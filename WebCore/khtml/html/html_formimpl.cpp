@@ -856,7 +856,7 @@ void HTMLGenericFormElementImpl::defaultEventHandler(EventImpl *evt)
 	if (evt->id()==EventImpl::KHTML_KEYDOWN_EVENT ||
 	    evt->id()==EventImpl::KHTML_KEYUP_EVENT)
 	{
-	    KeyEventImpl * k = static_cast<KeyEventImpl *>(evt);
+	    KeyboardEventImpl * k = static_cast<KeyboardEventImpl *>(evt);
 	    if (k->keyVal() == QChar('\n').unicode() && m_render && m_render->isWidget() && k->qKeyEvent)
 		QApplication::sendEvent(static_cast<RenderWidget *>(m_render)->widget(), k->qKeyEvent);
 	}

@@ -1326,26 +1326,16 @@ bool KWQKHTMLPart::keyEvent(NSEvent *event)
     NSEvent *oldCurrentEvent = _currentEvent;
     _currentEvent = [event retain];
 
-    const char *characters = [[event characters] lossyCString];
-    int ascii = (characters != nil && strlen(characters) == 1) ? characters[0] : 0;
-
-    QKeyEvent qEvent([event type] == NSKeyDown ? QEvent::KeyPress : QEvent::KeyRelease,
-		     [event keyCode],
-		     ascii,
-		     stateForCurrentEvent(),
-		     QString::fromNSString([event characters]),
-		     [event isARepeat]);
+    QEvent::Type type = [event type] == NSKeyDown ? QEvent::KeyPress : QEvent::KeyRelease;
+    QKeyEvent qEvent(event, type, stateForCurrentEvent(), [event isARepeat]);
     bool result = node->dispatchKeyEvent(&qEvent);
 
     // We want to send both a down and a press for the initial key event.
-    // This is a temporary hack; we need to do this a better way.
+    // To get KHTML to do this, we send a second KeyPress QKeyEvent with "is repeat" set to true,
+    // which causes it to send a press to the DOM.
+    // That's not a great hack; it would be good to do this in a better way.
     if ([event type] == NSKeyDown && ![event isARepeat]) {
-	QKeyEvent qEvent(QEvent::KeyPress,
-			 [event keyCode],
-			 ascii,
-			 stateForCurrentEvent(),
-			 QString::fromNSString([event characters]),
-			 true);
+	QKeyEvent qEvent(event, QEvent::KeyPress, stateForCurrentEvent(), true);
         node->dispatchKeyEvent(&qEvent);
     }
 
@@ -1689,6 +1679,8 @@ int KWQKHTMLPart::stateForCurrentEvent()
         state |= Qt::AltButton;
     if (modifiers & NSCommandKeyMask)
         state |= Qt::MetaButton;
+    if (modifiers & NSNumericPadKeyMask)
+        state |= Qt::Keypad;
     
     return state;
 }

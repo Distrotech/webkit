@@ -737,14 +737,14 @@ bool NodeImpl::dispatchKeyEvent(QKeyEvent *key)
 {
     int exceptioncode = 0;
     //kdDebug(6010) << "DOM::NodeImpl: dispatching keyboard event" << endl;
-    KeyEventImpl *keyEventImpl = new KeyEventImpl(key, getDocument()->defaultView());
-    keyEventImpl->ref();
-    bool r = dispatchEvent(keyEventImpl,exceptioncode,true);
+    KeyboardEventImpl *keyboardEventImpl = new KeyboardEventImpl(key, getDocument()->defaultView());
+    keyboardEventImpl->ref();
+    bool r = dispatchEvent(keyboardEventImpl,exceptioncode,true);
     // the default event handler should accept() the internal QKeyEvent
     // to prevent the view from further evaluating it.
-    if (!keyEventImpl->defaultPrevented() && !keyEventImpl->qKeyEvent->isAccepted())
+    if (!keyboardEventImpl->defaultPrevented() && !keyboardEventImpl->qKeyEvent()->isAccepted())
       r = false;
-    keyEventImpl->deref();
+    keyboardEventImpl->deref();
     return r;
 }
 
