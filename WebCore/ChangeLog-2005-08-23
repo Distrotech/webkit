@@ -1,3 +1,13 @@
+=== WebCore-125~6~2 ===
+
+2004-04-16  Vicki Murley  <vicki@apple.com>
+
+	- buildit complained about missing CFBundleName.  Add InfoPlist.strings back 
+        to the build, with only a CFBundleName (no version or copyright string)
+ 
+        * English.lproj/InfoPlist.strings: Added.
+        * WebCore.pbproj/project.pbxproj:
+
 2004-04-16  Vicki Murley  <vicki@apple.com>
 
 	- roll out the change to WebCoreViewFactory.h.  This isn't a part of 
