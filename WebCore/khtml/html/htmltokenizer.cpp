@@ -1434,7 +1434,7 @@ void HTMLTokenizer::write( const QString &str, bool appendData )
 //     if (Entity)
 //         parseEntity(src, dest);
 
-    while (!src.isEmpty() && (!parser->doc()->part() || !parser->doc()->part()->isImmediateRedirectPending())) {
+    while (src.length() && (!parser->doc()->part() || !parser->doc()->part()->isImmediateRedirectPending())) {
         // do we need to enlarge the buffer?
         checkBuffer();
 

@@ -1,3 +1,12 @@
+2004-09-13  Vicki Murley <vicki@apple.com>
+
+	- fix merge errors from <rdar://problem/3773150>
+
+        * khtml/html/htmltokenizer.cpp:
+        (HTMLTokenizer::write):
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::isImmediateRedirectPending):
+
 2004-09-10  Vicki Murley <vicki@apple.com>
 
 	- merge these changes for SUPanNavy, <rdar://problem/3773150> 

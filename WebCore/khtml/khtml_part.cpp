@@ -1910,7 +1910,7 @@ void KHTMLPart::scheduleRedirection( double delay, const QString &url, bool doLo
     }
 }
 
-bool KHTMLPart::isImmediateRedirectPending()
+bool KHTMLPart::isImmediateRedirectPending() const
 {
   return d->m_scheduledRedirection != noRedirectionScheduled && d->m_delayRedirect == 0;
 }
