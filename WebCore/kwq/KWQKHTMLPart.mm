@@ -862,7 +862,8 @@ void KWQKHTMLPart::paint(QPainter *p, const QRect &rect)
     if (renderer()) {
         renderer()->layer()->paint(p, rect);
 #ifdef APPLE_CHANGES
-        view()->paintCaret(p, rect);
+        if (isEditingAtSelection())
+            view()->paintCaret(p, rect);
 #endif
     } else {
         ERROR("called KWQKHTMLPart::paint with nil renderer");
