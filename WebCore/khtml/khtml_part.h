@@ -1058,7 +1058,7 @@ private:
   /**
    * @internal
    */
-  void emitCaretPositionChanged(const khtml::Caret &);
+  void emitCaretPositionChanged();
 
   /**
    * @internal
