@@ -1,3 +1,18 @@
+2003-12-08  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
+	A couple of tweaks to make caret drawing work a little
+	better. Now the caret does not paint when you click on
+	a link, and the "leftover" pixel is gone from the
+	caret blink.
+
+        * khtml/khtmlview.cpp:
+        (KHTMLView::timerEvent):
+        (KHTMLView::placeCaret):
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::paint):
+
 2003-12-06  Ken Kocienda  <kocienda@apple.com>
 
         Reviewed by me
