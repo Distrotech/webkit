@@ -467,7 +467,6 @@ void RenderTable::paint( QPainter *p, int _x, int _y,
 #ifdef BOX_DEBUG
     outlineBox(p, _tx, _ty, "blue");
 #endif
-}
 
 void RenderTable::paintBoxDecorations(QPainter *p,int _x, int _y,
                                       int _w, int _h, int _tx, int _ty)
