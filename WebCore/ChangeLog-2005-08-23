@@ -1,3 +1,30 @@
+2004-03-09  Maciej Stachowiak  <mjs@madness.apple.com>
+
+	Merged the following changes from HEAD for Epiphany:
+
+    2004-03-09  David Hyatt  <hyatt@apple.com>
+
+	Make the AXLinkUIElements attribute always return an array (never
+	return nil).
+	
+        * kwq/KWQAccObject.mm:
+        (-[KWQAccObject accessibilityAttributeValue:]):
+
+    2004-03-09  David Hyatt  <hyatt@apple.com>
+
+	(1) Change root element in a document to have a role of AXWebArea.
+	(2) Add support for AXURL to links and children of links.
+	(3) Add support for AXLinkUIElements to the AXWebArea
+	
+        Reviewed by john
+
+        * khtml/dom/html_misc.h:
+        * kwq/KWQAccObject.mm:
+        (-[KWQAccObject role]):
+        (-[KWQAccObject roleDescription]):
+        (-[KWQAccObject accessibilityAttributeNames]):
+        (-[KWQAccObject accessibilityAttributeValue:]):
+
 === WebCore-125.3 ===
 
 2004-03-04  Maciej Stachowiak  <mjs@apple.com>
