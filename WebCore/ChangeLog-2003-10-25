@@ -2,6 +2,21 @@
 
         Rolled in change from main trunk.
 
+    2003-07-14  Dave Hyatt  <hyatt@apple.com>
+
+	Fix for 3294626, no scrollbar on ESPN.  Fix lowestPosition to
+	always crawl into all children.
+	
+        Reviewed by darin
+
+        * khtml/rendering/render_flow.cpp:
+        (RenderFlow::lowestPosition):
+        (RenderFlow::rightmostPosition):
+
+2003-07-14  Darin Adler  <darin@apple.com>
+
+        Rolled in change from main trunk.
+
     2003-07-08  Dave Hyatt  <hyatt@apple.com>
 
 	Make sure that the contents width and height of the view are
