@@ -402,6 +402,34 @@ void QPainter::drawPixmap( int x, int y, const QPixmap &pixmap,
     _unlockFocus();
 }
 
+#define USE_COLOR_TILING
+#ifdef USE_COLOR_TILING
+extern "C" {
+CG_EXTERN void CGContextSetPatternPhase(CGContextRef c, CGSize phase);
+}
+
+void QPainter::drawTiledPixmap( int x, int y, int w, int h,
+				const QPixmap &pixmap, int sx, int sy )
+{    
+    NSColor *patternColor;
+    int sw = pixmap.width();
+    int sh = pixmap.height();
+    NSView *view = data->widget->getView();
+    NSPoint p = [view convertPoint: NSMakePoint (x, y) toView: nil];
+    CGContextRef cgContext;
+
+    [NSGraphicsContext saveGraphicsState];
+
+    cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
+    CGSize phase = { (float)(((int)p.x) % sw), (float)(((int)p.y) % sh) };
+    CGContextSetPatternPhase(cgContext, phase);
+    patternColor = [NSColor colorWithPatternImage: pixmap.nsimage];
+    [patternColor set];
+    [NSBezierPath fillRect:NSMakeRect(x, y, w, h)];
+
+    [NSGraphicsContext restoreGraphicsState];
+}
+#else
 static void drawTile( QPainter *p, int x, int y, int w, int h,
 		      const QPixmap &pixmap, int xOffset, int yOffset )
 {
@@ -427,7 +455,6 @@ static void drawTile( QPainter *p, int x, int y, int w, int h,
     }
 }
 
-
 void QPainter::drawTiledPixmap( int x, int y, int w, int h,
 				const QPixmap &pixmap, int sx, int sy )
 {
@@ -446,6 +473,7 @@ void QPainter::drawTiledPixmap( int x, int y, int w, int h,
 
     drawTile( this, x, y, w, h, pixmap, sx, sy );
 }
+#endif
 
 #define FAST_CACHE_DRAWING 1
 
@@ -467,7 +495,7 @@ void QPainter::drawText(int x, int y, const QString &qstring, int len)
     _lockFocus();
     
     //font = data->qfont.data->font;    
-    font = data->qfont.font;    
+    font = data->qfont.getFont();    
 
     if (len == -1)
         string = QSTRING_TO_NSSTRING(qstring);
@@ -533,8 +561,7 @@ void QPainter::drawUnderlineForText(int x, int y, const QString &qstring, int le
     
     _lockFocus();
     
-    //font = data->qfont.data->font;    
-    font = data->qfont.font;    
+    font = data->qfont.getFont();    
 
     if (len == -1)
         string = QSTRING_TO_NSSTRING(qstring);
@@ -558,7 +585,7 @@ void QPainter::drawText(int x, int y, int w, int h, int flags, const QString&qst
     _lockFocus();
     
     //font = data->qfont.data->font;    
-    font = data->qfont.font;    
+    font = data->qfont.getFont();    
         
     if (len == -1)
         string = QSTRING_TO_NSSTRING(qstring);

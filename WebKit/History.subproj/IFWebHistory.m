@@ -9,23 +9,17 @@
 #import "IFWebHistory.h"
 #import "IFWebHistoryPrivate.h"
 
-static IFWebHistory *sharedWebHistory = nil;
-
 @implementation IFWebHistory
 
-+ (IFWebHistory *)sharedWebHistory
++ (IFWebHistory *)webHistoryWithFile: (NSString*)file
 {
-    if (sharedWebHistory == nil) {
-        sharedWebHistory = [[[self class] alloc] init];
-    }
-
-    return sharedWebHistory;
+    return [[[self alloc] initWithFile:file] autorelease];
 }
 
-- (id)init
+- (id)initWithFile: (NSString *)file;
 {
     if ((self = [super init]) != nil) {
-        _historyPrivate = [[IFWebHistoryPrivate alloc] init];
+        _historyPrivate = [[IFWebHistoryPrivate alloc] initWithFile:file];
     }
 
     return self;
@@ -103,6 +97,27 @@ static IFWebHistory *sharedWebHistory = nil;
 - (BOOL)containsURL: (NSURL *)url
 {
     return [_historyPrivate containsURL: url];
+}
+
+#pragma mark SAVING TO DISK
+
+- (NSString *)file
+{
+    return [_historyPrivate file];
+}
+
+- (BOOL)loadHistory
+{
+    if ([_historyPrivate loadHistory]) {
+        [self sendEntriesChangedNotification];
+        return YES;
+    }
+    return NO;
+}
+
+- (BOOL)saveHistory
+{
+    return [_historyPrivate saveHistory];
 }
 
 @end

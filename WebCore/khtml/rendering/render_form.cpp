@@ -861,6 +861,8 @@ void RenderSelect::layout( )
         else
             static_cast<KComboBox*>(m_widget)->clear();
 
+        if(!m_useListBox)
+            static_cast<KComboBox*>(m_widget)->setSize(listItems.size());
         for (listIndex = 0; listIndex < int(listItems.size()); listIndex++) {
             if (listItems[listIndex]->id() == ID_OPTGROUP) {
                 DOMString text = listItems[listIndex]->getAttribute(ATTR_LABEL);
@@ -895,6 +897,8 @@ void RenderSelect::layout( )
                 KHTMLAssert(false);
             m_selectionChanged = true;
         }
+        if(!m_useListBox)
+            static_cast<KComboBox*>(m_widget)->doneLoading();
         m_optionsChanged = false;
     }
 

@@ -27,10 +27,74 @@
 
 #import <Cocoa/Cocoa.h>
 
+@class KWQTextStorage;
+
+
+#ifdef DIRECT_TO_CG
+
+#define LOCAL_GLYPH_BUFFER_SIZE 1024
+
+#define INITIAL_GLYPH_CACHE_MAX 512
+#define INCREMENTAL_GLYPH_CACHE_BLOCK 512
+
+#define UNITIALIZED_GLYPH_WIDTH 65535
+
+// These definitions are used to bound the character-to-glyph mapping cache.  The
+// range is limited to LATIN1.  When accessing the cache a check must be made to
+// determine that a character range does not include a composable charcter.
+
+// The first displayable character in latin1. (SPACE)
+#define FIRST_CACHE_CHARACTER (0x20)
+
+// The last character in latin1 extended A. (LATIN SMALL LETTER LONG S)
+#define LAST_CACHE_CHARACTER (0x17F)
+
+#define Boolean MacBoolean
+#define Fixed MacFixed
+#define Rect MacRect
+
+#import <ApplicationServices/ApplicationServices.h>
+#import <ATSUnicodePriv.h>
+
+#undef Fixed
+#undef Rect
+#undef Boolean
+
+@interface NSFont (IFPrivate)
+- (ATSUFontID)_atsFontID;
+- (CGFontRef) _backingCGSFont;
+@end
+
+extern "C" {
+
+CG_EXTERN int CGFontGetGlyphScaledAdvances(CGFontRef font, const CGGlyph glyph[], size_t count, float advance[], float scale);
+CG_EXTERN size_t CGFontGetNumberOfGlyphs(CGFontRef font);
+
+}
+
+typedef unsigned short _IFGlyphWidth;
+
+#endif
+
 @interface KWQLayoutInfo : NSObject
 {
+    NSFont *font;
+    int lineHeight;
+#ifdef DIRECT_TO_CG
+    ATSStyleGroupPtr _styleGroup;
+    ATSUStyle _style;
+    ATSGlyphVector _glyphVector;
+    ATSStyleGroupPtr _latinStyleGroup;
+    ATSUStyle _latinStyle;
+    ATSGlyphVector _latinCacheGlyphVector;
+    unsigned int widthCacheSize;
+    _IFGlyphWidth *widthCache;
+    ATSGlyphRef *characterToGlyph;
+#else
     NSMutableDictionary *attributes;
-    NSMutableDictionary *fragmentCache;
+    NSLayoutManager *layoutManager;
+    KWQTextStorage *textStorage;
+#endif
 }
 
 + (void)drawString: (NSString *)string atPoint: (NSPoint)p withFont: (NSFont *)font color: (NSColor *)color;
@@ -39,25 +103,49 @@
 + (void)setMetric: (KWQLayoutInfo *)info forFont: (NSFont *)aFont;
 - initWithFont: (NSFont *)aFont;
 - (NSRect)rectForString:(NSString *)string;
-- (NSLayoutManager *)layoutManagerForString: (NSString *)string;
+- (NSLayoutManager *)layoutManager;
+- (KWQTextStorage *)textStorage;
 - (void)setColor: (NSColor *)color;
-- (void)setFont: (NSFont *)aFont;
 - (NSDictionary *)attributes;
+- (int)lineHeight;
+- (NSFont *)font;
 @end
 
-@interface KWQLayoutFragment : NSObject
-{
-    NSTextStorage *textStorage;
-    NSTextContainer *textContainer;
-    NSLayoutManager *layoutManager;
-    NSRect boundingRect;
-    BOOL cachedRect;
-}
-
-- initWithString: (NSString *)storage attributes: (NSDictionary *)attrs;
+@protocol KWQLayoutFragment
+- (void)setGlyphRange: (NSRange)r;
+- (NSRange)glyphRange;
+- (void)setBoundingRect: (NSRect)r;
 - (NSRect)boundingRect;
-- (void)dealloc;
 
+#ifdef _DEBUG_LAYOUT_FRAGMENT
+- (int)accessCount;
+#endif
+
+@end
+
+@interface KWQSmallLayoutFragment : NSObject <KWQLayoutFragment>
+{
+    // Assumes 0,0 boundingRect origin and < UINT16_MAX width and height,
+    // and loss of precision for float to short is irrelevant.
+    unsigned short width;
+    unsigned short height;
+
+    // Assumes 0 location and < UINT16_MAX length.
+    unsigned short glyphRangeLength;
+#ifdef _DEBUG_LAYOUT_FRAGMENT
+    int accessCount;
+#endif
+}
+@end
+
+@interface KWQLargeLayoutFragment : NSObject <KWQLayoutFragment>
+{
+    NSRect boundingRect;
+    NSRange glyphRange;
+#ifdef _DEBUG_LAYOUT_FRAGMENT
+    int accessCount;
+#endif
+}
 @end
 
 #endif

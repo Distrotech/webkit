@@ -30,13 +30,15 @@
     ((IFWebViewPrivate *)_viewPrivate)->needsLayout = YES;
 
     [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(windowResized:) name: NSWindowDidResizeNotification object: nil];
-    
+        
     return self;
 }
 
 
 - (void)dealloc 
 {
+    [self _stopPlugins];
+    [[NSNotificationCenter defaultCenter] removeObserver: self];
     [_viewPrivate release];
     [super dealloc];
 }
@@ -50,6 +52,19 @@
 }
 
 
+- (void)removeFromSuperview
+{
+    [self _stopPlugins];
+    [super removeFromSuperview];
+}
+
+
+- (void)removeFromSuperviewWithoutNeedingDisplay
+{
+    [self _stopPlugins];
+    [super removeFromSuperviewWithoutNeedingDisplay];
+}
+
 
 // This method is typically called by the view's controller when
 // the data source is changed.
@@ -57,6 +72,7 @@
 {
     IFWebViewPrivate *data = ((IFWebViewPrivate *)_viewPrivate);
     NSRect r = [self frame];
+    IFWebView *provisionalView;
     
     // Nasty!  Setup the cross references between the KHTMLView and
     // the KHTMLPart.
@@ -65,18 +81,24 @@
     data->provisionalWidget = new KHTMLView (part, 0);
     part->setView (data->provisionalWidget);
 
-    // Check to see if we're a frame.
-    if ([self _frameScrollView])
-        data->provisionalWidget->setView ([self _frameScrollView]);
-    else
-        data->provisionalWidget->setView (self);
-    
+    // Create a temporary provisional view.  It will be replaced with
+    // the actual view once the datasource has been committed.
+    provisionalView = [[IFWebView alloc] initWithFrame: NSMakeRect (0,0,0,0)];
+    data->provisionalWidget->setView (provisionalView);
+    [provisionalView release];
+
     data->provisionalWidget->resize (r.size.width,r.size.height);
 }
 
 - (void)dataSourceChanged: (IFWebDataSource *)dataSource 
 {
     IFWebViewPrivate *data = ((IFWebViewPrivate *)_viewPrivate);
+
+    // Setup the real view.
+    if ([self _frameScrollView])
+        data->provisionalWidget->setView ([self _frameScrollView]);
+    else
+        data->provisionalWidget->setView (self);
 
     // Only delete the widget if we're the top level widget.  In other
     // cases the widget is associated with a RenderFrame which will
@@ -86,13 +108,15 @@
 
     data->widget = data->provisionalWidget;
     data->provisionalWidget = 0;
-    
+
+/*    
     // Remove any remnants, i.e. form widgets, from the
     // previous page.
     [self _resetView];
     
     // Force a layout.
     [self layout];
+*/
 }
 
 
@@ -111,17 +135,17 @@
     if (widget->part()->xmlDocImpl() && 
         widget->part()->xmlDocImpl()->renderer()){
         if (((IFWebViewPrivate *)_viewPrivate)->needsLayout){
-            //WEBKITDEBUGLEVEL (0x100, "doing layout\n");
+            WEBKITDEBUGLEVEL (WEBKIT_LOG_VIEW, "doing layout\n");
             //double start = CFAbsoluteTimeGetCurrent();
             widget->layout();
-            //WebKitDebugAtLevel (0x200, "layout time %e\n", CFAbsoluteTimeGetCurrent() - start);
+            //WebKitDebugAtLevel (WEBKIT_LOG_TIMING, "layout time %e\n", CFAbsoluteTimeGetCurrent() - start);
             ((IFWebViewPrivate *)_viewPrivate)->needsLayout = NO;
         }
     }
 
 #ifdef _KWQ_TIMING        
     double thisTime = CFAbsoluteTimeGetCurrent() - start;
-    WEBKITDEBUGLEVEL2 (0x200, "%s layout seconds = %f\n", widget->part()->baseURL().url().latin1(), thisTime);
+    WEBKITDEBUGLEVEL2 (WEBKIT_LOG_TIMING, "%s layout seconds = %f\n", widget->part()->baseURL().url().latin1(), thisTime);
 #endif
 }
 
@@ -248,6 +272,11 @@
 }
 
 
+- (BOOL)isOpaque
+{
+    return YES;
+}
+
 
 #ifdef DELAY_LAYOUT
 - delayLayout: sender
@@ -277,14 +306,14 @@
 
 - (void)setNeedsDisplay:(BOOL)flag
 {
-    //WEBKITDEBUGLEVEL (0x100, "setNeedsDisplay:\n");
+    WEBKITDEBUGLEVEL1 (WEBKIT_LOG_VIEW, "flag = %d\n", (int)flag);
     [super setNeedsDisplay: flag];
 }
 
 
 - (void)setNeedsLayout: (bool)flag
 {
-    //WEBKITDEBUGLEVEL (0x100, "setNeedsLayout:\n");
+    WEBKITDEBUGLEVEL1 (WEBKIT_LOG_VIEW, "flag = %d\n", (int)flag);
     ((IFWebViewPrivate *)_viewPrivate)->needsLayout = flag;
 }
 
@@ -292,10 +321,15 @@
 // This should eventually be removed.
 - (void)drawRect:(NSRect)rect {
     KHTMLView *widget = ((IFWebViewPrivate *)_viewPrivate)->widget;
+    //IFWebViewPrivate *data = ((IFWebViewPrivate *)_viewPrivate);
 
-    //WEBKITDEBUGLEVEL (0x100, "drawRect:\n");
+    //if (data->provisionalWidget != 0){
+    //    WEBKITDEBUGLEVEL (WEBKIT_LOG_VIEW, "not drawing, frame in provisional state.\n");
+    //    return;
+    //}
+    
     if (widget != 0l){        
-        //WEBKITDEBUGLEVEL (0x100, "drawRect: drawing\n");
+        WEBKITDEBUGLEVEL (WEBKIT_LOG_VIEW, "drawing\n");
         [self layout];
 
 #ifdef _KWQ_TIMING        
@@ -310,7 +344,7 @@
                     (int)rect.origin.y, 
                     (int)rect.size.width, 
                     (int)rect.size.height );
-        //WebKitDebugAtLevel (0x200, "draw time %e\n", CFAbsoluteTimeGetCurrent() - start);
+        //WebKitDebugAtLevel (WEBKIT_LOG_TIMING, "draw time %e\n", CFAbsoluteTimeGetCurrent() - start);
 
 #ifdef DEBUG_LAYOUT       
         NSRect vframe = [self frame]; 
@@ -334,7 +368,7 @@
 
 #ifdef _KWQ_TIMING        
     double thisTime = CFAbsoluteTimeGetCurrent() - start;
-    WEBKITDEBUGLEVEL2 (0x200, "%s draw seconds = %f\n", widget->part()->baseURL().url().latin1(), thisTime);
+    WEBKITDEBUGLEVEL2 (WEBKIT_LOG_TIMING, "%s draw seconds = %f\n", widget->part()->baseURL().url().latin1(), thisTime);
 #endif
     }
 }
@@ -351,13 +385,6 @@
 }
 
 
-
-// Override superclass implementation.  We want to relayout when the frame size is changed.
-- (void)setFrame:(NSRect)frameRect
-{
-    [super setFrame:frameRect];
-    //[self setNeedsLayout: YES];
-}
 
 - (void)windowResized: (NSNotification *)notification
 {
@@ -427,7 +454,7 @@
 - (void)mouseDragged: (NSEvent *)event
 {
     NSPoint p = [event locationInWindow];
-    //WebKitDebugAtLevel (0x200, "mouseDragged %f, %f\n", p.x, p.y);
+    //WebKitDebugAtLevel (WEBKIT_LOG_EVENTS, "mouseDragged %f, %f\n", p.x, p.y);
 }
 
 @end

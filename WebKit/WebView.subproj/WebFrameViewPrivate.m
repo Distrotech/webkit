@@ -5,8 +5,10 @@
         in WebCore.  Instances of this class are referenced by _viewPrivate in 
         NSWebPageView.
 */
-#import <IFWebViewPrivate.h>
-#import <IFPluginView.h>
+#import <WebKit/WebKitDebug.h>
+
+#import <WebKit/IFWebViewPrivate.h>
+#import <WebKit/IFPluginView.h>
 
 // Includes from KDE
 #include <khtmlview.h>
@@ -51,23 +53,37 @@
     ((IFWebViewPrivate *)_viewPrivate)->widget = 0;
 }
 
-- (void)_resetView 
+- (void)_stopPlugins 
 {
     NSArray *views = [self subviews];
     int count;
     
     count = [views count];
     while (count--){
-        //WebKitDebugAtLevel(0x200, "Removing %p %s\n", [views objectAtIndex: 0], DEBUG_OBJECT([[[views objectAtIndex: 0] class] className]));
         id view;
         
         view = [views objectAtIndex: count];
         if ([view isKindOfClass: NSClassFromString (@"IFPluginView")])
             [(IFPluginView *)view stop];
+    }
+}
+
+
+- (void)_removeSubviews
+{
+    // Remove all the views.  They will be be re-added if this
+    // is a re-layout. 
+    NSArray *views = [self subviews];
+    int count;
+    
+    count = [views count];
+    while (count--){
+        id view;
+        view = [views objectAtIndex: count];
         [view removeFromSuperviewWithoutNeedingDisplay]; 
     }
-    [self setFrameSize: NSMakeSize (0,0)];
 }
+
 
 
 - (void)_setController: (id <IFWebController>)controller
@@ -88,7 +104,7 @@
 }
 
 
-- (void)_setFrameScrollView: (IFDynamicScrollBarsView *)sv
+- (void)_setFrameScrollView: (NSScrollView *)sv
 {
     ((IFWebViewPrivate *)_viewPrivate)->frameScrollView = [sv retain];    
     //[sv setAutoresizingMask: NSViewWidthSizable | NSViewHeightSizable];
@@ -98,9 +114,23 @@
     [sv setDocumentView: self];
 }
 
-- (IFDynamicScrollBarsView *)_frameScrollView
+- (NSScrollView *)_frameScrollView
 {
     return ((IFWebViewPrivate *)_viewPrivate)->frameScrollView;    
 }
+
+- (void)_setupScrollers
+{
+    BOOL scrollsVertically;
+    BOOL scrollsHorizontally;
+
+    scrollsVertically = [self bounds].size.height > [[self _frameScrollView] frame].size.height;
+    scrollsHorizontally = [self bounds].size.width > [[self _frameScrollView] frame].size.width;
+
+    [[self _frameScrollView] setHasVerticalScroller: scrollsVertically];
+    [[self _frameScrollView] setHasHorizontalScroller: scrollsHorizontally];
+}
+
+
 
 @end

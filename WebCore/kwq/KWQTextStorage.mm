@@ -28,6 +28,7 @@
 #include <kwqdebug.h>
 
 #import <KWQTextStorage.h>
+#import <KWQTextContainer.h>
 
 /*
     This class is a dumb text storage implementation.  It is optimized for speed,
@@ -38,39 +39,147 @@
     correct attributes (font and color only) during layout and rendering.
 */
 
+#ifndef UINT16_MAX
+#define UINT16_MAX        65535
+#endif
+
 @implementation KWQTextStorage
 
-static KWQTextStorage *sharedInstance = nil;
-
-+ (KWQTextStorage *)sharedInstance
+- (id <KWQLayoutFragment>)_buildFragmentForString: (NSString *)measureString
 {
-    if (sharedInstance == nil)
-        sharedInstance = [[KWQTextStorage alloc] init];
-    return sharedInstance;
+    id <KWQLayoutFragment> fragment;
+    NSRange range = NSMakeRange (0, [measureString length]);
+    NSRange glyphRange;
+    NSRect boundingRect;
+
+    if (fragmentCache == nil)
+        fragmentCache = [[NSMutableDictionary alloc] initWithCapacity: 1024*8];
+    
+    [self setString: measureString];
+    
+    glyphRange = [_layoutManager glyphRangeForCharacterRange:range actualCharacterRange:nil];
+    boundingRect = [_layoutManager boundingRectForGlyphRange: glyphRange inTextContainer: [KWQTextContainer sharedInstance]];
+    
+    bool useLargeFragment = NO;
+
+    if (boundingRect.origin.x != 0 || boundingRect.origin.y != 0 ||
+            glyphRange.location != 0 ||
+            glyphRange.length > UINT16_MAX || 
+            boundingRect.size.width > (float)UINT16_MAX ||
+            boundingRect.size.height > (float)UINT16_MAX){
+        useLargeFragment = YES;
+    }
+
+    if (useLargeFragment)
+        fragment = [[KWQLargeLayoutFragment alloc] init];
+    else
+        fragment = [[KWQSmallLayoutFragment alloc] init];
+
+    [fragment setGlyphRange: glyphRange];
+    [fragment setBoundingRect: boundingRect];
+
+    [fragmentCache setObject: fragment forKey: [self string]];
+    [fragment release];
+
+    return fragment;
 }
 
-+ (void)setString:(NSString *)str attributes:(NSDictionary *)attrs 
+
+- (id <KWQLayoutFragment>)getFragmentForString: (NSString *)fString
 {
-    [[KWQTextStorage sharedInstance] setString: str attributes: attrs];
+    id <KWQLayoutFragment> fragment;
+    
+#ifdef SPACE_OPTIMIZATION
+    bool hasLeadingSpace = NO, hasTrailingSpace = NO;
+    const UniChar *clippedStart = 0;
+    unsigned int clippedLength = 0, fragStringLength;
+    CFStringRef clippedString, fragString = (CFStringRef)fString;
+
+    fragStringLength = CFStringGetLength (fragString);
+    if (fragStringLength > 1){
+        const UniChar *internalBuffer = CFStringGetCharactersPtr((CFStringRef)fragString);
+        
+        if (internalBuffer){
+            clippedStart = internalBuffer;
+            clippedLength = fragStringLength;
+            if (*internalBuffer == ' '){
+                hasLeadingSpace = YES;
+                clippedStart++;
+                clippedLength--;
+            }
+            if (internalBuffer[fragStringLength-1] == ' '){
+                hasTrailingSpace = YES;
+                clippedLength--;
+            }
+
+            if (hasLeadingSpace || hasTrailingSpace){
+                NSRect boundingRect;
+                NSRange glyphRange;
+                
+                clippedString = CFStringCreateWithCharactersNoCopy (kCFAllocatorDefault, clippedStart, clippedLength, kCFAllocatorNull);
+                fragment = [fragmentCache objectForKey: (NSString *)clippedString];
+                if (!fragment)
+                    fragment = [self _buildFragmentForString: (NSString *)clippedString];
+                CFRelease (clippedString);
+                boundingRect = [fragment boundingRect];
+                glyphRange = [fragment glyphRange];
+                if (hasLeadingSpace){
+                    glyphRange.length++;
+                    boundingRect.size.width += [spaceFragment boundingRect].size.width;
+                }
+                if (hasTrailingSpace){
+                    glyphRange.length++;
+                    boundingRect.size.width += [spaceFragment boundingRect].size.width;
+                }
+                [expandedFragment setBoundingRect: boundingRect];
+                [expandedFragment setGlyphRange: glyphRange];
+                
+                return expandedFragment;
+            }
+        }
+    }
+#endif
+
+    fragment = [fragmentCache objectForKey: fString];
+    if (!fragment)
+        fragment = [self _buildFragmentForString: fString];
+        
+    return fragment;
 }
 
-- (id)initWithString:(NSString *)str attributes:(NSDictionary *)attrs 
+#ifdef DEBUG_SPACE_OPTIMIZATION
+static int totalMeasurements = 0;
+static int leadingSpace = 0;
+static int trailingSpace = 0;
+#endif
+
+- (id)initWithFontAttribute:(NSDictionary *)attrs 
 {
-    attrString = [str retain];
     attributes = [attrs retain];
+#ifdef SPACE_OPTIMIZATION
+    expandedFragment = [[KWQLargeLayoutFragment alloc] init];
+#endif
     return self;
 }
 
 - (void)dealloc 
 {
+    [string release];
+    [fragmentCache release];
     [attributes release];
-    [attrString release];
     [super dealloc];
 }
+
+#ifdef _DEBUG_LAYOUT_FRAGMENT
+- (NSDictionary *)fragmentCache { return fragmentCache; }
+#endif
 
 - (void)addLayoutManager:(id)obj {
     _layoutManager = [obj retain];
     [obj setTextStorage:self];
+#ifdef SPACE_OPTIMIZATION
+    spaceFragment = [self _buildFragmentForString: @" "];
+#endif
 }
 
 - (void)removeLayoutManager:(id)obj {
@@ -101,26 +210,39 @@ static KWQTextStorage *sharedInstance = nil;
 
 - (unsigned)length 
 {
-    return [attrString length];
+    return [string length];
 }
 
-- (void)setString: (NSString *)aString attributes: (NSDictionary *)at
+- (void)setAttributes: (NSDictionary *)at
 {
-    if (aString != attrString){
-        [attrString release];
-        attrString = [aString retain];
-    }
-
     if (at != attributes){
         [attributes release];
         attributes = [at retain];
     }
 }
 
+- (void)setString: (NSString *)newString
+{
+    if (newString != string){
+        int oldLength = [self length];
+        int newLength = [newString length];
+        
+        [string release];
+        
+        // Make an immutable copy.
+        string = [[NSString stringWithString: newString] retain];
+        
+        [_layoutManager textStorage: self 
+                edited: NSTextStorageEditedCharacters
+                range: NSMakeRange (0, newLength)
+                changeInLength: newLength - oldLength
+                invalidatedRange:NSMakeRange (0, newLength)];
+    }
+}
 
 - (NSString *)string 
 {
-    return attrString;
+    return string;
 }
 
 

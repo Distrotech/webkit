@@ -139,11 +139,13 @@
     
     [[self view] provisionalDataSourceChanged: newDataSource];
 
+#ifdef OLD_WAY
     // This introduces a nasty dependency on the view.
     khtml::RenderPart *renderPartFrame = [self _renderFramePart];
     id view = [self view];
     if (renderPartFrame && [view isKindOfClass: NSClassFromString(@"IFWebView")])
         renderPartFrame->setWidget ([view _provisionalWidget]);
+#endif
 
     [self _setState: IFWEBFRAMESTATE_PROVISIONAL];
     
@@ -154,7 +156,7 @@
 - (void)startLoading
 {
     IFWebFramePrivate *data = (IFWebFramePrivate *)_framePrivate;
-
+    
     // Force refresh is irrelevant, as this will always be the first load.
     // The controller will transition the provisional data source to the
     // committed data source.
@@ -175,6 +177,8 @@
 {
     IFWebFramePrivate *data = (IFWebFramePrivate *)_framePrivate;
 
+    [self _clearErrors];
+
     [data->dataSource startLoading: forceRefresh];
 }
 
@@ -186,5 +190,18 @@
     [[data view] _resetWidget];
     [data setView: nil];
 }
+
+- (NSDictionary *)errors
+{
+    IFWebFramePrivate *data = (IFWebFramePrivate *)_framePrivate;
+    return data->errors;
+}
+
+- (IFError *)mainDocumentError
+{
+    IFWebFramePrivate *data = (IFWebFramePrivate *)_framePrivate;
+    return data->mainDocumentError;
+}
+
 
 @end

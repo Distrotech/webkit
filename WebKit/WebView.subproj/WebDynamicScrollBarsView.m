@@ -8,17 +8,30 @@
 
 #import <WebKit/IFDynamicScrollBarsView.h>
 
+#import <WebKit/IFWebView.h>
+
+#import <WebKit/WebKitDebug.h>
+
 @implementation IFDynamicScrollBarsView
 
 // make the horizontal and vertical scroll bars come and go as needed
 - (void) reflectScrolledClipView: (NSClipView*)clipView
 {
-    if( clipView == [self contentView] ) {
-        BOOL scrollsVertically = [[self documentView] bounds].size.height > [self contentSize].height;
-        BOOL scrollsHorizontally = [[self documentView] bounds].size.width > [self contentSize].width;
-
+    id dview = [self documentView];
+        
+    if( clipView == [self contentView] && breakRecursionCycle == NO ) {
+        BOOL scrollsVertically;
+        BOOL scrollsHorizontally;
+    
+        breakRecursionCycle = YES;
+        
+        scrollsVertically = [dview bounds].size.height > [self frame].size.height;
+        scrollsHorizontally = [dview bounds].size.width > [self frame].size.width;
+    
         [self setHasVerticalScroller: scrollsVertically];
         [self setHasHorizontalScroller: scrollsHorizontally];
+        
+        breakRecursionCycle = NO;
     }
     [super reflectScrolledClipView: clipView];
 }

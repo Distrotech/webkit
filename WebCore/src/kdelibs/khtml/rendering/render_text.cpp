@@ -34,6 +34,14 @@
 #include <kdebug.h>
 #include <assert.h>
 
+#define QT_ALLOC_QCHAR_VEC( N ) (QChar*) new char[ sizeof(QChar)*( N ) ]
+#define QT_DELETE_QCHAR_VEC( P ) delete[] ((char*)( P ))
+
+#ifdef APPLE_CHANGES
+#define OPTIMIZE_STRING_USAGE
+#endif
+
+
 using namespace khtml;
 using namespace DOM;
 
@@ -706,7 +714,11 @@ void RenderText::calcMinMaxWidth()
         } while( i+wordlen < len && !(isBreakable( str->s, i+wordlen, str->l )) );
         if (wordlen)
         {
+#if (defined(APPLE_CHANGES) && defined(OPTIMIZE_STRING_USAGE))
+            int w = _fm._width((const UniChar *)(str->s+i), wordlen);
+#else
             int w = _fm.width(QConstString(str->s+i, wordlen).string());
+#endif
             currMinWidth += w;
             currMaxWidth += w;
         }
@@ -725,7 +737,11 @@ void RenderText::calcMinMaxWidth()
             {
                 if(currMinWidth > m_minWidth) m_minWidth = currMinWidth;
                 currMinWidth = 0;
+#if (defined(APPLE_CHANGES) && defined(OPTIMIZE_STRING_USAGE))
+                currMaxWidth += _fm._width((const UniChar *)(str->s+i+wordlen), 1);
+#else
                 currMaxWidth += _fm.width( *(str->s+i+wordlen) );
+#endif
             }
             /* else if( c == '-')
             {
@@ -881,7 +897,11 @@ unsigned int RenderText::width(unsigned int from, unsigned int len, const QFontM
     if( len == 1)
         w = _fm->width( *(str->s+from) );
     else
+#if (defined(APPLE_CHANGES) && defined(OPTIMIZE_STRING_USAGE))
+        w = _fm->_width((const UniChar *)(str->s+from), len);
+#else
         w = _fm->width(QConstString(str->s+from, len).string());
+#endif
 
     // ### add margins and support for RTL
 

@@ -980,7 +980,12 @@ void RenderObject::recalcMinMaxWidths()
         // gcc sucks. if anybody knows a trick to get rid of the
         // warning without adding an extra (unneeded) initialisation,
         // go ahead
+#ifdef APPLE_CHANGES
+	int cmin = 0;
+	int cmax = 0;
+#else /* not APPLE_CHANGES */
 	int cmin, cmax;
+#endif /* not APPLE_CHANGES */
 	bool test = false;
 	if ( ( m_minMaxKnown && child->m_recalcMinMax ) || !child->m_minMaxKnown ) {
 	    cmin = child->minWidth();

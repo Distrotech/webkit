@@ -8,6 +8,7 @@
 #import <WebKit/IFWebDataSourcePrivate.h>
 #import <WebKit/IFWebFrame.h>
 #import <WebKit/IFWebFramePrivate.h>
+#import <WebKit/IFDynamicScrollBarsView.h>
 #import <WebKit/IFException.h>
 
 #import <WebKit/WebKitDebug.h>
@@ -46,6 +47,7 @@
 - (void)dealloc
 {
     [object release];
+    [super dealloc];
 }
 
 - (id)copyWithZone:(NSZone *)zone
@@ -134,7 +136,7 @@ static id IFLoadProgressMake()
 {
     IFWebView *childView;
     IFWebFrame *newFrame;
-    IFDynamicScrollBarsView *scrollView;
+    NSScrollView *scrollView;
 
     childView = [[[IFWebView alloc] initWithFrame: NSMakeRect (0,0,0,0)] autorelease];
 
@@ -146,6 +148,8 @@ static id IFLoadProgressMake()
     [childDataSource _setController: self];
 
     scrollView  = [[[IFDynamicScrollBarsView alloc] initWithFrame: NSMakeRect(0,0,0,0)] autorelease];
+    [scrollView setHasVerticalScroller: NO];
+    [scrollView setHasHorizontalScroller: NO];
     [childView _setFrameScrollView: scrollView];
         
     return newFrame;
@@ -175,32 +179,13 @@ static id IFLoadProgressMake()
 // ---------------------------------------------------------------------
 - (void)receivedProgress: (IFLoadProgress *)progress forResource: (NSString *)resourceDescription fromDataSource: (IFWebDataSource *)dataSource
 {
-    IFWebFrame *frame = [dataSource frame];
-    
-    WEBKIT_ASSERT (dataSource != nil);
-
-    WEBKIT_ASSERT (frame != nil);
-
-    // Check to see if this is the first load for a data source, if so
-    // we need to transition the data source from provisional to committed.
-    if (progress->bytesSoFar == progress->totalToLoad && [frame provisionalDataSource] == dataSource){
-        WEBKITDEBUGLEVEL1 (0x2000, "resource = %s\n", [resourceDescription cString]);
-        [frame _transitionProvisionalToCommitted];
-    }
-    
-    // This resouce has completed, so check if the load is complete for all frames.
-    if (progress->bytesSoFar == progress->totalToLoad)
-        [[self mainFrame] _checkLoadComplete: nil];
+    // Do nothing.  Subclasses typically override this method.
 }
-
 
 - (void)receivedError: (IFError *)error forResource: (NSString *)resourceDescription partialProgress: (IFLoadProgress *)progress fromDataSource: (IFWebDataSource *)dataSource
 {
-    WEBKIT_ASSERT ([self mainFrame] != nil);
-
-    [[self mainFrame] _checkLoadComplete: error];
+    // Do nothing.  Subclasses typically override this method.
 }
-
 
 // ---------------------------------------------------------------------
 // IFLocationChangeHandler
@@ -225,8 +210,9 @@ static id IFLoadProgressMake()
 
 - (void)locationChangeDone: (IFError *)error forFrame: (IFWebFrame *)frame
 {    
-    [[frame view] setNeedsLayout: YES];
-    [[frame view] setNeedsDisplay: YES];
+    if ([frame errors]){
+        NSLog (@"received the following errors loading frame %@:\n%@\n", [frame name], [frame errors]);
+    }
 }
 
 - (void)receivedPageTitle: (NSString *)title forDataSource: (IFWebDataSource *)dataSource
@@ -244,7 +230,7 @@ static id IFLoadProgressMake()
 {
     NSArray *frames;
     int i, count;
-    IFWebFrame *result;
+    IFWebFrame *result, *aFrame;
     
     if ([frame dataSource] == dataSource)
         return frame;
@@ -255,8 +241,8 @@ static id IFLoadProgressMake()
     frames = [[frame dataSource] children];
     count = [frames count];
     for (i = 0; i < count; i++){
-        frame = [frames objectAtIndex: i];
-        result = [self _frameForDataSource: dataSource fromFrame: frame];
+        aFrame = [frames objectAtIndex: i];
+        result = [self _frameForDataSource: dataSource fromFrame: aFrame];
         if (result)
             return result;
     }
@@ -264,8 +250,8 @@ static id IFLoadProgressMake()
     frames = [[frame provisionalDataSource] children];
     count = [frames count];
     for (i = 0; i < count; i++){
-        frame = [frames objectAtIndex: i];
-        result = [self _frameForDataSource: dataSource fromFrame: frame];
+        aFrame = [frames objectAtIndex: i];
+        result = [self _frameForDataSource: dataSource fromFrame: aFrame];
         if (result)
             return result;
     }

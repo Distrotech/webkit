@@ -52,6 +52,17 @@ RenderApplet::RenderApplet(HTMLElementImpl *applet, QMap<QString, QString> args 
     setInline(true);
 
 #ifdef APPLE_CHANGES
+    // FIXME:MERGE Is this needed any more?
+#if 0
+    NodeImpl *child = m_applet->firstChild();
+    while(child) {
+        if(child->id() == ID_PARAM) {
+            HTMLParamElementImpl *p = static_cast<HTMLParamElementImpl *>(child);
+            args.insert(p->name(), p->value());
+        }
+        child = child->nextSibling();
+    }
+#endif
     setQWidget( new WCJavaAppletWidget(args));
 #else /* APPLE_CHANGES not defined */
     KJavaAppletContext *context = 0;

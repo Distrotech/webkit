@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 34;
+	objectVersion = 36;
 	objects = {
 		014CEA440018CDF011CA2923 = {
 			buildRules = (
@@ -119,7 +119,6 @@
 			buildSettings = {
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
-				FRAMEWORK_SEARCH_PATHS = /symroots;
 				FRAMEWORK_VERSION = A;
 				HEADER_SEARCH_PATHS = ../WebCore/include;
 				INSTALL_PATH = "";
@@ -194,6 +193,7 @@
 				9CF0E24B021361B10ECA16EA,
 				F5B92B840223191D01C1A525,
 				F5DE3CB4023575AA01A80181,
+				F5D538EA02441F2601A80181,
 			);
 			isa = PBXHeadersBuildPhase;
 		};
@@ -203,6 +203,8 @@
 				089C1668FE841158C02AAC07,
 				35F3577501986B740ACA1520,
 				35F357800198AAB80ACA1520,
+				F515C2B90238249C01C1A525,
+				F5B67131023EDF8901C1A525,
 			);
 			isa = PBXResourcesBuildPhase;
 		};
@@ -227,6 +229,7 @@
 				F520FB1C0221DEFD01C1A525,
 				F5B92B850223191D01C1A525,
 				F5DE3CB5023575AA01A80181,
+				F5D538ED02441FDD01A80181,
 			);
 			isa = PBXSourcesBuildPhase;
 		};
@@ -255,6 +258,7 @@
 				35F3577E0198AAB80ACA1520,
 				089C1666FE841158C02AAC07,
 				35F3577401986B740ACA1520,
+				F5B67130023EDF8901C1A525,
 			);
 			isa = PBXGroup;
 			name = Resources;
@@ -347,6 +351,7 @@
 				25A5593201A5996D0ECA149E,
 				F5DE3CB2023575AA01A80181,
 				F5DE3CB3023575AA01A80181,
+				F515C2B70238249C01C1A525,
 			);
 			isa = PBXGroup;
 			name = Misc;
@@ -949,6 +954,8 @@
 				9CF0E249021361B00ECA16EA,
 				9CF0E24A021361B00ECA16EA,
 				F5143A370221DCCE01A80181,
+				F5D538E802441F2601A80181,
+				F5D538EC02441FDD01A80181,
 			);
 			isa = PBXGroup;
 			name = WebView;
@@ -1000,6 +1007,27 @@
 			settings = {
 			};
 		};
+		F515C2B70238249C01C1A525 = {
+			children = (
+				F515C2B80238249C01C1A525,
+			);
+			isa = PBXVariantGroup;
+			name = IFError.strings;
+			path = "";
+			refType = 4;
+		};
+		F515C2B80238249C01C1A525 = {
+			isa = PBXFileReference;
+			name = English;
+			path = English.lproj/IFError.strings;
+			refType = 4;
+		};
+		F515C2B90238249C01C1A525 = {
+			fileRef = F515C2B70238249C01C1A525;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F520FB190221DEFD01C1A525 = {
 			isa = PBXFileReference;
 			path = IFWebHistory.h;
@@ -1025,6 +1053,18 @@
 			settings = {
 			};
 		};
+		F5B67130023EDF8901C1A525 = {
+			isa = PBXFileReference;
+			name = url_icon.tiff;
+			path = Resources/url_icon.tiff;
+			refType = 4;
+		};
+		F5B67131023EDF8901C1A525 = {
+			fileRef = F5B67130023EDF8901C1A525;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F5B92B820223191D01C1A525 = {
 			isa = PBXFileReference;
 			path = IFWebHistoryPrivate.h;
@@ -1043,6 +1083,30 @@
 		};
 		F5B92B850223191D01C1A525 = {
 			fileRef = F5B92B830223191D01C1A525;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5D538E802441F2601A80181 = {
+			isa = PBXFileReference;
+			name = IFMainURLHandleClient.h;
+			path = WebView.subproj/IFMainURLHandleClient.h;
+			refType = 2;
+		};
+		F5D538EA02441F2601A80181 = {
+			fileRef = F5D538E802441F2601A80181;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5D538EC02441FDD01A80181 = {
+			isa = PBXFileReference;
+			name = IFMainURLHandleClient.mm;
+			path = WebView.subproj/IFMainURLHandleClient.mm;
+			refType = 2;
+		};
+		F5D538ED02441FDD01A80181 = {
+			fileRef = F5D538EC02441FDD01A80181;
 			isa = PBXBuildFile;
 			settings = {
 			};

@@ -1,3 +1,8 @@
+2002-03-20  Maciej Stachowiak  <mjs@apple.com>
+
+	Merged accumlated changes from HEAD, up to
+	MERGED_TO_KDE_3_MERGE_BRANCH tag.
+
 2002-03-19  Maciej Stachowiak  <mjs@apple.com>
 
 	Fixed two more crashers. Tree now looks pretty stable.

@@ -75,6 +75,14 @@ static int selectorDynamicState;
 static CSSStyleSelector::Encodedurl *encodedurl;
 
 
+#ifdef APPLE_CHANGES
+#define OPTIMIZE_STRING_USAGE
+#ifdef OPTIMIZE_STRING_USAGE
+static CFMutableStringRef reuseableString = 0;
+#endif
+#endif
+
+
 CSSStyleSelector::CSSStyleSelector( KHTMLView *view, QString userStyleSheet, StyleSheetListImpl *styleSheets,
                                     const KURL &url, bool _strictParsing )
 {
@@ -481,7 +489,13 @@ static void checkPseudoState( DOM::ElementImpl *e )
 	pseudoState = PseudoNone;
 	return;
     }
+#if (defined(APPLE_CHANGES) && defined(OPTIMIZE_STRING_USAGE))
+    QString u = QString::gstring_toQString(&reuseableString, (UniChar *)(attr.unicode()), attr.length());
+#else
+        // Pseudo elements. We need to check first child here. No dynamic pseudo
+        // elements for the moment
     QString u = attr.string();
+#endif
     if ( !u.contains("://") ) {
 	if ( u[0] == '/' )
 	    u = encodedurl->host + u;
@@ -580,10 +594,14 @@ bool CSSStyleSelector::checkOneSelector(DOM::CSSSelector *sel, DOM::ElementImpl 
     }
     if(sel->match == CSSSelector::Pseudo)
     {
+#if (defined(APPLE_CHANGES) && defined(OPTIMIZE_STRING_USAGE))
+	const QString value = QString::gstring_toQString(&reuseableString, (UniChar *)(sel->value.unicode()), sel->value.length());
+#else
         // Pseudo elements. We need to check first child here. No dynamic pseudo
         // elements for the moment
 	const QString& value = sel->value.string();
-//	kdDebug() << "CSSOrderedRule::pseudo " << value << endl;
+#endif
+	//kdDebug() << "CSSOrderedRule::pseudo " << value << endl;
 	if(value == "first-child") {
 	    // first-child matches the first child that is an element!
 	    DOM::NodeImpl *n = e->parentNode()->firstChild();
@@ -2328,7 +2346,8 @@ void khtml::applyRule(khtml::RenderStyle *style, DOM::CSSProperty *prop, DOM::El
             if(!item->isPrimitiveValue()) continue;
             CSSPrimitiveValueImpl *val = static_cast<CSSPrimitiveValueImpl *>(item);
             if(!val->primitiveType() == CSSPrimitiveValue::CSS_STRING) return;
-            QString face = static_cast<FontFamilyValueImpl *>(val)->fontName();
+	    // FIXME:MERGE removed optimization to avoid allocating QString here
+	    QString face = static_cast<FontFamilyValueImpl *>(val)->fontName();
 	    if ( !face.isNull() || face.isEmpty() ) {
 		const KHTMLSettings *s = e->getDocument()->view()->part()->settings();
 		if(face == "serif") {

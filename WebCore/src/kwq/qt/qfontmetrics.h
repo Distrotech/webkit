@@ -42,7 +42,6 @@
 
 class QFontMetricsPrivate;
 
-
 // class QFontMetrics ==========================================================
 
 class QFontMetrics {
@@ -60,6 +59,10 @@ public:
     QFontMetrics(const QFontMetrics &);
     ~QFontMetrics();
 
+    // operators ---------------------------------------------------------------
+
+    QFontMetrics &operator=(const QFontMetrics &);
+
     // member functions --------------------------------------------------------
 
     int ascent() const;
@@ -67,6 +70,11 @@ public:
     int width(QChar) const;
     int width(char) const;
     int width(const QString &, int len=-1) const;
+#if (defined(__APPLE__))
+    int _width (CFStringRef string) const;
+    int _width (const UniChar *uchars, int len) const;
+#endif
+
     int descent() const;
     QRect boundingRect(const QString &, int len=-1) const;
     QRect boundingRect(QChar) const;
@@ -76,26 +84,10 @@ public:
         int *tabarray=0, char **intern=0 ) const;
     int rightBearing(QChar) const;
     int leftBearing(QChar) const;
-
-    // operators ---------------------------------------------------------------
-
-    QFontMetrics &operator=(const QFontMetrics &);
-
-// protected -------------------------------------------------------------------
-// private ---------------------------------------------------------------------
-#ifdef _KWQ_
-    int baselineOffset();
-    void _initialize();
-#if (defined(__APPLE__) && defined(__OBJC__) && defined(__cplusplus))
-    //void _initializeWithData(QFontMetricsPrivate *);
-    void _initializeWithFont (NSFont *font);
-#else
-    void _initializeWithFont(void *);
-#endif
-    void _free();
+    int baselineOffset() const;
     
-    QFontMetricsPrivate *data;
-#endif
+private:
+    KWQRefPtr<QFontMetricsPrivate> data;
 
 }; // class QFontMetrics =======================================================
 

@@ -158,6 +158,7 @@ static id IFPluginMake(NSRect rect, WCPlugin *plugin, NSString *url, NSString *m
         notificationCenter = [NSNotificationCenter defaultCenter];
         [notificationCenter addObserver:self selector:@selector(viewHasMoved:) name:@"NSViewBoundsDidChangeNotification" object:[self findSuperview:@"NSClipView"]];
         [notificationCenter addObserver:self selector:@selector(viewHasMoved:) name:@"NSWindowDidResizeNotification" object:[self window]];
+        [notificationCenter addObserver:self selector:@selector(windowWillClose:) name:@"NSWindowWillCloseNotification" object:[self window]];
         [self sendActivateEvent];
         if(URL)
             [self newStream:URL mimeType:mime notifyData:NULL];
@@ -166,6 +167,7 @@ static id IFPluginMake(NSRect rect, WCPlugin *plugin, NSString *url, NSString *m
         transferred = TRUE;
         webView = [self findSuperview:@"IFWebView"];
         webController = [webView controller];
+        trackingTag = [self addTrackingRect:[self bounds] owner:self userData:nil assumeInside:NO];
     }
     [self sendUpdateEvent];
 }
@@ -175,10 +177,10 @@ static id IFPluginMake(NSRect rect, WCPlugin *plugin, NSString *url, NSString *m
     return YES;
 }
 
--(void) viewHasMoved:(NSNotification *)note
+-(void) viewHasMoved:(NSNotification *)notification
 {
-    [self setWindow];
     [self sendUpdateEvent];
+    [self setWindow];
 }
 
 - (void) setWindow
@@ -230,6 +232,11 @@ static id IFPluginMake(NSRect rect, WCPlugin *plugin, NSString *url, NSString *m
         }
     }
     return nil;
+}
+
+- (void) windowWillClose:(NSNotification *)notification
+{
+    [self stop];
 }
 
 
@@ -461,22 +468,17 @@ static id IFPluginMake(NSRect rect, WCPlugin *plugin, NSString *url, NSString *m
     EventRecord event;
     bool acceptedEvent;
     
-    KWQDebug("NPP_HandleEvent(mouseEntered)\n");
-    if([theEvent trackingNumber] != trackingTag)
-        return;
     event.what = adjustCursorEvent;
     event.when = (uint32)([theEvent timestamp] * 60);
     acceptedEvent = NPP_HandleEvent(instance, &event);
-    KWQDebug("NPP_HandleEvent(mouseEntered): %dn", acceptedEvent);
+    KWQDebug("NPP_HandleEvent(mouseEntered): %d\n", acceptedEvent);
 }
 
 - (void)mouseExited:(NSEvent *)theEvent
 {
     EventRecord event;
     bool acceptedEvent;
-    
-    if([theEvent trackingNumber] != trackingTag)
-        return;    
+     
     event.what = adjustCursorEvent;
     event.when = (uint32)([theEvent timestamp] * 60);
     acceptedEvent = NPP_HandleEvent(instance, &event);
@@ -602,6 +604,11 @@ static id IFPluginMake(NSRect rect, WCPlugin *plugin, NSString *url, NSString *m
 -(void)invalidateRegion:(NPRegion)invalidateRegion
 {
     KWQDebug("NPN_InvalidateRegion\n");
+}
+
+-(void)start
+{
+
 }
 
 - (void)stop

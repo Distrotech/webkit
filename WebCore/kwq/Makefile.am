@@ -152,6 +152,9 @@ INCLUDES = \
 	$(KDELIBS_INCLUDES) \
 	$(WEBCORE_INCLUDES) \
 	-I$(top_srcdir)/WebFoundation/Misc.subproj \
+	-I/System/Library/Frameworks/ApplicationServices.framework/Frameworks/ \
+	-F/System/Library/Frameworks/ApplicationServices.framework/Frameworks \
+	-I/System/Library/Frameworks/ApplicationServices.framework/Frameworks/QD.framework/PrivateHeaders \
 	-F$(SYMROOTS) \
 	$(NULL)
 

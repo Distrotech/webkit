@@ -22,34 +22,12 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
-#import <Cocoa/Cocoa.h> 
 
-#include <kwqdebug.h>
+#include <qstylesheet.h>
+#include <qstring.h>
 
-#import <KWQMetrics.h>
-
-@interface KWQTextStorage : NSTextStorage
+QString QStyleSheet::convertFromPlainText(const QString &str)
 {
-    NSDictionary *attributes;
-    NSString *string;
-    int stringCapacity;
-    NSMutableDictionary *fragmentCache;
-    NSLayoutManager *_layoutManager;
-#ifdef SPACE_OPTIMIZATION
-    id <KWQLayoutFragment> spaceFragment;
-    id <KWQLayoutFragment> expandedFragment;
-#endif
+    return QString(str);
 }
 
-- (id)initWithFontAttribute:(NSDictionary *)attrs;
-- (void)setAttributes: (NSDictionary *)at;
-
-- (id <KWQLayoutFragment>)getFragmentForString: (NSString *)string;
-
-- (void)setString: (NSString *)dString;
-
-#ifdef _DEBUG_LAYOUT_FRAGMENT
-- (NSDictionary *)fragmentCache;
-#endif
-
-@end
