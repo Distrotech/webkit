@@ -439,7 +439,7 @@ void RenderBlock::layoutBlock(bool relayoutChildren)
 
     // Expand our intrinsic height to encompass floats.
     int toAdd = borderBottom() + paddingBottom();
-    if (style()->overflow() == OSCROLL && m_layer)
+    if (style()->hidesOverflow() && m_layer)
         toAdd += m_layer->horizontalScrollbarHeight();
     if ( hasOverhangingFloats() && (isInlineBlockOrInlineTable() || isFloatingOrPositioned() || style()->hidesOverflow() ||
                                     (parent() && parent()->isFlexibleBox())) )
@@ -512,7 +512,7 @@ void RenderBlock::layoutBlockChildren( bool relayoutChildren )
         xPos = m_width - paddingRight() - borderRight();
 
     int toAdd = borderBottom() + paddingBottom();
-    if (style()->overflow() == OSCROLL && m_layer)
+    if (style()->hidesOverflow() && m_layer)
         toAdd += m_layer->horizontalScrollbarHeight();
     
     m_height = borderTop() + paddingTop();
@@ -1156,7 +1156,8 @@ void RenderBlock::paint(QPainter* p, int _x, int _y, int _w, int _h, int _tx, in
         if (m_firstLineBox && m_firstLineBox->topOverflow() < 0)
             yPos += m_firstLineBox->topOverflow();
         
-        if( (yPos > _y + _h) || (_ty + h < _y))
+        int os = 2*maximalOutlineSize(paintAction);
+        if( (yPos >= _y + _h + os) || (_ty + h <= _y - os))
             return;
     }
 
