@@ -111,7 +111,6 @@
 				0867D69EFE84028FC02AAC07,
 				0867D69FFE84028FC02AAC07,
 				0867D6A0FE84028FC02AAC07,
-				6573C63B03A0BE5700FCA39F,
 			);
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
@@ -133,7 +132,6 @@
 				PREFIX_HEADER = WebCorePrefix.h;
 				PRODUCT_NAME = WebCore;
 				SECTORDER_FLAGS = "";
-				SKIP_INSTALL = YES;
 				USE_GCC3_PFE_SUPPORT = YES;
 				WARNING_CFLAGS = "$(WARNING_COMMONFLAGS)";
 				WARNING_COMMONFLAGS = "-Werror -Wall -W -Wcast-align -Wchar-subscripts -Wformat-security -Wmissing-format-attribute -Wmissing-prototypes -Wpointer-arith -Wwrite-strings -Wno-format-y2k -Wno-unused-parameter";
@@ -831,29 +829,6 @@
 //512
 //513
 //514
-//650
-//651
-//652
-//653
-//654
-		6573C63B03A0BE5700FCA39F = {
-			buildActionMask = 8;
-			files = (
-			);
-			generatedFileNames = (
-			);
-			isa = PBXShellScriptBuildPhase;
-			neededFileNames = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-			shellPath = /bin/sh;
-			shellScript = "mkdir -p /WebCore/Library/Frameworks; ditto ${SYMROOT}/WebCore.framework /WebCore/Library/Frameworks/";
-		};
-//650
-//651
-//652
-//653
-//654
 //930
 //931
 //932
