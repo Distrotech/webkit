@@ -234,7 +234,7 @@ public:
     NodeIteratorImpl *createNodeIterator(NodeImpl *root, unsigned long whatToShow,
                                     NodeFilter &filter, bool entityReferenceExpansion, int &exceptioncode);
 
-    TreeWalkerImpl *createTreeWalker(Node root, unsigned long whatToShow, NodeFilter &filter,
+    TreeWalkerImpl *createTreeWalker(const Node &root, unsigned long whatToShow, const NodeFilter &filter,
                             bool entityReferenceExpansion);
 
     virtual void recalcStyle( StyleChange = NoChange );
