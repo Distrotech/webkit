@@ -1,8 +1,10 @@
+=== WebCore-125.6.3 ===
+
 
 2004-04-20  Vicki Murley  <vicki@apple.com>
 
 	- fixed <rdar://problem/3626076>: (REGRESSION (10.3.3-7H40): some tables rendering 
-	incorrectly) by merging more of the zeldmand change (3609695) and fixing HRs
+	incorrectly) by merging more of the zeldman change (3609695) and fixing HRs
 
         * khtml/css/html4.css: margins on HRs should be smaller, to match other browsers
         * khtml/rendering/render_block.cpp:
