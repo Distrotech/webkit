@@ -23,8 +23,6 @@ libkhtmlecma_o_SOURCES = \
 	kjs_proxy.h \
 	kjs_range.cpp \
 	kjs_range.h \
-	kjs_text.cpp \
-	kjs_text.h \
 	kjs_traversal.cpp \
 	kjs_traversal.h \
 	kjs_views.cpp \

@@ -1,3 +1,17 @@
+2002-03-13  Maciej Stachowiak  <mjs@apple.com>
+
+	Remove files from build that are no longer in KDE 3 beta 2:
+
+	* src/kdelibs/khtml/ecma/Makefile.am:
+	* src/kdelibs/khtml/ecma/kjs_text.cpp:
+	* src/kdelibs/khtml/ecma/kjs_text.h:
+	* src/kdelibs/khtml/misc/Makefile.am:
+	* src/kdelibs/khtml/misc/font.cpp:
+	* src/kdelibs/khtml/misc/font.h:
+	* src/kdelibs/khtml/rendering/Makefile.am:
+	* src/kdelibs/khtml/rendering/render_hr.cpp:
+	* src/kdelibs/khtml/rendering/render_hr.h:
+
 2002-03-08  Don Melton  <gramps@apple.com>
 
 	Merged kdelibs from KDE 3 beta 2 into our 2.2.1-based sources.
