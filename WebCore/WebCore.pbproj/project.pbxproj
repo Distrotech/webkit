@@ -520,6 +520,7 @@
 				654E7EE40569FD4600358BD2,
 				654E7EE50569FD4600358BD2,
 				84B2B1F9056BEF3A00D2B771,
+				BE0A4D3F057FA132005C7113,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -785,6 +786,7 @@
 				654E7EE30569FD4600358BD2,
 				84B2B1FA056BEF3A00D2B771,
 				84B2B250056BF15F00D2B771,
+				BE0A4D40057FA132005C7113,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2361,6 +2363,34 @@
 //BE2
 //BE3
 //BE4
+		BE0A4D3D057FA132005C7113 = {
+			expectedFileType = sourcecode.c.h;
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			path = htmlediting.h;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		BE0A4D3E057FA132005C7113 = {
+			expectedFileType = sourcecode.cpp.cpp;
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			path = htmlediting.cpp;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		BE0A4D3F057FA132005C7113 = {
+			fileRef = BE0A4D3D057FA132005C7113;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		BE0A4D40057FA132005C7113 = {
+			fileRef = BE0A4D3E057FA132005C7113;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		BE26F15305517DE000BFA0C3 = {
 			expectedFileType = sourcecode.c.h;
 			fileEncoding = 30;
@@ -4640,6 +4670,8 @@
 				F523D24D02DE4396018635CA,
 				F523D24E02DE4396018635CA,
 				F523D24F02DE4396018635CA,
+				BE0A4D3D057FA132005C7113,
+				BE0A4D3E057FA132005C7113,
 				F523D25002DE4396018635CA,
 				F523D25102DE4396018635CA,
 				F523D25202DE4396018635CA,
