@@ -568,6 +568,8 @@ public:
     virtual int borderLeft() const { return style()->borderLeftWidth(); }
     virtual int borderRight() const { return style()->borderRightWidth(); }
 
+    virtual void absoluteRects(QValueList<QRect>& rects, int _tx, int _ty);
+
 #if APPLE_CHANGES
     virtual void addFocusRingRects(QPainter *painter, int _tx, int _ty);
 #endif
