@@ -2078,7 +2078,7 @@ void RenderTableCell::paint(QPainter *p, int _x, int _y,
     if (needsLayout()) return;
 
     _tx += m_x;
-    _ty += m_y;
+    _ty += m_y + _topExtra;
 
     // check if we need to do anything at all...
     int os = 2*maximalOutlineSize(paintAction);
