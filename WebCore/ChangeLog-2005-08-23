@@ -1,3 +1,9 @@
+2004-04-15  Vicki Murley  <vicki@apple.com>
+
+	Fix mismatched_CFBundleShortVersionStrings verification failure
+
+        * English.lproj/InfoPlist.strings:
+
 === WebCore-125.6 ===
 
 2004-04-14  Vicki Murley  <vicki@apple.com>
