@@ -43,6 +43,8 @@
 #include "decoder.h"
 #endif
 
+#include "htmlediting.h"
+
 class QPaintDevice;
 class QPaintDeviceMetrics;
 class KHTMLView;
@@ -58,6 +60,7 @@ namespace khtml {
     class DocLoader;
     class CSSStyleSelectorList;
     class RenderImage;
+    class EditCommand;
 }
 
 namespace DOM {
@@ -405,6 +408,8 @@ public:
     bool hasWindowEventListener(int id);
 
     EventListener *createHTMLEventListener(QString code);
+    
+    bool applyEditing(khtml::EditCommand *);
 
     /**
      * Searches through the document, starting from fromNode, for the next selectable element that comes after fromNode.
