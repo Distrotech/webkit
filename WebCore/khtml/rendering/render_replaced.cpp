@@ -19,7 +19,6 @@
  * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  *
- * $Id$
  */
 #include "render_replaced.h"
 #include "render_root.h"
@@ -30,10 +29,12 @@
 #include <qevent.h>
 #include <qapplication.h>
 
+#include "khtml_ext.h"
 #include "khtmlview.h"
 #include "xml/dom2_eventsimpl.h"
 #include "khtml_part.h"
 #include "xml/dom_docimpl.h" // ### remove dependency
+#include <kdebug.h>
 
 using namespace khtml;
 using namespace DOM;
@@ -109,7 +110,7 @@ short RenderReplaced::baselinePosition( bool ) const
     return height()+marginTop()+marginBottom();
 }
 
-void RenderReplaced::position(int x, int y, int, int, int, bool, bool)
+void RenderReplaced::position(int x, int y, int, int, int, bool, bool, int)
 {
     m_x = x + marginLeft();
     m_y = y + marginTop();
@@ -124,9 +125,6 @@ RenderWidget::RenderWidget(DOM::NodeImpl* node)
     // a replaced element doesn't support being anonymous
     assert(node);
     m_view = node->getDocument()->view();
-    m_paintingSelf = false;
-    m_ignorePaintEvents = false;
-    m_widgetShown = false;
 
     // this is no real reference counting, its just there
     // to make sure that we're not deleted while we're recursed
@@ -158,6 +156,14 @@ RenderWidget::~RenderWidget()
     delete m_widget;
 }
 
+static void resizeWidget( QWidget *widget, int w, int h )
+{
+    // ugly hack to limit the maximum size of the widget (as X11 has problems if it's bigger)
+    h = QMIN( h, 3072 );
+    w = QMIN( w, 2000 );
+    widget->resize( w, h );
+}
+
 void RenderWidget::setQWidget(QWidget *widget)
 {
     if (widget != m_widget)
@@ -175,12 +181,15 @@ void RenderWidget::setQWidget(QWidget *widget)
             // if we're already layouted, apply the calculated space to the
             // widget immediately
             if (layouted()) {
-                m_widget->resize( m_width-borderLeft()-borderRight()-paddingLeft()-paddingRight(),
-                                  m_height-borderLeft()-borderRight()-paddingLeft()-paddingRight());
+		// ugly hack to limit the maximum size of the widget (as X11 has problems if it's bigger)
+		resizeWidget( m_widget,
+			      m_width-borderLeft()-borderRight()-paddingLeft()-paddingRight(),
+			      m_height-borderLeft()-borderRight()-paddingLeft()-paddingRight() );
             }
             else
                 setPos(xPos(), -500000);
         }
+	m_view->addChild( m_widget, -500000, 0 );
     }
 }
 
@@ -188,9 +197,12 @@ void RenderWidget::layout( )
 {
     KHTMLAssert( !layouted() );
     KHTMLAssert( minMaxKnown() );
-    if ( m_widget )
-        m_widget->resize( m_width-borderLeft()-borderRight()-paddingLeft()-paddingRight(),
-                          m_height-borderLeft()-borderRight()-paddingLeft()-paddingRight());
+    if ( m_widget ) {
+	resizeWidget( m_widget,
+		      m_width-borderLeft()-borderRight()-paddingLeft()-paddingRight(),
+		      m_height-borderLeft()-borderRight()-paddingLeft()-paddingRight() );
+    }
+
     setLayouted();
 }
 
@@ -207,7 +219,6 @@ void RenderWidget::setStyle(RenderStyle *_style)
         m_widget->setFont(style()->font());
         if (style()->visibility() != VISIBLE) {
             m_widget->hide();
-            m_widgetShown = false;
         }
     }
 
@@ -215,14 +226,13 @@ void RenderWidget::setStyle(RenderStyle *_style)
     setSpecialObjects(false);
 }
 
-void RenderWidget::printObject(QPainter *p, int, int, int, int, int _tx, int _ty)
+void RenderWidget::printObject(QPainter* /*p*/, int, int, int, int, int _tx, int _ty)
 {
     if (!m_widget || !m_view)
 	return;
 
     if (style()->visibility() != VISIBLE) {
 	m_widget->hide();
-	m_widgetShown = false;
 	return;
     }
 
@@ -352,45 +362,21 @@ void RenderWidget::handleDOMEvent(EventImpl *evt)
 		doRepaint = true;
 	    delete event;
 	}
-    }
-    else if (evt->id() == EventImpl::DOMFOCUSIN_EVENT) {
-	QFocusEvent focusEvent(QEvent::FocusIn);
-
-	m_widget->setFocusProxy(m_view);
-	m_view->setFocus();
-
-	sendWidgetEvent(&focusEvent);
-	doRepaint = true;
-    }
-    else if (evt->id() == EventImpl::DOMFOCUSOUT_EVENT) {
-	QFocusEvent focusEvent(QEvent::FocusOut);
-
-	m_widget->setFocusProxy(0);
-
-	sendWidgetEvent(&focusEvent);
-	doRepaint = true;
-    }
-    else if (evt->id() == EventImpl::KHTML_KEYDOWN_EVENT ||
-	     evt->id() == EventImpl::KHTML_KEYUP_EVENT) {
-	KeyEventImpl *keyEvent = static_cast<KeyEventImpl*>(evt);
-
-	if (sendWidgetEvent(keyEvent->qKeyEvent)) {
-	    keyEvent->qKeyEvent->accept();
-	    doRepaint = true;
+	yNew = QMIN( yNew, yPos + m_height - childh );
+	yNew = QMAX( yNew, yPos );
+	if ( yNew != childy || xNew != childx ) {
+	    if ( vw->contentsHeight() < yNew - yPos + childh )
+		vw->resizeContents( vw->contentsWidth(), yNew - yPos + childh );
+	    vw->setContentsPos( xNew - xPos, yNew - yPos );
 	}
+	xPos = xNew;
+	yPos = yNew;
     }
-
-    if (doRepaint) {
-	int xpos = 0;
-	int ypos = 0;
-	absolutePosition(xpos,ypos);
-	m_view->updateContents(xpos,ypos,width(),height());
-    }
-
-    evt->setDefaultHandled();
+    m_view->addChild(m_widget, xPos, yPos );
+    m_widget->show();
 }
 
-bool RenderWidget::sendWidgetEvent(QEvent *event)
+bool RenderWidget::eventFilter(QObject* /*o*/, QEvent* e)
 {
     m_view->setIgnoreEvents(true);
     m_ignorePaintEvents = true;
@@ -408,6 +394,7 @@ bool RenderWidget::sendWidgetEvent(QEvent *event)
 
     return eventHandled;
 }
+
 
 #include "render_replaced.moc"
 

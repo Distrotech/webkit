@@ -15,6 +15,7 @@
 #define	WebKitCursiveFontPreferenceKey		@"WebKitCursiveFont"
 #define	WebKitFantasyFontPreferenceKey		@"WebKitFantasyFont"
 #define	WebKitMinimumFontSizePreferenceKey	@"WebKitMinimumFontSize"
+#define	WebKitMediumFontSizePreferenceKey	@"WebKitMediumFontSize"
 #define	WebKitFontSizesPreferenceKey		@"WebKitFontSizes"
 #define	WebKitJavaEnabledPreferenceKey		@"WebKitJavaEnabled"
 #define	WebKitJScriptEnabledPreferenceKey	@"WebKitJScriptEnabled"
@@ -59,6 +60,7 @@ static IFPreferences *_standardPreferences = nil;
         @"Apple Chancery", 		WebKitCursiveFontPreferenceKey,
         @"Papyrus", 			WebKitFantasyFontPreferenceKey,
         @"6", 				WebKitMinimumFontSizePreferenceKey,
+        @"12", 				WebKitMediumFontSizePreferenceKey,
         @"1.5",		 		WebKitInitialTimedLayoutDelayPreferenceKey,
         @"4096", 			WebKitInitialTimedLayoutSizePreferenceKey,
         @"1.5", 			WebKitResourceTimedLayoutDelayPreferenceKey,

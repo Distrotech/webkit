@@ -34,8 +34,12 @@
 
 #include "misc/loader.h"
 
+#include "rendering/render_style.h"
+
 #include <kdebug.h>
 #include <qregexp.h>
+#include <qpaintdevice.h>
+#include <qpaintdevicemetrics.h>
 
 // Hack for debugging purposes
 extern DOM::DOMString getPropertyName(unsigned short id);
@@ -56,6 +60,23 @@ CSSStyleDeclarationImpl::CSSStyleDeclarationImpl(CSSRuleImpl *parent, QPtrList<C
     m_node = 0;
 }
 
+CSSStyleDeclarationImpl&  CSSStyleDeclarationImpl::operator= (const CSSStyleDeclarationImpl& o)
+{
+    // don't attach it to the same node, just leave the current m_node value
+    delete m_lstValues;
+    m_lstValues = 0;
+    if (o.m_lstValues) {
+        m_lstValues = new QPtrList<CSSProperty>;
+        m_lstValues->setAutoDelete( true );
+
+        QPtrListIterator<CSSProperty> lstValuesIt(*o.m_lstValues);
+        for (lstValuesIt.toFirst(); lstValuesIt.current(); ++lstValuesIt)
+            m_lstValues->append(new CSSProperty(*lstValuesIt.current()));
+    }
+
+    return *this;
+}
+
 CSSStyleDeclarationImpl::~CSSStyleDeclarationImpl()
 {
     delete m_lstValues;
@@ -70,9 +91,7 @@ CSSValueImpl *CSSStyleDeclarationImpl::getPropertyCSSValue( int propertyID )
     for (lstValuesIt.toLast(); lstValuesIt.current(); --lstValuesIt)
         if (lstValuesIt.current()->m_id == propertyID && !lstValuesIt.current()->nonCSSHint)
             return lstValuesIt.current()->value();
-#if APPLE_CHANGES
     return 0;
-#endif
 }
 
 DOMString CSSStyleDeclarationImpl::removeProperty( int propertyID, bool NonCSSHint )
@@ -350,6 +369,64 @@ void CSSPrimitiveValueImpl::cleanup()
     m_type = 0;
 }
 
+int CSSPrimitiveValueImpl::computeLength( khtml::RenderStyle *style, QPaintDeviceMetrics *devMetrics )
+{
+    return ( int ) computeLengthFloat( style, devMetrics );
+}
+
+float CSSPrimitiveValueImpl::computeLengthFloat( khtml::RenderStyle *style, QPaintDeviceMetrics *devMetrics )
+{
+    unsigned short type = primitiveType();
+
+    float dpiY = 72.; // fallback
+    if ( devMetrics )
+        dpiY = devMetrics->logicalDpiY();
+#ifdef APPLE_CHANGES
+    // FIXME: SCREEN_RESOLUTION hack good enough to keep?
+    if ( !khtml::printpainter && dpiY < SCREEN_RESOLUTION )
+        dpiY = SCREEN_RESOLUTION;
+#else /* APPLE_CHANGES not defined */
+    if ( !khtml::printpainter && dpiY < 96 )
+        dpiY = 96.;
+#endif /* APPLE_CHANGES not defined */
+    
+    float factor = 1.;
+    switch(type)
+    {
+    case CSSPrimitiveValue::CSS_EMS:
+       	factor = style->font().pixelSize();
+		break;
+    case CSSPrimitiveValue::CSS_EXS:
+	{
+        QFontMetrics fm = style->fontMetrics();
+        QRect b = fm.boundingRect('x');
+        factor = b.height();
+        break;
+	}
+    case CSSPrimitiveValue::CSS_PX:
+        break;
+    case CSSPrimitiveValue::CSS_CM:
+	factor = dpiY/2.54; //72dpi/(2.54 cm/in)
+        break;
+    case CSSPrimitiveValue::CSS_MM:
+	factor = dpiY/25.4;
+        break;
+    case CSSPrimitiveValue::CSS_IN:
+            factor = dpiY;
+        break;
+    case CSSPrimitiveValue::CSS_PT:
+            factor = dpiY/72.;
+        break;
+    case CSSPrimitiveValue::CSS_PC:
+        // 1 pc == 12 pt
+            factor = dpiY*12./72.;
+        break;
+    default:
+        return -1;
+    }
+    return getFloatValue(type)*factor;
+}
+
 void CSSPrimitiveValueImpl::setFloatValue( unsigned short unitType, float floatValue, int &exceptioncode )
 {
     exceptioncode = 0;
@@ -574,14 +651,18 @@ FontFamilyValueImpl::FontFamilyValueImpl( const QString &string)
 {
 #ifdef APPLE_CHANGES
     parsedFontName = string;
+    // a languge tag is often added in braces at the end. Remove it.
     parsedFontName.replace(QRegExp(" \\(.*\\)$"), "");
+    // remove [Xft] qualifiers
+    parsedFontName.replace(QRegExp(" \\[.*\\]$"), "");
 #else
     const QString &available = KHTMLSettings::availableFamilies();
 
     QString face = string.lower();
     // a languge tag is often added in braces at the end. Remove it.
     face = face.replace(QRegExp(" \\(.*\\)$"), "");
-    parsedFontName = face;
+    // remove [Xft] qualifiers
+    face = face.replace(QRegExp(" \\[.*\\]$"), "");
     //kdDebug(0) << "searching for face '" << face << "'" << endl;
     if(face == "serif" ||
        face == "sans-serif" ||

@@ -1,3 +1,12 @@
+2002-04-15  Darin Adler  <darin@apple.com>
+
+        Merged changes from previous merge branch.
+
+        2002-03-25  Darin Adler  <darin@apple.com>
+
+	* WebView.subproj/IFPreferences.mm: (+[IFPreferences load]):
+        Add WebKitMediumFontSizePreferenceKey.
+
 2002-04-12  Chris Blumenberg  <cblu@apple.com>
 
 	Fixed build failure. Forgot to make IFDownloadHandler.h
