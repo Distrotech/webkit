@@ -35,10 +35,6 @@
 
 using namespace khtml;
 
-#ifdef APPLE_CHANGES
-static inline int max(int a, int b) { return a > b ? a : b; }
-#endif
-
 void Font::drawText( QPainter *p, int x, int y, QChar *str, int slen, int pos, int len,
         int toAdd, QPainter::TextDirection d, int from, int to, QColor bg ) const
 {
@@ -105,7 +101,7 @@ void Font::drawText( QPainter *p, int x, int y, QChar *str, int slen, int pos, i
 int Font::width( QChar *chs, int slen, int pos, int len ) const
 {
 #ifdef APPLE_CHANGES
-    return fm._width(chs + pos, max(len, slen - pos));
+    return fm._width(chs + pos, kMin(len, slen - pos));
 #else
     QString qstr = QConstString(chs+pos, slen-pos).string();
 
@@ -163,6 +159,9 @@ void Font::update( QPaintDeviceMetrics* devMetrics ) const
     f.setItalic( fontDef.italic );
     f.setWeight( fontDef.weight );
 
+#ifdef APPLE_CHANGES
+    f.setPixelSize(fontDef.size);
+#else
     QFontDatabase db;
 
     int size = fontDef.size;
@@ -200,6 +199,7 @@ void Font::update( QPaintDeviceMetrics* devMetrics ) const
 //   	   fontDef.weight, size );
 
     f.setPixelSize( size );
+#endif
 
     fm = QFontMetrics( f );
 #ifndef APPLE_CHANGES

@@ -1669,5 +1669,5 @@ void KHTMLPart::setSheetUsed(const QString &qs)
 
 int KHTMLPart::zoomFactor(void) const
 {
-    return 1;
+    return 100;
 }

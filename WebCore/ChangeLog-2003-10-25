@@ -1,5 +1,16 @@
 2002-04-15  Darin Adler  <darin@apple.com>
 
+	Fix text to it displays at the right font size.
+
+	* src/kdelibs/khtml/css/cssstyleselector.cpp:
+	(CSSStyleSelector::computeFontSizes): Apply the same SCREEN_RESOLUTION hack here
+	that we do elsewhere.
+	* src/kdelibs/khtml/rendering/font.cpp: (Font::width): Use kMin instead of max (oops).
+	(Font::update): Turn off font database chicanery.
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::zoomFactor): Use zoom factor 100, not 1.
+
+2002-04-15  Darin Adler  <darin@apple.com>
+
 	More fixes so text displays (still at wrong font size).
 
 	* src/kdelibs/khtml/rendering/font.cpp: (max): New helper.

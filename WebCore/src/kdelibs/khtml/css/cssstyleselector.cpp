@@ -226,7 +226,11 @@ void CSSStyleSelector::computeFontSizes(QPaintDeviceMetrics* paintDeviceMetrics,
 {
     // ### get rid of float / double
     float toPix = paintDeviceMetrics->logicalDpiY()/72.;
+#ifdef APPLE_CHANGES
+    if (toPix  < SCREEN_RESOLUTION/72) toPix = SCREEN_RESOLUTION/72;
+#else
     if (toPix  < 96./72.) toPix = 96./72.;
+#endif
 
     m_fontSizes.clear();
     const float factor = 1.2;
@@ -2173,13 +2177,10 @@ void CSSStyleSelector::applyRule( DOM::CSSProperty *prop )
         float size = 0;
         int minFontSize = settings->minFontSize();
 
+#ifndef APPLE_CHANGES
         float toPix = paintDeviceMetrics->logicalDpiY()/72.;
-#ifdef APPLE_CHANGES
-        // FIXME: SCREEN_RESOLUTION hack good enough to keep?
-        if (toPix  < SCREEN_RESOLUTION/72) toPix = SCREEN_RESOLUTION/72;
-#else /* APPLE_CHANGES not defined */
         if (toPix  < 96./72.) toPix = 96./72.;
-#endif /* APPLE_CHANGES not defined */
+#endif
 
         if(parentNode) {
             oldSize = parentStyle->font().pixelSize();
