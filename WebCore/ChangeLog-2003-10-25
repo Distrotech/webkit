@@ -1,5 +1,22 @@
 2003-02-07  Ken Kocienda  <kocienda@apple.com>
 
+	Rolled changes from trunk onto branch to fix this bug:
+
+	Radar 3165860 (REGRESSION: most of the page disappears when you mouse over DHTML at rollingstone.com)
+
+	Original comment for checkin:
+
+	    2003-02-06  David Hyatt  <hyatt@apple.com>
+	    
+	    Fix rollingstone regression.
+	    
+	    Reviewed by mjs
+	    
+	    * khtml/rendering/render_object.cpp:
+	    (RenderObject::setLayouted):
+
+2003-02-07  Ken Kocienda  <kocienda@apple.com>
+
         Moved Darin's copyright changes onto this branch.
 
         * khtml/rendering/render_table.cpp:
