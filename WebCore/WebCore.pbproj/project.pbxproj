@@ -21,7 +21,6 @@
 			buildRules = (
 			);
 			buildSettings = {
-				DEBUGGING_SYMBOLS = NO;
 			};
 			isa = PBXBuildStyle;
 			name = Deployment;
@@ -63,8 +62,6 @@
 			buildStyles = (
 				014CEA440018CDF011CA2923,
 				014CEA450018CDF011CA2923,
-				F58C8A07025BD3BC018635CA,
-				F531DDEC02F0C34D018635CA,
 			);
 			hasScannedForEncodings = 1;
 			isa = PBXProject;
@@ -114,8 +111,6 @@
 				0867D69EFE84028FC02AAC07,
 				0867D69FFE84028FC02AAC07,
 				0867D6A0FE84028FC02AAC07,
-				255AF6590250FC030ECA149E,
-				6573C63B03A0BE5700FCA39F,
 			);
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
@@ -123,11 +118,11 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXPORTED_SYMBOLS_FILE = WebCore.exp;
-				FRAMEWORK_SEARCH_PATHS = "\"$(APPLE_INTERNAL_LIBRARY_DIR)/Frameworks\" \"${DSTROOT}/AppleInternal/Library/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS = /WebCore/Library/Frameworks;
 				FRAMEWORK_VERSION = A;
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				HEADER_SEARCH_PATHS = ForwardingHeaders;
-				INSTALL_PATH = "@executable_path/../Frameworks";
+				INSTALL_PATH = /WebCore/Library/Frameworks;
 				LIBRARY_SEARCH_PATHS = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.2;
 				OPTIMIZATION_CFLAGS = "-Os";
@@ -137,7 +132,6 @@
 				PREFIX_HEADER = WebCorePrefix.h;
 				PRODUCT_NAME = WebCore;
 				SECTORDER_FLAGS = "";
-				SKIP_INSTALL = YES;
 				USE_GCC3_PFE_SUPPORT = YES;
 				WARNING_CFLAGS = "$(WARNING_COMMONFLAGS)";
 				WARNING_COMMONFLAGS = "-Werror -Wall -W -Wcast-align -Wchar-subscripts -Wformat-security -Wmissing-format-attribute -Wmissing-prototypes -Wpointer-arith -Wwrite-strings -Wno-format-y2k -Wno-unused-parameter";
@@ -160,7 +154,7 @@
 	<key>CFBundleExecutable</key>
 	<string>WebCore</string>
 	<key>CFBundleGetInfoString</key>
-	<string>1.0 Beta, Copyright 2001-2002 Apple Computer, Inc.</string>
+	<string>1.0 Beta, Copyright 2001-2002 Apple Computer, Inc.; Copyright 1997 Martin Jones &lt;mjones@kde.org&gt;; Copyright 1998, 1999 Torben Weis &lt;weis@kde.org&gt;; Copyright 1998, 1999, 2002 Waldo Bastian &lt;bastian@kde.org&gt;; Copyright 1998-2000 Lars Knoll &lt;knoll@kde.org&gt;; Copyright 1999, 2001 Antti Koivisto &lt;koivisto@kde.org&gt;; Copyright 1999-2001 Harri Porten &lt;porten@kde.org&gt;; Copyright 2000 Simon Hausmann &lt;hausmann@kde.org&gt;; Copyright 2000, 2001 Dirk Mueller &lt;mueller@kde.org&gt;; Copyright 2000, 2001 Peter Kelly &lt;pmk@post.com&gt;; Copyright 2000 Daniel Molkentin &lt;molkentin@kde.org&gt;; Copyright 2000 Stefan Schimanski &lt;schimmi@kde.org&gt;; Copyright © 1998-2000 Netscape Communications Corporation.</string>
 	<key>CFBundleIconFile</key>
 	<string></string>
 	<key>CFBundleIdentifier</key>
@@ -172,9 +166,9 @@
 	<key>CFBundleShortVersionString</key>
 	<string>0.8</string>
 	<key>CFBundleVersion</key>
-	<string>48u</string>
+	<string>48</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright 2001-2002 Apple Computer, Inc.</string>
+	<string>Copyright 2001-2002 Apple Computer, Inc.; Copyright 1997 Martin Jones &lt;mjones@kde.org&gt;; Copyright 1998, 1999 Torben Weis &lt;weis@kde.org&gt;; Copyright 1998, 1999, 2002 Waldo Bastian &lt;bastian@kde.org&gt;; Copyright 1998-2000 Lars Knoll &lt;knoll@kde.org&gt;; Copyright 1999, 2001 Antti Koivisto &lt;koivisto@kde.org&gt;; Copyright 1999-2001 Harri Porten &lt;porten@kde.org&gt;; Copyright 2000 Simon Hausmann &lt;hausmann@kde.org&gt;; Copyright 2000, 2001 Dirk Mueller &lt;mueller@kde.org&gt;; Copyright 2000, 2001 Peter Kelly &lt;pmk@post.com&gt;; Copyright 2000 Daniel Molkentin &lt;molkentin@kde.org&gt;; Copyright 2000 Stefan Schimanski &lt;schimmi@kde.org&gt;; Copyright © 1998-2000 Netscape Communications Corporation.</string>
 	<key>NSPrincipalClass</key>
 	<string></string>
 	<key>SKIP_INSTALL</key>
@@ -764,29 +758,6 @@
 //082
 //083
 //084
-//250
-//251
-//252
-//253
-//254
-		255AF6590250FC030ECA149E = {
-			buildActionMask = 2147483647;
-			files = (
-			);
-			generatedFileNames = (
-			);
-			isa = PBXShellScriptBuildPhase;
-			neededFileNames = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if [ -f ../Tools/Scripts/embed-into-alex ]; then sh ../Tools/Scripts/embed-into-alex; fi";
-		};
-//250
-//251
-//252
-//253
-//254
 //350
 //351
 //352
@@ -858,29 +829,6 @@
 //512
 //513
 //514
-//650
-//651
-//652
-//653
-//654
-		6573C63B03A0BE5700FCA39F = {
-			buildActionMask = 8;
-			files = (
-			);
-			generatedFileNames = (
-			);
-			isa = PBXShellScriptBuildPhase;
-			neededFileNames = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-			shellPath = /bin/sh;
-			shellScript = "ditto ${SYMROOT}/WebCore.framework ${DSTROOT}/AppleInternal/Library/Frameworks/WebCore.framework";
-		};
-//650
-//651
-//652
-//653
-//654
 //930
 //931
 //932
@@ -4160,16 +4108,6 @@
 			isa = PBXGroup;
 			path = xml;
 			refType = 4;
-		};
-		F531DDEC02F0C34D018635CA = {
-			buildRules = (
-			);
-			buildSettings = {
-				i386 = YES;
-				ppc = YES;
-			};
-			isa = PBXBuildStyle;
-			name = DeploymentFat;
 		};
 		F54A61D302E3523B01A80180 = {
 			fileEncoding = 30;
@@ -7693,18 +7631,6 @@
 			path = "";
 			refType = 4;
 		};
-		F58C8A07025BD3BC018635CA = {
-			buildRules = (
-			);
-			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				DEBUG_CFLAGS = "";
-				EXPORTED_SYMBOLS_FILE = "WebCore-combined.exp";
-				OPTIMIZATION_CFLAGS = "-O";
-			};
-			isa = PBXBuildStyle;
-			name = Mixed;
-		};
 		F58EF58D02DFDFB7018635CA = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
@@ -7952,8 +7878,9 @@
 //F84
 		F8216299029F4FB501000131 = {
 			isa = PBXFrameworkReference;
-			path = JavaScriptCore.framework;
-			refType = 3;
+			name = JavaScriptCore.framework;
+			path = /WebCore/Library/Frameworks/JavaScriptCore.framework;
+			refType = 0;
 		};
 		F82162D7029F4FB501000131 = {
 			fileRef = F8216299029F4FB501000131;
