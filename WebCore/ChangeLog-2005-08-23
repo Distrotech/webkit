@@ -1,5 +1,78 @@
 2004-01-19  Ken Kocienda  <kocienda@apple.com>
 
+        Reviewed by me.
+
+	Made KHTMLPart now use a KHTMLSelection object rather
+	than its own member variables to track the selection.
+
+	Reorganized KHTMLSelection to use a "base and extent"
+	rather than a "start and end". This makes the "pivot
+	around mouse click" behavior while clicking and
+	dragging to make a selection much easier to implement.
+
+	Some other improvements to KHTMLSelection as well,
+	like some more overloaded operators.
+
+        * khtml/editing/htmlediting.cpp:
+        (EditCommand::deleteSelection):
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::init):
+        (KHTMLPart::clear):
+        (KHTMLPart::findTextNext):
+        (KHTMLPart::hasSelection):
+        (KHTMLPart::selection):
+        (KHTMLPart::setSelection):
+        (KHTMLPart::slotClearSelection):
+        (startAndEndLineNodesIncludingNode):
+        (KHTMLPart::isPointInsideSelection):
+        (KHTMLPart::handleMousePressEventDoubleClick):
+        (KHTMLPart::handleMousePressEventTripleClick):
+        (KHTMLPart::handleMousePressEventSingleClick):
+        (KHTMLPart::handleMouseMoveEventSelection):
+        (KHTMLPart::khtmlMouseReleaseEvent):
+        (KHTMLPart::selectAll):
+        (KHTMLPart::caret):
+        * khtml/khtml_part.h:
+        * khtml/khtml_selection.cpp:
+        (KHTMLSelection::KHTMLSelection):
+        (KHTMLSelection::~KHTMLSelection):
+        (KHTMLSelection::operator=):
+        (KHTMLSelection::setSelection):
+        (KHTMLSelection::setBase):
+        (KHTMLSelection::setExtent):
+        (KHTMLSelection::clearSelection):
+        (KHTMLSelection::setBaseNode):
+        (KHTMLSelection::setBaseOffset):
+        (KHTMLSelection::setExtentNode):
+        (KHTMLSelection::setExtentOffset):
+        (KHTMLSelection::invalidate):
+        (KHTMLSelection::isEmpty):
+        (KHTMLSelection::repaint):
+        (KHTMLSelection::nodeIsBeforeNode):
+        * khtml/khtml_selection.h:
+        (KHTMLSelection::startNode):
+        (KHTMLSelection::startOffset):
+        (KHTMLSelection::endNode):
+        (KHTMLSelection::endOffset):
+        (KHTMLSelection::dump):
+        (operator==):
+        (operator!=):
+        * khtml/khtmlpart_p.h:
+        (KHTMLPartPrivate::KHTMLPartPrivate):
+        (KHTMLPartPrivate::~KHTMLPartPrivate):
+        * khtml/khtmlview.cpp:
+        * khtml/xml/dom_docimpl.cpp:
+        (DocumentImpl::setSelection):
+        * khtml/xml/dom_docimpl.h:
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::jumpToSelection):
+        (KWQKHTMLPart::selectionStartOffset):
+        (KWQKHTMLPart::selectionEndOffset):
+        (KWQKHTMLPart::selectionStart):
+        (KWQKHTMLPart::selectionEnd):
+
+2004-01-19  Ken Kocienda  <kocienda@apple.com>
+
         Reviewed by me
 
 	Initial pass at trying to clean up mouse event handling

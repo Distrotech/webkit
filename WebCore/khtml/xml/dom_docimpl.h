@@ -49,6 +49,7 @@ class QPaintDevice;
 class QPaintDeviceMetrics;
 class KHTMLView;
 class KHTMLPart;
+class KHTMLSelection;
 class Tokenizer;
 class RenderArena;
 
@@ -258,6 +259,7 @@ public:
     void setVisuallyOrdered();
 
     void setSelection(NodeImpl* s, int sp, NodeImpl* e, int ep);
+    void setSelection(const KHTMLSelection &);
     void clearSelection();
 
     void open();

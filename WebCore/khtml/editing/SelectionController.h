@@ -55,25 +55,33 @@ public:
 
     void setSelection(DOM::NodeImpl *node, long offset);
     void setSelection(const DOM::Range &);
-    void setSelection(DOM::NodeImpl *startNode, long startOffset, DOM::NodeImpl *endNode, long endOffset);
+    void setSelection(DOM::NodeImpl *baseNode, long baseOffset, DOM::NodeImpl *extentNode, long extentOffset);
+    void setBase(DOM::NodeImpl *node, long offset);
+    void setExtent(DOM::NodeImpl *node, long offset);
     void clearSelection();
 
-    DOM::NodeImpl *startNode() const { return m_startNode; }
-    long startOffset() const { return m_startOffset; }
+    DOM::NodeImpl *startNode() const { return m_baseIsStart ? m_baseNode : m_extentNode; }
+    long startOffset() const { return m_baseIsStart ? m_baseOffset : m_extentOffset; }
 
-    DOM::NodeImpl *endNode() const { return m_endNode; }
-    long endOffset() const { return m_endOffset; }
-
-    DOM::NodeImpl *caretNode() const { return m_extendAtEnd ? m_endNode : m_startNode; }
-    long caretOffset() const { return m_extendAtEnd ? m_endOffset : m_startOffset; }
+    DOM::NodeImpl *endNode() const { return m_baseIsStart ? m_extentNode : m_baseNode; }
+    long endOffset() const { return m_baseIsStart ? m_extentOffset : m_baseOffset; }
 
     void setVisible(bool flag=true);
     bool visible() const { return m_visible; }
     void invalidate();
     
+    bool isEmpty() const;
+    
 #ifdef APPLE_CHANGES
     void paint(QPainter *p, const QRect &rect) const;
 #endif
+
+    static bool KHTMLSelection::nodeIsBeforeNode(DOM::NodeImpl *n1, DOM::NodeImpl *n2);
+
+    KHTMLSelection &operator=(const KHTMLSelection &o);
+    
+    friend bool operator==(const KHTMLSelection &a, const KHTMLSelection &b);
+    friend bool operator!=(const KHTMLSelection &a, const KHTMLSelection &b);
     
     friend class KHTMLPart;
     
@@ -83,29 +91,45 @@ private:
     void timerEvent(QTimerEvent *e);
     void repaint(bool immediate=false) const;
 
-	void setStartNode(DOM::NodeImpl *);
-	void setStartOffset(long);
-	void setEndNode(DOM::NodeImpl *);
-	void setEndOffset(long);
+	void setBaseNode(DOM::NodeImpl *);
+	void setBaseOffset(long);
+	void setExtentNode(DOM::NodeImpl *);
+	void setExtentOffset(long);
+    
+    void dump() {
+        fprintf(stderr, "selection: %p:%d ; %p:%d\n", m_baseNode, m_baseOffset, m_extentNode, m_extentOffset);
+    }
 
-    KHTMLPart *m_part;          // part for this selection
-    DOM::NodeImpl *m_startNode; // start node for the selection
-    long m_startOffset;         // offset into start node where selection starts
-    DOM::NodeImpl *m_endNode;   // end node for the selection
-    long m_endOffset;           // offset into end node where selection starts
+    KHTMLPart *m_part;            // part for this selection
+    DOM::NodeImpl *m_baseNode;    // start node for the selection
+    long m_baseOffset;            // offset into base node where selection is
+    DOM::NodeImpl *m_extentNode;  // extent node for the selection
+    long m_extentOffset;          // offset into extent node where selection is
 
-	EState m_state;             // the state of the selection
+	EState m_state;               // the state of the selection
 
-    int m_caretBlinkTimer;      // caret blink frequency timer id
+    int m_caretBlinkTimer;        // caret blink frequency timer id
 	
 	int m_caretX;
 	int m_caretY;
 	int m_caretSize;
 
-	bool m_extendAtEnd : 1;     // true if the selection "extends" at the end when arrowing
+	bool m_baseIsStart : 1;     // true if base node is before the extent node
     bool m_caretBlinks : 1;     // true if caret blinks
     bool m_caretPaint : 1;      // flag used to deal with blinking the caret
     bool m_visible : 1;         // true if selection is to be displayed at all
 };
+
+
+inline bool operator==(const KHTMLSelection &a, const KHTMLSelection &b)
+{
+    return a.startNode() == b.startNode() && a.startOffset() == b.startOffset() &&
+        a.endNode() == b.endNode() && a.endOffset() == b.endOffset();
+}
+
+inline bool operator!=(const KHTMLSelection &a, const KHTMLSelection &b)
+{
+    return !(a == b);
+}
 
 #endif

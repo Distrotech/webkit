@@ -569,7 +569,7 @@ public:
   /**
    * Sets the current selection.
    */
-  void setSelection(const DOM::Range &, bool placeCaret=true);
+  void setSelection(const DOM::Range &);
 
   /**
    * Returns the text for a part of the document.

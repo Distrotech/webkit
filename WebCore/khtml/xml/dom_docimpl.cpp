@@ -51,6 +51,7 @@
 
 #include "khtmlview.h"
 #include "khtml_part.h"
+#include "khtml_selection.h"
 
 #include <kglobalsettings.h>
 #include <kstringhandler.h>
@@ -1174,6 +1175,15 @@ void DocumentImpl::setSelection(NodeImpl* s, int sp, NodeImpl* e, int ep)
 {
     if ( m_render )
         static_cast<RenderCanvas*>(m_render)->setSelection(s->renderer(),sp,e->renderer(),ep);
+}
+
+void DocumentImpl::setSelection(const KHTMLSelection &s)
+{
+    if (m_render) {
+        RenderObject *startRenderer = s.startNode() ? s.startNode()->renderer() : 0;
+        RenderObject *endRenderer = s.endNode() ? s.endNode()->renderer() : 0;
+        static_cast<RenderCanvas*>(m_render)->setSelection(startRenderer, s.startOffset(), endRenderer, s.endOffset());
+    }
 }
 
 void DocumentImpl::clearSelection()

@@ -52,8 +52,8 @@ enum { CARET_BLINK_FREQUENCY = 500 };
 KHTMLSelection::KHTMLSelection() 
 	: QObject(),
 	  m_part(0),
-	  m_startNode(0), m_startOffset(0), m_endNode(0), m_endOffset(0),
-	  m_state(NONE), m_caretBlinkTimer(0), m_extendAtEnd(true),
+	  m_baseNode(0), m_baseOffset(0), m_extentNode(0), m_extentOffset(0),
+	  m_state(NONE), m_caretBlinkTimer(0), m_baseIsStart(true),
 	  m_caretBlinks(true), m_caretPaint(false), m_visible(false)
 {
 }
@@ -61,20 +61,20 @@ KHTMLSelection::KHTMLSelection()
 KHTMLSelection::KHTMLSelection(const KHTMLSelection &o)
 	: QObject(),
 	  m_part(o.m_part),
-	  m_startNode(0), m_startOffset(0), m_endNode(0), m_endOffset(0)
+	  m_baseNode(0), m_baseOffset(0), m_extentNode(0), m_extentOffset(0)
 {
-    if (o.m_startNode) {
-        m_startNode = o.m_startNode;
-        m_startNode->ref();
+    if (o.m_baseNode) {
+        m_baseNode = o.m_baseNode;
+        m_baseNode->ref();
     }
-    if (o.m_endNode) {
-        m_endNode = o.m_endNode;
-        m_endNode->ref();
+    if (o.m_extentNode) {
+        m_extentNode = o.m_extentNode;
+        m_extentNode->ref();
     }
 
 	m_state = o.m_state;
 	m_caretBlinkTimer = o.m_caretBlinkTimer;
-	m_extendAtEnd = o.m_extendAtEnd;
+	m_baseIsStart = o.m_baseIsStart;
 	m_caretBlinks = o.m_caretBlinks;
 	m_caretPaint = o.m_caretPaint;
 	m_visible = o.m_visible;
@@ -83,18 +83,50 @@ KHTMLSelection::KHTMLSelection(const KHTMLSelection &o)
 
 KHTMLSelection::~KHTMLSelection()
 {
-    if (m_startNode)
-        m_startNode->deref();
-    if (m_endNode)
-        m_endNode->deref();
+    if (m_baseNode)
+        m_baseNode->deref();
+    if (m_extentNode)
+        m_extentNode->deref();
+}
+
+KHTMLSelection &KHTMLSelection::operator=(const KHTMLSelection &o)
+{
+    m_part = o.m_part;
+    
+    if (m_baseNode)
+        m_baseNode->deref();
+    m_baseNode = 0;
+
+    if (o.m_baseNode) {
+        m_baseNode = o.m_baseNode;
+        m_baseNode->ref();
+    }
+
+    if (m_extentNode)
+        m_extentNode->deref();
+    m_extentNode = 0;
+
+    if (o.m_extentNode) {
+        m_extentNode = o.m_extentNode;
+        m_extentNode->ref();
+    }
+
+	m_state = o.m_state;
+	m_caretBlinkTimer = o.m_caretBlinkTimer;
+	m_baseIsStart = o.m_baseIsStart;
+	m_caretBlinks = o.m_caretBlinks;
+	m_caretPaint = o.m_caretPaint;
+	m_visible = o.m_visible;
+    invalidate();
+    return *this;
 }
 
 void KHTMLSelection::setSelection(DOM::NodeImpl *node, long offset)
 {
-	setStartNode(node);
-	setEndNode(node);
-	setStartOffset(offset);
-	setEndOffset(offset);
+	setBaseNode(node);
+	setExtentNode(node);
+	setBaseOffset(offset);
+	setExtentOffset(offset);
 	invalidate();
 }
 
@@ -106,58 +138,72 @@ void KHTMLSelection::setSelection(const DOM::Range &r)
 
 void KHTMLSelection::setSelection(DOM::NodeImpl *startNode, long startOffset, DOM::NodeImpl *endNode, long endOffset)
 {
-	setStartNode(startNode);
-	setEndNode(endNode);
-	setStartOffset(startOffset);
-	setEndOffset(endOffset);
+	setBaseNode(startNode);
+	setExtentNode(endNode);
+	setBaseOffset(startOffset);
+	setExtentOffset(endOffset);
+	invalidate();
+}
+
+void KHTMLSelection::setBase(DOM::NodeImpl *node, long offset)
+{
+	setBaseNode(node);
+	setBaseOffset(offset);
+	invalidate();
+}
+
+void KHTMLSelection::setExtent(DOM::NodeImpl *node, long offset)
+{
+	setExtentNode(node);
+	setExtentOffset(offset);
 	invalidate();
 }
 
 void KHTMLSelection::clearSelection()
 {
-	setStartNode(0);
-	setEndNode(0);
-	setStartOffset(0);
-	setEndOffset(0);
+	setBaseNode(0);
+	setExtentNode(0);
+	setBaseOffset(0);
+	setExtentOffset(0);
 	invalidate();
 }
 
-void KHTMLSelection::setStartNode(DOM::NodeImpl *node)
+void KHTMLSelection::setBaseNode(DOM::NodeImpl *node)
 {
-	if (m_startNode == node)
+	if (m_baseNode == node)
 		return;
 
-	if (m_startNode)
-		m_startNode->deref();
+	if (m_baseNode)
+		m_baseNode->deref();
 	
-	m_startNode = node;
+	m_baseNode = node;
 	
-	if (m_startNode)
-		m_startNode->ref();
+	if (m_baseNode)
+		m_baseNode->ref();
 }
 
-void KHTMLSelection::setStartOffset(long offset)
+void KHTMLSelection::setBaseOffset(long offset)
 {
-	m_startOffset = offset;
+	m_baseOffset = offset;
 }
 
-void KHTMLSelection::setEndNode(DOM::NodeImpl *node)
+void KHTMLSelection::setExtentNode(DOM::NodeImpl *node)
 {
-	if (m_endNode == node)
+	if (m_extentNode == node)
 		return;
 
-	if (m_endNode)
-		m_endNode->deref();
+	if (m_extentNode)
+		m_extentNode->deref();
 	
-	m_endNode = node;
+	m_extentNode = node;
 	
-	if (m_endNode)
-		m_endNode->ref();
+	if (m_extentNode)
+		m_extentNode->ref();
 }
 	
-void KHTMLSelection::setEndOffset(long offset)
+void KHTMLSelection::setExtentOffset(long offset)
 {
-	m_endOffset = offset;
+	m_extentOffset = offset;
 }
 
 void KHTMLSelection::setVisible(bool flag)
@@ -169,25 +215,40 @@ void KHTMLSelection::setVisible(bool flag)
 void KHTMLSelection::invalidate()
 {
     // make sure we do not have a dangling start or end
-	if (!m_startNode) {
-		setStartNode(m_endNode);
-		setStartOffset(m_endOffset);
+	if (!m_baseNode) {
+		setBaseNode(m_extentNode);
+		setBaseOffset(m_extentOffset);
+        m_baseIsStart = true;
 	}
-	if (!m_endNode) {
-		setEndNode(m_startNode);
-		setEndOffset(m_startOffset);
+	else if (!m_extentNode) {
+		setExtentNode(m_baseNode);
+		setExtentOffset(m_baseOffset);
+        m_baseIsStart = true;
 	}
+    else {
+        if (m_baseNode == m_extentNode) {
+            if (m_baseOffset > m_extentOffset)
+                m_baseIsStart = false;
+            else 
+                m_baseIsStart = true;
+        }
+        else if (nodeIsBeforeNode(m_baseNode, m_extentNode))
+            m_baseIsStart = true;
+        else
+            m_baseIsStart = false;
+    }
 
 	// update the state
-	if (!m_startNode && !m_endNode)
+	if (!m_baseNode && !m_extentNode)
 		m_state = NONE;
-	if (m_startNode == m_endNode && m_startOffset == m_endOffset)
+	if (m_baseNode == m_extentNode && m_baseOffset == m_extentOffset)
 		m_state = CARET;
 	else
 		m_state = RANGE;
 
     // update the blink timer
-    killTimer(m_caretBlinkTimer);
+    if (m_caretBlinkTimer >= 0)
+        killTimer(m_caretBlinkTimer);
     if (m_visible && m_state == CARET && m_caretBlinks)
         m_caretBlinkTimer = startTimer(CARET_BLINK_FREQUENCY);
     else
@@ -215,10 +276,10 @@ void KHTMLSelection::invalidate()
     int newY = 0;
     int newSize = 0;
     
-    NodeImpl *node = caretNode();
+    NodeImpl *node = startNode();
     if (node && node->renderer()) {
         int w;
-        node->renderer()->caretPos(caretOffset(), true, newX, newY, w, newSize);
+        node->renderer()->caretPos(startOffset(), true, newX, newY, w, newSize);
     }
 
     // repaint the old position if necessary
@@ -237,6 +298,11 @@ void KHTMLSelection::invalidate()
         m_caretPaint = true;
         repaint();
     }
+}
+
+bool KHTMLSelection::isEmpty() const
+{
+    return m_baseNode == 0 && m_extentNode == 0;
 }
 
 #ifdef APPLE_CHANGES
@@ -280,4 +346,57 @@ void KHTMLSelection::repaint(bool immediate) const
         v->repaintContents(m_caretX, m_caretY, 1, m_caretSize);
     else
         v->updateContents(m_caretX, m_caretY, 1, m_caretSize);
+}
+
+bool KHTMLSelection::nodeIsBeforeNode(NodeImpl *n1, NodeImpl *n2) 
+{
+	if (!n1 || !n2) 
+		return true;
+ 
+ 	if (n1 == n2)
+ 		return true;
+ 
+ 	bool result = false;
+    int n1Depth = 0;
+    int n2Depth = 0;
+
+    // First we find the depths of the two nodes in the tree (n1Depth, n2Depth)
+    DOM::NodeImpl *n = n1;
+    while (n->parentNode()) {
+        n = n->parentNode();
+        n1Depth++;
+    }
+    n = n2;
+    while (n->parentNode()) {
+        n = n->parentNode();
+        n2Depth++;
+    }
+    // Climb up the tree with the deeper node, until both nodes have equal depth
+    while (n2Depth > n1Depth) {
+        n2 = n2->parentNode();
+        n2Depth--;
+    }
+    while (n1Depth > n2Depth) {
+        n1 = n1->parentNode();
+        n1Depth--;
+    }
+    // Climb the tree with both n1 and n2 until they have the same parent
+    while (n1->parentNode() != n2->parentNode()) {
+        n1 = n1->parentNode();
+        n2 = n2->parentNode();
+    }
+    // Iterate through the parent's children until n1 or n2 is found
+    n = n1->parentNode()->firstChild();
+    while (n) {
+        if (n == n1) {
+            result = true;
+            break;
+        }
+        else if (n == n2) {
+            result = false;
+            break;
+        }
+        n = n->nextSibling();
+    }
+	return result;
 }

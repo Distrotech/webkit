@@ -103,7 +103,7 @@ void EditCommand::deleteSelection()
 
     // EDIT FIXME: need to save the contents for redo
     if (document()->view() && document()->view()->part())
-        document()->view()->part()->setSelection(Range(selection().startContainer(), selection().startOffset(), selection().startContainer(), selection().startOffset()), true);
+        document()->view()->part()->setSelection(Range(selection().startContainer(), selection().startOffset(), selection().startContainer(), selection().startOffset()));
 
     selection().deleteContents();
 }

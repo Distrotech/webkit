@@ -121,11 +121,7 @@ public:
     m_bCleared = false;
     m_zoomFactor = 100;
     m_bDnd = true;
-    m_startOffset = m_endOffset = 0;
-    m_startBeforeEnd = true;
     m_extendAtEnd = true;
-    m_caret = new khtml::Caret();
-    m_selection = new KHTMLSelection();
 #if !APPLE_CHANGES
     m_linkCursor = KCursor::handCursor();
 #endif
@@ -215,8 +211,6 @@ public:
 #ifndef Q_WS_QWS
     delete m_javaContext;
 #endif
-    delete m_caret;
-    delete m_selection;
   }
 
   FrameList m_frames;
@@ -356,12 +350,7 @@ public:
   bool m_selectionInitiatedWithTripleClick:1;
   bool m_mouseMovedSinceLastMousePress:1;
 #endif
-  DOM::Node m_selectionStart;
-  long m_startOffset;
-  DOM::Node m_selectionEnd;
-  long m_endOffset;
-  khtml::Caret *m_caret;
-  KHTMLSelection *m_selection;
+  KHTMLSelection m_selection;
   QString m_overURL;
   QString m_overURLTarget;
 

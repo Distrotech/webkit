@@ -238,11 +238,6 @@ public:
     CaretViewContext *m_caretViewContext;
 };
 
-// == caret-related helper functions
-
-// defined in khtml_part.cpp
-bool isBeforeNode(DOM::Node node1, DOM::Node node2);
-
 #ifndef QT_NO_TOOLTIP
 
 void KHTMLToolTip::maybeTip(const QPoint& /*p*/)

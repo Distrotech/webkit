@@ -186,7 +186,7 @@ void KHTMLPart::init( KHTMLView *view, GUIProfile prof )
   d->m_view = view;
   setWidget( d->m_view );
   
-  d->m_selection->setPart(this);
+  d->m_selection.setPart(this);
 
 #if !APPLE_CHANGES
   d->m_guiProfile = prof;
@@ -1043,10 +1043,6 @@ void KHTMLPart::clear()
 
   d->m_bMousePressed = false;
 
-  d->m_selectionStart = DOM::Node();
-  d->m_selectionEnd = DOM::Node();
-  d->m_startOffset = 0;
-  d->m_endOffset = 0;
 #ifndef QT_NO_CLIPBOARD
   connect( kapp->clipboard(), SIGNAL( selectionChanged()), SLOT( slotClearSelection()));
 #endif
@@ -2218,15 +2214,9 @@ bool KHTMLPart::findTextNext( const QString &str, bool forward, bool caseSensiti
                   ->posOfChar(d->m_findPos, x, y);
                 d->m_view->setContentsPos(x-50, y-50);
 #endif
-
-                d->m_selectionStart = d->m_findNode;
-                d->m_startOffset = d->m_findPos;
-                d->m_selectionEnd = d->m_findNode;
-                d->m_endOffset = d->m_findPos + matchLen;
-                d->m_startBeforeEnd = true;
-
-                d->m_doc->setSelection( d->m_selectionStart.handle(), d->m_startOffset,
-                                        d->m_selectionEnd.handle(), d->m_endOffset );
+                
+                d->m_selection.setSelection(d->m_findNode, d->m_findPos, d->m_findNode, d->m_findPos + matchLen);
+                d->m_doc->setSelection(d->m_selection);
                 emitSelectionChanged();
                 return true;
             }
@@ -2458,39 +2448,31 @@ QString KHTMLPart::selectedText() const
 
 bool KHTMLPart::hasSelection() const
 {
-    return (!d->m_selectionStart.isNull() && !d->m_selectionEnd.isNull());
+    return d->m_selection.isEmpty();
 }
 
 DOM::Range KHTMLPart::selection() const
 {
     DOM::Range r = document().createRange();
     if (hasSelection()) {
-        r.setStart( d->m_selectionStart, d->m_startOffset );
-        r.setEnd( d->m_selectionEnd, d->m_endOffset );
+        r.setStart(d->m_selection.startNode(), d->m_selection.startOffset());
+        r.setEnd(d->m_selection.endNode(), d->m_selection.endOffset());
     }
     return r;
 }
 
-void KHTMLPart::setSelection(const DOM::Range &r, bool placeCaret)
+void KHTMLPart::setSelection(const DOM::Range &r)
 {
-    d->m_selectionStart = r.startContainer();
-    d->m_startOffset = r.startOffset();
-    d->m_selectionEnd = r.endContainer();
-    d->m_endOffset = r.endOffset();
-    d->m_doc->setSelection(d->m_selectionStart.handle(),d->m_startOffset,
-                           d->m_selectionEnd.handle(),d->m_endOffset);
+    d->m_selection.setSelection(r);
+    d->m_doc->setSelection(d->m_selection);
     emitSelectionChanged();
 }
 
 void KHTMLPart::slotClearSelection()
 {
     bool hadSelection = hasSelection();
-    d->m_selectionStart = 0;
-    d->m_startOffset = 0;
-    d->m_selectionEnd = 0;
-    d->m_endOffset = 0;
-    if (d->m_doc) 
-        d->m_doc->clearSelection();
+    d->m_selection.clearSelection();
+    d->m_doc->clearSelection();
     if (hadSelection)
         emitSelectionChanged();
 }
@@ -4415,7 +4397,7 @@ static bool lastRunAt(RenderObject *renderNode, int y, NodeImpl *&endNode, long 
     }
 }
 
-static bool startAndEndLineNodesIncludingNode (DOM::NodeImpl *node, int offset, DOM::Node &_startNode, long &startOffset, DOM::Node &_endNode, long &endOffset)
+static bool startAndEndLineNodesIncludingNode(DOM::NodeImpl *node, int offset, KHTMLSelection &selection)
 {
     if (node && (node->nodeType() == Node::TEXT_NODE || node->nodeType() == Node::CDATA_SECTION_NODE)){
         int pos;
@@ -4423,8 +4405,6 @@ static bool startAndEndLineNodesIncludingNode (DOM::NodeImpl *node, int offset, 
         khtml::RenderText *renderer = static_cast<khtml::RenderText *>(node->renderer());
         khtml::InlineTextBox * run = renderer->findNextInlineTextBox( offset, pos );
         DOMString t = node->nodeValue();
-        DOM::NodeImpl* startNode;
-        DOM::NodeImpl* endNode;
         
         if (!run)
             return false;
@@ -4438,6 +4418,11 @@ static bool startAndEndLineNodesIncludingNode (DOM::NodeImpl *node, int offset, 
         
         renderNode = renderNode->firstChild();
         
+        DOM::NodeImpl *startNode = 0;
+        DOM::NodeImpl *endNode = 0;
+        long startOffset;
+        long endOffset;
+        
         // Look for all the first child in the block that is on the same line
         // as the selection point.
         if (!firstRunAt (renderNode, selectionPointY, startNode, startOffset))
@@ -4448,8 +4433,8 @@ static bool startAndEndLineNodesIncludingNode (DOM::NodeImpl *node, int offset, 
         if (!lastRunAt (renderNode, selectionPointY, endNode, endOffset))
             return false;
         
-        _startNode = startNode;
-        _endNode = endNode;
+        selection.setSelection(startNode, startOffset, endNode, endOffset);
+        
         return true;
     }
     return false;
@@ -4508,9 +4493,8 @@ static void findWordBoundary(QChar *chars, int len, int position, int *start, in
 bool KHTMLPart::isPointInsideSelection(int x, int y)
 {
     // Treat an empty selection like no selection.
-    if (d->m_selectionStart == d->m_selectionEnd && d->m_startOffset == d->m_endOffset) {
+    if (d->m_selection.state() == KHTMLSelection::CARET)
         return false;
-    }
     if (!xmlDocImpl()->renderer()) {
         return false;
     }
@@ -4535,25 +4519,25 @@ bool KHTMLPart::isPointInsideSelection(int x, int y)
         return false;
     }
 
-    DOM::Node n = d->m_selectionStart;
-    while (!n.isNull()) {
+    DOM::NodeImpl *n = d->m_selection.startNode();
+    while (n) {
         if (n == node) {
-            if ((n == d->m_selectionStart && offset < d->m_startOffset) ||
-                (n == d->m_selectionEnd && offset > d->m_endOffset)) {
+            if ((n == d->m_selection.startNode() && offset < d->m_selection.startOffset()) ||
+                (n == d->m_selection.endNode() && offset > d->m_selection.endOffset())) {
                 return false;
             }
             return true;
         }
-        if (n == d->m_selectionEnd) {
+        if (n == d->m_selection.endNode()) {
             break;
         }
-        DOM::Node next = n.firstChild();
-        if (next.isNull()) {
-            next = n.nextSibling();
+        DOM::NodeImpl *next = n->firstChild();
+        if (next) {
+            next = n->nextSibling();
         }
-        while (next.isNull() && !n.parentNode().isNull()) {
-            n = n.parentNode();
-            next = n.nextSibling();
+        while (!next && n->parentNode()) {
+            n = n->parentNode();
+            next = n->nextSibling();
         }
         n = next;
     }
@@ -4580,12 +4564,8 @@ void KHTMLPart::handleMousePressEventDoubleClick(khtml::MousePressEvent *event)
 {
     QMouseEvent *mouse = event->qmouseEvent();
     DOM::Node innerNode = event->innerNode();
-    //KHTMLSelection selection;
 
-    d->m_selectionStart = 0;
-    d->m_selectionEnd = 0;
-    d->m_startOffset = 0;
-    d->m_endOffset = 0;
+    d->m_selection.clearSelection();
 
     if (mouse->button() == LeftButton && !innerNode.isNull() && innerNode.handle()->renderer()) {
         int startOffset = 0;
@@ -4598,26 +4578,21 @@ void KHTMLPart::handleMousePressEventDoubleClick(khtml::MousePressEvent *event)
             DOMString t = node->nodeValue();
             QChar *chars = t.unicode();
             uint len = t.length();
-            findWordBoundary (chars, len, startOffset, &startOffset, &endOffset);
-            //selection.setSelection(node, startOffset, node, endOffset);
-
-            d->m_selectionStart = node;
-            d->m_selectionEnd = node;
-            d->m_startOffset = startOffset;
-            d->m_endOffset = endOffset;
+            findWordBoundary(chars, len, startOffset, &startOffset, &endOffset);
+            d->m_selection.setSelection(node, startOffset, node, endOffset);
         }
     }
     
-    if (d->m_selectionStart == 0 || d->m_selectionEnd == 0) {
+    if (d->m_selection.state() == KHTMLSelection::CARET) {
         d->m_doc->clearSelection();
     }
     else {
-        d->m_initialSelectionStart = d->m_selectionStart;
-        d->m_initialSelectionStartOffset = d->m_startOffset;
-        d->m_initialSelectionEnd = d->m_selectionEnd;
-        d->m_initialSelectionEndOffset = d->m_endOffset;
+        d->m_initialSelectionStart = d->m_selection.startNode();
+        d->m_initialSelectionStartOffset = d->m_selection.startOffset();
+        d->m_initialSelectionEnd = d->m_selection.endNode();
+        d->m_initialSelectionEndOffset = d->m_selection.endOffset();
         d->m_selectionInitiatedWithDoubleClick = true;
-        d->m_doc->setSelection(d->m_selectionStart.handle(), d->m_startOffset, d->m_selectionEnd.handle(),d->m_endOffset);
+        d->m_doc->setSelection(d->m_selection);
     }
     
     emitSelectionChanged();
@@ -4629,28 +4604,25 @@ void KHTMLPart::handleMousePressEventTripleClick(khtml::MousePressEvent *event)
     QMouseEvent *mouse = event->qmouseEvent();
     DOM::Node innerNode = event->innerNode();
     
-    d->m_selectionStart = 0;
-    d->m_selectionEnd = 0;
-    d->m_startOffset = 0;
-    d->m_endOffset = 0;
+    d->m_selection.clearSelection();
     
     if (mouse->button() == LeftButton && !innerNode.isNull() && innerNode.handle()->renderer()) {
         DOM::NodeImpl* node = 0;
         int offset = 0;
         checkSelectionPoint(event, node, offset);
-        startAndEndLineNodesIncludingNode(node, offset, d->m_selectionStart, d->m_startOffset, d->m_selectionEnd, d->m_endOffset);
+        startAndEndLineNodesIncludingNode(node, offset, d->m_selection);
     }
     
-    if (d->m_selectionStart == 0 || d->m_selectionEnd == 0) {
+    if (d->m_selection.state() == KHTMLSelection::CARET) {
         d->m_doc->clearSelection();
     }
     else {
-        d->m_initialSelectionStart = d->m_selectionStart;
-        d->m_initialSelectionStartOffset = d->m_startOffset;
-        d->m_initialSelectionEnd = d->m_selectionEnd;
-        d->m_initialSelectionEndOffset = d->m_endOffset;
+        d->m_initialSelectionStart = d->m_selection.startNode();
+        d->m_initialSelectionStartOffset = d->m_selection.startOffset();
+        d->m_initialSelectionEnd = d->m_selection.endNode();
+        d->m_initialSelectionEndOffset = d->m_selection.endOffset();
         d->m_selectionInitiatedWithTripleClick = true;
-        d->m_doc->setSelection(d->m_selectionStart.handle(), d->m_startOffset, d->m_selectionEnd.handle(),d->m_endOffset);
+        d->m_doc->setSelection(d->m_selection);
     }
     
     emitSelectionChanged();
@@ -4666,9 +4638,7 @@ void KHTMLPart::handleMousePressEventSingleClick(khtml::MousePressEvent *event)
     
 	if (mouse->button() == LeftButton) {
 		if (innerNode.isNull() || !innerNode.handle()->renderer()) {
-			d->m_selectionStart = DOM::Node();
-			d->m_selectionEnd = DOM::Node();
-			d->m_startOffset = d->m_endOffset = 0;
+			d->m_selection.clearSelection();
 		}
 		else {
 #if APPLE_CHANGES
@@ -4678,12 +4648,10 @@ void KHTMLPart::handleMousePressEventSingleClick(khtml::MousePressEvent *event)
 				return;
 			}
 #endif
-			int offset = 0;
 			DOM::NodeImpl* node = 0;
-
+			int offset = 0;
         	checkSelectionPoint(event, node, offset);
-			d->m_selectionStart = d->m_selectionEnd = node;
-			d->m_startOffset = d->m_endOffset = offset;
+            d->m_selection.setSelection(node, offset);
 			d->m_doc->clearSelection();
 		}
 
@@ -4954,25 +4922,22 @@ void KHTMLPart::handleMouseMoveEventSelection(khtml::MouseMoveEvent *event)
 	// done in khtmlMousePressEvent, but not if the mouse press was on an existing selection.
 	if (!d->m_mouseMovedSinceLastMousePress) {
 		d->m_mouseMovedSinceLastMousePress = true;
-		d->m_selectionStart = node;
-		d->m_startOffset = offset;
-		d->m_selectionEnd = node;
-		d->m_endOffset = offset;
+        d->m_selection.setSelection(node, offset);
 	}
 #endif        
 
 	// we have to get to know if end is before start or not...
-	d->m_startBeforeEnd = isBeforeNode(d->m_selectionStart, node);
+	d->m_startBeforeEnd = isBeforeNode(d->m_selection.startNode(), node);
 
 #if !APPLE_CHANGES
-	d->m_selectionEnd = node;
-	d->m_endOffset = offset;
+    d->m_selection.setExtent(node, offset);
 #else
 	//
 	// Handle selection made with double-click
 	//
 	if (d->m_selectionInitiatedWithDoubleClick) {
-		int wordStartOffset = offset, wordEndOffset = offset;
+		int wordStartOffset = offset;
+        int wordEndOffset = offset;
 		
 		if (node && (node->nodeType() == Node::TEXT_NODE || node->nodeType() == Node::CDATA_SECTION_NODE)){
 			DOMString t = node->nodeValue();
@@ -4983,53 +4948,40 @@ void KHTMLPart::handleMouseMoveEventSelection(khtml::MouseMoveEvent *event)
 		}
 		if (d->m_startBeforeEnd) {
 			if (node == d->m_initialSelectionStart.handle() && node == d->m_initialSelectionEnd.handle()) {
-				d->m_selectionStart = d->m_initialSelectionStart;
-				d->m_startOffset = MIN(d->m_initialSelectionStartOffset, wordStartOffset);
 				wordEndOffset = MAX(d->m_initialSelectionEndOffset, wordEndOffset);
-				d->m_selectionEnd = node;
-				d->m_endOffset = wordEndOffset;
+                d->m_selection.setSelection(d->m_initialSelectionStart.handle(), MIN(d->m_initialSelectionStartOffset, wordStartOffset),
+                    node, wordEndOffset);
 			}
 			else {
-				d->m_selectionStart = d->m_initialSelectionStart;
-				d->m_startOffset = d->m_initialSelectionStartOffset;
-				d->m_selectionEnd = node;
-				d->m_endOffset = wordEndOffset;
+				d->m_selection.setSelection(d->m_initialSelectionStart.handle(), d->m_initialSelectionStartOffset, node, offset);
 			}
 		}
 		else {
-			d->m_selectionStart = d->m_initialSelectionEnd;
-			d->m_startOffset = d->m_initialSelectionEndOffset;
-			d->m_selectionEnd = node;
-			d->m_endOffset = wordStartOffset;
+            d->m_selection.setSelection(d->m_initialSelectionEnd.handle(), d->m_initialSelectionEndOffset, node, wordStartOffset);
 		}
 	}
 	//
 	// Handle selection made with triple-click
 	//
 	else if (d->m_selectionInitiatedWithTripleClick) {
-		DOM::Node lineStart, lineEnd;
-		long lineStartOffset, lineEndOffset;
+        KHTMLSelection line;
 		
-		if (startAndEndLineNodesIncludingNode(node, offset, lineStart, lineStartOffset, lineEnd, lineEndOffset)) {
+		if (startAndEndLineNodesIncludingNode(node, offset, line)) {
 			if (d->m_startBeforeEnd) {
-				if (node == d->m_initialSelectionStart.handle() && node == lineEnd.handle()) {
-					d->m_selectionStart = d->m_initialSelectionStart;
-					d->m_startOffset = MIN(lineStartOffset, d->m_initialSelectionStartOffset);
-					d->m_selectionEnd = lineEnd;
-					d->m_endOffset = MAX(lineEndOffset, d->m_initialSelectionEndOffset);
+				if (node == d->m_initialSelectionStart.handle() && node == line.endNode()) {
+                    d->m_selection.setSelection(d->m_initialSelectionStart.handle(),
+                        MIN(line.startOffset(), d->m_initialSelectionStartOffset),
+                        line.endNode(),
+                        MAX(line.endOffset(), d->m_initialSelectionEndOffset));
 				}
 				else {
-					d->m_selectionStart = d->m_initialSelectionStart;
-					d->m_startOffset = d->m_initialSelectionStartOffset;
-					d->m_selectionEnd = lineEnd;
-					d->m_endOffset = lineEndOffset;
+                    d->m_selection.setSelection(d->m_initialSelectionStart.handle(),
+                        d->m_initialSelectionStartOffset, line.endNode(), line.endOffset());
 				}
 			}
 			else {
-				d->m_selectionStart = d->m_initialSelectionEnd;
-				d->m_startOffset = d->m_initialSelectionEndOffset;
-				d->m_selectionEnd = lineStart;
-				d->m_endOffset = lineStartOffset;
+                d->m_selection.setSelection(d->m_initialSelectionEnd.handle(),
+                    d->m_initialSelectionEndOffset, line.startNode(), line.startOffset());
 			}
 		}
 	}
@@ -5037,24 +4989,12 @@ void KHTMLPart::handleMouseMoveEventSelection(khtml::MouseMoveEvent *event)
 	// Handle selection made with single-click
 	//
 	else {
-		d->m_selectionEnd = node;
-		d->m_endOffset = offset;
+        d->m_selection.setExtent(node, offset);
 	}
 #endif // APPLE_CHANGES     
 
-    if (!d->m_selectionStart.isNull() && !d->m_selectionEnd.isNull()) {
-        if (d->m_selectionEnd == d->m_selectionStart && d->m_endOffset < d->m_startOffset) {
-            // select with swapped start and end offsets
-            d->m_doc->setSelection(d->m_selectionStart.handle(), d->m_endOffset, d->m_selectionEnd.handle(), d->m_startOffset);
-        }
-        else if (d->m_startBeforeEnd) {
-            // select without altering start and end nodes and offsets
-            d->m_doc->setSelection(d->m_selectionStart.handle(), d->m_startOffset, d->m_selectionEnd.handle(), d->m_endOffset);
-        }
-        else {
-            // select with swapped start and end nodes and offsets
-            d->m_doc->setSelection(d->m_selectionEnd.handle(), d->m_endOffset, d->m_selectionStart.handle(), d->m_startOffset);
-        }
+    if (!d->m_selection.isEmpty()) {
+        d->m_doc->setSelection(d->m_selection);
     }
         
 #endif // KHTML_NO_SELECTION
@@ -5116,35 +5056,18 @@ void KHTMLPart::khtmlMouseReleaseEvent( khtml::MouseReleaseEvent *event )
 		d->m_dragStartPos.y() == event->qmouseEvent()->y() &&
 		!d->m_selectionInitiatedWithDoubleClick &&
 		!d->m_selectionInitiatedWithTripleClick) {
-			d->m_selectionStart = 0;
-			d->m_selectionEnd = 0;
-			d->m_startOffset = 0;
-			d->m_endOffset = 0;
+			d->m_selection.clearSelection();
 			d->m_doc->clearSelection();
 	}
 #endif
 
 #ifndef KHTML_NO_SELECTION
 	// delete selection in case start and end position are at the same point
-	if (d->m_selectionStart == d->m_selectionEnd && d->m_startOffset == d->m_endOffset) {
-		d->m_selectionStart = 0;
-		d->m_selectionEnd = 0;
-		d->m_startOffset = 0;
-		d->m_endOffset = 0;
+	if (d->m_selection.state() == KHTMLSelection::CARET) {
+        d->m_selection.clearSelection();
 	} 
 	else {
-		// make sure start is before the end
-		d->m_startBeforeEnd = isBeforeNode(d->m_selectionStart, d->m_selectionEnd);
-		if (!d->m_startBeforeEnd) {
-			// swap start and end node/offset pairs
-			DOM::Node swapNode = d->m_selectionStart;
-			d->m_selectionStart = d->m_selectionEnd;
-			d->m_selectionEnd = swapNode;
-			long swapOffset = d->m_startOffset;
-			d->m_startOffset = d->m_endOffset;
-			d->m_endOffset = swapOffset;
-            d->m_startBeforeEnd = true;
-		}
+        d->m_startBeforeEnd = true;
 	}
 	
 #ifndef QT_NO_CLIPBOARD
@@ -5349,14 +5272,9 @@ void KHTMLPart::selectAll()
     return;
   Q_ASSERT(first->renderer());
   Q_ASSERT(last->renderer());
-  d->m_selectionStart = first;
-  d->m_startOffset = 0;
-  d->m_selectionEnd = last;
-  d->m_endOffset = last->nodeValue().length();
+  d->m_selection.setSelection(first, 0, last, last->nodeValue().length());
   d->m_startBeforeEnd = true;
-
-  d->m_doc->setSelection( d->m_selectionStart.handle(), d->m_startOffset,
-                          d->m_selectionEnd.handle(), d->m_endOffset );
+  d->m_doc->setSelection(d->m_selection);
   emitSelectionChanged();
 }
 
@@ -5588,7 +5506,7 @@ void KHTMLPart::emitCaretPositionChanged()
 
 Caret *KHTMLPart::caret() const
 { 
-    return d->m_caret; 
+    return new Caret();
 }
 
 bool KHTMLPart::tabsToLinks() const
