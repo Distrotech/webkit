@@ -129,11 +129,9 @@ public:
         layoutTimerId = 0;
         complete = false;
         mousePressed = false;
-	tooltip = 0;
-#ifndef KHTML_NO_CARET
+        tooltip = 0;
         m_caretViewContext = 0;
         m_editorContext = 0;
-#endif
 #ifdef INCREMENTAL_REPAINTING
         doFullRepaint = true;
 #endif
@@ -199,7 +197,6 @@ public:
 #endif
     }
 
-#ifndef KHTML_NO_CARET
     /** this function returns an instance of the caret view context. If none
      * exists, it will be instantiated.
      */
@@ -214,7 +211,6 @@ public:
         if (!m_editorContext) m_editorContext = new EditorContext();
         return m_editorContext;
     }
-#endif // KHTML_NO_CARET
     
     QPainter *tp;
     QPixmap  *paintBuffer;
@@ -258,15 +254,11 @@ public:
 #endif
     bool mousePressed;
     KHTMLToolTip *tooltip;
-#ifndef KHTML_NO_CARET
     CaretViewContext *m_caretViewContext;
     EditorContext *m_editorContext;
-#endif // KHTML_NO_CARET
 };
 
 // == caret-related helper functions
-
-#ifndef KHTML_NO_CARET
 
 // defined in khtml_part.cpp
 bool isBeforeNode(DOM::Node node1, DOM::Node node2);
@@ -295,10 +287,7 @@ inline RenderObject *findRenderer(NodeImpl *&node)
     return r;
 }
 
-}/*end namespace*/
-
-// == end caret-related
-#endif // KHTML_NO_CARET
+} /*end namespace*/
 
 #ifndef QT_NO_TOOLTIP
 
@@ -428,15 +417,10 @@ void KHTMLView::init()
 
 void KHTMLView::clear()
 {
-
-
 //    viewport()->erase();
 
     setStaticBackground(false);
-
-#ifndef KHTML_NO_CARET
     caretOff();
-#endif
 
     d->reset();
     killTimers();
@@ -484,11 +468,9 @@ void KHTMLView::resizeEvent (QResizeEvent* e)
     if ( m_part && m_part->xmlDocImpl() )
         m_part->xmlDocImpl()->dispatchWindowEvent( EventImpl::RESIZE_EVENT, false, false );
 
-#ifndef KHTML_NO_CARET
     hideCaret();
     recalcAndStoreCaretPos();
     showCaret();
-#endif
 
     KApplication::sendPostedEvents(viewport(), QEvent::Paint);
 }
@@ -540,21 +522,19 @@ void KHTMLView::drawContents( QPainter *p, int ex, int ey, int ew, int eh )
         py += PAINT_BUFFER_HEIGHT;
     }
 
-#ifndef KHTML_NO_CARET
     if (d->m_caretViewContext && d->m_caretViewContext->visible) {
         QRect pos(d->m_caretViewContext->x, d->m_caretViewContext->y,
 		d->m_caretViewContext->width, d->m_caretViewContext->height);
         if (pos.intersects(QRect(ex, ey, ew, eh))) {
             p->setRasterOp(XorROP);
-	    p->setPen(white);
-	    if (pos.height() == 1)
-              p->drawLine(pos.topLeft(), pos.bottomRight());
-	    else {
-	      p->fillRect(pos, white);
-	    }
-	}
+            p->setPen(white);
+            if (pos.height() == 1)
+                  p->drawLine(pos.topLeft(), pos.bottomRight());
+            else {
+              p->fillRect(pos, white);
+            }
+        }
     }
-#endif // KHTML_NO_CARET
 
     khtml::DrawContentsEvent event( p, ex, ey, ew, eh );
     QApplication::sendEvent( m_part, &event );
@@ -732,11 +712,9 @@ void KHTMLView::layout()
 
     root->layout();
 
-#ifndef KHTML_NO_CARET
     hideCaret();
     recalcAndStoreCaretPos();
     showCaret();
-#endif
         
     //kdDebug( 6000 ) << "TIME: layout() dt=" << qt.elapsed() << endl;
    
@@ -1808,11 +1786,14 @@ bool KHTMLView::dispatchMouseEvent(int eventId, DOM::NodeImpl *targetNode, bool 
         }
         else if (eventId == EventImpl::MOUSEDOWN_EVENT) {
             // Focus should be shifted on mouse down, not on a click.  -dwh
+            // Blur current focus node when a link/button is clicked; this
+            // is expected by some sites that rely on onChange handlers running
+            // from form fields before the button click is processed.
 	    DOM::NodeImpl* nodeImpl = targetNode;
 	    for ( ; nodeImpl && !nodeImpl->isFocusable(); nodeImpl = nodeImpl->parentNode());
             if (nodeImpl && nodeImpl->isMouseFocusable())
                 m_part->xmlDocImpl()->setFocusNode(nodeImpl);
-            else if (!nodeImpl)
+            else if (!nodeImpl || !nodeImpl->focused())
                 m_part->xmlDocImpl()->setFocusNode(0);
         }
     }
@@ -1998,8 +1979,6 @@ void KHTMLView::complete()
     }
 }
 
-
-#ifndef KHTML_NO_CARET
 
 void KHTMLView::initCaret() 
 {
@@ -2215,9 +2194,7 @@ bool KHTMLView::moveCaretTo(NodeImpl *node, long offset, bool clearSel) {
     // also, then two caretPositionChanged signals with a null Node are
     // emitted in series.
     if (posChanged)
-        m_part->emitCaretPositionChanged(m_part->caret());
+        m_part->emitCaretPositionChanged();
     
     return folded;
 }
-
-#endif // KHTML_NO_CARET
