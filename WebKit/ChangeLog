@@ -1,6 +1,6 @@
 2004-09-28  Richard Williamson   <rjw@apple.com>
 
-	Fix for follow on problem to fix for 3791526, in particular:
+	Fix for follow on problem to fix for 3710123, in particular:
 
 	<rdar://problem/3803113> WebFrame object leaked
 
