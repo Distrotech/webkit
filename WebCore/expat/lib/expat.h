@@ -885,7 +885,7 @@ enum XML_FeatureEnum {
 
 typedef struct {
   enum XML_FeatureEnum  feature;
-  const XML_LChar      *name;
+  XML_LChar            *name;
   long int              value;
 } XML_Feature;
 
