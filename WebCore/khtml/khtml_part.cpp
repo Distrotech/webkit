@@ -269,6 +269,8 @@ void KHTMLPart::init( KHTMLView *view, GUIProfile prof )
   connect( &d->m_redirectionTimer, SIGNAL( timeout() ),
            this, SLOT( slotRedirect() ) );
 
+  connect(&d->m_lifeSupportTimer, SIGNAL(timeout()), this, SLOT(slotEndLifeSupport()));
+
 #if !APPLE_CHANGES
   d->m_dcopobject = new KHTMLPartIface(this);
 #endif
@@ -1571,12 +1573,8 @@ void KHTMLPart::write( const char *str, int len )
     jScript()->appendSourceFile(m_url.url(),decoded);
   Tokenizer* t = d->m_doc->tokenizer();
 
-  // parsing some of the page can result in running a script which
-  // could possibly destroy the part. To avoid this, ref it temporarily.
-  ref();
   if(t)
     t->write( decoded, true );
-  deref();
 }
 
 void KHTMLPart::write( const QString &str )
@@ -1598,18 +1596,11 @@ void KHTMLPart::write( const QString &str )
 
 void KHTMLPart::end()
 {
-    // Make sure we're not deallocated half-way through due to JavaScript in the onload handler.
-    // With this ref we guarantee that if we are shut down, we won't actually destroy the object
-    // until we return here.
-    ref();
-
     // make sure nothing's left in there...
     if(d->m_decoder)
         write(d->m_decoder->flush());
     if (d->m_doc)
 	d->m_doc->finishParsing();
-
-    deref();
 }
 
 #if !APPLE_CHANGES
@@ -5544,6 +5535,20 @@ void KHTMLPart::disconnectChild(const khtml::ChildFrame *child) const
         disconnect( this, SIGNAL( completed(bool) ),
                     part, SLOT( slotParentCompleted() ) );
     }
+}
+
+void KHTMLPart::keepAlive()
+{
+    if (d->m_lifeSupportTimer.isActive())
+        return;
+    ref();
+    d->m_lifeSupportTimer.start(0, true);
+}
+
+void KHTMLPart::slotEndLifeSupport()
+{
+    d->m_lifeSupportTimer.stop();
+    deref();
 }
 
 using namespace KParts;
