@@ -345,6 +345,7 @@
 				F5883BDF025E5C6A01000102,
 				F5B67131023EDF8901C1A525,
 				5128F1FA04719A4200CA2D3A,
+				99356DF10630D6DA00F78775,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -470,6 +471,7 @@
 		};
 		089C1665FE841158C02AAC07 = {
 			children = (
+				99356DEF0630D6DA00F78775,
 				35F3577E0198AAB80ACA1520,
 				932399D7034CF7F6008635CE,
 				F5883BDE025E5C6A01000102,
@@ -2570,6 +2572,41 @@
 //932
 //933
 //934
+//990
+//991
+//992
+//993
+//994
+		99356DEF0630D6DA00F78775 = {
+			children = (
+				99356DF00630D6DA00F78775,
+			);
+			isa = PBXVariantGroup;
+			name = InfoPlist.strings;
+			path = "";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		99356DF00630D6DA00F78775 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = text.plist.strings;
+			name = English;
+			path = English.lproj/InfoPlist.strings;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		99356DF10630D6DA00F78775 = {
+			fileRef = 99356DEF0630D6DA00F78775;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//990
+//991
+//992
+//993
+//994
 //9C0
 //9C1
 //9C2

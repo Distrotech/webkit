@@ -2,6 +2,15 @@
 
 2004-04-16  Vicki Murley  <vicki@apple.com>
 
+	- buildit complained about missing CFBundleName.  Add InfoPlist.strings back 
+	to the build, with only a CFBundleName (no version or copyright string)
+ 
+        * English.lproj/InfoPlist.strings: Added.
+        * WebKit.pbproj/project.pbxproj:
+
+
+2004-04-16  Vicki Murley  <vicki@apple.com>
+
         Reviewed by kocienda.
 
 	Make this change on the branch for SUPanLavender, at Amy Rapport's request
