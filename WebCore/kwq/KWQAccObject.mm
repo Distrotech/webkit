@@ -30,6 +30,7 @@
 
 #import "dom_docimpl.h"
 #import "dom_elementimpl.h"
+#import "html_inlineimpl.h"
 #import "dom_string.h"
 #import "dom2_range.h"
 #import "htmlattrs.h"
@@ -43,8 +44,10 @@
 #import "render_text.h"
 
 using DOM::ElementImpl;
+using DOM::HTMLAnchorElementImpl;
 using khtml::RenderObject;
 using khtml::RenderWidget;
+using khtml::RenderCanvas;
 
 // FIXME: This will eventually need to really localize.
 #define UI_STRING(string, comment) ((NSString *)[NSString stringWithUTF8String:(string)])
@@ -55,38 +58,6 @@ using khtml::RenderWidget;
     [super init];
     m_renderer = renderer;
     return self;
-}
-
--(long)x
-{
-    if (!m_renderer)
-        return 0;
-    int x, y;
-    m_renderer->absolutePosition(x,y);
-    return x;
-}
-
--(long)y
-{
-    if (!m_renderer)
-        return 0;
-    int x, y;
-    m_renderer->absolutePosition(x,y);
-    return y;
-}
-
--(long)width
-{
-    if (!m_renderer)
-        return 0;
-    return m_renderer->width();
-}
-
--(long)height
-{
-    if (!m_renderer)
-        return 0;
-    return m_renderer->height();
 }
 
 -(BOOL)detached
@@ -114,6 +85,19 @@ using khtml::RenderWidget;
     [data retain];
     [m_data release];
     m_data = data;
+}
+
+-(HTMLAnchorElementImpl*)anchorElement
+{
+    RenderObject* currRenderer;
+    for (currRenderer = m_renderer; 
+         currRenderer && (!currRenderer->element() || !currRenderer->element()->hasAnchor());
+         currRenderer = currRenderer->parent());
+    
+    if (!currRenderer)
+        return 0;
+    
+    return static_cast<HTMLAnchorElementImpl*>(currRenderer->element());
 }
 
 -(KWQAccObject*)firstChild
@@ -198,7 +182,7 @@ using khtml::RenderWidget;
     if (m_renderer->isText())
         return NSAccessibilityStaticTextRole;
     if (m_renderer->isImage())
-       return NSAccessibilityButtonRole;
+       return NSAccessibilityImageRole;
     if (m_renderer->isCanvas())
         return NSAccessibilityGroupRole;
     if (m_renderer->isTable() || m_renderer->isTableCell())
@@ -239,22 +223,19 @@ using khtml::RenderWidget;
     NodeImpl* e = m_renderer->element();
     DocumentImpl* d = m_renderer->document();
     if (e && d) {
-        KHTMLView* v = d->view();
-        if (v) {
-            KHTMLPart* p = v->part();
-            if (p) {
-                Range r(p->document());
-                if (m_renderer->isText()) {
-                    r.setStartBefore(e);
-                    r.setEndAfter(e);
-                    return p->text(r).getNSString();
-                }
-                if (e->firstChild()) {
-                    r.setStartBefore(e->firstChild());
-                    r.setEndAfter(e->lastChild());
-                    return p->text(r).getNSString();
-                }
-            }
+	KHTMLPart* p = d->part();
+	if (p) {
+	    Range r(p->document());
+	    if (m_renderer->isText()) {
+		r.setStartBefore(e);
+		r.setEndAfter(e);
+		return p->text(r).getNSString();
+	    }
+	    if (e->firstChild()) {
+		r.setStartBefore(e->firstChild());
+		r.setEndAfter(e->lastChild());
+		return p->text(r).getNSString();
+	    }
         }
     }
 
@@ -294,12 +275,28 @@ using khtml::RenderWidget;
 
 -(NSValue*)position
 {
-    return [NSValue valueWithPoint: NSMakePoint([self x],[self y])];
+    int x = 0;
+    int y = 0;
+    if (m_renderer) {
+        m_renderer->absolutePosition(x, y);
+        y += m_renderer->height(); // The API wants the lower-left corner, not the upper-left.
+    }
+    NSPoint point = NSMakePoint(x, y);
+    if (m_renderer && m_renderer->canvas() && m_renderer->canvas()->view()) {
+        NSView* view = m_renderer->canvas()->view()->getDocumentView();
+        point = [[view window] convertBaseToScreen: [view convertPoint: point toView:nil]];
+    }
+    return [NSValue valueWithPoint: point];
 }
 
 -(NSValue*)size
 {
-    return [NSValue valueWithSize: NSMakeSize([self width],[self height])];
+    long width = 0, height = 0;
+    if (m_renderer) {
+        width = m_renderer->width();
+        height = m_renderer->height();
+    }
+    return [NSValue valueWithSize: NSMakeSize(width, height)];
 }
 
 -(BOOL)accessibilityIsIgnored
@@ -318,25 +315,49 @@ using khtml::RenderWidget;
 
 - (NSArray *)accessibilityAttributeNames
 {
-    return [NSArray arrayWithObjects: NSAccessibilityRoleAttribute,
-        NSAccessibilityRoleDescriptionAttribute,
-        NSAccessibilityChildrenAttribute,
-        NSAccessibilityHelpAttribute,
-        NSAccessibilityParentAttribute,
-        NSAccessibilityPositionAttribute,
-        NSAccessibilitySizeAttribute,
-        //NSAccessibilitySubroleAttribute,
-        NSAccessibilityTitleAttribute,
-        NSAccessibilityValueAttribute,
-        NSAccessibilityFocusedAttribute,
-        NSAccessibilityEnabledAttribute,
-        NSAccessibilityWindowAttribute,
-        nil];
+    static NSArray* attributes = nil;
+    if (attributes == nil) {
+        attributes = [[NSArray alloc] initWithObjects: NSAccessibilityRoleAttribute,
+            NSAccessibilityRoleDescriptionAttribute,
+            NSAccessibilityChildrenAttribute,
+            NSAccessibilityHelpAttribute,
+            NSAccessibilityParentAttribute,
+            NSAccessibilityPositionAttribute,
+            NSAccessibilitySizeAttribute,
+            NSAccessibilityTitleAttribute,
+            NSAccessibilityValueAttribute,
+            NSAccessibilityFocusedAttribute,
+            NSAccessibilityEnabledAttribute,
+            NSAccessibilityWindowAttribute,
+            nil];
+    }
+    return attributes;
 }
 
 - (NSArray*)accessibilityActionNames
 {
+    static NSArray* actions = nil;
+    if ([self anchorElement]) {
+        if (actions == nil)
+            actions = [[NSArray alloc] initWithObjects: NSAccessibilityPressAction, nil];
+        return actions;
+    }
     return nil;
+}
+
+- (NSString *)accessibilityActionDescription:(NSString *)action
+{
+    // We only have the one action (press).
+    return UI_STRING("press link", "not real string value yet");
+}
+
+- (void)accessibilityPerformAction:(NSString *)action
+{
+    // We only have the one action (press).
+    // Locate the anchor element. If it doesn't exist, just bail.
+    HTMLAnchorElementImpl* anchorElt = [self anchorElement];
+    if (!anchorElt) return;
+    anchorElt->click();
 }
 
 - (BOOL)accessibilityIsAttributeSettable:(NSString*)attributeName
