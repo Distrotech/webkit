@@ -1,3 +1,12 @@
+2004-03-03  Maciej Stachowiak  <mjs@apple.com>
+
+	Actually merge the two changes below, they didn't actually get in
+	last time.
+	
+        * kwq/KWQAccObject.mm:
+        (-[KWQAccObject role]):
+        (-[KWQAccObject accessibilityIsIgnored]):
+
 === WebCore-125.1 ===
 
 2004-01-30  Maciej Stachowiak  <mjs@madness.apple.com>
