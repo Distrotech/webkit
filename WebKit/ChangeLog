@@ -1,3 +1,12 @@
+=== WebKit-89.1 ===
+
+2003-07-12  Maciej Stachowiak  <mjs@apple.com>
+
+	Try to fix OS build by making the Frameworks link in both SYMROOT
+	and DSTROOT, and at both build time and install time.
+
+        * WebKit.pbproj/project.pbxproj:
+
 === Safari-89 ===
 
 2003-07-10  Richard Williamson   <rjw@apple.com>
