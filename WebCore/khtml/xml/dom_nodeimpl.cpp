@@ -321,10 +321,21 @@ QString NodeImpl::recursive_toHTML(bool start) const
     return me;
 }
 
-void NodeImpl::getCursor(int offset, int &_x, int &_y, int &height)
+bool NodeImpl::isContentEditable() const
 {
-    if(m_render) m_render->cursorPos(offset, _x, _y, height);
-    else _x = _y = height = -1;
+    return m_parent ? m_parent->isContentEditable() : false;
+}
+
+void NodeImpl::getCaret(int offset, bool override, int &_x, int &_y, int &width, int &height)
+{
+    if (m_render) 
+        m_render->caretPos(offset, override, _x, _y, width, height);
+    else {
+        // return default values
+        _x = _y = height = -1;
+        width = 1;	// the caret has a default width of one pixel. If you want
+                   // to check for validity, only test the x-coordinate for >= 0.
+    }
 }
 
 QRect NodeImpl::getRect() const
@@ -1088,6 +1099,82 @@ RenderObject * NodeImpl::nextRenderer()
     return 0;
 }
 
+NodeImpl *NodeImpl::prevLeafNode() const
+{
+    const NodeImpl *r = this;
+    const NodeImpl *n = firstChild();
+    if (n) {
+        while (n) { 
+            r = n; 
+            n = n->firstChild(); 
+        }
+        return const_cast<NodeImpl *>(r);
+    }
+    n = r->previousSibling();
+    if (n) {
+        r = n;
+        while (n) { 
+            r = n; 
+            n = n->firstChild(); 
+        }
+        return const_cast<NodeImpl *>(r);
+    }    
+    n = r->parentNode();
+    while (n) {
+        r = n;
+        n = r->previousSibling();
+        if (n) {
+            r = n;
+            n = r->lastChild();
+            while (n) { 
+                r = n; 
+                n = n->lastChild(); 
+            }
+            return const_cast<NodeImpl *>(r);
+        }
+        n = r->parentNode();
+    }
+    return 0;
+}
+
+NodeImpl *NodeImpl::nextLeafNode() const
+{
+    const NodeImpl *r = this;
+    const NodeImpl *n = firstChild();
+    if (n) {
+        while (n) { 
+            r = n; 
+            n = n->firstChild(); 
+        }
+        return const_cast<NodeImpl *>(r);
+    }
+    n = r->nextSibling();
+    if (n) {
+        r = n;
+        while (n) { 
+            r = n; 
+            n = n->firstChild(); 
+        }
+        return const_cast<NodeImpl *>(r);
+    }
+    n = r->parentNode();
+    while (n) {
+        r = n;
+        n = r->nextSibling();
+        if (n) {
+            r = n;
+            n = r->firstChild();
+            while (n) { 
+                r = n; 
+                n = n->firstChild(); 
+            }
+            return const_cast<NodeImpl *>(r);
+        }
+        n = r->parentNode();
+    }
+    return 0;
+}
+
 void NodeImpl::createRendererIfNeeded()
 {
 #if APPLE_CHANGES
@@ -1128,6 +1215,16 @@ RenderObject *NodeImpl::createRenderer(RenderArena *arena, RenderStyle *style)
 {
     assert(false);
     return 0;
+}
+
+long NodeImpl::caretMinOffset() const
+{
+    return renderer() ? renderer()->caretMinOffset() : 0;
+}
+
+long NodeImpl::caretMaxOffset() const
+{
+    return renderer() ? renderer()->caretMaxOffset() : 1;
 }
 
 //-------------------------------------------------------------------------
