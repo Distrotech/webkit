@@ -2,7 +2,7 @@
 
         Merged fix for the following bug from HEAD:
 
-	- fixed 3183754 - returning false from key press handlers does not prevent typing or form submission
+	- fixed 3375281 - Keyboard event handlers not fired if focus not in form field
         
         * kwq/KWQKHTMLPart.mm:
         (KWQKHTMLPart::keyEvent):
