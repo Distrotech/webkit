@@ -1,3 +1,10 @@
+2004-05-14  Maciej Stachowiak  <mjs@apple.com>
+
+        Fix build bustage in last change, merge did not work in older tree.
+
+        * khtml/rendering/render_image.cpp:
+        (RenderImage::imageMap):
+
 === WebCore-125.6.5 ===
 
 2004-05-14  Maciej Stachowiak  <mjs@apple.com>
