@@ -1,5 +1,11 @@
 2002-03-20  Maciej Stachowiak  <mjs@apple.com>
 
+	* src/kdelibs/khtml/rendering/render_applet.cpp:
+	(RenderApplet::RenderApplet): Handle Java parameters properly,
+	with Chris's assistance.
+
+2002-03-20  Maciej Stachowiak  <mjs@apple.com>
+
 	Merged accumlated changes from HEAD, up to
 	MERGED_TO_KDE_3_MERGE_BRANCH tag.
 
