@@ -1,3 +1,5 @@
+=== WebCore-125.6 ===
+
 2004-04-16  Vicki Murley  <vicki@apple.com>
 	
 	- follow-up fix for 3612968 (clone of 3487207).  Implement 
@@ -17,8 +19,6 @@
         * kwq/WebCoreBridge.mm:
         (-[WebCoreBridge sendScrollEvent]):
         * kwq/WebCoreViewFactory.h:
-
-=== WebCore-125.6 ===
 
 2004-04-15  Vicki Murley  <vicki@apple.com>
 
