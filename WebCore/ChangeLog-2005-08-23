@@ -1,3 +1,38 @@
+2003-11-20  Vicki Murley  <vicki@apple.com>
+
+        - roll these fixes onto the branch to add tooltip support in SUPanBisque (rdar://problem/3490331)
+
+    2003-11-13  Darin Adler  <darin@apple.com>
+
+        Reviewed by Dave.
+
+        - fixed 3474330 -- tooltips do not work for <area> elements
+
+        * kwq/WebCoreBridge.mm: (-[WebCoreBridge elementAtPoint:]): When looking for a title, start
+        with innerNode (which can be an <area> inside a <map>). This matches what Mozilla does.
+
+    2003-09-21  Darin Adler  <darin@apple.com>
+
+        Reviewed by Dave.
+
+        - fixed 3106411 -- show title attribute for page elements in tooltip on mouseover (important for PeopleSoft)
+
+        * kwq/WebCoreBridge.mm: (-[WebCoreBridge elementAtPoint:]): Set the value of a new element dictionary
+        key, WebCoreElementTitleKey. This gives the title for an element, walking up the DOM tree as necessary
+        to find it. It's used for tool tips at the WebKit level.
+        * kwq/WebCoreBridge.h: Added WebCoreElementTitleKey and WebCorePageCacheStateKey.
+
+        * WebCore.exp: Added all the constants from WebCoreBridge.h; these should be exported even though they
+        are not being used at the moment because the "WebCore and WebKit use the same constant keys" hack we
+        are doing at the WebKit level means we can just use the WebKit keys on the WebKit side.
+        * WebCore-combined.exp: Regenerated.
+
+        * WebCore-combined.exp:
+        * WebCore.exp:
+        * kwq/WebCoreBridge.h:
+        * kwq/WebCoreBridge.mm:
+        (-[WebCoreBridge elementAtPoint:]):
+
 2003-11-15  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Darin.

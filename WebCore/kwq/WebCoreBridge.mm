@@ -93,8 +93,9 @@ NSString *WebCoreElementLinkTargetFrameKey =	@"WebElementTargetFrame";
 NSString *WebCoreElementLinkLabelKey = 		@"WebElementLinkLabel";
 NSString *WebCoreElementLinkTitleKey = 		@"WebElementLinkTitle";
 NSString *WebCoreElementNameKey = 		@"WebElementName";
+NSString *WebCoreElementTitleKey = 		@"WebCoreElementTitle"; // not in WebKit API for now, could be in API some day
 
-NSString *WebCorePageCacheStateKey =               @"WebCorePageCacheState";
+NSString *WebCorePageCacheStateKey =            @"WebCorePageCacheState";
 
 @implementation WebCoreBridge
 
@@ -681,7 +682,22 @@ static HTMLFormElementImpl *formElementFromDOMElement(id <WebDOMElement>element)
     NSMutableDictionary *element = [NSMutableDictionary dictionary];
     [element setObject:[NSNumber numberWithBool:_part->isPointInsideSelection((int)point.x, (int)point.y)]
                 forKey:WebCoreElementIsSelectedKey];
-    
+
+    // Find the title in the nearest enclosing DOM node.
+    // For <area> tags in image maps, walk the tree for the <area>, not the <img> using it.
+    for (NodeImpl *titleNode = nodeInfo.innerNode(); titleNode; titleNode = titleNode->parentNode()) {
+        if (titleNode->isElementNode()) {
+            const DOMString title = static_cast<ElementImpl *>(titleNode)->getAttribute(ATTR_TITLE);
+            if (!title.isNull()) {
+                // We found a node with a title.
+                QString titleText = title.string();
+                titleText.replace('\\', _part->backslashAsCurrencySymbol());
+                [element setObject:titleText.getNSString() forKey:WebCoreElementTitleKey];
+                break;
+            }
+        }
+    }
+
     NodeImpl *URLNode = nodeInfo.URLElement();
     if (URLNode) {
         ElementImpl *e = static_cast<ElementImpl *>(URLNode);
