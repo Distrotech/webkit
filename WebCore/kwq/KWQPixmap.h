@@ -61,7 +61,9 @@ public:
     QPixmap(const QPixmap &);
     QPixmap(WebCoreImageRendererPtr);
     ~QPixmap();
-    
+
+    AUTO_GC_SCANNABLE
+
     bool isNull() const;
 
     QSize size() const;
@@ -85,7 +87,7 @@ public:
     
 private:
 
-    WebCoreImageRendererPtr imageRenderer;
+    __strong WebCoreImageRendererPtr imageRenderer;
         
     mutable bool needCopyOnWrite;
     

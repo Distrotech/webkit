@@ -73,4 +73,16 @@ void qWarning(const char *msg, ...);
 #define _KWQ_IOSTREAM_
 #endif
 
+#if !defined(__OBJC__) && defined(__cplusplus)
+// XXX_PCB hack to avoid including <Foundation/Foundation.h>
+extern "C" {
+void *NSZoneMalloc(void* zone, unsigned n);
+void NSZoneFree(void* zone, void* ptr);
+}
+#endif
+
+#define AUTO_GC_SCANNABLE \
+    void* operator new(size_t n) { return ::NSZoneMalloc(NULL, n); } \
+    void operator delete(void* p) { ::NSZoneFree(NULL, p); }
+
 #endif

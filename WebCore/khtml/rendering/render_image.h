@@ -44,7 +44,7 @@ class RenderImage : public RenderReplaced
 public:
     RenderImage(DOM::NodeImpl*);
     virtual ~RenderImage();
-
+    
     virtual const char *renderName() const { return "RenderImage"; }
     
     virtual SelectionState selectionState() const {return m_selectionState;}

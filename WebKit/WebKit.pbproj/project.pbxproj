@@ -12,9 +12,10 @@
 				DEBUG_CFLAGS = "";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_ENABLE_OBJC_GARBAGE_COLLECTION = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				INSTALL_PATH = "@executable_path/../Frameworks";
+				GCC_WARN_OBJC_ASSIGN_INTERCEPT = YES;
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_LDFLAGS = "$(COMMON_LDFLAGS) -seg1addr $(LOCAL_SEG1_ADDR)";
 				SECTORDER_FLAGS = "";
@@ -56,8 +57,7 @@
 		};
 		034768E0FF38A50411DB9C8B = {
 			explicitFileType = wrapper.framework;
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			path = WebKit.framework;
 			refType = 3;
 			sourceTree = BUILT_PRODUCTS_DIR;
@@ -121,6 +121,7 @@
 		0867D69AFE84028FC02AAC07 = {
 			children = (
 				BE1B2F5504755C7700CA289C,
+				AB340B45061A2071006D2E1A,
 				F5C2869302846DCD018635CA,
 				F5C2869402846DCD018635CA,
 				F5C2869502846DCD018635CA,
@@ -154,7 +155,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXPORTED_SYMBOLS_FILE = WebKit.exp;
-				FRAMEWORK_SEARCH_PATHS = "\"${DSTROOT}\" \"${MERGE_DIR}/${SYSTEM_LIBRARY_DIR}/Frameworks\" \"${MERGE_DIR}/$(SYSTEM_LIBRARY_DIR)/Frameworks/WebKit.framework/Frameworks\" \"$(SYSTEM_LIBRARY_DIR)/Frameworks/WebKit.framework/Frameworks\" \"$(SYSTEM_LIBRARY_DIR)/Frameworks/ApplicationServices.framework/Frameworks\" \"$(SYSTEM_LIBRARY_DIR)/Frameworks/Carbon.framework/Frameworks\" \"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks\"";
+				FRAMEWORK_SEARCH_PATHS = "\"${DSTROOT}\" \"${MERGE_DIR}/${SYSTEM_LIBRARY_DIR}/Frameworks\" \"${MERGE_DIR}/$(SYSTEM_LIBRARY_DIR)/Frameworks/WebKit.framework/Frameworks\" \"$(SYSTEM_LIBRARY_DIR)/Frameworks/WebKit.framework/Frameworks\" \"$(SYSTEM_LIBRARY_DIR)/Frameworks/ApplicationServices.framework/Frameworks\" \"$(SYSTEM_LIBRARY_DIR)/Frameworks/Carbon.framework/Frameworks\" \"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks\" /Volumes/Clarity/Apple/Projects/Tiger/build";
 				FRAMEWORK_VERSION = A;
 				HEADER_SEARCH_PATHS = "";
 				INSTALL_PATH = /System/Library/Frameworks;
@@ -162,15 +163,15 @@
 				LOCAL_SEG1_ADDR = 0x7000000;
 				MACOSX_DEPLOYMENT_TARGET = 10.2;
 				OPTIMIZATION_CFLAGS = "-Os";
-				OTHER_CFLAGS = "$(DEBUG_CFLAGS) -DFRAMEWORK_NAME=WebKit";
+				OTHER_CFLAGS = "$(DEBUG_CFLAGS) -DFRAMEWORK_NAME=WebKit -fobjc-gc -Wassign-intercept";
 				OTHER_LDFLAGS = "$(COMMON_LDFLAGS) -sub_umbrella WebCore -sub_umbrella JavaScriptCore";
 				PRECOMPILE_PREFIX_HEADER = YES;
 				PREFIX_HEADER = WebKitPrefix.h;
 				PRODUCT_NAME = WebKit;
 				SECTORDER_FLAGS = "-sectorder __TEXT __text /AppleInternal/OrderFiles/WebKit.order";
 				USE_GCC3_PFE_SUPPORT = YES;
-				WARNING_CFLAGS = "-Werror -Wall -W -Wcast-align -Wchar-subscripts -Wformat-security -Wmissing-format-attribute -Wmissing-prototypes -Wpointer-arith -Wwrite-strings -Wno-format-y2k -Wno-unused-parameter -Wbad-function-cast -Wmissing-declarations -Wnested-externs";
-				WARNING_CPLUSPLUSFLAGS = "-Werror -Wall -Wcast-align -Wchar-subscripts -Wformat-security -Wmissing-format-attribute -Wmissing-prototypes -Wpointer-arith -Wwrite-strings -Wno-format-y2k -Wno-unused-parameter";
+				WARNING_CFLAGS = "-Wall -W -Wcast-align -Wchar-subscripts -Wformat-security -Wmissing-format-attribute -Wmissing-prototypes -Wpointer-arith -Wwrite-strings -Wno-format-y2k -Wno-unused-parameter -Wbad-function-cast -Wmissing-declarations -Wnested-externs";
+				WARNING_CPLUSPLUSFLAGS = "-Wall -Wcast-align -Wchar-subscripts -Wformat-security -Wmissing-format-attribute -Wmissing-prototypes -Wpointer-arith -Wwrite-strings -Wno-format-y2k -Wno-unused-parameter";
 				WRAPPER_EXTENSION = framework;
 			};
 			dependencies = (
@@ -486,6 +487,7 @@
 				BE1B2F5604755C7700CA289C,
 				93D623DE051E791F002F47DD,
 				830E81E105853AC000AD0891,
+				AB340B46061A2071006D2E1A,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3143,6 +3145,30 @@
 //9C2
 //9C3
 //9C4
+//AB0
+//AB1
+//AB2
+//AB3
+//AB4
+		AB340B45061A2071006D2E1A = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.framework;
+			name = CoreFoundation.framework;
+			path = /Volumes/Clarity/Apple/Projects/Tiger/build/CoreFoundation.framework;
+			refType = 0;
+			sourceTree = "<absolute>";
+		};
+		AB340B46061A2071006D2E1A = {
+			fileRef = AB340B45061A2071006D2E1A;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//AB0
+//AB1
+//AB2
+//AB3
+//AB4
 //BE0
 //BE1
 //BE2
@@ -3233,8 +3259,7 @@
 			};
 		};
 		BE1B2F5504755C7700CA289C = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
 			path = Foundation.framework;
 			refType = 3;
@@ -4359,8 +4384,7 @@
 			};
 		};
 		F5C2869302846DCD018635CA = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
 			name = ApplicationServices.framework;
 			path = /System/Library/Frameworks/ApplicationServices.framework;
@@ -4368,8 +4392,7 @@
 			sourceTree = "<absolute>";
 		};
 		F5C2869402846DCD018635CA = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
 			name = Carbon.framework;
 			path = /System/Library/Frameworks/Carbon.framework;
@@ -4377,8 +4400,7 @@
 			sourceTree = "<absolute>";
 		};
 		F5C2869502846DCD018635CA = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
 			name = Cocoa.framework;
 			path = /System/Library/Frameworks/Cocoa.framework;
@@ -4749,8 +4771,7 @@
 //F73
 //F74
 		F738C9E903FAD3DF0321FBE0 = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = file;
 			name = JavaScriptCore.framework;
 			path = build/JavaScriptCore.framework;
@@ -4758,8 +4779,7 @@
 			sourceTree = "<group>";
 		};
 		F738C9EA03FAD3DF0321FBE0 = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = file;
 			name = WebCore.framework;
 			path = build/WebCore.framework;

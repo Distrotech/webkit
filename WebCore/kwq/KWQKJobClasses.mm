@@ -71,6 +71,8 @@ public:
         [loader release];
     }
 
+    AUTO_GC_SCANNABLE
+
     int status;
     NSMutableDictionary *metaData;
     KURL URL;

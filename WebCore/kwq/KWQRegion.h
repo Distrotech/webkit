@@ -49,6 +49,8 @@ public:
     QRegion(const QRegion &);
     QRegion &operator=(const QRegion &);
 
+    AUTO_GC_SCANNABLE
+
     bool contains(const QPoint &) const;
     QRect boundingRect() const;
 

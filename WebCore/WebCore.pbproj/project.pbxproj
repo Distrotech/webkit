@@ -13,9 +13,10 @@
 				EXPORTED_SYMBOLS_FILE = "WebCore-combined.exp";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_ENABLE_OBJC_GARBAGE_COLLECTION = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				INSTALL_PATH = "@executable_path/../Frameworks";
+				GCC_WARN_OBJC_ASSIGN_INTERCEPT = YES;
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_LDFLAGS = "-seg1addr $(LOCAL_SEG1_ADDR)";
 				SECTORDER_FLAGS = "";
@@ -57,8 +58,7 @@
 		};
 		034768E0FF38A50411DB9C8B = {
 			explicitFileType = wrapper.framework;
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			path = WebCore.framework;
 			refType = 3;
 			sourceTree = BUILT_PRODUCTS_DIR;
@@ -145,14 +145,13 @@
 				EXPORTED_SYMBOLS_FILE = WebCore.exp;
 				FRAMEWORK_SEARCH_PATHS = "\"${DSTROOT}\" \"${MERGE_DIR}/$(SYSTEM_LIBRARY_DIR)/Frameworks/WebKit.framework/Frameworks\" \"$(SYSTEM_LIBRARY_DIR)/Frameworks/WebKit.framework/Frameworks\"";
 				FRAMEWORK_VERSION = A;
-				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				HEADER_SEARCH_PATHS = "ForwardingHeaders /usr/include/libxml2";
 				INSTALL_PATH = /System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks;
 				LIBRARY_SEARCH_PATHS = "";
 				LOCAL_SEG1_ADDR = 0x9000000;
 				MACOSX_DEPLOYMENT_TARGET = 10.2;
 				OPTIMIZATION_CFLAGS = "-Os";
-				OTHER_CFLAGS = "$(DEBUG_CFLAGS) -DAPPLE_CHANGES";
+				OTHER_CFLAGS = "$(DEBUG_CFLAGS) -DAPPLE_CHANGES -fobjc-gc -Wassign-intercept";
 				OTHER_LDFLAGS = "-no-c++filt -umbrella WebKit";
 				PRECOMPILE_PREFIX_HEADER = YES;
 				PREFIX_HEADER = WebCorePrefix.h;
@@ -160,7 +159,7 @@
 				SECTORDER_FLAGS = "-sectorder __TEXT __text /AppleInternal/OrderFiles/WebCore.order";
 				USE_GCC3_PFE_SUPPORT = YES;
 				WARNING_CFLAGS = "$(WARNING_COMMONFLAGS)";
-				WARNING_COMMONFLAGS = "-Werror -Wall -W -Wcast-align -Wchar-subscripts -Wformat-security -Wmissing-format-attribute -Wmissing-prototypes -Wpointer-arith -Wwrite-strings -Wno-format-y2k -Wno-unused-parameter";
+				WARNING_COMMONFLAGS = "-Wall -W -Wcast-align -Wchar-subscripts -Wformat-security -Wmissing-format-attribute -Wmissing-prototypes -Wpointer-arith -Wwrite-strings -Wno-format-y2k -Wno-unused-parameter";
 				WARNING_CPLUSPLUSFLAGS = "$(WARNING_COMMONFLAGS)";
 				WRAPPER_EXTENSION = framework;
 			};
@@ -6503,9 +6502,8 @@
 			sourceTree = "<group>";
 		};
 		F550D70C02E13281018635CA = {
-			fallbackIsa = PBXFileReference;
 			fileEncoding = 30;
-			isa = PBXExecutableFileReference;
+			isa = PBXFileReference;
 			lastKnownFileType = text.script.perl;
 			path = "make-charset-table.pl";
 			refType = 4;
@@ -10451,8 +10449,7 @@
 			sourceTree = "<group>";
 		};
 		F5C2869302846DCD018635CA = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
 			name = ApplicationServices.framework;
 			path = /System/Library/Frameworks/ApplicationServices.framework;
@@ -10460,8 +10457,7 @@
 			sourceTree = "<absolute>";
 		};
 		F5C2869402846DCD018635CA = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
 			name = Carbon.framework;
 			path = /System/Library/Frameworks/Carbon.framework;
@@ -10469,8 +10465,7 @@
 			sourceTree = "<absolute>";
 		};
 		F5C2869502846DCD018635CA = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
 			name = Cocoa.framework;
 			path = /System/Library/Frameworks/Cocoa.framework;
@@ -10544,8 +10539,7 @@
 //F83
 //F84
 		F8216299029F4FB501000131 = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
 			path = JavaScriptCore.framework;
 			refType = 3;

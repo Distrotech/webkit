@@ -47,6 +47,7 @@ using khtml::RenderWidget;
 class KWQWidgetPrivate
 {
 public:
+    AUTO_GC_SCANNABLE
     QStyle *style;
     QFont font;
     QPalette pal;

@@ -91,7 +91,6 @@ public:
     static const unsigned darkGray = 0xFF808080;
     static const unsigned gray = 0xFFA0A0A0;
     static const unsigned lightGray = 0xFFC0C0C0;
-
 };
 
 #endif

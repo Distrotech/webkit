@@ -260,14 +260,14 @@ void KWQCheckCacheObjectStatus(DocLoader *loader, CachedObject *cachedObject)
 void KWQRetainResponse(void *response)
 {
     // There's no way a retain can raise
-    [(id)response retain];
+    if (response) CFRetain(response); // XXX_PCB GC:  do a hard retain. // [(id)response retain];
 }
 
 void KWQReleaseResponse(void *response)
 {
     // A release could raise if it deallocs, though...
     KWQ_BLOCK_EXCEPTIONS;
-    [(id)response release];
+    if (response) CFRelease(response); // XXX_PCB GC:  balance CFRetain. // [(id)response release];
     KWQ_UNBLOCK_EXCEPTIONS;
 }
 

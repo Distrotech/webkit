@@ -101,7 +101,7 @@ public:
 
 protected:
     QRegion getRegion(int width_, int height) const;
-    QRegion region;
+    QRegion* m_region;
     khtml::Length* m_coords;
     int m_coordsLen;
     int lastw, lasth;
