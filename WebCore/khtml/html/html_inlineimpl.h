@@ -62,6 +62,7 @@ public:
     virtual Id id() const;
     virtual void parseAttribute(AttributeImpl *attr);
     virtual khtml::RenderObject *createRenderer(RenderArena *, khtml::RenderStyle *);
+    virtual bool isHTMLBRElement() const { return true; }
 };
 
 // -------------------------------------------------------------------------
