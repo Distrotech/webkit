@@ -1,3 +1,23 @@
+2003-07-14  Darin Adler  <darin@apple.com>
+
+        Rolled in change from main trunk.
+
+    2003-07-08  Dave Hyatt  <hyatt@apple.com>
+
+	Make sure that the contents width and height of the view are
+	used as the root height and width when a view exists.  This
+	ensures that the root element background properly tiles over 
+	the entire height of the document.  (This used to be ensured
+	by growing the height of the <html> element, but that violates
+	the CSS2 spec.)
+
+	This fixes bugs 3317809, 3299789, and 3318066.
+	
+        Reviewed by john
+
+        * khtml/rendering/render_box.cpp:
+        (RenderBox::paintRootBoxDecorations):
+
 === Safari-85 ===
 
 2003-06-14  Chris Blumenberg  <cblu@apple.com>
