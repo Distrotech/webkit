@@ -1373,7 +1373,7 @@ void HTMLInputElementImpl::parseAttribute(AttributeImpl *attr)
             setChanged();     // at the default value right now.
         break;
     case ATTR_CHECKED:
-        m_defaultChecked = !attr->isNull();
+        m_defaultChecked = attr->val() != 0;
         if (m_useDefaultChecked) {
             setChecked(m_defaultChecked);
             m_useDefaultChecked = true;

@@ -1,5 +1,13 @@
 2004-06-24  Vicki Murley  <vicki@apple.com>
 
+	- fix a build error that cropped up from the merge for the radio button fix, 3673762
+
+        * khtml/html/html_formimpl.cpp:
+        (HTMLInputElementImpl::parseAttribute):
+        (HTMLInputElementImpl::reset):
+
+2004-06-24  Vicki Murley  <vicki@apple.com>
+
 	- merge this change from HEAD for SUPanMoccasin, 3704509
 
     2004-06-02  David Hyatt  <hyatt@apple.com>
