@@ -659,15 +659,25 @@ void KHTMLView::layout()
     killTimer(d->layoutTimerId);
     d->layoutTimerId = 0;
 
+    if (!m_part) {
+        // FIXME: Do we need to set _width here?
+        // FIXME: Should we set _height here too?
+        _width = visibleWidth();
+        return;
+    }
+
     DOM::DocumentImpl* document = m_part->xmlDocImpl();
     if (!document) {
+        // FIXME: Should we set _height here too?
         _width = visibleWidth();
         return;
     }
 
     khtml::RenderCanvas* root = static_cast<khtml::RenderCanvas*>(document->renderer());
-    if (!root)
+    if (!root) {
+        // FIXME: Do we need to set _width or _height here?
         return;
+    }
 
     ScrollBarMode hMode = d->hmode;
     ScrollBarMode vMode = d->vmode;
@@ -1830,7 +1840,7 @@ bool KHTMLView::dispatchMouseEvent(int eventId, DOM::NodeImpl *targetNode, bool 
 	    for ( ; nodeImpl && !nodeImpl->isFocusable(); nodeImpl = nodeImpl->parentNode());
             if (nodeImpl && nodeImpl->isMouseFocusable())
                 m_part->xmlDocImpl()->setFocusNode(nodeImpl);
-            else if (!nodeImpl || !nodeImpl->isKeyboardFocusable())
+            else if (!nodeImpl)
                 m_part->xmlDocImpl()->setFocusNode(0);
         }
     }
