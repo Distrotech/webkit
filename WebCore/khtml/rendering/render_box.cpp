@@ -108,6 +108,9 @@ void RenderBox::setStyle(RenderStyle *_style)
     // Set the text color if we're the body.
     if (isBody())
         element()->getDocument()->setTextColor(_style->color());
+    
+    if (style()->outlineWidth() > 0 && style()->outlineSize() > maximalOutlineSize(PaintActionOutline))
+        static_cast<RenderCanvas*>(document()->renderer())->setMaximalOutlineSize(style()->outlineSize());
 }
 
 RenderBox::~RenderBox()
@@ -186,16 +189,6 @@ void RenderBox::paint(QPainter *p, int _x, int _y, int _w, int _h,
     }
 }
 
-void RenderBox::setPixmap(const QPixmap &, const QRect&, CachedImage *image)
-{
-    if (image && image->pixmap_size() == image->valid_rect().size() && parent()) {
-        if (element() && (element()->id() == ID_HTML || element()->id() == ID_BODY))
-            canvas()->repaint(); // repaint the entire canvas, since the background gets propagated up.
-        else
-            repaint();      //repaint bg when it finished loading
-    }
-}
-
 void RenderBox::paintRootBoxDecorations(QPainter *p,int, int _y,
                                         int, int _h, int _tx, int _ty)
 {
@@ -229,7 +222,7 @@ void RenderBox::paintRootBoxDecorations(QPainter *p,int, int _y,
 
     // Only fill with a base color (e.g., white) if we're the root document, since iframes/frames with
     // no background in the child document should show the parent's background.
-    if (!c.isValid() && canvas()->view()) {
+    if ((!c.isValid() || qAlpha(c.rgb()) == 0) && canvas()->view()) {
         DOM::NodeImpl* elt = element()->getDocument()->ownerElement();
         if (canBeTransparent && elt && elt->id() != ID_FRAME) // Frames are never transparent.
             canvas()->view()->useSlowRepaints(); // The parent must show behind the child.
@@ -311,8 +304,14 @@ void RenderBox::paintBackgroundExtended(QPainter *p, const QColor &c, CachedImag
                                         int _tx, int _ty, int w, int h,
                                         int bleft, int bright)
 {
-    if (c.isValid() && qAlpha(c.rgb()) > 0)
+    if (c.isValid() && qAlpha(c.rgb()) > 0) {
+        // If we have an alpha and we are painting the root element, go ahead and blend with our default
+        // background color (typically white).
+        if (qAlpha(c.rgb()) < 0xFF && isRoot())
+            p->fillRect(_tx, clipy, w, cliph, canvas()->view()->palette().active().color(QColorGroup::Base));
         p->fillRect(_tx, clipy, w, cliph, c);
+    }
+    
     // no progressive loading of the background image
     if(bg && bg->pixmap_size() == bg->valid_rect().size() && !bg->isTransparent() && !bg->isErrorImage()) {
         //kdDebug( 6040 ) << "painting bgimage at " << _tx << "/" << _ty << endl;
