@@ -168,7 +168,7 @@ DOMString AttrImpl::toString() const
 	result += "=\"";
 
 	for (NodeImpl *child = firstChild(); child != NULL; child = child->nextSibling()) {
-	    child = child->nextSibling();
+	    result += child->toString();
 	}
 	
 	result += "\"";
@@ -294,7 +294,8 @@ void ElementImpl::setAttributeMap( NamedAttrMapImpl* list )
 NodeImpl *ElementImpl::cloneNode(bool deep)
 {
     // ### we loose the namespace here ... FIXME
-    ElementImpl *clone = getDocument()->createElement(tagName());
+    int exceptioncode;
+    ElementImpl *clone = getDocument()->createElement(tagName(), exceptioncode);
     if (!clone) return 0;
 
     // clone attributes
@@ -556,7 +557,7 @@ DOMString ElementImpl::toString() const
 	result += ">";
 
 	for (NodeImpl *child = firstChild(); child != NULL; child = child->nextSibling()) {
-	    child = child->nextSibling();
+	    result += child->toString();
 	}
 
 	result += "</";
