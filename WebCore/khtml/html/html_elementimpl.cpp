@@ -623,6 +623,26 @@ void HTMLElementImpl::click()
     dispatchMouseEvent(&evt, EventImpl::KHTML_CLICK_EVENT);
 }
 
+void HTMLElementImpl::defaultEventHandler(EventImpl *evt)
+{
+    if (evt->id()==EventImpl::KEYPRESS_EVENT)
+    {
+        KeyboardEventImpl *k = static_cast<KeyboardEventImpl *>(evt);
+        DocumentImpl *doc = getDocument();
+        EditCommand *cmd;
+        QString text(k->qKeyEvent()->text());
+        if (text.length() == 1 && text[0] == QChar(0x7f)) {
+            cmd = new DeleteTextCommand(doc->view()->part()->selection());
+        }
+        else {
+            cmd = new InputTextCommand(doc->view()->part()->selection(), text);
+        }
+        if (doc->applyEditing(cmd))
+            evt->setDefaultHandled();
+    }
+    ElementImpl::defaultEventHandler(evt);
+}
+
 DOMString HTMLElementImpl::toString() const
 {
     if (!hasChildNodes()) {
@@ -640,8 +660,6 @@ DOMString HTMLElementImpl::toString() const
 
     return ElementImpl::toString();
 }
-
-
 
 // -------------------------------------------------------------------------
 HTMLGenericElementImpl::HTMLGenericElementImpl(DocumentPtr *doc, ushort i)
