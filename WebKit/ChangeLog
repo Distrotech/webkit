@@ -1,3 +1,12 @@
+2003-02-11  Richard Williamson   <rjw@apple.com>
+
+        Add import of CGFontCache.h, which is no longer
+        included by CoreGraphicsPrivate.h.
+        
+        Reviewed by Vicki.
+
+        * WebCoreSupport.subproj/WebTextRendererFactory.m:
+
 === Safari-58.4 ===
 
 2003-02-11  Maciej Stachowiak  <mjs@apple.com>
