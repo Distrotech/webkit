@@ -2,9 +2,9 @@
 
 2004-07-26  Richard Williamson   <set EMAIL_ADDRESS environment variable>
 
-	Fix for 3739752.  We now clear the carbon control focus when setting 
-	the focus on a Cocoa NSView.  When a carbon control receives a click we de-focus any Cocoa NSView.  This fixes the problem, but we still
-	have 3739736, which may never be fixed for Jaguar.
+	Fix for 3739752.  We now clear the carbon control focus when setting the focus 
+	on a Cocoa NSView.  When a carbon control receives a click we de-focus any Cocoa NSView.  
+	This fixes the problem, but we still have 3739736, which may never be fixed for Jaguar.
 
         Reviewed by Ken.
 
@@ -22,11 +22,11 @@
 
 	Fixes for:
 
-	<rdar://problem/3668209>: after typing double-byte text, delete return and arrow keys don't work in form field (Jaguar only)
-	<rdar://problem/3668252>: can't type using Roman alphabet within Japanese input method in form fields on Jaguar
-	<rdar://problem/3668300>: Jaguar: Contribute hangs when you print from Safari
-	<rdar://problem/3706572>: Jag: Context menu in Contrib. not appearing according to where mouse is clicked
-	<rdar://problem/3730044>: Contribute: Setting focus to browser view has problems (clone for Safari 1.0.3)
+	<rdar://problem/3668209>: after typing double-byte text, delete return and arrow keys don't work in form field (Jaguar only) 
+	<rdar://problem/3668252>: can't type using Roman alphabet within Japanese input method in form fields on Jaguar 
+	<rdar://problem/3668300>: Jaguar: Contribute hangs when you print from Safari 
+	<rdar://problem/3706572>: Jag: Context menu in Contrib. not appearing according to where mouse is clicked 
+	<rdar://problem/3730044>: Contribute: Setting focus to browser view has problems (clone for Safari 1.0.3) 
 	<rdar://problem/3730127>: Macromedia Flash 6 cannot take Asian text entry in Safari (clone for Safari 1.0.3)
 
 	This patch back ports several fixes from Panther to Jaguar, specifically to address the needs
