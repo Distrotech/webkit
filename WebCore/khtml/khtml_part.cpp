@@ -1044,6 +1044,7 @@ void KHTMLPart::clear()
   d->m_selectionEnd = DOM::Node();
   d->m_startOffset = 0;
   d->m_endOffset = 0;
+  caret().setPosition(DOM::Node(), 0);
 #ifndef QT_NO_CLIPBOARD
   connect( kapp->clipboard(), SIGNAL( selectionChanged()), SLOT( slotClearSelection()));
 #endif
@@ -2225,6 +2226,8 @@ bool KHTMLPart::findTextNext( const QString &str, bool forward, bool caseSensiti
                 d->m_doc->setSelection( d->m_selectionStart.handle(), d->m_startOffset,
                                         d->m_selectionEnd.handle(), d->m_endOffset );
                 emitSelectionChanged();
+                
+                caret().setPosition(d->m_selectionEnd, d->m_endOffset);
                 return true;
             }
         }
@@ -2476,12 +2479,11 @@ void KHTMLPart::setSelection(const DOM::Range &r, bool placeCaret)
     d->m_doc->setSelection(d->m_selectionStart.handle(),d->m_startOffset,
                            d->m_selectionEnd.handle(),d->m_endOffset);
 
-#ifndef KHTML_NO_CARET
     if (placeCaret) {
+        caret().setPosition(d->m_selectionEnd, d->m_endOffset);
         d->m_view->placeCaret();
         emitCaretPositionChanged(caret());
     }
-#endif
 }
 
 void KHTMLPart::slotClearSelection()
@@ -2491,28 +2493,14 @@ void KHTMLPart::slotClearSelection()
     d->m_startOffset = 0;
     d->m_selectionEnd = 0;
     d->m_endOffset = 0;
-    if ( d->m_doc ) d->m_doc->clearSelection();
-    if ( hadSelection )
+    if (d->m_doc) 
+        d->m_doc->clearSelection();
+    if (hadSelection)
         emitSelectionChanged();
-#ifndef KHTML_NO_CARET
-    d->m_view->placeCaret();
-    emitCaretPositionChanged(caret());
-#endif
-}
 
-Caret KHTMLPart::caret() const
-{
-    return Caret(caretNode(), caretOffset());
-}
-
-DOM::Node KHTMLPart::caretNode() const 
-{
-    return d->m_extendAtEnd ? d->m_selectionEnd : d->m_selectionStart;
-}
-
-long KHTMLPart::caretOffset() const 
-{
-    return d->m_extendAtEnd ? d->m_endOffset : d->m_startOffset;
+    //caret().setPosition(0, 0);
+    //d->m_view->placeCaret();
+    //emitCaretPositionChanged(caret());
 }
 
 #if !APPLE_CHANGES
@@ -4612,6 +4600,7 @@ void KHTMLPart::khtmlMousePressEvent( khtml::MousePressEvent *event )
         d->m_selectionEnd = 0;
         d->m_startOffset = 0;
         d->m_endOffset = 0;
+        caret().setPosition(0,0);
     
         if ( _mouse->button() == LeftButton ){
             if ( !innerNode.isNull()  && innerNode.handle()->renderer()) {
@@ -4638,6 +4627,7 @@ void KHTMLPart::khtmlMousePressEvent( khtml::MousePressEvent *event )
                     d->m_startOffset = startOffset;
                     d->m_selectionEnd = d->m_selectionStart;
                     d->m_endOffset = endOffset;
+                    caret().setPosition(d->m_selectionEnd, endOffset);
                 }
             }
         }
@@ -4663,6 +4653,7 @@ void KHTMLPart::khtmlMousePressEvent( khtml::MousePressEvent *event )
         d->m_selectionEnd = 0;
         d->m_startOffset = 0;
         d->m_endOffset = 0;
+        caret().setPosition(0,0);
     
         if ( _mouse->button() == LeftButton ){
             if ( !innerNode.isNull()  && innerNode.handle()->renderer()) {
@@ -4722,19 +4713,16 @@ void KHTMLPart::khtmlMousePressEvent( khtml::MousePressEvent *event )
                 d->m_selectionEnd = d->m_selectionStart;
                 d->m_endOffset = d->m_startOffset;
                 d->m_doc->clearSelection();
-#ifndef KHTML_NO_CARET
+
+                caret().setPosition(d->m_selectionEnd, d->m_endOffset);
                 d->m_view->placeCaret();
                 emitCaretPositionChanged(caret());
-#endif
             }
             else
             {
-#ifndef KHTML_NO_CARET
-                // simply leave it. Is this a good idea?
-#else
                 d->m_selectionStart = DOM::Node();
                 d->m_selectionEnd = DOM::Node();
-#endif
+                caret().setPosition(d->m_selectionEnd, 0);
             }
             emitSelectionChanged();
             startAutoScroll();
@@ -4951,6 +4939,7 @@ void KHTMLPart::khtmlMouseMoveEvent( khtml::MouseMoveEvent *event )
             d->m_selectionEnd = node;
             d->m_endOffset = offset;
             d->m_doc->clearSelection();
+            caret().setPosition(d->m_selectionEnd, d->m_endOffset);
         }
 #endif        
         // we have to get to know if end is before start or not...
@@ -4987,12 +4976,14 @@ void KHTMLPart::khtmlMouseMoveEvent( khtml::MouseMoveEvent *event )
                     wordEndOffset = MAX(d->m_initialSelectionEndOffset, wordEndOffset);
                     d->m_selectionEnd = node;
                     d->m_endOffset = wordEndOffset;
+                    caret().setPosition(d->m_selectionEnd, d->m_endOffset);
                 }
                 else {
                     d->m_selectionStart = d->m_initialSelectionStart;
                     d->m_startOffset = d->m_initialSelectionStartOffset;
                     d->m_selectionEnd = node;
                     d->m_endOffset = wordEndOffset;
+                    caret().setPosition(d->m_selectionEnd, d->m_endOffset);
                 }
             }
             else {
@@ -5000,6 +4991,7 @@ void KHTMLPart::khtmlMouseMoveEvent( khtml::MouseMoveEvent *event )
                 d->m_startOffset = d->m_initialSelectionEndOffset;
                 d->m_selectionEnd = node;
                 d->m_endOffset = wordStartOffset;
+                caret().setPosition(d->m_selectionEnd, d->m_endOffset);
             }
         }
         else if (d->m_selectionInitiatedWithTripleClick ){
@@ -5013,12 +5005,14 @@ void KHTMLPart::khtmlMouseMoveEvent( khtml::MouseMoveEvent *event )
                         d->m_startOffset = MIN(lineStartOffset, d->m_initialSelectionStartOffset);
                         d->m_selectionEnd = lineEnd;
                         d->m_endOffset = MAX(lineEndOffset, d->m_initialSelectionEndOffset);
+                        caret().setPosition(d->m_selectionEnd, d->m_endOffset);
                     }
                     else {
                         d->m_selectionStart = d->m_initialSelectionStart;
                         d->m_startOffset = d->m_initialSelectionStartOffset;
                         d->m_selectionEnd = lineEnd;
                         d->m_endOffset = lineEndOffset;
+                        caret().setPosition(d->m_selectionEnd, d->m_endOffset);
                     }
                 }
                 else {
@@ -5026,16 +5020,19 @@ void KHTMLPart::khtmlMouseMoveEvent( khtml::MouseMoveEvent *event )
                     d->m_startOffset = d->m_initialSelectionEndOffset;
                     d->m_selectionEnd = lineStart;
                     d->m_endOffset = lineStartOffset;
+                    caret().setPosition(d->m_selectionEnd, d->m_endOffset);
                 }
             }
         }
         else {
             d->m_selectionEnd = node;
             d->m_endOffset = offset;
+            caret().setPosition(d->m_selectionEnd, d->m_endOffset);
         }
 #else
         d->m_selectionEnd = node;
         d->m_endOffset = offset;
+        caret().setPosition(d->m_selectionEnd, d->m_endOffset);
 #endif        
         if ( !d->m_selectionStart.isNull() && !d->m_selectionEnd.isNull() )
         {
@@ -5127,6 +5124,7 @@ void KHTMLPart::khtmlMouseReleaseEvent( khtml::MouseReleaseEvent *event )
         d->m_startOffset = 0;
         d->m_endOffset = 0;
         d->m_doc->clearSelection();
+        caret().setPosition(0,0);
     }
 #endif // APPLE_CHANGES
 
@@ -5141,6 +5139,7 @@ void KHTMLPart::khtmlMouseReleaseEvent( khtml::MouseReleaseEvent *event )
         d->m_startOffset = 0;
         d->m_endOffset = 0;
         emitSelectionChanged();
+        caret().setPosition(0,0);
     } 
     else {
         // we have to get to know if end is before start or not...
@@ -5162,6 +5161,7 @@ void KHTMLPart::khtmlMouseReleaseEvent( khtml::MouseReleaseEvent *event )
                 d->m_endOffset = tmpOffset;
                 d->m_startBeforeEnd = true;
                 d->m_extendAtEnd = false;
+                caret().setPosition(d->m_selectionStart, d->m_startOffset);
             }
 
 #ifndef KHTML_NO_CARET
@@ -5380,6 +5380,8 @@ void KHTMLPart::selectAll()
                           d->m_selectionEnd.handle(), d->m_endOffset );
 
   emitSelectionChanged();
+  
+  caret().setPosition(d->m_selectionEnd, d->m_endOffset);
 }
 
 bool KHTMLPart::isEditingAtSelection() const
@@ -5610,11 +5612,17 @@ void KHTMLPart::emitCaretPositionChanged(const Caret &caret)
     emit caretPositionChanged(caret);
 }
 
+Caret KHTMLPart::caret() const
+{ 
+    return d->m_caret; 
+}
+
 void KHTMLPart::moveCaretTo(DOM::NodeImpl *node, long offset) 
 {
-    
     d->m_selectionStart = d->m_selectionEnd = node;
     d->m_startOffset = d->m_endOffset = offset;
+    caret().setPosition(node, offset);
+    emitCaretPositionChanged(caret());
 }
 
 bool KHTMLPart::tabsToLinks() const
