@@ -2,6 +2,40 @@
 
         Reviewed by me
 
+	Moved contenteditable to use the style system.
+
+        * khtml/css/cssparser.cpp:
+        (CSSParser::parseValue):
+        * khtml/css/cssproperties.c:
+        (findProp):
+        * khtml/css/cssproperties.h:
+        * khtml/css/cssproperties.in:
+        * khtml/css/cssstyleselector.cpp:
+        (khtml::CSSStyleSelector::applyRule):
+        * khtml/css/cssvalues.c:
+        (hash_val):
+        (findValue):
+        * khtml/css/cssvalues.h:
+        * khtml/css/cssvalues.in:
+        * khtml/editing/htmlediting.cpp:
+        (EditCommand::pruneEmptyNodes):
+        * khtml/html/html_elementimpl.cpp:
+        (HTMLElementImpl::HTMLElementImpl):
+        (HTMLElementImpl::isContentEditable):
+        (HTMLElementImpl::contentEditable):
+        (HTMLElementImpl::setContentEditable):
+        (HTMLElementImpl::defaultEventHandler):
+        * khtml/html/html_elementimpl.h:
+        * khtml/rendering/render_style.h:
+        (khtml::):
+        (khtml::RenderStyle::setBitDefaults):
+        (khtml::RenderStyle::userModify):
+        (khtml::RenderStyle::setUserModify):
+
+2004-01-09  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
 	A whole host of editing improvements
 
         * khtml/editing/edit_caret.cpp:
