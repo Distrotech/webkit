@@ -554,7 +554,7 @@ public:
    */
   int zoomFactor() const;
 
-  /**
+/**
    * Returns the text the user has marked.
    */
   virtual QString selectedText() const;
@@ -567,7 +567,7 @@ public:
   /**
    * Sets the current selection.
    */
-  void setSelection( const DOM::Range & );
+  void setSelection(const DOM::Range &, bool placeCaret=true);
 
   /**
    * Returns the text for a part of the document.
@@ -589,6 +589,17 @@ public:
    */
   void selectAll();
 
+  /**
+   * Returns the node containing the input caret.
+   */
+  DOM::Node caretNode() const;
+  
+  /**
+   * Returns the offset of the input caret in the 
+   * node containing the caret.
+   */
+  long caretOffset() const;
+  
   /**
    * Convenience method to show the document's view.
    *
@@ -765,6 +776,24 @@ signals:
    */
   void nodeActivated(const DOM::Node &);
 
+  /**
+   * This signal is emitted whenever the caret position has been changed.
+   *
+   * The signal transmits the position the DOM::Range way, the node and
+   * the zero-based offset within this node.
+   * @param node node which the caret is in. This can be null if the caret
+   * has been deactivated.
+   * @param offset offset within the node. If the node is null, the offset
+   * is meaningless.
+   * @since 3.2
+   */
+  void caretPositionChanged(const DOM::Node &node, long offset);
+
+  /**
+   * Moves the input caret to the specified offset.
+   */
+  void moveCaretTo(DOM::NodeImpl *node, long offset);
+  
 protected:
 
   /**
@@ -1027,6 +1056,11 @@ private:
    * @internal
    */
   void emitSelectionChanged();
+  
+  /**
+   * @internal
+   */
+  void emitCaretPositionChanged(const DOM::Node &node, long offset);
 
   /**
    * @internal
