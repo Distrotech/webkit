@@ -288,7 +288,6 @@ Window::Window(KHTMLPart *p)
   , history(0)
   , frames(0)
   , loc(0)
-  , m_selection(0)
   , m_locationbar(0)
   , m_menubar(0)
   , m_personalbar(0)
@@ -2129,7 +2128,7 @@ const ClassInfo BarInfo::info = { "BarInfo", 0, 0, 0 };
 @end
 */
 BarInfo::BarInfo(ExecState *exec, KHTMLPart *p, Type barType) 
-  : ObjectImp(exec->lexicalInterpreter()->builtinObjectPrototype())
+  : ObjectImp(exec->interpreter()->builtinObjectPrototype())
   , m_part(p)
   , m_type(barType)
 {

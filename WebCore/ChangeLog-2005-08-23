@@ -1,3 +1,16 @@
+2004-09-10  Vicki Murley <vicki@apple.com>
+
+	- code changes by Darin, reviewed by Vicki
+
+	Fix build breakage on the branch caused by bad merging for <rdar://problem/3772916> controls 
+	on page at http://help.sap.com don't work properly (clone for SUPanNavy)
+
+        * khtml/ecma/kjs_dom.lut.h:
+        (KJS::):
+        * khtml/ecma/kjs_window.cpp:
+        (Window::Window):
+        (BarInfo::BarInfo):
+
 2004-09-08  Vicki Murley <vicki@apple.com>
 
 	- check in regenerated file khtml/ecma/kjs_window.lut.h, for 3772916
