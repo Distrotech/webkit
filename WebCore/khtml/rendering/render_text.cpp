@@ -67,15 +67,15 @@ void TextSlave::printDecoration( QPainter *pt, RenderText* p, int _tx, int _ty, 
         width -= p->paddingRight() + p->borderRight();
 
 #if APPLE_CHANGES
-    if(deco & UNDERLINE)
-    {
+    if(deco & UNDERLINE) {
         QConstString s(p->str->s + m_start, m_len);
         pt->drawUnderlineForText(_tx, _ty + m_baseline, s.string());
     }
 #else /* APPLE_CHANGES not defined */
+    int underlineOffset = ( pt->fontMetrics().height() + m_baseline ) / 2;
+    if(underlineOffset <= m_baseline) underlineOffset = m_baseline+1;
+
     if(deco & UNDERLINE){
-        int underlineOffset = ( pt->fontMetrics().height() + m_baseline ) / 2;
-        if(underlineOffset <= m_baseline) underlineOffset = m_baseline+1;
         pt->drawLine(_tx, _ty + underlineOffset, _tx + width, _ty + underlineOffset );
     }
 #endif /* APPLE_CHANGES not defined */
