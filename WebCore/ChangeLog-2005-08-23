@@ -1,3 +1,10 @@
+2003-12-06  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::khtmlMouseReleaseEvent): Fixed a dumb crasher in a debug printf.
+
 2003-12-04  Ken Kocienda  <kocienda@apple.com>
 
         Reviewed by me
