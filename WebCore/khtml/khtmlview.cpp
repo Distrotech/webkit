@@ -1956,9 +1956,10 @@ void KHTMLView::timerEvent ( QTimerEvent *e )
     else if (d->m_caretViewContext && e->timerId() == d->m_caretViewContext->freqTimerId) {
         d->m_caretViewContext->visible = !d->m_caretViewContext->visible;
         if (d->m_caretViewContext->displayed) {
-            updateContents(d->m_caretViewContext->x, d->m_caretViewContext->y,
+            // fudge a bit to make sure we repaint the whole cursor rect
+            updateContents(d->m_caretViewContext->x, d->m_caretViewContext->y - 1,
                            d->m_caretViewContext->width,
-                           d->m_caretViewContext->height);
+                           d->m_caretViewContext->height + 2);
         }
 	return;
     }
@@ -2179,7 +2180,7 @@ bool KHTMLView::placeCaret() {
     if (!caretNode)
         return false;
 
-    if (!m_part->inEditMode() && !caretNode->isContentEditable())
+    if (!m_part->isEditingAtSelection())
         return false;
 
     // save selection. setting focus might clear it.
