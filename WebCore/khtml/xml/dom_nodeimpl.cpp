@@ -168,6 +168,17 @@ NodeImpl *NodeImpl::appendChild( NodeImpl *, int &exceptioncode )
   return 0;
 }
 
+void NodeImpl::remove(int &exceptioncode)
+{
+    exceptioncode = 0;
+    if (!parentNode()) {
+        exceptioncode = DOMException::HIERARCHY_REQUEST_ERR;
+        return;
+    }
+    
+    parentNode()->removeChild(this, exceptioncode);
+}
+
 bool NodeImpl::hasChildNodes(  ) const
 {
   return false;
@@ -1127,14 +1138,14 @@ RenderObject * NodeImpl::nextRenderer()
     return 0;
 }
 
-NodeImpl *NodeImpl::prevLeafNode() const
+NodeImpl *NodeImpl::previousLeafNode() const
 {
     const NodeImpl *r = this;
-    const NodeImpl *n = firstChild();
+    const NodeImpl *n = lastChild();
     if (n) {
         while (n) { 
             r = n; 
-            n = n->firstChild(); 
+            n = n->lastChild(); 
         }
         return const_cast<NodeImpl *>(r);
     }
@@ -1143,7 +1154,7 @@ NodeImpl *NodeImpl::prevLeafNode() const
         r = n;
         while (n) { 
             r = n; 
-            n = n->firstChild(); 
+            n = n->lastChild(); 
         }
         return const_cast<NodeImpl *>(r);
     }    
