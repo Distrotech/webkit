@@ -1,3 +1,27 @@
+2003-02-07  Ken Kocienda  <kocienda@apple.com>
+
+	Rolled changes from trunk onto branch to fix this bug:
+
+	Radar 3161953 (crash due to trashed memory on XML page)
+
+	Original comment for checkin:
+
+	    Reviewed by Dave.
+    
+	    - fixed 3161953 -- crash in KWQListImpl, DOM::CSSStyleSheetImpl::isLoading on XML page
+	    
+	    The problem is that this page has some non-HTML elements, but the code was checking
+	    only the element ID, not whether it is HTML or not. Also fixed the page's layout.
+	    
+	    * khtml/xml/dom_docimpl.cpp: (DocumentImpl::recalcStyleSelector):
+	    Check that the node is an HTML element before checking the ID in two places.
+	    Without this, we cast the pointer to the wrong type and trash memory.
+	    
+	    * khtml/rendering/render_root.cpp:
+	    (RenderRoot::layout): Set all the children false here, not just firstChild.
+	    (RenderRoot::docHeight): Take all the children's heights into account, not just firstChild.
+	    (RenderRoot::docWidth): Take all the children's widths into account, not just firstChild.
+    
 === Safari-59 ===
 
 2003-02-04  Maciej Stachowiak  <mjs@apple.com>
