@@ -21,7 +21,6 @@
 			buildRules = (
 			);
 			buildSettings = {
-				DEBUGGING_SYMBOLS = NO;
 			};
 			isa = PBXBuildStyle;
 			name = Deployment;
@@ -63,8 +62,6 @@
 			buildStyles = (
 				014CEA440018CDF011CA2923,
 				014CEA450018CDF011CA2923,
-				F58C8A07025BD3BC018635CA,
-				F531DDEC02F0C34D018635CA,
 			);
 			hasScannedForEncodings = 1;
 			isa = PBXProject;
@@ -115,8 +112,6 @@
 				0867D69EFE84028FC02AAC07,
 				0867D69FFE84028FC02AAC07,
 				0867D6A0FE84028FC02AAC07,
-				255AF6590250FC030ECA149E,
-				6573C63B03A0BE5700FCA39F,
 			);
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
@@ -124,11 +119,10 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXPORTED_SYMBOLS_FILE = WebCore.exp;
-				FRAMEWORK_SEARCH_PATHS = "\"$(APPLE_INTERNAL_LIBRARY_DIR)/Frameworks\" \"${DSTROOT}/AppleInternal/Library/Frameworks\"";
 				FRAMEWORK_VERSION = A;
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				HEADER_SEARCH_PATHS = ForwardingHeaders;
-				INSTALL_PATH = "@executable_path/../Frameworks";
+				INSTALL_PATH = /Library/Frameworks;
 				LIBRARY_SEARCH_PATHS = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.2;
 				OPTIMIZATION_CFLAGS = "-Os";
@@ -138,7 +132,6 @@
 				PREFIX_HEADER = WebCorePrefix.h;
 				PRODUCT_NAME = WebCore;
 				SECTORDER_FLAGS = "";
-				SKIP_INSTALL = YES;
 				USE_GCC3_PFE_SUPPORT = YES;
 				WARNING_CFLAGS = "$(WARNING_COMMONFLAGS)";
 				WARNING_COMMONFLAGS = "-Werror -Wall -W -Wcast-align -Wchar-subscripts -Wformat-security -Wmissing-format-attribute -Wmissing-prototypes -Wpointer-arith -Wwrite-strings -Wno-format-y2k -Wno-unused-parameter";
@@ -169,9 +162,9 @@
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.8.1</string>
+	<string>0.8.1.1</string>
 	<key>CFBundleVersion</key>
-	<string>53u</string>
+	<string>53</string>
 </dict>
 </plist>
 ";
@@ -777,29 +770,6 @@
 //082
 //083
 //084
-//250
-//251
-//252
-//253
-//254
-		255AF6590250FC030ECA149E = {
-			buildActionMask = 2147483647;
-			files = (
-			);
-			generatedFileNames = (
-			);
-			isa = PBXShellScriptBuildPhase;
-			neededFileNames = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if [ -f ../Tools/Scripts/embed-into-alex ]; then sh ../Tools/Scripts/embed-into-alex; fi";
-		};
-//250
-//251
-//252
-//253
-//254
 //350
 //351
 //352
@@ -890,19 +860,6 @@
 					Private,
 				);
 			};
-		};
-		6573C63B03A0BE5700FCA39F = {
-			buildActionMask = 8;
-			files = (
-			);
-			generatedFileNames = (
-			);
-			isa = PBXShellScriptBuildPhase;
-			neededFileNames = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-			shellPath = /bin/sh;
-			shellScript = "ditto ${SYMROOT}/WebCore.framework ${DSTROOT}/AppleInternal/Library/Frameworks/WebCore.framework";
 		};
 //650
 //651
@@ -4470,16 +4427,6 @@
 			path = xml;
 			refType = 4;
 		};
-		F531DDEC02F0C34D018635CA = {
-			buildRules = (
-			);
-			buildSettings = {
-				i386 = YES;
-				ppc = YES;
-			};
-			isa = PBXBuildStyle;
-			name = DeploymentFat;
-		};
 		F54A61D302E3523B01A80180 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
@@ -7954,18 +7901,6 @@
 			name = qt;
 			path = "";
 			refType = 4;
-		};
-		F58C8A07025BD3BC018635CA = {
-			buildRules = (
-			);
-			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				DEBUG_CFLAGS = "";
-				EXPORTED_SYMBOLS_FILE = "WebCore-combined.exp";
-				OPTIMIZATION_CFLAGS = "-O";
-			};
-			isa = PBXBuildStyle;
-			name = Mixed;
 		};
 		F58EF58D02DFDFB7018635CA = {
 			fileEncoding = 30;
