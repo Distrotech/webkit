@@ -34,14 +34,26 @@
 #include "dom_textimpl.h"
 #include "khtmlview.h"
 #include "khtml_part.h"
+#include "render_object.h"
 
 using DOM::ElementImpl;
 using DOM::NodeImpl;
 using DOM::TextImpl;
 
 using khtml::DeleteTextCommand;
+using khtml::EditCommand;
 using khtml::EditCommandID;
 using khtml::InputTextCommand;
+
+//------------------------------------------------------------------------------------------
+// EditCommand
+
+void EditCommand::notifyChanged(NodeImpl *node) const
+{
+    node->setChanged(true);
+    if (node->renderer())
+        node->renderer()->setNeedsLayoutAndMinMaxRecalc();
+}
 
 //------------------------------------------------------------------------------------------
 // InputTextCommand
@@ -116,6 +128,7 @@ bool InputTextCommand::applyToDocument(DocumentImpl *doc)
                                     selection().startContainer(), selection().startOffset() + textLength));
     }
     
+    notifyChanged();
     return true;
 }
 
@@ -154,18 +167,42 @@ bool DeleteTextCommand::applyToDocument(DocumentImpl *doc)
         part->setSelection(Range(caretNode, selection().startOffset(), caretNode, selection().startOffset()));
     }
     else {
-        // Delete character at cursor
         // EDIT FIXME: this is a hack for now
         TextImpl *textNode = static_cast<TextImpl *>(caretNode);
         int exceptionCode;
         int offset = selection().startOffset() - 1;
+        fprintf(stderr, "delete offset: %d\n", offset);
         if (offset >= 0) {
+            // Delete character at cursor
             textNode->deleteData(offset, 1, exceptionCode);
             part->setSelection(Range(selection().startContainer(), selection().startOffset() - 1, 
                                      selection().startContainer(), selection().startOffset() - 1));
         }
+        else if (textNode->previousSibling()) {
+            // look at previous sibling
+            NodeImpl *previousSibling = textNode->previousSibling();
+            if (previousSibling->isTextNode()) {
+                fprintf(stderr, "previousSibling is text node\n");
+                // delete last character in text node
+                TextImpl *previousTextNode = static_cast<TextImpl *>(previousSibling);
+                previousTextNode->deleteData(previousTextNode->length() - 1, 1, exceptionCode);
+                // leave caret right where it is
+            }
+            else if (previousSibling->isHTMLBRElement()) {
+                // remove BR
+                fprintf(stderr, "remove BR\n");
+                textNode->parentNode()->removeChild(previousSibling, exceptionCode);
+            }
+            else {
+                fprintf(stderr, "delete fall through\n");
+            }
+        }
+        else {
+            fprintf(stderr, "node is first child\n");
+        }
     }
     
+    notifyChanged(caretNode);
     return true;
 }
 

@@ -48,11 +48,14 @@ public:
 
     virtual EditCommandID commandID() const = 0;
 
-    Range selection() { return m_selection; }
+    Range selection() const { return m_selection; }
 
     virtual bool applyToDocument(DocumentImpl *) = 0;
     virtual bool canUndo() const = 0;
 
+protected:
+    virtual void notifyChanged() const;
+        
 private:
     Range m_selection;
 };
@@ -69,7 +72,7 @@ public:
     virtual bool applyToDocument(DocumentImpl *);
     virtual bool canUndo() const;
 
-    DOMString text() { return m_text; }
+    DOMString text() const { return m_text; }
     bool isLineBreak() const;
     bool isSpace() const;
     
