@@ -1,5 +1,12 @@
 === JavaScriptCore-125.6 ===
 
+2004-09-13  Vicki Murley <vicki@apple.com>
+
+	- initialize deletedElementIndex to 0 to make the compiler happy
+
+        * kjs/property_map.cpp:
+        (KJS::PropertyMap::put):
+
 2004-09-07  Vicki Murley <vicki@apple.com>
 
 	- merge this fix from HEAD for SUPanNavy, <rdar://problem/3773145>
