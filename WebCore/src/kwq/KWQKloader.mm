@@ -135,17 +135,6 @@ CachedCSSStyleSheet::CachedCSSStyleSheet(DocLoader* dl, const DOMString &url, bo
         m_codec = QTextCodec::codecForMib(4); // latin-1
 }
 
-CachedCSSStyleSheet::CachedCSSStyleSheet(const DOMString &url, const QString &stylesheet_data)
-    : CachedObject(url, CSSStyleSheet, false, 0)
-{
-    m_loading = false;
-    m_status = Persistent;
-    m_codec = 0;
-    m_size = stylesheet_data.length();
-    m_sheet = DOMString(stylesheet_data);
-}
-
-
 CachedCSSStyleSheet::~CachedCSSStyleSheet()
 {
 }
@@ -219,16 +208,6 @@ CachedScript::CachedScript(DocLoader* dl, const DOMString &url, bool reload, int
         m_codec = KGlobal::charsets()->codecForName(charset, b);
     else
 	m_codec = QTextCodec::codecForMib(4); // latin-1
-}
-
-CachedScript::CachedScript(const DOMString &url, const QString &script_data)
-    : CachedObject(url, Script, false, 0)
-{
-    m_loading = false;
-    m_status = Persistent;
-    m_codec = 0;
-    m_size = script_data.length();
-    m_script = DOMString(script_data);
 }
 
 CachedScript::~CachedScript()
@@ -456,7 +435,6 @@ CachedImage::CachedImage(DocLoader* dl, const DOMString &url, bool reload, int _
     m_size = 0;
     imgSource = 0;
     setAccept( acceptHeader );
-    m_showAnimations = dl->showAnimations();
 }
 
 CachedImage::~CachedImage()
@@ -656,7 +634,9 @@ void CachedImage::movieStatus(int status)
     if(status == QMovie::EndOfFrame)
     {
         const QImage& im = m->frameImage();
+#ifndef APPLE_CHANGES
         monochrome = ( ( im.depth() <= 8 ) && ( im.numColors() - int( im.hasAlphaBuffer() ) <= 2 ) );
+#endif
         if(im.width() < 5 && im.height() < 5 && im.hasAlphaBuffer()) // only evaluate for small images
         {
             QImage am = im.createAlphaMask();
@@ -680,10 +660,14 @@ void CachedImage::movieStatus(int status)
     }
 
 
+#ifdef APPLE_CHANGES
+    if (status == QMovie::EndOfMovie)
+#else
     if((status == QMovie::EndOfMovie) ||
        ((status == QMovie::EndOfLoop) && (m_showAnimations == KHTMLSettings::KAnimationLoopOnce)) ||
        ((status == QMovie::EndOfFrame) && (m_showAnimations == KHTMLSettings::KAnimationDisabled))
       )
+#endif
     {
 #if 0
         // the movie has ended and it doesn't loop nor is it an animation,
@@ -696,6 +680,7 @@ void CachedImage::movieStatus(int status)
         if(imgSource)
 #endif
         {
+#ifndef APPLE_CHANGES
             setShowAnimations( KHTMLSettings::KAnimationDisabled );
 
             // monochrome alphamasked images are usually about 10000 times
@@ -710,6 +695,7 @@ void CachedImage::movieStatus(int status)
                 p = pix;
                 monochrome = false;
             }
+#endif
         }
 
 	CachedObjectClient *c;
@@ -733,6 +719,7 @@ void CachedImage::movieResize(const QSize& /*s*/)
 //    do_notify(m->framePixmap(), QRect());
 }
 
+#ifndef APPLE_CHANGES
 void CachedImage::setShowAnimations( KHTMLSettings::KAnimationAdvice showAnimations )
 {
     m_showAnimations = showAnimations;
@@ -747,6 +734,7 @@ void CachedImage::setShowAnimations( KHTMLSettings::KAnimationAdvice showAnimati
         imgSource = 0;
     }
 }
+#endif
 
 void CachedImage::deleteMovie()
 {
@@ -873,7 +861,9 @@ DocLoader::DocLoader(KHTMLPart* part, DocumentImpl* doc)
     m_reloading = false;
     m_expireDate = 0;
     m_bautoloadImages = true;
+#ifndef APPLE_CHANGES
     m_showAnimations = KHTMLSettings::KAnimationEnabled;
+#endif
     m_part = part;
     m_doc = doc;
 
@@ -979,6 +969,7 @@ void DocLoader::setReloading( bool enable )
     m_reloading = enable;
 }
 
+#ifndef APPLE_CHANGES
 void DocLoader::setShowAnimations( KHTMLSettings::KAnimationAdvice showAnimations )
 {
     if ( showAnimations == m_showAnimations ) return;
@@ -993,6 +984,7 @@ void DocLoader::setShowAnimations( KHTMLSettings::KAnimationAdvice showAnimation
             img->setShowAnimations( showAnimations );
         }
 }
+#endif
 
 void DocLoader::removeCachedObject( CachedObject* o ) const
 {
@@ -1165,7 +1157,7 @@ Loader::~Loader()
 static NSMutableDictionary *clientForDocument = 0;
 #endif
 
-void Loader::load(DocLoader* dl, const DOMString &baseURL, bool incremental)
+void Loader::load(DocLoader* dl, CachedObject *object, bool incremental = true)
 {
     Request *req = new Request(dl, object, incremental);
 
@@ -1182,7 +1174,7 @@ void Loader::load(DocLoader* dl, const DOMString &baseURL, bool incremental)
     NSNumber *key = [NSNumber numberWithUnsignedInt: (unsigned int)dataSource];
     client = [clientForDocument objectForKey: key];
     if (client == nil){
-        KWQDEBUGLEVEL2 (0x2000, "Creating client for dataSource 0x%08x, url %s\n", dataSource, baseURL.string().latin1());
+        KWQDEBUGLEVEL2 (0x2000, "Creating client for dataSource 0x%08x, url %s\n", dataSource, object->url().string().latin1());
         client = [[[URLLoadClient alloc] initWithLoader:this dataSource: dataSource] autorelease];
         [clientForDocument setObject: client forKey: key];
     }
@@ -1215,7 +1207,7 @@ void Loader::servePendingRequests()
 
 #ifdef APPLE_CHANGES
   KWQDEBUGLEVEL2 (0x2000, "Serving request for base %s, url %s\n", 
-		  req->m_baseURL.string().latin1(), req->object->url().string().latin1());
+		  req->m_docLoader->part()->baseURL().url().latin1(), req->object->url().string().latin1());
   //job->begin(d->m_recv, job);
   job->begin((URLLoadClient *)req->client, job);
   [((URLLoadClient *)req->client)->m_dataSource _addURLHandle: job->handle()];
@@ -1270,7 +1262,7 @@ void Loader::slotFinished( KIO::Job* job )
     
 #if APPLE_CHANGES
     NSString *urlString;
-    urlString = [NSString stringWithCString:r->m_baseURL.string().latin1()];
+    urlString = [NSString stringWithCString:r->object->url().string().latin1()];
     if ([urlString hasSuffix:@"/"]) {
         urlString = [urlString substringToIndex:([urlString length] - 1)];
     }
@@ -1545,16 +1537,6 @@ CachedCSSStyleSheet *Cache::requestStyleSheet( DocLoader* dl, const DOMString & 
     return static_cast<CachedCSSStyleSheet *>(o);
 }
 
-void Cache::preloadStyleSheet( const QString &url, const QString &stylesheet_data)
-{
-    CachedObject *o = cache->find(url);
-    if(o)
-        removeCacheEntry(o);
-
-    CachedCSSStyleSheet *stylesheet = new CachedCSSStyleSheet(url, stylesheet_data);
-    cache->insert( url, stylesheet );
-}
-
 CachedScript *Cache::requestScript( DocLoader* dl, const DOM::DOMString &url, bool reload, int _expireDate, const QString& charset)
 {
     // this brings the _url to a standard form...
@@ -1606,16 +1588,6 @@ CachedScript *Cache::requestScript( DocLoader* dl, const DOM::DOMString &url, bo
         dl->m_docObjects.append( o );
     }
     return static_cast<CachedScript *>(o);
-}
-
-void Cache::preloadScript( const QString &url, const QString &script_data)
-{
-    CachedObject *o = cache->find(url);
-    if(o)
-        removeCacheEntry(o);
-
-    CachedScript *script = new CachedScript(url, script_data);
-    cache->insert( url, script );
 }
 
 void Cache::flush(bool force)

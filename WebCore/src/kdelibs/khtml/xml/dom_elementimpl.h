@@ -30,6 +30,10 @@
 #include "dom/dom_element.h"
 #include "xml/dom_stringimpl.h"
 
+#if defined(APPLE_CHANGES) && defined(__OBJC__)
+#define id id_
+#endif /* APPLE_CHANGES, __OBJC__ */
+
 namespace DOM {
 
 class ElementImpl;
@@ -284,5 +288,9 @@ protected:
 };
 
 }; //namespace
+
+#if defined(APPLE_CHANGES) && defined(__OBJC__)
+#undef id
+#endif /* APPLE_CHANGES, __OBJC__ */
 
 #endif

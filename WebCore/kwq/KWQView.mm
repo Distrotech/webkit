@@ -174,7 +174,7 @@
         ((KHTMLView *)widget)->part()->xmlDocImpl()->renderer()){
         if (needsLayout){
             double start = CFAbsoluteTimeGetCurrent();
-            ((KHTMLView *)widget)->layout(TRUE);
+            ((KHTMLView *)widget)->layout();
             KWQDEBUGLEVEL1 (0x200, "layout time %e\n", CFAbsoluteTimeGetCurrent() - start);
             needsLayout = NO;
         }

@@ -74,7 +74,7 @@ struct QPState {				// painter state
     NSCompositingOperation compositingOperation;
 };
 
-typedef QStack<QPState> QPStateStack;
+typedef QPtrStack<QPState> QPStateStack;
 
 
 QPainter::QPainter()
@@ -170,7 +170,7 @@ void QPainter::save()
 {
     QPStateStack *pss = data->ps_stack;
     if ( pss == 0 ) {
-	pss = new QStack<QPState>;
+	pss = new QPStateStack;
 	data->ps_stack = pss;
     }
     

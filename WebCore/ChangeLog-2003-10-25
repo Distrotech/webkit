@@ -1,3 +1,38 @@
+2002-03-18  Maciej Stachowiak  <mjs@apple.com>
+
+	Changes needed to get kwq compiling (doesn't link yet, though).
+
+	* src/kdelibs/khtml/misc/loader.h:
+	* src/kdelibs/khtml/xml/dom_elementimpl.h:
+	* src/kwq/KWQCollection.mm: (QPtrCollection::QPtrCollection),
+	(QPtrCollection::operator=), (QPtrCollection::~QPtrCollection),
+	(QPtrCollection::autoDelete), (QPtrCollection::setAutoDelete):
+	* src/kwq/KWQEvent.mm: (QKeyEvent::QKeyEvent):
+	* src/kwq/KWQIcon.h:
+	* src/kwq/KWQKHTMLFactory.mm:
+	* src/kwq/KWQKHTMLPart.h:
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::KHTMLPart), (KHTMLPart::slotData),
+	(KHTMLPart::begin), (KHTMLPart::write), (KHTMLPart::checkCompleted),
+	(KHTMLPart::settings), (KHTMLPart::completeURL), (KHTMLPart::encoding),
+	(KHTMLPart::overURL), (KHTMLPart::urlSelected), (KHTMLPart::requestObject),
+	(KHTMLPart::frames), (KHTMLPart::event):
+	* src/kwq/KWQKHTMLSettings.mm: (KHTMLSettings::KHTMLSettings),
+	(KHTMLSettings::availableFamilies):
+	* src/kwq/KWQKProcess.mm: (KProcess::args):
+	* src/kwq/KWQKloader.mm: (CachedImage::CachedImage), (CachedImage::movieStatus),
+	(DocLoader::DocLoader), (Loader::load), (Loader::servePendingRequests),
+	(Loader::slotFinished), (Cache::requestScript):
+	* src/kwq/KWQPainter.mm: (QPainter::save):
+	* src/kwq/KWQPointArray.mm: (QPointArray::setPoint):
+	* src/kwq/KWQValueListImpl.mm: (KWQValueListImpl::removeEqualNodes),
+	(KWQValueListImpl::containsEqualNodes):
+	* src/kwq/KWQView.mm: (-[KWQHTMLView layout]):
+	* src/kwq/KWQsignals.mm: (khtml::Loader::requestDone),
+	(khtml::Loader::requestFailed):
+	* src/kwq/kdecore/kiconloader.h:
+	* src/kwq/kparts/browserextension.h:
+	* src/kwq/qt/qmovie.h:
+
 2002-03-16  Maciej Stachowiak  <mjs@apple.com>
 
 	Updated to get khtml to compile. Changes included updating our

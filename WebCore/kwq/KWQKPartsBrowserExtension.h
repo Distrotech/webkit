@@ -86,7 +86,9 @@ struct URLArgs {
 
     QString frameName;
     QString serviceType;
-    
+    int xOffset;
+    int yOffset;
+
     URLArgs();
     URLArgs( const URLArgs &);
     URLArgs &operator=(const URLArgs &);    

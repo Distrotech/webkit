@@ -120,7 +120,7 @@ int QTimerEvent::timerId() const
 
 // class QKeyEvent =============================================================
 
-QKeyEvent::QKeyEvent(Type, Key, int, int)
+QKeyEvent::QKeyEvent(Type, int, int, int, const QString &, bool, ushort)
 {
     _logNotYetImplemented();
 }

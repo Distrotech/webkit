@@ -171,7 +171,7 @@ namespace khtml
         QString accept() const { return m_accept; }
         void setAccept(const QString &_accept) { m_accept = _accept; }
 #ifdef APPLE_CHANGES
-    const DocLoader *loader() { return m_loader; }
+	const DocLoader *loader() { return m_loader; }
 #endif /* APPLE_CHANGES */
 
     protected:
@@ -382,7 +382,10 @@ namespace khtml
 	QBuffer m_buffer;
 	CachedObject *object;
         DocLoader* m_docLoader;
-    };
+#ifdef APPLE_CHANGES
+        void *client;
+#endif /* APPLE_CHANGES */
+     };
 
     /**
      * @internal

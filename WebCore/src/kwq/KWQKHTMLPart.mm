@@ -70,7 +70,7 @@
 #include <html/html_documentimpl.h>
 #include <rendering/render_image.h>
 #include <loader.h>
-#include <kjs.h>
+#include <kjs/interpreter.h>
 #include <kjs_dom.h>
 #include <dom_doc.h>
 #include <qcursor.h>
@@ -291,7 +291,7 @@ public:
         m_view = 0L;
         
         // Why is this allocated here?
-        m_doc = new HTMLDocumentImpl();
+        m_doc = NULL;
         
         m_decoder = 0L;
         m_bFirstData = true;
@@ -361,9 +361,7 @@ KHTMLPart::KHTMLPart(
     init();
 }
 
-KHTMLPart::KHTMLPart(
-const KURL &url 
-)
+KHTMLPart::KHTMLPart(const KURL &url)
 {
     init();
 }
@@ -518,17 +516,6 @@ bool KHTMLPart::jScriptEnabled() const
     return TRUE;
 }
 
-void KHTMLPart::setMetaRefreshEnabled( bool enable )
-{
-    _logNotYetImplemented();
-}
-
-bool KHTMLPart::metaRefreshEnabled() const
-{
-    _logNotYetImplemented();
-    return FALSE;
-}
-
 KJSProxy *KHTMLPart::jScript()
 {
   if ( !d->m_jscript )
@@ -632,9 +619,7 @@ DOM::DocumentImpl *KHTMLPart::xmlDocImpl() const
     return 0;
 }
 
-void KHTMLPart::slotData(
-id handle, const char *bytes, int length
-)
+void KHTMLPart::slotData(id handle, const char *bytes, int length)
 {
 // NOTE: This code emulates the interface used by the original khtml part  
     NSString *encoding;
@@ -664,10 +649,12 @@ void KHTMLPart::begin( const KURL &url, int xOffset, int yOffset )
   KParts::URLArgs args;
   args.xOffset = xOffset;
   args.yOffset = yOffset;
+#ifndef APPLE_CHANGES
   d->m_extension->setURLArgs( args );
+#endif
 
   // d->m_referrer = url.url();
-  m_url = url;
+  d->m_url = url;
   KURL baseurl;
 
   // ### not sure if XHTML documents served as text/xml should use DocumentImpl or HTMLDocumentImpl
@@ -675,7 +662,7 @@ void KHTMLPart::begin( const KURL &url, int xOffset, int yOffset )
     d->m_doc = DOMImplementationImpl::instance()->createDocument( d->m_view );
   else
     d->m_doc = DOMImplementationImpl::instance()->createHTMLDocument( d->m_view );
-    d->m_doc = new HTMLDocumentImpl(d->m_view);
+
     //DomShared::instanceToCheck = (void *)((DomShared *)d->m_doc);
     d->m_doc->ref();
 
@@ -690,7 +677,7 @@ void KHTMLPart::begin( const KURL &url, int xOffset, int yOffset )
 
     //FIXME: do we need this? 
     if (!d->m_doc->attached())
-	d->m_doc->attach( d->m_view );
+	d->m_doc->attach();
     d->m_doc->setURL( url.url() );
 
     if (!d->m_workingURL.isEmpty())
@@ -791,12 +778,14 @@ void KHTMLPart::write( const char *str, int len )
         
     // Transition from provisional to committed data source at this point.
     
-    d->m_doc->applyChanges(true, true);
-    
+#if FIGURE_OUT_WHAT_APPLY_CHANGES_DOES
+    d->m_doc->applyChanges();
+#endif    
+
     // end lines added in lieu of big fixme
     
     if (jScript())
-	jScript()->appendSourceFile(m_url.url(),decoded);
+	jScript()->appendSourceFile(d->m_url.url(),decoded);
     Tokenizer* t = d->m_doc->tokenizer();
     if(t)
         t->write( decoded, true );
@@ -805,6 +794,7 @@ void KHTMLPart::write( const char *str, int len )
     double thisTime = CFAbsoluteTimeGetCurrent() - start;
     d->totalWriteTime += thisTime;
     KWQDEBUGLEVEL4 (0x200, "%s bytes = %d, seconds = %f, total = %f\n", d->m_url.url().latin1(), len, thisTime, d->totalWriteTime);
+#endif
 }
 
 void KHTMLPart::write( const QString &str )
@@ -818,7 +808,7 @@ void KHTMLPart::write( const QString &str )
       d->m_bFirstData = false;
   }
   if (jScript())
-    jScript()->appendSourceFile(m_url.url(),str);
+    jScript()->appendSourceFile(d->m_url.url(),str);
   Tokenizer* t = d->m_doc->tokenizer();
   if(t)
     t->write( str, true );
@@ -881,7 +871,7 @@ void KHTMLPart::checkCompleted()
   checkEmitLoadEvent(); // if we didn't do it before
 
   // check that the view has not been moved by the user
-  if ( m_url.encodedHtmlRef().isEmpty() && d->m_view->contentsY() == 0 )
+  if ( d->m_url.encodedHtmlRef().isEmpty() && d->m_view->contentsY() == 0 )
       d->m_view->setContentsPos( d->m_extension->urlArgs().xOffset,
                                  d->m_extension->urlArgs().yOffset );
 
@@ -913,14 +903,12 @@ void KHTMLPart::checkCompleted()
 }
 #endif /* not APPLE_CHANGES */
 
-const KHTMLSettings *KHTMLPart::settings() const
+KHTMLSettings *KHTMLPart::settings()
 {
   return d->m_settings;
 }
 
-KURL KHTMLPart::completeURL(
- const QString &url 
-)
+KURL KHTMLPart::completeURL(const QString &url)
 {
   if ( !d->m_doc ) return url;
 
@@ -969,7 +957,7 @@ bool KHTMLPart::setEncoding( const QString &name, bool override )
 #endif /* not APPLE_CHANGES */
 }
 
-QString KHTMLPart::encoding() const
+QString KHTMLPart::encoding()
 {
     _logNeverImplemented();
     return d->m_settings->encoding();
@@ -1091,13 +1079,12 @@ void KHTMLPart::setSelection( const DOM::Range & )
     _logNeverImplemented();
 }
 
-void KHTMLPart::overURL( const QString &url, const QString &target, bool shiftPressed )
+void KHTMLPart::overURL( const QString &url, const QString &target)
 {
     _logNeverImplemented();
 }
 
-void KHTMLPart::urlSelected( const QString &url, int button, int state, const QString &_target,
-                             KParts::URLArgs args )
+void KHTMLPart::urlSelected( const QString &url, int button, int state, const QString &_target)
 {
     _logNeverImplemented();
 }
@@ -1175,67 +1162,21 @@ QString KHTMLPart::requestFrameName()
     return QString::fromLatin1("<!--frame %1-->").arg(d->m_frameNameId++);
 }
 
-bool KHTMLPart::requestObject( khtml::ChildFrame *child, const KURL &url, const KParts::URLArgs &_args )
+bool KHTMLPart::requestObject( khtml::RenderPart *frame, const QString &url, const QString &serviceType,
+			       const QStringList &args )
 {
-#ifdef _KWQ_
-  if (!checkLinkSecurity(url))
-    return false;
-  if ( child->m_bPreloaded )
-  {
-    // kdDebug(6005) << "KHTMLPart::requestObject preload" << endl;
-    if ( child->m_frame && child->m_part )
-      child->m_frame->setWidget( child->m_part->widget() );
-
-    child->m_bPreloaded = false;
-    return true;
+  if(url.isEmpty()){
+    return FALSE;
   }
-
-  KParts::URLArgs args( _args );
-
-  if ( child->m_run )
-    child->m_run->abort();
-
-  if ( child->m_part && !args.reload && urlcmp( child->m_part->url().url(), url.url(), true, true ) )
-    args.serviceType = child->m_serviceType;
-
-  child->m_args = args;
-  child->m_args.reload = d->m_bReloading;
-  child->m_serviceName = QString::null;
-  if (!d->m_referrer.isEmpty() && !child->m_args.metaData().contains( "referrer" ))
-    child->m_args.metaData()["referrer"] = d->m_referrer;
-
-  child->m_args.metaData().insert("main_frame_request",
-                                  parentPart() == 0 ? "TRUE":"FALSE");
-  child->m_args.metaData().insert("ssl_was_in_use",
-                                  d->m_ssl_in_use ? "TRUE":"FALSE");
-  child->m_args.metaData().insert("ssl_activate_warnings", "TRUE");
-
-  // We want a KHTMLPart if the HTML says <frame src=""> or <frame src="about:blank">
-  if ((url.isEmpty() || url.url() == "about:blank") && args.serviceType.isEmpty())
-    args.serviceType = QString::fromLatin1( "text/html" );
-
-  if ( args.serviceType.isEmpty() ) {
-    child->m_run = new KHTMLRun( this, child, url, child->m_args,
-                                 child->m_type != khtml::ChildFrame::Frame );
-    return false;
-  } else {
-    return processObjectRequest( child, url, args.serviceType );
+  // requestObject can be called multiple times for a single plug-in.
+  // The plugins array is an attempt to avoid multiple creations of the same plug-in.
+  // FIXME: Can't have multiple plug-ins with the same URL on a page
+  if(!plugins.contains(url)) {
+    WCPluginWidget *pluginWidget = new WCPluginWidget(completeURL(url).url(), serviceType, args);
+    frame->setWidget(pluginWidget);
+    plugins.append(url);
   }
-#else
-    if (url.isEmpty())
-        return false;
-    
-    khtml::ChildFrame child;
-    QValueList<khtml::ChildFrame>::Iterator it = d->m_objects.append( child );
-    (*it).m_frame = frame;
-    (*it).m_type = khtml::ChildFrame::Object;
-    (*it).m_params = params;
-    
-    KParts::URLArgs args;
-    args.serviceType = serviceType;
-    
-    return requestObject( &(*it), completeURL( url ), args );
-#endif
+  return TRUE;
 }
 
 void KHTMLPart::submitForm( const char *action, const QString &url, const QByteArray &formData, const QString &_target, const QString& contentType, const QString& boundary )
@@ -1377,45 +1318,46 @@ QString KHTMLPart::jsDefaultStatusBarText() const
     return QString();
 }
 
-QPtrList<KParts::ReadOnlyPart> KHTMLPart::frames() const
+const QPtrList<KParts::ReadOnlyPart> KHTMLPart::frames() const
+
 {
     _logNeverImplemented();
-    return QList<KParts::ReadOnlyPart>(); 
+    return QPtrList<KParts::ReadOnlyPart>(); 
 }
 
-void KHTMLPart::customEvent( QCustomEvent *event )
+bool KHTMLPart::event( QEvent *event )
 {
   if ( khtml::MousePressEvent::test( event ) )
   {
     khtmlMousePressEvent( static_cast<khtml::MousePressEvent *>( event ) );
-    return;
+    return true;
   }
 
   if ( khtml::MouseDoubleClickEvent::test( event ) )
   {
     khtmlMouseDoubleClickEvent( static_cast<khtml::MouseDoubleClickEvent *>( event ) );
-    return;
+    return true;
   }
 
   if ( khtml::MouseMoveEvent::test( event ) )
   {
     khtmlMouseMoveEvent( static_cast<khtml::MouseMoveEvent *>( event ) );
-    return;
+    return true;
   }
 
   if ( khtml::MouseReleaseEvent::test( event ) )
   {
     khtmlMouseReleaseEvent( static_cast<khtml::MouseReleaseEvent *>( event ) );
-    return;
+    return true;
   }
 
   if ( khtml::DrawContentsEvent::test( event ) )
   {
     khtmlDrawContentsEvent( static_cast<khtml::DrawContentsEvent *>( event ) );
-    return;
+    return true;
   }
 
-  KParts::ReadOnlyPart::customEvent( event );
+  return false;
 }
 
 void KHTMLPart::khtmlMousePressEvent( khtml::MousePressEvent *event )
@@ -1650,7 +1592,7 @@ void KHTMLPart::khtmlMouseMoveEvent( khtml::MouseMoveEvent *event )
 #endif
     }
   }
-
+#endif
 }
 
 void KHTMLPart::khtmlMouseReleaseEvent( khtml::MouseReleaseEvent *event )

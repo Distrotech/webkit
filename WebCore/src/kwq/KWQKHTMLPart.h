@@ -37,6 +37,8 @@
 
 #include <kjs_proxy.h>
 
+#include <rendering/render_frames.h>
+
 class KHTMLSettings;
 class KJavaAppletContext;
 class KJSProxy;
@@ -56,8 +58,8 @@ namespace DOM
 
 namespace khtml
 {
-  class RenderPart;
-  struct ChildFrame;
+  class ChildFrame {
+  };
 };
 
 extern "C" {
@@ -539,7 +541,7 @@ public:
     KJSProxy *jScript();
 
     // This should be private.
-    KURL completeURL( const QString &url, const QString &target = QString::null );
+    KURL completeURL( const QString &url );
 
     // This should be private.
 
