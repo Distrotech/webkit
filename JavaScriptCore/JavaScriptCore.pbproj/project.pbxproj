@@ -719,7 +719,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
-			shellScript = "mkdir -p /WebCore/Library/Frameworks; ditto ${SYMROOT}/JavaScriptCore.framework /WebCore/Library/Frameworks";
+			shellScript = "mkdir -p /WebCore/Library/Frameworks; ditto ${SYMROOT}/JavaScriptCore.framework /WebCore/Library/Frameworks/JavaScriptCore.framework";
 		};
 //930
 //931
