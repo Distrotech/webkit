@@ -777,21 +777,6 @@ void KHTMLPart::setUserStyleSheet(const QString &styleSheet)
     _logNeverImplemented();
 }
 
-void KHTMLPart::setFontSizes( const QValueList<int> &newFontSizes )
-{
-    _logNeverImplemented();
-}
-
-QValueList<int> KHTMLPart::fontSizes() const
-{
-  return d->m_settings->fontSizes();
-}
-
-void KHTMLPart::resetFontSizes()
-{
-    _logNeverImplemented();
-}
-
 void KHTMLPart::setStandardFont( const QString &name )
 {
     _logNeverImplemented();

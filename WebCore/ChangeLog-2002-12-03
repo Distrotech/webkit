@@ -1,5 +1,25 @@
 2002-04-15  Darin Adler  <darin@apple.com>
 
+	* src/kdelibs/khtml/css/css_valueimpl.cpp:
+	(FontFamilyValueImpl::FontFamilyValueImpl): Fix comment.
+	* src/kdelibs/khtml/css/cssstyleselector.cpp: Remove some gratuitous diffs vs. KDE.
+	* src/kdelibs/khtml/html/html_objectimpl.cpp:
+	(HTMLEmbedElementImpl::parseAttribute): Remove unneeded copy from KWQ's early days.
+	* src/kdelibs/khtml/html/html_tableimpl.cpp:
+	(HTMLTableElementImpl::parseAttribute),
+	(HTMLTablePartElementImpl::parseAttribute): Remove unneeded copy from KWQ's early days.
+	* src/kdelibs/khtml/html/htmltokenizer.cpp: (HTMLTokenizer::processToken): Redo the
+	APPLE_CHANGES ifdef here.
+	* src/kdelibs/khtml/khtmlpart_p.h: Update to latest kde.
+	* src/kdelibs/khtml/khtmlview.cpp: (KHTMLView::KHTMLView): Add ifdef APPLE_CHANGES.
+	(KHTMLView::~KHTMLView): Add ifdef APPLE_CHANGES.
+	(KHTMLView::print): Remove code left in here during merge process.
+	* src/kwq/KWQKHTMLPart.mm: Remove unused setFontSizes(), fontSizes(), and
+	resetFontSizes(). After the merge is landed, remove more.
+	* src/libwebcore.exp: Export updateStyleSelector() for WebKit.
+
+2002-04-15  Darin Adler  <darin@apple.com>
+
 	Fix text to it displays at the right font size.
 
 	* src/kdelibs/khtml/css/cssstyleselector.cpp:

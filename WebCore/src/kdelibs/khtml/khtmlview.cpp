@@ -217,7 +217,9 @@ KHTMLView::KHTMLView( KHTMLPart *part, QWidget *parent, const char *name)
     m_medium = "screen";
 
     m_part = part;
+#ifdef APPLE_CHANGES
     m_part->ref();
+#endif
     d = new KHTMLViewPrivate;
     QScrollView::setVScrollBarMode(d->vmode);
     QScrollView::setHScrollBarMode(d->hmode);
@@ -244,7 +246,9 @@ KHTMLView::~KHTMLView()
 {
     if (m_part)
     {
+#ifdef APPLE_CHANGES
         m_part->deref();
+#endif
         
         //WABA: Is this Ok? Do I need to deref it as well?
         //Does this need to be done somewhere else?
@@ -399,7 +403,7 @@ void KHTMLView::drawContents( QPainter *p, int ex, int ey, int ew, int eh )
 
     khtml::DrawContentsEvent event( p, ex, ey, ew, eh );
 #ifdef APPLE_CHANGES
-    m_part->event (&event);
+    m_part->event(&event);
 #else /* APPLE_CHANGES not defined */
     QApplication::sendEvent( m_part, &event );
 #endif /* APPLE_CHANGES not defined */
@@ -498,7 +502,7 @@ void KHTMLView::viewportMousePressEvent( QMouseEvent *_mouse )
     if (!swallowEvent) {
 	khtml::MousePressEvent event( _mouse, xm, ym, mev.url, mev.target, mev.innerNode );
 #ifdef APPLE_CHANGES
-        m_part->event (&event);
+        m_part->event(&event);
 #else /* APPLE_CHANGES not defined */
         QApplication::sendEvent( m_part, &event );
 #endif /* APPLE_CHANGES not defined */
@@ -541,7 +545,7 @@ void KHTMLView::viewportMouseDoubleClickEvent( QMouseEvent *_mouse )
     if (!swallowEvent) {
 	khtml::MouseDoubleClickEvent event( _mouse, xm, ym, mev.url, mev.target, mev.innerNode );
 #ifdef APPLE_CHANGES
-        m_part->event (&event);
+        m_part->event(&event);
 #else /* APPLE_CHANGES not defined */
 	QApplication::sendEvent( m_part, &event );
 #endif /* APPLE_CHANGES not defined */
@@ -643,7 +647,7 @@ void KHTMLView::viewportMouseMoveEvent( QMouseEvent * _mouse )
     if (!swallowEvent) {
         khtml::MouseMoveEvent event( _mouse, xm, ym, mev.url, mev.target, mev.innerNode );
 #ifdef APPLE_CHANGES
-        m_part->event (&event);
+        m_part->event(&event);
 #else /* APPLE_CHANGES not defined */
         QApplication::sendEvent( m_part, &event );
 #endif /* APPLE_CHANGES not defined */
@@ -681,7 +685,7 @@ void KHTMLView::viewportMouseReleaseEvent( QMouseEvent * _mouse )
     if (!swallowEvent) {
 	khtml::MouseReleaseEvent event( _mouse, xm, ym, mev.url, mev.target, mev.innerNode );
 #ifdef APPLE_CHANGES
-	m_part->event (&event);
+	m_part->event(&event);
 #else /* APPLE_CHANGES not defined */
 	QApplication::sendEvent( m_part, &event );
 #endif /* APPLE_CHANGES not defined */
@@ -1092,8 +1096,6 @@ void KHTMLView::print()
                       << " height = " << metrics.height() << endl;
         root->setPrintingMode(true);
         root->setWidth(metrics.width());
-
-        QValueList<int> oldSizes = m_part->fontSizes();
 
         m_part->xmlDocImpl()->styleSelector()->computeFontSizes(&metrics, 100);
         m_part->xmlDocImpl()->updateStyleSelector();

@@ -1529,13 +1529,10 @@ void HTMLTokenizer::finish()
 
 void HTMLTokenizer::processToken()
 {
-    KJSProxy *jsProxy;
-    
 #ifdef APPLE_CHANGES
-    if (view && view->part())
-        jsProxy = view->part()->jScript();
-    else
-        jsProxy = 0L;
+    KJSProxy *jsProxy = (view && view->part()) ? view->part()->jScript() : 0L;
+#else
+    KJSProxy *jsProxy = view ? view->part()->jScript() : 0L;
 #endif
     
     if (jsProxy)

@@ -583,8 +583,6 @@ static void checkPseudoState( DOM::ElementImpl *e )
 #if (defined(APPLE_CHANGES) && defined(OPTIMIZE_STRING_USAGE))
     QString u = QString::gstring_toQString(&reuseableString, (UniChar *)(attr.unicode()), attr.length());
 #else
-        // Pseudo elements. We need to check first child here. No dynamic pseudo
-        // elements for the moment
     QString u = attr.string();
 #endif
     if ( !u.contains("://") ) {
@@ -691,7 +689,7 @@ bool CSSStyleSelector::checkOneSelector(DOM::CSSSelector *sel, DOM::ElementImpl 
         // elements for the moment
 	const QString& value = sel->value.string();
 #endif
-	//kdDebug() << "CSSOrderedRule::pseudo " << value << endl;
+//	kdDebug() << "CSSOrderedRule::pseudo " << value << endl;
 	if(value == "first-child") {
 	    // first-child matches the first child that is an element!
 	    DOM::NodeImpl *n = e->parentNode()->firstChild();

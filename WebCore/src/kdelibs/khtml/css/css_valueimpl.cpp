@@ -664,7 +664,7 @@ FontFamilyValueImpl::FontFamilyValueImpl( const QString &string)
 {
 #ifdef APPLE_CHANGES
     parsedFontName = string;
-    // a languge tag is often added in braces at the end. Remove it.
+    // a language tag is often added in braces at the end. Remove it.
     parsedFontName.replace(QRegExp(" \\(.*\\)$"), "");
     // remove [Xft] qualifiers
     parsedFontName.replace(QRegExp(" \\[.*\\]$"), "");
