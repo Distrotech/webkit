@@ -471,28 +471,33 @@ static BOOL nowPrinting(WebCoreBridge *self)
     [self drawRect:rect withPainter:&painter];
 }
 
-// Vertical pagination hook from AppKit
-- (NSArray*)computePageRects: (float)printWidth withPageHeight: (float)printHeight
-{    
+// Used by pagination code called from AppKit when a standalone web page is printed.
+- (NSArray*)computePageRectsWithPrintWidth:(float)printWidth printHeight:(float)printHeight
+{
     [self _setupRootForPrinting:YES];
-    NSMutableArray* pages = [[NSMutableArray alloc] initWithCapacity:5];
+    NSMutableArray* pages = [NSMutableArray arrayWithCapacity:5];
+	if (printWidth == 0 || printHeight == 0) {
+		return pages;
+	}
+	
     KHTMLView* view = _part->view();
     NSView* documentView = view->getDocumentView();
     if (!documentView)
         return pages;
-    
+	
     float currPageHeight = printHeight;
     float docHeight = NSHeight([documentView bounds]);
-    float pageX = NSMinX([documentView bounds]);
-    float pageWidth = NSWidth([documentView bounds]);
+    float docWidth = NSWidth([documentView bounds]);
     
     // We need to give the part the opportunity to adjust the page height at each step.
     for (float i = 0; i < docHeight; i += currPageHeight) {
         float proposedBottom = kMin(docHeight, i + printHeight);
         _part->adjustPageHeight(&proposedBottom, i, proposedBottom, i);
-        currPageHeight = proposedBottom - i;
-        NSValue* val = [NSValue valueWithRect: NSMakeRect(pageX, i, pageWidth, currPageHeight)];
-        [pages addObject: val];
+        currPageHeight = kMax(1.0f, proposedBottom - i);
+        for (float j = 0; j < docWidth; j += printWidth) {
+            NSValue* val = [NSValue valueWithRect: NSMakeRect(j, i, printWidth, currPageHeight)];
+            [pages addObject: val];
+        }
     }
     [self _setupRootForPrinting:NO];
     
@@ -867,9 +872,6 @@ static HTMLFormElementImpl *formElementFromDOMElement(id <WebDOMElement>element)
         return;
     }
     _part->setZoomFactor(newZoomFactor);
-    // setZoomFactor will trigger a timed layout, but we want to do the layout before
-    // we do any drawing. This takes care of that. Without this we redraw twice.
-    [self setNeedsLayout];
 }
 
 - (CFStringEncoding)textEncoding
@@ -1048,6 +1050,13 @@ static HTMLFormElementImpl *formElementFromDOMElement(id <WebDOMElement>element)
 {
     RenderObject *renderer = _part->renderer();
     return renderer ? renderer->needsLayout() : false;
+}
+
+- (void)setNeedsLayout
+{
+    RenderObject *renderer = _part->renderer();
+    if (renderer)
+        renderer->setNeedsLayout(true);
 }
 
 - (BOOL)interceptKeyEvent:(NSEvent *)event toView:(NSView *)view
