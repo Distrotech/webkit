@@ -186,14 +186,6 @@ DocumentImpl *DOMImplementationImpl::createDocument( const DOMString &namespaceU
     if (doc->doctype() && dtype)
         doc->doctype()->copyFrom(*dtype);
 
-    ElementImpl *element = doc->createElementNS(namespaceURI,qualifiedName);
-    doc->appendChild(element,exceptioncode);
-    if (exceptioncode) {
-        delete element;
-        delete doc;
-        return 0;
-    }
-
     return doc;
 }
 
@@ -397,7 +389,7 @@ ElementImpl *DocumentImpl::documentElement() const
     return static_cast<ElementImpl*>(n);
 }
 
-ElementImpl *DocumentImpl::createElement( const DOMString &name )
+ElementImpl *DocumentImpl::createElement( const DOMString &name, int &exceptioncode )
 {
     return new XMLElementImpl( document, name.implementation() );
 }
@@ -443,7 +435,9 @@ NodeImpl *DocumentImpl::importNode(NodeImpl *importedNode, bool deep, int &excep
 
 	if(importedNode->nodeType() == Node::ELEMENT_NODE)
 	{
-		ElementImpl *tempElementImpl = createElementNS(getDocument()->namespaceURI(id()), importedNode->nodeName());
+		ElementImpl *tempElementImpl = createElementNS(getDocument()->namespaceURI(id()), importedNode->nodeName(), exceptioncode);
+                if (exceptioncode)
+                    return 0;
 		result = tempElementImpl;
 
 		if(static_cast<ElementImpl *>(importedNode)->attributes(true) && static_cast<ElementImpl *>(importedNode)->attributes(true)->length())
@@ -505,7 +499,7 @@ NodeImpl *DocumentImpl::importNode(NodeImpl *importedNode, bool deep, int &excep
 	return result;
 }
 
-ElementImpl *DocumentImpl::createElementNS( const DOMString &_namespaceURI, const DOMString &_qualifiedName )
+ElementImpl *DocumentImpl::createElementNS( const DOMString &_namespaceURI, const DOMString &_qualifiedName, int &exceptioncode)
 {
     ElementImpl *e = 0;
     QString qName = _qualifiedName.string();
@@ -515,10 +509,16 @@ ElementImpl *DocumentImpl::createElementNS( const DOMString &_namespaceURI, cons
         _namespaceURI == XHTML_NAMESPACE) {
         // User requested an element in the XHTML namespace - this means we create a HTML element
         // (elements not in this namespace are treated as normal XML elements)
-        e = createHTMLElement(qName.mid(colonPos+1));
-        int exceptioncode = 0;
-        if (e && colonPos >= 0)
-            e->setPrefix(qName.left(colonPos),  exceptioncode);
+        e = createHTMLElement(qName.mid(colonPos+1), exceptioncode);
+        if (exceptioncode)
+            return 0;
+        if (e && colonPos >= 0) {
+            e->setPrefix(qName.left(colonPos), exceptioncode);
+            if (exceptioncode) {
+                delete e;
+                return 0;
+            }
+        }
     }
     if (!e)
         e = new XMLElementImpl( document, _qualifiedName.implementation(), _namespaceURI.implementation() );
@@ -586,11 +586,11 @@ void DocumentImpl::setTitle(DOMString _title)
 {
     m_title = _title;
 
-    if (!view() || !view()->part())
+    if (!part())
         return;
 
 #if APPLE_CHANGES
-    KWQ(view()->part())->setTitle(_title);
+    KWQ(part())->setTitle(_title);
 #else
     QString titleStr = m_title.string();
     for (int i = 0; i < titleStr.length(); ++i)
@@ -598,7 +598,7 @@ void DocumentImpl::setTitle(DOMString _title)
             titleStr[i] = ' ';
     titleStr = titleStr.stripWhiteSpace();
     titleStr.compose();
-    if ( !view()->part()->parentPart() ) {
+    if ( !part()->parentPart() ) {
 	if (titleStr.isNull() || titleStr.isEmpty()) {
 	    // empty title... set window caption as the URL
 	    KURL url = m_url;
@@ -607,7 +607,7 @@ void DocumentImpl::setTitle(DOMString _title)
 	    titleStr = url.url();
 	}
 
-	emit view()->part()->setWindowCaption( KStringHandler::csqueeze( titleStr, 128 ) );
+	emit part()->setWindowCaption( KStringHandler::csqueeze( titleStr, 128 ) );
     }
 #endif
 }
@@ -622,9 +622,12 @@ unsigned short DocumentImpl::nodeType() const
     return Node::DOCUMENT_NODE;
 }
 
-ElementImpl *DocumentImpl::createHTMLElement( const DOMString &name )
+ElementImpl *DocumentImpl::createHTMLElement( const DOMString &name, int &exceptioncode )
 {
-    if (!isValidName(name)) throw DOMException(DOMException::INVALID_CHARACTER_ERR);
+    if (!isValidName(name)) {
+        exceptioncode = DOMException::INVALID_CHARACTER_ERR;
+        return 0;
+    }
 
     uint id = khtml::getTagID( name.string().lower().latin1(), name.string().length() );
 
@@ -908,6 +911,11 @@ QStringList DocumentImpl::docState()
         s.append(it.current()->state());
 
     return s;
+}
+
+KHTMLPart *DocumentImpl::part() const 
+{
+    return m_view ? m_view->part() : 0; 
 }
 
 RangeImpl *DocumentImpl::createRange()
@@ -1221,7 +1229,7 @@ void DocumentImpl::close()
     // First fire the onload.
     bool doload = !parsing() && m_tokenizer && !m_processingLoadEvent;
     
-    bool wasNotRedirecting = !view() || view()->part()->d->m_scheduledRedirection == noRedirectionScheduled || view()->part()->d->m_scheduledRedirection == historyNavigationScheduled;
+    bool wasNotRedirecting = !part() || part()->d->m_scheduledRedirection == noRedirectionScheduled || part()->d->m_scheduledRedirection == historyNavigationScheduled;
     
     m_processingLoadEvent = true;
     if (body() && doload) {
@@ -1617,7 +1625,7 @@ void DocumentImpl::processHttpEquiv(const DOMString &equiv, const DOMString &con
 {
     assert(!equiv.isNull() && !content.isNull());
 
-    KHTMLView *v = getDocument()->view();
+    KHTMLPart *part = getDocument()->part();
 
     if (strcasecmp(equiv, "default-style") == 0) {
         // The preferred style set has been overridden as per section 
@@ -1626,11 +1634,11 @@ void DocumentImpl::processHttpEquiv(const DOMString &equiv, const DOMString &con
         // For more info, see the test at:
         // http://www.hixie.ch/tests/evil/css/import/main/preferred.html
         // -dwh
-        v->part()->d->m_sheetUsed = content.string();
+        part->d->m_sheetUsed = content.string();
         m_preferredStylesheetSet = content;
         updateStyleSelector();
     }
-    else if(strcasecmp(equiv, "refresh") == 0 && v->part()->metaRefreshEnabled())
+    else if(strcasecmp(equiv, "refresh") == 0 && part->metaRefreshEnabled())
     {
         // get delay and url
         QString str = content.string().stripWhiteSpace();
@@ -1644,10 +1652,10 @@ void DocumentImpl::processHttpEquiv(const DOMString &equiv, const DOMString &con
             int delay = 0;
 	    delay = str.toInt(&ok);
 #if APPLE_CHANGES
-            // We want a new history item if the refresh timeout > 1 second
-            if(ok) v->part()->scheduleRedirection(delay, v->part()->url().url(), delay <= 1);
+	    // We want a new history item if the refresh timeout > 1 second
+	    if(ok && part) part->scheduleRedirection(delay, part->url().url(), delay <= 1);
 #else
-            if(ok) v->part()->scheduleRedirection(delay, v->part()->url().url() );
+	    if(ok && part) part->scheduleRedirection(delay, part->url().url() );
 #endif
         } else {
             double delay = 0;
@@ -1661,12 +1669,12 @@ void DocumentImpl::processHttpEquiv(const DOMString &equiv, const DOMString &con
             str = str.stripWhiteSpace();
             if ( str.length() && str[0] == '=' ) str = str.mid( 1 ).stripWhiteSpace();
             str = parseURL( DOMString(str) ).string();
-            if ( ok )
+            if ( ok && part )
 #if APPLE_CHANGES
                 // We want a new history item if the refresh timeout > 1 second
-                v->part()->scheduleRedirection(delay, getDocument()->completeURL( str ), delay <= 1);
+                part->scheduleRedirection(delay, getDocument()->completeURL( str ), delay <= 1);
 #else
-                v->part()->scheduleRedirection(delay, getDocument()->completeURL( str ));
+                part->scheduleRedirection(delay, getDocument()->completeURL( str ));
 #endif
         }
     }
@@ -1674,14 +1682,13 @@ void DocumentImpl::processHttpEquiv(const DOMString &equiv, const DOMString &con
     {
         QString str = content.string().stripWhiteSpace();
         time_t expire_date = str.toLong();
-        KURL url = v->part()->url();
         if (m_docLoader)
             m_docLoader->setExpireDate(expire_date);
     }
-    else if(strcasecmp(equiv, "pragma") == 0 || strcasecmp(equiv, "cache-control") == 0)
+    else if(strcasecmp(equiv, "pragma") == 0 || strcasecmp(equiv, "cache-control") == 0 && part)
     {
         QString str = content.string().lower().stripWhiteSpace();
-        KURL url = v->part()->url();
+        KURL url = part->url();
         if ((str == "no-cache") && url.protocol().startsWith("http"))
         {
            KIO::http_update_cache(url, true, 0);
@@ -2495,7 +2502,7 @@ void DocumentImpl::setDomain(const DOMString &newDomain, bool force /*=false*/)
 bool DocumentImpl::isValidName(const DOMString &name)
 {
     static const char validFirstCharacter[] = "ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxyz";
-    static const char validSubsequentCharacter[] = "ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxyz0-9-_:.";
+    static const char validSubsequentCharacter[] = "ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxyz0123456789-_:.";
     const unsigned length = name.length();
     if (length == 0)
         return false;
@@ -2590,7 +2597,7 @@ DOMString DocumentImpl::toString() const
     DOMString result;
 
     for (NodeImpl *child = firstChild(); child != NULL; child = child->nextSibling()) {
-	child = child->nextSibling();
+	result += child->toString();
     }
 
     return result;
@@ -2641,7 +2648,7 @@ DOMString DocumentFragmentImpl::toString() const
     DOMString result;
 
     for (NodeImpl *child = firstChild(); child != NULL; child = child->nextSibling()) {
-	child = child->nextSibling();
+	result += child->toString();
     }
 
     return result;
