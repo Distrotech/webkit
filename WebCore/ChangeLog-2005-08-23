@@ -1,5 +1,14 @@
 2003-11-15  Maciej Stachowiak  <mjs@apple.com>
 
+        Reviewed by Darin.
+
+	- initialize modifier key fields, needed to make the recent merged fixes work well
+
+        * khtml/xml/dom2_eventsimpl.cpp:
+        (KeyboardEventImpl::KeyboardEventImpl): Always initialize, don't only set to true.
+
+2003-11-15  Maciej Stachowiak  <mjs@apple.com>
+
 	- merged the following fixes from HEAD
 	
     2003-11-13  Darin Adler  <darin@apple.com>

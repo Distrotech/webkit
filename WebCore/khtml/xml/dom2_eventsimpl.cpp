@@ -592,14 +592,11 @@ KeyboardEventImpl::KeyboardEventImpl(QKeyEvent *key, AbstractViewImpl *view)
 
     // key->state returns enum ButtonState, which is ShiftButton, ControlButton and AltButton or'ed together.
     int keyState = key->state();
-    if (keyState & Qt::ControlButton)
-        m_ctrlKey = true;
-    if (keyState & Qt::ShiftButton)
-        m_shiftKey = true;
-    if (keyState & Qt::AltButton)
-        m_altKey = true;
-    if (keyState & Qt::MetaButton)
-        m_metaKey = true;
+    
+    m_ctrlKey = keyState & Qt::ControlButton;
+    m_shiftKey = keyState & Qt::ShiftButton;
+    m_altKey = keyState & Qt::AltButton;
+    m_metaKey = keyState & Qt::MetaButton;
     // altGraphKey is not supported by Qt.
     
     // Note: we only support testing for num pad
