@@ -1,3 +1,12 @@
+=== Safari-58.4 ===
+
+2003-02-11  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+
+        * WebCoreSupport.subproj/WebTextRenderer.m: Change (void **) cast
+	to (void *) for compatibility with the latest Panther.
+	
 === Safari-58.3 ===
 
 2003-02-11  Maciej Stachowiak  <mjs@apple.com>
