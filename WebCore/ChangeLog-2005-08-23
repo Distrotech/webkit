@@ -1,3 +1,17 @@
+=== WebCore-106 ===
+
+2003-09-19  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+
+	- fixed 3410980 - FileMaker: going forward with an empty forward list makes a frame come out blank sometimes
+	
+        * khtml/html/html_documentimpl.cpp:
+        (HTMLDocumentImpl::close): Don't do paint suppression for history
+	redirects.
+
+=== WebCore-105 ===
+
 2003-09-15  Ken as Darin  <darin@apple.com>
 
         Reviewed by Darin and Don.
