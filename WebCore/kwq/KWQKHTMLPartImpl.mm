@@ -174,6 +174,8 @@ public:
     double totalWriteTime;
 #endif
 
+    QString m_sheetUsed;
+
     KHTMLPartPrivate(KHTMLPart *part)
     {
         if (!cache_init) {
@@ -1574,4 +1576,19 @@ void KHTMLPart::nodeActivated(const DOM::Node &aNode)
 void KHTMLPart::stopAutoScroll()
 {
     _logNeverImplemented();
+}
+
+QString KHTMLPart::sheetUsed() const
+{
+    return d->m_sheetUsed;
+}
+
+void KHTMLPart::setSheetUsed(const QString &qs)
+{
+    d->m_sheetUsed = qs;
+}
+
+int KHTMLPart::zoomFactor(void) const
+{
+    return 1;
 }

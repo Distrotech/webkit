@@ -79,7 +79,7 @@ public:
     // member functions --------------------------------------------------------
 
     QWidget *focusWidget() const;
-    QStyle style() const;
+    QStyle &style() const;
 
     // operators ---------------------------------------------------------------
 

@@ -53,6 +53,17 @@ int QDesktopWidget::height() const
     return (int)[[NSScreen mainScreen] frame].size.height;
 }
 
+int QDesktopWidget::screenNumber(QWidget *) const
+{
+    return 0;
+}
+
+QRect QDesktopWidget::screenGeometry(int screenNumber)
+{
+    NSRect rect = [[NSScreen mainScreen] frame];
+    return QRect(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+}
+
 
 QDesktopWidget *QApplication::desktop()
 {
@@ -209,4 +220,10 @@ QWidget *QApplication::focusWidget() const
 {
     _logNeverImplemented();
     return NULL;
+}
+
+QStyle &QApplication::style() const
+{
+    static QStyle style;
+    return style;
 }

@@ -88,7 +88,11 @@ void Font::drawText( QPainter *p, int x, int y, QChar *str, int slen, int pos, i
 int Font::width( QChar *chs, int slen, int pos, int len ) const
 {
     // ### might be a little inaccurate
+#ifdef APPLE_CHANGES
+    int w = fm._width((UniChar *) chs + pos, len);
+#else
     int w = fm.width( QConstString( chs+pos, slen-pos).string(), len );
+#endif
 
     if ( letterSpacing )
 	w += len*letterSpacing;

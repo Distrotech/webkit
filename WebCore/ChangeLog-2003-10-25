@@ -1,3 +1,28 @@
+2002-03-25  Darin Adler  <darin@apple.com>
+
+	* src/kdelibs/khtml/rendering/font.cpp: (Font::width): Make it call _width so we
+        don't lose the optimization.
+        
+	* src/kwq/KWQApplication.mm: (QDesktopWidget::screenNumber): New.
+	(QDesktopWidget::screenGeometry): New.
+        (QApplication::style): New.
+	* src/kwq/KWQColorGroup.mm: (QColorGroup::highlight): New.
+	(QColorGroup::highlightedText): New.
+	* src/kwq/KWQFont.mm: (QFont::setPixelSize): New.
+	* src/kwq/KWQFontMetrics.mm: (QFontMetrics::charWidth): New.
+	* src/kwq/KWQKGlobal.mm: (KGlobal::locale): Implement.
+        (KLocale::KLocale): New.
+	(KLocale::languageList): New.
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::sheetUsed): New.
+	(KHTMLPart::setSheetUsed): New.
+        (KHTMLPart::zoomFactor): New.
+	* src/kwq/KWQKHTMLSettings.mm: (KHTMLSettings::mediumFontSize): New.
+	* src/kwq/KWQScrollView.mm: (QScrollView::childX): New.
+        (QScrollView::childY): New.
+        
+	* src/kwq/qt/qapplication.h: style() returns a QStyle &.
+	* src/kwq/qt/qpalette.h: Add Highlight and HighlightedText.
+
 2002-03-24  Darin Adler  <darin@apple.com>
 
         More compiling. Still won't link.
