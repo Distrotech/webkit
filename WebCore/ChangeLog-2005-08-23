@@ -1,3 +1,5 @@
+=== WebCore-125.6 ===
+
 2004-04-15  Vicki Murley  <vicki@apple.com>
 
 	- merge the rest of the fix for the zeldman bug (3609695) from HEAD
@@ -13,8 +15,6 @@
 	Fix mismatched_CFBundleShortVersionStrings verification failure
 
         * English.lproj/InfoPlist.strings:
-
-=== WebCore-125.6 ===
 
 2004-04-14  Vicki Murley  <vicki@apple.com>
 
