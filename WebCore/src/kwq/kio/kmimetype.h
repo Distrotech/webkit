@@ -86,6 +86,8 @@ public:
     // static member functions -------------------------------------------------
 
     static Ptr findByURL(const KURL &, mode_t=0, bool=false, bool=false);
+    static Ptr mimeType(QString serviceType);
+    static QString defaultMimeType();
     
     // constructors, copy constructors, and destructors ------------------------
 
@@ -100,8 +102,6 @@ public:
 
     QString name() const;
     QString comment() const;
-    static Ptr mimeType(QString serviceType);
-    static QString defaultMimeType();
 
     // operators ---------------------------------------------------------------
 

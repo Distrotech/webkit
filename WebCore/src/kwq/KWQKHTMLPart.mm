@@ -516,6 +516,12 @@ bool KHTMLPart::jScriptEnabled() const
     return TRUE;
 }
 
+bool KHTMLPart::metaRefreshEnabled() const
+{
+    _logNotYetImplemented();
+    return TRUE;
+}
+
 KJSProxy *KHTMLPart::jScript()
 {
   if ( !d->m_jscript )
@@ -555,6 +561,13 @@ QVariant KHTMLPart::executeScript( const DOM::Node &n, const QString &script )
     
     //kdDebug(6050) << "KHTMLPart::executeScript - done" << endl;
     return ret;
+}
+
+QVariant KHTMLPart::executeScript(QString filename, int baseLine, const DOM::Node &n, const QString &script)
+{
+  // FIXME:MERGE need to implement this, I think
+  _logNotYetImplemented();
+  return QVariant();
 }
 
 QVariant KHTMLPart::executeScheduledScript()
@@ -1176,8 +1189,15 @@ bool KHTMLPart::requestObject( khtml::RenderPart *frame, const QString &url, con
     frame->setWidget(pluginWidget);
     plugins.append(url);
   }
-  return TRUE;
+  return true;
 }
+
+bool KHTMLPart::requestObject( khtml::ChildFrame *frame, const KURL &url, const KParts::URLArgs &args )
+{
+  _logNotYetImplemented();
+  return false;
+}
+
 
 void KHTMLPart::submitForm( const char *action, const QString &url, const QByteArray &formData, const QString &_target, const QString& contentType, const QString& boundary )
 {
@@ -1304,6 +1324,18 @@ void KHTMLPart::setJSStatusBarText( const QString &text )
 void KHTMLPart::setJSDefaultStatusBarText( const QString &text )
 {
     _logNeverImplemented();
+}
+
+QString KHTMLPart::referrer() const
+{
+     _logNeverImplemented();
+     return QString();
+}
+
+QString KHTMLPart::lastModified() const
+{
+     _logNeverImplemented();
+     return QString();
 }
 
 QString KHTMLPart::jsStatusBarText() const

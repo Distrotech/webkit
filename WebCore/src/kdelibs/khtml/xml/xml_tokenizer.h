@@ -115,9 +115,10 @@ public:
     virtual void finish() = 0;
     virtual void setOnHold(bool /*_onHold*/) {}
 
+#ifndef APPLE_CHANGES
 signals:
     void finishedParsing();
-
+#endif
 };
 
 class XMLTokenizer : public Tokenizer, public khtml::CachedObjectClient

@@ -59,7 +59,7 @@ public:
     
     // member functions --------------------------------------------------------
 
-    bool isEmpty();
+    bool isEmpty() {return impl.size() == 0; }
     T &at(uint u) const {return *(T *)impl.at(u); }
     T *data() const { return (T *)impl.data(); }
     uint size() const { return impl.size(); }

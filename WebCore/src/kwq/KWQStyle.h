@@ -62,10 +62,10 @@ public:
     // member functions --------------------------------------------------------
 
     GUIStyle guiStyle() const;
-    virtual QSize indicatorSize() { return QSize(22,22); };	// FIXME!  Shouldn't be hardcoded.
-    virtual QSize exclusiveIndicatorSize() { return QSize(22,22); };// FIXME!  Shouldn't be hardcoded.
-    virtual int pixelMetric(int metric) const;
-    virtual int styleHint(StyleHint hint) const;
+    virtual QSize indicatorSize() { return QSize(22,22); }	// FIXME!  Shouldn't be hardcoded.
+    virtual QSize exclusiveIndicatorSize() { return QSize(22,22); } // FIXME!  Shouldn't be hardcoded.
+    virtual int pixelMetric(int metric) const { return 22; } // FIXME!  Shouldn't be hardcoded.
+    virtual int styleHint(StyleHint hint) const { return 0; }
 
     // operators ---------------------------------------------------------------
 

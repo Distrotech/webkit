@@ -1,3 +1,84 @@
+2002-03-19  Maciej Stachowiak  <mjs@apple.com>
+
+	Changes needed to get WebCore to link: implement all the missing functions.
+	
+	* src/kdelibs/khtml/html/htmltokenizer.cpp: (HTMLTokenizer::end):
+	* src/kdelibs/khtml/xml/xml_tokenizer.cpp: (XMLTokenizer::end):
+	* src/kdelibs/khtml/xml/xml_tokenizer.h:
+	* src/kwq/KWQApplication.mm: (QApplication::_initialize),
+	(QApplication::focusWidget):
+	* src/kwq/KWQColorGroup.mm: (QColorGroup::operator==):
+	* src/kwq/KWQComboBox.mm: (QComboBox::currentItem):
+	* src/kwq/KWQCursor.mm: (QCursor::operator=), (QCursor::handle):
+	* src/kwq/KWQEvent.mm: (QMouseEvent::QMouseEvent), (QKeyEvent::isAutoRepeat),
+	(QKeyEvent::text), (QKeyEvent::ascii), (QKeyEvent::count),
+	(QKeyEvent::isAccepted), (QCustomEvent::QCustomEvent),
+	(QContextMenuEvent::QContextMenuEvent), (QContextMenuEvent::globalPos),
+	(QContextMenuEvent::reason), (QContextMenuEvent::state), (QContextMenuEvent::x),
+	(QContextMenuEvent::y):
+	* src/kwq/KWQFontMetrics.mm: (QFontMetrics::boundingRect):
+	* src/kwq/KWQKCursor.mm: (KCursor::whatsThisCursor):
+	* src/kwq/KWQKDebug.mm: (kdBacktrace):
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::metaRefreshEnabled),
+	(KHTMLPart::executeScript), (KHTMLPart::requestObject),
+	(KHTMLPart::setJSDefaultStatusBarText), (KHTMLPart::referrer),
+	(KHTMLPart::lastModified):
+	* src/kwq/KWQKMimeType.mm: (KMimeType::comment), (KMimeType::mimeType),
+	(KMimeType::defaultMimeType):
+	* src/kwq/KWQKPrinter.mm: (KPrinter::KPrinter):
+	* src/kwq/KWQKProtocolManager.mm: (KProtocolManager::proxyFor):
+	* src/kwq/KWQKstddirs.mm: (KStandardDirs::saveLocation):
+	* src/kwq/KWQLineEdit.mm: (QLineEdit::edited), (QLineEdit::setEdited):
+	* src/kwq/KWQListImpl.h:
+	* src/kwq/KWQListImpl.mm: (KWQListImpl::getFirst), (KWQListImpl::take):
+	* src/kwq/KWQMapImpl.h:
+	* src/kwq/KWQMapImpl.mm: (KWQMapImpl::removeEqualInternal):
+	* src/kwq/KWQNSTextField.h:
+	* src/kwq/KWQNSTextField.mm: (-[KWQNSTextField edited]), (-[KWQNSTextField
+	setEdited:]), (-[KWQNSTextField textDidChange:]):
+	* src/kwq/KWQObject.mm: (QObject::eventFilter):
+	* src/kwq/KWQPainter.mm: (QPainter::drawConvexPolygon), (QPainter::drawText):
+	* src/kwq/KWQPalette.mm: (QPalette::operator==):
+	* src/kwq/KWQRadioButton.mm: (QRadioButton::isChecked):
+	* src/kwq/KWQRect.mm: (QRect::isEmpty), (QRect::intersect), (QRect::unite):
+	* src/kwq/KWQRegion.mm: (QRegion::translate), (QRegion::boundingRect):
+	* src/kwq/KWQScrollView.mm: (QScrollView::updateContents):
+	* src/kwq/KWQString.mm: (QString::endsWith):
+	* src/kwq/KWQStyle.h:
+	* src/kwq/KWQTextArea.h:
+	* src/kwq/KWQTextArea.mm: (-[KWQTextArea paragraphs]), (RangeOfParagraph),
+	(-[KWQTextArea paragraphLength:]), (-[KWQTextArea textForParagraph:]),
+	(-[KWQTextArea lineOfCharAtIndex:inParagraph:]), (-[KWQTextArea
+	getCursorPositionAsIndex:inParagraph:]), (-[KWQTextArea
+	setCursorPositionToIndex:inParagraph:]):
+	* src/kwq/KWQTextEdit.mm: (QMultiLineEdit::QMultiLineEdit), (KEdit::KEdit),
+	(KEdit::~KEdit), (QTextEdit::QTextEdit), (QTextEdit::setText), (QTextEdit::text),
+	(QTextEdit::paragraphs), (QTextEdit::paragraphLength), (QTextEdit::lineOfChar),
+	(QTextEdit::getCursorPosition), (QTextEdit::setCursorPosition),
+	(QTextEdit::wordWrap), (QTextEdit::setWordWrap), (QTextEdit::setTextFormat),
+	(QTextEdit::isReadOnly), (QTextEdit::setReadOnly), (QTextEdit::selectAll):
+	* src/kwq/KWQVectorImpl.mm: (KWQVectorImpl::at), (KWQVectorImpl::data):
+	* src/kwq/KWQWidget.mm: (QWidget::frameGeometry), (QWidget::cursor),
+	(QWidget::unsetCursor):
+	* src/kwq/KWQbrowserextension.mm:
+	* src/kwq/KWQtextstream.mm: (QTextStream::QTextStream),
+	(QTextStream::operator<<), (endl):
+	* src/kwq/KWQxml.mm: (QXmlAttributes::uri), (QXmlParseException::lineNumber):
+	* src/kwq/Makefile.am:
+	* src/kwq/kdecore/kstandarddirs.h:
+	* src/kwq/kdecore/kstaticdeleter.h:
+	* src/kwq/kdeui/keditcl.h:
+	* src/kwq/kio/kmimetype.h:
+	* src/kwq/qt/qarray.h:
+	* src/kwq/qt/qevent.h:
+	* src/kwq/qt/qlist.h:
+	* src/kwq/qt/qmap.h:
+	* src/kwq/qt/qpalette.h:
+	* src/kwq/qt/qptrqueue.h:
+	* src/kwq/qt/qscrollview.h:
+	* src/kwq/qt/qstring.h:
+	* src/kwq/qt/qtextedit.h:
+
 2002-03-18  Maciej Stachowiak  <mjs@apple.com>
 
 	Changes needed to get kwq compiling (doesn't link yet, though).

@@ -339,6 +339,13 @@ QRect QFontMetrics::boundingRect(const QString &qstring, int len) const
 }
 
 
+QRect QFontMetrics::boundingRect(int x, int y, int width, int height, int flags, const QString &str) const
+{
+    // FIXME: need to support word wrapping
+    return QRect(x,y, width, height).intersect(boundingRect(str));
+}
+
+
 QRect QFontMetrics::boundingRect(QChar qc) const
 {
     ushort c = qc.unicode();

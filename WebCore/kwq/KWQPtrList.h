@@ -73,6 +73,7 @@ public:
     bool removeLast() { return impl.removeLast(del_item); }
     bool removeRef(const T *item) { return impl.removeRef(item, del_item); }
 
+    T *getFirst() const { return (T *)impl.getFirst(); }
     T *getLast() const { return (T *)impl.getLast(); }
     T *current() const { return (T *)impl.current(); }
     T *first() { return (T *)impl.first(); }

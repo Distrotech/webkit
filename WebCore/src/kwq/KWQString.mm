@@ -485,6 +485,14 @@ bool QString::startsWith(const QString &qs) const
     return FALSE;
 }
 
+bool QString::endsWith(const QString &qs) const
+{
+    if (s && qs.s) {
+        return CFStringHasSuffix(s, qs.s);
+    }
+    return FALSE;
+}
+
 int QString::find(QChar qc, int index) const
 {
     if (s && qc.c) {

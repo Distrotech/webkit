@@ -544,7 +544,7 @@ private:
 class QContextMenuEvent : public QEvent
 {
  public:
-    QContextMenuEvent(int, QPoint &, QPoint, Qt::ButtonState);
+    QContextMenuEvent(int, const QPoint &, const QPoint &, Qt::ButtonState);
 
     int x() const;
     int y() const;
@@ -552,6 +552,11 @@ class QContextMenuEvent : public QEvent
     int reason() const;
     QPoint globalPos() const;
 
+ private:
+    int m_reason;
+    QPoint m_pos;
+    QPoint m_globalPos;
+    ButtonState m_state;
 }; // class QContextMenuEvent ========================================================
 
 #endif

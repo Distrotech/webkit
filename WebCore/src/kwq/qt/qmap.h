@@ -286,7 +286,7 @@ public:
 
     void remove(const QMapIterator<K,V> &iterator)
     {
-	removeInternal(iterator.node);
+	removeEqualInternal(iterator.node, true);
     }
 
     Iterator find (const K &key)

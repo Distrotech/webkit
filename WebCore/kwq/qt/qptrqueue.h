@@ -26,16 +26,21 @@
 #ifndef QPTRQUEUE_H_
 #define QPTRQUEUE_H_
 
-#include <config.h>
+#include <qptrlist.h>
+
 
 template<class T> class QPtrQueue
 {
 public:
-    bool isEmpty() const;
-    T *dequeue();
-    void enqueue(T *);
-    uint count() const;
-    T *head();
+    bool isEmpty() const { return list.isEmpty(); }
+    T *dequeue() { T *tmp = list.getFirst(); list.removeFirst(); return tmp; }
+    void enqueue(const T *item) { list.append (item); }
+    uint count() const { return list.count(); }
+    T *head() const { return list.getFirst(); }
+    QPtrQueue<T> &operator=(const QPtrQueue<T> &q) { list = q.list; return *this; }
+
+ private:
+    QPtrList<T> list;
 };
 
 #endif /* QPTRQUEUE_H_ */

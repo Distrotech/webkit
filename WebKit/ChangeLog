@@ -1,3 +1,8 @@
+2002-03-19  Maciej Stachowiak  <mjs@apple.com>
+
+	* WebView.subproj/IFWebView.mm: (-[IFWebView layout]): layout() no
+	longer takes an argument.
+
 2002-03-06  John Sullivan  <sullivan@apple.com>
 
 	* Misc.subproj/IFError.h: Removed stray but evil import.
