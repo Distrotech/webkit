@@ -27,12 +27,14 @@
 #include <qpalette.h>
 #include <qcolor.h>
 
+#define QCOLOR_GROUP_SIZE (QColorGroup::HighlightedText + 1)
+
 class QColorGroupPrivate
 {
 friend class QColorGroup;
 public:
     QColorGroupPrivate() {
-        brushes = new QBrush[QColorGroup::HighlightedText + 1];    
+        brushes = new QBrush[QCOLOR_GROUP_SIZE];    
         //brushes[QColorGroup::Foreground] = QColor(0,0,0);    
         //brushes[QColorGroup::Shadow] = QColor(0,0,0);    
         brushes[QColorGroup::Foreground] = QColor(255,255,255);    

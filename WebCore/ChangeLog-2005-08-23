@@ -1,5 +1,17 @@
 2002-04-15  Darin Adler  <darin@apple.com>
 
+	More fixes so text displays (still at wrong font size).
+
+	* src/kdelibs/khtml/rendering/font.cpp: (max): New helper.
+	(Font::drawText): Simplified implementation for now.
+	(Font::width): Simplified implementation for now.
+	* src/kwq/KWQColorGroup.mm: Reinstated QCOLOR_GROUP_SIZE.
+
+	* src/kwq/qt/qfontmetrics.h: Removed charWidth and changed _width to take QChar *.
+	* src/kwq/KWQFontMetrics.mm: Removed charWidth and changed _width to take QChar *.
+
+2002-04-15  Darin Adler  <darin@apple.com>
+
 	Merged changes from KDE 3.0 final. Other fixes to get things compiling.
 
 	* src/kdelibs/khtml/css/css_valueimpl.cpp:

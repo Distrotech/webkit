@@ -824,15 +824,9 @@ int QFontMetrics::width(const QString &qstring, int len) const
     return ROUND_TO_INT([data->getInfo() rectForString: string].size.width);
 }
 
-int QFontMetrics::charWidth(const QString &qstring, int pos) const
+int QFontMetrics::_width(const QChar *uchars, int len) const
 {
-    _logNotYetImplemented();
-    return 0;
-}
-
-int QFontMetrics::_width(const UniChar *uchars, int len) const
-{
-    return ROUND_TO_INT(_rectForString(data->getInfo(), uchars, len).size.width);
+    return ROUND_TO_INT(_rectForString(data->getInfo(), (const UniChar *)uchars, len).size.width);
 }
 
 

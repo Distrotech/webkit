@@ -35,12 +35,18 @@
 
 using namespace khtml;
 
+#ifdef APPLE_CHANGES
+static inline int max(int a, int b) { return a > b ? a : b; }
+#endif
+
 void Font::drawText( QPainter *p, int x, int y, QChar *str, int slen, int pos, int len,
         int toAdd, QPainter::TextDirection d, int from, int to, QColor bg ) const
 {
+#ifdef APPLE_CHANGES
+    p->drawText(x, y, QConstString(str + pos, slen - pos).string(), len, d);
+#else
     QString qstr = QConstString(str, slen).string();
 
-#ifndef APPLE_CHANGES
     // hack for fonts that don't have a welldefined nbsp
     if ( !fontDef.hasNbsp ) {
 	// str.setLength() always does a deep copy, so the replacement code below is safe.
@@ -50,7 +56,6 @@ void Font::drawText( QPainter *p, int x, int y, QChar *str, int slen, int pos, i
 	    if ( uc->unicode() == 0xa0 )
 		*uc = ' ';
     }
-#endif
     
     // ### fixme for RTL
     if ( !letterSpacing && !wordSpacing && !toAdd && from==-1 ) {
@@ -93,14 +98,17 @@ void Font::drawText( QPainter *p, int x, int y, QChar *str, int slen, int pos, i
 		x += chw;
 	}
     }
+#endif
 }
 
 
 int Font::width( QChar *chs, int slen, int pos, int len ) const
 {
+#ifdef APPLE_CHANGES
+    return fm._width(chs + pos, max(len, slen - pos));
+#else
     QString qstr = QConstString(chs+pos, slen-pos).string();
 
-#ifndef APPLE_CHANGES
     // hack for fonts that don't have a welldefined nbsp
     if ( !fontDef.hasNbsp ) {
 	// str.setLength() always does a deep copy, so the replacement code below is safe.
@@ -110,7 +118,6 @@ int Font::width( QChar *chs, int slen, int pos, int len ) const
 	    if ( uc->unicode() == 0xa0 )
 		*uc = ' ';
     }
-#endif
 
     // ### might be a little inaccurate
     int w = fm.width( qstr, len );
@@ -126,10 +133,14 @@ int Font::width( QChar *chs, int slen, int pos, int len ) const
 	}
     }
     return w;
+#endif
 }
 
 int Font::width( QChar *chs, int slen, int pos ) const
 {
+#ifdef APPLE_CHANGES
+    return width(chs, slen, pos, 1);
+#else
     int w;
     if ( !fontDef.hasNbsp && (chs+pos)->unicode() == 0xa0 )
 	w = fm.width( QChar( ' ' ) );
@@ -142,6 +153,7 @@ int Font::width( QChar *chs, int slen, int pos ) const
     if ( wordSpacing && (chs+pos)->isSpace() )
 		w += wordSpacing;
     return w;
+#endif
 }
 
 
