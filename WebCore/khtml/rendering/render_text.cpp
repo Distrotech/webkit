@@ -97,9 +97,14 @@ void InlineTextBox::paintSelection(const Font *f, RenderText *text, QPainter *p,
 #endif
     ty += m_baseline;
 
+#if APPLE_CHANGES
     //kdDebug( 6040 ) << "InlineTextBox::painting(" << s.string() << ") at(" << x+_tx << "/" << y+_ty << ")" << endl;
     f->drawHighlightForText(p, m_x + tx, m_y + ty, text->str->s, text->str->l, m_start, m_len,
+		m_toAdd, m_reversed ? QPainter::RTL : QPainter::LTR, style->visuallyOrdered(), startPos, endPos, c);
+#else
+    f->drawHighlightForText(p, m_x + tx, m_y + ty, text->str->s, text->str->l, m_start, m_len,
 		m_toAdd, m_reversed ? QPainter::RTL : QPainter::LTR, startPos, endPos, c);
+#endif
     p->restore();
 }
 
@@ -374,6 +379,15 @@ bool RenderText::isTextFragment() const
 DOM::DOMStringImpl* RenderText::originalString() const
 {
     return element() ? element()->string() : 0;
+}
+
+void RenderText::absoluteRects(QValueList<QRect>& rects, int _tx, int _ty)
+{
+    for (unsigned int i = 0; i < m_lines.count(); i++)
+        rects.append(QRect(_tx + m_lines[i]->xPos(), 
+                           _ty + m_lines[i]->yPos(), 
+                           m_lines[i]->width(), 
+                           m_lines[i]->height()));
 }
 
 InlineTextBox * RenderText::findNextInlineTextBox( int offset, int &pos )
@@ -699,9 +713,15 @@ void RenderText::paintObject(QPainter *p, int /*x*/, int y, int /*w*/, int h,
                 }
                 
                 if (!paintSelectedTextOnly && !paintSelectedTextSeparately) {
+#if APPLE_CHANGES
+                    font->drawText(p, s->m_x + tx, s->m_y + ty + s->m_baseline,
+                                   str->s, str->l, s->m_start, s->m_len,
+                                   s->m_toAdd, s->m_reversed ? QPainter::RTL : QPainter::LTR, style()->visuallyOrdered());
+#else
                     font->drawText(p, s->m_x + tx, s->m_y + ty + s->m_baseline,
                                    str->s, str->l, s->m_start, s->m_len,
                                    s->m_toAdd, s->m_reversed ? QPainter::RTL : QPainter::LTR);
+#endif
                 }
                 else {
                     int offset = s->m_start;
@@ -709,18 +729,36 @@ void RenderText::paintObject(QPainter *p, int /*x*/, int y, int /*w*/, int h,
                     int ePos = QMIN( endPos - offset, s->m_len );
                     if (paintSelectedTextSeparately) {
                         if (sPos >= ePos)
+#if APPLE_CHANGES
+                            font->drawText(p, s->m_x + tx, s->m_y + ty + s->m_baseline,
+                                           str->s, str->l, s->m_start, s->m_len,
+                                           s->m_toAdd, s->m_reversed ? QPainter::RTL : QPainter::LTR, style()->visuallyOrdered());
+#else
                             font->drawText(p, s->m_x + tx, s->m_y + ty + s->m_baseline,
                                            str->s, str->l, s->m_start, s->m_len,
                                            s->m_toAdd, s->m_reversed ? QPainter::RTL : QPainter::LTR);
+#endif
                         else {
                             if (sPos-1 >= 0)
+#if APPLE_CHANGES
+                                font->drawText(p, s->m_x + tx, s->m_y + ty + s->m_baseline, str->s,
+                                            str->l, s->m_start, s->m_len,
+                                            s->m_toAdd, s->m_reversed ? QPainter::RTL : QPainter::LTR, style()->visuallyOrdered(), 0, sPos);
+#else
                                 font->drawText(p, s->m_x + tx, s->m_y + ty + s->m_baseline, str->s,
                                             str->l, s->m_start, s->m_len,
                                             s->m_toAdd, s->m_reversed ? QPainter::RTL : QPainter::LTR, 0, sPos);
+#endif
                             if (ePos < s->m_start+s->m_len)
+#if APPLE_CHANGES
+                                font->drawText(p, s->m_x + tx, s->m_y + ty + s->m_baseline, str->s,
+                                            str->l, s->m_start, s->m_len,
+                                            s->m_toAdd, s->m_reversed ? QPainter::RTL : QPainter::LTR, style()->visuallyOrdered(), ePos, -1);
+#else
                                 font->drawText(p, s->m_x + tx, s->m_y + ty + s->m_baseline, str->s,
                                             str->l, s->m_start, s->m_len,
                                             s->m_toAdd, s->m_reversed ? QPainter::RTL : QPainter::LTR, ePos, -1);
+#endif
                         }
                     }
                     
@@ -735,9 +773,17 @@ void RenderText::paintObject(QPainter *p, int /*x*/, int y, int /*w*/, int h,
                                          selectionTextShadow->blur,
                                          selectionTextShadow->color);
 #endif                       
+
+#if APPLE_CHANGES
+                        font->drawText(p, s->m_x + tx, s->m_y + ty + s->m_baseline, str->s,
+                                       str->l, s->m_start, s->m_len,
+                                       s->m_toAdd, s->m_reversed ? QPainter::RTL : QPainter::LTR, style()->visuallyOrdered(), sPos, ePos);
+#else
                         font->drawText(p, s->m_x + tx, s->m_y + ty + s->m_baseline, str->s,
                                        str->l, s->m_start, s->m_len,
                                        s->m_toAdd, s->m_reversed ? QPainter::RTL : QPainter::LTR, sPos, ePos);
+#endif
+
 #if APPLE_CHANGES
                         if (selectionTextShadow)
                             p->clearShadow();
