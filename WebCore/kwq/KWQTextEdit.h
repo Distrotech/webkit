@@ -49,13 +49,12 @@ class QTextEdit : public QScrollView
     void setCursorPosition(int, int);
     void getCursorPosition(int *, int *) const;
 
+    FocusPolicy focusPolicy() const;
+
     void setFont(const QFont &);
 
     void setReadOnly(bool);
     bool isReadOnly() const;
-
-    void setDisabled(bool);
-    bool isDisabled() const;
 
     void setText(const QString &);
     QString text() const;
@@ -70,13 +69,12 @@ class QTextEdit : public QScrollView
 
     void selectAll();
 
-    QSize sizeWithColumnsAndRows(int numColumns, int numRows) const;
+    int verticalScrollBarWidth() const;
+    int horizontalScrollBarHeight() const;
 
     void textChanged() { _textChanged.call(); }
 
     void clicked();
-
-    virtual bool checksDescendantsForFocus() const;
 
   private:
     KWQSignal _clicked;

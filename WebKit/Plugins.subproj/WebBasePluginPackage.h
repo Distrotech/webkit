@@ -26,8 +26,6 @@
     NSString *pluginDescription;
 
     NSBundle *bundle;
-    
-    NSDate *lastModifiedDate;
 
     NSDictionary *MIMEToDescription;
     NSDictionary *MIMEToExtensions;
@@ -48,7 +46,6 @@
 - (NSString *)filename;
 - (NSString *)pluginDescription;
 - (NSBundle *)bundle;
-- (NSDate *)lastModifiedDate;
 
 - (NSEnumerator *)extensionEnumerator;
 - (NSEnumerator *)MIMETypeEnumerator;

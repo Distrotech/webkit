@@ -85,9 +85,7 @@ public:
         { return columnPos[col]; }
 
     int cellSpacing() const { return spacing; }
-    
-    bool collapseBorders() const { return style()->borderCollapse(); }
-        
+
     Rules getRules() const { return rules; }
 
     const QColor &bgColor() const { return style()->backgroundColor(); }
@@ -150,9 +148,8 @@ public:
 	return c;
     }
 
-    int bordersPaddingAndSpacing() const {
-	return borderLeft() + borderRight() + 
-               (collapseBorders() ? 0 : (paddingLeft() + paddingRight() + (numEffCols()+1) * cellSpacing()));
+    int bordersAndSpacing() const {
+	return borderLeft() + borderRight() + (numEffCols()+1) * cellSpacing();
     }
 
     RenderTableCol *colElement( int col );
@@ -194,7 +191,7 @@ class RenderTableSection : public RenderBox
 public:
     RenderTableSection(DOM::NodeImpl* node);
     ~RenderTableSection();
-    virtual void detach();
+    virtual void detach(RenderArena* arena);
 
     virtual void setStyle(RenderStyle *style);
 
@@ -268,7 +265,7 @@ class RenderTableRow : public RenderContainer
 public:
     RenderTableRow(DOM::NodeImpl* node);
 
-    virtual void detach();
+    virtual void detach(RenderArena* arena);
 
     virtual void setStyle( RenderStyle* );
     virtual const char *renderName() const { return "RenderTableRow"; }
@@ -283,7 +280,7 @@ public:
     virtual void position(int, int, int, int, int, bool, bool, int) {}
 
     virtual void layout();
-    virtual QRect getAbsoluteRepaintRect();
+    virtual void repaint(bool immediate=false);
     
     RenderTable *table() const { return static_cast<RenderTable *>(parent()->parent()); }
     RenderTableSection *section() const { return static_cast<RenderTableSection *>(parent()); }
@@ -300,7 +297,7 @@ class RenderTableCell : public RenderBlock
 public:
     RenderTableCell(DOM::NodeImpl* node);
 
-    virtual void detach();
+    virtual void detach(RenderArena* arena);
 
     virtual const char *renderName() const { return "RenderTableCell"; }
     virtual bool isTableCell() const { return true; }
@@ -344,7 +341,7 @@ public:
     // lie position to outside observers
     virtual int yPos() const { return m_y + _topExtra; }
 
-    virtual void computeAbsoluteRepaintRect(QRect& r, bool f=false);
+    virtual void repaintRectangle(int x, int y, int w, int h, bool immediate = false, bool f=false);
     virtual bool absolutePosition(int &xPos, int &yPos, bool f = false);
 
     virtual short baselinePosition( bool = false ) const;

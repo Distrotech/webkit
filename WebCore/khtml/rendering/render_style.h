@@ -641,7 +641,6 @@ protected:
               // non CSS2 inherited
               bool _visuallyOrdered : 1;
               bool _htmlHacks :1;
-              bool _should_correct_text_color : 1;
     } inherited_flags;
 
 // don't inherit
@@ -720,13 +719,12 @@ protected:
 	inherited_flags._text_decorations = TDNONE;
 	inherited_flags._cursor_style = CURSOR_AUTO;
 	inherited_flags._direction = LTR;
-	inherited_flags._border_collapse = false;
+	inherited_flags._border_collapse = true;
 	inherited_flags._white_space = NORMAL;
 	inherited_flags._font_variant = FVNORMAL;
 	inherited_flags._visuallyOrdered = false;
 	inherited_flags._htmlHacks=false;
         inherited_flags._box_direction = BNORMAL;
-        inherited_flags._should_correct_text_color = false;
 
 	noninherited_flags._effectiveDisplay = noninherited_flags._originalDisplay = INLINE;
 	noninherited_flags._bg_repeat = REPEAT;
@@ -1042,9 +1040,6 @@ public:
     void setCursor( ECursor c ) { inherited_flags._cursor_style = c; }
     void setFontVariant( EFontVariant f ) { inherited_flags._font_variant = f; }
     void setCursorImage( CachedImage *v ) { SET_VAR(inherited,cursor_image,v) }
-
-    bool shouldCorrectTextColor() const { return inherited_flags._should_correct_text_color; }
-    void setShouldCorrectTextColor(bool b=true) { inherited_flags._should_correct_text_color = b; }
 
     bool htmlHacks() const { return inherited_flags._htmlHacks; }
     void setHtmlHacks(bool b=true) { inherited_flags._htmlHacks = b; }

@@ -59,15 +59,12 @@ public:
     void selectAll();
     
     QSize sizeForCharacterWidth(int numCharacters) const;
-    int baselinePosition(int height) const;
+    int baselinePosition() const;
     
     void returnPressed() { m_returnPressed.call(); }
     void textChanged() { m_textChanged.call(text()); }
 
     void clicked();
-    
-    virtual bool checksDescendantsForFocus() const;
-
 private:
     KWQSignal m_returnPressed;
     KWQSignal m_textChanged;

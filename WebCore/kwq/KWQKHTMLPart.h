@@ -32,8 +32,6 @@
 #include "html_formimpl.h"
 #include "html_tableimpl.h"
 
-#import "WebCoreKeyboardAccess.h"
-
 #include <CoreFoundation/CoreFoundation.h>
 
 class KHTMLPartPrivate;
@@ -99,8 +97,6 @@ public:
     
     void openURLRequest(const KURL &, const KParts::URLArgs &);
     void submitForm(const KURL &, const KParts::URLArgs &);
-
-    void scheduleHistoryNavigation( int steps );
     
     void scrollToAnchor(const KURL &);
     void jumpToSelection();
@@ -186,7 +182,7 @@ public:
     void mouseDown(NSEvent *);
     void mouseDragged(NSEvent *);
     void mouseUp(NSEvent *);
-    void sendFakeEventsAfterWidgetTracking(NSEvent *initiatingEvent);
+    void doFakeMouseUpAfterWidgetTracking(NSEvent *downEvent);
     void mouseMoved(NSEvent *);
     bool keyEvent(NSEvent *);
     bool lastEventIsMouseUp();
@@ -225,8 +221,6 @@ public:
     QChar backslashAsCurrencySymbol() const;
 
     NSColor *bodyBackgroundColor() const;
-    
-    WebCoreKeyboardUIMode keyboardUIMode() const;
 
 private:
     virtual void khtmlMousePressEvent(khtml::MousePressEvent *);
@@ -250,6 +244,7 @@ private:
     NSView *nextKeyViewInFrame(DOM::NodeImpl *startingPoint, KWQSelectionDirection);
     static DOM::NodeImpl *nodeForWidget(const QWidget *);
     static KWQKHTMLPart *partForNode(DOM::NodeImpl *);
+    khtml::ChildFrame *childFrameForPart(const KParts::ReadOnlyPart *) const;
     
     WebCoreBridge *_bridge;
     

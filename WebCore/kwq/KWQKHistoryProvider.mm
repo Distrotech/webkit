@@ -25,7 +25,6 @@
 
 #import "KWQKPartsHistoryProvider.h"
 
-#import "KWQExceptions.h"
 #import "KWQKURL.h"
 #import "WebCoreHistory.h"
 
@@ -44,15 +43,7 @@ void HistoryProvider::insert(const QString &s)
 
 bool HistoryProvider::contains(const QString &s) const
 {
-    volatile bool result = false;
-    
-    KWQ_BLOCK_NS_EXCEPTIONS;
-
-    result = [[WebCoreHistory historyProvider] containsItemForURLString: KURL(s).canonicalURL().getNSString()];
-
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
-
-    return result;
+    return [[WebCoreHistory historyProvider] containsItemForURLString: KURL(s).canonicalURL().getNSString()];
 }
 
 } // namespace KParts

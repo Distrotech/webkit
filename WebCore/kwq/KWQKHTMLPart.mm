@@ -37,7 +37,6 @@
 #import "khtmlpart_p.h"
 #import "khtmlview.h"
 #import "kjs_window.h"
-#import "kjs_binding.h"
 #import "misc/htmlattrs.h"
 #import "csshelper.h"
 
@@ -56,8 +55,6 @@
 #import "xml/dom2_eventsimpl.h"
 
 #import <JavaScriptCore/property_map.h>
-
-#import <qscrollbar.h>
 
 #undef _KWQ_TIMING
 
@@ -86,7 +83,7 @@ using khtml::RenderStyle;
 using khtml::RenderTableCell;
 using khtml::RenderText;
 using khtml::RenderWidget;
-using khtml::InlineTextBoxArray;
+using khtml::TextRunArray;
 using khtml::VISIBLE;
 
 using KIO::Job;
@@ -196,29 +193,12 @@ void KWQKHTMLPart::provisionalLoadStarted()
 
 bool KWQKHTMLPart::openURL(const KURL &url)
 {
-    bool onLoad = false;
-    
-    if (jScript() && jScript()->interpreter()) {
-        KHTMLPart *rootPart;
-        
-        rootPart = this;
-        while (rootPart->parentPart() != 0)
-            rootPart = parentPart();
-        KJS::ScriptInterpreter *interpreter = static_cast<KJS::ScriptInterpreter *>(KJSProxy::proxy(rootPart)->interpreter());
-        DOM::Event *evt = interpreter->getCurrentEvent();
-        
-        if (evt) {
-            onLoad = (evt->type() == "load");
-        }
-    }
-
     // FIXME: The lack of args here to get the reload flag from
     // indicates a problem in how we use KHTMLPart::processObjectRequest,
     // where we are opening the URL before the args are set up.
     [_bridge loadURL:url.getNSURL()
             referrer:[_bridge referrer]
               reload:NO
-              onLoadEvent:onLoad
               target:nil
      triggeringEvent:nil
                 form:nil
@@ -231,7 +211,6 @@ void KWQKHTMLPart::openURLRequest(const KURL &url, const URLArgs &args)
     [_bridge loadURL:url.getNSURL()
             referrer:[_bridge referrer]
               reload:args.reload
-              onLoadEvent:false
               target:args.frameName.getNSString()
      triggeringEvent:nil
                 form:nil
@@ -581,7 +560,6 @@ void KWQKHTMLPart::submitForm(const KURL &url, const URLArgs &args)
         [_bridge loadURL:url.getNSURL()
 	        referrer:[_bridge referrer] 
                   reload:args.reload
-             onLoadEvent:false
   	          target:args.frameName.getNSString()
          triggeringEvent:_currentEvent
                     form:_formAboutToBeSubmitted
@@ -638,7 +616,6 @@ void KWQKHTMLPart::urlSelected(const KURL &url, int button, int state, const URL
     [_bridge loadURL:url.getNSURL()
             referrer:[_bridge referrer]
               reload:args.reload
-         onLoadEvent:false
               target:args.frameName.getNSString()
      triggeringEvent:_currentEvent
                 form:nil
@@ -672,7 +649,7 @@ ReadOnlyPart *KWQKHTMLPart::createPart(const ChildFrame &child, const KURL &url,
         int marginWidth = -1;
         int marginHeight = -1;
         if (child.m_type != ChildFrame::Object) {
-            HTMLFrameElementImpl *o = static_cast<HTMLFrameElementImpl *>(child.m_frame->element());
+            HTMLIFrameElementImpl *o = static_cast<HTMLIFrameElementImpl *>(child.m_frame->element());
             allowsScrolling = o->scrollingMode() != QScrollView::AlwaysOff;
             marginWidth = o->getMarginWidth();
             marginHeight = o->getMarginHeight();
@@ -803,7 +780,7 @@ void KWQKHTMLPart::paint(QPainter *p, const QRect &rect)
 #endif
 
     if (renderer()) {
-        renderer()->layer()->paint(p, rect);
+        renderer()->layer()->paint(p, rect.x(), rect.y(), rect.width(), rect.height(), false);
     } else {
         ERROR("called KWQKHTMLPart::paint with nil renderer");
     }
@@ -812,7 +789,7 @@ void KWQKHTMLPart::paint(QPainter *p, const QRect &rect)
 void KWQKHTMLPart::paintSelectionOnly(QPainter *p, const QRect &rect)
 {
     if (renderer()) {
-        renderer()->layer()->paint(p, rect, true);
+        renderer()->layer()->paint(p, rect.x(), rect.y(), rect.width(), rect.height(), true);
     } else {
         ERROR("called KWQKHTMLPart::paintSelectionOnly with nil renderer");
     }
@@ -827,9 +804,8 @@ void KWQKHTMLPart::adjustPageHeight(float *newBottom, float oldTop, float oldBot
         painter.setPaintingDisabled(true);
 
         root->setTruncatedAt((int)floor(oldBottom));
-        QRect dirtyRect(0, (int)floor(oldTop),
-                        root->docWidth(), (int)ceil(oldBottom-oldTop));
-        root->layer()->paint(&painter, dirtyRect);
+        root->layer()->paint(&painter, 0, (int)floor(oldTop),
+                             root->docWidth(), (int)ceil(oldBottom-oldTop), false);
         *newBottom = root->bestTruncatedAt();
         if (*newBottom == 0) {
             *newBottom = oldBottom;
@@ -897,6 +873,25 @@ NSView *KWQKHTMLPart::nextKeyViewInFrame(NodeImpl *node, KWQSelectionDirection d
     }
 }
 
+ChildFrame *KWQKHTMLPart::childFrameForPart(const ReadOnlyPart *part) const
+{
+    FrameIt it = d->m_frames.begin();
+    FrameIt end = d->m_frames.end();
+    for (; it != end; ++it) {
+	if ((*it).m_part == part) {
+            return &*it;
+        }
+    }
+    it = d->m_objects.begin();
+    end = d->m_objects.end();
+    for (; it != end; ++it) {
+	if ((*it).m_part == part) {
+            return &*it;
+        }
+    }
+    return 0;
+}
+
 NSView *KWQKHTMLPart::nextKeyViewInFrameHierarchy(NodeImpl *node, KWQSelectionDirection direction)
 {
     NSView *next = nextKeyViewInFrame(node, direction);
@@ -906,7 +901,7 @@ NSView *KWQKHTMLPart::nextKeyViewInFrameHierarchy(NodeImpl *node, KWQSelectionDi
     
     KWQKHTMLPart *parent = KWQ(parentPart());
     if (parent) {
-        next = parent->nextKeyView(parent->childFrame(this)->m_frame->element(), direction);
+        next = parent->nextKeyView(parent->childFrameForPart(this)->m_frame->element(), direction);
         if (next) {
             return next;
         }
@@ -1321,9 +1316,6 @@ bool KWQKHTMLPart::keyEvent(NSEvent *event)
         return false;
     }
     NodeImpl *node = doc->focusNode();
-    if (!node && docImpl()) {
-	node = docImpl()->body();
-    }
     if (!node) {
 	return false;
     }
@@ -1340,7 +1332,7 @@ bool KWQKHTMLPart::keyEvent(NSEvent *event)
 		     stateForCurrentEvent(),
 		     QString::fromNSString([event characters]),
 		     [event isARepeat]);
-    bool result = !node->dispatchKeyEvent(&qEvent);
+    bool result = node->dispatchKeyEvent(&qEvent);
 
     // We want to send both a down and a press for the initial key event.
     // This is a temporary hack; we need to do this a better way.
@@ -1351,9 +1343,7 @@ bool KWQKHTMLPart::keyEvent(NSEvent *event)
 			 stateForCurrentEvent(),
 			 QString::fromNSString([event characters]),
 			 true);
-        if (!node->dispatchKeyEvent(&qEvent)) {
-	    result = true;
-	}
+        node->dispatchKeyEvent(&qEvent);
     }
 
     ASSERT(_currentEvent == event);
@@ -1416,7 +1406,7 @@ void KWQKHTMLPart::khtmlMouseDoubleClickEvent(MouseDoubleClickEvent *event)
 bool KWQKHTMLPart::passWidgetMouseDownEventToWidget(khtml::MouseEvent *event)
 {
     // Figure out which view to send the event to.
-    RenderObject *target = event->innerNode().handle() ? event->innerNode().handle()->renderer() : 0;
+    RenderObject *target = event->innerNode().handle()->renderer();
     if (!target)
         return false;
 
@@ -1603,8 +1593,10 @@ void KWQKHTMLPart::khtmlMouseReleaseEvent(MouseReleaseEvent *event)
 
 void KWQKHTMLPart::clearTimers(KHTMLView *view)
 {
-    if (view)
+    if (view) {
         view->unscheduleRelayout();
+        view->unscheduleRepaint();
+    }
 }
 
 void KWQKHTMLPart::clearTimers()
@@ -1800,53 +1792,33 @@ void KWQKHTMLPart::mouseUp(NSEvent *event)
 /*
  A hack for the benefit of AK's PopUpButton, which uses the Carbon menu manager, which thus
  eats all subsequent events after it is starts its modal tracking loop.  After the interaction
- is done, this routine is used to fix things up.  When a mouse down started us tracking in
- the widget, we post a fake mouse up to balance the mouse down we started with. When a 
- key down started us tracking in the widget, we post a fake key up to balance things out.
- In addition, we post a fake mouseMoved to get the cursor in sync with whatever we happen to 
- be over after the tracking is done.
+ is done, this routine is used to fix things up.  We post a fake mouse up to balance the
+ mouse down we started with.  In addition, we post a fake mouseMoved to get the cursor in sync
+ with whatever we happen to be over after the tracking is done.
  */
-void KWQKHTMLPart::sendFakeEventsAfterWidgetTracking(NSEvent *initiatingEvent)
+void KWQKHTMLPart::doFakeMouseUpAfterWidgetTracking(NSEvent *downEvent)
 {
     _sendingEventToSubview = false;
-    int eventType = [initiatingEvent type];
-    ASSERT(eventType == NSLeftMouseDown || eventType == NSKeyDown);
-    NSEvent *fakeEvent = nil;
-    if (eventType == NSLeftMouseDown) {
-        fakeEvent = [NSEvent mouseEventWithType:NSLeftMouseUp
-                                location:[initiatingEvent locationInWindow]
-                            modifierFlags:[initiatingEvent modifierFlags]
-                                timestamp:[initiatingEvent timestamp]
-                            windowNumber:[initiatingEvent windowNumber]
-                                    context:[initiatingEvent context]
-                                eventNumber:[initiatingEvent eventNumber]
-                                clickCount:[initiatingEvent clickCount]
-                                pressure:[initiatingEvent pressure]];
-    
-        mouseUp(fakeEvent);
-    }
-    else { // eventType == NSKeyDown
-        fakeEvent = [NSEvent keyEventWithType:NSKeyUp
-                                location:[initiatingEvent locationInWindow]
-                           modifierFlags:[initiatingEvent modifierFlags]
-                               timestamp:[initiatingEvent timestamp]
-                            windowNumber:[initiatingEvent windowNumber]
-                                 context:[initiatingEvent context]
-                              characters:[initiatingEvent characters] 
-             charactersIgnoringModifiers:[initiatingEvent charactersIgnoringModifiers] 
-                               isARepeat:[initiatingEvent isARepeat] 
-                                 keyCode:[initiatingEvent keyCode]];
-        keyEvent(fakeEvent);
-    }
+    ASSERT([downEvent type] == NSLeftMouseDown);
+    NSEvent *fakeEvent = [NSEvent mouseEventWithType:NSLeftMouseUp
+                                            location:[downEvent locationInWindow]
+                                       modifierFlags:[downEvent modifierFlags]
+                                           timestamp:[downEvent timestamp]
+                                        windowNumber:[downEvent windowNumber]
+                                             context:[downEvent context]
+                                         eventNumber:[downEvent eventNumber]
+                                          clickCount:[downEvent clickCount]
+                                            pressure:[downEvent pressure]];
+    mouseUp(fakeEvent);
     // FIXME:  We should really get the current modifierFlags here, but there's no way to poll
     // them in Cocoa, and because the event stream was stolen by the Carbon menu code we have
     // no up-to-date cache of them anywhere.
     fakeEvent = [NSEvent mouseEventWithType:NSMouseMoved
                                    location:[[_bridge window] convertScreenToBase:[NSEvent mouseLocation]]
-                              modifierFlags:[initiatingEvent modifierFlags]
-                                  timestamp:[initiatingEvent timestamp]
-                               windowNumber:[initiatingEvent windowNumber]
-                                    context:[initiatingEvent context]
+                              modifierFlags:[downEvent modifierFlags]
+                                  timestamp:[downEvent timestamp]
+                               windowNumber:[downEvent windowNumber]
+                                    context:[downEvent context]
                                 eventNumber:0
                                  clickCount:0
                                    pressure:0];
@@ -2014,7 +1986,7 @@ NSAttributedString *KWQKHTMLPart::attributedString(NodeImpl *_startNode, int sta
                     }
                     else {
                         RenderText* textObj = static_cast<RenderText*>(renderer);
-                        InlineTextBoxArray runs = textObj->inlineTextBoxes();
+                        TextRunArray runs = textObj->textRuns();
                         if (runs.count() == 0 && str.length() > 0 && !addedSpace) {
                             // We have no runs, but we do have a length.  This means we must be
                             // whitespace that collapsed away at the end of a line.
@@ -2030,9 +2002,7 @@ NSAttributedString *KWQKHTMLPart::attributedString(NodeImpl *_startNode, int sta
                                 bool spaceBetweenRuns = false;
                                 if (runStart >= runs[i]->m_start &&
                                     runStart < runs[i]->m_start + runs[i]->m_len) {
-                                    QString runText = str.mid(runStart, runEnd - runStart);
-                                    runText.replace('\n', ' ');
-                                    text += runText;
+                                    text += str.mid(runStart, runEnd - runStart);
                                     start = -1;
                                     spaceBetweenRuns = i+1 < runs.count() && runs[i+1]->m_start > runEnd;
                                     addedSpace = str[runEnd-1].direction() == QChar::DirWS;
@@ -2442,7 +2412,4 @@ NSColor *KWQKHTMLPart::bodyBackgroundColor(void) const
     return nil;
 }
 
-WebCoreKeyboardUIMode KWQKHTMLPart::keyboardUIMode() const
-{
-    return [_bridge keyboardUIMode];
-}
+

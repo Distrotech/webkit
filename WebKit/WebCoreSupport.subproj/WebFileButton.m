@@ -77,11 +77,6 @@
     [super dealloc];
 }
 
-- (BOOL)isFlipped
-{
-    return YES;
-}
-        
 - (void)drawRect:(NSRect)rect
 {
     NSRect bounds = [self bounds];
@@ -92,9 +87,9 @@
     float left = NSMaxX([_button frame]) + AFTER_BUTTON_SPACING;
 
     if (_icon) {
-        float top = (bounds.size.height - BUTTON_BOTTOM_MARGIN - BUTTON_TOP_MARGIN - ICON_HEIGHT) / 2
-            + BUTTON_TOP_MARGIN;
-        [_icon drawInRect:NSMakeRect(left, top, ICON_WIDTH, ICON_HEIGHT)
+        float bottom = (bounds.size.height - BUTTON_BOTTOM_MARGIN - BUTTON_TOP_MARGIN - ICON_HEIGHT) / 2
+            + BUTTON_BOTTOM_MARGIN;
+        [_icon drawInRect:NSMakeRect(left, bottom, ICON_WIDTH, ICON_HEIGHT)
             fromRect:NSMakeRect(0, 0, [_icon size].width, [_icon size].height)
             operation:NSCompositeSourceOver fraction:1.0];
         left += ICON_WIDTH + ICON_FILENAME_SPACING;
@@ -102,7 +97,7 @@
 
     NSFont *font = [_button font];
     NSDictionary *attributes = [NSDictionary dictionaryWithObject:font forKey:NSFontAttributeName];
-    [_label drawAtPoint:NSMakePoint(left, [self baseline] - [[_button font] ascender]) withAttributes:attributes];
+    [_label drawAtPoint:NSMakePoint(left, [self baseline]) withAttributes:attributes];
 
     [NSGraphicsContext restoreGraphicsState];
 }
@@ -136,7 +131,7 @@
     _filename = copy;
     
     [_icon release];
-    if ([_filename length] == 0 || [_filename characterAtIndex:0] != '/') {
+    if (![_filename length]) {
         _icon = nil;
     } else {
         _icon = [[[NSWorkspace sharedWorkspace] iconForFile:_filename] retain];
@@ -177,7 +172,7 @@
     NSRect frame = [self frame];
     frame.origin.x += BUTTON_LEFT_MARGIN;
     frame.size.width -= BUTTON_LEFT_MARGIN;
-    frame.origin.y += BUTTON_TOP_MARGIN;
+    frame.origin.y += BUTTON_BOTTOM_MARGIN;
     frame.size.height -= BUTTON_TOP_MARGIN + BUTTON_BOTTOM_MARGIN;
     return frame;
 }
@@ -187,7 +182,7 @@
     ASSERT([self superview] == nil || [[self superview] isFlipped]);
     frame.origin.x -= BUTTON_LEFT_MARGIN;
     frame.size.width += BUTTON_LEFT_MARGIN;
-    frame.origin.y -= BUTTON_TOP_MARGIN;
+    frame.origin.y -= BUTTON_BOTTOM_MARGIN;
     frame.size.height += BUTTON_TOP_MARGIN + BUTTON_BOTTOM_MARGIN;
     [self setFrame:frame];
 }
@@ -199,9 +194,8 @@
     NSFont *buttonFont = [_button font];
     float ascender = [buttonFont ascender];
     float descender = [buttonFont descender];
-    return -BUTTON_TOP_MARGIN
-        + ([[_button cell] cellSize].height + BUTTON_TOP_MARGIN + BUTTON_BOTTOM_MARGIN - (ascender - descender)) / 2.0
-        + ascender - BUTTON_VERTICAL_FUDGE_FACTOR;
+    return ([[_button cell] cellSize].height - (ascender - descender)) / 2.0
+        + BUTTON_VERTICAL_FUDGE_FACTOR + descender;
 }
 
 - (void)beginSheet

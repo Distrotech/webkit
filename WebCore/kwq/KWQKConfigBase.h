@@ -68,6 +68,4 @@ private:
 
 };
 
-void RefreshPlugins(bool reload);
-
 #endif

@@ -892,11 +892,6 @@ int Window::installTimeout(const UString &handler, int t, bool singleShot)
   return winq->installTimeout(handler, t, singleShot);
 }
 
-int Window::installTimeout(const Value &function, List &args, int t, bool singleShot)
-{
-  return winq->installTimeout(function, args, t, singleShot);
-}
-
 void Window::clearTimeout(int timerId)
 {
   winq->clearTimeout(timerId);
@@ -1404,12 +1399,13 @@ Value WindowFunc::tryCall(ExecState *exec, Object &thisObj, const List &args)
     else if (args.size() >= 2 && v.isA(ObjectType) && Object::dynamicCast(v).implementsCall()) {
       Value func = args[0];
       int i = args[1].toInt32(exec);
-
-      // All arguments after the second should go to the function
-      // FIXME: could be more efficient
-      List funcArgs = args.copyTail().copyTail();
-
-      int r = (const_cast<Window*>(window))->installTimeout(func, funcArgs, i, true /*single shot*/);
+#if 0
+//  ### TODO
+      List *funcArgs = args.copy();
+      funcArgs->removeFirst(); // all args after 2 go to the function
+      funcArgs->removeFirst();
+#endif
+      int r = (const_cast<Window*>(window))->installTimeout(s, i, true /*single shot*/);
       return Number(r);
     }
     else
@@ -1426,12 +1422,13 @@ Value WindowFunc::tryCall(ExecState *exec, Object &thisObj, const List &args)
 	     Object::dynamicCast(v).implementsCall()) {
       Value func = args[0];
       int i = args[1].toInt32(exec);
-
-      // All arguments after the second should go to the function
-      // FIXME: could be more efficient
-      List funcArgs = args.copyTail().copyTail();
-
-      int r = (const_cast<Window*>(window))->installTimeout(func, funcArgs, i, false);
+#if 0
+// ### TODO
+      List *funcArgs = args.copy();
+      funcArgs->removeFirst(); // all args after 2 go to the function
+      funcArgs->removeFirst();
+#endif
+      int r = (const_cast<Window*>(window))->installTimeout(s, i, false);
       return Number(r);
     }
     else
@@ -1578,10 +1575,6 @@ void ScheduledAction::execute(Window *window)
 #endif
 	  exec->clearException();
 	}
-
-	// Update our document's rendering following the execution of the timeout callback.
-	DOM::DocumentImpl *doc = static_cast<DOM::DocumentImpl*>(window->m_part->document().handle());
-	doc->updateRendering();
       }
     }
   }

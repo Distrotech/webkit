@@ -36,7 +36,7 @@ class NSView;
 
 class QScrollView : public QFrame {
 public:
-    enum ScrollBarMode { Auto, AlwaysOff, AlwaysOn };
+    enum ScrollBarMode { AlwaysOff, AlwaysOn, Auto };
 
     QScrollView(QWidget *parent = 0, const char *name = 0, int flags = 0) { }
 
@@ -51,23 +51,9 @@ public:
 
     void setContentsPos(int x, int y);
 
-    virtual void setVScrollBarMode(ScrollBarMode vMode);
-    virtual void setHScrollBarMode(ScrollBarMode hMode);
+    virtual void setVScrollBarMode(ScrollBarMode);
+    virtual void setHScrollBarMode(ScrollBarMode);
 
-    // The following method is not defined in Qt, but we provide it so that we can
-    // set the mode for both scrollbars at once.
-    virtual void setScrollBarsMode(ScrollBarMode mode);
-
-    // This method is also not defined in Qt.  It gives us a means of blocking painting on our
-    // scrollbars until the first layout has occurred.
-    void suppressScrollBars(bool suppressed, bool repaintOnUnsuppress=false);
-    
-    ScrollBarMode vScrollBarMode() const;
-    ScrollBarMode hScrollBarMode() const;
-
-    bool hasVerticalScrollBar() const;
-    bool hasHorizontalScrollBar() const;
-    
     void addChild(QWidget *child, int x = 0, int y = 0);
     void removeChild(QWidget *child);
     int childX(QWidget *child);

@@ -29,9 +29,6 @@
 
 #import <Cocoa/Cocoa.h>
 
-// The NSScreen calls in this file can't throw, so no need to block
-// Cocoa exceptions.
-
 class KWQWindowWidgetPrivate
 {
 public:

@@ -31,32 +31,24 @@
 @end
 
 @interface NSCursor (WebCoreCursorAdditions)
-+ (NSCursor *)_WebCore_cursorWithName:(NSString *)name hotSpot:(NSPoint)hotSpot;
++ (NSCursor *)_WebCore_linkCursor;
 @end
 
 @implementation NSCursor (WebCoreCursorAdditions)
 
-+ (NSCursor *)_WebCore_cursorWithName:(NSString *)name hotSpot:(NSPoint)hotSpot
++ (NSCursor *)_WebCore_linkCursor
 {
-    static NSMutableDictionary *nameToCursor = nil;
-    if (!nameToCursor) {
-        nameToCursor = [[NSMutableDictionary alloc] init];
+    static NSCursor *linkCursor = nil;
+    
+    if (linkCursor == nil) {
+	NSImage *linkCursorImage = [[NSImage alloc] initWithContentsOfFile:
+            [[NSBundle bundleForClass:[KWQKCursorBundleDummy class]]
+            pathForResource:@"linkCursor" ofType:@"tiff"]];
+        linkCursor = [[NSCursor alloc] initWithImage:linkCursorImage hotSpot:NSMakePoint(6.0,1.0)];
+	[linkCursorImage release];
     }
     
-    NSCursor *cursor = [nameToCursor objectForKey:name];
-    if (!cursor) {
-        NSImage *cursorImage = [[NSImage alloc] initWithContentsOfFile:
-            [[NSBundle bundleForClass:[KWQKCursorBundleDummy class]]
-            pathForResource:name ofType:@"tiff"]];
-        if (cursorImage) {
-            cursor = [[NSCursor alloc] initWithImage:cursorImage hotSpot:hotSpot];
-            [cursorImage release];
-            [nameToCursor setObject:cursor forKey:name];
-            [cursor release];
-        }
-    }
-
-    return cursor;
+    return linkCursor;
 }
 
 @end
@@ -64,22 +56,13 @@
 void KCursor::setAutoHideCursor(QWidget *w, bool enable) {}
 
 QCursor KCursor::arrowCursor() { return QCursor(); }
-QCursor KCursor::crossCursor() { return QCursor([NSCursor crosshairCursor]); }
-QCursor KCursor::handCursor() { return QCursor([NSCursor _WebCore_cursorWithName:@"linkCursor" hotSpot:NSMakePoint(6.0, 1.0)]); }
-QCursor KCursor::sizeAllCursor() { return QCursor([NSCursor _WebCore_cursorWithName:@"moveCursor" hotSpot:NSMakePoint(7.0, 7.0)]); }
+QCursor KCursor::crossCursor() { return QCursor(); }
+QCursor KCursor::handCursor() { return QCursor([NSCursor _WebCore_linkCursor]); }
+QCursor KCursor::sizeAllCursor() { return QCursor(); }
 QCursor KCursor::sizeHorCursor() { return QCursor(); }
 QCursor KCursor::sizeVerCursor() { return QCursor(); }
 QCursor KCursor::sizeBDiagCursor() { return QCursor(); }
 QCursor KCursor::sizeFDiagCursor() { return QCursor(); }
 QCursor KCursor::ibeamCursor() { return QCursor([NSCursor IBeamCursor]); }
-QCursor KCursor::waitCursor() { return QCursor([NSCursor _WebCore_cursorWithName:@"waitCursor" hotSpot:NSMakePoint(7.0, 7.0)]); }
-QCursor KCursor::whatsThisCursor() { return QCursor([NSCursor _WebCore_cursorWithName:@"helpCursor" hotSpot:NSMakePoint(8.0, 8.0)]); }
-
-QCursor KCursor::eastResizeCursor() { return QCursor([NSCursor _WebCore_cursorWithName:@"eastResizeCursor" hotSpot:NSMakePoint(14.0, 7.0)]); }
-QCursor KCursor::northResizeCursor() { return QCursor([NSCursor _WebCore_cursorWithName:@"northResizeCursor" hotSpot:NSMakePoint(7.0, 1.0)]); }
-QCursor KCursor::northEastResizeCursor() { return QCursor([NSCursor _WebCore_cursorWithName:@"northEastResizeCursor" hotSpot:NSMakePoint(14.0, 1.0)]); }
-QCursor KCursor::northWestResizeCursor() { return QCursor([NSCursor _WebCore_cursorWithName:@"northWestResizeCursor" hotSpot:NSMakePoint(0.0, 0.0)]); }
-QCursor KCursor::southResizeCursor() { return QCursor([NSCursor _WebCore_cursorWithName:@"southResizeCursor" hotSpot:NSMakePoint(7.0, 14.0)]); }
-QCursor KCursor::southEastResizeCursor() { return QCursor([NSCursor _WebCore_cursorWithName:@"southEastResizeCursor" hotSpot:NSMakePoint(14.0, 14.0)]); }
-QCursor KCursor::southWestResizeCursor() { return QCursor([NSCursor _WebCore_cursorWithName:@"southWestResizeCursor" hotSpot:NSMakePoint(1.0, 14.0)]); }
-QCursor KCursor::westResizeCursor() { return QCursor([NSCursor _WebCore_cursorWithName:@"westResizeCursor" hotSpot:NSMakePoint(1.0, 7.0)]); }
+QCursor KCursor::waitCursor() { return QCursor(); }
+QCursor KCursor::whatsThisCursor() { return QCursor(); }

@@ -26,7 +26,6 @@
 #import "KWQKPartsBrowserInterface.h"
 
 #import "KWQAssertions.h"
-#import "KWQExceptions.h"
 #import "KWQKHTMLPart.h"
 #import "WebCoreBridge.h"
 
@@ -45,9 +44,7 @@ void BrowserInterface::callMethod(const char *name, const QVariant &argument)
 {
     if (strcmp(name, "goHistory(int)") == 0) {
         int distance = argument.toInt();
-	KWQ_BLOCK_NS_EXCEPTIONS;
-	[_part->bridge() goBackOrForward:distance];
-	KWQ_UNBLOCK_NS_EXCEPTIONS;
+        [_part->bridge() goBackOrForward:distance];
         return;
     }
     ERROR("method %s not implemented", name);

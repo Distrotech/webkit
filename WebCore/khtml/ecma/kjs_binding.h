@@ -125,9 +125,6 @@ namespace KJS {
     bool wasRunByUserGesture() const;
 
     virtual void mark();
-    
-    DOM::Event *getCurrentEvent() const { return m_evt; }
-    
   private:
     KHTMLPart* m_part;
     QPtrDict<DOMObject> m_domObjects;

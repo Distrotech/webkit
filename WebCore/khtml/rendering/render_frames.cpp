@@ -84,10 +84,9 @@ RenderFrameSet::~RenderFrameSet()
       delete [] m_vSplitVar;
 }
 
-bool RenderFrameSet::nodeAtPoint(NodeInfo& info, int _x, int _y, int _tx, int _ty,
-                                 HitTestAction hitTestAction, bool inside)
+bool RenderFrameSet::nodeAtPoint(NodeInfo& info, int _x, int _y, int _tx, int _ty, bool inside)
 {
-    RenderBox::nodeAtPoint(info, _x, _y, _tx, _ty, hitTestAction, inside);
+    RenderBox::nodeAtPoint(info, _x, _y, _tx, _ty, inside);
 
     inside = m_resizing || canResize(_x, _y);
 
@@ -647,12 +646,10 @@ void RenderFrame::slotViewCleared()
         // Qt creates QScrollView w/ a default style of QFrame::StyledPanel | QFrame::Sunken.
         else
             view->setFrameStyle( QFrame::StyledPanel | QFrame::Sunken );
-
-#else
-        view->setHScrollBarMode(element()->scrolling );
-        view->setVScrollBarMode(element()->scrolling );
 #endif
-
+            
+        view->setVScrollBarMode(element()->scrolling );
+        view->setHScrollBarMode(element()->scrolling );
         if(view->inherits("KHTMLView")) {
 #ifdef DEBUG_LAYOUT
             kdDebug(6031) << "frame is a KHTMLview!" << endl;
@@ -943,17 +940,13 @@ void RenderPartObject::slotViewCleared()
 	  HTMLIFrameElementImpl *frame = static_cast<HTMLIFrameElementImpl *>(element());
 	  if(frame->frameBorder)
 	      frameStyle = QFrame::Box;
-          scroll = frame->scrolling;
+	  scroll = frame->scrolling;
 	  marginw = frame->marginWidth;
 	  marginh = frame->marginHeight;
       }
       view->setFrameStyle(frameStyle);
-
-#if !APPLE_CHANGES
-      view->setVScrollBarMode(scroll);
-      view->setHScrollBarMode(scroll);
-#endif
-
+      view->setVScrollBarMode(scroll );
+      view->setHScrollBarMode(scroll );
       if(view->inherits("KHTMLView")) {
 #ifdef DEBUG_LAYOUT
           kdDebug(6031) << "frame is a KHTMLview!" << endl;

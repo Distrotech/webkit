@@ -56,7 +56,6 @@
 #import "KWQRenderTreeDebug.h"
 #import "KWQView.h"
 #import "KWQPrinter.h"
-#import "KWQAccObjectCache.h"
 
 #import "WebCoreDOMPrivate.h"
 #import "WebCoreImageRenderer.h"
@@ -94,9 +93,8 @@ NSString *WebCoreElementLinkTargetFrameKey =	@"WebElementTargetFrame";
 NSString *WebCoreElementLinkLabelKey = 		@"WebElementLinkLabel";
 NSString *WebCoreElementLinkTitleKey = 		@"WebElementLinkTitle";
 NSString *WebCoreElementNameKey = 		@"WebElementName";
-NSString *WebCoreElementTitleKey = 		@"WebCoreElementTitle"; // not in WebKit API for now, could be in API some day
 
-NSString *WebCorePageCacheStateKey =            @"WebCorePageCacheState";
+NSString *WebCorePageCacheStateKey =               @"WebCorePageCacheState";
 
 @implementation WebCoreBridge
 
@@ -287,6 +285,8 @@ static bool initializedObjectCacheSize = FALSE;
                                                      windowProperties:windowProperties
                                                    locationProperties:locationProperties
 				                  interpreterBuiltins:interpreterBuiltins] autorelease];
+
+
     [pageState setPausedActions: _part->pauseActions((const void *)pageState)];
 
     return [self saveDocumentToPageCache:pageState];
@@ -345,14 +345,6 @@ static bool initializedObjectCacheSize = FALSE;
     return _part->isFrameSet();
 }
 
-- (NSString *)styleSheetForPrinting
-{
-    if (!_part->settings()->shouldPrintBackgrounds()) {
-        return @"* { background-image: none !important; background-color: white !important;}";
-    }
-    return nil;
-}
-
 - (void)reapplyStylesForDeviceType:(WebCoreDeviceType)deviceType
 {
     _part->setMediaType(deviceType == WebCoreDeviceScreen ? "screen" : "print");
@@ -361,9 +353,6 @@ static bool initializedObjectCacheSize = FALSE;
         static QPaintDevice screen;
         static QPrinter printer;
     	doc->setPaintDevice(deviceType == WebCoreDeviceScreen ? &screen : &printer);
-        if (deviceType != WebCoreDeviceScreen) {
-            doc->setPrintStyleSheet(QString::fromNSString([self styleSheetForPrinting]));
-        }
     }
     return _part->reparseConfiguration();
 }
@@ -425,6 +414,18 @@ static BOOL nowPrinting(WebCoreBridge *self)
 {
     QPainter painter(nowPrinting(self));
     painter.setUsesInactiveTextBackgroundColor(_part->usesInactiveTextBackgroundColor());
+    [self drawRect:rect withPainter:&painter];
+}
+
+- (void)adjustFrames:(NSRect)rect
+{
+    // Ick!  khtml sets the frame size during layout and
+    // the frame origins during drawing!  So we have to 
+    // layout and do a draw with rendering disabled to
+    // correctly adjust the frames.
+    [self forceLayoutAdjustingViewSize:NO];
+    QPainter painter(nowPrinting(self));
+    painter.setPaintingDisabled(YES);
     [self drawRect:rect withPainter:&painter];
 }
 
@@ -511,8 +512,6 @@ static BOOL nowPrinting(WebCoreBridge *self)
         _renderPart->setWidget(_part->view());
         // Now the render part owns the view, so we don't any more.
     }
-
-    _part->view()->initScrollBars();
 }
 
 - (void)mouseDown:(NSEvent *)event
@@ -682,21 +681,7 @@ static HTMLFormElementImpl *formElementFromDOMElement(id <WebDOMElement>element)
     NSMutableDictionary *element = [NSMutableDictionary dictionary];
     [element setObject:[NSNumber numberWithBool:_part->isPointInsideSelection((int)point.x, (int)point.y)]
                 forKey:WebCoreElementIsSelectedKey];
-
-    // Find the title in the nearest enclosing DOM node.
-    for (NodeImpl *titleNode = nodeInfo.innerNonSharedNode(); titleNode; titleNode = titleNode->parentNode()) {
-        if (titleNode->isElementNode()) {
-            const DOMString title = static_cast<ElementImpl *>(titleNode)->getAttribute(ATTR_TITLE);
-            if (!title.isNull()) {
-                // We found a node with a title.
-                QString titleText = title.string();
-                titleText.replace('\\', _part->backslashAsCurrencySymbol());
-                [element setObject:titleText.getNSString() forKey:WebCoreElementTitleKey];
-                break;
-            }
-        }
-    }
-
+    
     NodeImpl *URLNode = nodeInfo.URLElement();
     if (URLNode) {
         ElementImpl *e = static_cast<ElementImpl *>(URLNode);
@@ -710,14 +695,20 @@ static HTMLFormElementImpl *formElementFromDOMElement(id <WebDOMElement>element)
         
         DOMString link = e->getAttribute(ATTR_HREF);
         if (!link.isNull()) {
-            if (e->firstChild()) {
-                Range r(_part->document());
-                r.setStartBefore(e->firstChild());
-                r.setEndAfter(e->lastChild());
-                QString t = _part->text(r);
-                if (!t.isEmpty()) {
-                    [element setObject:t.getNSString() forKey:WebCoreElementLinkLabelKey];
+            // Look for the first #text node to use as a label.
+            NodeImpl *labelParent = e;
+            while (labelParent->hasChildNodes()){
+                NodeImpl *childNode = labelParent->firstChild();
+                unsigned short type = childNode->nodeType();
+                if (type == Node::TEXT_NODE){
+                    DOMStringImpl *dv = childNode->nodeValue().implementation();
+                    if (dv){
+                        NSString *value = [NSString stringWithCharacters: (const unichar *)dv->s length: dv->l];
+                        [element setObject:value forKey:WebCoreElementLinkLabelKey];
+                        break;
+                    }
                 }
+                labelParent = childNode;
             }
             [element setObject:_part->xmlDocImpl()->completeURL(link.string()).getNSString() forKey:WebCoreElementLinkURLKey];
         }
@@ -952,14 +943,6 @@ static HTMLFormElementImpl *formElementFromDOMElement(id <WebDOMElement>element)
     return [WebCoreBridge stringWithData:data textEncoding:textEncoding];
 }
 
-+ (void)updateAllViews
-{
-    for (QPtrListIterator<KWQKHTMLPart> it(KWQKHTMLPart::instances()); it.current(); ++it) {
-        KWQKHTMLPart *part = it.current();
-        [part->bridge() setNeedsReapplyStyles];
-    }
-}
-
 - (BOOL)needsLayout
 {
     RenderObject *renderer = _part->renderer();
@@ -1017,11 +1000,4 @@ static HTMLFormElementImpl *formElementFromDOMElement(id <WebDOMElement>element)
         view->adjustViewSize();
 }
 
--(id)accessibilityTree
-{
-    if (!_part || !_part->xmlDocImpl()) return nil;
-    RenderCanvas* root = static_cast<khtml::RenderCanvas *>(_part->xmlDocImpl()->renderer());
-    if (!root) return nil;
-    return _part->xmlDocImpl()->getOrCreateAccObjectCache()->accObject(root);
-}
 @end

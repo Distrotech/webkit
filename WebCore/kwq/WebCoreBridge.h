@@ -25,8 +25,6 @@
 
 #import <Foundation/Foundation.h>
 
-#import <WebCore/WebCoreKeyboardAccess.h>
-
 #ifdef __cplusplus
 
 class KWQKHTMLPart;
@@ -70,9 +68,6 @@ extern NSString *WebCoreElementLinkURLKey;
 extern NSString *WebCoreElementLinkTargetFrameKey;
 extern NSString *WebCoreElementLinkLabelKey;
 extern NSString *WebCoreElementLinkTitleKey;
-extern NSString *WebCoreElementTitleKey;
-
-extern NSString *WebCorePageCacheStateKey;
 
 typedef enum {
     WebCoreDeviceScreen,
@@ -146,6 +141,7 @@ typedef enum {
 - (void)forceLayoutForPageWidth:(float)pageWidth adjustingViewSize:(BOOL)adjustSizeFlag;
 - (void)sendResizeEvent;
 - (BOOL)needsLayout;
+- (void)adjustFrames:(NSRect)rect;
 - (void)drawRect:(NSRect)rect;
 - (void)adjustPageHeightNew:(float *)newBottom top:(float)oldTop bottom:(float)oldBottom limit:(float)bottomLimit;
 
@@ -224,10 +220,6 @@ typedef enum {
 
 - (void)adjustViewSize;
 
-+ (void)updateAllViews;
-
--(id)accessibilityTree;
-
 @end
 
 // The WebCoreBridge protocol contains methods for use by the WebCore side of the bridge.
@@ -241,7 +233,7 @@ typedef enum {
 - (NSString *)generateFrameName;
 - (void)frameDetached;
 
-- (void)loadURL:(NSURL *)URL referrer:(NSString *)referrer reload:(BOOL)reload onLoadEvent:(BOOL)onLoad target:(NSString *)target triggeringEvent:(NSEvent *)event form:(NSObject <WebDOMElement> *)form formValues:(NSDictionary *)values;
+- (void)loadURL:(NSURL *)URL referrer:(NSString *)referrer reload:(BOOL)reload target:(NSString *)target triggeringEvent:(NSEvent *)event form:(NSObject <WebDOMElement> *)form formValues:(NSDictionary *)values;
 - (void)postWithURL:(NSURL *)URL referrer:(NSString *)referrer target:(NSString *)target data:(NSData *)data contentType:(NSString *)contentType triggeringEvent:(NSEvent *)event form:(NSObject <WebDOMElement> *)form formValues:(NSDictionary *)values;
 
 - (WebCoreBridge *)createWindowWithURL:(NSURL *)URL frameName:(NSString *)name;
@@ -348,8 +340,6 @@ typedef enum {
 - (NSView <WebCoreFileButton> *)fileButton;
 
 - (void)setHasBorder:(BOOL)hasBorder;
-
-- (WebCoreKeyboardUIMode)keyboardUIMode;
 
 @end
 

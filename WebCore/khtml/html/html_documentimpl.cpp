@@ -73,7 +73,6 @@
 
 #include "khtml_factory.h"
 #include "rendering/render_object.h"
-#include "dom/dom_exception.h"
 
 #include <dcopclient.h>
 #include <kapplication.h>
@@ -240,14 +239,14 @@ HTMLElementImpl *HTMLDocumentImpl::body()
     return static_cast<HTMLElementImpl *>(body);
 }
 
-void HTMLDocumentImpl::setBody(HTMLElementImpl *_body, int &exceptioncode)
+void HTMLDocumentImpl::setBody(HTMLElementImpl *_body)
 {
+    int exceptioncode = 0;
     HTMLElementImpl *b = body();
-    if ( !_body ) { 
-	exceptioncode = DOMException::HIERARCHY_REQUEST_ERR;
-	return;
-    }
-    if ( !b )
+    if ( !_body && !b ) return;
+    if ( !_body )
+        documentElement()->removeChild( b, exceptioncode );
+    else if ( !b )
         documentElement()->appendChild( _body, exceptioncode );
     else
         documentElement()->replaceChild( _body, b, exceptioncode );
@@ -347,9 +346,11 @@ void HTMLDocumentImpl::close()
     if (body() && doload) {
         updateRendering();
         
-        // Always do a layout after loading if needed.
-        if (renderer() && renderer()->needsLayout())
-            view()->layout();
+        // Always do a layout/repaint after loading.
+        if (renderer()) {
+            renderer()->layoutIfNeeded();
+            renderer()->repaint();
+        }
     }
 }
 

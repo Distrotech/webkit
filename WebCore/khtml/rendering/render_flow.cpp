@@ -45,13 +45,13 @@
 using namespace DOM;
 using namespace khtml;
 
-RenderFlow* RenderFlow::createAnonymousFlow(DOM::DocumentImpl* doc, RenderStyle* style)
+RenderFlow* RenderFlow::createFlow(DOM::NodeImpl* node, RenderStyle* style, RenderArena* arena)
 {
     RenderFlow* result;
     if (style->display() == INLINE)
-        result = new (doc->renderArena()) RenderInline(doc);
+        result = new (arena) RenderInline(node);
     else
-        result = new (doc->renderArena()) RenderBlock(doc);
+        result = new (arena) RenderBlock(node);
     result->setStyle(style);
     return result;
 }
@@ -125,10 +125,11 @@ void RenderFlow::addChild(RenderObject *newChild, RenderObject *beforeChild)
     return addChildToFlow(newChild, beforeChild);
 }
 
-void RenderFlow::deleteLineBoxes()
+void RenderFlow::deleteLineBoxes(RenderArena* arena)
 {
     if (m_firstLineBox) {
-        RenderArena* arena = renderArena();
+        if (!arena)
+            arena = renderArena();
         InlineRunBox *curr=m_firstLineBox, *next=0;
         while (curr) {
             next = curr->nextLineBox();
@@ -140,10 +141,10 @@ void RenderFlow::deleteLineBoxes()
     }
 }
 
-void RenderFlow::detach()
+void RenderFlow::detach(RenderArena* renderArena)
 {
-    deleteLineBoxes();
-    RenderBox::detach();
+    deleteLineBoxes(renderArena);
+    RenderBox::detach(renderArena);
 }
 
 InlineBox* RenderFlow::createInlineBox(bool makePlaceHolderBox, bool isRootLineBox)
@@ -205,7 +206,7 @@ void RenderFlow::paintLineBoxDecorations(QPainter *p, int _x, int _y,
 
     if (style()->visibility() == VISIBLE && paintAction == PaintActionForeground) {
         // We only paint line box decorations in strict or almost strict mode.
-        // Otherwise we let the InlineTextBoxes paint their own decorations.
+        // Otherwise we let the TextRuns paint their own decorations.
         if (style()->htmlHacks())
             return;
         
@@ -228,7 +229,7 @@ void RenderFlow::paintLineBoxDecorations(QPainter *p, int _x, int _y,
     }
 }
 
-QRect RenderFlow::getAbsoluteRepaintRect()
+void RenderFlow::repaint(bool immediate)
 {
     if (isInlineFlow()) {
         // Find our leftmost position.
@@ -242,29 +243,19 @@ QRect RenderFlow::getAbsoluteRepaintRect()
         int ow = style() ? style()->outlineWidth() : 0;
         if (isCompact())
             left -= m_x;
-#ifdef INCREMENTAL_REPAINTING
-        if (style()->position() == RELATIVE && m_layer)
-            m_layer->relativePositionOffset(left, top);
-#else
-        if (style()->position() == RELATIVE)
-            relativePositionOffset(left, top);
-#endif
-        QRect r(-ow+left, -ow+top, width()+ow*2, height()+ow*2);
-        containingBlock()->computeAbsoluteRepaintRect(r);
-        return r;
+        containingBlock()->repaintRectangle(-ow+left, -ow+top,
+                                            width()+ow*2, height()+ow*2, immediate);
     }
     else {
         if (firstLineBox() && firstLineBox()->topOverflow() < 0) {
             int ow = style() ? style()->outlineWidth() : 0;
-            QRect r(-ow, -ow+firstLineBox()->topOverflow(),
-                    overflowWidth(false)+ow*2,
-                    overflowHeight(false)+ow*2-firstLineBox()->topOverflow());
-            computeAbsoluteRepaintRect(r);
-            return r;
+            repaintRectangle(-ow, -ow+firstLineBox()->topOverflow(),
+                             overflowWidth(false)+ow*2,
+                             overflowHeight(false)+ow*2-firstLineBox()->topOverflow(), immediate);
         }
+        else
+            return RenderBox::repaint(immediate);
     }
-
-    return RenderBox::getAbsoluteRepaintRect();
 }
 
 int

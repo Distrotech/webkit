@@ -539,7 +539,7 @@ int Lexer::lex()
 bool Lexer::isWhiteSpace() const
 {
   return (current == ' ' || current == '\t' ||
-          current == 0x0b || current == 0x0c || current == 0xa0);
+          current == 0x0b || current == 0x0c);
 }
 
 bool Lexer::isLineTerminator()

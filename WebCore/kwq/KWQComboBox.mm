@@ -25,27 +25,29 @@
 
 #import "KWQComboBox.h"
 
-#import "KWQButton.h"
-#import "KWQExceptions.h"
-#import "KWQKHTMLPart.h"
 #import "KWQView.h"
 #import "KWQKHTMLPart.h"
-#import "KWQNSViewExtras.h"
 #import "WebCoreBridge.h"
+
 #import "khtmlview.h"
 #import "render_replaced.h"
-
 using khtml::RenderWidget;
 
-enum {
-    topMargin,
-    bottomMargin,
-    leftMargin,
-    rightMargin,
-    baselineFudgeFactor,
-    widthNotIncludingText,
-    minimumTextWidth
-};
+// We empirically determined that combo boxes have these extra pixels on all
+// sides. It would be better to get this info from AppKit somehow.
+#define TOP_MARGIN 1
+#define BOTTOM_MARGIN 3
+#define LEFT_MARGIN 3
+#define RIGHT_MARGIN 3
+
+// This is the 2-pixel CELLOFFSET for bordered cells from NSCell.
+#define VERTICAL_FUDGE_FACTOR 2
+
+// When we discovered we needed to measure text widths ourselves, I empirically
+// determined these widths. I don't know what exactly they correspond to in the
+// NSPopUpButtonCell code.
+#define WIDTH_NOT_INCLUDING_TEXT 31
+#define MINIMUM_WIDTH 36
 
 @interface KWQComboBoxAdapter : NSObject
 {
@@ -63,22 +65,14 @@ enum {
 @end
 
 @interface KWQPopUpButton : NSPopUpButton <KWQWidgetHolder>
-{
-    BOOL inNextValidKeyView;
-}
 @end
 
 QComboBox::QComboBox()
-    : _adapter(0)
+    : _adapter([[KWQComboBoxAdapter alloc] initWithQComboBox:this])
     , _widthGood(false)
     , _activated(this, SIGNAL(activated(int)))
 {
-    KWQ_BLOCK_NS_EXCEPTIONS;
-
-    _adapter = [[KWQComboBoxAdapter alloc] initWithQComboBox:this];
     KWQPopUpButton *button = [[KWQPopUpButton alloc] init];
-    setView(button);
-    [button release];
     
     KWQPopUpButtonCell *cell = [[KWQPopUpButtonCell alloc] initWithWidget:this];
     [button setCell:cell];
@@ -88,30 +82,24 @@ QComboBox::QComboBox()
     [button setAction:@selector(action:)];
 
     [[button cell] setControlSize:NSSmallControlSize];
-    [button setFont:[NSFont systemFontOfSize:[NSFont systemFontSizeForControlSize:NSSmallControlSize]]];
+    [button setFont:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]]];
+
+    setView(button);
+
+    [button release];
 
     updateCurrentItem();
-
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
 }
 
 QComboBox::~QComboBox()
 {
-    KWQ_BLOCK_NS_EXCEPTIONS;
-
     KWQPopUpButton *button = (KWQPopUpButton *)getView();
     [button setTarget:nil];
     [_adapter release];
-
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
 }
 
-void QComboBox::insertItem(const QString &text, int i)
+void QComboBox::insertItem(const QString &text, int index)
 {
-    KWQ_BLOCK_NS_EXCEPTIONS;
-
-    int index = i;
-
     KWQPopUpButton *button = (KWQPopUpButton *)getView();
     int numItems = [button numberOfItems];
     if (index < 0) {
@@ -128,16 +116,10 @@ void QComboBox::insertItem(const QString &text, int i)
     _widthGood = false;
 
     updateCurrentItem();
-
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
 }
 
 QSize QComboBox::sizeHint() const 
 {
-    NSSize size = {0,0};
-
-    KWQ_BLOCK_NS_EXCEPTIONS;
-
     KWQPopUpButton *button = (KWQPopUpButton *)getView();
     
     float width;
@@ -153,40 +135,36 @@ QSize QComboBox::sizeHint() const
             width = MAX(width, size.width);
         }
         _width = ceil(width);
-        if (_width < dimensions()[minimumTextWidth]) {
-            _width = dimensions()[minimumTextWidth];
+        if (_width < MINIMUM_WIDTH - WIDTH_NOT_INCLUDING_TEXT) {
+            _width = MINIMUM_WIDTH - WIDTH_NOT_INCLUDING_TEXT;
         }
         _widthGood = true;
     }
     
-    size = [[button cell] cellSize];
-
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
-
-    return QSize((int)_width + dimensions()[widthNotIncludingText],
-        (int)size.height - (dimensions()[topMargin] + dimensions()[bottomMargin]));
+    return QSize((int)_width + WIDTH_NOT_INCLUDING_TEXT,
+        (int)[[button cell] cellSize].height - (TOP_MARGIN + BOTTOM_MARGIN));
 }
 
 QRect QComboBox::frameGeometry() const
 {
     QRect r = QWidget::frameGeometry();
-    return QRect(r.x() + dimensions()[leftMargin], r.y() + dimensions()[topMargin],
-        r.width() - (dimensions()[leftMargin] + dimensions()[rightMargin]),
-        r.height() - (dimensions()[topMargin] + dimensions()[bottomMargin]));
+    return QRect(r.x() + LEFT_MARGIN, r.y() + TOP_MARGIN,
+        r.width() - (LEFT_MARGIN + RIGHT_MARGIN),
+        r.height() - (TOP_MARGIN + BOTTOM_MARGIN));
 }
 
 void QComboBox::setFrameGeometry(const QRect &r)
 {
-    QWidget::setFrameGeometry(QRect(-dimensions()[leftMargin] + r.x(), -dimensions()[topMargin] + r.y(),
-        dimensions()[leftMargin] + r.width() + dimensions()[rightMargin],
-        dimensions()[topMargin] + r.height() + dimensions()[bottomMargin]));
+    QWidget::setFrameGeometry(QRect(-LEFT_MARGIN + r.x(), -TOP_MARGIN + r.y(),
+        LEFT_MARGIN + r.width() + RIGHT_MARGIN,
+        TOP_MARGIN + r.height() + BOTTOM_MARGIN));
 }
 
-int QComboBox::baselinePosition(int height) const
+int QComboBox::baselinePosition() const
 {
     // Menu text is at the top.
     KWQPopUpButton *button = (KWQPopUpButton *)getView();
-    return (int)ceil(-dimensions()[topMargin] + dimensions()[baselineFudgeFactor] + [[button font] ascender]);
+    return (int)ceil(-TOP_MARGIN + VERTICAL_FUDGE_FACTOR + [[button font] ascender]);
 }
 
 void QComboBox::clear()
@@ -199,26 +177,15 @@ void QComboBox::clear()
 
 void QComboBox::setCurrentItem(int index)
 {
-    KWQ_BLOCK_NS_EXCEPTIONS;
-
     KWQPopUpButton *button = (KWQPopUpButton *)getView();
     [button selectItemAtIndex:index];
-
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
-
     updateCurrentItem();
 }
 
 bool QComboBox::updateCurrentItem() const
 {
     KWQPopUpButton *button = (KWQPopUpButton *)getView();
-
-    volatile int i = 0;
-
-    KWQ_BLOCK_NS_EXCEPTIONS;
-    i = [button indexOfSelectedItem];
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
-
+    int i = [button indexOfSelectedItem];
     if (_currentItem == i) {
         return false;
     }
@@ -232,55 +199,7 @@ void QComboBox::itemSelected()
         _activated.call(_currentItem);
     }
 }
-
-void QComboBox::setFont(const QFont &f)
-{
-    QWidget::setFont(f);
-
-    const NSControlSize size = KWQNSControlSizeForFont(f);
-    NSControl * const button = static_cast<NSControl *>(getView());
-
-    KWQ_BLOCK_NS_EXCEPTIONS;
-
-    if (size != [[button cell] controlSize]) {
-        [[button cell] setControlSize:size];
-        [button setFont:[NSFont systemFontOfSize:[NSFont systemFontSizeForControlSize:size]]];
-        _widthGood = false;
-    }
-
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
-}
-
-const int *QComboBox::dimensions() const
-{
-    // We empirically determined these dimensions.
-    // It would be better to get this info from AppKit somehow.
-    static const int w[3][7] = {
-        { 2, 3, 3, 3, 4, 34, 9 },
-        { 1, 3, 3, 3, 3, 31, 5 },
-        { 0, 0, 1, 1, 2, 32, 0 }
-    };
-    NSControl * const button = static_cast<NSControl *>(getView());
-
-    volatile NSControlSize size = NSSmallControlSize;
-    KWQ_BLOCK_NS_EXCEPTIONS;
-    size = [[button cell] controlSize];
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
-
-    return w[size];
-}
-
-QWidget::FocusPolicy QComboBox::focusPolicy() const
-{
-    // Add an additional check here.
-    // For now, selects are only focused when full
-    // keyboard access is turned on.
-    if ([KWQKHTMLPart::bridgeForWidget(this) keyboardUIMode] != WebCoreFullKeyboardAccess)
-        return NoFocus;
-
-    return QWidget::focusPolicy();
-}
-
+ 
 @implementation KWQComboBoxAdapter
 
 - initWithQComboBox:(QComboBox *)b
@@ -333,7 +252,7 @@ QWidget::FocusPolicy QComboBox::focusPolicy() const
         // Give khtml a chance to fix up its event state, since the popup eats all the
         // events during tracking.  [NSApp currentEvent] is still the original mouseDown
         // at this point!
-        [bridge part]->sendFakeEventsAfterWidgetTracking(event);
+        [bridge part]->doFakeMouseUpAfterWidgetTracking(event);
     }
     [bridge release];
     return result;
@@ -351,63 +270,6 @@ QWidget::FocusPolicy QComboBox::focusPolicy() const
 - (QWidget *)widget
 {
     return [(KWQPopUpButtonCell *)[self cell] widget];
-}
-
-- (BOOL)becomeFirstResponder
-{
-    BOOL become = [super becomeFirstResponder];
-    if (become) {
-        QWidget *widget = [self widget];
-        if (!KWQKHTMLPart::currentEventIsMouseDownInWidget(widget)) {
-            [self _KWQ_scrollFrameToVisible];
-        }
-        QFocusEvent event(QEvent::FocusIn);
-        const_cast<QObject *>(widget->eventFilterObject())->eventFilter(widget, &event);
-    }
-    return become;
-}
-
-- (BOOL)resignFirstResponder
-{
-    BOOL resign = [super resignFirstResponder];
-    if (resign) {
-        QWidget *widget = [self widget];
-        QFocusEvent event(QEvent::FocusOut);
-        const_cast<QObject *>(widget->eventFilterObject())->eventFilter(widget, &event);
-    }
-    return resign;
-}
-
--(NSView *)nextKeyView
-{
-    QWidget *widget = [self widget];
-    return widget && inNextValidKeyView
-        ? KWQKHTMLPart::nextKeyViewForWidget(widget, KWQSelectingNext)
-        : [super nextKeyView];
-}
-
--(NSView *)previousKeyView
-{
-    QWidget *widget = [self widget];
-    return widget && inNextValidKeyView
-        ? KWQKHTMLPart::nextKeyViewForWidget(widget, KWQSelectingPrevious)
-        : [super previousKeyView];
-}
-
--(NSView *)nextValidKeyView
-{
-    inNextValidKeyView = YES;
-    NSView *view = [super nextValidKeyView];
-    inNextValidKeyView = NO;
-    return view;
-}
-
--(NSView *)previousValidKeyView
-{
-    inNextValidKeyView = YES;
-    NSView *view = [super previousValidKeyView];
-    inNextValidKeyView = NO;
-    return view;
 }
 
 @end

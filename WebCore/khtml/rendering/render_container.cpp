@@ -30,7 +30,6 @@
 #include "render_text.h"
 #include "render_image.h"
 #include "render_canvas.h"
-#include "xml/dom_docimpl.h"
 
 #include <kdebug.h>
 #include <assert.h>
@@ -49,22 +48,22 @@ RenderContainer::~RenderContainer()
 {
 }
 
-void RenderContainer::detach()
+void RenderContainer::detach(RenderArena* renderArena)
 {
     if (continuation())
-        continuation()->detach();
+        continuation()->detach(renderArena);
     
     RenderObject* next;
     for(RenderObject* n = m_first; n; n = next ) {
         n->removeFromObjectLists();
         n->setParent(0);
         next = n->nextSibling();
-        n->detach();
+        n->detach(renderArena);
     }
     m_first = 0;
     m_last = 0;
 
-    RenderObject::detach();
+    RenderObject::detach(renderArena);
 }
 
 bool RenderContainer::canHaveChildren() const
@@ -133,15 +132,16 @@ void RenderContainer::addChild(RenderObject *newChild, RenderObject *beforeChild
         RenderTable *table;
         if( !beforeChild )
             beforeChild = lastChild();
-        if( beforeChild && beforeChild->isAnonymous() && beforeChild->isTable() )
+        if( beforeChild && beforeChild->isAnonymousBox() && beforeChild->isTable() )
             table = static_cast<RenderTable *>(beforeChild);
         else {
             //kdDebug( 6040 ) << "creating anonymous table" << endl;
-            table = new (renderArena()) RenderTable(document() /* is anonymous */);
+            table = new (renderArena()) RenderTable(0 /* is anonymous */);
             RenderStyle *newStyle = new RenderStyle();
             newStyle->inheritFrom(style());
             newStyle->setDisplay(TABLE);
             table->setStyle(newStyle);
+            table->setIsAnonymousBox(true);
             addChild(table, beforeChild);
         }
         table->addChild(newChild);
@@ -149,43 +149,34 @@ void RenderContainer::addChild(RenderObject *newChild, RenderObject *beforeChild
 	// just add it...
 	insertChildNode(newChild, beforeChild);
     }
+    newChild->setNeedsLayoutAndMinMaxRecalc();
 }
 
 RenderObject* RenderContainer::removeChildNode(RenderObject* oldChild)
 {
     KHTMLAssert(oldChild->parent() == this);
 
-    // So that we'll get the appropriate dirty bit set (either that a normal flow child got yanked or
-    // that a positioned child got yanked).  We also repaint, so that the area exposed when the child
-    // disappears gets repainted properly.
-    if (document()->renderer()) {
-        oldChild->setNeedsLayoutAndMinMaxRecalc();
-#ifdef INCREMENTAL_REPAINTING
-        oldChild->repaint();
-#endif
-        
-        // Keep our layer hierarchy updated.
-        oldChild->removeLayers(enclosingLayer());
-    
-        // if oldChild is the start or end of the selection, then clear the selection to
-        // avoid problems of invalid pointers
-    
-        // ### This is not the "proper" solution... ideally the selection should be maintained
-        // based on DOM Nodes and a Range, which gets adjusted appropriately when nodes are
-        // deleted/inserted near etc. But this at least prevents crashes caused when the start
-        // or end of the selection is deleted and then accessed when the user next selects
-        // something.
-    
-        if (oldChild->isSelectionBorder()) {
-            RenderObject *root = oldChild;
-            while (root && root->parent())
-                root = root->parent();
-            if (root->isCanvas()) {
-                static_cast<RenderCanvas*>(root)->clearSelection();
-            }
+    // Keep our layer hierarchy updated.
+    oldChild->removeLayers(enclosingLayer());
+   
+    // if oldChild is the start or end of the selection, then clear the selection to
+    // avoid problems of invalid pointers
+
+    // ### This is not the "proper" solution... ideally the selection should be maintained
+    // based on DOM Nodes and a Range, which gets adjusted appropriately when nodes are
+    // deleted/inserted near etc. But this at least prevents crashes caused when the start
+    // or end of the selection is deleted and then accessed when the user next selects
+    // something.
+
+    if (oldChild->isSelectionBorder()) {
+        RenderObject *root = oldChild;
+        while (root && root->parent())
+            root = root->parent();
+        if (root->isCanvas()) {
+            static_cast<RenderCanvas*>(root)->clearSelection();
         }
     }
-    
+
     // remove the child
     if (oldChild->previousSibling())
         oldChild->previousSibling()->setNextSibling(oldChild->nextSibling());
@@ -201,12 +192,15 @@ RenderObject* RenderContainer::removeChildNode(RenderObject* oldChild)
     oldChild->setNextSibling(0);
     oldChild->setParent(0);
 
+    setNeedsLayoutAndMinMaxRecalc();
+    
     return oldChild;
 }
 
 void RenderContainer::removeChild(RenderObject *oldChild)
 {
     removeChildNode(oldChild);
+    setNeedsLayout(true);
 }
 
 void RenderContainer::updatePseudoChild(RenderStyle::PseudoId type, RenderObject* child)
@@ -304,18 +298,18 @@ void RenderContainer::updatePseudoChild(RenderStyle::PseudoId type, RenderObject
     for (ContentData* contentData = pseudo->contentData();
          contentData; contentData = contentData->_nextContent) {
         if (!pseudoContainer)
-            pseudoContainer = RenderFlow::createAnonymousFlow(document(), pseudo); /* anonymous box */
+            pseudoContainer = RenderFlow::createFlow(0, pseudo, renderArena()); /* anonymous box */
         
         if (contentData->contentType() == CONTENT_TEXT)
         {
-            RenderText* t = new (renderArena()) RenderText(document() /*anonymous object */, contentData->contentText());
+            RenderText* t = new (renderArena()) RenderText(0 /*anonymous object */, contentData->contentText());
             t->setStyle(pseudo);
             pseudoContainer->addChild(t);
             t->close();
         }
         else if (contentData->contentType() == CONTENT_OBJECT)
         {
-            RenderImage* img = new (renderArena()) RenderImage(document()); /* Anonymous object */
+            RenderImage* img = new (renderArena()) RenderImage(0);
             RenderStyle* style = new RenderStyle();
             style->inheritFrom(pseudo);
             img->setStyle(style);
@@ -351,16 +345,11 @@ void RenderContainer::appendChildNode(RenderObject* newChild)
 
     setLastChild(newChild);
     
-    // Keep our layer hierarchy updated.  Optimize for the common case where we don't have any children
-    // and don't have a layer attached to ourselves.
-    if (newChild->firstChild() || newChild->layer()) {
-        RenderLayer* layer = enclosingLayer();
-        newChild->addLayers(layer, newChild);
-    }
-    
-    newChild->setNeedsLayoutAndMinMaxRecalc(); // Goes up the containing block hierarchy.
-    if (!normalChildNeedsLayout())
-        setChildNeedsLayout(true); // We may supply the static position for an absolute positioned child.
+    // Keep our layer hierarchy updated.
+    RenderLayer* layer = enclosingLayer();
+    newChild->addLayers(layer, newChild);
+
+    newChild->setNeedsLayoutAndMinMaxRecalc();
 }
 
 void RenderContainer::insertChildNode(RenderObject* child, RenderObject* beforeChild)
@@ -371,7 +360,7 @@ void RenderContainer::insertChildNode(RenderObject* child, RenderObject* beforeC
     }
 
     KHTMLAssert(!child->parent());
-    while ( beforeChild->parent() != this && beforeChild->parent()->isAnonymous() )
+    while ( beforeChild->parent() != this && beforeChild->parent()->isAnonymousBox() )
 	beforeChild = beforeChild->parent();
     KHTMLAssert(beforeChild->parent() == this);
 
@@ -391,8 +380,6 @@ void RenderContainer::insertChildNode(RenderObject* child, RenderObject* beforeC
     child->addLayers(layer, child);
 
     child->setNeedsLayoutAndMinMaxRecalc();
-    if (!normalChildNeedsLayout())
-        setChildNeedsLayout(true); // We may supply the static position for an absolute positioned child.
 }
 
 
@@ -417,7 +404,7 @@ void RenderContainer::removeLeftoverAnonymousBoxes()
     while( child ) {
 	RenderObject *next = child->nextSibling();
 	
-	if ( child->isRenderBlock() && child->isAnonymous() && !child->continuation() && !child->childrenInline() && !child->isTableCell() ) {
+	if ( child->isRenderBlock() && child->isAnonymousBox() && !child->continuation() && !child->childrenInline() && !child->isTableCell() ) {
 	    RenderObject *firstAnChild = child->firstChild();
 	    RenderObject *lastAnChild = child->lastChild();
 	    if ( firstAnChild ) {
@@ -451,7 +438,7 @@ void RenderContainer::removeLeftoverAnonymousBoxes()
 		c->m_first = 0;
 		c->m_next = 0;
 	    }
-	    child->detach();
+	    child->detach(renderArena());
 	}
 	child = next;
     }

@@ -38,9 +38,6 @@ using namespace khtml;
 RenderCanvas::RenderCanvas(DOM::NodeImpl* node, KHTMLView *view)
     : RenderBlock(node)
 {
-    // Clear our anonymous bit.
-    setIsAnonymous(false);
-        
     // init RenderObject attributes
     setInline(false);
 
@@ -125,15 +122,11 @@ void RenderCanvas::calcMinMaxWidth()
 
 void RenderCanvas::layout()
 {
-    KHTMLAssert(!view()->inLayout());
-    
     if (m_printingMode)
        m_minWidth = m_width;
 
-    setChildNeedsLayout(true);
-    setMinMaxKnown(false);
     for (RenderObject *c = firstChild(); c; c = c->nextSibling())
-        c->setChildNeedsLayout(true);
+        c->setNeedsLayout(true);
 
 #ifdef SPEED_DEBUG
     QTime qt;
@@ -165,6 +158,7 @@ void RenderCanvas::layout()
     int doch = docHeight();
 
     if (!m_printingMode) {
+        m_view->resizeContents(docw, doch);
         setWidth( m_viewportWidth = m_view->visibleWidth() );
         setHeight(  m_viewportHeight = m_view->visibleHeight() );
     }
@@ -178,7 +172,7 @@ void RenderCanvas::layout()
 
     layer()->setHeight(QMAX(doch, m_height));
     layer()->setWidth(QMAX(docw, m_width));
-    
+
     setNeedsLayout(false);
 }
 
@@ -261,34 +255,53 @@ void RenderCanvas::paintBoxDecorations(QPainter *p,int _x, int _y,
         p->fillRect(_x,_y,_w,_h, view()->palette().active().color(QColorGroup::Base));
 }
 
-void RenderCanvas::repaintViewRectangle(const QRect& ur, bool immediate)
-{
-    if (m_printingMode || ur.width() == 0 || ur.height() == 0) return;
-
-    QRect vr = viewRect();
-    if (m_view && ur.intersects(vr))
-        m_view->repaintRectangle(ur.intersect(vr), immediate);
-}
-
-QRect RenderCanvas::getAbsoluteRepaintRect()
-{
-    QRect result;
-    if (m_view && !m_printingMode)
-        result = QRect(m_view->contentsX(), m_view->contentsY(),
-                       m_view->visibleWidth(), m_view->visibleHeight());
-    return result;
-}
-
-void RenderCanvas::computeAbsoluteRepaintRect(QRect& r, bool f)
+void RenderCanvas::repaintRectangle(int x, int y, int w, int h, bool immediate, bool f)
 {
     if (m_printingMode) return;
+//    kdDebug( 6040 ) << "updating views contents (" << x << "/" << y << ") (" << w << "/" << h << ")" << endl;
 
-    if (f && m_view) {
-        r.setX(r.x() + m_view->contentsX());
-        r.setY(r.y() + m_view->contentsY());
+    if ( f && m_view ) {
+        x += m_view->contentsX();
+        y += m_view->contentsY();
+    }
+
+    QRect vr = viewRect();
+    QRect ur(x, y, w, h);
+
+    if (m_view && ur.intersects(vr))
+        if (immediate)
+            m_view->updateContents(ur, true);
+        else
+            m_view->scheduleRepaint(x, y, w, h);
+}
+
+void RenderCanvas::repaint(bool immediate)
+{
+    if (m_view && !m_printingMode) {
+        if (immediate) {
+            m_view->resizeContents(docWidth(), docHeight());
+            m_view->unscheduleRepaint();
+            if (needsLayout()) {
+                m_view->scheduleRelayout();
+                return;
+            }
+            m_view->updateContents(m_view->contentsX(), m_view->contentsY(),
+                                   m_view->visibleWidth(), m_view->visibleHeight(), true);
+        }
+        else
+            m_view->scheduleRepaint(m_view->contentsX(), m_view->contentsY(),
+                                    m_view->visibleWidth(), m_view->visibleHeight());
     }
 }
 
+void RenderCanvas::close()
+{
+    setNeedsLayout(true);
+    if (m_view) {
+        m_view->layout();
+    }
+    //printTree();
+}
 
 static QRect enclosingPositionedRect (RenderObject *n)
 {

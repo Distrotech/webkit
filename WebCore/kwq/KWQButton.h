@@ -39,19 +39,9 @@ public:
     QString text() const;
     
     virtual void clicked();
-    virtual void simulateClick();
-
-    // QWidget overrides
-    virtual void setFont(const QFont &);
-
-    virtual FocusPolicy focusPolicy() const;
-
 private:
+    
     KWQSignal m_clicked;
 };
-
-#ifdef __OBJC__
-NSControlSize KWQNSControlSizeForFont(const QFont &);
-#endif
 
 #endif

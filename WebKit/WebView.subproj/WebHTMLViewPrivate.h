@@ -35,14 +35,6 @@
     BOOL laidOutAtLeastOnce;
     
     WebPluginController *pluginController;
-    
-    NSString *toolTip;
-    NSToolTipTag toolTipTag;
-    id trackingRectOwner;
-    void *trackingRectUserData;
-    
-    NSTimer *autoscrollTimer;
-    NSEvent *autoscrollTriggerEvent;
 }
 @end
 
@@ -52,6 +44,7 @@
 - (WebView *)_webView;
 - (WebFrame *)_frame;
 - (WebBridge *)_bridge;
+- (void)_adjustFrames;
 
 // Modifier (flagsChanged) tracking SPI
 + (void)_postFlagsChangedEvent:(NSEvent *)flagsChangedEvent;
@@ -65,6 +58,7 @@
 - (BOOL)_insideAnotherHTMLView;
 - (void)_clearLastHitViewIfSelf;
 - (void)_updateMouseoverWithEvent:(NSEvent *)event;
+- (BOOL)_interceptKeyEvent:(NSEvent *)event toView:(NSView *)view;
 
 + (NSArray *)_pasteboardTypes;
 - (void)_writeSelectionToPasteboard:(NSPasteboard *)pasteboard;
@@ -79,8 +73,5 @@
 - (WebPluginController *)_pluginController;
 
 - (NSRect)_selectionRect;
-
-- (void)_startAutoscrollTimer:(NSEvent *)event;
-- (void)_stopAutoscrollTimer;
 
 @end

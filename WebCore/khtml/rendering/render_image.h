@@ -38,7 +38,7 @@ class DocLoader;
 class RenderImage : public RenderReplaced
 {
 public:
-    RenderImage(DOM::NodeImpl*);
+    RenderImage(DOM::HTMLElementImpl *_element);
     virtual ~RenderImage();
 
     virtual const char *renderName() const { return "RenderImage"; }
@@ -64,13 +64,12 @@ public:
     virtual void notifyFinished(CachedObject *finishedObj);
     void dispatchLoadEvent();
 
-    virtual bool nodeAtPoint(NodeInfo& info, int x, int y, int tx, int ty,
-                             HitTestAction hitTestAction = HitTestAll, bool inside=false);
+    virtual bool nodeAtPoint(NodeInfo& info, int x, int y, int tx, int ty, bool inside=false);
     
     virtual short calcReplacedWidth() const;
     virtual int calcReplacedHeight() const;
 
-    virtual void detach();
+    virtual void detach(RenderArena *);
 
     // Called to set generated content images (e.g., :before/:after generated images).
     void setContentObject(CachedObject* co);

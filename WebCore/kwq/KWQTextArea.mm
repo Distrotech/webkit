@@ -52,11 +52,8 @@
 @interface KWQTextAreaTextView : NSTextView <KWQWidgetHolder>
 {
     QTextEdit *widget;
-    BOOL disabled;
 }
 - (void)setWidget:(QTextEdit *)widget;
-- (void)setEnabled:(BOOL)flag;
-- (BOOL)isEnabled;
 @end
 
 @implementation KWQTextArea
@@ -68,16 +65,14 @@ const float LargeNumberForText = 1.0e7;
     NSSize size = [self frame].size;
     NSRect textFrame;
     textFrame.origin.x = textFrame.origin.y = 0;
-    if (size.width > 0 && size.height > 0) {
-        textFrame.size = [[self class] contentSizeForFrameSize:size
-            hasHorizontalScroller:[self hasHorizontalScroller]
-            hasVerticalScroller:[self hasVerticalScroller]
-            borderType:[self borderType]];
-    } else {
+    if (size.width > 0 && size.height > 0)
+        textFrame.size = [NSScrollView contentSizeForFrameSize:size
+            hasHorizontalScroller:NO hasVerticalScroller:YES borderType:[self borderType]];
+    else {
         textFrame.size.width = LargeNumberForText;
         textFrame.size.height = LargeNumberForText;
     }
-
+        
     textView = [[KWQTextAreaTextView alloc] initWithFrame:textFrame];
     [textView setRichText:NO];
     [[textView textContainer] setWidthTracksTextView:YES];
@@ -262,27 +257,12 @@ const float LargeNumberForText = 1.0e7;
     return [textView isEditable];
 }
 
-- (void)setEnabled:(BOOL)flag
-{
-    if (flag == [textView isEnabled])
-        return;
-        
-    [textView setEnabled:flag];
-    
-    [self setNeedsDisplay:YES];
-}
-
-- (BOOL)isEnabled
-{
-    return [textView isEnabled];
-}
-
 - (void)setFrame:(NSRect)frameRect
 {    
     [super setFrame:frameRect];
 
     if ([self wordWrap]) {
-        NSSize contentSize = [[self class] contentSizeForFrameSize:frameRect.size
+        NSSize contentSize = [NSScrollView contentSizeForFrameSize:frameRect.size
             hasHorizontalScroller:[self hasHorizontalScroller]
             hasVerticalScroller:[self hasVerticalScroller]
             borderType:[self borderType]];
@@ -434,20 +414,7 @@ static NSRange RangeOfParagraph(NSString *text, int paragraph)
 - (void)drawRect:(NSRect)rect
 {
     [super drawRect:rect];
-    if (![textView isEnabled]) {
-        // draw a disabled bezel border
-        [[NSColor controlColor] set];
-        NSFrameRect(rect);
-        
-        rect = NSInsetRect(rect, 1, 1);
-        [[NSColor controlShadowColor] set];
-        NSFrameRect(rect);
-    
-        rect = NSInsetRect(rect, 1, 1);
-        [[NSColor textBackgroundColor] set];
-        NSRectFill(rect);
-    }
-    else if ([KWQKHTMLPart::bridgeForWidget(widget) firstResponder] == textView) {
+    if ([KWQKHTMLPart::bridgeForWidget(widget) firstResponder] == textView) {
         NSSetFocusRingStyle(NSFocusRingOnly);
         NSRectFill([self bounds]);
     }
@@ -503,19 +470,6 @@ static NSRange RangeOfParagraph(NSString *text, int paragraph)
     implementation(view, selector, rect);
 
     return NO;
-}
-
-- (NSSize)sizeWithColumns:(int)numColumns rows:(int)numRows
-{
-    NSFont *font = [textView font];
-    NSSize textSize = NSMakeSize(ceil(numColumns * [font widthOfString:@"0"]), numRows * [font defaultLineHeightForFont]);
-    NSSize textContainerSize = NSMakeSize(textSize.width + [[textView textContainer] lineFragmentPadding] * 2, textSize.height);
-    NSSize textContainerInset = [textView textContainerInset];
-    NSSize textViewSize = NSMakeSize(textContainerSize.width + textContainerInset.width, textContainerSize.height + textContainerInset.height); 
-    return [[self class] frameSizeForContentSize:textViewSize
-        hasHorizontalScroller:[self hasHorizontalScroller]
-        hasVerticalScroller:[self hasVerticalScroller]
-        borderType:[self borderType]];
 }
 
 @end
@@ -581,11 +535,8 @@ static NSString *WebContinuousSpellCheckingEnabled = @"WebContinuousSpellCheckin
 
 - (BOOL)becomeFirstResponder
 {
-    if (disabled)
-        return NO;
-
     BOOL become = [super becomeFirstResponder];
-    
+
     if (become) {
         // Select all the text if we are tabbing in, but otherwise preserve/remember
         // the selection from last time we had focus (to match WinIE).
@@ -599,7 +550,7 @@ static NSString *WebContinuousSpellCheckingEnabled = @"WebContinuousSpellCheckin
 	QFocusEvent event(QEvent::FocusIn);
 	const_cast<QObject *>(widget->eventFilterObject())->eventFilter(widget, &event);
     }
-
+       
     return become;
 }
 
@@ -653,8 +604,6 @@ static NSString *WebContinuousSpellCheckingEnabled = @"WebContinuousSpellCheckin
 
 - (void)mouseDown:(NSEvent *)event
 {
-    if (disabled)
-        return;
     [super mouseDown:event];
     widget->sendConsumedMouseUp();
     widget->clicked();
@@ -662,41 +611,22 @@ static NSString *WebContinuousSpellCheckingEnabled = @"WebContinuousSpellCheckin
 
 - (void)keyDown:(NSEvent *)event
 {
-    if (disabled)
-        return;
     WebCoreBridge *bridge = KWQKHTMLPart::bridgeForWidget(widget);
-    if (![bridge interceptKeyEvent:event toView:self]) {
-	[super keyDown:event];
-    }
+    [bridge interceptKeyEvent:event toView:self];
+    // FIXME: In theory, if the bridge intercepted the event we should return not call super.
+    // But the code in the Web Kit that this replaces did not do that, so lets not do it until
+    // we can do more testing to see if it works well.
+    [super keyDown:event];
 }
 
 - (void)keyUp:(NSEvent *)event
 {
-    if (disabled)
-        return;
     WebCoreBridge *bridge = KWQKHTMLPart::bridgeForWidget(widget);
-    if (![bridge interceptKeyEvent:event toView:self]) {
-	[super keyUp:event];
-    }
-}
-
-- (void)setEnabled:(BOOL)flag
-{
-    disabled = !flag;
-    [self setEditable:flag];
-}
-
-- (BOOL)isEnabled
-{
-    return !disabled;
-}
-
-- (void)drawRect:(NSRect)rect
-{
-    // do a hack to make the text view look like it's disabled
-    NSColor *color = disabled ? [NSColor disabledControlTextColor] : [NSColor controlTextColor];
-    [[self textStorage] setForegroundColor:color];
-    [super drawRect:rect];
+    [bridge interceptKeyEvent:event toView:self];
+    // FIXME: In theory, if the bridge intercepted the event we should return not call super.
+    // But the code in the Web Kit that this replaces did not do that, so lets not do it until
+    // we can do more testing to see if it works well.
+    [super keyUp:event];
 }
 
 @end

@@ -49,8 +49,8 @@ using namespace khtml;
 
 // -------------------------------------------------------------------------
 
-RenderImage::RenderImage(NodeImpl *_node)
-    : RenderReplaced(_node)
+RenderImage::RenderImage(HTMLElementImpl *_element)
+    : RenderReplaced(_element)
 {
     image = 0;
     berrorPic = false;
@@ -157,20 +157,16 @@ void RenderImage::setPixmap( const QPixmap &p, const QRect& r, CachedImage *o)
     
     pix = p;
 
-    if (needlayout) {
-        if (!selfNeedsLayout())
-            setNeedsLayout(true);
-        if (minMaxKnown())
-            setMinMaxKnown(false);
+    if(needlayout)
+    {
+        setNeedsLayout(true);
+        setMinMaxKnown(false);
+
+//         kdDebug( 6040 ) << "m_width: : " << m_width << " height: " << m_height << endl;
+//         kdDebug( 6040 ) << "Image: size " << m_width << "/" << m_height << endl;
     }
-    else {
-#if APPLE_CHANGES
-        // FIXME: We always just do a complete repaint, since we always pass in the full pixmap
-        // rect at the moment anyway.
-        resizeCache = QPixmap();
-        repaintRectangle(QRect(borderLeft()+paddingLeft(), borderTop()+paddingTop(), contentWidth(), contentHeight()));
-#else
-        // FIXME: This code doesn't handle scaling properly, since it doesn't scale |r|.
+    else
+    {
         bool completeRepaint = !resizeCache.isNull();
         int cHeight = contentHeight();
         int scaledHeight = intrinsicHeight() ? ((o->valid_rect().height()*cHeight)/intrinsicHeight()) : 0;
@@ -182,13 +178,12 @@ void RenderImage::setPixmap( const QPixmap &p, const QRect& r, CachedImage *o)
 
         resizeCache = QPixmap(); // for resized animations
         if(completeRepaint)
-            repaintRectangle(QRect(borderLeft()+paddingLeft(), borderTop()+paddingTop(), contentWidth(), contentHeight()));
+            repaintRectangle(borderLeft()+paddingLeft(), borderTop()+paddingTop(), contentWidth(), contentHeight());
         else
         {
-            repaintRectangle(QRect(r.x() + borderLeft() + paddingLeft(), r.y() + borderTop() + paddingTop(),
-                             r.width(), r.height()));
+            repaintRectangle(r.x() + borderLeft() + paddingLeft(), r.y() + borderTop() + paddingTop(),
+                             r.width(), r.height());
         }
-#endif
     }
 }
 
@@ -359,13 +354,6 @@ void RenderImage::layout()
     KHTMLAssert(needsLayout());
     KHTMLAssert( minMaxKnown() );
 
-#ifdef INCREMENTAL_REPAINTING
-    QRect oldBounds;
-    bool checkForRepaint = checkForRepaintDuringLayout();
-    if (checkForRepaint)
-        oldBounds = getAbsoluteRepaintRect();
-#endif
-    
     short oldwidth = m_width;
     int oldheight = m_height;
 
@@ -393,15 +381,10 @@ void RenderImage::layout()
 	m_height = (int) (m_height/scale);
     }
 #endif
-
+    
     if ( m_width != oldwidth || m_height != oldheight )
         resizeCache = QPixmap();
 
-#ifdef INCREMENTAL_REPAINTING
-    if (checkForRepaint)
-        repaintAfterLayoutIfNeeded(oldBounds, oldBounds);
-#endif
-    
     setNeedsLayout(false);
 }
 
@@ -444,7 +427,7 @@ void RenderImage::reload()
 }
 #endif
 
-void RenderImage::detach()
+void RenderImage::detach(RenderArena *arena)
 {
     NodeImpl *node = element();
     if (node) {
@@ -453,13 +436,12 @@ void RenderImage::detach()
             document->removeImage(this);
         }
     }
-    RenderReplaced::detach();
+    RenderReplaced::detach(arena);
 }
 
-bool RenderImage::nodeAtPoint(NodeInfo& info, int _x, int _y, int _tx, int _ty,
-                              HitTestAction hitTestAction, bool inside)
+bool RenderImage::nodeAtPoint(NodeInfo& info, int _x, int _y, int _tx, int _ty, bool inside)
 {
-    inside |= RenderReplaced::nodeAtPoint(info, _x, _y, _tx, _ty, hitTestAction, inside);
+    inside |= RenderReplaced::nodeAtPoint(info, _x, _y, _tx, _ty, inside);
 
     if (inside && element()) {
         int tx = _tx + m_x;

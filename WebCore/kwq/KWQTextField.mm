@@ -246,14 +246,14 @@
 
 -(void)controlTextDidEndEditing:(NSNotification *)notification
 {
+    [self setHasFocus:NO];
+
     if (!widget) {
 	return;
     }
 
     WebCoreBridge *bridge = KWQKHTMLPart::bridgeForWidget(widget);
     [bridge controlTextDidEndEditing:notification];
-    
-    [self setHasFocus:NO];
 }
 
 -(void)controlTextDidChange:(NSNotification *)notification
@@ -465,7 +465,9 @@
 
     if ([event type] == NSKeyDown || [event type] == NSKeyUp) {
         WebCoreBridge *bridge = KWQKHTMLPart::bridgeForWidget(widget);
-        return ![bridge interceptKeyEvent:event toView:view];
+        [bridge interceptKeyEvent:event toView:view];
+        // FIXME: In theory, if the bridge intercepted the event we should return NO.
+        // But the code in the Web Kit that we moved in here did not do that.
     }
     return YES;
 }

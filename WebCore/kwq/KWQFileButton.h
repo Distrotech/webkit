@@ -45,7 +45,7 @@ public:
     QSize sizeForCharacterWidth(int characters) const;
     QRect frameGeometry() const;
     void setFrameGeometry(const QRect &);
-    int baselinePosition(int height) const;
+    int baselinePosition() const;
     
     void filenameChanged();
     void clicked();

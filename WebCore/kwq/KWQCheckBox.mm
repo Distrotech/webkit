@@ -24,71 +24,57 @@
  */
 
 #import "KWQCheckBox.h"
-#import "KWQExceptions.h"
 
-enum {
-    topMargin,
-    bottomMargin,
-    leftMargin,
-    rightMargin,
-    baselineFudgeFactor,
-    dimWidth,
-    dimHeight
-};
+// We empirically determined that check boxes have these dimensions.
+// It would be better to get this info from AppKit somehow.
+
+#define TOP_MARGIN 4
+#define BOTTOM_MARGIN 3
+#define LEFT_MARGIN 3
+#define RIGHT_MARGIN 3
+
+#define WIDTH 12
+#define HEIGHT 12
+
+#define BASELINE_MARGIN 2
 
 QCheckBox::QCheckBox(QWidget *w)
     : m_stateChanged(this, SIGNAL(stateChanged(int)))
 {
-    KWQ_BLOCK_NS_EXCEPTIONS;
-
     NSButton *button = (NSButton *)getView();
     [button setButtonType:NSSwitchButton];
-
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
 }
 
 QSize QCheckBox::sizeHint() const 
 {
-    return QSize(dimensions()[dimWidth], dimensions()[dimHeight]);
+    return QSize(WIDTH, HEIGHT);
 }
 
 QRect QCheckBox::frameGeometry() const
 {
     QRect r = QWidget::frameGeometry();
-    return QRect(r.x() + dimensions()[leftMargin], r.y() + dimensions()[topMargin],
-        r.width() - (dimensions()[leftMargin] + dimensions()[rightMargin]),
-        r.height() - (dimensions()[topMargin] + dimensions()[bottomMargin]));
+    return QRect(r.x() + LEFT_MARGIN, r.y() + TOP_MARGIN,
+        r.width() - (LEFT_MARGIN + RIGHT_MARGIN),
+        r.height() - (TOP_MARGIN + BOTTOM_MARGIN));
 }
 
 void QCheckBox::setFrameGeometry(const QRect &r)
 {
-    QWidget::setFrameGeometry(QRect(r.x() - dimensions()[leftMargin], r.y() - dimensions()[topMargin],
-        r.width() + dimensions()[leftMargin] + dimensions()[rightMargin],
-        r.height() + dimensions()[topMargin] + dimensions()[bottomMargin]));
+    QWidget::setFrameGeometry(QRect(r.x() - LEFT_MARGIN, r.y() - TOP_MARGIN,
+        r.width() + LEFT_MARGIN + RIGHT_MARGIN,
+        r.height() + TOP_MARGIN + BOTTOM_MARGIN));
 }
 
 void QCheckBox::setChecked(bool isChecked)
 {
-    KWQ_BLOCK_NS_EXCEPTIONS;
-
     NSButton *button = (NSButton *)getView();
     [button setState:isChecked ? NSOnState : NSOffState];
-
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
 }
 
 bool QCheckBox::isChecked()
 {
-    volatile bool result = false;
-
-    KWQ_BLOCK_NS_EXCEPTIONS;
-
     NSButton *button = (NSButton *)getView();
-    result = [button state] == NSOnState;
-
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
-
-    return result;
+    return [button state] == NSOnState;
 }
 
 void QCheckBox::clicked()
@@ -102,26 +88,7 @@ void QCheckBox::clicked()
     QButton::clicked();
 }
 
-int QCheckBox::baselinePosition(int height) const
+int QCheckBox::baselinePosition() const
 {
-    return height - dimensions()[baselineFudgeFactor];
-}
-
-const int *QCheckBox::dimensions() const
-{
-    // We empirically determined these dimensions.
-    // It would be better to get this info from AppKit somehow.
-    static const int w[3][7] = {
-        { 3, 4, 2, 4, 2, 14, 14 },
-        { 4, 3, 3, 3, 2, 12, 12 },
-        { 4, 3, 3, 3, 2, 10, 10 },
-    };
-    NSControl * const button = static_cast<NSControl *>(getView());
-    volatile NSControlSize size = NSSmallControlSize;
-
-    KWQ_BLOCK_NS_EXCEPTIONS;
-    size = [[button cell] controlSize];
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
-
-    return w[size];
+    return height() - BASELINE_MARGIN;
 }

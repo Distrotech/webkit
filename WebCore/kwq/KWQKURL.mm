@@ -28,9 +28,6 @@
 #import "KWQAssertions.h"
 #import "KWQTextCodec.h"
 
-// The simple Cocoa calls to NSString, NSURL and NSData can't throw so
-// no need to block NSExceptions here.
-
 typedef enum {
     // alpha 
     SchemeFirstChar = 1 << 0,

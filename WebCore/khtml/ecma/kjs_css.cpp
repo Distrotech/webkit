@@ -31,37 +31,18 @@
 using namespace KJS;
 #include <kdebug.h>
 
-static QString cssPropertyName(const Identifier &p, bool *hadPixelOrPosPrefix = 0)
+static QString jsNameToProp( const Identifier &p )
 {
     QString prop = p.qstring();
-
     int i = prop.length();
-    while (--i) {
+    while( --i ) {
 	char c = prop[i].latin1();
-	if (c >= 'A' && c <= 'Z')
-            prop.insert(i, '-');
+	if ( c < 'A' || c > 'Z' )
+	    continue;
+	prop.insert( i, '-' );
     }
 
-    prop = prop.lower();
-
-    if (hadPixelOrPosPrefix)
-        *hadPixelOrPosPrefix = false;
-
-    if (prop.startsWith("css-")) {
-        prop = prop.mid(4);
-    } else if (prop.startsWith("pixel-")) {
-        prop = prop.mid(6);
-        if (hadPixelOrPosPrefix)
-            *hadPixelOrPosPrefix = true;
-    } else if (prop.startsWith("pos-")) {
-        prop = prop.mid(4);
-        if (hadPixelOrPosPrefix)
-            *hadPixelOrPosPrefix = true;
-    } else if (prop.startsWith("khtml-")) {
-        prop.insert(0, '-');
-    }
-
-    return prop;
+    return prop.lower();
 }
 
 /*
@@ -96,11 +77,9 @@ DOMCSSStyleDeclaration::~DOMCSSStyleDeclaration()
 
 bool DOMCSSStyleDeclaration::hasProperty(ExecState *exec, const Identifier &p) const
 {
-  if (p == "cssText")
-    return true;
-
-  QString prop = cssPropertyName(p);    
-  if (DOM::getPropertyID(prop.ascii(), prop.length()))
+  DOM::DOMString cssprop = jsNameToProp(p);
+  // strip pos- / pixel- prefix here?
+  if (DOM::getPropertyID(cssprop.string().ascii(), cssprop.length()))
       return true;
 
   return ObjectImp::hasProperty(exec, p);
@@ -135,21 +114,26 @@ Value DOMCSSStyleDeclaration::tryGet(ExecState *exec, const Identifier &property
     return getStringOrNull(DOM::CSSStyleDeclaration(styleDecl).item(u));
 
 #ifdef KJS_VERBOSE
-  kdDebug(6070) << "DOMCSSStyleDeclaration: converting to css property name: " << cssPropertyName(propertyName) << endl;
+  kdDebug(6070) << "DOMCSSStyleDeclaration: converting to css property name: " << jsNameToProp(propertyName) << endl;
 #endif
   DOM::CSSStyleDeclaration styleDecl2 = styleDecl;
-
-  // Set up pixelOrPos boolean to handle the fact that
+  DOM::DOMString p = jsNameToProp(propertyName);
+  bool asNumber = false;
   // pixelTop returns "CSS Top" as number value in unit pixels
   // posTop returns "CSS top" as number value in unit pixels _if_ its a
   // positioned element. if it is not a positioned element, return 0
   // from MSIE documentation ### IMPLEMENT THAT (Dirk)
-  bool pixelOrPos;
-  DOM::DOMString p = cssPropertyName(propertyName, &pixelOrPos);
+  {
+    QString prop = p.string();
+    if(prop.startsWith( "pixel-") || prop.startsWith( "pos-" ) ) {
+      p = prop.mid(prop.find( '-' )+1);
+      asNumber = true;
+    }
+  }
 
   DOM::CSSValue v = styleDecl2.getPropertyCSSValue(p);
   if (!v.isNull()) {
-    if (pixelOrPos && v.cssValueType() == DOM::CSSValue::CSS_PRIMITIVE_VALUE)
+    if (asNumber && v.cssValueType() == DOM::CSSValue::CSS_PRIMITIVE_VALUE)
       return Number(static_cast<DOM::CSSPrimitiveValue>(v).getFloatValue(DOM::CSSPrimitiveValue::CSS_PX));
 
     return getStringOrNull(v.cssText());
@@ -164,8 +148,10 @@ Value DOMCSSStyleDeclaration::tryGet(ExecState *exec, const Identifier &property
 }
 
 
-void DOMCSSStyleDeclaration::tryPut(ExecState *exec, const Identifier &propertyName, const Value& value, int )
+void DOMCSSStyleDeclaration::tryPut(ExecState *exec, const Identifier &pName, const Value& value, int )
 {
+  Identifier propertyName = pName;
+
 #ifdef KJS_VERBOSE
   kdDebug(6070) << "DOMCSSStyleDeclaration::tryPut " << propertyName.qstring() << endl;
 #endif
@@ -173,11 +159,16 @@ void DOMCSSStyleDeclaration::tryPut(ExecState *exec, const Identifier &propertyN
     styleDecl.setCssText(value.toString(exec).string());
   }
   else {
-    bool pixelOrPos;
-    QString prop = cssPropertyName(propertyName, &pixelOrPos);
+    QString prop = jsNameToProp(propertyName);
     QString propvalue = value.toString(exec).qstring();
-    if (pixelOrPos)
+
+    if(prop.left(4) == "css-")
+      prop = prop.mid(4);
+
+    if(prop.startsWith( "pixel-") || prop.startsWith( "pos-" ) ) {
+      prop = prop.mid(prop.find( '-' )+1);
       propvalue += "px";
+    }
 #ifdef KJS_VERBOSE
     kdDebug(6070) << "DOMCSSStyleDeclaration: prop=" << prop << " propvalue=" << propvalue << endl;
 #endif

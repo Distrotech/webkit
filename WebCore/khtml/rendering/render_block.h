@@ -92,13 +92,7 @@ public:
 
     virtual void addChildToFlow(RenderObject* newChild, RenderObject* beforeChild);
     virtual void removeChild(RenderObject *oldChild);
-
-#ifdef INCREMENTAL_REPAINTING
-    virtual void repaintObjectsBeforeLayout();
-    virtual void repaintFloatingDescendants();
-    virtual void getAbsoluteRepaintRectIncludingFloats(QRect& bounds, QRect& fullBounds);
-#endif
-
+        
     virtual void setStyle(RenderStyle* _style);
 
     virtual void layout();
@@ -114,11 +108,11 @@ public:
     virtual RenderObject* layoutLegend(bool relayoutChildren) { return 0; };
     
     // the implementation of the following functions is in bidi.cpp
-    void bidiReorderLine(const BidiIterator &start, const BidiIterator &end, BidiState &bidi );
-    BidiIterator findNextLineBreak(BidiIterator &start, BidiState &info );
+    void bidiReorderLine(const BidiIterator &start, const BidiIterator &end);
+    BidiIterator findNextLineBreak(BidiIterator &start);
     InlineFlowBox* constructLine(const BidiIterator& start, const BidiIterator& end);
     InlineFlowBox* createLineBoxes(RenderObject* obj);
-    void computeHorizontalPositionsForLine(InlineFlowBox* lineBox, BidiState &bidi);
+    void computeHorizontalPositionsForLine(InlineFlowBox* lineBox, BidiContext* endEmbed);
     void computeVerticalPositionsForLine(InlineFlowBox* lineBox);
     // end bidi.cpp functions
     
@@ -164,8 +158,7 @@ public:
                       int *heightRemaining = 0) const;
     int leftOffset(int y) const { return leftRelOffset(y, leftOffset(), true); }
 
-    virtual bool nodeAtPoint(NodeInfo& info, int x, int y, int tx, int ty,
-                             HitTestAction hitTestAction = HitTestAll, bool inside=false);
+    virtual bool nodeAtPoint(NodeInfo& info, int x, int y, int tx, int ty, bool inside=false);
 
     bool isPointInScrollbar(int x, int y, int tx, int ty);
     
@@ -173,11 +166,18 @@ public:
     void calcInlineMinMaxWidth();
     void calcBlockMinMaxWidth();
 
+    virtual void close();
+
     virtual int getBaselineOfFirstLineBox();
     virtual InlineFlowBox* getFirstLineBox();
     
     // overrides RenderObject
-    virtual bool requiresLayer();
+    // FIXME: The bogus table cell check is only here until we figure out how to position
+    // table cells properly when they have layers.
+    // Note that we also restrict overflow to blocks for now.  
+    virtual bool requiresLayer() { 
+        return !isTableCell() && (RenderObject::requiresLayer() || style()->hidesOverflow());
+    }
     
 #ifndef NDEBUG
     virtual void printTree(int indent=0) const;

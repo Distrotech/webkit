@@ -240,20 +240,6 @@ void RenderFlexibleBox::layoutBlock(bool relayoutChildren)
     KHTMLAssert(needsLayout());
     KHTMLAssert(minMaxKnown());
 
-    if (!relayoutChildren && posChildNeedsLayout() && !normalChildNeedsLayout() && !selfNeedsLayout()) {
-        // All we have to is lay out our positioned objects.
-        layoutPositionedObjects(relayoutChildren);
-        setNeedsLayout(false);
-        return;
-    }
-
-#ifdef INCREMENTAL_REPAINTING
-    QRect oldBounds;
-    bool checkForRepaint = checkForRepaintDuringLayout();
-    if (checkForRepaint)
-        oldBounds = getAbsoluteRepaintRect();
-#endif
-    
     int oldWidth = m_width;
     int oldHeight = m_height;
     
@@ -322,17 +308,11 @@ void RenderFlexibleBox::layoutBlock(bool relayoutChildren)
     if (m_overflowWidth < m_width)
         m_overflowWidth = m_width;
 
-    // Update our scrollbars if we're overflow:auto/scroll/hidden now that we know if
+    // Update our scrollbars if we're overflow:auto/scroll now that we know if
     // we overflow or not.
-    if (style()->hidesOverflow() && m_layer)
-        m_layer->updateScrollInfoAfterLayout();
+    if (style()->scrollsOverflow() && m_layer)
+        m_layer->checkScrollbarsAfterLayout();
 
-#ifdef INCREMENTAL_REPAINTING
-    // Repaint with our new bounds if they are different from our old bounds.
-    if (checkForRepaint)
-        repaintAfterLayoutIfNeeded(oldBounds, oldBounds);
-#endif
-    
     setNeedsLayout(false);
 }
 
@@ -388,7 +368,7 @@ void RenderFlexibleBox::layoutHorizontalBox(bool relayoutChildren)
         while (child) {
             // make sure we relayout children if we need it.
             if ( relayoutChildren || (child->isReplaced() && (child->style()->width().isPercent() || child->style()->height().isPercent())))
-                child->setChildNeedsLayout(true);
+                child->setNeedsLayout(true);
             
             if (child->isPositioned()) {
                 child = iterator.next();
@@ -452,7 +432,7 @@ void RenderFlexibleBox::layoutHorizontalBox(bool relayoutChildren)
             int oldChildHeight = child->height();
             static_cast<RenderBox*>(child)->calcHeight();
             if (oldChildHeight != child->height())
-                child->setChildNeedsLayout(true);
+                child->setNeedsLayout(true);
             child->layoutIfNeeded();
     
             // We can place the child now, using our value of box-align.
@@ -470,9 +450,9 @@ void RenderFlexibleBox::layoutHorizontalBox(bool relayoutChildren)
                     childY += child->marginTop();
                     break;
             }
-
-            placeChild(child, xPos, childY);
-            
+    
+            // Place the child.
+            child->setPos(xPos, childY);
             xPos += child->width() + child->marginRight();
     
             child = iterator.next();
@@ -605,8 +585,7 @@ void RenderFlexibleBox::layoutHorizontalBox(bool relayoutChildren)
                     offset += remainingSpace/totalChildren;
                     remainingSpace -= (remainingSpace/totalChildren);
                     totalChildren--;
-
-                    placeChild(child, child->xPos()+offset, child->yPos());
+                    child->setPos(child->xPos()+offset, child->yPos());
                     child = iterator.next();
                 }
             }
@@ -622,7 +601,7 @@ void RenderFlexibleBox::layoutHorizontalBox(bool relayoutChildren)
                     child = iterator.next();
                     continue;
                 }
-                placeChild(child, child->xPos()+offset, child->yPos());
+                child->setPos(child->xPos()+offset, child->yPos());
                 child = iterator.next();
             }
         }
@@ -658,7 +637,7 @@ void RenderFlexibleBox::layoutVerticalBox(bool relayoutChildren)
             // We always have to lay out flexible objects again, since the flex distribution
             // may have changed, and we need to reallocate space.
             if (!relayoutChildren)
-                child->setChildNeedsLayout(true);
+                child->setNeedsLayout(true);
             haveFlex = true;
             unsigned int flexGroup = child->style()->boxFlexGroup();
             if (lowestFlexGroup == 0)
@@ -734,7 +713,7 @@ void RenderFlexibleBox::layoutVerticalBox(bool relayoutChildren)
             }
     
             // Place the child.
-            placeChild(child, childX, m_height);
+            child->setPos(childX, m_height);
             m_height += child->height() + child->marginBottom();
     
             // See if this child has made our overflow need to grow.
@@ -883,7 +862,7 @@ void RenderFlexibleBox::layoutVerticalBox(bool relayoutChildren)
                     offset += remainingSpace/totalChildren;
                     remainingSpace -= (remainingSpace/totalChildren);
                     totalChildren--;
-                    placeChild(child, child->xPos(), child->yPos()+offset);
+                    child->setPos(child->xPos(), child->yPos()+offset);
                     child = iterator.next();
                 }
             }
@@ -899,7 +878,7 @@ void RenderFlexibleBox::layoutVerticalBox(bool relayoutChildren)
                     child = iterator.next();
                     continue;
                 }
-                placeChild(child, child->xPos(), child->yPos()+offset);
+                child->setPos(child->xPos(), child->yPos()+offset);
                 child = iterator.next();
             }
         }
@@ -909,22 +888,6 @@ void RenderFlexibleBox::layoutVerticalBox(bool relayoutChildren)
     // a height change, we revert our height back to the intrinsic height before returning.
     if (heightSpecified)
         m_height = oldHeight;    
-}
-
-void RenderFlexibleBox::placeChild(RenderObject* child, int x, int y)
-{
-#ifdef INCREMENTAL_REPAINTING
-    int oldChildX = child->xPos();
-    int oldChildY = child->yPos();
-#endif
-    // Place the child.
-    child->setPos(x, y);
-#ifdef INCREMENTAL_REPAINTING
-    // If the child moved, we have to repaint it as well as any floating/positioned
-    // descendants.  An exception is if we need a layout.  In this case, we know we're going to
-    // repaint ourselves (and the child) anyway.
-    if (!selfNeedsLayout() && checkForRepaintDuringLayout())        	child->repaintDuringLayoutIfMoved(oldChildX, oldChildY);
-#endif    
 }
 
 const char *RenderFlexibleBox::renderName() const

@@ -140,7 +140,7 @@ void RenderListItem::setStyle(RenderStyle *_style)
         newStyle->ref();
         newStyle->inheritFrom(style());
         if (!m_marker) {
-            m_marker = new (renderArena()) RenderListMarker(document());
+            m_marker = new (renderArena()) RenderListMarker();
             m_marker->setStyle(newStyle);
             m_marker->setListItem(this);
             _markerInstalledInParent = false;
@@ -149,7 +149,7 @@ void RenderListItem::setStyle(RenderStyle *_style)
             m_marker->setStyle(newStyle);
         newStyle->deref();
     } else if (m_marker) {
-        m_marker->detach();
+        m_marker->detach(renderArena());
         m_marker = 0;
     }
 }
@@ -158,13 +158,13 @@ RenderListItem::~RenderListItem()
 {
 }
 
-void RenderListItem::detach()
+void RenderListItem::detach(RenderArena* renderArena)
 {    
     if (m_marker && !_markerInstalledInParent) {
-        m_marker->detach();
+        m_marker->detach(renderArena);
         m_marker = 0;
     }
-    RenderBlock::detach();
+    RenderBlock::detach(renderArena);
 }
 
 void RenderListItem::calcListValue()
@@ -232,7 +232,7 @@ void RenderListItem::updateMarkerLocation()
             // then we are the only item in that anonymous box (since no line box
             // parent was found).  It's ok to just leave the marker where it is
             // in this case.
-            if (markerPar && markerPar->isAnonymous())
+            if (markerPar && markerPar->isAnonymousBox())
                 lineBoxParent = markerPar;
             else
                 lineBoxParent = this;
@@ -289,45 +289,10 @@ void RenderListItem::paintObject(QPainter *p, int _x, int _y,
     RenderBlock::paintObject(p, _x, _y, _w, _h, _tx, _ty, paintAction);
 }
 
-QRect RenderListItem::getAbsoluteRepaintRect()
-{
-    QRect result = RenderBlock::getAbsoluteRepaintRect();
-    if (m_marker && !m_marker->isInside()) {
-        // This can be a sloppy and imprecise offset as long as it's always too big.
-        int pixHeight = style()->htmlFont().getFontDef().computedPixelSize();
-        int offset = pixHeight*2/3;
-        int xoff = 0;
-        if (style()->direction() == LTR)
-            xoff = -7 - offset;
-        else
-            xoff = offset;
-
-        if (m_marker->listImage() && !m_marker->listImage()->isErrorImage()) {
-            // For OUTSIDE bullets shrink back to only a 0.3em margin. 0.67 em is too
-            // much.  This brings the margin back to MacIE/Gecko/WinIE levels.
-            // For LTR don't forget to add in the width of the image to the offset as
-            // well (you are moving the image left, so you have to also add in the width
-            // of the image's border box as well). -dwh
-            if (style()->direction() == LTR)
-                xoff -= m_marker->listImage()->pixmap().width() - pixHeight*1/3;
-            else
-                xoff -= pixHeight*1/3;
-        }
-
-        if (xoff < 0) {
-            result.setX(result.x() + xoff);
-            result.setWidth(result.width() - xoff);
-        }
-        else
-            result.setWidth(result.width() + xoff);
-    }
-    return result;
-}
-
 // -----------------------------------------------------------
 
-RenderListMarker::RenderListMarker(DocumentImpl* document)
-    : RenderBox(document), m_listImage(0), m_value(-1)
+RenderListMarker::RenderListMarker()
+    : RenderBox(0), m_listImage(0), m_value(-1)
 {
     // init RenderObject attributes
     setInline(true);   // our object is Inline
@@ -530,10 +495,10 @@ void RenderListMarker::setPixmap( const QPixmap &p, const QRect& r, CachedImage 
         return;
     }
 
-    if (m_width != m_listImage->pixmap_size().width() || m_height != m_listImage->pixmap_size().height())
+    if(m_width != m_listImage->pixmap_size().width() || m_height != m_listImage->pixmap_size().height())
         setNeedsLayoutAndMinMaxRecalc();
     else
-        repaint();
+        repaintRectangle(0, 0, m_width, m_height);
 }
 
 void RenderListMarker::calcMinMaxWidth()
@@ -576,7 +541,7 @@ void RenderListMarker::calcMinMaxWidth()
     case DECIMAL_LEADING_ZERO:
         // ### unsupported, we use decimal instead
     case LDECIMAL:
-        m_item.sprintf( "%ld", m_value );
+        m_item.sprintf( "%2ld", m_value );
         break;
     case LOWER_ROMAN:
         m_item = toRoman( m_value, false );
@@ -611,7 +576,6 @@ void RenderListMarker::calcMinMaxWidth()
     case LNONE:
         break;
     }
-
     m_item += QString::fromLatin1(". ");
 
     if (isInside())

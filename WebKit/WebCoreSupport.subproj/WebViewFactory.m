@@ -9,7 +9,6 @@
 #import <WebKit/WebViewFactory.h>
 
 #import <WebKit/WebAssertions.h>
-#import <WebKit/WebControllerSets.h>
 #import <WebKit/WebLocalizableStrings.h>
 
 #import <WebKit/WebPluginDatabase.h>
@@ -27,14 +26,6 @@
 - (NSArray *)pluginsInfo
 {
     return [[WebPluginDatabase installedPlugins] plugins];
-}
-
-- (void)refreshPlugins:(BOOL)reloadPages
-{
-    [[WebPluginDatabase installedPlugins] refresh];
-    if (reloadPages) {
-        [WebViewSets makeWebViewsPerformSelector:@selector(_reloadForPluginChanges)];
-    }
 }
 
 - (NSString *)inputElementAltText

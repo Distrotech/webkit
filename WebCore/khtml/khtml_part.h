@@ -563,11 +563,6 @@ public:
   void setSelection( const DOM::Range & );
 
   /**
-   * Returns the text for a part of the document.
-   */
-  QString text(const DOM::Range &) const;
-
-  /**
    * Has the user selected anything?
    *
    *  Call @ref selectedText() to
@@ -1074,7 +1069,7 @@ private:
 
   DOM::HTMLDocumentImpl *docImpl() const;
   DOM::DocumentImpl *xmlDocImpl() const;
-  khtml::ChildFrame *childFrame( const QObject *obj );
+  khtml::ChildFrame *frame( const QObject *obj );
 
   khtml::ChildFrame *recursiveFrameRequest( const KURL &url, const KParts::URLArgs &args, bool callParent = true );
 
