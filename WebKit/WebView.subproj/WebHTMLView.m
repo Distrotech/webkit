@@ -1741,8 +1741,8 @@ static WebHTMLView *lastHitView = nil;
     float totalScaleFactor = [self _scaleFactorForPrintOperation:[NSPrintOperation currentOperation]];
     float userScaleFactor = [self _userScaleFactorForPrintOperation:[NSPrintOperation currentOperation]];
     [_private->pageRects release];
-    _private->pageRects = [[[self _bridge] computePageRectsWithPrintWidth:NSWidth([self bounds])/userScaleFactor
-                                                             printHeight:[self _calculatePrintHeight]/totalScaleFactor] retain];
+    _private->pageRects = [[[self _bridge] computePageRectsWithPrintWidthScaleFactor:userScaleFactor
+                                                                         printHeight:[self _calculatePrintHeight]/totalScaleFactor] retain];
     range->length = [_private->pageRects count];
     return YES;
 }
