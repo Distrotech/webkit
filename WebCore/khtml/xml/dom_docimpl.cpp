@@ -935,11 +935,10 @@ NodeIteratorImpl *DocumentImpl::createNodeIterator(NodeImpl *root, unsigned long
     return new NodeIteratorImpl(root,whatToShow,filter,entityReferenceExpansion);
 }
 
-TreeWalkerImpl *DocumentImpl::createTreeWalker(Node /*root*/, unsigned long /*whatToShow*/, NodeFilter &/*filter*/,
-                                bool /*entityReferenceExpansion*/)
+TreeWalkerImpl *DocumentImpl::createTreeWalker(const Node &root, unsigned long whatToShow, const NodeFilter &filter,
+                                bool entityReferenceExpansion)
 {
-    // ###
-    return new TreeWalkerImpl;
+    return new TreeWalkerImpl(root.handle(), whatToShow, filter.handle(), entityReferenceExpansion);
 }
 
 void DocumentImpl::setDocumentChanged(bool b)
