@@ -275,12 +275,6 @@ bool isBeforeNode(DOM::Node node1, DOM::Node node2);
 
 namespace khtml {
 
-/** Make sure the given node is a leaf node. */
-inline void ensureLeafNode(NodeImpl *&node) 
-{
-    if (node && node->hasChildNodes()) node = node->nextLeafNode();
-}
-
 /** Finds the next node that has a renderer.
  *
  * Note that if the initial @p node has a renderer, this will be returned,
@@ -306,8 +300,6 @@ inline RenderObject *findRenderer(NodeImpl *&node)
 /** Bring caret information position into a sane state */
 static void sanitizeCaretState(NodeImpl *&caretNode, long &offset) 
 {
-    ensureLeafNode(caretNode);
-    
     // EDIT FIXME: this leaves caretNode untouched if there are no more renderers.
     // It better should search backwards then.
     // This still won't solve the problem what to do if *no* element has a
@@ -450,6 +442,8 @@ void KHTMLView::init()
     _width = 0;
     _height = 0;
 
+    initCaret();
+    
     setAcceptDrops(true);
     
     resizeContents(visibleWidth(), visibleHeight());
@@ -2027,7 +2021,8 @@ void KHTMLView::complete()
 
 #ifndef KHTML_NO_CARET
 
-void KHTMLView::initCaret() {
+void KHTMLView::initCaret() 
+{
     if (m_part->xmlDocImpl()) {
         d->caretViewContext();
         if (m_part->caretNode().isNull()) {
@@ -2214,13 +2209,13 @@ bool KHTMLView::moveCaretTo(NodeImpl *node, long offset, bool clearSel) {
         folded = foldSelectionToCaret(oldStartSel, oldStartOfs, oldEndSel, oldEndOfs);
     }
     
-    bool visible_caret = placeCaret();
+    placeCaret();
     
     // FIXME: if the old position was !visible_caret, and the new position is
     // also, then two caretPositionChanged signals with a null Node are
     // emitted in series.
     if (posChanged) {
-        m_part->emitCaretPositionChanged(visible_caret ? node : 0, offset);
+        m_part->emitCaretPositionChanged(m_part->caret());
     }
     
     return folded;
