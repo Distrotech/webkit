@@ -26,11 +26,14 @@
 #ifndef __htmlediting_h__
 #define __htmlediting_h__
 
+#include <khtml_selection.h>
 #include <dom_docimpl.h>
 #include <dom_string.h>
 #include <dom_node.h>
 #include <dom_nodeimpl.h>
 #include <dom2_range.h>
+
+class KHTMLSelection;
 
 namespace khtml {
 
@@ -45,21 +48,19 @@ public:
     virtual EditCommandID commandID() const = 0;
 
     DOM::DocumentImpl *document() const { return m_document; }
-    DOM::Range selection() const { return m_selection; }
 
     virtual bool apply() = 0;
     virtual bool canUndo() const = 0;
     
 protected:
     virtual void notifyChanged(DOM::NodeImpl *) const;
-    virtual void notifyChanged(const DOM::Range &) const;
+    virtual void notifyChanged(const KHTMLSelection &) const;
     void deleteSelection();
     void pruneEmptyNodes() const;
     void removeNode(DOM::NodeImpl *) const;
     
 private:
     DOM::DocumentImpl *m_document;
-    DOM::Range m_selection;
 };
 
 

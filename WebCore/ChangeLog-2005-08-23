@@ -2,6 +2,23 @@
 
         Reviewed by me.
 
+	With one very small exception, deleting new lines, 
+	editing is back to where it was before I started
+	my caret-to-selection makeover.
+
+        * khtml/editing/htmlediting.cpp:
+        (EditCommand::EditCommand):
+        (EditCommand::notifyChanged):
+        (EditCommand::deleteSelection):
+        (EditCommand::pruneEmptyNodes):
+        (DeleteTextCommand::apply):
+        * khtml/editing/htmlediting.h:
+        (khtml::EditCommand::document):
+
+2004-01-20  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me.
+
 	Editing is basically working again. I have
 	some crashers to hunt down when deleting, but
 	this is a good checkpoint.

@@ -60,8 +60,6 @@ EditCommand::EditCommand(DOM::DocumentImpl *document) : m_document(0)
     m_document = document;
     if (m_document) {
         m_document->ref();
-        if (m_document->view() && m_document->view()->part())
-            m_selection = m_document->view()->part()->selection();
     }
 }
 
@@ -81,11 +79,11 @@ void EditCommand::notifyChanged(NodeImpl *node) const
         node->renderer()->setNeedsLayoutAndMinMaxRecalc();
 }
 
-void EditCommand::notifyChanged(const DOM::Range &range) const
+void EditCommand::notifyChanged(const KHTMLSelection &selection) const
 {
     // notify all the nodes in the selection
-    NodeImpl *startNode = range.startContainer().handle();
-    NodeImpl *endNode = range.endContainer().handle();
+    NodeImpl *startNode = selection.startNode();
+    NodeImpl *endNode = selection.endNode();
     if (startNode == endNode) {
         notifyChanged(startNode);
     }
@@ -99,17 +97,22 @@ void EditCommand::notifyChanged(const DOM::Range &range) const
 
 void EditCommand::deleteSelection()
 {
-    notifyChanged(selection());
-
-    // EDIT FIXME: need to save the contents for redo
-    if (document()->view() && document()->view()->part())
-        document()->view()->part()->setSelection(Range(selection().startContainer(), selection().startOffset(), selection().startContainer(), selection().startOffset()));
-
-    selection().deleteContents();
+    if (!m_document || !m_document->view() || !m_document->view()->part())
+        return;
+    
+    KHTMLSelection &selection = m_document->view()->part()->getKHTMLSelection();
+    notifyChanged(selection);
+    Range range(selection.startNode(), selection.startOffset(), selection.endNode(), selection.endOffset());
+    range.deleteContents();
+    selection.setSelection(selection.startNode(), selection.startOffset());
+    m_document->clearSelection();
 }
 
 void EditCommand::pruneEmptyNodes() const
 {
+    return;
+
+#if 0
     KHTMLView *view = document()->view();
     if (!view)
         return;
@@ -118,7 +121,7 @@ void EditCommand::pruneEmptyNodes() const
     if (!part)
         return;
 
-    KHTMLSelection selection = part->getKHTMLSelection();
+    KHTMLSelection &selection = part->getKHTMLSelection();
     
     bool prunedNodes = false;
     NodeImpl *node = selection.startNode();
@@ -151,6 +154,7 @@ void EditCommand::pruneEmptyNodes() const
         selection.setSelection(node, node->caretMaxOffset());
         notifyChanged(node);
     }
+#endif
 }
 
 void EditCommand::removeNode(DOM::NodeImpl *node) const
@@ -267,7 +271,7 @@ bool DeleteTextCommand::apply()
     if (!part)
         return false;
 
-    KHTMLSelection selection = part->getKHTMLSelection();
+    KHTMLSelection &selection = part->getKHTMLSelection();
 
     // Delete the current selection
     if (selection.state() == KHTMLSelection::RANGE) {
