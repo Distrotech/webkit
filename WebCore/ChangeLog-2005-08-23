@@ -2,6 +2,21 @@
 
         Reviewed by me
 
+	Did some caret adjustments to make the caret position
+	itself into the correct position when between text nodes.
+
+        * khtml/editing/edit_caretimpl.cpp:
+        (CaretImpl::setPosition):
+        (CaretImpl::moveForwardByCharacter):
+        (CaretImpl::moveBackwardByCharacter):
+        (CaretImpl::adjustPosition):
+        (CaretImpl::notifyChanged):
+        * khtml/editing/edit_caretimpl.h:
+
+2004-01-09  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
 	Made it so the cursor does not blink while you are
 	navigating with the arrow keys.
 
