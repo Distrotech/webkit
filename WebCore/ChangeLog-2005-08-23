@@ -1,3 +1,11 @@
+2004-05-16  Maciej Stachowiak  <mjs@apple.com>
+
+        More build breakage in last change, needed to merge this unrelated
+	change from HEAD.
+
+        * khtml/rendering/render_list.h:
+        (khtml::RenderListMarker::text):
+
 === WebCore-125.6.6 ===
 
 2004-05-14  Maciej Stachowiak  <mjs@apple.com>
