@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2004 Apple Computer, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -65,6 +65,7 @@ using khtml::RenderWidget;
 #import <AppKit/NSView.h>
 
 using DOM::DocumentImpl;
+using DOM::HTMLDocumentImpl;
 using DOM::Node;
 using DOM::NodeImpl;
 
@@ -909,7 +910,7 @@ static HTMLFormElementImpl *formElementFromDOMElement(id <WebDOMElement>element)
 {
     DocumentImpl *doc = _part->xmlDocImpl();
     if (doc && doc->isHTMLDocument()) {
-        return doc->domain().string().getNSString();
+        return static_cast<HTMLDocumentImpl *>(doc)->domain().string().getNSString();
     }
     return nil;
 }
