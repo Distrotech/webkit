@@ -371,7 +371,7 @@ bool KWQListImpl::removeRef(const void *item, bool deleteItem)
 
 void *KWQListImpl::getFirst() const
 {
-    return d->head;
+    return d->head->data;
 }
 
 void *KWQListImpl::getLast() const

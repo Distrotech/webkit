@@ -1,5 +1,17 @@
 2002-03-19  Maciej Stachowiak  <mjs@apple.com>
 
+	Fixed two more crashers. Tree now looks pretty stable.
+
+	* src/kdelibs/khtml/html/html_objectimpl.cpp:
+	(HTMLObjectElementImpl::detach): Don't send an unload event, that
+	needs the view to be a live, which it won't be when the DOM is
+	being destroyed.
+
+	* src/kwq/KWQListImpl.mm: (KWQListImpl::getFirst): Return
+	d->head->data, not d->head. Whoops!
+
+2002-03-19  Maciej Stachowiak  <mjs@apple.com>
+
 	Fixed two crashers:
 
 	* src/kdelibs/khtml/rendering/render_object.h: Don't attempt to
