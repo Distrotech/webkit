@@ -32,36 +32,54 @@
 #include "qrect.h"
 #include "dom/dom2_range.h"
 #include "dom/dom_node.h"
+#include "dom/dom_string.h"
 #include "rendering/render_object.h"
+#include "rendering/render_text.h"
 #include "xml/dom_docimpl.h"
 #include "xml/dom_nodeimpl.h"
 #include "xml/dom_textimpl.h"
 
 #if APPLE_CHANGES
 #include <KWQAssertions.h>
+#include <CoreServices/CoreServices.h>
 #endif
 
 using DOM::DocumentImpl;
 using DOM::Node;
 using DOM::NodeImpl;
 using DOM::Range;
+using DOM::DOMString;
 using DOM::TextImpl;
+using khtml::InlineTextBoxArray;
+using khtml::RenderObject;
+using khtml::RenderText;
+using khtml::RenderText;
 
 enum { CARET_BLINK_FREQUENCY = 500 };
+
+#if APPLE_CHANGES
+static void findWordBoundary(QChar *chars, int len, int position, int *start, int *end);
+static bool firstRunAt(RenderObject *renderNode, int y, NodeImpl *&startNode, long &startOffset);
+static bool lastRunAt(RenderObject *renderNode, int y, NodeImpl *&endNode, long &endOffset);
+static bool startAndEndLineNodesIncludingNode(DOM::NodeImpl *node, int offset, KHTMLSelection &selection);
+#endif
 
 KHTMLSelection::KHTMLSelection() 
 	: QObject(),
 	  m_part(0),
 	  m_baseNode(0), m_baseOffset(0), m_extentNode(0), m_extentOffset(0),
-	  m_state(NONE), m_caretBlinkTimer(0), m_baseIsStart(true),
-	  m_caretBlinks(true), m_caretPaint(false), m_visible(false)
+	  m_startNode(0), m_startOffset(0), m_endNode(0), m_endOffset(0),
+	  m_state(NONE), m_caretBlinkTimer(0),
+      m_baseIsStart(true), m_caretBlinks(true), m_caretPaint(false), 
+      m_visible(false), m_startEndValid(false)
 {
 }
 
 KHTMLSelection::KHTMLSelection(const KHTMLSelection &o)
 	: QObject(),
 	  m_part(o.m_part),
-	  m_baseNode(0), m_baseOffset(0), m_extentNode(0), m_extentOffset(0)
+	  m_baseNode(0), m_baseOffset(0), m_extentNode(0), m_extentOffset(0),
+	  m_startNode(0), m_startOffset(0), m_endNode(0), m_endOffset(0)
 {
     if (o.m_baseNode) {
         m_baseNode = o.m_baseNode;
@@ -78,6 +96,7 @@ KHTMLSelection::KHTMLSelection(const KHTMLSelection &o)
 	m_caretBlinks = o.m_caretBlinks;
 	m_caretPaint = o.m_caretPaint;
 	m_visible = o.m_visible;
+    m_startEndValid = false;
 	invalidate(); // invalidate the new copy
 }
 
@@ -117,6 +136,7 @@ KHTMLSelection &KHTMLSelection::operator=(const KHTMLSelection &o)
 	m_caretBlinks = o.m_caretBlinks;
 	m_caretPaint = o.m_caretPaint;
 	m_visible = o.m_visible;
+    m_startEndValid = false;
     invalidate();
     return *this;
 }
@@ -168,42 +188,28 @@ void KHTMLSelection::clearSelection()
 	invalidate();
 }
 
-void KHTMLSelection::setBaseNode(DOM::NodeImpl *node)
-{
-	if (m_baseNode == node)
-		return;
-
-	if (m_baseNode)
-		m_baseNode->deref();
-	
-	m_baseNode = node;
-	
-	if (m_baseNode)
-		m_baseNode->ref();
+NodeImpl *KHTMLSelection::startNode()
+{ 
+    calculateStartAndEnd();
+    return m_startNode;
 }
 
-void KHTMLSelection::setBaseOffset(long offset)
-{
-	m_baseOffset = offset;
+long KHTMLSelection::startOffset() 
+{ 
+    calculateStartAndEnd();
+    return m_startOffset;
 }
 
-void KHTMLSelection::setExtentNode(DOM::NodeImpl *node)
+NodeImpl *KHTMLSelection::endNode() 
 {
-	if (m_extentNode == node)
-		return;
-
-	if (m_extentNode)
-		m_extentNode->deref();
-	
-	m_extentNode = node;
-	
-	if (m_extentNode)
-		m_extentNode->ref();
+    calculateStartAndEnd();
+    return m_endNode;
 }
-	
-void KHTMLSelection::setExtentOffset(long offset)
-{
-	m_extentOffset = offset;
+
+long KHTMLSelection::endOffset() 
+{ 
+    calculateStartAndEnd();
+    return m_endOffset;
 }
 
 void KHTMLSelection::setVisible(bool flag)
@@ -215,7 +221,12 @@ void KHTMLSelection::setVisible(bool flag)
 void KHTMLSelection::invalidate()
 {
     // make sure we do not have a dangling start or end
-	if (!m_baseNode) {
+	if (!m_baseNode && !m_extentNode) {
+        setBaseOffset(0);
+        setExtentOffset(0);
+        m_baseIsStart = true;
+    }
+	else if (!m_baseNode) {
 		setBaseNode(m_extentNode);
 		setBaseOffset(m_extentOffset);
         m_baseIsStart = true;
@@ -226,6 +237,7 @@ void KHTMLSelection::invalidate()
         m_baseIsStart = true;
 	}
     else {
+        // adjust m_baseIsStart as needed
         if (m_baseNode == m_extentNode) {
             if (m_baseOffset > m_extentOffset)
                 m_baseIsStart = false;
@@ -238,14 +250,11 @@ void KHTMLSelection::invalidate()
             m_baseIsStart = false;
     }
 
-	// update the state
-	if (!m_baseNode && !m_extentNode)
-		m_state = NONE;
-	if (m_baseNode == m_extentNode && m_baseOffset == m_extentOffset)
-		m_state = CARET;
-	else
-		m_state = RANGE;
-
+    // invalidate start and end
+    m_startEndValid = false;
+    calculateStartAndEnd();
+    
+#if 0
     // update the blink timer
     if (m_caretBlinkTimer >= 0)
         killTimer(m_caretBlinkTimer);
@@ -298,6 +307,7 @@ void KHTMLSelection::invalidate()
         m_caretPaint = true;
         repaint();
     }
+#endif
 }
 
 bool KHTMLSelection::isEmpty() const
@@ -346,6 +356,196 @@ void KHTMLSelection::repaint(bool immediate) const
         v->repaintContents(m_caretX, m_caretY, 1, m_caretSize);
     else
         v->updateContents(m_caretX, m_caretY, 1, m_caretSize);
+}
+
+void KHTMLSelection::setBaseNode(DOM::NodeImpl *node)
+{
+	if (m_baseNode == node)
+		return;
+
+	if (m_baseNode)
+		m_baseNode->deref();
+	
+	m_baseNode = node;
+	
+	if (m_baseNode)
+		m_baseNode->ref();
+}
+
+void KHTMLSelection::setBaseOffset(long offset)
+{
+	m_baseOffset = offset;
+}
+
+void KHTMLSelection::setExtentNode(DOM::NodeImpl *node)
+{
+	if (m_extentNode == node)
+		return;
+
+	if (m_extentNode)
+		m_extentNode->deref();
+	
+	m_extentNode = node;
+	
+	if (m_extentNode)
+		m_extentNode->ref();
+}
+	
+void KHTMLSelection::setExtentOffset(long offset)
+{
+	m_extentOffset = offset;
+}
+
+void KHTMLSelection::setStartNode(DOM::NodeImpl *node)
+{
+	if (m_startNode == node)
+		return;
+
+	if (m_startNode)
+		m_startNode->deref();
+	
+	m_startNode = node;
+	
+	if (m_startNode)
+		m_startNode->ref();
+}
+
+void KHTMLSelection::setStartOffset(long offset)
+{
+	m_startOffset = offset;
+}
+
+void KHTMLSelection::setEndNode(DOM::NodeImpl *node)
+{
+	if (m_endNode == node)
+		return;
+
+	if (m_endNode)
+		m_endNode->deref();
+	
+	m_endNode = node;
+	
+	if (m_endNode)
+		m_endNode->ref();
+}
+	
+void KHTMLSelection::setEndOffset(long offset)
+{
+	m_endOffset = offset;
+}
+
+void KHTMLSelection::expandSelection(ETextSelect select)
+{
+    m_startEndValid = false;
+    calculateStartAndEnd(select);
+}
+
+void KHTMLSelection::calculateStartAndEnd(ETextSelect select)
+{
+    if (m_startEndValid)
+        return;
+
+#if !APPLE_CHANGES
+    if (m_baseIsStart) {
+        setStartNode(m_baseNode);
+        setStartOffset(m_baseOffset);
+        setEndNode(m_extentNode);
+        setEndOffset(m_extentOffset);
+    }
+    else {
+        setStartNode(m_extentNode);
+        setStartOffset(m_extentOffset);
+        setEndNode(m_baseNode);
+        setEndOffset(m_baseOffset);
+    }
+#else
+    if (select == CHARACTER) {
+        if (m_baseIsStart) {
+            setStartNode(m_baseNode);
+            setStartOffset(m_baseOffset);
+            setEndNode(m_extentNode);
+            setEndOffset(m_extentOffset);
+        }
+        else {
+            setStartNode(m_extentNode);
+            setStartOffset(m_extentOffset);
+            setEndNode(m_baseNode);
+            setEndOffset(m_baseOffset);
+        }
+    }
+    else if (select == WORD) {
+        int baseStartOffset = m_baseOffset;
+        int baseEndOffset = m_baseOffset;
+        int extentStartOffset = m_extentOffset;
+        int extentEndOffset = m_extentOffset;
+        if (m_baseNode && (m_baseNode->nodeType() == Node::TEXT_NODE || m_baseNode->nodeType() == Node::CDATA_SECTION_NODE)) {
+            DOMString t = m_baseNode->nodeValue();
+            QChar *chars = t.unicode();
+            uint len = t.length();
+            findWordBoundary(chars, len, m_baseOffset, &baseStartOffset, &baseEndOffset);
+        }
+        if (m_extentNode && (m_extentNode->nodeType() == Node::TEXT_NODE || m_extentNode->nodeType() == Node::CDATA_SECTION_NODE)) {
+            DOMString t = m_extentNode->nodeValue();
+            QChar *chars = t.unicode();
+            uint len = t.length();
+            findWordBoundary(chars, len, m_extentOffset, &extentStartOffset, &extentEndOffset);
+        }
+        if (m_baseIsStart) {
+            setStartNode(m_baseNode);
+            setStartOffset(baseStartOffset);
+            setEndNode(m_extentNode);
+            setEndOffset(extentEndOffset);
+        }
+        else {
+            setStartNode(m_extentNode);
+            setStartOffset(extentStartOffset);
+            setEndNode(m_baseNode);
+            setEndOffset(baseEndOffset);
+        }
+    }
+    else {  // select == LINE
+        KHTMLSelection baseSelection = *this;
+        KHTMLSelection extentSelection = *this;
+        if (m_baseNode && (m_baseNode->nodeType() == Node::TEXT_NODE || m_baseNode->nodeType() == Node::CDATA_SECTION_NODE)) {
+            if (startAndEndLineNodesIncludingNode(m_baseNode, m_baseOffset, baseSelection)) {
+                setStartNode(baseSelection.baseNode());
+                setStartOffset(baseSelection.baseOffset());
+                setEndNode(baseSelection.extentNode());
+                setEndOffset(baseSelection.extentOffset());
+            }
+        }
+        if (m_extentNode && (m_extentNode->nodeType() == Node::TEXT_NODE || m_extentNode->nodeType() == Node::CDATA_SECTION_NODE)) {
+            if (startAndEndLineNodesIncludingNode(m_extentNode, m_extentOffset, extentSelection)) {
+                setStartNode(extentSelection.baseNode());
+                setStartOffset(extentSelection.baseOffset());
+                setEndNode(extentSelection.extentNode());
+                setEndOffset(extentSelection.extentOffset());
+            }
+        }
+        if (m_baseIsStart) {
+            setStartNode(baseSelection.startNode());
+            setStartOffset(baseSelection.startOffset());
+            setEndNode(extentSelection.endNode());
+            setEndOffset(extentSelection.endOffset());
+        }
+        else {
+            setStartNode(extentSelection.startNode());
+            setStartOffset(extentSelection.startOffset());
+            setEndNode(baseSelection.endNode());
+            setEndOffset(baseSelection.endOffset());
+        }
+    }
+#endif  // APPLE_CHANGES
+
+	// update the state
+	if (!m_startNode && !m_endNode)
+		m_state = NONE;
+	if (m_startNode == m_endNode && m_startOffset == m_endOffset)
+		m_state = CARET;
+	else
+		m_state = RANGE;
+    
+    m_startEndValid = true;
 }
 
 bool KHTMLSelection::nodeIsBeforeNode(NodeImpl *n1, NodeImpl *n2) 
@@ -400,3 +600,158 @@ bool KHTMLSelection::nodeIsBeforeNode(NodeImpl *n1, NodeImpl *n2)
     }
 	return result;
 }
+
+#if APPLE_CHANGES
+
+static void findWordBoundary(QChar *chars, int len, int position, int *start, int *end)
+{
+    TextBreakLocatorRef breakLocator;
+    OSStatus status = UCCreateTextBreakLocator(NULL, 0, kUCTextBreakWordMask, &breakLocator);
+    if (status == noErr) {
+        UniCharArrayOffset startOffset, endOffset;
+        status = UCFindTextBreak(breakLocator, kUCTextBreakWordMask, 0, (const UniChar *)chars, len, position, &endOffset);
+        if (status == noErr) {
+            status = UCFindTextBreak(breakLocator, kUCTextBreakWordMask, kUCTextBreakGoBackwardsMask, (const UniChar *)chars, len, position, &startOffset);
+        }
+        UCDisposeTextBreakLocator(&breakLocator);
+        if (status == noErr) {
+            *start = startOffset;
+            *end = endOffset;
+            return;
+        }
+    }
+    
+    // If Carbon fails (why would it?), do a simple space/punctuation boundary check.
+    if (chars[position].isSpace()) {
+        int pos = position;
+        while (chars[pos].isSpace() && pos >= 0)
+            pos--;
+        *start = pos+1;
+        pos = position;
+        while (chars[pos].isSpace() && pos < (int)len)
+            pos++;
+        *end = pos;
+    } else if (chars[position].isPunct()) {
+        int pos = position;
+        while (chars[pos].isPunct() && pos >= 0)
+            pos--;
+        *start = pos+1;
+        pos = position;
+        while (chars[pos].isPunct() && pos < (int)len)
+            pos++;
+        *end = pos;
+    } else {
+        int pos = position;
+        while (!chars[pos].isSpace() && !chars[pos].isPunct() && pos >= 0)
+            pos--;
+        *start = pos+1;
+        pos = position;
+        while (!chars[pos].isSpace() && !chars[pos].isPunct() && pos < (int)len)
+            pos++;
+        *end = pos;
+    }
+}
+
+static bool firstRunAt(RenderObject *renderNode, int y, NodeImpl *&startNode, long &startOffset)
+{
+    for (RenderObject *n = renderNode; n; n = n->nextSibling()) {
+        if (n->isText()) {
+            RenderText *textRenderer = static_cast<khtml::RenderText *>(n);
+            InlineTextBoxArray runs = textRenderer->inlineTextBoxes();
+            for (unsigned i = 0; i != runs.count(); i++) {
+                if (runs[i]->m_y == y) {
+                    startNode = textRenderer->element();
+                    startOffset = runs[i]->m_start;
+                    return true;
+                }
+            }
+        }
+        
+        if (firstRunAt(n->firstChild(), y, startNode, startOffset)) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+static bool lastRunAt(RenderObject *renderNode, int y, NodeImpl *&endNode, long &endOffset)
+{
+    RenderObject *n = renderNode;
+    if (!n) {
+        return false;
+    }
+    RenderObject *next;
+    while ((next = n->nextSibling())) {
+        n = next;
+    }
+    
+    while (1) {
+        if (lastRunAt(n->firstChild(), y, endNode, endOffset)) {
+            return true;
+        }
+    
+        if (n->isText()) {
+            RenderText *textRenderer =  static_cast<khtml::RenderText *>(n);
+            InlineTextBoxArray runs = textRenderer->inlineTextBoxes();
+            for (int i = (int)runs.count()-1; i >= 0; i--) {
+                if (runs[i]->m_y == y) {
+                    endNode = textRenderer->element();
+                    endOffset = runs[i]->m_start + runs[i]->m_len;
+                    return true;
+                }
+            }
+        }
+        
+        if (n == renderNode) {
+            return false;
+        }
+        
+        n = n->previousSibling();
+    }
+}
+
+static bool startAndEndLineNodesIncludingNode(DOM::NodeImpl *node, int offset, KHTMLSelection &selection)
+{
+    if (node && (node->nodeType() == Node::TEXT_NODE || node->nodeType() == Node::CDATA_SECTION_NODE)){
+        int pos;
+        int selectionPointY;
+        khtml::RenderText *renderer = static_cast<khtml::RenderText *>(node->renderer());
+        khtml::InlineTextBox * run = renderer->findNextInlineTextBox( offset, pos );
+        DOMString t = node->nodeValue();
+        
+        if (!run)
+            return false;
+            
+        selectionPointY = run->m_y;
+        
+        // Go up to first non-inline element.
+        khtml::RenderObject *renderNode = renderer;
+        while (renderNode && renderNode->isInline())
+            renderNode = renderNode->parent();
+        
+        renderNode = renderNode->firstChild();
+        
+        DOM::NodeImpl *startNode = 0;
+        DOM::NodeImpl *endNode = 0;
+        long startOffset;
+        long endOffset;
+        
+        // Look for all the first child in the block that is on the same line
+        // as the selection point.
+        if (!firstRunAt (renderNode, selectionPointY, startNode, startOffset))
+            return false;
+    
+        // Look for all the last child in the block that is on the same line
+        // as the selection point.
+        if (!lastRunAt (renderNode, selectionPointY, endNode, endOffset))
+            return false;
+        
+        selection.setSelection(startNode, startOffset, endNode, endOffset);
+        
+        return true;
+    }
+    return false;
+}
+
+#endif

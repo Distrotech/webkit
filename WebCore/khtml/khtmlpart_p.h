@@ -342,19 +342,13 @@ public:
   DOM::Node m_mousePressNode; //node under the mouse when the mouse was pressed (set in the mouse handler)
 
 #if APPLE_CHANGES
-  DOM::Node m_initialSelectionStart;
-  long m_initialSelectionStartOffset;
-  DOM::Node m_initialSelectionEnd;
-  long m_initialSelectionEndOffset;
-  bool m_selectionInitiatedWithDoubleClick:1;
-  bool m_selectionInitiatedWithTripleClick:1;
+  KHTMLSelection::ETextSelect m_textSelect;
   bool m_mouseMovedSinceLastMousePress:1;
 #endif
   KHTMLSelection m_selection;
   QString m_overURL;
   QString m_overURLTarget;
 
-  bool m_startBeforeEnd:1;
   bool m_extendAtEnd:1;
   bool m_bDnd:1;
   bool m_bFirstData:1;

@@ -1,3 +1,57 @@
+2004-01-20  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
+	A lot of cleanup to the way selections are made
+	with the mouse by clicking and dragging. A lot
+	of code was made simpler, and much of the 
+	remaining logic was moved from KHTMLPart to
+	KHTMLSelection.
+
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::hasSelection):
+        (KHTMLPart::handleMousePressEventDoubleClick):
+        (KHTMLPart::handleMousePressEventTripleClick):
+        (KHTMLPart::khtmlMousePressEvent):
+        (KHTMLPart::handleMouseMoveEventSelection):
+        (KHTMLPart::khtmlMouseReleaseEvent):
+        (KHTMLPart::selectAll):
+        * khtml/khtml_selection.cpp:
+        (KHTMLSelection::KHTMLSelection):
+        (KHTMLSelection::operator=):
+        (KHTMLSelection::startNode):
+        (KHTMLSelection::startOffset):
+        (KHTMLSelection::endNode):
+        (KHTMLSelection::endOffset):
+        (KHTMLSelection::invalidate):
+        (KHTMLSelection::setBaseNode):
+        (KHTMLSelection::setBaseOffset):
+        (KHTMLSelection::setExtentNode):
+        (KHTMLSelection::setExtentOffset):
+        (KHTMLSelection::setStartNode):
+        (KHTMLSelection::setStartOffset):
+        (KHTMLSelection::setEndNode):
+        (KHTMLSelection::setEndOffset):
+        (KHTMLSelection::expandSelection):
+        (KHTMLSelection::calculateStartAndEnd):
+        (findWordBoundary):
+        (firstRunAt):
+        (lastRunAt):
+        (startAndEndLineNodesIncludingNode):
+        * khtml/khtml_selection.h:
+        (KHTMLSelection::):
+        (KHTMLSelection::baseNode):
+        (KHTMLSelection::baseOffset):
+        (KHTMLSelection::extentNode):
+        (KHTMLSelection::extentOffset):
+        (operator==):
+        * khtml/khtmlpart_p.h:
+        * khtml/xml/dom_docimpl.cpp:
+        (DocumentImpl::setSelection):
+        * khtml/xml/dom_docimpl.h:
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::khtmlMouseMoveEvent):
+
 2004-01-19  Ken Kocienda  <kocienda@apple.com>
 
         Reviewed by me.

@@ -1177,7 +1177,7 @@ void DocumentImpl::setSelection(NodeImpl* s, int sp, NodeImpl* e, int ep)
         static_cast<RenderCanvas*>(m_render)->setSelection(s->renderer(),sp,e->renderer(),ep);
 }
 
-void DocumentImpl::setSelection(const KHTMLSelection &s)
+void DocumentImpl::setSelection(KHTMLSelection &s)
 {
     if (m_render) {
         RenderObject *startRenderer = s.startNode() ? s.startNode()->renderer() : 0;

@@ -259,7 +259,7 @@ public:
     void setVisuallyOrdered();
 
     void setSelection(NodeImpl* s, int sp, NodeImpl* e, int ep);
-    void setSelection(const KHTMLSelection &);
+    void setSelection(KHTMLSelection &);
     void clearSelection();
 
     void open();

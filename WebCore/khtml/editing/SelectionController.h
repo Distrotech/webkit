@@ -50,6 +50,7 @@ public:
     ~KHTMLSelection();
 
 	enum EState { NONE, CARET, RANGE };
+	enum ETextSelect { CHARACTER, WORD, LINE };
 
 	EState state() const { return m_state; }
 
@@ -58,13 +59,20 @@ public:
     void setSelection(DOM::NodeImpl *baseNode, long baseOffset, DOM::NodeImpl *extentNode, long extentOffset);
     void setBase(DOM::NodeImpl *node, long offset);
     void setExtent(DOM::NodeImpl *node, long offset);
+    void expandSelection(ETextSelect);
     void clearSelection();
 
-    DOM::NodeImpl *startNode() const { return m_baseIsStart ? m_baseNode : m_extentNode; }
-    long startOffset() const { return m_baseIsStart ? m_baseOffset : m_extentOffset; }
+    DOM::NodeImpl *baseNode() const { return m_baseNode; }
+    long baseOffset() const { return m_baseOffset; }
 
-    DOM::NodeImpl *endNode() const { return m_baseIsStart ? m_extentNode : m_baseNode; }
-    long endOffset() const { return m_baseIsStart ? m_extentOffset : m_baseOffset; }
+    DOM::NodeImpl *extentNode() const { return m_extentNode; }
+    long extentOffset() const { return m_extentOffset; }
+
+    DOM::NodeImpl *startNode();
+    long startOffset();
+
+    DOM::NodeImpl *endNode();
+    long endOffset();
 
     void setVisible(bool flag=true);
     bool visible() const { return m_visible; }
@@ -75,8 +83,6 @@ public:
 #ifdef APPLE_CHANGES
     void paint(QPainter *p, const QRect &rect) const;
 #endif
-
-    static bool KHTMLSelection::nodeIsBeforeNode(DOM::NodeImpl *n1, DOM::NodeImpl *n2);
 
     KHTMLSelection &operator=(const KHTMLSelection &o);
     
@@ -95,16 +101,31 @@ private:
 	void setBaseOffset(long);
 	void setExtentNode(DOM::NodeImpl *);
 	void setExtentOffset(long);
-    
+
+	void setStartNode(DOM::NodeImpl *);
+	void setStartOffset(long);
+	void setEndNode(DOM::NodeImpl *);
+	void setEndOffset(long);
+
+    bool nodeIsBeforeNode(DOM::NodeImpl *n1, DOM::NodeImpl *n2);
+
+    void calculateStartAndEnd(ETextSelect select=CHARACTER);
+
     void dump() {
         fprintf(stderr, "selection: %p:%d ; %p:%d\n", m_baseNode, m_baseOffset, m_extentNode, m_extentOffset);
     }
 
     KHTMLPart *m_part;            // part for this selection
-    DOM::NodeImpl *m_baseNode;    // start node for the selection
+
+    DOM::NodeImpl *m_baseNode;    // base node for the selection
     long m_baseOffset;            // offset into base node where selection is
     DOM::NodeImpl *m_extentNode;  // extent node for the selection
     long m_extentOffset;          // offset into extent node where selection is
+
+    DOM::NodeImpl *m_startNode;   // start node for the selection (read-only)
+    long m_startOffset;           // offset into start node where selection is (read-only)
+    DOM::NodeImpl *m_endNode;     // end node for the selection (read-only)
+    long m_endOffset;             // offset into end node where selection is (read-only)
 
 	EState m_state;               // the state of the selection
 
@@ -118,13 +139,14 @@ private:
     bool m_caretBlinks : 1;     // true if caret blinks
     bool m_caretPaint : 1;      // flag used to deal with blinking the caret
     bool m_visible : 1;         // true if selection is to be displayed at all
+	bool m_startEndValid : 1;   // true if the start and end are valid
 };
 
 
 inline bool operator==(const KHTMLSelection &a, const KHTMLSelection &b)
 {
-    return a.startNode() == b.startNode() && a.startOffset() == b.startOffset() &&
-        a.endNode() == b.endNode() && a.endOffset() == b.endOffset();
+    return a.baseNode() == b.baseNode() && a.baseOffset() == b.baseOffset() &&
+        a.extentNode() == b.extentNode() && a.extentOffset() == b.extentOffset();
 }
 
 inline bool operator!=(const KHTMLSelection &a, const KHTMLSelection &b)

@@ -1797,11 +1797,9 @@ void KWQKHTMLPart::khtmlMouseMoveEvent(MouseMoveEvent *event)
             return;
         }
 
-	if (_mouseDownMayStartDrag &&
-            !d->m_selectionInitiatedWithDoubleClick &&
-            !d->m_selectionInitiatedWithTripleClick &&
-            [_bridge mayStartDragWithMouseDragged:_currentEvent])
-        {
+	if (_mouseDownMayStartDrag && 
+        d->m_textSelect == KHTMLSelection::CHARACTER &&
+        [_bridge mayStartDragWithMouseDragged:_currentEvent]) {
             // We are starting a text/image/url drag, so the cursor should be an arrow
             d->m_view->resetCursor();
             [_bridge handleMouseDragged:_currentEvent];
