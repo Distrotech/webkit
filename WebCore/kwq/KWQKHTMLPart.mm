@@ -1316,6 +1316,9 @@ bool KWQKHTMLPart::keyEvent(NSEvent *event)
         return false;
     }
     NodeImpl *node = doc->focusNode();
+    if (!node && docImpl()) {
+	node = docImpl()->body();
+    }
     if (!node) {
 	return false;
     }

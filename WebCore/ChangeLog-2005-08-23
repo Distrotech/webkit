@@ -1,3 +1,10 @@
+2003-11-13  Vicki Murley  <vicki@apple.com>
+
+        Reviewed by NOBODY (OOPS!).
+
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::keyEvent):
+
 2003-11-11  Vicki Murley  <vicki@apple.com>
 
         - apply the WebCore part of the fix for 3478904 to the SUPanBisque branch
