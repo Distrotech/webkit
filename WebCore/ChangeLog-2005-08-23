@@ -1,5 +1,31 @@
 2003-12-08  Ken Kocienda  <kocienda@apple.com>
 
+        Reviewed by me.
+
+	Some more work on getting the delete key to work.
+	Some work to make relayout happen correctly.
+	Moved edit evenit handler to HTMLElementImpl.
+
+        * khtml/html/html_blockimpl.cpp:
+        * khtml/html/html_blockimpl.h:
+        * khtml/html/html_elementimpl.cpp:
+        (HTMLElementImpl::defaultEventHandler):
+        (HTMLElementImpl::toString):
+        * khtml/html/html_elementimpl.h:
+        * khtml/html/html_inlineimpl.h:
+        (DOM::HTMLBRElementImpl::isHTMLBRElement):
+        * khtml/html/htmlediting.cpp:
+        (EditCommand::notifyChanged):
+        (InputTextCommand::applyToDocument):
+        (DeleteTextCommand::applyToDocument):
+        * khtml/html/htmlediting.h:
+        (khtml::EditCommand::selection):
+        (khtml::InputTextCommand::text):
+        * khtml/xml/dom_nodeimpl.h:
+        (DOM::NodeImpl::isHTMLBRElement):
+
+2003-12-08  Ken Kocienda  <kocienda@apple.com>
+
         Reviewed by me
 
 	Got some more basic text editing working, including:
