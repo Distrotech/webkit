@@ -498,6 +498,8 @@ bool NodeImpl::dispatchEvent(EventImpl *evt, int &exceptioncode, bool tempEvent)
 {
     evt->setTarget(this);
 
+    KHTMLPart *part = document->document()->part();
+
     // Since event handling code could cause this object to be deleted, grab a reference to the view now
     KHTMLView *view = document->document()->view();
     if (view)
@@ -508,13 +510,8 @@ bool NodeImpl::dispatchEvent(EventImpl *evt, int &exceptioncode, bool tempEvent)
     // If tempEvent is true, this means that the DOM implementation will not be storing a reference to the event, i.e.
     // there is no way to retrieve it from javascript if a script does not already have a reference to it in a variable.
     // So there is no need for the interpreter to keep the event in it's cache
-#if APPLE_CHANGES
-    if (tempEvent && view && view->part() && view->part()->jScript())
-        view->part()->jScript()->finishedWithEvent(evt);
-#else
-    if (tempEvent && view && view->part()->jScript())
-        view->part()->jScript()->finishedWithEvent(evt);
-#endif
+    if (tempEvent && part && part->jScript())
+        part->jScript()->finishedWithEvent(evt);
 
     if (view)
         view->deref();
@@ -631,7 +628,7 @@ bool NodeImpl::dispatchWindowEvent(int _id, bool canBubbleArg, bool cancelableAr
     if (!evt->defaultPrevented() && doc->document())
 	doc->document()->defaultEventHandler(evt);
     
-    if (_id == EventImpl::LOAD_EVENT && !evt->propagationStopped()) {
+    if (_id == EventImpl::LOAD_EVENT && !evt->propagationStopped() && doc->document()) {
         // For onload events, send them to the enclosing frame only.
         // This is a DOM extension and is independent of bubbling/capturing rules of
         // the DOM.  You send the event only to the enclosing frame.  It does not
