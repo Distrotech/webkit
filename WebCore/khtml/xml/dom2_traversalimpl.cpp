@@ -24,6 +24,10 @@
 #include "dom/dom_exception.h"
 #include "xml/dom_docimpl.h"
 
+#if APPLE_CHANGES
+#include <KWQAssertions.h>
+#endif
+
 using namespace DOM;
 
 NodeIteratorImpl::NodeIteratorImpl(NodeImpl *_root, unsigned long _whatToShow,
@@ -298,197 +302,214 @@ CustomNodeFilter *NodeFilterImpl::customNodeFilter()
 
 // --------------------------------------------------------------
 
-TreeWalkerImpl::TreeWalkerImpl()
+TreeWalkerImpl::TreeWalkerImpl(NodeImpl *root, unsigned long whatToShow, NodeFilterImpl *filter, bool expandEntityReferences)
 {
-    m_filter = 0;
-    m_whatToShow = 0x0000FFFF;
-    m_expandEntityReferences = true;
+    assertNodeValid(root);
+    setRoot(root);
+    setWhatToShow(whatToShow);
+    setFilter(filter);
+    setExpandEntityReferences(expandEntityReferences);
+    setCurrentNode(root);
 }
 
-TreeWalkerImpl::TreeWalkerImpl(const TreeWalkerImpl &other)
-    : khtml::Shared<TreeWalkerImpl>()
+TreeWalkerImpl::TreeWalkerImpl(const TreeWalkerImpl &other) : khtml::Shared<TreeWalkerImpl>()
 {
-    m_expandEntityReferences = other.m_expandEntityReferences;
-    m_filter = other.m_filter;
-    m_whatToShow = other.m_whatToShow;
-    m_currentNode = other.m_currentNode;
-    m_rootNode = other.m_rootNode;
+    setRoot(other.root());
+    setWhatToShow(other.whatToShow());
+    setFilter(other.filter());
+    setExpandEntityReferences(other.expandEntityReferences());
+    setCurrentNode(other.currentNode());
 }
 
-TreeWalkerImpl::TreeWalkerImpl(Node n, NodeFilter *f)
+TreeWalkerImpl &TreeWalkerImpl::operator=(const TreeWalkerImpl &other)
 {
-  m_currentNode = n;
-  m_rootNode = n;
-  m_whatToShow = 0x0000FFFF;
-  m_filter = f;
-}
-
-TreeWalkerImpl::TreeWalkerImpl(Node n, long _whatToShow, NodeFilter *f)
-{
-  m_currentNode = n;
-  m_rootNode = n;
-  m_whatToShow = _whatToShow;
-  m_filter = f;
-}
-
-TreeWalkerImpl &TreeWalkerImpl::operator = (const TreeWalkerImpl &other)
-{
-  m_expandEntityReferences = other.m_expandEntityReferences;
-  m_filter = other.m_filter;
-  m_whatToShow = other.m_whatToShow;
-  m_currentNode = other.m_currentNode;
-  return *this;
+    setRoot(other.root());
+    setWhatToShow(other.whatToShow());
+    setFilter(other.filter());
+    setExpandEntityReferences(other.expandEntityReferences());
+    setCurrentNode(other.currentNode());
+    return *this;
 }
 
 TreeWalkerImpl::~TreeWalkerImpl()
 {
-    if(m_filter)
-      {
-        delete m_filter;
-        m_filter = 0;
-      }
+    if (m_root)
+        m_root->deref();
+    if (m_filter)
+        m_filter->deref();
+    if (m_currentNode)
+        m_currentNode->deref();
 }
 
-
-
-
-
-Node TreeWalkerImpl::getRoot()
+void TreeWalkerImpl::setRoot(NodeImpl *node)
 {
-    // ###
-    return 0;
-}
-
-unsigned long TreeWalkerImpl::getWhatToShow()
-{
-    // ###
-    return 0;
-}
-
-NodeFilter TreeWalkerImpl::getFilter()
-{
-    // ###
-    return 0;
-}
-
-bool TreeWalkerImpl::getExpandEntityReferences()
-{
-    // ###
-    return 0;
-}
-
-Node TreeWalkerImpl::getCurrentNode()
-{
-    return m_currentNode;
-}
-
-void TreeWalkerImpl::setWhatToShow(long _whatToShow)
-{
-  // do some testing wether this is an accepted value
-  m_whatToShow = _whatToShow;
-}
-
-void TreeWalkerImpl::setFilter(NodeFilter *_filter)
-{
-  // ### allow setting of filter to 0?
-  if(_filter)
-    m_filter = _filter;
-}
-
-void TreeWalkerImpl::setExpandEntityReferences(bool value)
-{
-  m_expandEntityReferences = value;
-}
-
-void TreeWalkerImpl::setCurrentNode( const Node n )
-{
-    if( !n.isNull() )
-    {
-        m_rootNode = n;
-        m_currentNode = n;
+    assertNodeValid(node);
+    
+    if (node == m_root)
+        return;
+        
+    if (m_root)
+        m_root->deref();
+        
+    if (node) {
+        m_root = node;
+        m_root->ref();
     }
-//     else
-//         throw( DOMException::NOT_SUPPORTED_ERR );
 }
 
-Node TreeWalkerImpl::parentNode(  )
+void TreeWalkerImpl::setFilter(NodeFilterImpl *filter)
 {
-    Node n = getParentNode(m_currentNode);
-    if( !n.isNull() )
-        m_currentNode = n;
-    return n;
+    if (filter == m_filter)
+        return;
+        
+    if (m_filter)
+        m_filter->deref();
+        
+    if (filter) {
+        m_filter = filter;
+        m_filter->ref();
+    }
+}
+
+void TreeWalkerImpl::setCurrentNode(NodeImpl *node)
+{
+    assertNodeValid(node);
+
+    if (node == m_currentNode)
+        return;
+        
+    if (m_currentNode)
+        m_currentNode->deref();
+        
+    m_currentNode = node;
+    m_currentNode->ref();
+}
+
+NodeImpl *TreeWalkerImpl::parentNode()
+{
+    assertNodeValid(root());
+    assertNodeValid(currentNode());
+
+    NodeImpl *stopNode = root()->parentNode();
+    NodeImpl *node = currentNode()->parentNode();
+
+    while (node != stopNode && !isAccepted(node))
+        node = node->parentNode();
+
+    if (node)
+        setCurrentNode(node);
+        
+    return node;
 }
 
 
-Node TreeWalkerImpl::firstChild(  )
+NodeImpl *TreeWalkerImpl::firstChild()
 {
-    Node n = getFirstChild(m_currentNode);
-    if( !n.isNull() )
-        m_currentNode = n;
-    return n;
-}
+    assertNodeValid(root());
+    assertNodeValid(currentNode());
+    
+    NodeImpl *accepted = 0;
+    NodeImpl *node = currentNode();
 
+    if (!node->hasChildNodes())
+        return 0;
 
-Node TreeWalkerImpl::lastChild(  )
-{
-    Node n = getLastChild(m_currentNode);
-    if( !n.isNull() )
-        m_currentNode = n;
-    return n;
-}
-
-Node TreeWalkerImpl::previousSibling(  )
-{
-    Node n = getPreviousSibling(m_currentNode);
-    if( !n.isNull() )
-        m_currentNode = n;
-    return n;
-}
-
-Node TreeWalkerImpl::nextSibling(  )
-{
-    Node n = getNextSibling(m_currentNode);
-    if( !n.isNull() )
-        m_currentNode = n;
-    return n;
-}
-
-Node TreeWalkerImpl::previousNode(  )
-{
-/* 1. my previous sibling.lastchild
- * 2. my previous sibling
- * 3. my parent
- */
-
-    Node n = getPreviousSibling(m_currentNode);
-    if( n.isNull() )
-    {
-        n = getParentNode(m_currentNode);
-        if( !n.isNull() )      //parent
-        {
-            m_currentNode = n;
-            return m_currentNode;
+    for (NodeImpl *child = node->firstChild(); child; child = child->nextSibling()) {
+        if (isAccepted(child)) {
+            accepted = child;
+            break;
         }
-        else                  // parent failed.. no previous node
-            return Node();
     }
-
-    Node child = getLastChild(n);
-    if( !child.isNull() )     // previous siblings last child
-    {
-        m_currentNode = child;
-        return m_currentNode;
-    }
-    else                      // previous sibling
-    {
-        m_currentNode = n;
-        return m_currentNode;
-    }
-    return Node();            // should never get here!
+    
+    if (accepted)
+        setCurrentNode(node);
+        
+    return accepted;
 }
 
-Node TreeWalkerImpl::nextNode(  )
+
+NodeImpl *TreeWalkerImpl::lastChild()
 {
+    assertNodeValid(root());
+    assertNodeValid(currentNode());
+    
+    NodeImpl *accepted = 0;
+    NodeImpl *node = currentNode();
+
+    if (!node->hasChildNodes())
+        return 0;
+
+    for (NodeImpl *child = node->lastChild(); child; child = child->previousSibling()) {
+        if (isAccepted(child)) {
+            accepted = child;
+            break;
+        }
+    }
+    
+    if (accepted)
+        setCurrentNode(node);
+        
+    return accepted;
+}
+
+NodeImpl *TreeWalkerImpl::previousSibling()
+{
+    assertNodeValid(root());
+    assertNodeValid(currentNode());
+    
+    NodeImpl *accepted = 0;
+    NodeImpl *node = currentNode();
+
+    for (NodeImpl *sibling = node->previousSibling(); sibling; sibling = sibling->previousSibling()) {
+        if (isAccepted(sibling)) {
+            accepted = sibling;
+            break;
+        }
+    }
+    
+    if (accepted)
+        setCurrentNode(node);
+        
+    return accepted;
+}
+
+NodeImpl *TreeWalkerImpl::nextSibling()
+{
+    assertNodeValid(root());
+    assertNodeValid(currentNode());
+    
+    NodeImpl *accepted = 0;
+    NodeImpl *node = currentNode();
+
+    for (NodeImpl *sibling = node->nextSibling(); sibling; sibling = sibling->nextSibling()) {
+        if (isAccepted(sibling)) {
+            accepted = sibling;
+            break;
+        }
+    }
+    
+    if (accepted)
+        setCurrentNode(node);
+        
+    return accepted;
+}
+
+NodeImpl *TreeWalkerImpl::previousNode()
+{
+    NodeImpl *result = previousSibling();
+    if (result)
+        return result;
+    return 0;
+}
+
+NodeImpl *TreeWalkerImpl::nextNode()
+{
+    NodeImpl *result = nextSibling();
+    if (result)
+        return result;
+    return 0;
+
+#if 0
 /*  1. my first child
  *  2. my next sibling
  *  3. my parents sibling, or their parents sibling (loop)
@@ -496,14 +517,14 @@ Node TreeWalkerImpl::nextNode(  )
  */
 
     Node n = getFirstChild(m_currentNode);
-    if( !n.isNull()  ) // my first child
+    if (!n.isNull()  ) // my first child
     {
         m_currentNode = n;
         return n;
     }
 
     n = getNextSibling(m_currentNode); // my next sibling
-    if( !n.isNull() )
+    if (!n.isNull() )
     {
         m_currentNode = n;
         return m_currentNode;
@@ -512,7 +533,7 @@ Node TreeWalkerImpl::nextNode(  )
     while( !parent.isNull() ) // parents sibling
     {
         n = getNextSibling(parent);
-        if( !n.isNull() )
+        if (!n.isNull() )
         {
           m_currentNode = n;
           return m_currentNode;
@@ -521,12 +542,13 @@ Node TreeWalkerImpl::nextNode(  )
             parent = getParentNode(parent);
     }
     return Node();
+#endif
 }
 
-short TreeWalkerImpl::isAccepted(Node n)
+short TreeWalkerImpl::isAccepted(NodeImpl *n) const
 {
     // if XML is implemented we have to check expandEntityRerefences in this function
-  if( ( ( 1 << n.nodeType()-1 ) & m_whatToShow) != 0 )
+  if (( ( 1 << n->nodeType()-1 ) & m_whatToShow) != 0 )
     {
       if(m_filter)
         return m_filter->acceptNode(n);
@@ -536,173 +558,14 @@ short TreeWalkerImpl::isAccepted(Node n)
   return NodeFilter::FILTER_SKIP;
 }
 
-Node TreeWalkerImpl::getParentNode(Node n)
+NodeImpl *firstDescendent(const NodeImpl *) 
 {
-     short _result = NodeFilter::FILTER_ACCEPT;
-
-    if( n == m_rootNode /*|| n.isNull()*/ )
-      return Node();
-
-    Node _tempCurrent = n.parentNode();
-
-    if( _tempCurrent.isNull() )
-      return Node();
-
-    _result = isAccepted(_tempCurrent );
-    if(_result == NodeFilter::FILTER_ACCEPT)
-      return _tempCurrent;       // match found
-
-    return getParentNode(_tempCurrent);
+    return 0;
 }
 
-Node TreeWalkerImpl::getFirstChild(Node n)
+NodeImpl *lastDescendent(const NodeImpl *)
 {
-    short _result;
-
-    if( n.isNull() || n.firstChild().isNull() )
-        return Node();
-    n = n.firstChild();
-
-    _result = isAccepted(n);
-
-    switch(_result)
-    {
-         case NodeFilter::FILTER_ACCEPT:
-           return n;
-           break;
-        case NodeFilter::FILTER_SKIP:
-          if( n.hasChildNodes() )
-                return getFirstChild(n);
-            else
-                return getNextSibling(n);
-            break;
-
-        case NodeFilter::FILTER_REJECT:
-            return getNextSibling(n);
-            break;
-    }
-    return Node();      // should never get here!
+    return 0;
 }
 
-Node TreeWalkerImpl::getLastChild(Node n)
-{
-    short _result;
-
-    if( n.isNull() || n.lastChild().isNull() )
-        return Node();
-    n = n.lastChild();
-    _result = isAccepted(n);
-    switch(_result)
-    {
-        case NodeFilter::FILTER_ACCEPT:
-            return n;
-            break;
-
-        case NodeFilter::FILTER_SKIP:
-            if( n.hasChildNodes() )
-                return getLastChild(n);
-            else
-                return getPreviousSibling(n);
-            break;
-
-        case NodeFilter::FILTER_REJECT:
-            return getPreviousSibling(n);
-            break;
-    }
-    return Node();
-}
-
-Node TreeWalkerImpl::getPreviousSibling(Node n)
-{
-    short _result;
-    Node _tempCurrent;
-
-    if( n.isNull() )
-        return Node();
-    //first the cases if we have a previousSibling
-    _tempCurrent = n.previousSibling();
-    if( !_tempCurrent.isNull() )
-    {
-        _result = isAccepted(_tempCurrent);
-        switch(_result)
-        {
-            case NodeFilter::FILTER_ACCEPT:
-                return _tempCurrent;
-                break;
-
-            case NodeFilter::FILTER_SKIP:
-            {
-                Node nskip = getLastChild(_tempCurrent);
-                if( !nskip.isNull() )
-                    return nskip;
-                return getPreviousSibling(_tempCurrent);
-                break;
-            }
-
-            case NodeFilter::FILTER_REJECT:
-                return getPreviousSibling(_tempCurrent);
-                break;
-        }
-    }
-    // now the case if we don't have previous sibling
-    else
-    {
-        _tempCurrent = _tempCurrent.parentNode();
-        if(_tempCurrent.isNull() || _tempCurrent == m_rootNode)
-            return Node();
-        _result = isAccepted(_tempCurrent);
-        if(_result == NodeFilter::FILTER_SKIP)
-            return getPreviousSibling(_tempCurrent);
-
-        return Node();
-
-    }
-    return Node();  // should never get here!
-}
-
-Node TreeWalkerImpl::getNextSibling(Node n)
-{
-    Node _tempCurrent;
-    short _result;
-
-    if( n.isNull() || _tempCurrent == m_rootNode)
-        return Node();
-
-    _tempCurrent = n.nextSibling();
-    if( !_tempCurrent.isNull() )
-    {
-        _result = isAccepted(_tempCurrent);
-        switch(_result)
-        {
-            case NodeFilter::FILTER_ACCEPT:
-                return _tempCurrent;
-                break;
-
-            case NodeFilter::FILTER_SKIP:
-            {
-                Node nskip = getFirstChild(_tempCurrent);
-                if( !nskip.isNull() )
-                    return nskip;
-                return getNextSibling(_tempCurrent);
-                break;
-            }
-
-            case NodeFilter::FILTER_REJECT:
-                return getNextSibling(_tempCurrent);
-                break;
-        }
-    }
-    else
-    {
-        _tempCurrent = _tempCurrent.parentNode();
-        if(_tempCurrent.isNull() || _tempCurrent == m_rootNode)
-            return Node();
-        _result = isAccepted(_tempCurrent);
-        if(_result == NodeFilter::FILTER_SKIP)
-            return getNextSibling(_tempCurrent);
-
-        return Node();
-    }
-    return Node();
-}
 

@@ -190,6 +190,7 @@ class NodeFilter
 public:
     NodeFilter();
     NodeFilter(const NodeFilter &other);
+    NodeFilter(NodeFilterImpl *i);
 
     virtual NodeFilter & operator = (const NodeFilter &other);
 
@@ -256,7 +257,6 @@ public:
     static NodeFilter createCustom(CustomNodeFilter *custom);
 
 protected:
-    NodeFilter(NodeFilterImpl *i);
     NodeFilterImpl *impl;
 };
 
@@ -342,7 +342,7 @@ class TreeWalker
 public:
     TreeWalker();
     TreeWalker(const TreeWalker &other);
-
+    TreeWalker(TreeWalkerImpl *i);
     TreeWalker & operator = (const TreeWalker &other);
 
     ~TreeWalker();
@@ -523,7 +523,6 @@ public:
     bool isNull() const;
 
 protected:
-    TreeWalker(TreeWalkerImpl *i);
     TreeWalkerImpl *impl;
 };
 

@@ -256,37 +256,37 @@ TreeWalker::~TreeWalker()
 
 Node TreeWalker::root()
 {
-    if (impl) return impl->getRoot();
+    if (impl) return impl->root();
     return 0;
 }
 
 unsigned long TreeWalker::whatToShow()
 {
-    if (impl) return impl->getWhatToShow();
+    if (impl) return impl->whatToShow();
     return 0;
 }
 
 NodeFilter TreeWalker::filter()
 {
-    if (impl) return impl->getFilter();
+    if (impl) return impl->filter();
     return 0;
 }
 
 bool TreeWalker::expandEntityReferences()
 {
-    if (impl) return impl->getExpandEntityReferences();
+    if (impl) return impl->expandEntityReferences();
     return false;
 }
 
 Node TreeWalker::currentNode()
 {
-    if (impl) return impl->getCurrentNode();
+    if (impl) return impl->currentNode();
     return 0;
 }
 
 void TreeWalker::setCurrentNode(const Node _currentNode)
 {
-    if (impl) impl->setCurrentNode(_currentNode);
+    if (impl) impl->setCurrentNode(_currentNode.handle());
 }
 
 Node TreeWalker::parentNode()
