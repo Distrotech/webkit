@@ -53,8 +53,7 @@ using namespace DOM;
 using namespace khtml;
 
 HTMLElementImpl::HTMLElementImpl(DocumentPtr *doc)
-    : ElementImpl(doc),
-      m_contentEditable(FlagNone)
+    : ElementImpl(doc)
 {
 }
 
@@ -572,41 +571,36 @@ void HTMLElementImpl::addHTMLAlignment( DOMString alignment )
 }
 
 bool HTMLElementImpl::isContentEditable() const {
-    if (m_contentEditable == FlagEnabled)
-        return true;
-    if (m_contentEditable == FlagDisabled)
-        return false;
-
-    NodeImpl *node = parentNode();
-    while (node && node->isHTMLElement()) {
-        HTMLElementImpl *element = static_cast<HTMLElementImpl *>(node);
-        if (element->m_contentEditable == FlagEnabled)
-            return true;
-        if (element->m_contentEditable == FlagDisabled)
-            return false;
-        node = node->parentNode();
-    }
-    return false;
+    return contentEditable() == "true";
 }
 
 DOMString HTMLElementImpl::contentEditable() const {
-    if (m_contentEditable == FlagEnabled)
-        return "true";
-    if (m_contentEditable == FlagDisabled)
+    if (!renderer())
         return "false";
+    
+    switch (renderer()->style()->userModify()) {
+        case UI_ENABLED:
+            return "true";
+        case UI_DISABLED:
+            return "false";
+        case UI_NONE:
+            return "inherit";
+    }
     return "inherit";
 }
 
-void HTMLElementImpl::setContentEditable(const DOMString &enabled) {
-    if ( strcasecmp ( enabled, "true" ) == 0 )
-        m_contentEditable = FlagEnabled;
-    else if ( enabled.isEmpty() ) // we want the "true" attribute
-        setAttribute(ATTR_CONTENTEDITABLE, "true");
-    else if ( strcasecmp ( enabled, "false" ) == 0 )
-        m_contentEditable = FlagDisabled;
-    else if ( strcasecmp ( enabled, "inherit" ) == 0 ) {
-        m_contentEditable = FlagNone;
-    }
+void HTMLElementImpl::setContentEditable(const DOMString &enabled) 
+{
+    int value;
+    if (strcasecmp ( enabled, "true") == 0)
+        value = CSS_VAL_ENABLED;
+    else if (enabled.isEmpty()) // we want the "true" attribute
+        value = CSS_VAL_ENABLED;
+    else if (strcasecmp (enabled, "false") == 0)
+        value = CSS_VAL_DISABLED;
+    else if (strcasecmp ( enabled, "inherit") == 0)
+        value = CSS_VAL_INHERIT;
+    addCSSProperty(CSS_PROP__KHTML_USER_MODIFY, value);
 }
 
 void HTMLElementImpl::click()
@@ -625,7 +619,7 @@ void HTMLElementImpl::click()
 
 void HTMLElementImpl::defaultEventHandler(EventImpl *evt)
 {
-    if (evt->id()==EventImpl::KEYPRESS_EVENT)
+    if (evt->id()==EventImpl::KEYPRESS_EVENT && isContentEditable())
     {
         KeyboardEventImpl *k = static_cast<KeyboardEventImpl *>(evt);
         EditCommand *cmd = 0;
