@@ -1,3 +1,15 @@
+2004-10-18  Adele Amchan  <adele@apple.com>
+
+        Reviewed by Dave.
+
+        This backs out the fix for <rdar://problem/3803113> WebFrame object leaked.
+
+        Back out rjw's fix for the frame leak, since it caused the onload handler to fire before
+        CSS and images had loaded.
+
+        * WebView.subproj/WebDataSource.m:
+        (-[WebDataSource _finishedLoading]):
+
 === WebKit-125.5.4 ===
 
 2004-10-07  Adele Amchan  <adele@apple.com>
