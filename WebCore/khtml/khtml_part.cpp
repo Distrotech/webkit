@@ -5102,7 +5102,7 @@ void KHTMLPart::khtmlMouseReleaseEvent( khtml::MouseReleaseEvent *event )
 
     fprintf(stderr, "inEditMode: %s; isContentEditable: %s\n", 
         inEditMode() ? "Y" : "N", 
-        d->m_selectionStart.handle()->isContentEditable() ? "Y" : "N");
+         d->m_selectionStart == 0 ? "N" : d->m_selectionStart.handle()->isContentEditable() ? "Y" : "N");
 
 #if APPLE_CHANGES
     // Clear the selection if the mouse didn't move after the last mouse press.
