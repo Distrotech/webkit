@@ -1,3 +1,22 @@
+2004-04-07  Vicki Murley  <vicki@apple.com>
+
+        - merge fix for <rdar://problem/3612939>: Java/JavaScript LiveConnect: Null string assignment results in string value of "Null" (clone for SU) from HEAD
+
+        * bindings/jni/jni_utility.cpp:
+        (KJS::Bindings::convertValueToJValue):
+        
+    2004-03-15  Richard Williamson   <rjw@apple.com>
+
+        Fixed 3570854.  Don't attempt to convert Null to strings.  We
+        were incorrectly converting to "Null".
+
+        Actually fixed by Scott Kovatch.
+
+        Reviewed by Richard.
+
+        * bindings/jni/jni_utility.cpp:
+        (KJS::Bindings::convertValueToJValue):
+
 2004-03-11  Vicki Murley <vicki@apple.com>
 
 	- bump the JavaScriptCore version number to 125.3 on the Safari-1-2-branch, to match the JSC version number that is in Feldspar
@@ -149,6 +168,7 @@
 	Fixed 3529010.
 
 	Finalize may be called on an JSObject after we've already remove all our references.  The assert in this case is firing because we've received a finalize call from Java for an instance that we no longer know about.  The fix is to check in finalize that we're getting a call on an instance that we still care about.
+
 
         Reviewed by John.
 
