@@ -41,7 +41,7 @@ QPalette QApplication::palette(const QWidget *p)
 }
 
 
-static QWidget *mainWidget = 0;
+static QDesktopWidget *desktopWidget = 0;
 
 int QDesktopWidget::width() const
 {
@@ -54,12 +54,12 @@ int QDesktopWidget::height() const
 }
 
 
-QWidget *QApplication::desktop()
+QDesktopWidget *QApplication::desktop()
 {
-    if (mainWidget == 0){
-        mainWidget = new QDesktopWidget();
+    if (desktopWidget == 0) {
+        desktopWidget = new QDesktopWidget();
     }
-    return mainWidget;
+    return desktopWidget;
 }
 
 

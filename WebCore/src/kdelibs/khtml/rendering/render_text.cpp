@@ -33,31 +33,8 @@
 #include <kdebug.h>
 #include <assert.h>
 
-#define QT_ALLOC_QCHAR_VEC( N ) (QChar*) new char[ sizeof(QChar)*( N ) ]
-#define QT_DELETE_QCHAR_VEC( P ) delete[] ((char*)( P ))
-
-#ifdef APPLE_CHANGES
-#define OPTIMIZE_STRING_USAGE
-#endif
-
-
 using namespace khtml;
 using namespace DOM;
-
-TextSlave::~TextSlave()
-{
-}
-
-void TextSlave::print( QPainter *pt, int _tx, int _ty)
-{
-    if (!m_text || m_len <= 0)
-        return;
-
-    QConstString s(m_text, m_len);
-    //kdDebug( 6040 ) << "textSlave::printing(" << s.string() << ") at(" << x+_tx << "/" << y+_ty << ")" << endl;
-
-    pt->drawText(m_x + _tx, m_y + _ty + m_baseline, s.string(), -1, m_reversed ? QPainter::RTL : QPainter::LTR);
-}
 
 void TextSlave::printSelection(const Font *f, RenderText *text, QPainter *p, RenderStyle* style, int tx, int ty, int startPos, int endPos)
 {
@@ -89,7 +66,7 @@ void TextSlave::printDecoration( QPainter *pt, RenderText* p, int _tx, int _ty, 
     if ( end )
         width -= p->paddingRight() + p->borderRight();
 
-#ifdef APPLE_CHANGES
+#if APPLE_CHANGES && DRAW_UNDERLINE_FIXED
     //int underlineOffset = pt->fontMetrics().baselineOffset() + 2;
 #else /* APPLE_CHANGES not defined */
     int underlineOffset = ( pt->fontMetrics().height() + m_baseline ) / 2;
@@ -97,7 +74,7 @@ void TextSlave::printDecoration( QPainter *pt, RenderText* p, int _tx, int _ty, 
 #endif /* APPLE_CHANGES not defined */
 
     if(deco & UNDERLINE)
-#ifdef APPLE_CHANGES
+#if APPLE_CHANGES && DRAW_UNDERLINE_FIXED
     {
         //fprintf (stderr, "UNDERLINE (%d, %d) to (%d, %d)\n", _tx, _ty + underlineOffset, _tx + width, _ty + underlineOffset );
         QConstString s(m_text, m_len);
@@ -377,9 +354,7 @@ bool RenderText::nodeAtPoint(NodeInfo& /*info*/, int _x, int _y, int _tx, int _t
         s = si < (int)m_lines.count()-1 ? m_lines[++si] : 0;
     }
 
-#ifndef APPLE_CHANGES
     bool oldinside = mouseInside();
-#endif /* not APPLE_CHANGES */
     setMouseInside(inside);
     if (mouseInside() != oldinside && element())
         element()->setChanged();

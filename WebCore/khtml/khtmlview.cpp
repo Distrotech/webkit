@@ -38,7 +38,9 @@
 #include "misc/htmlhashes.h"
 #include "misc/helper.h"
 #include "khtml_settings.h"
+#ifndef APPLE_CHANGES
 #include "khtml_printsettings.h"
+#endif
 
 #include <kcursor.h>
 #include <ksimpleconfig.h>
@@ -53,8 +55,10 @@
 #include <kimageio.h>
 #include <assert.h>
 #include <kdebug.h>
+#ifndef APPLE_CHANGES
 #include <kurldrag.h>
 #include <qobjectlist.h>
+#endif
 
 #define PAINT_BUFFER_HEIGHT 128
 
@@ -1041,6 +1045,7 @@ QString KHTMLView::mediaType() const
     return m_medium;
 }
 
+#ifndef APPLE_CHANGES
 void KHTMLView::print()
 {
     if(!m_part->xmlDocImpl()) return;
@@ -1140,6 +1145,7 @@ void KHTMLView::print()
     }
     delete printer;
 }
+#endif // !APPLE_CHANGES
 
 void KHTMLView::slotPaletteChanged()
 {
@@ -1405,6 +1411,7 @@ void KHTMLView::viewportWheelEvent(QWheelEvent* e)
 }
 #endif
 
+#ifndef APPLE_CHANGES
 void KHTMLView::dragEnterEvent( QDragEnterEvent* ev )
 {
     // Handle drops onto frames (#16820)
@@ -1451,6 +1458,7 @@ void KHTMLView::dropEvent( QDropEvent *ev )
     }
     QScrollView::dropEvent( ev );
 }
+#endif // !APPLE_CHANGES
 
 void KHTMLView::focusOutEvent( QFocusEvent *e )
 {

@@ -1,5 +1,21 @@
 2002-03-24  Darin Adler  <darin@apple.com>
 
+        More compiling. Still won't link.
+
+	* src/kdelibs/khtml/khtmlview.cpp: Disable printing and drag and drop code.
+	* src/kdelibs/khtml/rendering/render_text.cpp: (TextSlave::printDecoration):
+        Temporarily turn off our smarter underlining since it relies on access to the
+        string, and TextSlave doesn't have that any more.
+	(RenderText::nodeAtPoint): Get rid of a workaround we don't need any more for
+        a bug that was fixed by KDE folks.
+	* src/kwq/KWQApplication.mm: (QApplication::desktop): Make the desktop be a
+        QDesktopWidget.
+	* src/kwq/qt/qnamespace.h: Add MetaButton.
+	* src/kwq/qt/qtooltip.h: Add a maybeTip virtual function member and a virtual
+        destructor.
+
+2002-03-24  Darin Adler  <darin@apple.com>
+
         Some fixes to get more stuff to compile.
 
 	* src/kdelibs/khtml/ecma/kjs_dom.cpp: (DOMDocument::getValueProperty):
