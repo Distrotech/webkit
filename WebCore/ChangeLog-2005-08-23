@@ -1,3 +1,80 @@
+2003-12-17  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me.
+
+	Made editing subdirectory.
+	Moved htmlediting files into this new directory.
+	Added Caret and CaretImpl classes.
+
+        * WebCore.pbproj/project.pbxproj:
+        * khtml/editing/edit_caret.cpp: Added.
+        (Caret::Caret):
+        (Caret::~Caret):
+        (Caret::node):
+        (Caret::offset):
+        (Caret::startOfLine):
+        (Caret::setPosition):
+        (Caret::setStartOfLine):
+        (Caret::needsAdjustmentForEditing):
+        (Caret::adjustForEditing):
+        (Caret::adjustedForEditing):
+        (Caret::handle):
+        (operator==):
+        * khtml/editing/edit_caret.h: Added.
+        * khtml/editing/edit_caretimpl.cpp: Added.
+        (CaretImpl::CaretImpl):
+        (CaretImpl::~CaretImpl):
+        (CaretImpl::setPosition):
+        (CaretImpl::setStartOfLine):
+        (CaretImpl::needsAdjustmentForEditing):
+        (CaretImpl::adjustForEditing):
+        (EditNodeFilter::acceptNode):
+        * khtml/editing/edit_caretimpl.h: Added.
+        (khtml::CaretImpl::node):
+        (khtml::CaretImpl::offset):
+        (khtml::CaretImpl::startOfLine):
+        (khtml::CaretImpl::CaretImpl):
+        * khtml/editing/htmlediting.cpp: Added.
+        (EditCommand::notifyChanged):
+        (InputTextCommand::commandID):
+        (InputTextCommand::InputTextCommand):
+        (InputTextCommand::isLineBreak):
+        (InputTextCommand::isSpace):
+        (InputTextCommand::applyToDocument):
+        (InputTextCommand::canUndo):
+        (DeleteTextCommand::commandID):
+        (DeleteTextCommand::DeleteTextCommand):
+        (DeleteTextCommand::applyToDocument):
+        (DeleteTextCommand::canUndo):
+        * khtml/editing/htmlediting.h: Added.
+        (khtml::):
+        (khtml::EditCommand::EditCommand):
+        (khtml::EditCommand::~EditCommand):
+        (khtml::EditCommand::selection):
+        (khtml::InputTextCommand::~InputTextCommand):
+        (khtml::InputTextCommand::text):
+        (khtml::DeleteTextCommand::~DeleteTextCommand):
+        * khtml/html/htmlediting.cpp: Removed.
+        * khtml/html/htmlediting.h: Removed.
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::setSelection):
+        (KHTMLPart::slotClearSelection):
+        (KHTMLPart::caret):
+        (KHTMLPart::khtmlMousePressEvent):
+        (KHTMLPart::khtmlMouseMoveEvent):
+        (KHTMLPart::khtmlMouseReleaseEvent):
+        (KHTMLPart::emitCaretPositionChanged):
+        (KHTMLPart::moveCaretTo):
+        * khtml/khtml_part.h:
+        * khtml/khtmlpart_p.h:
+        * khtml/khtmlview.cpp:
+        (khtml::sanitizeCaretState):
+        (KHTMLView::init):
+        (KHTMLView::initCaret):
+        (KHTMLView::moveCaretTo):
+        * kwq/KWQKHTMLPart.mm:
+        (KHTMLPart::caretPositionChanged):
+
 2003-12-12  Ken Kocienda  <kocienda@apple.com>
 
         Reviewed by me
