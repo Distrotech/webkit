@@ -71,7 +71,7 @@ namespace KJS {
      * for the specified part p this will be returned in order to have unique
      * bindings.
      */
-    static Object retrieve(KHTMLPart *p);
+    static Value retrieve(KHTMLPart *p);
     /**
      * Returns the Window object for a given HTML part
      */
@@ -103,7 +103,7 @@ namespace KJS {
     virtual const ClassInfo* classInfo() const { return &info; }
     static const ClassInfo info;
     enum { Closed, Crypto, DefaultStatus, Status, Document, Node, EventCtor, Range,
-           NodeFilter, DOMException, Frames, _History, Event, InnerHeight,
+           NodeFilter, DOMException, CSSRule, Frames, _History, Event, InnerHeight,
            InnerWidth, Length, _Location, Name, _Navigator, _Konqueror, ClientInformation,
            OffscreenBuffering, Opener, OuterHeight, OuterWidth, PageXOffset, PageYOffset,
            Parent, Personalbar, ScreenX, ScreenY, Scrollbars, Scroll, ScrollBy,

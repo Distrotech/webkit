@@ -146,7 +146,7 @@ public:
 
     m_bPendingChildRedirection = false;
 
-    // inherit security settings from parent
+    // inherit settings from parent
     if(parent && parent->inherits("KHTMLPart"))
     {
         KHTMLPart* part = static_cast<KHTMLPart*>(parent);
@@ -161,6 +161,7 @@ public:
             // Same for SSL settings
             m_ssl_in_use = part->d->m_ssl_in_use;
             m_onlyLocalReferences = part->d->m_onlyLocalReferences;
+            m_zoomFactor = part->d->m_zoomFactor;
         }
     }
 
@@ -277,6 +278,7 @@ public:
   KParts::PartManager *m_manager;
 
   QString m_popupMenuXML;
+  KHTMLPart::GUIProfile m_guiProfile;
 
   int m_zoomFactor;
 

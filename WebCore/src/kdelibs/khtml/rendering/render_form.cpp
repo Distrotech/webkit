@@ -43,6 +43,8 @@
 #include "khtml_ext.h"
 #include "xml/dom_docimpl.h" // ### remove dependency
 
+#include <kdebug.h>
+
 using namespace khtml;
 
 RenderFormElement::RenderFormElement(HTMLGenericFormElementImpl *element)
@@ -287,10 +289,8 @@ RenderSubmitButton::RenderSubmitButton(HTMLInputElementImpl *element)
     connect(p, SIGNAL(clicked()), this, SLOT(slotClicked()));
 }
 
-void RenderSubmitButton::calcMinMaxWidth()
+QString RenderSubmitButton::rawText()
 {
-    KHTMLAssert( !minMaxKnown() );
-
     QString value = element()->value().isEmpty() ? defaultLabel() : element()->value().string();
     value = value.stripWhiteSpace();
     QString raw;
@@ -299,7 +299,14 @@ void RenderSubmitButton::calcMinMaxWidth()
         if(value[i] == '&')
             raw += '&';
     }
+    return raw;
+}
 
+void RenderSubmitButton::calcMinMaxWidth()
+{
+    KHTMLAssert( !minMaxKnown() );
+
+    QString raw = rawText();
     static_cast<QPushButton*>(m_widget)->setText(raw);
     static_cast<QPushButton*>(m_widget)->setFont(style()->font());
 
@@ -317,6 +324,18 @@ void RenderSubmitButton::calcMinMaxWidth()
     setIntrinsicHeight( s.height() );
 
     RenderButton::calcMinMaxWidth();
+}
+
+void RenderSubmitButton::updateFromElement()
+{
+    QString oldText = static_cast<QPushButton*>(m_widget)->text();
+    QString newText = rawText();
+    static_cast<QPushButton*>(m_widget)->setText(newText);
+    if ( oldText != newText ) {
+        setMinMaxKnown(false);
+	setLayouted(false);
+    }
+    RenderFormElement::updateFromElement();
 }
 
 QString RenderSubmitButton::defaultLabel() {
@@ -472,19 +491,21 @@ void RenderLineEdit::calcMinMaxWidth()
 
 void RenderLineEdit::updateFromElement()
 {
-    widget()->blockSignals(true);
-    int pos = widget()->cursorPosition();
-    widget()->setText(element()->value().string());
+    if (element()->value().string() != widget()->text()) {
+        widget()->blockSignals(true);
+        int pos = widget()->cursorPosition();
+        widget()->setText(element()->value().string());
 
-    int ml = element()->maxLength();
-    if ( ml < 0 || ml > 1024 )
-        ml = 1024;
-    if ( widget()->maxLength() != ml )
-        widget()->setMaxLength( ml );
-    widget()->setEdited( false );
+        int ml = element()->maxLength();
+        if ( ml < 0 || ml > 1024 )
+            ml = 1024;
+        if ( widget()->maxLength() != ml )
+            widget()->setMaxLength( ml );
+        widget()->setEdited( false );
 
-    widget()->setCursorPosition(pos);
-    widget()->blockSignals(false);
+        widget()->setCursorPosition(pos);
+        widget()->blockSignals(false);
+    }
 
     RenderFormElement::updateFromElement();
 }
@@ -974,9 +995,8 @@ void RenderSelect::updateSelection()
         // ok, nothing was selected, select the first one..
         for (i = 0; !found && i < int(listItems.size()); i++)
             if ( listItems[i]->id() == ID_OPTION ) {
-                static_cast<HTMLOptionElementImpl*>( listItems[i] )->m_selected = true;
+//                static_cast<HTMLOptionElementImpl*>( listItems[i] )->m_selected = true;
                 static_cast<KComboBox*>( m_widget )->setCurrentItem( i );
-                found = true;
                 break;
             }
     }

@@ -107,6 +107,7 @@ const ClassInfo KJS::HTMLDocument::info =
   links			HTMLDocument::Links		DontDelete|ReadOnly
   forms			HTMLDocument::Forms		DontDelete|ReadOnly
   anchors		HTMLDocument::Anchors		DontDelete|ReadOnly
+  scripts		HTMLDocument::Scripts		DontDelete|ReadOnly
   all			HTMLDocument::All		DontDelete|ReadOnly
   clear			HTMLDocument::Clear		DontDelete|Function 0
   open			HTMLDocument::Open		DontDelete|Function 0
@@ -180,7 +181,13 @@ Value KJS::HTMLDocument::tryGet(ExecState *exec, const UString &propertyName) co
       Q_ASSERT(view);
       Q_ASSERT(view->part());
       if ( view && view->part() )
-        return Value(Window::retrieveWindow(view->part())->location());
+      {
+        Window* win = Window::retrieveWindow(view->part());
+        if (win)
+          return Value(win->location());
+	else
+          return Undefined();
+      }
       else
         return Undefined();
     case Cookie:
@@ -195,6 +202,14 @@ Value KJS::HTMLDocument::tryGet(ExecState *exec, const UString &propertyName) co
       return getHTMLCollection(exec,doc.forms());
     case Anchors:
       return getHTMLCollection(exec,doc.anchors());
+    case Scripts: // TODO (IE-specific)
+    {
+      // To be implemented. Meanwhile, return an object with a length property set to 0
+      kdWarning() << "KJS::HTMLDocument document.scripts called - not implemented" << endl;
+      Object obj( new ObjectImp() );
+      obj.put( exec, "length", Number(0) );
+      return obj;
+    }
     case All:
       // Disable document.all when we try to be Netscape-compatible
       if ( exec->interpreter()->compatMode() == Interpreter::NetscapeCompat )
@@ -977,10 +992,10 @@ Value KJS::HTMLElement::tryGet(ExecState *exec, const UString &propertyName) con
       if ( doc && doc->view() ) {
         KHTMLPart* part = doc->view()->part();
         if ( part ) {
-          Object globalObject = Window::retrieve( part );
+          Object globalObject = Object::dynamicCast( Window::retrieve( part ) );
           // Calling hasProperty on a Window object doesn't work, it always says true.
           // Hence we need to use getDirect instead.
-          if ( static_cast<ObjectImp *>(globalObject.imp())->getDirect( propertyName ) )
+          if ( !globalObject.isNull() && static_cast<ObjectImp *>(globalObject.imp())->getDirect( propertyName ) )
             return globalObject.get( exec, propertyName );
         }
       }

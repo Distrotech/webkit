@@ -131,8 +131,7 @@ KHTMLPart::KHTMLPart( QWidget *parentWidget, const char *widgetname, QObject *pa
 {
     d = 0;
     KHTMLFactory::registerPart( this );
-    setInstance( KHTMLFactory::instance(), prof == BrowserViewGUI ); // doesn't work inside init() for derived classes
-    // Why?? :-} (Simon)
+    setInstance( KHTMLFactory::instance(), prof == BrowserViewGUI && !parentPart() );
     init( new KHTMLView( this, parentWidget, widgetname ), prof );
 }
 
@@ -141,7 +140,7 @@ KHTMLPart::KHTMLPart( KHTMLView *view, QObject *parent, const char *name, GUIPro
 {
     d = 0;
     KHTMLFactory::registerPart( this );
-    setInstance( KHTMLFactory::instance(), prof == BrowserViewGUI );
+    setInstance( KHTMLFactory::instance(), prof == BrowserViewGUI && !parentPart() );
     assert( view );
     init( view, prof );
 }
@@ -158,6 +157,7 @@ void KHTMLPart::init( KHTMLView *view, GUIProfile prof )
   d->m_view = view;
   setWidget( d->m_view );
 
+  d->m_guiProfile = prof;
   d->m_extension = new KHTMLPartBrowserExtension( this );
   d->m_hostExtension = new KHTMLPartBrowserHostExtension( this );
 
@@ -3409,6 +3409,7 @@ void KHTMLPart::setZoomFactor (int percent)
 {
   if (percent < minZoom) percent = minZoom;
   if (percent > maxZoom) percent = maxZoom;
+  if (d->m_zoomFactor == percent) return;
   d->m_zoomFactor = percent;
 
   if(d->m_doc) {
@@ -3827,7 +3828,7 @@ void KHTMLPart::khtmlMouseReleaseEvent( khtml::MouseReleaseEvent *event )
 
 #ifndef QT_NO_CLIPBOARD
   QMouseEvent *_mouse = event->qmouseEvent();
-  if ((_mouse->button() == MidButton) && (event->url().isNull()))
+  if ((d->m_guiProfile == BrowserViewGUI) && (_mouse->button() == MidButton) && (event->url().isNull()))
   {
     QClipboard *cb = QApplication::clipboard();
     cb->setSelectionMode( true );
