@@ -1,3 +1,5 @@
+=== WebKit-58.5 ===
+
 2003-02-11  Richard Williamson   <rjw@apple.com>
 
         Add import of CGFontCache.h, which is no longer
