@@ -81,23 +81,18 @@ KHTMLSelection::KHTMLSelection(const KHTMLSelection &o)
 	  m_baseNode(0), m_baseOffset(0), m_extentNode(0), m_extentOffset(0),
 	  m_startNode(0), m_startOffset(0), m_endNode(0), m_endOffset(0)
 {
-    if (o.m_baseNode) {
-        m_baseNode = o.m_baseNode;
-        m_baseNode->ref();
-    }
-    if (o.m_extentNode) {
-        m_extentNode = o.m_extentNode;
-        m_extentNode->ref();
-    }
+    setBase(o.baseNode(), o.baseOffset());
+    setExtent(o.extentNode(), o.extentOffset());
+    setStart(o.startNode(), o.startOffset());
+    setEnd(o.endNode(), o.endOffset());
 
 	m_state = o.m_state;
 	m_caretBlinkTimer = o.m_caretBlinkTimer;
 	m_baseIsStart = o.m_baseIsStart;
 	m_caretBlinks = o.m_caretBlinks;
-	m_caretPaint = o.m_caretPaint;
+	m_caretPaint = true;
 	m_visible = o.m_visible;
-    m_startEndValid = false;
-	invalidate(); // invalidate the new copy
+    m_startEndValid = true;
 }
 
 KHTMLSelection::~KHTMLSelection()
@@ -112,32 +107,18 @@ KHTMLSelection &KHTMLSelection::operator=(const KHTMLSelection &o)
 {
     m_part = o.m_part;
     
-    if (m_baseNode)
-        m_baseNode->deref();
-    m_baseNode = 0;
-
-    if (o.m_baseNode) {
-        m_baseNode = o.m_baseNode;
-        m_baseNode->ref();
-    }
-
-    if (m_extentNode)
-        m_extentNode->deref();
-    m_extentNode = 0;
-
-    if (o.m_extentNode) {
-        m_extentNode = o.m_extentNode;
-        m_extentNode->ref();
-    }
+    setBase(o.baseNode(), o.baseOffset());
+    setExtent(o.extentNode(), o.extentOffset());
+    setStart(o.startNode(), o.startOffset());
+    setEnd(o.endNode(), o.endOffset());
 
 	m_state = o.m_state;
 	m_caretBlinkTimer = o.m_caretBlinkTimer;
 	m_baseIsStart = o.m_baseIsStart;
 	m_caretBlinks = o.m_caretBlinks;
-	m_caretPaint = o.m_caretPaint;
+	m_caretPaint = true;
 	m_visible = o.m_visible;
-    m_startEndValid = false;
-    invalidate();
+    m_startEndValid = true;
     return *this;
 }
 
@@ -156,12 +137,12 @@ void KHTMLSelection::setSelection(const DOM::Range &r)
 		r.endContainer().handle(), r.endOffset());
 }
 
-void KHTMLSelection::setSelection(DOM::NodeImpl *startNode, long startOffset, DOM::NodeImpl *endNode, long endOffset)
+void KHTMLSelection::setSelection(DOM::NodeImpl *baseNode, long baseOffset, DOM::NodeImpl *extentNode, long extentOffset)
 {
-	setBaseNode(startNode);
-	setExtentNode(endNode);
-	setBaseOffset(startOffset);
-	setExtentOffset(endOffset);
+	setBaseNode(baseNode);
+	setExtentNode(extentNode);
+	setBaseOffset(baseOffset);
+	setExtentOffset(extentOffset);
 	invalidate();
 }
 
@@ -188,27 +169,23 @@ void KHTMLSelection::clearSelection()
 	invalidate();
 }
 
-NodeImpl *KHTMLSelection::startNode()
+NodeImpl *KHTMLSelection::startNode() const
 { 
-    calculateStartAndEnd();
     return m_startNode;
 }
 
-long KHTMLSelection::startOffset() 
+long KHTMLSelection::startOffset() const
 { 
-    calculateStartAndEnd();
     return m_startOffset;
 }
 
-NodeImpl *KHTMLSelection::endNode() 
+NodeImpl *KHTMLSelection::endNode() const 
 {
-    calculateStartAndEnd();
     return m_endNode;
 }
 
-long KHTMLSelection::endOffset() 
+long KHTMLSelection::endOffset() const 
 { 
-    calculateStartAndEnd();
     return m_endOffset;
 }
 
@@ -390,6 +367,12 @@ void KHTMLSelection::setExtentOffset(long offset)
 	m_extentOffset = offset;
 }
 
+void KHTMLSelection::setStart(DOM::NodeImpl *node, long offset)
+{
+    setStartNode(node);
+    setStartOffset(offset);
+}
+
 void KHTMLSelection::setStartNode(DOM::NodeImpl *node)
 {
 	if (m_startNode == node)
@@ -407,6 +390,12 @@ void KHTMLSelection::setStartNode(DOM::NodeImpl *node)
 void KHTMLSelection::setStartOffset(long offset)
 {
 	m_startOffset = offset;
+}
+
+void KHTMLSelection::setEnd(DOM::NodeImpl *node, long offset)
+{
+    setEndNode(node);
+    setEndOffset(offset);
 }
 
 void KHTMLSelection::setEndNode(DOM::NodeImpl *node)

@@ -1,5 +1,31 @@
 2004-01-20  Ken Kocienda  <kocienda@apple.com>
 
+        Reviewed by me.
+
+	Editing is basically working again. I have
+	some crashers to hunt down when deleting, but
+	this is a good checkpoint.
+
+        * khtml/editing/htmlediting.cpp:
+        (EditCommand::pruneEmptyNodes):
+        (InputTextCommand::apply):
+        (DeleteTextCommand::apply):
+        * khtml/khtml_selection.cpp:
+        (KHTMLSelection::KHTMLSelection):
+        (KHTMLSelection::operator=):
+        (KHTMLSelection::setSelection):
+        (KHTMLSelection::startNode):
+        (KHTMLSelection::startOffset):
+        (KHTMLSelection::endNode):
+        (KHTMLSelection::endOffset):
+        (KHTMLSelection::setStart):
+        (KHTMLSelection::setStartOffset):
+        (KHTMLSelection::setEnd):
+        * khtml/khtml_selection.h:
+        (KHTMLSelection::dump):
+
+2004-01-20  Ken Kocienda  <kocienda@apple.com>
+
         Reviewed by me
 
 	Some more clean up. Removed vestiges of old

@@ -121,7 +121,7 @@ void EditCommand::pruneEmptyNodes() const
     KHTMLSelection selection = part->getKHTMLSelection();
     
     bool prunedNodes = false;
-    NodeImpl *node = selection.baseNode();
+    NodeImpl *node = selection.startNode();
     while (1) {
         if (node->isTextNode()) {
             TextImpl *textNode = static_cast<TextImpl *>(node);
@@ -202,8 +202,8 @@ bool InputTextCommand::apply()
     if (!part)
         return false;
 
-    KHTMLSelection selection = part->getKHTMLSelection();
-    if (!selection.baseNode()->isTextNode())
+    KHTMLSelection &selection = part->getKHTMLSelection();
+    if (!selection.startNode()->isTextNode())
         return false;
 
     // Delete the current selection
@@ -212,12 +212,12 @@ bool InputTextCommand::apply()
         // EDIT FIXME: adjust selection position
     }
     
-    TextImpl *textNode = static_cast<TextImpl *>(selection.baseNode());
+    TextImpl *textNode = static_cast<TextImpl *>(selection.startNode());
     int exceptionCode;
     
     if (isLineBreak()) {
-        TextImpl *textBeforeNode = document()->createTextNode(textNode->substringData(0, selection.baseOffset(), exceptionCode));
-        textNode->deleteData(0, selection.baseOffset(), exceptionCode);
+        TextImpl *textBeforeNode = document()->createTextNode(textNode->substringData(0, selection.startOffset(), exceptionCode));
+        textNode->deleteData(0, selection.startOffset(), exceptionCode);
         ElementImpl *breakNode = document()->createHTMLElement("BR", exceptionCode);
         textNode->parentNode()->insertBefore(textBeforeNode, textNode, exceptionCode);
         textNode->parentNode()->insertBefore(breakNode, textNode, exceptionCode);
@@ -231,11 +231,11 @@ bool InputTextCommand::apply()
         notifyChanged(textNode->parentNode());
     }
     else {
-        textNode->insertData(selection.baseOffset(), text(), exceptionCode);
+        textNode->insertData(selection.startOffset(), text(), exceptionCode);
         // EDIT FIXME: this is a hack for now
         // advance the cursor
         int textLength = text().length();
-        selection.setSelection(selection.baseNode(), selection.baseOffset() + textLength);
+        selection.setSelection(selection.startNode(), selection.startOffset() + textLength);
         notifyChanged(textNode);
     }
 
@@ -276,16 +276,16 @@ bool DeleteTextCommand::apply()
         return true;
     }
 
-    if (!selection.baseNode())
+    if (!selection.startNode())
         return false;
 
-    NodeImpl *caretNode = selection.baseNode();
+    NodeImpl *caretNode = selection.startNode();
 
     if (caretNode->isTextNode()) {
         int exceptionCode;
 
         // Check if we can delete character at cursor
-        int offset = selection.baseOffset() - 1;
+        int offset = selection.startOffset() - 1;
         if (offset >= 0) {
             TextImpl *textNode = static_cast<TextImpl *>(caretNode);
             textNode->deleteData(offset, 1, exceptionCode);

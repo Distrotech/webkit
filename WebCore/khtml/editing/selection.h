@@ -68,11 +68,11 @@ public:
     DOM::NodeImpl *extentNode() const { return m_extentNode; }
     long extentOffset() const { return m_extentOffset; }
 
-    DOM::NodeImpl *startNode();
-    long startOffset();
+    DOM::NodeImpl *startNode() const;
+    long startOffset() const;
 
-    DOM::NodeImpl *endNode();
-    long endOffset();
+    DOM::NodeImpl *endNode() const;
+    long endOffset() const;
 
     void setVisible(bool flag=true);
     bool visible() const { return m_visible; }
@@ -90,6 +90,12 @@ public:
     friend bool operator!=(const KHTMLSelection &a, const KHTMLSelection &b);
     
     friend class KHTMLPart;
+
+    void dump() {
+        fprintf(stderr, "selection: %p:%d ; %p:%d (%p:%d ; %p:%d)\n", 
+            m_baseNode, m_baseOffset, m_extentNode, m_extentOffset,
+            startNode(), startOffset(), endNode(), endOffset());
+    }
     
 private:
     void setPart(KHTMLPart *part);
@@ -102,18 +108,16 @@ private:
 	void setExtentNode(DOM::NodeImpl *);
 	void setExtentOffset(long);
 
+	void setStart(DOM::NodeImpl *, long);
 	void setStartNode(DOM::NodeImpl *);
 	void setStartOffset(long);
+	void setEnd(DOM::NodeImpl *, long);
 	void setEndNode(DOM::NodeImpl *);
 	void setEndOffset(long);
 
     bool nodeIsBeforeNode(DOM::NodeImpl *n1, DOM::NodeImpl *n2);
 
     void calculateStartAndEnd(ETextSelect select=CHARACTER);
-
-    void dump() {
-        fprintf(stderr, "selection: %p:%d ; %p:%d\n", m_baseNode, m_baseOffset, m_extentNode, m_extentOffset);
-    }
 
     KHTMLPart *m_part;            // part for this selection
 
