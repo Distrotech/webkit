@@ -8,6 +8,7 @@
 
 #include <assert.h>
 #include <ctype.h>
+#include <sys/types.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include <regex.h>
