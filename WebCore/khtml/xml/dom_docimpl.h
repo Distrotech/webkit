@@ -411,8 +411,6 @@ public:
 
     EventListener *createHTMLEventListener(QString code);
     
-    bool applyEditing(khtml::EditCommand *);
-
     /**
      * Searches through the document, starting from fromNode, for the next selectable element that comes after fromNode.
      * The order followed is as specified in section 17.11.1 of the HTML4 spec, which is elements with tab indexes
