@@ -36,6 +36,7 @@
 #include "khtmlview.h"
 #include "khtml_part.h"
 #import "KWQLogging.h"
+#import "KWQKHTMLPart.h"
 
 #include <kdebug.h>
 
@@ -100,7 +101,14 @@ void HTMLDivElementImpl::defaultEventHandler(EventImpl *evt)
     {
         KeyboardEventImpl *k = static_cast<KeyboardEventImpl *>(evt);
         DocumentImpl *doc = getDocument();
-        TextInputCommand *cmd = new TextInputCommand(doc->view()->part()->selection(), k->qKeyEvent()->text());
+        EditCommand *cmd;
+        QString text(k->qKeyEvent()->text());
+        if (text.length() == 1 && text[0] == QChar(0x7f)) {
+            cmd = new DeleteTextCommand(doc->view()->part()->selection());
+        }
+        else {
+            cmd = new InputTextCommand(doc->view()->part()->selection(), text);
+        }
         if (doc->applyEditing(cmd))
             evt->setDefaultHandled();
     }
