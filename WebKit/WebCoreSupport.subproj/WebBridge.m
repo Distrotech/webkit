@@ -427,6 +427,34 @@
     [[self dataSource] _setIconURL:[NSURL _web_URLWithString:URL] withType:type];
 }
 
+- (BOOL)canTargetLoadInFrame:(WebFrame *)targetFrame
+{
+    // This method prevents this exploit:
+    // <rdar://problem/3715785> multiple frame injection vulnerability reported by Secunia, affects almost all browsers
+    
+    // Normally, domain should be called on the DOMDocument since it is a DOM method, but this fix is needed for
+    // Jaguar as well where the DOM API doesn't exist.
+    NSString *thisDomain = [self domain];
+    if ([thisDomain length] == 0) {
+        // Allow if the request is made from a local file.
+        return YES;
+    }
+    
+    WebFrame *parentFrame = [targetFrame parentFrame];
+    if (parentFrame == nil) {
+        // Allow if target is an entire window.
+        return YES;
+    }
+    
+    NSString *parentDomain = [[parentFrame _bridge] domain];
+    if (parentDomain != nil && [thisDomain _web_isCaseInsensitiveEqualToString:parentDomain]) {
+        // Allow if the domain of the parent of the targeted frame equals this domain.
+        return YES;
+    }
+
+    return NO;
+}
+
 - (void)loadURL:(NSString *)URL referrer:(NSString *)referrer reload:(BOOL)reload target:(NSString *)target triggeringEvent:(NSEvent *)event form:(id <WebDOMElement>)form formValues:(NSDictionary *)values
 {
     if ([target length] == 0) {
@@ -434,6 +462,9 @@
     }
 
     WebFrame *targetFrame = [_frame findFrameNamed:target];
+    if (![self canTargetLoadInFrame:targetFrame]) {
+        return;
+    }
 
     [_frame _loadURL:[NSURL _web_URLWithString:URL] referrer:referrer loadType:(reload ? WebFrameLoadTypeReload : WebFrameLoadTypeStandard) target:target triggeringEvent:event form:form formValues:values];
 
@@ -449,6 +480,9 @@
     }
 
     WebFrame *targetFrame = [_frame findFrameNamed:target];
+    if (![self canTargetLoadInFrame:targetFrame]) {
+        return;
+    }
 
     [_frame _postWithURL:[NSURL _web_URLWithString:URL] referrer:(NSString *)referrer target:target data:data contentType:contentType triggeringEvent:event form:form formValues:values];
 
