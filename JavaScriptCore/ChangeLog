@@ -2,6 +2,13 @@
 
 2004-09-13  Vicki Murley <vicki@apple.com>
 
+	- fix a typo in my last change, whoops!
+
+        * kjs/property_map.cpp:
+        (KJS::PropertyMap::put):
+
+2004-09-13  Vicki Murley <vicki@apple.com>
+
 	- initialize deletedElementIndex to 0 to make the compiler happy
 
         * kjs/property_map.cpp:
