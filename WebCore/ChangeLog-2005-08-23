@@ -2,6 +2,24 @@
 
         Reviewed by me
 
+	Made it so the cursor does not blink while you are
+	navigating with the arrow keys.
+
+        * khtml/editing/edit_caretimpl.cpp:
+        (CaretImpl::setPosition):
+        * khtml/editing/edit_caretimpl.h:
+        (khtml::CaretImpl::setOffset):
+        * khtml/khtmlview.cpp:
+        (KHTMLView::timerEvent):
+        (KHTMLView::caretOn):
+        (KHTMLView::caretOff):
+        (KHTMLView::showCaret):
+        (KHTMLView::paintCaret):
+
+2004-01-09  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
 	Moved contenteditable to use the style system.
 
         * khtml/css/cssparser.cpp:
