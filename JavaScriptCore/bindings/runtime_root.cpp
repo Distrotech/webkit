@@ -357,4 +357,8 @@ void RootObject::setInterpreter (KJS::Interpreter *i)
     _interpreter = i;
 }
 
+void RootObject::removeAllJavaReferencesForRoot (Bindings::RootObject *root)
+{
+    root->removeAllNativeReferences();
+}
 

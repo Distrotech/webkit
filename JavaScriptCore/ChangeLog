@@ -1,3 +1,16 @@
+2005-02-10  Richard Williamson   <rjw@apple.com>
+
+	Fixed <rdar://problem/4002366> Safari crashes leaving https://www.entrust.com
+	
+	Fixed binary incompatiblity inined a member function that used
+	to NOT be inline.
+
+        Reviewed by Darin.
+
+        * bindings/runtime_root.cpp:
+        (RootObject::removeAllJavaReferencesForRoot):
+        * bindings/runtime_root.h:
+
 === 125.6.1 ===
 
 2005-02-08  Richard Williamson   <rjw@apple.com>

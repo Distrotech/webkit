@@ -91,7 +91,7 @@ public:
     
     const void *nativeHandle() const { return _nativeHandle; }
 
-    static void removeAllJavaReferencesForRoot (Bindings::RootObject *root) { root->removeAllNativeReferences(); }
+    static void removeAllJavaReferencesForRoot (Bindings::RootObject *root);
 
 private:
     const void *_nativeHandle;
