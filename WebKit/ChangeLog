@@ -1,3 +1,14 @@
+=== WebKit-85.8.5 ===
+
+2005-01-13  Adele Amchan  <adele@apple.com>
+
+        Reviewed by Vicki.
+
+        - fix mismatched_CFBundleShortVersionStrings verification failure by correcting 
+	version string to 1.0.3
+
+        * English.lproj/InfoPlist.strings:
+
 2005-01-13  Adele Amchan  <adele@apple.com>
 
         Reviewed by Vicki.
