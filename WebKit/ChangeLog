@@ -1,3 +1,9 @@
+2003-07-20  Darin Adler  <darin@apple.com>
+
+        - another attempt to fix compiler error
+
+        * WebKit.pbproj/project.pbxproj: Turn off -Werror.
+
 2003-07-18  Darin Adler  <darin@apple.com>
 
         - attempt to fix compiler error
