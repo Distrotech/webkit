@@ -1,3 +1,18 @@
+2004-08-05  Vicki Murley  <vicki@apple.com>
+
+	- roll out this chang for SUPanMoccasin, since it causes 3751025
+
+    2004-06-18  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Darin
+        
+        - fixed <rdar://problem/3534851> Pop up windows not showing up within SAP's 
+        BW Module (changing location.href on new window created by window.open)
+
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::scheduleRedirection):
+        allow new redirect to win if delay <= current delay, not just <
+
 === WebCore-125.8.3 === versioning for SUPanXpress, WebCore-125.8.3
 
 === WebCore-125.8.2 === versioning for SUPanMoccasin, WebCore-125.8.2
