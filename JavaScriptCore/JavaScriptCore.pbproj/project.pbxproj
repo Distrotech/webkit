@@ -32,7 +32,7 @@
 				DEBUGGING_SYMBOLS = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				INSTALL_PATH = "@executable_path/../Frameworks";
-				OTHER_LDFLAGS = "-seg1addr $(LOCAL_SEG1_ADDR)";
+				OTHER_LDFLAGS = "-seg1addr $(LOCAL_SEG1_ADDR)  -lobjc -sub_library libobjc";
 				SECTORDER_FLAGS = "";
 				ZERO_LINK = NO;
 			};
