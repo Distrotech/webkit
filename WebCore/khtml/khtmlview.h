@@ -210,23 +210,6 @@ public:
     void paintCaret(QPainter *p, const QRect &rect) const;
 #endif
 
-    /** folds the selection to the current caret position.
-     *
-     * Whatever selection has existed before will be removed by the invocation
-     * of this method. Updates are only done if an actual selection has
-     * been folded. After the call of this method, no selection will exist
-     * any more.
-     *
-     * No validity checking is done on the parameters. Note that the parameters
-     * refer to the old selection, the current caret may be way off.
-     * @param startNode starting node of selection
-     * @param startOffset offset within the start node.
-     * @param endNode ending node of selection
-     * @param endOffset offset within the end node.
-     * @return @p true if there had been a selection, and it was folded.
-     */
-    bool foldSelectionToCaret(DOM::NodeImpl *startNode, long startOffset,
-                              DOM::NodeImpl *endNode, long endOffset);
     /** places the caret on the current position.
      *
      * The caret is switched off, the position recalculated with respect to
@@ -240,19 +223,6 @@ public:
      * Evaluates key presses on editable nodes.
      */
     void caretKeyPressEvent(QKeyEvent *);
-    // -- caret navigation member functions
-    /** moves the caret to the given position and displays it.
-     *
-     * If the node is an invalid place, the function sets the caret to an
-     * nearby node that is valid.
-     *
-     * @param node node to be set to
-     * @param offset zero-based offset within this node
-     * @param clearSelection @p true if any the selection should be cleared
-     *    as well. It is ignored if @p thoroughly is false.
-     * @return @p true if a previously existing selection has been cleared.
-     */
-    bool moveCaretTo(DOM::NodeImpl *node, long offset, bool clearSelection);
 
 signals:
         void cleared();

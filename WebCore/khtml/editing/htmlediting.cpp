@@ -205,8 +205,6 @@ bool InputTextCommand::apply()
     if (!caret.node().handle()->isTextNode())
         return false;
 
-    notifyChanged(selection());
-
     // Delete the current selection
     if (view->caretOverrides()) {
         deleteSelection();
@@ -227,6 +225,9 @@ bool InputTextCommand::apply()
         
         // Set the cursor at the beginning of the node after the split.
         part->moveCaretTo(textNode, 0);
+        notifyChanged(breakNode);
+        notifyChanged(textNode);
+        notifyChanged(textNode->parentNode());
     }
     else {
         textNode->insertData(caret.offset(), text(), exceptionCode);
@@ -234,6 +235,7 @@ bool InputTextCommand::apply()
         // advance the cursor
         int textLength = text().length();
         part->moveCaretTo(caret.node().handle(), caret.offset() + textLength);
+        notifyChanged(textNode);
     }
 
     return true;
@@ -265,8 +267,6 @@ bool DeleteTextCommand::apply()
         return false;
 
     Caret caret = part->caret();
-
-    notifyChanged(selection());
 
     // Delete the current selection
     if (!selection().collapsed()) {

@@ -27,7 +27,6 @@
 #define __edit_caretimpl_h__
 
 #include <edit_caret.h>
-#include <dom_docimpl.h>
 #include <shared.h>
 
 namespace DOM {
@@ -47,22 +46,22 @@ public:
     long offset() const { return m_offset; }
     bool startOfLine() const { return m_startOfLine; }
     
-    void setPosition(DOM::NodeImpl *, long);
-    void moveForwardByCharacter();
-    void moveBackwardByCharacter();
-    
-    void setStartOfLine(bool);
-    
-    void adjustPosition();
-    
     friend class Caret;
+    friend class KHTMLPart;
 
 private:
     CaretImpl() : m_node(0), m_offset(0), m_startOfLine(false) {}
     CaretImpl(const CaretImpl *c) {};
 
+    void moveForwardByCharacter();
+    void moveBackwardByCharacter();
+
+    void setStartOfLine(bool);
+    
     void setNode(DOM::NodeImpl *);
     void setOffset(long offset) { m_offset = offset; }
+    void setPosition(DOM::NodeImpl *, long);
+    void adjustPosition();
 
     void notifyChanged(DOM::NodeImpl *) const;
 

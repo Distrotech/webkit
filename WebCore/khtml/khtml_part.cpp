@@ -5612,13 +5612,85 @@ Caret KHTMLPart::caret() const
     return d->m_caret; 
 }
 
-void KHTMLPart::moveCaretTo(DOM::NodeImpl *node, long offset) 
+void KHTMLPart::moveCaretTo(DOM::NodeImpl *node, long offset, bool clearSelection) 
 {
-    d->m_selectionStart = d->m_selectionEnd = node;
-    d->m_startOffset = d->m_endOffset = offset;
+    // Fix up caret node
+    // EDIT FIXME: this leaves node untouched if there are no more renderers.
+    // It should search backwards then.
+    // This still won't solve the problem what to do if *no* element has a renderer.
+    node = nextNodeWithRenderer(node);
+    if (!node)
+        return;
+    
+    // Fix up caret offset
+    long max = node->caretMaxOffset();
+    long min = node->caretMinOffset();
+    if (offset < min) 
+        offset = min;
+    else if (offset > max) 
+        offset = max;
+    
+    // test for clearing the selection
+    bool selectionCleared = false;
+    if (clearSelection) {
+        selectionCleared = collapseSelectionToCaret();
+    }
+    
+    // test for position change
+    bool positionChanged = caret().node().handle() != node || caret().offset() != offset;
     caret().setPosition(node, offset);
-    emitSelectionChanged();
-    emitCaretPositionChanged();
+
+    // EDIT FIXME: if the old position was !visible_caret, and the new position is
+    // also, then two caretPositionChanged signals with a null Node are
+    // emitted in series.
+    if (positionChanged) {
+        if (view()) {
+            // this has the effect of keeping the cursor from blinking when the caret moves
+            view()->caretOn();
+            // update the view
+            view()->placeCaret();
+        }
+        emitCaretPositionChanged();
+    }
+
+    if (selectionCleared)
+        emitSelectionChanged();
+}
+
+bool KHTMLPart::collapseSelectionToCaret() {
+    if (d->m_selectionStart == d->m_selectionEnd && 
+        d->m_startOffset == d->m_endOffset)
+        return false;
+
+    d->m_selectionStart = d->m_selectionEnd = caret().node();
+    d->m_startOffset = d->m_endOffset = caret().offset();
+    d->m_extendAtEnd = true;
+    
+    xmlDocImpl()->clearSelection();
+    
+    return true;
+}
+
+/** Finds the next node that has a renderer.
+ *
+ * Note that if the initial node has a renderer, this will be returned,
+ * regardless of being a leaf node.
+ * Otherwise, for the next nodes, only leaf nodes are considered.
+ * @param node node to start with, will be updated accordingly
+ * @return renderer or 0 if no following node has a renderer.
+ */
+NodeImpl *KHTMLPart::nextNodeWithRenderer(NodeImpl *node) const
+{
+    if (!node) 
+        return 0;
+    RenderObject *r = node->renderer();
+    while (!r) {
+        node = node->nextLeafNode();
+        if (!node) 
+            break;
+        r = node->renderer();
+    }
+    return node;
 }
 
 bool KHTMLPart::tabsToLinks() const

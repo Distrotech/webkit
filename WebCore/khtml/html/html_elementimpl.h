@@ -61,6 +61,7 @@ public:
 
     virtual DOMString namespaceURI() const;
     
+    virtual bool isFocusable() const;
     virtual bool isContentEditable() const;
     virtual DOMString contentEditable() const;
     virtual void setContentEditable(const DOMString &enabled);

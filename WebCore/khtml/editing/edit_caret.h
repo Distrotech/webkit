@@ -29,6 +29,7 @@
 #include <dom_node.h>
 #include <dom2_traversal.h>
 
+class KHTMLPart;
 class KHTMLPartPrivate;
 
 namespace khtml {
@@ -47,7 +48,6 @@ public:
     long offset() const;
     bool startOfLine() const;
     
-    void setPosition(const DOM::Node &, long);
     void moveForwardByCharacter();
     void moveBackwardByCharacter();
     
@@ -60,10 +60,12 @@ public:
 
     friend bool operator==(const Caret &, const Caret &);
 
+    friend class KHTMLPart;
     friend class KHTMLPartPrivate;
     
 private:
     Caret();
+    void setPosition(const DOM::Node &, long);
 
     CaretImpl *impl;
 };

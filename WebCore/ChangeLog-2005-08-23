@@ -1,3 +1,38 @@
+2004-01-14  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
+	Did quite a lot of cleanup in the way that 
+	the caret position is set programmatically.
+	The attempt was to funnel more code through
+	KHTMLPart::moveCaretTo.
+
+        * khtml/editing/edit_caret.cpp:
+        * khtml/editing/edit_caret.h:
+        * khtml/editing/edit_caretimpl.cpp:
+        (CaretImpl::moveForwardByCharacter):
+        (CaretImpl::moveBackwardByCharacter):
+        (CaretImpl::setNode):
+        (CaretImpl::setPosition):
+        (CaretImpl::adjustPosition):
+        * khtml/editing/edit_caretimpl.h:
+        * khtml/editing/htmlediting.cpp:
+        (InputTextCommand::apply):
+        (DeleteTextCommand::apply):
+        * khtml/html/html_elementimpl.cpp:
+        (HTMLElementImpl::isFocusable):
+        (HTMLElementImpl::defaultEventHandler):
+        * khtml/html/html_elementimpl.h:
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::moveCaretTo):
+        (KHTMLPart::collapseSelectionToCaret):
+        (KHTMLPart::nextNodeWithRenderer):
+        * khtml/khtml_part.h:
+        * khtml/khtmlview.cpp:
+        (KHTMLView::focusNextPrevNode):
+        (KHTMLView::initCaret):
+        * khtml/khtmlview.h:
+
 2004-01-13  Ken Kocienda  <kocienda@apple.com>
 
         Reviewed by me

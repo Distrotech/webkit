@@ -605,7 +605,7 @@ public:
   /**
    * Moves the input caret to the specified offset.
    */
-  void moveCaretTo(DOM::NodeImpl *node, long offset);
+  void moveCaretTo(DOM::NodeImpl *node, long offset, bool clearSelection=true);
   
   /**
    * Convenience method to show the document's view.
@@ -1139,6 +1139,18 @@ private:
   void receivedFirstData();
 
   void replaceContentsWithScriptResult( const KURL &url );
+
+    /** collapses the selection to the current caret position.
+     *
+     * Whatever selection has existed before will be removed by the invocation
+     * of this method. Updates are only done if an actual selection has
+     * been collapsed. After the call of this method, no selection will exist
+     * any more.
+     *
+     * @return @p true if there had been a selection, and it was collapsed.
+     */
+  bool collapseSelectionToCaret();
+  DOM::NodeImpl *nextNodeWithRenderer(DOM::NodeImpl *node) const; 
 
   KHTMLPartPrivate *d;
   friend class KHTMLPartPrivate;

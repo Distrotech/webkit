@@ -570,6 +570,11 @@ void HTMLElementImpl::addHTMLAlignment( DOMString alignment )
 	addCSSProperty( CSS_PROP_VERTICAL_ALIGN, propvalign );
 }
 
+bool HTMLElementImpl::isFocusable() const
+{
+    return isContentEditable();
+}
+
 bool HTMLElementImpl::isContentEditable() const {
     return contentEditable() == "true";
 }
@@ -623,7 +628,9 @@ void HTMLElementImpl::defaultEventHandler(EventImpl *evt)
     {
         KeyboardEventImpl *k = static_cast<KeyboardEventImpl *>(evt);
         EditCommand *cmd = 0;
-        if (k->keyIdentifier() == "U+00007F" || k->keyIdentifier() == "ForwardDelete") {
+        if (k->keyIdentifier() == "U+00007F" || 
+            k->keyIdentifier() == "U+000008" || 
+            k->keyIdentifier() == "ForwardDelete") {
             cmd = new DeleteTextCommand(getDocument());
         }
         else if (k->keyIdentifier() == "Right") {
