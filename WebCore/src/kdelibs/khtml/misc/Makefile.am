@@ -1,66 +1,43 @@
-NULL =
+#    This file is part of the KDE libraries
+#    Copyright (C) 1997 Martin Jones (mjones@kde.org)
+#              (C) 1997 Torben Weis (weis@kde.org)
 
-noinst_LIBRARIES = libkhtmlmisc.o
-LDFLAGS = -Wl,-r -nostdlib
-libkhtmlmisc_o_AR = $(OBJCXXLD) $(AM_OBJCXXFLAGS) $(OBJCXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Library General Public
+#    License as published by the Free Software Foundation; either
+#    version 2 of the License, or (at your option) any later version.
 
-libkhtmlmisc_o_SOURCES = \
-	decoder.cpp \
-	decoder.h \
-	font.cpp \
-	font.h \
-	helper.cpp \
-	helper.h \
-	htmlattrs.h \
-	htmlhashes.cpp \
-	htmlhashes.h \
-	htmltags.h \
-	khtmldata.h \
-	khtmllayout.h \
-	loader.h \
-	loader_client.h \
-	loader_jpeg.cpp \
-	loader_jpeg.h \
-	stringit.h \
-	$(NULL)
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Library General Public License for more details.
+
+#    You should have received a copy of the GNU Library General Public License
+#    along with this library; see the file COPYING.LIB.  If not, write to
+#    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+#    Boston, MA 02111-1307, USA.
+
+KDE_CXXFLAGS = $(WOVERLOADED_VIRTUAL)
+
+noinst_LTLIBRARIES = libkhtmlmisc.la
+libkhtmlmisc_la_SOURCES = \
+	decoder.cpp    loader.cpp loader_jpeg.cpp \
+	htmlhashes.cpp helper.cpp 
+
+libkhtmlmisc_la_METASOURCES = AUTO
 
 noinst_HEADERS = \
-	htmlattrs.c \
-	htmltags.c \
-	$(NULL)
+	decoder.h      khtmllayout.h loader_jpeg.h loader.h \
+	stringit.h     htmlhashes.h    helper.h 
 
-INCLUDES = \
-	$(KWQ_INCLUDES) \
-	$(KDELIBS_INCLUDES) \
-	$(NULL)
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/dcop -I$(top_srcdir)/kio -I$(top_srcdir)/libltdl \
+           -I$(top_srcdir)/khtml $(all_includes)
 
-TAGFILES = \
-	htmltags.c \
-	htmltags.h \
-	htmltags.gperf \
-	$(NULL)
+SRCDOC_DEST=$(kde_htmldir)/en/kdelibs/khtml
 
-ATTRSFILES = \
-	htmlattrs.c \
-	htmlattrs.h \
-	htmlattrs.gperf \
-	$(NULL)
+## generate lib documentation
+srcdoc:
+	$(mkinstalldirs) $(SRCDOC_DEST)
+	kdoc -H -d $(SRCDOC_DEST) kdecore \
+	         $(include_HEADERS) -lqt
 
-khtmldata.h:
-	touch $@
-
-$(TAGFILES): tag-stamp
-
-tag-stamp: maketags
-	perl ./maketags
-	touch ./tag-stamp
-
-$(ATTRSFILES): attr-stamp
-
-attr-stamp: makeattrs
-	perl ./makeattrs
-	touch ./attr-stamp
-
-BUILT_SOURCES = khtmldata.h $(TAGFILES) $(ATTRSFILES) tag-stamp attr-stamp
-
-CLEANFILES = $(BUILT_SOURCES)

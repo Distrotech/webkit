@@ -1,73 +1,52 @@
-NULL =
+#    This file is part of the KDE libraries
+#    Copyright (C) 1997 Martin Jones (mjones@kde.org)
+#              (C) 1997 Torben Weis (weis@kde.org)
 
-noinst_LIBRARIES = libkhtmlrendering.o
-LDFLAGS = -Wl,-r -nostdlib
-libkhtmlrendering_o_AR = $(OBJCXXLD) $(AM_OBJCXXFLAGS) $(OBJCXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Library General Public
+#    License as published by the Free Software Foundation; either
+#    version 2 of the License, or (at your option) any later version.
 
-libkhtmlrendering_o_SOURCES = \
-	bidi.cpp \
-	bidi.h \
-	break_lines.cpp \
-	break_lines.h \
-	render_applet.cpp \
-	render_applet.h \
-	render_body.cpp \
-	render_body.h \
-	render_box.cpp \
-	render_box.h \
-	render_br.cpp \
-	render_br.h \
-	render_container.cpp \
-	render_container.h \
-	render_flow.cpp \
-	render_flow.h \
-	render_form.cpp \
-	render_form.h \
-	render_frames.cpp \
-	render_frames.h \
-	render_hr.cpp \
-	render_hr.h \
-	render_html.cpp \
-	render_html.h \
-	render_image.cpp \
-	render_image.h \
-	render_list.cpp \
-	render_list.h \
-	render_object.cpp \
-	render_object.h \
-	render_replaced.cpp \
-	render_replaced.h \
-	render_root.cpp \
-	render_root.h \
-	render_style.cpp \
-	render_style.h \
-	render_table.cpp \
-	render_table.h \
-	render_text.cpp \
-	render_text.h \
-	$(NULL)
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Library General Public License for more details.
 
+#    You should have received a copy of the GNU Library General Public License
+#    along with this library; see the file COPYING.LIB.  If not, write to
+#    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+#    Boston, MA 02111-1307, USA.
 
-INCLUDES = \
-	-DNEED_BOGUS_X_DEFINES \
-	$(KWQ_INCLUDES) \
-	$(KDELIBS_INCLUDES) \
-	$(NULL)
+KDE_CXXFLAGS = $(WOVERLOADED_VIRTUAL)
 
-render_form.moc:
-	touch $@
+noinst_LTLIBRARIES = libkhtmlrender.la
+libkhtmlrender_la_SOURCES = \
+	bidi.cpp break_lines.cpp \
+	render_style.cpp render_object.cpp render_container.cpp render_box.cpp \
+	render_flow.cpp render_text.cpp \
+	render_image.cpp render_table.cpp \
+	render_replaced.cpp render_form.cpp render_list.cpp \
+	render_root.cpp render_frames.cpp render_br.cpp render_applet.cpp \
+	render_html.cpp render_body.cpp
 
-render_frames.moc:
-	touch $@
+libkhtmlrender_la_METASOURCES = AUTO
 
-render_replaced.moc:
-	touch $@
+noinst_HEADERS = \
+	bidi.h break_lines.h \
+	render_style.h render_object.h render_container.h render_box.h \
+	render_flow.h render_text.h render_box.h render_replaced.h \
+	render_form.h render_list.h render_root.h render_frames.h \
+	render_br.h render_applet.h
 
-BUILT_SOURCES = \
-	render_form.moc \
-	render_frames.moc \
-	render_replaced.moc \
-	$(NULL)
+INCLUDES = -I$(top_srcdir)/kimgio -I$(top_srcdir)/kio -I$(top_srcdir)/dcop \
+ -I$(top_srcdir)/kfile -I$(top_srcdir)/khtml -I$(top_srcdir) $(all_includes)
 
-CLEANFILES = $(BUILT_SOURCES)
+SRCDOC_DEST=$(kde_htmldir)/en/kdelibs/khtml
+
+## generate lib documentation
+srcdoc:
+	$(mkinstalldirs) $(SRCDOC_DEST)
+	kdoc -H -d $(SRCDOC_DEST) kdecore \
+	         $(include_HEADERS) -lqt
+
 

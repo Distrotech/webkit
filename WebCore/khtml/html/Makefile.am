@@ -1,55 +1,53 @@
-NULL =
+#    This file is part of the KDE libraries
+#    Copyright (C) 1997 Martin Jones (mjones@kde.org)
+#              (C) 1997 Torben Weis (weis@kde.org)
 
-noinst_LIBRARIES = libkhtmlhtml.o
-LDFLAGS = -Wl,-r -nostdlib
-libkhtmlhtml_o_AR = $(OBJCXXLD) $(AM_OBJCXXFLAGS) $(OBJCXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Library General Public
+#    License as published by the Free Software Foundation; either
+#    version 2 of the License, or (at your option) any later version.
 
-libkhtmlhtml_o_SOURCES = \
-	dtd.cpp \
-	dtd.h \
-	html_baseimpl.cpp \
-	html_baseimpl.h \
-	html_blockimpl.cpp \
-	html_blockimpl.h \
-	html_documentimpl.cpp \
-	html_documentimpl.h \
-	html_elementimpl.cpp \
-	html_elementimpl.h \
-	html_formimpl.cpp \
-	html_formimpl.h \
-	html_headimpl.cpp \
-	html_headimpl.h \
-	html_imageimpl.cpp \
-	html_imageimpl.h \
-	html_inlineimpl.cpp \
-	html_inlineimpl.h \
-	html_listimpl.cpp \
-	html_listimpl.h \
-	html_miscimpl.cpp \
-	html_miscimpl.h \
-	html_objectimpl.cpp \
-	html_objectimpl.h \
-	html_tableimpl.cpp \
-	html_tableimpl.h \
-	htmlparser.cpp \
-	htmlparser.h \
-	htmltokenizer.cpp \
-	htmltokenizer.h \
-	$(NULL)
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Library General Public License for more details.
 
-INCLUDES = \
-	-I$(top_srcdir) \
-	$(KWQ_INCLUDES) \
-	$(KDELIBS_INCLUDES) \
-	-I. \
-	$(NULL)
+#    You should have received a copy of the GNU Library General Public License
+#    along with this library; see the file COPYING.LIB.  If not, write to
+#    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+#    Boston, MA 02111-1307, USA.
 
-htmltokenizer.moc:
-	touch $@
+KDE_CXXFLAGS = $(WOVERLOADED_VIRTUAL)
 
-html_documentimpl.moc:
-	touch $@
+noinst_LTLIBRARIES = libkhtmlhtml.la
+libkhtmlhtml_la_SOURCES = \
+	htmlparser.cpp         htmltokenizer.cpp \
+	dtd.cpp                html_headimpl.cpp      html_blockimpl.cpp  \
+	html_elementimpl.cpp   html_inlineimpl.cpp    html_documentimpl.cpp \
+	html_baseimpl.cpp      html_imageimpl.cpp     html_listimpl.cpp \
+	html_miscimpl.cpp      html_formimpl.cpp      html_objectimpl.cpp \
+	html_tableimpl.cpp
 
-BUILT_SOURCES = htmltokenizer.moc html_documentimpl.moc
+libkhtmlhtml_la_METASOURCES = AUTO
 
-CLEANFILES = $(BUILT_SOURCES)
+
+noinst_HEADERS = \
+	dtd.h                html_headimpl.h      html_tableimpl.h \
+	html_baseimpl.h      html_imageimpl.h     htmlparser.h \
+	html_blockimpl.h     html_inlineimpl.h    \
+	html_documentimpl.h  html_listimpl.h      htmltokenizer.h \
+	html_elementimpl.h   html_miscimpl.h \
+	html_formimpl.h      html_objectimpl.h
+
+INCLUDES = -I$(top_srcdir)/kimgio -I$(top_srcdir)/dcop \
+ -I$(top_srcdir)/kio/kssl \
+ -I$(top_srcdir)/kjs -I$(top_srcdir)/khtml -I$(top_srcdir) $(all_includes)
+
+SRCDOC_DEST=$(kde_htmldir)/en/kdelibs/khtml
+
+## generate lib documentation 
+srcdoc:
+	$(mkinstalldirs) $(SRCDOC_DEST)
+	kdoc -H -d $(SRCDOC_DEST) kdecore \
+	         $(include_HEADERS) -lqt
+

@@ -35,7 +35,7 @@
 #endif
 
 #include <stdlib.h>
-#include <qlist.h>
+#include <qptrlist.h>
 #include <qobject.h>
 #include <qptrdict.h>
 #include <qdict.h>
@@ -46,6 +46,8 @@
 
 #include <kurl.h>
 
+
+#include <khtml_settings.h>
 #include <dom/dom_string.h>
 
 class QMovie;
@@ -66,10 +68,7 @@ namespace khtml
 {
     class CachedObject;
     class Request;
-#ifdef APPLE_CHANGES
-    class LoaderPrivate;
     class DocLoader;
-#endif /* APPLE_CHANGES */
 
     /**
      * @internal
@@ -98,15 +97,8 @@ namespace khtml
 	    Uncacheable   // to big to be cached,
 	};  	          // will be destroyed as soon as possible
 
-#ifdef APPLE_CHANGES
-	CachedObject(const DocLoader *loader, const DOM::DOMString &url, Type type, bool _reload, int _expireDate)
-#else /* APPLE_CHANGES not defined */
 	CachedObject(const DOM::DOMString &url, Type type, bool _reload, int _expireDate)
-#endif /* APPLE_CHANGES not defined */
 	{
-#ifdef APPLE_CHANGES
-	    m_loader = loader;
-#endif /* APPLE_CHANGES */
 	    m_url = url;
 	    m_type = type;
 	    m_status = Pending;
@@ -160,22 +152,18 @@ namespace khtml
 
 	void setExpireDate(int _expireDate);
 
+        virtual bool schedule() const { return false; }
+
         /*
          * List of acceptable mimetypes seperated by ",". A mimetype may contain a wildcard.
          */
         // e.g. "text/*"
         QString accept() const { return m_accept; }
         void setAccept(const QString &_accept) { m_accept = _accept; }
-#ifdef APPLE_CHANGES
-    const DocLoader *loader() { return m_loader; }
-#endif /* APPLE_CHANGES */
 
     protected:
-#ifdef APPLE_CHANGES
-        const DocLoader *m_loader;
-#endif /* APPLE_CHANGES */
-        QList<CachedObjectClient> m_clients;
-        
+        QPtrList<CachedObjectClient> m_clients;
+
 	DOM::DOMString m_url;
         QString m_accept;
         Request *m_request;
@@ -183,9 +171,10 @@ namespace khtml
 	Status m_status;
 	int m_size;
 	int m_expireDate;
-        bool m_free;
-        bool m_reload;
-        bool m_deleted;
+        bool m_free : 1;
+        bool m_reload : 1;
+        bool m_deleted : 1;
+        bool m_loading : 1;
     };
 
 
@@ -195,11 +184,8 @@ namespace khtml
     class CachedCSSStyleSheet : public CachedObject
     {
     public:
-#ifdef APPLE_CHANGES
-	CachedCSSStyleSheet(const DocLoader *loader, const DOM::DOMString &url, const DOM::DOMString &baseURL, bool reload, int _expireDate, const QString& charset);
-#else /* APPLE_CHANGES not defined */
-	CachedCSSStyleSheet(const DOM::DOMString &url, const DOM::DOMString &baseURL, bool reload, int _expireDate, const QString& charset);
-#endif /* APPLE_CHANGES not defined */
+	CachedCSSStyleSheet(DocLoader* dl, const DOM::DOMString &url, bool reload, int _expireDate, const QString& charset);
+	CachedCSSStyleSheet(const DOM::DOMString &url, const QString &stylesheet_data);
 	virtual ~CachedCSSStyleSheet();
 
 	const DOM::DOMString &sheet() const { return m_sheet; }
@@ -210,11 +196,12 @@ namespace khtml
 	virtual void data( QBuffer &buffer, bool eof );
 	virtual void error( int err, const char *text );
 
+        virtual bool schedule() const { return true; }
+
 	void checkNotify();
 
     protected:
 	DOM::DOMString m_sheet;
-	bool loading;
         QTextCodec* m_codec;
     };
 
@@ -224,11 +211,8 @@ namespace khtml
     class CachedScript : public CachedObject
     {
     public:
-#ifdef APPLE_CHANGES
-	CachedScript(const DocLoader *loader, const DOM::DOMString &url, const DOM::DOMString &baseURL, bool reload, int _expireDate, const QString& charset);
-#else /* APPLE_CHANGES not defined */
-	CachedScript(const DOM::DOMString &url, const DOM::DOMString &baseURL, bool reload, int _expireDate, const QString& charset);
-#endif /* APPLE_CHANGES not defined */
+	CachedScript(DocLoader* dl, const DOM::DOMString &url, bool reload, int _expireDate, const QString& charset);
+	CachedScript(const DOM::DOMString &url, const QString &script_data);
 	virtual ~CachedScript();
 
 	const DOM::DOMString &script() const { return m_script; }
@@ -239,11 +223,14 @@ namespace khtml
 	virtual void data( QBuffer &buffer, bool eof );
 	virtual void error( int err, const char *text );
 
+        virtual bool schedule() const { return false; }
+
 	void checkNotify();
+
+        bool isLoaded() const { return !m_loading; }
 
     protected:
 	DOM::DOMString m_script;
-	bool loading;
         QTextCodec* m_codec;
     };
 
@@ -256,11 +243,7 @@ namespace khtml
     {
 	Q_OBJECT
     public:
-#ifdef APPLE_CHANGES
-	CachedImage(const DocLoader *loader, const DOM::DOMString &url, const DOM::DOMString &baseURL, bool reload, int _expireDate);
-#else /* APPLE_CHANGES not defined */
-	CachedImage(const DOM::DOMString &url, const DOM::DOMString &baseURL, bool reload, int _expireDate);
-#endif /* APPLE_CHANGES not defined */
+	CachedImage(DocLoader* dl, const DOM::DOMString &url, bool reload, int _expireDate);
 	virtual ~CachedImage();
 
 	const QPixmap &pixmap() const;
@@ -275,12 +258,12 @@ namespace khtml
 	virtual void data( QBuffer &buffer, bool eof );
 	virtual void error( int err, const char *text );
 
-        const DOM::DOMString& baseURL() const { return m_baseURL; }
-
         bool isTransparent() const { return isFullyTransparent; }
         bool isErrorImage() const { return errorOccured; }
 
-        void setShowAnimations( bool );
+        void setShowAnimations( KHTMLSettings::KAnimationAdvice );
+
+        virtual bool schedule() const { return true; }
 
     protected:
 	void clear();
@@ -292,15 +275,15 @@ namespace khtml
 	void movieUpdated( const QRect &rect );
         void movieStatus(int);
         void movieResize(const QSize&);
+        void deleteMovie();
 
     private:
         void do_notify(const QPixmap& p, const QRect& r);
 
-        DOM::DOMString m_baseURL;
-        QRgb bgColor;
 	QMovie* m;
         QPixmap* p;
 	QPixmap* bg;
+        QRgb bgColor;
         mutable QPixmap* pixPart;
 
         ImageSource* imgSource;
@@ -308,12 +291,13 @@ namespace khtml
 
 	int width;
 	int height;
-        bool monochrome;
 
 	// Is set if movie format type ( incremental/animation) was checked
-	bool typeChecked;
-        bool isFullyTransparent;
-        bool errorOccured;
+	bool typeChecked : 1;
+        bool isFullyTransparent : 1;
+        bool errorOccured : 1;
+        bool monochrome : 1;
+        KHTMLSettings::KAnimationAdvice m_showAnimations : 2;
 
         friend class Cache;
     };
@@ -326,37 +310,38 @@ namespace khtml
     class DocLoader
     {
     public:
- 	DocLoader(KHTMLPart*);
+ 	DocLoader(KHTMLPart*, DOM::DocumentImpl*);
  	~DocLoader();
 
-	CachedImage *requestImage( const DOM::DOMString &url, const DOM::DOMString &baseUrl);
-	CachedCSSStyleSheet *requestStyleSheet( const DOM::DOMString &url, const DOM::DOMString &baseUrl, const QString& charset);
-        CachedScript *requestScript( const DOM::DOMString &url, const DOM::DOMString &baseUrl, const QString& charset);
+	CachedImage *requestImage( const DOM::DOMString &url);
+	CachedCSSStyleSheet *requestStyleSheet( const DOM::DOMString &url, const QString& charset);
+        CachedScript *requestScript( const DOM::DOMString &url, const QString& charset);
 
 	bool autoloadImages() const { return m_bautoloadImages; }
         bool reloading() const { return m_reloading; }
+        KHTMLSettings::KAnimationAdvice showAnimations() const { return m_showAnimations; }
         int expireDate() const { return m_expireDate; }
+        KHTMLPart* part() const { return m_part; }
+        DOM::DocumentImpl* doc() const { return m_doc; }
 
         void setExpireDate( int );
         void setAutoloadImages( bool );
         void setReloading( bool );
-        void setShowAnimations( bool );
+        void setShowAnimations( KHTMLSettings::KAnimationAdvice );
         void removeCachedObject( CachedObject*) const;
-#ifdef APPLE_CHANGES
-        const KHTMLPart *part() { return m_part; }
-#endif /* APPLE_CHANGES */
 
     private:
         friend class Cache;
         friend class DOM::DocumentImpl;
-        
+
         QStringList m_reloadedURLs;
-        mutable QList<CachedObject> m_docObjects;
+        mutable QPtrList<CachedObject> m_docObjects;
 	int m_expireDate;
-	bool m_reloading;
-        bool m_bautoloadImages;
-        bool m_showAnimations;
+	bool m_reloading : 1;
+        bool m_bautoloadImages : 1;
+        KHTMLSettings::KAnimationAdvice m_showAnimations : 2;
         KHTMLPart* m_part;
+        DOM::DocumentImpl* m_doc;
     };
 
     /**
@@ -365,15 +350,12 @@ namespace khtml
     class Request
     {
     public:
-	Request(CachedObject *_object, const DOM::DOMString &baseURL, bool _incremental);
+	Request(DocLoader* dl, CachedObject *_object, bool _incremental);
 	~Request();
 	bool incremental;
 	QBuffer m_buffer;
 	CachedObject *object;
-	DOM::DOMString m_baseURL;
-#ifdef APPLE_CHANGES
-    void *client;
-#endif /* APPLE_CHANGES */
+        DocLoader* m_docLoader;
     };
 
     /**
@@ -382,50 +364,36 @@ namespace khtml
     class Loader : public QObject
     {
 	Q_OBJECT
-            
-    public:     
+
+    public:
 	Loader();
 	~Loader();
-        
-	void load(CachedObject *object, const DOM::DOMString &baseURL, bool incremental = true);
 
-        int numRequests( const DOM::DOMString &baseURL ) const;
-        int numRequests( const DOM::DOMString &baseURL, CachedObject::Type type ) const;
+	void load(DocLoader* dl, CachedObject *object, bool incremental = true);
 
-        void cancelRequests( const DOM::DOMString &baseURL );
+        int numRequests( DocLoader* dl ) const;
+        void cancelRequests( DocLoader* dl );
 
         // may return 0L
         KIO::Job *jobForRequest( const DOM::DOMString &url ) const;
 
     signals:
-	void requestDone( const DOM::DOMString &baseURL, khtml::CachedObject *obj );
-	void requestFailed( const DOM::DOMString &baseURL, khtml::CachedObject *obj );
+        void requestStarted( khtml::DocLoader* dl, khtml::CachedObject* obj );
+	void requestDone( khtml::DocLoader* dl, khtml::CachedObject *obj );
+	void requestFailed( khtml::DocLoader* dl, khtml::CachedObject *obj );
 
-#ifdef APPLE_CHANGES
-    public:
-	void slotFinished( KIO::Job * );
-	void slotData( KIO::Job *, const char *data, int size );
-#else /* APPLE_CHANGES not defined */
     protected slots:
 	void slotFinished( KIO::Job * );
 	void slotData( KIO::Job *, const QByteArray & );
-#endif /* APPLE_CHANGES not defined */
 
     private:
 	void servePendingRequests();
 
-	QList<Request> m_requestsPending;
+	QPtrList<Request> m_requestsPending;
 	QPtrDict<Request> m_requestsLoading;
 #ifdef HAVE_LIBJPEG
         KJPEGFormatType m_jpegloader;
 #endif
-#ifdef APPLE_CHANGES
-#if (defined(__APPLE__) && defined(__OBJC__) && defined(__cplusplus))
-    LoaderPrivate *d;
-#else /* __APPLE__, __OBJC__, __cplusplus not defined */
-    void *d;    
-#endif /* __APPLE__, __OBJC__, __cplusplus not defined */
-#endif /* APPLE_CHANGES */
     };
 
         /**
@@ -447,20 +415,32 @@ namespace khtml
 	/**
 	 * Ask the cache for some url. Will return a cachedObject, and
 	 * load the requested data in case it's not cahced
+         * if the DocLoader is zero, the url must be full-qualified.
+         * Otherwise, it is automatically base-url expanded
 	 */
-	static CachedImage *requestImage( const DocLoader* l, const DOM::DOMString &url, const DOM::DOMString &baseUrl, bool reload=false, int _expireDate=0);
+	static CachedImage *requestImage( DocLoader* l, const DOM::DOMString &url, bool reload=false, int _expireDate=0);
+
+	/**
+	 * Ask the cache for some url. Will return a cachedObject, and
+	 * load the requested data in case it's not cached
+	 */
+	static CachedCSSStyleSheet *requestStyleSheet( DocLoader* l, const DOM::DOMString &url, bool reload=false, int _expireDate=0, const QString& charset = QString::null);
+
+        /**
+         * Pre-loads a stylesheet into the cache.
+         */
+        static void preloadStyleSheet(const QString &url, const QString &stylesheet_data);
 
 	/**
 	 * Ask the cache for some url. Will return a cachedObject, and
 	 * load the requested data in case it's not cahced
 	 */
-	static CachedCSSStyleSheet *requestStyleSheet( const DocLoader* l, const DOM::DOMString &url, const DOM::DOMString &baseUrl, bool reload=false, int _expireDate=0, const QString& charset = QString::null);
+	static CachedScript *requestScript( DocLoader* l, const DOM::DOMString &url, bool reload=false, int _expireDate=0, const QString& charset=QString::null);
 
-	/**
-	 * Ask the cache for some url. Will return a cachedObject, and
-	 * load the requested data in case it's not cahced
-	 */
-	static CachedScript *requestScript( const DocLoader* l, const DOM::DOMString &url, const DOM::DOMString &baseUrl, bool reload=false, int _expireDate=0, const QString& charset=QString::null);
+        /**
+         * Pre-loads a script into the cache.
+         */
+        static void preloadScript(const QString &url, const QString &script_data);
 
 	/**
 	 * sets the size of the cache. This will only hod approximately, since the size some
@@ -485,10 +465,9 @@ namespace khtml
 
 	static Loader *loader() { return m_loader; }
 
-	static KURL completeURL(const DOM::DOMString &url, const DOM::DOMString &baseUrl);
-
     	static QPixmap *nullPixmap;
         static QPixmap *brokenPixmap;
+        static int cacheSize;
 
         static void removeCacheEntry( CachedObject *object );
 
@@ -506,14 +485,14 @@ namespace khtml
 	    void touch( const QString &url )
 	    {
 		remove( url );
-		append( url );
+		prepend( url );
 	    }
 	};
 
 
 	static QDict<CachedObject> *cache;
 	static LRUList *lru;
-        static QList<DocLoader>* docloader;
+        static QPtrList<DocLoader>* docloader;
 
 	static int maxSize;
 	static int flushCount;

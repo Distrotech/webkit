@@ -1,51 +1,48 @@
-NULL=
+#    This file is part of the KDE libraries
+#    Copyright (C) 1997 Martin Jones (mjones@kde.org)
+#              (C) 1997 Torben Weis (weis@kde.org)
 
-noinst_LIBRARIES = libkhtmlxml.o
-LDFLAGS = -Wl,-r -nostdlib
-libkhtmlxml_o_AR = $(OBJCXXLD) $(AM_OBJCXXFLAGS) $(OBJCXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Library General Public
+#    License as published by the Free Software Foundation; either
+#    version 2 of the License, or (at your option) any later version.
 
-libkhtmlxml_o_SOURCES = \
-        dom2_eventsimpl.cpp \
-        dom2_eventsimpl.h \
-        dom2_rangeimpl.cpp \
-        dom2_rangeimpl.h \
-        dom2_traversalimpl.cpp \
-        dom2_traversalimpl.h \
-        dom2_viewsimpl.cpp \
-        dom2_viewsimpl.h \
-        dom_docimpl.cpp \
-        dom_docimpl.h \
-        dom_elementimpl.cpp \
-        dom_elementimpl.h \
-        dom_nodeimpl.cpp \
-        dom_nodeimpl.h \
-        dom_stringimpl.cpp \
-        dom_stringimpl.h \
-        dom_textimpl.cpp \
-        dom_textimpl.h \
-        dom_xmlimpl.cpp \
-        dom_xmlimpl.h \
-        xml_tokenizer.cpp \
-        xml_tokenizer.h \
-	$(NULL)
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Library General Public License for more details.
 
+#    You should have received a copy of the GNU Library General Public License
+#    along with this library; see the file COPYING.LIB.  If not, write to
+#    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+#    Boston, MA 02111-1307, USA.
 
-# FIXME: Need a hack here to give the xml tokenizer text stream
-# defines from Qt. The NEED_BOGUS_TEXTSTREAMS symbol
-# can be removed when we have Qt text streams implemented
+KDE_CXXFLAGS = $(WOVERLOADED_VIRTUAL)
 
-INCLUDES = \
-    -DNEED_BOGUS_TEXTSTREAMS \
-    $(KWQ_INCLUDES) \
-    $(KDELIBS_INCLUDES) \
-    $(NULL)
+noinst_LTLIBRARIES = libkhtmlxml.la
+libkhtmlxml_la_SOURCES = \
+	dom_docimpl.cpp      dom_nodeimpl.cpp     dom_textimpl.cpp \
+	dom_elementimpl.cpp  dom_stringimpl.cpp   dom2_rangeimpl.cpp \
+	dom2_traversalimpl.cpp xml_tokenizer.cpp  dom_xmlimpl.cpp \
+	dom2_eventsimpl.cpp  dom2_viewsimpl.cpp
 
-dom_docimpl.moc:
-	touch $@
+#libkhtmlxml_la_LDFLAGS = -no-undefined 
+libkhtmlxml_la_METASOURCES = AUTO
 
-xml_tokenizer.moc:
-	touch $@
+noinst_HEADERS = \
+	dom_docimpl.h      dom_nodeimpl.h     dom_textimpl.h \
+	dom_elementimpl.h  dom_stringimpl.h   dom2_rangeimpl.h \
+	dom2_traversalimpl.h xml_tokenizer.h  dom_xmlimpl.h \
+	dom2_eventsimpl.h  dom2_viewsimpl.h
 
-BUILT_SOURCES = dom_docimpl.moc xml_tokenizer.moc
+INCLUDES = -I$(top_srcdir)/kimgio -I$(top_srcdir)/kio -I$(top_srcdir)/dcop \
+ -I$(top_srcdir)/khtml -I$(top_srcdir) $(all_includes)
 
-CLEANFILES = $(BUILT_SOURCES)
+SRCDOC_DEST=$(kde_htmldir)/en/kdelibs/khtml
+
+## generate lib documentation
+srcdoc:
+	$(mkinstalldirs) $(SRCDOC_DEST)
+	kdoc -H -d $(SRCDOC_DEST) kdecore \
+	         $(include_HEADERS) -lqt
+
