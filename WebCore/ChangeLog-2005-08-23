@@ -1,3 +1,9 @@
+2002-04-15  Richard Williamson  <rjw@apple.com>
+
+        Updated to reflect changes in KDE.
+        
+	* src/kdelibs/khtml/rendering/render_text.cpp: (TextSlave::printDecoration):
+
 2002-04-15  Darin Adler  <darin@apple.com>
 
 	* src/kdelibs/khtml/css/css_valueimpl.cpp:

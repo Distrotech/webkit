@@ -66,24 +66,18 @@ void TextSlave::printDecoration( QPainter *pt, RenderText* p, int _tx, int _ty, 
     if ( end )
         width -= p->paddingRight() + p->borderRight();
 
-#if APPLE_CHANGES && DRAW_UNDERLINE_FIXED
-    //int underlineOffset = pt->fontMetrics().baselineOffset() + 2;
-#else /* APPLE_CHANGES not defined */
-    int underlineOffset = ( pt->fontMetrics().height() + m_baseline ) / 2;
-    if(underlineOffset <= m_baseline) underlineOffset = m_baseline+1;
-#endif /* APPLE_CHANGES not defined */
-
+#if APPLE_CHANGES
     if(deco & UNDERLINE)
-#if APPLE_CHANGES && DRAW_UNDERLINE_FIXED
     {
-        //fprintf (stderr, "UNDERLINE (%d, %d) to (%d, %d)\n", _tx, _ty + underlineOffset, _tx + width, _ty + underlineOffset );
-        QConstString s(m_text, m_len);
+        QConstString s(p->str->s + m_start, m_len);
         pt->drawUnderlineForText(_tx, _ty + m_baseline, s.string());
-        //pt->drawLine(_tx, _ty, _tx + width, _ty );
-        //pt->drawLine(_tx, _ty + pt->fontMetrics().height(), _tx + width, _ty + pt->fontMetrics().height() );
     }
 #else /* APPLE_CHANGES not defined */
+    if(deco & UNDERLINE){
+        int underlineOffset = ( pt->fontMetrics().height() + m_baseline ) / 2;
+        if(underlineOffset <= m_baseline) underlineOffset = m_baseline+1;
         pt->drawLine(_tx, _ty + underlineOffset, _tx + width, _ty + underlineOffset );
+    }
 #endif /* APPLE_CHANGES not defined */
     if(deco & OVERLINE)
         pt->drawLine(_tx, _ty, _tx + width, _ty );
