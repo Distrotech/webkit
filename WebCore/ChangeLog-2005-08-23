@@ -2,6 +2,13 @@
 
         Reviewed by me
 
+        * khtml/html/htmlediting.cpp: Added.
+        * khtml/html/htmlediting.h: Added.
+
+2003-12-04  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
 	A large set of change to get a blinking caret 
 	and a little bit of text input limping along.
 
