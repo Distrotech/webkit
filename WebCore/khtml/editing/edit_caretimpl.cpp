@@ -25,7 +25,7 @@
 
 #include <edit_caretimpl.h>
 
-#include <dom_doc.h>
+#include <dom_docimpl.h>
 #include <dom_nodeimpl.h>
 #include <dom2_traversalimpl.h>
 
@@ -33,7 +33,7 @@
 #include <KWQAssertions.h>
 #endif
 
-using DOM::Document;
+using DOM::DocumentImpl;
 using DOM::EditNodeFilter;
 using DOM::Node;
 using DOM::NodeImpl;
@@ -97,15 +97,11 @@ void CaretImpl::adjustForEditing()
     if (!needsAdjustmentForEditing())
         return;
 
-#if 0        
     EditNodeFilter filter;
     NodeFilter nodeFilter = NodeFilter::createCustom(&filter);
-    Document document = node().ownerDocument();
-    if (!document.handle())
-        return;
-    TreeWalker tree = document.createTreeWalker(document, NodeFilter::SHOW_ALL, nodeFilter, true);
+    DocumentImpl *document = node()->getDocument();
+    TreeWalker tree = document->createTreeWalker(document, NodeFilter::SHOW_ALL, nodeFilter, true);
     tree.handle()->setCurrentNode(node());
-#endif
 }
 
 short EditNodeFilter::acceptNode(const DOM::Node &n)
