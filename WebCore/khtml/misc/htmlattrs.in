@@ -58,6 +58,7 @@ html
 http-equiv
 id
 ismap
+keytype
 label
 lang
 language
@@ -69,6 +70,7 @@ loop
 marginheight
 marginwidth
 maxlength
+mayscript
 media
 method
 multiple

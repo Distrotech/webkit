@@ -60,7 +60,7 @@ namespace KJS {
     virtual bool toBoolean(ExecState *) const { return true; }
     virtual const ClassInfo* classInfo() const { return &info; }
     static const ClassInfo info;
-    enum { Onreadystatechange, ReadyState, ResponseText, ResponseXML, Status, StatusText, Abort, GetAllResponseHeaders, GetResponseHeader, Open, Send, SetRequestHeader };
+    enum { Onload, Onreadystatechange, ReadyState, ResponseText, ResponseXML, Status, StatusText, Abort, GetAllResponseHeaders, GetResponseHeader, Open, Send, SetRequestHeader };
 
   private:
     friend class XMLHttpRequestProtoFunc;
@@ -79,6 +79,10 @@ namespace KJS {
 #endif
     void slotFinished( KIO::Job* );
     void slotRedirection( KIO::Job*, const KURL& );
+
+#if APPLE_CHANGES
+    void processSyncLoadResults(const QByteArray &data, const KURL &finalURL, const QString &headers);
+#endif
 
     void open(const QString& _method, const KURL& _url, bool _async);
     void send(const QString& _body);
@@ -100,12 +104,18 @@ namespace KJS {
 
     XMLHttpRequestState state;
     JSEventListener *onReadyStateChangeListener;
+    JSEventListener *onLoadListener;
 
     khtml::Decoder *decoder;
     QString encoding;
-    QString response;
-
     QString responseHeaders;
+
+    QString response;
+    mutable bool createdDocument;
+    mutable bool typeIsXML;
+    mutable DOM::Document responseXML;
+
+    bool aborted;
   };
 
 
