@@ -382,7 +382,6 @@ void RenderFlow::paintLines(PaintInfo& i, int _tx, int _ty)
                 if (_ty + curr->root()->bottomOverflow() > c->printRect().y() + c->printRect().height()) {
                     if (_ty + curr->root()->topOverflow() < c->truncatedAt())
                         c->setBestTruncatedAt(_ty + curr->root()->topOverflow(), this);
-                    // Let's stop here.
                     break;
                 }
             }
