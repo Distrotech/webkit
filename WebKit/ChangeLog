@@ -1,3 +1,11 @@
+2003-07-18  Darin Adler  <darin@apple.com>
+
+        - attempt to fix compiler error
+
+        * WebView.subproj/WebHTMLViewPrivate.m:
+        (-[WebNSTextView drawInsertionPointInRect:color:turnedOn:]):
+        Did the type casting another way.
+
 === WebKit-85.6 ===
 
 2003-07-17  Darin Adler  <darin@apple.com>

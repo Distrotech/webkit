@@ -668,9 +668,9 @@ static BOOL inNSTextViewDrawRect;
         // we will reenter the caret blinking code and end up with a nasty crash
         // (see Radar 3250608).
         SEL selector = @selector(setNeedsDisplayInRect:);
+        IMP implementation = [NSView instanceMethodForSelector:selector];
         typedef void (*IMPWithNSRect)(id, SEL, NSRect);
-        IMPWithNSRect implementation = (IMPWithNSRect)[NSView instanceMethodForSelector:selector];
-        implementation(self, selector, rect);
+        ((IMPWithNSRect)implementation)(self, selector, rect);
     }
 }
 
