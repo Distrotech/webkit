@@ -95,26 +95,6 @@ void HTMLDivElementImpl::parseAttribute(AttributeImpl *attr)
     }
 }
 
-void HTMLDivElementImpl::defaultEventHandler(EventImpl *evt)
-{
-    if (evt->id()==EventImpl::KEYPRESS_EVENT)
-    {
-        KeyboardEventImpl *k = static_cast<KeyboardEventImpl *>(evt);
-        DocumentImpl *doc = getDocument();
-        EditCommand *cmd;
-        QString text(k->qKeyEvent()->text());
-        if (text.length() == 1 && text[0] == QChar(0x7f)) {
-            cmd = new DeleteTextCommand(doc->view()->part()->selection());
-        }
-        else {
-            cmd = new InputTextCommand(doc->view()->part()->selection(), text);
-        }
-        if (doc->applyEditing(cmd))
-            evt->setDefaultHandled();
-    }
-    HTMLElementImpl::defaultEventHandler(evt);
-}
-
 // -------------------------------------------------------------------------
 
 HTMLHRElementImpl::HTMLHRElementImpl(DocumentPtr *doc)
