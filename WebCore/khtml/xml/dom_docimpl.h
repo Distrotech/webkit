@@ -48,6 +48,7 @@
 class QPaintDevice;
 class QPaintDeviceMetrics;
 class KHTMLView;
+class KHTMLPart;
 class Tokenizer;
 class RenderArena;
 
@@ -150,7 +151,7 @@ public:
 
     DOMImplementationImpl *implementation() const;
     ElementImpl *documentElement() const;
-    virtual ElementImpl *createElement ( const DOMString &tagName );
+    virtual ElementImpl *createElement ( const DOMString &tagName, int &exceptioncode );
     DocumentFragmentImpl *createDocumentFragment ();
     TextImpl *createTextNode ( const DOMString &data );
     CommentImpl *createComment ( const DOMString &data );
@@ -159,7 +160,7 @@ public:
     Attr createAttribute(NodeImpl::Id id);
     EntityReferenceImpl *createEntityReference ( const DOMString &name );
     NodeImpl *importNode( NodeImpl *importedNode, bool deep, int &exceptioncode );
-    virtual ElementImpl *createElementNS ( const DOMString &_namespaceURI, const DOMString &_qualifiedName );
+    virtual ElementImpl *createElementNS ( const DOMString &_namespaceURI, const DOMString &_qualifiedName, int &exceptioncode );
     ElementImpl *getElementById ( const DOMString &elementId ) const;
 
     // Actually part of HTMLDocument, but used for giving XML documents a window title as well
@@ -175,7 +176,7 @@ public:
     virtual bool isDocumentNode() const { return true; }
     virtual bool isHTMLDocument() const { return false; }
 
-    virtual ElementImpl *createHTMLElement ( const DOMString &tagName );
+    virtual ElementImpl *createHTMLElement ( const DOMString &tagName, int &exceptioncode );
 
     khtml::CSSStyleSelector *styleSelector() { return m_styleSelector; }
 
@@ -226,6 +227,7 @@ public:
     QStringList &restoreState( ) { return m_state; }
 
     KHTMLView *view() const { return m_view; }
+    KHTMLPart *part() const;
 
     RangeImpl *createRange();
 
