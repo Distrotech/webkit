@@ -1,3 +1,18 @@
+2004-09-28  Richard Williamson   <rjw@apple.com>
+
+	Fix for follow on problem to fix for 3791526, in particular:
+
+	<rdar://problem/3803113> WebFrame object leaked
+
+	We should always call end to guarantee that terminal load delegate
+	callbacks get sent to WebKit clients.  In this case the a cancel message
+	wasn't sent and Safari's activity monitor was holding onto a reference.
+
+        Reviewed by Maciej.
+
+        * WebView.subproj/WebDataSource.m:
+        (-[WebDataSource _finishedLoading]):
+
 === WebKit-125.5.2 ===
 
 2004-09-15  Maciej Stachowiak  <mjs@apple.com> (Maciej committing as Adele)
