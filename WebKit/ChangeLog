@@ -1,5 +1,18 @@
 2004-07-09  Vicki Murley  <vicki@apple.com>
 
+	- merge this fix from HEAD so that the fix for the July Security Update will compile on Jaguar
+
+    2004-07-09  Chris Blumenberg  <cblu@apple.com>
+        
+        Allowed my change for 3715785 to compile on Jaguar.
+
+        Reviewed by kocienda.
+
+        * WebCoreSupport.subproj/WebBridge.m:
+        (-[WebBridge canTargetLoadInFrame:]): don't use the DOM API since it doesn't exist on Jaguar, instead call the new domain method on the bridge
+
+2004-07-09  Vicki Murley  <vicki@apple.com>
+
 	- merge this fix from HEAD for July Security Update, 3717262
 
     2004-07-06  Chris Blumenberg  <cblu@apple.com>
