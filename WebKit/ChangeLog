@@ -1,3 +1,16 @@
+2004-09-07  Vicki Murley <vicki@apple.com>
+
+	- merge this fix from HEAD for SUPanNavy, <rdar://problem/3791327>
+
+    2004-07-08  Chris Blumenberg  <cblu@apple.com>
+
+        Fixed: <rdar://problem/3706296> VIP: ifilm.com crashing reproducibly with Safari
+
+        Reviewed by kocienda.
+
+        * Plugins.subproj/WebNetscapePluginPackage.m:
+        (-[WebNetscapePluginPackage launchRealPlayer]): don't release a NULL appURL
+
 === WebKit-125.4.2 ===
 
 2004-07-26  Darin Adler  <darin@apple.com>
