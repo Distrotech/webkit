@@ -39,6 +39,12 @@
 #include "kjs_dom.lut.h"
 #include "khtmlpart_p.h"
 
+#include "html_objectimpl.h"
+
+#if APPLE_CHANGES
+#include <JavaScriptCore/runtime_object.h>
+#endif
+
 using namespace KJS;
 
 using DOM::DOMException;
@@ -749,9 +755,9 @@ Value DOMDocument::getValueProperty(ExecState *exec, int token) const
   case ReadyState:
     {
     DOM::DocumentImpl* docimpl = node.handle()->getDocument();
-    if ( docimpl && docimpl->view() )
+    if ( docimpl )
     {
-      KHTMLPart* part = docimpl->view()->part();
+      KHTMLPart* part = docimpl->part();
       if ( part ) {
         if (part->d->m_bComplete) return String("complete");
         if (docimpl->parsing()) return String("loading");
@@ -1311,8 +1317,8 @@ bool KJS::checkNodeSecurity(ExecState *exec, const DOM::Node& n)
     return false;
 
   // Check to see if the currently executing interpreter is allowed to access the specified node
-  KHTMLView *view = n.handle()->getDocument()->view();
-  Window* win = view && view->part() ? Window::retrieveWindow(view->part()) : 0L;
+  KHTMLPart *part = n.handle()->getDocument()->part();
+  Window* win = part ? Window::retrieveWindow(part) : 0L;
   if ( !win || !win->isSafeScript(exec) )
     return false;
   return true;
@@ -1380,6 +1386,19 @@ Value KJS::getDOMNode(ExecState *exec, const DOM::Node &n)
 Value KJS::getDOMNamedNodeMap(ExecState *exec, const DOM::NamedNodeMap &m)
 {
   return Value(cacheDOMObject<DOM::NamedNodeMap, KJS::DOMNamedNodeMap>(exec, m));
+}
+
+Value KJS::getRuntimeObject(ExecState *exec, const DOM::Node &node)
+{
+    DOM::HTMLElement element = static_cast<DOM::HTMLElement>(node);
+    DOM::HTMLAppletElementImpl *appletElement = static_cast<DOM::HTMLAppletElementImpl *>(element.handle());
+    
+    if (appletElement->getAppletInstance()) {
+        // The instance is owned by the applet element.
+        RuntimeObjectImp *appletImp = new RuntimeObjectImp(appletElement->getAppletInstance(), false);
+        return Value(appletImp);
+    }
+    return Undefined();
 }
 
 Value KJS::getDOMNodeList(ExecState *exec, const DOM::NodeList &l)
