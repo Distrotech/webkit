@@ -54,6 +54,11 @@ public:
 
     virtual bool canHaveChildren() const;
 
+    virtual long caretMinOffset() const { return 0; }
+    // Returns 1 since a replaced element can have the caret positioned 
+    // at its beginning (0), or at its end (1).
+    virtual long caretMaxOffset() const { return 1; }
+
 private:
     short m_intrinsicWidth;
     short m_intrinsicHeight;
