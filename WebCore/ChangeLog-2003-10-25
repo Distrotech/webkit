@@ -1,3 +1,29 @@
+2003-01-31  Darin Adler  <darin@apple.com>
+
+        Rolled over changes from the main trunk.
+
+    2003-01-31  Darin Adler  <darin@apple.com>
+
+        * Resources/Info.plist: Removed unused file.
+
+    2003-01-31  Darin Adler  <darin@apple.com>
+
+        Reviewed by me, Dave wrote the code.
+
+        - fixed 3162013 -- Safari collapses margins through bottom borders (affects top of zeldman.com)
+
+        * khtml/rendering/render_flow.cpp: (RenderFlow::layoutBlockChildren):
+        Don't collapse if we have any bottom border or padding.
+
+    2003-01-31  Darin Adler  <darin@apple.com>
+
+        Reviewed by Dave.
+
+        - fixed 3160442 -- no top image map at ebay, caused by referrer returning null instead of empty string
+
+        * khtml/ecma/kjs_html.cpp: (KJS::HTMLDocument::tryGet):
+        Return an empty string, not null, when there is no referrer.
+        
 === Safari-55 ===
 
 2003-01-30  Darin Adler  <darin@apple.com>
