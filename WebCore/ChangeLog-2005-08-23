@@ -1,3 +1,20 @@
+2004-07-29  Maciej Stachowiak  <mjs@apple.com>
+
+	Rolled in the change below from HEAD to fix this SU bug:
+
+	<rdar://problem/3745334> *SUPanMoccasin* Seed: WebKit: Table's caption broken
+	
+    2004-07-29  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+
+	<rdar://problem/3745808> Seed: WebKit: Table's caption broken
+	
+        * khtml/html/htmlparser.cpp:
+        (KHTMLParser::insertNode): When a caption appears in an illegal
+	place in a table, pop blocks until we hit a place where it's
+	allowed.
+
 === WebCore-125.8.1 ===
 
 2004-07-23  Vicki Murley  <vicki@apple.com>
