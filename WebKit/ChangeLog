@@ -1,3 +1,8 @@
+2002-03-25  Darin Adler  <darin@apple.com>
+
+	* WebView.subproj/IFPreferences.mm: (+[IFPreferences load]):
+        Add WebKitMediumFontSizePreferenceKey.
+
 2002-03-24  Richard Williamson  <rjw@apple.com>
 
         Removed erroneous comments.
