@@ -23,6 +23,8 @@
         (-[WebBridge canTargetLoadInFrame:]): Don't apply the restrictions to frames
         that are in the same window (Mozilla does this too).
 
+=== WebKit-125.4 ===
+
 2004-07-20  Darin Adler  <darin@apple.com>
 
 	- merge this fix from HEAD for SUPanMoccasin
