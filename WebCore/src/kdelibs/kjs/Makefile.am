@@ -1,81 +1,74 @@
-NULL =
+#    This file is part of the KDE libraries
+#    Copyright (C) 1999 Harri Porten (porten@kde.org)
 
-noinst_LIBRARIES = libkjs.o
-libkjs_o_LDFLAGS = -Wl,-r -nostdlib
-libkjs_o_AR = $(OBJCXXLD) $(AM_OBJCXXFLAGS) $(OBJCXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) $(libkjs_o_LDFLAGS) -o
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Library General Public
+#    License as published by the Free Software Foundation; either
+#    version 2 of the License, or (at your option) any later version.
 
-libkjs_o_SOURCES = \
-	array_object.cpp \
-	array_object.h \
-	bool_object.cpp \
-	bool_object.h \
-	collector.cpp \
-	collector.h \
-	date_object.cpp \
-	date_object.h \
-	debugger.cpp \
-	debugger.h \
-	error_object.cpp \
-	error_object.h \
-	function.cpp \
-	function.h \
-	function_object.cpp \
-	function_object.h \
-	global_object.cpp \
-	grammar.cpp \
-	grammar.h \
-	internal.cpp \
-	internal.h \
-	kjs.cpp \
-	kjs.h \
-	lexer.cpp \
-	lexer.h \
-	lexer.lut.h \
-	lookup.cpp \
-	lookup.h \
-	math_object.cpp \
-	math_object.h \
-	math_object.lut.h \
-	nodes.cpp \
-	nodes.h \
-	number_object.cpp \
-	number_object.h \
-	object.cpp \
-	object.h \
-	object_object.cpp \
-	object_object.h \
-	operations.cpp \
-	operations.h \
-	regexp.cpp \
-	regexp.h \
-	regexp_object.cpp \
-	regexp_object.h \
-	string_object.cpp \
-	string_object.h \
-	types.cpp \
-	types.h \
-	ustring.cpp \
-	ustring.h \
-	$(NULL)
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Library General Public License for more details.
 
-noinst_PROGRAMS = testkjs
+#    You should have received a copy of the GNU Library General Public License
+#    along with this library; see the file COPYING.LIB.  If not, write to
+#    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+#    Boston, MA 02111-1307, USA.
 
+YACC = bison
+INCLUDES = $(PCRECFLAGS) $(all_includes)
+
+lib_LTLIBRARIES = libkjs.la
+
+libkjs_la_SOURCES =  ustring.cpp internal.cpp collector.cpp nodes.cpp \
+		     grammar.cpp lexer.cpp lookup.cpp operations.cpp \
+		     regexp.cpp function_object.cpp string_object.cpp \
+		     bool_object.cpp number_object.cpp date_object.cpp \
+		     array_object.cpp math_object.cpp object_object.cpp \
+		     regexp_object.cpp error_object.cpp function.cpp \
+		     debugger.cpp value.cpp types.cpp object.cpp \
+		     interpreter.cpp property_map.cpp
+
+kjsincludedir = $(includedir)/kjs
+kjsinclude_HEADERS = value.h types.h object.h interpreter.h operations.h \
+		     ustring.h
+
+noinst_HEADERS = internal.h collector.h nodes.h lexer.h lexer.lut.h lookup.h \
+		 grammar.h regexp.cpp function_object.h string_object.h \
+		 bool_object.h number_object.h date_object.h array_object.h \
+		 math_object.h object_object.h regexp_object.h error_object.h \
+		 function.h debugger.h property_map.h
+
+libkjs_la_LDFLAGS = -version-info 1:0 -no-undefined $(USER_LDFLAGS) $(all_libraries)
+libkjs_la_LIBADD = -lm $(LIBPCRE)
+
+parser: $(srcdir)/grammar.y
+	cd $(srcdir); \
+	$(YACC) -d -p kjsyy grammar.y && mv grammar.tab.c grammar.cpp; \
+	if test -f grammar.tab.h; then \
+	if cmp -s grammar.tab.h grammar.h; then rm -f grammar.tab.h; \
+	else mv grammar.tab.h grammar.h; fi \
+	else :; fi
+
+hashtables:
+	cd $(srcdir); \
+	./create_hash_table keywords.table -i > lexer.lut.h; \
+	./create_hash_table array_object.cpp -i > array_object.lut.h; \
+	./create_hash_table math_object.cpp -i > math_object.lut.h; \
+	./create_hash_table date_object.cpp -i > date_object.lut.h; \
+	./create_hash_table number_object.cpp -i > number_object.lut.h; \
+	./create_hash_table string_object.cpp -i > string_object.lut.h
+
+## test program (in one program for easier profiling/memory debugging)
+EXTRA_PROGRAMS = testkjs_static testavl
+testkjs_static_SOURCES = testkjs.cpp  $(libkjs_la_SOURCES)
+testkjs_static_LDADD = $(LIBPCRE)
+testavl_SOURCES = testavl.cpp  $(libkjs_la_SOURCES)
+testavl_LDADD = $(LIBPCRE)
+
+## test program (linked to libkjs)
+check_PROGRAMS = testkjs
 testkjs_SOURCES = testkjs.cpp
-
-testkjs_LDADD = $(srcdir)/libkjs.o
-
-YACCFLAGS = -d --output-file=grammar.cpp --file-prefix=grammar --name-prefix=kjsyy
-
-GRAMMAR_FILES = grammar.h grammar.cpp.h grammar.cpp
-
-$(GRAMMAR_FILES): grammar-stamp
-
-grammar-stamp: grammar.y
-	$(YACC) $(YACCFLAGS) $<
-	ln -sf grammar.cpp.h grammar.h
-	touch ./grammar-stamp
-
-BUILT_SOURCES = $(GRAMMAR_FILES) grammar-stamp
-
-CLEANFILES = $(BUILT_SOURCES)
+testkjs_LDADD = libkjs.la
 
