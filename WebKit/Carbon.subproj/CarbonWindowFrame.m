@@ -41,6 +41,27 @@ The class of objects that are meant to be used as _borderViews of NSCarbonWindow
 @implementation CarbonWindowFrame
 
 
+- (NSRect)titlebarRect
+{
+    NSRect	titlebarRect;
+    NSRect	boundsRect;
+
+    boundsRect = [self bounds];
+
+    CarbonWindowAdapter *carbonWindow;
+    carbonWindow = (CarbonWindowAdapter *)[self window];
+    WindowRef windowRef = [carbonWindow windowRef];
+    Rect globalBounds;
+    GetWindowBounds (windowRef, kWindowTitleBarRgn, &globalBounds);
+    
+    titlebarRect.origin.x    = boundsRect.origin.x;
+    titlebarRect.size.width  = boundsRect.size.width;
+    titlebarRect.size.height = globalBounds.bottom - globalBounds.top;
+    titlebarRect.origin.y    = NSMaxY(boundsRect) - titlebarRect.size.height;
+
+    return titlebarRect;
+}
+
 // Given a content rectangle and style mask, return a corresponding frame rectangle.
 + (NSRect)frameRectForContentRect:(NSRect)contentRect styleMask:(unsigned int)style {
 

@@ -35,6 +35,8 @@
     BOOL laidOutAtLeastOnce;
     
     WebPluginController *pluginController;
+
+    NSArray* pageRects;
 }
 @end
 

@@ -1,3 +1,79 @@
+2004-07-22  Richard Williamson   <rjw@apple.com>
+
+	Fixes for:
+
+	<rdar://problem/3668209>: after typing double-byte text, delete return and arrow keys don't work in form field (Jaguar only)
+	<rdar://problem/3668252>: can't type using Roman alphabet within Japanese input method in form fields on Jaguar
+	<rdar://problem/3668300>: Jaguar: Contribute hangs when you print from Safari
+	<rdar://problem/3706572>: Jag: Context menu in Contrib. not appearing according to where mouse is clicked
+	<rdar://problem/3730044>: Contribute: Setting focus to browser view has problems (clone for Safari 1.0.3)
+	<rdar://problem/3730127>: Macromedia Flash 6 cannot take Asian text entry in Safari (clone for Safari 1.0.3)
+
+	This patch back ports several fixes from Panther to Jaguar, specifically to address the needs
+	Macromedia's Contribute application.
+        
+	Reviewed by Darin.
+
+        * Carbon.subproj/CarbonUtils.m:
+        (getNumPools):
+        (WebInitForCarbon):
+        (PoolCleaner):
+        * Carbon.subproj/CarbonWindowAdapter.m:
+        (-[CarbonWindowAdapter initWithCarbonWindowRef:takingOwnership:disableOrdering:carbon:]):
+        (-[CarbonWindowAdapter sendSuperEvent:]):
+        (-[CarbonWindowAdapter makeKeyWindow]):
+        (-[CarbonWindowAdapter _growBoxRect]):
+        * Carbon.subproj/CarbonWindowFrame.m:
+        (-[CarbonWindowFrame titlebarRect]):
+        * Carbon.subproj/HIWebView.m:
+        (MouseMoved):
+        (MouseDragged):
+        (ContextMenuClick):
+        (OwningWindowChanged):
+        (WindowHandler):
+        (HIWebViewEventHandler):
+        * Misc.subproj/WebNSPrintOperationExtras.h: Added.
+        * Misc.subproj/WebNSPrintOperationExtras.m: Added.
+        (-[NSPrintOperation _web_pageSetupScaleFactor]):
+        * Plugins.subproj/WebBaseNetscapePluginView.h:
+        * Plugins.subproj/WebBaseNetscapePluginView.m:
+        (-[WebBaseNetscapePluginView sendEvent:]):
+        (-[WebBaseNetscapePluginView restartNullEvents]):
+        (-[WebBaseNetscapePluginView installKeyEventHandler]):
+        (-[WebBaseNetscapePluginView removeKeyEventHandler]):
+        (-[WebBaseNetscapePluginView becomeFirstResponder]):
+        (-[WebBaseNetscapePluginView resignFirstResponder]):
+        (-[WebBaseNetscapePluginView keyMessageForEvent:]):
+        (-[WebBaseNetscapePluginView keyUp:]):
+        (-[WebBaseNetscapePluginView keyDown:]):
+        (TSMEventHandler):
+        (-[WebBaseNetscapePluginView stop]):
+        (-[WebBaseNetscapePluginView windowBecameKey:]):
+        * WebKit.pbproj/project.pbxproj:
+        * WebView.subproj/WebHTMLView.m:
+        (-[WebHTMLView layoutToMinimumPageWidth:maximumPageWidth:adjustingViewSize:]):
+        (-[WebHTMLView layout]):
+        (-[WebHTMLView _setPrinting:minimumPageWidth:maximumPageWidth:adjustViewSize:]):
+        (-[WebHTMLView adjustPageHeightNew:top:bottom:limit:]):
+        (-[WebHTMLView _availablePaperWidthForPrintOperation:]):
+        (-[WebHTMLView _scaleFactorForPrintOperation:]):
+        (-[WebHTMLView _provideTotalScaleFactorForPrintOperation:]):
+        (-[WebHTMLView setPageWidthForPrinting:]):
+        (-[WebHTMLView knowsPageRange:]):
+        (-[WebHTMLView rectForPage:]):
+        (-[WebHTMLView _calculatePrintHeight]):
+        (-[WebHTMLView drawPageBorderWithSize:]):
+        (-[WebHTMLView endDocument]):
+        * WebView.subproj/WebHTMLViewPrivate.h:
+        * WebView.subproj/WebView.m:
+        (-[WebView _headerHeight]):
+        (-[WebView _footerHeight]):
+        (-[WebView _drawHeaderInRect:]):
+        (-[WebView _drawFooterInRect:]):
+        (-[WebView _adjustPrintingMarginsForHeaderAndFooter]):
+        (-[WebView _drawHeaderAndFooter]):
+        * WebView.subproj/WebViewPrivate.h:
+
 2004-07-22  Darin Adler  <darin@apple.com>
 
         Reviewed by Richard.

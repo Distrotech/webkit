@@ -549,6 +549,14 @@ MouseMoved( HIWebView* inView, EventRef inEvent )
 	
 	GetEventPlatformEventRecord( inEvent, &eventRec );
 	RetainEvent( inEvent );
+
+#define WORK_AROUND_3585644
+#ifdef WORK_AROUND_3585644
+    int windowNumber = [inView->fKitWindow windowNumber];
+    CGSWindowID *winID = (void *)windowNumber;
+    eventRec.window = winID;
+#endif
+    
 	kitEvent = [[NSEvent alloc] _initWithCGSEvent:(CGSEventRecord)eventRec eventRef:(void *)inEvent];
 
 //	targ = [[inView->fKitWindow _borderView] hitTest:[kitEvent locationInWindow]];
@@ -571,7 +579,7 @@ MouseDragged( HIWebView* inView, EventRef inEvent )
 	CGSEventRecord			eventRec;
 	NSEvent*				kitEvent;
 //	NSView*					targ;
-	
+    
 	GetEventPlatformEventRecord( inEvent, &eventRec );
 	RetainEvent( inEvent );
 	kitEvent = [[NSEvent alloc] _initWithCGSEvent:(CGSEventRecord)eventRec eventRef:(void *)inEvent];
@@ -618,8 +626,6 @@ MouseWheelMoved( HIWebView* inView, EventRef inEvent )
 static OSStatus
 ContextMenuClick( HIWebView* inView, EventRef inEvent )
 {
-    OSStatus result = eventNotHandledErr;
-
     NSView *webView = inView->fWebView;
     NSWindow *window = [webView window];
 
@@ -631,8 +637,8 @@ ContextMenuClick( HIWebView* inView, EventRef inEvent )
     // Flip the Y coordinate, since Carbon is flipped relative to the AppKit.
     NSPoint location = NSMakePoint(point.x, [window frame].size.height - point.y);
     
-    // Make up an event with the point.
-    NSEvent *kitEvent = [NSEvent mouseEventWithType:NSRightMouseUp
+    // Make up an event with the point and send it to the window.
+    NSEvent *kitEvent = [NSEvent mouseEventWithType:NSRightMouseDown
                                            location:location
                                       modifierFlags:0
                                           timestamp:GetEventTime(inEvent)
@@ -641,21 +647,8 @@ ContextMenuClick( HIWebView* inView, EventRef inEvent )
                                         eventNumber:0
                                          clickCount:1
                                            pressure:0];
-    
-    // Convert from window coordinates to superview coordinates for hit testing.
-    NSPoint superviewPoint = [[webView superview] convertPoint:location fromView:nil];
-    NSView *target = [webView hitTest:superviewPoint];
-    
-    // Pop up the menu.
-    if ([target _allowsContextMenus]) {
-        NSMenu *contextMenu = [target menuForEvent:kitEvent];
-        if (contextMenu) {
-            [contextMenu _popUpMenuWithEvent:kitEvent forView:target];
-            result = noErr;
-        }
-    }
-    
-    return result;
+    [inView->fKitWindow sendEvent:kitEvent];
+    return noErr;
 }
 
 //----------------------------------------------------------------------------------
@@ -697,34 +690,44 @@ OwningWindowChanged(
 	WindowRef			oldWindow,
 	WindowRef			newWindow )
 {
-	if ( newWindow )
-	{
+    if ( newWindow ){
         WindowAttributes	attrs;
         
-    	OSStatus err = GetWindowProperty(newWindow, NSAppKitPropertyCreator, NSCarbonWindowPropertyTag, sizeof(NSWindow *), NULL, &view->fKitWindow);
-		if ( err != noErr )
-		{
-			const EventTypeSpec kWindowEvents[] = {
-                { kEventClassWindow, kEventWindowClosed },
-                { kEventClassMouse, kEventMouseMoved },
-                { kEventClassMouse, kEventMouseUp },
-                { kEventClassMouse, kEventMouseDragged },
-                { kEventClassMouse, kEventMouseWheelMoved }
+        OSStatus err = GetWindowProperty(newWindow, NSAppKitPropertyCreator, NSCarbonWindowPropertyTag, sizeof(NSWindow *), NULL, &view->fKitWindow);
+        if ( err != noErr )
+        {
+            const EventTypeSpec kWindowEvents[] = {
+            { kEventClassWindow, kEventWindowClosed },
+            { kEventClassMouse, kEventMouseMoved },
+            { kEventClassMouse, kEventMouseUp },
+            { kEventClassMouse, kEventMouseDragged },
+            { kEventClassMouse, kEventMouseWheelMoved },
+            { kEventClassKeyboard, kEventRawKeyDown },
+            { kEventClassKeyboard, kEventRawKeyRepeat },
+            { kEventClassKeyboard, kEventRawKeyUp }
             };
-
-			view->fKitWindow = [[CarbonWindowAdapter alloc] initWithCarbonWindowRef: newWindow takingOwnership: NO disableOrdering:NO carbon:YES];
-    		SetWindowProperty(newWindow, NSAppKitPropertyCreator, NSCarbonWindowPropertyTag, sizeof(NSWindow *), &view->fKitWindow);
-		
-			InstallWindowEventHandler( newWindow, WindowHandler, GetEventTypeCount( kWindowEvents ), kWindowEvents, newWindow, NULL );
-		}
-		
-		[[view->fKitWindow contentView] addSubview:view->fWebView];
-
+            
+            view->fKitWindow = [[CarbonWindowAdapter alloc] initWithCarbonWindowRef: newWindow takingOwnership: NO disableOrdering:NO carbon:YES];
+            SetWindowProperty(newWindow, NSAppKitPropertyCreator, NSCarbonWindowPropertyTag, sizeof(NSWindow *), &view->fKitWindow);
+            
+            InstallWindowEventHandler( newWindow, WindowHandler, GetEventTypeCount( kWindowEvents ), kWindowEvents, newWindow, NULL );
+        }
+        
+        [[view->fKitWindow contentView] addSubview:view->fWebView];
+        
         GetWindowAttributes( newWindow, &attrs );
         view->fIsComposited = ( ( attrs & kWindowCompositingAttribute ) != 0 );
-
-		SyncFrame( view );        
-	}
+        
+        SyncFrame( view );        
+    }
+    else
+    {
+        // Be sure to detach the cocoa view, too.
+        if ( view->fWebView )
+            [view->fWebView removeFromSuperview];
+        
+        view->fKitWindow = NULL; // break the ties that bind
+    }
 }
 
 //-------------------------------------------------------------------------------------
@@ -742,6 +745,38 @@ WindowHandler( EventHandlerCallRef inCallRef, EventRef inEvent, void* inUserData
 
     switch( GetEventClass( inEvent ) )
     {
+    	case kEventClassKeyboard:
+    		{
+                NSWindow*		kitWindow;
+                OSStatus		err;
+    			CGSEventRecord	eventRec;
+   				NSEvent*		kitEvent;
+   				
+   				// if the first responder in the kit window is something other than the
+   				// window, we assume a subview of the webview is focused. we must send
+   				// the event to the window so that it goes through the kit's normal TSM
+   				// logic, and -- more importantly -- allows any delegates associated
+   				// with the first responder to have a chance at the event.
+   				
+				err = GetWindowProperty( window, NSAppKitPropertyCreator, NSCarbonWindowPropertyTag, sizeof(NSWindow *), NULL, &kitWindow);
+				if ( err == noErr )
+				{
+					NSResponder* responder = [kitWindow firstResponder];
+					if ( responder != kitWindow )
+					{
+						GetEventPlatformEventRecord( inEvent, &eventRec );
+						RetainEvent( inEvent );
+						kitEvent = [[NSEvent alloc] _initWithCGSEvent:(CGSEventRecord)eventRec eventRef:(void *)inEvent];
+						
+						[kitWindow sendEvent:kitEvent];
+						[kitEvent release];
+						
+						result = noErr;
+					}
+				}
+    		}
+    		break;
+
         case kEventClassWindow:
             {
                 NSWindow*	kitWindow;
@@ -1278,6 +1313,10 @@ HIWebViewEventHandler(
 	ControlPartCode		part;
 	HIWebView*			view = (HIWebView*)inUserData;
 
+        // [NSApp setWindowsNeedUpdate:YES] must be called before events so that ActivateTSMDocument is called to set an active document. 
+        // Without an active document, TSM will use a default document which uses a bottom-line input window which we don't want.
+        [NSApp setWindowsNeedUpdate:YES];
+        
 	switch ( GetEventClass( inEvent ) )
 	{
 		case kEventClassHIObject:
@@ -1486,15 +1525,15 @@ HIWebViewEventHandler(
 						result = noErr;
 					}
 					break;
-
+                                    
 				case kEventControlClick:
 					result = Click( view, inEvent );
 					break;
-					
+                                    
 				case kEventControlContextualMenuClick:
 					result = ContextMenuClick( view, inEvent );
 					break;
-					
+                                    
 				case kEventControlSetFocusPart:
 					{
 						ControlPartCode		desiredFocus;

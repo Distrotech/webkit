@@ -1,3 +1,35 @@
+2004-07-22  Richard Williamson   <rjw@apple.com>
+
+	Fixes for:
+
+	<rdar://problem/3668209>: after typing double-byte text, delete return and arrow keys don't work in form field (Jaguar only)
+	<rdar://problem/3668252>: can't type using Roman alphabet within Japanese input method in form fields on Jaguar
+	<rdar://problem/3668300>: Jaguar: Contribute hangs when you print from Safari
+	<rdar://problem/3706572>: Jag: Context menu in Contrib. not appearing according to where mouse is clicked
+	<rdar://problem/3730044>: Contribute: Setting focus to browser view has problems (clone for Safari 1.0.3)
+	<rdar://problem/3730127>: Macromedia Flash 6 cannot take Asian text entry in Safari (clone for Safari 1.0.3)
+
+	This patch back ports several fixes from Panther to Jaguar, specifically to address the needs
+	Macromedia's Contribute application.
+        
+	Reviewed by Darin.
+
+        * WebCore.pbproj/project.pbxproj:
+        * khtml/khtmlview.cpp:
+        (KHTMLView::adjustViewSize):
+        * khtml/khtmlview.h:
+        * khtml/rendering/render_text.cpp:
+        (RenderText::paintObject):
+        * kwq/KWQKHTMLPart.h:
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::forceLayoutWithPageWidthRange):
+        * kwq/WebCoreBridge.h:
+        * kwq/WebCoreBridge.mm:
+        (-[WebCoreBridge forceLayoutAdjustingViewSize:]):
+        (-[WebCoreBridge forceLayoutWithMinimumPageWidth:maximumPageWidth:adjustingViewSize:]):
+        (-[WebCoreBridge computePageRectsWithPrintWidthScaleFactor:printHeight:]):
+        (-[WebCoreBridge adjustViewSize]):
+
 === WebCore-85.6.2 ===
 
 2004-07-22  Darin Adler  <darin@apple.com>

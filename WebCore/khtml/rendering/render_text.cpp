@@ -643,29 +643,21 @@ void RenderText::paintObject(QPainter *p, int /*x*/, int y, int /*w*/, int h,
         do {
             s = m_lines[si];
 
-	    if (isPrinting)
-	    {
-                // FIXME: Need to understand what this section is doing.
-                int lh = lineHeight( false ) + paddingBottom() + borderBottom();
-                if (ty+s->m_y < y)
-                {
-                   // This has been printed already we suppose.
-                   continue;
-                }
-
-                if (ty+lh+s->m_y > y+h)
-                {
-                   RenderCanvas* canvasObj = canvas();
-                   if (ty+s->m_y < canvasObj->truncatedAt())
+        if (isPrinting)
+        {
+            if (ty+s->m_y+s->height() > y + h)
+            {
+               RenderCanvas* canvasObj = canvas();
+               if (ty+s->m_y < canvasObj->truncatedAt())
 #if APPLE_CHANGES
-                       canvasObj->setBestTruncatedAt(ty+s->m_y, this);
+                   canvasObj->setBestTruncatedAt(ty+s->m_y, this);
 #else
-                       canvasObj->setTruncatedAt(ty+s->m_y);
+                   canvasObj->setTruncatedAt(ty+s->m_y);
 #endif
-                   // Let's stop here.
-                   break;
-                }
+               // Let's stop here.
+               break;
             }
+        }
 
             RenderStyle* _style = pseudoStyle && s->m_firstLine ? pseudoStyle : style();
 

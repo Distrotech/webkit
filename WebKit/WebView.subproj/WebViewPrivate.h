@@ -229,3 +229,24 @@ Could be worth adding to the API.
 + (id)safeForwarderWithTarget:(id)t defaultTarget:(id)dt templateClass:(Class)aClass;
 @end
 
+@interface WebView (WebViewPrintingPrivate)
+/*!
+    @method _adjustPrintingMarginsForHeaderAndFooter:
+    @abstract Increase the top and bottom margins for the current print operation to
+    account for the header and footer height. 
+    @discussion Called by <WebDocument> implementors once when a print job begins. If the
+    <WebDocument> implementor implements knowsPageRange:, this should be called from there.
+    Otherwise this should be called from beginDocument. The <WebDocument> implementors need
+    to also call _drawHeaderAndFooter.
+*/
+- (void)_adjustPrintingMarginsForHeaderAndFooter;
+
+/*!
+    @method _drawHeaderAndFooter
+    @abstract Gives the WebView's UIDelegate a chance to draw a header and footer on the
+    printed page. 
+    @discussion This should be called by <WebDocument> implementors from an override of
+    drawPageBorderWithSize:.
+*/
+- (void)_drawHeaderAndFooter;
+@end

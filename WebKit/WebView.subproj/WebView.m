@@ -19,6 +19,7 @@
 #import <WebKit/WebKitErrors.h>
 #import <WebKit/WebKitStatisticsPrivate.h>
 #import <WebKit/WebNSPasteboardExtras.h>
+#import <WebKit/WebNSPrintOperationExtras.h>
 #import <WebKit/WebNSViewExtras.h>
 #import <WebKit/WebPluginDatabase.h>
 #import <WebKit/WebPolicyDelegate.h>
@@ -782,4 +783,107 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
 }
 
 
+@end
+
+@implementation WebView (WebViewPrintingPrivate)
+
+- (float)_headerHeight
+{
+#if 0
+    if ([[self UIDelegate] respondsToSelector:@selector(webViewHeaderHeight:)]) {
+        return [[self UIDelegate] webViewHeaderHeight:self];
+    }
+#endif
+    
+#ifdef DEBUG_HEADER_AND_FOOTER
+    return 25;
+#else
+    return 0;
+#endif
+}
+
+- (float)_footerHeight
+{
+#if 0
+    if ([[self UIDelegate] respondsToSelector:@selector(webViewFooterHeight:)]) {
+        return [[self UIDelegate] webViewFooterHeight:self];
+    }
+#endif
+    
+#ifdef DEBUG_HEADER_AND_FOOTER
+    return 50;
+#else
+    return 0;
+#endif
+}
+
+- (void)_drawHeaderInRect:(NSRect)rect
+{
+#ifdef DEBUG_HEADER_AND_FOOTER
+    NSGraphicsContext *currentContext = [NSGraphicsContext currentContext];
+    [currentContext saveGraphicsState];
+    [[NSColor yellowColor] set];
+    NSRectFill(rect);
+    [currentContext restoreGraphicsState];
+#endif
+    
+#if 0
+    if ([[self UIDelegate] respondsToSelector:@selector(webView:drawHeaderInRect:)]) {
+        NSGraphicsContext *currentContext = [NSGraphicsContext currentContext];
+        [currentContext saveGraphicsState];
+        NSRectClip(rect);
+        [[self UIDelegate] webView:self drawHeaderInRect:rect]; 
+        [currentContext restoreGraphicsState];
+    }
+#endif
+}
+
+- (void)_drawFooterInRect:(NSRect)rect
+{
+#ifdef DEBUG_HEADER_AND_FOOTER
+    NSGraphicsContext *currentContext = [NSGraphicsContext currentContext];
+    [currentContext saveGraphicsState];
+    [[NSColor cyanColor] set];
+    NSRectFill(rect);
+    [currentContext restoreGraphicsState];
+#endif
+    
+#if 0
+    if ([[self UIDelegate] respondsToSelector:@selector(webView:drawFooterInRect:)]) {
+        NSGraphicsContext *currentContext = [NSGraphicsContext currentContext];
+        [currentContext saveGraphicsState];
+        NSRectClip(rect);
+        [[self UIDelegate] webView:self drawFooterInRect:rect];
+        [currentContext restoreGraphicsState];
+    }
+#endif
+}
+
+- (void)_adjustPrintingMarginsForHeaderAndFooter
+{
+    NSPrintOperation *op = [NSPrintOperation currentOperation];
+    NSPrintInfo *info = [op printInfo];
+    float scale = [op _web_pageSetupScaleFactor];
+    [info setTopMargin:[info topMargin] + [self _headerHeight]*scale];
+    [info setBottomMargin:[info bottomMargin] + [self _footerHeight]*scale];
+}
+
+- (void)_drawHeaderAndFooter
+{
+    // The header and footer rect height scales with the page, but the width is always
+    // all the way across the printed page (inset by printing margins).
+    NSPrintOperation *op = [NSPrintOperation currentOperation];
+    float scale = [op _web_pageSetupScaleFactor];
+    NSPrintInfo *printInfo = [op printInfo];
+    NSSize paperSize = [printInfo paperSize];
+    float headerFooterLeft = [printInfo leftMargin]/scale;
+    float headerFooterWidth = (paperSize.width - ([printInfo leftMargin] + [printInfo rightMargin]))/scale;
+    NSRect footerRect = NSMakeRect(headerFooterLeft, [printInfo bottomMargin]/scale - [self _footerHeight] , 
+                                   headerFooterWidth, [self _footerHeight]);
+    NSRect headerRect = NSMakeRect(headerFooterLeft, (paperSize.height - [printInfo topMargin])/scale, 
+                                   headerFooterWidth, [self _headerHeight]);
+    
+    [self _drawHeaderInRect:headerRect];
+    [self _drawFooterInRect:footerRect];
+}
 @end

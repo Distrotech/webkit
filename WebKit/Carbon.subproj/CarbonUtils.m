@@ -1,19 +1,32 @@
 /*
- *  CarbonUtils.c
+ *  CarbonUtils.m
  *  WebKit
  *
  *  Created by Ed Voas on Mon Feb 17 2003.
- *  Copyright (c) 2003 __MyCompanyName__. All rights reserved.
+ *  Copyright (c) 2003 Apple Computer, Inc. All rights reserved.
  *
  */
+#import <AppKit/NSBitmapImageRep_Private.h>
 
 #include "CarbonUtils.h"
+
 
 extern CGImageRef _NSCreateImageRef( unsigned char *const bitmapData[5], int pixelsWide, int pixelsHigh, int bitsPerSample, int samplesPerPixel, int bitsPerPixel, int bytesPerRow, BOOL isPlanar, BOOL hasAlpha, NSString *colorSpaceName, CGColorSpaceRef customColorSpace, id sourceObj);
 
 static void				PoolCleaner( EventLoopTimerRef inTimer, EventLoopIdleTimerMessage inState, void *inUserData );
 
 static NSAutoreleasePool*	sPool;
+static unsigned numPools;
+static EventLoopRef poolLoop;
+
+static unsigned getNumPools()
+{
+    void *v = NSPushAutoreleasePool(0);
+    unsigned numPools = (unsigned)(v);
+    NSPopAutoreleasePool (v);
+    return numPools;
+}
+
 
 void
 WebInitForCarbon()
@@ -28,23 +41,45 @@ WebInitForCarbon()
         // "flavour" is correctly established.
         GetCurrentProcess( &process ); 
         NSApplicationLoad();
-        
+                
         sPool = [[NSAutoreleasePool allocWithZone:NULL] init];
+        numPools = getNumPools();
         
+        poolLoop = GetCurrentEventLoop ();
+
         InstallEventLoopIdleTimer( GetMainEventLoop(), 1.0, 0, PoolCleaner, 0, NULL );
         
         sAppKitLoaded = true;     
+
+        [NSBitmapImageRep _setEnableFlippedImageFix:YES];
     }
 }
 
+
+/*
+    The pool cleaner is required because Carbon applications do not have
+    an autorelease pool provided by their event loops.  Importantly,
+    carbon applications that nest event loops, using any of the various
+    techniques available to Carbon apps, MUST create their our pools around
+    their nested event loops.
+*/
 static void
 PoolCleaner( EventLoopTimerRef inTimer, EventLoopIdleTimerMessage inState, void *inUserData )
 {
-	if ( inState == kEventLoopIdleTimerStarted )
-	{
-		[sPool release];
-		sPool = [[NSAutoreleasePool allocWithZone:NULL] init];
-	}
+    if ( inState == kEventLoopIdleTimerStarted ) {
+        CFStringRef mode = CFRunLoopCopyCurrentMode( (CFRunLoopRef)GetCFRunLoopFromEventLoop( GetCurrentEventLoop() ));
+        EventLoopRef thisLoop = GetCurrentEventLoop ();
+        if ( CFEqual( mode, kCFRunLoopDefaultMode ) && thisLoop == poolLoop) {
+            unsigned currentNumPools = getNumPools()-1;            
+            if (currentNumPools == numPools){
+                [sPool release];
+                
+                sPool = [[NSAutoreleasePool allocWithZone:NULL] init];
+                numPools = getNumPools();
+            }
+        }
+        CFRelease( mode );
+    }
 }
 
 CGImageRef

@@ -69,7 +69,6 @@
 				014CEA450018CDF011CA2923,
 				F58C8A07025BD3BC018635CA,
 			);
-			hasScannedForEncodings = 1;
 			isa = PBXProject;
 			knownRegions = (
 				English,
@@ -183,6 +182,7 @@
 </dict>
 </plist>
 ";
+			shouldUseHeadermap = 0;
 		};
 		0867D69DFE84028FC02AAC07 = {
 			buildActionMask = 2147483647;
@@ -299,6 +299,7 @@
 				BE07CEAD047538F000CA289C,
 				BE07CEAF047538F000CA289C,
 				BE07CEB1047538F000CA289C,
+				F540351C06AF406A01CA2D3A,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -417,6 +418,7 @@
 				BE07CEAE047538F000CA289C,
 				BE07CEB0047538F000CA289C,
 				BE07CEB2047538F000CA289C,
+				F540351D06AF406A01CA2D3A,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -526,6 +528,8 @@
 				517FA6AB03709FCE00CA2D3A,
 				6578F5DE045F817400000128,
 				6578F5DF045F817400000128,
+				F540351A06AF406A01CA2D3A,
+				F540351B06AF406A01CA2D3A,
 			);
 			isa = PBXGroup;
 			name = Misc;
@@ -2809,6 +2813,28 @@
 		};
 		F53444D302E87D4B018635CA = {
 			fileRef = F53444D202E87D4B018635CA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F540351A06AF406A01CA2D3A = {
+			isa = PBXFileReference;
+			path = WebNSPrintOperationExtras.h;
+			refType = 4;
+		};
+		F540351B06AF406A01CA2D3A = {
+			isa = PBXFileReference;
+			path = WebNSPrintOperationExtras.m;
+			refType = 4;
+		};
+		F540351C06AF406A01CA2D3A = {
+			fileRef = F540351A06AF406A01CA2D3A;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F540351D06AF406A01CA2D3A = {
+			fileRef = F540351B06AF406A01CA2D3A;
 			isa = PBXBuildFile;
 			settings = {
 			};

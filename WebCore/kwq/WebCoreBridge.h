@@ -145,12 +145,14 @@ enum FrameBorderStyle {
 
 - (void)reapplyStylesForDeviceType:(WebCoreDeviceType)deviceType;
 - (void)forceLayout;
-- (void)forceLayoutForPageWidth:(float)pageWidth;
+- (void)forceLayoutAdjustingViewSize:(BOOL)adjustSizeFlag;
+- (void)forceLayoutWithMinimumPageWidth:(float)minPageWidth maximumPageWidth:(float)maxPageWidth adjustingViewSize:(BOOL)adjustSizeFlag;
 - (void)sendResizeEvent;
 - (BOOL)needsLayout;
 - (void)adjustFrames:(NSRect)rect;
 - (void)drawRect:(NSRect)rect;
 - (void)adjustPageHeightNew:(float *)newBottom top:(float)oldTop bottom:(float)oldBottom limit:(float)bottomLimit;
+- (NSArray*)computePageRectsWithPrintWidthScaleFactor:(float)printWidthScaleFactor printHeight:(float)printHeight;
 
 - (void)setUsesInactiveTextBackgroundColor:(BOOL)uses;
 - (BOOL)usesInactiveTextBackgroundColor;
@@ -221,6 +223,8 @@ enum FrameBorderStyle {
 - (BOOL)shouldCreateRenderers;
 
 - (int)numPendingOrLoadingRequests;
+
+- (void)adjustViewSize;
 
 @end
 

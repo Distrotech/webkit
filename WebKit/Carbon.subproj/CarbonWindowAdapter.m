@@ -3,7 +3,7 @@
 //  Synergy
 //
 //  Created by Ed Voas on Fri Jan 17 2003.
-//  Copyright (c) 2003 __MyCompanyName__. All rights reserved.
+//  Copyright (c) 2004 Apple Computer, Inc. All rights reserved.
 //
 
 /*
@@ -54,6 +54,7 @@ The subclass of NSWindow that encapsulates a Carbon window, in such a manner tha
 #import "HIViewAdapter.h"
 
 #import <AppKit/AppKit.h>
+#import <AppKit/NSWindow_Private.h>
 #import <CoreGraphics/CGSWindow.h>
 #import <HIToolbox/CarbonEvents.h>
 #import <HIToolbox/CarbonEventsPriv.h>
@@ -62,16 +63,6 @@ The subclass of NSWindow that encapsulates a Carbon window, in such a manner tha
 #import <HIToolbox/WindowsPriv.h>
 #import <HIToolbox/HIView.h>
 #import <assert.h>
-
-// Turn off the assertions in this file.
-// If this is commented out, uncomment it before committing to CVS.  M.P. Warning - 10/18/01
-#undef assert
-#define assert(X)
-
-enum
-{
-	_NSCarbonWindowMask               = 1 << 25
-};
 
 // Carbon SPI functions.
 // The fact that these are declared here instead of in an HIToolbox header is a bad thing.  2776459.  M.P. To Do - 9/18/01
@@ -83,14 +74,8 @@ OSStatus SyncWindowToCGSWindow(WindowRef inWindow, CGSWindowID inWindowID);
 #define WINDOWSMENUWINDOW(w)   (!_wFlags.excludedFromWindowsMenu && \
                                 [w _miniaturizedOrCanBecomeMain] && [w _isDocWindow])
 extern float _NXScreenMaxYForRect(NSRect *rect);
-extern MenuRef _NSGetCarbonMenu(NSMenu* menu);
-extern int _NSMenuToCarbonIndex(NSMenu* menu, int index);
 extern void _NXOrderKeyAndMain( void );
 extern void _NXShowKeyAndMain( void );
-
-// Forward declarations.
-static OSStatus NSCarbonWindowHandleEvent(EventHandlerCallRef inEventHandlerCallRef, EventRef inEventRef, void *inUserData);
-
 
 // Constants that we use to fiddle with NSViewCarbonControls.
 extern const ControlFocusPart NSViewCarbonControlMagicPartCode;
@@ -106,12 +91,21 @@ extern const OSType NSCarbonWindowPropertyTag;
 - (NSGraphicsContext *)_threadContext;
 - (void)_setFrame:(NSRect)newWindowFrameRect;
 - (void)_setVisible:(BOOL)flag;
+- (NSRect)_growBoxRect;
 @end
 
 @interface NSApplication(HIWebFrameView)
 - (void)setIsActive:(BOOL)aFlag;
 - (id)_setMouseActivationInProgress:(BOOL)flag;
+- (BOOL)_handleKeyEquivalent:(NSEvent*)theEvent;
 @end
+
+@interface NSInputContext
+- (BOOL)processInputKeyBindings:(NSEvent *)event;
+@end
+
+// Forward declarations.
+static OSStatus NSCarbonWindowHandleEvent(EventHandlerCallRef inEventHandlerCallRef, EventRef inEventRef, void *inUserData);
 
 @implementation CarbonWindowAdapter
 
@@ -168,27 +162,17 @@ extern const OSType NSCarbonWindowPropertyTag;
     nativeWindow = GetNativeWindowFromWindowRef(inWindowRef);
 
     // Find out the window's Carbon window attributes.
-    osStatus = GetWindowAttributes(inWindowRef, &windowAttributes);
-    if (osStatus!=noErr) NSLog(@"A Carbon window's attributes couldn't be gotten.");
+    GetWindowAttributes(inWindowRef, &windowAttributes);
 
     // Find out the window's Carbon window features.
-    osStatus = GetWindowFeatures(inWindowRef, &windowFeatures);
-    if (osStatus!=noErr) NSLog(@"A Carbon window's features couldn't be gotten.");
+    GetWindowFeatures(inWindowRef, &windowFeatures);
 
     // Figure out the window's backing store type.
-    // This switch statement is inspired by one in HIToolbox/Windows/Platform/CGSPlatform.c's CreatePlatformWindow().  M.P. Notice - 8/2/00
-    switch (windowAttributes & (kWindowNoBufferingAttribute | kWindowRetainedAttribute)) {
-        case kWindowNoAttributes:
-            backingStoreType = NSBackingStoreBuffered;
-            break;
-        case kWindowRetainedAttribute:
-            backingStoreType = NSBackingStoreRetained;
-            break;
-        case kWindowNoBufferingAttribute:
-        default:
-            backingStoreType = NSBackingStoreNonretained;
-            break;
-    }
+    // At one time, this had code stolen from CreatePlatformWindow in HIToolbox/Windows/Platform/CGSPlatform.c
+	// But now the non-retained window class is a Carbon secret that's not even in
+	// WindowsPriv.h; maybe we'll have to revisit this if someone needs to use WebKit
+	// in a non-retained window.
+    backingStoreType = NSBackingStoreRetained;
 
     // Figure out the window's style mask.
     styleMask = _NSCarbonWindowMask;
@@ -203,14 +187,6 @@ extern const OSType NSCarbonWindowPropertyTag;
         return nil;
     }
     
-    if (windowModality == kWindowModalityNone || windowModality == kWindowModalityWindowModal) {
-        if (inDisableOrdering) {
-            // Take over the ordering of the window from Carbon.
-            osStatus = _SetWindowCGOrderingEnabled(inWindowRef, FALSE);
-            if (osStatus!=noErr) NSLog(@"A Carbon window's ordering couldn't be disabled.");
-        }
-    }
-
     // Create one of our special content views.
     carbonWindowContentView = [[[CarbonWindowContentView alloc] init] autorelease];
 
@@ -229,37 +205,35 @@ extern const OSType NSCarbonWindowPropertyTag;
     // We didn't even really try to get it right at _initContent:... time, because it's more trouble that it's worth to write a real +[NSCarbonWindow frameRectForContentRect:styleMask:].  M.P. Notice - 10/10/00
     [self reconcileToCarbonWindowBounds];
 
-	if (windowModality == kWindowModalityNone || windowModality == kWindowModalityWindowModal || inDisableOrdering) {
-		// Install an event handler for the Carbon window events in which we're interested.
-		const EventTypeSpec kEvents[] = {
-			{ kEventClassWindow, kEventWindowActivated },
-			{ kEventClassWindow, kEventWindowDeactivated },
-			{ kEventClassWindow, kEventWindowBoundsChanged },
-			{ kEventClassWindow, kEventWindowShown },
-			{ kEventClassWindow, kEventWindowHidden }
-		};
-		
-		const EventTypeSpec kControlBoundsChangedEvent = { kEventClassControl, kEventControlBoundsChanged };
-		
-		osStatus = InstallEventHandler( GetWindowEventTarget(_windowRef), NSCarbonWindowHandleEvent, GetEventTypeCount( kEvents ), kEvents, (void*)self, &_eventHandler);
-		if (osStatus!=noErr) {
-			[self release];
-			return nil;
-		}
+    // Install an event handler for the Carbon window events in which we're interested.
+    const EventTypeSpec kEvents[] = {
+            { kEventClassWindow, kEventWindowActivated },
+            { kEventClassWindow, kEventWindowDeactivated },
+            { kEventClassWindow, kEventWindowBoundsChanged },
+            { kEventClassWindow, kEventWindowShown },
+            { kEventClassWindow, kEventWindowHidden }
+    };
+    
+    const EventTypeSpec kControlBoundsChangedEvent = { kEventClassControl, kEventControlBoundsChanged };
+    
+    osStatus = InstallEventHandler( GetWindowEventTarget(_windowRef), NSCarbonWindowHandleEvent, GetEventTypeCount( kEvents ), kEvents, (void*)self, &_eventHandler);
+    if (osStatus!=noErr) {
+            [self release];
+            return nil;
+    }
 
-		osStatus = InstallEventHandler( GetControlEventTarget( HIViewGetRoot( _windowRef ) ), NSCarbonWindowHandleEvent, 1, &kControlBoundsChangedEvent, (void*)self, &_eventHandler);
-		if (osStatus!=noErr) {
-			[self release];
-			return nil;
-		}
+    osStatus = InstallEventHandler( GetControlEventTarget( HIViewGetRoot( _windowRef ) ), NSCarbonWindowHandleEvent, 1, &kControlBoundsChangedEvent, (void*)self, &_eventHandler);
+    if (osStatus!=noErr) {
+            [self release];
+            return nil;
+    }
 
-		HIViewFindByID( HIViewGetRoot( _windowRef ), kHIViewWindowContentID, &contentView );
-		osStatus = InstallEventHandler( GetControlEventTarget( contentView ), NSCarbonWindowHandleEvent, 1, &kControlBoundsChangedEvent, (void*)self, &_eventHandler);
-		if (osStatus!=noErr) {
-			[self release];
-			return nil;
-		}
-	}
+    HIViewFindByID( HIViewGetRoot( _windowRef ), kHIViewWindowContentID, &contentView );
+    osStatus = InstallEventHandler( GetControlEventTarget( contentView ), NSCarbonWindowHandleEvent, 1, &kControlBoundsChangedEvent, (void*)self, &_eventHandler);
+    if (osStatus!=noErr) {
+            [self release];
+            return nil;
+    }
 	
     // Put a pointer to this Cocoa NSWindow in a Carbon window property tag.
     // Right now, this is just used by NSViewCarbonControl.  M.P. Notice - 10/9/00
@@ -272,6 +246,9 @@ extern const OSType NSCarbonWindowPropertyTag;
 
     // Ignore the Carbon window activation/deactivation events that Carbon sends to its windows at app activation/deactivation.  We'll send such events when we think it's appropriate.
     _passingCarbonWindowActivationEvents = NO;
+
+    // Be sure to sync up visibility
+    [self _setVisible:(BOOL)IsWindowVisible( _windowRef )];
 
     // Done.
     return self;
@@ -413,11 +390,15 @@ extern const OSType NSCarbonWindowPropertyTag;
         if (eventSubtype==7) {
             ignoreEvent = YES;
         }
+    } else if (eventType == NSKeyDown) {
+        // Handle command-space as [NSApp sendEvent:] does.
+        if ([NSInputContext processInputKeyBindings:inEvent]) {
+            return;
+        }
     }
-
+    
     // Simple.
     if (!ignoreEvent) [super sendEvent:inEvent];
-
 }
 
 
@@ -630,7 +611,6 @@ extern const OSType NSCarbonWindowPropertyTag;
 	[NSApp _setMouseActivationInProgress:NO];
 	[NSApp setIsActive:YES];
 	[super makeKeyWindow];
-	_NXOrderKeyAndMain();
 	_NXShowKeyAndMain();
 }
 
@@ -986,6 +966,32 @@ static OSStatus NSCarbonWindowHandleEvent(EventHandlerCallRef inEventHandlerCall
 // [3364117] We need to make sure this does not fall through to the AppKit implementation! bad things happen.
 - (void)_reallyDoOrderWindow:(NSWindowOrderingMode)place relativeTo:(int)otherWin findKey:(BOOL)doKeyCalc forCounter:(BOOL)isACounter force:(BOOL)doForce isModal:(BOOL)isModal {
 }
+
+- (NSRect) _growBoxRect
+{
+      WindowAttributes                attrs;
+      NSRect                                  retRect = NSZeroRect;
+
+      GetWindowAttributes( _windowRef, &attrs );
+
+      if ( attrs & kWindowResizableAttribute )
+      {
+              HIRect          bounds, rect;
+              HIViewRef   view;
+
+              HIViewGetBounds( HIViewGetRoot( _windowRef ), &bounds );
+              HIViewFindByID( HIViewGetRoot( _windowRef ), kHIViewWindowGrowBoxID, &view );
+              HIViewGetFrame( view, &rect );
+
+              rect.origin.y = bounds.size.height - CGRectGetMaxY( rect ) - 1;
+              rect.origin.x++;
+
+              retRect = *(NSRect*)&rect;
+      }
+
+      return retRect;
+}
+
 
 /*
 void _NSSetModalWindowClassLevel(int level) {

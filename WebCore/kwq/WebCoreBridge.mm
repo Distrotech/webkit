@@ -51,6 +51,7 @@ using khtml::RenderWidget;
 #import "KWQDOMNode.h"
 #import "KWQFont.h"
 #import "KWQFrame.h"
+#import "KWQKGlobal.h"
 #import "KWQLoader.h"
 #import "KWQPageState.h"
 #import "KWQRenderTreeDebug.h"
@@ -370,12 +371,26 @@ static BOOL nowPrinting(WebCoreBridge *self)
     [self _setupRootForPrinting:NO];
 }
 
-- (void)forceLayoutForPageWidth:(float)pageWidth
+- (void)forceLayoutAdjustingViewSize:(BOOL)flag
 {
     [self _setupRootForPrinting:YES];
-    _part->forceLayoutForPageWidth(pageWidth);
+    _part->forceLayout();
+    if (flag) {
+        [self adjustViewSize];
+    }
     [self _setupRootForPrinting:NO];
 }
+
+- (void)forceLayoutWithMinimumPageWidth:(float)minPageWidth maximumPageWidth:(float)maxPageWidth adjustingViewSize:(BOOL)flag
+{
+    [self _setupRootForPrinting:YES];
+    _part->forceLayoutWithPageWidthRange(minPageWidth, maxPageWidth);
+    if (flag) {
+        [self adjustViewSize];
+    }
+    [self _setupRootForPrinting:NO];
+}
+
 
 - (void)sendResizeEvent
 {
@@ -398,6 +413,44 @@ static BOOL nowPrinting(WebCoreBridge *self)
     QPainter painter(nowPrinting(self));
     painter.setUsesInactiveTextBackgroundColor(_part->usesInactiveTextBackgroundColor());
     [self drawRect:rect withPainter:&painter];
+}
+
+
+// Used by pagination code called from AppKit when a standalone web page is printed.
+- (NSArray*)computePageRectsWithPrintWidthScaleFactor:(float)printWidthScaleFactor printHeight:(float)printHeight
+{
+    [self _setupRootForPrinting:YES];
+    NSMutableArray* pages = [NSMutableArray arrayWithCapacity:5];
+    if (printWidthScaleFactor == 0 || printHeight == 0)
+        return pages;
+	
+    if (!_part || !_part->xmlDocImpl() || !_part->view()) return pages;
+    RenderCanvas* root = static_cast<khtml::RenderCanvas *>(_part->xmlDocImpl()->renderer());
+    if (!root) return pages;
+    
+    KHTMLView* view = _part->view();
+    NSView* documentView = view->getDocumentView();
+    if (!documentView)
+        return pages;
+	
+    float currPageHeight = printHeight;
+    float docHeight = root->layer()->height();
+    float docWidth = root->layer()->width();
+    float printWidth = docWidth/printWidthScaleFactor;
+    
+    // We need to give the part the opportunity to adjust the page height at each step.
+    for (float i = 0; i < docHeight; i += currPageHeight) {
+        float proposedBottom = kMin(docHeight, i + printHeight);
+        _part->adjustPageHeight(&proposedBottom, i, proposedBottom, i);
+        currPageHeight = kMax(1.0f, proposedBottom - i);
+        for (float j = 0; j < docWidth; j += printWidth) {
+            NSValue* val = [NSValue valueWithRect: NSMakeRect(j, i, printWidth, currPageHeight)];
+            [pages addObject: val];
+        }
+    }
+    [self _setupRootForPrinting:NO];
+    
+    return pages;
 }
 
 - (void)adjustFrames:(NSRect)rect
@@ -974,5 +1027,12 @@ static HTMLFormElementImpl *formElementFromDOMElement(id <WebDOMElement>element)
     return 0;
 }
     
+- (void)adjustViewSize
+{
+    KHTMLView *view = _part->view();
+    if (view)
+        view->adjustViewSize();
+}
+
 
 @end
