@@ -90,14 +90,20 @@ using khtml::RenderCanvas;
 -(HTMLAnchorElementImpl*)anchorElement
 {
     RenderObject* currRenderer;
-    for (currRenderer = m_renderer; 
-         currRenderer && (!currRenderer->element() || !currRenderer->element()->hasAnchor());
-         currRenderer = currRenderer->parent());
+    for (currRenderer = m_renderer; currRenderer && !currRenderer->element(); currRenderer = currRenderer->parent())
+        if (currRenderer->continuation())
+            return [currRenderer->document()->getOrCreateAccObjectCache()->accObject(currRenderer->continuation()) anchorElement];
     
-    if (!currRenderer)
+    if (!currRenderer || !currRenderer->element())
         return 0;
     
-    return static_cast<HTMLAnchorElementImpl*>(currRenderer->element());
+    NodeImpl* elt = currRenderer->element();
+    for ( ; elt; elt = elt->parentNode()) {
+        if (elt->hasAnchor())
+            return static_cast<HTMLAnchorElementImpl*>(elt);
+    }
+  
+    return 0;
 }
 
 -(KWQAccObject*)firstChild
@@ -185,8 +191,6 @@ using khtml::RenderCanvas;
        return NSAccessibilityImageRole;
     if (m_renderer->isCanvas())
         return NSAccessibilityGroupRole;
-    if (m_renderer->isTable() || m_renderer->isTableCell())
-        return NSAccessibilityTableRole;
     
     return NSAccessibilityUnknownRole;
 }
@@ -273,15 +277,35 @@ using khtml::RenderCanvas;
     return nil;
 }
 
+static QRect boundingBoxRect(RenderObject* obj)
+{
+    QRect rect(0,0,0,0);
+    if (obj) {
+        if (obj->isInlineContinuation())
+            obj = obj->element()->renderer();
+        QValueList<QRect> rects;
+        int x = 0, y = 0;
+        obj->absolutePosition(x, y);
+        obj->absoluteRects(rects, x, y);
+        for (QValueList<QRect>::ConstIterator it = rects.begin(); it != rects.end(); ++it) {
+            QRect r = *it;
+            if (r.isValid()) {
+                if (rect.isEmpty())
+                    rect = r;
+                else
+                    rect.unite(r);
+            }
+        }
+    }
+    return rect;
+}
+
 -(NSValue*)position
 {
-    int x = 0;
-    int y = 0;
-    if (m_renderer) {
-        m_renderer->absolutePosition(x, y);
-        y += m_renderer->height(); // The API wants the lower-left corner, not the upper-left.
-    }
-    NSPoint point = NSMakePoint(x, y);
+    QRect rect = boundingBoxRect(m_renderer);
+    
+    // The Cocoa accessibility API wants the lower-left corner, not the upper-left, so we add in our height.
+    NSPoint point = NSMakePoint(rect.x(), rect.y() + rect.height());
     if (m_renderer && m_renderer->canvas() && m_renderer->canvas()->view()) {
         NSView* view = m_renderer->canvas()->view()->getDocumentView();
         point = [[view window] convertBaseToScreen: [view convertPoint: point toView:nil]];
@@ -291,12 +315,8 @@ using khtml::RenderCanvas;
 
 -(NSValue*)size
 {
-    long width = 0, height = 0;
-    if (m_renderer) {
-        width = m_renderer->width();
-        height = m_renderer->height();
-    }
-    return [NSValue valueWithSize: NSMakeSize(width, height)];
+    QRect rect = boundingBoxRect(m_renderer);
+    return [NSValue valueWithSize: NSMakeSize(rect.width(), rect.height())];
 }
 
 -(BOOL)accessibilityIsIgnored
@@ -307,7 +327,7 @@ using khtml::RenderCanvas;
     if (m_renderer->element() && m_renderer->element()->hasAnchor())
         return NO;
     
-    return (!m_renderer->isCanvas() && !m_renderer->isTable() && !m_renderer->isTableCell() &&
+    return (!m_renderer->isCanvas() && 
             !m_renderer->isImage() && !m_renderer->isText() &&
             !(m_renderer->element() && m_renderer->element()->isHTMLElement() &&
               Node(m_renderer->element()).elementId() == ID_BUTTON));
