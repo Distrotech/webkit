@@ -1288,14 +1288,6 @@ void KHTMLPart::begin( const KURL &url, int xOffset, int yOffset )
   d->m_doc->setBaseURL( baseurl.url() );
   d->m_doc->docLoader()->setShowAnimations( KHTMLFactory::defaultHTMLSettings()->showAnimations() );
 
-  // Inherit domain from parent
-  KHTMLPart* parent = parentPart();
-  if (d->m_doc->isHTMLDocument() && parent && parent->d->m_doc && parent->d->m_doc->isHTMLDocument()) {
-    DOMString domain = static_cast<HTMLDocumentImpl*>(parent->d->m_doc)->domain();
-    kdDebug() << "KHTMLPart::begin setting frame domain to " << domain.string() << endl;
-    static_cast<HTMLDocumentImpl*>(d->m_doc)->setDomain( domain, true );
-  }
-
   d->m_paUseStylesheet->setItems(QStringList());
   d->m_paUseStylesheet->setEnabled( false );
 
@@ -1546,7 +1538,10 @@ void KHTMLPart::checkCompleted()
   d->m_paUseStylesheet->setItems( sheets );
   d->m_paUseStylesheet->setEnabled( !sheets.isEmpty() );
   if (!sheets.isEmpty())
+  {
     d->m_paUseStylesheet->setCurrentItem(kMax(sheets.findIndex(d->m_sheetUsed), 0));
+    slotUseStylesheet();
+  }
 
   if (!parentPart())
       emit setStatusBarText(i18n("Done."));
@@ -1565,6 +1560,30 @@ void KHTMLPart::checkEmitLoadEvent()
   for (; it != end; ++it )
     if ( !(*it).m_bCompleted ) // still got a frame running -> too early
       return;
+
+
+  // All frames completed -> set their domain to the frameset's domain
+  // This must only be done when loading the frameset initially (#22039),
+  // not when following a link in a frame (#44162).
+  if ( d->m_doc && d->m_doc->isHTMLDocument() )
+  {
+    DOMString domain = static_cast<HTMLDocumentImpl*>(d->m_doc)->domain();
+    ConstFrameIt it = d->m_frames.begin();
+    ConstFrameIt end = d->m_frames.end();
+    for (; it != end; ++it )
+    {
+      KParts::ReadOnlyPart *p = (*it).m_part;
+      if ( p && p->inherits( "KHTMLPart" ))
+      {
+        KHTMLPart* htmlFrame = static_cast<KHTMLPart *>(p);
+        if (htmlFrame->d->m_doc && htmlFrame->d->m_doc->isHTMLDocument() )
+        {
+          kdDebug() << "KHTMLPart::checkCompleted setting frame domain to " << domain.string() << endl;
+          static_cast<HTMLDocumentImpl*>(htmlFrame->d->m_doc)->setDomain( domain, true );
+        }
+      }
+    }
+  }
 
   d->m_bLoadEventEmitted = true;
   if (d->m_doc)
@@ -1639,7 +1658,7 @@ void KHTMLPart::slotRedirect()
     args.reload = true;
 
   args.setLockHistory( d->m_redirectLockHistory );
-  urlSelected( u, 0, 0, QString::null, args );
+  urlSelected( u, 0, 0, "_self", args );
 }
 
 void KHTMLPart::slotRedirection(KIO::Job*, const KURL& url)
@@ -2012,7 +2031,7 @@ void KHTMLPart::overURL( const QString &url, const QString &target, bool shiftPr
 
   if ( url.isEmpty() )
   {
-    emit setStatusBarText(url);
+    emit setStatusBarText(completeURL(url).htmlURL());
     return;
   }
 
@@ -2037,7 +2056,7 @@ void KHTMLPart::overURL( const QString &url, const QString &target, bool shiftPr
 
   if ( u.isMalformed() )
   {
-    emit setStatusBarText(u.prettyURL());
+    emit setStatusBarText(u.htmlURL());
     return;
   }
 
@@ -2053,7 +2072,7 @@ void KHTMLPart::overURL( const QString &url, const QString &target, bool shiftPr
     struct stat lbuff;
     if (ok) ok = !lstat( path.data(), &lbuff );
 
-    QString text = u.url();
+    QString text = u.htmlURL();
     QString text2 = text;
 
     if (ok && S_ISLNK( lbuff.st_mode ) )
@@ -2129,8 +2148,12 @@ void KHTMLPart::overURL( const QString &url, const QString &target, bool shiftPr
           mailtoMsg += i18n(" - CC: ") + KURL::decode_string((*it).mid(3));
         else if ((*it).startsWith(QString::fromLatin1("bcc=")))
           mailtoMsg += i18n(" - BCC: ") + KURL::decode_string((*it).mid(4));
-      emit setStatusBarText(mailtoMsg.replace(QRegExp("([\n\r\t]|[ ]{10})"), ""));
-			return;
+      mailtoMsg.replace(QRegExp("&"), QString("&amp;"));
+      mailtoMsg.replace(QRegExp("<"), QString("&lt;"));
+      mailtoMsg.replace(QRegExp(">"), QString("&gt;"));
+      mailtoMsg.replace(QRegExp("([\n\r\t]|[ ]{10})"), "");
+      emit setStatusBarText(mailtoMsg);
+      return;
     }
    // Is this check neccessary at all? (Frerich)
 #if 0
@@ -2155,7 +2178,7 @@ void KHTMLPart::overURL( const QString &url, const QString &target, bool shiftPr
         }
       }
 #endif
-    emit setStatusBarText(u.prettyURL() + extra);
+    emit setStatusBarText(u.htmlURL() + extra);
   }
 }
 
@@ -2803,7 +2826,7 @@ void KHTMLPart::submitForm( const char *action, const QString &url, const QByteA
    */
 
   // This causes crashes... needs to be fixed.
-  if (u.protocol() != "https" && u.protocol() != "mailto") {
+  if (!d->m_submitForm && u.protocol() != "https" && u.protocol() != "mailto") {
 	if (d->m_ssl_in_use) {    // Going from SSL -> nonSSL
 		int rc = KMessageBox::warningContinueCancel(NULL, i18n("Warning:  This is a secure form but it is attempting to send your data back unencrypted."
 					"\nA third party may be able to intercept and view this information."
@@ -2837,7 +2860,7 @@ void KHTMLPart::submitForm( const char *action, const QString &url, const QByteA
     }
   }
 
-  if (u.protocol() == "mailto") {
+  if (!d->m_submitForm && u.protocol() == "mailto") {
      int rc = KMessageBox::warningContinueCancel(NULL, 
                  i18n("This site is attempting to submit form data via email."),
                  i18n("KDE"), 
@@ -3249,8 +3272,6 @@ void KHTMLPart::saveState( QDataStream &stream )
          << d->m_ssl_cipher_bits
          << d->m_ssl_cert_state;
 
-  // Save frame data
-  stream << (Q_UINT32)d->m_frames.count();
 
   QStringList frameNameLst, frameServiceTypeLst, frameServiceNameLst;
   KURL::List frameURLLst;
@@ -3260,23 +3281,25 @@ void KHTMLPart::saveState( QDataStream &stream )
   ConstFrameIt end = d->m_frames.end();
   for (; it != end; ++it )
   {
+    if ( !(*it).m_part )
+       continue;
+
     frameNameLst << (*it).m_name;
     frameServiceTypeLst << (*it).m_serviceType;
     frameServiceNameLst << (*it).m_serviceName;
-    if ( (*it).m_part )
-      frameURLLst << (*it).m_part->url();
-    else
-      frameURLLst << KURL();
+    frameURLLst << (*it).m_part->url();
 
     QByteArray state;
     QDataStream frameStream( state, IO_WriteOnly );
 
-    if ( (*it).m_part && (*it).m_extension )
+    if ( (*it).m_extension )
       (*it).m_extension->saveState( frameStream );
 
     frameStateBufferLst << state;
   }
 
+  // Save frame data
+  stream << (Q_UINT32) frameNameLst.count();
   stream << frameNameLst << frameServiceTypeLst << frameServiceNameLst << frameURLLst << frameStateBufferLst;
 }
 
@@ -3373,7 +3396,7 @@ void KHTMLPart::restoreState( QDataStream &stream )
       if ( child->m_part )
       {
         child->m_bCompleted = false;
-        if ( child->m_extension )
+        if ( child->m_extension && !(*fBufferIt).isEmpty() )
         {
           QDataStream frameStream( *fBufferIt, IO_ReadOnly );
           child->m_extension->restoreState( frameStream );
@@ -3429,6 +3452,7 @@ void KHTMLPart::restoreState( QDataStream &stream )
       if ( (*childFrame).m_part )
       {
         if ( (*childFrame).m_extension )
+        if ( (*childFrame).m_extension && !(*fBufferIt).isEmpty() )
         {
           QDataStream frameStream( *fBufferIt, IO_ReadOnly );
           (*childFrame).m_extension->restoreState( frameStream );
@@ -3622,7 +3646,8 @@ QStringList KHTMLPart::frameNames() const
   ConstFrameIt it = d->m_frames.begin();
   ConstFrameIt end = d->m_frames.end();
   for (; it != end; ++it )
-    res += (*it).m_name;
+    if (!(*it).m_bPreloaded)
+      res += (*it).m_name;
 
   return res;
 }
@@ -3634,7 +3659,8 @@ QPtrList<KParts::ReadOnlyPart> KHTMLPart::frames() const
   ConstFrameIt it = d->m_frames.begin();
   ConstFrameIt end = d->m_frames.end();
   for (; it != end; ++it )
-     res.append( (*it).m_part );
+    if (!(*it).m_bPreloaded)
+      res.append( (*it).m_part );
 
   return res;
 }
@@ -4164,6 +4190,8 @@ void KHTMLPart::slotAutoScroll()
 
 void KHTMLPart::selectAll()
 {
+  if(!d->m_doc) return;
+
   NodeImpl *first;
   if (d->m_doc->isHTMLDocument())
     first = static_cast<HTMLDocumentImpl*>(d->m_doc)->body();
