@@ -558,7 +558,7 @@
     // <rdar://problem/3715785> multiple frame injection vulnerability reported by Secunia, affects almost all browsers
     
     // don't mess with navigation purely within the same frame
-    if ([[self webFrame] webView] == [targetFrame webView]) {
+    if ([_frame webView] == [targetFrame webView]) {
 	return YES;
     }
 

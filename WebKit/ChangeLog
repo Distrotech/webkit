@@ -1,3 +1,10 @@
+2004-07-26  Darin Adler  <darin@apple.com>
+
+        - fix 3721690 bug fix so it compiles
+
+        * WebCoreSupport.subproj/WebBridge.m: (-[WebBridge canTargetLoadInFrame:]):
+        Change this so it compiles.
+
 === WebKit-125.4.1 ===
 
 2004-07-20  Darin Adler  <darin@apple.com>
