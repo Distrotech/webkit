@@ -1,3 +1,50 @@
+=== Safari-160 ===
+
+2004-08-24  Vicki Murley <vicki@apple.com>
+
+	- merge this fix from HEAD for the Expo build
+
+    2004-08-20  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by Trey
+
+        Fix for this bug:
+        
+        <rdar://problem/3768378> crash typing newline in Blot
+
+        * khtml/editing/htmlediting_impl.cpp:
+        (khtml::InputNewlineCommandImpl::doApply): Adding an assert in a recent change
+        showed up that inserting newlines that was not being handled correctly for the 
+        case described in the bug. I added a new case to handle inserting BR's when
+        at the caret max offset for a node, and this new code runs instead of the
+        fall-through case that should not have been running and triggered the assert.
+
+2004-08-24  Vicki Murley <vicki@apple.com>
+
+	- merge this fix from HEAD for the Expo build
+
+    2004-08-23  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+
+	<rdar://problem/3770306> XMLHttpRequest does not honor character set encoding
+
+        * khtml/ecma/xmlhttprequest.cpp:
+        (KJS::XMLHttpRequest::slotData): Get encoding from the transfer job.
+        * kwq/KWQKJobClasses.h:
+        * kwq/KWQKJobClasses.mm:
+        (KIO::TransferJobPrivate::TransferJobPrivate): Added retrievedCharset
+	flag.
+        (KIO::TransferJob::retrieveCharset): New method, gets the charset
+	from the response.
+        (KIO::TransferJob::queryMetaData): Handle charset.
+        (KIO::TransferJob::emitReceivedResponse): Clear retreivedCharset flag.
+        * kwq/KWQLoader.h:
+        * kwq/KWQLoader.mm:
+        (KWQResponseTextEncodingName): New function, gets the encoding from the response.
+
+=== Safari-158 ===
+
 2004-08-18  Trey Matteson  <trey@apple.com>
 
 	3765958	- downstreamPosition() can hit infinite loop when at end of doc
