@@ -1,5 +1,18 @@
 2004-06-24  Vicki Murley  <vicki@apple.com>
 
+	- merge this change from HEAD for SUPanMoccasin, 3704509
+
+    2004-06-02  David Hyatt  <hyatt@apple.com>
+
+        Fix for 3673931, negative margins on objects that dodge floats not handled correctly.
+        
+        Reviewed by darin
+
+        * khtml/rendering/render_block.cpp:
+        (khtml::RenderBlock::layoutBlockChildren):
+
+2004-06-24  Vicki Murley  <vicki@apple.com>
+
 	- merge this change from HEAD for SUPanMoccasin, 3703230
 
     2004-06-18  John Sullivan  <sullivan@apple.com>
