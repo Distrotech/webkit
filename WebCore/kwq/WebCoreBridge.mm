@@ -88,7 +88,7 @@ using KJS::SavedBuiltins;
 
 using KParts::URLArgs;
 
-using Bindings::RootObject;
+using KJS::Bindings::RootObject;
 
 NSString *WebCoreElementFrameKey = 		@"WebElementFrame";
 NSString *WebCoreElementImageAltStringKey = 	@"WebElementImageAltString";
@@ -109,14 +109,17 @@ static RootObject *rootForView(void *v)
 {
     NSView *aView = (NSView *)v;
     WebCoreBridge *aBridge = [[WebCoreViewFactory sharedFactory] bridgeForView:aView];
-    KWQKHTMLPart *part = [aBridge part];
-    RootObject *root = new RootObject(v);    // The root gets deleted by JavaScriptCore.
-    
-    root->setRootObjectImp (static_cast<KJS::ObjectImp *>(KJS::Window::retrieveWindow(part)));
-    root->setInterpreter (KJSProxy::proxy(part)->interpreter());
-    part->addPluginRootObject (root);
+    if (aBridge) {
+        KWQKHTMLPart *part = [aBridge part];
+        RootObject *root = new RootObject(v);    // The root gets deleted by JavaScriptCore.
         
-    return root;
+        root->setRootObjectImp (static_cast<KJS::ObjectImp *>(KJS::Window::retrieveWindow(part)));
+        root->setInterpreter (KJSProxy::proxy(part)->interpreter());
+        part->addPluginRootObject (root);
+            
+        return root;
+    }
+    return 0;
 }
 
 @implementation WebCoreBridge
@@ -137,7 +140,7 @@ static bool initializedKJS = FALSE;
     }
     
     if (!initializedKJS) {
-        Bindings::RootObject::setFindRootObjectForNativeHandleFunction (rootForView);
+        KJS::Bindings::RootObject::setFindRootObjectForNativeHandleFunction (rootForView);
         initializedKJS = TRUE;
     }
     
