@@ -1,3 +1,12 @@
+=== JavaScriptCore-125 tarball ===
+
+2004-02-02  Maciej Stachowiak  <mjs@apple.com>
+
+        Changes for JavaScriptCore-125 tarball.
+
+        * JavaScriptCore.pbproj/project.pbxproj: Tweak project file as
+	usual.
+
 === Safari-125 ===
 
 === Safari-124 ===
