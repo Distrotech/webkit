@@ -1,3 +1,21 @@
+2004-04-07  Vicki Murley  <vicki@apple.com>
+
+	- merge fix for <rdar://problem/3612921>: Plug-in context menus (Flash) don't work in Carbon WebKit applications (clone for SU) from HEAD
+		
+        * Carbon.subproj/HIWebView.m:
+        (ContextMenuClick):
+        (HIWebViewEventHandler):
+        
+    2004-03-30  Chris Blumenberg  <cblu@apple.com>
+
+        Fixed: <rdar://problem/3604391>: Plug-in context menus (Flash) don't work in Carbon WebKit applications (e.g., CarbonWeb)
+
+        Reviewed by rjw.
+
+        * Carbon.subproj/HIWebView.m:
+        (ContextMenuClick): instead of calling menuForEvent (which is not implemented on our plug-in view) call rightMouseDown and let AppKit handle the rest
+
+
 === Safari-125 ===
 
 === Safari-124 ===
