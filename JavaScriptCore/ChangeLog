@@ -1,6 +1,14 @@
 2004-03-11  Vicki Murley <vicki@apple.com>
 
-        Reviewed by NOBODY (OOPS!).
+
+- roll this change from the SUPanFeldspar branch to the Safari-1-2-branch, so that all our Feldspar changes are also in Epiphany
+
+    2004-01-30  Richard Williamson   <rjw@apple.com>
+
+	Fixed 3542044.  Create KJS::String using UString constructor instead 
+	of passing UTF8 string to char* constructor.
+
+        Reviewed by Darin.
 
         * bindings/jni/jni_instance.cpp:
         (JavaInstance::stringValue):
