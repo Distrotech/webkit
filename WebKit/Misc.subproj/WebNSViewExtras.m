@@ -239,4 +239,13 @@
     [self dragImage:dragImage at:origin offset:offset event:event pasteboard:pboard source:source slideBack:YES];
 }
 
+- (void)_web_scrollPointToVisible:(NSPoint)p fromView:(NSView *)view
+{
+    p = [self convertPoint: p fromView:view];
+    [self scrollPoint: p];
+    [[self superview] _web_scrollPointToVisible:p fromView: self];
+}
+
+
+
 @end
