@@ -1,3 +1,20 @@
+2004-01-12  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
+	Some more clean up to basic caret movement and basic editing.
+	Fixed deleting BR's, which I broke late last week.
+
+        * khtml/editing/htmlediting.cpp:
+        (EditCommand::notifyChanged):
+        (EditCommand::deleteSelection):
+        (EditCommand::pruneEmptyNodes):
+        (InputTextCommand::apply):
+        (DeleteTextCommand::apply):
+        * khtml/editing/htmlediting.h:
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::moveCaretTo):
+
 2004-01-09  Ken Kocienda  <kocienda@apple.com>
 
         Reviewed by me
