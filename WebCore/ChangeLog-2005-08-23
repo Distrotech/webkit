@@ -2,6 +2,15 @@
 
         Reviewed by me
 
+	Files now obsolete.
+
+        * khtml/editing/edit_caretimpl.cpp: Removed.
+        * khtml/editing/edit_caretimpl.h: Removed.
+
+2004-01-15  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
 	First batch of changes from my notes I wrote while chatting
 	with Dave. Many small improvements.
 
