@@ -196,8 +196,10 @@
 	    NSString *saveFilename = [[[dataSource controller] policyDelegate]
                 saveFilenameForResponse:r andRequest:req];
             // FIXME: Maybe there a cleaner way handle the bad filename case?
-            if(!saveFilename || [saveFilename length] == 0){
-                saveFilename = NSHomeDirectory();
+            if(!saveFilename || [saveFilename length] == 0 || ![saveFilename isAbsolutePath]){
+                ERROR("Nil or empty response to saveFilenameForResponse:andRequest:.");
+                [self stopLoadingForPolicyChange];
+                return;
             }
 	    [dataSource _setDownloadPath:saveFilename];
 	}
