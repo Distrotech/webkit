@@ -1,5 +1,15 @@
 2004-04-15  Vicki Murley  <vicki@apple.com>
 
+	- merge the rest of the fix for the zeldman bug (3609695) from HEAD
+
+        * khtml/rendering/render_block.cpp:
+        (khtml::RenderBlock::layoutBlockChildren):
+        (khtml::RenderBlock::lowestPosition):
+        (khtml::RenderBlock::rightmostPosition):
+        (khtml::RenderBlock::leftmostPosition):
+
+2004-04-15  Vicki Murley  <vicki@apple.com>
+
 	Fix mismatched_CFBundleShortVersionStrings verification failure
 
         * English.lproj/InfoPlist.strings:
