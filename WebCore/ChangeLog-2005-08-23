@@ -2,6 +2,53 @@
 
         Reviewed by me
 
+	Made out TreeWalker implementation less lame. It's not
+	done yet, but it's a lot better.
+
+        * khtml/dom/dom2_traversal.cpp:
+        (TreeWalker::root):
+        (TreeWalker::whatToShow):
+        (TreeWalker::filter):
+        (TreeWalker::expandEntityReferences):
+        (TreeWalker::currentNode):
+        (TreeWalker::setCurrentNode):
+        * khtml/dom/dom2_traversal.h:
+        * khtml/editing/edit_caretimpl.cpp:
+        (CaretImpl::adjustForEditing):
+        * khtml/xml/dom2_traversalimpl.cpp:
+        (TreeWalkerImpl::TreeWalkerImpl):
+        (TreeWalkerImpl::operator=):
+        (TreeWalkerImpl::~TreeWalkerImpl):
+        (TreeWalkerImpl::setRoot):
+        (TreeWalkerImpl::setFilter):
+        (TreeWalkerImpl::setCurrentNode):
+        (TreeWalkerImpl::parentNode):
+        (TreeWalkerImpl::firstChild):
+        (TreeWalkerImpl::lastChild):
+        (TreeWalkerImpl::previousSibling):
+        (TreeWalkerImpl::nextSibling):
+        (TreeWalkerImpl::previousNode):
+        (TreeWalkerImpl::nextNode):
+        (TreeWalkerImpl::isAccepted):
+        (firstDescendent):
+        (lastDescendent):
+        * khtml/xml/dom2_traversalimpl.h:
+        (DOM::TreeWalkerImpl::root):
+        (DOM::TreeWalkerImpl::whatToShow):
+        (DOM::TreeWalkerImpl::filter):
+        (DOM::TreeWalkerImpl::expandEntityReferences):
+        (DOM::TreeWalkerImpl::currentNode):
+        (DOM::TreeWalkerImpl::setWhatToShow):
+        (DOM::TreeWalkerImpl::setExpandEntityReferences):
+        (DOM::TreeWalkerImpl::assertNodeValid):
+        * khtml/xml/dom_docimpl.cpp:
+        (DocumentImpl::createTreeWalker):
+        * khtml/xml/dom_docimpl.h:
+
+2003-12-19  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
 	Merged HEAD to branch
 
         * ChangeLog:
