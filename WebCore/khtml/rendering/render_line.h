@@ -22,6 +22,8 @@
 #ifndef RENDER_LINE_H
 #define RENDER_LINE_H
 
+#include "rendering/render_object.h"
+
 namespace khtml {
 
 class InlineFlowBox;
@@ -96,6 +98,9 @@ public:
 
     virtual int topOverflow() { return yPos(); }
     virtual int bottomOverflow() { return yPos()+height(); }
+
+    virtual long caretMinOffset() const { return 0; }
+    virtual long caretMaxOffset() const { return 1; }
     
 public: // FIXME: Would like to make this protected, but methods are accessing these
         // members over in the part.
