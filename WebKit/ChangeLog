@@ -1,5 +1,18 @@
 2004-06-24  Vicki Murley  <vicki@apple.com>
 
+	- merge this change from HEAD for SUPanMoccasin, also for 3704961
+
+    2004-06-21  Chris Blumenberg  <cblu@apple.com>
+
+        Made WebKitErrorDescriptionPlugInCancelledConnection properly reuse an already localized string to avoid loc changes.
+
+        Reviewed by john.
+
+        * ChangeLog:
+        * Misc.subproj/WebKitErrors.m:
+
+2004-06-24  Vicki Murley  <vicki@apple.com>
+
 	- merge this change from HEAD for SUPanMoccasin, 3704961
 
     2004-06-21  Chris Blumenberg  <cblu@apple.com>
