@@ -90,7 +90,6 @@ private:
 
 #endif
 
-#ifndef KHTML_NO_CARET
 /** contextual information about the caret which is related to the view.
  * An object of this class is only instantiated when it is needed.
  */
@@ -116,7 +115,6 @@ struct EditorContext {
 
     EditorContext() : override(false) {}
 };
-#endif // KHTML_NO_CARET
 
 class KHTMLViewPrivate {
     friend class KHTMLToolTip;
@@ -1930,7 +1928,6 @@ void KHTMLView::timerEvent ( QTimerEvent *e )
 {
     if (e->timerId()==d->layoutTimerId)
         layout();
-#ifndef KHTML_NO_CARET
     else if (d->m_caretViewContext && e->timerId() == d->m_caretViewContext->freqTimerId) {
         d->m_caretViewContext->visible = !d->m_caretViewContext->visible;
         if (d->m_caretViewContext->displayed) {
@@ -1939,9 +1936,8 @@ void KHTMLView::timerEvent ( QTimerEvent *e )
                            d->m_caretViewContext->width,
                            d->m_caretViewContext->height + 2);
         }
-	return;
+        return;
     }
-#endif
 }
 
 #ifdef INCREMENTAL_REPAINTING
@@ -2071,8 +2067,8 @@ void KHTMLView::caretOn() {
         d->m_caretViewContext->freqTimerId = startTimer(500);
         d->m_caretViewContext->visible = true;
         d->m_caretViewContext->displayed = true;
-	updateContents(d->m_caretViewContext->x, d->m_caretViewContext->y,
-	    		d->m_caretViewContext->width,
+        updateContents(d->m_caretViewContext->x, d->m_caretViewContext->y,
+	    	d->m_caretViewContext->width,
 			d->m_caretViewContext->height);
     }
 }
@@ -2080,11 +2076,11 @@ void KHTMLView::caretOn() {
 void KHTMLView::caretOff() {
     if (d->m_caretViewContext) {
         killTimer(d->m_caretViewContext->freqTimerId);
-	d->m_caretViewContext->freqTimerId = -1;
+        d->m_caretViewContext->freqTimerId = -1;
         d->m_caretViewContext->displayed = false;
         if (d->m_caretViewContext->visible) {
             d->m_caretViewContext->visible = false;
-	    updateContents(d->m_caretViewContext->x, d->m_caretViewContext->y,
+            updateContents(d->m_caretViewContext->x, d->m_caretViewContext->y,
 	    		d->m_caretViewContext->width,
 	    		d->m_caretViewContext->height);
 	}
@@ -2095,9 +2091,10 @@ void KHTMLView::showCaret() {
     if (d->m_caretViewContext) {
         d->m_caretViewContext->displayed = true;
         if (d->m_caretViewContext->visible) {
-	    updateContents(d->m_caretViewContext->x, d->m_caretViewContext->y,
-                           d->m_caretViewContext->width, d->m_caretViewContext->height);
-   	}
+            updateContents(d->m_caretViewContext->x, d->m_caretViewContext->y,
+                d->m_caretViewContext->width, 
+                d->m_caretViewContext->height);
+        }
     }
 }
 
@@ -2108,7 +2105,8 @@ void KHTMLView::paintCaret(QPainter *p, const QRect &rect) const
         return;
 
     QRect pos(d->m_caretViewContext->x, d->m_caretViewContext->y,
-            d->m_caretViewContext->width, d->m_caretViewContext->height);
+        d->m_caretViewContext->width, 
+        d->m_caretViewContext->height);
     if (pos.intersects(rect)) {
         QPen pen = p->pen();
         pen.setStyle(SolidLine);
