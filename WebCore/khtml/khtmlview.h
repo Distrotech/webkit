@@ -58,6 +58,7 @@ namespace khtml {
     class RenderPartObject;
     class RenderWidget;
     class CSSStyleSelector;
+    class InlineBox;
     void applyRule(DOM::CSSProperty *prop);
 };
 
@@ -164,15 +165,102 @@ public:
     void resetScrollBars();
 #endif
 
+    // -- caret-related member functions (for caret mode as well as design mode)
+    /** initializes the caret if it hasn't been initialized yet.
+     *
+     * This method determines a suitable starting position, initializes
+     * the internal structures, and calculates the caret's coordinates ready
+     * for display.
+     *
+     * To "deinitialize" the caret, call @ref caretOff
+     */
+    void initCaret();
+    /** returns whether the text under the caret will be overridden.
+     */
+    bool caretOverrides();
+    /** ensures that the given element is properly focused.
+     *
+     * If not in caret mode or design mode, keyboard events are only regarded for
+     * focused nodes. Therefore, the function ensured that the focus will be
+     * properly set on unfocused nodes (or on a suitable ancestor).
+     * @param node node to focus
+     */
+    void ensureNodeHasFocus(DOM::NodeImpl *node);
+    /** inquires the current caret position and stores it in the caret view
+     * context. Also resets the blink frequency timer. It will not display
+     * the caret on the canvas.
+     */
+    void recalcAndStoreCaretPos();
+    /** displays the caret and reinitializes the blink frequency timer. */
+    void caretOn();
+    /** hides the caret and kills the blink frequency timer. */
+    void caretOff();
+    /** makes the caret visible, but does not influence the frequency timer.
+     * That means it probably won't get visible immediately.
+     */
+    void showCaret();
+    /** makes the caret invisible, but does not influence the frequency timer.
+     * The caret is immediately hidden.
+     */
+    void hideCaret();
+
+#ifdef APPLE_CHANGES
+    void paintCaret(QPainter *p, const QRect &rect) const;
+#endif
+
+    /** folds the selection to the current caret position.
+     *
+     * Whatever selection has existed before will be removed by the invocation
+     * of this method. Updates are only done if an actual selection has
+     * been folded. After the call of this method, no selection will exist
+     * any more.
+     *
+     * No validity checking is done on the parameters. Note that the parameters
+     * refer to the old selection, the current caret may be way off.
+     * @param startNode starting node of selection
+     * @param startOffset offset within the start node.
+     * @param endNode ending node of selection
+     * @param endOffset offset within the end node.
+     * @return @p true if there had been a selection, and it was folded.
+     */
+    bool foldSelectionToCaret(DOM::NodeImpl *startNode, long startOffset,
+                              DOM::NodeImpl *endNode, long endOffset);
+    /** places the caret on the current position.
+     *
+     * The caret is switched off, the position recalculated with respect to
+     * the new position. The caret will only be redisplayed if it is on an
+     * editable node, in design mode, or in caret mode.
+     * @return @p true if the caret has been displayed.
+     */
+    bool placeCaret();
+    // -- caret event handler
+    /**
+     * Evaluates key presses on editable nodes.
+     */
+    void caretKeyPressEvent(QKeyEvent *);
+    // -- caret navigation member functions
+    /** moves the caret to the given position and displays it.
+     *
+     * If the node is an invalid place, the function sets the caret to an
+     * nearby node that is valid.
+     *
+     * @param node node to be set to
+     * @param offset zero-based offset within this node
+     * @param clearSelection @p true if any the selection should be cleared
+     *    as well. It is ignored if @p thoroughly is false.
+     * @return @p true if a previously existing selection has been cleared.
+     */
+    bool moveCaretTo(DOM::NodeImpl *node, long offset, bool clearSelection);
+
 signals:
-    void cleared();
-
+        void cleared();
+    
 protected:
-    void clear();
-
+        void clear();
+    
 #if APPLE_CHANGES
 public:
-    void clearPart();
+        void clearPart();
 #endif
     virtual void resizeEvent ( QResizeEvent * event );
     virtual void showEvent ( QShowEvent * );
@@ -182,8 +270,9 @@ public:
     virtual void drawContents ( QPainter * p, int clipx, int clipy, int clipw, int cliph );
     virtual void drawContents( QPainter* );
 #endif
-
+    
     virtual void viewportMousePressEvent( QMouseEvent * );
+    virtual void focusInEvent( QFocusEvent * );
     virtual void focusOutEvent( QFocusEvent * );
     virtual void viewportMouseDoubleClickEvent( QMouseEvent * );
     virtual void viewportMouseMoveEvent(QMouseEvent *);
