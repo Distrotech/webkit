@@ -15,9 +15,7 @@
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				INSTALL_PATH = "@executable_path/../Frameworks";
 				OPTIMIZATION_CFLAGS = "-O0";
-				OTHER_LDFLAGS = "-seg1addr $(LOCAL_SEG1_ADDR)";
 				SECTORDER_FLAGS = "";
 				ZERO_LINK = YES;
 			};
@@ -31,8 +29,6 @@
 				COPY_PHASE_STRIP = YES;
 				DEBUGGING_SYMBOLS = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				INSTALL_PATH = "@executable_path/../Frameworks";
-				OTHER_LDFLAGS = "-seg1addr $(LOCAL_SEG1_ADDR)";
 				SECTORDER_FLAGS = "";
 				ZERO_LINK = NO;
 			};
@@ -124,7 +120,6 @@
 				0867D69EFE84028FC02AAC07,
 				0867D69FFE84028FC02AAC07,
 				0867D6A0FE84028FC02AAC07,
-				F692A8D8025563E401FF60F7,
 			);
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
@@ -135,13 +130,12 @@
 				FRAMEWORK_VERSION = A;
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				HEADER_SEARCH_PATHS = "";
-				INSTALL_PATH = "${SYSTEM_LIBRARY_DIR}/Frameworks/WebKit.framework/Versions/A/Frameworks";
+				INSTALL_PATH = /Library/Frameworks;
 				LIBRARY_SEARCH_PATHS = "";
 				LOCAL_SEG1_ADDR = 0x8000000;
 				MACOSX_DEPLOYMENT_TARGET = 10.2;
 				OPTIMIZATION_CFLAGS = "-Os";
 				OTHER_CFLAGS = "$(DEBUG_CFLAGS) -DAPPLE_CHANGES -DHAVE_CONFIG_H";
-				OTHER_LDFLAGS = "-umbrella WebKit -allowable_client JavaScriptGlue";
 				PRECOMPILE_PREFIX_HEADER = YES;
 				PREFIX_HEADER = JavaScriptCorePrefix.h;
 				PRODUCT_NAME = JavaScriptCore;
@@ -154,7 +148,7 @@
 			);
 			isa = PBXFrameworkTarget;
 			name = JavaScriptCore;
-			productInstallPath = "${SYSTEM_LIBRARY_DIR}/Frameworks/WebKit.framework/Versions/A/Frameworks";
+			productInstallPath = /Library/Frameworks;
 			productName = JavaScriptCore;
 			productReference = 034768E0FF38A50411DB9C8B;
 			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
@@ -178,7 +172,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>1.2</string>
 	<key>CFBundleVersion</key>
-	<string>124u</string>
+	<string>125</string>
 </dict>
 </plist>
 ";
@@ -1262,8 +1256,6 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
 				DEBUG_CFLAGS = "";
-				INSTALL_PATH = "@executable_path/../Frameworks";
-				OTHER_LDFLAGS = "-seg1addr $(LOCAL_SEG1_ADDR)";
 			};
 			isa = PBXBuildStyle;
 			name = OptimizedWithSymbols;
@@ -2228,15 +2220,6 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
-		};
-		F692A8D8025563E401FF60F7 = {
-			buildActionMask = 2147483647;
-			files = (
-			);
-			isa = PBXShellScriptBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if [ -f ../Tools/Scripts/embed-into-alex ]; then sh ../Tools/Scripts/embed-into-alex; fi";
 		};
 	};
 	rootObject = 0867D690FE84028FC02AAC07;
