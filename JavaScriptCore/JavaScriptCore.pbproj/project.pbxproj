@@ -108,7 +108,6 @@
 				0867D69FFE84028FC02AAC07,
 				0867D6A0FE84028FC02AAC07,
 				F692A8D8025563E401FF60F7,
-				6573C62F03A0BDCD00FCA39F,
 			);
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
@@ -119,7 +118,7 @@
 				FRAMEWORK_VERSION = A;
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				HEADER_SEARCH_PATHS = "";
-				INSTALL_PATH = "@executable_path/../Frameworks";
+				INSTALL_PATH = /System/Library/PrivateFrameworks;
 				LIBRARY_SEARCH_PATHS = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.2;
 				OPTIMIZATION_CFLAGS = "-Os";
@@ -129,7 +128,6 @@
 				PREFIX_HEADER = JavaScriptCorePrefix.h;
 				PRODUCT_NAME = JavaScriptCore;
 				SECTORDER_FLAGS = "";
-				SKIP_INSTALL = YES;
 				USE_GCC3_PFE_SUPPORT = YES;
 				WARNING_CFLAGS = "-Werror -Wall -W -Wcast-align -Wchar-subscripts -Wformat-security -Wmissing-format-attribute -Wmissing-prototypes -Wpointer-arith -Wwrite-strings -Wno-format-y2k -Wno-unused-parameter";
 				WRAPPER_EXTENSION = framework;
@@ -165,7 +163,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>0.8</string>
 	<key>CFBundleVersion</key>
-	<string>50u</string>
+	<string>49.1</string>
 	<key>CFHumanReadableCopyright</key>
 	<string>Copyright 2001-2002 Apple Computer, Inc; Copyright 1999-2001 Harri Porten &lt;porten@kde.org&gt;; Copyright 2001 Peter Kelly &lt;pmk@post.com&gt;; Copyright 1997-2001 University of Cambridge; Copyright 1991, 2000, 2001 by Lucent Technologies.
 </string>
@@ -589,19 +587,6 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
-		};
-		6573C62F03A0BDCD00FCA39F = {
-			buildActionMask = 8;
-			files = (
-			);
-			generatedFileNames = (
-			);
-			isa = PBXShellScriptBuildPhase;
-			neededFileNames = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-			shellPath = /bin/sh;
-			shellScript = "ditto ${SYMROOT}/JavaScriptCore.framework ${DSTROOT}/AppleInternal/Library/Frameworks/JavaScriptCore.framework";
 		};
 //650
 //651

@@ -1,3 +1,12 @@
+=== JavaScriptCore-49.1 ===
+
+2003-01-09  Maciej Stachowiak  <mjs@apple.com>
+
+        Updated versions for 49.1.
+
+        * English.lproj/InfoPlist.strings: Updated to 49.1 and 0.8.
+        * JavaScriptCore.pbproj/project.pbxproj: Likewise.
+
 === Safari-49 ===
 
 2003-01-05  Maciej Stachowiak  <mjs@apple.com>
