@@ -904,6 +904,23 @@ void RenderObject::paintBorder(QPainter *p, int _tx, int _ty, int w, int h, cons
     }
 }
 
+void RenderObject::absoluteRects(QValueList<QRect>& rects, int _tx, int _ty)
+{
+    // For blocks inside inlines, we go ahead and include margins so that we run right up to the
+    // inline boxes above and below us (thus getting merged with them to form a single irregular
+    // shape).
+    if (continuation()) {
+        rects.append(QRect(_tx, _ty - collapsedMarginTop(), 
+                           width(), height()+collapsedMarginTop()+collapsedMarginBottom()));
+        continuation()->absoluteRects(rects, 
+                                      _tx - xPos() + continuation()->containingBlock()->xPos(),
+                                      _ty - yPos() + continuation()->containingBlock()->yPos());
+    }
+    else
+        rects.append(QRect(_tx, _ty, width(), height()));
+}
+
+#if APPLE_CHANGES
 void RenderObject::addFocusRingRects(QPainter *p, int _tx, int _ty)
 {
     // For blocks inside inlines, we go ahead and include margins so that we run right up to the
@@ -918,6 +935,7 @@ void RenderObject::addFocusRingRects(QPainter *p, int _tx, int _ty)
     else
         p->addFocusRingRect(_tx, _ty, width(), height());
 }
+#endif
 
 void RenderObject::paintOutline(QPainter *p, int _tx, int _ty, int w, int h, const RenderStyle* style)
 {
@@ -1466,15 +1484,35 @@ RenderObject *RenderObject::container() const
     return o;
 }
 
+#if 0
+static void checkFloats(RenderObject* o, RenderObject* f)
+{
+    if (o->isRenderBlock()) {
+        RenderBlock* b = static_cast<RenderBlock*>(o);
+        if (b->containsFloat(f))
+            assert(false);
+    }
+    
+    for (RenderObject* c = o->firstChild(); c; c = c->nextSibling())
+        checkFloats(c, f);
+}
+#endif
+
 void RenderObject::removeFromObjectLists()
 {
     if (isFloating()) {
         RenderBlock* outermostBlock = containingBlock();
-        for (RenderBlock* p = outermostBlock;
-             p && !p->isCanvas() && p->containsFloat(this);
-             outermostBlock = p, p = p->containingBlock());
+        for (RenderBlock* p = outermostBlock; p && !p->isCanvas(); p = p->containingBlock()) {
+            if (p->containsFloat(this))
+                outermostBlock = p;
+        }
+        
         if (outermostBlock)
             outermostBlock->markAllDescendantsWithFloatsForLayout(this);
+#if 0
+        // Debugging code for float checking.
+        checkFloats(canvas(), this);
+#endif
     }
 
     if (isPositioned()) {
