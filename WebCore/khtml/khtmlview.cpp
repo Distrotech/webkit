@@ -2044,10 +2044,8 @@ void KHTMLView::initCaret() {
 }
 
 bool KHTMLView::caretOverrides() {
-    bool dm = m_part->inEditMode();
-    return !dm ? false
-    	: (dm || m_part->caretNode().handle()->renderer()->isEditable())
-	  && d->editorContext()->override;
+    return d->editorContext()->override &&
+        (m_part->inEditMode() || m_part->caretNode().handle()->isContentEditable());
 }
 
 void KHTMLView::ensureNodeHasFocus(NodeImpl *node) {
