@@ -42,6 +42,7 @@
 #endif
 
 using DOM::DocumentImpl;
+using DOM::Node;
 using DOM::NodeImpl;
 using DOM::Range;
 using DOM::TextImpl;
@@ -51,7 +52,7 @@ enum { BLINK_FREQUENCY = 500 };
 
 Caret::Caret(NodeImpl *node, long offset) 
     : m_node(0), m_offset(offset), 
-      m_x(0), m_y(0), m_height(0), 
+      m_x(0), m_y(0), m_size(0), 
       m_timerId(0), m_blinks(true), m_paint(false), m_visible(false)
 {
     if (node) {
@@ -62,7 +63,7 @@ Caret::Caret(NodeImpl *node, long offset)
 
 Caret::Caret() 
     : m_node(0), m_offset(0), 
-      m_x(0), m_y(0), m_height(0),
+      m_x(0), m_y(0), m_size(0),
       m_timerId(0), m_blinks(true), m_paint(false), m_visible(false)
 {
 }
@@ -75,7 +76,7 @@ Caret::Caret(const Caret &other) : QObject()
     m_offset = other.m_offset;
     m_x = other.m_x;
     m_y = other.m_y;
-    m_height = other.m_height;
+    m_size = other.m_size;
     m_timerId = other.m_timerId;
     m_blinks = other.m_blinks;
     m_paint = other.m_paint;
@@ -98,17 +99,35 @@ KHTMLView *Caret::view() const
     return m_node ? m_node->getDocument()->view(): 0; 
 }
 
-void Caret::setPosition(NodeImpl *node, long offset)
+void Caret::moveTo(NodeImpl *node, long offset, bool clearSelection) 
 {
-    if (node == m_node && offset == m_offset)
-        return;
+    // Fix up caret node
+    // EDIT FIXME: this finds the next node with a renderer,
+    // setting the node to 0 if there are no more renderers.
+    // It should search backwards then.
+    // This still won't solve the problem what to do if *no* element has a renderer.
+    if (node) { 
+        RenderObject *r = node->renderer();
+        while (!r) {
+            node = node->nextLeafNode();
+            if (!node) 
+                break;
+            r = node->renderer();
+        }
 
-    // set the node and offset
+        // Fix up caret offset
+        long max = node->caretMaxOffset();
+        long min = node->caretMinOffset();
+        if (offset < min) 
+            offset = min;
+        else if (offset > max) 
+            offset = max;
+    }
+
+    bool positionChanged = m_node != node || m_offset != offset;
+
+    // update caret values
     m_offset = offset;
-
-    if (node && node->hasChildNodes())
-        node = node->nextLeafNode();
-
     if (m_node != node) {
 		if (m_node)
 			m_node->deref();
@@ -117,25 +136,29 @@ void Caret::setPosition(NodeImpl *node, long offset)
 			m_node->ref();
 	}
 
-    if (!m_node)
-        return;
-
-    // place the caret
-    adjustPosition();
-    
+    // test for clearing the selection
     KHTMLPart *p = part();
-    if (!p || !p->isEditingAtCaret())
-        return;
-
-    // save selection. setting focus might clear it.
-    Range selection = p->selection();
-    ensureNodeHasFocus(m_node);
-    // restore selection, but don't place caret
-    p->setSelection(selection, false);
-    if (!p->selection().collapsed())
-        return;
-
-    invalidate();
+    if (p) {
+        if (clearSelection) {
+            ensureNodeHasFocus(m_node);
+            p->slotClearSelection();
+        }
+        else {
+#if 0
+            // save selection. setting focus might clear it.
+            Range selection = p->selection();
+            ensureNodeHasFocus(m_node);
+            // restore selection, but don't place caret
+            p->setSelection(selection, false);
+#endif
+        }
+    }
+    
+    if (positionChanged) {
+        invalidate();
+        if (p)
+            p->emitCaretPositionChanged();
+    }
 }
 
 void Caret::moveForwardByCharacter()
@@ -147,30 +170,22 @@ void Caret::moveForwardByCharacter()
     if (!part)
         return;
 
-    bool moved = false;
-    
     long caretOffset = offset();
     
     if (caretOffset < node()->caretMaxOffset()) {
-        part->moveCaretTo(node(), caretOffset + 1);
-        moved = true;
+        moveTo(node(), caretOffset + 1);
     }
     else {
         NodeImpl *n = node()->nextLeafNode();
         while (n) {
             if (n->caretMinOffset() < n->caretMaxOffset()) {
-                part->moveCaretTo(n, n->caretMinOffset() + 1);
-                moved = true;
+                moveTo(n, n->caretMinOffset() + 1);
                 break;
             }
             else {
                 n = n->nextLeafNode();
             }
         }
-    }
-    
-    if (moved) {
-        adjustPosition();
     }
 }
 
@@ -183,28 +198,20 @@ void Caret::moveBackwardByCharacter()
     if (!part)
         return;
 
-    bool moved = false;
-
     if (offset() - 1 >= 0) {
-        part->moveCaretTo(node(), offset() - 1);
-        moved = true;
+        moveTo(node(), offset() - 1);
     }
     else {
         NodeImpl *n = node()->previousLeafNode();
         while (n) {
             if (n->caretMinOffset() < n->caretMaxOffset()) {
-                part->moveCaretTo(n, n->caretMaxOffset() - 1);
-                moved = true;
+                moveTo(n, n->caretMaxOffset() - 1);
                 break;
             }
             else {
                 n = n->nextLeafNode();
             }
         }
-    }
-
-    if (moved) {
-        adjustPosition();
     }
 }
 
@@ -234,7 +241,7 @@ void Caret::adjustPosition()
     // move to the end of the preceding text node
     n = node()->previousLeafNode();
     if (n && n->isTextNode()) {
-        part->moveCaretTo(n, n->caretMaxOffset());
+        moveTo(n, n->caretMaxOffset());
     }
 }
 
@@ -249,32 +256,34 @@ void Caret::invalidate()
 
     // short-circuit if caret is not visible
     if (!m_visible) {
-        m_paint = false;
-        repaint(true);
+        if (m_paint) {
+            m_paint = false;
+            repaint(true);
+        }
         return;
     }
 
     // update caret rendering position
     int oldX = m_x;   
     int oldY = m_y;   
-    int oldHeight = m_height;   
+    int oldSize = m_size;   
     if (m_node && m_node->renderer()) {
         int w;
-        m_node->renderer()->caretPos(m_offset, true, m_x, m_y, w, m_height);
+        m_node->renderer()->caretPos(m_offset, true, m_x, m_y, w, m_size);
     }
     else
-        m_x = m_y = m_height = 0; // default values
+        m_x = m_y = m_size = 0; // default values
 
     // repaint the old position if necessary
     // prevents two carets from ever being drawn
-    if (oldX != m_x || oldY != m_y || oldHeight != m_height) {
+    if (m_paint && (oldX != m_x || oldY != m_y || oldSize != m_size)) {
         KHTMLView *v = view();
         if (v)
-            v->updateContents(oldX, oldY, 1, oldHeight);
+            v->updateContents(oldX, oldY, 1, oldSize);
     }
 
     // paint the caret if it is visible
-    if (m_visible && m_height != 0) {
+    if (m_visible && m_size != 0) {
         m_paint = true;
         repaint();
     }
@@ -293,9 +302,9 @@ void Caret::repaint(bool immediate) const
         return;
         
     if (immediate)
-        v->repaintContents(m_x, m_y, 1, m_height);
+        v->repaintContents(m_x, m_y, 1, m_size);
     else
-        v->updateContents(m_x, m_y, 1, m_height);
+        v->updateContents(m_x, m_y, 1, m_size);
 }
 
 #ifdef APPLE_CHANGES
@@ -304,7 +313,7 @@ void Caret::paint(QPainter *p, const QRect &rect) const
     if (!m_paint)
         return;
 
-    QRect pos(m_x, m_y, 1, m_height);
+    QRect pos(m_x, m_y, 1, m_size);
     if (pos.intersects(rect)) {
         QPen pen = p->pen();
         pen.setStyle(SolidLine);
@@ -330,7 +339,7 @@ void Caret::ensureNodeHasFocus(NodeImpl *node)
     if (!p)
         return;
 
-    if (p->inEditMode() || node->focused()) 
+    if (node && node->focused()) 
         return;
     
     // Find first ancestor whose "user-input" is "enabled"

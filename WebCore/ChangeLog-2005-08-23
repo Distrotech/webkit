@@ -1,3 +1,79 @@
+2004-01-19  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
+	Initial pass at trying to clean up mouse event handling
+	in KHTMLPart, with emphasis on making the selection
+	code more readable. Actually, this breaks editing, but
+	the point the code is in now is a good checkpoint.
+	I will fix editing soon, and it will be much better for it.
+
+        * WebCore.pbproj/project.pbxproj:
+        * khtml/editing/edit_caret.cpp:
+        (Caret::Caret):
+        (Caret::moveTo):
+        (Caret::moveForwardByCharacter):
+        (Caret::moveBackwardByCharacter):
+        (Caret::adjustPosition):
+        (Caret::invalidate):
+        (Caret::repaint):
+        (Caret::paint):
+        (Caret::ensureNodeHasFocus):
+        * khtml/editing/edit_caret.h:
+        (khtml::Caret::size):
+        * khtml/editing/htmlediting.cpp:
+        (EditCommand::pruneEmptyNodes):
+        (InputTextCommand::apply):
+        (DeleteTextCommand::apply):
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::init):
+        (KHTMLPart::findTextNext):
+        (KHTMLPart::setSelection):
+        (KHTMLPart::checkSelectionPoint):
+        (KHTMLPart::handleMousePressEventDoubleClick):
+        (KHTMLPart::handleMousePressEventTripleClick):
+        (KHTMLPart::handleMousePressEventSingleClick):
+        (KHTMLPart::khtmlMousePressEvent):
+        (isBeforeNode):
+        (KHTMLPart::handleMouseMoveEventDrag):
+        (KHTMLPart::handleMouseMoveEventOver):
+        (KHTMLPart::handleMouseMoveEventSelection):
+        (KHTMLPart::khtmlMouseMoveEvent):
+        (KHTMLPart::khtmlMouseReleaseEvent):
+        (KHTMLPart::selectAll):
+        (KHTMLPart::caret):
+        * khtml/khtml_part.h:
+        * khtml/khtml_selection.cpp: Added.
+        (KHTMLSelection::KHTMLSelection):
+        (KHTMLSelection::~KHTMLSelection):
+        (KHTMLSelection::setSelection):
+        (KHTMLSelection::clearSelection):
+        (KHTMLSelection::setStartNode):
+        (KHTMLSelection::setStartOffset):
+        (KHTMLSelection::setEndNode):
+        (KHTMLSelection::setEndOffset):
+        (KHTMLSelection::setVisible):
+        (KHTMLSelection::invalidate):
+        (KHTMLSelection::paint):
+        (KHTMLSelection::setPart):
+        (KHTMLSelection::timerEvent):
+        (KHTMLSelection::repaint):
+        * khtml/khtml_selection.h: Added.
+        (KHTMLSelection::):
+        (KHTMLSelection::state):
+        (KHTMLSelection::startNode):
+        (KHTMLSelection::startOffset):
+        (KHTMLSelection::endNode):
+        (KHTMLSelection::endOffset):
+        (KHTMLSelection::caretNode):
+        (KHTMLSelection::caretOffset):
+        (KHTMLSelection::visible):
+        * khtml/khtmlpart_p.h:
+        (KHTMLPartPrivate::KHTMLPartPrivate):
+        (KHTMLPartPrivate::~KHTMLPartPrivate):
+        * khtml/khtmlview.cpp:
+        (KHTMLView::focusNextPrevNode):
+
 2004-01-15  Ken Kocienda  <kocienda@apple.com>
 
         Reviewed by me

@@ -148,7 +148,7 @@ void EditCommand::pruneEmptyNodes() const
     }
     
     if (prunedNodes) {
-        part->moveCaretTo(node, node->caretMaxOffset());
+        part->caret()->moveTo(node, node->caretMaxOffset());
         notifyChanged(node);
     }
 }
@@ -225,7 +225,7 @@ bool InputTextCommand::apply()
         breakNode->deref();
         
         // Set the cursor at the beginning of the node after the split.
-        part->moveCaretTo(textNode, 0);
+        part->caret()->moveTo(textNode, 0);
         notifyChanged(breakNode);
         notifyChanged(textNode);
         notifyChanged(textNode->parentNode());
@@ -235,7 +235,7 @@ bool InputTextCommand::apply()
         // EDIT FIXME: this is a hack for now
         // advance the cursor
         int textLength = text().length();
-        part->moveCaretTo(caret->node(), caret->offset() + textLength);
+        part->caret()->moveTo(caret->node(), caret->offset() + textLength);
         notifyChanged(textNode);
     }
 
@@ -271,7 +271,7 @@ bool DeleteTextCommand::apply()
 
     // Delete the current selection
     if (!selection().collapsed()) {
-        part->moveCaretTo(selection().startContainer().handle(), selection().startOffset());
+        part->caret()->moveTo(selection().startContainer().handle(), selection().startOffset());
         deleteSelection();
         caret->adjustPosition();
         return true;
@@ -290,7 +290,7 @@ bool DeleteTextCommand::apply()
         if (offset >= 0) {
             TextImpl *textNode = static_cast<TextImpl *>(caretNode);
             textNode->deleteData(offset, 1, exceptionCode);
-            part->moveCaretTo(textNode, offset);
+            part->caret()->moveTo(textNode, offset);
             pruneEmptyNodes();
             notifyChanged(textNode);
             return true;
@@ -312,7 +312,7 @@ bool DeleteTextCommand::apply()
             TextImpl *textNode = static_cast<TextImpl *>(previousLeafNode);
             offset = previousLeafNode->caretMaxOffset() - 1;
             textNode->deleteData(offset, 1, exceptionCode);
-            part->moveCaretTo(textNode, offset);
+            part->caret()->moveTo(textNode, offset);
             pruneEmptyNodes();
             notifyChanged(textNode);
             return true;

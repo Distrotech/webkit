@@ -38,6 +38,7 @@
 #include "khtml_events.h"
 #include "khtml_ext.h"
 #include "khtml_iface.h"
+#include "khtml_selection.h"
 #include "khtml_settings.h"
 #include "misc/decoder.h"
 #include "java/kjavaappletcontext.h"
@@ -124,6 +125,7 @@ public:
     m_startBeforeEnd = true;
     m_extendAtEnd = true;
     m_caret = new khtml::Caret();
+    m_selection = new KHTMLSelection();
 #if !APPLE_CHANGES
     m_linkCursor = KCursor::handCursor();
 #endif
@@ -214,6 +216,7 @@ public:
     delete m_javaContext;
 #endif
     delete m_caret;
+    delete m_selection;
   }
 
   FrameList m_frames;
@@ -358,6 +361,7 @@ public:
   DOM::Node m_selectionEnd;
   long m_endOffset;
   khtml::Caret *m_caret;
+  KHTMLSelection *m_selection;
   QString m_overURL;
   QString m_overURLTarget;
 

@@ -1322,13 +1322,13 @@ void KHTMLView::focusNextPrevNode(bool next)
             scrollTo(QRect(contentsX()+visibleWidth()/2,0,0,0));
     }
     else {
-        // if it's an editable element, activate the caret
+        // EDIT FIXME: if it's an editable element, activate the caret
+        // otherwise, hide it
         if (!m_part->inEditMode() && newFocusNode->renderer()->isEditable()) {
-            d->caretViewContext();
-            m_part->moveCaretTo(newFocusNode, 0L);
+            // make caret visible
         } 
         else {
-            m_part->caret()->setVisible(false);
+            // hide caret
         }
 
         // Scroll the view as necessary to ensure that the new focus node is visible

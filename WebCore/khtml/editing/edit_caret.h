@@ -46,16 +46,18 @@ class Caret : public QObject
   Q_OBJECT
 
 public:
+    Caret();
     Caret(DOM::NodeImpl *node, long offset);
     Caret(const Caret &);
     ~Caret();
 
+    void moveTo(DOM::NodeImpl *node, long offset, bool clearSelection=true);
     DOM::NodeImpl *node() const { return m_node; }
     long offset() const { return m_offset; }
 
     int xPos() const { return m_x; }
     int yPos() const { return m_y; }
-    int height() const { return m_height; }
+    int size() const { return m_size; }
 
     void setVisible(bool flag=true);
     bool visible() const { return m_visible; }
@@ -74,17 +76,12 @@ public:
     void adjustPosition();
         
     friend class KHTMLPart;
-    friend class KHTMLPartPrivate;
     
 private:
-    Caret();
-
     KHTMLPart *part() const;
     KHTMLView *view() const;
 
-    void setPosition(DOM::NodeImpl *, long);
     void timerEvent(QTimerEvent *e);
-
     void repaint(bool immediate=false) const;
 
     DOM::NodeImpl *m_node;  // node containing the caret
@@ -92,8 +89,7 @@ private:
 
     int m_x;                // caret x position in viewport coordinates
     int m_y;                // caret y position in viewport coordinates (specifies the top, not the baseline)
-                    
-    int m_height;           // height of caret in pixels
+    int m_size;             // size of caret in pixels
 
     int m_timerId;          // caret blink frequency timer id
 

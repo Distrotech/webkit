@@ -603,11 +603,6 @@ public:
   bool isEditingAtCaret() const;
 
   /**
-   * Moves the input caret to the specified offset.
-   */
-  void moveCaretTo(DOM::NodeImpl *node, long offset, bool clearSelection=true);
-  
-  /**
    * Convenience method to show the document's view.
    *
    * Equivalent to widget()->show() or view()->show() .
@@ -1138,17 +1133,17 @@ private:
 
   void replaceContentsWithScriptResult( const KURL &url );
 
-    /** collapses the selection to the current caret position.
-     *
-     * Whatever selection has existed before will be removed by the invocation
-     * of this method. Updates are only done if an actual selection has
-     * been collapsed. After the call of this method, no selection will exist
-     * any more.
-     *
-     * @return @p true if there had been a selection, and it was collapsed.
-     */
-  bool collapseSelectionToCaret();
-  DOM::NodeImpl *nextNodeWithRenderer(DOM::NodeImpl *node) const; 
+  void checkSelectionPoint(khtml::MouseEvent *event, DOM::NodeImpl *&node, int &offset);
+
+  bool handleMouseMoveEventDrag(khtml::MouseMoveEvent *event);
+  bool handleMouseMoveEventOver(khtml::MouseMoveEvent *event);
+  void handleMouseMoveEventSelection(khtml::MouseMoveEvent *event);
+
+#if APPLE_CHANGES
+  void handleMousePressEventSingleClick(khtml::MousePressEvent *event);
+  void handleMousePressEventDoubleClick(khtml::MousePressEvent *event);
+  void handleMousePressEventTripleClick(khtml::MousePressEvent *event);
+#endif
 
   KHTMLPartPrivate *d;
   friend class KHTMLPartPrivate;
