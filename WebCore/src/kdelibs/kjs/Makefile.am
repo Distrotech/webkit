@@ -39,6 +39,7 @@ libkjs_o_SOURCES = \
 	math_object.lut.h \
 	nodes.cpp \
 	nodes.h \
+	nodes2string.cpp \
 	number_object.cpp \
 	number_object.h \
 	object.cpp \

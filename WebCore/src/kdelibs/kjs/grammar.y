@@ -18,7 +18,6 @@
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- *  $Id$
  */
 
 #ifdef HAVE_CONFIG_H
@@ -237,7 +236,8 @@ CallExpr:
     MemberExpr Arguments           { $$ = new FunctionCallNode($1, $2); }
   | CallExpr Arguments             { $$ = new FunctionCallNode($1, $2); }
   | CallExpr '[' Expr ']'          { $$ = new AccessorNode1($1, $3); }
-  | CallExpr '.' IDENT             { $$ = new AccessorNode2($1, $3); }
+  | CallExpr '.' IDENT             { $$ = new AccessorNode2($1, $3);
+                                     delete $3; }
 ;
 
 Arguments:

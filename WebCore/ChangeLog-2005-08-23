@@ -1,3 +1,383 @@
+2002-03-24  Darin Adler  <darin@apple.com>
+
+        Merged kdelibs from KDE 3.0 RC 3 into our 3.0 beta 2-based sources.
+
+	* src/kdelibs/kdecore/kentities.gperf:
+	* src/kdelibs/khtml/css/css_ruleimpl.cpp: (CSSMediaRuleImpl::~CSSMediaRuleImpl),
+	(CSSStyleRuleImpl::selectorText):
+	* src/kdelibs/khtml/css/css_ruleimpl.h:
+	* src/kdelibs/khtml/css/css_stylesheetimpl.cpp:
+	(StyleSheetImpl::~StyleSheetImpl), (StyleSheetImpl::setMedia):
+	* src/kdelibs/khtml/css/css_stylesheetimpl.h:
+	* src/kdelibs/khtml/css/css_valueimpl.cpp: (CSSStyleDeclarationImpl::operator= ),
+	(CSSStyleDeclarationImpl::getPropertyCSSValue),
+	(CSSPrimitiveValueImpl::computeLength),
+	(CSSPrimitiveValueImpl::computeLengthFloat),
+	(FontFamilyValueImpl::FontFamilyValueImpl):
+	* src/kdelibs/khtml/css/css_valueimpl.h:
+	* src/kdelibs/khtml/css/csshelper.cpp: (khtml::parseURL):
+	* src/kdelibs/khtml/css/csshelper.h:
+	* src/kdelibs/khtml/css/cssparser.cpp: (getNext), (StyleBaseImpl::parseValue),
+	(StyleBaseImpl::parseAuralValue), (StyleBaseImpl::setParsedValue),
+	(StyleBaseImpl::parseShortHand), (StyleBaseImpl::parseBackgroundPosition),
+	(StyleBaseImpl::parseContent), (StyleBaseImpl::splitContent),
+	(StyleBaseImpl::parseRule), (StyleBaseImpl::preprocess), (CSSSelector::print),
+	(CSSSelector::operator == ), (CSSSelector::selectorText):
+	* src/kdelibs/khtml/css/cssparser.h:
+	* src/kdelibs/khtml/css/cssstyleselector.cpp:
+	(CSSStyleSelector::CSSStyleSelector), (CSSStyleSelector::init),
+	(CSSStyleSelector::computeFontSizes), (CSSStyleSelector::styleForElement),
+	(CSSStyleSelector::addInlineDeclarations), (CSSStyleSelector::checkOneSelector),
+	(CSSOrderedPropertyList::append), (convertToLength):
+	* src/kdelibs/khtml/css/cssstyleselector.h:
+	* src/kdelibs/khtml/css/cssvalues.in:
+	* src/kdelibs/khtml/css/html4.css:
+	* src/kdelibs/khtml/css/makeprop:
+	* src/kdelibs/khtml/css/makevalues:
+	* src/kdelibs/khtml/dom/css_rule.cpp:
+	* src/kdelibs/khtml/dom/css_rule.h:
+	* src/kdelibs/khtml/dom/css_stylesheet.cpp:
+	* src/kdelibs/khtml/dom/css_stylesheet.h:
+	* src/kdelibs/khtml/dom/css_value.cpp:
+	* src/kdelibs/khtml/dom/css_value.h:
+	* src/kdelibs/khtml/dom/dom2_events.cpp:
+	* src/kdelibs/khtml/dom/dom2_events.h:
+	* src/kdelibs/khtml/dom/dom2_range.cpp:
+	* src/kdelibs/khtml/dom/dom2_range.h:
+	* src/kdelibs/khtml/dom/dom2_traversal.cpp:
+	* src/kdelibs/khtml/dom/dom2_traversal.h:
+	* src/kdelibs/khtml/dom/dom2_views.cpp:
+	* src/kdelibs/khtml/dom/dom2_views.h:
+	* src/kdelibs/khtml/dom/dom_core.h:
+	* src/kdelibs/khtml/dom/dom_doc.cpp:
+	* src/kdelibs/khtml/dom/dom_doc.h:
+	* src/kdelibs/khtml/dom/dom_element.cpp: (Attr::name),
+	(Element::removeAttribute):
+	* src/kdelibs/khtml/dom/dom_element.h:
+	* src/kdelibs/khtml/dom/dom_exception.h:
+	* src/kdelibs/khtml/dom/dom_html.h:
+	* src/kdelibs/khtml/dom/dom_misc.cpp:
+	* src/kdelibs/khtml/dom/dom_misc.h:
+	* src/kdelibs/khtml/dom/dom_node.cpp:
+	* src/kdelibs/khtml/dom/dom_node.h:
+	* src/kdelibs/khtml/dom/dom_string.h:
+	* src/kdelibs/khtml/dom/dom_text.cpp:
+	* src/kdelibs/khtml/dom/dom_text.h:
+	* src/kdelibs/khtml/dom/dom_xml.cpp:
+	* src/kdelibs/khtml/dom/dom_xml.h:
+	* src/kdelibs/khtml/dom/html_base.cpp: (HTMLIFrameElement::HTMLIFrameElement),
+	(HTMLIFrameElement::operator = ), (HTMLIFrameElement::~HTMLIFrameElement),
+	(HTMLIFrameElement::align), (HTMLIFrameElement::setAlign),
+	(HTMLIFrameElement::frameBorder), (HTMLIFrameElement::setFrameBorder),
+	(HTMLIFrameElement::height), (HTMLIFrameElement::setHeight),
+	(HTMLIFrameElement::longDesc), (HTMLIFrameElement::setLongDesc),
+	(HTMLIFrameElement::marginHeight), (HTMLIFrameElement::setMarginHeight),
+	(HTMLIFrameElement::marginWidth), (HTMLIFrameElement::setMarginWidth),
+	(HTMLIFrameElement::name), (HTMLIFrameElement::setName),
+	(HTMLIFrameElement::scrolling), (HTMLIFrameElement::setScrolling),
+	(HTMLIFrameElement::src), (HTMLIFrameElement::setSrc),
+	(HTMLIFrameElement::width), (HTMLIFrameElement::setWidth),
+	(HTMLIFrameElement::contentDocument):
+	* src/kdelibs/khtml/dom/html_base.h:
+	* src/kdelibs/khtml/dom/html_block.cpp:
+	* src/kdelibs/khtml/dom/html_block.h:
+	* src/kdelibs/khtml/dom/html_document.cpp:
+	* src/kdelibs/khtml/dom/html_document.h:
+	* src/kdelibs/khtml/dom/html_element.cpp:
+	* src/kdelibs/khtml/dom/html_element.h:
+	* src/kdelibs/khtml/dom/html_form.cpp:
+	* src/kdelibs/khtml/dom/html_form.h:
+	* src/kdelibs/khtml/dom/html_head.cpp:
+	* src/kdelibs/khtml/dom/html_head.h:
+	* src/kdelibs/khtml/dom/html_image.cpp: (HTMLImageElement::height),
+	(HTMLImageElement::width):
+	* src/kdelibs/khtml/dom/html_image.h:
+	* src/kdelibs/khtml/dom/html_inline.cpp:
+	* src/kdelibs/khtml/dom/html_inline.h:
+	* src/kdelibs/khtml/dom/html_list.cpp:
+	* src/kdelibs/khtml/dom/html_list.h:
+	* src/kdelibs/khtml/dom/html_misc.cpp:
+	* src/kdelibs/khtml/dom/html_misc.h:
+	* src/kdelibs/khtml/dom/html_object.cpp:
+	* src/kdelibs/khtml/dom/html_object.h:
+	* src/kdelibs/khtml/dom/html_table.cpp:
+	* src/kdelibs/khtml/dom/html_table.h:
+	* src/kdelibs/khtml/ecma/kjs_binding.cpp: (ScriptInterpreter::ScriptInterpreter):
+	* src/kdelibs/khtml/ecma/kjs_binding.h:
+	* src/kdelibs/khtml/ecma/kjs_css.cpp: (DOMCSSStyleDeclaration::hasProperty),
+	(DOMCSSStyleDeclaration::tryPut), (DOMRGBColor::tryGet),
+	(DOMRGBColor::getValueProperty), (DOMRect::tryGet), (DOMRect::getValueProperty),
+	(DOMCounter::tryGet), (DOMCounter::getValueProperty):
+	* src/kdelibs/khtml/ecma/kjs_css.h:
+	* src/kdelibs/khtml/ecma/kjs_dom.cpp: (DOMNode::getValueProperty),
+	(DOMNodeList::hasProperty), (DOMDocument::getValueProperty),
+	(DOMElement::tryGet), (DOMNamedNodeMap::hasProperty):
+	* src/kdelibs/khtml/ecma/kjs_dom.h:
+	* src/kdelibs/khtml/ecma/kjs_events.cpp: (JSEventListener::handleEvent),
+	(DOMEvent::getValueProperty), (DOMEvent::tryPut), (DOMEvent::putValue),
+	(DOMMouseEvent::getValueProperty):
+	* src/kdelibs/khtml/ecma/kjs_events.h:
+	* src/kdelibs/khtml/ecma/kjs_html.cpp: (KJS::HTMLDocument::hasProperty),
+	(KJS::HTMLDocument::tryGet), (KJS::HTMLElement::tryGet),
+	(KJS::HTMLElement::hasProperty), (KJS::HTMLElement::tryPut),
+	(KJS::HTMLCollection::hasProperty):
+	* src/kdelibs/khtml/ecma/kjs_html.h:
+	* src/kdelibs/khtml/ecma/kjs_navigator.cpp: (Navigator::getValueProperty):
+	* src/kdelibs/khtml/ecma/kjs_navigator.h:
+	* src/kdelibs/khtml/ecma/kjs_proxy.cpp: (KJSProxyImpl::~KJSProxyImpl),
+	(KJSProxyImpl::evaluate), (KJSProxyImpl::clear),
+	(KJSProxyImpl::createHTMLEventHandler), (KJSProxyImpl::setDebugEnabled),
+	(KJSProxyImpl::setSourceFile), (KJSProxyImpl::appendSourceFile):
+	* src/kdelibs/khtml/ecma/kjs_window.cpp: (Screen::getValueProperty),
+	(Window::hasProperty), (Window::get), (Window::put), (Window::clear),
+	(WindowFunc::tryCall), (Location::put), (LocationFunc::tryCall),
+	(Konqueror::hasProperty):
+	* src/kdelibs/khtml/ecma/kjs_window.h:
+	* src/kdelibs/khtml/html/dtd.cpp:
+	* src/kdelibs/khtml/html/dtd.h:
+	* src/kdelibs/khtml/html/html_baseimpl.cpp:
+	(HTMLBodyElementImpl::parseAttribute), (HTMLBodyElementImpl::init),
+	(HTMLBodyElementImpl::attach), (HTMLFrameElementImpl::HTMLFrameElementImpl),
+	(HTMLFrameElementImpl::attach), (HTMLFrameSetElementImpl::recalcStyle):
+	* src/kdelibs/khtml/html/html_baseimpl.h:
+	* src/kdelibs/khtml/html/html_blockimpl.cpp: (HTMLHRElementImpl::attach):
+	* src/kdelibs/khtml/html/html_blockimpl.h:
+	* src/kdelibs/khtml/html/html_documentimpl.cpp: (HTMLDocumentImpl::body),
+	(HTMLDocumentImpl::close):
+	* src/kdelibs/khtml/html/html_documentimpl.h:
+	* src/kdelibs/khtml/html/html_elementimpl.cpp: (HTMLElementImpl::addCSSLength):
+	* src/kdelibs/khtml/html/html_elementimpl.h:
+	* src/kdelibs/khtml/html/html_formimpl.cpp: (HTMLFormElementImpl::formData),
+	(HTMLGenericFormElementImpl::isSelectable),
+	(HTMLGenericFormElementImpl::defaultEventHandler),
+	(HTMLButtonElementImpl::attach), (HTMLInputElementImpl::~HTMLInputElementImpl),
+	(HTMLInputElementImpl::init), (HTMLSelectElementImpl::HTMLSelectElementImpl),
+	(HTMLSelectElementImpl::~HTMLSelectElementImpl),
+	(HTMLSelectElementImpl::selectedIndex),
+	(HTMLSelectElementImpl::setSelectedIndex), (HTMLSelectElementImpl::length),
+	(HTMLSelectElementImpl::add), (HTMLSelectElementImpl::remove),
+	(HTMLSelectElementImpl::value), (HTMLSelectElementImpl::insertBefore),
+	(HTMLSelectElementImpl::replaceChild), (HTMLSelectElementImpl::removeChild),
+	(HTMLSelectElementImpl::appendChild), (HTMLSelectElementImpl::addChild),
+	(HTMLSelectElementImpl::init), (HTMLSelectElementImpl::encoding),
+	(HTMLSelectElementImpl::optionToListIndex),
+	(HTMLSelectElementImpl::listToOptionIndex),
+	(HTMLSelectElementImpl::recalcListItems),
+	(HTMLSelectElementImpl::childrenChanged),
+	(HTMLSelectElementImpl::setRecalcListItems), (HTMLSelectElementImpl::reset),
+	(HTMLSelectElementImpl::notifyOptionSelected),
+	(HTMLOptGroupElementImpl::addChild),
+	(HTMLOptGroupElementImpl::recalcSelectOptions),
+	(HTMLOptionElementImpl::setSelected),
+	(HTMLTextAreaElementImpl::~HTMLTextAreaElementImpl),
+	(HTMLTextAreaElementImpl::restoreState):
+	* src/kdelibs/khtml/html/html_formimpl.h:
+	* src/kdelibs/khtml/html/html_headimpl.cpp: (HTMLLinkElementImpl::process):
+	* src/kdelibs/khtml/html/html_headimpl.h:
+	* src/kdelibs/khtml/html/html_imageimpl.cpp: (HTMLImageElementImpl::width),
+	(HTMLImageElementImpl::height):
+	* src/kdelibs/khtml/html/html_imageimpl.h:
+	* src/kdelibs/khtml/html/html_inlineimpl.cpp:
+	(HTMLAnchorElementImpl::defaultEventHandler):
+	* src/kdelibs/khtml/html/html_inlineimpl.h:
+	* src/kdelibs/khtml/html/html_listimpl.cpp: (HTMLLIElementImpl::attach):
+	* src/kdelibs/khtml/html/html_listimpl.h:
+	* src/kdelibs/khtml/html/html_miscimpl.cpp:
+	* src/kdelibs/khtml/html/html_miscimpl.h:
+	* src/kdelibs/khtml/html/html_objectimpl.h:
+	* src/kdelibs/khtml/html/html_tableimpl.h:
+	* src/kdelibs/khtml/html/htmlparser.cpp: (KHTMLParser::parseToken),
+	(KHTMLParser::insertNode), (KHTMLParser::getElement), (KHTMLParser::popOneBlock):
+	* src/kdelibs/khtml/html/htmlparser.h:
+	* src/kdelibs/khtml/html/htmltokenizer.cpp: (HTMLTokenizer::parseSpecial),
+	(HTMLTokenizer::scriptHandler), (HTMLTokenizer::parseTag),
+	(HTMLTokenizer::write), (HTMLTokenizer::processToken):
+	* src/kdelibs/khtml/html/htmltokenizer.h:
+	* src/kdelibs/khtml/java/kjavaapplet.h:
+	* src/kdelibs/khtml/java/kjavaappletcontext.h:
+	* src/kdelibs/khtml/java/kjavaappletserver.h:
+	* src/kdelibs/khtml/khtml_events.cpp: (khtml::MouseEvent::MouseEvent):
+	* src/kdelibs/khtml/khtml_events.h:
+	* src/kdelibs/khtml/khtml_ext.h:
+	* src/kdelibs/khtml/khtml_part.h:
+	* src/kdelibs/khtml/khtmlview.cpp: (KHTMLView::KHTMLView),
+	(KHTMLView::viewportMousePressEvent), (KHTMLView::viewportMouseDoubleClickEvent),
+	(KHTMLView::viewportMouseMoveEvent), (KHTMLView::viewportMouseReleaseEvent),
+	(KHTMLView::keyPressEvent), (KHTMLView::keyReleaseEvent),
+	(KHTMLView::contentsContextMenuEvent), (KHTMLView::focusNextPrevChild),
+	(KHTMLView::focusNextPrevNode), (KHTMLView::print),
+	(KHTMLView::dispatchMouseEvent), (KHTMLView::dragEnterEvent),
+	(KHTMLView::dropEvent):
+	* src/kdelibs/khtml/khtmlview.h:
+	* src/kdelibs/khtml/misc/decoder.cpp: (KanjiCode::judge), (Decoder::decode):
+	* src/kdelibs/khtml/misc/decoder.h:
+	* src/kdelibs/khtml/misc/helper.cpp:
+	* src/kdelibs/khtml/misc/helper.h:
+	* src/kdelibs/khtml/misc/khtmllayout.h:
+	* src/kdelibs/khtml/misc/loader.h:
+	* src/kdelibs/khtml/misc/loader_client.h:
+	* src/kdelibs/khtml/misc/makeattrs:
+	* src/kdelibs/khtml/misc/maketags:
+	* src/kdelibs/khtml/misc/stringit.h:
+	* src/kdelibs/khtml/rendering/Makefile.am:
+	* src/kdelibs/khtml/rendering/bidi.cpp: (operator==), (operator!=), (Bidinext),
+	(appendRun), (embed), (RenderFlow::bidiReorderLine),
+	(RenderFlow::layoutInlineChildren):
+	* src/kdelibs/khtml/rendering/bidi.h:
+	* src/kdelibs/khtml/rendering/font.cpp: Added.
+	* src/kdelibs/khtml/rendering/font.h: Added.
+	* src/kdelibs/khtml/rendering/render_applet.cpp:
+	* src/kdelibs/khtml/rendering/render_applet.h:
+	* src/kdelibs/khtml/rendering/render_body.cpp:
+	* src/kdelibs/khtml/rendering/render_body.h:
+	* src/kdelibs/khtml/rendering/render_box.cpp: (RenderBox::printBoxDecorations),
+	(RenderBox::printBackground), (RenderBox::calcClip), (RenderBox::position),
+	(RenderBox::calcReplacedWidth):
+	* src/kdelibs/khtml/rendering/render_box.h:
+	* src/kdelibs/khtml/rendering/render_br.cpp:
+	* src/kdelibs/khtml/rendering/render_br.h:
+	* src/kdelibs/khtml/rendering/render_container.cpp:
+	(RenderContainer::insertChildNode):
+	* src/kdelibs/khtml/rendering/render_container.h:
+	* src/kdelibs/khtml/rendering/render_flow.cpp: (RenderFlow::printSpecialObjects),
+	(RenderFlow::layout), (RenderFlow::layoutBlockChildren),
+	(RenderFlow::positionNewFloats), (RenderFlow::floatBottom),
+	(RenderFlow::lowestPosition), (RenderFlow::rightmostPosition),
+	(RenderFlow::clearFloats), (RenderFlow::addOverHangingFloats), (next),
+	(RenderFlow::calcMinMaxWidth), (RenderFlow::addChild), (RenderFlow::nodeAtPoint),
+	(RenderFlow::printTree):
+	* src/kdelibs/khtml/rendering/render_flow.h:
+	* src/kdelibs/khtml/rendering/render_form.cpp:
+	(RenderFormElement::performAction), (RenderFormElement::slotClicked),
+	(RenderLineEdit::updateFromElement), (RenderLineEdit::performAction),
+	(RenderSelect::RenderSelect), (RenderSelect::updateFromElement),
+	(RenderSelect::calcMinMaxWidth), (RenderSelect::layout),
+	(RenderSelect::performAction), (RenderSelect::slotSelectionChanged),
+	(RenderTextArea::performAction):
+	* src/kdelibs/khtml/rendering/render_form.h:
+	* src/kdelibs/khtml/rendering/render_frames.cpp: (RenderFrameSet::userResize),
+	(RenderFrame::slotViewCleared), (RenderPartObject::slotViewCleared):
+	* src/kdelibs/khtml/rendering/render_frames.h:
+	* src/kdelibs/khtml/rendering/render_html.cpp:
+	* src/kdelibs/khtml/rendering/render_html.h:
+	* src/kdelibs/khtml/rendering/render_image.cpp: (RenderImage::printObject):
+	* src/kdelibs/khtml/rendering/render_image.h:
+	* src/kdelibs/khtml/rendering/render_list.cpp:
+	* src/kdelibs/khtml/rendering/render_list.h:
+	* src/kdelibs/khtml/rendering/render_object.cpp: (RenderObject::information),
+	(RenderObject::checkSelectionPoint), (RenderObject::nodeAtPoint):
+	* src/kdelibs/khtml/rendering/render_object.h:
+	* src/kdelibs/khtml/rendering/render_replaced.cpp: (RenderReplaced::position),
+	(RenderWidget::RenderWidget), (resizeWidget), (RenderWidget::setQWidget),
+	(RenderWidget::layout), (RenderWidget::setStyle), (RenderWidget::printObject),
+	(RenderWidget::eventFilter):
+	* src/kdelibs/khtml/rendering/render_replaced.h:
+	* src/kdelibs/khtml/rendering/render_root.cpp: (RenderRoot::RenderRoot),
+	(RenderRoot::printObject):
+	* src/kdelibs/khtml/rendering/render_root.h:
+	* src/kdelibs/khtml/rendering/render_style.cpp:
+	(StyleVisualData::StyleVisualData), (RenderStyle::setBitDefaults):
+	* src/kdelibs/khtml/rendering/render_style.h:
+	* src/kdelibs/khtml/rendering/render_table.cpp: (RenderTable::position),
+	(RenderTable::addChild), (RenderTable::calcColMinMax), (RenderTable::calcWidth),
+	(RenderTable::layoutRows), (RenderTable::print), (RenderTableSection::addChild),
+	(RenderTableRow::addChild):
+	* src/kdelibs/khtml/rendering/render_table.h:
+	* src/kdelibs/khtml/rendering/render_text.cpp: (TextSlave::printSelection),
+	(TextSlave::checkSelectionPoint), (RenderText::findTextSlave),
+	(RenderText::nodeAtPoint), (RenderText::checkSelectionPoint),
+	(RenderText::cursorPos), (RenderText::printObject),
+	(RenderText::calcMinMaxWidth), (RenderText::position), (RenderText::width),
+	(RenderText::metrics), (RenderText::htmlFont):
+	* src/kdelibs/khtml/rendering/render_text.h:
+	* src/kdelibs/khtml/xml/dom2_eventsimpl.cpp: (KeyEventImpl::KeyEventImpl),
+	(KeyEventImpl::~KeyEventImpl), (KeyEventImpl::outputString):
+	* src/kdelibs/khtml/xml/dom2_eventsimpl.h:
+	* src/kdelibs/khtml/xml/dom2_rangeimpl.h:
+	* src/kdelibs/khtml/xml/dom2_traversalimpl.h:
+	* src/kdelibs/khtml/xml/dom2_viewsimpl.cpp:
+	* src/kdelibs/khtml/xml/dom2_viewsimpl.h:
+	* src/kdelibs/khtml/xml/dom_docimpl.cpp: (DocumentImpl::DocumentImpl),
+	(DocumentImpl::docState), (DocumentImpl::recalcStyle), (DocumentImpl::attach),
+	(DocumentImpl::close), (DocumentImpl::write), (DocumentImpl::clear),
+	(DocumentImpl::nodeAbsIndex), (DocumentImpl::processHttpEquiv),
+	(DocumentImpl::prepareMouseEvent), (DocumentImpl::availableStyleSheets),
+	(DocumentImpl::recalcStyleSelector), (DocumentImpl::setFocusNode),
+	(DocumentTypeImpl::cloneNode):
+	* src/kdelibs/khtml/xml/dom_docimpl.h:
+	* src/kdelibs/khtml/xml/dom_elementimpl.cpp: (ElementImpl::cloneNode),
+	(ElementImpl::recalcStyle), (ElementImpl::dispatchAttrRemovalEvent),
+	(ElementImpl::dispatchAttrAdditionEvent):
+	* src/kdelibs/khtml/xml/dom_elementimpl.h:
+	* src/kdelibs/khtml/xml/dom_nodeimpl.cpp: (NodeImpl::dispatchGenericEvent),
+	(NodeImpl::dispatchUIEvent), (NodeImpl::defaultEventHandler):
+	* src/kdelibs/khtml/xml/dom_nodeimpl.h:
+	* src/kdelibs/khtml/xml/dom_stringimpl.cpp:
+	* src/kdelibs/khtml/xml/dom_stringimpl.h:
+	* src/kdelibs/khtml/xml/dom_textimpl.h:
+	* src/kdelibs/khtml/xml/dom_xmlimpl.h:
+	* src/kdelibs/khtml/xml/xml_tokenizer.h:
+	* src/kdelibs/kjs/Makefile.am:
+	* src/kdelibs/kjs/array_object.cpp: (ArrayInstanceImp::put),
+	(ArrayInstanceImp::hasOwnProperty):
+	* src/kdelibs/kjs/array_object.h:
+	* src/kdelibs/kjs/bool_object.h:
+	* src/kdelibs/kjs/collector.cpp:
+	* src/kdelibs/kjs/collector.h:
+	* src/kdelibs/kjs/date_object.cpp: (DateProtoFuncImp::call):
+	* src/kdelibs/kjs/date_object.h:
+	* src/kdelibs/kjs/debugger.cpp:
+	* src/kdelibs/kjs/debugger.h:
+	* src/kdelibs/kjs/error_object.h:
+	* src/kdelibs/kjs/function.cpp: (FunctionImp::FunctionImp),
+	(FunctionImp::~FunctionImp), (FunctionImp::addParameter),
+	(FunctionImp::parameterString):
+	* src/kdelibs/kjs/function.h:
+	* src/kdelibs/kjs/function_object.cpp: (FunctionProtoFuncImp::call):
+	* src/kdelibs/kjs/function_object.h:
+	* src/kdelibs/kjs/grammar.y:
+	* src/kdelibs/kjs/internal.cpp: (InterpreterImp::InterpreterImp),
+	(InterpreterImp::initGlobalObject):
+	* src/kdelibs/kjs/internal.h:
+	* src/kdelibs/kjs/interpreter.cpp: (Interpreter::initGlobalObject),
+	(Interpreter::virtual_hook):
+	* src/kdelibs/kjs/interpreter.h:
+	* src/kdelibs/kjs/lexer.cpp: (Lexer::Lexer), (Lexer::setCode), (Lexer::nextLine),
+	(Lexer::lex), (Lexer::isWhiteSpace), (Lexer::isIdentLetter), (Lexer::isHexDigit),
+	(Lexer::matchPunctuator), (Lexer::convertUnicode):
+	* src/kdelibs/kjs/lexer.h:
+	* src/kdelibs/kjs/lookup.cpp:
+	* src/kdelibs/kjs/lookup.h:
+	* src/kdelibs/kjs/math_object.cpp: (MathObjectImp::getValueProperty):
+	* src/kdelibs/kjs/math_object.h:
+	* src/kdelibs/kjs/nodes.cpp: (CaseBlockNode::evalBlock),
+	(FunctionBodyNode::execute):
+	* src/kdelibs/kjs/nodes.h:
+	* src/kdelibs/kjs/nodes2string.cpp: Added.
+	* src/kdelibs/kjs/number_object.cpp:
+	* src/kdelibs/kjs/number_object.h:
+	* src/kdelibs/kjs/object.cpp: (Object::hasProperty), (ObjectImp::ObjectImp),
+	(ObjectImp::~ObjectImp), (ObjectImp::hasProperty), (ObjectImp::deleteProperty):
+	* src/kdelibs/kjs/object.h:
+	* src/kdelibs/kjs/object_object.cpp:
+	* src/kdelibs/kjs/object_object.h:
+	* src/kdelibs/kjs/operations.h:
+	* src/kdelibs/kjs/property_map.cpp: (PropertyMap::~PropertyMap):
+	* src/kdelibs/kjs/property_map.h:
+	* src/kdelibs/kjs/regexp.cpp:
+	* src/kdelibs/kjs/regexp.h:
+	* src/kdelibs/kjs/regexp_object.cpp:
+	* src/kdelibs/kjs/regexp_object.h:
+	* src/kdelibs/kjs/string_object.cpp: (StringProtoFuncImp::call):
+	* src/kdelibs/kjs/string_object.h:
+	* src/kdelibs/kjs/testkjs.cpp: (main):
+	* src/kdelibs/kjs/types.cpp:
+	* src/kdelibs/kjs/types.h:
+	* src/kdelibs/kjs/ustring.cpp: (UString::UString), (KJS::operator<):
+	* src/kdelibs/kjs/ustring.h:
+	* src/kdelibs/kjs/value.cpp: (ValueImp::ValueImp), (ValueImp::setGcAllowed):
+	* src/kdelibs/kjs/value.h:
+
 2002-03-24  Richard Williamson  <rjw@apple.com>
 
         Cached available families from NSFontManager.  
