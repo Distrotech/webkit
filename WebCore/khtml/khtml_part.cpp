@@ -5622,6 +5622,7 @@ void KHTMLPart::moveCaretTo(DOM::NodeImpl *node, long offset)
     d->m_selectionStart = d->m_selectionEnd = node;
     d->m_startOffset = d->m_endOffset = offset;
     caret().setPosition(node, offset);
+    emitSelectionChanged();
     emitCaretPositionChanged(caret());
 }
 
