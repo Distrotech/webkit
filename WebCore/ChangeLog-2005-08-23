@@ -1,5 +1,14 @@
 === Alexander-33 ===
 
+2002-11-21  Richard Williamson   <rjw@apple.com>
+
+        Fixed from SK's copy/paste whitespace issue.
+        This fixes 3076236 and a regression due to additional whitespace
+        in the DOM.
+        
+        * kwq/WebCoreBridge.mm:
+        (attributedString):
+
 2002-11-21  David Hyatt  <hyatt@apple.com>
 
 	Fix mac.com regression (and weather.com regression).
