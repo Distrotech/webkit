@@ -33,6 +33,8 @@ namespace KJS {
 
 namespace Bindings {
 
+struct JSObjectCallContext;
+
 class RootObject;
 
 typedef RootObject *(*FindRootObjectForNativeHandleFunctionPtr)(void *);
@@ -88,6 +90,8 @@ public:
     static void dispatchToJavaScriptThread(JSObjectCallContext *context);
     
     const void *nativeHandle() const { return _nativeHandle; }
+
+    static void removeAllJavaReferencesForRoot (Bindings::RootObject *root) { root->removeAllNativeReferences(); }
 
 private:
     const void *_nativeHandle;
