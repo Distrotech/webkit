@@ -288,6 +288,9 @@ using khtml::RenderImage;
     if ([role isEqualToString:@"AXListMarker"])
         return UI_STRING("list marker", "accessibility role description for list marker");
     
+    if ([role isEqualToString:@"AXImageMap"])
+        return UI_STRING("image map", "accessibility role description for image map");
+        
     return UI_STRING("unknown", "accessibility role description for unknown role");
 }
 
@@ -307,7 +310,7 @@ using khtml::RenderImage;
 
     for (RenderObject* curr = m_renderer; curr; curr = curr->parent()) {
         if (curr->element() && curr->element()->isHTMLElement()) {
-            QString summary = static_cast<ElementImpl*>(m_areaElement)->getAttribute(ATTR_SUMMARY).string();
+            QString summary = static_cast<ElementImpl*>(curr->element())->getAttribute(ATTR_SUMMARY).string();
             if (!summary.isEmpty())
                 return summary.getNSString();
             QString title = static_cast<ElementImpl*>(curr->element())->getAttribute(ATTR_TITLE).string();
@@ -496,6 +499,8 @@ static QRect boundingBoxRect(RenderObject* obj)
             NSAccessibilityEnabledAttribute,
             NSAccessibilityWindowAttribute,
             @"AXLinkUIElements",
+            @"AXLoaded",
+            @"AXLayoutCount",
             nil];
     }
     
@@ -563,19 +568,25 @@ static QRect boundingBoxRect(RenderObject* obj)
         return m_children;
     }
 
-    if ([attributeName isEqualToString: @"AXLinkUIElements"] && m_renderer->isCanvas()) {
-        NSMutableArray* links = [NSMutableArray arrayWithCapacity: 32];
-        HTMLCollection coll(m_renderer->document(), HTMLCollectionImpl::DOC_LINKS);
-        if (coll.isNull())
+    if (m_renderer->isCanvas()) {
+        if ([attributeName isEqualToString: @"AXLinkUIElements"]) {
+            NSMutableArray* links = [NSMutableArray arrayWithCapacity: 32];
+            HTMLCollection coll(m_renderer->document(), HTMLCollectionImpl::DOC_LINKS);
+            if (coll.isNull())
+                return links;
+            Node curr = coll.firstItem();
+            while (!curr.isNull()) {
+                RenderObject* obj = curr.handle()->renderer();
+                if (obj)
+                    [links addObject: obj->document()->getOrCreateAccObjectCache()->accObject(obj)];
+                curr = coll.nextItem();
+            }
             return links;
-        Node curr = coll.firstItem();
-        while (!curr.isNull()) {
-            RenderObject* obj = curr.handle()->renderer();
-            if (obj)
-                [links addObject: obj->document()->getOrCreateAccObjectCache()->accObject(obj)];
-            curr = coll.nextItem();
         }
-        return links;
+        else if ([attributeName isEqualToString: @"AXLoaded"])
+            return [NSNumber numberWithBool: (!m_renderer->document()->tokenizer())];
+        else if ([attributeName isEqualToString: @"AXLayoutCount"])
+            return [NSNumber numberWithInt: (static_cast<RenderCanvas*>(m_renderer)->view()->layoutCount())];
     }
     
     if ([attributeName isEqualToString: @"AXURL"] && 
