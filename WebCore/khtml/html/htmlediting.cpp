@@ -23,10 +23,154 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#import "htmlediting.h"
+#include "htmlediting.h"
 
+#if APPLE_CHANGES
+#include "KWQAssertions.h"
+#endif
+
+#include "dom_elementimpl.h"
+#include "dom_nodeimpl.h"
+#include "dom_textimpl.h"
+#include "khtmlview.h"
+#include "khtml_part.h"
+
+using DOM::ElementImpl;
+using DOM::NodeImpl;
+using DOM::TextImpl;
+
+using khtml::DeleteTextCommand;
 using khtml::EditCommandID;
-using khtml::TextInputCommand;
+using khtml::InputTextCommand;
 
+//------------------------------------------------------------------------------------------
+// InputTextCommand
 
-EditCommandID TextInputCommand::commandID() const { return TextInputCommandID; }
+EditCommandID InputTextCommand::commandID() const { return InputTextCommandID; }
+
+InputTextCommand::InputTextCommand(const Range &selection, const DOMString &text) 
+    : EditCommand(selection)
+{
+    if (text.isEmpty()) {
+#if APPLE_CHANGES
+        ERROR("InputTextCommand constructed with zero-length string");
+#endif
+        m_text = "";
+    }
+    else {
+        m_text = text; 
+    }
+}
+
+bool InputTextCommand::isLineBreak() const
+{
+    return !m_text.isEmpty() && (m_text[0] == '\n' || m_text[0] == '\r');
+}
+
+bool InputTextCommand::isSpace() const
+{
+    return !m_text.isEmpty() && (m_text[0] == ' ');
+}
+
+bool InputTextCommand::applyToDocument(DocumentImpl *doc)
+{
+    KHTMLView *view = doc->view();
+    if (!view)
+        return false;
+    KHTMLPart *part = view->part();
+    if (!part)
+        return false;
+
+    NodeImpl *caretNode = selection().startContainer().handle();
+    if (!caretNode->isTextNode())
+        return false;
+    
+    // Delete the current selection
+    if (view->caretOverrides()) {
+        // EDIT FIXME: need to save the contents for redo
+        selection().deleteContents();
+        part->setSelection(Range(caretNode, selection().startOffset(), caretNode, selection().startOffset()));
+    }
+    
+    TextImpl *textNode = static_cast<TextImpl *>(caretNode);
+    int exceptionCode;
+    
+    if (isLineBreak()) {
+        TextImpl *textBeforeNode = doc->createTextNode(textNode->substringData(0, selection().startOffset(), exceptionCode));
+        textNode->deleteData(0, selection().startOffset(), exceptionCode);
+        ElementImpl *breakNode = doc->createHTMLElement("BR");
+        textNode->parentNode()->insertBefore(textBeforeNode, textNode, exceptionCode);
+        textNode->parentNode()->insertBefore(breakNode, textNode, exceptionCode);
+        textBeforeNode->deref();
+        breakNode->deref();
+        
+        // Set the cursor at the beginning of the node after the split.
+        part->setSelection(Range(caretNode, 0, caretNode, 0));
+    }
+    else {
+        textNode->insertData(selection().startOffset(), text(), exceptionCode);
+        // EDIT FIXME: this is a hack for now
+        // advance the cursor
+        int textLength = text().length();
+        part->setSelection(Range(selection().startContainer(), selection().startOffset() + textLength, 
+                                    selection().startContainer(), selection().startOffset() + textLength));
+    }
+    
+    return true;
+}
+
+bool InputTextCommand::canUndo() const
+{
+    return true;
+}
+
+//------------------------------------------------------------------------------------------
+// DeleteTextCommand
+
+EditCommandID DeleteTextCommand::commandID() const { return DeleteTextCommandID; }
+
+DeleteTextCommand::DeleteTextCommand(const Range &selection) 
+    : EditCommand(selection)
+{
+}
+
+bool DeleteTextCommand::applyToDocument(DocumentImpl *doc)
+{
+    KHTMLView *view = doc->view();
+    if (!view)
+        return false;
+    KHTMLPart *part = view->part();
+    if (!part)
+        return false;
+    
+    NodeImpl *caretNode = selection().startContainer().handle();
+    if (!caretNode->isTextNode())
+        return false;
+    
+    // Delete the current selection
+    if (!selection().collapsed()) {
+        // EDIT FIXME: need to save the contents for redo
+        selection().deleteContents();
+        part->setSelection(Range(caretNode, selection().startOffset(), caretNode, selection().startOffset()));
+    }
+    else {
+        // Delete character at cursor
+        // EDIT FIXME: this is a hack for now
+        TextImpl *textNode = static_cast<TextImpl *>(caretNode);
+        int exceptionCode;
+        int offset = selection().startOffset() - 1;
+        if (offset >= 0) {
+            textNode->deleteData(offset, 1, exceptionCode);
+            part->setSelection(Range(selection().startContainer(), selection().startOffset() - 1, 
+                                     selection().startContainer(), selection().startOffset() - 1));
+        }
+    }
+    
+    return true;
+}
+
+bool DeleteTextCommand::canUndo() const
+{
+    return true;
+}
+

@@ -26,47 +26,68 @@
 #ifndef __htmlediting_h__
 #define __htmlediting_h__
 
+#include <dom_docimpl.h>
 #include <dom_string.h>
 #include <dom_node.h>
 #include <dom2_range.h>
 
+using DOM::DocumentImpl;
 using DOM::DOMString;
 using DOM::Node;
 using DOM::Range;
 
 namespace khtml {
 
-enum EditCommandID { TextInputCommandID, };
+enum EditCommandID { InputTextCommandID, DeleteTextCommandID, };
 
 class EditCommand
 {
 public:    
     EditCommand(const Range &selection) : m_selection(selection) {};
     virtual ~EditCommand() {};
-    
+
     virtual EditCommandID commandID() const = 0;
-    
+
     Range selection() { return m_selection; }
+
+    virtual bool applyToDocument(DocumentImpl *) = 0;
+    virtual bool canUndo() const = 0;
 
 private:
     Range m_selection;
 };
 
 
-class TextInputCommand : public EditCommand
+class InputTextCommand : public EditCommand
 {
 public:
-    TextInputCommand(const Range &selection, const DOMString &text) 
-    : EditCommand(selection), m_text(text) {}
-    
-    virtual ~TextInputCommand() {};
+    InputTextCommand(const Range &selection, const DOMString &text);
+    virtual ~InputTextCommand() {};
     
     virtual EditCommandID commandID() const;
+    
+    virtual bool applyToDocument(DocumentImpl *);
+    virtual bool canUndo() const;
 
     DOMString text() { return m_text; }
+    bool isLineBreak() const;
+    bool isSpace() const;
     
 private:
     DOMString m_text;
+};
+
+class DeleteTextCommand : public EditCommand
+{
+public:
+    DeleteTextCommand(const Range &selection);
+    virtual ~DeleteTextCommand() {};
+    
+    virtual EditCommandID commandID() const;
+    
+    virtual bool applyToDocument(DocumentImpl *);
+    virtual bool canUndo() const;
+    
 };
 
 }; // end namespace khtml
