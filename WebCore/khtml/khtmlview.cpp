@@ -31,16 +31,20 @@
 #include "html/html_documentimpl.h"
 #include "html/html_inlineimpl.h"
 #include "html/html_formimpl.h"
+#include "rendering/render_arena.h"
 #include "rendering/render_object.h"
 #include "rendering/render_canvas.h"
 #include "rendering/render_style.h"
 #include "rendering/render_replaced.h"
+#include "rendering/render_line.h"
+#include "rendering/render_text.h"
 #include "xml/dom2_eventsimpl.h"
 #include "css/cssstyleselector.h"
 #include "misc/htmlhashes.h"
 #include "misc/helper.h"
 #include "khtml_settings.h"
 #include "khtml_printsettings.h"
+#include "khtmlpart_p.h"
 
 #include <kcursor.h>
 #include <ksimpleconfig.h>
@@ -79,11 +83,40 @@ protected:
     virtual void maybeTip(const QPoint &);
 
 private:
+
     KHTMLView *m_view;
     KHTMLViewPrivate* m_viewprivate;
 };
 
 #endif
+
+#ifndef KHTML_NO_CARET
+/** contextual information about the caret which is related to the view.
+ * An object of this class is only instantiated when it is needed.
+ */
+struct CaretViewContext {
+    int freqTimerId;		// caret blink frequency timer id
+    int x, y;			// caret position in viewport coordinates
+    				// (y specifies the top, not the baseline)
+    int height;			// height of caret in pixels
+    int width;			// width of caret in pixels
+    bool visible;		// true if currently visible.
+    bool displayed;		// true if caret is to be displayed at all.
+
+    CaretViewContext() : freqTimerId(-1), x(0), y(0), height(16), width(1), visible(true),
+    	displayed(false) {}
+};
+
+/** contextual information about the editing state.
+ * An object of this class is only instantiated when it is needed.
+ */
+struct EditorContext {
+    bool override;		// true if typed characters should override
+    				// the existing ones.
+
+    EditorContext() : override(false) {}
+};
+#endif // KHTML_NO_CARET
 
 class KHTMLViewPrivate {
     friend class KHTMLToolTip;
@@ -99,6 +132,10 @@ public:
         complete = false;
         mousePressed = false;
 	tooltip = 0;
+#ifndef KHTML_NO_CARET
+        m_caretViewContext = 0;
+        m_editorContext = 0;
+#endif
 #ifdef INCREMENTAL_REPAINTING
         doFullRepaint = true;
 #endif
@@ -119,6 +156,8 @@ public:
         if (underMouse)
 	    underMouse->deref();
 	delete tooltip;
+	delete m_caretViewContext;
+	delete m_editorContext;
     }
     void reset()
     {
@@ -162,6 +201,23 @@ public:
 #endif
     }
 
+#ifndef KHTML_NO_CARET
+    /** this function returns an instance of the caret view context. If none
+     * exists, it will be instantiated.
+     */
+    CaretViewContext *caretViewContext() {
+        if (!m_caretViewContext) m_caretViewContext = new CaretViewContext();
+        return m_caretViewContext;
+    }
+    /** this function returns an instance of the editor context. If none
+     * exists, it will be instantiated.
+     */
+    EditorContext *editorContext() {
+        if (!m_editorContext) m_editorContext = new EditorContext();
+        return m_editorContext;
+    }
+#endif // KHTML_NO_CARET
+    
     QPainter *tp;
     QPixmap  *paintBuffer;
     NodeImpl *underMouse;
@@ -204,7 +260,76 @@ public:
 #endif
     bool mousePressed;
     KHTMLToolTip *tooltip;
+#ifndef KHTML_NO_CARET
+    CaretViewContext *m_caretViewContext;
+    EditorContext *m_editorContext;
+#endif // KHTML_NO_CARET
 };
+
+// == caret-related helper functions
+
+#ifndef KHTML_NO_CARET
+
+// defined in khtml_part.cpp
+bool isBeforeNode(DOM::Node node1, DOM::Node node2);
+
+namespace khtml {
+
+/** Make sure the given node is a leaf node. */
+inline void ensureLeafNode(NodeImpl *&node) 
+{
+    if (node && node->hasChildNodes()) node = node->nextLeafNode();
+}
+
+/** Finds the next node that has a renderer.
+ *
+ * Note that if the initial @p node has a renderer, this will be returned,
+ * regardless of being a leaf node.
+ * Otherwise, for the next nodes, only leaf nodes are considered.
+ * @param node node to start with, will be updated accordingly
+ * @return renderer or 0 if no following node has a renderer.
+ */
+inline RenderObject *findRenderer(NodeImpl *&node) 
+{
+    if (!node) 
+        return 0;
+    RenderObject *r = node->renderer();
+    while (!r) {
+        node = node->nextLeafNode();
+        if (!node) 
+            break;
+        r = node->renderer();
+    }
+    return r;
+}
+
+/** Bring caret information position into a sane state */
+static void sanitizeCaretState(NodeImpl *&caretNode, long &offset) 
+{
+    ensureLeafNode(caretNode);
+    
+    // EDIT FIXME: this leaves caretNode untouched if there are no more renderers.
+    // It better should search backwards then.
+    // This still won't solve the problem what to do if *no* element has a
+    // renderer.
+    NodeImpl *tmpNode = caretNode;
+    if (findRenderer(tmpNode)) {
+        fprintf(stderr, "set caret node to: %p", caretNode);
+        caretNode = tmpNode;
+    }
+    
+    long max = caretNode->caretMaxOffset();
+    long min = caretNode->caretMinOffset();
+    if (offset < min) 
+        offset = min;
+    else if (offset > max) 
+        offset = max;
+}
+
+}/*end namespace*/
+
+// == end caret-related
+#endif // KHTML_NO_CARET
 
 #ifndef QT_NO_TOOLTIP
 
@@ -338,6 +463,10 @@ void KHTMLView::clear()
 
     setStaticBackground(false);
 
+#ifndef KHTML_NO_CARET
+    caretOff();
+#endif
+
     d->reset();
     killTimers();
     emit cleared();
@@ -383,6 +512,13 @@ void KHTMLView::resizeEvent (QResizeEvent* e)
 #endif
     if ( m_part && m_part->xmlDocImpl() )
         m_part->xmlDocImpl()->dispatchWindowEvent( EventImpl::RESIZE_EVENT, false, false );
+
+#ifndef KHTML_NO_CARET
+    hideCaret();
+    recalcAndStoreCaretPos();
+    showCaret();
+#endif
+
     KApplication::sendPostedEvents(viewport(), QEvent::Paint);
 }
 
@@ -432,6 +568,22 @@ void KHTMLView::drawContents( QPainter *p, int ex, int ey, int ew, int eh )
         p->drawPixmap(ex, ey+py, *d->paintBuffer, 0, 0, ew, ph);
         py += PAINT_BUFFER_HEIGHT;
     }
+
+#ifndef KHTML_NO_CARET
+    if (d->m_caretViewContext && d->m_caretViewContext->visible) {
+        QRect pos(d->m_caretViewContext->x, d->m_caretViewContext->y,
+		d->m_caretViewContext->width, d->m_caretViewContext->height);
+        if (pos.intersects(QRect(ex, ey, ew, eh))) {
+            p->setRasterOp(XorROP);
+	    p->setPen(white);
+	    if (pos.height() == 1)
+              p->drawLine(pos.topLeft(), pos.bottomRight());
+	    else {
+	      p->fillRect(pos, white);
+	    }
+	}
+    }
+#endif // KHTML_NO_CARET
 
     khtml::DrawContentsEvent event( p, ex, ey, ew, eh );
     QApplication::sendEvent( m_part, &event );
@@ -599,6 +751,12 @@ void KHTMLView::layout()
 
     root->layout();
 
+#ifndef KHTML_NO_CARET
+    hideCaret();
+    recalcAndStoreCaretPos();
+    showCaret();
+#endif
+        
     //kdDebug( 6000 ) << "TIME: layout() dt=" << qt.elapsed() << endl;
    
     d->layoutSchedulingEnabled=true;
@@ -945,7 +1103,6 @@ void KHTMLView::viewportMouseReleaseEvent( QMouseEvent * _mouse )
 
 void KHTMLView::keyPressEvent( QKeyEvent *_ke )
 {
-
     if (m_part->xmlDocImpl() && m_part->xmlDocImpl()->focusNode()) {
         if (m_part->xmlDocImpl()->focusNode()->dispatchKeyEvent(_ke))
         {
@@ -1260,6 +1417,16 @@ void KHTMLView::focusNextPrevNode(bool next)
     else
     // Scroll the view as necessary to ensure that the new focus node is visible
     {
+#ifndef KHTML_NO_CARET
+        // if it's an editable element, activate the caret
+        if (!m_part->inEditMode() && newFocusNode->renderer()->isEditable()) {
+	    d->caretViewContext();
+	    moveCaretTo(newFocusNode, 0L, true);
+        } else {
+	    caretOff();
+	}
+#endif // KHTML_NO_CARET
+
       if (oldFocusNode)
 	{
 	  if (!scrollTo(newFocusNode->getRect()))
@@ -1752,9 +1919,16 @@ void KHTMLView::dropEvent( QDropEvent *ev )
 }
 #endif // !APPLE_CHANGES
 
+void KHTMLView::focusInEvent( QFocusEvent *e )
+{
+    showCaret();
+    QScrollView::focusInEvent( e );
+}
+
 void KHTMLView::focusOutEvent( QFocusEvent *e )
 {
     m_part->stopAutoScroll();
+    hideCaret();
     QScrollView::focusOutEvent( e );
 }
 
@@ -1776,9 +1950,19 @@ void KHTMLView::repaintRectangle(const QRect& r, bool immediate)
 
 void KHTMLView::timerEvent ( QTimerEvent *e )
 {
-//    kdDebug() << "timer event " << e->timerId() << endl;
     if (e->timerId()==d->layoutTimerId)
         layout();
+#ifndef KHTML_NO_CARET
+    else if (d->m_caretViewContext && e->timerId() == d->m_caretViewContext->freqTimerId) {
+        d->m_caretViewContext->visible = !d->m_caretViewContext->visible;
+        if (d->m_caretViewContext->displayed) {
+            updateContents(d->m_caretViewContext->x, d->m_caretViewContext->y,
+                           d->m_caretViewContext->width,
+                           d->m_caretViewContext->height);
+        }
+	return;
+    }
+#endif
 }
 
 #ifdef INCREMENTAL_REPAINTING
@@ -1838,3 +2022,209 @@ void KHTMLView::complete()
         d->layoutTimerId = startTimer( 0 );
     }
 }
+
+
+#ifndef KHTML_NO_CARET
+
+void KHTMLView::initCaret() {
+    if (m_part->xmlDocImpl()) {
+        d->caretViewContext();
+        if (m_part->caretNode().isNull()) {
+            // set to document, position will be sanitized anyway
+            m_part->moveCaretTo(m_part->document().handle(), 0L);
+            // This sanity check is necessary for the not so unlikely case that
+            // setEditMode or setCaretMode is called before any render objects have
+            // been created.
+            if (!m_part->caretNode().handle()->renderer()) 
+                return;
+        }
+        moveCaretTo(m_part->caretNode().handle(), m_part->caretOffset(), true);
+    }
+}
+
+bool KHTMLView::caretOverrides() {
+    bool dm = m_part->inEditMode();
+    return !dm ? false
+    	: (dm || m_part->caretNode().handle()->renderer()->isEditable())
+	  && d->editorContext()->override;
+}
+
+void KHTMLView::ensureNodeHasFocus(NodeImpl *node) {
+    if (m_part->inEditMode() || node->focused()) 
+        return;
+    
+    // Find first ancestor whose "user-input" is "enabled"
+    NodeImpl *firstAncestor = node->parentNode();
+    while (node) {
+        if (node->renderer())
+            break;
+        firstAncestor = node;
+        node = node->parentNode();
+    }
+    
+    if (!node) 
+        firstAncestor = 0;
+    
+    // Set focus node on the document
+    m_part->xmlDocImpl()->setFocusNode(firstAncestor);
+    emit m_part->nodeActivated(Node(firstAncestor));
+}
+
+void KHTMLView::recalcAndStoreCaretPos() {
+    if (!m_part || m_part->caretNode().isNull()) 
+        return;
+    
+    d->caretViewContext();
+    m_part->caretNode().handle()->getCaret(m_part->caretOffset(),
+                caretOverrides(),
+    		d->m_caretViewContext->x, d->m_caretViewContext->y,
+		d->m_caretViewContext->width,
+		d->m_caretViewContext->height);
+}
+
+void KHTMLView::caretOn() {
+    if (d->m_caretViewContext) {
+        killTimer(d->m_caretViewContext->freqTimerId);
+        d->m_caretViewContext->freqTimerId = startTimer(500);
+        d->m_caretViewContext->visible = true;
+        d->m_caretViewContext->displayed = true;
+	updateContents(d->m_caretViewContext->x, d->m_caretViewContext->y,
+	    		d->m_caretViewContext->width,
+			d->m_caretViewContext->height);
+    }
+}
+
+void KHTMLView::caretOff() {
+    if (d->m_caretViewContext) {
+        killTimer(d->m_caretViewContext->freqTimerId);
+	d->m_caretViewContext->freqTimerId = -1;
+        d->m_caretViewContext->displayed = false;
+        if (d->m_caretViewContext->visible) {
+            d->m_caretViewContext->visible = false;
+	    updateContents(d->m_caretViewContext->x, d->m_caretViewContext->y,
+	    		d->m_caretViewContext->width,
+	    		d->m_caretViewContext->height);
+	}
+    }
+}
+
+void KHTMLView::showCaret() {
+    if (d->m_caretViewContext) {
+        d->m_caretViewContext->displayed = true;
+        if (d->m_caretViewContext->visible) {
+	    updateContents(d->m_caretViewContext->x, d->m_caretViewContext->y,
+                           d->m_caretViewContext->width, d->m_caretViewContext->height);
+   	}
+    }
+}
+
+#ifdef APPLE_CHANGES
+void KHTMLView::paintCaret(QPainter *p, const QRect &rect) const
+{
+    if (!d->m_caretViewContext || !d->m_caretViewContext->visible)
+        return;
+
+    QRect pos(d->m_caretViewContext->x, d->m_caretViewContext->y,
+            d->m_caretViewContext->width, d->m_caretViewContext->height);
+    if (pos.intersects(rect)) {
+        QPen pen = p->pen();
+        pen.setStyle(SolidLine);
+        pen.setColor(Qt::black);
+        pen.setWidth(1);
+        p->setPen(pen);
+        p->drawLine(pos.left(), pos.top(), pos.left(), pos.bottom());
+    }
+}
+#endif
+
+bool KHTMLView::foldSelectionToCaret(NodeImpl *startNode, long startOffset,
+    				NodeImpl *endNode, long endOffset) {
+    m_part->d->m_selectionStart = m_part->d->m_selectionEnd = m_part->caretNode();
+    m_part->d->m_startOffset = m_part->d->m_endOffset = m_part->caretOffset();
+    m_part->d->m_extendAtEnd = true;
+    
+    bool folded = startNode != endNode || startOffset != endOffset;
+    
+    // Only clear the selection if there has been one.
+    if (folded) {
+        m_part->xmlDocImpl()->clearSelection();
+    }
+    
+    return folded;
+}
+
+void KHTMLView::hideCaret() {
+    if (!d->m_caretViewContext)
+        return;
+        
+    if (d->m_caretViewContext->visible) {
+        d->m_caretViewContext->visible = false;
+        // force repaint, otherwise the event won't be handled
+        // before the focus leaves the window
+        repaintContents(d->m_caretViewContext->x, d->m_caretViewContext->y,
+                    d->m_caretViewContext->width,
+                    d->m_caretViewContext->height);
+        d->m_caretViewContext->visible = true;
+    }
+    d->m_caretViewContext->displayed = false;
+}
+
+bool KHTMLView::placeCaret() {
+    caretOff();
+    d->editorContext()->override = false;
+
+    recalcAndStoreCaretPos();
+    
+    NodeImpl *caretNode = m_part->caretNode().handle();
+    if (!caretNode)
+        return false;
+    
+    // save selection. setting focus might clear it.
+    Range selection = m_part->selection();
+    ensureNodeHasFocus(caretNode);
+    // restore selection, but don't place caret
+    m_part->setSelection(selection, false);
+    
+    if (!m_part->inEditMode() && !caretNode->isContentEditable())
+        return false;
+    
+    if (!m_part->selection().collapsed()) {
+        d->editorContext()->override = true;
+        return false;
+    }
+
+    caretOn();
+    return true;
+}
+
+bool KHTMLView::moveCaretTo(NodeImpl *node, long offset, bool clearSel) {
+    sanitizeCaretState(node, offset);
+    
+    NodeImpl *oldStartSel = m_part->d->m_selectionStart.handle();
+    long oldStartOfs = m_part->d->m_startOffset;
+    NodeImpl *oldEndSel = m_part->d->m_selectionEnd.handle();
+    long oldEndOfs = m_part->d->m_endOffset;
+    
+    // test for position change
+    bool posChanged = m_part->caretNode().handle() != node
+                || m_part->caretOffset() != offset;
+    bool folded = false;
+    
+    m_part->moveCaretTo(node, offset);
+    if (clearSel) {
+        folded = foldSelectionToCaret(oldStartSel, oldStartOfs, oldEndSel, oldEndOfs);
+    }
+    
+    bool visible_caret = placeCaret();
+    
+    // FIXME: if the old position was !visible_caret, and the new position is
+    // also, then two caretPositionChanged signals with a null Node are
+    // emitted in series.
+    if (posChanged) {
+        m_part->emitCaretPositionChanged(visible_caret ? node : 0, offset);
+    }
+    
+    return folded;
+}
+
+#endif // KHTML_NO_CARET
