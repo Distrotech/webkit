@@ -3458,6 +3458,22 @@ void CSSStyleSelector::applyRule( int id, DOM::CSSValueImpl *value )
         }
         break;
     }
+    case CSS_PROP__KHTML_USER_MODIFY: {
+        if(value->cssValueType() == CSSValue::CSS_INHERIT) {
+            if(!parentNode) 
+                return;
+            style->setUserModify(parentStyle->userModify());
+            return;
+        }
+        if(!primitiveValue) 
+            return;
+        int id = primitiveValue->getIdent();
+        if (id == CSS_VAL_NONE)
+            style->setUserModify(UI_NONE);
+        else
+            style->setUserModify(EUserModify(id - CSS_VAL_ENABLED));
+        return;
+    }
     default:
         return;
     }
