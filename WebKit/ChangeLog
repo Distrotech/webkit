@@ -1,3 +1,14 @@
+2004-09-15  Maciej Stachowiak  <mjs@apple.com> (Maciej committing as Adele)
+
+        Code change by Darin, reviewed by me.
+
+	- further follow-up fix for for <rdar://problem/3791526>
+
+        * WebView.subproj/WebFrame.m:
+        (+[WebFrame _recursiveCheckCompleteFromFrame:]): Don't call _isLoadCompleted
+	on the child frame again, once is enough. The second time hits an assertion failure.
+	This is already fixed on Tiger.
+
 2004-09-14  Vicki Murley <vicki@apple.com>
 
 	- merge these changes for <rdar://problem/3800366>

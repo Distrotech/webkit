@@ -1081,7 +1081,6 @@ static CFAbsoluteTime _timeOfLastCompletedLoad;
         
         childFrame = [childFrames objectAtIndex: i];
         [WebFrame _recursiveCheckCompleteFromFrame: childFrame];
-        [childFrame _isLoadComplete];
     }
     [fromFrame _isLoadComplete];
 }
