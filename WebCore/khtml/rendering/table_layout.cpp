@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2002 Lars Knoll (knoll@kde.org)
  *           (C) 2002 Dirk Mueller (mueller@kde.org)
+ * Copyright (C) 2003 Apple Computer, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,7 +20,6 @@
  * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  *
- * $Id$
  */
 #include "table_layout.h"
 #include "render_table.h"
@@ -234,15 +234,13 @@ void FixedTableLayout::calcMinMaxWidth()
     // unlimited.
 
     int bs = table->bordersAndSpacing();
-    table->m_minWidth = 0;
-    table->m_maxWidth = 0;
-    short tableWidth = table->style()->width().type == Fixed ? table->style()->width().value - bs : 0;
+    
+    int tableWidth = table->style()->width().type == Fixed ? table->style()->width().value - bs : 0;
+    int mw = calcWidthArray( tableWidth ) + bs;
 
-    table->m_minWidth = calcWidthArray( tableWidth );
-    table->m_minWidth += bs;
-
-    table->m_minWidth = kMax( table->m_minWidth, tableWidth );
+    table->m_minWidth = kMin(kMax( mw, tableWidth ), 0x7fff);
     table->m_maxWidth = table->m_minWidth;
+    
     if ( !tableWidth ) {
 	bool haveNonFixed = false;
 	for ( unsigned int i = 0; i < width.size(); i++ ) {
@@ -269,7 +267,7 @@ void FixedTableLayout::layout()
 #endif
 
 
-    QMemArray<short> calcWidth;
+    QMemArray<int> calcWidth;
     calcWidth.resize( nEffCols );
     calcWidth.fill( -1 );
 
@@ -557,12 +555,8 @@ void AutoTableLayout::calcMinMaxWidth()
 	maxWidth = minWidth;
     }
 
-    // Max widths can overflow. We need to bounds check them.
-    if (maxWidth > 10000)
-        maxWidth = 10000;
-    
-    table->m_maxWidth = maxWidth;
-    table->m_minWidth = minWidth;
+    table->m_maxWidth = kMin(maxWidth, 0x7fff);
+    table->m_minWidth = kMin(minWidth, 0x7fff);
 #ifdef DEBUG_LAYOUT
     qDebug("    minWidth=%d, maxWidth=%d", table->m_minWidth, table->m_maxWidth );
 #endif
@@ -704,21 +698,29 @@ int AutoTableLayout::calcEffectiveWidth()
 		qDebug("extending minWidth of cols %d-%d to %dpx currentMin=%d", col, lastCol-1, cMinWidth, minWidth );
 #endif
 		int maxw = maxWidth;
-		for ( unsigned int pos = col; minWidth > 0 && pos < lastCol; pos++ ) {
-
-		    int w;
+		for ( unsigned int pos = col; maxw > 0 && pos < lastCol; pos++ ) {
 		    if ( layoutStruct[pos].width.type == Fixed && haveVariable && fixedWidth <= cMinWidth ) {
-			w = QMAX( layoutStruct[pos].effMinWidth, layoutStruct[pos].width.value );
+			int w = QMAX( layoutStruct[pos].effMinWidth, layoutStruct[pos].width.value );
 			fixedWidth -= layoutStruct[pos].width.value;
-		    } else {
-			w = QMAX( layoutStruct[pos].effMinWidth, cMinWidth * layoutStruct[pos].effMaxWidth / maxw );
-		    }
 #ifdef DEBUG_LAYOUT
-		    qDebug("   col %d: min=%d, effMin=%d, new=%d", pos, layoutStruct[pos].effMinWidth, layoutStruct[pos].effMinWidth, w );
+                        qDebug("   col %d: min=%d, effMin=%d, new=%d", pos, layoutStruct[pos].effMinWidth, layoutStruct[pos].effMinWidth, w );
 #endif
-		    maxw -= layoutStruct[pos].effMaxWidth;
-		    cMinWidth -= w;
-		    layoutStruct[pos].effMinWidth = w;
+                        maxw -= layoutStruct[pos].effMaxWidth;
+                        cMinWidth -= w;
+                        layoutStruct[pos].effMinWidth = w;
+                    }
+		}
+                
+		for ( unsigned int pos = col; maxw > 0 && pos < lastCol; pos++ ) {
+		    if ( !(layoutStruct[pos].width.type == Fixed && haveVariable && fixedWidth <= cMinWidth) ) {
+			int w = QMAX( layoutStruct[pos].effMinWidth, cMinWidth * layoutStruct[pos].effMaxWidth / maxw );
+#ifdef DEBUG_LAYOUT
+                        qDebug("   col %d: min=%d, effMin=%d, new=%d", pos, layoutStruct[pos].effMinWidth, layoutStruct[pos].effMinWidth, w );
+#endif
+                        maxw -= layoutStruct[pos].effMaxWidth;
+                        cMinWidth -= w;
+                        layoutStruct[pos].effMinWidth = w;
+                    }
 		}
 	    }
 	}
