@@ -1,3 +1,14 @@
+2003-01-16  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by no one, I'm just rolling out an accidentally committed change.
+
+	- removed the change below which I accidentally committed on the branch.
+	
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::closeURL):
+        (KHTMLPart::checkEmitLoadEvent):
+        * khtml/khtmlpart_p.h:
+
 2003-01-14  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Darin.
