@@ -598,10 +598,15 @@ public:
   bool isEditingAtSelection() const;
 
   /**
-   * Returns the caret location.
+   * Returns the caret.
    */
   khtml::Caret caret() const;
 
+  /**
+   * Moves the input caret to the specified offset.
+   */
+  void moveCaretTo(DOM::NodeImpl *node, long offset);
+  
   /**
    * Convenience method to show the document's view.
    *
@@ -787,11 +792,6 @@ signals:
    */
   void caretPositionChanged(const khtml::Caret &);
 
-  /**
-   * Moves the input caret to the specified offset.
-   */
-  void moveCaretTo(DOM::NodeImpl *node, long offset);
-  
 protected:
 
   /**
@@ -1060,17 +1060,6 @@ private:
    */
   void emitCaretPositionChanged(const khtml::Caret &);
 
-  /**
-   * Returns the node containing the input caret.
-   */
-  DOM::Node caretNode() const;
-  
-  /**
-   * Returns the offset of the input caret in the 
-   * node containing the caret.
-   */
-  long caretOffset() const;
-  
   /**
    * @internal
    */
