@@ -55,7 +55,6 @@ public:
 
     virtual NodeImpl::Id id() const;
     virtual void parseAttribute(AttributeImpl *token);
-    virtual void defaultEventHandler(EventImpl *evt);
 };
 
 // -------------------------------------------------------------------------
