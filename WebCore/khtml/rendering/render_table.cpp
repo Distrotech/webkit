@@ -420,8 +420,9 @@ void RenderTable::paint( QPainter *p, int _x, int _y,
 #endif
     if (!overhangingContents() && !isRelPositioned() && !isPositioned())
     {
-        if((_ty > _y + _h) || (_ty + height() < _y)) return;
-        if((_tx > _x + _w) || (_tx + width() < _x)) return;
+        int os = 2*maximalOutlineSize(paintAction);
+        if((_ty >= _y + _h + os) || (_ty + height() <= _y - os)) return;
+        if((_tx >= _x + _w + os) || (_tx + width() <= _x - os)) return;
     }
 
 #ifdef TABLE_PRINT
@@ -1356,6 +1357,11 @@ int RenderTableSection::layoutRows( int toAdd )
             cell->setCellBottomExtra( rHeight - cell->height() - te);
             }
             
+#ifdef INCREMENTAL_REPAINTING
+            int oldCellX = cell->xPos();
+            int oldCellY = cell->yPos();
+#endif
+        
             if (style()->direction()==RTL) {
                 cell->setPos(
 		    table()->columnPos[(int)totalCols] -
@@ -1365,6 +1371,14 @@ int RenderTableSection::layoutRows( int toAdd )
             } else {
                 cell->setPos( table()->columnPos[c] + leftOffset, rowPos[rindx] );
 	    }
+
+#ifdef INCREMENTAL_REPAINTING
+            // If the cell moved, we have to repaint it as well as any floating/positioned
+            // descendants.  An exception is if we need a layout.  In this case, we know we're going to
+            // repaint ourselves (and the cell) anyway.
+            if (!selfNeedsLayout() && checkForRepaintDuringLayout())
+                cell->repaintDuringLayoutIfMoved(oldCellX, oldCellY);
+#endif
         }
     }
 
@@ -1384,25 +1398,26 @@ void RenderTableSection::paint( QPainter *p, int x, int y, int w, int h,
 
     // check which rows and cols are visible and only paint these
     // ### fixme: could use a binary search here
+    int os = 2*maximalOutlineSize(paintAction);
     unsigned int startrow = 0;
     unsigned int endrow = totalRows;
     for ( ; startrow < totalRows; startrow++ ) {
-	if ( ty + rowPos[startrow+1] > y )
+	if ( ty + rowPos[startrow+1] >= y - os)
 	    break;
     }
     for ( ; endrow > 0; endrow-- ) {
-	if ( ty + rowPos[endrow-1] < y + h )
+	if ( ty + rowPos[endrow-1] <= y + h + os)
 	    break;
     }
     unsigned int startcol = 0;
     unsigned int endcol = totalCols;
     if ( style()->direction() == LTR ) {
 	for ( ; startcol < totalCols; startcol++ ) {
-	    if ( tx + table()->columnPos[startcol+1] > x )
+	    if ( tx + table()->columnPos[startcol+1] >= x - os)
 		break;
 	}
 	for ( ; endcol > 0; endcol-- ) {
-	    if ( tx + table()->columnPos[endcol-1] < x + w )
+	    if ( tx + table()->columnPos[endcol-1] <= x + w + os)
 		break;
 	}
     }
@@ -2067,8 +2082,9 @@ void RenderTableCell::paint(QPainter *p, int _x, int _y,
     _ty += m_y + _topExtra;
 
     // check if we need to do anything at all...
-    if(!overhangingContents() && ((_ty-_topExtra > _y + _h)
-        || (_ty + m_height + _bottomExtra < _y))) return;
+    int os = 2*maximalOutlineSize(paintAction);
+    if(!overhangingContents() && ((_ty-_topExtra >= _y + _h + os)
+        || (_ty + m_height + _bottomExtra <= _y - os))) return;
 
     paintObject(p, _x, _y, _w, _h, _tx, _ty, paintAction);
 
