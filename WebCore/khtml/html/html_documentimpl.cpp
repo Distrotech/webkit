@@ -130,21 +130,21 @@ HTMLDocumentImpl::~HTMLDocumentImpl()
 
 DOMString HTMLDocumentImpl::referrer() const
 {
-    if ( view() )
+    if ( part() )
 #if APPLE_CHANGES
-        return KWQ(view()->part())->incomingReferrer();
+        return KWQ(part())->incomingReferrer();
 #else
         // This is broken; returns the referrer used for links within this page (basically
         // the same as the URL), not the referrer used for loading this page itself.
-        return view()->part()->referrer();
+        return part()->referrer();
 #endif
     return DOMString();
 }
 
 DOMString HTMLDocumentImpl::lastModified() const
 {
-    if ( view() )
-        return view()->part()->lastModified();
+    if ( part() )
+        return part()->lastModified();
     return DOMString();
 }
 
@@ -273,9 +273,9 @@ bool HTMLDocumentImpl::childAllowed( NodeImpl *newChild )
     return (newChild->id() == ID_HTML || newChild->id() == ID_COMMENT);
 }
 
-ElementImpl *HTMLDocumentImpl::createElement( const DOMString &name )
+ElementImpl *HTMLDocumentImpl::createElement( const DOMString &name, int &exceptioncode )
 {
-    return createHTMLElement(name);
+    return createHTMLElement(name, exceptioncode);
 }
 
 void HTMLDocumentImpl::slotHistoryChanged()
