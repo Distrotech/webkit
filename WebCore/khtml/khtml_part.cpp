@@ -187,6 +187,7 @@ void KHTMLPart::init( KHTMLView *view, GUIProfile prof )
   setWidget( d->m_view );
   
   d->m_selection.setPart(this);
+  d->m_selection.setVisible();
 
 #if !APPLE_CHANGES
   d->m_guiProfile = prof;
@@ -2475,6 +2476,11 @@ void KHTMLPart::slotClearSelection()
     d->m_doc->clearSelection();
     if (hadSelection)
         emitSelectionChanged();
+}
+
+KHTMLSelection &KHTMLPart::getKHTMLSelection() const
+{
+    return d->m_selection;
 }
 
 #if !APPLE_CHANGES
@@ -4878,7 +4884,8 @@ void KHTMLPart::khtmlMouseReleaseEvent( khtml::MouseReleaseEvent *event )
 	// We do this so when clicking on the selection, the selection goes away.
 	if (d->m_dragStartPos.x() == event->qmouseEvent()->x() &&
 		d->m_dragStartPos.y() == event->qmouseEvent()->y() &&
-		d->m_textSelect == KHTMLSelection::CHARACTER) {
+		d->m_textSelect == KHTMLSelection::CHARACTER &&
+        !isEditingAtCaret()) {
 			d->m_selection.clearSelection();
 			d->m_doc->clearSelection();
 	}
@@ -4886,9 +4893,9 @@ void KHTMLPart::khtmlMouseReleaseEvent( khtml::MouseReleaseEvent *event )
 
 #ifndef KHTML_NO_SELECTION
 	// delete selection in case start and end position are at the same point
-	if (d->m_selection.state() == KHTMLSelection::CARET) {
-        d->m_selection.clearSelection();
-	} 
+	//if (d->m_selection.state() == KHTMLSelection::CARET) {
+    //    d->m_selection.clearSelection();
+	//} 
 	
 #ifndef QT_NO_CLIPBOARD
     // get selected text and paste to the clipboard
@@ -4903,8 +4910,6 @@ void KHTMLPart::khtmlMouseReleaseEvent( khtml::MouseReleaseEvent *event )
 #endif // QT_NO_CLIPBOARD
 
     emitSelectionChanged();
-
-    //d->m_selection.setTextSelectMode(KHTMLSelection::CHARACTER);
 
 #endif // KHTML_NO_SELECTION
 }
@@ -5104,7 +5109,7 @@ bool KHTMLPart::isEditingAtCaret() const
     if (inEditMode())
         return true;
     
-    NodeImpl *node = caret()->node();
+    NodeImpl *node = d->m_selection.baseNode();
     return node && node->isContentEditable();
     
     return false;

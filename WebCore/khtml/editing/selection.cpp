@@ -181,6 +181,7 @@ void KHTMLSelection::setExtent(DOM::NodeImpl *node, long offset)
 
 void KHTMLSelection::clearSelection()
 {
+    fprintf(stderr, "clearSelection\n");
 	setBaseNode(0);
 	setExtentNode(0);
 	setBaseOffset(0);
@@ -254,7 +255,6 @@ void KHTMLSelection::invalidate()
     m_startEndValid = false;
     calculateStartAndEnd();
     
-#if 0
     // update the blink timer
     if (m_caretBlinkTimer >= 0)
         killTimer(m_caretBlinkTimer);
@@ -307,7 +307,6 @@ void KHTMLSelection::invalidate()
         m_caretPaint = true;
         repaint();
     }
-#endif
 }
 
 bool KHTMLSelection::isEmpty() const

@@ -2,6 +2,28 @@
 
         Reviewed by me
 
+	Gor caret painting limping along again.
+
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::init):
+        (KHTMLPart::getKHTMLSelection):
+        (KHTMLPart::khtmlMouseReleaseEvent):
+        (KHTMLPart::isEditingAtCaret):
+        * khtml/khtml_part.h:
+        * khtml/khtml_selection.cpp:
+        (KHTMLSelection::clearSelection):
+        (KHTMLSelection::invalidate):
+        * khtml/khtmlview.cpp:
+        (KHTMLView::layout):
+        * khtml/rendering/render_block.cpp:
+        (khtml::RenderBlock::paintObject):
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::paint):
+
+2004-01-20  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
 	Removed the last remnants of the now-obsolete
 	CaretViewContext class.
 

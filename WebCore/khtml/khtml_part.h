@@ -39,6 +39,7 @@
 class KHTMLPartPrivate;
 class KHTMLPartBrowserExtension;
 class KJSProxy;
+class KHTMLSelection;
 class KHTMLView;
 class KHTMLSettings;
 class KJavaAppletContext;
@@ -595,6 +596,8 @@ public:
    * Returns the caret.
    */
   khtml::Caret *caret() const;
+
+  KHTMLSelection &getKHTMLSelection() const;
 
   /**
    * Returns whether editing is enabled at the current caret

@@ -634,7 +634,7 @@ void KHTMLView::layout()
 
     root->layout();
 
-    m_part->caret()->invalidate();
+    m_part->getKHTMLSelection().invalidate();
         
     //kdDebug( 6000 ) << "TIME: layout() dt=" << qt.elapsed() << endl;
    
