@@ -1,3 +1,27 @@
+=== WebKit-89.2 ===
+
+2003-07-13  Maciej Stachowiak  <mjs@apple.com>
+
+	Rolled in build fixes from HEAD.
+
+    2003-07-13  Darin Adler  <darin@apple.com>
+
+        * WebKit.pbproj/project.pbxproj: Add command to prevent build from failing if symlink
+        creation fails.
+
+    2003-07-13  Darin Adler  <darin@apple.com>
+
+        Fixed symbolic link path as Matt Reda suggested.
+
+        * WebKit.pbproj/project.pbxproj: Changed paths in both of Maciej's new build phases
+        to use Versions/Current instead of Versions/A.
+
+    2003-07-13  Darin Adler  <darin@apple.com>
+
+        Fixed DSTROOT path as Eric Weiss suggested.
+
+        * WebKit.pbproj/project.pbxproj: Changed paths in both of Maciej's new build phases.
+
 === WebKit-89.1 ===
 
 2003-07-12  Maciej Stachowiak  <mjs@apple.com>
