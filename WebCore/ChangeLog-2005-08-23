@@ -2,6 +2,19 @@
 
         Reviewed by me
 
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::khtmlMouseReleaseEvent): Fixed some formatting. By calling
+	new isEditingAtSelection() helper, fixed crasher caused by checking 
+	if we're editing and the selection has been cleared.
+        (KHTMLPart::isEditingAtSelection): New helper.
+        * khtml/khtml_part.h:
+        * khtml/khtmlview.cpp:
+        (KHTMLView::placeCaret): Don't focus if not editing.
+
+2003-12-04  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
         * khtml/html/htmlediting.cpp: Added.
         * khtml/html/htmlediting.h: Added.
 
