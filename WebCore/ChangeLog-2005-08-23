@@ -1,5 +1,40 @@
 2002-03-13  Maciej Stachowiak  <mjs@apple.com>
 
+	Merge KDE3 beta 2 changes into this frankenstein file.
+
+	* src/kwq/KWQKloader.mm: (CachedCSSStyleSheet::CachedCSSStyleSheet),
+	(CachedCSSStyleSheet::ref), (CachedCSSStyleSheet::data),
+	(CachedCSSStyleSheet::checkNotify), (CachedCSSStyleSheet::error),
+	(CachedScript::CachedScript), (CachedScript::ref), (CachedScript::data),
+	(CachedScript::checkNotify), (CachedScript::error), (CachedImage::CachedImage),
+	(CachedImage::ref), (CachedImage::tiled_pixmap), (CachedImage::pixmap_size),
+	(CachedImage::do_notify), (CachedImage::movieStatus), (CachedImage::movieResize),
+	(CachedImage::setShowAnimations), (CachedImage::deleteMovie),
+	(CachedImage::data), (Request::Request), (DocLoader::DocLoader),
+	(DocLoader::requestImage), (DocLoader::requestStyleSheet),
+	(DocLoader::requestScript), (DocLoader::setAutoloadImages),
+	(DocLoader::setShowAnimations), (Loader::Loader), (Loader::~Loader),
+	(Loader::load), (Loader::servePendingRequests), (Loader::slotFinished),
+	(Loader::slotData), (Loader::numRequests), (Loader::cancelRequests),
+	(Cache::init), (Cache::requestImage), (Cache::requestStyleSheet),
+	(Cache::preloadStyleSheet), (Cache::requestScript), (Cache::preloadScript),
+	(Cache::flush):
+
+2002-03-13  Maciej Stachowiak  <mjs@apple.com>
+
+	Clean up this frankenstein file in preparation for merging KDE
+	beta 2 changes.
+
+	* src/kwq/KWQKloader.mm: (CachedCSSStyleSheet::CachedCSSStyleSheet),
+	(CachedScript::CachedScript), (CachedImage::CachedImage),
+	(CachedImage::pixmap_size), (CachedImage::movieResize), (CachedImage::data),
+	(DocLoader::DocLoader), (Loader::Loader), (Loader::~Loader), (Loader::load),
+	(Loader::servePendingRequests), (Loader::slotFinished), (Loader::slotData),
+	(Loader::numRequests), (Loader::cancelRequests), (Cache::requestImage),
+	(Cache::requestStyleSheet), (Cache::requestScript), (Cache::flush):
+
+2002-03-13  Maciej Stachowiak  <mjs@apple.com>
+
 	Remove files from build that are no longer in KDE 3 beta 2:
 
 	* src/kdelibs/khtml/ecma/Makefile.am:
