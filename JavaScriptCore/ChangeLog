@@ -1,3 +1,5 @@
+=== JavaScriptCore-96~0~1 ===
+
 2003-11-18  Vicki Murley  <vicki@apple.com>
 
         - Merged this fix from HEAD.  We thought this was already merged to the branch, but its not.
