@@ -305,10 +305,8 @@ initializeEncoding(XML_Parser parser);
 static enum XML_Error FASTCALL
 doProlog(XML_Parser parser, const ENCODING *enc, const char *s,
          const char *end, int tok, const char *next, const char **nextPtr);
-#ifdef XML_DTD
 static enum XML_Error FASTCALL
 processInternalParamEntity(XML_Parser parser, ENTITY *entity);
-#endif
 static enum XML_Error FASTCALL
 doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
           const char *start, const char *end, const char **endPtr);
@@ -1617,28 +1615,30 @@ XML_ExpatVersionInfo(void)
 const XML_Feature *
 XML_GetFeatureList(void)
 {
-  static const XML_Feature features[] = {
-    {XML_FEATURE_SIZEOF_XML_CHAR,  XML_L("sizeof(XML_Char)"), sizeof(XML_Char)},
-    {XML_FEATURE_SIZEOF_XML_LCHAR, XML_L("sizeof(XML_LChar)"), sizeof(XML_LChar)},
+  static XML_Feature features[] = {
+    {XML_FEATURE_SIZEOF_XML_CHAR,  XML_L("sizeof(XML_Char)")},
+    {XML_FEATURE_SIZEOF_XML_LCHAR, XML_L("sizeof(XML_LChar)")},
 #ifdef XML_UNICODE
-    {XML_FEATURE_UNICODE,          XML_L("XML_UNICODE"), 0},
+    {XML_FEATURE_UNICODE,          XML_L("XML_UNICODE")},
 #endif
 #ifdef XML_UNICODE_WCHAR_T
-    {XML_FEATURE_UNICODE_WCHAR_T,  XML_L("XML_UNICODE_WCHAR_T"), 0},
+    {XML_FEATURE_UNICODE_WCHAR_T,  XML_L("XML_UNICODE_WCHAR_T")},
 #endif
 #ifdef XML_DTD
-    {XML_FEATURE_DTD,              XML_L("XML_DTD"), 0},
+    {XML_FEATURE_DTD,              XML_L("XML_DTD")},
 #endif
 #ifdef XML_CONTEXT_BYTES
     {XML_FEATURE_CONTEXT_BYTES,    XML_L("XML_CONTEXT_BYTES"),
      XML_CONTEXT_BYTES},
 #endif
 #ifdef XML_MIN_SIZE
-    {XML_FEATURE_MIN_SIZE,         XML_L("XML_MIN_SIZE"), 0},
+    {XML_FEATURE_MIN_SIZE,         XML_L("XML_MIN_SIZE")},
 #endif
-    {XML_FEATURE_END,              NULL, 0}
+    {XML_FEATURE_END,              NULL}
   };
 
+  features[0].value = sizeof(XML_Char);
+  features[1].value = sizeof(XML_LChar);
   return features;
 }
 
