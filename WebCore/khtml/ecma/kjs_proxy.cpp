@@ -129,7 +129,9 @@ QVariant KJSProxyImpl::evaluate(QString filename, int baseLine,
   {
     if ( comp.complType() == Throw )
     {
+        KJS::Interpreter::lock();
         UString msg = comp.value().toString(m_script->globalExec());
+        KJS::Interpreter::unlock();
         kdWarning(6070) << "Script threw exception: " << msg.qstring() << endl;
     }
     return QVariant();
@@ -164,12 +166,14 @@ DOM::EventListener *KJSProxyImpl::createHTMLEventHandler(QString sourceUrl, QStr
 #endif
 
   initScript();
+  KJS::Interpreter::lock();
   //KJS::Constructor constr(KJS::Global::current().get("Function").imp());
   KJS::Object constr = m_script->builtinFunction();
   KJS::List args;
   args.append(KJS::String("event"));
   args.append(KJS::String(code));
   Object handlerFunc = constr.construct(m_script->globalExec(), args); // ### is globalExec ok ?
+  KJS::Interpreter::unlock();
 
   return KJS::Window::retrieveWindow(m_part)->getJSEventListener(handlerFunc,true);
 }
@@ -274,8 +278,10 @@ void KJSProxyImpl::initScript()
   m_script->setDebuggingEnabled(m_debugEnabled);
 #endif
   //m_script->enableDebug();
+  KJS::Interpreter::lock();
   globalObject.put(m_script->globalExec(),
 		   "debug", Value(new TestFunctionImp()), Internal);
+  KJS::Interpreter::unlock();
 
 #if APPLE_CHANGES
   QString userAgent = KWQ(m_part)->userAgent();

@@ -79,7 +79,9 @@ void JSEventListener::handleEvent(DOM::Event &evt, bool isWindowEvent)
     if (isWindowEvent) {
         thisObj = win;
     } else {
+        KJS::Interpreter::lock();
         thisObj = Object::dynamicCast(getDOMNode(exec,evt.currentTarget()));
+        KJS::Interpreter::unlock();
         if ( !thisObj.isNull() ) {
             ScopeChain scope = oldScope;
             static_cast<DOMNode*>(thisObj.imp())->pushEventHandlerScope(exec, scope);
@@ -93,7 +95,9 @@ void JSEventListener::handleEvent(DOM::Event &evt, bool isWindowEvent)
     // ... and in the interpreter
     interpreter->setCurrentEvent( &evt );
 
+    KJS::Interpreter::lock();
     Value retval = listener.call(exec, thisObj, args);
+    KJS::Interpreter::unlock();
 
     listener.setScope( oldScope );
 
@@ -303,8 +307,11 @@ Value KJS::getDOMEvent(ExecState *exec, DOM::Event e)
   ScriptInterpreter* interp = static_cast<ScriptInterpreter *>(exec->interpreter());
   if ((ret = interp->getDOMObject(e.handle())))
     return Value(ret);
-
+    
   DOM::DOMString module = e.eventModuleName();
+
+  KJS::Interpreter::lock();
+
   if (e.handle()->isKeyboardEvent())
     ret = new DOMKeyboardEvent(exec, static_cast<DOM::KeyboardEvent>(e));
   else if (module == "UIEvents")
@@ -315,6 +322,8 @@ Value KJS::getDOMEvent(ExecState *exec, DOM::Event e)
     ret = new DOMMutationEvent(exec, static_cast<DOM::MutationEvent>(e));
   else
     ret = new DOMEvent(exec, e);
+
+  KJS::Interpreter::unlock();
 
   interp->putDOMObject(e.handle(),ret);
   return Value(ret);
