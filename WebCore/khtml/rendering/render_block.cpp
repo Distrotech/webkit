@@ -1239,9 +1239,7 @@ void RenderBlock::paintObject(QPainter *p, int _x, int _y,
         const KHTMLSelection &s = document()->part()->getKHTMLSelection();
         NodeImpl *baseNode = s.baseNode();
         RenderObject *renderer = baseNode ? baseNode->renderer() : 0;
-        fprintf(stderr, "will paint caret: %p\n", baseNode);
         if (renderer && renderer->containingBlock() == this) {
-            fprintf(stderr, "paint caret\n");
             s.paint(p, QRect(_x, _y, _w, _h));
         }
     }

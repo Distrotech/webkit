@@ -2,6 +2,20 @@
 
         Reviewed by me
 
+	Cleanups to caret painting.
+
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::khtmlMouseReleaseEvent):
+        * khtml/khtml_selection.cpp:
+        (KHTMLSelection::clearSelection):
+        (KHTMLSelection::paint):
+        * khtml/rendering/render_block.cpp:
+        (khtml::RenderBlock::paintObject):
+
+2004-01-20  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
 	Gor caret painting limping along again.
 
         * khtml/khtml_part.cpp:

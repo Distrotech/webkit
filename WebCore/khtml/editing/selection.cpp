@@ -181,7 +181,6 @@ void KHTMLSelection::setExtent(DOM::NodeImpl *node, long offset)
 
 void KHTMLSelection::clearSelection()
 {
-    fprintf(stderr, "clearSelection\n");
 	setBaseNode(0);
 	setExtentNode(0);
 	setBaseOffset(0);
@@ -317,7 +316,7 @@ bool KHTMLSelection::isEmpty() const
 #ifdef APPLE_CHANGES
 void KHTMLSelection::paint(QPainter *p, const QRect &rect) const
 {
-    if (!m_caretPaint)
+    if (!m_caretPaint || m_state != CARET)
         return;
 
     QRect pos(m_caretX, m_caretY, 1, m_caretSize);

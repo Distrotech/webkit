@@ -4882,20 +4882,26 @@ void KHTMLPart::khtmlMouseReleaseEvent( khtml::MouseReleaseEvent *event )
 #if APPLE_CHANGES
 	// Clear the selection if the mouse didn't move after the last mouse press.
 	// We do this so when clicking on the selection, the selection goes away.
+    // However, if we are editing, place the caret.
 	if (d->m_dragStartPos.x() == event->qmouseEvent()->x() &&
 		d->m_dragStartPos.y() == event->qmouseEvent()->y() &&
-		d->m_textSelect == KHTMLSelection::CHARACTER &&
-        !isEditingAtCaret()) {
-			d->m_selection.clearSelection();
-			d->m_doc->clearSelection();
+		d->m_selection.state() == KHTMLSelection::RANGE &&
+        d->m_textSelect == KHTMLSelection::CHARACTER) {
+            if (isEditingAtCaret()) {
+                NodeImpl *node = 0;
+                int offset = 0;
+                checkSelectionPoint(event, node, offset);
+                d->m_selection.setSelection(node, offset);
+                d->m_doc->setSelection(d->m_selection);
+            }
+            else {
+                d->m_selection.clearSelection();
+                d->m_doc->clearSelection();
+            }
 	}
 #endif
 
 #ifndef KHTML_NO_SELECTION
-	// delete selection in case start and end position are at the same point
-	//if (d->m_selection.state() == KHTMLSelection::CARET) {
-    //    d->m_selection.clearSelection();
-	//} 
 	
 #ifndef QT_NO_CLIPBOARD
     // get selected text and paste to the clipboard
