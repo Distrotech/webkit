@@ -1,3 +1,10 @@
+2003-01-16  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by no one - just backing out an accidental commit to the wrong branch.
+
+        * kjs/testkjs.cpp:
+        (main):
+
 2003-01-13  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Darin.
