@@ -198,11 +198,11 @@
     }
 
     // Search from this frame down.
-    WebFrame *frame = [self _descendantFrameNamed:name];
+    WebFrame *frame = [self _descendantFrameNamed:name sourceFrame:self];
 
     if (!frame) {
         // Search in this WebView then in others.
-        frame = [[self webView] _findFrameNamed:name];
+        frame = [[self webView] _findFrameNamed:name sourceFrame:self];
     }
 
     return frame;

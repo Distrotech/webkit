@@ -1,3 +1,68 @@
+2005-01-13  Adele Amchan  <adele@apple.com>
+
+        <rdar://problem/3939323> frame naming allows malicious site to bring up a window when you click on a link in another
+        <rdar://problem/3939484> scripts can cause other frames/windows to execute arbitrary script using javascript: URLs
+        <rdar://problem/3943552> WebKit needs to restrict access to certain window operations by domain
+
+        merged these fixes from Tiger:
+  
+            2004-12-21  Maciej Stachowiak  <mjs@apple.com>
+
+            Reviewed by Darin.
+
+	    <rdar://problem/3888931> frame naming allows malicious site to bring up a window when you click on a link in another
+        
+	    Added opener bridge method to help WebKit implement security check
+	    for named frame visibility.
+	
+	    * khtml/khtml_part.h:
+            * kwq/WebCoreBridge.h:
+            * kwq/WebCoreBridge.mm:
+            (-[WebCoreBridge opener]):
+
+            2004-12-06  Maciej Stachowiak  <mjs@apple.com>
+
+            Reviewed by John.
+
+	    - fixed <rdar://problem/3903797> scripts can cause other frames/windows to execute arbitrary script using javascript: URLs
+        
+	    I changed all unprotected places that can navigate a different
+	    window or frame from script to check for a javascript: URL, and if
+	    found, to check for safety using cross-site-script rules. 
+
+	    I considered a few other possible exploits and made no change:
+
+	    - document.location is already protected because the document
+	    object itself is protected
+
+	    - frame.src, frame.location, iframe.src and targetted links are
+	    all safe because setting the URL of a frame to a javascript: URL
+	    executes the script in the context of the parent
+
+	    * khtml/ecma/kjs_window.cpp:
+            (WindowFunc::tryCall):
+            (Location::put):
+            (LocationFunc::tryCall):
+
+            2004-12-21  Maciej Stachowiak  <mjs@apple.com>
+
+            Reviewed by John.
+
+	    <rdar://problem/3929187> WebKit needs to restrict access to certain window operations by domain
+        
+	    * khtml/ecma/kjs_window.cpp:
+            (Window::get): Change most window functions to be restricted by
+	    XSS domain check.
+
+	The following files were changed to complete the merge.  Added compareIgnoringCaseForASCIIOnly and startsWith functions
+        to match how it is in later versions.
+
+        * kwq/KWQString.h:
+        * kwq/KWQString.mm:
+        (compareIgnoringCaseForASCIIOnly):
+        (QString::startsWith):
+        (QString::find):
+
 === WebCore-85.6.5 ===
 (skipped 85.6.4 - version numbers that include a "4" are not allowed b/c of Netscape 4 version checks)
 

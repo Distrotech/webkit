@@ -358,24 +358,69 @@ NSString *WebCorePageCacheStateKey = @"WebCorePageCacheState";
     }
 }
 
-- (WebFrame *)_descendantFrameNamed:(NSString *)name
+- (BOOL)_shouldAllowAccessFrom:(WebFrame *)source
 {
-    if ([[self name] isEqualToString: name]){
+    // if no source frame, allow access
+    if (source == nil) {
+        return YES;
+    }
+    
+    //   - allow access if the two frames are in the same window
+    if ([self webView] == [source webView]) {
+        return YES;
+    }
+    
+    //   - allow if the request is made from a local file.
+    NSString *sourceDomain = [[source _bridge] domain];
+    if ([sourceDomain length] == 0) {
+        return YES;
+    }
+    
+    //   - allow access if this frame or one of its ancestors
+    //     has the same origin as source
+    WebFrame *ancestor = self;
+    while (ancestor != nil) {
+        NSString *ancestorDomain = [[ancestor _bridge] domain];
+        if (ancestorDomain != nil && [sourceDomain _web_isCaseInsensitiveEqualToString:ancestorDomain]) {
+            return YES;
+        }
+        ancestor = [ancestor parentFrame];
+    }
+    
+    //   - allow access if this frame is a toplevel window and the source
+    //     can access its opener. Note that we only allow one level of
+    //     recursion here.
+    if ([self parentFrame] == nil) {
+        NSString *openerDomain = [[[self _bridge] opener] domain];
+        if (openerDomain != nil && [sourceDomain _web_isCaseInsensitiveEqualToString:openerDomain]) {
+            return YES;
+        }
+    }
+    
+    // otherwise deny access
+    return NO;
+}
+
+- (WebFrame *)_descendantFrameNamed:(NSString *)name sourceFrame:(WebFrame *)source
+{
+    // for security reasons, we do not want to even make frames visible to frames that
+    // can't access them 
+    if ([[self name] isEqualToString: name] && [self _shouldAllowAccessFrom:source]) {
         return self;
     }
-
+    
     NSArray *children = [self childFrames];
     WebFrame *frame;
     unsigned i;
-
+    
     for (i = 0; i < [children count]; i++){
         frame = [children objectAtIndex: i];
-        frame = [frame _descendantFrameNamed:name];
+        frame = [frame _descendantFrameNamed:name sourceFrame:source];
         if (frame){
             return frame;
         }
     }
-
+    
     return nil;
 }
 
