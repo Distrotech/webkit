@@ -75,13 +75,14 @@ void HTMLAppletElementImpl::parseAttribute(AttributeImpl *attr)
 {
     switch( attr->id() )
     {
-    case ATTR_CODEBASE:
+    case ATTR_ALT:
     case ATTR_ARCHIVE:
     case ATTR_CODE:
-    case ATTR_OBJECT:
-    case ATTR_ALT:
+    case ATTR_CODEBASE:
     case ATTR_ID:
+    case ATTR_MAYSCRIPT:
     case ATTR_NAME:
+    case ATTR_OBJECT:
         break;
     case ATTR_WIDTH:
         addCSSLength(CSS_PROP_WIDTH, attr->value());
@@ -105,9 +106,9 @@ bool HTMLAppletElementImpl::rendererIsNeeded(RenderStyle *style)
 RenderObject *HTMLAppletElementImpl::createRenderer(RenderArena *arena, RenderStyle *style)
 {
 #ifndef Q_WS_QWS // FIXME(E)? I don't think this is possible with Qt Embedded...
-    KHTMLView *view = getDocument()->view();
+    KHTMLPart *part = getDocument()->part();
 
-    if( view->part()->javaEnabled() )
+    if( part && part->javaEnabled() )
     {
 	QMap<QString, QString> args;
 
@@ -125,7 +126,11 @@ RenderObject *HTMLAppletElementImpl::createRenderer(RenderArena *arena, RenderSt
 
 	args.insert( "baseURL", getDocument()->baseURL() );
 
-        // Other arguments (from <PARAM> tags are added later.
+        DOMString mayScript = getAttribute(ATTR_MAYSCRIPT);
+        if (!mayScript.isNull())
+            args.insert("mayScript", mayScript.string());
+
+        // Other arguments (from <PARAM> tags) are added later.
         
         return new (getDocument()->renderArena()) RenderApplet(this, args);
     }
@@ -175,13 +180,15 @@ Bindings::Instance *HTMLAppletElementImpl::getAppletInstance() const
         return appletInstance;
     
     RenderApplet *r = static_cast<RenderApplet*>(m_render);
-    r->createWidgetIfNecessary();
-    if (r && r->widget()){
-        // Call into the part (and over the bridge) to pull the Bindings::Instance
-        // from the guts of the Java VM.
-        void *_view = r->widget()->getView();
-        KHTMLView* v = getDocument()->view();
-        appletInstance = KWQ(v->part())->getAppletInstanceForView((NSView *)_view);
+    if (r) {
+        r->createWidgetIfNecessary();
+        if (r->widget()){
+            // Call into the part (and over the bridge) to pull the Bindings::Instance
+            // from the guts of the Java VM.
+            void *_view = r->widget()->getView();
+            KHTMLPart* part = getDocument()->part();
+            appletInstance = part ? KWQ(part)->getAppletInstanceForView((NSView *)_view) : 0;
+        }
     }
     return appletInstance;
 }
@@ -267,8 +274,10 @@ void HTMLEmbedElementImpl::parseAttribute(AttributeImpl *attr)
 
 bool HTMLEmbedElementImpl::rendererIsNeeded(RenderStyle *style)
 {
-    KHTMLView* w = getDocument()->view();
-    return w->part()->pluginsEnabled() && parentNode()->id() != ID_OBJECT;
+    KHTMLPart *part = getDocument()->part();
+    if (!part)
+	return false;
+    return part->pluginsEnabled() && parentNode()->id() != ID_OBJECT;
 }
 
 RenderObject *HTMLEmbedElementImpl::createRenderer(RenderArena *arena, RenderStyle *style)
@@ -365,8 +374,8 @@ bool HTMLObjectElementImpl::rendererIsNeeded(RenderStyle *style)
         return HTMLElementImpl::rendererIsNeeded(style);
     }
 
-    KHTMLView* w = getDocument()->view();
-    if (!w->part()->pluginsEnabled()) {
+    KHTMLPart* part = getDocument()->part();
+    if (!part || !part->pluginsEnabled()) {
         return false;
     }
 #if APPLE_CHANGES
