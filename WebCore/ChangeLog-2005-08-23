@@ -1,3 +1,37 @@
+2004-03-04  Maciej Stachowiak  <mjs@apple.com>
+
+	Bump versions.
+	
+        * English.lproj/InfoPlist.strings:
+
+        * kwq/KWQAccObject.mm:
+        (-[KWQAccObject accessibilityIsIgnored]): Fix to build on branch.
+
+2004-03-03  Maciej Stachowiak  <mjs@apple.com>
+
+	Merge the following fix for Epiphany:
+
+    2004-03-03  David Hyatt  <hyatt@apple.com>
+
+	Speed up access to the children arrays of accessibility objects by caching mutable arrays of children
+	and nulling them out only when the children change.
+	
+        Reviewed by john
+
+        * khtml/rendering/render_container.cpp:
+        (RenderContainer::removeChildNode):
+        (RenderContainer::appendChildNode):
+        (RenderContainer::insertChildNode):
+        * kwq/KWQAccObject.h:
+        * kwq/KWQAccObject.mm:
+        (-[KWQAccObject detach]):
+        (-[KWQAccObject accessibilityAttributeValue:]):
+        (-[KWQAccObject childrenChanged]):
+        (-[KWQAccObject clearChildren]):
+        * kwq/KWQAccObjectCache.h:
+        * kwq/KWQAccObjectCache.mm:
+        (KWQAccObjectCache::childrenChanged):
+
 2004-03-03  Maciej Stachowiak  <mjs@apple.com>
 
 	Actually merge the two changes below, they didn't actually get in

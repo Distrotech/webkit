@@ -35,6 +35,11 @@
 #include <kdebug.h>
 #include <assert.h>
 
+#if APPLE_CHANGES
+// For accessibility
+#include "KWQAccObjectCache.h" 
+#endif
+
 using namespace khtml;
 
 RenderContainer::RenderContainer(DOM::NodeImpl* node)
@@ -201,6 +206,12 @@ RenderObject* RenderContainer::removeChildNode(RenderObject* oldChild)
     oldChild->setNextSibling(0);
     oldChild->setParent(0);
 
+#if APPLE_CHANGES
+    KWQAccObjectCache* cache = document()->getExistingAccObjectCache();
+    if (cache)
+        cache->childrenChanged(this);
+#endif
+    
     return oldChild;
 }
 
@@ -348,6 +359,12 @@ void RenderContainer::appendChildNode(RenderObject* newChild)
     newChild->setNeedsLayoutAndMinMaxRecalc(); // Goes up the containing block hierarchy.
     if (!normalChildNeedsLayout())
         setChildNeedsLayout(true); // We may supply the static position for an absolute positioned child.
+    
+#if APPLE_CHANGES
+    KWQAccObjectCache* cache = document()->getExistingAccObjectCache();
+    if (cache)
+        cache->childrenChanged(this);
+#endif
 }
 
 void RenderContainer::insertChildNode(RenderObject* child, RenderObject* beforeChild)
@@ -380,6 +397,12 @@ void RenderContainer::insertChildNode(RenderObject* child, RenderObject* beforeC
     child->setNeedsLayoutAndMinMaxRecalc();
     if (!normalChildNeedsLayout())
         setChildNeedsLayout(true); // We may supply the static position for an absolute positioned child.
+    
+#if APPLE_CHANGES
+    KWQAccObjectCache* cache = document()->getExistingAccObjectCache();
+    if (cache)
+        cache->childrenChanged(this);
+#endif    
 }
 
 
