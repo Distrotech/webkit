@@ -47,12 +47,10 @@
 #include "misc/htmltags.h"
 
 #include "rendering/render_object.h"
+#include "rendering/render_layer.h"
 
 #include <kdebug.h>
 
-#if APPLE_CHANGES
-#include <JavaScriptCore/runtime_object.h>
-#endif
 
 using namespace KJS;
 
@@ -74,22 +72,19 @@ Value KJS::HTMLDocFunction::tryCall(ExecState *exec, Object &thisObj, const List
   case HTMLDocument::Open:
     // For compatibility with other browsers, pass open calls with parameters to the window.
     if (args.size() > 1) {
-      KHTMLView *view = static_cast<DOM::DocumentImpl *>(doc.handle())->view();
-      if (view) {
-        KHTMLPart *part = view->part();
-        if (part) {
-          Window *window = Window::retrieveWindow(part);
-          if (window) {
-            Object functionObject = Object::dynamicCast(window->get(exec, "open"));
-            if (functionObject.isNull() || !functionObject.implementsCall()) {
-                Object exception = Error::create(exec, TypeError);
-                exec->setException(exception);
-                return exception;
-            }
-            Object windowObject(window);
-            return functionObject.call(exec, windowObject, args);
-          }
-        }
+      KHTMLPart *part = static_cast<DOM::DocumentImpl *>(doc.handle())->part();
+      if (part) {
+	Window *window = Window::retrieveWindow(part);
+	if (window) {
+	  Object functionObject = Object::dynamicCast(window->get(exec, "open"));
+	  if (functionObject.isNull() || !functionObject.implementsCall()) {
+	    Object exception = Error::create(exec, TypeError);
+	    exec->setException(exception);
+	    return exception;
+	  }
+	  Object windowObject(window);
+	  return functionObject.call(exec, windowObject, args);
+	}
       }
       return Undefined();
     }
@@ -204,8 +199,6 @@ Value KJS::HTMLDocument::tryGet(ExecState *exec, const Identifier &propertyName)
     case Body:
       return getDOMNode(exec,doc.body());
     case Location:
-      Q_ASSERT(view);
-      Q_ASSERT(view->part());
       if ( view && view->part() )
       {
         Window* win = Window::retrieveWindow(view->part());
@@ -287,6 +280,17 @@ Value KJS::HTMLDocument::tryGet(ExecState *exec, const Identifier &propertyName)
   //kdDebug(6070) << "KJS::HTMLDocument::tryGet " << propertyName.qstring() << " not found, returning element" << endl;
   // image and form elements with the name p will be looked up last
 
+#if APPLE_CHANGES
+    // Look for named applets.
+    // FIXME:  Factor code that creates RuntimeObjectImp for applet.  It's also
+    // located in applets[0]. 
+    DOM::HTMLCollection applets = doc.applets();
+    DOM::HTMLElement anApplet = applets.namedItem (propertyName.string());
+    if (!anApplet.isNull()) {
+        return getRuntimeObject(exec,anApplet);
+    }
+#endif
+
   DOM::HTMLDocumentImpl *docImpl = static_cast<DOM::HTMLDocumentImpl*>(node.handle());
   if (!docImpl->haveNamedImageOrForm(propertyName.qstring())) {
     return Undefined();
@@ -354,11 +358,9 @@ void KJS::HTMLDocument::putValue(ExecState *exec, int token, const Value& value,
     doc.setCookie(value.toString(exec).string());
     break;
   case Location: {
-    KHTMLView *view = static_cast<DOM::DocumentImpl *>( doc.handle() )->view();
-    Q_ASSERT(view);
-    if (view)
+    KHTMLPart *part = static_cast<DOM::DocumentImpl *>( doc.handle() )->part();
+    if (part)
     {
-      KHTMLPart *part = view->part();
       QString str = value.toString(exec).qstring();
 
       // When assinging location, IE and Mozilla both resolve the URL
@@ -486,6 +488,7 @@ const ClassInfo KJS::HTMLElement::tablecell_info = { "HTMLTableCellElement", &KJ
 const ClassInfo KJS::HTMLElement::frameSet_info = { "HTMLFrameSetElement", &KJS::HTMLElement::info, &HTMLFrameSetElementTable, 0 };
 const ClassInfo KJS::HTMLElement::frame_info = { "HTMLFrameElement", &KJS::HTMLElement::info, &HTMLFrameElementTable, 0 };
 const ClassInfo KJS::HTMLElement::iFrame_info = { "HTMLIFrameElement", &KJS::HTMLElement::info, &HTMLIFrameElementTable, 0 };
+const ClassInfo KJS::HTMLElement::marquee_info = { "HTMLMarqueeElement", &KJS::HTMLElement::info, &HTMLMarqueeElementTable, 0 };
 
 const ClassInfo* KJS::HTMLElement::classInfo() const
 {
@@ -609,6 +612,8 @@ const ClassInfo* KJS::HTMLElement::classInfo() const
     return &frame_info;
   case ID_IFRAME:
     return &iFrame_info;
+  case ID_MARQUEE:
+    return &marquee_info;
   default:
     return &info;
   }
@@ -1066,6 +1071,11 @@ const ClassInfo* KJS::HTMLElement::classInfo() const
   src		  KJS::HTMLElement::IFrameSrc			DontDelete
   width		  KJS::HTMLElement::IFrameWidth			DontDelete
 @end
+
+@begin HTMLMarqueeElementTable 2
+  start           KJS::HTMLElement::MarqueeStart		DontDelete|Function 0
+  stop            KJS::HTMLElement::MarqueeStop                 DontDelete|Function 0
+@end
 */
 
 Value KJS::HTMLElement::tryGet(ExecState *exec, const Identifier &propertyName) const
@@ -1100,28 +1110,24 @@ Value KJS::HTMLElement::tryGet(ExecState *exec, const Identifier &propertyName) 
     case ID_FRAME:
     case ID_IFRAME: {
         DOM::DocumentImpl* doc = static_cast<DOM::HTMLFrameElementImpl *>(element.handle())->contentDocument();
-        if ( doc && doc->view() ) {
-            KHTMLPart* part = doc->view()->part();
+        if ( doc ) {
+            KHTMLPart* part = doc->part();
             if ( part ) {
-            Object globalObject = Object::dynamicCast( Window::retrieve( part ) );
-            // Calling hasProperty on a Window object doesn't work, it always says true.
-            // Hence we need to use getDirect instead.
-            if ( !globalObject.isNull() && static_cast<ObjectImp *>(globalObject.imp())->getDirect( propertyName ) )
+	      Object globalObject = Object::dynamicCast( Window::retrieve( part ) );
+	      // Calling hasProperty on a Window object doesn't work, it always says true.
+	      // Hence we need to use getDirect instead.
+	      if ( !globalObject.isNull() && static_cast<ObjectImp *>(globalObject.imp())->getDirect( propertyName ) )
                 return globalObject.get( exec, propertyName );
             }
         }
     }
       break;
+#if APPLE_CHANGES
     case ID_APPLET: {
-        DOM::HTMLAppletElementImpl *appletElement = static_cast<DOM::HTMLAppletElementImpl *>(element.handle());
-        
-        if (appletElement->getAppletInstance()) {
-            // The instance is owned by the applet element.
-            RuntimeObjectImp valueForApplet(appletElement->getAppletInstance(), false);
-            return valueForApplet.get(exec,propertyName);
-        }
+        return getRuntimeObject(exec,element);
     }
       break;
+#endif
     default:
         break;
     }
@@ -2101,6 +2107,22 @@ Value KJS::HTMLElementFunction::tryCall(ExecState *exec, Object &thisObj, const 
         return Undefined();
       }
     }
+    case ID_MARQUEE: {
+        if (id == KJS::HTMLElement::MarqueeStart && element.handle()->renderer() && 
+            element.handle()->renderer()->layer() &&
+            element.handle()->renderer()->layer()->marquee()) {
+            element.handle()->renderer()->layer()->marquee()->start();
+            return Undefined();
+        }
+        else if (id == KJS::HTMLElement::MarqueeStop && element.handle()->renderer() && 
+                 element.handle()->renderer()->layer() &&
+                 element.handle()->renderer()->layer()->marquee()) {
+            element.handle()->renderer()->layer()->marquee()->suspend();
+            return Undefined();
+        }
+        break;
+    }
+        
     break;
   }
 
@@ -2906,15 +2928,8 @@ Value KJS::HTMLCollection::tryGet(ExecState *exec, const Identifier &propertyNam
       DOM::Node node = collection.item(u);
 
 #if APPLE_CHANGES
-        if (node.handle()->id() == ID_APPLET) {
-            DOM::HTMLElement element = static_cast<DOM::HTMLElement>(node);
-            DOM::HTMLAppletElementImpl *appletElement = static_cast<DOM::HTMLAppletElementImpl *>(element.handle());
-            
-            if (appletElement->getAppletInstance()) {
-                // The instance is owned by the applet element.
-                RuntimeObjectImp *appletImp = new RuntimeObjectImp(appletElement->getAppletInstance(), false);
-                return Value(appletImp);
-            }
+        if (!node.isNull() && node.handle()->id() == ID_APPLET) {
+            return getRuntimeObject(exec,node);
         }
 #endif
       return getDOMNode(exec,node);
@@ -3259,8 +3274,8 @@ void Image::putValue(ExecState *exec, int token, const Value& value, int /*attr*
 
 void Image::notifyFinished(khtml::CachedObject *)
 {
-  if (onLoadListener) {
-    DOM::Event ev = doc->view()->part()->document().createEvent("HTMLEvents");
+  if (onLoadListener && doc->part()) {
+    DOM::Event ev = doc->part()->document().createEvent("HTMLEvents");
     ev.initEvent("load", true, true);
     onLoadListener->handleEvent(ev, true);
   }
