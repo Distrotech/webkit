@@ -26,10 +26,16 @@
 #include "html_blockimpl.h"
 #include "html_documentimpl.h"
 #include "css/cssstyleselector.h"
+#include "xml/dom2_eventsimpl.h"
 
 #include "css/cssproperties.h"
 #include "css/cssvalues.h"
 #include "misc/htmlhashes.h"
+
+#include "htmlediting.h"
+#include "khtmlview.h"
+#include "khtml_part.h"
+#import "KWQLogging.h"
 
 #include <kdebug.h>
 
@@ -86,6 +92,19 @@ void HTMLDivElementImpl::parseAttribute(AttributeImpl *attr)
     default:
         HTMLElementImpl::parseAttribute(attr);
     }
+}
+
+void HTMLDivElementImpl::defaultEventHandler(EventImpl *evt)
+{
+    if (evt->id()==EventImpl::KEYPRESS_EVENT)
+    {
+        KeyboardEventImpl *k = static_cast<KeyboardEventImpl *>(evt);
+        DocumentImpl *doc = getDocument();
+        TextInputCommand *cmd = new TextInputCommand(doc->view()->part()->selection(), k->qKeyEvent()->text());
+        if (doc->applyEditing(cmd))
+            evt->setDefaultHandled();
+    }
+    HTMLElementImpl::defaultEventHandler(evt);
 }
 
 // -------------------------------------------------------------------------
