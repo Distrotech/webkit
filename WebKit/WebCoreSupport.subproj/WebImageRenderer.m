@@ -286,6 +286,7 @@ static NSMutableSet *activeImageRenderers;
     copy->frameView = nil;
     copy->patternColor = nil;
     copy->compositeOperator = compositeOperator;
+    copy->context = 0;
         
     return copy;
 }
@@ -385,6 +386,7 @@ static NSMutableSet *activeImageRenderers;
     
     if (context) {
         CGContextRelease(context);
+        context = 0;
     }
 
     [_PDFDoc release];
@@ -678,10 +680,12 @@ static NSMutableSet *activeImageRenderers;
     compositeOperator = operator;
     
     if (aContext != context) {
-        if (aContext)
+        if (aContext) {
             CGContextRetain(aContext);
-        if (context)
+        }
+        if (context) {
             CGContextRelease(context);
+        }
         context = aContext;
     }
         

@@ -1,3 +1,19 @@
+2004-06-24  Vicki Murley  <vicki@apple.com>
+
+	- roll this change to a branch for the WWDC demo
+
+    2004-06-24  Richard Williamson   <rjw@apple.com>
+
+                Fixed <rdar://problem/3710313>: CGContext not zeroed when WebImageRenderer is copied
+                The context ivar of WebImageRenderer wasn't being nil when the object was copied.
+
+        Reviewed by Darin.
+
+        * WebCoreSupport.subproj/WebImageRenderer.m:
+        (-[WebImageRenderer copyWithZone:]):
+        (-[WebImageRenderer dealloc]):
+        (-[WebImageRenderer drawImageInRect:fromRect:compositeOperator:context:]):
+
 === Safari-146 ===
 
 2004-06-17  Richard Williamson   <rjw@apple.com>
