@@ -133,7 +133,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.2;
 				OPTIMIZATION_CFLAGS = "-Os";
 				OTHER_CFLAGS = "$(DEBUG_CFLAGS) -DAPPLE_CHANGES -DHAVE_CONFIG_H";
-				OTHER_LDFLAGS = "-seg1addr 0x02200000 -no-c++filt";
+				OTHER_LDFLAGS = "-seg1addr 0x9000000 -no-c++filt";
 				PRECOMPILE_PREFIX_HEADER = YES;
 				PREFIX_HEADER = WebCorePrefix.h;
 				PRODUCT_NAME = WebCore;
@@ -169,9 +169,9 @@
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.9</string>
+	<string>0.8.2</string>
 	<key>CFBundleVersion</key>
-	<string>56u</string>
+	<string>60</string>
 </dict>
 </plist>
 ";
@@ -902,7 +902,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
-			shellScript = "ditto ${SYMROOT}/WebCore.framework ${DSTROOT}/AppleInternal/Library/Frameworks/WebCore.framework";
+			shellScript = "if [ \"x$RC_RELEASE\" = \"xPanther\" ]; then\n    install_name_tool -id \"${SYSTEM_LIBRARY_DIR}/PrivateFrameworks/WebCore.framework/Versions/A/WebCore\" \"${SYMROOT}/WebCore.framework/Versions/A/WebCore\" ;\n    ditto \"${SYMROOT}/WebCore.framework\" \"${DSTROOT}/${SYSTEM_LIBRARY_DIR}/PrivateFrameworks/WebCore.framework\" ;\n    strip -S ${DSTROOT}/\"${SYSTEM_LIBRARY_DIR}/PrivateFrameworks/WebCore.framework/Versions/A/WebCore\";\nelse\n    ditto \"${SYMROOT}/WebCore.framework\" \"${DSTROOT}/AppleInternal/Library/Frameworks/WebCore.framework\"\nfi";
 		};
 //650
 //651
