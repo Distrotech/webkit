@@ -98,6 +98,11 @@ using KParts::URLArgs;
 NSEvent *KWQKHTMLPart::_currentEvent = nil;
 NSResponder *KWQKHTMLPart::_firstResponderAtMouseDownTime = nil;
 
+void KHTMLPart::caretPositionChanged(const DOM::Node &node, long offset)
+{
+    KWQ(this)->_completed.call();
+}
+
 void KHTMLPart::completed()
 {
     KWQ(this)->_completed.call();
@@ -856,6 +861,9 @@ void KWQKHTMLPart::paint(QPainter *p, const QRect &rect)
 
     if (renderer()) {
         renderer()->layer()->paint(p, rect);
+#ifdef APPLE_CHANGES
+        view()->paintCaret(p, rect);
+#endif
     } else {
         ERROR("called KWQKHTMLPart::paint with nil renderer");
     }
