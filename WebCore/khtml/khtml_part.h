@@ -30,7 +30,6 @@
 #include "dom/html_document.h"
 #include "dom/dom2_range.h"
 #include "dom/dom_misc.h"
-#include "editing/edit_caret.h"
 
 #include <kparts/part.h>
 #include <kparts/browserextension.h>
@@ -163,6 +162,7 @@ class KHTMLPart : public KParts::ReadOnlyPart
   friend class khtml::RenderWidget;
   friend class khtml::CSSStyleSelector;
   friend class KHTMLPartIface;
+  friend class khtml::Caret;
 
   Q_PROPERTY( bool javaScriptEnabled READ jScriptEnabled WRITE setJScriptEnabled )
   Q_PROPERTY( bool javaEnabled READ javaEnabled WRITE setJavaEnabled )

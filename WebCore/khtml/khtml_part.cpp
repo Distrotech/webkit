@@ -2481,7 +2481,7 @@ void KHTMLPart::setSelection(const DOM::Range &r, bool placeCaret)
 
     if (placeCaret) {
         caret()->setPosition(d->m_selectionEnd.handle(), d->m_endOffset);
-        d->m_view->placeCaret();
+        caret()->placeCaret();
         emitCaretPositionChanged();
     }
 }
@@ -4714,7 +4714,7 @@ void KHTMLPart::khtmlMousePressEvent( khtml::MousePressEvent *event )
                 d->m_doc->clearSelection();
 
                 caret()->setPosition(d->m_selectionEnd.handle(), d->m_endOffset);
-                d->m_view->placeCaret();
+                caret()->placeCaret();
                 emitCaretPositionChanged();
             }
             else
@@ -5045,7 +5045,7 @@ void KHTMLPart::khtmlMouseMoveEvent( khtml::MouseMoveEvent *event )
                 d->m_doc->setSelection(d->m_selectionEnd.handle(),d->m_endOffset,
                                 d->m_selectionStart.handle(),d->m_startOffset);
         }
-        d->m_view->placeCaret();
+        caret()->placeCaret();
         emitCaretPositionChanged();
 #else
         if ( d->m_doc && d->m_view ) {
@@ -5159,7 +5159,7 @@ void KHTMLPart::khtmlMouseReleaseEvent( khtml::MouseReleaseEvent *event )
                 d->m_extendAtEnd = false;
                 caret()->setPosition(d->m_selectionStart.handle(), d->m_startOffset);
             }
-            d->m_view->placeCaret();
+            caret()->placeCaret();
             emitCaretPositionChanged();
 
             // get selected text and paste to the clipboard
@@ -5641,12 +5641,9 @@ void KHTMLPart::moveCaretTo(DOM::NodeImpl *node, long offset, bool clearSelectio
     // also, then two caretPositionChanged signals with a null Node are
     // emitted in series.
     if (positionChanged) {
-        if (view()) {
-            // this has the effect of keeping the cursor from blinking when the caret moves
-            view()->caretOn();
-            // update the view
-            view()->placeCaret();
-        }
+        // this has the effect of keeping the cursor from blinking when the caret moves
+        caret()->caretOn();
+        caret()->placeCaret();
         emitCaretPositionChanged();
     }
 

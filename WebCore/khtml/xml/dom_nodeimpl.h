@@ -231,7 +231,6 @@ public:
     QString recursive_toHTML(bool start = false) const;
 
     virtual bool isContentEditable() const;
-    virtual void getCaret(int offset, bool override, int &_x, int &_y, int &width, int &height);
     virtual QRect getRect() const;
 
     enum StyleChange { NoChange, NoInherit, Inherit, Detach, Force };

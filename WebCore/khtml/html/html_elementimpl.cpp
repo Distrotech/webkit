@@ -47,6 +47,8 @@
 #include "xml/dom_textimpl.h"
 #include "xml/dom2_eventsimpl.h"
 
+#include "editing/edit_caret.h"
+
 #include <kdebug.h>
 
 using namespace DOM;

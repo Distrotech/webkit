@@ -352,18 +352,6 @@ bool NodeImpl::isContentEditable() const
     return m_parent ? m_parent->isContentEditable() : false;
 }
 
-void NodeImpl::getCaret(int offset, bool override, int &_x, int &_y, int &width, int &height)
-{
-    if (m_render) 
-        m_render->caretPos(offset, override, _x, _y, width, height);
-    else {
-        // return default values
-        _x = _y = height = -1;
-        width = 1;	// the caret has a default width of one pixel. If you want
-                   // to check for validity, only test the x-coordinate for >= 0.
-    }
-}
-
 QRect NodeImpl::getRect() const
 {
     int _x, _y;

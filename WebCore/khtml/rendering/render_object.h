@@ -215,8 +215,6 @@ public:
     virtual bool childrenInline() const { return false; }
     virtual void setChildrenInline(bool b) { };
 
-    virtual bool isFlow() const { return false; }
-
     virtual RenderFlow* continuation() const;
     virtual bool isInlineContinuation() const;
     

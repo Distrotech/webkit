@@ -167,63 +167,6 @@ public:
     void resetScrollBars();
 #endif
 
-    // -- caret-related member functions (for caret mode as well as design mode)
-    /** initializes the caret if it hasn't been initialized yet.
-     *
-     * This method determines a suitable starting position, initializes
-     * the internal structures, and calculates the caret's coordinates ready
-     * for display.
-     *
-     * To "deinitialize" the caret, call @ref caretOff
-     */
-    void initCaret();
-    /** returns whether the text under the caret will be overridden.
-     */
-    bool caretOverrides();
-    /** ensures that the given element is properly focused.
-     *
-     * If not in caret mode or design mode, keyboard events are only regarded for
-     * focused nodes. Therefore, the function ensured that the focus will be
-     * properly set on unfocused nodes (or on a suitable ancestor).
-     * @param node node to focus
-     */
-    void ensureNodeHasFocus(DOM::NodeImpl *node);
-    /** inquires the current caret position and stores it in the caret view
-     * context. Also resets the blink frequency timer. It will not display
-     * the caret on the canvas.
-     */
-    void recalcAndStoreCaretPos();
-    /** displays the caret and reinitializes the blink frequency timer. */
-    void caretOn();
-    /** hides the caret and kills the blink frequency timer. */
-    void caretOff();
-    /** makes the caret visible, but does not influence the frequency timer.
-     * That means it probably won't get visible immediately.
-     */
-    void showCaret();
-    /** makes the caret invisible, but does not influence the frequency timer.
-     * The caret is immediately hidden.
-     */
-    void hideCaret();
-
-#ifdef APPLE_CHANGES
-    void paintCaret(QPainter *p, const QRect &rect) const;
-#endif
-
-    /** places the caret on the current position.
-     *
-     * The caret is switched off, the position recalculated with respect to
-     * the new position. The caret will only be redisplayed if it is on an
-     * editable node, in design mode, or in caret mode.
-     * @return @p true if the caret has been displayed.
-     */
-    bool placeCaret();
-    // -- caret event handler
-    /**
-     * Evaluates key presses on editable nodes.
-     */
-    void caretKeyPressEvent(QKeyEvent *);
-
 signals:
         void cleared();
     

@@ -29,13 +29,14 @@
 #include "KWQAssertions.h"
 #endif
 
-#include "dom_elementimpl.h"
-#include "dom_nodeimpl.h"
-#include "dom2_rangeimpl.h"
-#include "dom_textimpl.h"
 #include "khtmlview.h"
 #include "khtml_part.h"
-#include "render_object.h"
+#include "editing/edit_caret.h"
+#include "rendering/render_object.h"
+#include "xml/dom_elementimpl.h"
+#include "xml/dom_nodeimpl.h"
+#include "xml/dom2_rangeimpl.h"
+#include "xml/dom_textimpl.h"
 
 using DOM::DocumentImpl;
 using DOM::DOMString;
@@ -206,10 +207,8 @@ bool InputTextCommand::apply()
         return false;
 
     // Delete the current selection
-    if (view->caretOverrides()) {
-        deleteSelection();
-        caret->adjustPosition();
-    }
+    deleteSelection();
+    caret->adjustPosition();
     
     TextImpl *textNode = static_cast<TextImpl *>(caret->node());
     int exceptionCode;

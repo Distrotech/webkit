@@ -2,6 +2,66 @@
 
         Reviewed by me
 
+	Purged all caret member functions from KHTMLView,
+	rolling them all into the Caret class.
+
+        * khtml/dom/dom_node.cpp:
+        * khtml/dom/dom_node.h:
+        * khtml/editing/edit_caret.cpp:
+        (Caret::Caret):
+        (Caret::part):
+        (Caret::view):
+        (Caret::initCaret):
+        (Caret::invalidate):
+        (Caret::recalcAndStoreCaretPos):
+        (Caret::caretOn):
+        (Caret::caretOff):
+        (Caret::showCaret):
+        (Caret::hideCaret):
+        (Caret::updateView):
+        (Caret::placeCaret):
+        (Caret::paintCaret):
+        (Caret::timerEvent):
+        (Caret::ensureNodeHasFocus):
+        * khtml/editing/edit_caret.h:
+        (khtml::Caret::node):
+        (khtml::Caret::offset):
+        (khtml::Caret::xPos):
+        (khtml::Caret::yPos):
+        (khtml::Caret::height):
+        (khtml::Caret::visible):
+        (khtml::Caret::displayed):
+        * khtml/editing/htmlediting.cpp:
+        (InputTextCommand::apply):
+        * khtml/html/html_elementimpl.cpp:
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::setSelection):
+        (KHTMLPart::khtmlMousePressEvent):
+        (KHTMLPart::khtmlMouseMoveEvent):
+        (KHTMLPart::khtmlMouseReleaseEvent):
+        (KHTMLPart::moveCaretTo):
+        * khtml/khtml_part.h:
+        * khtml/khtmlview.cpp:
+        (KHTMLView::init):
+        (KHTMLView::clear):
+        (KHTMLView::resizeEvent):
+        (KHTMLView::layout):
+        (KHTMLView::focusNextPrevNode):
+        (KHTMLView::focusInEvent):
+        (KHTMLView::focusOutEvent):
+        (KHTMLView::timerEvent):
+        (KHTMLView::complete):
+        * khtml/khtmlview.h:
+        * khtml/rendering/render_object.h:
+        * khtml/xml/dom_nodeimpl.cpp:
+        * khtml/xml/dom_nodeimpl.h:
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::paint):
+
+2004-01-15  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
 	Files now obsolete.
 
         * khtml/editing/edit_caretimpl.cpp: Removed.
