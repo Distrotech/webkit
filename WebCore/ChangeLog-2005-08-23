@@ -1,3 +1,5 @@
+=== WebCore-125.6.4 ===
+
 2004-04-27  Vicki Murley  <vicki@apple.com>
 
 	- merge fix for <rdar://problem/3634233>: innerText problem makes FedEx tracking 
