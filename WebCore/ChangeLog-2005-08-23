@@ -1,3 +1,5 @@
+=== WebCore-85.6.6 ===
+
 2005-01-13  Adele Amchan  <adele@apple.com>
 
         <rdar://problem/3939323> frame naming allows malicious site to bring up a window when you click on a link in another
