@@ -1,3 +1,119 @@
+2005-02-08  Richard Williamson   <rjw@apple.com>
+
+	Back-ported Java LiveConnect implementation from Tiger/SUPanWheat.
+
+        Reviewed by Darin.
+
+        * JavaScriptCore.pbproj/project.pbxproj:
+        * Makefile.am:
+        * bindings/jni/jni_class.cpp:
+        (JavaClass::methodsNamed):
+        (JavaClass::fieldNamed):
+        * bindings/jni/jni_class.h:
+        * bindings/jni/jni_instance.cpp:
+        (JavaInstance::JavaInstance):
+        (JavaInstance::invokeMethod):
+        (JavaInstance::invokeDefaultMethod):
+        * bindings/jni/jni_instance.h:
+        * bindings/jni/jni_jsobject.cpp: Added.
+        (isJavaScriptThread):
+        (JSObject::invoke):
+        (JSObject::JSObject):
+        (JSObject::call):
+        (JSObject::eval):
+        (JSObject::getMember):
+        (JSObject::setMember):
+        (JSObject::removeMember):
+        (JSObject::getSlot):
+        (JSObject::setSlot):
+        (JSObject::toString):
+        (JSObject::finalize):
+        (JSObject::createNative):
+        (JSObject::convertValueToJObject):
+        (JSObject::convertJObjectToValue):
+        (JSObject::listFromJArray):
+        * bindings/jni/jni_jsobject.h: Added.
+        (KJS::Bindings::):
+        * bindings/jni/jni_objc.mm: Added.
+        (convertNSStringToString):
+        (KJS::Bindings::dispatchJNICall):
+        (KJS::Bindings::getLastPolledView):
+        (pollForAppletInView):
+        (initializeWorkaround):
+        * bindings/jni/jni_runtime.cpp:
+        (JavaField::JavaField):
+        (JavaArray::convertJObjectToArray):
+        (JavaField::dispatchValueFromInstance):
+        (JavaField::valueFromInstance):
+        (JavaField::dispatchSetValueToInstance):
+        (JavaField::setValueToInstance):
+        (JavaMethod::JavaMethod):
+        (JavaArray::JavaArray):
+        (JavaArray::valueAt):
+        * bindings/jni/jni_runtime.h:
+        (KJS::Bindings::JavaString::JavaString):
+        (KJS::Bindings::JavaString::_commonInit):
+        (KJS::Bindings::JavaString::UTF8String):
+        (KJS::Bindings::JavaString::uchars):
+        (KJS::Bindings::JavaString::length):
+        (KJS::Bindings::JavaString::ustring):
+        (KJS::Bindings::JavaMethod::returnType):
+        (KJS::Bindings::JavaMethod::isStatic):
+        (KJS::Bindings::JavaArray::operator=):
+        (KJS::Bindings::JavaArray::executionContext):
+        * bindings/jni/jni_utility.cpp:
+        (callJNIStaticMethod):
+        (KJS::Bindings::getMethodID):
+        (KJS::Bindings::callJNIStaticBooleanMethod):
+        (KJS::Bindings::getJNIField):
+        (KJS::Bindings::convertValueToJValue):
+        * bindings/jni/jni_utility.h:
+        * bindings/jni_jsobject.cpp: Removed.
+        * bindings/jni_jsobject.h: Removed.
+        * bindings/runtime.cpp:
+        (MethodList::MethodList):
+        (MethodList::operator=):
+        (Instance::setDidExecuteFunction):
+        (Instance::didExecuteFunction):
+        (Instance::getValueOfField):
+        (Instance::setValueOfField):
+        (Instance::createBindingForLanguageInstance):
+        (Instance::createRuntimeObject):
+        (Instance::Instance):
+        (Instance::operator=):
+        * bindings/runtime.h:
+        (KJS::Bindings::Class::fallbackObject):
+        (KJS::Bindings::Instance::):
+        (KJS::Bindings::Instance::Instance):
+        (KJS::Bindings::Instance::getValueOfUndefinedField):
+        (KJS::Bindings::Instance::supportsSetValueOfUndefinedField):
+        (KJS::Bindings::Instance::setValueOfUndefinedField):
+        (KJS::Bindings::Instance::valueOf):
+        (KJS::Bindings::Instance::setExecutionContext):
+        (KJS::Bindings::Instance::executionContext):
+        * bindings/runtime_array.cpp:
+        (RuntimeArrayImp::RuntimeArrayImp):
+        (RuntimeArrayImp::get):
+        * bindings/runtime_array.h:
+        * bindings/runtime_method.cpp:
+        (RuntimeMethodImp::RuntimeMethodImp):
+        (RuntimeMethodImp::get):
+        (RuntimeMethodImp::call):
+        * bindings/runtime_method.h:
+        * bindings/runtime_object.cpp:
+        (RuntimeObjectImp::~RuntimeObjectImp):
+        (RuntimeObjectImp::RuntimeObjectImp):
+        (RuntimeObjectImp::get):
+        (RuntimeObjectImp::put):
+        (RuntimeObjectImp::canPut):
+        (RuntimeObjectImp::hasProperty):
+        (RuntimeObjectImp::defaultValue):
+        (RuntimeObjectImp::implementsCall):
+        (RuntimeObjectImp::call):
+        * bindings/runtime_object.h:
+        * kjs/ustring.cpp:
+        (KJS::CString::operator=):
+
 === JavaScriptCore-125.6 ===
 
 2004-09-13  Vicki Murley <vicki@apple.com>

@@ -29,6 +29,7 @@
 
 #include <JavaScriptCore/interpreter.h>
 #include <JavaScriptCore/object.h>
+#include <JavaScriptCore/runtime_root.h>
 
 #include <JavaVM/jni.h>
 

@@ -23,9 +23,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 #include <value.h>
+#include <interpreter.h>
 
-#include <runtime.h>
+#include <runtime_object.h>
+#include <runtime_root.h>
 #include <jni_instance.h>
+#include <jni_utility.h>
 
 using namespace KJS;
 using namespace KJS::Bindings;
@@ -58,18 +61,81 @@ MethodList::~MethodList()
     delete [] _methods;
 }
 
-
-Instance *Instance::createBindingForLanguageInstance (BindingLanguage language, void *instance)
-{
-    if (language == Instance::JavaLanguage)
-        return new Bindings::JavaInstance ((jobject)instance);
-    return 0;
+MethodList::MethodList (const MethodList &other) {
+    _length = other._length;
+    _methods = new Method *[_length];
+    if (_length > 0)
+        memcpy (_methods, other._methods, sizeof(Method *) * _length);
 }
 
-Value Instance::getValueOfField (const Field *aField) const {  
-    return aField->valueFromInstance (this);
+MethodList &MethodList::operator=(const MethodList &other)
+{
+    if (this == &other)
+        return *this;
+            
+    delete [] _methods;
+    
+    _length = other._length;
+    _methods = new Method *[_length];
+    if (_length > 0)
+        memcpy (_methods, other._methods, sizeof(Method *) * _length);
+
+    return *this;
+}
+
+
+static KJSDidExecuteFunctionPtr _DidExecuteFunction;
+
+void Instance::setDidExecuteFunction (KJSDidExecuteFunctionPtr func) { _DidExecuteFunction = func; }
+KJSDidExecuteFunctionPtr Instance::didExecuteFunction () { return _DidExecuteFunction; }
+
+Value Instance::getValueOfField (KJS::ExecState *exec, const Field *aField) const {  
+    return aField->valueFromInstance (exec, this);
 }
 
 void Instance::setValueOfField (KJS::ExecState *exec, const Field *aField, const Value &aValue) const {  
-    return aField->setValueToInstance (exec, this, aValue);
+    aField->setValueToInstance (exec, this, aValue);
+}
+
+Instance *Instance::createBindingForLanguageInstance (BindingLanguage language, void *instance)
+{
+    if (language == Instance::JavaLanguage) {
+	// Horrible work-around for Java update.
+	void *nativeHandle = getLastPolledView();
+	if (!nativeHandle)
+	    return 0;
+
+        Instance *newInstance = new Bindings::JavaInstance ((jobject)instance, 0);
+        RootObject *root = RootObject::findRootObjectForNativeHandleFunction ()(nativeHandle);
+        newInstance->setExecutionContext (root);
+	
+	return newInstance;
+    }
+    return 0;
+}
+
+Object Instance::createRuntimeObject (BindingLanguage language, void *myInterface)
+{
+    Instance *interfaceObject = Instance::createBindingForLanguageInstance (language, (void *)myInterface);
+    
+    Interpreter::lock();
+    Object theObject(new RuntimeObjectImp(interfaceObject,true));
+    Interpreter::unlock();
+    
+    return theObject;
+}
+
+Instance::Instance (const Instance &other) 
+{
+    setExecutionContext (other.executionContext());
+};
+
+Instance &Instance::operator=(const Instance &other)
+{
+    if (this == &other)
+        return *this;
+
+    setExecutionContext (other.executionContext());
+    
+    return *this;
 }

@@ -201,7 +201,7 @@ jobject JSObject::eval(jstring script) const
     
     Interpreter::lock();
 
-    Completion completion = _root->interpreter()->evaluate(UString(), 0, JavaString(script).ustring(),thisObj);
+    Completion completion = _root->interpreter()->evaluate(JavaString(script).ustring(),thisObj);
     ComplType type = completion.complType();
     
     if (type == Normal) {

@@ -17,7 +17,7 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				INSTALL_PATH = "@executable_path/../Frameworks";
 				OPTIMIZATION_CFLAGS = "-O0";
-				OTHER_LDFLAGS = "-seg1addr $(LOCAL_SEG1_ADDR)";
+				OTHER_LDFLAGS = "-seg1addr $(LOCAL_SEG1_ADDR) -lobjc -sub_library libobjc";
 				SECTORDER_FLAGS = "";
 				ZERO_LINK = YES;
 			};
@@ -109,6 +109,7 @@
 		};
 		0867D69AFE84028FC02AAC07 = {
 			children = (
+				5157010407B977930000F7B4,
 				6560A4CF04B3B3E7008AE952,
 				6560A63D04B3B69F008AE952,
 				51856D980562F158008B9D83,
@@ -141,7 +142,8 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.2;
 				OPTIMIZATION_CFLAGS = "-Os";
 				OTHER_CFLAGS = "$(DEBUG_CFLAGS) -DAPPLE_CHANGES -DHAVE_CONFIG_H";
-				OTHER_LDFLAGS = "-umbrella WebKit -allowable_client JavaScriptGlue";
+				OTHER_LDFLAGS = "-sub_library libobjc -umbrella WebKit -allowable_client JavaScriptGlue ";
+				PREBINDING = NO;
 				PRECOMPILE_PREFIX_HEADER = YES;
 				PREFIX_HEADER = JavaScriptCorePrefix.h;
 				PRODUCT_NAME = JavaScriptCore;
@@ -242,7 +244,8 @@
 				517D534A056BFB5D003851BD,
 				51A58A90057D3A6A00A3E942,
 				7073BE3F0581291E005EE2C9,
-				513589F00586989000813311,
+				5108947807B9700D0000DB59,
+				515700BC07B971400000F7B4,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -302,7 +305,9 @@
 				517D5349056BFB5D003851BD,
 				51A58A8F057D3A6A00A3E942,
 				7073BE3E0581291E005EE2C9,
-				513589EF0586989000813311,
+				5108947707B9700D0000DB59,
+				515700BB07B971400000F7B4,
+				515700DD07B973CE0000F7B4,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -313,6 +318,7 @@
 				6560A4D004B3B3E7008AE952,
 				6560A63E04B3B69F008AE952,
 				51856D990562F158008B9D83,
+				5157010507B977930000F7B4,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -412,6 +418,39 @@
 //512
 //513
 //514
+		5108947507B9700D0000DB59 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			name = jni_jsobject.cpp;
+			path = bindings/jni/jni_jsobject.cpp;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		5108947607B9700D0000DB59 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = jni_jsobject.h;
+			path = bindings/jni/jni_jsobject.h;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		5108947707B9700D0000DB59 = {
+			fileRef = 5108947507B9700D0000DB59;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		5108947807B9700D0000DB59 = {
+			fileRef = 5108947607B9700D0000DB59;
+			isa = PBXBuildFile;
+			settings = {
+				ATTRIBUTES = (
+					Private,
+				);
+			};
+		};
 		511B0870056468730080E486 = {
 			fileEncoding = 4;
 			isa = PBXFileReference;
@@ -460,37 +499,66 @@
 			settings = {
 			};
 		};
-		513589ED0586989000813311 = {
+		515700B907B971400000F7B4 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			name = jni_jsobject.cpp;
-			path = bindings/jni_jsobject.cpp;
+			name = runtime_root.cpp;
+			path = bindings/runtime_root.cpp;
 			refType = 4;
 			sourceTree = "<group>";
 		};
-		513589EE0586989000813311 = {
+		515700BA07B971400000F7B4 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.c.h;
-			name = jni_jsobject.h;
-			path = bindings/jni_jsobject.h;
+			name = runtime_root.h;
+			path = bindings/runtime_root.h;
 			refType = 4;
 			sourceTree = "<group>";
 		};
-		513589EF0586989000813311 = {
-			fileRef = 513589ED0586989000813311;
+		515700BB07B971400000F7B4 = {
+			fileRef = 515700B907B971400000F7B4;
 			isa = PBXBuildFile;
 			settings = {
 			};
 		};
-		513589F00586989000813311 = {
-			fileRef = 513589EE0586989000813311;
+		515700BC07B971400000F7B4 = {
+			fileRef = 515700BA07B971400000F7B4;
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
 					Private,
 				);
+			};
+		};
+		515700DC07B973CE0000F7B4 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.objcpp;
+			name = jni_objc.mm;
+			path = bindings/jni/jni_objc.mm;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		515700DD07B973CE0000F7B4 = {
+			fileRef = 515700DC07B973CE0000F7B4;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		5157010407B977930000F7B4 = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.framework;
+			name = Foundation.framework;
+			path = /System/Library/Frameworks/Foundation.framework;
+			refType = 0;
+			sourceTree = "<absolute>";
+		};
+		5157010507B977930000F7B4 = {
+			fileRef = 5157010407B977930000F7B4;
+			isa = PBXBuildFile;
+			settings = {
 			};
 		};
 		517D52DC056BF2F5003851BD = {
@@ -591,8 +659,9 @@
 				517D52DD056BF2F6003851BD,
 				517D5347056BFB5D003851BD,
 				517D5348056BFB5D003851BD,
-				513589ED0586989000813311,
-				513589EE0586989000813311,
+				5108947507B9700D0000DB59,
+				5108947607B9700D0000DB59,
+				515700DC07B973CE0000F7B4,
 				511B0877056468BB0080E486,
 				511B0876056468BB0080E486,
 				51856D8F0562EE95008B9D83,
@@ -605,6 +674,8 @@
 				51A58A8E057D3A6A00A3E942,
 				70B16A260569A10900DB756D,
 				70B16A270569A10900DB756D,
+				515700B907B971400000F7B4,
+				515700BA07B971400000F7B4,
 			);
 			isa = PBXGroup;
 			name = bindings;

@@ -24,7 +24,6 @@
  */
 #import <Foundation/Foundation.h>
 #import <JavaScriptCore/jni_utility.h>
-#import <JavaScriptCore/objc_utility.h>
 
 using namespace KJS::Bindings;
 
@@ -43,6 +42,24 @@ using namespace KJS::Bindings;
 - (NSURL *)_webViewURL;
 @end
 
+static KJS::Value convertNSStringToString(NSString *nsstring)
+{
+    unichar *chars;
+    unsigned int length = [nsstring length];
+    chars = (unichar *)malloc(sizeof(unichar)*length);
+    [nsstring getCharacters:chars];
+    KJS::UString u((const KJS::UChar*)chars, length);
+    KJS::Value aValue = KJS::String (u);
+    free((void *)chars);
+    return aValue;
+}
+
+@interface NSObject (WebInternal)
+- (id)superview;
+- (id)_bridge;
+- (NSURL *)URL;
+@end
+
 bool KJS::Bindings::dispatchJNICall (const void *targetAppletView, jobject obj, bool isStatic, JNIType returnType, jmethodID methodID, jvalue *args, jvalue &result, const char *callingURL, Value &exceptionDescription)
 {
     id view = (id)targetAppletView;
@@ -53,7 +70,7 @@ bool KJS::Bindings::dispatchJNICall (const void *targetAppletView, jobject obj, 
 	// Always just pass the URL of the page that contains the applet.  The
 	// execution restrictions implemented in WebCore will guarantee
 	// that only appropriate JavaScript can reference the applet.
-	NSURL *_callingURL = [view _webViewURL];
+	NSURL *_callingURL = [[[view superview] _bridge] URL];
         result = [view webPlugInCallJava:obj isStatic:isStatic returnType:returnType method:methodID arguments:args callingURL:_callingURL exceptionDescription:&_exceptionDescription];
         if (_exceptionDescription != 0) {
             exceptionDescription = convertNSStringToString(_exceptionDescription);
@@ -68,3 +85,41 @@ bool KJS::Bindings::dispatchJNICall (const void *targetAppletView, jobject obj, 
     bzero (&result, sizeof(jvalue));
     return false;
 }
+
+#include <objc/objc.h>
+#include <objc/objc-class.h>
+#include <objc/objc-runtime.h>
+
+static IMP originalIMP = 0;
+static id lastPolledView;
+
+void *KJS::Bindings::getLastPolledView()
+{
+    return (void *)lastPolledView;
+}
+
+static id pollForAppletInView(id target, SEL selector, id view)
+{
+    lastPolledView = view;
+    
+    return originalIMP(target, selector, view);
+}
+
+static bool initializeWorkaround()
+{
+    struct objc_class *wbClass = (struct objc_class *)objc_getClass("WebBridge");
+    
+    if (wbClass) {
+	struct objc_method *pollMethod = class_getInstanceMethod (wbClass, @selector(pollForAppletInView:));
+	
+	if (pollMethod) {
+	    originalIMP = pollMethod->method_imp;
+	    pollMethod->method_imp = (IMP)pollForAppletInView;
+	}
+    }
+    
+    return true;
+}
+
+static bool workaroundInitialized = initializeWorkaround();
+

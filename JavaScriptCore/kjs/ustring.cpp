@@ -109,8 +109,13 @@ CString &CString::operator=(const CString &str)
   if (data)
     delete [] data;
   length = str.length;
-  data = new char[length + 1];
-  memcpy(data, str.data, length + 1);
+  if (length > 0 && str.data) {
+    data = new char[length + 1];
+    memcpy(data, str.data, length + 1);
+  }
+  else {
+    data = 0;
+  }
 
   return *this;
 }
