@@ -1,5 +1,18 @@
 2004-04-13  Vicki Murley  <vicki@apple.com>
 
+	- merge fix for 3609695 from HEAD
+
+    2004-02-11  David Hyatt  <hyatt@apple.com>
+
+        Fix for 3556702, margin collapsing gets disabled when images spill out of the containing block.
+        
+        Reviewed by kocienda
+
+        * khtml/rendering/render_block.cpp:
+        (khtml::RenderBlock::layoutBlockChildren):
+
+2004-04-13  Vicki Murley  <vicki@apple.com>
+
 	- merged fix for 3609640 from HEAD.  To fix this properly, we need code changes from both 3552346 and 3571356.
 
     2004-02-27  Maciej Stachowiak  <mjs@apple.com>
