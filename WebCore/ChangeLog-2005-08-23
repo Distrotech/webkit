@@ -1,3 +1,126 @@
+2003-12-04  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
+	A large set of change to get a blinking caret 
+	and a little bit of text input limping along.
+
+        * WebCore.pbproj/project.pbxproj:
+        * khtml/dom/dom_node.cpp:
+        (Node::getCursor):
+        * khtml/dom/dom_node.h:
+        * khtml/html/html_blockimpl.cpp:
+        (HTMLDivElementImpl::parseAttribute):
+        (HTMLDivElementImpl::defaultEventHandler):
+        * khtml/html/html_blockimpl.h:
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::hasSelection):
+        (KHTMLPart::setSelection):
+        (KHTMLPart::slotClearSelection):
+        (KHTMLPart::caretNode):
+        (KHTMLPart::caretOffset):
+        (KHTMLPart::isPointInsideSelection):
+        (KHTMLPart::khtmlMousePressEvent):
+        (isBeforeNode):
+        (KHTMLPart::khtmlMouseMoveEvent):
+        (KHTMLPart::khtmlMouseReleaseEvent):
+        (KHTMLPart::topLevelFrameCount):
+        (KHTMLPart::emitCaretPositionChanged):
+        (KHTMLPart::moveCaretTo):
+        * khtml/khtml_part.h:
+        * khtml/khtmlpart_p.h:
+        (KHTMLPartPrivate::KHTMLPartPrivate):
+        * khtml/khtmlview.cpp:
+        (CaretViewContext::CaretViewContext):
+        (EditorContext::EditorContext):
+        (KHTMLViewPrivate::KHTMLViewPrivate):
+        (KHTMLViewPrivate::~KHTMLViewPrivate):
+        (KHTMLViewPrivate::caretViewContext):
+        (KHTMLViewPrivate::editorContext):
+        (khtml::ensureLeafNode):
+        (khtml::findRenderer):
+        (khtml::sanitizeCaretState):
+        (KHTMLView::clear):
+        (KHTMLView::resizeEvent):
+        (KHTMLView::drawContents):
+        (KHTMLView::layout):
+        (KHTMLView::keyPressEvent):
+        (KHTMLView::focusNextPrevNode):
+        (KHTMLView::focusInEvent):
+        (KHTMLView::focusOutEvent):
+        (KHTMLView::timerEvent):
+        (KHTMLView::initCaret):
+        (KHTMLView::caretOverrides):
+        (KHTMLView::ensureNodeHasFocus):
+        (KHTMLView::recalcAndStoreCaretPos):
+        (KHTMLView::caretOn):
+        (KHTMLView::caretOff):
+        (KHTMLView::showCaret):
+        (KHTMLView::paintCaret):
+        (KHTMLView::foldSelectionToCaret):
+        (KHTMLView::hideCaret):
+        (KHTMLView::placeCaret):
+        (KHTMLView::moveCaretTo):
+        * khtml/khtmlview.h:
+        * khtml/rendering/render_box.cpp:
+        (RenderBox::caretPos):
+        * khtml/rendering/render_box.h:
+        * khtml/rendering/render_br.cpp:
+        * khtml/rendering/render_br.h:
+        (khtml::RenderBR::isBR):
+        (khtml::RenderBR::caretMinOffset):
+        (khtml::RenderBR::caretMaxOffset):
+        * khtml/rendering/render_flow.cpp:
+        (RenderFlow::caretPos):
+        * khtml/rendering/render_flow.h:
+        * khtml/rendering/render_line.h:
+        (khtml::InlineBox::caretMinOffset):
+        (khtml::InlineBox::caretMaxOffset):
+        * khtml/rendering/render_object.cpp:
+        (RenderObject::caretPos):
+        (RenderObject::isEditable):
+        * khtml/rendering/render_object.h:
+        (khtml::RenderObject::isFlow):
+        (khtml::RenderObject::caretMinOffset):
+        (khtml::RenderObject::caretMaxOffset):
+        * khtml/rendering/render_replaced.h:
+        (khtml::RenderReplaced::caretMinOffset):
+        (khtml::RenderReplaced::caretMaxOffset):
+        * khtml/rendering/render_text.cpp:
+        (InlineTextBox::caretMinOffset):
+        (InlineTextBox::caretMaxOffset):
+        (RenderText::caretPos):
+        (RenderText::htmlFont):
+        (RenderText::caretMinOffset):
+        (RenderText::caretMaxOffset):
+        * khtml/rendering/render_text.h:
+        * khtml/xml/dom_docimpl.cpp:
+        (DocumentImpl::hasWindowEventListener):
+        (DocumentImpl::applyEditing):
+        * khtml/xml/dom_docimpl.h:
+        * khtml/xml/dom_nodeimpl.cpp:
+        (NodeImpl::isContentEditable):
+        (NodeImpl::getCaret):
+        (NodeImpl::prevLeafNode):
+        (NodeImpl::nextLeafNode):
+        (NodeImpl::createRenderer):
+        (NodeImpl::caretMinOffset):
+        (NodeImpl::caretMaxOffset):
+        * khtml/xml/dom_nodeimpl.h:
+        * khtml/xml/dom_textimpl.cpp:
+        (CharacterDataImpl::caretMinOffset):
+        (CharacterDataImpl::caretMaxOffset):
+        * khtml/xml/dom_textimpl.h:
+        * kwq/KWQKDebug.h:
+        (kdbgstream::operator<<):
+        * kwq/KWQKHTMLPart.mm:
+        (KHTMLPart::caretPositionChanged):
+        (KWQKHTMLPart::paint):
+        * kwq/KWQLogging.h:
+        * kwq/KWQLogging.m:
+        * kwq/KWQWidget.h:
+        (QWidget::focusInEvent):
+
 2003-12-03  Richard Williamson   <rjw@apple.com>
 
 	LiveConnect:  Removed some debugging.
