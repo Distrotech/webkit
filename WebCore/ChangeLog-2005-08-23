@@ -1,5 +1,19 @@
 2004-09-07  Vicki Murley <vicki@apple.com>
 
+	- merge this fix from HEAD for SUPanNavy, <rdar://problem/3791536>
+
+    2004-08-25  Kevin Decker  <kdecker@apple.com>
+
+        Reviewed by John and Maciej.
+
+        - Fixes SAP bug <rdar://problem/3751295> Personalize link at the
+        top gives an error in the pop-up window. 
+
+        * khtml/ecma/kjs_window.cpp:
+        (WindowFunc::tryCall): Passes a referrer to KHTMLPart::begin() 
+
+2004-09-07  Vicki Murley <vicki@apple.com>
+
 	- merge this change from HEAD for SUPanNavy, <rdar://problem/3772907>
 
     2004-08-12  Maciej Stachowiak  <mjs@apple.com>
