@@ -50,6 +50,7 @@
 #include "xml/xml_tokenizer.h"
 #include "css/cssstyleselector.h"
 #include "css/csshelper.h"
+#include "editing/edit_caret.h"
 using namespace DOM;
 
 #include "khtmlview.h"
@@ -96,6 +97,7 @@ using namespace DOM;
 #include <CoreServices/CoreServices.h>
 #endif
 
+using khtml::Caret;
 using khtml::Decoder;
 using khtml::RenderObject;
 using khtml::RenderText;
@@ -2476,8 +2478,8 @@ void KHTMLPart::setSelection(const DOM::Range &r, bool placeCaret)
 
 #ifndef KHTML_NO_CARET
     if (placeCaret) {
-        bool v = d->m_view->placeCaret();
-        emitCaretPositionChanged(v ? caretNode() : 0, caretOffset());
+        d->m_view->placeCaret();
+        emitCaretPositionChanged(caret());
     }
 #endif
 }
@@ -2493,9 +2495,14 @@ void KHTMLPart::slotClearSelection()
     if ( hadSelection )
         emitSelectionChanged();
 #ifndef KHTML_NO_CARET
-    bool v = d->m_view->placeCaret();
-    emitCaretPositionChanged(v ? caretNode() : 0, caretOffset());
+    d->m_view->placeCaret();
+    emitCaretPositionChanged(caret());
 #endif
+}
+
+Caret KHTMLPart::caret() const
+{
+    return Caret(caretNode(), caretOffset());
 }
 
 DOM::Node KHTMLPart::caretNode() const 
@@ -4716,8 +4723,8 @@ void KHTMLPart::khtmlMousePressEvent( khtml::MousePressEvent *event )
                 d->m_endOffset = d->m_startOffset;
                 d->m_doc->clearSelection();
 #ifndef KHTML_NO_CARET
-                bool v = d->m_view->placeCaret();
-                emitCaretPositionChanged(v ? caretNode() : 0, caretOffset());
+                d->m_view->placeCaret();
+                emitCaretPositionChanged(caret());
 #endif
             }
             else
@@ -5043,8 +5050,8 @@ void KHTMLPart::khtmlMouseMoveEvent( khtml::MouseMoveEvent *event )
                                 d->m_selectionStart.handle(),d->m_startOffset);
         }
 #ifndef KHTML_NO_CARET
-        bool v = d->m_view->placeCaret();
-        emitCaretPositionChanged(v ? caretNode() : 0, caretOffset());
+        d->m_view->placeCaret();
+        emitCaretPositionChanged(caret());
 #endif
 
 #else
@@ -5158,8 +5165,8 @@ void KHTMLPart::khtmlMouseReleaseEvent( khtml::MouseReleaseEvent *event )
             }
 
 #ifndef KHTML_NO_CARET
-            bool v = d->m_view->placeCaret();
-            emitCaretPositionChanged(v ? caretNode() : 0, caretOffset());
+            d->m_view->placeCaret();
+            emitCaretPositionChanged(caret());
 #endif // KHTML_NO_CARET
             // get selected text and paste to the clipboard
 #ifndef QT_NO_CLIPBOARD
@@ -5598,13 +5605,14 @@ int KHTMLPart::topLevelFrameCount()
   return frameCount;
 }
 
-void KHTMLPart::emitCaretPositionChanged(const DOM::Node &node, long offset) 
+void KHTMLPart::emitCaretPositionChanged(const Caret &caret) 
 {
-    emit caretPositionChanged(node, offset);
+    emit caretPositionChanged(caret);
 }
 
 void KHTMLPart::moveCaretTo(DOM::NodeImpl *node, long offset) 
 {
+    
     d->m_selectionStart = d->m_selectionEnd = node;
     d->m_startOffset = d->m_endOffset = offset;
 }
