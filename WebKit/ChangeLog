@@ -1,3 +1,8 @@
+2003-07-14  Darin Adler  <darin@apple.com>
+
+        * WebView.subproj/WebPreferences.m: (+[WebPreferences initialize]):
+        Changed minimum font size back to 9 instead of 1.
+
 2003-07-02  Maciej Stachowiak  <mjs@apple.com>
 
 	Merged fix from TOT:
