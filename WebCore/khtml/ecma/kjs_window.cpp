@@ -49,6 +49,7 @@
 #include "kjs_css.h"
 #include "kjs_events.h"
 #include "xmlhttprequest.h"
+#include "xmlserializer.h"
 
 #include "khtmlview.h"
 #include "khtml_part.h"
@@ -229,6 +230,7 @@ const ClassInfo Window::info = { "Window", 0, &WindowTable, 0 };
   Image		Window::Image		DontDelete|ReadOnly
   Option	Window::Option		DontDelete|ReadOnly
   XMLHttpRequest	Window::XMLHttpRequest	DontDelete|ReadOnly
+  XMLSerializer	Window::XMLSerializer	DontDelete|ReadOnly
   alert		Window::Alert		DontDelete|Function 1
   confirm	Window::Confirm		DontDelete|Function 1
   prompt	Window::Prompt		DontDelete|Function 2
@@ -545,6 +547,8 @@ Value Window::get(ExecState *exec, const Identifier &p) const
       return Value(new OptionConstructorImp(exec, m_part->document()));
     case XMLHttpRequest:
       return Value(new XMLHttpRequestConstructorImp(exec, m_part->document()));
+    case XMLSerializer:
+      return Value(new XMLSerializerConstructorImp(exec));
     case Alert:
     case Confirm:
     case Prompt:
@@ -1603,11 +1607,15 @@ void ScheduledAction::execute(Window *window)
         ExecState *exec = interpreter->globalExec();
         Q_ASSERT( window == interpreter->globalObject().imp() );
         Object obj( window );
+	Interpreter::lock();
         func.call(exec,obj,args); // note that call() creates its own execution state for the func call
+	Interpreter::unlock();
 	if ( exec->hadException() ) {
 #if APPLE_CHANGES
 	  if (Interpreter::shouldPrintExceptions()) {
+	    Interpreter::lock();
 	    char *message = exec->exception().toObject(exec).get(exec, messagePropertyName).toString(exec).ascii();
+	    Interpreter::unlock();
 	    printf("(timer):%s\n", message);
 	  }
 #endif

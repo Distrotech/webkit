@@ -304,7 +304,7 @@ QByteArray HTMLFormElementImpl::formData(bool& ok)
     str.replace(',', ' ');
     QStringList charsets = QStringList::split(' ', str);
     QTextCodec* codec = 0;
-    KHTMLView *view = getDocument()->view();
+    KHTMLPart *part = getDocument()->part();
     for ( QStringList::Iterator it = charsets.begin(); it != charsets.end(); ++it )
     {
         QString enc = (*it);
@@ -312,8 +312,8 @@ QByteArray HTMLFormElementImpl::formData(bool& ok)
         {
             // use standard document encoding
             enc = "ISO-8859-1";
-            if(view && view->part())
-                enc = view->part()->encoding();
+            if (part)
+                enc = part->encoding();
         }
         if((codec = KGlobal::charsets()->codecForName(enc.latin1())))
             break;
@@ -390,8 +390,7 @@ QByteArray HTMLFormElementImpl::formData(bool& ok)
                         if(!static_cast<HTMLInputElementImpl*>(current)->value().isEmpty())
                         {
 #if APPLE_CHANGES
-                            KWQKHTMLPart *part = KWQ(current->getDocument()->view()->part());
-                            QString mimeType = part->mimeTypeForFileName(onlyfilename);
+                            QString mimeType = part ? KWQ(part)->mimeTypeForFileName(onlyfilename) : QString();
 #else
                             KMimeType::Ptr ptr = KMimeType::findByURL(KURL(path));
                             QString mimeType = ptr->name();
@@ -471,8 +470,8 @@ void HTMLFormElementImpl::setBoundary( const DOMString& bound )
 
 bool HTMLFormElementImpl::prepareSubmit()
 {
-    KHTMLView *view = getDocument()->view();
-    if(m_insubmit || !view || !view->part() || view->part()->onlyLocalReferences())
+    KHTMLPart *part = getDocument()->part();
+    if(m_insubmit || !part || part->onlyLocalReferences())
         return m_insubmit;
 
     m_insubmit = true;
@@ -492,7 +491,8 @@ bool HTMLFormElementImpl::prepareSubmit()
 void HTMLFormElementImpl::submit( bool activateSubmitButton )
 {
     KHTMLView *view = getDocument()->view();
-    if (!view || !view->part()) {
+    KHTMLPart *part = getDocument()->part();
+    if (!view || !part) {
         return;
     }
 
@@ -511,7 +511,7 @@ void HTMLFormElementImpl::submit( bool activateSubmitButton )
     bool needButtonActivation = activateSubmitButton;	// do we need to activate a submit button?
     
 #if APPLE_CHANGES
-    KWQ(view->part())->clearRecordedFormValues();
+    KWQ(part)->clearRecordedFormValues();
 #endif
     for (QPtrListIterator<HTMLGenericFormElementImpl> it(formElements); it.current(); ++it) {
         HTMLGenericFormElementImpl* current = it.current();
@@ -523,7 +523,7 @@ void HTMLFormElementImpl::submit( bool activateSubmitButton )
             if (input->inputType() == HTMLInputElementImpl::TEXT
                 || input->inputType() ==  HTMLInputElementImpl::PASSWORD)
             {
-                KWQ(view->part())->recordFormValue(input->name().string(), input->value().string(), this);
+                KWQ(part)->recordFormValue(input->name().string(), input->value().string(), this);
             }
         }
 #else
@@ -553,13 +553,13 @@ void HTMLFormElementImpl::submit( bool activateSubmitButton )
     QByteArray form_data = formData(ok);
     if (ok) {
         if(m_post) {
-            view->part()->submitForm( "post", m_url.string(), form_data,
+            part->submitForm( "post", m_url.string(), form_data,
                                       m_target.string(),
                                       enctype().string(),
                                       boundary().string() );
         }
         else {
-            view->part()->submitForm( "get", m_url.string(), form_data,
+            part->submitForm( "get", m_url.string(), form_data,
                                       m_target.string() );
         }
     }
@@ -573,8 +573,8 @@ void HTMLFormElementImpl::submit( bool activateSubmitButton )
 
 void HTMLFormElementImpl::reset(  )
 {
-    KHTMLView *view = getDocument()->view();
-    if(m_inreset || !view || !view->part()) return;
+    KHTMLPart *part = getDocument()->part();
+    if(m_inreset || !part) return;
 
     m_inreset = true;
 
@@ -761,17 +761,18 @@ void HTMLGenericFormElementImpl::attach()
     // The call to updateFromElement() needs to go after the call through
     // to the base class's attach() because that can sometimes do a close
     // on the renderer.
-    if (m_render)
+    if (m_render) {
         m_render->updateFromElement();
     
-    // Delayed attachment in order to prevent FOUC can result in an object being
-    // programmatically focused before it has a render object.  If we have been focused
-    // (i.e., if we are the focusNode) then go ahead and focus our corresponding native widget.
-    // (Attach/detach can also happen as a result of display type changes, e.g., making a widget
-    // block instead of inline, and focus should be restored in that case as well.)
-    if (getDocument()->focusNode() == this && m_render->isWidget() && 
-        static_cast<RenderWidget*>(renderer())->widget())
-        static_cast<RenderWidget*>(renderer())->widget()->setFocus();
+        // Delayed attachment in order to prevent FOUC can result in an object being
+        // programmatically focused before it has a render object.  If we have been focused
+        // (i.e., if we are the focusNode) then go ahead and focus our corresponding native widget.
+        // (Attach/detach can also happen as a result of display type changes, e.g., making a widget
+        // block instead of inline, and focus should be restored in that case as well.)
+        if (getDocument()->focusNode() == this && m_render->isWidget() && 
+            static_cast<RenderWidget*>(renderer())->widget())
+            static_cast<RenderWidget*>(renderer())->widget()->setFocus();
+    }
 }
 
 HTMLFormElementImpl *HTMLGenericFormElementImpl::getForm() const
@@ -859,7 +860,8 @@ bool HTMLGenericFormElementImpl::isKeyboardFocusable() const
             ((static_cast<RenderWidget*>(m_render)->widget()->focusPolicy() == QWidget::TabFocus) ||
              (static_cast<RenderWidget*>(m_render)->widget()->focusPolicy() == QWidget::StrongFocus));
         }
-        return getDocument()->view()->part()->tabsToAllControls();
+	if (getDocument()->part())
+	    return getDocument()->part()->tabsToAllControls();
     }
     return false;
 }
@@ -888,9 +890,9 @@ void HTMLGenericFormElementImpl::defaultEventHandler(EventImpl *evt)
     if (evt->target()==this)
     {
         // Report focus in/out changes to the browser extension (editable widgets only)
-        KHTMLView *view = getDocument()->view();
-        if (evt->id()==EventImpl::DOMFOCUSIN_EVENT && isEditable() && view && m_render && m_render->isWidget()) {
-            KHTMLPartBrowserExtension *ext = static_cast<KHTMLPartBrowserExtension *>(view->part()->browserExtension());
+        KHTMLPart *part = getDocument()->part();
+        if (evt->id()==EventImpl::DOMFOCUSIN_EVENT && isEditable() && part && m_render && m_render->isWidget()) {
+            KHTMLPartBrowserExtension *ext = static_cast<KHTMLPartBrowserExtension *>(part->browserExtension());
             QWidget *widget = static_cast<RenderWidget*>(m_render)->widget();
             if (ext)
                 ext->editableWidgetFocused(widget);
@@ -924,8 +926,8 @@ void HTMLGenericFormElementImpl::defaultEventHandler(EventImpl *evt)
 	}
 #endif
 
-	if (evt->id()==EventImpl::DOMFOCUSOUT_EVENT && isEditable() && view && m_render && m_render->isWidget()) {
-	    KHTMLPartBrowserExtension *ext = static_cast<KHTMLPartBrowserExtension *>(view->part()->browserExtension());
+	if (evt->id()==EventImpl::DOMFOCUSOUT_EVENT && isEditable() && part && m_render && m_render->isWidget()) {
+	    KHTMLPartBrowserExtension *ext = static_cast<KHTMLPartBrowserExtension *>(part->browserExtension());
 	    QWidget *widget = static_cast<RenderWidget*>(m_render)->widget();
 	    if (ext)
 		ext->editableWidgetBlurred(widget);
@@ -2398,6 +2400,10 @@ void HTMLKeygenElementImpl::parseAttribute(AttributeImpl* attr)
     switch(attr->id())
     {
     case ATTR_CHALLENGE:
+        m_challenge = attr->val();
+        break;
+    case ATTR_KEYTYPE:
+        m_keyType = attr->val();
         break;
     default:
         // skip HTMLSelectElementImpl parsing!
@@ -2410,8 +2416,20 @@ bool HTMLKeygenElementImpl::encoding(const QTextCodec* codec, khtml::encodingLis
     bool successful = false;
     QCString enc_name = fixUpfromUnicode(codec, name().string());
 
+#if APPLE_CHANGES
+    // Only RSA is supported at this time.
+    if (!m_keyType.isNull() && m_keyType.lower() != "rsa") {
+        return false;
+    }
+    QString value = KSSLKeyGen::signedPublicKeyAndChallengeString((unsigned)selectedIndex(), m_challenge.string(), getDocument()->part()->baseURL());
+    if (!value.isNull()) {
+        encoded_values += enc_name;
+        encoded_values += value.utf8();
+        successful = true;
+    }
+#else
     encoded_values += enc_name;
-
+    
     // pop up the fancy certificate creation dialog here
     KSSLKeyGen *kg = new KSSLKeyGen(static_cast<RenderWidget *>(m_render)->widget(), "Key Generator", true);
 
@@ -2421,7 +2439,8 @@ bool HTMLKeygenElementImpl::encoding(const QTextCodec* codec, khtml::encodingLis
     delete kg;
 
     encoded_values += "deadbeef";
-
+#endif
+    
     return successful;
 }
 
