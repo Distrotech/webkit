@@ -1,3 +1,5 @@
+=== JavaScriptCore-125~4 ===
+
 2004-04-07  Vicki Murley  <vicki@apple.com>
 
         - merge fix for <rdar://problem/3612939>: Java/JavaScript LiveConnect: Null string assignment results in string value of "Null" (clone for SU) from HEAD
