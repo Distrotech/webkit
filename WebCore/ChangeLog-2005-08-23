@@ -1,3 +1,5 @@
+=== WebCore-125.8.11 ===
+
 2004-11-01  Chris Blumenberg  <cblu@apple.com>
 
 	Fixed: <rdar://problem/3860882> Safari URI status bar spoofing using a nested <a> links in a table
