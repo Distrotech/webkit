@@ -1,5 +1,11 @@
 2005-01-12  Maciej Stachowiak  <mjs@apple.com>
 
+	- fix for the following bug was incomplete, fixed error in one particular case
+
+	<rdar://problem/3939324> *SecUpd: Panther* frame naming allows malicious site to bring up a window when you click on a link in another
+
+2005-01-12  Maciej Stachowiak  <mjs@apple.com>
+
 	<rdar://problem/3939324> *SecUpd: Panther* frame naming allows malicious site to bring up a window when you click on a link in another
 
 	- merged fix for this from Tiger:

@@ -1440,7 +1440,7 @@ Value WindowFunc::tryCall(ExecState *exec, Object &thisObj, const List &args)
         }
 #if APPLE_CHANGES
         if (!url.isEmpty()) {
-          const Window* window = Window::retrieveWindow(part);
+          const Window* window = Window::retrieveWindow(khtmlpart);
           if (!url.url().startsWith("javascript:", false) || (window && window->isSafeScript(exec))) {
             bool userGesture = static_cast<ScriptInterpreter *>(exec->interpreter())->wasRunByUserGesture();
             // FIXME: Need to pass referrer here.
