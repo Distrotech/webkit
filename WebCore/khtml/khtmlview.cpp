@@ -2178,16 +2178,16 @@ bool KHTMLView::placeCaret() {
     NodeImpl *caretNode = m_part->caretNode().handle();
     if (!caretNode)
         return false;
-    
+
+    if (!m_part->inEditMode() && !caretNode->isContentEditable())
+        return false;
+
     // save selection. setting focus might clear it.
     Range selection = m_part->selection();
     ensureNodeHasFocus(caretNode);
     // restore selection, but don't place caret
     m_part->setSelection(selection, false);
-    
-    if (!m_part->inEditMode() && !caretNode->isContentEditable())
-        return false;
-    
+        
     if (!m_part->selection().collapsed()) {
         d->editorContext()->override = true;
         return false;
