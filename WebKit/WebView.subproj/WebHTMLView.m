@@ -879,6 +879,18 @@
     [[self window] setAutodisplay:YES];
 }
 
+- (void)keyDown:(NSEvent *)event
+{
+    [[self _bridge] interceptKeyEvent:event toView:self];
+    [super keyDown:event];
+}
+
+- (void)keyUp:(NSEvent *)event
+{
+    [[self _bridge] interceptKeyEvent:event toView:self];
+    [super keyUp:event];
+}
+
 @end
 
 @implementation NSArray (WebHTMLView)
