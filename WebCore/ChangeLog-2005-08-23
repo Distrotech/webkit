@@ -1,3 +1,94 @@
+2004-01-15  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
+	First batch of changes from my notes I wrote while chatting
+	with Dave. Many small improvements.
+
+        * WebCore.pbproj/project.pbxproj:
+        * khtml/css/cssparser.cpp:
+        (CSSParser::parseValue):
+        * khtml/css/cssstyleselector.cpp:
+        (khtml::CSSStyleSelector::applyRule):
+        * khtml/css/cssvalues.c:
+        (hash_val):
+        (findValue):
+        * khtml/css/cssvalues.h:
+        * khtml/css/cssvalues.in:
+        * khtml/editing/edit_caret.cpp:
+        (Caret::Caret):
+        (Caret::~Caret):
+        (Caret::node):
+        (Caret::offset):
+        (Caret::setPosition):
+        (Caret::moveForwardByCharacter):
+        (Caret::moveBackwardByCharacter):
+        (Caret::adjustPosition):
+        (Caret::notifyChanged):
+        * khtml/editing/edit_caret.h:
+        (khtml::Caret::Caret):
+        * khtml/editing/edit_caretimpl.h:
+        * khtml/editing/htmlediting.cpp:
+        (EditCommand::pruneEmptyNodes):
+        (InputTextCommand::apply):
+        (DeleteTextCommand::apply):
+        * khtml/html/html_elementimpl.cpp:
+        (HTMLElementImpl::parseAttribute):
+        (HTMLElementImpl::contentEditable):
+        (HTMLElementImpl::setContentEditable):
+        (HTMLElementImpl::defaultEventHandler):
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::clear):
+        (KHTMLPart::findTextNext):
+        (KHTMLPart::setSelection):
+        (KHTMLPart::khtmlMousePressEvent):
+        (KHTMLPart::khtmlMouseMoveEvent):
+        (KHTMLPart::khtmlMouseReleaseEvent):
+        (KHTMLPart::selectAll):
+        (KHTMLPart::isEditingAtCaret):
+        (KHTMLPart::caret):
+        (KHTMLPart::moveCaretTo):
+        (KHTMLPart::collapseSelectionToCaret):
+        * khtml/khtml_part.h:
+        * khtml/khtmlpart_p.h:
+        (KHTMLPartPrivate::KHTMLPartPrivate):
+        (KHTMLPartPrivate::~KHTMLPartPrivate):
+        * khtml/khtmlview.cpp:
+        (KHTMLViewPrivate::KHTMLViewPrivate):
+        (KHTMLViewPrivate::~KHTMLViewPrivate):
+        (KHTMLViewPrivate::caretViewContext):
+        (KHTMLView::initCaret):
+        (KHTMLView::caretOverrides):
+        (KHTMLView::recalcAndStoreCaretPos):
+        (KHTMLView::placeCaret):
+        * khtml/rendering/render_br.cpp:
+        (RenderBR::caretMinOffset):
+        (RenderBR::caretMaxOffset):
+        * khtml/rendering/render_br.h:
+        * khtml/rendering/render_flow.cpp:
+        (RenderFlow::caretPos):
+        * khtml/rendering/render_line.cpp:
+        (InlineBox::caretMinOffset):
+        (InlineBox::caretMaxOffset):
+        * khtml/rendering/render_line.h:
+        * khtml/rendering/render_replaced.cpp:
+        (RenderReplaced::caretMinOffset):
+        (RenderReplaced::caretMaxOffset):
+        * khtml/rendering/render_replaced.h:
+        * khtml/rendering/render_style.cpp:
+        (userModify):
+        (StyleCSS3InheritedData):
+        (StyleCSS3InheritedData::shadowDataEquivalent):
+        * khtml/rendering/render_style.h:
+        (khtml::):
+        (khtml::RenderStyle::setBitDefaults):
+        (khtml::RenderStyle::userModify):
+        (khtml::RenderStyle::setUserModify):
+        * khtml/rendering/render_text.h:
+        * kwq/KWQKHTMLPart.mm:
+        (KHTMLPart::caretPositionChanged):
+        (KWQKHTMLPart::paint):
+
 2004-01-14  Ken Kocienda  <kocienda@apple.com>
 
         Reviewed by me

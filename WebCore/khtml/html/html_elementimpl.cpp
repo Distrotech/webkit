@@ -130,11 +130,12 @@ void HTMLElementImpl::parseAttribute(AttributeImpl *attr)
         setChanged();
         break;
     case ATTR_CONTENTEDITABLE:
-    {
-        setContentEditable(attr->value());
-        setChanged();
+        if (attr->val()) {
+            setContentEditable(attr->value());
+        }
+        else
+            removeCSSProperty(CSS_PROP__KHTML_USER_MODIFY);
         break;
-    }
     case ATTR_STYLE:
         // ### we need to remove old style info in case there was any!
         // ### the inline sheet ay contain more than 1 property!
@@ -584,11 +585,11 @@ DOMString HTMLElementImpl::contentEditable() const {
         return "false";
     
     switch (renderer()->style()->userModify()) {
-        case UI_ENABLED:
+        case READ_WRITE:
             return "true";
-        case UI_DISABLED:
+        case READ_ONLY:
             return "false";
-        case UI_NONE:
+        default:
             return "inherit";
     }
     return "inherit";
@@ -596,16 +597,14 @@ DOMString HTMLElementImpl::contentEditable() const {
 
 void HTMLElementImpl::setContentEditable(const DOMString &enabled) 
 {
-    int value;
-    if (strcasecmp ( enabled, "true") == 0)
-        value = CSS_VAL_ENABLED;
-    else if (enabled.isEmpty()) // we want the "true" attribute
-        value = CSS_VAL_ENABLED;
-    else if (strcasecmp (enabled, "false") == 0)
-        value = CSS_VAL_DISABLED;
-    else if (strcasecmp ( enabled, "inherit") == 0)
-        value = CSS_VAL_INHERIT;
-    addCSSProperty(CSS_PROP__KHTML_USER_MODIFY, value);
+    if (strcasecmp(enabled, "true") == 0 || enabled.isEmpty())
+        addCSSProperty(CSS_PROP__KHTML_USER_MODIFY, CSS_VAL_READ_WRITE);
+    else if (strcasecmp(enabled, "false") == 0)
+        addCSSProperty(CSS_PROP__KHTML_USER_MODIFY, CSS_VAL_READ_ONLY);
+    else if (strcasecmp(enabled, "inherit") == 0)
+        addCSSProperty(CSS_PROP__KHTML_USER_MODIFY, CSS_VAL_INHERIT);
+    else
+        removeCSSProperty(CSS_PROP__KHTML_USER_MODIFY);
 }
 
 void HTMLElementImpl::click()
@@ -634,11 +633,11 @@ void HTMLElementImpl::defaultEventHandler(EventImpl *evt)
             cmd = new DeleteTextCommand(getDocument());
         }
         else if (k->keyIdentifier() == "Right") {
-            getDocument()->view()->part()->caret().moveForwardByCharacter();
+            getDocument()->view()->part()->caret()->moveForwardByCharacter();
             evt->setDefaultHandled();
         }
         else if (k->keyIdentifier() == "Left") {
-            getDocument()->view()->part()->caret().moveBackwardByCharacter();
+            getDocument()->view()->part()->caret()->moveBackwardByCharacter();
             evt->setDefaultHandled();
         }
         else if (k->keyIdentifier() == "Up") {

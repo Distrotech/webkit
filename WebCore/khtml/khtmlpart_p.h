@@ -123,6 +123,7 @@ public:
     m_startOffset = m_endOffset = 0;
     m_startBeforeEnd = true;
     m_extendAtEnd = true;
+    m_caret = new khtml::Caret();
 #if !APPLE_CHANGES
     m_linkCursor = KCursor::handCursor();
 #endif
@@ -212,6 +213,7 @@ public:
 #ifndef Q_WS_QWS
     delete m_javaContext;
 #endif
+    delete m_caret;
   }
 
   FrameList m_frames;
@@ -355,7 +357,7 @@ public:
   long m_startOffset;
   DOM::Node m_selectionEnd;
   long m_endOffset;
-  khtml::Caret m_caret;
+  khtml::Caret *m_caret;
   QString m_overURL;
   QString m_overURLTarget;
 

@@ -25,113 +25,186 @@
   
 #include <edit_caret.h>
 
+#include <dom_docimpl.h>
 #include <dom_nodeimpl.h>
-#include <edit_caretimpl.h>
+#include <dom_textimpl.h>
+#include <khtml_part.h>
+#include <render_object.h>
 
 #if APPLE_CHANGES
 #include <KWQAssertions.h>
 #endif
 
-using DOM::Node;
+using DOM::DocumentImpl;
+using DOM::NodeImpl;
+using DOM::TextImpl;
 using khtml::Caret;
-using khtml::CaretImpl;
 
-Caret::Caret(const DOM::Node &node, long offset)
+Caret::Caret(NodeImpl *node, long offset) : m_node(0), m_offset(offset)
 {
-    impl = new CaretImpl(node.handle(), offset);
-    impl->ref();
-}
-
-Caret::Caret(CaretImpl *i)
-{
-    impl = i;
-    if(impl) 
-        impl->ref();
+    if (node) {
+        m_node = node;
+        m_node->ref();
+    }
 }
 
 Caret::Caret(const Caret &other)
 {
-    impl = other.impl;
-    if (impl) 
-        impl->ref();
-}
-
-Caret::Caret()
-{
-    impl = new CaretImpl();
-    impl->ref();
+    m_node = other.m_node;
+    if (m_node)
+        m_node->ref();
+    m_offset = other.m_offset;
 }
 
 Caret::~Caret()
 {
-    if (impl)
-        impl->deref();
+    if (m_node)
+        m_node->deref();
 }
 
-DOM::Node Caret::node() const
+NodeImpl *Caret::node() const
 {
-    if (!impl) throw CaretException();
-    return impl->node();
+    return m_node;
 }
 
 long Caret::offset() const
 {
-    if (!impl) throw CaretException();
-    return impl->offset();
+	return m_offset;
 }
 
-bool Caret::startOfLine() const
+void Caret::setPosition(NodeImpl *node, long offset)
 {
-    if (!impl) throw CaretException();
-    return impl->startOfLine();
-}
+    if (node == m_node && offset == m_offset)
+        return;
 
-void Caret::setPosition(const Node &node, long offset)
-{
-    if (!impl) throw CaretException();
-    impl->setPosition(node.handle(), offset);
+    if (node && node->hasChildNodes())
+        node = node->nextLeafNode();
+
+    if (m_node != node) {
+		if (m_node)
+			m_node->deref();
+
+    	m_node = node;
+
+		if (m_node)
+			m_node->ref();
+	}
+
+    m_offset = offset;
+
+    adjustPosition();
+    notifyChanged(node);
 }
 
 void Caret::moveForwardByCharacter()
 {
-    if (!impl) throw CaretException();
-    impl->moveForwardByCharacter();
+    if (!node())
+        return;
+
+    KHTMLPart *part = node()->getDocument()->part();
+    if (!part)
+        return;
+
+    bool moved = false;
+    
+    long caretOffset = offset();
+    
+    if (caretOffset < node()->caretMaxOffset()) {
+        part->moveCaretTo(node(), caretOffset + 1);
+        moved = true;
+    }
+    else {
+        NodeImpl *n = node()->nextLeafNode();
+        while (n) {
+            if (n->caretMinOffset() < n->caretMaxOffset()) {
+                part->moveCaretTo(n, n->caretMinOffset() + 1);
+                moved = true;
+                break;
+            }
+            else {
+                n = n->nextLeafNode();
+            }
+        }
+    }
+    
+    if (moved) {
+        adjustPosition();
+        notifyChanged(node());
+    }
 }
 
 void Caret::moveBackwardByCharacter()
 {
-    if (!impl) throw CaretException();
-    impl->moveBackwardByCharacter();
-}
+    if (!node())
+        return;
 
-void Caret::setStartOfLine(bool startOfLine)
-{
-    if (!impl) throw CaretException();
-    impl->setStartOfLine(startOfLine);
+    KHTMLPart *part = node()->getDocument()->part();
+    if (!part)
+        return;
+
+    bool moved = false;
+
+    if (offset() - 1 >= 0) {
+        part->moveCaretTo(node(), offset() - 1);
+        moved = true;
+    }
+    else {
+        NodeImpl *n = node()->previousLeafNode();
+        while (n) {
+            if (n->caretMinOffset() < n->caretMaxOffset()) {
+                part->moveCaretTo(n, n->caretMaxOffset() - 1);
+                moved = true;
+                break;
+            }
+            else {
+                n = n->nextLeafNode();
+            }
+        }
+    }
+
+    if (moved) {
+        adjustPosition();
+        notifyChanged(node());
+    }
 }
 
 void Caret::adjustPosition()
 {
-    if (!impl) throw CaretException();
-    impl->adjustPosition();
+    if (!node()) 
+        return;
+
+    if (offset() != 0) 
+        return;
+
+    KHTMLPart *part = node()->getDocument()->part();
+    if (!part)
+        return;
+
+    // prune empty text nodes preceding the caret
+    int exceptionCode;
+    NodeImpl *n = node()->previousLeafNode();
+    while (1) {
+        if (!n || !n->isTextNode() || static_cast<TextImpl *>(n)->length() > 0)
+            break;
+        node()->parentNode()->removeChild(n, exceptionCode);
+        notifyChanged(node()->parentNode());
+        n = n->previousLeafNode();
+    }
+
+    // if we are at offset zero of a text node, and a text node precedes us
+    // move to the end of the preceding text node
+    n = node()->previousLeafNode();
+    if (n && n->isTextNode()) {
+        part->moveCaretTo(n, n->caretMaxOffset());
+    }
 }
 
-Caret Caret::adjustedForEditing() const
+void Caret::notifyChanged(NodeImpl *node) const
 {
-    if (!impl) throw CaretException();
-    impl->adjustPosition();
-    return impl;
-}
+    if (!node)
+        return;
 
-CaretImpl *Caret::handle() const
-{
-    return impl;
+    node->setChanged(true);
+    if (node->renderer())
+        node->renderer()->setNeedsLayoutAndMinMaxRecalc();
 }
-
-bool operator==(const Caret &a, const Caret &b)
-{
-    Caret _a = a.adjustedForEditing();
-    Caret _b = b.adjustedForEditing();
-    return _a.offset() == _b.offset() && _a.node() == _b.node();
-}
-

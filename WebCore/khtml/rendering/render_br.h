@@ -54,8 +54,8 @@ public:
 
     virtual bool isBR() const { return true; }
 
-    virtual long caretMinOffset() const { return 0; }
-    virtual long caretMaxOffset() const { return 0; }
+    virtual long caretMinOffset() const;
+    virtual long caretMaxOffset() const;
     
     virtual FindSelectionResult checkSelectionPointIgnoringContinuations(int _x, int _y, int _tx, int _ty, DOM::NodeImpl*& node, int &offset);
 };

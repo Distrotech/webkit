@@ -106,16 +106,6 @@ struct CaretViewContext {
     	displayed(false) {}
 };
 
-/** contextual information about the editing state.
- * An object of this class is only instantiated when it is needed.
- */
-struct EditorContext {
-    bool override;		// true if typed characters should override
-    				// the existing ones.
-
-    EditorContext() : override(false) {}
-};
-
 class KHTMLViewPrivate {
     friend class KHTMLToolTip;
 public:
@@ -131,7 +121,6 @@ public:
         mousePressed = false;
         tooltip = 0;
         m_caretViewContext = 0;
-        m_editorContext = 0;
 #ifdef INCREMENTAL_REPAINTING
         doFullRepaint = true;
 #endif
@@ -153,7 +142,6 @@ public:
 	    underMouse->deref();
 	delete tooltip;
 	delete m_caretViewContext;
-	delete m_editorContext;
     }
     void reset()
     {
@@ -204,13 +192,6 @@ public:
         if (!m_caretViewContext) m_caretViewContext = new CaretViewContext();
         return m_caretViewContext;
     }
-    /** this function returns an instance of the editor context. If none
-     * exists, it will be instantiated.
-     */
-    EditorContext *editorContext() {
-        if (!m_editorContext) m_editorContext = new EditorContext();
-        return m_editorContext;
-    }
     
     QPainter *tp;
     QPixmap  *paintBuffer;
@@ -255,7 +236,6 @@ public:
     bool mousePressed;
     KHTMLToolTip *tooltip;
     CaretViewContext *m_caretViewContext;
-    EditorContext *m_editorContext;
 };
 
 // == caret-related helper functions
@@ -1958,23 +1938,22 @@ void KHTMLView::initCaret()
 {
     if (m_part->xmlDocImpl()) {
         d->caretViewContext();
-        Caret caret = m_part->caret();
-        if (caret.node().isNull()) {
+        Caret *caret = m_part->caret();
+        if (!caret->node()) {
             // set to document, position will be sanitized anyway
             m_part->moveCaretTo(m_part->document().handle(), 0L);
             // This sanity check is necessary for the not so unlikely case that
             // setEditMode or setCaretMode is called before any render objects have
             // been created.
-            if (!caret.node().handle()->renderer()) 
+            if (!caret->node() || !caret->node()->renderer()) 
                 return;
         }
-        m_part->moveCaretTo(caret.node().handle(), caret.offset());
+        m_part->moveCaretTo(caret->node(), caret->offset());
     }
 }
 
 bool KHTMLView::caretOverrides() {
-    return d->editorContext()->override &&
-        (m_part->inEditMode() || m_part->caret().node().handle()->isContentEditable());
+    return m_part->inEditMode() || m_part->caret()->node()->isContentEditable();
 }
 
 void KHTMLView::ensureNodeHasFocus(NodeImpl *node) {
@@ -2002,12 +1981,12 @@ void KHTMLView::recalcAndStoreCaretPos() {
     if (!m_part) 
         return;
 
-    Caret caret = m_part->caret();
-    if (caret.node().isNull()) 
+    Caret *caret = m_part->caret();
+    if (!caret->node()) 
         return;
     
     d->caretViewContext();
-    caret.node().handle()->getCaret(caret.offset(),
+    caret->node()->getCaret(caret->offset(),
         caretOverrides(),
         d->m_caretViewContext->x, d->m_caretViewContext->y,
 		d->m_caretViewContext->width,
@@ -2089,15 +2068,14 @@ void KHTMLView::hideCaret() {
 
 bool KHTMLView::placeCaret() {
     caretOff();
-    d->editorContext()->override = false;
 
     recalcAndStoreCaretPos();
     
-    NodeImpl *caretNode = m_part->caret().node().handle();
+    NodeImpl *caretNode = m_part->caret()->node();
     if (!caretNode)
         return false;
 
-    if (!m_part->isEditingAtSelection())
+    if (!m_part->isEditingAtCaret())
         return false;
 
     // save selection. setting focus might clear it.
@@ -2106,10 +2084,8 @@ bool KHTMLView::placeCaret() {
     // restore selection, but don't place caret
     m_part->setSelection(selection, false);
         
-    if (!m_part->selection().collapsed()) {
-        d->editorContext()->override = true;
+    if (!m_part->selection().collapsed())
         return false;
-    }
 
     caretOn();
     return true;

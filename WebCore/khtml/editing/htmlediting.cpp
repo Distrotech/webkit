@@ -117,10 +117,10 @@ void EditCommand::pruneEmptyNodes() const
     if (!part)
         return;
 
-    Caret caret = part->caret();
+    Caret *caret = part->caret();
     
     bool prunedNodes = false;
-    NodeImpl *node = caret.node().handle();
+    NodeImpl *node = caret->node();
     while (1) {
         if (node->isTextNode()) {
             TextImpl *textNode = static_cast<TextImpl *>(node);
@@ -201,22 +201,22 @@ bool InputTextCommand::apply()
     if (!part)
         return false;
 
-    Caret caret = part->caret();
-    if (!caret.node().handle()->isTextNode())
+    Caret *caret = part->caret();
+    if (!caret->node()->isTextNode())
         return false;
 
     // Delete the current selection
     if (view->caretOverrides()) {
         deleteSelection();
-        caret.adjustPosition();
+        caret->adjustPosition();
     }
     
-    TextImpl *textNode = static_cast<TextImpl *>(caret.node().handle());
+    TextImpl *textNode = static_cast<TextImpl *>(caret->node());
     int exceptionCode;
     
     if (isLineBreak()) {
-        TextImpl *textBeforeNode = document()->createTextNode(textNode->substringData(0, caret.offset(), exceptionCode));
-        textNode->deleteData(0, caret.offset(), exceptionCode);
+        TextImpl *textBeforeNode = document()->createTextNode(textNode->substringData(0, caret->offset(), exceptionCode));
+        textNode->deleteData(0, caret->offset(), exceptionCode);
         ElementImpl *breakNode = document()->createHTMLElement("BR", exceptionCode);
         textNode->parentNode()->insertBefore(textBeforeNode, textNode, exceptionCode);
         textNode->parentNode()->insertBefore(breakNode, textNode, exceptionCode);
@@ -230,11 +230,11 @@ bool InputTextCommand::apply()
         notifyChanged(textNode->parentNode());
     }
     else {
-        textNode->insertData(caret.offset(), text(), exceptionCode);
+        textNode->insertData(caret->offset(), text(), exceptionCode);
         // EDIT FIXME: this is a hack for now
         // advance the cursor
         int textLength = text().length();
-        part->moveCaretTo(caret.node().handle(), caret.offset() + textLength);
+        part->moveCaretTo(caret->node(), caret->offset() + textLength);
         notifyChanged(textNode);
     }
 
@@ -266,26 +266,26 @@ bool DeleteTextCommand::apply()
     if (!part)
         return false;
 
-    Caret caret = part->caret();
+    Caret *caret = part->caret();
 
     // Delete the current selection
     if (!selection().collapsed()) {
         part->moveCaretTo(selection().startContainer().handle(), selection().startOffset());
         deleteSelection();
-        caret.adjustPosition();
+        caret->adjustPosition();
         return true;
     }
 
-    if (!caret.node().handle())
+    if (!caret->node())
         return false;
 
-    NodeImpl *caretNode = caret.node().handle();
+    NodeImpl *caretNode = caret->node();
 
     if (caretNode->isTextNode()) {
         int exceptionCode;
 
         // Check if we can delete character at cursor
-        int offset = caret.offset() - 1;
+        int offset = caret->offset() - 1;
         if (offset >= 0) {
             TextImpl *textNode = static_cast<TextImpl *>(caretNode);
             textNode->deleteData(offset, 1, exceptionCode);
@@ -299,7 +299,7 @@ bool DeleteTextCommand::apply()
         NodeImpl *previousSibling = caretNode->previousSibling();
         if (previousSibling->isHTMLBRElement()) {
             caretNode->parentNode()->removeChild(previousSibling, exceptionCode);
-            caret.adjustPosition();
+            caret->adjustPosition();
             notifyChanged(caretNode->parentNode());
             notifyChanged(previousSibling);
             return true;

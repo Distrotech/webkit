@@ -359,12 +359,13 @@ void RenderFlow::caretPos(int offset, bool override, int &_x, int &_y, int &widt
     // constructed properly and this kludge is not called any more. So only
     // the caret size of an empty :first-line'd block is wrong, but I think we
     // can live with that.
-    height = style()->fontMetrics().height();
+    RenderStyle *currentStyle = style(true);
+    height = currentStyle->fontMetrics().height();
     width = 1;
 
     // EDIT FIXME: This needs to account for text direction
     int w = this->width();
-    switch (style()->textAlign()) {
+    switch (currentStyle->textAlign()) {
         case LEFT:
         case KHTML_LEFT:
         case TAAUTO:

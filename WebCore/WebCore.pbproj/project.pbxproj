@@ -524,7 +524,6 @@
 				65912B110586921000123A69,
 				65912B120586921000123A69,
 				BE8F05B805B450E100E676BB,
-				BE8F05BA05B450E100E676BB,
 				BE8F05BC05B450E100E676BB,
 			);
 			isa = PBXHeadersBuildPhase;
@@ -793,7 +792,6 @@
 				84B2B250056BF15F00D2B771,
 				65912B100586921000123A69,
 				BE8F05B705B450E100E676BB,
-				BE8F05B905B450E100E676BB,
 				BE8F05BB05B450E100E676BB,
 			);
 			isa = PBXSourcesBuildPhase;
@@ -2463,8 +2461,6 @@
 			children = (
 				BE8F05B105B450E000E676BB,
 				BE8F05B205B450E000E676BB,
-				BE8F05B305B450E000E676BB,
-				BE8F05B405B450E000E676BB,
 				BE8F05B505B450E000E676BB,
 				BE8F05B605B450E000E676BB,
 			);
@@ -2488,24 +2484,6 @@
 			lastKnownFileType = sourcecode.c.h;
 			name = edit_caret.h;
 			path = editing/edit_caret.h;
-			refType = 4;
-			sourceTree = "<group>";
-		};
-		BE8F05B305B450E000E676BB = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			name = edit_caretimpl.cpp;
-			path = editing/edit_caretimpl.cpp;
-			refType = 4;
-			sourceTree = "<group>";
-		};
-		BE8F05B405B450E000E676BB = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.c.h;
-			name = edit_caretimpl.h;
-			path = editing/edit_caretimpl.h;
 			refType = 4;
 			sourceTree = "<group>";
 		};
@@ -2535,18 +2513,6 @@
 		};
 		BE8F05B805B450E100E676BB = {
 			fileRef = BE8F05B205B450E000E676BB;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		BE8F05B905B450E100E676BB = {
-			fileRef = BE8F05B305B450E000E676BB;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		BE8F05BA05B450E100E676BB = {
-			fileRef = BE8F05B405B450E000E676BB;
 			isa = PBXBuildFile;
 			settings = {
 			};

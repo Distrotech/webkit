@@ -26,11 +26,12 @@
 #ifndef __edit_caret_h__
 #define __edit_caret_h__
 
-#include <dom_node.h>
-#include <dom2_traversal.h>
-
 class KHTMLPart;
 class KHTMLPartPrivate;
+
+namespace DOM {
+    class NodeImpl;
+};
 
 namespace khtml {
 
@@ -39,35 +40,29 @@ class CaretImpl;
 class Caret
 {
 public:
-    Caret(const DOM::Node &node, long offset);
-    Caret(CaretImpl *i);
+    Caret(DOM::NodeImpl *node, long offset);
     Caret(const Caret &);
     ~Caret();
 
-    DOM::Node node() const;
+    DOM::NodeImpl *node() const;
     long offset() const;
-    bool startOfLine() const;
     
     void moveForwardByCharacter();
     void moveBackwardByCharacter();
     
-    void setStartOfLine(bool);
-    
     void adjustPosition();
-    Caret adjustedForEditing() const;
     
-    CaretImpl *handle() const;
-
-    friend bool operator==(const Caret &, const Caret &);
-
     friend class KHTMLPart;
     friend class KHTMLPartPrivate;
     
 private:
-    Caret();
-    void setPosition(const DOM::Node &, long);
+    Caret() : m_node(0), m_offset(0) {}
 
-    CaretImpl *impl;
+    void setPosition(DOM::NodeImpl *, long);
+    void notifyChanged(DOM::NodeImpl *) const;
+
+    DOM::NodeImpl *m_node;
+    long m_offset;
 };
 
 class CaretException {};

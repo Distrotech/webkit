@@ -195,7 +195,7 @@ bool StyleCSS3NonInheritedData::operator==(const StyleCSS3NonInheritedData& o) c
 }
 
 StyleCSS3InheritedData::StyleCSS3InheritedData()
-:Shared<StyleCSS3InheritedData>(), textShadow(0)
+:Shared<StyleCSS3InheritedData>(), textShadow(0), userModify(READ_ONLY)
 {
 
 }
@@ -204,6 +204,7 @@ StyleCSS3InheritedData::StyleCSS3InheritedData(const StyleCSS3InheritedData& o)
 :Shared<StyleCSS3InheritedData>()
 {
     textShadow = o.textShadow ? new ShadowData(*o.textShadow) : 0;
+    userModify = o.userModify;
 }
 
 StyleCSS3InheritedData::~StyleCSS3InheritedData()
@@ -218,6 +219,8 @@ bool StyleCSS3InheritedData::operator==(const StyleCSS3InheritedData& o) const
 
 bool StyleCSS3InheritedData::shadowDataEquivalent(const StyleCSS3InheritedData& o) const
 {
+    if (userModify != o.userModify)
+        return false;
     if (!textShadow && o.textShadow || textShadow && !o.textShadow)
         return false;
     if (textShadow && o.textShadow && (*textShadow != *o.textShadow))

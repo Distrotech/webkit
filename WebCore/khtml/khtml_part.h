@@ -592,15 +592,15 @@ public:
   void selectAll();
 
   /**
-   * Returns whether editing is enabled at the point of the
-   * current selection.
-   */
-  bool isEditingAtSelection() const;
-
-  /**
    * Returns the caret.
    */
-  khtml::Caret caret() const;
+  khtml::Caret *caret() const;
+
+  /**
+   * Returns whether editing is enabled at the current caret
+   * position.
+   */
+  bool isEditingAtCaret() const;
 
   /**
    * Moves the input caret to the specified offset.
@@ -786,11 +786,9 @@ signals:
   /**
    * This signal is emitted whenever the caret position has been changed.
    *
-   * The signal transmits the position the DOM::Range way, the node and
-   * the zero-based offset within this node.
    * @since 3.2
    */
-  void caretPositionChanged(const khtml::Caret &);
+  void caretPositionChanged(const khtml::Caret *);
 
 protected:
 

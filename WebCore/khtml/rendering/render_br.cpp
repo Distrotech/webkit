@@ -48,3 +48,12 @@ FindSelectionResult RenderBR::checkSelectionPointIgnoringContinuations(int _x, i
     return result;
 }
 
+long RenderBR::caretMinOffset() const 
+{ 
+    return 0; 
+}
+
+long RenderBR::caretMaxOffset() const 
+{ 
+    return 0; 
+}

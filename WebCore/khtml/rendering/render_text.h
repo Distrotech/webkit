@@ -75,8 +75,8 @@ public:
     void paintDecoration( QPainter *pt, int _tx, int _ty, int decoration);
     void paintSelection(const Font *f, RenderText *text, QPainter *p, RenderStyle* style, int tx, int ty, int startPos, int endPos);
 
-    long caretMinOffset() const;
-    long caretMaxOffset() const;
+    virtual long caretMinOffset() const;
+    virtual long caretMaxOffset() const;
     
     // Return before, after (offset set to max), or inside the text, at @p offset
     FindSelectionResult checkSelectionPoint(int _x, int _y, int _tx, int _ty, const Font *f, RenderText *text, int & offset, short lineheight);

@@ -313,12 +313,6 @@ thick
 thin
 underline
 -khtml-nowrap
-#
-# CSS_PROP__KHTML_USER_MODIFY
-#
-enabled
-disabled
-#none
 
 # CSS3 Values
 # CSS_PROP_BOX_ALIGN
@@ -374,3 +368,8 @@ slide
 alternate
 unfurl
 
+#
+# CSS_PROP__KHTML_USER_MODIFY
+#
+read-only
+read-write

@@ -50,7 +50,6 @@ public:
     friend class KHTMLPart;
 
 private:
-    CaretImpl() : m_node(0), m_offset(0), m_startOfLine(false) {}
     CaretImpl(const CaretImpl *c) {};
 
     void moveForwardByCharacter();
@@ -63,10 +62,7 @@ private:
     void setPosition(DOM::NodeImpl *, long);
     void adjustPosition();
 
-    void notifyChanged(DOM::NodeImpl *) const;
 
-    DOM::NodeImpl *m_node;
-    long m_offset;
     long m_startOfLine;
 };
 

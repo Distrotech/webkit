@@ -101,7 +101,7 @@ using KParts::URLArgs;
 NSEvent *KWQKHTMLPart::_currentEvent = nil;
 NSResponder *KWQKHTMLPart::_firstResponderAtMouseDownTime = nil;
 
-void KHTMLPart::caretPositionChanged(const khtml::Caret &)
+void KHTMLPart::caretPositionChanged(const khtml::Caret *)
 {
     KWQ(this)->_completed.call();
 }
@@ -867,7 +867,8 @@ void KWQKHTMLPart::paint(QPainter *p, const QRect &rect)
     if (renderer()) {
         renderer()->layer()->paint(p, rect);
 #ifdef APPLE_CHANGES
-        if (isEditingAtSelection())
+        // EDIT FIXME: Caret should be painted by block containing caret node.
+        if (isEditingAtCaret())
             view()->paintCaret(p, rect);
 #endif
     } else {

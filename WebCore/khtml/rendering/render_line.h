@@ -99,8 +99,8 @@ public:
     virtual int topOverflow() { return yPos(); }
     virtual int bottomOverflow() { return yPos()+height(); }
 
-    virtual long caretMinOffset() const { return 0; }
-    virtual long caretMaxOffset() const { return 1; }
+    virtual long caretMinOffset() const;
+    virtual long caretMaxOffset() const;
     
 public: // FIXME: Would like to make this protected, but methods are accessing these
         // members over in the part.
