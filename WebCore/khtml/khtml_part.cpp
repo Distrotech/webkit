@@ -2062,7 +2062,13 @@ bool KHTMLPart::gotoAnchor( const QString &name )
   int x = 0, y = 0;
   HTMLElementImpl *a = static_cast<HTMLElementImpl *>(n);
   a->getUpperLeftCorner(x, y);
+#if APPLE_CHANGES
+  // Remove the 50 pixel slop factor; some pages expect anchors to be exactly scrolled to.
+  // Also, call recursive version so this will expose correctly from within nested frames.
+  d->m_view->setContentsPosRecursive(x, y);
+#else
   d->m_view->setContentsPos(x-50, y-50);
+#endif
 
   return true;
 }
@@ -4628,7 +4634,7 @@ void KHTMLPart::khtmlMousePressEvent( khtml::MousePressEvent *event )
                 }
             }
         }
-        if (d->m_selectionStart == 0)
+        if (d->m_selectionStart == 0 || d->m_selectionEnd == 0)
             d->m_doc->clearSelection();
         else{
             d->m_initialSelectionStart = d->m_selectionStart;
@@ -4667,7 +4673,7 @@ void KHTMLPart::khtmlMousePressEvent( khtml::MousePressEvent *event )
                 startAndEndLineNodesIncludingNode (node, startOffset, d->m_selectionStart, d->m_startOffset, d->m_selectionEnd, d->m_endOffset);
             }
         }
-        if (d->m_selectionStart == 0) 
+        if (d->m_selectionStart == 0 || d->m_selectionEnd == 0)
             d->m_doc->clearSelection();
         else {
             d->m_initialSelectionStart = d->m_selectionStart;
