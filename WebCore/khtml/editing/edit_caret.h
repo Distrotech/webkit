@@ -38,7 +38,7 @@ class CaretImpl;
 class Caret
 {
 public:
-    Caret(const DOM::Node &node, long offset, bool startOfLine=false);
+    Caret(const DOM::Node &node, long offset);
     Caret(CaretImpl *i);
     Caret(const Caret &);
     ~Caret();
@@ -47,10 +47,13 @@ public:
     long offset() const;
     bool startOfLine() const;
     
-    void setPosition(const DOM::Node &, long, bool startOfLine=false);
+    void setPosition(const DOM::Node &, long);
+    void moveForwardByCharacter();
+    void moveBackwardByCharacter();
+    
     void setStartOfLine(bool);
     
-    void adjustForEditing();
+    void adjustPosition();
     Caret adjustedForEditing() const;
     
     CaretImpl *handle() const;
@@ -61,7 +64,6 @@ public:
     
 private:
     Caret();
-    bool needsAdjustmentForEditing() const;
 
     CaretImpl *impl;
 };

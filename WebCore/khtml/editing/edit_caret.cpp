@@ -36,9 +36,9 @@ using DOM::Node;
 using khtml::Caret;
 using khtml::CaretImpl;
 
-Caret::Caret(const DOM::Node &node, long offset, bool startOfLine)
+Caret::Caret(const DOM::Node &node, long offset)
 {
-    impl = new CaretImpl(node.handle(), offset, startOfLine);
+    impl = new CaretImpl(node.handle(), offset);
     impl->ref();
 }
 
@@ -58,7 +58,8 @@ Caret::Caret(const Caret &other)
 
 Caret::Caret()
 {
-    impl = 0;
+    impl = new CaretImpl();
+    impl->ref();
 }
 
 Caret::~Caret()
@@ -85,11 +86,22 @@ bool Caret::startOfLine() const
     return impl->startOfLine();
 }
 
-
-void Caret::setPosition(const Node &node, long offset, bool startOfLine)
+void Caret::setPosition(const Node &node, long offset)
 {
     if (!impl) throw CaretException();
-    impl->setPosition(node.handle(), offset, startOfLine);
+    impl->setPosition(node.handle(), offset);
+}
+
+void Caret::moveForwardByCharacter()
+{
+    if (!impl) throw CaretException();
+    impl->moveForwardByCharacter();
+}
+
+void Caret::moveBackwardByCharacter()
+{
+    if (!impl) throw CaretException();
+    impl->moveBackwardByCharacter();
 }
 
 void Caret::setStartOfLine(bool startOfLine)
@@ -98,22 +110,16 @@ void Caret::setStartOfLine(bool startOfLine)
     impl->setStartOfLine(startOfLine);
 }
 
-bool Caret::needsAdjustmentForEditing() const
+void Caret::adjustPosition()
 {
     if (!impl) throw CaretException();
-    return impl->needsAdjustmentForEditing();
-}
-
-void Caret::adjustForEditing()
-{
-    if (!impl) throw CaretException();
-    impl->adjustForEditing();
+    impl->adjustPosition();
 }
 
 Caret Caret::adjustedForEditing() const
 {
     if (!impl) throw CaretException();
-    impl->adjustForEditing();
+    impl->adjustPosition();
     return impl;
 }
 

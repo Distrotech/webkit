@@ -27,12 +27,11 @@
 #define __edit_caretimpl_h__
 
 #include <edit_caret.h>
-#include <dom2_traversal.h>
+#include <dom_docimpl.h>
 #include <shared.h>
 
 namespace DOM {
-    class CustomNodeFilter;
-    class Node;
+    class DocumentImpl;
     class NodeImpl;
 }
 
@@ -41,17 +40,20 @@ namespace khtml {
 class CaretImpl : public Shared<CaretImpl>
 {
 public:
-    CaretImpl(DOM::NodeImpl *node, long offset, bool startOfLine);
+    CaretImpl(DOM::NodeImpl *node, long offset);
     ~CaretImpl();
 
     DOM::NodeImpl *node() const { return m_node; }
     long offset() const { return m_offset; }
     bool startOfLine() const { return m_startOfLine; }
     
-    void setPosition(DOM::NodeImpl *, long, bool startOfLine=false);
+    void setPosition(DOM::NodeImpl *, long);
+    void moveForwardByCharacter();
+    void moveBackwardByCharacter();
+    
     void setStartOfLine(bool);
     
-    void adjustForEditing();
+    void adjustPosition();
     
     friend class Caret;
 
@@ -59,7 +61,7 @@ private:
     CaretImpl() : m_node(0), m_offset(0), m_startOfLine(false) {}
     CaretImpl(const CaretImpl *c) {};
 
-    bool needsAdjustmentForEditing() const;
+    void setNode(DOM::NodeImpl *);
 
     DOM::NodeImpl *m_node;
     long m_offset;

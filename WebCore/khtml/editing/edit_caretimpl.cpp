@@ -27,7 +27,8 @@
 
 #include <dom_docimpl.h>
 #include <dom_nodeimpl.h>
-#include <dom2_traversalimpl.h>
+#include <dom_textimpl.h>
+#include <render_object.h>
 
 #if APPLE_CHANGES
 #include <KWQAssertions.h>
@@ -38,12 +39,12 @@ using DOM::EditNodeFilter;
 using DOM::Node;
 using DOM::NodeImpl;
 using DOM::NodeFilter;
-using DOM::TreeWalker;
+using DOM::TextImpl;
 using khtml::Caret;
 using khtml::CaretImpl;
 
-CaretImpl::CaretImpl(NodeImpl *node, long offset, bool startOfLine) 
-    : m_offset(offset), m_startOfLine(startOfLine) 
+CaretImpl::CaretImpl(NodeImpl *node, long offset) 
+    : m_node(0), m_offset(offset), m_startOfLine(false) 
 {
     if (node) {
         m_node = node;
@@ -57,23 +58,94 @@ CaretImpl::~CaretImpl()
         m_node->deref();
 }
 
-
-void CaretImpl::setPosition(DOM::NodeImpl *node, long offset, bool startOfLine)
+void CaretImpl::setNode(DOM::NodeImpl *node)
 {
-    if (m_node != node) {
+    if (m_node == node)
+        return;
+
+    if (m_node)
         m_node->deref();
-        m_node = node;
+
+    m_node = node;
+
+    if (m_node)
         m_node->ref();
-    }
-    m_offset = offset;
-    m_startOfLine = startOfLine;
+}
+
+void CaretImpl::setPosition(NodeImpl *node, long offset)
+{
+    if (node == m_node && offset == m_offset)
+        return;
 
     // Perform various checks on the new position and fix up as needed
-
     // 1. Ensure the node set is a leaf node
-    //if (m_node && m_node.hasChildNodes())
-    //    m_node = m_node.nextLeafNode();
+    if (node && node->hasChildNodes())
+        node = node->nextLeafNode();
 
+    setNode(node);
+    m_offset = offset;
+
+    adjustPosition();
+}
+
+void CaretImpl::moveForwardByCharacter()
+{
+    bool moved = false;
+    
+    if (offset() < node()->caretMaxOffset()) {
+        setPosition(node(), offset() + 1);
+        moved = true;
+    }
+    else {
+        NodeImpl *n = node()->nextLeafNode();
+        while (n) {
+            if (n->caretMinOffset() < n->caretMaxOffset()) {
+                setPosition(n, n->caretMinOffset() + 1);
+                moved = true;
+                break;
+            }
+            else {
+                n = n->nextLeafNode();
+            }
+        }
+    }
+    
+    if (moved) {
+        adjustPosition();
+        node()->setChanged(true);
+        if (node()->renderer())
+            node()->renderer()->setNeedsLayoutAndMinMaxRecalc();
+    }
+}
+
+void CaretImpl::moveBackwardByCharacter()
+{
+    bool moved = false;
+
+    if (offset() - 1 > 0) {
+        setPosition(node(), offset() - 1);
+        moved = true;
+    }
+    else {
+        NodeImpl *n = node()->previousLeafNode();
+        while (n) {
+            if (n->caretMinOffset() < n->caretMaxOffset()) {
+                setPosition(n, n->caretMaxOffset() - 1);
+                moved = true;
+                break;
+            }
+            else {
+                n = n->nextLeafNode();
+            }
+        }
+    }
+
+    if (moved) {
+        adjustPosition();
+        node()->setChanged(true);
+        if (node()->renderer())
+            node()->renderer()->setNeedsLayoutAndMinMaxRecalc();
+    }
 }
 
 void CaretImpl::setStartOfLine(bool startOfLine)
@@ -81,40 +153,81 @@ void CaretImpl::setStartOfLine(bool startOfLine)
     m_startOfLine = startOfLine;
 }
 
-bool CaretImpl::needsAdjustmentForEditing() const
+void CaretImpl::adjustPosition()
 {
-    if (offset() != 0) 
-        return false;
-    
-    if (node() == node()->parentNode()->firstChild())
-        return false;
-        
-    return true;
-}
-
-void CaretImpl::adjustForEditing()
-{
-    if (!needsAdjustmentForEditing())
+    if (!node()) 
         return;
+
+    if (offset() != 0) 
+        return;
+
+#if 0
+
+    // some sketchy ideas.
+    // not ready for prime time
+
+    if (!node()) 
+        return;
+    
+    if (offset() != 0) 
+        return;
+
+    // prune empty text nodes preceding the caret
+    int exceptionCode;
+    NodeImpl *n = node()->previousSibling();
+    while (1) {
+        if (!n || !n->isTextNode() || static_cast<TextImpl *>(n)->length() > 0)
+            break;
+        node()->parentNode()->removeChild(n, exceptionCode);
+        n = n->previousSibling();
+    }
+    
+    // determine whether adjustment is needed
+    n = node();
+    while (n) {
+        fprintf(stderr, "needsAdjustmentForEditing: %p : (%s)\n", n, n->nodeName().string().latin1());
+        n = n->traversePreviousNode();
+        if (!n)
+            return;
+        if (n->isHTMLBRElement())
+            return;
+        if (n->isTextNode())
+            break;
+    }
 
     EditNodeFilter filter;
     NodeFilter nodeFilter = NodeFilter::createCustom(&filter);
-    DocumentImpl *document = node()->getDocument();
-    TreeWalker tree = document->createTreeWalker(document, NodeFilter::SHOW_ALL, nodeFilter, true);
-    tree.handle()->setCurrentNode(node());
+    TreeWalker tw = treeWalker();
+    if (tw.isNull())
+        return;
+    tw.handle()->setFilter(nodeFilter.handle());
+    NodeImpl *node = m_node;
+    node = tw.previousNode().handle();
+    if (node) {
+        setNode(node);
+        m_offset = node->caretMaxOffset();
+        fprintf(stderr, "adjustedForEditing: %p : %d (%s)\n", node, node->caretMaxOffset(), node->nodeName().string().latin1());
+    }
+    else {
+        fprintf(stderr, "not adjustedForEditing\n");
+    }
+#endif
 }
 
 short EditNodeFilter::acceptNode(const DOM::Node &n)
 {
     NodeImpl *node = n.handle();
-    if (!node)
+    if (!node) {
         return NodeFilter::FILTER_REJECT;
-    
-    if (!node->isHTMLElement()) 
-        return NodeFilter::FILTER_REJECT;
+    }
 
-    if (node->isTextNode() && node->isContentEditable())
+    if (!node->isHTMLElement() && !node->isTextNode()) {
+        return NodeFilter::FILTER_REJECT;
+    }
+
+    if (node->isContentEditable()) {
         return NodeFilter::FILTER_ACCEPT;
-        
+    }
+
     return NodeFilter::FILTER_SKIP;
 }

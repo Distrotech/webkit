@@ -31,6 +31,7 @@
 
 #include "dom_elementimpl.h"
 #include "dom_nodeimpl.h"
+#include "dom2_rangeimpl.h"
 #include "dom_textimpl.h"
 #include "khtmlview.h"
 #include "khtml_part.h"
@@ -42,6 +43,7 @@ using DOM::ElementImpl;
 using DOM::Node;
 using DOM::NodeImpl;
 using DOM::Range;
+using DOM::RangeImpl;
 using DOM::TextImpl;
 
 using khtml::DeleteTextCommand;
@@ -52,11 +54,124 @@ using khtml::InputTextCommand;
 //------------------------------------------------------------------------------------------
 // EditCommand
 
+EditCommand::EditCommand(DOM::DocumentImpl *document) : m_document(0)
+{
+    m_document = document;
+    if (m_document) {
+        m_document->ref();
+        if (m_document->view() && m_document->view()->part())
+            m_selection = m_document->view()->part()->selection();
+    }
+}
+
+EditCommand::~EditCommand()
+{
+    if (m_document)
+        m_document->deref();
+}
+
 void EditCommand::notifyChanged(NodeImpl *node) const
 {
+    if (!node)
+        return;
+
     node->setChanged(true);
     if (node->renderer())
         node->renderer()->setNeedsLayoutAndMinMaxRecalc();
+}
+
+void EditCommand::notifyNodesChanged() const
+{
+    // notify all the nodes in the selection
+    NodeImpl *startNode = selection().startContainer().handle();
+    NodeImpl *endNode = selection().endContainer().handle();
+    if (startNode == endNode) {
+        notifyChanged(startNode);
+    }
+    else {
+        for (NodeImpl *node = startNode; node != endNode; node = node->traverseNextNode()) {
+            notifyChanged(node);
+        }
+        notifyChanged(endNode);
+    }
+
+    // notify the caret node
+    KHTMLView *view = document()->view();
+    if (!view)
+        return;
+
+    KHTMLPart *part = view->part();
+    if (!part)
+        return;
+
+    notifyChanged(part->caret().node().handle());
+}
+
+void EditCommand::deleteSelection()
+{
+    // EDIT FIXME: need to save the contents for redo
+    notifyChanged(selection().startContainer().handle());
+    notifyChanged(selection().endContainer().handle());
+    if (document()->view() && document()->view()->part())
+        document()->view()->part()->setSelection(Range(selection().startContainer(), selection().startOffset(), selection().startContainer(), selection().startOffset()), true);
+
+    selection().deleteContents();
+}
+
+void EditCommand::pruneEmptyNodes() const
+{
+    KHTMLView *view = document()->view();
+    if (!view)
+        return;
+
+    KHTMLPart *part = view->part();
+    if (!part)
+        return;
+
+    Caret caret = part->caret();
+    
+    bool prunedNodes = false;
+    NodeImpl *node = caret.node().handle();
+    while (1) {
+        if (node->isTextNode()) {
+            TextImpl *textNode = static_cast<TextImpl *>(node);
+            if (textNode->length() == 0) {
+                fprintf(stderr, "prune text: %p\n", textNode);
+                node = textNode->traversePreviousNode();
+                removeNode(textNode);
+                prunedNodes = true;
+            }
+            else {
+                break;
+            }
+        }
+        else if (!node->hasChildNodes()) {
+            NodeImpl *n = node;
+            node = node->traversePreviousNode();
+            fprintf(stderr, "prune elem: %p\n", n);
+            removeNode(n);
+            prunedNodes = true;
+        }
+        else {
+            fprintf(stderr, "has children: %p : %d\n", node, node->childNodes()->length());
+            break;
+        }
+    }
+    
+    if (prunedNodes) {
+        fprintf(stderr, "prune move to: %p : %s\n", node, node->nodeName().string().latin1());
+        part->moveCaretTo(node, node->caretMaxOffset());
+    }
+}
+
+void EditCommand::removeNode(DOM::NodeImpl *node) const
+{
+    if (!node)
+        return;
+    
+    notifyChanged(node->parentNode());
+    int exceptionCode;
+    node->remove(exceptionCode);
 }
 
 //------------------------------------------------------------------------------------------
@@ -64,8 +179,8 @@ void EditCommand::notifyChanged(NodeImpl *node) const
 
 EditCommandID InputTextCommand::commandID() const { return InputTextCommandID; }
 
-InputTextCommand::InputTextCommand(const Range &selection, const DOMString &text) 
-    : EditCommand(selection)
+InputTextCommand::InputTextCommand(DocumentImpl *document, const DOMString &text) 
+    : EditCommand(document)
 {
     if (text.isEmpty()) {
 #if APPLE_CHANGES
@@ -80,59 +195,60 @@ InputTextCommand::InputTextCommand(const Range &selection, const DOMString &text
 
 bool InputTextCommand::isLineBreak() const
 {
-    return !m_text.isEmpty() && (m_text[0] == '\n' || m_text[0] == '\r');
+    return m_text.length() == 1 && (m_text[0] == '\n' || m_text[0] == '\r');
 }
 
 bool InputTextCommand::isSpace() const
 {
-    return !m_text.isEmpty() && (m_text[0] == ' ');
+    return m_text.length() == 1 && (m_text[0] == ' ');
 }
 
-bool InputTextCommand::applyToDocument(DocumentImpl *doc)
+bool InputTextCommand::apply()
 {
-    KHTMLView *view = doc->view();
+    KHTMLView *view = document()->view();
     if (!view)
         return false;
+
     KHTMLPart *part = view->part();
     if (!part)
         return false;
 
-    NodeImpl *caretNode = selection().startContainer().handle();
-    if (!caretNode->isTextNode())
+    Caret caret = part->caret();
+    if (!caret.node().handle()->isTextNode())
         return false;
-    
+
+    // notify nodes that will change
+    notifyNodesChanged();
+
     // Delete the current selection
     if (view->caretOverrides()) {
-        // EDIT FIXME: need to save the contents for redo
-        selection().deleteContents();
-        part->setSelection(Range(caretNode, selection().startOffset(), caretNode, selection().startOffset()));
+        deleteSelection();
+        caret.adjustPosition();
     }
     
-    TextImpl *textNode = static_cast<TextImpl *>(caretNode);
+    TextImpl *textNode = static_cast<TextImpl *>(caret.node().handle());
     int exceptionCode;
     
     if (isLineBreak()) {
-        TextImpl *textBeforeNode = doc->createTextNode(textNode->substringData(0, selection().startOffset(), exceptionCode));
-        textNode->deleteData(0, selection().startOffset(), exceptionCode);
-        ElementImpl *breakNode = doc->createHTMLElement("BR", exceptionCode);
+        TextImpl *textBeforeNode = document()->createTextNode(textNode->substringData(0, caret.offset(), exceptionCode));
+        textNode->deleteData(0, caret.offset(), exceptionCode);
+        ElementImpl *breakNode = document()->createHTMLElement("BR", exceptionCode);
         textNode->parentNode()->insertBefore(textBeforeNode, textNode, exceptionCode);
         textNode->parentNode()->insertBefore(breakNode, textNode, exceptionCode);
         textBeforeNode->deref();
         breakNode->deref();
         
         // Set the cursor at the beginning of the node after the split.
-        part->setSelection(Range(caretNode, 0, caretNode, 0));
+        part->moveCaretTo(textNode, 0);
     }
     else {
-        textNode->insertData(selection().startOffset(), text(), exceptionCode);
+        textNode->insertData(caret.offset(), text(), exceptionCode);
         // EDIT FIXME: this is a hack for now
         // advance the cursor
         int textLength = text().length();
-        part->setSelection(Range(selection().startContainer(), selection().startOffset() + textLength, 
-                                    selection().startContainer(), selection().startOffset() + textLength));
+        part->moveCaretTo(caret.node().handle(), caret.offset() + textLength);
     }
-    
-    notifyChanged(textNode);
+
     return true;
 }
 
@@ -146,67 +262,58 @@ bool InputTextCommand::canUndo() const
 
 EditCommandID DeleteTextCommand::commandID() const { return DeleteTextCommandID; }
 
-DeleteTextCommand::DeleteTextCommand(const Range &selection) 
-    : EditCommand(selection)
+DeleteTextCommand::DeleteTextCommand(DocumentImpl *document) 
+    : EditCommand(document)
 {
 }
 
-bool DeleteTextCommand::applyToDocument(DocumentImpl *doc)
+bool DeleteTextCommand::apply()
 {
-    KHTMLView *view = doc->view();
+    KHTMLView *view = document()->view();
     if (!view)
         return false;
+
     KHTMLPart *part = view->part();
     if (!part)
         return false;
-    
-    NodeImpl *caretNode = selection().startContainer().handle();
-    if (!caretNode->isTextNode())
-        return false;
-    
+
+    Caret caret = part->caret();
+
+    // notify nodes that will change
+    notifyNodesChanged();
+
     // Delete the current selection
     if (!selection().collapsed()) {
-        // EDIT FIXME: need to save the contents for redo
-        selection().deleteContents();
-        part->setSelection(Range(caretNode, selection().startOffset(), caretNode, selection().startOffset()));
+        deleteSelection();
+        caret.adjustPosition();
+        return true;
     }
-    else {
-        // EDIT FIXME: this is a hack for now
-        TextImpl *textNode = static_cast<TextImpl *>(caretNode);
+
+    if (caret.node().handle()->isTextNode()) {
         int exceptionCode;
-        int offset = selection().startOffset() - 1;
-        fprintf(stderr, "delete offset: %d\n", offset);
+        int offset = caret.offset() - 1;
         if (offset >= 0) {
             // Delete character at cursor
+            TextImpl *textNode = static_cast<TextImpl *>(caret.node().handle());
             textNode->deleteData(offset, 1, exceptionCode);
-            part->setSelection(Range(selection().startContainer(), selection().startOffset() - 1, 
-                                     selection().startContainer(), selection().startOffset() - 1));
-        }
-        else if (textNode->previousSibling()) {
-            // look at previous sibling
-            NodeImpl *previousSibling = textNode->previousSibling();
-            if (previousSibling->isTextNode()) {
-                fprintf(stderr, "previousSibling is text node\n");
-                // delete last character in text node
-                TextImpl *previousTextNode = static_cast<TextImpl *>(previousSibling);
-                previousTextNode->deleteData(previousTextNode->length() - 1, 1, exceptionCode);
-                // leave caret right where it is
-            }
-            else if (previousSibling->isHTMLBRElement()) {
-                // remove BR
-                fprintf(stderr, "remove BR\n");
-                textNode->parentNode()->removeChild(previousSibling, exceptionCode);
-            }
-            else {
-                fprintf(stderr, "delete fall through\n");
-            }
+            part->moveCaretTo(textNode, offset);
+            pruneEmptyNodes();
+            return true;
         }
         else {
-            fprintf(stderr, "node is first child\n");
+            NodeImpl *node = caret.node().handle()->previousLeafNode();
+            if (!node)
+                return false;
+            if (node->isTextNode()) {
+                TextImpl *textNode = static_cast<TextImpl *>(node);
+                offset = node->caretMaxOffset() - 1;
+                textNode->deleteData(offset, 1, exceptionCode);
+                part->moveCaretTo(textNode, offset);
+                pruneEmptyNodes();
+            }
         }
     }
-    
-    notifyChanged(caretNode);
+
     return true;
 }
 

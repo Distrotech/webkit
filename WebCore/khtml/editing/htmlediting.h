@@ -39,20 +39,26 @@ enum EditCommandID { InputTextCommandID, DeleteTextCommandID, };
 class EditCommand
 {
 public:    
-    EditCommand(const DOM::Range &selection) : m_selection(selection) {};
-    virtual ~EditCommand() {};
+    EditCommand(DOM::DocumentImpl *document);
+    virtual ~EditCommand();
 
     virtual EditCommandID commandID() const = 0;
 
+    DOM::DocumentImpl *document() const { return m_document; }
     DOM::Range selection() const { return m_selection; }
 
-    virtual bool applyToDocument(DOM::DocumentImpl *) = 0;
+    virtual bool apply() = 0;
     virtual bool canUndo() const = 0;
-
+    
 protected:
     virtual void notifyChanged(DOM::NodeImpl *) const;
-        
+    virtual void notifyNodesChanged() const;
+    void deleteSelection();
+    void pruneEmptyNodes() const;
+    void removeNode(DOM::NodeImpl *) const;
+    
 private:
+    DOM::DocumentImpl *m_document;
     DOM::Range m_selection;
 };
 
@@ -60,12 +66,12 @@ private:
 class InputTextCommand : public EditCommand
 {
 public:
-    InputTextCommand(const DOM::Range &selection, const DOM::DOMString &text);
+    InputTextCommand(DOM::DocumentImpl *document, const DOM::DOMString &text);
     virtual ~InputTextCommand() {};
     
     virtual EditCommandID commandID() const;
     
-    virtual bool applyToDocument(DOM::DocumentImpl *);
+    virtual bool apply();
     virtual bool canUndo() const;
 
     DOM::DOMString text() const { return m_text; }
@@ -79,14 +85,13 @@ private:
 class DeleteTextCommand : public EditCommand
 {
 public:
-    DeleteTextCommand(const DOM::Range &selection);
+    DeleteTextCommand(DOM::DocumentImpl *document);
     virtual ~DeleteTextCommand() {};
     
     virtual EditCommandID commandID() const;
     
-    virtual bool applyToDocument(DOM::DocumentImpl *);
+    virtual bool apply();
     virtual bool canUndo() const;
-    
 };
 
 }; // end namespace khtml
