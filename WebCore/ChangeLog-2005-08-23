@@ -1,3 +1,20 @@
+2004-01-19  Maciej Stachowiak  <mjs@apple.com>
+
+	Merged security fix from HEAD. Clone for this branch is:
+
+	<rdar://problem/3533737>: Safari allows upload of arbitrary local files w/o user's knowledge or permission (SUJagBullet)
+
+    2004-01-19  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by John, Ken, Dave.
+
+	<rdar://problem/3533319>: Safari allows upload of arbitrary local files w/o user's knowledge or permission
+        
+	* khtml/html/html_formimpl.cpp:
+        (HTMLInputElementImpl::value): Don't fall back to the value
+	attribute for file inputs, since that way malicious HTML could
+	force the user to upload files unexpectedly.
+
 === Safari-85.5 ===
 
 2003-07-14  Darin Adler  <darin@apple.com>
