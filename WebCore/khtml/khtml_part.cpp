@@ -5100,77 +5100,80 @@ void KHTMLPart::khtmlMouseReleaseEvent( khtml::MouseReleaseEvent *event )
   }
 #endif
 
+    fprintf(stderr, "inEditMode: %s; isContentEditable: %s\n", 
+        inEditMode() ? "Y" : "N", 
+        d->m_selectionStart.handle()->isContentEditable() ? "Y" : "N");
+
 #if APPLE_CHANGES
-  // Clear the selection if the mouse didn't move after the last mouse press.
-  // We do this so when clicking on the selection, the selection goes away.
-  if (d->m_dragStartPos.x() == event->qmouseEvent()->x() &&
-      d->m_dragStartPos.y() == event->qmouseEvent()->y() &&
-      !d->m_selectionInitiatedWithDoubleClick &&
-      !d->m_selectionInitiatedWithTripleClick &&
-      !inEditMode() && !d->m_selectionStart.handle()->isContentEditable()) {
-      d->m_extendAtEnd = true;
-      d->m_selectionStart = 0;
-      d->m_selectionEnd = 0;
-      d->m_startOffset = 0;
-      d->m_endOffset = 0;
-      d->m_doc->clearSelection();
-  }
+    // Clear the selection if the mouse didn't move after the last mouse press.
+    // We do this so when clicking on the selection, the selection goes away.
+    if (d->m_dragStartPos.x() == event->qmouseEvent()->x() &&
+        d->m_dragStartPos.y() == event->qmouseEvent()->y() &&
+        !d->m_selectionInitiatedWithDoubleClick &&
+        !d->m_selectionInitiatedWithTripleClick &&
+        !isEditingAtSelection()) {
+        d->m_extendAtEnd = true;
+        d->m_selectionStart = 0;
+        d->m_selectionEnd = 0;
+        d->m_startOffset = 0;
+        d->m_endOffset = 0;
+        d->m_doc->clearSelection();
+    }
 #endif // APPLE_CHANGES
 
 #ifndef KHTML_NO_SELECTION
+
     // delete selection in case start and end position are at the same point
     if (d->m_selectionStart == d->m_selectionEnd && d->m_startOffset == d->m_endOffset &&
-        !inEditMode() && !d->m_selectionStart.handle()->isContentEditable()) {
+        !isEditingAtSelection()) {
         d->m_extendAtEnd = true;
         d->m_selectionStart = 0;
         d->m_selectionEnd = 0;
         d->m_startOffset = 0;
         d->m_endOffset = 0;
         emitSelectionChanged();
-    } else {
-    // we have to get to know if end is before start or not...
-    DOM::Node n = d->m_selectionStart;
-    d->m_startBeforeEnd = false;
-    d->m_extendAtEnd = true;
-    if( d->m_selectionStart == d->m_selectionEnd ) {
-      if( d->m_startOffset < d->m_endOffset )
-        d->m_startBeforeEnd = true;
-    } else {
-      d->m_startBeforeEnd = isBeforeNode(d->m_selectionStart, d->m_selectionEnd);
-    if(!d->m_startBeforeEnd)
-    {
-      DOM::Node tmpNode = d->m_selectionStart;
-      int tmpOffset = d->m_startOffset;
-      d->m_selectionStart = d->m_selectionEnd;
-      d->m_startOffset = d->m_endOffset;
-      d->m_selectionEnd = tmpNode;
-      d->m_endOffset = tmpOffset;
-      d->m_startBeforeEnd = true;
-      d->m_extendAtEnd = false;
-    }
+    } 
+    else {
+        // we have to get to know if end is before start or not...
+        DOM::Node n = d->m_selectionStart;
+        d->m_startBeforeEnd = false;
+        d->m_extendAtEnd = true;
+        if (d->m_selectionStart == d->m_selectionEnd) {
+            if (d->m_startOffset < d->m_endOffset)
+                d->m_startBeforeEnd = true;
+        } 
+        else {
+            d->m_startBeforeEnd = isBeforeNode(d->m_selectionStart, d->m_selectionEnd);
+            if (!d->m_startBeforeEnd) {
+                DOM::Node tmpNode = d->m_selectionStart;
+                int tmpOffset = d->m_startOffset;
+                d->m_selectionStart = d->m_selectionEnd;
+                d->m_startOffset = d->m_endOffset;
+                d->m_selectionEnd = tmpNode;
+                d->m_endOffset = tmpOffset;
+                d->m_startBeforeEnd = true;
+                d->m_extendAtEnd = false;
+            }
 
 #ifndef KHTML_NO_CARET
-    bool v = d->m_view->placeCaret();
-    emitCaretPositionChanged(v ? caretNode() : 0, caretOffset());
+            bool v = d->m_view->placeCaret();
+            emitCaretPositionChanged(v ? caretNode() : 0, caretOffset());
 #endif // KHTML_NO_CARET
-        
-    // get selected text and paste to the clipboard
+            // get selected text and paste to the clipboard
 #ifndef QT_NO_CLIPBOARD
-    QString text = selectedText();
-    text.replace(QChar(0xa0), ' ');
-    QClipboard *cb = QApplication::clipboard();
-    cb->setSelectionMode( true );
-    disconnect( kapp->clipboard(), SIGNAL( selectionChanged()), this, SLOT( slotClearSelection()));
-    cb->setText(text);
-    connect( kapp->clipboard(), SIGNAL( selectionChanged()), SLOT( slotClearSelection()));
-    cb->setSelectionMode( false );
+            QString text = selectedText();
+            text.replace(QChar(0xa0), ' ');
+            QClipboard *cb = QApplication::clipboard();
+            cb->setSelectionMode( true );
+            disconnect( kapp->clipboard(), SIGNAL( selectionChanged()), this, SLOT( slotClearSelection()));
+            cb->setText(text);
+            connect( kapp->clipboard(), SIGNAL( selectionChanged()), SLOT( slotClearSelection()));
+            cb->setSelectionMode( false );
 #endif // QT_NO_CLIPBOARD
-    //kdDebug( 6000 ) << "selectedText = " << text << endl;
-    emitSelectionChanged();
-  }
-  }
-#endif
-
+            emitSelectionChanged();
+        }
+    }
+#endif // KHTML_NO_SELECTION
 }
 
 void KHTMLPart::khtmlDrawContentsEvent( khtml::DrawContentsEvent * )
@@ -5368,6 +5371,19 @@ void KHTMLPart::selectAll()
                           d->m_selectionEnd.handle(), d->m_endOffset );
 
   emitSelectionChanged();
+}
+
+bool KHTMLPart::isEditingAtSelection() const
+{
+    if (inEditMode())
+        return true;
+    
+    if (d->m_selectionStart != 0) {
+        NodeImpl *node = d->m_selectionStart.handle();
+        return node && node->isContentEditable();
+    }
+    
+    return false;
 }
 
 #if !APPLE_CHANGES
