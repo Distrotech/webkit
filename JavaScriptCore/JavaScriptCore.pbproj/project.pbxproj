@@ -20,7 +20,6 @@
 			buildRules = (
 			);
 			buildSettings = {
-				DEBUGGING_SYMBOLS = NO;
 			};
 			isa = PBXBuildStyle;
 			name = Deployment;
@@ -62,8 +61,6 @@
 			buildStyles = (
 				014CEA440018CDF011CA2923,
 				014CEA450018CDF011CA2923,
-				F58C8A1D025BD408018635CA,
-				F531DDEB02F0C2DD018635CA,
 			);
 			hasScannedForEncodings = 1;
 			isa = PBXProject;
@@ -107,8 +104,6 @@
 				0867D69EFE84028FC02AAC07,
 				0867D69FFE84028FC02AAC07,
 				0867D6A0FE84028FC02AAC07,
-				F692A8D8025563E401FF60F7,
-				6573C62F03A0BDCD00FCA39F,
 			);
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
@@ -116,20 +111,18 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				FRAMEWORK_SEARCH_PATHS = "";
-				FRAMEWORK_VERSION = A;
+				FRAMEWORK_VERSION = B;
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				HEADER_SEARCH_PATHS = "";
-				INSTALL_PATH = "@executable_path/../Frameworks";
+				INSTALL_PATH = /Library/Frameworks;
 				LIBRARY_SEARCH_PATHS = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.2;
 				OPTIMIZATION_CFLAGS = "-Os";
 				OTHER_CFLAGS = "$(DEBUG_CFLAGS) -DAPPLE_CHANGES -DHAVE_CONFIG_H";
-				OTHER_LDFLAGS = "-seg1addr 0x8000000";
 				PRECOMPILE_PREFIX_HEADER = YES;
 				PREFIX_HEADER = JavaScriptCorePrefix.h;
 				PRODUCT_NAME = JavaScriptCore;
 				SECTORDER_FLAGS = "";
-				SKIP_INSTALL = YES;
 				USE_GCC3_PFE_SUPPORT = YES;
 				WARNING_CFLAGS = "-Werror -Wall -W -Wcast-align -Wchar-subscripts -Wformat-security -Wmissing-format-attribute -Wmissing-prototypes -Wpointer-arith -Wwrite-strings -Wno-format-y2k -Wno-unused-parameter";
 				WRAPPER_EXTENSION = framework;
@@ -162,7 +155,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>0.8.2</string>
 	<key>CFBundleVersion</key>
-	<string>55u</string>
+	<string>60</string>
 </dict>
 </plist>
 ";
@@ -582,19 +575,6 @@
 			settings = {
 			};
 		};
-		6573C62F03A0BDCD00FCA39F = {
-			buildActionMask = 8;
-			files = (
-			);
-			generatedFileNames = (
-			);
-			isa = PBXShellScriptBuildPhase;
-			neededFileNames = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-			shellPath = /bin/sh;
-			shellScript = "ditto ${SYMROOT}/JavaScriptCore.framework ${DSTROOT}/AppleInternal/Library/Frameworks/JavaScriptCore.framework";
-		};
 //650
 //651
 //652
@@ -744,16 +724,6 @@
 				);
 			};
 		};
-		F531DDEB02F0C2DD018635CA = {
-			buildRules = (
-			);
-			buildSettings = {
-				i386 = YES;
-				ppc = YES;
-			};
-			isa = PBXBuildStyle;
-			name = DeploymentFat;
-		};
 		F5341390030CEEB1018BE7F3 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
@@ -813,17 +783,6 @@
 					Private,
 				);
 			};
-		};
-		F58C8A1D025BD408018635CA = {
-			buildRules = (
-			);
-			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				DEBUG_CFLAGS = "";
-				OPTIMIZATION_CFLAGS = "-O";
-			};
-			isa = PBXBuildStyle;
-			name = Mixed;
 		};
 		F5BB2BC5030F772101FCFE1D = {
 			fileEncoding = 30;
@@ -1674,19 +1633,6 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
-		};
-		F692A8D8025563E401FF60F7 = {
-			buildActionMask = 2147483647;
-			files = (
-			);
-			generatedFileNames = (
-			);
-			isa = PBXShellScriptBuildPhase;
-			neededFileNames = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if [ -f ../Tools/Scripts/embed-into-alex ]; then sh ../Tools/Scripts/embed-into-alex; fi";
 		};
 	};
 	rootObject = 0867D690FE84028FC02AAC07;
