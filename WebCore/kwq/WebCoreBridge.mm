@@ -36,6 +36,8 @@
 #import "htmltags.h"
 #import "khtml_part.h"
 #import "khtmlview.h"
+#import "kjs_proxy.h"
+#import "kjs_window.h"
 #import "loader.h"
 #import "render_frames.h"
 #import "render_image.h"
@@ -44,6 +46,8 @@
 #import "render_style.h"
 #import "render_replaced.h"
 
+#import <JavaScriptCore/jni_jsobject.h>
+#import <JavaScriptCore/object.h>
 #import <JavaScriptCore/property_map.h>
 
 #import "KWQAssertions.h"
@@ -61,6 +65,7 @@
 #import "WebCoreDOMPrivate.h"
 #import "WebCoreImageRenderer.h"
 #import "WebCoreTextRendererFactory.h"
+#import "WebCoreViewFactory.h"
 #import "WebCoreSettings.h"
 
 #import <AppKit/NSView.h>
@@ -83,6 +88,8 @@ using KJS::SavedBuiltins;
 
 using KParts::URLArgs;
 
+using Bindings::RootObject;
+
 NSString *WebCoreElementFrameKey = 		@"WebElementFrame";
 NSString *WebCoreElementImageAltStringKey = 	@"WebElementImageAltString";
 NSString *WebCoreElementImageKey = 		@"WebElementImage";
@@ -98,9 +105,24 @@ NSString *WebCoreElementTitleKey = 		@"WebCoreElementTitle"; // not in WebKit AP
 
 NSString *WebCorePageCacheStateKey =            @"WebCorePageCacheState";
 
+static RootObject *rootForView(void *v)
+{
+    NSView *aView = (NSView *)v;
+    WebCoreBridge *aBridge = [[WebCoreViewFactory sharedFactory] bridgeForView:aView];
+    KWQKHTMLPart *part = [aBridge part];
+    RootObject *root = new RootObject(v);    // The root gets deleted by JavaScriptCore.
+    
+    root->setRootObjectImp (static_cast<KJS::ObjectImp *>(KJS::Window::retrieveWindow(part)));
+    root->setInterpreter (KJSProxy::proxy(part)->interpreter());
+    part->addPluginRootObject (root);
+        
+    return root;
+}
+
 @implementation WebCoreBridge
 
 static bool initializedObjectCacheSize = FALSE;
+static bool initializedKJS = FALSE;
 
 - init
 {
@@ -112,6 +134,11 @@ static bool initializedObjectCacheSize = FALSE;
     if (!initializedObjectCacheSize){
         khtml::Cache::setSize([self getObjectCacheSize]);
         initializedObjectCacheSize = TRUE;
+    }
+    
+    if (!initializedKJS) {
+        Bindings::RootObject::setFindRootObjectForNativeHandleFunction (rootForView);
+        initializedKJS = TRUE;
     }
     
     _shouldCreateRenderers = YES;
@@ -1083,4 +1110,6 @@ static HTMLFormElementImpl *formElementFromDOMElement(id <WebDOMElement>element)
     if (!root) return nil;
     return _part->xmlDocImpl()->getOrCreateAccObjectCache()->accObject(root);
 }
+
+
 @end
