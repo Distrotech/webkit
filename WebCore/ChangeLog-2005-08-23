@@ -1,5 +1,22 @@
 2004-04-13  Vicki Murley  <vicki@apple.com>
 
+	- merge fix for 3612956 from HEAD
+
+    2004-03-30  Darin Adler  <darin@apple.com>
+
+        Reviewed by Dave.
+
+        - fixed <rdar://problem/3570877>: REGRESSION: onfocus handler not working at weather.com
+
+        * khtml/ecma/kjs_binding.cpp:
+        (UString::string): Turn a null UString into a null DOMString, but a non-null empty UString into a
+        non-null empty DOMString.
+        (UString::qstring): Ditto, for QString.
+        (Identifier::string): Ditto, for Identifier.
+        (Identifier::qstring): Ditto.
+
+2004-04-13  Vicki Murley  <vicki@apple.com>
+
 	- merge WebCore part of fix for 3612925 from HEAD
 
     2004-03-24  Darin Adler  <darin@apple.com>
