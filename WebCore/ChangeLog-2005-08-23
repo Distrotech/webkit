@@ -1,5 +1,21 @@
 2005-01-12  Maciej Stachowiak  <mjs@apple.com>
 
+	<rdar://problem/3943553> *SecUpd: Panther* WebKit needs to restrict access to certain window operations by domain
+	
+	- merged the following fix from Tiger to fix this
+
+    2004-12-21  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by John.
+
+	<rdar://problem/3929187> WebKit needs to restrict access to certain window operations by domain
+        
+	* khtml/ecma/kjs_window.cpp:
+        (Window::get): Change most window functions to be restricted by
+	XSS domain check.
+
+2005-01-12  Maciej Stachowiak  <mjs@apple.com>
+
 	<rdar://problem/3939485> *SecUpd: Panther* scripts can cause other frames/windows to execute arbitrary script using javascript: URLs
 
 	- merged the following fix from Tiger to fix this
@@ -22,6 +38,8 @@
 	- frame.src, frame.location, iframe.src and targetted links are
 	all safe because setting the URL of a frame to a javascript: URL
 	executes the script in the context of the parent
+
+2004-12-21  Ken Kocienda  <kocienda@apple.com>
 
 	* khtml/ecma/kjs_window.cpp:
         (WindowFunc::tryCall):
