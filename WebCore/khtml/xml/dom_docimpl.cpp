@@ -2384,17 +2384,6 @@ bool DocumentImpl::hasWindowEventListener(int id)
     return false;
 }
 
-bool DocumentImpl::applyEditing(khtml::EditCommand *command)
-{
-    bool result = command->applyToDocument(this);
-    
-    // EDIT FIXME: until undo is hooked up, the command has no place to go
-    // just delete
-    delete command;
-    
-    return result;
-}
-
 EventListener *DocumentImpl::createHTMLEventListener(QString code)
 {
     return view()->part()->createHTMLEventListener(code);
