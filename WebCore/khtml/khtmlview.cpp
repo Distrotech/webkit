@@ -819,7 +819,9 @@ void KHTMLView::contentsContextMenuEvent ( QContextMenuEvent *_ce )
         targetNode->renderer()->absolutePosition(absx,absy);
         QPoint pos(xm-absx,ym-absy);
 
+#ifndef APPLE_CHANGES
         QWidget *w = static_cast<RenderWidget*>(targetNode->renderer())->widget();
+#endif
         QContextMenuEvent cme(_ce->reason(),pos,_ce->globalPos(),_ce->state());
 // ### what kind of c*** is that ?
 //        setIgnoreEvents(true);

@@ -66,7 +66,10 @@ public:
     // member functions --------------------------------------------------------
 
     int ascent() const;
+    int descent() const;
     int height() const;
+    int lineSpacing() const;
+    
     int width(QChar) const;
     int width(char) const;
     int width(const QString &, int len=-1) const;
@@ -77,7 +80,6 @@ public:
     int _charWidth (const UniChar *uchars, int len, int pos) const;
 #endif
 
-    int descent() const;
     QRect boundingRect(const QString &, int len=-1) const;
     QRect boundingRect(QChar) const;
     QRect boundingRect(int, int, int, int, int, const QString &) const;

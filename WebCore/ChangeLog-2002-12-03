@@ -1,5 +1,26 @@
 2002-04-15  Darin Adler  <darin@apple.com>
 
+	Merged changes from KDE 3.0 final. Other fixes to get things compiling.
+
+	* src/kdelibs/khtml/css/css_valueimpl.cpp:
+	(CSSStyleDeclarationImpl::setProperty): Fix unused variable.
+	* src/kdelibs/khtml/khtmlview.cpp: (KHTMLView::contentsContextMenuEvent):
+	Fix unused variable.
+	* src/kdelibs/khtml/rendering/font.cpp: (Font::drawText), (Font::width),
+	(Font::update): Disable special "nsbp" logic for now. We can reenable it
+	if necessary.
+	* src/kdelibs/khtml/rendering/render_replaced.cpp: Fix mismerge.
+	* src/kdelibs/khtml/rendering/render_text.cpp: (RenderText::nodeAtPoint):
+	Fix unused variable.
+	* src/kwq/KWQApplication.mm: (QDesktopWidget::width), (QApplication::desktop):
+	Fix mismerge.
+	* src/kwq/KWQColorGroup.mm: Fix QCOLOR_GROUP_SIZE.
+	* src/kwq/KWQFontMetrics.mm: (QFontMetrics::lineSpacing): New.
+	(QFontMetrics::width): Remove unused optimization.
+	* src/kwq/qt/qfontmetrics.h: Add lineSpacing().
+
+2002-04-15  Darin Adler  <darin@apple.com>
+
         Merged changes from previous merge pass.
 
         2002-03-25  Darin Adler  <darin@apple.com>

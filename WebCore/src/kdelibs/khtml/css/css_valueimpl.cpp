@@ -184,7 +184,9 @@ void CSSStyleDeclarationImpl::setProperty ( const DOMString &propertyString)
 
     props->setAutoDelete(false);
 
+#ifndef APPLE_CHANGES
     unsigned int i = 0;
+#endif
     if(!m_lstValues) {
 	m_lstValues = new QPtrList<CSSProperty>;
 	m_lstValues->setAutoDelete( true );

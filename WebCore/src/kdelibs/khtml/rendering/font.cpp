@@ -39,6 +39,8 @@ void Font::drawText( QPainter *p, int x, int y, QChar *str, int slen, int pos, i
         int toAdd, QPainter::TextDirection d, int from, int to, QColor bg ) const
 {
     QString qstr = QConstString(str, slen).string();
+
+#ifndef APPLE_CHANGES
     // hack for fonts that don't have a welldefined nbsp
     if ( !fontDef.hasNbsp ) {
 	// str.setLength() always does a deep copy, so the replacement code below is safe.
@@ -48,6 +50,7 @@ void Font::drawText( QPainter *p, int x, int y, QChar *str, int slen, int pos, i
 	    if ( uc->unicode() == 0xa0 )
 		*uc = ' ';
     }
+#endif
     
     // ### fixme for RTL
     if ( !letterSpacing && !wordSpacing && !toAdd && from==-1 ) {
@@ -96,6 +99,8 @@ void Font::drawText( QPainter *p, int x, int y, QChar *str, int slen, int pos, i
 int Font::width( QChar *chs, int slen, int pos, int len ) const
 {
     QString qstr = QConstString(chs+pos, slen-pos).string();
+
+#ifndef APPLE_CHANGES
     // hack for fonts that don't have a welldefined nbsp
     if ( !fontDef.hasNbsp ) {
 	// str.setLength() always does a deep copy, so the replacement code below is safe.
@@ -105,6 +110,8 @@ int Font::width( QChar *chs, int slen, int pos, int len ) const
 	    if ( uc->unicode() == 0xa0 )
 		*uc = ' ';
     }
+#endif
+
     // ### might be a little inaccurate
     int w = fm.width( qstr, len );
 
@@ -183,5 +190,7 @@ void Font::update( QPaintDeviceMetrics* devMetrics ) const
     f.setPixelSize( size );
 
     fm = QFontMetrics( f );
+#ifndef APPLE_CHANGES
     fontDef.hasNbsp = fm.inFont( 0xa0 );
+#endif
 }

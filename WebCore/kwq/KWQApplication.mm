@@ -33,17 +33,9 @@ QPalette QApplication::palette(const QWidget *p)
     return pal;
 }
 
-static QWidget *mainWidget = 0;
-
 // Do we need to worry about multiple screens?
-class KWQDesktopWidget : public QWidget
-{
-public:
-    int width() const;
-    int height() const;
-};
 
-int KWQDesktopWidget::width() const
+int QDesktopWidget::width() const
 {
     return (int)[[NSScreen mainScreen] frame].size.width;
 }
@@ -66,6 +58,7 @@ QRect QDesktopWidget::screenGeometry(int screenNumber)
 
 QDesktopWidget *QApplication::desktop()
 {
+    static QDesktopWidget *desktopWidget;
     if (desktopWidget == 0) {
         desktopWidget = new QDesktopWidget();
     }
