@@ -342,9 +342,9 @@ void RenderObject::setLayouted(bool b)
         }
     }
     else {
-        RenderObject *o = m_parent;
+        RenderObject *o = container();
         RenderObject *root = this;
-        
+
         // If an attempt is made to
         // setLayouted(false) an object inside a clipped (overflow:hidden) object, we 
         // have to make sure to repaint only the clipped rectangle.
@@ -359,7 +359,7 @@ void RenderObject::setLayouted(bool b)
             o->m_layouted = false;
             if (o->style()->overflow() == OHIDDEN && !clippedObj)
                 clippedObj = o;
-            o = o->m_parent;
+            o = o->container();
         }
         
         root->scheduleRelayout(clippedObj);
@@ -825,7 +825,7 @@ void RenderObject::setStyle(RenderStyle *style)
 
     RenderStyle::Diff d = m_style ? m_style->diff( style ) : RenderStyle::Layout;
 
-    if (m_style && m_parent && d >= RenderStyle::Visible)
+    if (m_style && m_parent && d == RenderStyle::Visible && !isText())
         // Do a repaint with the old style first, e.g., for example if we go from
         // having an outline to not having an outline.
         repaint();
@@ -1001,8 +1001,16 @@ RenderObject *RenderObject::container() const
 {
     EPosition pos = m_style->position();
     RenderObject *o = 0;
-    if( pos == FIXED )
-	o = root();
+    if( pos == FIXED ) {
+        // container() can be called on an object that is not in the
+        // tree yet.  We don't call root() since it will assert if it
+        // can't get back to the root.  Instead we just walk as high up
+        // as we can.  If we're in the tree, we'll get the root.  If we
+        // aren't we'll get the root of our little subtree (most likely
+        // we'll just return 0).
+        o = parent();
+        while ( o && o->parent() ) o = o->parent();
+    }
     else if ( pos == ABSOLUTE )
 	o = containingBlock();
     else
@@ -1085,13 +1093,28 @@ void RenderObject::arenaDelete(RenderArena *arena)
 
 FindSelectionResult RenderObject::checkSelectionPoint(int _x, int _y, int _tx, int _ty, DOM::NodeImpl*& node, int & offset )
 {
+    FindSelectionResult result = checkSelectionPointIgnoringContinuations(_x, _y, _tx, _ty, node, offset);
+    
+    if (isInline())
+        for (RenderObject *c = continuation(); result == SelectionPointAfter && c; c = c->continuation())
+            if (c->isInline()) {
+                int ncx, ncy;
+                c->absolutePosition(ncx, ncy);
+                result = c->checkSelectionPointIgnoringContinuations(_x, _y, ncx - c->xPos(), ncy - c->yPos(), node, offset);
+            }
+    
+    return result;
+}
+
+FindSelectionResult RenderObject::checkSelectionPointIgnoringContinuations(int _x, int _y, int _tx, int _ty, DOM::NodeImpl*& node, int & offset )
+{
     int lastOffset=0;
     int off = offset;
     DOM::NodeImpl* nod = node;
     DOM::NodeImpl* lastNode = 0;
     
     for (RenderObject *child = firstChild(); child; child=child->nextSibling()) {
-        khtml::FindSelectionResult pos = child->checkSelectionPoint(_x, _y, _tx+xPos(), _ty+yPos(), nod, off);
+        FindSelectionResult pos = child->checkSelectionPointIgnoringContinuations(_x, _y, _tx+xPos(), _ty+yPos(), nod, off);
         //kdDebug(6030) << this << " child->findSelectionNode returned " << pos << endl;
         switch(pos) {
         case SelectionPointBeforeInLine:
@@ -1118,16 +1141,6 @@ FindSelectionResult RenderObject::checkSelectionPoint(int _x, int _y, int _tx, i
             lastNode = nod;
             lastOffset = off;
         }
-    }
-    
-    RenderObject* nextCont = continuation();
-    while (nextCont && !nextCont->isInline()) {
-        nextCont = nextCont->continuation();
-    }
-    if (nextCont){
-        int ncx, ncy;
-        nextCont->absolutePosition(ncx, ncy);
-        return nextCont->checkSelectionPoint(_x, _y, ncx-nextCont->xPos(), ncy-nextCont->yPos(), node, offset);
     }
     
     node = lastNode;

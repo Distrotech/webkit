@@ -160,9 +160,9 @@
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.9</string>
+	<string>0.8.2</string>
 	<key>CFBundleVersion</key>
-	<string>56u</string>
+	<string>60</string>
 </dict>
 </plist>
 ";
@@ -593,7 +593,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
-			shellScript = "ditto ${SYMROOT}/JavaScriptCore.framework ${DSTROOT}/AppleInternal/Library/Frameworks/JavaScriptCore.framework";
+			shellScript = "if [ \"x$RC_RELEASE\" = \"xPanther\" ]; then\n    install_name_tool -id \"${SYSTEM_LIBRARY_DIR}/PrivateFrameworks/JavaScriptCore.framework/Versions/A/JavaScriptCore\" \"${SYMROOT}/JavaScriptCore.framework/Versions/A/JavaScriptCore\" ;\n    ditto \"${SYMROOT}/JavaScriptCore.framework\" \"${DSTROOT}/${SYSTEM_LIBRARY_DIR}/PrivateFrameworks/JavaScriptCore.framework\" ;\n    strip -S ${DSTROOT}/\"${SYSTEM_LIBRARY_DIR}/PrivateFrameworks/JavaScriptCore.framework/Versions/A/JavaScriptCore\";\nelse\n    ditto \"${SYMROOT}/JavaScriptCore.framework\" \"${DSTROOT}/AppleInternal/Library/Frameworks/JavaScriptCore.framework\"\nfi";
 		};
 //650
 //651
