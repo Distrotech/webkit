@@ -80,11 +80,11 @@ void EditCommand::notifyChanged(NodeImpl *node) const
         node->renderer()->setNeedsLayoutAndMinMaxRecalc();
 }
 
-void EditCommand::notifyNodesChanged() const
+void EditCommand::notifyChanged(const DOM::Range &range) const
 {
     // notify all the nodes in the selection
-    NodeImpl *startNode = selection().startContainer().handle();
-    NodeImpl *endNode = selection().endContainer().handle();
+    NodeImpl *startNode = range.startContainer().handle();
+    NodeImpl *endNode = range.endContainer().handle();
     if (startNode == endNode) {
         notifyChanged(startNode);
     }
@@ -94,24 +94,13 @@ void EditCommand::notifyNodesChanged() const
         }
         notifyChanged(endNode);
     }
-
-    // notify the caret node
-    KHTMLView *view = document()->view();
-    if (!view)
-        return;
-
-    KHTMLPart *part = view->part();
-    if (!part)
-        return;
-
-    notifyChanged(part->caret().node().handle());
 }
 
 void EditCommand::deleteSelection()
 {
+    notifyChanged(selection());
+
     // EDIT FIXME: need to save the contents for redo
-    notifyChanged(selection().startContainer().handle());
-    notifyChanged(selection().endContainer().handle());
     if (document()->view() && document()->view()->part())
         document()->view()->part()->setSelection(Range(selection().startContainer(), selection().startOffset(), selection().startContainer(), selection().startOffset()), true);
 
@@ -138,6 +127,7 @@ void EditCommand::pruneEmptyNodes() const
             if (textNode->length() == 0) {
                 node = textNode->traversePreviousNode();
                 removeNode(textNode);
+                notifyChanged(textNode);
                 prunedNodes = true;
             }
             else {
@@ -148,6 +138,7 @@ void EditCommand::pruneEmptyNodes() const
             NodeImpl *n = node;
             node = node->traversePreviousNode();
             removeNode(n);
+            notifyChanged(n);
             prunedNodes = true;
         }
         else {
@@ -157,6 +148,7 @@ void EditCommand::pruneEmptyNodes() const
     
     if (prunedNodes) {
         part->moveCaretTo(node, node->caretMaxOffset());
+        notifyChanged(node);
     }
 }
 
@@ -213,8 +205,7 @@ bool InputTextCommand::apply()
     if (!caret.node().handle()->isTextNode())
         return false;
 
-    // notify nodes that will change
-    notifyNodesChanged();
+    notifyChanged(selection());
 
     // Delete the current selection
     if (view->caretOverrides()) {
@@ -275,42 +266,59 @@ bool DeleteTextCommand::apply()
 
     Caret caret = part->caret();
 
-    // notify nodes that will change
-    notifyNodesChanged();
+    notifyChanged(selection());
 
     // Delete the current selection
     if (!selection().collapsed()) {
+        part->moveCaretTo(selection().startContainer().handle(), selection().startOffset());
         deleteSelection();
         caret.adjustPosition();
         return true;
     }
 
-    if (caret.node().handle()->isTextNode()) {
+    if (!caret.node().handle())
+        return false;
+
+    NodeImpl *caretNode = caret.node().handle();
+
+    if (caretNode->isTextNode()) {
         int exceptionCode;
+
+        // Check if we can delete character at cursor
         int offset = caret.offset() - 1;
         if (offset >= 0) {
-            // Delete character at cursor
-            TextImpl *textNode = static_cast<TextImpl *>(caret.node().handle());
+            TextImpl *textNode = static_cast<TextImpl *>(caretNode);
             textNode->deleteData(offset, 1, exceptionCode);
             part->moveCaretTo(textNode, offset);
             pruneEmptyNodes();
+            notifyChanged(textNode);
             return true;
         }
-        else {
-            NodeImpl *node = caret.node().handle()->previousLeafNode();
-            if (!node)
-                return false;
-            if (node->isTextNode()) {
-                TextImpl *textNode = static_cast<TextImpl *>(node);
-                offset = node->caretMaxOffset() - 1;
-                textNode->deleteData(offset, 1, exceptionCode);
-                part->moveCaretTo(textNode, offset);
-                pruneEmptyNodes();
-            }
+        
+        // Check if previous sibling is a BR element
+        NodeImpl *previousSibling = caretNode->previousSibling();
+        if (previousSibling->isHTMLBRElement()) {
+            caretNode->parentNode()->removeChild(previousSibling, exceptionCode);
+            caret.adjustPosition();
+            notifyChanged(caretNode->parentNode());
+            notifyChanged(previousSibling);
+            return true;
+        }
+        
+        // Check if previous leaf node is a text node
+        NodeImpl *previousLeafNode = caretNode->previousLeafNode();
+        if (previousLeafNode->isTextNode()) {
+            TextImpl *textNode = static_cast<TextImpl *>(previousLeafNode);
+            offset = previousLeafNode->caretMaxOffset() - 1;
+            textNode->deleteData(offset, 1, exceptionCode);
+            part->moveCaretTo(textNode, offset);
+            pruneEmptyNodes();
+            notifyChanged(textNode);
+            return true;
         }
     }
 
-    return true;
+    return false;
 }
 
 bool DeleteTextCommand::canUndo() const

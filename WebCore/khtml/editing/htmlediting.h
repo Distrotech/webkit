@@ -52,7 +52,7 @@ public:
     
 protected:
     virtual void notifyChanged(DOM::NodeImpl *) const;
-    virtual void notifyNodesChanged() const;
+    virtual void notifyChanged(const DOM::Range &) const;
     void deleteSelection();
     void pruneEmptyNodes() const;
     void removeNode(DOM::NodeImpl *) const;
