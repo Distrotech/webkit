@@ -167,7 +167,7 @@
 	<key>CFBundleExecutable</key>
 	<string>WebKit</string>
 	<key>CFBundleGetInfoString</key>
-	<string>1.0 Beta, Copyright Apple Computer, Inc. 2001-2002</string>
+	<string>0.8.1, Copyright Apple Computer, Inc. 2001-2002</string>
 	<key>CFBundleIconFile</key>
 	<string></string>
 	<key>CFBundleIdentifier</key>
@@ -179,7 +179,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>0.8</string>
 	<key>CFBundleVersion</key>
-	<string>48</string>
+	<string>50</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright 2001-2002 Apple Computer, Inc.</string>
 	<key>NSPrincipalClass</key>
