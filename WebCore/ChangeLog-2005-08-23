@@ -1,3 +1,5 @@
+=== WebCore-125.8.3 ===
+
 2004-07-29  Maciej Stachowiak  <mjs@apple.com>
 
 	Rolled in the change below from HEAD to fix this SU bug:
