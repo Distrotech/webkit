@@ -1,3 +1,19 @@
+2004-07-20  Darin Adler  <darin@apple.com>
+
+	- merge this fix from HEAD for SUPanMoccasin
+
+    2004-07-20  Richard Williamson   <rjw@apple.com>
+
+        Fix for 3728558.  Fixed the key event handling in the carbon/cocoa
+        integration code.  This does not fix the arrow keys not working on
+        initial focus problem also mentioned in the bug.
+        
+        Reviewed by John.
+
+        * Carbon.subproj/HIWebView.m:
+        (OwningWindowChanged):
+        (WindowHandler):
+
 === WebKit-125.3.1 ===
 
 2004-07-09  Vicki Murley  <vicki@apple.com>
