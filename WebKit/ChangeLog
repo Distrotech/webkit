@@ -1,3 +1,18 @@
+2004-02-24  Vicki Murley  <vicki@apple.com>
+
+	- merge this change from HEAD, for Safari 1.0.3
+
+    2003-08-12 Ed Voas  <voas@apple.com>
+
+	Reviewed by Richard.
+
+	Make sure to override the standard behavior for ordering windows to do nothing for Carbon stuff.
+
+	* Carbon.subproj/CarbonWindowAdapter.m:
+	(-[CarbonWindowAdapter _reallyDoOrderWindow:relativeTo:findKey:forCounter:force:isModal:]):
+
+=== WebKit-85.7.1 ===
+
 2004-07-09  Vicki Murley  <vicki@apple.com>
 
 	- merge these two fixes from HEAD for July 2004 Security Update
@@ -22,7 +37,7 @@
         (-[WebBridge loadURL:referrer:reload:userGesture:target:triggeringEvent:form:formValues:]): call canTargetLoadInFrame: to make sure we can load the request
         (-[WebBridge postWithURL:referrer:target:data:contentType:triggeringEvent:form:formValues:]): ditto
 
-=== Safari-85.8 ===
+=== WebKit-85.7 ===
 
 2003-07-20  Darin Adler  <darin@apple.com>
 
