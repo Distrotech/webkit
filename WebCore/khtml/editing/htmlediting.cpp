@@ -2200,6 +2200,7 @@ void InsertParagraphSeparatorCommand::doApply()
     if (startBlock->id() == ID_BODY) {
         int exceptionCode = 0;
         addedBlock = document()->createHTMLElement("P", exceptionCode);
+        static_cast<ElementImpl *>(addedBlock)->setAttribute(ATTR_STYLE, "margin-top: 0.1em; margin-bottom: 0.1em");
         ASSERT(exceptionCode == 0);
         appendNode(addedBlock, startBlock);
     }
