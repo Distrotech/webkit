@@ -41,6 +41,7 @@
 #import "htmltokenizer.h"
 #import "khtmlpart_p.h"
 #import "khtmlview.h"
+#import "khtml_selection.h"
 #import "kjs_binding.h"
 #import "kjs_window.h"
 #import "misc/htmlattrs.h"
@@ -53,7 +54,6 @@
 #import "render_table.h"
 #import "render_text.h"
 #import "xml/dom2_eventsimpl.h"
-#import "edit_caret.h"
 #import <JavaScriptCore/property_map.h>
 
 #undef _KWQ_TIMING
@@ -100,11 +100,6 @@ using KParts::URLArgs;
 
 NSEvent *KWQKHTMLPart::_currentEvent = nil;
 NSResponder *KWQKHTMLPart::_firstResponderAtMouseDownTime = nil;
-
-void KHTMLPart::caretPositionChanged(const khtml::Caret *)
-{
-    KWQ(this)->_completed.call();
-}
 
 void KHTMLPart::completed()
 {

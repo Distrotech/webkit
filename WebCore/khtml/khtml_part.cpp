@@ -50,7 +50,6 @@
 #include "xml/xml_tokenizer.h"
 #include "css/cssstyleselector.h"
 #include "css/csshelper.h"
-#include "editing/edit_caret.h"
 using namespace DOM;
 
 #include "khtmlview.h"
@@ -5329,16 +5328,6 @@ int KHTMLPart::topLevelFrameCount()
   }
 
   return frameCount;
-}
-
-void KHTMLPart::emitCaretPositionChanged() 
-{
-    emit caretPositionChanged(caret());
-}
-
-Caret *KHTMLPart::caret() const
-{ 
-    return new Caret();
 }
 
 bool KHTMLPart::tabsToLinks() const

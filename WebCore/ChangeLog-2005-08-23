@@ -2,6 +2,37 @@
 
         Reviewed by me
 
+	Some more clean up. Removed vestiges of old
+	standalone caret object. Fixed up some caret
+	repaint issues. Switched over editing commands
+	to use new selection object.
+
+        * ForwardingHeaders/editing/edit_caret.h: Removed.
+        * WebCore.pbproj/project.pbxproj:
+        * khtml/editing/htmlediting.cpp:
+        (EditCommand::pruneEmptyNodes):
+        (InputTextCommand::apply):
+        (DeleteTextCommand::apply):
+        * khtml/html/html_elementimpl.cpp:
+        (HTMLElementImpl::defaultEventHandler):
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::topLevelFrameCount):
+        * khtml/khtml_part.h:
+        * khtml/khtml_selection.cpp:
+        (KHTMLSelection::invalidate):
+        (KHTMLSelection::repaint):
+        * khtml/khtmlpart_p.h:
+        * khtml/khtmlview.cpp:
+        (KHTMLView::clear):
+        (KHTMLView::resizeEvent):
+        (KHTMLView::focusInEvent):
+        (KHTMLView::focusOutEvent):
+        * kwq/KWQKHTMLPart.mm:
+
+2004-01-20  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
 	Cleanups to caret painting.
 
         * khtml/khtml_part.cpp:

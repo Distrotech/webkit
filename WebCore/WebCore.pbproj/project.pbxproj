@@ -523,7 +523,6 @@
 				84B2B1F9056BEF3A00D2B771,
 				65912B110586921000123A69,
 				65912B120586921000123A69,
-				BE8F05B805B450E100E676BB,
 				BE8F05BC05B450E100E676BB,
 				BE8B226005B89B0C00EE7307,
 			);
@@ -792,7 +791,6 @@
 				84B2B1FA056BEF3A00D2B771,
 				84B2B250056BF15F00D2B771,
 				65912B100586921000123A69,
-				BE8F05B705B450E100E676BB,
 				BE8F05BB05B450E100E676BB,
 				BE8B225F05B89B0C00EE7307,
 			);
@@ -2489,31 +2487,11 @@
 		};
 		BE8F05B005B450BB00E676BB = {
 			children = (
-				BE8F05B105B450E000E676BB,
-				BE8F05B205B450E000E676BB,
 				BE8F05B505B450E000E676BB,
 				BE8F05B605B450E000E676BB,
 			);
 			isa = PBXGroup;
 			name = editing;
-			refType = 4;
-			sourceTree = "<group>";
-		};
-		BE8F05B105B450E000E676BB = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			name = edit_caret.cpp;
-			path = editing/edit_caret.cpp;
-			refType = 4;
-			sourceTree = "<group>";
-		};
-		BE8F05B205B450E000E676BB = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.c.h;
-			name = edit_caret.h;
-			path = editing/edit_caret.h;
 			refType = 4;
 			sourceTree = "<group>";
 		};
@@ -2534,18 +2512,6 @@
 			path = editing/htmlediting.h;
 			refType = 4;
 			sourceTree = "<group>";
-		};
-		BE8F05B705B450E100E676BB = {
-			fileRef = BE8F05B105B450E000E676BB;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		BE8F05B805B450E100E676BB = {
-			fileRef = BE8F05B205B450E000E676BB;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		BE8F05BB05B450E100E676BB = {
 			fileRef = BE8F05B505B450E000E676BB;

@@ -44,7 +44,6 @@
 #include "java/kjavaappletcontext.h"
 #include "ecma/kjs_proxy.h"
 #include "dom/dom_misc.h"
-#include "editing/edit_caret.h"
 
 namespace KIO
 {

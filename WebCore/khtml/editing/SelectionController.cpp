@@ -266,7 +266,7 @@ void KHTMLSelection::invalidate()
     if (!m_visible) {
         if (m_caretPaint) {
             m_caretPaint = false;
-            repaint(true);
+            repaint();
         }
         return;
     }
@@ -293,7 +293,7 @@ void KHTMLSelection::invalidate()
     // repaint the old position if necessary
     // prevents two carets from ever being drawn
     if (m_caretPaint && (oldX != newX || oldY != newY || oldSize != newSize)) {
-        repaint(true);
+        repaint();
     }
 
     // update caret rendering position
@@ -349,11 +349,7 @@ void KHTMLSelection::repaint(bool immediate) const
     KHTMLView *v = m_part->view();
     if (!v)
         return;
-        
-    if (immediate)
-        v->repaintContents(m_caretX, m_caretY, 1, m_caretSize);
-    else
-        v->updateContents(m_caretX, m_caretY, 1, m_caretSize);
+    v->updateContents(m_caretX, m_caretY, 1, m_caretSize, immediate);
 }
 
 void KHTMLSelection::setBaseNode(DOM::NodeImpl *node)

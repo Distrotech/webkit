@@ -26,6 +26,7 @@
 #include "khtmlview.h"
 
 #include "khtml_part.h"
+#include "khtml_selection.h"
 #include "khtml_events.h"
 
 #include "html/html_documentimpl.h"
@@ -356,7 +357,7 @@ void KHTMLView::clear()
 //    viewport()->erase();
 
     setStaticBackground(false);
-    m_part->caret()->setVisible(false);
+    m_part->getKHTMLSelection().clearSelection();
 
     d->reset();
     killTimers();
@@ -403,8 +404,6 @@ void KHTMLView::resizeEvent (QResizeEvent* e)
 #endif
     if ( m_part && m_part->xmlDocImpl() )
         m_part->xmlDocImpl()->dispatchWindowEvent( EventImpl::RESIZE_EVENT, false, false );
-
-    m_part->caret()->invalidate();
 
     KApplication::sendPostedEvents(viewport(), QEvent::Paint);
 }
@@ -1798,14 +1797,14 @@ void KHTMLView::dropEvent( QDropEvent *ev )
 
 void KHTMLView::focusInEvent( QFocusEvent *e )
 {
-    m_part->caret()->setVisible();
+    m_part->getKHTMLSelection().setVisible();
     QScrollView::focusInEvent( e );
 }
 
 void KHTMLView::focusOutEvent( QFocusEvent *e )
 {
     m_part->stopAutoScroll();
-    m_part->caret()->setVisible(false);
+    m_part->getKHTMLSelection().setVisible(false);
     QScrollView::focusOutEvent( e );
 }
 

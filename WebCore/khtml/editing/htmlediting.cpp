@@ -31,7 +31,7 @@
 
 #include "khtmlview.h"
 #include "khtml_part.h"
-#include "editing/edit_caret.h"
+#include "khtml_selection.h"
 #include "rendering/render_object.h"
 #include "xml/dom_elementimpl.h"
 #include "xml/dom_nodeimpl.h"
@@ -118,10 +118,10 @@ void EditCommand::pruneEmptyNodes() const
     if (!part)
         return;
 
-    Caret *caret = part->caret();
+    KHTMLSelection selection = part->getKHTMLSelection();
     
     bool prunedNodes = false;
-    NodeImpl *node = caret->node();
+    NodeImpl *node = selection.baseNode();
     while (1) {
         if (node->isTextNode()) {
             TextImpl *textNode = static_cast<TextImpl *>(node);
@@ -148,7 +148,7 @@ void EditCommand::pruneEmptyNodes() const
     }
     
     if (prunedNodes) {
-        part->caret()->moveTo(node, node->caretMaxOffset());
+        selection.setSelection(node, node->caretMaxOffset());
         notifyChanged(node);
     }
 }
@@ -202,22 +202,22 @@ bool InputTextCommand::apply()
     if (!part)
         return false;
 
-    Caret *caret = part->caret();
-    if (!caret->node()->isTextNode())
+    KHTMLSelection selection = part->getKHTMLSelection();
+    if (!selection.baseNode()->isTextNode())
         return false;
 
     // Delete the current selection
-    if (!selection().collapsed()) {
+    if (selection.state() == KHTMLSelection::RANGE) {
         deleteSelection();
-        caret->adjustPosition();
+        // EDIT FIXME: adjust selection position
     }
     
-    TextImpl *textNode = static_cast<TextImpl *>(caret->node());
+    TextImpl *textNode = static_cast<TextImpl *>(selection.baseNode());
     int exceptionCode;
     
     if (isLineBreak()) {
-        TextImpl *textBeforeNode = document()->createTextNode(textNode->substringData(0, caret->offset(), exceptionCode));
-        textNode->deleteData(0, caret->offset(), exceptionCode);
+        TextImpl *textBeforeNode = document()->createTextNode(textNode->substringData(0, selection.baseOffset(), exceptionCode));
+        textNode->deleteData(0, selection.baseOffset(), exceptionCode);
         ElementImpl *breakNode = document()->createHTMLElement("BR", exceptionCode);
         textNode->parentNode()->insertBefore(textBeforeNode, textNode, exceptionCode);
         textNode->parentNode()->insertBefore(breakNode, textNode, exceptionCode);
@@ -225,17 +225,17 @@ bool InputTextCommand::apply()
         breakNode->deref();
         
         // Set the cursor at the beginning of the node after the split.
-        part->caret()->moveTo(textNode, 0);
+        selection.setSelection(textNode, 0);
         notifyChanged(breakNode);
         notifyChanged(textNode);
         notifyChanged(textNode->parentNode());
     }
     else {
-        textNode->insertData(caret->offset(), text(), exceptionCode);
+        textNode->insertData(selection.baseOffset(), text(), exceptionCode);
         // EDIT FIXME: this is a hack for now
         // advance the cursor
         int textLength = text().length();
-        part->caret()->moveTo(caret->node(), caret->offset() + textLength);
+        selection.setSelection(selection.baseNode(), selection.baseOffset() + textLength);
         notifyChanged(textNode);
     }
 
@@ -267,30 +267,29 @@ bool DeleteTextCommand::apply()
     if (!part)
         return false;
 
-    Caret *caret = part->caret();
+    KHTMLSelection selection = part->getKHTMLSelection();
 
     // Delete the current selection
-    if (!selection().collapsed()) {
-        part->caret()->moveTo(selection().startContainer().handle(), selection().startOffset());
+    if (selection.state() == KHTMLSelection::RANGE) {
         deleteSelection();
-        caret->adjustPosition();
+        // EDIT FIXME: adjust selection position
         return true;
     }
 
-    if (!caret->node())
+    if (!selection.baseNode())
         return false;
 
-    NodeImpl *caretNode = caret->node();
+    NodeImpl *caretNode = selection.baseNode();
 
     if (caretNode->isTextNode()) {
         int exceptionCode;
 
         // Check if we can delete character at cursor
-        int offset = caret->offset() - 1;
+        int offset = selection.baseOffset() - 1;
         if (offset >= 0) {
             TextImpl *textNode = static_cast<TextImpl *>(caretNode);
             textNode->deleteData(offset, 1, exceptionCode);
-            part->caret()->moveTo(textNode, offset);
+            selection.setSelection(textNode, offset);
             pruneEmptyNodes();
             notifyChanged(textNode);
             return true;
@@ -300,7 +299,7 @@ bool DeleteTextCommand::apply()
         NodeImpl *previousSibling = caretNode->previousSibling();
         if (previousSibling->isHTMLBRElement()) {
             caretNode->parentNode()->removeChild(previousSibling, exceptionCode);
-            caret->adjustPosition();
+            // EDIT FIXME: adjust selection position
             notifyChanged(caretNode->parentNode());
             notifyChanged(previousSibling);
             return true;
@@ -312,7 +311,7 @@ bool DeleteTextCommand::apply()
             TextImpl *textNode = static_cast<TextImpl *>(previousLeafNode);
             offset = previousLeafNode->caretMaxOffset() - 1;
             textNode->deleteData(offset, 1, exceptionCode);
-            part->caret()->moveTo(textNode, offset);
+            selection.setSelection(textNode, offset);
             pruneEmptyNodes();
             notifyChanged(textNode);
             return true;

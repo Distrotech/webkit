@@ -595,8 +595,6 @@ public:
   /**
    * Returns the caret.
    */
-  khtml::Caret *caret() const;
-
   KHTMLSelection &getKHTMLSelection() const;
 
   /**
@@ -780,13 +778,6 @@ signals:
    * becoming active.
    */
   void nodeActivated(const DOM::Node &);
-
-  /**
-   * This signal is emitted whenever the caret position has been changed.
-   *
-   * @since 3.2
-   */
-  void caretPositionChanged(const khtml::Caret *);
 
 protected:
 
@@ -1051,11 +1042,6 @@ private:
    */
   void emitSelectionChanged();
   
-  /**
-   * @internal
-   */
-  void emitCaretPositionChanged();
-
   /**
    * @internal
    */

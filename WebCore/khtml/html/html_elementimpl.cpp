@@ -37,6 +37,7 @@
 
 #include "khtmlview.h"
 #include "khtml_part.h"
+#include "khtml_selection.h"
 
 #include "rendering/render_object.h"
 #include "rendering/render_replaced.h"
@@ -46,8 +47,6 @@
 #include "css/cssvalues.h"
 #include "xml/dom_textimpl.h"
 #include "xml/dom2_eventsimpl.h"
-
-#include "editing/edit_caret.h"
 
 #include <kdebug.h>
 
@@ -635,12 +634,10 @@ void HTMLElementImpl::defaultEventHandler(EventImpl *evt)
             cmd = new DeleteTextCommand(getDocument());
         }
         else if (k->keyIdentifier() == "Right") {
-            getDocument()->view()->part()->caret()->moveForwardByCharacter();
-            evt->setDefaultHandled();
+            // EDIT FIXME: unimplemented
         }
         else if (k->keyIdentifier() == "Left") {
-            getDocument()->view()->part()->caret()->moveBackwardByCharacter();
-            evt->setDefaultHandled();
+            // EDIT FIXME: unimplemented
         }
         else if (k->keyIdentifier() == "Up") {
             // EDIT FIXME: unimplemented
