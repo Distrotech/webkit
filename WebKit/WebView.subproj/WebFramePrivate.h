@@ -115,7 +115,7 @@ extern NSString *WebPageCacheDocumentViewKey;
 @interface WebFrame (WebPrivate)
 - (void)_setWebView:(WebView *)webView;
 - (void)_setName:(NSString *)name;
-- (WebFrame *)_descendantFrameNamed:(NSString *)name;
+- (WebFrame *)_descendantFrameNamed:(NSString *)name sourceFrame:(WebFrame *)source;
 - (void)_detachFromParent;
 - (void)_closeOldDataSources;
 - (void)_setDataSource:(WebDataSource *)d;

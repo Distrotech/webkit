@@ -1,3 +1,9 @@
+2005-01-12  Maciej Stachowiak  <mjs@apple.com> (committing as Adele)
+
+        Missing part of last change.
+
+        * WebView.subproj/WebFramePrivate.h:
+
 2005-01-12  Maciej Stachowiak  <mjs@apple.com>
 
 	<rdar://problem/3939324> *SecUpd: Panther* frame naming allows malicious site to bring up a window when you click on a link in another
