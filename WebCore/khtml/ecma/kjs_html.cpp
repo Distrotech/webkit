@@ -136,7 +136,12 @@ const ClassInfo KJS::HTMLDocument::info =
   forms			HTMLDocument::Forms		DontDelete|ReadOnly
   anchors		HTMLDocument::Anchors		DontDelete|ReadOnly
   scripts		HTMLDocument::Scripts		DontDelete|ReadOnly
-  all			HTMLDocument::All		DontDelete|ReadOnly
+# We want no document.all at all, not just a function that returns undefined.
+# That means we lose the "document.all when spoofing as IE" feature, but we don't spoof in Safari.
+# And this makes sites that set document.all explicitly work when they otherwise wouldn't, 
+# e.g. https://corporateexchange.airborne.com
+# (Not in APPLE_CHANGES since we can't do #if in KJS identifier lists.)
+#  all			HTMLDocument::All		DontDelete|ReadOnly
   clear			HTMLDocument::Clear		DontDelete|Function 0
   open			HTMLDocument::Open		DontDelete|Function 0
   close			HTMLDocument::Close		DontDelete|Function 0
@@ -3013,6 +3018,11 @@ Value KJS::HTMLCollection::getNamedItems(ExecState *exec, const Identifier &prop
     {
 #ifdef KJS_VERBOSE
       kdDebug(6070) << "returning single node" << endl;
+#endif
+#if APPLE_CHANGES
+	  if (!node.isNull() && node.handle()->id() == ID_APPLET) {
+	    return getRuntimeObject(exec,node);
+	  }
 #endif
       return getDOMNode(exec,node);
     }
