@@ -133,6 +133,7 @@ typedef enum {
 
 - (NSURL *)URL;
 - (NSString *)referrer;
+- (NSString *)domain;
 
 - (void)installInFrame:(NSView *)view;
 - (void)removeFromFrame;
