@@ -622,9 +622,6 @@ void RenderObject::drawBorder(QPainter *p, int x1, int y1, int x2, int y2,
     {
     case BNONE:
     case BHIDDEN:
-#ifdef APPLE_CHANGES
-    case APPLEAQUA:
-#endif
         // should not happen
         if(invalidisInvert && p->rasterOp() == Qt::XorROP)
             p->setRasterOp(Qt::CopyROP);
@@ -938,7 +935,7 @@ void RenderObject::paintOutline(QPainter *p, int _tx, int _ty, int w, int h, con
     int offset = style->outlineOffset();
     
 #ifdef APPLE_CHANGES
-    if (os == APPLEAQUA) {
+    if (style->outlineStyleIsAuto()) {
         p->initFocusRing(ow, offset, oc);
         addFocusRingRects(p, _tx, _ty);
         p->drawFocusRing();
@@ -1985,7 +1982,29 @@ QChar RenderObject::backslashAsCurrencySymbol() const
 
 bool RenderObject::isEditable() const
 {
-    // FIXME
+    // EDIT FIXME
     return true;
 }
 
+void RenderObject::setPixmap(const QPixmap&, const QRect&, CachedImage *image)
+{
+    // Repaint when the background image finishes loading.
+    // This is needed for RenderBox objects, and also for table objects that hold
+    // backgrounds that are then respected by the table cells (which are RenderBox
+    // subclasses). It would be even better to find a more elegant way of doing this that
+    // would avoid putting this function and the CachedObjectClient base class into RenderObject.
+
+    if (image && image->pixmap_size() == image->valid_rect().size() && parent()) {
+        if (element() && (element()->id() == ID_HTML || element()->id() == ID_BODY))
+            canvas()->repaint();    // repaint the entire canvas since the background gets propagated up
+        else
+            repaint();              // repaint object, which is a box or a container with boxes inside it
+    }
+}
+
+int RenderObject::maximalOutlineSize(PaintAction p) const
+{
+    if (p != PaintActionOutline)
+        return 0;
+    return static_cast<RenderCanvas*>(document()->renderer())->maximalOutlineSize();
+}
