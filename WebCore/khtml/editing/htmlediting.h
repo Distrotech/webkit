@@ -53,8 +53,6 @@ public:
     virtual bool canUndo() const = 0;
     
 protected:
-    virtual void notifyChanged(DOM::NodeImpl *) const;
-    virtual void notifyChanged(const KHTMLSelection &) const;
     void deleteSelection();
     void pruneEmptyNodes() const;
     void removeNode(DOM::NodeImpl *) const;

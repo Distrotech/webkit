@@ -67,7 +67,6 @@ public:
     virtual void setContentEditable(const DOMString &enabled);
 
     virtual void click();
-    virtual void defaultEventHandler(EventImpl *evt);
     
 #if APPLE_CHANGES
     virtual bool isGenericFormElement() const { return false; }

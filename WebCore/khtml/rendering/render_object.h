@@ -123,6 +123,12 @@ public:
     virtual RenderObject *firstChild() const { return 0; }
     virtual RenderObject *lastChild() const { return 0; }
 
+    RenderObject *nextRenderer() const; 
+    RenderObject *previousRenderer() const; 
+
+    RenderObject *nextEditable() const; 
+    RenderObject *previousEditable() const; 
+    
     virtual RenderLayer* layer() const { return 0; }
     RenderLayer* enclosingLayer();
     void addLayers(RenderLayer* parentLayer, RenderObject* newObject);

@@ -4538,7 +4538,7 @@ void KHTMLPart::handleMousePressEventDoubleClick(khtml::MousePressEvent *event)
         d->m_doc->clearSelection();
     }
     else {
-        d->m_textSelect = KHTMLSelection::WORD;
+        d->m_textElement = KHTMLSelection::WORD;
         d->m_doc->setSelection(d->m_selection);
     }
     
@@ -4567,7 +4567,7 @@ void KHTMLPart::handleMousePressEventTripleClick(khtml::MousePressEvent *event)
         d->m_doc->clearSelection();
     }
     else {
-        d->m_textSelect = KHTMLSelection::LINE;
+        d->m_textElement = KHTMLSelection::LINE;
         d->m_doc->setSelection(d->m_selection);
     }
     
@@ -4637,7 +4637,7 @@ void KHTMLPart::khtmlMousePressEvent(khtml::MousePressEvent *event)
         d->m_dragLastPos = mouse->globalPos();
 #else
 #if APPLE_CHANGES
-        d->m_textSelect = KHTMLSelection::CHARACTER;
+        d->m_textElement = KHTMLSelection::CHARACTER;
         d->m_mouseMovedSinceLastMousePress = false;
 
 		if (mouse->clickCount() == 2) {
@@ -4817,8 +4817,8 @@ void KHTMLPart::handleMouseMoveEventSelection(khtml::MouseMoveEvent *event)
     d->m_selection.setExtent(node, offset);
 
 #if APPLE_CHANGES
-    if (d->m_textSelect != KHTMLSelection::CHARACTER) {
-        d->m_selection.expandSelection(d->m_textSelect);
+    if (d->m_textElement != KHTMLSelection::CHARACTER) {
+        d->m_selection.expandSelection(d->m_textElement);
     }
 #endif    
 
@@ -4885,7 +4885,7 @@ void KHTMLPart::khtmlMouseReleaseEvent( khtml::MouseReleaseEvent *event )
 	if (d->m_dragStartPos.x() == event->qmouseEvent()->x() &&
 		d->m_dragStartPos.y() == event->qmouseEvent()->y() &&
 		d->m_selection.state() == KHTMLSelection::RANGE &&
-        d->m_textSelect == KHTMLSelection::CHARACTER) {
+        d->m_textElement == KHTMLSelection::CHARACTER) {
             if (isEditingAtCaret()) {
                 NodeImpl *node = 0;
                 int offset = 0;

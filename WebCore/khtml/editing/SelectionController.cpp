@@ -32,8 +32,10 @@
 #include "qrect.h"
 #include "dom/dom2_range.h"
 #include "dom/dom_node.h"
+#include "dom/dom_position.h"
 #include "dom/dom_string.h"
 #include "rendering/render_object.h"
+#include "rendering/render_style.h"
 #include "rendering/render_text.h"
 #include "xml/dom_docimpl.h"
 #include "xml/dom_nodeimpl.h"
@@ -45,14 +47,15 @@
 #endif
 
 using DOM::DocumentImpl;
+using DOM::DOMPosition;
+using DOM::DOMString;
 using DOM::Node;
 using DOM::NodeImpl;
 using DOM::Range;
-using DOM::DOMString;
 using DOM::TextImpl;
+using khtml::InlineTextBox;
 using khtml::InlineTextBoxArray;
 using khtml::RenderObject;
-using khtml::RenderText;
 using khtml::RenderText;
 
 enum { CARET_BLINK_FREQUENCY = 500 };
@@ -63,6 +66,7 @@ static bool firstRunAt(RenderObject *renderNode, int y, NodeImpl *&startNode, lo
 static bool lastRunAt(RenderObject *renderNode, int y, NodeImpl *&endNode, long &endOffset);
 static bool startAndEndLineNodesIncludingNode(DOM::NodeImpl *node, int offset, KHTMLSelection &selection);
 #endif
+
 
 KHTMLSelection::KHTMLSelection() 
 	: QObject(),
@@ -128,7 +132,7 @@ void KHTMLSelection::setSelection(DOM::NodeImpl *node, long offset)
 	setExtentNode(node);
 	setBaseOffset(offset);
 	setExtentOffset(offset);
-	invalidate();
+	update();
 }
 
 void KHTMLSelection::setSelection(const DOM::Range &r)
@@ -137,27 +141,71 @@ void KHTMLSelection::setSelection(const DOM::Range &r)
 		r.endContainer().handle(), r.endOffset());
 }
 
+void KHTMLSelection::setSelection(const DOM::DOMPosition &pos)
+{
+	setSelection(pos.node(), pos.offset());
+}
+
 void KHTMLSelection::setSelection(DOM::NodeImpl *baseNode, long baseOffset, DOM::NodeImpl *extentNode, long extentOffset)
 {
 	setBaseNode(baseNode);
 	setExtentNode(extentNode);
 	setBaseOffset(baseOffset);
 	setExtentOffset(extentOffset);
-	invalidate();
+	update();
 }
 
 void KHTMLSelection::setBase(DOM::NodeImpl *node, long offset)
 {
 	setBaseNode(node);
 	setBaseOffset(offset);
-	invalidate();
+	update();
 }
 
 void KHTMLSelection::setExtent(DOM::NodeImpl *node, long offset)
 {
 	setExtentNode(node);
 	setExtentOffset(offset);
-	invalidate();
+	update();
+}
+
+bool KHTMLSelection::alterSelection(EAlter alter, EDirection dir, ETextElement elem)
+{
+    DOMPosition pos;
+    
+    switch (dir) {
+        case FORWARD:
+            switch (elem) {
+                case CHARACTER:
+                    pos = nextCharacterPosition();
+                    break;
+                case WORD:
+                    break;
+                case LINE:
+                    break;
+            }
+            break;
+        case BACKWARD:
+            switch (elem) {
+                case CHARACTER:
+                    break;
+                case WORD:
+                    break;
+                case LINE:
+                    break;
+            }
+            break;
+    }
+    
+    if (pos.isEmpty())
+        return false;
+    
+    if (alter == MOVE)
+        setSelection(pos.node(), pos.offset());
+    else // alter == EXTEND
+        setExtent(pos.node(), pos.offset());
+    
+    return true;
 }
 
 void KHTMLSelection::clearSelection()
@@ -166,7 +214,7 @@ void KHTMLSelection::clearSelection()
 	setExtentNode(0);
 	setBaseOffset(0);
 	setExtentOffset(0);
-	invalidate();
+	update();
 }
 
 NodeImpl *KHTMLSelection::startNode() const
@@ -192,10 +240,15 @@ long KHTMLSelection::endOffset() const
 void KHTMLSelection::setVisible(bool flag)
 {
     m_visible = flag;
-    invalidate();
+    update();
 }
 
 void KHTMLSelection::invalidate()
+{
+    update();
+}
+
+void KHTMLSelection::update()
 {
     // make sure we do not have a dangling start or end
 	if (!m_baseNode && !m_extentNode) {
@@ -227,7 +280,7 @@ void KHTMLSelection::invalidate()
             m_baseIsStart = false;
     }
 
-    // invalidate start and end
+    // update start and end
     m_startEndValid = false;
     calculateStartAndEnd();
     
@@ -326,7 +379,8 @@ void KHTMLSelection::repaint(bool immediate) const
     KHTMLView *v = m_part->view();
     if (!v)
         return;
-    v->updateContents(m_caretX, m_caretY, 1, m_caretSize, immediate);
+    // EDIT FIXME: fudge a bit to make sure we don't leave behind artifacts
+    v->updateContents(m_caretX - 1, m_caretY - 1, 3, m_caretSize + 2, immediate);
 }
 
 void KHTMLSelection::setBaseNode(DOM::NodeImpl *node)
@@ -417,13 +471,13 @@ void KHTMLSelection::setEndOffset(long offset)
 	m_endOffset = offset;
 }
 
-void KHTMLSelection::expandSelection(ETextSelect select)
+void KHTMLSelection::expandSelection(ETextElement select)
 {
     m_startEndValid = false;
     calculateStartAndEnd(select);
 }
 
-void KHTMLSelection::calculateStartAndEnd(ETextSelect select)
+void KHTMLSelection::calculateStartAndEnd(ETextElement select)
 {
     if (m_startEndValid)
         return;
@@ -529,6 +583,76 @@ void KHTMLSelection::calculateStartAndEnd(ETextSelect select)
 		m_state = RANGE;
     
     m_startEndValid = true;
+}
+
+DOMPosition KHTMLSelection::nextCharacterPosition()
+{
+    DOMPosition result;
+	NodeImpl *node = endNode();
+	long offset = endOffset();
+    long desiredOffset = offset + 1;
+
+    if (!node)
+        return result;
+    
+    //
+    // Look in this renderer
+    //
+    RenderObject *renderer = node->renderer();
+    if (renderer->isText()) {
+        RenderText *textRenderer = static_cast<khtml::RenderText *>(renderer);
+        InlineTextBoxArray runs = textRenderer->inlineTextBoxes();
+        unsigned i = 0;
+        for (i = 0; i < runs.count(); i++) {
+            long start = runs[i]->m_start;
+            long end = runs[i]->m_start + runs[i]->m_len;
+            if (desiredOffset > end) {
+                // Skip this node.
+                // It is too early in the text runs to be involved.
+                continue;
+            }
+            else if (desiredOffset >= start && 
+                (desiredOffset < end || (desiredOffset == end && i + 1 == runs.count() && !renderer->nextEditable())) ||
+                (desiredOffset == end && textRenderer->precedesLineBreak() && !textRenderer->followsLineBreak())) {
+                // Desired offset is in this node.
+                // Either it is:
+                // 1. at or after the start and before, but not at the end
+                // 2. at the end of a text run and is immediately followed by a line break
+                //    but does not precede a line break
+                // 3. at the end of the editable content of the document
+                return DOMPosition(renderer->element(), desiredOffset);
+            }
+            else if (desiredOffset <= start) {
+                // The offset we're looking for is before this node
+                // this means the offset must be in text that is
+                // not rendered. Just return the start of the node.
+                return DOMPosition(renderer->element(), start);
+            }
+        }
+    }
+    else if (desiredOffset < renderer->caretMaxOffset() || (desiredOffset == renderer->caretMaxOffset() && !renderer->nextEditable())) {
+        return DOMPosition(node, desiredOffset);
+    }
+
+    //
+    // Look in next renderer(s)
+    //
+    renderer = renderer->nextEditable();
+    while (renderer) {
+        if (renderer->isText()) {
+            RenderText *textRenderer = static_cast<khtml::RenderText *>(renderer);
+            InlineTextBoxArray runs = textRenderer->inlineTextBoxes();
+            if (runs.count())
+                return DOMPosition(renderer->element(), runs[0]->m_start);
+        }
+        else {
+            return DOMPosition(renderer->element(), renderer->caretMinOffset());
+        }
+        renderer = renderer->nextEditable();
+    }
+
+    result = DOMPosition(node, offset);
+    return result;
 }
 
 bool KHTMLSelection::nodeIsBeforeNode(NodeImpl *n1, NodeImpl *n2) 
@@ -696,11 +820,11 @@ static bool lastRunAt(RenderObject *renderNode, int y, NodeImpl *&endNode, long 
 
 static bool startAndEndLineNodesIncludingNode(DOM::NodeImpl *node, int offset, KHTMLSelection &selection)
 {
-    if (node && (node->nodeType() == Node::TEXT_NODE || node->nodeType() == Node::CDATA_SECTION_NODE)){
+    if (node && (node->nodeType() == Node::TEXT_NODE || node->nodeType() == Node::CDATA_SECTION_NODE)) {
         int pos;
         int selectionPointY;
-        khtml::RenderText *renderer = static_cast<khtml::RenderText *>(node->renderer());
-        khtml::InlineTextBox * run = renderer->findNextInlineTextBox( offset, pos );
+        RenderText *renderer = static_cast<RenderText *>(node->renderer());
+        InlineTextBox * run = renderer->findNextInlineTextBox( offset, pos );
         DOMString t = node->nodeValue();
         
         if (!run)

@@ -1222,7 +1222,7 @@ void RenderText::setText(DOMStringImpl *text, bool force)
     KHTMLAssert(!isBR() || (str->l == 1 && (*str->s) == '\n'));
     KHTMLAssert(!str->l || str->s);
 
-    setNeedsLayout(true);
+    setNeedsLayoutAndMinMaxRecalc();
     
 #ifdef BIDI_DEBUG
     QConstString cstr(str->s, str->l);
@@ -1384,6 +1384,34 @@ long RenderText::caretMaxOffset() const
     // or maintain an index (needs much mem),
     // or calculate and store it in bidi.cpp (needs calculation even if not needed)
     return m_lines[count - 1]->m_start + m_lines[count - 1]->m_len;
+}
+
+bool RenderText::precedesLineBreak() const
+{
+    RenderObject *r = nextRenderer();
+    while (r) {
+        if (r->isBR() || r->isRenderBlock())
+            return true;
+        if (r->isText() || r->isReplaced())
+            return false;
+        r = r->nextRenderer();
+    }
+    
+    return false;
+}
+
+bool RenderText::followsLineBreak() const
+{
+    RenderObject *r = previousRenderer();
+    while (r) {
+        if (r->isBR() || r->isRenderBlock())
+            return true;
+        if (r->isText() || r->isReplaced())
+            return false;
+        r = r->previousRenderer();
+    }
+    
+    return false;
 }
 
 RenderTextFragment::RenderTextFragment(DOM::NodeImpl* _node, DOM::DOMStringImpl* _str,

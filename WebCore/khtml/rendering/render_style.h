@@ -1274,6 +1274,7 @@ public:
     static Length initialMarqueeIncrement() { return Length(6, Fixed); }
     static EMarqueeBehavior initialMarqueeBehavior() { return MSCROLL; }
     static EMarqueeDirection initialMarqueeDirection() { return MAUTO; }
+    static EUserModify initialUserModify() { return READ_ONLY; }
 };
 
 

@@ -1239,7 +1239,7 @@ void RenderBlock::paintObject(QPainter *p, int _x, int _y,
         const KHTMLSelection &s = document()->part()->getKHTMLSelection();
         NodeImpl *baseNode = s.baseNode();
         RenderObject *renderer = baseNode ? baseNode->renderer() : 0;
-        if (renderer && renderer->containingBlock() == this) {
+        if (renderer && renderer->containingBlock() == this && baseNode->isContentEditable()) {
             s.paint(p, QRect(_x, _y, _w, _h));
         }
     }

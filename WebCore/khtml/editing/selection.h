@@ -36,6 +36,7 @@ class QRect;
 class QTimerEvent;
 
 namespace DOM {
+    class DOMPosition;
     class NodeImpl;
     class Range;
 };
@@ -50,18 +51,22 @@ public:
     ~KHTMLSelection();
 
 	enum EState { NONE, CARET, RANGE };
-	enum ETextSelect { CHARACTER, WORD, LINE };
+	enum ETextElement { CHARACTER, WORD, LINE };
+	enum EDirection { FORWARD, BACKWARD };
+	enum EAlter { MOVE, EXTEND };
 
 	EState state() const { return m_state; }
 
     void setSelection(DOM::NodeImpl *node, long offset);
     void setSelection(const DOM::Range &);
+    void setSelection(const DOM::DOMPosition &);
     void setSelection(DOM::NodeImpl *baseNode, long baseOffset, DOM::NodeImpl *extentNode, long extentOffset);
     void setBase(DOM::NodeImpl *node, long offset);
     void setExtent(DOM::NodeImpl *node, long offset);
-    void expandSelection(ETextSelect);
+    void expandSelection(ETextElement);
+    bool alterSelection(EAlter, EDirection, ETextElement);
     void clearSelection();
-
+    
     DOM::NodeImpl *baseNode() const { return m_baseNode; }
     long baseOffset() const { return m_baseOffset; }
 
@@ -76,6 +81,7 @@ public:
 
     void setVisible(bool flag=true);
     bool visible() const { return m_visible; }
+    
     void invalidate();
     
     bool isEmpty() const;
@@ -100,6 +106,8 @@ public:
 private:
     void setPart(KHTMLPart *part);
 
+    void update();
+
     void timerEvent(QTimerEvent *e);
     void repaint(bool immediate=false) const;
 
@@ -117,8 +125,10 @@ private:
 
     bool nodeIsBeforeNode(DOM::NodeImpl *n1, DOM::NodeImpl *n2);
 
-    void calculateStartAndEnd(ETextSelect select=CHARACTER);
-
+    void calculateStartAndEnd(ETextElement select=CHARACTER);
+    
+    DOM::DOMPosition nextCharacterPosition();
+    
     KHTMLPart *m_part;            // part for this selection
 
     DOM::NodeImpl *m_baseNode;    // base node for the selection

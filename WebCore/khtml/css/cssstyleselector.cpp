@@ -3459,15 +3459,11 @@ void CSSStyleSelector::applyRule( int id, DOM::CSSValueImpl *value )
         break;
     }
     case CSS_PROP__KHTML_USER_MODIFY: {
-        if (value->cssValueType() == CSSValue::CSS_INHERIT) {
-            if(!parentNode) 
-                return;
-            style->setUserModify(parentStyle->userModify());
-            return;
-        }
-        if (!primitiveValue) 
+        HANDLE_INHERIT_AND_INITIAL(userModify, UserModify)      
+        if (!primitiveValue || !primitiveValue->getIdent())
             return;
         style->setUserModify(EUserModify(primitiveValue->getIdent() - CSS_VAL_READ_ONLY));
+        break;
     }
     default:
         return;

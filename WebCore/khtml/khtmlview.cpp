@@ -91,22 +91,6 @@ private:
 
 #endif
 
-/** contextual information about the caret which is related to the view.
- * An object of this class is only instantiated when it is needed.
- */
-struct CaretViewContext {
-    int freqTimerId;		// caret blink frequency timer id
-    int x, y;			// caret position in viewport coordinates
-    				// (y specifies the top, not the baseline)
-    int height;			// height of caret in pixels
-    int width;			// width of caret in pixels
-    bool visible;		// true if currently visible.
-    bool displayed;		// true if caret is to be displayed at all.
-
-    CaretViewContext() : freqTimerId(-1), x(0), y(0), height(16), width(1), visible(true),
-    	displayed(false) {}
-};
-
 class KHTMLViewPrivate {
     friend class KHTMLToolTip;
 public:

@@ -1,3 +1,74 @@
+2004-01-23  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
+	Check in before moving to HEAD.
+	Many more cleanups and work on caret navigation.
+
+        * WebCore.pbproj/project.pbxproj:
+        * khtml/css/cssstyleselector.cpp:
+        (khtml::CSSStyleSelector::applyRule):
+        * khtml/editing/htmlediting.cpp:
+        (EditCommand::deleteSelection):
+        (EditCommand::pruneEmptyNodes):
+        (EditCommand::removeNode):
+        (InputTextCommand::apply):
+        (DeleteTextCommand::apply):
+        * khtml/editing/htmlediting.h:
+        * khtml/html/html_elementimpl.cpp:
+        * khtml/html/html_elementimpl.h:
+        * khtml/html/html_inlineimpl.h:
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::handleMousePressEventDoubleClick):
+        (KHTMLPart::handleMousePressEventTripleClick):
+        (KHTMLPart::khtmlMousePressEvent):
+        (KHTMLPart::handleMouseMoveEventSelection):
+        (KHTMLPart::khtmlMouseReleaseEvent):
+        * khtml/khtml_selection.cpp:
+        (KHTMLSelection::setSelection):
+        (KHTMLSelection::setBase):
+        (KHTMLSelection::setExtent):
+        (KHTMLSelection::alterSelection):
+        (KHTMLSelection::clearSelection):
+        (KHTMLSelection::setVisible):
+        (KHTMLSelection::invalidate):
+        (KHTMLSelection::update):
+        (KHTMLSelection::repaint):
+        (KHTMLSelection::expandSelection):
+        (KHTMLSelection::calculateStartAndEnd):
+        (KHTMLSelection::nextCharacterPosition):
+        (startAndEndLineNodesIncludingNode):
+        * khtml/khtml_selection.h:
+        (KHTMLSelection::):
+        * khtml/khtmlpart_p.h:
+        * khtml/khtmlview.cpp:
+        * khtml/rendering/render_block.cpp:
+        (khtml::RenderBlock::paintObject):
+        * khtml/rendering/render_object.cpp:
+        (RenderObject::nextRenderer):
+        (RenderObject::previousRenderer):
+        (RenderObject::isEditable):
+        (RenderObject::nextEditable):
+        (RenderObject::previousEditable):
+        (RenderObject::backslashAsCurrencySymbol):
+        * khtml/rendering/render_object.h:
+        * khtml/rendering/render_style.h:
+        (khtml::RenderStyle::initialUserModify):
+        * khtml/rendering/render_text.cpp:
+        (RenderText::setText):
+        (RenderText::caretMaxOffset):
+        (RenderText::precedesLineBreak):
+        (RenderText::followsLineBreak):
+        * khtml/rendering/render_text.h:
+        * khtml/xml/dom_elementimpl.cpp:
+        (ElementImpl::createAttributeMap):
+        (ElementImpl::defaultEventHandler):
+        * khtml/xml/dom_elementimpl.h:
+        * khtml/xml/dom_nodeimpl.h:
+        (DOM::NodeImpl::isHTMLElement):
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::khtmlMouseMoveEvent):
+
 2004-01-20  Ken Kocienda  <kocienda@apple.com>
 
         Reviewed by me.

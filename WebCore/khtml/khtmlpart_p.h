@@ -341,7 +341,7 @@ public:
   DOM::Node m_mousePressNode; //node under the mouse when the mouse was pressed (set in the mouse handler)
 
 #if APPLE_CHANGES
-  KHTMLSelection::ETextSelect m_textSelect;
+  KHTMLSelection::ETextElement m_textElement;
   bool m_mouseMovedSinceLastMousePress:1;
 #endif
   KHTMLSelection m_selection;

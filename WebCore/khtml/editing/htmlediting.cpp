@@ -69,39 +69,12 @@ EditCommand::~EditCommand()
         m_document->deref();
 }
 
-void EditCommand::notifyChanged(NodeImpl *node) const
-{
-    if (!node)
-        return;
-
-    node->setChanged(true);
-    if (node->renderer())
-        node->renderer()->setNeedsLayoutAndMinMaxRecalc();
-}
-
-void EditCommand::notifyChanged(const KHTMLSelection &selection) const
-{
-    // notify all the nodes in the selection
-    NodeImpl *startNode = selection.startNode();
-    NodeImpl *endNode = selection.endNode();
-    if (startNode == endNode) {
-        notifyChanged(startNode);
-    }
-    else {
-        for (NodeImpl *node = startNode; node != endNode; node = node->traverseNextNode()) {
-            notifyChanged(node);
-        }
-        notifyChanged(endNode);
-    }
-}
-
 void EditCommand::deleteSelection()
 {
     if (!m_document || !m_document->view() || !m_document->view()->part())
         return;
     
     KHTMLSelection &selection = m_document->view()->part()->getKHTMLSelection();
-    notifyChanged(selection);
     Range range(selection.startNode(), selection.startOffset(), selection.endNode(), selection.endOffset());
     range.deleteContents();
     selection.setSelection(selection.startNode(), selection.startOffset());
@@ -131,7 +104,6 @@ void EditCommand::pruneEmptyNodes() const
             if (textNode->length() == 0) {
                 node = textNode->traversePreviousNode();
                 removeNode(textNode);
-                notifyChanged(textNode);
                 prunedNodes = true;
             }
             else {
@@ -142,7 +114,6 @@ void EditCommand::pruneEmptyNodes() const
             NodeImpl *n = node;
             node = node->traversePreviousNode();
             removeNode(n);
-            notifyChanged(n);
             prunedNodes = true;
         }
         else {
@@ -152,7 +123,6 @@ void EditCommand::pruneEmptyNodes() const
     
     if (prunedNodes) {
         selection.setSelection(node, node->caretMaxOffset());
-        notifyChanged(node);
     }
 #endif
 }
@@ -162,7 +132,6 @@ void EditCommand::removeNode(DOM::NodeImpl *node) const
     if (!node)
         return;
     
-    notifyChanged(node->parentNode());
     int exceptionCode;
     node->remove(exceptionCode);
 }
@@ -230,9 +199,6 @@ bool InputTextCommand::apply()
         
         // Set the cursor at the beginning of the node after the split.
         selection.setSelection(textNode, 0);
-        notifyChanged(breakNode);
-        notifyChanged(textNode);
-        notifyChanged(textNode->parentNode());
     }
     else {
         textNode->insertData(selection.startOffset(), text(), exceptionCode);
@@ -240,7 +206,6 @@ bool InputTextCommand::apply()
         // advance the cursor
         int textLength = text().length();
         selection.setSelection(selection.startNode(), selection.startOffset() + textLength);
-        notifyChanged(textNode);
     }
 
     return true;
@@ -295,17 +260,14 @@ bool DeleteTextCommand::apply()
             textNode->deleteData(offset, 1, exceptionCode);
             selection.setSelection(textNode, offset);
             pruneEmptyNodes();
-            notifyChanged(textNode);
             return true;
         }
         
         // Check if previous sibling is a BR element
         NodeImpl *previousSibling = caretNode->previousSibling();
-        if (previousSibling->isHTMLBRElement()) {
+        if (previousSibling->renderer() && previousSibling->renderer()->isBR()) {
             caretNode->parentNode()->removeChild(previousSibling, exceptionCode);
             // EDIT FIXME: adjust selection position
-            notifyChanged(caretNode->parentNode());
-            notifyChanged(previousSibling);
             return true;
         }
         
@@ -317,7 +279,6 @@ bool DeleteTextCommand::apply()
             textNode->deleteData(offset, 1, exceptionCode);
             selection.setSelection(textNode, offset);
             pruneEmptyNodes();
-            notifyChanged(textNode);
             return true;
         }
     }
