@@ -57,43 +57,14 @@ public:
     int yPos() const { return m_y; }
     int height() const { return m_height; }
 
+    void setVisible(bool flag=true);
     bool visible() const { return m_visible; }
-    bool displayed() const { return m_displayed; }
-
     void invalidate();
-    void recalcAndStoreCaretPos();
-
-    void initCaret();
-
-    /** displays the caret and reinitializes the blink frequency timer. */
-    void caretOn();
-
-    /** hides the caret and kills the blink frequency timer. */
-    void caretOff();
-
-    /** makes the caret visible, but does not influence the frequency timer.
-     * That means it probably won't get visible immediately.
-     */
-    void showCaret();
-    /** makes the caret invisible, but does not influence the frequency timer.
-     * The caret is immediately hidden.
-     */
-    void hideCaret();
     
-    bool placeCaret();
-
-    // -- caret-related member functions (for caret mode as well as design mode)
-    /** ensures that the given element is properly focused.
-     *
-     * If not in caret mode or design mode, keyboard events are only regarded for
-     * focused nodes. Therefore, the function ensured that the focus will be
-     * properly set on unfocused nodes (or on a suitable ancestor).
-     * @param node node to focus
-     */
     void ensureNodeHasFocus(DOM::NodeImpl *node);
 
 #ifdef APPLE_CHANGES
-    void paintCaret(QPainter *p, const QRect &rect) const;
+    void paint(QPainter *p, const QRect &rect) const;
 #endif
     
     void moveForwardByCharacter();
@@ -112,9 +83,9 @@ private:
     KHTMLView *view() const;
 
     void setPosition(DOM::NodeImpl *, long);
-    void notifyChanged(DOM::NodeImpl *) const;
-    void updateView(bool immediate=false) const;
     void timerEvent(QTimerEvent *e);
+
+    void repaint(bool immediate=false) const;
 
     DOM::NodeImpl *m_node;  // node containing the caret
     long m_offset;          // offset into node where caret is positioned
@@ -123,12 +94,12 @@ private:
     int m_y;                // caret y position in viewport coordinates (specifies the top, not the baseline)
                     
     int m_height;           // height of caret in pixels
-    int m_width;            // width of caret in pixels
 
-    int m_freqTimerId;      // caret blink frequency timer id
+    int m_timerId;          // caret blink frequency timer id
 
-    bool m_visible : 1;     // true if currently visible.
-    bool m_displayed : 1;   // true if caret is to be displayed at all.
+    bool m_blinks : 1;      // flag set if caret blinks
+    bool m_paint : 1;       // flag used to deal with blinking the caret.
+    bool m_visible : 1;     // true if caret is to be displayed at all.
 };
 
 }; // end namespace khtml

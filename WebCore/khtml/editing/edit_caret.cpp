@@ -51,8 +51,8 @@ enum { BLINK_FREQUENCY = 500 };
 
 Caret::Caret(NodeImpl *node, long offset) 
     : m_node(0), m_offset(offset), 
-      m_x(0), m_y(0), m_height(0), m_width(0), 
-      m_freqTimerId(0), m_visible(false), m_displayed(false)
+      m_x(0), m_y(0), m_height(0), 
+      m_timerId(0), m_blinks(true), m_paint(false), m_visible(false)
 {
     if (node) {
         m_node = node;
@@ -62,8 +62,8 @@ Caret::Caret(NodeImpl *node, long offset)
 
 Caret::Caret() 
     : m_node(0), m_offset(0), 
-      m_x(0), m_y(0), m_height(0), m_width(0), 
-      m_freqTimerId(0), m_visible(false), m_displayed(false)
+      m_x(0), m_y(0), m_height(0),
+      m_timerId(0), m_blinks(true), m_paint(false), m_visible(false)
 {
 }
 
@@ -76,10 +76,10 @@ Caret::Caret(const Caret &other) : QObject()
     m_x = other.m_x;
     m_y = other.m_y;
     m_height = other.m_height;
-    m_width = other.m_width;
-    m_freqTimerId = other.m_freqTimerId;
+    m_timerId = other.m_timerId;
+    m_blinks = other.m_blinks;
+    m_paint = other.m_paint;
     m_visible = other.m_visible;
-    m_displayed = other.m_displayed;
 }
 
 Caret::~Caret()
@@ -103,23 +103,39 @@ void Caret::setPosition(NodeImpl *node, long offset)
     if (node == m_node && offset == m_offset)
         return;
 
+    // set the node and offset
+    m_offset = offset;
+
     if (node && node->hasChildNodes())
         node = node->nextLeafNode();
 
     if (m_node != node) {
 		if (m_node)
 			m_node->deref();
-
     	m_node = node;
-
 		if (m_node)
 			m_node->ref();
 	}
 
-    m_offset = offset;
+    if (!m_node)
+        return;
 
+    // place the caret
     adjustPosition();
-    notifyChanged(node);
+    
+    KHTMLPart *p = part();
+    if (!p || !p->isEditingAtCaret())
+        return;
+
+    // save selection. setting focus might clear it.
+    Range selection = p->selection();
+    ensureNodeHasFocus(m_node);
+    // restore selection, but don't place caret
+    p->setSelection(selection, false);
+    if (!p->selection().collapsed())
+        return;
+
+    invalidate();
 }
 
 void Caret::moveForwardByCharacter()
@@ -155,7 +171,6 @@ void Caret::moveForwardByCharacter()
     
     if (moved) {
         adjustPosition();
-        notifyChanged(node());
     }
 }
 
@@ -190,7 +205,6 @@ void Caret::moveBackwardByCharacter()
 
     if (moved) {
         adjustPosition();
-        notifyChanged(node());
     }
 }
 
@@ -213,7 +227,6 @@ void Caret::adjustPosition()
         if (!n || !n->isTextNode() || static_cast<TextImpl *>(n)->length() > 0)
             break;
         node()->parentNode()->removeChild(n, exceptionCode);
-        notifyChanged(node()->parentNode());
         n = n->previousLeafNode();
     }
 
@@ -225,145 +238,70 @@ void Caret::adjustPosition()
     }
 }
 
-void Caret::notifyChanged(NodeImpl *node) const
-{
-    if (!node)
-        return;
-
-    node->setChanged(true);
-    if (node->renderer())
-        node->renderer()->setNeedsLayoutAndMinMaxRecalc();
-}
-
-void Caret::initCaret() 
-{
-    KHTMLPart *p = part();
-    if (!p)
-        return;
-
-    if (p->xmlDocImpl()) {
-        if (!m_node) {
-            // set to document, position will be sanitized anyway
-            p->moveCaretTo(p->document().handle(), 0L);
-            // This sanity check is necessary for the not so unlikely case that
-            // setEditMode or setCaretMode is called before any render objects have
-            // been created.
-            if (!m_node->renderer()) 
-                return;
-        }
-        p->moveCaretTo(m_node, m_offset);
-    }
-}
-
 void Caret::invalidate()
 {
-    if (!m_node || !m_displayed)
-        return;
+    // update the blink timer
+    killTimer(m_timerId);
+    if (m_blinks && m_visible)
+        m_timerId = startTimer(BLINK_FREQUENCY);
+    else
+        m_timerId = -1;
 
-    hideCaret();
-    recalcAndStoreCaretPos();
-    showCaret();
+    // short-circuit if caret is not visible
+    if (!m_visible) {
+        m_paint = false;
+        repaint(true);
+        return;
+    }
+
+    // update caret rendering position
+    int oldX = m_x;   
+    int oldY = m_y;   
+    int oldHeight = m_height;   
+    if (m_node && m_node->renderer()) {
+        int w;
+        m_node->renderer()->caretPos(m_offset, true, m_x, m_y, w, m_height);
+    }
+    else
+        m_x = m_y = m_height = 0; // default values
+
+    // repaint the old position if necessary
+    // prevents two carets from ever being drawn
+    if (oldX != m_x || oldY != m_y || oldHeight != m_height) {
+        KHTMLView *v = view();
+        if (v)
+            v->updateContents(oldX, oldY, 1, oldHeight);
+    }
+
+    // paint the caret if it is visible
+    if (m_visible && m_height != 0) {
+        m_paint = true;
+        repaint();
+    }
 }
 
-void Caret::recalcAndStoreCaretPos()
+void Caret::setVisible(bool flag) 
 {
-    if (!m_node)
-        return;
-
-    if (m_node->renderer()) 
-        m_node->renderer()->caretPos(m_offset, true, m_x, m_y, m_width, m_height);
-    else {
-        // return default values
-        m_x = m_y = m_height = -1;
-        m_width = 1;	// the caret has a default width of one pixel. If you want
-                   // to check for validity, only test the x-coordinate for >= 0.
-    }
+    m_visible = flag;
+    invalidate();
 }
 
-void Caret::caretOn() {
-    if (!m_node)
-        return;
-
-    killTimer(m_freqTimerId);
-    m_freqTimerId = startTimer(BLINK_FREQUENCY);
-    m_visible = true;
-    m_displayed = true;
-    updateView();
-}
-
-void Caret::caretOff() {
-    killTimer(m_freqTimerId);
-    m_freqTimerId = -1;
-    m_displayed = false;
-    if (m_visible) {
-        m_visible = false;
-        updateView();
-    }
-}
-
-void Caret::showCaret() {
-    m_displayed = true;
-    if (m_visible) {
-        updateView();
-    }
-}
-
-void Caret::hideCaret() {
-    if (m_visible) {
-        m_visible = false;
-        updateView(true);
-        m_visible = true;
-    }
-    else {
-        m_displayed = false;
-    }
-}
-
-void Caret::updateView(bool immediate) const
+void Caret::repaint(bool immediate) const
 {
-    KHTMLView *view = m_node->getDocument()->view();
-    if (!view)
+    KHTMLView *v = view();
+    if (!v)
         return;
         
     if (immediate)
-        view->repaintContents(m_x, m_y, 1, m_height);
+        v->repaintContents(m_x, m_y, 1, m_height);
     else
-        view->updateContents(m_x, m_y, 1, m_height);
-}
-
-bool Caret::placeCaret() 
-{
-    caretOff();
-
-    recalcAndStoreCaretPos();
-    
-    if (!m_node)
-        return false;
-
-    KHTMLPart *p = part();
-    if (!p)
-        return false;
-
-    if (!p->isEditingAtCaret())
-        return false;
-
-    // save selection. setting focus might clear it.
-    Range selection = p->selection();
-    ensureNodeHasFocus(m_node);
-    // restore selection, but don't place caret
-    p->setSelection(selection, false);
-        
-    if (!p->selection().collapsed())
-        return false;
-
-    caretOn();
-    return true;
+        v->updateContents(m_x, m_y, 1, m_height);
 }
 
 #ifdef APPLE_CHANGES
-void Caret::paintCaret(QPainter *p, const QRect &rect) const
+void Caret::paint(QPainter *p, const QRect &rect) const
 {
-    if (!m_visible)
+    if (!m_paint)
         return;
 
     QRect pos(m_x, m_y, 1, m_height);
@@ -380,10 +318,9 @@ void Caret::paintCaret(QPainter *p, const QRect &rect) const
 
 void Caret::timerEvent(QTimerEvent *e)
 {
-    if (e->timerId() == m_freqTimerId) {
-        m_visible = !m_visible;
-        if (m_displayed)
-            updateView();
+    if (e->timerId() == m_timerId && m_visible) {
+        m_paint = !m_paint;
+        repaint();
     }
 }
 

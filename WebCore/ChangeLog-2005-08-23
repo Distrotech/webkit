@@ -2,6 +2,45 @@
 
         Reviewed by me
 
+	A lot of clean up in the caret class now that the
+	old khtmlview functions have been moved in. Many
+	functions have been factored together and the
+	API now makes a lot more sense.
+
+        * khtml/editing/edit_caret.cpp:
+        (Caret::Caret):
+        (Caret::setPosition):
+        (Caret::moveForwardByCharacter):
+        (Caret::moveBackwardByCharacter):
+        (Caret::adjustPosition):
+        (Caret::invalidate):
+        (Caret::setVisible):
+        (Caret::repaint):
+        (Caret::paint):
+        (Caret::timerEvent):
+        * khtml/editing/edit_caret.h:
+        (khtml::Caret::visible):
+        * khtml/editing/htmlediting.cpp:
+        (InputTextCommand::apply):
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::setSelection):
+        (KHTMLPart::khtmlMousePressEvent):
+        (KHTMLPart::khtmlMouseMoveEvent):
+        (KHTMLPart::khtmlMouseReleaseEvent):
+        (KHTMLPart::moveCaretTo):
+        * khtml/khtmlview.cpp:
+        (KHTMLView::init):
+        (KHTMLView::clear):
+        (KHTMLView::focusNextPrevNode):
+        (KHTMLView::focusInEvent):
+        (KHTMLView::focusOutEvent):
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::paint):
+
+2004-01-15  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
 	Purged all caret member functions from KHTMLView,
 	rolling them all into the Caret class.
 

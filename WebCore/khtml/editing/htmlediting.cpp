@@ -207,8 +207,10 @@ bool InputTextCommand::apply()
         return false;
 
     // Delete the current selection
-    deleteSelection();
-    caret->adjustPosition();
+    if (!selection().collapsed()) {
+        deleteSelection();
+        caret->adjustPosition();
+    }
     
     TextImpl *textNode = static_cast<TextImpl *>(caret->node());
     int exceptionCode;

@@ -2481,7 +2481,6 @@ void KHTMLPart::setSelection(const DOM::Range &r, bool placeCaret)
 
     if (placeCaret) {
         caret()->setPosition(d->m_selectionEnd.handle(), d->m_endOffset);
-        caret()->placeCaret();
         emitCaretPositionChanged();
     }
 }
@@ -4714,7 +4713,6 @@ void KHTMLPart::khtmlMousePressEvent( khtml::MousePressEvent *event )
                 d->m_doc->clearSelection();
 
                 caret()->setPosition(d->m_selectionEnd.handle(), d->m_endOffset);
-                caret()->placeCaret();
                 emitCaretPositionChanged();
             }
             else
@@ -5045,7 +5043,6 @@ void KHTMLPart::khtmlMouseMoveEvent( khtml::MouseMoveEvent *event )
                 d->m_doc->setSelection(d->m_selectionEnd.handle(),d->m_endOffset,
                                 d->m_selectionStart.handle(),d->m_startOffset);
         }
-        caret()->placeCaret();
         emitCaretPositionChanged();
 #else
         if ( d->m_doc && d->m_view ) {
@@ -5159,7 +5156,6 @@ void KHTMLPart::khtmlMouseReleaseEvent( khtml::MouseReleaseEvent *event )
                 d->m_extendAtEnd = false;
                 caret()->setPosition(d->m_selectionStart.handle(), d->m_startOffset);
             }
-            caret()->placeCaret();
             emitCaretPositionChanged();
 
             // get selected text and paste to the clipboard
@@ -5177,6 +5173,9 @@ void KHTMLPart::khtmlMouseReleaseEvent( khtml::MouseReleaseEvent *event )
         }
     }
 #endif // KHTML_NO_SELECTION
+
+    // update the caret's visibility
+    caret()->setVisible(isEditingAtCaret());
 }
 
 void KHTMLPart::khtmlDrawContentsEvent( khtml::DrawContentsEvent * )
@@ -5642,8 +5641,7 @@ void KHTMLPart::moveCaretTo(DOM::NodeImpl *node, long offset, bool clearSelectio
     // emitted in series.
     if (positionChanged) {
         // this has the effect of keeping the cursor from blinking when the caret moves
-        caret()->caretOn();
-        caret()->placeCaret();
+        caret()->invalidate();
         emitCaretPositionChanged();
     }
 

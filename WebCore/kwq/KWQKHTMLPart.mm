@@ -869,7 +869,7 @@ void KWQKHTMLPart::paint(QPainter *p, const QRect &rect)
 #ifdef APPLE_CHANGES
         // EDIT FIXME: Caret should be painted by block containing caret node.
         if (isEditingAtCaret())
-            caret()->paintCaret(p, rect);
+            caret()->paint(p, rect);
 #endif
     } else {
         ERROR("called KWQKHTMLPart::paint with nil renderer");

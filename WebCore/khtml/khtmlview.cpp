@@ -362,8 +362,6 @@ void KHTMLView::init()
     _width = 0;
     _height = 0;
 
-    m_part->caret()->initCaret();
-    
     setAcceptDrops(true);
     
     resizeContents(visibleWidth(), visibleHeight());
@@ -374,7 +372,7 @@ void KHTMLView::clear()
 //    viewport()->erase();
 
     setStaticBackground(false);
-    m_part->caret()->caretOff();
+    m_part->caret()->setVisible(false);
 
     d->reset();
     killTimers();
@@ -1330,7 +1328,7 @@ void KHTMLView::focusNextPrevNode(bool next)
             m_part->moveCaretTo(newFocusNode, 0L);
         } 
         else {
-            m_part->caret()->caretOff();
+            m_part->caret()->setVisible(false);
         }
 
         // Scroll the view as necessary to ensure that the new focus node is visible
@@ -1828,14 +1826,14 @@ void KHTMLView::dropEvent( QDropEvent *ev )
 
 void KHTMLView::focusInEvent( QFocusEvent *e )
 {
-    m_part->caret()->showCaret();
+    m_part->caret()->setVisible();
     QScrollView::focusInEvent( e );
 }
 
 void KHTMLView::focusOutEvent( QFocusEvent *e )
 {
     m_part->stopAutoScroll();
-    m_part->caret()->hideCaret();
+    m_part->caret()->setVisible(false);
     QScrollView::focusOutEvent( e );
 }
 
