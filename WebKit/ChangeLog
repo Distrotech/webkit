@@ -1,3 +1,73 @@
+=== Safari-50 (Alexander-48-branch) ===
+
+2003-01-09  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by Everybody
+
+        Changes merged from trunk onto the branch to patch critical data loss problems. 
+
+        2003-01-09  Trey Matteson  <trey@apple.com>    
+
+		Reviewed by Richard.
+
+		3142201 - home directory nuked during power download session
+
+		We add checks for various error cases that could combine to cause this problem.  While we
+		never got a reproducible case, we are confident that this is the only file removal done
+		in the download code, and its ability to wreak havoc has been clipped.
+
+		* Downloads.subproj/WebDownloadHandler.m:
+		(-[WebDownloadHandler cleanUpAfterFailure]):  Only nuke the partial download if in fact 
+		we created a new download file.  Never nuke a directory.
+		(-[WebDownloadHandler createFileIfNecessary]):  Don't add "." to the foo-1 filenames 
+		we generate
+		if the original filename doesn't have any extension.
+		* WebView.subproj/WebMainResourceClient.m:
+		(-[WebMainResourceClient continueAfterContentPolicy:response:]):
+		If the policyDelegate gives us a nil filename, just stop the whole load, instead of 
+		trying to overwrite the user's home directory.
+
+
+        2003-01-09  Darin Adler  <darin@apple.com>
+
+                Reviewed by Richard.
+
+                - fixed 3143332 -- if path returned is empty string (or "." or "..") it will 
+                trash the /tmp symlink
+
+                * Plugins.subproj/WebBaseNetscapePluginStream.m:
+                (-[WebBaseNetscapePluginStream finishedLoadingWithData:]):
+                Check for empty string, ".", and "..", and don't create files by those names.
+
+
+        2003-01-09  Darin Adler  <darin@apple.com>    
+
+		Reviewed by Chris.
+
+		- second pass on 3143332 - we still need a test case to be sure this is right
+
+		* Plugins.subproj/WebBaseNetscapePluginStream.m:
+		(-[WebBaseNetscapePluginStream finishedLoadingWithData:]):
+		Check for "/". Also report the failure instead of just hanging on forever.
+
+
+        2003-01-09  Trey Matteson  <trey@apple.com>    
+
+		Reviewed by Darin
+
+		WebKit:
+
+		3143294 - need short-term bulletproofing of download code against bad filenames
+
+		We protect against a download location that is not an absolute path.
+
+		* WebView.subproj/WebMainResourceClient.m:
+		(-[WebMainResourceClient continueAfterContentPolicy:response:]):
+		Bail on download if we don't have a abs path to write to.
+
+
+=== Alexander-48 ===
+
 2003-01-02  Richard Williamson   <rjw@apple.com>
 
         Increase the minimum font size to 9pt.  This bounds the lower
