@@ -93,6 +93,7 @@ public:
     virtual NodeImpl *replaceChild ( NodeImpl *newChild, NodeImpl *oldChild, int &exceptioncode );
     virtual NodeImpl *removeChild ( NodeImpl *oldChild, int &exceptioncode );
     virtual NodeImpl *appendChild ( NodeImpl *newChild, int &exceptioncode );
+    virtual void remove(int &exceptioncode);
     virtual bool hasChildNodes (  ) const;
     virtual NodeImpl *cloneNode ( bool deep ) = 0;
     virtual DOMString localName() const;
@@ -140,7 +141,7 @@ public:
      * were a linear chain of its leaf nodes.
      * @return previous leaf node or 0 if there are no more.
      */
-    NodeImpl *prevLeafNode() const;
+    NodeImpl *previousLeafNode() const;
 
     // used by the parser. Doesn't do as many error checkings as
     // appendChild(), and returns the node into which will be parsed next.
