@@ -39,8 +39,6 @@
 - (NSString *)searchableIndexIntroduction;
 - (NSString *)submitButtonDefaultLabel;
 
-- (NSMenu *)cellMenuForSearchField;
-
 - (NSString *)defaultLanguageCode;
 
 - (WebCoreBridge *)bridgeForView:(NSView *)aView;
