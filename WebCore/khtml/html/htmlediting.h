@@ -29,11 +29,13 @@
 #include <dom_docimpl.h>
 #include <dom_string.h>
 #include <dom_node.h>
+#include <dom_nodeimpl.h>
 #include <dom2_range.h>
 
 using DOM::DocumentImpl;
 using DOM::DOMString;
 using DOM::Node;
+using DOM::NodeImpl;
 using DOM::Range;
 
 namespace khtml {
@@ -54,7 +56,7 @@ public:
     virtual bool canUndo() const = 0;
 
 protected:
-    virtual void notifyChanged() const;
+    virtual void notifyChanged(NodeImpl *) const;
         
 private:
     Range m_selection;

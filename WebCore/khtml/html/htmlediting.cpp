@@ -110,7 +110,7 @@ bool InputTextCommand::applyToDocument(DocumentImpl *doc)
     if (isLineBreak()) {
         TextImpl *textBeforeNode = doc->createTextNode(textNode->substringData(0, selection().startOffset(), exceptionCode));
         textNode->deleteData(0, selection().startOffset(), exceptionCode);
-        ElementImpl *breakNode = doc->createHTMLElement("BR");
+        ElementImpl *breakNode = doc->createHTMLElement("BR", exceptionCode);
         textNode->parentNode()->insertBefore(textBeforeNode, textNode, exceptionCode);
         textNode->parentNode()->insertBefore(breakNode, textNode, exceptionCode);
         textBeforeNode->deref();
@@ -128,7 +128,7 @@ bool InputTextCommand::applyToDocument(DocumentImpl *doc)
                                     selection().startContainer(), selection().startOffset() + textLength));
     }
     
-    notifyChanged();
+    notifyChanged(textNode);
     return true;
 }
 
