@@ -763,6 +763,8 @@ public:
      */
     KHTMLView *view() const;
 
+    KHTMLPart *part() const;
+
     /**
      * Introduced in DOM Level 2
      * This method is from the DocumentCSS interface
@@ -788,9 +790,10 @@ public:
     DOMString completeURL(const DOMString& url);
 
     DOMString toString() const;
-protected:
+
     Document( DocumentImpl *i);
 
+protected:
     friend class Node;
 };
 
