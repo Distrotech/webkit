@@ -1,5 +1,11 @@
 2004-03-11  Vicki Murley <vicki@apple.com>
 
+	- bump the JavaScriptCore version number to 125.3 on the Safari-1-2-branch, to match the JSC version number that is in Feldspar
+
+        * JavaScriptCore.pbproj/project.pbxproj:
+
+2004-03-11  Vicki Murley <vicki@apple.com>
+
 
 - roll this change from the SUPanFeldspar branch to the Safari-1-2-branch, so that all our Feldspar changes are also in Epiphany
 
