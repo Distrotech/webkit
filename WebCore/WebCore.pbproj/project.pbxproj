@@ -16,9 +16,7 @@
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				INSTALL_PATH = "@executable_path/../Frameworks";
 				OPTIMIZATION_CFLAGS = "-O0";
-				OTHER_LDFLAGS = "-seg1addr $(LOCAL_SEG1_ADDR)";
 				SECTORDER_FLAGS = "";
 				ZERO_LINK = YES;
 			};
@@ -34,8 +32,6 @@
 				DEPLOYMENT_LOCATION = YES;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				INSTALL_PATH = "@executable_path/../Frameworks";
-				OTHER_LDFLAGS = "-seg1addr $(LOCAL_SEG1_ADDR)";
 				SECTORDER_FLAGS = "";
 				ZERO_LINK = NO;
 			};
@@ -141,7 +137,6 @@
 				0867D69EFE84028FC02AAC07,
 				0867D69FFE84028FC02AAC07,
 				0867D6A0FE84028FC02AAC07,
-				255AF6590250FC030ECA149E,
 			);
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
@@ -159,7 +154,6 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.2;
 				OPTIMIZATION_CFLAGS = "-Os";
 				OTHER_CFLAGS = "$(DEBUG_CFLAGS) -DAPPLE_CHANGES";
-				OTHER_LDFLAGS = "-no-c++filt -umbrella WebKit";
 				PRECOMPILE_PREFIX_HEADER = YES;
 				PREFIX_HEADER = WebCorePrefix.h;
 				PRODUCT_NAME = WebCore;
@@ -196,7 +190,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>1.2</string>
 	<key>CFBundleVersion</key>
-	<string>125u</string>
+	<string>125</string>
 </dict>
 </plist>
 ";
@@ -849,25 +843,6 @@
 //082
 //083
 //084
-//250
-//251
-//252
-//253
-//254
-		255AF6590250FC030ECA149E = {
-			buildActionMask = 2147483647;
-			files = (
-			);
-			isa = PBXShellScriptBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if [ -f ../Tools/Scripts/embed-into-alex ]; then sh ../Tools/Scripts/embed-into-alex; fi";
-		};
-//250
-//251
-//252
-//253
-//254
 //350
 //351
 //352
@@ -9749,8 +9724,6 @@
 				COPY_PHASE_STRIP = NO;
 				DEBUG_CFLAGS = "";
 				EXPORTED_SYMBOLS_FILE = WebCore.exp;
-				INSTALL_PATH = "@executable_path/../Frameworks";
-				OTHER_LDFLAGS = "-seg1addr $(LOCAL_SEG1_ADDR)";
 			};
 			isa = PBXBuildStyle;
 			name = OptimizedWithSymbols;

@@ -1,3 +1,13 @@
+=== WebCore-125 tarball ===
+
+2004-02-02  Maciej Stachowiak  <mjs@apple.com>
+
+        Changes for WebCore-125 tarball.
+
+        * WebCore.pbproj/project.pbxproj: Made the usual tweaks.
+
+=== Safari-125 ===
+
 2004-01-19  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by John, Ken, Dave.
