@@ -2,6 +2,42 @@
 
         Reviewed by me
 
+	Got some more basic text editing working, including:
+	Deleting selection when you start typing, and making
+	the delete key work to remove text.
+
+	I did some refactoring as well, moving the guts of
+	the application of editing commands into the command
+	implementation file.
+
+        * khtml/html/html_blockimpl.cpp:
+        (HTMLDivElementImpl::defaultEventHandler):
+        * khtml/html/htmlediting.cpp:
+        (InputTextCommand::commandID):
+        (InputTextCommand::InputTextCommand):
+        (InputTextCommand::isLineBreak):
+        (InputTextCommand::isSpace):
+        (InputTextCommand::applyToDocument):
+        (InputTextCommand::canUndo):
+        (DeleteTextCommand::commandID):
+        (DeleteTextCommand::DeleteTextCommand):
+        (DeleteTextCommand::applyToDocument):
+        (DeleteTextCommand::canUndo):
+        * khtml/html/htmlediting.h:
+        (khtml::):
+        (khtml::InputTextCommand::~InputTextCommand):
+        (khtml::DeleteTextCommand::~DeleteTextCommand):
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::khtmlMouseReleaseEvent):
+        * khtml/khtmlview.cpp:
+        (KHTMLView::caretOverrides):
+        * khtml/xml/dom_docimpl.cpp:
+        (DocumentImpl::applyEditing):
+
+2003-12-08  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
 	A couple of tweaks to make caret drawing work a little
 	better. Now the caret does not paint when you click on
 	a link, and the "leftover" pixel is gone from the
