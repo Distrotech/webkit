@@ -1,5 +1,20 @@
 2004-04-13  Vicki Murley  <vicki@apple.com>
 
+	- merge fix for 3609714 from HEAD
+
+    2004-04-01  Richard Williamson   <rjw@apple.com>
+
+        Fixed 3609493.  Don't remove the plugin's view until after
+        sending pluginDestroy.  This change was requested by Greg
+        and is needed in the Lavender update.
+
+        Reviewed by Greg Bolsinga.
+
+        * Plugins.subproj/WebPluginController.m:
+        (-[WebPluginController destroyAllPlugins]):
+
+2004-04-13  Vicki Murley  <vicki@apple.com>
+
 	- merge fix for 3609700 from HEAD
 
     2004-03-17  Richard Williamson   <rjw@apple.com>
