@@ -1,6 +1,6 @@
 /*	
     WebBridge.m
-    Copyright (c) 2002, 2003, Apple Computer, Inc. All rights reserved.
+    Copyright (c) 2002, 2003, 2004 Apple Computer, Inc. All rights reserved.
 */
 
 #import <WebKit/WebBridge.h>
@@ -1018,6 +1018,20 @@ static BOOL loggedObjectCacheSize = NO;
 - (int)historyLength
 {
     return [[[_frame webView] backForwardList] backListCount] + 1;
+}
+
+- (BOOL)canGoBackOrForward:(int)distance
+{
+    if (distance == 0)
+        return TRUE;
+    
+    if (distance > 0 && distance <= [[[_frame webView] backForwardList] forwardListCount])
+        return TRUE;
+        
+    if (distance < 0 && distance <= [[[_frame webView] backForwardList] backListCount])
+        return TRUE;
+    
+    return FALSE;
 }
 
 - (void)goBackOrForward:(int)distance

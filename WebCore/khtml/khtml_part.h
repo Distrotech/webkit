@@ -7,7 +7,7 @@
  *                     2000-2001 Simon Hausmann <hausmann@kde.org>
  *                     2000-2001 Dirk Mueller <mueller@kde.org>
  *                     2000 Stefan Schimanski <1Stein@gmx.de>
- * Copyright (C) 2003 Apple Computer, Inc.
+ * Copyright (C) 2004 Apple Computer, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -375,11 +375,15 @@ public:
 
   /**
    * Schedules a redirection after @p delay seconds.
-   * Note that this is used for JavaScript-triggered location changes as well.
    */
-  void scheduleRedirection( double delay, const QString &url, bool lockHistory = true, bool userGesture = false );
+  void scheduleRedirection( double delay, const QString &url, bool lockHistory = true);
 
-  bool isImmediateRedirectPending() const;
+  /**
+  * Schedules a location change.
+  * This is used for JavaScript-triggered location changes.
+  */
+  void scheduleLocationChange(const QString &url, bool lockHistory = true, bool userGesture = false);
+  bool isScheduledLocationChangePending() const;
 
   /**
    * Schedules a history navigation operation (go forward, go back, etc.).

@@ -1,3 +1,11 @@
+2004-10-07  Adele Amchan  <adele@apple.com>
+
+        Reviewed by Darin.
+
+        - roll in canGoBackOrForward method from HEAD; needed for WebCore bug fix
+
+        * WebCoreSupport.subproj/WebBridge.m: (-[WebBridge canGoBackOrForward:]): Added.
+
 === WebKit-125.5.3 ===
 
 2004-09-28  Richard Williamson   <rjw@apple.com>

@@ -1,3 +1,59 @@
+2004-10-07  Adele Amchan  <adele@apple.com>
+
+        Reviewed by Darin.
+
+        Some of this was rolled from HEAD, and some is a new bug fix that we'll do on TOT separately.
+
+        - fixed <rdar://problem/3827035> REGRESSION (Navy): Safari no longer works with Wachovia online banking after logging in
+        - fixed <rdar://problem/3830201> REGRESSION (Navy): onload handler doesn't run on page with meta refresh (0 duration) (clone for SUPanNavy)
+
+        The fix for <rdar://problem/3773150> made it so we stopped tokenizing once an immediate redirect was pending.
+        For the Wachovia bug, there was a failing history.go call in the <head>; even though it did not cause any
+        navigation, it prevented the rest of the page from being loaded. Now we check to see if the requested history
+        navigation is possible, and if it's not then we continue processing the rest of the page as normal.
+
+        Another problem caused by the same fix is that <meta> redirects were preventing tokenizing in the same way.
+        This is incorrect; the reason the JavaScript-triggered loads prevent tokenizing is that they take place
+        "right away" in other browsers, but that is not true of <meta> redirect. We fixed this by using a separate
+        call for <meta> redirect and not preventing tokenizing when that's in effect.
+
+        * khtml/khtml_part.h: Removed userGesture parameter from scheduleRedirection. Renamed
+        isImmediateRedirectPending to isScheduledLocationChangePending. Added scheduleLocationChange.
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::openURL): Updated for new constant name.
+        (KHTMLPart::scheduleRedirection): Removed now-unneeded userGesture parameter, and removed code that
+        does the special case for redirection during load; a <meta> refresh can never be one of those special
+        redirects during a load because it redirects the frame itself, not another frame. Also tightened up
+        the logic by always stopping the redirect timer even if we aren't restarting it.
+        (KHTMLPart::scheduleLocationChange): Added. Like scheduleRedirection, but with a different constant
+        so we can tell it apart and always a delay of 0. The "redirection during load" case was moved in here
+        and renamed to locationChangeScheduledDuringLoad.
+        (KHTMLPart::isScheduledLocationChangePending): Renamed from isImmediateRedirectPending. This now
+        returns true only for location changes and history navigation, not <meta> redirects.
+        (KHTMLPart::scheduleHistoryNavigation): Added a check of canGoBackOrForward across bridge so we don't
+        set up a history navigation that will just fail later. This fixes the Wachovia bug. Also tightened up
+        logic to do the stop() outside the if as above, and got rid of a silly timer delay computation that
+        always resulted in 0.
+
+        * khtml/khtmlpart_p.h: Added a new value to the RedirectionScheduled enum for scheduleLocationChange
+        and also renamed one of the existing values.
+
+        * khtml/html/htmltokenizer.cpp: (HTMLTokenizer::write): Changed to use isScheduledLocationChangePending instead
+        of isImmediateRedirectPending, because we do want to continue tokenizing if it's actually a redirect.
+
+        * khtml/ecma/kjs_html.cpp: (KJS::HTMLDocument::putValue): Changed to call the new scheduleLocationChange
+        instead of calling scheduleRedirection with delay of 0.
+        * khtml/ecma/kjs_window.cpp:
+        (Window::put): Ditto.
+        (WindowFunc::tryCall): Ditto.
+        (Location::put): Ditto.
+        (LocationFunc::tryCall): Ditto.
+
+        * kwq/KWQKHTMLPart.h: Added canGoBackOrForward.
+        * kwq/KWQKHTMLPart.mm: (KWQKHTMLPart::canGoBackOrForward): Added. Calls across bridge to do the real work.
+
+        * kwq/WebCoreBridge.h: Added canGoBackOrForward.
+
 === WebCore-125.8.9 ===
 
 2004-09-20  Vicki Murley  <vicki@apple.com>
@@ -50,13 +106,13 @@
 
 2004-09-14  Vicki Murley <vicki@apple.com>
 
-	- roll the fix for <rdar://problem/3791496> back in
+        - roll the fix for <rdar://problem/3791496> back in
 
 === WebCore-125.8.8 ===
 
 2004-09-13  Vicki Murley <vicki@apple.com>
 
-	- roll the fix for <rdar://problem/3791496> off the branch, since we won't be including this in SUPanNavy
+        - roll the fix for <rdar://problem/3791496> off the branch, since we won't be including this in SUPanNavy
 
 2004-09-13  Vicki Murley <vicki@apple.com>
 
