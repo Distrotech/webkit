@@ -62,6 +62,7 @@ private:
     CaretImpl(const CaretImpl *c) {};
 
     void setNode(DOM::NodeImpl *);
+    void setOffset(long offset) { m_offset = offset; }
 
     DOM::NodeImpl *m_node;
     long m_offset;

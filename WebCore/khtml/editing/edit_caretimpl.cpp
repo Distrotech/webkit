@@ -28,6 +28,7 @@
 #include <dom_docimpl.h>
 #include <dom_nodeimpl.h>
 #include <dom_textimpl.h>
+#include <khtmlview.h>
 #include <render_object.h>
 
 #if APPLE_CHANGES
@@ -72,20 +73,27 @@ void CaretImpl::setNode(DOM::NodeImpl *node)
         m_node->ref();
 }
 
-void CaretImpl::setPosition(NodeImpl *node, long offset)
+void CaretImpl::setPosition(NodeImpl *newNode, long newOffset)
 {
-    if (node == m_node && offset == m_offset)
+    if (newNode == node() && newOffset == offset())
         return;
 
     // Perform various checks on the new position and fix up as needed
     // 1. Ensure the node set is a leaf node
-    if (node && node->hasChildNodes())
-        node = node->nextLeafNode();
+    if (newNode && newNode->hasChildNodes())
+        newNode = newNode->nextLeafNode();
 
-    setNode(node);
-    m_offset = offset;
+    setNode(newNode);
+    setOffset(newOffset);
 
     adjustPosition();
+    
+    // this has the effect of keeping the cursor from blinking when the caret moves
+    if (node()) {
+        KHTMLView *view = node()->getDocument()->view();
+        if (view)
+            view->caretOn();
+    }
 }
 
 void CaretImpl::moveForwardByCharacter()
