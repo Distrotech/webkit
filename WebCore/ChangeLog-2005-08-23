@@ -1,3 +1,17 @@
+2004-03-11  Maciej Stachowiak  <mjs@apple.com>
+
+	Merge yet another fix for Epiphany.
+	
+    2004-03-10  David Hyatt  <hyatt@apple.com>
+
+	Fix for 3584646, AxWebArea should encompass all children (its AxSize should).
+	
+        Reviewed by mjs
+
+        * khtml/rendering/render_canvas.cpp:
+        (RenderCanvas::absoluteRects):
+        * khtml/rendering/render_canvas.h:
+
 === WebCore-125.4 ===
 
 2004-03-10  Maciej Stachowiak  <mjs@apple.com>
