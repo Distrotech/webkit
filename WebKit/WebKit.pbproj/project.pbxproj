@@ -346,6 +346,7 @@
 				F5B67131023EDF8901C1A525,
 				5128F1FA04719A4200CA2D3A,
 				99356DF10630D6DA00F78775,
+				9325FBDD07D829AE00159862,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -479,6 +480,7 @@
 				F5F732D202FF4D4F01A80180,
 				9345D4E70365C58D008635CE,
 				5128F1F904719A4200CA2D3A,
+				9325FBDC07D829AE00159862,
 			);
 			isa = PBXGroup;
 			name = Resources;
@@ -2386,6 +2388,21 @@
 			path = English.lproj/StringsNotToBeLocalized.txt;
 			refType = 4;
 			sourceTree = "<group>";
+		};
+		9325FBDC07D829AE00159862 = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			lastKnownFileType = text;
+			name = IDNScriptWhiteList.txt;
+			path = Resources/IDNScriptWhiteList.txt;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		9325FBDD07D829AE00159862 = {
+			fileRef = 9325FBDC07D829AE00159862;
+			isa = PBXBuildFile;
+			settings = {
+			};
 		};
 		933D659903413FF2008635CE = {
 			fileEncoding = 4;

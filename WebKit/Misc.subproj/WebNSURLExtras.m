@@ -14,7 +14,9 @@
 #import <Foundation/NSURLRequest.h>
 #import <Foundation/NSURL_NSURLExtras.h>
 
+#import <unicode/uchar.h>
 #import <unicode/uidna.h>
+#import <unicode/uscript.h>
 
 typedef void (* StringRangeApplierFunction)(NSString *string, NSRange range, void *context);
 
@@ -23,6 +25,9 @@ typedef void (* StringRangeApplierFunction)(NSString *string, NSRange range, voi
 #define HOST_NAME_BUFFER_LENGTH 2048
 
 #define URL_BYTES_BUFFER_LENGTH 2048
+
+static pthread_once_t IDNScriptWhiteListFileRead = PTHREAD_ONCE_INIT;
+static uint32_t IDNScriptWhiteList[(USCRIPT_CODE_LIMIT + 31) / 32];
 
 static char hexDigit(int i)
 {
@@ -695,6 +700,98 @@ static NSString *mapHostNames(NSString *string, BOOL encode)
     return lastChar == '/' && [self _web_hasCaseInsensitivePrefix:@"ftp:"];
 }
 
+
+static BOOL readIDNScriptWhiteListFile(NSString *filename)
+{
+    if (!filename) {
+        return NO;
+    }
+    FILE *file = fopen([filename fileSystemRepresentation], "r");
+    if (file == NULL) {
+        return NO;
+    }
+
+    // Read a word at a time.
+    // Allow comments, starting with # character to the end of the line.
+    while (1) {
+        // Skip a comment if present.
+        int result = fscanf(file, " #%*[^\n\r]%*[\n\r]");
+        if (result == EOF) {
+            break;
+        }
+
+        // Read a script name if present.
+        char word[33];
+        result = fscanf(file, " %32[^# \t\n\r]%*[^# \t\n\r] ", word);
+        if (result == EOF) {
+            break;
+        }
+        if (result == 1) {
+            // Got a word, map to script code and put it into the array.
+            int32_t script = u_getPropertyValueEnum(UCHAR_SCRIPT, word);
+            if (script == UCHAR_INVALID_CODE) {
+                NSLog(@"%@: unknown script code: %s", filename, word);
+            } else if (script >= 0 && script < USCRIPT_CODE_LIMIT) {
+                size_t index = script / 32;
+                uint32_t mask = 1 << (script % 32);
+                if (IDNScriptWhiteList[index] & mask) {
+                    NSLog(@"%@: script code %s is listed twice\n", filename, word);
+                }
+                IDNScriptWhiteList[script] |= mask;
+            }
+        }
+    }
+    fclose(file);
+    return YES;
+}
+
+static void readIDNScriptWhiteList(void)
+{
+    // Read white list from library.
+    NSArray *dirs = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSAllDomainsMask, YES);
+    int i, numDirs = [dirs count];
+    for (i = 0; i < numDirs; i++) {
+	NSString *dir = [dirs objectAtIndex:i];
+	if (readIDNScriptWhiteListFile([dir stringByAppendingPathComponent:@"IDNScriptWhiteList.txt"])) {
+            return;
+        }
+    }
+
+    // Fall back on white list inside bundle.
+    NSBundle *bundle = [NSBundle bundleWithIdentifier:@"com.apple.WebKit"];
+    readIDNScriptWhiteListFile([bundle pathForResource:@"IDNScriptWhiteList" ofType:@"txt"]);
+}
+
+static BOOL allCharactersInIDNScriptWhiteList(const UChar *buffer, int32_t length)
+{
+    pthread_once(&IDNScriptWhiteListFileRead, readIDNScriptWhiteList);
+
+    int32_t i = 0;
+    while (i < length) {
+        UChar32 c;
+        U16_NEXT(buffer, i, length, c)
+        UErrorCode error = U_ZERO_ERROR;
+        UScriptCode script = uscript_getScript(c, &error);
+        if (error != U_ZERO_ERROR) {
+            ERROR("got ICU error while trying to look at scripts: %d", error);
+            return NO;
+        }
+        if (script < 0) {
+            ERROR("got negative number for script code from ICU: %d", script);
+            return NO;
+        }
+        if (script >= USCRIPT_CODE_LIMIT) {
+            return NO;
+        }
+        size_t index = script / 32;
+        uint32_t mask = 1 << (script % 32);
+        if (!(IDNScriptWhiteList[index] & mask)) {
+            return NO;
+        }
+    }
+    return YES;
+}
+
 // Return value of nil means no mapping is necessary.
 // If makeString is NO, then return value is either nil or self to indicate mapping is necessary.
 // If makeString is YES, then return value is either nil or the mapped string.
@@ -727,6 +824,9 @@ static NSString *mapHostNames(NSString *string, BOOL encode)
         return nil;
     }
     if (numCharactersConverted == length && memcmp(sourceBuffer, destinationBuffer, length * sizeof(UChar)) == 0) {
+        return nil;
+    }
+    if (!encode && !allCharactersInIDNScriptWhiteList(destinationBuffer, numCharactersConverted)) {
         return nil;
     }
     return makeString ? [NSString stringWithCharacters:destinationBuffer length:numCharactersConverted] : self;
