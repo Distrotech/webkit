@@ -1,3 +1,72 @@
+2004-01-09  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
+	A whole host of editing improvements
+
+        * khtml/editing/edit_caret.cpp:
+        (Caret::Caret):
+        (Caret::setPosition):
+        (Caret::moveForwardByCharacter):
+        (Caret::moveBackwardByCharacter):
+        (Caret::setStartOfLine):
+        (Caret::adjustPosition):
+        (Caret::adjustedForEditing):
+        * khtml/editing/edit_caret.h:
+        * khtml/editing/edit_caretimpl.cpp:
+        (CaretImpl::CaretImpl):
+        (CaretImpl::setNode):
+        (CaretImpl::setPosition):
+        (CaretImpl::moveForwardByCharacter):
+        (CaretImpl::moveBackwardByCharacter):
+        (CaretImpl::adjustPosition):
+        (EditNodeFilter::acceptNode):
+        * khtml/editing/edit_caretimpl.h:
+        * khtml/editing/htmlediting.cpp:
+        (EditCommand::EditCommand):
+        (EditCommand::~EditCommand):
+        (EditCommand::notifyChanged):
+        (EditCommand::notifyNodesChanged):
+        (EditCommand::deleteSelection):
+        (EditCommand::pruneEmptyNodes):
+        (EditCommand::removeNode):
+        (InputTextCommand::InputTextCommand):
+        (InputTextCommand::isLineBreak):
+        (InputTextCommand::isSpace):
+        (InputTextCommand::apply):
+        (DeleteTextCommand::DeleteTextCommand):
+        (DeleteTextCommand::apply):
+        * khtml/editing/htmlediting.h:
+        (khtml::EditCommand::document):
+        * khtml/html/html_elementimpl.cpp:
+        (HTMLElementImpl::defaultEventHandler):
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::clear):
+        (KHTMLPart::findTextNext):
+        (KHTMLPart::setSelection):
+        (KHTMLPart::slotClearSelection):
+        (KHTMLPart::khtmlMousePressEvent):
+        (KHTMLPart::khtmlMouseMoveEvent):
+        (KHTMLPart::khtmlMouseReleaseEvent):
+        (KHTMLPart::selectAll):
+        (KHTMLPart::caret):
+        (KHTMLPart::moveCaretTo):
+        * khtml/khtml_part.h:
+        * khtml/khtmlview.cpp:
+        (KHTMLView::focusNextPrevNode):
+        (KHTMLView::initCaret):
+        (KHTMLView::caretOverrides):
+        (KHTMLView::recalcAndStoreCaretPos):
+        (KHTMLView::foldSelectionToCaret):
+        (KHTMLView::placeCaret):
+        (KHTMLView::moveCaretTo):
+        * khtml/xml/dom_docimpl.cpp:
+        * khtml/xml/dom_docimpl.h:
+        * khtml/xml/dom_nodeimpl.cpp:
+        (NodeImpl::remove):
+        (NodeImpl::previousLeafNode):
+        * khtml/xml/dom_nodeimpl.h:
+
 2003-12-19  Ken Kocienda  <kocienda@apple.com>
 
         Reviewed by me
