@@ -905,6 +905,15 @@ static HTMLFormElementImpl *formElementFromDOMElement(id <WebDOMElement>element)
     return NoFrameBorder;
 }
 
+- (NSString *)domain
+{
+    DocumentImpl *doc = _part->xmlDocImpl();
+    if (doc && doc->isHTMLDocument()) {
+        return doc->domain().string().getNSString();
+    }
+    return nil;
+}
+
 + (NSString *)stringWithData:(NSData *)data textEncoding:(CFStringEncoding)textEncoding
 {
     if (textEncoding == kCFStringEncodingInvalidId || textEncoding == kCFStringEncodingISOLatin1) {

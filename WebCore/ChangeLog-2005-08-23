@@ -1,3 +1,17 @@
+2004-07-09  Vicki Murley  <vicki@apple.com>
+
+	- merge this fix from HEAD, so that the July 2004 Security Update will compile on Jaguar
+
+    2004-07-09  Chris Blumenberg  <cblu@apple.com>
+
+        Allowed my change for 3715785 to compile on Jaguar.
+
+        Reviewed by kocienda.
+
+        * kwq/WebCoreBridge.h:
+        * kwq/WebCoreBridge.mm:
+        (-[WebCoreBridge domain]): new, allows access to the domain without using the DOM API which doesn't exist on Jaguar
+
 === WebCore-85.6 ===
 
 2004-01-19  Maciej Stachowiak  <mjs@apple.com>
