@@ -1,3 +1,5 @@
+=== WebKit-106.2 ===
+
 2003-11-20  Vicki Murley  <vicki@apple.com>
 
         - roll these fixes onto the branch to add tooltip support in SUPanBisque (rdar://problem/3490331)
