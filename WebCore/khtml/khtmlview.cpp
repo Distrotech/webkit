@@ -297,27 +297,6 @@ inline RenderObject *findRenderer(NodeImpl *&node)
     return r;
 }
 
-/** Bring caret information position into a sane state */
-static void sanitizeCaretState(NodeImpl *&caretNode, long &offset) 
-{
-    // EDIT FIXME: this leaves caretNode untouched if there are no more renderers.
-    // It better should search backwards then.
-    // This still won't solve the problem what to do if *no* element has a
-    // renderer.
-    NodeImpl *tmpNode = caretNode;
-    if (findRenderer(tmpNode)) {
-        fprintf(stderr, "set caret node to: %p", caretNode);
-        caretNode = tmpNode;
-    }
-    
-    long max = caretNode->caretMaxOffset();
-    long min = caretNode->caretMinOffset();
-    if (offset < min) 
-        offset = min;
-    else if (offset > max) 
-        offset = max;
-}
-
 }/*end namespace*/
 
 // == end caret-related
@@ -1418,29 +1397,24 @@ void KHTMLView::focusNextPrevNode(bool next)
         else
             scrollTo(QRect(contentsX()+visibleWidth()/2,0,0,0));
     }
-    else
-    // Scroll the view as necessary to ensure that the new focus node is visible
-    {
-#ifndef KHTML_NO_CARET
+    else {
         // if it's an editable element, activate the caret
         if (!m_part->inEditMode() && newFocusNode->renderer()->isEditable()) {
-	    d->caretViewContext();
-	    moveCaretTo(newFocusNode, 0L, true);
-        } else {
-	    caretOff();
-	}
-#endif // KHTML_NO_CARET
+            d->caretViewContext();
+            moveCaretTo(newFocusNode, 0L, true);
+        } 
+        else {
+            caretOff();
+        }
 
-      if (oldFocusNode)
-	{
-	  if (!scrollTo(newFocusNode->getRect()))
-	    return;
-	}
-      else
-	{
-	  ensureVisible(contentsX(), next?0:contentsHeight());
-	  //return;
-	}
+        // Scroll the view as necessary to ensure that the new focus node is visible
+        if (oldFocusNode) {
+            if (!scrollTo(newFocusNode->getRect()))
+                return;
+        }
+        else {
+            ensureVisible(contentsX(), next ? 0: contentsHeight());
+        }
     }
     // Set focus node on the document
     m_part->xmlDocImpl()->setFocusNode(newFocusNode);
@@ -2035,22 +2009,23 @@ void KHTMLView::initCaret()
 {
     if (m_part->xmlDocImpl()) {
         d->caretViewContext();
-        if (m_part->caretNode().isNull()) {
+        Caret caret = m_part->caret();
+        if (caret.node().isNull()) {
             // set to document, position will be sanitized anyway
             m_part->moveCaretTo(m_part->document().handle(), 0L);
             // This sanity check is necessary for the not so unlikely case that
             // setEditMode or setCaretMode is called before any render objects have
             // been created.
-            if (!m_part->caretNode().handle()->renderer()) 
+            if (!caret.node().handle()->renderer()) 
                 return;
         }
-        moveCaretTo(m_part->caretNode().handle(), m_part->caretOffset(), true);
+        moveCaretTo(caret.node().handle(), caret.offset(), true);
     }
 }
 
 bool KHTMLView::caretOverrides() {
     return d->editorContext()->override &&
-        (m_part->inEditMode() || m_part->caretNode().handle()->isContentEditable());
+        (m_part->inEditMode() || m_part->caret().node().handle()->isContentEditable());
 }
 
 void KHTMLView::ensureNodeHasFocus(NodeImpl *node) {
@@ -2075,13 +2050,17 @@ void KHTMLView::ensureNodeHasFocus(NodeImpl *node) {
 }
 
 void KHTMLView::recalcAndStoreCaretPos() {
-    if (!m_part || m_part->caretNode().isNull()) 
+    if (!m_part) 
+        return;
+
+    Caret caret = m_part->caret();
+    if (caret.node().isNull()) 
         return;
     
     d->caretViewContext();
-    m_part->caretNode().handle()->getCaret(m_part->caretOffset(),
-                caretOverrides(),
-    		d->m_caretViewContext->x, d->m_caretViewContext->y,
+    caret.node().handle()->getCaret(caret.offset(),
+        caretOverrides(),
+        d->m_caretViewContext->x, d->m_caretViewContext->y,
 		d->m_caretViewContext->width,
 		d->m_caretViewContext->height);
 }
@@ -2143,8 +2122,8 @@ void KHTMLView::paintCaret(QPainter *p, const QRect &rect) const
 
 bool KHTMLView::foldSelectionToCaret(NodeImpl *startNode, long startOffset,
     				NodeImpl *endNode, long endOffset) {
-    m_part->d->m_selectionStart = m_part->d->m_selectionEnd = m_part->caretNode();
-    m_part->d->m_startOffset = m_part->d->m_endOffset = m_part->caretOffset();
+    m_part->d->m_selectionStart = m_part->d->m_selectionEnd = m_part->caret().node();
+    m_part->d->m_startOffset = m_part->d->m_endOffset = m_part->caret().offset();
     m_part->d->m_extendAtEnd = true;
     
     bool folded = startNode != endNode || startOffset != endOffset;
@@ -2179,7 +2158,7 @@ bool KHTMLView::placeCaret() {
 
     recalcAndStoreCaretPos();
     
-    NodeImpl *caretNode = m_part->caretNode().handle();
+    NodeImpl *caretNode = m_part->caret().node().handle();
     if (!caretNode)
         return false;
 
@@ -2202,7 +2181,21 @@ bool KHTMLView::placeCaret() {
 }
 
 bool KHTMLView::moveCaretTo(NodeImpl *node, long offset, bool clearSel) {
-    sanitizeCaretState(node, offset);
+    // Fix up caret node
+    // EDIT FIXME: this leaves node untouched if there are no more renderers.
+    // It should search backwards then.
+    // This still won't solve the problem what to do if *no* element has a renderer.
+    NodeImpl *tmpNode = node;
+    if (findRenderer(tmpNode))
+        node = tmpNode;
+    
+    // Fix up caret offset
+    long max = node->caretMaxOffset();
+    long min = node->caretMinOffset();
+    if (offset < min) 
+        offset = min;
+    else if (offset > max) 
+        offset = max;
     
     NodeImpl *oldStartSel = m_part->d->m_selectionStart.handle();
     long oldStartOfs = m_part->d->m_startOffset;
@@ -2210,8 +2203,7 @@ bool KHTMLView::moveCaretTo(NodeImpl *node, long offset, bool clearSel) {
     long oldEndOfs = m_part->d->m_endOffset;
     
     // test for position change
-    bool posChanged = m_part->caretNode().handle() != node
-                || m_part->caretOffset() != offset;
+    bool posChanged = m_part->caret().node().handle() != node || m_part->caret().offset() != offset;
     bool folded = false;
     
     m_part->moveCaretTo(node, offset);
@@ -2224,9 +2216,8 @@ bool KHTMLView::moveCaretTo(NodeImpl *node, long offset, bool clearSel) {
     // FIXME: if the old position was !visible_caret, and the new position is
     // also, then two caretPositionChanged signals with a null Node are
     // emitted in series.
-    if (posChanged) {
+    if (posChanged)
         m_part->emitCaretPositionChanged(m_part->caret());
-    }
     
     return folded;
 }
