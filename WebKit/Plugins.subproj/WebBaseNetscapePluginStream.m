@@ -136,7 +136,18 @@
     }
     
     NSString *filename = [[URL path] lastPathComponent];
-    if(transferMode == NP_ASFILE || transferMode == NP_ASFILEONLY) {
+    
+    // It's very important to not do the below calls, like "removeFileAtPath:", on empty paths.
+    // That's the way you lose your "/tmp" directory.
+    if ([filename length] == 0
+            || [filename isEqualToString:@"."]
+            || [filename isEqualToString:@".."]
+            || [filename isEqualToString:@"/"]) {
+        [self destroyStreamWithReason:NPRES_NETWORK_ERR];
+        return;
+    }
+    
+    if (transferMode == NP_ASFILE || transferMode == NP_ASFILEONLY) {
         // FIXME: Need to use something like mkstemp?
         path = [[NSString stringWithFormat:@"/tmp/%@", filename] retain];        
         NSFileManager *fileManager = [NSFileManager defaultManager];
