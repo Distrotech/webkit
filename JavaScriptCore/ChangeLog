@@ -1,3 +1,21 @@
+2004-06-18  Vicki Murley  <vicki@apple.com>
+
+	- merge this fix from HEAD.  Even if we can't submit this to Tiger for WWDC, we'll still
+	need it for the Dashboard demo.  No harm in merging this now.
+
+    2004-06-16  Richard Williamson   <rjw@apple.com>
+
+        Fixed <rdar://problem/3702287> Crash returning nil from bound ObjC
+
+        This turned out to be a show stopper for Dashboard.  Accessing a nil
+        ObjC property from JS caused a crash.  Similar to the problem
+        3696112 fixed below.
+        
+        Reviewed by Trey.
+
+        * bindings/objc/objc_runtime.mm:
+        (KJS::Bindings::ObjcField::valueFromInstance):
+
 === Safari-146 ===
 
 2004-06-16  Richard Williamson   <rjw@apple.com>
