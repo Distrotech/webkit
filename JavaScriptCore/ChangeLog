@@ -1,6 +1,31 @@
+2004-03-01  Vicki Murley  <vicki@apple.com>
+
+	- roll this change onto the SUPanFeldspar branch
+
+    2004-02-02  Darin Adler  <darin@apple.com>
+
+        Reviewed by Maciej.
+
+        - fixed <rdar://problem/3546613>: array of negative size leads to crash (test page at oscar.the-rileys.net)
+
+        * kjs/array_object.cpp:
+        (ArrayInstanceImp::ArrayInstanceImp): If the length is greater than 10,000, don't allocate an array until
+        we start putting values in. This prevents new Array(2147483647) from causing trouble.
+        (ArrayObjectImp::construct): Check number as described in specification, and raise a range error if the
+        number is out of range. This prevents new Array(-1) from causing trouble.
+
+=== JavaScriptCore-125~1 ===
+
 2004-02-11  Vicki Murley  <vicki@apple.com>
 
-        Reviewed by NOBODY (OOPS!).
+    	- roll this change onto the SUPanFeldspar branch
+
+    2004-01-30  Richard Williamson   <rjw@apple.com>
+
+        Fixed 3542044.  Create KJS::String using UString constructor 
+	instead of passing UTF8 string to char* constructor.
+
+        Reviewed by Darin.
 
         * bindings/jni/jni_instance.cpp:
         (JavaInstance::stringValue):
