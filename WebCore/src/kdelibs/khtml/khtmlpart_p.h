@@ -25,6 +25,7 @@
  * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+#ifndef APPLE_CHANGES
 #include <kcursor.h>
 #include <klibloader.h>
 #include <kxmlguifactory.h>
@@ -354,3 +355,4 @@ public:
 };
 
 #endif
+#endif /* APPLE_CHANGES not defined */

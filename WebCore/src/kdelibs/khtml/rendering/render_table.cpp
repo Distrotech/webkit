@@ -990,7 +990,7 @@ void RenderTable::calcColMinMax()
   
         if (tot<100)
             m_maxWidth = KMAX( short((maxVar+maxRel)*100/(100-tot)), m_maxWidth );
-        else if (hasRel || hasVar || (totalPercent>maxPercentColumn && maxPercentColumn>=100))
+        else if (hasRel || hasVar || ((int)totalPercent>maxPercentColumn && maxPercentColumn>=100))
             m_maxWidth = 10000;
         else if (totalPercent>0)
             m_maxWidth = KMAX(short(maxTentativePercentWidth*100/totalPercent), m_maxWidth);

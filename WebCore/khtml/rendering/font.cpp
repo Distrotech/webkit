@@ -152,7 +152,11 @@ void Font::update( QPaintDeviceMetrics* devMetrics ) const
         }
         //kdDebug( 6080 ) << "best smooth font size: " << bestSize << " diff=" << diff << endl;
         if ( bestSize != 0 && diff < 0.2 ) // 20% deviation, otherwise we use a scaled font...
+#ifdef APPLE_CHANGES
+            size = (int) ((bestSize*lDpiY) / 72);
+#else
             size = (bestSize*lDpiY) / 72;
+#endif
     }
 
 //      qDebug("setting font to %s, italic=%d, weight=%d, size=%d", fontDef.family.latin1(), fontDef.italic,

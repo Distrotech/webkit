@@ -83,6 +83,8 @@ public:
     const QColor &button() const;
     const QColor &text() const;
     const QColor &background() const;
+    const QColor &highlight() const;
+    const QColor &highlightedText() const;
 
     // operators ---------------------------------------------------------------
 

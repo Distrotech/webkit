@@ -723,7 +723,9 @@ Value DOMDocument::getValueProperty(ExecState *exec, int token) const
     {
       KHTMLPart* part = docimpl->view()->part();
       if ( part ) {
+#ifndef APPLE_CHANGES
         if (part->d->m_bComplete) return String("complete");
+#endif
         if (docimpl->parsing()) return String("loading");
         return String("loaded");
         // What does the interactive value mean ?

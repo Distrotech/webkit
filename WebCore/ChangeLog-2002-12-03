@@ -1,5 +1,35 @@
 2002-03-24  Darin Adler  <darin@apple.com>
 
+        Some fixes to get more stuff to compile.
+
+	* src/kdelibs/khtml/ecma/kjs_dom.cpp: (DOMDocument::getValueProperty):
+        Don't try to look at the private m_bComplete to display "complete". Just do
+        "loading" and "loaded".
+        * src/kdelibs/khtml/khtmlpart_p.h: #ifdef this all out for APPLE_CHANGES.
+	* src/kdelibs/khtml/rendering/font.cpp: (Font::update): Add an explicit cast to
+        int to avoid float -> int warning.
+	* src/kdelibs/khtml/rendering/render_table.cpp: (RenderTable::calcColMinMax):
+        Add an explicit cast to int to avoid uint compared with int warning.
+	* src/kdelibs/khtml/xml/dom_docimpl.cpp: (DocumentImpl::recalcStyleSelector):
+        Use sheetUsed() and setSheetUsed() functions on KHTMLPart intead of getting
+        at private fields the way the real KDE code does.
+        
+        * src/kwq/KWQKHTMLPart.h: Declare zoomFactor(), sheetUsed(), and setSheetUsed().
+	* src/kwq/KWQStyle.h: Add PM_DefaultFramWidth as another metric.
+	* src/kwq/kdecore/klocale.h: Add languageList().
+	* src/kwq/khtml/khtml_settings.h: Add mediumFontSize().
+	* src/kwq/qt/qapplication.h: Add style() and QDesktopWidget.
+	* src/kwq/qt/qevent.h: Add reason().
+	* src/kwq/qt/qfont.h: Add setPixelSize(int).
+	* src/kwq/qt/qfontmetrics.h: Add charWidth() and _charWidth() functions.
+	* src/kwq/qt/qpainter.h: Add drawText() overload with position parameter.
+	* src/kwq/qt/qpalette.h: Add highlight() and highlightedText().
+	* src/kwq/qt/qscrollview.h: Add childX() and childY().
+        
+	* src/kwq/KWQApplication.mm: Change KWQDesktopWidget to QDesktopWidget.
+
+2002-03-24  Darin Adler  <darin@apple.com>
+
         Merged kdelibs from KDE 3.0 RC 3 into our 3.0 beta 2-based sources.
 
 	* src/kdelibs/kdecore/kentities.gperf:
