@@ -1,3 +1,18 @@
+2004-04-13  Vicki Murley  <vicki@apple.com>
+
+	- merge WebKit part of fix for 3612925 from HEAD
+
+    2004-03-24  Darin Adler  <darin@apple.com>
+
+        Reviewed by John.
+
+        - fixed <rdar://problem/3566805>: REGRESSION: When the subject of mailto is 2 byte Safari 
+	failed to send mail address and subject to Mail.app
+
+        * Misc.subproj/WebNSURLExtras.m: (applyHostNameFunctionToMailToURLString): Update to handle hostnames
+        that end just before a '?' since a '?' ends the entire part of the URL that can contain hostnames.
+        Also change the logic so that the '?' will successfully end the search.
+
 2004-04-07  Vicki Murley  <vicki@apple.com>
 
 	- merge fix for <rdar://problem/3612921>: Plug-in context menus (Flash) don't work in Carbon WebKit applications (clone for SU) from HEAD
