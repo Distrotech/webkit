@@ -1,3 +1,5 @@
+=== JavaScriptCore-146.1 ===
+
 2004-06-18  Vicki Murley  <vicki@apple.com>
 
 	- merge this fix from HEAD.  Even if we can't submit this to Tiger for WWDC, we'll still
