@@ -1,5 +1,12 @@
 2003-02-07  Ken Kocienda  <kocienda@apple.com>
 
+        Moved Darin's copyright changes onto this branch.
+
+        * khtml/rendering/render_table.cpp:
+        * khtml/rendering/render_table.h:
+
+2003-02-07  Ken Kocienda  <kocienda@apple.com>
+
 	Rolled changes from trunk onto branch to fix this bug:
 
 	Radar 3167025 (REGRESSION: http://www.buypcdirect.com doesn't wrap correctly b/c of huge cell width value)
