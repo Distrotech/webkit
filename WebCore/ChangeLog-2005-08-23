@@ -1,5 +1,12 @@
 2004-09-08  Vicki Murley <vicki@apple.com>
 
+	- check in regenerated file khtml/ecma/kjs_window.lut.h, for 3772916
+        
+	* khtml/ecma/kjs_window.lut.h:
+        (KJS::):
+
+2004-09-08  Vicki Murley <vicki@apple.com>
+
 	- merge this fix from HEAD for SUPanNavy, <rdar://problem/3791496>
 
     2004-08-10  Darin Adler  <darin@apple.com>
