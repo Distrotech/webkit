@@ -2380,41 +2380,7 @@ bool DocumentImpl::hasWindowEventListener(int id)
 
 bool DocumentImpl::applyEditing(khtml::EditCommand *command)
 {
-    bool result = false;
-    
-    switch (command->commandID()) {
-        case TextInputCommandID: {
-            TextInputCommand *cmd = static_cast<TextInputCommand *>(command);
-            
-            if (view()->caretOverrides()) {
-                // EDIT FIXME: need to save the contents for redo
-                cmd->selection().deleteContents();
-            }
-            
-            NodeImpl *caretNode = cmd->selection().startContainer().handle();
-            if (caretNode->isTextNode()) {
-                TextImpl *n = static_cast<TextImpl *>(caretNode);
-                int exceptionCode;
-                n->insertData(cmd->selection().startOffset(), cmd->text(), exceptionCode);
-                
-                // EDIT FIXME: this is a hack for now
-                // advance the cursor
-                int textLength = cmd->text().length();
-                Range r = view()->part()->selection();
-                r.setEnd(r.endContainer(), r.endOffset() + textLength);
-                r.setStart(r.startContainer(), r.startOffset() + textLength);
-                view()->part()->setSelection(r);
-                
-                result = true;
-            }
-            break;
-        }
-        default:
-#if APPLE_CHANGES
-            ERROR("unrecognized edit command: %d", command->commandID());
-#endif
-            break;
-    }
+    bool result = command->applyToDocument(this);
     
     // EDIT FIXME: until undo is hooked up, the command has no place to go
     // just delete
