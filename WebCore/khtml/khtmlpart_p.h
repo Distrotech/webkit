@@ -121,6 +121,7 @@ public:
     m_bDnd = true;
     m_startOffset = m_endOffset = 0;
     m_startBeforeEnd = true;
+    m_extendAtEnd = true;
 #if !APPLE_CHANGES
     m_linkCursor = KCursor::handCursor();
 #endif
@@ -357,6 +358,7 @@ public:
   QString m_overURLTarget;
 
   bool m_startBeforeEnd:1;
+  bool m_extendAtEnd:1;
   bool m_bDnd:1;
   bool m_bFirstData:1;
   bool m_bClearing:1;
