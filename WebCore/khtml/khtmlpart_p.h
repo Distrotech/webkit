@@ -43,6 +43,7 @@
 #include "java/kjavaappletcontext.h"
 #include "ecma/kjs_proxy.h"
 #include "dom/dom_misc.h"
+#include "editing/edit_caret.h"
 
 namespace KIO
 {
@@ -354,6 +355,7 @@ public:
   long m_startOffset;
   DOM::Node m_selectionEnd;
   long m_endOffset;
+  khtml::Caret m_caret;
   QString m_overURL;
   QString m_overURLTarget;
 
