@@ -1,3 +1,80 @@
+2003-11-20  Vicki Murley  <vicki@apple.com>
+
+        - roll these fixes onto the branch to add tooltip support in SUPanBisque (rdar://problem/3490331)
+
+    2003-09-22  Darin Adler  <darin@apple.com>
+
+        Reviewed by Dave.
+
+        - worked around 3429631 -- window stops getting mouse moved events after first tooltip appears
+
+        * WebView.subproj/WebHTMLViewPrivate.m: (-[NSToolTipPanel setAcceptsMouseMovedEvents:]):
+        Do nothing, preventing the real setAcceptsMouseMovedEvents: (in class NSWindow) from being called.
+
+    2003-09-22  Darin Adler  <darin@apple.com>
+
+        Reviewed by Dave.
+
+        - fixed 3431033 -- crash in -[NSToolTipManager _shouldInstallToolTip:]
+
+        * WebView.subproj/WebHTMLViewPrivate.m:
+        (-[WebHTMLView _addTrackingRect:owner:userData:assumeInside:useTrackingNum:]):
+        Override this alternate version of addTrackingRect. If I don't do this, we might
+        create a real tracking rect, which we would then never remove.
+        (-[WebHTMLView removeTrackingRect:]): Added assertions.
+
+    2003-09-21  Darin Adler  <darin@apple.com>
+
+        * WebView.subproj/WebHTMLViewPrivate.m: (-[WebHTMLView removeTrackingRect:]): Remove bogus assert.
+
+    2003-09-21  Darin Adler  <darin@apple.com>
+
+        Reviewed by Dave.
+
+        - fixed 3106411 -- show title attribute for page elements in tooltip on mouseover (important for PeopleSoft)
+
+        * WebView.subproj/WebHTMLViewPrivate.h: Added fields needed for tool tip implementation.
+        * WebView.subproj/WebHTMLViewPrivate.m:
+        (-[WebHTMLViewPrivate dealloc]): Release the tool tip string.
+        (-[WebHTMLView addTrackingRect:owner:userData:assumeInside:]): Override the default NSView
+        tracking rectangle implementation so we can trick the tool tip manager into trusting us about
+        when you leave and enter the rectangle for each element.
+        (-[WebHTMLView removeTrackingRect:]): The other half of the above stuff.
+        (-[WebHTMLView _sendToolTipMouseExited]): Added. Makes an event just good enough to fool the tool tip
+        manager, and send it on.
+        (-[WebHTMLView _sendToolTipMouseEntered]): Ditto.
+        (-[WebHTMLView _setToolTip:]): Added. Manages the new and old tool tips in a way that fools the tool
+        tip manager into working even though we don't know the rectangles of the tool tips beforehand. The
+        advantage of using AppKit tool tips is that they have all sorts of nice little features, like wrapping
+        to a nice rectangular shape and fading out when you move away.
+        (-[WebHTMLView view:stringForToolTip:point:userData:]): This is how the tool tip manager gets the actual
+        tool tip text.
+        (-[WebHTMLView _updateMouseoverWithEvent:]): Call _setToolTip method, using the value passed along with the
+        WebCoreElementTitleKey in the dictionary.
+
+        - unrelated code cleanup
+
+        * WebView.subproj/WebFramePrivate.h: Don't define WebCorePageCacheStateKey here; instead use
+        a definition exported from WebCore.
+        * WebView.subproj/WebFramePrivate.m: Ditto.
+        * English.lproj/StringsNotToBeLocalized.txt: Update for above changes.
+
+        * WebView.subproj/WebFramePrivate.h:
+        * WebView.subproj/WebFramePrivate.m:
+        * WebView.subproj/WebHTMLViewPrivate.h:
+        * WebView.subproj/WebHTMLViewPrivate.m:
+        (-[WebHTMLViewPrivate dealloc]):
+        (-[WebHTMLView addTrackingRect:owner:userData:assumeInside:]):
+        (-[WebHTMLView _addTrackingRect:owner:userData:assumeInside:useTrackingNum:]):
+        (-[WebHTMLView removeTrackingRect:]):
+        (-[WebHTMLView _sendToolTipMouseExited]):
+        (-[WebHTMLView _sendToolTipMouseEntered]):
+        (-[WebHTMLView _setToolTip:]):
+        (-[WebHTMLView view:stringForToolTip:point:userData:]):
+        (-[WebHTMLView _updateMouseoverWithEvent:]):
+        (-[NSMutableDictionary _web_setObjectIfNotNil:forKey:]):
+        (-[NSToolTipPanel setAcceptsMouseMovedEvents:]):
+
 2003-11-13  Vicki Murley  <vicki@apple.com>
 
         Reviewed by NOBODY (OOPS!).
