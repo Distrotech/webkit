@@ -30,6 +30,7 @@
 #include "dom/html_document.h"
 #include "dom/dom2_range.h"
 #include "dom/dom_misc.h"
+#include "editing/edit_caret.h"
 
 #include <kparts/part.h>
 #include <kparts/browserextension.h>
@@ -79,6 +80,7 @@ namespace khtml
   class CachedObject;
   class RenderWidget;
   class CSSStyleSelector;
+  class Caret;
 };
 
 namespace KJS {
@@ -596,16 +598,10 @@ public:
   bool isEditingAtSelection() const;
 
   /**
-   * Returns the node containing the input caret.
+   * Returns the caret location.
    */
-  DOM::Node caretNode() const;
-  
-  /**
-   * Returns the offset of the input caret in the 
-   * node containing the caret.
-   */
-  long caretOffset() const;
-  
+  khtml::Caret caret() const;
+
   /**
    * Convenience method to show the document's view.
    *
@@ -787,13 +783,9 @@ signals:
    *
    * The signal transmits the position the DOM::Range way, the node and
    * the zero-based offset within this node.
-   * @param node node which the caret is in. This can be null if the caret
-   * has been deactivated.
-   * @param offset offset within the node. If the node is null, the offset
-   * is meaningless.
    * @since 3.2
    */
-  void caretPositionChanged(const DOM::Node &node, long offset);
+  void caretPositionChanged(const khtml::Caret &);
 
   /**
    * Moves the input caret to the specified offset.
@@ -1066,8 +1058,19 @@ private:
   /**
    * @internal
    */
-  void emitCaretPositionChanged(const DOM::Node &node, long offset);
+  void emitCaretPositionChanged(const khtml::Caret &);
 
+  /**
+   * Returns the node containing the input caret.
+   */
+  DOM::Node caretNode() const;
+  
+  /**
+   * Returns the offset of the input caret in the 
+   * node containing the caret.
+   */
+  long caretOffset() const;
+  
   /**
    * @internal
    */
