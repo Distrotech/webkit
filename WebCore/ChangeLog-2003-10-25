@@ -1,3 +1,11 @@
+=== Safari-58.3 ===
+
+2003-02-11  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Trey.
+
+        * WebCore.pbproj/project.pbxproj: Include /System/Library/PrivateFrameworks.
+
 === Safari-58.2 ===
 
 2003-02-10  Maciej Stachowiak  <mjs@apple.com>
