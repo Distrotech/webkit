@@ -150,6 +150,8 @@ public:
     virtual bool nodeAtPoint(NodeInfo& info, int x, int y, int tx, int ty,
                              HitTestAction hitTestAction = HitTestAll, bool inside=false);
 
+    virtual void absoluteRects(QValueList<QRect>& rects, int _tx, int _ty);
+
     // Return before, after (offset set to max), or inside the text, at @p offset
     virtual FindSelectionResult checkSelectionPointIgnoringContinuations
         (int _x, int _y, int _tx, int _ty, DOM::NodeImpl*& node, int & offset);
