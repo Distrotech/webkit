@@ -1,5 +1,31 @@
 2004-04-14  Vicki Murley  <vicki@apple.com>
 
+	- merge fix for 3609690 from HEAD
+
+    2004-02-11  David Hyatt  <hyatt@apple.com>
+
+        Fix for 3556037, regression where display:block generated content didn't work.
+        
+        Reviewed by kocienda
+
+        * khtml/rendering/render_block.cpp:
+        (khtml::RenderBlock::setStyle):
+        (khtml::RenderBlock::addChildToFlow):
+        (khtml::RenderBlock::removeChild):
+        (khtml::RenderBlock::renderName):
+        * khtml/rendering/render_container.cpp:
+        (RenderContainer::insertChildNode):
+        (RenderContainer::removeLeftoverAnonymousBoxes):
+        * khtml/rendering/render_inline.cpp:
+        (RenderInline::splitFlow):
+        (RenderInline::renderName):
+        * khtml/rendering/render_list.cpp:
+        (RenderListItem::updateMarkerLocation):
+        * khtml/rendering/render_object.h:
+        (khtml::RenderObject::isAnonymousBlock):
+
+2004-04-14  Vicki Murley  <vicki@apple.com>
+
 	- merge fix for 3609686 from HEAD
 
     2004-02-23  David Hyatt  <hyatt@apple.com>
