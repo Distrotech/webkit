@@ -2,11 +2,13 @@
 	Copyright 2002, Apple, Inc. All rights reserved.
 */
 
+#import <string.h>
 #import <fcntl.h>
 #import <sys/stat.h>
 #import <sys/types.h>
 #import <sys/mman.h>
 #import <pthread.h>
+#import <fts.h>
 
 #import "IFURLFileDatabase.h"
 #import "IFNSFileManagerExtensions.h"
@@ -14,6 +16,7 @@
 #import "WebFoundationDebug.h"
 
 #define SIZE_FILE_NAME @".size"
+#define SIZE_FILE_NAME_CSTRING ".size"
 
 // The next line is a workaround for Radar 2905545. Once that's fixed, it can use PTHREAD_ONCE_INIT.
 static void databaseInit(void);
@@ -33,6 +36,72 @@ enum
     SYNC_INTERVAL = 5,
     SYNC_IDLE_THRESHOLD = 5,
 };
+
+// support for expiring cache files using file system access times --------------------------------------------
+
+typedef struct IFFileAccessTime IFFileAccessTime;
+
+struct IFFileAccessTime
+{   
+    NSString *path;
+    time_t time;
+};
+
+static CFComparisonResult compare_atimes(const void *val1, const void *val2, void *context)
+{
+    int t1 = ((IFFileAccessTime *)val1)->time;
+    int t2 = ((IFFileAccessTime *)val2)->time;
+    
+    if (t1 > t2) return kCFCompareGreaterThan;
+    if (t1 < t2) return kCFCompareLessThan;
+    return kCFCompareEqualTo;
+}
+
+static Boolean IFPtrEqual(const void *p1, const void *p2) {
+    return p1 == p2;  
+}
+
+static void IFFileAccessTimeRelease(CFAllocatorRef allocator, const void *value) {
+    IFFileAccessTime *spec;
+    
+    spec = (IFFileAccessTime *)value;
+    [spec->path release];
+    free(spec);  
+}
+
+static CFArrayRef CreateArrayListingFilesSortedByAccessTime(const char *path) {
+    FTS *fts;
+    FTSENT *ent;
+    CFMutableArrayRef atimeArray;
+    char *paths[2];
+    NSFileManager *defaultManager;
+    
+    CFArrayCallBacks callBacks = {0, NULL, IFFileAccessTimeRelease, NULL, IFPtrEqual};
+    
+    defaultManager = [NSFileManager defaultManager];
+    paths[0] = (char *)path;
+    paths[1] = NULL;
+    
+    atimeArray = CFArrayCreateMutable(NULL, 0, &callBacks);
+    fts = fts_open(paths, FTS_COMFOLLOW | FTS_LOGICAL, NULL);
+    
+    ent = fts_read(fts);
+    while (ent) {
+        if (ent->fts_statp->st_mode & S_IFREG && strcmp(ent->fts_name, SIZE_FILE_NAME_CSTRING) != 0) {
+            IFFileAccessTime *spec = malloc(sizeof(IFFileAccessTime));
+            spec->path = [[defaultManager stringWithFileSystemRepresentation:ent->fts_accpath length:strlen(ent->fts_accpath)] retain];
+            spec->time = ent->fts_statp->st_atimespec.tv_sec;
+            CFArrayAppendValue(atimeArray, spec);
+        }
+        ent = fts_read(fts);
+    }
+
+    CFArraySortValues(atimeArray, CFRangeMake(0, CFArrayGetCount(atimeArray)), compare_atimes, NULL);
+
+    fts_close(fts);
+    
+    return atimeArray;
+}
 
 // interface IFURLFileReader -------------------------------------------------------------
 
@@ -95,7 +164,7 @@ static void URLFileReaderInit(void)
     [mutex unlock];
 
     if (fileNotMappable) {
-        data = [NSData dataWithContentsOfFile:path];
+        data = [[NSData alloc] initWithContentsOfFile:path];
     }
     else if (fileSystemPath && (fd = open(fileSystemPath, O_RDONLY, 0)) >= 0) {
         // File exists. Retrieve the file size.
@@ -111,17 +180,17 @@ static void URLFileReaderInit(void)
                 [mutex unlock];
                 
                 mappedBytes = NULL;
-                data = [NSData dataWithContentsOfFile:path];
+                data = [[NSData alloc] initWithContentsOfFile:path];
             }
             else {
                 // On success, create data object using mapped bytes.
                 mappedLength = statInfo.st_size;
-                data = [[NSData alloc] initWithBytesNoCopy:mappedBytes length:mappedLength freeWhenDone:YES];
+                data = [[NSData alloc] initWithBytesNoCopy:mappedBytes length:mappedLength freeWhenDone:NO];
                 // ok data creation failed but we know file exists
                 // be stubborn....try to read bytes again
                 if (!data) {
                     munmap(mappedBytes, mappedLength);    
-                    data = [NSData dataWithContentsOfFile:path];
+                    data = [[NSData alloc] initWithContentsOfFile:path];
                 }
             }
         }
@@ -310,6 +379,8 @@ static void URLFileReaderInit(void)
         free(buf);
         close(fd);
     }
+
+    WEBFOUNDATIONDEBUGLEVEL(WebFoundationLogDiskCacheActivity, "writing size file - %u", value);
     
     [mutex unlock];
 }
@@ -341,11 +412,12 @@ static void URLFileReaderInit(void)
 -(void)truncateToSizeLimit:(unsigned)size
 {
     NSFileManager *defaultManager;
-    NSDirectoryEnumerator *enumerator;
-    NSString *filePath;
-    NSString *fullFilePath;
     NSDictionary *attributes;
     NSNumber *fileSize;
+    CFArrayRef atimeArray;
+    unsigned aTimeArrayCount;
+    unsigned i;
+    IFFileAccessTime *spec;
     
     if (size > usage) {
         return;
@@ -357,30 +429,21 @@ static void URLFileReaderInit(void)
     else {
         defaultManager = [NSFileManager defaultManager];
         [mutex lock];
-        enumerator = [defaultManager enumeratorAtPath:path];
-        while (usage > size) {
-            filePath = [enumerator nextObject];
-            if (filePath == nil) {
-                break;
-            }
-            if ([filePath isEqualToString:SIZE_FILE_NAME]) {
-                continue;
-            }
-            
-            fullFilePath = [[NSString alloc] initWithFormat:@"%@/%@", path, filePath];
-            attributes = [defaultManager fileAttributesAtPath:fullFilePath traverseLink:YES];
+        atimeArray = CreateArrayListingFilesSortedByAccessTime([defaultManager fileSystemRepresentationWithPath:path]);
+        aTimeArrayCount = CFArrayGetCount(atimeArray);
+        for (i = 0; i < aTimeArrayCount && usage > size; i++) {
+            spec = (IFFileAccessTime *)CFArrayGetValueAtIndex(atimeArray, i);
+            attributes = [defaultManager fileAttributesAtPath:spec->path traverseLink:YES];
             if (attributes) {
-                if ([[attributes objectForKey:NSFileType] isEqualToString:NSFileTypeRegular]) {
-                    fileSize = [attributes objectForKey:NSFileSize];
-                    if (fileSize) {
-                        usage -= [fileSize unsignedIntValue];
-                        WEBFOUNDATIONDEBUGLEVEL(WebFoundationLogDiskCacheActivity, "truncateToSizeLimit - %u - %u - %u, %s", size, usage, [fileSize unsignedIntValue], DEBUG_OBJECT(fullFilePath));
-                        [defaultManager removeFileAtPath:fullFilePath handler:nil];
-                    }
+                fileSize = [attributes objectForKey:NSFileSize];
+                if (fileSize) {
+                    usage -= [fileSize unsignedIntValue];
+                    WEBFOUNDATIONDEBUGLEVEL(WebFoundationLogDiskCacheActivity, "truncateToSizeLimit - %u - %u - %u, %s", size, usage, [fileSize unsignedIntValue], DEBUG_OBJECT(spec->path));
+                    [defaultManager removeFileAtPath:spec->path handler:nil];
                 }
             }
-            [fullFilePath release];
         }
+        CFRelease(atimeArray);
         [self writeSizeFile:usage];
         [mutex unlock];
     }
@@ -492,10 +555,12 @@ static void databaseInit()
     [mutex lock];
     [setCache removeAllObjects];
     [removeCache removeAllObjects];
+    [ops removeAllObjects];
     [self close];
     [[NSFileManager defaultManager] _IF_backgroundRemoveFileAtPath:path];
     [self open];
     [self writeSizeFile:0];
+    usage = 0;
     [mutex unlock];
 
     WEBFOUNDATIONDEBUGLEVEL(WebFoundationLogDiskCacheActivity, "removeAllObjects");
@@ -570,13 +635,14 @@ static void databaseInit()
 
 -(void)performSetObject:(id)object forKey:(id)key
 {
-    BOOL result;
     NSString *filePath;
     NSMutableData *data;
     NSDictionary *attributes;
     NSDictionary *directoryAttributes;
     NSArchiver *archiver;
     NSFileManager *defaultManager;
+    NSNumber *oldSize;
+    BOOL result;
 
     WEBFOUNDATION_ASSERT_NOT_NIL(object);
     WEBFOUNDATION_ASSERT_NOT_NIL(key);
@@ -584,42 +650,53 @@ static void databaseInit()
     WEBFOUNDATIONDEBUGLEVEL(WebFoundationLogDiskCacheActivity, "performSetObject - %s - %s",
         DEBUG_OBJECT(key), DEBUG_OBJECT([IFURLFileDatabase uniqueFilePathForKey:key]));
 
-    result = NO;
-
     data = [NSMutableData data];
     archiver = [[NSArchiver alloc] initForWritingWithMutableData:data];
     [archiver encodeObject:key];
     [archiver encodeObject:object];
     
     attributes = [NSDictionary dictionaryWithObjectsAndKeys:
-        [NSDate date], @"NSFileModificationDate",
-        NSUserName(), @"NSFileOwnerAccountName",
-        IFURLFilePosixPermissions, @"NSFilePosixPermissions",
+        NSUserName(), NSFileOwnerAccountName,
+        IFURLFilePosixPermissions, NSFilePosixPermissions,
         NULL
     ];
 
     directoryAttributes = [NSDictionary dictionaryWithObjectsAndKeys:
-        [NSDate date], @"NSFileModificationDate",
-        NSUserName(), @"NSFileOwnerAccountName",
-        IFURLFileDirectoryPosixPermissions, @"NSFilePosixPermissions",
+        NSUserName(), NSFileOwnerAccountName,
+        IFURLFileDirectoryPosixPermissions, NSFilePosixPermissions,
         NULL
     ];
 
     defaultManager = [NSFileManager defaultManager];
 
     filePath = [[NSString alloc] initWithFormat:@"%@/%@", path, [IFURLFileDatabase uniqueFilePathForKey:key]];
+    attributes = [defaultManager fileAttributesAtPath:filePath traverseLink:YES];
 
-    result = [defaultManager createFileAtPath:filePath contents:data attributes:attributes];
-    if (!result) {
-        result = [defaultManager _IF_createFileAtPathWithIntermediateDirectories:filePath contents:data attributes:attributes directoryAttributes:directoryAttributes];
+    // update usage and truncate before writing file
+    // this has the effect of _always_ keeping disk usage under sizeLimit by clearing away space in anticipation of the write.
+    usage += [data length];
+    [self truncateToSizeLimit:[self sizeLimit]];
+
+    result = [defaultManager _IF_createFileAtPathWithIntermediateDirectories:filePath contents:data attributes:attributes directoryAttributes:directoryAttributes];
+
+    if (result) {
+        // we're going to write a new file
+        // if there was an old file, we have to subtract the size of the old file before adding the new size
+        if (attributes) {
+            oldSize = [attributes objectForKey:NSFileSize];
+            if (oldSize) {
+                usage -= [oldSize unsignedIntValue];
+            }
+        }
+        [self writeSizeFile:usage];
+    }
+    else {
+        // we failed to write the file. don't charge this against usage.
+        usage -= [data length];
     }
 
     [archiver release];
-    [filePath release];
-    
-    usage += [data length];
-    [self writeSizeFile:usage];
-    [self truncateToSizeLimit:[self sizeLimit]];
+    [filePath release];    
 }
 
 -(void)performRemoveObjectForKey:(id)key
@@ -627,6 +704,7 @@ static void databaseInit()
     NSString *filePath;
     NSDictionary *attributes;
     NSNumber *size;
+    BOOL result;
     
     WEBFOUNDATION_ASSERT_NOT_NIL(key);
     
@@ -634,14 +712,14 @@ static void databaseInit()
 
     filePath = [[NSString alloc] initWithFormat:@"%@/%@", path, [IFURLFileDatabase uniqueFilePathForKey:key]];
     attributes = [[NSFileManager defaultManager] fileAttributesAtPath:filePath traverseLink:YES];
-    if (attributes) {
+    result = [[NSFileManager defaultManager] removeFileAtPath:filePath handler:nil];
+    if (result && attributes) {
         size = [attributes objectForKey:NSFileSize];
         if (size) {
             usage -= [size unsignedIntValue];
             [self writeSizeFile:usage];
         }
     }
-    [[NSFileManager defaultManager] removeFileAtPath:filePath handler:nil];
     [filePath release];
 }
 
@@ -671,19 +749,16 @@ static void databaseInit()
                 NULL
             ];
             
-            // be optimistic that full subpath leading to directory exists
-            isOpen = [manager createDirectoryAtPath:path attributes:attributes];
-            if (!isOpen) {
-                // perhaps the optimism did not pay off ...
-                // try again, this time creating full subpath leading to directory
-                isOpen = [manager _IF_createDirectoryAtPathWithIntermediateDirectories:path attributes:attributes];
-            }
-        }
+	    isOpen = [manager _IF_createDirectoryAtPathWithIntermediateDirectories:path attributes:attributes];
+	}
 
         sizeFilePathString = [NSString stringWithFormat:@"%@/%@", path, SIZE_FILE_NAME];
         tmp = [[NSFileManager defaultManager] fileSystemRepresentationWithPath:sizeFilePathString];
         sizeFilePath = strdup(tmp);
         usage = [self readSizeFile];
+
+        // remove any leftover turds
+        [manager _IF_deleteBackgroundRemoveLeftoverFiles:path];
     }
     
     return isOpen;
