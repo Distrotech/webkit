@@ -1,5 +1,36 @@
 2004-09-08  Vicki Murley <vicki@apple.com>
 
+	- A few follow up changes necessary to really fix the colgroup crash, 
+	<rdar://problem/3791559>.  I've included the original ChangeLog comments 
+	below. I did not merge the changes in render_block.cpp to eliminate redundant
+	setPos -500000 calls, since those weren't necessary for this fix.
+
+        * khtml/html/htmlparser.cpp:
+        (KHTMLParser::insertNode):
+        * khtml/rendering/render_block.cpp:
+        (khtml::RenderBlock::addChildToFlow):
+
+    2004-09-01  David Hyatt  <hyatt@apple.com>
+
+        Fix for 3769409, a regression from 10.3.4 to 10.3.5 involving <colgroup>s in malformed HTML.
+        
+        Reviewed by mjs
+
+        * khtml/html/htmlparser.cpp: 
+        (KHTMLParser::insertNode):
+
+    2004-09-01  David Hyatt  <hyatt@apple.com>
+
+        Fix for the <colgroup> crasher.  Make sure adding to an anonymous box just returns immediately. Also eliminate
+        all the redundant setPos -500000 calls, since we don't need those at all.
+        
+        Reviewed by john
+
+        * khtml/rendering/render_block.cpp: 
+        (khtml::RenderBlock::addChildToFlow):
+
+2004-09-08  Vicki Murley <vicki@apple.com>
+
 	- merge this fix from HEAD for SUPanNavy, <rdar://problem/3791559>
 
     2004-08-26  David Hyatt  <hyatt@apple.com>
