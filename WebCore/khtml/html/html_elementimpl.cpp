@@ -628,17 +628,34 @@ void HTMLElementImpl::defaultEventHandler(EventImpl *evt)
     if (evt->id()==EventImpl::KEYPRESS_EVENT)
     {
         KeyboardEventImpl *k = static_cast<KeyboardEventImpl *>(evt);
-        DocumentImpl *doc = getDocument();
-        EditCommand *cmd;
-        QString text(k->qKeyEvent()->text());
-        if (text.length() == 1 && text[0] == QChar(0x7f)) {
-            cmd = new DeleteTextCommand(doc->view()->part()->selection());
+        EditCommand *cmd = 0;
+        if (k->keyIdentifier() == "U+00007F" || k->keyIdentifier() == "ForwardDelete") {
+            cmd = new DeleteTextCommand(getDocument());
+        }
+        else if (k->keyIdentifier() == "Right") {
+            getDocument()->view()->part()->caret().moveForwardByCharacter();
+            evt->setDefaultHandled();
+        }
+        else if (k->keyIdentifier() == "Left") {
+            getDocument()->view()->part()->caret().moveBackwardByCharacter();
+            evt->setDefaultHandled();
+        }
+        else if (k->keyIdentifier() == "Up") {
+            // EDIT FIXME: unimplemented
+        }
+        else if (k->keyIdentifier() == "Down") {
+            // EDIT FIXME: unimplemented
         }
         else {
-            cmd = new InputTextCommand(doc->view()->part()->selection(), text);
+            QString text(k->qKeyEvent()->text());
+            cmd = new InputTextCommand(getDocument(), text);
         }
-        if (doc->applyEditing(cmd))
+        if (cmd && cmd->apply()) {
             evt->setDefaultHandled();
+            // EDIT FIXME: until undo is hooked up, the command has no place to go
+            // just delete
+            delete cmd;
+        }
     }
     ElementImpl::defaultEventHandler(evt);
 }
