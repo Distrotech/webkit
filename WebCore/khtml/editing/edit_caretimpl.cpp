@@ -36,7 +36,6 @@
 #endif
 
 using DOM::DocumentImpl;
-using DOM::EditNodeFilter;
 using DOM::Node;
 using DOM::NodeImpl;
 using DOM::NodeFilter;
@@ -87,6 +86,7 @@ void CaretImpl::setPosition(NodeImpl *newNode, long newOffset)
     setOffset(newOffset);
 
     adjustPosition();
+    notifyChanged(node());
     
     // this has the effect of keeping the cursor from blinking when the caret moves
     if (node()) {
@@ -120,9 +120,7 @@ void CaretImpl::moveForwardByCharacter()
     
     if (moved) {
         adjustPosition();
-        node()->setChanged(true);
-        if (node()->renderer())
-            node()->renderer()->setNeedsLayoutAndMinMaxRecalc();
+        notifyChanged(node());
     }
 }
 
@@ -130,7 +128,7 @@ void CaretImpl::moveBackwardByCharacter()
 {
     bool moved = false;
 
-    if (offset() - 1 > 0) {
+    if (offset() - 1 >= 0) {
         setPosition(node(), offset() - 1);
         moved = true;
     }
@@ -150,9 +148,7 @@ void CaretImpl::moveBackwardByCharacter()
 
     if (moved) {
         adjustPosition();
-        node()->setChanged(true);
-        if (node()->renderer())
-            node()->renderer()->setNeedsLayoutAndMinMaxRecalc();
+        notifyChanged(node());
     }
 }
 
@@ -169,73 +165,33 @@ void CaretImpl::adjustPosition()
     if (offset() != 0) 
         return;
 
-#if 0
-
-    // some sketchy ideas.
-    // not ready for prime time
-
-    if (!node()) 
-        return;
-    
-    if (offset() != 0) 
-        return;
-
     // prune empty text nodes preceding the caret
     int exceptionCode;
-    NodeImpl *n = node()->previousSibling();
+    NodeImpl *n = node()->previousLeafNode();
     while (1) {
         if (!n || !n->isTextNode() || static_cast<TextImpl *>(n)->length() > 0)
             break;
         node()->parentNode()->removeChild(n, exceptionCode);
-        n = n->previousSibling();
-    }
-    
-    // determine whether adjustment is needed
-    n = node();
-    while (n) {
-        fprintf(stderr, "needsAdjustmentForEditing: %p : (%s)\n", n, n->nodeName().string().latin1());
-        n = n->traversePreviousNode();
-        if (!n)
-            return;
-        if (n->isHTMLBRElement())
-            return;
-        if (n->isTextNode())
-            break;
+        notifyChanged(node()->parentNode());
+        n = n->previousLeafNode();
     }
 
-    EditNodeFilter filter;
-    NodeFilter nodeFilter = NodeFilter::createCustom(&filter);
-    TreeWalker tw = treeWalker();
-    if (tw.isNull())
-        return;
-    tw.handle()->setFilter(nodeFilter.handle());
-    NodeImpl *node = m_node;
-    node = tw.previousNode().handle();
-    if (node) {
-        setNode(node);
-        m_offset = node->caretMaxOffset();
-        fprintf(stderr, "adjustedForEditing: %p : %d (%s)\n", node, node->caretMaxOffset(), node->nodeName().string().latin1());
+    // if we are at offset zero of a text node, and a text node precedes us
+    // move to the end of the preceding text node
+    n = node()->previousLeafNode();
+    if (n && n->isTextNode()) {
+        setNode(n);
+        m_offset = n->caretMaxOffset();
+        notifyChanged(n);
     }
-    else {
-        fprintf(stderr, "not adjustedForEditing\n");
-    }
-#endif
 }
 
-short EditNodeFilter::acceptNode(const DOM::Node &n)
+void CaretImpl::notifyChanged(NodeImpl *node) const
 {
-    NodeImpl *node = n.handle();
-    if (!node) {
-        return NodeFilter::FILTER_REJECT;
-    }
+    if (!node)
+        return;
 
-    if (!node->isHTMLElement() && !node->isTextNode()) {
-        return NodeFilter::FILTER_REJECT;
-    }
-
-    if (node->isContentEditable()) {
-        return NodeFilter::FILTER_ACCEPT;
-    }
-
-    return NodeFilter::FILTER_SKIP;
+    node->setChanged(true);
+    if (node->renderer())
+        node->renderer()->setNeedsLayoutAndMinMaxRecalc();
 }

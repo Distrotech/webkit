@@ -64,20 +64,13 @@ private:
     void setNode(DOM::NodeImpl *);
     void setOffset(long offset) { m_offset = offset; }
 
+    void notifyChanged(DOM::NodeImpl *) const;
+
     DOM::NodeImpl *m_node;
     long m_offset;
     long m_startOfLine;
 };
 
 }; // end namespace khtml
-
-namespace DOM {
-
-class EditNodeFilter : public CustomNodeFilter
-{
-    virtual short acceptNode(const DOM::Node &);
-};
-
-};  // end namespace DOM
 
 #endif
