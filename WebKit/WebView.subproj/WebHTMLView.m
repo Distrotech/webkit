@@ -1139,11 +1139,11 @@ static WebHTMLView *lastHitView = nil;
 
 - (void)addSubview:(NSView *)view
 {
+    [super addSubview:view];
+
     if ([view conformsToProtocol:@protocol(WebPlugin)]) {
         [[self _pluginController] addPlugin:view];
     }
-
-    [super addSubview:view];
 }
 
 - (void)reapplyStyles

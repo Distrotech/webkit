@@ -1,5 +1,18 @@
 2004-04-13  Vicki Murley  <vicki@apple.com>
 
+	- merge fix for 3609700 from HEAD
+
+    2004-03-17  Richard Williamson   <rjw@apple.com>
+
+        Fixed 3591667.  Plugin view is added to view hierarchy before calling init.
+
+        Reviewed by Ken.
+
+        * WebView.subproj/WebHTMLView.m:
+        (-[WebHTMLView addSubview:]):
+
+2004-04-13  Vicki Murley  <vicki@apple.com>
+
 	- merge WebKit part of fix for 3612925 from HEAD
 
     2004-03-24  Darin Adler  <darin@apple.com>
