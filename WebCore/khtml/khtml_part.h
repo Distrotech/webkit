@@ -590,6 +590,12 @@ public:
   void selectAll();
 
   /**
+   * Returns whether editing is enabled at the point of the
+   * current selection.
+   */
+  bool isEditingAtSelection() const;
+
+  /**
    * Returns the node containing the input caret.
    */
   DOM::Node caretNode() const;
