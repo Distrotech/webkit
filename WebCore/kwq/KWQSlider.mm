@@ -68,7 +68,7 @@ QSlider::QSlider()
 :m_sliderValueChanged(this, SIGNAL(sliderValueChanged())), m_minVal(0.0), m_maxVal(100.0), m_val(50.0)
 {
     KWQ_BLOCK_EXCEPTIONS;
-    KWQSlider* slider = [[KWQSlider alloc] initWithQSlider:this];
+    KWQSlider* slider = [[KWQSlider alloc] initWithQSlider:this]; // GC safe.
     [[slider cell] setControlSize:NSSmallControlSize];
     setView(slider);
     [slider release];

@@ -35,7 +35,7 @@ QTextEdit::QTextEdit(QWidget *parent)
     , _textChanged(this, SIGNAL(textChanged()))
 {
     KWQ_BLOCK_EXCEPTIONS;
-    KWQTextArea *textView = [[KWQTextArea alloc] initWithQTextEdit:this];
+    KWQTextArea *textView = [[KWQTextArea alloc] initWithQTextEdit:this]; // GC safe.
     setView(textView);
     [textView release];
     KWQ_UNBLOCK_EXCEPTIONS;

@@ -169,8 +169,8 @@ void ObjcField::setValueToInstance(KJS::ExecState *exec, const Instance *instanc
                 // Release the previous value.
                 [*(ObjectStructPtr *)(ivarValuePtr) autorelease];
                 
-                // Retain the new value.
-                *(ObjectStructPtr *)(ivarValuePtr) = [result.objectValue retain];
+                // Retain the new value. GC: use a strong cast to get a write-barrier.
+                (__strong id)*(ObjectStructPtr *)(ivarValuePtr) = [result.objectValue retain];
             }
             
             // FIXME.  Deal with numbers.
@@ -224,22 +224,20 @@ void ObjcField::setValueToInstance(KJS::ExecState *exec, const Instance *instanc
 
 ObjcArray::ObjcArray (ObjectStructPtr a) 
 {
-    _array = [a retain];
-};
+    _array = (id) CFRetain(a);
+}
 
 ObjcArray::~ObjcArray () 
 {
-    [_array release];
+    CFRelease(_array);
 }
 
 
 ObjcArray::ObjcArray (const ObjcArray &other) : Array() 
 {
-    if (other._array != _array) {
-        [_array release];
-        _array = [other._array retain];
-    }
-};
+    _array = other._array;
+    if (_array) CFRetain(_array);
+}
 
 ObjcArray &ObjcArray::operator=(const ObjcArray &other) {
     if (this == &other)
@@ -247,11 +245,11 @@ ObjcArray &ObjcArray::operator=(const ObjcArray &other) {
     
     ObjectStructPtr _oldArray = _array;
     _array = other._array;
-    [_array retain];
-    [_oldArray release];
+    if (_array) CFRetain(_array);
+    if (_oldArray) CFRelease(_oldArray);
     
     return *this;
-};
+}
 
 void ObjcArray::setValueAt(KJS::ExecState *exec, unsigned int index, const KJS::Value &aValue) const
 {

@@ -46,6 +46,11 @@
     [super dealloc];
 }
 
+- (void)finalize {
+    delete settings;
+    [super finalize];
+}
+
 - init
 {
     settings = new KHTMLSettings();

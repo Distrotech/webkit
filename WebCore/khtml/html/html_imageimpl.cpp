@@ -389,7 +389,6 @@ void HTMLMapElementImpl::parseHTMLAttribute(HTMLAttributeImpl *attr)
 HTMLAreaElementImpl::HTMLAreaElementImpl(DocumentPtr *doc)
     : HTMLAnchorElementImpl(doc)
 {
-    m_region=new QRegion();
     m_coords=0;
     m_coordsLen = 0;
     shape = Unknown;
@@ -398,7 +397,6 @@ HTMLAreaElementImpl::HTMLAreaElementImpl(DocumentPtr *doc)
 
 HTMLAreaElementImpl::~HTMLAreaElementImpl()
 {
-    if (m_region) delete m_region;
     if (m_coords) delete [] m_coords;
 }
 
@@ -441,7 +439,6 @@ bool HTMLAreaElementImpl::mapMouseEvent(int x_, int y_, int width_, int height_,
                                    RenderObject::NodeInfo& info)
 {
     bool inside = false;
-    QRegion& region = *m_region;
     if (width_ != lastw || height_ != lasth)
     {
         region=getRegion(width_, height_);

@@ -34,8 +34,6 @@
 
 #include "render_arena.h"
 
-#include <objc/objc-auto.h>
-
 #ifndef NDEBUG
 
 const int signature = 0xDBA00AEA;
@@ -64,14 +62,8 @@ RenderArena::~RenderArena()
     FreeArenaPool(&m_pool);
 }
 
-// #include <Foundation/NSPrivateDecls.h>
-extern "C" void* NSAllocateScannedUncollectable(size_t size);
-
 void* RenderArena::allocate(size_t size)
 {
-    // XXX_PCB don't use arenas when GC is used.
-    if (objc_collecting_enabled()) return ::NSAllocateScannedUncollectable(size);
-
 #ifndef NDEBUG
     // Use standard malloc so that memory debugging tools work.
     assert(this);
@@ -83,7 +75,7 @@ void* RenderArena::allocate(size_t size)
     return header + 1;
 #else
     void* result = 0;
-    
+
     // Ensure we have correct alignment for pointers.  Important for Tru64
     size = ROUNDUP(size, sizeof(void*));
 
@@ -110,9 +102,6 @@ void* RenderArena::allocate(size_t size)
 
 void RenderArena::free(size_t size, void* ptr)
 {
-    // XXX_PCB don't use arenas when GC is used.
-    if (objc_collecting_enabled()) return ::free(ptr);
-
 #ifndef NDEBUG
     // Use standard free so that memory debugging tools work.
     RenderArenaDebugHeader *header = (RenderArenaDebugHeader *)ptr - 1;

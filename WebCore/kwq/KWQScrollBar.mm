@@ -26,6 +26,7 @@
 #import "KWQScrollBar.h"
 
 #import "KWQExceptions.h"
+#import "KWQFoundationExtras.h"
 
 @interface KWQScrollBar : NSScroller
 {
@@ -81,9 +82,8 @@ QScrollBar::QScrollBar(Qt::Orientation orientation, QWidget* parent)
     m_scroller = 0;
 
     KWQ_BLOCK_EXCEPTIONS;
-    m_scroller = [[KWQScrollBar alloc] initWithQScrollBar:this];
+    m_scroller = KWQRetainNSRelease([[KWQScrollBar alloc] initWithQScrollBar:this]);
     setView(m_scroller);
-    [m_scroller release];
     [parent->getView() addSubview: m_scroller];
     KWQ_UNBLOCK_EXCEPTIONS;
 
@@ -94,6 +94,7 @@ QScrollBar::~QScrollBar()
 {
     KWQ_BLOCK_EXCEPTIONS;
     [m_scroller removeFromSuperview];
+    KWQRelease(m_scroller);
     KWQ_UNBLOCK_EXCEPTIONS;
 }
 

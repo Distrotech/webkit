@@ -235,7 +235,7 @@ int main(int argc, char **argv)
         
         Interpreter::unlock();
         
-        [pool release];
+        [pool drain];
     } // end block, so that Interpreter and global get deleted
     
     return ret ? 0 : 3;

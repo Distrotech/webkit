@@ -103,8 +103,6 @@ public:
     KWQKHTMLPart();
     ~KWQKHTMLPart();
     
-    AUTO_GC_SCANNABLE
-
     void clear();
 
     void setBridge(WebCoreBridge *p);

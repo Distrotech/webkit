@@ -40,7 +40,7 @@ using namespace KJS;
 
 ObjcInstance::ObjcInstance (ObjectStructPtr instance) 
 {
-    _instance = [instance retain];
+    _instance = (id) CFRetain(instance);
     _class = 0;
     _pool = 0;
     _beginCount = 0;
@@ -48,13 +48,13 @@ ObjcInstance::ObjcInstance (ObjectStructPtr instance)
 
 ObjcInstance::~ObjcInstance () 
 {
-    [_instance release];
+    CFRelease(_instance);
 }
 
 
 ObjcInstance::ObjcInstance (const ObjcInstance &other) : Instance() 
 {
-    _instance = [other._instance retain];
+    _instance = (id) CFRetain(other._instance);
     _class = other._class;
     _pool = 0;
     _beginCount = 0;
@@ -65,8 +65,8 @@ ObjcInstance &ObjcInstance::operator=(const ObjcInstance &other){
         return *this;
     
     ObjectStructPtr _oldInstance = _instance;
-    _instance = [(id)other._instance retain];
-    [(id)_oldInstance release];
+    _instance = (id) CFRetain(other._instance);
+    if (_oldInstance) CFRelease(_oldInstance);
     
     // Classes are kept around forever.
     _class = other._class;
@@ -87,7 +87,7 @@ void ObjcInstance::end()
     _beginCount--;
     assert (_beginCount >= 0);
     if (_beginCount == 0) {
-        [_pool release];
+        [_pool drain];
     }
     _pool = 0;
 }

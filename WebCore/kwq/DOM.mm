@@ -50,6 +50,7 @@
 #import "DOMHTML.h"
 #import "DOMInternal.h"
 #import "KWQAssertions.h"
+#import "KWQFoundationExtras.h"
 
 using DOM::Attr;
 using DOM::AttrImpl;
@@ -2140,12 +2141,12 @@ ObjCNodeFilterCondition::ObjCNodeFilterCondition(id <DOMNodeFilter> filter)
     : m_filter(filter)
 {
     ASSERT(m_filter);
-    [m_filter retain];
+    KWQRetain(m_filter);
 }
 
 ObjCNodeFilterCondition::~ObjCNodeFilterCondition()
 {
-    [m_filter release];
+    KWQRelease(m_filter);
 }
 
 short ObjCNodeFilterCondition::acceptNode(const Node &n) const

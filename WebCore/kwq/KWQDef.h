@@ -73,11 +73,4 @@ void qWarning(const char *msg, ...);
 #define _KWQ_IOSTREAM_
 #endif
 
-// GC: from <Foundation/NSPrivateDecls.h>
-extern "C" void* NSAllocateScannedUncollectable(size_t size);
-
-#define AUTO_GC_SCANNABLE \
-    void* operator new(size_t n) { return ::NSAllocateScannedUncollectable(n); } \
-    void operator delete(void* p) { ::free(p); }
-
 #endif

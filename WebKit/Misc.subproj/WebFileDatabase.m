@@ -135,10 +135,8 @@ enum
     
     [super dealloc];
 }
--(void)finalize
-{
-    [super finalize];
-}
+
+// no finalize needed.
 
 @end
 
@@ -325,10 +323,9 @@ static void databaseInit()
 
     [super dealloc];
 }
+
 -(void)finalize
 {
-    [mutex lock];
-    [mutex unlock];
     [self close];
     [timer invalidate];
     [super finalize];

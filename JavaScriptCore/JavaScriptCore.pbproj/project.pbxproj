@@ -19,7 +19,7 @@
 				OPTIMIZATION_CFLAGS = "-O0";
 				SECTORDER_FLAGS = "";
 				STYLE_LDFLAGS = "-seg1addr $(LOCAL_SEG1_ADDR)";
-				ZERO_LINK = YES;
+				ZERO_LINK = NO;
 			};
 			isa = PBXBuildStyle;
 			name = Development;

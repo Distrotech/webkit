@@ -20,7 +20,7 @@
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_LDFLAGS = "-seg1addr $(LOCAL_SEG1_ADDR)";
 				SECTORDER_FLAGS = "";
-				ZERO_LINK = YES;
+				ZERO_LINK = NO;
 			};
 			isa = PBXBuildStyle;
 			name = Development;
@@ -534,6 +534,7 @@
 				BE8BD8F506359F6000D3F20B,
 				BE8BD90B0635CC2F00D3F20B,
 				9342E3EB0646C8FF00004B05,
+				3961C4F1066E8AD40018A1F2,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -818,6 +819,7 @@
 				BE8BD90A0635CC2F00D3F20B,
 				842F72DD06405FDF00CC271B,
 				9342E3EA0646C8FF00004B05,
+				3961C4F0066E8AD40018A1F2,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -916,6 +918,34 @@
 //392
 //393
 //394
+		3961C4EE066E8AD30018A1F2 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.objc;
+			path = KWQFoundationExtras.m;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		3961C4EF066E8AD30018A1F2 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			path = KWQFoundationExtras.h;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		3961C4F0066E8AD40018A1F2 = {
+			fileRef = 3961C4EE066E8AD30018A1F2;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3961C4F1066E8AD40018A1F2 = {
+			fileRef = 3961C4EF066E8AD30018A1F2;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		39E0AD370654355B0019CDDC = {
 			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
@@ -3209,6 +3239,8 @@
 				93CCF7D5033BD43C008635CE,
 				9394E0A903AA60FB008635CE,
 				9394E0AA03AA60FB008635CE,
+				3961C4EE066E8AD30018A1F2,
+				3961C4EF066E8AD30018A1F2,
 				F58784EE02DE375901EA4122,
 				F58784EF02DE375901EA4122,
 				F58784FA02DE375901EA4122,

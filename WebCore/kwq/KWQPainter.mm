@@ -35,6 +35,7 @@
 #import "KWQPrinter.h"
 #import "KWQPtrStack.h"
 #import "KWQWidget.h"
+#import "KWQFoundationExtras.h"
 #import "WebCoreGraphicsBridge.h"
 #import "WebCoreImageRenderer.h"
 #import "WebCoreTextRenderer.h"
@@ -56,7 +57,7 @@ struct QPState {
 struct QPainterPrivate {
     QPainterPrivate() : textRenderer(0), focusRingPath(0), focusRingWidth(0), focusRingOffset(0),
                         hasFocusRingColor(false) { }
-    ~QPainterPrivate() { [textRenderer release]; [focusRingPath release]; }
+    ~QPainterPrivate() { KWQRelease(textRenderer); KWQRelease(focusRingPath); }
     QPState state;
     QPtrStack<QPState> stack;
     id <WebCoreTextRenderer> textRenderer;
@@ -518,10 +519,10 @@ void QPainter::_updateRenderer()
         data->textRendererFont = data->state.font;
         id <WebCoreTextRenderer> oldRenderer = data->textRenderer;
 	KWQ_BLOCK_EXCEPTIONS;
-        data->textRenderer = [[[WebCoreTextRendererFactory sharedFactory]
+        data->textRenderer = KWQRetain([[WebCoreTextRendererFactory sharedFactory]
             rendererWithFont:data->textRendererFont.getNSFont()
-            usingPrinterFont:data->textRendererFont.isPrinterFont()] retain];
-        [oldRenderer release];
+            usingPrinterFont:data->textRendererFont.isPrinterFont()]);
+        KWQRelease(oldRenderer);
 	KWQ_UNBLOCK_EXCEPTIONS;
     }
 }
@@ -749,7 +750,7 @@ void QPainter::initFocusRing(int width, int offset)
     data->focusRingWidth = width;
     data->hasFocusRingColor = false;
     data->focusRingOffset = offset;
-    data->focusRingPath = [[NSBezierPath alloc] init];
+    data->focusRingPath = KWQRetainNSRelease([[NSBezierPath alloc] init]);
     [data->focusRingPath setWindingRule:NSNonZeroWindingRule];
 }
 
@@ -803,7 +804,7 @@ void QPainter::drawFocusRing()
 void QPainter::clearFocusRing()
 {
     if (data->focusRingPath) {
-        [data->focusRingPath release];
+        KWQRelease(data->focusRingPath);
         data->focusRingPath = nil;
     }
 }

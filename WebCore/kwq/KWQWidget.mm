@@ -29,6 +29,7 @@
 #import "KWQKHTMLPart.h"
 #import "KWQLogging.h"
 #import "KWQWindowWidget.h"
+#import "KWQFoundationExtras.h"
 #import "WebCoreBridge.h"
 #import "WebCoreFrameView.h"
 #import "khtmlview.h"
@@ -47,7 +48,6 @@ using khtml::RenderWidget;
 class KWQWidgetPrivate
 {
 public:
-    AUTO_GC_SCANNABLE
     QStyle *style;
     QFont font;
     QPalette pal;
@@ -67,14 +67,14 @@ QWidget::QWidget(NSView *view) : data(new KWQWidgetPrivate)
 {
     static QStyle defaultStyle;
     data->style = &defaultStyle;
-    data->view = [view retain];
+    data->view = KWQRetain(view);
     data->visible = true;
 }
 
 QWidget::~QWidget() 
 {
     KWQ_BLOCK_EXCEPTIONS;
-    [data->view release];
+    KWQRelease(data->view);
     KWQ_UNBLOCK_EXCEPTIONS;
 
     delete data;
@@ -455,8 +455,8 @@ void QWidget::setView(NSView *view)
     }
     
     KWQ_BLOCK_EXCEPTIONS;
-    [data->view release];
-    data->view = [view retain];
+    KWQRelease(data->view);
+    data->view = KWQRetain(view);
     KWQ_UNBLOCK_EXCEPTIONS;
 }
 

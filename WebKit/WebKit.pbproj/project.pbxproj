@@ -19,7 +19,7 @@
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_LDFLAGS = "$(COMMON_LDFLAGS) -seg1addr $(LOCAL_SEG1_ADDR)";
 				SECTORDER_FLAGS = "";
-				ZERO_LINK = YES;
+				ZERO_LINK = NO;
 			};
 			isa = PBXBuildStyle;
 			name = Development;
@@ -155,7 +155,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXPORTED_SYMBOLS_FILE = WebKit.exp;
-				FRAMEWORK_SEARCH_PATHS = "\"${DSTROOT}\" \"${MERGE_DIR}/${SYSTEM_LIBRARY_DIR}/Frameworks\" \"${MERGE_DIR}/$(SYSTEM_LIBRARY_DIR)/Frameworks/WebKit.framework/Frameworks\" \"$(SYSTEM_LIBRARY_DIR)/Frameworks/WebKit.framework/Frameworks\" \"$(SYSTEM_LIBRARY_DIR)/Frameworks/ApplicationServices.framework/Frameworks\" \"$(SYSTEM_LIBRARY_DIR)/Frameworks/Carbon.framework/Frameworks\" \"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks\" /Volumes/Clarity/Apple/Projects/Tiger/build";
+				FRAMEWORK_SEARCH_PATHS = "\"${DSTROOT}\" \"${MERGE_DIR}/${SYSTEM_LIBRARY_DIR}/Frameworks\" \"${MERGE_DIR}/$(SYSTEM_LIBRARY_DIR)/Frameworks/WebKit.framework/Frameworks\" \"$(SYSTEM_LIBRARY_DIR)/Frameworks/WebKit.framework/Frameworks\" \"$(SYSTEM_LIBRARY_DIR)/Frameworks/ApplicationServices.framework/Frameworks\" \"$(SYSTEM_LIBRARY_DIR)/Frameworks/Carbon.framework/Frameworks\" \"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks\"";
 				FRAMEWORK_VERSION = A;
 				HEADER_SEARCH_PATHS = "";
 				INSTALL_PATH = /System/Library/Frameworks;
@@ -3153,10 +3153,9 @@
 		AB340B45061A2071006D2E1A = {
 			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
-			name = CoreFoundation.framework;
-			path = /Volumes/Clarity/Apple/Projects/Tiger/build/CoreFoundation.framework;
-			refType = 0;
-			sourceTree = "<absolute>";
+			path = CoreFoundation.framework;
+			refType = 3;
+			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		AB340B46061A2071006D2E1A = {
 			fileRef = AB340B45061A2071006D2E1A;

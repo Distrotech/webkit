@@ -27,6 +27,7 @@
 
 #import "KWQAssertions.h"
 #import "KWQKJobClasses.h"
+#import "KWQFoundationExtras.h"
 #import "loader.h"
 
 using khtml::Loader;
@@ -48,7 +49,7 @@ using KIO::TransferJob;
 - (void)setHandle:(id <WebCoreResourceHandle>)handle
 {
     ASSERT(_handle == nil);
-    _handle = [handle retain];
+    _handle = KWQRetain(handle);
 }
 
 - (void)receivedResponse:(NSURLResponse *)response
@@ -79,7 +80,7 @@ using KIO::TransferJob;
     _handle = nil;
 
     [handle cancel];
-    [handle release];
+    KWQRelease(handle);
 }
 
 - (void)finishJobAndHandle
@@ -93,7 +94,7 @@ using KIO::TransferJob;
         job->emitResult();
     }
     delete job;
-    [handle release];
+    KWQRelease(handle);
 }
 
 - (void)cancel

@@ -40,8 +40,6 @@ public:
     QTimer();
     ~QTimer() { stop(); }
     
-    AUTO_GC_SCANNABLE
-
     bool isActive() const;
     void start(int msec, bool singleShot = false);
     void stop();

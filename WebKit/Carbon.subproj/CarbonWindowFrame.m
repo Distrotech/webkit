@@ -122,10 +122,8 @@ The class of objects that are meant to be used as _borderViews of NSCarbonWindow
     [super dealloc];
     
 }
-- (void)finalize {
-    [super finalize];
-}
 
+// no finalize needed.
 
 // Sink a method invocation.
 - (void)_setFrameNeedsDisplay:(BOOL)needsDisplay {
