@@ -198,4 +198,6 @@ extern NSString *WebPageCacheDocumentViewKey;
 
 - (void)_reloadForPluginChanges;
 
+- (BOOL)_isFrameSet;
+
 @end

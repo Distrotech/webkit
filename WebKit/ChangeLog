@@ -1,3 +1,23 @@
+2004-09-10  Vicki Murley <vicki@apple.com>
+
+        - merge this change for <rdar://problem/3791183> Need to choose "best" frame instead 
+        of printing all frames clipped to window size (clone for SUPanNavy).  The original 
+        fix would not compile on 10.3.5.
+
+    2004-09-10  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Chris.
+        
+        - added _isFrameSet as a private method, so it can be used in WebBrowser.
+        This is needed to merge the fix for 3123987 to SUPanNavy.
+
+        * WebView.subproj/WebFrame.m:
+        (-[WebFrame _isFrameSet]):
+        new method
+        
+        * WebView.subproj/WebFramePrivate.h:
+        declare new method
+
 2004-09-08  Vicki Murley <vicki@apple.com>
 
 	- follow-up fix for <rdar://problem/3791526>, for SUPanNavy
