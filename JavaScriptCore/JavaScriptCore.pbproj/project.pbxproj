@@ -20,7 +20,6 @@
 			buildRules = (
 			);
 			buildSettings = {
-				DEBUGGING_SYMBOLS = NO;
 			};
 			isa = PBXBuildStyle;
 			name = Deployment;
@@ -62,8 +61,6 @@
 			buildStyles = (
 				014CEA440018CDF011CA2923,
 				014CEA450018CDF011CA2923,
-				F58C8A1D025BD408018635CA,
-				F531DDEB02F0C2DD018635CA,
 			);
 			hasScannedForEncodings = 1;
 			isa = PBXProject;
@@ -107,8 +104,7 @@
 				0867D69EFE84028FC02AAC07,
 				0867D69FFE84028FC02AAC07,
 				0867D6A0FE84028FC02AAC07,
-				F692A8D8025563E401FF60F7,
-				6573C62F03A0BDCD00FCA39F,
+				93AF3CE903C94DB500A95B14,
 			);
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
@@ -119,7 +115,7 @@
 				FRAMEWORK_VERSION = A;
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				HEADER_SEARCH_PATHS = "";
-				INSTALL_PATH = "@executable_path/../Frameworks";
+				INSTALL_PATH = /WebCore/Library/Frameworks;
 				LIBRARY_SEARCH_PATHS = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.2;
 				OPTIMIZATION_CFLAGS = "-Os";
@@ -150,15 +146,14 @@
 	<key>CFBundleExecutable</key>
 	<string>JavaScriptCore</string>
 	<key>CFBundleGetInfoString</key>
-	<string>1.0 Beta, Copyright 2001-2002 Apple Compupter, Inc</string>
+	<string>1.0 Beta, Copyright 2001-2002 Apple Computer, Inc; Copyright 1999-2001 Harri Porten &lt;porten@kde.org&gt;; Copyright 2001 Peter Kelly &lt;pmk@post.com&gt;; Copyright 1997-2001 University of Cambridge; Copyright 1991, 2000, 2001 by Lucent Technologies.
+</string>
 	<key>CFBundleIconFile</key>
 	<string></string>
 	<key>CFBundleIdentifier</key>
 	<string>com.apple.JavaScriptCore</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
-	<key>CFBundleLongVersionString</key>
-	<string>JavaScriptCore 0.1, Copyright 2001-2002 Apple Compupter</string>
 	<key>CFBundleName</key>
 	<string>JavaScriptCore</string>
 	<key>CFBundlePackageType</key>
@@ -166,9 +161,10 @@
 	<key>CFBundleShortVersionString</key>
 	<string>0.8</string>
 	<key>CFBundleVersion</key>
-	<string>47u</string>
+	<string>48</string>
 	<key>CFHumanReadableCopyright</key>
-	<string>Copyright (c) 2001-2002 Apple Computer</string>
+	<string>Copyright 2001-2002 Apple Computer, Inc; Copyright 1999-2001 Harri Porten &lt;porten@kde.org&gt;; Copyright 2001 Peter Kelly &lt;pmk@post.com&gt;; Copyright 1997-2001 University of Cambridge; Copyright 1991, 2000, 2001 by Lucent Technologies.
+</string>
 	<key>NSPrincipalClass</key>
 	<string></string>
 </dict>
@@ -590,19 +586,6 @@
 			settings = {
 			};
 		};
-		6573C62F03A0BDCD00FCA39F = {
-			buildActionMask = 8;
-			files = (
-			);
-			generatedFileNames = (
-			);
-			isa = PBXShellScriptBuildPhase;
-			neededFileNames = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-			shellPath = /bin/sh;
-			shellScript = "ditto ${SYMROOT}/JavaScriptCore.framework ${DSTROOT}/AppleInternal/Library/Frameworks/JavaScriptCore.framework";
-		};
 //650
 //651
 //652
@@ -727,6 +710,19 @@
 			settings = {
 			};
 		};
+		93AF3CE903C94DB500A95B14 = {
+			buildActionMask = 8;
+			files = (
+			);
+			generatedFileNames = (
+			);
+			isa = PBXShellScriptBuildPhase;
+			neededFileNames = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "mkdir -p /WebCore/Library/Frameworks; ditto ${SYMROOT}/JavaScriptCore.framework /WebCore/Library/Frameworks/JavaScriptCore.framework";
+		};
 //930
 //931
 //932
@@ -751,16 +747,6 @@
 					Private,
 				);
 			};
-		};
-		F531DDEB02F0C2DD018635CA = {
-			buildRules = (
-			);
-			buildSettings = {
-				i386 = YES;
-				ppc = YES;
-			};
-			isa = PBXBuildStyle;
-			name = DeploymentFat;
 		};
 		F5341390030CEEB1018BE7F3 = {
 			fileEncoding = 30;
@@ -821,17 +807,6 @@
 					Private,
 				);
 			};
-		};
-		F58C8A1D025BD408018635CA = {
-			buildRules = (
-			);
-			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				DEBUG_CFLAGS = "";
-				OPTIMIZATION_CFLAGS = "-O";
-			};
-			isa = PBXBuildStyle;
-			name = Mixed;
 		};
 		F5BB2BC5030F772101FCFE1D = {
 			fileEncoding = 30;
@@ -1682,19 +1657,6 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
-		};
-		F692A8D8025563E401FF60F7 = {
-			buildActionMask = 2147483647;
-			files = (
-			);
-			generatedFileNames = (
-			);
-			isa = PBXShellScriptBuildPhase;
-			neededFileNames = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if [ -f ../Tools/Scripts/embed-into-alex ]; then sh ../Tools/Scripts/embed-into-alex; fi";
 		};
 	};
 	rootObject = 0867D690FE84028FC02AAC07;
