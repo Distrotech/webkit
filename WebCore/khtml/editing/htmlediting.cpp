@@ -136,7 +136,6 @@ void EditCommand::pruneEmptyNodes() const
         if (node->isTextNode()) {
             TextImpl *textNode = static_cast<TextImpl *>(node);
             if (textNode->length() == 0) {
-                fprintf(stderr, "prune text: %p\n", textNode);
                 node = textNode->traversePreviousNode();
                 removeNode(textNode);
                 prunedNodes = true;
@@ -148,18 +147,15 @@ void EditCommand::pruneEmptyNodes() const
         else if (!node->hasChildNodes()) {
             NodeImpl *n = node;
             node = node->traversePreviousNode();
-            fprintf(stderr, "prune elem: %p\n", n);
             removeNode(n);
             prunedNodes = true;
         }
         else {
-            fprintf(stderr, "has children: %p : %d\n", node, node->childNodes()->length());
             break;
         }
     }
     
     if (prunedNodes) {
-        fprintf(stderr, "prune move to: %p : %s\n", node, node->nodeName().string().latin1());
         part->moveCaretTo(node, node->caretMaxOffset());
     }
 }
