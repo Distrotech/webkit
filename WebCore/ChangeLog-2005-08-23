@@ -1,5 +1,17 @@
 2002-03-19  Maciej Stachowiak  <mjs@apple.com>
 
+	Fixed two crashers:
+
+	* src/kdelibs/khtml/rendering/render_object.h: Don't attempt to
+	schedule a relayout ever. We control layout timing. This was
+	resulting in calls on destroyed/trashed objects before.
+
+	* src/kdelibs/khtml/xml/dom_nodeimpl.cpp:
+	(NodeImpl::dispatchEvent): Check if view()->part() is NULL (looks
+	like a bug in the KDE code that this wasn't checked).
+
+2002-03-19  Maciej Stachowiak  <mjs@apple.com>
+
 	Changes needed to get WebCore to link: implement all the missing functions.
 	
 	* src/kdelibs/khtml/html/htmltokenizer.cpp: (HTMLTokenizer::end):
