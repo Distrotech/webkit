@@ -1,3 +1,22 @@
+2004-09-08  Vicki Murley <vicki@apple.com>
+
+	- follow-up fix for <rdar://problem/3791526>, for SUPanNavy
+
+    2004-08-13  Darin Adler  <darin@apple.com>
+
+        Reviewed by Chris.
+
+        - fixed <rdar://problem/3760924> Carbon path passed in NPP_StreamAsFile must be in local character set, not UTF-8
+
+        * Plugins.subproj/WebBaseNetscapePluginStream.m:
+        (CarbonPathFromPOSIXPath): Added. New function that uses the path pieces from an FSSpec.
+        This has many advantages; the big one that fixes the bug is that it gives the mangled names
+        that work even for files that have names that can't otherwise be encoded in Carbon-style
+        path names. I didn't write this from scratch: I started with the method in Foundation
+        and just changed it to use FSSpec.
+        (-[WebBaseNetscapePluginStream destroyStream]): Remove code that used NSString and just call
+        CarbonPathFromPOSIXPath instead.
+
 2004-09-07  Vicki Murley <vicki@apple.com>
 
 	- merge this fix from HEAD for SUPanNavy, <rdar://problem/3791526>
