@@ -1,3 +1,21 @@
+2003-11-07  Vicki Murley  <vicki@apple.com>
+
+        - rolled this fix onto the Safari-1-1-Merlot-BuildFixes-branch
+
+    2003-10-26  Darin Adler  <darin@apple.com>
+
+        Reviewed by Maciej.
+
+        - fixed 3463586 -- WebCore does not compile with new definition of NULL
+
+        * khtml/khtml_part.cpp: (findWordBoundary): Changed NULL to 0 and did a little code
+        cleanup of the surrounding code.
+        * khtml/rendering/break_lines.cpp: (khtml::isBreakable): Changed NULL to 0 and did
+        a tiny bit of cleanup.
+
+        * WebCorePrefix.h: Add a definition of NULL here that takes advantage of the GNU
+        __null feature even if the system C library doesn't.
+
 === WebCore-106 ===
 
 2003-09-19  Maciej Stachowiak  <mjs@apple.com>
