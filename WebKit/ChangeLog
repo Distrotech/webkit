@@ -1,3 +1,13 @@
+2003-10-29  Maciej Stachowiak  <mjs@apple.com>
+
+        Merged fix for the following bug from HEAD:
+
+	- fixed 3183754 - returning false from key press handlers does not prevent typing or form submission
+	
+        * WebView.subproj/WebHTMLView.m:
+        (-[WebHTMLView keyDown:]):
+        (-[WebHTMLView keyUp:]):
+
 === WebKit-106 ===
 
 2003-09-16  Richard Williamson   <rjw@apple.com>
