@@ -218,9 +218,11 @@ class HTMLInputElementImpl : public HTMLGenericFormElementImpl
     friend class khtml::RenderFileButton;
 
 public:
+    // do not change the order!
     enum typeEnum {
         TEXT,
         PASSWORD,
+        ISINDEX,
         CHECKBOX,
         RADIO,
         SUBMIT,
@@ -228,8 +230,7 @@ public:
         FILE,
         HIDDEN,
         IMAGE,
-        BUTTON,
-        ISINDEX
+        BUTTON
     };
 
     HTMLInputElementImpl(DocumentPtr *doc, HTMLFormElementImpl *f = 0);
@@ -276,6 +277,7 @@ public:
 
     virtual void defaultEventHandler(EventImpl *evt);
     virtual bool isEditable();
+    virtual bool isSelectable() const { return true; };
 
     DOMString altText() const;
 
@@ -331,8 +333,11 @@ public:
 
 class HTMLSelectElementImpl : public HTMLGenericFormElementImpl
 {
+    friend class khtml::RenderSelect;
+
 public:
     HTMLSelectElementImpl(DocumentPtr *doc, HTMLFormElementImpl *f = 0);
+    ~HTMLSelectElementImpl();
 
     virtual Id id() const;
 
@@ -367,6 +372,9 @@ public:
     virtual NodeImpl *replaceChild ( NodeImpl *newChild, NodeImpl *oldChild, int &exceptioncode );
     virtual NodeImpl *removeChild ( NodeImpl *oldChild, int &exceptioncode );
     virtual NodeImpl *appendChild ( NodeImpl *newChild, int &exceptioncode );
+    virtual NodeImpl *addChild( NodeImpl* newChild );
+
+    virtual void childrenChanged();
 
     virtual void parseAttribute(AttributeImpl *attr);
 
@@ -378,16 +386,26 @@ public:
     int optionToListIndex(int optionIndex) const;
     // reverse of optionToListIndex - get optionIndex from listboxIndex
     int listToOptionIndex(int listIndex) const;
-    void recalcListItems();
-    QMemArray<HTMLGenericFormElementImpl*> listItems() const { return m_listItems; }
+
+    void setRecalcListItems();
+
+    QMemArray<HTMLGenericFormElementImpl*> listItems() const
+     {
+         if (m_recalcListItems) const_cast<HTMLSelectElementImpl*>(this)->recalcListItems();
+         return m_listItems;
+     }
     virtual void reset();
     void notifyOptionSelected(HTMLOptionElementImpl *selectedOption, bool selected);
 
+private:
+    void recalcListItems();
+
 protected:
-    QMemArray<HTMLGenericFormElementImpl*> m_listItems;
+    mutable QMemArray<HTMLGenericFormElementImpl*> m_listItems;
     short m_minwidth;
     short m_size : 15;
     bool m_multiple : 1;
+    bool m_recalcListItems;
 };
 
 // -------------------------------------------------------------------------
@@ -426,9 +444,9 @@ public:
     virtual NodeImpl *replaceChild ( NodeImpl *newChild, NodeImpl *oldChild, int &exceptioncode );
     virtual NodeImpl *removeChild ( NodeImpl *oldChild, int &exceptioncode );
     virtual NodeImpl *appendChild ( NodeImpl *newChild, int &exceptioncode );
+    virtual NodeImpl *addChild( NodeImpl* newChild );
     virtual void parseAttribute(AttributeImpl *attr);
     void recalcSelectOptions();
-    virtual void setChanged(bool);
 
 };
 
@@ -458,8 +476,6 @@ public:
 
     HTMLSelectElementImpl *getSelect() const;
 
-    virtual void setChanged(bool);
-
 protected:
     DOMString m_value;
     bool m_selected;
@@ -480,6 +496,7 @@ public:
     };
 
     HTMLTextAreaElementImpl(DocumentPtr *doc, HTMLFormElementImpl *f = 0);
+    ~HTMLTextAreaElementImpl();
 
     virtual Id id() const;
 

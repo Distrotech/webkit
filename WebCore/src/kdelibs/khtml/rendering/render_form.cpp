@@ -178,8 +178,6 @@ void RenderFormElement::slotClicked()
         QMouseEvent e2( QEvent::MouseButtonRelease, m_mousePos, m_button, m_state);
 
         element()->dispatchMouseEvent(&e2, m_isDoubleClick ? EventImpl::KHTML_DBLCLICK_EVENT : EventImpl::KHTML_CLICK_EVENT, m_clickCount);
-        //already done by NodeImpl::dispatchGenericEvent
-        //element()->dispatchUIEvent(EventImpl::DOMACTIVATE_EVENT,m_isDoubleClick ? 2 : 1);
         m_isDoubleClick = false;
         deref();
     }
@@ -477,14 +475,16 @@ void RenderLineEdit::updateFromElement()
     widget()->blockSignals(true);
     int pos = widget()->cursorPosition();
     widget()->setText(element()->value().string());
-    widget()->setCursorPosition(pos);
-    widget()->blockSignals(false);
 
     int ml = element()->maxLength();
     if ( ml < 0 || ml > 1024 )
         ml = 1024;
-    widget()->setMaxLength( ml );
+    if ( widget()->maxLength() != ml )
+        widget()->setMaxLength( ml );
     widget()->setEdited( false );
+
+    widget()->setCursorPosition(pos);
+    widget()->blockSignals(false);
 
     RenderFormElement::updateFromElement();
 }
@@ -682,6 +682,8 @@ RenderSelect::RenderSelect(HTMLSelectElementImpl *element)
     m_multiple = element->multiple();
     m_size = element->size();
     m_useListBox = (m_multiple || m_size > 1);
+    m_selectionChanged = true;
+    m_optionsChanged = true;
 
     if(m_useListBox)
         setQWidget(createListBox());
@@ -691,42 +693,9 @@ RenderSelect::RenderSelect(HTMLSelectElementImpl *element)
 
 void RenderSelect::updateFromElement()
 {
-    // ### remove me, quick hack
-    setMinMaxKnown(false);
-    setLayouted(false);
-
-    RenderFormElement::updateFromElement();
-}
-
-void RenderSelect::calcMinMaxWidth()
-{
-    KHTMLAssert( !minMaxKnown() );
-
-    // ### ugly HACK FIXME!!!
-    setMinMaxKnown();
-    if ( !layouted() )
-        layout();
-    setLayouted( false );
-    setMinMaxKnown( false );
-    // ### end FIXME
-
-    RenderFormElement::calcMinMaxWidth();
-}
-
-void RenderSelect::layout( )
-{
-    KHTMLAssert(!layouted());
-    KHTMLAssert(minMaxKnown());
-
-    // ### maintain selection properly between type/size changes, and work
-    // out how to handle multiselect->singleselect (probably just select
-    // first selected one)
-
-    // ### reconnect mouse signals when we change widget type
     m_ignoreSelectEvents = true;
 
     // change widget type
-
     bool oldMultiple = m_multiple;
     unsigned oldSize = m_size;
     bool oldListbox = m_useListBox;
@@ -755,11 +724,15 @@ void RenderSelect::layout( )
 
     // update contents listbox/combobox based on options in m_element
     if ( m_optionsChanged ) {
+        if (element()->m_recalcListItems)
+            element()->recalcListItems();
         QMemArray<HTMLGenericFormElementImpl*> listItems = element()->listItems();
         int listIndex;
 
-        if(m_useListBox)
+        if(m_useListBox) {
             static_cast<KListBox*>(m_widget)->clear();
+        }
+
         else
             static_cast<KComboBox*>(m_widget)->clear();
 
@@ -797,12 +770,48 @@ void RenderSelect::layout( )
                 KHTMLAssert(false);
             m_selectionChanged = true;
         }
+        setMinMaxKnown(false);
+        setLayouted(false);
         m_optionsChanged = false;
     }
 
     // update selection
-    if (m_selectionChanged)
+    if (m_selectionChanged) {
         updateSelection();
+    }
+
+
+    m_ignoreSelectEvents = false;
+
+    RenderFormElement::updateFromElement();
+}
+
+void RenderSelect::calcMinMaxWidth()
+{
+    KHTMLAssert( !minMaxKnown() );
+
+    if (m_optionsChanged)
+        updateFromElement();
+
+    // ### ugly HACK FIXME!!!
+    setMinMaxKnown();
+    if ( !layouted() )
+        layout();
+    setLayouted( false );
+    setMinMaxKnown( false );
+    // ### end FIXME
+
+    RenderFormElement::calcMinMaxWidth();
+}
+
+void RenderSelect::layout( )
+{
+    KHTMLAssert(!layouted());
+    KHTMLAssert(minMaxKnown());
+
+    // ### maintain selection properly between type/size changes, and work
+    // out how to handle multiselect->singleselect (probably just select
+    // first selected one)
 
     // calculate size
     if(m_useListBox) {
@@ -850,15 +859,6 @@ void RenderSelect::layout( )
 	foundOption = (listItems[i]->id() == ID_OPTION);
 
     m_widget->setEnabled(foundOption && ! element()->disabled());
-
-    m_ignoreSelectEvents = false;
-}
-
-void RenderSelect::close()
-{
-    element()->recalcListItems();
-
-    RenderFormElement::close();
 }
 
 void RenderSelect::slotSelected(int index)
@@ -913,7 +913,9 @@ void RenderSelect::slotSelectionChanged()
 {
     if ( m_ignoreSelectEvents ) return;
 
-    QMemArray<HTMLGenericFormElementImpl*> listItems = element()->listItems();
+    // don't use listItems() here as we have to avoid recalculations - changing the
+    // option list will make use update options not in the way the user expects them
+    QMemArray<HTMLGenericFormElementImpl*> listItems = element()->m_listItems;
     for ( unsigned i = 0; i < listItems.count(); i++ )
         // don't use setSelected() here because it will cause us to be called
         // again with updateSelection.
@@ -1026,9 +1028,6 @@ bool TextAreaWidget::event( QEvent *e )
 }
 
 // -------------------------------------------------------------------------
-
-// ### allow contents to be manipulated via DOM - will require updating
-// of text node child
 
 RenderTextArea::RenderTextArea(HTMLTextAreaElementImpl *element)
     : RenderFormElement(element)

@@ -56,7 +56,7 @@ public:
     void setIntrinsicWidth(int w) {  m_intrinsicWidth = w; }
     void setIntrinsicHeight(int h) { m_intrinsicHeight = h; }
 
-    virtual void position(int x, int y, int from, int len, int width, bool reverse, bool firstLine);
+    virtual void position(int x, int y, int from, int len, int width, bool reverse, bool firstLine, int);
 
 private:
     short m_intrinsicWidth;
@@ -80,25 +80,18 @@ public:
     virtual void detach();
     virtual void layout( );
 
-    virtual bool eventFilter(QObject *o, QEvent *e);
-
-    virtual void handleDOMEvent(DOM::EventImpl *evt);
-
-    bool sendWidgetEvent(QEvent *event);
     QWidget *widget() const { return m_widget; }
     KHTMLView* view() const { return m_view; }
+
 
 public slots:
     void slotWidgetDestructed();
 
 protected:
+    bool eventFilter(QObject* /*o*/, QEvent* e);
     void setQWidget(QWidget *widget);
     QWidget *m_widget;
     KHTMLView* m_view;
-
-    bool m_paintingSelf : 1;
-    bool m_ignorePaintEvents : 1;
-    bool m_widgetShown : 1;
 };
 
 };

@@ -88,6 +88,7 @@ StyleVisualData::StyleVisualData()
 {
     colspan = 1;
     palette = QApplication::palette();
+    counter_increment = counter_reset = 0;
 }
 
 StyleVisualData::~StyleVisualData() {
@@ -112,7 +113,7 @@ RenderStyle::setBitDefaults()
     inherited_flags._list_style_type = DISC;
     inherited_flags._list_style_position = OUTSIDE;
     inherited_flags._visibility = VISIBLE;
-    inherited_flags._text_align = JUSTIFY;
+    inherited_flags._text_align = TAAUTO;
     inherited_flags._text_transform = TTNONE;
     inherited_flags._direction = LTR;
     inherited_flags._white_space = NORMAL;

@@ -42,6 +42,7 @@
 #include <kstaticdeleter.h>
 
 #include "rendering/render_root.h"
+#include "rendering/render_replaced.h"
 
 #include "khtmlview.h"
 #include "khtml_part.h"
@@ -49,6 +50,7 @@
 #include <kglobalsettings.h>
 #include <kstringhandler.h>
 #include "khtml_settings.h"
+#include "khtmlpart_p.h"
 
 #include "html/html_baseimpl.h"
 #include "html/html_blockimpl.h"
@@ -274,7 +276,7 @@ DocumentImpl::DocumentImpl(DOMImplementationImpl *_implementation, KHTMLView *v)
     m_inDocument = true;
     m_styleSelectorDirty = false;
 
-    m_styleSelector = new CSSStyleSelector( m_view, m_usersheet, m_styleSheets, m_url,
+    m_styleSelector = new CSSStyleSelector( this, m_usersheet, m_styleSheets, m_url,
                                             pMode == Strict );
     m_windowEventListeners.setAutoDelete(true);
 }
@@ -742,10 +744,9 @@ QString DocumentImpl::nextState()
 QStringList DocumentImpl::docState()
 {
     QStringList s;
-    for (NodeImpl *n = this; n != 0; n = n->traverseNextNode()) {
-	if (n->maintainsState())
-	    s.append(n->state());
-    }
+    for (QPtrListIterator<NodeImpl> it(m_maintainsState); it.current(); ++it)
+        s.append(it.current()->state());
+
     return s;
 }
 
@@ -800,32 +801,31 @@ void DocumentImpl::recalcStyle( StyleChange change )
         _style->setVisuallyOrdered( visuallyOrdered );
         // ### make the font stuff _really_ work!!!!
 
-        QFont f = KGlobalSettings::generalFont();
+	khtml::FontDef fontDef;
+	QFont f = KGlobalSettings::generalFont();
+	fontDef.family = f.family();
+	fontDef.italic = f.italic();
+	fontDef.weight = f.weight();
         if (m_view) {
             const KHTMLSettings *settings = m_view->part()->settings();
-            f.setFamily(settings->stdFontName());
+	    QString stdfont = settings->stdFontName();
+	    if ( !stdfont.isEmpty() )
+		fontDef.family = stdfont;
 
-            QValueList<int> fs = settings->fontSizes();
-            float dpiY = 72.; // fallback
-            if ( !khtml::printpainter )
-                dpiY = paintDeviceMetrics()->logicalDpiY();
-            if ( !khtml::printpainter && dpiY < 96 )
-                dpiY = 96.;
-            float size = fs[3] * dpiY / 72.;
-            if(size < settings->minFontSize())
-                size = settings->minFontSize();
-
-            khtml::setFontSize( f, int(size),  settings, paintDeviceMetrics() );
+            fontDef.size = m_styleSelector->fontSizes()[3];
         }
 
         //kdDebug() << "DocumentImpl::attach: setting to charset " << settings->charset() << endl;
-        _style->setFont(f);
+        _style->setFontDef(fontDef);
+	_style->htmlFont().update( paintDeviceMetrics() );
         if ( parseMode() != Strict )
             _style->setHtmlHacks(true); // enable html specific rendering tricks
 
         StyleChange ch = diff( _style, oldStyle );
         if(m_render && ch != NoChange)
             m_render->setStyle(_style);
+	else
+	    delete _style;
         if ( change != Force )
             change = ch;
 
@@ -896,6 +896,7 @@ void DocumentImpl::attach()
 
     // Create the rendering tree
     m_render = new RenderRoot(this, m_view);
+    m_styleSelector->computeFontSizes(paintDeviceMetrics(), m_view ? m_view->part()->zoomFactor() : 100);
     recalcStyle( Force );
 
     RenderObject* render = m_render;
@@ -969,7 +970,7 @@ void DocumentImpl::open(  )
 
 void DocumentImpl::close(  )
 {
-    if (parsing()) return;
+    if (parsing() || !m_tokenizer) return;
 
     if ( m_render )
         m_render->close();
@@ -992,7 +993,6 @@ void DocumentImpl::write( const QString &text )
         open();
         write(QString::fromLatin1("<html>"));
     }
-
     m_tokenizer->write(text, false);
 
     if (m_view && m_view->part()->jScript())
@@ -1017,6 +1017,9 @@ void DocumentImpl::clear()
     m_tokenizer = 0;
 
     removeChildren();
+    QPtrListIterator<RegisteredEventListener> it(m_windowEventListeners);
+    for (; it.current();)
+        m_windowEventListeners.removeRef(it.current());
 }
 
 void DocumentImpl::setStyleSheet(const DOM::DOMString &url, const DOM::DOMString &sheet)
@@ -1288,7 +1291,7 @@ int DocumentImpl::nodeAbsIndex(NodeImpl *node)
     assert(node->getDocument() == this);
 
     int absIndex = 0;
-    for (NodeImpl *n = node; n != this; n = n->traversePreviousNode())
+    for (NodeImpl *n = node; n && n != this; n = n->traversePreviousNode())
 	absIndex++;
     return absIndex;
 }
@@ -1321,7 +1324,7 @@ void DocumentImpl::processHttpEquiv(const DOMString &equiv, const DOMString &con
             bool ok = false;
             int delay = 0;
 	    delay = content.implementation()->toInt(&ok);
-            if(ok) v->part()->scheduleRedirection(delay, v->part()->url().url());
+            if(ok) v->part()->scheduleRedirection(delay, v->part()->url().url() );
         } else {
             int delay = 0;
             bool ok = false;
@@ -1380,10 +1383,13 @@ bool DocumentImpl::prepareMouseEvent( int _x, int _y, MouseEvent *ev )
             DOMString href = khtml::parseURL(e->getAttribute(ATTR_HREF));
             DOMString target = e->getAttribute(ATTR_TARGET);
 
-            if (!target.isNull() && !href.isNull())
-                ev->url = DOMString("target://") + target + DOMString("/#") + href;
+            if (!target.isNull() && !href.isNull()) {
+                ev->target = target;
+                ev->url = href;
+            }
             else
                 ev->url = href;
+//            qDebug("url: *%s*", ev->url.string().latin1());
         }
 
         updateRendering();
@@ -1663,12 +1669,19 @@ void DocumentImpl::updateStyleSelector()
     }
 }
 
+
+QStringList DocumentImpl::availableStyleSheets() const
+{
+    return m_availableSheets;
+}
+
 void DocumentImpl::recalcStyleSelector()
 {
     if ( !m_render || !attached() ) return;
 
     QPtrList<StyleSheetImpl> oldStyleSheets = m_styleSheets->styleSheets;
     m_styleSheets->styleSheets.clear();
+    m_availableSheets.clear();
     NodeImpl *n;
     for (n = this; n; n = n->traverseNextNode()) {
     	StyleSheetImpl *sheet = 0;
@@ -1701,20 +1714,37 @@ void DocumentImpl::recalcStyleSelector()
             }
 
         }
-        else if (n->id() == ID_LINK) {
-            // <LINK> element
-	    sheet = static_cast<HTMLLinkElementImpl*>(n)->sheet();
-        }
-        else if (n->id() == ID_STYLE) {
-            // <STYLE> element
-	    sheet = static_cast<HTMLStyleElementImpl*>(n)->sheet();
-        }
-        else if (n->id() == ID_BODY) {
+        else if (n->id() == ID_LINK || n->id() == ID_STYLE) {
+            ElementImpl *e = static_cast<ElementImpl *>(n);
+            QString title = e->getAttribute( ATTR_TITLE ).string();
+            if (n->id() == ID_LINK) {
+                // <LINK> element
+                HTMLLinkElementImpl* l = static_cast<HTMLLinkElementImpl*>(n);
+                // awful hack to ensure that we ignore the title attribute for non-stylesheets
+                // ### make that nicer!
+                if (!l->sheet() || l->isLoading())
+                    title = QString::null;
+            }
+            QString sheetUsed = view()->part()->d->m_sheetUsed;
+            if ( !title.isEmpty() ) {
+                if ( sheetUsed.isEmpty() )
+                    sheetUsed = view()->part()->d->m_sheetUsed = title;
+                if ( !m_availableSheets.contains( title ) )
+                    m_availableSheets.append( title );
+            }
+            if ( n->id() == ID_LINK ) {
+                if (title.isEmpty() || title == sheetUsed)
+                    sheet = static_cast<HTMLLinkElementImpl*>(n)->sheet();
+            }
+            else
+                // <STYLE> element
+                sheet = static_cast<HTMLStyleElementImpl*>(n)->sheet();
+	}
+	else if (n->id() == ID_BODY) {
             // <BODY> element (doesn't contain styles as such but vlink="..." and friends
             // are treated as style declarations)
 	    sheet = static_cast<HTMLBodyElementImpl*>(n)->sheet();
         }
-
         if (sheet) {
             sheet->ref();
             m_styleSheets->styleSheets.append(sheet);
@@ -1733,7 +1763,10 @@ void DocumentImpl::recalcStyleSelector()
 
     // Create a new style selector
     delete m_styleSelector;
-    m_styleSelector = new CSSStyleSelector( m_view, m_usersheet, m_styleSheets, m_url,
+    QString usersheet = m_usersheet;
+    if ( m_view && m_view->mediaType() == "print" )
+	usersheet += m_printSheet;
+    m_styleSelector = new CSSStyleSelector( this, usersheet, m_styleSheets, m_url,
                                             pMode == Strict );
 
     m_styleSelectorDirty = false;
@@ -1746,32 +1779,42 @@ void DocumentImpl::setFocusNode(NodeImpl *newFocusNode)
         return;
 
     if (m_focusNode != newFocusNode) {
+        NodeImpl *oldFocusNode = m_focusNode;
+        // Set focus on the new node
+        m_focusNode = newFocusNode;
         // Remove focus from the existing focus node (if any)
-        if (m_focusNode) {
-            if (m_focusNode->active())
-                m_focusNode->setActive(false);
+        if (oldFocusNode) {
+            if (oldFocusNode->active())
+                oldFocusNode->setActive(false);
 
-            m_focusNode->setFocus(false);
-	    m_focusNode->dispatchHTMLEvent(EventImpl::BLUR_EVENT,false,false);
-	    m_focusNode->dispatchUIEvent(EventImpl::DOMFOCUSOUT_EVENT);
-
-            if ((m_focusNode == this) && m_focusNode->hasOneRef()) {
-                m_focusNode->deref(); // deletes this
+            oldFocusNode->setFocus(false);
+	    oldFocusNode->dispatchHTMLEvent(EventImpl::BLUR_EVENT,false,false);
+	    oldFocusNode->dispatchUIEvent(EventImpl::DOMFOCUSOUT_EVENT);
+            if ((oldFocusNode == this) && oldFocusNode->hasOneRef()) {
+                oldFocusNode->deref(); // deletes this
                 return;
             }
 	    else {
-                m_focusNode->deref();
+                oldFocusNode->deref();
             }
         }
 
-        // Set focus on the new node
-        m_focusNode = newFocusNode;
         if (m_focusNode) {
-	    m_focusNode->ref();
-	    m_focusNode->dispatchHTMLEvent(EventImpl::FOCUS_EVENT,false,false);
-	    m_focusNode->dispatchUIEvent(EventImpl::DOMFOCUSIN_EVENT);
-            m_focusNode->setFocus();
-	}
+            m_focusNode->ref();
+            m_focusNode->dispatchHTMLEvent(EventImpl::FOCUS_EVENT,false,false);
+            m_focusNode->dispatchUIEvent(EventImpl::DOMFOCUSIN_EVENT);
+            if (m_focusNode == newFocusNode) {
+                m_focusNode->setFocus();
+                // eww, I suck. set the qt focus correctly
+                // ### find a better place in the code for this
+                if (getDocument()->view()) {
+                    if (!m_focusNode->renderer() || !m_focusNode->renderer()->isWidget())
+                        getDocument()->view()->setFocus();
+                    else
+                        static_cast<RenderWidget*>(m_focusNode->renderer())->widget()->setFocus();
+                }
+            }
+        }
     }
 }
 
@@ -1976,6 +2019,5 @@ NodeImpl *DocumentTypeImpl::cloneNode ( bool /*deep*/ )
     // so we do not support it...
     return 0;
 }
-
 
 #include "dom_docimpl.moc"

@@ -31,6 +31,7 @@
 #include <kwinmodule.h>
 #include <kconfig.h>
 #include <assert.h>
+#include <qstyle.h>
 
 #include <kjs/collector.h>
 #include "kjs_proxy.h"
@@ -45,6 +46,7 @@
 #include "khtml_part.h"
 #include "xml/dom2_eventsimpl.h"
 #include "xml/dom_docimpl.h"
+#include "html/html_documentimpl.h"
 
 using namespace KJS;
 
@@ -119,27 +121,38 @@ Value Screen::get(ExecState *exec, const UString &p) const
   return lookupGetValue<Screen,ObjectImp>(exec,p,&ScreenTable,this);
 }
 
-Value Screen::getValueProperty(ExecState *, int token) const
+Value Screen::getValueProperty(ExecState *exec, int token) const
 {
   KWinModule info;
+  QWidget *thisWidget = Window::retrieveActive(exec)->part()->view();
+  QRect sg = QApplication::desktop()->screenGeometry(QApplication::desktop()->screenNumber(thisWidget));
+
   switch( token ) {
   case Height:
-    return Number(QApplication::desktop()->height());
+    return Number(sg.height());
   case Width:
-    return Number(QApplication::desktop()->width());
+    return Number(sg.width());
   case ColorDepth:
   case PixelDepth: {
     QPaintDeviceMetrics m(QApplication::desktop());
     return Number(m.depth());
   }
-  case AvailLeft:
-    return Number(info.workArea().left());
-  case AvailTop:
-    return Number(info.workArea().top());
-  case AvailHeight:
-    return Number(info.workArea().height());
-  case AvailWidth:
-    return Number(info.workArea().width());
+  case AvailLeft: {
+    QRect clipped = info.workArea().intersect(sg);
+    return Number(clipped.x()-sg.x());
+  }
+  case AvailTop: {
+    QRect clipped = info.workArea().intersect(sg);
+    return Number(clipped.y()-sg.y());
+  }
+  case AvailHeight: {
+    QRect clipped = info.workArea().intersect(sg);
+    return Number(clipped.height());
+  }
+  case AvailWidth: {
+    QRect clipped = info.workArea().intersect(sg);
+    return Number(clipped.width());
+  }
   default:
     kdWarning() << "Screen::getValueProperty unhandled token " << token << endl;
     return Undefined();
@@ -172,6 +185,7 @@ const ClassInfo Window::info = { "Window", 0, &WindowTable, 0 };
   location	Window::_Location	DontDelete
   name		Window::Name		DontDelete
   navigator	Window::_Navigator	DontDelete|ReadOnly
+  clientInformation	Window::ClientInformation	DontDelete|ReadOnly
   konqueror	Window::_Konqueror	DontDelete|ReadOnly
   offscreenBuffering	Window::OffscreenBuffering	DontDelete|ReadOnly
   opener	Window::Opener		DontDelete|ReadOnly
@@ -311,7 +325,7 @@ void Window::mark()
     loc->mark();
 }
 
-bool Window::hasProperty(ExecState * /*exec*/, const UString &/*p*/, bool /*recursive*/) const
+bool Window::hasProperty(ExecState * /*exec*/, const UString &/*p*/) const
 {
   //fprintf( stderr, "Window::hasProperty: always saying true\n" );
 
@@ -361,19 +375,12 @@ Value Window::get(ExecState *exec, const UString &p) const
       if (isSafeScript(exec))
       {
         if (m_part->document().isNull()) {
+          kdDebug(6070) << "Document.write: adding <HTML><BODY> to create document" << endl;
           m_part->begin();
-          m_part->write("<HTML>");
+          m_part->write("<HTML><BODY>");
           m_part->end();
         }
         Value val = getDOMNode(exec,m_part->document());
-#if 0 // not needed anymore
-        // Cache the value. This also prevents the GC from deleting the document
-        // while the window exists (important if the users sets properties on it).
-        const_cast<Window*>(this)->ObjectImp::put( exec, UString("document"), val, Internal );
-        // ## This is a hack. The whole cache should be in here, or in ScriptInterpreter,
-        // so that dynamic properties are remembered. But then, which cache to clear up
-        // in the object dtor will be a headache.
-#endif
         return val;
       }
       else
@@ -418,6 +425,7 @@ Value Window::get(ExecState *exec, const UString &p) const
     case Name:
       return String(m_part->name());
     case _Navigator:
+    case ClientInformation:
       return Value(new Navigator(exec, m_part));
 #ifdef Q_WS_QWS
     case _Konqueror:
@@ -447,10 +455,14 @@ Value Window::get(ExecState *exec, const UString &p) const
       return Value(retrieve(m_part->parentPart() ? m_part->parentPart() : (KHTMLPart*)m_part));
     case Personalbar:
       return Undefined(); // ###
-    case ScreenX:
-      return Number(m_part->view() ? m_part->view()->mapToGlobal(QPoint(0,0)).x() : 0);
-    case ScreenY:
-      return Number(m_part->view() ? m_part->view()->mapToGlobal(QPoint(0,0)).y() : 0);
+    case ScreenX: {
+	  QRect sg = QApplication::desktop()->screenGeometry(QApplication::desktop()->screenNumber(m_part->view()));
+      return Number(m_part->view()->mapToGlobal(QPoint(0,0)).x() + sg.x());
+    }
+    case ScreenY: {
+	  QRect sg = QApplication::desktop()->screenGeometry(QApplication::desktop()->screenNumber(m_part->view()));
+      return Number(m_part->view()->mapToGlobal(QPoint(0,0)).y() + sg.y());
+    }
     case Scrollbars:
       return Undefined(); // ###
     case Self:
@@ -678,8 +690,7 @@ void Window::put(ExecState* exec, const UString &propertyName, const Value &valu
       QString str = value.toString(exec).qstring();
       KHTMLPart* p = Window::retrieveActive(exec)->m_part;
       if ( p )
-        m_part->scheduleRedirection(0, p->htmlDocument().
-                                    completeURL(str).string().prepend( "target://_self/?#" ));
+        m_part->scheduleRedirection(0, p->htmlDocument().completeURL(str).string());
       return;
     }
     case Onabort:
@@ -890,11 +901,14 @@ void Window::clear( ExecState *exec )
 {
   kdDebug(6070) << "Window::clear " << this << endl;
   delete winq;
-  winq = 0;
+  winq = new WindowQObject(this);;
   // Get rid of everything, those user vars could hold references to DOM nodes
   deleteAllProperties( exec );
   // Really delete those properties, so that the DOM nodes get deref'ed
   KJS::Collector::collect();
+  // Now recreate a working global object for the next URL that will use us
+  KJS::Interpreter *interpreter = KJSProxy::proxy( m_part )->interpreter();
+  interpreter->initGlobalObject();
 }
 
 void Window::setCurrentEvent( DOM::Event *evt )
@@ -990,16 +1004,33 @@ Value WindowFunc::tryCall(ExecState *exec, Object &thisObj, const List &args)
           if (pos >= 0) {
             key = s.left(pos).stripWhiteSpace().lower();
             val = s.mid(pos + 1).stripWhiteSpace().lower();
-            if (key == "left" || key == "screenx")
-              winargs.x = val.toInt();
-            else if (key == "top" || key == "screeny")
-              winargs.y = val.toInt();
-            else if (key == "height")
-              winargs.height = val.toInt() + 4;
-            else if (key == "width")
-              winargs.width = val.toInt() + 4;
-            else
+
+            int scnum = QApplication::desktop()->screenNumber(widget->topLevelWidget());
+
+	    QRect screen = QApplication::desktop()->screenGeometry(scnum);
+            if (key == "left" || key == "screenx") {
+              winargs.x = val.toInt() + screen.x();
+	      if (winargs.x < screen.x() || winargs.x > screen.right())
+		  winargs.x = screen.x(); // only safe choice until size is determined
+            } else if (key == "top" || key == "screeny") {
+              winargs.y = val.toInt() + screen.y();
+	      if (winargs.y < screen.y() || winargs.y > screen.bottom())
+		  winargs.y = screen.y(); // only safe choice until size is determined
+            } else if (key == "height") {
+              winargs.height = val.toInt() + 2*qApp->style().pixelMetric( QStyle::PM_DefaultFrameWidth ) + 2;
+	      if (winargs.height > screen.height())  // should actually check workspace
+		  winargs.height = screen.height();
+              if (winargs.height < 100)
+		  winargs.height = 100;
+            } else if (key == "width") {
+              winargs.width = val.toInt() + 2*qApp->style().pixelMetric( QStyle::PM_DefaultFrameWidth ) + 2;
+	      if (winargs.width > screen.width())    // should actually check workspace
+		  winargs.width = screen.width();
+              if (winargs.width < 100)
+		  winargs.width = 100;
+            } else {
               goto boolargs;
+	    }
             continue;
           } else {
             // leaving away the value gives true
@@ -1039,19 +1070,19 @@ Value WindowFunc::tryCall(ExecState *exec, Object &thisObj, const List &args)
       {
           while ( part->parentPart() )
               part = part->parentPart();
-          part->scheduleRedirection(0, url.url().prepend( "target://_self/?#" ) );
+          part->scheduleRedirection(0, url.url());
           return Window::retrieve(part);
       }
       if ( uargs.frameName == "_parent" )
       {
           if ( part->parentPart() )
               part = part->parentPart();
-          part->scheduleRedirection(0, url.url().prepend( "target://_self/?#" ) );
+          part->scheduleRedirection(0, url.url());
           return Window::retrieve(part);
       }
       uargs.serviceType = "text/html";
 
-      // request new window
+      // request window (new or existing if framename is set)
       KParts::ReadOnlyPart *newPart = 0L;
       emit part->browserExtension()->createNewWindow("", uargs,winargs,newPart);
       if (newPart && newPart->inherits("KHTMLPart")) {
@@ -1059,6 +1090,15 @@ Value WindowFunc::tryCall(ExecState *exec, Object &thisObj, const List &args)
         //qDebug("opener set to %p (this Window's part) in new Window %p  (this Window=%p)",part,win,window);
         khtmlpart->setOpener(part);
         khtmlpart->setOpenedByJS(true);
+        if (khtmlpart->document().isNull()) {
+          khtmlpart->begin();
+          khtmlpart->write("<HTML><BODY>");
+          khtmlpart->end();
+	  if ( part->docImpl() ) {
+	    khtmlpart->docImpl()->setDomain( part->docImpl()->domain(), true );
+	    khtmlpart->docImpl()->setBaseURL( part->docImpl()->baseURL() );
+	  }
+        }
         uargs.serviceType = QString::null;
         if (uargs.frameName == "_blank")
           uargs.frameName = QString::null;
@@ -1081,11 +1121,12 @@ Value WindowFunc::tryCall(ExecState *exec, Object &thisObj, const List &args)
     if(args.size() == 2 && widget)
     {
       QWidget * tl = widget->topLevelWidget();
+	  QRect sg = QApplication::desktop()->screenGeometry(QApplication::desktop()->screenNumber(tl));
       QPoint dest = tl->pos() + QPoint( args[0].toInt32(exec), args[1].toInt32(exec) );
       // Security check (the spec talks about UniversalBrowserWrite to disable this check...)
-      if ( dest.x() >= 0 && dest.y() >= 0 &&
-           dest.x()+tl->width() <= QApplication::desktop()->width() &&
-           dest.y()+tl->height() <= QApplication::desktop()->height() )
+      if ( dest.x() >= sg.x() && dest.y() >= sg.x() &&
+           dest.x()+tl->width() <= sg.width()+sg.x() &&
+           dest.y()+tl->height() <= sg.height()+sg.y() )
         tl->move( dest );
     }
     return Undefined();
@@ -1093,11 +1134,12 @@ Value WindowFunc::tryCall(ExecState *exec, Object &thisObj, const List &args)
     if(args.size() == 2 && widget)
     {
       QWidget * tl = widget->topLevelWidget();
-      QPoint dest = QPoint( args[0].toInt32(exec), args[1].toInt32(exec) );
+	  QRect sg = QApplication::desktop()->screenGeometry(QApplication::desktop()->screenNumber(tl));
+      QPoint dest( args[0].toInt32(exec)+sg.x(), args[1].toInt32(exec)+sg.y() );
       // Security check (the spec talks about UniversalBrowserWrite to disable this check...)
-      if ( dest.x() >= 0 && dest.y() >= 0 &&
-           dest.x()+tl->width() <= QApplication::desktop()->width() &&
-           dest.y()+tl->height() <= QApplication::desktop()->height() )
+      if ( dest.x() >= sg.x() && dest.y() >= sg.y() &&
+           dest.x()+tl->width() <= sg.width()+sg.x() &&
+           dest.y()+tl->height() <= sg.height()+sg.y() )
         tl->move( dest );
     }
     return Undefined();
@@ -1106,9 +1148,10 @@ Value WindowFunc::tryCall(ExecState *exec, Object &thisObj, const List &args)
     {
       QWidget * tl = widget->topLevelWidget();
       QSize dest = tl->size() + QSize( args[0].toInt32(exec), args[1].toInt32(exec) );
+	  QRect sg = QApplication::desktop()->screenGeometry(QApplication::desktop()->screenNumber(tl));
       // Security check: within desktop limits and bigger than 100x100 (per spec)
-      if ( tl->x()+dest.width() <= QApplication::desktop()->width() &&
-           tl->y()+dest.height() <= QApplication::desktop()->height() &&
+      if ( tl->x()+dest.width() <= sg.x()+sg.width() &&
+           tl->y()+dest.height() <= sg.y()+sg.height() &&
            dest.width() >= 100 && dest.height() >= 100 )
       {
         // Take into account the window frame
@@ -1123,9 +1166,10 @@ Value WindowFunc::tryCall(ExecState *exec, Object &thisObj, const List &args)
     {
       QWidget * tl = widget->topLevelWidget();
       QSize dest = QSize( args[0].toInt32(exec), args[1].toInt32(exec) );
+	  QRect sg = QApplication::desktop()->screenGeometry(QApplication::desktop()->screenNumber(tl));
       // Security check: within desktop limits and bigger than 100x100 (per spec)
-      if ( tl->x()+dest.width() <= QApplication::desktop()->width() &&
-           tl->y()+dest.height() <= QApplication::desktop()->height() &&
+      if ( tl->x()+dest.width() <= sg.x()+sg.width() &&
+           tl->y()+dest.height() <= sg.y()+sg.height() &&
            dest.width() >= 100 && dest.height() >= 100 )
       {
         // Take into account the window frame
@@ -1539,7 +1583,7 @@ void Location::put(ExecState *exec, const UString &p, const Value &v, int attr)
     return;
   }
 
-  m_part->scheduleRedirection(0, url.url().prepend( "target://_self/?#" ) );
+  m_part->scheduleRedirection(0, url.url());
 }
 
 Value Location::toPrimitive(ExecState *exec, Type) const
@@ -1571,12 +1615,11 @@ Value LocationFunc::tryCall(ExecState *exec, Object &thisObj, const List &args)
       QString str = args[0].toString(exec).qstring();
       KHTMLPart* p = Window::retrieveActive(exec)->part();
       if ( p )
-        part->scheduleRedirection(0, p->htmlDocument().
-                                  completeURL(str).string().prepend( "target://_self/?#" ));
+        part->scheduleRedirection(0, p->htmlDocument().completeURL(str).string());
       break;
     }
     case Location::Reload:
-      part->scheduleRedirection(0, part->url().url().prepend( "target://_self/?#" ) );
+      part->scheduleRedirection(0, part->url().url());
       break;
     case Location::ToString:
       return String(location->toString(exec));
@@ -1689,7 +1732,7 @@ Value HistoryFunc::tryCall(ExecState *exec, Object &thisObj, const List &args)
 
 const ClassInfo Konqueror::info = { "Konqueror", 0, 0, 0 };
 
-bool Konqueror::hasProperty(ExecState *exec, const UString &p, bool recursive) const
+bool Konqueror::hasProperty(ExecState *exec, const UString &p) const
 {
   if ( p.qstring().startsWith( "goHistory" ) ) return false;
 

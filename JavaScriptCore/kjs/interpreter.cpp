@@ -114,6 +114,11 @@ Object Interpreter::globalObject() const
   return rep->globalObject();
 }
 
+void Interpreter::initGlobalObject()
+{
+  rep->initGlobalObject();
+}
+
 ExecState *Interpreter::globalExec()
 {
   return rep->globalExec();
@@ -364,3 +369,5 @@ ExecState::ExecState(Interpreter *interp, ContextImp *con)
   rep = new ExecStateImp(interp,con);
 }
 
+void Interpreter::virtual_hook( int, void* )
+{ /*BASE::virtual_hook( id, data );*/ }

@@ -163,8 +163,7 @@ void RenderBox::printBoxDecorations(QPainter *p,int, int _y,
     else
         mh = QMIN(_h,h);
 
-    if ( !root()->printingMode() )
-        printBackground(p, style()->backgroundColor(), style()->backgroundImage(), my, mh, _tx, _ty, w, h);
+    printBackground(p, style()->backgroundColor(), style()->backgroundImage(), my, mh, _tx, _ty, w, h);
 
     if(style()->hasBorder())
         printBorder(p, _tx, _ty, w, h, style());
@@ -253,7 +252,7 @@ void RenderBox::printBackground(QPainter *p, const QColor &c, CachedImage *bg, i
             }
 
             QRect fix(cx,cy,cw,ch);
-            QRect ele(_tx+borderLeft()+paddingLeft(),_ty+borderTop()+paddingTop(),w-vpab,h-hpab);
+            QRect ele(_tx+borderLeft(),_ty+borderTop(),w-vpab,h-hpab);
             QRect b = fix.intersect(ele);
             sx+=b.x()-cx;
             sy+=b.y()-cy;
@@ -292,7 +291,7 @@ void RenderBox::calcClip(QPainter* p, int tx, int ty)
     }
     if (!style()->clipRight().isVariable())
     {
-	int w = style()->clipRight().width(m_width-bl-br); 
+	int w = style()->clipRight().width(m_width-bl-br);
 	if ( style()->jsClipMode() )
 	    clipw = w + tx + bl;
 	else
@@ -361,7 +360,7 @@ bool RenderBox::absolutePosition(int &xPos, int &yPos, bool f)
     }
 }
 
-void RenderBox::position(int x, int y, int, int, int, bool, bool)
+void RenderBox::position(int x, int y, int, int, int, bool, bool, int)
 {
     m_x = x + marginLeft();
     m_y = y;
@@ -582,7 +581,7 @@ short RenderBox::calcReplacedWidth(bool* ieHack) const
     Length w = style()->width();
     short width;
     if ( ieHack )
-        *ieHack = style()->height().isPercent() || (w.isVariable() || w.isPercent());
+        *ieHack = style()->height().isPercent() || w.isPercent();
 
     switch( w.type ) {
     case Variable:
@@ -597,7 +596,7 @@ short RenderBox::calcReplacedWidth(bool* ieHack) const
     }
     case Percent:
     {
-        RenderObject* p = parent();
+        //RenderObject* p = parent();
         int cw = containingBlockWidth();
         if ( cw )
             width = w.minWidth( cw );

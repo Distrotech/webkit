@@ -22,14 +22,14 @@
 
 INCLUDES = $(all_includes)
 
-SUBDIRS = . tests
+SUBDIRS = malloc . tests
 
 lib_LTLIBRARIES = libkdefakes.la libkdecore.la
 
 include_HEADERS = kconfig.h kconfigdata.h ksimpleconfig.h kconfigbase.h \
 	kdesktopfile.h kurl.h ksock.h kaboutdata.h kcmdlineargs.h \
 	kconfigbackend.h kapp.h kapplication.h kuniqueapp.h kuniqueapplication.h \
-	kcharsets.h \
+	kcharsets.h kdeversion.h \
 	kprocess.h kprocctrl.h klocale.h kicontheme.h kiconloader.h kdebug.h \
 	kwinmodule.h kwin.h krootprop.h \
 	kshortcut.h kkeynative.h kaccel.h kglobalaccel.h \
@@ -42,11 +42,11 @@ include_HEADERS = kconfig.h kconfigdata.h ksimpleconfig.h kconfigbase.h \
 	krandomsequence.h kstringhandler.h knotifyclient.h kiconeffect.h \
 	kaudioplayer.h kdcoppropertyproxy.h netwm.h \
 	netwm_def.h netwm_p.h kpixmapprovider.h kunload.h kstaticdeleter.h \
-	kextsock.h ksockaddr.h kprocio.h kasyncio.h kbufferedio.h \
+	kextsock.h kextendedsocket.h ksockaddr.h kprocio.h kasyncio.h kbufferedio.h \
 	kurldrag.h kmimesourcefactory.h kmdcodec.h ksocks.h \
 	ksycoca.h ksycocaentry.h ksycocatype.h kxmessages.h kstartupinfo.h \
 	klargefile.h kmultipledrag.h kgenericfactory.h kgenericfactory.tcc ktypelist.h \
-	ksortablevaluelist.h
+	ksortablevaluelist.h kdebugclasses.h
 
 libkdefakes_la_SOURCES = fakes.c vsnprintf.c
 libkdefakes_la_LDFLAGS = -version-info 4:0
@@ -77,11 +77,11 @@ libkdecore_la_SOURCES = libintl.cpp kapplication.cpp kdebug.cpp netwm.cpp  \
 	kpixmapprovider.cpp kurldrag.cpp \
         kmdcodec.cpp ksocks.cpp fakes.c vsnprintf.c \
 	ksycoca.cpp ksycocadict.cpp ksycocafactory.cpp ksycoca.skel \
-	kxmessages.cpp kstartupinfo.cpp kcatalogue.cpp \
+	kxmessages.cpp kstartupinfo.cpp kcatalogue.cpp kasyncio.cpp \
 	kmultipledrag.cpp kstaticdeleter.cpp kappdcopiface.cpp kappdcopiface.skel
 
 libkdecore_la_LDFLAGS = $(QT_LDFLAGS) $(KDE_RPATH) $(KDE_MT_LDFLAGS) $(X_LDFLAGS) $(USER_LDFLAGS) -version-info 4:0 -no-undefined
-libkdecore_la_LIBADD = $(LIB_DCOP) ../libltdl/libltdlc.la $(LIB_XEXT) $(LIBRESOLV) $(LIBXINERAMA) $(LIB_DMALLOC)
+libkdecore_la_LIBADD = malloc/libklmalloc.la $(LIB_DCOP) ../libltdl/libltdlc.la $(LIB_XEXT) $(LIBRESOLV) $(LIBXINERAMA) $(LIB_DMALLOC)
 
 libkdecore_la_METASOURCES = AUTO
 
@@ -94,9 +94,7 @@ kckey_h : $(srcdir)/generate_keys.sh $(QNAMESPACE_H)
 	(cd $(srcdir) && ./generate_keys.sh $(QNAMESPACE_H))
 
 install-data-local:
-	$(mkinstalldirs) $(includedir)
 	$(mkinstalldirs) $(includedir)/kio
-	$(INSTALL_DATA) $(srcdir)/../libltdl/ltdl.h $(includedir)/ltdl.h
 	$(mkinstalldirs) $(kde_datadir)/knotify
 	$(INSTALL_DATA) $(srcdir)/eventsrc $(kde_datadir)/knotify/eventsrc
 	$(mkinstalldirs) $(kde_confdir)/colors
@@ -106,7 +104,6 @@ install-data-local:
 	$(INSTALL_DATA) $(srcdir)/kmdcodec_compat.h $(includedir)/kio/kmdcodec.h
 
 uninstall-local:
-	-rm -f $(includedir)/ltdl.h
 	-rm -f $(includedir)/kio/kmdcodec.h
 
 EXTRA_DIST = generate_keys.sh $(kdebug_DATA) Web.colors \
