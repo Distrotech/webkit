@@ -1,3 +1,94 @@
+2004-01-13  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
+	Merged TOT onto the branch
+
+        * ChangeLog:
+        * WebCore.pbproj/project.pbxproj:
+        * khtml/css/css_valueimpl.h:
+        * khtml/css/cssparser.cpp:
+        * khtml/ecma/kjs_html.cpp:
+        (KJS::HTMLCollection::getNamedItems):
+        * khtml/ecma/kjs_html.lut.h:
+        (KJS::):
+        * khtml/html/dtd.cpp:
+        (DOM::checkChild):
+        * khtml/html/html_objectimpl.cpp:
+        (HTMLAppletElementImpl::getAppletInstance):
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::text):
+        (KHTMLPart::setSelection):
+        (KHTMLPart::slotClearSelection):
+        (KHTMLPart::setZoomFactor):
+        (KHTMLPart::khtmlMousePressEvent):
+        (KHTMLPart::khtmlMouseMoveEvent):
+        (KHTMLPart::khtmlMouseReleaseEvent):
+        (KHTMLPart::emitCaretPositionChanged):
+        (KHTMLPart::moveCaretTo):
+        * khtml/khtml_part.h:
+        * khtml/khtmlview.cpp:
+        (KHTMLViewPrivate::KHTMLViewPrivate):
+        (KHTMLViewPrivate::editorContext):
+        (KHTMLView::clear):
+        (KHTMLView::resizeEvent):
+        (KHTMLView::drawContents):
+        (KHTMLView::layout):
+        (KHTMLView::dispatchMouseEvent):
+        (KHTMLView::moveCaretTo):
+        * khtml/khtmlview.h:
+        * khtml/rendering/render_block.cpp:
+        (khtml::RenderBlock::positionNewFloats):
+        * khtml/rendering/render_frames.cpp:
+        (RenderPart::updateWidgetPositions):
+        * khtml/rendering/render_frames.h:
+        * khtml/rendering/render_image.cpp:
+        (RenderImage::setPixmap):
+        * khtml/rendering/render_style.cpp:
+        (StyleCSS3InheritedData::~StyleCSS3InheritedData):
+        * khtml/rendering/render_style.h:
+        * khtml/rendering/render_table.cpp:
+        (RenderTableSection::layoutRows):
+        (RenderTableCell::setStyle):
+        * khtml/rendering/render_table.h:
+        (khtml::RenderTableCol::lineHeight):
+        * khtml/rendering/render_text.cpp:
+        (RenderText::paintObject):
+        * khtml/xml/dom_docimpl.cpp:
+        (DocumentImpl::DocumentImpl):
+        (DocumentImpl::~DocumentImpl):
+        (DocumentImpl::attach):
+        (DocumentImpl::setInPageCache):
+        * khtml/xml/dom_docimpl.h:
+        * kwq/KWQAccObject.mm:
+        (-[KWQAccObject roleDescription]):
+        (-[KWQAccObject value]):
+        (-[KWQAccObject accessibilityIsIgnored]):
+        (-[KWQAccObject accessibilityActionDescription:]):
+        * kwq/KWQEvent.mm:
+        (keyIdentifierForKeyEvent):
+        (QKeyEvent::QKeyEvent):
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::openURLFromPageCache):
+        (KWQKHTMLPart::scrollToAnchor):
+        (KWQKHTMLPart::attributedString):
+        * kwq/KWQPageState.h:
+        * kwq/KWQPageState.mm:
+        (-[KWQPageState initWithDocument:URL:windowProperties:locationProperties:interpreterBuiltins:]):
+        (-[KWQPageState clear]):
+        (-[KWQPageState invalidate]):
+        (-[KWQPageState dealloc]):
+        (-[KWQPageState interpreterBuiltins]):
+        * kwq/WebCoreBridge.h:
+        * kwq/WebCoreBridge.mm:
+        (-[WebCoreBridge computePageRectsWithPrintWidth:printHeight:]):
+        (-[WebCoreBridge setTextSizeMultiplier:]):
+        (-[WebCoreBridge needsLayout]):
+        (-[WebCoreBridge setNeedsLayout]):
+        * kwq/WebCoreJavaScript.mm:
+        (+[WebCoreJavaScript rootObjectClasses]):
+        (+[WebCoreJavaScript garbageCollect]):
+
 2004-01-12  Ken Kocienda  <kocienda@apple.com>
 
         Reviewed by me
@@ -1145,865 +1236,306 @@
         * kwq/KWQWidget.h:
         (QWidget::focusInEvent):
 
-2003-12-12  Chris Blumenberg  <cblu@apple.com>
+=== Safari-121 ===
 
-	Fixed: <rdar://problem/3505208>: keys added to keychain from KEYGEN need better UI names
+2004-01-11  Darin Adler  <darin@apple.com>
 
-        Reviewed by rjw.
+        - fixed Dave's check-in so it compiles; I assume he forgot to land one source file
 
-        * khtml/html/html_formimpl.cpp:
-        (HTMLKeygenElementImpl::encoding): pass the page URL to signedPublicKeyAndChallengeString
-        * kwq/KWQKSSLKeyGen.h:
-        * kwq/KWQKSSLKeyGen.mm:
-        (KSSLKeyGen::signedPublicKeyAndChallengeString): take a URL
-        * kwq/WebCoreKeyGenerator.h:
-        * kwq/WebCoreKeyGenerator.m:
-        (-[WebCoreKeyGenerator signedPublicKeyAndChallengeStringWithStrengthIndex:challenge:pageURL:]): take a URL
+        * khtml/khtmlview.h: Add RenderPart to the friends of KHTMLView.
 
-2003-12-12  David Hyatt  <hyatt@apple.com>
+2004-01-11  David Hyatt  <hyatt@apple.com>
 
-	Fix for 3254534, CSS background-image style should be loaded lazily only when used.
+	Fix for frame repainting bugs (3510669, 3515442).  This is a narrower fix than the previous attempt.
 	
-        Reviewed by rjw
+        Reviewed by darin
 
-        * ChangeLog:
-        * khtml/css/css_valueimpl.cpp:
-        (CSSImageValueImpl::CSSImageValueImpl):
-        (CSSImageValueImpl::~CSSImageValueImpl):
-        (CSSImageValueImpl::image):
-        * khtml/css/css_valueimpl.h:
-        
-2003-12-11  David Hyatt  <hyatt@apple.com>
-
-	WebCore part of 3453214.  This ensures that all outline styles except for auto (which has a CG bug) will
-	be displayed properly during the PaintActionOutline phase.
-	
-        Reviewed by john and darin
-
-        * khtml/rendering/render_block.cpp:
-        (khtml::RenderBlock::paint):
-        * khtml/rendering/render_box.cpp:
-        (RenderBox::setStyle):
-        * khtml/rendering/render_canvas.cpp:
-        (RenderCanvas::RenderCanvas):
-        * khtml/rendering/render_canvas.h:
-        (khtml::RenderCanvas::setMaximalOutlineSize):
-        (khtml::RenderCanvas::maximalOutlineSize):
-        * khtml/rendering/render_object.cpp:
-        (RenderObject::maximalOutlineSize):
-        * khtml/rendering/render_object.h:
+        * khtml/rendering/render_frames.cpp:
+        (RenderPart::updateWidgetPositions):
+        * khtml/rendering/render_frames.h:
         * khtml/rendering/render_replaced.cpp:
-        (RenderReplaced::paint):
-        * khtml/rendering/render_table.cpp:
-        (RenderTable::paint):
-        (RenderTableSection::paint):
-        (RenderTableCell::paint):
+        (RenderWidget::updateWidgetPositions):
 
-2003-12-12  John Sullivan  <sullivan@apple.com>
-
-        - fixed <rdar://problem/3508825>: REGRESSION (100-116): crash in 
-        HTMLGenericFormElementImpl::attach at sonyericsson.com
-
-        Reviewed by Maciej.
-
-        * khtml/html/html_formimpl.cpp:
-        (HTMLGenericFormElementImpl::attach):
-        Move a few lines inside an existing nil check to prevent nil dereference.
-
-2003-12-12  John Sullivan  <sullivan@apple.com>
-
-        - fixed <rdar://problem/3508760>: tabbing to out-of-sight link behaves 
-        differently than tabbing to out-of-sight form control
-
-        Reviewed by Dave.
-
-        * kwq/KWQScrollView.h:
-        * kwq/KWQScrollView.mm:
-        (QScrollView::ensureVisible):
-        added comments and changed parameter names to reveal differences between
-        what we've implemented and what QScrollView was intended to do.
-        (QScrollView::ensureRectVisibleCentered):
-        New method that calls _KWQ_scrollRectToVisible, which is the method
-        we use when scrolling to reveal form controls.
-
-        * kwq/KWQKHTMLPart.mm:
-        (KWQKHTMLPart::nextKeyViewInFrame):
-        call ensureRectVisibleCentered so tabbing to a link will use the
-        same scroll-to-reveal code as tabbing to a form control
-        
-2003-12-11  Maciej Stachowiak  <mjs@apple.com>
+2004-01-10  Darin Adler  <darin@apple.com>
 
         Reviewed by John.
 
-	<rdar://problem/3507856>: XMLHttpRequest xhtml test displays but doesn't load
+        - fixed 3525468: REGRESSION (114-115): HOMEPAGE: after hitting textarea limit, backspace key is ignored
 
-        * khtml/ecma/xmlhttprequest.cpp:
-        (KJS::XMLHttpRequestProtoFunc::tryCall): complete the URL using the document,
-	not the htmlDocument.
+        * kwq/KWQEvent.mm:
+        (keyIdentifierForKeyEvent): Treat 7F as 08; matches other browsers.
+        (QKeyEvent::QKeyEvent): Ditto.
 
-2003-12-12  Richard Williamson   <rjw@apple.com>
+2004-01-09  David Hyatt  <hyatt@apple.com>
 
-	Replace call to global functions with static member functions.
-
-        Reviewed by Ken.
-
-        * kwq/KWQKHTMLPart.mm:
-        (KWQKHTMLPart::cleanupPluginRootObjects):
-        * kwq/WebCoreBridge.mm:
-        (rootForView):
-        (-[WebCoreBridge init]):
-
-2003-12-11  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Darin.
-
-	<rdar://problem/3464315>: createDocument creates document with initial child element, unlike other browsers
-	
-        * khtml/xml/dom_docimpl.cpp:
-        (DOMImplementationImpl::createDocument): Don;t add initial element.
-
-2003-12-11  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Darin. 
-
-	<rdar://problem/3507863>: XMLHttpRequest should not parse response if HTML
-        
-	* khtml/ecma/xmlhttprequest.cpp:
-        (KJS::XMLHttpRequest::getValueProperty):
-
-2003-12-11  Richard Williamson   <rjw@apple.com>
-
-	Cleaned up and verified reference counting scheme, and
-	dereferencing of vended JavaScript objects when applet is
-	destroyed (actually when part is destroyed).
-
-        Reviewed by Ken.
-
-        * kwq/KWQKHTMLPart.h:
-        * kwq/KWQKHTMLPart.mm:
-        (KWQKHTMLPart::~KWQKHTMLPart):
-        (KWQKHTMLPart::getAppletInstanceForView):
-        (KWQKHTMLPart::addPluginRootObject):
-        (KWQKHTMLPart::cleanupPluginRootObjects):
-        * kwq/WebCoreBridge.h:
-        * kwq/WebCoreBridge.mm:
-        (rootForView):
-        (-[WebCoreBridge init]):
-
-2003-12-11  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by John.
-
-	<rdar://problem/3507862>: XMLHttpRequest documents that reference external resources (e.g. stylesheets) cause crash
-
-        * khtml/html/html_headimpl.cpp:
-        (HTMLLinkElementImpl::process):
-        * khtml/html/htmltokenizer.cpp:
-        (HTMLTokenizer::scriptHandler):
-        * khtml/xml/dom_xmlimpl.cpp:
-        (ProcessingInstructionImpl::checkStyleSheet):
-        * khtml/xml/xml_tokenizer.cpp:
-        (XMLHandler::processingInstruction):
-        (XMLTokenizer::executeScripts):
-
-2003-12-11  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Chris.
-
-	<rdar://problem/3507859>: Status text should only include "OK", not full "HTTP/1.0 200 OK" status line
-	
-        * khtml/ecma/xmlhttprequest.cpp:
-        (KJS::XMLHttpRequest::getStatusText): Include only the status
-	text, not the full status line.
-
-=== Safari-117 ===
-
-2003-12-11  David Hyatt  <hyatt@apple.com>
-
-	Fix for 3507164, scrolling really slow on hixie's web forms spec page.  Hixie has 12 little transparent layers
-        at various points on this page, and beginning/ending transparency on only those 12 layers as you scroll
-        is enough to kill scrolling performance.
-
-	This patch works around the issue by lazily beginning transparency layers only when we determine that
-	we're actually painting a descendant layer of a transparent ancestor or a transparent layer.
-
-	Also fixing QColor's comparison operator.  It was broken and not comparing the "valid" bit, so invalid and
-	valid colors were being assumed to be the same.
-
-	Also fixed the render dumper to not dump transparent and invalid background colors and fixed it do dump the
-	alpha for colors with an alpha < 0xFF.
-	
-	Reviewed by mjs (opacity changes), darin (color changes) and john (render tree dumper changes)
-
-        * ChangeLog:
-        * khtml/rendering/render_layer.cpp:
-        (RenderLayer::RenderLayer):
-        (RenderLayer::beginTransparencyLayers):
-        (RenderLayer::paint):
-        (RenderLayer::paintLayer):
-        * khtml/rendering/render_layer.h:
-        * kwq/KWQColor.h:
-        (operator==):
-        (operator!=):
-        * kwq/KWQColor.mm:
-        (QColor::name):
-        * kwq/KWQRenderTreeDebug.cpp:
-        (operator<<):
-
-2003-12-11  Ken Kocienda  <kocienda@apple.com>
-
-        Reviewed by me
-
-        * kwq/KWQLoader.mm:
-        (KWQCacheObjectExpiresTime): Fixed deployment build bustage.
-
-2003-12-09  Ken Kocienda  <kocienda@apple.com>
-
-        Reviewed by Darin
-        
-        <rdar://problem/3505444>: WebCore cache does not use expiration dates on cache items
-        
-        * khtml/misc/loader.cpp:
-        (Loader::slotFinished): Don't reset expiration date. We set this once in
-        slotReceivedResponse.
-        (Loader::slotReceivedResponse): Call new KWQ function to get a cache object's
-        expiration date using its NSURLResponse data.
-        (Cache::requestImage): Don't reset expiration date. We set this once in
-        slotReceivedResponse, and we do not want the value from the DocLoader
-	anyway.
-        (Cache::requestStyleSheet): Ditto.
-        (Cache::requestScript): Ditto.
-        * kwq/KWQLoader.h:
-        * kwq/KWQLoader.mm:
-        (KWQCacheObjectExpiresTime): New function. Call over bridge to get access
-        to SPI in NSURLResponse to calculate expiration time.
-        * kwq/WebCoreBridge.h: Declare bridge method.
-
-2003-12-10  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Darin.
-
-	<rdar://problem/3504156>: XMLHttpRequest reuse test fails
-	<rdar://problem/3505158>: XMLHttpRequest "abort with open" test fails
-
-        * khtml/ecma/xmlhttprequest.cpp:
-        (KJS::XMLHttpRequest::open):
-        (KJS::XMLHttpRequest::abort):
-        (KJS::XMLHttpRequestProtoFunc::tryCall):
-
-2003-12-10  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Darin.
-
-	<rdar://problem/3507175>: Setting timeout function can allocate JS objects without lock
-
-        * khtml/ecma/kjs_window.cpp:
-        (ScheduledAction::execute): Lock interpreter around code that
-	might allocate JS objects.
-
-2003-12-10  David Hyatt  <hyatt@apple.com>
-
-	Fix for 3507097, overflow:auto should include the height of the horizontal scrollbar when the height
-	of the block is auto.
+	Fixes for 3510669 and 3515442, blank frame problems caused by WebKit's use of a separate needsLayout boolean.
 	
         Reviewed by darin
-
-        * khtml/rendering/bidi.cpp:
-        (khtml::RenderBlock::layoutInlineChildren):
-        * khtml/rendering/render_block.cpp:
-        (khtml::RenderBlock::layoutBlock):
-        (khtml::RenderBlock::layoutBlockChildren):
-
-2003-12-10  Darin Adler  <darin@apple.com>
-
-        Reviewed by Maciej.
-
-        - fixed 3506739: nil-deref in DocumentImpl::setSelection triple clicking (generated content)
-
-        * khtml/khtml_part.cpp: (KHTMLPart::khtmlMousePressEvent): Check for the case where
-        m_selectionEnd is 0. This doesn't fix the behavior completely, but it does prevent a crash.
-
-2003-12-10  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Richard.
-
-	<rdar://problem/3487160>: Implement synchronous loading for XMLHttpRequest
-        
-	* khtml/ecma/xmlhttprequest.cpp:
-        (KJS::XMLHttpRequest::XMLHttpRequest):
-        (KJS::XMLHttpRequest::send):
-        (KJS::XMLHttpRequest::abort):
-        (KJS::XMLHttpRequest::processSyncLoadResults):
-        (KJS::XMLHttpRequest::slotRedirection):
-        (KJS::XMLHttpRequest::slotData):
-        * khtml/ecma/xmlhttprequest.h:
-        * kwq/KWQLoader.h:
-        * kwq/KWQLoader.mm:
-        (KWQHeaderStringFromDictionary):
-        (KWQServeSynchronousRequest):
-        (KWQResponseHeaderString):
-        * kwq/WebCoreBridge.h:
-
-2003-12-10  Darin Adler  <darin@apple.com>
-
-        Reviewed by Maciej.
-
-        - fixed 3506706: REGRESSION (100-115): onkeyup handlers called twice for active input fields
-
-        * kwq/KWQTextArea.mm: (-[KWQTextAreaTextView keyUp:]): Don't call super because we
-        don't want to pass the event down the responder chain.
-        * kwq/KWQTextField.mm: (-[KWQTextField textView:shouldHandleEvent:]): Return NO for
-        key up events because we don't want to pass the event down the responder chain.
-
-2003-12-10  Richard Williamson   <rjw@apple.com>
-
-	Added method to get to the bridge from a view.  This is
-	used to ultimately get the part and KJS::Window for a
-	particular applet.
-
-        Reviewed by Hyatt.
 
         * kwq/WebCoreBridge.h:
         * kwq/WebCoreBridge.mm:
-        (rootForView):
-        (-[WebCoreBridge init]):
-        * kwq/WebCoreViewFactory.h:
-        * kwq/WebCoreViewFactory.m:
+        (-[WebCoreBridge setNeedsLayout]):
 
-2003-12-10  John Sullivan  <sullivan@apple.com>
+2004-01-08  David Hyatt  <hyatt@apple.com>
 
-        - WebCore part of fix for:
-        <rdar://problem/3505231>: REGRESSION (100-114): Some sites autoscroll to bottom of page when loading
-
-        Reviewed by Darin.
-
-        * kwq/KWQNSViewExtras.h:
-        * kwq/KWQNSViewExtras.m:
-        (-[NSView _KWQ_scrollPointRecursive:]):
-        (-[NSView _KWQ_scrollPointRecursive:inView:]):
-        new methods, similar to existing scrollRect methods
-        except that the preferred position for the point is
-        the top-left corner rather than centered in the visible area
-        
-        * kwq/KWQScrollView.h:
-        * kwq/KWQScrollView.mm:
-        (QScrollView::setContentsPosRecursive):
-        new method, calls _KWQ_scrollPointRecursive:
-
-        * khtml/khtml_part.cpp:
-        (KHTMLPart::gotoAnchor):
-        call setContentsPosRecursive instead of setContentsPos; also remove
-        the 50 pixel offset that upset Hyatt so.
-        
-
-2003-12-10  Chris Blumenberg  <cblu@apple.com>
-
-        * kwq/KWQKSSLKeyGen.mm:
-        (KSSLKeyGen::signedPublicKeyAndChallengeString): removed unnecessary includes
-
-2003-12-10  David Hyatt  <hyatt@apple.com>
-
-	Fix for 3505846, overflow:auto region doesn't update when scrolled.  The child layers inside an overflow:auto
-	block were not updating their positions.
-	
-        Reviewed by john
-
-        * khtml/khtmlview.cpp:
-        (KHTMLView::layout):
-        * khtml/rendering/render_layer.cpp:
-        (RenderLayer::updateLayerPositions):
-        (RenderLayer::scrollToOffset):
-        * khtml/rendering/render_layer.h:
-
-2003-12-09  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by John.
-
-	<rdar://problem/3505795>: loading invalid XML document crashes trying to create h1 element
-	<rdar://problem/3504158>: XMLHttpRequest xhtml test totally fails
-        
-	* khtml/xml/dom_docimpl.cpp:
-        (DocumentImpl::isValidName): include "0123456789" instead of
-	"0-9", it's not a regexp it's just a list of characters.
-
-2003-12-09  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by John.
-
-	<rdar://problem/3504155>: Safari fails XMLHttpRequest abort test
-        
-	* khtml/ecma/xmlhttprequest.cpp:
-        (KJS::XMLHttpRequestProtoFunc::tryCall): Avoid throwing an
-	exception after send().
-
-2003-12-09  David Hyatt  <hyatt@apple.com>
-
-	Rename -apple-aqua to auto for outline styles.
+	Fix for 3524118, floats don't repaint when moved.
 	
         Reviewed by darin
 
-        * khtml/css/cssparser.cpp:
-        (CSSParser::parseValue):
-        * khtml/css/cssstyleselector.cpp:
-        (khtml::CSSStyleSelector::applyRule):
-        * khtml/css/cssvalues.c:
-        (hash_val):
-        (findValue):
-        * khtml/css/cssvalues.h:
-        * khtml/css/cssvalues.in:
-        * khtml/css/html4.css:
-        * khtml/rendering/render_inline.cpp:
-        (RenderInline::paintObject):
-        * khtml/rendering/render_object.cpp:
-        (RenderObject::drawBorder):
-        (RenderObject::paintOutline):
-        * khtml/rendering/render_style.h:
-        (khtml::):
-        (khtml::OutlineValue::OutlineValue):
-        (khtml::RenderStyle::outlineStyleIsAuto):
-        (khtml::RenderStyle::outlineOffset):
-        (khtml::RenderStyle::setOutlineStyle):
-        (khtml::RenderStyle::setOutlineOffset):
-        * kwq/KWQRenderTreeDebug.cpp:
-        (printBorderStyle):
+         * khtml/rendering/render_block.cpp:
+        (khtml::RenderBlock::positionNewFloats):
+ 
+2004-01-08  David Hyatt  <hyatt@apple.com>
 
-2003-12-09  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by John.
-
-	<rdar://problem/3487195>: Implement responseXML property for XMLHttpRequest
-        
-        * khtml/ecma/xmlhttprequest.cpp:
-        (KJS::XMLHttpRequest::getValueProperty): Implemented responseXML by parsing the
-	document and returning it.
-        (KJS::XMLHttpRequest::XMLHttpRequest): Initialize new field
-        * khtml/ecma/xmlhttprequest.h:
-
-        * khtml/ecma/kjs_window.cpp: 
-	(Windw::get): Forgot this in last commit; add XMLSerializer
-	constructor.
-        * khtml/ecma/kjs_window.lut.h:
-	* khtml/ecma/Makefile.am: Forgot to include this in the last commit.
-
-2003-12-09  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Richard.
-
-	<rdar://problem/3504049>: XMLSerializer object and serializeToString method needed for XMLHttpRequest testing
-
-	Also fixed some lasst-minute mistakes in the DOM serialization
-	code that was already there.
-	
-        * WebCore.pbproj/project.pbxproj:
-        * khtml/dom/dom_doc.h:
-        * khtml/ecma/Makefile.am:
-        * khtml/ecma/kjs_window.cpp:
-        (Window::get):
-        * khtml/ecma/kjs_window.h:
-        (KJS::Window::):
-        * khtml/ecma/kjs_window.lut.h:
-        (KJS::):
-        * khtml/ecma/xmlserializer.cpp: Added.
-        (KJS::XMLSerializerConstructorImp::XMLSerializerConstructorImp):
-        (KJS::XMLSerializerConstructorImp::implementsConstruct):
-        (KJS::XMLSerializerConstructorImp::construct):
-        (KJS::):
-        (KJS::XMLSerializer::XMLSerializer):
-        (KJS::XMLSerializerProtoFunc::tryCall):
-        * khtml/ecma/xmlserializer.h: Added.
-        (KJS::XMLSerializer::toBoolean):
-        (KJS::XMLSerializer::classInfo):
-        (KJS::XMLSerializer::):
-        * khtml/ecma/xmlserializer.lut.h: Added.
-        (KJS::):
-        * khtml/xml/dom_docimpl.cpp:
-        (DocumentImpl::toString):
-        (DocumentFragmentImpl::toString):
-        * khtml/xml/dom_elementimpl.cpp:
-        (AttrImpl::toString):
-        (ElementImpl::toString):
-
-2003-12-09  David Hyatt  <hyatt@apple.com>
-
-	Implement start() and stop() for marquees.
-	
-        Reviewed by darin
-
-        * khtml/ecma/kjs_html.cpp:
-        (KJS::HTMLElement::classInfo):
-        (KJS::HTMLElementFunction::tryCall):
-        * khtml/ecma/kjs_html.h:
-        (KJS::HTMLElement::):
-        * khtml/ecma/kjs_html.lut.h:
-        (KJS::):
-
-2003-12-09  Darin Adler  <darin@apple.com>
-
-        Reviewed by John.
-
-        - fixed 3505277: nil-deref in ownerElement after choosing item from menu at projectnissan.com
-
-        * khtml/xml/dom_nodeimpl.cpp: (NodeImpl::dispatchWindowEvent): Add check for nil.
-
-2003-12-09  Darin Adler  <darin@apple.com>
-
-        Reviewed by Maciej.
-
-        * kwq/KWQKHTMLPart.mm:
-        (KWQKHTMLPart::saveLocationProperties): Add locking around the call to get the location
-        since it can allocate.
-        (KWQKHTMLPart::restoreLocationProperties): Ditto.
-
-2003-12-09  David Hyatt  <hyatt@apple.com>
-
-	Fix for mojibake bg painting problem on bofa.com.  The bug # is 3487144.  Transparent colors were not
-	being handled properly when specified on the body.
-	
-        Reviewed by darin
-
-        * khtml/rendering/render_box.cpp:
-        (RenderBox::paintRootBoxDecorations):
-        (RenderBox::paintBackgroundExtended):
-
-2003-12-09  Darin Adler  <darin@apple.com>
-
-        Reviewed by Dave.
-
-        - fixed 3505391: REGRESSION (100-116): pages that move cells around don't repaint correctly
-
-        * khtml/rendering/render_table.cpp: (RenderTableSection::layoutRows): Added code
-        similar to the code in RenderBlock::layoutBlock, but for table cells.
-
-2003-12-09  Darin Adler  <darin@apple.com>
-
-        Reviewed by Maciej.
-
-        * khtml/ecma/kjs_events.cpp: (JSEventListener::handleEvent): Add locking around the call to
-        push event handler scope. Without this, we hit the "allocated without locking" assertion.
-
-2003-12-09  David Hyatt  <hyatt@apple.com>
-
-	Fix the dirty rect checks on various render_objects to be more accurate so that page-break properties don't
-	have mojibake when printing.
-	
-        Reviewed by john
-
-        * khtml/rendering/render_block.cpp:
-        (khtml::RenderBlock::paint):
-        * khtml/rendering/render_flow.cpp:
-        (RenderFlow::paintLineBoxBackgroundBorder):
-        (RenderFlow::paintLineBoxDecorations):
-        * khtml/rendering/render_replaced.cpp:
-        (RenderReplaced::paint):
-        * khtml/rendering/render_table.cpp:
-        (RenderTable::paint):
-
-2003-12-09  Darin Adler  <darin@apple.com>
-
-        Reviewed by Richard.
-
-        - fixed 3500408: Web Kit should pass the MAYSCRIPT attribute from the APPLET tag to the Java plug-in
-
-        * khtml/html/html_objectimpl.cpp:
-        (HTMLAppletElementImpl::parseAttribute): Allow the "mayscript" attribute.
-        (HTMLAppletElementImpl::createRenderer): Pass the value of the "mayscript" attribute
-        as an argument named "mayScript".
-
-        * khtml/misc/htmlattrs.in: Added "mayscript".
-        * khtml/misc/htmlattrs.c: Regenerated.
-        * khtml/misc/htmlattrs.h: Regenerated.
-
-2003-12-09  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Darin.
-
-	<rdar://problem/3501030>: JavaScript sites crash when a PAC file is in place (WebCore,Safari 1.2)
-	
-        * khtml/ecma/kjs_events.cpp:
-        (JSEventListener::handleEvent): Lock interpreter when needed.
-        (JSLazyEventListener::parseCode): Likewise.
-        (KJS::getDOMEvent): Likewise.
-        * khtml/ecma/kjs_proxy.cpp:
-        (KJSProxyImpl::evaluate): Likewise.
-        (KJSProxyImpl::initScript): Likewise.
-
-2003-12-09  David Hyatt  <hyatt@apple.com>
-
-	Fix for 3491235, really make <script src="..."/> work in HTML.  My original attempt to fix this only made
-	the tag flat, but did not ensure that the script got processed.
-	
-        Reviewed by john
-
-        * khtml/html/htmltokenizer.cpp:
-        (HTMLTokenizer::parseTag):
-
-2003-12-08  David Hyatt  <hyatt@apple.com>
-
-	Fix for 3503652, news.com misrenders badly (footer is out of position).  My fix to 3495748 caused this
-	regression.  I made the tag priority of <nobr> too high.  It needed to be the same as <div>, and I
-	accidentally made it higher.  I intended for it to be the same as <div>.
-
-	I also had to make a fix (now that <nobr> has a higher priority) to ensure <nobr> can't be nested inside
-	other <nobr>.  
-
-	Both fixes were required to make news.com render correctly again.
+	Fix for 3519003, crash in mail because <dir> and <menu> don't allow the same children as <ul> and <ol>.
 	
         Reviewed by darin
 
         * khtml/html/dtd.cpp:
-        * khtml/html/htmlparser.cpp:
-        (KHTMLParser::getElement):
+        (DOM::checkChild):
 
-2003-12-08  Chris Blumenberg  <cblu@apple.com>
+2004-01-08  John Sullivan  <sullivan@apple.com>
 
-	Fixed: <rdar://problem/3234676>: Support for KEYGEN tag (ie 509 email certificates from www.thawte.com)
+        - fixed <rdar://problem/3524359>: REGRESSSION (119-120): 
+        Double click to select text in form broken
 
-        Reviewed by mjs.
+        Reviewed by Dave and Darin.
 
-        * WebCore-combined.exp:
-        * WebCore.exp:
-        * WebCore.pbproj/project.pbxproj:
-        * khtml/html/html_formimpl.cpp:
-        (HTMLKeygenElementImpl::parseAttribute): store the KEYTYPE attribute
-        (HTMLKeygenElementImpl::encoding): call KSSLKeyGen::signedPublicKeyAndChallengeString
-        * khtml/html/html_formimpl.h: remove 2 declared but unimplemented methods
-        * khtml/misc/htmlattrs.c: generated changes
-        (hash_attr):
-        (findAttr):
-        * khtml/misc/htmlattrs.h: generated change
-        * khtml/misc/htmlattrs.in: added KEYTYPE
-        * kwq/KWQKSSLKeyGen.h:
-        * kwq/KWQKSSLKeyGen.mm:
-        (KSSLKeyGen::supportedKeySizes): call renamed strengthMenuItemTitles
-        (KSSLKeyGen::signedPublicKeyAndChallengeString): new, calls [WebCoreKeyGenerationFactory signedPublicKeyAndChallengeStringWithStrengthIndex:challenge:] 
-        * kwq/WebCoreKeyGenerationFactory.h: Added.
-        * kwq/WebCoreKeyGenerationFactory.m: Added.
-        (+[WebCoreKeyGenerationFactory sharedFactory]):
-        (-[WebCoreKeyGenerationFactory init]):
-        (-[WebCoreKeyGenerationFactory strengthMenuItemTitles]):
-        (-[WebCoreKeyGenerationFactory signedPublicKeyAndChallengeStringWithStrengthIndex:challenge:]):
-        * kwq/WebCoreLocalizedStringFactory.h: Removed.
-        * kwq/WebCoreLocalizedStringFactory.m: Removed.
+        * khtml/khtmlview.cpp:
+        (KHTMLView::dispatchMouseEvent):
+        Don't blur the focused node if that's the one you clicked on.
 
-2003-12-08  Maciej Stachowiak  <mjs@apple.com>
+2004-01-07  Richard Williamson   <rjw@apple.com>
 
-        Reviewed by Ken.
-
-	<rdar://problem/3504047>: XMLHttpRequest object needs onload event
-        
-	* khtml/ecma/xmlhttprequest.cpp:
-        (KJS::XMLHttpRequest::getValueProperty): Implemented onload property.
-        (KJS::XMLHttpRequest::putValue): Ditto.
-        (KJS::XMLHttpRequest::XMLHttpRequest): Ditto.
-        (KJS::XMLHttpRequest::changeState): Ditto.
-        * khtml/ecma/xmlhttprequest.h:
-        * khtml/ecma/xmlhttprequest.lut.h: Regenerated.
-
-2003-12-08  David Hyatt  <hyatt@apple.com>
-
-	Fix for 3503022, asahi.com is too wide.  Bugs in line breaking of breakable Japanese characters caused
-	the breaks to be ignored.
-	
-        Reviewed by john
-
-        * khtml/rendering/render_text.cpp:
-        (RenderText::calcMinMaxWidth):
-
-2003-12-05  David Hyatt  <hyatt@apple.com>
-
-	Fix the position method to return screen coords like it should and to use the lower left corner instead of
-	the upper left.
-	
-        Reviewed by john
-
-        * kwq/KWQAccObject.h:
-        * kwq/KWQAccObject.mm:
-        (-[KWQAccObject position]):
-        (-[KWQAccObject size]):
-
-2003-12-07  Darin Adler  <darin@apple.com>
-
-        Reviewed by John.
-
-        - fixed 3502347: REGRESSION (100-116): bottom of login window sometimes missing (TR background image)
-
-        * khtml/rendering/render_object.h: Added setPixmap.
-        * khtml/rendering/render_object.cpp: (RenderObject::setPixmap): Moved this
-        function here from RenderBox. This code is needed for the table row class and
-        similar classes that supply a background image that is drawn by the table cell,
-        and those are not RenderBox subclasses.
-
-        * khtml/rendering/render_box.cpp: Removed setPixmap.
-        * khtml/rendering/render_box.h: Removed setPixmap.
-
-2003-12-06  John Sullivan  <sullivan@apple.com>
-
-        - fixed <rdar://problem/3502655>: REGRESSION: Repro crash at espn.com
-
-        Reviewed by Darin.
-
-        * khtml/html/html_objectimpl.cpp:
-        (HTMLAppletElementImpl::getAppletInstance):
-        Check for nil RenderApplet before dereferencing rather than after.
-
-2003-12-05  David Hyatt  <hyatt@apple.com>
-
-	Add support for link clicking as an accessibility action.
-	
-        Reviewed by john
-
-        * kwq/KWQAccObject.mm:
-        (-[KWQAccObject anchorElement]):
-        (-[KWQAccObject role]):
-        (-[KWQAccObject accessibilityAttributeNames]):
-        (-[KWQAccObject accessibilityActionNames]):
-        (-[KWQAccObject accessibilityActionDescription:]):
-        (-[KWQAccObject accessibilityPerformAction:]):
-
-2003-12-05  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by John.
-
-	<rdar://problem/3487222>: Add ability to create working fully standalone document object
-	
-        * khtml/css/cssstyleselector.cpp:
-        (khtml::CSSStyleSelector::CSSStyleSelector):
-        (khtml::CSSStyleSelector::addSheet):
-        (khtml::CSSStyleSelector::initForStyleResolve):
-        (khtml::CSSStyleSelector::applyRule):
-        * khtml/dom/dom_doc.cpp:
-        (DOM::Document::part):
-        * khtml/dom/dom_doc.h:
-        * khtml/ecma/kjs_dom.cpp:
-        (DOMDocument::getValueProperty):
-        (KJS::checkNodeSecurity):
-        * khtml/ecma/kjs_html.cpp:
-        (KJS::HTMLDocFunction::tryCall):
-        (KJS::HTMLDocument::tryGet):
-        (KJS::HTMLDocument::putValue):
-        (KJS::HTMLElement::tryGet):
-        (Image::notifyFinished):
-        * khtml/ecma/kjs_traversal.cpp:
-        (JSNodeFilter::acceptNode):
-        * khtml/ecma/xmlhttprequest.cpp:
-        (KJS::XMLHttpRequest::changeState):
-        * khtml/html/html_baseimpl.cpp:
-        (HTMLBodyElementImpl::insertedIntoDocument):
-        (HTMLFrameElementImpl::isURLAllowed):
-        (HTMLFrameElementImpl::attach):
-        (HTMLFrameElementImpl::detach):
-        (HTMLFrameElementImpl::contentDocument):
-        (HTMLIFrameElementImpl::attach):
-        * khtml/html/html_documentimpl.cpp:
-        (HTMLDocumentImpl::referrer):
-        (HTMLDocumentImpl::lastModified):
-        * khtml/html/html_formimpl.cpp:
-        (HTMLFormElementImpl::formData):
-        (HTMLFormElementImpl::prepareSubmit):
-        (HTMLFormElementImpl::submit):
-        (HTMLFormElementImpl::reset):
-        (HTMLGenericFormElementImpl::isKeyboardFocusable):
-        (HTMLGenericFormElementImpl::defaultEventHandler):
-        * khtml/html/html_headimpl.cpp:
-        (HTMLBaseElementImpl::process):
-        (HTMLLinkElementImpl::process):
-        * khtml/html/html_inlineimpl.cpp:
-        (HTMLAnchorElementImpl::isKeyboardFocusable):
-        (HTMLAnchorElementImpl::defaultEventHandler):
-        * khtml/html/html_objectimpl.cpp:
-        (HTMLAppletElementImpl::createRenderer):
-        (HTMLAppletElementImpl::getAppletInstance):
-        (HTMLEmbedElementImpl::rendererIsNeeded):
-        (HTMLObjectElementImpl::rendererIsNeeded):
-        * khtml/html/htmltokenizer.cpp:
-        (HTMLTokenizer::scriptExecution):
-        (HTMLTokenizer::parseTag):
-        * khtml/rendering/render_applet.cpp:
-        (RenderApplet::RenderApplet):
-        * khtml/xml/dom_docimpl.cpp:
-        (DocumentImpl::setTitle):
-        (DocumentImpl::part):
-        (DocumentImpl::close):
-        (DocumentImpl::processHttpEquiv):
-        * khtml/xml/dom_docimpl.h:
-        * khtml/xml/dom_nodeimpl.cpp:
-        (NodeImpl::dispatchEvent):
-        * kwq/KWQAccObject.mm:
-        (-[KWQAccObject textUnderElement]):
-        * kwq/KWQKHTMLPart.mm:
-        (KWQKHTMLPart::partForNode):
-        (KWQKHTMLPart::attributedString):
-
-2003-12-05  Richard Williamson   <rjw@apple.com>
-
-	Fixed 3501885.  Added null test to returned node from collection.
-
-        Reviewed by John.
-
-        * khtml/ecma/kjs_html.cpp:
-        (KJS::HTMLCollection::tryGet):
-
-2003-12-04  Richard Williamson   <rjw@apple.com>
-
-	Added support for named applet access from document node.
-	Factored creation of KJS::Values from RuntimeObjectImps.
+	Fixed 3517550.  Named array lookup of applet failed, i.e.:
+	var appletobj = document.applets['myapplet']
 
         Reviewed by Chris.
 
-        * khtml/ecma/kjs_dom.cpp:
-        (KJS::getDOMNamedNodeMap):
-        (KJS::getRuntimeObject):
-        * khtml/ecma/kjs_dom.h:
         * khtml/ecma/kjs_html.cpp:
-        (KJS::HTMLDocument::tryGet):
-        (KJS::HTMLElement::tryGet):
-        (KJS::HTMLCollection::tryGet):
+        (KJS::HTMLCollection::getNamedItems):
 
-2003-12-04  Darin Adler  <darin@apple.com>
+=== Safari-120 ===
+
+2004-01-06  David Hyatt  <hyatt@apple.com>
+
+	Possible fix for table bugs 3510005 and 3492945, repainting glitches that occurred when table cells moved.
+
+	Fix for 33522497, empty AXElements appear in AXBrowser.
+	
+        Reviewed by darin
+
+        * khtml/rendering/render_table.cpp:
+        (RenderTableSection::layoutRows):
+        (RenderTableCell::setWidth):
+        * khtml/rendering/render_table.h:
+
+        * kwq/KWQAccObject.mm:
+        (-[KWQAccObject accessibilityIsIgnored]):
+
+2004-01-06  John Sullivan  <sullivan@apple.com>
+
+        - fixed <rdar://problem/3484465>: REGRESSION (118): button click does 
+        not take focus away from <textarea>; breaks Outlook Web Access
+
+        Reviewed by Dave.
+
+        * khtml/khtmlview.cpp:
+        (KHTMLView::dispatchMouseEvent):
+        Removed nodeimpl == nil test that was preventing button/link clicks
+        from blurring previously-focused text field.
+
+2004-01-06  David Hyatt  <hyatt@apple.com>
+
+	Fix for 3520636, infinite loop in page breaking code when printing.
+	
+        Reviewed by darin
+
+        * khtml/rendering/render_text.cpp:
+        (RenderText::paintObject):
+        * kwq/WebCoreBridge.mm:
+        (-[WebCoreBridge computePageRectsWithPrintWidth:printHeight:]):
+
+2004-01-05  David Hyatt  <hyatt@apple.com>
+
+	Fix for 3521466, generated image content should not try to calcWidth/height when it isn't yet rooted in
+	the rendering tree.
+	
+        Reviewed by john
+
+        * khtml/rendering/render_image.cpp:
+        (RenderImage::setPixmap):
+
+2003-12-26  Darin Adler  <darin@apple.com>
+
+        - one more small step to make -[KWQPageState dealloc] safer
+
+        * kwq/KWQPageState.mm: (-[KWQPageState dealloc]): Only do the real detach() if the
+        document is already in the detached state; we don't want to detach prematurely.
+
+2003-12-23  John Sullivan  <sullivan@apple.com>
+
+        - fixed <rdar://problem/3451306>: address book search fails at Airborne 
+        Express Corporate site (Apple Shipping wants to use it)
+
+        Reviewed by Darin.
+
+        * khtml/ecma/kjs_html.cpp:
+        commented out definition of document.all; now sites like this one that
+        set document.all to a value will work.
+        * khtml/ecma/kjs_html.lut.h: regenerated this file
+
+2003-12-23  Darin Adler  <darin@apple.com>
 
         Reviewed by John.
 
-        - fixed 3498712: REGRESSION (100-115): Safari aborts at http://www11.dht.dk/~blangstrup_org/
+        - another try at fixing the -[KWQPageState dealloc] bug, even though we don't fully understand it
+        
+        This change saves the renderer inside the document rather than in the KWQPageState to
+        try to eliminate the possibility that multiple KWQPageState objects could restore the
+        same renderer multiple times, resulting in multiple detaches of the same renderer.
 
-        This was an uncaught exception thrown by DocumentImpl. But the design of KHTML DOM is that
-        "impl" classes return exception codes; they don't throw exceptions.
-
-        * khtml/dom/dom_doc.cpp:
-        (DOM::Document::createElement): Throw exception if necessary. The impl function now returns
-        an exception code.
-        (DOM::Document::createElementNS): Ditto.
-
-        * khtml/html/html_documentimpl.h: Add exception code parameter to createElement.
-        * khtml/html/html_documentimpl.cpp: (HTMLDocumentImpl::createElement): Pass along the
-        exception code from the lower level.
-
-        * khtml/xml/dom_docimpl.h: Add exception code parameters to createElement, createElementNS,
-        and createHTMLElement.
+        * khtml/xml/dom_docimpl.h: Add a m_savedRenderer field.
         * khtml/xml/dom_docimpl.cpp:
-        (DOMImplementationImpl::createDocument): Handle exception code from createElementNS.
-        (DocumentImpl::createElement): Add exception code parameter, not set since there is
-        no exception.
-        (DocumentImpl::importNode): Handle exception code from createElementNS.
-        (DocumentImpl::createElementNS): Add exception code parameter. Propagate the exception
-        codes that we get from createHTMLElement and setPrefix.
-        (DocumentImpl::createHTMLElement): Add exception code parameter. Use an exception code
-        rather than a C++ exception for INVALID_CHARACTER_ERR.
+        (DocumentImpl::DocumentImpl): Initialize m_savedRenderer to 0.
+        (DocumentImpl::~DocumentImpl): Added some asserts to make sure we don't get destroyed
+        while we are in the page cache.
+        (DocumentImpl::attach): Added an assert.
+        (DocumentImpl::setInPageCache): Save the renderer when setting the flag, and restore
+        the renderer when clearing it.
 
-        * khtml/xml/dom_elementimpl.cpp: (ElementImpl::cloneNode): Pass exception code parameter to
-        createElement.
+        * kwq/KWQKHTMLPart.mm: (KWQKHTMLPart::openURLFromPageCache): Instead of doing a restoreRenderer
+        call, just do setInPageCache(NO), which will restore the renderer as a side effect.
 
-        * khtml/xml/xml_tokenizer.cpp:
-        (XMLHandler::startElement): Pass exception code parameter to createElementNS, and return false
-        if it is not zero. This is where the bug happened. Before we would get an exception from
-        createElementNS, but "impl" functions are not supposed to throw in KHTML's DOM.
-        (XMLTokenizer::finish): Add various exception code parameters to compile, but we know we won't
-        get any exceptions.
+        * kwq/KWQPageState.h: Removed the renderer method and field.
+        * kwq/KWQPageState.mm:
+        (-[KWQPageState initWithDocument:URL:windowProperties:locationProperties:interpreterBuiltins:]):
+        Don't store a pointer to the renderer.
+        (-[KWQPageState clear]): New method, shared by invalidate and dealloc.
+        (-[KWQPageState invalidate]): Removed code relating to "relinquishing object ownership";
+        just deallocate everything here without doing a detach().
+        (-[KWQPageState dealloc]): Removed restoreRenderer now that setInPageCache(NO) handles that.
+        Added some assertions. Share code with invalidate by calling clear.
 
-        * kwq/WebCoreDOMDocument.mm:
-        (-[WebCoreDOMDocument createElement:]): Pass an (ignored) exception code parameter.
-        (-[WebCoreDOMDocument createElementNS::]): Pass an (ignored) exception code parameter.
+2003-12-22  John Sullivan  <sullivan@apple.com>
 
-=== Safari-116 ===
+        - fixed <rdar://problem/3508798>: ACCESSIBILITY: role/description/value strings not defined
+
+        Reviewed by Darin.
+
+        * kwq/KWQAccObject.mm:
+        (-[KWQAccObject roleDescription]):
+        provide not-yet-localized strings for all the role descriptions that this class uses.
+        (-[KWQAccObject value]):
+        return nil string rather than dummy string for the cases where we don't have a value attribute.
+        (-[KWQAccObject accessibilityActionDescription:]):
+        changed comment passed to UI_STRING bogus macro so it won't have to change if/when macro
+        loses its bogosity
+
+2003-12-22  John Sullivan  <sullivan@apple.com>
+
+	- WebCore part of fix for <rdar://problem/3515706>: 
+	REGRESSION (100-118): Web Kit printing does not honor Page Setup scale factor
+
+        Reviewed by Darin.
+
+        * kwq/WebCoreBridge.h:
+        * kwq/WebCoreBridge.mm:
+        (-[WebCoreBridge computePageRectsWithPrintWidth:printHeight:]):
+	renamed method for clarity; now iterates over pages horizontally as well 
+	as vertically; assume x starts at 0 as we were already assuming that y
+	starts at 0; now returns autoreleased result
+
+2003-12-22  Darin Adler  <darin@apple.com>
+
+        Reviewed by John.
+
+        - follow-on to my fix for 3467919: handle collapsed spaces at the starts of runs too, not just at the
+          end, and make sure that a space inherits style from the run it was collapsed from rather than always
+          from the run it precedes
+
+        * khtml/khtml_part.cpp: (KHTMLPart::text): Add code to deal with collapsed spaces at the start of runs.
+        * kwq/KWQKHTMLPart.mm: (KWQKHTMLPart::attributedString): Change code to keep the style of a space that
+        was collapsed at the end of the run, and use that styled space if necessary. Also add the code to deal
+        with collapsed spaces at the start of runs. Also remove comment that refers to long-since-deleted code.
+
+2003-12-21  Darin Adler  <darin@apple.com>
+
+        Reviewed by John.
+
+        - fixed 3467919: REGRESSION (91-92): space missing when copying text with link at start or end of line
+
+        * khtml/khtml_part.cpp: (KHTMLPart::text):
+        * kwq/KWQKHTMLPart.mm: (KWQKHTMLPart::attributedString):
+        Changed both "turn HTML into text" code paths to generate spaces in a different way.
+        First, corrected the logic so it notices spaces left out at the end of a RenderText object.
+        Second, don't emit the space until we are emitting more text, to prevent emitting trailing
+        spaces. To get this completely right for the attributed string case, I had to add code to
+        adjust the offset used to mark links.
+
+2003-12-21  Darin Adler  <darin@apple.com>
+
+        Reviewed by John.
+
+        - fixed 3477453: nowrap in a fixed-width TD is ignored on screen but not when printed (Williams-Sonoma)
+
+        * khtml/rendering/render_table.cpp: (RenderTableCell::setStyle):
+        Compute the proper whitespace mode before calling the base class setStyle,
+        since the base class setStyle may create styles that inherit from our style,
+        and we want them to inherit the computed whitespace mode.
+
+        * WebCore.pbproj/project.pbxproj: Let Xcode be 1.1, as it was meant to be.
+
+2003-12-21  Darin Adler  <darin@apple.com>
+
+        Reviewed by Dave.
+
+        - fixed a storage leak
+
+        * khtml/rendering/render_style.h: Added a destructor and a private unimplemented assignment
+        operator to StyleCSS3InheritedData, since the textShadow field that needs to be allocated
+        and deallocated and the default destructor and assignment operator don't do that.
+        * khtml/rendering/render_style.cpp: (StyleCSS3InheritedData::~StyleCSS3InheritedData):
+        Added destructor that deletes the textShadow object.
+
+        - fixed locking for JavaScript debugging tools in Caches window
+
+        * kwq/WebCoreJavaScript.mm:
+        (+[WebCoreJavaScript rootObjectClasses]): Lock and unlock around call to JavaScriptCore.
+        (+[WebCoreJavaScript garbageCollect]): Ditto.
+
+2003-12-19  David Hyatt  <hyatt@apple.com>
+
+	Fix for 3483130, repaint doesn't occur when font is decreased dynamically when at the bottom of
+	amazon.com.
+	
+        Reviewed by john
+
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::setZoomFactor):
+        * kwq/WebCoreBridge.mm:
+        (-[WebCoreBridge setTextSizeMultiplier:]):
+
+2003-12-19  Richard Williamson   <rjw@apple.com>
+
+	Fixed 3515590.  Return Undefined to JS for applet if
+	Java is disabled.
+
+        Reviewed by Chris.
+
+        * khtml/html/html_objectimpl.cpp:
+        (HTMLAppletElementImpl::getAppletInstance):
+
+2003-12-19  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Chris.
+
+	<rdar://problem/3512545>: reproducible assertion failure in KWQKHTMLPart::addData scrolling to anchor while page loads
+        
+	* kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::scrollToAnchor): Don't pretend we finished loading,
+	because we don't actually make anchor scrolling stop the current
+	page load.
 
 === Safari-119 ===
 
@@ -2445,8 +1977,6 @@
         (operator<<):
 
 2003-12-11  Ken Kocienda  <kocienda@apple.com>
-
-        Reviewed by me
 
         * kwq/KWQLoader.mm:
         (KWQCacheObjectExpiresTime): Fixed deployment build bustage.
@@ -4879,8 +4409,6 @@ Added support for getting at Java object fields.
 
 2003-11-12  Ken Kocienda  <kocienda@apple.com>
 
-        Reviewed by me
-	
 	I am an idiot for just assuming that these elements implement a focus()
 	function, without actually compiling and testing. I will have to add 
 	this function to these elements so I can make this work.
@@ -6779,8 +6307,6 @@ Added support for getting at Java object fields.
 === Safari-112 ===
 
 2003-10-30  Ken Kocienda  <kocienda@apple.com>
-
-        Reviewed by me
 
 	Rolling out this code since it caused a big performance 
 	regression.
