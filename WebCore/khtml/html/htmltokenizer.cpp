@@ -466,7 +466,8 @@ void HTMLTokenizer::scriptHandler()
     // We are inside a <script>
     bool doScriptExec = false;
     CachedScript* cs = 0;
-    if (!scriptSrc.isEmpty()) {
+    // don't load external scripts for standalone documents (for now)
+    if (!scriptSrc.isEmpty() && parser->doc()->part()) {
         // forget what we just got; load from src url instead
         if ( !parser->skipMode() ) {
             if ( (cs = parser->doc()->docLoader()->requestScript(scriptSrc, scriptSrcCharset) ))
@@ -550,7 +551,7 @@ void HTMLTokenizer::scriptExecution( const QString& str, QString scriptURL,
                                      int baseLine)
 {
 #if APPLE_CHANGES
-    if (!view->part())
+    if (!view || !view->part())
         return;
 #endif
     bool oldscript = script;
@@ -1240,14 +1241,15 @@ void HTMLTokenizer::parseTag(DOMStringIt &src)
 #endif
             bool beginTag = !currToken.flat && (tagID < ID_CLOSE_TAG);
 
-            if(tagID >= ID_CLOSE_TAG)
+            if (tagID >= ID_CLOSE_TAG)
                 tagID -= ID_CLOSE_TAG;
-            else if ( beginTag && tagID == ID_SCRIPT ) {
+            else if (tagID == ID_SCRIPT) {
                 AttributeImpl* a = 0;
                 scriptSrc = QString::null;
                 scriptSrcCharset = QString::null;
                 if ( currToken.attrs && /* potentially have a ATTR_SRC ? */
-                     parser->doc()->view()->part()->jScriptEnabled() && /* jscript allowed at all? */
+		     parser->doc()->part() &&
+                     parser->doc()->part()->jScriptEnabled() && /* jscript allowed at all? */
                      view /* are we a regular tokenizer or just for innerHTML ? */
                     ) {
                     if ( ( a = currToken.attrs->getAttributeItem( ATTR_SRC ) ) )
@@ -1255,7 +1257,7 @@ void HTMLTokenizer::parseTag(DOMStringIt &src)
                     if ( ( a = currToken.attrs->getAttributeItem( ATTR_CHARSET ) ) )
                         scriptSrcCharset = a->value().string().stripWhiteSpace();
                     if ( scriptSrcCharset.isEmpty() )
-                        scriptSrcCharset = parser->doc()->view()->part()->encoding();
+                        scriptSrcCharset = parser->doc()->part()->encoding();
                     if (!(a = currToken.attrs->getAttributeItem( ATTR_LANGUAGE )))
                         a = currToken.attrs->getAttributeItem(ATTR_TYPE);
                 }
@@ -1292,6 +1294,8 @@ void HTMLTokenizer::parseTag(DOMStringIt &src)
                     script = true;
                     parseSpecial(src);
                 }
+                else if (tagID < ID_CLOSE_TAG) // Handle <script src="foo"/>
+                    scriptHandler();
                 break;
             case ID_STYLE:
                 if (beginTag) {
