@@ -25,7 +25,6 @@
 
 #import "KWQFile.h"
 
-// This NSString call can't throw so no need to block exceptions
 QFile::QFile(const QString &n) : name(strdup(n.isEmpty() ? "" : [n.getNSString() fileSystemRepresentation])), fd(-1)
 {
 }

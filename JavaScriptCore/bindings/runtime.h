@@ -22,20 +22,59 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
+namespace Bindings
+{
 
-#import <Foundation/NSException.h>
-#import "KWQAssertions.h"
+// For now just use Java style type descriptors.
+typedef const char * RuntimeType;
 
-#define KWQ_BLOCK_NS_EXCEPTIONS NS_DURING
+class Parameter
+{
+public:
+    virtual RuntimeType type() const = 0;
+    virtual ~Parameter() {};
+};
 
-#define KWQ_UNBLOCK_NS_EXCEPTIONS NS_HANDLER \
-     if (ASSERT_DISABLED) { \
-     NSLog(@"Uncaught exception - %@\n", localException); \
-     } else { \
-     ASSERT_WITH_MESSAGE(0, "Uncaught exception - %@", localException); \
-     } \
-NS_ENDHANDLER
+class Constructor
+{
+public:
+    virtual Parameter *parameterAt(long i) const = 0;
+    virtual long numParameters() const = 0;
+    virtual ~Constructor() {};
+};
 
-#define KWQ_UNBLOCK_RETURN_VALUE(val,type) NS_VALUERETURN(val,type)
+class Field
+{
+public:
+    virtual const char *name() const = 0;
+    virtual RuntimeType type() const = 0;
+    virtual ~Field() {};
+};
 
-#define KWQ_UNBLOCK_RETURN NS_VOIDRETURN
+class Method
+{
+public:
+    virtual const char *name() const = 0;
+    virtual RuntimeType returnType() const = 0;
+    virtual Parameter *parameterAt(long i) const = 0;
+    virtual long numParameters() const = 0;
+    virtual ~Method() {};
+};
+
+class Class
+{
+public:
+    virtual const char *name() const = 0;
+    
+    virtual Method *methodAt(long i) const = 0;
+    virtual long numMethods() const = 0;
+    
+    virtual Constructor *constructorAt(long i) const = 0;
+    virtual long numConstructors() const = 0;
+    
+    virtual Field *fieldAt(long i) const = 0;
+    virtual long numFields() const = 0          ;
+    virtual ~Class() {};
+};
+
+}

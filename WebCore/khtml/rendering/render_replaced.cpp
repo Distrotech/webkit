@@ -130,7 +130,7 @@ RenderWidget::RenderWidget(DOM::NodeImpl* node)
     ref();
 }
 
-void RenderWidget::detach()
+void RenderWidget::detach(RenderArena* renderArena)
 {
     remove();
 
@@ -141,10 +141,10 @@ void RenderWidget::detach()
         m_widget->removeEventFilter( this );
         m_widget->setMouseTracking( false );
     }
-
-    RenderArena* arena = renderArena();
-    setNode(0);
-    deref(arena);
+    
+    m_node = 0;
+    
+    deref(renderArena);
 }
 
 RenderWidget::~RenderWidget()
@@ -190,9 +190,8 @@ void RenderWidget::setQWidget(QWidget *widget, bool deleteWidget)
             connect( m_widget, SIGNAL( destroyed()), this, SLOT( slotWidgetDestructed()));
             m_widget->installEventFilter(this);
             // if we've already received a layout, apply the calculated space to the
-            // widget immediately, but we have to have really been full constructed (with a non-null
-            // style pointer).
-            if (!needsLayout() && style()) {
+            // widget immediately
+            if (!needsLayout()) {
 		resizeWidget( m_widget,
 			      m_width-borderLeft()-borderRight()-paddingLeft()-paddingRight(),
 			      m_height-borderLeft()-borderRight()-paddingLeft()-paddingRight() );
@@ -209,13 +208,11 @@ void RenderWidget::layout( )
 {
     KHTMLAssert( needsLayout() );
     KHTMLAssert( minMaxKnown() );
-#if !APPLE_CHANGES
     if ( m_widget ) {
 	resizeWidget( m_widget,
 		      m_width-borderLeft()-borderRight()-paddingLeft()-paddingRight(),
 		      m_height-borderLeft()-borderRight()-paddingLeft()-paddingRight() );
     }
-#endif
 
     setNeedsLayout(false);
 }
@@ -332,7 +329,7 @@ bool RenderWidget::eventFilter(QObject* /*o*/, QEvent* e)
         if ( QFocusEvent::reason() != QFocusEvent::Popup )
        {
            //kdDebug(6000) << "RenderWidget::eventFilter captures FocusOut" << endl;
-            elem->getDocument()->setFocusNode(0);
+            elem->dispatchHTMLEvent(EventImpl::BLUR_EVENT,false,false);
 //             if (  elem->isEditable() ) {
 //                 KHTMLPartBrowserExtension *ext = static_cast<KHTMLPartBrowserExtension *>( elem->view->part()->browserExtension() );
 //                 if ( ext )  ext->editableWidgetBlurred( m_widget );
@@ -423,28 +420,5 @@ void RenderWidget::deref(RenderArena *arena)
     if (!_ref)
         arenaDelete(arena);
 }
-
-#if APPLE_CHANGES
-void RenderWidget::updateWidgetPositions()
-{
-    if (!m_widget)
-        return;
-    
-    int x, y, width, height;
-    absolutePosition(x,y);
-    width = m_width-borderLeft()-borderRight()-paddingLeft()-paddingRight();
-    height = m_height-borderLeft()-borderRight()-paddingLeft()-paddingRight();
-    QRect newBounds(x,y,width,height);
-    const QRect& oldBounds = m_widget->frameGeometry();
-    if (newBounds != oldBounds) {
-        // The widget changed positions.  Update the frame geometry.
-        RenderArena *arena = ref();
-        element()->ref();
-        m_widget->setFrameGeometry(newBounds);
-        element()->deref();
-        deref(arena);
-    }
-}
-#endif
 
 #include "render_replaced.moc"

@@ -47,8 +47,6 @@ public:
     virtual bool isStretchingChildren() const { return m_stretchingChildren; }
     
     virtual const char *renderName() const;
-
-    void placeChild(RenderObject* child, int x, int y);
     
 protected:
     bool hasMultipleLines() { return style()->boxLines() == MULTIPLE; }

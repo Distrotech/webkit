@@ -99,7 +99,7 @@ using namespace DOM;
 using khtml::Decoder;
 using khtml::RenderObject;
 using khtml::RenderText;
-using khtml::InlineTextBoxArray;
+using khtml::TextRunArray;
 
 using KParts::BrowserInterface;
 
@@ -1521,7 +1521,7 @@ void KHTMLPart::write( const char *str, int len )
                 d->m_haveEncoding ? Decoder::UserChosenEncoding : Decoder::EncodingFromHTTPHeader);
         else {
             // Inherit the default encoding from the parent frame if there is one.
-            const char *defaultEncoding = (parentPart() && parentPart()->d->m_decoder)
+            const char *defaultEncoding = parentPart()
                 ? parentPart()->d->m_decoder->encoding() : settings()->encoding().latin1();
             d->m_decoder->setEncoding(defaultEncoding, Decoder::DefaultEncoding);
         }
@@ -2216,33 +2216,16 @@ bool KHTMLPart::findTextNext( const QString &str, bool forward, bool caseSensiti
     }
 }
 
-QString KHTMLPart::text(const DOM::Range &r) const
+QString KHTMLPart::selectedText() const
 {
-  // FIXME: This whole function should use the render tree and not the DOM tree, since elements could
-  // be hidden using CSS, or additional generated content could be added.  For now, we just make sure
-  // text objects walk their renderers' InlineTextBox objects, so that we at least get the whitespace 
-  // stripped out properly and obey CSS visibility for text runs.
-
-  if (r.isNull())
-    return QString();
-
+    // FIXME: This whole function should use the render tree and not the DOM tree, since elements could
+    // be hidden using CSS, or additional generated content could be added.  For now, we just make sure
+    // text objects walk their renderers' TextRuns, so that we at least get the whitespace stripped out properly
+    // and obey CSS visibility for text runs.
   bool hasNewLine = true;
   bool addedSpace = true;
   QString text;
-  DOM::Node startNode = r.startContainer();
-  DOM::Node endNode = r.endContainer();
-  int startOffset = r.startOffset();
-  int endOffset = r.endOffset();
-  if (!startNode.isNull() && startNode.nodeType() == DOM::Node::ELEMENT_NODE) {
-      startOffset = -1;
-      startNode = !startNode.childNodes().isNull() ? startNode.childNodes().item(r.startOffset()) : Node();
-  }
-  if (!endNode.isNull() && endNode.nodeType() == DOM::Node::ELEMENT_NODE) {
-      endOffset = -1;
-      endNode = !endNode.childNodes().isNull() ? endNode.childNodes().item(r.endOffset()-1) : Node();
-  }
-
-  DOM::Node n = startNode;
+  DOM::Node n = d->m_selectionStart;
   while(!n.isNull()) {
       if(n.nodeType() == DOM::Node::TEXT_NODE) {
           if (hasNewLine) {
@@ -2250,8 +2233,8 @@ QString KHTMLPart::text(const DOM::Range &r) const
               hasNewLine = false;
           }
           QString str = n.nodeValue().string();
-          int start = (n == startNode) ? startOffset : -1;
-          int end = (n == endNode) ? endOffset : -1;
+          int start = (n == d->m_selectionStart) ? d->m_startOffset : -1;
+          int end = (n == d->m_selectionEnd) ? d->m_endOffset : -1;
           RenderObject* renderer = n.handle()->renderer();
           if (renderer && renderer->isText()) {
               if (renderer->style()->whiteSpace() == khtml::PRE) {
@@ -2262,7 +2245,7 @@ QString KHTMLPart::text(const DOM::Range &r) const
               }
               else {
                   RenderText* textObj = static_cast<RenderText*>(n.handle()->renderer());
-                  InlineTextBoxArray runs = textObj->inlineTextBoxes();
+                  TextRunArray runs = textObj->textRuns();
                   if (runs.count() == 0 && str.length() > 0 && !addedSpace) {
                       // We have no runs, but we do have a length.  This means we must be
                       // whitespace that collapsed away at the end of a line.
@@ -2278,9 +2261,7 @@ QString KHTMLPart::text(const DOM::Range &r) const
                           bool spaceBetweenRuns = false;
                           if (runStart >= runs[i]->m_start &&
                               runStart < runs[i]->m_start + runs[i]->m_len) {
-                              QString runText = str.mid(runStart, runEnd - runStart);
-                              runText.replace('\n', ' ');
-                              text += runText;
+                              text += str.mid(runStart, runEnd - runStart);
                               start = -1;
                               spaceBetweenRuns = i+1 < runs.count() && runs[i+1]->m_start > runEnd;
                               addedSpace = str[runEnd-1].direction() == QChar::DirWS;
@@ -2337,7 +2318,7 @@ QString KHTMLPart::text(const DOM::Range &r) const
             break;
         }
       }
-      if(n == endNode) break;
+      if(n == d->m_selectionEnd) break;
       DOM::Node next = n.firstChild();
       if(next.isNull()) next = n.nextSibling();
       while( next.isNull() && !n.parentNode().isNull() ) {
@@ -2394,11 +2375,6 @@ QString KHTMLPart::text(const DOM::Range &r) const
     return text.mid(start, end-start);
 }
 
-QString KHTMLPart::selectedText() const
-{
-    return text(selection());
-}
-
 bool KHTMLPart::hasSelection() const
 {
   return ( !d->m_selectionStart.isNull() &&
@@ -2407,11 +2383,9 @@ bool KHTMLPart::hasSelection() const
 
 DOM::Range KHTMLPart::selection() const
 {
-    DOM::Range r = document().createRange();
-    if (hasSelection()) {
-        r.setStart( d->m_selectionStart, d->m_startOffset );
-        r.setEnd( d->m_selectionEnd, d->m_endOffset );
-    }
+    DOM::Range r = document().createRange();DOM::Range();
+    r.setStart( d->m_selectionStart, d->m_startOffset );
+    r.setEnd( d->m_selectionEnd, d->m_endOffset );
     return r;
 }
 
@@ -3518,7 +3492,7 @@ void KHTMLPart::slotParentCompleted()
 
 void KHTMLPart::slotChildStarted( KIO::Job *job )
 {
-  khtml::ChildFrame *child = childFrame( sender() );
+  khtml::ChildFrame *child = frame( sender() );
 
   assert( child );
 
@@ -3545,7 +3519,7 @@ void KHTMLPart::slotChildCompleted()
 
 void KHTMLPart::slotChildCompleted( bool complete )
 {
-  khtml::ChildFrame *child = childFrame( sender() );
+  khtml::ChildFrame *child = frame( sender() );
 
   assert( child );
 
@@ -3562,7 +3536,7 @@ void KHTMLPart::slotChildCompleted( bool complete )
 
 void KHTMLPart::slotChildURLRequest( const KURL &url, const KParts::URLArgs &args )
 {
-  khtml::ChildFrame *child = childFrame( sender()->parent() );
+  khtml::ChildFrame *child = frame( sender()->parent() );
 
   QString frameName = args.frameName.lower();
   if ( !frameName.isEmpty() )
@@ -3620,21 +3594,15 @@ void KHTMLPart::slotChildURLRequest( const KURL &url, const KParts::URLArgs &arg
 
 #endif // APPLE_CHANGES
 
-khtml::ChildFrame *KHTMLPart::childFrame( const QObject *obj )
+khtml::ChildFrame *KHTMLPart::frame( const QObject *obj )
 {
     assert( obj->inherits( "KParts::ReadOnlyPart" ) );
-    const ReadOnlyPart *part = static_cast<const ReadOnlyPart *>( obj );
+    const KParts::ReadOnlyPart *part = static_cast<const KParts::ReadOnlyPart *>( obj );
 
     FrameIt it = d->m_frames.begin();
     FrameIt end = d->m_frames.end();
     for (; it != end; ++it )
-      if ( static_cast<ReadOnlyPart *>((*it).m_part) == part )
-        return &(*it);
-
-    it = d->m_objects.begin();
-    end = d->m_objects.end();
-    for (; it != end; ++it )
-      if ( static_cast<ReadOnlyPart *>((*it).m_part) == part )
+      if ( (KParts::ReadOnlyPart *)(*it).m_part == part )
         return &(*it);
 
     return 0L;
@@ -4298,7 +4266,7 @@ static bool firstRunAt(RenderObject *renderNode, int y, NodeImpl *&startNode, lo
     for (RenderObject *n = renderNode; n; n = n->nextSibling()) {
         if (n->isText()) {
             RenderText *textRenderer = static_cast<khtml::RenderText *>(n);
-            InlineTextBoxArray runs = textRenderer->inlineTextBoxes();
+            TextRunArray runs = textRenderer->textRuns();
             for (unsigned i = 0; i != runs.count(); i++) {
                 if (runs[i]->m_y == y) {
                     startNode = textRenderer->element();
@@ -4334,7 +4302,7 @@ static bool lastRunAt(RenderObject *renderNode, int y, NodeImpl *&endNode, long 
     
         if (n->isText()) {
             RenderText *textRenderer =  static_cast<khtml::RenderText *>(n);
-            InlineTextBoxArray runs = textRenderer->inlineTextBoxes();
+            TextRunArray runs = textRenderer->textRuns();
             for (int i = (int)runs.count()-1; i >= 0; i--) {
                 if (runs[i]->m_y == y) {
                     endNode = textRenderer->element();
@@ -4358,7 +4326,7 @@ static bool startAndEndLineNodesIncludingNode (DOM::NodeImpl *node, int offset, 
         int pos;
         int selectionPointY;
         khtml::RenderText *renderer = static_cast<khtml::RenderText *>(node->renderer());
-        khtml::InlineTextBox * run = renderer->findNextInlineTextBox( offset, pos );
+        khtml::TextRun * run = renderer->findTextRun( offset, pos );
         DOMString t = node->nodeValue();
         DOM::NodeImpl* startNode;
         DOM::NodeImpl* endNode;

@@ -34,7 +34,7 @@
     NSString *newPath = [thePath stringByResolvingSymlinksInPath];
 
     FSRef fref;
-    OSStatus err;
+    OSErr err;
 
     err = FSPathMakeRef((const UInt8 *)[thePath fileSystemRepresentation], &fref, NULL);
     if (err != noErr) {
@@ -43,7 +43,7 @@
 
     Boolean targetIsFolder;
     Boolean wasAliased;
-    err = FSResolveAliasFileWithMountFlags(&fref, TRUE, &targetIsFolder, &wasAliased, kResolveAliasFileNoUI);
+    err = FSResolveAliasFile (&fref, TRUE, &targetIsFolder, &wasAliased);
     if (err != noErr) {
         return newPath;
     }
@@ -60,10 +60,9 @@
 - initWithPath:(NSString *)pluginPath
 {
     [super init];
-    extensionToMIME = [[NSMutableDictionary alloc] init];
+    extensionToMIME = [[NSMutableDictionary dictionary] retain];
     path = [[self pathByResolvingSymlinksAndAliasesInPath:pluginPath] retain];
     bundle = [[NSBundle alloc] initWithPath:path];
-    lastModifiedDate = [[[[NSFileManager defaultManager] fileAttributesAtPath:path traverseLink:YES] objectForKey:NSFileModificationDate] retain];
     return self;
 }
 
@@ -149,8 +148,6 @@
 
 - (void)dealloc
 {
-    [self unload];
-    
     [name release];
     [path release];
     [pluginDescription release];
@@ -214,11 +211,6 @@
     return bundle;
 }
 
-- (NSDate *)lastModifiedDate
-{
-    return lastModifiedDate;
-}
-
 - (void)setName:(NSString *)theName
 {
     [name release];
@@ -271,18 +263,6 @@
 {
     return [NSString stringWithFormat:@"name: %@\npath: %@\nmimeTypes:\n%@\npluginDescription:%@",
         name, path, [MIMEToExtensions description], [MIMEToDescription description], pluginDescription];
-}
-
-- (BOOL)isEqual:(id)object
-{
-    return ([object isKindOfClass:[WebBasePluginPackage class]] &&
-            [[object name] isEqualToString:name] &&
-            [[object lastModifiedDate] isEqual:lastModifiedDate]);
-}
-
-- (unsigned)hash
-{
-    return [[name stringByAppendingString:[lastModifiedDate description]] hash];
 }
 
 @end

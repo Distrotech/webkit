@@ -901,9 +901,8 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
 
 - (void)setPlugin:(WebNetscapePluginPackage *)thePlugin;
 {
-    [thePlugin retain];
     [plugin release];
-    plugin = thePlugin;
+    plugin = [thePlugin retain];
 
     NPP_New = 		[plugin NPP_New];
     NPP_Destroy = 	[plugin NPP_Destroy];
@@ -1008,10 +1007,11 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
         free(cAttributes[i]);
         free(cValues[i]);
     }
-    [plugin release];
+    [streams removeAllObjects];
     [streams release];
     [MIMEType release];
     [baseURL release];
+    [streamNotifications removeAllObjects];
     [streamNotifications release];
     free(cAttributes);
     free(cValues);

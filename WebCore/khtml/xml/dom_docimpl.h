@@ -48,10 +48,6 @@ class KHTMLView;
 class Tokenizer;
 class RenderArena;
 
-#if APPLE_CHANGES
-class KWQAccObjectCache;
-#endif
-
 namespace khtml {
     class CSSStyleSelector;
     class DocLoader;
@@ -240,11 +236,6 @@ public:
     virtual void detach();
 
     RenderArena* renderArena() { return m_renderArena; }
-
-#if APPLE_CHANGES
-    KWQAccObjectCache* getExistingAccObjectCache() { return m_accCache; }
-    KWQAccObjectCache* getOrCreateAccObjectCache();
-#endif
     
     // to get visually ordered hebrew and arabic pages right
     void setVisuallyOrdered();
@@ -353,13 +344,9 @@ public:
     void setSelectedStylesheetSet(const DOMString& aString);
 
     QStringList availableStyleSheets() const;
-
     NodeImpl *focusNode() const { return m_focusNode; }
     void setFocusNode(NodeImpl *newFocusNode);
 
-    NodeImpl *hoverNode() const { return m_hoverNode; }
-    void setHoverNode(NodeImpl *newHoverNode);
-    
     // Updates for :target (CSS3 selector).
     void setCSSTarget(NodeImpl* n);
     NodeImpl* getCSSTarget();
@@ -455,11 +442,6 @@ public:
     DOMString domain() const;
     void setDomain( const DOMString &newDomain, bool force = false ); // not part of the DOM
     
-    // The following implements the rule from HTML 4 for what valid names are.
-    // To get this right for all the XML cases, we probably have to improve this or move it
-    // and make it sensitive to the type of document.
-    static bool isValidName(const DOMString &);
-    
 signals:
     void finishedParsing();
 
@@ -496,10 +478,8 @@ protected:
     HTMLMode hMode;
 
     QColor m_textColor;
-
     NodeImpl *m_focusNode;
-    NodeImpl *m_hoverNode;
-    
+
     // ### replace me with something more efficient
     // in lookup and insertion.
     DOMStringImpl **m_elementNames;
@@ -536,10 +516,6 @@ protected:
     DOMString m_title;
     
     RenderArena* m_renderArena;
-
-#if APPLE_CHANGES
-    KWQAccObjectCache* m_accCache;
-#endif
     
     QPtrList<khtml::RenderImage> m_imageLoadEventDispatchSoonList;
     QPtrList<khtml::RenderImage> m_imageLoadEventDispatchingList;

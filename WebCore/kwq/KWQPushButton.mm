@@ -25,31 +25,26 @@
 
 #import "KWQPushButton.h"
 
-#import "KWQExceptions.h"
+// We empirically determined that buttons have these extra pixels on all
+// sides. It would be better to get this info from AppKit somehow.
+#define TOP_MARGIN 4
+#define BOTTOM_MARGIN 6
+#define LEFT_MARGIN 5
+#define RIGHT_MARGIN 5
 
-enum {
-    topMargin,
-    bottomMargin,
-    leftMargin,
-    rightMargin,
-    baselineFudgeFactor
-};
+// AppKit calls this kThemePushButtonSmallTextOffset.
+#define VERTICAL_FUDGE_FACTOR 2
 
 QPushButton::QPushButton(QWidget *)
 {
     NSButton *button = (NSButton *)getView();
-    KWQ_BLOCK_NS_EXCEPTIONS;
     [button setBezelStyle:NSRoundedBezelStyle];
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
 }
 
 QPushButton::QPushButton(const QString &text, QWidget *)
 {
     NSButton *button = (NSButton *)getView();
-
-    KWQ_BLOCK_NS_EXCEPTIONS;
     [button setBezelStyle:NSRoundedBezelStyle];
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
 
     setText(text);
 }
@@ -57,66 +52,33 @@ QPushButton::QPushButton(const QString &text, QWidget *)
 QSize QPushButton::sizeHint() const 
 {
     NSButton *button = (NSButton *)getView();
-
-    QSize size;
-
-    KWQ_BLOCK_NS_EXCEPTIONS;
-    size = QSize((int)[[button cell] cellSize].width - (dimensions()[leftMargin] + dimensions()[rightMargin]),
-        (int)[[button cell] cellSize].height - (dimensions()[topMargin] + dimensions()[bottomMargin]));
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
-
-    return size;
+    return QSize((int)[[button cell] cellSize].width - (LEFT_MARGIN + RIGHT_MARGIN),
+        (int)[[button cell] cellSize].height - (TOP_MARGIN + BOTTOM_MARGIN));
 }
 
 QRect QPushButton::frameGeometry() const
 {
     QRect r = QWidget::frameGeometry();
-    return QRect(r.x() + dimensions()[leftMargin], r.y() + dimensions()[topMargin],
-        r.width() - (dimensions()[leftMargin] + dimensions()[rightMargin]),
-        r.height() - (dimensions()[topMargin] + dimensions()[bottomMargin]));
+    return QRect(r.x() + LEFT_MARGIN, r.y() + TOP_MARGIN,
+        r.width() - (LEFT_MARGIN + RIGHT_MARGIN),
+        r.height() - (TOP_MARGIN + BOTTOM_MARGIN));
 }
 
 void QPushButton::setFrameGeometry(const QRect &r)
 {
-    QWidget::setFrameGeometry(QRect(r.x() - dimensions()[leftMargin], r.y() - dimensions()[topMargin],
-        r.width() + dimensions()[leftMargin] + dimensions()[rightMargin],
-        r.height() + dimensions()[topMargin] + dimensions()[bottomMargin]));
+    QWidget::setFrameGeometry(QRect(r.x() - LEFT_MARGIN, r.y() - TOP_MARGIN,
+        r.width() + LEFT_MARGIN + RIGHT_MARGIN,
+        r.height() + TOP_MARGIN + BOTTOM_MARGIN));
 }
 
-int QPushButton::baselinePosition(int height) const
+int QPushButton::baselinePosition() const
 {
     // Button text is centered vertically, with a fudge factor to account for the shadow.
     NSButton *button = (NSButton *)getView();
-
-    volatile float ascender = 0;
-    volatile float descender = 0;
-
-    KWQ_BLOCK_NS_EXCEPTIONS;
     NSFont *font = [button font];
-    ascender = [font ascender];
-    descender = [font descender];
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
-
-    return (int)ceil(-dimensions()[topMargin]
-        + ((height + dimensions()[topMargin] + dimensions()[bottomMargin]) - (ascender - descender)) / 2.0
-        + ascender - dimensions()[baselineFudgeFactor]);
-}
-
-const int *QPushButton::dimensions() const
-{
-    // We empirically determined these dimensions.
-    // It would be better to get this info from AppKit somehow.
-    static const int w[3][5] = {
-        { 4, 7, 6, 6, 2 },
-        { 4, 6, 5, 5, 2 },
-        { 0, 1, 1, 1, 1 }
-    };
-    NSControl * const button = static_cast<NSControl *>(getView());
-    volatile NSControlSize size = NSSmallControlSize;
-
-    KWQ_BLOCK_NS_EXCEPTIONS;
-    size = [[button cell] controlSize];
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
-
-    return w[size];
+    float ascender = [font ascender];
+    float descender = [font descender];
+    return (int)ceil(-TOP_MARGIN
+        + ((height() + TOP_MARGIN + BOTTOM_MARGIN) - (ascender - descender)) / 2.0
+        + ascender - VERTICAL_FUDGE_FACTOR);
 }

@@ -41,37 +41,37 @@ using namespace khtml;
 using namespace DOM;
 
 #ifndef NDEBUG
-static bool inInlineTextBoxDetach;
+static bool inTextRunDetach;
 #endif
 
-void InlineTextBox::detach(RenderArena* renderArena)
+void TextRun::detach(RenderArena* renderArena)
 {
 #ifndef NDEBUG
-    inInlineTextBoxDetach = true;
+    inTextRunDetach = true;
 #endif
     delete this;
 #ifndef NDEBUG
-    inInlineTextBoxDetach = false;
+    inTextRunDetach = false;
 #endif
     
     // Recover the size left there for us by operator delete and free the memory.
     renderArena->free(*(size_t *)this, this);
 }
 
-void* InlineTextBox::operator new(size_t sz, RenderArena* renderArena) throw()
+void* TextRun::operator new(size_t sz, RenderArena* renderArena) throw()
 {
     return renderArena->allocate(sz);
 }
 
-void InlineTextBox::operator delete(void* ptr, size_t sz)
+void TextRun::operator delete(void* ptr, size_t sz)
 {
-    assert(inInlineTextBoxDetach);
+    assert(inTextRunDetach);
     
     // Stash size where detach can find it.
     *(size_t *)ptr = sz;
 }
 
-void InlineTextBox::paintSelection(const Font *f, RenderText *text, QPainter *p, RenderStyle* style, int tx, int ty, int startPos, int endPos)
+void TextRun::paintSelection(const Font *f, RenderText *text, QPainter *p, RenderStyle* style, int tx, int ty, int startPos, int endPos)
 {
     if(startPos > m_len) return;
     if(startPos < 0) startPos = 0;
@@ -81,8 +81,6 @@ void InlineTextBox::paintSelection(const Font *f, RenderText *text, QPainter *p,
     // Macintosh-style text highlighting is to draw with a particular background color, not invert.
     QColor textColor = style->color();
     QColor c = p->selectedTextBackgroundColor();
-    
-    // if text color and selection background color are identical, invert background color.
     if (textColor == c)
         c = QColor(0xff - c.red(), 0xff - c.green(), 0xff - c.blue());
 
@@ -97,14 +95,14 @@ void InlineTextBox::paintSelection(const Font *f, RenderText *text, QPainter *p,
 #endif
     ty += m_baseline;
 
-    //kdDebug( 6040 ) << "InlineTextBox::painting(" << s.string() << ") at(" << x+_tx << "/" << y+_ty << ")" << endl;
+    //kdDebug( 6040 ) << "textRun::painting(" << s.string() << ") at(" << x+_tx << "/" << y+_ty << ")" << endl;
     f->drawHighlightForText(p, m_x + tx, m_y + ty, text->str->s, text->str->l, m_start, m_len,
 		m_toAdd, m_reversed ? QPainter::RTL : QPainter::LTR, startPos, endPos, c);
     p->restore();
 }
 
 #ifdef APPLE_CHANGES
-void InlineTextBox::paintDecoration( QPainter *pt, int _tx, int _ty, int deco)
+void TextRun::paintDecoration( QPainter *pt, int _tx, int _ty, int deco)
 {
     _tx += m_x;
     _ty += m_y;
@@ -128,7 +126,7 @@ void InlineTextBox::paintDecoration( QPainter *pt, int _tx, int _ty, int deco)
     }
 }
 #else
-void InlineTextBox::paintDecoration( QPainter *pt, int _tx, int _ty, int decoration)
+void TextRun::paintDecoration( QPainter *pt, int _tx, int _ty, int decoration)
 {
     _tx += m_x;
     _ty += m_y;
@@ -160,9 +158,9 @@ void InlineTextBox::paintDecoration( QPainter *pt, int _tx, int _ty, int decorat
 
 #define LOCAL_WIDTH_BUF_SIZE	1024
 
-FindSelectionResult InlineTextBox::checkSelectionPoint(int _x, int _y, int _tx, int _ty, const Font *f, RenderText *text, int & offset, short lineHeight)
+FindSelectionResult TextRun::checkSelectionPoint(int _x, int _y, int _tx, int _ty, const Font *f, RenderText *text, int & offset, short lineHeight)
 {
-//     kdDebug(6040) << "InlineTextBox::checkSelectionPoint " << this << " _x=" << _x << " _y=" << _y
+//     kdDebug(6040) << "TextRun::checkSelectionPoint " << this << " _x=" << _x << " _y=" << _y
 //                   << " _tx+m_x=" << _tx+m_x << " _ty+m_y=" << _ty+m_y << endl;
     offset = 0;
 
@@ -189,7 +187,7 @@ FindSelectionResult InlineTextBox::checkSelectionPoint(int _x, int _y, int _tx, 
     int pos = f->checkSelectionPoint (text->str->s, text->str->l, m_start, m_len, m_toAdd, _x - (_tx + m_x), m_reversed);
 #else
     int delta = _x - (_tx + m_x);
-    //kdDebug(6040) << "InlineTextBox::checkSelectionPoint delta=" << delta << endl;
+    //kdDebug(6040) << "TextRun::checkSelectionPoint delta=" << delta << endl;
     int pos = 0;
     if ( m_reversed ) {
 	delta -= m_width;
@@ -221,21 +219,21 @@ FindSelectionResult InlineTextBox::checkSelectionPoint(int _x, int _y, int _tx, 
 
 // -----------------------------------------------------------------------------
 
-InlineTextBoxArray::InlineTextBoxArray()
+TextRunArray::TextRunArray()
 {
     setAutoDelete(false);
 }
 
-int InlineTextBoxArray::compareItems( Item d1, Item d2 )
+int TextRunArray::compareItems( Item d1, Item d2 )
 {
     assert(d1);
     assert(d2);
 
-    return static_cast<InlineTextBox*>(d1)->m_y - static_cast<InlineTextBox*>(d2)->m_y;
+    return static_cast<TextRun*>(d1)->m_y - static_cast<TextRun*>(d2)->m_y;
 }
 
 // remove this once QVector::bsearch is fixed
-int InlineTextBoxArray::findFirstMatching(Item d) const
+int TextRunArray::findFirstMatching(Item d) const
 {
     int len = count();
 
@@ -329,13 +327,13 @@ RenderText::~RenderText()
     if(str) str->deref();
 }
 
-void RenderText::detach()
+void RenderText::detach(RenderArena* renderArena)
 {
-    deleteRuns();
-    RenderObject::detach();
+    deleteRuns(renderArena);
+    RenderObject::detach(renderArena);
 }
 
-void RenderText::deleteRuns()
+void RenderText::deleteRuns(RenderArena *arena)
 {
     // this is a slight variant of QArray::clear().
     // We don't delete the array itself here because its
@@ -343,9 +341,10 @@ void RenderText::deleteRuns()
     // us resize() calls
     unsigned int len = m_lines.size();
     if (len) {
-        RenderArena* arena = renderArena();
+        if (!arena)
+            arena = renderArena();
         for(unsigned int i=0; i < len; i++) {
-            InlineTextBox* s = m_lines.at(i);
+            TextRun* s = m_lines.at(i);
             if (s)
                 s->detach(arena);
             m_lines.remove(i);
@@ -355,7 +354,7 @@ void RenderText::deleteRuns()
     KHTMLAssert(m_lines.count() == 0);
 }
 
-InlineTextBox * RenderText::findNextInlineTextBox( int offset, int &pos )
+TextRun * RenderText::findTextRun( int offset, int &pos )
 {
     // The text runs point to parts of the rendertext's str string
     // (they don't include '\n')
@@ -365,7 +364,7 @@ InlineTextBox * RenderText::findNextInlineTextBox( int offset, int &pos )
     if ( m_lines.isEmpty() )
         return 0L;
 
-    InlineTextBox* s = m_lines[0];
+    TextRun* s = m_lines[0];
     uint si = 1;
     int off = s->m_len;
     while(offset > off && si < m_lines.count())
@@ -378,12 +377,11 @@ InlineTextBox * RenderText::findNextInlineTextBox( int offset, int &pos )
     return s;
 }
 
-bool RenderText::nodeAtPoint(NodeInfo& info, int _x, int _y, int _tx, int _ty,
-                             HitTestAction hitTestAction, bool inside)
+bool RenderText::nodeAtPoint(NodeInfo& info, int _x, int _y, int _tx, int _ty, bool inside)
 {
     assert(parent());
 
-    InlineTextBox *s = m_lines.count() ? m_lines[0] : 0;
+    TextRun *s = m_lines.count() ? m_lines[0] : 0;
     int si = 0;
     while(s) {
         if((_y >=_ty + s->m_y) && (_y < _ty + s->m_y + s->height()) &&
@@ -394,6 +392,8 @@ bool RenderText::nodeAtPoint(NodeInfo& info, int _x, int _y, int _tx, int _ty,
 
         s = si < (int) m_lines.count()-1 ? m_lines[++si] : 0;
     }
+
+    setMouseInside(inside);
 
     if (inside && element()) {
         if (info.innerNode() && info.innerNode()->renderer() && 
@@ -409,7 +409,7 @@ bool RenderText::nodeAtPoint(NodeInfo& info, int _x, int _y, int _tx, int _ty,
         if (!info.innerNode())
             info.setInnerNode(element());
 
-        if (!info.innerNonSharedNode())
+        if(!info.innerNonSharedNode())
             info.setInnerNonSharedNode(element());
     }
 
@@ -420,24 +420,24 @@ FindSelectionResult RenderText::checkSelectionPointIgnoringContinuations(int _x,
 {
 //     kdDebug(6040) << "RenderText::checkSelectionPoint " << this << " _x=" << _x << " _y=" << _y
 //                   << " _tx=" << _tx << " _ty=" << _ty << endl;
-    InlineTextBox *lastPointAfterInline=0;
+    TextRun *lastPointAfterInline=0;
 
     for(unsigned int si = 0; si < m_lines.count(); si++)
     {
-        InlineTextBox* s = m_lines[si];
+        TextRun* s = m_lines[si];
         int result;
         const Font *f = htmlFont( si==0 );
         result = s->checkSelectionPoint(_x, _y, _tx, _ty, f, this, offset, m_lineHeight);
 
 //         kdDebug(6040) << "RenderText::checkSelectionPoint " << this << " line " << si << " result=" << result << " offset=" << offset << endl;
-        if ( result == SelectionPointInside ) // x,y is inside the InlineTextBox
+        if ( result == SelectionPointInside ) // x,y is inside the textrun
         {
             offset += s->m_start; // add the offset from the previous lines
             //kdDebug(6040) << "RenderText::checkSelectionPoint inside -> " << offset << endl;
             node = element();
             return SelectionPointInside;
         } else if ( result == SelectionPointBefore ) {
-            // x,y is before the InlineTextBox -> stop here
+            // x,y is before the textrun -> stop here
             if ( si > 0 && lastPointAfterInline ) {
                 offset = lastPointAfterInline->m_start + lastPointAfterInline->m_len;
                 //kdDebug(6040) << "RenderText::checkSelectionPoint before -> " << offset << endl;
@@ -470,7 +470,7 @@ void RenderText::cursorPos(int offset, int &_x, int &_y, int &height)
   }
 
   int pos;
-  InlineTextBox * s = findNextInlineTextBox( offset, pos );
+  TextRun * s = findTextRun( offset, pos );
   _y = s->m_y;
   height = s->m_height;
 
@@ -514,7 +514,7 @@ void RenderText::posOfChar(int chr, int &x, int &y)
     //chr = str->l;
 
     int pos;
-    InlineTextBox * s = findNextInlineTextBox( chr, pos );
+    TextRun * s = findTextRun( chr, pos );
 
     if ( s )
     {
@@ -532,43 +532,13 @@ int RenderText::rightmostPosition() const
     return 0;
 }
 
-static int
-simpleDifferenceBetweenColors(QColor c1, QColor c2)
-{
-    // a distance could be computed by squaring the differences between components, but
-    // this is faster and so far seems good enough for our purposes.
-    return abs(c1.red() - c2.red()) + abs(c1.green() - c2.green()) + abs(c1.blue() - c2.blue());
-}
-
-static QColor 
-correctedTextColor(QColor textColor, QColor backgroundColor) 
-{
-    // Adjust the text color if it is too close to the background color,
-    // by darkening or lightening it to move it further away.
-    
-    int d = simpleDifferenceBetweenColors(textColor, backgroundColor);
-    // semi-arbitrarily chose 255 value here after a few tests; 
-    if (d > 255) {
-        return textColor;
-    }
-    
-    int distanceFromWhite = simpleDifferenceBetweenColors(textColor, Qt::white);
-    int distanceFromBlack = simpleDifferenceBetweenColors(textColor, Qt::black);
-
-    if (distanceFromWhite < distanceFromBlack) {
-        return textColor.dark();
-    }
-    
-    return textColor.light();
-}
-
 void RenderText::paintObject(QPainter *p, int /*x*/, int y, int /*w*/, int h,
                              int tx, int ty, PaintAction paintAction)
 {
     int ow = style()->outlineWidth();
     RenderStyle* pseudoStyle = style()->getPseudoStyle(RenderStyle::FIRST_LINE);
     int d = style()->textDecorationsInEffect();
-    InlineTextBox f(0, y-ty);
+    TextRun f(0, y-ty);
     int si = m_lines.findFirstMatching(&f);
     // something matching found, find the first one to print
     bool isPrinting = (p->device()->devType() == QInternal::Printer);
@@ -596,7 +566,7 @@ void RenderText::paintObject(QPainter *p, int /*x*/, int y, int /*w*/, int h,
             //kdDebug(6040) << this << " Selection from " << startPos << " to " << endPos << endl;
         }
 
-        InlineTextBox* s;
+        TextRun* s;
         int minx =  1000000;
         int maxx = -1000000;
         int outlinebox_y = m_lines[si]->m_y;
@@ -662,14 +632,9 @@ void RenderText::paintObject(QPainter *p, int /*x*/, int y, int /*w*/, int h,
 #if APPLE_CHANGES
             if (drawText) {
 #endif
-            
-            QColor textColor = _style->color();
-            if (_style->shouldCorrectTextColor()) {
-                textColor = correctedTextColor(textColor, _style->backgroundColor());
-            }
 
-            if(textColor != p->pen().color())
-                p->setPen(textColor);
+            if(_style->color() != p->pen().color())
+                p->setPen(_style->color());
 
 #if APPLE_CHANGES
             // Set a text shadow if we have one.
@@ -945,7 +910,7 @@ void RenderText::trimmedMinMaxWidth(short& beginMinW, bool& beginWS,
     hasBreakableChar = m_hasBreakableChar;
     hasBreak = m_hasBreak;
 
-    if (stripFrontSpaces && (str->s[0] == ' ' || (!isPre && str->s[0] == '\n'))) {
+    if (stripFrontSpaces && str->s[0].unicode() == ' ') {
         const Font *f = htmlFont( false );
         QChar space[1]; space[0] = ' ';
         int spaceWidth = f->width(space, 1, 0);
@@ -964,10 +929,10 @@ void RenderText::trimmedMinMaxWidth(short& beginMinW, bool& beginWS,
         const Font *f = htmlFont( false );
         bool firstLine = true;
         beginMaxW = endMaxW = maxW;
-        for (int i = 0; i < len; i++)
+        for(int i = 0; i < len; i++)
         {
             int linelen = 0;
-            while (i+linelen < len && str->s[i+linelen] != '\n')
+            while( i+linelen < len && str->s[i+linelen] != '\n')
                 linelen++;
                 
             if (linelen)
@@ -982,16 +947,13 @@ void RenderText::trimmedMinMaxWidth(short& beginMinW, bool& beginWS,
                     beginMaxW = endMaxW;
                 }
                 i += linelen;
+                if (i == len-1)
+                    endMaxW = 0;
             }
             else if (firstLine) {
                 beginMaxW = 0;
                 firstLine = false;
             }
-	    
-	    if (i == len-1)
-	        // A <pre> run that ends with a newline, as in, e.g.,
-	        // <pre>Some text\n\n<span>More text</pre>
-	        endMaxW = 0;
         }
     }
 }
@@ -1021,22 +983,20 @@ void RenderText::calcMinMaxWidth()
     bool firstWord = true;
     for(int i = 0; i < len; i++)
     {
-        const QChar c = str->s[i];
-        
-        bool previousCharacterIsSpace = isSpace;
-        
         bool isNewline = false;
-        if (c == '\n') {
+        // XXXdwh Wrong in the first stage.  Will stop mutating newlines
+        // in a second stage.
+        if (str->s[i] == '\n') {
             if (isPre) {
                 m_hasBreak = true;
                 isNewline = true;
-                isSpace = false;
             }
             else
-                isSpace = true;
-        } else {
-            isSpace = c == ' ';
+                str->s[i] = ' ';
         }
+        
+        bool previousCharacterIsSpace = isSpace;
+        isSpace = str->s[i].unicode() == ' ';
         
         if ((isSpace || isNewline) && i == 0)
             m_hasBeginWS = true;
@@ -1090,7 +1050,7 @@ void RenderText::calcMinMaxWidth()
             if(currMinWidth > m_minWidth) m_minWidth = currMinWidth;
             currMinWidth = 0;
                 
-            if (str->s[i] == '\n' && isPre)
+            if (str->s[i] == '\n')
             {
                 if(currMaxWidth > m_maxWidth) m_maxWidth = currMaxWidth;
                 currMaxWidth = 0;
@@ -1224,15 +1184,15 @@ InlineBox* RenderText::createInlineBox(bool, bool isRootLineBox)
 {
     // FIXME: Either ditch the array or get this object into it.
     KHTMLAssert(!isRootLineBox);
-    return new (renderArena()) InlineTextBox(this);
+    return new (renderArena()) TextRun(this);
 }
 
 void RenderText::position(InlineBox* box, int from, int len, bool reverse)
 {
-    InlineTextBox *s = static_cast<InlineTextBox*>(box);
+    TextRun *s = static_cast<TextRun*>(box);
     
     // ### should not be needed!!!
-    if (len == 0 || isBR()) {
+    if (len == 0 || (str->l && len == 1 && *(str->s+from) == '\n')) {
         // We want the box to be destroyed.  This is a <br>, and we don't
         // need <br>s to be included.
         s->detach(renderArena());
@@ -1292,7 +1252,7 @@ short RenderText::width() const
     int maxx = 0;
     // slooow
     for(unsigned int si = 0; si < m_lines.count(); si++) {
-        InlineTextBox* s = m_lines[si];
+        TextRun* s = m_lines[si];
         if(s->m_x < minx)
             minx = s->m_x;
         if(s->m_x + s->m_width > maxx)

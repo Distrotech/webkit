@@ -26,7 +26,7 @@
 #include "render_arena.h"
 #include "render_inline.h"
 #include "render_block.h"
-#include "xml/dom_docimpl.h"
+#include "xml/dom_nodeimpl.h"
 
 using namespace khtml;
 
@@ -75,6 +75,8 @@ void RenderInline::addChildToFlow(RenderObject* newChild, RenderObject* beforeCh
     if (!beforeChild && lastChild() && lastChild()->style()->styleType() == RenderStyle::AFTER)
         beforeChild = lastChild();
     
+    setNeedsLayout(true);
+    
     if (!newChild->isText() && newChild->style()->position() != STATIC)
         setOverhangingContents();
     
@@ -88,8 +90,9 @@ void RenderInline::addChildToFlow(RenderObject* newChild, RenderObject* beforeCh
         newStyle->inheritFrom(style());
         newStyle->setDisplay(BLOCK);
 
-        RenderBlock *newBox = new (renderArena()) RenderBlock(document() /* anonymous box */);
+        RenderBlock *newBox = new (renderArena()) RenderBlock(0 /* anonymous box */);
         newBox->setStyle(newStyle);
+        newBox->setIsAnonymousBox(true);
         RenderFlow* oldContinuation = continuation();
         setContinuation(newBox);
 
@@ -197,7 +200,7 @@ void RenderInline::splitFlow(RenderObject* beforeChild, RenderBlock* newBlockBox
     RenderBlock* pre = 0;
     RenderBlock* block = containingBlock();
     bool madeNewBeforeBlock = false;
-    if (block->isAnonymous()) {
+    if (block->isAnonymousBox()) {
         // We can reuse this block and make it the preBlock of the next continuation.
         pre = block;
         block = block->containingBlock();
@@ -358,23 +361,20 @@ const char *RenderInline::renderName() const
 {
     if (isRelPositioned())
         return "RenderInline (relative positioned)";
-    if (isAnonymous())
+    if (isAnonymousBox())
         return "RenderInline (anonymous)";
     return "RenderInline";
 }
 
-bool RenderInline::nodeAtPoint(NodeInfo& info, int _x, int _y, int _tx, int _ty,
-                               HitTestAction hitTestAction, bool inside)
+bool RenderInline::nodeAtPoint(NodeInfo& info, int _x, int _y, int _tx, int _ty, bool inside)
 {
-    // Check our kids if our HitTestAction says to.
-    if (hitTestAction != HitTestSelfOnly) {
-        for (RenderObject* child = lastChild(); child; child = child->previousSibling())
-            if (!child->layer() && !child->isFloating() && child->nodeAtPoint(info, _x, _y, _tx, _ty))
-                inside = true;
-    }
-    
+    // Always check our kids.
+    for (RenderObject* child = lastChild(); child; child = child->previousSibling())
+        if (!child->layer() && !child->isFloating() && child->nodeAtPoint(info, _x, _y, _tx, _ty))
+            inside = true;
+
     // Check our line boxes if we're still not inside.
-    if (hitTestAction != HitTestChildrenOnly && !inside && style()->visibility() != HIDDEN) {
+    if (!inside && style()->visibility() != HIDDEN) {
         // See if we're inside one of our line boxes.
         for (InlineRunBox* curr = firstLineBox(); curr; curr = curr->nextLineBox()) {
             if((_y >=_ty + curr->m_y) && (_y < _ty + curr->m_y + curr->m_height) &&
@@ -401,8 +401,31 @@ bool RenderInline::nodeAtPoint(NodeInfo& info, int _x, int _y, int _tx, int _ty,
 
         if(!info.innerNonSharedNode())
             info.setInnerNonSharedNode(element());
+
+        if (!info.URLElement()) {
+            RenderObject* p = this;
+            while (p) {
+                if (p->element() && p->element()->hasAnchor()) {
+                    info.setURLElement(p->element());
+                    break;
+                }
+                if (!isFloatingOrPositioned()) break;
+                p = p->parent();
+            }
+        }
+        
     }
 
+    if (!info.readonly()) {
+        // lets see if we need a new style
+        bool oldinside = mouseInside();
+        setMouseInside(inside);
+
+        setHoverAndActive(info, oldinside, inside);
+        if (!isInline() && continuation())
+            continuation()->setHoverAndActive(info, oldinside, inside);
+    }
+    
     return inside;
 }
 

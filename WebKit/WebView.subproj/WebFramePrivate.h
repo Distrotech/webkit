@@ -42,8 +42,7 @@ typedef enum {
     WebFrameLoadTypeReload,
     WebFrameLoadTypeReloadAllowingStaleData,
     WebFrameLoadTypeSame,		// user loads same URL again (but not reload button)
-    WebFrameLoadTypeInternal,
-    WebFrameLoadTypeOnLoadEvent
+    WebFrameLoadTypeInternal
 } WebFrameLoadType;
 
 #define WebFrameStateChangedNotification @"WebFrameStateChangedNotification"
@@ -55,6 +54,7 @@ typedef enum {
 extern NSString *WebPageCacheEntryDateKey;
 extern NSString *WebPageCacheDataSourceKey;
 extern NSString *WebPageCacheDocumentViewKey;
+extern NSString *WebCorePageCacheStateKey;
 
 @interface WebFramePrivate : NSObject
 {
@@ -194,7 +194,5 @@ extern NSString *WebPageCacheDocumentViewKey;
 - (int)_numPendingOrLoadingRequests:(BOOL)recurse;
 
 - (NSColor *)_bodyBackgroundColor;
-
-- (void)_reloadForPluginChanges;
 
 @end

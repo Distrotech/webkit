@@ -58,7 +58,6 @@ AttrImpl::AttrImpl(ElementImpl* element, DocumentPtr* docPtr, AttributeImpl* a)
     assert(!m_attribute->_impl);
     m_attribute->_impl = this;
     m_attribute->ref();
-    m_specified = true;
 }
 
 AttrImpl::~AttrImpl()
@@ -184,12 +183,8 @@ ElementImpl::~ElementImpl()
 
 void ElementImpl::removeAttribute( NodeImpl::Id id, int &exceptioncode )
 {
-    if (namedAttrMap) {
+    if (namedAttrMap)
         namedAttrMap->removeNamedItem(id, exceptioncode);
-        if (exceptioncode == DOMException::NOT_FOUND_ERR) {
-            exceptioncode = 0;
-        }
-    }
 }
 
 void ElementImpl::setAttribute(NodeImpl::Id id, const DOMString &value)
@@ -599,16 +594,16 @@ Node NamedAttrMapImpl::setNamedItem ( NodeImpl* arg, int &exceptioncode )
     }
     AttrImpl *attr = static_cast<AttrImpl*>(arg);
 
-    AttributeImpl* a = attr->attrImpl();
-    AttributeImpl* old = getAttributeItem(a->id());
-    if (old == a) return arg; // we know about it already
-
     // INUSE_ATTRIBUTE_ERR: Raised if arg is an Attr that is already an attribute of another Element object.
     // The DOM user must explicitly clone Attr nodes to re-use them in other elements.
     if (attr->ownerElement()) {
         exceptioncode = DOMException::INUSE_ATTRIBUTE_ERR;
         return 0;
     }
+
+    AttributeImpl* a = attr->attrImpl();
+    AttributeImpl* old = getAttributeItem(a->id());
+    if (old == a) return arg; // we know about it already
 
     // ### slightly inefficient - resizes attribute array twice.
     Node r;
@@ -623,8 +618,7 @@ Node NamedAttrMapImpl::setNamedItem ( NodeImpl* arg, int &exceptioncode )
 }
 
 // The DOM2 spec doesn't say that removeAttribute[NS] throws NOT_FOUND_ERR
-// if the attribute is not found, but at this level we have to throw NOT_FOUND_ERR
-// because of removeNamedItem, removeNamedItemNS, and removeAttributeNode.
+// if the attribute is not found - David
 Node NamedAttrMapImpl::removeNamedItem ( NodeImpl::Id id, int &exceptioncode )
 {
     // ### should this really be raised when the attribute to remove isn't there at all?
@@ -635,10 +629,7 @@ Node NamedAttrMapImpl::removeNamedItem ( NodeImpl::Id id, int &exceptioncode )
     }
 
     AttributeImpl* a = getAttributeItem(id);
-    if (!a) {
-        exceptioncode = DOMException::NOT_FOUND_ERR;
-        return Node();
-    }
+    if (!a) return Node();
 
     if (!a->attrImpl())  a->allocateImpl(element);
     Node r(a->attrImpl());
@@ -727,7 +718,7 @@ NamedAttrMapImpl& NamedAttrMapImpl::operator=(const NamedAttrMapImpl& other)
 
 void NamedAttrMapImpl::addAttribute(AttributeImpl *attr)
 {
-    // Add the attribute to the list
+    // Add the attribute tot he list
     AttributeImpl **newAttrs = new AttributeImpl* [len+1];
     if (attrs) {
       for (uint i = 0; i < len; i++)
@@ -737,10 +728,6 @@ void NamedAttrMapImpl::addAttribute(AttributeImpl *attr)
     attrs = newAttrs;
     attrs[len++] = attr;
     attr->ref();
-
-    AttrImpl * const attrImpl = attr->_impl;
-    if (attrImpl)
-        attrImpl->m_element = element;
 
     // Notify the element that the attribute has been added, and dispatch appropriate mutation events
     // Note that element may be null here if we are called from insertAttr() during parsing

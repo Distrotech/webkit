@@ -28,7 +28,6 @@
 #define WebKitDefaultTextEncodingNamePreferenceKey @"WebKitDefaultTextEncodingName"
 #define WebKitUserStyleSheetEnabledPreferenceKey @"WebKitUserStyleSheetEnabledPreferenceKey"
 #define WebKitUserStyleSheetLocationPreferenceKey @"WebKitUserStyleSheetLocationPreferenceKey"
-#define WebKitShouldPrintBackgroundsPreferenceKey @"WebKitShouldPrintBackgroundsPreferenceKey"
 #define WebKitJavaEnabledPreferenceKey @"WebKitJavaEnabled"
 #define WebKitJavaScriptEnabledPreferenceKey @"WebKitJavaScriptEnabled"
 #define WebKitJavaScriptCanOpenWindowsAutomaticallyPreferenceKey @"WebKitJavaScriptCanOpenWindowsAutomatically"
@@ -80,17 +79,7 @@ enum { WebPreferencesVersion = 1 };
 
 - init
 {
-    // Create fake identifier
-    static int instanceCount = 1;
-    NSString *fakeIdentifier;
-    
-    // At least ensure that identifier hasn't been already used.  
-    fakeIdentifier = [NSString stringWithFormat:@"WebPreferences%d", instanceCount++];
-    while ([[self class] _getInstanceForIdentifier:fakeIdentifier]){
-        fakeIdentifier = [NSString stringWithFormat:@"WebPreferences%d", instanceCount++];
-    }
-    
-    return [self initWithIdentifier:fakeIdentifier];
+    return [self initWithIdentifier:nil];
 }
 
 static WebPreferences *_standardPreferences = nil;
@@ -183,7 +172,7 @@ NS_ENDHANDLER
 + (WebPreferences *)standardPreferences
 {
     if (_standardPreferences == nil) {
-        _standardPreferences = [[WebPreferences alloc] initWithIdentifier:nil];
+        _standardPreferences = [[WebPreferences alloc] init];
         [_standardPreferences setAutosaves:YES];
         [_standardPreferences _postPreferencesChangesNotification];
     }
@@ -215,7 +204,6 @@ NS_ENDHANDLER
         [NSNumber numberWithBool:YES],  WebKitResourceTimedLayoutEnabledPreferenceKey,
         [NSNumber numberWithBool:NO],   WebKitUserStyleSheetEnabledPreferenceKey,
         @"",                            WebKitUserStyleSheetLocationPreferenceKey,
-        [NSNumber numberWithBool:NO],   WebKitShouldPrintBackgroundsPreferenceKey,
         [NSNumber numberWithBool:YES],  WebKitJavaEnabledPreferenceKey,
         [NSNumber numberWithBool:YES],  WebKitJavaScriptEnabledPreferenceKey,
         [NSNumber numberWithBool:YES],  WebKitJavaScriptCanOpenWindowsAutomaticallyPreferenceKey,
@@ -442,16 +430,6 @@ NS_ENDHANDLER
     }
     
     [self _setStringValue:locationString forKey: WebKitUserStyleSheetLocationPreferenceKey];
-}
-
-- (BOOL)shouldPrintBackgrounds
-{
-    return [self _boolValueForKey: WebKitShouldPrintBackgroundsPreferenceKey];
-}
-
-- (void)setShouldPrintBackgrounds:(BOOL)flag
-{
-    [self _setBoolValue: flag forKey: WebKitShouldPrintBackgroundsPreferenceKey];
 }
 
 - (BOOL)isJavaEnabled

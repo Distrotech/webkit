@@ -32,9 +32,6 @@
 class QPainter;
 class QRect;
 
-// Uncomment to enable INCREMENTAL_REPAINTING
-//#define INCREMENTAL_REPAINTING
-
 namespace DOM {
     class HTMLDocumentImpl;
     class DocumentImpl;
@@ -141,9 +138,6 @@ public:
      */
     virtual void setHScrollBarMode ( ScrollBarMode mode );
 
-    // Sets both horizontal and vertical modes.
-    virtual void setScrollBarsMode(ScrollBarMode mode);
-    
     /**
      * Prints the HTML document.
      */
@@ -153,16 +147,6 @@ public:
      * ensure the display is up to date
      */
     void layout();
-
-    bool inLayout() const;
-
-#ifdef INCREMENTAL_REPAINTING
-    bool needsFullRepaint() const;
-#endif
-    
-#if APPLE_CHANGES
-    void resetScrollBars();
-#endif
 
 signals:
     void cleared();
@@ -203,13 +187,10 @@ public:
 
     void timerEvent ( QTimerEvent * );
 
-    void repaintRectangle(const QRect& r, bool immediate);
-    
 #if APPLE_CHANGES
     QWidget *topLevelWidget() const;
     QPoint mapToGlobal(const QPoint &) const;
     void adjustViewSize();
-    void initScrollBars();
 #endif
 
     void ref() { ++_refCount; }
@@ -223,13 +204,12 @@ private:
 
     void resetCursor();
 
-#ifdef INCREMENTAL_REPAINTING
-    void scheduleRelayout();
-#else
     void scheduleRelayout(khtml::RenderObject* clippedObj=0);
-#endif
     void unscheduleRelayout();
 
+    void scheduleRepaint(int x, int y, int w, int h);
+    void unscheduleRepaint();
+    
     /**
      * Paints the HTML document to a QPainter.
      * The document will be scaled to match the width of
@@ -276,13 +256,9 @@ private:
 
     void complete();
 
-    void applyBodyScrollQuirk(khtml::RenderObject* o, ScrollBarMode& hMode, ScrollBarMode& vMode);
-    
-#ifndef INCREMENTAL_REPAINTING
     // Returns the clipped object we will repaint when we perform our scheduled layout.
     khtml::RenderObject* layoutObject() { return m_layoutObject; }
-#endif
-    
+
     // ------------------------------------- member variables ------------------------------------
  private:
     unsigned _refCount;
@@ -297,12 +273,10 @@ private:
     KHTMLViewPrivate *d;
 
     QString m_medium;   // media type
-
-#ifndef INCREMENTAL_REPAINTING
+    
     // An overflow: hidden clipped object.  If this is set, a scheduled layout will only repaint
     // the object's clipped area, and it will not do a full repaint.
     khtml::RenderObject* m_layoutObject;
-#endif
 };
 
 #endif

@@ -8,7 +8,6 @@
  */
 
 #import <Cocoa/Cocoa.h>
-#import <WebKit/WebIconDatabase.h>
 
 @class WebFileDatabase;
 

@@ -41,8 +41,6 @@
 
 using namespace KJS;
 
-using DOM::DOMException;
-
 // -------------------------------------------------------------------------
 /* Source for DOMNodeProtoTable. Use "make hashtables" to regenerate.
 @begin DOMNodeProtoTable 13
@@ -367,13 +365,13 @@ void DOMNode::putValue(ExecState *exec, int token, const Value& value, int /*att
     break;
   case ScrollTop: {
     khtml::RenderObject *rend = node.handle() ? node.handle()->renderer() : 0L;
-    if (rend && rend->layer() && rend->style()->hidesOverflow())
+    if (rend && rend->layer())
         rend->layer()->scrollToYOffset(value.toInt32(exec));
     break;
   }
   case ScrollLeft: {
     khtml::RenderObject *rend = node.handle() ? node.handle()->renderer() : 0L;
-    if (rend && rend->layer() && rend->style()->hidesOverflow())
+    if (rend && rend->layer())
       rend->layer()->scrollToXOffset(value.toInt32(exec));
     break;
   }
@@ -1632,32 +1630,24 @@ Value DOMCharacterDataProtoFunc::tryCall(ExecState *exec, Object &thisObj, const
   }
   DOM::CharacterData data = static_cast<DOMCharacterData *>(thisObj.imp())->toData();
   switch(id) {
-    case DOMCharacterData::SubstringData: {
-      const int count = args[1].toInteger(exec);
-      if (count < 0)
-        throw DOMException(DOMException::INDEX_SIZE_ERR);
-      return getStringOrNull(data.substringData(args[0].toInteger(exec), count));
-    }
+    case DOMCharacterData::SubstringData:
+      return getStringOrNull(data.substringData(args[0].toInteger(exec),args[1].toInteger(exec)));
     case DOMCharacterData::AppendData:
       data.appendData(args[0].toString(exec).string());
       return Undefined();
+      break;
     case DOMCharacterData::InsertData:
-      data.insertData(args[0].toInteger(exec), args[1].toString(exec).string());
+      data.insertData(args[0].toInteger(exec),args[1].toString(exec).string());
+      return  Undefined();
+      break;
+    case DOMCharacterData::DeleteData:
+      data.deleteData(args[0].toInteger(exec),args[1].toInteger(exec));
+      return  Undefined();
+      break;
+    case DOMCharacterData::ReplaceData:
+      data.replaceData(args[0].toInteger(exec),args[1].toInteger(exec),args[2].toString(exec).string());
       return Undefined();
-    case DOMCharacterData::DeleteData: {
-      const int count = args[1].toInteger(exec);
-      if (count < 0)
-        throw DOMException(DOMException::INDEX_SIZE_ERR);
-      data.deleteData(args[0].toInteger(exec), count);
-      return Undefined();
-    }
-    case DOMCharacterData::ReplaceData: {
-      const int count = args[1].toInteger(exec);
-      if (count < 0)
-        throw DOMException(DOMException::INDEX_SIZE_ERR);
-      data.replaceData(args[0].toInteger(exec), count, args[2].toString(exec).string());
-      return Undefined();
-    }
+      break;
     default:
       return Undefined();
   }

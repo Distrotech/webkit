@@ -27,8 +27,6 @@
 
 QRect KWinModule::workArea() const
 {
-    // No need to block exceptions because these simple NSScreen calls can't throw.
-
     NSRect visibleRect = [[NSScreen mainScreen] visibleFrame];
     NSRect rect = [[NSScreen mainScreen] frame];
     return QRect((int)visibleRect.origin.x,

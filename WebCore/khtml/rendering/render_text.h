@@ -41,10 +41,10 @@ namespace khtml
     class RenderText;
     class RenderStyle;
 
-class InlineTextBox : public InlineBox
+class TextRun : public InlineBox
 {
 public:
-    InlineTextBox(RenderObject* obj)
+    TextRun(RenderObject* obj)
     :InlineBox(obj)
     {
         m_start = 0;
@@ -53,7 +53,7 @@ public:
         m_toAdd = 0;
     }
     
-    void detach(RenderArena* arena);
+    void detach(RenderArena* renderArena);
     
     // Overloaded new operator.  Derived classes must override operator new
     // in order to allocate out of the RenderArena.
@@ -70,7 +70,7 @@ public:
     void setSpaceAdd(int add) { m_width -= m_toAdd; m_toAdd = add; m_width += m_toAdd; }
     int spaceAdd() { return m_toAdd; }
 
-    virtual bool isInlineTextBox() { return true; }
+    virtual bool isTextRun() { return true; }
     
     void paintDecoration( QPainter *pt, int _tx, int _ty, int decoration);
     void paintSelection(const Font *f, RenderText *text, QPainter *p, RenderStyle* style, int tx, int ty, int startPos, int endPos);
@@ -93,7 +93,7 @@ public:
     int m_toAdd : 14; // for justified text
 private:
     // this is just for QVector::bsearch. Don't use it otherwise
-    InlineTextBox(int _x, int _y)
+    TextRun(int _x, int _y)
         :InlineBox(0)
     {
         m_x = _x;
@@ -103,12 +103,12 @@ private:
     friend class RenderText;
 };
 
-class InlineTextBoxArray : public QPtrVector<InlineTextBox>
+class TextRunArray : public QPtrVector<TextRun>
 {
 public:
-    InlineTextBoxArray();
+    TextRunArray();
 
-    InlineTextBox* first();
+    TextRun* first();
 
     int	  findFirstMatching( Item ) const;
     virtual int compareItems( Item, Item );
@@ -116,7 +116,7 @@ public:
 
 class RenderText : public RenderObject
 {
-    friend class InlineTextBox;
+    friend class TextRun;
 
 public:
     RenderText(DOM::NodeImpl* node, DOM::DOMStringImpl *_str);
@@ -131,8 +131,8 @@ public:
     virtual void paintObject(QPainter *, int x, int y, int w, int h,
                              int tx, int ty, PaintAction paintAction);
 
-    void deleteRuns();
-    virtual void detach();
+    void deleteRuns(RenderArena *renderArena = 0);
+    virtual void detach(RenderArena* renderArena);
     
     DOM::DOMString data() const { return str; }
     DOM::DOMStringImpl *string() const { return str; }
@@ -141,8 +141,7 @@ public:
     
     virtual void layout() {assert(false);}
 
-    virtual bool nodeAtPoint(NodeInfo& info, int x, int y, int tx, int ty,
-                             HitTestAction hitTestAction = HitTestAll, bool inside=false);
+    virtual bool nodeAtPoint(NodeInfo& info, int x, int y, int tx, int ty, bool inside = false);
 
     // Return before, after (offset set to max), or inside the text, at @p offset
     virtual FindSelectionResult checkSelectionPointIgnoringContinuations
@@ -208,7 +207,7 @@ public:
     { return static_cast<DOM::TextImpl*>(RenderObject::element()); }
 
 #if APPLE_CHANGES
-    InlineTextBoxArray inlineTextBoxes() const { return m_lines; }
+    TextRunArray textRuns() const { return m_lines; }
     int widthFromCache(const Font *, int start, int len) const;
     bool shouldUseMonospaceCache(const Font *) const;
     void cacheWidths();
@@ -221,10 +220,10 @@ protected:
 #if APPLE_CHANGES
 public:
 #endif
-    InlineTextBox * findNextInlineTextBox( int offset, int &pos );
+    TextRun * findTextRun( int offset, int &pos );
 
 protected: // members
-    InlineTextBoxArray m_lines;
+    TextRunArray m_lines;
     DOM::DOMStringImpl *str; //
 
     short m_lineHeight;

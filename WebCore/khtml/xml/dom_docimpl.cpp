@@ -69,10 +69,6 @@
 
 #include <kio/job.h>
 
-#if APPLE_CHANGES
-#include "KWQAccObjectCache.h"
-#endif
-
 using namespace DOM;
 using namespace khtml;
 
@@ -246,10 +242,6 @@ DocumentImpl::DocumentImpl(DOMImplementationImpl *_implementation, KHTMLView *v)
 
     m_view = v;
     m_renderArena = 0;
-
-#if APPLE_CHANGES
-    m_accCache = 0;
-#endif
     
     if ( v ) {
         m_docLoader = new DocLoader(v->part(), this );
@@ -292,7 +284,6 @@ DocumentImpl::DocumentImpl(DOMImplementationImpl *_implementation, KHTMLView *v)
     m_namespaceURIs[0] = new DOMStringImpl(xhtml.unicode(), xhtml.length());
     m_namespaceURIs[0]->ref();
     m_focusNode = 0;
-    m_hoverNode = 0;
     m_defaultView = new AbstractViewImpl(this);
     m_defaultView->ref();
     m_listenerTypes = 0;
@@ -345,23 +336,13 @@ DocumentImpl::~DocumentImpl()
     delete [] m_namespaceURIs;
     m_defaultView->deref();
     m_styleSheets->deref();
-
     if (m_focusNode)
         m_focusNode->deref();
-    if (m_hoverNode)
-        m_hoverNode->deref();
-    
+        
     if (m_renderArena){
         delete m_renderArena;
         m_renderArena = 0;
     }
-
-#if APPLE_CHANGES
-    if (m_accCache){
-        delete m_accCache;
-        m_accCache = 0;
-    }
-#endif
     
     if (m_decoder){
         m_decoder->deref();
@@ -602,8 +583,6 @@ unsigned short DocumentImpl::nodeType() const
 
 ElementImpl *DocumentImpl::createHTMLElement( const DOMString &name )
 {
-    if (!isValidName(name)) throw DOMException(DOMException::INVALID_CHARACTER_ERR);
-
     uint id = khtml::getTagID( name.string().lower().latin1(), name.string().length() );
 
     ElementImpl *n = 0;
@@ -946,16 +925,10 @@ void DocumentImpl::recalcStyle( StyleChange change )
 	fontDef.italic = f.italic();
 	fontDef.weight = f.weight();
 #if APPLE_CHANGES
-        bool printing = m_paintDevice->devType() == QInternal::Printer;
-        fontDef.usePrinterFont = printing;
+        fontDef.usePrinterFont = m_paintDevice->devType() == QInternal::Printer;
 #endif
         if (m_view) {
             const KHTMLSettings *settings = m_view->part()->settings();
-#if APPLE_CHANGES
-            if (printing && !settings->shouldPrintBackgrounds()) {
-                _style->setShouldCorrectTextColor(true);
-            }
-#endif
             QString stdfont = settings->stdFontName();
             if ( !stdfont.isEmpty() ) {
                 fontDef.family.setFamily(stdfont);
@@ -988,8 +961,13 @@ void DocumentImpl::recalcStyle( StyleChange change )
             n->recalcStyle( change );
     //kdDebug( 6020 ) << "TIME: recalcStyle() dt=" << qt.elapsed() << endl;
 
-    if (changed() && m_view)
-	m_view->layout();
+    // ### should be done by the rendering tree itself,
+    // this way is rather crude and CPU intensive
+    if ( changed() ) {
+        renderer()->setNeedsLayoutAndMinMaxRecalc();
+	renderer()->layout();
+	renderer()->repaint();
+    }
 
 bail_out:
     setChanged( false );
@@ -1090,7 +1068,7 @@ void DocumentImpl::detach()
     NodeBaseImpl::detach();
 
     if ( render )
-        render->detach();
+        render->detach(m_renderArena);
 
     if (m_paintDevice == m_view)
         setPaintDevice(0);
@@ -1101,15 +1079,6 @@ void DocumentImpl::detach()
         m_renderArena = 0;
     }
 }
-
-#if APPLE_CHANGES
-KWQAccObjectCache* DocumentImpl::getOrCreateAccObjectCache()
-{
-    if (!m_accCache)
-        m_accCache = new KWQAccObjectCache;
-    return m_accCache;
-}
-#endif
 
 void DocumentImpl::setVisuallyOrdered()
 {
@@ -2047,17 +2016,6 @@ void DocumentImpl::recalcStyleSelector()
     m_styleSelectorDirty = false;
 }
 
-void DocumentImpl::setHoverNode(NodeImpl* newHoverNode)
-{
-    if (m_hoverNode != newHoverNode) {
-        if (m_hoverNode)
-            m_hoverNode->deref();
-        m_hoverNode = newHoverNode;
-        if (m_hoverNode)
-            m_hoverNode->ref();
-    }    
-}
-
 void DocumentImpl::setFocusNode(NodeImpl *newFocusNode)
 {    
     // Make sure newFocusNode is actually in this document
@@ -2317,7 +2275,7 @@ ElementImpl *DocumentImpl::ownerElement()
     KHTMLPart *parent = childPart->parentPart();
     if (!parent)
         return 0;
-    ChildFrame *childFrame = parent->childFrame(childPart);
+    ChildFrame *childFrame = parent->frame(childPart);
     if (!childFrame)
         return 0;
     RenderPart *renderPart = childFrame->m_frame;
@@ -2358,29 +2316,6 @@ void DocumentImpl::setDomain(const DOMString &newDomain, bool force /*=false*/)
     }
 }
 
-bool DocumentImpl::isValidName(const DOMString &name)
-{
-    static const char validFirstCharacter[] = "ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxyz";
-    static const char validSubsequentCharacter[] = "ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxyz0-9-_:.";
-    const unsigned length = name.length();
-    if (length == 0)
-        return false;
-    const QChar * const characters = name.unicode();
-    const char fc = characters[0];
-    if (!fc)
-        return false;
-    if (strchr(validFirstCharacter, fc) == 0)
-        return false;
-    for (unsigned i = 1; i < length; ++i) {
-        const char sc = characters[i];
-        if (!sc)
-            return false;
-        if (strchr(validSubsequentCharacter, sc) == 0)
-            return false;
-    }
-    return true;
-}
-
 #if APPLE_CHANGES
 
 void DocumentImpl::setDecoder(Decoder *decoder)
@@ -2405,8 +2340,6 @@ bool DocumentImpl::inPageCache()
 void DocumentImpl::setInPageCache(bool flag)
 {
     m_inPageCache = flag;
-    if (m_view && m_inPageCache)
-        m_view->resetScrollBars();
 }
 
 void DocumentImpl::passwordFieldAdded()

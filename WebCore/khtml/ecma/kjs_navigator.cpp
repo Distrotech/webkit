@@ -46,8 +46,6 @@ namespace KJS {
     public:
         PluginBase(ExecState *exec);
         virtual ~PluginBase();
-        
-        void refresh(bool reload);
 
         struct MimeClassInfo;
         struct PluginInfo;
@@ -323,17 +321,6 @@ PluginBase::~PluginBase()
     }
 }
 
-void PluginBase::refresh(bool reload)
-{
-    delete plugins;
-    delete mimes;
-    plugins = 0;
-    mimes = 0;
-#if APPLE_CHANGES
-    RefreshPlugins(reload);
-#endif
-}
-
 
 /*******************************************************************/
 IMPLEMENT_PROTOFUNC(PluginsFunc)
@@ -455,10 +442,9 @@ Value MimeType::get(ExecState *exec, const Identifier &propertyName) const
 }
 
 
-Value PluginsFunc::tryCall(ExecState *exec, Object &, const List &args)
+Value PluginsFunc::tryCall(ExecState *, Object &, const List &)
 {
-    PluginBase(exec).refresh(args[0].toBoolean(exec));
-    return Undefined();
+  return Undefined();
 }
 
 

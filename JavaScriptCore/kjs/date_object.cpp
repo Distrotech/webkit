@@ -70,12 +70,118 @@ const time_t invalidDate = -1;
 
 using KJS::UString;
 
+#define gmtime(x) gmtimeUsingCF(x)
+#define localtime(x) localtimeUsingCF(x)
+#define mktime(x) mktimeUsingCF(x)
+#define timegm(x) timegmUsingCF(x)
+#define time(x) timeUsingCF(x)
+
 #define ctime(x) NotAllowedToCallThis()
 #define strftime(a, b, c, d) NotAllowedToCallThis()
 
 static const char * const weekdayName[7] = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
 static const char * const monthName[12] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
     
+static struct tm *tmUsingCF(time_t clock, CFTimeZoneRef timeZone)
+{
+    static struct tm result;
+    static char timeZoneCString[128];
+    
+    CFAbsoluteTime absoluteTime = clock - kCFAbsoluteTimeIntervalSince1970;
+    CFGregorianDate date = CFAbsoluteTimeGetGregorianDate(absoluteTime, timeZone);
+
+    CFStringRef abbreviation = CFTimeZoneCopyAbbreviation(timeZone, absoluteTime);
+    CFStringGetCString(abbreviation, timeZoneCString, sizeof(timeZoneCString), kCFStringEncodingASCII);
+    CFRelease(abbreviation);
+
+    result.tm_sec = (int)date.second;
+    result.tm_min = date.minute;
+    result.tm_hour = date.hour;
+    result.tm_mday = date.day;
+    result.tm_mon = date.month - 1;
+    result.tm_year = date.year - 1900;
+    result.tm_wday = CFAbsoluteTimeGetDayOfWeek(absoluteTime, timeZone) % 7;
+    result.tm_yday = CFAbsoluteTimeGetDayOfYear(absoluteTime, timeZone) - 1;
+    result.tm_isdst = CFTimeZoneIsDaylightSavingTime(timeZone, absoluteTime);
+    result.tm_gmtoff = (int)CFTimeZoneGetSecondsFromGMT(timeZone, absoluteTime);
+    result.tm_zone = timeZoneCString;
+    
+    return &result;
+}
+
+static CFTimeZoneRef UTCTimeZone()
+{
+    static CFTimeZoneRef zone = CFTimeZoneCreateWithTimeIntervalFromGMT(NULL, 0.0);
+    return zone;
+}
+
+static CFTimeZoneRef CopyLocalTimeZone()
+{
+    CFTimeZoneRef zone = CFTimeZoneCopyDefault();
+    if (zone) {
+        return zone;
+    }
+    zone = UTCTimeZone();
+    CFRetain(zone);
+    return zone;
+}
+
+static struct tm *gmtimeUsingCF(const time_t *clock)
+{
+    return tmUsingCF(*clock, UTCTimeZone());
+}
+
+static struct tm *localtimeUsingCF(const time_t *clock)
+{
+    CFTimeZoneRef timeZone = CopyLocalTimeZone();
+    struct tm *result = tmUsingCF(*clock, timeZone);
+    CFRelease(timeZone);
+    return result;
+}
+
+static time_t timetUsingCF(struct tm *tm, CFTimeZoneRef timeZone)
+{
+    CFGregorianDate date;
+    date.second = tm->tm_sec;
+    date.minute = tm->tm_min;
+    date.hour = tm->tm_hour;
+    date.day = tm->tm_mday;
+    date.month = tm->tm_mon + 1;
+    date.year = tm->tm_year + 1900;
+
+    // CFGregorianDateGetAbsoluteTime will go nuts if the year is too large or small,
+    // so we pick an arbitrary cutoff.
+    if (date.year < -2500 || date.year > 2500) {
+        return invalidDate;
+    }
+
+    CFAbsoluteTime absoluteTime = CFGregorianDateGetAbsoluteTime(date, timeZone);
+
+    return (time_t)(absoluteTime + kCFAbsoluteTimeIntervalSince1970);
+}
+
+static time_t mktimeUsingCF(struct tm *tm)
+{
+    CFTimeZoneRef timeZone = CopyLocalTimeZone();
+    time_t result = timetUsingCF(tm, timeZone);
+    CFRelease(timeZone);
+    return result;
+}
+
+static time_t timegmUsingCF(struct tm *tm)
+{
+    return timetUsingCF(tm, UTCTimeZone());
+}
+
+static time_t timeUsingCF(time_t *clock)
+{
+    time_t result = (time_t)(CFAbsoluteTimeGetCurrent() + kCFAbsoluteTimeIntervalSince1970);
+    if (clock) {
+        *clock = result;
+    }
+    return result;
+}
+
 static UString formatDate(struct tm &tm)
 {
     char buffer[100];
@@ -390,14 +496,12 @@ Value DateProtoFuncImp::call(ExecState *exec, Object &thisObj, const List &args)
     break;
   case GetTimezoneOffset:
 #if defined BSD || defined(__APPLE__)
-    result = Number(-t->tm_gmtoff / 60);
+    result = Number(-( t->tm_gmtoff / 60 ) + ( t->tm_isdst ? 60 : 0 ));
 #else
 #  if defined(__BORLANDC__)
 #error please add daylight savings offset here!
-    // FIXME: Using the daylight value was wrong for BSD, maybe wrong here too.
     result = Number(_timezone / 60 - (_daylight ? 60 : 0));
 #  else
-    // FIXME: Using the daylight value was wrong for BSD, maybe wrong here too.
     result = Number(( timezone / 60 - ( daylight ? 60 : 0 )));
 #  endif
 #endif
@@ -725,11 +829,6 @@ static const struct {
     { 0, 0 }
 };
 
-static inline bool isSpaceOrTab(char c)
-{
-    return c == ' ' || c == '\t';
-}
-
 time_t KJS::KRFCDate_parseDate(const UString &_date)
 {
      // This parse a date in the form:
@@ -759,14 +858,14 @@ time_t KJS::KRFCDate_parseDate(const UString &_date)
      errno = 0;
 
      // Skip leading space
-     while (isSpaceOrTab(*dateString))
+     while(*dateString && isspace(*dateString))
      	dateString++;
 
      const char *wordStart = dateString;
      // Check contents of first words if not number
      while(*dateString && !isdigit(*dateString))
      {
-        if ( isSpaceOrTab(*dateString) && dateString - wordStart >= 3 )
+        if ( isspace(*dateString) && dateString - wordStart >= 3 )
         {
           monthStr[0] = tolower(*wordStart++);
           monthStr[1] = tolower(*wordStart++);
@@ -780,7 +879,7 @@ time_t KJS::KRFCDate_parseDate(const UString &_date)
               month = position / 3; // Jan=00, Feb=01, Mar=02, ..
             }
           }
-          while (isSpaceOrTab(*dateString))
+          while(*dateString && isspace(*dateString))
              dateString++;
           wordStart = dateString;
         }
@@ -788,7 +887,7 @@ time_t KJS::KRFCDate_parseDate(const UString &_date)
            dateString++;
      }
 
-     while (isSpaceOrTab(*dateString))
+     while(*dateString && isspace(*dateString))
      	dateString++;
 
      if (!*dateString)
@@ -808,14 +907,14 @@ time_t KJS::KRFCDate_parseDate(const UString &_date)
      if (*dateString == '-' || *dateString == ',')
      	dateString++;
 
-     while (isSpaceOrTab(*dateString))
+     while(*dateString && isspace(*dateString))
      	dateString++;
 
      if ( month == -1 ) // not found yet
      {
         for(int i=0; i < 3;i++)
         {
-           if (!*dateString || (*dateString == '-') || isSpaceOrTab(*dateString))
+           if (!*dateString || (*dateString == '-') || isspace(*dateString))
               return invalidDate;
            monthStr[i] = tolower(*dateString++);
         }
@@ -823,7 +922,7 @@ time_t KJS::KRFCDate_parseDate(const UString &_date)
 
         newPosStr = (char*)strstr(haystack, monthStr);
 
-        if (!newPosStr || (newPosStr - haystack) % 3 != 0)
+        if (!newPosStr)
            return invalidDate;
 
         month = (newPosStr-haystack)/3; // Jan=00, Feb=01, Mar=02, ..
@@ -831,14 +930,14 @@ time_t KJS::KRFCDate_parseDate(const UString &_date)
         if ((month < 0) || (month > 11))
            return invalidDate;
 
-        while (*dateString && *dateString != '-' && !isSpaceOrTab(*dateString))
+        while(*dateString && (*dateString != '-') && !isspace(*dateString))
            dateString++;
 
         if (!*dateString)
            return invalidDate;
 
         // '-99 23:12:40 GMT'
-        if (*dateString != '-' && !isSpaceOrTab(*dateString))
+        if ((*dateString != '-') && !isspace(*dateString))
            return invalidDate;
         dateString++;
      }
@@ -854,14 +953,15 @@ time_t KJS::KRFCDate_parseDate(const UString &_date)
      dateString = newPosStr;
 
      // Don't fail if the time is missing.
-     if (*dateString == ':' || (isSpaceOrTab(*dateString) && isdigit(dateString[1])))
+     if (*dateString)
      {
         if (*dateString == ':') {
           hour = year;
           gotYear = false;
         } else {
           // ' 23:12:40 GMT'
-          ++dateString;
+          if (!isspace(*dateString++))
+            return invalidDate;
         
           hour = strtol(dateString, &newPosStr, 10);
           if (errno)
@@ -887,6 +987,13 @@ time_t KJS::KRFCDate_parseDate(const UString &_date)
         if ((minute < 0) || (minute > 59))
            return invalidDate;
 
+        if (!*dateString)
+           return invalidDate;
+
+        // ':40 GMT'
+        if (*dateString != ':' && !isspace(*dateString))
+           return invalidDate;
+
         // seconds are optional in rfc822 + rfc2822
         if (*dateString ==':') {
            dateString++;
@@ -898,17 +1005,19 @@ time_t KJS::KRFCDate_parseDate(const UString &_date)
 
            if ((second < 0) || (second > 59))
               return invalidDate;
+        } else {
+           dateString++;
         }
+
+        while(*dateString && isspace(*dateString))
+           dateString++;
      }
      
-     while (isSpaceOrTab(*dateString))
-        dateString++;
-
      if (!gotYear) {
         year = strtol(dateString, &newPosStr, 10);
         if (errno)
           return invalidDate;
-        while (isSpaceOrTab(*dateString))
+        while(*dateString && isspace(*dateString))
            dateString++;
      }
 
@@ -921,24 +1030,6 @@ time_t KJS::KRFCDate_parseDate(const UString &_date)
 
      if ((year < 1900) || (year > 2500))
      	return invalidDate;
-
-     if (strncasecmp(dateString, "AM", 2) == 0) {
-        if (hour < 1 || hour > 12)
-            return invalidDate;
-        if (hour == 12)
-            hour = 0;
-        dateString += 2;
-        while (isSpaceOrTab(*dateString))
-           dateString++;
-     } else if (strncasecmp(dateString, "PM", 2) == 0) {
-        if (hour < 1 || hour > 12)
-            return invalidDate;
-        if (hour != 12)
-            hour += 12;
-        dateString += 2;
-        while (isSpaceOrTab(*dateString))
-           dateString++;
-     }
 
      // don't fail if the time zone is missing, some
      // broken mail-/news-clients omit the time zone

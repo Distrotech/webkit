@@ -103,9 +103,8 @@ void DOMStringImpl::truncate(int len)
 
 void DOMStringImpl::remove(uint pos, int len)
 {
-  if(len <= 0) return;
   if(pos >= l ) return;
-  if((unsigned)len > l - pos)
+  if(pos+len > l)
     len = l - pos;
 
   uint newLen = l-len;
@@ -150,7 +149,7 @@ bool DOMStringImpl::containsOnlyWhitespace() const
 DOMStringImpl *DOMStringImpl::substring(uint pos, uint len)
 {
   if( pos >=l ) return new DOMStringImpl();
-  if(len > l - pos)
+  if(pos+len > l)
     len = l - pos;
 
   return new DOMStringImpl(s + pos, len);

@@ -23,9 +23,12 @@
 
 #import <float.h>
 
+#define NON_BREAKING_SPACE 0x00A0
 #define SPACE 0x0020
 
-#define ROUND_TO_INT(x) (unsigned)((x)+.5)
+#define IS_CONTROL_CHARACTER(c) ((c) < 0x0020 || (c) == 0x007F)
+
+#define ROUND_TO_INT(x) (unsigned int)((x)+.5)
 
 // Lose precision beyond 1000ths place. This is to work around an apparent
 // bug in CoreGraphics where there seem to be small errors to some metrics.
@@ -97,11 +100,21 @@ struct CharacterWidthIterator
     const WebCoreTextStyle *style;
     unsigned currentCharacter;
     CharacterShapeIterator shapeIterator;
-    unsigned needsShaping;
+    unsigned int needsShaping;
     float runWidthSoFar;
     int padding;
     int padPerSpace;
 };
+
+static void initializeCharacterWidthIterator (CharacterWidthIterator *iterator, WebTextRenderer *renderer, const WebCoreTextRun *run , const WebCoreTextStyle *style);
+static float widthForNextCharacter (CharacterWidthIterator *iterator);
+
+// These somewhat cryptically named constants were 'borrowed' from
+// some example carbon code.
+#define kFixedOne ((Fixed)1<<16)
+#define fixed1 ((Fixed) 0x00010000L)
+#define FixToFloat(f) ((float)((f)  * (1./(float)kFixedOne)))
+#define FloatToFixed(a) ((Fixed)((float)(a) * fixed1))
 
 static inline BOOL shouldUseATSU(const WebCoreTextRun *run)
 {
@@ -131,21 +144,6 @@ static inline BOOL shouldUseATSU(const WebCoreTextRun *run)
     }
     
     return NO;
-}
-
-static inline BOOL isControlCharacter(UniChar c)
-{
-    return c < 0x0020 || c == 0x007F;
-}
-
-static inline BOOL isAlternateSpace(UniChar c)
-{
-    return c == '\n' || c == 0xA0;
-}
-
-static inline BOOL isSpace(UniChar c)
-{
-    return c == SPACE || isAlternateSpace(c);
 }
 
 @interface NSLanguage : NSObject 
@@ -352,7 +350,7 @@ static inline WebGlyphWidth widthForGlyph (WebTextRenderer *renderer, ATSGlyphRe
 }
 
 
-static void initializeCharacterWidthIterator (CharacterWidthIterator *iterator, WebTextRenderer *renderer, const WebCoreTextRun *run , const WebCoreTextStyle *style) 
+void initializeCharacterWidthIterator (CharacterWidthIterator *iterator, WebTextRenderer *renderer, const WebCoreTextRun *run , const WebCoreTextStyle *style) 
 {
     iterator->needsShaping = initializeCharacterShapeIterator (&iterator->shapeIterator, run);
     iterator->renderer = renderer;
@@ -369,10 +367,9 @@ static void initializeCharacterWidthIterator (CharacterWidthIterator *iterator, 
         int from = run->from;
         int len = run->to - from;
         int k;
-        for (k = from; k < from + len; k++) {
-            if (isSpace(run->characters[k])) {
+        for (k = from; k < from + len; k++){
+            if (run->characters[k] == NON_BREAKING_SPACE || run->characters[k] == SPACE)
                 numSpaces++;
-            }
         }
         iterator->padPerSpace = CEIL_TO_INT ((((float)style->padding) / ((float)numSpaces)));
     }
@@ -394,7 +391,7 @@ static float widthAndGlyphForSurrogate (WebTextRenderer *renderer, UniChar high,
 
     if (*glyphID == 0){
         UniChar surrogates[2];
-        unsigned clusterLength;
+        unsigned int clusterLength;
         
         clusterLength = 2;
         surrogates[0] = high;
@@ -420,7 +417,7 @@ static float widthForNextCharacter (CharacterWidthIterator *iterator)
     const WebCoreTextRun *run = iterator->run;
     NSFont *font = renderer->font;
     UniChar c;
-    unsigned offset = iterator->currentCharacter;
+    unsigned int offset = iterator->currentCharacter;
     WebGlyphWidth width;
 
     if (offset >= run->length)
@@ -516,18 +513,13 @@ static BOOL FillStyleWithAttributes(ATSUStyle style, NSFont *theFont)
 {
     if (theFont) {
         ATSUFontID fontId = (ATSUFontID)[theFont _atsFontID];
-        LOG (FontCache, "FillStyleWithAttributes:  font = %p,%@, _atsFontID = %x\n", theFont, theFont, (unsigned)fontId);
         ATSUAttributeTag tag = kATSUFontTag;
         ByteCount size = sizeof(ATSUFontID);
         ATSUFontID *valueArray[1] = {&fontId};
-        OSStatus status;
 
         if (fontId) {
-            status = ATSUSetAttributes(style, 1, &tag, &size, (void *)valueArray);
-            if (status != noErr){
-                LOG (FontCache, "FillStyleWithAttributes failed(%d):  font = %p,%@, _atsFontID = %x\n", (int)status, theFont, theFont, (unsigned)fontId);
+            if (ATSUSetAttributes(style, 1, &tag, &size, (void *)valueArray) != noErr)
                 return NO;
-            }
         }
         else {
             return NO;
@@ -538,9 +530,9 @@ static BOOL FillStyleWithAttributes(ATSUStyle style, NSFont *theFont)
 }
 
 
-static unsigned findLengthOfCharacterCluster(const UniChar *characters, unsigned length)
+static unsigned int findLengthOfCharacterCluster(const UniChar *characters, unsigned int length)
 {
-    unsigned k;
+    unsigned int k;
 
     if (length <= 1)
         return length;
@@ -630,7 +622,7 @@ static inline BOOL _fontContainsString (NSFont *font, NSString *string)
 }
 
 
-/* Convert newlines and non-breaking spaces into spaces, and skip control characters. */
+/* Convert non-breaking spaces into spaces, and skip control characters. */
 - (void)convertCharacters: (const UniChar *)characters length: (unsigned)numCharacters toGlyphs: (ATSGlyphVector *)glyphs skipControlCharacters:(BOOL)skipControlCharacters
 {
     unsigned i, numCharactersInBuffer;
@@ -640,7 +632,7 @@ static inline BOOL _fontContainsString (NSFont *font, NSString *string)
     
     for (i = 0; i < numCharacters; i++) {
         UniChar c = characters[i];
-        if ((skipControlCharacters && isControlCharacter(c)) || isAlternateSpace(c)) {
+        if ((skipControlCharacters && IS_CONTROL_CHARACTER(c)) || c == NON_BREAKING_SPACE) {
             break;
         }
     }
@@ -653,9 +645,9 @@ static inline BOOL _fontContainsString (NSFont *font, NSString *string)
         numCharactersInBuffer = 0;
         for (i = 0; i < numCharacters; i++) {
             UniChar c = characters[i];
-            if (isAlternateSpace(c)) {
+            if (c == NON_BREAKING_SPACE) {
                 buffer[numCharactersInBuffer++] = SPACE;
-            } else if (!(skipControlCharacters && isControlCharacter(c))) {
+            } else if (!(skipControlCharacters && IS_CONTROL_CHARACTER(c))) {
                 buffer[numCharactersInBuffer++] = characters[i];
             }
         }
@@ -855,7 +847,7 @@ static NSString *WebFallbackFontFamily;
     // in the appkit.
     CGFontRef cgFont = [font _backingCGSFont];
     const CGFontHMetrics *metrics = CGFontGetHMetrics(cgFont);
-    unsigned unitsPerEm = CGFontGetUnitsPerEm(cgFont);
+    unsigned int unitsPerEm = CGFontGetUnitsPerEm(cgFont);
     float pointSize = [font pointSize];
     float asc = (ScaleEmToUnits(metrics->ascent, unitsPerEm)*pointSize);
     float dsc = (-ScaleEmToUnits(metrics->descent, unitsPerEm)*pointSize);
@@ -937,7 +929,7 @@ static NSString *WebFallbackFontFamily;
     UniChar localCharacterBuffer[LOCAL_BUFFER_SIZE];
     UniChar *characterBuffer = localCharacterBuffer;
     const UniChar *usedCharacterBuffer = CFStringGetCharactersPtr((CFStringRef)string);
-    unsigned length;
+    unsigned int length;
     int width;
 
     // Get the characters from the string into a buffer.
@@ -1037,7 +1029,7 @@ static void _drawGlyphs(NSFont *font, NSColor *color, CGGlyph *glyphs, CGSize *a
     CGSize *advances, localAdvanceBuffer[LOCAL_BUFFER_SIZE];
     int numGlyphs = 0, i, startGlyph = 0, endGlyph = 0;
     float startX;
-    unsigned length = run->length;
+    unsigned int length = run->length;
     
     if (run->length == 0)
         return;
@@ -1128,7 +1120,7 @@ static void _drawGlyphs(NSFont *font, NSColor *color, CGGlyph *glyphs, CGSize *a
     CGSize *advances, localAdvanceBuffer[LOCAL_BUFFER_SIZE];
     int numGlyphs = 0, i, startGlyph = 0, endGlyph = 0;
     float startX;
-    unsigned length = run->length;
+    unsigned int length = run->length;
     
     if (run->length == 0)
         return;
@@ -1357,7 +1349,7 @@ static const char *joiningNames[] = {
 - (float)_CG_floatWidthForRun:(const WebCoreTextRun *)run style:(const WebCoreTextStyle *)style widths: (float *)widthBuffer fonts: (NSFont **)fontBuffer glyphs: (CGGlyph *)glyphBuffer  startGlyph:(int *)startGlyph endGlyph:(int *)endGlyph numGlyphs: (int *)_numGlyphs
 {
     float totalWidth = 0, widthFromStart = 0;
-    unsigned i, clusterLength;
+    unsigned int i, clusterLength;
     NSFont *substituteFont = nil;
     ATSGlyphRef glyphID;
     float lastWidth = 0;
@@ -1369,11 +1361,14 @@ static const char *joiningNames[] = {
     int to = run->to;
     int len = to - from;
     const UniChar *characters = run->characters;
-    unsigned stringLength = run->length;
+    unsigned int stringLength = run->length;
     int pos = run->from;
     int padding = style->padding;
     
-    if (stringLength <= 0 || len <= 0) {
+    if (run->length <= 0)
+        return 0;
+        
+    if (len <= 0){
         if (_numGlyphs)
             *_numGlyphs = 0;
         return 0;
@@ -1390,7 +1385,7 @@ static const char *joiningNames[] = {
         // FIXME:  Change to use the new CharacterShapeIterator internal API.
         shaped = shapedString (run, &lengthOut);        
         if (shaped){
-             if (stringLength < LOCAL_BUFFER_SIZE)
+             if (run->length < LOCAL_BUFFER_SIZE)
                  munged = &_localMunged[0];
              else
                  munged = (UniChar *)malloc(stringLength * sizeof(UniChar));
@@ -1418,10 +1413,9 @@ static const char *joiningNames[] = {
     if (style->padding > 0){
         int k;
         // Distribute the padding over the spaces in the entire run.
-        for (k = 0; k < (int)stringLength; k++) {
-            if (isSpace(characters[k])) {
+        for (k = 0; k < (int)run->length; k++){
+            if (characters[k] == NON_BREAKING_SPACE || characters[k] == SPACE)
                 numSpaces++;
-            }
         }
         padPerSpace = CEIL_TO_INT ((((float)style->padding) / ((float)numSpaces)));
     }
@@ -1431,61 +1425,41 @@ static const char *joiningNames[] = {
         UniChar c = characters[i];
         BOOL foundMetrics = NO;
         
-        if (isAlternateSpace(c)) {
+        // Skip control characters.
+        if (IS_CONTROL_CHARACTER(c)) {
+            if (glyphBuffer && i < (unsigned int)(run->to) && endGlyph)
+                *endGlyph = numGlyphs-1;
+            continue;
+        }
+        
+        if (c == NON_BREAKING_SPACE) {
             c = SPACE;
         }
         
         // Drop out early if we've measured to the end of the requested
         // fragment.
         if ((int)i - pos >= len) {
-            if (style->applyRounding) {
-                BOOL needsRounding = NO;
-                
-                // Check if next character is a space. If so, we have to apply rounding.
-                if (c == SPACE) {
-                    needsRounding = YES;
-                }
-                // Also check if we have a run of control characters followed by a space
-                // or end of string.  If so, we have to apply rounding.
-                else {
-                    i++;
-                    while (isControlCharacter(c) && i < stringLength){
-                        c = characters[i];
-                        i++;
-                    }
-                    if (i == stringLength || c == SPACE) {
-                        needsRounding = YES;
-                    }
-                }
-                
-                if (needsRounding) {
-                    float delta = CEIL_TO_INT(widthFromStart) - widthFromStart;
-                    if (i >= (unsigned)pos)
-                        totalWidth += delta;
-                    widthFromStart += delta;
-                    if (widthBuffer && numGlyphs > 0)
-                        widthBuffer[numGlyphs - 1] += delta;
-                }
+            // Check if next character is a space. If so, we have to apply rounding.
+            if (c == SPACE && style->applyRounding) {
+                float delta = CEIL_TO_INT(widthFromStart) - widthFromStart;
+                if (i >= (unsigned int)pos)
+                    totalWidth += delta;
+                widthFromStart += delta;
+                if (widthBuffer && numGlyphs > 0)
+                    widthBuffer[numGlyphs - 1] += delta;
             }
-            if (glyphBuffer && i < (unsigned)to && endGlyph)
+
+            if (glyphBuffer && i < (unsigned int)(run->to) && endGlyph)
                 *endGlyph = numGlyphs-1;
 
             break;
         }
-
-        // Skip control characters.
-        if (isControlCharacter(c)) {
-            if (glyphBuffer && i < (unsigned)to && endGlyph)
-                *endGlyph = numGlyphs-1;
-            continue;
-        }
-        
         // Deal with surrogate pairs
         if (c >= HighSurrogateRangeStart && c <= HighSurrogateRangeEnd){
             high = c;
 
             // Make sure we have another character and it's a low surrogate.
-            if (i+1 >= stringLength || !IsLowSurrogatePair((low = characters[++i]))){
+            if (i+1 >= run->length || !IsLowSurrogatePair((low = characters[++i]))){
                 // Error!  Use 0 glyph.
                 glyphID = 0;
             }
@@ -1526,7 +1500,7 @@ static const char *joiningNames[] = {
                 _characters = &surrogates[0];
             }
             else {
-                clusterLength = findLengthOfCharacterCluster (&characters[i], stringLength - i);
+                clusterLength = findLengthOfCharacterCluster (&characters[i], run->length - i);
                 _characters = &characters[i];
             }
             substituteFont = [self substituteFontForCharacters: _characters length: clusterLength families: style->families];
@@ -1552,7 +1526,7 @@ static const char *joiningNames[] = {
                 
                 int j;
                 if (glyphBuffer){
-                    if (i-1 == (unsigned)from && startGlyph)
+                    if (i-1 == (unsigned int)run->from && startGlyph)
                         *startGlyph = numGlyphs;
                     for (j = 0; j < cNumGlyphs; j++){
                         glyphBuffer[numGlyphs+j] = localGlyphBuffer[j];
@@ -1570,7 +1544,7 @@ static const char *joiningNames[] = {
 
                 numGlyphs += cNumGlyphs;
 
-                if (glyphBuffer && i == (unsigned)(to-1) && endGlyph)
+                if (glyphBuffer && i == (unsigned int)(run->to-1) && endGlyph)
                     *endGlyph = numGlyphs-1;
 
                 foundMetrics = YES;
@@ -1589,7 +1563,7 @@ static const char *joiningNames[] = {
             if (glyphID == spaceGlyph && style->applyRounding) {
                 if (lastWidth > 0){
                     float delta = CEIL_TO_INT(widthFromStart) - widthFromStart;
-                    if (i >= (unsigned)pos)
+                    if (i >= (unsigned int)pos)
                         totalWidth += delta;
                     widthFromStart += delta;
                     if (widthBuffer)
@@ -1616,7 +1590,7 @@ static const char *joiningNames[] = {
                 fontBuffer[numGlyphs] = (substituteFont ? substituteFont: font);
             }
             if (glyphBuffer) {
-                if (i == (unsigned)from && startGlyph)
+                if (i == (unsigned int)run->from && startGlyph)
                     *startGlyph = numGlyphs;
                 glyphBuffer[numGlyphs] = glyphID;
             }
@@ -1628,7 +1602,7 @@ static const char *joiningNames[] = {
 
             // Account for word-spacing.  Make the size of the last character (grapheme cluster)
             // in the word wider.
-            if (glyphID == spaceGlyph && numGlyphs > 0 && !isSpace(characters[i-1])) {
+            if (glyphID == spaceGlyph && numGlyphs > 0 && (characters[i-1] != SPACE || characters[i-1] != NON_BREAKING_SPACE)){
                 // Find the base glyph in the grapheme cluster.  Combining glyphs
                 // should have zero width.
                 if (widthBuffer){
@@ -1639,7 +1613,7 @@ static const char *joiningNames[] = {
                         widthBuffer[ng] += style->wordSpacing;
                     }
                 }
-                if (i >= (unsigned)pos)
+                if (i >= (unsigned int)pos)
                     totalWidth += style->wordSpacing;
                 widthFromStart += style->wordSpacing;
             }
@@ -1649,14 +1623,14 @@ static const char *joiningNames[] = {
             }
             numGlyphs++;
 
-            if (glyphBuffer && i == (unsigned)(to-1) && endGlyph)
+            if (glyphBuffer && i == (unsigned int)(run->to-1) && endGlyph)
                 *endGlyph = numGlyphs-1;
         }
 #ifdef DEBUG_COMBINING        
         printf ("Character 0x%04x, joining attribute %d(%s), combining class %d, direction %d(%s)\n", c, WebCoreUnicodeJoiningFunction(c), joiningNames[WebCoreUnicodeJoiningFunction(c)], WebCoreUnicodeCombiningClassFunction(c), WebCoreUnicodeDirectionFunction(c), directionNames[WebCoreUnicodeDirectionFunction(c)]);
 #endif
         
-        if (i >= (unsigned)pos)
+        if (i >= (unsigned int)pos)
             totalWidth += lastWidth;
         widthFromStart += lastWidth;
     }
@@ -1664,9 +1638,9 @@ static const char *joiningNames[] = {
     // Ceil the last glyph, but only if
     // 1) The string is longer than one character
     // 2) or the entire stringLength is one character
-    if ((len > 1 || stringLength == 1) && style->applyRounding){
+    if ((len > 1 || run->length == 1) && style->applyRounding){
         float delta = CEIL_TO_INT(widthFromStart) - widthFromStart;
-        if (i >= (unsigned)pos)
+        if (i >= (unsigned int)pos)
             totalWidth += delta;
         widthFromStart += delta;
         if (widthBuffer && numGlyphs > 0)
@@ -1690,7 +1664,7 @@ static const char *joiningNames[] = {
     ATSLayoutRecord *glyphRecord;
     ATSGlyphVector glyphVector;
     UnicodeChar end, start;
-    unsigned blockSize;
+    unsigned int blockSize;
     ATSGlyphRef glyphID;
     
     if (unicodeCharacterToGlyphMap == 0)
@@ -1705,7 +1679,7 @@ static const char *joiningNames[] = {
     map->startRange = start;
     map->endRange = end;
     
-    unsigned i, count = end - start + 1;
+    unsigned int i, count = end - start + 1;
     UnicodeChar buffer[INCREMENTAL_BLOCK_SIZE+2];
     
     for (i = 0; i < count; i++){
@@ -1773,7 +1747,7 @@ static const char *joiningNames[] = {
     ATSLayoutRecord *glyphRecord;
     ATSGlyphVector glyphVector;
     UniChar end, start;
-    unsigned blockSize;
+    unsigned int blockSize;
     ATSGlyphRef glyphID;
     
     if (characterToGlyphMap == 0)
@@ -1788,8 +1762,8 @@ static const char *joiningNames[] = {
     map->startRange = start;
     map->endRange = end;
     
-    unsigned i, count = end - start + 1;
-    short unsigned buffer[INCREMENTAL_BLOCK_SIZE+2];
+    unsigned int i, count = end - start + 1;
+    short unsigned int buffer[INCREMENTAL_BLOCK_SIZE+2];
     
     for (i = 0; i < count; i++){
         buffer[i] = i+start;
@@ -1844,10 +1818,10 @@ static const char *joiningNames[] = {
 - (WidthMap *)extendGlyphToWidthMapToInclude:(ATSGlyphRef)glyphID font:(NSFont *)subFont
 {
     WidthMap *map = (WidthMap *)calloc (1, sizeof(WidthMap)), **rootMap;
-    unsigned end;
+    unsigned int end;
     ATSGlyphRef start;
-    unsigned blockSize;
-    unsigned i, count;
+    unsigned int blockSize;
+    unsigned int i, count;
     
     if (subFont && subFont != font)
         rootMap = &mapForSubstituteFont(self,subFont)->map;
@@ -1863,7 +1837,7 @@ static const char *joiningNames[] = {
     else
         blockSize = INCREMENTAL_BLOCK_SIZE;
     start = (glyphID / blockSize) * blockSize;
-    end = ((unsigned)start) + blockSize; 
+    end = ((unsigned int)start) + blockSize; 
     if (end > 0xffff)
         end = 0xffff;
 
@@ -1996,8 +1970,8 @@ static const char *joiningNames[] = {
     oGlyphBounds = [self _trapezoidForRun:run style:style atPoint:NSMakePoint (0,0)];
     
     float width = 
-        MAX(FixedToFloat(oGlyphBounds.upperRight.x), FixedToFloat(oGlyphBounds.lowerRight.x)) - 
-        MIN(FixedToFloat(oGlyphBounds.upperLeft.x), FixedToFloat(oGlyphBounds.lowerLeft.x));
+        MAX(FixToFloat(oGlyphBounds.upperRight.x), FixToFloat(oGlyphBounds.lowerRight.x)) - 
+        MIN(FixToFloat(oGlyphBounds.upperLeft.x), FixToFloat(oGlyphBounds.lowerLeft.x));
     
     return width;
 }
@@ -2036,13 +2010,13 @@ static const char *joiningNames[] = {
     ATSTrapezoid selectedTrapezoid = [self _trapezoidForRun:run style:style atPoint:point];
 
     float backgroundWidth = 
-            MAX(FixedToFloat(selectedTrapezoid.upperRight.x), FixedToFloat(selectedTrapezoid.lowerRight.x)) - 
-            MIN(FixedToFloat(selectedTrapezoid.upperLeft.x), FixedToFloat(selectedTrapezoid.lowerLeft.x));
+            MAX(FixToFloat(selectedTrapezoid.upperRight.x), FixToFloat(selectedTrapezoid.lowerRight.x)) - 
+            MIN(FixToFloat(selectedTrapezoid.upperLeft.x), FixToFloat(selectedTrapezoid.lowerLeft.x));
 
     if (run->from == 0)
         selectedLeftX = point.x;
     else
-        selectedLeftX = MIN(FixedToFloat(leadingTrapezoid.upperRight.x), FixedToFloat(leadingTrapezoid.lowerRight.x));
+        selectedLeftX = MIN(FixToFloat(leadingTrapezoid.upperRight.x), FixToFloat(leadingTrapezoid.lowerRight.x));
     
     [style->backgroundColor set];
     
@@ -2108,7 +2082,7 @@ static const char *joiningNames[] = {
 
 - (int)_ATSU_pointToOffset:(const WebCoreTextRun *)run style:(const WebCoreTextStyle *)style position:(int)x reversed:(BOOL)reversed
 {
-    unsigned offset = 0;
+    unsigned int offset = 0;
     ATSUTextLayout layout;
     UniCharArrayOffset primaryOffset = 0;
     UniCharArrayOffset secondaryOffset = 0;
@@ -2117,9 +2091,9 @@ static const char *joiningNames[] = {
 
     layout = [self _createATSUTextLayoutForRun:run];
 
-    status = ATSUPositionToOffset(layout, FloatToFixed(x), 1, &primaryOffset, &isLeading, &secondaryOffset);
+    status = ATSUPositionToOffset (layout, (ATSUTextMeasurement)FloatToFixed(((float)x)), 1, &primaryOffset, &isLeading, &secondaryOffset);
     if (status == noErr){
-        offset = (unsigned)primaryOffset;
+        offset = (unsigned int)primaryOffset;
     }
     else {
         // Failed to find offset!  Return 0 offset.
@@ -2128,11 +2102,13 @@ static const char *joiningNames[] = {
     return offset;
 }
 
+#define LOCAL_WIDTH_BUF_SIZE 1024
+
 - (int)_CG_pointToOffset:(const WebCoreTextRun *)run style:(const WebCoreTextStyle *)style position:(int)x reversed:(BOOL)reversed
 {
     float delta = (float)x;
     float width;
-    unsigned offset = run->from;
+    unsigned int offset = run->from;
     CharacterWidthIterator widthIterator;
     
     initializeCharacterWidthIterator(&widthIterator, self, run, style);

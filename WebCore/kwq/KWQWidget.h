@@ -69,7 +69,6 @@ public:
     virtual QSize sizeHint() const;
     
     virtual void setEnabled(bool);
-    virtual bool isEnabled() const;
     
     void setActiveWindow();
 
@@ -93,19 +92,18 @@ public:
     virtual QRect frameGeometry() const;
     virtual void setFrameGeometry(const QRect &);
 
-    virtual int baselinePosition(int height) const; // relative to the top of the widget
+    virtual int baselinePosition() const; // relative to the top of the widget
 
     virtual QPoint mapFromGlobal(const QPoint &) const;
 
     bool hasFocus() const;
     void setFocus();
     void clearFocus();
-    virtual bool checksDescendantsForFocus() const;
     
     virtual FocusPolicy focusPolicy() const;
-    void setFocusPolicy(FocusPolicy) {};
+    virtual void setFocusPolicy(FocusPolicy);
     
-    virtual void setFocusProxy(QWidget *) {};
+    virtual void setFocusProxy(QWidget *);
 
     const QPalette& palette() const;
     virtual void setPalette(const QPalette &);

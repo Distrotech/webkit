@@ -495,8 +495,7 @@ void HTMLTableElementImpl::parseAttribute(AttributeImpl *attr)
             padding = 1;
         if (m_render && m_render->isTable()) {
             static_cast<RenderTable *>(m_render)->setCellPadding(padding);
-	    if (!m_render->needsLayout())
-	        m_render->setNeedsLayout(true);
+            m_render->setNeedsLayout(true);
         }
         break;
     case ATTR_COLS:

@@ -740,19 +740,10 @@ bool NodeImpl::dispatchKeyEvent(QKeyEvent *key)
     KeyEventImpl *keyEventImpl = new KeyEventImpl(key, getDocument()->defaultView());
     keyEventImpl->ref();
     bool r = dispatchEvent(keyEventImpl,exceptioncode,true);
-
-#if APPLE_CHANGES
-    // we want to return false if default is prevented (already taken care of)
-    // or if the element is default-handled by the DOM. Otherwise we let it just
-    // let it get handled by AppKit 
-    if (keyEventImpl->defaultHandled())
-#else
     // the default event handler should accept() the internal QKeyEvent
     // to prevent the view from further evaluating it.
     if (!keyEventImpl->defaultPrevented() && !keyEventImpl->qKeyEvent->isAccepted())
-#endif
       r = false;
-
     keyEventImpl->deref();
     return r;
 }
@@ -874,7 +865,7 @@ void NodeImpl::checkAddChild(NodeImpl *newChild, int &exceptioncode)
     // We assume that if newChild is a DocumentFragment, all children are created from the same document
     // as the fragment itself (otherwise they could not have been added as children)
     if (newChild->getDocument() != getDocument()) {
-        exceptioncode = DOMException::WRONG_DOCUMENT_ERR;
+        exceptioncode = DOMException::NO_MODIFICATION_ALLOWED_ERR;
         return;
     }
 
@@ -996,8 +987,8 @@ void NodeImpl::detach()
 {
 //    assert(m_attached);
 
-    if (m_render)
-        m_render->detach();
+    if ( m_render )
+        m_render->detach(getDocument()->renderArena());
 
     m_render = 0;
     m_attached = false;
@@ -1237,8 +1228,14 @@ NodeImpl *NodeBaseImpl::insertBefore ( NodeImpl *newChild, NodeImpl *refChild, i
 
         // Add child to the rendering tree
         // ### should we detach() it first if it's already attached?
-        if (attached() && !child->attached())
+        if (attached() && !child->attached()) {
             child->attach();
+            // This is extremely important, as otherwise a fresh layout
+            // isn't scheduled, and you end up with stale data (especially
+            // with inline runs of text). -dwh
+            if (child->renderer())
+                child->renderer()->setNeedsLayout(true);
+        }
 
         // Dispatch the mutation events
         dispatchChildInsertedEvents(child,exceptioncode);
@@ -1305,8 +1302,14 @@ NodeImpl *NodeBaseImpl::replaceChild ( NodeImpl *newChild, NodeImpl *oldChild, i
 
         // Add child to the rendering tree
         // ### should we detach() it first if it's already attached?
-        if (attached() && !child->attached())
+        if (attached() && !child->attached()) {
             child->attach();
+            // This is extremely important, as otherwise a fresh layout
+            // isn't scheduled, and you end up with stale data (especially
+            // with inline runs of text). -dwh
+            if (child->renderer())
+                child->renderer()->setNeedsLayout(true);
+        }
 
         // Dispatch the mutation events
         dispatchChildInsertedEvents(child,exceptioncode);
@@ -1452,8 +1455,14 @@ NodeImpl *NodeBaseImpl::appendChild ( NodeImpl *newChild, int &exceptioncode )
 
         // Add child to the rendering tree
         // ### should we detach() it first if it's already attached?
-        if (attached() && !child->attached())
+        if (attached() && !child->attached()) {
             child->attach();
+            // This is extremely important, as otherwise a fresh layout
+            // isn't scheduled, and you end up with stale data (especially
+            // with inline runs of text). -dwh
+            if (child->renderer())
+                child->renderer()->setNeedsLayout(true);
+        }
           
         // Dispatch the mutation events
         dispatchChildInsertedEvents(child,exceptioncode);

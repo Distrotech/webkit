@@ -64,16 +64,10 @@
     }
     
     if ([error code] == NSURLErrorCancelled) {
-        [self cancelWithReason:NPRES_USER_BREAK];
+        [self receivedError:NPRES_USER_BREAK];
     } else {
-        [self cancelWithReason:NPRES_NETWORK_ERR];
+        [self receivedError:NPRES_NETWORK_ERR];
     }
-}
-
-- (void)cancelWithReason:(NPReason)theReason;
-{
-    [[_dataSource webFrame] stopLoading];
-    [super cancelWithReason:NPRES_USER_BREAK];
 }
 
 - (void)finishedLoadingWithDataSource:(WebDataSource *)ds

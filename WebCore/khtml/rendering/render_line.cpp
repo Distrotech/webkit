@@ -228,7 +228,7 @@ int InlineFlowBox::placeBoxesHorizontally(int x)
     
     for (InlineBox* curr = firstChild(); curr; curr = curr->nextOnLine()) {
         if (curr->object()->isText()) {
-            InlineTextBox* text = static_cast<InlineTextBox*>(curr);
+            TextRun* text = static_cast<TextRun*>(curr);
             text->setXPos(x);
             x += text->width();
         }
@@ -414,7 +414,7 @@ void InlineFlowBox::placeBoxesVertically(int y, int maxHeight, int maxAscent, bo
         int newY = curr->yPos();
         int newHeight = curr->height();
         int newBaseline = curr->baseline();
-        if (curr->isInlineTextBox() || curr->isInlineFlowBox()) {
+        if (curr->isTextRun() || curr->isInlineFlowBox()) {
             const QFontMetrics &fm = curr->object()->fontMetrics( m_firstLine );
             newBaseline = fm.ascent();
             newY += curr->baseline() - newBaseline;

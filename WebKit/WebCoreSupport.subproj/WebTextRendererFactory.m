@@ -4,10 +4,8 @@
 */
 
 #import <WebKit/WebAssertions.h>
-#import <WebKit/WebBridge.h>
 #import <WebKit/WebKitLogging.h>
 #import <WebKit/WebKitSystemBits.h>
-#import <WebKit/WebPreferences.h>
 #import <WebKit/WebTextRendererFactory.h>
 #import <WebKit/WebTextRenderer.h>
 
@@ -29,10 +27,6 @@
 )
 
 #define DESIRED_WEIGHT 5
-
-@interface NSFont (WebPrivate)
-- (ATSUFontID)_atsFontID;
-@end
 
 @interface NSFont (WebAppKitSecretAPI)
 - (BOOL)_isFakeFixedPitch;
@@ -179,35 +173,6 @@ static int getLCDScaleParameters(void)
 
 }
 
-static CFMutableDictionaryRef fontCache = NULL;
-
-- (void)clearCaches
-{
-    [cacheForScreen release];
-    [cacheForPrinter release];
-    
-    cacheForScreen = [[NSMutableDictionary alloc] init];
-    cacheForPrinter = [[NSMutableDictionary alloc] init];
-
-    if (fontCache)
-        CFRelease (fontCache);
-    fontCache = NULL;
-    
-    [WebBridge updateAllViews];
-}
-
-static void 
-fontsChanged( ATSFontNotificationInfoRef info, void *_factory)
-{
-    WebTextRendererFactory *factory = (WebTextRendererFactory *)_factory;
-    
-    LOG (FontCache, "clearing font caches");
-
-    ASSERT (factory);
-
-    [factory clearCaches];
-}
-
 #define MINIMUM_GLYPH_CACHE_SIZE 1536 * 1024
 
 + (void)createSharedFactory
@@ -229,10 +194,6 @@ fontsChanged( ATSFontNotificationInfoRef info, void *_factory)
 #endif
         CGFontCacheSetMaxSize (fontCache, s);
         CGFontCacheRelease(fontCache);
-
-        // Ignore errors returned from ATSFontNotificationSubscribe.  If we can't subscribe then we
-        // won't be told about changes to fonts.
-	ATSFontNotificationSubscribe( fontsChanged, kATSFontNotifyOptionDefault, (void *)[super sharedFactory], nil );
     }
     ASSERT([[self sharedFactory] isKindOfClass:self]);
 }
@@ -294,8 +255,6 @@ fontsChanged( ATSFontNotificationInfoRef info, void *_factory)
     return font;
 }
 
-        
-
 - (NSFont *)fontWithFamilies:(NSString **)families traits:(NSFontTraitMask)traits size:(float)size
 {
     NSFont *font = nil;
@@ -307,35 +266,8 @@ fontsChanged( ATSFontNotificationInfoRef info, void *_factory)
         if ([family length] != 0)
             font = [self cachedFontFromFamily: family traits:traits size:size];
     }
-    if (font == nil) {
-        // We didn't find a font.  Use a fallback font.
-        static int matchCount = 3;
-        static NSString *matchWords[] = { @"Arabic", @"Pashto", @"Urdu" };
-        static NSString *matchFamilies[] = { @"Geeza Pro", @"Geeza Pro", @"Geeza Pro" };
-        
-        // First we'll attempt to find an appropriate font using a match based on 
-        // the presence of keywords in the the requested names.  For example, we'll
-        // match any name that contains "Arabic" to Geeza Pro.
-        int j;
-        i = 0;
-        while (families && families[i] != 0 && font == nil) {
-            family = families[i++];
-            if ([family length] != 0) {
-                j = 0;
-                while (j < matchCount && font == nil) {
-                    if ([family rangeOfString:matchWords[j] options:NSCaseInsensitiveSearch].location != NSNotFound) {
-                        font = [self cachedFontFromFamily:matchFamilies[j] traits:traits size:size];
-                    }
-                    j++;
-                }
-            }
-        }
-        
-        // Still nothing found, use the final fallback.
-        if (font == nil) {
-            font = [self fallbackFontWithTraits:traits size:size];
-        }
-    }
+    if (font == nil)
+        font = [self fallbackFontWithTraits:traits size:size];
 
     return font;
 }
@@ -485,8 +417,9 @@ static BOOL betterChoice(NSFontTraitMask desiredTraits, int desiredWeight,
     }
 
     font = [fontManager fontWithFamily:availableFamily traits:chosenTraits weight:chosenWeight size:size];
-    LOG (FontSelection, "returning font family %@ (%@) traits %x, fontID = %x\n\n", 
-            availableFamily, [[[font fontDescriptor] fontAttributes] objectForKey: NSFontNameAttribute], chosenTraits, (unsigned int)[font _atsFontID]);
+    
+    LOG (FontSelection, "returning font family %@ (%@) traits %x\n\n", 
+            availableFamily, [[[font fontDescriptor] fontAttributes] objectForKey: NSFontNameAttribute], chosenTraits);
     
     return font;
 }
@@ -546,6 +479,7 @@ static void FontCacheValueRelease(CFAllocatorRef allocator, const void *value)
 {
     ASSERT(family);
     
+    static CFMutableDictionaryRef fontCache = NULL;
     if (!fontCache) {
         static const CFDictionaryKeyCallBacks fontCacheKeyCallBacks = { 0, FontCacheKeyCopy, FontCacheKeyFree, NULL, FontCacheKeyEqual, FontCacheKeyHash };
         static const CFDictionaryValueCallBacks fontCacheValueCallBacks = { 0, FontCacheValueRetain, FontCacheValueRelease, NULL, NULL };

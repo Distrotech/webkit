@@ -25,12 +25,7 @@
 
 #import "KWQButton.h"
 
-#import "KWQAssertions.h"
 #import "KWQCheckBox.h"
-#import "KWQExceptions.h"
-#import "KWQKHTMLPart.h"
-#import "KWQNSViewExtras.h"
-#import "WebCoreBridge.h"
 
 #import "render_form.h"
 
@@ -38,12 +33,10 @@
 {
     QButton *button;
     BOOL needToSendConsumedMouseUp;
-    BOOL inNextValidKeyView;
 }
 
 - (id)initWithQButton:(QButton *)b;
 - (void)sendConsumedMouseUpIfNeeded;
-- (void)simulateClick;
 
 @end
 
@@ -70,11 +63,6 @@
     } 
 }
 
--(void)simulateClick
-{
-    [self performClick:self];
-}
-
 -(void)mouseDown:(NSEvent *)event
 {
     needToSendConsumedMouseUp = YES;
@@ -82,112 +70,41 @@
     [self sendConsumedMouseUpIfNeeded];
 }
 
-- (BOOL)becomeFirstResponder
-{
-    BOOL become = [super becomeFirstResponder];
-    if (become) {
-        if (!KWQKHTMLPart::currentEventIsMouseDownInWidget(button)) {
-            [self _KWQ_scrollFrameToVisible];
-        }
-        QFocusEvent event(QEvent::FocusIn);
-        const_cast<QObject *>(button->eventFilterObject())->eventFilter(button, &event);
-    }
-    return become;
-}
-
-- (BOOL)resignFirstResponder
-{
-    BOOL resign = [super resignFirstResponder];
-    if (resign) {
-        QFocusEvent event(QEvent::FocusOut);
-        const_cast<QObject *>(button->eventFilterObject())->eventFilter(button, &event);
-    }
-    return resign;
-}
-
--(NSView *)nextKeyView
-{
-    return button && inNextValidKeyView
-        ? KWQKHTMLPart::nextKeyViewForWidget(button, KWQSelectingNext)
-        : [super nextKeyView];
-}
-
--(NSView *)previousKeyView
-{
-    return button && inNextValidKeyView
-        ? KWQKHTMLPart::nextKeyViewForWidget(button, KWQSelectingPrevious)
-        : [super previousKeyView];
-}
-
--(NSView *)nextValidKeyView
-{
-    inNextValidKeyView = YES;
-    NSView *view = [super nextValidKeyView];
-    inNextValidKeyView = NO;
-    return view;
-}
-
--(NSView *)previousValidKeyView
-{
-    inNextValidKeyView = YES;
-    NSView *view = [super previousValidKeyView];
-    inNextValidKeyView = NO;
-    return view;
-}
-
 @end
 
 QButton::QButton()
     : m_clicked(this, SIGNAL(clicked()))
 {
-    KWQ_BLOCK_NS_EXCEPTIONS;
-
     KWQButton *button = [[KWQButton alloc] initWithQButton:this];
-    setView(button);
-    [button release];
     
     [button setTarget:button];
     [button setAction:@selector(action:)];
-    
+
     [button setTitle:@""];
     [[button cell] setControlSize:NSSmallControlSize];
-    [button setFont:[NSFont systemFontOfSize:[NSFont systemFontSizeForControlSize:NSSmallControlSize]]];
+    [button setFont:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]]];
 
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
+    setView(button);
+
+    [button release];
 }
 
 QButton::~QButton()
 {
-    KWQ_BLOCK_NS_EXCEPTIONS;
-
     NSButton *button = (NSButton *)getView();
     [button setTarget:nil];
-
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
 }
 
 void QButton::setText(const QString &s)
 {
-    KWQ_BLOCK_NS_EXCEPTIONS;
-
     NSButton *button = (NSButton *)getView();
     [button setTitle:s.getNSString()];
-
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
 }
 
 QString QButton::text() const
 {
-    QString result;
-
-    KWQ_BLOCK_NS_EXCEPTIONS;
-
     NSButton *button = (NSButton *)getView();
-    result = QString::fromNSString([button title]);
-    
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
-
-    return result;
+    return QString::fromNSString([button title]);
 }
 
 void QButton::clicked()
@@ -198,8 +115,6 @@ void QButton::clicked()
     //   3) clicked
     // Proper behavior of check boxes, at least, depends on this order.
     
-    KWQ_BLOCK_NS_EXCEPTIONS;
-
     KWQButton *button = (KWQButton *)getView();
     [button sendConsumedMouseUpIfNeeded];
 
@@ -207,67 +122,4 @@ void QButton::clicked()
     if ([button target]) {
         m_clicked.call();
     }
-
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
 }
-
-void QButton::simulateClick()
-{
-    KWQ_BLOCK_NS_EXCEPTIONS;
-
-    KWQButton *button = (KWQButton *)getView();
-    [button simulateClick];
-
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
-}
-
-void QButton::setFont(const QFont &f)
-{
-    KWQ_BLOCK_NS_EXCEPTIONS;
-
-    QWidget::setFont(f);
-
-    const NSControlSize size = KWQNSControlSizeForFont(f);    
-    NSControl * const button = static_cast<NSControl *>(getView());
-    [[button cell] setControlSize:size];
-    [button setFont:[NSFont systemFontOfSize:[NSFont systemFontSizeForControlSize:size]]];
-
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
-}
-
-NSControlSize KWQNSControlSizeForFont(const QFont &f)
-{
-    return NSSmallControlSize;
-    // Dave is going to turn this on once he figures out what he wants to do
-    // about mini controls.
-#if 0
-    const int fontSize = f.pixelSize();
-    if (fontSize >= 20) {
-        return NSRegularControlSize;
-    }
-    if (fontSize >= 10) {
-        return NSSmallControlSize;
-    }
-    return NSMiniControlSize;
-#endif
-}
-
-QWidget::FocusPolicy QButton::focusPolicy() const
-{
-    volatile bool fullKeyboardMode = false;
-    
-    KWQ_BLOCK_NS_EXCEPTIONS;
-
-    // Add an additional check here.
-    // For now, buttons are only focused when full
-    // keyboard access is turned on.
-    fullKeyboardMode = [KWQKHTMLPart::bridgeForWidget(this) keyboardUIMode] == WebCoreFullKeyboardAccess;
-
-    KWQ_UNBLOCK_NS_EXCEPTIONS;
-
-    if (!fullKeyboardMode)
-        return NoFocus;
-
-    return QWidget::focusPolicy();
-}
-

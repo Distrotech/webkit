@@ -50,16 +50,9 @@
 #import <Foundation/NSURLFileTypeMappings.h>
 #import <WebKit/WebLocalizableStrings.h>
 
-#define KeyboardUIModeDidChangeNotification @"com.apple.KeyboardUIModeDidChange"
-#define AppleKeyboardUIMode CFSTR("AppleKeyboardUIMode")
-#define UniversalAccessDomain CFSTR("com.apple.universalaccess")
 
 @interface NSApplication (DeclarationStolenFromAppKit)
 - (void)_cycleWindowsReversed:(BOOL)reversed;
-@end
-
-@interface NSView (AppKitSecretsWebBridgeKnowsAbout)
-- (NSView *)_findLastViewInKeyViewLoop;
 @end
 
 @implementation WebBridge
@@ -87,11 +80,6 @@
 - (void)dealloc
 {
     ASSERT(_frame == nil);
-
-    if (_keyboardUIModeAccessed) {
-        [[NSDistributedNotificationCenter defaultCenter] 
-            removeObserver:self name:KeyboardUIModeDidChangeNotification object:nil];
-    }
     
     --WebBridgeCount;
     
@@ -439,22 +427,15 @@
     [[self dataSource] _setIconURL:URL withType:type];
 }
 
-- (void)loadURL:(NSURL *)URL referrer:(NSString *)referrer reload:(BOOL)reload onLoadEvent:(BOOL)onLoad target:(NSString *)target triggeringEvent:(NSEvent *)event form:(NSObject <WebDOMElement> *)form formValues:(NSDictionary *)values
+- (void)loadURL:(NSURL *)URL referrer:(NSString *)referrer reload:(BOOL)reload target:(NSString *)target triggeringEvent:(NSEvent *)event form:(NSObject <WebDOMElement> *)form formValues:(NSDictionary *)values
 {
     if ([target length] == 0) {
 	target = nil;
     }
 
     WebFrame *targetFrame = [_frame findFrameNamed:target];
-    WebFrameLoadType loadType;
-    
-    if (reload)
-        loadType = WebFrameLoadTypeReload;
-    else if (onLoad)
-        loadType = WebFrameLoadTypeOnLoadEvent;
-    else
-        loadType = WebFrameLoadTypeStandard;
-    [_frame _loadURL:URL referrer:referrer loadType:loadType target:target triggeringEvent:event form:form formValues:values];
+
+    [_frame _loadURL:URL referrer:referrer loadType:(reload ? WebFrameLoadTypeReload : WebFrameLoadTypeStandard) target:target triggeringEvent:event form:form formValues:values];
 
     if (targetFrame != nil && _frame != targetFrame) {
 	[[targetFrame _bridge] focusWindow];
@@ -534,29 +515,26 @@
     return [[_frame webView] userAgentForURL:URL];
 }
 
-- (BOOL)inNextKeyViewOutsideWebFrameViews
-{
-    return _inNextKeyViewOutsideWebFrameViews;
-}
-
 - (NSView *)nextKeyViewOutsideWebFrameViews
 {
-    _inNextKeyViewOutsideWebFrameViews = YES;
     WebView *webView = [_frame webView];
-    // Do not ask webView for its next key view, but rather, ask it for 
-    // the next key view of the last view in its key view loop.
-    // Doing so gives us the correct answer as calculated by AppKit, 
-    // and makes HTML views behave like other views.
-    NSView *nextKeyView = [[webView _findLastViewInKeyViewLoop] nextKeyView];
-    _inNextKeyViewOutsideWebFrameViews = NO;
-    return nextKeyView;
+    NSView *nextKeyView = [webView nextKeyView];
+    if (nextKeyView) {
+        return nextKeyView;
+    }
+    // Old way, here so we don't break early WebKit adopters, but could be removed later.
+    return [[[webView mainFrame] frameView] nextKeyView];
 }
 
 - (NSView *)previousKeyViewOutsideWebFrameViews
 {
     WebView *webView = [_frame webView];
     NSView *previousKeyView = [webView previousKeyView];
-    return previousKeyView;
+    if (previousKeyView) {
+        return previousKeyView;
+    }
+    // Old way, here so we don't break early WebKit adopters, but could be removed later.
+    return [[[webView mainFrame] frameView] previousKeyView];
 }
 
 - (BOOL)defersLoading
@@ -795,21 +773,15 @@ static BOOL loggedObjectCacheSize = NO;
     return cacheSize * multiplier;
 }
 
-- (BOOL)frameRequiredForMIMEType:(NSString*)MIMEType
+- (BOOL)frameRequiredForMIMEType:(NSString*)mimeType
 {
     // Assume a plugin is required. Don't make a frame.
-    if ([MIMEType length] == 0) {
+    if ([mimeType length] == 0)
         return NO;
-    }
     
-    // Have the plug-in DB register document views.
-    [[WebPluginDatabase installedPlugins] loadPluginIfNeededForMIMEType:MIMEType];
-    
-    Class result = [WebFrameView _viewClassForMIMEType:MIMEType];
-    if (!result) {
-        // Want to display a "plugin not found" dialog/image, so let a plugin get made.
-        return NO;
-    }
+    Class result = [WebFrameView _viewClassForMIMEType:mimeType];
+    if (!result)
+        return NO;  // Want to display a "plugin not found" dialog/image, so let a plugin get made.
         
     // If we're a supported type other than a plugin, we want to make a frame.
     // Ultimately we should just use frames for all mime types (plugins and HTML/XML/text documents),
@@ -831,8 +803,7 @@ static BOOL loggedObjectCacheSize = NO;
 {
     ASSERT(path);
     NSString *extension = [path pathExtension];
-    NSString *type = [[NSURLFileTypeMappings sharedMappings] MIMETypeForExtension:extension];
-    return [type length] == 0 ? @"application/octet-stream" : type;
+    return [[NSURLFileTypeMappings sharedMappings] MIMETypeForExtension:extension];
 }
 
 - (void)handleMouseDragged:(NSEvent *)event
@@ -969,37 +940,6 @@ static id <WebFormDelegate> formDelegate(WebBridge *self)
 - (void)setHasBorder:(BOOL)hasBorder
 {
     [[_frame frameView] _setHasBorder:hasBorder];
-}
-
-- (void)_retrieveKeyboardUIModeFromPreferences:(NSNotification *)notification
-{
-    CFPreferencesAppSynchronize(UniversalAccessDomain);
-
-    BOOL sanityCheck;
-    int mode = CFPreferencesGetAppIntegerValue(AppleKeyboardUIMode, UniversalAccessDomain, &sanityCheck);
-    ASSERT(sanityCheck);
-    
-    // The keyboard access mode is reported by two bits:
-    // Bit 0 is set if feature is on
-    // Bit 1 is set if full keyboard access works for any control, not just text boxes and lists
-    // We require both bits to be on.
-    // I do not know that we would ever get one bit on and the other off since
-    // checking the checkbox in system preferences which is marked as "Turn on full keyboard access"
-    // turns on both bits.
-    _keyboardUIMode = (mode & 0x2) ? WebCoreFullKeyboardAccess : WebCoreDefaultKeyboardAccess;
-}
-
-- (WebCoreKeyboardUIMode)keyboardUIMode
-{
-    if (!_keyboardUIModeAccessed) {
-        _keyboardUIModeAccessed = YES;
-        [self _retrieveKeyboardUIModeFromPreferences:nil];
-        
-        [[NSDistributedNotificationCenter defaultCenter] 
-            addObserver:self selector:@selector(_retrieveKeyboardUIModeFromPreferences:) 
-            name:KeyboardUIModeDidChangeNotification object:nil];
-    }
-    return _keyboardUIMode;
 }
 
 @end

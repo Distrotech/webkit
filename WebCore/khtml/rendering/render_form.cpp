@@ -70,7 +70,7 @@ RenderFormElement::~RenderFormElement()
 short RenderFormElement::baselinePosition( bool f, bool isRootLineBox ) const
 {
 #if APPLE_CHANGES
-    return marginTop() + widget()->baselinePosition(m_height);
+    return marginTop() + widget()->baselinePosition();
 #else
     return RenderWidget::baselinePosition( f, isRootLineBox ) - 2 - style()->fontMetrics().descent();
 #endif
@@ -79,9 +79,6 @@ short RenderFormElement::baselinePosition( bool f, bool isRootLineBox ) const
 void RenderFormElement::updateFromElement()
 {
     m_widget->setEnabled(!element()->disabled());
-#if APPLE_CHANGES
-    m_widget->setFont(style()->font());
-#endif
 
     QColor color = style()->color();
     QColor backgroundColor = style()->backgroundColor();
@@ -157,14 +154,13 @@ void RenderFormElement::layout()
     calcWidth();
     calcHeight();
 
-#if !APPLE_CHANGES
     if ( m_widget )
         resizeWidget(m_widget,
                      m_width-borderLeft()-borderRight()-paddingLeft()-paddingRight(),
                      m_height-borderLeft()-borderRight()-paddingLeft()-paddingRight());
-#endif
-    
-    setNeedsLayout(false);
+
+    if ( !style()->width().isPercent() )
+        setNeedsLayout(false);
 }
 
 void RenderFormElement::slotClicked()
@@ -1275,17 +1271,13 @@ TextAreaWidget::TextAreaWidget(int wrap, QWidget* parent)
 {
     if(wrap != DOM::HTMLTextAreaElementImpl::ta_NoWrap) {
         setWordWrap(QTextEdit::WidgetWidth);
-#if !APPLE_CHANGES
         setHScrollBarMode( AlwaysOff );
         setVScrollBarMode( AlwaysOn );
-#endif
     }
     else {
         setWordWrap(QTextEdit::NoWrap);
-#if !APPLE_CHANGES
         setHScrollBarMode( Auto );
         setVScrollBarMode( Auto );
-#endif
     }
     KCursor::setAutoHideCursor(viewport(), true);
     setTextFormat(QTextEdit::PlainText);
@@ -1326,13 +1318,13 @@ RenderTextArea::RenderTextArea(HTMLTextAreaElementImpl *element)
     connect(edit,SIGNAL(clicked()),this,SLOT(slotClicked()));
 }
 
-void RenderTextArea::detach()
+void RenderTextArea::detach(RenderArena *arena)
 {
     if ( element()->m_dirtyvalue ) {
         element()->m_value = text();
         element()->m_dirtyvalue = false;
     }
-    RenderFormElement::detach();
+    RenderFormElement::detach(arena);
 }
 
 void RenderTextArea::handleFocusOut()
@@ -1353,7 +1345,12 @@ void RenderTextArea::calcMinMaxWidth()
     const QFontMetrics &m = style()->fontMetrics();
     w->setTabStopWidth(8 * m.width(" "));
 #if APPLE_CHANGES
-    QSize size(w->sizeWithColumnsAndRows(QMAX(element()->cols(), 1), QMAX(element()->rows(), 1)));
+    QSize size( QMAX(element()->cols(), 1)*m.width('x') + w->frameWidth() +
+                w->verticalScrollBarWidth(),
+                QMAX(element()->rows(), 1)*m.height() + w->frameWidth()*2 +
+                (w->wordWrap() == QTextEdit::NoWrap ?
+                 w->horizontalScrollBarHeight() : 0)
+        );
 #else
     QSize size( QMAX(element()->cols(), 1)*m.width('x') + w->frameWidth() +
                 w->verticalScrollBar()->sizeHint().width(),
@@ -1373,9 +1370,6 @@ void RenderTextArea::updateFromElement()
 {
     TextAreaWidget* w = static_cast<TextAreaWidget*>(m_widget);
     w->setReadOnly(element()->readOnly());
-#ifdef APPLE_CHANGES
-    w->setDisabled(element()->disabled());
-#endif
     w->setAlignment(style()->direction() == RTL ? Qt::AlignRight : Qt::AlignLeft);
     
     // Call w->text() before calling element()->value(), because in the case of inline

@@ -44,7 +44,7 @@ public:
     virtual void addChild(RenderObject *newChild, RenderObject *beforeChild = 0);
     virtual void removeChild(RenderObject *oldChild);
 
-    virtual void detach();
+    virtual void detach(RenderArena* renderArena);
     
     virtual RenderObject* removeChildNode(RenderObject* child);
     virtual void appendChildNode(RenderObject* child);

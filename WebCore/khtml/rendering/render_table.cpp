@@ -33,7 +33,6 @@
 #include "html/html_tableimpl.h"
 #include "misc/htmltags.h"
 #include "misc/htmlattrs.h"
-#include "xml/dom_docimpl.h"
 
 #include <kglobal.h>
 
@@ -42,8 +41,6 @@
 
 #include <kdebug.h>
 #include <assert.h>
-
-#include "khtmlview.h"
 
 using namespace khtml;
 using namespace DOM;
@@ -88,8 +85,7 @@ void RenderTable::setStyle(RenderStyle *_style)
     setInline(style()->display()==INLINE_TABLE && !isPositioned());
     setReplaced(style()->display()==INLINE_TABLE);
 
-    // In the collapsed border model, there is no cell spacing.
-    spacing = collapseBorders() ? 0 : style()->borderSpacing();
+    spacing = style()->borderSpacing();
     columnPos[0] = spacing;
 
     if ( !tableLayout || style()->tableLayout() != oldTableLayout ) {
@@ -147,25 +143,26 @@ void RenderTable::addChild(RenderObject *child, RenderObject *beforeChild)
         break;
     default:
         if ( !beforeChild && lastChild() &&
-	     lastChild()->isTableSection() && lastChild()->isAnonymous() ) {
+	     lastChild()->isTableSection() && lastChild()->isAnonymousBox() ) {
             o = lastChild();
         } else {
 	    RenderObject *lastBox = beforeChild;
-	    while ( lastBox && lastBox->parent()->isAnonymous() &&
+	    while ( lastBox && lastBox->parent()->isAnonymousBox() &&
 		    !lastBox->isTableSection() && lastBox->style()->display() != TABLE_CAPTION )
 		lastBox = lastBox->parent();
-	    if ( lastBox && lastBox->isAnonymous() ) {
+	    if ( lastBox && lastBox->isAnonymousBox() ) {
 		lastBox->addChild( child, beforeChild );
 		return;
 	    } else {
 		if ( beforeChild && !beforeChild->isTableSection() )
 		    beforeChild = 0;
   		//kdDebug( 6040 ) << this <<" creating anonymous table section beforeChild="<< beforeChild << endl;
-		o = new (renderArena()) RenderTableSection(document() /* anonymous */);
+		o = new (renderArena()) RenderTableSection(0 /* anonymous */);
 		RenderStyle *newStyle = new RenderStyle();
 		newStyle->inheritFrom(style());
                 newStyle->setDisplay(TABLE_ROW_GROUP);
 		o->setStyle(newStyle);
+		o->setIsAnonymousBox(true);
 		addChild(o, beforeChild);
 	    }
         }
@@ -217,22 +214,8 @@ void RenderTable::layout()
     KHTMLAssert( minMaxKnown() );
     KHTMLAssert( !needSectionRecalc );
 
-    if (posChildNeedsLayout() && !normalChildNeedsLayout() && !selfNeedsLayout()) {
-        // All we have to is lay out our positioned objects.
-        layoutPositionedObjects(true);
-        setNeedsLayout(false);
-        return;
-    }
-
-#ifdef INCREMENTAL_REPAINTING
-    QRect oldBounds, oldFullBounds;
-    bool checkForRepaint = checkForRepaintDuringLayout();
-    if (checkForRepaint)
-        getAbsoluteRepaintRectIncludingFloats(oldBounds, oldFullBounds);
-#endif
-    
     //kdDebug( 6040 ) << renderName() << "(Table)"<< this << " ::layout0() width=" << width() << ", needsLayout=" << needsLayout() << endl;
-    
+
     m_height = 0;
     initMaxMarginValues();
     
@@ -273,20 +256,11 @@ void RenderTable::layout()
     }
 
     m_height += borderTop();
-    if (!collapseBorders())
-        m_height += paddingTop();
-
-    int oldHeight = m_height;
-    calcHeight();
-    int newHeight = m_height;
-    m_height = oldHeight;
 
     // html tables with percent height are relative to view
     Length h = style()->height();
     int th=0;
-    if (isPositioned())
-        th = newHeight;
-    else if (h.isFixed())
+    if (h.isFixed())
         th = h.value;
     else if (h.isPercent())
     {
@@ -332,10 +306,7 @@ void RenderTable::layout()
             firstBody->layoutRows( th - calculatedHeight );
         }
     }
-    
     int bl = borderLeft();
-    if (!collapseBorders())
-        bl += paddingLeft();
 
     // position the table sections
     if ( head ) {
@@ -357,8 +328,6 @@ void RenderTable::layout()
 
 
     m_height += borderBottom();
-    if (!collapseBorders())
-        m_height += paddingBottom();
 
     if(tCaption && tCaption->style()->captionSide()==CAPBOTTOM) {
         tCaption->setPos(tCaption->marginLeft(), m_height);
@@ -367,16 +336,14 @@ void RenderTable::layout()
 
     //kdDebug(0) << "table height: " << m_height << endl;
 
+    calcHeight();
+
+    //kdDebug(0) << "table height: " << m_height << endl;
+
     // table can be containing block of positioned elements.
     // ### only pass true if width or height changed.
     layoutPositionedObjects( true );
 
-#ifdef INCREMENTAL_REPAINTING
-    // Repaint with our new bounds if they are different from our old bounds.
-    if (checkForRepaint)
-        repaintAfterLayoutIfNeeded(oldBounds, oldFullBounds);
-#endif
-    
     setNeedsLayout(false);
 }
 
@@ -716,14 +683,14 @@ RenderTableSection::~RenderTableSection()
     clearGrid();
 }
 
-void RenderTableSection::detach()
+void RenderTableSection::detach(RenderArena* arena)
 {
     // recalc cell info because RenderTable has unguarded pointers
     // stored that point to this RenderTableSection.
     if (table())
         table()->setNeedSectionRecalc();
 
-    RenderBox::detach();
+    RenderBox::detach(arena);
 }
 
 void RenderTableSection::setStyle(RenderStyle* _style)
@@ -755,22 +722,23 @@ void RenderTableSection::addChild(RenderObject *child, RenderObject *beforeChild
         if( !beforeChild )
             beforeChild = lastChild();
 
-        if( beforeChild && beforeChild->isAnonymous() )
+        if( beforeChild && beforeChild->isAnonymousBox() )
             row = beforeChild;
         else {
 	    RenderObject *lastBox = beforeChild;
-	    while ( lastBox && lastBox->parent()->isAnonymous() && !lastBox->isTableRow() )
+	    while ( lastBox && lastBox->parent()->isAnonymousBox() && !lastBox->isTableRow() )
 		lastBox = lastBox->parent();
-	    if ( lastBox && lastBox->isAnonymous() ) {
+	    if ( lastBox && lastBox->isAnonymousBox() ) {
 		lastBox->addChild( child, beforeChild );
 		return;
 	    } else {
 		//kdDebug( 6040 ) << "creating anonymous table row" << endl;
-		row = new (renderArena()) RenderTableRow(document() /* anonymous table */);
+		row = new (renderArena()) RenderTableRow(0 /* anonymous table */);
 		RenderStyle *newStyle = new RenderStyle();
 		newStyle->inheritFrom(style());
 		newStyle->setDisplay( TABLE_ROW );
 		row->setStyle(newStyle);
+		row->setIsAnonymousBox(true);
 		addChild(row, beforeChild);
 	    }
         }
@@ -963,7 +931,7 @@ void RenderTableSection::calcRowHeight()
     int spacing = table()->cellSpacing();
 
     rowPos.resize( totalRows + 1 );
-    rowPos[0] = spacing;
+    rowPos[0] =  spacing + borderTop();
 
     for ( int r = 0; r < totalRows; r++ ) {
 	rowPos[r+1] = 0;
@@ -992,7 +960,7 @@ void RenderTableSection::calcRowHeight()
 		indx = 0;
 
 	    ch = cell->style()->height().width(0);
-	    if (cell->height() > ch)
+	    if ( cell->height() > ch)
 		ch = cell->height();
 
 	    pos = rowPos[ indx ] + ch + table()->cellSpacing();
@@ -1103,7 +1071,7 @@ int RenderTableSection::layoutRows( int toAdd )
         }
     }
 
-    int leftOffset = spacing;
+    int leftOffset = borderLeft() + spacing;
 
     int nEffCols = table()->numEffCols();
     for ( int r = 0; r < totalRows; r++ )
@@ -1323,13 +1291,13 @@ RenderTableRow::RenderTableRow(DOM::NodeImpl* node)
     setInline(false);   // our object is not Inline
 }
 
-void RenderTableRow::detach()
+void RenderTableRow::detach(RenderArena* arena)
 {
     RenderTableSection *s = section();
     if (s) {
         s->setNeedCellRecalc();
     }
-    RenderContainer::detach();
+    RenderContainer::detach(arena);
 }
 
 void RenderTableRow::setStyle(RenderStyle* style)
@@ -1356,14 +1324,15 @@ void RenderTableRow::addChild(RenderObject *child, RenderObject *beforeChild)
         if ( !last )
             last = lastChild();
         RenderTableCell *cell = 0;
-        if( last && last->isAnonymous() && last->isTableCell() )
+        if( last && last->isAnonymousBox() && last->isTableCell() )
             cell = static_cast<RenderTableCell *>(last);
         else {
-	    cell = new (renderArena()) RenderTableCell(document() /* anonymous object */);
+	    cell = new (renderArena()) RenderTableCell(0 /* anonymous object */);
 	    RenderStyle *newStyle = new RenderStyle();
 	    newStyle->inheritFrom(style());
 	    newStyle->setDisplay( TABLE_CELL );
 	    cell->setStyle(newStyle);
+	    cell->setIsAnonymousBox(true);
 	    addChild(cell, beforeChild);
         }
         cell->addChild(child);
@@ -1402,34 +1371,25 @@ void RenderTableRow::layout()
 
     RenderObject *child = firstChild();
     while( child ) {
-        if (child->isTableCell()) {
-            RenderTableCell *cell = static_cast<RenderTableCell *>(child);
-            if (cell->getCellPercentageHeight()) {
-                cell->setCellPercentageHeight(0);
-                if (!cell->needsLayout())
-                    cell->setChildNeedsLayout(true);
-            }
-            if (child->needsLayout()) {
-                cell->calcVerticalMargins();
-                cell->layout();
-                cell->setCellTopExtra(0);
-                cell->setCellBottomExtra(0);
-            }
-        }
+	if ( child->isTableCell() && child->needsLayout() ) {
+	    RenderTableCell *cell = static_cast<RenderTableCell *>(child);
+	    cell->calcVerticalMargins();
+	    cell->layout();
+	    cell->setCellTopExtra(0);
+	    cell->setCellBottomExtra(0);
+	}
 	child = child->nextSibling();
     }
     setNeedsLayout(false);
 }
 
-QRect RenderTableRow::getAbsoluteRepaintRect()
+void RenderTableRow::repaint(bool immediate)
 {
     // For now, just repaint the whole table.
     // FIXME: Find a better way to do this.
     RenderTable* parentTable = table();
     if (parentTable)
-        return parentTable->getAbsoluteRepaintRect();
-    else
-        return QRect();
+        parentTable->repaint(immediate);
 }
 
 // -------------------------------------------------------------------------
@@ -1446,12 +1406,12 @@ RenderTableCell::RenderTableCell(DOM::NodeImpl* _node)
   m_percentageHeight = 0;
 }
 
-void RenderTableCell::detach()
+void RenderTableCell::detach(RenderArena* arena)
 {
     if (parent() && section())
         section()->setNeedCellRecalc();
 
-    RenderBlock::detach();
+    RenderBlock::detach(arena);
 }
 
 void RenderTableCell::updateFromElement()
@@ -1522,10 +1482,10 @@ void RenderTableCell::close()
 }
 
 
-void RenderTableCell::computeAbsoluteRepaintRect(QRect& r, bool f)
+void RenderTableCell::repaintRectangle(int x, int y, int w, int h, bool immediate, bool f)
 {
-    r.setY(r.y() + _topExtra);
-    RenderBlock::computeAbsoluteRepaintRect(r, f);
+    y += _topExtra;
+    RenderBlock::repaintRectangle(x, y, w, h, immediate, f);
 }
 
 bool RenderTableCell::absolutePosition(int &xPos, int &yPos, bool f)

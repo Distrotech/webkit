@@ -14,8 +14,6 @@
 #import <Foundation/NSFileManager_NSURLExtras.h>
 #import <Foundation/NSURL_NSURLExtras.h>
 
-#define WEB_REASON_NONE -1
-
 @implementation WebBaseNetscapePluginStream
 
 - (void)dealloc
@@ -85,7 +83,7 @@
     
     transferMode = NP_NORMAL;
     offset = 0;
-    reason = WEB_REASON_NONE;
+    reason = -1;
 
     // FIXME: Need a way to check if stream is seekable
 
@@ -94,8 +92,7 @@
 
     if (npErr != NPERR_NO_ERROR) {
         ERROR("NPP_NewStream failed with error: %d URLString: %s", npErr, [URL _web_URLCString]);
-        // Calling cancelWithReason with WEB_REASON_NONE cancels the load, but doesn't call NPP_DestroyStream.
-        [self cancelWithReason:WEB_REASON_NONE];
+        stream.ndata = nil;
         return;
     }
 
@@ -111,7 +108,7 @@
             break;
         case NP_SEEK:
             ERROR("Stream type: NP_SEEK not yet supported");
-            [self cancelWithReason:NPRES_NETWORK_ERR];
+            // FIXME: Need to properly handle this error.
             break;
         default:
             ERROR("unknown stream type");
@@ -128,7 +125,7 @@
 
 - (void)destroyStream
 {
-    if (![plugin isLoaded] || !stream.ndata || [deliveryData length] > 0 || reason == WEB_REASON_NONE) {
+    if (![plugin isLoaded] || !stream.ndata || [deliveryData length] > 0 || reason == -1) {
         return;
     }
     
@@ -157,12 +154,11 @@
     [self destroyStream];
 }
 
-- (void)cancelWithReason:(NPReason)theReason
+- (void)receivedError:(NPError)error
 {
     // Stop any pending data from being streamed.
     [deliveryData setLength:0];
-    [self destroyStreamWithReason:theReason];
-    stream.ndata = nil;
+    [self destroyStreamWithReason:error];
 }
 
 - (void)finishedLoadingWithData:(NSData *)data
@@ -171,33 +167,33 @@
         return;
     }
     
-    if ((transferMode == NP_ASFILE || transferMode == NP_ASFILEONLY) && !path) {
-        path = strdup("/tmp/WebKitPlugInStreamXXXXXX");
-        int fd = mkstemp(path);
-        if (fd == -1) {
-            // This should almost never happen.
-            ERROR("can't make temporary file, almost certainly a problem with /tmp");
-            // This is not a network error, but the only error codes are "network error" and "user break".
-            [self cancelWithReason:NPRES_NETWORK_ERR];
-            free(path);
-            path = NULL;
-            return;
-        }
-        int dataLength = [data length];
-        if (dataLength > 0) {
+    if ((transferMode == NP_ASFILE || transferMode == NP_ASFILEONLY) && [data length] > 0) {
+        if (!path) {
+            path = strdup("/tmp/WebKitPlugInStreamXXXXXX");
+            int fd = mkstemp(path);
+            if (fd == -1) {
+                // This should almost never happen.
+                ERROR("can't make temporary file, almost certainly a problem with /tmp");
+                // This is not a network error, but the only error codes are "network error" and "user break".
+                [self receivedError:NPRES_NETWORK_ERR];
+                free(path);
+                path = NULL;
+                return;
+            }
+            int dataLength = [data length];
             int byteCount = write(fd, [data bytes], dataLength);
             if (byteCount != dataLength) {
                 // This happens only rarely, when we are out of disk space or have a disk I/O error.
                 ERROR("error writing to temporary file, errno %d", errno);
                 close(fd);
                 // This is not a network error, but the only error codes are "network error" and "user break".
-                [self cancelWithReason:NPRES_NETWORK_ERR];
+                [self receivedError:NPRES_NETWORK_ERR];
                 free(path);
                 path = NULL;
                 return;
             }
+            close(fd);
         }
-        close(fd);
     }
 
     [self destroyStreamWithReason:NPRES_DONE];
