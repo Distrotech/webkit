@@ -296,6 +296,10 @@ extern const OSType NSCarbonWindowPropertyTag;
     [super dealloc];
 
 }
+- (void)finalize {
+    if (_eventHandler) RemoveEventHandler(_eventHandler);
+    [super finalize];
+}
 
 - (WindowRef)windowRef {
 

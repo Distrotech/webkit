@@ -27,9 +27,9 @@ NSMutableDictionary *sets = nil;
     CFMutableSetRef set = (CFMutableSetRef)[sets objectForKey:name];
 
     if (set == NULL) {
-	set = CFSetCreateMutable(NULL, 0, &NonRetainingSetCallbacks);
+	set = CFMakeCollectable(CFSetCreateMutable(NULL, 0, &NonRetainingSetCallbacks));
 	[sets setObject:(id)set forKey:name];
-	CFRelease(set);
+	[set release];
     }
 
     

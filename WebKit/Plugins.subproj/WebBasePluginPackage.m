@@ -49,7 +49,7 @@
     }
 
     if (wasAliased) {
-        NSURL *URL = (NSURL *)CFURLCreateFromFSRef(kCFAllocatorDefault, &fref);
+        NSURL *URL = (NSURL *)CFMakeCollectable(CFURLCreateFromFSRef(kCFAllocatorDefault, &fref));
         newPath = [URL path];
         [URL release];
     }
@@ -164,6 +164,11 @@
     [lastModifiedDate release];
     
     [super dealloc];
+}
+- (void)finalize
+{
+    [self unload];
+    [super finalize];
 }
 
 - (NSString *)name

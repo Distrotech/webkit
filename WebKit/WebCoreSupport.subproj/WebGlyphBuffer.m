@@ -50,6 +50,11 @@
     [self reset];
     [super dealloc];
 }
+- (void)finalize
+{
+    [self reset];
+    [super finalize];
+}
 
 
 - (void)drawInView: (NSView *)targetView

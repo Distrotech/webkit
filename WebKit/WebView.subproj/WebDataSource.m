@@ -75,6 +75,12 @@
 
     [super dealloc];
 }
+- (void)finalize
+{
+    ASSERT(!loading);
+    [iconLoader setDelegate:nil];
+    [super finalize];
+}
 
 @end
 
@@ -1045,6 +1051,11 @@
     
     [super dealloc];
 }
+- (void)finalize
+{
+    --WebDataSourceCount;
+    [super finalize];
+}
 
 - (NSData *)data
 {
@@ -1116,7 +1127,7 @@
             break;
         }
     }
-    [pool release];
+    [pool drain];
     
     return childFrame != nil;
 }

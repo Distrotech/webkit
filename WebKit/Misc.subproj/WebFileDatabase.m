@@ -135,6 +135,10 @@ enum
     
     [super dealloc];
 }
+-(void)finalize
+{
+    [super finalize];
+}
 
 @end
 
@@ -208,7 +212,7 @@ static void UniqueFilePathForKey(id key, char *buffer)
 
     LOG(FileDatabaseActivity, "lru list created");
 
-    [pool release];
+    [pool drain];
 }
 
 -(void)_truncateToSizeLimit:(unsigned)size
@@ -272,7 +276,7 @@ static void UniqueFilePathForKey(id key, char *buffer)
 
     END_EXCEPTION_HANDLER
 
-    [pool release];
+    [pool drain];
 }
 
 static void databaseInit()
@@ -320,6 +324,14 @@ static void databaseInit()
     [mutex release];
 
     [super dealloc];
+}
+-(void)finalize
+{
+    [mutex lock];
+    [mutex unlock];
+    [self close];
+    [timer invalidate];
+    [super finalize];
 }
 
 -(void)setTimer

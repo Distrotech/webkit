@@ -122,6 +122,11 @@
     [originalURL release];
     [super dealloc];
 }
+- (void)finalize
+{
+    ASSERT(reachedTerminalState);
+    [super finalize];
+}
 
 - (void)deliverResource
 {

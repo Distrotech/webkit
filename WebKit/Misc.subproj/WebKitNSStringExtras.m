@@ -145,13 +145,13 @@ static BOOL canUseFastRenderer (const UniChar *buffer, unsigned length)
 		return NSMacOSRomanStringEncoding;
 	}
 	
-	CFURLRef URL = CFURLCreateFromFSRef(NULL, &fref);
+	CFURLRef URL = CFMakeCollectable(CFURLCreateFromFSRef(NULL, &fref));
 	if (URL == NULL) {
 		return NSMacOSRomanStringEncoding;
 	}
 	
 	NSString *path = [(NSURL *)URL path];
-	CFRelease(URL);
+	[URL release];
 	
 	// Get the lproj directory name
 	path = [path stringByDeletingLastPathComponent];
@@ -160,7 +160,7 @@ static BOOL canUseFastRenderer (const UniChar *buffer, unsigned length)
 	}
 	
 	NSString *directoryName = [[path stringByDeletingPathExtension] lastPathComponent];
-	NSString *locale = (NSString *)CFLocaleCreateCanonicalLocaleIdentifierFromString(NULL, (CFStringRef)directoryName);
+	NSString *locale = (NSString *)CFMakeCollectable(CFLocaleCreateCanonicalLocaleIdentifierFromString(NULL, (CFStringRef)directoryName));
 	if (locale == nil) {
 		return NSMacOSRomanStringEncoding;
 	}

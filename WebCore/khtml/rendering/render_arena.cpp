@@ -64,17 +64,13 @@ RenderArena::~RenderArena()
     FreeArenaPool(&m_pool);
 }
 
-extern "C" { 
-void* NSZoneMalloc(void* zone, size_t size);
-void NSZoneFree(void* zone, void* ptr);
-}
+// #include <Foundation/NSPrivateDecls.h>
+extern "C" void* NSAllocateScannedUncollectable(size_t size);
 
 void* RenderArena::allocate(size_t size)
 {
     // XXX_PCB don't use arenas when GC is used.
-    if (objc_collecting_enabled()) {
-        return ::NSZoneMalloc(NULL, size);
-    }
+    if (objc_collecting_enabled()) return ::NSAllocateScannedUncollectable(size);
 
 #ifndef NDEBUG
     // Use standard malloc so that memory debugging tools work.
@@ -115,9 +111,7 @@ void* RenderArena::allocate(size_t size)
 void RenderArena::free(size_t size, void* ptr)
 {
     // XXX_PCB don't use arenas when GC is used.
-    if (objc_collecting_enabled()) {
-        return ::NSZoneFree(NULL, ptr);
-    }
+    if (objc_collecting_enabled()) return ::free(ptr);
 
 #ifndef NDEBUG
     // Use standard free so that memory debugging tools work.

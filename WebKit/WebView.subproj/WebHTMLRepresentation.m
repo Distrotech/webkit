@@ -58,6 +58,11 @@
 
     [super dealloc];
 }
+- (void)finalize
+{
+    --WebHTMLRepresentationCount;
+    [super finalize];
+}
 
 - (WebBridge *)_bridge
 {

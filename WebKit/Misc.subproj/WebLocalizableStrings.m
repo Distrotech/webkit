@@ -28,9 +28,9 @@ NSString *WebLocalizedString(WebLocalizableStringsBundle *stringsBundle, const c
         }
     }
     NSString *notFound = @"localized string not found";
-    CFStringRef keyString = CFStringCreateWithCStringNoCopy(NULL, key, kCFStringEncodingUTF8, kCFAllocatorNull);
+    CFStringRef keyString = CFMakeCollectable(CFStringCreateWithCStringNoCopy(NULL, key, kCFStringEncodingUTF8, kCFAllocatorNull));
     NSString *result = [bundle localizedStringForKey:(NSString *)keyString value:notFound table:nil];
-    CFRelease(keyString);
+    [keyString release];
     ASSERT_WITH_MESSAGE(result != notFound, "could not find localizable string %s in bundle", key);
     return result;
 }

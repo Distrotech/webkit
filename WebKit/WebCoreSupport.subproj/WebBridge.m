@@ -112,6 +112,18 @@
     
     [super dealloc];
 }
+- (void)finalize
+{
+    ASSERT(_frame == nil);
+    if (_keyboardUIModeAccessed) {
+        [[NSDistributedNotificationCenter defaultCenter] 
+            removeObserver:self name:KeyboardUIModeDidChangeNotification object:nil];
+        [[NSNotificationCenter defaultCenter] 
+            removeObserver:self name:WebPreferencesChangedNotification object:nil];
+    }
+    --WebBridgeCount;
+    [super finalize];
+}
 
 - (WebFrame *)webFrame
 {

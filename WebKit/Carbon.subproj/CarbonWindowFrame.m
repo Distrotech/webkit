@@ -122,6 +122,9 @@ The class of objects that are meant to be used as _borderViews of NSCarbonWindow
     [super dealloc];
     
 }
+- (void)finalize {
+    [super finalize];
+}
 
 
 // Sink a method invocation.

@@ -60,6 +60,15 @@
     [_private release];
     [super dealloc];
 }
+- (void)finalize
+{
+    unsigned i;
+    for (i = 0; i < [_private->entries count]; i++){
+        WebHistoryItem *item = [_private->entries objectAtIndex: i];
+        [item setHasPageCache: NO]; 
+    }
+    [super finalize];
+}
 
 - (void)addItem:(WebHistoryItem *)entry;
 {

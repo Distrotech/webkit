@@ -60,7 +60,6 @@ NSString *WebActionOriginalURLKey = @"WebActionOriginalURLKey";
     [super dealloc];
 }
 
-
 -(void)_usePolicy:(WebPolicyAction)policy
 {
     if (_private->target != nil) {

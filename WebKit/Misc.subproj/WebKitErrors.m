@@ -122,5 +122,5 @@ static void registerErrors()
 
     [NSError _web_addErrorsWithCodesAndDescriptions:dict inDomain:WebKitErrorDomain];
 
-    [pool release];
+    [pool drain];
 }

@@ -1072,6 +1072,19 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
     free(cValues);
     [super dealloc];
 }
+-(void)finalize
+{
+    unsigned i;
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [self stop];
+    for (i = 0; i < argsCount; i++) {
+        free(cAttributes[i]);
+        free(cValues[i]);
+    }
+    free(cAttributes);
+    free(cValues);
+    [super finalize];
+}
 
 - (void)drawRect:(NSRect)rect
 {
@@ -1254,7 +1267,7 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
         return nil;
     }
     
-    NSString *string = (NSString *)CFStringCreateWithCString(kCFAllocatorDefault, URLCString, kCFStringEncodingWindowsLatin1);
+    NSString *string = (NSString *)CFMakeCollectable(CFStringCreateWithCString(kCFAllocatorDefault, URLCString, kCFStringEncodingWindowsLatin1));
     NSString *URLString = [string _web_stringByStrippingReturnCharacters];
     [string release];
     
@@ -1393,7 +1406,7 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
         NSString *target = nil;
         if (cTarget) {
             // Find the frame given the target string.
-            target = (NSString *)CFStringCreateWithCString(kCFAllocatorDefault, cTarget, kCFStringEncodingWindowsLatin1);
+            target = (NSString *)CFMakeCollectable(CFStringCreateWithCString(kCFAllocatorDefault, cTarget, kCFStringEncodingWindowsLatin1));
         }
         
         WebFrame *frame = [self webFrame];
@@ -1453,7 +1466,7 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
 
     if (file) {
         // If we're posting a file, buf is either a file URL or a path to the file.
-        NSString *bufString = (NSString *)CFStringCreateWithCString(kCFAllocatorDefault, buf, kCFStringEncodingWindowsLatin1);
+        NSString *bufString = (NSString *)CFMakeCollectable(CFStringCreateWithCString(kCFAllocatorDefault, buf, kCFStringEncodingWindowsLatin1));
         if (!bufString) {
             return NPERR_INVALID_PARAM;
         }
@@ -1577,7 +1590,7 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
         return;
     }
 
-    NSString *status = (NSString *)CFStringCreateWithCString(NULL, message, kCFStringEncodingWindowsLatin1);
+    NSString *status = (NSString *)CFMakeCollectable(CFStringCreateWithCString(NULL, message, kCFStringEncodingWindowsLatin1));
     LOG(Plugins, "NPN_Status: %@", status);
     WebView *wv = [self webView];
     [[wv _UIDelegateForwarder] webView:wv setStatusText:status];

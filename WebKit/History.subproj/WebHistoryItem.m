@@ -104,6 +104,11 @@ NSString *WebHistoryItemChangedNotification = @"WebHistoryItemChangedNotificatio
     
     [super dealloc];
 }
+- (void)finalize
+{
+    [self _retainIconInDatabase:NO];
+    [super finalize];
+}
 
 - (id)copyWithZone:(NSZone *)zone
 {

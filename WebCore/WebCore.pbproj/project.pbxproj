@@ -118,6 +118,7 @@
 				F5C2869302846DCD018635CA,
 				F5C2869402846DCD018635CA,
 				F5C2869502846DCD018635CA,
+				39E0AD370654355B0019CDDC,
 				F8216299029F4FB501000131,
 				704FD2FE056972FA003DBED9,
 				93F1D31A0558CC5C00821BC0,
@@ -832,6 +833,7 @@
 				704FD2FF056972FA003DBED9,
 				848A3210057E688B001A2362,
 				BC8CAEC805BF251000E11F1B,
+				39E0AD380654355B0019CDDC,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -909,6 +911,30 @@
 //352
 //353
 //354
+//390
+//391
+//392
+//393
+//394
+		39E0AD370654355B0019CDDC = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.framework;
+			name = Foundation.framework;
+			path = /System/Library/Frameworks/Foundation.framework;
+			refType = 0;
+			sourceTree = "<absolute>";
+		};
+		39E0AD380654355B0019CDDC = {
+			fileRef = 39E0AD370654355B0019CDDC;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//390
+//391
+//392
+//393
+//394
 //510
 //511
 //512

@@ -38,10 +38,18 @@
 #ifdef __OBJC__
 @protocol WebCoreImageRenderer;
 typedef id <WebCoreImageRenderer> WebCoreImageRendererPtr;
+class WebCoreImageRendererRef {
+    WebCoreImageRendererPtr ref;
+ public:
+    operator WebCoreImageRendererPtr() { return ref; }
+    operator const WebCoreImageRendererPtr() const { return ref; }
+    WebCoreImageRendererPtr& operator=(WebCoreImageRendererPtr r) { (__strong WebCoreImageRendererPtr)ref = r; return ref; }
+};
 @class NSString;
 #else
 class WebCoreImageRenderer;
 typedef WebCoreImageRenderer *WebCoreImageRendererPtr;
+typedef WebCoreImageRendererPtr WebCoreImageRendererRef;
 class NSString;
 #endif
 
@@ -87,7 +95,7 @@ public:
     
 private:
 
-    __strong WebCoreImageRendererPtr imageRenderer;
+    WebCoreImageRendererRef imageRenderer;
         
     mutable bool needCopyOnWrite;
     

@@ -47,6 +47,11 @@
     
     [super dealloc];
 }
+- (void)finalize
+{
+    [[rep image] stopAnimation];
+    [super finalize];
+}
 
 - (BOOL)haveCompleteImage
 {

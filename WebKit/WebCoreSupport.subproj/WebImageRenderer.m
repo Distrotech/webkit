@@ -220,6 +220,12 @@ static NSMutableSet *activeImageRenderers;
     [originalData release];
     [super dealloc];
 }
+- (void)finalize
+{
+    ASSERT(frameTimer == nil);
+    ASSERT(frameView == nil);
+    [super finalize];
+}
 
 - (id)firstRepProperty:(NSString *)propertyName
 {

@@ -59,6 +59,11 @@
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [super dealloc];
 }
+- (void)finalize
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [super finalize];
+}
 
 - (float)_textSizeMultiplierFromWebView
 {

@@ -175,6 +175,20 @@ NSString *WebPageCacheDocumentViewKey = @"WebPageCacheDocumentViewKey";
 
     [super dealloc];
 }
+- (void)finalize
+{
+    ASSERT(scheduledLayoutTimer == nil);
+    [webFrameView _setWebView:nil];
+    [dataSource _setWebView:nil];
+    [provisionalDataSource _setWebView:nil];
+    ASSERT(listener == nil);
+    ASSERT(policyRequest == nil);
+    ASSERT(policyFrameName == nil);
+    ASSERT(policyTarget == nil);
+    ASSERT(policyFormState == nil);
+    ASSERT(policyDataSource == nil);
+    [super finalize];
+}
 
 - (NSString *)name { return name; }
 - (void)setName:(NSString *)n 
@@ -2545,6 +2559,12 @@ static CFAbsoluteTime _timeOfLastCompletedLoad;
     [self _detachFromParent];
     [_private release];
     [super dealloc];
+}
+- (void)finalize
+{
+    --WebFrameCount;
+    [self _detachFromParent];
+    [super finalize];
 }
 
 - (NSString *)name

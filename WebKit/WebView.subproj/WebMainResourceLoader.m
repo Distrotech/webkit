@@ -57,6 +57,11 @@
     
     [super dealloc];
 }
+- (void)finalize
+{
+    [proxy setDelegate:nil];
+    [super finalize];
+}
 
 - (void)receivedError:(NSError *)error
 {

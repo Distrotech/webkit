@@ -332,9 +332,9 @@ static NSString *mapHostNames(NSString *string, BOOL encode)
         // (e.g calls to NSURL -path). However, this function is not tolerant of illegal UTF-8 sequences, which
         // could either be a malformed string or bytes in a different encoding, like shift-jis, so we fall back
         // onto using ISO Latin 1 in those cases.
-        result = (NSURL *)CFURLCreateAbsoluteURLWithBytes(NULL, bytes, length, kCFStringEncodingUTF8, (CFURLRef)baseURL, YES);
+        result = (NSURL *)CFMakeCollectable(CFURLCreateAbsoluteURLWithBytes(NULL, bytes, length, kCFStringEncodingUTF8, (CFURLRef)baseURL, YES));
         if (!result) {
-            result = (NSURL *)CFURLCreateAbsoluteURLWithBytes(NULL, bytes, length, kCFStringEncodingISOLatin1, (CFURLRef)baseURL, YES);
+            result = (NSURL *)CFMakeCollectable(CFURLCreateAbsoluteURLWithBytes(NULL, bytes, length, kCFStringEncodingISOLatin1, (CFURLRef)baseURL, YES));
         }
         [result autorelease];
     }
@@ -498,11 +498,11 @@ static NSString *mapHostNames(NSString *string, BOOL encode)
 - (NSURL *)_webkit_URLByRemovingFragment
 {
     // Check to see if a fragment exists before decomposing the URL.
-    CFStringRef frag = CFURLCopyFragment((CFURLRef)self, NULL);
+    CFStringRef frag = CFMakeCollectable(CFURLCopyFragment((CFURLRef)self, NULL));
     if (!frag) {
         return self;
     }
-    CFRelease(frag);
+    [frag release];
     
     WebURLComponents components = [self _web_URLComponents];
     components.fragment = nil;
@@ -560,7 +560,7 @@ static NSString *mapHostNames(NSString *string, BOOL encode)
     }
     
     NSURL *result = changed
-        ? [(NSURL *)CFURLCreateAbsoluteURLWithBytes(NULL, buffer, bytesFilled, kCFStringEncodingUTF8, nil, YES) autorelease]
+        ? [(NSURL *)CFMakeCollectable(CFURLCreateAbsoluteURLWithBytes(NULL, buffer, bytesFilled, kCFStringEncodingUTF8, nil, YES)) autorelease]
         : self;
 
     if (buffer != static_buffer) {
@@ -733,7 +733,7 @@ static NSString *mapHostNames(NSString *string, BOOL encode)
     NSString *string = self;
     if (encode && [self rangeOfString:@"%" options:NSLiteralSearch range:range].location != NSNotFound) {
         NSString *substring = [self substringWithRange:range];
-        substring = (NSString *)CFURLCreateStringByReplacingPercentEscapes(NULL, (CFStringRef)substring, CFSTR(""));
+        substring = (NSString *)CFMakeCollectable(CFURLCreateStringByReplacingPercentEscapes(NULL, (CFStringRef)substring, CFSTR("")));
         if (substring != nil) {
             string = substring;
             range = NSMakeRange(0, [string length]);

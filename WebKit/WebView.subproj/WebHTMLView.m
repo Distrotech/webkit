@@ -128,6 +128,13 @@ static BOOL forceRealHitTest = NO;
     
     [super dealloc];
 }
+- (void)finalize
+{
+    ASSERT(autoscrollTimer == nil);
+    ASSERT(autoscrollTriggerEvent == nil);
+    [pluginController destroyAllPlugins];
+    [super finalize];
+}
 
 @end
 
@@ -1016,6 +1023,13 @@ static WebHTMLView *lastHitView = nil;
     _private = nil;
     [super dealloc];
 }
+- (void)finalize
+{
+    [self _clearLastHitViewIfSelf];
+    [self _reset];
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [super finalize];
+}
 
 - (IBAction)takeFindStringFromSelection:(id)sender
 {
@@ -1468,7 +1482,8 @@ static WebHTMLView *lastHitView = nil;
         }
         
         //double start = CFAbsoluteTimeGetCurrent();
-        [[self _bridge] drawRect:rect];
+        WebBridge *bridge = [self _bridge];
+        [bridge drawRect:rect];
         //LOG(Timing, "draw time %e", CFAbsoluteTimeGetCurrent() - start);
 
         if (textRendererFactoryIfCoalescing != nil) {

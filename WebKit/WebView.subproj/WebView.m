@@ -151,6 +151,11 @@ NSString *_WebMainFrameURLKey =         @"mainFrameURL";
     
     [super dealloc];
 }
+- (void)finalize
+{
+    ASSERT(!mainFrame);
+    [super finalize];
+}
 
 @end
 
@@ -1341,6 +1346,14 @@ NS_ENDHANDLER
     _private = nil;
 
     [super dealloc];
+}
+- (void)finalize
+{
+    [self _close];
+    --WebViewCount;
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [WebPreferences _removeReferenceForIdentifier: [self preferencesIdentifier]];
+    [super finalize];
 }
 
 - (void)setPreferences: (WebPreferences *)prefs

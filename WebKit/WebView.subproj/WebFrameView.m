@@ -446,6 +446,12 @@ static NSMutableDictionary *viewTypes;
     
     [super dealloc];
 }
+- (void)finalize 
+{
+    --WebFrameViewCount;
+    _private = nil;
+    [super finalize];
+}
 
 - (WebFrame *)webFrame
 {

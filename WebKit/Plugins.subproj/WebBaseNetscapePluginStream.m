@@ -37,6 +37,16 @@
     
     [super dealloc];
 }
+- (void)finalize
+{
+    ASSERT(stream.ndata == nil);
+    if (path) {
+        unlink(path);
+    }
+    free((void *)stream.url);
+    free(path);
+    [super finalize];
+}
 
 - (uint16)transferMode
 {
