@@ -623,6 +623,10 @@ enum ECursor {
     CURSOR_S_RESIZE, CURSOR_W_RESIZE, CURSOR_TEXT, CURSOR_WAIT, CURSOR_HELP
 };
 
+enum EUserModify {
+    UI_ENABLED, UI_DISABLED, UI_NONE
+};
+
 enum ContentType {
     CONTENT_NONE, CONTENT_OBJECT, CONTENT_TEXT, CONTENT_COUNTER
 };
@@ -714,6 +718,7 @@ protected:
               bool _visuallyOrdered : 1;
               bool _htmlHacks :1;
               bool _should_correct_text_color : 1;
+              EUserModify _user_modify : 2;
     } inherited_flags;
 
 // don't inherit
@@ -801,6 +806,7 @@ protected:
 	inherited_flags._white_space = initialWhiteSpace();
 	inherited_flags._visuallyOrdered = false;
 	inherited_flags._htmlHacks=false;
+    inherited_flags._user_modify = UI_NONE;
         inherited_flags._box_direction = initialBoxDirection();
         inherited_flags._should_correct_text_color = false;
         
@@ -987,6 +993,8 @@ public:
     
     CachedImage *cursorImage() const { return inherited->cursor_image; }
 
+    EUserModify userModify() const { return inherited_flags._user_modify; }
+
     short widows() const { return inherited->widows; }
     short orphans() const { return inherited->orphans; }
     EPageBreak pageBreakInside() const { return inherited->page_break_inside; }
@@ -1138,6 +1146,8 @@ public:
 
     void setCursor( ECursor c ) { inherited_flags._cursor_style = c; }
     void setCursorImage( CachedImage *v ) { SET_VAR(inherited,cursor_image,v) }
+
+    void setUserModify(EUserModify b) { inherited_flags._user_modify = b; }
 
     bool shouldCorrectTextColor() const { return inherited_flags._should_correct_text_color; }
     void setShouldCorrectTextColor(bool b=true) { inherited_flags._should_correct_text_color = b; }
