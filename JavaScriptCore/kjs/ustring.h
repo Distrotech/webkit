@@ -28,6 +28,10 @@
 #include <config.h>
 #endif
 
+#ifdef APPLE_CHANGES
+#include <KWQDef.h>
+#endif
+
 /**
  * @internal
  */
