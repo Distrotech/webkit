@@ -1,3 +1,16 @@
+2004-06-18  Vicki Murley  <vicki@apple.com>
+
+	- merge this change from HEAD
+
+    2004-06-18  Darin Adler  <darin@apple.com>
+
+        Reviewed by John.
+
+        - fixed <rdar://problem/3701893> show expert preferences notes in xcode causes crash (in EllipsisBox code)
+
+        * khtml/rendering/render_block.cpp: (khtml::RenderBlock::paintEllipsisBoxes):
+        Only walk the ellipsis list if hasMarkupTruncation is true.
+
 === Safari-146 ===
 
 2004-06-17  Richard Williamson   <rjw@apple.com>
