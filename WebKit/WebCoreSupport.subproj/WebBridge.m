@@ -433,8 +433,8 @@
     // <rdar://problem/3715785> multiple frame injection vulnerability reported by Secunia, affects almost all browsers
     
     // don't mess with navigation purely within the same frame
-    if ([[self webFrame] webView] == [targetFrame webView]) {
-	return YES;
+    if ([_frame webView] == [targetFrame webView]) {
+        return YES;
     }
 
     // Normally, domain should be called on the DOMDocument since it is a DOM method, but this fix is needed for

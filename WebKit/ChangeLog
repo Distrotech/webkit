@@ -1,5 +1,14 @@
 2004-07-22  Darin Adler  <darin@apple.com>
 
+        Reviewed by Richard.
+
+        - fix frame check to compile in Jaguar version
+
+        * WebCoreSupport.subproj/WebBridge.m:
+        (-[WebBridge canTargetLoadInFrame:]):
+
+2004-07-22  Darin Adler  <darin@apple.com>
+
 	- merge this fix from HEAD for Safari 1.0.3 (to match July 2004 Security Update)
 
     2004-07-20  Maciej Stachowiak  <mjs@apple.com>
@@ -8,7 +17,6 @@
 
         <rdar://problem/3721690> REGRESSION (125.7-148u) clicking on links at macosx.apple.com/Builds does not load new page in frame
 
-        * Plugins.subproj/npruntime.h:
         * WebCoreSupport.subproj/WebBridge.m:
         (-[WebBridge canTargetLoadInFrame:]): Don't apply the restrictions to frames
         that are in the same window (Mozilla does this too).
