@@ -1,3 +1,18 @@
+2004-06-24  Vicki Murley  <vicki@apple.com>
+
+	- roll this change to a branch, for the demo (one more try)
+
+    2004-06-22  Richard Williamson   <rjw@apple.com>
+
+        Fixed <rdar://problem/3707162>: accessing embeds[] plug-in interface may crash
+
+        embedInstance was uninitialized.
+
+        Reviewed by Chris.
+
+        * khtml/html/html_objectimpl.cpp:
+        (HTMLEmbedElementImpl::HTMLEmbedElementImpl):
+
 === WebCore-146.1 ===
 
 2004-06-18  Vicki Murley  <vicki@apple.com>
