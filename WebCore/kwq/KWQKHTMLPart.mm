@@ -87,6 +87,8 @@ using khtml::VISIBLE;
 
 using KIO::Job;
 
+using KJS::Interpreter;
+using KJS::Location;
 using KJS::SavedBuiltins;
 using KJS::SavedProperties;
 using KJS::ScheduledAction;
@@ -169,6 +171,8 @@ KWQKHTMLPart::KWQKHTMLPart()
 
 KWQKHTMLPart::~KWQKHTMLPart()
 {
+    cleanupPluginRootObjects();
+    
     mutableInstances().remove(this);
     if (d->m_view) {
 	d->m_view->deref();
@@ -962,10 +966,7 @@ NSView *KWQKHTMLPart::nextKeyViewInFrame(NodeImpl *node, KWQSelectionDirection d
         else {
             doc->setFocusNode(node);
             if (view()) {
-                QRect rect = node->getRect();
-                int offset = 50; // same offset we use for jumping to anchors in a document
-                view()->ensureVisible(rect.right() + offset, rect.bottom() + offset);
-                view()->ensureVisible(rect.left() - offset, rect.top() - offset);
+                view()->ensureRectVisibleCentered(node->getRect());
             }
             [_bridge makeFirstResponder:[_bridge documentView]];
             return [_bridge documentView];
@@ -1150,8 +1151,12 @@ void KWQKHTMLPart::saveWindowProperties(SavedProperties *windowProperties)
 void KWQKHTMLPart::saveLocationProperties(SavedProperties *locationProperties)
 {
     Window *window = Window::retrieveWindow(this);
-    if (window)
-        window->location()->saveProperties(*locationProperties);
+    if (window) {
+        Interpreter::lock();
+        Location *location = window->location();
+        Interpreter::unlock();
+        location->saveProperties(*locationProperties);
+    }
 }
 
 void KWQKHTMLPart::restoreWindowProperties(SavedProperties *windowProperties)
@@ -1164,8 +1169,12 @@ void KWQKHTMLPart::restoreWindowProperties(SavedProperties *windowProperties)
 void KWQKHTMLPart::restoreLocationProperties(SavedProperties *locationProperties)
 {
     Window *window = Window::retrieveWindow(this);
-    if (window)
-        window->location()->restoreProperties(*locationProperties);
+    if (window) {
+        Interpreter::lock();
+        Location *location = window->location();
+        Interpreter::unlock();
+        location->restoreProperties(*locationProperties);
+    }
 }
 
 void KWQKHTMLPart::saveInterpreterBuiltins(SavedBuiltins &interpreterBuiltins)
@@ -1286,7 +1295,7 @@ WebCoreBridge *KWQKHTMLPart::bridgeForWidget(const QWidget *widget)
 KWQKHTMLPart *KWQKHTMLPart::partForNode(NodeImpl *node)
 {
     ASSERT_ARG(node, node);
-    return KWQ(node->getDocument()->view()->part());
+    return KWQ(node->getDocument()->part());
 }
 
 NSView *KWQKHTMLPart::documentViewForNode(DOM::NodeImpl *node)
@@ -2473,7 +2482,7 @@ NSAttributedString *KWQKHTMLPart::attributedString(NodeImpl *_start, int startOf
                     // will have corrected any illegally nested <a> elements.
                     if (linkStartNode && n.handle() == linkStartNode){
                         DOMString href = parseURL(linkStartNode->getAttribute(ATTR_HREF));
-                        KURL kURL = KWQ(linkStartNode->getDocument()->view()->part())->completeURL(href.string());
+                        KURL kURL = KWQ(linkStartNode->getDocument()->part())->completeURL(href.string());
                         
                         NSURL *URL = kURL.getNSURL();
                         [result addAttribute:NSLinkAttributeName value:URL range:NSMakeRange(linkStartLocation, [result length]-linkStartLocation)];
@@ -2773,5 +2782,19 @@ Bindings::Instance *KWQKHTMLPart::getAppletInstanceForView (NSView *aView)
         return Bindings::Instance::createBindingForLanguageInstance (Bindings::Instance::JavaLanguage, applet);
     
     return 0;
+}
+
+void KWQKHTMLPart::addPluginRootObject(const Bindings::RootObject *root)
+{
+    rootObjects.append (root);
+}
+
+void KWQKHTMLPart::cleanupPluginRootObjects()
+{
+    Bindings::RootObject *root;
+    while ((root = rootObjects.getLast())) {
+        Bindings::RootObject::removeAllJavaReferencesForRoot (root);
+        rootObjects.removeLast();
+    }
 }
 
