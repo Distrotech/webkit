@@ -1,4 +1,6 @@
-=== WebCore-125.8.5 === new versioning for the SUPanXpress, since the change for 3534851 has to be backed out of the Security Update too
+=== WebCore-125.8.5 === new versioning for the SUPanXpress, WebCore-125.8.5.  The change for 3534851 has to be backed out of the Security Update too.
+
+=== WebCore-125.8.4 === versioning for SUPanMoccasin, WebCore-125.8.4
 
 2004-08-05  Vicki Murley  <vicki@apple.com>
 
