@@ -1,3 +1,6 @@
+=== WebCore-85.6.5 ===
+(skipped 85.6.4 - version numbers that include a "4" are not allowed b/c of Netscape 4 version checks)
+
 2004-11-16  Vicki Murley  <vicki@apple.com>
 
 	- changes by Darin, reviewed by Vicki
@@ -15,11 +18,11 @@
 
 	Fixes for:
 
-	<rdar://problem/3668209>: after typing double-byte text, delete return and arrow keys don't work in form field (Jaguar only)
-	<rdar://problem/3668252>: can't type using Roman alphabet within Japanese input method in form fields on Jaguar
-	<rdar://problem/3668300>: Jaguar: Contribute hangs when you print from Safari
-	<rdar://problem/3706572>: Jag: Context menu in Contrib. not appearing according to where mouse is clicked
-	<rdar://problem/3730044>: Contribute: Setting focus to browser view has problems (clone for Safari 1.0.3)
+	<rdar://problem/3668209>: after typing double-byte text, delete return and arrow keys don't work in form field (Jaguar only)	
+	<rdar://problem/3668252>: can't type using Roman alphabet within Japanese input method in form fields on Jaguar	
+	<rdar://problem/3668300>: Jaguar: Contribute hangs when you print from Safari	
+	<rdar://problem/3706572>: Jag: Context menu in Contrib. not appearing according to where mouse is clicked	
+	<rdar://problem/3730044>: Contribute: Setting focus to browser view has problems (clone for Safari 1.0.3)	
 	<rdar://problem/3730127>: Macromedia Flash 6 cannot take Asian text entry in Safari (clone for Safari 1.0.3)
 
 	This patch back ports several fixes from Panther to Jaguar, specifically to address the needs
