@@ -1,3 +1,18 @@
+2004-07-16  Adele Amchan <adele@apple.com>
+
+        Reviewed by vicki.
+
+	- merge this change from HEAD for SUPanMoccasin, 3730017
+
+    2004-07-14  David Hyatt  <hyatt@apple.com>
+
+        Fix for 3595073, setting innerHTML on a <table> should work.
+        
+        Reviewed by rjw
+
+        * khtml/html/html_elementimpl.cpp:
+        (HTMLElementImpl::createContextualFragment):
+
 === WebCore-125.7.1 ===
 
 2004-07-09  Vicki Murley  <vicki@apple.com>
