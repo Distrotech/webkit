@@ -1,3 +1,80 @@
+=== Safari-58 ===
+
+2003-02-03  Darin Adler  <darin@apple.com>
+
+        Rolled over changes from the main trunk.
+
+    2003-02-03  David Hyatt  <hyatt@apple.com>
+
+	Fix for 3163603, livepage.apple.com repaints entire page.
+	
+        Reviewed by darin.
+
+        * khtml/rendering/render_object.cpp:
+        (RenderObject::setStyle):
+
+=== Safari-57 ===
+
+2003-02-03  Darin Adler  <darin@apple.com>
+
+        Rolled over changes from the main trunk.
+
+    2003-01-30  Trey Matteson  <trey@apple.com>
+
+	3161486 - REGRESSION: double click on a widget causes crash
+
+	Slight enhancement to the earlier fix of this bug.  When handling a doubleclick we
+	don't want to try to pass the current event down the Cocoa widgets, because Cocoa
+	has no double-click event, and we just end up resending one we already sent.
+
+	The upshot is that we do not pass an extra mouseup event to the widgets at the
+	end of a double click sequence.
+
+        Reviewed by Darin.
+
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::passWidgetMouseDownEventToWidget):
+	Do not pass event down to the widget for doubleclick events.
+
+=== Safari-56 ===
+
+2003-01-31  Darin Adler  <darin@apple.com>
+
+        Rolled over changes from the main trunk.
+
+    2003-01-31  Darin Adler  <darin@apple.com>
+
+        Reviewed by Richard.
+
+        * khtml/misc/decoder.cpp: (Decoder::decode): Turn off Japanese auto-detect.
+	It was causing us to use Japanese encoding on pages that were UTF-8.
+
+2003-01-31  Darin Adler  <darin@apple.com>
+
+        Rolled over changes from the main trunk.
+
+    2003-01-31  Darin Adler  <darin@apple.com>
+
+        * Resources/Info.plist: Removed unused file.
+
+    2003-01-31  Darin Adler  <darin@apple.com>
+
+        Reviewed by me, Dave wrote the code.
+
+        - fixed 3162013 -- Safari collapses margins through bottom borders (affects top of zeldman.com)
+
+        * khtml/rendering/render_flow.cpp: (RenderFlow::layoutBlockChildren):
+        Don't collapse if we have any bottom border or padding.
+
+    2003-01-31  Darin Adler  <darin@apple.com>
+
+        Reviewed by Dave.
+
+        - fixed 3160442 -- no top image map at ebay, caused by referrer returning null instead of empty string
+
+        * khtml/ecma/kjs_html.cpp: (KJS::HTMLDocument::tryGet):
+        Return an empty string, not null, when there is no referrer.
+        
 === Safari-55 ===
 
 2003-01-30  Darin Adler  <darin@apple.com>
