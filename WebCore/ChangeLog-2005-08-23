@@ -1,3 +1,19 @@
+2004-09-20  Vicki Murley  <vicki@apple.com>
+
+        - rolled in the fix for 3801256
+
+    2004-09-03  Darin Adler  <darin@apple.com>
+
+        Reviewed by Chris.
+
+        - fixed <rdar://problem/3410112> filename with non-ASCII name for <input type=file> should be sent in the page's encoding
+
+        * khtml/html/html_formimpl.cpp: (DOM::HTMLFormElementImpl::formData):
+        Encode filename using the codec rather than doing the &# dance. It turns out that Mozilla
+        only does the &# thing under certain circumstances that are not important. Always encoding
+        the filename is almost certainly better behavior, and will fix many serious problems for
+        Japanese and Korean users and websites.
+
 2004-09-14  Vicki Murley <vicki@apple.com>
 
         - roll the fix for 3710123 in
