@@ -1,3 +1,5 @@
+=== WebCore-125.7 ===
+
 2004-06-24  Vicki Murley  <vicki@apple.com>
 
 	- fix a build error that cropped up from the merge for the radio button fix, 3673762
