@@ -50,6 +50,11 @@
         * Plugins.subproj/WebNetscapePluginPackage.m:
         (-[WebNetscapePluginPackage launchRealPlayer]): don't release a NULL appURL
 
+=== WebKit-125.5 ===
+
+	- bump version number to 125.5, for <rdar://problem/3787996> Seed: Safari does not render FedEx site 
+	properly after WebKit update 125.4 -> 125.4.2
+
 === WebKit-125.4.2 ===
 
 2004-07-26  Darin Adler  <darin@apple.com>
