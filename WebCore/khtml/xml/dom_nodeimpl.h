@@ -123,6 +123,24 @@ public:
     virtual void setFirstChild(NodeImpl *child);
     virtual void setLastChild(NodeImpl *child);
 
+    /** (Not part of the official DOM)
+     * Returns the next leaf node.
+     *
+     * Using this function delivers leaf nodes as if the whole DOM tree
+     * were a linear chain of its leaf nodes.
+     * @return next leaf node or 0 if there are no more.
+     */
+    NodeImpl *nextLeafNode() const;
+
+    /** (Not part of the official DOM)
+     * Returns the previous leaf node.
+     *
+     * Using this function delivers leaf nodes as if the whole DOM tree
+     * were a linear chain of its leaf nodes.
+     * @return previous leaf node or 0 if there are no more.
+     */
+    NodeImpl *prevLeafNode() const;
+
     // used by the parser. Doesn't do as many error checkings as
     // appendChild(), and returns the node into which will be parsed next.
     virtual NodeImpl *addChild(NodeImpl *newChild);
@@ -210,7 +228,8 @@ public:
     virtual QString toHTML() const;
     QString recursive_toHTML(bool start = false) const;
 
-    virtual void getCursor(int offset, int &_x, int &_y, int &height);
+    virtual bool isContentEditable() const;
+    virtual void getCaret(int offset, bool override, int &_x, int &_y, int &width, int &height);
     virtual QRect getRect() const;
 
     enum StyleChange { NoChange, NoInherit, Inherit, Detach, Force };
@@ -286,6 +305,10 @@ public:
     void checkAddChild(NodeImpl *newChild, int &exceptioncode);
     bool isAncestor( NodeImpl *other );
     virtual bool childAllowed( NodeImpl *newChild );
+
+    virtual long caretMinOffset() const;
+    virtual long caretMaxOffset() const;
+
 #ifndef NDEBUG
     virtual void dump(QTextStream *stream, QString ind = "") const;
 #endif
