@@ -1,3 +1,17 @@
+2004-04-16  Vicki Murley  <vicki@apple.com>
+
+        Reviewed by kocienda.
+
+	Make this change on the branch for SUPanLavender, per Amy Rapport's request.
+
+    2004-03-03  Darin Adler  <darin@apple.com>
+
+        Reviewed by Vicki.
+
+        * English.lproj/InfoPlist.strings: Removed. No need to localize the version and
+        copyright string, and that's all that was in here.
+        * JavaScriptCore.pbproj/project.pbxproj: Removed InfoPlist.strings from build.
+
 2004-04-15  Vicki Murley  <vicki@apple.com>
 
 	Fix mismatched_CFBundleShortVersionStrings verification failure
