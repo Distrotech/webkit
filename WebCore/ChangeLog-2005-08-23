@@ -1,3 +1,19 @@
+2004-07-17  Vicki Murley  <vicki@apple.com>
+
+	Roll this Security Update change out for the next SUPanMoccasin 
+	submission. Security Update changes can't be included in Software
+	Updates. 
+
+    2004-07-09  Chris Blumenberg  <cblu@apple.com>
+
+        Allowed my change for 3715785 to compile on Jaguar.
+
+        Reviewed by kocienda.
+
+        * kwq/WebCoreBridge.h:
+        * kwq/WebCoreBridge.mm:
+        (-[WebCoreBridge domain]): new, allows access to the domain without using the DOM API which doesn't exist on Jaguar
+
 2004-07-16  Adele Amchan <adele@apple.com>
 
         Reviewed by vicki.
