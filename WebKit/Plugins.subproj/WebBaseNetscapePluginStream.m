@@ -14,8 +14,6 @@
 #import <Foundation/NSFileManager_NSURLExtras.h>
 #import <Foundation/NSURL_NSURLExtras.h>
 
-#define WEB_REASON_NONE -1
-
 @implementation WebBaseNetscapePluginStream
 
 - (void)dealloc
@@ -85,7 +83,7 @@
     
     transferMode = NP_NORMAL;
     offset = 0;
-    reason = WEB_REASON_NONE;
+    reason = WEB_REASON_PLUGIN_CANCELLED;
 
     // FIXME: Need a way to check if stream is seekable
 
@@ -94,8 +92,8 @@
 
     if (npErr != NPERR_NO_ERROR) {
         ERROR("NPP_NewStream failed with error: %d URLString: %s", npErr, [URL _web_URLCString]);
-        // Calling cancelWithReason with WEB_REASON_NONE cancels the load, but doesn't call NPP_DestroyStream.
-        [self cancelWithReason:WEB_REASON_NONE];
+        // Calling cancelWithReason with WEB_REASON_PLUGIN_CANCELLED cancels the load, but doesn't call NPP_DestroyStream.
+        [self cancelWithReason:WEB_REASON_PLUGIN_CANCELLED];
         return;
     }
 
@@ -128,7 +126,7 @@
 
 - (void)destroyStream
 {
-    if (![plugin isLoaded] || !stream.ndata || [deliveryData length] > 0 || reason == WEB_REASON_NONE) {
+    if (![plugin isLoaded] || !stream.ndata || [deliveryData length] > 0 || reason == WEB_REASON_PLUGIN_CANCELLED) {
         return;
     }
     
