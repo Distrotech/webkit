@@ -2,9 +2,48 @@
 
 	Rolled changes from trunk onto branch to fix this bug:
 
+	Radar 3165295 (Hang while triple clicking on page)
+
+	Original comment for checkin:
+
+	    2003-02-06  Darin Adler  <darin@apple.com>
+	    
+	    Reviewed by Dave.
+	    
+	    - fixed 3165295 -- Hang while triple clicking on page
+	    
+	    Flaws in the continuation logic we added to checkSelectionPoint made it take
+	    exponential time on pages with a lot of continuations.
+	    
+	    * khtml/rendering/render_object.h: Make checkSelectionPoint non-virtual, and
+	    added virtual checkSelectionPointIgnoringContinuations.
+	    * khtml/rendering/render_object.cpp:
+	    (RenderObject::checkSelectionPoint): Added. Does the inline continuation part of
+	    the render object walking process, which we only want to do at the top level,
+	    since otherwise we will see the same nodes multiple times. Also optimizes by only
+	    looking at the inline continuations of inlines, not any continuations of a block.
+	    (RenderObject::checkSelectionPointIgnoringContinuations): This is now the virtual
+	    function that is overriden by RenderText. It is identical to the old version of
+	    checkSelectionPoint, minus the continuation logic.
+	    
+	    * khtml/rendering/render_text.h: Changed the name of checkSelectionPoint to
+	    checkSelectionPointIgnoringContinuations.
+	    * khtml/rendering/render_text.cpp: (RenderText::checkSelectionPointIgnoringContinuations):
+	    Changed the name, and nothing else.
+	    
+	    - fixed my build which was crashing on load
+	    
+	    * WebCore.pbproj/project.pbxproj: Change seg1addr from 2200000 to 9000000.
+
+2003-02-07  Ken Kocienda  <kocienda@apple.com>
+
+	Rolled changes from trunk onto branch to fix this bug:
+
 	Radar 3161953 (crash due to trashed memory on XML page)
 
 	Original comment for checkin:
+
+            2003-02-06  Darin Adler  <darin@apple.com>
 
 	    Reviewed by Dave.
     
