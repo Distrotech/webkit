@@ -120,7 +120,6 @@ public:
         complete = false;
         mousePressed = false;
         tooltip = 0;
-        m_caretViewContext = 0;
 #ifdef INCREMENTAL_REPAINTING
         doFullRepaint = true;
 #endif
@@ -141,7 +140,6 @@ public:
         if (underMouse)
 	    underMouse->deref();
 	delete tooltip;
-	delete m_caretViewContext;
     }
     void reset()
     {
@@ -185,14 +183,6 @@ public:
 #endif
     }
 
-    /** this function returns an instance of the caret view context. If none
-     * exists, it will be instantiated.
-     */
-    CaretViewContext *caretViewContext() {
-        if (!m_caretViewContext) m_caretViewContext = new CaretViewContext();
-        return m_caretViewContext;
-    }
-    
     QPainter *tp;
     QPixmap  *paintBuffer;
     NodeImpl *underMouse;
@@ -235,7 +225,6 @@ public:
 #endif
     bool mousePressed;
     KHTMLToolTip *tooltip;
-    CaretViewContext *m_caretViewContext;
 };
 
 #ifndef QT_NO_TOOLTIP
@@ -467,19 +456,7 @@ void KHTMLView::drawContents( QPainter *p, int ex, int ey, int ew, int eh )
         py += PAINT_BUFFER_HEIGHT;
     }
 
-    if (d->m_caretViewContext && d->m_caretViewContext->visible) {
-        QRect pos(d->m_caretViewContext->x, d->m_caretViewContext->y,
-		d->m_caretViewContext->width, d->m_caretViewContext->height);
-        if (pos.intersects(QRect(ex, ey, ew, eh))) {
-            p->setRasterOp(XorROP);
-            p->setPen(white);
-            if (pos.height() == 1)
-                  p->drawLine(pos.topLeft(), pos.bottomRight());
-            else {
-              p->fillRect(pos, white);
-            }
-        }
-    }
+    // EDIT FIXME: KDE needs to draw the caret here.
 
     khtml::DrawContentsEvent event( p, ex, ey, ew, eh );
     QApplication::sendEvent( m_part, &event );

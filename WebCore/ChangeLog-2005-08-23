@@ -2,6 +2,18 @@
 
         Reviewed by me
 
+	Removed the last remnants of the now-obsolete
+	CaretViewContext class.
+
+        * khtml/khtmlview.cpp:
+        (KHTMLViewPrivate::KHTMLViewPrivate):
+        (KHTMLViewPrivate::~KHTMLViewPrivate):
+        (KHTMLView::drawContents):
+
+2004-01-20  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by me
+
 	A lot of cleanup to the way selections are made
 	with the mouse by clicking and dragging. A lot
 	of code was made simpler, and much of the 
