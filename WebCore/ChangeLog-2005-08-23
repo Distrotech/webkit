@@ -1,5 +1,25 @@
 2005-01-12  Maciej Stachowiak  <mjs@apple.com>
 
+	<rdar://problem/3939324> *SecUpd: Panther* frame naming allows malicious site to bring up a window when you click on a link in another
+
+	- merged fix for this from Tiger:
+
+    2004-12-21  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+
+	<rdar://problem/3888931> frame naming allows malicious site to bring up a window when you click on a link in another
+        
+	Added opener bridge method to help WebKit implement security check
+	for named frame visibility.
+	
+	* khtml/khtml_part.h:
+        * kwq/WebCoreBridge.h:
+        * kwq/WebCoreBridge.mm:
+        (-[WebCoreBridge opener]):
+
+2005-01-12  Maciej Stachowiak  <mjs@apple.com>
+
 	<rdar://problem/3943553> *SecUpd: Panther* WebKit needs to restrict access to certain window operations by domain
 	
 	- merged the following fix from Tiger to fix this
@@ -38,8 +58,6 @@
 	- frame.src, frame.location, iframe.src and targetted links are
 	all safe because setting the URL of a frame to a javascript: URL
 	executes the script in the context of the parent
-
-2004-12-21  Ken Kocienda  <kocienda@apple.com>
 
 	* khtml/ecma/kjs_window.cpp:
         (WindowFunc::tryCall):
