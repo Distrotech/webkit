@@ -35,10 +35,6 @@
 
 #include "ustring.h"
 
-#if APPLE_CHANGES
-#include <stdlib.h>
-#endif
-
 // Primitive data types
 
 namespace KJS {
