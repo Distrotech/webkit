@@ -1,3 +1,40 @@
+=== Safari-61 ===
+
+=== Safari-60 ===
+
+=== Safari-59 ===
+
+2003-02-04  Maciej Stachowiak  <mjs@apple.com>
+
+	Merged changes from the trunk:
+
+    2003-02-04  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+ 
+        * WebKit.pbproj/project.pbxproj: Updated to build the framework
+ 	standalone instead of embedded when doing a B&I build for Panther.
+ 
+=== Safari-58 ===
+
+2003-02-03  Darin Adler  <darin@apple.com>
+
+        Rolled over changes from the trunk.
+
+    2003-02-03  Chris Blumenberg  <cblu@apple.com>
+
+        Fixed: 3163073 - SECURITY: Need to check if filename in encoded download is safe
+
+        Reviewed by kocienda, darin, mjs.
+
+        * Downloads.subproj/WebDownloadHandler.m:
+        (-[WebDownloadHandler createFileIfNecessary]): call _web_filenameByFixingIllegalCharacters on the enco
+ded filename
+
+=== Safari-57 ===
+
+=== Safari-56 ===
+
 === Safari-55 ===
 
 2003-01-30  Chris Blumenberg  <cblu@apple.com>
