@@ -77,6 +77,8 @@ public:
     QPtrList<CSSProperty> *values() { return m_lstValues; }
     void setNode(NodeImpl *_node) { m_node = _node; }
 
+    void setChanged();
+
 protected:
     QPtrList<CSSProperty> *m_lstValues;
     NodeImpl *m_node;

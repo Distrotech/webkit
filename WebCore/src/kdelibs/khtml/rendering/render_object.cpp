@@ -955,7 +955,7 @@ short RenderObject::lineHeight( bool firstLine ) const
 
     // its "unset", choose nice default
     if ( lh.value < 0 )
-        return style()->fontMetrics().height();
+        return style()->fontMetrics().lineSpacing();
 
     if ( lh.isPercent() )
         return lh.minWidth( style()->font().pixelSize() );

@@ -174,8 +174,10 @@ public:
     virtual QString defaultLabel();
 
     virtual void calcMinMaxWidth();
+    virtual void updateFromElement();
     virtual short baselinePosition( bool ) const;
-
+private:
+    QString rawText();
 };
 
 // -------------------------------------------------------------------------

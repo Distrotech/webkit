@@ -231,8 +231,6 @@ void HTMLFrameElementImpl::parseAttribute(AttributeImpl *attr)
         url = khtml::parseURL(attr->val());
         break;
     case ATTR_ID:
-        if (getDocument()->htmlMode() != DocumentImpl::XHtml) break;
-        // fall through
     case ATTR_NAME:
         name = attr->value();
         break;
@@ -268,6 +266,12 @@ void HTMLFrameElementImpl::parseAttribute(AttributeImpl *attr)
 void HTMLFrameElementImpl::init()
 {
     HTMLElementImpl::init();
+
+    // we should first look up via id, then via name.
+    // this shortterm hack fixes the ugly case. ### rewrite needed for next release
+    name = getAttribute(ATTR_NAME);
+    if (name.isNull())
+        name = getAttribute(ATTR_ID);
 
     // inherit default settings from parent frameset
     HTMLElementImpl* node = static_cast<HTMLElementImpl*>(parentNode());

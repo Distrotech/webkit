@@ -474,6 +474,9 @@ ListImp::~ListImp()
 
   clear();
   delete hook;
+
+  if ( emptyList == this )
+    emptyList = 0L;
 }
 
 void ListImp::mark()
@@ -757,11 +760,6 @@ void InterpreterImp::globalClear()
   BooleanImp::staticFalse->deref();
   BooleanImp::staticFalse->setGcAllowed();
   BooleanImp::staticFalse = 0L;
-#ifdef APPLE_CHANGES
-  ListImp::emptyList->setGcAllowed();
-  ListImp::emptyList->deref();
-  ListImp::emptyList = 0;
-#endif
 }
 
 InterpreterImp::InterpreterImp(Interpreter *interp, const Object &glob)
