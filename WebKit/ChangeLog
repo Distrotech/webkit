@@ -1,3 +1,12 @@
+2005-01-13  Adele Amchan  <adele@apple.com>
+
+        Reviewed by Vicki.
+
+	- bump WebKit version number to 85.8.5; the tag "WebKit-85~8~3" is already taken, and 
+	version numbers with a "4" are not allowed because of Netscape 4 compatibility
+
+	WebKit.pbproj/project.pbxproj:
+
 === WebKit-85.8.3 ===
 
 2005-01-13  Adele Amchan  <adele@apple.com>
