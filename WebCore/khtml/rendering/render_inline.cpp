@@ -368,7 +368,7 @@ bool RenderInline::nodeAtPoint(NodeInfo& info, int _x, int _y, int _tx, int _ty,
         if (!info.URLElement()) {
             RenderObject* p = this;
             while (p) {
-                if (p->element() && p->element()->hasAnchor()) {
+                if (p->element() && p->element()->hasAnchor() && !info.URLElement()) {
                     info.setURLElement(p->element());
                     break;
                 }
