@@ -25,6 +25,7 @@
 #ifndef _DOM2_TraversalImpl_h_
 #define _DOM2_TraversalImpl_h_
 
+#include "dom/dom_exception.h"
 #include "dom/dom_node.h"
 #include "dom/dom_misc.h"
 #include "misc/shared.h"
@@ -94,58 +95,50 @@ protected:
 class TreeWalkerImpl : public khtml::Shared<TreeWalkerImpl>
 {
 public:
-    TreeWalkerImpl();
+    TreeWalkerImpl(NodeImpl *root, unsigned long whatToShow, NodeFilterImpl *filter, bool expandEntityReferences);
     TreeWalkerImpl(const TreeWalkerImpl &other);
-    TreeWalkerImpl(Node n, NodeFilter *f=0);
-    TreeWalkerImpl(Node n, long _whatToShow, NodeFilter *f=0);
-    TreeWalkerImpl & operator = (const TreeWalkerImpl &other);
-
-
     ~TreeWalkerImpl();
 
-    Node getRoot();
+    TreeWalkerImpl &operator=(const TreeWalkerImpl &other);
 
-    unsigned long getWhatToShow();
+    NodeImpl *root() const { return m_root; }
+    unsigned long whatToShow() const { return m_whatToShow; }
+    NodeFilterImpl *filter() const { return m_filter; }
+    bool expandEntityReferences() const { return m_expandEntityReferences; }
 
-    NodeFilter getFilter();
-
-    bool getExpandEntityReferences();
-
-    Node getCurrentNode();
-
-    void setCurrentNode(const Node _currentNode);
-
-    Node parentNode();
-
-    Node firstChild();
-
-    Node lastChild ();
-
-    Node previousSibling ();
-
-    Node nextSibling();
-
-    Node previousNode();
-
-    Node nextNode();
-
+    NodeImpl *currentNode() const { return m_currentNode; }
+    NodeImpl *parentNode();
+    NodeImpl *firstChild();
+    NodeImpl *lastChild();
+    NodeImpl *previousSibling();
+    NodeImpl *nextSibling();
+    NodeImpl *previousNode();
+    NodeImpl *nextNode();
 
     /**
      * Sets which node types are to be presented via the TreeWalker
      */
-    void setWhatToShow(long _whatToShow);
-    void setFilter(NodeFilter *_filter);
-    void setExpandEntityReferences(bool value);
+    void setRoot(NodeImpl *);
+    void setWhatToShow(unsigned long whatToShow) { m_whatToShow = whatToShow; }
+    void setFilter(NodeFilterImpl *);
+    void setExpandEntityReferences(bool value) { m_expandEntityReferences = value; }
+    void setCurrentNode(NodeImpl *);
 
-    Node getParentNode(Node n);
-    Node getFirstChild(Node n);
-    Node getLastChild(Node n);
-    Node getPreviousSibling(Node n);
-    Node getNextSibling(Node n);
+    short isAccepted(NodeImpl *node) const;
 
-    short isAccepted(Node n);
+private:
 
-protected:
+    void assertNodeValid(const NodeImpl *node) const { if (!node) throw DOMException(DOMException::INVALID_STATE_ERR); }
+
+    NodeImpl *firstDescendent(const NodeImpl *);
+    NodeImpl *lastDescendent(const NodeImpl *);
+
+    /**
+     * This root node for this TreeWalker.
+     *
+     */
+    NodeImpl *m_root;
+
     /**
      * This attribute determines which node types are presented via
      * the TreeWalker.
@@ -157,7 +150,7 @@ protected:
      * The filter used to screen nodes.
      *
      */
-    NodeFilter *m_filter;
+    NodeFilterImpl *m_filter;
 
     /**
      * The value of this flag determines whether entity reference
@@ -170,7 +163,7 @@ protected:
      * the whatToShow flags to show the entity reference node and set
      * expandEntityReferences to true.
      *
-     * This is not implemented (allways true)
+     * This is not implemented (always true)
      */
     bool m_expandEntityReferences;
 
@@ -184,9 +177,7 @@ protected:
      * type.
      *
      */
-    Node m_currentNode;
-
-    Node m_rootNode;
+    NodeImpl *m_currentNode;
 };
 
 
