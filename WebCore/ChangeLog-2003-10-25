@@ -1,3 +1,30 @@
+2002-03-14  Maciej Stachowiak  <mjs@apple.com>
+
+	Hand-merge KDE3 beta 2 changes into this frankenstein file.
+
+	* src/kwq/KWQKHTMLPart.mm: (-[KHTMLPartLoadClient setDataSource:]),
+	(WCSetIFWebDataSourceMakeFunc), (WCSetIFErrorMakeFunc), (recursive),
+	(encodingFromContentType), (splitUrlTarget), (KHTMLPart::KHTMLPart),
+	(KHTMLPart::init), (KHTMLPart::~KHTMLPart), (KHTMLPart::browserExtension),
+	(KHTMLPart::view), (KHTMLPart::setMetaRefreshEnabled), (KHTMLPart::jScript),
+	(KHTMLPart::executeScript), (KHTMLPart::executeScheduledScript),
+	(KHTMLPart::docImpl), (KHTMLPart::xmlDocImpl), (KHTMLPart::slotData),
+	(KHTMLPart::begin), (KHTMLPart::write), (KHTMLPart::end),
+	(KHTMLPart::checkCompleted), (KHTMLPart::settings), (KHTMLPart::completeURL),
+	(KHTMLPart::scheduleRedirection), (KHTMLPart::setEncoding),
+	(KHTMLPart::encoding), (KHTMLPart::gotoAnchor), (KHTMLPart::setFontSizes),
+	(KHTMLPart::fontSizes), (KHTMLPart::onlyLocalReferences),
+	(KHTMLPart::setOnlyLocalReferences), (KHTMLPart::findTextBegin),
+	(KHTMLPart::findTextNext), (KHTMLPart::selectedText), (KHTMLPart::hasSelection),
+	(KHTMLPart::selection), (KHTMLPart::setSelection), (KHTMLPart::overURL),
+	(KHTMLPart::urlSelected), (KHTMLPart::requestFrame),
+	(KHTMLPart::requestFrameName), (KHTMLPart::requestObject),
+	(KHTMLPart::submitForm), (KHTMLPart::findFrame), (KHTMLPart::frameExists),
+	(KHTMLPart::parentPart), (KHTMLPart::setJSStatusBarText),
+	(KHTMLPart::setJSDefaultStatusBarText), (KHTMLPart::jsStatusBarText),
+	(KHTMLPart::jsDefaultStatusBarText), (KHTMLPart::frames),
+	(KHTMLPart::customEvent), (KHTMLPart::khtmlMousePressEvent):
+
 2002-03-13  Maciej Stachowiak  <mjs@apple.com>
 
 	Merge KDE3 beta 2 changes into this frankenstein file.
