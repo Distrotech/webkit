@@ -1,5 +1,13 @@
 2002-03-25  Darin Adler  <darin@apple.com>
 
+        Last bit of making stuff compile and link. Probably will drop the merge now
+        and take it up again when it's time to merge in KDE 3.0 final.
+
+	* src/kwq/KWQEvent.mm: (QFocusEvent::reason): New.
+	* src/kwq/KWQPainter.mm: (QPainter::drawText): New overload.
+
+2002-03-25  Darin Adler  <darin@apple.com>
+
 	* src/kdelibs/khtml/rendering/font.cpp: (Font::width): Make it call _width so we
         don't lose the optimization.
         
