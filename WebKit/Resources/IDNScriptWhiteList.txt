@@ -15,7 +15,6 @@ Hangul
 Han
 Hebrew
 Hiragana
-Katakana_Or_Hiragana
 Katakana
 Latin
 Tamil

@@ -1,3 +1,10 @@
+2005-03-07  Adele Amchan  <adele@apple.com>
+
+        Reviewed by Darin.
+
+        * Resources/IDNScriptWhiteList.txt: Took out Katakana_Or_Hiragana, since
+        the Panther version of ICU doesn't have this script.
+
 2005-03-04  Darin Adler  <darin@apple.com>
 
         Rolled in fix from Tiger for IDN spoofing.
