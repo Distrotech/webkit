@@ -1,3 +1,162 @@
+2002-03-16  Maciej Stachowiak  <mjs@apple.com>
+
+	Updated to get khtml to compile. Changes included updating our
+	headers for new classes, new methods, header name changes, etc, as
+	well as occasionally commenting out or replacing portions of the
+	khtml code with #if APPLE_CHANGES, and adding new files from the
+	kde3 sources when appropriate. Also commit some kjs files that I
+	forgot to cvs add before.
+
+	* src/kdelibs/khtml/css/css_valueimpl.cpp:
+	(CSSStyleDeclarationImpl::getPropertyCSSValue):
+	* src/kdelibs/khtml/css/cssparser.cpp: (StyleBaseImpl::parseContent):
+	* src/kdelibs/khtml/css/cssstyleselector.cpp:
+	(CSSStyleSelector::CSSStyleSelector), (khtml::applyRule):
+	* src/kdelibs/khtml/ecma/.cvsignore:
+	* src/kdelibs/khtml/ecma/Makefile.am:
+	* src/kdelibs/khtml/ecma/kjs_debugwin.h:
+	* src/kdelibs/khtml/ecma/kjs_dom.cpp: (DOMNode::toString):
+	* src/kdelibs/khtml/ecma/kjs_dom.h:
+	* src/kdelibs/khtml/ecma/kjs_window.cpp:
+	* src/kdelibs/khtml/html/html_documentimpl.cpp: (HTMLDocumentImpl::cookie),
+	(HTMLDocumentImpl::setCookie):
+	* src/kdelibs/khtml/html/html_formimpl.cpp:
+	(HTMLKeygenElementImpl::HTMLKeygenElementImpl),
+	(HTMLKeygenElementImpl::encoding):
+	* src/kdelibs/khtml/java/kjavaprocess.cpp: (KJavaProcess::invokeJVM):
+	* src/kdelibs/khtml/khtmlview.cpp: (KHTMLView::contentsContextMenuEvent):
+	* src/kdelibs/khtml/misc/loader.h:
+	* src/kdelibs/khtml/rendering/render_box.cpp: (RenderBox::calcReplacedWidth):
+	* src/kdelibs/khtml/rendering/render_form.cpp: (RenderTextArea::calcMinMaxWidth):
+	* src/kdelibs/khtml/rendering/render_image.cpp: (RenderImage::printObject):
+	* src/kdelibs/khtml/rendering/render_text.cpp: (RenderText::nodeAtPoint):
+	* src/kdelibs/khtml/xml/dom_docimpl.cpp: (DocumentImpl::close):
+	* src/kdelibs/khtml/xml/dom_elementimpl.cpp:
+	(ElementImpl::dispatchAttrRemovalEvent),
+	(ElementImpl::dispatchAttrAdditionEvent):
+	* src/kdelibs/kjs/interpreter.cpp: (Context::Context), (Context::operator=),
+	(Context::~Context), (Context::isNull), (Context::imp), (Context::scopeChain),
+	(Context::variableObject), (Context::thisValue), (Context::callingContext),
+	(Interpreter::Interpreter), (Interpreter::~Interpreter),
+	(Interpreter::globalObject), (Interpreter::globalExec),
+	(Interpreter::checkSyntax), (Interpreter::evaluate), (Interpreter::imp),
+	(Interpreter::builtinObject), (Interpreter::builtinFunction),
+	(Interpreter::builtinArray), (Interpreter::builtinBoolean),
+	(Interpreter::builtinString), (Interpreter::builtinNumber),
+	(Interpreter::builtinDate), (Interpreter::builtinRegExp),
+	(Interpreter::builtinError), (Interpreter::builtinObjectPrototype),
+	(Interpreter::builtinFunctionPrototype), (Interpreter::builtinArrayPrototype),
+	(Interpreter::builtinBooleanPrototype), (Interpreter::builtinStringPrototype),
+	(Interpreter::builtinNumberPrototype), (Interpreter::builtinDatePrototype),
+	(Interpreter::builtinRegExpPrototype), (Interpreter::builtinErrorPrototype),
+	(Interpreter::builtinEvalError), (Interpreter::builtinRangeError),
+	(Interpreter::builtinReferenceError), (Interpreter::builtinSyntaxError),
+	(Interpreter::builtinTypeError), (Interpreter::builtinURIError),
+	(Interpreter::builtinEvalErrorPrototype),
+	(Interpreter::builtinRangeErrorPrototype),
+	(Interpreter::builtinReferenceErrorPrototype),
+	(Interpreter::builtinSyntaxErrorPrototype),
+	(Interpreter::builtinTypeErrorPrototype),
+	(Interpreter::builtinURIErrorPrototype), (Interpreter::setCompatMode),
+	(Interpreter::compatMode), (Interpreter::finalCheck), (ExecState::~ExecState),
+	(ExecState::interpreter), (ExecState::context), (ExecState::setException),
+	(ExecState::clearException), (ExecState::exception), (ExecState::hadException),
+	(ExecState::ExecState):
+	* src/kdelibs/kjs/property_map.cpp: (PropertyMapNode::setLeft),
+	(PropertyMapNode::setRight), (PropertyMapNode::setParent),
+	(PropertyMapNode::findMax), (PropertyMapNode::findMin), (PropertyMapNode::next),
+	(KJS::uscompare), (PropertyMap::PropertyMap), (PropertyMap::~PropertyMap),
+	(PropertyMap::put), (PropertyMap::remove), (PropertyMap::get),
+	(PropertyMap::clear), (PropertyMap::dump), (PropertyMap::checkTree),
+	(PropertyMap::getNode), (PropertyMap::first), (PropertyMap::balance),
+	(PropertyMap::updateHeight), (PropertyMap::rotateRR), (PropertyMap::rotateLL),
+	(PropertyMap::rotateRL), (PropertyMap::rotateLR):
+	* src/kdelibs/kjs/property_map.h:
+	* src/kdelibs/kjs/value.cpp: (ValueImp::ValueImp), (ValueImp::~ValueImp),
+	(ValueImp::mark), (ValueImp::marked), (ValueImp::setGcAllowed),
+	(ValueImp::operator new), (ValueImp::operator delete), (ValueImp::toInteger),
+	(ValueImp::toInt32), (ValueImp::toUInt32), (ValueImp::toUInt16),
+	(ValueImp::getBase), (ValueImp::getPropertyName), (ValueImp::getValue),
+	(ValueImp::putValue), (KJS::operator==), (KJS::operator!=), (Value::Value),
+	(Value::~Value), (Value::operator=), (Value::isNull), (Value::imp),
+	(Value::type), (Value::isA), (Value::toPrimitive), (Value::toBoolean),
+	(Value::toNumber), (Value::toInteger), (Value::toInt32), (Value::toUInt32),
+	(Value::toUInt16), (Value::toString), (Value::toObject), (Value::getBase),
+	(Value::getPropertyName), (Value::getValue), (Value::putValue),
+	(Undefined::Undefined), (Undefined::~Undefined), (Undefined::operator=),
+	(Undefined::dynamicCast), (Null::Null), (Null::~Null), (Null::operator=),
+	(Null::dynamicCast), (Boolean::Boolean), (Boolean::~Boolean),
+	(Boolean::operator=), (Boolean::value), (Boolean::dynamicCast), (String::String),
+	(String::~String), (String::operator=), (String::value), (String::dynamicCast),
+	(Number::Number), (Number::~Number), (Number::operator=), (Number::dynamicCast),
+	(Number::value), (Number::intValue), (Number::isNaN), (Number::isInf):
+	* src/kwq/KWQDef.h:
+	* src/kwq/KWQInputDialog.mm: (QInputDialog::getText):
+	* src/kwq/KWQKConfigBase.mm: (KConfig::KConfig):
+	* src/kwq/KWQKHTMLPart.h:
+	* src/kwq/KWQListImpl.h:
+	* src/kwq/KWQMapImpl.h:
+	* src/kwq/KWQMapImpl.mm: (KWQMapImpl::removeEqualInternal):
+	* src/kwq/KWQStrList.h:
+	* src/kwq/KWQStyle.h:
+	* src/kwq/KWQValueListImpl.h:
+	* src/kwq/KWQVectorImpl.h:
+	* src/kwq/kdecore/kapplication.h:
+	* src/kwq/kdecore/kconfig.h:
+	* src/kwq/kdecore/kdebug.h:
+	* src/kwq/kdecore/kprocess.h:
+	* src/kwq/kdecore/kstandarddirs.h:
+	* src/kwq/kdecore/kstaticdeleter.h:
+	* src/kwq/kdeui/kaction.h:
+	* src/kwq/kdeui/kcursor.h:
+	* src/kwq/khtml/khtml_factory.h:
+	* src/kwq/khtml/khtml_settings.h:
+	* src/kwq/kio/global.h:
+	* src/kwq/kio/kmimetype.h:
+	* src/kwq/kio/kprinter.h:
+	* src/kwq/kio/kprotocolmanager.h:
+	* src/kwq/kparts/browserextension.h:
+	* src/kwq/qt/qapplication.h:
+	* src/kwq/qt/qarray.h:
+	* src/kwq/qt/qcollection.h:
+	* src/kwq/qt/qcombobox.h:
+	* src/kwq/qt/qcstring.h:
+	* src/kwq/qt/qcursor.h:
+	* src/kwq/qt/qdict.h:
+	* src/kwq/qt/qevent.h:
+	* src/kwq/qt/qfontmetrics.h:
+	* src/kwq/qt/qinputdialog.h:
+	* src/kwq/qt/qlineedit.h:
+	* src/kwq/qt/qlist.h:
+	* src/kwq/qt/qmap.h:
+	* src/kwq/qt/qmemarray.h:
+	* src/kwq/qt/qnamespace.h:
+	* src/kwq/qt/qobject.h:
+	* src/kwq/qt/qpainter.h:
+	* src/kwq/qt/qpalette.h:
+	* src/kwq/qt/qpoint.h:
+	* src/kwq/qt/qpointarray.h:
+	* src/kwq/qt/qprinter.h:
+	* src/kwq/qt/qptrdict.h:
+	* src/kwq/qt/qptrlist.h:
+	* src/kwq/qt/qptrqueue.h:
+	* src/kwq/qt/qptrstack.h:
+	* src/kwq/qt/qptrvector.h:
+	* src/kwq/qt/qradiobutton.h:
+	* src/kwq/qt/qrect.h:
+	* src/kwq/qt/qregion.h:
+	* src/kwq/qt/qscrollview.h:
+	* src/kwq/qt/qsortedlist.h:
+	* src/kwq/qt/qstack.h:
+	* src/kwq/qt/qstring.h:
+	* src/kwq/qt/qstylesheet.h:
+	* src/kwq/qt/qtextedit.h:
+	* src/kwq/qt/qtextstream.h:
+	* src/kwq/qt/qvaluelist.h:
+	* src/kwq/qt/qvector.h:
+	* src/kwq/qt/qwidget.h:
+	* src/kwq/qt/qxml.h:
+
 2002-03-14  Maciej Stachowiak  <mjs@apple.com>
 
 	Get kjs to compile and link by adding mssing files, setting up

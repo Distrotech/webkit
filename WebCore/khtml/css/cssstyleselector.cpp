@@ -80,7 +80,11 @@ CSSStyleSelector::CSSStyleSelector( KHTMLView *view, QString userStyleSheet, Sty
 {
     strictParsing = _strictParsing;
     if(!defaultStyle) loadDefaultStyle(view ? view->part()->settings() : 0);
+#if APPLE_CHANGES
+    m_medium = view ? view->mediaType() : QString("all");
+#else
     m_medium = view ? view->mediaType() : "all";
+#endif
 
     selectors = 0;
     selectorCache = 0;
@@ -2079,7 +2083,7 @@ void khtml::applyRule(khtml::RenderStyle *style, DOM::CSSProperty *prop, DOM::El
         float toPix = paintDeviceMetrics->logicalDpiY()/72.;
 #ifdef APPLE_CHANGES
         // FIXME: SCREEN_RESOLUTION hack good enough to keep?
-        if (toPix  < SCREEN_RESOLUTION/72) toPix = SCREEN_RESOLUTION/;
+        if (toPix  < SCREEN_RESOLUTION/72) toPix = SCREEN_RESOLUTION/72;
 #else /* APPLE_CHANGES not defined */
         if (toPix  < 96./72.) toPix = 96./72.;
 #endif /* APPLE_CHANGES not defined */

@@ -43,18 +43,18 @@
 
 #include <KWQListImpl.h>
 
-// class QList =================================================================
+// class QPtrList =================================================================
 
-template <class T> class QListIterator;
+template <class T> class QPtrListIterator;
 
-template <class T> class QList : public QCollection {
+template <class T> class QPtrList : public QPtrCollection {
 public:
 
     // constructors, copy constructors, and destructors ------------------------
     
-    QList() : impl(deleteFunc) {}
-    QList(const QList<T> &l) : impl(l.impl) {}
-    ~QList() { if (del_item) { impl.clear(del_item); } }
+    QPtrList() : impl(deleteFunc) {}
+    QPtrList(const QPtrList<T> &l) : impl(l.impl) {}
+    ~QPtrList() { if (del_item) { impl.clear(del_item); } }
      
     // member functions --------------------------------------------------------
 
@@ -80,6 +80,7 @@ public:
     T *next() { return (T *)impl.next(); }
     T *prev() { return (T *)impl.prev(); }
     T *take(uint n) { return (T *)impl.take(n); }
+    T *take() { return (T *)impl.take(); }
 
     void append(const T *item) { impl.append(item); }
     void prepend(const T *item) { impl.prepend(item); }
@@ -90,8 +91,8 @@ public:
 
     // operators ---------------------------------------------------------------
 
-    QList<T> &operator=(const QList<T> &l)
-    { impl.assign(l.impl,del_item); QCollection::operator=(l); return *this; }
+    QPtrList<T> &operator=(const QPtrList<T> &l)
+    { impl.assign(l.impl,del_item); QPtrCollection::operator=(l); return *this; }
 
  private:
     static void deleteFunc(void *item) {
@@ -100,26 +101,26 @@ public:
 
     static int compareFunc(void *a, void *b, void *data)
     {
-	QList<T> *l = (QList<T> *)data;
+	QPtrList<T> *l = (QPtrList<T> *)data;
 	return l->compareItems(a, b);
     }
 
-    friend class QListIterator<T>;
+    friend class QPtrListIterator<T>;
 
     KWQListImpl impl;
-}; // class QList ==============================================================
+}; // class QPtrList ==============================================================
 
 
-// class QListIterator =========================================================
+// class QPtrListIterator =========================================================
 
-template <class T> class QListIterator {
+template <class T> class QPtrListIterator {
 public:
 
     // constructors, copy constructors, and destructors ------------------------
 
-    QListIterator() {}
-    QListIterator(const QList<T> &l) : impl(l.impl) {}
-    ~QListIterator() {}
+    QPtrListIterator() {}
+    QPtrListIterator(const QPtrList<T> &l) : impl(l.impl) {}
+    ~QPtrListIterator() {}
 
     // member functions --------------------------------------------------------
 
@@ -133,22 +134,22 @@ public:
     operator T *() const { return (T *)impl.current(); }
     T *operator--() { return (T *)(--impl); }
     T *operator++()  { return (T *)(++impl); }
-    QListIterator<T> &operator=(const QListIterator<T> &li) { impl = li.impl; return *this; }
+    QPtrListIterator<T> &operator=(const QPtrListIterator<T> &li) { impl = li.impl; return *this; }
 
 private:
-    QListIterator<T>(const QListIterator<T> &li) {}
+    QPtrListIterator<T>(const QPtrListIterator<T> &li) {}
 
     KWQListIteratorImpl impl;
-}; // class QListIterator ======================================================
+}; // class QPtrListIterator ======================================================
 
 
 template<class T>
-inline ostream &operator<<(ostream &stream, const QList<T> &l)
+inline ostream &operator<<(ostream &stream, const QPtrList<T> &l)
 {
-    QListIterator<T> iter(l);
+    QPtrListIterator<T> iter(l);
     unsigned count = l.count();
 
-    stream << "QList: [size: " << l.count() << "; items: ";
+    stream << "QPtrList: [size: " << l.count() << "; items: ";
 
     // print first
     if (count != 0) {

@@ -133,6 +133,8 @@ public:
 
     QPalette &operator=(const QPalette &);
 
+    bool operator==(const QPalette &) const;
+
 // protected -------------------------------------------------------------------
 // private ---------------------------------------------------------------------
 

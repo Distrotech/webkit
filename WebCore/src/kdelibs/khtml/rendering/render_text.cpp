@@ -379,7 +379,9 @@ bool RenderText::nodeAtPoint(NodeInfo& info, int _x, int _y, int _tx, int _ty)
         s = si < (int)m_lines.count()-1 ? m_lines[++si] : 0;
     }
 
+#ifndef APPLE_CHANGES
     bool oldinside = mouseInside();
+#endif /* not APPLE_CHANGES */
     setMouseInside(inside);
     if (mouseInside() != inside && element())
         element()->setChanged();

@@ -191,13 +191,16 @@ void RenderImage::printObject(QPainter *p, int /*_x*/, int /*_y*/, int /*_w*/, i
     {
         if(cWidth > 2 && cHeight > 2)
         {
+#ifdef APPLE_CHANGES
             if ( !berrorPic ) {
                 //qDebug("qDrawShadePanel %d/%d/%d/%d", _tx + leftBorder, _ty + topBorder, cWidth, cHeight);
-#ifdef APPLE_CHANGES
                 p->setPen (Qt::lightGray);
                 p->setBrush (Qt::NoBrush);
                 p->drawRect (_tx, _ty, cWidth, cHeight);
-#endif /* APPLE_CHANGES */
+	    }
+#else /* not APPLE_CHANGES */
+            if ( !berrorPic ) {
+                //qDebug("qDrawShadePanel %d/%d/%d/%d", _tx + leftBorder, _ty + topBorder, cWidth, cHeight);
                 qDrawShadePanel( p, _tx + leftBorder + leftPad, _ty + topBorder + topPad, cWidth, cHeight,
                                  KApplication::palette().inactive(), true, 1 );
             }

@@ -70,6 +70,9 @@ CSSValueImpl *CSSStyleDeclarationImpl::getPropertyCSSValue( int propertyID )
     for (lstValuesIt.toLast(); lstValuesIt.current(); --lstValuesIt)
         if (lstValuesIt.current()->m_id == propertyID && !lstValuesIt.current()->nonCSSHint)
             return lstValuesIt.current()->value();
+#if APPLE_CHANGES
+    return 0;
+#endif
 }
 
 DOMString CSSStyleDeclarationImpl::removeProperty( int propertyID, bool NonCSSHint )

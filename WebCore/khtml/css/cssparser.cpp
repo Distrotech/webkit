@@ -2329,7 +2329,11 @@ CSSValueImpl* StyleBaseImpl::parseContent(const QChar *curP, const QChar *endP)
     CSSValueListImpl* values = new CSSValueListImpl();
     
     QPtrList<QChar> list = splitContent(curP, endP);
+#if APPLE_CHANGES
+    for(unsigned n=0; n<list.count(); n+=2)
+#else
     for(int n=0; n<list.count(); n+=2)
+#endif
     {
         QString str(list.at(n), list.at(n+1)-list.at(n));
         CSSValueImpl* parsedValue=0;

@@ -436,7 +436,9 @@ void ElementImpl::dispatchAttrRemovalEvent(AttributeImpl *attr)
 {
     if (!getDocument()->hasListenerType(DocumentImpl::DOMATTRMODIFIED_LISTENER))
 	return;
+#ifndef APPLE_CHANGES
     int exceptioncode = 0;
+#endif /* not APPLE_CHANGES */
 //     dispatchEvent(new MutationEventImpl(EventImpl::DOMATTRMODIFIED_EVENT,true,false,attr,attr->value(),
 // 		  attr->value(), getDocument()->attrName(attr->id()),MutationEvent::REMOVAL),exceptioncode);
 }
@@ -445,7 +447,9 @@ void ElementImpl::dispatchAttrAdditionEvent(AttributeImpl *attr)
 {
     if (!getDocument()->hasListenerType(DocumentImpl::DOMATTRMODIFIED_LISTENER))
 	return;
+#ifndef APPLE_CHANGES
     int exceptioncode = 0;
+#endif
 //     dispatchEvent(new MutationEventImpl(EventImpl::DOMATTRMODIFIED_EVENT,true,false,attr,attr->value(),
 //                                         attr->value(),getDocument()->attrName(attr->id()),MutationEvent::ADDITION),exceptioncode);
 }

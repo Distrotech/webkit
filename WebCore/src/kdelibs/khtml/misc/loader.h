@@ -277,7 +277,9 @@ namespace khtml
         bool isTransparent() const { return isFullyTransparent; }
         bool isErrorImage() const { return errorOccured; }
 
+#ifndef APPLE_CHANGES
         void setShowAnimations( KHTMLSettings::KAnimationAdvice );
+#endif /* APPLE_CHANGES */
 
         virtual bool schedule() const { return true; }
 
@@ -313,7 +315,9 @@ namespace khtml
         bool isFullyTransparent : 1;
         bool errorOccured : 1;
         bool monochrome : 1;
+#ifndef APPLE_CHANGES
         KHTMLSettings::KAnimationAdvice m_showAnimations : 2;
+#endif /* not APPLE_CHANGES */
 
         friend class Cache;
     };
@@ -335,7 +339,9 @@ namespace khtml
 
 	bool autoloadImages() const { return m_bautoloadImages; }
         bool reloading() const { return m_reloading; }
+#ifndef APPLE_CHANGES
         KHTMLSettings::KAnimationAdvice showAnimations() const { return m_showAnimations; }
+#endif /* not APPLE_CHANGES */
         int expireDate() const { return m_expireDate; }
         KHTMLPart* part() const { return m_part; }
         DOM::DocumentImpl* doc() const { return m_doc; }
@@ -343,7 +349,9 @@ namespace khtml
         void setExpireDate( int );
         void setAutoloadImages( bool );
         void setReloading( bool );
+#ifndef APPLE_CHANGES
         void setShowAnimations( KHTMLSettings::KAnimationAdvice );
+#endif /* not APPLE_CHANGES */
         void removeCachedObject( CachedObject*) const;
 
     private:
@@ -355,7 +363,9 @@ namespace khtml
 	int m_expireDate;
 	bool m_reloading : 1;
         bool m_bautoloadImages : 1;
+#ifndef APPLE_CHANGES
         KHTMLSettings::KAnimationAdvice m_showAnimations : 2;
+#endif /* not APPLE_CHANGES */
         KHTMLPart* m_part;
         DOM::DocumentImpl* m_doc;
     };

@@ -28,6 +28,10 @@
 
 #include "ecma/kjs_binding.h"
 
+#if APPLE_CHANGES
+#include <qvaluelist.h>
+#endif
+
 #if defined(APPLE_CHANGES) && defined(__OBJC__)
 #define id id_
 #endif /* APPLE_CHANGES, __OBJC__ */

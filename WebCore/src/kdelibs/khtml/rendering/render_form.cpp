@@ -28,6 +28,9 @@
 #include <kfiledialog.h>
 #include <kcompletionbox.h>
 #include <kcursor.h>
+#if APPLE_CHANGES
+#include <kglobalsettings.h>
+#endif /* APPLE_CHANGES */
 
 #include <qstyle.h>
 
@@ -1192,21 +1195,12 @@ void RenderTextArea::calcMinMaxWidth()
 
     TextAreaWidget* w = static_cast<TextAreaWidget*>(m_widget);
     const QFontMetrics &m = style()->fontMetrics();
-#ifdef APPLE_CHANGES
-    QSize size( QMAX(element()->cols(), 1)*m.width('x') + w->frameWidth() +
-                w->verticalScrollBar(),
-                QMAX(element()->rows(), 1)*m.height() + w->frameWidth()*2 +
-                (w->wordWrap() == QTextEdit::NoWrap ?
-                 w->horizontalScrollBar() : 0)
-        );
-#else /* APPLE_CHANGES not defined */
     QSize size( QMAX(element()->cols(), 1)*m.width('x') + w->frameWidth() +
                 w->verticalScrollBar()->sizeHint().width(),
                 QMAX(element()->rows(), 1)*m.height() + w->frameWidth()*2 +
                 (w->wordWrap() == QTextEdit::NoWrap ?
                  w->horizontalScrollBar()->sizeHint().height() : 0)
         );
-#endif /* APPLE_CHANGES not defined */
 
     setIntrinsicWidth( size.width() );
     setIntrinsicHeight( size.height() );

@@ -480,7 +480,7 @@ KWQMapNodeImpl *KWQMapImpl::insertInternal(KWQMapNodeImpl *nodeToInsert, bool re
     return node;
 }
 
-void KWQMapImpl::removeInternal(KWQMapNodeImpl *nodeToDelete)
+void KWQMapImpl::removeEqualInternal(KWQMapNodeImpl *nodeToDelete)
 {
     KWQMapNodeImpl *nodeStack[MAX_STACK];
     bool wentLeftStack[MAX_STACK];

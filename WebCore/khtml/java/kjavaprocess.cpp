@@ -260,12 +260,14 @@ bool KJavaProcess::invokeJVM()
     if ( d->classArgs != QString::null )
         *javaProcess << d->classArgs;
 
+#ifndef APPLE_CHANGES
     kdDebug(6100) << "Invoking JVM now...with arguments = " << endl;
     QString argStr;
     QTextOStream stream( &argStr );
     QValueList<QCString> args = javaProcess->args();
     qCopy( args.begin(), args.end(), QTextOStreamIterator<QCString>( stream, " " ) );
     kdDebug(6100) << argStr << endl;
+#endif
 
     KProcess::Communication flags =  (KProcess::Communication)
                                      (KProcess::Stdin | KProcess::Stdout |

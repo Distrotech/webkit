@@ -813,11 +813,7 @@ void KHTMLView::contentsContextMenuEvent ( QContextMenuEvent *_ce )
         QWidget *w = static_cast<RenderWidget*>(targetNode->renderer())->widget();
         QContextMenuEvent cme(_ce->reason(),pos,_ce->globalPos(),_ce->state());
         setIgnoreEvents(true);
-#ifdef APPLE_CHANGES
-	m_part->event (&event);
-#else /* APPLE_CHANGES not defined */
         QApplication::sendEvent(w,&cme);
-#endif /* APPLE_CHANGES not defined */
         setIgnoreEvents(false);
     }
 

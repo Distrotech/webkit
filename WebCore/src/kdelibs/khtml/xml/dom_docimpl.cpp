@@ -983,8 +983,10 @@ void DocumentImpl::close(  )
     delete m_tokenizer;
     m_tokenizer = 0;
 
+#ifndef APPLE_CHANGES
     if (m_view)
         m_view->part()->checkEmitLoadEvent();
+#endif
 }
 
 void DocumentImpl::write( const DOMString &text )

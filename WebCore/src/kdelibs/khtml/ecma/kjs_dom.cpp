@@ -371,7 +371,11 @@ UString DOMNode::toString(ExecState *) const
 
   DOM::Element e = node;
   if ( !e.isNull() ) {
+#if APPLE_CHANGES
+    s = KJS::UString(e.nodeName().string());
+#else /* not APPLE_CHANGES */
     s = e.nodeName().string();
+#endif /* not APPLE_CHANGES */
   } else
     s = className(); // fallback
 

@@ -128,6 +128,9 @@ DOMString HTMLDocumentImpl::lastModified() const
 
 DOMString HTMLDocumentImpl::cookie() const
 {
+#if APPLE_CHANGES
+    return DOMString();
+#else /* not APPLE_CHANGES */
     QCString replyType;
     QByteArray params, reply;
     QDataStream stream(params, IO_WriteOnly);
@@ -153,10 +156,12 @@ DOMString HTMLDocumentImpl::cookie() const
     QString result;
     stream2 >> result;
     return DOMString(result);
+#endif /* not APPLE_CHANGES */
 }
 
 void HTMLDocumentImpl::setCookie( const DOMString & value )
 {
+#ifndef APPLE_CHANGES
     long windowId = view() ? view()->winId() : 0;
     QByteArray params;
     QDataStream stream(params, IO_WriteOnly);
@@ -173,6 +178,7 @@ void HTMLDocumentImpl::setCookie( const DOMString & value )
                                        "addCookies(QString,QCString,long int)", params))
              kdWarning(6010) << "Can't communicate with cookiejar!" << endl;
     }
+#endif
 }
 
 

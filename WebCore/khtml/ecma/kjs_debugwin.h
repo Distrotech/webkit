@@ -23,9 +23,14 @@
 
 #include <qglobal.h>
 
+#include <config.h>
+
+#ifndef APPLE_CHANGES
 #ifdef __GNUC__
 #warning TODO port the debugger
 #endif
+#endif
+
 
 //#define KJS_DEBUGGER
 

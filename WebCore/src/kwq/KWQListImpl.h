@@ -63,6 +63,7 @@ public:
     void *next();
     void *prev();
     void *take(uint n);
+    void *take();
 
     void append(const void *item);
     void prepend(const void *item);

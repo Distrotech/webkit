@@ -99,6 +99,9 @@ public:
     // member functions --------------------------------------------------------
 
     QString name() const;
+    QString comment() const;
+    static Ptr mimeType(QString serviceType);
+    static QString defaultMimeType();
 
     // operators ---------------------------------------------------------------
 

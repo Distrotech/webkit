@@ -393,6 +393,8 @@ public:
     int contains(char) const;
     int contains(const char *, bool cs=TRUE) const;
 
+    int endsWith(QString &);
+
     // NOTE: toXXXXX integer functions only support base 10 and base 16
     // NOTE: toShort, toUShort, toULong, and toDouble are NOT used but are kept
     // for completeness

@@ -46,6 +46,10 @@
 #include "xml/dom2_eventsimpl.h"
 #include "xml/dom_docimpl.h"
 
+#if APPLE_CHANGES
+#include <qlineedit.h>
+#endif
+
 using namespace KJS;
 
 namespace KJS {

@@ -148,6 +148,8 @@ public:
      void createNewWindow(const KURL &, const KParts::URLArgs &, 
         const KParts::WindowArgs &, KParts::ReadOnlyPart *&);
 
+     void setIconURL(const KURL &);
+
     // operators ---------------------------------------------------------------
 
 // protected -------------------------------------------------------------------
