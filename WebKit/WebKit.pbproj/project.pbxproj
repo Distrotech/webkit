@@ -2818,11 +2818,13 @@
 			};
 		};
 		F540351A06AF406A01CA2D3A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = WebNSPrintOperationExtras.h;
 			refType = 4;
 		};
 		F540351B06AF406A01CA2D3A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = WebNSPrintOperationExtras.m;
 			refType = 4;

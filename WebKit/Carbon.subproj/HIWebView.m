@@ -454,7 +454,6 @@ Click( HIWebView* inView, EventRef inEvent )
 {
 	CGSEventRecord			eventRec;
 	NSEvent*				kitEvent;
-	ControlRef				focus;
 //	NSView*					targ;
 	EventRef				newEvent;
 	Point					where;
@@ -484,14 +483,6 @@ Click( HIWebView* inView, EventRef inEvent )
 	SetEventParameter( newEvent, kEventParamKeyModifiers, typeUInt32, sizeof( UInt32 ), &modifiers );
 	
 	kitEvent = [[NSEvent alloc] _initWithCGSEvent:(CGSEventRecord)eventRec eventRef:(void *)newEvent];
-
-	// Grab the keyboard focus
-	// еее FIX: Need to switch to a real part code, not focusnextpart. Have to handle
-	//			subviews properly as well.
-
-	GetKeyboardFocus( GetWindowRef( inView ), &focus );
-	if ( focus != inView->fViewRef )
-		SetKeyboardFocus( GetWindowRef( inView ), inView->fViewRef, kControlFocusNextPart );
 
 //	targ = [[inView->fKitWindow _borderView] hitTest:[kitEvent locationInWindow]];
 
@@ -704,7 +695,8 @@ OwningWindowChanged(
             { kEventClassMouse, kEventMouseWheelMoved },
             { kEventClassKeyboard, kEventRawKeyDown },
             { kEventClassKeyboard, kEventRawKeyRepeat },
-            { kEventClassKeyboard, kEventRawKeyUp }
+            { kEventClassKeyboard, kEventRawKeyUp },
+            { kEventClassControl, kEventControlClick },
             };
             
             view->fKitWindow = [[CarbonWindowAdapter alloc] initWithCarbonWindowRef: newWindow takingOwnership: NO disableOrdering:NO carbon:YES];
@@ -730,6 +722,7 @@ OwningWindowChanged(
     }
 }
 
+
 //-------------------------------------------------------------------------------------
 //	WindowHandler
 //-------------------------------------------------------------------------------------
@@ -745,12 +738,31 @@ WindowHandler( EventHandlerCallRef inCallRef, EventRef inEvent, void* inUserData
 
     switch( GetEventClass( inEvent ) )
     {
+    	case kEventClassControl:
+            {
+            switch( GetEventKind( inEvent ) )
+            {
+                case kEventControlClick:
+                    {
+                        CarbonWindowAdapter *kitWindow;
+                        OSStatus err;
+                        
+                        err = GetWindowProperty( window, NSAppKitPropertyCreator, NSCarbonWindowPropertyTag, sizeof(NSWindow *), NULL, &kitWindow);
+                        
+                        // We must be outside the HIWebView, relinquish focus.
+                        [kitWindow relinquishFocus];
+                    }
+                    break;
+                }
+            }
+            break;
+            
     	case kEventClassKeyboard:
     		{
-                NSWindow*		kitWindow;
-                OSStatus		err;
-    			CGSEventRecord	eventRec;
-   				NSEvent*		kitEvent;
+                CarbonWindowAdapter *kitWindow;
+                OSStatus err;
+    			CGSEventRecord eventRec;
+   				NSEvent *kitEvent;
    				
    				// if the first responder in the kit window is something other than the
    				// window, we assume a subview of the webview is focused. we must send
@@ -768,7 +780,7 @@ WindowHandler( EventHandlerCallRef inCallRef, EventRef inEvent, void* inUserData
 						RetainEvent( inEvent );
 						kitEvent = [[NSEvent alloc] _initWithCGSEvent:(CGSEventRecord)eventRec eventRef:(void *)inEvent];
 						
-						[kitWindow sendEvent:kitEvent];
+						[kitWindow sendSuperEvent:kitEvent];
 						[kitEvent release];
 						
 						result = noErr;

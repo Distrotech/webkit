@@ -401,6 +401,50 @@ static OSStatus NSCarbonWindowHandleEvent(EventHandlerCallRef inEventHandlerCall
     if (!ignoreEvent) [super sendEvent:inEvent];
 }
 
+- (void)relinquishFocus
+{
+    NSResponder*  firstResponder;
+
+    // Carbon thinks that a control has the keyboard focus,
+    // or we wouldn't be being asked to relinquish focus.
+
+	firstResponder = [self firstResponder];
+	if ([firstResponder isKindOfClass:[NSView class]] ){
+		// Make the window the first responder, so that no view is the key view.
+        [self makeFirstResponder:self];
+    }
+}
+
+- (BOOL)makeFirstResponder:(NSResponder *)aResponder
+{
+    // Let NSWindow focus the appropriate NSView.
+    if (![super makeFirstResponder:aResponder])
+        return NO;
+
+    // Now, if the view we're focusing is in a HIWebView, find the
+    // corresponding HIWebView for the NSView, and tell carbon that
+    // we've just focused.
+    HIViewRef viewRef = 0;
+    NSResponder *firstResponder = [self firstResponder];    
+    if ([firstResponder isKindOfClass:[NSView class]]) {
+        NSView *view = (NSView *)firstResponder;
+        while (view) {
+            viewRef = [HIViewAdapter getHIViewForNSView:view];
+            if (viewRef)
+                break;
+            view = [view superview];
+        }
+    }
+
+    HIViewRef focus;
+	GetKeyboardFocus (_windowRef, &focus);
+	if (focus != viewRef) {
+        ClearKeyboardFocus (_windowRef);
+    }
+
+    return YES;
+}
+
 
 // There's no override of _addCursorRect:cursor:forView:, despite the fact that NSWindow's invokes [self windowNumber], because Carbon windows won't have subviews, and therefore won't have cursor rects.
 
