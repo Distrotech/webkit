@@ -1,3 +1,16 @@
+2004-11-01  Chris Blumenberg  <cblu@apple.com>
+
+	Fixed: <rdar://problem/3860882> Safari URI status bar spoofing using a nested <a> links in a table
+
+	Rolled fix from TOT to 1.2 branch.
+
+        Reviewed by adele.
+
+        * khtml/rendering/render_layer.cpp:
+        (RenderLayer::nodeAtPoint): 
+	Make sure the URL element is the innermost one, by not setting it once
+        it's already set.
+
 === WebCore-125.8.10 ===
 
 2004-10-07  Adele Amchan  <adele@apple.com>
