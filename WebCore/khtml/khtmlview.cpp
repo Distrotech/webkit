@@ -58,6 +58,10 @@
 #include <kurldrag.h>
 #include <qobjectlist.h>
 
+#if APPLE_CHANGES
+#include "KWQAccObjectCache.h"
+#endif
+
 #define PAINT_BUFFER_HEIGHT 128
 
 using namespace DOM;
@@ -638,6 +642,11 @@ void KHTMLView::layout()
 #endif
     
     d->layoutCount++;
+#if APPLE_CHANGES
+    if (KWQAccObjectCache::accessibilityEnabled())
+        root->document()->getOrCreateAccObjectCache()->postNotification(root, "AXLayoutComplete");
+#endif
+
 #ifdef INCREMENTAL_REPAINTING
     if (root->needsLayout())
 #else
