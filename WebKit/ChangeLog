@@ -1,3 +1,20 @@
+2005-04-07  John Sullivan  <sullivan@apple.com>
+
+        WebKit support to allow clients to control whether the selection is still
+        drawn when the first responder is elsewhere. Formerly this was hardwired
+        to be true only when -[WebView isEditable] was true.
+
+        Reviewed by Darin.
+
+        * WebView.subproj/WebHTMLView.m:
+        (-[WebHTMLView maintainsInactiveSelection]):
+        check [WebView maintainsInactiveSelection] rather than just [WebView isEditable]
+        
+        * WebView.subproj/WebViewPrivate.h:
+        * WebView.subproj/WebView.m:
+        (-[WebView maintainsInactiveSelection]):
+        new method for clients to override, returns -[self isEditable]
+
 === Safari-412 ===
 
 === Safari-411 ===

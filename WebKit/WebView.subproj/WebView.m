@@ -2505,6 +2505,11 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
     }
 }
 
+- (BOOL)maintainsInactiveSelection
+{
+    return [self isEditable];
+}
+
 @end
 
 @implementation WebView (WebViewPrintingPrivate)

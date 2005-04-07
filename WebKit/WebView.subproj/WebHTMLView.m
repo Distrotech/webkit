@@ -2035,8 +2035,7 @@ static WebHTMLView *lastHitView = nil;
     if (nextResponder == self)
         return YES;
 
-    // non-editable views lose selection whenever losing first responder status
-    if (![[self _webView] isEditable])
+    if (![[self _webView] maintainsInactiveSelection])
         return NO;
     
     // editable views lose selection when losing first responder status
