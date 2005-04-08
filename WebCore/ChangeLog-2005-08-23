@@ -1,3 +1,21 @@
+2005-04-07  John Sullivan  <sullivan@apple.com>
+
+        WebCore support for find-as-you-type; needed an additional parameter
+        to findString and searchFor:...
+
+        Reviewed by Dave Hyatt.
+
+        * kwq/KWQKHTMLPart.h:
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::findString):
+        new findInSelection parameter; if true, start from the beginning of the selection
+        when searching forward, or the end of the selection when searching backward
+        
+        * kwq/WebCoreBridge.h:
+        * kwq/WebCoreBridge.mm:
+        (-[WebCoreBridge searchFor:direction:caseSensitive:wrap:findInSelection:]):
+        new findInSelection parameter; passed through to findString
+
 === WebCore-415 ===
 
 2005-03-28  David Harrison  <harrison@apple.com>
