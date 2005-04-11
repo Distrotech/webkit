@@ -1,3 +1,11 @@
+2005-04-11  John Sullivan  <sullivan@apple.com>
+
+        Fixed inability to wrap around in Find in Page 
+
+        * WebView.subproj/WebView.m:
+        (-[WebView _searchFor:direction:caseSensitive:wrap:findInSelection:]):
+        changed wrapFlag from NO to YES on two lines (copy/paste error)
+
 2005-04-07  John Sullivan  <sullivan@apple.com>
 
         WebKit support for find-as-you-type. Needed an additional parameter on

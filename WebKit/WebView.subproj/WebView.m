@@ -2199,9 +2199,9 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
     if (wrapFlag && startHasSelection && startSearchView) {
         BOOL success;
         if ([startSearchView respondsToSelector:@selector(_searchFor:direction:caseSensitive:wrap:findInSelection:)]) {
-            success = [startSearchView _searchFor:string direction:forward caseSensitive:caseFlag wrap:NO findInSelection:findInSelection];
+            success = [startSearchView _searchFor:string direction:forward caseSensitive:caseFlag wrap:YES findInSelection:findInSelection];
         } else {
-            success = [startSearchView searchFor:string direction:forward caseSensitive:caseFlag wrap:NO];
+            success = [startSearchView searchFor:string direction:forward caseSensitive:caseFlag wrap:YES];
         }
         if (success) {
             [[self window] makeFirstResponder:startSearchView];
