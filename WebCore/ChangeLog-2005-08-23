@@ -1,3 +1,27 @@
+2005-04-15  Adele Amchan  <adele@apple.com>
+
+	Merged elementFromPoint fix from TOT for Chancery Seed.
+
+    2005-04-12  Vicki Murley  <vicki@apple.com>
+
+        Reviewed by Maciej. 
+
+	- fixed <rdar://problem/3760895> Request for including an implementation of the elementFromPoint function
+ 
+        * khtml/dom/dom_doc.cpp:
+        (DOM::Document::elementFromPoint):
+        * khtml/dom/dom_doc.h:
+        * khtml/ecma/kjs_dom.cpp:
+        (DOMDocumentProtoFunc::tryCall):
+        * khtml/ecma/kjs_dom.h:
+        (KJS::DOMDocument::):
+        * khtml/ecma/kjs_dom.lut.h:
+        (KJS::):
+        * khtml/xml/dom_docimpl.cpp:
+        (DocumentImpl::elementFromPoint):
+        * khtml/xml/dom_docimpl.h:
+
+
 === WebCore-415 ===
 
 2005-03-28  David Harrison  <harrison@apple.com>
