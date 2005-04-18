@@ -1,3 +1,18 @@
+2005-04-18  John Sullivan  <sullivan@apple.com>
+
+        WebCore support for notifying a form delegate when a
+        textarea's contents have changed (as opposed to a 
+        textfield, which was already handled).
+
+        Reviewed by Maciej.
+
+        * kwq/WebCoreBridge.h:
+        add textDidChange: method
+
+        * kwq/KWQTextArea.mm:
+        (-[KWQTextArea textDidChange:]):
+        call through to bridge
+
 2005-04-12  John Sullivan  <sullivan@apple.com>
 
         - fixed these two bugs (this is on the branch; I need to roll these into TOT also):

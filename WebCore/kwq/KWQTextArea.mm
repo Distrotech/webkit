@@ -167,10 +167,13 @@ const float LargeNumberForText = 1.0e7;
     [super dealloc];
 }
 
-- (void)textDidChange:(NSNotification *)aNotification
+- (void)textDidChange:(NSNotification *)notification
 {
     if (widget)
         widget->textChanged();
+
+    WebCoreBridge *bridge = KWQKHTMLPart::bridgeForWidget(widget);
+    [bridge textDidChange:notification];
 }
 
 - (void)setWordWrap:(BOOL)f

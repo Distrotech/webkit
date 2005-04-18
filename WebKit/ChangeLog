@@ -1,3 +1,20 @@
+2005-04-18  John Sullivan  <sullivan@apple.com>
+
+        WebKit support for notifying a form delegate when a
+        textarea's contents have changed (as opposed to a 
+        textfield, which was already handled).
+
+        Reviewed by Maciej.
+
+        * WebView.subproj/WebFormDelegate.h:
+        * WebView.subproj/WebFormDelegate.m:
+        (-[WebFormDelegate textDidChange:inFrame:]):
+        new form delegate method
+
+        * WebCoreSupport.subproj/WebBridge.m:
+        (-[WebBridge textDidChange:]):
+        new method, calls through to form delegate
+        
 2005-04-11  John Sullivan  <sullivan@apple.com>
 
         Fixed inability to wrap around in Find in Page 

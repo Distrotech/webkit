@@ -566,6 +566,7 @@ typedef enum {
 - (void)controlTextDidBeginEditing:(NSNotification *)obj;
 - (void)controlTextDidEndEditing:(NSNotification *)obj;
 - (void)controlTextDidChange:(NSNotification *)obj;
+- (void)textDidChange:(NSNotification *)obj;
 
 - (BOOL)control:(NSControl *)control textShouldBeginEditing:(NSText *)fieldEditor;
 - (BOOL)control:(NSControl *)control textShouldEndEditing:(NSText *)fieldEditor;
