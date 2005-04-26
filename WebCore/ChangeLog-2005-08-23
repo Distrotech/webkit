@@ -1,3 +1,20 @@
+2005-04-26  chris petersen  <cpetersen@apple.com>
+	
+	Merging fix for <rdar://problem/4069161> from TOT 
+
+	Reviewed by Adele.
+
+    2005-03-28  David Harrison  <harrison@apple.com>
+
+        Reviewed by Darin.
+        
+        <rdar://problem/4069161> REGRESSION (8A416-8A419): Safari crash bringing up context menu for non-HTML content in a frame
+
+        * kwq/KWQAccObject.mm:
+        (-[KWQAccObject rendererForView:]):
+        Nil-check node variable instead of rechecking document variable.
+       
+
 === Safari-412 ===
 
 2005-03-24  Richard Williamson   <rjw@apple.com>
