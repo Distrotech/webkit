@@ -1,5 +1,22 @@
 === WebCore-415.1 ===
 
+2005-04-27  Vicki Murley  <vicki@apple.com>
+
+	- merge this fix from HEAD
+
+	This fix was included in WebCore-413, which shipped in Tiger GM (8A428).  However, 
+	Safari-2-0-anchor was mistakenly placed at WebCore-412.  Merging this fix to 
+	the branch so that this fix isn't lost in the SU. 
+
+    2005-03-27  Darin Adler  <darin@apple.com>
+
+        Reviewed by me, fix by Kida-san.
+
+        - fixed <rdar://problem/4067474> 8A424: Safari immediately quit by Cmd+Ctrll+'D'
+
+        * kwq/WebCoreBridge.mm: (-[WebCoreBridge convertToNSRange:DOM::]):
+        Added nil check.
+
 2005-04-27  Adele Peterson  <adele@apple.com>
 
         Merging John's fix for alt/shift bug in <rdar://problem/3655817> fix from TOT.
