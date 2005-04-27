@@ -323,8 +323,8 @@ public:
                 const DOMString &keyIdentifierArg,
                 unsigned long keyLocationArg,
                 bool ctrlKeyArg,
-                bool shiftKeyArg,
                 bool altKeyArg,
+                bool shiftKeyArg,
                 bool metaKeyArg,
                 bool altGraphKeyArg);
     virtual ~KeyboardEventImpl();
@@ -336,8 +336,8 @@ public:
                 const DOMString &keyIdentifierArg,
                 unsigned long keyLocationArg,
                 bool ctrlKeyArg,
-                bool shiftKeyArg,
                 bool altKeyArg,
+                bool shiftKeyArg,
                 bool metaKeyArg,
                 bool altGraphKeyArg);
     
