@@ -1,3 +1,33 @@
+2005-05-02  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Chris.
+        
+        Improvements to resizable textarea experiment:
+        - resize image is now drawn in the resize corner
+        - cursor sometimes tracks to arrow when over resize corner (but usually not)
+        - cursor changes to arrow on mouse down in any case
+
+        * Resources/textAreaResizeCorner.tiff: Added.
+        * WebCore.pbproj/project.pbxproj:
+        updated for added image file
+        
+        * kwq/DOMHTML.mm:
+        (-[DOMHTMLTextAreaElement cols]):
+        Rolled in a fix to this method from tip of tree since it affects the demo.
+        
+        * kwq/KWQTextArea.mm:
+        (-[KWQTextAreaTextView _resizeCornerImage]):
+        new method, reads resize image once and caches it
+        (-[KWQTextAreaTextView _resizeCornerRect]):
+        new method, computes rect from image
+        (-[KWQTextAreaTextView resetCursorRects]):
+        overridden to attempt to make the cursor change to an arrow when over this
+        corner. Only works sometimes, as explained in comments.
+        (-[KWQTextAreaTextView drawRect:]):
+        overridden to draw resize image
+        (-[KWQTextAreaTextView mouseDown:]):
+        now uses _resizeCornerRect, and sets cursor to arrow when pressed in resize corner
+
 2005-04-27  John Sullivan  <sullivan@apple.com>
 
         Rolled in the resizable textarea change from tip of tree, so all three of my

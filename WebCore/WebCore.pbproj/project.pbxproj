@@ -561,6 +561,7 @@
 				84C0FA38052B966D000440A1,
 				84C0FA39052B966D000440A1,
 				84C0FA3A052B966D000440A1,
+				EDA80BB3082687C100248EEB,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -848,6 +849,7 @@
 		089C1665FE841158C02AAC07 = {
 			children = (
 				84C0FA1E052B9652000440A1,
+				EDA80BB10826878F00248EEB,
 				F5A1B05302DE8B46018635CA,
 				BC8F62990405F45600A80004,
 			);
@@ -3559,6 +3561,30 @@
 		};
 		EDA4AC98076FB89100DD23EC = {
 			fileRef = EDA4AC97076FB89100DD23EC;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		EDA80BB10826878F00248EEB = {
+			children = (
+				EDA80BB2082687C100248EEB,
+			);
+			isa = PBXGroup;
+			name = "Other Images";
+			path = "";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		EDA80BB2082687C100248EEB = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = textAreaResizeCorner.tiff;
+			path = Resources/textAreaResizeCorner.tiff;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		EDA80BB3082687C100248EEB = {
+			fileRef = EDA80BB2082687C100248EEB;
 			isa = PBXBuildFile;
 			settings = {
 			};
