@@ -1,10 +1,22 @@
+2005-05-05  Adele Peterson  <adele@apple.com>
+
+    Merging fix for <rdar://problem/4109564> from TOT for SUTiAtlanta.
+
+    2005-05-05  Darin Adler  <darin@apple.com>
+
+        Reviewed by Dave Hyatt.
+
+        - fixed <rdar://problem/4109564> REGRESSION (Atlanta): maps.google.com doesn't always center California correctly
+
+        * khtml/ecma/kjs_events.cpp: (offsetFromTarget): Fix two places that said X where they should say Y.
+
 === WebCore-415.2 ===
 
 2005-05-02  Chris Petersen  <cpetersen@apple.com>
 
         Reviewed by Adele. Merging changes for SUTiAtlanta.
 
- 2005-04-29  David Harrison  <harrison@apple.com>
+    2005-04-29  David Harrison  <harrison@apple.com>
 
         Reviewed by Darin.
 

@@ -693,7 +693,7 @@ Value DOMMouseEvent::tryGet(ExecState *exec, const Identifier &p) const
 static QPoint offsetFromTarget(const MouseRelatedEventImpl *e)
 {
     int x = e->clientX();
-    int y = e->clientX();
+    int y = e->clientY();
 
     NodeImpl *n = e->target();
     if (n) {
@@ -705,7 +705,7 @@ static QPoint offsetFromTarget(const MouseRelatedEventImpl *e)
                 int rx, ry;
                 if (r->absolutePosition(rx, ry)) {
                     x -= rx;
-                    x -= ry;
+                    y -= ry;
                 }
             }
         }
