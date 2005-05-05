@@ -1,3 +1,16 @@
+2005-05-05  Adele Peterson  <adele@apple.com>
+
+    Merged fix for <rdar://problem/4065447> from TOT for Oracle Seed.
+
+    2005-04-20  Vicki Murley  <vicki@apple.com>
+
+        Reviewed by hyatt.
+
+	- fixed <rdar://problem/4065447> support outerHTML on IMG elements
+
+        * khtml/html/html_elementimpl.cpp:
+        (HTMLElementImpl::setOuterHTML):
+
 === WebCore-315.2 ===
 
 2005-05-04  Adele Peterson  <adele@apple.com>
