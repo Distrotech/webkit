@@ -1,3 +1,13 @@
+2005-05-05  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Chris.
+
+        * kwq/KWQTextArea.mm:
+        (-[KWQTextAreaTextView _resizeCornerRect]):
+        Get corner rect from enclosing clipView, rather than using visibleRect.
+        VisibleRect would return the wrong result when the textarea was clipped
+        by the bottom of the window, leading to redraw schmutz among other things.
+
 2005-05-02  John Sullivan  <sullivan@apple.com>
 
         Reviewed by Chris.

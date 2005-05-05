@@ -794,9 +794,8 @@ const long MinimumRowsWhileResizing = 2;
 
 - (NSRect)_resizeCornerRect
 {
-    // FIXME: visibleRect works here as long as there are no views overlapping the NSTextView.
-    // Might be safer to compute the rect of the document that's visible in the scrollview
-    NSRect visibleRect = [self visibleRect];
+    NSClipView *clipView = [self superview];
+    NSRect visibleRect = [clipView documentVisibleRect];
     NSImage *cornerImage = [self _resizeCornerImage];
     NSSize imageSize = [cornerImage size];
     // Add one pixel of whitespace at right and bottom of image to match normal resize corner appearance.
