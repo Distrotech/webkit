@@ -1,8 +1,21 @@
+2005-05-09  Adele Peterson  <adele@apple.com>
+
+        Merged fix for <rdar://problem/4110775> from TOT.
+
+    2005-05-09  Adele Peterson  <adele@apple.com>
+
+        fix for <rdar://problem/4110775> Crash will occur when double-clicking outerHTML link on W3 DOM test
+
+        Reviewed by Darin.
+
+        * khtml/html/html_elementimpl.cpp: (HTMLElementImpl::setOuterHTML): added nil check.  
+        This was causing a crash when you tried to set the outerHTML on an element that was no longer in the DOM tree.
+
 === WebCore-315.3 ===
 
 2005-05-05  Adele Peterson  <adele@apple.com>
 
-    Merged fix for <rdar://problem/4065447> from TOT for Oracle Seed.
+        Merged fix for <rdar://problem/4065447> from TOT for Oracle Seed.
 
     2005-04-20  Vicki Murley  <vicki@apple.com>
 
