@@ -832,15 +832,12 @@ Value Window::get(ExecState *exec, const Identifier &p) const
         return getListener(exec,DOM::EventImpl::UNLOAD_EVENT);
       else
         return Undefined();
-    case FrameElement: {
-        DocumentImpl *document = m_part->xmlDocImpl();
-        if (!document)
-            return Undefined();
-        ElementImpl *frameElement = document->ownerElement();
-        if (!frameElement)
-            return Undefined();
-        return Value(frameElement);
-    }
+    case FrameElement:
+      if (DocumentImpl *doc = m_part->xmlDocImpl())
+        if (ElementImpl *fe = doc->ownerElement())
+          if (checkNodeSecurity(exec, fe))
+            return getDOMNode(exec, fe);
+      return Undefined();
     }
   }
 

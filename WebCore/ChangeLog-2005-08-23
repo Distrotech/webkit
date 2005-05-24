@@ -1,5 +1,12 @@
 2005-05-23  Chris Petersen  <cpetersen@apple.com>
 
+        Reviewed by Adele.
+
+        * khtml/ecma/kjs_window.cpp: (Window::get): Merged final change
+        for frameElement from TOT.
+
+2005-05-23  Chris Petersen  <cpetersen@apple.com>
+
         Merged fix for <rdar://problem/4091956> from TOT to SUTiCambridge
 
      2005-04-25  Darin Adler  <darin@apple.com>
