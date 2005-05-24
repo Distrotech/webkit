@@ -1,3 +1,17 @@
+2005-05-23  Chris Petersen <cpetersen@apple.com>
+
+        Merged fix for <rdar://problem/4091082>  from TOT for SUTiCambridge
+
+    2005-04-22  Darin Adler  <darin@apple.com>
+
+        Reviewed by John.
+
+        - fixed <rdar://problem/4091082> Google Suggest no longer works due to lack of "frameElement"
+
+        * khtml/ecma/kjs_window.h: Added FrameElement.
+        * khtml/ecma/kjs_window.cpp: (Window::get): Added "frameElement".
+        * khtml/ecma/kjs_window.lut.h: Regenerated.
+
 === WebCore-415.5 ===
 
 2005-05-07  Adele Peterson  <adele@apple.com>
