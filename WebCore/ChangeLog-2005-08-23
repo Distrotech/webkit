@@ -1,3 +1,93 @@
+2005-05-24  Darin Adler  <darin@apple.com>
+
+        Rolled in changes to compile with gcc 4.0 from TOT.
+
+    2005-05-16  Darin Adler  <darin@apple.com>
+
+        Reviewed by Adele.
+
+        - fixed issues preventing us from compiling with newer versions of gcc 4.0
+
+        * khtml/dom/dom2_events.cpp: Add definitions of some static data member constants, as required
+        by the C++ standard and the gcc 4.0 compiler.
+
+        * khtml/editing/selection.h: Specified KHTMLPart friend class as ::KHTMLPart, since if it's
+        not explicitly qualified, it means DOM::KHTMLPart.
+
+        * khtml/dom/dom_string.cpp:
+        (DOM::strcasecmp): Removed redundant and illegal DOM:: prefix.
+        (DOM::operator==): Ditto.
+        * khtml/ecma/kjs_binding.cpp:
+        (KJS::getStringOrNull): Removed redundant and illegal KJS:: prefix.
+        (KJS::ValueToVariant): Ditto.
+        * khtml/ecma/kjs_css.cpp:
+        (KJS::getCSSRuleConstructor): Ditto.
+        (KJS::getCSSValueConstructor): Ditto.
+        (KJS::getCSSPrimitiveValueConstructor): Ditto.
+        * khtml/ecma/kjs_events.cpp:
+        (KJS::getEventConstructor): Ditto.
+        (KJS::getEventExceptionConstructor): Ditto.
+        (KJS::getMutationEventConstructor): Ditto.
+        * khtml/ecma/kjs_traversal.cpp:
+        (KJS::getNodeFilterConstructor): Ditto.
+
+        * khtml/misc/loader_client.h: Added an empty virtual destructor to CachedObjectClient
+        to quiet the compiler. This doesn't really do any good, but also does no harm.
+        * khtml/misc/loader.cpp: (CachedObjectClient::~CachedObjectClient): Added.
+
+        * khtml/rendering/render_block.cpp: (khtml::RenderBlock::fillBlockSelectionGaps):
+        Initialize a couple of variables that should have been initialized to 0.
+        Not just about making the compiler happy -- warning found a real bug!
+
+        * kwq/KWQTextArea.mm: (RangeOfParagraph): Change else structure to work around compiler
+        warning bug.
+
+    2005-04-28  Darin Adler  <darin@apple.com>
+
+        Reviewed by Dave Harrison.
+
+        - fixed problems preventing us from compiling with gcc 4.0
+
+        * WebCore.pbproj/project.pbxproj: Removed -fobjc-exceptions because I can't figure out an easy
+        way to pass it only when compiling Objective-C/C++. Removed -Wmissing-prototypes from
+        WARNING_CPLUSPLUSFLAGS since it's now a C-only warning.
+
+        * khtml/css/parser.y: Changed some rules that were using a float to pass around an enum to use an
+        int instead to avoid a warning.
+        * khtml/css/parser.cpp: Regenerated.
+        * khtml/css/parser.h: Regenerated.
+
+        * khtml/ecma/kjs_dom.cpp: (DOMTextProtoFunc::tryCall): Rearranged a return statement to avoid an incorrect
+        warning.
+        * khtml/ecma/kjs_html.cpp: (KJS::Context2DFunction::tryCall): Initialized a couple of variables to avoid
+        an incorrect warning.
+        * khtml/ecma/kjs_proxy.cpp: (KJSProxyImpl::evaluate): Rearranged how we exit from the function to avoid
+        an incorret warning.
+        * khtml/editing/selection.cpp: (khtml::Selection::debugPosition): Changed some %d to %ld where the
+        parameters where long ints.
+        * khtml/editing/visible_position.cpp: (khtml::VisiblePosition::debugPosition): Ditto.
+        * khtml/xml/dom_position.cpp: (DOM::Position::debugPosition): Ditto.
+        * kwq/DOMEvents.mm: (-[DOMMouseEvent initMouseEvent:::::::::::::::]): Rearranged code to avoid a cast
+        that was causing an incorrect warning.
+        * kwq/DOMUtility.mm:
+        (createObjCDOMNode): Broke out as a separate function.
+        (KJS::ScriptInterpreter::createObjcInstanceForValue): Rearranged code to avoid a namespace collision with
+        KJS::DOMNode and the Objective-C DOMNode class.
+        * kwq/KWQFileButton.mm: Made fields of KWQFileButtonAdapter public to avoid an error, new to gcc 4.0,
+        about accessing protected Objective-C fields.
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::matchLabelsAgainstElement): Rearranged a return statement to avoid an incorrect warning.
+        (KWQKHTMLPart::imageFromRect): Rearranged how this function does its exception handling to avoid a
+        "may be clobbered" warning.
+        * kwq/KWQKJavaAppletWidget.mm: Fixed incorrect import that said "KHTMLView.h" instead of "khtmlview.h".
+        * kwq/KWQObject.mm: Made fields of KWQObjectTimerTarget public to avoid an error, new to gcc 4.0,
+        about accessing protected Objective-C fields.
+        * kwq/WebCoreBridge.mm: (partHasSelection): Used [bridge part] instead of getting directly at instance
+        variable to avoid an error, new to gcc 4.0, about accessing protected Objective-C fields.
+
+        * WebCore-combined.exp: Regenerated.
+        * WebCore-tests.exp: Added some additional symbols needed by the tests under gcc 4.0.
+
 === WebCore-413 ===
 
 2005-03-27  Darin Adler  <darin@apple.com>

@@ -854,9 +854,13 @@ Value CSSRuleConstructor::getValueProperty(ExecState *, int token) const
   return Value();
 }
 
-Value KJS::getCSSRuleConstructor(ExecState *exec)
+namespace KJS {
+
+Value getCSSRuleConstructor(ExecState *exec)
 {
   return cacheGlobalObject<CSSRuleConstructor>( exec, "[[cssRule.constructor]]" );
+}
+
 }
 
 // -------------------------------------------------------------------------
@@ -942,7 +946,7 @@ Value CSSValueConstructor::getValueProperty(ExecState *, int token) const
   return Value();
 }
 
-Value KJS::getCSSValueConstructor(ExecState *exec)
+Value getCSSValueConstructor(ExecState *exec)
 {
   return cacheGlobalObject<CSSValueConstructor>( exec, "[[cssValue.constructor]]" );
 }
@@ -1054,7 +1058,7 @@ Value CSSPrimitiveValueConstructor::getValueProperty(ExecState *, int token) con
   return Number(token);
 }
 
-Value KJS::getCSSPrimitiveValueConstructor(ExecState *exec)
+Value getCSSPrimitiveValueConstructor(ExecState *exec)
 {
   return cacheGlobalObject<CSSPrimitiveValueConstructor>( exec, "[[cssPrimitiveValue.constructor]]" );
 }
