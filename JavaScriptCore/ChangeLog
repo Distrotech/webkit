@@ -1,3 +1,17 @@
+2005-05-26  Chris Petersen  <cpetersen@apple.com>
+
+        Merged fix for <rdar://problem/4086570> from TOTO to SUTiCambridge.
+
+    2005-05-04  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+
+	<rdar://problem/4086570> Crash in JavaScriptCore with RSS Visualizer
+	
+        * kjs/internal.cpp:
+        (InterpreterImp::mark): mark staticNaN, it is usually protected by the Number
+	prototype but there is a small window where it can get collected.
+
 === JavaScriptCore-412.2 ===
 
 2005-05-24  Chris Petersen  <cpetersen@apple.com>
