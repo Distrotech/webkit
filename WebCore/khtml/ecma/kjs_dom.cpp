@@ -96,7 +96,10 @@ DOMNode::DOMNode(const DOM::Node &n)
 
 DOMNode::~DOMNode()
 {
-  ScriptInterpreter::forgetDOMNodeForDocument(node.handle()->getDocument(), node.handle());
+  NodeImpl *n = node.handle();
+  if (n) {
+    ScriptInterpreter::forgetDOMNodeForDocument(n->getDocument(), n);
+  }
 }
 
 void DOMNode::mark()

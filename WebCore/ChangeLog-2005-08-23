@@ -1,4 +1,9 @@
 === WebCore-415.7 ===
+2005-05-31  Chris Petersen  <cpetersen@apple.com>
+
+        Change by Adele, Reviewed by Maciej.
+
+        * khtml/ecma/kjs_dom.cpp: (DOMNode::~DOMNode): Added nil check.  On the branch, its possible to create a node with no impl.
 
 2005-05-31  Chris Petersen  <cpetersen@apple.com>
 
