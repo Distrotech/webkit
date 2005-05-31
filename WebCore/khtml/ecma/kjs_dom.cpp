@@ -106,7 +106,7 @@ void DOMNode::mark()
 {
   static bool markingTree = false;
 
-  if (node.handle()->inDocument() || markingTree) {
+  if (node.isNull() || node.handle()->inDocument() || markingTree) {
     DOMObject::mark();
     return;
   }

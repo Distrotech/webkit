@@ -229,7 +229,8 @@ void ScriptInterpreter::mark()
       // don't mark wrappers for nodes that are no longer in the
       // document - they should not be saved if the node is not
       // otherwise reachable from JS.
-      if (node->toNode().handle()->inDocument() && !node->marked())
+      DOM::NodeImpl *n = node->toNode().handle();
+      if (n && n->inDocument() && !node->marked())
           node->mark();
 
       ++nodeIterator;

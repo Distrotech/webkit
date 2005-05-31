@@ -1,4 +1,12 @@
 === WebCore-415.7 ===
+
+2005-05-31  Chris Petersen  <cpetersen@apple.com>
+
+        Change by Adele, Reviewed by Maciej.
+
+        * khtml/ecma/kjs_binding.cpp: (ScriptInterpreter::mark): added nil check.
+        * khtml/ecma/kjs_dom.cpp: (DOMNode::mark): added nil check.
+
 2005-05-31  Chris Petersen  <cpetersen@apple.com>
 
         Change by Adele, Reviewed by Maciej.
