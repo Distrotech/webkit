@@ -1,5 +1,40 @@
 2005-05-31  Chris Petersen  <cpetersen@apple.com>
 
+       Merged fix for 4125222 from TOT for SUTiCambridge
+
+    2005-05-30  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+
+	- fixed <rdar://problem/4125222> Dashboard heap size grows over time (leak caused by JavaScript DOM node wrappers?)
+
+	- changed per-document DOMObject caching to work with DOMNodes, since that is all it was used for anyway.
+
+        * khtml/ecma/kjs_binding.cpp:
+        (KJS::ScriptInterpreter::forgetDOMObjectForDocument): New function - allows nodes
+	that get removed from the document to go away from the cache if not referenced.
+        (KJS::ScriptInterpreter::mark): Don't mark nodes that aren't in the document,
+	they can stay in the cache but only if they have another source of life.
+        (KJS::ScriptInterpreter::domNodesPerDocument): Renamed and changed parameter types.
+        (KJS::ScriptInterpreter::getDOMNodeForDocument): Renamed and changed parameter types.
+        (KJS::ScriptInterpreter::forgetDOMNodeForDocument): Renamed and changed parameter types.
+        (KJS::ScriptInterpreter::putDOMNodeForDocument): Renamed and changed parameter types.
+        (KJS::ScriptInterpreter::forgetAllDOMNodesForDocument): Renamed and changed parameter types.
+        (KJS::ScriptInterpreter::updateDOMNodeDocument): Renamed and changed parameter types.
+        * khtml/ecma/kjs_binding.h:
+        * khtml/ecma/kjs_dom.cpp: 
+        (KJS::DOMNode::~DOMNode): call forgetDOMObjectForDocument.
+        (KJS::DOMNode::mark): If the node is not in the document, make sure to mark
+	all wrappers in its detached piece of the tree.
+        (KJS::getDOMNode): Updated for renames
+        * khtml/ecma/kjs_dom.h:
+        * khtml/xml/dom_docimpl.cpp:
+        (DocumentImpl::~DocumentImpl): Updated for renames.
+        * khtml/xml/dom_nodeimpl.cpp:
+        (NodeImpl::checkAddChild): Updated for renames.
+
+2005-05-31  Chris Petersen  <cpetersen@apple.com>
+
         Merged fix for <rdar://problem/4067761> from TOT to SUTiCambridge.
 
     2005-05-27  Adele Peterson  <adele@apple.com>

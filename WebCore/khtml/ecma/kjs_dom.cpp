@@ -52,6 +52,8 @@ using namespace KJS;
 using DOM::DOMException;
 using DOM::DOMString;
 using DOM::NodeFilter;
+using DOM::NodeImpl;
+using DOM::DocumentImpl;
 
 // -------------------------------------------------------------------------
 /* Source for DOMNodeProtoTable. Use "make hashtables" to regenerate.
@@ -90,6 +92,45 @@ DOMNode::DOMNode(ExecState *exec, const DOM::Node &n)
 DOMNode::DOMNode(const DOM::Node &n)
   : node(n)
 {
+}
+
+DOMNode::~DOMNode()
+{
+  ScriptInterpreter::forgetDOMNodeForDocument(node.handle()->getDocument(), node.handle());
+}
+
+void DOMNode::mark()
+{
+  static bool markingTree = false;
+
+  if (node.handle()->inDocument() || markingTree) {
+    DOMObject::mark();
+    return;
+  }
+
+  DocumentImpl *document = node.handle()->getDocument();
+  NodeImpl *outermostWrappedNode = node.handle();
+  for (NodeImpl *current = node.handle()->parentNode(); current; current = current->parentNode()) {
+    if (ScriptInterpreter::getDOMNodeForDocument(document, current))
+      outermostWrappedNode = current;
+  }
+
+  markingTree = true;
+
+  NodeImpl *nodeToMark = outermostWrappedNode;
+  while (nodeToMark) {
+    DOMNode *wrapper = ScriptInterpreter::getDOMNodeForDocument(document, nodeToMark);
+    if (!wrapper)
+      nodeToMark = nodeToMark->traverseNextNode();
+    else if (wrapper->marked())
+      nodeToMark = nodeToMark->traverseNextSibling();
+    else {
+      wrapper->mark();
+      nodeToMark = nodeToMark->traverseNextNode();
+    }
+  }
+
+  markingTree = false;
 }
 
 bool DOMNode::toBoolean(ExecState *) const
@@ -1506,13 +1547,13 @@ bool KJS::checkNodeSecurity(ExecState *exec, const DOM::Node& n)
 
 Value KJS::getDOMNode(ExecState *exec, const DOM::Node &n)
 {
-  DOMObject *ret = 0;
+  DOMNode *ret = 0;
   if (n.isNull())
     return Null();
   ScriptInterpreter* interp = static_cast<ScriptInterpreter *>(exec->dynamicInterpreter());
-  DOM::NodeImpl *doc = n.ownerDocument().handle();
+  DocumentImpl *doc = n.handle()->getDocument();
 
-  if ((ret = interp->getDOMObjectForDocument(static_cast<DOM::DocumentImpl *>(doc), n.handle())))
+  if ((ret = interp->getDOMNodeForDocument(doc, n.handle())))
     return Value(ret);
 
   switch (n.nodeType()) {
@@ -1557,7 +1598,7 @@ Value KJS::getDOMNode(ExecState *exec, const DOM::Node &n)
       ret = new DOMNode(exec, n);
   }
 
-  interp->putDOMObjectForDocument(static_cast<DOM::DocumentImpl *>(doc), n.handle(), ret);
+  interp->putDOMNodeForDocument(doc, n.handle(), ret);
 
   return Value(ret);
 }
