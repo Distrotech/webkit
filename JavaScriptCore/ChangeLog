@@ -1,6 +1,8 @@
+=== JavaScriptCore-412.3 ===
+
 2005-05-26  Chris Petersen  <cpetersen@apple.com>
 
-        Merged fix for <rdar://problem/4086570> from TOTO to SUTiCambridge.
+        Merged fix for <rdar://problem/4086570> from TOT to SUTiCambridge.
 
     2005-05-04  Maciej Stachowiak  <mjs@apple.com>
 
