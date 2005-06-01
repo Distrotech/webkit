@@ -66,8 +66,6 @@ namespace KJS {
         StatusText, Abort, GetAllResponseHeaders, GetResponseHeader, Open, Send, SetRequestHeader,
         OverrideMIMEType };
 
-    static void cancelRequests(DOM::DocumentImpl *d);
-
   private:
     friend class XMLHttpRequestProtoFunc;
     friend class XMLHttpRequestQObject;
@@ -98,10 +96,6 @@ namespace KJS {
     Value getResponseHeader(const QString& name) const;
 
     void changeState(XMLHttpRequestState newState);
-
-    static QPtrDict< QPtrDict<XMLHttpRequest> > &requestsByDocument();
-    void addToRequestsByDocument();
-    void removeFromRequestsByDocument();
 
     QGuardedPtr<DOM::DocumentImpl> doc;
 

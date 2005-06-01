@@ -1,5 +1,10 @@
 === WebCore-415.7 ===
 
+2005-06-01  Chris Petersen  <cpetersen@apple.com>
+
+       Backing out fix for <rdar://problem/4067761> because it caused 
+       <rdar://problem/4135705> REGRESSION (412-TOT) crash in TV Tracker widget - KJS::XMLHttpRequest::removeFromRequestsByDocument()
+
 2005-05-31  Chris Petersen  <cpetersen@apple.com>
 
         Change by Adele, Reviewed by Maciej.

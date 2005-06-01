@@ -321,13 +321,6 @@ void XMLHttpRequest::open(const QString& _method, const KURL& _url, bool _async)
 
 void XMLHttpRequest::send(const QString& _body)
 {
-  if (!doc)
-    return;
-
-  // FIXME: Should this abort instead if we already have a job going?
-  if (job)
-    return;
-
   aborted = false;
 
 #if !APPLE_CHANGES
@@ -376,8 +369,6 @@ void XMLHttpRequest::send(const QString& _body)
   qObject->connect( job, SIGNAL(redirection(KIO::Job*, const KURL& ) ),
 		    SLOT( slotRedirection(KIO::Job*, const KURL&) ) );
 
-  addToRequestsByDocument();
-
 #ifdef APPLE_CHANGES
   KWQServeRequest(khtml::Cache::loader(), doc->docLoader(), job);
 #else 
@@ -387,10 +378,7 @@ void XMLHttpRequest::send(const QString& _body)
 
 void XMLHttpRequest::abort()
 {
-  bool hadJob = job;
-
-  if (hadJob) {
-    removeFromRequestsByDocument();
+  if (job) {
     job->kill();
     job = 0;
   }
@@ -400,8 +388,7 @@ void XMLHttpRequest::abort()
   }
   aborted = true;
 
-  if (hadJob)
-    gcUnprotect(this);
+  gcUnprotect (this);
 }
 
 void XMLHttpRequest::setRequestHeader(const QString& name, const QString &value)
@@ -536,7 +523,6 @@ void XMLHttpRequest::slotFinished(KIO::Job *)
     response += decoder->flush();
   }
 
-  removeFromRequestsByDocument();
   job = 0;
 
   changeState(Completed);
@@ -594,48 +580,6 @@ void XMLHttpRequest::slotData(KIO::Job*, const QByteArray &_data)
   if (!aborted) {
     changeState(Interactive);
   }
-}
-
-QPtrDict< QPtrDict<XMLHttpRequest> > &XMLHttpRequest::requestsByDocument()
-{
-    static QPtrDict< QPtrDict<XMLHttpRequest> > dictionary;
-    return dictionary;
-}
-
-void XMLHttpRequest::addToRequestsByDocument()
-{
-  assert(doc);
-
-  QPtrDict<XMLHttpRequest> *requests = requestsByDocument().find(doc);
-  if (!requests) {
-    requests = new QPtrDict<XMLHttpRequest>;
-    requestsByDocument().insert(doc, requests);
-  }
-
-  assert(requests->find(this) == 0);
-  requests->insert(this, this);
-}
-
-void XMLHttpRequest::removeFromRequestsByDocument()
-{
-  assert(doc);
-
-  QPtrDict<XMLHttpRequest> *requests = requestsByDocument().find(doc);
-  assert(requests);
-
-  assert(requests->find(this));
-  requests->remove(this);
-
-  if (requests->isEmpty()) {
-    requestsByDocument().remove(doc);
-    delete requests;
-  }
-}
-
-void XMLHttpRequest::cancelRequests(DOM::DocumentImpl *d)
-{
-  while (QPtrDict<XMLHttpRequest> *requests = requestsByDocument().find(d))
-    QPtrDictIterator<XMLHttpRequest>(*requests).current()->abort();
 }
 
 Value XMLHttpRequestProtoFunc::tryCall(ExecState *exec, Object &thisObj, const List &args)
