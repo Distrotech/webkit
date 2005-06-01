@@ -1,3 +1,19 @@
+2005-06-01  Adele Peterson  <adele@apple.com>
+
+        Merged fix for 4097289 from TOT for SUTiCambridge.
+
+    2005-05-24  Richard Williamson   <rjw@apple.com>
+
+	Fixed <rdar://problem/4097289> -[WebView elementAtPoint:] failing when WebView is nested and offset
+
+	Code to determine the correct frame under the window point was
+	converting the point incorrectly.
+
+        Reviewed by Chris.
+
+        * WebView.subproj/WebView.m:
+        (-[WebView _frameViewAtWindowPoint:]):
+
 === WebKit-412.2 ===
 
 2005-05-23  Chris Petersen <cpetersen@apple.com>
