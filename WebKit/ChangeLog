@@ -2,6 +2,14 @@
 
 2005-06-02  Adele Peterson  <adele@apple.com>
 
+        change by Darin, reviewed by me.
+
+         * WebCoreSupport.subproj/WebBridge.m:
+        (-[WebBridge loadURL:referrer:reload:userGesture:target:triggeringEvent:form:formValues:]): pass the passed referrer to canLoadURL::: not [self referrer]
+        (-[WebBridge postWithURL:referrer:target:data:contentType:triggeringEvent:form:formValues:]): ditto
+
+2005-06-02  Adele Peterson  <adele@apple.com>
+
         Merged WebKit part of fix for <rdar://problem/3166090> from TOT to Safari-1-3-branch
 
     2005-06-01  Darin Adler  <darin@apple.com>
