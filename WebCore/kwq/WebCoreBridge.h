@@ -460,6 +460,11 @@ typedef enum {
 - (WebCoreBridge *)createWindowWithURL:(NSURL *)URL frameName:(NSString *)name;
 - (void)showWindow;
 
+- (BOOL)canRunModal;
+- (BOOL)canRunModalNow;
+- (WebCoreBridge *)createModalDialogWithURL:(NSURL *)URL;
+- (void)runModal;
+
 - (NSString *)userAgentForURL:(NSURL *)URL;
 
 - (void)setTitle:(NSString *)title;
