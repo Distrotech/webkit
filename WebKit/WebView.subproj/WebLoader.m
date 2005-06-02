@@ -27,6 +27,7 @@
 #import <WebKit/WebResourcePrivate.h>
 #import <WebKit/WebViewPrivate.h>
 
+static unsigned inNSURLConnectionCallback;
 static BOOL NSURLConnectionSupportsBufferedData;
 
 @interface NSURLConnection (NSURLConnectionTigerPrivate)
@@ -557,37 +558,50 @@ static BOOL NSURLConnectionSupportsBufferedData;
 - (NSURLRequest *)connection:(NSURLConnection *)con willSendRequest:(NSURLRequest *)newRequest redirectResponse:(NSURLResponse *)redirectResponse
 {
     ASSERT(con == connection);
-    return [self willSendRequest:newRequest redirectResponse:redirectResponse];
+    ++inNSURLConnectionCallback;
+    NSURLRequest *result = [self willSendRequest:newRequest redirectResponse:redirectResponse];
+    --inNSURLConnectionCallback;
+    return result;
 }
 
 - (void)connection:(NSURLConnection *)con didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
 {
     ASSERT(con == connection);
+    ++inNSURLConnectionCallback;
     [self didReceiveAuthenticationChallenge:challenge];
+    --inNSURLConnectionCallback;
 }
 
 - (void)connection:(NSURLConnection *)con didCancelAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
 {
     ASSERT(con == connection);
+    ++inNSURLConnectionCallback;
     [self didCancelAuthenticationChallenge:challenge];
+    --inNSURLConnectionCallback;
 }
 
 - (void)connection:(NSURLConnection *)con didReceiveResponse:(NSURLResponse *)r
 {
     ASSERT(con == connection);
+    ++inNSURLConnectionCallback;
     [self didReceiveResponse:r];
+    --inNSURLConnectionCallback;
 }
 
 - (void)connection:(NSURLConnection *)con didReceiveData:(NSData *)data lengthReceived:(long long)lengthReceived
 {
     ASSERT(con == connection);
+    ++inNSURLConnectionCallback;
     [self didReceiveData:data lengthReceived:lengthReceived];
+    --inNSURLConnectionCallback;
 }
 
 - (void)connection:(NSURLConnection *)con willStopBufferingData:(NSData *)data
 {
     ASSERT(con == connection);
+    ++inNSURLConnectionCallback;
     [self willStopBufferingData:data];
+    --inNSURLConnectionCallback;
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)con
@@ -595,19 +609,27 @@ static BOOL NSURLConnectionSupportsBufferedData;
     // don't worry about checking connection consistency if this load
     // got cancelled while finishing.
     ASSERT(cancelledFlag || con == connection);
+    ++inNSURLConnectionCallback;
     [self didFinishLoading];
+    --inNSURLConnectionCallback;
 }
 
 - (void)connection:(NSURLConnection *)con didFailWithError:(NSError *)error
 {
     ASSERT(con == connection);
+    ++inNSURLConnectionCallback;
     [self didFailWithError:error];
+    --inNSURLConnectionCallback;
 }
 
 - (NSCachedURLResponse *)connection:(NSURLConnection *)con willCacheResponse:(NSCachedURLResponse *)cachedResponse
 {
     ASSERT(con == connection);
-    return [self willCacheResponse:cachedResponse];
+    
+    ++inNSURLConnectionCallback;
+    NSCachedURLResponse *result = [self willCacheResponse:cachedResponse];
+    --inNSURLConnectionCallback;
+    return result;
 }
 
 - (void)cancelWithError:(NSError *)error
@@ -664,6 +686,11 @@ static BOOL NSURLConnectionSupportsBufferedData;
 - (NSURLResponse *)response
 {
     return response;
+}
+
++ (BOOL)inConnectionCallback
+{
+    return inNSURLConnectionCallback != 0;
 }
 
 @end
