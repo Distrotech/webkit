@@ -1,3 +1,19 @@
+2005-06-14  Vicki Murley  <vicki@apple.com>
+
+	- merged this fix from HEAD
+
+    2005-06-13  Vicki Murley  <vicki@apple.com>
+
+        Reviewed by Darin.
+
+        No test cases added since the steps to reproduce require use of showModalDialog.
+
+        - fix for <rdar://problem/4145910> parameters not working in showModalDialog 
+        test page (dialogWidth, dialogHeight, etc.)
+
+        * khtml/ecma/kjs_window.cpp:
+        (KJS::parseFeatures): add a check for colon character in the feature string
+
 === WebCore-315.5 ===
 
 2005-06-02  Adele Peterson  <adele@apple.com>
