@@ -454,7 +454,7 @@
     [clients release];
     
     if (_private->committed) {
-	[[self _bridge] closeURL];        
+	[[self _bridge] stopLoading];        
     }
 }
 

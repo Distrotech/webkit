@@ -66,6 +66,7 @@
 
 using DOM::DocumentImpl;
 using DOM::DOMString;
+using DOM::ElementImpl;
 using DOM::Node;
 using DOM::Position;
 using khtml::TypingCommand;
@@ -283,6 +284,7 @@ const ClassInfo Window::info = { "Window", 0, &WindowTable, 0 };
   onmouseout	Window::Onmouseout	DontDelete
   onmouseover	Window::Onmouseover	DontDelete
   onmouseup	Window::Onmouseup	DontDelete
+  onmousewheel	Window::OnWindowMouseWheel	DontDelete
   onmove	Window::Onmove		DontDelete
   onreset	Window::Onreset		DontDelete
   onresize	Window::Onresize	DontDelete
@@ -291,6 +293,7 @@ const ClassInfo Window::info = { "Window", 0, &WindowTable, 0 };
   onselect	Window::Onselect	DontDelete
   onsubmit	Window::Onsubmit	DontDelete
   onunload	Window::Onunload	DontDelete
+  frameElement  Window::FrameElement    DontDelete|ReadOnly
 @end
 */
 IMPLEMENT_PROTOFUNC(WindowFunc)
@@ -782,6 +785,11 @@ Value Window::get(ExecState *exec, const Identifier &p) const
         return getListener(exec,DOM::EventImpl::MOUSEUP_EVENT);
       else
         return Undefined();
+    case OnWindowMouseWheel:
+      if (isSafeScript(exec))
+        return getListener(exec, DOM::EventImpl::MOUSEWHEEL_EVENT);
+      else
+        return Undefined();
     case Onmove:
       if (isSafeScript(exec))
         return getListener(exec,DOM::EventImpl::KHTML_MOVE_EVENT);
@@ -824,6 +832,12 @@ Value Window::get(ExecState *exec, const Identifier &p) const
         return getListener(exec,DOM::EventImpl::UNLOAD_EVENT);
       else
         return Undefined();
+    case FrameElement:
+      if (DocumentImpl *doc = m_part->xmlDocImpl())
+        if (ElementImpl *fe = doc->ownerElement())
+          if (checkNodeSecurity(exec, fe))
+            return getDOMNode(exec, fe);
+      return Undefined();
     }
   }
 
@@ -1003,6 +1017,10 @@ void Window::put(ExecState* exec, const Identifier &propertyName, const Value &v
     case Onmouseup:
       if (isSafeScript(exec))
         setListener(exec,DOM::EventImpl::MOUSEUP_EVENT,value);
+      return;
+    case OnWindowMouseWheel:
+      if (isSafeScript(exec))
+        setListener(exec, DOM::EventImpl::MOUSEWHEEL_EVENT,value);
       return;
     case Onmove:
       if (isSafeScript(exec))
