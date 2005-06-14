@@ -872,6 +872,34 @@ bool NodeImpl::dispatchKeyEvent(QKeyEvent *key)
     return r;
 }
 
+void NodeImpl::dispatchWheelEvent(QWheelEvent *e)
+{
+    if (e->delta() == 0)
+        return;
+
+    DocumentImpl *doc = getDocument();
+    if (!doc)
+        return;
+
+    KHTMLView *view = getDocument()->view();
+    if (!view)
+        return;
+
+    int x;
+    int y;
+    view->viewportToContents(e->x(), e->y(), x, y);
+
+    int state = e->state();
+
+    WheelEventImpl *we = new WheelEventImpl(e->orientation() == Qt::Horizontal, e->delta(),
+        getDocument()->defaultView(), e->globalX(), e->globalY(), x, y,
+        state & Qt::ControlButton, state & Qt::AltButton, state & Qt::ShiftButton, state & Qt::MetaButton);
+
+    int exceptionCode = 0;
+    if (!dispatchEvent(we, exceptionCode, true))
+        e->accept();
+}
+
 void NodeImpl::handleLocalEvents(EventImpl *evt, bool useCapture)
 {
     if (!m_regdListeners)
@@ -1060,7 +1088,7 @@ void NodeImpl::checkAddChild(NodeImpl *newChild, int &exceptioncode)
 
     // only do this once we know there won't be an exception
     if (shouldAdoptChild) {
-	KJS::ScriptInterpreter::updateDOMObjectDocument(newChild, newChild->getDocument(), getDocument());
+	KJS::ScriptInterpreter::updateDOMNodeDocument(newChild, newChild->getDocument(), getDocument());
 	newChild->setDocument(getDocument()->docPtr());
     }
 }
