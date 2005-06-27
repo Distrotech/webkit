@@ -1,3 +1,18 @@
+2005-06-27  Adele Peterson  <adele@apple.com>
+
+       Merged fix for <rdar://problem/4162816> from TOT to Safari-2-0-branch
+
+    2005-05-27  Darin Adler  <darin@apple.com>
+
+        Reviewed by Vicki.
+
+        - fixed <rdar://problem/4125212> form submission delayed until you are on the next page on XML/XSL page (security hole)
+
+        * khtml/xsl/xslt_processorimpl.cpp: (DOM::XSLTProcessorImpl::documentFromXMLDocPtr):
+        Call setParsing(false) explicitly here. It's really annoying that setParsing(true) is done
+        inside DOM::DocumentImpl and setParsing(false) is done by KHTMLPart, so that should be fixed
+        some day, but for now this is the way to do it.
+
 === WebCore-415.11 ===
 
 2005-06-13  Adele Peterson  <adele@apple.com>
