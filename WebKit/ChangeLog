@@ -1,3 +1,16 @@
+2005-06-27  Adele Peterson  <adele@apple.com>
+
+        Merged fix for 4119282 from TOT to Safari-1-3-branch
+
+    2005-05-17  Chris Blumenberg  <cblu@apple.com>
+	
+	Fixed: <rdar://problem/4119282> clicking a link in an RTF file opens the link with NSWorkspace without the usual security checks or WebView delegate control
+
+        Reviewed by mjs.
+
+        * WebView.subproj/WebTextView.m:
+        (-[WebTextView clickedOnLink:atIndex:]): call the loadURL bridge method so that security checks are made, command/option clicks work, policy delegate is consulted etc.
+
 === WebKit-312.2 ===
 
 2005-06-02  Adele Peterson  <adele@apple.com>
