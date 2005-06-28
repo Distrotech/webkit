@@ -457,14 +457,7 @@ NSString *WebPluginContainerKey =   @"WebPluginContainer";
 
 - (void)objectLoadedFromCacheWithURL:(NSURL *)URL response:(NSURLResponse *)response data:(NSData *)data
 {
-    // Pass NO for copyData since the data doesn't need to be copied since it won't be modified. 
-    // Copying it will also cause a performance regression. 
-    WebResource *resource = [[WebResource alloc] _initWithData:data
-                                                           URL:URL
-                                                      MIMEType:[response MIMEType]
-                                              textEncodingName:[response textEncodingName]
-                                                     frameName:nil
-                                                      copyData:NO];
+    WebResource *resource = [[WebResource alloc] _initWithData:data URL:URL response:response];
     ASSERT(resource != nil);
     [[self dataSource] addSubresource:resource];
     [resource release];
@@ -633,7 +626,7 @@ NSString *WebPluginContainerKey =   @"WebPluginContainer";
 - (void)loadURL:(NSURL *)URL referrer:(NSString *)referrer reload:(BOOL)reload userGesture:(BOOL)forUser target:(NSString *)target triggeringEvent:(NSEvent *)event form:(DOMElement *)form formValues:(NSDictionary *)values
 {
     BOOL hideReferrer;
-    if (![self canLoadURL:URL fromReferrer:[self referrer] hideReferrer:&hideReferrer])
+    if (![self canLoadURL:URL fromReferrer:referrer hideReferrer:&hideReferrer])
         return;
 
     if ([target length] == 0) {
@@ -663,7 +656,7 @@ NSString *WebPluginContainerKey =   @"WebPluginContainer";
 - (void)postWithURL:(NSURL *)URL referrer:(NSString *)referrer target:(NSString *)target data:(NSArray *)postData contentType:(NSString *)contentType triggeringEvent:(NSEvent *)event form:(DOMElement *)form formValues:(NSDictionary *)values
 {
     BOOL hideReferrer;
-    if (![self canLoadURL:URL fromReferrer:[self referrer] hideReferrer:&hideReferrer])
+    if (![self canLoadURL:URL fromReferrer:referrer hideReferrer:&hideReferrer])
         return;
 
     if ([target length] == 0) {
