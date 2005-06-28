@@ -1,4 +1,18 @@
 2005-06-27  Adele Peterson  <adele@apple.com>
+  
+       Merged fix for <rdar://problem/4155738> from TOT to Safari-2-0-branch
+
+    2005-05-17  Chris Blumenberg  <cblu@apple.com>
+
+	Fixed: <rdar://problem/4120255> web archives on remote servers can be viewed directly (with major security issues); should download instead
+
+        Reviewed by mjs.
+
+        * WebView.subproj/WebBaseResourceHandleDelegate.h:
+        * WebView.subproj/WebMainResourceClient.m:
+        (-[WebMainResourceClient continueAfterContentPolicy:response:]): if the WebKit client has chosen to "use" a remote web archive, stop the load with an error
+
+2005-06-27  Adele Peterson  <adele@apple.com>
 
         Merged fix for <rdar://problem/4155736> from TOT to Safari-2-0-branch
 

@@ -16,6 +16,7 @@
 #import <Foundation/NSURLResponse.h>
 #import <Foundation/NSURLResponsePrivate.h>
 
+#import <WebKit/WebDataProtocol.h>
 #import <WebKit/WebDataSourcePrivate.h>
 #import <WebKit/WebDefaultPolicyDelegate.h>
 #import <WebKit/WebDocument.h>
@@ -200,15 +201,25 @@
 
 -(void)continueAfterContentPolicy:(WebPolicyAction)contentPolicy response:(NSURLResponse *)r
 {
+    NSURL *URL = [request URL];
+    NSString *MIMEType = [r MIMEType]; 
+    
     switch (contentPolicy) {
     case WebPolicyUse:
-	if (![WebView canShowMIMEType:[r MIMEType]]) {
-	    [[dataSource webFrame] _handleUnimplementablePolicyWithErrorCode:WebKitErrorCannotShowMIMEType forURL:[[dataSource request] URL]];
-	    [self stopLoadingForPolicyChange];
+    {
+        // Prevent remote web archives from loading because they can claim to be from any domain and thus avoid cross-domain security checks (4120255).
+        BOOL isRemote = ![URL isFileURL] && ![WebDataProtocol _webIsDataProtocolURL:URL];
+	BOOL isRemoteWebArchive = isRemote && [MIMEType _web_isCaseInsensitiveEqualToString:@"application/x-webarchive"];
+        if (![WebView canShowMIMEType:MIMEType] || isRemoteWebArchive) {
+	    [[dataSource webFrame] _handleUnimplementablePolicyWithErrorCode:WebKitErrorCannotShowMIMEType forURL:URL];
+            // Check reachedTerminalState since the load may have already been cancelled inside of _handleUnimplementablePolicyWithErrorCode::.
+            if (!reachedTerminalState) {
+                [self stopLoadingForPolicyChange];
+            }
 	    return;
 	}
         break;
-
+    }
     case WebPolicyDownload:
         [proxy setDelegate:nil];
         [WebDownload _downloadWithLoadingConnection:connection
