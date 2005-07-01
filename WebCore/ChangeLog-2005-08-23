@@ -1,3 +1,27 @@
+2005-07-01  Adele Peterson  <adele@apple.com>
+
+	Merged fix from TOT to Safari-2-0-branch.
+        <rdar://problem/4164922> Request for including an implementation of the elementFromPoint function
+
+    2005-04-12  Vicki Murley  <vicki@apple.com>
+
+        Reviewed by Maciej. 
+
+	- fixed <rdar://problem/3760895> Request for including an implementation of the elementFromPoint function
+ 
+        * khtml/dom/dom_doc.cpp:
+        (DOM::Document::elementFromPoint):
+        * khtml/dom/dom_doc.h:
+        * khtml/ecma/kjs_dom.cpp:
+        (DOMDocumentProtoFunc::tryCall):
+        * khtml/ecma/kjs_dom.h:
+        (KJS::DOMDocument::):
+        * khtml/ecma/kjs_dom.lut.h:
+        (KJS::):
+        * khtml/xml/dom_docimpl.cpp:
+        (DocumentImpl::elementFromPoint):
+        * khtml/xml/dom_docimpl.h:
+
 === WebCore-415.11.1 ===
 
 2005-06-27  Adele Peterson  <adele@apple.com>

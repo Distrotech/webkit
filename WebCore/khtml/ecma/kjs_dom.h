@@ -126,7 +126,7 @@ namespace KJS {
            CreateEntityReference, GetElementsByTagName, ImportNode, CreateElementNS,
            CreateAttributeNS, GetElementsByTagNameNS, GetElementById,
            CreateRange, CreateNodeIterator, CreateTreeWalker, DefaultView,
-           CreateEvent, StyleSheets, PreferredStylesheetSet, 
+           CreateEvent, ElementFromPoint, StyleSheets, PreferredStylesheetSet, 
            SelectedStylesheetSet, GetOverrideStyle, ReadyState, 
            ExecCommand, QueryCommandEnabled, QueryCommandIndeterm, QueryCommandState, 
            QueryCommandSupported, QueryCommandValue };
