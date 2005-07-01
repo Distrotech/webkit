@@ -1,5 +1,32 @@
 2005-07-01  Adele Peterson  <adele@apple.com>
 
+       Merged fix from TOT to Safari-2-0-branch
+       <rdar://problem/4164985> Not able to load additional script blocks dynamically
+
+    2005-05-04  Vicki Murley  <vicki@apple.com>
+
+        Reviewed by darin.
+
+	- fixed <rdar://problem/3986228> Not able to load additional script blocks dynamically
+
+	Run scripts when they're inserted into the document. Use createdByParser bit to make sure
+	that scripts aren't run twice, once while parsing and again when inserting.
+
+        * khtml/html/html_headimpl.cpp:
+        (HTMLScriptElementImpl::HTMLScriptElementImpl):
+        (HTMLScriptElementImpl::~HTMLScriptElementImpl):
+        (HTMLScriptElementImpl::insertedIntoDocument): 
+        (HTMLScriptElementImpl::removedFromDocument): 
+        (HTMLScriptElementImpl::notifyFinished): 
+        * khtml/html/html_headimpl.h:
+        (DOM::HTMLScriptElementImpl::setCreatedByParser):
+        * khtml/html/htmlparser.cpp:
+        (KHTMLParser::getElement): 
+        * khtml/xml/xml_tokenizer.cpp:
+        (khtml::XMLTokenizer::startElement): 
+
+2005-07-01  Adele Peterson  <adele@apple.com>
+
 	Merged fix from TOT to Safari-2-0-branch.
         <rdar://problem/4164922> Request for including an implementation of the elementFromPoint function
 
