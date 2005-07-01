@@ -1,5 +1,29 @@
 2005-07-01  Adele Peterson  <adele@apple.com>
 
+        Merged fix from TOT to Safari-2-0-branch
+        <rdar://problem/4164966> Crash will occur when double-clicking outerHTML link on W3 DOM test
+        <rdar://problem/4164988> support outerHTML on IMG elements
+
+    2005-05-09  Adele Peterson  <adele@apple.com>
+
+        fix for <rdar://problem/4110775> Crash will occur when double-clicking outerHTML link on W3 DOM test
+
+        Reviewed by Darin.
+
+        * khtml/html/html_elementimpl.cpp: (HTMLElementImpl::setOuterHTML): added nil check.  
+        This was causing a crash when you tried to set the outerHTML on an element that was no longer in the DOM tree.
+
+    2005-04-20  Vicki Murley  <vicki@apple.com>
+
+        Reviewed by hyatt.
+
+	- fixed <rdar://problem/4065447> support outerHTML on IMG elements
+
+        * khtml/html/html_elementimpl.cpp:
+        (HTMLElementImpl::setOuterHTML):
+
+2005-07-01  Adele Peterson  <adele@apple.com>
+
        Merged fix from TOT to Safari-2-0-branch
        <rdar://problem/4164985> Not able to load additional script blocks dynamically
 
