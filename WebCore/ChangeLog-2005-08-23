@@ -1,6 +1,23 @@
 2005-07-01  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch
+        <rdar://problem/4164976> parameters not working in showModalDialog test page (dialogWidth, dialogHeight, etc.)
+
+    2005-06-13  Vicki Murley  <vicki@apple.com>
+
+        Reviewed by Darin.
+
+        No test cases added since the steps to reproduce require use of showModalDialog.
+
+        - fix for <rdar://problem/4145910> parameters not working in showModalDialog 
+        test page (dialogWidth, dialogHeight, etc.)
+
+        * khtml/ecma/kjs_window.cpp:
+        (KJS::parseFeatures): add a check for colon character in the feature string
+
+2005-07-01  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
         <rdar://problem/4164982> add IE JavaScript extension window.showModalDialog
 
     2005-06-01  Darin Adler  <darin@apple.com>
