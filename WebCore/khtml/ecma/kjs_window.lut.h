@@ -100,7 +100,7 @@ const struct HashEntry WindowTableEntries[] = {
    { "DOMException", Window::DOMException, DontDelete, 0, &WindowTableEntries[96] },
    { 0, 0, 0, 0, 0 },
    { "setInterval", Window::SetInterval, DontDelete|Function, 2, 0 },
-   { "scrollbars", Window::Scrollbars, DontDelete|ReadOnly, 0, 0 },
+   { "scrollbars", Window::Scrollbars, DontDelete|ReadOnly, 0, &WindowTableEntries[125] },
    { "clearTimeout", Window::ClearTimeout, DontDelete|Function, 1, &WindowTableEntries[107] },
    { "moveBy", Window::MoveBy, DontDelete|Function, 2, &WindowTableEntries[117] },
    { "alert", Window::Alert, DontDelete|Function, 1, 0 },
@@ -146,10 +146,11 @@ const struct HashEntry WindowTableEntries[] = {
    { "onmousedown", Window::Onmousedown, DontDelete, 0, 0 },
    { "onmouseout", Window::Onmouseout, DontDelete, 0, 0 },
    { "onmove", Window::Onmove, DontDelete, 0, 0 },
-   { "onsubmit", Window::Onsubmit, DontDelete, 0, 0 }
+   { "onsubmit", Window::Onsubmit, DontDelete, 0, 0 },
+   { "showModalDialog", Window::ShowModalDialog, DontDelete|Function, 1, 0 }
 };
 
-const struct HashTable WindowTable = { 2, 125, WindowTableEntries, 91 };
+const struct HashTable WindowTable = { 2, 126, WindowTableEntries, 91 };
 
 } // namespace
 
