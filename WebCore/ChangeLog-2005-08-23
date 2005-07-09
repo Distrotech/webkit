@@ -1,3 +1,50 @@
+2005-07-08  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by john
+
+        Changes needed in order to compile with gcc 4.0 build 5204
+        Mostly obj-c type and casting issues
+
+        * kwq/DOM-CSS.mm:
+        (+[DOMCSSPrimitiveValue _valueWithImpl:]): Wrote wrapper _valuewithimpl that calls parent class's method
+        * kwq/DOMEvents.h:
+        * kwq/DOMInternal.h:
+        (addDOMWrapper):
+        * kwq/KWQButton.mm:
+        (QButton::setWritingDirection):
+        * kwq/KWQClipboard.mm:
+        (KWQClipboard::dragNSImage):
+        * kwq/KWQComboBox.mm:
+        (QComboBox::setWritingDirection):
+        (QComboBox::populateMenu):
+        * kwq/KWQKHTMLPart.mm:
+        (regExpForLabels):
+        (KWQKHTMLPart::passWidgetMouseDownEventToWidget):
+        (KWQKHTMLPart::fileWrapperForElement): renderer->pixmap().image() was used as an NSImage, but a WebCoreImageRenderer doesn't have any association with NSImage, should be investigated further
+        * kwq/KWQLineEdit.mm:
+        (QLineEdit::QLineEdit):
+        * kwq/KWQListBox.mm:
+        (QListBox::~QListBox):
+        (QListBox::setSelectionMode):
+        (QListBox::doneAppendingItems):
+        (QListBox::setSelected):
+        (QListBox::isSelected):
+        (QListBox::setEnabled):
+        (QListBox::sizeForNumberOfLines):
+        (QListBox::setWritingDirection):
+        * kwq/KWQScrollView.mm:
+        (QScrollView::contentsX):
+        (QScrollView::contentsY):
+        * kwq/KWQTextEdit.mm:
+        (QTextEdit::setAlignment):
+        (QTextEdit::setWritingDirection):
+        (QTextEdit::sizeWithColumnsAndRows):
+        (QTextEdit::setPalette):
+        * kwq/KWQWidget.mm:
+        (QWidget::hasFocus):
+        * kwq/WebCoreBridge.mm:
+        (-[WebCoreBridge elementAtPoint:]):
+
 === WebCore-413.0.1 ===
 
 2005-05-24  Darin Adler  <darin@apple.com>
