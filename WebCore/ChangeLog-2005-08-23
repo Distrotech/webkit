@@ -1,6 +1,24 @@
 2005-07-12  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch
+        <rdar://problem/4164978>
+
+    2005-06-24  Darin Adler  <darin@apple.com>
+
+        Reviewed by Justin Garcia.
+
+        - fixed <rdar://problem/4151619> Safari changes "\" characters to "/" in the query part of links that start with "?"
+
+        Test cases added:
+        * layout-tests/fast/dom/anchor-backslash-expected.txt: Added.
+        * layout-tests/fast/dom/anchor-backslash.html: Added.
+
+        * kwq/KWQKURL.mm: (substituteBackslashes): Fix error where we'd ignore
+        "?" and "#" characters if they were the first character in the string.
+
+2005-07-12  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
         <rdar://problem/4164975>
 
     2005-05-23  Adele Peterson  <adele@apple.com>
