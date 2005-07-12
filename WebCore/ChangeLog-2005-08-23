@@ -1,3 +1,31 @@
+2005-07-11  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+        <rdar://problem/4164913> implement Mozilla "DOMParser" extension for use with XMLHTTPRequest
+
+    2005-06-08  Anders Carlsson  <andersca@mac.com>
+
+	Reviewed and committed by Maciej.
+
+	- fixed http://bugzilla.opendarwin.org/show_bug.cgi?id=3337
+	(Support the Mozilla DOMParser and XMLSerializer objects)
+
+	<rdar://problem/3533735> implement Mozilla "DOMParser" extension for use with XMLHTTPRequest
+
+        Test cases added:
+        * layout-tests/fast/dom/dom-parse-serialize-display-expected.txt: Added.
+        * layout-tests/fast/dom/dom-parse-serialize-display.html: Added.
+        * layout-tests/fast/dom/dom-parse-serialize-expected.txt: Added.
+        * layout-tests/fast/dom/dom-parse-serialize.html: Added.
+
+	* khtml/ecma/domparser.h:
+	* khtml/ecma/domparser.cpp:
+	Add files implementing the DOMParser object.
+
+	* khtml/ecma/kjs_window.h:
+	* khtml/ecma/kjs_window.cpp:
+	Expose DOMParser object.
+
 2005-07-01  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch
