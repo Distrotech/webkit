@@ -2,6 +2,18 @@
 
 	- merge this fix from HEAD
 
+    2005-05-12  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Maciej.
+
+        fix for  <rdar://problem/4117656> deleting an input element in its onBlur handler crashes Safari
+
+        * khtml/rendering/render_form.cpp: (RenderLineEdit::handleFocusOut): added nil check for element
+
+2005-07-12  Vicki Murley  <vicki@apple.com>
+
+	- merge this fix from HEAD
+
     2005-07-11  Geoffrey Garen  <ggaren@apple.com>
 
 	-fixed rdar://problem/4170960 
