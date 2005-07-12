@@ -1,3 +1,20 @@
+2005-07-12  Vicki Murley  <vicki@apple.com>
+
+        - merge this fix from HEAD
+
+    2005-07-11  Geoffrey Garen  <ggaren@apple.com>
+
+        -fixed rdar://problem/4170960 
+        http://bugzilla.opendarwin.org/show_bug.cgi?id=3952 
+        iFrame name and id information incorrectly returned
+        
+        Reviewed by mjs.
+
+        * khtml/html/html_baseimpl.cpp:
+        (HTMLFrameElementImpl::attach): removed misleading comment
+        (HTMLIFrameElementImpl::attach): copied FrameElementImpl behavior
+        for initializing m_name
+
 2005-07-12  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-1-3-branch
