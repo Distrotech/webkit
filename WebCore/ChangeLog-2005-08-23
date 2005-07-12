@@ -1,6 +1,27 @@
 2005-07-12  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch
+        <rdar://problem/4164939> Selects wrapped by Span or Label elements do not resize when options are added via javascript
+
+    2005-06-17  Vicki Murley  <vicki@apple.com>
+
+        Reviewed by Maciej. 
+
+        Test cases added: None, since this test requires manual interaction.
+
+	- fixed <rdar://problem/4086793> Selects wrapped by Span or Label elements 
+	do not resize when options are added via javascript
+        
+	* khtml/rendering/render_form.cpp:
+        (RenderSelect::layout): Remove call setting setNeedsLayout to true. setNeedsLayout
+	is already true at this point, and this additional call has the negative effect of 
+	marking m_normalChildNeedsLayout on the element's parent, which keeps layout from 
+	propagating all the way up to the root later on.
+
+
+2005-07-12  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
         <rdar://problem/4164931> crash in DOM::ElementImpl::setAttribute at www.nitto-kohki.co.jp
 
     2005-05-11  Adele Peterson  <adele@apple.com>
