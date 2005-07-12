@@ -1,6 +1,23 @@
 2005-07-12  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-1-3-branch
+        <rdar://problem/4164950> Safari crashes if Esc key is held down during series of authentication sheets
+
+    2005-05-13  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Kevin.
+        
+        - fixed <rdar://problem/4093306> Safari crashes if Esc key is held down during series 
+        of authentication sheets
+
+        * Panels.subproj/WebAuthenticationPanel.m:
+        (-[WebAuthenticationPanel cancel:]):
+        retain and autorelease self. This is a workaround for an AppKit key-handling issue, which I wrote up as:
+        <rdar://problem/4118422> Key-down events can be sent to a closed window if a key is kept pressed down
+
+2005-07-12  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-1-3-branch
         <rdar://problem/4164949> REGRESSION (Tiger): progressively loaded background images "scroll down" instead of just appearing
 
     2005-04-18  Darin Adler  <darin@apple.com>
