@@ -1,3 +1,16 @@
+2005-07-12  Vicki Murley  <vicki@apple.com>
+
+        - merge this fix from HEAD
+
+    2005-05-30  Darin Adler  <darin@apple.com>
+
+        Reviewed by John.
+
+        - fixed <rdar://problem/4105097> REGRESSION (138-139): Hitting Enter on a checkbox toggles check mark         instead of submitting form
+
+        * khtml/html/html_formimpl.cpp: (DOM::HTMLInputElementImpl::defaultEventHandler): Separate the checks for
+        the space bar and the Enter key and make Enter submit the form on a check box or radio button.
+
 2005-07-12  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch
