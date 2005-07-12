@@ -1,3 +1,17 @@
+2005-07-12  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+        <rdar://problem/4164931> crash in DOM::ElementImpl::setAttribute at www.nitto-kohki.co.jp
+
+    2005-05-11  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Darin.
+
+        fix for <rdar://problem/4061979> crash in DOM::ElementImpl::setAttribute at www.nitto-kohki.co.jp
+
+        * khtml/html/html_imageimpl.cpp: (HTMLImageLoader::updateFromElement): added a nil check for the document
+        * khtml/xml/dom_nodeimpl.h: (DOM::NodeImpl::inDocument): added check for document in case the document has been destroyed before the node has been removed.  A lot of code already assumes that if inDocument returns true, a document exists.
+ 
 2005-07-11  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch
