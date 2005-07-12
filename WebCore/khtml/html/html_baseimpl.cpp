@@ -413,8 +413,6 @@ RenderObject *HTMLFrameElementImpl::createRenderer(RenderArena *arena, RenderSty
 
 void HTMLFrameElementImpl::attach()
 {
-    // we should first look up via id, then via name.
-    // this shortterm hack fixes the ugly case. ### rewrite needed for next release
     name = getAttribute(ATTR_NAME);
     if (name.isNull())
         name = getAttribute(ATTR_ID);
@@ -759,6 +757,10 @@ RenderObject *HTMLIFrameElementImpl::createRenderer(RenderArena *arena, RenderSt
 
 void HTMLIFrameElementImpl::attach()
 {
+    name = getAttribute(ATTR_NAME);
+    if (name.isNull())
+        name = getAttribute(ATTR_ID);
+
     HTMLElementImpl::attach();
 
     KHTMLPart *part = getDocument()->part();
