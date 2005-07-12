@@ -1093,7 +1093,7 @@ static BOOL loggedObjectCacheSize = NO;
     ASSERT(path);
     NSString *extension = [path pathExtension];
     NSString *type = [[NSURLFileTypeMappings sharedMappings] MIMETypeForExtension:extension];
-    return [type length] == 0 ? @"application/octet-stream" : type;
+    return [type length] == 0 ? (NSString *)@"application/octet-stream" : type;
 }
 
 - (void)allowDHTMLDrag:(BOOL *)flagDHTML UADrag:(BOOL *)flagUA
@@ -1268,7 +1268,7 @@ static id <WebFormDelegate> formDelegate(WebBridge *self)
 {
     CFPreferencesAppSynchronize(UniversalAccessDomain);
 
-    BOOL keyExistsAndHasValidFormat;
+    Boolean keyExistsAndHasValidFormat;
     int mode = CFPreferencesGetAppIntegerValue(AppleKeyboardUIMode, UniversalAccessDomain, &keyExistsAndHasValidFormat);
     
     // The keyboard access mode is reported by two bits:

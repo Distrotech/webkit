@@ -146,9 +146,13 @@ Value NodeFilterConstructor::getValueProperty(ExecState *, int token) const
   return Number(token);
 }
 
-Value KJS::getNodeFilterConstructor(ExecState *exec)
+namespace KJS {
+
+Value getNodeFilterConstructor(ExecState *exec)
 {
   return cacheGlobalObject<NodeFilterConstructor>(exec, "[[nodeFilter.constructor]]");
+}
+
 }
 
 // -------------------------------------------------------------------------

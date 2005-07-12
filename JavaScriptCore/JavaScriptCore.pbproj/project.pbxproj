@@ -147,7 +147,9 @@
 				SECTORDER_FLAGS = "-sectorder __TEXT __text /AppleInternal/OrderFiles/JavaScriptCore.order";
 				STYLE_LDFLAGS = "-umbrella WebKit -allowable_client JavaScriptGlue";
 				USE_GCC3_PFE_SUPPORT = YES;
-				WARNING_CFLAGS = "-Werror -Wall -W -Wcast-align -Wchar-subscripts -Wformat-security -Wmissing-format-attribute -Wmissing-prototypes -Wpointer-arith -Wwrite-strings -Wno-format-y2k -Wno-unused-parameter -Wno-long-double";
+				WARNING_CFLAGS = "$(WARNING_COMMONFLAGS) -Wmissing-prototypes";
+				WARNING_COMMONFLAGS = "-Werror -Wall -W -Wcast-align -Wchar-subscripts -Wformat-security -Wmissing-format-attribute -Wpointer-arith -Wwrite-strings -Wno-format-y2k -Wno-unused-parameter -Wno-long-double";
+				WARNING_CPLUSPLUSFLAGS = "$(WARNING_COMMONFLAGS)";
 				WRAPPER_EXTENSION = framework;
 			};
 			dependencies = (
@@ -166,7 +168,7 @@
 	<key>CFBundleExecutable</key>
 	<string>JavaScriptCore</string>
 	<key>CFBundleGetInfoString</key>
-	<string>411+, Copyright 2005 Apple Computer, Inc.; Copyright 1999-2001 Harri Porten &lt;porten@kde.org&gt;; Copyright 2001 Peter Kelly &lt;pmk@post.com&gt;; Copyright 1997-2001 University of Cambridge; Copyright 1991, 2000, 2001 by Lucent Technologies.</string>
+	<string>412.0.1, Copyright 2005 Apple Computer, Inc.; Copyright 1999-2001 Harri Porten &lt;porten@kde.org&gt;; Copyright 2001 Peter Kelly &lt;pmk@post.com&gt;; Copyright 1997-2001 University of Cambridge; Copyright 1991, 2000, 2001 by Lucent Technologies.</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.apple.JavaScriptCore</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -176,9 +178,9 @@
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
 	<key>CFBundleShortVersionString</key>
-	<string>411+</string>
+	<string>412.0.1</string>
 	<key>CFBundleVersion</key>
-	<string>411+</string>
+	<string>412.0.1</string>
 </dict>
 </plist>
 ";

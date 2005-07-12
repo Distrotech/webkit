@@ -44,6 +44,7 @@
 
 #import "WebCoreBridge.h"
 #import "WebCoreGraphicsBridge.h"
+#import "WebCoreImageRenderer.h"
 #import "WebCoreViewFactory.h"
 #import "WebDashboardRegion.h"
 
@@ -428,7 +429,7 @@ QRegExp *regExpForLabels(NSArray *labels)
         unsigned int numLabels = [labels count];
         unsigned int i;
         for (i = 0; i < numLabels; i++) {
-            QString label = QString::fromNSString([labels objectAtIndex:i]);
+            QString label = QString::fromNSString((NSString *)[labels objectAtIndex:i]);
 
             bool startsWithWordChar = false;
             bool endsWithWordChar = false;
@@ -594,9 +595,8 @@ NSString *KWQKHTMLPart::matchLabelsAgainstElement(NSArray *labels, ElementImpl *
 
     if (bestPos != -1) {
         return name.mid(bestPos, bestLength).getNSString();
-    } else {
-        return nil;
     }
+    return nil;
 }
 
 // Search from the end of the currently selected location if we are first responder, or from
@@ -2082,7 +2082,7 @@ bool KWQKHTMLPart::passWidgetMouseDownEventToWidget(QWidget* widget)
                 superview = [superview superview];
                 ASSERT(superview);
                 if ([superview isKindOfClass:[NSControl class]]) {
-                    NSControl *control = superview;
+                    NSControl *control = static_cast<NSControl *>(superview);
                     if ([control currentEditor] == view) {
                         view = superview;
                     }
@@ -2838,7 +2838,7 @@ NSFileWrapper *KWQKHTMLPart::fileWrapperForElement(ElementImpl *e)
     }    
     if (!wrapper) {
         RenderImage *renderer = static_cast<RenderImage *>(e->renderer());
-        NSImage *image = renderer->pixmap().image();
+        NSImage * image = (NSImage *)(renderer->pixmap().image());
         NSData *tiffData = [image TIFFRepresentationUsingCompression:NSTIFFCompressionLZW factor:0.0];
         wrapper = [[NSFileWrapper alloc] initRegularFileWithContents:tiffData];
         [wrapper setPreferredFilename:@"image.tiff"];
@@ -3388,11 +3388,11 @@ NSImage *KWQKHTMLPart::imageFromRect(NSRect rect) const
         return nil;
     }
     
-    NSRect bounds = [view bounds];
-    NSImage *resultImage = [[[NSImage alloc] initWithSize:rect.size] autorelease];
-    
     KWQ_BLOCK_EXCEPTIONS;
     
+    NSRect bounds = [view bounds];
+    NSImage *resultImage = [[[NSImage alloc] initWithSize:rect.size] autorelease];
+
     if (rect.size.width != 0 && rect.size.height != 0) {
         [resultImage setFlipped:YES];
         [resultImage lockFocus];
@@ -3419,10 +3419,12 @@ NSImage *KWQKHTMLPart::imageFromRect(NSRect rect) const
         [resultImage unlockFocus];
         [resultImage setFlipped:NO];
     }
-    
+
+    return resultImage;
+
     KWQ_UNBLOCK_EXCEPTIONS;
     
-    return resultImage;
+    return nil;
 }
 
 NSImage *KWQKHTMLPart::selectionImage() const

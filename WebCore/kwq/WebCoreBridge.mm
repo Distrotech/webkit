@@ -201,7 +201,7 @@ static BOOL partHasSelection(WebCoreBridge *bridge)
     if (!bridge)
         return NO;
     
-    KHTMLPart *part = bridge->_part;
+    KHTMLPart *part = [bridge part];
     if (!part)
         return NO;
         
@@ -1081,7 +1081,7 @@ static HTMLFormElementImpl *formElementFromDOMElement(DOMElement *element)
     
         if (node->renderer() && node->renderer()->isImage()) {
             RenderImage *r = static_cast<RenderImage *>(node->renderer());
-            NSImage *image = r->pixmap().image();
+            NSImage * image = (NSImage *)(r->pixmap().image());
             // Only return image information if there is an image.
             if (image && !r->isDisplayingError()) {
                 [element setObject:r->pixmap().image() forKey:WebCoreElementImageKey];
@@ -1628,6 +1628,10 @@ static HTMLFormElementImpl *formElementFromDOMElement(DOMElement *element)
 
 - (NSRange)convertToNSRange:(DOM::RangeImpl *)drange
 {
+    if (!drange) {
+        return NSMakeRange(NSNotFound, 0);
+    }
+
     Range toStartRange, toEndRange;
     Range actualRange = Range(drange);
     long startPosition, endPosition;
