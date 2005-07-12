@@ -1,6 +1,22 @@
 2005-07-12  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-1-3-branch
+        <rdar://problem/4164967>
+
+    2005-06-17  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Maciej.
+
+        - fixed http://bugzilla.opendarwin.org/show_bug.cgi?id=3419
+        <rdar://problem/4111752> REGRESSION (125-312/412): Safari doesn't display edmunds.com pages first time through
+
+        * khtml/html/htmltokenizer.cpp: (khtml::HTMLTokenizer::parseTag): set 'script' flag when 
+          parsing <script src="foo" /> case.  In this case, parseTag calls the scriptHandler function which expects 
+          that flag to be set, and sets it back to false at the appropriate time.
+
+2005-07-12  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-1-3-branch
         <rdar://problem/4164964>
 
     2005-05-05  David Hyatt  <hyatt@apple.com>
