@@ -1,8 +1,18 @@
+2005-07-12  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by mjs
+
+        * kwq/KWQCursor.mm:
+        (QCursor::makeWithNSCursor):
+            Didn't KWQRetain() the NSCursor in yesterday's gcc 4.0 workaround
+
 === WebCore-413.0.3 ===
 
 2005-07-11  Justin Garcia  <justin.garcia@apple.com>
 
-        Reviewed by NOBODY (OOPS!).
+        Reviewed by mjs
+        
+        Workarounds to get WebCore to compile with gcc 4.0 build 5208
 
         * kwq/KWQCursor.h:
         * kwq/KWQCursor.mm:

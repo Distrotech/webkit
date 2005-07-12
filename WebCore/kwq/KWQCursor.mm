@@ -54,7 +54,7 @@ QCursor::~QCursor()
 QCursor QCursor::makeWithNSCursor(NSCursor * c)
 {
     QCursor q;
-    q.cursor = c;
+    q.cursor = KWQRetain(c);
     return q;
 }
       
