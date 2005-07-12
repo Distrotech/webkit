@@ -1,3 +1,24 @@
+2005-07-12  Vicki Murley  <vicki@apple.com>
+
+	- merge this fix from HEAD
+
+    2005-04-25  Darin Adler  <darin@apple.com>
+
+        Reviewed by John.
+
+        - fixed <rdar://problem/4091956> JavaScript drop handlers don't receive more than one dropped item
+
+        * kwq/KWQClipboard.mm:
+        (cocoaTypeFromMIMEType): Remove some use of compare -- less efficient than a simpler "==" check.
+        Fixed non-GC-safe code to use KWQCFAutorelease instead.
+        (MIMETypeFromCocoaType): Use fromCFString instead of fromNSString to avoid a cast.
+        (KWQClipboard::getData): Rearrange so that we'll use filenames if both filenames and a URL are present, since
+        filenames can accomodate multiple items. Fix bug where we'd return multiple filenames when the type requested
+        is "URL". Fixed loop that computed the count over and over again for the loop termination condition. Check
+        that the data for NSFilenamesPboardType is an NSArray instead of assuming it is.
+        (KWQClipboard::setData): Use isEqualToString: instead of == when comparing types.
+        Test cases added: (NONE)
+
 2005-07-12  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-1-3-branch
