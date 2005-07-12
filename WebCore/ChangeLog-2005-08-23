@@ -1,5 +1,20 @@
 2005-07-12  Adele Peterson  <adele@apple.com>
 
+        Merge fix from TOT to Safari-1-3-branch
+        <rdar://problem/4164959>
+
+    2005-04-22  David Hyatt  <hyatt@apple.com>
+
+	Fix for 4096878, drop shadow effect not displayed correctly on tbray.org/ongoing/.  Block minmaxwidth was
+	broken when negative margins were used and did not properly decrease the max width.
+	
+        Reviewed by Maciej
+
+        * khtml/rendering/render_block.cpp:
+        (khtml::RenderBlock::calcBlockMinMaxWidth):
+
+2005-07-12  Adele Peterson  <adele@apple.com>
+
         Merged fix from TOT to Safari-1-3-branch
         <rdar://problem/4164953>
 
