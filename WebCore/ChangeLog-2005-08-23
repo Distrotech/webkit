@@ -1,3 +1,39 @@
+2005-07-11  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by NOBODY (OOPS!).
+
+        * kwq/KWQCursor.h:
+        * kwq/KWQCursor.mm:
+        (QCursor::makeWithNSCursor):
+        * kwq/KWQKCursor.mm:
+        (KCursor::crossCursor):
+        (KCursor::handCursor):
+        (KCursor::sizeAllCursor):
+        (KCursor::ibeamCursor):
+        (KCursor::waitCursor):
+        (KCursor::whatsThisCursor):
+        (KCursor::eastResizeCursor):
+        (KCursor::northResizeCursor):
+        (KCursor::northEastResizeCursor):
+        (KCursor::northWestResizeCursor):
+        (KCursor::southResizeCursor):
+        (KCursor::southEastResizeCursor):
+        (KCursor::southWestResizeCursor):
+        (KCursor::westResizeCursor):
+        * kwq/KWQKJobClasses.mm:
+        (KIO::TransferJob::emitResult):
+        (KIO::TransferJob::emitReceivedResponse):
+        * kwq/KWQSignal.h:
+        * kwq/KWQSignal.mm:
+        (KWQSignal::callWithData):
+        (KWQSignal::callWithResponse):
+        * kwq/KWQSlot.h:
+        * kwq/KWQSlot.mm:
+        (KWQSlot::callWithData):
+        (KWQSlot::callWithResponse):
+        * kwq/KWQWidget.mm:
+        (QWidget::cursor):
+
 === WebCore-413.0.2 ===
 
 2005-07-08  Justin Garcia  <justin.garcia@apple.com>
