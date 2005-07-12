@@ -1,3 +1,53 @@
+2005-07-12  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-1-3-branch
+        <rdar://problem/4164941> REGRESSION (1.2.4-1.3): many titles with non-ASCII characters do not display properly (XHTML strict only)
+
+    2005-06-22  Anders Carlsson  <andersca@mac.com>
+
+        Reviewed and landed by Darin Adler.
+
+        Test cases added: 
+        * layout-tests/fast/dom/title-text-property-expected.txt: Added
+        * layout-tests/fast/dom/title-text-property.html: Added
+        * layout-tests/fast/dom/title-text-property-expected-2.txt: Added
+        * layout-tests/fast/dom/title-text-property-2.html: Added
+
+        - fixed <rdar://problem/3831364> getting or setting text for a <title> element doesn't work
+        - fixed <rdar://problem/4091225> REGRESSION (1.2.4-1.3): many titles with non-ASCII characters do not display properly (XHTML strict only)
+        - fixed <http://bugzilla.opendarwin.org/show_bug.cgi?id=3586>
+          Setting and getting title's text attribute does not work
+
+        * khtml/dom/html_head.cpp:
+        (HTMLTitleElement::text):
+        (HTMLTitleElement::setText):
+        Call HTMLTitleElementImpl::text() and ::setText().
+
+        * khtml/html/html_headimpl.cpp:
+        (HTMLTitleElementImpl::HTMLTitleElementImpl):
+        (HTMLTitleElementImpl::insertedIntoDocument):
+        (HTMLTitleElementImpl::removedFromDocument):
+        (HTMLTitleElementImpl::childrenChanged):
+        Pass the current title node to DocumentImpl::setTitle
+        and ::removeTitle.
+
+        (HTMLTitleElementImpl::text):
+        Return the title.
+
+        (HTMLTitleElementImpl::setText):
+        Set the new title.
+
+        * khtml/xml/dom_docimpl.cpp:
+        (DocumentImpl::DocumentImpl):
+        (DocumentImpl::~DocumentImpl):
+        (DocumentImpl::updateTitle):
+        (DocumentImpl::setTitle):
+        (DocumentImpl::removeTitle):
+        * khtml/xml/dom_docimpl.h:
+        Only update the title if it's done by setting document.title
+        or by changing the child nodes of the title element.
+
+
 2005-07-12  Vicki Murley  <vicki@apple.com>
 
 	- merge this fix from HEAD

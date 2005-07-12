@@ -538,7 +538,7 @@ void HTMLStyleElementImpl::sheetLoaded()
 // -------------------------------------------------------------------------
 
 HTMLTitleElementImpl::HTMLTitleElementImpl(DocumentPtr *doc)
-    : HTMLElementImpl(doc)
+    : HTMLElementImpl(doc), m_title("")
 {
 }
 
@@ -554,21 +554,13 @@ NodeImpl::Id HTMLTitleElementImpl::id() const
 void HTMLTitleElementImpl::insertedIntoDocument()
 {
     HTMLElementImpl::insertedIntoDocument();
-#if APPLE_CHANGES
-    // Only allow title to be set by first <title> encountered.
-    if (getDocument()->title().isEmpty())
-        getDocument()->setTitle(m_title);
-#else
-        getDocument()->setTitle(m_title);
-#endif
+    getDocument()->setTitle(m_title, this);
 }
 
 void HTMLTitleElementImpl::removedFromDocument()
 {
     HTMLElementImpl::removedFromDocument();
-    // Title element removed, so we have no title... we ignore the case of multiple title elements, as it's invalid
-    // anyway (?)
-    getDocument()->setTitle(DOMString());
+    getDocument()->removeTitle(this);
 }
 
 void HTMLTitleElementImpl::childrenChanged()
@@ -579,11 +571,34 @@ void HTMLTitleElementImpl::childrenChanged()
 	if ((c->nodeType() == Node::TEXT_NODE) || (c->nodeType() == Node::CDATA_SECTION_NODE))
 	    m_title += c->nodeValue();
     }
-#if APPLE_CHANGES
-    // Only allow title to be set by first <title> encountered.
-    if (inDocument() && getDocument()->title().isEmpty())
-#else
     if (inDocument())
-#endif
-	getDocument()->setTitle(m_title);
+        getDocument()->setTitle(m_title, this);
+}
+
+DOMString HTMLTitleElementImpl::text() const
+{
+    DOMString val = "";
+
+    for (NodeImpl *n = firstChild(); n; n = n->nextSibling()) {
+        if (n->isTextNode())
+            val += static_cast<TextImpl *>(n)->data();
+    }
+
+    return val;
+}
+
+void HTMLTitleElementImpl::setText(const DOMString &value)
+{
+    int exceptioncode = 0;
+    int numChildren = childNodeCount();
+
+    if (numChildren == 1 && firstChild()->isTextNode()) {
+        static_cast<DOM::TextImpl *>(firstChild())->setData(value, exceptioncode);
+    } else {  
+        if (numChildren > 0) {
+            removeChildren();
+        }
+        
+        appendChild(getDocument()->createTextNode(value.implementation()), exceptioncode);
+    }
 }
