@@ -12,6 +12,7 @@ LUT_FILES = \
 	kjs_window.lut.h \
 	xmlhttprequest.lut.h \
 	xmlserializer.lut.h \
+        domparser.lut.h \
 	$(NULL)
 
 CREATE_HASH_TABLE = $(top_srcdir)/JavaScriptCore/kjs/create_hash_table

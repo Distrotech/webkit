@@ -25,6 +25,8 @@
 
 using DOM::DocumentImpl;
 
+using namespace KJS;
+
 ////////////////////// DOMParser Object ////////////////////////
 
 /* Source for DOMParserProtoTable.
@@ -32,11 +34,11 @@ using DOM::DocumentImpl;
   parseFromString DOMParser::ParseFromString DontDelete|Function 2
 @end
 */
-namespace KJS {
-
 DEFINE_PROTOTYPE("DOMParser",DOMParserProto)
 IMPLEMENT_PROTOFUNC(DOMParserProtoFunc)
 IMPLEMENT_PROTOTYPE(DOMParserProto,DOMParserProtoFunc)
+
+namespace KJS {
 
 DOMParserConstructorImp::DOMParserConstructorImp(ExecState *, DOM::DocumentImpl *d)
     : doc(d)
