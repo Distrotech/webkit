@@ -1,3 +1,17 @@
+2005-07-12  Vicki Murley  <vicki@apple.com>
+
+	- merge this fix from HEAD
+
+    2005-04-22  David Hyatt  <hyatt@apple.com>
+
+	Fix for 4096681, fix regression in how the list-style property is parsed.  It no longer parses when it hits
+	a url in the property value list now, because the list pointer did not get advanced.  This fixes alistapart.com.
+	
+        Reviewed by john
+
+        * khtml/css/cssparser.cpp:
+        (CSSParser::parseValue):
+
 2005-07-12  Adele Peterson  <adele@apple.com>
 
         Merge fix from TOT to Safari-2-0-branch
