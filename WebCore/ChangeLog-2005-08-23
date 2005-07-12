@@ -1,6 +1,25 @@
 2005-07-12  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-1-3-branch
+        <rdar://problem/4164969> A crash occurs when invoking assigned access key on a Button element (DOM::HTMLButtonElementImpl::click(bool) + 36)
+
+    2005-06-17  Geoffrey Garen  <ggaren@apple.com>
+
+	Patch contributed by Anders Carlsson<andersca@mac.com>.
+
+	Fixes: http://bugzilla.opendarwin.org/show_bug.cgi?id=3408	
+
+        Reviewed by Darin.
+
+        Test cases added: None. Test requires manual interaction.
+	Manual test available at: http://bugzilla.opendarwin.org/attachment.cgi?id=2207
+
+        * khtml/html/html_formimpl.cpp: Eliminated HTMLButtonElementImpl::click. HTMLButtonElementImpl now inherits HTMLElementImpl::click. 
+        * khtml/html/html_formimpl.h: Ditto.
+
+2005-07-12  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-1-3-branch
         <rdar://problem/4164967>
 
     2005-06-17  Adele Peterson  <adele@apple.com>
