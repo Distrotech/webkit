@@ -68,6 +68,12 @@
 
 #define IS_NAN(d) (!(d == d))
 
+// Must include <cmath> instead of <math.h> because of a bug in the
+// gcc 3.3 library version of <math.h> where if you include both
+// <cmath> and <math.h> the macros necessary for functions like
+// isnan are not defined.
+#include <cmath>
+
 using DOM::DocumentImpl;
 using DOM::DOMString;
 using DOM::Node;
@@ -79,6 +85,8 @@ using KParts::URLArgs;
 using KParts::WindowArgs;
 
 using namespace KJS;
+
+using std::isnan;
 
 namespace KJS {
 
@@ -1681,7 +1689,7 @@ Value WindowFunc::tryCall(ExecState *exec, Object &thisObj, const List &args)
             if (key == "left" || key == "screenx") {
               bool ok;
               double d = val.toDouble(&ok);
-              if (d != 0 || ok) {
+              if ((d != 0 || ok) && !isnan(d)) {
                 d += screen.x();
                 if (d < screen.x() || d > screen.right())
 		  d = screen.x(); // only safe choice until size is determined
@@ -1693,7 +1701,7 @@ Value WindowFunc::tryCall(ExecState *exec, Object &thisObj, const List &args)
             } else if (key == "top" || key == "screeny") {
               bool ok;
               double d = val.toDouble(&ok);
-              if (d != 0 || ok) {
+              if ((d != 0 || ok) && !isnan(d)) {
                 d += screen.y();
                 if (d < screen.y() || d > screen.bottom())
 		  d = screen.y(); // only safe choice until size is determined
@@ -1705,7 +1713,7 @@ Value WindowFunc::tryCall(ExecState *exec, Object &thisObj, const List &args)
             } else if (key == "height") {
               bool ok;
               double d = val.toDouble(&ok);
-              if (d != 0 || ok) {
+              if ((d != 0 || ok) && !isnan(d)) {
 #if !APPLE_CHANGES
                 d += 2*qApp->style().pixelMetric( QStyle::PM_DefaultFrameWidth ) + 2;
 #endif
@@ -1721,7 +1729,7 @@ Value WindowFunc::tryCall(ExecState *exec, Object &thisObj, const List &args)
             } else if (key == "width") {
               bool ok;
               double d = val.toDouble(&ok);
-              if (d != 0 || ok) {
+              if ((d != 0 || ok) && !isnan(d)) {
 #if !APPLE_CHANGES
                 d += 2*qApp->style().pixelMetric( QStyle::PM_DefaultFrameWidth ) + 2;
 #endif

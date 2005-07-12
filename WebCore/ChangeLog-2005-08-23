@@ -1,6 +1,19 @@
 2005-07-12  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-1-3-branch
+        <rdar://problem/4164975>
+
+    2005-05-23  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Darin.
+
+        fix for <rdar://problem/4122661> Regression: 10.3.8-10.3.9: Next lesson doesn't work on Dale Carnegie Action Systems page
+
+        * khtml/ecma/kjs_window.cpp: (KJS::WindowFunc::tryCall): added checks for NaN, in case it is passed into window.open for screenx, screeny, left, top, height, or width.
+
+2005-07-12  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-1-3-branch
         <rdar://problem/4164969> A crash occurs when invoking assigned access key on a Button element (DOM::HTMLButtonElementImpl::click(bool) + 36)
 
     2005-06-17  Geoffrey Garen  <ggaren@apple.com>
