@@ -1275,8 +1275,6 @@ void RenderSelect::layout( )
         setIntrinsicHeight( s.height() );
     }
 
-    /// uuh, ignore the following line..
-    setNeedsLayout(true);
     RenderFormElement::layout();
 
     // and now disable the widget in case there is no <option> given
