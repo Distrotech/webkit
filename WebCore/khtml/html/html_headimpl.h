@@ -197,6 +197,9 @@ public:
     virtual void insertedIntoDocument();
     virtual void removedFromDocument();
     virtual void childrenChanged();
+    
+    DOMString text() const;
+    void setText(const DOMString &);
 
 protected:
     DOMString m_title;
