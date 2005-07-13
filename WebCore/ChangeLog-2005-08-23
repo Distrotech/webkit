@@ -1,6 +1,25 @@
 2005-07-12  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch
+        <rdar://problem/4178198>
+
+    2005-07-12  Kevin Decker  <kdecker@apple.com>
+
+         Reviewed by cblu.
+
+	Fixed: 
+	  http://bugzilla.opendarwin.org/show_bug.cgi?id=3968
+	 <rdar://problem/4172645> REGRESSION: top frame only loads at banking site - http://www.skandiabanken.no
+
+        Test cases added: None; This fixes a race condition that is not reproducible locally.
+
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::scheduleLocationChange): If a redirect was scheduled during a load, then stop the current load. Otherwise when the current load transitions from a provisional to a committed state, pending redirects may be cancelled. 
+        (KHTMLPart::scheduleLocationChange):
+
+2005-07-12  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
         <rdar://problem/4176180>
 
     2005-07-07  Adele Peterson  <adele@apple.com>
