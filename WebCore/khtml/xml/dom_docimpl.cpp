@@ -1312,6 +1312,7 @@ void DocumentImpl::removeAllDisconnectedNodeEventListeners()
          ++iter) {
         iter.current()->removeAllEventListeners();
     }
+    m_disconnectedNodesWithEventListeners.clear();
 }
 
 #if APPLE_CHANGES
