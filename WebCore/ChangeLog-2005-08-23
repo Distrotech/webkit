@@ -1,5 +1,11 @@
 === WebCore-315.8 ===
 
+2005-07-13  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Maciej.
+
+        * khtml/ecma/kjs_window.cpp: (WindowFunc::tryCall): removed isnan calls and used IS_NAN macro instead to get this to build on Panther.
+
 2005-07-12  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-1-3-branch
