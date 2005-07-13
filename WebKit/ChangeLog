@@ -1,5 +1,19 @@
 2005-07-12  Adele Peterson  <adele@apple.com>
 
+       Merged fix from TOT to Safari-1-3-branch
+       <rdar://problem/4164997>         
+
+    2005-04-26  Richard Williamson   <rjw@apple.com>
+
+	Fixed <rdar://problem/4098713> Scripting API is incompatible with Mozilla
+
+        Reviewed by Chris.
+
+        * Plugins.subproj/npfunctions.h:
+        * Plugins.subproj/npruntime.h:
+
+2005-07-12  Adele Peterson  <adele@apple.com>
+
         Merged WebKit part of fix from TOT to Safari-1-3-branch
         <rdar://problem/4176173>
 
