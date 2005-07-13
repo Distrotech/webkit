@@ -1,6 +1,34 @@
 2005-07-12  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-1-3-branch
+        <rdar://problem/4164993>
+
+    2005-05-02  Darin Adler  <darin@apple.com>
+
+        Reviewed by Vicki.
+        Added two layout tests for regression testing.
+
+        - redid frameElement (fix for 4091082 below)
+
+        The first version lacked a security check, and was also broken.
+
+        * khtml/ecma/kjs_window.cpp:
+        (frameElement): Refactored into separate function; added isSafeScript check.
+        (Window::get): Call the new frameElement function.
+
+    2005-04-22  Darin Adler  <darin@apple.com>
+
+        Reviewed by John.
+
+        - fixed <rdar://problem/4091082> Google Suggest no longer works due to lack of "frameElement"
+
+        * khtml/ecma/kjs_window.h: Added FrameElement.
+        * khtml/ecma/kjs_window.cpp: (Window::get): Added "frameElement".
+        * khtml/ecma/kjs_window.lut.h: Regenerated.
+
+2005-07-12  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-1-3-branch
         <rdar://problem/4178198>
 
     2005-07-12  Kevin Decker  <kdecker@apple.com>

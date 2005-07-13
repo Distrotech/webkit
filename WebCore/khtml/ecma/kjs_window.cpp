@@ -76,6 +76,7 @@
 
 using DOM::DocumentImpl;
 using DOM::DOMString;
+using DOM::ElementImpl;
 using DOM::Node;
 using DOM::Position;
 using khtml::TypingCommand;
@@ -308,6 +309,7 @@ const ClassInfo Window::info = { "Window", 0, &WindowTable, 0 };
   onselect	Window::Onselect	DontDelete
   onsubmit	Window::Onsubmit	DontDelete
   onunload	Window::Onunload	DontDelete
+  frameElement  Window::FrameElement    DontDelete|ReadOnly
   showModalDialog Window::ShowModalDialog    DontDelete|Function 1
 @end
 */
@@ -678,6 +680,32 @@ static ValueImp *showModalDialog(ExecState *exec, Window *openerWindow, const Li
     static_cast<KHTMLPartBrowserExtension *>(dialogPart->browserExtension())->runModal();
     dialogWindow->setReturnValueSlot(NULL);
     return returnValue;
+}
+
+static ElementImpl *frameElement(ExecState *exec, KHTMLPart *part)
+{
+    // Find the frame element.
+    DocumentImpl *document = part->xmlDocImpl();
+    if (!document)
+        return 0;
+    ElementImpl *frameElement = document->ownerElement();
+    if (!frameElement)
+        return 0;
+
+    // Find the window object for the frame element, and do a cross-domain check.
+    DocumentImpl *frameElementDocument = frameElement->getDocument();
+    if (!frameElementDocument)
+        return 0;
+    KHTMLPart *frameElementPart = frameElementDocument->part();
+    if (!frameElementPart)
+        return 0;
+    Window *frameElementWindow = Window::retrieveWindow(frameElementPart);
+    if (!frameElementWindow)
+        return 0;
+    if (!frameElementWindow->isSafeScript(exec))
+        return 0;
+
+    return frameElement;
 }
 
 Value Window::get(ExecState *exec, const Identifier &p) const
@@ -1053,6 +1081,12 @@ Value Window::get(ExecState *exec, const Identifier &p) const
         return getListener(exec,DOM::EventImpl::UNLOAD_EVENT);
       else
         return Undefined();
+    case FrameElement: {
+      ElementImpl *fe = frameElement(exec, m_part);
+      if (!fe)
+        return Undefined();
+      return getDOMNode(exec, fe);
+    }
     }
   }
 

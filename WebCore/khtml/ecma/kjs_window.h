@@ -145,7 +145,7 @@ namespace KJS {
 	   Onfocus, Onkeydown, Onkeypress, Onkeyup, Onload, Onmousedown, Onmousemove,
            Onmouseout, Onmouseover, Onmouseup, Onmove, Onreset, Onresize, Onscroll, Onsearch,
            Onselect, Onsubmit, Onunload,
-           Statusbar, Toolbar, ShowModalDialog };
+           Statusbar, Toolbar, FrameElement, ShowModalDialog };
   protected:
     Value getListener(ExecState *exec, int eventId) const;
     void setListener(ExecState *exec, int eventId, Value func);
