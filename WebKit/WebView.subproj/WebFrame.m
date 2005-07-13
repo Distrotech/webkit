@@ -743,6 +743,8 @@ NSString *WebPageCacheDocumentViewKey = @"WebPageCacheDocumentViewKey";
                 [_private setProvisionalItem:nil];
             }
 
+            [[self _bridge] closeURL];
+
             // Set the committed data source on the frame.
             [self _setDataSource:_private->provisionalDataSource];
                 

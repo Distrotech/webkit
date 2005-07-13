@@ -1,5 +1,46 @@
 2005-07-12  Adele Peterson  <adele@apple.com>
 
+        Merged WebKit part of fix from TOT to Safari-1-3-branch
+        <rdar://problem/4176173>
+
+    2005-06-13  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Chris Blumenberg and Adele.
+
+	- better fix for <rdar://problem/4142247> REGRESSION: List to browse widgets at Apple website failed. Closing tab afterwards caused Safari crash
+	http://bugzilla.opendarwin.org/show_bug.cgi?id=3445
+
+	With this change and the matching WebKit change we'll still stop loading the moment you click
+	a download link, but the unload event and detaching of event handlers will not happen early any more.
+	
+        * WebView.subproj/WebDataSource.m:
+        (-[WebDataSource _stopLoadingInternal]): call stopLoading on bridge instead of closeURL.
+        * WebView.subproj/WebFrame.m:
+        (-[WebFrame _transitionToCommitted:]): Revert previous attempt at fix.
+        (-[WebFrame _continueLoadRequestAfterNavigationPolicy:formState:]): ditto
+        (-[WebFrame stopLoading]): ditto
+
+    2005-06-12  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Chris Blumenberg.
+
+	- fixed <rdar://problem/4142247> REGRESSION: List to browse widgets at Apple website failed. Closing tab afterwards caused Safari crash
+	http://bugzilla.opendarwin.org/show_bug.cgi?id=3445
+	
+        * WebView.subproj/WebFrame.m:
+        (-[WebFrame _transitionToCommitted:]): Stop loading the non-provisional data
+	source before swapping in the provisional.
+        (-[WebFrame _continueLoadRequestAfterNavigationPolicy:formState:]): Stop only
+	the provisional load here, we would not want to stop loading if this navigation
+	later turns into a download or is cancelled before being committed.
+        (-[WebFrame stopLoading]): Factored a bit.
+        (-[WebFrame _cancelProvisionalLoad]): New method to stop only provisional load,
+	and cancel any pending policy deicions.
+        (-[WebFrame _stopNonProvisionalLoadOnly]): New mthod that stops only the main
+	load.
+
+2005-07-12  Adele Peterson  <adele@apple.com>
+
         Merged fix from TOT to Safari-1-3-branch
         <rdar://problem/4164950> Safari crashes if Esc key is held down during series of authentication sheets
 
