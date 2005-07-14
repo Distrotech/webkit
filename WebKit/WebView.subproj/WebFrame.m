@@ -2553,6 +2553,19 @@ static CFAbsoluteTime _timeOfLastCompletedLoad;
     return _private->internalLoadDelegate;
 }
 
+- (void)_safeLoadURL:(NSURL *)URL
+{
+    // Call the bridge because this is where our security checks are made.
+    [[self _bridge] loadURL:URL 
+                   referrer:[[[[self dataSource] request] URL] _web_originalDataAsString]
+                     reload:NO
+                userGesture:YES       
+                     target:nil
+            triggeringEvent:[NSApp currentEvent]
+                       form:nil 
+                 formValues:nil];
+}
+
 - (void)_sendResourceLoadDelegateMessagesForURL:(NSURL *)URL response:(NSURLResponse *)response length:(unsigned)length
 {
     ASSERT(response != nil);
