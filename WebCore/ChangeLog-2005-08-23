@@ -1,6 +1,21 @@
 2005-07-14  Adele Peterson  <adele@apple.com>
 
-        Merged change from TOT.
+        Merged changes from TOT.
+
+    2005-03-11  David Harrison  <harrison@apple.com>
+
+        Reviewed by Darin.
+
+        <rdar://problem/4046602> WebCore invokes undefined behavior when the spell checker isn't running
+
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::advanceToNextMisspelling):
+        (KWQKHTMLPart::markMisspellings):
+        Nil check checker.
+
+2005-07-14  Adele Peterson  <adele@apple.com>
+
+        Merged changes from TOT.
 
     2005-04-12  Maciej Stachowiak  <mjs@apple.com>
 
