@@ -223,6 +223,7 @@ typedef enum {
 - (NSString *)referrer;
 - (NSString *)domain;
 - (WebCoreBridge *)opener;
+- (void)setOpener:(WebCoreBridge *)bridge;
 
 - (void)installInFrame:(NSView *)view;
 - (void)removeFromFrame;

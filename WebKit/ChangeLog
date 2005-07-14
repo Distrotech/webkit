@@ -1,3 +1,20 @@
+2005-07-14  Vicki Murley  <vicki@apple.com>
+
+	- merge this fix from HEAD
+
+    2005-07-14  Vicki Murley  <vicki@apple.com>
+
+        Reviewed by Kocienda.
+
+        - WebKit part of fix for  <rdar://problem/4172380> [GENENTECH] window.opener 
+        not available when child opened via target="_new"
+
+        Add a setOpener function to the WebCore bridge, and call this function when opening
+        new windows through Web Kit.
+
+        * WebView.subproj/WebFrame.m:
+        (-[WebFrame _continueLoadRequestAfterNewWindowPolicy:frameName:formState:]):
+
 === WebKit-312.3 ===
 
 2005-07-12  Adele Peterson  <adele@apple.com>
