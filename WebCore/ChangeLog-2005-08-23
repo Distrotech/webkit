@@ -1,3 +1,21 @@
+2005-07-14  Adele Peterson  <adele@apple.com>
+
+        Merged change from TOT.
+
+    2005-04-12  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Richard.
+
+	- use custom single-threaded malloc for all non-GC JavaScriptCore
+	allocations, for a 9.1% speedup on JavaScript iBench
+
+        * khtml/ecma/kjs_binding.cpp:
+        (KJS::UString::UString):
+        * khtml/ecma/kjs_events.cpp:
+        (JSAbstractEventListener::handleEvent):
+        * khtml/ecma/kjs_proxy.cpp:
+        (KJSProxyImpl::evaluate):
+
 === WebCore-413.0.6 ===
 
 === WebCore-413.0.5 ===
