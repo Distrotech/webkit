@@ -12,6 +12,8 @@
 #import <JavaScriptCore/npruntime_impl.h>
 
 #import <Foundation/NSPrivateDecls.h>
+#import <mach-o/arch.h>
+#import <mach-o/loader.h>
 
 typedef void (* FunctionPointer) (void);
 typedef void (* TransitionVector) (void);
@@ -200,7 +202,7 @@ static TransitionVector tVectorForFunctionPointer(FunctionPointer);
     // Check if the executable is Mach-O or CFM.
     if (bundle) {
         NSFileHandle *executableFile = [NSFileHandle fileHandleForReadingAtPath:[bundle executablePath]];
-        NSData *data = [executableFile readDataOfLength:8];
+        NSData *data = [executableFile readDataOfLength:512];
         [executableFile closeFile];
         // Check the length of the data before calling memcmp. We think this fixes 3782543.
         if (data == nil || [data length] < 8) {
@@ -214,6 +216,29 @@ static TransitionVector tVectorForFunctionPointer(FunctionPointer);
             [self release];
             return nil;
         }
+#endif
+
+#if __i386__		
+		// If we have a 32-bit thin Mach-O file, see if we have an i386 binary.  If not, don't load it.
+		// This is designed to be the safest possible test for now.  We'll only reject files that we
+		// can easily tell are wrong.
+		if ([data length] >= sizeof(struct mach_header)) {
+		    int isNative = 1;	// Default to yes so we default to our previous behavior of accepting everything
+		    struct mach_header *header;
+		    const NXArchInfo *localArch = NXGetLocalArchInfo();
+		    if (localArch != NULL) {
+		        header = (struct mach_header *) [data bytes];
+		        if (header->magic == MH_MAGIC) {
+		            isNative = (header->cputype == localArch->cputype);
+		        } else if (header->magic == MH_CIGAM) {
+		            isNative = ((cpu_type_t) OSSwapInt32(header->cputype) == localArch->cputype);
+		        }
+		        if (!isNative) {
+		            [self release];
+		            return nil;
+		        }
+		    }
+		}
 #endif
     }
 

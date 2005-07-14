@@ -1,6 +1,14 @@
 2005-07-14  Adele Peterson  <adele@apple.com>
 
         Merged fix for:
+        <rdar://problem/4127100> [WebKit] 8B1016: After installing Acrobat Reader, can no longer see pdf's in Safari
+
+        * Plugins.subproj/WebNetscapePluginPackage.m:
+        (-[WebNetscapePluginPackage initWithPath:]):
+
+2005-07-14  Adele Peterson  <adele@apple.com>
+
+        Merged fix for:
         <rdar://problem/4125127> [WebKit] horizontal rulers don't render on Safari on web.apple.com
 
         * WebCoreSupport.subproj/WebImageData.m:
