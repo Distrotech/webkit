@@ -1837,6 +1837,7 @@ static CFAbsoluteTime _timeOfLastCompletedLoad;
     [[webView _UIDelegateForwarder] webViewShow:webView];
     WebFrame *frame = [webView mainFrame];
 
+    [[self _bridge] setOpener:[frame _bridge]];
     [frame _loadRequest:request triggeringAction:nil loadType:WebFrameLoadTypeStandard formState:formState];
 }
 

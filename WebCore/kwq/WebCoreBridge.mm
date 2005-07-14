@@ -1350,6 +1350,14 @@ static HTMLFormElementImpl *formElementFromDOMElement(DOMElement *element)
     return nil;
 }
 
+- (void)setOpener:(WebCoreBridge *)bridge;
+{
+    KHTMLPart *p = [bridge part];
+    
+    if (p)
+        p->setOpener(_part);
+}
+
 + (NSString *)stringWithData:(NSData *)data textEncoding:(CFStringEncoding)textEncoding
 {
     if (textEncoding == kCFStringEncodingInvalidId || textEncoding == kCFStringEncodingISOLatin1) {
