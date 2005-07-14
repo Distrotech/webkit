@@ -275,7 +275,7 @@ static CFDictionaryRef imageSourceOptions;
         float pixel[4]; // RGBA
         CGColorSpaceRef space = CGColorSpaceCreateDeviceRGB();
         CGContextRef bmap = CGBitmapContextCreate(&pixel,1,1,8*sizeof(float),sizeof(pixel),space,
-                                                  kCGImageAlphaPremultipliedLast | kCGBitmapFloatComponents);
+                                                  kCGImageAlphaPremultipliedLast | kCGBitmapFloatComponents | kCGBitmapByteOrder32Host);
         if( bmap ) {
             CGContextSetCompositeOperation(bmap, kCGCompositeCopy);
             CGRect dst = {{0,0},{1,1}};
