@@ -346,7 +346,7 @@
     }
     if (URL != nil) {    
         WebFrame *frame = [[self _web_parentWebFrameView] webFrame];
-        [frame _saveLoadURL:URL] 
+        [frame _safeLoadURL:URL]; 
     }
 }
 

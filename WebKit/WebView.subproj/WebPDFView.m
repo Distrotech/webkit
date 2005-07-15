@@ -7,7 +7,9 @@
 
 #import <Foundation/NSString_NSURLExtras.h>
 
+#import <WebKit/WebFrame.h>
 #import <WebKit/WebFrameInternal.h>
+#import <WebKit/WebFrameView.h>
 #import <WebKit/WebAssertions.h>
 #import <WebKit/WebDataSource.h>
 #import <WebKit/WebLocalizableStrings.h>

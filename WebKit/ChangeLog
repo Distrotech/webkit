@@ -1,5 +1,10 @@
 === WebKit-412.6.2 ===
 
+2005-07-14  Adele Peterson  <adele@apple.com>
+
+        * WebView.subproj/WebPDFView.m: added #import of WebFrame.h and WebFrameView.h
+        * WebView.subproj/WebTextView.m: (-[WebTextView clickedOnLink:atIndex:]): added missing semicolon and fixed typo.
+
 2005-07-14  Kevin Decker  <kdecker@apple.com>
 
 	Merged fix for <rdar://problem/4122282> clicking a link in an PDF file opens the link with NSWorkspace without the usual security checks or WebView delegate control
