@@ -743,6 +743,8 @@ NSString *WebPageCacheDocumentViewKey = @"WebPageCacheDocumentViewKey";
                 [_private setProvisionalItem:nil];
             }
 
+            [[self _bridge] closeURL];
+
             // Set the committed data source on the frame.
             [self _setDataSource:_private->provisionalDataSource];
                 
@@ -1835,6 +1837,7 @@ static CFAbsoluteTime _timeOfLastCompletedLoad;
     [[webView _UIDelegateForwarder] webViewShow:webView];
     WebFrame *frame = [webView mainFrame];
 
+    [[self _bridge] setOpener:[frame _bridge]];
     [frame _loadRequest:request triggeringAction:nil loadType:WebFrameLoadTypeStandard formState:formState];
 }
 
@@ -2549,6 +2552,19 @@ static CFAbsoluteTime _timeOfLastCompletedLoad;
 - (id)_internalLoadDelegate
 {
     return _private->internalLoadDelegate;
+}
+
+- (void)_safeLoadURL:(NSURL *)URL
+{
+    // Call the bridge because this is where our security checks are made.
+    [[self _bridge] loadURL:URL 
+                   referrer:[[[[self dataSource] request] URL] _web_originalDataAsString]
+                     reload:NO
+                userGesture:YES       
+                     target:nil
+            triggeringEvent:[NSApp currentEvent]
+                       form:nil 
+                 formValues:nil];
 }
 
 - (void)_sendResourceLoadDelegateMessagesForURL:(NSURL *)URL response:(NSURLResponse *)response length:(unsigned)length

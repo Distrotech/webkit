@@ -234,8 +234,9 @@ public:
     virtual bool isActivatedSubmit() const;
     virtual void setActivatedSubmit(bool flag);
 
-    virtual void click(bool sendMouseEvents);
     virtual void accessKeyAction(bool sendToAnyElement);
+    void blur();
+    void focus();
     
 protected:
     DOMString m_value;
