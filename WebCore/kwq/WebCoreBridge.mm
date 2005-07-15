@@ -375,6 +375,11 @@ static bool initializedKJS = FALSE;
     _part->closeURL();
 }
 
+- (void)stopLoading
+{
+    _part->stopLoading();
+}
+
 - (void)didNotOpenURL:(NSURL *)URL pageCache:(NSDictionary *)pageCache
 {
     _part->didNotOpenURL(KURL(URL).url());
@@ -447,10 +452,7 @@ static bool initializedKJS = FALSE;
 
 - (BOOL)scrollOverflowWithScrollWheelEvent:(NSEvent *)event
 {
-    if (_part == NULL) {
-        return NO;
-    }    
-    return _part->scrollOverflowWithScrollWheelEvent(event);
+    return _part ? _part->wheelEvent(event) : NO;
 }
 
 - (BOOL)saveDocumentToPageCache
@@ -1348,6 +1350,14 @@ static HTMLFormElementImpl *formElementFromDOMElement(DOMElement *element)
     return nil;
 }
 
+- (void)setOpener:(WebCoreBridge *)bridge;
+{
+    KHTMLPart *p = [bridge part];
+    
+    if (p)
+        p->setOpener(_part);
+}
+
 + (NSString *)stringWithData:(NSData *)data textEncoding:(CFStringEncoding)textEncoding
 {
     if (textEncoding == kCFStringEncodingInvalidId || textEncoding == kCFStringEncodingISOLatin1) {
@@ -1628,6 +1638,10 @@ static HTMLFormElementImpl *formElementFromDOMElement(DOMElement *element)
 
 - (NSRange)convertToNSRange:(DOM::RangeImpl *)drange
 {
+    if (!drange) {
+        return NSMakeRange(NSNotFound, 0);
+    }
+
     Range toStartRange, toEndRange;
     Range actualRange = Range(drange);
     long startPosition, endPosition;

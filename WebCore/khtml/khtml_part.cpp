@@ -66,6 +66,7 @@ using namespace DOM;
 #include "khtmlview.h"
 #include <kparts/partmanager.h>
 #include "ecma/kjs_proxy.h"
+#include "ecma/xmlhttprequest.h"
 #include "khtml_settings.h"
 
 #include <sys/types.h>
@@ -111,6 +112,7 @@ using khtml::ApplyStyleCommand;
 using khtml::CHARACTER;
 using khtml::ChildFrame;
 using khtml::Decoder;
+using khtml::DocLoader;
 using khtml::EAffinity;
 using khtml::EditAction;
 using khtml::EditCommandPtr;
@@ -581,7 +583,7 @@ void KHTMLPart::didExplicitOpen()
 }
 
 
-bool KHTMLPart::closeURL()
+void KHTMLPart::stopLoading(bool sendUnload)
 {    
     if (d->m_doc && d->m_doc->tokenizer()) {
         d->m_doc->tokenizer()->stopParsing();
@@ -594,17 +596,22 @@ bool KHTMLPart::closeURL()
     d->m_job = 0;
   }
 
-  if ( d->m_doc && d->m_doc->isHTMLDocument() ) {
-    HTMLDocumentImpl* hdoc = static_cast<HTMLDocumentImpl*>( d->m_doc );
-
-    if ( hdoc->body() && d->m_bLoadEventEmitted && !d->m_bUnloadEventEmitted ) {
-      hdoc->body()->dispatchWindowEvent( EventImpl::UNLOAD_EVENT, false, false );
-      if ( d->m_doc )
-        d->m_doc->updateRendering();
-      d->m_bUnloadEventEmitted = true;
+  if (sendUnload) {
+    if ( d->m_doc && d->m_doc->isHTMLDocument() ) {
+      HTMLDocumentImpl* hdoc = static_cast<HTMLDocumentImpl*>( d->m_doc );
+      
+      if ( hdoc->body() && d->m_bLoadEventEmitted && !d->m_bUnloadEventEmitted ) {
+        hdoc->body()->dispatchWindowEvent( EventImpl::UNLOAD_EVENT, false, false );
+        if ( d->m_doc )
+          d->m_doc->updateRendering();
+        d->m_bUnloadEventEmitted = true;
+      }
     }
-  }
     
+    if (d->m_doc && !d->m_doc->inPageCache())
+      d->m_doc->removeAllEventListenersFromAllNodes();
+  }
+
   d->m_bComplete = true; // to avoid emitting completed() in slotFinishedParsing() (David)
   d->m_bLoadingMainResource = false;
   d->m_bLoadEventEmitted = true; // don't want that one either
@@ -627,15 +634,26 @@ bool KHTMLPart::closeURL()
 
   d->m_workingURL = KURL();
 
-  if ( d->m_doc && d->m_doc->docLoader() )
-    khtml::Cache::loader()->cancelRequests( d->m_doc->docLoader() );
+  if (DocumentImpl *doc = d->m_doc) {
+    if (DocLoader *docLoader = doc->docLoader())
+      khtml::Cache::loader()->cancelRequests(docLoader);
+    KJS::XMLHttpRequest::cancelRequests(doc);
+  }
 
   // tell all subframes to stop as well
   ConstFrameIt it = d->m_frames.begin();
   ConstFrameIt end = d->m_frames.end();
-  for (; it != end; ++it )
-    if ( !( *it ).m_part.isNull() )
-      ( *it ).m_part->closeURL();
+  for (; it != end; ++it ) {
+      KParts::ReadOnlyPart *part = (*it).m_part;
+      if (part) {
+          KHTMLPart *khtml_part = static_cast<KHTMLPart *>(part);
+
+          if (khtml_part->inherits("KHTMLPart"))
+              khtml_part->stopLoading(sendUnload);
+          else
+              part->closeURL();
+      }
+  }
 
   d->m_bPendingChildRedirection = false;
 
@@ -645,7 +663,6 @@ bool KHTMLPart::closeURL()
   // null node activated.
   emit nodeActivated(Node());
 
-  return true;
 }
 
 DOM::HTMLDocument KHTMLPart::htmlDocument() const
@@ -707,6 +724,13 @@ bool KHTMLPart::metaRefreshEnabled() const
 #ifdef DIRECT_LINKAGE_TO_ECMA
 extern "C" { KJSProxy *kjs_html_init(KHTMLPart *khtmlpart); }
 #endif
+
+bool KHTMLPart::closeURL()
+{    
+  stopLoading(true);
+
+  return true;
+}
 
 KJSProxy *KHTMLPart::jScript()
 {
@@ -2027,6 +2051,14 @@ void KHTMLPart::scheduleLocationChange(const QString &url, const QString &referr
     // Handle a location change of a page with no document as a special case.
     // This may happen when a frame changes the location of another frame.
     d->m_scheduledRedirection = d->m_doc ? locationChangeScheduled : locationChangeScheduledDuringLoad;
+    
+    // If a redirect was scheduled during a load, then stop the current load.
+    // Otherwise when the current load transitions from a provisional to a 
+    // committed state, pending redirects may be cancelled. 
+    if (d->m_scheduledRedirection == locationChangeScheduledDuringLoad) {
+        stopLoading(true);   
+    }
+    
     d->m_delayRedirect = 0;
     d->m_redirectURL = url;
     d->m_redirectReferrer = referrer;
@@ -2081,6 +2113,28 @@ void KHTMLPart::cancelRedirection(bool cancelWithLoadInProgress)
     }
 }
 
+void KHTMLPart::changeLocation(const QString &URL, const QString &referrer, bool lockHistory, bool userGesture)
+{
+    if (URL.find("javascript:", 0, false) == 0) {
+        QString script = KURL::decode_string(URL.mid(11));
+        QVariant result = executeScript(script, userGesture);
+        if (result.type() == QVariant::String) {
+            begin(url());
+            write(result.asString());
+            end();
+        }
+        return;
+    }
+
+    KParts::URLArgs args;
+
+    args.setLockHistory(lockHistory);
+    if (!referrer.isEmpty())
+        args.metaData()["referrer"] = referrer;
+
+    urlSelected(URL, 0, 0, "_self", args);
+}
+
 void KHTMLPart::slotRedirect()
 {
     if (d->m_scheduledRedirection == historyNavigationScheduled) {
@@ -2101,34 +2155,18 @@ void KHTMLPart::slotRedirect()
         }
         return;
     }
-  
-  QString u = d->m_redirectURL;
 
-  d->m_scheduledRedirection = noRedirectionScheduled;
-  d->m_delayRedirect = 0;
-  d->m_redirectURL = QString::null;
-  if ( u.find( QString::fromLatin1( "javascript:" ), 0, false ) == 0 )
-  {
-    QString script = KURL::decode_string( u.right( u.length() - 11 ) );
-    //kdDebug( 6050 ) << "KHTMLPart::slotRedirect script=" << script << endl;
-    QVariant res = executeScript( script, d->m_redirectUserGesture );
-    if ( res.type() == QVariant::String ) {
-      begin( url() );
-      write( res.asString() );
-      end();
-    }
-    return;
-  }
-  KParts::URLArgs args;
-  if ( urlcmp( u, m_url.url(), true, false ) )
-    args.reload = true;
+    QString URL = d->m_redirectURL;
+    QString referrer = d->m_redirectReferrer;
+    bool lockHistory = d->m_redirectLockHistory;
+    bool userGesture = d->m_redirectUserGesture;
 
-  args.setLockHistory( d->m_redirectLockHistory );
-  if (!d->m_redirectReferrer.isEmpty())
-    args.metaData()["referrer"] = d->m_redirectReferrer;
-  d->m_redirectReferrer = QString::null;
+    d->m_scheduledRedirection = noRedirectionScheduled;
+    d->m_delayRedirect = 0;
+    d->m_redirectURL = QString::null;
+    d->m_redirectReferrer = QString::null;
 
-  urlSelected( u, 0, 0, "_self", args );
+    changeLocation(URL, referrer, lockHistory, userGesture);
 }
 
 void KHTMLPart::slotRedirection(KIO::Job*, const KURL& url)
@@ -2835,7 +2873,8 @@ void KHTMLPart::urlSelected( const QString &url, int button, int state, const QS
 #endif
 
 #if APPLE_CHANGES
-  args.metaData()["referrer"] = d->m_referrer;
+  if (!d->m_referrer.isEmpty())
+    args.metaData()["referrer"] = d->m_referrer;
   KWQ(this)->urlSelected(cURL, button, state, args);
 #else
   if ( hasTarget )

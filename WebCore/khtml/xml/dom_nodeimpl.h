@@ -42,6 +42,7 @@ class QMouseEvent;
 class QKeyEvent;
 class QTextStream;
 class QStringList;
+class QWheelEvent;
 
 namespace khtml {
     class RenderObject;
@@ -113,6 +114,7 @@ public:
     virtual bool hasChildNodes (  ) const;
     virtual NodeImpl *cloneNode ( bool deep ) = 0;
     virtual DOMString localName() const;
+    virtual DOMString namespaceURI() const;
     virtual DOMString prefix() const;
     virtual void setPrefix(const DOMString &_prefix, int &exceptioncode );
     void normalize ();
@@ -242,7 +244,8 @@ public:
     bool changed() const    { return m_changed; }
     bool hasChangedChild() const { return m_hasChangedChild; }
     bool hasAnchor() const { return m_hasAnchor; }
-    bool inDocument() const { return m_inDocument; }
+    // inDocument should also make sure a document exists in case the document has been destroyed before the node is removed from the document.
+    bool inDocument() const { return document->document() && m_inDocument; }
     bool styleElement() const { return m_styleElement; }
     bool implicitNode() const { return m_implicit; }
     void setHasID(bool b=true) { m_hasId = b; }
@@ -295,6 +298,7 @@ public:
     bool dispatchUIEvent(int _id, int detail = 0);
     bool dispatchSubtreeModifiedEvent(bool childrenChanged = true);
     bool dispatchKeyEvent(QKeyEvent *key);
+    void dispatchWheelEvent(QWheelEvent *);
 
     void handleLocalEvents(EventImpl *evt, bool useCapture);
 

@@ -818,6 +818,8 @@ const ClassInfo* KJS::HTMLElement::classInfo() const
   tabIndex	KJS::HTMLElement::ButtonTabIndex	DontDelete
   type		KJS::HTMLElement::ButtonType		DontDelete|ReadOnly
   value		KJS::HTMLElement::ButtonValue		DontDelete
+  blur		KJS::HTMLElement::ButtonBlur		DontDelete|Function 0
+  focus		KJS::HTMLElement::ButtonFocus		DontDelete|Function 0
 @end
 @begin HTMLLabelElementTable 3
   form		KJS::HTMLElement::LabelForm		DontDelete|ReadOnly
@@ -2169,6 +2171,19 @@ Value KJS::HTMLElementFunction::tryCall(ExecState *exec, Object &thisObj, const 
       }
     }
     break;
+    case ID_BUTTON: {
+      DOM::HTMLButtonElement button = element;
+      
+      if (id == KJS::HTMLElement::ButtonBlur) {
+        button.blur();
+        return Undefined();
+      }
+      else if (id == KJS::HTMLElement::ButtonFocus) {
+        button.focus();
+        return Undefined();
+      }
+    }
+    break;
     case ID_TEXTAREA: {
       DOM::HTMLTextAreaElement textarea = element;
       if (id == KJS::HTMLElement::TextAreaBlur) {
@@ -3051,7 +3066,10 @@ IMPLEMENT_PROTOTYPE(HTMLCollectionProto,HTMLCollectionProtoFunc)
 const ClassInfo HTMLCollection::info = { "HTMLCollection", 0, 0, 0 };
 
 HTMLCollection::HTMLCollection(ExecState *exec, const DOM::HTMLCollection &c)
-  : DOMObject(HTMLCollectionProto::self(exec)), collection(c) {}
+  : collection(c) 
+{
+  setPrototype(HTMLCollectionProto::self(exec));
+}
 
 HTMLCollection::~HTMLCollection()
 {

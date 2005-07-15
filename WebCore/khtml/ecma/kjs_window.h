@@ -124,6 +124,9 @@ namespace KJS {
     // Set the current "event" object
     void setCurrentEvent( DOM::Event *evt );
 
+    // Set a place to put a dialog return value when the window is cleared.
+    void setReturnValueSlot(ValueImp **slot) { m_returnValueSlot = slot; }
+
     QPtrDict<JSEventListener> jsEventListeners;
     QPtrDict<JSUnprotectedEventListener> jsUnprotectedEventListeners;
     virtual const ClassInfo* classInfo() const { return &info; }
@@ -137,17 +140,17 @@ namespace KJS {
            ScrollTo, ScrollX, ScrollY, MoveBy, MoveTo, ResizeBy, ResizeTo, Self, _Window, Top, _Screen,
            Image, Option, Alert, Confirm, Prompt, Open, Print, SetTimeout, ClearTimeout,
            Focus, GetSelection, Blur, Close, SetInterval, ClearInterval, CaptureEvents, 
-           ReleaseEvents, AddEventListener, RemoveEventListener, XMLHttpRequest, XMLSerializer,
+           ReleaseEvents, AddEventListener, RemoveEventListener, XMLHttpRequest, XMLSerializer, DOMParser,
 	   Onabort, Onblur, Onchange, Onclick, Ondblclick, Ondragdrop, Onerror, 
 	   Onfocus, Onkeydown, Onkeypress, Onkeyup, Onload, Onmousedown, Onmousemove,
-           Onmouseout, Onmouseover, Onmouseup, Onmove, Onreset, Onresize, Onscroll, Onsearch,
+           Onmouseout, Onmouseover, Onmouseup, OnWindowMouseWheel, Onmove, Onreset, Onresize, Onscroll, Onsearch,
            Onselect, Onsubmit, Onunload,
-           Statusbar, Toolbar };
+           Statusbar, Toolbar, FrameElement, ShowModalDialog };
   protected:
     Value getListener(ExecState *exec, int eventId) const;
     void setListener(ExecState *exec, int eventId, Value func);
   private:
-    void updateLayout() const;
+    void updateLayout(bool ignoreStylesheets = true) const;
 
     QGuardedPtr<KHTMLPart> m_part;
     Screen *screen;
@@ -163,6 +166,7 @@ namespace KJS {
     BarInfo *m_toolbar;
     WindowQObject *winq;
     DOM::Event *m_evt;
+    ValueImp **m_returnValueSlot;
   };
 
   /**

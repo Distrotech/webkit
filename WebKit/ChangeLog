@@ -1,3 +1,308 @@
+=== WebKit-412.7 ===
+
+2005-07-15  Adele Peterson  <adele@apple.com>
+
+        added missing line from last fix.
+
+        * WebView.subproj/WebTextView.m: (-[WebTextView clickedOnLink:atIndex:]):
+
+2005-07-14  Kevin Decker  <kdecker@apple.com>
+
+        Merged fix for <rdar://problem/4122282> clicking a link in an PDF file opens the link with NSWorkspace without the usual security checks or WebView delegate control
+
+2005-07-14  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+        <rdar://problem/4180841> [GENENTECH] window.opener not available when child opened via target="_new"
+
+    2005-07-14  Vicki Murley  <vicki@apple.com>
+
+        Reviewed by Kocienda.
+
+	- WebKit part of fix for  <rdar://problem/4172380> [GENENTECH] window.opener 
+	not available when child opened via target="_new"
+
+	Add a setOpener function to the WebCore bridge, and call this function when opening
+	new windows through Web Kit.
+
+        * WebView.subproj/WebFrame.m:
+        (-[WebFrame _continueLoadRequestAfterNewWindowPolicy:frameName:formState:]):
+
+2005-07-12  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+        <rdar://problem/4164950> Safari crashes if Esc key is held down during series of authentication sheets
+
+    2005-05-13  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Kevin.
+        
+        - fixed <rdar://problem/4093306> Safari crashes if Esc key is held down during series 
+        of authentication sheets
+
+        * Panels.subproj/WebAuthenticationPanel.m:
+        (-[WebAuthenticationPanel cancel:]):
+        retain and autorelease self. This is a workaround for an AppKit key-handling issue, which I wrote up as:
+        <rdar://problem/4118422> Key-down events can be sent to a closed window if a key is kept pressed down
+
+2005-07-12  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+        <rdar://problem/4164949> REGRESSION (Tiger): progressively loaded background images "scroll down" instead of just appearing
+
+    2005-04-18  Darin Adler  <darin@apple.com>
+
+        Reviewed by Hyatt.
+
+        - fixed <rdar://problem/4092614> REGRESSION (Tiger): progressively loaded background images "scroll around" instead of just appearing
+
+        * WebCoreSupport.subproj/WebImageData.m:
+        (-[WebImageData _imageSourceOptions]): Moved a global inside this function, since it's only used here.
+        (-[WebImageData _cacheImages:allImages:]): Fixed a sizeof that was getting the size of the wrong thing.
+        (-[WebImageData _isSizeAvailable]): Used calloc in a more consistent way.
+        (drawPattern): Removed an unneeded cast.
+        (-[WebImageData tileInRect:fromPoint:context:]): Here's the actual bug fix. Don't use the image size
+        when deciding whether the image needs to be tiled as a pattern nor when creating the pattern: in both
+        cases, use the tile size. The old way was wrong, and the new way works perfectly. Also removed uneeded
+        error message when the image is not yet loaded enough to create a CGImageRef for it -- it's fine to
+        draw nothing in that case.
+
+2005-07-12  Vicki Murley  <vicki@apple.com>
+
+	- merged this fix from HEAD
+
+    2005-07-11  Kevin Decker  <kdecker@apple.com>
+
+        Reviewed by cblu and mjs.
+
+	Fixed: <rdar://problem/4099552> REGRESSION: Safari 1.3 Netscape API NPN_PostURL[Notify] 
+	no longer allows manual headers
+	
+	Most plugins (flash) send 2 CRFL's between the header and body of their POST requests, while 
+	the Adboe plugin sends two LF's. This caused us to send custom headers as part of the actual 
+	POST data itself, and correspondently, would skew Content-Length.
+
+        * Plugins.subproj/WebBaseNetscapePluginView.m:
+        (-[NSData _web_locationAfterFirstBlankLine]): Look for two LF's as well
+
+2005-07-01  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+        <rdar://problem/4164982> add IE JavaScript extension window.showModalDialog
+
+    2005-06-01  Darin Adler  <darin@apple.com>
+
+        Reviewed by John Sullivan.
+
+        - WebKit part of fix for <rdar://problem/3166090> add IE JavaScript extension window.showModalDialog
+
+        * WebCoreSupport.subproj/WebBridge.m:
+        (-[WebBridge createModalDialogWithURL:]): Added. Calls the UI delegate, falling back to the generic
+        "create WebView" method.
+        (-[WebBridge canRunModal]): Added. Checks the UI delegate to see if it implements runModal.
+        (-[WebBridge canRunModalNow]): Added. Checks the "inConnectionCallback" field so we can prevent
+        deadlock since we can't do any I/O while inside a connection callback until this aspect of NSURLConnection
+        is changed.
+        (-[WebBridge runModal]): Added. Sets "defersCallbacks" on all other web views in the group, then
+        calls runModal on the UI delegate.
+
+        * WebView.subproj/WebBaseResourceHandleDelegate.h: Added inConnectionCallback class method.
+        * WebView.subproj/WebBaseResourceHandleDelegate.m:
+        (-[WebBaseResourceHandleDelegate connection:willSendRequest:redirectResponse:]): Bump count and then
+        decrement count so we can tell if we are in a callback.
+        (-[WebBaseResourceHandleDelegate connection:didReceiveAuthenticationChallenge:]): Ditto.
+        (-[WebBaseResourceHandleDelegate connection:didCancelAuthenticationChallenge:]): Ditto.
+        (-[WebBaseResourceHandleDelegate connection:didReceiveResponse:]): Ditto.
+        (-[WebBaseResourceHandleDelegate connection:didReceiveData:lengthReceived:]): Ditto.
+        (-[WebBaseResourceHandleDelegate connection:willStopBufferingData:]): Ditto.
+        (-[WebBaseResourceHandleDelegate connectionDidFinishLoading:]): Ditto.
+        (-[WebBaseResourceHandleDelegate connection:didFailWithError:]): Ditto.
+        (-[WebBaseResourceHandleDelegate connection:willCacheResponse:]): Ditto.
+        (+[WebBaseResourceHandleDelegate inConnectionCallback]): Added. Return YES if count is not 0.
+
+        * WebView.subproj/WebMainResourceClient.m:
+        (-[WebMainResourceClient receivedError:]): Changed to use the method without the connection: parameter
+        in the base class, since we no longer are overriding the connection: version.
+        (-[WebMainResourceClient willSendRequest:redirectResponse:]): Change to override the version without
+        the connection prefix/parameter; now only the base class overrides the actual connection delegate methods.
+        (-[WebMainResourceClient continueAfterContentPolicy:response:]): Ditto.
+        (-[WebMainResourceClient didReceiveResponse:]): Ditto.
+        (-[WebMainResourceClient didReceiveData:lengthReceived:]): Ditto.
+        (-[WebMainResourceClient didFinishLoading]): Ditto.
+        (-[WebMainResourceClient didFailWithError:]): Ditto.
+        (-[WebMainResourceClient loadWithRequestNow:]): Call the method without the connection parameter.
+
+        * WebView.subproj/WebUIDelegatePrivate.h: Added new SPI here that WebBrowser implements.
+
+=== WebKit-412.6.1 ===
+
+2005-06-27  Adele Peterson  <adele@apple.com>
+  
+       Merged fix for <rdar://problem/4155738> from TOT to Safari-2-0-branch
+
+    2005-05-17  Chris Blumenberg  <cblu@apple.com>
+
+	Fixed: <rdar://problem/4120255> web archives on remote servers can be viewed directly (with major security issues); should download instead
+
+        Reviewed by mjs.
+
+        * WebView.subproj/WebBaseResourceHandleDelegate.h:
+        * WebView.subproj/WebMainResourceClient.m:
+        (-[WebMainResourceClient continueAfterContentPolicy:response:]): if the WebKit client has chosen to "use" a remote web archive, stop the load with an error
+
+2005-06-27  Adele Peterson  <adele@apple.com>
+
+        Merged fix for <rdar://problem/4155736> from TOT to Safari-2-0-branch
+
+    2005-05-17  Chris Blumenberg  <cblu@apple.com>
+	
+	Fixed: <rdar://problem/4119282> clicking a link in an RTF file opens the link with NSWorkspace without the usual security checks or WebView delegate control
+
+        Reviewed by mjs.
+
+        * WebCoreSupport.subproj/WebBridge.m:
+        (-[WebBridge loadURL:referrer:reload:userGesture:target:triggeringEvent:form:formValues:]): pass the passed referrer to canLoadURL::: not [self referrer]
+        (-[WebBridge postWithURL:referrer:target:data:contentType:triggeringEvent:form:formValues:]): ditto
+        * WebView.subproj/WebTextView.m:
+        (-[WebTextView clickedOnLink:atIndex:]): call the loadURL bridge method so that security checks are made, command/option clicks work, policy delegate is consulted etc.
+
+=== WebKit-412.6 ===
+
+2005-06-13  Adele Peterson  <adele@apple.com>
+
+        Merged new fix for <rdar://problem/4142247> from TOT to Safari-2-0-branch.
+
+    2005-06-13  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Chris Blumenberg and Adele.
+
+	- better fix for <rdar://problem/4142247> REGRESSION: List to browse widgets at Apple website failed. Closing tab afterwards caused Safari crash
+	http://bugzilla.opendarwin.org/show_bug.cgi?id=3445
+
+	With this change and the matching WebKit change we'll still stop loading the moment you click
+	a download link, but the unload event and detaching of event handlers will not happen early any more.
+	
+        * WebView.subproj/WebDataSource.m:
+        (-[WebDataSource _stopLoadingInternal]): call stopLoading on bridge instead of closeURL.
+        * WebView.subproj/WebFrame.m:
+        (-[WebFrame _transitionToCommitted:]): Revert previous attempt at fix.
+        (-[WebFrame _continueLoadRequestAfterNavigationPolicy:formState:]): ditto
+        (-[WebFrame stopLoading]): ditto
+
+=== WebKit-412.5 ===
+
+2005-06-12  Adele Peterson  <adele@apple.com>
+
+         Merged fix for <rdar://problem/4142247> from TOT to Safari-2-0-branch.
+
+    2005-06-12 Maciej Stachowiak <mjs@apple.com>
+
+          Reviewed by Chris Blumenberg.
+
+  	- fixed <rdar://problem/4142247> REGRESSION: List to browse widgets at Apple website failed. Closing tab afterwards caused Safari crash
+  	http://bugzilla.opendarwin.org/show_bug.cgi?id=3445
+
+          * WebView.subproj/WebFrame.m:
+          (-[WebFrame _transitionToCommitted:]): Stop loading the non-provisional data
+  	source before swapping in the provisional.
+          (-[WebFrame _continueLoadRequestAfterNavigationPolicy:formState:]): Stop only
+  	the provisional load here, we would not want to stop loading if this navigation
+  	later turns into a download or is cancelled before being committed.
+          (-[WebFrame stopLoading]): Factored a bit.
+          (-[WebFrame _cancelProvisionalLoad]): New method to stop only provisional load,
+  	and cancel any pending policy deicions.
+          (-[WebFrame _stopNonProvisionalLoadOnly]): New mthod that stops only the main
+  	load.
+
+=== WebKit-412.3 ===
+
+2005-06-01  Adele Peterson  <adele@apple.com>
+
+        Merged fix for 4097289 from TOT for SUTiCambridge.
+
+    2005-05-24  Richard Williamson   <rjw@apple.com>
+
+	Fixed <rdar://problem/4097289> -[WebView elementAtPoint:] failing when WebView is nested and offset
+
+	Code to determine the correct frame under the window point was
+	converting the point incorrectly.
+
+        Reviewed by Chris.
+
+        * WebView.subproj/WebView.m:
+        (-[WebView _frameViewAtWindowPoint:]):
+
+=== WebKit-412.2 ===
+
+2005-05-23  Chris Petersen <cpetersen@apple.com>
+
+        Merged fix for 4077106 from TOT to SUTiCambridge
+
+    2005-04-05  David Hyatt  <hyatt@apple.com>
+
+	Fix for 4077106, wheel scroll amount smaller in Tiger.  All along wheeling should have been 4x the default
+	line height of 10 (just as arrow keys did).  Scroll arrows should have done this too for scroll views (they did
+	already for overflow sections).  This patch puts the override into the scrollview itself, and removes the
+	multipliers in the private frame methods.
+	
+        Reviewed by darin
+
+        * WebView.subproj/WebFrameView.m:
+        (-[WebFrameView _verticalKeyboardScrollDistance]):
+        (-[WebFrameView initWithFrame:]):
+        (-[WebFrameView _horizontalKeyboardScrollDistance]):
+
+
+2005-05-23  Chris Petersen  <cpetersen@apple.com>
+
+        Merged changes for <rdar://problem/4072280> from TOT to SUTiCambridge
+
+    2005-05-04  Chris Blumenberg  <cblu@apple.com>
+
+	Fixed: 
+	<rdar://problem/4078417> REGRESSION (125-412): MLB gameday page doesn't update (Flash)
+	<rdar://problem/4072280> XMLHttpRequest calls onReadyStateChange callback with bogus status value
+        
+	Reviewed by john.
+
+	Our WebKit-level caching of subresources "dumbed-down" information held in NSURLResponse. This caused some loads to lack response headers and thus disabling cache directives. Status codes were also not retained and this caused XMLHttpRequest to fail frequently. The fix is to have WebResource retain the NSURLResponse and to use the NSURLResponse when we decide to load from WebResources.
+
+        * WebCoreSupport.subproj/WebBridge.m:
+        (-[WebBridge objectLoadedFromCacheWithURL:response:data:]): call new [WebResource _initWithData:URL:response:]
+        * WebView.subproj/WebBaseResourceHandleDelegate.m:
+        (-[WebBaseResourceHandleDelegate _canUseResourceWithResponse:]): new, checks response cache directives
+        (-[WebBaseResourceHandleDelegate loadWithRequest:]): call _canUseResourceWithResponse:
+        (-[WebBaseResourceHandleDelegate saveResource]): call new [WebResource _initWithData:URL:response:]
+        * WebView.subproj/WebResource.m:
+        (-[WebResourcePrivate dealloc]):
+        (-[WebResource initWithData:URL:MIMEType:textEncodingName:frameName:]): call renamed _initWithData:URL:MIMEType:textEncodingName:frameName:response:copyData:
+        (-[WebResource initWithCoder:]): decode the NSURLReponse
+        (-[WebResource encodeWithCoder:]): encode the NSURLReponse
+        (-[WebResource _initWithData:URL:MIMEType:textEncodingName:frameName:response:copyData:]): take the NSURLReponse
+        (-[WebResource _initWithData:URL:response:]): new
+        (-[WebResource _initWithPropertyList:]): decode the NSURLReponse
+        (-[WebResource _propertyListRepresentation]): encode the NSURLReponse
+        (-[WebResource _response]): return ivar if we have one
+        * WebView.subproj/WebResourcePrivate.h:
+
+
+2005-05-23  Chris Petersen <cpetersen@apple.com>
+
+        Merged changes for <rdar://problem/4098713> from TOT to SUTiCambridge
+
+     2005-04-26  Richard Williamson   <rjw@apple.com>
+
+	Fixed <rdar://problem/4098713> Scripting API is incompatible with Mozilla
+
+        Reviewed by Chris.
+
+        * Plugins.subproj/npfunctions.h:
+        * Plugins.subproj/npruntime.h:
+
+=== Safari-412 ===
+
+=== Safari-411 ===
+
 2005-03-23  Richard Williamson   <rjw@apple.com>
 
 	Use Patti Yeh's hack to determine the appropriate rectangle
