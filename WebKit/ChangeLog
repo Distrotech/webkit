@@ -1,3 +1,9 @@
+2005-07-15  Adele Peterson  <adele@apple.com>
+
+        added missing line from last fix.
+
+        * WebView.subproj/WebTextView.m: (-[WebTextView clickedOnLink:atIndex:]):
+
 2005-07-14  Kevin Decker  <kdecker@apple.com>
 
         Merged fix for <rdar://problem/4122282> clicking a link in an PDF file opens the link with NSWorkspace without the usual security checks or WebView delegate control

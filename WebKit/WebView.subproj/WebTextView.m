@@ -345,6 +345,7 @@
         URL = [[self class] _URLForString:(NSString *)link];
     }
     if (URL != nil) {
+        WebFrame *frame = [[self _web_parentWebFrameView] webFrame];
         [frame _safeLoadURL:URL];
     }
 }
