@@ -1,3 +1,10 @@
+2005-07-14  Adele Peterson  <adele@apple.com>
+
+        Rolling out last fix since this was not picked up for Cambridge.
+
+        * khtml/xml/dom_docimpl.cpp:
+        (DocumentImpl::removeAllDisconnectedNodeEventListeners):
+
 === WebCore-415.12.1 ===
 
 2005-07-08  Adele Peterson  <adele@apple.com>
