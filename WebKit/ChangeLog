@@ -1,5 +1,42 @@
 2005-07-21  Adele Peterson  <adele@apple.com>
 
+        Merge from TOT to Safari-2-0-branch
+        <rdar://problem/4164147>
+	<rdar://problem/4164149>
+ 
+    2005-07-21  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Chris Blumenberg.
+
+        - fixed <rdar://problem/4132797> don't register thin PPC WebKit plug-ins
+        Merged fix for:
+        <rdar://problem/4127100> [WebKit] 8B1016: After installing Acrobat Reader, can no longer see pdf's in Safari
+
+        * Plugins.subproj/WebBasePluginPackage.h: Added isNativeLibraryData method.
+        * Plugins.subproj/WebBasePluginPackage.m: (-[WebBasePluginPackage isNativeLibraryData:]): Added isNativeLibraryData method.
+        * Plugins.subproj/WebNetscapePluginPackage.m: (-[WebNetscapePluginPackage initWithPath:]):
+          calls isNativeLibraryData to determine whether or not to register the plug-in.
+        * Plugins.subproj/WebPluginPackage.m: (-[WebPluginPackage initWithPath:]): ditto.
+        * WebCoreSupport.subproj/WebImageData.m: (-[WebImageData _checkSolidColor:]): added comment for #ifdef.
+
+    2005-07-20  Adele Peterson  <adele@apple.com>
+
+          Merged fix for:
+          <rdar://problem/4125127> [WebKit] horizontal rulers don't render on Safari on web.apple.com
+
+          * WebCoreSupport.subproj/WebImageData.m:
+          (-[WebImageData _checkSolidColor:]):
+
+    2005-07-20  Adele Peterson  <adele@apple.com>
+
+        Merged fix for :
+        <rdar://problem/4118278> mail divide by zero navigating messages
+  
+        * WebCoreSupport.subproj/WebTextRenderer.m:
+        (-[WebTextRenderer _extendGlyphToWidthMapToInclude:font:]):
+
+2005-07-21  Adele Peterson  <adele@apple.com>
+
        Merge from TOT to Safari-2-0-branch to build with gcc 4.0 
        <rdar://problem/4164127>
 

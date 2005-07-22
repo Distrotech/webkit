@@ -734,9 +734,9 @@ NodeImpl *XMLElementImpl::cloneNode ( bool deep )
 
 NamedAttrMapImpl::NamedAttrMapImpl(ElementImpl *e)
     : element(e)
+    , attrs(0)
+    , len(0)
 {
-    attrs = 0;
-    len = 0;
 }
 
 NamedAttrMapImpl::~NamedAttrMapImpl()
@@ -886,7 +886,7 @@ void NamedAttrMapImpl::clearAttributes()
                 attrs[i]->_impl->m_element = 0;
             attrs[i]->deref();
         }
-        delete [] attrs;
+        main_thread_free(attrs);
         attrs = 0;
     }
     len = 0;
@@ -917,7 +917,7 @@ NamedAttrMapImpl& NamedAttrMapImpl::operator=(const NamedAttrMapImpl& other)
 
     clearAttributes();
     len = other.len;
-    attrs = new AttributeImpl* [len];
+    attrs = static_cast<AttributeImpl **>(main_thread_malloc(len * sizeof(AttributeImpl *)));
 
     // first initialize attrs vector, then call attributeChanged on it
     // this allows attributeChanged to use getAttribute
@@ -939,11 +939,11 @@ NamedAttrMapImpl& NamedAttrMapImpl::operator=(const NamedAttrMapImpl& other)
 void NamedAttrMapImpl::addAttribute(AttributeImpl *attr)
 {
     // Add the attribute to the list
-    AttributeImpl **newAttrs = new AttributeImpl* [len+1];
+    AttributeImpl **newAttrs = static_cast<AttributeImpl **>(main_thread_malloc((len + 1) * sizeof(AttributeImpl *)));
     if (attrs) {
       for (uint i = 0; i < len; i++)
         newAttrs[i] = attrs[i];
-      delete [] attrs;
+      main_thread_free(attrs);
     }
     attrs = newAttrs;
     attrs[len++] = attr;
@@ -978,19 +978,19 @@ void NamedAttrMapImpl::removeAttribute(NodeImpl::Id id)
     if (attrs[index]->_impl)
         attrs[index]->_impl->m_element = 0;
     if (len == 1) {
-        delete [] attrs;
+        main_thread_free(attrs);
         attrs = 0;
         len = 0;
     }
     else {
-        AttributeImpl **newAttrs = new AttributeImpl* [len-1];
+        AttributeImpl **newAttrs = static_cast<AttributeImpl **>(main_thread_malloc((len - 1) * sizeof(AttributeImpl *)));
         uint i;
         for (i = 0; i < uint(index); i++)
             newAttrs[i] = attrs[i];
         len--;
         for (; i < len; i++)
             newAttrs[i] = attrs[i+1];
-        delete [] attrs;
+        main_thread_free(attrs);
         attrs = newAttrs;
     }
 
