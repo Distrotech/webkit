@@ -346,9 +346,13 @@ Value EventConstructor::getValueProperty(ExecState *, int token) const
   return Number(token);
 }
 
-Value KJS::getEventConstructor(ExecState *exec)
+namespace KJS {
+
+Value getEventConstructor(ExecState *exec)
 {
   return cacheGlobalObject<EventConstructor>(exec, "[[event.constructor]]");
+}
+
 }
 
 // -------------------------------------------------------------------------
@@ -564,7 +568,7 @@ Value EventExceptionConstructor::getValueProperty(ExecState *, int token) const
   return Number(token);
 }
 
-Value KJS::getEventExceptionConstructor(ExecState *exec)
+Value getEventExceptionConstructor(ExecState *exec)
 {
   return cacheGlobalObject<EventExceptionConstructor>(exec, "[[eventException.constructor]]");
 }
@@ -907,7 +911,7 @@ Value MutationEventConstructor::getValueProperty(ExecState *, int token) const
   return Number(token);
 }
 
-Value KJS::getMutationEventConstructor(ExecState *exec)
+Value getMutationEventConstructor(ExecState *exec)
 {
   return cacheGlobalObject<MutationEventConstructor>(exec, "[[mutationEvent.constructor]]");
 }
@@ -1251,4 +1255,3 @@ Value ClipboardProtoFunc::tryCall(ExecState *exec, Object &thisObj, const List &
     }
     return Undefined();
 }
-

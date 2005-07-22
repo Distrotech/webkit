@@ -1,3 +1,57 @@
+2005-07-21  Adele Peterson  <adele@apple.com>
+
+       Merge from TOT to Safari-2-0-branch to build with gcc 4.0 
+       <rdar://problem/4164127>
+
+    2005-05-16  Darin Adler  <darin@apple.com>
+
+        Reviewed by Adele.
+
+        - fixed issues preventing us from compiling with newer versions of gcc 4.0
+
+        * kjs/ustring.cpp:
+        (KJS::operator==): Remove redundant and illegal KJS:: prefix on this function's definition.
+        (KJS::operator<): Ditto.
+        (KJS::compare): Ditto.
+
+    2005-05-04  Darin Adler  <darin@apple.com>
+
+        Reviewed by Dave Hyatt.
+
+        - another gcc-4.0-related fix
+
+        * bindings/runtime_root.h: Take off extra namespace prefixes that apparently cause problems
+        compiling with gcc 4.0, although I have not observed the problems.
+
+    2005-04-28  Darin Adler  <darin@apple.com>
+
+        Reviewed by Dave Harrison.
+
+        - fixed problems preventing us from compiling with gcc 4.0
+
+        * JavaScriptCore.pbproj/project.pbxproj: Removed -Wmissing-prototypes from
+        WARNING_CPLUSPLUSFLAGS since it's now a C-only warning.
+
+        * bindings/jni/jni_jsobject.cpp:
+        (JSObject::getSlot): Changed some %d to %ld where the parameters where long ints.
+        (JSObject::setSlot): Ditto.
+        * bindings/jni/jni_utility.cpp:
+        (KJS::Bindings::getJavaVM): Ditto.
+        (KJS::Bindings::getJNIEnv): Ditto.
+        * bindings/objc/objc_utility.mm: Fixed include of <JavascriptCore/internal.h> that needed the
+        letter "S" capitalized.
+        * kjs/bool_object.cpp: (BooleanProtoFuncImp::call): Rearranged how this function returns to
+        avoid incorrect gcc 4.0 warning.
+        * kjs/collector.cpp: (KJS::Collector::markStackObjectsConservatively): Changed code to check
+        the alignment of the passed-in pointers to only require pointer-level alignment, not 8-byte alignment.
+        Prevents a crash on garbage collect when compiled with gcc 4.0.
+        * kjs/nodes.cpp:
+        (WhileNode::execute): Added a redundant return after an infinite loop to work around incorrect gcc 4.0 warning.
+        (ForNode::execute): Ditto.
+        (SwitchNode::execute):Rearranged how this function returns to avoid incorrect gcc 4.0 warning.
+        (LabelNode::execute): Ditto.
+        * kjs/string_object.cpp: (replace): Ditto.
+
 === JavaScriptCore-412.5 ===
 
 2005-07-12  Adele Peterson  <adele@apple.com>

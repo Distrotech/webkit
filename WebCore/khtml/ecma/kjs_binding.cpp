@@ -33,7 +33,7 @@
 
 using DOM::DOMString;
 
-using namespace KJS;
+namespace KJS {
 
 /* TODO:
  * The catch all (...) clauses below shouldn't be necessary.
@@ -382,7 +382,7 @@ QString Identifier::qstring() const
   return QString((QChar*) data(), size());
 }
 
-DOM::Node KJS::toNode(const Value& val)
+DOM::Node toNode(const Value& val)
 {
   Object obj = Object::dynamicCast(val);
   if (obj.isNull() || !obj.inherits(&DOMNode::info))
@@ -392,7 +392,7 @@ DOM::Node KJS::toNode(const Value& val)
   return dobj->toNode();
 }
 
-Value KJS::getStringOrNull(DOMString s)
+Value getStringOrNull(DOMString s)
 {
   if (s.isNull())
     return Null();
@@ -400,7 +400,7 @@ Value KJS::getStringOrNull(DOMString s)
     return String(s);
 }
 
-QVariant KJS::ValueToVariant(ExecState* exec, const Value &val) {
+QVariant ValueToVariant(ExecState* exec, const Value &val) {
   QVariant res;
   switch (val.type()) {
   case BooleanType:
@@ -417,4 +417,6 @@ QVariant KJS::ValueToVariant(ExecState* exec, const Value &val) {
     break;
   }
   return res;
+}
+
 }
