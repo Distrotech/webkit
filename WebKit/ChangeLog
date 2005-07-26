@@ -2,6 +2,18 @@
 
         Merged fix from TOT to Safari-2-0-branch
 
+    2005-05-26  David Harrison  <harrison@apple.com>
+
+        <rdar://problem/4120518> Mail: control-T in an empty message crashes mail
+
+        * WebCoreSupport.subproj/WebBridge.m:
+        (-[WebBridge issueTransposeCommand]):
+        New, to support transpose in JS.
+
+2005-07-26  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
     2005-05-10  John Sullivan  <sullivan@apple.com>
 
         Reviewed by Chris.
