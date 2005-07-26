@@ -44,6 +44,7 @@
 using DOM::CharacterDataImpl;
 using DOM::NodeImpl;
 using DOM::offsetInCharacters;
+using DOM::UsingComposedCharacters;
 using DOM::Position;
 using DOM::Range;
 using DOM::RangeImpl;
@@ -197,7 +198,7 @@ VisiblePosition VisiblePosition::previous() const
 
 Position VisiblePosition::previousVisiblePosition(const Position &pos)
 {
-    if (pos.isNull() || atStart(pos))
+    if (pos.isNull() || pos.atStart())
         return Position();
 
     Position test = deepEquivalent(pos);
@@ -211,8 +212,8 @@ Position VisiblePosition::previousVisiblePosition(const Position &pos)
     // that is not a candidate.  That is wrong!  However, our clients seem to
     // like it.  Gotta lose those clients! (initDownstream and initUpstream)
     Position current = test;
-    while (!atStart(current)) {
-        current = previousPosition(current);
+    while (!current.atStart()) {
+        current = current.previous(UsingComposedCharacters);
         if (isCandidate(current) && (acceptAnyVisiblePosition || (downstreamTest != current.downstream(StayInBlock)))) {
             return current;
         }
@@ -223,7 +224,7 @@ Position VisiblePosition::previousVisiblePosition(const Position &pos)
 
 Position VisiblePosition::nextVisiblePosition(const Position &pos)
 {
-    if (pos.isNull() || atEnd(pos))
+    if (pos.isNull() || pos.atEnd())
         return Position();
 
     Position test = deepEquivalent(pos);
@@ -231,70 +232,14 @@ Position VisiblePosition::nextVisiblePosition(const Position &pos)
 
     Position current = test;
     Position downstreamTest = test.downstream(StayInBlock);
-    while (!atEnd(current)) {
-        current = nextPosition(current);
+    while (!current.atEnd()) {
+        current = current.next(UsingComposedCharacters);
         if (isCandidate(current) && (acceptAnyVisiblePosition || (downstreamTest != current.downstream(StayInBlock)))) {
             return current;
         }
     }
     
     return Position();
-}
-
-Position VisiblePosition::previousPosition(const Position &pos)
-{
-    if (pos.isNull())
-        return pos;
-    
-    Position result;
-
-    if (pos.offset() <= 0) {
-        NodeImpl *prevNode = pos.node()->traversePreviousNode();
-        if (prevNode)
-            result = Position(prevNode, prevNode->maxOffset());
-    }
-    else {
-        NodeImpl *node = pos.node();
-        result = Position(node, node->previousOffset(pos.offset()));
-    }
-    
-    return result;
-}
-
-Position VisiblePosition::nextPosition(const Position &pos)
-{
-    if (pos.isNull())
-        return pos;
-    
-    Position result;
-
-    if (pos.offset() >= pos.node()->maxOffset()) {
-        NodeImpl *nextNode = pos.node()->traverseNextNode();
-        if (nextNode)
-            result = Position(nextNode, 0);
-    }
-    else {
-        NodeImpl *node = pos.node();
-        result = Position(node, node->nextOffset(pos.offset()));
-    }
-    
-    return result;
-}
-
-bool VisiblePosition::atStart(const Position &pos)
-{
-    if (pos.isNull())
-        return true;
-
-    return pos.offset() <= 0 && pos.node()->previousLeafNode() == 0;
-}
-
-bool VisiblePosition::atEnd(const Position &pos)
-{
-    if (pos.isNull())
-        return true;
-
-    return pos.offset() >= pos.node()->maxOffset() && pos.node()->nextLeafNode() == 0;
 }
 
 bool VisiblePosition::isCandidate(const Position &pos)
@@ -381,14 +326,14 @@ Position VisiblePosition::downstreamDeepEquivalent() const
 {
     Position pos = m_deepPosition;
     
-    if (pos.isNull() || atEnd(pos))
+    if (pos.isNull() || pos.atEnd())
         return pos;
 
     Position downstreamTest = pos.downstream(StayInBlock);
 
     Position current = pos;
-    while (!atEnd(current)) {
-        current = nextPosition(current);
+    while (!current.atEnd()) {
+        current = current.next(UsingComposedCharacters);
         if (isCandidate(current)) {
             if (downstreamTest != current.downstream(StayInBlock))
                 break;
