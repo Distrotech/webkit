@@ -1,3 +1,18 @@
+2005-07-27  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
+    2005-05-24  Richard Williamson   <rjw@apple.com>
+
+	Fixed <rdar://problem/4127061> <canvas> backing store should be zero filled
+
+	Use calloc instead of malloc to ensure zero filled backing store.
+
+        Reviewed by Darin.
+
+        * khtml/rendering/render_canvasimage.cpp:
+        (RenderCanvasImage::createDrawingContext):
+
 2005-07-26  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch.  Needed for other editing fixes on the branch.
