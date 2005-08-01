@@ -1,1 +1,1 @@
-#import <main_thread_malloc.h>
+#import "../../khtml/misc/main_thread_malloc.h"
