@@ -330,8 +330,8 @@ namespace KJS {
     { \
       if (ObjectImp::hasOwnProperty(exec, propertyName)) \
         return true; \
-      return ParentProto::self(exec)->hasOwnProperty(exec, propertyName); \
-    }
+      return ParentProto::self(exec).hasOwnProperty(exec, propertyName); \
+    } 
 
 #define IMPLEMENT_PROTOFUNC(ClassFunc) \
   namespace KJS { \

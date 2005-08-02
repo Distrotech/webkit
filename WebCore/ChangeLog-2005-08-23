@@ -1,5 +1,12 @@
 2005-08-02  Adele Peterson  <adele@apple.com>
 
+        small change to fix build bustage.
+
+        * khtml/ecma/kjs_binding.h: use '.' instead of '->'.  On the branch, 
+          self returns an Object instead of an ObjectImp *
+
+2005-08-02  Adele Peterson  <adele@apple.com>
+
         Merged fix from TOT to Safari-2-0-branch
 
     2005-07-25  Vicki Murley  <vicki@apple.com>
