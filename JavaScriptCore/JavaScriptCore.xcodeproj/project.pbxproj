@@ -118,7 +118,7 @@
 		9374D3A9038D9D74008635CE /* scope_chain.h in Headers */ = {isa = PBXBuildFile; fileRef = 9374D3A7038D9D74008635CE /* scope_chain.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		9374D3AA038D9D74008635CE /* scope_chain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9374D3A8038D9D74008635CE /* scope_chain.cpp */; };
 		937F4F25048E5B9900CA2AC4 /* internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 937F4F24048E5B9900CA2AC4 /* internal.h */; };
-		938772E6038BFE19008635CE /* array_instance.h in Headers */ = {isa = PBXBuildFile; fileRef = 938772E5038BFE19008635CE /* array_instance.h */; };
+		938772E6038BFE19008635CE /* array_instance.h in Headers */ = {isa = PBXBuildFile; fileRef = 938772E5038BFE19008635CE /* array_instance.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		F50888B7030BB74C012A967E /* simple_number.h in Headers */ = {isa = PBXBuildFile; fileRef = F50888B6030BB74C012A967E /* simple_number.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		F5341392030CEEB1018BE7F3 /* reference.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5341390030CEEB1018BE7F3 /* reference.cpp */; settings = {ATTRIBUTES = (Private, ); }; };
 		F5341393030CEEB1018BE7F3 /* reference.h in Headers */ = {isa = PBXBuildFile; fileRef = F5341391030CEEB1018BE7F3 /* reference.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -138,7 +138,7 @@
 		F692A8920255597D01FF60F7 /* date_object.h in Headers */ = {isa = PBXBuildFile; fileRef = F692A8560255597D01FF60F7 /* date_object.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		F692A8930255597D01FF60F7 /* date_object.lut.h in Headers */ = {isa = PBXBuildFile; fileRef = F692A8570255597D01FF60F7 /* date_object.lut.h */; };
 		F692A8940255597D01FF60F7 /* debugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F692A8580255597D01FF60F7 /* debugger.cpp */; };
-		F692A8950255597D01FF60F7 /* debugger.h in Headers */ = {isa = PBXBuildFile; fileRef = F692A8590255597D01FF60F7 /* debugger.h */; };
+		F692A8950255597D01FF60F7 /* debugger.h in Headers */ = {isa = PBXBuildFile; fileRef = F692A8590255597D01FF60F7 /* debugger.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		F692A8960255597D01FF60F7 /* error_object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F692A85A0255597D01FF60F7 /* error_object.cpp */; };
 		F692A8970255597D01FF60F7 /* error_object.h in Headers */ = {isa = PBXBuildFile; fileRef = F692A85B0255597D01FF60F7 /* error_object.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		F692A8980255597D01FF60F7 /* function_object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F692A85C0255597D01FF60F7 /* function_object.cpp */; };
