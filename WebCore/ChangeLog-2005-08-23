@@ -2,6 +2,39 @@
 
         Merged fix from TOT to Safari-2-0-branch
 
+    2005-06-29  Anders Carlsson  <andersca@mac.com>
+
+        Reviewed and landed by Darin Adler.
+
+        - Fix <http://bugzilla.opendarwin.org/show_bug.cgi?id=3274>
+        document() not supported
+
+        Test cases added:
+        * layout-tests/fast/xsl/document-function-expected.txt: Added.
+        * layout-tests/fast/xsl/document-function.xml: Added.
+        * layout-tests/fast/xsl/document-function.xsl: Added.
+        * layout-tests/fast/xsl/resources/document-function-source.xml: Added.
+        
+        * khtml/xsl/xslt_processorimpl.cpp:
+        (DOM::parseErrorFunc):
+        Stub to prevent errors from getting written to the console.
+        
+        (DOM::stylesheetLoadFunc):
+        Fetch and parse documents.
+        
+        (DOM::XSLTProcessorImpl::transformDocument):
+        Use the processor as the global variable instead of the 
+        style sheet.
+        
+        * khtml/xsl/xslt_processorimpl.h:
+        (DOM::XSLTProcessorImpl::stylesheet):
+        (DOM::XSLTProcessorImpl::sourceDocument):
+        Add accessors for source document and stylesheet.
+
+2005-08-02  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
     2005-07-03  Maciej Stachowiak  <mjs@apple.com>
 
 	Original patch from Mark Rowe <opendarwin.org@bdash.net.nz>, reviewed by me.
