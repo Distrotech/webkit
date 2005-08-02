@@ -41,6 +41,7 @@
 #import <Foundation/NSDictionary_NSURLExtras.h>
 #import <Foundation/NSString_NSURLExtras.h>
 #import <Foundation/NSURLRequestPrivate.h>
+#import <WebKit/WebScriptDebugDelegatePrivate.h>
 
 #import <objc/objc-runtime.h>
 
@@ -191,6 +192,8 @@ NSString *WebPageCacheDocumentViewKey = @"WebPageCacheDocumentViewKey";
     [currentItem release];
     [provisionalItem release];
     [previousItem release];
+    
+    [scriptDebugger release];
     
     ASSERT(listener == nil);
     ASSERT(policyRequest == nil);
@@ -2530,6 +2533,13 @@ static CFAbsoluteTime _timeOfLastCompletedLoad;
 - (NSArray *)_internalChildFrames
 {
     return _private->children;
+}
+
+- (void)_attachScriptDebugger
+{
+    if (!_private->scriptDebugger) {
+        _private->scriptDebugger = [[WebScriptDebugger alloc] initWithWebFrame:self];
+    }
 }
 
 @end
