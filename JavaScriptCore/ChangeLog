@@ -1,4 +1,9 @@
 2005-08-02  Geoffrey Garen  <ggaren@apple.com>
+        - minor tweak to last checkin
+        
+        * kjs/debugger.h: restored a comment I shouldn't have deleted
+
+2005-08-02  Geoffrey Garen  <ggaren@apple.com>
         Merged from TOT to Safari-2-0-branch.
 
         2005-07-27  Maciej Stachowiak  <mjs@apple.com>

@@ -102,6 +102,7 @@ namespace KJS {
      * @param sourceId The ID of the source code (corresponds to the
      * sourceId supplied in other functions such as @ref atStatement()
      * @param sourceURL Where the source code that was parsed came from 
+     * @param source The source code that was parsed
      * @param errorLine The line number at which parsing encountered an
      * error, or -1 if the source code was valid and parsed succesfully
      * @return true if execution should be continue, false if it should
