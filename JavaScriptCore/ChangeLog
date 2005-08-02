@@ -1,3 +1,18 @@
+2005-08-02  Adele Peterson  <adele@apple.com>
+
+        Merged from TOT to Safari-2-0-branch.
+
+    2005-06-30  Kevin Decker  <kdecker@apple.com>
+
+        Reviewed by rjw.
+
+	fixed: <rdar://problem/4166838> failed assertion in`Interpreter::lockCount() > 0
+
+	no layout test added; this is in the bindings code.
+
+        * bindings/objc/WebScriptObject.mm:
+        (+[WebScriptObject _convertValueToObjcValue:KJS::originExecutionContext:Bindings::executionContext:Bindings::]): make sure to lock and unlock the interpreter around allocations. 
+
 === JavaScriptCore-412.6 ===
 
 2005-07-21  Adele Peterson  <adele@apple.com>
