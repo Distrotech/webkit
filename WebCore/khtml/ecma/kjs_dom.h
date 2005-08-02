@@ -79,7 +79,7 @@ namespace KJS {
   public:
     DOMNodeList(ExecState *, const DOM::NodeList &l) : list(l) { }
     ~DOMNodeList();
-    virtual bool hasProperty(ExecState *exec, const Identifier &p) const;
+    virtual bool hasOwnProperty(ExecState *exec, const Identifier &p) const;
     virtual Value tryGet(ExecState *exec, const Identifier &propertyName) const;
     virtual Value call(ExecState *exec, Object &thisObj, const List&args);
     virtual Value tryCall(ExecState *exec, Object &thisObj, const List&args);
@@ -193,7 +193,7 @@ namespace KJS {
   public:
     DOMNamedNodeMap(ExecState *, const DOM::NamedNodeMap &m);
     ~DOMNamedNodeMap();
-    virtual bool hasProperty(ExecState *exec, const Identifier &p) const;
+    virtual bool hasOwnProperty(ExecState *exec, const Identifier &p) const;
     virtual Value tryGet(ExecState *exec, const Identifier &propertyName) const;
     // no put - all read-only
     virtual const ClassInfo* classInfo() const { return &info; }
