@@ -1,3 +1,11 @@
+2005-08-03  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+        <rdar://problem/4128727> many DOM classes not exported (can't add categories or do other things that require class name linking)
+
+        * WebCore-combined.exp:
+        * WebCore.exp:
+
 2005-08-02  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch
