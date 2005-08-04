@@ -2750,8 +2750,9 @@ bool DeleteSelectionCommand::handleSpecialCaseBRDelete()
     bool downstreamStartIsBR = m_downstreamStart.node()->id() == ID_BR;
     bool isBROnLineByItself = upstreamStartIsBR && downstreamStartIsBR && m_downstreamStart.node() == m_upstreamEnd.node();
     if (isBROnLineByItself) {
+        m_endingPosition = Position(m_downstreamStart.node()->parentNode(), m_downstreamStart.node()->nodeIndex());
         removeNode(m_downstreamStart.node());
-        m_endingPosition = m_upstreamStart;
+        m_endingPosition = m_endingPosition.equivalentDeepPosition();
         m_mergeBlocksAfterDelete = false;
         return true;
     }
@@ -3194,10 +3195,20 @@ void DeleteSelectionCommand::doApply()
     deleteInsignificantTextDownstream(m_trailingWhitespace);    
 
     saveTypingStyleState();
-    insertPlaceholderForAncestorBlockContent();
     
-    if (!handleSpecialCaseBRDelete())
-        handleGeneralDelete();
+    // deleting just a BR is handled specially, at least because we do not
+    // want to replace it with a placeholder BR!
+    if (handleSpecialCaseBRDelete()) {
+        calculateTypingStyleAfterDelete(false);
+        debugPosition("endingPosition   ", m_endingPosition);
+        setEndingSelection(Selection(m_endingPosition, affinity));
+        clearTransientState();
+        rebalanceWhitespace();
+        return;
+    }
+
+    insertPlaceholderForAncestorBlockContent();
+    handleGeneralDelete();
     
     // Do block merge if start and end of selection are in different blocks.
     moveNodesAfterNode();
@@ -3217,6 +3228,7 @@ void DeleteSelectionCommand::doApply()
         addBlockPlaceholderIfNeeded(m_endingPosition.node());
 
     calculateTypingStyleAfterDelete(addedPlaceholder);
+    
     debugPosition("endingPosition   ", m_endingPosition);
     setEndingSelection(Selection(m_endingPosition, affinity));
     clearTransientState();
