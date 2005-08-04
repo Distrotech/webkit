@@ -32,6 +32,7 @@
 #include "xml/dom_elementimpl.h"
 
 #include "khtml_part.h"
+#include "khtmlview.h"
 
 #include "html/dtd.h"
 #include "html/htmlparser.h"
@@ -256,6 +257,22 @@ const AtomicString& ElementImpl::getAttribute(NodeImpl::Id id) const
         if (a) return a->value();
     }
     return nullAtom;
+}
+
+void ElementImpl::scrollIntoView(bool alignToTop) 
+{
+    KHTMLView *v = getDocument()->view();
+    QRect bounds = this->getRect();
+    int x, y, xe, ye;
+    x = bounds.left();
+    y = bounds.top();
+    xe = bounds.right();
+    ye = bounds.bottom();
+    
+    if (alignToTop) 
+        v->setContentsPos(x, y);
+    else
+        v->ensureVisible(x, y, xe-x, ye-y);
 }
 
 const AtomicString& ElementImpl::getAttributeNS(const DOMString &namespaceURI,

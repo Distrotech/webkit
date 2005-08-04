@@ -69,7 +69,7 @@ namespace KJS {
            OnMouseMove, OnMouseOut, OnMouseOver, OnMouseUp, OnMouseWheel, OnMove, OnReset,
            OnResize, OnScroll, OnSearch, OnSelect, OnSubmit, OnUnload,
            OffsetLeft, OffsetTop, OffsetWidth, OffsetHeight, OffsetParent,
-           ClientWidth, ClientHeight, ScrollLeft, ScrollTop, ScrollWidth, ScrollHeight };
+           ClientWidth, ClientHeight, ScrollLeft, ScrollTop, ScrollWidth, ScrollHeight, ScrollIntoView };
 
   protected:
     DOM::Node node;
@@ -159,7 +159,7 @@ namespace KJS {
            SetAttributeNode, RemoveAttributeNode, GetElementsByTagName,
            GetAttributeNS, SetAttributeNS, RemoveAttributeNS, GetAttributeNodeNS,
            SetAttributeNodeNS, GetElementsByTagNameNS, HasAttribute, HasAttributeNS,
-           ScrollByLines, ScrollByPages};
+           ScrollByLines, ScrollByPages, ScrollIntoView};
   };
 
   class DOMDOMImplementation : public DOMObject {

@@ -170,6 +170,8 @@ public:
     void removeAttribute( NodeImpl::Id id, int &exceptioncode );
     bool hasAttributes() const;
     
+    void scrollIntoView (bool alignToTop);
+    
     DOMString prefix() const { return m_prefix; }
     void setPrefix(const DOMString &_prefix, int &exceptioncode );
 
