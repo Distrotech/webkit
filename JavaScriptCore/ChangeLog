@@ -1,3 +1,15 @@
+2005-08-04  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
+        Submitted by: rjw@apple.com
+        Reviewed by: cblu@apple.com
+        Fixed hard capacity limit on the method and field cache use for the ObjC bindings.
+
+        <rdar://problem/4204416> Dashboard client crashes when too many ObjC methods are called
+
+        * bindings/objc/objc_class.mm: (ObjcClass::_commonInit):
+
 2005-08-02  Geoffrey Garen  <ggaren@apple.com>
         - minor tweak to last checkin
         
