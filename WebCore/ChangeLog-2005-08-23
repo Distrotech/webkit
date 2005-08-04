@@ -1,3 +1,17 @@
+2005-08-04  Adele Peterson  <adele@apple.com>
+
+       Merged fix from TOT to Safari-OC-branch
+
+    2005-08-04  Geoffrey Garen  <ggaren@apple.com>
+
+        - fixed <rdar://problem/4199495> REGRESSION: Safari Crashes on Window Closing Event
+
+        Reviewed by darin.
+
+        * khtml/ecma/kjs_binding.cpp:
+        (KJS::ScriptInterpreter::updateDOMNodeDocument): inserting a node into a new
+        document now removes the node from its old document.
+
 === WebCore-415.13 ===
 
 2005-07-15  Adele Peterson  <adele@apple.com>
