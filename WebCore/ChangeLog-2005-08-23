@@ -1,5 +1,18 @@
 2005-08-04  Adele Peterson  <adele@apple.com>
 
+        Merged fix from TOT to Safari-2-0-branch
+
+    2005-08-04  Adele Peterson  <adele@apple.com>
+
+        Reviewed by John.
+
+        - fixed <rdar://problem/4204496> REGRESSION(denver): repro crash in KHTMLParser::finished() downloading attachment at webmail.mac.com
+        This regression was introduced by the fix for <rdar://problem/4084029>.  It was just missing a nil check.
+
+        * khtml/html/htmlparser.cpp: (KHTMLParser::finished): added nil check for current.
+
+2005-08-04  Adele Peterson  <adele@apple.com>
+
        Merged fix from TOT to Safari-2-0-branch
 
     2005-08-04  Geoffrey Garen  <ggaren@apple.com>

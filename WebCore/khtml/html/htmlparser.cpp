@@ -1519,7 +1519,7 @@ void KHTMLParser::startBody()
 void KHTMLParser::finished()
 {
     // In the case of a completely empty document, here's the place to create the HTML element.
-    if (current->isDocumentNode() && current->firstChild() == 0) {
+    if (current && current->isDocumentNode() && current->firstChild() == 0) {
         insertNode(new HTMLHtmlElementImpl(document));
     }
 
