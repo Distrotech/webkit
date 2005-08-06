@@ -41,11 +41,11 @@ const struct HashEntry DOMNodeTableEntries[] = {
    { 0, 0, 0, 0, 0 },
    { "onsubmit", DOMNode::OnSubmit, DontDelete, 0, 0 },
    { 0, 0, 0, 0, 0 },
-   { "onmouseover", DOMNode::OnMouseOver, DontDelete, 0, &DOMNodeTableEntries[81] },
+   { "onmouseover", DOMNode::OnMouseOver, DontDelete, 0, &DOMNodeTableEntries[82] },
    { 0, 0, 0, 0, 0 },
    { 0, 0, 0, 0, 0 },
    { 0, 0, 0, 0, 0 },
-   { "childNodes", DOMNode::ChildNodes, DontDelete|ReadOnly, 0, &DOMNodeTableEntries[84] },
+   { "childNodes", DOMNode::ChildNodes, DontDelete|ReadOnly, 0, &DOMNodeTableEntries[85] },
    { "oncut", DOMNode::OnCut, DontDelete, 0, 0 },
    { "onbeforecopy", DOMNode::OnBeforeCopy, DontDelete, 0, 0 },
    { 0, 0, 0, 0, 0 },
@@ -57,16 +57,16 @@ const struct HashEntry DOMNodeTableEntries[] = {
    { "onpaste", DOMNode::OnPaste, DontDelete, 0, 0 },
    { 0, 0, 0, 0, 0 },
    { 0, 0, 0, 0, 0 },
-   { "onfocus", DOMNode::OnFocus, DontDelete, 0, &DOMNodeTableEntries[90] },
+   { "onfocus", DOMNode::OnFocus, DontDelete, 0, &DOMNodeTableEntries[91] },
    { 0, 0, 0, 0, 0 },
    { 0, 0, 0, 0, 0 },
    { "firstChild", DOMNode::FirstChild, DontDelete|ReadOnly, 0, &DOMNodeTableEntries[68] },
    { "ondrag", DOMNode::OnDrag, DontDelete, 0, 0 },
    { 0, 0, 0, 0, 0 },
-   { "onload", DOMNode::OnLoad, DontDelete, 0, &DOMNodeTableEntries[88] },
+   { "onload", DOMNode::OnLoad, DontDelete, 0, &DOMNodeTableEntries[78] },
    { "parentNode", DOMNode::ParentNode, DontDelete|ReadOnly, 0, &DOMNodeTableEntries[73] },
    { "nodeType", DOMNode::NodeType, DontDelete|ReadOnly, 0, 0 },
-   { "localName", DOMNode::LocalName, DontDelete|ReadOnly, 0, &DOMNodeTableEntries[83] },
+   { "localName", DOMNode::LocalName, DontDelete|ReadOnly, 0, &DOMNodeTableEntries[84] },
    { "ondragenter", DOMNode::OnDragEnter, DontDelete, 0, &DOMNodeTableEntries[72] },
    { 0, 0, 0, 0, 0 },
    { "ondblclick", DOMNode::OnDblClick, DontDelete, 0, 0 },
@@ -86,31 +86,32 @@ const struct HashEntry DOMNodeTableEntries[] = {
    { "ondragstart", DOMNode::OnDragStart, DontDelete, 0, 0 },
    { "onblur", DOMNode::OnBlur, DontDelete, 0, &DOMNodeTableEntries[71] },
    { 0, 0, 0, 0, 0 },
-   { "onmove", DOMNode::OnMove, DontDelete, 0, &DOMNodeTableEntries[80] },
+   { "onmove", DOMNode::OnMove, DontDelete, 0, &DOMNodeTableEntries[81] },
    { 0, 0, 0, 0, 0 },
    { "offsetParent", DOMNode::OffsetParent, DontDelete|ReadOnly, 0, 0 },
-   { "nodeValue", DOMNode::NodeValue, DontDelete, 0, &DOMNodeTableEntries[82] },
+   { "nodeValue", DOMNode::NodeValue, DontDelete, 0, &DOMNodeTableEntries[83] },
    { "oncopy", DOMNode::OnCopy, DontDelete, 0, 0 },
    { 0, 0, 0, 0, 0 },
    { 0, 0, 0, 0, 0 },
    { "previousSibling", DOMNode::PreviousSibling, DontDelete|ReadOnly, 0, 0 },
    { "onmouseup", DOMNode::OnMouseUp, DontDelete, 0, 0 },
    { 0, 0, 0, 0, 0 },
-   { "onabort", DOMNode::OnAbort, DontDelete, 0, &DOMNodeTableEntries[85] },
-   { "onchange", DOMNode::OnChange, DontDelete, 0, &DOMNodeTableEntries[78] },
-   { "oncontextmenu", DOMNode::OnContextMenu, DontDelete, 0, &DOMNodeTableEntries[89] },
+   { "onabort", DOMNode::OnAbort, DontDelete, 0, &DOMNodeTableEntries[86] },
+   { "onchange", DOMNode::OnChange, DontDelete, 0, &DOMNodeTableEntries[79] },
+   { "oncontextmenu", DOMNode::OnContextMenu, DontDelete, 0, &DOMNodeTableEntries[90] },
    { "onbeforepaste", DOMNode::OnBeforePaste, DontDelete, 0, 0 },
    { "ondrop", DOMNode::OnDrop, DontDelete, 0, 0 },
    { "onerror", DOMNode::OnError, DontDelete, 0, 0 },
    { "onkeypress", DOMNode::OnKeyPress, DontDelete, 0, 0 },
-   { "onkeyup", DOMNode::OnKeyUp, DontDelete, 0, &DOMNodeTableEntries[86] },
-   { "onmousedown", DOMNode::OnMouseDown, DontDelete, 0, &DOMNodeTableEntries[79] },
+   { "onkeyup", DOMNode::OnKeyUp, DontDelete, 0, &DOMNodeTableEntries[87] },
+   { "onmousedown", DOMNode::OnMouseDown, DontDelete, 0, &DOMNodeTableEntries[80] },
    { "onmousemove", DOMNode::OnMouseMove, DontDelete, 0, 0 },
    { "onmouseout", DOMNode::OnMouseOut, DontDelete, 0, 0 },
+   { "onmousewheel", DOMNode::OnMouseWheel, DontDelete, 0, &DOMNodeTableEntries[89] },
    { "onreset", DOMNode::OnReset, DontDelete, 0, 0 },
    { "onresize", DOMNode::OnResize, DontDelete, 0, 0 },
    { "onselect", DOMNode::OnSelect, DontDelete, 0, 0 },
-   { "onselectstart", DOMNode::OnSelectStart, DontDelete, 0, &DOMNodeTableEntries[87] },
+   { "onselectstart", DOMNode::OnSelectStart, DontDelete, 0, &DOMNodeTableEntries[88] },
    { "onunload", DOMNode::OnUnload, DontDelete, 0, 0 },
    { "offsetLeft", DOMNode::OffsetLeft, DontDelete|ReadOnly, 0, 0 },
    { "offsetTop", DOMNode::OffsetTop, DontDelete|ReadOnly, 0, 0 },
@@ -122,7 +123,7 @@ const struct HashEntry DOMNodeTableEntries[] = {
    { "scrollWidth", DOMNode::ScrollWidth, DontDelete|ReadOnly, 0, 0 }
 };
 
-const struct HashTable DOMNodeTable = { 2, 91, DOMNodeTableEntries, 67 };
+const struct HashTable DOMNodeTable = { 2, 92, DOMNodeTableEntries, 67 };
 
 } // namespace
 
@@ -145,24 +146,24 @@ namespace KJS {
 const struct HashEntry DOMDocumentProtoTableEntries[] = {
    { 0, 0, 0, 0, 0 },
    { "createEntityReference", DOMDocument::CreateEntityReference, DontDelete|Function, 1, 0 },
-   { "getElementById", DOMDocument::GetElementById, DontDelete|Function, 1, &DOMDocumentProtoTableEntries[34] },
+   { "getElementById", DOMDocument::GetElementById, DontDelete|Function, 1, &DOMDocumentProtoTableEntries[35] },
    { 0, 0, 0, 0, 0 },
-   { "getElementsByTagName", DOMDocument::GetElementsByTagName, DontDelete|Function, 1, &DOMDocumentProtoTableEntries[31] },
+   { "getElementsByTagName", DOMDocument::GetElementsByTagName, DontDelete|Function, 1, &DOMDocumentProtoTableEntries[32] },
    { "queryCommandIndeterm", DOMDocument::QueryCommandIndeterm, DontDelete|Function, 1, 0 },
    { 0, 0, 0, 0, 0 },
    { 0, 0, 0, 0, 0 },
    { "createElement", DOMDocument::CreateElement, DontDelete|Function, 1, 0 },
-   { "queryCommandEnabled", DOMDocument::QueryCommandEnabled, DontDelete|Function, 1, &DOMDocumentProtoTableEntries[35] },
+   { "queryCommandEnabled", DOMDocument::QueryCommandEnabled, DontDelete|Function, 1, &DOMDocumentProtoTableEntries[36] },
    { "createAttribute", DOMDocument::CreateAttribute, DontDelete|Function, 1, 0 },
    { "createEvent", DOMDocument::CreateEvent, DontDelete|Function, 1, 0 },
    { 0, 0, 0, 0, 0 },
-   { "importNode", DOMDocument::ImportNode, DontDelete|Function, 2, &DOMDocumentProtoTableEntries[33] },
+   { "importNode", DOMDocument::ImportNode, DontDelete|Function, 2, &DOMDocumentProtoTableEntries[34] },
    { 0, 0, 0, 0, 0 },
    { 0, 0, 0, 0, 0 },
    { 0, 0, 0, 0, 0 },
    { "createDocumentFragment", DOMDocument::CreateDocumentFragment, DontDelete|Function, 1, &DOMDocumentProtoTableEntries[29] },
-   { "createTextNode", DOMDocument::CreateTextNode, DontDelete|Function, 1, &DOMDocumentProtoTableEntries[32] },
-   { "createRange", DOMDocument::CreateRange, DontDelete|Function, 0, 0 },
+   { "createTextNode", DOMDocument::CreateTextNode, DontDelete|Function, 1, &DOMDocumentProtoTableEntries[33] },
+   { "elementFromPoint", DOMDocument::ElementFromPoint, DontDelete|Function, 1, &DOMDocumentProtoTableEntries[31] },
    { "createCDATASection", DOMDocument::CreateCDATASection, DontDelete|Function, 1, &DOMDocumentProtoTableEntries[30] },
    { 0, 0, 0, 0, 0 },
    { "execCommand", DOMDocument::ExecCommand, DontDelete|Function, 3, 0 },
@@ -174,6 +175,7 @@ const struct HashEntry DOMDocumentProtoTableEntries[] = {
    { "getOverrideStyle", DOMDocument::GetOverrideStyle, DontDelete|Function, 2, 0 },
    { "createComment", DOMDocument::CreateComment, DontDelete|Function, 1, 0 },
    { "getElementsByTagNameNS", DOMDocument::GetElementsByTagNameNS, DontDelete|Function, 2, 0 },
+   { "createRange", DOMDocument::CreateRange, DontDelete|Function, 0, 0 },
    { "createNodeIterator", DOMDocument::CreateNodeIterator, DontDelete|Function, 3, 0 },
    { "createTreeWalker", DOMDocument::CreateTreeWalker, DontDelete|Function, 4, 0 },
    { "queryCommandState", DOMDocument::QueryCommandState, DontDelete|Function, 1, 0 },
@@ -181,7 +183,7 @@ const struct HashEntry DOMDocumentProtoTableEntries[] = {
    { "queryCommandValue", DOMDocument::QueryCommandValue, DontDelete|Function, 1, 0 }
 };
 
-const struct HashTable DOMDocumentProtoTable = { 2, 36, DOMDocumentProtoTableEntries, 29 };
+const struct HashTable DOMDocumentProtoTable = { 2, 37, DOMDocumentProtoTableEntries, 29 };
 
 } // namespace
 
@@ -211,7 +213,7 @@ const struct HashEntry DOMElementProtoTableEntries[] = {
    { "removeAttributeNode", DOMElement::RemoveAttributeNode, DontDelete|Function, 1, 0 },
    { "removeAttribute", DOMElement::RemoveAttribute, DontDelete|Function, 1, &DOMElementProtoTableEntries[17] },
    { "setAttribute", DOMElement::SetAttribute, DontDelete|Function, 2, 0 },
-   { "hasAttribute", DOMElement::HasAttribute, DontDelete|Function, 1, &DOMElementProtoTableEntries[19] },
+   { "hasAttribute", DOMElement::HasAttribute, DontDelete|Function, 1, &DOMElementProtoTableEntries[20] },
    { "getElementsByTagNameNS", DOMElement::GetElementsByTagNameNS, DontDelete|Function, 2, 0 },
    { 0, 0, 0, 0, 0 },
    { "getAttributeNode", DOMElement::GetAttributeNode, DontDelete|Function, 1, 0 },
@@ -219,16 +221,17 @@ const struct HashEntry DOMElementProtoTableEntries[] = {
    { 0, 0, 0, 0, 0 },
    { "removeAttributeNS", DOMElement::RemoveAttributeNS, DontDelete|Function, 2, &DOMElementProtoTableEntries[18] },
    { "setAttributeNS", DOMElement::SetAttributeNS, DontDelete|Function, 3, 0 },
-   { "hasAttributeNS", DOMElement::HasAttributeNS, DontDelete|Function, 2, 0 },
+   { "hasAttributeNS", DOMElement::HasAttributeNS, DontDelete|Function, 2, &DOMElementProtoTableEntries[19] },
    { 0, 0, 0, 0, 0 },
    { "getElementsByTagName", DOMElement::GetElementsByTagName, DontDelete|Function, 1, 0 },
    { "setAttributeNode", DOMElement::SetAttributeNode, DontDelete|Function, 2, 0 },
-   { "setAttributeNodeNS", DOMElement::SetAttributeNodeNS, DontDelete|Function, 1, &DOMElementProtoTableEntries[20] },
+   { "setAttributeNodeNS", DOMElement::SetAttributeNodeNS, DontDelete|Function, 1, &DOMElementProtoTableEntries[21] },
+   { "scrollIntoView", DOMElement::ScrollIntoView, DontDelete|Function, 1, 0 },
    { "scrollByLines", DOMElement::ScrollByLines, DontDelete|Function, 1, 0 },
    { "scrollByPages", DOMElement::ScrollByPages, DontDelete|Function, 1, 0 }
 };
 
-const struct HashTable DOMElementProtoTable = { 2, 21, DOMElementProtoTableEntries, 17 };
+const struct HashTable DOMElementProtoTable = { 2, 22, DOMElementProtoTableEntries, 17 };
 
 } // namespace
 

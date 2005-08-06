@@ -1050,7 +1050,7 @@ static WebHTMLView *lastHitView = nil;
 + (NSArray *)_selectionPasteboardTypes
 {
     // FIXME: We should put data for NSHTMLPboardType on the pasteboard but Microsoft Excel doesn't like our format of HTML (3640423).
-    return [NSArray arrayWithObjects:WebArchivePboardType, NSRTFPboardType, NSRTFDPboardType, NSStringPboardType, nil];
+    return [NSArray arrayWithObjects:WebArchivePboardType, NSRTFDPboardType, NSRTFPboardType, NSStringPboardType, nil];
 }
 
 - (WebArchive *)_selectedArchive
@@ -1198,7 +1198,7 @@ static WebHTMLView *lastHitView = nil;
     NSPoint mouseDraggedPoint = [self convertPoint:[mouseDraggedEvent locationInWindow] fromView:nil];
     _private->webCoreDragOp = op;     // will be DragNone if WebCore doesn't care
     NSImage *dragImage = nil;
-    NSPoint dragLoc;
+    NSPoint dragLoc = { 0, 0 }; // quiet gcc 4.0 warning
 
     // We allow WebCore to override the drag image, even if its a link, image or text we're dragging.
     // This is in the spirit of the IE API, which allows overriding of pasteboard data and DragOp.
@@ -3722,7 +3722,7 @@ static WebHTMLView *lastHitView = nil;
     }
 
     color = [dictionary objectForKey:NSForegroundColorAttributeName];
-    [style setColor:color ? [self _colorAsString:color] : @"black"];
+    [style setColor:color ? [self _colorAsString:color] : (NSString *)@"black"];
 
     NSShadow *shadow = [dictionary objectForKey:NSShadowAttributeName];
     [style setTextShadow:[self _shadowAsString:shadow]];
@@ -4536,11 +4536,11 @@ static DOMRange *unionDOMRanges(DOMRange *a, DOMRange *b)
     } else {
         DOMRange *selection = [self _selectedRange];
         DOMRange *r;
-        @try {
+        NS_DURING
             r = unionDOMRanges(mark, selection);
-        } @catch (NSException *exception) {
+        NS_HANDLER
             r = selection;
-        }
+        NS_ENDHANDLER
         [self _deleteRange:r killRing:YES prepend:YES smartDeleteOK:NO deletionAction:deleteSelectionAction];
     }
     [self setMark:sender];
@@ -4555,11 +4555,11 @@ static DOMRange *unionDOMRanges(DOMRange *a, DOMRange *b)
         return;
     }
     DOMRange *selection = [self _selectedRange];
-    @try {
+    NS_DURING
         [bridge setSelectedDOMRange:unionDOMRanges(mark, selection) affinity:NSSelectionAffinityDownstream closeTyping:YES];
-    } @catch (NSException *exception) {
+    NS_HANDLER
         NSBeep();
-    }
+    NS_ENDHANDLER
 }
 
 - (void)swapWithMark:(id)sender
@@ -4571,12 +4571,12 @@ static DOMRange *unionDOMRanges(DOMRange *a, DOMRange *b)
         return;
     }
     DOMRange *selection = [self _selectedRange];
-    @try {
+    NS_DURING
         [bridge setSelectedDOMRange:mark affinity:NSSelectionAffinityDownstream closeTyping:YES];
-    } @catch (NSException *exception) {
+    NS_HANDLER
         NSBeep();
         return;
-    }
+    NS_ENDHANDLER
     [bridge setMarkDOMRange:selection];
 }
 
@@ -4904,11 +4904,23 @@ static NSArray *validAttributes = nil;
 {
     WebBridge *bridge = [self _bridge];
     
-    DOMRange *range = [bridge convertToObjCDOMRange:theRange];
+    DOMRange *range;
     
-    NSRect resultRect = [self convertRect:[bridge firstRectForDOMRange:range] toView:nil];
-    resultRect.origin = [[self window] convertBaseToScreen:resultRect.origin];
+    if ([self hasMarkedText]) {
+        range = [bridge convertToObjCDOMRange:theRange];
+    }
+    else {
+        range = [self _selectedRange];
+    }
     
+    NSRect resultRect;
+    if ([range startContainer]) {
+        resultRect = [self convertRect:[bridge firstRectForDOMRange:range] toView:nil];
+        resultRect.origin = [[self window] convertBaseToScreen:resultRect.origin];
+    }
+    else {
+        resultRect = NSMakeRect(0,0,0,0);
+    }
     return resultRect;
 }
 

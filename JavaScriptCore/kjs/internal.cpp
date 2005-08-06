@@ -225,7 +225,7 @@ Object StringImp::toObject(ExecState *exec) const
 {
   List args;
   args.append(const_cast<StringImp*>(this));
-  return Object::dynamicCast(exec->lexicalInterpreter()->builtinString().construct(exec,args));
+  return Object(static_cast<ObjectImp *>(exec->lexicalInterpreter()->builtinString().construct(exec, args).imp()));
 }
 
 // ------------------------------ NumberImp ------------------------------------
@@ -460,7 +460,7 @@ ProgramNode *Parser::parse(const UString &sourceURL, int startingLineNumber,
   Lexer::curr()->doneParsing();
   ProgramNode *prog = progNode;
   progNode = 0;
-  sid = -1;
+//  sid = -1;
 
   if (parseError || lexError) {
     int eline = Lexer::curr()->lineNo();
@@ -753,6 +753,8 @@ void InterpreterImp::mark()
     UndefinedImp::staticUndefined->mark();
   if (NullImp::staticNull && !NullImp::staticNull->marked())
     NullImp::staticNull->mark();
+  if (NumberImp::staticNaN && !NumberImp::staticNaN->marked())
+    NumberImp::staticNaN->mark();
   if (BooleanImp::staticTrue && !BooleanImp::staticTrue->marked())
     BooleanImp::staticTrue->mark();
   if (BooleanImp::staticFalse && !BooleanImp::staticFalse->marked())
@@ -802,7 +804,7 @@ Completion InterpreterImp::evaluate(const UString &code, const Value &thisV, con
 
   // notify debugger that source has been parsed
   if (dbg) {
-    bool cont = dbg->sourceParsed(globExec,sid,code,errLine);
+    bool cont = dbg->sourceParsed(globExec,sid,sourceURL,code,errLine);
     if (!cont)
 #if APPLE_CHANGES
       {
@@ -863,13 +865,6 @@ Completion InterpreterImp::evaluate(const UString &code, const Value &thisV, con
   unlockInterpreter();
 #endif
   return res;
-}
-
-void InterpreterImp::setDebugger(Debugger *d)
-{
-  if (d)
-    d->detach(m_interpreter);
-  dbg = d;
 }
 
 void InterpreterImp::saveBuiltins (SavedBuiltins &builtins) const

@@ -29,6 +29,7 @@
 
 #include "khtmlview.h"
 #include "khtml_part.h"
+#include "kjs_proxy.h"
 
 #include "misc/htmlhashes.h"
 #include "misc/loader.h"
@@ -354,12 +355,78 @@ void HTMLMetaElementImpl::process()
 
 // -------------------------------------------------------------------------
 
-HTMLScriptElementImpl::HTMLScriptElementImpl(DocumentPtr *doc) : HTMLElementImpl(doc)
+HTMLScriptElementImpl::HTMLScriptElementImpl(DocumentPtr *doc)
+    : HTMLElementImpl(doc), m_cachedScript(0), m_createdByParser(false)
 {
 }
 
 HTMLScriptElementImpl::~HTMLScriptElementImpl()
 {
+    if (m_cachedScript)
+        m_cachedScript->deref(this);
+}
+
+void HTMLScriptElementImpl::insertedIntoDocument()
+{
+    HTMLElementImpl::insertedIntoDocument();
+
+    assert(!m_cachedScript);
+
+    if (m_createdByParser)
+        return;
+    
+    QString url = getAttribute(ATTR_SRC).string();
+    if (!url.isEmpty()) {
+        QString charset = getAttribute(ATTR_CHARSET).string();
+        m_cachedScript = getDocument()->docLoader()->requestScript(DOMString(url), charset);
+        m_cachedScript->ref(this);
+        return;
+    }
+
+    DOMString scriptString = "";
+    for (NodeImpl *n = firstChild(); n; n = n->nextSibling())
+        if (n->isTextNode()) 
+            scriptString += static_cast<TextImpl*>(n)->data();
+
+    DocumentImpl *doc = getDocument();
+    KHTMLPart *part = doc->part();
+    if (!part)
+        return;
+    KJSProxy *proxy = KJSProxy::proxy(part);
+    if (!proxy)
+        return;
+
+    proxy->evaluate(doc->URL(), 0, scriptString.string(), Node());
+    DocumentImpl::updateDocumentsRendering();
+}
+
+void HTMLScriptElementImpl::removedFromDocument()
+{
+    HTMLElementImpl::removedFromDocument();
+
+    if (m_cachedScript) {
+        m_cachedScript->deref(this);
+        m_cachedScript = 0;
+    }
+}
+
+void HTMLScriptElementImpl::notifyFinished(CachedObject* o)
+{
+    CachedScript *cs = static_cast<CachedScript *>(o);
+
+    assert(cs == m_cachedScript);
+
+    KHTMLPart *part = getDocument()->part();
+    if (part) {
+        KJSProxy *proxy = KJSProxy::proxy(part);
+        if (proxy) {
+            proxy->evaluate(cs->url().string(), 0, cs->script().string(), Node()); 
+            DocumentImpl::updateDocumentsRendering();
+        }
+    }
+
+    cs->deref(this);
+    m_cachedScript = 0;
 }
 
 NodeImpl::Id HTMLScriptElementImpl::id() const
@@ -471,7 +538,7 @@ void HTMLStyleElementImpl::sheetLoaded()
 // -------------------------------------------------------------------------
 
 HTMLTitleElementImpl::HTMLTitleElementImpl(DocumentPtr *doc)
-    : HTMLElementImpl(doc)
+    : HTMLElementImpl(doc), m_title("")
 {
 }
 
@@ -487,21 +554,13 @@ NodeImpl::Id HTMLTitleElementImpl::id() const
 void HTMLTitleElementImpl::insertedIntoDocument()
 {
     HTMLElementImpl::insertedIntoDocument();
-#if APPLE_CHANGES
-    // Only allow title to be set by first <title> encountered.
-    if (getDocument()->title().isEmpty())
-        getDocument()->setTitle(m_title);
-#else
-        getDocument()->setTitle(m_title);
-#endif
+    getDocument()->setTitle(m_title, this);
 }
 
 void HTMLTitleElementImpl::removedFromDocument()
 {
     HTMLElementImpl::removedFromDocument();
-    // Title element removed, so we have no title... we ignore the case of multiple title elements, as it's invalid
-    // anyway (?)
-    getDocument()->setTitle(DOMString());
+    getDocument()->removeTitle(this);
 }
 
 void HTMLTitleElementImpl::childrenChanged()
@@ -512,11 +571,35 @@ void HTMLTitleElementImpl::childrenChanged()
 	if ((c->nodeType() == Node::TEXT_NODE) || (c->nodeType() == Node::CDATA_SECTION_NODE))
 	    m_title += c->nodeValue();
     }
-#if APPLE_CHANGES
-    // Only allow title to be set by first <title> encountered.
-    if (inDocument() && getDocument()->title().isEmpty())
-#else
-    if (inDocument()))
-#endif
-	getDocument()->setTitle(m_title);
+    if (inDocument())
+        getDocument()->setTitle(m_title, this);
 }
+
+DOMString HTMLTitleElementImpl::text() const
+{
+    DOMString val = "";
+
+    for (NodeImpl *n = firstChild(); n; n = n->nextSibling()) {
+        if (n->isTextNode())
+            val += static_cast<TextImpl *>(n)->data();
+    }
+
+    return val;
+}
+
+void HTMLTitleElementImpl::setText(const DOMString &value)
+{
+    int exceptioncode = 0;
+    int numChildren = childNodeCount();
+
+    if (numChildren == 1 && firstChild()->isTextNode()) {
+        static_cast<DOM::TextImpl *>(firstChild())->setData(value, exceptioncode);
+    } else {  
+        if (numChildren > 0) {
+            removeChildren();
+        }
+        
+        appendChild(getDocument()->createTextNode(value.implementation()), exceptioncode);
+    }
+}
+

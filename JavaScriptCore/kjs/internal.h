@@ -120,6 +120,7 @@ namespace KJS {
   inline String::String(StringImp *imp) : Value(imp) { }
 
   class NumberImp : public ValueImp {
+    friend class Value;
     friend class Number;
     friend class InterpreterImp;
   public:
@@ -273,7 +274,7 @@ namespace KJS {
     bool checkSyntax(const UString &code);
     Completion evaluate(const UString &code, const Value &thisV, const UString &sourceURL, int startingLineNumber);
     Debugger *debugger() const { return dbg; }
-    void setDebugger(Debugger *d);
+    void setDebugger(Debugger *d) { dbg = d; }
 
     Object builtinObject() const { return b_Object; }
     Object builtinFunction() const { return b_Function; }

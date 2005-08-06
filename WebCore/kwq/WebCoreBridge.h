@@ -203,6 +203,7 @@ typedef enum {
 - (void)setEncoding:(NSString *)encoding userChosen:(BOOL)userChosen;
 - (void)addData:(NSData *)data;
 - (void)closeURL;
+- (void)stopLoading;
 
 - (void)didNotOpenURL:(NSURL *)URL pageCache:(NSDictionary *)pageCache;
 
@@ -222,6 +223,7 @@ typedef enum {
 - (NSString *)referrer;
 - (NSString *)domain;
 - (WebCoreBridge *)opener;
+- (void)setOpener:(WebCoreBridge *)bridge;
 
 - (void)installInFrame:(NSView *)view;
 - (void)removeFromFrame;
@@ -460,6 +462,11 @@ typedef enum {
 - (WebCoreBridge *)createWindowWithURL:(NSURL *)URL frameName:(NSString *)name;
 - (void)showWindow;
 
+- (BOOL)canRunModal;
+- (BOOL)canRunModalNow;
+- (WebCoreBridge *)createModalDialogWithURL:(NSURL *)URL;
+- (void)runModal;
+
 - (NSString *)userAgentForURL:(NSURL *)URL;
 
 - (void)setTitle:(NSString *)title;
@@ -598,6 +605,7 @@ typedef enum {
 - (void)issueCopyCommand;
 - (void)issuePasteCommand;
 - (void)issuePasteAndMatchStyleCommand;
+- (void)issueTransposeCommand;
 - (void)respondToChangedSelection;
 - (void)respondToChangedContents;
 - (void)setIsSelected:(BOOL)isSelected forView:(NSView *)view;

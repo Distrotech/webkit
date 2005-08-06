@@ -156,6 +156,7 @@ Could be worth adding to the API.
 - (id)_policyDelegateForwarder;
 - (id)_UIDelegateForwarder;
 - (id)_editingDelegateForwarder;
+- (id)_scriptDebugDelegateForwarder;
 
 - (void)_closeWindow;
 

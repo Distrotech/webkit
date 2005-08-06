@@ -228,11 +228,10 @@ protected:
     void joinTextNodes(DOM::TextImpl *text1, DOM::TextImpl *text2);
     void rebalanceWhitespace();
     void removeCSSProperty(DOM::CSSStyleDeclarationImpl *, int property);
-    void removeFullySelectedNodePreservingPosition(DOM::NodeImpl *node, DOM::Position &pos);
+    void removeFullySelectedNode(DOM::NodeImpl *node);
     void removeNodeAttribute(DOM::ElementImpl *, int attribute);
-    void removeChildrenInRangePreservingPosition(DOM::NodeImpl *node, int from, int to, DOM::Position &pos);
+    void removeChildrenInRange(DOM::NodeImpl *node, int from, int to);
     void removeNode(DOM::NodeImpl *removeChild);
-    void removeNodePreservingPosition(DOM::NodeImpl *removeChild, DOM::Position &pos);
     void removeNodePreservingChildren(DOM::NodeImpl *node);
     void replaceTextInNode(DOM::TextImpl *node, long offset, long count, const DOM::DOMString &replacementText);
     void setNodeAttribute(DOM::ElementImpl *, int attribute, const DOM::DOMString &);
@@ -403,6 +402,7 @@ private:
     DOM::NodeImpl *m_endBlock;
     DOM::NodeImpl *m_startNode;
     DOM::CSSMutableStyleDeclarationImpl *m_typingStyle;
+    DOM::CSSMutableStyleDeclarationImpl *m_deleteIntoBlockquoteStyle;
 };
 
 //------------------------------------------------------------------------------------------
@@ -521,7 +521,8 @@ public:
 private:
     virtual bool isInsertTextCommand() const;
 
-    DOM::Position prepareForTextInsertion(bool adjustDownstream);
+    DOM::Position prepareForTextInsertion(const DOM::Position& pos);
+    DOM::Position insertTab(DOM::Position pos);
     void insertSpace(DOM::TextImpl *textNode, unsigned long offset);
 
     unsigned long m_charactersAdded;
@@ -958,12 +959,20 @@ private:
 
 //------------------------------------------------------------------------------------------
 
+bool isSpecialElement(const DOM::NodeImpl *n);
+
 DOM::ElementImpl *floatRefdElement(DOM::ElementImpl *element);
 DOM::ElementImpl *createDefaultParagraphElement(DOM::DocumentImpl *document);
 DOM::ElementImpl *createBlockPlaceholderElement(DOM::DocumentImpl *document);
 DOM::ElementImpl *createBreakElement(DOM::DocumentImpl *document);
 DOM::ElementImpl *createFontElement(DOM::DocumentImpl *document);
 DOM::ElementImpl *createStyleSpanElement(DOM::DocumentImpl *document);
+
+bool isTabSpanNode(const DOM::NodeImpl *node);
+bool isTabSpanTextNode(const DOM::NodeImpl *node);
+DOM::Position positionBeforeTabSpan(const DOM::Position& pos);
+DOM::ElementImpl *createTabSpanElement(DOM::DocumentImpl *document, DOM::NodeImpl *tabTextNode=0);
+DOM::ElementImpl *createTabSpanElement(DOM::DocumentImpl *document, QString *tabText);
 
 bool isNodeRendered(const DOM::NodeImpl *);
 bool isProbablyBlock(const DOM::NodeImpl *);

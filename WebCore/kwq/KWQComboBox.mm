@@ -339,7 +339,7 @@ void QComboBox::setWritingDirection(QPainter::TextDirection direction)
 {
     KWQ_BLOCK_EXCEPTIONS;
 
-    KWQPopUpButton *button = getView();
+    KWQPopUpButton *button = static_cast<KWQPopUpButton *>(getView());
     KWQPopUpButtonCell *cell = [button cell];
     NSWritingDirection d = direction == QPainter::RTL ? NSWritingDirectionRightToLeft : NSWritingDirectionLeftToRight;
     if ([cell baseWritingDirection] != d) {
@@ -355,7 +355,7 @@ void QComboBox::populateMenu()
     if (!_menuPopulated) {
         KWQ_BLOCK_EXCEPTIONS;
 
-        KWQPopUpButton *button = getView();
+        KWQPopUpButton *button = static_cast<KWQPopUpButton *>(getView());
 	[button setPopulatingMenu:YES];
         [button removeAllItems];
         QValueListConstIterator<KWQListBoxItem> i = const_cast<const QValueList<KWQListBoxItem> &>(_items).begin();
@@ -496,6 +496,12 @@ void QComboBox::populate()
         }
     }
     return resign;
+}
+
+- (BOOL)needsPanelToBecomeKey
+{
+    // override this NSView method so that <select> elements gain focus when clicked - 4011544
+    return YES;
 }
 
 - (BOOL)canBecomeKeyView

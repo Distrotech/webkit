@@ -24,6 +24,7 @@
     WebDataSource *dataSource;
     NSURLConnection *connection;
     NSURLRequest *request;
+    BOOL reachedTerminalState;
 @private
     WebView *webView;
     NSURLResponse *response;
@@ -33,7 +34,6 @@
     NSURLAuthenticationChallenge *currentConnectionChallenge;
     NSURLAuthenticationChallenge *currentWebChallenge;
     BOOL cancelledFlag;
-    BOOL reachedTerminalState;
     BOOL defersCallbacks;
     BOOL waitingToDeliverResource;
     BOOL deliveredResource;
@@ -77,6 +77,9 @@
 - (void)didFinishLoading;
 - (void)didFailWithError:(NSError *)error;
 - (NSCachedURLResponse *)willCacheResponse:(NSCachedURLResponse *)cachedResponse;
+
+// Used to work around the fact that you don't get any more NSURLConnection callbacks until you return from the first one.
++ (BOOL)inConnectionCallback;
 
 @end
 

@@ -25,6 +25,7 @@
 @class WebFrameView;
 @class WebHistoryItem;
 @class WebPolicyDecisionListener;
+@class WebScriptDebugger;
 @class WebView;
 
 typedef enum {
@@ -95,6 +96,7 @@ extern NSString *WebPageCacheDocumentViewKey;
     BOOL delegateIsHandlingUnimplementablePolicy;
     
     id internalLoadDelegate;
+    WebScriptDebugger *scriptDebugger;
 }
 
 - (void)setName:(NSString *)name;
@@ -213,5 +215,7 @@ extern NSString *WebPageCacheDocumentViewKey;
 
 - (BOOL)_isDescendantOfFrame:(WebFrame *)frame;
 - (BOOL)_isFrameSet;
+
+- (void)_attachScriptDebugger;
 
 @end

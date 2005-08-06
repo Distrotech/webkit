@@ -362,15 +362,17 @@ const struct HashEntry HTMLButtonElementTableEntries[] = {
    { 0, 0, 0, 0, 0 },
    { 0, 0, 0, 0, 0 },
    { "form", KJS::HTMLElement::ButtonForm, DontDelete|ReadOnly, 0, &HTMLButtonElementTableEntries[7] },
-   { "tabIndex", KJS::HTMLElement::ButtonTabIndex, DontDelete, 0, 0 },
+   { "tabIndex", KJS::HTMLElement::ButtonTabIndex, DontDelete, 0, &HTMLButtonElementTableEntries[9] },
    { "name", KJS::HTMLElement::ButtonName, DontDelete, 0, 0 },
-   { "disabled", KJS::HTMLElement::ButtonDisabled, DontDelete, 0, 0 },
+   { "disabled", KJS::HTMLElement::ButtonDisabled, DontDelete, 0, &HTMLButtonElementTableEntries[10] },
    { "accessKey", KJS::HTMLElement::ButtonAccessKey, DontDelete, 0, 0 },
    { "type", KJS::HTMLElement::ButtonType, DontDelete|ReadOnly, 0, &HTMLButtonElementTableEntries[8] },
-   { "value", KJS::HTMLElement::ButtonValue, DontDelete, 0, 0 }
+   { "value", KJS::HTMLElement::ButtonValue, DontDelete, 0, 0 },
+   { "blur", KJS::HTMLElement::ButtonBlur, DontDelete|Function, 0, 0 },
+   { "focus", KJS::HTMLElement::ButtonFocus, DontDelete|Function, 0, 0 }
 };
 
-const struct HashTable HTMLButtonElementTable = { 2, 9, HTMLButtonElementTableEntries, 7 };
+const struct HashTable HTMLButtonElementTable = { 2, 11, HTMLButtonElementTableEntries, 7 };
 
 } // namespace
 
@@ -1075,13 +1077,13 @@ const struct HashEntry Context2DTableEntries[] = {
    { "clearShadow", Context2D::ClearShadow, DontDelete|Function, 0, &Context2DTableEntries[60] },
    { 0, 0, 0, 0, 0 },
    { "rotate", Context2D::Rotate, DontDelete|Function, 2, 0 },
-   { "quadraticCurveToPoint", Context2D::QuadraticCurveTo, DontDelete|Function, 4, 0 },
+   { 0, 0, 0, 0, 0 },
    { 0, 0, 0, 0, 0 },
    { "setFillColor", Context2D::SetFillColor, DontDelete|Function, 1, &Context2DTableEntries[58] },
    { "setStrokeColor", Context2D::SetStrokeColor, DontDelete|Function, 1, &Context2DTableEntries[57] },
    { "setLineWidth", Context2D::SetLineWidth, DontDelete|Function, 1, 0 },
    { 0, 0, 0, 0, 0 },
-   { 0, 0, 0, 0, 0 },
+   { "quadraticCurveTo", Context2D::QuadraticCurveTo, DontDelete|Function, 4, 0 },
    { "fill", Context2D::Fill, DontDelete|Function, 0, 0 },
    { "fillStyle", Context2D::FillStyle, DontDelete, 0, &Context2DTableEntries[49] },
    { "strokeStyle", Context2D::StrokeStyle, DontDelete, 0, 0 },

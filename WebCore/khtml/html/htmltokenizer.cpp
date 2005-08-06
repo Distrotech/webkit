@@ -313,8 +313,6 @@ void HTMLTokenizer::begin()
     tag = NoTag;
     pending = NonePending;
     discard = NoneDiscard;
-    pre = false;
-    prePos = 0;
     plaintext = false;
     xmp = false;
     processingInstruction = false;
@@ -351,16 +349,11 @@ void HTMLTokenizer::setForceSynchronous(bool force)
 
 void HTMLTokenizer::processListing(TokenizerString list)
 {
-    bool old_pre = pre;
     // This function adds the listing 'list' as
     // preformatted text-tokens to the token-collection
-    // thereby converting TABs.
-    if(!style) pre = true;
-    prePos = 0;
-
     while ( !list.isEmpty() )
     {
-        checkBuffer(3*TAB_SIZE);
+        checkBuffer();
 
         if (skipLF && ( *list != '\n' ))
         {
@@ -393,14 +386,11 @@ void HTMLTokenizer::processListing(TokenizerString list)
             }
             ++list;
         }
-        else if (( *list == ' ' ) || ( *list == '\t'))
+        else if ( *list == ' ' )
         {
             if (pending)
                 addPending();
-            if (*list == ' ')
-                pending = SpacePending;
-            else
-                pending = TabPending;
+            pending = SpacePending;
 
             ++list;
         }
@@ -410,7 +400,6 @@ void HTMLTokenizer::processListing(TokenizerString list)
             if (pending)
                 addPending();
 
-            prePos++;
             *dest++ = *list;
             ++list;
         }
@@ -419,10 +408,6 @@ void HTMLTokenizer::processListing(TokenizerString list)
 
     if (pending)
         addPending();
-
-    prePos = 0;
-
-    pre = old_pre;
 }
 
 void HTMLTokenizer::parseSpecial(TokenizerString &src)
@@ -489,7 +474,8 @@ void HTMLTokenizer::parseSpecial(TokenizerString &src)
         }
         else {
             scriptCode[scriptCodeSize] = *src;
-            fixUpChar(scriptCode[scriptCodeSize]);
+            if (src->unicode() >= 0x0080)
+                fixUpChar(scriptCode[scriptCodeSize]);
             ++scriptCodeSize;
             ++src;
         }
@@ -773,7 +759,8 @@ void HTMLTokenizer::parseText(TokenizerString &src)
         }
         else {
             *dest = *src;
-            fixUpChar(*dest);
+            if (src->unicode() >= 0x0080)
+                fixUpChar(*dest);
             ++dest;
             ++src;
         }
@@ -901,7 +888,8 @@ void HTMLTokenizer::parseEntity(TokenizerString &src, QChar *&dest, bool start)
 
                 if (EntityUnicodeValue <= 0xFFFF) {
                     QChar c(EntityUnicodeValue);
-                    fixUpChar(c);
+                    if (c.unicode() >= 0x0080)
+                        fixUpChar(c);
                     checkBuffer();
                     src.push(c);
                 } else {
@@ -923,8 +911,6 @@ void HTMLTokenizer::parseEntity(TokenizerString &src, QChar *&dest, bool start)
                 for(unsigned int i = 0; i < cBufferPos; i++)
                     dest[i] = cBuffer[i];
                 dest += cBufferPos;
-                if (pre)
-                    prePos += cBufferPos+1;
             }
 
             Entity = NoEntity;
@@ -1090,39 +1076,37 @@ void HTMLTokenizer::parseTag(TokenizerString &src)
 
             while(ll--) {
                 curchar = *src;
-                if(curchar <= '>') {
-                    if(curchar <= ' ' || curchar == '=' || curchar == '>') {
-                        unsigned int a;
-                        cBuffer[cBufferPos] = '\0';
-                        a = getAttrID(cBuffer, cBufferPos);
-                        if (a)
-                            attrNamePresent = true;
-                        else {
-                            attrName = QString::fromLatin1(QCString(cBuffer, cBufferPos+1).data());
-                            attrNamePresent = !attrName.isEmpty();
+                if (curchar <= '>' && (curchar >= '=' || curchar <= ' ')) {
+                    unsigned int a;
+                    cBuffer[cBufferPos] = '\0';
+                    a = getAttrID(cBuffer, cBufferPos);
+                    if (a)
+                        attrNamePresent = true;
+                    else {
+                        attrName = QString::fromLatin1(QCString(cBuffer, cBufferPos+1).data());
+                        attrNamePresent = !attrName.isEmpty();
 
-                            // This is a deliberate quirk to match Mozilla and Opera.  We have to do this
-                            // since sites that use the "standards-compliant" path sometimes send
-                            // <script src="foo.js"/>.  Both Moz and Opera will honor this, despite it
-                            // being bogus HTML.  They do not honor the "/" for other tags.  This behavior
-                            // also deviates from WinIE, but in this case we'll just copy Moz and Opera.
-                            if (currToken.id == ID_SCRIPT && curchar == '>' &&
-                                attrName == "/")
-                                currToken.flat = true;
-                        }
-                        
-                        dest = buffer;
-                        *dest++ = a;
+                        // This is a deliberate quirk to match Mozilla and Opera.  We have to do this
+                        // since sites that use the "standards-compliant" path sometimes send
+                        // <script src="foo.js"/>.  Both Moz and Opera will honor this, despite it
+                        // being bogus HTML.  They do not honor the "/" for other tags.  This behavior
+                        // also deviates from WinIE, but in this case we'll just copy Moz and Opera.
+                        if (currToken.id == ID_SCRIPT && curchar == '>' &&
+                            attrName == "/")
+                            currToken.flat = true;
+                    }
+                    
+                    dest = buffer;
+                    *dest++ = a;
 #ifdef TOKEN_DEBUG
-                        if (!a || (cBufferPos && *cBuffer == '!'))
-                            kdDebug( 6036 ) << "Unknown attribute: *" << QCString(cBuffer, cBufferPos+1).data() << "*" << endl;
-                        else
-                            kdDebug( 6036 ) << "Known attribute: " << QCString(cBuffer, cBufferPos+1).data() << endl;
+                    if (!a || (cBufferPos && *cBuffer == '!'))
+                        kdDebug( 6036 ) << "Unknown attribute: *" << QCString(cBuffer, cBufferPos+1).data() << "*" << endl;
+                    else
+                        kdDebug( 6036 ) << "Known attribute: " << QCString(cBuffer, cBufferPos+1).data() << endl;
 #endif
 
-                        tag = SearchEqual;
-                        break;
-                    }
+                    tag = SearchEqual;
+                    break;
                 }
                 // Use tolower() instead of | 0x20 to lowercase the char because there is no 
                 // performance gain in using | 0x20 since tolower() is optimized and 
@@ -1245,7 +1229,8 @@ void HTMLTokenizer::parseTag(TokenizerString &src)
                     }
                 }
                 *dest = *src;
-                fixUpChar(*dest);
+                if (dest->unicode() >= 0x0080)
+                    fixUpChar(*dest);
                 ++dest;
                 ++src;
             }
@@ -1281,7 +1266,8 @@ void HTMLTokenizer::parseTag(TokenizerString &src)
                 }
 
                 *dest = *src;
-                fixUpChar(*dest);
+                if (dest->unicode() >= 0x0080)
+                    fixUpChar(*dest);
                 ++dest;
                 ++src;
             }
@@ -1396,17 +1382,8 @@ void HTMLTokenizer::parseTag(TokenizerString &src)
 
             processToken();
 
-            // we have to take care to close the pre block in
-            // case we encounter an unallowed element....
-            if(pre && beginTag && !DOM::checkChild(ID_PRE, tagID)) {
-                kdDebug(6036) << " not allowed in <pre> " << (int)tagID << endl;
-                pre = false;
-            }
-
             switch( tagID ) {
             case ID_PRE:
-                prePos = 0;
-                pre = beginTag;
                 break;
             case ID_SCRIPT:
                 if (beginTag) {
@@ -1415,8 +1392,10 @@ void HTMLTokenizer::parseTag(TokenizerString &src)
                     script = true;
                     parseSpecial(src);
                 }
-                else if (tagID <= ID_CLOSE_TAG) // Handle <script src="foo"/>
+                else if (tagID <= ID_CLOSE_TAG) { // Handle <script src="foo"/>
+                    script = true;
                     scriptHandler();
+                }
                 break;
             case ID_STYLE:
                 if (beginTag) {
@@ -1478,40 +1457,24 @@ void HTMLTokenizer::addPending()
     else if ( textarea || script )
     {
         switch(pending) {
-        case LFPending:  *dest++ = '\n'; prePos = 0; break;
-        case SpacePending: *dest++ = ' '; ++prePos; break;
-        case TabPending: *dest++ = '\t'; prePos += TAB_SIZE - (prePos % TAB_SIZE); break;
+        case LFPending:  *dest++ = '\n'; break;
+        case SpacePending: *dest++ = ' '; break;
         case NonePending:
             assert(0);
         }
     }
     else
     {
-        int p;
-
         switch (pending)
         {
         case SpacePending:
             // Insert a breaking space
             *dest++ = QChar(' ');
-            prePos++;
             break;
 
         case LFPending:
             *dest = '\n';
             dest++;
-            prePos = 0;
-            break;
-
-        case TabPending:
-            p = TAB_SIZE - ( prePos % TAB_SIZE );
-#ifdef TOKEN_DEBUG
-            qDebug("tab pending, prePos: %d, toadd: %d", prePos, p);
-#endif
-
-            for ( int x = 0; x < p; x++ )
-                *dest++ = QChar(' ');
-            prePos += p;
             break;
 
         case NonePending:
@@ -1667,8 +1630,7 @@ void HTMLTokenizer::write(const TokenizerString &str, bool appendData)
 
             if ( pending ) {
                 // pre context always gets its spaces/linefeeds
-                if ( pre || script || (!parser->selectMode() &&
-                             (!parser->noSpaces() || dest > buffer ))) {
+                if (script || (!parser->selectMode() && (!parser->noSpaces() || dest > buffer ))) {
                     addPending();
                     discard = AllDiscard; // So we discard the first LF after the open tag.
                 }
@@ -1740,7 +1702,7 @@ void HTMLTokenizer::write(const TokenizerString &str, bool appendData)
             }
             ++src;
         }
-        else if (( cc == ' ' ) || ( cc == '\t' ))
+        else if (cc == ' ')
         {
 	    if (select && !script) {
                 if(discard == SpaceDiscard)
@@ -1757,10 +1719,7 @@ void HTMLTokenizer::write(const TokenizerString &str, bool appendData)
             
                 if (pending)
                     addPending();
-                if (cc == ' ')
-                    pending = SpacePending;
-                else
-                    pending = TabPending;
+                pending = SpacePending;
             }
             
             ++src;
@@ -1771,17 +1730,14 @@ void HTMLTokenizer::write(const TokenizerString &str, bool appendData)
                 addPending();
 
             discard = NoneDiscard;
-            if ( pre )
-            {
-                prePos++;
-            }
 #if QT_VERSION < 300
             unsigned char row = src->row();
             if ( row > 0x05 && row < 0x10 || row > 0xfd )
                     currToken.complexText = true;
 #endif
             *dest = *src;
-            fixUpChar( *dest );
+            if (dest->unicode() >= 0x0080)
+                fixUpChar( *dest );
             ++dest;
             ++src;
         }
