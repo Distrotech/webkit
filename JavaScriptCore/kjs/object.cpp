@@ -285,7 +285,7 @@ bool ObjectImp::hasProperty(ExecState *exec, const Identifier &propertyName) con
   if (hasOwnProperty(exec, propertyName))
     return true;
 
-  if (_proto->dispatchType() != ObjectType) {
+  if (!_proto || _proto->dispatchType() != ObjectType) {
     return false;
   }
 
@@ -298,7 +298,7 @@ bool ObjectImp::hasProperty(ExecState *exec, unsigned propertyName) const
     if (hasOwnProperty(exec, propertyName))
       return true;
 
-    if (_proto->dispatchType() != ObjectType) {
+    if (!_proto || _proto->dispatchType() != ObjectType) {
       return false;
     }
 

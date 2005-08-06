@@ -1,5 +1,23 @@
 2005-08-05  Adele Peterson  <adele@apple.com>
 
+         Merged fix from TOT to Safari-2-0-branch
+
+    2005-08-05  Geoffrey Garen  <ggaren@apple.com>
+
+         -fixed <rdar://problem/4207220> REGRESSION (DENVER): Crash occurs 
+         after clicking on Hangman applet
+ 
+         Reviewed by darin.
+ 
+         * kjs/object.cpp:
+         (KJS::ObjectImp::hasProperty): added check for null prototype.
+ 
+         FIXME: The long-term plan is to make runtime objects use JS Null()
+         instead of null pointers, which will allow us to eliminate null
+         checks, improving performance.
+
+2005-08-05  Adele Peterson  <adele@apple.com>
+
         Reviewed by Darin.
 
         * JavaScriptCore.xcodeproj/project.pbxproj: Unchecked 'statics are thread safe' option.
