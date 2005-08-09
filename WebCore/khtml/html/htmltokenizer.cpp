@@ -62,7 +62,6 @@ using DOM::AttributeImpl;
 using DOM::DOMString;
 using DOM::DOMStringImpl;
 using DOM::DocumentImpl;
-using DOM::FORBIDDEN;
 using DOM::Node;
 using DOM::emptyAtom;
 using DOM::endTagRequirement;
@@ -1384,6 +1383,7 @@ void HTMLTokenizer::parseTag(TokenizerString &src)
 
             switch( tagID ) {
             case ID_PRE:
+                discard = LFDiscard; // Discard the first LF after we open a pre.
                 break;
             case ID_SCRIPT:
                 if (beginTag) {
@@ -1436,11 +1436,7 @@ void HTMLTokenizer::parseTag(TokenizerString &src)
                 plaintext = beginTag;
                 break;
             }
-            
-            if (beginTag && endTagRequirement(tagID) == FORBIDDEN)
-                // Don't discard LFs since this element has no end tag.
-                discard = NoneDiscard;
-                
+
             return; // Finished parsing tag!
         }
         } // end switch
@@ -1630,10 +1626,8 @@ void HTMLTokenizer::write(const TokenizerString &str, bool appendData)
 
             if ( pending ) {
                 // pre context always gets its spaces/linefeeds
-                if (script || (!parser->selectMode() && (!parser->noSpaces() || dest > buffer ))) {
+                if (script || (!parser->selectMode() && (!parser->noSpaces() || dest > buffer )))
                     addPending();
-                    discard = AllDiscard; // So we discard the first LF after the open tag.
-                }
                 // just forget it
                 else
                     pending = NonePending;
