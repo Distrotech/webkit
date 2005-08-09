@@ -436,7 +436,12 @@ void QPainter::_drawPoints (const QPointArray &_points, bool winding, int index,
 {
     if (data->state.paintingDisabled)
         return;
-        
+    
+       
+    NSGraphicsContext *graphicsContext = [NSGraphicsContext currentContext];
+    BOOL flag = [graphicsContext shouldAntialias];
+    [graphicsContext setShouldAntialias: NO];
+
     int npoints = _npoints != -1 ? _npoints : _points.size()-index;
     NSPoint points[npoints];
     for (int i = 0; i < npoints; i++) {
@@ -461,6 +466,8 @@ void QPainter::_drawPoints (const QPointArray &_points, bool winding, int index,
     }
     
     [path release];
+    
+    [graphicsContext setShouldAntialias: flag];
 }
 
 

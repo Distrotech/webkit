@@ -388,10 +388,18 @@ bool RenderBlock::isSelfCollapsingBlock() const
         style()->marginTopCollapse() == MSEPARATE || style()->marginBottomCollapse() == MSEPARATE)
         return false;
 
+    bool hasAutoHeight = style()->height().isVariable();
+    if (style()->height().isPercent() && !style()->htmlHacks()) {
+        hasAutoHeight = true;
+        for (RenderBlock* cb = containingBlock(); !cb->isCanvas(); cb = cb->containingBlock()) {
+            if (cb->style()->height().isFixed() || cb->isTableCell())
+                hasAutoHeight = false;
+        }
+    }
+
     // If the height is 0 or auto, then whether or not we are a self-collapsing block depends
     // on whether we have content that is all self-collapsing or not.
-    if (style()->height().isVariable() ||
-        (style()->height().isFixed() && style()->height().value == 0)) {
+    if (hasAutoHeight || ((style()->height().isFixed() || style()->height().isPercent()) && style()->height().value == 0)) {
         // If the block has inline children, see if we generated any line boxes.  If we have any
         // line boxes, then we can't be self-collapsing, since we have content.
         if (childrenInline())
@@ -528,7 +536,7 @@ void RenderBlock::layoutBlock(bool relayoutChildren)
             m_height = m_overflowHeight + borderBottom() + paddingBottom();
     }
 
-    if (hasOverhangingFloats() && (isFloating() || isTableCell())) {
+    if (hasOverhangingFloats() && ((isFloating() && style()->height().isVariable()) || isTableCell())) {
         m_height = floatBottom();
         m_height += borderBottom() + paddingBottom();
     }

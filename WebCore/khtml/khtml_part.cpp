@@ -52,6 +52,7 @@
 #include "html/html_baseimpl.h"
 #include "html/html_miscimpl.h"
 #include "html/html_imageimpl.h"
+#include "html/html_objectimpl.h"
 #include "rendering/render_block.h"
 #include "rendering/render_text.h"
 #include "rendering/render_frames.h"
@@ -3188,6 +3189,7 @@ bool KHTMLPart::requestObject( khtml::RenderPart *frame, const QString &url, con
   (*it).m_type = khtml::ChildFrame::Object;
   (*it).m_paramNames = paramNames;
   (*it).m_paramValues = paramValues;
+  (*it).m_hasFallbackContent = frame->hasFallbackContent();
 
   KURL completedURL;
   if (!url.isEmpty())
@@ -3302,12 +3304,7 @@ bool KHTMLPart::processObjectRequest( khtml::ChildFrame *child, const KURL &_url
     KParts::ReadOnlyPart *part = createPart( d->m_view->viewport(), child->m_name.ascii(), this, child->m_name.ascii(), mimetype, child->m_serviceName, child->m_services, child->m_params );
 #endif
 
-    if ( !part )
-    {
-        if ( child->m_frame )
-          if (child->m_frame->partLoadingErrorNotify( child, url, mimetype ))
-            return true; // we succeeded after all (a fallback was used)
-
+    if (!part) {
         checkEmitLoadEvent();
         return false;
     }
@@ -5935,6 +5932,23 @@ void KHTMLPart::selectFrameElementInParentIfFullySelected()
     // Focus on the parent frame, and then select from before this element to after.
     parentView->setFocus();
     parent->setSelection(Selection(beforeOwnerElement, afterOwnerElement));
+}
+
+void KHTMLPart::handleFallbackContent()
+{
+    KHTMLPart *parent = parentPart();
+    if (!parent)
+        return;
+    ChildFrame *childFrame = parent->childFrame(this);
+    if (!childFrame || childFrame->m_type != ChildFrame::Object)
+        return;
+    khtml::RenderPart *renderPart = childFrame->m_frame;
+    if (!renderPart)
+        return;
+    HTMLObjectElementImpl* elt = static_cast<HTMLObjectElementImpl *>(renderPart->element());
+    if (!elt)
+        return;
+    elt->renderFallbackContent();
 }
 
 using namespace KParts;

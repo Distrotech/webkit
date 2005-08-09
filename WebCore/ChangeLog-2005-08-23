@@ -1,3 +1,80 @@
+2005-08-09  David Hyatt  <hyatt@apple.com>
+
+	Land all the necessary changes to pass Acid2.
+	
+        * khtml/css/html4.css:
+        * khtml/html/dtd.cpp:
+        (DOM::checkChild):
+        * khtml/html/dtd.h:
+        * khtml/html/html_headimpl.cpp:
+        (HTMLLinkElementImpl::HTMLLinkElementImpl):
+        (HTMLLinkElementImpl::parseHTMLAttribute):
+        (HTMLLinkElementImpl::tokenizeRelAttribute):
+        (HTMLLinkElementImpl::process):
+        * khtml/html/html_headimpl.h:
+        * khtml/html/html_objectimpl.cpp:
+        (HTMLObjectElementImpl::HTMLObjectElementImpl):
+        (HTMLObjectElementImpl::parseHTMLAttribute):
+        (HTMLObjectElementImpl::rendererIsNeeded):
+        (HTMLObjectElementImpl::createRenderer):
+        (HTMLObjectElementImpl::attach):
+        (HTMLObjectElementImpl::detach):
+        (HTMLObjectElementImpl::recalcStyle):
+        (HTMLObjectElementImpl::childrenChanged):
+        (HTMLObjectElementImpl::isImageType):
+        (HTMLObjectElementImpl::renderFallbackContent):
+        * khtml/html/html_objectimpl.h:
+        * khtml/html/htmlparser.cpp:
+        (KHTMLParser::insertNode):
+        * khtml/html/htmltokenizer.cpp:
+        (khtml::HTMLTokenizer::parseComment):
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::requestObject):
+        (KHTMLPart::processObjectRequest):
+        (KHTMLPart::handleFallbackContent):
+        * khtml/khtml_part.h:
+        * khtml/khtmlpart_p.h:
+        (khtml::ChildFrame::ChildFrame):
+        * khtml/khtmlview.cpp:
+        (KHTMLView::applyOverflowToViewport):
+        (KHTMLView::layout):
+        * khtml/khtmlview.h:
+        * khtml/rendering/render_block.cpp:
+        (khtml::RenderBlock::isSelfCollapsingBlock):
+        (khtml::RenderBlock::layoutBlock):
+        * khtml/rendering/render_block.h:
+        (khtml::RenderBlock::firstRootBox):
+        (khtml::RenderBlock::lastRootBox):
+        * khtml/rendering/render_box.cpp:
+        (RenderBox::setStyle):
+        (RenderBox::calcHeight):
+        (RenderBox::calcHeightUsing):
+        (RenderBox::calcAbsoluteHorizontal):
+        (RenderBox::calcAbsoluteHorizontalValues):
+        (RenderBox::calcAbsoluteVertical):
+        (RenderBox::calcAbsoluteVerticalValues):
+        * khtml/rendering/render_box.h:
+        * khtml/rendering/render_frames.cpp:
+        (RenderPartObject::RenderPartObject):
+        (RenderPartObject::updateWidget):
+        * khtml/rendering/render_frames.h:
+        (khtml::RenderPart::hasFallbackContent):
+        * khtml/rendering/render_replaced.cpp:
+        (RenderReplaced::RenderReplaced):
+        * khtml/rendering/render_table.cpp:
+        (RenderTable::layout):
+        (RenderTableSection::calcRowHeight):
+        (RenderTableCell::baselinePosition):
+        * khtml/xml/dom_elementimpl.cpp:
+        (ElementImpl::childAllowed):
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::createPart):
+        * kwq/KWQPainter.mm:
+        (QPainter::_drawPoints):
+        * kwq/WebCoreBridge.h:
+        * kwq/WebCoreBridge.mm:
+        (-[WebCoreBridge mainResourceError]):
+
 2005-08-09  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch
