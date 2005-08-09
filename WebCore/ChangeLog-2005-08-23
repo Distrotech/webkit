@@ -1,6 +1,7 @@
 2005-08-09  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch
+        <rdar://problem/4210182> Have the HTML tokenizer stop stripping off new lines after tags.
 
     2005-06-14  David Hyatt  <hyatt@apple.com>
 
