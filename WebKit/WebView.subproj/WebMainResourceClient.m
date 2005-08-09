@@ -31,6 +31,7 @@
 #import <WebKit/WebNSURLExtras.h>
 #import <WebKit/WebPolicyDelegatePrivate.h>
 #import <WebKit/WebViewPrivate.h>
+#import <WebKit/WebBridge.h>
 
 // FIXME: More that is in common with WebSubresourceClient should move up into WebBaseResourceHandleDelegate.
 
@@ -241,6 +242,14 @@
     }
 
     [self retain];
+
+    if ([r isKindOfClass:[NSHTTPURLResponse class]]) {
+        int status = [(NSHTTPURLResponse *)r statusCode];
+        if (status < 200 || status >= 300) {
+	    // Handle <object> fallback for error cases.
+	    [[[dataSource webFrame] _bridge] mainResourceError];
+        }
+    }
 
     [super didReceiveResponse:r];
   

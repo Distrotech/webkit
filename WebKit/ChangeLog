@@ -1,3 +1,14 @@
+2005-08-09  David Hyatt  <hyatt@apple.com>
+
+	Land the changes to pass Acid2.
+
+        * WebCoreSupport.subproj/WebBridge.m:
+        (-[WebBridge determineObjectFromMIMEType:URL:]):
+        * WebView.subproj/WebDataSource.m:
+        (-[WebDataSource _receivedMainResourceError:complete:]):
+        * WebView.subproj/WebMainResourceClient.m:
+        (-[WebMainResourceClient continueAfterContentPolicy:response:]):
+
 2005-08-08  Adele Peterson  <adele@apple.com>
 
           Merged fix from TOT to Safari-2-0-branch
