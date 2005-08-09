@@ -681,19 +681,14 @@ Value GlobalFuncImp::call(ExecState *exec, Object &/*thisObj*/, const List &args
       if (newExec.hadException())
         exec->setException(newExec.exception());
 
-      if ( progNode->deref() )
-          delete progNode;
-      if (c.complType() == ReturnValue)
-	  return c.value();
-      // ### setException() on throw?
-      else if (c.complType() == Normal) {
-	  if (c.isValueCompletion())
-	      return c.value();
-	  else
-	      return Undefined();
-      } else {
-	  return Undefined();
-      }
+        res = Undefined();
+        if (c.complType() == Throw)
+            exec->setException(c.value());
+        else if (c.isValueCompletion())
+            res = c.value();
+  
+        if ( progNode->deref() )
+            delete progNode;
     }
     break;
   }

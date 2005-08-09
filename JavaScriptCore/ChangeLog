@@ -1,3 +1,27 @@
+2005-08-09  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
+    2005-07-14  Geoffrey Garen  <ggaren@apple.com>
+
+        -fixed http://bugzilla.opendarwin.org/show_bug.cgi?id=3970
+        throw statements fail inside eval statements
+        
+        Reviewed by mjs.
+
+        * kjs/function.cpp:
+        (KJS::GlobalFuncImp::call):
+        Big change since I fixed the tabbing. The important part is:
+        if (c.complType() == Throw)
+          exec->setException(c.value());
+
+        * kjs/nodes.cpp:
+        (ThrowNode::execute): removed duplicate KJS_CHECKEXCEPTION
+        (TryNode::execute): 
+        try now clears the exception state before the finally block executes,
+        and checks the state after the block executes, so that exceptions in
+        finally code get caught.
+
 2005-08-08  Adele Peterson  <adele@apple.com>
 
          Merged fix from TOT to Safari-2-0-branch
