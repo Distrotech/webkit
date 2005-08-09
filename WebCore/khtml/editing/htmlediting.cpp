@@ -4026,7 +4026,7 @@ void InsertTextCommand::input(const DOMString &text, bool selectInsertedText)
             // When the user hits space to finish marked sequence, the string that
             // we receive ends with a normal space, not a non breaking space.  This code
             // ensures that the right kind of space is produced.
-            if (KWQ(document()->part())->markedTextRange() && text[len-1] == ' ') {
+            if (KWQ(document()->part())->markedTextRange() != NULL && text[len-1] == ' ') {
                 DOMString textWithoutTrailingSpace(text.unicode(), len-1);
                 insertTextIntoNode(textNode, offset, textWithoutTrailingSpace);
                 insertSpace(textNode, offset + len-1);
