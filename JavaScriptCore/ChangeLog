@@ -1,3 +1,38 @@
+2005-08-08  Adele Peterson  <adele@apple.com>
+
+          Merged fix from TOT to Safari-2-0-branch
+          <rdar://problem/3444900> some US-centric date formats not parsed by JavaScript (clock at news8austin.com) (bugzilla 3477)
+
+    2005-07-01  Geoffrey Garen  <ggaren@apple.com
+
+          -landed patch by Carsten Guenther <cguenther@gmail.com>
+
+          -fixes http://bugzilla.opendarwin.org/show_bug.cgi?id=3477
+          some US-centric date formats not parsed by JavaScript (clock at news8austin.com)
+
+          -relevant tests:
+                 mozilla/ecma_3/Date/15.9.5.5.js
+                 layout-tests/fast/js/date-parse-test.html
+
+          Reviewed by darin.
+
+        * kjs/date_object.cpp:
+        (day):
+        (dayFromYear):
+        (daysInYear):
+        (timeFromYear):
+        (yearFromTime):
+        (weekDay):
+        (timeZoneOffset):
+        (DateProtoFuncImp::call):
+        (DateObjectImp::construct):
+        (KJS::parseDate):
+        (ymdhms_to_seconds):
+        (KJS::makeTime):
+        (findMonth):
+        (KJS::KRFCDate_parseDate):
+        * kjs/date_object.h:
+
 === Safari-416 ===
 
 2005-08-05  Adele Peterson  <adele@apple.com>
