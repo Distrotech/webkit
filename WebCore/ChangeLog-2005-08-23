@@ -2,6 +2,28 @@
 
         Merged fix from TOT to Safari-2-0-branch
 
+    2005-08-04  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by kocienda
+        
+        Fix for: 
+        - <rdar://problem/4132360> HIM-8A428:Space key works like Return key in Mail application.
+        - <rdar://problem/4122708> Mail: when composing new mail with a Korean input method, the first space doesn't work
+
+        If the user terminates marked text with a space, a string including marked characters and a normal, 
+        breaking space, is passed to WebCore in order to replace the previous marked sequence.  The fix ensures
+        that the space becomes a non breaking space if necessary.
+
+        Test cases added:
+        * manual-tests/korean-input-space.html
+
+        * khtml/editing/insert_text_command.cpp:
+        (khtml::InsertTextCommand::input):
+
+2005-08-09  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
     2005-08-09  Adele Peterson  <adele@apple.com>
 
         Reviewed by Darin.
