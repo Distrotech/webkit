@@ -1,5 +1,24 @@
 2005-08-08  Adele Peterson  <adele@apple.com>
 
+         Merged fix from TOT to Safari-2-0-branch
+
+ 2005-08-05  Geoffrey Garen  <ggaren@apple.com>
+ 
+         Fix by darin, reviewed by me.
+         
+         - rolled in fix for: <rdar://problem/4161606> JavaScript regular 
+         expressions with certain ranges of Unicode characters cause a crash
+   
+         Test cases added:
+  
+         * layout-tests/fast/js/regexp-big-unicode-ranges-expected.txt: Added.
+         * layout-tests/fast/js/regexp-big-unicode-ranges.html: Added.
+  
+         * pcre/pcre.c:
+         (compile_branch): added checks for characters > 255
+
+2005-08-08  Adele Peterson  <adele@apple.com>
+
           Merged fix from TOT to Safari-2-0-branch
           <rdar://problem/3444900> some US-centric date formats not parsed by JavaScript (clock at news8austin.com) (bugzilla 3477)
 
