@@ -294,7 +294,7 @@ Object DeclaredFunctionImp::construct(ExecState *exec, const List &args)
 
   Object obj(new ObjectImp(proto));
 
-  Value res = call(exec,obj,args);
+  Value res = Object(this).call(exec,obj,args);
 
   if (res.type() == ObjectType)
     return Object::dynamicCast(res);

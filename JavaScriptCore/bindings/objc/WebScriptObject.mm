@@ -207,7 +207,7 @@ static KJS::List listFromNSArray(ExecState *exec, NSArray *array)
     ObjectImp *funcImp = static_cast<ObjectImp*>(func.imp());
     Object thisObj = Object(const_cast<ObjectImp*>([self _imp]));
     List argList = listFromNSArray(exec, args);
-    Value result = funcImp->call (exec, thisObj, argList);
+    Value result = Object(funcImp).call (exec, thisObj, argList);
     Interpreter::unlock();
 
     if (exec->hadException()) {

@@ -1,3 +1,26 @@
+2005-08-09  Geoffrey Garen  <ggaren@apple.com>
+        
+        -fixed <rdar://problem/4197421> crash in ObjectImp::findPropertyHashEntry at ifilm.com
+        [due to JS infinite recursion]
+        
+        More changes in WebCore.
+        
+        Reviewed by darin.
+
+        All calls to FunctionImp::call now go through ObjectImp::call to preserve 
+        stack depth checking.
+        
+        * bindings/NP_jsobject.cpp:
+        (_NPN_Invoke):
+        * bindings/jni/jni_jsobject.cpp:
+        (JSObject::call):
+        * bindings/objc/WebScriptObject.mm:
+        (-[WebScriptObject callWebScriptMethod:withArguments:]):
+        * kjs/function.cpp:
+        (KJS::DeclaredFunctionImp::construct):
+        * kjs/nodes.cpp:
+        (FunctionCallNode::evaluate):
+
 2005-08-09  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch

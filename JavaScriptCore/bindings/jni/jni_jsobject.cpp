@@ -185,7 +185,7 @@ jobject JSObject::call(jstring methodName, jobjectArray args) const
     Object thisObj = Object(const_cast<ObjectImp*>(_imp));
     List argList = listFromJArray(args);
     Interpreter::lock();
-    Value result = funcImp->call (exec, thisObj, argList);
+    Value result = Object(funcImp).call (exec, thisObj, argList);
     Interpreter::unlock();
 
     // Convert and return the result of the function call.

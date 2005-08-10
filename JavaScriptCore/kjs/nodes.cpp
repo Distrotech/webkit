@@ -721,7 +721,7 @@ Value FunctionCallNode::evaluate(ExecState *exec)
   }
 
   Object thisObj(thisObjImp);
-  return func->call(exec, thisObj, argList);
+  return Object(func).call(exec, thisObj, argList);
 }
 
 // ------------------------------ PostfixNode ----------------------------------

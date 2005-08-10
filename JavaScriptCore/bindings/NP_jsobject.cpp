@@ -166,7 +166,7 @@ bool _NPN_Invoke (NPP npp, NPObject *o, NPIdentifier methodName, const NPVariant
 		Object thisObj = Object(const_cast<ObjectImp*>(obj->imp));
 		List argList = listFromVariantArgs(exec, args, argCount);
 		Interpreter::lock();
-		Value resultV = funcImp->call (exec, thisObj, argList);
+		Value resultV = Object(funcImp).call (exec, thisObj, argList);
 		Interpreter::unlock();
 
 		// Convert and return the result of the function call.

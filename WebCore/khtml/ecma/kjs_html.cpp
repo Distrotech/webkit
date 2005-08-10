@@ -1255,7 +1255,7 @@ Value KJS::HTMLElement::call(ExecState *exec, Object &thisObj, const List&args)
 		Value runtimeObject = getRuntimeObject(exec,element);
 		if (!runtimeObject.isNull()) {
 		    ObjectImp *imp = static_cast<ObjectImp *>(runtimeObject.imp());
-		    return imp->call (exec, thisObj, args);
+		    return Object(imp).call (exec, thisObj, args);
 		}
 	    }
 	    break;
