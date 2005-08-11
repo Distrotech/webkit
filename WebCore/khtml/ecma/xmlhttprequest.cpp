@@ -256,13 +256,13 @@ void XMLHttpRequest::changeState(XMLHttpRequestState newState)
   if (state != newState) {
     state = newState;
     
-    if (onReadyStateChangeListener != 0 && doc->part()) {
+    if (doc && doc->part() && onReadyStateChangeListener != 0) {
       DOM::Event ev = doc->part()->document().createEvent("HTMLEvents");
       ev.initEvent("readystatechange", true, true);
       onReadyStateChangeListener->handleEvent(ev, true);
     }
     
-    if (state == Completed && onLoadListener != 0 && doc->part()) {
+    if (doc && doc->part() && state == Completed && onLoadListener != 0) {
       DOM::Event ev = doc->part()->document().createEvent("HTMLEvents");
       ev.initEvent("load", true, true);
       onLoadListener->handleEvent(ev, true);
