@@ -117,7 +117,7 @@
     NSURL *oldURL = [request URL];
     NSURLRequest *clientRequest = [super willSendRequest:newRequest redirectResponse:redirectResponse];
     
-    if (clientRequest != nil && ![oldURL isEqual:[clientRequest URL]]) {
+    if (clientRequest != nil && oldURL != [clientRequest URL] && ![oldURL isEqual:[clientRequest URL]]) {
 	[loader redirectedToURL:[clientRequest URL]];
     }
 

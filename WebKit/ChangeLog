@@ -1,3 +1,9 @@
+2005-08-10  Adele Peterson  <adele@apple.com>
+
+        Changes made to WebSubresourceLoader.m need to be made on WebSubresourceClient.m, since the file was renamed on TOT.
+
+        * WebCoreSupport.subproj/WebSubresourceClient.m:
+
 2005-08-09  David Hyatt  <hyatt@apple.com>
 
 	Land the changes to pass Acid2.
