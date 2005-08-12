@@ -1,5 +1,0 @@
-This test checks for regression against: 3381 Date.prototype.setDate() incorrect for values >=128.
-
-If the test passes, "Success" will be printed below.
-
-Success!
