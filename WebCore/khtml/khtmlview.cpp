@@ -618,7 +618,7 @@ void KHTMLView::layout()
             }
         }
     }
-    else
+    else if (rootRenderer)
         applyOverflowToViewport(rootRenderer, hMode, vMode); // XML/XHTML UAs use the root element.
 
 #ifdef INSTRUMENT_LAYOUT_SCHEDULING

@@ -1,5 +1,14 @@
 2005-08-12  Adele Peterson  <adele@apple.com>
 
+        Added a few more missing changes for acid2.
+
+        * khtml/khtmlview.cpp:
+        (KHTMLView::layout):
+        * khtml/rendering/render_box.cpp:
+        (RenderBox::setStyle):
+
+2005-08-12  Adele Peterson  <adele@apple.com>
+
         Added missing nil check from acid2 merge.
 
         * khtml/khtmlview.cpp: (KHTMLView::layout):
