@@ -1,3 +1,17 @@
+2005-08-11  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
+    2005-08-11  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by Vicki
+
+	This is a fix for <rdar://problem/4141161> REGRESSION (Tiger): WebKit does not display in composited Carbon windows.
+	I basically did what Troy suggests in his bug comments, and everything seems to work fine!
+
+        * Carbon.subproj/HIViewAdapter.m:
+        (-[HIViewAdapter setNeedsDisplayInRect:]):
+
 2005-08-10  Adele Peterson  <adele@apple.com>
 
         Changes made to WebSubresourceLoader.m need to be made on WebSubresourceClient.m, since the file was renamed on TOT.
