@@ -1,3 +1,19 @@
+2005-08-12  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+        <rdar://problem/4205174> Hebrew or Arabic text on long pages becomes garbled
+
+    2005-06-19  Darin Adler  <darin@apple.com>
+
+        Changes by Mitz Pettel
+        Reviewed by me.
+
+        - fixed <http://bugzilla.opendarwin.org/show_bug.cgi?id=3466>
+          ATSUI text doesn't render at coordinates greater than 32K
+
+        * WebCoreSupport.subproj/WebTextRenderer.m: (-[WebTextRenderer _ATSU_drawRun:style:geometry:]):
+        Translate the matrix of the CGContext instead of passing the appropriate coordinates to ATSU.
+
 2005-08-11  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch
