@@ -1,5 +1,11 @@
 2005-08-12  Adele Peterson  <adele@apple.com>
 
+        Added missing nil check from acid2 merge.
+
+        * khtml/khtmlview.cpp: (KHTMLView::layout):
+
+2005-08-12  Adele Peterson  <adele@apple.com>
+
         Merged fixes from TOT to Safari-2-0-branch
         <rdar://problem/4213775> Several fixes in WebCore's bidi algorithm
 

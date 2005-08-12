@@ -603,7 +603,7 @@ void KHTMLView::layout()
     ScrollBarMode hMode = d->hmode;
     ScrollBarMode vMode = d->vmode;
     
-    RenderObject* rootRenderer = document->documentElement()->renderer();
+    RenderObject* rootRenderer = document->documentElement() ? document->documentElement()->renderer() : 0;
     if (document->isHTMLDocument()) {
         NodeImpl *body = static_cast<HTMLDocumentImpl*>(document)->body();
         if (body && body->renderer()) {
