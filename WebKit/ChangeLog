@@ -1,5 +1,60 @@
 2005-08-12  Adele Peterson  <adele@apple.com>
 
+        Merged fixes from TOT to Safari-2-0-branch
+        <rdar://problem/4214024> Several improvements to WebKit's ability to render international text
+
+    2005-07-08  Geoffrey Garen  <ggaren@apple.com>
+ 
+        Rolled in patch by opendarwin.org@mitzpettel.com
+ 
+        -fixes http://bugzilla.opendarwin.org/show_bug.cgi?id=3818
+        Fallback font doesn't have requested weight in ATSUI-rendered text
+
+        Reviewed by mjs.
+
+        * WebCoreSupport.subproj/WebTextRenderer.m:
+        (-[WebTextRenderer _createATSUTextLayoutForRun:style:]):
+
+    2005-06-22  Darin Adler  <darin@apple.com>
+
+        Change by Mitz Pettel.
+        Reviewed by me.
+
+        - fixed <http://bugzilla.opendarwin.org/show_bug.cgi?id=3618>
+          RTL runs drawn by CG not reversed properly
+
+        * WebCoreSupport.subproj/WebTextRenderer.m: (-[WebTextRenderer _CG_drawRun:style:geometry:]):
+        Fix off-by-one mistake in order-swapping loops.
+
+    2005-06-17  Richard Williamson   <rjw@apple.com>
+
+	Changes by Mitz Pettel
+        Reviewed by Richard Williamson.
+
+	Fixed http://bugzilla.opendarwin.org/show_bug.cgi?id=3545
+
+        * WebCoreSupport.subproj/WebTextRenderer.m:
+        (reverseCharactersInRun):
+        (-[WebTextRenderer _ATSU_pointToOffset:style:position:reversed:includePartialGlyphs:]):
+
+    2005-07-23  Justin Garcia  <justin.garcia@apple.com>
+
+        Patch by <opendarwin.org@mitzpettel.com>
+
+        Reviewed by darin and hyatt
+
+        Fixes <http://bugzilla.opendarwin.org/show_bug.cgi?id=3862>
+        The fix for <http://bugzilla.opendarwin.org/show_bug.cgi?id=3545> enclosed each run of visually ordered
+        hebrew with LRO and PDF control characters, but adjusted the run's to and from to include those characters,
+        so that they would be rendered if the font includes a glyph for bidi control characters.
+        
+        Also adding a manual test
+
+        * WebCoreSupport.subproj/WebTextRenderer.m:
+        (reverseCharactersInRun):
+   
+2005-08-12  Adele Peterson  <adele@apple.com>
+
         Merged fix from TOT to Safari-2-0-branch
         <rdar://problem/4205174> Hebrew or Arabic text on long pages becomes garbled
 

@@ -48,6 +48,8 @@
 #define SPACE 0x0020
 #define NO_BREAK_SPACE 0x00A0
 #define ZERO_WIDTH_SPACE 0x200B
+#define POP_DIRECTIONAL_FORMATTING 0x202C
+#define LEFT_TO_RIGHT_OVERRIDE 0x202D
 
 // MAX_GLYPH_EXPANSION is the maximum numbers of glyphs that may be
 // use to represent a single Unicode code point.
@@ -1105,19 +1107,19 @@ static void _drawGlyphs(NSFont *font, NSColor *color, CGGlyph *glyphs, CGSize *a
         CGSize aswap1, aswap2;
         NSFont *fswap1, *fswap2;
         
-        for (i = pos, end = numGlyphs-1; i < (numGlyphs - pos)/2; i++){
+        for (i = pos, end = numGlyphs; i < (numGlyphs - pos)/2; i++){
             gswap1 = glyphBuffer[i];
             gswap2 = glyphBuffer[--end];
             glyphBuffer[i] = gswap2;
             glyphBuffer[end] = gswap1;
         }
-        for (i = pos, end = numGlyphs - 1; i < (numGlyphs - pos)/2; i++){
+        for (i = pos, end = numGlyphs; i < (numGlyphs - pos)/2; i++){
             aswap1 = advances[i];
             aswap2 = advances[--end];
             advances[i] = aswap2;
             advances[end] = aswap1;
         }
-        for (i = pos, end = numGlyphs - 1; i < (numGlyphs - pos)/2; i++){
+        for (i = pos, end = numGlyphs; i < (numGlyphs - pos)/2; i++){
             fswap1 = fontBuffer[i];
             fswap2 = fontBuffer[--end];
             fontBuffer[i] = fswap2;
@@ -1495,6 +1497,9 @@ static const char *joiningNames[] = {
 
     ATSUTextLayout layout;
     UniCharCount runLength;
+    ATSUFontID ATSUSubstituteFont;
+    UniCharArrayOffset substituteOffset;
+    UniCharCount substituteLength;
     OSStatus status;
     
     [self _initializeATSUStyle];
@@ -1531,6 +1536,20 @@ static const char *joiningNames[] = {
     status = ATSUSetTransientFontMatching (layout, YES);
     if(status != noErr)
         FATAL_ALWAYS ("ATSUSetTransientFontMatching failed(%d)", status);
+
+    substituteOffset = run->from;
+    while ((status = ATSUMatchFontsToText(layout, substituteOffset, kATSUToTextEnd, &ATSUSubstituteFont, &substituteOffset, &substituteLength)) == kATSUFontsMatched || status == kATSUFontsNotMatched) {
+        NSFont *substituteFont = [self _substituteFontForCharacters:run->characters+substituteOffset length:substituteLength families:style->families];
+        if (substituteFont) {
+            WebTextRenderer *substituteRenderer = [[WebTextRendererFactory sharedFactory] rendererWithFont:substituteFont usingPrinterFont:usingPrinterFont];
+            [substituteRenderer _initializeATSUStyle];
+            if (substituteRenderer && substituteRenderer->_ATSUSstyle)
+                ATSUSetRunStyle(layout, substituteRenderer->_ATSUSstyle, substituteOffset, substituteLength);
+            // ignoring errors
+        }
+        substituteOffset += substituteLength;
+    };
+    // ignoring errors in font substitution
         
     return layout;
 }
@@ -1582,16 +1601,15 @@ static const char *joiningNames[] = {
 static WebCoreTextRun reverseCharactersInRun(const WebCoreTextRun *run)
 {
     WebCoreTextRun swappedRun;
-    unsigned int i;
     
-    UniChar *swappedCharacters = (UniChar *)malloc(sizeof(UniChar)*run->length);
-    for (i = 0; i < run->length; i++) {
-        swappedCharacters[i] = run->characters[run->length-i-1];
-    }
+    UniChar *swappedCharacters = (UniChar *)malloc(sizeof(UniChar)*(run->length+2));
+    memcpy(swappedCharacters+1, run->characters, sizeof(UniChar)*run->length);
+    swappedRun.from = (run->from == -1 ? 0 : run->from) + 1;
+    swappedRun.to = (run->to == -1 ? (int)run->length - 1 : run->to + 1);
+    swappedRun.length = run->length+2;
+    swappedCharacters[swappedRun.from - 1] = LEFT_TO_RIGHT_OVERRIDE;
+    swappedCharacters[swappedRun.to] = POP_DIRECTIONAL_FORMATTING;
     swappedRun.characters = swappedCharacters;
-    swappedRun.from = run->length - (run->to == -1 ? (int)run->length : run->to);
-    swappedRun.to = run->length - (run->from == -1 ? 0 : run->from);
-    swappedRun.length = run->length;
 
     return swappedRun;
 }
@@ -1745,7 +1763,7 @@ static WebCoreTextRun reverseCharactersInRun(const WebCoreTextRun *run)
     const WebCoreTextRun *aRun = run;
     WebCoreTextRun swappedRun;
     
-    // Reverse the visually ordered characters.  ATSU will re-reverse.  Ick!
+    // Enclose in LRO-PDF to force ATSU to render visually.
     if (style->visuallyOrdered) {
         swappedRun = reverseCharactersInRun(run);
         aRun = &swappedRun;
