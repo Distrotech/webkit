@@ -1,3 +1,75 @@
+2005-08-12  Adele Peterson  <adele@apple.com>
+
+        Merged fixes from TOT to Safari-2-0-branch
+        <rdar://problem/4213775> Several fixes in WebCore's bidi algorithm
+
+    2005-06-24  Darin Adler  <darin@apple.com>
+
+        Changes by Mitz Pettel.
+        Reviewed by me.
+
+       - fixed <http://bugzilla.opendarwin.org/show_bug.cgi?id=3693>
+          Bug_72578 in KHTML: bidi algorithm misbehaves with CS after AN
+
+        * khtml/rendering/bidi.cpp: (khtml::RenderBlock::bidiReorderLine): Rolled in the
+        patch from the KDE tree.
+        
+    2005-06-24  Darin Adler  <darin@apple.com>
+
+        Changes by Mitz Pettel.
+        Reviewed by me.
+
+        - fixed <http://bugzilla.opendarwin.org/show_bug.cgi?id=3599>
+          Incorrect layout of explicit embedding levels
+
+        * khtml/rendering/bidi.cpp:
+        (khtml::embed): Set up the new run correctly following an embed/pop.
+        (khtml::RenderBlock::bidiReorderLine): Close the "dangling" run when we see an explicit
+        embedding character (or PDF).
+        
+    2005-06-22  Darin Adler  <darin@apple.com>
+
+        Changes by Mitz Pettel.
+        Reviewed by me.
+
+        - fixed <http://bugzilla.opendarwin.org/show_bug.cgi?id=3633>
+          Layout order of bidi level runs is incorrect
+
+        * khtml/rendering/bidi.cpp: (khtml::RenderBlock::bidiReorderLine): Fixed mistake
+        where we'd advance too far after reversing a run.
+        
+    2005-07-05  Geoffrey Garen  <ggaren@apple.com>
+
+        Rolled in patch by opendarwin.org@mitzpettel.com
+
+        -fixes http://bugzilla.opendarwin.org/show_bug.cgi?id=3733
+        Incorrect bidi layout of ETs, ANs, and ENs in some contexts
+
+        Reviewed by hyatt.
+
+        * khtml/rendering/bidi.cpp:
+        (khtml::appendRun):
+        (khtml::RenderBlock::bidiReorderLine):
+        (khtml::RenderBlock::layoutInlineChildren):
+        
+    2005-07-19  Geoffrey Garen  <ggaren@apple.com>
+
+        - rolled in patch by opendarwin.org@mitzpettel.com for
+        http://bugzilla.opendarwin.org/show_bug.cgi?id=3838
+        Text runs unnecessarily split at EN L boundaries
+
+        Reviewed by hyatt.
+
+        * khtml/rendering/bidi.cpp:
+        (khtml::RenderBlock::bidiReorderLine):
+
+
+        * khtml/rendering/bidi.cpp:
+        (khtml::appendRun):
+        (khtml::embed):
+        (khtml::RenderBlock::bidiReorderLine):
+        (khtml::RenderBlock::layoutInlineChildren):
+
 2005-08-11  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch
