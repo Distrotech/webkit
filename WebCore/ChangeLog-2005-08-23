@@ -2,6 +2,21 @@
 
 2005-08-13  Adele Peterson  <adele@apple.com>
 
+        Merged fix from TOT to Safari-2-0-branch
+        This was a regression caused by the acid2 changes, so it needs to be on the branch too.
+
+    2005-05-30  Darin Adler  <darin@apple.com>
+
+        Reviewed by John.
+        Could not figure out how to make an <object> fallback, so for now, no layout test.
+
+        - fixed <rdar://problem/4134124> REGRESSION (tip of tree): crash in QWidget::getView handling onunload event (yahoo.com)
+
+        * khtml/html/html_objectimpl.cpp: (DOM::HTMLObjectElementImpl::getObjectInstance):
+        Check type of RenderObject to be sure it is a RenderWidget before calling widget() on it.
+
+2005-08-13  Adele Peterson  <adele@apple.com>
+
         Rolled out fix since it doesn't work right on the branch
         <rdar://problem/4202641> Line breaks do not happen inside whitespace:pre; word-wrap: break-word
 
