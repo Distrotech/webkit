@@ -2094,7 +2094,7 @@ BidiIterator RenderBlock::findNextLineBreak(BidiIterator &start, BidiState &bidi
                 bool applyWordSpacing = false;
                 bool isNormal = o->style()->whiteSpace() == NORMAL;
                 bool breakNBSP = isNormal && o->style()->nbspMode() == SPACE;
-                bool breakWords = w == 0 && o->style()->wordWrap() == BREAK_WORD && (isNormal || o->style()->whiteSpace() == PRE);
+                bool breakWords = w == 0 && isNormal && o->style()->wordWrap() == BREAK_WORD;
 
                 currentCharacterIsWS = currentCharacterIsSpace || (breakNBSP && c.unicode() == nonBreakingSpace);
 
@@ -2150,7 +2150,7 @@ BidiIterator RenderBlock::findNextLineBreak(BidiIterator &start, BidiState &bidi
                         }
                     }
         
-                    if (o->style()->whiteSpace() == NORMAL || breakWords) {
+                    if (o->style()->whiteSpace() == NORMAL) {
                         // In AFTER_WHITE_SPACE mode, consider the current character
                         // as candidate width for this line.
                         int charWidth = o->style()->khtmlLineBreak() == AFTER_WHITE_SPACE ? t->width(pos, 1, f, w+tmpW) : 0;

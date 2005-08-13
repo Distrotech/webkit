@@ -1,3 +1,11 @@
+2005-08-13  Adele Peterson  <adele@apple.com>
+
+        Rolled out fix since it doesn't work right on the branch
+        <rdar://problem/4202641> Line breaks do not happen inside whitespace:pre; word-wrap: break-word
+
+        * khtml/rendering/bidi.cpp:
+        (khtml::RenderBlock::findNextLineBreak):
+
 2005-08-12  Adele Peterson  <adele@apple.com>
 
         Added a few more missing changes for acid2.
