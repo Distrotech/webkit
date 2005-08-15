@@ -8,6 +8,7 @@ and semantics are as close as possible to those of the Perl 5 language.
 
                        Written by Philip Hazel
            Copyright (c) 1997-2005 University of Cambridge
+           Copyright (c) 2004, 2005 Apple Computer, Inc.
 
 -----------------------------------------------------------------------------
 Redistribution and use in source and binary forms, with or without
@@ -42,6 +43,21 @@ POSSIBILITY OF SUCH DAMAGE.
 modules, but which are not relevant to the exported API. This includes some
 functions whose names all begin with "_pcre_". */
 
+#define _pcre_OP_lengths kjs_pcre_OP_lengths
+#define _pcre_default_tables kjs_pcre_default_tables
+#define _pcre_ord2utf8 kjs_pcre_ord2utf8
+#define _pcre_printint kjs_pcre_printint
+#define _pcre_try_flipped kjs_pcre_try_flipped
+#define _pcre_ucp_findchar kjs_pcre_ucp_findchar
+#define _pcre_utf8_table1 kjs_pcre_utf8_table1
+#define _pcre_utf8_table1_size  kjs_pcre_utf8_table1_size
+#define _pcre_utf8_table2 kjs_pcre_utf8_table2
+#define _pcre_utf8_table3 kjs_pcre_utf8_table3
+#define _pcre_utf8_table4 kjs_pcre_utf8_table4
+#define _pcre_utt kjs_pcre_utt
+#define _pcre_utt_size kjs_pcre_utt_size
+#define _pcre_valid_utf8 kjs_pcre_valid_utf8
+#define _pcre_xclass kjs_pcre_xclass
 
 /* Define DEBUG to get debugging output on stdout. */
 
@@ -63,7 +79,7 @@ all, it had only been about 10 years then... */
 
 /* Get the definitions provided by running "configure" */
 
-#include "config.h"
+#include "pcre-config.h"
 
 /* Standard C headers plus the external interface definition. The only time
 setjmp and stdarg are used is when NO_RECURSE is set. */
@@ -103,6 +119,10 @@ preprocessor time in standard C environments. */
   #error Cannot determine a type for 32-bit unsigned integers
 #endif
 
+/* Include the public PCRE header */
+
+#include "pcre.h"
+
 /* All character handling must be done as unsigned characters. Otherwise there
 are problems with top-bit-set characters and functions such as isspace().
 However, we leave the interface to the outside world as char *, because that
@@ -112,9 +132,12 @@ Unix, where it is defined in sys/types, so use "uschar" instead. */
 
 typedef unsigned char uschar;
 
-/* Include the public PCRE header */
-
-#include "pcre.h"
+/* Use ichar to mean "internal character" for always-unsigned version of pcre_char. */
+#if PCRE_UTF16
+typedef pcre_char ichar;
+#else
+typedef unsigned char ichar;
+#endif
 
 /* Include the (copy of) the public ucp header, changing the external name into
 a private one. This does no harm, even if we aren't compiling UCP support. */
@@ -249,6 +272,47 @@ byte-mode, and more complicated ones for UTF-8 characters. */
 
 #else   /* SUPPORT_UTF8 */
 
+#if PCRE_UTF16
+
+#define LEAD_OFFSET (0xd800 - (0x10000 >> 10))
+#define SURROGATE_OFFSET (0x10000 - (0xd800 << 10) - 0xdc00)
+
+#define IS_LEADING_SURROGATE(c) (((c) & ~0x3ff) == 0xd800)
+#define IS_TRAILING_SURROGATE(c) (((c) & ~0x3ff) == 0xdc00)
+
+#define DECODE_SURROGATE_PAIR(l, t) (((l) << 10) + (t) + SURROGATE_OFFSET)
+#define LEADING_SURROGATE(c) (LEAD_OFFSET + ((c) >> 10))
+#define TRAILING_SURROGATE(c) (0xdc00 + ((c) & 0x3FF))
+
+#define GETCHAR(c, eptr) \
+  c = eptr[0]; \
+  if (IS_LEADING_SURROGATE(c)) \
+    c = DECODE_SURROGATE_PAIR(c, eptr[1])
+
+#define GETCHARTEST(c, eptr) GETCHAR(c, eptr)
+
+#define GETCHARINC(c, eptr) \
+  c = *eptr++; \
+  if (IS_LEADING_SURROGATE(c)) \
+    c = DECODE_SURROGATE_PAIR(c, *eptr++)
+
+#define GETCHARINCTEST(c, eptr) GETCHARINC(c, eptr)
+
+#define GETCHARLEN(c, eptr, len) \
+  c = eptr[0]; \
+  if (!IS_LEADING_SURROGATE(c)) \
+    len = 1; \
+  else \
+    { \
+    c = DECODE_SURROGATE_PAIR(c, eptr[1]); \
+    len = 2; \
+    }
+
+#define ISMBSTARTCHAR(c) IS_LEADING_SURROGATE(c)
+#define ISMIDCHAR(c) IS_TRAILING_SURROGATE(c)
+
+#else
+
 /* Get the next UTF-8 character, not advancing the pointer. This is called when
 we know we are in UTF-8 mode. */
 
@@ -337,10 +401,20 @@ if there are extra bytes. This is called when we know we are in UTF-8 mode. */
     len += gcaa; \
     }
 
+/* Return 1 if at the start of a multibyte character. */
+
+#define ISMBSTARTCHAR(c) (((c) & 0xc0) == 0xc0)
+
+/* Return 1 if not the start of a character. */
+
+#define ISMIDCHAR(c) (((c) & 0xc0) == 0x80)
+
+#endif
+
 /* If the pointer is not at the start of a character, move it back until
 it is. Called only in UTF-8 mode. */
 
-#define BACKCHAR(eptr) while((*eptr & 0xc0) == 0x80) eptr--;
+#define BACKCHAR(eptr) while(ISMIDCHAR(*eptr)) eptr--;
 
 #endif
 
@@ -803,10 +877,10 @@ typedef struct match_data {
   BOOL   partial;               /* PARTIAL flag */
   BOOL   hitend;                /* Hit the end of the subject at some point */
   const uschar *start_code;     /* For use when recursing */
-  const uschar *start_subject;  /* Start of the subject string */
-  const uschar *end_subject;    /* End of the subject string */
-  const uschar *start_match;    /* Start of this match attempt */
-  const uschar *end_match_ptr;  /* Subject position at end match */
+  const ichar *start_subject;   /* Start of the subject string */
+  const ichar *end_subject;     /* End of the subject string */
+  const ichar *start_match;     /* Start of this match attempt */
+  const ichar *end_match_ptr;   /* Subject position at end match */
   int    end_offset_top;        /* Highwater mark at end of match */
   int    capture_last;          /* Most recent capture number */
   int    start_offset;          /* The start offset value */
@@ -820,8 +894,8 @@ functions. */
 
 typedef struct dfa_match_data {
   const uschar *start_code;     /* Start of the compiled pattern */
-  const uschar *start_subject;  /* Start of the subject string */
-  const uschar *end_subject;    /* End of subject string */
+  const ichar *start_subject;   /* Start of the subject string */
+  const ichar *end_subject;     /* End of subject string */
   const uschar *tables;         /* Character tables */
   int   moptions;               /* Match options */
   int   poptions;               /* Pattern options */
@@ -888,7 +962,6 @@ extern const int _pcre_utt_size;
 extern const uschar _pcre_default_tables[];
 
 extern const uschar _pcre_OP_lengths[];
-
 
 /* Internal shared functions. These are functions that are used by more than
 one of the exported public functions. They have to be "external" in the C

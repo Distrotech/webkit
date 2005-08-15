@@ -6,6 +6,7 @@
 "configure" into pcre.h.
 
            Copyright (c) 1997-2005 University of Cambridge
+           Copyright (c) 2004, 2005 Apple Computer, Inc.
 
 -----------------------------------------------------------------------------
 Redistribution and use in source and binary forms, with or without
@@ -39,12 +40,35 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifndef _PCRE_H
 #define _PCRE_H
 
-/* The file pcre.h is build by "configure". Do not edit it; instead
-make changes to pcre.in. */
+#define pcre_callout kjs_pcre_callout
+#define pcre_compile kjs_pcre_compile
+#define pcre_compile2 kjs_pcre_compile2
+#define pcre_config kjs_pcre_config
+#define pcre_copy_named_substring kjs_pcre_copy_named_substring
+#define pcre_copy_substring kjs_pcre_copy_substring
+#define pcre_dfa_exec kjs_pcre_dfa_exec
+#define pcre_exec kjs_pcre_exec
+#define pcre_free kjs_pcre_free
+#define pcre_free_substring kjs_pcre_free_substring
+#define pcre_free_substring_list kjs_pcre_free_substring_list
+#define pcre_fullinfo kjs_pcre_fullinfo
+#define pcre_get_named_substring kjs_pcre_get_named_substring
+#define pcre_get_substring kjs_pcre_get_substring
+#define pcre_get_substring_list kjs_pcre_get_substring_list
+#define pcre_info kjs_pcre_info
+#define pcre_maketables kjs_pcre_maketables
+#define pcre_malloc kjs_pcre_malloc
+#define pcre_refcount kjs_pcre_refcount
+#define pcre_stack_free kjs_pcre_stack_free
+#define pcre_stack_malloc kjs_pcre_stack_malloc
+#define pcre_study kjs_pcre_study
+#define pcre_version kjs_pcre_version
 
-#define PCRE_MAJOR          @PCRE_MAJOR@
-#define PCRE_MINOR          @PCRE_MINOR@
-#define PCRE_DATE           @PCRE_DATE@
+#define PCRE_MAJOR          6
+#define PCRE_MINOR          1
+#define PCRE_DATE           21-Jun-2005
+
+#define PCRE_UTF16          1
 
 /* Win32 uses DLL by default; it needs special stuff for exported functions. */
 
@@ -161,6 +185,12 @@ extern "C" {
 
 /* Types */
 
+#if PCRE_UTF16
+typedef unsigned short pcre_char;
+#else
+typedef char pcre_char;
+#endif
+
 struct real_pcre;                 /* declaration; the definition is private  */
 typedef struct real_pcre pcre;
 
@@ -186,7 +216,7 @@ typedef struct pcre_callout_block {
   /* ------------------------ Version 0 ------------------------------- */
   int          callout_number;    /* Number compiled into pattern */
   int         *offset_vector;     /* The offset vector */
-  const char  *subject;           /* The subject being matched */
+  const pcre_char  *subject;      /* The subject being matched */
   int          subject_length;    /* The length of the subject */
   int          start_match;       /* Offset to start of this match attempt */
   int          current_position;  /* Where we currently are in the subject */
@@ -221,30 +251,30 @@ PCRE_DATA_SCOPE int   pcre_callout(pcre_callout_block *);
 
 /* Exported PCRE functions */
 
-PCRE_DATA_SCOPE pcre *pcre_compile(const char *, int, const char **, int *,
+PCRE_DATA_SCOPE pcre *pcre_compile(const pcre_char *, int, const char **, int *,
                   const unsigned char *);
-PCRE_DATA_SCOPE pcre *pcre_compile2(const char *, int, int *, const char **,
+PCRE_DATA_SCOPE pcre *pcre_compile2(const pcre_char *, int, int *, const char **,
                   int *, const unsigned char *);
 PCRE_DATA_SCOPE int  pcre_config(int, void *);
-PCRE_DATA_SCOPE int  pcre_copy_named_substring(const pcre *, const char *,
-                  int *, int, const char *, char *, int);
-PCRE_DATA_SCOPE int  pcre_copy_substring(const char *, int *, int, int, char *,
+PCRE_DATA_SCOPE int  pcre_copy_named_substring(const pcre *, const pcre_char *,
+                  int *, int, const pcre_char *, pcre_char *, int);
+PCRE_DATA_SCOPE int  pcre_copy_substring(const pcre_char *, int *, int, int, pcre_char *,
                   int);
 PCRE_DATA_SCOPE int  pcre_dfa_exec(const pcre *, const pcre_extra *,
-                  const char *, int, int, int, int *, int , int *, int);
-PCRE_DATA_SCOPE int  pcre_exec(const pcre *, const pcre_extra *, const char *,
+                  const pcre_char *, int, int, int, int *, int , int *, int);
+PCRE_DATA_SCOPE int  pcre_exec(const pcre *, const pcre_extra *, const pcre_char *,
                    int, int, int, int *, int);
-PCRE_DATA_SCOPE void pcre_free_substring(const char *);
-PCRE_DATA_SCOPE void pcre_free_substring_list(const char **);
+PCRE_DATA_SCOPE void pcre_free_substring(const pcre_char *);
+PCRE_DATA_SCOPE void pcre_free_substring_list(const pcre_char **);
 PCRE_DATA_SCOPE int  pcre_fullinfo(const pcre *, const pcre_extra *, int,
                   void *);
-PCRE_DATA_SCOPE int  pcre_get_named_substring(const pcre *, const char *,
-                  int *, int, const char *, const char **);
-PCRE_DATA_SCOPE int  pcre_get_stringnumber(const pcre *, const char *);
-PCRE_DATA_SCOPE int  pcre_get_substring(const char *, int *, int, int,
-                  const char **);
-PCRE_DATA_SCOPE int  pcre_get_substring_list(const char *, int *, int,
-                  const char ***);
+PCRE_DATA_SCOPE int  pcre_get_named_substring(const pcre *, const pcre_char *,
+                  int *, int, const pcre_char *, const pcre_char **);
+PCRE_DATA_SCOPE int  pcre_get_stringnumber(const pcre *, const pcre_char *);
+PCRE_DATA_SCOPE int  pcre_get_substring(const pcre_char *, int *, int, int,
+                  const pcre_char **);
+PCRE_DATA_SCOPE int  pcre_get_substring_list(const pcre_char *, int *, int,
+                  const pcre_char ***);
 PCRE_DATA_SCOPE int  pcre_info(const pcre *, int *, int *);
 PCRE_DATA_SCOPE const unsigned char *pcre_maketables(void);
 PCRE_DATA_SCOPE int  pcre_refcount(pcre *, int);
