@@ -126,4 +126,6 @@ const ucp_type_table _pcre_utt[] = {
 
 const int _pcre_utt_size = sizeof(_pcre_utt)/sizeof(ucp_type_table);
 
+#include "chartables.c"
+
 /* End of pcre_tables.c */

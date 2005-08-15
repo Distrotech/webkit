@@ -337,7 +337,7 @@ static const unsigned char ebcdic_chartab[] = { /* chartable partial dup */
 /* Definition to allow mutual recursion */
 
 static BOOL
-  compile_regex(int, int, int *, uschar **, const ichar **, int *, BOOL, int,
+  compile_regex(int, int, int *, uschar **, const pcre_uchar **, int *, BOOL, int,
     int *, int *, branch_chain *, compile_data *);
 
 
@@ -365,10 +365,10 @@ Returns:         zero or positive => a data character
 */
 
 static int
-check_escape(const ichar **ptrptr, int *errorcodeptr, int bracount,
+check_escape(const pcre_uchar **ptrptr, int *errorcodeptr, int bracount,
   int options, BOOL isclass)
 {
-const ichar *ptr = *ptrptr;
+const pcre_uchar *ptr = *ptrptr;
 int c, i;
 
 /* If backslash is at the end of the pattern, it's an error. */
@@ -393,7 +393,7 @@ else if ((i = escapes[c - 0x48]) != 0)  c = i;
 
 else
   {
-  const ichar *oldptr;
+  const pcre_uchar *oldptr;
   switch (c)
     {
     /* A number of Perl escapes are not handled by PCRE. We give an explicit
@@ -464,7 +464,7 @@ else
 #ifdef SUPPORT_UTF8
     if (ptr[1] == '{' && (options & PCRE_UTF8) != 0)
       {
-      const ichar *pt = ptr + 2;
+      const pcre_uchar *pt = ptr + 2;
       register int count = 0;
       c = 0;
       while ((digitab[*pt] & ctype_xdigit) != 0)
@@ -572,10 +572,10 @@ Returns:     value from ucp_type_table, or -1 for an invalid type
 */
 
 static int
-get_ucp(const ichar **ptrptr, BOOL *negptr, int *errorcodeptr)
+get_ucp(const pcre_uchar **ptrptr, BOOL *negptr, int *errorcodeptr)
 {
 int c, i, bot, top;
-const ichar *ptr = *ptrptr;
+const pcre_uchar *ptr = *ptrptr;
 char name[4];
 
 c = *(++ptr);
@@ -662,7 +662,7 @@ Returns:    TRUE or FALSE
 */
 
 static BOOL
-is_counted_repeat(const ichar *p)
+is_counted_repeat(const pcre_uchar *p)
 {
 if ((digitab[*p++] & ctype_digit) == 0) return FALSE;
 while ((digitab[*p] & ctype_digit) != 0) p++;
@@ -698,8 +698,8 @@ Returns:         pointer to '}' on success;
                  current ptr on error, with errorcodeptr set non-zero
 */
 
-static const ichar *
-read_repeat_counts(const ichar *p, int *minp, int *maxp, int *errorcodeptr)
+static const pcre_uchar *
+read_repeat_counts(const pcre_uchar *p, int *minp, int *maxp, int *errorcodeptr)
 {
 int min = 0;
 int max = -1;
@@ -1327,7 +1327,7 @@ Returns:   TRUE or FALSE
 */
 
 static BOOL
-check_posix_syntax(const ichar *ptr, const ichar **endptr, compile_data *cd)
+check_posix_syntax(const pcre_uchar *ptr, const pcre_uchar **endptr, compile_data *cd)
 {
 int terminator;          /* Don't combine these lines; the Solaris cc */
 terminator = *(++ptr);   /* compiler warns about "non-constant" initializer. */
@@ -1343,7 +1343,7 @@ return FALSE;
 
 #if PCRE_UTF16
 
-static inline BOOL strequal(const ichar *str1, int len, const char *str2)
+static inline BOOL strequal(const pcre_uchar *str1, int len, const char *str2)
 {
   int i;
   for (i = 0; i < len; i++)
@@ -1375,7 +1375,7 @@ Returns:     a value representing the name, or -1 if unknown
 */
 
 static int
-check_posix_name(const ichar *ptr, int len)
+check_posix_name(const pcre_uchar *ptr, int len)
 {
 register int yield = 0;
 while (posix_name_lengths[yield] != 0)
@@ -1441,7 +1441,7 @@ Returns:         new code pointer
 */
 
 static uschar *
-auto_callout(uschar *code, const ichar *ptr, compile_data *cd)
+auto_callout(uschar *code, const pcre_uchar *ptr, compile_data *cd)
 {
 *code++ = OP_CALLOUT;
 *code++ = 255;
@@ -1469,7 +1469,7 @@ Returns:             nothing
 */
 
 static void
-complete_callout(uschar *previous_callout, const ichar *ptr, compile_data *cd)
+complete_callout(uschar *previous_callout, const pcre_uchar *ptr, compile_data *cd)
 {
 int length = ptr - cd->start_pattern - GET(previous_callout, 2);
 PUT(previous_callout, 2 + LINK_SIZE, length);
@@ -1553,7 +1553,7 @@ Returns:         TRUE on success
 
 static BOOL
 compile_branch(int *optionsptr, int *brackets, uschar **codeptr,
-  const ichar **ptrptr, int *errorcodeptr, int *firstbyteptr,
+  const pcre_uchar **ptrptr, int *errorcodeptr, int *firstbyteptr,
   int *reqbyteptr, branch_chain *bcptr, compile_data *cd)
 {
 int repeat_type, op_type;
@@ -1571,8 +1571,8 @@ register uschar *code = *codeptr;
 uschar *tempcode;
 BOOL inescq = FALSE;
 BOOL groupsetfirstbyte = FALSE;
-const ichar *ptr = *ptrptr;
-const ichar *tempptr;
+const pcre_uchar *ptr = *ptrptr;
+const pcre_uchar *tempptr;
 uschar *previous = NULL;
 uschar *previous_callout = NULL;
 uschar classbits[32];
@@ -2005,7 +2005,7 @@ for (;; ptr++)
 
         if (d == '\\')
           {
-          const ichar *oldptr = ptr;
+          const pcre_uchar *oldptr = ptr;
           d = check_escape(&ptr, errorcodeptr, *brackets, options, TRUE);
 
           /* \b is backslash; \X is literal X; any other special means the '-'
@@ -2903,7 +2903,7 @@ for (;; ptr++)
           {
           int i, namelen;
           uschar *slot = cd->name_table;
-          const ichar *name;      /* Don't amalgamate; some compilers */
+          const pcre_uchar *name;      /* Don't amalgamate; some compilers */
           name = ++ptr;           /* grumble at autoincrement in declaration */
 
           while (*ptr++ != '>');
@@ -2941,7 +2941,7 @@ for (;; ptr++)
           {
           int i, namelen;
           int type = *ptr++;
-          const ichar *name = ptr;
+          const pcre_uchar *name = ptr;
           uschar *slot = cd->name_table;
 
           while (*ptr != ')') ptr++;
@@ -3431,10 +3431,10 @@ Returns:      TRUE on success
 
 static BOOL
 compile_regex(int options, int oldims, int *brackets, uschar **codeptr,
-  const ichar **ptrptr, int *errorcodeptr, BOOL lookbehind, int skipbytes,
+  const pcre_uchar **ptrptr, int *errorcodeptr, BOOL lookbehind, int skipbytes,
   int *firstbyteptr, int *reqbyteptr, branch_chain *bcptr, compile_data *cd)
 {
-const ichar *ptr = *ptrptr;
+const pcre_uchar *ptr = *ptrptr;
 uschar *code = *codeptr;
 uschar *last_branch = code;
 uschar *start_bracket = code;
@@ -3882,7 +3882,7 @@ unsigned int brastackptr = 0;
 size_t size;
 uschar *code;
 const uschar *codestart;
-const ichar *ptr;
+const pcre_uchar *ptr;
 compile_data compile_block;
 int brastack[BRASTACK_SIZE];
 uschar bralenstack[BRASTACK_SIZE];
@@ -3922,7 +3922,7 @@ options |= PCRE_UTF8;
 utf8 = (options & PCRE_UTF8) != 0;
 #if !PCRE_UTF16
 if (utf8 && (options & PCRE_NO_UTF8_CHECK) == 0 &&
-     (*erroroffset = _pcre_valid_utf8((ichar *)pattern, -1)) >= 0)
+     (*erroroffset = _pcre_valid_utf8((pcre_uchar *)pattern, -1)) >= 0)
   {
   errorcode = ERR44;
   goto PCRE_EARLY_ERROR_RETURN;
@@ -3970,7 +3970,7 @@ flag settings right at the start, and extract them. Make an attempt to correct
 for any counted white space if an "extended" flag setting appears late in the
 pattern. We can't be so clever for #-comments. */
 
-ptr = (const ichar *)(pattern - 1);
+ptr = (const pcre_uchar *)(pattern - 1);
 while ((c = *(++ptr)) != 0)
   {
   int min, max;
@@ -4287,7 +4287,7 @@ while ((c = *(++ptr)) != 0)
         d = -1;
         if (ptr[1] == '-')
           {
-          ichar const *hyptr = ptr++;
+          pcre_uchar const *hyptr = ptr++;
           if (ptr[1] == '\\')
             {
             ptr++;
@@ -4537,7 +4537,7 @@ while ((c = *(++ptr)) != 0)
         ptr += 3;
         if (*ptr == '<')
           {
-          const ichar *p;    /* Don't amalgamate; some compilers */
+          const pcre_uchar *p;    /* Don't amalgamate; some compilers */
           p = ++ptr;          /* grumble at autoincrement in declaration */
           while ((compile_block.ctypes[*ptr] & ctype_word) != 0) ptr++;
           if (*ptr != '>')
@@ -4919,7 +4919,7 @@ compile_block.name_entry_size = max_name_size + 3;
 compile_block.name_table = (uschar *)re + re->name_table_offset;
 codestart = compile_block.name_table + re->name_entry_size * re->name_count;
 compile_block.start_code = codestart;
-compile_block.start_pattern = (const ichar *)pattern;
+compile_block.start_pattern = (const pcre_uchar *)pattern;
 compile_block.req_varyopt = 0;
 compile_block.nopartial = FALSE;
 
@@ -4927,7 +4927,7 @@ compile_block.nopartial = FALSE;
 error, errorcode will be set non-zero, so we don't need to look at the result
 of the function here. */
 
-ptr = (const ichar *)pattern;
+ptr = (const pcre_uchar *)pattern;
 code = (uschar *)codestart;
 *code = OP_BRA;
 bracount = 0;
@@ -4962,7 +4962,7 @@ if (errorcode != 0)
   {
   (pcre_free)(re);
   PCRE_ERROR_RETURN:
-  *erroroffset = ptr - (const ichar *)pattern;
+  *erroroffset = ptr - (const pcre_uchar *)pattern;
   PCRE_EARLY_ERROR_RETURN:
   *errorptr = error_texts[errorcode];
   if (errorcodeptr != NULL) *errorcodeptr = errorcode;
@@ -5060,7 +5060,7 @@ if (code - codestart > length)
   {
   (pcre_free)(re);
   *errorptr = error_texts[ERR23];
-  *erroroffset = ptr - (ichar *)pattern;
+  *erroroffset = ptr - (pcre_uchar *)pattern;
   if (errorcodeptr != NULL) *errorcodeptr = ERR23;
   return NULL;
   }

@@ -132,11 +132,11 @@ Unix, where it is defined in sys/types, so use "uschar" instead. */
 
 typedef unsigned char uschar;
 
-/* Use ichar to mean "internal character" for always-unsigned version of pcre_char. */
+/* Use pcre_uchar for always-unsigned version of pcre_char. */
 #if PCRE_UTF16
-typedef pcre_char ichar;
+typedef pcre_char pcre_uchar;
 #else
-typedef unsigned char ichar;
+typedef unsigned char pcre_uchar;
 #endif
 
 /* Include the (copy of) the public ucp header, changing the external name into
@@ -815,7 +815,7 @@ typedef struct compile_data {
   const uschar *cbits;          /* Points to character type table */
   const uschar *ctypes;         /* Points to table of type maps */
   const uschar *start_code;     /* The start of the compiled code */
-  const ichar *start_pattern;   /* The start of the pattern */
+  const pcre_uchar *start_pattern;   /* The start of the pattern */
   uschar *name_table;           /* The name/number table */
   int  names_found;             /* Number of entries so far */
   int  name_entry_size;         /* Size of each entry */
@@ -840,7 +840,7 @@ typedef struct recursion_info {
   struct recursion_info *prevrec; /* Previous recursion record (or NULL) */
   int group_num;                /* Number of group that was called */
   const uschar *after_call;     /* "Return value": points after the call in the expr */
-  const ichar *save_start;     /* Old value of md->start_match */
+  const pcre_uchar *save_start;     /* Old value of md->start_match */
   int *offset_save;             /* Pointer to start of saved offsets */
   int saved_max;                /* Number of saved offsets */
 } recursion_info;
@@ -875,10 +875,10 @@ typedef struct match_data {
   BOOL   partial;               /* PARTIAL flag */
   BOOL   hitend;                /* Hit the end of the subject at some point */
   const uschar *start_code;     /* For use when recursing */
-  const ichar *start_subject;   /* Start of the subject string */
-  const ichar *end_subject;     /* End of the subject string */
-  const ichar *start_match;     /* Start of this match attempt */
-  const ichar *end_match_ptr;   /* Subject position at end match */
+  const pcre_uchar *start_subject;   /* Start of the subject string */
+  const pcre_uchar *end_subject;     /* End of the subject string */
+  const pcre_uchar *start_match;     /* Start of this match attempt */
+  const pcre_uchar *end_match_ptr;   /* Subject position at end match */
   int    end_offset_top;        /* Highwater mark at end of match */
   int    capture_last;          /* Most recent capture number */
   int    start_offset;          /* The start offset value */
@@ -892,8 +892,8 @@ functions. */
 
 typedef struct dfa_match_data {
   const uschar *start_code;     /* Start of the compiled pattern */
-  const ichar *start_subject;   /* Start of the subject string */
-  const ichar *end_subject;     /* End of subject string */
+  const pcre_uchar *start_subject;   /* Start of the subject string */
+  const pcre_uchar *end_subject;     /* End of subject string */
   const uschar *tables;         /* Character tables */
   int   moptions;               /* Match options */
   int   poptions;               /* Pattern options */
