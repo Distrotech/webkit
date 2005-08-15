@@ -111,7 +111,7 @@ static const short int escapes[] = {
 terminated by a zero length entry. The first three must be alpha, upper, lower,
 as this is assumed for handling case independence. */
 
-static const char * const const posix_names[] = {
+static const char * const posix_names[] = {
   "alpha", "lower", "upper",
   "alnum", "ascii", "blank", "cntrl", "digit", "graph",
   "print", "punct", "space", "word",  "xdigit" };
@@ -1352,11 +1352,11 @@ static inline BOOL strequal(const ichar *str1, int len, const char *str2)
   return TRUE;
 }
 
-#define STREQUAL(str1, len, str2) strequal((str), (len), (str2))
+#define STREQUAL(str1, len, str2) strequal((str1), (len), (str2))
 
 #else
 
-#define STREQUAL(str1, len, str2) (strncmp((const char *)(str), (str2), (len)) == 0)
+#define STREQUAL(str1, len, str2) (strncmp((const char *)(str1), (str2), (len)) == 0)
 
 #endif
 

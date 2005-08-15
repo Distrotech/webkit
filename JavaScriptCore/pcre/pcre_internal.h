@@ -300,12 +300,10 @@ byte-mode, and more complicated ones for UTF-8 characters. */
 
 #define GETCHARLEN(c, eptr, len) \
   c = eptr[0]; \
-  if (!IS_LEADING_SURROGATE(c)) \
-    len = 1; \
-  else \
+  if (IS_LEADING_SURROGATE(c)) \
     { \
     c = DECODE_SURROGATE_PAIR(c, eptr[1]); \
-    len = 2; \
+    ++len; \
     }
 
 #define ISMBSTARTCHAR(c) IS_LEADING_SURROGATE(c)
@@ -817,7 +815,7 @@ typedef struct compile_data {
   const uschar *cbits;          /* Points to character type table */
   const uschar *ctypes;         /* Points to table of type maps */
   const uschar *start_code;     /* The start of the compiled code */
-  const uschar *start_pattern;  /* The start of the pattern */
+  const ichar *start_pattern;   /* The start of the pattern */
   uschar *name_table;           /* The name/number table */
   int  names_found;             /* Number of entries so far */
   int  name_entry_size;         /* Size of each entry */
@@ -842,7 +840,7 @@ typedef struct recursion_info {
   struct recursion_info *prevrec; /* Previous recursion record (or NULL) */
   int group_num;                /* Number of group that was called */
   const uschar *after_call;     /* "Return value": points after the call in the expr */
-  const uschar *save_start;     /* Old value of md->start_match */
+  const ichar *save_start;     /* Old value of md->start_match */
   int *offset_save;             /* Pointer to start of saved offsets */
   int saved_max;                /* Number of saved offsets */
 } recursion_info;

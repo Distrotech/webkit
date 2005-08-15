@@ -54,7 +54,7 @@ are on the heap, not on the stack. */
 
 typedef struct eptrblock {
   struct eptrblock *epb_prev;
-  const uschar *epb_saved_eptr;
+  const ichar *epb_saved_eptr;
 } eptrblock;
 
 /* Flag bits for the match() function */
@@ -99,7 +99,7 @@ Returns:     nothing
 */
 
 static void
-pchars(const uschar *p, int length, BOOL is_subject, match_data *md)
+pchars(const ichar *p, int length, BOOL is_subject, match_data *md)
 {
 int c;
 if (is_subject && length > md->end_subject - p) length = md->end_subject - p;
@@ -128,10 +128,10 @@ Returns:      TRUE if matched
 */
 
 static BOOL
-match_ref(int offset, register const uschar *eptr, int length, match_data *md,
+match_ref(int offset, register const ichar *eptr, int length, match_data *md,
   unsigned long int ims)
 {
-const uschar *p = md->start_subject + md->offset_vector[offset];
+const ichar *p = md->start_subject + md->offset_vector[offset];
 
 #ifdef DEBUG
 if (eptr >= md->end_subject)
@@ -250,7 +250,7 @@ typedef struct heapframe {
 
   /* Function arguments that may change */
 
-  const uschar *Xeptr;
+  const ichar *Xeptr;
   const uschar *Xecode;
   int Xoffset_top;
   long int Xims;
@@ -263,9 +263,9 @@ typedef struct heapframe {
   const uschar *Xcharptr;
   const uschar *Xdata;
   const uschar *Xnext;
-  const uschar *Xpp;
+  const ichar *Xpp;
   const uschar *Xprev;
-  const uschar *Xsaved_eptr;
+  const ichar *Xsaved_eptr;
 
   recursion_info Xnew_recursive;
 
@@ -351,7 +351,7 @@ Returns:       MATCH_MATCH if matched            )  these values are >= 0
 */
 
 static int
-match(REGISTER const uschar *eptr, REGISTER const uschar *ecode,
+match(REGISTER const ichar *eptr, REGISTER const uschar *ecode,
   int offset_top, match_data *md, unsigned long int ims, eptrblock *eptrb,
   int flags)
 {
@@ -458,9 +458,9 @@ const uschar *charptr;             /* small blocks of the code. My normal  */
 const uschar *callpat;             /* them within each of those blocks.    */
 const uschar *data;                /* However, in order to accommodate the */
 const uschar *next;                /* version of this code that uses an    */
-const uschar *pp;                  /* external "stack" implemented on the  */
+const ichar *pp;                   /* external "stack" implemented on the  */
 const uschar *prev;                /* heap, it is easier to declare them   */
-const uschar *saved_eptr;          /* all here, so the declarations can    */
+const ichar *saved_eptr;           /* all here, so the declarations can    */
                                    /* be cut out in a block. The only      */
 recursion_info new_recursive;      /* declarations within blocks below are */
                                    /* for variables that do not have to    */
@@ -800,7 +800,7 @@ for (;;)
       cb.version          = 1;   /* Version 1 of the callout block */
       cb.callout_number   = ecode[1];
       cb.offset_vector    = md->offset_vector;
-      cb.subject          = (const char *)md->start_subject;
+      cb.subject          = (const pcre_char *)md->start_subject;
       cb.subject_length   = md->end_subject - md->start_subject;
       cb.start_match      = md->start_match - md->start_subject;
       cb.current_position = eptr - md->start_subject;
@@ -1213,7 +1213,7 @@ for (;;)
         {
         if (eptr == md->start_subject) prev_is_word = FALSE; else
           {
-          const uschar *lastptr = eptr - 1;
+          const ichar *lastptr = eptr - 1;
           while((*lastptr & 0xc0) == 0x80) lastptr--;
           GETCHAR(c, lastptr);
           prev_is_word = c < 256 && (md->ctypes[c] & ctype_word) != 0;
@@ -3202,7 +3202,7 @@ Returns:          > 0 => success; value is the number of elements filled in
 
 EXPORT int
 pcre_exec(const pcre *argument_re, const pcre_extra *extra_data,
-  const char *subject, int length, int start_offset, int options, int *offsets,
+  const pcre_char *subject, int length, int start_offset, int options, int *offsets,
   int offsetcount)
 {
 int rc, resetcount, ocount;
@@ -3219,9 +3219,9 @@ BOOL req_byte_caseless = FALSE;
 match_data match_block;
 const uschar *tables;
 const uschar *start_bits = NULL;
-const uschar *start_match = (const uschar *)subject + start_offset;
-const uschar *end_subject;
-const uschar *req_byte_ptr = start_match - 1;
+const ichar *start_match = (const ichar *)subject + start_offset;
+const ichar *end_subject;
+const ichar *req_byte_ptr = start_match - 1;
 
 pcre_study_data internal_study;
 const pcre_study_data *study;
@@ -3289,7 +3289,7 @@ firstline = (re->options & PCRE_FIRSTLINE) != 0;
 match_block.start_code = (const uschar *)external_re + re->name_table_offset +
   re->name_count * re->name_entry_size;
 
-match_block.start_subject = (const uschar *)subject;
+match_block.start_subject = (const ichar *)subject;
 match_block.start_offset = start_offset;
 match_block.end_subject = match_block.start_subject + length;
 end_subject = match_block.end_subject;
@@ -3317,14 +3317,15 @@ if (match_block.partial && (re->options & PCRE_NOPARTIAL) != 0)
 /* Check a UTF-8 string if required. Unfortunately there's no way of passing
 back the character offset. */
 
+#if !PCRE_UTF16
 #ifdef SUPPORT_UTF8
 if (match_block.utf8 && (options & PCRE_NO_UTF8_CHECK) == 0)
   {
-  if (_pcre_valid_utf8((uschar *)subject, length) >= 0)
+  if (_pcre_valid_utf8((ichar *)subject, length) >= 0)
     return PCRE_ERROR_BADUTF8;
   if (start_offset > 0 && start_offset < length)
     {
-    int tb = ((uschar *)subject)[start_offset];
+    int tb = ((ichar *)subject)[start_offset];
     if (tb > 127)
       {
       tb &= 0xc0;
@@ -3332,6 +3333,7 @@ if (match_block.utf8 && (options & PCRE_NO_UTF8_CHECK) == 0)
       }
     }
   }
+#endif
 #endif
 
 /* The ims options can vary during the matching as a result of the presence
@@ -3415,7 +3417,7 @@ the loop runs just once. */
 
 do
   {
-  const uschar *save_end_subject = end_subject;
+  const ichar *save_end_subject = end_subject;
 
   /* Reset the maximum number of extractions we might see. */
 
@@ -3434,7 +3436,7 @@ do
 
   if (firstline)
     {
-    const uschar *t = start_match;
+    const ichar *t = start_match;
     while (t < save_end_subject && *t != '\n') t++;
     end_subject = t;
     }
@@ -3504,7 +3506,7 @@ do
       end_subject - start_match < REQ_BYTE_MAX &&
       !match_block.partial)
     {
-    register const uschar *p = start_match + ((first_byte >= 0)? 1 : 0);
+    register const ichar *p = start_match + ((first_byte >= 0)? 1 : 0);
 
     /* We don't need to repeat the search if we haven't yet reached the
     place we found it at last time. */
