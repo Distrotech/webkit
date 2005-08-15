@@ -190,6 +190,12 @@
 		93E26BD508B1514100F85226 /* pcre_xclass.c in Sources */ = {isa = PBXBuildFile; fileRef = 93E26BD308B1514100F85226 /* pcre_xclass.c */; };
 		93E26BE608B1517100F85226 /* pcre_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 93E26BE508B1517100F85226 /* pcre_internal.h */; };
 		93E26BE708B1517100F85226 /* pcre_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 93E26BE508B1517100F85226 /* pcre_internal.h */; };
+		93E26BFD08B151D400F85226 /* ucp.h in Headers */ = {isa = PBXBuildFile; fileRef = 93E26BFB08B151D400F85226 /* ucp.h */; };
+		93E26BFE08B151D400F85226 /* ucpinternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 93E26BFC08B151D400F85226 /* ucpinternal.h */; };
+		93E26BFF08B151D400F85226 /* ucp.h in Headers */ = {isa = PBXBuildFile; fileRef = 93E26BFB08B151D400F85226 /* ucp.h */; };
+		93E26C0008B151D400F85226 /* ucpinternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 93E26BFC08B151D400F85226 /* ucpinternal.h */; };
+		93E26C0F08B1520900F85226 /* ucptable.c in Sources */ = {isa = PBXBuildFile; fileRef = 93E26C0D08B1520900F85226 /* ucptable.c */; };
+		93E26C1308B1523D00F85226 /* ucptable.c in Headers */ = {isa = PBXBuildFile; fileRef = 93E26C0D08B1520900F85226 /* ucptable.c */; };
 		A85D81F8087B2822006A9172 /* array_object.h in Headers */ = {isa = PBXBuildFile; fileRef = F692A84E0255597D01FF60F7 /* array_object.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		A85D81F9087B2822006A9172 /* collector.h in Headers */ = {isa = PBXBuildFile; fileRef = F692A8530255597D01FF60F7 /* collector.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		A85D81FA087B2822006A9172 /* date_object.h in Headers */ = {isa = PBXBuildFile; fileRef = F692A8560255597D01FF60F7 /* date_object.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -512,6 +518,9 @@
 		93E26BD008B1513800F85226 /* pcre_try_flipped.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = pcre_try_flipped.c; path = pcre/pcre_try_flipped.c; sourceTree = "<group>"; };
 		93E26BD308B1514100F85226 /* pcre_xclass.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = pcre_xclass.c; path = pcre/pcre_xclass.c; sourceTree = "<group>"; };
 		93E26BE508B1517100F85226 /* pcre_internal.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = pcre_internal.h; path = pcre/pcre_internal.h; sourceTree = "<group>"; };
+		93E26BFB08B151D400F85226 /* ucp.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ucp.h; path = pcre/ucp.h; sourceTree = "<group>"; };
+		93E26BFC08B151D400F85226 /* ucpinternal.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ucpinternal.h; path = pcre/ucpinternal.h; sourceTree = "<group>"; };
+		93E26C0D08B1520900F85226 /* ucptable.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = ucptable.c; path = pcre/ucptable.c; sourceTree = "<group>"; };
 		93F1981A08245AAE001E9ABC /* keywords.table */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = keywords.table; sourceTree = "<group>"; };
 		A85D8288087B2822006A9172 /* JavaScriptCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = JavaScriptCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F50888B6030BB74C012A967E /* simple_number.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = simple_number.h; sourceTree = "<group>"; };
@@ -804,6 +813,9 @@
 				65417217039E0B280058BFEB /* pcre-config.h */,
 				6541720F039E08B90058BFEB /* pcre.h */,
 				93E26BE508B1517100F85226 /* pcre_internal.h */,
+				93E26BFB08B151D400F85226 /* ucp.h */,
+				93E26BFC08B151D400F85226 /* ucpinternal.h */,
+				93E26C0D08B1520900F85226 /* ucptable.c */,
 				930754BF08B0F68000AB3056 /* pcre_compile.c */,
 				930754E908B0F78500AB3056 /* pcre_exec.c */,
 				930754E608B0F77700AB3056 /* pcre_fullinfo.c */,
@@ -934,6 +946,9 @@
 				932FC11D0824A6A3005B3C75 /* create_hash_table in Headers */,
 				65621E6E089E859700760F35 /* property_slot.h in Headers */,
 				93E26BE608B1517100F85226 /* pcre_internal.h in Headers */,
+				93E26BFD08B151D400F85226 /* ucp.h in Headers */,
+				93E26BFE08B151D400F85226 /* ucpinternal.h in Headers */,
+				93E26C1308B1523D00F85226 /* ucptable.c in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1015,6 +1030,8 @@
 				65621E70089E85D300760F35 /* property_slot.h in Headers */,
 				A85D823F087B2822006A9172 /* create_hash_table in Headers */,
 				93E26BE708B1517100F85226 /* pcre_internal.h in Headers */,
+				93E26BFF08B151D400F85226 /* ucp.h in Headers */,
+				93E26C0008B151D400F85226 /* ucpinternal.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1664,6 +1681,7 @@
 				93E26BCF08B1512600F85226 /* pcre_ucp_findchar.c in Sources */,
 				93E26BD208B1513800F85226 /* pcre_try_flipped.c in Sources */,
 				93E26BD508B1514100F85226 /* pcre_xclass.c in Sources */,
+				93E26C0F08B1520900F85226 /* ucptable.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
