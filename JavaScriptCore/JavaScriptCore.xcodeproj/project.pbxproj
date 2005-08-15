@@ -69,7 +69,6 @@
 		932F5B6B0822A1C700736975 /* dtoa.h in Headers */ = {isa = PBXBuildFile; fileRef = 651F6413039D5B5F0078395C /* dtoa.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		932F5B6C0822A1C700736975 /* pcre.h in Headers */ = {isa = PBXBuildFile; fileRef = 6541720F039E08B90058BFEB /* pcre.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		932F5B6D0822A1C700736975 /* pcre-config.h in Headers */ = {isa = PBXBuildFile; fileRef = 65417217039E0B280058BFEB /* pcre-config.h */; };
-		932F5B6E0822A1C700736975 /* internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 937F4F24048E5B9900CA2AC4 /* internal.h */; };
 		932F5B6F0822A1C700736975 /* jni_utility.h in Headers */ = {isa = PBXBuildFile; fileRef = 51856D900562EE95008B9D83 /* jni_utility.h */; };
 		932F5B700822A1C700736975 /* runtime.h in Headers */ = {isa = PBXBuildFile; fileRef = 511B0870056468730080E486 /* runtime.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		932F5B710822A1C700736975 /* jni_runtime.h in Headers */ = {isa = PBXBuildFile; fileRef = 511B0876056468BB0080E486 /* jni_runtime.h */; };
@@ -133,10 +132,6 @@
 		932F5BAF0822A1C700736975 /* scope_chain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9374D3A8038D9D74008635CE /* scope_chain.cpp */; };
 		932F5BB00822A1C700736975 /* list.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 931C6CF0038EE8DE008635CE /* list.cpp */; };
 		932F5BB10822A1C700736975 /* dtoa.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 651F6412039D5B5F0078395C /* dtoa.cpp */; };
-		932F5BB20822A1C700736975 /* get.c in Sources */ = {isa = PBXBuildFile; fileRef = 65417205039E02E70058BFEB /* get.c */; };
-		932F5BB30822A1C700736975 /* maketables.c in Sources */ = {isa = PBXBuildFile; fileRef = 65417206039E02E70058BFEB /* maketables.c */; };
-		932F5BB40822A1C700736975 /* pcre.c in Sources */ = {isa = PBXBuildFile; fileRef = 65417207039E02E70058BFEB /* pcre.c */; };
-		932F5BB50822A1C700736975 /* study.c in Sources */ = {isa = PBXBuildFile; fileRef = 65417208039E02E70058BFEB /* study.c */; };
 		932F5BB60822A1C700736975 /* fpconst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9364B273045B7D6C00A9CAC1 /* fpconst.cpp */; };
 		932F5BB70822A1C700736975 /* jni_utility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 51856D8F0562EE95008B9D83 /* jni_utility.cpp */; };
 		932F5BB80822A1C700736975 /* jni_runtime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 511B0877056468BB0080E486 /* jni_runtime.cpp */; };
@@ -213,7 +208,6 @@
 		A85D821B087B2822006A9172 /* dtoa.h in Headers */ = {isa = PBXBuildFile; fileRef = 651F6413039D5B5F0078395C /* dtoa.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		A85D821C087B2822006A9172 /* pcre.h in Headers */ = {isa = PBXBuildFile; fileRef = 6541720F039E08B90058BFEB /* pcre.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		A85D821D087B2822006A9172 /* pcre-config.h in Headers */ = {isa = PBXBuildFile; fileRef = 65417217039E0B280058BFEB /* pcre-config.h */; };
-		A85D821E087B2822006A9172 /* internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 937F4F24048E5B9900CA2AC4 /* internal.h */; };
 		A85D821F087B2822006A9172 /* jni_utility.h in Headers */ = {isa = PBXBuildFile; fileRef = 51856D900562EE95008B9D83 /* jni_utility.h */; };
 		A85D8220087B2822006A9172 /* runtime.h in Headers */ = {isa = PBXBuildFile; fileRef = 511B0870056468730080E486 /* runtime.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		A85D8221087B2822006A9172 /* jni_runtime.h in Headers */ = {isa = PBXBuildFile; fileRef = 511B0876056468BB0080E486 /* jni_runtime.h */; };
@@ -279,10 +273,6 @@
 		A85D825E087B2822006A9172 /* scope_chain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9374D3A8038D9D74008635CE /* scope_chain.cpp */; };
 		A85D825F087B2822006A9172 /* list.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 931C6CF0038EE8DE008635CE /* list.cpp */; };
 		A85D8260087B2822006A9172 /* dtoa.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 651F6412039D5B5F0078395C /* dtoa.cpp */; };
-		A85D8261087B2822006A9172 /* get.c in Sources */ = {isa = PBXBuildFile; fileRef = 65417205039E02E70058BFEB /* get.c */; };
-		A85D8262087B2822006A9172 /* maketables.c in Sources */ = {isa = PBXBuildFile; fileRef = 65417206039E02E70058BFEB /* maketables.c */; };
-		A85D8263087B2822006A9172 /* pcre.c in Sources */ = {isa = PBXBuildFile; fileRef = 65417207039E02E70058BFEB /* pcre.c */; };
-		A85D8264087B2822006A9172 /* study.c in Sources */ = {isa = PBXBuildFile; fileRef = 65417208039E02E70058BFEB /* study.c */; };
 		A85D8265087B2822006A9172 /* fpconst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9364B273045B7D6C00A9CAC1 /* fpconst.cpp */; };
 		A85D8266087B2822006A9172 /* jni_utility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 51856D8F0562EE95008B9D83 /* jni_utility.cpp */; };
 		A85D8267087B2822006A9172 /* jni_runtime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 511B0877056468BB0080E486 /* jni_runtime.cpp */; };
@@ -456,10 +446,6 @@
 		651F6412039D5B5F0078395C /* dtoa.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = dtoa.cpp; sourceTree = "<group>"; };
 		651F6413039D5B5F0078395C /* dtoa.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = dtoa.h; sourceTree = "<group>"; };
 		65305EAE08A58DDE00F31E73 /* protected_object.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = protected_object.h; sourceTree = "<group>"; };
-		65417205039E02E70058BFEB /* get.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = get.c; path = pcre/get.c; sourceTree = "<group>"; };
-		65417206039E02E70058BFEB /* maketables.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = maketables.c; path = pcre/maketables.c; sourceTree = "<group>"; };
-		65417207039E02E70058BFEB /* pcre.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = pcre.c; path = pcre/pcre.c; sourceTree = "<group>"; };
-		65417208039E02E70058BFEB /* study.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = study.c; path = pcre/study.c; sourceTree = "<group>"; };
 		6541720E039E08B90058BFEB /* dftables.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = dftables.c; path = pcre/dftables.c; sourceTree = "<group>"; };
 		6541720F039E08B90058BFEB /* pcre.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = pcre.h; path = pcre/pcre.h; sourceTree = "<group>"; };
 		65417217039E0B280058BFEB /* pcre-config.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = "pcre-config.h"; path = "pcre/pcre-config.h"; sourceTree = "<group>"; };
@@ -495,7 +481,6 @@
 		9373524E038DA8C2008635CE /* context.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = context.h; sourceTree = "<group>"; };
 		9374D3A7038D9D74008635CE /* scope_chain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = scope_chain.h; sourceTree = "<group>"; };
 		9374D3A8038D9D74008635CE /* scope_chain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = scope_chain.cpp; sourceTree = "<group>"; };
-		937F4F24048E5B9900CA2AC4 /* internal.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = internal.h; path = pcre/internal.h; sourceTree = "<group>"; };
 		938772E5038BFE19008635CE /* array_instance.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = array_instance.h; sourceTree = "<group>"; };
 		93F1981A08245AAE001E9ABC /* keywords.table */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = keywords.table; sourceTree = "<group>"; };
 		A85D8288087B2822006A9172 /* JavaScriptCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = JavaScriptCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -787,13 +772,8 @@
 			isa = PBXGroup;
 			children = (
 				6541720E039E08B90058BFEB /* dftables.c */,
-				65417205039E02E70058BFEB /* get.c */,
-				937F4F24048E5B9900CA2AC4 /* internal.h */,
-				65417206039E02E70058BFEB /* maketables.c */,
 				65417217039E0B280058BFEB /* pcre-config.h */,
 				6541720F039E08B90058BFEB /* pcre.h */,
-				65417207039E02E70058BFEB /* pcre.c */,
-				65417208039E02E70058BFEB /* study.c */,
 			);
 			name = pcre;
 			sourceTree = "<group>";
@@ -879,7 +859,6 @@
 				932F5B6B0822A1C700736975 /* dtoa.h in Headers */,
 				932F5B6C0822A1C700736975 /* pcre.h in Headers */,
 				932F5B6D0822A1C700736975 /* pcre-config.h in Headers */,
-				932F5B6E0822A1C700736975 /* internal.h in Headers */,
 				932F5B6F0822A1C700736975 /* jni_utility.h in Headers */,
 				932F5B700822A1C700736975 /* runtime.h in Headers */,
 				932F5B710822A1C700736975 /* jni_runtime.h in Headers */,
@@ -960,7 +939,6 @@
 				A85D821B087B2822006A9172 /* dtoa.h in Headers */,
 				A85D821C087B2822006A9172 /* pcre.h in Headers */,
 				A85D821D087B2822006A9172 /* pcre-config.h in Headers */,
-				A85D821E087B2822006A9172 /* internal.h in Headers */,
 				A85D821F087B2822006A9172 /* jni_utility.h in Headers */,
 				A85D8220087B2822006A9172 /* runtime.h in Headers */,
 				A85D8221087B2822006A9172 /* jni_runtime.h in Headers */,
@@ -1513,10 +1491,6 @@
 				932F5BAF0822A1C700736975 /* scope_chain.cpp in Sources */,
 				932F5BB00822A1C700736975 /* list.cpp in Sources */,
 				932F5BB10822A1C700736975 /* dtoa.cpp in Sources */,
-				932F5BB20822A1C700736975 /* get.c in Sources */,
-				932F5BB30822A1C700736975 /* maketables.c in Sources */,
-				932F5BB40822A1C700736975 /* pcre.c in Sources */,
-				932F5BB50822A1C700736975 /* study.c in Sources */,
 				932F5BB60822A1C700736975 /* fpconst.cpp in Sources */,
 				932F5BB70822A1C700736975 /* jni_utility.cpp in Sources */,
 				932F5BB80822A1C700736975 /* jni_runtime.cpp in Sources */,
@@ -1601,10 +1575,6 @@
 				A85D825E087B2822006A9172 /* scope_chain.cpp in Sources */,
 				A85D825F087B2822006A9172 /* list.cpp in Sources */,
 				A85D8260087B2822006A9172 /* dtoa.cpp in Sources */,
-				A85D8261087B2822006A9172 /* get.c in Sources */,
-				A85D8262087B2822006A9172 /* maketables.c in Sources */,
-				A85D8263087B2822006A9172 /* pcre.c in Sources */,
-				A85D8264087B2822006A9172 /* study.c in Sources */,
 				A85D8265087B2822006A9172 /* fpconst.cpp in Sources */,
 				A85D8266087B2822006A9172 /* jni_utility.cpp in Sources */,
 				A85D8267087B2822006A9172 /* jni_runtime.cpp in Sources */,
