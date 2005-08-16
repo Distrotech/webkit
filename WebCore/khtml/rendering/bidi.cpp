@@ -2061,7 +2061,7 @@ BidiIterator RenderBlock::findNextLineBreak(BidiIterator &start, BidiState &bidi
                 bool previousCharacterIsSpace = currentCharacterIsSpace;
                 bool previousCharacterIsWS = currentCharacterIsWS;
                 const QChar c = str[pos];
-                currentCharacterIsSpace = c == ' ' || (!isPre && (c == '\n' || c == '\t'));
+                currentCharacterIsSpace = c == ' ' || c == '\t' || (!isPre && (c == '\n'));
                 
                 if (isPre || !currentCharacterIsSpace)
                     isLineEmpty = false;
@@ -2094,13 +2094,13 @@ BidiIterator RenderBlock::findNextLineBreak(BidiIterator &start, BidiState &bidi
                 bool applyWordSpacing = false;
                 bool isNormal = o->style()->whiteSpace() == NORMAL;
                 bool breakNBSP = isNormal && o->style()->nbspMode() == SPACE;
-                bool breakWords = w == 0 && isNormal && o->style()->wordWrap() == BREAK_WORD;
+                bool breakWords = o->style()->wordWrap() == BREAK_WORD && ((isNormal && w == 0) || o->style()->whiteSpace() == PRE);
 
                 currentCharacterIsWS = currentCharacterIsSpace || (breakNBSP && c.unicode() == nonBreakingSpace);
 
                 if (breakWords)
                     wrapW += t->width(pos, 1, f, w+wrapW);
-                if (c == '\n' || (!isPre && isBreakable(str, pos, strlen, breakNBSP)) || (breakWords && wrapW > width)) {
+                if (c == '\n' || (!isPre && isBreakable(str, pos, strlen, breakNBSP)) || (breakWords && (w + wrapW > width))) {
                     if (ignoringSpaces) {
                         if (!currentCharacterIsSpace) {
                             // Stop ignoring spaces and begin at this
@@ -2150,7 +2150,7 @@ BidiIterator RenderBlock::findNextLineBreak(BidiIterator &start, BidiState &bidi
                         }
                     }
         
-                    if (o->style()->whiteSpace() == NORMAL) {
+                    if (o->style()->whiteSpace() == NORMAL || breakWords) {
                         // In AFTER_WHITE_SPACE mode, consider the current character
                         // as candidate width for this line.
                         int charWidth = o->style()->khtmlLineBreak() == AFTER_WHITE_SPACE ? t->width(pos, 1, f, w+tmpW) : 0;
@@ -2161,7 +2161,7 @@ BidiIterator RenderBlock::findNextLineBreak(BidiIterator &start, BidiState &bidi
                                 // If the line needs the extra whitespace to be too long, 
                                 // then move the line break to the space and skip all 
                                 // additional whitespace.
-                                if (w + tmpW < width) {
+                                if (w + tmpW <= width) {
                                     lBreak.obj = o;
                                     lBreak.pos = pos;
                                     skipWhitespace(lBreak, bidi);
@@ -2265,7 +2265,7 @@ BidiIterator RenderBlock::findNextLineBreak(BidiIterator &start, BidiState &bidi
                     int strlen = nextText->stringLength();
                     QChar *str = nextText->text();
                     if (strlen &&
-                        ((str[0].unicode() == ' ') ||
+                        (str[0].unicode() == ' ' || str[0].unicode() == '\t' ||
                             (next->style()->whiteSpace() != PRE && str[0] == '\n')))
                         // If the next item on the line is text, and if we did not end with
                         // a space, then the next text run continues our word (and so it needs to
