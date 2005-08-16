@@ -317,7 +317,8 @@ QSize QListBox::sizeForNumberOfLines(int lines) const
         _widthGood = true;
     }
     
-    size = [NSScrollView frameSizeForContentSize:NSMakeSize(_width, [tableView rowHeight] * MAX(minLines, lines))
+    NSSize tempSize = { _width, [tableView rowHeight] * MAX(minLines, lines) }; // workaround for 4213314
+    size = [NSScrollView frameSizeForContentSize:tempSize
         hasHorizontalScroller:NO hasVerticalScroller:YES borderType:NSBezelBorder];
     size.width += [NSScroller scrollerWidthForControlSize:NSSmallControlSize] - [NSScroller scrollerWidth] + leftMargin + rightMargin;
 
