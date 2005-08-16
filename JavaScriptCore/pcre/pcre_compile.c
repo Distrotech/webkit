@@ -46,6 +46,16 @@ supporting internal functions that are not used by other modules. */
 #include "pcre_internal.h"
 
 
+// WARNING: These macros evaluate their parameters more than once.
+#if PCRE_UTF16
+#define CTYPES(cd, x) ((x) <= 255 ? (cd)->ctypes[(x)] : 0)
+#define DIGITAB(x) ((x) <= 255 ? digitab[(x)] : 0)
+#else
+#define CTYPES(cd, x) cd->ctypes[(x)]
+#define DIGITAB(x) digitab[(x)]
+#endif
+
+
 /*************************************************
 *      Code parameters and static tables         *
 *************************************************/
@@ -225,7 +235,6 @@ For convenience, we use the same bit definitions as in chartables:
 
 Then we can use ctype_digit and ctype_xdigit in the code. */
 
-// FIXME: handle chars > 255 when looking in this table
 #if !EBCDIC    /* This is the "normal" case, for ASCII systems */
 static const unsigned char digitab[] =
   {
@@ -426,7 +435,7 @@ else
       {
       oldptr = ptr;
       c -= '0';
-      while ((digitab[ptr[1]] & ctype_digit) != 0)
+      while ((DIGITAB(ptr[1]) & ctype_digit) != 0)
         c = c * 10 + *(++ptr) - '0';
       if (c < 10 || c <= bracount)
         {
@@ -467,7 +476,7 @@ else
       const pcre_uchar *pt = ptr + 2;
       register int count = 0;
       c = 0;
-      while ((digitab[*pt] & ctype_xdigit) != 0)
+      while ((DIGITAB(*pt) & ctype_xdigit) != 0)
         {
         int cc = *pt++;
         count++;
@@ -493,7 +502,7 @@ else
     /* Read just a single hex char */
 
     c = 0;
-    while (i++ < 2 && (digitab[ptr[1]] & ctype_xdigit) != 0)
+    while (i++ < 2 && (DIGITAB(ptr[1]) & ctype_xdigit) != 0)
       {
       int cc;                               /* Some compilers don't like ++ */
       cc = *(++ptr);                        /* in initializers */
@@ -598,6 +607,7 @@ if (c == '{')
     c = *(++ptr);
     if (c == 0) goto ERROR_RETURN;
     if (c == '}') break;
+    if (c > 127) goto ERROR_RETURN;
     name[i] = c;
     }
   if (c !='}')   /* Try to distinguish error cases */
@@ -612,6 +622,7 @@ if (c == '{')
 
 else
   {
+  if (c > 127) goto ERROR_RETURN;
   name[0] = c;
   name[1] = 0;
   }
@@ -664,15 +675,17 @@ Returns:    TRUE or FALSE
 static BOOL
 is_counted_repeat(const pcre_uchar *p)
 {
-if ((digitab[*p++] & ctype_digit) == 0) return FALSE;
-while ((digitab[*p] & ctype_digit) != 0) p++;
+if ((DIGITAB(*p) & ctype_digit) == 0) return FALSE;
+p++;
+while ((DIGITAB(*p) & ctype_digit) != 0) p++;
 if (*p == '}') return TRUE;
 
 if (*p++ != ',') return FALSE;
 if (*p == '}') return TRUE;
 
-if ((digitab[*p++] & ctype_digit) == 0) return FALSE;
-while ((digitab[*p] & ctype_digit) != 0) p++;
+if ((DIGITAB(*p) & ctype_digit) == 0) return FALSE;
+p++;
+while ((DIGITAB(*p) & ctype_digit) != 0) p++;
 
 return (*p == '}');
 }
@@ -704,14 +717,14 @@ read_repeat_counts(const pcre_uchar *p, int *minp, int *maxp, int *errorcodeptr)
 int min = 0;
 int max = -1;
 
-while ((digitab[*p] & ctype_digit) != 0) min = min * 10 + *p++ - '0';
+while ((DIGITAB(*p) & ctype_digit) != 0) min = min * 10 + *p++ - '0';
 
 if (*p == '}') max = min; else
   {
   if (*(++p) != '}')
     {
     max = 0;
-    while((digitab[*p] & ctype_digit) != 0) max = max * 10 + *p++ - '0';
+    while((DIGITAB(*p) & ctype_digit) != 0) max = max * 10 + *p++ - '0';
     if (max < min)
       {
       *errorcodeptr = ERR4;
@@ -895,7 +908,7 @@ for (;;)
 #ifdef SUPPORT_UTF8
     if ((options & PCRE_UTF8) != 0)
       {
-      while (ISMIDCHAR(*cc)) cc++;
+      while ((*cc & 0xc0) == 0x80) cc++;
       }
 #endif
     break;
@@ -1043,7 +1056,7 @@ for (;;)
       case OP_MINPLUS:
       case OP_QUERY:
       case OP_MINQUERY:
-      while (ISMIDCHAR(*code)) code++;
+      while ((*code & 0xc0) == 0x80) code++;
       break;
 
       /* XCLASS is used for classes that cannot be represented just by a bit
@@ -1115,7 +1128,7 @@ for (;;)
       case OP_MINPLUS:
       case OP_QUERY:
       case OP_MINQUERY:
-      while (ISMIDCHAR(*code)) code++;
+      while ((*code & 0xc0) == 0x80) code++;
       break;
 
       /* XCLASS is used for classes that cannot be represented just by a bit
@@ -1266,7 +1279,7 @@ for (code = first_significant_code(code + 1 + LINK_SIZE, NULL, 0, TRUE);
     case OP_MINQUERY:
     case OP_UPTO:
     case OP_MINUPTO:
-    if (utf8) while (ISMIDCHAR(code[2])) code++;
+    if (utf8) while ((code[2] & 0xc0) == 0x80) code++;
     break;
 #endif
     }
@@ -1332,7 +1345,7 @@ check_posix_syntax(const pcre_uchar *ptr, const pcre_uchar **endptr, compile_dat
 int terminator;          /* Don't combine these lines; the Solaris cc */
 terminator = *(++ptr);   /* compiler warns about "non-constant" initializer. */
 if (*(++ptr) == '^') ptr++;
-while ((cd->ctypes[*ptr] & ctype_letter) != 0) ptr++;
+while ((CTYPES(cd, *ptr) & ctype_letter) != 0) ptr++;
 if (*ptr == terminator && ptr[1] == ']')
   {
   *endptr = ptr;
@@ -1674,7 +1687,7 @@ for (;; ptr++)
 
   if ((options & PCRE_EXTENDED) != 0)
     {
-    if ((cd->ctypes[c] & ctype_space) != 0) continue;
+    if ((CTYPES(cd, c) & ctype_space) != 0) continue;
     if (c == '#')
       {
       /* The space before the ; is to avoid a warning on a silly compiler
@@ -2384,7 +2397,7 @@ for (;; ptr++)
       if (utf8 && (code[-1] & 0x80) != 0)
         {
         uschar *lastchar = code - 1;
-        while(ISMIDCHAR(*lastchar)) lastchar--;
+        while((*lastchar & 0xc0) == 0x80) lastchar--;
         c = code - lastchar;            /* Length of UTF-8 character */
         memcpy(utf8_char, lastchar, c); /* Save the char */
         c |= 0x80;                      /* Flag c as a length */
@@ -2828,7 +2841,7 @@ for (;; ptr++)
         if a digit follows ( then there will just be digits until ) because
         the syntax was checked in the first pass. */
 
-        else if ((digitab[ptr[1]] && ctype_digit) != 0)
+        else if ((DIGITAB(ptr[1]) && ctype_digit) != 0)
           {
           int condref;                 /* Don't amalgamate; some compilers */
           condref = *(++ptr) - '0';    /* grumble at autoincrement in declaration */
@@ -2883,8 +2896,12 @@ for (;; ptr++)
         *code++ = OP_CALLOUT;     /* Already checked that the terminating */
           {                       /* closing parenthesis is present. */
           int n = 0;
-          while ((digitab[*(++ptr)] & ctype_digit) != 0)
+          ++ptr;
+          while ((DIGITAB(*ptr) & ctype_digit) != 0)
+            {
             n = n * 10 + *ptr - '0';
+            ++ptr;
+            }
           if (n > 255)
             {
             *errorcodeptr = ERR38;
@@ -2986,7 +3003,7 @@ for (;; ptr++)
           {
           const uschar *called;
           recno = 0;
-          while((digitab[*ptr] & ctype_digit) != 0)
+          while((DIGITAB(*ptr) & ctype_digit) != 0)
             recno = recno * 10 + *ptr++ - '0';
 
           /* Come here from code above that handles a named recursion */
@@ -3337,9 +3354,9 @@ for (;; ptr++)
     mcbuffer[0] = c;
 
 #ifdef SUPPORT_UTF8
-    if (utf8 && ISMBSTARTCHAR(c))
+    if (utf8 && (c & 0xc0) == 0xc0)
       {
-      while (ISMIDCHAR(ptr[1]))
+      while ((ptr[1] & 0xc0) == 0x80)
         mcbuffer[mclength++] = *(++ptr);
       }
 #endif
@@ -3990,7 +4007,7 @@ while ((c = *(++ptr)) != 0)
 
   if ((options & PCRE_EXTENDED) != 0)
     {
-    if ((compile_block.ctypes[c] & ctype_space) != 0) continue;
+    if ((CTYPES(&compile_block, c) & ctype_space) != 0) continue;
     if (c == '#')
       {
       /* The space before the ; is to avoid a warning on a silly compiler
@@ -4496,7 +4513,11 @@ while ((c = *(++ptr)) != 0)
         case '5': case '6': case '7': case '8': case '9':
         ptr += 2;
         if (c != 'R')
-          while ((digitab[*(++ptr)] & ctype_digit) != 0);
+          {
+          ++ptr;
+          while ((DIGITAB(*ptr) & ctype_digit) != 0)
+            ++ptr;
+          }
         if (*ptr != ')')
           {
           errorcode = ERR29;
@@ -4521,8 +4542,9 @@ while ((c = *(++ptr)) != 0)
         follow (default is zero). */
 
         case 'C':
-        ptr += 2;
-        while ((digitab[*(++ptr)] & ctype_digit) != 0);
+        ptr += 3;
+        while ((DIGITAB(*ptr) & ctype_digit) != 0)
+          ++ptr;
         if (*ptr != ')')
           {
           errorcode = ERR39;
@@ -4539,7 +4561,7 @@ while ((c = *(++ptr)) != 0)
           {
           const pcre_uchar *p;    /* Don't amalgamate; some compilers */
           p = ++ptr;          /* grumble at autoincrement in declaration */
-          while ((compile_block.ctypes[*ptr] & ctype_word) != 0) ptr++;
+          while ((CTYPES(&compile_block, *ptr) & ctype_word) != 0) ptr++;
           if (*ptr != '>')
             {
             errorcode = ERR42;
@@ -4552,7 +4574,9 @@ while ((c = *(++ptr)) != 0)
 
         if (*ptr == '=' || *ptr == '>')
           {
-          while ((compile_block.ctypes[*(++ptr)] & ctype_word) != 0);
+          ++ptr;
+          while ((CTYPES(&compile_block, *ptr) & ctype_word) != 0)
+            ++ptr;
           if (*ptr != ')')
             {
             errorcode = ERR42;
@@ -4589,11 +4613,11 @@ while ((c = *(++ptr)) != 0)
           ptr += 4;
           length += 3;
           }
-        else if ((digitab[ptr[3]] & ctype_digit) != 0)
+        else if ((DIGITAB(ptr[3]) & ctype_digit) != 0)
           {
           ptr += 4;
           length += 3;
-          while ((digitab[*ptr] & ctype_digit) != 0) ptr++;
+          while ((DIGITAB(*ptr) & ctype_digit) != 0) ptr++;
           if (*ptr != ')')
             {
             errorcode = ERR26;
@@ -4857,9 +4881,9 @@ while ((c = *(++ptr)) != 0)
     /* In UTF-8 mode, check for additional bytes. */
 
 #ifdef SUPPORT_UTF8
-    if (utf8 && ISMBSTARTCHAR(c))
+    if (utf8 && (c & 0xc0) == 0xc0)
       {
-      while (ISMIDCHAR(ptr[1]))               /* Can't flow over the end */
+      while ((ptr[1] & 0xc0) == 0x80)         /* Can't flow over the end */
         {                                     /* because the end is marked */
         lastitemlength++;                     /* by a zero byte. */
         length++;

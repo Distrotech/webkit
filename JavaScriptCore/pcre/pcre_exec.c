@@ -103,8 +103,14 @@ pchars(const pcre_uchar *p, int length, BOOL is_subject, match_data *md)
 {
 int c;
 if (is_subject && length > md->end_subject - p) length = md->end_subject - p;
-while (length-- > 0)
-  if (isprint(c = *(p++))) printf("%c", c); else printf("\\x%02x", c);
+while (length-- > 0) {
+  if (isprint(c = *(p++))) printf("%c", c);
+#if PCRE_UTF16
+  else if (c < 256) printf("\\x%02x", c);
+  else printf("\\x{%x}", c);
+#else
+  else printf("\\x%02x", c);
+#endif
 }
 #endif
 
@@ -452,15 +458,17 @@ i, and fc and c, can be the same variables. */
 #define fc c
 
 
+#if !PCRE_UTF16
 #ifdef SUPPORT_UTF8                /* Many of these variables are used ony */
 const uschar *charptr;             /* small blocks of the code. My normal  */
 #endif                             /* style of coding would have declared  */
+#endif
 const uschar *callpat;             /* them within each of those blocks.    */
 const uschar *data;                /* However, in order to accommodate the */
 const uschar *next;                /* version of this code that uses an    */
-const pcre_uchar *pp;                   /* external "stack" implemented on the  */
+const pcre_uchar *pp;              /* external "stack" implemented on the  */
 const uschar *prev;                /* heap, it is easier to declare them   */
-const pcre_uchar *saved_eptr;           /* all here, so the declarations can    */
+const pcre_uchar *saved_eptr;      /* all here, so the declarations can    */
                                    /* be cut out in a block. The only      */
 recursion_info new_recursive;      /* declarations within blocks below are */
                                    /* for variables that do not have to    */
@@ -1214,7 +1222,7 @@ for (;;)
         if (eptr == md->start_subject) prev_is_word = FALSE; else
           {
           const pcre_uchar *lastptr = eptr - 1;
-          while((*lastptr & 0xc0) == 0x80) lastptr--;
+          while(ISMIDCHAR(*lastptr)) lastptr--;
           GETCHAR(c, lastptr);
           prev_is_word = c < 256 && (md->ctypes[c] & ctype_word) != 0;
           }
@@ -1252,7 +1260,7 @@ for (;;)
     if (eptr++ >= md->end_subject) RRETURN(MATCH_NOMATCH);
 #ifdef SUPPORT_UTF8
     if (utf8)
-      while (eptr < md->end_subject && (*eptr & 0xc0) == 0x80) eptr++;
+      while (eptr < md->end_subject && ISMIDCHAR(*eptr)) eptr++;
 #endif
     ecode++;
     break;
@@ -1900,6 +1908,112 @@ for (;;)
 
     REPEATCHAR:
 #ifdef SUPPORT_UTF8
+#if PCRE_UTF16
+      length = 1;
+      GETUTF8CHARLEN(fc, ecode, length);
+      int utf16Length = fc > 0xFFFF ? 2 : 1;
+      if (min * utf16Length > md->end_subject - eptr) RRETURN(MATCH_NOMATCH);
+      ecode += length;
+
+      if (utf16Length == 1)
+        {
+#ifdef SUPPORT_UCP
+        int othercase;
+        int chartype;
+        if ((ims & PCRE_CASELESS) == 0 || ucp_findchar(fc, &chartype, &othercase) < 0)
+          othercase = -1; /* Guaranteed to not match any character */
+#endif  /* SUPPORT_UCP */
+
+        for (i = 1; i <= min; i++)
+          {
+          if (*eptr != fc && *eptr != othercase) RRETURN(MATCH_NOMATCH);
+          ++eptr;
+          }
+
+        if (min == max) continue;
+
+        if (minimize)
+          {
+          for (fi = min;; fi++)
+            {
+            RMATCH(rrc, eptr, ecode, offset_top, md, ims, eptrb, 0);
+            if (rrc != MATCH_NOMATCH) RRETURN(rrc);
+            if (fi >= max || eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
+            if (*eptr != fc && *eptr != othercase) RRETURN(MATCH_NOMATCH);
+            ++eptr;
+            }
+          /* Control never gets here */
+          }
+        else
+          {
+          pp = eptr;
+          for (i = min; i < max; i++)
+            {
+            if (eptr > md->end_subject - length) break;
+            if (*eptr != fc && *eptr != othercase) break;
+            ++eptr;
+            }
+          while (eptr >= pp)
+           {
+           RMATCH(rrc, eptr, ecode, offset_top, md, ims, eptrb, 0);
+           if (rrc != MATCH_NOMATCH) RRETURN(rrc);
+           --eptr;
+           }
+          RRETURN(MATCH_NOMATCH);
+          }
+        /* Control never gets here */
+        }
+      else
+        {
+        /* No case on surrogate pairs, so no need to bother with "othercase". */
+
+        for (i = 1; i <= min; i++)
+          {
+          int nc;
+          GETCHAR(nc, eptr);
+          if (nc != fc) RRETURN(MATCH_NOMATCH);
+          eptr += 2;
+          }
+
+        if (min == max) continue;
+
+        if (minimize)
+          {
+          for (fi = min;; fi++)
+            {
+            int nc;
+            RMATCH(rrc, eptr, ecode, offset_top, md, ims, eptrb, 0);
+            if (rrc != MATCH_NOMATCH) RRETURN(rrc);
+            if (fi >= max || eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
+            GETCHAR(nc, eptr);
+            if (*eptr != fc) RRETURN(MATCH_NOMATCH);
+            eptr += 2;
+            }
+          /* Control never gets here */
+          }
+        else
+          {
+          pp = eptr;
+          for (i = min; i < max; i++)
+            {
+            int nc;
+            if (eptr > md->end_subject - length) break;
+            GETCHAR(nc, eptr);
+            if (*eptr != fc) break;
+            eptr += 2;
+            }
+          while (eptr >= pp)
+           {
+           RMATCH(rrc, eptr, ecode, offset_top, md, ims, eptrb, 0);
+           if (rrc != MATCH_NOMATCH) RRETURN(rrc);
+           eptr -= 2;
+           }
+          RRETURN(MATCH_NOMATCH);
+          }
+          /* Control never gets here */
+        }
+        /* Control never gets here */
+#else
     if (utf8)
       {
       length = 1;
@@ -1987,6 +2101,7 @@ for (;;)
       value of fc will always be < 128. */
       }
     else
+#endif
 #endif  /* SUPPORT_UTF8 */
 
     /* When not in UTF-8 mode, load a single-byte character. */
@@ -2483,7 +2598,7 @@ for (;;)
           if (eptr >= md->end_subject ||
              (*eptr++ == NEWLINE && (ims & PCRE_DOTALL) == 0))
             RRETURN(MATCH_NOMATCH);
-          while (eptr < md->end_subject && (*eptr & 0xc0) == 0x80) eptr++;
+          while (eptr < md->end_subject && ISMIDCHAR(*eptr)) eptr++;
           }
         break;
 
@@ -2517,7 +2632,7 @@ for (;;)
           if (eptr >= md->end_subject ||
              (*eptr < 128 && (md->ctypes[*eptr++] & ctype_space) != 0))
             RRETURN(MATCH_NOMATCH);
-          while (eptr < md->end_subject && (*eptr & 0xc0) == 0x80) eptr++;
+          while (eptr < md->end_subject && ISMIDCHAR(*eptr)) eptr++;
           }
         break;
 
@@ -2537,7 +2652,7 @@ for (;;)
           if (eptr >= md->end_subject ||
              (*eptr < 128 && (md->ctypes[*eptr++] & ctype_word) != 0))
             RRETURN(MATCH_NOMATCH);
-          while (eptr < md->end_subject && (*eptr & 0xc0) == 0x80) eptr++;
+          while (eptr < md->end_subject && ISMIDCHAR(*eptr)) eptr++;
           }
         break;
 
