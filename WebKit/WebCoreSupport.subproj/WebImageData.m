@@ -612,7 +612,8 @@ static const CGPatternCallbacks patternCallbacks = { 0, drawPattern, NULL };
         if (pattern) {
             CGContextSaveGState (aContext);
 
-            CGPoint transformedOrigin = CGPointApplyAffineTransform(rect.origin, CGContextGetCTM(aContext));
+            CGPoint tileOrigin = CGPointMake(oneTileRect.origin.x, oneTileRect.origin.y);
+            CGPoint transformedOrigin = CGPointApplyAffineTransform(tileOrigin, CGContextGetCTM(aContext));
             CGContextSetPatternPhase(aContext, CGSizeMake(transformedOrigin.x, transformedOrigin.y));
 
             CGColorSpaceRef patternSpace = CGColorSpaceCreatePattern(NULL);
