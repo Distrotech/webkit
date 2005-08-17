@@ -41,6 +41,8 @@ HTMLBaseFontElementImpl::HTMLBaseFontElementImpl(DocumentPtr *doc)
 
 HTMLBaseFontElementImpl::~HTMLBaseFontElementImpl()
 {
+    if (m_ownsInfo)
+        delete info;
 }
 
 NodeImpl::Id HTMLBaseFontElementImpl::id() const
@@ -56,6 +58,7 @@ HTMLCollectionImpl::HTMLCollectionImpl(NodeImpl *_base, int _type)
     base->ref();
     type = _type;
     idsDone = false;
+    m_ownsInfo = false;
     info = base->isDocumentNode() && base->getDocument()->isHTMLDocument() ? static_cast<HTMLDocumentImpl*>(base->getDocument())->collectionInfo(type) : 0;
 }
 
@@ -90,6 +93,7 @@ void HTMLCollectionImpl::resetCollectionInfo() const
 
     if (!info) {
         info = new CollectionInfo;
+        m_ownsInfo = true;
         info->version = docversion;
         return;
     }

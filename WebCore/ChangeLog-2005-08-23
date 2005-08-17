@@ -1,3 +1,26 @@
+2005-08-16  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+        <rdar://problem/4219015> HTMLCollections leak their info (reproducible on sony.com)
+
+    2005-08-15  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by John.
+
+	- fixed leak of HTML collection info - this can build up to
+	hundreds of leaks pretty quickly
+
+	http://bugzilla.opendarwin.org/show_bug.cgi?id=4450
+	
+        * khtml/html/html_miscimpl.cpp:
+        (DOM::HTMLCollectionImpl::HTMLCollectionImpl): Initialize new
+	m_ownsInfo member.
+        (DOM::HTMLCollectionImpl::~HTMLCollectionImpl): Delete info if
+	owned.
+        (DOM::HTMLCollectionImpl::resetCollectionInfo): When creating new
+	info, indicate that it's owned.
+        * khtml/html/html_miscimpl.h: Declare new member.
+
 2005-08-15  Justin Garcia  <justin.garcia@apple.com>
 
         Reviewed by mjs 
