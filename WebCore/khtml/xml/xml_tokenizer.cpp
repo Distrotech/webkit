@@ -333,7 +333,7 @@ void XMLTokenizer::startElement(const xmlChar *name, const xmlChar **libxmlAttri
         m_currentNode = implicitTBody;
     }
 
-    if (newElement->id() == ID_SCRIPT)
+    if (newElement->isHTMLElement() && newElement->id() == ID_SCRIPT)
         static_cast<HTMLScriptElementImpl *>(newElement)->setCreatedByParser(true);
 
     if (m_currentNode->addChild(newElement)) {

@@ -1,3 +1,13 @@
+2005-08-17  Vicki Murley  <vicki@apple.com>
+
+        Reviewed by Darin.
+
+	- fix <rdar://problem/4217250> REGRESSION (OC): crash loading XML file with <script> tag in it
+ 
+        * khtml/xml/xml_tokenizer.cpp:
+        (khtml::XMLTokenizer::startElement): make sure that elements that id themselves as scripts
+        are also HTML elements
+
 === WebCore-415.13.1 ===
 
 2005-08-04  Adele Peterson  <adele@apple.com>
