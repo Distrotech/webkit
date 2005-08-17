@@ -1,3 +1,11 @@
+2005-08-17  Adele Peterson  <adele@apple.com>
+
+        Fixed merge error from last checkin.
+
+        * khtml/html/html_miscimpl.cpp:
+        (HTMLBaseFontElementImpl::~HTMLBaseFontElementImpl):
+        (HTMLCollectionImpl::~HTMLCollectionImpl):
+
 2005-08-16  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch

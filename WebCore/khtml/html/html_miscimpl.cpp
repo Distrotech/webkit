@@ -41,8 +41,6 @@ HTMLBaseFontElementImpl::HTMLBaseFontElementImpl(DocumentPtr *doc)
 
 HTMLBaseFontElementImpl::~HTMLBaseFontElementImpl()
 {
-    if (m_ownsInfo)
-        delete info;
 }
 
 NodeImpl::Id HTMLBaseFontElementImpl::id() const
@@ -64,6 +62,8 @@ HTMLCollectionImpl::HTMLCollectionImpl(NodeImpl *_base, int _type)
 
 HTMLCollectionImpl::~HTMLCollectionImpl()
 {
+    if (m_ownsInfo)
+        delete info;
     base->deref();
 }
 
