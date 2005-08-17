@@ -122,11 +122,12 @@ p += cbit_length;
 /* Finally, the character type table. In this, we exclude VT from the white
 space chars, because Perl doesn't recognize it as such for \s and for comments
 within regexes. */
+/* But no, in JavaScriptCore we don't, so that's commented out below. */
 
 for (i = 0; i < 256; i++)
   {
   int x = 0;
-  if (i != 0x0b && isspace(i)) x += ctype_space;
+  if (/*i != 0x0b && */ isspace(i)) x += ctype_space;
   if (isalpha(i)) x += ctype_letter;
   if (isdigit(i)) x += ctype_digit;
   if (isxdigit(i)) x += ctype_xdigit;

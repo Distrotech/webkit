@@ -196,6 +196,12 @@
 		93E26C0008B151D400F85226 /* ucpinternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 93E26BFC08B151D400F85226 /* ucpinternal.h */; };
 		93E26C0F08B1520900F85226 /* ucptable.c in Sources */ = {isa = PBXBuildFile; fileRef = 93E26C0D08B1520900F85226 /* ucptable.c */; };
 		93E26C1308B1523D00F85226 /* ucptable.c in Headers */ = {isa = PBXBuildFile; fileRef = 93E26C0D08B1520900F85226 /* ucptable.c */; };
+		93E26CCF08B2921900F85226 /* softlinking.h in Headers */ = {isa = PBXBuildFile; fileRef = 93E26CCE08B2921900F85226 /* softlinking.h */; };
+		93E26CD008B2921900F85226 /* softlinking.h in Headers */ = {isa = PBXBuildFile; fileRef = 93E26CCE08B2921900F85226 /* softlinking.h */; };
+		93E26CF708B29A1C00F85226 /* pcre_get.c in Sources */ = {isa = PBXBuildFile; fileRef = 93E26CF608B29A1C00F85226 /* pcre_get.c */; };
+		93E26CF808B29A1C00F85226 /* pcre_get.c in Sources */ = {isa = PBXBuildFile; fileRef = 93E26CF608B29A1C00F85226 /* pcre_get.c */; };
+		93E26DDC08B2A4F400F85226 /* pcre_printint.c in Sources */ = {isa = PBXBuildFile; fileRef = 93E26DDB08B2A4F400F85226 /* pcre_printint.c */; };
+		93E26DDD08B2A4F400F85226 /* pcre_printint.c in Sources */ = {isa = PBXBuildFile; fileRef = 93E26DDB08B2A4F400F85226 /* pcre_printint.c */; };
 		A85D81F8087B2822006A9172 /* array_object.h in Headers */ = {isa = PBXBuildFile; fileRef = F692A84E0255597D01FF60F7 /* array_object.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		A85D81F9087B2822006A9172 /* collector.h in Headers */ = {isa = PBXBuildFile; fileRef = F692A8530255597D01FF60F7 /* collector.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		A85D81FA087B2822006A9172 /* date_object.h in Headers */ = {isa = PBXBuildFile; fileRef = F692A8560255597D01FF60F7 /* date_object.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -521,6 +527,9 @@
 		93E26BFB08B151D400F85226 /* ucp.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ucp.h; path = pcre/ucp.h; sourceTree = "<group>"; };
 		93E26BFC08B151D400F85226 /* ucpinternal.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ucpinternal.h; path = pcre/ucpinternal.h; sourceTree = "<group>"; };
 		93E26C0D08B1520900F85226 /* ucptable.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = ucptable.c; path = pcre/ucptable.c; sourceTree = "<group>"; };
+		93E26CCE08B2921900F85226 /* softlinking.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = softlinking.h; path = bindings/softlinking.h; sourceTree = "<group>"; };
+		93E26CF608B29A1C00F85226 /* pcre_get.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = pcre_get.c; path = pcre/pcre_get.c; sourceTree = "<group>"; };
+		93E26DDB08B2A4F400F85226 /* pcre_printint.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = pcre_printint.c; path = pcre/pcre_printint.c; sourceTree = "<group>"; };
 		93F1981A08245AAE001E9ABC /* keywords.table */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = keywords.table; sourceTree = "<group>"; };
 		A85D8288087B2822006A9172 /* JavaScriptCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = JavaScriptCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F50888B6030BB74C012A967E /* simple_number.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = simple_number.h; sourceTree = "<group>"; };
@@ -794,6 +803,7 @@
 				51F0EC9605C88DC700E6DF1B /* objc_utility.h */,
 				51F0EC9705C88DC700E6DF1B /* objc_utility.mm */,
 				8442A376074175C2000AE2ED /* softlinking.c */,
+				93E26CCE08B2921900F85226 /* softlinking.h */,
 			);
 			name = bindings;
 			sourceTree = "<group>";
@@ -819,8 +829,10 @@
 				930754BF08B0F68000AB3056 /* pcre_compile.c */,
 				930754E908B0F78500AB3056 /* pcre_exec.c */,
 				930754E608B0F77700AB3056 /* pcre_fullinfo.c */,
+				93E26CF608B29A1C00F85226 /* pcre_get.c */,
 				930754D108B0F76200AB3056 /* pcre_globals.c */,
 				93E26BC908B1511900F85226 /* pcre_ord2utf8.c */,
+				93E26DDB08B2A4F400F85226 /* pcre_printint.c */,
 				930754CE08B0F74500AB3056 /* pcre_tables.c */,
 				93E26BD008B1513800F85226 /* pcre_try_flipped.c */,
 				93E26BCD08B1512600F85226 /* pcre_ucp_findchar.c */,
@@ -949,6 +961,7 @@
 				93E26BFD08B151D400F85226 /* ucp.h in Headers */,
 				93E26BFE08B151D400F85226 /* ucpinternal.h in Headers */,
 				93E26C1308B1523D00F85226 /* ucptable.c in Headers */,
+				93E26CCF08B2921900F85226 /* softlinking.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1032,6 +1045,7 @@
 				93E26BE708B1517100F85226 /* pcre_internal.h in Headers */,
 				93E26BFF08B151D400F85226 /* ucp.h in Headers */,
 				93E26C0008B151D400F85226 /* ucpinternal.h in Headers */,
+				93E26CD008B2921900F85226 /* softlinking.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1588,6 +1602,8 @@
 				93E26BCE08B1512600F85226 /* pcre_ucp_findchar.c in Sources */,
 				93E26BD108B1513800F85226 /* pcre_try_flipped.c in Sources */,
 				93E26BD408B1514100F85226 /* pcre_xclass.c in Sources */,
+				93E26CF708B29A1C00F85226 /* pcre_get.c in Sources */,
+				93E26DDC08B2A4F400F85226 /* pcre_printint.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1682,6 +1698,8 @@
 				93E26BD208B1513800F85226 /* pcre_try_flipped.c in Sources */,
 				93E26BD508B1514100F85226 /* pcre_xclass.c in Sources */,
 				93E26C0F08B1520900F85226 /* ucptable.c in Sources */,
+				93E26CF808B29A1C00F85226 /* pcre_get.c in Sources */,
+				93E26DDD08B2A4F400F85226 /* pcre_printint.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1774,6 +1792,7 @@
 					APPLE_CHANGES,
 					HAVE_CONFIG_H,
 				);
+				GCC_STRICT_ALIASING = YES;
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
@@ -1781,6 +1800,7 @@
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = /System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks;
 				MACOSX_DEPLOYMENT_TARGET = 10.3;
+				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = (
 					"$(STYLE_LDFLAGS)",
 					"-sub_library",
@@ -1825,6 +1845,7 @@
 					APPLE_CHANGES,
 					HAVE_CONFIG_H,
 				);
+				GCC_STRICT_ALIASING = YES;
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
@@ -1832,6 +1853,7 @@
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = /System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks;
 				MACOSX_DEPLOYMENT_TARGET = 10.3;
+				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = (
 					"$(STYLE_LDFLAGS)",
 					"-sub_library",
@@ -1876,6 +1898,7 @@
 					APPLE_CHANGES,
 					HAVE_CONFIG_H,
 				);
+				GCC_STRICT_ALIASING = YES;
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
@@ -1883,6 +1906,7 @@
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = /System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks;
 				MACOSX_DEPLOYMENT_TARGET = 10.3;
+				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = (
 					"$(STYLE_LDFLAGS)",
 					"-sub_library",
@@ -1927,12 +1951,14 @@
 					APPLE_CHANGES,
 					HAVE_CONFIG_H,
 				);
+				GCC_STRICT_ALIASING = YES;
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				HEADER_SEARCH_PATHS = icu;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = /System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks;
+				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = (
 					"$(STYLE_LDFLAGS)",
 					"-sub_library",
@@ -2324,6 +2350,9 @@
 		149C277208902AFE008A9EFC /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_ENABLE_OBJC_GC = YES;
+				GCC_FAST_OBJC_DISPATCH = YES;
+				GCC_STRICT_ALIASING = YES;
 				GCC_THREADSAFE_STATICS = NO;
 			};
 			name = Development;
@@ -2331,6 +2360,10 @@
 		149C277308902AFE008A9EFC /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_ENABLE_OBJC_GC = YES;
+				GCC_FAST_OBJC_DISPATCH = YES;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_STRICT_ALIASING = YES;
 				GCC_THREADSAFE_STATICS = NO;
 			};
 			name = Deployment;
@@ -2338,6 +2371,9 @@
 		149C277408902AFE008A9EFC /* OptimizedWithSymbols */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_ENABLE_OBJC_GC = YES;
+				GCC_FAST_OBJC_DISPATCH = YES;
+				GCC_STRICT_ALIASING = YES;
 				GCC_THREADSAFE_STATICS = NO;
 			};
 			name = OptimizedWithSymbols;
@@ -2345,6 +2381,9 @@
 		149C277508902AFE008A9EFC /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_ENABLE_OBJC_GC = YES;
+				GCC_FAST_OBJC_DISPATCH = YES;
+				GCC_STRICT_ALIASING = YES;
 				GCC_THREADSAFE_STATICS = NO;
 			};
 			name = Default;

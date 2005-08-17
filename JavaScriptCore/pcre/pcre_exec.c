@@ -103,7 +103,7 @@ pchars(const pcre_uchar *p, int length, BOOL is_subject, match_data *md)
 {
 int c;
 if (is_subject && length > md->end_subject - p) length = md->end_subject - p;
-while (length-- > 0) {
+while (length-- > 0)
   if (isprint(c = *(p++))) printf("%c", c);
 #if PCRE_UTF16
   else if (c < 256) printf("\\x%02x", c);
@@ -1805,9 +1805,16 @@ for (;;)
       {
       length = 1;
       ecode++;
-      GETCHARLEN(fc, ecode, length);
+      GETUTF8CHARLEN(fc, ecode, length);
+#if PCRE_UTF16
+      int dc;
+      ecode += length;
+      GETCHARINC(dc, eptr);
+      if (fc != dc) RRETURN(MATCH_NOMATCH);
+#else
       if (length > md->end_subject - eptr) RRETURN(MATCH_NOMATCH);
       while (length-- > 0) if (*ecode++ != *eptr++) RRETURN(MATCH_NOMATCH);
+#endif
       }
     else
 #endif
@@ -1828,16 +1835,25 @@ for (;;)
       {
       length = 1;
       ecode++;
-      GETCHARLEN(fc, ecode, length);
+      GETUTF8CHARLEN(fc, ecode, length);
 
+#if !PCRE_UTF16
       if (length > md->end_subject - eptr) RRETURN(MATCH_NOMATCH);
+#endif
 
       /* If the pattern character's value is < 128, we have only one byte, and
       can use the fast lookup table. */
 
       if (fc < 128)
         {
+#if PCRE_UTF16
+        int dc;
+        ecode++;
+        dc = *eptr++;
+        if (dc >= 128 || md->lcc[fc] != md->lcc[dc]) RRETURN(MATCH_NOMATCH);
+#else
         if (md->lcc[*ecode++] != md->lcc[*eptr++]) RRETURN(MATCH_NOMATCH);
+#endif
         }
 
       /* Otherwise we must pick up the subject character */
@@ -3561,9 +3577,17 @@ do
   if (first_byte >= 0)
     {
     if (first_byte_caseless)
-      while (start_match < end_subject &&
-             match_block.lcc[*start_match] != first_byte)
+      while (start_match < end_subject)
+        {
+        int sm = *start_match;
+#if PCRE_UTF16
+        if (sm > 127)
+          break;
+#endif
+        if (match_block.lcc[sm] == first_byte)
+          break;
         start_match++;
+        }
     else
       while (start_match < end_subject && *start_match != first_byte)
         start_match++;

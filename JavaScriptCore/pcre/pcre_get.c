@@ -62,8 +62,10 @@ Returns:      the number of the named parentheses, or a negative number
 */
 
 int
-pcre_get_stringnumber(const pcre *code, const char *stringname)
+pcre_get_stringnumber(const pcre *code, const pcre_char *stringname)
 {
+// FIXME: This doesn't work for UTF-16 because the name table has 8-bit characters in it!
+#if !PCRE_UTF16
 int rc;
 int entrysize;
 int top, bot;
@@ -87,6 +89,7 @@ while (top > bot)
   if (c == 0) return (entry[0] << 8) + entry[1];
   if (c > 0) bot = mid + 1; else top = mid;
   }
+#endif
 
 return PCRE_ERROR_NOSUBSTRING;
 }
@@ -121,8 +124,8 @@ Returns:         if successful:
 */
 
 int
-pcre_copy_substring(const char *subject, int *ovector, int stringcount,
-  int stringnumber, char *buffer, int size)
+pcre_copy_substring(const pcre_char *subject, int *ovector, int stringcount,
+  int stringnumber, pcre_char *buffer, int size)
 {
 int yield;
 if (stringnumber < 0 || stringnumber >= stringcount)
@@ -165,8 +168,8 @@ Returns:         if successful:
 */
 
 int
-pcre_copy_named_substring(const pcre *code, const char *subject, int *ovector,
-  int stringcount, const char *stringname, char *buffer, int size)
+pcre_copy_named_substring(const pcre *code, const pcre_char *subject, int *ovector,
+  int stringcount, const pcre_char *stringname, pcre_char *buffer, int size)
 {
 int n = pcre_get_stringnumber(code, stringname);
 if (n <= 0) return n;
@@ -197,28 +200,28 @@ Returns:         if successful: 0
 */
 
 int
-pcre_get_substring_list(const char *subject, int *ovector, int stringcount,
-  const char ***listptr)
+pcre_get_substring_list(const pcre_char *subject, int *ovector, int stringcount,
+  const pcre_char ***listptr)
 {
 int i;
 int size = sizeof(char *);
 int double_count = stringcount * 2;
-char **stringlist;
-char *p;
+pcre_char **stringlist;
+pcre_char *p;
 
 for (i = 0; i < double_count; i += 2)
-  size += sizeof(char *) + ovector[i+1] - ovector[i] + 1;
+  size += sizeof(pcre_char *) + (ovector[i+1] - ovector[i] + 1) * sizeof(pcre_char);
 
-stringlist = (char **)(pcre_malloc)(size);
+stringlist = (pcre_char **)(pcre_malloc)(size);
 if (stringlist == NULL) return PCRE_ERROR_NOMEMORY;
 
-*listptr = (const char **)stringlist;
-p = (char *)(stringlist + stringcount + 1);
+*listptr = (const pcre_char **)stringlist;
+p = (pcre_char *)(stringlist + stringcount + 1);
 
 for (i = 0; i < double_count; i += 2)
   {
   int len = ovector[i+1] - ovector[i];
-  memcpy(p, subject + ovector[i], len);
+  memcpy(p, subject + ovector[i], len * sizeof(pcre_char));
   *stringlist++ = p;
   p += len;
   *p++ = 0;
@@ -242,7 +245,7 @@ Returns:    nothing
 */
 
 void
-pcre_free_substring_list(const char **pointer)
+pcre_free_substring_list(const pcre_char **pointer)
 {
 (pcre_free)((void *)pointer);
 }
@@ -275,18 +278,18 @@ Returns:         if successful:
 */
 
 int
-pcre_get_substring(const char *subject, int *ovector, int stringcount,
-  int stringnumber, const char **stringptr)
+pcre_get_substring(const pcre_char *subject, int *ovector, int stringcount,
+  int stringnumber, const pcre_char **stringptr)
 {
 int yield;
-char *substring;
+pcre_char *substring;
 if (stringnumber < 0 || stringnumber >= stringcount)
   return PCRE_ERROR_NOSUBSTRING;
 stringnumber *= 2;
 yield = ovector[stringnumber+1] - ovector[stringnumber];
-substring = (char *)(pcre_malloc)(yield + 1);
+substring = (pcre_char *)(pcre_malloc)((yield + 1) * sizeof(pcre_char));
 if (substring == NULL) return PCRE_ERROR_NOMEMORY;
-memcpy(substring, subject + ovector[stringnumber], yield);
+memcpy(substring, subject + ovector[stringnumber], yield * sizeof(pcre_char));
 substring[yield] = 0;
 *stringptr = substring;
 return yield;
@@ -321,8 +324,8 @@ Returns:         if successful:
 */
 
 int
-pcre_get_named_substring(const pcre *code, const char *subject, int *ovector,
-  int stringcount, const char *stringname, const char **stringptr)
+pcre_get_named_substring(const pcre *code, const pcre_char *subject, int *ovector,
+  int stringcount, const pcre_char *stringname, const pcre_char **stringptr)
 {
 int n = pcre_get_stringnumber(code, stringname);
 if (n <= 0) return n;
@@ -344,7 +347,7 @@ Returns:    nothing
 */
 
 void
-pcre_free_substring(const char *pointer)
+pcre_free_substring(const pcre_char *pointer)
 {
 (pcre_free)((void *)pointer);
 }

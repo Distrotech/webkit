@@ -1950,12 +1950,14 @@ for (;; ptr++)
 
             case ESC_s:
             for (c = 0; c < 32; c++) classbits[c] |= cbits[c+cbit_space];
-            classbits[1] &= ~0x08;   /* Perl 5.004 onwards omits VT from \s */
+            /* JavaScript does not omit VT, so we leave out the following line: */
+            /* classbits[1] &= ~0x08;   Perl 5.004 onwards omits VT from \s */
             continue;
 
             case ESC_S:
             for (c = 0; c < 32; c++) classbits[c] |= ~cbits[c+cbit_space];
-            classbits[1] |= 0x08;    /* Perl 5.004 onwards omits VT from \s */
+            /* JavaScript does not omit VT, so we leave out the following line: */
+            /* classbits[1] |= 0x08;    Perl 5.004 onwards omits VT from \s */
             continue;
 
 #ifdef SUPPORT_UCP
@@ -2920,12 +2922,13 @@ for (;; ptr++)
           {
           int i, namelen;
           uschar *slot = cd->name_table;
-          const pcre_uchar *name;      /* Don't amalgamate; some compilers */
+          const pcre_uchar *name; /* Don't amalgamate; some compilers */
           name = ++ptr;           /* grumble at autoincrement in declaration */
 
           while (*ptr++ != '>');
           namelen = ptr - name - 1;
 
+          // FIXME: This won't work for UTF-16.
           for (i = 0; i < cd->names_found; i++)
             {
             int crc = memcmp(name, slot+2, namelen);
@@ -3350,6 +3353,15 @@ for (;; ptr++)
 
     default:
     NORMAL_CHAR:
+#if PCRE_UTF16
+    if (c < 128)
+      {
+       mclength = 1;
+       mcbuffer[0] = c;
+     }
+    else
+      mclength = _pcre_ord2utf8(c, mcbuffer);
+#else
     mclength = 1;
     mcbuffer[0] = c;
 
@@ -3359,6 +3371,7 @@ for (;; ptr++)
       while ((ptr[1] & 0xc0) == 0x80)
         mcbuffer[mclength++] = *(++ptr);
       }
+#endif
 #endif
 
     /* At this point we have the character's bytes in mcbuffer, and the length
@@ -4880,6 +4893,19 @@ while ((c = *(++ptr)) != 0)
 
     /* In UTF-8 mode, check for additional bytes. */
 
+#if PCRE_UTF16
+    if (c > 127)
+      {
+        if (IS_LEADING_SURROGATE(c))
+          {
+          c = DECODE_SURROGATE_PAIR(c, *ptr);
+          ++ptr;
+          }
+        char utf8Buffer[6];
+        lastitemlength = _pcre_ord2utf8(c, utf8Buffer);
+        length += lastitemlength - 1;
+      }
+#else
 #ifdef SUPPORT_UTF8
     if (utf8 && (c & 0xc0) == 0xc0)
       {
@@ -4890,6 +4916,7 @@ while ((c = *(++ptr)) != 0)
         ptr++;
         }
       }
+#endif
 #endif
 
     continue;
@@ -5015,9 +5042,14 @@ if ((options & PCRE_ANCHORED) == 0)
     if (firstbyte >= 0)   /* Remove caseless flag for non-caseable chars */
       {
       int ch = firstbyte & 255;
-      re->first_byte = ((firstbyte & REQ_CASELESS) != 0 &&
-         compile_block.fcc[ch] == ch)? ch : firstbyte;
-      re->options |= PCRE_FIRSTSET;
+#if PCRE_UTF16
+      if (ch < 127)
+#endif
+        {
+        re->first_byte = ((firstbyte & REQ_CASELESS) != 0 &&
+           compile_block.fcc[ch] == ch)? ch : firstbyte;
+        re->options |= PCRE_FIRSTSET;
+        }
       }
     else if (is_startline(codestart, 0, compile_block.backref_map))
       re->options |= PCRE_STARTLINE;
@@ -5032,9 +5064,14 @@ if (reqbyte >= 0 &&
      ((re->options & PCRE_ANCHORED) == 0 || (reqbyte & REQ_VARY) != 0))
   {
   int ch = reqbyte & 255;
-  re->req_byte = ((reqbyte & REQ_CASELESS) != 0 &&
-    compile_block.fcc[ch] == ch)? (reqbyte & ~REQ_CASELESS) : reqbyte;
-  re->options |= PCRE_REQCHSET;
+#if PCRE_UTF16
+  if (ch < 127)
+#endif
+    {
+    re->req_byte = ((reqbyte & REQ_CASELESS) != 0 &&
+      compile_block.fcc[ch] == ch)? (reqbyte & ~REQ_CASELESS) : reqbyte;
+    re->options |= PCRE_REQCHSET;
+    }
   }
 
 /* Print out the compiled data for debugging */
