@@ -1365,6 +1365,7 @@
 		14DF17B7089AF42B00995D0A /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_THREADSAFE_STATICS = NO;
 			};
 			name = Development;
@@ -1372,6 +1373,7 @@
 		14DF17B8089AF42B00995D0A /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_THREADSAFE_STATICS = NO;
 			};
 			name = Deployment;
@@ -1379,6 +1381,7 @@
 		14DF17B9089AF42B00995D0A /* OptimizedWithSymbols */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_THREADSAFE_STATICS = NO;
 			};
 			name = OptimizedWithSymbols;
@@ -1386,6 +1389,7 @@
 		14DF17BA089AF42B00995D0A /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_THREADSAFE_STATICS = NO;
 			};
 			name = Default;

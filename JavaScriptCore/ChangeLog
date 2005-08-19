@@ -1,5 +1,11 @@
 === Safari-416.2 ===
 
+2005-08-18  Adele Peterson  <adele@apple.com>
+
+	Checked "Inline Functions Hidden" box.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+
 === Safari-416.1 ===
 
 2005-08-10  Adele Peterson  <adele@apple.com>
