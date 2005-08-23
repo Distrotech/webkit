@@ -1780,7 +1780,9 @@ static WebCoreTextRun reverseCharactersInRun(const WebCoreTextRun *run)
     else {
         // Failed to find offset!  Return 0 offset.
     }
-       
+    
+    ATSUDisposeTextLayout(layout);
+    
     if (style->visuallyOrdered) {
         free ((void *)swappedRun.characters);
     }
