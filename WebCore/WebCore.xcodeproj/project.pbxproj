@@ -612,7 +612,7 @@
 		B51B650808B69D810076106C /* html_misc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F523D1B602DE4322018635CA /* html_misc.cpp */; };
 		B51B650908B69D820076106C /* html_object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F523D1B802DE4322018635CA /* html_object.cpp */; };
 		B51B650A08B69D840076106C /* html_table.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F523D1BA02DE4322018635CA /* html_table.cpp */; };
-		B51B651D08B69E110076106C /* WebCoreScriptDebugger.h in Headers */ = {isa = PBXBuildFile; fileRef = B51B651908B69E110076106C /* WebCoreScriptDebugger.h */; };
+		B51B651D08B69E110076106C /* WebCoreScriptDebugger.h in Headers */ = {isa = PBXBuildFile; fileRef = B51B651908B69E110076106C /* WebCoreScriptDebugger.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		B51B651E08B69E110076106C /* WebCoreScriptDebugger.mm in Sources */ = {isa = PBXBuildFile; fileRef = B51B651A08B69E110076106C /* WebCoreScriptDebugger.mm */; };
 		B51B651F08B69E110076106C /* WebCoreUnicode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B51B651B08B69E110076106C /* WebCoreUnicode.cpp */; };
 		B51B652008B69E110076106C /* WebCoreUnicode.h in Headers */ = {isa = PBXBuildFile; fileRef = B51B651C08B69E110076106C /* WebCoreUnicode.h */; settings = {ATTRIBUTES = (Private, ); }; };
