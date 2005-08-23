@@ -615,7 +615,7 @@
 		B51B651D08B69E110076106C /* WebCoreScriptDebugger.h in Headers */ = {isa = PBXBuildFile; fileRef = B51B651908B69E110076106C /* WebCoreScriptDebugger.h */; };
 		B51B651E08B69E110076106C /* WebCoreScriptDebugger.mm in Sources */ = {isa = PBXBuildFile; fileRef = B51B651A08B69E110076106C /* WebCoreScriptDebugger.mm */; };
 		B51B651F08B69E110076106C /* WebCoreUnicode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B51B651B08B69E110076106C /* WebCoreUnicode.cpp */; };
-		B51B652008B69E110076106C /* WebCoreUnicode.h in Headers */ = {isa = PBXBuildFile; fileRef = B51B651C08B69E110076106C /* WebCoreUnicode.h */; };
+		B51B652008B69E110076106C /* WebCoreUnicode.h in Headers */ = {isa = PBXBuildFile; fileRef = B51B651C08B69E110076106C /* WebCoreUnicode.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		B51B652908B69E360076106C /* KWQChar.mm in Sources */ = {isa = PBXBuildFile; fileRef = B51B652808B69E360076106C /* KWQChar.mm */; };
 /* End PBXBuildFile section */
 
