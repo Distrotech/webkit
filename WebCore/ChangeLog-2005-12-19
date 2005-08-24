@@ -1,5 +1,12 @@
 2005-08-23  Adele Peterson  <adele@apple.com>
 
+        Merged another version of reset which is used in our xmlhttprequest leak fix.
+
+        * khtml/misc/shared.h:
+        (khtml::SharedPtr::reset):
+
+2005-08-23  Adele Peterson  <adele@apple.com>
+
         Merged fix from TOT to Safari-2-0-branch
 
     2005-08-22  David Harrison  <harrison@apple.com>
