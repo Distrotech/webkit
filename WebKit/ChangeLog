@@ -1,6 +1,22 @@
 2005-08-23  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch
+        <rdar://problem/4221431> avoid icon database thrash for 1% speedup on HTML iBench
+
+    2005-08-14  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+
+	- 1% speedup on HTML load speed iBench by avoiding icon database thrash
+	http://bugzilla.opendarwin.org/show_bug.cgi?id=4423
+	
+        * Misc.subproj/WebIconDatabase.m:
+        (-[WebIconDatabase _setIconURL:forURL:]): Be more aggressive about returning early, because
+	updating the database does some expensive data structure copies.
+
+2005-08-23  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
 
     2005-08-23  Mitz Pettel  <opendarwin.org@mitzpettel.com>
 
