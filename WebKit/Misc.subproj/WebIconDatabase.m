@@ -295,7 +295,7 @@ NSSize WebIconLargeSize = {128, 128};
     ASSERT([self _isEnabled]);
     ASSERT([self _hasIconForIconURL:iconURL]);    
     
-    if ([[_private->pageURLToIconURL objectForKey:URL] isEqualToString:iconURL]) {
+    if ([[_private->URLToIconURL objectForKey:URL] isEqualToString:iconURL]) {
         // Don't do any work if the icon URL is already bound to the site URL
         return;
     }

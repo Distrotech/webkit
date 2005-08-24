@@ -1,3 +1,10 @@
+2005-08-24  Adele Peterson  <adele@apple.com>
+
+        Fixed merge error.  Use URLToIconURL on the branch instead of pageURLToIconURL
+
+        * Misc.subproj/WebIconDatabase.m:
+        (-[WebIconDatabase _setIconURL:forURL:]):
+
 2005-08-23  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch
