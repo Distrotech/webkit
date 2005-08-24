@@ -138,6 +138,7 @@ extern NSString *WebPageCacheDocumentViewKey;
 - (WebFrameState)_state;
 - (void)_setState:(WebFrameState)newState;
 - (void)_checkLoadCompleteForThisFrame;
+- (void)_handledOnloadEvents;
 - (void)_checkLoadComplete;
 - (WebBridge *)_bridge;
 - (void)_clearProvisionalDataSource;

@@ -1,6 +1,26 @@
 2005-08-23  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch
+
+    2005-08-17  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by rjw
+        
+        Addresses <rdar://problem/4192534> new frame load delegate SPI needed for Dashboard
+            Added handledOnloadEvents delegate method (private for now)
+
+        * WebCoreSupport.subproj/WebBridge.m:
+        (-[WebBridge handledOnloadEvents]):
+        * WebView.subproj/WebDefaultFrameLoadDelegate.m:
+        (-[WebDefaultFrameLoadDelegate webView:didHandleOnloadEventsForFrame:]):
+        * WebView.subproj/WebFrame.m:
+        (-[WebFrame _handledOnloadEvents]):
+        * WebView.subproj/WebFramePrivate.h:
+        * WebView.subproj/WebViewPrivate.h:
+
+2005-08-23  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
         <rdar://problem/4221431> avoid icon database thrash for 1% speedup on HTML iBench
 
     2005-08-14  Maciej Stachowiak  <mjs@apple.com>
