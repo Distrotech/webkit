@@ -1764,18 +1764,6 @@ NS_ENDHANDLER
 {
     return _private->frameLoadDelegate;
 }
-- (void)setScriptDebugDelegate:delegate
-{
-    _private->scriptDebugDelegate = delegate;
-    [_private->scriptDebugDelegateForwarder release];
-    _private->scriptDebugDelegateForwarder = nil;
-}
-
-- scriptDebugDelegate
-{
-    return _private->scriptDebugDelegate;
-}
-
 
 - (WebFrame *)mainFrame
 {
@@ -2531,6 +2519,18 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
     if ([self isEditable]) {
         [self setContinuousGrammarCheckingEnabled:![self isContinuousGrammarCheckingEnabled]];
     }
+}
+
+- (void)setScriptDebugDelegate:delegate
+{
+    _private->scriptDebugDelegate = delegate;
+    [_private->scriptDebugDelegateForwarder release];
+    _private->scriptDebugDelegateForwarder = nil;
+}
+
+- scriptDebugDelegate
+{
+    return _private->scriptDebugDelegate;
 }
 
 @end
