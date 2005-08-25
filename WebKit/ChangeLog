@@ -1,5 +1,14 @@
 === Safari-416.3 ===
 
+2005-08-25  Adele Peterson  <adele@apple.com>
+
+        Reviewed by John.        
+
+        Merged nil check for URLs from TOT
+
+        * Misc.subproj/WebIconDatabase.m:
+        (-[WebIconDatabase _releaseIconForIconURLString:]):
+
 2005-08-24  Adele Peterson  <adele@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch

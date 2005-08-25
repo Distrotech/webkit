@@ -611,11 +611,13 @@ NSSize WebIconLargeSize = {128, 128};
         // Remove the icon's associated site URLs
         [iconURLString retain];
         id URLs = [_private->iconURLToURLs objectForKey:iconURLString];
-        if ([URLs isKindOfClass:[NSMutableSet class]]) {
-            [_private->URLToIconURL removeObjectsForKeys:[URLs allObjects]];
-        } else {
-            ASSERT([URLs isKindOfClass:[NSString class]]);
-            [_private->URLToIconURL removeObjectForKey:URLs];
+        if (URLs != nil) {
+            if ([URLs isKindOfClass:[NSMutableSet class]]) {
+                [_private->URLToIconURL removeObjectsForKeys:[URLs allObjects]];
+            } else {
+                ASSERT([URLs isKindOfClass:[NSString class]]);
+                [_private->URLToIconURL removeObjectForKey:URLs];
+            }
         }
         [_private->iconURLToURLs removeObjectForKey:iconURLString];
         [iconURLString release];
