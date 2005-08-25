@@ -1,6 +1,6 @@
 SUBDIRS = khtml kwq
 
-all-am: previous-clean-timestamp previous-js-clean-timestamp
+all-am:
 	xcodebuild -configuration $(BUILDSTYLE) OBJROOT=$(SYMROOTS) SYMROOT=$(SYMROOTS) DSTROOT=$(SYMROOTS) 
 clean-am:
 	xcodebuild clean OBJROOT=$(SYMROOTS) SYMROOT=$(SYMROOTS) DSTROOT=$(SYMROOTS) 
