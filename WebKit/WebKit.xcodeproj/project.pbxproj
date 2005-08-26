@@ -1348,6 +1348,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 149C282D08902B0F008A9EFC /* Build configuration list for PBXNativeTarget "WebKit" */;
 			buildPhases = (
+				939811300824BF01008DF038 /* Frameworks (symlink) */,
 				B5E928B208B6ADDB00B9F2B3 /* security_cdsa_utils */,
 				B5E928BC08B6AE4D00B9F2B3 /* WebKitSecurity */,
 				93AF528708254B33005D0156 /* DOM.h */,
@@ -1362,7 +1363,6 @@
 				93AF529B08254D62005D0156 /* DOMStylesheets.h */,
 				93AF52CE08254E18005D0156 /* DOMTraversal.h */,
 				93AF52D808254E31005D0156 /* DOMViews.h */,
-				939811300824BF01008DF038 /* Frameworks (symlink) */,
 				933932420825A64800AADA6B /* npapi.h */,
 				9339323E0825A64200AADA6B /* npruntime.h */,
 				93AF52D608254E2D005D0156 /* WebDashboardRegion.h */,
