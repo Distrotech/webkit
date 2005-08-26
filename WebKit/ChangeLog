@@ -1,3 +1,9 @@
+=== WebKit-416.3.3 ===
+
+2005-08-26  Adele Peterson  <adele@apple.com>
+
+        * WebKit.xcodeproj/project.pbxproj: removed creation of frameworks-symlink-stamp
+
 === WebKit-416.3.2 ===
 
 2005-08-26  Adele Peterson  <adele@apple.com>
