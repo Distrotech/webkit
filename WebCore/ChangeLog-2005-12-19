@@ -1,3 +1,16 @@
+2005-08-26  David Hyatt  <hyatt@apple.com>
+
+	Fix for 4226539, blank content on leaky-cauldron.org.  Revert
+	back to proper strict SGML comment parsing and just relax the
+	rules for comments inside <style> blocks (which weren't supposed
+	to be parsed by the HTML parser anyway... same problem as
+	<script> on news.com).
+	
+        Reviewed by adele
+
+        * khtml/html/htmltokenizer.cpp:
+        (khtml::HTMLTokenizer::parseComment):
+
 === Safari-416.3 ===
 
 2005-08-25  Adele Peterson  <adele@apple.com>

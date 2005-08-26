@@ -642,8 +642,8 @@ void HTMLTokenizer::scriptExecution( const QString& str, QString scriptURL,
 
 void HTMLTokenizer::parseComment(TokenizerString &src)
 {
-    // FIXME: Why does this code even run for comments inside <script>? This seems bogus.
-    bool strict = !parser->doc()->inCompatMode() && !script;
+    // FIXME: Why does this code even run for comments inside <script> and <style>? This seems bogus.
+    bool strict = !parser->doc()->inCompatMode() && !script && !style;
     int delimiterCount = 0;
     bool canClose = false;
     checkScriptBuffer(src.length());
@@ -654,7 +654,19 @@ void HTMLTokenizer::parseComment(TokenizerString &src)
                QConstString((QChar*)src.current(), QMIN(16, src.length())).string().latin1());
 #endif
 
-        if ((!strict || canClose) && *src == '>') {
+        if (strict) {
+            if (src->unicode() == '-') {
+                delimiterCount++;
+                if (delimiterCount == 2) {
+                    delimiterCount = 0;
+                    canClose = !canClose;
+                }
+            }
+            else
+                delimiterCount = 0;
+        }
+
+        if ((!strict || canClose) && src->unicode() == '>') {
             bool handleBrokenComments = brokenComments && !(script || style);
             int endCharsCount = 1; // start off with one for the '>' character
             if (!strict) {
@@ -688,26 +700,6 @@ void HTMLTokenizer::parseComment(TokenizerString &src)
                 return; // Finished parsing comment
             }
         }
-
-        if (strict) {
-            if (*src == '-') {
-                delimiterCount++;
-                if (delimiterCount == 2) {
-                    delimiterCount = 0;
-                    canClose = !canClose;
-                }
-            } else {
-                delimiterCount = 0;
-                // Bad markup.  Non-space between the comment end and the markup
-                // declaration close ('>').  Keep scanning as comment, but set
-                // the state back to where we need to see another comment end
-                // followed by a declaration close.
-                // This is not exactly to spec, but is better for compatiblility.
-                if (canClose && *src != ' ')
-                    canClose = false;
-            }
-        }
-
         ++src;
     }
 }
