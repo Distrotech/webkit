@@ -1,3 +1,7 @@
+2005-08-26  Adele Peterson  <adele@apple.com>
+
+        * WebKit.xcodeproj/project.pbxproj: Change WebKit.Framework to WebKit.framework in UMBRELLA_FRAMEWORK
+
 === WebKit-416.3.1 ===
 
 === Safari-416.3 ===
