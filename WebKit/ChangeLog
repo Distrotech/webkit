@@ -1,3 +1,9 @@
+2005-08-26  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Darin.
+
+        * WebKit.xcodeproj/project.pbxproj: Made WebDashboardRegion.h private.
+
 === WebKit-416.3.3 ===
 
 2005-08-26  Adele Peterson  <adele@apple.com>
