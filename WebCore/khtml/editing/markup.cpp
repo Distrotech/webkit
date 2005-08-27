@@ -189,7 +189,6 @@ static QString startMarkup(const NodeImpl *node, const RangeImpl *range, EAnnota
             if (defaultStyle) {
                 NodeImpl *element = node->parentNode();
                 if (element) {
-                    CSSMutableStyleDeclarationImpl *style = Position(element, 0).computedStyle()->copyInheritableProperties();
                     CSSComputedStyleDeclarationImpl *computedStyle = Position(element, 0).computedStyle();
                     computedStyle->ref();
                     CSSMutableStyleDeclarationImpl *style = computedStyle->copyInheritableProperties();

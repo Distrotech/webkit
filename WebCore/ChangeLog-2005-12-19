@@ -1,5 +1,12 @@
 2005-08-27  Adele Peterson  <adele@apple.com>
 
+        Fixing merge error.
+
+        * khtml/editing/markup.cpp:
+        (khtml::startMarkup):
+
+2005-08-27  Adele Peterson  <adele@apple.com>
+
         Merged fix from TOT to Safari-2-0-branch.
 
         * khtml/editing/htmlediting.cpp:  ReplaceSelectionCommand changes are made here. 
