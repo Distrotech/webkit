@@ -1404,7 +1404,7 @@ long NodeImpl::maxOffset() const
 // method for editing madness, which allows BR,1 as a position, though that is incorrect
 long NodeImpl::maxDeepOffset() const
 {
-    if (offsetInCharacters(nodeType()))
+    if (isTextNode())
         return static_cast<const TextImpl*>(this)->length();
         
     if (id() == ID_BR || (renderer() && renderer()->isReplaced()))
