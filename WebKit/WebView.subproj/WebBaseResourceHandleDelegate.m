@@ -239,7 +239,13 @@ static BOOL NSURLConnectionSupportsBufferedData;
         }
     }
     
+#ifndef NDEBUG
+    isInitializingConnection = YES;
+#endif
     connection = [[NSURLConnection alloc] initWithRequest:r delegate:self];
+#ifndef NDEBUG
+    isInitializingConnection = NO;
+#endif
     if (defersCallbacks) {
         [connection setDefersCallbacks:YES];
     }
@@ -631,7 +637,11 @@ static BOOL NSURLConnectionSupportsBufferedData;
 
 - (NSCachedURLResponse *)connection:(NSURLConnection *)con willCacheResponse:(NSCachedURLResponse *)cachedResponse
 {
-    ASSERT(con == connection);
+#ifndef NDEBUG
+     if (connection == nil && isInitializingConnection) {
+         ERROR("connection:willCacheResponse: was called inside of [NSURLConnection initWithRequest:delegate:] (40676250)");
+     }
+#endif
     
     ++inNSURLConnectionCallback;
     NSCachedURLResponse *result = [self willCacheResponse:cachedResponse];

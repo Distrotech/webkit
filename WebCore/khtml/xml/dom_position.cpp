@@ -383,7 +383,7 @@ Position Position::upstream(EStayInBlock stayInBlock) const
 
             // we could not have iterated here because we would have returned
             // this node, caretMaxOffset, so we must have started here
-            assert(currentPos == start);
+//            assert(currentPos == start);
             continue;
         }
 
@@ -495,7 +495,7 @@ Position Position::downstream(EStayInBlock stayInBlock) const
             
             // we could not have iterated here because we would have returned
             // this node, offset 0, so we must have started here
-            assert(currentPos == start);
+//            assert(currentPos == start);
             continue;
         }
 
