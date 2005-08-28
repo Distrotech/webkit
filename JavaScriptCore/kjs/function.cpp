@@ -31,6 +31,7 @@
 #include "operations.h"
 #include "debugger.h"
 #include "context.h"
+#include "shared_ptr.h"
 
 #include <stdio.h>
 #include <errno.h>
@@ -41,6 +42,8 @@
 #if APPLE_CHANGES
 #include <unicode/uchar.h>
 #endif
+
+using namespace kxmlcore;
 
 namespace KJS {
 
@@ -267,14 +270,7 @@ DeclaredFunctionImp::DeclaredFunctionImp(ExecState *exec, const Identifier &n,
   : FunctionImp(exec,n), body(b)
 {
   Value protect(this);
-  body->ref();
   setScope(sc);
-}
-
-DeclaredFunctionImp::~DeclaredFunctionImp()
-{
-  if ( body->deref() )
-    delete body;
 }
 
 bool DeclaredFunctionImp::implementsConstruct() const
@@ -644,7 +640,7 @@ Value GlobalFuncImp::call(ExecState *exec, Object &/*thisObj*/, const List &args
       int sid;
       int errLine;
       UString errMsg;
-      ProgramNode *progNode = Parser::parse(UString(), 0, s.data(),s.size(),&sid,&errLine,&errMsg);
+      SharedPtr<ProgramNode> progNode(Parser::parse(UString(), 0, s.data(),s.size(),&sid,&errLine,&errMsg));
 
       Debugger *dbg = exec->dynamicInterpreter()->imp()->debugger();
       if (dbg) {
@@ -660,8 +656,6 @@ Value GlobalFuncImp::call(ExecState *exec, Object &/*thisObj*/, const List &args
         exec->setException(err);
         return err;
       }
-
-      progNode->ref();
 
       // enter a new execution context
       Object thisVal(Object::dynamicCast(exec->context().thisValue()));
@@ -686,9 +680,6 @@ Value GlobalFuncImp::call(ExecState *exec, Object &/*thisObj*/, const List &args
             exec->setException(c.value());
         else if (c.isValueCompletion())
             res = c.value();
-  
-        if ( progNode->deref() )
-            delete progNode;
     }
     break;
   }

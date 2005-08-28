@@ -89,6 +89,8 @@
 		932F5B850822A1C700736975 /* npruntime.h in Headers */ = {isa = PBXBuildFile; fileRef = 5199B1BE061B65BC0070C006 /* npruntime.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		932F5B870822A1C700736975 /* interpreter_map.h in Headers */ = {isa = PBXBuildFile; fileRef = 65AB004906261CBA0076DE63 /* interpreter_map.h */; };
 		932F5B880822A1C700736975 /* protect.h in Headers */ = {isa = PBXBuildFile; fileRef = 65C02FBB0637462A003E7EE6 /* protect.h */; settings = {ATTRIBUTES = (Private, ); }; };
+ 		65EF2DF508BECC80000894BB /* shared_ptr.h in Headers */ = {isa = PBXBuildFile; fileRef = 65EF2DF408BECC80000894BB /* shared_ptr.h */; settings = {ATTRIBUTES = (Private, ); }; };
+ 		65EF2DF808BECC8A000894BB /* shared_ptr.h in Headers */ = {isa = PBXBuildFile; fileRef = 65EF2DF408BECC80000894BB /* shared_ptr.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		932F5B890822A1C700736975 /* protected_values.h in Headers */ = {isa = PBXBuildFile; fileRef = 650B68D90639033F009D42DE /* protected_values.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		932F5B8A0822A1C700736975 /* WebScriptObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 51863F6F065420E800E9E8DD /* WebScriptObject.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		932F5B8B0822A1C700736975 /* WebScriptObjectPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 700DA117065984CE00747C0B /* WebScriptObjectPrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -309,6 +311,7 @@
 		65AB004806261CBA0076DE63 /* interpreter_map.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = interpreter_map.cpp; sourceTree = "<group>"; };
 		65AB004906261CBA0076DE63 /* interpreter_map.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = interpreter_map.h; sourceTree = "<group>"; };
 		65C02FBB0637462A003E7EE6 /* protect.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = protect.h; sourceTree = "<group>"; };
+		65EF2DF408BECC80000894BB /* shared_ptr.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = shared_ptr.h; sourceTree = "<group>"; };
 		700DA117065984CE00747C0B /* WebScriptObjectPrivate.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = WebScriptObjectPrivate.h; path = bindings/objc/WebScriptObjectPrivate.h; sourceTree = "<group>"; };
 		704FD35305697E6D003DBED9 /* bool_object.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = bool_object.h; sourceTree = "<group>"; };
 		704FD44505698F17003DBED9 /* runtime.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = runtime.cpp; path = bindings/runtime.cpp; sourceTree = "<group>"; };

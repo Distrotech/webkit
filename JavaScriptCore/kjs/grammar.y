@@ -609,9 +609,9 @@ FunctionBody:
 
 Program:
     /* nothing, empty script */      { $$ = new ProgramNode(0);
-                                     Parser::progNode = $$; }
+                                     Parser::accept($$); }
     | SourceElements                 { $$ = new ProgramNode($1);
-                                     Parser::progNode = $$; }
+                                     Parser::accept($$); }
 ;
 
 SourceElements:
