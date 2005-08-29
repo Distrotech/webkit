@@ -1,5 +1,10 @@
 === Safari-416.5 ===
 
+2005-08-28  Adele Peterson  <adele@apple.com>
+
+        * JavaScriptCore.xcodeproj/project.pbxproj: 
+        Adding shared_ptr.h as private header.  It didn't make it in the last merge.
+
 2005-08-28  Maciej Stachowiak  <mjs@apple.com>
 
 	Merges fixes from HEAD to Safari-2-0-branch

@@ -89,8 +89,6 @@
 		932F5B850822A1C700736975 /* npruntime.h in Headers */ = {isa = PBXBuildFile; fileRef = 5199B1BE061B65BC0070C006 /* npruntime.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		932F5B870822A1C700736975 /* interpreter_map.h in Headers */ = {isa = PBXBuildFile; fileRef = 65AB004906261CBA0076DE63 /* interpreter_map.h */; };
 		932F5B880822A1C700736975 /* protect.h in Headers */ = {isa = PBXBuildFile; fileRef = 65C02FBB0637462A003E7EE6 /* protect.h */; settings = {ATTRIBUTES = (Private, ); }; };
- 		65EF2DF508BECC80000894BB /* shared_ptr.h in Headers */ = {isa = PBXBuildFile; fileRef = 65EF2DF408BECC80000894BB /* shared_ptr.h */; settings = {ATTRIBUTES = (Private, ); }; };
- 		65EF2DF808BECC8A000894BB /* shared_ptr.h in Headers */ = {isa = PBXBuildFile; fileRef = 65EF2DF408BECC80000894BB /* shared_ptr.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		932F5B890822A1C700736975 /* protected_values.h in Headers */ = {isa = PBXBuildFile; fileRef = 650B68D90639033F009D42DE /* protected_values.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		932F5B8A0822A1C700736975 /* WebScriptObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 51863F6F065420E800E9E8DD /* WebScriptObject.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		932F5B8B0822A1C700736975 /* WebScriptObjectPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 700DA117065984CE00747C0B /* WebScriptObjectPrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -171,6 +169,7 @@
 		932FC11D0824A6A3005B3C75 /* create_hash_table in Headers */ = {isa = PBXBuildFile; fileRef = F692A8540255597D01FF60F7 /* create_hash_table */; settings = {ATTRIBUTES = (Private, ); }; };
 		935F69FE08245057003D1A45 /* dftables.c in Sources */ = {isa = PBXBuildFile; fileRef = 6541720E039E08B90058BFEB /* dftables.c */; };
 		93DE3E420868DCAB00B8897C /* grammar.y in Sources */ = {isa = PBXBuildFile; fileRef = 933A3499038AE7C6008635CE /* grammar.y */; };
+		ABCCD16A08C2A00700C32085 /* shared_ptr.h in Headers */ = {isa = PBXBuildFile; fileRef = ABCCD16908C2A00700C32085 /* shared_ptr.h */; settings = {ATTRIBUTES = (Private, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -311,7 +310,6 @@
 		65AB004806261CBA0076DE63 /* interpreter_map.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = interpreter_map.cpp; sourceTree = "<group>"; };
 		65AB004906261CBA0076DE63 /* interpreter_map.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = interpreter_map.h; sourceTree = "<group>"; };
 		65C02FBB0637462A003E7EE6 /* protect.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = protect.h; sourceTree = "<group>"; };
-		65EF2DF408BECC80000894BB /* shared_ptr.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = shared_ptr.h; sourceTree = "<group>"; };
 		700DA117065984CE00747C0B /* WebScriptObjectPrivate.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = WebScriptObjectPrivate.h; path = bindings/objc/WebScriptObjectPrivate.h; sourceTree = "<group>"; };
 		704FD35305697E6D003DBED9 /* bool_object.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = bool_object.h; sourceTree = "<group>"; };
 		704FD44505698F17003DBED9 /* runtime.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = runtime.cpp; path = bindings/runtime.cpp; sourceTree = "<group>"; };
@@ -340,6 +338,7 @@
 		937F4F24048E5B9900CA2AC4 /* internal.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = internal.h; path = pcre/internal.h; sourceTree = "<group>"; };
 		938772E5038BFE19008635CE /* array_instance.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = array_instance.h; sourceTree = "<group>"; };
 		93F1981A08245AAE001E9ABC /* keywords.table */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = keywords.table; sourceTree = "<group>"; };
+		ABCCD16908C2A00700C32085 /* shared_ptr.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; path = shared_ptr.h; sourceTree = "<group>"; };
 		F50888B6030BB74C012A967E /* simple_number.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = simple_number.h; sourceTree = "<group>"; };
 		F5341390030CEEB1018BE7F3 /* reference.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = reference.cpp; sourceTree = "<group>"; };
 		F5341391030CEEB1018BE7F3 /* reference.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = reference.h; sourceTree = "<group>"; };
@@ -469,6 +468,7 @@
 		08FB77AEFE84172EC02AAC07 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				ABCCD16908C2A00700C32085 /* shared_ptr.h */,
 				938772E5038BFE19008635CE /* array_instance.h */,
 				650B68D80639033F009D42DE /* protected_values.cpp */,
 				650B68D90639033F009D42DE /* protected_values.h */,
@@ -737,6 +737,7 @@
 				932F5B8E0822A1C700736975 /* npruntime_impl.h in Headers */,
 				932F5B8F0822A1C700736975 /* fast_malloc.h in Headers */,
 				932FC11D0824A6A3005B3C75 /* create_hash_table in Headers */,
+				ABCCD16A08C2A00700C32085 /* shared_ptr.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
