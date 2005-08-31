@@ -1,3 +1,34 @@
+2005-08-30  Adele Peterson  <adele@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
+    2005-08-30  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Maciej.
+
+        Test cases added: none, doesn't affect layout
+        
+        - fixed <rdar://problem/4237183> REGRESSION (Denver): crash in 
+        JSUnprotectedEventListener::~JSUnprotectedEventListener
+
+        * khtml/ecma/kjs_events.cpp:
+        (KJS::JSUnprotectedEventListener::~JSUnprotectedEventListener):
+        check for nil window pointer
+        (KJS::JSUnprotectedEventListener::clearWindowObj):
+        new method, sets window pointer to nil
+        
+        (KJS::JSEventListener::~JSEventListener):
+        (KJS::JSEventListener::clearWindowObj):
+        same changes for this class. We don't think the bug would ever happen for
+        this similar class, but we're not completely sure, so best to play it safe.
+        
+        * khtml/ecma/kjs_events.h:
+        declaration of new clearWindowObj methods
+        
+        * khtml/ecma/kjs_window.cpp:
+        (KJS::Window::~Window):
+        iterate through event listeners, clearing their window pointers
+
 === Safari-416.5 ===
 
 2005-08-28  Adele Peterson  <adele@apple.com>

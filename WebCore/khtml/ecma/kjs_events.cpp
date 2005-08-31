@@ -154,7 +154,9 @@ JSUnprotectedEventListener::JSUnprotectedEventListener(Object _listener, const O
 JSUnprotectedEventListener::~JSUnprotectedEventListener()
 {
     if (listener.imp()) {
-      static_cast<Window*>(win.imp())->jsUnprotectedEventListeners.remove(listener.imp());
+        if (!win.isNull()) {
+            static_cast<Window*>(win.imp())->jsUnprotectedEventListeners.remove(listener.imp());
+        }
     }
 }
 
@@ -167,6 +169,12 @@ Object JSUnprotectedEventListener::windowObj() const
 {
     return win;
 }
+
+void JSUnprotectedEventListener::clearWindowObj()
+{
+    win = Object();
+}
+
 
 void JSUnprotectedEventListener::mark()
 {
@@ -191,7 +199,9 @@ JSEventListener::JSEventListener(Object _listener, const Object &_win, bool _htm
 JSEventListener::~JSEventListener()
 {
     if (listener.imp()) {
-      static_cast<Window*>(win.imp())->jsEventListeners.remove(listener.imp());
+        if (!win.isNull()) {
+          static_cast<Window*>(win.imp())->jsEventListeners.remove(listener.imp());
+        }
     }
     //fprintf(stderr,"JSEventListener::~JSEventListener this=%p listener=%p\n",this,listener.imp());
 }
@@ -204,6 +214,11 @@ Object JSEventListener::listenerObj() const
 Object JSEventListener::windowObj() const
 {
     return win;
+}
+
+void JSEventListener::clearWindowObj()
+{
+    win = Object();
 }
 
 // -------------------------------------------------------------------------
