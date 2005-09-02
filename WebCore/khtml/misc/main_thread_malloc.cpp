@@ -224,6 +224,11 @@
     probably don't want to touch unless you are extending or adapting malloc.
 */
 
+#define MORECORE_CONTIGUOUS 0
+#define MORECORE_CANNOT_TRIM 1
+#define MALLOC_FAILURE_ACTION abort()
+
+
 namespace khtml {
 
 /*
@@ -2498,7 +2503,9 @@ static void malloc_init_state(av) mstate av;
 
 #if __STD_C
 static Void_t*  sYSMALLOc(INTERNAL_SIZE_T, mstate);
+#ifndef MORECORE_CANNOT_TRIM
 static int      sYSTRIm(size_t, mstate);
+#endif
 static void     malloc_consolidate(mstate);
 static Void_t** iALLOc(size_t, size_t*, int, Void_t**);
 #else
@@ -3288,6 +3295,8 @@ static Void_t* sYSMALLOc(nb, av) INTERNAL_SIZE_T nb; mstate av;
   returns 1 if it actually released any memory, else 0.
 */
 
+#ifndef MORECORE_CANNOT_TRIM
+
 #if __STD_C
 static int sYSTRIm(size_t pad, mstate av)
 #else
@@ -3344,6 +3353,8 @@ static int sYSTRIm(pad, av) size_t pad; mstate av;
   }
   return 0;
 }
+
+#endif
 
 /*
   ------------------------------ malloc ------------------------------
