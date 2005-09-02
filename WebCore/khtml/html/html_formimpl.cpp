@@ -2293,7 +2293,7 @@ long HTMLSelectElementImpl::selectedIndex() const
 {
     // return the number of the first option selected
     uint o = 0;
-    QMemArray<HTMLGenericFormElementImpl*> items = listItems();
+    QMemArray<HTMLElementImpl*> items = listItems();
     for (unsigned int i = 0; i < items.size(); i++) {
         if (items[i]->id() == ID_OPTION) {
             if (static_cast<HTMLOptionElementImpl*>(items[i])->selected())
@@ -2308,7 +2308,7 @@ long HTMLSelectElementImpl::selectedIndex() const
 void HTMLSelectElementImpl::setSelectedIndex( long  index )
 {
     // deselect all other options and select only the new one
-    QMemArray<HTMLGenericFormElementImpl*> items = listItems();
+    QMemArray<HTMLElementImpl*> items = listItems();
     int listIndex;
     for (listIndex = 0; listIndex < int(items.size()); listIndex++) {
         if (items[listIndex]->id() == ID_OPTION)
@@ -2325,7 +2325,7 @@ long HTMLSelectElementImpl::length() const
 {
     int len = 0;
     uint i;
-    QMemArray<HTMLGenericFormElementImpl*> items = listItems();
+    QMemArray<HTMLElementImpl*> items = listItems();
     for (i = 0; i < items.size(); i++) {
         if (items[i]->id() == ID_OPTION)
             len++;
@@ -2335,7 +2335,7 @@ long HTMLSelectElementImpl::length() const
 
 void HTMLSelectElementImpl::add( HTMLElementImpl *element, HTMLElementImpl *before )
 {
-    if (!element || element->id() != ID_OPTION)
+    if (!element || !(element->id() == ID_OPTION || element->id() == ID_HR))
         return;
 
     int exceptioncode = 0;
@@ -2349,7 +2349,7 @@ void HTMLSelectElementImpl::remove( long index )
     int exceptioncode = 0;
     int listIndex = optionToListIndex(index);
 
-    QMemArray<HTMLGenericFormElementImpl*> items = listItems();
+    QMemArray<HTMLElementImpl*> items = listItems();
     if(listIndex < 0 || index >= int(items.size()))
         return; // ### what should we do ? remove the last item?
 
@@ -2372,7 +2372,7 @@ void HTMLSelectElementImpl::focus()
 DOMString HTMLSelectElementImpl::value( )
 {
     uint i;
-    QMemArray<HTMLGenericFormElementImpl*> items = listItems();
+    QMemArray<HTMLElementImpl*> items = listItems();
     for (i = 0; i < items.size(); i++) {
         if ( items[i]->id() == ID_OPTION
             && static_cast<HTMLOptionElementImpl*>(items[i])->selected())
@@ -2385,7 +2385,7 @@ void HTMLSelectElementImpl::setValue(DOMStringImpl* value)
 {
     // find the option with value() matching the given parameter
     // and make it the current selection.
-    QMemArray<HTMLGenericFormElementImpl*> items = listItems();
+    QMemArray<HTMLElementImpl*> items = listItems();
     for (unsigned i = 0; i < items.size(); i++)
         if (items[i]->id() == ID_OPTION && static_cast<HTMLOptionElementImpl*>(items[i])->value() == value) {
             static_cast<HTMLOptionElementImpl*>(items[i])->setSelected(true);
@@ -2398,7 +2398,7 @@ QString HTMLSelectElementImpl::state( )
 #if !APPLE_CHANGES
     QString state;
 #endif
-    QMemArray<HTMLGenericFormElementImpl*> items = listItems();
+    QMemArray<HTMLElementImpl*> items = listItems();
 
     int l = items.count();
 
@@ -2439,7 +2439,7 @@ void HTMLSelectElementImpl::restoreState(QStringList &_states)
 #endif
     }
 
-    QMemArray<HTMLGenericFormElementImpl*> items = listItems();
+    QMemArray<HTMLElementImpl*> items = listItems();
 
     int l = items.count();
     for(int i = 0; i < l; i++) {
@@ -2531,7 +2531,7 @@ RenderObject *HTMLSelectElementImpl::createRenderer(RenderArena *arena, RenderSt
 bool HTMLSelectElementImpl::appendFormData(FormDataList& encoded_values, bool)
 {
     bool successful = false;
-    QMemArray<HTMLGenericFormElementImpl*> items = listItems();
+    QMemArray<HTMLElementImpl*> items = listItems();
 
     uint i;
     for (i = 0; i < items.size(); i++) {
@@ -2562,7 +2562,7 @@ bool HTMLSelectElementImpl::appendFormData(FormDataList& encoded_values, bool)
 
 int HTMLSelectElementImpl::optionToListIndex(int optionIndex) const
 {
-    QMemArray<HTMLGenericFormElementImpl*> items = listItems();
+    QMemArray<HTMLElementImpl*> items = listItems();
     if (optionIndex < 0 || optionIndex >= int(items.size()))
         return -1;
 
@@ -2580,7 +2580,7 @@ int HTMLSelectElementImpl::optionToListIndex(int optionIndex) const
 
 int HTMLSelectElementImpl::listToOptionIndex(int listIndex) const
 {
-    QMemArray<HTMLGenericFormElementImpl*> items = listItems();
+    QMemArray<HTMLElementImpl*> items = listItems();
     if (listIndex < 0 || listIndex >= int(items.size()) ||
         items[listIndex]->id() != ID_OPTION)
         return -1;
@@ -2611,12 +2611,12 @@ void HTMLSelectElementImpl::recalcListItems()
         if (current->id() == ID_OPTGROUP && current->firstChild()) {
             // ### what if optgroup contains just comments? don't want one of no options in it...
             m_listItems.resize(m_listItems.size()+1);
-            m_listItems[m_listItems.size()-1] = static_cast<HTMLGenericFormElementImpl*>(current);
+            m_listItems[m_listItems.size()-1] = static_cast<HTMLElementImpl*>(current);
             current = current->firstChild();
         }
         if (current->id() == ID_OPTION) {
             m_listItems.resize(m_listItems.size()+1);
-            m_listItems[m_listItems.size()-1] = static_cast<HTMLGenericFormElementImpl*>(current);
+            m_listItems[m_listItems.size()-1] = static_cast<HTMLElementImpl*>(current);
             if (!foundSelected && !m_multiple && m_size <= 1) {
                 foundSelected = static_cast<HTMLOptionElementImpl*>(current);
                 foundSelected->m_selected = true;
@@ -2625,6 +2625,10 @@ void HTMLSelectElementImpl::recalcListItems()
                 foundSelected->m_selected = false;
                 foundSelected = static_cast<HTMLOptionElementImpl*>(current);
             }
+        }
+        if (current->id() == ID_HR) {
+            m_listItems.resize(m_listItems.size()+1);
+            m_listItems[m_listItems.size()-1] = static_cast<HTMLElementImpl*>(current);
         }
         NodeImpl *parent = current->parentNode();
         current = current->nextSibling();
@@ -2653,7 +2657,7 @@ void HTMLSelectElementImpl::setRecalcListItems()
 
 void HTMLSelectElementImpl::reset()
 {
-    QMemArray<HTMLGenericFormElementImpl*> items = listItems();
+    QMemArray<HTMLElementImpl*> items = listItems();
     uint i;
     for (i = 0; i < items.size(); i++) {
         if (items[i]->id() == ID_OPTION) {
@@ -2671,7 +2675,7 @@ void HTMLSelectElementImpl::notifyOptionSelected(HTMLOptionElementImpl *selected
 {
     if (selected && !m_multiple) {
         // deselect all other options
-        QMemArray<HTMLGenericFormElementImpl*> items = listItems();
+        QMemArray<HTMLElementImpl*> items = listItems();
         uint i;
         for (i = 0; i < items.size(); i++) {
             if (items[i]->id() == ID_OPTION)
@@ -2908,7 +2912,7 @@ long HTMLOptionElementImpl::index() const
 {
     // Let's do this dynamically. Might be a bit slow, but we're sure
     // we won't forget to update a member variable in some cases...
-    QMemArray<HTMLGenericFormElementImpl*> items = getSelect()->listItems();
+    QMemArray<HTMLElementImpl*> items = getSelect()->listItems();
     int l = items.count();
     int optionIndex = 0;
     for(int i = 0; i < l; i++) {

@@ -183,9 +183,9 @@ void QListBox::setSelectionMode(SelectionMode mode)
     KWQ_UNBLOCK_EXCEPTIONS;
 }
 
-void QListBox::appendItem(const QString &text, bool isLabel)
+void QListBox::appendItem(const QString &text, KWQListBoxItemType type)
 {
-    _items.append(KWQListBoxItem(text, isLabel));
+    _items.append(KWQListBoxItem(text, type));
     _widthGood = false;
 }
 
@@ -306,7 +306,7 @@ QSize QListBox::sizeForNumberOfLines(int lines) const
                 int length = s.length();
                 WebCoreInitializeTextRun(&run, reinterpret_cast<const UniChar *>(s.unicode()), length, 0, length);
 
-                float textWidth = [((*i).isGroupLabel ? groupLabelRenderer : renderer) floatWidthForRun:&run style:&style widths:0];
+                float textWidth = [(((*i).type == KWQListBoxGroupLabel) ? groupLabelRenderer : renderer) floatWidthForRun:&run style:&style widths:0];
                 width = kMax(width, textWidth);
                 
                 ++i;
@@ -598,7 +598,7 @@ void QListBox::setFont(const QFont &font)
 
 - (BOOL)tableView:(NSTableView *)tableView shouldSelectRow:(int)row
 {
-    return _box && !_box->itemAtIndex(row).isGroupLabel;
+    return _box && _box->itemAtIndex(row).type == KWQListBoxOption;
 }
 
 - (BOOL)selectionShouldChangeInTableView:(NSTableView *)aTableView
@@ -631,9 +631,9 @@ void QListBox::setFont(const QFont &font)
     
     id <WebCoreTextRenderer> renderer;
     if (isSystemFont) {
-        renderer = item.isGroupLabel ? groupLabelTextRenderer() : itemTextRenderer();
+        renderer = (item.type == KWQListBoxGroupLabel) ? groupLabelTextRenderer() : itemTextRenderer();
     } else {
-        if (item.isGroupLabel) {
+        if (item.type == KWQListBoxGroupLabel) {
             QFont boldFont = _box->font();
             boldFont.setWeight(QFont::Bold);
             font = boldFont.getNSFont();
