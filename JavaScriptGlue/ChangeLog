@@ -1,3 +1,14 @@
+2005-09-02  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by John.
+
+	- fixed <rdar://problem/4234146> Denver Regression: for (x in y) broken in JavaScriptGlue (could cause crash)
+
+        * UserObjectImp.cpp:
+        (UserObjectImp::hasOwnProperty): Renamed from hasProperty and implemented in a
+	lower-level way, to avoid relying on get.
+        * UserObjectImp.h:
+
 2005-09-01  Maciej Stachowiak  <mjs@apple.com>
 
         Rubber stamped by hyatt.
