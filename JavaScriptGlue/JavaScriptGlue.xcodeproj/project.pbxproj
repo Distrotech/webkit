@@ -80,7 +80,7 @@
 /* Begin PBXFrameworkTarget section */
 		0867D69CFE84028FC02AAC07 /* JavaScriptGlue */ = {
 			isa = PBXFrameworkTarget;
-			buildConfigurationList = 14AC662708CE7791006915A8 /* Build configuration list for PBXFrameworkTarget "JavaScriptGlue" */;
+			buildConfigurationList = B53406EF08D0D7CE00BF5003 /* Build configuration list for PBXFrameworkTarget "JavaScriptGlue" */;
 			buildPhases = (
 				0867D69DFE84028FC02AAC07 /* Headers */,
 				0867D69EFE84028FC02AAC07 /* Resources */,
@@ -131,7 +131,7 @@
 	<key>CFBundleExecutable</key>
 	<string>JavaScriptGlue</string>
 	<key>CFBundleGetInfoString</key>
-	<string>JavaScriptGlue version 1.1.0, Copyright 2004, Apple Computer Inc.</string>
+	<string>1.1.1, Copyright 2004, Apple Computer Inc.</string>
 	<key>CFBundleIconFile</key>
 	<string></string>
 	<key>CFBundleIdentifier</key>
@@ -141,11 +141,11 @@
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.1.0</string>
+	<string>1.1.1</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>1.1.0</string>
+	<string>1.1.1</string>
 	<key>NSPrincipalClass</key>
 	<string></string>
 </dict>
@@ -266,7 +266,7 @@
 /* Begin PBXProject section */
 		0867D690FE84028FC02AAC07 /* Project object */ = {
 			isa = PBXProject;
-			buildConfigurationList = 14AC662B08CE7791006915A8 /* Build configuration list for PBXProject "JavaScriptGlue" */;
+			buildConfigurationList = B53406F308D0D7CE00BF5003 /* Build configuration list for PBXProject "JavaScriptGlue" */;
 			buildSettings = {
 			};
 			buildStyles = (
@@ -334,7 +334,7 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
-		14AC662808CE7791006915A8 /* Development */ = {
+		B53406F008D0D7CE00BF5003 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
@@ -373,7 +373,7 @@
 			};
 			name = Development;
 		};
-		14AC662908CE7791006915A8 /* Deployment */ = {
+		B53406F108D0D7CE00BF5003 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
@@ -408,7 +408,7 @@
 			};
 			name = Deployment;
 		};
-		14AC662A08CE7791006915A8 /* Default */ = {
+		B53406F208D0D7CE00BF5003 /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -440,19 +440,19 @@
 			};
 			name = Default;
 		};
-		14AC662C08CE7791006915A8 /* Development */ = {
+		B53406F408D0D7CE00BF5003 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 			};
 			name = Development;
 		};
-		14AC662D08CE7791006915A8 /* Deployment */ = {
+		B53406F508D0D7CE00BF5003 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 			};
 			name = Deployment;
 		};
-		14AC662E08CE7791006915A8 /* Default */ = {
+		B53406F608D0D7CE00BF5003 /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 			};
@@ -461,22 +461,22 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		14AC662708CE7791006915A8 /* Build configuration list for PBXFrameworkTarget "JavaScriptGlue" */ = {
+		B53406EF08D0D7CE00BF5003 /* Build configuration list for PBXFrameworkTarget "JavaScriptGlue" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				14AC662808CE7791006915A8 /* Development */,
-				14AC662908CE7791006915A8 /* Deployment */,
-				14AC662A08CE7791006915A8 /* Default */,
+				B53406F008D0D7CE00BF5003 /* Development */,
+				B53406F108D0D7CE00BF5003 /* Deployment */,
+				B53406F208D0D7CE00BF5003 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Default;
 		};
-		14AC662B08CE7791006915A8 /* Build configuration list for PBXProject "JavaScriptGlue" */ = {
+		B53406F308D0D7CE00BF5003 /* Build configuration list for PBXProject "JavaScriptGlue" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				14AC662C08CE7791006915A8 /* Development */,
-				14AC662D08CE7791006915A8 /* Deployment */,
-				14AC662E08CE7791006915A8 /* Default */,
+				B53406F408D0D7CE00BF5003 /* Development */,
+				B53406F508D0D7CE00BF5003 /* Deployment */,
+				B53406F608D0D7CE00BF5003 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Default;

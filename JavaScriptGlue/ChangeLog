@@ -1,3 +1,13 @@
+2005-09-08  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Geoff and Tim.
+
+        Converting project to XCode 2.1 on the Safari-2-0-branch
+
+        * JavaScriptGlue.pbproj/project.pbxproj: Removed.
+        * JavaScriptGlue.xcodeproj/.cvsignore: Added.
+        * JavaScriptGlue.xcodeproj/project.pbxproj: Added.
+
 2005-09-02  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by John.
