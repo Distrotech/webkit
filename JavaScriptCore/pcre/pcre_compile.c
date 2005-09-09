@@ -4055,13 +4055,6 @@ while ((c = *(++ptr)) != 0)
       {
       length += 2;          /* For a one-byte character */
 
-#if PCRE_UTF16
-      if (IS_LEADING_SURROGATE(c))
-        {
-        length++;
-        lastitemlength++;
-        }
-#else
 #ifdef SUPPORT_UTF8
       if (utf8 && c > 127)
         {
@@ -4071,7 +4064,6 @@ while ((c = *(++ptr)) != 0)
         length += i;
         lastitemlength += i;
         }
-#endif
 #endif
 
       continue;
@@ -4901,9 +4893,11 @@ while ((c = *(++ptr)) != 0)
           c = DECODE_SURROGATE_PAIR(c, *ptr);
           ++ptr;
           }
-        char utf8Buffer[6];
-        lastitemlength = _pcre_ord2utf8(c, utf8Buffer);
-        length += lastitemlength - 1;
+        int i;
+        for (i = 0; i < _pcre_utf8_table1_size; i++)
+          if (c <= _pcre_utf8_table1[i]) break;
+        length += i - 1;
+        lastitemlength = i;
       }
 #else
 #ifdef SUPPORT_UTF8
