@@ -785,6 +785,7 @@ NSString *WebPageCacheDocumentViewKey = @"WebPageCacheDocumentViewKey";
 
             case WebFrameLoadTypeReload:
             case WebFrameLoadTypeSame:
+            case WebFrameLoadTypeReplace:
             {
                 WebHistoryItem *currItem = [_private currentItem];
                 LOG(PageCache, "Clearing back/forward cache, %@\n", [currItem URL]);
@@ -1174,6 +1175,7 @@ static CFAbsoluteTime _timeOfLastCompletedLoad;
                     case WebFrameLoadTypeInternal:
                     case WebFrameLoadTypeReloadAllowingStaleData:
                     case WebFrameLoadTypeSame:
+                    case WebFrameLoadTypeReplace:
                         // Do nothing.
                         break;
 
@@ -2259,6 +2261,7 @@ static CFAbsoluteTime _timeOfLastCompletedLoad;
         case WebFrameLoadTypeReload:
         case WebFrameLoadTypeReloadAllowingStaleData:
         case WebFrameLoadTypeSame:
+        case WebFrameLoadTypeReplace:
             // Don't restore any form state on reload or loadSame
             return nil;
         case WebFrameLoadTypeBack:
@@ -2675,6 +2678,17 @@ static CFAbsoluteTime _timeOfLastCompletedLoad;
 {
     [[self _bridge] unmarkAllMisspellings];
     [_private->children makeObjectsPerformSelector:@selector(_unmarkAllMisspellings)];
+}
+
+- (void)_setupForReplace
+{
+    [self _setState:WebFrameStateProvisional];
+    WebDataSource *old = _private->provisionalDataSource;
+    _private->provisionalDataSource = _private->dataSource;
+    _private->dataSource = nil;
+    [old release];
+        
+    [self _detachChildren];
 }
 
 @end

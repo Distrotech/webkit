@@ -49,7 +49,8 @@ typedef enum {
     WebFrameLoadTypeReload,
     WebFrameLoadTypeReloadAllowingStaleData,
     WebFrameLoadTypeSame,		// user loads same URL again (but not reload button)
-    WebFrameLoadTypeInternal
+    WebFrameLoadTypeInternal,
+    WebFrameLoadTypeReplace
 } WebFrameLoadType;
 
 // Keys for accessing the values in the page cache dictionary.
@@ -131,6 +132,7 @@ extern NSString *WebPageCacheDocumentViewKey;
 - (void)_setName:(NSString *)name;
 - (WebFrame *)_descendantFrameNamed:(NSString *)name sourceFrame:(WebFrame *)source;
 - (void)_detachFromParent;
+- (void)_detachChildren;
 - (void)_closeOldDataSources;
 - (void)_setDataSource:(WebDataSource *)d;
 - (void)_transitionToCommitted:(NSDictionary *)pageCache;
