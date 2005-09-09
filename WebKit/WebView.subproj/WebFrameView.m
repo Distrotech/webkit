@@ -164,7 +164,7 @@ enum {
     return _private->marginHeight;
 }
 
-- (void)_setDocumentView:(NSView *)view
+- (void)_setDocumentView:(NSView <WebDocumentView> *)view
 {
     WebDynamicScrollBarsView *sv = (WebDynamicScrollBarsView *)[self _scrollView];
     
@@ -233,6 +233,7 @@ static NSMutableDictionary *viewTypes;
             [WebHTMLView class], @"application/rss+xml",
             [WebHTMLView class], @"application/atom+xml",
             [WebHTMLView class], @"application/x-webarchive",
+            [WebHTMLView class], @"multipart/x-mixed-replace",
             [WebTextView class], @"text/",
             [WebTextView class], @"application/x-javascript",
             nil];
@@ -353,7 +354,7 @@ static NSMutableDictionary *viewTypes;
     return [(WebDynamicScrollBarsView *)[self _scrollView] allowsScrolling];
 }
 
-- documentView
+- (NSView <WebDocumentView> *)documentView
 {
     return [[self _scrollView] documentView];
 }

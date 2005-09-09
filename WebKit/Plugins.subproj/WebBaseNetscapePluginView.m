@@ -38,6 +38,8 @@
 // This is not yet in QuickdrawPriv.h, although it's supposed to be.
 void CallDrawingNotifications(CGrafPtr port, Rect *mayDrawIntoThisRect, int drawingType);
 
+#import <objc/objc-runtime.h>
+
 // Send null events 50 times a second when active, so plug-ins like Flash get high frame rates.
 #define NullEventIntervalActive 	0.02
 #define NullEventIntervalNotActive	0.25
@@ -171,13 +173,38 @@ void ConsoleConnectionChangeNotifyProc(CGSNotificationType type, CGSNotification
     return NO;
 }
 
+// The WindowRef created by -[NSWindow windowRef] has a QuickDraw GrafPort that covers 
+// the entire window frame (or structure region to use the Carbon term) rather then just the window content.
+// We can remove this when <rdar://problem/4201099> is fixed.
+- (void)fixWindowPort
+{
+    NSWindow *currentWindow = [self currentWindow];
+    if ([currentWindow isKindOfClass:objc_getClass("NSCarbonWindow")])
+        return;
+    
+    float windowHeight = [currentWindow frame].size.height;
+    NSView *contentView = [currentWindow contentView];
+    NSRect contentRect = [contentView convertRect:[contentView frame] toView:nil]; // convert to window-relative coordinates
+    
+    CGrafPtr oldPort;
+    GetPort(&oldPort);    
+    SetPort(GetWindowPort([currentWindow windowRef]));
+    
+    MovePortTo(contentRect.origin.x, /* Flip Y */ windowHeight - NSMaxY(contentRect));
+    PortSize(contentRect.size.width, contentRect.size.height);
+    
+    SetPort(oldPort);
+}
+
 - (PortState)saveAndSetPortStateForUpdate:(BOOL)forUpdate
 {
     ASSERT([self currentWindow] != nil);
-    
+ 
+    [self fixWindowPort];
+   
     WindowRef windowRef = [[self currentWindow] windowRef];
     CGrafPtr port = GetWindowPort(windowRef);
-
+        
     Rect portBounds;
     GetPortBounds(port, &portBounds);
 
@@ -1786,7 +1813,7 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
     return [self length] > 0 && ((const char *)[self bytes])[0] == '\n';
 }
 
-// Returns the position after 2 CRLF's or 1 CRLF if it is the first line.
+
 - (unsigned)_web_locationAfterFirstBlankLine
 {
     const char *bytes = (const char *)[self bytes];
@@ -1794,6 +1821,13 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
     
     unsigned i;
     for (i = 0; i < length - 4; i++) {
+        
+        //most plugins (Flash) send 2 CRFL's between the header and body of their POST requests, while the adboe plugin sends two LF's.
+        if (bytes[i] == '\n' && bytes[i+1] == '\n') {
+            return i+2;
+        }
+        
+        // Returns the position after 2 CRLF's or 1 CRLF if it is the first line.
         if (bytes[i] == '\r' && bytes[i+1] == '\n') {
             i += 2;
             if (i == 2) {

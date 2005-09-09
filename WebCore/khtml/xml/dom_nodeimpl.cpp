@@ -267,6 +267,11 @@ DOMString NodeImpl::localName() const
     return DOMString();
 }
 
+DOMString NodeImpl::namespaceURI() const
+{
+    return DOMString();
+}
+
 void NodeImpl::setFirstChild(NodeImpl *)
 {
 }
@@ -872,6 +877,34 @@ bool NodeImpl::dispatchKeyEvent(QKeyEvent *key)
     return r;
 }
 
+void NodeImpl::dispatchWheelEvent(QWheelEvent *e)
+{
+    if (e->delta() == 0)
+        return;
+
+    DocumentImpl *doc = getDocument();
+    if (!doc)
+        return;
+
+    KHTMLView *view = getDocument()->view();
+    if (!view)
+        return;
+
+    int x;
+    int y;
+    view->viewportToContents(e->x(), e->y(), x, y);
+
+    int state = e->state();
+
+    WheelEventImpl *we = new WheelEventImpl(e->orientation() == Qt::Horizontal, e->delta(),
+        getDocument()->defaultView(), e->globalX(), e->globalY(), x, y,
+        state & Qt::ControlButton, state & Qt::AltButton, state & Qt::ShiftButton, state & Qt::MetaButton);
+
+    int exceptionCode = 0;
+    if (!dispatchEvent(we, exceptionCode, true))
+        e->accept();
+}
+
 void NodeImpl::handleLocalEvents(EventImpl *evt, bool useCapture)
 {
     if (!m_regdListeners)
@@ -1060,7 +1093,7 @@ void NodeImpl::checkAddChild(NodeImpl *newChild, int &exceptioncode)
 
     // only do this once we know there won't be an exception
     if (shouldAdoptChild) {
-	KJS::ScriptInterpreter::updateDOMObjectDocument(newChild, newChild->getDocument(), getDocument());
+	KJS::ScriptInterpreter::updateDOMNodeDocument(newChild, newChild->getDocument(), getDocument());
 	newChild->setDocument(getDocument()->docPtr());
     }
 }
@@ -1366,6 +1399,18 @@ RenderObject *NodeImpl::createRenderer(RenderArena *arena, RenderStyle *style)
 long NodeImpl::maxOffset() const
 {
     return 1;
+}
+
+// method for editing madness, which allows BR,1 as a position, though that is incorrect
+long NodeImpl::maxDeepOffset() const
+{
+    if (isTextNode())
+        return static_cast<const TextImpl*>(this)->length();
+        
+    if (id() == ID_BR || (renderer() && renderer()->isReplaced()))
+        return 1;
+
+    return childNodeCount();
 }
 
 long NodeImpl::caretMinOffset() const
@@ -1934,6 +1979,7 @@ bool NodeBaseImpl::checkSameDocument( NodeImpl *newChild, int &exceptioncode )
 {
     exceptioncode = 0;
     DocumentImpl *ownerDocThis = getDocument();
+    // FIXME: Doh! This next line isn't getting newChild, so it's never going to work!
     DocumentImpl *ownerDocNew = getDocument();
     if(ownerDocThis != ownerDocNew) {
         kdDebug(6010)<< "not same document, newChild = " << newChild << "document = " << getDocument() << endl;
@@ -2100,7 +2146,10 @@ bool NodeBaseImpl::getUpperLeftCorner(int &xPos, int &yPos) const
             }
             o = next;
         }
-        if((o->isText() && !o->isBR()) || o->isReplaced()) {
+        if (o->parent()->element() == this && !static_cast<RenderText*>(o)->firstTextBox() ) {
+            // do nothing - skip child node of the named anchor if it doesn't have a text box rdar://problems/4233844&4246096
+        }
+        else if((o->isText() && !o->isBR()) || o->isReplaced()) {
             o->container()->absolutePosition( xPos, yPos );
             if (o->isText())
                 xPos += static_cast<RenderText *>(o)->minXPos();

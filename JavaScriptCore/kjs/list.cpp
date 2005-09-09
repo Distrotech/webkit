@@ -188,12 +188,9 @@ List::List() : _impBase(allocateListImp()), _needsMarking(false)
     ListImp *imp = static_cast<ListImp *>(_impBase);
     imp->size = 0;
     imp->refCount = 1;
+    imp->valueRefCount = 1;
     imp->capacity = 0;
     imp->overflow = 0;
-
-    if (!_needsMarking) {
-	imp->valueRefCount = 1;
-    }
 #if DUMP_STATISTICS
     if (++numLists > numListsHighWaterMark)
         numListsHighWaterMark = numLists;
@@ -206,12 +203,9 @@ List::List(bool needsMarking) : _impBase(allocateListImp()), _needsMarking(needs
     ListImp *imp = static_cast<ListImp *>(_impBase);
     imp->size = 0;
     imp->refCount = 1;
+    imp->valueRefCount = !needsMarking;
     imp->capacity = 0;
     imp->overflow = 0;
-
-    if (!_needsMarking) {
-	imp->valueRefCount = 1;
-    }
 
 #if DUMP_STATISTICS
     if (++numLists > numListsHighWaterMark)
@@ -378,6 +372,17 @@ const List &List::empty()
 {
     static List emptyList;
     return emptyList;
+}
+
+List &List::operator=(const List &b)
+{
+    ListImpBase *bImpBase = b._impBase;
+    ++bImpBase->refCount;
+    if (!_needsMarking)
+        ++bImpBase->valueRefCount;
+    deref();
+    _impBase = bImpBase;
+    return *this;
 }
 
 } // namespace KJS

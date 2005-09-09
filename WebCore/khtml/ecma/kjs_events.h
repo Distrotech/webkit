@@ -25,9 +25,11 @@
 #include "ecma/kjs_dom.h"
 #include "ecma/kjs_html.h"
 #include "dom/dom2_events.h"
-#include "dom/dom_misc.h"
 
-namespace DOM { class ClipboardImpl; }
+namespace DOM {
+    class ClipboardImpl;
+    class WheelEventImpl;
+}
 
 namespace KJS {
 
@@ -53,6 +55,7 @@ namespace KJS {
     virtual ~JSUnprotectedEventListener();
     virtual Object listenerObj() const;
     virtual Object windowObj() const;
+    void clearWindowObj();
     void mark();
   protected:
     Object listener;
@@ -65,6 +68,7 @@ namespace KJS {
     virtual ~JSEventListener();
     virtual Object listenerObj() const;
     virtual Object windowObj() const;
+    void clearWindowObj();
   protected:
     mutable ProtectedObject listener;
     ProtectedObject win;
@@ -212,6 +216,18 @@ namespace KJS {
     DOM::MutationEvent toMutationEvent() const { return static_cast<DOM::MutationEvent>(event); }
   };
   
+    class DOMWheelEvent : public DOMUIEvent {
+    public:
+        DOMWheelEvent(ExecState *, DOM::WheelEventImpl *);
+        virtual Value tryGet(ExecState *, const Identifier &p) const;
+        Value getValueProperty(ExecState *, int token) const;
+        // no put - all read-only
+        virtual const ClassInfo* classInfo() const { return &info; }
+        static const ClassInfo info;
+        enum { ScreenX, ScreenY, ClientX, X, ClientY, Y, OffsetX, OffsetY,
+           CtrlKey, ShiftKey, AltKey, MetaKey, WheelDelta };
+    };
+
   class Clipboard : public DOMObject {
   friend class ClipboardProtoFunc;
   public:

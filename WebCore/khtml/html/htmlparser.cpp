@@ -943,6 +943,13 @@ NodeImpl *KHTMLParser::getElement(Token* t)
         if (!includesCommentsInDOM)
             return 0;
         break;
+
+    case ID_SCRIPT:
+        {
+            HTMLScriptElementImpl *scriptElement = new HTMLScriptElementImpl(document);
+            scriptElement->setCreatedByParser(true);
+            return scriptElement;
+        }
     }
 
     return document->document()->createHTMLElement(t->id);
@@ -1511,6 +1518,11 @@ void KHTMLParser::startBody()
 
 void KHTMLParser::finished()
 {
+    // In the case of a completely empty document, here's the place to create the HTML element.
+    if (current && current->isDocumentNode() && current->firstChild() == 0) {
+        insertNode(new HTMLHtmlElementImpl(document));
+    }
+
     // This ensures that "current" is not left pointing to a node when the document is destroyed.
     freeBlock();
     setCurrent(0);

@@ -98,9 +98,8 @@ void RenderBox::setStyle(RenderStyle *_style)
 
     // FIXME: Note that we restrict overflow to blocks for now.  One day table bodies and cells 
     // will need to support overflow.
-    // We also deal with the body scroll quirk here, since it sets the scrollbars for the document.
-    if (_style->overflow() != OVISIBLE && isBlockFlow() && !isTableCell() &&
-        (!document()->isHTMLDocument() || !isBody()))
+    // We also handle <body> and <html>, whose overflow applies to the viewport.
+    if (_style->overflow() != OVISIBLE && isBlockFlow() && !isTableCell() && !isRoot() && (!isBody() || !document()->isHTMLDocument()))
         setHasOverflowClip();
 
     if (requiresLayer()) {
@@ -989,8 +988,12 @@ void RenderBox::calcHeight()
         int height;
         if (checkMinMaxHeight) {
             height = calcHeightUsing(style()->height());
-            int minH = calcHeightUsing(style()->minHeight());
+            if (height == -1)
+                height = m_height;
+            int minH = calcHeightUsing(style()->minHeight()); // Leave as -1 if unset.
             int maxH = style()->maxHeight().value == UNDEFINED ? height : calcHeightUsing(style()->maxHeight());
+            if (maxH == -1)
+                maxH = height;
             height = kMin(maxH, height);
             height = kMax(minH, height);
         }
@@ -1027,8 +1030,8 @@ void RenderBox::calcHeight()
 
 int RenderBox::calcHeightUsing(const Length& h)
 {
+    int height = -1;
     if (!h.isVariable()) {
-        int height = -1;
         if (h.isFixed())
             height = h.value;
         else if (h.isPercent())
@@ -1038,7 +1041,7 @@ int RenderBox::calcHeightUsing(const Length& h)
             return height;
         }
     }
-    return m_height;
+    return height;
 }
 
 int RenderBox::calcPercentageHeight(const Length& height)

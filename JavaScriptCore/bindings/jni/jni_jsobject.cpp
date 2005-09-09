@@ -185,7 +185,7 @@ jobject JSObject::call(jstring methodName, jobjectArray args) const
     Object thisObj = Object(const_cast<ObjectImp*>(_imp));
     List argList = listFromJArray(args);
     Interpreter::lock();
-    Value result = funcImp->call (exec, thisObj, argList);
+    Value result = Object(funcImp).call (exec, thisObj, argList);
     Interpreter::unlock();
 
     // Convert and return the result of the function call.
@@ -254,7 +254,7 @@ void JSObject::removeMember(jstring memberName) const
 
 jobject JSObject::getSlot(jint index) const
 {
-    JS_LOG ("index = %d\n", index);
+    JS_LOG ("index = %ld\n", index);
 
     ExecState *exec = _root->interpreter()->globalExec();
     Interpreter::lock();
@@ -267,7 +267,7 @@ jobject JSObject::getSlot(jint index) const
 
 void JSObject::setSlot(jint index, jobject value) const
 {
-    JS_LOG ("index = %d, value = %p\n", index, value);
+    JS_LOG ("index = %ld, value = %p\n", index, value);
 
     ExecState *exec = _root->interpreter()->globalExec();
     Interpreter::lock();

@@ -54,6 +54,7 @@
 extern int kjsyyparse();
 
 using namespace KJS;
+using namespace kxmlcore;
 
 #if !APPLE_CHANGES
 
@@ -225,7 +226,7 @@ Object StringImp::toObject(ExecState *exec) const
 {
   List args;
   args.append(const_cast<StringImp*>(this));
-  return Object::dynamicCast(exec->lexicalInterpreter()->builtinString().construct(exec,args));
+  return Object(static_cast<ObjectImp *>(exec->lexicalInterpreter()->builtinString().construct(exec, args).imp()));
 }
 
 // ------------------------------ NumberImp ------------------------------------
@@ -435,20 +436,22 @@ void ContextImp::mark()
 
 // ------------------------------ Parser ---------------------------------------
 
-ProgramNode *Parser::progNode = 0;
+static SharedPtr<ProgramNode> *progNode;
 int Parser::sid = 0;
 
-ProgramNode *Parser::parse(const UString &sourceURL, int startingLineNumber,
-                           const UChar *code, unsigned int length, int *sourceId,
-			   int *errLine, UString *errMsg)
+SharedPtr<ProgramNode> Parser::parse(const UString &sourceURL, int startingLineNumber,
+                                     const UChar *code, unsigned int length, int *sourceId,
+                                     int *errLine, UString *errMsg)
 {
   if (errLine)
     *errLine = -1;
   if (errMsg)
     *errMsg = 0;
-  
+  if (!progNode)
+    progNode = new SharedPtr<ProgramNode>;
+
   Lexer::curr()->setCode(sourceURL, startingLineNumber, code, length);
-  progNode = 0;
+  *progNode = 0;
   sid++;
   if (sourceId)
     *sourceId = sid;
@@ -458,9 +461,9 @@ ProgramNode *Parser::parse(const UString &sourceURL, int startingLineNumber,
   int parseError = kjsyyparse();
   bool lexError = Lexer::curr()->sawError();
   Lexer::curr()->doneParsing();
-  ProgramNode *prog = progNode;
-  progNode = 0;
-  sid = -1;
+  SharedPtr<ProgramNode> prog = *progNode;
+  *progNode = 0;
+  //  sid = -1;
 
   if (parseError || lexError) {
     int eline = Lexer::curr()->lineNo();
@@ -468,17 +471,17 @@ ProgramNode *Parser::parse(const UString &sourceURL, int startingLineNumber,
       *errLine = eline;
     if (errMsg)
       *errMsg = "Parse error";
-    if (prog) {
-      // must ref and deref to clean up properly
-      prog->ref();
-      prog->deref();
-      delete prog;
-    }
-    return 0;
+    return SharedPtr<ProgramNode>();
   }
 
   return prog;
 }
+
+void Parser::accept(ProgramNode *prog)
+{
+  *progNode = prog;
+}
+
 
 // ------------------------------ InterpreterImp -------------------------------
 
@@ -753,6 +756,8 @@ void InterpreterImp::mark()
     UndefinedImp::staticUndefined->mark();
   if (NullImp::staticNull && !NullImp::staticNull->marked())
     NullImp::staticNull->mark();
+  if (NumberImp::staticNaN && !NumberImp::staticNaN->marked())
+    NumberImp::staticNaN->mark();
   if (BooleanImp::staticTrue && !BooleanImp::staticTrue->marked())
     BooleanImp::staticTrue->mark();
   if (BooleanImp::staticFalse && !BooleanImp::staticFalse->marked())
@@ -767,15 +772,8 @@ void InterpreterImp::mark()
 bool InterpreterImp::checkSyntax(const UString &code)
 {
   // Parser::parse() returns 0 in a syntax error occurs, so we just check for that
-  ProgramNode *progNode = Parser::parse(UString(), 0, code.data(),code.size(),0,0,0);
-  bool ok = (progNode != 0);
-  if (progNode) {
-    // must ref and deref to clean up properly
-    progNode->ref();
-    progNode->deref();
-    delete progNode;
-  }
-  return ok;
+  SharedPtr<ProgramNode> progNode = Parser::parse(UString(), 0, code.data(),code.size(),0,0,0);
+  return progNode;
 }
 
 Completion InterpreterImp::evaluate(const UString &code, const Value &thisV, const UString &sourceURL, int startingLineNumber)
@@ -798,11 +796,11 @@ Completion InterpreterImp::evaluate(const UString &code, const Value &thisV, con
   int sid;
   int errLine;
   UString errMsg;
-  ProgramNode *progNode = Parser::parse(sourceURL, startingLineNumber, code.data(),code.size(),&sid,&errLine,&errMsg);
+  SharedPtr<ProgramNode> progNode = Parser::parse(sourceURL, startingLineNumber, code.data(),code.size(),&sid,&errLine,&errMsg);
 
   // notify debugger that source has been parsed
   if (dbg) {
-    bool cont = dbg->sourceParsed(globExec,sid,code,errLine);
+    bool cont = dbg->sourceParsed(globExec,sid,sourceURL,code,errLine);
     if (!cont)
 #if APPLE_CHANGES
       {
@@ -827,7 +825,6 @@ Completion InterpreterImp::evaluate(const UString &code, const Value &thisV, con
   globExec->clearException();
 
   recursion++;
-  progNode->ref();
 
   Object &globalObj = globalObject();
   Object thisObj = globalObject();
@@ -855,21 +852,12 @@ Completion InterpreterImp::evaluate(const UString &code, const Value &thisV, con
     res = progNode->execute(&newExec);
   }
 
-  if (progNode->deref())
-    delete progNode;
   recursion--;
 
 #if APPLE_CHANGES
   unlockInterpreter();
 #endif
   return res;
-}
-
-void InterpreterImp::setDebugger(Debugger *d)
-{
-  if (d)
-    d->detach(m_interpreter);
-  dbg = d;
 }
 
 void InterpreterImp::saveBuiltins (SavedBuiltins &builtins) const

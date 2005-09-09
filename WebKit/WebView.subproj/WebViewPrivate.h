@@ -58,6 +58,20 @@ typedef enum {
 
 - (void)toggleSmartInsertDelete:(id)sender;
 
+/*!
+@method setScriptDebugDelegate:
+@abstract Set the WebView's WebScriptDebugDelegate delegate.
+@param delegate The WebScriptDebugDelegate to set as the delegate.
+*/    
+- (void)setScriptDebugDelegate:(id)delegate;
+
+/*!
+@method scriptDebugDelegate
+@abstract Return the WebView's WebScriptDebugDelegate.
+@result The WebView's WebScriptDebugDelegate.
+*/    
+- (id)scriptDebugDelegate;
+
 @end
 
 @interface WebView (WebPrivate)
@@ -156,6 +170,7 @@ Could be worth adding to the API.
 - (id)_policyDelegateForwarder;
 - (id)_UIDelegateForwarder;
 - (id)_editingDelegateForwarder;
+- (id)_scriptDebugDelegateForwarder;
 
 - (void)_closeWindow;
 
@@ -275,4 +290,6 @@ Could be worth adding to the API.
 
 @interface NSObject (WebFrameLoadDelegatePrivate)
 - (void)webView:(WebView *)sender didFirstLayoutInFrame:(WebFrame *)frame;
+// Addresses 4192534.  Private API for now.
+- (void)webView:(WebView *)sender didHandleOnloadEventsForFrame:(WebFrame *)frame;
 @end
