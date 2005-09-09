@@ -52,7 +52,10 @@ IMPLEMENT_PROTOFUNC(DOMNodeIteratorProtoFunc)
 IMPLEMENT_PROTOTYPE(DOMNodeIteratorProto,DOMNodeIteratorProtoFunc)
 
 DOMNodeIterator::DOMNodeIterator(ExecState *exec, DOM::NodeIterator ni)
-  : DOMObject(DOMNodeIteratorProto::self(exec)), nodeIterator(ni) {}
+  : nodeIterator(ni) 
+{
+  setPrototype(DOMNodeIteratorProto::self(exec));
+}
 
 DOMNodeIterator::~DOMNodeIterator()
 {
@@ -146,9 +149,13 @@ Value NodeFilterConstructor::getValueProperty(ExecState *, int token) const
   return Number(token);
 }
 
-Value KJS::getNodeFilterConstructor(ExecState *exec)
+namespace KJS {
+
+Value getNodeFilterConstructor(ExecState *exec)
 {
   return cacheGlobalObject<NodeFilterConstructor>(exec, "[[nodeFilter.constructor]]");
+}
+
 }
 
 // -------------------------------------------------------------------------
@@ -164,7 +171,10 @@ IMPLEMENT_PROTOFUNC(DOMNodeFilterProtoFunc)
 IMPLEMENT_PROTOTYPE(DOMNodeFilterProto,DOMNodeFilterProtoFunc)
 
 DOMNodeFilter::DOMNodeFilter(ExecState *exec, DOM::NodeFilter nf)
-  : DOMObject(DOMNodeFilterProto::self(exec)), nodeFilter(nf) {}
+  : nodeFilter(nf) 
+{
+  setPrototype(DOMNodeFilterProto::self(exec));
+}
 
 DOMNodeFilter::~DOMNodeFilter()
 {
@@ -217,7 +227,10 @@ IMPLEMENT_PROTOFUNC(DOMTreeWalkerProtoFunc)
 IMPLEMENT_PROTOTYPE(DOMTreeWalkerProto,DOMTreeWalkerProtoFunc)
 
 DOMTreeWalker::DOMTreeWalker(ExecState *exec, DOM::TreeWalker tw)
-  : DOMObject(DOMTreeWalkerProto::self(exec)), treeWalker(tw) {}
+  : treeWalker(tw)
+{
+  setPrototype(DOMTreeWalkerProto::self(exec));
+}
 
 DOMTreeWalker::~DOMTreeWalker()
 {

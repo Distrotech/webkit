@@ -514,6 +514,7 @@ static const ushort tag_list_7[] = {
     ID_OPTION,
     ID_COMMENT,
     ID_SCRIPT,
+    ID_HR,
     0
 };
 
@@ -686,7 +687,7 @@ bool DOM::checkChild(ushort tagID, ushort childID, bool strict)
         return check_array(childID, tag_list_7);
     case ID_OPTGROUP:
         // OPTGROUP: OPTION +
-        if(childID == ID_OPTION) return true;
+        if(childID == ID_OPTION || childID == ID_HR) return true;
         return false;
     case ID_OPTION:
     case ID_TEXTAREA:

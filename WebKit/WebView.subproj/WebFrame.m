@@ -41,6 +41,7 @@
 #import <Foundation/NSDictionary_NSURLExtras.h>
 #import <Foundation/NSString_NSURLExtras.h>
 #import <Foundation/NSURLRequestPrivate.h>
+#import <WebKit/WebScriptDebugDelegatePrivate.h>
 
 #import <objc/objc-runtime.h>
 
@@ -192,6 +193,8 @@ NSString *WebPageCacheDocumentViewKey = @"WebPageCacheDocumentViewKey";
     [provisionalItem release];
     [previousItem release];
     
+    [scriptDebugger release];
+    
     ASSERT(listener == nil);
     ASSERT(policyRequest == nil);
     ASSERT(policyFrameName == nil);
@@ -283,7 +286,7 @@ NSString *WebPageCacheDocumentViewKey = @"WebPageCacheDocumentViewKey";
     [request _webDataRequestSetEncoding:encodingName];
     [request _webDataRequestSetBaseURL:URL];
     [request _webDataRequestSetUnreachableURL:unreachableURL];
-    [request _webDataRequestSetMIMEType:MIMEType?MIMEType:@"text/html"];
+    [request _webDataRequestSetMIMEType: MIMEType ? MIMEType : (NSString *)@"text/html"];
     return request;
 }
 
@@ -743,6 +746,8 @@ NSString *WebPageCacheDocumentViewKey = @"WebPageCacheDocumentViewKey";
                 [_private setProvisionalItem:nil];
             }
 
+            [[self _bridge] closeURL];
+
             // Set the committed data source on the frame.
             [self _setDataSource:_private->provisionalDataSource];
                 
@@ -780,6 +785,7 @@ NSString *WebPageCacheDocumentViewKey = @"WebPageCacheDocumentViewKey";
 
             case WebFrameLoadTypeReload:
             case WebFrameLoadTypeSame:
+            case WebFrameLoadTypeReplace:
             {
                 WebHistoryItem *currItem = [_private currentItem];
                 LOG(PageCache, "Clearing back/forward cache, %@\n", [currItem URL]);
@@ -903,22 +909,22 @@ NSString *WebPageCacheDocumentViewKey = @"WebPageCacheDocumentViewKey";
     unsigned pagesCached = 0;
     WebBackForwardList *backForwardList = [[self webView] backForwardList];
     NSArray *backList = [backForwardList backListWithLimit: 999999];
-    WebHistoryItem *oldestItem = nil;
+    WebHistoryItem *oldestNonSnapbackItem = nil;
     
     unsigned i;
     for (i = 0; i < [backList count]; i++){
         WebHistoryItem *item = [backList objectAtIndex: i];
         if ([item hasPageCache]){
-            if (oldestItem == nil)
-                oldestItem = item;
+            if (oldestNonSnapbackItem == nil && ![item alwaysAttemptToUsePageCache])
+                oldestNonSnapbackItem = item;
             pagesCached++;
         }
     }
-    
+
     // Snapback items are never directly purged here.
-    if (pagesCached >= sizeLimit && ![oldestItem alwaysAttemptToUsePageCache]){
-        LOG(PageCache, "Purging back/forward cache, %@\n", [oldestItem URL]);
-        [oldestItem setHasPageCache: NO];
+    if (pagesCached >= sizeLimit) {
+        LOG(PageCache, "Purging back/forward cache, %@\n", [oldestNonSnapbackItem URL]);
+        [oldestNonSnapbackItem setHasPageCache:NO];
     }
 }
 
@@ -1053,9 +1059,13 @@ static CFAbsoluteTime _timeOfLastCompletedLoad;
         int i, count = [responses count];
         for (i = 0; i < count; i++){
             response = [responses objectAtIndex: i];
-            [self _sendResourceLoadDelegateMessagesForURL:[response URL]
-                                                 response:response
-                                                   length:[response expectedContentLength]];
+            // FIXME: If the WebKit client changes or cancels the request, this is not respected.
+            NSError *error;
+            NSString *identifier;
+            NSURLRequest *request = [[NSURLRequest alloc] initWithURL:[response URL]];
+            [self _requestFromDelegateForRequest:request identifier:&identifier error:&error];
+            [self _sendRemainingDelegateMessagesWithIdentifier:identifier response:response length:[response expectedContentLength] error:error];
+            [request release];
         }
         
         // Release the resources kept in the page cache.  They will be
@@ -1165,6 +1175,7 @@ static CFAbsoluteTime _timeOfLastCompletedLoad;
                     case WebFrameLoadTypeInternal:
                     case WebFrameLoadTypeReloadAllowingStaleData:
                     case WebFrameLoadTypeSame:
+                    case WebFrameLoadTypeReplace:
                         // Do nothing.
                         break;
 
@@ -1207,6 +1218,11 @@ static CFAbsoluteTime _timeOfLastCompletedLoad;
     
     // Yikes!  Serious horkage.
     ASSERT_NOT_REACHED();
+}
+
+- (void)_handledOnloadEvents
+{
+    [[[self webView] _frameLoadDelegateForwarder] webView:_private->webView didHandleOnloadEventsForFrame:self];
 }
 
 - (void)_recursiveCheckLoadComplete
@@ -1835,6 +1851,7 @@ static CFAbsoluteTime _timeOfLastCompletedLoad;
     [[webView _UIDelegateForwarder] webViewShow:webView];
     WebFrame *frame = [webView mainFrame];
 
+    [[self _bridge] setOpener:[frame _bridge]];
     [frame _loadRequest:request triggeringAction:nil loadType:WebFrameLoadTypeStandard formState:formState];
 }
 
@@ -2244,6 +2261,7 @@ static CFAbsoluteTime _timeOfLastCompletedLoad;
         case WebFrameLoadTypeReload:
         case WebFrameLoadTypeReloadAllowingStaleData:
         case WebFrameLoadTypeSame:
+        case WebFrameLoadTypeReplace:
             // Don't restore any form state on reload or loadSame
             return nil;
         case WebFrameLoadTypeBack:
@@ -2525,6 +2543,13 @@ static CFAbsoluteTime _timeOfLastCompletedLoad;
     return _private->children;
 }
 
+- (void)_attachScriptDebugger
+{
+    if (!_private->scriptDebugger) {
+        _private->scriptDebugger = [[WebScriptDebugger alloc] initWithWebFrame:self];
+    }
+}
+
 @end
 
 @implementation WebFrame (WebInternal)
@@ -2551,48 +2576,119 @@ static CFAbsoluteTime _timeOfLastCompletedLoad;
     return _private->internalLoadDelegate;
 }
 
-- (void)_sendResourceLoadDelegateMessagesForURL:(NSURL *)URL response:(NSURLResponse *)response length:(unsigned)length
+- (void)_safeLoadURL:(NSURL *)URL
 {
-    ASSERT(response != nil);
+    // Call the bridge because this is where our security checks are made.
+    [[self _bridge] loadURL:URL 
+                   referrer:[[[[self dataSource] request] URL] _web_originalDataAsString]
+                     reload:NO
+                userGesture:YES       
+                     target:nil
+            triggeringEvent:[NSApp currentEvent]
+                       form:nil 
+                 formValues:nil];
+}
+
+- (NSURLRequest *)_requestFromDelegateForRequest:(NSURLRequest *)request identifier:(NSString **)identifier error:(NSError **)error
+{
+    ASSERT(request != nil);
     
-    NSURLRequest *request = [[NSURLRequest alloc] initWithURL:URL];
     WebView *wv = [self webView];
     id delegate = [wv resourceLoadDelegate];
     id sharedDelegate = [WebDefaultResourceLoadDelegate sharedResourceLoadDelegate];
-    id identifier;
     WebResourceDelegateImplementationCache implementations = [wv _resourceLoadDelegateImplementations];
     WebDataSource *dataSource = [self dataSource];
     
-    // No chance for delegate to modify request, so we don't send a willSendRequest:redirectResponse: message.
-    if (implementations.delegateImplementsIdentifierForRequest)
-        identifier = [delegate webView:wv identifierForInitialRequest: request fromDataSource:dataSource];
-    else
-        identifier = [sharedDelegate webView:wv identifierForInitialRequest:request fromDataSource:dataSource];
+    if (implementations.delegateImplementsIdentifierForRequest) {
+        *identifier = [delegate webView:wv identifierForInitialRequest:request fromDataSource:dataSource];
+    } else {
+        *identifier = [sharedDelegate webView:wv identifierForInitialRequest:request fromDataSource:dataSource];
+    }
+        
+    NSURLRequest *newRequest;
+    if (implementations.delegateImplementsWillSendRequest) {
+        newRequest = [delegate webView:wv resource:*identifier willSendRequest:request redirectResponse:nil fromDataSource:dataSource];
+    } else {
+        newRequest = [sharedDelegate webView:wv resource:*identifier willSendRequest:request redirectResponse:nil fromDataSource:dataSource];
+    }
     
-    if (implementations.delegateImplementsDidReceiveResponse)
-        [delegate webView:wv resource: identifier didReceiveResponse: response fromDataSource:dataSource];
-    else
-        [sharedDelegate webView:wv resource: identifier didReceiveResponse: response fromDataSource:dataSource];
+    if (newRequest == nil) {
+        *error = [NSError _webKitErrorWithDomain:NSURLErrorDomain code:NSURLErrorCancelled URL:[request URL]];
+    } else {
+        *error = nil;
+    }
     
-    if (implementations.delegateImplementsDidReceiveContentLength)
-        [delegate webView:wv resource: identifier didReceiveContentLength:length fromDataSource:dataSource];
-    else
-        [sharedDelegate webView:wv resource: identifier didReceiveContentLength:length fromDataSource:dataSource];
+    return newRequest;
+}
+
+- (void)_sendRemainingDelegateMessagesWithIdentifier:(NSString *)identifier response:(NSURLResponse *)response length:(unsigned)length error:(NSError *)error 
+{    
+    WebView *wv = [self webView];
+    id delegate = [wv resourceLoadDelegate];
+    id sharedDelegate = [WebDefaultResourceLoadDelegate sharedResourceLoadDelegate];
+    WebResourceDelegateImplementationCache implementations = [wv _resourceLoadDelegateImplementations];
+    WebDataSource *dataSource = [self dataSource];
+        
+    if (response != nil) {
+        if (implementations.delegateImplementsDidReceiveResponse) {
+            [delegate webView:wv resource:identifier didReceiveResponse:response fromDataSource:dataSource];
+        } else {
+            [sharedDelegate webView:wv resource:identifier didReceiveResponse:response fromDataSource:dataSource];
+        }
+    }
     
-    if (implementations.delegateImplementsDidFinishLoadingFromDataSource)
-        [delegate webView:wv resource: identifier didFinishLoadingFromDataSource:dataSource];
-    else
-        [sharedDelegate webView:wv resource: identifier didFinishLoadingFromDataSource:dataSource];
+    if (length > 0) {
+        if (implementations.delegateImplementsDidReceiveContentLength) {
+            [delegate webView:wv resource:identifier didReceiveContentLength:length fromDataSource:dataSource];
+        } else {
+            [sharedDelegate webView:wv resource:identifier didReceiveContentLength:length fromDataSource:dataSource];
+        }
+    }
     
-    [wv _finishedLoadingResourceFromDataSource:dataSource];
-    
-    [request release];
+    if (error == nil) {
+        if (implementations.delegateImplementsDidFinishLoadingFromDataSource) {
+            [delegate webView:wv resource:identifier didFinishLoadingFromDataSource:dataSource];
+        } else {
+            [sharedDelegate webView:wv resource:identifier didFinishLoadingFromDataSource:dataSource];
+        }
+        [wv _finishedLoadingResourceFromDataSource:dataSource];
+    } else {
+        [[wv _resourceLoadDelegateForwarder] webView:wv resource:identifier didFailLoadingWithError:error fromDataSource:dataSource];
+    }
+}
+
+- (void)_saveResourceAndSendRemainingDelegateMessagesWithRequest:(NSURLRequest *)request
+                                                      identifier:(NSString *)identifier 
+                                                        response:(NSURLResponse *)response 
+                                                            data:(NSData *)data
+                                                           error:(NSError *)error
+{
+    unsigned length = [data length];
+    if (length > 0 && error == nil) {
+        ASSERT(request != nil);
+        WebResource *resource = [[WebResource alloc] _initWithData:data URL:[request URL] response:response];
+        ASSERT(resource != nil);    
+        [[self dataSource] addSubresource:resource];
+        [resource release];
+    }
+    [self _sendRemainingDelegateMessagesWithIdentifier:identifier response:response length:length error:error];
 }
 
 - (void)_unmarkAllMisspellings
 {
     [[self _bridge] unmarkAllMisspellings];
     [_private->children makeObjectsPerformSelector:@selector(_unmarkAllMisspellings)];
+}
+
+- (void)_setupForReplace
+{
+    [self _setState:WebFrameStateProvisional];
+    WebDataSource *old = _private->provisionalDataSource;
+    _private->provisionalDataSource = _private->dataSource;
+    _private->dataSource = nil;
+    [old release];
+        
+    [self _detachChildren];
 }
 
 @end

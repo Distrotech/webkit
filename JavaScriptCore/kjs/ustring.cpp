@@ -132,7 +132,7 @@ CString &CString::operator=(const CString &str)
   return *this;
 }
 
-bool KJS::operator==(const KJS::CString& c1, const KJS::CString& c2)
+bool operator==(const CString& c1, const CString& c2)
 {
   int len = c1.size();
   return len == c2.size() && (len == 0 || memcmp(c1.c_str(), c2.c_str(), len) == 0);
@@ -1047,8 +1047,10 @@ int UString::find(const UString &f, int pos) const
   const UChar *end = data() + sz - fsz;
   long fsizeminusone = (fsz - 1) * sizeof(UChar);
   const UChar *fdata = f.data();
+  unsigned short fchar = fdata->uc;
+  ++fdata;
   for (const UChar *c = data() + pos; c <= end; c++)
-    if (*c == *fdata && !memcmp(c + 1, fdata + 1, fsizeminusone))
+    if (c->uc == fchar && !memcmp(c + 1, fdata, fsizeminusone))
       return (c-data());
 
   return -1;
@@ -1125,12 +1127,6 @@ UString UString::substr(int pos, int len) const
   return result;
 }
 
-void UString::attach(Rep *r)
-{
-  rep = r;
-  rep->ref();
-}
-
 void UString::detach()
 {
   if (rep->rc > 1 || rep->baseString) {
@@ -1142,12 +1138,7 @@ void UString::detach()
   }
 }
 
-void UString::release()
-{
-  rep->deref();
-}
-
-bool KJS::operator==(const UString& s1, const UString& s2)
+bool operator==(const UString& s1, const UString& s2)
 {
   if (s1.rep->len != s2.rep->len)
     return false;
@@ -1156,7 +1147,7 @@ bool KJS::operator==(const UString& s1, const UString& s2)
 		 s1.rep->len * sizeof(UChar)) == 0);
 }
 
-bool KJS::operator==(const UString& s1, const char *s2)
+bool operator==(const UString& s1, const char *s2)
 {
   if (s2 == 0) {
     return s1.isEmpty();
@@ -1174,7 +1165,7 @@ bool KJS::operator==(const UString& s1, const char *s2)
   return u == uend && *s2 == 0;
 }
 
-bool KJS::operator<(const UString& s1, const UString& s2)
+bool operator<(const UString& s1, const UString& s2)
 {
   const int l1 = s1.size();
   const int l2 = s2.size();
@@ -1193,7 +1184,7 @@ bool KJS::operator<(const UString& s1, const UString& s2)
   return (l1 < l2);
 }
 
-int KJS::compare(const UString& s1, const UString& s2)
+int compare(const UString& s1, const UString& s2)
 {
   const int l1 = s1.size();
   const int l2 = s2.size();

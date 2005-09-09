@@ -166,7 +166,7 @@ bool _NPN_Invoke (NPP npp, NPObject *o, NPIdentifier methodName, const NPVariant
 		Object thisObj = Object(const_cast<ObjectImp*>(obj->imp));
 		List argList = listFromVariantArgs(exec, args, argCount);
 		Interpreter::lock();
-		Value resultV = funcImp->call (exec, thisObj, argList);
+		Value resultV = Object(funcImp).call (exec, thisObj, argList);
 		Interpreter::unlock();
 
 		// Convert and return the result of the function call.
@@ -411,17 +411,13 @@ bool _NPN_HasMethod(NPP npp, NPObject *o, NPIdentifier methodName)
     return false;
 }
 
-void _NPN_SetException (NPObject *o, NPString *message)
+void _NPN_SetException (NPObject *o, const NPUTF8 *message)
 {
     if (o->_class == NPScriptObjectClass) {
         JavaScriptObject *obj = (JavaScriptObject *)o; 
         ExecState *exec = obj->executionContext->interpreter()->globalExec();
         Interpreter::lock();
-        char *msg = (char *)malloc (message->UTF8Length + 1);
-        strncpy (msg, message->UTF8Characters, message->UTF8Length);
-        msg[message->UTF8Length] = 0;
-        Object err = Error::create(exec, GeneralError, msg);
-        free (msg);
+        Object err = Error::create(exec, GeneralError, message);
         exec->setException (err);
         Interpreter::unlock();
     }

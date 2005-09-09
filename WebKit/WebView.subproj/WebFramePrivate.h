@@ -25,6 +25,7 @@
 @class WebFrameView;
 @class WebHistoryItem;
 @class WebPolicyDecisionListener;
+@class WebScriptDebugger;
 @class WebView;
 
 typedef enum {
@@ -48,7 +49,8 @@ typedef enum {
     WebFrameLoadTypeReload,
     WebFrameLoadTypeReloadAllowingStaleData,
     WebFrameLoadTypeSame,		// user loads same URL again (but not reload button)
-    WebFrameLoadTypeInternal
+    WebFrameLoadTypeInternal,
+    WebFrameLoadTypeReplace
 } WebFrameLoadType;
 
 // Keys for accessing the values in the page cache dictionary.
@@ -95,6 +97,7 @@ extern NSString *WebPageCacheDocumentViewKey;
     BOOL delegateIsHandlingUnimplementablePolicy;
     
     id internalLoadDelegate;
+    WebScriptDebugger *scriptDebugger;
 }
 
 - (void)setName:(NSString *)name;
@@ -129,6 +132,7 @@ extern NSString *WebPageCacheDocumentViewKey;
 - (void)_setName:(NSString *)name;
 - (WebFrame *)_descendantFrameNamed:(NSString *)name sourceFrame:(WebFrame *)source;
 - (void)_detachFromParent;
+- (void)_detachChildren;
 - (void)_closeOldDataSources;
 - (void)_setDataSource:(WebDataSource *)d;
 - (void)_transitionToCommitted:(NSDictionary *)pageCache;
@@ -136,6 +140,7 @@ extern NSString *WebPageCacheDocumentViewKey;
 - (WebFrameState)_state;
 - (void)_setState:(WebFrameState)newState;
 - (void)_checkLoadCompleteForThisFrame;
+- (void)_handledOnloadEvents;
 - (void)_checkLoadComplete;
 - (WebBridge *)_bridge;
 - (void)_clearProvisionalDataSource;
@@ -213,5 +218,7 @@ extern NSString *WebPageCacheDocumentViewKey;
 
 - (BOOL)_isDescendantOfFrame:(WebFrame *)frame;
 - (BOOL)_isFrameSet;
+
+- (void)_attachScriptDebugger;
 
 @end

@@ -114,7 +114,10 @@ QVariant KJSProxyImpl::evaluate(QString filename, int baseLine,
   m_script->setInlineCode(inlineCode);
   KJS::Value thisNode = n.isNull() ? Window::retrieve( m_part ) : getDOMNode(m_script->globalExec(),n);
 
+  KJS::Interpreter::lock();
   UString code( str );
+  KJS::Interpreter::unlock();
+
   Completion comp = m_script->evaluate(filename, baseLine, code, thisNode);
   bool success = ( comp.complType() == Normal ) || ( comp.complType() == ReturnValue );  
 #ifdef KJS_DEBUGGER
@@ -124,24 +127,21 @@ QVariant KJSProxyImpl::evaluate(QString filename, int baseLine,
   // let's try to convert the return value
   if (success && !comp.value().isNull())
     return ValueToVariant( m_script->globalExec(), comp.value());
-  else
-  {
-    if ( comp.complType() == Throw )
-    {
-        KJS::Interpreter::lock();
-        UString errorMessage = comp.value().toString(m_script->globalExec());
-        int lineNumber =  comp.value().toObject(m_script->globalExec()).get(m_script->globalExec(), "line").toInt32(m_script->globalExec());
-        UString sourceURL = comp.value().toObject(m_script->globalExec()).get(m_script->globalExec(), "sourceURL").toString(m_script->globalExec());
-        KJS::Interpreter::unlock();
+
+  if ( comp.complType() == Throw ) {
+    KJS::Interpreter::lock();
+    UString errorMessage = comp.value().toString(m_script->globalExec());
+    int lineNumber =  comp.value().toObject(m_script->globalExec()).get(m_script->globalExec(), "line").toInt32(m_script->globalExec());
+    UString sourceURL = comp.value().toObject(m_script->globalExec()).get(m_script->globalExec(), "sourceURL").toString(m_script->globalExec());
+    KJS::Interpreter::unlock();
 
 #if APPLE_CHANGES
-        KWQ(m_part)->addMessageToConsole(errorMessage.qstring(), lineNumber, sourceURL.qstring());
+    KWQ(m_part)->addMessageToConsole(errorMessage.qstring(), lineNumber, sourceURL.qstring());
 #else
-        kdWarning(6070) << "Script threw exception: " << errorMessage.qstring() << endl;
+    kdWarning(6070) << "Script threw exception: " << errorMessage.qstring() << endl;
 #endif
-    }
-    return QVariant();
   }
+  return QVariant();
 }
 
 void KJSProxyImpl::clear() {

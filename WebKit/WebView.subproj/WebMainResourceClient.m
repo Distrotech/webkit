@@ -16,6 +16,7 @@
 #import <Foundation/NSURLResponse.h>
 #import <Foundation/NSURLResponsePrivate.h>
 
+#import <WebKit/WebDataProtocol.h>
 #import <WebKit/WebDataSourcePrivate.h>
 #import <WebKit/WebDefaultPolicyDelegate.h>
 #import <WebKit/WebDocument.h>
@@ -30,6 +31,7 @@
 #import <WebKit/WebNSURLExtras.h>
 #import <WebKit/WebPolicyDelegatePrivate.h>
 #import <WebKit/WebViewPrivate.h>
+#import <WebKit/WebBridge.h>
 
 // FIXME: More that is in common with WebSubresourceClient should move up into WebBaseResourceHandleDelegate.
 
@@ -69,7 +71,7 @@
     // Calling _receivedMainResourceError will likely result in a call to release, so we must retain.
     [self retain];
     [dataSource _receivedMainResourceError:error complete:YES];
-    [super connection:connection didFailWithError:error];
+    [super didFailWithError:error];
     [self release];
 }
 
@@ -140,7 +142,7 @@
     // Override. We don't want to save the main resource as a subresource of the data source.
 }
 
-- (NSURLRequest *)connection:(NSURLConnection *)con willSendRequest:(NSURLRequest *)newRequest redirectResponse:(NSURLResponse *)redirectResponse
+- (NSURLRequest *)willSendRequest:(NSURLRequest *)newRequest redirectResponse:(NSURLResponse *)redirectResponse
 {
     // Note that there are no asserts here as there are for the other callbacks. This is due to the
     // fact that this "callback" is sent when starting every load, and the state of callback
@@ -182,7 +184,7 @@
     // Note super will make a copy for us, so reassigning newRequest is important. Since we are returning this value, but
     // it's only guaranteed to be retained by self, and self might be dealloc'ed in this method, we have to autorelease.
     // See 3777253 for an example.
-    newRequest = [[[super connection:con willSendRequest:newRequest redirectResponse:redirectResponse] retain] autorelease];
+    newRequest = [[[super willSendRequest:newRequest redirectResponse:redirectResponse] retain] autorelease];
 
     // Don't set this on the first request.  It is set
     // when the main load was started.
@@ -200,15 +202,25 @@
 
 -(void)continueAfterContentPolicy:(WebPolicyAction)contentPolicy response:(NSURLResponse *)r
 {
+    NSURL *URL = [request URL];
+    NSString *MIMEType = [r MIMEType]; 
+    
     switch (contentPolicy) {
     case WebPolicyUse:
-	if (![WebView canShowMIMEType:[r MIMEType]]) {
-	    [[dataSource webFrame] _handleUnimplementablePolicyWithErrorCode:WebKitErrorCannotShowMIMEType forURL:[[dataSource request] URL]];
-	    [self stopLoadingForPolicyChange];
+    {
+        // Prevent remote web archives from loading because they can claim to be from any domain and thus avoid cross-domain security checks (4120255).
+        BOOL isRemote = ![URL isFileURL] && ![WebDataProtocol _webIsDataProtocolURL:URL];
+	BOOL isRemoteWebArchive = isRemote && [MIMEType _web_isCaseInsensitiveEqualToString:@"application/x-webarchive"];
+        if (![WebView canShowMIMEType:MIMEType] || isRemoteWebArchive) {
+	    [[dataSource webFrame] _handleUnimplementablePolicyWithErrorCode:WebKitErrorCannotShowMIMEType forURL:URL];
+            // Check reachedTerminalState since the load may have already been cancelled inside of _handleUnimplementablePolicyWithErrorCode::.
+            if (!reachedTerminalState) {
+                [self stopLoadingForPolicyChange];
+            }
 	    return;
 	}
         break;
-
+    }
     case WebPolicyDownload:
         [proxy setDelegate:nil];
         [WebDownload _downloadWithLoadingConnection:connection
@@ -231,12 +243,18 @@
 
     [self retain];
 
-    [super connection:connection didReceiveResponse:r];
+    if ([r isKindOfClass:[NSHTTPURLResponse class]]) {
+        int status = [(NSHTTPURLResponse *)r statusCode];
+        if (status < 200 || status >= 300) {
+	    // Handle <object> fallback for error cases.
+	    [[[dataSource webFrame] _bridge] mainResourceError];
+        }
+    }
 
-    if (![dataSource _isStopping]
-            && ([[request URL] _webkit_shouldLoadAsEmptyDocument]
-            	|| [WebView _representationExistsForURLScheme:[[request URL] scheme]])) {
-        [self connectionDidFinishLoading:connection];
+    [super didReceiveResponse:r];
+  
+    if (![dataSource _isStopping] && ([URL _webkit_shouldLoadAsEmptyDocument] || [WebView _representationExistsForURLScheme:[URL scheme]])) {
+        [self didFinishLoading];
     }
     
     [self release];
@@ -271,25 +289,29 @@
 }
 
 
-- (void)connection:(NSURLConnection *)con didReceiveResponse:(NSURLResponse *)r
+- (void)didReceiveResponse:(NSURLResponse *)r
 {
-    ASSERT([[r URL] _webkit_shouldLoadAsEmptyDocument] || ![con defersCallbacks]);
+    ASSERT([[r URL] _webkit_shouldLoadAsEmptyDocument] || ![connection defersCallbacks]);
     ASSERT([[r URL] _webkit_shouldLoadAsEmptyDocument] || ![self defersCallbacks]);
     ASSERT([[r URL] _webkit_shouldLoadAsEmptyDocument] || ![[dataSource _webView] defersCallbacks]);
 
     LOG(Loading, "main content type: %@", [r MIMEType]);
     
-    // FIXME: Since we're not going to fix <rdar://problem/3087535> for Tiger, we should not 
-    // load multipart/x-mixed-replace content.  Pages with such content contain what is 
-    // essentially an infinite load and therefore a memory leak. Both this code and code in
-    // SubresourceClient must be removed once multipart/x-mixed-replace is fully implemented. 
+    if (loadingMultipartContent) {
+        [[self dataSource] _setupForReplaceByMIMEType:[r MIMEType]];
+        [self clearResourceData];
+    }
+     
     if ([[r MIMEType] isEqualToString:@"multipart/x-mixed-replace"]) {
-        [dataSource _removeSubresourceClient:self];
-        [[[dataSource _webView] mainFrame] _checkLoadComplete];
-        [self cancelWithError:[NSError _webKitErrorWithDomain:NSURLErrorDomain
-                                                         code:NSURLErrorUnsupportedURL
-                                                          URL:[r URL]]];
-        return;
+        if (!supportsMultipartContent) {
+            [dataSource _removeSubresourceClient:self];
+            [[[dataSource _webView] mainFrame] _checkLoadComplete];
+            [self cancelWithError:[NSError _webKitErrorWithDomain:NSURLErrorDomain
+                                                            code:NSURLErrorUnsupportedURL
+                                                            URL:[r URL]]];
+            return;
+        }
+        loadingMultipartContent = YES;
     }
         
     // FIXME: This is a workaround to make web archive files work with Foundations that
@@ -312,7 +334,7 @@
     [self release];
 }
 
-- (void)connection:(NSURLConnection *)con didReceiveData:(NSData *)data lengthReceived:(long long)lengthReceived
+- (void)didReceiveData:(NSData *)data lengthReceived:(long long)lengthReceived
 {
     ASSERT(data);
     ASSERT([data length] != 0);
@@ -329,16 +351,16 @@
                                        fromDataSource:dataSource
                                              complete:NO];
     
-    [super connection:con didReceiveData:data lengthReceived:lengthReceived];
+    [super didReceiveData:data lengthReceived:lengthReceived];
     _bytesReceived += [data length];
 
     LOG(Loading, "%d of %d", _bytesReceived, _contentLength);
     [self release];
 }
 
-- (void)connectionDidFinishLoading:(NSURLConnection *)con
+- (void)didFinishLoading
 {
-    ASSERT([[dataSource _URL] _webkit_shouldLoadAsEmptyDocument] || ![con defersCallbacks]);
+    ASSERT([[dataSource _URL] _webkit_shouldLoadAsEmptyDocument] || ![connection defersCallbacks]);
     ASSERT([[dataSource _URL] _webkit_shouldLoadAsEmptyDocument] || ![self defersCallbacks]);
     ASSERT([[dataSource _URL] _webkit_shouldLoadAsEmptyDocument] || ![[dataSource _webView] defersCallbacks]);
 
@@ -351,14 +373,14 @@
     [[dataSource _webView] _mainReceivedBytesSoFar:_bytesReceived
                                     fromDataSource:dataSource
                                             complete:YES];
-    [super connectionDidFinishLoading:con];
+    [super didFinishLoading];
 
     [self release];
 }
 
-- (void)connection:(NSURLConnection *)con didFailWithError:(NSError *)error
+- (void)didFailWithError:(NSError *)error
 {
-    ASSERT(![con defersCallbacks]);
+    ASSERT(![connection defersCallbacks]);
     ASSERT(![self defersCallbacks]);
     ASSERT(![[dataSource _webView] defersCallbacks]);
 
@@ -378,7 +400,7 @@
     // Send this synthetic delegate callback since clients expect it, and
     // we no longer send the callback from within NSURLConnection for
     // initial requests.
-    r = [self connection:nil willSendRequest:r redirectResponse:nil];
+    r = [self willSendRequest:r redirectResponse:nil];
     NSURL *URL = [r URL];
     BOOL shouldLoadEmpty = [URL _webkit_shouldLoadAsEmptyDocument];
 
@@ -396,7 +418,7 @@
 
         NSURLResponse *resp = [[NSURLResponse alloc] initWithURL:URL MIMEType:MIMEType
             expectedContentLength:0 textEncodingName:nil];
-	[self connection:nil didReceiveResponse:resp];
+	[self didReceiveResponse:resp];
 	[resp release];
     } else {
         connection = [[NSURLConnection alloc] initWithRequest:r delegate:proxy];

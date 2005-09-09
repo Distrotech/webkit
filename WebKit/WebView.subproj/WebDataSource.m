@@ -15,7 +15,7 @@
 #import <WebKit/WebDOMOperationsPrivate.h>
 #import <WebKit/WebException.h>
 #import <WebKit/WebFrameLoadDelegate.h>
-#import <WebKit/WebFramePrivate.h>
+#import <WebKit/WebFrameInternal.h>
 #import <WebKit/WebFrameView.h>
 #import <WebKit/WebHistory.h>
 #import <WebKit/WebHistoryItemPrivate.h>
@@ -45,6 +45,13 @@
 #import <Foundation/NSURLConnection.h>
 #import <Foundation/NSURLRequest.h>
 #import <Foundation/NSURLResponsePrivate.h>
+
+// We could include NSURLRequestPrivate.h if we knew it was a version new enough
+// to have this (AppleInternal from 10.4.3 or newer), but for now we'd like to
+// be able to compile even if we only have older headers, so declare this here.
+@interface NSMutableURLRequest (WebKitSystemInterfaceSecrets) 
+- (void)setHTTPShouldHandleMixedReplace:(BOOL)yorn;
+@end
 
 @implementation WebDataSourcePrivate 
 
@@ -379,6 +386,12 @@
             identifier = [[WebDefaultResourceLoadDelegate sharedResourceLoadDelegate] webView:_private->webView identifierForInitialRequest:_private->originalRequest fromDataSource:self];
             
         _private->mainClient = [[WebMainResourceClient alloc] initWithDataSource:self];
+        if ([_private->request respondsToSelector:@selector(setHTTPShouldHandleMixedReplace:)]) {
+            [_private->request setHTTPShouldHandleMixedReplace:YES];
+            [_private->mainClient setSupportsMultipartContent:YES]; 
+        } else
+            [_private->mainClient setSupportsMultipartContent:NO];
+            
         [_private->mainClient setIdentifier: identifier];
         [[self webFrame] _addExtraFieldsToRequest:_private->request alwaysFromRequest: NO];
         if (![_private->mainClient loadWithRequest:_private->request]) {
@@ -454,7 +467,7 @@
     [clients release];
     
     if (_private->committed) {
-	[[self _bridge] closeURL];        
+	[[self _bridge] stopLoading];        
     }
 }
 
@@ -676,6 +689,7 @@
             [WebHTMLRepresentation class], @"application/rss+xml",
             [WebHTMLRepresentation class], @"application/atom+xml",
             [WebHTMLRepresentation class], @"application/x-webarchive",
+            [WebHTMLRepresentation class], @"multipart/x-mixed-replace",
             [WebTextRepresentation class], @"text/",
             [WebTextRepresentation class], @"application/x-javascript",
             nil];
@@ -733,7 +747,8 @@
         NSDictionary *headers = [_private->response isKindOfClass:[NSHTTPURLResponse class]]
             ? [(NSHTTPURLResponse *)_private->response allHeaderFields] : nil;
 
-        [frame _closeOldDataSources];
+        if (loadType != WebFrameLoadTypeReplace)
+            [frame _closeOldDataSources];
 
         LOG(Loading, "committed resource = %@", [[self request] URL]);
 	_private->committed = TRUE;
@@ -743,12 +758,7 @@
         [frame _transitionToCommitted: pageCache];
 
         NSURL *baseURL = [[self request] _webDataRequestBaseURL];        
-        NSURL *URL = nil;
-        
-        if (baseURL)
-            URL = baseURL;
-        else
-            URL = [_private->response URL];
+        NSURL *URL = baseURL ? baseURL : [_private->response URL];
             
         // WebCore will crash if given an empty URL here.
         // FIXME: could use CFURL, when available, range API to save an allocation here
@@ -788,15 +798,9 @@
 -(void)_receivedData:(NSData *)data
 {    
     _private->gotFirstByte = YES;
-    [self _commitIfReady];
-
-    // parsing some of the page can result in running a script which
-    // could possibly destroy the frame and data source. So retain
-    // self temporarily.
-    [self retain];
-    [[self representation] receivedData:data withDataSource:self];
-    [[[[self webFrame] frameView] documentView] dataSourceUpdated:self];
-    [self release];
+    
+    if ([self _doesProgressiveLoadWithMIMEType:[[self response] MIMEType]])
+        [self _commitLoadWithData:data];
 }
 
 - (void)_finishedLoading
@@ -815,7 +819,9 @@
     if (isComplete) {
         // Can't call [self _bridge] because we might not have commited yet
         [[[self webFrame] _bridge] stop];
-    }        
+        [[[self webFrame] _bridge] mainResourceError];
+    }
+
     [[self webFrame] _receivedMainResourceError:error];
     [[self _webView] _mainReceivedError:error
                            fromDataSource:self
@@ -1041,6 +1047,59 @@
 {
     NSString *MIMEType = [[self response] MIMEType];
     return [WebView canShowMIMETypeAsHTML:MIMEType];
+}
+
+- (BOOL)_doesProgressiveLoadWithMIMEType:(NSString *)MIMEType
+{
+    return [[self webFrame] _loadType] != WebFrameLoadTypeReplace || [MIMEType isEqualToString:@"text/html"];
+}
+
+- (void)_commitLoadWithData:(NSData *)data
+{
+    [self _commitIfReady];
+    // Parsing the page may result in running a script which could destroy the datasource, so retain temporarily
+    [self retain];
+    [[self representation] receivedData:data withDataSource:self];
+    [[[[self webFrame] frameView] documentView] dataSourceUpdated:self];
+    [self release];
+}
+
+- (void)_revertToProvisionalState
+{
+    [self _setRepresentation:nil];
+    [[self webFrame] _setupForReplace];
+    _private->committed = NO;
+}
+
+- (void)_setupForReplaceByMIMEType:(NSString *)newMIMEType
+{
+    if (!_private->gotFirstByte)
+        return;
+    
+    WebFrame *frame = [self webFrame];
+    NSString *oldMIMEType = [[self response] MIMEType];
+    
+    if (![self _doesProgressiveLoadWithMIMEType:oldMIMEType]) {
+        [self _revertToProvisionalState];
+        [self _commitLoadWithData:[self data]];
+        [frame _transitionToLayoutAcceptable];
+    }
+    
+    [[self representation] finishedLoadingWithDataSource:self];
+    [[self _bridge] end];
+
+    [frame _setLoadType:WebFrameLoadTypeReplace];
+    _private->gotFirstByte = NO;
+
+    if ([self _doesProgressiveLoadWithMIMEType:newMIMEType])
+        [self _revertToProvisionalState];
+
+    [_private->subresourceClients makeObjectsPerformSelector:@selector(cancel)];
+    [_private->subresourceClients removeAllObjects];
+    [_private->plugInStreamClients makeObjectsPerformSelector:@selector(cancel)];
+    [_private->plugInStreamClients removeAllObjects];
+    [_private->subresources removeAllObjects];
+    [_private->pendingSubframeArchives removeAllObjects];
 }
 
 @end
