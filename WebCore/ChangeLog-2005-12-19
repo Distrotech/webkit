@@ -1,3 +1,12 @@
+2005-09-12  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Justin and Adele.
+
+        A workaround for a GCC bug, Justin to file a radar with a reduction soon.
+
+        * kwq/KWQPainter.mm:
+        (QPainter::drawFloatPixmap):
+
 === WebCore-416.7 ===
 
 2005-09-09  Adele Peterson  <adele@apple.com>
