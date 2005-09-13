@@ -164,6 +164,14 @@ typedef enum {
     WebUndoActionTyping,
 } WebUndoAction;
 
+typedef enum
+{
+    ObjectElementNone,
+    ObjectElementImage,
+    ObjectElementFrame,
+    ObjectElementPlugin,
+} ObjectElementType;
+
 // WebCoreBridge objects are used by WebCore to abstract away operations that need
 // to be implemented by library clients, for example WebKit. The objects are also
 // used in the opposite direction, for simple access to WebCore functions without dealing
@@ -203,6 +211,7 @@ typedef enum {
 - (void)setEncoding:(NSString *)encoding userChosen:(BOOL)userChosen;
 - (void)addData:(NSData *)data;
 - (void)closeURL;
+- (void)stopLoading;
 
 - (void)didNotOpenURL:(NSURL *)URL pageCache:(NSDictionary *)pageCache;
 
@@ -217,11 +226,14 @@ typedef enum {
 - (void)end;
 - (void)stop;
 
+- (void)mainResourceError;
+
 - (NSURL *)URL;
 - (NSURL *)baseURL;
 - (NSString *)referrer;
 - (NSString *)domain;
 - (WebCoreBridge *)opener;
+- (void)setOpener:(WebCoreBridge *)bridge;
 
 - (void)installInFrame:(NSView *)view;
 - (void)removeFromFrame;
@@ -374,6 +386,10 @@ typedef enum {
 - (DOMRange *)smartDeleteRangeForProposedRange:(DOMRange *)proposedCharRange;
 - (void)smartInsertForString:(NSString *)pasteString replacingRange:(DOMRange *)charRangeToReplace beforeString:(NSString **)beforeString afterString:(NSString **)afterString;
 - (BOOL)canDeleteRange:(DOMRange *)range;
+- (void)selectNSRange:(NSRange)range;
+- (NSRange)selectedNSRange;
+- (NSRange)markedTextNSRange;
+- (DOMRange *)convertToObjCDOMRange:(NSRange)range;
 
 - (DOMDocumentFragment *)documentFragmentWithMarkupString:(NSString *)markupString baseURLString:(NSString *)baseURLString;
 - (DOMDocumentFragment *)documentFragmentWithText:(NSString *)text;
@@ -455,6 +471,11 @@ typedef enum {
 
 - (WebCoreBridge *)createWindowWithURL:(NSURL *)URL frameName:(NSString *)name;
 - (void)showWindow;
+
+- (BOOL)canRunModal;
+- (BOOL)canRunModalNow;
+- (WebCoreBridge *)createModalDialogWithURL:(NSURL *)URL;
+- (void)runModal;
 
 - (NSString *)userAgentForURL:(NSURL *)URL;
 
@@ -542,7 +563,7 @@ typedef enum {
 
 - (int)getObjectCacheSize;
 
-- (BOOL)frameRequiredForMIMEType:(NSString*)MIMEType URL:(NSURL *)URL;
+- (ObjectElementType)determineObjectFromMIMEType:(NSString*)MIMEType URL:(NSURL*)URL;
 
 - (void)loadEmptyDocumentSynchronously;
 
@@ -594,6 +615,7 @@ typedef enum {
 - (void)issueCopyCommand;
 - (void)issuePasteCommand;
 - (void)issuePasteAndMatchStyleCommand;
+- (void)issueTransposeCommand;
 - (void)respondToChangedSelection;
 - (void)respondToChangedContents;
 - (void)setIsSelected:(BOOL)isSelected forView:(NSView *)view;
