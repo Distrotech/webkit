@@ -1,4 +1,3 @@
-// -*- c-basic-offset: 2 -*-
 /*
  *  This file is part of the KDE libraries
  *  Copyright (C) 2001 Peter Kelly (pmk@post.com)
@@ -19,12 +18,13 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _KJS_EVENTS_H_
-#define _KJS_EVENTS_H_
+#ifndef KJS_EVENTS_H
+#define KJS_EVENTS_H
 
 #include "ecma/kjs_dom.h"
 #include "ecma/kjs_html.h"
 #include "dom/dom2_events.h"
+#include <kjs/protect.h>
 
 namespace DOM {
     class ClipboardImpl;

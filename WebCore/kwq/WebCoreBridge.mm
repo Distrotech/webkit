@@ -60,11 +60,12 @@
 #import "visible_units.h"
 #import "xml_tokenizer.h"
 
-#import <JavaScriptCore/npruntime.h>
+#import <JavaScriptCore/interpreter.h>
 #import <JavaScriptCore/jni_jsobject.h>
+#import <JavaScriptCore/npruntime.h>
 #import <JavaScriptCore/object.h>
-#import <JavaScriptCore/runtime_root.h>
 #import <JavaScriptCore/property_map.h>
+#import <JavaScriptCore/runtime_root.h>
 
 #import "KWQAssertions.h"
 #import "KWQCharsets.h"
@@ -136,6 +137,8 @@ using khtml::UPSTREAM;
 using khtml::VisiblePosition;
 
 using KJS::ExecState;
+using KJS::Interpreter;
+using KJS::InterpreterLock;
 using KJS::ObjectImp;
 using KJS::SavedProperties;
 using KJS::SavedBuiltins;
@@ -466,6 +469,8 @@ static bool initializedKJS = FALSE;
         return NO;
     }
     _part->clearTimers();
+
+    InterpreterLock lock;
 
     SavedProperties *windowProperties = new SavedProperties;
     _part->saveWindowProperties(windowProperties);

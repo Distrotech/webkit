@@ -1,5 +1,3 @@
-SUBDIRS = khtml kwq
-
 all-am:
 	xcodebuild -configuration $(BUILDSTYLE) OBJROOT=$(SYMROOTS) SYMROOT=$(SYMROOTS) DSTROOT=$(SYMROOTS) 
 clean-am:

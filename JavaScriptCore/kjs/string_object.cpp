@@ -682,8 +682,7 @@ StringObjectImp::StringObjectImp(ExecState *exec,
   // ECMA 15.5.3.1 String.prototype
   putDirect(prototypePropertyName, stringProto, DontEnum|DontDelete|ReadOnly);
 
-  static Identifier fromCharCode("fromCharCode");
-  putDirect(fromCharCode, new StringObjectFuncImp(exec,funcProto), DontEnum);
+  putDirect(fromCharCodePropertyName, new StringObjectFuncImp(exec, funcProto), DontEnum);
 
   // no. of arguments for constructor
   putDirect(lengthPropertyName, NumberImp::one(), ReadOnly|DontDelete|DontEnum);
