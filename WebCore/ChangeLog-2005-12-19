@@ -1,3 +1,5 @@
+=== Safari-416.8 ===
+
 2005-09-16  Timothy Hatcher  <timothy@apple.com>
 
         Merged fix from TOT to Safari-Den-branch
@@ -106,19 +108,6 @@
         (+[WebCoreJavaScript garbageCollect]):
         * kwq/WebCoreScriptDebugger.mm:
         (-[WebCoreScriptCallFrame evaluateWebScript:]):
-
-2005-09-14  Maciej Stachowiak  <mjs@apple.com>
-
-=== WebCore-417 ===
-
-2005-09-12  Timothy Hatcher  <timothy@apple.com>
-
-        Reviewed by Justin and Adele.
-
-        A workaround for a GCC bug, Justin to file a radar with a reduction soon.
-
-        * kwq/KWQPainter.mm:
-        (QPainter::drawFloatPixmap):
 
 === WebCore-416.7 ===
 
