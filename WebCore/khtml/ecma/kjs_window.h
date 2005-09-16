@@ -28,6 +28,7 @@
 #include <qptrlist.h>
 
 #include "kjs_binding.h"
+#include <kjs/protect.h>
 
 class QTimer;
 class KHTMLView;

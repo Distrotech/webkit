@@ -1555,21 +1555,21 @@ JSLazyEventListener *Window::getJSLazyEventListener(const QString& code, DOM::No
 
 void Window::clear( ExecState *exec )
 {
-  KJS::Interpreter::lock();
+  InterpreterLock lock;
   if (m_returnValueSlot)
     if (ValueImp *returnValue = getDirect("returnValue"))
       *m_returnValueSlot = returnValue;
   kdDebug(6070) << "Window::clear " << this << endl;
   delete winq;
   winq = new WindowQObject(this);
-  // Get rid of everything, those user vars could hold references to DOM nodes
+
   deleteAllProperties( exec );
-  // Really delete those properties, so that the DOM nodes get deref'ed
-  KJS::Collector::collect();
+  // there's likely to be lots of garbage now
+  Collector::collect();
+
   // Now recreate a working global object for the next URL that will use us
   KJS::Interpreter *interpreter = KJSProxy::proxy( m_part )->interpreter();
   interpreter->initGlobalObject();
-  KJS::Interpreter::unlock();
 }
 
 void Window::setCurrentEvent( DOM::Event *evt )
@@ -2129,43 +2129,38 @@ ScheduledAction::ScheduledAction(const QString &_code, bool _singleShot)
 void ScheduledAction::execute(Window *window)
 {
   ScriptInterpreter *interpreter = static_cast<ScriptInterpreter *>(KJSProxy::proxy(window->m_part)->interpreter());
-
+  
   interpreter->setProcessingTimerCallback(true);
-
+  
   //kdDebug(6070) << "ScheduledAction::execute " << this << endl;
   if (isFunction) {
     if (func.implementsCall()) {
       // #### check this
       Q_ASSERT( window->m_part );
-      if ( window->m_part )
-      {
-        KJS::Interpreter *interpreter = KJSProxy::proxy( window->m_part )->interpreter();
+      if (window->m_part) {
+        Interpreter *interpreter = KJSProxy::proxy(window->m_part)->interpreter();
         ExecState *exec = interpreter->globalExec();
         Q_ASSERT( window == interpreter->globalObject().imp() );
         Object obj( window );
-	Interpreter::lock();
+	InterpreterLock lock;
         func.call(exec,obj,args); // note that call() creates its own execution state for the func call
-	Interpreter::unlock();
+        
 	if ( exec->hadException() ) {
 #if APPLE_CHANGES
-          Interpreter::lock();
           char *message = exec->exception().toObject(exec).get(exec, messagePropertyName).toString(exec).ascii();
           int lineNumber =  exec->exception().toObject(exec).get(exec, "line").toInt32(exec);
-          Interpreter::unlock();
-	  if (Interpreter::shouldPrintExceptions()) {
+	  if (Interpreter::shouldPrintExceptions())
 	    printf("(timer):%s\n", message);
-	  }
+
           KWQ(window->m_part)->addMessageToConsole(message, lineNumber, QString());
 #endif
 	  exec->clearException();
-	}
+        }
       }
     }
-  }
-  else {
+  } else
     window->m_part->executeScript(code);
-  }
-
+  
   // Update our document's rendering following the execution of the timeout callback.
   DOM::DocumentImpl *doc = static_cast<DOM::DocumentImpl*>(window->m_part->document().handle());
   doc->updateRendering();

@@ -28,6 +28,7 @@
 #include "ustring.h"
 #include "value.h"
 #include "object.h"
+#include "protect.h"
 #include "types.h"
 #include "interpreter.h"
 #include "scope_chain.h"
@@ -261,7 +262,7 @@ namespace KJS {
     InterpreterImp(Interpreter *interp, const Object &glob);
     ~InterpreterImp();
 
-    ProtectedObject &globalObject() const { return const_cast<ProtectedObject &>(global); }
+    Object &globalObject() { return global; }
     Interpreter* interpreter() const { return m_interpreter; }
 
     void initGlobalObject();

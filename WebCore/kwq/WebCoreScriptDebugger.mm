@@ -330,12 +330,11 @@ class WebCoreScriptDebuggerImp : public KJS::Debugger {
     // evaluate
     Value result;
     if (!eval.isNull()) {
-        Interpreter::lock();
+        InterpreterLock lock;
         Object dummy;
         List args;
         args.append(String(code));
         result = eval.call(state, dummy, args);
-        Interpreter::unlock();
     }
     else {
         // no "eval", or no context (i.e. global scope) - use global fallback
