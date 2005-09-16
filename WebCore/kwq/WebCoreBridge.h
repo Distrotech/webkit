@@ -226,7 +226,7 @@ typedef enum
 - (void)end;
 - (void)stop;
 
-- (void)mainResourceError;
+- (void)handleFallbackContent;
 
 - (NSURL *)URL;
 - (NSURL *)baseURL;

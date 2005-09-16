@@ -511,7 +511,7 @@ static bool initializedKJS = FALSE;
     _part->stop();
 }
 
-- (void)mainResourceError
+- (void)handleFallbackContent
 {
     _part->handleFallbackContent();
 }
