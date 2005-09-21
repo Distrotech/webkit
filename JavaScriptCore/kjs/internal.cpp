@@ -542,7 +542,7 @@ void InterpreterImp::globalClear()
 }
 
 InterpreterImp::InterpreterImp(Interpreter *interp, const Object &glob)
-    : _context(0)
+    : globExec(0), _context(0)
 {
   // add this interpreter to the global chain
   // as a root set for garbage collection
@@ -761,7 +761,7 @@ void InterpreterImp::mark()
     m_interpreter->mark();
   if (_context)
     _context->mark();
-  if (!globExec->_exception.isNull())
+  if (globExec && !globExec->_exception.isNull())
       globExec->_exception.imp()->mark();
 }
 

@@ -1,3 +1,15 @@
+2005-09-21  Timothy Hatcher  <timothy@apple.com>
+
+          - Fixed <rdar://problem/4263434> <rdar://problem/4263434> Denver 8F29 Regression:
+            KJS::InterpreterImp::mark() crash
+
+          Fix by mjs, review by Geoff.
+
+          * kjs/internal.cpp:
+          (KJS::InterpreterImp::mark): Added a null check on globExec in case a
+          garbage collection occurs inside InterpreterImp::globalInit (called
+          from InterpreterImp::InterpreterImp), at which point globExec has not yet been initialized.
+
 === Safari-416.8 ===
 
 2005-09-14  Maciej Stachowiak  <mjs@apple.com>
