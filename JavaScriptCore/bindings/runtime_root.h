@@ -54,18 +54,21 @@ public:
         _imp->deref();
 #endif
 #if USE_CONSERVATIVE_GC | TEST_CONSERVATIVE_GC
-	gcUnprotect(_imp);
+        InterpreterLock lock;
+        gcUnprotect(_imp);
 #endif
     }
     
     void setRootObjectImp (ObjectImp *i) { 
+#if USE_CONSERVATIVE_GC | TEST_CONSERVATIVE_GC
+        InterpreterLock lock;
+#endif
         _imp = i;
 #if !USE_CONSERVATIVE_GC
         _imp->ref();
-
 #endif
 #if USE_CONSERVATIVE_GC | TEST_CONSERVATIVE_GC
-	gcProtect(_imp);
+        gcProtect(_imp);
 #endif
     }
     
