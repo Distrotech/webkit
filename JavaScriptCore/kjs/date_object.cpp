@@ -960,11 +960,12 @@ double KJS::makeTime(struct tm *t, int ms, bool utc)
 {
     int utcOffset;
     if (utc) {
-	time_t zero = 0;
+        time_t zero = 0;
 #if defined BSD || defined(__linux__) || defined(__APPLE__)
-	struct tm *t3 = localtime(&zero);
-        utcOffset = t3->tm_gmtoff;
-        t->tm_isdst = t3->tm_isdst;
+        struct tm t3;
+        localtime_r(&zero, &t3);
+        utcOffset = t3.tm_gmtoff;
+        t->tm_isdst = t3.tm_isdst;
 #else
         (void)localtime(&zero);
 #  if defined(__BORLANDC__) || defined(__CYGWIN__)
