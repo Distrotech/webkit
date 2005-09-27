@@ -1,3 +1,15 @@
+2005-09-27  Timothy Hatcher  <timothy@apple.com>
+
+    2005-09-26  Geoffrey Garen  <ggaren@apple.com>
+
+        - Fixed <rdar://problem/4244084> Denver Regression: Date.setUTCFullYear() broken
+
+        Reviewed by John.
+
+        * kjs/date_object.cpp:
+        (KJS::makeTime): Changed to use localtime_r to avoid blowing away the results from
+        a previous call to localtime farther up the stack.
+
 === JavaScriptCore-416.9 ===
 
 2005-09-22  Timothy Hatcher  <timothy@apple.com>
