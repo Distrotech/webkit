@@ -1,3 +1,50 @@
+2005-09-28  Timothy Hatcher  <timothy@apple.com>
+
+        Merge over of various leak fixes from TOT to Safari-2-0-branch
+
+        <rdar://problem/4231952> leaks of DOMStringImpl called from HTMLTokenizer::processToken, seen running WebKit tests
+        <rdar://problem/4231978> many leaks of StyleSurroundData called beneath RenderStyle::setMarginTop, seen running webkit tests
+        <rdar://problem/4232017> many leaks of StyleInheritedData called from different RenderStyle methods, seen running webkit tests
+        <rdar://problem/4232175> leak of RenderObject called from RenderContainer::updatePseudoChild, seen running webkit tests
+        <rdar://problem/4232214> many leaks of RenderStyle from CSSStyleSelector::pseudoStyleForElement, seen running webkit tests
+        <rdar://problem/4232252> many leaks of RenderStyle called beneath NodeImpl::createRendererIfNeeded, seen running webkit tests
+        <rdar://problem/4232263> many leaks of RenderObject called from TextImpl::createRenderer, seen running webkit tests
+        <rdar://problem/4232303> many objects leaked from HTMLTokenizer::parseTag() within -[WebView paste:], seen running webkit tests (probably affects Mail)
+        <rdar://problem/4232355> leak of DOMStringImpl called from RenderTextFragment::originalString, seen running webkit tests
+        <rdar://problem/4232371> leak of DOMStringImpl called from DOMStringImpl::substring, seen running webkit tests
+        <rdar://problem/4232588> many leaks beneath ApplyStyleCommand::mergeEndWithNextIfIdentical, seen running webkit tests (probably affects Mail)
+        <rdar://problem/4232812> leaks of NodeImpl called from HTMLParser::textCreateErrorCheck, seen running webkit tests
+        <rdar://problem/4233683> leaks of NodeImpl called from HTMLElementImpl::setOuterText, seen running webkit tests
+        <rdar://problem/4233690> leaks of StyleBackgroundData called within setBackgroundColor, seen running webkit tests
+        <rdar://problem/4233701> leaks inside QFontMetrics::setFont, seen running webkit tests
+        <rdar://problem/4233800> leak inside DOM::DocumentImpl::DocumentImpl, seen running webkit tests
+        <rdar://problem/4236218> many leaks of StyleBaseImpl within -[WebCoreBridge markupStringFromRange:nodes:] within -[WebHTMLView copy:]
+        <rdar://problem/4238024> leak of DocumentFragmentImpl if parseXMLDocumentFragment fails
+        <rdar://problem/4241457> many callers of removeChild are leaking the removed node
+
+        * khtml/editing/markup.cpp:
+        (khtml::createMarkup):
+        * khtml/html/html_elementimpl.cpp:
+        (HTMLElementImpl::setOuterHTML):
+        (HTMLElementImpl::setOuterText):
+        * khtml/html/html_tableimpl.cpp:
+        (HTMLTableElementImpl::setCaption):
+        (HTMLTableElementImpl::setTHead):
+        (HTMLTableElementImpl::setTFoot):
+        (HTMLTableElementImpl::setTBody):
+        * khtml/rendering/render_block.cpp:
+        (khtml::RenderBlock::updateFirstLetter):
+        * khtml/rendering/render_container.cpp:
+        (RenderContainer::updatePseudoChild):
+        * khtml/rendering/render_text.cpp:
+        (RenderText::setStyle):
+        (RenderText::originalString):
+        (RenderTextFragment::originalString):
+        * khtml/rendering/render_text.h:
+        * khtml/xml/dom_nodeimpl.cpp:
+        (NodeImpl::remove):
+        (NodeImpl::normalize):
+
 2005-09-16  Timothy Hatcher  <timothy@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch
