@@ -1,5 +1,0 @@
-#define HAVE_MEMMOVE 1
-#define HAVE_BCOPY 1
-#define HAVE_STRERROR 1
-#define NEWLINE 10
-#define SUPPORT_UTF8 1

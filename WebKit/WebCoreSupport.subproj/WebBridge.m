@@ -10,6 +10,7 @@
 #import <WebKit/WebBaseNetscapePluginView.h>
 #import <WebKit/WebBasePluginPackage.h>
 #import <WebKit/WebBaseResourceHandleDelegate.h>
+#import "WebControllerSets.h"
 #import <WebKit/WebDataSourcePrivate.h>
 #import <WebKit/WebDefaultUIDelegate.h>
 #import <WebKit/WebEditingDelegate.h>
@@ -22,6 +23,7 @@
 #import <WebKit/WebHistoryItemPrivate.h>
 #import <WebKit/WebHTMLRepresentationPrivate.h>
 #import <WebKit/WebHTMLViewInternal.h>
+#import <WebKit/WebImageView.h>
 #import <WebKit/WebJavaPlugIn.h>
 #import <WebKit/WebJavaScriptTextInputPanel.h>
 #import <WebKit/WebKitErrorsPrivate.h>
@@ -323,7 +325,20 @@ NSString *WebPluginContainerKey =   @"WebPluginContainer";
 
 - (void)closeWindowSoon
 {
-    [[_frame webView] performSelector:@selector(_closeWindow) withObject:nil afterDelay:0.0];
+    WebView *parentWebView = [_frame webView];
+
+    // We need to remove the parent WebView from WebViewSets here, before it actually
+    // closes, to make sure that JavaScript code that executes before it closes
+    // can't find it. Otherwise, window.open will select a closed WebView instead of opening a new one.
+
+    // FIXME: This code assumes that the UI delegate will respond to a webViewClose
+    // message by actually closing the WebView. Safari guarantees this behavior, but other apps might not.
+    // This approach is an inherent limitation of not making a close execute immediately
+    // after a call to window.close.
+    
+    [WebViewSets removeWebView:parentWebView fromSetNamed:[parentWebView groupName]];
+    
+    [parentWebView performSelector:@selector(_closeWindow) withObject:nil afterDelay:0.0];
 }
 
 - (NSWindow *)window
@@ -368,7 +383,7 @@ NSString *WebPluginContainerKey =   @"WebPluginContainer";
 
 - (NSView <WebCoreFileButton> *)fileButtonWithDelegate:(id <WebCoreFileButtonDelegate>)delegate
 {
-    return [[WebFileButton alloc] initWithBridge:self delegate:delegate];
+    return [[[WebFileButton alloc] initWithBridge:self delegate:delegate] autorelease];
 }
 
 - (void)runOpenPanelForFileButtonWithResultListener:(id<WebOpenPanelResultListener>)resultListener
@@ -457,19 +472,13 @@ NSString *WebPluginContainerKey =   @"WebPluginContainer";
 
 - (void)objectLoadedFromCacheWithURL:(NSURL *)URL response:(NSURLResponse *)response data:(NSData *)data
 {
-    // Pass NO for copyData since the data doesn't need to be copied since it won't be modified. 
-    // Copying it will also cause a performance regression. 
-    WebResource *resource = [[WebResource alloc] _initWithData:data
-                                                           URL:URL
-                                                      MIMEType:[response MIMEType]
-                                              textEncodingName:[response textEncodingName]
-                                                     frameName:nil
-                                                      copyData:NO];
-    ASSERT(resource != nil);
-    [[self dataSource] addSubresource:resource];
-    [resource release];
-    
-    [_frame _sendResourceLoadDelegateMessagesForURL:URL response:response length:[data length]];    
+    // FIXME: If the WebKit client changes or cancels the request, WebCore does not respect this and continues the load.
+    NSError *error;
+    NSString *identifier;
+    NSURLRequest *request = [[NSURLRequest alloc] initWithURL:URL];
+    [_frame _requestFromDelegateForRequest:request identifier:&identifier error:&error];    
+    [_frame _saveResourceAndSendRemainingDelegateMessagesWithRequest:request identifier:identifier response:response data:data error:error];
+    [request release];
 }
 
 - (NSData *)syncLoadResourceWithURL:(NSURL *)URL customHeaders:(NSDictionary *)requestHeaders postData:(NSArray *)postData finalURL:(NSURL **)finalURL responseHeaders:(NSDictionary **)responseHeaderDict statusCode:(int *)statusCode
@@ -479,32 +488,39 @@ NSString *WebPluginContainerKey =   @"WebPluginContainer";
     BOOL hideReferrer;
     [self canLoadURL:URL fromReferrer:[self referrer] hideReferrer:&hideReferrer];
 
-    NSMutableURLRequest *newRequest = [[NSMutableURLRequest alloc] initWithURL:URL];
+    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:URL];
 
     if (postData) {
-        [newRequest setHTTPMethod:@"POST"];
-        webSetHTTPBody(newRequest, postData);
+        [request setHTTPMethod:@"POST"];
+        webSetHTTPBody(request, postData);
     }
 
     NSEnumerator *e = [requestHeaders keyEnumerator];
     NSString *key;
     while ((key = (NSString *)[e nextObject]) != nil) {
-        [newRequest addValue:[requestHeaders objectForKey:key] forHTTPHeaderField:key];
+        [request addValue:[requestHeaders objectForKey:key] forHTTPHeaderField:key];
     }
     
     // Never use cached data for these requests (xmlhttprequests).
-    [newRequest setCachePolicy:[[[self dataSource] request] cachePolicy]];
+    [request setCachePolicy:[[[self dataSource] request] cachePolicy]];
     if (!hideReferrer)
-        [newRequest setHTTPReferrer:[self referrer]];
+        [request setHTTPReferrer:[self referrer]];
     
     WebView *webView = [_frame webView];
-    [newRequest setMainDocumentURL:[[[[webView mainFrame] dataSource] request] URL]];
-    [newRequest setHTTPUserAgent:[webView userAgentForURL:[newRequest URL]]];
-
-    NSURLResponse *response = nil;
+    [request setMainDocumentURL:[[[[webView mainFrame] dataSource] request] URL]];
+    [request setHTTPUserAgent:[webView userAgentForURL:[request URL]]];
+    
     NSError *error = nil;
-    NSData *result = [NSURLConnection sendSynchronousRequest:newRequest returningResponse:&response error:&error];
-
+    NSString *identifier = nil;    
+    NSURLRequest *newRequest = [_frame _requestFromDelegateForRequest:request identifier:&identifier error:&error];
+    
+    NSURLResponse *response = nil;
+    NSData *result = nil;
+    if (error == nil) {
+        ASSERT(newRequest != nil);
+        result = [NSURLConnection sendSynchronousRequest:newRequest returningResponse:&response error:&error];
+    }
+    
     if (error == nil) {
         *finalURL = [response URL];
         if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
@@ -515,16 +531,19 @@ NSString *WebPluginContainerKey =   @"WebPluginContainer";
             *responseHeaderDict = [NSDictionary dictionary];
             *statusCode = 200;
         }
-
-        // notify the delegates
-        // FIXME: Bridge method name "loaded from cache" doesn't make any sense here.
-        [self objectLoadedFromCacheWithURL:URL response:response data:result];
     } else {
         *finalURL = URL;
         *responseHeaderDict = [NSDictionary dictionary];
-        *statusCode = 404;
+        if ([error domain] == NSURLErrorDomain) {
+            *statusCode = [error code];
+        } else {
+            *statusCode = 404;
+        }
     }
-
+    
+    [_frame _saveResourceAndSendRemainingDelegateMessagesWithRequest:newRequest identifier:identifier response:response data:result error:error];
+    [request release];
+    
     return result;
 }
 
@@ -633,7 +652,7 @@ NSString *WebPluginContainerKey =   @"WebPluginContainer";
 - (void)loadURL:(NSURL *)URL referrer:(NSString *)referrer reload:(BOOL)reload userGesture:(BOOL)forUser target:(NSString *)target triggeringEvent:(NSEvent *)event form:(DOMElement *)form formValues:(NSDictionary *)values
 {
     BOOL hideReferrer;
-    if (![self canLoadURL:URL fromReferrer:[self referrer] hideReferrer:&hideReferrer])
+    if (![self canLoadURL:URL fromReferrer:referrer hideReferrer:&hideReferrer])
         return;
 
     if ([target length] == 0) {
@@ -663,7 +682,7 @@ NSString *WebPluginContainerKey =   @"WebPluginContainer";
 - (void)postWithURL:(NSURL *)URL referrer:(NSString *)referrer target:(NSString *)target data:(NSArray *)postData contentType:(NSString *)contentType triggeringEvent:(NSEvent *)event form:(DOMElement *)form formValues:(NSDictionary *)values
 {
     BOOL hideReferrer;
-    if (![self canLoadURL:URL fromReferrer:[self referrer] hideReferrer:&hideReferrer])
+    if (![self canLoadURL:URL fromReferrer:referrer hideReferrer:&hideReferrer])
         return;
 
     if ([target length] == 0) {
@@ -1053,30 +1072,36 @@ static BOOL loggedObjectCacheSize = NO;
     return cacheSize * multiplier;
 }
 
-- (BOOL)frameRequiredForMIMEType:(NSString *)MIMEType URL:(NSURL *)URL
+- (ObjectElementType)determineObjectFromMIMEType:(NSString*)MIMEType URL:(NSURL*)URL
 {
     if ([MIMEType length] == 0) {
+        // Try to guess the MIME type based off the extension.
         NSString *extension = [[URL path] pathExtension];
-        if ([extension length] > 0 && [[WebPluginDatabase installedPlugins] pluginForExtension:extension] != nil) {
-            // If no MIME type is specified, use a plug-in if we have one that can handle the extension.
-            return NO;
-        } else {
-            // Else, create a frame and attempt to load the URL in there.
-            return YES;
+        if ([extension length] > 0) {
+            MIMEType = [[NSURLFileTypeMappings sharedMappings] MIMETypeForExtension:extension];
+            if ([MIMEType length] == 0 && [[WebPluginDatabase installedPlugins] pluginForExtension:extension])
+                // If no MIME type is specified, use a plug-in if we have one that can handle the extension.
+                return ObjectElementPlugin;
         }
     }
-    
+
+    if ([MIMEType length] == 0)
+        return ObjectElementFrame; // Go ahead and hope that we can display the content.
+                
     Class viewClass = [WebFrameView _viewClassForMIMEType:MIMEType];
-    if (!viewClass) {
-        // Want to display a "plugin not found" dialog/image, so let a plugin get made.
-        return NO;
-    }
-        
+    if (!viewClass)
+        // Nothing is registered at all.
+        return ObjectElementNone;
+    
+    if ([viewClass isSubclassOfClass:[WebImageView class]])
+        return ObjectElementImage;
+    
     // If we're a supported type other than a plugin, we want to make a frame.
     // Ultimately we should just use frames for all mime types (plugins and HTML/XML/text documents),
     // but for now we're burdened with making a distinction between the two.
-    return !([viewClass isSubclassOfClass:[WebNetscapePluginDocumentView class]] || 
-             [viewClass isSubclassOfClass:[WebPluginDocumentView class]]);
+    if ([viewClass isSubclassOfClass:[WebNetscapePluginDocumentView class]] || [viewClass isSubclassOfClass:[WebPluginDocumentView class]])
+        return ObjectElementPlugin;
+    return ObjectElementFrame;
 }
 
 - (void)loadEmptyDocumentSynchronously
@@ -1093,7 +1118,7 @@ static BOOL loggedObjectCacheSize = NO;
     ASSERT(path);
     NSString *extension = [path pathExtension];
     NSString *type = [[NSURLFileTypeMappings sharedMappings] MIMETypeForExtension:extension];
-    return [type length] == 0 ? @"application/octet-stream" : type;
+    return [type length] == 0 ? (NSString *)@"application/octet-stream" : type;
 }
 
 - (void)allowDHTMLDrag:(BOOL *)flagDHTML UADrag:(BOOL *)flagUA
@@ -1268,7 +1293,7 @@ static id <WebFormDelegate> formDelegate(WebBridge *self)
 {
     CFPreferencesAppSynchronize(UniversalAccessDomain);
 
-    BOOL keyExistsAndHasValidFormat;
+    Boolean keyExistsAndHasValidFormat;
     int mode = CFPreferencesGetAppIntegerValue(AppleKeyboardUIMode, UniversalAccessDomain, &keyExistsAndHasValidFormat);
     
     // The keyboard access mode is reported by two bits:
@@ -1401,6 +1426,14 @@ static id <WebFormDelegate> formDelegate(WebBridge *self)
     [[_frame webView] pasteAsPlainText:nil];
 }
 
+- (void)issueTransposeCommand
+{
+    NSView <WebDocumentView> *view = [[_frame frameView] documentView];
+    if ([view isKindOfClass:[WebHTMLView class]]) {
+        [(WebHTMLView *)view transpose:nil];
+    }
+}
+
 - (BOOL)canPaste
 {
     return [[_frame webView] _canPaste];
@@ -1440,6 +1473,9 @@ static id <WebFormDelegate> formDelegate(WebBridge *self)
 {
     WebView *wv = [_frame webView];
     [[wv _frameLoadDelegateForwarder] webView:wv windowScriptObjectAvailable:[self windowScriptObject]];
+    if ([wv scriptDebugDelegate]) {
+        [_frame _attachScriptDebugger];
+    }
 }
 
 - (int)spellCheckerDocumentTag
@@ -1571,6 +1607,86 @@ static NSCharacterSet *_getPostSmartSet(void)
 - (BOOL)isCharacterSmartReplaceExempt:(unichar)c isPreviousCharacter:(BOOL)isPreviousCharacter
 {
     return [isPreviousCharacter ? _getPreSmartSet() : _getPostSmartSet() characterIsMember:c];
+}
+
+- (WebCoreBridge *)createModalDialogWithURL:(NSURL *)URL
+{
+    ASSERT(_frame != nil);
+
+    NSMutableURLRequest *request = nil;
+
+    if (URL != nil && ![URL _web_isEmpty]) {
+	request = [NSMutableURLRequest requestWithURL:URL];
+	[request setHTTPReferrer:[self referrer]];
+    }
+
+    WebView *currentWebView = [_frame webView];
+    id UIDelegate = [currentWebView UIDelegate];
+
+    WebView *newWebView = nil;
+    if ([UIDelegate respondsToSelector:@selector(webView:createWebViewModalDialogWithRequest:)])
+        newWebView = [UIDelegate webView:currentWebView createWebViewModalDialogWithRequest:request];
+    else if ([UIDelegate respondsToSelector:@selector(webView:createWebViewWithRequest:)])
+        newWebView = [UIDelegate webView:currentWebView createWebViewWithRequest:request];
+    else
+        newWebView = [[WebDefaultUIDelegate sharedUIDelegate] webView:currentWebView createWebViewWithRequest:request];
+
+    return [[newWebView mainFrame] _bridge];
+}
+
+- (BOOL)canRunModal
+{
+    WebView *webView = [_frame webView];
+    id UIDelegate = [webView UIDelegate];
+    return [UIDelegate respondsToSelector:@selector(webViewRunModal:)];
+}
+
+- (BOOL)canRunModalNow
+{
+    return [self canRunModal] && ![WebBaseResourceHandleDelegate inConnectionCallback];
+}
+
+- (void)runModal
+{
+    if (![self canRunModal])
+        return;
+
+    WebView *webView = [_frame webView];
+    if ([webView defersCallbacks]) {
+        ERROR("tried to run modal in a view when it was deferring callbacks -- should never happen");
+        return;
+    }
+
+    // Defer callbacks in all the other views in this group, so we don't try to run JavaScript
+    // in a way that could interact with this view.
+    NSMutableArray *deferredWebViews = [NSMutableArray array];
+    NSString *setName = [webView groupName];
+    if (setName) {
+        NSEnumerator *enumerator = [WebViewSets webViewsInSetNamed:setName];
+        WebView *otherWebView;
+        while ((otherWebView = [enumerator nextObject]) != nil) {
+            if (otherWebView != webView && ![otherWebView defersCallbacks]) {
+                [otherWebView setDefersCallbacks:YES];
+                [deferredWebViews addObject:otherWebView];
+            }
+        }
+    }
+
+    // Go run the modal event loop.
+    [[webView UIDelegate] webViewRunModal:webView];
+
+    // Restore the callbacks for any views that we deferred them for.
+    unsigned count = [deferredWebViews count];
+    unsigned i;
+    for (i = 0; i < count; ++i) {
+        WebView *otherWebView = [deferredWebViews objectAtIndex:i];
+        [otherWebView setDefersCallbacks:NO];
+    }
+}
+
+- (void)handledOnloadEvents
+{
+    [_frame _handledOnloadEvents];
 }
 
 @end
