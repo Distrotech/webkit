@@ -27,6 +27,7 @@
     BOOL reachedTerminalState;
     BOOL loadingMultipartContent;
     BOOL supportsMultipartContent;
+    BOOL signalledFinish;
 @private
     WebView *webView;
     NSURLResponse *response;
@@ -48,6 +49,8 @@
 #endif
 }
 - (void)setSupportsMultipartContent:(BOOL)flag;
+- (void)signalFinish;
+- (void)saveResource;
 
 - (BOOL)loadWithRequest:(NSURLRequest *)request;
 
