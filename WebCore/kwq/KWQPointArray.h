@@ -34,7 +34,11 @@
 
 #include "KWQMemArray.h"
 
+#ifdef NSGEOMETRY_TYPES_SAME_AS_CGGEOMETRY_TYPES
+typedef struct CGPoint NSPoint;
+#else
 typedef struct _NSPoint NSPoint;
+#endif
 
 class QPoint {
 public:

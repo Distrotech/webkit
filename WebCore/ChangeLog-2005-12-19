@@ -1,3 +1,19 @@
+2005-09-29  Timothy Hatcher  <timothy@apple.com>
+
+        Merge over of various leak fixes from TOT to Safari-2-0-branch
+
+    2005-09-29  Timothy Hatcher  <timothy@apple.com>
+
+        Fixes build failures on a future release train.
+
+        Reviewed by Maciej.
+
+        Test cases added: (None needed.)
+
+        * kwq/KWQPointArray.h: check if NSPoint is the same as CGPoint
+        * kwq/KWQRect.h: check if NSRect is the same as CGRect
+        * kwq/KWQSize.h: check if NSSize is the same as CGSize
+
 === WebCore-417.1 ===
 
 2005-09-28  Timothy Hatcher  <timothy@apple.com>
