@@ -1,5 +1,22 @@
 === JavaScriptCore-416.10 ===
 
+2005-09-30  Timothy Hatcher  <timothy@apple.com>
+
+	    Merges fixes from TOT to Safari-Den-branch
+
+    2005-09-29  Geoffrey Garen  <ggaren@apple.com>
+
+		- Second cut at fixing <rdar://problem/4275206> Denver Regression: Seed: 
+		Past Editions of Opinions display "NAN/Undefined" for www.washingtonpost.com
+		
+        Reviewed by mjs.
+
+        * kjs/date_object.cpp:
+        (KJS::KRFCDate_parseDate): Intead of creating a timezone when one isn't specified,
+        just rely on the fallback logic, which will do it for you. Also, return invalidDate
+        if the date includes trailing garbage. (Somewhat accidentally, the timezone logic
+        used to catch trailing garbage.)
+
 2005-09-28  Timothy Hatcher  <timothy@apple.com>
 
 	    Merges fixes from TOT to Safari-Den-branch

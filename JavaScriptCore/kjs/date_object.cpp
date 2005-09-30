@@ -1036,7 +1036,7 @@ double KJS::KRFCDate_parseDate(const UString &_date)
      // We ignore the weekday
      //
      double result = -1;
-     long offset = 0;
+     int offset = 0;
      bool have_tz = false;
      char *newPosStr;
      const char *dateString = _date.ascii();
@@ -1247,6 +1247,8 @@ double KJS::KRFCDate_parseDate(const UString &_date)
        dateString = newPosStr;
      }
 
+     // Don't fail if the time zone is missing. 
+     // Some websites omit the time zone (4275206).
      if (*dateString) {
        if (strncasecmp(dateString, "GMT", 3) == 0 ||
 	   strncasecmp(dateString, "UTC", 3) == 0) {
@@ -1285,24 +1287,10 @@ double KJS::KRFCDate_parseDate(const UString &_date)
          for (int i=0; i < int(sizeof(known_zones)/sizeof(KnownZone)); i++) {
            if (0 == strncasecmp(dateString, known_zones[i].tzName, strlen(known_zones[i].tzName))) {
              offset = known_zones[i].tzOffset;
+             dateString += strlen(known_zones[i].tzName);
              have_tz = true;
              break;
            }
-         }
-         // If the time zone is missing or malformed, substitute the local time zone. 
-         // Some websites (4275206) omit the time zone.
-         if (!have_tz) {
-           time_t now;
-           struct tm t;
-           
-           time(&now);
-           if (now == -1)
-             return invalidDate;
-           
-           localtime_r(&now, &t);
-           offset = -timeZoneOffset(&t);
-           
-           have_tz = true;
          }
        }
      }
@@ -1314,7 +1302,15 @@ double KJS::KRFCDate_parseDate(const UString &_date)
        year = strtol(dateString, &newPosStr, 10);
        if (errno)
          return invalidDate;
+       dateString = newPosStr;
      }
+     
+     while (isspace(*dateString))
+       dateString++;
+     
+     // Trailing garbage
+     if (*dateString != '\0')
+       return invalidDate;
 
      // Y2K: Solve 2 digit years
      if ((year >= 0) && (year < 50))
@@ -1323,8 +1319,8 @@ double KJS::KRFCDate_parseDate(const UString &_date)
      if ((year >= 50) && (year < 100))
          year += 1900;  // Y2K
 
+     // fall back to midnight, local timezone
      if (!have_tz) {
-       // fall back to midnight, local timezone
        struct tm t;
        memset(&t, 0, sizeof(tm));
        t.tm_mday = day;
@@ -1341,7 +1337,7 @@ double KJS::KRFCDate_parseDate(const UString &_date)
        return makeTime(&t, 0, false) / 1000.0;
      }
      
-     result = ymdhms_to_seconds(year, month+1, day, hour, minute, second) - (offset * 60);
+     result = ymdhms_to_seconds(year, month + 1, day, hour, minute, second) - (offset * 60);
      return result;
 }
 
