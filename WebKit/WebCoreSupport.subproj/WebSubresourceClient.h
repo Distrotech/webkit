@@ -17,6 +17,8 @@
     id <WebCoreResourceLoader> loader;
 }
 
+- (void)signalFinish;
+
 + (WebSubresourceClient *)startLoadingResource:(id <WebCoreResourceLoader>)rLoader
                                        withURL:(NSURL *)URL 
                                  customHeaders:(NSDictionary *)customHeaders

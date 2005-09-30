@@ -167,7 +167,14 @@
     if (loadingMultipartContent && [[self resourceData] length]) {
         // A subresource loader does not load multipart sections progressively, deliver the previously received data to the coreLoader all at once
         [loader addData:[self resourceData]];
+        // Tells the dataSource to save the just completed section, necessary for saving/dragging multipart images
+        [self saveResource];
+        // Clears the data to make way for the next multipart section
         [self clearResourceData];
+        
+        // After the first multipart section is complete, signal to delegates that this load is "finished" 
+        if (!signalledFinish)
+            [self signalFinish];
     }
 }
 
@@ -183,6 +190,13 @@
     [self release];
 }
 
+- (void)signalFinish
+{
+    [dataSource _removeSubresourceClient:self];
+    [[dataSource _webView] _finishedLoadingResourceFromDataSource:dataSource];
+    [super signalFinish];
+}
+
 - (void)didFinishLoading
 {
     // Calling _removeSubresourceClient will likely result in a call to release, so we must retain.
@@ -190,10 +204,9 @@
     
     [loader finishWithData:[self resourceData]];
     
-    [dataSource _removeSubresourceClient:self];
-    
-    [[dataSource _webView] _finishedLoadingResourceFromDataSource:dataSource];
-
+    if (!signalledFinish)
+        [self signalFinish];
+        
     [super didFinishLoading];
 
     [self release];    
