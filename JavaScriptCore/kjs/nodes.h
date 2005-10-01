@@ -100,6 +100,7 @@ namespace KJS {
     Value throwError(ExecState *exec, ErrorType e, const char *msg);
     Value throwError(ExecState *exec, ErrorType e, const char *msg, Value v, Node *expr);
     Value throwError(ExecState *exec, ErrorType e, const char *msg, Identifier label);
+    void setExceptionDetailsIfNeeded(ExecState *);
     int line;
     UString sourceURL;
     unsigned int m_refcount;

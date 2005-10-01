@@ -1,3 +1,16 @@
+2005-09-30  Timothy Hatcher  <timothy@apple.com>
+
+		<rdar://problem/4277521> JS exceptions don't carry file/line information (3327)
+		
+		Fixed by Geoffrey Garen.
+        Reviewed by Andrew Wooster.
+
+		Sends file and line numbers with JS exceptions.
+
+        * kjs/nodes.cpp:
+        (Node::setExceptionDetailsIfNeeded):
+        * kjs/nodes.h:
+
 === JavaScriptCore-417.1 ===
 
 2005-09-30  Timothy Hatcher  <timothy@apple.com>
