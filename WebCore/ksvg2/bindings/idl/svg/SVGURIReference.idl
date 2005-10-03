@@ -1,6 +1,0 @@
-module svg
-{
-  interface [nodptr] SVGURIReference { 
-    readonly attribute SVGAnimatedString href;
-  };
-};

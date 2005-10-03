@@ -1,7 +1,0 @@
-module svg
-{
-  interface SVGElementInstanceList { 
-// TODO   readonly attribute unsigned long length;
-// TODO    SVGElementInstance item ( in unsigned long index );
-  };
-};
