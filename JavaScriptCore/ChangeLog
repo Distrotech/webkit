@@ -1,3 +1,21 @@
+2005-10-03  Geoffrey Garen  <ggaren@apple.com>
+
+        - Fixed <rdar://problem/4244084> Denver Regression: setUTC() functions don't take 
+          into account Daylight Savings Time
+          
+        Reviewed by kevin.
+        
+        Fix was to roll in this change from TOT:
+
+                2005-08-11  Maciej Stachowiak  <mjs@apple.com>
+        
+                Reviewed by Geoff.
+                
+                * kjs/date_object.cpp:
+                (timetUsingCF): Fix one of the date tests my making the CF version of mktime
+                have the same quirk about the DST field as the real mktime.
+                * tests/mozilla/expected.html: Updated for newly fixed test.
+
 2005-09-30  Timothy Hatcher  <timothy@apple.com>
 
 		<rdar://problem/4277521> JS exceptions don't carry file/line information (3327)
