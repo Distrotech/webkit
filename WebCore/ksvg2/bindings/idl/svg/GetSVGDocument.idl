@@ -1,7 +1,0 @@
-module svg
-{
-  interface GetSVGDocument { 
-    SVGDocument getSVGDocument (  )
-                    raises( DOMException );
-  };
-};
