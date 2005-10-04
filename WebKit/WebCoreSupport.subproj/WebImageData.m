@@ -20,6 +20,8 @@
 
 #import <ImageIO/CGImageSourcePrivate.h>
 
+#import <CoreGraphics/CGContextPrivate.h>
+
 // Forward declarations of internal methods.
 @interface WebImageData (WebInternal)
 - (void)_commonTermination;
@@ -613,9 +615,12 @@ static const CGPatternCallbacks patternCallbacks = { 0, drawPattern, NULL };
             CGContextSaveGState (aContext);
 
             CGPoint tileOrigin = CGPointMake(oneTileRect.origin.x, oneTileRect.origin.y);
-            CGPoint transformedOrigin = CGPointApplyAffineTransform(tileOrigin, CGContextGetCTM(aContext));
-            CGContextSetPatternPhase(aContext, CGSizeMake(transformedOrigin.x, transformedOrigin.y));
-
+            CGAffineTransform userToBase = CGAffineTransformConcat(CGContextGetCTM(aContext),
+                CGAffineTransformInvert(CGContextGetBaseCTM(aContext)));
+            CGPoint phase = CGPointApplyAffineTransform(tileOrigin, userToBase);
+            
+            CGContextSetPatternPhase(aContext, CGSizeMake(phase.x, phase.y));
+        
             CGColorSpaceRef patternSpace = CGColorSpaceCreatePattern(NULL);
             CGContextSetFillColorSpace(aContext, patternSpace);
             CGColorSpaceRelease(patternSpace);
