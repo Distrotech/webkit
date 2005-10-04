@@ -5945,10 +5945,10 @@ void KHTMLPart::handleFallbackContent()
     khtml::RenderPart *renderPart = childFrame->m_frame;
     if (!renderPart)
         return;
-    HTMLObjectElementImpl* elt = static_cast<HTMLObjectElementImpl *>(renderPart->element());
-    if (!elt)
+    NodeImpl *node = renderPart->element();
+    if (!node || node->id() != ID_OBJECT)
         return;
-    elt->renderFallbackContent();
+    static_cast<HTMLObjectElementImpl *>(node)->renderFallbackContent();
 }
 
 using namespace KParts;
