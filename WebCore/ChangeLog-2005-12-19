@@ -1,3 +1,17 @@
+2005-10-03  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-Den-branch
+
+    2005-10-03  Justin Garcia  <justin.garcia@apple.com>
+
+		Fixes <rdar://problem/4275492> REGRESSION (SuTiDenver): EMBED tag with bogus type attribute downloads .wmv file twice (gorillamask.net)
+
+        Reviewed by geoff, darin
+
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::handleFallbackContent):
+        Don't handle fallback content for <embed> tags.
+
 === Safari-416.8 ===
 
 2005-09-16  Timothy Hatcher  <timothy@apple.com>
