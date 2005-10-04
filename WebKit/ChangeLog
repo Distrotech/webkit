@@ -1,3 +1,14 @@
+2005-10-04  Timothy Hatcher  <timothy@apple.com>
+
+		Fix for <rdar://problem/4275275> Denver Regression: Drawing glitch
+		in the transparent dialog's cancel/ok button in the widget manager
+
+		Fixed by Beth Dakin.
+        Reviewed by Darin.
+
+        * WebCoreSupport.subproj/WebImageData.m:
+        (-[WebImageData tileInRect:fromPoint:context:]): CG workaround
+
 2005-09-29  Timothy Hatcher  <timothy@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch
