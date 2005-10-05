@@ -1,8 +1,0 @@
-module svg
-{
-  interface SVGFEFloodElement : 
-                SVGElement,
-                SVGFilterPrimitiveStandardAttributes { 
-    readonly attribute SVGAnimatedString      in1;
-  };
-};

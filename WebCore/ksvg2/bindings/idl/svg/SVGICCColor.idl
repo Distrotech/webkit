@@ -1,8 +1,0 @@
-module svg
-{
-  interface SVGICCColor { 
-             attribute core::DOMString      colorProfile;
-                         // raises DOMException on setting
-    readonly attribute SVGNumberList colors;
-  };
-};

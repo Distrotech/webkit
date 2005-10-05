@@ -1,8 +1,0 @@
-module svg
-{
-  interface SVGStopElement : 
-                SVGElement,
-                SVGStylable { 
-    readonly attribute SVGAnimatedNumber offset;
-  };
-};
