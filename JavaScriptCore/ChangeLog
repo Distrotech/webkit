@@ -1,3 +1,5 @@
+=== JavaScriptCore-417.2 ===
+
 2005-10-05  Timothy Hatcher  <timothy@apple.com>
 
         - Fixed <rdar://problem/4269934> JavaScriptCore needs to limit its exports

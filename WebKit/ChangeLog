@@ -1,3 +1,5 @@
+=== WebKit-417.2 ===
+
 2005-10-04  Timothy Hatcher  <timothy@apple.com>
 
 		Fix for <rdar://problem/4275275> Denver Regression: Drawing glitch
