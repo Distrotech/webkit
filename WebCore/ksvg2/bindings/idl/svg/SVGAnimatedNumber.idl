@@ -1,8 +1,0 @@
-module svg
-{
-  interface SVGAnimatedNumber { 
-             attribute float baseVal;
-                         // raises DOMException on setting
-    readonly attribute float animVal;
-  };
-};
