@@ -1,3 +1,12 @@
+2005-10-06  Timothy Hatcher  <timothy@apple.com>
+
+        Fixes <rdar://problem/4286069> Intel Safari gives "MacPPC" for JavaScript navigator.platform
+
+        Reviewed by Geoff.
+
+        * khtml/ecma/kjs_navigator.cpp:
+        (Navigator::getValueProperty): Return MacPPC or MacIntel
+
 2005-10-05  Timothy Hatcher  <timothy@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch
