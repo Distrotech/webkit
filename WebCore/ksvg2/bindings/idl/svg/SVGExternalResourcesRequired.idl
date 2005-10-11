@@ -1,6 +1,0 @@
-module svg
-{
-  interface [nodptr] SVGExternalResourcesRequired { 
-    readonly attribute SVGAnimatedBoolean externalResourcesRequired;
-  };
-};

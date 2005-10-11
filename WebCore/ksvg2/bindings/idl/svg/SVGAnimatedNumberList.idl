@@ -1,7 +1,0 @@
-module svg
-{
-  interface SVGAnimatedNumberList { 
-    readonly attribute SVGNumberList baseVal;
-    readonly attribute SVGNumberList animVal;
-  };
-};
