@@ -1670,6 +1670,9 @@ void Loader::slotReceivedResponse(KIO::Job* job, NSURLResponse *response)
         ASSERT(r->object->type() == CachedObject::Image);
         static_cast<CachedImage *>(r->object)->clear();
         r->m_buffer = QBuffer();
+        if (r->m_docLoader->part())
+            r->m_docLoader->part()->checkCompleted();
+        
     } else if (KWQResponseIsMultipart(response)) {
         r->multipart = true;
         if (!r->object->type() == CachedObject::Image)
@@ -1718,7 +1721,8 @@ int Loader::numRequests( DocLoader* dl ) const
     QPtrDictIterator<Request> lIt( m_requestsLoading );
     for (; lIt.current(); ++lIt )
         if ( lIt.current()->m_docLoader == dl )
-            res++;
+            if (!lIt.current()->multipart)
+                res++;
 
 #if APPLE_CHANGES
     QPtrListIterator<Request> bdIt( m_requestsBackgroundDecoding );
