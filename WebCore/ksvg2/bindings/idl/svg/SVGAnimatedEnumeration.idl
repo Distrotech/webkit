@@ -1,8 +1,0 @@
-module svg
-{
-  interface SVGAnimatedEnumeration { 
-             attribute unsigned short baseVal;
-                         // raises DOMException on setting
-    readonly attribute unsigned short animVal;
-  };
-};
