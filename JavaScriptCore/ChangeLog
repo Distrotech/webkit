@@ -1,5 +1,10 @@
 2005-10-17  Timothy Hatcher  <timothy@apple.com>
 
+        * JavaScriptCore.exp: Rolled out some NPN symbols from
+        my last commit that Tim O. and I determined are not public.
+
+2005-10-17  Timothy Hatcher  <timothy@apple.com>
+
         - Fixed: <rdar://problem/4300099> JavaScriptCore export file needs
           to include symbols used by Java/liveconnect and other bindings clients
 
