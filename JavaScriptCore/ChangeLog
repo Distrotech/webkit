@@ -1,3 +1,13 @@
+2005-10-17  Timothy Hatcher  <timothy@apple.com>
+
+        - Fixed: <rdar://problem/4300099> JavaScriptCore export file needs
+          to include symbols used by Java/liveconnect and other bindings clients
+
+        Reviewed by Darin and Geoff.
+
+        * JavaScriptCore.exp: adding a few sysmbols for jni bindings
+          also add the WebUndefined ObjC class symbol, and some missing NPN symbols
+
 === JavaScriptCore-417.2 ===
 
 2005-10-05  Timothy Hatcher  <timothy@apple.com>
