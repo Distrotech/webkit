@@ -1,3 +1,28 @@
+2005-10-19  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-Den-branch
+
+    2005-10-18  Tim Omernick  <tomernick@apple.com>
+
+        Reviewed by John Sullivan.
+
+        <rdar://problem/4301852> Denver Regression: Text is invisible as you type in text fields in SimpleCarbonWeb
+
+        This regression was caused by the fix to <rdar://problem/4141161> REGRESSION (Tiger): WebKit does not display in composited Carbon windows.
+        Before that change, the dirty rect was obtained after calling -setNeedsDisplayInRect:, which intersects the dirty rect with the view's bounds.
+        The change in question subtly removed the bounds-intersection step, resulting in very large NSRects being converted to QuickDraw Rects with
+        sometimes disastrous results.
+
+        * Carbon.subproj/HIViewAdapter.m:
+        Added quickDrawRectForRect(), which returns a QuickDraw Rect derived from the passed CGRect.  The Rect's values
+        are clamped so that they do not overflow when cast to the short integer data type.
+        (-[NSView setNeedsDisplay:]):
+        NSTextView will occasionally pass a very large rect to -setNeedsDisplayInRect:.  Maybe it's passing the bounds
+        of its NSTextContainer, or something like that.  Who knows?  What's important here is that when we convert that
+        NSRect to a QuickDraw Rect, the Rect's values are overflowed, which leads to unpredictable results.  The solution
+        is to use quickDrawRectForRect() to clamp the NSRect's values to the limits imposed by Rect's short int type.
+        (-[NSView setNeedsDisplayInRect:]): ditto
+
 === WebKit-416.10 ===
 
 2005-10-04  Timothy Hatcher  <timothy@apple.com>
