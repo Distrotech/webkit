@@ -1,3 +1,12 @@
+2005-10-19  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Hyatt.
+
+        Fixed <rdar://problem/4243807> Denver Regression: DOM returns lower case strings for tags in empty document
+
+        * khtml/html/html_documentimpl.cpp:
+        (HTMLDocumentImpl::HTMLDocumentImpl): initialize hMode to Html4.
+
 === WebCore-416.11 ===
 
 2005-10-11  Timothy Hatcher  <timothy@apple.com>
