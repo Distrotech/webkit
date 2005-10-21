@@ -34,7 +34,7 @@
 using DOM::DOMString;
 
 namespace KJS {
-#if 0
+
 /* TODO:
  * The catch all (...) clauses below shouldn't be necessary.
  * But they helped to view for example www.faz.net in an stable manner.
@@ -46,10 +46,9 @@ namespace KJS {
 Value DOMObject::get(ExecState *exec, const Identifier &p) const
 {
   Value result;
-//  try {
+  try {
     result = tryGet(exec,p);
-//  }
-#if 0
+  }
   catch (DOM::DOMException e) {
     // ### translate code into readable string ?
     // ### oh, and s/QString/i18n or I18N_NOOP (the code in kjs uses I18N_NOOP... but where is it translated ?)
@@ -63,17 +62,16 @@ Value DOMObject::get(ExecState *exec, const Identifier &p) const
     kdError(6070) << "Unknown exception in DOMObject::get()" << endl;
     result = String("Unknown exception");
   }
-#endif
+
   return result;
 }
 
 void DOMObject::put(ExecState *exec, const Identifier &propertyName,
                     const Value &value, int attr)
 {
-//  try {
+  try {
     tryPut(exec, propertyName, value, attr);
-//  }
-#if 0
+  }
   catch (DOM::DOMException e) {
     Object err = Error::create(exec, GeneralError, QString("DOM exception %1").arg(e.code).local8Bit());
     err.put(exec, "code", Number(e.code));
@@ -82,7 +80,6 @@ void DOMObject::put(ExecState *exec, const Identifier &propertyName,
   catch (...) {
     kdError(6070) << "Unknown exception in DOMObject::put()" << endl;
   }
-#endif
 }
 
 UString DOMObject::toString(ExecState *) const
@@ -93,10 +90,9 @@ UString DOMObject::toString(ExecState *) const
 Value DOMFunction::get(ExecState *exec, const Identifier &propertyName) const
 {
   Value result;
-//  try {
+  try {
     result = tryGet(exec, propertyName);
-//  }
-#if 0
+  }
   catch (DOM::DOMException e) {
     result = Undefined();
     Object err = Error::create(exec, GeneralError, QString("DOM exception %1").arg(e.code).local8Bit());
@@ -107,18 +103,17 @@ Value DOMFunction::get(ExecState *exec, const Identifier &propertyName) const
     kdError(6070) << "Unknown exception in DOMFunction::get()" << endl;
     result = String("Unknown exception");
   }
-#endif
+
   return result;
 }
 
 Value DOMFunction::call(ExecState *exec, Object &thisObj, const List &args)
 {
   Value val;
-//  try {
+  try {
     val = tryCall(exec, thisObj, args);
-//  }
+  }
   // pity there's no way to distinguish between these in JS code
-#if 0
   catch (DOM::DOMException e) {
     Object err = Error::create(exec, GeneralError, QString("DOM Exception %1").arg(e.code).local8Bit());
     err.put(exec, "code", Number(e.code));
@@ -144,7 +139,6 @@ Value DOMFunction::call(ExecState *exec, Object &thisObj, const List &args)
     Object err = Error::create(exec, GeneralError, "Unknown exception");
     exec->setException(err);
   }
-#endif
   return val;
 }
 
@@ -178,16 +172,12 @@ ScriptInterpreter::ScriptInterpreter( const Object &global, KHTMLPart* part )
 #endif
 }
 
-#endif
-
 ScriptInterpreter::~ScriptInterpreter()
 {
 #ifdef KJS_VERBOSE
   kdDebug(6070) << "ScriptInterpreter::~ScriptInterpreter " << this << " for part=" << m_part << endl;
 #endif
 }
-
-#if 0
 
 void ScriptInterpreter::forgetDOMObject( void* objectHandle )
 {
@@ -427,7 +417,5 @@ QVariant ValueToVariant(ExecState* exec, const Value &val) {
   }
   return res;
 }
-
-#endif
 
 }
