@@ -27,6 +27,7 @@
 #import <WebKit/WebResourcePrivate.h>
 #import <WebKit/WebViewPrivate.h>
 
+static unsigned inNSURLConnectionCallback;
 static BOOL NSURLConnectionSupportsBufferedData;
 
 @interface NSURLConnection (NSURLConnectionTigerPrivate)
@@ -164,7 +165,7 @@ static BOOL NSURLConnectionSupportsBufferedData;
     }
 }
 
-// This is copied from [NSHTTPURLProtocol _cachedResponsePassesValidityChecks] and modified for our needs.
+// The following 2 methods are copied from [NSHTTPURLProtocol _cachedResponsePassesValidityChecks] and modified for our needs.
 // FIXME: It would be nice to eventually to share this code somehow.
 - (BOOL)_canUseResourceForRequest:(NSURLRequest *)theRequest
 {
@@ -185,6 +186,17 @@ static BOOL NSURLConnectionSupportsBufferedData;
     } else if ([theRequest valueForHTTPHeaderField:@"Cache-Control"] != nil) {
 	return NO;
     } else if ([[theRequest HTTPMethod] _web_isCaseInsensitiveEqualToString:@"POST"]) {
+        return NO;
+    } else {
+        return YES;
+    }
+}
+
+- (BOOL)_canUseResourceWithResponse:(NSURLResponse *)theResponse
+{
+    if ([theResponse _mustRevalidate]) {
+        return NO;
+    } else if ([theResponse _calculatedExpiration] - CFAbsoluteTimeGetCurrent() < 1) {
         return NO;
     } else {
         return YES;
@@ -215,15 +227,25 @@ static BOOL NSURLConnectionSupportsBufferedData;
     
     if ([[r URL] isEqual:originalURL] && [self _canUseResourceForRequest:r]) {
         resource = [dataSource subresourceForURL:originalURL];
-        if (resource) {
-            [resource retain];
-            // Deliver the resource after a delay because callers don't expect to receive callbacks while calling this method.
-            [self deliverResourceAfterDelay];
-            return YES;
+        if (resource != nil) {
+            if ([self _canUseResourceWithResponse:[resource _response]]) {
+                [resource retain];
+                // Deliver the resource after a delay because callers don't expect to receive callbacks while calling this method.
+                [self deliverResourceAfterDelay];
+                return YES;
+            } else {
+                resource = nil;
+            }
         }
     }
     
+#ifndef NDEBUG
+    isInitializingConnection = YES;
+#endif
     connection = [[NSURLConnection alloc] initWithRequest:r delegate:self];
+#ifndef NDEBUG
+    isInitializingConnection = NO;
+#endif
     if (defersCallbacks) {
         [connection setDefersCallbacks:YES];
     }
@@ -305,15 +327,9 @@ static BOOL NSURLConnectionSupportsBufferedData;
     if (resource == nil) {
         NSData *data = [self resourceData];
         if ([data length] > 0) {
-            // Don't have WebResource copy the data since the data is a NSMutableData that we know won't get modified. 
             ASSERT(originalURL);
             ASSERT([response MIMEType]);
-            WebResource *newResource = [[WebResource alloc] _initWithData:data
-                                                                      URL:originalURL
-                                                                 MIMEType:[response MIMEType]
-                                                         textEncodingName:[response textEncodingName]
-                                                                frameName:nil
-                                                                 copyData:NO];
+            WebResource *newResource = [[WebResource alloc] _initWithData:data URL:originalURL response:response];
             if (newResource != nil) {
                 [dataSource addSubresource:newResource];
                 [newResource release];
@@ -336,6 +352,11 @@ static BOOL NSURLConnectionSupportsBufferedData;
         return [connection _bufferedData];
     }
     return nil;
+}
+
+- (void)clearResourceData
+{
+    [resourceData setLength:0];
 }
 
 - (NSURLRequest *)willSendRequest:(NSURLRequest *)newRequest redirectResponse:(NSURLResponse *)redirectResponse
@@ -503,6 +524,18 @@ static BOOL NSURLConnectionSupportsBufferedData;
     resourceData = [data mutableCopy];
 }
 
+- (void)signalFinish
+{
+    signalledFinish = YES;
+
+    [webView _completeProgressForConnectionDelegate:self];    
+    
+    if (implementations.delegateImplementsDidFinishLoadingFromDataSource)
+        [resourceLoadDelegate webView:webView resource:identifier didFinishLoadingFromDataSource:dataSource];
+    else
+        [[WebDefaultResourceLoadDelegate sharedResourceLoadDelegate] webView:webView resource:identifier didFinishLoadingFromDataSource:dataSource];
+}
+
 - (void)didFinishLoading
 {
     // If load has been cancelled after finishing (which could happen with a 
@@ -515,12 +548,8 @@ static BOOL NSURLConnectionSupportsBufferedData;
 
     [self saveResource];
     
-    [webView _completeProgressForConnectionDelegate:self];
-
-    if (implementations.delegateImplementsDidFinishLoadingFromDataSource)
-        [resourceLoadDelegate webView:webView resource:identifier didFinishLoadingFromDataSource:dataSource];
-    else
-        [[WebDefaultResourceLoadDelegate sharedResourceLoadDelegate] webView:webView resource:identifier didFinishLoadingFromDataSource:dataSource];
+    if (!signalledFinish)
+        [self signalFinish];
 
     [self releaseResources];
 }
@@ -555,37 +584,50 @@ static BOOL NSURLConnectionSupportsBufferedData;
 - (NSURLRequest *)connection:(NSURLConnection *)con willSendRequest:(NSURLRequest *)newRequest redirectResponse:(NSURLResponse *)redirectResponse
 {
     ASSERT(con == connection);
-    return [self willSendRequest:newRequest redirectResponse:redirectResponse];
+    ++inNSURLConnectionCallback;
+    NSURLRequest *result = [self willSendRequest:newRequest redirectResponse:redirectResponse];
+    --inNSURLConnectionCallback;
+    return result;
 }
 
 - (void)connection:(NSURLConnection *)con didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
 {
     ASSERT(con == connection);
+    ++inNSURLConnectionCallback;
     [self didReceiveAuthenticationChallenge:challenge];
+    --inNSURLConnectionCallback;
 }
 
 - (void)connection:(NSURLConnection *)con didCancelAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
 {
     ASSERT(con == connection);
+    ++inNSURLConnectionCallback;
     [self didCancelAuthenticationChallenge:challenge];
+    --inNSURLConnectionCallback;
 }
 
 - (void)connection:(NSURLConnection *)con didReceiveResponse:(NSURLResponse *)r
 {
     ASSERT(con == connection);
+    ++inNSURLConnectionCallback;
     [self didReceiveResponse:r];
+    --inNSURLConnectionCallback;
 }
 
 - (void)connection:(NSURLConnection *)con didReceiveData:(NSData *)data lengthReceived:(long long)lengthReceived
 {
     ASSERT(con == connection);
+    ++inNSURLConnectionCallback;
     [self didReceiveData:data lengthReceived:lengthReceived];
+    --inNSURLConnectionCallback;
 }
 
 - (void)connection:(NSURLConnection *)con willStopBufferingData:(NSData *)data
 {
     ASSERT(con == connection);
+    ++inNSURLConnectionCallback;
     [self willStopBufferingData:data];
+    --inNSURLConnectionCallback;
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)con
@@ -593,19 +635,31 @@ static BOOL NSURLConnectionSupportsBufferedData;
     // don't worry about checking connection consistency if this load
     // got cancelled while finishing.
     ASSERT(cancelledFlag || con == connection);
+    ++inNSURLConnectionCallback;
     [self didFinishLoading];
+    --inNSURLConnectionCallback;
 }
 
 - (void)connection:(NSURLConnection *)con didFailWithError:(NSError *)error
 {
     ASSERT(con == connection);
+    ++inNSURLConnectionCallback;
     [self didFailWithError:error];
+    --inNSURLConnectionCallback;
 }
 
 - (NSCachedURLResponse *)connection:(NSURLConnection *)con willCacheResponse:(NSCachedURLResponse *)cachedResponse
 {
-    ASSERT(con == connection);
-    return [self willCacheResponse:cachedResponse];
+#ifndef NDEBUG
+     if (connection == nil && isInitializingConnection) {
+         ERROR("connection:willCacheResponse: was called inside of [NSURLConnection initWithRequest:delegate:] (40676250)");
+     }
+#endif
+    
+    ++inNSURLConnectionCallback;
+    NSCachedURLResponse *result = [self willCacheResponse:cachedResponse];
+    --inNSURLConnectionCallback;
+    return result;
 }
 
 - (void)cancelWithError:(NSError *)error
@@ -664,4 +718,13 @@ static BOOL NSURLConnectionSupportsBufferedData;
     return response;
 }
 
++ (BOOL)inConnectionCallback
+{
+    return inNSURLConnectionCallback != 0;
+}
+
+- (void)setSupportsMultipartContent:(BOOL)flag
+{
+    supportsMultipartContent = flag;
+}
 @end

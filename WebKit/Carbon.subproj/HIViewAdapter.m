@@ -19,6 +19,25 @@ static void			SetViewNeedsDisplay( HIViewRef inView, RgnHandle inRegion, Boolean
 
 @implementation HIViewAdapter
 
+static inline Rect quickDrawRectForRect(CGRect rect)
+{
+    // Make sure rect's values are within the allowed range for the data type (short) used by QuickDraw's Rect structure.
+    CGRect largestQuickDrawRect = CGRectMake(
+        SHRT_MIN,
+        SHRT_MIN,
+        SHRT_MAX - SHRT_MIN,
+        SHRT_MAX - SHRT_MIN);
+    rect = CGRectIntersection(rect, largestQuickDrawRect);
+    
+    Rect qdRect;
+    qdRect.top = (SInt16)rect.origin.y;
+    qdRect.left = (SInt16)rect.origin.x;
+    qdRect.bottom = CGRectGetMaxY(rect);
+    qdRect.right = CGRectGetMaxX(rect);
+    
+    return qdRect;
+}
+
 static CFMutableDictionaryRef	sViewMap;
 
 + (void)bindHIViewToNSView:(HIViewRef)hiView nsView:(NSView*)nsView
@@ -103,12 +122,7 @@ static CFMutableDictionaryRef	sViewMap;
 				RgnHandle rgn = NewRgn();
 				if ( rgn )
 				{
-					Rect		qdRect;
-					qdRect.top = (SInt16)rect.origin.y;
-					qdRect.left = (SInt16)rect.origin.x;
-					qdRect.bottom = CGRectGetMaxY( rect );
-					qdRect.right = CGRectGetMaxX( rect );
-				
+                    Rect qdRect = quickDrawRectForRect(rect);
 					RectRgn( rgn, &qdRect );
 					SetViewNeedsDisplay( hiView, rgn, false );
 					DisposeRgn( rgn );
@@ -120,15 +134,14 @@ static CFMutableDictionaryRef	sViewMap;
 }
 
 - (void)setNeedsDisplayInRect:(NSRect)invalidRect {
+        invalidRect = NSUnionRect(invalidRect, [self _dirtyRect]);
 	[super setNeedsDisplayInRect:invalidRect];
 	
-    if (_vFlags.needsDisplay || _vFlags.needsDisplayForBounds) 
+    if (!NSIsEmptyRect(invalidRect)) 
     {
     	HIViewRef	hiView = NULL;
     	NSRect		targetBounds = _bounds;
     	NSView*		view = self;
-    	
-		invalidRect = [self _dirtyRect];
 		
     	while ( view ) {
 			targetBounds = [view bounds];
@@ -164,12 +177,7 @@ static CFMutableDictionaryRef	sViewMap;
 					RgnHandle rgn = NewRgn();
 					if ( rgn )
 					{
-						Rect		qdRect;
-						qdRect.top = (SInt16)rect.origin.y;
-						qdRect.left = (SInt16)rect.origin.x;
-						qdRect.bottom = CGRectGetMaxY( rect );
-						qdRect.right = CGRectGetMaxX( rect );
-					
+                        Rect qdRect = quickDrawRectForRect(rect);
 						RectRgn( rgn, &qdRect );
 						SetViewNeedsDisplay( hiView, rgn, true );
 						DisposeRgn( rgn );

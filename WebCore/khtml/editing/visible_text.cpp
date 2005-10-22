@@ -229,6 +229,9 @@ bool TextIterator::handleTextNode()
         long end = (m_node == m_endContainer) ? m_endOffset : LONG_MAX;
         long runEnd = kMin(strLength, end);
 
+        if (runStart >= runEnd)
+            return true;
+
         m_positionNode = m_node;
         m_positionOffsetBaseNode = 0;
         m_positionStartOffset = runStart;
@@ -246,7 +249,16 @@ bool TextIterator::handleTextNode()
         return true;
     }
 
-    m_textBox = renderer->firstTextBox();
+    // Used when text boxes are out of order (Hebrew/Arabic w/ embeded LTR text)
+    if (renderer->containsReversedText()) {
+        m_sortedTextBoxes.clear();
+        for (InlineTextBox * textBox = renderer->firstTextBox(); textBox; textBox = textBox->nextTextBox()) {
+            m_sortedTextBoxes.append(textBox);
+        }
+        m_sortedTextBoxes.sort(); 
+    }
+    
+    m_textBox = renderer->containsReversedText() ? m_sortedTextBoxes.first() : renderer->firstTextBox();
     handleTextBox();
     return true;
 }
@@ -257,19 +269,23 @@ void TextIterator::handleTextBox()
     DOMString str = m_node->nodeValue();
     long start = m_offset;
     long end = (m_node == m_endContainer) ? m_endOffset : LONG_MAX;
-    for (; m_textBox; m_textBox = m_textBox->nextTextBox()) {
+    while (m_textBox) {
         long textBoxStart = m_textBox->m_start;
         long runStart = kMax(textBoxStart, start);
 
         // Check for collapsed space at the start of this run.
+        InlineTextBox *firstTextBox = renderer->containsReversedText() ? m_sortedTextBoxes.getFirst() : renderer->firstTextBox();
         bool needSpace = m_lastTextNodeEndedWithCollapsedSpace
-            || (m_textBox == renderer->firstTextBox() && textBoxStart == runStart && runStart > 0);
+            || (m_textBox == firstTextBox && textBoxStart == runStart && runStart > 0);
         if (needSpace && !isCollapsibleWhitespace(m_lastCharacter) && !m_lastCharacter.isNull()) {
             emitCharacter(' ', m_node, 0, runStart, runStart);
             return;
         }
         long textBoxEnd = textBoxStart + m_textBox->m_len;
         long runEnd = kMin(textBoxEnd, end);
+        
+        // Determine what the next text box will be, but don't advance yet
+        InlineTextBox *nextTextBox = renderer->containsReversedText() ? m_sortedTextBoxes.next() : m_textBox->nextTextBox();
 
         if (runStart < runEnd) {
             // Handle either a single newline character (which becomes a space),
@@ -303,8 +319,7 @@ void TextIterator::handleTextBox()
                 return;
             }
 
-            // Advance to the next text box.
-            InlineTextBox *nextTextBox = m_textBox->nextTextBox();
+            // Advance and return
             long nextRunStart = nextTextBox ? nextTextBox->m_start : str.length();
             if (nextRunStart > runEnd) {
                 m_lastTextNodeEndedWithCollapsedSpace = true; // collapsed space between runs or at the end
@@ -312,6 +327,8 @@ void TextIterator::handleTextBox()
             m_textBox = nextTextBox;
             return;
         }
+        // Advance and continue
+        m_textBox = nextTextBox;
     }
 }
 
@@ -995,12 +1012,32 @@ void TextIterator::setRangeFromLocationAndLength (const Range &range, Range &res
 
     for (TextIterator it(range); !it.atEnd(); it.advance()) {
         long len = it.length();
-        if (rangeLocation >= docTextPosition && rangeLocation < docTextPosition + len) {
-            resultRange.setStart(it.m_node, rangeLocation - docTextPosition);
+        if (rangeLocation >= docTextPosition && rangeLocation <= docTextPosition + len) {
+            Range textRunRange = it.range();
+            if (textRunRange.startContainer().handle()->isTextNode()) {
+                long offset = rangeLocation - docTextPosition;
+                resultRange.setStart(textRunRange.startContainer(), offset + textRunRange.startOffset());
+            } else {
+                if (rangeLocation == docTextPosition) {
+                    resultRange.setStart(textRunRange.startContainer(), textRunRange.startOffset());
+                } else {
+                    resultRange.setStart(textRunRange.endContainer(), textRunRange.endOffset());
+                }
+            }
         }
         if (rangeEnd >= docTextPosition && rangeEnd <= docTextPosition + len) {
+            Range textRunRange = it.range();
+            if (textRunRange.startContainer().handle()->isTextNode()) {
+                long offset = rangeEnd - docTextPosition;
+                resultRange.setEnd(textRunRange.startContainer(), offset + textRunRange.startOffset());
+            } else {
+                if (rangeEnd == docTextPosition) {
+                    resultRange.setEnd(textRunRange.startContainer(), textRunRange.startOffset());
+                } else {
+                    resultRange.setEnd(textRunRange.endContainer(), textRunRange.endOffset());
+                }
+            }
             if ( !(rangeLength == 0 && rangeEnd == docTextPosition + len) ) {
-                resultRange.setEnd(it.m_node, rangeEnd - docTextPosition);
                 break;
             }
         }

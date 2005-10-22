@@ -19,6 +19,7 @@
 #import <WebKit/WebDefaultFrameLoadDelegate.h>
 #import <WebKit/WebDefaultPolicyDelegate.h>
 #import <WebKit/WebDefaultResourceLoadDelegate.h>
+#import <WebKit/WebDefaultScriptDebugDelegate.h>
 #import <WebKit/WebDefaultUIDelegate.h>
 #import <WebKit/WebDOMOperationsPrivate.h>
 #import <WebKit/WebDocument.h>
@@ -47,6 +48,7 @@
 #import <WebKit/WebPolicyDelegate.h>
 #import <WebKit/WebPreferencesPrivate.h>
 #import <WebKit/WebResourceLoadDelegate.h>
+#import <WebKit/WebScriptDebugDelegatePrivate.h>
 #import <WebKit/WebTextView.h>
 #import <WebKit/WebTextRepresentation.h>
 #import <WebKit/WebTextRenderer.h>
@@ -68,6 +70,14 @@
 
 #if !BUILDING_ON_PANTHER         
 #include <CoreGraphics/CGSConnection.h>
+#endif
+
+#if __ppc__
+#define PROCESSOR "PPC"
+#elif __i386__
+#define PROCESSOR "Intel"
+#else
+#error Unknown architecture
 #endif
 
 #define FOR_EACH_RESPONDER_SELECTOR(macro) \
@@ -267,6 +277,7 @@ static BOOL shouldUseFontSmoothing = YES;
     [UIDelegateForwarder release];
     [frameLoadDelegateForwarder release];
     [editingDelegateForwarder release];
+    [scriptDebugDelegateForwarder release];
     
     [progressItems release];
         
@@ -809,6 +820,13 @@ static bool debugWidget = true;
     return _private->editingDelegateForwarder;
 }
 
+- _scriptDebugDelegateForwarder
+{
+    if (!_private->scriptDebugDelegateForwarder)
+        _private->scriptDebugDelegateForwarder = [[_WebSafeForwarder alloc] initWithTarget: [self scriptDebugDelegate] defaultTarget: [WebDefaultScriptDebugDelegate sharedScriptDebugDelegate] templateClass: [WebDefaultScriptDebugDelegate class]];
+    return _private->scriptDebugDelegateForwarder;
+}
+
 - (WebFrame *)_frameForDataSource: (WebDataSource *)dataSource fromFrame: (WebFrame *)frame
 {
     NSArray *frames;
@@ -1234,7 +1252,7 @@ static bool debugWidget = true;
 {
     NSURL *linkURL = [element objectForKey:WebElementLinkURLKey];
     [pasteboard _web_writeImage:[element objectForKey:WebElementImageKey] 
-                            URL:linkURL ? linkURL : [element objectForKey:WebElementImageURLKey]
+                            URL:linkURL ? linkURL : (NSURL *)[element objectForKey:WebElementImageURLKey]
                           title:[element objectForKey:WebElementImageAltStringKey] 
                         archive:[[element objectForKey:WebElementDOMNodeKey] webArchive]
                           types:types];
@@ -1895,7 +1913,7 @@ NS_ENDHANDLER
     return [[[self mainFrame] _bridge] windowScriptObject];
 }
 
-
+	
 // Get the appropriate user-agent string for a particular URL.
 // Since we no longer automatically spoof, this no longer requires looking at the URL.
 - (NSString *)userAgentForURL:(NSURL *)URL
@@ -1905,18 +1923,16 @@ NS_ENDHANDLER
         return [[userAgent retain] autorelease];
     }
     
-    // FIXME: Some day we will start reporting the actual CPU here instead of hardcoding PPC.
-
     NSString *language = [NSUserDefaults _web_preferredLanguageCode];
     id sourceVersion = [[NSBundle bundleForClass:[WebView class]]
         objectForInfoDictionaryKey:(id)kCFBundleVersionKey];
     NSString *applicationName = _private->applicationNameForUserAgent;
 
     if ([applicationName length]) {
-        userAgent = [NSString stringWithFormat:@"Mozilla/5.0 (Macintosh; U; PPC Mac OS X; %@) AppleWebKit/%@ (KHTML, like Gecko) %@",
+        userAgent = [NSString stringWithFormat:@"Mozilla/5.0 (Macintosh; U; " PROCESSOR " Mac OS X; %@) AppleWebKit/%@ (KHTML, like Gecko) %@",
             language, sourceVersion, applicationName];
     } else {
-        userAgent = [NSString stringWithFormat:@"Mozilla/5.0 (Macintosh; U; PPC Mac OS X; %@) AppleWebKit/%@ (KHTML, like Gecko)",
+        userAgent = [NSString stringWithFormat:@"Mozilla/5.0 (Macintosh; U; " PROCESSOR " Mac OS X; %@) AppleWebKit/%@ (KHTML, like Gecko)",
             language, sourceVersion];
     }
 
@@ -2448,7 +2464,7 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
 - (NSString *)mainFrameTitle
 {
     NSString *mainFrameTitle = [[[self mainFrame] dataSource] pageTitle];
-    return (mainFrameTitle != nil) ? mainFrameTitle : @"";
+    return (mainFrameTitle != nil) ? mainFrameTitle : (NSString *)@"";
 }
 
 - (NSImage *)mainFrameIcon
@@ -2503,6 +2519,18 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
     if ([self isEditable]) {
         [self setContinuousGrammarCheckingEnabled:![self isContinuousGrammarCheckingEnabled]];
     }
+}
+
+- (void)setScriptDebugDelegate:delegate
+{
+    _private->scriptDebugDelegate = delegate;
+    [_private->scriptDebugDelegateForwarder release];
+    _private->scriptDebugDelegateForwarder = nil;
+}
+
+- scriptDebugDelegate
+{
+    return _private->scriptDebugDelegate;
 }
 
 @end
@@ -2663,7 +2691,7 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
 
 - (WebFrameView *)_frameViewAtWindowPoint:(NSPoint)point
 {
-    NSView *view = [self hitTest:[[self superview] convertPoint:point toView:nil]];
+    NSView *view = [self hitTest:[[self superview] convertPoint:point fromView:nil]];
     return (WebFrameView *)[view _web_superviewOfClass:[WebFrameView class] stoppingAtClass:[self class]];
 }
 

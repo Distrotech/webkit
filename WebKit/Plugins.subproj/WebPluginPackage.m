@@ -43,6 +43,14 @@ extern NSString *WebPlugInContainingElementKey;
             return nil;
         }
     }
+    
+    NSFileHandle *executableFile = [NSFileHandle fileHandleForReadingAtPath:[bundle executablePath]];
+    NSData *data = [executableFile readDataOfLength:512];
+    [executableFile closeFile];
+    if (![self isNativeLibraryData:data]) {
+        [self release];
+        return nil;
+    }
 
     if (![self getPluginInfoFromPLists]) {
         [self release];

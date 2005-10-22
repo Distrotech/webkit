@@ -7,10 +7,14 @@
 
 #import <Foundation/NSString_NSURLExtras.h>
 
+#import <WebKit/WebFrame.h>
+#import <WebKit/WebFrameInternal.h>
+#import <WebKit/WebFrameView.h>
 #import <WebKit/WebAssertions.h>
 #import <WebKit/WebDataSource.h>
 #import <WebKit/WebLocalizableStrings.h>
 #import <WebKit/WebNSPasteboardExtras.h>
+#import <WebKit/WebNSViewExtras.h>
 #import <WebKit/WebPDFView.h>
 
 #import <Quartz/Quartz.h>
@@ -63,6 +67,7 @@ NSString *_NSPathForSystemFramework(NSString *framework);
         PDFSubview = [[[[self class] PDFViewClass] alloc] initWithFrame:frame];
         [PDFSubview setAutoresizingMask:NSViewWidthSizable|NSViewHeightSizable];
         [self addSubview:PDFSubview];
+        [PDFSubview setDelegate:self];
         written = NO;
     }
     return self;
@@ -259,6 +264,16 @@ static void applicationInfoForMIMEType(NSString *type, NSString **name, NSImage 
 - (NSPrintOperation *)printOperationWithPrintInfo:(NSPrintInfo *)printInfo
 {
     return [[PDFSubview document] getPrintOperationForPrintInfo:printInfo autoRotate:YES];
+}
+
+// Delegates implementing the following method will be called to handle clicks on URL
+// links within the PDFView.  
+- (void)PDFViewWillClickOnLink:(PDFView *)sender withURL:(NSURL *)URL
+{
+    if (URL != nil) {    
+        WebFrame *frame = [[self _web_parentWebFrameView] webFrame];
+        [frame _safeLoadURL:URL];
+    }
 }
 
 @end
