@@ -295,9 +295,15 @@ NSSize WebIconLargeSize = {128, 128};
     ASSERT([self _isEnabled]);
     ASSERT([self _hasIconForIconURL:iconURL]);    
     
-    if ([[_private->URLToIconURL objectForKey:URL] isEqualToString:iconURL] &&
-        [_private->iconsOnDiskWithURLs containsObject:iconURL]) {
+    if ([[_private->URLToIconURL objectForKey:URL] isEqualToString:iconURL]) {
         // Don't do any work if the icon URL is already bound to the site URL
+        return;
+    }
+    
+    if ([_private->iconURLsWithNoIcons containsObject:iconURL]) {
+        // Don't do any work if the icon URL is in the negative cache, it's not
+        // worth doing work just to record that this site is associated with
+        // a nonexistent icon
         return;
     }
     
@@ -605,11 +611,13 @@ NSSize WebIconLargeSize = {128, 128};
         // Remove the icon's associated site URLs
         [iconURLString retain];
         id URLs = [_private->iconURLToURLs objectForKey:iconURLString];
-        if ([URLs isKindOfClass:[NSMutableSet class]]) {
-            [_private->URLToIconURL removeObjectsForKeys:[URLs allObjects]];
-        } else {
-            ASSERT([URLs isKindOfClass:[NSString class]]);
-            [_private->URLToIconURL removeObjectForKey:URLs];
+        if (URLs != nil) {
+            if ([URLs isKindOfClass:[NSMutableSet class]]) {
+                [_private->URLToIconURL removeObjectsForKeys:[URLs allObjects]];
+            } else {
+                ASSERT([URLs isKindOfClass:[NSString class]]);
+                [_private->URLToIconURL removeObjectForKey:URLs];
+            }
         }
         [_private->iconURLToURLs removeObjectForKey:iconURLString];
         [iconURLString release];

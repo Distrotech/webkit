@@ -17,6 +17,9 @@
 
 #import <CoreFoundation/CFBundlePriv.h>
 
+#import <mach-o/arch.h>
+#import <mach-o/loader.h>
+
 #define JavaCocoaPluginIdentifier 	@"com.apple.JavaPluginCocoa"
 #define JavaCarbonPluginIdentifier 	@"com.apple.JavaAppletPlugin"
 #define JavaCFMPluginFilename		@"Java Applet Plugin Enabler"
@@ -382,6 +385,26 @@
     return [bundleIdentifier _web_isCaseInsensitiveEqualToString:JavaCocoaPluginIdentifier] || 
         [bundleIdentifier _web_isCaseInsensitiveEqualToString:JavaCarbonPluginIdentifier] ||
         [[path lastPathComponent] _web_isCaseInsensitiveEqualToString:JavaCFMPluginFilename];
+}
+
+- (BOOL)isNativeLibraryData:(NSData *)data
+{  
+    // If we have a 32-bit thin Mach-O file, see if we have an i386 binary.  If not, don't load it.
+    // This is designed to be the safest possible test for now.  We'll only reject files that we
+    // can easily tell are wrong.
+    if ([data length] >= sizeof(struct mach_header)) {
+        const NXArchInfo *localArch = NXGetLocalArchInfo();
+        if (localArch != NULL) {
+            struct mach_header *header = (struct mach_header *)[data bytes];
+            if (header->magic == MH_MAGIC) {
+                return (header->cputype == localArch->cputype);
+            }
+            if (header->magic == MH_CIGAM) {
+                return ((cpu_type_t) OSSwapInt32(header->cputype) == localArch->cputype);
+            }
+        }
+    }
+    return YES;
 }
 
 @end

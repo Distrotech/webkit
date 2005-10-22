@@ -68,4 +68,6 @@
 - (BOOL)isQuickTimePlugIn;
 - (BOOL)isJavaPlugIn;
 
+- (BOOL)isNativeLibraryData:(NSData *)data;
+
 @end

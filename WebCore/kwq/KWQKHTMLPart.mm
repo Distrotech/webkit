@@ -44,6 +44,7 @@
 
 #import "WebCoreBridge.h"
 #import "WebCoreGraphicsBridge.h"
+#import "WebCoreImageRenderer.h"
 #import "WebCoreViewFactory.h"
 #import "WebDashboardRegion.h"
 
@@ -78,6 +79,7 @@
 
 #import <JavaScriptCore/identifier.h>
 #import <JavaScriptCore/property_map.h>
+#import <JavaScriptCore/interpreter.h>
 #import <JavaScriptCore/runtime.h>
 #import <JavaScriptCore/runtime_root.h>
 #import <JavaScriptCore/WebScriptObjectPrivate.h>
@@ -152,6 +154,7 @@ using khtml::WordAwareIterator;
 using KIO::Job;
 
 using KJS::Interpreter;
+using KJS::InterpreterLock;
 using KJS::Location;
 using KJS::SavedBuiltins;
 using KJS::SavedProperties;
@@ -293,19 +296,22 @@ void KWQKHTMLPart::provisionalLoadStarted()
     cancelRedirection(true);
 }
 
-bool KWQKHTMLPart::openURL(const KURL &url)
+bool KWQKHTMLPart::userGestureHint()
 {
-    KWQ_BLOCK_EXCEPTIONS;
-
-    bool userGesture = true;
-    
     if (jScript() && jScript()->interpreter()) {
         KHTMLPart *rootPart = this;
         while (rootPart->parentPart() != 0)
             rootPart = rootPart->parentPart();
         KJS::ScriptInterpreter *interpreter = static_cast<KJS::ScriptInterpreter *>(KJSProxy::proxy(rootPart)->interpreter());
-        userGesture = interpreter->wasRunByUserGesture();
-    }
+        return interpreter->wasRunByUserGesture();
+    } else
+        // if no JS, assume the user initiated this nav
+        return true;
+}
+
+bool KWQKHTMLPart::openURL(const KURL &url)
+{
+    KWQ_BLOCK_EXCEPTIONS;
 
     // FIXME: The lack of args here to get the reload flag from
     // indicates a problem in how we use KHTMLPart::processObjectRequest,
@@ -313,7 +319,7 @@ bool KWQKHTMLPart::openURL(const KURL &url)
     [_bridge loadURL:url.getNSURL()
             referrer:[_bridge referrer]
               reload:NO
-         userGesture:userGesture
+         userGesture:userGestureHint()
               target:nil
      triggeringEvent:nil
                 form:nil
@@ -339,7 +345,7 @@ void KWQKHTMLPart::openURLRequest(const KURL &url, const URLArgs &args)
     [_bridge loadURL:url.getNSURL()
             referrer:referrer
               reload:args.reload
-         userGesture:true
+         userGesture:userGestureHint()
               target:args.frameName.getNSString()
      triggeringEvent:nil
                 form:nil
@@ -428,7 +434,7 @@ QRegExp *regExpForLabels(NSArray *labels)
         unsigned int numLabels = [labels count];
         unsigned int i;
         for (i = 0; i < numLabels; i++) {
-            QString label = QString::fromNSString([labels objectAtIndex:i]);
+            QString label = QString::fromNSString((NSString *)[labels objectAtIndex:i]);
 
             bool startsWithWordChar = false;
             bool endsWithWordChar = false;
@@ -594,9 +600,8 @@ NSString *KWQKHTMLPart::matchLabelsAgainstElement(NSArray *labels, ElementImpl *
 
     if (bestPos != -1) {
         return name.mid(bestPos, bestLength).getNSString();
-    } else {
-        return nil;
     }
+    return nil;
 }
 
 // Search from the end of the currently selected location if we are first responder, or from
@@ -798,8 +803,17 @@ ReadOnlyPart *KWQKHTMLPart::createPart(const ChildFrame &child, const KURL &url,
     KWQ_BLOCK_EXCEPTIONS;
     ReadOnlyPart *part;
 
-    BOOL needFrame = [_bridge frameRequiredForMIMEType:mimeType.getNSString() URL:url.getNSURL()];
-    if (child.m_type == ChildFrame::Object && !needFrame) {
+    ObjectElementType objectType = ObjectElementFrame;
+    if (child.m_type == ChildFrame::Object)
+        objectType = [_bridge determineObjectFromMIMEType:mimeType.getNSString() URL:url.getNSURL()];
+    
+    if (objectType == ObjectElementNone) {
+        if (child.m_hasFallbackContent)
+            return NULL;
+        objectType = ObjectElementPlugin; // Since no fallback content exists, we'll make a plugin and show the error dialog.
+    }
+
+    if (objectType == ObjectElementPlugin) {
         KWQPluginPart *newPart = new KWQPluginPart;
         newPart->setWidget(new QWidget([_bridge viewForPluginWithURL:url.getNSURL()
                                                       attributeNames:child.m_paramNames.getNSArray()
@@ -827,9 +841,8 @@ ReadOnlyPart *KWQKHTMLPart::createPart(const ChildFrame &child, const KURL &url,
 	// This call needs to return an object with a ref, since the caller will expect to own it.
 	// childBridge owns the only ref so far.
         part = [childBridge part];
-        if (part) {
+        if (part)
             part->ref();
-        }
     }
 
     return part;
@@ -988,7 +1001,11 @@ QString KWQKHTMLPart::advanceToNextMisspelling(bool startBeforeSelection)
         return QString();       // nothing to search in
     }
     
+    // Get the spell checker if it is available
     NSSpellChecker *checker = [NSSpellChecker sharedSpellChecker];
+    if (checker == nil)
+        return QString();
+
     WordAwareIterator it(searchRange);
     bool wrapped = false;
     
@@ -1064,27 +1081,20 @@ bool KWQKHTMLPart::scrollOverflow(KWQScrollDirection direction, KWQScrollGranula
     return false;
 }
 
-bool KWQKHTMLPart::scrollOverflowWithScrollWheelEvent(NSEvent *event)
+bool KWQKHTMLPart::wheelEvent(NSEvent *event)
 {
-    RenderObject *r = renderer();
-    if (r == 0) {
-        return false;
+    KHTMLView *v = d->m_view;
+
+    if (v) {
+        QWheelEvent qEvent(event);
+        v->viewportWheelEvent(&qEvent);
+        if (qEvent.isAccepted())
+            return true;
     }
-    
-    NSPoint point = [d->m_view->getDocumentView() convertPoint:[event locationInWindow] fromView:nil];
-    RenderObject::NodeInfo nodeInfo(true, true);
-    r->layer()->hitTest(nodeInfo, (int)point.x, (int)point.y);    
-    
-    NodeImpl *node = nodeInfo.innerNode();
-    if (node == 0) {
-        return false;
-    }
-    
-    r = node->renderer();
-    if (r == 0) {
-        return false;
-    }
-    
+
+    // FIXME: The scrolling done here should be done in the default handlers
+    // of the elements rather than here in the part.
+
     KWQScrollDirection direction;
     float multiplier;
     float deltaX = [event deltaX];
@@ -1104,6 +1114,26 @@ bool KWQKHTMLPart::scrollOverflowWithScrollWheelEvent(NSEvent *event)
     } else {
         return false;
     }
+
+    RenderObject *r = renderer();
+    if (r == 0) {
+        return false;
+    }
+    
+    NSPoint point = [d->m_view->getDocumentView() convertPoint:[event locationInWindow] fromView:nil];
+    RenderObject::NodeInfo nodeInfo(true, true);
+    r->layer()->hitTest(nodeInfo, (int)point.x, (int)point.y);    
+    
+    NodeImpl *node = nodeInfo.innerNode();
+    if (node == 0) {
+        return false;
+    }
+    
+    r = node->renderer();
+    if (r == 0) {
+        return false;
+    }
+    
     return r->scroll(direction, KWQScrollWheel, multiplier);
 }
 
@@ -1401,6 +1431,7 @@ KJS::Bindings::RootObject *KWQKHTMLPart::executionContextForDOM()
 KJS::Bindings::RootObject *KWQKHTMLPart::bindingRootObject()
 {
     if (!_bindingRoot) {
+        InterpreterLock lock;
         _bindingRoot = new KJS::Bindings::RootObject(0);    // The root gets deleted by JavaScriptCore.
         KJS::ObjectImp *win = static_cast<KJS::ObjectImp *>(KJS::Window::retrieveWindow(this));
         _bindingRoot->setRootObjectImp (win);
@@ -1413,7 +1444,8 @@ KJS::Bindings::RootObject *KWQKHTMLPart::bindingRootObject()
 WebScriptObject *KWQKHTMLPart::windowScriptObject()
 {
     if (!_windowScriptObject) {
-        KJS::ObjectImp *win = static_cast<KJS::ObjectImp *>(KJS::Window::retrieveWindow(this));
+        KJS::InterpreterLock lock;
+        KJS::ObjectImp *win = KJS::Window::retrieveWindow(this);
         _windowScriptObject = KWQRetainNSRelease([[WebScriptObject alloc] _initWithObjectImp:win originExecutionContext:bindingRootObject() executionContext:bindingRootObject()]);
     }
 
@@ -1486,9 +1518,8 @@ void KWQKHTMLPart::saveLocationProperties(SavedProperties *locationProperties)
 {
     Window *window = Window::retrieveWindow(this);
     if (window) {
-        Interpreter::lock();
+        InterpreterLock lock;
         Location *location = window->location();
-        Interpreter::unlock();
         location->saveProperties(*locationProperties);
     }
 }
@@ -1504,9 +1535,8 @@ void KWQKHTMLPart::restoreLocationProperties(SavedProperties *locationProperties
 {
     Window *window = Window::retrieveWindow(this);
     if (window) {
-        Interpreter::lock();
+        InterpreterLock lock;
         Location *location = window->location();
-        Interpreter::unlock();
         location->restoreProperties(*locationProperties);
     }
 }
@@ -1604,10 +1634,13 @@ void KWQKHTMLPart::openURLFromPageCache(KWQPageState *state)
     doc->setParseMode ([state parseMode]);
     
     updatePolicyBaseURL();
-        
-    restoreWindowProperties (windowProperties);
-    restoreLocationProperties (locationProperties);
-    restoreInterpreterBuiltins (*interpreterBuiltins);
+
+    { // scope the lock
+        InterpreterLock lock;
+        restoreWindowProperties (windowProperties);
+        restoreLocationProperties (locationProperties);
+        restoreInterpreterBuiltins (*interpreterBuiltins);
+    }
 
     if (actions)
         resumeActions (actions, state);
@@ -2082,7 +2115,7 @@ bool KWQKHTMLPart::passWidgetMouseDownEventToWidget(QWidget* widget)
                 superview = [superview superview];
                 ASSERT(superview);
                 if ([superview isKindOfClass:[NSControl class]]) {
-                    NSControl *control = superview;
+                    NSControl *control = static_cast<NSControl *>(superview);
                     if ([control currentEditor] == view) {
                         view = superview;
                     }
@@ -2838,7 +2871,7 @@ NSFileWrapper *KWQKHTMLPart::fileWrapperForElement(ElementImpl *e)
     }    
     if (!wrapper) {
         RenderImage *renderer = static_cast<RenderImage *>(e->renderer());
-        NSImage *image = renderer->pixmap().image();
+        NSImage * image = (NSImage *)(renderer->pixmap().image());
         NSData *tiffData = [image TIFFRepresentationUsingCompression:NSTIFFCompressionLZW factor:0.0];
         wrapper = [[NSFileWrapper alloc] initRegularFileWithContents:tiffData];
         [wrapper setPreferredFilename:@"image.tiff"];
@@ -3196,7 +3229,8 @@ NSAttributedString *KWQKHTMLPart::attributedString(NodeImpl *_start, int startOf
                         KURL kURL = KWQ(linkStartNode->getDocument()->part())->completeURL(href.string());
                         
                         NSURL *URL = kURL.getNSURL();
-                        [result addAttribute:NSLinkAttributeName value:URL range:NSMakeRange(linkStartLocation, [result length]-linkStartLocation)];
+                        NSRange range = { linkStartLocation, [result length]-linkStartLocation }; // workaround for 4213314
+                        [result addAttribute:NSLinkAttributeName value:URL range:range];
                         linkStartNode = 0;
                     }
                     break;
@@ -3323,7 +3357,8 @@ NSAttributedString *KWQKHTMLPart::attributedString(NodeImpl *_start, int startOf
                         [[[NSTextTab alloc] initWithType:NSRightTabStopType location:rx-(pointSize*2/3)] autorelease],
                         [[[NSTextTab alloc] initWithType:NSLeftTabStopType location:rx] autorelease],
                         nil]];
-            [result addAttribute:NSParagraphStyleAttributeName value:mps range:NSMakeRange(info.start, info.end-info.start)];
+            NSRange tempRange = { info.start, info.end-info.start }; // workaround for 4213314
+            [result addAttribute:NSParagraphStyleAttributeName value:mps range:tempRange];
             [mps release];
         }
     }
@@ -3388,11 +3423,11 @@ NSImage *KWQKHTMLPart::imageFromRect(NSRect rect) const
         return nil;
     }
     
-    NSRect bounds = [view bounds];
-    NSImage *resultImage = [[[NSImage alloc] initWithSize:rect.size] autorelease];
-    
     KWQ_BLOCK_EXCEPTIONS;
     
+    NSRect bounds = [view bounds];
+    NSImage *resultImage = [[[NSImage alloc] initWithSize:rect.size] autorelease];
+
     if (rect.size.width != 0 && rect.size.height != 0) {
         [resultImage setFlipped:YES];
         [resultImage lockFocus];
@@ -3419,10 +3454,12 @@ NSImage *KWQKHTMLPart::imageFromRect(NSRect rect) const
         [resultImage unlockFocus];
         [resultImage setFlipped:NO];
     }
-    
+
+    return resultImage;
+
     KWQ_UNBLOCK_EXCEPTIONS;
     
-    return resultImage;
+    return nil;
 }
 
 NSImage *KWQKHTMLPart::selectionImage() const
@@ -3904,6 +3941,8 @@ void KWQKHTMLPart::addPluginRootObject(const KJS::Bindings::RootObject *root)
 
 void KWQKHTMLPart::cleanupPluginRootObjects()
 {
+    InterpreterLock lock;
+
     KJS::Bindings::RootObject *root;
     while ((root = rootObjects.getLast())) {
         root->removeAllNativeReferences ();
@@ -3974,6 +4013,11 @@ void KWQKHTMLPart::issuePasteAndMatchStyleCommand()
     [_bridge issuePasteAndMatchStyleCommand];
 }
 
+void KWQKHTMLPart::issueTransposeCommand()
+{
+    [_bridge issueTransposeCommand];
+}
+
 bool KHTMLPart::canUndo() const
 {
     return [[KWQ(this)->_bridge undoManager] canUndo];
@@ -4012,8 +4056,12 @@ void KWQKHTMLPart::markMisspellings(const Selection &selection)
     NodeImpl *editableNodeImpl = searchRange.startContainer().handle();
     if (!editableNodeImpl->isContentEditable())
         return;
-    
+
+    // Get the spell checker if it is available    
     NSSpellChecker *checker = [NSSpellChecker sharedSpellChecker];
+    if (checker == nil)
+        return;
+
     WordAwareIterator it(searchRange);
     
     while (!it.atEnd()) {      // we may be starting at the end of the doc, and already by atEnd

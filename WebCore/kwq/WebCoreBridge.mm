@@ -60,11 +60,12 @@
 #import "visible_units.h"
 #import "xml_tokenizer.h"
 
-#import <JavaScriptCore/npruntime.h>
+#import <JavaScriptCore/interpreter.h>
 #import <JavaScriptCore/jni_jsobject.h>
+#import <JavaScriptCore/npruntime.h>
 #import <JavaScriptCore/object.h>
-#import <JavaScriptCore/runtime_root.h>
 #import <JavaScriptCore/property_map.h>
+#import <JavaScriptCore/runtime_root.h>
 
 #import "KWQAssertions.h"
 #import "KWQCharsets.h"
@@ -136,6 +137,8 @@ using khtml::UPSTREAM;
 using khtml::VisiblePosition;
 
 using KJS::ExecState;
+using KJS::Interpreter;
+using KJS::InterpreterLock;
 using KJS::ObjectImp;
 using KJS::SavedProperties;
 using KJS::SavedBuiltins;
@@ -201,7 +204,7 @@ static BOOL partHasSelection(WebCoreBridge *bridge)
     if (!bridge)
         return NO;
     
-    KHTMLPart *part = bridge->_part;
+    KHTMLPart *part = [bridge part];
     if (!part)
         return NO;
         
@@ -375,6 +378,11 @@ static bool initializedKJS = FALSE;
     _part->closeURL();
 }
 
+- (void)stopLoading
+{
+    _part->stopLoading();
+}
+
 - (void)didNotOpenURL:(NSURL *)URL pageCache:(NSDictionary *)pageCache
 {
     _part->didNotOpenURL(KURL(URL).url());
@@ -447,10 +455,7 @@ static bool initializedKJS = FALSE;
 
 - (BOOL)scrollOverflowWithScrollWheelEvent:(NSEvent *)event
 {
-    if (_part == NULL) {
-        return NO;
-    }    
-    return _part->scrollOverflowWithScrollWheelEvent(event);
+    return _part ? _part->wheelEvent(event) : NO;
 }
 
 - (BOOL)saveDocumentToPageCache
@@ -464,6 +469,8 @@ static bool initializedKJS = FALSE;
         return NO;
     }
     _part->clearTimers();
+
+    InterpreterLock lock;
 
     SavedProperties *windowProperties = new SavedProperties;
     _part->saveWindowProperties(windowProperties);
@@ -502,6 +509,11 @@ static bool initializedKJS = FALSE;
 - (void)stop
 {
     _part->stop();
+}
+
+- (void)handleFallbackContent
+{
+    _part->handleFallbackContent();
 }
 
 - (void)createKHTMLViewWithNSView:(NSView *)view marginWidth:(int)mw marginHeight:(int)mh
@@ -1081,7 +1093,7 @@ static HTMLFormElementImpl *formElementFromDOMElement(DOMElement *element)
     
         if (node->renderer() && node->renderer()->isImage()) {
             RenderImage *r = static_cast<RenderImage *>(node->renderer());
-            NSImage *image = r->pixmap().image();
+            NSImage * image = (NSImage *)(r->pixmap().image());
             // Only return image information if there is an image.
             if (image && !r->isDisplayingError()) {
                 [element setObject:r->pixmap().image() forKey:WebCoreElementImageKey];
@@ -1346,6 +1358,14 @@ static HTMLFormElementImpl *formElementFromDOMElement(DOMElement *element)
         return KWQ(openerPart)->bridge();
 
     return nil;
+}
+
+- (void)setOpener:(WebCoreBridge *)bridge;
+{
+    KHTMLPart *p = [bridge part];
+    
+    if (p)
+        p->setOpener(_part);
 }
 
 + (NSString *)stringWithData:(NSData *)data textEncoding:(CFStringEncoding)textEncoding
@@ -1628,6 +1648,10 @@ static HTMLFormElementImpl *formElementFromDOMElement(DOMElement *element)
 
 - (NSRange)convertToNSRange:(DOM::RangeImpl *)drange
 {
+    if (!drange) {
+        return NSMakeRange(NSNotFound, 0);
+    }
+
     Range toStartRange, toEndRange;
     Range actualRange = Range(drange);
     long startPosition, endPosition;
@@ -2262,7 +2286,7 @@ static HTMLFormElementImpl *formElementFromDOMElement(DOMElement *element)
     VisiblePosition caret(selection.start(), selection.startAffinity());
     VisiblePosition next = caret.next();
     VisiblePosition previous = caret.previous();
-    if (caret == next || caret == previous)
+    if (previous.isNull() || next.isNull() || caret == next || caret == previous)
         return nil;
 
     return [DOMRange _rangeWithImpl:makeRange(previous, next).handle()];

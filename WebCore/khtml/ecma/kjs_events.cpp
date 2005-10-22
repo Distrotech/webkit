@@ -18,6 +18,7 @@
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
 #include "khtml_part.h"
 #include "kjs_window.h"
 #include "kjs_events.h"
@@ -34,9 +35,14 @@
 
 using namespace KJS;
 
-using DOM::KeyboardEvent;
+using DOM::DocumentImpl;
+using DOM::DOMString;
 using DOM::EventImpl;
+using DOM::KeyboardEvent;
+using DOM::MouseRelatedEventImpl;
 using DOM::NodeImpl;
+
+using khtml::RenderObject;
 
 // -------------------------------------------------------------------------
 
@@ -62,8 +68,12 @@ void JSAbstractEventListener::handleEvent(DOM::Event &evt, bool isWindowEvent)
   KJSProxy *proxy = 0;
   if (part)
       proxy = KJSProxy::proxy( part );
+  if (!proxy)
+    return;
 
-  if (proxy && listener.implementsCall()) {
+  if (listener.implementsCall()) {
+    InterpreterLock lock;
+
     ref();
 
     KJS::ScriptInterpreter *interpreter = static_cast<KJS::ScriptInterpreter *>(proxy->interpreter());
@@ -79,44 +89,39 @@ void JSAbstractEventListener::handleEvent(DOM::Event &evt, bool isWindowEvent)
     interpreter->setCurrentEvent( &evt );
 
     Object thisObj;
-    if (isWindowEvent) {
+    if (isWindowEvent) 
         thisObj = win;
-    } else {
-        KJS::Interpreter::lock();
+    else 
         thisObj = Object::dynamicCast(getDOMNode(exec,evt.currentTarget()));
-        KJS::Interpreter::unlock();
-    }
 
-    KJS::Interpreter::lock();
     Value retval = listener.call(exec, thisObj, args);
-    KJS::Interpreter::unlock();
 
     window->setCurrentEvent( 0 );
     interpreter->setCurrentEvent( 0 );
-#if APPLE_CHANGES
-    if ( exec->hadException() ) {
-        KJS::Interpreter::lock();
+
+    if (exec->hadException()) {
         char *message = exec->exception().toObject(exec).get(exec, messagePropertyName).toString(exec).ascii();
         int lineNumber =  exec->exception().toObject(exec).get(exec, "line").toInt32(exec);
-        UString sourceURL = exec->exception().toObject(exec).get(exec, "sourceURL").toString(exec);
-        KJS::Interpreter::unlock();
+        QString sourceURL;
+        {
+          // put this in a block to make sure UString is deallocated inside the lock
+          UString uSourceURL = exec->exception().toObject(exec).get(exec, "sourceURL").toString(exec);
+          sourceURL = uSourceURL.qstring();
+        }
         if (Interpreter::shouldPrintExceptions()) {
 	    printf("(event handler):%s\n", message);
 	}
-        KWQ(part)->addMessageToConsole(message, lineNumber, sourceURL.qstring());
-        exec->clearException();
-    }
-#else
-    if ( exec->hadException() )
-        exec->clearException();
-#endif
+        KWQ(part)->addMessageToConsole(message, lineNumber, sourceURL);
 
-    else if (html)
-    {
+        if (Interpreter::shouldPrintExceptions())
+            printf("(event handler):%s\n", message);
+        exec->clearException();
+    } else if (html) {
         QVariant ret = ValueToVariant(exec, retval);
         if (ret.type() == QVariant::Bool && ret.toBool() == false)
             evt.preventDefault();
     }
+
     DOM::DocumentImpl::updateDocumentsRendering();
     deref();
   }
@@ -145,7 +150,9 @@ JSUnprotectedEventListener::JSUnprotectedEventListener(Object _listener, const O
 JSUnprotectedEventListener::~JSUnprotectedEventListener()
 {
     if (listener.imp()) {
-      static_cast<Window*>(win.imp())->jsUnprotectedEventListeners.remove(listener.imp());
+        if (!win.isNull()) {
+            static_cast<Window*>(win.imp())->jsUnprotectedEventListeners.remove(listener.imp());
+        }
     }
 }
 
@@ -158,6 +165,12 @@ Object JSUnprotectedEventListener::windowObj() const
 {
     return win;
 }
+
+void JSUnprotectedEventListener::clearWindowObj()
+{
+    win = Object();
+}
+
 
 void JSUnprotectedEventListener::mark()
 {
@@ -182,7 +195,9 @@ JSEventListener::JSEventListener(Object _listener, const Object &_win, bool _htm
 JSEventListener::~JSEventListener()
 {
     if (listener.imp()) {
-      static_cast<Window*>(win.imp())->jsEventListeners.remove(listener.imp());
+        if (!win.isNull()) {
+          static_cast<Window*>(win.imp())->jsEventListeners.remove(listener.imp());
+        }
     }
     //fprintf(stderr,"JSEventListener::~JSEventListener this=%p listener=%p\n",this,listener.imp());
 }
@@ -195,6 +210,11 @@ Object JSEventListener::listenerObj() const
 Object JSEventListener::windowObj() const
 {
     return win;
+}
+
+void JSEventListener::clearWindowObj()
+{
+    win = Object();
 }
 
 // -------------------------------------------------------------------------
@@ -242,7 +262,7 @@ void JSLazyEventListener::parseCode() const
       KJS::ScriptInterpreter *interpreter = static_cast<KJS::ScriptInterpreter *>(proxy->interpreter());
       ExecState *exec = interpreter->globalExec();
 
-      KJS::Interpreter::lock();
+      InterpreterLock lock;
       //KJS::Constructor constr(KJS::Global::current().get("Function").imp());
       KJS::Object constr = interpreter->builtinFunction();
       KJS::List args;
@@ -252,8 +272,6 @@ void JSLazyEventListener::parseCode() const
       args.append(eventString);
       args.append(KJS::String(code));
       listener = constr.construct(exec, args, sourceURL, lineNumber); // ### is globalExec ok ?
-
-      KJS::Interpreter::unlock();
 
       if (exec->hadException()) {
 	exec->clearException();
@@ -270,10 +288,7 @@ void JSLazyEventListener::parseCode() const
         KJS::Interpreter::unlock();
         
         if (!thisObj.isNull()) {
-          KJS::Interpreter::lock();
           static_cast<DOMNode*>(thisObj.imp())->pushEventHandlerScope(exec, scope);
-          KJS::Interpreter::unlock();
-          
           listener.setScope(scope);
         }
       }
@@ -342,9 +357,13 @@ Value EventConstructor::getValueProperty(ExecState *, int token) const
   return Number(token);
 }
 
-Value KJS::getEventConstructor(ExecState *exec)
+namespace KJS {
+
+Value getEventConstructor(ExecState *exec)
 {
   return cacheGlobalObject<EventConstructor>(exec, "[[event.constructor]]");
+}
+
 }
 
 // -------------------------------------------------------------------------
@@ -362,7 +381,7 @@ const ClassInfo DOMEvent::info = { "Event", 0, &DOMEventTable, 0 };
   timeStamp	DOMEvent::TimeStamp	DontDelete|ReadOnly
   returnValue   DOMEvent::ReturnValue   DontDelete
   cancelBubble  DOMEvent::CancelBubble  DontDelete
-  dataTransfer	DOMMouseEvent::DataTransfer DontDelete|ReadOnly
+  dataTransfer	DOMEvent::DataTransfer  DontDelete|ReadOnly
   clipboardData  DOMEvent::ClipboardData  DontDelete|ReadOnly
 @end
 @begin DOMEventProtoTable 3
@@ -376,7 +395,10 @@ IMPLEMENT_PROTOFUNC(DOMEventProtoFunc)
 IMPLEMENT_PROTOTYPE(DOMEventProto, DOMEventProtoFunc)
 
 DOMEvent::DOMEvent(ExecState *exec, DOM::Event e)
-  : DOMObject(DOMEventProto::self(exec)), event(e), clipboard(0) { }
+  : event(e), clipboard(0) 
+{
+  setPrototype(DOMEventProto::self(exec));
+}
 
 DOMEvent::~DOMEvent()
 {
@@ -502,7 +524,7 @@ Value KJS::getDOMEvent(ExecState *exec, DOM::Event e)
     return Null();
   ScriptInterpreter* interp = static_cast<ScriptInterpreter *>(exec->dynamicInterpreter());
 
-  KJS::Interpreter::lock();
+  InterpreterLock lock;
 
   DOMObject *ret = interp->getDOMObject(ei);
   if (!ret) {
@@ -510,6 +532,8 @@ Value KJS::getDOMEvent(ExecState *exec, DOM::Event e)
       ret = new DOMKeyboardEvent(exec, e);
     else if (ei->isMouseEvent())
       ret = new DOMMouseEvent(exec, e);
+    else if (ei->isWheelEvent())
+      ret = new DOMWheelEvent(exec, static_cast<DOM::WheelEventImpl *>(ei));
     else if (ei->isUIEvent())
       ret = new DOMUIEvent(exec, e);
     else if (ei->isMutationEvent())
@@ -519,8 +543,6 @@ Value KJS::getDOMEvent(ExecState *exec, DOM::Event e)
 
     interp->putDOMObject(ei, ret);
   }
-
-  KJS::Interpreter::unlock();
 
   return Value(ret);
 }
@@ -555,7 +577,7 @@ Value EventExceptionConstructor::getValueProperty(ExecState *, int token) const
   return Number(token);
 }
 
-Value KJS::getEventExceptionConstructor(ExecState *exec)
+Value getEventExceptionConstructor(ExecState *exec)
 {
   return cacheGlobalObject<EventExceptionConstructor>(exec, "[[eventException.constructor]]");
 }
@@ -684,6 +706,29 @@ Value DOMMouseEvent::tryGet(ExecState *exec, const Identifier &p) const
   return DOMObjectLookupGetValue<DOMMouseEvent,DOMUIEvent>(exec,p,&DOMMouseEventTable,this);
 }
 
+static QPoint offsetFromTarget(const MouseRelatedEventImpl *e)
+{
+    int x = e->clientX();
+    int y = e->clientY();
+
+    NodeImpl *n = e->target();
+    if (n) {
+        DocumentImpl *doc = n->getDocument();
+        if (doc) {
+            doc->updateRendering();
+            RenderObject *r = n->renderer();
+            if (r) {
+                int rx, ry;
+                if (r->absolutePosition(rx, ry)) {
+                    x -= rx;
+                    y -= ry;
+                }
+            }
+        }
+    }
+    return QPoint(x, y);
+}
+
 Value DOMMouseEvent::getValueProperty(ExecState *exec, int token) const
 {
   switch (token) {
@@ -697,24 +742,10 @@ Value DOMMouseEvent::getValueProperty(ExecState *exec, int token) const
   case ClientY:
   case Y:
     return Number(static_cast<DOM::MouseEvent>(event).clientY());
-  case OffsetX:
+  case OffsetX: // MSIE extension
+    return Number(offsetFromTarget(static_cast<MouseRelatedEventImpl *>(event.handle())).x());
   case OffsetY: // MSIE extension
-  {
-    DOM::Node node = event.target();
-    node.handle()->getDocument()->updateRendering();
-    khtml::RenderObject *rend = node.handle() ? node.handle()->renderer() : 0L;
-    int x = static_cast<DOM::MouseEvent>(event).clientX();
-    int y = static_cast<DOM::MouseEvent>(event).clientY();
-    if ( rend ) {
-      int xPos, yPos;
-      if ( rend->absolutePosition( xPos, yPos ) ) {
-        kdDebug() << "DOMMouseEvent::getValueProperty rend=" << rend << "  xPos=" << xPos << "  yPos=" << yPos << endl;
-        x -= xPos;
-        y -= yPos;
-      }
-    }
-    return Number( token == OffsetX ? x : y );
-  }
+    return Number(offsetFromTarget(static_cast<MouseRelatedEventImpl *>(event.handle())).y());
   case CtrlKey:
     return Boolean(static_cast<DOM::MouseEvent>(event).ctrlKey());
   case ShiftKey:
@@ -889,7 +920,7 @@ Value MutationEventConstructor::getValueProperty(ExecState *, int token) const
   return Number(token);
 }
 
-Value KJS::getMutationEventConstructor(ExecState *exec)
+Value getMutationEventConstructor(ExecState *exec)
 {
   return cacheGlobalObject<MutationEventConstructor>(exec, "[[mutationEvent.constructor]]");
 }
@@ -966,6 +997,84 @@ Value DOMMutationEventProtoFunc::tryCall(ExecState *exec, Object &thisObj, const
 
 // -------------------------------------------------------------------------
 
+const ClassInfo DOMWheelEvent::info = { "WheelEvent", &DOMEvent::info, &DOMWheelEventTable, 0 };
+/*
+@begin DOMWheelEventTable 10
+    altKey      DOMWheelEvent::AltKey       DontDelete|ReadOnly
+    clientX     DOMWheelEvent::ClientX      DontDelete|ReadOnly
+    clientY     DOMWheelEvent::ClientY      DontDelete|ReadOnly
+    ctrlKey     DOMWheelEvent::CtrlKey      DontDelete|ReadOnly
+    metaKey     DOMWheelEvent::MetaKey      DontDelete|ReadOnly
+    offsetX     DOMWheelEvent::OffsetX      DontDelete|ReadOnly
+    offsetY     DOMWheelEvent::OffsetY      DontDelete|ReadOnly
+    screenX     DOMWheelEvent::ScreenX      DontDelete|ReadOnly
+    screenY     DOMWheelEvent::ScreenY      DontDelete|ReadOnly
+    shiftKey    DOMWheelEvent::ShiftKey     DontDelete|ReadOnly
+    wheelDelta  DOMWheelEvent::WheelDelta   DontDelete|ReadOnly
+    x           DOMWheelEvent::X            DontDelete|ReadOnly
+    y           DOMWheelEvent::Y            DontDelete|ReadOnly
+@end
+@begin DOMWheelEventProtoTable 1
+@end
+*/
+DEFINE_PROTOTYPE("DOMWheelEvent",DOMWheelEventProto)
+IMPLEMENT_PROTOFUNC(DOMWheelEventProtoFunc)
+IMPLEMENT_PROTOTYPE_WITH_PARENT(DOMWheelEventProto,DOMWheelEventProtoFunc,DOMEventProto)
+
+DOMWheelEvent::DOMWheelEvent(ExecState *exec, DOM::WheelEventImpl *e)
+    : DOMUIEvent(exec, DOM::UIEvent(e))
+{
+}
+
+Value DOMWheelEvent::tryGet(ExecState *exec, const Identifier &p) const
+{
+    return DOMObjectLookupGetValue<DOMWheelEvent,DOMEvent>(exec, p, &DOMWheelEventTable, this);
+}
+
+Value DOMWheelEvent::getValueProperty(ExecState *exec, int token) const
+{
+    DOM::WheelEventImpl *e = static_cast<DOM::WheelEventImpl *>(event.handle());
+    switch (token) {
+        case AltKey:
+            return Boolean(e->altKey());
+        case ClientX:
+        case X:
+            return Number(e->clientX());
+        case ClientY:
+        case Y:
+            return Number(e->clientY());
+        case CtrlKey:
+            return Number(e->ctrlKey());
+        case MetaKey:
+            return Number(e->metaKey());
+        case OffsetX:
+            return Number(offsetFromTarget(e).x());
+        case OffsetY:
+            return Number(offsetFromTarget(e).y());
+        case ScreenX:
+            return Number(e->screenX());
+        case ScreenY:
+            return Number(e->screenY());
+        case ShiftKey:
+            return Boolean(e->shiftKey());
+        case WheelDelta:
+            return Number(e->wheelDelta());
+    }
+    return Undefined();
+}
+
+Value DOMWheelEventProtoFunc::tryCall(ExecState *exec, Object &thisObj, const List &args)
+{
+    if (!thisObj.inherits(&DOMWheelEvent::info)) {
+        Object error = Error::create(exec,TypeError);
+        exec->setException(error);
+        return error;
+    }
+    return Undefined();
+}
+
+// -------------------------------------------------------------------------
+
 const ClassInfo Clipboard::info = { "Clipboard", 0, &ClipboardTable, 0 };
 
 /* Source for ClipboardTable. Use "make hashtables" to regenerate.
@@ -987,8 +1096,10 @@ IMPLEMENT_PROTOFUNC(ClipboardProtoFunc)
 IMPLEMENT_PROTOTYPE(ClipboardProto, ClipboardProtoFunc)
 
 Clipboard::Clipboard(ExecState *exec, DOM::ClipboardImpl *cb)
-: DOMObject(ClipboardProto::self(exec)), clipboard(cb)
+  : clipboard(cb)
 {
+    setPrototype(ClipboardProto::self(exec));
+  
     if (clipboard)
         clipboard->ref();
 }
@@ -1153,4 +1264,3 @@ Value ClipboardProtoFunc::tryCall(ExecState *exec, Object &thisObj, const List &
     }
     return Undefined();
 }
-

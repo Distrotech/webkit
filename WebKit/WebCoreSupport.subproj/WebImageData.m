@@ -20,7 +20,7 @@
 
 #import <ImageIO/CGImageSourcePrivate.h>
 
-static CFDictionaryRef imageSourceOptions;
+#import <CoreGraphics/CGContextPrivate.h>
 
 // Forward declarations of internal methods.
 @interface WebImageData (WebInternal)
@@ -165,6 +165,7 @@ static CFDictionaryRef imageSourceOptions;
 
 - (CFDictionaryRef)_imageSourceOptions
 {
+    static CFDictionaryRef imageSourceOptions;
     if (!imageSourceOptions) {
         const void * keys[2] = { kCGImageSourceShouldCache, kCGImageSourceShouldPreferRGB32 };
         const void * values[2] = { kCFBooleanTrue, kCFBooleanTrue };
@@ -274,8 +275,14 @@ static CFDictionaryRef imageSourceOptions;
     if( image && CGImageGetWidth(image)==1 && CGImageGetHeight(image)==1 ) {
         float pixel[4]; // RGBA
         CGColorSpaceRef space = CGColorSpaceCreateDeviceRGB();
+#if __ppc__	
         CGContextRef bmap = CGBitmapContextCreate(&pixel,1,1,8*sizeof(float),sizeof(pixel),space,
                                                   kCGImageAlphaPremultipliedLast | kCGBitmapFloatComponents);
+#else
+        CGContextRef bmap = CGBitmapContextCreate(&pixel,1,1,8*sizeof(float),sizeof(pixel),space,
+                                                  kCGImageAlphaPremultipliedLast | kCGBitmapFloatComponents | kCGBitmapByteOrder32Host);
+#endif
+
         if( bmap ) {
             CGContextSetCompositeOperation(bmap, kCGCompositeCopy);
             CGRect dst = {{0,0},{1,1}};
@@ -310,7 +317,7 @@ static CFDictionaryRef imageSourceOptions;
     }
     for (i = from; i < to; i++) {
         if (!images) {
-            images = (CGImageRef *)calloc (imagesSize, sizeof(CGImageRef *));
+            images = (CGImageRef *)calloc (imagesSize, sizeof(CGImageRef));
         }
 
         images[i] = CGImageSourceCreateImageAtIndex (imageSource, i, [self _imageSourceOptions]);
@@ -393,7 +400,7 @@ static CFDictionaryRef imageSourceOptions;
             }
             else {
                 imagePropertiesSize = [self numberOfImages];
-                imageProperties = (CFDictionaryRef *)calloc (imagePropertiesSize * sizeof(CFDictionaryRef), 1);
+                imageProperties = (CFDictionaryRef *)calloc (imagePropertiesSize, sizeof(CFDictionaryRef));
             }
                 
             imageProperties[0] = image0Properties;
@@ -551,13 +558,13 @@ static void drawPattern (void * info, CGContextRef context)
 {
     WebImageData *data = (WebImageData *)info;
     
-    CGImageRef image = (CGImageRef)[data imageAtIndex:[data currentFrame]];
+    CGImageRef image = [data imageAtIndex:[data currentFrame]];
     float w = CGImageGetWidth(image);
     float h = CGImageGetHeight(image);
     CGContextDrawImage (context, CGRectMake(0, [data size].height-h, w, h), image);    
 }
 
-CGPatternCallbacks patternCallbacks = { 0, drawPattern, NULL };
+static const CGPatternCallbacks patternCallbacks = { 0, drawPattern, NULL };
 
 - (void)tileInRect:(CGRect)rect fromPoint:(CGPoint)point context:(CGContextRef)aContext
 {
@@ -568,7 +575,6 @@ CGPatternCallbacks patternCallbacks = { 0, drawPattern, NULL };
     size_t frame = [self currentFrame];
     CGImageRef image = [self imageAtIndex:frame];
     if (!image) {
-        ERROR ("unable to find image");
         [decodeLock unlock];
         return;
     }
@@ -578,13 +584,13 @@ CGPatternCallbacks patternCallbacks = { 0, drawPattern, NULL };
         
     } else {
         CGSize tileSize = [self size];
-        NSSize imageSize = NSMakeSize(CGImageGetWidth(image),CGImageGetHeight(image));
         
         // Check and see if a single draw of the image can cover the entire area we are supposed to tile.
         NSRect oneTileRect;
         oneTileRect.origin.x = rect.origin.x + fmodf(fmodf(-point.x, tileSize.width) - tileSize.width, tileSize.width);
         oneTileRect.origin.y = rect.origin.y + fmodf(fmodf(-point.y, tileSize.height) - tileSize.height, tileSize.height);
-        oneTileRect.size = imageSize;
+        oneTileRect.size.height = tileSize.height;
+        oneTileRect.size.width = tileSize.width;
 
         // If the single image draw covers the whole area, then just draw once.
         if (NSContainsRect(oneTileRect, NSMakeRect(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height))) {
@@ -601,24 +607,20 @@ CGPatternCallbacks patternCallbacks = { 0, drawPattern, NULL };
             return;
         }
 
-        // Compute the appropriate phase relative to the top level view in the window.
-        // Conveniently, the oneTileRect we computed above has the appropriate origin.
-        NSPoint originInWindow = [[NSView focusView] convertPoint:oneTileRect.origin toView:nil];
-
-        // WebCore may translate the focus, and thus need an extra phase correction
-        NSPoint extraPhase = [[WebGraphicsBridge sharedBridge] additionalPatternPhase];
-        originInWindow.x += extraPhase.x;
-        originInWindow.y += extraPhase.y;
-        CGSize phase = CGSizeMake(fmodf(originInWindow.x, tileSize.width), fmodf(originInWindow.y, tileSize.height));
-
-        // Possible optimization:  We may want to cache the CGPatternRef    
-        CGPatternRef pattern = CGPatternCreate(self, CGRectMake (0, 0, imageSize.width, imageSize.height), CGAffineTransformIdentity, tileSize.width, tileSize.height, 
-            kCGPatternTilingConstantSpacing, true, &patternCallbacks);
+        CGPatternRef pattern = CGPatternCreate(self, CGRectMake(0, 0, tileSize.width, tileSize.height),
+        CGAffineTransformIdentity, tileSize.width, tileSize.height, 
+        kCGPatternTilingConstantSpacing, TRUE, &patternCallbacks);
+        
         if (pattern) {
             CGContextSaveGState (aContext);
 
-            CGContextSetPatternPhase(aContext, phase);
-
+            CGPoint tileOrigin = CGPointMake(oneTileRect.origin.x, oneTileRect.origin.y);
+            CGAffineTransform userToBase = CGAffineTransformConcat(CGContextGetCTM(aContext),
+                CGAffineTransformInvert(CGContextGetBaseCTM(aContext)));
+            CGPoint phase = CGPointApplyAffineTransform(tileOrigin, userToBase);
+            
+            CGContextSetPatternPhase(aContext, CGSizeMake(phase.x, phase.y));
+        
             CGColorSpaceRef patternSpace = CGColorSpaceCreatePattern(NULL);
             CGContextSetFillColorSpace(aContext, patternSpace);
             CGColorSpaceRelease(patternSpace);
