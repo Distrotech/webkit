@@ -4,6 +4,7 @@
 
         Reviewed by Justin Garcia.
 
+        <rdar://problem/4310534> Denver Regression: Removing empty lines at end of signature crashes Mail
         If node is an ancestor of refNode, use the highest non-common ancestor instead
         (otherwise we would be trying to append refNode's ancestor after refNode)
 
