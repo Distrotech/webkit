@@ -3010,6 +3010,11 @@ void DeleteSelectionCommand::moveNodesAfterNode()
     // Insert after the subtree containing destNode
     NodeImpl *refNode = dstNode->enclosingInlineElement();
 
+    // If node is an ancestor of refNode, use the highest non-common ancestor instead
+    // (otherwise we would be trying to append refNode's ancestor after refNode)
+    if (refNode->isAncestor(node))
+        for (node = startNode; !refNode->isAncestor(node->parent()); node = node->parent());
+    
     // Nothing to do if start is already at the beginning of dstBlock
     NodeImpl *dstBlock = refNode->enclosingBlockFlowElement();
     if (startBlock == dstBlock->firstChild())

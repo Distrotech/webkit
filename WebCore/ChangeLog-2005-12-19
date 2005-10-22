@@ -1,3 +1,13 @@
+2005-10-21  Dave Harrison  <harrison@apple.com>
+
+        Reviewed by Justin Garcia.
+
+        If node is an ancestor of refNode, use the highest non-common ancestor instead
+        (otherwise we would be trying to append refNode's ancestor after refNode)
+
+        * khtml/editing/htmlediting.cpp:
+        (khtml::DeleteSelectionCommand::moveNodesAfterNode):
+
 === WebCore-416.12 ===
 
 2005-10-19  Adele Peterson  <adele@apple.com>
