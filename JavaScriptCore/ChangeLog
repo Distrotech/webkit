@@ -1,3 +1,15 @@
+2005-10-26  Timothy Hatcher  <timothy@apple.com>
+
+        - Fixed <rdar://problem/4306000> Mail and Safari will launch faster if JavaScriptCore
+          has no weak exports (typeinfo for subclasses in WebCore)
+
+        Reviewed by Darin.
+
+        * as: Wrapper for the system assembler that supresses all type-info .weak_definition lines
+        * gcc-path: small wrapper that sets the PATH before calling gcc, this makes gcc use our as
+        * JavaScriptCore.xcodeproj/project.pbxproj: 
+          set CC and CPLUSPLUS to point to gcc-path only in Default configuration
+
 === JavaScriptCore-417.3 ===
 
 2005-10-17  Timothy Hatcher  <timothy@apple.com>

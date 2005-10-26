@@ -1179,6 +1179,8 @@
 		149C275E08902AFE008A9EFC /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CC = "./gcc-path";
+				CPLUSPLUS = "./gcc-path";
 				DEBUG_DEFINES = "";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -1232,6 +1234,8 @@
 		149C275F08902AFE008A9EFC /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CC = "./gcc-path";
+				CPLUSPLUS = "./gcc-path";
 				DEBUG_DEFINES = NDEBUG;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -1286,6 +1290,8 @@
 		149C276008902AFE008A9EFC /* OptimizedWithSymbols */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CC = "./gcc-path";
+				CPLUSPLUS = "./gcc-path";
 				DEBUG_DEFINES = NDEBUG;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -1340,6 +1346,8 @@
 		149C276108902AFE008A9EFC /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CC = "./gcc-path";
+				CPLUSPLUS = "./gcc-path";
 				DEBUG_DEFINES = NDEBUG;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
