@@ -1,3 +1,5 @@
+=== JavaScriptCore-417.4 ===
+
 2005-10-26  Timothy Hatcher  <timothy@apple.com>
 
         - Fixed <rdar://problem/4306000> Mail and Safari will launch faster if JavaScriptCore
