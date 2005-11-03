@@ -902,7 +902,7 @@ void RenderStyle::setClip( Length top, Length right, Length bottom, Length left 
     data->clip.left = left;
 }
 
-bool RenderStyle::contentDataEquivalent(RenderStyle* otherStyle)
+bool RenderStyle::contentDataEquivalent(const RenderStyle* otherStyle) const
 {
     ContentData* c1 = content;
     ContentData* c2 = otherStyle->content;

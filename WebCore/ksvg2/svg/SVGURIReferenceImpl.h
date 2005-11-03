@@ -23,6 +23,8 @@
 #ifndef KSVG_SVGURIReferenceImpl_H
 #define KSVG_SVGURIReferenceImpl_H
 
+#include <qstring.h>
+
 namespace KDOM
 {
     class AttributeImpl;

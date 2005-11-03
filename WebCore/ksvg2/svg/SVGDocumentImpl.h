@@ -34,6 +34,10 @@
 class KCanvas;
 class KCanvasView;
 
+#ifdef APPLE_CHANGES
+class KHTMLView;
+#endif
+
 namespace KSVG
 {
     class KSVGView;
@@ -49,19 +53,11 @@ namespace KSVG
         SVGDocumentImpl(SVGDOMImplementationImpl *i, KDOM::KDOMView *view);
         virtual ~SVGDocumentImpl();
 
-        // 'SVGDocumentImpl' functions
-        KDOM::DOMStringImpl *title() const;
-        KDOM::DOMStringImpl *referrer() const;
-        KDOM::DOMStringImpl *domain() const;
-        KDOM::DOMStringImpl *URL() const;
-
         SVGSVGElementImpl *rootElement() const;
-
-        virtual KDOM::ElementImpl *createElement(KDOM::DOMStringImpl *tagName);
-        virtual KDOM::ElementImpl *createElementNS(KDOM::DOMStringImpl *namespaceURI, KDOM::DOMStringImpl *qualifiedName);
-
-        // 'DocumentEvent' functions
-        virtual KDOM::EventImpl *createEvent(KDOM::DOMStringImpl *eventType);
+        
+        KDOM::DOMString title() const;
+        
+        virtual KDOM::ElementImpl *createElement(const KDOM::DOMString& tagName, int& exceptionCode);
 
         // Derived from: 'CachedObjectClient'
         virtual void notifyFinished(KDOM::CachedObject *finishedObj);
@@ -103,10 +99,8 @@ namespace KSVG
         virtual KDOM::CSSStyleSelector *createStyleSelector(const QString &);
 
     private:
-        void dispatchUIEvent(KDOM::EventTargetImpl *target, KDOM::DOMStringImpl *type);
-        void dispatchMouseEvent(KDOM::EventTargetImpl *target, KDOM::DOMStringImpl *type);
-
-        SVGElementImpl *createSVGElement(KDOM::DOMStringImpl *prefix, KDOM::DOMStringImpl *localName);
+        void dispatchUIEvent(KDOM::EventTargetImpl *target, const KDOM::AtomicString &type);
+        void dispatchMouseEvent(KDOM::EventTargetImpl *target, const KDOM::AtomicString &type);
 
         KCanvasView *m_canvasView;
         KDOM::EventTargetImpl *m_lastTarget;

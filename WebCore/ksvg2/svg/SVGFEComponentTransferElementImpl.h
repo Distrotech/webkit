@@ -35,7 +35,7 @@ namespace KSVG
     class SVGFEComponentTransferElementImpl : public SVGFilterPrimitiveStandardAttributesImpl
     {
     public:
-        SVGFEComponentTransferElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix);
+        SVGFEComponentTransferElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGFEComponentTransferElementImpl();
 
         // 'SVGFEComponentTransferElement' functions
@@ -50,7 +50,7 @@ namespace KSVG
 
         virtual KCanvasFilterEffect *filterEffect() const;
 
-        virtual void close();
+        virtual void closeRenderer();
 
     private:
         mutable SVGAnimatedStringImpl *m_in1;

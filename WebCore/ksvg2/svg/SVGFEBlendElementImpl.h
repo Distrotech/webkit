@@ -36,7 +36,7 @@ namespace KSVG
     class SVGFEBlendElementImpl : public SVGFilterPrimitiveStandardAttributesImpl
     {
     public:
-        SVGFEBlendElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix);
+        SVGFEBlendElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGFEBlendElementImpl();
 
         // 'SVGFEBlendElement' functions

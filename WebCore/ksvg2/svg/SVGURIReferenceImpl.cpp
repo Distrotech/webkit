@@ -24,7 +24,7 @@
 #include <kdom/core/NodeImpl.h>
 #include <kdom/core/AttrImpl.h>
 
-#include "svgattrs.h"
+#include "SVGNames.h"
 #include "SVGHelper.h"
 #include "SVGURIReferenceImpl.h"
 #include "SVGStyledElementImpl.h"
@@ -51,11 +51,9 @@ SVGAnimatedStringImpl *SVGURIReferenceImpl::href() const
 
 bool SVGURIReferenceImpl::parseAttribute(KDOM::AttributeImpl *attr)
 {
-    int id = (attr->id() & NodeImpl_IdLocalMask);
-    KDOM::DOMString value(attr->value());
-    if(id == ATTR_HREF || KDOM::DOMString(attr->name()) == "xlink:href")
+    if (attr->name() == SVGNames::hrefAttr || attr->name() == XLinkNames::hrefAttr)
     {
-        href()->setBaseVal(value.handle());
+        href()->setBaseVal(attr->value().impl());
         return true;
     }
 

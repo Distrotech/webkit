@@ -23,6 +23,7 @@
 #include "config.h"
 #include <kcanvas/KCanvas.h>
 
+#include "ksvg2/svg/SVGNames.h"
 #include "SVGMatrixImpl.h"
 #include "SVGDocumentImpl.h"
 #include "KSVGTimeScheduler.moc"
@@ -33,7 +34,7 @@
 #include "SVGAnimatedTransformListImpl.h"
 #include "SVGAnimateTransformElementImpl.h"
 
-using namespace KSVG;
+namespace KSVG {
 
 SVGTimer::SVGTimer(TimeScheduler *scheduler, unsigned int ms, bool singleShot)
 {
@@ -201,7 +202,7 @@ void SVGTimer::notifyAll()
                 animation->handleTimerEvent(percentage);
 
             // Special cases for animate* objects depending on 'additive' attribute
-            if(animation->id() == ID_ANIMATETRANSFORM)
+            if(animation->hasTagName(SVGNames::animatetransformTag))
             {
                 SVGAnimateTransformElementImpl *animTransform = static_cast<SVGAnimateTransformElementImpl *>(animation);
                 if(!animTransform)
@@ -256,7 +257,7 @@ void SVGTimer::notifyAll()
 
                 transformMatrix->deref();
             }
-            else if(animation->id() == ID_ANIMATECOLOR)
+            else if(animation->hasTagName(SVGNames::animatecolorTag))
             {
                 SVGAnimateColorElementImpl *animColor = static_cast<SVGAnimateColorElementImpl *>(animation);
                 if(!animColor)
@@ -324,8 +325,8 @@ void SVGTimer::notifyAll()
             if(cit.data().isValid())
             {
                 SVGAnimationElementImpl::setTargetAttribute(tit.key(),
-                                                            KDOM::DOMString(cit.key()).handle(),
-                                                            KDOM::DOMString(cit.data().name()).handle());
+                                                            KDOM::DOMString(cit.key()).impl(),
+                                                            KDOM::DOMString(cit.data().name()).impl());
             }
         }
     }
@@ -510,5 +511,7 @@ float TimeScheduler::elapsed() const
 {
     return float(m_creationTime.elapsed()) / 1000.0;
 }
+
+} // namespace;
 
 // vim:ts=4:noet

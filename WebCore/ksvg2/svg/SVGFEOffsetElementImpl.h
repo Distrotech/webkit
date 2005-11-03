@@ -36,7 +36,7 @@ namespace KSVG
     class SVGFEOffsetElementImpl : public SVGFilterPrimitiveStandardAttributesImpl
     {
     public:
-        SVGFEOffsetElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix);
+        SVGFEOffsetElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGFEOffsetElementImpl();
 
         // 'SVGFEOffsetElement' functions

@@ -337,6 +337,11 @@ const AtomicString& ElementImpl::getIDAttribute() const
     return namedAttrMap ? namedAttrMap->id() : nullAtom;
 }
 
+bool ElementImpl::hasAttribute(const QualifiedName& name) const
+{
+    return hasAttributeNS(name.namespaceURI(), name.localName());
+}
+
 const AtomicString& ElementImpl::getAttribute(const QualifiedName& name) const
 {
     if (name == styleAttr)

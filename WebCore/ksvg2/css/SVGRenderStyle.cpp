@@ -33,7 +33,7 @@ using namespace KSVG;
 
 SVGRenderStyle *SVGRenderStyle::s_defaultStyle = 0;
 
-SVGRenderStyle::SVGRenderStyle() : KDOM::RenderStyle()
+SVGRenderStyle::SVGRenderStyle() : khtml::RenderStyle()
 {
     if(!s_defaultStyle)    
         s_defaultStyle = new SVGRenderStyle(true);
@@ -48,7 +48,7 @@ SVGRenderStyle::SVGRenderStyle() : KDOM::RenderStyle()
     setBitDefaults();
 }
 
-SVGRenderStyle::SVGRenderStyle(bool) : KDOM::RenderStyle(true)
+SVGRenderStyle::SVGRenderStyle(bool) : khtml::RenderStyle(true)
 {
     setBitDefaults();
 
@@ -60,7 +60,7 @@ SVGRenderStyle::SVGRenderStyle(bool) : KDOM::RenderStyle(true)
     markers.init();
 }
 
-SVGRenderStyle::SVGRenderStyle(const SVGRenderStyle &other) : KDOM::RenderStyle(other)
+SVGRenderStyle::SVGRenderStyle(const SVGRenderStyle &other) : khtml::RenderStyle(other)
 {
     fill = other.fill;
     stroke = other.stroke;
@@ -83,7 +83,7 @@ void SVGRenderStyle::cleanup()
     s_defaultStyle = 0;
 }
 
-bool SVGRenderStyle::equals(KDOM::RenderStyle *other) const
+bool SVGRenderStyle::equals(khtml::RenderStyle *other) const
 {
     SVGRenderStyle *svgOther = dynamic_cast<SVGRenderStyle *>(other);
     if(!svgOther)
@@ -92,7 +92,7 @@ bool SVGRenderStyle::equals(KDOM::RenderStyle *other) const
     return (fill == svgOther->fill && stroke == svgOther->stroke &&
         stops == svgOther->stops && clip == svgOther->clip &&
         misc == svgOther->misc && markers == svgOther->markers &&
-        KDOM::RenderStyle::equals(other));
+        khtml::RenderStyle::contentDataEquivalent(other));
 }
 
 void SVGRenderStyle::inheritFrom(const RenderStyle *inheritParent)
@@ -101,7 +101,7 @@ void SVGRenderStyle::inheritFrom(const RenderStyle *inheritParent)
     if(!svgInheritParent)
         return;
 
-    KDOM::RenderStyle::inheritFrom(inheritParent);
+    khtml::RenderStyle::inheritFrom(inheritParent);
 
     fill = svgInheritParent->fill;
     stroke = svgInheritParent->stroke;

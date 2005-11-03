@@ -27,7 +27,7 @@
 #include <kcanvas/KCanvasRegistry.h>
 #include <kcanvas/device/KRenderingPaintServerGradient.h>
 
-#include "svgattrs.h"
+#include "SVGNames.h"
 #include "SVGHelper.h"
 #include "SVGRenderStyle.h"
 #include "SVGDocumentImpl.h"
@@ -37,7 +37,7 @@
 
 using namespace KSVG;
 
-SVGStopElementImpl::SVGStopElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix) : SVGStyledElementImpl(doc, id, prefix)
+SVGStopElementImpl::SVGStopElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc) : SVGStyledElementImpl(tagName, doc)
 {
     m_offset = 0;
 }
@@ -55,21 +55,14 @@ SVGAnimatedNumberImpl *SVGStopElementImpl::offset() const
 
 void SVGStopElementImpl::parseAttribute(KDOM::AttributeImpl *attr)
 {
-    int id = (attr->id() & NodeImpl_IdLocalMask);
     KDOM::DOMString value(attr->value());
-    switch(id)
-    {
-        case ATTR_OFFSET:
-        {
-            if(value.string().endsWith(QString::fromLatin1("%")))
-                offset()->setBaseVal(value.string().left(value.length() - 1).toDouble() / 100.);
-            else
-                offset()->setBaseVal(value.string().toDouble());
-            break;
-        }
-        default:
-            SVGStyledElementImpl::parseAttribute(attr);
-    };
+    if (attr->name() == SVGNames::offsetAttr) {
+        if(value.qstring().endsWith(QString::fromLatin1("%")))
+            offset()->setBaseVal(value.qstring().left(value.length() - 1).toDouble() / 100.);
+        else
+            offset()->setBaseVal(value.qstring().toDouble());
+    } else
+        SVGStyledElementImpl::parseAttribute(attr);
 
     if(!ownerDocument()->parsing())
     {
@@ -91,7 +84,7 @@ KCanvasItem *SVGStopElementImpl::createCanvasItem(KCanvas *canvas, KRenderingSty
 {
     if(renderStyle())
     {
-        QString gradientId = KDOM::DOMString(static_cast<SVGElementImpl *>(parentNode())->getId()).string();
+        QString gradientId = KDOM::DOMString(static_cast<SVGElementImpl *>(parentNode())->getIDAttribute()).qstring();
         KRenderingPaintServer *paintServer = canvas->registry()->getPaintServerById(gradientId);
         KRenderingPaintServerGradient *paintServerGradient  = static_cast<KRenderingPaintServerGradient *>(paintServer);
 

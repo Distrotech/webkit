@@ -37,7 +37,7 @@ namespace KSVG
     class SVGFETurbulenceElementImpl : public SVGFilterPrimitiveStandardAttributesImpl
     {
     public:
-        SVGFETurbulenceElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix);
+        SVGFETurbulenceElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGFETurbulenceElementImpl();
 
         // 'SVGFETurbulenceElement' functions

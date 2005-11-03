@@ -45,15 +45,14 @@
 #include "SVGAnimatedStringImpl.h"
 #include "KCanvasRenderingStyle.h"
 #include "SVGDOMImplementationImpl.h"
-#include "SVGCSSStyleDeclarationImpl.h"
 
-#include "svgattrs.h"
+#include "SVGNames.h"
 #include <ksvg2/css/cssproperties.h>
 
 using namespace KSVG;
 
-SVGStyledElementImpl::SVGStyledElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix)
-: SVGElementImpl(doc, id, prefix), SVGStylableImpl(), m_pa(0), m_className(0)
+SVGStyledElementImpl::SVGStyledElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc)
+: SVGElementImpl(tagName, doc), m_pa(0), m_className(0)
 {
     m_canvasItem = 0;
     m_renderStyle = 0;
@@ -81,16 +80,11 @@ SVGAnimatedStringImpl *SVGStyledElementImpl::className() const
     return m_className;
 }
 
-KDOM::CSSStyleDeclarationImpl *SVGStyledElementImpl::style()
-{
-    return styleRules();
-}
-
 KDOM::CSSStyleDeclarationImpl *SVGStyledElementImpl::pa() const
 {
     if(!m_pa)
     {
-        m_pa = new SVGCSSStyleDeclarationImpl(ownerDocument()->implementation()->cdfInterface(), 0);
+        m_pa = new KDOM::CSSStyleDeclarationImpl(0);
         m_pa->ref();
     }
 
@@ -118,47 +112,16 @@ KCanvasItem *SVGStyledElementImpl::createCanvasItem(KCanvas *canvas, KRenderingS
 
 void SVGStyledElementImpl::parseAttribute(KDOM::AttributeImpl *attr)
 {
-    int id = (attr->id() & NodeImpl_IdLocalMask);
-    KDOM::DOMStringImpl *value = attr->value();
-    switch(id)
-    {
-        case ATTR_CLASS:
-        {
-            className()->setBaseVal(value);
-            break;
-        }
-        case ATTR_STYLE:
-        {
-            style()->setProperty(value);
-            break;
-        }
-        default:
-        {
-            KDOM::CDFInterface *interface = (ownerDocument() ? ownerDocument()->implementation()->cdfInterface() : 0);
-            if(interface)
-            {
-                QString qProp = QString::fromLatin1(interface->getAttrName(id));
-                int svgPropId = interface->getPropertyID(qProp.ascii(), qProp.length());
-                if(svgPropId > 0)
-                {
-                    if(value)
-                        pa()->setProperty(svgPropId, value);
-                    else
-                        pa()->removeProperty(svgPropId);
-
-                    if(!ownerDocument()->parsing())
-                        setChanged(true);
-
-                    return;
-                }
-            }
-
-            SVGElementImpl::parseAttribute(attr);
-        }
-    };
+    const KDOM::AtomicString& value = attr->value();
+    if (attr->name() == SVGNames::classAttr)
+        className()->setBaseVal(value.impl());
+    else if (attr->name() == SVGNames::styleAttr)
+        style()->setProperty(value);
+    else
+        SVGElementImpl::parseAttribute(attr);
 }
 
-KDOM::RenderStyle *SVGStyledElementImpl::renderStyle() const
+khtml::RenderStyle *SVGStyledElementImpl::renderStyle() const
 {
     if(!m_renderStyle)
     {
@@ -210,7 +173,7 @@ void SVGStyledElementImpl::attach()
         SVGRenderStyle *svgStyle = static_cast<SVGRenderStyle *>(renderStyle());
         KCanvasRenderingStyle *renderingStyle = new KCanvasRenderingStyle(canvas, svgStyle);
         if (m_canvasItem)
-            fprintf(stderr, "DOUBLE ATTACH: <%s> %p\n", KDOM::DOMString(nodeName()).string().ascii(), this);
+            fprintf(stderr, "DOUBLE ATTACH: <%s> %p\n", KDOM::DOMString(nodeName()).qstring().ascii(), this);
 
         m_canvasItem = createCanvasItem(canvas, renderingStyle);
         if(m_canvasItem)
@@ -232,11 +195,11 @@ void SVGStyledElementImpl::attach()
                     styledParent = static_cast<SVGStyledElementImpl *>(parentElement);
             if(styledParent && styledParent->canvasItem() && styledParent->allowAttachChildren(this))
                 styledParent->canvasItem()->appendItem(m_canvasItem);
-            else if (styledParent && (styledParent->id() != ID_PATTERN)) {
+            else if (styledParent && !styledParent->hasTagName(SVGNames::patternTag)) {
                 // FIXME: This exists until we can find a better way to create root && pattern nodes. -- ecs 8/7/05
                 delete m_canvasItem;
                 m_canvasItem = NULL;
-                //fprintf(stderr, "FAILED CANVAS INSERTION: <%s>\n", KDOM::DOMString(nodeName()).string().ascii())
+                //fprintf(stderr, "FAILED CANVAS INSERTION: <%s>\n", KDOM::DOMString(nodeName()).qstring().ascii())
             }
 
 #ifndef APPLE_COMPILE_HACK
@@ -256,7 +219,9 @@ void SVGStyledElementImpl::attach()
     else
         kdDebug(26002) << "[SVGStyledElementImpl::attach] Unable to attach canvas item. (not necessarily wrong!)" << endl;
 
+#ifndef APPLE_CHANGES
     KDOM::NodeBaseImpl::attach();
+#endif
 }
 
 void SVGStyledElementImpl::detach()
@@ -280,7 +245,9 @@ void SVGStyledElementImpl::detach()
     delete m_renderStyle;
     m_renderStyle = 0;
 
+#ifndef APPLE_CHANGES
     KDOM::NodeBaseImpl::detach();
+#endif
 }
 
 KCanvasItem *SVGStyledElementImpl::canvasItem() const
@@ -328,55 +295,6 @@ void SVGStyledElementImpl::updateCanvasItem()
     }
 }
 
-void SVGStyledElementImpl::recalcStyle(StyleChange change)
-{
-    KDOM::RenderStyle *_style = m_renderStyle;
-    bool hasParentRenderer = parentNode() ? parentNode()->attached() : false;
-
-    if(hasParentRenderer && (change >= Inherit) || changed())
-    {
-        KDOM::EDisplay oldDisplay = _style ? _style->display() : KDOM::DS_NONE;
-
-        KDOM::RenderStyle *newStyle = ownerDocument()->styleSelector()->styleForElement(this);
-        newStyle->ref();
-        
-        StyleChange ch = diff(_style, newStyle);
-        if(ch != NoChange)
-        {
-            if(oldDisplay != newStyle->display())
-            {
-                if(attached()) detach();
-                // ### uuhm, suboptimal. style gets calculated again
-                attach();
-                // attach recalulates the style for all children. No need to do it twice.
-                setChanged(false);
-                setHasChangedChild(false);
-                newStyle->deref();
-                return;
-            }
-
-            if(newStyle)
-                setStyle(newStyle);
-        }
-
-        newStyle->deref();
-
-        if(change != Force)
-        {
-            if(ownerDocument()->usesDescendantRules())
-                change = Force;
-            else
-                change = ch;
-        }
-    }
-
-    for(NodeImpl *n = firstChild(); n; n = n->nextSibling())
-    {
-        if(change >= Inherit || n->hasChangedChild() || n->changed())
-            n->recalcStyle(change);
-    }
-}
-
 const SVGStyledElementImpl *SVGStyledElementImpl::pushAttributeContext(const SVGStyledElementImpl *)
 {
     if(canvas())
@@ -388,9 +306,9 @@ const SVGStyledElementImpl *SVGStyledElementImpl::pushAttributeContext(const SVG
     return 0;
 }
 
-void SVGStyledElementImpl::setStyle(KDOM::RenderStyle *newStyle)
+void SVGStyledElementImpl::setStyle(khtml::RenderStyle *newStyle)
 {
-    KDOM_SAFE_SET(m_renderStyle, newStyle);
+    KDOM::KDOM_SAFE_SET(m_renderStyle, newStyle);
 
     KCanvasRenderingStyle *style = (m_canvasItem ? static_cast<KCanvasRenderingStyle *>(m_canvasItem->style()) : 0);
     if(style)

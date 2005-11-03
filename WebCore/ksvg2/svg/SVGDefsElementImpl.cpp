@@ -25,7 +25,7 @@
 
 using namespace KSVG;
 
-SVGDefsElementImpl::SVGDefsElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix) : SVGStyledElementImpl(doc, id, prefix), SVGTestsImpl(), SVGLangSpaceImpl(), SVGExternalResourcesRequiredImpl(), SVGTransformableImpl()
+SVGDefsElementImpl::SVGDefsElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc) : SVGStyledElementImpl(tagName, doc), SVGTestsImpl(), SVGLangSpaceImpl(), SVGExternalResourcesRequiredImpl(), SVGTransformableImpl()
 {
 }
 

@@ -30,7 +30,7 @@
 
 using namespace KSVG;
 
-SVGGElementImpl::SVGGElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix) : SVGStyledElementImpl(doc, id, prefix), SVGTestsImpl(), SVGLangSpaceImpl(), SVGExternalResourcesRequiredImpl(), SVGTransformableImpl()
+SVGGElementImpl::SVGGElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc) : SVGStyledElementImpl(tagName, doc), SVGTestsImpl(), SVGLangSpaceImpl(), SVGExternalResourcesRequiredImpl(), SVGTransformableImpl()
 {
 }
 
@@ -61,7 +61,7 @@ KCanvasItem *SVGGElementImpl::createCanvasItem(KCanvas *canvas, KRenderingStyle 
 }
 
 // Helper class for <use> support
-SVGDummyElementImpl::SVGDummyElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id, KDOM::DOMStringImpl *prefix) : SVGGElementImpl(doc, 0, prefix)
+SVGDummyElementImpl::SVGDummyElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc) : SVGGElementImpl(tagName, doc),  m_localName("dummy")
 {
 }
 
@@ -69,9 +69,9 @@ SVGDummyElementImpl::~SVGDummyElementImpl()
 {
 }
 
-KDOM::DOMStringImpl *SVGDummyElementImpl::localName() const
+const KDOM::AtomicString& SVGDummyElementImpl::localName() const
 {
-    return new KDOM::DOMStringImpl("dummy");
+    return m_localName;
 }
 
 // vim:ts=4:noet

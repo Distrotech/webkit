@@ -30,8 +30,8 @@
 
 using namespace KSVG;
 
-SVGSymbolElementImpl::SVGSymbolElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix)
-: SVGStyledElementImpl(doc, id, prefix), SVGLangSpaceImpl(), SVGExternalResourcesRequiredImpl(), SVGFitToViewBoxImpl()
+SVGSymbolElementImpl::SVGSymbolElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc)
+: SVGStyledElementImpl(tagName, doc), SVGLangSpaceImpl(), SVGExternalResourcesRequiredImpl(), SVGFitToViewBoxImpl()
 {
 }
 

@@ -29,7 +29,7 @@
 #include <kcanvas/KCanvas.h>
 #include <kcanvas/KCanvasItem.h>
 
-#include "svgattrs.h"
+#include "SVGNames.h"
 #include "SVGHelper.h"
 #include "SVGMatrixImpl.h"
 #include "SVGDocumentImpl.h"
@@ -93,7 +93,7 @@ void SVGTransformableImpl::updateLocalTransform(SVGTransformListImpl *localTrans
     {
         localTransform->ref();
         
-        KDOM_SAFE_SET(m_localMatrix, localTransform->matrix());
+        KDOM::KDOM_SAFE_SET(m_localMatrix, localTransform->matrix());
 
         localTransform->deref();
     }
@@ -113,7 +113,7 @@ void SVGTransformableImpl::updateSubtreeMatrices(KDOM::NodeImpl *node)
         QMatrix useMatrix = transform->localMatrix()->qmatrix();
     
         KDOM::NodeImpl *parentElement = node->parentNode();
-        if(parentElement && parentElement->id() == ID_G)
+        if(parentElement && parentElement->hasTagName(SVGNames::gTag))
         {
             SVGMatrixImpl *ctm = transform->getCTM();
             ctm->ref();
@@ -133,13 +133,12 @@ void SVGTransformableImpl::updateSubtreeMatrices(KDOM::NodeImpl *node)
 
 bool SVGTransformableImpl::parseAttribute(KDOM::AttributeImpl *attr)
 {
-    int id = (attr->id() & NodeImpl_IdLocalMask);
-    if(id == ATTR_TRANSFORM)
+    if (attr->name() == SVGNames::transformAttr)
     {
         SVGTransformListImpl *localTransforms = transform()->baseVal();
         
         localTransforms->clear();
-        SVGTransformableImpl::parseTransformAttribute(localTransforms, attr->value());
+        SVGTransformableImpl::parseTransformAttribute(localTransforms, attr->value().impl());
 
         // Update cached local matrix
         updateLocalTransform(localTransforms);
@@ -161,7 +160,7 @@ void SVGTransformableImpl::parseTransformAttribute(SVGTransformListImpl *list, K
         return;
 
     // Split string for handling 1 transform statement at a time
-    QStringList subtransforms = QStringList::split(')', KDOM::DOMString(transform).string());
+    QStringList subtransforms = QStringList::split(')', KDOM::DOMString(transform).qstring());
     QStringList::ConstIterator it = subtransforms.begin();
     QStringList::ConstIterator end = subtransforms.end();
     for(; it != end; ++it)

@@ -26,7 +26,6 @@
 #include <kcanvas/KCanvasItem.h>
 #include <kcanvas/KCanvasMatrix.h>
 
-#include "svgattrs.h"
 #include "SVGAngleImpl.h"
 #include "SVGMatrixImpl.h"
 #include "SVGDocumentImpl.h"
@@ -43,8 +42,8 @@
 using namespace KSVG;
 using namespace std;
 
-SVGAnimateTransformElementImpl::SVGAnimateTransformElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix)
-: SVGAnimationElementImpl(doc, id, prefix)
+SVGAnimateTransformElementImpl::SVGAnimateTransformElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc)
+: SVGAnimationElementImpl(tagName, doc)
 {
     m_type = SVG_TRANSFORM_UNKNOWN;
     
@@ -79,28 +78,21 @@ SVGAnimateTransformElementImpl::~SVGAnimateTransformElementImpl()
 
 void SVGAnimateTransformElementImpl::parseAttribute(KDOM::AttributeImpl *attr)
 {
-    int id = (attr->id() & NodeImpl_IdLocalMask);
     KDOM::DOMString value(attr->value());
-    switch(id)
-    {
-        case ATTR_TYPE:
-        {
-            if(value == "translate")
-                m_type = SVG_TRANSFORM_TRANSLATE;
-            else if(value == "scale")
-                m_type = SVG_TRANSFORM_SCALE;
-            else if(value == "rotate")
-                m_type = SVG_TRANSFORM_ROTATE;
-            else if(value == "skewX")
-                m_type = SVG_TRANSFORM_SKEWX;
-            else if(value == "skewY")
-                m_type = SVG_TRANSFORM_SKEWY;
-
-            break;
-        }                
-        default:
-            SVGAnimationElementImpl::parseAttribute(attr);
-    };
+    if (attr->name() == SVGNames::typeAttr) {
+        if(value == "translate")
+            m_type = SVG_TRANSFORM_TRANSLATE;
+        else if(value == "scale")
+            m_type = SVG_TRANSFORM_SCALE;
+        else if(value == "rotate")
+            m_type = SVG_TRANSFORM_ROTATE;
+        else if(value == "skewX")
+            m_type = SVG_TRANSFORM_SKEWX;
+        else if(value == "skewY")
+            m_type = SVG_TRANSFORM_SKEWY;
+    } else {
+        SVGAnimationElementImpl::parseAttribute(attr);
+    }
 }
 
 void SVGAnimateTransformElementImpl::handleTimerEvent(double timePercentage)
@@ -264,13 +256,13 @@ void SVGAnimateTransformElementImpl::handleTimerEvent(double timePercentage)
                 if(m_toTransform)
                     m_toTransform->deref();
         
-                m_toTransform = parseTransformValue(value2.string());
+                m_toTransform = parseTransformValue(value2.qstring());
                 m_toRotateSpecialCase = m_rotateSpecialCase;
 
                 if(m_fromTransform)
                     m_fromTransform->deref();
     
-                m_fromTransform = parseTransformValue(value1.string());
+                m_fromTransform = parseTransformValue(value1.qstring());
                 m_fromRotateSpecialCase = m_rotateSpecialCase;
 
                 m_currentItem = itemByPercentage;

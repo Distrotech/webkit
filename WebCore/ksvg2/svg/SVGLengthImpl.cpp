@@ -125,12 +125,13 @@ float SVGLengthImpl::valueInSpecifiedUnits() const
     return m_valueInSpecifiedUnits;
 }                                                
 
-void SVGLengthImpl::setValueAsString(KDOM::DOMStringImpl *valueAsString)
+void SVGLengthImpl::setValueAsString(KDOM::DOMStringImpl *valueAsStringImpl)
 {
-    if(!valueAsString || valueAsString->isEmpty())
+    KDOM::DOMString valueAsString(valueAsStringImpl);
+    if(valueAsString.isEmpty())
         return;
 
-    QString valueAsQString = valueAsString->string();
+    QString valueAsQString = valueAsString.qstring();
 
     double convertedNumber = 0;
     const char *start = valueAsQString.latin1();
@@ -253,9 +254,9 @@ void SVGLengthImpl::updateValue()
                     useSize = parentStyle->getFontSize();
             
                 if(familyLocal)
-                    useFont = style->getFontFamily()->getFirst()->string();
+                    useFont = style->getFontFamily()->getFirst()->qstring();
                 else if(parentStyle && parentStyle->getFontFamily() && parentStyle->getFontFamily()->getFirst())
-                    useFont = parentStyle->getFontFamily()->getFirst()->string();
+                    useFont = parentStyle->getFontFamily()->getFirst()->qstring();
 
                 if(unitType == SVG_LENGTHTYPE_EMS)
                     value = valueInSpecifiedUnits * useSize;

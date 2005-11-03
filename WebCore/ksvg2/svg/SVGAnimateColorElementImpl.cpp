@@ -23,13 +23,14 @@
 #include "config.h"
 #include "SVGAnimateColorElementImpl.h"
 #include "SVGDocumentImpl.h"
+#include "kdom/DOMString.h"
 
 #include <kdebug.h>
 
 using namespace KSVG;
 
-SVGAnimateColorElementImpl::SVGAnimateColorElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix)
-: SVGAnimationElementImpl(doc, id, prefix)
+SVGAnimateColorElementImpl::SVGAnimateColorElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc)
+: SVGAnimationElementImpl(tagName, doc)
 {
     m_toColor = new SVGColorImpl();
     m_toColor->ref();
@@ -61,7 +62,7 @@ void SVGAnimateColorElementImpl::handleTimerEvent(double timePercentage)
         SVGColorImpl *temp = new SVGColorImpl();
         temp->ref();
             
-        temp->setRGBColor(targetAttribute());
+        temp->setRGBColor(targetAttribute().impl());
 
         m_initialColor = temp->color();
         
@@ -74,7 +75,7 @@ void SVGAnimateColorElementImpl::handleTimerEvent(double timePercentage)
             case FROM_TO_ANIMATION:
             {
                 KDOM::DOMString toColorString(m_to);
-                m_toColor->setRGBColor(toColorString.handle());
+                m_toColor->setRGBColor(toColorString.impl());
     
                 KDOM::DOMString fromColorString;
                 if(!m_from.isEmpty()) // from-to animation
@@ -82,7 +83,7 @@ void SVGAnimateColorElementImpl::handleTimerEvent(double timePercentage)
                 else // to animation
                     fromColorString = m_initialColor.name();
     
-                m_fromColor->setRGBColor(fromColorString.handle());    
+                m_fromColor->setRGBColor(fromColorString.impl());    
 
                 // Calculate color differences, once.
                 QColor qTo = m_toColor->color();
@@ -98,7 +99,7 @@ void SVGAnimateColorElementImpl::handleTimerEvent(double timePercentage)
             case FROM_BY_ANIMATION:
             {
                 KDOM::DOMString byColorString(m_by);
-                m_toColor->setRGBColor(byColorString.handle());
+                m_toColor->setRGBColor(byColorString.impl());
 
                 KDOM::DOMString fromColorString;
             
@@ -107,7 +108,7 @@ void SVGAnimateColorElementImpl::handleTimerEvent(double timePercentage)
                 else // by animation
                     fromColorString = m_initialColor.name();
 
-                m_fromColor->setRGBColor(fromColorString.handle());
+                m_fromColor->setRGBColor(fromColorString.impl());
 
                 QColor qBy = m_toColor->color();
                 QColor qFrom = m_fromColor->color();
@@ -120,7 +121,7 @@ void SVGAnimateColorElementImpl::handleTimerEvent(double timePercentage)
                 QColor qTo = clampColor(r, g, b);
             
                 KDOM::DOMString toColorString(qTo.name());
-                m_toColor->setRGBColor(toColorString.handle());
+                m_toColor->setRGBColor(toColorString.impl());
             
                 m_redDiff = qTo.red() - qFrom.red();
                 m_greenDiff = qTo.green() - qFrom.green();
@@ -181,10 +182,10 @@ void SVGAnimateColorElementImpl::handleTimerEvent(double timePercentage)
                 }
 
                 KDOM::DOMString toColorString(value2);
-                m_toColor->setRGBColor(toColorString.handle());
+                m_toColor->setRGBColor(toColorString.impl());
     
                 KDOM::DOMString fromColorString(value1);
-                m_fromColor->setRGBColor(fromColorString.handle());    
+                m_fromColor->setRGBColor(fromColorString.impl());    
 
                 QColor qTo = m_toColor->color();
                 QColor qFrom = m_fromColor->color();

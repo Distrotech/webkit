@@ -23,7 +23,7 @@
 #include "config.h"
 #include <kdom/core/AttrImpl.h>
 
-#include "svgattrs.h"
+#include "SVGNames.h"
 #include "SVGHelper.h"
 #include "SVGDocumentImpl.h"
 #include "SVGRectElementImpl.h"
@@ -38,8 +38,8 @@
 
 using namespace KSVG;
 
-SVGRectElementImpl::SVGRectElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix)
-: SVGStyledElementImpl(doc, id, prefix), SVGTestsImpl(), SVGLangSpaceImpl(), SVGExternalResourcesRequiredImpl(), SVGTransformableImpl()
+SVGRectElementImpl::SVGRectElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc)
+: SVGStyledElementImpl(tagName, doc), SVGTestsImpl(), SVGLangSpaceImpl(), SVGExternalResourcesRequiredImpl(), SVGTransformableImpl()
 {
     m_x = m_y = m_rx = m_ry = m_width = m_height = 0;
 }
@@ -92,50 +92,28 @@ SVGAnimatedLengthImpl *SVGRectElementImpl::ry() const
 
 void SVGRectElementImpl::parseAttribute(KDOM::AttributeImpl *attr)
 {
-    int id = (attr->id() & NodeImpl_IdLocalMask);
-    KDOM::DOMStringImpl *value = attr->value();
-    switch(id)
+    const KDOM::AtomicString& value = attr->value();
+    if (attr->name() == SVGNames::xAttr)
+        x()->baseVal()->setValueAsString(value.impl());
+    else if (attr->name() == SVGNames::yAttr)
+        y()->baseVal()->setValueAsString(value.impl());
+    else if (attr->name() == SVGNames::rxAttr)
+        rx()->baseVal()->setValueAsString(value.impl());
+    else if (attr->name() == SVGNames::ryAttr)
+        ry()->baseVal()->setValueAsString(value.impl());
+    else if (attr->name() == SVGNames::widthAttr)
+        width()->baseVal()->setValueAsString(value.impl());
+    else if (attr->name() == SVGNames::heightAttr)
+        height()->baseVal()->setValueAsString(value.impl());
+    else
     {
-        case ATTR_X:
-        {
-            x()->baseVal()->setValueAsString(value);
-            break;
-        }
-        case ATTR_Y:
-        {
-            y()->baseVal()->setValueAsString(value);
-            break;
-        }
-        case ATTR_RX:
-        {
-            rx()->baseVal()->setValueAsString(value);
-            break;
-        }
-        case ATTR_RY:
-        {
-            ry()->baseVal()->setValueAsString(value);
-            break;
-        }
-        case ATTR_WIDTH:
-        {
-            width()->baseVal()->setValueAsString(value);
-            break;
-        }
-        case ATTR_HEIGHT:
-        {
-            height()->baseVal()->setValueAsString(value);
-            break;
-        }
-        default:
-        {
-            if(SVGTestsImpl::parseAttribute(attr)) return;
-            if(SVGLangSpaceImpl::parseAttribute(attr)) return;
-            if(SVGExternalResourcesRequiredImpl::parseAttribute(attr)) return;
-            if(SVGTransformableImpl::parseAttribute(attr)) return;
-            
-            SVGStyledElementImpl::parseAttribute(attr);
-        }
-    };
+        if(SVGTestsImpl::parseAttribute(attr)) return;
+        if(SVGLangSpaceImpl::parseAttribute(attr)) return;
+        if(SVGExternalResourcesRequiredImpl::parseAttribute(attr)) return;
+        if(SVGTransformableImpl::parseAttribute(attr)) return;
+        
+        SVGStyledElementImpl::parseAttribute(attr);
+    }
 }
 
 KCPathDataList SVGRectElementImpl::toPathData() const
@@ -143,7 +121,7 @@ KCPathDataList SVGRectElementImpl::toPathData() const
     float _x = x()->baseVal()->value(), _y = y()->baseVal()->value();
     float _width = width()->baseVal()->value(), _height = height()->baseVal()->value();
 
-    if(hasAttribute(KDOM::DOMString("rx").handle()) || hasAttribute(KDOM::DOMString("ry").handle()))
+    if(hasAttribute(KDOM::DOMString("rx").impl()) || hasAttribute(KDOM::DOMString("ry").impl()))
     {
         float _rx = rx()->baseVal()->value(), _ry = rx()->baseVal()->value();
         return KCanvasCreator::self()->createRoundedRectangle(_x, _y, _width, _height, _rx, _ry);

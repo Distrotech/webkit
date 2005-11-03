@@ -25,8 +25,6 @@
 
 #include <qpoint.h>
 
-#include <kdom/events/DocumentEventImpl.h>
-
 #include "SVGTestsImpl.h"
 #include "SVGLangSpaceImpl.h"
 #include "SVGLocatableImpl.h"
@@ -58,11 +56,10 @@ namespace KSVG
                               public SVGExternalResourcesRequiredImpl,
                               public SVGLocatableImpl,
                               public SVGFitToViewBoxImpl,
-                              public SVGZoomAndPanImpl,
-                              public KDOM::DocumentEventImpl
+                              public SVGZoomAndPanImpl
     {
     public:
-        SVGSVGElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix);
+        SVGSVGElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGSVGElementImpl();
         
         virtual bool isSVG() const { return true; }
@@ -73,11 +70,11 @@ namespace KSVG
         SVGAnimatedLengthImpl *width() const;
         SVGAnimatedLengthImpl *height() const;
 
-        KDOM::DOMStringImpl *contentScriptType() const;
-        void setContentScriptType(KDOM::DOMStringImpl *type);
+        const KDOM::AtomicString& contentScriptType() const;
+        void setContentScriptType(const KDOM::AtomicString& type);
 
-        KDOM::DOMStringImpl *contentStyleType() const;
-        void setContentStyleType(KDOM::DOMStringImpl *type);
+        const KDOM::AtomicString& contentStyleType() const;
+        void setContentStyleType(const KDOM::AtomicString& type);
 
         SVGRectImpl *viewport() const;
 
@@ -122,9 +119,6 @@ namespace KSVG
         static SVGRectImpl *createSVGRect();
         static SVGTransformImpl *createSVGTransform();
         static SVGTransformImpl *createSVGTransformFromMatrix(SVGMatrixImpl *matrix);
-
-        // 'DocumentEvent' functions
-        virtual KDOM::EventImpl *createEvent(KDOM::DOMStringImpl *eventType);
 
         virtual void parseAttribute(KDOM::AttributeImpl *);
 

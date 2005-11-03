@@ -26,8 +26,8 @@
 
 using namespace KSVG;
 
-SVGSetElementImpl::SVGSetElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix)
-: SVGAnimationElementImpl(doc, id, prefix)
+SVGSetElementImpl::SVGSetElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc)
+: SVGAnimationElementImpl(tagName, doc)
 {
 }
 
@@ -57,9 +57,9 @@ void SVGSetElementImpl::handleTimerEvent(double timePercentage)
     // Commit change now...
     if(m_savedTo.isEmpty())
     {
-        KDOM::DOMStringImpl *attr = targetAttribute();
-        m_savedTo = (attr ? attr->string() : QString::null);
-        setTargetAttribute(KDOM::DOMString(m_to).handle());
+        KDOM::DOMString attr(targetAttribute());
+        m_savedTo = attr.qstring();
+        setTargetAttribute(KDOM::DOMString(m_to).impl());
     }
 
     // End condition.
@@ -73,7 +73,7 @@ void SVGSetElementImpl::handleTimerEvent(double timePercentage)
         }
 
         if(!isFrozen())
-            setTargetAttribute(KDOM::DOMString(m_savedTo).handle());
+            setTargetAttribute(KDOM::DOMString(m_savedTo).impl());
 
         m_savedTo = QString();
     }

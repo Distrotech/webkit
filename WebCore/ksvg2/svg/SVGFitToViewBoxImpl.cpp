@@ -26,7 +26,7 @@
 #include <kdom/core/AttrImpl.h>
 #include <kdom/core/DOMStringImpl.h>
 
-#include "svgattrs.h"
+#include "SVGNames.h"
 #include "SVGRectImpl.h"
 #include "SVGSVGElementImpl.h"
 #include "SVGAnimatedRectImpl.h"
@@ -77,7 +77,7 @@ SVGAnimatedPreserveAspectRatioImpl *SVGFitToViewBoxImpl::preserveAspectRatio() c
 void SVGFitToViewBoxImpl::parseViewBox(KDOM::DOMStringImpl *str)
 {
     // allow for viewbox def with ',' or whitespace
-    QString viewbox(str->unicode(), str->length());
+    QString viewbox = KDOM::DOMString(str).qstring();
     QStringList points = QStringList::split(' ', viewbox.replace(',', ' ').simplifyWhiteSpace());
 
     if (points.count() == 4) {
@@ -103,19 +103,15 @@ SVGMatrixImpl *SVGFitToViewBoxImpl::viewBoxToViewTransform(float viewWidth, floa
 
 bool SVGFitToViewBoxImpl::parseAttribute(KDOM::AttributeImpl *attr)
 {
-    int id = (attr->id() & NodeImpl_IdLocalMask);
-    switch(id)
+    if (attr->name() == SVGNames::viewboxAttr)
     {
-        case ATTR_VIEWBOX:
-        {
-            parseViewBox(attr->value());
-            return true;
-        }
-        case ATTR_PRESERVEASPECTRATIO:
-        {
-            preserveAspectRatio()->baseVal()->parsePreserveAspectRatio(attr->value());
-            return true;
-        }
+        parseViewBox(attr->value().impl());
+        return true;
+    }
+    else if (attr->name() == SVGNames::preserveaspectratioAttr)
+    {
+        preserveAspectRatio()->baseVal()->parsePreserveAspectRatio(attr->value().impl());
+        return true;
     }
 
     return false;

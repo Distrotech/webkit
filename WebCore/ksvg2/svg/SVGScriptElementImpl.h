@@ -34,7 +34,7 @@ namespace KSVG
                                  public SVGExternalResourcesRequiredImpl
     {
     public:
-        SVGScriptElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix);
+        SVGScriptElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGScriptElementImpl();
 
         // 'SVGScriptElement' functions

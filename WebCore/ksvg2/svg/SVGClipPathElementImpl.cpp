@@ -29,7 +29,7 @@
 #include <kcanvas/device/KRenderingDevice.h>
 
 #include "ksvg.h"
-#include "svgattrs.h"
+#include "SVGNames.h"
 #include "SVGHelper.h"
 #include "SVGRenderStyle.h"
 #include "SVGDocumentImpl.h"
@@ -38,8 +38,8 @@
 
 using namespace KSVG;
 
-SVGClipPathElementImpl::SVGClipPathElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix)
-: SVGStyledElementImpl(doc, id, prefix), SVGTestsImpl(), SVGLangSpaceImpl(), SVGExternalResourcesRequiredImpl(), SVGTransformableImpl()
+SVGClipPathElementImpl::SVGClipPathElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc)
+: SVGStyledElementImpl(tagName, doc), SVGTestsImpl(), SVGLangSpaceImpl(), SVGExternalResourcesRequiredImpl(), SVGTransformableImpl()
 {
     m_clipPathUnits = 0;
     m_clipper = 0;
@@ -64,31 +64,26 @@ SVGAnimatedEnumerationImpl *SVGClipPathElementImpl::clipPathUnits() const
 
 void SVGClipPathElementImpl::parseAttribute(KDOM::AttributeImpl *attr)
 {
-    int id = (attr->id() & NodeImpl_IdLocalMask);
     KDOM::DOMString value(attr->value());
-    switch(id)
+    if (attr->name() == SVGNames::clippathunitsAttr)
     {
-        case ATTR_CLIPPATHUNITS:
-        {
-            if(value == "userSpaceOnUse")
-                clipPathUnits()->setBaseVal(SVG_UNIT_TYPE_USERSPACEONUSE);
-            else if(value == "objectBoundingBox")
-                clipPathUnits()->setBaseVal(SVG_UNIT_TYPE_OBJECTBOUNDINGBOX);
-            break;
-        }
-        default:
-        {
-            if(SVGTestsImpl::parseAttribute(attr)) return;
-            if(SVGLangSpaceImpl::parseAttribute(attr)) return;
-            if(SVGExternalResourcesRequiredImpl::parseAttribute(attr)) return;
-            if(SVGTransformableImpl::parseAttribute(attr)) return;
-            
-            SVGStyledElementImpl::parseAttribute(attr);
-        }
-    };
+        if(value == "userSpaceOnUse")
+            clipPathUnits()->setBaseVal(SVG_UNIT_TYPE_USERSPACEONUSE);
+        else if(value == "objectBoundingBox")
+            clipPathUnits()->setBaseVal(SVG_UNIT_TYPE_OBJECTBOUNDINGBOX);
+    }
+   else
+    {
+        if(SVGTestsImpl::parseAttribute(attr)) return;
+        if(SVGLangSpaceImpl::parseAttribute(attr)) return;
+        if(SVGExternalResourcesRequiredImpl::parseAttribute(attr)) return;
+        if(SVGTransformableImpl::parseAttribute(attr)) return;
+        
+        SVGStyledElementImpl::parseAttribute(attr);
+    }
 }
 
-void SVGClipPathElementImpl::close()
+void SVGClipPathElementImpl::closeRenderer()
 {
     if(!m_clipper)
     {
@@ -98,7 +93,7 @@ void SVGClipPathElementImpl::close()
             return;
 
         m_clipper = static_cast<KCanvasClipper *>(canvas->renderingDevice()->createResource(RS_CLIPPER));
-        canvas->registry()->addResourceById(KDOM::DOMString(getId()).string(), m_clipper);
+        canvas->registry()->addResourceById(getIDAttribute().qstring(), m_clipper);
     }
     else
         m_clipper->resetClipData();

@@ -23,7 +23,7 @@
 #ifndef KSVG_SVGElementImpl_H
 #define KSVG_SVGElementImpl_H
 
-#include <ksvg2/svg/svgtags.h>
+#include "SVGNames.h"
 #include <kdom/core/XMLElementImpl.h>
 
 namespace KDOM
@@ -42,31 +42,23 @@ namespace KSVG
     class SVGElementImpl : public KDOM::XMLElementImpl
     {
     public:
-        SVGElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix);
+        SVGElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGElementImpl();
 #if APPLE_CHANGES
         virtual bool isSVGElement() { return true; }
 #endif
         virtual bool isSupported(KDOM::DOMStringImpl *feature, KDOM::DOMStringImpl *version) const;
 
-        // 'SVGElement' functions
-        KDOM::DOMStringImpl *getId() const;
-        void setGetId(KDOM::DOMStringImpl *);
-        KDOM::DOMStringImpl *xmlbase() const;
-        void setXmlbase(KDOM::DOMStringImpl *);
-
         SVGSVGElementImpl *ownerSVGElement() const;
         SVGElementImpl *viewportElement() const;
 
         // Helper methods that returns the attr value if attr is set, otherwise the default value.
         // It throws NO_MODIFICATION_ALLOWED_ERR if the element is read-only.
-        KDOM::DOMStringImpl *tryGetAttribute(KDOM::DOMStringImpl *name, KDOM::DOMStringImpl *defaultVal = 0) const;
-        KDOM::DOMStringImpl *tryGetAttributeNS(KDOM::DOMStringImpl *namespaceURI, KDOM::DOMStringImpl *localName, KDOM::DOMStringImpl *defaultVal = 0) const;
+        const KDOM::AtomicString& tryGetAttribute(const KDOM::DOMString& name, const KDOM::AtomicString& defaultValue = KDOM::AtomicString()) const;
+        const KDOM::AtomicString& tryGetAttributeNS(const KDOM::DOMString& namespaceURI, const KDOM::DOMString& localName, const KDOM::AtomicString& defaultValue = KDOM::AtomicString()) const;
 
         // Internal
         virtual void parseAttribute(KDOM::AttributeImpl *attr);
-
-        virtual void createStyleDeclaration() const;
 
         // To be implemented by any element which can establish new viewports...
         virtual QString adjustViewportClipping() const { return QString::null; }
@@ -75,8 +67,14 @@ namespace KSVG
         
         virtual bool isStyled() const { return false; }
         virtual bool isSVG() const { return false; }
+        
+        virtual void closeRenderer() { m_closed = true; }
+        
+        // helper:
+        bool isClosed() { return m_closed; }
 
     private:
+        bool m_closed;
 #if 0
         void addSVGEventListener(KDOM::Ecma *ecmaEngine, const KDOM::DOMString &type, const KDOM::DOMString &value);
 #endif

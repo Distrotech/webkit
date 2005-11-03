@@ -33,7 +33,7 @@
 #include <kcanvas/device/KRenderingPaintServerGradient.h>
 
 #include "ksvg.h"
-#include "svgattrs.h"
+#include "SVGNames.h"
 #include "SVGHelper.h"
 #include "SVGRenderStyle.h"
 #include "SVGFECompositeElementImpl.h"
@@ -44,8 +44,8 @@
 
 using namespace KSVG;
 
-SVGFECompositeElementImpl::SVGFECompositeElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix) : 
-SVGFilterPrimitiveStandardAttributesImpl(doc, id, prefix)
+SVGFECompositeElementImpl::SVGFECompositeElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc) : 
+SVGFilterPrimitiveStandardAttributesImpl(tagName, doc)
 {
     m_in1 = m_in2 = 0;
     m_k1 = m_k2 = m_k3 = m_k4 = 0;
@@ -115,49 +115,36 @@ SVGAnimatedNumberImpl *SVGFECompositeElementImpl::k4() const
 
 void SVGFECompositeElementImpl::parseAttribute(KDOM::AttributeImpl *attr)
 {
-    int id = (attr->id() & NodeImpl_IdLocalMask);
     KDOM::DOMString value(attr->value());
-    switch(id)
+    if (attr->name() == SVGNames::operatorAttr)
     {
-        case ATTR_OPERATOR:
-        {
-            if(value == "over")
-                _operator()->setBaseVal(SVG_FECOMPOSITE_OPERATOR_OVER);
-            else if(value == "in")
-                _operator()->setBaseVal(SVG_FECOMPOSITE_OPERATOR_IN);
-            else if(value == "out")
-                _operator()->setBaseVal(SVG_FECOMPOSITE_OPERATOR_OUT);
-            else if(value == "atop")
-                _operator()->setBaseVal(SVG_FECOMPOSITE_OPERATOR_ATOP);
-            else if(value == "xor")
-                _operator()->setBaseVal(SVG_FECOMPOSITE_OPERATOR_XOR);
-            else if(value == "arithmatic")
-                _operator()->setBaseVal(SVG_FECOMPOSITE_OPERATOR_ARITHMETIC);
-            break;
-        }
-        case ATTR_IN:
-        {
-            in1()->setBaseVal(value.handle());
-            break;
-        }
-        case ATTR_IN2:
-        {
-            in2()->setBaseVal(value.handle());
-            break;
-        }
-        default:
-        {
-            SVGFilterPrimitiveStandardAttributesImpl::parseAttribute(attr);
-        }
-    };
+        if(value == "over")
+            _operator()->setBaseVal(SVG_FECOMPOSITE_OPERATOR_OVER);
+        else if(value == "in")
+            _operator()->setBaseVal(SVG_FECOMPOSITE_OPERATOR_IN);
+        else if(value == "out")
+            _operator()->setBaseVal(SVG_FECOMPOSITE_OPERATOR_OUT);
+        else if(value == "atop")
+            _operator()->setBaseVal(SVG_FECOMPOSITE_OPERATOR_ATOP);
+        else if(value == "xor")
+            _operator()->setBaseVal(SVG_FECOMPOSITE_OPERATOR_XOR);
+        else if(value == "arithmatic")
+            _operator()->setBaseVal(SVG_FECOMPOSITE_OPERATOR_ARITHMETIC);
+    }
+    else if (attr->name() == SVGNames::inAttr)
+        in1()->setBaseVal(value.impl());
+    else if (attr->name() == SVGNames::in2Attr)
+        in2()->setBaseVal(value.impl());
+    else
+        SVGFilterPrimitiveStandardAttributesImpl::parseAttribute(attr);
 }
 
 KCanvasItem *SVGFECompositeElementImpl::createCanvasItem(KCanvas *canvas, KRenderingStyle *style) const
 {
     m_filterEffect = static_cast<KCanvasFEComposite *>(canvas->renderingDevice()->createFilterEffect(FE_COMPOSITE));
     m_filterEffect->setOperation((KCCompositeOperationType)(_operator()->baseVal() - 1));
-    m_filterEffect->setIn(KDOM::DOMString(in1()->baseVal()).string());
-    m_filterEffect->setIn2(KDOM::DOMString(in2()->baseVal()).string());
+    m_filterEffect->setIn(KDOM::DOMString(in1()->baseVal()).qstring());
+    m_filterEffect->setIn2(KDOM::DOMString(in2()->baseVal()).qstring());
     setStandardAttributes(m_filterEffect);
     m_filterEffect->setK1(k1()->baseVal());
     m_filterEffect->setK2(k2()->baseVal());

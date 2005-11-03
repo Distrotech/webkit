@@ -24,7 +24,7 @@
 #include <kdom/core/AttrImpl.h>
 
 #include "ksvg.h"
-#include "svgattrs.h"
+#include "SVGNames.h"
 #include "SVGHelper.h"
 #include "SVGMatrixImpl.h"
 #include "SVGDocumentImpl.h"
@@ -46,7 +46,7 @@
 
 using namespace KSVG;
 
-SVGRadialGradientElementImpl::SVGRadialGradientElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix) : SVGGradientElementImpl(doc, id, prefix)
+SVGRadialGradientElementImpl::SVGRadialGradientElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc) : SVGGradientElementImpl(tagName, doc)
 {
     m_cx = m_cy = m_fx = m_fy = m_r = 0;
 }
@@ -113,47 +113,28 @@ SVGAnimatedLengthImpl *SVGRadialGradientElementImpl::r() const
 
 void SVGRadialGradientElementImpl::parseAttribute(KDOM::AttributeImpl *attr)
 {
-    int id = (attr->id() & NodeImpl_IdLocalMask);
-    KDOM::DOMStringImpl *value = attr->value();
-    switch(id)
-    {
-        case ATTR_CX:
-        {
-            cx()->baseVal()->setValueAsString(value);
-            break;
-        }
-        case ATTR_CY:
-        {
-            cy()->baseVal()->setValueAsString(value);
-            break;
-        }
-        case ATTR_R:
-        {
-            r()->baseVal()->setValueAsString(value);
-            break;
-        }
-        case ATTR_FX:
-        {
-            fx()->baseVal()->setValueAsString(value);
-            break;
-        }
-        case ATTR_FY:
-        {
-            fy()->baseVal()->setValueAsString(value);
-            break;
-        }
-        default:
-            SVGGradientElementImpl::parseAttribute(attr);
-    };
+    const KDOM::AtomicString& value = attr->value();
+    if (attr->name() == SVGNames::cxAttr)
+        cx()->baseVal()->setValueAsString(value.impl());
+    else if (attr->name() == SVGNames::cyAttr)
+        cy()->baseVal()->setValueAsString(value.impl());
+    else if (attr->name() == SVGNames::rAttr)
+        r()->baseVal()->setValueAsString(value.impl());
+    else if (attr->name() == SVGNames::fxAttr)
+        fx()->baseVal()->setValueAsString(value.impl());
+    else if (attr->name() == SVGNames::fyAttr)
+        fy()->baseVal()->setValueAsString(value.impl());
+    else
+        SVGGradientElementImpl::parseAttribute(attr);
 }
 
 void SVGRadialGradientElementImpl::buildGradient(KRenderingPaintServerGradient *_grad, KCanvas *canvas) const
 {
-    QString ref = KDOM::DOMString(href()->baseVal()).string();
+    QString ref = KDOM::DOMString(href()->baseVal()).qstring();
 
     bool bbox = (gradientUnits()->baseVal() == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX);
-    bool fxSet = hasAttribute(KDOM::DOMString("fx").handle());
-    bool fySet = hasAttribute(KDOM::DOMString("fy").handle());
+    bool fxSet = hasAttribute(KDOM::DOMString("fx").impl());
+    bool fySet = hasAttribute(KDOM::DOMString("fy").impl());
     cx()->baseVal()->setBboxRelative(bbox);
     cy()->baseVal()->setBboxRelative(bbox);
     r()->baseVal()->setBboxRelative(bbox);
@@ -178,31 +159,31 @@ void SVGRadialGradientElementImpl::buildGradient(KRenderingPaintServerGradient *
         bool isRadial = pserver->type() == PS_RADIAL_GRADIENT;
         KRenderingPaintServerGradient *gradient = static_cast<KRenderingPaintServerGradient *>(pserver);
 
-        if(!hasAttribute(KDOM::DOMString("gradientUnits").handle()))
+        if(!hasAttribute(KDOM::DOMString("gradientUnits").impl()))
             bbox = gradient->boundingBoxMode();
 
         if(isRadial)
         {
             KRenderingPaintServerRadialGradient *radial = static_cast<KRenderingPaintServerRadialGradient *>(pserver);
-            if(!hasAttribute(KDOM::DOMString("cx").handle()))
+            if(!hasAttribute(KDOM::DOMString("cx").impl()))
                 _cx = radial->gradientCenter().x();
             else if(bbox)
                 _cx *= 100.;
-            if(!hasAttribute(KDOM::DOMString("cy").handle()))
+            if(!hasAttribute(KDOM::DOMString("cy").impl()))
                 _cy = radial->gradientCenter().y();
             else if(bbox)
                 _cy *= 100.;
 
-            if(!hasAttribute(KDOM::DOMString("fx").handle()))
+            if(!hasAttribute(KDOM::DOMString("fx").impl()))
                 _fx = radial->gradientFocal().x();
             else if(bbox)
                 _fx *= 100.;
-            if(!hasAttribute(KDOM::DOMString("fy").handle()))
+            if(!hasAttribute(KDOM::DOMString("fy").impl()))
                 _fy = radial->gradientFocal().y();
             else if(bbox)
                 _fy *= 100.;
 
-            if(!hasAttribute(KDOM::DOMString("r").handle()))
+            if(!hasAttribute(KDOM::DOMString("r").impl()))
                 _r = radial->gradientRadius();
             else if(bbox)
                 _r *= 100.;
@@ -216,7 +197,7 @@ void SVGRadialGradientElementImpl::buildGradient(KRenderingPaintServerGradient *
             _r *= 100.0;
         }
 
-        if(!hasAttribute(KDOM::DOMString("gradientTransform").handle()))
+        if(!hasAttribute(KDOM::DOMString("gradientTransform").impl()))
             mat = gradient->gradientTransform();
 
         // Inherit color stops if empty
@@ -227,7 +208,7 @@ void SVGRadialGradientElementImpl::buildGradient(KRenderingPaintServerGradient *
                 grad->gradientStops().addStop(it.current()->offset, it.current()->color);
         }
 
-        if(!hasAttribute(KDOM::DOMString("spreadMethod").handle()))
+        if(!hasAttribute(KDOM::DOMString("spreadMethod").impl()))
             grad->setGradientSpreadMethod(gradient->spreadMethod());
     }
     else
@@ -263,14 +244,14 @@ KCanvasItem *SVGRadialGradientElementImpl::createCanvasItem(KCanvas *canvas, KRe
 
     pserver->setListener(const_cast<SVGRadialGradientElementImpl *>(this));
 
-    canvas->registry()->addPaintServerById(KDOM::DOMString(getId()).string(), pserver);
+    canvas->registry()->addPaintServerById(getIDAttribute().qstring(), pserver);
     return 0;
 }
 
 void SVGRadialGradientElementImpl::resourceNotification() const
 {
     // We're referenced by a "client", build the gradient now...
-    KRenderingPaintServer *pserver = canvas()->registry()->getPaintServerById(KDOM::DOMString(getId()).string());
+    KRenderingPaintServer *pserver = canvas()->registry()->getPaintServerById(getIDAttribute().qstring());
     KRenderingPaintServerGradient *gradient = static_cast<KRenderingPaintServerGradient *>(pserver);
     buildGradient(gradient, canvas());
 }

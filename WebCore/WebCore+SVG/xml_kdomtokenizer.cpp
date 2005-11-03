@@ -25,6 +25,7 @@
 
 #include "config.h"
 #include <qstring.h>
+#include <zlib.h>
 
 #include "loader_client.h"
 #include "khtmlview.h"
@@ -37,11 +38,8 @@
 #include "xml_kdomtokenizer.h"
 
 #include "kdom/core/DOMConfigurationImpl.h"
-#include "kdom/backends/libxml/LibXMLParser.h"
 #include "kdom/core/DocumentImpl.h"
-
 #include "ksvg2/svg/SVGDocumentImpl.h"
-#include "ksvg2/misc/KSVGDocumentBuilder.h"
 
 
 namespace DOM {

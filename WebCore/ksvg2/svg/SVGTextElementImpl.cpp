@@ -26,8 +26,8 @@
 
 using namespace KSVG;
 
-SVGTextElementImpl::SVGTextElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix)
-: SVGTextPositioningElementImpl(doc, id, prefix), SVGTransformableImpl()
+SVGTextElementImpl::SVGTextElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc)
+: SVGTextPositioningElementImpl(tagName, doc), SVGTransformableImpl()
 {
 }
 

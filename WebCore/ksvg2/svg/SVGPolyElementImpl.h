@@ -42,7 +42,7 @@ namespace KSVG
                                 public SVGPolyParser
     {
     public:
-        SVGPolyElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix);
+        SVGPolyElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGPolyElementImpl();
 
         // Derived from: 'SVGAnimatedPoints'

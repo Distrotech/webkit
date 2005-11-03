@@ -39,7 +39,7 @@ namespace KSVG
                                  public SVGTransformableImpl
     {
     public:
-        SVGCircleElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix);
+        SVGCircleElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGCircleElementImpl();
 
         // 'SVGCircleElement' functions

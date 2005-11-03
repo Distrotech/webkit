@@ -35,7 +35,7 @@ namespace KSVG
     class SVGFilterPrimitiveStandardAttributesImpl : public SVGStyledElementImpl
     {
     public:
-        SVGFilterPrimitiveStandardAttributesImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix);
+        SVGFilterPrimitiveStandardAttributesImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGFilterPrimitiveStandardAttributesImpl();
 
         // 'SVGFilterPrimitiveStandardAttributes' functions

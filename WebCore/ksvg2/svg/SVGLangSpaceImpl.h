@@ -23,6 +23,8 @@
 #ifndef KSVG_SVGLangSpaceImpl_H
 #define KSVG_SVGLangSpaceImpl_H
 
+#include "dom_atomicstring.h"
+
 namespace KDOM
 {
     class DOMStringImpl;
@@ -41,17 +43,17 @@ namespace KSVG
         virtual ~SVGLangSpaceImpl();
 
         // 'SVGLangSpace' functions
-        KDOM::DOMStringImpl *xmllang() const;
-        void setXmllang(KDOM::DOMStringImpl *xmlLang);
+        const KDOM::AtomicString& xmllang() const;
+        void setXmllang(const KDOM::AtomicString& xmlLang);
 
-        KDOM::DOMStringImpl *xmlspace() const;
-        void setXmlspace(KDOM::DOMStringImpl *xmlSpace);
+        const KDOM::AtomicString& xmlspace() const;
+        void setXmlspace(const KDOM::AtomicString& xmlSpace);
 
         bool parseAttribute(KDOM::AttributeImpl *attr);
 
     private:
-        mutable KDOM::DOMStringImpl *m_lang;
-        mutable KDOM::DOMStringImpl *m_space;
+        KDOM::AtomicString m_lang;
+        KDOM::AtomicString m_space;
     };
 };
 

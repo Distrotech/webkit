@@ -39,7 +39,7 @@ namespace KSVG
                                public SVGTransformableImpl
     {
     public:
-        SVGLineElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix);
+        SVGLineElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGLineElementImpl();
 
         // 'SVGLineElement' functions

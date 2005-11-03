@@ -35,23 +35,24 @@ class KCanvasView;
 class KCanvasItem;
 class KRenderingStyle;
 
+namespace KDOM {
+    class CSSStyleDeclarationImpl;
+}
+
 namespace KSVG
 {
     class KCanvasRenderingStyle;
     class SVGStyledElementImpl;
-    class SVGCSSStyleDeclarationImpl;
-    class SVGStyledElementImpl : public SVGElementImpl,
-                                 public SVGStylableImpl
+    class SVGStyledElementImpl : public SVGElementImpl
     {
     public:
-        SVGStyledElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix);
+        SVGStyledElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGStyledElementImpl();
         
         virtual bool isStyled() const { return true; }
 
         // 'SVGStylable' functions
         virtual SVGAnimatedStringImpl *className() const;
-        virtual KDOM::CSSStyleDeclarationImpl *style();
         virtual KDOM::CSSStyleDeclarationImpl *pa() const;
         virtual KDOM::CSSValueImpl *getPresentationAttribute(KDOM::DOMStringImpl *name);
 
@@ -71,7 +72,6 @@ namespace KSVG
 
         KCanvasItem *canvasItem() const;
         virtual void notifyAttributeChange() const;
-        virtual void recalcStyle(StyleChange = NoChange);
 
         // Imagine we're a <rect> inside of a <pattern> section with patternContentUnits="objectBoundingBox"
         // and our 'width' attribute is set to 50%. When the pattern gets referenced it knows the "bbox"
@@ -86,19 +86,19 @@ namespace KSVG
         KCanvas *canvas() const;
         KCanvasView *canvasView() const;
 
-        virtual KDOM::RenderStyle *renderStyle() const;
+        virtual khtml::RenderStyle *renderStyle() const;
         virtual void finalizeStyle(KCanvasRenderingStyle *style, bool needFillStrokeUpdate = true);
 
-        void setStyle(KDOM::RenderStyle *newStyle);
+        void setStyle(khtml::RenderStyle *newStyle);
         void updateCanvasItem(); // Handles "path data" object changes... (not for style/transform!)
 
         KCanvasItem *m_canvasItem;
 
     private:
-        mutable SVGCSSStyleDeclarationImpl *m_pa;
+        mutable KDOM::CSSStyleDeclarationImpl *m_pa;
         mutable SVGAnimatedStringImpl *m_className;
 
-        mutable KDOM::RenderStyle *m_renderStyle;
+        mutable khtml::RenderStyle *m_renderStyle;
 
         // Optimized updating logic
         bool m_updateVectorial : 1;

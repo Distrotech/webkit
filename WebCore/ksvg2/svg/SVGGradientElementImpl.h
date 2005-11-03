@@ -43,7 +43,7 @@ namespace KSVG
                                    public KCanvasResourceListener
     {
     public:
-        SVGGradientElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix);
+        SVGGradientElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGGradientElementImpl();
 
         // 'SVGGradientElement' functions

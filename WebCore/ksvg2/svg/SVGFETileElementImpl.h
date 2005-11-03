@@ -35,7 +35,7 @@ namespace KSVG
     class SVGFETileElementImpl : public SVGFilterPrimitiveStandardAttributesImpl
     {
     public:
-        SVGFETileElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix);
+        SVGFETileElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGFETileElementImpl();
 
         // 'SVGFETileElement' functions

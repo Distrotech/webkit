@@ -35,6 +35,7 @@
 #include <kcanvas/device/KRenderingPaintServerGradient.h>
 
 #include <kdom/core/DocumentImpl.h>
+#include <kdom/DOMString.h>
 #include <kdom/css/RenderStyle.h>
 #include <kdom/css/CSSValueListImpl.h>
 #include <kdom/css/CSSPrimitiveValueImpl.h>
@@ -83,7 +84,7 @@ void KCanvasRenderingStyle::updateFill(KCanvasItem *item)
     {
         KDOM::DOMString id(fill->uri());
 
-        KRenderingPaintServer *fillPaintServer = m_canvas->registry()->getPaintServerById(id.string().mid(1));
+        KRenderingPaintServer *fillPaintServer = m_canvas->registry()->getPaintServerById(id.qstring().mid(1));
         if(item && fillPaintServer)
             fillPaintServer->addClient(item);
 
@@ -120,7 +121,7 @@ void KCanvasRenderingStyle::updateStroke(KCanvasItem *item)
     {
         KDOM::DOMString id(stroke->uri());
 
-        KRenderingPaintServer *strokePaintServer = m_canvas->registry()->getPaintServerById(id.string().mid(1));
+        KRenderingPaintServer *strokePaintServer = m_canvas->registry()->getPaintServerById(id.qstring().mid(1));
         if(item && strokePaintServer)
             strokePaintServer->addClient(item);
 
@@ -194,8 +195,8 @@ double KCanvasRenderingStyle::cssPrimitiveToLength(KCanvasItem *item, KDOM::CSSV
 {
     KDOM::CSSPrimitiveValueImpl *primitive = static_cast<KDOM::CSSPrimitiveValueImpl *>(value);
 
-    unsigned short cssType = (primitive ? primitive->primitiveType() : (unsigned short) KDOM::CSS_UNKNOWN);
-    if(!(cssType > KDOM::CSS_UNKNOWN && cssType <= KDOM::CSS_PC))
+    unsigned short cssType = (primitive ? primitive->primitiveType() : (unsigned short) KDOM::CSSPrimitiveValue::CSS_UNKNOWN);
+    if(!(cssType > KDOM::CSSPrimitiveValue::CSS_UNKNOWN && cssType <= KDOM::CSSPrimitiveValue::CSS_PC))
         return defaultValue;
 
     Q3PaintDeviceMetrics *paintDeviceMetrics = 0;
@@ -204,12 +205,12 @@ double KCanvasRenderingStyle::cssPrimitiveToLength(KCanvasItem *item, KDOM::CSSV
     if(element && element->ownerDocument())
         paintDeviceMetrics = element->ownerDocument()->paintDeviceMetrics();
 
-    if(cssType == KDOM::CSS_PERCENTAGE)
+    if(cssType == KDOM::CSSPrimitiveValue::CSS_PERCENTAGE)
     {
         SVGElementImpl *viewportElement = (element ? element->viewportElement() : 0);
         if(viewportElement)
         {
-            double result = primitive->getFloatValue(KDOM::CSS_PERCENTAGE) / 100.0;
+            double result = primitive->getFloatValue(KDOM::CSSPrimitiveValue::CSS_PERCENTAGE) / 100.0;
             return SVGHelper::PercentageOfViewport(result, viewportElement, LM_OTHER);
         }
     }
@@ -268,8 +269,8 @@ KRenderingFillPainter *KCanvasRenderingStyle::fillPainter()
 // Display states
 bool KCanvasRenderingStyle::visible() const
 {
-    return (m_style->display() != KDOM::DS_NONE) &&
-           (m_style->visibility() == KDOM::VS_VISIBLE);
+    return (m_style->display() != KDOM::NONE) &&
+           (m_style->visibility() == KDOM::VISIBLE);
 }
 
 void KCanvasRenderingStyle::setVisible(bool)

@@ -24,7 +24,7 @@
 #include <kdom/core/AttrImpl.h>
 
 #include "ksvg.h"
-#include "svgattrs.h"
+#include "SVGNames.h"
 #include "SVGHelper.h"
 #include "SVGDocumentImpl.h"
 #include "SVGTransformableImpl.h"
@@ -40,7 +40,7 @@
 
 using namespace KSVG;
 
-SVGGradientElementImpl::SVGGradientElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix) : SVGStyledElementImpl(doc, id, prefix), SVGURIReferenceImpl(), SVGExternalResourcesRequiredImpl()
+SVGGradientElementImpl::SVGGradientElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc) : SVGStyledElementImpl(tagName, doc), SVGURIReferenceImpl(), SVGExternalResourcesRequiredImpl()
 {
     m_spreadMethod = 0;
     m_gradientUnits = 0;
@@ -80,42 +80,35 @@ SVGAnimatedEnumerationImpl *SVGGradientElementImpl::spreadMethod() const
 
 void SVGGradientElementImpl::parseAttribute(KDOM::AttributeImpl *attr)
 {
-    int id = (attr->id() & NodeImpl_IdLocalMask);
     KDOM::DOMString value(attr->value());
-    switch(id)
+    if (attr->name() == SVGNames::gradientunitsAttr)
     {
-        case ATTR_GRADIENTUNITS:
-        {
-            if(value == "userSpaceOnUse")
-                gradientUnits()->setBaseVal(SVG_UNIT_TYPE_USERSPACEONUSE);
-            else if(value == "objectBoundingBox")
-                gradientUnits()->setBaseVal(SVG_UNIT_TYPE_OBJECTBOUNDINGBOX);
-            break;
-        }
-        case ATTR_GRADIENTTRANSFORM:
-        {
-            SVGTransformListImpl *gradientTransforms = gradientTransform()->baseVal();
-            SVGTransformableImpl::parseTransformAttribute(gradientTransforms, attr->value());
-            break;
-        }
-        case ATTR_SPREADMETHOD:
-        {
-            if(value == "reflect")
-                spreadMethod()->setBaseVal(SVG_SPREADMETHOD_REFLECT);
-            else if(value == "repeat")
-                spreadMethod()->setBaseVal(SVG_SPREADMETHOD_REPEAT);
-            else if(value == "pad")
-                spreadMethod()->setBaseVal(SVG_SPREADMETHOD_PAD);
-            break;
-        }
-        default:
-        {
-            if(SVGURIReferenceImpl::parseAttribute(attr)) return;
-            if(SVGExternalResourcesRequiredImpl::parseAttribute(attr)) return;
-            
-            SVGStyledElementImpl::parseAttribute(attr);
-        }
-    };
+        if(value == "userSpaceOnUse")
+            gradientUnits()->setBaseVal(SVG_UNIT_TYPE_USERSPACEONUSE);
+        else if(value == "objectBoundingBox")
+            gradientUnits()->setBaseVal(SVG_UNIT_TYPE_OBJECTBOUNDINGBOX);
+    }
+    else if (attr->name() == SVGNames::gradienttransformAttr)
+    {
+        SVGTransformListImpl *gradientTransforms = gradientTransform()->baseVal();
+        SVGTransformableImpl::parseTransformAttribute(gradientTransforms, attr->value().impl());
+    }
+    else if (attr->name() == SVGNames::spreadmethodAttr)
+    {
+        if(value == "reflect")
+            spreadMethod()->setBaseVal(SVG_SPREADMETHOD_REFLECT);
+        else if(value == "repeat")
+            spreadMethod()->setBaseVal(SVG_SPREADMETHOD_REPEAT);
+        else if(value == "pad")
+            spreadMethod()->setBaseVal(SVG_SPREADMETHOD_PAD);
+    }
+    else
+    {
+        if(SVGURIReferenceImpl::parseAttribute(attr)) return;
+        if(SVGExternalResourcesRequiredImpl::parseAttribute(attr)) return;
+        
+        SVGStyledElementImpl::parseAttribute(attr);
+    }
 }
 
 void SVGGradientElementImpl::notifyAttributeChange() const
@@ -128,7 +121,7 @@ void SVGGradientElementImpl::notifyAttributeChange() const
     KCanvas *canvas = (document ? document->canvas() : 0);
     if(canvas)
     {
-        KRenderingPaintServerGradient *pserver = static_cast<KRenderingPaintServerGradient *>(canvas->registry()->getPaintServerById(KDOM::DOMString(getId()).string()));
+        KRenderingPaintServerGradient *pserver = static_cast<KRenderingPaintServerGradient *>(canvas->registry()->getPaintServerById(getIDAttribute().qstring()));
         if(pserver)
         {
             buildGradient(pserver, canvas);

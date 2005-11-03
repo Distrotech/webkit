@@ -37,7 +37,7 @@ namespace KSVG
     class SVGFECompositeElementImpl : public SVGFilterPrimitiveStandardAttributesImpl
     {
     public:
-        SVGFECompositeElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix);
+        SVGFECompositeElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGFECompositeElementImpl();
 
         // 'SVGFECompositeElement' functions

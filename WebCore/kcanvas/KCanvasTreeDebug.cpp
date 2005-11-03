@@ -277,7 +277,7 @@ static QString getTagName(void *node)
 {
     KSVG::SVGStyledElementImpl *elem = static_cast<KSVG::SVGStyledElementImpl *>(node);
     if (elem)
-        return KDOM::DOMString(elem->nodeName()).string();
+        return KDOM::DOMString(elem->nodeName()).qstring();
     return QString();
 }
 

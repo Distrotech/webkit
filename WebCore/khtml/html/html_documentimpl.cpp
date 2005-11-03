@@ -134,19 +134,6 @@ ElementImpl* HTMLDocumentImpl::documentElement() const
     return static_cast<ElementImpl*>(_first);
 }
 
-DOMString HTMLDocumentImpl::referrer() const
-{
-    if ( part() )
-#if APPLE_CHANGES
-        return KWQ(part())->incomingReferrer();
-#else
-        // This is broken; returns the referrer used for links within this page (basically
-        // the same as the URL), not the referrer used for loading this page itself.
-        return part()->referrer();
-#endif
-    return DOMString();
-}
-
 DOMString HTMLDocumentImpl::lastModified() const
 {
     if ( part() )

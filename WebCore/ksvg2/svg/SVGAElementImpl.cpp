@@ -30,7 +30,7 @@
 #include <kcanvas/KCanvasContainer.h>
 #include <kcanvas/device/KRenderingDevice.h>
 
-#include "svgattrs.h"
+#include "SVGNames.h"
 #include "SVGHelper.h"
 #include <ksvg2/KSVGPart.h>
 #include "SVGDocumentImpl.h"
@@ -39,8 +39,8 @@
 
 using namespace KSVG;
 
-SVGAElementImpl::SVGAElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix)
-: SVGStyledElementImpl(doc, id, prefix), SVGURIReferenceImpl(), SVGTestsImpl(), SVGLangSpaceImpl(), SVGExternalResourcesRequiredImpl(), SVGTransformableImpl()
+SVGAElementImpl::SVGAElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc)
+: SVGStyledElementImpl(tagName, doc), SVGURIReferenceImpl(), SVGTestsImpl(), SVGLangSpaceImpl(), SVGExternalResourcesRequiredImpl(), SVGTransformableImpl()
 {
     m_target = 0;
 }
@@ -58,30 +58,22 @@ SVGAnimatedStringImpl *SVGAElementImpl::target() const
 
 void SVGAElementImpl::parseAttribute(KDOM::AttributeImpl *attr)
 {
-    int id = (attr->id() & NodeImpl_IdLocalMask);
     KDOM::DOMString value(attr->value());
-    switch(id)
-    {
-        case ATTR_TARGET:
+    if (attr->name() == SVGNames::targetAttr) {
+        target()->setBaseVal(value.impl());
+    } else {
+        if(SVGURIReferenceImpl::parseAttribute(attr))
         {
-            target()->setBaseVal(value.handle());
-            break;
+            m_isLink = attr->value() != 0;
+            return;
         }
-        default:
-        {
-            if(SVGURIReferenceImpl::parseAttribute(attr))
-            {
-                m_hasAnchor = attr->value() != 0;
-                return;
-            }
-            if(SVGTestsImpl::parseAttribute(attr)) return;
-            if(SVGLangSpaceImpl::parseAttribute(attr)) return;
-            if(SVGExternalResourcesRequiredImpl::parseAttribute(attr)) return;
-            if(SVGTransformableImpl::parseAttribute(attr)) return;
-            
-            SVGStyledElementImpl::parseAttribute(attr);
-        }
-    };
+        if(SVGTestsImpl::parseAttribute(attr)) return;
+        if(SVGLangSpaceImpl::parseAttribute(attr)) return;
+        if(SVGExternalResourcesRequiredImpl::parseAttribute(attr)) return;
+        if(SVGTransformableImpl::parseAttribute(attr)) return;
+        
+        SVGStyledElementImpl::parseAttribute(attr);
+    }
 }
 
 KCanvasItem *SVGAElementImpl::createCanvasItem(KCanvas *canvas, KRenderingStyle *style) const
@@ -93,11 +85,9 @@ void SVGAElementImpl::defaultEventHandler(KDOM::EventImpl *evt)
 {
     // TODO : should use CLICK instead
     kdDebug() << k_funcinfo << endl;
-    if((evt->id() == KDOM::MOUSEUP_EVENT && m_hasAnchor))
+    if((evt->type() == KDOM::EventNames::mouseupEvent && m_isLink))
     {
-        KDOM::MouseEventImpl *e = 0;
-        if(evt->id() == KDOM::MOUSEUP_EVENT)
-            e = static_cast<KDOM::MouseEventImpl*>(evt);
+        KDOM::MouseEventImpl *e = static_cast<KDOM::MouseEventImpl*>(evt);
 
         QString url;
         QString utarget;
@@ -106,10 +96,13 @@ void SVGAElementImpl::defaultEventHandler(KDOM::EventImpl *evt)
             KDOM::EventTargetImpl::defaultEventHandler(evt);
             return;
         }
-
-        url = KDOM::DOMString(KDOM::Helper::parseURL(href()->baseVal())).string();
+#if APPLE_CHANGES
+        url = KDOM::parseURL(href()->baseVal()).qstring();
+#else
+        url = KDOM::DOMString(KDOM::Helper::parseURL(href()->baseVal())).qstring();
+#endif
         kdDebug() << "url : " << url << endl;
-        utarget = KDOM::DOMString(getAttribute(ATTR_TARGET)).string();
+        utarget = KDOM::DOMString(getAttribute(SVGNames::targetAttr)).qstring();
         kdDebug() << "utarget : " << utarget << endl;
 
         if(e && e->button() == 1)

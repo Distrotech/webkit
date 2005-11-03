@@ -27,7 +27,7 @@
 #include <kcanvas/KCanvasContainer.h>
 #include <kcanvas/device/KRenderingDevice.h>
 
-#include "svgattrs.h"
+#include "SVGNames.h"
 #include "SVGHelper.h"
 #include "SVGTestsImpl.h"
 #include "SVGDocumentImpl.h"
@@ -36,8 +36,8 @@
 
 using namespace KSVG;
 
-SVGSwitchElementImpl::SVGSwitchElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix)
-: SVGStyledElementImpl(doc, id, prefix), SVGTestsImpl(), SVGLangSpaceImpl(), SVGExternalResourcesRequiredImpl(), SVGTransformableImpl()
+SVGSwitchElementImpl::SVGSwitchElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc)
+: SVGStyledElementImpl(tagName, doc), SVGTestsImpl(), SVGLangSpaceImpl(), SVGExternalResourcesRequiredImpl(), SVGTransformableImpl()
 {
 }
 

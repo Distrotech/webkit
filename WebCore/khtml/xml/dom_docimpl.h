@@ -132,7 +132,7 @@ public:
     ~DOMImplementationImpl();
 
     // DOM methods & attributes for DOMImplementation
-    bool hasFeature ( const DOMString &feature, const DOMString &version );
+    bool hasFeature(const DOMString& feature, const DOMString& version) const;
     DocumentTypeImpl *createDocumentType( const DOMString &qualifiedName, const DOMString &publicId,
                                           const DOMString &systemId, int &exceptioncode );
     DocumentImpl *createDocument( const DOMString &namespaceURI, const DOMString &qualifiedName,
@@ -177,7 +177,7 @@ public:
     virtual DocumentTypeImpl *doctype() const; // returns 0 for HTML documents
     DocumentTypeImpl *realDocType() const { return m_docType.get(); }
 
-    DOMImplementationImpl *impl() const;
+    DOMImplementationImpl *implementation() const;
     virtual ElementImpl *documentElement() const;
     virtual ElementImpl *createElement(const DOMString &tagName, int &exceptioncode);
     DocumentFragmentImpl *createDocumentFragment ();
@@ -508,7 +508,8 @@ public:
     // Returns the owning element in the parent document.
     // Returns 0 if this is the top level document.
     ElementImpl *ownerElement();
-
+    
+    DOMString referrer() const;
     DOMString domain() const;
     void setDomain( const DOMString &newDomain, bool force = false ); // not part of the DOM
 
@@ -822,7 +823,7 @@ public:
     virtual NodeImpl *cloneNode(bool deep);
 
     // Other methods (not part of DOM)
-    DOMImplementationImpl *impl() const { return m_implementation.get(); }
+    DOMImplementationImpl *implementation() const { return m_implementation.get(); }
     virtual DOMString toString() const;
 
 private:

@@ -35,12 +35,11 @@
 #include <kcanvas/device/KRenderingDevice.h>
 
 #include "ksvg.h"
-#include "svgattrs.h"
+#include "SVGNames.h"
 #include "SVGHelper.h"
 #include "SVGRectImpl.h"
 #include "SVGAngleImpl.h"
 #include "SVGPointImpl.h"
-#include "SVGEventImpl.h"
 #include "SVGMatrixImpl.h"
 #include "SVGNumberImpl.h"
 #include "SVGLengthImpl.h"
@@ -61,10 +60,10 @@
 
 using namespace KSVG;
 
-SVGSVGElementImpl::SVGSVGElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix)
-: SVGStyledElementImpl(doc, id, prefix), SVGTestsImpl(), SVGLangSpaceImpl(),
+SVGSVGElementImpl::SVGSVGElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc)
+: SVGStyledElementImpl(tagName, doc), SVGTestsImpl(), SVGLangSpaceImpl(),
   SVGExternalResourcesRequiredImpl(), SVGLocatableImpl(), SVGFitToViewBoxImpl(),
-  SVGZoomAndPanImpl(), KDOM::DocumentEventImpl()
+  SVGZoomAndPanImpl()
 {
     m_clipper = 0;
 
@@ -101,7 +100,7 @@ SVGAnimatedLengthImpl *SVGSVGElementImpl::width() const
     {
         KDOM::DOMString temp("100%");
         lazy_create<SVGAnimatedLengthImpl>(m_width, static_cast<const SVGStyledElementImpl *>(0), LM_WIDTH, ownerDocument()->documentElement() == static_cast<const KDOM::ElementImpl *>(this) ? this : viewportElement());
-        m_width->baseVal()->setValueAsString(temp.handle());
+        m_width->baseVal()->setValueAsString(temp.impl());
     }
 
     return m_width;
@@ -113,31 +112,30 @@ SVGAnimatedLengthImpl *SVGSVGElementImpl::height() const
     {
         KDOM::DOMString temp("100%");
         lazy_create<SVGAnimatedLengthImpl>(m_height, static_cast<const SVGStyledElementImpl *>(0), LM_HEIGHT, ownerDocument()->documentElement() == static_cast<const KDOM::ElementImpl *>(this) ? this : viewportElement());
-        m_height->baseVal()->setValueAsString(temp.handle());
+        m_height->baseVal()->setValueAsString(temp.impl());
     }
 
     return m_height;
 }
 
-KDOM::DOMStringImpl *SVGSVGElementImpl::contentScriptType() const
+const KDOM::AtomicString& SVGSVGElementImpl::contentScriptType() const
 {
-    return tryGetAttribute(KDOM::DOMString("contentScriptType").handle(), KDOM::DOMString("text/ecmascript").handle());
+    return tryGetAttribute("contentScriptType", "text/ecmascript");
 }
 
-void SVGSVGElementImpl::setContentScriptType(KDOM::DOMStringImpl *type)
+void SVGSVGElementImpl::setContentScriptType(const KDOM::AtomicString& type)
 {
-    KDOM::DOMString name("contentScriptType");    
-    setAttribute(name.handle(), type);
+    setAttribute(SVGNames::contentscripttypeAttr, type);
 }
 
-KDOM::DOMStringImpl *SVGSVGElementImpl::contentStyleType() const
+const KDOM::AtomicString& SVGSVGElementImpl::contentStyleType() const
 {
-    return tryGetAttribute(KDOM::DOMString("contentStyleType").handle(), KDOM::DOMString("text/css").handle());
+    return tryGetAttribute("contentStyleType", "text/css");
 }
 
-void SVGSVGElementImpl::setContentStyleType(KDOM::DOMStringImpl *type)
+void SVGSVGElementImpl::setContentStyleType(const KDOM::AtomicString& type)
 {
-    setAttribute(KDOM::DOMString("contentStyleType").handle(), type);
+    setAttribute(SVGNames::contentstyletypeAttr, type);
 }
 
 SVGRectImpl *SVGSVGElementImpl::viewport() const
@@ -238,62 +236,35 @@ SVGPointImpl *SVGSVGElementImpl::currentTranslate() const
     return createSVGPoint(canvasView()->pan());
 }
 
-KDOM::EventImpl *SVGSVGElementImpl::createEvent(KDOM::DOMStringImpl *eventTypeImpl)
-{
-    QString eventType = (eventTypeImpl ? eventTypeImpl->string() : QString::null);
-
-    if(eventType == QString::fromLatin1("SVGEvents"))
-        return new SVGEventImpl();
-    else if(eventType == QString::fromLatin1("SVGZoomEvents"))
-        return new SVGZoomEventImpl();
-
-    return DocumentEventImpl::createEvent(eventTypeImpl);
-}
-
 void SVGSVGElementImpl::parseAttribute(KDOM::AttributeImpl *attr)
 {
-    int id = (attr->id() & NodeImpl_IdLocalMask);
-    KDOM::DOMStringImpl *value = attr->value();
-    switch(id)
+    const KDOM::AtomicString& value = attr->value();
+    if (attr->name() == SVGNames::xAttr)
+        x()->baseVal()->setValueAsString(value.impl());
+    else if (attr->name() == SVGNames::yAttr)
+        y()->baseVal()->setValueAsString(value.impl());
+    else if (attr->name() == SVGNames::widthAttr || attr->name() == SVGNames::heightAttr)
     {
-        case ATTR_X:
-        {
-            x()->baseVal()->setValueAsString(value);
-            break;
-        }
-        case ATTR_Y:
-        {
-            y()->baseVal()->setValueAsString(value);
-            break;
-        }
-        case ATTR_WIDTH:
-        case ATTR_HEIGHT:
-        {
-            if(id == ATTR_WIDTH)
-                width()->baseVal()->setValueAsString(value);
-            else
-                height()->baseVal()->setValueAsString(value);
+        if(attr->name() == SVGNames::widthAttr)
+            width()->baseVal()->setValueAsString(value.impl());
+        else
+            height()->baseVal()->setValueAsString(value.impl());
 
-            SVGDocumentImpl *document = static_cast<SVGDocumentImpl *>(ownerDocument());
-            if(document->canvas() && canvasItem() == document->canvas()->rootContainer())
-            {
-                document->canvas()->setCanvasSize(QSize(qRound(width()->baseVal()->value()),
-                                                        qRound(height()->baseVal()->value())));
-            }
-
-            break;
-        }
-        default:
+        SVGDocumentImpl *document = static_cast<SVGDocumentImpl *>(ownerDocument());
+        if(document->canvas() && canvasItem() == document->canvas()->rootContainer())
         {
-            if(SVGTestsImpl::parseAttribute(attr)) return;
-            if(SVGLangSpaceImpl::parseAttribute(attr)) return;
-            if(SVGExternalResourcesRequiredImpl::parseAttribute(attr)) return;
-            if(SVGFitToViewBoxImpl::parseAttribute(attr)) return;
-            if(SVGZoomAndPanImpl::parseAttribute(attr)) return;
-
-            SVGStyledElementImpl::parseAttribute(attr);
+            document->canvas()->setCanvasSize(QSize(qRound(width()->baseVal()->value()),
+                                                    qRound(height()->baseVal()->value())));
         }
-    };
+    } else {
+        if(SVGTestsImpl::parseAttribute(attr)) return;
+        if(SVGLangSpaceImpl::parseAttribute(attr)) return;
+        if(SVGExternalResourcesRequiredImpl::parseAttribute(attr)) return;
+        if(SVGFitToViewBoxImpl::parseAttribute(attr)) return;
+        if(SVGZoomAndPanImpl::parseAttribute(attr)) return;
+
+        SVGStyledElementImpl::parseAttribute(attr);
+    }
 }
 
 unsigned long SVGSVGElementImpl::suspendRedraw(unsigned long /* max_wait_milliseconds */)
@@ -449,7 +420,7 @@ SVGMatrixImpl *SVGSVGElementImpl::getCTM() const
     {
         mat->translate(x()->baseVal()->value(), y()->baseVal()->value());
 
-        if(attributes()->getValue(ATTR_VIEWBOX))
+        if(attributes()->getNamedItem(SVGNames::viewboxAttr))
         {
             SVGMatrixImpl *viewBox = viewBoxToViewTransform(width()->baseVal()->value(), height()->baseVal()->value());
             viewBox->ref();
@@ -468,7 +439,7 @@ SVGMatrixImpl *SVGSVGElementImpl::getScreenCTM() const
     {
         mat->translate(x()->baseVal()->value(), y()->baseVal()->value());
 
-        if(attributes()->getValue(ATTR_VIEWBOX))
+        if(attributes()->getNamedItem(SVGNames::viewboxAttr))
         {
             SVGMatrixImpl *viewBox = viewBoxToViewTransform(width()->baseVal()->value(), height()->baseVal()->value());
             viewBox->ref();
@@ -486,7 +457,7 @@ QString SVGSVGElementImpl::adjustViewportClipping() const
     QTextStream keyStream(&key, IO_WriteOnly);
     keyStream << ((void *) this);
 
-    if(renderStyle()->overflow() == KDOM::OF_VISIBLE)
+    if(renderStyle()->overflow() == KDOM::OVISIBLE)
         return QString();
 
     if(!m_clipper)

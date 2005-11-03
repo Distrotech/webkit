@@ -39,7 +39,6 @@
 #include "SVGPaintImpl.h"
 #include "GlobalObject.h"
 #include "SVGColorImpl.h"
-#include "SVGEventImpl.h"
 #include "SVGZoomEvent.h"
 #include "SVGUseElement.h"
 #include "SVGSVGElement.h"
@@ -141,7 +140,7 @@ KJS::ObjectImp *Ecma::inheritedGetDOMNode(KJS::ExecState *exec, KDOM::Node n)
     if(n.nodeType() == KDOM::DOCUMENT_NODE)
         return SVGDocument(n).bridge(exec);
 
-    switch(nodeImpl->id())
+    switch(nodeImpl->getIDAttribute())
     {
         // TODO: Add all remaining nodes here...
         case ID_SVG:

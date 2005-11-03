@@ -64,7 +64,7 @@ namespace KSVG
                                public SVGPathParser
     {
     public:
-        SVGPathElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix);
+        SVGPathElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGPathElementImpl();
 
         SVGAnimatedNumberImpl *pathLength() const;

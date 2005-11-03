@@ -33,7 +33,7 @@ namespace KSVG
     class SVGFEMergeElementImpl : public SVGFilterPrimitiveStandardAttributesImpl
     {
     public:
-        SVGFEMergeElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix);
+        SVGFEMergeElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGFEMergeElementImpl();
 
         virtual KCanvasItem *createCanvasItem(KCanvas *canvas, KRenderingStyle *style) const;
@@ -42,7 +42,7 @@ namespace KSVG
 
         virtual KCanvasFilterEffect *filterEffect() const;
 
-        virtual void close();
+        virtual void closeRenderer();
 
     private:
         mutable KCanvasFEMerge *m_filterEffect;

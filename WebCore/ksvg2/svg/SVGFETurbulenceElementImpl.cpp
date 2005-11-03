@@ -33,7 +33,6 @@
 #include <kcanvas/device/KRenderingPaintServerGradient.h>
 
 #include "ksvg.h"
-#include "svgattrs.h"
 #include "SVGHelper.h"
 #include "SVGRenderStyle.h"
 #include "SVGFETurbulenceElementImpl.h"
@@ -44,8 +43,8 @@
 
 using namespace KSVG;
 
-SVGFETurbulenceElementImpl::SVGFETurbulenceElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix) : 
-SVGFilterPrimitiveStandardAttributesImpl(doc, id, prefix)
+SVGFETurbulenceElementImpl::SVGFETurbulenceElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc) : 
+SVGFilterPrimitiveStandardAttributesImpl(tagName, doc)
 {
     m_baseFrequencyX = m_baseFrequencyY = m_seed = 0;
     m_numOctaves = 0;
@@ -107,52 +106,36 @@ SVGAnimatedEnumerationImpl *SVGFETurbulenceElementImpl::type() const
 
 void SVGFETurbulenceElementImpl::parseAttribute(KDOM::AttributeImpl *attr)
 {
-    int id = (attr->id() & NodeImpl_IdLocalMask);
     KDOM::DOMString value(attr->value());
-    switch(id)
+    if (attr->name() == SVGNames::typeAttr)
     {
-        case ATTR_TYPE:
-        {
-            if(value == "fractalNoise")
-                type()->setBaseVal(SVG_TURBULENCE_TYPE_FRACTALNOISE);
-            else if(value == "turbulence")
-                type()->setBaseVal(SVG_TURBULENCE_TYPE_TURBULENCE);
-            break;
-        }
-        case ATTR_STITCHTILES:
-        {
-            if(value == "stitch")
-                stitchTiles()->setBaseVal(SVG_STITCHTYPE_STITCH);
-            else if(value == "nostitch")
-                stitchTiles()->setBaseVal(SVG_STITCHTYPE_NOSTITCH);
-            break;
-        }
-        case ATTR_BASEFREQUENCY:
-        {
-            QStringList numbers = QStringList::split(' ', value.string());
-            baseFrequencyX()->setBaseVal(numbers[0].toDouble());
-            if(numbers.count() == 1)
-                baseFrequencyY()->setBaseVal(numbers[0].toDouble());
-            else
-                baseFrequencyY()->setBaseVal(numbers[1].toDouble());
-
-            break;
-        }
-        case ATTR_SEED:
-        {
-            seed()->setBaseVal(value.string().toDouble());
-            break;
-        }
-        case ATTR_NUMOCTAVES:
-        {
-            numOctaves()->setBaseVal(value.string().toUInt());
-            break;
-        }
-        default:
-        {
-            SVGFilterPrimitiveStandardAttributesImpl::parseAttribute(attr);
-        }
-    };
+        if(value == "fractalNoise")
+            type()->setBaseVal(SVG_TURBULENCE_TYPE_FRACTALNOISE);
+        else if(value == "turbulence")
+            type()->setBaseVal(SVG_TURBULENCE_TYPE_TURBULENCE);
+    }
+    else if (attr->name() == SVGNames::stitchtilesAttr)
+    {
+        if(value == "stitch")
+            stitchTiles()->setBaseVal(SVG_STITCHTYPE_STITCH);
+        else if(value == "nostitch")
+            stitchTiles()->setBaseVal(SVG_STITCHTYPE_NOSTITCH);
+    }
+    else if (attr->name() == SVGNames::basefrequencyAttr)
+    {
+        QStringList numbers = QStringList::split(' ', value.qstring());
+        baseFrequencyX()->setBaseVal(numbers[0].toDouble());
+        if(numbers.count() == 1)
+            baseFrequencyY()->setBaseVal(numbers[0].toDouble());
+        else
+            baseFrequencyY()->setBaseVal(numbers[1].toDouble());
+    }
+    else if (attr->name() == SVGNames::seedAttr)
+        seed()->setBaseVal(value.qstring().toDouble());
+    else if (attr->name() == SVGNames::numoctavesAttr)
+        numOctaves()->setBaseVal(value.qstring().toUInt());
+    else
+        SVGFilterPrimitiveStandardAttributesImpl::parseAttribute(attr);
 }
 
 KCanvasItem *SVGFETurbulenceElementImpl::createCanvasItem(KCanvas *canvas, KRenderingStyle *style) const

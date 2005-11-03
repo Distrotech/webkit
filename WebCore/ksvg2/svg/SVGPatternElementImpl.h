@@ -55,7 +55,7 @@ namespace KSVG
                                   public KCanvasResourceListener
     {
     public:
-        SVGPatternElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix);
+        SVGPatternElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGPatternElementImpl();
 
         // 'SVGPatternElement' functions

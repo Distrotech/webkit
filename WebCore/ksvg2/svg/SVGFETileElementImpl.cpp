@@ -30,7 +30,6 @@
 #include <kcanvas/KCanvasFilters.h>
 #include <kcanvas/device/KRenderingDevice.h>
 
-#include "svgattrs.h"
 #include "SVGHelper.h"
 #include "SVGRenderStyle.h"
 #include "SVGFETileElementImpl.h"
@@ -39,8 +38,8 @@
 
 using namespace KSVG;
 
-SVGFETileElementImpl::SVGFETileElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix) : 
-SVGFilterPrimitiveStandardAttributesImpl(doc, id, prefix)
+SVGFETileElementImpl::SVGFETileElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc) : 
+SVGFilterPrimitiveStandardAttributesImpl(tagName, doc)
 {
     m_in1 = 0;
     m_filterEffect = 0;
@@ -60,26 +59,17 @@ SVGAnimatedStringImpl *SVGFETileElementImpl::in1() const
 
 void SVGFETileElementImpl::parseAttribute(KDOM::AttributeImpl *attr)
 {
-    int id = (attr->id() & NodeImpl_IdLocalMask);
     KDOM::DOMString value(attr->value());
-    switch(id)
-    {
-        case ATTR_IN:
-        {
-            in1()->setBaseVal(value.handle());
-            break;
-        }
-        default:
-        {
-            SVGFilterPrimitiveStandardAttributesImpl::parseAttribute(attr);
-        }
-    };
+    if (attr->name() == SVGNames::inAttr)
+        in1()->setBaseVal(value.impl());
+    else
+        SVGFilterPrimitiveStandardAttributesImpl::parseAttribute(attr);
 }
 
 KCanvasItem *SVGFETileElementImpl::createCanvasItem(KCanvas *canvas, KRenderingStyle *style) const
 {
     m_filterEffect = static_cast<KCanvasFETile *>(canvas->renderingDevice()->createFilterEffect(FE_TILE));
-    m_filterEffect->setIn(KDOM::DOMString(in1()->baseVal()).string());
+    m_filterEffect->setIn(KDOM::DOMString(in1()->baseVal()).qstring());
     setStandardAttributes(m_filterEffect);
     return 0;
 }

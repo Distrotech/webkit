@@ -43,7 +43,7 @@ namespace KSVG
                                  public KDOM::CachedObjectClient
     {
     public:
-        SVGCursorElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id,  KDOM::DOMStringImpl *prefix);
+        SVGCursorElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGCursorElementImpl();
 
         // 'SVGCursorElement' functions

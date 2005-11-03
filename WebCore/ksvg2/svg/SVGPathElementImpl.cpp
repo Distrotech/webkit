@@ -24,7 +24,7 @@
 #include <kdom/core/AttrImpl.h>
 
 #include "ksvg.h"
-#include "svgattrs.h"
+#include "SVGNames.h"
 #include "SVGHelper.h"
 #include "SVGRectImpl.h"
 #include "SVGPointImpl.h"
@@ -47,10 +47,10 @@
 #include <kcanvas/KCanvas.h>
 #include <kcanvas/KCanvasCreator.h>
 
-using namespace KSVG;
+namespace KSVG {
 
-SVGPathElementImpl::SVGPathElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix)
-: SVGStyledElementImpl(doc, id, prefix), SVGTestsImpl(), SVGLangSpaceImpl(), SVGExternalResourcesRequiredImpl(), SVGTransformableImpl(), SVGPathParser()
+SVGPathElementImpl::SVGPathElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc)
+: SVGStyledElementImpl(tagName, doc), SVGTestsImpl(), SVGLangSpaceImpl(), SVGExternalResourcesRequiredImpl(), SVGTransformableImpl(), SVGPathParser()
 {
     m_pathLength = 0;
     m_pathSegList = 0;
@@ -352,24 +352,17 @@ void SVGPathElementImpl::svgClosePath()
 
 void SVGPathElementImpl::parseAttribute(KDOM::AttributeImpl *attr)
 {
-    int id = (attr->id() & NodeImpl_IdLocalMask);
-    switch(id)
+    if (attr->name() == SVGNames::dAttr)
+        parseSVG(KDOM::DOMString(attr->value()).qstring(), true);
+    else
     {
-        case ATTR_D:
-        {
-            parseSVG(KDOM::DOMString(attr->value()).string(), true);
-            break;
-        }
-        default:
-        {
-            if(SVGTestsImpl::parseAttribute(attr)) return;
-            if(SVGLangSpaceImpl::parseAttribute(attr)) return;
-            if(SVGExternalResourcesRequiredImpl::parseAttribute(attr)) return;
-            if(SVGTransformableImpl::parseAttribute(attr)) return;
+        if(SVGTestsImpl::parseAttribute(attr)) return;
+        if(SVGLangSpaceImpl::parseAttribute(attr)) return;
+        if(SVGExternalResourcesRequiredImpl::parseAttribute(attr)) return;
+        if(SVGTransformableImpl::parseAttribute(attr)) return;
 
-            SVGStyledElementImpl::parseAttribute(attr);
-        }
-    };
+        SVGStyledElementImpl::parseAttribute(attr);
+    }
 }
 
 SVGPathSegListImpl *SVGPathElementImpl::pathSegList() const
@@ -436,6 +429,8 @@ KCPathDataList SVGPathElementImpl::toPathData() const
     }
 
     return pathData;
+}
+
 }
 
 // vim:ts=4:noet

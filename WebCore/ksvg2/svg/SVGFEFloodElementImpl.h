@@ -35,7 +35,7 @@ namespace KSVG
     class SVGFEFloodElementImpl : public SVGFilterPrimitiveStandardAttributesImpl
     {
     public:
-        SVGFEFloodElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix);
+        SVGFEFloodElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGFEFloodElementImpl();
 
         // 'SVGFEFloodElement' functions

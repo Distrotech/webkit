@@ -42,13 +42,13 @@ namespace KSVG
                               public SVGURIReferenceImpl
     {
     public:
-        SVGUseElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id,  KDOM::DOMStringImpl *prefix);
+        SVGUseElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGUseElementImpl();
 
         // Derived from: 'ElementImpl'
         virtual bool hasChildNodes() const;
 
-        virtual void close();
+        virtual void closeRenderer();
 
         // 'SVGUseElement' functions
         SVGAnimatedLengthImpl *x() const;

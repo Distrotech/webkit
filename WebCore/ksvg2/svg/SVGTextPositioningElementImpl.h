@@ -33,7 +33,7 @@ namespace KSVG
     class SVGTextPositioningElementImpl : public SVGTextContentElementImpl
     {
     public:
-        SVGTextPositioningElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id,  KDOM::DOMStringImpl *prefix);
+        SVGTextPositioningElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGTextPositioningElementImpl();
 
         // 'SVGTextPositioningElement' functions

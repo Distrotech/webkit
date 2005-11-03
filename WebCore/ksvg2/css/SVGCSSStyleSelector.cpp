@@ -52,7 +52,7 @@
 #include <kdom/css/CSSStyleDeclarationImpl.h>
 
 #include "ksvg.h"
-#include "svgtags.h"
+#include "SVGNames.h"
 #include <ksvg2/css/cssvalues.h>
 #include "SVGColorImpl.h"
 #include "SVGPaintImpl.h"
@@ -153,14 +153,14 @@ void SVGCSSStyleSelector::loadDefaultStyle(KDOM::DocumentImpl *doc)
     KDOM::DOMString str(style);
 
     s_defaultSheet = new SVGCSSStyleSheetImpl(doc);
-    s_defaultSheet->parseString(str.handle());
+    s_defaultSheet->parseString(str.impl());
 
     // Collect only strict-mode rules.
     s_defaultStyle = new KDOM::CSSStyleSelectorList();
-    s_defaultStyle->append(s_defaultSheet, KDOM::DOMString("screen").handle());
+    s_defaultStyle->append(s_defaultSheet, KDOM::DOMString("screen").impl());
 
     s_defaultPrintStyle = new KDOM::CSSStyleSelectorList();
-    s_defaultPrintStyle->append(s_defaultSheet, KDOM::DOMString("print").handle());
+    s_defaultPrintStyle->append(s_defaultSheet, KDOM::DOMString("print").impl());
 }
 
 unsigned int SVGCSSStyleSelector::addExtraDeclarations(KDOM::ElementImpl *e, unsigned int numProps)
@@ -634,7 +634,7 @@ void SVGCSSStyleSelector::applyRule(int id, KDOM::CSSValueImpl *value)
             QString s;
             int type = primitiveValue->primitiveType();
             if(type == KDOM::CSS_URI)
-                s = KDOM::DOMString(primitiveValue->getDOMStringValue()).string();
+                s = KDOM::DOMString(primitiveValue->getDOMStringValue()).qstring();
             else
                 return;
 
@@ -650,7 +650,7 @@ void SVGCSSStyleSelector::applyRule(int id, KDOM::CSSValueImpl *value)
             QString s;
             int type = primitiveValue->primitiveType();
             if(type == KDOM::CSS_URI)
-                s = KDOM::DOMString(primitiveValue->getDOMStringValue()).string();
+                s = KDOM::DOMString(primitiveValue->getDOMStringValue()).qstring();
             else
                 return;
 
@@ -666,7 +666,7 @@ void SVGCSSStyleSelector::applyRule(int id, KDOM::CSSValueImpl *value)
             QString s;
             int type = primitiveValue->primitiveType();
             if(type == KDOM::CSS_URI)
-                s = KDOM::DOMString(primitiveValue->getDOMStringValue()).string();
+                s = KDOM::DOMString(primitiveValue->getDOMStringValue()).qstring();
             else
                 return;
 
@@ -706,7 +706,7 @@ void SVGCSSStyleSelector::applyRule(int id, KDOM::CSSValueImpl *value)
             QString s;
             int type = primitiveValue->primitiveType();
             if(type == KDOM::CSS_URI)
-                s = KDOM::DOMString(primitiveValue->getDOMStringValue()).string();
+                s = KDOM::DOMString(primitiveValue->getDOMStringValue()).qstring();
             else
                 return;
             svgstyle->setFilter(s);
@@ -721,7 +721,7 @@ void SVGCSSStyleSelector::applyRule(int id, KDOM::CSSValueImpl *value)
             QString s;
             int type = primitiveValue->primitiveType();
             if(type == KDOM::CSS_URI)
-                s = KDOM::DOMString(primitiveValue->getDOMStringValue()).string();
+                s = KDOM::DOMString(primitiveValue->getDOMStringValue()).qstring();
             else
                 return;
 

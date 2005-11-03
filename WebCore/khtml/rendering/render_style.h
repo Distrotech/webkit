@@ -1641,7 +1641,7 @@ public:
 #endif
 
     ContentData* contentData() { return content; }
-    bool contentDataEquivalent(RenderStyle* otherStyle);
+    bool contentDataEquivalent(const RenderStyle *otherStyle) const;
     void setContent(DOM::DOMStringImpl* s, bool add = false);
     void setContent(CachedObject* o, bool add = false);
 

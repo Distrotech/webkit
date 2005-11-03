@@ -30,7 +30,7 @@ namespace KSVG
     class SVGPolygonElementImpl :    public SVGPolyElementImpl
     {
     public:
-        SVGPolygonElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix);
+        SVGPolygonElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGPolygonElementImpl();
 
         virtual KCPathDataList toPathData() const;

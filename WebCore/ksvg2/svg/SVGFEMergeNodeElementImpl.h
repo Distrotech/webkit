@@ -31,7 +31,7 @@ namespace KSVG
     class SVGFEMergeNodeElementImpl : public SVGElementImpl
     {
     public:
-        SVGFEMergeNodeElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix);
+        SVGFEMergeNodeElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGFEMergeNodeElementImpl();
 
         // Derived from: 'ElementImpl'

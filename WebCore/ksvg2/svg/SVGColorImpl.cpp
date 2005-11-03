@@ -28,7 +28,6 @@
 #include "ksvg.h"
 #include <ksvg2/css/cssvalues.h>
 #include "SVGColorImpl.h"
-#include "CDFInterface.h"
 #include "SVGDOMImplementationImpl.h"
 
 using namespace KSVG;
@@ -62,7 +61,7 @@ unsigned short SVGColorImpl::colorType() const
 
 KDOM::RGBColorImpl *SVGColorImpl::rgbColor() const
 {
-    return new KDOM::RGBColorImpl(SVGDOMImplementationImpl::self()->cdfInterface(), m_qColor);
+    return new KDOM::RGBColorImpl(m_qColor);
 }
 
 static const QColor cmap[] =
@@ -223,7 +222,7 @@ void SVGColorImpl::setRGBColor(KDOM::DOMStringImpl *rgbColor)
     if(!m_rgbColor)
         return;
 
-    QString parse = KDOM::DOMString(m_rgbColor).string().stripWhiteSpace();
+    QString parse = KDOM::DOMString(m_rgbColor).qstring().stripWhiteSpace();
     if(parse.startsWith(QString::fromLatin1("rgb(")))
     {
         QStringList colors = QStringList::split(',', parse);
@@ -253,8 +252,8 @@ void SVGColorImpl::setRGBColor(KDOM::DOMStringImpl *rgbColor)
     }
     else
     {
-        QString name(m_rgbColor->unicode(), m_rgbColor->length());
-        name = name.lower();
+        KDOM::DOMString colorName = m_rgbColor->lower();
+        QString name = colorName.qstring();
         int col = KSVG::getValueID(name.ascii(), name.length());
         if(col == 0)
             m_qColor = QColor(name);
@@ -274,12 +273,12 @@ void SVGColorImpl::setColor(unsigned short colorType, KDOM::DOMStringImpl * /* r
     m_colorType = colorType;
 }
 
-KDOM::DOMStringImpl *SVGColorImpl::cssText() const
+KDOM::DOMString SVGColorImpl::cssText() const
 {
     if(m_colorType == SVG_COLORTYPE_RGBCOLOR)
         return m_rgbColor;
 
-    return 0;
+    return KDOM::DOMString();
 }
 
 const QColor &SVGColorImpl::color() const

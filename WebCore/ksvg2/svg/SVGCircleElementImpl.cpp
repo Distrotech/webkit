@@ -23,7 +23,7 @@
 #include "config.h"
 #include <kdom/core/AttrImpl.h>
 
-#include "svgattrs.h"
+#include "SVGNames.h"
 #include "SVGHelper.h"
 #include "SVGCircleElementImpl.h"
 #include "SVGAnimatedLengthImpl.h"
@@ -33,8 +33,8 @@
 
 using namespace KSVG;
 
-SVGCircleElementImpl::SVGCircleElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix)
-: SVGStyledElementImpl(doc, id, prefix), SVGTestsImpl(), SVGLangSpaceImpl(), SVGExternalResourcesRequiredImpl(), SVGTransformableImpl()
+SVGCircleElementImpl::SVGCircleElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc)
+: SVGStyledElementImpl(tagName, doc), SVGTestsImpl(), SVGLangSpaceImpl(), SVGExternalResourcesRequiredImpl(), SVGTransformableImpl()
 {
     m_cx = m_cy = m_r = 0;
 }
@@ -66,35 +66,22 @@ SVGAnimatedLengthImpl *SVGCircleElementImpl::r() const
 
 void SVGCircleElementImpl::parseAttribute(KDOM::AttributeImpl *attr)
 {
-    int id = (attr->id() & NodeImpl_IdLocalMask);
-    KDOM::DOMStringImpl *value = attr->value();
-    switch(id)
+    const KDOM::AtomicString& value = attr->value();
+    if (attr->name() == SVGNames::cxAttr)
+        cx()->baseVal()->setValueAsString(value.impl());
+    else if (attr->name() == SVGNames::cyAttr)
+        cy()->baseVal()->setValueAsString(value.impl());
+    else if (attr->name() == SVGNames::rAttr)
+        r()->baseVal()->setValueAsString(value.impl());
+    else
     {
-        case ATTR_CX:
-        {
-            cx()->baseVal()->setValueAsString(value);
-            break;
-        }
-        case ATTR_CY:
-        {
-            cy()->baseVal()->setValueAsString(value);
-            break;
-        }
-        case ATTR_R:
-        {
-            r()->baseVal()->setValueAsString(value);
-            break;
-        }
-        default:
-        {
-            if(SVGTestsImpl::parseAttribute(attr)) return;
-            if(SVGLangSpaceImpl::parseAttribute(attr)) return;
-            if(SVGExternalResourcesRequiredImpl::parseAttribute(attr)) return;
-            if(SVGTransformableImpl::parseAttribute(attr)) return;
-            
-            SVGStyledElementImpl::parseAttribute(attr);
-        }
-    };
+        if(SVGTestsImpl::parseAttribute(attr)) return;
+        if(SVGLangSpaceImpl::parseAttribute(attr)) return;
+        if(SVGExternalResourcesRequiredImpl::parseAttribute(attr)) return;
+        if(SVGTransformableImpl::parseAttribute(attr)) return;
+        
+        SVGStyledElementImpl::parseAttribute(attr);
+    }
 }
 
 KCPathDataList SVGCircleElementImpl::toPathData() const

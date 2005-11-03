@@ -37,7 +37,7 @@ namespace KSVG
     class SVGFEColorMatrixElementImpl : public SVGFilterPrimitiveStandardAttributesImpl
     {
     public:
-        SVGFEColorMatrixElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix);
+        SVGFEColorMatrixElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGFEColorMatrixElementImpl();
 
         // 'SVGFEColorMatrixElement' functions

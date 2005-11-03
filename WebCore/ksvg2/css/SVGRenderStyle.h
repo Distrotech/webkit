@@ -29,9 +29,32 @@
 #include <kdom/css/RenderStyle.h>
 #include <ksvg2/css/SVGRenderStyleDefs.h>
 
+// Helper macros for 'RenderStyle'
+#define RS_DEFINE_ATTRIBUTE(Data, Type, Name, Initial) \
+    void set##Type(Data val) { noninherited_flags.f._##Name = val; } \
+    Data Name() const { return (Data) noninherited_flags.f._##Name; } \
+    static Data initial##Type() { return Initial; }
+
+#define RS_DEFINE_ATTRIBUTE_INHERITED(Data, Type, Name, Initial) \
+    void set##Type(Data val) { inherited_flags.f._##Name = val; } \
+    Data Name() const { return (Data) inherited_flags.f._##Name; } \
+    static Data initial##Type() { return Initial; }
+
+#define RS_DEFINE_ATTRIBUTE_DATAREF(Data, Group, Variable, Type, Name) \
+    Data Name() const { return Group->Variable; } \
+    void set##Type(Data obj) { RS_SET_VARIABLE(Group, Variable, obj) }
+
+#define RS_DEFINE_ATTRIBUTE_DATAREF_WITH_INITIAL(Data, Group, Variable, Type, Name, Initial) \
+    RS_DEFINE_ATTRIBUTE_DATAREF(Data, Group, Variable, Type, Name) \
+    static Data initial##Type() { return Initial; }
+
+#define RS_SET_VARIABLE(Group, Variable, Value) \
+    if(!(Group->Variable == Value)) \
+        Group.access()->Variable = Value;
+
 namespace KSVG
 {
-    class SVGRenderStyle : public KDOM::RenderStyle
+    class SVGRenderStyle : public khtml::RenderStyle
     {    
     public:
         SVGRenderStyle();
@@ -39,7 +62,7 @@ namespace KSVG
         SVGRenderStyle(const SVGRenderStyle &other);
         virtual ~SVGRenderStyle();
 
-        virtual bool equals(KDOM::RenderStyle *other) const;
+        virtual bool equals(RenderStyle *other) const;
 
         static void cleanup();
 
@@ -154,7 +177,7 @@ namespace KSVG
         static SVGRenderStyle *s_defaultStyle;
 
     private:
-        SVGRenderStyle(const SVGRenderStyle *) : KDOM::RenderStyle() { }
+        SVGRenderStyle(const SVGRenderStyle *) : khtml::RenderStyle() { }
 
         void setBitDefaults()
         {

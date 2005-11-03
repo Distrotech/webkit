@@ -31,7 +31,7 @@ namespace KSVG
     class SVGLinearGradientElementImpl : public SVGGradientElementImpl
     {
     public:
-        SVGLinearGradientElementImpl(KDOM::DocumentPtr *doc, KDOM::NodeImpl::Id id, KDOM::DOMStringImpl *prefix);
+        SVGLinearGradientElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentPtr *doc);
         virtual ~SVGLinearGradientElementImpl();
 
         // 'SVGLinearGradientElement' functions
