@@ -1,3 +1,131 @@
+2005-11-03  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Darin and Vicki.
+
+        * WebCore.xcodeproj/project.pbxproj:
+          Change to use $(SYSTEM_LIBRARY_DIR) consistently and place
+          $(NEXT_ROOT) in a few spots to make build-root work.
+
+2005-11-03  David Hyatt  <hyatt@apple.com>
+
+	Cleanup of bidi.cpp.  This is bug 5532.  I merged it nearly as is, although I
+	did one additional rename of my own (BidiIterator's "par" -> "block") and
+	I did not merge the * changes, since that particular style guideline is 
+	"in dispute." :)
+	
+        Reviewed by darin
+
+        * khtml/rendering/bidi.cpp:
+        (khtml::BidiIterator::BidiIterator):
+        (khtml::BidiIterator::pos):
+        (khtml::BidiState::BidiState):
+        (khtml::getBPMWidth):
+        (khtml::BidiContext::BidiContext):
+        (khtml::BidiContext::~BidiContext):
+        (khtml::BidiContext::deref):
+        (khtml::operator==):
+        (khtml::operator!=):
+        (khtml::bidiNext):
+        (khtml::bidiFirst):
+        (khtml::BidiIterator::increment):
+        (khtml::BidiIterator::atEnd):
+        (khtml::BidiIterator::current):
+        (khtml::chopMidpointsAt):
+        (khtml::checkMidpoints):
+        (khtml::appendRunsForObject):
+        (khtml::appendRun):
+        (khtml::embed):
+        (khtml::RenderBlock::constructLine):
+        (khtml::RenderBlock::tabWidth):
+        (khtml::RenderBlock::computeHorizontalPositionsForLine):
+        (khtml::RenderBlock::bidiReorderLine):
+        (khtml::buildCompactRuns):
+        (khtml::RenderBlock::layoutInlineChildren):
+        (khtml::RenderBlock::determineStartPosition):
+        (khtml::RenderBlock::skipWhitespace):
+        (khtml::RenderBlock::findNextLineBreak):
+
+2005-11-03  David Hyatt  <hyatt@apple.com>
+
+	Make pre-wrap collapse away spaces at the start of a line.  There are
+	still several bugs, namely with overflow and with selection.  This is bugzilla
+	bug 5593.
+	
+        Reviewed by adele
+
+	fast/text/whitespace/pre-wrap.html
+
+        * khtml/rendering/bidi.cpp:
+        (khtml::skipNonBreakingSpace):
+        (khtml::shouldCollapseWhiteSpace):
+        (khtml::RenderBlock::skipWhitespace):
+        * khtml/rendering/render_block.h:
+
+2005-11-03  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Darin.
+
+        * khtml/rendering/render_layer.cpp:
+        (khtml::): Made global ScrollAlignment members const
+        (khtml::RenderLayer::scrollRectToVisible): Changed ScrollAlignment parameters to const ScrollAlignment&
+        (khtml::RenderLayer::getRectToExpose): ditto.
+        * khtml/rendering/render_layer.h:
+        (khtml::RenderLayer::): removed typedefs
+        (khtml::RenderLayer::getVisibleBehavior): Made this static.
+        (khtml::RenderLayer::getPartialBehavior): ditto.
+        (khtml::RenderLayer::getHiddenBehavior): ditto.
+
+2005-11-03  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Hyatt.
+
+        Clean up of layer scrolling code.  Now we can clearly define what to do if a rectangle is fully visible, partially visible, or hidden.
+        This also fixes a bug with the previous implementation where nested layers/frames would get passed a rect that was too large.
+
+        Added fast/overflow/scrollRevealButton.html
+
+        * khtml/rendering/render_layer.h: (khtml::RenderLayer::): 
+        Added ScrollBehavior enum, ScrollAlignment struct, and ScrollAlignment static members
+        to describe specific scrolling behaviors depending on how visible the rectangle is.
+        In the future, we can add other statics to easily describe desired behaviors.
+        * khtml/rendering/render_layer.cpp:
+        (khtml::): initialize ScrollAlignment static members: 
+        alignCenterIfNeeded, alignToEdgeIfNeeded, alignCenterAlways, alignTopAlways, alignBottomAlways
+        (khtml::RenderLayer::scrollRectToVisible):
+        alignCenterIfNeeded is the default behavior for both directions.
+        Pass the original rect (adjusted if scrolling has occurred) when recursively calling this function.
+        (khtml::RenderLayer::getRectToExpose): Adjusted for new ScrollAlignment parameters.
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::gotoAnchor): Use the node's rect to determine where to scroll.  
+        We used to just use the origin, but this helps us match other browsers better.
+        (KHTMLPart::setActiveNode): Removed scrolling code, since this is now also done in setFocusNode
+        * khtml/xml/dom_elementimpl.cpp: (ElementImpl::scrollIntoView): Use new ScrollAlignment values to describe scrolling behavior.
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::nextKeyViewInFrame): Removed scrolling code, since this is now also done in setFocusNode
+        (KWQKHTMLPart::centerSelectionInVisibleArea): Use new ScrollAlignment values to describe scrolling behavior.
+        * kwq/WebCoreBridge.mm: (-[WebCoreBridge ensureSelectionVisible]): ditto.
+        * kwq/KWQScrollView.h: Removed ensureRectVisible, since we no longer use this.
+        * kwq/KWQScrollView.mm: ditto.
+        * khtml/khtmlview.cpp:
+        (KHTMLView::doAutoScroll): Removed unnecessary nil checks for enclosingLayer
+        (KHTMLView::focusNextPrevNode): ditto.
+
+2005-11-02  David Harrison  <harrison@apple.com>
+
+        Reviewed by Justin.
+
+        Tests added in editing/inserting.
+        
+        <rdar://problem/4017861> in reply, extra line is inserted after pressing return on blank quoted line
+        Also, did some minor cleanup.
+
+        * khtml/editing/break_blockquote_command.cpp:
+        (khtml::BreakBlockquoteCommand::BreakBlockquoteCommand):
+        (khtml::BreakBlockquoteCommand::doApply):
+        Make sure not to clone parent of skipped BR unless there are siblings to move over.
+        * khtml/editing/break_blockquote_command.h:
+        * khtml/editing/jsediting.cpp:
+
 2005-11-02  Vicki Murley  <vicki@apple.com>
 
         Reviewed by Darin.

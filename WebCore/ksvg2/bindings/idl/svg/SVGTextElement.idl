@@ -1,6 +1,0 @@
-module svg
-{
-  interface SVGTextElement : 
-                SVGTextPositioningElement,
-                SVGTransformable {};
-};

@@ -1,8 +1,0 @@
-module svg
-{
-  interface [nodptr] SVGStylable { 
-    readonly attribute SVGAnimatedString className;
-    readonly attribute css::CSSStyleDeclaration style;
-    css::CSSValue getPresentationAttribute ( in core::DOMString name );
-  };
-};
