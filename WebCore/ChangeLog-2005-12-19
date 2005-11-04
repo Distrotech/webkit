@@ -1,3 +1,17 @@
+2005-11-03  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Ti-2005-009-branch
+
+    2005-10-06  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by Vicki.
+
+        Fix for <rdar://problem/4145535> Crash in khtml::RenderBlock::addOverhangingFloats 
+        with simple HTML test file.
+
+        * khtml/rendering/render_block.cpp: Added nil check
+        (khtml::RenderBlock::addOverhangingFloats):
+
 === WebCore-416.13 ===
 
 2005-10-21  Dave Harrison  <harrison@apple.com>
