@@ -27,17 +27,35 @@
 #include "render_kcanvaswrapper.h"
 
 #include "kcanvas/KCanvas.h"
+#include "kcanvas/KCanvasView.h"
 #include "kcanvas/KCanvasContainer.h"
 #include "kcanvas/device/KRenderingDevice.h"
+#include "kcanvas/device/quartz/KRenderingDeviceQuartz.h"
+#include "kcanvas/device/quartz/KCanvasViewQuartz.h"
 
 using namespace khtml;
 
-RenderKCanvasWrapper::RenderKCanvasWrapper(DOM::KDOMNodeTreeWrapperImpl *node) : RenderReplaced(node), m_canvas(0)
+KRenderingDeviceQuartz *RenderKCanvasWrapper::renderingDevice()
 {
+    static KRenderingDeviceQuartz *__quartzRenderingDevice = nil;
+    if (!__quartzRenderingDevice)
+        __quartzRenderingDevice = new KRenderingDeviceQuartz();
+    return __quartzRenderingDevice;
+}
+
+RenderKCanvasWrapper::RenderKCanvasWrapper(DOM::NodeImpl *node) : RenderReplaced(node), m_canvas(0)
+{
+    m_canvas = new KCanvas(RenderKCanvasWrapper::renderingDevice());
+    m_canvasView = new KCanvasViewQuartz();
+    m_canvasView->setRenderObject(this);
+    m_canvasView->init(m_canvas, NULL);
+    m_canvas->addView(m_canvasView);
 }
 
 RenderKCanvasWrapper::~RenderKCanvasWrapper()
 {
+    delete m_canvas;
+    delete m_canvasView;
 }
 
 void RenderKCanvasWrapper::layout()

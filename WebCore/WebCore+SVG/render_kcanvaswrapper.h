@@ -28,16 +28,17 @@
 
 #include "khtml/misc/loader.h"
 #include "khtml/rendering/render_replaced.h"
-#include "dom_kdomnodetreewrapper.h"
 
 class KCanvas;
+class KCanvasViewQuartz;
+class KRenderingDeviceQuartz;
 
 namespace khtml {
 
 class RenderKCanvasWrapper : public RenderReplaced
 {
 public:
-    RenderKCanvasWrapper(DOM::KDOMNodeTreeWrapperImpl *node);
+    RenderKCanvasWrapper(DOM::NodeImpl *node);
     virtual ~RenderKCanvasWrapper();
 
     virtual const char *renderName() const { return "RenderKCanvasWrapper"; }
@@ -51,7 +52,10 @@ public:
     int RenderKCanvasWrapper::intrinsicHeight() const;
     
 private:
+    static KRenderingDeviceQuartz *renderingDevice();
+
     KCanvas *m_canvas;
+    KCanvasViewQuartz *m_canvasView;
 };
 
 }; // namespace
