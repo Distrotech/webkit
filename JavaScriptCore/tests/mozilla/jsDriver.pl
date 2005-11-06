@@ -636,7 +636,7 @@ sub get_xpc_engine_command {
 # get the shell command used to run kjs
 #
 sub get_kjs_engine_command {
-    return $ENV{"SYMROOTS"} . "/testkjs";
+    return $ENV{"SYMROOTS"} . "/Development/testkjs";
 }
 
 #

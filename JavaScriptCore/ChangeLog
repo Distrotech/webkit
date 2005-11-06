@@ -1,3 +1,36 @@
+2005-11-04  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by NOBODY (OOPS!).
+
+        - Fixed <rdar://problem/4323773> REGRESSION (412.2-416.12): [[xxx]] 
+          appears on page due to JS regexp with char > 255 (5597) 
+          (tiddlywiki.com)
+
+        Previously, we fixed a buffer overflow by returning an error when 
+        compiling character classes with characters > 255. But that broke 
+        the internet.
+
+        Plan B here is to work around such classes, skipping single characters 
+        > 255, skipping character ranges beginning > 255, and truncating 
+        character ranges at 255. 
+
+        I removed the early returns we added and the early returns in the 
+        original library. Now, funky expressions compile normally, tweaked 
+        by our special rules.
+
+        I also merged the UTF8 and UTF16 checks for out of range characters. 
+        I remember we kept them separate before because we were purist about 
+        marking off our code changes inside UTF16 #ifdefs. Since this patch 
+        applies equally to UTF8 and UTF16, we've already lost that innocence, 
+        so why not have a little fun?
+
+        * ChangeLog:
+        * pcre/pcre.c:
+        (compile_branch):
+        * tests/mozilla/jsDriver.pl: Oh, by the way, I modified this to look 
+        inside of $SYMROOTS/Development. Not perfect, but certainly better 
+        than $SYMROOTS/, which is always wrong with XCode 2.1.
+
 === JavaScriptCore-416.14 ===
 
 2005-11-04  Geoffrey Garen  <ggaren@apple.com>

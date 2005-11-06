@@ -1190,13 +1190,6 @@ for (;; ptr++)
         *errorptr = ERR6;
         goto FAILED;
         }
-#if PCRE_UTF16
-      if (c > 255)
-        {
-        *errorptr = ERR33;
-        goto FAILED;
-        }
-#endif
           
       /* Handle POSIX class names. Perl allows a negation extension of the
       form [:^name]. A square bracket that doesn't match the syntax is
@@ -1306,16 +1299,7 @@ for (;; ptr++)
             }
           }
 
-        /* Fall through if single character, but don't at present allow
-        chars > 255 in UTF-8 mode. */
-
-#ifdef SUPPORT_UTF8
-        if (c > 255)
-          {
-          *errorptr = ERR33;
-          goto FAILED;
-          }
-#endif
+        /* Fall through if single character. */
         }
 
       /* A single character may be followed by '-' to form a range. However,
@@ -1333,13 +1317,6 @@ for (;; ptr++)
           *errorptr = ERR6;
           goto FAILED;
           }
-#if PCRE_UTF16
-        if (d > 255)
-          {
-          *errorptr = ERR33;
-          goto FAILED;
-          }
-#endif
         
         /* The second part of a range can be a single-character escape, but
         not any of the other escapes. Perl 5.6 treats a hyphen as a literal
@@ -1350,13 +1327,6 @@ for (;; ptr++)
           const ichar *oldptr = ptr;
           d = check_escape(&ptr, errorptr, *brackets, options, TRUE, cd);
 
-#ifdef SUPPORT_UTF8
-          if (d > 255)
-            {
-            *errorptr = ERR33;
-            goto FAILED;
-            }
-#endif
           /* \b is backslash; any other special means the '-' was literal */
 
           if (d < 0)
@@ -1374,6 +1344,16 @@ for (;; ptr++)
           *errorptr = ERR8;
           goto FAILED;
           }
+
+#ifdef SUPPORT_UTF8
+        /* start of character range is out of range -- skip range */
+        if (c > 255)
+            continue;
+
+        /* end of character range is out of range -- truncate range */
+        if (d > 255)
+          d = 255;
+#endif
 
         for (; c <= d; c++)
           {
@@ -1394,6 +1374,12 @@ for (;; ptr++)
 
       SINGLE_CHARACTER:
 
+#ifdef SUPPORT_UTF8
+      /* character is out of range -- skip it */
+      if (c > 255)
+        continue;
+#endif
+      
       class [c/8] |= (1 << (c&7));
       if ((options & PCRE_CASELESS) != 0)
         {
