@@ -569,11 +569,15 @@ void HTMLObjectElementImpl::attach()
 void HTMLObjectElementImpl::detach()
 {
     // Only bother with an unload event if we had a render object.  - dwh
-    if (attached() && m_render && !m_useFallbackContent)
+    if (attached() && m_render && !m_useFallbackContent) {
         // ### do this when we are actualy removed from document instead
         dispatchHTMLEvent(EventImpl::UNLOAD_EVENT,false,false);
+        
+        // Update the widget the next time we attach (detaching destroys the plugin).
+        needWidgetUpdate = true;
+    }
 
-  HTMLElementImpl::detach();
+    HTMLElementImpl::detach();
 }
 
 void HTMLObjectElementImpl::recalcStyle(StyleChange ch)
