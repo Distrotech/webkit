@@ -200,11 +200,15 @@
 
 - (void)copy:(id)sender
 {
-    [self writeImageToPasteboard:[NSPasteboard generalPasteboard] types:[NSPasteboard _web_writableTypesForImageIncludingArchive:([rep archive] != nil)]];
+    NSArray *types = [NSPasteboard _web_writableTypesForImageIncludingArchive:([rep archive] != nil)];
+    NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
+    [pasteboard declareTypes:types owner:nil];
+    [self writeImageToPasteboard:pasteboard types:types];
 }
 
 - (BOOL)writeSelectionToPasteboard:(NSPasteboard *)pasteboard types:(NSArray *)types
 {
+    [pasteboard declareTypes:types owner:nil];
     return [self writeImageToPasteboard:pasteboard types:types];
 }
 
