@@ -2,6 +2,22 @@
 
         Merged fix from TOT to Safari-2-0-branch
 
+    2005-11-09  Dave Hyatt  <hyatt@apple.com>
+    
+        Fixed <rdar://problem/4237617> selects should be in the tab order
+        in all keyboard modes
+        
+        Reviewed by Vicki
+        
+        * kwq/KWQComboBox.mm:
+        (QComboBox::focusPolicy):
+        * kwq/KWQListBox.mm:
+        (QListBox::focusPolicy):
+    
+2005-11-10  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
     2005-10-10  Geoffrey Garen  <ggaren@apple.com>
 
         - Fixed <rdar://problem/4245682> Regression: CrashTracer: 923 crashes 
