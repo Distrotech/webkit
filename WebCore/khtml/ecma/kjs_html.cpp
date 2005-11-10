@@ -3416,7 +3416,7 @@ Value Image::getValueProperty(ExecState *, int token) const
 {
   switch (token) {
   case Src:
-    return String(src);
+    return String(doc ? doc->completeURL(src.domString()) : src);
   case Complete:
     return Boolean(!img || img->status() >= khtml::CachedObject::Persistent);
   case OnLoad:
