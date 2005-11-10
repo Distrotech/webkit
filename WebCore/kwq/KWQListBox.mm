@@ -509,11 +509,12 @@ void QListBox::setFont(const QFont &font)
         if (_box && !KWQKHTMLPart::currentEventIsMouseDownInWidget(_box)) {
             [self _KWQ_scrollFrameToVisible];
         }        
-	[self _KWQ_setKeyboardFocusRingNeedsDisplay];
+        [self _KWQ_setKeyboardFocusRingNeedsDisplay];
 
         if (_box) {
             QFocusEvent event(QEvent::FocusIn);
-            const_cast<QObject *>(_box->eventFilterObject())->eventFilter(_box, &event);
+            if (_box->eventFilterObject())
+                const_cast<QObject *>(_box->eventFilterObject())->eventFilter(_box, &event);
         }
     }
 
@@ -525,7 +526,8 @@ void QListBox::setFont(const QFont &font)
     BOOL resign = [super resignFirstResponder];
     if (resign && _box) {
         QFocusEvent event(QEvent::FocusOut);
-        const_cast<QObject *>(_box->eventFilterObject())->eventFilter(_box, &event);
+        if (_box->eventFilterObject())
+            const_cast<QObject *>(_box->eventFilterObject())->eventFilter(_box, &event);
     }
     return resign;
 }
