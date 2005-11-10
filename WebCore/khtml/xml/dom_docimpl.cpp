@@ -927,7 +927,11 @@ ElementImpl *DocumentImpl::createHTMLElement(unsigned short tagID)
     case ID_EMBED:
         return new HTMLEmbedElementImpl(docPtr());
     case ID_OBJECT:
-        return new HTMLObjectElementImpl(docPtr());
+    {
+        HTMLObjectElementImpl *objectElement = new HTMLObjectElementImpl(docPtr());
+        objectElement->setComplete(true);
+        return objectElement;
+    }
     case ID_PARAM:
         return new HTMLParamElementImpl(docPtr());
     case ID_SCRIPT:
