@@ -1,3 +1,20 @@
+2005-11-10  Timothy Hatcher  <timothy@apple.com>
+
+	    Merges fixes from Ti-2005-009-branch to Safari-2-0-branch
+
+    2005-11-04  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by darin.
+
+        - Fixed <rdar://problem/4317701> *SecUpd: Tiger* PCRE heap overflow 
+          in Safari JavaScriptCore
+
+        * pcre/pcre.c:
+        (read_repeat_counts): We now return an error for negative repeat counts
+        in regular expressions. This matches Firefox exactly, and Win IE by 
+        effect (Win IE doesn't return an error, but it does refuse to match 
+        anything).
+
 2005-11-04  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Darin.
