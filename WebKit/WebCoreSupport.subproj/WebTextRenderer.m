@@ -1463,6 +1463,7 @@ static const char *joiningNames[] = {
 
     if (!ATSUStyleInitialized){
         OSStatus status;
+        ByteCount propTableSize;
         
         status = ATSUCreateStyle(&_ATSUSstyle);
         if(status != noErr)
@@ -1483,6 +1484,13 @@ static const char *joiningNames[] = {
         status = ATSUSetAttributes (_ATSUSstyle, 3, styleTags, styleSizes, styleValues);
         if(status != noErr)
             FATAL_ALWAYS ("ATSUSetAttributes failed (%d)", status);
+        status = ATSFontGetTable(fontID, 'prop', 0, 0, 0, &propTableSize);
+        if (status == noErr)    // naively assume that if a 'prop' table exists then it contains mirroring info
+            ATSUMirrors = YES;
+        else if (status == kATSInvalidFontTableAccess)
+            ATSUMirrors = NO;
+        else
+            FATAL_ALWAYS ("ATSFontGetTable failed (%d)", status);
 
         ATSUStyleInitialized = YES;
     }
@@ -1612,6 +1620,25 @@ static WebCoreTextRun reverseCharactersInRun(const WebCoreTextRun *run)
     return swappedRun;
 }
 
+// Be sure to free the run.characters allocated by this function.
+static WebCoreTextRun applyMirroringToRun(const WebCoreTextRun *run)
+{
+    WebCoreTextRun swappedRun;
+    unsigned int i;
+    
+    UniChar *swappedCharacters = (UniChar *)malloc(sizeof(UniChar)*(run->length));
+    for (i=0; i < run->length; i++) {
+        // will choke on surrogate pairs?
+        swappedCharacters[i] = u_charMirror(run->characters[i]);
+    }
+    swappedRun.from = run->from;
+    swappedRun.to = run->to;
+    swappedRun.length = run->length;
+    swappedRun.characters = swappedCharacters;
+
+    return swappedRun;
+}
+
 - (void)_ATSU_drawHighlightForRun:(const WebCoreTextRun *)run style:(const WebCoreTextStyle *)style geometry:(const WebCoreTextGeometry *)geometry
 {
     // The only Cocoa calls made here are to NSColor and NSBezierPath,
@@ -1629,6 +1656,9 @@ static WebCoreTextRun reverseCharactersInRun(const WebCoreTextRun *run)
     
     if (style->visuallyOrdered) {
         swappedRun = reverseCharactersInRun(run);
+        aRun = &swappedRun;
+    } else if (style->rtl && !ATSUMirrors) {
+        swappedRun = applyMirroringToRun(run);
         aRun = &swappedRun;
     }
 
@@ -1682,7 +1712,7 @@ static WebCoreTextRun reverseCharactersInRun(const WebCoreTextRun *run)
 
     ATSUDisposeTextLayout (layout); // Ignore the error.  Nothing we can do anyway.
 
-    if (style->visuallyOrdered)
+    if (style->visuallyOrdered || (style->rtl && !ATSUMirrors))
         free ((void *)swappedRun.characters);
 }
 
@@ -1702,6 +1732,9 @@ static WebCoreTextRun reverseCharactersInRun(const WebCoreTextRun *run)
     
     if (style->visuallyOrdered) {
         swappedRun = reverseCharactersInRun(run);
+        aRun = &swappedRun;
+    } else if (style->rtl && !ATSUMirrors) {
+        swappedRun = applyMirroringToRun(run);
         aRun = &swappedRun;
     }
 
@@ -1743,7 +1776,7 @@ static WebCoreTextRun reverseCharactersInRun(const WebCoreTextRun *run)
 
     ATSUDisposeTextLayout (layout); // Ignore the error.  Nothing we can do anyway.
     
-    if (style->visuallyOrdered)
+    if (style->visuallyOrdered || (style->rtl && !ATSUMirrors))
         free ((void *)swappedRun.characters);
 }
 
@@ -1765,6 +1798,9 @@ static WebCoreTextRun reverseCharactersInRun(const WebCoreTextRun *run)
     if (style->visuallyOrdered) {
         swappedRun = reverseCharactersInRun(run);
         aRun = &swappedRun;
+    } else if (style->rtl && !ATSUMirrors) {
+        swappedRun = applyMirroringToRun(run);
+        aRun = &swappedRun;
     }
 
     layout = [self _createATSUTextLayoutForRun:aRun style:style];
@@ -1783,7 +1819,7 @@ static WebCoreTextRun reverseCharactersInRun(const WebCoreTextRun *run)
     
     ATSUDisposeTextLayout(layout);
     
-    if (style->visuallyOrdered) {
+    if (style->visuallyOrdered || (style->rtl && !ATSUMirrors)) {
         free ((void *)swappedRun.characters);
     }
 

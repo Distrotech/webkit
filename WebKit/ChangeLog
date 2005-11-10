@@ -2,6 +2,23 @@
 
         Merged fix from TOT to Safari-2-0-branch
 
+    2005-07-12  Geoffrey Garen  <ggaren@apple.com>
+
+		Patch by Mitz Pettel
+        Added layout test for 
+        http://bugzilla.opendarwin.org/show_bug.cgi?id=3435
+        Parentheses are backwards in Hebrew text (no bidi mirroring?)
+
+        Test is manual because results only reflect visually -
+        the layout is the same either way.
+        
+        Test cases added:
+        * manual-tests/bidi-parens.html: Added.
+
+2005-11-10  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
     2005-09-16  John Sullivan  <sullivan@apple.com>
 
         Reviewed by Tim Omernick
