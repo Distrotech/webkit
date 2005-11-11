@@ -1,3 +1,14 @@
+2005-11-11  Timothy Hatcher  <timothy@apple.com>
+
+        Merges fixes from TOT to Safari-2-0-branch
+
+    2005-06-20  Anders Carlsson  <andersca@mac.com>
+
+        Fixed: <http://bugzilla.opendarwin.org/show_bug.cgi?id=3294>
+
+        * kjs/string_object.cpp:
+        (replace): Handle the second argument of replace being a function.
+
 2005-11-10  Timothy Hatcher  <timothy@apple.com>
 
 	    Merges fixes from Ti-2005-009-branch to Safari-2-0-branch
