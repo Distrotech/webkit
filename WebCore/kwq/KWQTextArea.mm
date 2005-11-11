@@ -249,6 +249,66 @@ const float LargeNumberForText = 1.0e7;
     [textView selectAll:nil];
 }
 
+- (void)setSelectedRange:(NSRange)aRange
+{
+    NSString *text = [textView string];
+    // Ok, the selection has to match up with the string returned by -text
+    // and since -text translates \r\n to \n, we have to modify our selection
+    // if a \r\n sequence is anywhere in or before the selection
+    unsigned count = 0;
+    NSRange foundRange, searchRange = NSMakeRange(0, aRange.location);
+    while (foundRange = [text rangeOfString:@"\r\n" options:NSLiteralSearch range:searchRange],
+           foundRange.location != NSNotFound) {
+        count++;
+        searchRange.location = NSMaxRange(foundRange);
+        if (searchRange.location >= aRange.location) break;
+        searchRange.length = aRange.location - searchRange.location;
+    }
+    aRange.location += count;
+    count = 0;
+    searchRange = NSMakeRange(aRange.location, aRange.length);
+    while (foundRange = [text rangeOfString:@"\r\n" options:NSLiteralSearch range:searchRange],
+           foundRange.location != NSNotFound) {
+        count++;
+        searchRange.location = NSMaxRange(foundRange);
+        if (searchRange.location >= NSMaxRange(aRange)) break;
+        searchRange.length = NSMaxRange(aRange) - searchRange.location;
+    }
+    aRange.length += count;
+    [textView setSelectedRange:aRange];
+}
+
+- (NSRange)selectedRange
+{
+    NSRange aRange = [textView selectedRange];
+    if (aRange.location == NSNotFound) {
+        return aRange;
+    }
+    // Same issue as with -setSelectedRange: regarding \r\n sequences
+    unsigned count = 0;
+    NSRange foundRange, searchRange = NSMakeRange(0, aRange.location);
+    NSString *text = [textView string];
+    while (foundRange = [text rangeOfString:@"\r\n" options:NSLiteralSearch range:searchRange],
+           foundRange.location != NSNotFound) {
+        count++;
+        searchRange.location = NSMaxRange(foundRange);
+        if (searchRange.location >= aRange.location) break;
+        searchRange.length = aRange.location - searchRange.location;
+    }
+    aRange.location -= count;
+    count = 0;
+    searchRange = NSMakeRange(aRange.location, aRange.length);
+    while (foundRange = [text rangeOfString:@"\r\n" options:NSLiteralSearch range:searchRange],
+           foundRange.location != NSNotFound) {
+        count++;
+        searchRange.location = NSMaxRange(foundRange);
+        if (searchRange.location >= NSMaxRange(aRange)) break;
+        searchRange.length = NSMaxRange(aRange) - searchRange.location;
+    }
+    aRange.length -= count;
+    return aRange;
+}
+
 - (void)setEditable:(BOOL)flag
 {
     [textView setEditableIfEnabled:flag];
@@ -322,7 +382,7 @@ static NSRange RangeOfParagraph(NSString *text, int paragraph)
 {
     int paragraphSoFar = 0;
     NSRange searchRange = NSMakeRange(0, [text length]);
-
+    
     NSRange newlineRange;
     while (true) {
         // FIXME: Doesn't work for CR-separated or CRLF-separated text.
@@ -347,7 +407,7 @@ static NSRange RangeOfParagraph(NSString *text, int paragraph)
 	searchRange.length -= advance;
 	searchRange.location += advance;
     }
-
+    
     if (paragraphSoFar < paragraph) {
 	return NSMakeRange(NSNotFound, 0);
     } else if (searchRange.location == NSNotFound || newlineRange.location == NSNotFound) {

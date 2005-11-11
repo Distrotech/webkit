@@ -329,7 +329,15 @@ public:
     virtual QString state();
     virtual void restoreState(QStringList &);
 
+    bool canHaveSelection();
+
+    long selectionStart();
+    long selectionEnd();
+    void setSelectionStart(long);
+    void setSelectionEnd(long);
+
     void select();
+    void setSelectionRange(long, long);
     
     virtual void click(bool sendMouseEvents);
     virtual void accessKeyAction(bool sendToAnyElement);
@@ -632,7 +640,14 @@ public:
     virtual QString state();
     virtual void restoreState(QStringList &);
 
+    long selectionStart();
+    long selectionEnd();
+
+    void setSelectionStart(long);
+    void setSelectionEnd(long);
+
     void select (  );
+    void setSelectionRange(long, long);
 
     virtual void childrenChanged();
     virtual void parseHTMLAttribute(HTMLAttributeImpl *attr);
