@@ -1,3 +1,19 @@
+2005-11-10  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-1-3-branch
+
+    2005-10-12  Vicki Murley  <vicki@apple.com>
+
+        Reviewed by Darin.
+
+        fix <rdar://problem/4043643> iframe swallows events for overlapping elements (3449)
+
+        * WebView.subproj/WebHTMLView.m:
+        (-[WebHTMLView hitTest:]): 
+        (-[WebHTMLView _updateMouseoverWithEvent:]):
+        eliminate _hitViewForEvent hackery and self dependency
+        from this function
+
 === WebKit-312.5.2 ===
 
 2005-11-03  Timothy Hatcher  <timothy@apple.com>
