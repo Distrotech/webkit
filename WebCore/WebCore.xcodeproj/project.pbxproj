@@ -3513,7 +3513,7 @@
 		B51B64B308B693000076106C /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CREATE_HASH_TABLE = /System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks/JavaScriptCore.framework/PrivateHeaders/create_hash_table;
+				CREATE_HASH_TABLE = "$(NEXT_ROOT)/System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks/JavaScriptCore.framework/PrivateHeaders/create_hash_table";
 				DEBUG_DEFINES = NDEBUG;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
