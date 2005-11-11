@@ -382,7 +382,6 @@ static NSRange RangeOfParagraph(NSString *text, int paragraph)
     
     NSParagraphStyle *style = [textView _KWQ_typingParagraphStyle];
     if (_lineHeight) {
-        ASSERT(style);
         [textView _KWQ_updateTypingAttributes:style forLineHeight:_lineHeight fontHeight:([_font ascender] - [_font descender])];
     }
 }
