@@ -390,6 +390,11 @@
     }
 }
 
+- (BOOL)hasSelection
+{
+    return [self selectedRange].length > 0;
+}
+
 - (void)setHasFocus:(BOOL)nowHasFocus
 {
     if (!widget || nowHasFocus == hasFocus)

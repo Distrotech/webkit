@@ -34,6 +34,7 @@
 #include "html/html_baseimpl.h"
 #include "html/html_canvasimpl.h"
 #include "html/html_documentimpl.h"
+#include "html/html_formimpl.h"
 #include "html/html_imageimpl.h"
 #include "html/html_objectimpl.h"
 
@@ -68,8 +69,15 @@ using namespace KJS;
 
 using DOM::DocumentImpl;
 using DOM::DOMString;
+using DOM::ElementImpl;
 using DOM::HTMLFrameElementImpl;
+using DOM::HTMLGenericFormElementImpl;
+using DOM::HTMLHtmlElementImpl;
 using DOM::HTMLIFrameElementImpl;
+using DOM::HTMLInputElement;
+using DOM::HTMLInputElementImpl;
+using DOM::HTMLTextAreaElement;
+using DOM::HTMLTextAreaElementImpl;
 
 IMPLEMENT_PROTOFUNC(HTMLDocFunction)
 
@@ -1272,7 +1280,7 @@ Value KJS::HTMLElement::call(ExecState *exec, Object &thisObj, const List&args)
 }
 #endif
 
-static Value getInputSelectionStart(HTMLInputElementImpl &input)
+static Value getInputSelectionStart(HTMLInputElement &input)
 {
   if (input.canHaveSelection()) {
     return Number(input.selectionStart());
@@ -1280,7 +1288,7 @@ static Value getInputSelectionStart(HTMLInputElementImpl &input)
   return Undefined();
 }
 
-static Value getInputSelectionEnd(HTMLInputElementImpl &input)
+static Value getInputSelectionEnd(HTMLInputElement &input)
 {
   if (input.canHaveSelection()) {
     return Number(input.selectionEnd());
@@ -2031,7 +2039,7 @@ bool KJS::HTMLElement::hasOwnProperty(ExecState *exec, const Identifier &propert
         return true;
     }
     case ID_INPUT: {
-      HTMLInputElementImpl &input = static_cast<HTMLInputElementImpl &>(element);
+      HTMLInputElement input = static_cast<HTMLInputElement>(element);
       const HashTable* table = classInfo()->propHashTable;
       const HashEntry* entry = Lookup::findEntry(table, propertyName);
       if (entry) {
@@ -2171,10 +2179,6 @@ Value KJS::HTMLElementFunction::tryCall(ExecState *exec, Object &thisObj, const 
         form.reset();
         return Undefined();
       }
-      else if (id == KJS::HTMLElement::InputSetSelectionRange) {
-        input.setSelectionRange(args[0].toInt32(exec), args[1].toInt32(exec));
-        return Undefined();
-      }
     }
     break;
     case ID_SELECT: {
@@ -2213,6 +2217,10 @@ Value KJS::HTMLElementFunction::tryCall(ExecState *exec, Object &thisObj, const 
       }
       else if (id == KJS::HTMLElement::InputClick) {
         input.click();
+        return Undefined();
+      }
+      else if (id == KJS::HTMLElement::InputSetSelectionRange) {
+        input.setSelectionRange(args[0].toInt32(exec), args[1].toInt32(exec));
         return Undefined();
       }
     }

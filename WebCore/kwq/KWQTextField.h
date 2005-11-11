@@ -44,6 +44,8 @@ class QLineEdit;
 
 - (void)detachQLineEdit;
 
+- (BOOL)hasSelection;
+
 - (void)setHasFocus:(BOOL)hasFocus;
 
 - (void)setMaximumLength:(int)len;
