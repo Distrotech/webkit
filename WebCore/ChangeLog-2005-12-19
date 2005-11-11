@@ -2,6 +2,18 @@
 
         Merged fix from TOT to Safari-2-0-branch
 
+    2005-11-10  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Maciej.
+
+        - fixed <rdar://problem/4327363> GAP: tabs not treated as whitespace in option element
+
+        * khtml/rendering/render_form.cpp: (RenderSelect::updateFromElement): call simplifyWhiteSpace() on the itemText or label to collapse whitespace.
+
+2005-11-10  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
     2005-09-21  Vicki Murley  <vicki@apple.com>
    
         Changes by Romain Brestac, reviewed by Darin.
