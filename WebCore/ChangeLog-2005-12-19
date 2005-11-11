@@ -2,6 +2,25 @@
 
         Merged fix from TOT to Safari-2-0-branch
 
+    2005-11-02  Vicki Murley  <vicki@apple.com>
+
+        Reviewed by Darin.
+ 
+        fix <rdar://problem/4303587> REGRESSION (TOT): Scrollwheel doesn't work on frameset pages (5450)
+
+        * kwq/KWQKHTMLPart.h:
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::wheelEvent): set _currentEvent to the wheel event
+        (KWQKHTMLPart::passWheelEventToChildWidget): New.  Pass the event
+        to the child widget, if we haven't already handled the event
+        * khtml/khtmlview.cpp:
+        (KHTMLView::viewportWheelEvent): add passWheelEventToChildWidget check, and
+        accept the event if we're passing to the child widget
+
+2005-11-10  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
     2005-11-10  Adele Peterson  <adele@apple.com>
 
         Reviewed by Maciej.

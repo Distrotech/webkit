@@ -1970,6 +1970,10 @@ void KHTMLView::viewportWheelEvent(QWheelEvent* e)
             doc->renderer()->layer()->hitTest(hitTestResult, x, y); 
             NodeImpl *node = hitTestResult.innerNode();
 
+           if (KWQ(m_part)->passWheelEventToChildWidget(node)) {
+                e->accept();
+                return;
+            }
             if (node) {
                 node->dispatchWheelEvent(e);
                 if (e->isAccepted())
