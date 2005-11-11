@@ -55,6 +55,9 @@ class QLineEdit;
 - (void)setBaseWritingDirection:(NSWritingDirection)direction;
 - (NSWritingDirection)baseWritingDirection;
 
+- (NSRange)selectedRange;
+- (void)setSelectedRange:(NSRange)range;
+
 - (NSString *)string;
 
 @end
