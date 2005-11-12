@@ -558,7 +558,6 @@ void HTMLObjectElementImpl::attach()
                 // this method or recalcStyle (which also calls updateWidget) to be called.
                 needWidgetUpdate = false;
                 static_cast<RenderPartObject*>(m_render)->updateWidget();
-                dispatchHTMLEvent(EventImpl::LOAD_EVENT,false,false);
             } else {
                 needWidgetUpdate = true;
                 setChanged();
@@ -588,11 +587,7 @@ void HTMLObjectElementImpl::setComplete(bool complete)
 
 void HTMLObjectElementImpl::detach()
 {
-    // Only bother with an unload event if we had a render object.  - dwh
     if (attached() && m_render && !m_useFallbackContent) {
-        // ### do this when we are actualy removed from document instead
-        dispatchHTMLEvent(EventImpl::UNLOAD_EVENT,false,false);
-        
         // Update the widget the next time we attach (detaching destroys the plugin).
         needWidgetUpdate = true;
     }
