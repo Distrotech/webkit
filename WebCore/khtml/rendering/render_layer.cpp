@@ -59,6 +59,8 @@
 #include "KWQKHTMLPart.h" // For Dashboard.
 #endif
 
+#define MIN_INTERSECT_FOR_REVEAL 32
+
 using namespace DOM;
 using namespace khtml;
 
@@ -69,6 +71,12 @@ QScrollBar* RenderLayer::gScrollBar = 0;
 #ifndef NDEBUG
 static bool inRenderLayerDetach;
 #endif
+
+const RenderLayer::ScrollAlignment RenderLayer::gAlignCenterIfNeeded = { RenderLayer::noScroll, RenderLayer::alignCenter, RenderLayer::alignToClosestEdge };
+const RenderLayer::ScrollAlignment RenderLayer::gAlignToEdgeIfNeeded = { RenderLayer::noScroll, RenderLayer::alignToClosestEdge, RenderLayer::alignToClosestEdge };
+const RenderLayer::ScrollAlignment RenderLayer::gAlignCenterAlways = { RenderLayer::alignCenter, RenderLayer::alignCenter, RenderLayer::alignCenter };
+const RenderLayer::ScrollAlignment RenderLayer::gAlignTopAlways = { RenderLayer::alignTop, RenderLayer::alignTop, RenderLayer::alignTop };
+const RenderLayer::ScrollAlignment RenderLayer::gAlignBottomAlways = { RenderLayer::alignBottom, RenderLayer::alignBottom, RenderLayer::alignBottom };
 
 void* ClipRects::operator new(size_t sz, RenderArena* renderArena) throw()
 {
@@ -541,8 +549,121 @@ RenderLayer::scrollToOffset(int x, int y, bool updateScrollbars, bool repaint)
     }
 }
 
-void
-RenderLayer::updateScrollPositionFromScrollbars()
+void RenderLayer::scrollRectToVisible(const QRect &rect, const ScrollAlignment& alignX, const ScrollAlignment& alignY)
+{
+    RenderLayer* parentLayer = 0;
+    QRect newRect = rect;
+    
+    if (m_object->hasOverflowClip()) {
+        QRect layerBounds = QRect(m_x + m_scrollX, m_y + m_scrollY, m_width, m_height);
+        QRect exposeRect = QRect(rect.x() + m_scrollX, rect.y() + m_scrollY, rect.width(), rect.height());
+        QRect r = getRectToExpose(layerBounds, exposeRect, alignX, alignY);
+        
+        int xOffset = r.x() - m_x;
+        int yOffset = r.y() - m_y;
+        // Adjust offsets if they're outside of the allowable range.
+        xOffset = kMax(0, kMin(m_scrollWidth - m_width, xOffset));
+        yOffset = kMax(0, kMin(m_scrollHeight - m_height, yOffset));
+        
+        if (xOffset != m_scrollX || yOffset != m_scrollY) {
+            int diffX = m_scrollX;
+            int diffY = m_scrollY;
+            scrollToOffset(xOffset, yOffset);
+            diffX = m_scrollX - diffX;
+            diffY = m_scrollY - diffY;
+            newRect.setX(rect.x() - diffX);
+            newRect.setY(rect.y() - diffY);
+        }
+    
+        if (m_object->parent())
+            parentLayer = m_object->parent()->enclosingLayer();
+    } else {
+        QScrollView* view = m_object->document()->view();
+        QRect viewRect = QRect(view->contentsX(), view->contentsY(), view->visibleWidth(), view->visibleHeight());
+        if (view) {
+            QRect r = getRectToExpose(viewRect, rect, alignX, alignY);
+            view->setContentsPos(r.x(), r.y());
+        }
+        if (m_object->document() && m_object->document()->ownerElement() && m_object->document()->ownerElement()->renderer()) {
+            parentLayer = m_object->document()->ownerElement()->renderer()->enclosingLayer();
+            newRect.setX(rect.x() - view->contentsX() + view->viewport()->x());
+            newRect.setY(rect.y() - view->contentsY() + view->viewport()->y());
+        }
+    }
+    
+    if (parentLayer)
+        parentLayer->scrollRectToVisible(newRect, alignX, alignY);
+}
+
+QRect RenderLayer::getRectToExpose(const QRect &visibleRect, const QRect &exposeRect, const ScrollAlignment& alignX, const ScrollAlignment& alignY) {
+
+    int x, y, w, h;
+    x = exposeRect.x();
+    y = exposeRect.y();
+    w = exposeRect.width();
+    h = exposeRect.height();
+    
+    // Find the appropriate X coordinate to scroll to.
+    ScrollBehavior scrollX = getHiddenBehavior(alignX);
+    int intersectWidth = visibleRect.intersect(exposeRect).width();
+    // If the rectangle is fully visible, use the specified visible behavior.
+    // If the rectangle is partially visible, but over a certain threshold, then treat it as fully visible to avoid unnecessary horizontal scrolling
+    if (intersectWidth == w || intersectWidth >= MIN_INTERSECT_FOR_REVEAL)
+        scrollX = getVisibleBehavior(alignX);
+    else if (intersectWidth == visibleRect.width()) {
+        // If the rect is bigger than the visible area, don't bother trying to center.  Other alignments will work.
+        if (getVisibleBehavior(alignX) == alignCenter)
+            scrollX = noScroll;
+        else
+            scrollX = getVisibleBehavior(alignX);
+    }
+    // If the rectangle is partially visible, but not above the minimum threshold, use the specified partial behavior
+    else if (intersectWidth > 0)
+        scrollX = getPartialBehavior(alignX);
+        
+    if (scrollX == noScroll) 
+        x = visibleRect.x();
+    // If we're trying to align to the closest edge, and the exposeRect is further right than the visibleRect, then alignRight.
+    else if ((scrollX == alignRight) || ((scrollX == alignToClosestEdge) && exposeRect.right() > visibleRect.right()))
+        x = exposeRect.right() - visibleRect.width();
+    else if (scrollX == alignCenter)
+        x -= (visibleRect.width() - w) / 2;
+    // By default, x is set to the left of the exposeRect, so for the alignLeft case, 
+    // or the alignToClosestEdge case where the closest edge is the left edge, then x does not need to be changed.
+    w = visibleRect.width();
+    
+    // Find the appropriate Y coordinate to scroll to.
+    ScrollBehavior scrollY = getHiddenBehavior(alignY);
+    int intersectHeight = visibleRect.intersect(exposeRect).height();
+    // If the rectangle is fully visible, use the specified visible behavior.
+    if (intersectHeight == h)
+        scrollY = getVisibleBehavior(alignY);
+    else if (intersectHeight == visibleRect.height()) {
+        // If the rect is bigger than the visible area, don't bother trying to center.  Other alignments will work.
+        if (getVisibleBehavior(alignY) == alignCenter)
+            scrollY = noScroll;
+        else
+            scrollY = getVisibleBehavior(alignY);
+    }
+    // If the rectangle is partially visible, use the specified partial behavior
+    else if (intersectHeight > 0)
+        scrollY = getPartialBehavior(alignY);
+        
+    if (scrollY == noScroll) 
+        y = visibleRect.y();
+    // If we're trying to align to the closest edge, and the exposeRect is further down than the visibleRect, then alignBottom.
+    else if ((scrollY == alignBottom) || ((scrollY == alignToClosestEdge) && exposeRect.bottom() > visibleRect.bottom()))
+        y = exposeRect.bottom() - visibleRect.height();
+    else if (scrollY == alignCenter)
+        y -= (visibleRect.height() - h) / 2;
+    // By default, y is set to the top of the exposeRect, so for the alignTop case, 
+    // or the alignToEdgeY case where the closest edge is the top edge, then y does not need to be changed.
+    h = visibleRect.height();
+    
+    return QRect(x, y, w, h);
+}
+
+void RenderLayer::updateScrollPositionFromScrollbars()
 {
     bool needUpdate = false;
     int newX = m_scrollX;

@@ -122,6 +122,7 @@ using khtml::MoveSelectionCommand;
 using khtml::parseURL;
 using khtml::RenderCanvas;
 using khtml::RenderImage;
+using khtml::RenderLayer;
 using khtml::RenderObject;
 using khtml::RenderPart;
 using khtml::RenderStyle;
@@ -2120,9 +2121,9 @@ static HTMLFormElementImpl *formElementFromDOMElement(DOMElement *element)
         return;
     
     QRect extentRect = renderer->caretRect(extent.offset(), _part->selection().extentAffinity());
-    if (!NSContainsRect([documentView visibleRect], NSRect(extentRect))) {
-        v->ensureRectVisibleCentered(extentRect, true);
-    }
+    RenderLayer *layer = renderer->enclosingLayer();
+    if (layer)
+        layer->scrollRectToVisible(extentRect);
 }
 
 // [info draggingLocation] is in window coords

@@ -26,7 +26,6 @@
 #import "KWQTextArea.h"
 
 #import "KWQKHTMLPart.h"
-#import "KWQNSViewExtras.h"
 #import "KWQTextEdit.h"
 #import "render_replaced.h"
 #import "WebCoreBridge.h"
@@ -34,6 +33,7 @@
 using DOM::EventImpl;
 using DOM::NodeImpl;
 using khtml::RenderWidget;
+using khtml::RenderLayer;
 
 @interface NSTextView (WebCoreKnowsCertainAppKitSecrets)
 - (void)setWantsNotificationForMarkedText:(BOOL)wantsNotification;
@@ -747,7 +747,10 @@ static NSString *WebContinuousSpellCheckingEnabled = @"WebContinuousSpellCheckin
             [self selectAll:nil];
         }
         if (!KWQKHTMLPart::currentEventIsMouseDownInWidget(widget)) {
-            [[self enclosingScrollView] _KWQ_scrollFrameToVisible];
+            RenderWidget *w = const_cast<RenderWidget *> (static_cast<const RenderWidget *>(widget->eventFilterObject()));
+            RenderLayer *layer = w->enclosingLayer();
+            if (layer)
+                layer->scrollRectToVisible(w->absoluteBoundingBoxRect());
         }
 	[self _KWQ_setKeyboardFocusRingNeedsDisplay];
 

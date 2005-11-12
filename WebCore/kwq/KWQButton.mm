@@ -31,9 +31,12 @@
 #import "KWQKHTMLPart.h"
 #import "KWQNSViewExtras.h"
 #import "KWQView.h"
+#import "render_form.h"
 #import "WebCoreBridge.h"
 
-#import "render_form.h"
+using khtml::RenderWidget;
+using khtml::RenderLayer;
+
 
 @interface NSCell (KWQButtonKnowsAppKitSecrets)
 - (NSMutableDictionary *)_textAttributes;
@@ -123,7 +126,10 @@
     BOOL become = [super becomeFirstResponder];
     if (become && button) {
         if (!KWQKHTMLPart::currentEventIsMouseDownInWidget(button)) {
-            [self _KWQ_scrollFrameToVisible];
+            RenderWidget *w = const_cast<RenderWidget *> (static_cast<const RenderWidget *>(button->eventFilterObject()));
+            RenderLayer *layer = w->enclosingLayer();
+            if (layer)
+                layer->scrollRectToVisible(w->absoluteBoundingBoxRect());
         }
         if (button) {
             QFocusEvent event(QEvent::FocusIn);

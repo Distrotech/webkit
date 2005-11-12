@@ -29,12 +29,16 @@
 #import "KWQButton.h"
 #import "KWQExceptions.h"
 #import "KWQKHTMLPart.h"
-#import "KWQNSViewExtras.h"
 #import "KWQFoundationExtras.h"
 #import "KWQView.h"
 #import "WebCoreBridge.h"
 #import "WebCoreTextRenderer.h"
 #import "WebCoreTextRendererFactory.h"
+
+#import "render_form.h"
+
+using khtml::RenderWidget;
+using khtml::RenderLayer;
 
 @interface NSCell (KWQComboBoxKnowsAppKitSecrets)
 - (NSMutableDictionary *)_textAttributes;
@@ -468,7 +472,10 @@ void QComboBox::populate()
         QWidget *widget = [self widget];
         if (widget) {
             if (!KWQKHTMLPart::currentEventIsMouseDownInWidget(widget)) {
-                [self _KWQ_scrollFrameToVisible];
+                RenderWidget *w = const_cast<RenderWidget *> (static_cast<const RenderWidget *>(widget->eventFilterObject()));
+                RenderLayer *layer = w->enclosingLayer();
+                if (layer)
+                    layer->scrollRectToVisible(w->absoluteBoundingBoxRect());
             }
             QFocusEvent event(QEvent::FocusIn);
             const_cast<QObject *>(widget->eventFilterObject())->eventFilter(widget, &event);
