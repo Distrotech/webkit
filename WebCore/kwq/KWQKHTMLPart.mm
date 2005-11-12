@@ -917,37 +917,14 @@ void KWQKHTMLPart::unfocusWindow()
 
 void KWQKHTMLPart::jumpToSelection()
 {
-    // Assumes that selection start will only ever be a text node. This is currently
-    // true, but will it always be so?
     if (d->m_selection.start().isNotNull()) {
-        RenderText *rt = dynamic_cast<RenderText *>(d->m_selection.start().node()->renderer());
-        if (rt) {
-            int x = 0, y = 0;
-            rt->posOfChar(d->m_selection.start().offset(), x, y);
-            // The -50 offset is copied from KHTMLPart::findTextNext, which sets the contents position
-            // after finding a matched text string.
-            d->m_view->setContentsPos(x - 50, y - 50);
+        if (selectionStart() && selectionStart()->renderer()) {
+            RenderLayer *layer = selectionStart()->renderer()->enclosingLayer();
+            if (layer) {
+                ASSERT(!selectionEnd() || !selectionEnd()->renderer() || (selectionEnd()->renderer()->enclosingLayer() == layer));
+                layer->scrollRectToVisible(selectionRect());
+            }
         }
-/*
-        Something like this would fix <rdar://problem/3154293>: "Find Next should not scroll page if the next target is already visible"
-
-        I think this would be a better way to do this, to avoid needless horizontal scrolling,
-        but it is not feasible until selectionRect() returns a tighter rect around the
-        selected text.  Right now it works at element granularity.
- 
-        NSView *docView = d->m_view->getDocumentView();
-
-	KWQ_BLOCK_EXCEPTIONS;
-        NSRect selRect = NSRect(selectionRect());
-        NSRect visRect = [docView visibleRect];
-        if (!NSContainsRect(visRect, selRect)) {
-            // pad a bit so we overscroll slightly
-            selRect = NSInsetRect(selRect, -10.0, -10.0);
-            selRect = NSIntersectionRect(selRect, [docView bounds]);
-            [docView scrollRectToVisible:selRect];
-        }
-	KWQ_UNBLOCK_EXCEPTIONS;
-*/
     }
 }
 
@@ -1278,9 +1255,9 @@ NSView *KWQKHTMLPart::nextKeyViewInFrame(NodeImpl *node, KWQSelectionDirection d
         }
         else {
             doc->setFocusNode(node);
-            if (view() && node->renderer() && !node->renderer()->isRoot()) {
-                view()->ensureRectVisibleCentered(node->getRect());
-            }
+            if (node->renderer())
+                node->renderer()->enclosingLayer()->scrollRectToVisible(node->getRect());
+                
             [_bridge makeFirstResponder:[_bridge documentView]];
             return [_bridge documentView];
         }
@@ -3433,20 +3410,27 @@ NSRect KWQKHTMLPart::visibleSelectionRect() const
 
 void KWQKHTMLPart::centerSelectionInVisibleArea() const
 {
+    QRect rect;
+
     switch (selection().state()) {
         case Selection::NONE:
-            break;
+            return;
         case Selection::CARET: {
-            if (view())
-                // passing true forces centering even if selection is already exposed
-                view()->ensureRectVisibleCentered(selection().caretRect(), true);
+            rect = selection().caretRect();
             break;
         }
         case Selection::RANGE:
-            if (view())
-                // passing true forces centering even if selection is already exposed
-                view()->ensureRectVisibleCentered(selectionRect(), true);
+            rect = selectionRect();
             break;
+    }
+    
+    ASSERT(d->m_selection.start().isNotNull());
+    if (selectionStart() && selectionStart()->renderer()) {
+        RenderLayer *layer = selectionStart()->renderer()->enclosingLayer();
+        if (layer) {
+            ASSERT(!selectionEnd() || !selectionEnd()->renderer() || (selectionEnd()->renderer()->enclosingLayer() == layer));
+            layer->scrollRectToVisible(rect, RenderLayer::gAlignCenterAlways, RenderLayer::gAlignCenterAlways);
+        }
     }
 }
 
