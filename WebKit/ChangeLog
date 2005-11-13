@@ -1,6 +1,25 @@
 2005-11-10  Timothy Hatcher  <timothy@apple.com>
 
         Merged fix from TOT to Safari-1-3-branch
+        Vicki thinks this fixes <rdar://problem/3562729> location.replace with dynamically written frameset doesn't change view (3621)
+
+    2005-08-01  Geoffrey Garen  <ggaren@apple.com>
+
+        Fixed <rdar://problem/3572585> window.open fails if name param = the name of a window just closed in same function
+
+        Reviewed by darin.
+
+        Test cases added:
+
+        * manual-tests/open-after-close.html: Added.
+        * manual-tests/resources/open-after-close-popup.html: Added.
+
+        * WebCoreSupport.subproj/WebBridge.m:
+        (-[WebBridge closeWindowSoon]): We now remove a WebView from WebViewSets when the WebView is *scheduled* to close.
+
+2005-11-10  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-1-3-branch
 
     2005-10-12  Vicki Murley  <vicki@apple.com>
 
