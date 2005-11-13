@@ -200,7 +200,7 @@ void RenderLayer::updateLayerPosition()
         return;
     
     int x = m_object->xPos();
-    int y = m_object->yPos();
+    int y = m_object->yPos() - m_object->borderTopExtra();
 
     if (!m_object->isPositioned()) {
         // We must adjust our position by walking up the render tree looking for the
@@ -211,6 +211,7 @@ void RenderLayer::updateLayerPosition()
             y += curr->yPos();
             curr = curr->parent();
         }
+        y += curr->borderTopExtra();
     }
 
     m_relX = m_relY = 0;
@@ -264,7 +265,7 @@ void RenderLayer::updateLayerPosition()
     setPos(x,y);
 
     setWidth(m_object->width());
-    setHeight(m_object->height());
+    setHeight(m_object->height() + m_object->borderTopExtra() + m_object->borderBottomExtra());
 
     if (!m_object->hasOverflowClip()) {
         if (m_object->overflowWidth() > m_object->width())
@@ -1024,7 +1025,7 @@ RenderLayer::paintLayer(RenderLayer* rootLayer, QPainter *p,
 
         // Paint the background.
         RenderObject::PaintInfo info(p, damageRect, PaintActionBlockBackground, paintingRootForRenderer);
-        renderer()->paint(info, x - renderer()->xPos(), y - renderer()->yPos());        
+        renderer()->paint(info, x - renderer()->xPos(), y - renderer()->yPos() + renderer()->borderTopExtra());        
 #if APPLE_CHANGES
         // Our scrollbar widgets paint exactly when we tell them to, so that they work properly with
         // z-index.  We paint after we painted the background/border, so that the scrollbars will
@@ -1056,7 +1057,7 @@ RenderLayer::paintLayer(RenderLayer* rootLayer, QPainter *p,
         setClip(p, paintDirtyRect, clipRectToApply);
 
         int tx = x - renderer()->xPos();
-        int ty = y - renderer()->yPos();
+        int ty = y - renderer()->yPos() + renderer()->borderTopExtra();
         RenderObject::PaintInfo info(p, clipRectToApply, 
                                      selectionOnly ? PaintActionSelection : PaintActionChildBlockBackgrounds,
                                      paintingRootForRenderer);
@@ -1150,8 +1151,8 @@ RenderLayer::hitTestLayer(RenderLayer* rootLayer, RenderObject::NodeInfo& info,
     // Next we want to see if the mouse pos is inside the child RenderObjects of the layer.
     if (containsPoint(xMousePos, yMousePos, fgRect) && 
         renderer()->hitTest(info, xMousePos, yMousePos,
-                            layerBounds.x() - renderer()->xPos(),
-                            layerBounds.y() - renderer()->yPos(), HitTestDescendants)) {
+                            layerBounds.x() - renderer()->xPos() + m_object->borderLeft(),
+                            layerBounds.y() - renderer()->yPos() + m_object->borderTopExtra() - m_object->borderBottom(), HitTestDescendants)) {
         // for positioned generated content, we might still not have a
         // node by the time we get to the layer level, since none of
         // the content in the layer has an element. So just walk up
@@ -1190,8 +1191,8 @@ RenderLayer::hitTestLayer(RenderLayer* rootLayer, RenderObject::NodeInfo& info,
     // Next we want to see if the mouse pos is inside this layer but not any of its children.
     if (containsPoint(xMousePos, yMousePos, bgRect) &&
         renderer()->hitTest(info, xMousePos, yMousePos,
-                            layerBounds.x() - renderer()->xPos(),
-                            layerBounds.y() - renderer()->yPos(),
+                            layerBounds.x() - renderer()->xPos() + m_object->borderLeft(),
+                            layerBounds.y() - renderer()->yPos() + m_object->borderTopExtra() - m_object->borderBottom(),
                             HitTestSelf))
         return this;
 
