@@ -29,7 +29,6 @@
 #import "KWQCheckBox.h"
 #import "KWQExceptions.h"
 #import "KWQKHTMLPart.h"
-#import "KWQNSViewExtras.h"
 #import "KWQView.h"
 #import "render_form.h"
 #import "WebCoreBridge.h"

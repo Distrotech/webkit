@@ -305,17 +305,17 @@ static Value replace(ExecState *exec, const UString &source, const Value &patter
           int completeMatchStart = (*ovector)[0];
           List args;
 
-          args.append(Value(matchString));
+          args.append(String(matchString));
           
           for (unsigned i = 0; i < reg->subPatterns(); i++) {
               int matchStart = (*ovector)[(i + 1) * 2];
               int matchLen = (*ovector)[(i + 1) * 2 + 1] - matchStart;
               
-              args.append(Value(source.substr(matchStart, matchLen)));
+              args.append(String(source.substr(matchStart, matchLen)));
           }
           
-          args.append(Value(completeMatchStart));
-          args.append(Value(source));
+          args.append(Number(completeMatchStart));
+          args.append(String(source));
 
           replacementString = replacementFunction->call(exec, exec->dynamicInterpreter()->globalObject(), 
                                                         args).toString(exec);
@@ -355,9 +355,9 @@ static Value replace(ExecState *exec, const UString &source, const Value &patter
     if (replacementFunction) {
         List args;
       
-        args.append(Value(source.substr(matchPos, matchLen)));
-        args.append(Value(matchPos));
-        args.append(Value(source));
+        args.append(String(source.substr(matchPos, matchLen)));
+        args.append(Number(matchPos));
+        args.append(String(source));
       
         replacementString = replacementFunction->call(exec, exec->dynamicInterpreter()->globalObject(), 
                                                       args).toString(exec);
