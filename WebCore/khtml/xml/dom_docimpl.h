@@ -93,6 +93,8 @@ namespace DOM {
     class GenericRONamedNodeMapImpl;
     class HTMLDocumentImpl;
     class HTMLElementImpl;
+    class HTMLFormElementImpl;
+    class HTMLInputElementImpl;
     class HTMLImageLoader;
     class HTMLMapElementImpl;
     class JSEditor;
@@ -753,6 +755,10 @@ public:
 
     void registerDisconnectedNodeWithEventListeners(NodeImpl *node);
     void unregisterDisconnectedNodeWithEventListeners(NodeImpl *node);
+    
+    void radioButtonChecked(HTMLInputElementImpl *caller, HTMLFormElementImpl *form);
+    HTMLInputElementImpl* checkedRadioButtonForGroup(DOMString name, HTMLFormElementImpl *form);
+    void removeRadioButtonGroup(DOMString name, HTMLFormElementImpl *form);
 
 private:
     void updateTitle();
@@ -784,6 +790,9 @@ private:
     QValueList<khtml::DashboardRegionValue> m_dashboardRegions;
     bool m_hasDashboardRegions;
     bool m_dashboardRegionsDirty;
+    
+    QPtrDict< QDict<HTMLInputElementImpl> > *m_selectedRadioButtons;
+
 #endif
 };
 

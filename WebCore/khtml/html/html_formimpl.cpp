@@ -704,18 +704,6 @@ void HTMLFormElementImpl::parseHTMLAttribute(HTMLAttributeImpl *attr)
     }
 }
 
-void HTMLFormElementImpl::radioClicked( HTMLGenericFormElementImpl *caller )
-{
-    for (unsigned i = 0; i < formElements.count(); ++i) {
-        HTMLGenericFormElementImpl *current = formElements[i];
-        if (current->id() == ID_INPUT &&
-            static_cast<HTMLInputElementImpl*>(current)->inputType() == HTMLInputElementImpl::RADIO &&
-            current != caller && current->form() == caller->form() && current->name() == caller->name()) {
-            static_cast<HTMLInputElementImpl*>(current)->setChecked(false);
-        }
-    }
-}
-
 template<class T> static void appendToVector(QPtrVector<T> &vec, T *item)
 {
     unsigned size = vec.size();
@@ -747,6 +735,11 @@ void HTMLFormElementImpl::registerFormElement(HTMLGenericFormElementImpl *e)
 
 void HTMLFormElementImpl::removeFormElement(HTMLGenericFormElementImpl *e)
 {
+    if (!e->name().isEmpty()) {
+        HTMLGenericFormElementImpl* currentCheckedRadio = getDocument()->checkedRadioButtonForGroup(e->name(), this);
+        if (currentCheckedRadio == e)
+            getDocument()->removeRadioButtonGroup(e->name(), this);
+    }
     removeFromVector(formElements, e);
     removeFromVector(dormantFormElements, e);
 }
@@ -1314,6 +1307,10 @@ void HTMLInputElementImpl::setType(const DOMString& t)
             // Useful in case we were called from inside parseHTMLAttribute.
             setAttribute(ATTR_TYPE, type());
         } else {
+            if (m_type == RADIO && !name().isEmpty()) {
+                if (getDocument()->checkedRadioButtonForGroup(name(), m_form) == this)
+                    getDocument()->removeRadioButtonGroup(name(), m_form);
+            }
             bool wasAttached = m_attached;
             if (wasAttached)
                 detach();
@@ -1329,6 +1326,11 @@ void HTMLInputElementImpl::setType(const DOMString& t)
             }
             if (wasAttached)
                 attach();
+                
+            // If our type morphs into a radio button and we are checked, then go ahead
+            // and signal this to the form.
+            if (m_type == RADIO && checked())
+                getDocument()->radioButtonChecked(this, m_form);
         }
     }
     m_haveType = true;
@@ -1722,6 +1724,19 @@ void HTMLInputElementImpl::parseHTMLAttribute(HTMLAttributeImpl *attr)
         setChanged();
         break;
 #endif
+    case ATTR_NAME:
+        if (m_type == RADIO && checked()) {
+            // Remove the radio from its old group.
+            if (!name().isEmpty())
+                getDocument()->removeRadioButtonGroup(name(), m_form);
+            
+            // Update our cached reference to the name.
+            setName(attr->value());
+            
+            // Add it to its new group.
+            getDocument()->radioButtonChecked(this, m_form);
+        }
+        break;
     default:
         HTMLGenericFormElementImpl::parseHTMLAttribute(attr);
     }
@@ -2007,8 +2022,8 @@ void HTMLInputElementImpl::setChecked(bool _checked)
 {
     if (checked() == _checked) return;
 
-    if (m_form && m_type == RADIO && _checked && !name().isEmpty())
-        m_form->radioClicked(this);
+    if (m_type == RADIO && _checked)
+        getDocument()->radioButtonChecked(this, m_form);
 
     m_useDefaultChecked = false;
     m_checked = _checked;
