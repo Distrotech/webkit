@@ -1,3 +1,9 @@
+=== JavaScriptCore-417.6 ===
+
+2005-11-14  Timothy Hatcher  <timothy@apple.com>
+
+       * JavaScriptCore.exp: removed type info sysmbols that we no longer export according to B&I.
+
 === JavaScriptCore-417.5 ===
 
 2005-11-11  Timothy Hatcher  <timothy@apple.com>
