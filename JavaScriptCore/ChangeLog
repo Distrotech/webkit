@@ -1,3 +1,12 @@
+2005-11-16  Timothy Hatcher  <timothy@apple.com>
+
+       Fixes build failures on Glendale and Chardonnay.
+       We now use an export file for whatever compiler is selected (since the exported symbols differ.)
+
+       * JavaScriptCore.xcodeproj: use GCC_VERSION_IDENTIFIER to pick the proper export file
+       * JavaScriptCore.exp: added the 4 type infos that GCC 4 adds.
+       * JavaScriptCore-3.3.exp: the GCC 3.3 export file that excluded GCC 4 symbols
+
 === JavaScriptCore-417.6 ===
 
 2005-11-14  Timothy Hatcher  <timothy@apple.com>
