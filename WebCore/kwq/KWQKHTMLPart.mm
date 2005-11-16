@@ -2086,7 +2086,6 @@ bool KWQKHTMLPart::passWidgetMouseDownEventToWidget(QWidget* widget)
     if (!wasDeferringTimers) {
         QObject::setDefersTimers(true);
     }
-
     ASSERT(!_sendingEventToSubview);
     _sendingEventToSubview = true;
     [view mouseDown:_currentEvent];
@@ -2512,6 +2511,23 @@ bool KWQKHTMLPart::passSubframeEventToSubframe(NodeImpl::MouseEvent &event)
     KWQ_BLOCK_EXCEPTIONS;
 
     switch ([_currentEvent type]) {
+        case NSMouseMoved: {
+            NodeImpl *node = event.innerNode.handle();
+            if (!node)
+                return false;
+            RenderObject *renderer = node->renderer();
+            if (!renderer || !renderer->isWidget())
+                return false;
+            QWidget *widget = static_cast<RenderWidget *>(renderer)->widget();
+            if (!widget || !widget->inherits("KHTMLView"))
+                return false;
+            KHTMLPart *subframePart = static_cast<KHTMLView *>(widget)->part();
+            if (!subframePart)
+                return false;
+            [KWQ(subframePart)->bridge() mouseMoved:_currentEvent];
+            return true;
+        }
+        
     	case NSLeftMouseDown: {
             NodeImpl *node = event.innerNode.handle();
             if (!node) {
@@ -2722,7 +2738,7 @@ void KWQKHTMLPart::mouseMoved(NSEvent *event)
     KHTMLView *v = d->m_view;
     // Reject a mouse moved if the button is down - screws up tracking during autoscroll
     // These happen because WebKit sometimes has to fake up moved events.
-    if (!v || d->m_bMousePressed) {
+    if (!v || d->m_bMousePressed || _sendingEventToSubview) {
         return;
     }
     

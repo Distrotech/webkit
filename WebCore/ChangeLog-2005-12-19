@@ -1,5 +1,22 @@
 2005-11-15  Timothy Hatcher  <timothy@apple.com>
 
+        Merged fix from TOT to Safari-1-3-branch
+
+    2005-11-13  Vicki Murley  <vicki@apple.com>
+
+        Reviewed by Maciej.
+
+        Fixed <rdar://problem/4316201> REGRESSION: cursor and text in status bar is not updated when mousing over links in a frame (5509)
+
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::passSubframeEventToSubframe): add a case to handle NSMouseMoved, to fix the problem with the hand cursor
+        (KWQKHTMLPart::mouseMoved): return if we're already sending an event to the subview
+        * kwq/WebCoreBridge.mm:
+        (-[WebCoreBridge elementAtPoint:]): if we're over a frame, return the element within the frame, to fix the problem with
+        status bar text
+
+2005-11-15  Timothy Hatcher  <timothy@apple.com>
+
         Applied fix for the Safari-1-3-branch
 
     2005-11-14  Adele Peterson  <adele@apple.com>
