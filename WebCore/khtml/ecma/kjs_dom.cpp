@@ -1037,6 +1037,8 @@ Value DOMDocumentProtoFunc::tryCall(ExecState *exec, Object &thisObj, const List
   setAttributeNodeNS	DOMElement::SetAttributeNodeNS	DontDelete|Function 1
   getElementsByTagNameNS DOMElement::GetElementsByTagNameNS	DontDelete|Function 2
   hasAttributeNS	DOMElement::HasAttributeNS	DontDelete|Function 2
+  focus                 DOMElement::ElementFocus        DontDelete|Function 0
+  blur                  DOMElement::ElementBlur         DontDelete|Function 0
 # extension for Safari RSS
   scrollByLines         DOMElement::ScrollByLines       DontDelete|Function 1
   scrollByPages         DOMElement::ScrollByPages       DontDelete|Function 1
@@ -1167,6 +1169,12 @@ Value DOMElementProtoFunc::tryCall(ExecState *exec, Object &thisObj, const List 
         return Undefined();
         
     }
+    case DOMElement::ElementFocus:
+        element.focus();
+        return Undefined();
+    case DOMElement::ElementBlur:
+        element.blur();
+        return Undefined();
   default:
     return Undefined();
   }

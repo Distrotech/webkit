@@ -1548,6 +1548,22 @@ inline Document DocumentImpl::createInstance(DocumentImpl *impl)
 
 @end
 
+@implementation DOMElement (DOMElementExtensions)
+
+- (void)focus
+{
+    Element element(ElementImpl::createInstance([self _elementImpl]));
+    element.focus();
+}
+
+- (void)blur
+{
+    Element element(ElementImpl::createInstance([self _elementImpl]));
+    element.blur();
+}
+
+@end
+
 @implementation DOMElement (WebCoreInternal)
 
 + (DOMElement *)_elementWithImpl:(ElementImpl *)impl

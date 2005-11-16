@@ -477,6 +477,10 @@ void HTMLElementImpl::parseHTMLAttribute(HTMLAttributeImpl *attr)
         setHTMLEventListener(EventImpl::DOMFOCUSIN_EVENT,
 	    getDocument()->createHTMLEventListener(attr->value().string(), this));
         break;
+    case ATTR_ONBLUR:
+        setHTMLEventListener(EventImpl::DOMFOCUSOUT_EVENT,
+	    getDocument()->createHTMLEventListener(attr->value().string(), this));
+        break;
     case ATTR_ONKEYDOWN:
         setHTMLEventListener(EventImpl::KEYDOWN_EVENT,
 	    getDocument()->createHTMLEventListener(attr->value().string(), this));

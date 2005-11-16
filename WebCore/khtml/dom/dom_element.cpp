@@ -294,6 +294,22 @@ bool Element::isHTMLElement() const
     return ((ElementImpl *)impl)->isHTMLElement();
 }
 
+void Element::focus()
+{
+    if(!impl) return;
+    DocumentImpl* doc = impl->getDocument();
+    if (doc && impl->isFocusable())
+        doc->setFocusNode(impl);
+}
+
+void Element::blur()
+{
+    if(!impl) return;
+    DocumentImpl* doc = impl->getDocument();
+    if (doc && doc->focusNode() == impl)
+	doc->setFocusNode(0);
+}
+
 // FIXME: This should move down to HTMLElement.
 CSSStyleDeclaration Element::style()
 {

@@ -158,7 +158,7 @@ namespace KJS {
            SetAttributeNode, RemoveAttributeNode, GetElementsByTagName,
            GetAttributeNS, SetAttributeNS, RemoveAttributeNS, GetAttributeNodeNS,
            SetAttributeNodeNS, GetElementsByTagNameNS, HasAttribute, HasAttributeNS,
-           ScrollByLines, ScrollByPages};
+           ScrollByLines, ScrollByPages, ElementFocus, ElementBlur};
   };
 
   class DOMDOMImplementation : public DOMObject {
