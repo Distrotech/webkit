@@ -1,3 +1,15 @@
+2005-11-17  Adele Peterson  <adele@apple.com>
+
+        Fix by Darin, reviewed by me.
+        
+        fix for <rdar://problem/3885811> Some values used with setAttribute() cause the attribute to be removed (null strings vs. empty strings) (4059)
+
+        Changed the constructors to return the emtpy string if the string is null.
+
+        * kjs/value.cpp:
+        (Value::Value):
+        (String::String):
+
 === JavaScriptCore-417.7 ===
 
 2005-11-16  Timothy Hatcher  <timothy@apple.com>
