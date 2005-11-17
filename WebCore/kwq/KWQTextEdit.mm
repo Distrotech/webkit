@@ -202,12 +202,12 @@ long QTextEdit::selectionStart()
 long QTextEdit::selectionEnd()
 {
     KWQTextArea *textView = (KWQTextArea *)getView();
-    
+
     KWQ_BLOCK_EXCEPTIONS;
     NSRange range = [textView selectedRange];
     if (range.location == NSNotFound)
         return 0;
-    return NSMaxRange(range);
+    return (range.location + range.length);
     KWQ_UNBLOCK_EXCEPTIONS;
     
     return 0;
@@ -309,7 +309,10 @@ void QTextEdit::setSelectionRange(long start, long length)
     if (newStart + newLength > maxlen) {
         newLength = maxlen - newStart;
     }
-    [textView setSelectedRange:NSMakeRange(newStart, newLength)];
+    NSRange r;
+    r.location = newStart;
+    r.length = newLength;
+    [textView setSelectedRange:r];
     KWQ_UNBLOCK_EXCEPTIONS;
 }
 

@@ -78,7 +78,10 @@ QLineEdit::~QLineEdit()
 void QLineEdit::setCursorPosition(int pos)
 {
     KWQ_BLOCK_EXCEPTIONS;
-    [m_controller setSelectedRange:NSMakeRange(pos, 0)];
+    NSRange r;
+    r.location = pos;
+    r.length = 0;
+    [m_controller setSelectedRange:r];
     KWQ_UNBLOCK_EXCEPTIONS;
 }
 
@@ -213,7 +216,10 @@ QString QLineEdit::selectedText() const
 void QLineEdit::setSelection(int start, int length)
 {
     KWQ_BLOCK_EXCEPTIONS;
-    [m_controller setSelectedRange:NSMakeRange(start, length)];
+    NSRange r;
+    r.location = start;
+    r.length = length;
+    [m_controller setSelectedRange:r];
     KWQ_UNBLOCK_EXCEPTIONS;
 }
 
