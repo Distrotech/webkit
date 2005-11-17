@@ -498,9 +498,6 @@ void QListBox::clearCachedTextRenderers()
 {
     // Simplified method from NSView; overridden to replace NSView's way of checking
     // for full keyboard access with ours.
-    if (!_box || !KWQKHTMLPart::partForWidget(_box)->tabsToAllControls()) {
-        return NO;
-    }
     return ([self window] != nil) && ![self isHiddenOrHasHiddenAncestor] && [self acceptsFirstResponder];
 }
 
