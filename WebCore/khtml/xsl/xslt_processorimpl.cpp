@@ -143,7 +143,7 @@ static int bufferWrite(void* context, const char* buffer, int len)
 
 void XSLTProcessorImpl::addToResult(const char* buffer, int len)
 {
-    m_resultOutput += QString(buffer, len);
+    m_resultOutput += QString::fromUtf8(buffer, len);
 }
 
 DocumentImpl *XSLTProcessorImpl::documentFromXMLDocPtr(xmlDocPtr resultDoc, xsltStylesheetPtr sheet)
