@@ -1,3 +1,5 @@
+=== JavaScriptCore-417.7 ===
+
 2005-11-16  Timothy Hatcher  <timothy@apple.com>
 
        Fixes build failures on Glendale and Chardonnay.
