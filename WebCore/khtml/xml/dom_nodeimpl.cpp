@@ -63,6 +63,18 @@
 #define LOG(channel, formatAndArgs...) ((void)0)
 #endif
 
+#ifndef NDEBUG
+static int gEventDispatchForbidden;
+#define forbidEventDispatch() gEventDispatchForbidden += 1
+#define allowEventDispatch() assert(gEventDispatchForbidden > 0); gEventDispatchForbidden -= 1
+#define eventDispatchForbidden() (gEventDispatchForbidden > 0)
+#else
+
+#define forbidEventDispatch()
+#define allowEventDispatch()
+#define eventDispatchForbidden()
+#endif NDEBUG
+
 using namespace DOM;
 using namespace khtml;
 
@@ -466,7 +478,7 @@ EventListener *NodeImpl::getHTMLEventListener(int id)
 
 bool NodeImpl::dispatchEvent(EventImpl *evt, int &exceptioncode, bool tempEvent)
 {
-    assert(!getDocument()->eventDispatchForbidden());
+    assert(!eventDispatchForbidden());
     evt->ref();
 
     evt->setTarget(this);
@@ -505,7 +517,7 @@ bool NodeImpl::dispatchEvent(EventImpl *evt, int &exceptioncode, bool tempEvent)
 
 bool NodeImpl::dispatchGenericEvent( EventImpl *evt, int &/*exceptioncode */)
 {
-    assert(!getDocument()->eventDispatchForbidden());
+    assert(!eventDispatchForbidden());
     evt->ref();
 
     // ### check that type specified
@@ -590,7 +602,7 @@ bool NodeImpl::dispatchGenericEvent( EventImpl *evt, int &/*exceptioncode */)
 
 bool NodeImpl::dispatchHTMLEvent(int _id, bool canBubbleArg, bool cancelableArg)
 {
-    assert(!getDocument()->eventDispatchForbidden());
+    assert(!eventDispatchForbidden());
     int exceptioncode = 0;
     EventImpl *evt = new EventImpl(static_cast<EventImpl::EventId>(_id),canBubbleArg,cancelableArg);
     return dispatchEvent(evt,exceptioncode,true);
@@ -598,7 +610,7 @@ bool NodeImpl::dispatchHTMLEvent(int _id, bool canBubbleArg, bool cancelableArg)
 
 bool NodeImpl::dispatchWindowEvent(int _id, bool canBubbleArg, bool cancelableArg)
 {
-    assert(!getDocument()->eventDispatchForbidden());
+    assert(!eventDispatchForbidden());
     int exceptioncode = 0;
     EventImpl *evt = new EventImpl(static_cast<EventImpl::EventId>(_id),canBubbleArg,cancelableArg);
     evt->setTarget( 0 );
@@ -639,7 +651,7 @@ bool NodeImpl::dispatchWindowEvent(int _id, bool canBubbleArg, bool cancelableAr
 
 bool NodeImpl::dispatchMouseEvent(QMouseEvent *_mouse, int overrideId, int overrideDetail)
 {
-    assert(!getDocument()->eventDispatchForbidden());
+    assert(!eventDispatchForbidden());
     bool cancelable = true;
     int detail = overrideDetail; // defaults to 0
     EventImpl::EventId evtId = EventImpl::UNKNOWN_EVENT;
@@ -791,7 +803,7 @@ bool NodeImpl::dispatchMouseEvent(QMouseEvent *_mouse, int overrideId, int overr
 
 bool NodeImpl::dispatchUIEvent(int _id, int detail)
 {
-    assert(!getDocument()->eventDispatchForbidden());
+    assert(!eventDispatchForbidden());
     assert (!( (_id != EventImpl::DOMFOCUSIN_EVENT &&
         _id != EventImpl::DOMFOCUSOUT_EVENT &&
                 _id != EventImpl::DOMACTIVATE_EVENT)));
@@ -848,10 +860,8 @@ void NodeImpl::notifyNodeListsSubtreeModified()
 
 bool NodeImpl::dispatchSubtreeModifiedEvent(bool sendChildrenChanged)
 {
-    // forbidder will send this event later
-    if (getDocument()->eventDispatchForbidden())
-        return true;
-
+    assert(!eventDispatchForbidden());
+    
     notifyNodeListsSubtreeModified();
     if (sendChildrenChanged)
         childrenChanged();
@@ -864,7 +874,7 @@ bool NodeImpl::dispatchSubtreeModifiedEvent(bool sendChildrenChanged)
 
 bool NodeImpl::dispatchKeyEvent(QKeyEvent *key)
 {
-    assert(!getDocument()->eventDispatchForbidden());
+    assert(!eventDispatchForbidden());
     int exceptioncode = 0;
     //kdDebug(6010) << "DOM::NodeImpl: dispatching keyboard event" << endl;
     KeyboardEventImpl *keyboardEventImpl = new KeyboardEventImpl(key, getDocument()->defaultView());
@@ -890,7 +900,7 @@ bool NodeImpl::dispatchKeyEvent(QKeyEvent *key)
 
 void NodeImpl::dispatchWheelEvent(QWheelEvent *e)
 {
-    assert(!getDocument()->eventDispatchForbidden());
+    assert(!eventDispatchForbidden());
     if (e->delta() == 0)
         return;
 
@@ -1716,13 +1726,13 @@ NodeImpl *NodeBaseImpl::insertBefore ( NodeImpl *newChild, NodeImpl *refChild, i
 
         // If child is already present in the tree, first remove it
         NodeImpl *newParent = child->parentNode();
-        if(newParent)
+        if (newParent)
             newParent->removeChild( child, exceptioncode );
-        if ( exceptioncode )
+        if (exceptioncode)
             return 0;
 
         // Add child in the correct position
-        getDocument()->forbidEventDispatch();
+        forbidEventDispatch();
         if (prev)
             prev->setNextSibling(child);
         else
@@ -1736,7 +1746,7 @@ NodeImpl *NodeBaseImpl::insertBefore ( NodeImpl *newChild, NodeImpl *refChild, i
         // ### should we detach() it first if it's already attached?
         if (attached() && !child->attached())
             child->attach();
-        getDocument()->allowEventDispatch();
+        allowEventDispatch();
         
         // Dispatch the mutation events
         dispatchChildInsertedEvents(child,exceptioncode);
@@ -1784,15 +1794,16 @@ NodeImpl *NodeBaseImpl::replaceChild ( NodeImpl *newChild, NodeImpl *oldChild, i
 
     // Add the new child(ren)
     while (child) {
-        getDocument()->forbidEventDispatch();
         nextChild = isFragment ? child->nextSibling() : 0;
 
         // If child is already present in the tree, first remove it
         NodeImpl *newParent = child->parentNode();
-        if(newParent)
+        if (newParent)
             newParent->removeChild( child, exceptioncode );
         if (exceptioncode)
             return 0;
+
+        forbidEventDispatch();
 
         // Add child in the correct position
         if (prev) prev->setNextSibling(child);
@@ -1807,7 +1818,7 @@ NodeImpl *NodeBaseImpl::replaceChild ( NodeImpl *newChild, NodeImpl *oldChild, i
         // ### should we detach() it first if it's already attached?
         if (attached() && !child->attached())
             child->attach();
-        getDocument()->allowEventDispatch();
+        allowEventDispatch();
 
         // Dispatch the mutation events
         dispatchChildInsertedEvents(child,exceptioncode);
@@ -1876,7 +1887,7 @@ NodeImpl *NodeBaseImpl::removeChild ( NodeImpl *oldChild, int &exceptioncode )
     if (exceptioncode)
         return 0;
 
-    getDocument()->forbidEventDispatch();
+    forbidEventDispatch();
 
     // Remove from rendering tree
     if (oldChild->attached())
@@ -1898,7 +1909,7 @@ NodeImpl *NodeBaseImpl::removeChild ( NodeImpl *oldChild, int &exceptioncode )
 
     getDocument()->setDocumentChanged(true);
 
-    getDocument()->allowEventDispatch();
+    allowEventDispatch();
 
     // Dispatch post-removal mutation events
     dispatchSubtreeModifiedEvent();
@@ -1923,7 +1934,7 @@ void NodeBaseImpl::removeChildren()
     for (n = _first; n != 0; n = n->nextSibling())
         willRemoveChild(n);
     
-    getDocument()->forbidEventDispatch();
+    forbidEventDispatch();
     while ((n = _first) != 0) {
         NodeImpl *next = n->nextSibling();
         
@@ -1943,7 +1954,7 @@ void NodeBaseImpl::removeChildren()
         _first = next;
     }
     _last = 0;
-    getDocument()->allowEventDispatch();
+    allowEventDispatch();
     
     // Dispatch a single post-removal mutation event denoting a modified subtree.
     dispatchSubtreeModifiedEvent();
@@ -1976,7 +1987,6 @@ NodeImpl *NodeBaseImpl::appendChild ( NodeImpl *newChild, int &exceptioncode )
     NodeImpl *child = isFragment ? newChild->firstChild() : newChild;
 
     while (child) {
-        getDocument()->forbidEventDispatch();
         nextChild = isFragment ? child->nextSibling() : 0;
 
         // If child is already present in the tree, first remove it
@@ -1987,6 +1997,8 @@ NodeImpl *NodeBaseImpl::appendChild ( NodeImpl *newChild, int &exceptioncode )
                 return 0;
         }
 
+        forbidEventDispatch();
+
         // Append child to the end of the list
         child->setParent(this);
 
@@ -1995,20 +2007,15 @@ NodeImpl *NodeBaseImpl::appendChild ( NodeImpl *newChild, int &exceptioncode )
             child->setPreviousSibling(_last);
             _last->setNextSibling(child);
             _last = child;
-        }
-        else
-        {
+        } else
             _first = _last = child;
-        }
 
         // Add child to the rendering tree
         // ### should we detach() it first if it's already attached?
         if (attached() && !child->attached())
             child->attach();
         
-        getDocument()->allowEventDispatch();
-        if (oldParent)
-            oldParent->dispatchSubtreeModifiedEvent(true);
+        allowEventDispatch();
         
         // Dispatch the mutation events
         dispatchChildInsertedEvents(child,exceptioncode);
@@ -2090,7 +2097,7 @@ NodeImpl *NodeBaseImpl::addChild(NodeImpl *newChild)
         return 0;
     }
 
-    getDocument()->forbidEventDispatch();
+    forbidEventDispatch();
 
     // just add it...
     newChild->setParent(this);
@@ -2110,7 +2117,7 @@ NodeImpl *NodeBaseImpl::addChild(NodeImpl *newChild)
         newChild->insertedIntoDocument();
     childrenChanged();
 
-    getDocument()->allowEventDispatch();
+    allowEventDispatch();
     
     if(newChild->nodeType() == Node::ELEMENT_NODE)
         return newChild;
@@ -2364,7 +2371,7 @@ NodeImpl *NodeBaseImpl::childNode(unsigned long index)
 
 void NodeBaseImpl::dispatchChildInsertedEvents( NodeImpl *child, int &exceptioncode )
 {
-    assert(!getDocument()->eventDispatchForbidden());
+    assert(!eventDispatchForbidden());
     NodeImpl *p = this;
     while (p->parentNode())
         p = p->parentNode();
