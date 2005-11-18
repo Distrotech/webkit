@@ -1,3 +1,16 @@
+2005-11-18  Mitz Pettel  <opendarwin.org@mitzpettel.com>
+
+        Reviewed by Dave Harrson.
+        Commited by Tim Hatcher.
+
+        - fix http://bugzilla.opendarwin.org/show_bug.cgi?id=5629
+        REGRESSION: appendChild() does not remove nodes from source
+        nodelist when inserting into destination
+
+        * khtml/rendering/render_layer.cpp:
+        (khtml::ContainerNodeImpl::appendChild): Dispatch old parent's
+        subtree modified event from appendChild()
+
 2005-11-17  Timothy Hatcher  <timothy@apple.com>
 
         Merged fix from TOT to Safari-1-3-branch

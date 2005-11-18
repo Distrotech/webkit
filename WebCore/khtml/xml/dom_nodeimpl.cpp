@@ -1967,6 +1967,8 @@ NodeImpl *NodeBaseImpl::appendChild ( NodeImpl *newChild, int &exceptioncode )
             child->attach();
         
         getDocument()->allowEventDispatch();
+        if (oldParent)
+            oldParent->dispatchSubtreeModifiedEvent(true);
         
         // Dispatch the mutation events
         dispatchChildInsertedEvents(child,exceptioncode);
