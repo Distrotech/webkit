@@ -388,7 +388,10 @@ public:
     
     DOM::NodeImpl *mousePressNode();
     
+    virtual bool mouseDownMayStartSelect() const { return _mouseDownMayStartSelect; }
+    
 private:
+    bool canMouseDownStartSelect(DOM::NodeImpl* node);
     virtual void khtmlMousePressEvent(khtml::MousePressEvent *);
     virtual void khtmlMouseDoubleClickEvent(khtml::MouseDoubleClickEvent *);
     virtual void khtmlMouseMoveEvent(khtml::MouseMoveEvent *);
