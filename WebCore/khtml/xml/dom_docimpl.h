@@ -390,7 +390,8 @@ public:
     // internal
     NodeImpl *findElement( Id id );
 
-    bool prepareMouseEvent( bool readonly, int x, int y, MouseEvent *ev );
+    bool prepareMouseEvent(bool readonly, int x, int y, MouseEvent* ev);
+    bool prepareMouseEvent(bool readonly, bool active, int x, int y, MouseEvent *ev);
 
     virtual bool childAllowed( NodeImpl *newChild );
     virtual bool childTypeAllowed( unsigned short nodeType );
@@ -428,6 +429,9 @@ public:
     NodeImpl *hoverNode() const { return m_hoverNode; }
     void setHoverNode(NodeImpl *newHoverNode);
     
+    NodeImpl *activeNode() const { return m_activeNode; }
+    void setActiveNode(NodeImpl *newActiveNode);
+
     // Updates for :target (CSS3 selector).
     void setCSSTarget(NodeImpl* n);
     NodeImpl* getCSSTarget();
@@ -638,6 +642,7 @@ protected:
 
     NodeImpl *m_focusNode;
     NodeImpl *m_hoverNode;
+    NodeImpl *m_activeNode;
 
     unsigned int m_domtree_version;
     

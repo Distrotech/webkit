@@ -2478,7 +2478,7 @@ void KHTMLPart::setSelection(const Selection &s, bool closeTyping, bool keepTypi
     d->m_selection = s;
     if (!s.isNone())
         setFocusNodeIfNeeded();
-
+    
     selectionLayoutChanged();
 
     // Always clear the x position used for vertical arrow navigation.
@@ -4565,7 +4565,7 @@ void KHTMLPart::selectClosestWordFromMouseEvent(QMouseEvent *mouse, DOM::Node &i
 {
     Selection selection;
 
-    if (!innerNode.isNull() && innerNode.handle()->renderer() && innerNode.handle()->renderer()->shouldSelect()) {
+    if (!innerNode.isNull() && innerNode.handle()->renderer() && mouseDownMayStartSelect() && innerNode.handle()->renderer()->shouldSelect()) {
         VisiblePosition pos(innerNode.handle()->renderer()->positionForCoordinates(x, y));
         if (pos.isNotNull()) {
             selection.moveTo(pos);
@@ -4604,24 +4604,22 @@ void KHTMLPart::handleMousePressEventTripleClick(khtml::MousePressEvent *event)
     QMouseEvent *mouse = event->qmouseEvent();
     DOM::Node innerNode = event->innerNode();
     
-    Selection selection;
-    
     if (mouse->button() == LeftButton && !innerNode.isNull() && innerNode.handle()->renderer() &&
-        innerNode.handle()->renderer()->shouldSelect()) {
+        mouseDownMayStartSelect() && innerNode.handle()->renderer()->shouldSelect()) {
+        Selection selection;
         VisiblePosition pos(innerNode.handle()->renderer()->positionForCoordinates(event->x(), event->y()));
         if (pos.isNotNull()) {
             selection.moveTo(pos);
             selection.expandUsingGranularity(PARAGRAPH);
         }
+        if (selection.isRange()) {
+            d->m_selectionGranularity = PARAGRAPH;
+            d->m_beganSelectingText = true;
+        }
+        
+        setSelection(selection);
+        startAutoScroll();
     }
-    
-    if (selection.isRange()) {
-        d->m_selectionGranularity = PARAGRAPH;
-        d->m_beganSelectingText = true;
-    }
-    
-    setSelection(selection);
-    startAutoScroll();
 }
 
 void KHTMLPart::handleMousePressEventSingleClick(khtml::MousePressEvent *event)
@@ -4630,10 +4628,10 @@ void KHTMLPart::handleMousePressEventSingleClick(khtml::MousePressEvent *event)
     DOM::Node innerNode = event->innerNode();
     
     if (mouse->button() == LeftButton) {
-        Selection sel;
-
         if (!innerNode.isNull() && innerNode.handle()->renderer() &&
-            innerNode.handle()->renderer()->shouldSelect()) {
+            mouseDownMayStartSelect() && innerNode.handle()->renderer()->shouldSelect()) {
+            Selection sel;
+            
             // Extend the selection if the Shift key is down, unless the click is in a link.
             bool extendSelection = (mouse->state() & ShiftButton) && (event->url().isNull());
 
@@ -4670,10 +4668,10 @@ void KHTMLPart::handleMousePressEventSingleClick(khtml::MousePressEvent *event)
                 sel = Selection(visiblePos);
                 d->m_selectionGranularity = CHARACTER;
             }
+            
+            setSelection(sel);
+            startAutoScroll();
         }
-
-        setSelection(sel);
-        startAutoScroll();
     }
 }
 
@@ -4859,7 +4857,7 @@ void KHTMLPart::handleMouseMoveEventSelection(khtml::MouseMoveEvent *event)
     DOM::Node innerNode = event->innerNode();
 
     if (mouse->state() != LeftButton || !innerNode.handle() || !innerNode.handle()->renderer() ||
-        !innerNode.handle()->renderer()->shouldSelect())
+        !mouseDownMayStartSelect() || !innerNode.handle()->renderer()->shouldSelect())
     	return;
 
     // handle making selection
@@ -4943,7 +4941,7 @@ void KHTMLPart::khtmlMouseReleaseEvent( khtml::MouseReleaseEvent *event )
     // Clear the selection if the mouse didn't move after the last mouse press.
     // We do this so when clicking on the selection, the selection goes away.
     // However, if we are editing, place the caret.
-    if (!d->m_beganSelectingText
+    if (mouseDownMayStartSelect() && !d->m_beganSelectingText
             && d->m_dragStartPos.x() == event->qmouseEvent()->x()
             && d->m_dragStartPos.y() == event->qmouseEvent()->y()
             && d->m_selection.isRange()) {

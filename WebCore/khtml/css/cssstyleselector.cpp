@@ -621,14 +621,13 @@ NodeImpl* CSSStyleSelector::locateCousinList(ElementImpl* parent)
 bool CSSStyleSelector::canShareStyleWithElement(NodeImpl* n)
 {
     if (n->isHTMLElement()) {
-        bool mouseInside = element->renderer() ? element->renderer()->mouseInside() : false;
         HTMLElementImpl* s = static_cast<HTMLElementImpl*>(n);
         if (s->renderer() && (s->id() == element->id()) && !s->hasID() &&
             (s->hasClass() == element->hasClass()) && !s->inlineStyleDecl() &&
             (s->hasMappedAttributes() == htmlElement->hasMappedAttributes()) &&
             (s->hasAnchor() == element->hasAnchor()) && 
             !s->renderer()->style()->affectedByAttributeSelectors() &&
-            (s->renderer()->mouseInside() == mouseInside) &&
+            (s->hovered() == element->hovered()) &&
             (s->active() == element->active()) &&
             (s->focused() == element->focused())) {
             bool classesMatch = true;
@@ -1309,7 +1308,7 @@ bool CSSStyleSelector::checkOneSelector(DOM::CSSSelector *sel, DOM::ElementImpl 
                     if (e->renderer()) {
                         if (element != e)
                             e->renderer()->style()->setAffectedByHoverRules(true);
-                        if (e->renderer()->mouseInside())
+                        if (e->hovered())
                             return true;
                     }
                 }
@@ -3710,6 +3709,8 @@ void CSSStyleSelector::applyProperty( int id, DOM::CSSValueImpl *value )
 	    case CSS_VAL_TEXT:
 		style->setUserSelect(SELECT_TEXT);
 		break;
+            case CSS_VAL_ELEMENT:
+                style->setUserSelect(SELECT_ELEMENT);
 	    default:
 		return;
 	}

@@ -1106,7 +1106,7 @@ RenderLayer::hitTest(RenderObject::NodeInfo& info, int x, int y)
 
     // Now determine if the result is inside an anchor; make sure an image map wins if
     // it already set URLElement and only use the innermost.
-    DOM::NodeImpl* node = info.innerNode();
+    NodeImpl* node = info.innerNode();
     while (node) {
         if (node->hasAnchor() && !info.URLElement())
             info.setURLElement(node);
@@ -1368,16 +1368,43 @@ void RenderLayer::updateHoverActiveState(RenderObject::NodeInfo& info)
     if (info.readonly())
         return;
 
+    DocumentImpl* doc = renderer()->document();
+    if (!doc) return;
+
+    NodeImpl* activeNode = doc->activeNode();
+    if (activeNode && !info.active()) {
+        // We are clearing the :active chain because the mouse has been released.
+        for (RenderObject* curr = activeNode->renderer(); curr; curr = curr->parent()) {
+            if (curr->element() && !curr->isText())
+                curr->element()->setInActiveChain(false);
+        }
+        doc->setActiveNode(0);
+    } else {
+        NodeImpl* newActiveNode = info.innerNode();
+        if (!activeNode && newActiveNode && info.active()) {
+            // We are setting the :active chain and freezing it. If future moves happen, they
+            // will need to reference this chain.
+            for (RenderObject* curr = newActiveNode->renderer(); curr; curr = curr->parent()) {
+                if (curr->element() && !curr->isText()) {
+                    curr->element()->setInActiveChain(true);
+                }
+            }
+            doc->setActiveNode(newActiveNode);
+        }
+    }
+
+    // If the mouse is down and if this is a mouse move event, we want to restrict changes in 
+    // :hover/:active to only apply to elements that are in the :active chain that we froze
+    // at the time the mouse went down.
+    bool mustBeInActiveChain = info.active() && info.mouseMove();
+
     // Check to see if the hovered node has changed.  If not, then we don't need to
-    // do anything.  An exception is if we just went from :hover into :hover:active,
-    // in which case we need to update to get the new :active state.
-    DOM::DocumentImpl* doc = renderer()->document();
-    DOM::NodeImpl* oldHoverNode = doc ? doc->hoverNode() : 0;
+    // do anything.  
+    DOM::NodeImpl* oldHoverNode = doc->hoverNode();
     DOM::NodeImpl* newHoverNode = info.innerNode();
 
     // Update our current hover node.
-    if (doc)
-        doc->setHoverNode(newHoverNode);
+    doc->setHoverNode(newHoverNode);
 
     // We have two different objects.  Fetch their renderers.
     RenderObject* oldHoverObj = oldHoverNode ? oldHoverNode->renderer() : 0;
@@ -1385,31 +1412,22 @@ void RenderLayer::updateHoverActiveState(RenderObject::NodeInfo& info)
     
     // Locate the common ancestor render object for the two renderers.
     RenderObject* ancestor = commonAncestor(oldHoverObj, newHoverObj);
-    
+
     if (oldHoverObj != newHoverObj) {
         // The old hover path only needs to be cleared up to (and not including) the common ancestor;
         for (RenderObject* curr = oldHoverObj; curr && curr != ancestor; curr = hoverAncestor(curr)) {
-            curr->setMouseInside(false);
-            if (curr->element() && !curr->isText()) {
-                bool oldActive = curr->element()->active();
+            if (curr->element() && !curr->isText() && (!mustBeInActiveChain || curr->element()->inActiveChain())) {
                 curr->element()->setActive(false);
-                if (curr->style()->affectedByHoverRules() ||
-                    (curr->style()->affectedByActiveRules() && oldActive))
-                    curr->element()->setChanged();
+                curr->element()->setHovered(false);
             }
         }
     }
 
     // Now set the hover state for our new object up to the root.
     for (RenderObject* curr = newHoverObj; curr; curr = hoverAncestor(curr)) {
-        bool oldInside = curr->mouseInside();
-        curr->setMouseInside(true);
-        if (curr->element() && !curr->isText()) {
-            bool oldActive = curr->element()->active();
+        if (curr->element() && !curr->isText() && (!mustBeInActiveChain || curr->element()->inActiveChain())) {
             curr->element()->setActive(info.active());
-            if ((curr->style()->affectedByHoverRules() && !oldInside) ||
-                (curr->style()->affectedByActiveRules() && oldActive != info.active()))
-                curr->element()->setChanged();
+            curr->element()->setHovered(true);
         }
     }
 }

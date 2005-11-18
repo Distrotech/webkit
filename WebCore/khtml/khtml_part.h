@@ -1296,6 +1296,8 @@ public:
   // Workaround for the fact that it's hard to delete a frame.
   // Call this after doing user-triggered selections to make it easy to delete the frame you entirely selected.
   void selectFrameElementInParentIfFullySelected();
+
+  virtual bool mouseDownMayStartSelect() const { return true; }
   
 private:
   khtml::ChildFrame *childFrame( const QObject *obj );
