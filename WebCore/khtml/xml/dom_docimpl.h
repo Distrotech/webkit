@@ -697,7 +697,6 @@ protected:
     KWQAccObjectCache* m_accCache;
 #endif
     
-    int m_eventDispatchForbidden;
     QPtrList<HTMLImageLoader> m_imageLoadEventDispatchSoonList;
     QPtrList<HTMLImageLoader> m_imageLoadEventDispatchingList;
     int m_imageLoadEventTimer;
