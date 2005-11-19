@@ -2533,6 +2533,14 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
     return _private->scriptDebugDelegate;
 }
 
+- (BOOL)shouldClose
+{
+    WebBridge *bridge = [[self mainFrame] _bridge];
+    if (!bridge)
+        return YES;
+    return [bridge shouldClose];
+}
+
 @end
 
 @implementation WebView (WebViewPrintingPrivate)

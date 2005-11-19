@@ -295,6 +295,15 @@ bool EventImpl::isWheelEvent() const
     return false;
 }
 
+bool EventImpl::storesResultAsString() const
+{
+    return false;
+}
+
+void EventImpl::storeResult(const DOMString&)
+{
+}
+
 // -----------------------------------------------------------------------------
 
 UIEventImpl::UIEventImpl()
@@ -787,4 +796,21 @@ bool RegisteredEventListener::operator==(const RegisteredEventListener &other)
 
 ClipboardImpl::~ClipboardImpl()
 {
+}
+
+// -----------------------------------------------------------------------------
+
+BeforeUnloadEventImpl::BeforeUnloadEventImpl()
+    : EventImpl(BEFOREUNLOAD_EVENT, false, false)
+{
+}
+
+bool BeforeUnloadEventImpl::storesResultAsString() const
+{
+    return true;
+}
+
+void BeforeUnloadEventImpl::storeResult(const DOMString& s)
+{
+    m_result = s.implementation();
 }

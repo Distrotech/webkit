@@ -76,6 +76,7 @@
 #import "visible_position.h"
 #import "visible_text.h"
 #import "visible_units.h"
+#import "misc/shared.h"
 
 #import <JavaScriptCore/identifier.h>
 #import <JavaScriptCore/property_map.h>
@@ -90,66 +91,8 @@
 
 #undef _KWQ_TIMING
 
-using DOM::AtomicString;
-using DOM::ClipboardEventImpl;
-using DOM::DocumentFragmentImpl;
-using DOM::DocumentImpl;
-using DOM::DocumentMarker;
-using DOM::DOMString;
-using DOM::ElementImpl;
-using DOM::EventImpl;
-using DOM::HTMLDocumentImpl;
-using DOM::HTMLElementImpl;
-using DOM::HTMLFormElementImpl;
-using DOM::HTMLFrameElementImpl;
-using DOM::HTMLGenericFormElementImpl;
-using DOM::HTMLTableCellElementImpl;
-using DOM::Node;
-using DOM::NodeImpl;
-using DOM::Position;
-using DOM::Range;
-using DOM::RangeImpl;
-using DOM::TextImpl;
-
-using khtml::Cache;
-using khtml::CharacterIterator;
-using khtml::ChildFrame;
-using khtml::Decoder;
-using khtml::DashboardRegionValue;
-using khtml::EditCommandPtr;
-using khtml::endOfWord;
-using khtml::findPlainText;
-using khtml::InlineTextBox;
-using khtml::LeftWordIfOnBoundary;
-using khtml::MouseDoubleClickEvent;
-using khtml::MouseMoveEvent;
-using khtml::MousePressEvent;
-using khtml::MouseReleaseEvent;
-using khtml::parseURL;
-using khtml::PRE;
-using khtml::RenderCanvas;
-using khtml::RenderImage;
-using khtml::RenderLayer;
-using khtml::RenderListItem;
-using khtml::RenderObject;
-using khtml::RenderPart;
-using khtml::RenderStyle;
-using khtml::RenderTableCell;
-using khtml::RenderText;
-using khtml::RenderWidget;
-using khtml::RightWordIfOnBoundary;
-using khtml::Selection;
-using khtml::setEnd;
-using khtml::setStart;
-using khtml::ShadowData;
-using khtml::startOfWord;
-using khtml::startVisiblePosition;
-using khtml::StyleDashboardRegion;
-using khtml::TextIterator;
-using khtml::DOWNSTREAM;
-using khtml::VISIBLE;
-using khtml::VisiblePosition;
-using khtml::WordAwareIterator;
+using namespace DOM;
+using namespace khtml;
 
 using KIO::Job;
 
@@ -1898,6 +1841,39 @@ bool KWQKHTMLPart::statusbarVisible()
 bool KWQKHTMLPart::toolbarVisible()
 {
     return [_bridge areToolbarsVisible];
+}
+
+bool KWQKHTMLPart::shouldClose()
+{
+    KWQ_BLOCK_EXCEPTIONS;
+
+    if (![_bridge canRunBeforeUnloadConfirmPanel])
+        return true;
+
+    SharedPtr<DocumentImpl> document = xmlDocImpl();
+    if (!document)
+        return true;
+    HTMLElementImpl* body = document->body();
+    if (!body)
+        return true;
+
+    SharedPtr<BeforeUnloadEventImpl> event = new BeforeUnloadEventImpl;
+    event->setTarget(document.get());
+    int exception = 0;
+    body->dispatchGenericEvent(event.get(), exception);
+    if (!event->defaultPrevented() && document)
+ 	document->defaultEventHandler(event.get());
+    if (event->result().isNull())
+        return true;
+
+    QString text = event->result().string();
+    text.replace(QChar('\\'), backslashAsCurrencySymbol());
+
+    return [_bridge runBeforeUnloadConfirmPanelWithMessage:text.getNSString()];
+
+    KWQ_UNBLOCK_EXCEPTIONS;
+
+    return true;
 }
 
 void KWQKHTMLPart::addMessageToConsole(const QString &message, unsigned lineNumber, const QString &sourceURL)

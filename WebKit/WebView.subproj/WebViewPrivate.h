@@ -72,6 +72,8 @@ typedef enum {
 */    
 - (id)scriptDebugDelegate;
 
+- (BOOL)shouldClose;
+
 @end
 
 @interface WebView (WebPrivate)
