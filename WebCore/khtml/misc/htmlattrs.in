@@ -126,6 +126,7 @@ onselect
 onselectstart
 onsubmit
 onunload
+onbeforeunload
 oversrc
 pagex
 pagey

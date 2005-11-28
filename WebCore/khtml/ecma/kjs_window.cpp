@@ -301,6 +301,7 @@ const ClassInfo Window::info = { "Window", 0, &WindowTable, 0 };
   onselect	Window::Onselect	DontDelete
   onsubmit	Window::Onsubmit	DontDelete
   onunload	Window::Onunload	DontDelete
+  onbeforeunload Window::Onbeforeunload        DontDelete
   frameElement  Window::FrameElement    DontDelete|ReadOnly
   showModalDialog Window::ShowModalDialog    DontDelete|Function 1
 @end
@@ -1069,6 +1070,8 @@ Value Window::get(ExecState *exec, const Identifier &p) const
         return getListener(exec,DOM::EventImpl::SUBMIT_EVENT);
       else
         return Undefined();
+    case Onbeforeunload:
+      return getListener(exec, DOM::EventImpl::BEFOREUNLOAD_EVENT);
     case Onunload:
       if (isSafeScript(exec))
         return getListener(exec,DOM::EventImpl::UNLOAD_EVENT);
@@ -1289,6 +1292,10 @@ void Window::put(ExecState* exec, const Identifier &propertyName, const Value &v
     case Onsubmit:
       if (isSafeScript(exec))
         setListener(exec,DOM::EventImpl::SUBMIT_EVENT,value);
+      return;
+    case Onbeforeunload:
+      if (isSafeScript(exec))
+        setListener(exec, DOM::EventImpl::BEFOREUNLOAD_EVENT, value);
       return;
     case Onunload:
       if (isSafeScript(exec))

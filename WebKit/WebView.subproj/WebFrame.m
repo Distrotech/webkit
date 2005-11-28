@@ -2295,7 +2295,14 @@ static CFAbsoluteTime _timeOfLastCompletedLoad;
     // through this method already, nested; otherwise, _private->policyDataSource should still be set.
     ASSERT(_private->policyDataSource || [[self provisionalDataSource] unreachableURL] != nil);
 
-    if (!request) {
+
+    // Two reasons we can't continue:
+    //    1) navigation policy delegate said we can't so request is nil.
+    //    2) before unload event handler caused an alert to come up and the user said cancel.
+    // The "before unload" event handler runs only for the main frame.
+    BOOL canContinue = request && ([[self webView] mainFrame] != self || [_private->bridge shouldClose]);
+
+    if (!canContinue) {
         [self _setPolicyDataSource:nil];
         return;
     }

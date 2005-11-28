@@ -172,6 +172,10 @@ void HTMLBodyElementImpl::parseHTMLAttribute(HTMLAttributeImpl *attr)
         getDocument()->setHTMLWindowEventListener(EventImpl::LOAD_EVENT,
 	    getDocument()->createHTMLEventListener(attr->value().string(), NULL));
         break;
+    case ATTR_ONBEFOREUNLOAD:
+        getDocument()->setHTMLWindowEventListener(EventImpl::BEFOREUNLOAD_EVENT,
+	    getDocument()->createHTMLEventListener(attr->value().string(), NULL));
+        break;
     case ATTR_ONUNLOAD:
         getDocument()->setHTMLWindowEventListener(EventImpl::UNLOAD_EVENT,
 	    getDocument()->createHTMLEventListener(attr->value().string(), NULL));
@@ -393,6 +397,10 @@ void HTMLFrameElementImpl::parseHTMLAttribute(HTMLAttributeImpl *attr)
         setHTMLEventListener(EventImpl::LOAD_EVENT,
                                 getDocument()->createHTMLEventListener(attr->value().string(), this));
         break;
+    case ATTR_ONBEFOREUNLOAD:
+        setHTMLEventListener(EventImpl::BEFOREUNLOAD_EVENT,
+                                getDocument()->createHTMLEventListener(attr->value().string(), this));
+        break;
     case ATTR_ONUNLOAD:
         setHTMLEventListener(EventImpl::UNLOAD_EVENT,
                                 getDocument()->createHTMLEventListener(attr->value().string(), this));
@@ -608,6 +616,10 @@ void HTMLFrameSetElementImpl::parseHTMLAttribute(HTMLAttributeImpl *attr)
         break;
     case ATTR_ONLOAD:
         setHTMLEventListener(EventImpl::LOAD_EVENT,
+	    getDocument()->createHTMLEventListener(attr->value().string(), this));
+        break;
+    case ATTR_ONBEFOREUNLOAD:
+        setHTMLEventListener(EventImpl::BEFOREUNLOAD_EVENT,
 	    getDocument()->createHTMLEventListener(attr->value().string(), this));
         break;
     case ATTR_ONUNLOAD:

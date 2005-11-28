@@ -87,6 +87,7 @@ public:
         DOMCHARACTERDATAMODIFIED_EVENT,
 	// HTML events
 	LOAD_EVENT,
+	BEFOREUNLOAD_EVENT,
 	UNLOAD_EVENT,
 	ABORT_EVENT,
 	ERROR_EVENT,
@@ -160,6 +161,9 @@ public:
     void setCancelBubble(bool cancel) { m_cancelBubble = cancel; }
     void setDefaultPrevented(bool defaultPrevented) { m_defaultPrevented = defaultPrevented; }
     bool getCancelBubble() const { return m_cancelBubble; }
+
+    virtual bool storesResultAsString() const;
+    virtual void storeResult(const DOMString&);
 
 protected:
     DOMStringImpl *m_type;
@@ -426,5 +430,20 @@ public:
     virtual void setDragImageElement(const Node &, const QPoint &) = 0;
 };
 
-}; //namespace
+class BeforeUnloadEventImpl : public EventImpl
+{
+public:
+    BeforeUnloadEventImpl();
+
+    virtual bool storesResultAsString() const;
+    virtual void storeResult(const DOMString&);
+
+    DOMString result() const { return m_result.get(); }
+
+private:
+    khtml::SharedPtr<DOMStringImpl> m_result;
+};
+
+} //namespace
+
 #endif

@@ -58,6 +58,8 @@ typedef enum {
 
 - (void)toggleSmartInsertDelete:(id)sender;
 
+- (BOOL)shouldClose;
+
 @end
 
 @interface WebView (WebPrivate)
