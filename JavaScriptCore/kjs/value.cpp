@@ -356,7 +356,7 @@ Boolean Boolean::dynamicCast(const Value &v)
 
 // ------------------------------ String ---------------------------------------
 
-String::String(const UString &s) : Value(new StringImp(s))
+String::String(const UString &s) : Value(new StringImp(s.isNull() ?"":s))
 {
 }
 
