@@ -93,23 +93,24 @@ void JSAbstractEventListener::handleEvent(DOM::Event &evt, bool isWindowEvent)
 
     window->setCurrentEvent( 0 );
     interpreter->setCurrentEvent( 0 );
-#if APPLE_CHANGES
-    if ( exec->hadException() ) {
-        KJS::Interpreter::lock();
+
+    if (exec->hadException()) {
         char *message = exec->exception().toObject(exec).get(exec, messagePropertyName).toString(exec).ascii();
         int lineNumber =  exec->exception().toObject(exec).get(exec, "line").toInt32(exec);
-        UString sourceURL = exec->exception().toObject(exec).get(exec, "sourceURL").toString(exec);
-        KJS::Interpreter::unlock();
+        QString sourceURL;
+        {
+          // put this in a block to make sure UString is deallocated inside the lock
+          UString uSourceURL = exec->exception().toObject(exec).get(exec, "sourceURL").toString(exec);
+          sourceURL = uSourceURL.qstring();
+        }
         if (Interpreter::shouldPrintExceptions()) {
 	    printf("(event handler):%s\n", message);
 	}
-        KWQ(part)->addMessageToConsole(message, lineNumber, sourceURL.qstring());
+        KWQ(part)->addMessageToConsole(message, lineNumber, sourceURL);
+
+        if (Interpreter::shouldPrintExceptions())
+            printf("(event handler):%s\n", message);
         exec->clearException();
-    }
-#else
-    if ( exec->hadException() )
-        exec->clearException();
-#endif
       } else {
             if (!retval.isA(UndefinedType) && !retval.isA(NullType) && evt.handle()->storesResultAsString())
                 evt.handle()->storeResult(retval.toString(exec).string());
@@ -119,6 +120,7 @@ void JSAbstractEventListener::handleEvent(DOM::Event &evt, bool isWindowEvent)
                     evt.preventDefault();
             }
     }
+
     DOM::DocumentImpl::updateDocumentsRendering();
     deref();
   }
