@@ -206,13 +206,13 @@ const struct HashTable DOMDocumentTable = { 2, 8, DOMDocumentTableEntries, 4 };
 namespace KJS {
 
 const struct HashEntry DOMElementProtoTableEntries[] = {
-   { "getAttributeNodeNS", DOMElement::GetAttributeNodeNS, DontDelete|Function, 2, 0 },
+   { "getAttributeNodeNS", DOMElement::GetAttributeNodeNS, DontDelete|Function, 2, &DOMElementProtoTableEntries[19] },
    { "getAttributeNS", DOMElement::GetAttributeNS, DontDelete|Function, 2, 0 },
    { 0, 0, 0, 0, 0 },
    { "removeAttributeNode", DOMElement::RemoveAttributeNode, DontDelete|Function, 1, 0 },
    { "removeAttribute", DOMElement::RemoveAttribute, DontDelete|Function, 1, &DOMElementProtoTableEntries[17] },
    { "setAttribute", DOMElement::SetAttribute, DontDelete|Function, 2, 0 },
-   { "hasAttribute", DOMElement::HasAttribute, DontDelete|Function, 1, &DOMElementProtoTableEntries[19] },
+   { "hasAttribute", DOMElement::HasAttribute, DontDelete|Function, 1, &DOMElementProtoTableEntries[21] },
    { "getElementsByTagNameNS", DOMElement::GetElementsByTagNameNS, DontDelete|Function, 2, 0 },
    { 0, 0, 0, 0, 0 },
    { "getAttributeNode", DOMElement::GetAttributeNode, DontDelete|Function, 1, 0 },
@@ -225,11 +225,13 @@ const struct HashEntry DOMElementProtoTableEntries[] = {
    { "getElementsByTagName", DOMElement::GetElementsByTagName, DontDelete|Function, 1, 0 },
    { "setAttributeNode", DOMElement::SetAttributeNode, DontDelete|Function, 2, 0 },
    { "setAttributeNodeNS", DOMElement::SetAttributeNodeNS, DontDelete|Function, 1, &DOMElementProtoTableEntries[20] },
+   { "focus", DOMElement::ElementFocus, DontDelete|Function, 0, 0 },
+   { "blur", DOMElement::ElementBlur, DontDelete|Function, 0, &DOMElementProtoTableEntries[22] },
    { "scrollByLines", DOMElement::ScrollByLines, DontDelete|Function, 1, 0 },
    { "scrollByPages", DOMElement::ScrollByPages, DontDelete|Function, 1, 0 }
 };
 
-const struct HashTable DOMElementProtoTable = { 2, 21, DOMElementProtoTableEntries, 17 };
+const struct HashTable DOMElementProtoTable = { 2, 23, DOMElementProtoTableEntries, 17 };
 
 } // namespace
 
