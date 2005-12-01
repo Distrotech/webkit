@@ -478,7 +478,8 @@ void QComboBox::populate()
                     layer->scrollRectToVisible(w->absoluteBoundingBoxRect());
             }
             QFocusEvent event(QEvent::FocusIn);
-            const_cast<QObject *>(widget->eventFilterObject())->eventFilter(widget, &event);
+            if (widget->eventFilterObject())
+                const_cast<QObject *>(widget->eventFilterObject())->eventFilter(widget, &event);
         }
     }
     return become;
@@ -491,7 +492,8 @@ void QComboBox::populate()
         QWidget *widget = [self widget];
         if (widget) {
             QFocusEvent event(QEvent::FocusOut);
-            const_cast<QObject *>(widget->eventFilterObject())->eventFilter(widget, &event);
+            if (widget->eventFilterObject())
+                const_cast<QObject *>(widget->eventFilterObject())->eventFilter(widget, &event);
         }
     }
     return resign;

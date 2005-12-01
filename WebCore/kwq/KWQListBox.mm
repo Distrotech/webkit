@@ -477,7 +477,8 @@ void QListBox::clearCachedTextRenderers()
 
         if (_box) {
             QFocusEvent event(QEvent::FocusIn);
-            const_cast<QObject *>(_box->eventFilterObject())->eventFilter(_box, &event);
+            if (_box->eventFilterObject())
+                const_cast<QObject *>(_box->eventFilterObject())->eventFilter(_box, &event);
         }
     }
 
@@ -489,7 +490,8 @@ void QListBox::clearCachedTextRenderers()
     BOOL resign = [super resignFirstResponder];
     if (resign && _box) {
         QFocusEvent event(QEvent::FocusOut);
-        const_cast<QObject *>(_box->eventFilterObject())->eventFilter(_box, &event);
+        if (_box->eventFilterObject())
+            const_cast<QObject *>(_box->eventFilterObject())->eventFilter(_box, &event);
     }
     return resign;
 }
