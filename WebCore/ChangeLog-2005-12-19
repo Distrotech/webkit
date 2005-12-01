@@ -1,3 +1,21 @@
+2005-12-01  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-1-3-branch
+        Fixes: <rdar://problem/4344760> Glendale REGRESSION (Safari 416.12-417.2)
+        gmail 'reply' does not fill in to: field or quoted message (3751)
+
+    2005-07-09  Anders Carlsson  <andersca@mac.com>
+
+        - Fix <http://bugzilla.opendarwin.org/show_bug.cgi?id=3751>
+
+        Reviewed by Maciej.
+
+        * khtml/html/html_formimpl.cpp:
+        (DOM::HTMLTextAreaElementImpl::attach):
+        * khtml/html/html_formimpl.h:
+        Update the value after attaching so we'll be sure that
+        the text renderer has a valid value.
+
 2005-11-29  Timothy Hatcher  <timothy@apple.com>
 
         Fix by Beth and Darin
