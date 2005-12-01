@@ -1,5 +1,14 @@
 2005-12-01  Timothy Hatcher  <timothy@apple.com>
 
+        Fix by Geoff
+
+        - <rdar://problem/4352697> Glendale Regression: Some widgets don't get
+          keyboard input (also affects Scrabble website)
+
+        * khtml/xml/dom2_eventsimpl.cpp: add beforeonload to the event names
+
+2005-12-01  Timothy Hatcher  <timothy@apple.com>
+
         Merged fix from TOT to Safari-2-0-branch
         Fixes: <rdar://problem/4344760> Glendale REGRESSION (Safari 416.12-417.2)
         gmail 'reply' does not fill in to: field or quoted message (3751)

@@ -196,6 +196,7 @@ static const char * const eventNames[EventImpl::numEventIds] = {
     "DOMAttrModified",
     "DOMCharacterDataModified",
     "load",
+    "beforeunload",
     "unload",
     "abort",
     "error",
