@@ -2,6 +2,23 @@
 
         Merged fix from TOT to Safari-2-0-branch
 
+    2005-12-02  Vicki Murley  <vicki@apple.com>
+
+        Reviewed by Darin.
+ 
+        - fix <rdar://problem/4361048> Regression: Seed: scrolling with scrollwheel, trackpad 
+        doesn't work for nested framesets at gmail.com
+
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::passWheelEventToChildWidget): 
+        * manual-tests/resources/lorem-text.html: Added.
+        * manual-tests/resources/nestedframesets.html: Added.
+        * manual-tests/scrolling-nestedframesets.html: Added.
+
+2005-12-02  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
     2005-12-02  David Hyatt  <hyatt@apple.com>
 
         <rdar://problem/4356387> Glendale Regression: Some text

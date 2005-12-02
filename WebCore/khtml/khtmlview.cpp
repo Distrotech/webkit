@@ -31,6 +31,7 @@
 #include "html/html_documentimpl.h"
 #include "html/html_inlineimpl.h"
 #include "html/html_formimpl.h"
+#include "html/html_baseimpl.h"
 #include "rendering/render_arena.h"
 #include "rendering/render_object.h"
 #include "rendering/render_canvas.h"
@@ -1972,11 +1973,32 @@ void KHTMLView::viewportWheelEvent(QWheelEvent* e)
             int x, y;
             viewportToContents(e->x(), e->y(), x, y);
 
-            RenderObject::NodeInfo hitTestResult(true, false);
-            doc->renderer()->layer()->hitTest(hitTestResult, x, y); 
-            NodeImpl *node = hitTestResult.innerNode();
+            RenderObject::NodeInfo nodeInfo(true, false);
+            doc->renderer()->layer()->hitTest(nodeInfo, x, y); 
+            NodeImpl *node = nodeInfo.innerNode();
+            NodeImpl *previousNode = node;
+            QWidget *widget = 0;
 
-           if (KWQ(m_part)->passWheelEventToChildWidget(node)) {
+            while (true) {
+                if (!node || !node->renderer() || !node->renderer()->isWidget()) 
+                    break;
+                widget = static_cast<RenderWidget *>(node->renderer())->widget();
+                if (!widget || !widget->inherits("KHTMLView")) 
+                    break;
+                KHTMLPart *kpart = static_cast<HTMLFrameElementImpl *>(node)->contentPart();
+                if (!kpart || !static_cast<KWQKHTMLPart *>(kpart)->renderer()) 
+                    break;
+                RenderObject::NodeInfo widgetNodeInfo(true, true);
+                static_cast<KWQKHTMLPart *>(kpart)->renderer()->layer()->hitTest(widgetNodeInfo, x, y);
+                nodeInfo = widgetNodeInfo;
+                previousNode = node;
+                node = nodeInfo.innerNode();
+            }
+
+            if (node != previousNode)
+                node = previousNode;
+                
+            if (KWQ(m_part)->passWheelEventToChildWidget(node)) {
                 e->accept();
                 return;
             }
