@@ -132,7 +132,8 @@ using khtml::RenderLayer;
         }
         if (button) {
             QFocusEvent event(QEvent::FocusIn);
-            const_cast<QObject *>(button->eventFilterObject())->eventFilter(button, &event);
+            if (button->eventFilterObject())
+                const_cast<QObject *>(button->eventFilterObject())->eventFilter(button, &event);
         }
     }
     return become;
@@ -143,7 +144,8 @@ using khtml::RenderLayer;
     BOOL resign = [super resignFirstResponder];
     if (resign && button) {
         QFocusEvent event(QEvent::FocusOut);
-        const_cast<QObject *>(button->eventFilterObject())->eventFilter(button, &event);
+        if (button->eventFilterObject())
+            const_cast<QObject *>(button->eventFilterObject())->eventFilter(button, &event);
     }
     return resign;
 }
