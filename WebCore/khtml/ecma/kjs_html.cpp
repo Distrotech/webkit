@@ -1490,8 +1490,8 @@ Value KJS::HTMLElement::getValueProperty(ExecState *exec, int token) const
     case TextAreaSelectionEnd:
         // FIXME (4363497): Work-around to prevent regression caused by GMail bug (4344954).
         // For the love of all that is holy, let's remove this code as soon as Google fixes its bug.
-        if (impl() && impl()->getDocument() && (impl()->getDocument()->domain() == "mail.google.com"))
-            return jsUndefined();
+        if (node.handle() && node.handle()->getDocument() && (node.handle()->getDocument()->domain() == "mail.google.com"))
+            return Undefined();
         return Number(textarea.selectionEnd());
     case TextAreaTabIndex:        return Number(textarea.tabIndex());
     case TextAreaType:            return String(textarea.type());
