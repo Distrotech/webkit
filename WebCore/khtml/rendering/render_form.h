@@ -129,6 +129,7 @@ public:
 
     virtual const char *renderName() const { return "RenderButton"; }
     virtual short baselinePosition( bool, bool ) const;
+    virtual void calcMinMaxWidth();
 
     // don't even think about making this method virtual!
     DOM::HTMLInputElementImpl* element() const

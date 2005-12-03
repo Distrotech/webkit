@@ -98,7 +98,7 @@ void RenderReplaced::calcMinMaxWidth()
 #endif
 
     int width = calcReplacedWidth() + paddingLeft() + paddingRight() + borderLeft() + borderRight();
-    if (style()->width().isVariable() && style()->height().isPercent()) {
+    if (style()->width().isPercent() || (style()->width().isVariable() && style()->height().isPercent())) {
         m_minWidth = 0;
         m_maxWidth = width;
     } else
