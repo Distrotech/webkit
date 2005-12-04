@@ -1,5 +1,27 @@
 2005-12-04  Timothy Hatcher  <timothy@apple.com>
 
+        Merged fix from Safari-2-0-branch to Safari-1-3-branch
+
+    2005-12-02  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Hyatt.
+
+        - fixed <rdar://problem/4360657> Regression: Seed: WebKit image scaling broken
+
+        Removed fix for <rdar://problem/3952698> Function buttons do not display 
+        properly with Telia Webmail (3488).  For a more conservative fix, we've added 
+        RenderButton::calcMinMaxWidth to avoid setting the minWidth to 0 for buttons.
+
+        * khtml/rendering/render_form.cpp:
+        (RenderButton::calcMinMaxWidth):
+        (RenderLineEdit::calcMinMaxWidth):
+        (RenderTextArea::calcMinMaxWidth):
+        * khtml/rendering/render_form.h:
+        * khtml/rendering/render_replaced.cpp:
+        (RenderReplaced::calcMinMaxWidth):
+
+2005-12-04  Timothy Hatcher  <timothy@apple.com>
+
         Merged fix from TOT to Safari-1-3-branch
 
     2005-12-02  Darin Adler  <darin@apple.com>

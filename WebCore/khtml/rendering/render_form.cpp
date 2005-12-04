@@ -269,6 +269,15 @@ short RenderButton::baselinePosition( bool f, bool isRootLineBox ) const
 #endif
 }
 
+void RenderButton::calcMinMaxWidth()
+{
+    RenderFormElement::calcMinMaxWidth();
+    
+    m_minWidth = m_maxWidth;
+    
+    setMinMaxKnown();
+}
+
 // -------------------------------------------------------------------------------
 
 RenderCheckBox::RenderCheckBox(HTMLInputElementImpl *element)
@@ -624,13 +633,6 @@ void RenderLineEdit::calcMinMaxWidth()
     setIntrinsicHeight( s.height() );
 
     RenderFormElement::calcMinMaxWidth();
-    
-    // FIXME: m_minWidth should not really be set to 0. If textfields 
-    // have value text in them to begin with, then to match WinIE the
-    // field should only be as wide as the text. Setting m_minWidth to 
-    // 0 also makes textfields with width:100% overlap. 
-    if (style()->width().isPercent())
-        m_minWidth = 0;
 }
 
 void RenderLineEdit::setStyle(RenderStyle *s)
@@ -1565,13 +1567,6 @@ void RenderTextArea::calcMinMaxWidth()
     setIntrinsicHeight( size.height() );
 
     RenderFormElement::calcMinMaxWidth();
-    
-    // FIXME: m_minWidth should not really be set to 0. If textareas 
-    // have value text in them to begin with, then to match WinIE the
-    // textarea should only be as wide as the text. Setting m_minWidth
-    // to 0 also makes textareas with width:100% overlap. 
-    if (style()->width().isPercent())
-        m_minWidth = 0;
 }
 
 void RenderTextArea::setStyle(RenderStyle *s)
