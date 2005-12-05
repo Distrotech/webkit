@@ -1,3 +1,18 @@
+2005-12-05  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-1-3-branch
+
+    2005-12-05  Vicki Murley  <vicki@apple.com>
+
+        Reviewed by John.
+ 
+        - fix <rdar://problem/4363132> Regression: status bar shows wrong text when mousing over links 
+        in wacky frameset at directory.apple.com
+
+        * kwq/WebCoreBridge.mm:
+        (-[WebCoreBridge elementAtPoint:]): reuse point to work with nested frames; add the overflow clip to 
+        accommodate any scrolling
+
 === WebCore-315.12 ===
 
 2005-12-04  Timothy Hatcher  <timothy@apple.com>
