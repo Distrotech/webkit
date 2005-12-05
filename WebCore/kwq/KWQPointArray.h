@@ -48,7 +48,12 @@ public:
 
     int x() const { return xCoord; }
     int y() const { return yCoord; }
+    
+    void setX(int x) { xCoord = x; }
+    void setY(int y) { yCoord = y; }
 
+    QPoint &operator -=(const QPoint &two) { xCoord -= two.xCoord; yCoord -= two.yCoord; return *this; }
+    friend const QPoint operator*(const QPoint &p, double s);
     friend QPoint operator+(const QPoint &, const QPoint &);
     friend QPoint operator-(const QPoint &, const QPoint &);
     
