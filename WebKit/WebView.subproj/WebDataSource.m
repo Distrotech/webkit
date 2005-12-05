@@ -387,8 +387,8 @@
             
         _private->mainClient = [[WebMainResourceClient alloc] initWithDataSource:self];
         if ([_private->request respondsToSelector:@selector(setHTTPShouldHandleMixedReplace:)]) {
-            [_private->request setHTTPShouldHandleMixedReplace:YES];
-            [_private->mainClient setSupportsMultipartContent:YES]; 
+            [_private->request setHTTPShouldHandleMixedReplace:_private->supportsMultipartContent];
+            [_private->mainClient setSupportsMultipartContent:_private->supportsMultipartContent]; 
         } else
             [_private->mainClient setSupportsMultipartContent:NO];
             
@@ -1123,6 +1123,10 @@
     
     LOG(Loading, "creating datasource for %@", [request URL]);
     _private->request = [_private->originalRequest mutableCopy];
+    if ([_private->request respondsToSelector:@selector(setHTTPShouldHandleMixedReplace:)]) {
+        [_private->request setHTTPShouldHandleMixedReplace:YES];
+        _private->supportsMultipartContent = YES;
+    }
 
     ++WebDataSourceCount;
     
