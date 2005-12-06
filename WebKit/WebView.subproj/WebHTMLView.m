@@ -849,7 +849,7 @@ void *_NSSoftLinkingGetFrameworkFuncPtr(NSString *inUmbrellaFrameworkName,
     // WebHTMLView objects handle all events for objects inside them.
     // To get those events, we prevent hit testing from AppKit.
 
-    // But there are three exceptions to this:
+    // But there are four exceptions to this:
     //   1) For right mouse clicks and control clicks we don't yet have an implementation
     //      that works for nested views, so we let the hit testing go through the
     //      standard NSView code path (needs to be fixed, see bug 4361618).
@@ -864,6 +864,11 @@ void *_NSSoftLinkingGetFrameworkFuncPtr(NSString *inUmbrellaFrameworkName,
     //      right view. The global is forceNSViewHitTest and the method they use to
     //      do the hit testing is _hitViewForEvent:. (But this does not work correctly
     //      when there is HTML overlapping the view, see bug 4361626)
+    //   4) NSAccessibilityHitTest relies on this for checking the cursor position.
+    //      Our check for that is whether the event is NSFlagsChanged.  This works
+    //      for VoiceOver's cntl-opt-f5 command (move focus to item under cursor)
+    //      and Dictionary's cmd-cntl-D (open dictionary popup for item under cursor).
+    //      This is of course a hack.
 
     BOOL captureHitsOnSubviews;
     if (forceNSViewHitTest)
@@ -874,7 +879,8 @@ void *_NSSoftLinkingGetFrameworkFuncPtr(NSString *inUmbrellaFrameworkName,
         NSEvent *event = [[self window] currentEvent];
         captureHitsOnSubviews = !([event type] == NSMouseMoved
             || [event type] == NSRightMouseDown
-            || ([event type] == NSLeftMouseDown && ([event modifierFlags] & NSControlKeyMask) != 0));
+            || ([event type] == NSLeftMouseDown && ([event modifierFlags] & NSControlKeyMask) != 0)
+            || [event type] == NSFlagsChanged);
     }
 
     if (!captureHitsOnSubviews)
