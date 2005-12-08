@@ -1,3 +1,23 @@
+2005-12-08  Tim Omernick  <timo@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch.
+	
+	Bug #: none
+	Submitted by: timo
+	Reviewed by: eseidel & darin
+		Changed some of the run measurement methods to C functions
+		to avoid overhead associated with objc_msgSend().
+
+	* WebCoreSupport.subproj/WebTextRenderer.m:
+	(-[WebTextRenderer floatWidthForRun:style:widths:]):
+	Updated to call new run measurement functions instead
+	of calling ObjC methods.
+	(-[WebTextRenderer CG_drawRun:style:geometry:]): ditto
+	(floatWidthForRun): ditto
+	(CG_floatWidthForRun): ditto
+	(ATSU_floatWidthForRun): ditto
+	(widthForNextCharacter): ditto
+
 === WebKit-417.7 ===
 
 2005-12-06  David Harrison  <harrison@apple.com>

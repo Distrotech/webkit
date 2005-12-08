@@ -27,6 +27,12 @@
 #import <unicode/uchar.h>
 #import <unicode/unorm.h>
 
+#if defined(__GNUC__) && (__GNUC__ > 3)
+#define ALWAYS_INLINE __attribute__ ((always_inline))
+#else
+#define ALWAYS_INLINE inline
+#endif
+
 // FIXME: FATAL_ALWAYS seems like a bad idea; lets stop using it.
 
 // SPI from other frameworks.
@@ -138,11 +144,12 @@ struct CharacterWidthIterator
 - (ATSGlyphRef)_extendUnicodeCharacterToGlyphMapToInclude: (UnicodeChar)c;
 - (void)_updateGlyphEntryForCharacter: (UniChar)c glyphID: (ATSGlyphRef)glyphID font: (NSFont *)substituteFont;
 
-- (float)_floatWidthForRun:(const WebCoreTextRun *)run style:(const WebCoreTextStyle *)style widths:(float *)widthBuffer fonts:(NSFont **)fontBuffer glyphs:(CGGlyph *)glyphBuffer startPosition:(float *)startPosition numGlyphs:(int *)_numGlyphs;
+static inline float _floatWidthForRun(const WebTextRenderer *renderer, const WebCoreTextRun *run, const WebCoreTextStyle *style, float *widthBuffer, NSFont **fontBuffer, CGGlyph *glyphBuffer, float *startPosition, int *_numGlyphs);
 
 // Measuring runs.
-- (float)_CG_floatWidthForRun:(const WebCoreTextRun *)run style:(const WebCoreTextStyle *)style widths: (float *)widthBuffer fonts: (NSFont **)fontBuffer glyphs: (CGGlyph *)glyphBuffer startPosition:(float *)startPosition numGlyphs: (int *)_numGlyphs;
-- (float)_ATSU_floatWidthForRun:(const WebCoreTextRun *)run style:(const WebCoreTextStyle *)style;
+static ALWAYS_INLINE float _CG_floatWidthForRun(const WebTextRenderer *renderer, const WebCoreTextRun *run, const WebCoreTextStyle *style, float *widthBuffer, NSFont **fontBuffer, CGGlyph *glyphBuffer, float *startPosition, int *_numGlyphs);
+static ALWAYS_INLINE float _ATSU_floatWidthForRun(const WebTextRenderer *renderer, const WebCoreTextRun *run, const WebCoreTextStyle *style);
+static ATSTrapezoid _trapezoidForRun(const WebTextRenderer *renderer, const WebCoreTextRun *run, const WebCoreTextStyle *style, NSPoint p);
 
 // Drawing runs.
 - (void)_CG_drawRun:(const WebCoreTextRun *)run style:(const WebCoreTextStyle *)style geometry:(const WebCoreTextGeometry *)geometry;
@@ -547,10 +554,10 @@ static BOOL alwaysUseATSU = NO;
 
 - (float)floatWidthForRun:(const WebCoreTextRun *)run style:(const WebCoreTextStyle *)style widths:(float *)widthBuffer
 {
-    if (style->smallCaps && !isSmallCapsRenderer) {
-        return [[self _smallCapsRenderer] _floatWidthForRun:run style:style widths:widthBuffer fonts:nil glyphs:nil startPosition:nil numGlyphs:nil];
-    }
-    return [self _floatWidthForRun:run style:style widths:widthBuffer fonts:nil glyphs:nil startPosition:nil numGlyphs:nil];
+    if (style->smallCaps && !isSmallCapsRenderer)
+        return _floatWidthForRun([self _smallCapsRenderer], run, style, widthBuffer, nil, nil, nil, nil);
+
+    return _floatWidthForRun(self, run, style, widthBuffer, nil, nil, nil, nil);
 }
 
 - (void)drawLineForCharacters:(NSPoint)point yOffset:(float)yOffset width: (int)width color:(NSColor *)color thickness:(float)thickness
@@ -1068,13 +1075,7 @@ static void _drawGlyphs(NSFont *font, NSColor *color, CGGlyph *glyphs, CGSize *a
         fontBuffer = localFontBuffer;
     }
 
-    [self _floatWidthForRun:run
-        style:style
-        widths:widthBuffer 
-        fonts:fontBuffer
-        glyphs:glyphBuffer
-        startPosition:&startX
-        numGlyphs: &numGlyphs];
+    _floatWidthForRun(self, run, style, widthBuffer, fontBuffer, glyphBuffer, &startX, &numGlyphs);
         
     // Eek.  We couldn't generate ANY glyphs for the run.
     if (numGlyphs <= 0)
@@ -1186,16 +1187,15 @@ static const char *joiningNames[] = {
 };
 #endif
 
-- (float)_floatWidthForRun:(const WebCoreTextRun *)run style:(const WebCoreTextStyle *)style widths:(float *)widthBuffer fonts:(NSFont **)fontBuffer glyphs:(CGGlyph *)glyphBuffer startPosition:(float *)startPosition numGlyphs:(int *)_numGlyphs
+static inline float _floatWidthForRun(const WebTextRenderer *renderer, const WebCoreTextRun *run, const WebCoreTextStyle *style, float *widthBuffer, NSFont **fontBuffer, CGGlyph *glyphBuffer, float *startPosition, int *_numGlyphs)
 {
     if (shouldUseATSU(run))
-        return [self _ATSU_floatWidthForRun:run style:style];
+        return _ATSU_floatWidthForRun(renderer, run, style);
     
-    return [self _CG_floatWidthForRun:run style:style widths:widthBuffer fonts:fontBuffer glyphs:glyphBuffer startPosition:startPosition numGlyphs:_numGlyphs];
-
+    return _CG_floatWidthForRun(renderer, run, style, widthBuffer, fontBuffer, glyphBuffer, startPosition, _numGlyphs);
 }
 
-- (float)_CG_floatWidthForRun:(const WebCoreTextRun *)run style:(const WebCoreTextStyle *)style widths: (float *)widthBuffer fonts: (NSFont **)fontBuffer glyphs: (CGGlyph *)glyphBuffer startPosition:(float *)startPosition numGlyphs: (int *)_numGlyphs
+static ALWAYS_INLINE float _CG_floatWidthForRun(const WebTextRenderer *renderer, const WebCoreTextRun *run, const WebCoreTextStyle *style, float *widthBuffer, NSFont **fontBuffer, CGGlyph *glyphBuffer, float *startPosition, int *_numGlyphs)
 {
     float _nextWidth;
     CharacterWidthIterator widthIterator;
@@ -1203,7 +1203,7 @@ static const char *joiningNames[] = {
     ATSGlyphRef glyphUsed;
     int numGlyphs = 0;
     
-    initializeCharacterWidthIterator(&widthIterator, self, run, style);
+    initializeCharacterWidthIterator(&widthIterator, (WebTextRenderer *)renderer, run, style);
     if (startPosition)
         *startPosition = widthIterator.widthToStart;
     while (widthIterator.currentCharacter < (unsigned)widthIterator.run->to) {
@@ -1561,7 +1561,7 @@ static const char *joiningNames[] = {
 }
 
 
-- (ATSTrapezoid)_trapezoidForRun:(const WebCoreTextRun *)run style:(const WebCoreTextStyle *)style atPoint:(NSPoint )p
+static ATSTrapezoid _trapezoidForRun(const WebTextRenderer *renderer, const WebCoreTextRun *run, const WebCoreTextStyle *style, NSPoint p)
 {
     // The only Cocoa call here is the self call to
     // _createATSUTextLayoutForRun:, which is exception-safe.
@@ -1573,7 +1573,7 @@ static const char *joiningNames[] = {
         return nilTrapezoid;
     }
         
-    ATSUTextLayout layout = [self _createATSUTextLayoutForRun:run style:style];
+    ATSUTextLayout layout = [renderer _createATSUTextLayoutForRun:run style:style];
 
     ATSTrapezoid firstGlyphBounds;
     ItemCount actualNumBounds;
@@ -1590,11 +1590,11 @@ static const char *joiningNames[] = {
 }
 
 
-- (float)_ATSU_floatWidthForRun:(const WebCoreTextRun *)run style:(const WebCoreTextStyle *)style
+static ALWAYS_INLINE float _ATSU_floatWidthForRun(const WebTextRenderer *renderer, const WebCoreTextRun *run, const WebCoreTextStyle *style)
 {
     ATSTrapezoid oGlyphBounds;
     
-    oGlyphBounds = [self _trapezoidForRun:run style:style atPoint:NSMakePoint (0,0)];
+    oGlyphBounds = _trapezoidForRun(renderer, run, style, NSMakePoint(0, 0));
     
     float width = 
         MAX(FixedToFloat(oGlyphBounds.upperRight.x), FixedToFloat(oGlyphBounds.lowerRight.x)) - 
@@ -1642,8 +1642,8 @@ static WebCoreTextRun applyMirroringToRun(const WebCoreTextRun *run)
 - (void)_ATSU_drawHighlightForRun:(const WebCoreTextRun *)run style:(const WebCoreTextStyle *)style geometry:(const WebCoreTextGeometry *)geometry
 {
     // The only Cocoa calls made here are to NSColor and NSBezierPath,
-    // plus the self calls to _createATSUTextLayoutForRun: and
-    // _trapezoidForRun:. These are all exception-safe.
+    // plus the self call to _createATSUTextLayoutForRun.
+    // These are all exception-safe.
 
     ATSUTextLayout layout;
     int from, to;
@@ -1683,8 +1683,8 @@ static WebCoreTextRun applyMirroringToRun(const WebCoreTextRun *run)
     // ATSU provides the bounds of the glyphs for the run with an origin of
     // (0,0), so we need to find the width of the glyphs immediately before
     // the actually selected glyphs.
-    ATSTrapezoid leadingTrapezoid = [self _trapezoidForRun:&leadingRun style:style atPoint:geometry->point];
-    ATSTrapezoid selectedTrapezoid = [self _trapezoidForRun:run style:style atPoint:geometry->point];
+    ATSTrapezoid leadingTrapezoid = _trapezoidForRun(self, &leadingRun, style, geometry->point);
+    ATSTrapezoid selectedTrapezoid = _trapezoidForRun(self, run, style, geometry->point);
 
     float backgroundWidth = 
             MAX(FixedToFloat(selectedTrapezoid.upperRight.x), FixedToFloat(selectedTrapezoid.lowerRight.x)) - 
@@ -2185,14 +2185,7 @@ static float widthForNextCharacter(CharacterWidthIterator *iterator, ATSGlyphRef
             
             WebTextRenderer *substituteRenderer;
             substituteRenderer = [[WebTextRendererFactory sharedFactory] rendererWithFont:substituteFont usingPrinterFont:renderer->usingPrinterFont];
-            width = [substituteRenderer
-                            _floatWidthForRun:&clusterRun
-                            style:&clusterStyle 
-                            widths: nil
-                            fonts: nil
-                            glyphs: &localGlyphBuffer[0]
-                            startPosition:nil
-                            numGlyphs:&cNumGlyphs];
+            width = _floatWidthForRun(substituteRenderer, &clusterRun, &clusterStyle, nil, nil, &localGlyphBuffer[0], nil, &cNumGlyphs);
             
             _fontUsed = substituteFont;
             _glyphUsed = localGlyphBuffer[0];
