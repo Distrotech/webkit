@@ -351,7 +351,15 @@ const QChar &BidiIterator::current() const
     return text->text()[pos];
 }
 
-inline QChar::Direction BidiIterator::direction() const
+#ifndef ALWAYS_INLINE
+#if defined(__GNUC__) && (__GNUC__ > 3)
+#define ALWAYS_INLINE __attribute__ ((always_inline))
+#else
+#define ALWAYS_INLINE inline
+#endif
+#endif
+
+ALWAYS_INLINE QChar::Direction BidiIterator::direction() const
 {
     if (!obj)
         return QChar::DirON;

@@ -1,3 +1,20 @@
+2005-12-08  Tim Omernick  <timo@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
+        Reviewed and landed by Maciej.
+
+        - some simple changes that amount to a < 1% speedup.
+
+        * khtml/css/cssstyleselector.cpp:
+        (khtml::CSSStyleSelector::applyProperty):
+        * khtml/rendering/bidi.cpp:
+        (khtml::BidiIterator::direction):
+        * kwq/KWQKURL.mm:
+        (hasSlashDotOrDotDot):
+        * kwq/KWQString.mm:
+        (QString::~QString):
+
 2005-12-08  David Harrison  <harrison@apple.com>
 
         Reviewed by Geoff.
