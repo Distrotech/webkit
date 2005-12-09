@@ -303,17 +303,13 @@ bool Element::isHTMLElement() const
 void Element::focus()
 {
     if(!impl) return;
-    DocumentImpl* doc = impl->getDocument();
-    if (doc && impl->isFocusable())
-        doc->setFocusNode(impl);
+    ((ElementImpl *)impl)->focus();
 }
 
 void Element::blur()
 {
     if(!impl) return;
-    DocumentImpl* doc = impl->getDocument();
-    if (doc && doc->focusNode() == impl)
-	doc->setFocusNode(0);
+    ((ElementImpl *)impl)->blur();
 }
 
 // FIXME: This should move down to HTMLElement.
