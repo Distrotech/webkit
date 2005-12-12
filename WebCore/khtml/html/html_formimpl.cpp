@@ -3280,9 +3280,11 @@ void HTMLTextAreaElementImpl::setValue(const DOMString &value)
 {
     m_value = value.string();
     m_valueMatchesRenderer = false;
+    m_valueIsValid = true;
     if (m_render)
         static_cast<RenderTextArea *>(m_render)->updateFromElement();
-    m_valueIsValid = false; // force the next access to fetch from the renderer
+    // FIXME: Force reload from renderer, as renderer may have normalized line endings.
+    m_valueIsValid = false;
     setChanged(true);
 }
 
