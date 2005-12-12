@@ -16,7 +16,7 @@
 #include <CoreGraphics/CGSEvent.h>
 #include <WebKit/WebKit.h>
 #include "HIViewAdapter.h"
-
+#import <objc/objc-runtime.h>
 
 extern Boolean GetEventPlatformEventRecord( EventRef inEvent, void * eventRec );
 Boolean WebGetEventPlatformEventRecord( EventRef inEvent, void * eventRec );
@@ -1280,7 +1280,10 @@ UpdateCommandStatus( HIWebView* inView, const HICommand* inCommand )
 					{
 						proxy = [[MenuItemProxy alloc] initWithAction: selector];
 						
-						if ( [resp performSelector:@selector(validateUserInterfaceItem:) withObject: proxy] )
+                        // Can't use -performSelector:withObject: here because the method we're calling returns BOOL, while
+                        // -performSelector:withObject:'s return value is assumed to be an id.
+                        BOOL (*validationFunction)(id, SEL, id) = (BOOL (*)(id, SEL, id))objc_msgSend;
+                        if (validationFunction(resp, @selector(validateUserInterfaceItem:), proxy))
 							EnableMenuItem( inCommand->menu.menuRef, inCommand->menu.menuItemIndex );
 						else
 							DisableMenuItem( inCommand->menu.menuRef, inCommand->menu.menuItemIndex );

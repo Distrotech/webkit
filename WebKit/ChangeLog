@@ -1,3 +1,17 @@
+2005-12-12  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
+    2005-12-09  Tim Omernick  <timo@apple.com>
+
+        Reviewed by John Sullivan.
+
+        Don't call -performSelector:withObject: on a method that returns a BOOL; this is not guaranteed to work on all architectures.
+        -performSelector:withObject:'s return value should only be checked if the method returns an object.
+
+        * Carbon.subproj/HIWebView.m:
+        (UpdateCommandStatus):
+
 === WebKit-417.8 ===
 
 2005-12-08  Tim Omernick  <timo@apple.com>
