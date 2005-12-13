@@ -2,6 +2,19 @@
 
         Merged fix from TOT to Safari-1-3-branch
 
+    2005-12-12  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Dave Harrison.
+
+        - fixed <rdar://problem/4374673> Regression: Safari fails to scroll to top of page if (name="top") attribute is not present
+
+        When there's no node corresponding to the anchor (the name is empty or "top"), we still want to scroll to the top of the document.  This got left out in the conversion to the new scrolling code.
+
+        * khtml/khtml_part.cpp: (KHTMLPart::gotoAnchor):
+2005-12-12  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-1-3-branch
+
     2005-12-09  Tim Omernick  <timo@apple.com>
 
         Reviewed by Darin.

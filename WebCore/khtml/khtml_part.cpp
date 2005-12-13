@@ -2264,10 +2264,21 @@ bool KHTMLPart::gotoAnchor( const QString &name )
 
 #if APPLE_CHANGES
     // Scroll nested layers and frames to reveal the anchor.
-    if (n && n->renderer()) {
+  RenderObject *renderer;
+  QRect rect;
+  if (n) {
+      renderer = n->renderer();
+      rect = n->getRect();
+  } else {
+      // If there's no node, we should scroll to the top of the document.
+      renderer = d->m_doc->renderer();
+      rect = QRect();
+  }
+  
+  if (renderer) {
         // Align to the top and to the closest side (this matches other browsers).
-        n->renderer()->enclosingLayer()->scrollRectToVisible(n->getRect(), RenderLayer::gAlignToEdgeIfNeeded, RenderLayer::gAlignTopAlways);
-    }
+        renderer->enclosingLayer()->scrollRectToVisible(rect, RenderLayer::gAlignToEdgeIfNeeded, RenderLayer::gAlignTopAlways);
+  } 
 #else
   d->m_view->setContentsPos(x, y);
 #endif
