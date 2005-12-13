@@ -1159,10 +1159,10 @@ NSView *KWQKHTMLPart::nextKeyViewInFrame(NodeImpl *node, KWQSelectionDirection d
             }
         }
         else {
-            doc->setFocusNode(node);
-            if (node->renderer())
+            if (node->isFocusable() && node->renderer()) {
+                doc->setFocusNode(node);
                 node->renderer()->enclosingLayer()->scrollRectToVisible(node->getRect());
-                
+            }
             [_bridge makeFirstResponder:[_bridge documentView]];
             return [_bridge documentView];
         }

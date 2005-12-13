@@ -258,6 +258,23 @@ const AtomicString& ElementImpl::getAttribute(NodeImpl::Id id) const
     return nullAtom;
 }
 
+void ElementImpl::focus()
+{
+    DocumentImpl *doc = getDocument();
+    if (doc)
+        doc->updateLayout();
+    if (isFocusable() && renderer()) {
+        renderer()->enclosingLayer()->scrollRectToVisible(getRect());
+    }
+}
+
+void ElementImpl::blur()
+{
+    DocumentImpl* doc = getDocument();
+    if (doc && doc->focusNode() == this)
+	doc->setFocusNode(0);
+}
+
 const AtomicString& ElementImpl::getAttributeNS(const DOMString &namespaceURI,
                                                 const DOMString &localName) const
 {   

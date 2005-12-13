@@ -2,6 +2,31 @@
 
         Merged fix from TOT to Safari-1-3-branch
 
+    2005-12-08  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Tim Hatcher.
+
+        - fixed <rdar://problem/4363794> 10.4.4 REGRESSION: Page scroll position jumps when clicking on word in editable div (5911)
+        setFocusNode was trying to scroll to reveal elements unnecessarily. 
+        Now the callers have to decide whether or not to scroll.
+
+        * khtml/xml/dom_docimpl.cpp:
+        (DocumentImpl::setFocusNode): No longer calls scrolling code.
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::nextKeyViewInFrame): Now calls scrolling code after setting the focus node.
+        * khtml/xml/dom_elementimpl.cpp:
+        (ElementImpl::focus): Moved functionality from Element::focus.
+         Now these functions also call scrolling code.
+        (ElementImpl::blur): ditto.
+        * khtml/xml/dom_elementimpl.h: Added focus and blur.
+        * khtml/dom/dom_element.cpp:
+        (Element::focus): Now calls ElementImpl::focus
+        (Element::blur): ditto.
+
+2005-12-12  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-1-3-branch
+
     2005-12-08  David Harrison  <harrison@apple.com>
 
         Reviewed by Geoff.
