@@ -1,3 +1,10 @@
+2005-12-14  Timothy Hatcher  <timothy@apple.com>
+
+        <rdar://problem/4381444> Remove GMail-specific work-around previously added
+
+        * khtml/ecma/kjs_html.cpp:
+        (KJS::HTMLElement::textAreaGetter): Remove GMail workaround.
+
 === WebCore-417.13 ===
 
 2005-12-14  Adele Peterson  <adele@apple.com>
