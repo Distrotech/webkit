@@ -1785,7 +1785,9 @@ void KHTMLPart::slotFinishedParsing()
 
   if (!d->m_view)
     return; // We are probably being destructed.
-    
+  
+  // Since checkCompleted can end up destroying the part, we want to make sure we're protected against getting deleted here.
+  khtml::SharedPtr<KHTMLPart> protector(this);
   checkCompleted();
 
   if (!d->m_view)

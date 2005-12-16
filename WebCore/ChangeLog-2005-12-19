@@ -1,3 +1,12 @@
+2005-12-16  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Maciej.
+
+        Fix for <rdar://problem/4381546> Safari crash at www.dallascowboys.com in KWQListIteratorImpl::current()
+
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::slotFinishedParsing): ref the part before calling checkCompleted.
+
 === WebCore-417.14 ===
 
 2005-12-14  Timothy Hatcher  <timothy@apple.com>
