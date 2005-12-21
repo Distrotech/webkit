@@ -729,6 +729,15 @@ template<class T> static void removeFromVector(QPtrVector<T> &vec, T *item)
 
 void HTMLFormElementImpl::registerFormElement(HTMLGenericFormElementImpl *e)
 {
+    DocumentImpl *doc = getDocument();
+    if (!e->name().isEmpty() && doc) {        
+        HTMLGenericFormElementImpl* currentCheckedRadio = doc->checkedRadioButtonForGroup(e->name(), (HTMLFormElementImpl*) 0);
+        if (currentCheckedRadio == e) {
+            doc->removeRadioButtonGroup(e->name(), (HTMLFormElementImpl*) 0);
+            doc->radioButtonChecked((HTMLInputElementImpl*) e, this);
+        }
+    }
+    
     appendToVector(formElements, e);
     removeFromVector(dormantFormElements, e);
 }
