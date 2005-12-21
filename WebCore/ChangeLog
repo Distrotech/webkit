@@ -1,0 +1,384 @@
+2005-12-20  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Darin.
+
+        Fix for <rdar://problem/4387630> REGRESSION: <select> element's onClick event doesn't fire @ bugweb.apple.com
+
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::passSubframeEventToSubframe): only pass mouse down for khtmlviews.
+
+2005-12-20  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by eric, thatcher
+        
+        <rdar://problem/4172984> KWQExceptions needs to use @try/@catch instead of relying on NSException.h internals
+        
+        Needed to undef try/catch because of 4333439.  Moved the 
+        declarations of variables that are returned from within a @try 
+        block outside the @try block (because of "might be clobbered by 
+        a longjmp or vfork" warnings).  Moved some return statements
+        inside the @try block to fix volatilization errors with gcc4.
+
+        * WebCore.xcodeproj/project.pbxproj:
+        * WebCorePrefix.h:
+        * kcanvas/device/quartz/KCanvasFilterQuartz.mm:
+        (KCanvasFEBlendQuartz::getCIFilter):
+        (KCanvasFEColorMatrixQuartz::getCIFilter):
+        (KCanvasFECompositeQuartz::getCIFilter):
+        (getPointLightVectors):
+        (getLightVectors):
+        (getNormalMap):
+        (KCanvasFEDiffuseLightingQuartz::getCIFilter):
+        (KCanvasFEFloodQuartz::getCIFilter):
+        (KCanvasFEImageQuartz::getCIFilter):
+        (KCanvasFEMergeQuartz::getCIFilter):
+        (KCanvasFESpecularLightingQuartz::getCIFilter):
+        * kwq/KWQExceptions.h:
+        * kwq/KWQExceptions.mm:
+        (KWQReportBlockedException):
+        * kwq/KWQFileButton.mm:
+        (KWQFileButton::sizeForCharacterWidth):
+        (KWQFileButton::frameGeometry):
+        * kwq/KWQKCursor.mm:
+        (+[NSCursor _WebCore_cursorWithName:hotSpot:_WebCore_cursorWithName:hotSpot:]):
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::createPart):
+        (KWQKHTMLPart::nextKeyView):
+        (KWQKHTMLPart::runJavaScriptPrompt):
+        (KWQKHTMLPart::keyEvent):
+        (KWQKHTMLPart::sendContextMenuEvent):
+        (KWQKHTMLPart::fileWrapperForElement):
+        (KWQKHTMLPart::attributedString):
+        (KWQKHTMLPart::imageFromRect):
+        * kwq/KWQKHTMLPartBrowserExtension.mm:
+        * kwq/KWQLineEdit.mm:
+        (QLineEdit::sizeForCharacterWidth):
+        * kwq/KWQListBox.mm:
+        (QListBox::sizeForNumberOfLines):
+        * kwq/KWQLoader.mm:
+        (KWQCheckCacheObjectStatus):
+        * kwq/KWQWidget.mm:
+        (QWidget::frameGeometry):
+        (QWidget::mapFromGlobal):
+
+2005-12-20  David Harrison  <harrison@apple.com>
+
+        <rdar://problem/4294417> Cannot un-italicize some text after triple clicking it
+
+        Reviewed by Justin.
+
+        * khtml/editing/apply_style_command.cpp:
+        (khtml::ApplyStyleCommand::addInlineStyleIfNeeded):
+        Removed check for tab span because ApplyStyleCommand::removeCSSStyle() already makes the same check.
+
+2005-12-20  Justin Garcia  <justin.garcia@apple.com>
+
+        <rdar://problem/4387270> editing/deleting/delete-3800834-fix failing
+        <http://bugzilla.opendarwin.org/show_bug.cgi?id=6160> REGRESSION: Crash when running editing/deleting/delete-3800834-fix.html
+        <http://bugzilla.opendarwin.org/show_bug.cgi?id=6161> REGRESSION: crash when pressing tab in editable WebHTMLView
+
+        Reviewed by darin
+    
+        Some callers call setAttribute on a floating element.  So, using 
+        a RefPtr for the element inside addAttribute can destroy
+        it.
+
+        * khtml/xml/dom_elementimpl.cpp:
+        (NamedAttrMapImpl::addAttribute):
+
+2005-12-20  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+
+        - fixed leak in createAttributeMap
+	http://bugzilla.opendarwin.org/show_bug.cgi?id=6162
+	
+        * khtml/xml/dom_elementimpl.cpp:
+        (StyledElementImpl::createAttributeMap): the new attribute map
+	is going in a RefPtr, don't also ref it manually.
+
+2005-12-20  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+
+        - change an assignment to a contructor declaration to build with PassRefPtr
+	leak fix changes
+
+        * ksvg2/svg/SVGTransformableImpl.cpp:
+        (SVGTransformableImpl::parseTransformAttribute):
+
+2005-12-20  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by John.
+
+        Fixed <rdar://problem/4310363> JavaScript window.open: Height is 1 
+        pixel short, and related bugs.
+
+        There were a few bugs here.
+        (1) Our code took size arguments and applied them to the window's
+            content rect. That's incorrect. The Rhino book says the arguments 
+            should apply to the WebView. Other things that occupy the content 
+            rect include the tab bar, the status bar, and the 1 pixel border 
+            between brushed metal and document. All of these used to impinge 
+            on the web page's display area.
+
+            The fix is to calculate sizing based on the WebView instead of
+            the content rect. This means that the webViewContentRect and 
+            setContentRect delegate methods are obsolete and no longer called
+            by any of our code. (setContentRect was never called in the 
+            first place.)
+
+        (2) None of our sizing accounted for scaled resolutions.
+
+            The fix is to ask the WebView to scale all coordintes for us.
+
+        (3) Our code assumed that all window accoutrements were on by default.
+            Safari works that way, but other WebKit clients might not.
+
+            The fix is always to explicitly set an on/off state.
+        
+        (a) To facilitate scaling, I added a new bridge method, webView, to 
+        access the webView.
+
+        (b) For internal consistency, I changed ___Bars to ___bars in bridge 
+        methods, and ___bars to ___Bars in WinArgs data members. (Interestingly,
+        the different classes in our code are evenly divided on which format to 
+        use.)
+        
+        Added manual test:
+        * manual-tests/window-open-features.html: Added.
+        * manual-tests/resources/200x200.png: Added.
+        * manual-tests/resources/popup200x200.html: Added.
+
+        * khtml/ecma/kjs_window.cpp:
+        (KJS::showModalDialog): see (b)
+        (KJS::WindowFunc::callAsFunction): see (b)
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::statusbarVisible): see (b)
+        * kwq/KWQKHTMLPartBrowserExtension.mm:
+        (KHTMLPartBrowserExtension::createNewWindow):
+        At the top of this method, I just did some formatting cleanup and
+        moved the 'referrer' variable closer to where it's used.
+        The changes in the middle of the method are (3), the bottom, (2).
+        * kwq/KWQKPartsBrowserExtension.h:
+        (KParts::WindowArgs::WindowArgs): see (b)
+        * kwq/WebCoreBridge.h: see (a)
+
+2005-12-20  Eric Seidel  <eseidel@apple.com>
+
+        Reviewed by mjs.
+
+        Leaks when running SVG tests
+        http://bugzilla.opendarwin.org/show_bug.cgi?id=6156
+        No additional tests necessary, leaks already caught by other tests.
+
+        * kcanvas/KCanvasFilters.cpp:
+        (KCanvasFEDiffuseLighting::setLightSource): takes ownership
+        (KCanvasFESpecularLighting::setLightSource): takes ownership
+        * kcanvas/KCanvasFilters.h:
+        (KCanvasFEDiffuseLighting::KCanvasFEDiffuseLighting): added
+        (KCanvasFEDiffuseLighting::~KCanvasFEDiffuseLighting): added
+        (KCanvasFEDiffuseLighting::lightSource): fixed spacing
+        (KCanvasFESpecularLighting::KCanvasFESpecularLighting): added
+        (KCanvasFESpecularLighting::~KCanvasFESpecularLighting): added
+        (KCanvasFESpecularLighting::lightSource): fixed spacing
+        * kcanvas/device/quartz/KRenderingDeviceQuartz.mm:
+        (KRenderingDeviceQuartz::stringForPath): added missing CFRelease
+
+2005-12-20  Eric Seidel  <eseidel@apple.com>
+
+        Reviewed by darin.
+
+        Remove additional bit-rotted DEBUG* ifdefs from WebCore.
+        This removes PARSER_DEBUG, FORMS_DEBUG and CSS_STYLESHEET_DEBUG.
+        http://bugzilla.opendarwin.org/show_bug.cgi?id=5931
+        No tests possible, only removing dead code.
+
+        * khtml/css/css_stylesheetimpl.cpp:
+        (CSSStyleSheetImpl::parseString):
+        (CSSStyleSheetImpl::isLoading):
+        * khtml/html/html_formimpl.cpp:
+        (DOM::HTMLFormElementImpl::formData):
+        (DOM::HTMLFormElementImpl::submit):
+        (DOM::HTMLFormElementImpl::reset):
+        (DOM::HTMLGenericFormElementImpl::getForm):
+        * khtml/html/htmlparser.cpp:
+        (HTMLParser::processCloseTag):
+        (HTMLParser::createHead):
+
+2005-12-20  Eric Seidel  <eseidel@apple.com>
+
+        Reviewed by darin.
+
+        Move Decoder onto Shared<T> and clients onto RefPtr.
+        http://bugzilla.opendarwin.org/show_bug.cgi?id=6107
+        No test cases possible, no functional changes.
+
+        * khtml/ecma/XSLTProcessor.cpp:
+        (KJS::XSLTProcessorProtoFunc::callAsFunction):
+        * khtml/ecma/xmlhttprequest.cpp:
+        (KJS::XMLHttpRequest::XMLHttpRequest):
+        (KJS::XMLHttpRequest::~XMLHttpRequest):
+        (KJS::XMLHttpRequest::changeState):
+        (KJS::XMLHttpRequest::abort):
+        (KJS::XMLHttpRequest::slotFinished):
+        (KJS::XMLHttpRequest::slotData):
+        * khtml/ecma/xmlhttprequest.h:
+        * khtml/khtml_part.cpp:
+        (KHTMLPart::clear):
+        (KHTMLPart::begin):
+        (KHTMLPart::write):
+        * khtml/khtmlpart_p.h:
+        (KHTMLPartPrivate::KHTMLPartPrivate):
+        * khtml/misc/decoder.cpp:
+        (Decoder::Decoder):
+        (Decoder::~Decoder):
+        * khtml/misc/decoder.h:
+        * khtml/misc/loader.h:
+        * khtml/xml/dom_docimpl.cpp:
+        (DocumentImpl::DocumentImpl):
+        (DocumentImpl::~DocumentImpl):
+        (DocumentImpl::prepareMouseEvent):
+        (DocumentImpl::setDecoder):
+        * khtml/xml/dom_docimpl.h:
+        (DOM::DocumentImpl::decoder):
+        * khtml/xsl/xslt_processorimpl.cpp:
+        (DOM::XSLTProcessorImpl::createDocumentFromSource):
+
+2005-12-19  Darin Adler  <darin@apple.com>
+
+        Reviewed by Maciej.
+
+        - fix http://bugzilla.opendarwin.org/show_bug.cgi?id=6143
+          DOM::ElementImpl should use a RefPtr for the attribute map
+
+        * khtml/xml/dom_elementimpl.cpp:
+        (ElementImpl::ElementImpl): Remove code to initialize the pointer; not needed since
+        RefPtr gets initialized to 0.
+        (ElementImpl::~ElementImpl): Remove code to deref the pointer; RefPtr handles that.
+        (ElementImpl::attributes): Add get() call to get raw pointer.
+        (ElementImpl::setAttributeMap): Remove code to deref the old map and set the new map.
+        But added code to clear the element pointer from the old map (missing in the old
+        version). Also added a FIXME.
+        (ElementImpl::createAttributeMap): Remove ref(); RefPtr handles that.
+        (NamedAttrMapImpl::addAttribute): Use a RefPtr to guarantee the element does not go
+        away in the middle of dispatching DOM events.
+        (StyledElementImpl::attributeChanged): Clean up code by using the inline function
+        mappedAttributes() instead of doing type casts.
+        (StyledElementImpl::parseMappedAttribute): Ditto.
+        (StyledElementImpl::getClassList): Ditto.
+
+        * khtml/xml/dom_elementimpl.h: Make ElementImpl::namedAttrMap be a RefPtr instead
+        of raw pointer. Added an overload of StyledElementImpl::mappedAttributes for both
+        const and non-const.
+
+        * khtml/xml/dom_nodeimpl.cpp: (DOM::NodeImpl::addChild): Use a RefPtr to ref/deref
+        the child so that it doesn't leak.
+
+        * khtml/html/htmlparser.h: Changed isindex to use a RefPtr.
+        * khtml/html/htmlparser.cpp:
+        (HTMLParser::~HTMLParser): Removed now-unneeded ref.
+        (HTMLParser::isindexCreateErrorCheck): Remove now-unneeded deref/ref.
+        (HTMLParser::handleIsindex): Put isindex element into a RefPtr. This prevents a
+        crash that was otherwise happening during layout tests (caused indirectly by
+        the changes above).
+        (HTMLParser::startBody): Added call to get().
+
+2005-12-19  Darin Adler  <darin@apple.com>
+
+        Reviewed by Geoff Garen and Eric Seidel.
+
+        - fix http://bugzilla.opendarwin.org/show_bug.cgi?id=4923
+          stop using <ostream> in WebCore, eliminating the <cmath> troubles it causes
+
+        * ForwardingHeaders/kxmlcore/AlwaysInline.h: Added.
+        * WebCorePrefix.h: Removed the use of <ostream>.
+
+        * kwq/KWQDef.h: Removed now-unused Q_INT64, Q_INT16, Q_UINT16, qRound, and _KWQ_IOSTREAM_.
+
+        * kwq/KWQKHTMLPart.h: Removed some unneeded headers and added forward-declarations of classes
+        instead. Corrected some incorrect member function declarations.
+        * kwq/KWQKHTMLPart.mm: Added a now-needed header.
+
+        * khtml/ecma/kjs_window.cpp: Removed the <cmath> workaround.
+        * khtml/rendering/bidi.cpp: Added include of AlwaysInline.h and removed a
+        lot of unnecessary includes.
+        * khtml/rendering/render_canvasimage.cpp: Removed the <cmath> workaround.
+        * khtml/rendering/render_image.cpp: Removed the <cmath> workaround.
+        * khtml/rendering/render_text.cpp: Added include of AlwaysInline.h and removed a
+        lot of unnecessary includes.
+
+        * ksvg2/css/SVGCSSStyleSelector.cpp: (KDOM::CSSStyleSelector::applySVGProperty):
+        * ksvg2/svg/SVGAnimateColorElementImpl.cpp: (SVGAnimateColorElementImpl::calculateColor):
+        * ksvg2/svg/SVGAnimateTransformElementImpl.cpp: (SVGAnimateTransformElementImpl::handleTimerEvent):
+        * ksvg2/svg/SVGAnimationElementImpl.cpp: (SVGAnimationElementImpl::closeRenderer):
+        * ksvg2/svg/SVGLinearGradientElementImpl.cpp: (SVGLinearGradientElementImpl::buildGradient):
+        * ksvg2/svg/SVGPatternElementImpl.cpp: (SVGPatternElementImpl::notifyAttributeChange):
+        * ksvg2/svg/SVGRadialGradientElementImpl.cpp: (SVGRadialGradientElementImpl::buildGradient):
+        Replaced use of qRound with use of lroundf or lround as appropriate.
+
+        * kwq/KWQCString.h:
+        * kwq/KWQCString.mm:
+        * kwq/KWQDateTime.h:
+        * kwq/KWQDateTime.mm:
+        * kwq/KWQMap.h:
+        * kwq/KWQMemArray.h:
+        * kwq/KWQPoint.mm:
+        * kwq/KWQPointArray.h:
+        * kwq/KWQPtrList.h:
+        * kwq/KWQPtrStack.h:
+        * kwq/KWQPtrVector.h:
+        * kwq/KWQRect.h:
+        * kwq/KWQRect.mm:
+        * kwq/KWQSize.h:
+        * kwq/KWQSize.mm:
+        * kwq/KWQValueList.h:
+        Removed _KWQ_IOSTREAM_ code that was used at one time for unit tests, but is now unneeded,
+        and requires <ostream>.
+
+2005-12-19  Darin Adler  <darin@apple.com>
+
+        Reviewed by Geoff Garen and John Sullivan.
+
+        - fix http://bugzilla.opendarwin.org/show_bug.cgi?id=4312
+          XMLHttpRequest headers that have two CRLF sequences lead to Obj-C exception
+
+        I found this by code inspection after examining a security report about
+        vulnerabilities in other browsers' XMLHttpRequest implementations.
+
+        * kwq/KWQLoader.mm:
+        (+[NSDictionary _webcore_dictionaryWithHeaderString:_webcore_dictionaryWithHeaderString:]):
+        Check length of string before calling characterAtIndex:0 since it will fail for an empty string.
+
+2005-12-19  Mitz Pettel  <opendarwin.org@mitzpettel.com>
+
+        Reviewed by Beth
+
+	- fix http://bugzilla.opendarwin.org/show_bug.cgi?id=6149
+          REGRESSION (WebCore-417.5): horizontal scrollbar in overflow with top
+          border doesn't receive mouse events
+
+        * khtml/rendering/render_block.cpp:
+        (khtml::RenderBlock::isPointInScrollbar):
+	Removed borderTop() from horizontal scrollbar rect computation.
+	* manual-tests/scrollbar-hittest2.html: Added.
+
+2005-12-19  Alexey Proskuryakov  <ap@nypop.com>
+
+        Reviewed by Darin, committed by Adele.
+
+        - fix http://bugzilla.opendarwin.org/show_bug.cgi?id=5744
+          XMLHttpRequest does not apply page encoding after assigning via innerHtml
+
+        * khtml/ecma/xmlhttprequest.cpp:
+        (getMIMEType): A helper function to get MIME type from a Content-Type string.
+        (getCharset): A helper function to get charset from a Content-Type string.
+        (KJS::XMLHttpRequest::getValueProperty): Factored out responseIsXML().
+        (KJS::XMLHttpRequest::getResponseHeader): Return QString instead of JSValue
+          (to get rid of unnecessary JSLocks).
+        (KJS::XMLHttpRequest::responseIsXML): A new method that analyses Content-Type.
+        (KJS::XMLHttpRequest::slotData): Use a correct charset for responses, see bug for details.
+        (KJS::XMLHttpRequestProtoFunc::callAsFunction): Update for getResponseHeader() changes
+        * khtml/ecma/xmlhttprequest.h:
+
+== Rolled over to ChangeLog-2005-12-19 ==
