@@ -261,10 +261,12 @@ const AtomicString& ElementImpl::getAttribute(NodeImpl::Id id) const
 void ElementImpl::focus()
 {
     DocumentImpl *doc = getDocument();
-    if (doc)
+    if (doc) {
         doc->updateLayout();
-    if (isFocusable() && renderer()) {
-        renderer()->enclosingLayer()->scrollRectToVisible(getRect());
+        if (isFocusable() && renderer()) {
+            doc->setFocusNode(this);
+            renderer()->enclosingLayer()->scrollRectToVisible(getRect());
+        }
     }
 }
 

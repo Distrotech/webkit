@@ -2532,6 +2532,9 @@ bool KWQKHTMLPart::passSubframeEventToSubframe(NodeImpl::MouseEvent &event)
             if (!renderer || !renderer->isWidget()) {
                 return false;
             }
+            QWidget *widget = static_cast<RenderWidget *>(renderer)->widget();
+            if (!widget || !widget->inherits("KHTMLView"))
+                return false;
             if (!passWidgetMouseDownEventToWidget(static_cast<RenderWidget *>(renderer))) {
                 return false;
             }
