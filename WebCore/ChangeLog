@@ -2,6 +2,19 @@
 
         Merged fix from TOT to Safari-1-3-branch
 
+    2005-12-21  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Tim Hatcher.
+
+        Fix for <rdar://problem/4387433> Seed: Radio buttons behave incorrectly in Gmail settings
+
+        * khtml/html/html_formimpl.cpp:
+        (DOM::HTMLFormElementImpl::registerFormElement): If this form element is already checked in the default form, remove it from m_selectedRadioButtons and add it for the new form.
+
+2005-12-22  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-1-3-branch
+
     2005-12-20  Adele Peterson  <adele@apple.com>
 
         Reviewed by Darin.
