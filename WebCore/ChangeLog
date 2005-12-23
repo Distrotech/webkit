@@ -1,3 +1,21 @@
+2005-12-22  Vicki Murley  <vicki@apple.com>
+
+        Reviewed by Eric.
+
+        - fix <rdar://problem/4379899> *Panther* REGRESSION (TOT): Scrollwheel doesn't work on frameset pages (5450) 
+	and <rdar://problem/4379906> *Pan EU2* 10.4.4 Regression: Seed: scrolling with scrollwheel, trackpad doesn't 
+	work for nested framesets at gmail.com
+
+        Basically plug in the TOT fixes for Panther.  Add passWheelEventToChildWidget, but add the event as a 
+        parameter - since there's no concept of _currentEvent on the branch, we have to pass the event around.  
+        Return true when passing the wheel event to the child widget, since we don't want to send the event on
+        to the nextResponder for this case.
+  
+        * kwq/KWQKHTMLPart.h:
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::scrollOverflowWithScrollWheelEvent):
+        (KWQKHTMLPart::passWheelEventToChildWidget):
+
 2005-12-22  Timothy Hatcher  <timothy@apple.com>
 
         Merged fix from TOT to Safari-1-3-branch

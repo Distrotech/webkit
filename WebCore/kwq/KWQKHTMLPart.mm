@@ -996,14 +996,15 @@ bool KWQKHTMLPart::scrollOverflowWithScrollWheelEvent(NSEvent *event)
     r->layer()->hitTest(nodeInfo, (int)point.x, (int)point.y);    
     
     NodeImpl *node = nodeInfo.innerNode();
-    if (node == 0) {
+    if (!node) 
         return false;
-    }
     
     r = node->renderer();
-    if (r == 0) {
+    if (!r) 
         return false;
-    }
+    
+    if (passWheelEventToChildWidget(node, event)) 
+        return true;
     
     KWQScrollDirection direction;
     float multiplier;
@@ -2501,6 +2502,30 @@ void KWQKHTMLPart::clearTimers()
     clearTimers(d->m_view);
 }
 
+bool KWQKHTMLPart::passWheelEventToChildWidget(DOM::NodeImpl *node, NSEvent *event)
+{
+    if ([event type] != NSScrollWheel || _sendingEventToSubview || !node) 
+      return false;
+
+    RenderObject *renderer = node->renderer();
+    if (!renderer || !renderer->isWidget())
+        return false;
+    QWidget *widget = static_cast<RenderWidget *>(renderer)->widget();
+    if (!widget)
+        return false;
+      
+    NSView *nodeView = widget->getView();
+    ASSERT(nodeView);
+    KWQ_BLOCK_EXCEPTIONS;
+    ASSERT([nodeView superview]);
+    NSView *view = [nodeView hitTest:[[nodeView superview] convertPoint:[event locationInWindow] fromView:nil]];
+    _sendingEventToSubview = true;
+    [view scrollWheel:event];
+    KWQ_UNBLOCK_EXCEPTIONS;
+    _sendingEventToSubview = false;
+    return true;
+}
+  
 bool KWQKHTMLPart::passSubframeEventToSubframe(NodeImpl::MouseEvent &event)
 {
     KWQ_BLOCK_EXCEPTIONS;

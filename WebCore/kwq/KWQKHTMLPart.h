@@ -282,6 +282,7 @@ public:
     void clearTimers();
     static void clearTimers(KHTMLView *);
     
+    bool passWheelEventToChildWidget(DOM::NodeImpl *node, NSEvent *event);
     bool passSubframeEventToSubframe(DOM::NodeImpl::MouseEvent &);
     
     void redirectionTimerStartedOrStopped();
