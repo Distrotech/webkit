@@ -56,7 +56,7 @@ using namespace KJS::Bindings;
             Returns true for success, false for failure. (Failure occurs when 'buffer' 
             is not big enough to hold the result.)
 */
-bool convertJSMethodNameToObjc(const char *JSName, char *buffer, size_t bufferSize)
+bool KJS::Bindings::convertJSMethodNameToObjc(const char *JSName, char *buffer, size_t bufferSize)
 {
     assert(JSName && buffer);
     
