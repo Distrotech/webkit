@@ -1,0 +1,11 @@
+all:
+	xcodebuild $(OTHER_OPTIONS)
+
+debug d development dev develop:
+	xcodebuild $(OTHER_OPTIONS) -configuration Development
+
+release r deployment dep deploy:
+	xcodebuild $(OTHER_OPTIONS) -configuration Deployment
+
+clean:
+	xcodebuild -alltargets clean
