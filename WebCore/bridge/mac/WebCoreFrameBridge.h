@@ -28,7 +28,6 @@
 #import <JavaScriptCore/npruntime.h>
 #import <JavaVM/jni.h>
 #import <WebCore/WebCoreKeyboardAccess.h>
-#import <WebKit/WebView.h>
 
 #ifdef __cplusplus
 
@@ -64,7 +63,6 @@ typedef khtml::RenderPart KHTMLRenderPart;
 @class WebCoreSettings;
 @class WebScriptObject;
 
-@protocol WebCoreDOMTreeCopier;
 @protocol WebCoreRenderTreeCopier;
 @protocol WebCoreResourceHandle;
 @protocol WebCoreResourceLoader;
@@ -191,12 +189,6 @@ typedef enum
     RenderArena *_renderPartArena;
     BOOL _shouldCreateRenderers;
 
-    WebCoreFrameBridge *_nextSibling;
-    WebCoreFrameBridge *_previousSibling;
-    WebCoreFrameBridge *_firstChild;
-    WebCoreFrameBridge *_lastChild;
-    int _childCount;
-
     NSString *_frameNamespace;
 }
 
@@ -262,6 +254,7 @@ typedef enum
 - (void)end;
 - (void)stop;
 
+- (void)clearFrame;
 - (void)handleFallbackContent;
 
 - (NSURL *)URL;
@@ -310,7 +303,6 @@ typedef enum
 - (NSView *)nextKeyViewInsideWebFrameViews;
 - (NSView *)previousKeyViewInsideWebFrameViews;
 
-- (NSObject *)copyDOMTree:(id <WebCoreDOMTreeCopier>)copier;
 - (NSObject *)copyRenderTree:(id <WebCoreRenderTreeCopier>)copier;
 - (NSString *)renderTreeAsExternalRepresentation;
 
@@ -501,7 +493,7 @@ typedef enum
 - (WebCoreFrameBridge *)mainFrame;
 - (void)frameDetached;
 - (NSView *)documentView;
-- (WebView *)webView;
+- (NSView *)webView;
 
 - (void)loadURL:(NSURL *)URL referrer:(NSString *)referrer reload:(BOOL)reload userGesture:(BOOL)forUser target:(NSString *)target triggeringEvent:(NSEvent *)event form:(DOMElement *)form formValues:(NSDictionary *)values;
 - (void)postWithURL:(NSURL *)URL referrer:(NSString *)referrer target:(NSString *)target data:(NSArray *)data contentType:(NSString *)contentType triggeringEvent:(NSEvent *)event form:(DOMElement *)form formValues:(NSDictionary *)values;
@@ -682,10 +674,6 @@ typedef enum
 // This idiom is appropriate because WebCoreFrameBridge is an abstract class.
 
 @interface WebCoreFrameBridge (SubclassResponsibility) <WebCoreFrameBridge>
-@end
-
-@protocol WebCoreDOMTreeCopier <NSObject>
-- (NSObject *)nodeWithName:(NSString *)name value:(NSString *)value source:(NSString *)source children:(NSArray *)children;
 @end
 
 @protocol WebCoreRenderTreeCopier <NSObject>
