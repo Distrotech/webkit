@@ -25,6 +25,7 @@
 
 
 #include "config.h"
+#if SVG_SUPPORT
 #import "QuartzSupport.h"
 
 #import "KCanvasMatrix.h"
@@ -89,9 +90,9 @@ CGAffineTransform CGAffineTransformMakeMapBetweenRects(CGRect source, CGRect des
     return transform;
 }
 
-void applyStrokeStyleToContext(CGContextRef context, khtml::RenderStyle *renderStyle, const RenderPath *renderPath)
+void applyStrokeStyleToContext(CGContextRef context, khtml::RenderStyle* renderStyle, const khtml::RenderObject* renderObject)
 {
-    KRenderingStrokePainter strokePainter = KSVG::KSVGPainterFactory::strokePainter(renderStyle, renderPath);
+    KRenderingStrokePainter strokePainter = KSVG::KSVGPainterFactory::strokePainter(renderStyle, renderObject);
 
     /* Shouldn't all these be in the stroke painter? */
     CGContextSetLineWidth(context, strokePainter.strokeWidth());
@@ -151,4 +152,6 @@ CFStringRef CFStringFromCGPath(CGPathRef path)
 
     return string;
 }
+
+#endif // SVG_SUPPORT
 

@@ -14,7 +14,7 @@
  *
  *  You should have received a copy of the GNU Library General Public License
  *  along with this library; see the file COPYING.LIB.  If not, write to
- *  the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
+ *  the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  *
  */
@@ -41,18 +41,20 @@
 #include <string.h> // for strlen
 #include <new> // for placement new
 
-#ifdef WIN32
-template struct KJS::UString::Rep * const & KXMLCore::identityExtract<struct KJS::UString::Rep *>(struct KJS::UString::Rep * const &);
-#endif
-
 namespace KXMLCore {
 
     template<typename T> class DefaultHash;
+    template<typename T> class StrHash;
 
-    template<> struct DefaultHash<KJS::UString::Rep *> {
+    template<> struct StrHash<KJS::UString::Rep *> {
         static unsigned hash(const KJS::UString::Rep *key) { return key->hash(); }
         static bool equal(const KJS::UString::Rep *a, const KJS::UString::Rep *b) { return KJS::Identifier::equal(a, b); }
     };
+
+    template<> struct DefaultHash<KJS::UString::Rep *> {
+        typedef StrHash<KJS::UString::Rep *> Hash;
+    };
+
 }
 
 namespace KJS {
@@ -138,7 +140,7 @@ PassRefPtr<UString::Rep> Identifier::add(const char *c)
     if (length == 0)
         return &UString::Rep::empty;
     
-    return *identifierTable().insert<const char *, CStringTranslator>(c).first;
+    return *identifierTable().add<const char *, CStringTranslator>(c).first;
 }
 
 struct UCharBuffer {
@@ -179,7 +181,7 @@ PassRefPtr<UString::Rep> Identifier::add(const UChar *s, int length)
         return &UString::Rep::empty;
     
     UCharBuffer buf = {s, length}; 
-    return *identifierTable().insert<UCharBuffer, UCharBufferTranslator>(buf).first;
+    return *identifierTable().add<UCharBuffer, UCharBufferTranslator>(buf).first;
 }
 
 PassRefPtr<UString::Rep> Identifier::add(UString::Rep *r)
@@ -190,7 +192,7 @@ PassRefPtr<UString::Rep> Identifier::add(UString::Rep *r)
     if (r->len == 0)
         return &UString::Rep::empty;
 
-    UString::Rep *result = *identifierTable().insert(r).first;
+    UString::Rep *result = *identifierTable().add(r).first;
     if (result == r)
         r->isIdentifier = true;
     return result;

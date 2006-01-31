@@ -28,6 +28,7 @@
 
 #ifndef KSVG_SVGRenderStyleDefs_H
 #define KSVG_SVGRenderStyleDefs_H
+#if SVG_SUPPORT
 
 // Helper macros for 'SVGRenderStyle'
 #define SVG_RS_DEFINE_ATTRIBUTE(Data, Type, Name, Initial) \
@@ -170,7 +171,7 @@ namespace KSVG
         }
 
         float opacity;
-        QColor color;
+        Color color;
 
     private:
         StyleStopData &operator=(const StyleStopData &);
@@ -243,7 +244,7 @@ namespace KSVG
         }
 
         QString filter;
-        QColor floodColor;
+        Color floodColor;
         float floodOpacity;
 
     private:
@@ -251,6 +252,7 @@ namespace KSVG
     };
 };
 
+#endif // SVG_SUPPORT
 #endif
 
 // vim:ts=4:noet

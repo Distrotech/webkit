@@ -2,6 +2,7 @@
  * This file is part of the WebKit project.
  *
  * Copyright (C) 2006 Apple Computer, Inc.
+ *               2006 Alexander Kellett <lypanov@kde.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,12 +22,15 @@
  */
 
 #include "config.h"
+#if SVG_SUPPORT
 #include "RenderSVGText.h"
 
+#include "render_object.h"
 #include "SVGTextElementImpl.h"
 #include "SVGAnimatedLengthListImpl.h"
 #include "KRenderingDevice.h"
 #include "KCanvasMatrix.h"
+#include "KCanvasRenderingStyle.h"
 
 RenderSVGText::RenderSVGText(KSVG::SVGTextElementImpl *node) 
     : RenderBlock(node)
@@ -64,7 +68,7 @@ void RenderSVGText::paint(PaintInfo& paintInfo, int parentX, int parentY)
         shouldPopContext = true;
     } else
         paintInfo.p->save();
-
+    
     context->concatCTM(localTransform());
     context->concatCTM(QMatrix().translate(parentX, parentY));
     context->concatCTM(translationForAttributes());
@@ -83,8 +87,28 @@ void RenderSVGText::paint(PaintInfo& paintInfo, int parentX, int parentY)
     if (filter)
         filter->prepareFilter(boundingBox);
         
-    RenderBlock::paint(paintInfo, 0, 0);
+    KRenderingPaintServer *fillPaintServer = KSVG::KSVGPainterFactory::fillPaintServer(style(), this);
+    if (fillPaintServer) {
+        fillPaintServer->setPaintingText(true);
+        // fillPaintServer->setActiveClient(this);
+        if (fillPaintServer->setup(context, this, APPLY_TO_FILL)) {
+            RenderBlock::paint(paintInfo, 0, 0);
+            fillPaintServer->teardown(context, this, APPLY_TO_FILL);
+        }
+        fillPaintServer->setPaintingText(false);
+    }
     
+    KRenderingPaintServer *strokePaintServer = KSVG::KSVGPainterFactory::strokePaintServer(style(), this);
+    if (strokePaintServer) {
+        strokePaintServer->setPaintingText(true);
+        // strokePaintServer->setActiveClient(this);
+        if (strokePaintServer->setup(context, this, APPLY_TO_STROKE)) {
+            RenderBlock::paint(paintInfo, 0, 0);
+            strokePaintServer->teardown(context, this, APPLY_TO_STROKE);
+        }
+        strokePaintServer->setPaintingText(false);
+    }
+
     if (filter)
         filter->applyFilter(boundingBox);
 
@@ -106,3 +130,5 @@ bool RenderSVGText::nodeAtPoint(NodeInfo& info, int _x, int _y, int _tx, int _ty
     totalTransform.invert().map(_x, _y, &localX, &localY);
     return RenderBlock::nodeAtPoint(info, (int)localX, (int)localY, _tx, _ty, hitTestAction);
 }
+#endif // SVG_SUPPORT
+

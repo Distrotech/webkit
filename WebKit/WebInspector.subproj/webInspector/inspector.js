@@ -26,8 +26,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-function loaded()
-{
+function loaded() {
     treeScrollbar = new AppleVerticalScrollbar(document.getElementById("treeScrollbar"));
 
     treeScrollbar.setTrackStart("Images/scrollTrackTop.png", 18);
@@ -130,7 +129,24 @@ function loaded()
             this.horizontalScrollTo(offsetX - width + node.clientWidth);
         else if (left > offsetX)
             this.horizontalScrollTo(offsetX);
-    };
+    }
+
+    // Change the standard show/hide to include the parentNode.
+    // This lets out content reflow when hidden.
+    AppleScrollbar.prototype.hide = function() {
+        this._track.style.display = "none";
+        this.scrollbar.style.display = "none";
+        this.hidden = true;
+    }
+
+    AppleScrollbar.prototype.show = function() {
+        this._track.style.display = "block";
+        this.scrollbar.style.display = null;
+        if (this.hidden) {
+            this.hidden = false;
+            this.refresh();
+        }
+    }
 
     window.addEventListener("resize", refreshScrollbars, false);
 }
@@ -153,7 +169,7 @@ function switchPane(pane) {
     currentPane = pane;
     for (var i = 0; i < tabNames.length; i++) {
         if (pane == tabNames[i]) {
-            document.getElementById(tabNames[i] + "Pane").style.removeProperty("display");
+            document.getElementById(tabNames[i] + "Pane").style.display = null;
             document.getElementById(tabNames[i] + "Button").className = "square selected";
         } else {
             document.getElementById(tabNames[i] + "Pane").style.display = "none";
@@ -164,11 +180,13 @@ function switchPane(pane) {
     if (!paneUpdateState[pane]) {
         eval("update" + pane.charAt(0).toUpperCase() + pane.substr(1) + "Pane()");
         paneUpdateState[pane] = true;
+    } else {
+        refreshScrollbars();
     }
 }
 
 function nodeTypeName(node) {
-    switch(node.nodeType) {
+    switch (node.nodeType) {
         case Node.ELEMENT_NODE: return "Element";
         case Node.ATTRIBUTE_NODE: return "Attribute";
         case Node.TEXT_NODE: return "Text";
@@ -198,13 +216,16 @@ function updateElementAttributes() {
 
     attributesList.innerHTML = "";
 
+    if (!focusedNode.attributes.length)
+        attributesList.innerHTML = "<span class=\"disabled\">(none)</span>";
+
     for (i = 0; i < focusedNode.attributes.length; i++) {
         var attr = focusedNode.attributes[i];
         var li = document.createElement("li");
 
         var span = document.createElement("span");
         span.className = "property";
-        if (attr.namespaceURI != null)
+        if (attr.namespaceURI)
             span.title = attr.namespaceURI;
         span.textContent = attr.name;
         li.appendChild(span);
@@ -215,10 +236,10 @@ function updateElementAttributes() {
         span.title = span.textContent;
         li.appendChild(span);
 
-        if (attr.style != null) {
+        if (attr.style) {
             span = document.createElement("span");
-            span.className = "presentational";
-            span.textContent = "(presentational)";
+            span.className = "mapped";
+            span.innerHTML = "(<a href=\"javascript:selectMappedStyleRule('" + attr.name + "')\">mapped style</a>)";
             li.appendChild(span);
         }
 
@@ -251,7 +272,7 @@ function updateNodePane() {
         } else {
             document.getElementById("nodeNamespaceRow").style.display = "none";
         }
-    
+
         document.getElementById("nodeContentsScrollview").innerHTML = "<span class=\"disabled\">Loading...</span>";
         nodeContentsScrollArea.refresh();
 
@@ -287,120 +308,190 @@ function updateStylePane() {
 
     rulesArea.innerHTML = "";
     propertiesArea.innerHTML = "";
-
-    var propertyCount = new Array();
-
     styleRules = new Array();
-    var focusedNodeName = focusedNode.nodeName.toLowerCase();
-    for (i = 0; i < focusedNode.attributes.length; i++) {
-        var attr = focusedNode.attributes[i];
-        if (attr.style) {
-            var attrStyle = new Object();
-            attrStyle.selectorText = focusedNodeName + "[" + attr.name + "=" + attr.value + "]";
-            attrStyle.style = attr.style;
-            attrStyle.subtitle = "element's \"" + attr.name + "\" attribute";
-            styleRules.push(attrStyle);
-        }
-    }
-
-    var matchedStyleRules = focusedNode.ownerDocument.defaultView.getMatchedCSSRules(focusedNode, "");
-    for (var i = 0; i < matchedStyleRules.length; i++) {
-        styleRules.push(matchedStyleRules[i]);
-    }
-
-    if (focusedNode.style.length) {
-        var inlineStyle = new Object();
-        inlineStyle.selectorText = "Inline Style Attribute";
-        inlineStyle.style = focusedNode.style;
-        inlineStyle.subtitle = "element's \"style\" attribute";
-        styleRules.push(inlineStyle);
-    }
-
     styleProperties = new Array();
 
-    if (selectedStyleRuleIndex >= styleRules.length)
-        selectedStyleRuleIndex = (styleRules.length - 1);
+    if (focusedNode.nodeType == Node.ELEMENT_NODE) {
+        document.getElementById("styleRules").style.display = null;
+        document.getElementById("styleProperties").style.display = null;
+        document.getElementById("noStyle").style.display = "none";
 
-    for (var i = (styleRules.length - 1); i >= 0; --i) {
-        styleProperties[i] = new Array();
+        var propertyCount = new Array();
 
-        var row = document.createElement("div");
-        row.className = "row";
-        if (i == selectedStyleRuleIndex)
-            row.className += " focused";
-
-        var cell = document.createElement("div");
-        cell.className = "cell selector";
-        cell.title = styleRules[i].selectorText;
-        cell.textContent = cell.title;
-        row.appendChild(cell);
-
-        cell = document.createElement("div");
-        cell.className = "cell stylesheet";
-        if (styleRules[i].subtitle != null)
-            cell.title = styleRules[i].subtitle;
-        else if (styleRules[i].parentStyleSheet != null && styleRules[i].parentStyleSheet.href != null)
-            cell.title = styleRules[i].parentStyleSheet.href;
-        else
-            cell.title = "inline stylesheet";
-        cell.textContent = cell.title;
-        row.appendChild(cell);
-
-        row.styleRuleIndex = i;
-        row.addEventListener("click", styleRuleSelect, true);
-
-        var style = styleRules[i].style;
-        var stylePropertyLookup = new Array();
-        for (var j = 0; j < style.length; j++) {
-            var originalProperty = null;
-            var shorthand = style.getPropertyShorthand(style[j]);
-            if (shorthand != null)
-                originalProperty = stylePropertyLookup[shorthand];
-
-            if (originalProperty != null) {
-                originalProperty.subProperties.push(style[j]);
-            } else {
-                originalProperty = new Object();
-                originalProperty.style = style;
-                originalProperty.subProperties = new Array(style[j]);
-                originalProperty.unusedProperties = new Array();
-                if (shorthand != null && propertyCount[shorthand] > 0)
-                    originalProperty.unusedProperties[shorthand] = true;
-                if (shorthand != null) {
-                    if (propertyCount[shorthand] == null)
-                        propertyCount[shorthand] = 1;
-                    else
-                        propertyCount[shorthand]++;
-                }
-                originalProperty.name = (shorthand != null ? shorthand : style[j]);
-                styleProperties[i].push(originalProperty);
-                if (shorthand != null)
-                    stylePropertyLookup[originalProperty.name] = originalProperty;
-            }
-
-            if (propertyCount[style[j]] > 0)
-                originalProperty.unusedProperties[style[j]] = true;
-
-            if (propertyCount[style[j]] == null)
-                propertyCount[style[j]] = 1;
-            else
-                propertyCount[style[j]]++;
+        var computedStyle = focusedNode.ownerDocument.defaultView.getComputedStyle(focusedNode, "");
+        if (computedStyle) {
+            var computedObj = new Object();
+            computedObj.computedStyle = true;
+            computedObj.selectorText = "Computed Style";
+            computedObj.style = computedStyle;
+            computedObj.subtitle = "";
+            styleRules.push(computedObj);
         }
 
-        if (rulesArea.firstChild != null)
-            rulesArea.insertBefore(row, rulesArea.firstChild);
-        else
-            rulesArea.appendChild(row);
+        var focusedNodeName = focusedNode.nodeName.toLowerCase();
+        for (var i = 0; i < focusedNode.attributes.length; i++) {
+            var attr = focusedNode.attributes[i];
+            if (attr.style) {
+                var attrStyle = new Object();
+                attrStyle.attr = attr.name;
+                attrStyle.selectorText = focusedNodeName + "[" + attr.name;
+                if (attr.value.length)
+                    attrStyle.selectorText += "=" + attr.value;
+                attrStyle.selectorText += "]";
+                attrStyle.style = attr.style;
+                attrStyle.subtitle = "element's \"" + attr.name + "\" attribute";
+                styleRules.push(attrStyle);
+            }
+        }
+
+        var matchedStyleRules = focusedNode.ownerDocument.defaultView.getMatchedCSSRules(focusedNode, "");
+        if (matchedStyleRules) {
+            for (var i = 0; i < matchedStyleRules.length; i++) {
+                styleRules.push(matchedStyleRules[i]);
+            }
+        }
+
+        if (focusedNode.style.length) {
+            var inlineStyle = new Object();
+            inlineStyle.selectorText = "Inline Style Attribute";
+            inlineStyle.style = focusedNode.style;
+            inlineStyle.subtitle = "element's \"style\" attribute";
+            styleRules.push(inlineStyle);
+        }
+
+        if (styleRules.length && selectedStyleRuleIndex >= styleRules.length)
+            selectedStyleRuleIndex = (styleRules.length - 1);
+
+        var priorityUsed = false;
+        for (var i = (styleRules.length - 1); i >= 0; --i) {
+            styleProperties[i] = new Array();
+
+            var row = document.createElement("div");
+            row.className = "row";
+            if (i == selectedStyleRuleIndex)
+                row.className += " focused";
+            if (styleRules[i].computedStyle)
+                row.className += " computedStyle";
+
+            var cell = document.createElement("div");
+            cell.className = "cell selector";
+            cell.title = styleRules[i].selectorText;
+            cell.textContent = cell.title;
+            row.appendChild(cell);
+
+            cell = document.createElement("div");
+            cell.className = "cell stylesheet";
+            if (styleRules[i].subtitle != null)
+                cell.title = styleRules[i].subtitle;
+            else if (styleRules[i].parentStyleSheet && styleRules[i].parentStyleSheet.href)
+                cell.title = styleRules[i].parentStyleSheet.href;
+            else
+                cell.title = "inline stylesheet";
+            cell.textContent = cell.title;
+            row.appendChild(cell);
+
+            row.styleRuleIndex = i;
+            row.addEventListener("click", styleRuleSelect, true);
+
+            var style = styleRules[i].style;
+            var styleShorthandLookup = new Array();
+            for (var j = 0; j < style.length; j++) {
+                var prop = null;
+                var name = style[j];
+                var shorthand = style.getPropertyShorthand(name);
+                if (shorthand)
+                    prop = styleShorthandLookup[shorthand];
+
+                if (!priorityUsed && style.getPropertyPriority(name).length)
+                    priorityUsed = true;
+
+                if (prop) {
+                    prop.subProperties.push(name);
+                } else {
+                    prop = new Object();
+                    prop.style = style;
+                    prop.subProperties = new Array(name);
+                    prop.unusedProperties = new Array();
+                    prop.name = (shorthand ? shorthand : name);
+                    styleProperties[i].push(prop);
+                    if (shorthand) {
+                        styleShorthandLookup[shorthand] = prop;
+                        if (!propertyCount[shorthand]) {
+                            propertyCount[shorthand] = 1;
+                        } else {
+                            prop.unusedProperties[shorthand] = true;
+                            propertyCount[shorthand]++;
+                        }
+                    }
+                }
+
+                if (styleRules[i].computedStyle)
+                    continue;
+
+                if (!propertyCount[name]) {
+                    propertyCount[name] = 1;
+                } else {
+                    prop.unusedProperties[name] = true;
+                    propertyCount[name]++;
+                }
+            }
+
+            if (styleRules[i].computedStyle && styleRules.length > 1) {
+                var divider = document.createElement("hr");
+                divider.className = "divider";
+                rulesArea.insertBefore(divider, rulesArea.firstChild);
+            }
+
+            if (rulesArea.firstChild)
+                rulesArea.insertBefore(row, rulesArea.firstChild);
+            else
+                rulesArea.appendChild(row);
+        }
+
+        if (priorityUsed) {
+            // walk the properties again and account for !important
+            var priorityCount = new Array();
+            for (var i = 0; i < styleRules.length; i++) {
+                var style = styleRules[i].style;
+                if (style.computedStyle)
+                    continue;
+                for (var j = 0; j < styleProperties[i].length; j++) {
+                    var prop = styleProperties[i][j];
+                    for (var k = 0; k < prop.subProperties.length; k++) {
+                        var name = prop.subProperties[k];
+                        if (style.getPropertyPriority(name).length) {
+                            if (!priorityCount[name]) {
+                                if (prop.unusedProperties[name])
+                                    prop.unusedProperties[name] = false;
+                                priorityCount[name] = 1;
+                            } else {
+                                priorityCount[name]++;
+                            }
+                        } else if (priorityCount[name]) {
+                            prop.unusedProperties[name] = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        updateStyleProperties();
+    } else {
+        var noStyle = document.getElementById("noStyle");
+        noStyle.textContent = "Can't style " + nodeTypeName(focusedNode) + " nodes.";
+        document.getElementById("styleRules").style.display = "none";
+        document.getElementById("styleProperties").style.display = "none";
+        noStyle.style.display = null;
     }
 
     styleRulesScrollArea.refresh();
-    updateStyleProperties();
 }
 
 function styleRuleSelect(event) {
     var row = document.getElementById("styleRulesScrollview").firstChild;
     while (row) {
-        row.className = "row";
+        if (row.nodeName == "DIV")
+            row.className = "row";
         row = row.nextSibling;
     }
 
@@ -416,53 +507,67 @@ function updateStyleProperties() {
     var propertiesTree = document.getElementById("stylePropertiesTree");
     propertiesTree.innerHTML = "";
 
-    for (var i = 0; i < styleProperties[selectedStyleRuleIndex].length; i++) {
-        var prop = styleProperties[selectedStyleRuleIndex][i];
-        var li = document.createElement("li");
+    if (selectedStyleRuleIndex >= styleProperties.length) {
+        stylePropertiesScrollArea.refresh();
+        return;
+    }
+
+    var properties = styleProperties[selectedStyleRuleIndex];
+    for (var i = 0; i < properties.length; i++) {
+        var prop = properties[i];
+        var mainli = document.createElement("li");
         if (prop.subProperties.length > 1) {
-            li.className = "hasChildren";
+            mainli.className = "hasChildren";
             if (expandedStyleShorthands[prop.name])
-                li.className += " expanded";
-            li.shorthand = prop.name;
+                mainli.className += " expanded";
+            mainli.shorthand = prop.name;
             var button = document.createElement("button");
             button.addEventListener("click", toggleStyleShorthand, false);
-            li.appendChild(button);
+            mainli.appendChild(button);
         }
-
-        if (prop.unusedProperties[prop.name] == true)
-            li.className += " overloaded";
 
         var span = document.createElement("span");
         span.className = "property";
         span.textContent = prop.name;
-        li.appendChild(span);
+        mainli.appendChild(span);
 
         span = document.createElement("span");
         span.className = "value";
         span.title = prop.style.getPropertyValue(prop.name);
+        if (prop.style.getPropertyPriority(prop.name).length)
+            span.title += " !" + prop.style.getPropertyPriority(prop.name);
         span.textContent = span.title;
-        li.appendChild(span);
+        mainli.appendChild(span);
 
-        propertiesTree.appendChild(li);
+        propertiesTree.appendChild(mainli);
 
-        if (prop.subProperties.length > 1) {
+        var overloadCount = 0;
+        if (prop.subProperties && prop.subProperties.length > 1) {
             var subTree = document.createElement("ul");
             if (!expandedStyleShorthands[prop.name])
-                subTree.style.setProperty("display", "none", "");
+                subTree.style.display = "none";
+
             for (var j = 0; j < prop.subProperties.length; j++) {
+                var name = prop.subProperties[j];
                 var li = document.createElement("li");
-                if (prop.style.isPropertyImplicit(prop.subProperties[j]) || prop.style.getPropertyValue(prop.subProperties[j]) == "initial")
+                if (prop.style.isPropertyImplicit(name) || prop.style.getPropertyValue(name) == "initial")
                     li.className = "implicit";
-                if (prop.unusedProperties[prop.subProperties[j]] == true)
+
+                if (prop.unusedProperties[name] || prop.unusedProperties[prop.name]) {
                     li.className += " overloaded";
+                    overloadCount++;
+                }
+
                 var span = document.createElement("span");
                 span.className = "property";
-                span.textContent = prop.subProperties[j];
+                span.textContent = name;
                 li.appendChild(span);
 
                 span = document.createElement("span");
                 span.className = "value";
-                span.title = prop.style.getPropertyValue(prop.subProperties[j]);
+                span.title = prop.style.getPropertyValue(name);
+                if (prop.style.getPropertyPriority(name).length)
+                    span.title += " !" + prop.style.getPropertyPriority(name);
                 span.textContent = span.title;
                 li.appendChild(span);
 
@@ -471,6 +576,9 @@ function updateStyleProperties() {
 
             propertiesTree.appendChild(subTree);
         }
+
+        if (prop.unusedProperties[prop.name] || overloadCount == prop.subProperties.length)
+            mainli.className += " overloaded";
     }
 
     stylePropertiesScrollArea.refresh();
@@ -480,13 +588,40 @@ function toggleStyleShorthand(event) {
     var li = event.currentTarget.parentNode;
     if (li.className.indexOf("expanded") != -1) {
         li.className = li.className.replace(/ expanded/, "");
-        li.nextSibling.style.setProperty("display", "none", "");
+        li.nextSibling.style.display = "none";
         expandedStyleShorthands[li.shorthand] = false;
     } else {
         li.className += " expanded";
-        li.nextSibling.style.removeProperty("display");
+        li.nextSibling.style.display = null;
         expandedStyleShorthands[li.shorthand] = true;
     }
 
     stylePropertiesScrollArea.refresh();
+}
+
+function selectMappedStyleRule(attrName) {
+    if (!paneUpdateState["style"])
+        updateStylePane();
+
+    for (var i = 0; i < styleRules.length; i++)
+        if (styleRules[i].attr == attrName)
+            break;
+
+    selectedStyleRuleIndex = i;
+
+    var row = document.getElementById("styleRulesScrollview").firstChild;
+    while (row) {
+        if (row.nodeName == "DIV") {
+            if (row.styleRuleIndex == selectedStyleRuleIndex)
+                row.className = "row focused";
+            else
+                row.className = "row";
+        }
+        row = row.nextSibling;
+    }
+
+    styleRulesScrollArea.refresh();
+
+    updateStyleProperties();
+    switchPane("style");
 }

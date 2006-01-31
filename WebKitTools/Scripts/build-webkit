@@ -43,6 +43,8 @@ setConfiguration();
 chdirWebKit();
 my $productDir = productDir();
 my @options = XcodeOptions();
+my @svgOptions = ();
+@svgOptions = ("GCC_PREPROCESSOR_DEFINITIONS=\$(DEBUG_DEFINES)") if (!$svgSupport);
 
 # Check that all the project directories are there.
 my @projects = ("JavaScriptCore", "JavaScriptGlue", "WebCore", "WebKit");
@@ -76,17 +78,15 @@ removeLibraryDependingOnSVG("WebCore", $svgSupport);
 # Build, and abort if the build fails.
 for my $dir (@projects) {
     chdir $dir or die;
-    my $result;
-    if (!$svgSupport && ($dir eq "WebCore")) {
-        $result = system "xcodebuild", "-project", "$dir.xcodeproj", "-target", "$dir-no-SVG", @options, @ARGV;
+    my $result = 0;
+    if ($dir eq "JavaScriptCore") {
+        $result = system "xcodebuild", "-project", "$dir.xcodeproj", "-target", "All", @options, @ARGV;
+    } elsif ($dir eq "WebCore") {
+        $result = system "xcodebuild", "-project", "$dir.xcodeproj", @options, @ARGV, @svgOptions;
     } else {
         $result = system "xcodebuild", "-project", "$dir.xcodeproj", @options, @ARGV;
     }
     exit WEXITSTATUS($result) if WEXITSTATUS($result);
-    if ($dir eq "JavaScriptCore") {
-        $result = system "xcodebuild", "-project", "$dir.xcodeproj", "-target", "testkjs", @options, @ARGV;
-        exit WEXITSTATUS($result) if WEXITSTATUS($result);
-    }
     chdir ".." or die;
 }
 

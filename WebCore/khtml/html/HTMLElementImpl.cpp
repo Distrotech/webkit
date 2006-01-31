@@ -3,7 +3,7 @@
  *
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
- * Copyright (C) 2004 Apple Computer, Inc.
+ * Copyright (C) 2004, 2005, 2006 Apple Computer, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,27 +24,26 @@
 
 #include "config.h"
 #include "HTMLElementImpl.h"
-#include "html/html_documentimpl.h"
-#include "html/htmltokenizer.h"
-#include "htmlfactory.h"
 
-#include <kxmlcore/HashSet.h>
-#include "editing/visible_text.h"
-
+#include "EventNames.h"
 #include "Frame.h"
-
-#include "dom/dom_exception.h"
-#include "rendering/render_replaced.h"
-#include "css/css_valueimpl.h"
-#include "css/css_stylesheetimpl.h"
+#include "css_ruleimpl.h"
+#include "css_stylesheetimpl.h"
+#include "css_valueimpl.h"
 #include "cssproperties.h"
 #include "cssvalues.h"
-#include "css/css_ruleimpl.h"
-#include "xml/dom_textimpl.h"
-#include "xml/dom2_eventsimpl.h"
-#include "xml/EventNames.h"
-#include "editing/markup.h"
+#include "dom2_events.h"
+#include "dom2_eventsimpl.h"
+#include "dom_exception.h"
+#include "dom_textimpl.h"
+#include "html_documentimpl.h"
+#include "htmlfactory.h"
 #include "htmlnames.h"
+#include "htmltokenizer.h"
+#include "markup.h"
+#include "render_replaced.h"
+#include "visible_text.h"
+#include <kxmlcore/HashSet.h>
 
 namespace WebCore {
 
@@ -91,9 +90,9 @@ int HTMLElementImpl::tagPriority() const
     return 1;
 }
 
-NodeImpl *HTMLElementImpl::cloneNode(bool deep)
+PassRefPtr<NodeImpl> HTMLElementImpl::cloneNode(bool deep)
 {
-    HTMLElementImpl *clone = HTMLElementFactory::createHTMLElement(m_tagName.localName(), getDocument(), 0, false);
+    PassRefPtr<HTMLElementImpl> clone = HTMLElementFactory::createHTMLElement(m_tagName.localName(), getDocument(), 0, false);
     if (!clone)
         return 0;
 
@@ -106,7 +105,7 @@ NodeImpl *HTMLElementImpl::cloneNode(bool deep)
     clone->copyNonAttributeProperties(this);
 
     if (deep)
-        cloneChildNodes(clone);
+        cloneChildNodes(clone.get());
 
     return clone;
 }
@@ -153,9 +152,9 @@ void HTMLElementImpl::parseMappedAttribute(MappedAttributeImpl *attr)
     else if (attr->name() == onclickAttr) {
         setHTMLEventListener(clickEvent, attr);
     } else if (attr->name() == oncontextmenuAttr) {
-    	setHTMLEventListener(contextmenuEvent, attr);
+        setHTMLEventListener(contextmenuEvent, attr);
     } else if (attr->name() == ondblclickAttr) {
-	setHTMLEventListener(khtmlDblclickEvent, attr);
+        setHTMLEventListener(khtmlDblclickEvent, attr);
     } else if (attr->name() == onmousedownAttr) {
         setHTMLEventListener(mousedownEvent, attr);
     } else if (attr->name() == onmousemoveAttr) {
@@ -271,23 +270,23 @@ DocumentFragmentImpl *HTMLElementImpl::createContextualFragment(const DOMString 
     NodeImpl *nextNode;
     for (NodeImpl *node = fragment->firstChild(); node != NULL; node = nextNode) {
         nextNode = node->nextSibling();
-	node->ref();
+        node->ref();
         if (node->hasTagName(htmlTag) || node->hasTagName(bodyTag)) {
-	    NodeImpl *firstChild = node->firstChild();
+            NodeImpl *firstChild = node->firstChild();
             if (firstChild != NULL) {
                 nextNode = firstChild;
             }
-	    NodeImpl *nextChild;
+            NodeImpl *nextChild;
             for (NodeImpl *child = firstChild; child != NULL; child = nextChild) {
-		nextChild = child->nextSibling();
+                nextChild = child->nextSibling();
                 child->ref();
                 node->removeChild(child, ignoredExceptionCode);
-		fragment->insertBefore(child, node, ignoredExceptionCode);
+                fragment->insertBefore(child, node, ignoredExceptionCode);
                 child->deref();
-	    }
+            }
             fragment->removeChild(node, ignoredExceptionCode);
-	} else if (node->hasTagName(headTag))
-	    fragment->removeChild(node, ignoredExceptionCode);
+        } else if (node->hasTagName(headTag))
+            fragment->removeChild(node, ignoredExceptionCode);
 
         // Important to do this deref after removeChild, because if the only thing
         // keeping a node around is a parent that is non-0, removeChild will not
@@ -309,7 +308,7 @@ void HTMLElementImpl::setInnerHTML(const DOMString &html, int &exception)
 {
     DocumentFragmentImpl *fragment = createContextualFragment(html);
     if (fragment == NULL) {
-	exception = DOMException::NO_MODIFICATION_ALLOWED_ERR;
+        exception = DOMException::NO_MODIFICATION_ALLOWED_ERR;
         return;
     }
 
@@ -321,14 +320,14 @@ void HTMLElementImpl::setOuterHTML(const DOMString &html, int &exception)
 {
     NodeImpl *p = parent();
     if (!p || !p->isHTMLElement()) {
-	exception = DOMException::NO_MODIFICATION_ALLOWED_ERR;
+        exception = DOMException::NO_MODIFICATION_ALLOWED_ERR;
         return;
     }
     HTMLElementImpl *parent = static_cast<HTMLElementImpl *>(p);
     DocumentFragmentImpl *fragment = parent->createContextualFragment(html);
 
     if (!fragment) {
-	exception = DOMException::NO_MODIFICATION_ALLOWED_ERR;
+        exception = DOMException::NO_MODIFICATION_ALLOWED_ERR;
         return;
     }
     
@@ -342,7 +341,7 @@ void HTMLElementImpl::setInnerText(const DOMString &text, int &exception)
 {
     // following the IE specs.
     if (endTagRequirement() == TagStatusForbidden) {
-	exception = DOMException::NO_MODIFICATION_ALLOWED_ERR;
+        exception = DOMException::NO_MODIFICATION_ALLOWED_ERR;
         return;
     }
 
@@ -362,7 +361,7 @@ void HTMLElementImpl::setOuterText(const DOMString &text, int &exception)
 {
     // following the IE specs.
     if (endTagRequirement() == TagStatusForbidden) {
-	exception = DOMException::NO_MODIFICATION_ALLOWED_ERR;
+        exception = DOMException::NO_MODIFICATION_ALLOWED_ERR;
         return;
     }
 
@@ -391,21 +390,21 @@ void HTMLElementImpl::setOuterText(const DOMString &text, int &exception)
     // is previous node a text node? if so, merge into it
     NodeImpl *prev = t->previousSibling();
     if (prev && prev->isTextNode()) {
-	TextImpl *textPrev = static_cast<TextImpl *>(prev);
-	textPrev->appendData(t->data(), exception);
+        TextImpl *textPrev = static_cast<TextImpl *>(prev);
+        textPrev->appendData(t->data(), exception);
         if (exception)
             return;
         t->remove(exception);
         if (exception)
             return;
-	t = textPrev;
+        t = textPrev;
     }
 
     // is next node a text node? if so, merge it in
     NodeImpl *next = t->nextSibling();
     if (next && next->isTextNode()) {
-	TextImpl *textNext = static_cast<TextImpl *>(next);
-	t->appendData(textNext->data(), exception);
+        TextImpl *textNext = static_cast<TextImpl *>(next);
+        t->appendData(textNext->data(), exception);
         if (exception)
             return;
         textNext->remove(exception);
@@ -426,34 +425,32 @@ void HTMLElementImpl::addHTMLAlignment(MappedAttributeImpl* attr)
     } else if (equalIgnoringCase(alignment, "absbottom")) {
         propvalign = CSS_VAL_BOTTOM;
     } else if (equalIgnoringCase(alignment, "left")) {
-	propfloat = CSS_VAL_LEFT;
-	propvalign = CSS_VAL_TOP;
+        propfloat = CSS_VAL_LEFT;
+        propvalign = CSS_VAL_TOP;
     } else if (equalIgnoringCase(alignment, "right")) {
-	propfloat = CSS_VAL_RIGHT;
-	propvalign = CSS_VAL_TOP;
+        propfloat = CSS_VAL_RIGHT;
+        propvalign = CSS_VAL_TOP;
     } else if (equalIgnoringCase(alignment, "top")) {
-	propvalign = CSS_VAL_TOP;
+        propvalign = CSS_VAL_TOP;
     } else if (equalIgnoringCase(alignment, "middle")) {
-	propvalign = CSS_VAL__KHTML_BASELINE_MIDDLE;
+        propvalign = CSS_VAL__KHTML_BASELINE_MIDDLE;
     } else if (equalIgnoringCase(alignment, "center")) {
-	propvalign = CSS_VAL_MIDDLE;
+        propvalign = CSS_VAL_MIDDLE;
     } else if (equalIgnoringCase(alignment, "bottom")) {
-	propvalign = CSS_VAL_BASELINE;
+        propvalign = CSS_VAL_BASELINE;
     } else if (equalIgnoringCase(alignment, "texttop")) {
-	propvalign = CSS_VAL_TEXT_TOP;
+        propvalign = CSS_VAL_TEXT_TOP;
     }
     
     if ( propfloat != -1 )
-	addCSSProperty( attr, CSS_PROP_FLOAT, propfloat );
+        addCSSProperty( attr, CSS_PROP_FLOAT, propfloat );
     if ( propvalign != -1 )
-	addCSSProperty( attr, CSS_PROP_VERTICAL_ALIGN, propvalign );
+        addCSSProperty( attr, CSS_PROP_VERTICAL_ALIGN, propvalign );
 }
 
 bool HTMLElementImpl::isFocusable() const
 {
-    // Added the check for !parent() so shadow elements, like those in engine-based textfields, can get focus.
-    // We may reevaluate this when we resolve outstanding focus issues with these shadow elements.
-    return isContentEditable() && ((parent() && !parent()->isContentEditable()) || !parent());
+    return isContentEditable() && parent() && !parent()->isContentEditable();
 }
 
 bool HTMLElementImpl::isContentEditable() const 
@@ -550,16 +547,16 @@ void HTMLElementImpl::accessKeyAction(bool sendToAnyElement)
 DOMString HTMLElementImpl::toString() const
 {
     if (!hasChildNodes() && getDocument()->isHTMLDocument()) {
-	DOMString result = openTagStartToString();
-	result += ">";
+        DOMString result = openTagStartToString();
+        result += ">";
 
-	if (endTagRequirement() == TagStatusRequired) {
-	    result += "</";
-	    result += nodeName();
-	    result += ">";
-	}
+        if (endTagRequirement() == TagStatusRequired) {
+            result += "</";
+            result += nodeName();
+            result += ">";
+        }
 
-	return result;
+        return result;
     }
 
     return ElementImpl::toString();
@@ -615,9 +612,9 @@ void HTMLElementImpl::setClassName(const DOMString &value)
     setAttribute(classAttr, value);
 }
 
-RefPtr<HTMLCollectionImpl> HTMLElementImpl::children()
+PassRefPtr<HTMLCollectionImpl> HTMLElementImpl::children()
 {
-    return RefPtr<HTMLCollectionImpl>(new HTMLCollectionImpl(this, HTMLCollectionImpl::NODE_CHILDREN));
+    return new HTMLCollectionImpl(this, HTMLCollectionImpl::NODE_CHILDREN);
 }
 
 // DOM Section 1.1.1
@@ -650,106 +647,106 @@ bool HTMLElementImpl::childAllowed(NodeImpl *newChild)
 // This unfortunate function is only needed when checking against the DTD.  Other languages (like SVG) won't need this.
 bool HTMLElementImpl::isRecognizedTagName(const QualifiedName& tagName)
 {
-    static HashSet<DOMStringImpl*, PointerHash<DOMStringImpl*> > tagList;
+    static HashSet<AtomicStringImpl*> tagList;
     if (tagList.isEmpty()) {
-        #define INSERT_TAG(name) tagList.insert(name##Tag.localName().impl());
-        DOM_HTMLNAMES_FOR_EACH_TAG(INSERT_TAG)
+        #define ADD_TAG(name) tagList.add(name##Tag.localName().impl());
+        DOM_HTMLNAMES_FOR_EACH_TAG(ADD_TAG)
     }
     return tagList.contains(tagName.localName().impl());
 }
 
 // The terms inline and block are used here loosely.  Don't make the mistake of assuming all inlines or all blocks
 // need to be in these two lists.
-HashSet<DOMStringImpl*, PointerHash<DOMStringImpl*> >* inlineTagList()
+HashSet<AtomicStringImpl*>* inlineTagList()
 {
-    static HashSet<DOMStringImpl*, PointerHash<DOMStringImpl*> > tagList;
+    static HashSet<AtomicStringImpl*> tagList;
     if (tagList.isEmpty()) {
-        tagList.insert(ttTag.localName().impl());
-        tagList.insert(iTag.localName().impl());
-        tagList.insert(bTag.localName().impl());
-        tagList.insert(uTag.localName().impl());
-        tagList.insert(sTag.localName().impl());
-        tagList.insert(strikeTag.localName().impl());
-        tagList.insert(bigTag.localName().impl());
-        tagList.insert(smallTag.localName().impl());
-        tagList.insert(emTag.localName().impl());
-        tagList.insert(strongTag.localName().impl());
-        tagList.insert(dfnTag.localName().impl());
-        tagList.insert(codeTag.localName().impl());
-        tagList.insert(sampTag.localName().impl());
-        tagList.insert(kbdTag.localName().impl());
-        tagList.insert(varTag.localName().impl());
-        tagList.insert(citeTag.localName().impl());
-        tagList.insert(abbrTag.localName().impl());
-        tagList.insert(acronymTag.localName().impl());
-        tagList.insert(aTag.localName().impl());
-        tagList.insert(canvasTag.localName().impl());
-        tagList.insert(imgTag.localName().impl());
-        tagList.insert(appletTag.localName().impl());
-        tagList.insert(objectTag.localName().impl());
-        tagList.insert(embedTag.localName().impl());
-        tagList.insert(fontTag.localName().impl());
-        tagList.insert(basefontTag.localName().impl());
-        tagList.insert(brTag.localName().impl());
-        tagList.insert(scriptTag.localName().impl());
-        tagList.insert(mapTag.localName().impl());
-        tagList.insert(qTag.localName().impl());
-        tagList.insert(subTag.localName().impl());
-        tagList.insert(supTag.localName().impl());
-        tagList.insert(spanTag.localName().impl());
-        tagList.insert(bdoTag.localName().impl());
-        tagList.insert(iframeTag.localName().impl());
-        tagList.insert(inputTag.localName().impl());
-        tagList.insert(keygenTag.localName().impl());
-        tagList.insert(selectTag.localName().impl());
-        tagList.insert(textareaTag.localName().impl());
-        tagList.insert(labelTag.localName().impl());
-        tagList.insert(buttonTag.localName().impl());
-        tagList.insert(insTag.localName().impl());
-        tagList.insert(delTag.localName().impl());
-        tagList.insert(nobrTag.localName().impl());
-        tagList.insert(wbrTag.localName().impl());
+        tagList.add(ttTag.localName().impl());
+        tagList.add(iTag.localName().impl());
+        tagList.add(bTag.localName().impl());
+        tagList.add(uTag.localName().impl());
+        tagList.add(sTag.localName().impl());
+        tagList.add(strikeTag.localName().impl());
+        tagList.add(bigTag.localName().impl());
+        tagList.add(smallTag.localName().impl());
+        tagList.add(emTag.localName().impl());
+        tagList.add(strongTag.localName().impl());
+        tagList.add(dfnTag.localName().impl());
+        tagList.add(codeTag.localName().impl());
+        tagList.add(sampTag.localName().impl());
+        tagList.add(kbdTag.localName().impl());
+        tagList.add(varTag.localName().impl());
+        tagList.add(citeTag.localName().impl());
+        tagList.add(abbrTag.localName().impl());
+        tagList.add(acronymTag.localName().impl());
+        tagList.add(aTag.localName().impl());
+        tagList.add(canvasTag.localName().impl());
+        tagList.add(imgTag.localName().impl());
+        tagList.add(appletTag.localName().impl());
+        tagList.add(objectTag.localName().impl());
+        tagList.add(embedTag.localName().impl());
+        tagList.add(fontTag.localName().impl());
+        tagList.add(basefontTag.localName().impl());
+        tagList.add(brTag.localName().impl());
+        tagList.add(scriptTag.localName().impl());
+        tagList.add(mapTag.localName().impl());
+        tagList.add(qTag.localName().impl());
+        tagList.add(subTag.localName().impl());
+        tagList.add(supTag.localName().impl());
+        tagList.add(spanTag.localName().impl());
+        tagList.add(bdoTag.localName().impl());
+        tagList.add(iframeTag.localName().impl());
+        tagList.add(inputTag.localName().impl());
+        tagList.add(keygenTag.localName().impl());
+        tagList.add(selectTag.localName().impl());
+        tagList.add(textareaTag.localName().impl());
+        tagList.add(labelTag.localName().impl());
+        tagList.add(buttonTag.localName().impl());
+        tagList.add(insTag.localName().impl());
+        tagList.add(delTag.localName().impl());
+        tagList.add(nobrTag.localName().impl());
+        tagList.add(wbrTag.localName().impl());
     }
     return &tagList;
 }
 
-HashSet<DOMStringImpl*, PointerHash<DOMStringImpl*> >* blockTagList()
+HashSet<AtomicStringImpl*>* blockTagList()
 {
-    static HashSet<DOMStringImpl*, PointerHash<DOMStringImpl*> > tagList;
+    static HashSet<AtomicStringImpl*> tagList;
     if (tagList.isEmpty()) {
-        tagList.insert(pTag.localName().impl());
-        tagList.insert(h1Tag.localName().impl());
-        tagList.insert(h2Tag.localName().impl());
-        tagList.insert(h3Tag.localName().impl());
-        tagList.insert(h4Tag.localName().impl());
-        tagList.insert(h5Tag.localName().impl());
-        tagList.insert(h6Tag.localName().impl());
-        tagList.insert(ulTag.localName().impl());
-        tagList.insert(olTag.localName().impl());
-        tagList.insert(dirTag.localName().impl());
-        tagList.insert(menuTag.localName().impl());
-        tagList.insert(preTag.localName().impl());
-        tagList.insert(plaintextTag.localName().impl());
-        tagList.insert(xmpTag.localName().impl());
-        tagList.insert(dlTag.localName().impl());
-        tagList.insert(divTag.localName().impl());
-        tagList.insert(layerTag.localName().impl());
-        tagList.insert(centerTag.localName().impl());
-        tagList.insert(noscriptTag.localName().impl());
-        tagList.insert(noframesTag.localName().impl());
-        tagList.insert(noembedTag.localName().impl());
-        tagList.insert(nolayerTag.localName().impl());
-        tagList.insert(blockquoteTag.localName().impl());
-        tagList.insert(formTag.localName().impl());
-        tagList.insert(isindexTag.localName().impl());
-        tagList.insert(hrTag.localName().impl());
-        tagList.insert(tableTag.localName().impl());
-        tagList.insert(fieldsetTag.localName().impl());
-        tagList.insert(addressTag.localName().impl());
-        tagList.insert(liTag.localName().impl());
-        tagList.insert(ddTag.localName().impl());
-        tagList.insert(dtTag.localName().impl());
-        tagList.insert(marqueeTag.localName().impl());
+        tagList.add(pTag.localName().impl());
+        tagList.add(h1Tag.localName().impl());
+        tagList.add(h2Tag.localName().impl());
+        tagList.add(h3Tag.localName().impl());
+        tagList.add(h4Tag.localName().impl());
+        tagList.add(h5Tag.localName().impl());
+        tagList.add(h6Tag.localName().impl());
+        tagList.add(ulTag.localName().impl());
+        tagList.add(olTag.localName().impl());
+        tagList.add(dirTag.localName().impl());
+        tagList.add(menuTag.localName().impl());
+        tagList.add(preTag.localName().impl());
+        tagList.add(plaintextTag.localName().impl());
+        tagList.add(xmpTag.localName().impl());
+        tagList.add(dlTag.localName().impl());
+        tagList.add(divTag.localName().impl());
+        tagList.add(layerTag.localName().impl());
+        tagList.add(centerTag.localName().impl());
+        tagList.add(noscriptTag.localName().impl());
+        tagList.add(noframesTag.localName().impl());
+        tagList.add(noembedTag.localName().impl());
+        tagList.add(nolayerTag.localName().impl());
+        tagList.add(blockquoteTag.localName().impl());
+        tagList.add(formTag.localName().impl());
+        tagList.add(isindexTag.localName().impl());
+        tagList.add(hrTag.localName().impl());
+        tagList.add(tableTag.localName().impl());
+        tagList.add(fieldsetTag.localName().impl());
+        tagList.add(addressTag.localName().impl());
+        tagList.add(liTag.localName().impl());
+        tagList.add(ddTag.localName().impl());
+        tagList.add(dtTag.localName().impl());
+        tagList.add(marqueeTag.localName().impl());
     }
     return &tagList;
 }

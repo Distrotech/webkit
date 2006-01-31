@@ -29,6 +29,7 @@
 #include "RenderTextFragment.h"
 #include "render_image.h"
 #include "render_canvas.h"
+#include "render_list.h"
 #include "DocumentImpl.h"
 #include "xml/dom_position.h"
 #include "visible_position.h"
@@ -65,7 +66,7 @@ void RenderContainer::destroyLeftoverChildren()
         if (m_first->isListMarker())
             m_first->remove();  // List markers are owned by their enclosing list and so don't get destroyed by this container.
         else {
-        // Destroy any anonymous children remaining in the render tree, as well as implicit (shadow) DOM elements like those used in the engine-based textfields.
+        // Destroy any anonymous children remaining in the render tree, as well as implicit (shadow) DOM elements like those used in the engine-based text fields.
             if (m_first->element())
                 m_first->element()->setRenderer(0);
             m_first->destroy();
@@ -76,6 +77,12 @@ void RenderContainer::destroyLeftoverChildren()
 bool RenderContainer::canHaveChildren() const
 {
     return true;
+}
+
+static void updateListMarkerNumbers(RenderObject *child)
+{
+    for (RenderObject *r = child; r && r->isListItem(); r = r->nextSibling())
+        static_cast<RenderListItem *>(r)->resetMarkerValue();
 }
 
 void RenderContainer::addChild(RenderObject *newChild, RenderObject *beforeChild)
@@ -89,10 +96,12 @@ void RenderContainer::addChild(RenderObject *newChild, RenderObject *beforeChild
 
     if(!newChild->isText() && !newChild->isReplaced()) {
         switch(newChild->style()->display()) {
+        case LIST_ITEM:
+            updateListMarkerNumbers(beforeChild);
+            break;
         case INLINE:
         case BLOCK:
         case INLINE_BLOCK:
-        case LIST_ITEM:
         case RUN_IN:
         case COMPACT:
         case BOX:
@@ -179,6 +188,10 @@ RenderObject* RenderContainer::removeChildNode(RenderObject* oldChild)
     
         if (oldChild->isSelectionBorder())
             canvas()->clearSelection();
+
+        // renumber ordered lists
+        if (oldChild->isListItem())
+            updateListMarkerNumbers(oldChild->nextSibling());
     }
     
     // remove the child

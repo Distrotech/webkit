@@ -558,8 +558,8 @@ bool RenderFrameSet::userResize( MouseEventImpl *evt )
         
         v->disableFlushDrawing();
         v->lockDrawingFocus();
-        paint.setPen( Qt::gray );
-        paint.setBrush( Qt::gray );
+        paint.setPen( Color::gray );
+        paint.setBrush( Color::gray );
         
         IntRect r(xPos(), yPos(), width(), height());
         const int rBord = 3;
@@ -569,8 +569,8 @@ bool RenderFrameSet::userResize( MouseEventImpl *evt )
             if ( m_oldpos >= 0 )
                 v->updateContents( m_oldpos + sw/2 - rBord , r.y(), 2*rBord, r.height(), true );
             if ( p >= 0 ){
-                paint.setPen( Qt::NoPen );
-                paint.setBrush( Qt::gray );
+                paint.setPen(Pen::NoPen);
+                paint.setBrush( Color::gray );
                 v->setDrawingAlpha((float)0.25);
                 paint.drawRect( p  + sw/2 - rBord, r.y(), 2*rBord, r.height() );
                 v->setDrawingAlpha((float)1.0);
@@ -579,8 +579,8 @@ bool RenderFrameSet::userResize( MouseEventImpl *evt )
             if ( m_oldpos >= 0 )
                 v->updateContents( r.x(), m_oldpos + sw/2 - rBord, r.width(), 2*rBord, true );
             if ( p >= 0 ){
-                paint.setPen( Qt::NoPen );
-                paint.setBrush( Qt::gray );
+                paint.setPen(Pen::NoPen);
+                paint.setBrush( Color::gray );
                 v->setDrawingAlpha((float)0.25);
                 paint.drawRect( r.x(), p + sw/2 - rBord, r.width(), 2*rBord );
                 v->setDrawingAlpha((float)1.0);
@@ -851,7 +851,7 @@ void RenderPartObject::updateWidget()
                   }
               }
               if (!embed) {
-                  uniqueParamNames.insert(p->name().impl());
+                  uniqueParamNames.add(p->name().impl());
                   paramNames.append(p->name().qstring());
                   paramValues.append(p->value().qstring());
               }
@@ -867,7 +867,7 @@ void RenderPartObject::updateWidget()
       DOMString codebase;
       if (!embed && serviceType.lower() == "application/x-java-applet") {
           codebase = "codebase";
-          uniqueParamNames.insert(codebase.impl()); // pretend we found it in a PARAM already
+          uniqueParamNames.add(codebase.impl()); // pretend we found it in a PARAM already
       }
       
       // Turn the attributes of either the EMBED tag or OBJECT tag into arrays, but don't override PARAM values.

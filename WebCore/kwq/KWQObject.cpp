@@ -49,8 +49,8 @@ KWQObjectTimer::KWQObjectTimer(QObject *tgt, int id, bool defer)
 const QObject *QObject::_sender;
 bool QObject::_defersTimers;
 
-typedef HashMap<int, KWQObjectTimer*, PointerHash<int> > IdToTimerMap;
-typedef HashMap<const QObject*, IdToTimerMap*, PointerHash<const QObject*> > ObjectToTimersMap;
+typedef HashMap<int, KWQObjectTimer*> IdToTimerMap;
+typedef HashMap<const QObject*, IdToTimerMap*> ObjectToTimersMap;
 
 static ObjectToTimersMap *timerMaps;
 static CFMutableArrayRef deferredTimers;
@@ -91,7 +91,6 @@ void QObject::connect(const QObject *sender, const char *signalName, const QObje
 #if !ERROR_DISABLED
         if (1
             && !KWQNamesMatch(member, SIGNAL(setStatusBarText(const QString &)))
-            && !KWQNamesMatch(member, SLOT(slotHistoryChanged()))
             && !KWQNamesMatch(member, SLOT(slotJobPercent(KIO::Job *, unsigned long)))
             && !KWQNamesMatch(member, SLOT(slotJobSpeed(KIO::Job *, unsigned long)))
             && !KWQNamesMatch(member, SLOT(slotScrollBarMoved()))

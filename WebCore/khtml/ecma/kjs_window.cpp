@@ -43,7 +43,7 @@
 #include "kjs_traversal.h"
 #include "kjs_css.h"
 #include "kjs_events.h"
-#include "xmlhttprequest.h"
+#include "JSXMLHttpRequest.h"
 #include "xmlserializer.h"
 #ifdef KHTML_XSLT
 #include "XSLTProcessor.h"
@@ -805,7 +805,7 @@ JSValue *Window::getValueProperty(ExecState *exec, int token) const
     case Option:
       return new OptionConstructorImp(exec, m_frame->document());
     case XMLHttpRequest:
-      return new XMLHttpRequestConstructorImp(exec, m_frame->document());
+      return new JSXMLHttpRequestConstructorImp(exec, m_frame->document());
     case XMLSerializer:
       return new XMLSerializerConstructorImp(exec);
     case DOMParser:
@@ -1289,13 +1289,14 @@ bool Window::isSafeScript(ExecState *exec) const
   DOM::DocumentImpl* thisDocument = m_frame->document();
   DOM::DocumentImpl* actDocument = activePart->document();
 
-  if (!actDocument) {
-    kdDebug(6070) << "Window::isSafeScript: active frame has no document!" << endl;
-    return false;
-  }
+  DOM::DOMString actDomain;
 
-  DOM::DOMString actDomain = actDocument->domain();
+  if (!actDocument)
+    actDomain = activePart->url().host();
+  else
+    actDomain = actDocument->domain();
   
+  // FIXME: this really should be explicitly checking for the "file:" protocol instead
   // Always allow local pages to execute any JS.
   if (actDomain.isNull())
     return true;
@@ -1315,6 +1316,7 @@ bool Window::isSafeScript(ExecState *exec) const
       thisDomain = ancestorPart->document()->domain();
   }
 
+  // FIXME: this should check that URL scheme and port match too, probably
   if (actDomain == thisDomain)
     return true;
 
@@ -1382,12 +1384,7 @@ JSUnprotectedEventListener *Window::getJSUnprotectedEventListener(JSValue *val, 
   return new JSUnprotectedEventListener(object, this, html);
 }
 
-JSLazyEventListener *Window::getJSLazyEventListener(const DOMString& code, DOM::NodeImpl *node, int lineNumber)
-{
-  return new JSLazyEventListener(code, this, node, lineNumber);
-}
-
-void Window::clear( ExecState *exec )
+void Window::clear()
 {
   JSLock lock;
   if (m_returnValueSlot)
@@ -1635,40 +1632,36 @@ JSValue *WindowFunc::callAsFunction(ExecState *exec, JSObject *thisObj, const Li
       uargs.serviceType = "text/html";
       
       // request window (new or existing if framename is set)
-      ObjectContents *newPart = 0L;
+      ObjectContents* newPart = 0;
       uargs.metaData().set("referrer", activePart->referrer());
       frame->browserExtension()->createNewWindow("", uargs, windowArgs, newPart);
       if (!newPart || !newPart->inherits("Frame"))
           return jsUndefined();
-      Frame *frame = static_cast<Frame*>(newPart);
-      //qDebug("opener set to %p (this Window's frame) in new Window %p  (this Window=%p)", frame,win,window);
-      frame->setOpener(frame);
-      frame->setOpenedByJS(true);
+      Frame *newFrame = static_cast<Frame*>(newPart);
+      newFrame->setOpener(frame);
+      newFrame->setOpenedByJS(true);
       
-      if (!frame->document()) {
-          DocumentImpl *oldDoc = frame->document();
+      if (!newFrame->document()) {
+          DocumentImpl* oldDoc = frame->document();
           if (oldDoc && oldDoc->baseURL() != 0)
-              frame->begin(oldDoc->baseURL());
+              newFrame->begin(oldDoc->baseURL());
           else
-              frame->begin();
-          
-          frame->write("<HTML><BODY>");
-          frame->end();
-          
+              newFrame->begin();
+          newFrame->write("<HTML><BODY>");
+          newFrame->end();          
           if (oldDoc) {
-              kdDebug(6070) << "Setting domain to " << oldDoc->domain().qstring() << endl;
-              frame->document()->setDomain( oldDoc->domain(), true );
-              frame->document()->setBaseURL( oldDoc->baseURL() );
+              newFrame->document()->setDomain(oldDoc->domain(), true);
+              newFrame->document()->setBaseURL(oldDoc->baseURL());
           }
       }
       if (!url.isEmpty()) {
-          const Window* window = Window::retrieveWindow(frame);
+          const Window* window = Window::retrieveWindow(newFrame);
           if (!url.url().startsWith("javascript:", false) || (window && window->isSafeScript(exec))) {
               bool userGesture = static_cast<ScriptInterpreter *>(exec->dynamicInterpreter())->wasRunByUserGesture();
-              frame->scheduleLocationChange(url.url(), activePart->referrer(), false, userGesture);
-          } 
+              newFrame->scheduleLocationChange(url.url(), activePart->referrer(), false, userGesture);
+          }
       }
-      return Window::retrieve(frame); // global object
+      return Window::retrieve(newFrame); // global object
   }
   case Window::Print:
     frame->print();

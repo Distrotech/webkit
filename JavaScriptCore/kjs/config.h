@@ -19,8 +19,6 @@
 #define HAVE_SYS_TIMEB_H 1
 #define USE_SYSTEM_MALLOC 1
 
-#include <assert.h>
-
 #else
 
 #define HAVE_ERRNO_H 1
@@ -40,8 +38,14 @@
 #define HAVE_STDINT_H 1
 #define HAVE_STRING_H 1
 
-#ifdef __ppc__
+#if __ppc__ || __PPC__ || __powerpc__
+#define KJS_CPU_PPC 1
 #define WORDS_BIGENDIAN 1
+#elif __ppc64__ || __PPC64__
+#define KJS_CPU_PPC64 1
+#define WORDS_BIGENDIAN 1
+#elif __i386__
+#define KJS_CPU_X86 1
 #endif
 
 #define KXC_CHANGES 1

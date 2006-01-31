@@ -36,6 +36,7 @@
 #include "KWQLogging.h"
 #include "NameNodeListImpl.h"
 #include "SegmentedString.h"
+#include "SystemTime.h"
 #include "css_stylesheetimpl.h"
 #include "css_valueimpl.h"
 #include "csshelper.h"
@@ -86,6 +87,7 @@ using XBL::XBLBindingManager;
 
 #if SVG_SUPPORT
 #include "SVGNames.h"
+#include "SVGDocumentExtensions.h"
 #include "SVGElementFactory.h"
 #include "SVGZoomEventImpl.h"
 #include "SVGStyleElementImpl.h"
@@ -239,7 +241,7 @@ DocumentImpl::DocumentImpl(DOMImplementationImpl *_implementation, FrameView *v)
         m_implementation->ref();
     pMode = Strict;
     hMode = XHtml;
-    m_textColor = Qt::black;
+    m_textColor = Color::black;
     m_elementNames = 0;
     m_elementNameAlloc = 0;
     m_elementNameCount = 0;
@@ -270,7 +272,7 @@ DocumentImpl::DocumentImpl(DOMImplementationImpl *_implementation, FrameView *v)
     resetActiveLinkColor();
 
     m_processingLoadEvent = false;
-    m_startTime.restart();
+    m_startTime = currentTime();
     m_overMinimumLayoutThreshold = false;
     
     m_jsEditor = 0;
@@ -304,7 +306,7 @@ void DocumentImpl::removedLastRef()
 
 DocumentImpl::~DocumentImpl()
 {
-    assert(!m_render);
+    assert(!renderer());
     assert(!m_inPageCache);
     assert(m_savedRenderer == 0);
     
@@ -335,7 +337,7 @@ DocumentImpl::~DocumentImpl()
     m_defaultView->deref();
     m_styleSheets->deref();
 
-    if (m_renderArena){
+    if (m_renderArena) {
         delete m_renderArena;
         m_renderArena = 0;
     }
@@ -366,12 +368,12 @@ DocumentImpl::~DocumentImpl()
 
 void DocumentImpl::resetLinkColor()
 {
-    m_linkColor = QColor(0, 0, 238);
+    m_linkColor = Color(0, 0, 238);
 }
 
 void DocumentImpl::resetVisitedLinkColor()
 {
-    m_visitedLinkColor = QColor(85, 26, 139);    
+    m_visitedLinkColor = Color(85, 26, 139);    
 }
 
 void DocumentImpl::resetActiveLinkColor()
@@ -631,11 +633,11 @@ ElementImpl *DocumentImpl::getElementById(const AtomicString& elementId) const
 
 ElementImpl* DocumentImpl::elementFromPoint(int x, int y) const
 {
-    if (!m_render)
+    if (!renderer())
         return 0;
 
     RenderObject::NodeInfo nodeInfo(true, true);
-    m_render->layer()->hitTest(nodeInfo, x, y); 
+    renderer()->layer()->hitTest(nodeInfo, x, y); 
 
     NodeImpl* n = nodeInfo.innerNode();
     while (n && !n->isElementNode())
@@ -648,7 +650,7 @@ void DocumentImpl::addElementById(const AtomicString& elementId, ElementImpl* el
     if (!m_elementsById.contains(elementId.impl()))
         m_elementsById.set(elementId.impl(), element);
     else
-        m_duplicateIds.insert(elementId.impl());
+        m_duplicateIds.add(elementId.impl());
 }
 
 void DocumentImpl::removeElementById(const AtomicString& elementId, ElementImpl* element)
@@ -807,10 +809,11 @@ void DocumentImpl::recalcStyle( StyleChange change )
         
     m_inStyleRecalc = true;
     
-    if( !m_render ) goto bail_out;
+    if (!renderer())
+        goto bail_out;
 
     if ( change == Force ) {
-        RenderStyle* oldStyle = m_render->style();
+        RenderStyle* oldStyle = renderer()->style();
         if ( oldStyle ) oldStyle->ref();
         RenderStyle* _style = new (m_renderArena) RenderStyle();
         _style->ref();
@@ -844,8 +847,8 @@ void DocumentImpl::recalcStyle( StyleChange change )
             _style->setHtmlHacks(true); // enable html specific rendering tricks
 
         StyleChange ch = diff( _style, oldStyle );
-        if(m_render && ch != NoChange)
-            m_render->setStyle(_style);
+        if (renderer() && ch != NoChange)
+            renderer()->setStyle(_style);
         if ( change != Force )
             change = ch;
 
@@ -854,10 +857,9 @@ void DocumentImpl::recalcStyle( StyleChange change )
             oldStyle->deref(m_renderArena);
     }
 
-    NodeImpl *n;
-    for (n = _first; n; n = n->nextSibling())
-        if ( change>= Inherit || n->hasChangedChild() || n->changed() )
-            n->recalcStyle( change );
+    for (NodeImpl* n = fastFirstChild(); n; n = n->nextSibling())
+        if (change >= Inherit || n->hasChangedChild() || n->changed())
+            n->recalcStyle(change);
 
     if (changed() && m_view)
         m_view->layout();
@@ -935,27 +937,28 @@ void DocumentImpl::attach()
         m_renderArena = new RenderArena();
     
     // Create the rendering tree
-    m_render = new (m_renderArena) RenderCanvas(this, m_view);
+    setRenderer(new (m_renderArena) RenderCanvas(this, m_view));
     recalcStyle( Force );
 
-    RenderObject* render = m_render;
-    m_render = 0;
+    RenderObject* render = renderer();
+    setRenderer(0);
 
     ContainerNodeImpl::attach();
-    m_render = render;
+
+    setRenderer(render);
 }
 
 void DocumentImpl::restoreRenderer(RenderObject* render)
 {
-    m_render = render;
+    setRenderer(render);
 }
 
 void DocumentImpl::detach()
 {
-    RenderObject* render = m_render;
+    RenderObject* render = renderer();
 
-    // indicate destruction mode,  i.e. attached() but m_render == 0
-    m_render = 0;
+    // indicate destruction mode,  i.e. attached() but renderer == 0
+    setRenderer(0);
     
     if (m_inPageCache) {
 #if __APPLE__
@@ -980,7 +983,7 @@ void DocumentImpl::detach()
         setPaintDevice(0);
     m_view = 0;
     
-    if (m_renderArena){
+    if (m_renderArena) {
         delete m_renderArena;
         m_renderArena = 0;
     }
@@ -997,7 +1000,7 @@ void DocumentImpl::removeAllEventListenersFromAllNodes()
 
 void DocumentImpl::registerDisconnectedNodeWithEventListeners(NodeImpl* node)
 {
-    m_disconnectedNodesWithEventListeners.insert(node);
+    m_disconnectedNodesWithEventListeners.add(node);
 }
 
 void DocumentImpl::unregisterDisconnectedNodeWithEventListeners(NodeImpl* node)
@@ -1055,16 +1058,16 @@ KWQAccObjectCache* DocumentImpl::getAccObjectCache()
 void DocumentImpl::setVisuallyOrdered()
 {
     visuallyOrdered = true;
-    if (m_render)
-        m_render->style()->setVisuallyOrdered(true);
+    if (renderer())
+        renderer()->style()->setVisuallyOrdered(true);
 }
 
 void DocumentImpl::updateSelection()
 {
-    if (!m_render)
+    if (!renderer())
         return;
     
-    RenderCanvas *canvas = static_cast<RenderCanvas*>(m_render);
+    RenderCanvas *canvas = static_cast<RenderCanvas*>(renderer());
     SelectionController s = frame()->selection();
     if (!s.isRange()) {
         canvas->clearSelection();
@@ -1075,7 +1078,7 @@ void DocumentImpl::updateSelection()
         if (startPos.isNotNull() && endPos.isNotNull()) {
             RenderObject *startRenderer = startPos.node()->renderer();
             RenderObject *endRenderer = endPos.node()->renderer();
-            static_cast<RenderCanvas*>(m_render)->setSelection(startRenderer, startPos.offset(), endRenderer, endPos.offset());
+            static_cast<RenderCanvas*>(renderer())->setSelection(startRenderer, startPos.offset(), endRenderer, endPos.offset());
         }
     }
     
@@ -1124,8 +1127,13 @@ void DocumentImpl::open(  )
 
 void DocumentImpl::implicitOpen()
 {
-    if (m_tokenizer)
+    if (m_tokenizer) {
+        // We have to clear the tokenizer to avoid possibly triggering
+        // the onload handler when closing as a side effect of opening
+        delete m_tokenizer;
+        m_tokenizer = 0;
         close();
+    }
 
     clear();
     m_tokenizer = createTokenizer();
@@ -1215,7 +1223,7 @@ void DocumentImpl::implicitClose()
     // fires. This will improve onload scores, and other browsers do it.
     // If they wanna cheat, we can too. -dwh
 
-    if (frame() && frame()->isScheduledLocationChangePending() && m_startTime.elapsed() < cLayoutScheduleThreshold) {
+    if (frame() && frame()->isScheduledLocationChangePending() && elapsedTime() < cLayoutScheduleThreshold) {
         // Just bail out. Before or during the onload we were shifted to another page.
         // The old i-Bench suite does this. When this happens don't bother painting or laying out.        
         view()->unscheduleRelayout();
@@ -1238,6 +1246,14 @@ void DocumentImpl::implicitClose()
 #if __APPLE__
     if (renderer() && KWQAccObjectCache::accessibilityEnabled())
         getAccObjectCache()->postNotification(renderer(), "AXLoadComplete");
+#endif
+
+#if SVG_SUPPORT
+    // FIXME: Officially, time 0 is when the outermost <svg> recieves its
+    // SVGLoad event, but we don't implement those yet.  This is close enough
+    // for now.  In some cases we should have fired earlier.
+    if (svgExtensions())
+        accessSVGExtensions()->timeScheduler()->startAnimations();
 #endif
 }
 
@@ -1269,7 +1285,7 @@ int DocumentImpl::minimumLayoutDelay()
     if (m_overMinimumLayoutThreshold)
         return 0;
     
-    int elapsed = m_startTime.elapsed();
+    int elapsed = elapsedTime();
     m_overMinimumLayoutThreshold = elapsed > cLayoutScheduleThreshold;
     
     // We'll want to schedule the timer to fire at the minimum layout threshold.
@@ -1278,7 +1294,7 @@ int DocumentImpl::minimumLayoutDelay()
 
 int DocumentImpl::elapsedTime() const
 {
-    return m_startTime.elapsed();
+    return static_cast<int>((currentTime() - m_startTime) * 1000);
 }
 
 void DocumentImpl::write( const DOMString &text )
@@ -1672,10 +1688,10 @@ bool DocumentImpl::prepareMouseEvent(bool readonly, int x, int y, MouseEvent* ev
 
 bool DocumentImpl::prepareMouseEvent(bool readonly, bool active, int _x, int _y, MouseEvent *ev)
 {
-    if ( m_render ) {
-        assert(m_render->isCanvas());
+    if (renderer()) {
+        assert(renderer()->isCanvas());
         RenderObject::NodeInfo renderInfo(readonly, active, ev->type == MouseMove);
-        bool isInside = m_render->layer()->hitTest(renderInfo, _x, _y);
+        bool isInside = renderer()->layer()->hitTest(renderInfo, _x, _y);
         ev->innerNode = renderInfo.innerNode();
 
         if (renderInfo.URLElement()) {
@@ -1739,7 +1755,7 @@ bool DocumentImpl::childTypeAllowed( unsigned short type )
     }
 }
 
-NodeImpl *DocumentImpl::cloneNode ( bool /*deep*/ )
+PassRefPtr<NodeImpl> DocumentImpl::cloneNode(bool /*deep*/)
 {
     // Spec says cloning Document nodes is "implementation dependent"
     // so we do not support it...
@@ -1819,7 +1835,7 @@ QStringList DocumentImpl::availableStyleSheets() const
 
 void DocumentImpl::recalcStyleSelector()
 {
-    if (!m_render || !attached())
+    if (!renderer() || !attached())
         return;
 
     QPtrList<StyleSheetImpl> oldStyleSheets = m_styleSheets->styleSheets;
@@ -2282,11 +2298,11 @@ bool DocumentImpl::hasWindowEventListener(const AtomicString &eventType)
 
 EventListener *DocumentImpl::createHTMLEventListener(const DOMString& code, NodeImpl *node)
 {
-    if (frame()) {
-        return frame()->createHTMLEventListener(code, node);
-    } else {
-        return NULL;
+    if (Frame *frm = frame()) {
+        if (KJSProxyImpl *proxy = frm->jScript())
+            return proxy->createHTMLEventHandler(code, node);
     }
+    return 0;
 }
 
 void DocumentImpl::setHTMLWindowEventListener(const AtomicString& eventType, AttributeImpl* attr)
@@ -2531,13 +2547,13 @@ void DocumentImpl::setInPageCache(bool flag)
     m_inPageCache = flag;
     if (flag) {
         assert(m_savedRenderer == 0);
-        m_savedRenderer = m_render;
+        m_savedRenderer = renderer();
         if (m_view) {
             m_view->resetScrollBars();
         }
     } else {
-        assert(m_render == 0 || m_render == m_savedRenderer);
-        m_render = m_savedRenderer;
+        assert(renderer() == 0 || renderer() == m_savedRenderer);
+        setRenderer(m_savedRenderer);
         m_savedRenderer = 0;
     }
 }
@@ -2970,6 +2986,20 @@ AttrImpl *DocumentImpl::createAttributeNS(const DOMString &namespaceURI, const D
                                                                        namespaceURI.impl()), DOMString("").impl()), false);
 }
 
+#if SVG_SUPPORT
+const SVGDocumentExtensions* DocumentImpl::svgExtensions()
+{
+    return m_svgExtensions.get();
+}
+
+SVGDocumentExtensions* DocumentImpl::accessSVGExtensions()
+{
+    if (!m_svgExtensions)
+        m_svgExtensions = new SVGDocumentExtensions(this);
+    return m_svgExtensions.get();
+}
+#endif
+
 void DocumentImpl::radioButtonChecked(HTMLInputElementImpl *caller, HTMLFormElementImpl *form)
 {
     // Without a name, there is no group.
@@ -2991,7 +3021,7 @@ void DocumentImpl::radioButtonChecked(HTMLInputElementImpl *caller, HTMLFormElem
     formRadioButtons->set(caller->name().impl(), caller);
 }
 
-HTMLInputElementImpl* DocumentImpl::checkedRadioButtonForGroup(DOMStringImpl* name, HTMLFormElementImpl *form)
+HTMLInputElementImpl* DocumentImpl::checkedRadioButtonForGroup(AtomicStringImpl* name, HTMLFormElementImpl *form)
 {
     if (!form)
         form = defaultForm;
@@ -3002,7 +3032,7 @@ HTMLInputElementImpl* DocumentImpl::checkedRadioButtonForGroup(DOMStringImpl* na
     return formRadioButtons->get(name);
 }
 
-void DocumentImpl::removeRadioButtonGroup(DOMStringImpl* name, HTMLFormElementImpl *form)
+void DocumentImpl::removeRadioButtonGroup(AtomicStringImpl* name, HTMLFormElementImpl *form)
 {
     if (!form)
         form = defaultForm;

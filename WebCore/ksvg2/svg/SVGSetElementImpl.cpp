@@ -21,9 +21,11 @@
 */
 
 #include "config.h"
+#if SVG_SUPPORT
 #include "SVGSetElementImpl.h"
-#include "SVGSVGElementImpl.h"
 #include "KSVGTimeScheduler.h"
+#include "DocumentImpl.h"
+#include "SVGDocumentExtensions.h"
 
 using namespace KSVG;
 
@@ -39,15 +41,11 @@ SVGSetElementImpl::~SVGSetElementImpl()
 void SVGSetElementImpl::handleTimerEvent(double timePercentage)
 {
     // Start condition.
-    if(!m_connected)
-    {    
-        SVGSVGElementImpl *ownerSVG = ownerSVGElement();
-        if(ownerSVG)
-        {
-            ownerSVG->timeScheduler()->connectIntervalTimer(this);
+    if (!m_connected) {    
+        if (DocumentImpl *doc = getDocument()) {
+            doc->accessSVGExtensions()->timeScheduler()->connectIntervalTimer(this);
             m_connected = true;
         }
-
         return;
     }
 
@@ -64,16 +62,13 @@ void SVGSetElementImpl::handleTimerEvent(double timePercentage)
     }
 
     // End condition.
-    if(timePercentage == 1.0)
-    {
-        SVGSVGElementImpl *ownerSVG = ownerSVGElement();
-        if(ownerSVG)
-        {
-            ownerSVG->timeScheduler()->disconnectIntervalTimer(this);
+    if (timePercentage == 1.0) {
+        if (DocumentImpl *doc = getDocument()) {
+            doc->accessSVGExtensions()->timeScheduler()->disconnectIntervalTimer(this);
             m_connected = false;
         }
 
-        if(!isFrozen())
+        if (!isFrozen())
             setTargetAttribute(KDOM::DOMString(m_savedTo).impl());
 
         m_savedTo = QString();
@@ -81,3 +76,5 @@ void SVGSetElementImpl::handleTimerEvent(double timePercentage)
 }
 
 // vim:ts=4:noet
+#endif // SVG_SUPPORT
+

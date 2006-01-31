@@ -21,6 +21,7 @@
 */
 
 #include "config.h"
+#if SVG_SUPPORT
 #include <assert.h>
 
 #include <kurl.h>
@@ -133,9 +134,9 @@ void SVGDocumentImpl::notifyFinished(KDOM::CachedObject *finishedObj)
     }
 }
 
-KSVGView *SVGDocumentImpl::svgView() const
+FrameView *SVGDocumentImpl::svgView() const
 {
-    return static_cast<KSVGView *>(m_view);
+    return m_view;
 }
 
 void SVGDocumentImpl::finishedParsing()
@@ -267,10 +268,6 @@ void SVGDocumentImpl::executeScripts(bool needsStyleSelectorUpdate)
             it.current()->closeRenderer();
     }
     m_forwardReferences.clear();
-
-    // Start animations, as "load" scripts are executed.
-    // FIXME: this won't work for CDF
-    rootElement()->timeScheduler()->startAnimations();
 }
 
 void SVGDocumentImpl::recalcStyle(StyleChange change)
@@ -306,3 +303,5 @@ void SVGDocumentImpl::addForwardReference(const SVGElementImpl *element)
 }
 
 // vim:ts=4:noet
+#endif // SVG_SUPPORT
+

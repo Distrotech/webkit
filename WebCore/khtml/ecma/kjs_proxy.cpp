@@ -27,8 +27,13 @@
 #include "Frame.h"
 #include <kjs/collector.h>
 
-using namespace DOM;
+#if SVG_SUPPORT
+#include "JSSVGLazyEventListener.h"
+#endif
+
 using namespace KJS;
+
+namespace WebCore {
 
 KJSProxyImpl::KJSProxyImpl(Frame *frame)
 {
@@ -85,7 +90,7 @@ void KJSProxyImpl::clear() {
   if (m_script) {
     Window *win = Window::retrieveWindow(m_frame);
     if (win)
-        win->clear( m_script->globalExec() );
+        win->clear();
   }
 }
 
@@ -93,8 +98,17 @@ EventListener *KJSProxyImpl::createHTMLEventHandler(const DOMString& code, NodeI
 {
     initScript();
     JSLock lock;
-    return KJS::Window::retrieveWindow(m_frame)->getJSLazyEventListener(code, node, m_handlerLineno);
+    return new JSLazyEventListener(code, KJS::Window::retrieveWindow(m_frame), node, m_handlerLineno);
 }
+
+#if SVG_SUPPORT
+EventListener *KJSProxyImpl::createSVGEventHandler(const DOMString& code, NodeImpl *node)
+{
+    initScript();
+    JSLock lock;
+    return new JSSVGLazyEventListener(code, KJS::Window::retrieveWindow(m_frame), node, m_handlerLineno);
+}
+#endif
 
 void KJSProxyImpl::finishedWithEvent(EventImpl *event)
 {
@@ -109,7 +123,6 @@ KJS::ScriptInterpreter *KJSProxyImpl::interpreter()
 {
   if (!m_script)
     initScript();
-  m_frame->keepAlive();
   return m_script;
 }
 
@@ -149,4 +162,6 @@ void KJSProxyImpl::initScript()
     if (userAgent.find(QString::fromLatin1("Mozilla")) >= 0 &&
         userAgent.find(QString::fromLatin1("compatible")) == -1)
       m_script->setCompatMode(Interpreter::NetscapeCompat);
+}
+
 }

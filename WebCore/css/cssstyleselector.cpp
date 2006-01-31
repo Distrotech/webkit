@@ -50,7 +50,6 @@
 #include <assert.h>
 #include <kurl.h>
 #include <kxmlcore/HashMap.h>
-#include <qdatetime.h>
 #include <qpaintdevicemetrics.h>
 #include <qstring.h>
 #include <qvaluelist.h>
@@ -169,17 +168,17 @@ public:
     CSSRuleSet();
     ~CSSRuleSet();
     
-    typedef HashMap<DOMStringImpl *, CSSRuleDataList *, PointerHash<DOMStringImpl *> > AtomRuleMap;
+    typedef HashMap<AtomicStringImpl*, CSSRuleDataList*> AtomRuleMap;
     
     void addRulesFromSheet(CSSStyleSheetImpl* sheet, const DOMString &medium = "screen");
     
     void addRule(CSSStyleRuleImpl* rule, CSSSelector* sel);
-    void addToRuleSet(DOMStringImpl* key, AtomRuleMap& map,
+    void addToRuleSet(AtomicStringImpl* key, AtomRuleMap& map,
                       CSSStyleRuleImpl* rule, CSSSelector* sel);
     
-    CSSRuleDataList* getIDRules(DOMStringImpl* key) { return m_idRules.get(key); }
-    CSSRuleDataList* getClassRules(DOMStringImpl* key) { return m_classRules.get(key); }
-    CSSRuleDataList* getTagRules(DOMStringImpl* key) { return m_tagRules.get(key); }
+    CSSRuleDataList* getIDRules(AtomicStringImpl* key) { return m_idRules.get(key); }
+    CSSRuleDataList* getClassRules(AtomicStringImpl* key) { return m_classRules.get(key); }
+    CSSRuleDataList* getTagRules(AtomicStringImpl* key) { return m_tagRules.get(key); }
     CSSRuleDataList* getUniversalRules() { return m_universalRules; }
     
 public:
@@ -399,9 +398,11 @@ void CSSStyleSelector::matchRulesForList(CSSRuleDataList* rules,
             
             // If we're matching normal rules, set a pseudo bit if 
             // we really just matched a pseudo-element.
-            if (!m_collectRulesOnly && dynamicPseudo != RenderStyle::NOPSEUDO && pseudoStyle == RenderStyle::NOPSEUDO)
+            if (dynamicPseudo != RenderStyle::NOPSEUDO && pseudoStyle == RenderStyle::NOPSEUDO) {
+                if (m_collectRulesOnly)
+                    return;
                 style->setHasPseudoStyle(dynamicPseudo);
-            else {
+            } else {
                 // Update our first/last rule indices in the matched rules array.
                 lastRuleIndex = m_matchedDeclCount + m_matchedRuleCount;
                 if (firstRuleIndex == -1) firstRuleIndex = m_matchedDeclCount + m_matchedRuleCount;
@@ -665,8 +666,8 @@ bool CSSStyleSelector::canShareStyleWithElement(NodeImpl* n)
                     bool linksMatch = true;
                     if (s->isLink()) {
                         // We need to check to see if the visited state matches.
-                        QColor linkColor = element->getDocument()->linkColor();
-                        QColor visitedColor = element->getDocument()->visitedLinkColor();
+                        Color linkColor = element->getDocument()->linkColor();
+                        Color visitedColor = element->getDocument()->visitedLinkColor();
                         if (pseudoState == PseudoUnknown)
                             checkPseudoState(element, s->renderer()->style()->pseudoState() != PseudoAnyLink ||
                                              linkColor != visitedColor);
@@ -1545,7 +1546,7 @@ CSSRuleSet::~CSSRuleSet()
 }
 
 
-void CSSRuleSet::addToRuleSet(DOMStringImpl* key, AtomRuleMap& map,
+void CSSRuleSet::addToRuleSet(AtomicStringImpl* key, AtomRuleMap& map,
                               CSSStyleRuleImpl* rule, CSSSelector* sel)
 {
     if (!key) return;
@@ -1655,7 +1656,7 @@ static Length convertToLength( CSSPrimitiveValueImpl *primitiveValue, RenderStyl
 // color mapping code
 struct colorMap {
     int css_value;
-    QRgb color;
+    RGBA32 color;
 };
 
 static const colorMap cmap[] = {
@@ -1676,7 +1677,7 @@ static const colorMap cmap[] = {
     { CSS_VAL_TEAL, 0xFF008080  },
     { CSS_VAL_WHITE, 0xFFFFFFFF },
     { CSS_VAL_YELLOW, 0xFFFFFF00 },
-    { CSS_VAL_TRANSPARENT, transparentColor },
+    { CSS_VAL_TRANSPARENT, Color::transparent },
     { CSS_VAL_GREY, 0xFF808080 },
     { CSS_VAL_ACTIVEBORDER, 0xFFE0E0E0 },
     { CSS_VAL_ACTIVECAPTION, 0xFF000000 },
@@ -1710,7 +1711,7 @@ static const colorMap cmap[] = {
 };
 
 
-static QColor colorForCSSValue( int css_value )
+static Color colorForCSSValue( int css_value )
 {
     // try the regular ones first
     const colorMap *col = cmap;
@@ -1719,7 +1720,7 @@ static QColor colorForCSSValue( int css_value )
     if ( col->css_value )
         return col->color;
 
-    return QColor();
+    return Color();
 }
 
 void CSSStyleSelector::applyDeclarations(bool applyFirst, bool isImportant,
@@ -2341,7 +2342,7 @@ void CSSStyleSelector::applyProperty( int id, CSSValueImpl *value )
     case CSS_PROP_OUTLINE_COLOR:
         // this property is an extension used to get HTML4 <font> right.
     {
-        QColor col;
+        Color col;
         if (isInherit) {
             HANDLE_INHERIT_COND(CSS_PROP_BACKGROUND_COLOR, backgroundColor, BackgroundColor)
             HANDLE_INHERIT_COND(CSS_PROP_BORDER_TOP_COLOR, borderTopColor, BorderTopColor)
@@ -3206,10 +3207,10 @@ void CSSStyleSelector::applyProperty( int id, CSSValueImpl *value )
                 style->setBorderRightColor(parentStyle->borderRightColor());
             }
             else if (isInitial) {
-                style->setBorderTopColor(QColor()); // Reset to invalid color so currentColor is used instead.
-                style->setBorderBottomColor(QColor());
-                style->setBorderLeftColor(QColor());
-                style->setBorderRightColor(QColor());
+                style->setBorderTopColor(Color()); // Reset to invalid color so currentColor is used instead.
+                style->setBorderBottomColor(Color());
+                style->setBorderLeftColor(Color());
+                style->setBorderRightColor(Color());
             }
         }
         if (id == CSS_PROP_BORDER || id == CSS_PROP_BORDER_STYLE)
@@ -3564,7 +3565,7 @@ void CSSStyleSelector::applyProperty( int id, CSSValueImpl *value )
             int x = item->x->computeLength(style, paintDeviceMetrics);
             int y = item->y->computeLength(style, paintDeviceMetrics);
             int blur = item->blur ? item->blur->computeLength(style, paintDeviceMetrics) : 0;
-            QColor col = transparentColor;
+            Color col = Color::transparent;
             if (item->color) {
                 int ident = item->color->getIdent();
                 if (ident)
@@ -4263,16 +4264,16 @@ float CSSStyleSelector::smallerFontSize(float size, bool quirksMode) const
     return size/1.2;
 }
 
-QColor CSSStyleSelector::getColorFromPrimitiveValue(CSSPrimitiveValueImpl* primitiveValue)
+Color CSSStyleSelector::getColorFromPrimitiveValue(CSSPrimitiveValueImpl* primitiveValue)
 {
-    QColor col;
+    Color col;
     int ident = primitiveValue->getIdent();
     if (ident) {
         if (ident == CSS_VAL__KHTML_TEXT)
             col = element->getDocument()->textColor();
         else if (ident == CSS_VAL__KHTML_LINK) {
-            QColor linkColor = element->getDocument()->linkColor();
-            QColor visitedColor = element->getDocument()->visitedLinkColor();
+            Color linkColor = element->getDocument()->linkColor();
+            Color visitedColor = element->getDocument()->visitedLinkColor();
             if (linkColor == visitedColor)
                 col = linkColor;
             else {

@@ -21,6 +21,7 @@
 */
 
 #include "config.h"
+#if SVG_SUPPORT
 #include <kdom/Namespace.h>
 #include <kdom/core/AttrImpl.h>
 
@@ -141,7 +142,7 @@ void SVGUseElementImpl::closeRenderer()
         SVGDummyElementImpl *dummy = new SVGDummyElementImpl(SVGNames::gTag, getDocument());
         dummy->setAttribute(SVGNames::transformAttr, KDOM::DOMString(trans));
         
-        SVGElementImpl *root = static_cast<SVGElementImpl *>(target->cloneNode(true));
+        PassRefPtr<SVGElementImpl> root = static_pointer_cast<SVGElementImpl>(target->cloneNode(true));
         if(hasAttribute(SVGNames::widthAttr))
             root->setAttribute(SVGNames::widthAttr, wString.impl());
             
@@ -156,7 +157,7 @@ void SVGUseElementImpl::closeRenderer()
         SVGDummyElementImpl *dummy = new SVGDummyElementImpl(SVGNames::gTag, getDocument());
         dummy->setAttribute(SVGNames::transformAttr, trans);
         
-        KDOM::NodeImpl *root = target->cloneNode(true);
+        PassRefPtr<KDOM::NodeImpl> root = target->cloneNode(true);
         
         appendChild(dummy, exceptioncode);
         dummy->appendChild(root, exceptioncode);
@@ -176,3 +177,5 @@ khtml::RenderObject *SVGUseElementImpl::createRenderer(RenderArena *arena, khtml
 }
 
 // vim:ts=4:noet
+#endif // SVG_SUPPORT
+

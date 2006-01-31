@@ -21,6 +21,7 @@
 */
 
 #include "config.h"
+#if SVG_SUPPORT
 #include "IntRect.h"
 #include <kdebug.h>
 
@@ -31,7 +32,6 @@
 #include "KCanvasContainer.h"
 #include "KCanvasResources.h"
 #include "KRenderingDevice.h"
-#include "KCanvasResourceListener.h"
 
 #include "SVGStyledElementImpl.h"
 
@@ -307,3 +307,5 @@ KRenderingPaintServer *getPaintServerById(KDOM::DocumentImpl *document, const KD
 }
 
 // vim:ts=4:noet
+#endif // SVG_SUPPORT
+

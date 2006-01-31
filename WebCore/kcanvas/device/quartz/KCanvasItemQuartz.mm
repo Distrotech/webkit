@@ -25,6 +25,7 @@
  */
 
 #include "config.h"
+#if SVG_SUPPORT
 #import "KCanvasItemQuartz.h"
 
 #import <kxmlcore/Assertions.h>
@@ -183,6 +184,11 @@ void KCanvasItemQuartz::drawMarkersIfNeeded(const FloatRect& rect, const KCanvas
     drawMarkerWithData(data.previousMarkerData);
 }
 
+IntRect KCanvasItemQuartz::getAbsoluteRepaintRect()
+{
+    return enclosingIntRect(absoluteTransform().mapRect(relativeBBox(true)));
+}
+
 void KCanvasItemQuartz::paint(PaintInfo &paintInfo, int parentX, int parentY)
 {
     // No one should be transforming us via these.
@@ -334,3 +340,5 @@ bool KCanvasItemQuartz::hitsPath(const FloatPoint &hitPoint, bool fill) const
 
     return hitSuccess;
 }
+#endif // SVG_SUPPORT
+

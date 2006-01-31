@@ -37,9 +37,7 @@
 #include "xsl_stylesheetimpl.h"
 #endif
 
-using khtml::parseAttributes;
-
-namespace DOM {
+namespace WebCore {
 
 EntityImpl::EntityImpl(DocumentImpl* doc) : ContainerNodeImpl(doc)
 {
@@ -64,7 +62,7 @@ unsigned short EntityImpl::nodeType() const
     return Node::ENTITY_NODE;
 }
 
-NodeImpl *EntityImpl::cloneNode(bool /*deep*/)
+PassRefPtr<NodeImpl> EntityImpl::cloneNode(bool /*deep*/)
 {
     // Spec says cloning Entity nodes is "implementation dependent". We do not support it.
     return 0;
@@ -139,13 +137,13 @@ unsigned short EntityReferenceImpl::nodeType() const
     return Node::ENTITY_REFERENCE_NODE;
 }
 
-NodeImpl *EntityReferenceImpl::cloneNode(bool deep)
+PassRefPtr<NodeImpl> EntityReferenceImpl::cloneNode(bool deep)
 {
-    EntityReferenceImpl* clone = new EntityReferenceImpl(getDocument(), m_entityName.get());
+    PassRefPtr<EntityReferenceImpl> clone = new EntityReferenceImpl(getDocument(), m_entityName.get());
     // ### make sure children are readonly
     // ### since we are a reference, should we clone children anyway (even if not deep?)
     if (deep)
-        cloneChildNodes(clone);
+        cloneChildNodes(clone.get());
     return clone;
 }
 
@@ -196,7 +194,7 @@ unsigned short NotationImpl::nodeType() const
     return Node::NOTATION_NODE;
 }
 
-NodeImpl *NotationImpl::cloneNode(bool /*deep*/)
+PassRefPtr<NodeImpl> NotationImpl::cloneNode(bool /*deep*/)
 {
     // Spec says cloning Notation nodes is "implementation dependent". We do not support it.
     return 0;
@@ -266,7 +264,7 @@ void ProcessingInstructionImpl::setNodeValue(const DOMString& nodeValue, int &ex
     setData(nodeValue, exceptioncode);
 }
 
-NodeImpl *ProcessingInstructionImpl::cloneNode(bool /*deep*/)
+PassRefPtr<NodeImpl> ProcessingInstructionImpl::cloneNode(bool /*deep*/)
 {
     // ### copy m_localHref
     return new ProcessingInstructionImpl(getDocument(), m_target.get(), m_data.get());
@@ -318,11 +316,8 @@ bool ProcessingInstructionImpl::checkStyleSheet()
                 // We need to make a synthetic XSLStyleSheetImpl that is embedded.  It needs to be able
                 // to kick off import/include loads that can hang off some parent sheet.
                 if (m_isXSL) {
-                    if (m_sheet)
-                        m_sheet->deref();
-                    XSLStyleSheetImpl* localSheet = new XSLStyleSheetImpl(this, m_localHref.get(), true);
+                    PassRefPtr<XSLStyleSheetImpl> localSheet = new XSLStyleSheetImpl(this, m_localHref.get(), true);
                     localSheet->setDocument((xmlDocPtr)getDocument()->transformSource());
-                    localSheet->ref();
                     localSheet->loadChildSheets();
                     m_sheet = localSheet;
                     m_loading = false;
@@ -375,15 +370,12 @@ void ProcessingInstructionImpl::sheetLoaded()
 
 void ProcessingInstructionImpl::setStyleSheet(const DOMString &url, const DOMString &sheet)
 {
-    if (m_sheet)
-        m_sheet->deref();
 #ifdef KHTML_XSLT
     if (m_isXSL)
         m_sheet = new XSLStyleSheetImpl(this, url);
     else
 #endif
         m_sheet = new CSSStyleSheetImpl(this, url);
-    m_sheet->ref();
     m_sheet->parseString(sheet);
     if (m_cachedSheet)
         m_cachedSheet->deref(this);

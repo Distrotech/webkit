@@ -336,7 +336,7 @@ void RenderLineEdit::slotTextChanged(const DOMString &string)
     // A null string value is used to indicate that the form control has not altered the original
     // default value.  That means that we should never use the null string value when the user
     // empties a textfield, but should always force an empty textfield to use the empty string.
-    QString newText = string.isNull() ? "" : string.qstring();
+    DOMString newText = string.isNull() ? "" : string;
     newText.replace(backslashAsCurrencySymbol(), QChar('\\'));
     element()->setValueFromRenderer(newText);
 }
@@ -454,8 +454,8 @@ void RenderFieldset::paintBorderMinusLegend(QPainter *p, int _tx, int _ty, int w
                                             const RenderStyle* style, int lx, int lw)
 {
 
-    const QColor& tc = style->borderTopColor();
-    const QColor& bc = style->borderBottomColor();
+    const Color& tc = style->borderTopColor();
+    const Color& bc = style->borderBottomColor();
 
     EBorderStyle ts = style->borderTopStyle();
     EBorderStyle bs = style->borderBottomStyle();
@@ -481,7 +481,7 @@ void RenderFieldset::paintBorderMinusLegend(QPainter *p, int _tx, int _ty, int w
 
     if(render_l)
     {
-        const QColor& lc = style->borderLeftColor();
+        const Color& lc = style->borderLeftColor();
 
         bool ignore_top =
             (tc == lc) &&
@@ -500,7 +500,7 @@ void RenderFieldset::paintBorderMinusLegend(QPainter *p, int _tx, int _ty, int w
 
     if(render_r)
     {
-        const QColor& rc = style->borderRightColor();
+        const Color& rc = style->borderRightColor();
 
         bool ignore_top =
             (tc == rc) &&

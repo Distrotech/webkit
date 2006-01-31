@@ -1,7 +1,7 @@
 /*
  *  This file is part of the KDE libraries
  *  Copyright (C) 2000 Harri Porten (porten@kde.org)
- *  Copyright (C) 2004 Apple Computer, Inc.
+ *  Copyright (C) 2004, 2005, 2006 Apple Computer, Inc.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -130,7 +130,7 @@ void DOMNode::mark()
     root = current;
   }
 
-  static HashSet<NodeImpl*, PointerHash<NodeImpl*> > markingRoots;
+  static HashSet<NodeImpl*> markingRoots;
 
   // If we're already marking this tree, then we can simply mark this wrapper
   // by calling the base class; our caller is iterating the tree.
@@ -142,7 +142,7 @@ void DOMNode::mark()
   DocumentImpl *document = m_impl->getDocument();
 
   // Mark the whole tree; use the global set of roots to avoid reentering.
-  markingRoots.insert(root);
+  markingRoots.add(root);
   for (NodeImpl *nodeToMark = root; nodeToMark; nodeToMark = nodeToMark->traverseNextNode()) {
     DOMNode *wrapper = ScriptInterpreter::getDOMNodeForDocument(document, nodeToMark);
     if (wrapper) {
@@ -1657,8 +1657,9 @@ bool checkNodeSecurity(ExecState *exec, NodeImpl *n)
   return win && win->isSafeScript(exec);
 }
 
-JSValue *getDOMNode(ExecState *exec, NodeImpl *n)
+JSValue *getDOMNode(ExecState *exec, PassRefPtr<NodeImpl> node)
 {
+  NodeImpl* n = node.get();
   DOMNode *ret = 0;
   if (!n)
     return jsNull();

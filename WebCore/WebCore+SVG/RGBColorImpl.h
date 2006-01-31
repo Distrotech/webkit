@@ -22,10 +22,11 @@
 
 #ifndef KDOM_RGBColorImpl_H
 #define KDOM_RGBColorImpl_H
+#if SVG_SUPPORT
 
 #include "Shared.h"
 
-#include <qcolor.h>
+#include "Color.h"
 
 namespace KDOM
 {
@@ -34,8 +35,8 @@ namespace KDOM
     class RGBColorImpl : public Shared<RGBColorImpl>
     {
     public:
-        RGBColorImpl(const QRgb &color);
-        RGBColorImpl(const QColor &color);
+        RGBColorImpl(const RGBA32 &color);
+        RGBColorImpl(const Color &color);
         virtual ~RGBColorImpl();
 
         // 'RGBColorImpl' functions
@@ -44,10 +45,11 @@ namespace KDOM
         CSSPrimitiveValueImpl *blue() const;
 
     protected:
-        QRgb m_color;
+        Color m_color;
     };
 };
 
+#endif // SVG_SUPPORT
 #endif
 
 // vim:ts=4:noet

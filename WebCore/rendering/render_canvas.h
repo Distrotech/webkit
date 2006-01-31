@@ -28,7 +28,7 @@
 class FrameView;
 class QScrollView;
 
-namespace khtml {
+namespace WebCore {
 
 class RenderCanvas : public RenderBlock
 {
@@ -126,7 +126,7 @@ protected:
     int m_maximalOutlineSize; // Used to apply a fudge factor to dirty-rect checks on blocks/tables.
     IntRect m_printRect; // Used when printing.
 
-    typedef HashSet<RenderObject *, PointerHash<RenderObject *> > RenderObjectSet;
+    typedef HashSet<RenderObject *> RenderObjectSet;
 
     RenderObjectSet m_widgets;
 };

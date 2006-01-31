@@ -137,7 +137,8 @@ static void redirectionTimerMonitor(void *context)
 }
 
 MacFrame::MacFrame()
-    : _started(this, SIGNAL(started(KIO::Job *)))
+    : _bridge(nil)
+    , _started(this, SIGNAL(started(KIO::Job *)))
     , _completed(this, SIGNAL(completed()))
     , _completedWithBool(this, SIGNAL(completed(bool)))
     , _mouseDownView(nil)
@@ -147,7 +148,7 @@ MacFrame::MacFrame()
     , _activationEventNumber(0)
     , _formValuesAboutToBeSubmitted(nil)
     , _formAboutToBeSubmitted(nil)
-    , _windowWidget(NULL)
+    , _windowWidget(0)
     , _bindingRoot(0)
     , _windowScriptObject(0)
     , _windowScriptNPObject(0)
@@ -170,6 +171,10 @@ MacFrame::~MacFrame()
     freeClipboard();
     clearRecordedFormValues();    
     
+    [_bridge clearFrame];
+    KWQRelease(_bridge);
+    _bridge = nil;
+
     delete _windowWidget;
 }
 
@@ -567,12 +572,8 @@ void MacFrame::submitForm(const KURL &url, const URLArgs &args)
 
 void Frame::frameDetached()
 {
-    // FIXME: This should be a virtual function, with the first part in MacFrame, and the second
+    // FIXME: This should be a virtual function, with the second part in MacFrame, and the first
     // part in Frame, so it works for KHTML too.
-
-    KWQ_BLOCK_EXCEPTIONS;
-    [Mac(this)->bridge() frameDetached];
-    KWQ_UNBLOCK_EXCEPTIONS;
 
     Frame *parent = parentFrame();
     if (parent) {
@@ -583,11 +584,14 @@ void Frame::frameDetached()
             if (child.m_frame == this) {
                 parent->disconnectChild(&child);
                 parentFrames.remove(it);
-                deref();
                 break;
             }
         }
     }
+
+    KWQ_BLOCK_EXCEPTIONS;
+    [Mac(this)->bridge() frameDetached];
+    KWQ_UNBLOCK_EXCEPTIONS;
 }
 
 void MacFrame::urlSelected(const KURL &url, int button, int state, const URLArgs &args)
@@ -659,11 +663,7 @@ ObjectContents *MacFrame::createPart(const ChildFrame &child, const KURL &url, c
                                                     allowsScrolling:allowsScrolling
                                                         marginWidth:marginWidth
                                                        marginHeight:marginHeight];
-        // This call needs to return an object with a ref, since the caller will expect to own it.
-        // childBridge owns the only ref so far.
         part = [childBridge part];
-        if (part)
-            part->ref();
     }
 
     return part;
@@ -2355,6 +2355,7 @@ static NodeImpl* isTextFirstInListItem(NodeImpl *e)
 
 NSAttributedString *MacFrame::attributedString(NodeImpl *_start, int startOffset, NodeImpl *endNode, int endOffset)
 {
+    ListItemInfo info;
     NSMutableAttributedString *result;
     KWQ_BLOCK_EXCEPTIONS;
 
@@ -2472,9 +2473,9 @@ NSAttributedString *MacFrame::attributedString(NodeImpl *_start, int startOffset
                 if (text.length() > 0 || needSpace) {
                     NSMutableDictionary *attrs = [[NSMutableDictionary alloc] init];
                     [attrs setObject:font forKey:NSFontAttributeName];
-                    if (style && style->color().isValid() && qAlpha(style->color().rgb()) != 0)
+                    if (style && style->color().isValid() && style->color().alpha() != 0)
                         [attrs setObject:nsColor(style->color()) forKey:NSForegroundColorAttributeName];
-                    if (style && style->backgroundColor().isValid() && qAlpha(style->backgroundColor().rgb()) != 0)
+                    if (style && style->backgroundColor().isValid() && style->backgroundColor().alpha() != 0)
                         [attrs setObject:nsColor(style->backgroundColor()) forKey:NSBackgroundColorAttributeName];
 
                     if (text.length() > 0) {
@@ -2512,7 +2513,6 @@ NSAttributedString *MacFrame::attributedString(NodeImpl *_start, int startOffset
                     hasNewLine = true;
 
                     listItems.append(static_cast<ElementImpl*>(n));
-                    ListItemInfo info;
                     info.start = [result length];
                     info.end = 0;
                     listItemLocations.append (info);
@@ -2705,7 +2705,6 @@ NSAttributedString *MacFrame::attributedString(NodeImpl *_start, int startOffset
     {
         unsigned i, count = listItems.count();
         ElementImpl *e;
-        ListItemInfo info;
 
 #ifdef POSITION_LIST
         NodeImpl *containingBlock;
@@ -2923,7 +2922,7 @@ NSDictionary *MacFrame::fontAttributesForSelectionStart() const
     if (style->font().getNSFont())
         [result setObject:style->font().getNSFont() forKey:NSFontAttributeName];
 
-    if (style->color().isValid() && style->color() != black)
+    if (style->color().isValid() && style->color() != Color::black)
         [result setObject:nsColor(style->color()) forKey:NSForegroundColorAttributeName];
 
     ShadowData *shadow = style->textShadow();
@@ -3009,11 +3008,15 @@ void MacFrame::tokenizerProcessedData()
     [_bridge tokenizerProcessedData];
 }
 
-void MacFrame::setBridge(WebCoreFrameBridge *p)
+void MacFrame::setBridge(WebCoreFrameBridge *bridge)
 { 
-    if (_bridge != p)
-        delete _windowWidget;
-    _bridge = p;
+    if (_bridge == bridge)
+        return;
+
+    delete _windowWidget;
+    KWQRetain(bridge);
+    KWQRelease(_bridge);
+    _bridge = bridge;
     _windowWidget = new KWQWindowWidget(_bridge);
 }
 
@@ -3072,7 +3075,7 @@ void MacFrame::setDisplaysWithFocusAttributes(bool flag)
 NSColor *MacFrame::bodyBackgroundColor() const
 {
     if (document() && document()->body() && document()->body()->renderer()) {
-        QColor bgColor = document()->body()->renderer()->style()->backgroundColor();
+        Color bgColor = document()->body()->renderer()->style()->backgroundColor();
         if (bgColor.isValid()) {
             return nsColor(bgColor);
         }
@@ -3091,7 +3094,7 @@ WebCoreKeyboardUIMode MacFrame::keyboardUIMode() const
 
 void MacFrame::didTellBridgeAboutLoad(const DOM::DOMString& URL)
 {
-    urlsBridgeKnowsAbout.insert(URL.impl());
+    urlsBridgeKnowsAbout.add(URL.impl());
 }
 
 bool MacFrame::haveToldBridgeAboutLoad(const DOM::DOMString& URL)
@@ -3418,13 +3421,13 @@ static QValueList<MarkedTextUnderline> convertAttributesToUnderlines(const Range
             continue;
         NSRange range = [[ranges objectAtIndex:i] rangeValue];
         NSColor *color = [[attributes objectAtIndex:i] objectForKey:NSUnderlineColorAttributeName];
-        QColor qColor = Qt::black;
+        Color qColor = Color::black;
         if (color) {
             NSColor* deviceColor = [color colorUsingColorSpaceName:NSDeviceRGBColorSpace];
-            qColor = QColor(qRgba((int)(255 * [deviceColor redComponent]),
-                                  (int)(255 * [deviceColor blueComponent]),
-                                  (int)(255 * [deviceColor greenComponent]),
-                                  (int)(255 * [deviceColor alphaComponent])));
+            qColor = Color(makeRGBA((int)(255 * [deviceColor redComponent]),
+                                    (int)(255 * [deviceColor blueComponent]),
+                                    (int)(255 * [deviceColor greenComponent]),
+                                    (int)(255 * [deviceColor alphaComponent])));
         }
 
         result.append(MarkedTextUnderline(range.location + baseOffset, 
@@ -3595,4 +3598,9 @@ bool MacFrame::dispatchDragSrcEvent(const AtomicString &eventType, const IntPoin
 {
     bool noDefaultProc = d->m_view->dispatchDragEvent(eventType, _dragSrc.get(), loc, _dragClipboard);
     return !noDefaultProc;
+}
+
+void MacFrame::detachFromView()
+{
+    setView(0);
 }

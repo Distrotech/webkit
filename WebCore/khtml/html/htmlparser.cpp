@@ -5,7 +5,7 @@
               (C) 1997 Torben Weis (weis@kde.org)
               (C) 1999,2001 Lars Knoll (knoll@kde.org)
               (C) 2000,2001 Dirk Mueller (mueller@kde.org)
-    Copyright (C) 2004 Apple Computer, Inc.
+    Copyright (C) 2004, 2005, 2006 Apple Computer, Inc.
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Library General Public
@@ -25,45 +25,38 @@
 //----------------------------------------------------------------------------
 //
 // KDE HTML Widget -- HTML Parser
-//#define PARSER_DEBUG
 
 #include "config.h"
-#include "html/htmlparser.h"
+#include "htmlparser.h"
 
-#include "dom/dom_exception.h"
-
-#include "html/html_baseimpl.h"
-#include "html/html_blockimpl.h"
-#include "html/html_canvasimpl.h"
-#include "html/html_documentimpl.h"
-#include "html/html_headimpl.h"
-#include "html/html_imageimpl.h"
-#include "html/html_inlineimpl.h"
-#include "html/html_listimpl.h"
-#include "html/html_tableimpl.h"
-#include "html/html_objectimpl.h"
+#include "DocumentFragmentImpl.h"
+#include "Frame.h"
+#include "FrameView.h"
 #include "HTMLFormElementImpl.h"
 #include "HTMLIsIndexElementImpl.h"
-#include "htmlfactory.h"
-#include "xml/dom_textimpl.h"
-#include "DocumentFragmentImpl.h"
-#include <kxmlcore/HashSet.h>
-#include "html/htmltokenizer.h"
-#include "FrameView.h"
-#include "Frame.h"
 #include "cssproperties.h"
 #include "cssvalues.h"
-
-#include "rendering/render_object.h"
-
-#include <kxmlcore/HashMap.h>
-
-#include <kdebug.h>
+#include "dom_exception.h"
+#include "dom_textimpl.h"
+#include "html_baseimpl.h"
+#include "html_blockimpl.h"
+#include "html_canvasimpl.h"
+#include "html_documentimpl.h"
+#include "html_headimpl.h"
+#include "html_imageimpl.h"
+#include "html_inlineimpl.h"
+#include "html_listimpl.h"
+#include "html_objectimpl.h"
+#include "html_tableimpl.h"
+#include "htmlfactory.h"
+#include "htmltokenizer.h"
+#include "render_object.h"
 #include <klocale.h>
+#include <kxmlcore/HashMap.h>
+#include <kxmlcore/HashSet.h>
 
-using namespace DOM;
+using namespace WebCore;
 using namespace HTMLNames;
-using namespace khtml;
 
 //----------------------------------------------------------------------------
 
@@ -598,7 +591,7 @@ bool HTMLParser::handleError(NodeImpl* n, bool flat, const AtomicString& localNa
 }
 
 typedef bool (HTMLParser::*CreateErrorCheckFunc)(Token* t, NodeImpl*&);
-typedef HashMap<DOMStringImpl *, CreateErrorCheckFunc, PointerHash<DOMStringImpl *> > FunctionMap;
+typedef HashMap<AtomicStringImpl*, CreateErrorCheckFunc> FunctionMap;
 
 bool HTMLParser::textCreateErrorCheck(Token* t, NodeImpl*& result)
 {
@@ -842,14 +835,14 @@ void HTMLParser::processCloseTag(Token *t)
 
 bool HTMLParser::isHeaderTag(const AtomicString& tagName)
 {
-    static HashSet<DOMStringImpl*, PointerHash<DOMStringImpl*> > headerTags;
+    static HashSet<AtomicStringImpl*> headerTags;
     if (headerTags.isEmpty()) {
-        headerTags.insert(h1Tag.localName().impl());
-        headerTags.insert(h2Tag.localName().impl());
-        headerTags.insert(h3Tag.localName().impl());
-        headerTags.insert(h4Tag.localName().impl());
-        headerTags.insert(h5Tag.localName().impl());
-        headerTags.insert(h6Tag.localName().impl());
+        headerTags.add(h1Tag.localName().impl());
+        headerTags.add(h2Tag.localName().impl());
+        headerTags.add(h3Tag.localName().impl());
+        headerTags.add(h4Tag.localName().impl());
+        headerTags.add(h5Tag.localName().impl());
+        headerTags.add(h6Tag.localName().impl());
     }
     
     return headerTags.contains(tagName.impl());
@@ -894,27 +887,27 @@ bool HTMLParser::isInline(DOM::NodeImpl* node) const
 
 bool HTMLParser::isResidualStyleTag(const AtomicString& tagName)
 {
-    static HashSet<DOMStringImpl*, PointerHash<DOMStringImpl*> > residualStyleTags;
+    static HashSet<AtomicStringImpl*> residualStyleTags;
     if (residualStyleTags.isEmpty()) {
-        residualStyleTags.insert(aTag.localName().impl());
-        residualStyleTags.insert(fontTag.localName().impl());
-        residualStyleTags.insert(ttTag.localName().impl());
-        residualStyleTags.insert(uTag.localName().impl());
-        residualStyleTags.insert(bTag.localName().impl());
-        residualStyleTags.insert(iTag.localName().impl());
-        residualStyleTags.insert(sTag.localName().impl());
-        residualStyleTags.insert(strikeTag.localName().impl());
-        residualStyleTags.insert(bigTag.localName().impl());
-        residualStyleTags.insert(smallTag.localName().impl());
-        residualStyleTags.insert(emTag.localName().impl());
-        residualStyleTags.insert(strongTag.localName().impl());
-        residualStyleTags.insert(dfnTag.localName().impl());
-        residualStyleTags.insert(codeTag.localName().impl());
-        residualStyleTags.insert(sampTag.localName().impl());
-        residualStyleTags.insert(kbdTag.localName().impl());
-        residualStyleTags.insert(varTag.localName().impl());
-        residualStyleTags.insert(nobrTag.localName().impl());
-        residualStyleTags.insert(wbrTag.localName().impl());
+        residualStyleTags.add(aTag.localName().impl());
+        residualStyleTags.add(fontTag.localName().impl());
+        residualStyleTags.add(ttTag.localName().impl());
+        residualStyleTags.add(uTag.localName().impl());
+        residualStyleTags.add(bTag.localName().impl());
+        residualStyleTags.add(iTag.localName().impl());
+        residualStyleTags.add(sTag.localName().impl());
+        residualStyleTags.add(strikeTag.localName().impl());
+        residualStyleTags.add(bigTag.localName().impl());
+        residualStyleTags.add(smallTag.localName().impl());
+        residualStyleTags.add(emTag.localName().impl());
+        residualStyleTags.add(strongTag.localName().impl());
+        residualStyleTags.add(dfnTag.localName().impl());
+        residualStyleTags.add(codeTag.localName().impl());
+        residualStyleTags.add(sampTag.localName().impl());
+        residualStyleTags.add(kbdTag.localName().impl());
+        residualStyleTags.add(varTag.localName().impl());
+        residualStyleTags.add(nobrTag.localName().impl());
+        residualStyleTags.add(wbrTag.localName().impl());
     }
     
     return residualStyleTags.contains(tagName.impl());
@@ -925,26 +918,26 @@ bool HTMLParser::isAffectedByResidualStyle(const AtomicString& tagName)
     if (isResidualStyleTag(tagName))
         return true;
 
-    static HashSet<DOMStringImpl*, PointerHash<DOMStringImpl*> > affectedBlockTags;
+    static HashSet<AtomicStringImpl*> affectedBlockTags;
     if (affectedBlockTags.isEmpty()) {
-        affectedBlockTags.insert(h1Tag.localName().impl());
-        affectedBlockTags.insert(h2Tag.localName().impl());
-        affectedBlockTags.insert(h3Tag.localName().impl());
-        affectedBlockTags.insert(h4Tag.localName().impl());
-        affectedBlockTags.insert(h5Tag.localName().impl());
-        affectedBlockTags.insert(h6Tag.localName().impl());
-        affectedBlockTags.insert(pTag.localName().impl());
-        affectedBlockTags.insert(divTag.localName().impl());
-        affectedBlockTags.insert(blockquoteTag.localName().impl());
-        affectedBlockTags.insert(addressTag.localName().impl());
-        affectedBlockTags.insert(centerTag.localName().impl());
-        affectedBlockTags.insert(ulTag.localName().impl());
-        affectedBlockTags.insert(olTag.localName().impl());
-        affectedBlockTags.insert(liTag.localName().impl());
-        affectedBlockTags.insert(dlTag.localName().impl());
-        affectedBlockTags.insert(dtTag.localName().impl());
-        affectedBlockTags.insert(ddTag.localName().impl());
-        affectedBlockTags.insert(preTag.localName().impl());
+        affectedBlockTags.add(h1Tag.localName().impl());
+        affectedBlockTags.add(h2Tag.localName().impl());
+        affectedBlockTags.add(h3Tag.localName().impl());
+        affectedBlockTags.add(h4Tag.localName().impl());
+        affectedBlockTags.add(h5Tag.localName().impl());
+        affectedBlockTags.add(h6Tag.localName().impl());
+        affectedBlockTags.add(pTag.localName().impl());
+        affectedBlockTags.add(divTag.localName().impl());
+        affectedBlockTags.add(blockquoteTag.localName().impl());
+        affectedBlockTags.add(addressTag.localName().impl());
+        affectedBlockTags.add(centerTag.localName().impl());
+        affectedBlockTags.add(ulTag.localName().impl());
+        affectedBlockTags.add(olTag.localName().impl());
+        affectedBlockTags.add(liTag.localName().impl());
+        affectedBlockTags.add(dlTag.localName().impl());
+        affectedBlockTags.add(dtTag.localName().impl());
+        affectedBlockTags.add(ddTag.localName().impl());
+        affectedBlockTags.add(preTag.localName().impl());
     }
     
     return affectedBlockTags.contains(tagName.impl());
@@ -1013,12 +1006,11 @@ void HTMLParser::handleResidualStyleCloseTagAcrossBlocks(HTMLStackElem* elem)
         // This will also affect how we ultimately reparent the block, since we want it to end up
         // under the reopened residual tags (e.g., the <i> in the above example.)
         NodeImpl* prevNode = 0;
-        NodeImpl* currNode = 0;
         currElem = maxElem;
         while (currElem->node != residualElem) {
             if (isResidualStyleTag(currElem->node->localName())) {
                 // Create a clone of this element.
-                currNode = currElem->node->cloneNode(false);
+                RefPtr<NodeImpl> currNode = currElem->node->cloneNode(false);
 
                 // Change the stack element's node to point to the clone.
                 currElem->node = currNode;
@@ -1027,9 +1019,9 @@ void HTMLParser::handleResidualStyleCloseTagAcrossBlocks(HTMLStackElem* elem)
                 if (prevNode)
                     currNode->appendChild(prevNode, exceptionCode);
                 else // The new parent for the block element is going to be the innermost clone.
-                    parentElem = currNode;
+                    parentElem = currNode.get();
                                 
-                prevNode = currNode;
+                prevNode = currNode.get();
             }
             
             currElem = currElem->next;
@@ -1040,6 +1032,11 @@ void HTMLParser::handleResidualStyleCloseTagAcrossBlocks(HTMLStackElem* elem)
             elem->node->appendChild(prevNode, exceptionCode);
     }
          
+    // Check if the block is still in the tree. If it isn't, then we don't
+    // want to remove it from its parent (that would crash) or insert it into
+    // a new parent later. See http://bugzilla.opendarwin.org/show_bug.cgi?id=6778
+    bool isBlockStillInTree = blockElem->parentNode();
+
     // We need to make a clone of |residualElem| and place it just inside |blockElem|.
     // All content of |blockElem| is reparented to be under this clone.  We then
     // reparent |blockElem| using real DOM calls so that attachment/detachment will
@@ -1048,10 +1045,11 @@ void HTMLParser::handleResidualStyleCloseTagAcrossBlocks(HTMLStackElem* elem)
     // The end result will be: <b>...</b><p><b>Foo</b>Goo</p>
     //
     // Step 1: Remove |blockElem| from its parent, doing a batch detach of all the kids.
-    blockElem->parentNode()->removeChild(blockElem, exceptionCode);
+    if (isBlockStillInTree)
+        blockElem->parentNode()->removeChild(blockElem, exceptionCode);
         
     // Step 2: Clone |residualElem|.
-    NodeImpl* newNode = residualElem->cloneNode(false); // Shallow clone. We don't pick up the same kids.
+    PassRefPtr<NodeImpl> newNode = residualElem->cloneNode(false); // Shallow clone. We don't pick up the same kids.
 
     // Step 3: Place |blockElem|'s children under |newNode|.  Remove all of the children of |blockElem|
     // before we've put |newElem| into the document.  That way we'll only do one attachment of all
@@ -1059,7 +1057,6 @@ void HTMLParser::handleResidualStyleCloseTagAcrossBlocks(HTMLStackElem* elem)
     NodeImpl* currNode = blockElem->firstChild();
     while (currNode) {
         NodeImpl* nextNode = currNode->nextSibling();
-        blockElem->removeChild(currNode, exceptionCode);
         newNode->appendChild(currNode, exceptionCode);
         currNode = nextNode;
     }
@@ -1069,7 +1066,8 @@ void HTMLParser::handleResidualStyleCloseTagAcrossBlocks(HTMLStackElem* elem)
     blockElem->appendChild(newNode, exceptionCode);
     
     // Step 5: Reparent |blockElem|.  Now the full attachment of the fixed up tree takes place.
-    parentElem->appendChild(blockElem, exceptionCode);
+    if (isBlockStillInTree)
+        parentElem->appendChild(blockElem, exceptionCode);
         
     // Step 6: Elide |elem|, since it is effectively no longer open.  Also update
     // the node associated with the previous stack element so that when it gets popped,
@@ -1121,7 +1119,7 @@ void HTMLParser::reopenResidualStyleTags(HTMLStackElem* elem, DOM::NodeImpl* mal
     // Loop for each tag that needs to be reopened.
     while (elem) {
         // Create a shallow clone of the DOM node for this element.
-        NodeImpl* newNode = elem->node->cloneNode(false); 
+        RefPtr<NodeImpl> newNode = elem->node->cloneNode(false); 
 
         // Append the new node. In the malformed table case, we need to insert before the table,
         // which will be the last child.
@@ -1145,7 +1143,7 @@ void HTMLParser::reopenResidualStyleTags(HTMLStackElem* elem, DOM::NodeImpl* mal
         malformedTableParent = 0;
 
         // Update |current| manually to point to the new node.
-        setCurrent(newNode);
+        setCurrent(newNode.get());
         
         // Advance to the next tag that needs to be reopened.
         HTMLStackElem* next = elem->next;

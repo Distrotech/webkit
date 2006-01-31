@@ -22,6 +22,7 @@
 
 #ifndef KSVG_SVGGElementImpl_H
 #define KSVG_SVGGElementImpl_H
+#if SVG_SUPPORT
 
 #include "SVGStyledTransformableElementImpl.h"
 #include "SVGTestsImpl.h"
@@ -45,8 +46,6 @@ namespace KSVG
 
         virtual bool rendererIsNeeded(khtml::RenderStyle *) { return true; }
         virtual khtml::RenderObject *createRenderer(RenderArena *arena, khtml::RenderStyle *style);
-
-        virtual void setChanged(bool b = true, bool deep = false);
     };
 
     class SVGDummyElementImpl : public SVGGElementImpl
@@ -62,6 +61,7 @@ namespace KSVG
     };
 };
 
+#endif // SVG_SUPPORT
 #endif
 
 // vim:ts=4:noet

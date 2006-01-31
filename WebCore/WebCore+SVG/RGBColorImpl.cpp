@@ -21,19 +21,18 @@
 */
 
 #include "config.h"
+#if SVG_SUPPORT
 #include "RGBColorImpl.h"
 #include "css_valueimpl.h"
 
 using namespace KDOM;
 
-RGBColorImpl::RGBColorImpl(const QRgb &color) : Shared<RGBColorImpl>()
+RGBColorImpl::RGBColorImpl(const RGBA32 &color) : Shared<RGBColorImpl>(), m_color(color)
 {
-    m_color = color;
 }
 
-RGBColorImpl::RGBColorImpl(const QColor &color) : Shared<RGBColorImpl>()
+RGBColorImpl::RGBColorImpl(const Color &color) : Shared<RGBColorImpl>(), m_color(color)
 {
-    m_color = color.rgb();
 }
 
 RGBColorImpl::~RGBColorImpl()
@@ -42,17 +41,19 @@ RGBColorImpl::~RGBColorImpl()
 
 CSSPrimitiveValueImpl *RGBColorImpl::red() const
 {
-    return new CSSPrimitiveValueImpl(float(qAlpha(m_color) ? qRed(m_color) : 0), CSSPrimitiveValue::CSS_DIMENSION);
+    return new CSSPrimitiveValueImpl(float(m_color.alpha() ? m_color.red() : 0), CSSPrimitiveValue::CSS_DIMENSION);
 }
 
 CSSPrimitiveValueImpl *RGBColorImpl::green() const
 {
-    return new CSSPrimitiveValueImpl(float(qAlpha(m_color) ? qGreen(m_color) : 0), CSSPrimitiveValue::CSS_DIMENSION);
+    return new CSSPrimitiveValueImpl(float(m_color.alpha() ? m_color.green() : 0), CSSPrimitiveValue::CSS_DIMENSION);
 }
 
 CSSPrimitiveValueImpl *RGBColorImpl::blue() const
 {
-    return new CSSPrimitiveValueImpl(float(qAlpha(m_color) ? qBlue(m_color) : 0), CSSPrimitiveValue::CSS_DIMENSION);
+    return new CSSPrimitiveValueImpl(float(m_color.alpha() ? m_color.blue() : 0), CSSPrimitiveValue::CSS_DIMENSION);
 }
 
 // vim:ts=4:noet
+#endif // SVG_SUPPORT
+

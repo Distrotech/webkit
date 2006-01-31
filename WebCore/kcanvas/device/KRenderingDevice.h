@@ -22,8 +22,9 @@
 
 #ifndef KRenderingDevice_H
 #define KRenderingDevice_H
+#if SVG_SUPPORT
 
-#include <qcolor.h>
+#include "Color.h"
 #include <qobject.h>
 #include <q3ptrstack.h>
 
@@ -85,6 +86,7 @@ private:
     Q3PtrStack<KRenderingDeviceContext> m_contextStack;
 };
 
+#endif // SVG_SUPPORT
 #endif
 
 // vim:ts=4:noet

@@ -32,6 +32,7 @@
 #include "FormDataList.h"
 
 #include "cssproperties.h"
+#include "Frame.h"
 #include "render_form.h"
 #include "render_button.h"
 #include "RenderTextField.h"
@@ -94,9 +95,9 @@ HTMLInputElementImpl::~HTMLInputElementImpl()
     delete m_imageLoader;
 }
 
-DOMString HTMLInputElementImpl::name() const
+const AtomicString& HTMLInputElementImpl::name() const
 {
-    return m_name.isNull() ? "" : m_name;
+    return m_name.isNull() ? emptyAtom : m_name;
 }
 
 bool HTMLInputElementImpl::isKeyboardFocusable() const
@@ -125,6 +126,23 @@ bool HTMLInputElementImpl::isKeyboardFocusable() const
     }
     
     return true;
+}
+
+void HTMLInputElementImpl::focus()
+{
+    if ((m_type == TEXT) || (m_type == PASSWORD) && renderer()->style()->appearance() == TextFieldAppearance) {
+        DocumentImpl* doc = getDocument();
+        if (doc) {
+            doc->updateLayout();
+            if (isFocusable()) {
+                doc->setFocusNode(this);
+                select();
+                doc->frame()->revealSelection();
+            }
+        }
+    } else
+        HTMLGenericFormElementImpl::focus();
+
 }
 
 void HTMLInputElementImpl::setType(const DOMString& t)
@@ -279,16 +297,17 @@ bool HTMLInputElementImpl::canHaveSelection()
 
 int HTMLInputElementImpl::selectionStart()
 {
-    if (!m_render) return 0;
+    if (!renderer())
+        return 0;
     
     switch (m_type) {
         case PASSWORD:
         case TEXT:
-            if (m_render->style()->appearance() == TextFieldAppearance)
-                 return static_cast<RenderTextField *>(m_render)->selectionStart();
+            if (renderer()->style()->appearance() == TextFieldAppearance)
+                 return static_cast<RenderTextField *>(renderer())->selectionStart();
             // Fall through for text fields that don't specify appearance
         case SEARCH:
-            return static_cast<RenderLineEdit *>(m_render)->selectionStart();
+            return static_cast<RenderLineEdit *>(renderer())->selectionStart();
         default:
             break;
     }
@@ -297,16 +316,17 @@ int HTMLInputElementImpl::selectionStart()
 
 int HTMLInputElementImpl::selectionEnd()
 {
-    if (!m_render) return 0;
+    if (!renderer())
+        return 0;
     
     switch (m_type) {
         case PASSWORD:
         case TEXT:
-            if (m_render->style()->appearance() == TextFieldAppearance)
-                 return static_cast<RenderTextField *>(m_render)->selectionEnd();
+            if (renderer()->style()->appearance() == TextFieldAppearance)
+                 return static_cast<RenderTextField *>(renderer())->selectionEnd();
             // Fall through for text fields that don't specify appearance
         case SEARCH:
-            return static_cast<RenderLineEdit *>(m_render)->selectionEnd();
+            return static_cast<RenderLineEdit *>(renderer())->selectionEnd();
         default:
             break;
     }
@@ -315,16 +335,19 @@ int HTMLInputElementImpl::selectionEnd()
 
 void HTMLInputElementImpl::setSelectionStart(int start)
 {
-    if (!m_render) return;
+    if (!renderer())
+        return;
     
     switch (m_type) {
         case PASSWORD:
         case TEXT:
-            if (m_render->style()->appearance() == TextFieldAppearance)
-                 static_cast<RenderTextField *>(m_render)->setSelectionStart(start);
+            if (renderer()->style()->appearance() == TextFieldAppearance) {
+                 static_cast<RenderTextField *>(renderer())->setSelectionStart(start);
+                 break;
+            }
             // Fall through for text fields that don't specify appearance
         case SEARCH:
-            static_cast<RenderLineEdit *>(m_render)->setSelectionStart(start);
+            static_cast<RenderLineEdit *>(renderer())->setSelectionStart(start);
             break;
         default:
             break;
@@ -333,16 +356,19 @@ void HTMLInputElementImpl::setSelectionStart(int start)
 
 void HTMLInputElementImpl::setSelectionEnd(int end)
 {
-    if (!m_render) return;
+    if (!renderer())
+        return;
     
     switch (m_type) {
         case PASSWORD:
         case TEXT:
-            if (m_render->style()->appearance() == TextFieldAppearance)
-                 static_cast<RenderTextField *>(m_render)->setSelectionEnd(end);
+            if (renderer()->style()->appearance() == TextFieldAppearance) {
+                 static_cast<RenderTextField *>(renderer())->setSelectionEnd(end);
+                 break;
+            }
             // Fall through for text fields that don't specify appearance
         case SEARCH:
-            static_cast<RenderLineEdit *>(m_render)->setSelectionEnd(end);
+            static_cast<RenderLineEdit *>(renderer())->setSelectionEnd(end);
             break;
         default:
             break;
@@ -351,19 +377,22 @@ void HTMLInputElementImpl::setSelectionEnd(int end)
 
 void HTMLInputElementImpl::select(  )
 {
-    if(!m_render) return;
+    if (!renderer())
+        return;
 
     switch (m_type) {
         case FILE:
-            static_cast<RenderFileButton*>(m_render)->select();
+            static_cast<RenderFileButton*>(renderer())->select();
             break;
         case PASSWORD:
         case TEXT:
-            if (m_render->style()->appearance() == TextFieldAppearance)
-                 static_cast<RenderTextField *>(m_render)->select();
+            if (renderer()->style()->appearance() == TextFieldAppearance) {
+                 static_cast<RenderTextField *>(renderer())->select();
+                 break;
+            }
             // Fall through for text fields that don't specify appearance
         case SEARCH:
-            static_cast<RenderLineEdit*>(m_render)->select();
+            static_cast<RenderLineEdit*>(renderer())->select();
             break;
         case BUTTON:
         case CHECKBOX:
@@ -380,16 +409,19 @@ void HTMLInputElementImpl::select(  )
 
 void HTMLInputElementImpl::setSelectionRange(int start, int end)
 {
-    if (!m_render) return;
+    if (!renderer())
+        return;
     
     switch (m_type) {
         case PASSWORD:
         case TEXT:
-            if (m_render->style()->appearance() == TextFieldAppearance)
-                static_cast<RenderTextField *>(m_render)->setSelectionRange(start, end);
+            if (renderer()->style()->appearance() == TextFieldAppearance) {
+                static_cast<RenderTextField *>(renderer())->setSelectionRange(start, end);
+                break;
+            }
             // Fall through for text fields that don't specify appearance
         case SEARCH:
-            static_cast<RenderLineEdit *>(m_render)->setSelectionRange(start, end);
+            static_cast<RenderLineEdit *>(renderer())->setSelectionRange(start, end);
             break;
         default:
             break;
@@ -511,10 +543,10 @@ void HTMLInputElementImpl::parseMappedAttribute(MappedAttributeImpl *attr)
     } else if (attr->name() == sizeAttr) {
         m_size = !attr->isNull() ? attr->value().toInt() : 20;
     } else if (attr->name() == altAttr) {
-        if (m_render && m_type == IMAGE)
-            static_cast<RenderImage*>(m_render)->updateAltText();
+        if (renderer() && m_type == IMAGE)
+            static_cast<RenderImage*>(renderer())->updateAltText();
     } else if (attr->name() == srcAttr) {
-        if (m_render && m_type == IMAGE) {
+        if (renderer() && m_type == IMAGE) {
             if (!m_imageLoader)
                 m_imageLoader = new HTMLImageLoader(this);
             m_imageLoader->updateFromElement();
@@ -785,21 +817,22 @@ void HTMLInputElementImpl::reset()
     m_useDefaultChecked = true;
 }
 
-void HTMLInputElementImpl::setChecked(bool _checked)
+void HTMLInputElementImpl::setChecked(bool nowChecked)
 {
-    // WinIE does not allow unnamed radio buttons to even be checked.
-    if (checked() == _checked || (m_type == RADIO && name().isEmpty()))
+    // We mimic WinIE and don't allow unnamed radio buttons to be checked.
+    if (checked() == nowChecked || (m_type == RADIO && name().isEmpty()))
         return;
 
-    if (m_type == RADIO && _checked)
+    if (m_type == RADIO && nowChecked)
         getDocument()->radioButtonChecked(this, m_form);
 
     m_useDefaultChecked = false;
-    m_checked = _checked;
+    m_checked = nowChecked;
     setChanged();
     if (renderer() && renderer()->style()->hasAppearance())
         theme()->stateChanged(renderer(), CheckedState);
-    onChange();
+    if (inDocument())
+        onChange();
 }
 
 void HTMLInputElementImpl::setIndeterminate(bool _indeterminate)
@@ -879,8 +912,8 @@ void HTMLInputElementImpl::setValue(const DOMString &value)
     m_valueMatchesRenderer = false;
     if (storesValueSeparateFromAttribute()) {
         m_value = value;
-        if (m_render)
-            m_render->updateFromElement();
+        if (renderer())
+            renderer()->updateFromElement();
         setChanged();
     } else {
         setAttribute(valueAttr, value);
@@ -989,17 +1022,17 @@ void HTMLInputElementImpl::postDispatchEventHandler(EventImpl *evt, void* data)
 
 void HTMLInputElementImpl::defaultEventHandler(EventImpl *evt)
 {
-    if (m_type == IMAGE && evt->isMouseEvent() && evt->type() == clickEvent && m_render) {
+    if (m_type == IMAGE && evt->isMouseEvent() && evt->type() == clickEvent) {
         // record the mouse position for when we get the DOMActivate event
         MouseEventImpl *me = static_cast<MouseEventImpl*>(evt);
         // FIXME: We could just call offsetX() and offsetY() on the event,
         // but that's currently broken, so for now do the computation here.
-        if (me->isSimulated() || !m_render) {
+        if (me->isSimulated() || !renderer()) {
             xPos = 0;
             yPos = 0;
         } else {
             int offsetX, offsetY;
-            m_render->absolutePosition(offsetX,offsetY);
+            renderer()->absolutePosition(offsetX,offsetY);
             xPos = me->clientX() - offsetX;
             yPos = me->clientY() - offsetY;
         }

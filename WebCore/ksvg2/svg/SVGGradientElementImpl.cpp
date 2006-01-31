@@ -21,6 +21,7 @@
 */
 
 #include "config.h"
+#if SVG_SUPPORT
 #include <kdom/core/AttrImpl.h>
 #include "cssstyleselector.h"
 #include "DocumentImpl.h"
@@ -153,10 +154,10 @@ void SVGGradientElementImpl::rebuildStops() const
                 float stopOffset = stop->offset()->baseVal();
                 
                 khtml::RenderStyle *stopStyle = getDocument()->styleSelector()->styleForElement(stop, gradientStyle);
-                QColor c = stopStyle->svgStyle()->stopColor();
+                Color c = stopStyle->svgStyle()->stopColor();
                 float opacity = stopStyle->svgStyle()->stopOpacity();
                 
-                stops.addStop(stopOffset, qRgba(c.red(), c.green(), c.blue(), int(opacity * 255.)));
+                stops.addStop(stopOffset, makeRGBA(c.red(), c.green(), c.blue(), int(opacity * 255.)));
                 stopStyle->deref(canvas()->renderArena());
             }
         }
@@ -165,3 +166,5 @@ void SVGGradientElementImpl::rebuildStops() const
 }
 
 // vim:ts=4:noet
+#endif // SVG_SUPPORT
+

@@ -4,7 +4,7 @@
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
  *           (C) 2001 Dirk Mueller (mueller@kde.org)
- * Copyright (C) 2004 Apple Computer, Inc.
+ * Copyright (C) 2004, 2005, 2006 Apple Computer, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,30 +24,29 @@
 
 #include "config.h"
 #include "ContainerNodeImpl.h"
-#include "dom_node.h"
-#include "dom_exception.h"
-#include "dom2_eventsimpl.h"
-#include "RenderText.h"
-#include "render_theme.h"
-#include "InlineTextBox.h"
+
 #include "DocumentImpl.h"
-#include "FrameView.h"
-
 #include "EventNames.h"
-
+#include "FrameView.h"
+#include "InlineTextBox.h"
 #include "IntRect.h"
-#include "qdatetime.h"
+#include "RenderText.h"
+#include "SystemTime.h"
+#include "dom2_eventsimpl.h"
+#include "dom_exception.h"
+#include "dom_node.h"
+#include "render_theme.h"
 
-using namespace khtml;
-
-namespace DOM {
+namespace WebCore {
 
 using namespace EventNames;
 
-ContainerNodeImpl::ContainerNodeImpl(DocumentImpl *doc)
-    : NodeImpl(doc)
+static void dispatchChildInsertionEvents(NodeImpl*, ExceptionCode&);
+static void dispatchChildRemovalEvents(NodeImpl*, ExceptionCode&);
+
+ContainerNodeImpl::ContainerNodeImpl(DocumentImpl* doc)
+    : NodeImpl(doc), m_firstChild(0), m_lastChild(0)
 {
-    _first = _last = 0;
 }
 
 void ContainerNodeImpl::removeAllChildren()
@@ -66,7 +65,7 @@ void ContainerNodeImpl::removeAllChildren()
     NodeImpl *n;
     NodeImpl *next;
 
-    for( n = _first; n != 0; n = next ) {
+    for (n = m_firstChild; n != 0; n = next ) {
         next = n->nextSibling();
         n->setPreviousSibling(0);
         n->setNextSibling(0);
@@ -98,8 +97,8 @@ void ContainerNodeImpl::removeAllChildren()
         }
         
         alreadyInsideDestructor = false;
-        _first = 0;
-        _last = 0;
+        m_firstChild = 0;
+        m_lastChild = 0;
     }
 }
 
@@ -109,83 +108,100 @@ ContainerNodeImpl::~ContainerNodeImpl()
 }
 
 
-NodeImpl *ContainerNodeImpl::firstChild() const
+NodeImpl* ContainerNodeImpl::firstChild() const
 {
-    return _first;
+    return m_firstChild;
 }
 
-NodeImpl *ContainerNodeImpl::lastChild() const
+NodeImpl* ContainerNodeImpl::lastChild() const
 {
-    return _last;
+    return m_lastChild;
 }
 
-NodeImpl *ContainerNodeImpl::insertBefore ( NodeImpl *newChild, NodeImpl *refChild, int &exceptioncode )
+PassRefPtr<NodeImpl> ContainerNodeImpl::insertBefore(PassRefPtr<NodeImpl> newChild, NodeImpl* refChild, ExceptionCode& ec)
 {
-    exceptioncode = 0;
+    ec = 0;
 
-    // insertBefore(...,null) is equivalent to appendChild()
-    if(!refChild)
-        return appendChild(newChild, exceptioncode);
+    // insertBefore(node, 0) is equivalent to appendChild(node)
+    if (!refChild)
+        return appendChild(newChild, ec);
 
-    RefPtr<NodeImpl> protectNewChild(newChild); // make sure the new child is ref'd and deref'd so we don't leak it
-
-    // Make sure adding the new child is ok
-    checkAddChild(newChild, exceptioncode);
-    if (exceptioncode)
+    // Make sure adding the new child is OK.
+    checkAddChild(newChild.get(), ec);
+    if (ec)
         return 0;
 
     // NOT_FOUND_ERR: Raised if refChild is not a child of this node
     if (refChild->parentNode() != this) {
-        exceptioncode = DOMException::NOT_FOUND_ERR;
+        ec = DOMException::NOT_FOUND_ERR;
         return 0;
     }
 
     bool isFragment = newChild->nodeType() == Node::DOCUMENT_FRAGMENT_NODE;
 
-    // If newChild is a DocumentFragment with no children.... there's nothing to do.
-    // Just return the document fragment
+    // If newChild is a DocumentFragment with no children; there's nothing to do.
+    // Just return the document fragment.
     if (isFragment && !newChild->firstChild())
-        return (newChild->hasOneRef() && !newChild->parent()) ? 0 : newChild;
+        return newChild;
 
     // Now actually add the child(ren)
-    NodeImpl *nextChild;
-    NodeImpl *child = isFragment ? newChild->firstChild() : newChild;
-
-    NodeImpl *prev = refChild->previousSibling();
-    if ( prev == newChild || refChild == newChild ) // nothing to do
+    if (refChild->previousSibling() == newChild || refChild == newChild) // nothing to do
         return newChild;
-    
-    while (child) {
-        nextChild = isFragment ? child->nextSibling() : 0;
 
-        // If child is already present in the tree, first remove it
-        NodeImpl *newParent = child->parentNode();
-        if (newParent)
-            newParent->removeChild( child, exceptioncode );
-        if (exceptioncode)
+    RefPtr<NodeImpl> next = refChild;
+
+    RefPtr<NodeImpl> child = isFragment ? newChild->firstChild() : newChild.get();
+    while (child) {
+        PassRefPtr<NodeImpl> nextChild = isFragment ? child->nextSibling() : 0;
+
+        // If child is already present in the tree, first remove it from the old location.
+        if (NodeImpl* oldParent = child->parentNode())
+            oldParent->removeChild(child.get(), ec);
+        if (ec)
             return 0;
 
-        // Add child in the correct position
+        // FIXME: After sending the mutation events, "this" could be destroyed.
+        // We can prevent that by doing a "ref", but first we have to make sure
+        // that no callers call with ref count == 0 and parent = 0 (as of this
+        // writing, there are definitely callers who call that way).
+
+        // Due to arbitrary code running in response to a DOM mutation event it's
+        // possible that "next" is no longer a child of "this".
+        // It's also possible that "child" has been inserted elsewhere.
+        // In either of those cases, we'll just stop.
+        if (next->parentNode() != this)
+            break;
+        if (child->parentNode())
+            break;
+
+        assert(!child->nextSibling());
+        assert(!child->previousSibling());
+
+        // Add child before "next".
         forbidEventDispatch();
-        if (prev)
-            prev->setNextSibling(child);
-        else
-            _first = child;
-        refChild->setPreviousSibling(child);
+        NodeImpl* prev = next->previousSibling();
+        assert(m_lastChild != prev);
+        next->setPreviousSibling(child.get());
+        if (prev) {
+            assert(m_firstChild != next);
+            assert(prev->nextSibling() == next);
+            prev->setNextSibling(child.get());
+        } else {
+            assert(m_firstChild == next);
+            m_firstChild = child.get();
+        }
         child->setParent(this);
         child->setPreviousSibling(prev);
-        child->setNextSibling(refChild);
+        child->setNextSibling(next.get());
         allowEventDispatch();
 
-        // Add child to the rendering tree
-        // ### should we detach() it first if it's already attached?
+        // Add child to the rendering tree.
         if (attached() && !child->attached())
             child->attach();
-        
-        // Dispatch the mutation events
-        dispatchChildInsertedEvents(child,exceptioncode);
 
-        prev = child;
+        // Dispatch the mutation events.
+        dispatchChildInsertionEvents(child.get(), ec);
+
         child = nextChild;
     }
 
@@ -194,70 +210,96 @@ NodeImpl *ContainerNodeImpl::insertBefore ( NodeImpl *newChild, NodeImpl *refChi
     return newChild;
 }
 
-NodeImpl *ContainerNodeImpl::replaceChild ( NodeImpl *newChild, NodeImpl *oldChild, int &exceptioncode )
+PassRefPtr<NodeImpl> ContainerNodeImpl::replaceChild(PassRefPtr<NodeImpl> newChild, NodeImpl* oldChild, ExceptionCode& ec)
 {
-    exceptioncode = 0;
+    ec = 0;
 
-    RefPtr<NodeImpl> protectNewChild(newChild); // make sure the new child is ref'd and deref'd so we don't leak it
-
-    if ( oldChild == newChild ) // nothing to do
-        return oldChild;
+    if (oldChild == newChild) // nothing to do
+        return newChild;
     
     // Make sure adding the new child is ok
-    checkAddChild(newChild, exceptioncode);
-    if (exceptioncode)
+    checkAddChild(newChild.get(), ec);
+    if (ec)
         return 0;
 
     // NOT_FOUND_ERR: Raised if oldChild is not a child of this node.
     if (!oldChild || oldChild->parentNode() != this) {
-        exceptioncode = DOMException::NOT_FOUND_ERR;
+        ec = DOMException::NOT_FOUND_ERR;
         return 0;
     }
 
-    bool isFragment = newChild->nodeType() == Node::DOCUMENT_FRAGMENT_NODE;
-    NodeImpl *nextChild;
-    NodeImpl *child = isFragment ? newChild->firstChild() : newChild;
+    RefPtr<NodeImpl> prev = oldChild->previousSibling();
 
-    // Remove the old child
-    NodeImpl *prev = oldChild->previousSibling();
-    NodeImpl *next = oldChild->nextSibling();
-
-    removeChild(oldChild, exceptioncode);
-    if (exceptioncode)
+    // Remove the node we're replacing
+    PassRefPtr<NodeImpl> removedChild = removeChild(oldChild, ec);
+    if (ec)
         return 0;
 
-    // If the new child was right before or right after the old child, nothing else needs to change
-    if (prev == child || next == child)
-        child = 0;
-    // Add the new child(ren)
-    while (child) {
-        nextChild = isFragment ? child->nextSibling() : 0;
+    // FIXME: After sending the mutation events, "this" could be destroyed.
+    // We can prevent that by doing a "ref", but first we have to make sure
+    // that no callers call with ref count == 0 and parent = 0 (as of this
+    // writing, there are definitely callers who call that way).
 
-        // If child is already present in the tree, first remove it
-        NodeImpl *newParent = child->parentNode();
-        if (newParent)
-            newParent->removeChild( child, exceptioncode );
-        if (exceptioncode)
+    bool isFragment = newChild->nodeType() == Node::DOCUMENT_FRAGMENT_NODE;
+
+    // Add the new child(ren)
+    RefPtr<NodeImpl> child = isFragment ? newChild->firstChild() : newChild.get();
+    while (child) {
+        // If the new child is already in the right place, we're done.
+        if (prev && (prev == child || prev == child->previousSibling()))
+            break;
+
+        // For a fragment we have more children to do.
+        RefPtr<NodeImpl> nextChild = isFragment ? child->nextSibling() : 0;
+
+        // Remove child from its old position.
+        if (NodeImpl* oldParent = child->parentNode())
+            oldParent->removeChild(child.get(), ec);
+        if (ec)
             return 0;
 
-        // Add child in the correct position
+        // Due to arbitrary code running in response to a DOM mutation event it's
+        // possible that "prev" is no longer a child of "this".
+        // It's also possible that "child" has been inserted elsewhere.
+        // In either of those cases, we'll just stop.
+        if (prev && prev->parentNode() != this)
+            break;
+        if (child->parentNode())
+            break;
+
+        assert(!child->nextSibling());
+        assert(!child->previousSibling());
+
+        // Add child after "prev".
         forbidEventDispatch();
-        if (prev) prev->setNextSibling(child);
-        if (next) next->setPreviousSibling(child);
-        if(!prev) _first = child;
-        if(!next) _last = child;
+        NodeImpl* next;
+        if (prev) {
+            next = prev->nextSibling();
+            assert(m_firstChild != next);
+            prev->setNextSibling(child.get());
+        } else {
+            next = m_firstChild;
+            m_firstChild = child.get();
+        }
+        if (next) {
+            assert(m_lastChild != prev);
+            assert(next->previousSibling() == prev);
+            next->setPreviousSibling(child.get());
+        } else {
+            assert(m_lastChild == prev);
+            m_lastChild = child.get();
+        }
         child->setParent(this);
-        child->setPreviousSibling(prev);
+        child->setPreviousSibling(prev.get());
         child->setNextSibling(next);
         allowEventDispatch();
 
         // Add child to the rendering tree
-        // ### should we detach() it first if it's already attached?
         if (attached() && !child->attached())
             child->attach();
 
         // Dispatch the mutation events
-        dispatchChildInsertedEvents(child,exceptioncode);
+        dispatchChildInsertionEvents(child.get(), ec);
 
         prev = child;
         child = nextChild;
@@ -266,24 +308,23 @@ NodeImpl *ContainerNodeImpl::replaceChild ( NodeImpl *newChild, NodeImpl *oldChi
     // ### set style in case it's attached
     getDocument()->setDocumentChanged(true);
     dispatchSubtreeModifiedEvent();
-    return oldChild;
+    return removedChild;
 }
 
 void ContainerNodeImpl::willRemove()
 {
-    for (NodeImpl *n = _first; n != 0; n = n->nextSibling()) {
+    for (NodeImpl *n = m_firstChild; n != 0; n = n->nextSibling())
         n->willRemove();
-    }
 }
 
-int ContainerNodeImpl::willRemoveChild(NodeImpl *child)
+static ExceptionCode willRemoveChild(NodeImpl *child)
 {
-    int exceptionCode = 0;
+    ExceptionCode ec = 0;
 
     // fire removed from document mutation events.
-    dispatchChildRemovalEvents(child, exceptionCode);
-    if (exceptionCode)
-        return exceptionCode;
+    dispatchChildRemovalEvents(child, ec);
+    if (ec)
+        return ec;
 
     if (child->attached())
         child->willRemove();
@@ -291,57 +332,70 @@ int ContainerNodeImpl::willRemoveChild(NodeImpl *child)
     return 0;
 }
 
-NodeImpl *ContainerNodeImpl::removeChild ( NodeImpl *oldChild, int &exceptioncode )
+PassRefPtr<NodeImpl> ContainerNodeImpl::removeChild(NodeImpl* oldChild, ExceptionCode& ec)
 {
-    exceptioncode = 0;
+    ec = 0;
 
     // NO_MODIFICATION_ALLOWED_ERR: Raised if this node is readonly.
     if (isReadOnly()) {
-        exceptioncode = DOMException::NO_MODIFICATION_ALLOWED_ERR;
+        ec = DOMException::NO_MODIFICATION_ALLOWED_ERR;
         return 0;
     }
 
     // NOT_FOUND_ERR: Raised if oldChild is not a child of this node.
     if (!oldChild || oldChild->parentNode() != this) {
-        exceptioncode = DOMException::NOT_FOUND_ERR;
+        ec = DOMException::NOT_FOUND_ERR;
         return 0;
     }
-    
-    // update auxiliary doc info (e.g. iterators) to note that node is being removed
-    // FIX: This looks redundant with same call from dispatchChildRemovalEvents in willRemoveChild
-//  getDocument()->notifyBeforeNodeRemoval(oldChild); // ### use events instead
 
+    PassRefPtr<NodeImpl> child = oldChild;
+    
     // dispatch pre-removal mutation events
     if (getDocument()->hasListenerType(DocumentImpl::DOMNODEREMOVED_LISTENER)) {
-        oldChild->dispatchEvent(new MutationEventImpl(DOMNodeRemovedEvent,
-                             true,false,this,DOMString(),DOMString(),DOMString(),0),exceptioncode,true);
-        if (exceptioncode)
+        child->dispatchEvent(new MutationEventImpl(DOMNodeRemovedEvent, true, false,
+            this, DOMString(), DOMString(), DOMString(), 0), ec, true);
+        if (ec)
             return 0;
     }
 
-    exceptioncode = willRemoveChild(oldChild);
-    if (exceptioncode)
+    ec = willRemoveChild(child.get());
+    if (ec)
         return 0;
+
+    // Mutation events might have moved this child into a different parent.
+    if (child->parentNode() != this) {
+        ec = DOMException::NOT_FOUND_ERR;
+        return 0;
+    }
+
+    // FIXME: After sending the mutation events, "this" could be destroyed.
+    // We can prevent that by doing a "ref", but first we have to make sure
+    // that no callers call with ref count == 0 and parent = 0 (as of this
+    // writing, there are definitely callers who call that way).
 
     forbidEventDispatch();
 
     // Remove from rendering tree
-    if (oldChild->attached())
-        oldChild->detach();
+    if (child->attached())
+        child->detach();
 
     // Remove the child
     NodeImpl *prev, *next;
-    prev = oldChild->previousSibling();
-    next = oldChild->nextSibling();
+    prev = child->previousSibling();
+    next = child->nextSibling();
 
-    if(next) next->setPreviousSibling(prev);
-    if(prev) prev->setNextSibling(next);
-    if(_first == oldChild) _first = next;
-    if(_last == oldChild) _last = prev;
+    if (next)
+        next->setPreviousSibling(prev);
+    if (prev)
+        prev->setNextSibling(next);
+    if (m_firstChild == child)
+        m_firstChild = next;
+    if (m_lastChild == child)
+        m_lastChild = prev;
 
-    oldChild->setPreviousSibling(0);
-    oldChild->setNextSibling(0);
-    oldChild->setParent(0);
+    child->setPreviousSibling(0);
+    child->setNextSibling(0);
+    child->setParent(0);
 
     allowEventDispatch();
 
@@ -350,12 +404,12 @@ NodeImpl *ContainerNodeImpl::removeChild ( NodeImpl *oldChild, int &exceptioncod
     // Dispatch post-removal mutation events
     dispatchSubtreeModifiedEvent();
 
-    if (oldChild->inDocument())
-        oldChild->removedFromDocument();
+    if (child->inDocument())
+        child->removedFromDocument();
     else
-        oldChild->removedFromTree(true);
+        child->removedFromTree(true);
 
-    return oldChild;
+    return child;
 }
 
 // this differs from other remove functions because it forcibly removes all the children,
@@ -364,16 +418,16 @@ void ContainerNodeImpl::removeChildren()
 {
     NodeImpl *n;
     
-    if (!_first)
+    if (!m_firstChild)
         return;
 
     // do any prep work needed before actually starting to detach
     // and remove... e.g. stop loading frames, fire unload events
-    for (n = _first; n != 0; n = n->nextSibling())
+    for (n = m_firstChild; n; n = n->nextSibling())
         willRemoveChild(n);
     
     forbidEventDispatch();
-    while ((n = _first) != 0) {
+    while ((n = m_firstChild) != 0) {
         NodeImpl *next = n->nextSibling();
         
         n->ref();
@@ -389,9 +443,9 @@ void ContainerNodeImpl::removeChildren()
 
         n->deref();
 
-        _first = next;
+        m_firstChild = next;
     }
-    _last = 0;
+    m_lastChild = 0;
     allowEventDispatch();
     
     // Dispatch a single post-removal mutation event denoting a modified subtree.
@@ -399,18 +453,16 @@ void ContainerNodeImpl::removeChildren()
 }
 
 
-NodeImpl *ContainerNodeImpl::appendChild ( NodeImpl *newChild, int &exceptioncode )
+PassRefPtr<NodeImpl> ContainerNodeImpl::appendChild(PassRefPtr<NodeImpl> newChild, ExceptionCode& ec)
 {
-    exceptioncode = 0;
-
-    RefPtr<NodeImpl> protectNewChild(newChild); // make sure the new child is ref'd and deref'd so we don't leak it
+    ec = 0;
 
     // Make sure adding the new child is ok
-    checkAddChild(newChild, exceptioncode);
-    if (exceptioncode)
+    checkAddChild(newChild.get(), ec);
+    if (ec)
         return 0;
     
-    if ( newChild == _last ) // nothing to do
+    if (newChild == m_lastChild) // nothing to do
         return newChild;
 
     bool isFragment = newChild->nodeType() == Node::DOCUMENT_FRAGMENT_NODE;
@@ -421,29 +473,33 @@ NodeImpl *ContainerNodeImpl::appendChild ( NodeImpl *newChild, int &exceptioncod
         return newChild;
 
     // Now actually add the child(ren)
-    NodeImpl *nextChild;
-    NodeImpl *child = isFragment ? newChild->firstChild() : newChild;
-
+    RefPtr<NodeImpl> child = isFragment ? newChild->firstChild() : newChild.get();
     while (child) {
-        nextChild = isFragment ? child->nextSibling() : 0;
+        // For a fragment we have more children to do.
+        RefPtr<NodeImpl> nextChild = isFragment ? child->nextSibling() : 0;
 
         // If child is already present in the tree, first remove it
-        NodeImpl *oldParent = child->parentNode();
-        if(oldParent) {
-            oldParent->removeChild( child, exceptioncode );
-            if (exceptioncode)
+        if (NodeImpl* oldParent = child->parentNode()) {
+            oldParent->removeChild(child.get(), ec);
+            if (ec)
                 return 0;
+            
+            // If the child has a parent again, just stop what we're doing, because
+            // that means someone is doing something with DOM mutation -- can't re-parent
+            // a child that already has a parent.
+            if (child->parentNode())
+                break;
         }
 
         // Append child to the end of the list
         forbidEventDispatch();
         child->setParent(this);
-        if (_last) {
-            child->setPreviousSibling(_last);
-            _last->setNextSibling(child);
-            _last = child;
+        if (m_lastChild) {
+            child->setPreviousSibling(m_lastChild);
+            m_lastChild->setNextSibling(child.get());
         } else
-            _first = _last = child;
+            m_firstChild = child.get();
+        m_lastChild = child.get();
         allowEventDispatch();
 
         // Add child to the rendering tree
@@ -452,7 +508,7 @@ NodeImpl *ContainerNodeImpl::appendChild ( NodeImpl *newChild, int &exceptioncod
             child->attach();
         
         // Dispatch the mutation events
-        dispatchChildInsertedEvents(child,exceptioncode);
+        dispatchChildInsertionEvents(child.get(), ec);
 
         child = nextChild;
     }
@@ -463,110 +519,64 @@ NodeImpl *ContainerNodeImpl::appendChild ( NodeImpl *newChild, int &exceptioncod
     return newChild;
 }
 
-bool ContainerNodeImpl::hasChildNodes (  ) const
+bool ContainerNodeImpl::hasChildNodes() const
 {
-    return _first != 0;
+    return m_firstChild;
 }
 
-// not part of the DOM
-void ContainerNodeImpl::setFirstChild(NodeImpl *child)
+ContainerNodeImpl* ContainerNodeImpl::addChild(PassRefPtr<NodeImpl> newChild)
 {
-    _first = child;
-}
+    // This function is only used during parsing.
+    // It does not send any DOM mutation events.
 
-void ContainerNodeImpl::setLastChild(NodeImpl *child)
-{
-    _last = child;
-}
-
-// check for same source document:
-bool ContainerNodeImpl::checkSameDocument( NodeImpl *newChild, int &exceptioncode )
-{
-    exceptioncode = 0;
-    DocumentImpl *ownerDocThis = getDocument();
-    // FIXME: Doh! This next line isn't getting newChild, so it's never going to work!
-    DocumentImpl *ownerDocNew = getDocument();
-    if(ownerDocThis != ownerDocNew) {
-        exceptioncode = DOMException::WRONG_DOCUMENT_ERR;
-        return true;
-    }
-    return false;
-}
-
-// check for being child:
-bool ContainerNodeImpl::checkIsChild( NodeImpl *oldChild, int &exceptioncode )
-{
-    if(!oldChild || oldChild->parentNode() != this) {
-        exceptioncode = DOMException::NOT_FOUND_ERR;
-        return true;
-    }
-    return false;
-}
-
-NodeImpl *ContainerNodeImpl::addChild(NodeImpl *newChild)
-{
-    // do not add applyChanges here! This function is only used during parsing
-
-    RefPtr<NodeImpl> protectNewChild(newChild); // make sure the new child is ref'd and deref'd so we don't leak it
-
-    // short check for consistency with DTD
-    if (getDocument()->isHTMLDocument() && !childAllowed(newChild))
+    // Check for consistency with DTD, but only when parsing HTML.
+    if (getDocument()->isHTMLDocument() && !childAllowed(newChild.get()))
         return 0;
 
-    // just add it...
     forbidEventDispatch();
     newChild->setParent(this);
-    if(_last) {
-        newChild->setPreviousSibling(_last);
-        _last->setNextSibling(newChild);
-        _last = newChild;
+    if (m_lastChild) {
+        newChild->setPreviousSibling(m_lastChild);
+        m_lastChild->setNextSibling(newChild.get());
     } else
-        _first = _last = newChild;
+        m_firstChild = newChild.get();
+    m_lastChild = newChild.get();
     allowEventDispatch();
 
     if (inDocument())
         newChild->insertedIntoDocument();
     childrenChanged();
     
-    if(newChild->nodeType() == Node::ELEMENT_NODE)
-        return newChild;
+    if (newChild->nodeType() == Node::ELEMENT_NODE)
+        return static_cast<ContainerNodeImpl*>(newChild.get());
     return this;
 }
 
 void ContainerNodeImpl::attach()
 {
-    NodeImpl *child = _first;
-    while(child != 0)
-    {
+    for (NodeImpl* child = m_firstChild; child; child = child->nextSibling())
         child->attach();
-        child = child->nextSibling();
-    }
     NodeImpl::attach();
 }
 
 void ContainerNodeImpl::detach()
 {
-    NodeImpl *child = _first;
-    while(child != 0)
-    {
-        NodeImpl* prev = child;
-        child = child->nextSibling();
-        prev->detach();
-    }
+    for (NodeImpl* child = m_firstChild; child; child = child->nextSibling())
+        child->detach();
     NodeImpl::detach();
 }
 
 void ContainerNodeImpl::insertedIntoDocument()
 {
     NodeImpl::insertedIntoDocument();
-    for (NodeImpl *child = _first; child; child = child->nextSibling())
+    for (NodeImpl *child = m_firstChild; child; child = child->nextSibling())
         child->insertedIntoDocument();
 }
 
 void ContainerNodeImpl::removedFromDocument()
 {
     NodeImpl::removedFromDocument();
-    for (NodeImpl *child = _first; child; child = child->nextSibling())
+    for (NodeImpl *child = m_firstChild; child; child = child->nextSibling())
         child->removedFromDocument();
 }
 
@@ -574,7 +584,7 @@ void ContainerNodeImpl::insertedIntoTree(bool deep)
 {
     NodeImpl::insertedIntoTree(deep);
     if (deep) {
-        for (NodeImpl *child = _first; child; child = child->nextSibling())
+        for (NodeImpl *child = m_firstChild; child; child = child->nextSibling())
             child->insertedIntoTree(deep);
     }
 }
@@ -583,26 +593,23 @@ void ContainerNodeImpl::removedFromTree(bool deep)
 {
     NodeImpl::removedFromTree(deep);
     if (deep) {
-        for (NodeImpl *child = _first; child; child = child->nextSibling())
+        for (NodeImpl *child = m_firstChild; child; child = child->nextSibling())
             child->removedFromTree(deep);
     }
 }
 
 void ContainerNodeImpl::cloneChildNodes(NodeImpl *clone)
 {
-    int exceptioncode = 0;
-    NodeImpl *n;
-    for(n = firstChild(); n && !exceptioncode; n = n->nextSibling())
-    {
-        clone->appendChild(n->cloneNode(true),exceptioncode);
-    }
+    ExceptionCode ec = 0;
+    for (NodeImpl* n = firstChild(); n && !ec; n = n->nextSibling())
+        clone->appendChild(n->cloneNode(true), ec);
 }
 
 bool ContainerNodeImpl::getUpperLeftCorner(int &xPos, int &yPos) const
 {
-    if (!m_render)
+    if (!renderer())
         return false;
-    RenderObject *o = m_render;
+    RenderObject *o = renderer();
     RenderObject *p = o;
 
     xPos = yPos = 0;
@@ -614,7 +621,7 @@ bool ContainerNodeImpl::getUpperLeftCorner(int &xPos, int &yPos) const
     // find the next text/image child, to get a position
     while(o) {
         p = o;
-        if(o->firstChild())
+        if (o->firstChild())
             o = o->firstChild();
         else if(o->nextSibling())
             o = o->nextSibling();
@@ -633,14 +640,12 @@ bool ContainerNodeImpl::getUpperLeftCorner(int &xPos, int &yPos) const
 
         if (p->element() && p->element() == this && o->isText() && !o->isBR() && !static_cast<RenderText*>(o)->firstTextBox()) {
                 // do nothing - skip unrendered whitespace that is a child or next sibling of the anchor
-        }
-        else if((o->isText() && !o->isBR()) || o->isReplaced()) {
+        } else if ((o->isText() && !o->isBR()) || o->isReplaced()) {
             o->container()->absolutePosition( xPos, yPos );
             if (o->isText() && static_cast<RenderText *>(o)->firstTextBox()) {
                 xPos += static_cast<RenderText *>(o)->minXPos();
                 yPos += static_cast<RenderText *>(o)->firstTextBox()->root()->topOverflow();
-            }
-            else {
+            } else {
                 xPos += o->xPos();
                 yPos += o->yPos();
             }
@@ -659,10 +664,10 @@ bool ContainerNodeImpl::getUpperLeftCorner(int &xPos, int &yPos) const
 
 bool ContainerNodeImpl::getLowerRightCorner(int &xPos, int &yPos) const
 {
-    if (!m_render)
+    if (!renderer())
         return false;
 
-    RenderObject *o = m_render;
+    RenderObject *o = renderer();
     xPos = yPos = 0;
     if (!o->isInline() || o->isReplaced())
     {
@@ -744,8 +749,8 @@ void ContainerNodeImpl::setActive(bool down, bool pause)
 
     // note that we need to recalc the style
     // FIXME: Move to ElementImpl
-    if (m_render) {
-        bool reactsToPress = m_render->style()->affectedByActiveRules();
+    if (renderer()) {
+        bool reactsToPress = renderer()->style()->affectedByActiveRules();
         if (reactsToPress)
             setChanged();
         if (renderer() && renderer()->style()->hasAppearance()) {
@@ -757,20 +762,20 @@ void ContainerNodeImpl::setActive(bool down, bool pause)
             // to repaint the "down" state of the control is about the same time as it would take to repaint the
             // "up" state.  Once you assume this, you can just delay for 100ms - that time (assuming that after you
             // leave this method, it will be about that long before the flush of the up state happens again).
-            QTime startTime;
-            startTime.restart();
+#if HAVE_FUNC_USLEEP
+            double startTime = currentTime();
+#endif
 
             // Do an immediate repaint.
-            m_render->repaint(true);
+            renderer()->repaint(true);
             
-#if !WIN32
-            // FIXME: Find a substitute for usleep.  Better yet, come up with a way of doing this that 
-            // doesn't use usleep at all.
-            int remainingTime = 100 - startTime.elapsed();
-            
+            // FIXME: Find a substitute for usleep for Win32.
+            // Better yet, come up with a way of doing this that doesn't use this sort of thing at all.            
+#if HAVE_FUNC_USLEEP
             // Now pause for a small amount of time (1/10th of a second from before we repainted in the pressed state)
+            double remainingTime = 0.1 - (currentTime() - startTime);
             if (remainingTime > 0)
-                usleep(remainingTime * 1000);
+                usleep(static_cast<useconds_t>(remainingTime * 1000000.0));
 #endif
         }
     }
@@ -784,8 +789,8 @@ void ContainerNodeImpl::setHovered(bool over)
 
     // note that we need to recalc the style
     // FIXME: Move to ElementImpl
-    if (m_render) {
-        if (m_render->style()->affectedByHoverRules())
+    if (renderer()) {
+        if (renderer()->style()->affectedByHoverRules())
             setChanged();
         if (renderer() && renderer()->style()->hasAppearance())
             theme()->stateChanged(renderer(), HoverState);
@@ -801,7 +806,7 @@ unsigned ContainerNodeImpl::childNodeCount() const
     return count;
 }
 
-NodeImpl *ContainerNodeImpl::childNode(unsigned index)
+NodeImpl *ContainerNodeImpl::childNode(unsigned index) const
 {
     unsigned i;
     NodeImpl *n = firstChild();
@@ -810,60 +815,63 @@ NodeImpl *ContainerNodeImpl::childNode(unsigned index)
     return n;
 }
 
-void ContainerNodeImpl::dispatchChildInsertedEvents( NodeImpl *child, int &exceptioncode )
+static void dispatchChildInsertionEvents(NodeImpl* child, ExceptionCode& ec)
 {
     assert(!eventDispatchForbidden());
-    if (inDocument())
-        child->insertedIntoDocument();
-    else
-        child->insertedIntoTree(true);
 
-    if (getDocument()->hasListenerType(DocumentImpl::DOMNODEINSERTED_LISTENER)) {
-        child->dispatchEvent(new MutationEventImpl(DOMNodeInsertedEvent,
-                                                   true,false,this,DOMString(),DOMString(),DOMString(),0),exceptioncode,true);
-        if (exceptioncode)
+    RefPtr<NodeImpl> c = child;
+    RefPtr<DocumentImpl> doc = child->getDocument();
+
+    if (c->parentNode() && c->parentNode()->inDocument())
+        c->insertedIntoDocument();
+    else
+        c->insertedIntoTree(true);
+
+    if (c->parentNode() && doc->hasListenerType(DocumentImpl::DOMNODEINSERTED_LISTENER)) {
+        ec = 0;
+        child->dispatchEvent(new MutationEventImpl(DOMNodeInsertedEvent, true, false,
+            c->parentNode(), DOMString(), DOMString(), DOMString(), 0), ec, true);
+        if (ec)
             return;
     }
 
     // dispatch the DOMNodeInsertedIntoDocument event to all descendants
-    bool hasInsertedListeners = getDocument()->hasListenerType(DocumentImpl::DOMNODEINSERTEDINTODOCUMENT_LISTENER);
-
-    if (hasInsertedListeners && inDocument()) {
-        for (NodeImpl *c = child; c; c = c->traverseNextNode(child)) {
-            c->dispatchEvent(new MutationEventImpl(DOMNodeInsertedIntoDocumentEvent,
-                                                   false,false,0,DOMString(),DOMString(),DOMString(),0),exceptioncode,true);
-            if (exceptioncode)
+    if (c->inDocument() && doc->hasListenerType(DocumentImpl::DOMNODEINSERTEDINTODOCUMENT_LISTENER))
+        for (; c; c = c->traverseNextNode(child)) {
+            ec = 0;
+            c->dispatchEvent(new MutationEventImpl(DOMNodeInsertedIntoDocumentEvent, false, false,
+                0, DOMString(), DOMString(), DOMString(), 0), ec, true);
+            if (ec)
                 return;
         }
-    }
 }
 
-// base class for nodes that may have children
-void ContainerNodeImpl::dispatchChildRemovalEvents( NodeImpl *child, int &exceptioncode )
+static void dispatchChildRemovalEvents(NodeImpl* child, ExceptionCode& ec)
 {
+    RefPtr<NodeImpl> c = child;
+    RefPtr<DocumentImpl> doc = child->getDocument();
+
     // update auxiliary doc info (e.g. iterators) to note that node is being removed
-    getDocument()->notifyBeforeNodeRemoval(child); // ### use events instead
+    doc->notifyBeforeNodeRemoval(child); // ### use events instead
 
     // dispatch pre-removal mutation events
-    if (getDocument()->hasListenerType(DocumentImpl::DOMNODEREMOVED_LISTENER)) {
-        child->dispatchEvent(new MutationEventImpl(DOMNodeRemovedEvent,
-                             true,false,this,DOMString(),DOMString(),DOMString(),0),exceptioncode,true);
-        if (exceptioncode)
+    if (c->parentNode() && doc->hasListenerType(DocumentImpl::DOMNODEREMOVED_LISTENER)) {
+        ec = 0;
+        child->dispatchEvent(new MutationEventImpl(DOMNodeRemovedEvent, true, false,
+            c->parentNode(), DOMString(), DOMString(), DOMString(), 0), ec, true);
+        if (ec)
             return;
     }
 
-    bool hasRemovalListeners = getDocument()->hasListenerType(DocumentImpl::DOMNODEREMOVEDFROMDOCUMENT_LISTENER);
-
     // dispatch the DOMNodeRemovedFromDocument event to all descendants
-    if (inDocument()) {
-        for (NodeImpl *c = child; c; c = c->traverseNextNode(child)) {
-            if (hasRemovalListeners) {
-                c->dispatchEvent(new MutationEventImpl(DOMNodeRemovedFromDocumentEvent,
-                                 false,false,0,DOMString(),DOMString(),DOMString(),0),exceptioncode,true);
-                if (exceptioncode)
-                    return;
-            }
+    if (c->inDocument() && doc->hasListenerType(DocumentImpl::DOMNODEREMOVEDFROMDOCUMENT_LISTENER))
+        for (; c; c = c->traverseNextNode(child)) {
+            ec = 0;
+            c->dispatchEvent(new MutationEventImpl(DOMNodeRemovedFromDocumentEvent, false, false,
+                0, DOMString(), DOMString(), DOMString(), 0), ec, true);
+            if (ec)
+                return;
         }
-    }
 }
+
 }

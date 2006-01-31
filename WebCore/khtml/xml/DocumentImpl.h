@@ -34,8 +34,7 @@
 #include <kurl.h>
 #include <kxmlcore/HashCountedSet.h>
 #include <kxmlcore/HashMap.h>
-#include <qcolor.h>
-#include <qdatetime.h>
+#include "Color.h"
 #include <qobject.h>
 #include <qptrlist.h>
 #include <qstringlist.h>
@@ -91,6 +90,9 @@ namespace WebCore {
     class Tokenizer;
 #if __APPLE__
     struct DashboardRegionValue;
+#endif
+#if SVG_SUPPORT
+    class SVGDocumentExtensions;
 #endif
 
     // A range of a node within a document that is "marked", such as being misspelled
@@ -336,15 +338,15 @@ public:
     bool shouldScheduleLayout();
     int elapsedTime() const;
     
-    void setTextColor(const QColor& color) { m_textColor = color; }
-    QColor textColor() const { return m_textColor; }
+    void setTextColor(const Color& color) { m_textColor = color; }
+    Color textColor() const { return m_textColor; }
 
-    const QColor& linkColor() const { return m_linkColor; }
-    const QColor& visitedLinkColor() const { return m_visitedLinkColor; }
-    const QColor& activeLinkColor() const { return m_activeLinkColor; }
-    void setLinkColor(const QColor& c) { m_linkColor = c; }
-    void setVisitedLinkColor(const QColor& c) { m_visitedLinkColor = c; }
-    void setActiveLinkColor(const QColor& c) { m_activeLinkColor = c; }
+    const Color& linkColor() const { return m_linkColor; }
+    const Color& visitedLinkColor() const { return m_visitedLinkColor; }
+    const Color& activeLinkColor() const { return m_activeLinkColor; }
+    void setLinkColor(const Color& c) { m_linkColor = c; }
+    void setVisitedLinkColor(const Color& c) { m_visitedLinkColor = c; }
+    void setActiveLinkColor(const Color& c) { m_activeLinkColor = c; }
     void resetLinkColor();
     void resetVisitedLinkColor();
     void resetActiveLinkColor();
@@ -352,9 +354,9 @@ public:
     bool prepareMouseEvent(bool readonly, int x, int y, MouseEvent* ev);
     bool prepareMouseEvent(bool readonly, bool active, int x, int y, MouseEvent *ev);
 
-    virtual bool childAllowed( NodeImpl *newChild );
-    virtual bool childTypeAllowed( unsigned short nodeType );
-    virtual NodeImpl *cloneNode ( bool deep );
+    virtual bool childAllowed(NodeImpl*);
+    virtual bool childTypeAllowed(unsigned short nodeType);
+    virtual PassRefPtr<NodeImpl> cloneNode(bool deep);
 
     StyleSheetListImpl* styleSheets();
 
@@ -589,7 +591,7 @@ protected:
     ParseMode pMode;
     HTMLMode hMode;
 
-    QColor m_textColor;
+    Color m_textColor;
 
     RefPtr<NodeImpl> m_focusNode;
     RefPtr<NodeImpl> m_hoverNode;
@@ -619,9 +621,9 @@ protected:
     QPtrList<RegisteredEventListener> m_windowEventListeners;
     QPtrList<NodeImpl> m_maintainsState;
 
-    QColor m_linkColor;
-    QColor m_visitedLinkColor;
-    QColor m_activeLinkColor;
+    Color m_linkColor;
+    Color m_visitedLinkColor;
+    Color m_activeLinkColor;
 
     DOMString m_preferredStylesheetSet;
     DOMString m_selectedStylesheetSet;
@@ -643,7 +645,7 @@ protected:
     
     RenderArena* m_renderArena;
 
-    typedef HashMap<NodeImpl*, QValueList<DocumentMarker>*, PointerHash<NodeImpl*> > MarkerMap;
+    typedef HashMap<NodeImpl*, QValueList<DocumentMarker>*> MarkerMap;
     MarkerMap m_markers;
 
     KWQAccObjectCache* m_accCache;
@@ -655,7 +657,7 @@ protected:
     NodeImpl* m_cssTarget;
     
     bool m_processingLoadEvent;
-    QTime m_startTime;
+    double m_startTime;
     bool m_overMinimumLayoutThreshold;
     
 #ifdef KHTML_XSLT
@@ -667,12 +669,12 @@ protected:
     XBL::XBLBindingManager* m_bindingManager; // The access point through which documents and elements communicate with XBL.
 #endif
     
-    typedef HashMap<DOMStringImpl*, HTMLMapElementImpl*, PointerHash<DOMStringImpl*> > ImageMapsByName;
+    typedef HashMap<AtomicStringImpl*, HTMLMapElementImpl*> ImageMapsByName;
     ImageMapsByName m_imageMapsByName;
 
     DOMString m_policyBaseURL;
 
-    typedef HashSet<NodeImpl*, PointerHash<NodeImpl*> > NodeSet;
+    typedef HashSet<NodeImpl*> NodeSet;
     NodeSet m_disconnectedNodesWithEventListeners;
 
     int m_docID; // A unique document identifier used for things like document-specific mapped attributes.
@@ -713,8 +715,13 @@ public:
     void unregisterDisconnectedNodeWithEventListeners(NodeImpl*);
     
     void radioButtonChecked(HTMLInputElementImpl *caller, HTMLFormElementImpl *form);
-    HTMLInputElementImpl* checkedRadioButtonForGroup(DOMStringImpl* name, HTMLFormElementImpl *form);
-    void removeRadioButtonGroup(DOMStringImpl* name, HTMLFormElementImpl *form);
+    HTMLInputElementImpl* checkedRadioButtonForGroup(AtomicStringImpl* name, HTMLFormElementImpl *form);
+    void removeRadioButtonGroup(AtomicStringImpl* name, HTMLFormElementImpl *form);
+    
+#if SVG_SUPPORT
+    const SVGDocumentExtensions* svgExtensions();
+    SVGDocumentExtensions* accessSVGExtensions();
+#endif
 
 private:
     void updateTitle();
@@ -733,17 +740,21 @@ private:
     
     RefPtr<Decoder> m_decoder;
 
-    mutable HashMap<DOMStringImpl*, ElementImpl*, PointerHash<DOMStringImpl*> > m_elementsById;
-    mutable HashCountedSet<DOMStringImpl*, PointerHash<DOMStringImpl*> > m_duplicateIds;
+    mutable HashMap<AtomicStringImpl*, ElementImpl*> m_elementsById;
+    mutable HashCountedSet<AtomicStringImpl*> m_duplicateIds;
     
     HashMap<DOMStringImpl*, ElementImpl*, CaseInsensitiveHash> m_elementsByAccessKey;
     
     InheritedBool m_designMode;
     
     int m_selfOnlyRefCount;
-    typedef HashMap<DOMStringImpl*, HTMLInputElementImpl*, PointerHash<DOMStringImpl*> > NameToInputMap;
-    typedef HashMap<HTMLFormElementImpl*, NameToInputMap*, PointerHash<HTMLFormElementImpl*> > FormToGroupMap;
+    typedef HashMap<AtomicStringImpl*, HTMLInputElementImpl*> NameToInputMap;
+    typedef HashMap<HTMLFormElementImpl*, NameToInputMap*> FormToGroupMap;
     FormToGroupMap m_selectedRadioButtons;
+    
+#if SVG_SUPPORT
+    RefPtr<SVGDocumentExtensions> m_svgExtensions;
+#endif
     
 #if __APPLE__
     QValueList<DashboardRegionValue> m_dashboardRegions;

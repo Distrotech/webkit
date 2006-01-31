@@ -37,7 +37,6 @@
 
 class CSSStyle;
 class FrameView;
-class QColor;
 class QMatrix;
 class QPainter;
 class QTextStream;
@@ -65,6 +64,7 @@ class RenderArena;
 
 namespace WebCore {
 
+class Color;
 class CollapsedBorderValue;
 class DOMString;
 class DocumentImpl;
@@ -124,7 +124,7 @@ struct DashboardRegionValue
 
 // FIXME: This should be a HashSequencedSet, but we don't have that data structure yet.
 // This means the paint order of outlines will be wrong, although this is a minor issue.
-typedef HashSet<RenderFlow*, PointerHash<RenderFlow*> > RenderFlowSequencedSet;
+typedef HashSet<RenderFlow*> RenderFlowSequencedSet;
 
 /**
  * Base Class for all rendering tree objects.
@@ -170,7 +170,8 @@ public:
     bool hasClip() { return isPositioned() &&  style()->hasClip(); }
     
     virtual int getBaselineOfFirstLineBox() const { return -1; } 
-    virtual int getBaselineOfLastLineBox() const { return -1; } 
+    virtual int getBaselineOfLastLineBox() const { return -1; }
+    virtual bool isEmpty() const { return firstChild() == 0; }
     
     // Obtains the nearest enclosing block (including this block) that contributes a first-line style to our inline
     // children.
@@ -224,6 +225,7 @@ public:
     virtual void printTree(int indent=0) const;
     virtual void dump(QTextStream *stream, QString ind = "") const;
     void showTree() const;
+    static void showTree(const RenderObject *ro);
 #endif
 
     static RenderObject *createObject(DOM::NodeImpl* node, RenderStyle* style);
@@ -338,6 +340,7 @@ public:
      * positioned elements
      */
     RenderObject *container() const;
+    RenderObject* hoverAncestor() const;
 
     virtual void markAllDescendantsWithFloatsForLayout(RenderObject* floatToRemove = 0);
     void markContainingBlocksForLayout();
@@ -417,7 +420,7 @@ public:
     // RenderBox implements this.
     virtual void paintBoxDecorations(PaintInfo& i, int _tx, int _ty) {};
 
-    virtual void paintBackgroundExtended(QPainter *p, const QColor& c, const BackgroundLayer* bgLayer, int clipy, int cliph,
+    virtual void paintBackgroundExtended(QPainter *p, const Color& c, const BackgroundLayer* bgLayer, int clipy, int cliph,
                                          int _tx, int _ty, int w, int height,
                                          int bleft, int bright, int pleft, int pright) {};
 
@@ -683,14 +686,14 @@ public:
     RenderStyle* style(bool firstLine) const { return firstLine ? firstLineStyle() : style(); }
 
 
-    void getTextDecorationColors(int decorations, QColor& underline, QColor& overline,
-                                 QColor& linethrough, bool quirksMode=false);
+    void getTextDecorationColors(int decorations, Color& underline, Color& overline,
+                                 Color& linethrough, bool quirksMode=false);
 
     enum BorderSide {
         BSTop, BSBottom, BSLeft, BSRight
     };
     void drawBorder(QPainter *p, int x1, int y1, int x2, int y2, BorderSide s,
-                    QColor c, const QColor& textcolor, EBorderStyle style,
+                    Color c, const Color& textcolor, EBorderStyle style,
                     int adjbw1, int adjbw2, bool invalidisInvert = false);
 
     virtual void setTable(RenderTable*) {};
@@ -781,7 +784,7 @@ public:
     bool shouldSelect() const;
     
     // Obtains the selection background color that should be used when painting a selection.
-    virtual QColor selectionColor(QPainter *p) const;
+    virtual Color selectionColor(QPainter *p) const;
     
     // Whether or not a given block needs to paint selection gaps.
     virtual bool shouldPaintSelectionGaps() const { return false; }

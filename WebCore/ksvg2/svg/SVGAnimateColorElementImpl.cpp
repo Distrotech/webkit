@@ -21,10 +21,12 @@
 */
 
 #include "config.h"
+#if SVG_SUPPORT
 #include "SVGAnimateColorElementImpl.h"
-#include "SVGSVGElementImpl.h"
 #include "KSVGTimeScheduler.h"
 #include "kdom/DOMString.h"
+#include "DocumentImpl.h"
+#include "SVGDocumentExtensions.h"
 
 #include <kdebug.h>
 
@@ -76,8 +78,8 @@ void SVGAnimateColorElementImpl::handleTimerEvent(double timePercentage)
                 m_fromColor->setRGBColor(fromColorString.impl());    
 
                 // Calculate color differences, once.
-                QColor qTo = m_toColor->color();
-                QColor qFrom = m_fromColor->color();
+                Color qTo = m_toColor->color();
+                Color qFrom = m_fromColor->color();
     
                 m_redDiff = qTo.red() - qFrom.red();
                 m_greenDiff = qTo.green() - qFrom.green();
@@ -100,15 +102,15 @@ void SVGAnimateColorElementImpl::handleTimerEvent(double timePercentage)
 
                 m_fromColor->setRGBColor(fromColorString.impl());
 
-                QColor qBy = m_toColor->color();
-                QColor qFrom = m_fromColor->color();
+                Color qBy = m_toColor->color();
+                Color qFrom = m_fromColor->color();
 
                 // Calculate 'm_toColor' using relative values
                 int r = qFrom.red() + qBy.red();
                 int g = qFrom.green() + qBy.green();
                 int b = qFrom.blue() + qBy.blue();
 
-                QColor qTo = clampColor(r, g, b);
+                Color qTo = clampColor(r, g, b);
             
                 KDOM::DOMString toColorString(qTo.name());
                 m_toColor->setRGBColor(toColorString.impl());
@@ -128,10 +130,8 @@ void SVGAnimateColorElementImpl::handleTimerEvent(double timePercentage)
             }
         }
 
-        SVGSVGElementImpl *ownerSVG = ownerSVGElement();
-        if (ownerSVG)
-        {
-            ownerSVG->timeScheduler()->connectIntervalTimer(this);
+        if (DocumentImpl *doc = getDocument()) {
+            doc->accessSVGExtensions()->timeScheduler()->connectIntervalTimer(this);
             m_connected = true;
         }
 
@@ -177,8 +177,8 @@ void SVGAnimateColorElementImpl::handleTimerEvent(double timePercentage)
                 KDOM::DOMString fromColorString(value1);
                 m_fromColor->setRGBColor(fromColorString.impl());    
 
-                QColor qTo = m_toColor->color();
-                QColor qFrom = m_fromColor->color();
+                Color qTo = m_toColor->color();
+                Color qFrom = m_fromColor->color();
 
                 m_redDiff = qTo.red() - qFrom.red();
                 m_greenDiff = qTo.green() - qFrom.green();
@@ -224,10 +224,8 @@ void SVGAnimateColorElementImpl::handleTimerEvent(double timePercentage)
             return;
         }
 
-        SVGSVGElementImpl *ownerSVG = ownerSVGElement();
-        if (ownerSVG)
-        {
-            ownerSVG->timeScheduler()->disconnectIntervalTimer(this);
+        if (DocumentImpl *doc = getDocument()) {
+            doc->accessSVGExtensions()->timeScheduler()->disconnectIntervalTimer(this);
             m_connected = false;
         }
 
@@ -240,7 +238,7 @@ void SVGAnimateColorElementImpl::handleTimerEvent(double timePercentage)
     }
 }
 
-QColor SVGAnimateColorElementImpl::clampColor(int r, int g, int b) const
+Color SVGAnimateColorElementImpl::clampColor(int r, int g, int b) const
 {
     if(r > 255)
         r = 255;
@@ -257,7 +255,7 @@ QColor SVGAnimateColorElementImpl::clampColor(int r, int g, int b) const
     else if(b < 0)
         b = 0;
 
-    return QColor(r, g, b);
+    return Color(r, g, b);
 }
 
 void SVGAnimateColorElementImpl::calculateColor(double time, int &r, int &g, int &b) const
@@ -267,14 +265,16 @@ void SVGAnimateColorElementImpl::calculateColor(double time, int &r, int &g, int
     b = lround(m_blueDiff * time) + m_fromColor->color().blue();
 }
 
-QColor SVGAnimateColorElementImpl::color() const
+Color SVGAnimateColorElementImpl::color() const
 {
     return m_currentColor;
 }
 
-QColor SVGAnimateColorElementImpl::initialColor() const
+Color SVGAnimateColorElementImpl::initialColor() const
 {
     return m_initialColor;
 }
 
 // vim:ts=4:noet
+#endif // SVG_SUPPORT
+

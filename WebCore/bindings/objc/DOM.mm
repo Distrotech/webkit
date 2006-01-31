@@ -94,7 +94,7 @@ private:
     id <DOMEventListener> m_listener;
 };
 
-typedef HashMap< id, ObjCEventListener *, PointerHash<id> > ListenerMap;
+typedef HashMap<id, ObjCEventListener*> ListenerMap;
 
 static ListenerMap *listenerMap;
 
@@ -253,7 +253,7 @@ static ListenerMap *listenerMap;
     ASSERT(refChild);
 
     int exceptionCode = 0;
-    DOMNode *result = [DOMNode _nodeWithImpl:[self _nodeImpl]->insertBefore([newChild _nodeImpl], [refChild _nodeImpl], exceptionCode)];
+    DOMNode *result = [DOMNode _nodeWithImpl:[self _nodeImpl]->insertBefore([newChild _nodeImpl], [refChild _nodeImpl], exceptionCode).get()];
     raiseOnDOMError(exceptionCode);
     return result;
 }
@@ -264,7 +264,7 @@ static ListenerMap *listenerMap;
     ASSERT(oldChild);
 
     int exceptionCode = 0;
-    DOMNode *result = [DOMNode _nodeWithImpl:[self _nodeImpl]->replaceChild([newChild _nodeImpl], [oldChild _nodeImpl], exceptionCode)];
+    DOMNode *result = [DOMNode _nodeWithImpl:[self _nodeImpl]->replaceChild([newChild _nodeImpl], [oldChild _nodeImpl], exceptionCode).get()];
     raiseOnDOMError(exceptionCode);
     return result;
 }
@@ -274,7 +274,7 @@ static ListenerMap *listenerMap;
     ASSERT(oldChild);
 
     int exceptionCode = 0;
-    DOMNode *result = [DOMNode _nodeWithImpl:[self _nodeImpl]->removeChild([oldChild _nodeImpl], exceptionCode)];
+    DOMNode *result = [DOMNode _nodeWithImpl:[self _nodeImpl]->removeChild([oldChild _nodeImpl], exceptionCode).get()];
     raiseOnDOMError(exceptionCode);
     return result;
 }
@@ -284,7 +284,7 @@ static ListenerMap *listenerMap;
     ASSERT(newChild);
 
     int exceptionCode = 0;
-    DOMNode *result = [DOMNode _nodeWithImpl:[self _nodeImpl]->appendChild([newChild _nodeImpl], exceptionCode)];
+    DOMNode *result = [DOMNode _nodeWithImpl:[self _nodeImpl]->appendChild([newChild _nodeImpl], exceptionCode).get()];
     raiseOnDOMError(exceptionCode);
     return result;
 }
@@ -296,7 +296,7 @@ static ListenerMap *listenerMap;
 
 - (DOMNode *)cloneNode:(BOOL)deep
 {
-    return [DOMNode _nodeWithImpl:[self _nodeImpl]->cloneNode(deep)];
+    return [DOMNode _nodeWithImpl:[self _nodeImpl]->cloneNode(deep).get()];
 }
 
 - (void)normalize

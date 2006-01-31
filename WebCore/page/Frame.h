@@ -34,14 +34,14 @@
 #include "edit_actions.h"
 #include "text_affinity.h"
 #include "text_granularity.h"
-#include <qcolor.h>
+#include "Color.h"
 #include <qscrollbar.h>
 
 class FramePrivate;
 class FrameView;
 class KHTMLPartBrowserExtension;
 class KHTMLSettings;
-class KJSProxyImpl;
+class FrameTreeNode;
 
 namespace KJS {
     class PausedTimeouts;
@@ -94,6 +94,7 @@ namespace WebCore {
     class SelectionController;
     class VisiblePosition;
     class XMLTokenizer;
+    class KJSProxyImpl;
 
     struct ChildFrame;
 }
@@ -111,7 +112,7 @@ namespace KJS {
 }
 
 struct MarkedTextUnderline {
-  MarkedTextUnderline(unsigned _startOffset, unsigned _endOffset, const QColor &_color, bool _thick) 
+  MarkedTextUnderline(unsigned _startOffset, unsigned _endOffset, const Color &_color, bool _thick) 
     : startOffset(_startOffset)
        , endOffset(_endOffset)
        , color(_color)
@@ -119,7 +120,7 @@ struct MarkedTextUnderline {
   {}
   unsigned startOffset;
   unsigned endOffset;
-  QColor color;
+  Color color;
   bool thick;
 };
 
@@ -150,7 +151,7 @@ class Frame : public ObjectContents {
 public:
   enum { NoXPosForVerticalArrowNavigation = INT_MIN };
 
-  Frame() : d(0) { }
+  Frame();
   virtual ~Frame();
 
   /**
@@ -473,11 +474,6 @@ public:
   virtual QString selectedText() const;
 
   /**
-   * Returns the selected part of the HTML.
-   */
-  WebCore::SelectionController &selection() const;
-
-  /**
    * Returns the granularity of the selection (character, word, line, paragraph).
    */
   WebCore::ETextGranularity selectionGranularity() const;
@@ -750,6 +746,8 @@ public:
   // Used to keep the part alive when running a script that might destroy it.
   void keepAlive();
 
+  static void endAllLifeSupport();
+
 signals:
   /**
    * Emitted if the cursor is moved over an URL.
@@ -906,6 +904,8 @@ private slots:
 
   void slotEndLifeSupport();
 
+  virtual void clear();
+
 private:
   bool restoreURL( const KURL &url );
   void clearCaretRectIfNeeded();
@@ -926,8 +926,6 @@ private:
 
   void init(FrameView *view);
 
-  virtual void clear();
-
   bool scheduleScript( WebCore::NodeImpl *n, const QString& script);
 
   QVariant executeScheduledScript();
@@ -944,12 +942,9 @@ private:
    */
   QString requestFrameName();
 
-  bool requestObject( WebCore::RenderPart *frame, const QString &url, const QString &serviceType,
-                      const QStringList &paramNames = QStringList(), const QStringList &paramValues = QStringList()  );
-
-  bool requestObject( WebCore::ChildFrame *child, const KURL &url, const WebCore::URLArgs &args = WebCore::URLArgs() );
-
-  WebCore::EventListener *createHTMLEventListener(const WebCore::DOMString& code, WebCore::NodeImpl *node);
+  bool requestObject(WebCore::RenderPart *frame, const QString &url, const QString &serviceType,
+                      const QStringList &paramNames = QStringList(), const QStringList &paramValues = QStringList());
+  bool requestObject(WebCore::ChildFrame *child, const KURL &url, const WebCore::URLArgs &args = WebCore::URLArgs());
 
 public:
   WebCore::DocumentImpl *document() const;
@@ -976,7 +971,7 @@ private:
   void cancelRedirection(bool newLoadInProgress = false);
 
  public:
-  KJSProxyImpl *jScript();
+  WebCore::KJSProxyImpl *jScript();
   Frame *opener();
   void setOpener(Frame *_opener);
   bool openedByJS();
@@ -1112,6 +1107,12 @@ public:
   virtual void didFirstLayout() {}
 
   int frameCount;
+
+  virtual void detachFromView();
+
+  // split out controller objects
+  FrameTreeNode *treeNode();
+  WebCore::SelectionController &selection() const;
 };
 
 #endif

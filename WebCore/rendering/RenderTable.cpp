@@ -7,6 +7,7 @@
  *           (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
  * Copyright (C) 2003, 2004, 2005, 2006 Apple Computer, Inc.
+ * Copyright (C) 2006 Alexey Proskuryakov (ap@nypop.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -26,6 +27,7 @@
 
 #include "config.h"
 #include "RenderTable.h"
+
 #include "RenderTableSection.h"
 #include "RenderTableCol.h"
 #include "RenderTableCell.h"
@@ -79,84 +81,108 @@ void RenderTable::setStyle(RenderStyle *_style)
     columnPos[0] = hspacing;
 
     if (!tableLayout || style()->tableLayout() != oldTableLayout) {
-	delete tableLayout;
+        delete tableLayout;
 
         // According to the CSS2 spec, you only use fixed table layout if an
         // explicit width is specified on the table.  Auto width implies auto table layout.
-	if (style()->tableLayout() == TFIXED && !style()->width().isAuto())
-	    tableLayout = new FixedTableLayout(this);
-	else
-	    tableLayout = new AutoTableLayout(this);
+        if (style()->tableLayout() == TFIXED && !style()->width().isAuto())
+            tableLayout = new FixedTableLayout(this);
+        else
+            tableLayout = new AutoTableLayout(this);
     }
 }
 
-void RenderTable::addChild(RenderObject *child, RenderObject *beforeChild)
+void RenderTable::addChild(RenderObject* child, RenderObject* beforeChild)
 {
-    RenderObject *o = child;
-
-    if (child->element() && child->element()->hasTagName(formTag)) {
-        RenderContainer::addChild(child,beforeChild);
-        return;
-    }
+    bool wrapInAnonymousSection = true;
 
     switch (child->style()->display()) {
         case TABLE_CAPTION:
-            tCaption = static_cast<RenderBlock *>(child);
+            if (child->isRenderBlock())
+                tCaption = static_cast<RenderBlock *>(child);
+            wrapInAnonymousSection = false;
             break;
         case TABLE_COLUMN:
         case TABLE_COLUMN_GROUP:
             has_col_elems = true;
+            wrapInAnonymousSection = false;
             break;
         case TABLE_HEADER_GROUP:
-            if (!head)
-                head = static_cast<RenderTableSection *>(child);
-            else if (!firstBody)
-                firstBody = static_cast<RenderTableSection *>(child);
+            if (!head) {
+                if (child->isTableSection())
+                    head = static_cast<RenderTableSection *>(child);
+            } else if (!firstBody) {
+                if (child->isTableSection())
+                    firstBody = static_cast<RenderTableSection *>(child);
+            }
+            wrapInAnonymousSection = false;
             break;
         case TABLE_FOOTER_GROUP:
             if (!foot) {
-                foot = static_cast<RenderTableSection *>(child);
+                if (child->isTableSection())
+                    foot = static_cast<RenderTableSection *>(child);
+                wrapInAnonymousSection = false;
                 break;
             }
             // fall through
         case TABLE_ROW_GROUP:
             if (!firstBody)
-                firstBody = static_cast<RenderTableSection *>(child);
+                if (child->isTableSection())
+                    firstBody = static_cast<RenderTableSection *>(child);
+            wrapInAnonymousSection = false;
             break;
-        default:
-            if (!beforeChild && lastChild() &&
-                lastChild()->isTableSection() && lastChild()->isAnonymous()) {
-                o = lastChild();
-            } else {
-                RenderObject *lastBox = beforeChild;
-                RenderObject *nextToLastBox = beforeChild;
-                while (lastBox && lastBox->parent()->isAnonymous() &&
-                        !lastBox->isTableSection() && lastBox->style()->display() != TABLE_CAPTION) {
-                    nextToLastBox = lastBox;
-                    lastBox = lastBox->parent();
-                }
-                if (lastBox && lastBox->isAnonymous()) {
-                    lastBox->addChild(child, nextToLastBox);
-                    return;
-                } else {
-                    if (beforeChild && !beforeChild->isTableSection())
-                        beforeChild = 0;
-                    o = new (renderArena()) RenderTableSection(document() /* anonymous */);
-                    RenderStyle *newStyle = new (renderArena()) RenderStyle();
-                    newStyle->inheritFrom(style());
-                    newStyle->setDisplay(TABLE_ROW_GROUP);
-                    o->setStyle(newStyle);
-                    addChild(o, beforeChild);
-                }
-            }
-            o->addChild(child);
-            child->setNeedsLayoutAndMinMaxRecalc();
-            return;
+        case TABLE_CELL:
+        case TABLE_ROW:
+            wrapInAnonymousSection = true;
+            break;
+        case BLOCK:
+        case BOX:
+        case COMPACT:
+        case INLINE:
+        case INLINE_BLOCK:
+        case INLINE_BOX:
+        case INLINE_TABLE:
+        case LIST_ITEM:
+        case NONE:
+        case RUN_IN:
+        case TABLE:
+            // Allow a form to just sit at the top level.
+            wrapInAnonymousSection = !(child->element() && child->element()->hasTagName(formTag));
+            break;
+        }
+
+    if (!wrapInAnonymousSection) {
+        RenderContainer::addChild(child, beforeChild);
+        return;
     }
-    RenderContainer::addChild(child,beforeChild);
+
+    if (!beforeChild && lastChild() && lastChild()->isTableSection() && lastChild()->isAnonymous()) {
+        lastChild()->addChild(child);
+        return;
+    }
+
+    RenderObject *lastBox = beforeChild;
+    RenderObject *nextToLastBox = beforeChild;
+    while (lastBox && lastBox->parent()->isAnonymous() &&
+            !lastBox->isTableSection() && lastBox->style()->display() != TABLE_CAPTION) {
+        nextToLastBox = lastBox;
+        lastBox = lastBox->parent();
+    }
+    if (lastBox && lastBox->isAnonymous()) {
+        lastBox->addChild(child, nextToLastBox);
+        return;
+    }
+
+    if (beforeChild && !beforeChild->isTableSection())
+        beforeChild = 0;
+    RenderTableSection* section = new (renderArena()) RenderTableSection(document() /* anonymous */);
+    RenderStyle* newStyle = new (renderArena()) RenderStyle();
+    newStyle->inheritFrom(style());
+    newStyle->setDisplay(TABLE_ROW_GROUP);
+    section->setStyle(newStyle);
+    addChild(section, beforeChild);
+    section->addChild(child);
 }
-
-
 
 void RenderTable::calcWidth()
 {
@@ -168,7 +194,7 @@ void RenderTable::calcWidth()
 
     LengthType widthType = style()->width().type;
     if (widthType > Relative && style()->width().value > 0) {
-	// Percent or fixed table
+        // Percent or fixed table
         m_width = style()->width().minWidth(availableWidth);
         if (m_minWidth > m_width) m_width = m_minWidth;
     } else {
@@ -237,13 +263,14 @@ void RenderTable::layout()
 
     RenderObject *child = firstChild();
     while(child) {
-	if (child->needsLayout() && !(child->element() && child->element()->hasTagName(formTag)))
-	    child->layout();
-	if (child->isTableSection()) {
-	    static_cast<RenderTableSection *>(child)->calcRowHeight();
-	    calculatedHeight += static_cast<RenderTableSection *>(child)->layoutRows(0);
-	}
-	child = child->nextSibling();
+        // FIXME: What about a form that has a display value that makes it a table section?
+        if (child->needsLayout() && !(child->element() && child->element()->hasTagName(formTag)))
+            child->layout();
+        if (child->isTableSection()) {
+            static_cast<RenderTableSection *>(child)->calcRowHeight();
+            calculatedHeight += static_cast<RenderTableSection *>(child)->layoutRows(0);
+        }
+        child = child->nextSibling();
     }
 
     // ### collapse caption margin
@@ -274,10 +301,10 @@ void RenderTable::layout()
 
     // layout rows
     if (th > calculatedHeight) {
-	// we have to redistribute that height to get the constraint correctly
-	// just force the first body to the height needed
-	// ### FIXME This should take height constraints on all table sections into account and distribute
-	// accordingly. For now this should be good enough
+        // we have to redistribute that height to get the constraint correctly
+        // just force the first body to the height needed
+        // ### FIXME This should take height constraints on all table sections into account and distribute
+        // accordingly. For now this should be good enough
         if (firstBody) {
             firstBody->calcRowHeight();
             firstBody->layoutRows(th - calculatedHeight);
@@ -295,18 +322,18 @@ void RenderTable::layout()
 
     // position the table sections
     if (head) {
-	head->setPos(bl, m_height);
-	m_height += head->height();
+        head->setPos(bl, m_height);
+        m_height += head->height();
     }
     for (RenderObject *body = firstBody; body; body = body->nextSibling()) {
-	if (body != head && body != foot && body->isTableSection()) {
-	    body->setPos(bl, m_height);
-	    m_height += body->height();
-	}
+        if (body != head && body != foot && body->isTableSection()) {
+            body->setPos(bl, m_height);
+            m_height += body->height();
+        }
     }
     if (foot) {
-	foot->setPos(bl, m_height);
-	m_height += foot->height();
+        foot->setPos(bl, m_height);
+        m_height += foot->height();
     }
 
     m_height += bpBottom;
@@ -333,8 +360,8 @@ void RenderTable::layout()
 void RenderTable::setCellWidths()
 {
     for (RenderObject *child = firstChild(); child; child = child->nextSibling())
-	if ( child->isTableSection() )
-	    static_cast<RenderTableSection *>(child)->setCellWidths();
+        if ( child->isTableSection() )
+            static_cast<RenderTableSection *>(child)->setCellWidths();
 }
 
 void RenderTable::paint(PaintInfo& i, int _tx, int _ty)
@@ -364,7 +391,7 @@ void RenderTable::paint(PaintInfo& i, int _tx, int _ty)
     
     for (RenderObject *child = firstChild(); child; child = child->nextSibling())
         if (child->isTableSection() || child == tCaption)
-	    child->paint(paintInfo, _tx, _ty);
+            child->paint(paintInfo, _tx, _ty);
 
     if (collapseBorders() && paintAction == PaintActionChildBlockBackground && style()->visibility() == VISIBLE) {
         // Collect all the unique border styles that we want to paint in a sorted list.  Once we
@@ -419,7 +446,7 @@ void RenderTable::calcMinMaxWidth()
     KHTMLAssert(!minMaxKnown());
 
     if (needSectionRecalc)
-	recalcSections();
+        recalcSections();
 
     tableLayout->calcMinMaxWidth();
 
@@ -443,19 +470,19 @@ void RenderTable::splitColumn(int pos, int firstSpan)
 
     // change width of all rows.
     for (RenderObject *child = firstChild(); child; child = child->nextSibling()) {
-	if (child->isTableSection()) {
-	    RenderTableSection *section = static_cast<RenderTableSection *>(child);
-	    if (section->cCol > pos)
-		section->cCol++;
-	    int size = section->numRows();
-	    for (int row = 0; row < size; ++row) {
-		section->grid[row].row->resize(oldSize + 1);
-		RenderTableSection::Row &r = *section->grid[row].row;
-		memmove(r.data() + pos + 1, r.data() + pos, (oldSize - pos) * sizeof(RenderTableSection::CellStruct));
-		r[pos + 1].cell = 0;
+        if (child->isTableSection()) {
+            RenderTableSection *section = static_cast<RenderTableSection *>(child);
+            if (section->cCol > pos)
+                section->cCol++;
+            int size = section->numRows();
+            for (int row = 0; row < size; ++row) {
+                section->grid[row].row->resize(oldSize + 1);
+                RenderTableSection::Row &r = *section->grid[row].row;
+                memmove(r.data() + pos + 1, r.data() + pos, (oldSize - pos) * sizeof(RenderTableSection::CellStruct));
+                r[pos + 1].cell = 0;
                 r[pos + 1].inColSpan = r[pos].inColSpan || r[pos].cell;
-	    }
-	}
+            }
+        }
     }
     columnPos.resize(numEffCols() + 1);
     setNeedsLayoutAndMinMaxRecalc();
@@ -471,46 +498,47 @@ void RenderTable::appendColumn(int span)
 
     // change width of all rows.
     for (RenderObject *child = firstChild(); child; child = child->nextSibling()) {
-	if (child->isTableSection()) {
-	    RenderTableSection *section = static_cast<RenderTableSection *>(child);
-	    int size = section->numRows();
-	    for (int row = 0; row < size; ++row) {
-		section->grid[row].row->resize(newSize);
+        if (child->isTableSection()) {
+            RenderTableSection *section = static_cast<RenderTableSection *>(child);
+            int size = section->numRows();
+            for (int row = 0; row < size; ++row) {
+                section->grid[row].row->resize(newSize);
                 RenderTableSection::CellStruct& c = section->cellAt(row, pos);
-		c.cell = 0;
-		c.inColSpan = false;
-	    }
-	}
+                c.cell = 0;
+                c.inColSpan = false;
+            }
+        }
     }
     columnPos.resize(numEffCols() + 1);
     setNeedsLayoutAndMinMaxRecalc();
 }
 
-RenderTableCol *RenderTable::colElement(int col) {
+RenderTableCol *RenderTable::colElement(int col)
+{
     if (!has_col_elems)
-	return 0;
+        return 0;
     RenderObject *child = firstChild();
     int cCol = 0;
     while (child) {
-	if (child->isTableCol()) {
-	    RenderTableCol *colElem = static_cast<RenderTableCol *>(child);
-	    int span = colElem->span();
-	    if (!colElem->firstChild()) {
-		cCol += span;
-		if (cCol > col)
-		    return colElem;
-	    }
+        if (child->isTableCol()) {
+            RenderTableCol *colElem = static_cast<RenderTableCol *>(child);
+            int span = colElem->span();
+            if (!colElem->firstChild()) {
+                cCol += span;
+                if (cCol > col)
+                    return colElem;
+            }
 
-	    RenderObject *next = child->firstChild();
-	    if (!next)
-		next = child->nextSibling();
-	    if (!next && child->parent()->isTableCol())
-		next = child->parent()->nextSibling();
-	    child = next;
-	} else if (child == tCaption)
+            RenderObject *next = child->firstChild();
+            if (!next)
+                next = child->nextSibling();
+            if (!next && child->parent()->isTableCol())
+                next = child->parent()->nextSibling();
+            child = next;
+        } else if (child == tCaption)
             child = child->nextSibling();
         else
-	    break;
+            break;
     }
     return 0;
 }
@@ -523,9 +551,9 @@ void RenderTable::recalcSections()
 
     // We need to get valid pointers to caption, head, foot and firstbody again
     for (RenderObject *child = firstChild(); child; child = child->nextSibling()) {
-	switch (child->style()->display()) {
+        switch (child->style()->display()) {
             case TABLE_CAPTION:
-                if (!tCaption) {
+                if (!tCaption && child->isRenderBlock()) {
                     tCaption = static_cast<RenderBlock*>(child);
                     tCaption->setNeedsLayout(true);
                 }
@@ -534,37 +562,56 @@ void RenderTable::recalcSections()
             case TABLE_COLUMN_GROUP:
                 has_col_elems = true;
                 break;
-            case TABLE_HEADER_GROUP: {
-                RenderTableSection *section = static_cast<RenderTableSection *>(child);
-                if (!head)
-                    head = section;
-                else if (!firstBody)
-                    firstBody = section;
-                if (section->needCellRecalc)
-                    section->recalcCells();
+            case TABLE_HEADER_GROUP:
+                if (child->isTableSection()) {
+                    RenderTableSection *section = static_cast<RenderTableSection *>(child);
+                    if (!head)
+                        head = section;
+                    else if (!firstBody)
+                        firstBody = section;
+                    if (section->needCellRecalc)
+                        section->recalcCells();
+                }
                 break;
-            }
-            case TABLE_FOOTER_GROUP: {
-                RenderTableSection *section = static_cast<RenderTableSection *>(child);
-                if (!foot)
-                    foot = section;
-                else if (!firstBody)
-                    firstBody = section;
-                if (section->needCellRecalc)
-                    section->recalcCells();
+            case TABLE_FOOTER_GROUP:
+                if (child->isTableSection()) {
+                    RenderTableSection *section = static_cast<RenderTableSection *>(child);
+                    if (!foot)
+                        foot = section;
+                    else if (!firstBody)
+                        firstBody = section;
+                    if (section->needCellRecalc)
+                        section->recalcCells();
+                }
                 break;
-            }
-            case TABLE_ROW_GROUP: {
-                RenderTableSection *section = static_cast<RenderTableSection *>(child);
-                if (!firstBody)
-                    firstBody = section;
-                if (section->needCellRecalc)
-                    section->recalcCells();
-            }
+            case TABLE_ROW_GROUP:
+                if (child->isTableSection()) {
+                    RenderTableSection *section = static_cast<RenderTableSection *>(child);
+                    if (!firstBody)
+                        firstBody = section;
+                    if (section->needCellRecalc)
+                        section->recalcCells();
+                }
+                break;
             default:
                 break;
-	}
+        }
     }
+
+    // repair column count (addChild can grow it too much, because it always adds elements to the last row of a section)
+    int maxCols = 0;
+    for (RenderObject *child = firstChild(); child; child = child->nextSibling()) {
+        if (child->isTableSection()) {
+            RenderTableSection *section = static_cast<RenderTableSection *>(child);
+            int sectionCols = section->numColumns();
+            if (sectionCols > maxCols)
+                maxCols = sectionCols;
+        }
+    }
+    
+    columns.resize(maxCols);
+    columnPos.resize(maxCols+1);
+    
     needSectionRecalc = false;
     setNeedsLayout(true);
 }
@@ -726,15 +773,15 @@ void RenderTable::updateFirstLetter()
 void RenderTable::dump(QTextStream *stream, QString ind) const
 {
     if (tCaption)
-	*stream << " tCaption";
+        *stream << " tCaption";
     if (head)
-	*stream << " head";
+        *stream << " head";
     if (foot)
-	*stream << " foot";
+        *stream << " foot";
 
     *stream << endl << ind << "cspans:";
     for ( unsigned int i = 0; i < columns.size(); i++ )
-	*stream << " " << columns[i].span;
+        *stream << " " << columns[i].span;
     *stream << endl << ind;
 
     RenderBlock::dump(stream,ind);

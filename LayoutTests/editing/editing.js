@@ -423,6 +423,21 @@ function selectAllCommand() {
 
 //-------------------------------------------------------------------------------------------------------
 
+function execStrikethroughCommand() {
+    document.execCommand("Strikethrough");
+}
+function strikethroughCommand() {
+    if (commandDelay > 0) {
+        window.setTimeout(execStrikethroughCommand, commandCount * commandDelay);
+        commandCount++;
+    }
+    else {
+        execStrikethroughCommand();
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------
+
 function execUndoCommand() {
     document.execCommand("Undo");
 }

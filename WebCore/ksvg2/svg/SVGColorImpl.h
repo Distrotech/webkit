@@ -22,8 +22,9 @@
 
 #ifndef KSVG_SVGColorImpl_H
 #define KSVG_SVGColorImpl_H
+#if SVG_SUPPORT
 
-#include <qcolor.h>
+#include "Color.h"
 
 #include <kdom/core/DOMStringImpl.h>
 #include "css_valueimpl.h"
@@ -55,15 +56,16 @@ namespace KSVG
         virtual KDOM::DOMString cssText() const;
 
         // Helpers
-        const QColor &color() const;
+        const Color &color() const;
 
     private:    
-        QColor m_qColor;
+        Color m_qColor;
         unsigned short m_colorType;
         KDOM::DOMString m_rgbColor;
     };
 };
 
+#endif // SVG_SUPPORT
 #endif
 
 // vim:ts=4:noet

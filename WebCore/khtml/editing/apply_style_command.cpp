@@ -156,7 +156,7 @@ bool StyleChange::checkForLegacyHTMLStyleChange(const CSSProperty *property)
             }
             break;
         case CSS_PROP_COLOR: {
-            QColor color(CSSParser::parseColor(valueText));
+            Color color(CSSParser::parseColor(valueText));
             m_applyFontColor = color.name();
             return true;
         }
@@ -454,7 +454,7 @@ void ApplyStyleCommand::applyRelativeFontStyleChange(CSSMutableStyleDeclarationI
 
     // Store away font size before making any changes to the document.
     // This ensures that changes to one node won't effect another.
-    HashMap<NodeImpl*, float, PointerHash<NodeImpl*> > startingFontSizes;
+    HashMap<NodeImpl*, float> startingFontSizes;
     for (NodeImpl *node = startNode; node != beyondEnd; node = node->traverseNextNode())
         startingFontSizes.set(node, computedFontSize(node));
 

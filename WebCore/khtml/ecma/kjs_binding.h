@@ -102,6 +102,7 @@ namespace KJS {
     bool wasRunByUserGesture() const;
 
     virtual void mark();
+    virtual ExecState *globalExec();
     
     DOM::EventImpl *getCurrentEvent() const { return m_evt; }
 
@@ -153,6 +154,11 @@ namespace KJS {
    *  Get a String object, or jsNull() if s is null
    */
   JSValue *jsStringOrNull(const DOM::DOMString&);
+
+  /**
+   *  Get a String object, or jsUndefined() if s is null
+   */
+  JSValue *jsStringOrUndefined(const WebCore::DOMString&);
 
   /**
    *  Get a DOMString object or a null DOMString if the value is null

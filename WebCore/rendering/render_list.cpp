@@ -32,7 +32,7 @@
 #include "htmlnames.h"
 
 #include <qpainter.h>
-#include <qpen.h>
+#include "Pen.h"
 
 #include "helper.h"
 
@@ -181,21 +181,25 @@ void RenderListItem::calcListValue()
     // only called from the marker so..
     KHTMLAssert(m_marker);
 
-    if(predefVal != -1)
+    if (predefVal != -1)
         m_marker->m_value = predefVal;
-    else if(!previousSibling())
+    else if (!previousSibling())
         m_marker->m_value = 1;
     else {
 	RenderObject *o = previousSibling();
-	while ( o && (!o->isListItem() || o->style()->listStyleType() == LNONE) )
+	while (o && (!o->isListItem() || o->style()->listStyleType() == LNONE))
 	    o = o->previousSibling();
-        if( o && o->isListItem() && o->style()->listStyleType() != LNONE ) {
+        if (o && o->isListItem() && o->style()->listStyleType() != LNONE) {
             RenderListItem *item = static_cast<RenderListItem *>(o);
             m_marker->m_value = item->value() + 1;
-        }
-        else
+        } else
             m_marker->m_value = 1;
     }
+}
+
+bool RenderListItem::isEmpty() const
+{
+    return lastChild() == m_marker;
 }
 
 static RenderObject* getParentOfFirstLineBox(RenderObject* curr, RenderObject* marker)
@@ -204,8 +208,7 @@ static RenderObject* getParentOfFirstLineBox(RenderObject* curr, RenderObject* m
     if (!firstChild)
         return 0;
         
-    for (RenderObject* currChild = firstChild;
-         currChild; currChild = currChild->nextSibling()) {
+    for (RenderObject* currChild = firstChild; currChild; currChild = currChild->nextSibling()) {
         if (currChild == marker)
             continue;
             
@@ -230,6 +233,12 @@ static RenderObject* getParentOfFirstLineBox(RenderObject* curr, RenderObject* m
     return 0;
 }
 
+void RenderListItem::resetMarkerValue()
+{
+    m_marker->m_value = -1;
+    m_marker->setNeedsLayoutAndMinMaxRecalc();
+}
+
 void RenderListItem::updateMarkerLocation()
 {
     // Sanity check the location of our marker.
@@ -246,8 +255,8 @@ void RenderListItem::updateMarkerLocation()
             else
                 lineBoxParent = this;
         }
-        if (markerPar != lineBoxParent)
-        {
+        
+        if (markerPar != lineBoxParent || !m_marker->minMaxKnown()) {
             if (markerPar)
                 markerPar->removeChild(m_marker);
             if (!lineBoxParent)
@@ -449,7 +458,7 @@ void RenderListMarker::paint(PaintInfo& i, int _tx, int _ty)
     p->drawRect( _tx + xoff, _ty + yoff, offset, offset );
 #endif
 
-    const QColor color( style()->color() );
+    const Color color( style()->color() );
     p->setPen( color );
 
     switch(style()->listStyleType()) {

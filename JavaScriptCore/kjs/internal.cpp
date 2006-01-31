@@ -16,7 +16,7 @@
  *
  *  You should have received a copy of the GNU Library General Public License
  *  along with this library; see the file COPYING.LIB.  If not, write to
- *  the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
+ *  the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  *
  */
@@ -46,12 +46,6 @@
 #include <math.h>
 #include <stdio.h>
 
-#if WIN32
-#include <float.h>
-#define copysign(a, b) _copysign(a, b)
-template void * const & KXMLCore::extractFirst<struct std::pair<void *,void *> >(struct std::pair<void *, void *> const &);
-#endif
-
 extern int kjsyyparse();
 
 namespace KJS {
@@ -72,6 +66,10 @@ namespace KJS {
   const double NaN = *(const double*) NaN_Bytes;
   const double Inf = *(const double*) Inf_Bytes;
  
+#endif
+
+#if WIN32
+#define copysign _copysign
 #endif
 
 // ------------------------------ UndefinedImp ---------------------------------
@@ -431,7 +429,7 @@ void Parser::accept(ProgramNode *prog)
 
 InterpreterImp* InterpreterImp::s_hook = 0L;
 
-typedef HashMap<JSObject *, InterpreterImp *, PointerHash<JSObject *> > InterpreterMap;
+typedef HashMap<JSObject *, InterpreterImp *> InterpreterMap;
 
 static inline InterpreterMap &interpreterMap()
 {

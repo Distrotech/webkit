@@ -15,8 +15,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -28,7 +28,7 @@
 
 namespace KXMLCore {
 
-    template<typename Value, typename HashFunctions = DefaultHash<Value>, typename Traits = HashTraits<Value> >
+    template<typename Value, typename HashFunctions = typename DefaultHash<Value>::Hash, typename Traits = HashTraits<Value> >
     class HashCountedSet {
     private:
         typedef HashMap<Value, unsigned, HashFunctions, Traits> ImplType;
@@ -55,9 +55,9 @@ namespace KXMLCore {
         unsigned count(const ValueType& value) const;
 
         // increases the count if an equal value is already present
-        // returns value is a pair of an interator to the new value's location, 
-        // and a bool that is true if an actual new insertion was done
-        std::pair<iterator, bool> insert(const ValueType &value);
+        // the return value is a pair of an interator to the new value's location, 
+        // and a bool that is true if an new entry was added
+        std::pair<iterator, bool> add(const ValueType &value);
         
         // reduces the count of the value, and removes it if count
         // goes down to zero
@@ -137,7 +137,7 @@ namespace KXMLCore {
     }
     
     template<typename Value, typename HashFunctions, typename Traits>
-    inline std::pair<typename HashCountedSet<Value, HashFunctions, Traits>::iterator, bool> HashCountedSet<Value, HashFunctions, Traits>::insert(const ValueType &value)
+    inline std::pair<typename HashCountedSet<Value, HashFunctions, Traits>::iterator, bool> HashCountedSet<Value, HashFunctions, Traits>::add(const ValueType &value)
     {
         pair<iterator, bool> result = m_impl.add(value, 0); 
         ++result.first->second;

@@ -21,26 +21,30 @@
 */
 
 #include "config.h"
-#include <kdom/kdom.h>
-#include <kdom/Namespace.h>
-#include <kdom/DOMString.h>
-#include <kdom/core/domattrs.h>
-#include <kdom/core/AttrImpl.h>
-#include "css_stylesheetimpl.h"
-#include <kdom/events/EventListenerImpl.h>
-#include "DocumentImpl.h"
-
-#include "ksvg.h"
-#include "SVGNames.h"
-#include "EventNames.h"
-#include "htmlnames.h"
+#if SVG_SUPPORT
 #include "SVGElementImpl.h"
-#include "SVGSVGElementImpl.h"
-#include "SVGDOMImplementationImpl.h"
 
-using namespace KSVG;
-using namespace DOM::HTMLNames;
-using namespace DOM::EventNames;
+#include "DocumentImpl.h"
+#include "EventNames.h"
+#include "SVGDOMImplementationImpl.h"
+#include "SVGNames.h"
+#include "SVGSVGElementImpl.h"
+#include "css_stylesheetimpl.h"
+#include "dom2_events.h"
+#include "htmlnames.h"
+#include "ksvg.h"
+#include <kdom/DOMString.h>
+#include <kdom/Namespace.h>
+#include <kdom/core/AttrImpl.h>
+#include <kdom/core/domattrs.h>
+#include <kdom/events/EventListenerImpl.h>
+#include <kdom/kdom.h>
+#include "SVGDocumentExtensions.h"
+
+namespace WebCore {
+
+using namespace HTMLNames;
+using namespace EventNames;
 
 SVGElementImpl::SVGElementImpl(const KDOM::QualifiedName& tagName, KDOM::DocumentImpl *doc) : KDOM::XMLElementImpl(tagName, doc), m_closed(false)
 {
@@ -102,25 +106,31 @@ KDOM::AtomicString SVGElementImpl::tryGetAttributeNS(const KDOM::DOMString& name
     return defaultVal;
 }
 
-void SVGElementImpl::parseMappedAttribute(KDOM::MappedAttributeImpl *attr)
+void SVGElementImpl::addSVGEventListener(const AtomicString& eventType, const AttributeImpl* attr)
+{
+    EventListener *listener = getDocument()->accessSVGExtensions()->createSVGEventListener(attr->value(), this);
+    ElementImpl::setHTMLEventListener(eventType, listener);
+}
+
+void SVGElementImpl::parseMappedAttribute(MappedAttributeImpl *attr)
 {
     // standard events
     if (attr->name() == onclickAttr)
-        setHTMLEventListener(clickEvent, getDocument()->createHTMLEventListener(attr->value().qstring(), this));
+        addSVGEventListener(clickEvent, attr);
     else if (attr->name() == onmousedownAttr)
-        setHTMLEventListener(mousedownEvent, getDocument()->createHTMLEventListener(attr->value().qstring(), this));
+        addSVGEventListener(mousedownEvent, attr);
     else if (attr->name() == onmousemoveAttr)
-        setHTMLEventListener(mousemoveEvent, getDocument()->createHTMLEventListener(attr->value().qstring(), this));
+        addSVGEventListener(mousemoveEvent, attr);
     else if (attr->name() == onmouseoutAttr)
-        setHTMLEventListener(mouseoutEvent, getDocument()->createHTMLEventListener(attr->value().qstring(), this));
+        addSVGEventListener(mouseoutEvent, attr);
     else if (attr->name() == onmouseoverAttr)
-        setHTMLEventListener(mouseoverEvent, getDocument()->createHTMLEventListener(attr->value().qstring(), this));
+        addSVGEventListener(mouseoverEvent, attr);
     else if (attr->name() == onmouseupAttr)
-        setHTMLEventListener(mouseupEvent, getDocument()->createHTMLEventListener(attr->value().qstring(), this));
+        addSVGEventListener(mouseupEvent, attr);
     else if (attr->name() == onfocusAttr)
-        setHTMLEventListener(DOMFocusInEvent, getDocument()->createHTMLEventListener(attr->value().qstring(), this));
+        addSVGEventListener(DOMFocusInEvent, attr);
     else if (attr->name() == onblurAttr)
-        setHTMLEventListener(DOMFocusOutEvent, getDocument()->createHTMLEventListener(attr->value().qstring(), this));
+        addSVGEventListener(DOMFocusOutEvent, attr);
     else
         KDOM::StyledElementImpl::parseMappedAttribute(attr);
 }
@@ -131,5 +141,9 @@ bool SVGElementImpl::childShouldCreateRenderer(DOM::NodeImpl *child) const
         return static_cast<SVGElementImpl *>(child)->isValid();
     return false;
 }
+
+}
+
+#endif // SVG_SUPPORT
 
 // vim:ts=4:noet

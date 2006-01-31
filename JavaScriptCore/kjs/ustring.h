@@ -16,7 +16,7 @@
  *
  *  You should have received a copy of the GNU Library General Public License
  *  along with this library; see the file COPYING.LIB.  If not, write to
- *  the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
+ *  the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  *
  */
@@ -44,6 +44,7 @@ typedef unsigned long ulong;
  */
 namespace DOM {
   class DOMString;
+  class AtomicString;
 }
 class KJScript;
 class QString;
@@ -275,11 +276,16 @@ namespace KJS {
      * Note: feel free to contact me if you want to see a dummy header for
      * your favorite FooString class here !
      */
-    UString(const QString &);
+    UString(const QString&);
     /**
      * Convenience declaration only ! See UString(const QString&).
      */
-    UString(const DOM::DOMString &);
+    UString(const DOM::DOMString&);
+    /**
+     * Convenience declaration only ! See UString(const QString&).
+     */
+    UString(const DOM::AtomicString&);
+
     /**
      * Concatenation constructor. Makes operator+ more efficient.
      */

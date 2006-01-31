@@ -1,3 +1,295 @@
+2006-01-25  George Staikos <staikos@opensource.apple.com>
+
+	Reviewed by Darin.
+
+	* kxmlcore/HashFunctions.h: Merge build fix from KDE.
+
+2006-01-25  Darin Adler  <darin@apple.com>
+
+        - removed an unused source file
+
+        * kjs/pointer_hash.h: Removed.
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCore.vcproj: Removed reference to pointer_hash.h.
+
+2006-01-23  Anders Carlsson  <andersca@mac.com>
+
+        Reviewed by Maciej.
+
+        - fix http://bugzilla.opendarwin.org/show_bug.cgi?id=6737
+        KJS_DEFINE_PROTOTYPE should work outside of the KJS namespace
+        
+        * kjs/lookup.h:
+        Prefix all KJS types with KJS:: in KJS_DEFINE_PROTOTYPE.
+        
+        (cacheGlobalObject):
+        Move this out of the KJS namespace.
+
+2006-01-23  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Eric.
+
+        - renamed PointerHash to PtrHash
+        - made PtrHash the default hash function for int and pointer types that aren't further specialized
+        - added an AtomicStringImpl class to make it easier and more typesafe to identity hash atomic strings
+        - did appropriate consequent cleanup (very few places now need to declare a hash function)
+        http://bugzilla.opendarwin.org/show_bug.cgi?id=6752
+        
+        * kjs/array_object.cpp:
+        (ArrayProtoFunc::callAsFunction): no need to mention PointerHash
+        * kjs/collector.cpp: ditto
+        * kjs/identifier.cpp:
+        (KXMLCore::): declare DefaultHash the new way
+        * kjs/internal.cpp: no need to mention PointerHash
+        * kjs/ustring.h:
+        * kxmlcore/HashCountedSet.h: change how we get the default hash to make it
+        easier to specialize on PtrHash
+        * kxmlcore/HashFunctions.h:
+        (KXMLCore::): renamed PointerHash to PtrHash; changed DefaultHash so that it has
+        a Hash typedef rather than being a hash function class itself; declared DefaultHash
+        for int and partializy specialized for pointer types
+        * kxmlcore/HashMapPtrSpec.h:
+        (KXMLCore::PtrHashIteratorAdapter::PtrHashIteratorAdapter): Slight tweaks for new
+        way of handling pointer hash
+        (KXMLCore::PtrHashConstIteratorAdapter::PtrHashConstIteratorAdapter): ditto
+        (KXMLCore::): ditto
+        * kxmlcore/HashMap.h: ditto
+        * kxmlcore/HashSet.h: ditto
+
+2006-01-23  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Tim Omernick.
+        
+        - use classes instead of free functions for extractors, this better matches how other
+        things work and should avoid the need for hacky workarounds on other compilers
+        http://bugzilla.opendarwin.org/show_bug.cgi?id=6748
+
+        * kjs/array_object.cpp:
+        * kjs/identifier.cpp:
+        * kjs/internal.cpp:
+        * kxmlcore/HashMap.h:
+        (KXMLCore::PairFirstExtractor::extract):
+        * kxmlcore/HashMapPtrSpec.h:
+        (KXMLCore::):
+        * kxmlcore/HashSet.h:
+        (KXMLCore::IdentityExtractor::extract):
+        * kxmlcore/HashTable.h:
+        (KXMLCore::addIterator):
+        (KXMLCore::removeIterator):
+        (KXMLCore::HashTable::add):
+        (KXMLCore::HashTable::isEmptyBucket):
+        (KXMLCore::HashTable::isDeletedBucket):
+        (KXMLCore::HashTable::HashTable):
+        (KXMLCore::HashTable::lookup):
+        (KXMLCore::HashTable::add):
+        (KXMLCore::HashTable::reinsert):
+        (KXMLCore::HashTable::find):
+        (KXMLCore::HashTable::contains):
+        (KXMLCore::HashTable::remove):
+        (KXMLCore::HashTable::allocateTable):
+        (KXMLCore::HashTable::deallocateTable):
+        (KXMLCore::HashTable::expand):
+        (KXMLCore::HashTable::rehash):
+        (KXMLCore::HashTable::clear):
+        (KXMLCore::HashTable::swap):
+        (KXMLCore::HashTable::operator):
+        (KXMLCore::HashTable::checkTableConsistency):
+        (KXMLCore::HashTable::checkTableConsistencyExceptSize):
+        (KXMLCore::HashTable::invalidateIterators):
+
+2006-01-23  Maciej Stachowiak  <mjs@apple.com>
+
+        Rubber stamped by Tim Hatcher.
+        
+        - renamed inert() operation on HashSet, HashCountedSet and HashTable to add()
+        for consistency with HashMap
+
+        * kjs/array_object.cpp:
+        (ArrayProtoFunc::callAsFunction):
+        * kjs/collector.cpp:
+        (KJS::Collector::protect):
+        * kjs/identifier.cpp:
+        (KJS::Identifier::add):
+        * kxmlcore/HashCountedSet.h:
+        (KXMLCore::::add):
+        * kxmlcore/HashMap.h:
+        (KXMLCore::::inlineAdd):
+        * kxmlcore/HashSet.h:
+        (KXMLCore::::add):
+        * kxmlcore/HashTable.h:
+        (KXMLCore::HashTable::add):
+        (KXMLCore::::add):
+        (KXMLCore::::HashTable):
+
+2006-01-23  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by thatcher
+        
+        Turned on -O2 for B&I build.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+
+2006-01-23  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Tim Hatcher.
+        
+        - it's "Franklin Street", not "Franklin Steet"
+
+        * kjs/array_instance.h:
+        * kjs/array_object.cpp:
+        * kjs/array_object.h:
+        * kjs/bool_object.cpp:
+        * kjs/bool_object.h:
+        * kjs/collector.cpp:
+        * kjs/collector.h:
+        * kjs/completion.h:
+        * kjs/context.h:
+        * kjs/date_object.cpp:
+        * kjs/date_object.h:
+        * kjs/debugger.cpp:
+        * kjs/debugger.h:
+        * kjs/dtoa.h:
+        * kjs/error_object.cpp:
+        * kjs/error_object.h:
+        * kjs/function.cpp:
+        * kjs/function.h:
+        * kjs/function_object.cpp:
+        * kjs/function_object.h:
+        * kjs/grammar.y:
+        * kjs/identifier.cpp:
+        * kjs/identifier.h:
+        * kjs/internal.cpp:
+        * kjs/internal.h:
+        * kjs/interpreter.cpp:
+        * kjs/interpreter.h:
+        * kjs/lexer.cpp:
+        * kjs/lexer.h:
+        * kjs/list.cpp:
+        * kjs/list.h:
+        * kjs/lookup.cpp:
+        * kjs/lookup.h:
+        * kjs/math_object.cpp:
+        * kjs/math_object.h:
+        * kjs/nodes.cpp:
+        * kjs/nodes.h:
+        * kjs/nodes2string.cpp:
+        * kjs/number_object.cpp:
+        * kjs/number_object.h:
+        * kjs/object.cpp:
+        * kjs/object.h:
+        * kjs/object_object.cpp:
+        * kjs/object_object.h:
+        * kjs/operations.cpp:
+        * kjs/operations.h:
+        * kjs/property_map.cpp:
+        * kjs/property_map.h:
+        * kjs/property_slot.cpp:
+        * kjs/property_slot.h:
+        * kjs/reference.cpp:
+        * kjs/reference.h:
+        * kjs/reference_list.cpp:
+        * kjs/reference_list.h:
+        * kjs/regexp.cpp:
+        * kjs/regexp.h:
+        * kjs/regexp_object.cpp:
+        * kjs/regexp_object.h:
+        * kjs/scope_chain.cpp:
+        * kjs/scope_chain.h:
+        * kjs/simple_number.h:
+        * kjs/string_object.cpp:
+        * kjs/string_object.h:
+        * kjs/testkjs.cpp:
+        * kjs/types.h:
+        * kjs/ustring.cpp:
+        * kjs/ustring.h:
+        * kjs/value.cpp:
+        * kjs/value.h:
+        * kxmlcore/AlwaysInline.h:
+        * kxmlcore/ListRefPtr.h:
+        * kxmlcore/PassRefPtr.h:
+        * kxmlcore/RefPtr.h:
+
+2006-01-23  Darin Adler  <darin@apple.com>
+
+        Reviewed by John Sullivan.
+
+        - change needed for fix to http://bugzilla.opendarwin.org/show_bug.cgi?id=6617
+          REGRESSION: Crash in cloneChildNodes when clicking element
+
+        * kxmlcore/PassRefPtr.h: Fix assignment operator from RefPtr of a different
+        type by calling get() instead of going directly at m_ptr.
+        * kxmlcore/RefPtr.h: Ditto.
+
+        - other changes
+
+        * JavaScriptCore.xcodeproj/project.pbxproj: Xcode decided to change this file.
+        It's just a resorted list of keys in a dictionary.
+
+        * kjs/fpconst.cpp: Wrap this file in #if __APPLE__ since the alternate version
+        in internal.cpp is in #if !__APPLE__. This file is to give us the "no init
+        routine" property we want to have on OS X.
+
+2006-01-22  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+
+        - Set up Page class and invert Frame / WebCoreFrameBridge ownership
+        http://bugzilla.opendarwin.org/show_bug.cgi?id=6577
+
+        * kjs/interpreter.h: make globalExec virtual so ScriptInterpreter can 
+        override it
+
+2006-01-23  George Staikos <staikos@opensource.apple.com>
+
+	Reviewed by Maciej and Darin.
+
+	* kxmlcore/Assertions.h: This file only works with __APPLE__ right now
+        * kjs/interpreter.cpp: ditto
+        * kjs/simple_number.h: Add assert.h and remove from config.h
+        * kjs/array_object.cpp: Use relative paths for kxmlcore includes
+        * kjs/testkjs.cpp: Use relative paths for kxmlcore includes
+
+2006-01-23  George Staikos <staikos@opensource.apple.com>
+
+	Reviewed by Maciej.
+
+	* kjs/config.h: unbreak preprocessor change
+
+2006-01-23  George Staikos <staikos@opensource.apple.com>
+
+        Approved by Maciej and Darin.
+
+        * kjs/:
+        * kxmlcore/:
+	     Update FSF address in license to make merging easier
+
+2006-01-22  George Staikos <staikos@opensource.apple.com>
+
+        Reviewed by Maciej.
+
+        * kjs/collector.cpp: merge major speedup from KDE on Linux
+                             patch by Maks Orlovich, bug #6145
+                             Also unify cpu detection
+        * kjs/config.h: define simpler CPU macros
+
+2006-01-22  George Staikos <staikos@opensource.apple.com>
+
+        Reviewed by Maciej.
+
+        * kjs/collector.cpp: merge FreeBSD compile fix from KDE
+                             -> requires build magic for use
+
+2006-01-21  George Staikos <staikos@opensource.apple.com>
+
+        Reviewed by Maciej.
+
+        * kjs/nodes2string.cpp
+        * kjs/operations.h
+        * kjs/debugger.h
+          Fix pedantic compile with some gcc versions (Merge from KDE)
+
+        * kjs/create_hash_table:
+	  Fix build with Perl 5.8.0 (Merge from KDE)
+
 2006-01-18  Darin Adler  <darin@apple.com>
 
         Reviewed by Hyatt.

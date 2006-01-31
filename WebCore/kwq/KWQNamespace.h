@@ -67,13 +67,6 @@ public:
         Horizontal,
         Vertical
     };
-    
-    enum PenStyle {
-        NoPen,
-        SolidLine,
-        DotLine,
-        DashLine
-    };
 
     enum BrushStyle {
         NoBrush,
@@ -85,13 +78,6 @@ public:
         OrROP,
         XorROP,
     };
-
-    static const unsigned black = 0xFF000000;
-    static const unsigned white = 0xFFFFFFFF;
-    static const unsigned darkGray = 0xFF808080;
-    static const unsigned gray = 0xFFA0A0A0;
-    static const unsigned lightGray = 0xFFC0C0C0;
-
 };
 
 #endif

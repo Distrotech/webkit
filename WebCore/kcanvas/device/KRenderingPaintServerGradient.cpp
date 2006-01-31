@@ -21,6 +21,7 @@
 */
 
 #include "config.h"
+#if SVG_SUPPORT
 #include "IntPoint.h"
 
 #include "KRenderingPaintServerGradient.h"
@@ -50,7 +51,7 @@ KCSortedGradientStopList::KCSortedGradientStopList()
     setAutoDelete(true);
 }
 
-void KCSortedGradientStopList::addStop(float offset, const QColor &color)
+void KCSortedGradientStopList::addStop(float offset, const Color &color)
 {
     KCGradientOffsetPair *pair = new KCGradientOffsetPair;
     pair->offset = offset;
@@ -294,3 +295,5 @@ QTextStream &KRenderingPaintServerRadialGradient::externalRepresentation(QTextSt
 }
 
 // vim:ts=4:noet
+#endif // SVG_SUPPORT
+

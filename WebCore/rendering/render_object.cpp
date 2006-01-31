@@ -54,7 +54,7 @@
 #include <assert.h>
 #include <kdebug.h>
 #include <qpainter.h>
-#include <qpen.h>
+#include "Pen.h"
 #include <qtextcodec.h>
 #include <qwmatrix.h>
 
@@ -257,15 +257,16 @@ RenderObject *RenderObject::nextRenderer() const
 {
     if (firstChild())
         return firstChild();
-    else if (nextSibling())
+
+    if (nextSibling())
         return nextSibling();
-    else {
-        const RenderObject *r = this;
-        while (r && !r->nextSibling())
-            r = r->parent();
-        if (r)
-            return r->nextSibling();
-    }
+
+    const RenderObject *r = this;
+    while (r && !r->nextSibling())
+        r = r->parent();
+    if (r)
+        return r->nextSibling();
+
     return 0;
 }
 
@@ -277,12 +278,8 @@ RenderObject *RenderObject::previousRenderer() const
             r = r->lastChild();
         return r;
     }
-    else if (parent()) {
-        return parent();
-    }
-    else {
-        return 0;
-    }
+
+    return parent();
 }
 
 bool RenderObject::isEditable() const
@@ -795,7 +792,7 @@ bool RenderObject::mustRepaintBackgroundOrBorder() const
 }
 
 void RenderObject::drawBorder(QPainter *p, int x1, int y1, int x2, int y2,
-                              BorderSide s, QColor c, const QColor& textcolor, EBorderStyle style,
+                              BorderSide s, Color c, const Color& textcolor, EBorderStyle style,
                               int adjbw1, int adjbw2, bool invalidisInvert)
 {
     int width = (s==BSTop||s==BSBottom?y2-y1:x2-x1);
@@ -807,7 +804,7 @@ void RenderObject::drawBorder(QPainter *p, int x1, int y1, int x2, int y2,
         if(invalidisInvert)
         {
             p->setRasterOp(Qt::XorROP);
-            c = Qt::white;
+            c = Color::white;
         }
         else {
             if (style == INSET || style == OUTSET || style == RIDGE || style == GROOVE)
@@ -827,11 +824,11 @@ void RenderObject::drawBorder(QPainter *p, int x1, int y1, int x2, int y2,
 
         return;
     case DOTTED:
-        p->setPen(QPen(c, width == 1 ? 0 : width, Qt::DotLine));
+        p->setPen(Pen(c, width == 1 ? 0 : width, Pen::DotLine));
         /* nobreak; */
     case DASHED:
         if(style == DASHED)
-            p->setPen(QPen(c, width == 1 ? 0 : width, Qt::DashLine));
+            p->setPen(Pen(c, width == 1 ? 0 : width, Pen::DashLine));
 
         if (width > 0)
             switch(s)
@@ -854,7 +851,7 @@ void RenderObject::drawBorder(QPainter *p, int x1, int y1, int x2, int y2,
 
         if (adjbw1 == 0 && adjbw2 == 0)
         {
-            p->setPen(Qt::NoPen);
+            p->setPen(Pen::NoPen);
             p->setBrush(c);
             switch(s)
             {
@@ -967,7 +964,7 @@ void RenderObject::drawBorder(QPainter *p, int x1, int y1, int x2, int y2,
         /* nobreak; */
     case SOLID:
         IntPointArray quad(4);
-        p->setPen(Qt::NoPen);
+        p->setPen(Pen::NoPen);
         p->setBrush(c);
         Q_ASSERT(x2>=x1);
         Q_ASSERT(y2>=y1);
@@ -1138,10 +1135,10 @@ void RenderObject::paintBorder(QPainter *p, int _tx, int _ty, int w, int h, cons
     if (shouldPaintBackgroundImage)
         return;
 
-    const QColor& tc = style->borderTopColor();
-    const QColor& bc = style->borderBottomColor();
-    const QColor& lc = style->borderLeftColor();
-    const QColor& rc = style->borderRightColor();
+    const Color& tc = style->borderTopColor();
+    const Color& bc = style->borderBottomColor();
+    const Color& lc = style->borderLeftColor();
+    const Color& rc = style->borderRightColor();
 
     bool tt = style->borderTopIsTransparent();
     bool bt = style->borderBottomIsTransparent();
@@ -1358,7 +1355,7 @@ void RenderObject::paintOutline(QPainter *p, int _tx, int _ty, int w, int h, con
     if (os <= BHIDDEN)
         return;
     
-    QColor oc = style->outlineColor();
+    Color oc = style->outlineColor();
     if (!oc.isValid())
         oc = style->color();
     
@@ -1383,19 +1380,19 @@ void RenderObject::paintOutline(QPainter *p, int _tx, int _ty, int w, int h, con
     h += 2*offset;
     
     drawBorder(p, _tx-ow, _ty-ow, _tx, _ty+h+ow, BSLeft,
-               QColor(oc), style->color(),
+               Color(oc), style->color(),
                os, ow, ow, true);
 
     drawBorder(p, _tx-ow, _ty-ow, _tx+w+ow, _ty, BSTop,
-               QColor(oc), style->color(),
+               Color(oc), style->color(),
                os, ow, ow, true);
 
     drawBorder(p, _tx+w, _ty-ow, _tx+w+ow, _ty+h+ow, BSRight,
-               QColor(oc), style->color(),
+               Color(oc), style->color(),
                os, ow, ow, true);
 
     drawBorder(p, _tx-ow, _ty+h, _tx+w+ow, _ty+h+ow, BSBottom,
-               QColor(oc), style->color(),
+               Color(oc), style->color(),
                os, ow, ow, true);
 
 }
@@ -1622,6 +1619,12 @@ void RenderObject::showTree() const
     if (element())
         element()->showTree();
 }
+
+void showTree(const RenderObject *ro)
+{
+    if (ro)
+        ro->showTree();
+}
 #endif
 
 static NodeImpl *selectStartNode(const RenderObject *object)
@@ -1658,9 +1661,9 @@ bool RenderObject::shouldSelect() const
     return node->dispatchHTMLEvent(selectstartEvent, true, true);
 }
 
-QColor RenderObject::selectionColor(QPainter *p) const
+Color RenderObject::selectionColor(QPainter *p) const
 {
-    QColor color;
+    Color color;
     if (style()->userSelect() != SELECT_NONE) {
         RenderStyle* pseudoStyle = getPseudoStyle(RenderStyle::SELECTION);
         if (pseudoStyle && pseudoStyle->backgroundColor().isValid())
@@ -2032,6 +2035,13 @@ RenderObject *RenderObject::container() const
     return o;
 }
 
+// This code has been written to anticipate the addition of CSS3-::outside and ::inside generated
+// content (and perhaps XBL).  That's why it uses the render tree and not the DOM tree.
+RenderObject* RenderObject::hoverAncestor() const
+{
+    return (!isInline() && continuation()) ? continuation() : parent();
+}
+
 bool RenderObject::isSelectionBorder() const
 {
     SelectionState st = selectionState();
@@ -2400,8 +2410,8 @@ RenderStyle* RenderObject::getPseudoStyle(RenderStyle::PseudoId pseudo, RenderSt
     return result;
 }
 
-void RenderObject::getTextDecorationColors(int decorations, QColor& underline, QColor& overline,
-                                           QColor& linethrough, bool quirksMode)
+void RenderObject::getTextDecorationColors(int decorations, Color& underline, Color& overline,
+                                           Color& linethrough, bool quirksMode)
 {
     RenderObject* curr = this;
     do {

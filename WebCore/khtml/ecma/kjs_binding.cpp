@@ -38,6 +38,7 @@
 #include "xml/dom2_eventsimpl.h"
 #include "xml/EventNames.h"
 #include "dom/css_stylesheet.h"
+#include "Frame.h"
 
 #include <kdebug.h>
 
@@ -58,9 +59,9 @@ UString DOMObject::toString(ExecState *) const
   return "[object " + className() + "]";
 }
 
-typedef HashMap<void *, DOMObject *> DOMObjectMap;
-typedef HashMap<NodeImpl *, DOMNode *, PointerHash<NodeImpl *> > NodeMap;
-typedef HashMap<DocumentImpl *, NodeMap *, PointerHash<DocumentImpl *> > NodePerDocMap;
+typedef HashMap<void*, DOMObject*> DOMObjectMap;
+typedef HashMap<NodeImpl*, DOMNode*> NodeMap;
+typedef HashMap<DocumentImpl*, NodeMap*> NodePerDocMap;
 
 static DOMObjectMap *domObjects()
 { 
@@ -174,6 +175,14 @@ void ScriptInterpreter::mark()
   }
 }
 
+ExecState *ScriptInterpreter::globalExec()
+{
+    // we need to make sure that any script execution happening in this
+    // frame does not destroy it
+    m_frame->keepAlive();
+    return Interpreter::globalExec();
+}
+
 void ScriptInterpreter::updateDOMNodeDocument(DOM::NodeImpl *node, DOM::DocumentImpl *oldDoc, DOM::DocumentImpl *newDoc)
 {
   DOMNode *cachedObject = getDOMNodeForDocument(oldDoc, node);
@@ -269,6 +278,17 @@ UString::UString(const DOMString &d)
   m_rep = UString::Rep::createCopying(reinterpret_cast<const UChar *>(d.unicode()), d.length());
 }
 
+UString::UString(const AtomicString &d)
+{
+  if (d.isNull()) {
+    m_rep = &Rep::null;
+    return;
+  }
+  // reinterpret_cast is ugly but in this case safe, since QChar and UChar have the same
+  // memory layout
+  m_rep = UString::Rep::createCopying(reinterpret_cast<const UChar *>(d.domString().unicode()), d.domString().length());
+}
+
 DOMString UString::domString() const
 {
   if (isNull())
@@ -314,6 +334,13 @@ JSValue *jsStringOrNull(const DOMString &s)
 {
     if (s.isNull())
         return jsNull();
+    return jsString(s);
+}
+
+JSValue *jsStringOrUndefined(const DOMString &s)
+{
+    if (s.isNull())
+        return jsUndefined();
     return jsString(s);
 }
 

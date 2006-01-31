@@ -15,8 +15,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -29,11 +29,17 @@
 
 namespace KXMLCore {
 
-template<typename PairType> 
-inline typename PairType::first_type const& extractFirst(const PairType& value)
+template<typename Key, typename Mapped>
+class PairFirstExtractor
 {
-    return value.first;
-}
+    typedef pair<Key, Mapped> ValueType;
+        
+public:
+    static const Key& extract(const ValueType& value) 
+    { 
+        return value.first;
+    }
+};
 
 template<typename Key, typename Mapped, typename HashFunctions>
 class HashMapTranslator 
@@ -59,7 +65,7 @@ public:
 };
 
 
-template<typename Key, typename Mapped, typename HashFunctions = DefaultHash<Key>, typename KeyTraits = HashTraits<Key>, typename MappedTraits = HashTraits<Mapped> >
+template<typename Key, typename Mapped, typename HashFunctions = typename DefaultHash<Key>::Hash, typename KeyTraits = HashTraits<Key>, typename MappedTraits = HashTraits<Mapped> >
 class HashMap {
  public:
     typedef Key KeyType;
@@ -67,7 +73,7 @@ class HashMap {
     typedef pair<Key, Mapped> ValueType;
     typedef PairHashTraits<KeyTraits, MappedTraits> ValueTraits;
  private:
-    typedef HashTable<KeyType, ValueType, extractFirst<ValueType>, HashFunctions, ValueTraits, KeyTraits> ImplType;
+    typedef HashTable<KeyType, ValueType, PairFirstExtractor<KeyType, MappedType>, HashFunctions, ValueTraits, KeyTraits> ImplType;
     typedef HashMapTranslator<Key, Mapped, HashFunctions> TranslatorType; 
  public:
     typedef typename ImplType::iterator iterator;
@@ -173,7 +179,7 @@ bool HashMap<Key, Mapped, HashFunctions, KeyTraits, MappedTraits>::contains(cons
 template<typename Key, typename Mapped, typename HashFunctions, typename KeyTraits, typename MappedTraits>
 pair<typename HashMap<Key, Mapped, HashFunctions, KeyTraits, MappedTraits>::iterator, bool> HashMap<Key, Mapped, HashFunctions, KeyTraits, MappedTraits>::inlineAdd(const KeyType &key, const MappedType &mapped) 
 {
-    return m_impl.template insert<KeyType, MappedType, TranslatorType>(key, mapped); 
+    return m_impl.template add<KeyType, MappedType, TranslatorType>(key, mapped); 
 }
 
 template<typename Key, typename Mapped, typename HashFunctions, typename KeyTraits, typename MappedTraits>

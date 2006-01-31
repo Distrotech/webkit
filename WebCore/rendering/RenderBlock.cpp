@@ -564,19 +564,22 @@ void RenderBlock::adjustPositionedBlock(RenderObject* child, const MarginInfo& m
     }
 
     if (child->hasStaticY()) {
-        int marginOffset = 0;
+        int y = m_height;
         if (!marginInfo.canCollapseWithTop()) {
+            child->calcVerticalMargins();
+            int marginTop = child->marginTop();
             int collapsedTopPos = marginInfo.posMargin();
             int collapsedTopNeg = marginInfo.negMargin();
-            bool posMargin = child->marginTop() >= 0;
-            if (posMargin && child->marginTop() > collapsedTopPos)
-                collapsedTopPos = child->marginTop();
-            else if (!posMargin && child->marginTop() > collapsedTopNeg)
-                collapsedTopNeg = child->marginTop();
-            marginOffset += (collapsedTopPos - collapsedTopNeg) - child->marginTop();
+            if (marginTop > 0) {
+                if (marginTop > collapsedTopPos)
+                    collapsedTopPos = marginTop;
+            } else {
+                if (-marginTop > collapsedTopNeg)
+                    collapsedTopNeg = -marginTop;
+            }
+            y += (collapsedTopPos - collapsedTopNeg) - marginTop;
         }
-        
-        child->setStaticY(m_height + marginOffset);
+        child->setStaticY(y);
     }
 }
 
@@ -1063,6 +1066,7 @@ void RenderBlock::layoutBlockChildren(bool relayoutChildren)
         // Now determine the correct ypos based off examination of collapsing margin
         // values.
         collapseMargins(child, marginInfo, yPosEstimate);
+        int postCollapseChildY = child->yPos();
 
         // Now check for clear.
         clearFloatsIfNeeded(child, marginInfo, oldTopPosMargin, oldTopNegMargin);
@@ -1103,8 +1107,18 @@ void RenderBlock::layoutBlockChildren(bool relayoutChildren)
         // If the child moved, we have to repaint it as well as any floating/positioned
         // descendants.  An exception is if we need a layout.  In this case, we know we're going to
         // repaint ourselves (and the child) anyway.
-        if (!selfNeedsLayout() && child->checkForRepaintDuringLayout())
-            child->repaintDuringLayoutIfMoved(oldChildX, oldChildY);
+        if (!selfNeedsLayout() && child->checkForRepaintDuringLayout()) {
+            int finalChildX = child->xPos();
+            int finalChildY = child->yPos();
+            if (finalChildX != oldChildX || finalChildY != oldChildY)
+                child->repaintDuringLayoutIfMoved(oldChildX, oldChildY);
+            else if (finalChildY != yPosEstimate || finalChildY != postCollapseChildY) {
+                // The child's repaints during layout were done before it reached its final position,
+                // so they were wrong.
+                child->repaint();
+                child->repaintFloatingDescendants();
+            }
+        }
 
         child = child->nextSibling();
     }

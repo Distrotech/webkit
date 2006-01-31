@@ -1,6 +1,7 @@
 /*
     Copyright (C) 2004, 2005 Nikolas Zimmermann <wildfox@kde.org>
                   2004, 2005 Rob Buis <buis@kde.org>
+    Copyright (C) 2006 Apple Computer, Inc.
 
     This file is part of the KDE project
 
@@ -21,6 +22,7 @@
 */
 
 #include "config.h"
+#if SVG_SUPPORT
 #include <kcanvas/KCanvas.h>
 
 #include "DocumentImpl.h"
@@ -33,6 +35,7 @@
 #include "SVGNames.h"
 #include "SVGStyledElementImpl.h"
 #include "SVGStyledTransformableElementImpl.h"
+#include "SystemTime.h"
 
 namespace KSVG {
 
@@ -131,7 +134,7 @@ void SVGTimer::notifyAll()
     // First build a list of animation elements per target element
     // This is important to decide about the order & priority of 
     // the animations -> 'additive' support is handled this way.
-    typedef HashMap<SVGElementImpl*, Q3PtrList<SVGAnimationElementImpl>, PointerHash<SVGElementImpl*> > TargetAnimationMap;
+    typedef HashMap<SVGElementImpl*, Q3PtrList<SVGAnimationElementImpl> > TargetAnimationMap;
     TargetAnimationMap targetMap;
     
     for(unsigned int i = m_notifyList.count(); i > 0; i--)
@@ -175,7 +178,7 @@ void SVGTimer::notifyAll()
         Q3PtrList<SVGAnimationElementImpl>::Iterator it = tit->second.begin();
         Q3PtrList<SVGAnimationElementImpl>::Iterator end = tit->second.end();
 
-        HashMap<DOMString, QColor> targetColor; // special <animateColor> case
+        HashMap<DOMString, Color> targetColor; // special <animateColor> case
         RefPtr<SVGTransformListImpl> targetTransforms; // special <animateTransform> case    
 
         for(; it != end; ++it)
@@ -248,7 +251,7 @@ void SVGTimer::notifyAll()
                     continue;
 
                 QString name = animColor->attributeName();
-                QColor color = animColor->color();
+                Color color = animColor->color();
 
                 if(!targetColor.contains(name))
                 {
@@ -269,7 +272,7 @@ void SVGTimer::notifyAll()
                         targetColor.set(name, color);
                     else
                     {
-                        QColor baseColor = targetColor.get(name);
+                        Color baseColor = targetColor.get(name);
                         int r = baseColor.red() + color.red();
                         int g = baseColor.green() + color.green();
                         int b = baseColor.blue() + color.blue();
@@ -293,8 +296,8 @@ void SVGTimer::notifyAll()
         }
 
         // Handle <animateColor>...
-        HashMap<DOMString, QColor>::iterator cend = targetColor.end();
-        for(HashMap<DOMString, QColor>::iterator cit = targetColor.begin(); cit != cend; ++cit)
+        HashMap<DOMString, Color>::iterator cend = targetColor.end();
+        for(HashMap<DOMString, Color>::iterator cit = targetColor.begin(); cit != cend; ++cit)
         {
             if(cit->second.isValid())
             {
@@ -368,7 +371,7 @@ TimeScheduler::TimeScheduler(KDOM::DocumentImpl *document) : QObject(), m_docume
     m_intervalTimer = new SVGTimer(this, staticTimerInterval, false);
 
     m_savedTime = 0;
-    m_creationTime = QTime::currentTime();
+    m_creationTime = currentTime();
 }
 
 TimeScheduler::~TimeScheduler()
@@ -404,7 +407,7 @@ void TimeScheduler::disconnectIntervalTimer(SVGAnimationElementImpl *element)
 
 void TimeScheduler::startAnimations()
 {
-    m_creationTime.start();
+    m_creationTime = currentTime();
 
     SVGTimerList::iterator it = m_timerList.begin();
     SVGTimerList::iterator end = m_timerList.end();
@@ -419,16 +422,14 @@ void TimeScheduler::startAnimations()
 
 void TimeScheduler::toggleAnimations()
 {
-    if(m_intervalTimer->isActive())
-    {
+    if (m_intervalTimer->isActive()) {
         m_intervalTimer->stop();
-        m_savedTime = m_creationTime.elapsed();
-    }
-    else
-    {
-        if(m_savedTime != 0)
-            m_creationTime = m_creationTime.addMSecs(m_creationTime.elapsed() - m_savedTime);
-
+        m_savedTime = currentTime();
+    } else {
+        if (m_savedTime != 0) {
+            m_creationTime += currentTime() - m_savedTime;
+            m_savedTime = 0;
+        }
         m_intervalTimer->start(this, SLOT(slotTimerNotify()));
     }
 }
@@ -481,11 +482,12 @@ void TimeScheduler::slotTimerNotify()
         m_intervalTimer->start(this, SLOT(slotTimerNotify()));
 }
 
-float TimeScheduler::elapsed() const
+double TimeScheduler::elapsed() const
 {
-    return float(m_creationTime.elapsed()) / 1000.0;
+    return currentTime() - m_creationTime;
 }
 
 } // namespace;
 
 // vim:ts=4:noet
+#endif // SVG_SUPPORT

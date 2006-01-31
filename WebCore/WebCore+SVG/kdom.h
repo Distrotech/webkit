@@ -1,6 +1,7 @@
 /*
     Copyright (C) 2004, 2005 Nikolas Zimmermann <wildfox@kde.org>
                   2004, 2005 Rob Buis <buis@kde.org>
+    Copyright (C) 2006 Apple Computer, Inc.
 
     This file is part of the KDE project
 
@@ -22,6 +23,7 @@
 
 #ifndef KDOM_H
 #define KDOM_H
+#if SVG_SUPPORT
 
 #include <kdebug.h>
 
@@ -53,7 +55,7 @@ namespace KDOM
         NOTATION_NODE               = 12
     };
 
-    enum ExceptionCode
+    enum ExceptionCodes
     {
         INDEX_SIZE_ERR              = 1,
         DOMSTRING_SIZE_ERR          = 2,
@@ -130,6 +132,7 @@ namespace KDOM
     inline kdbgstream  &operator<<(kdbgstream  &stream, const DOMString &string) { return (stream << string.qstring()); }
 };
 
+#endif // SVG_SUPPORT
 #endif
 
 // vim:ts=4:noet

@@ -21,6 +21,7 @@
 */
 
 #include "config.h"
+#if SVG_SUPPORT
 #include "SVGGElementImpl.h"
 
 #include <kcanvas/KCanvasCreator.h>
@@ -45,13 +46,6 @@ void SVGGElementImpl::parseMappedAttribute(KDOM::MappedAttributeImpl *attr)
     SVGStyledTransformableElementImpl::parseMappedAttribute(attr);
 }
 
-void SVGGElementImpl::setChanged(bool b, bool)
-{
-    // FIXME: this is waaay to slow & wrong!
-    //KDOM::NodeImpl::setChanged(b, true);
-    //KDOM::NodeImpl::setChanged(b, false);
-}
-
 khtml::RenderObject *SVGGElementImpl::createRenderer(RenderArena *arena, khtml::RenderStyle *style)
 {
     return QPainter::renderingDevice()->createContainer(arena, style, this);
@@ -72,3 +66,5 @@ const KDOM::AtomicString& SVGDummyElementImpl::localName() const
 }
 
 // vim:ts=4:noet
+#endif // SVG_SUPPORT
+

@@ -26,6 +26,7 @@
  */
 
 #include "config.h"
+#if SVG_SUPPORT
 #include "KCanvasTreeDebug.h"
 
 #include <math.h>
@@ -171,7 +172,7 @@ QTextStream &operator<<(QTextStream &ts, const QMatrix &m)
     return ts;
 }
 
-QTextStream &operator<<(QTextStream &ts, const QColor &c)
+QTextStream &operator<<(QTextStream &ts, const Color &c)
 {
     return ts << c.name();
 }
@@ -399,3 +400,5 @@ QTextStream &operator<<(QTextStream &ts, const QStringList &l)
     
     return ts;
 }
+#endif // SVG_SUPPORT
+
