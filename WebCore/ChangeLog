@@ -2,6 +2,23 @@
 
         Merged fix from TOT to Safari-2-0-branch
 
+    2005-11-01  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by darin
+
+        Fixes <rdar://problem/4074536> Seed: Mail crash adjusting quote level - KHTMLPart::computeAndSetTypingStyle
+
+        No test cases added, requires Mail
+
+        * kwq/WebCoreBridge.mm:
+        (-[WebCoreBridge typingStyle]):
+        Crashes were happening after a style was merged with itself.  Mail was doing a setTypingStyle
+        with a pointer to our internal typing style.  Fix is to only hand out copies of our typingStyle.
+
+2006-02-06  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
     2006-01-16  Tim Omernick  <timo@apple.com>
 
         Reviewed by John Sullivan.
