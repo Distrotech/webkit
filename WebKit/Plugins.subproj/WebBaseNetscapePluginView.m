@@ -22,6 +22,7 @@
 #import <WebKit/WebPreferences.h>
 #import <WebKit/WebViewPrivate.h>
 #import <WebKit/WebUIDelegate.h>
+#import <JavaScriptCore/npruntime_impl.h>
 
 #import <Foundation/NSData_NSURLExtras.h>
 #import <Foundation/NSDictionary_NSURLExtras.h>
@@ -1750,8 +1751,15 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
 - (NPError)getVariable:(NPNVariable)variable value:(void *)value
 {
     if (variable == NPNVWindowNPObject) {
+        NPObject *windowScriptObject = [[[self webFrame] _bridge] windowScriptNPObject];
+
+        // Return value is expected to be retained, as described here: <http://www.mozilla.org/projects/plugins/npruntime.html#browseraccess>
+        if (windowScriptObject)
+            _NPN_RetainObject(windowScriptObject);
+        
         void **v = (void **)value;
-        *v = [[[self webFrame] _bridge] windowScriptNPObject];
+        *v = windowScriptObject;
+        
         return NPERR_NO_ERROR;
     }
     return NPERR_GENERIC_ERROR;

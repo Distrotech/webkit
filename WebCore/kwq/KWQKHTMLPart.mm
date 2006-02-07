@@ -84,6 +84,8 @@
 #import <JavaScriptCore/runtime.h>
 #import <JavaScriptCore/runtime_root.h>
 #import <JavaScriptCore/WebScriptObjectPrivate.h>
+#import <JavaScriptCore/NP_jsobject.h>
+#import <JavaScriptCore/npruntime_impl.h>
 
 #if APPLE_CHANGES
 #import "KWQAccObjectCache.h"
@@ -190,20 +192,10 @@ KWQKHTMLPart::KWQKHTMLPart()
 
 KWQKHTMLPart::~KWQKHTMLPart()
 {
-    cleanupPluginRootObjects();
-    
+    setView(0);
     mutableInstances().remove(this);
-    if (d->m_view) {
-	d->m_view->deref();
-    }
     freeClipboard();
-    // these are all basic Foundation classes and our own classes - we
-    // know they will not raise in dealloc, so no need to block
-    // exceptions.
-    KWQRelease(_formValuesAboutToBeSubmitted);
-    KWQRelease(_formAboutToBeSubmitted);
-    
-    KWQRelease(_windowScriptObject);
+    clearRecordedFormValues();    
     
     delete _windowWidget;
 }
@@ -794,25 +786,36 @@ ReadOnlyPart *KWQKHTMLPart::createPart(const ChildFrame &child, const KURL &url,
 
     return NULL;
 }
-    
+
 void KWQKHTMLPart::setView(KHTMLView *view)
 {
     // Detach the document now, so any onUnload handlers get run - if
     // we wait until the view is destroyed, then things won't be
     // hooked up enough for some JavaScript calls to work.
-    if (d->m_doc && view == NULL) {
-	d->m_doc->detach();
-    }
+    if (d->m_doc && view == 0)
+        d->m_doc->detach();
 
-    if (view) {
-	view->ref();
-    }
-    if (d->m_view) {
-	d->m_view->deref();
-    }
+    if (view)
+        view->ref();
+    if (d->m_view)
+        d->m_view->deref();
     d->m_view = view;
     setWidget(view);
-    
+
+    // Delete old PlugIn data structures
+    cleanupPluginRootObjects();
+    _bindingRoot = 0;
+    KWQRelease(_windowScriptObject);
+    _windowScriptObject = 0;
+
+    if (_windowScriptNPObject) {
+        // Call _NPN_DeallocateObject() instead of _NPN_ReleaseObject() so that we don't leak if a plugin fails to release the window
+        // script object properly.
+        // This shouldn't cause any problems for plugins since they should have already been stopped and destroyed at this point.
+        _NPN_DeallocateObject(_windowScriptNPObject);
+        _windowScriptNPObject = 0;
+    }
+
     // Only one form submission is allowed per view of a part.
     // Since this part may be getting reused as a result of being
     // pulled from the back/forward cache, reset this flag.
@@ -3978,7 +3981,7 @@ void KWQKHTMLPart::cleanupPluginRootObjects()
 
     KJS::Bindings::RootObject *root;
     while ((root = rootObjects.getLast())) {
-        root->removeAllNativeReferences ();
+        root->removeAllNativeReferences();
         rootObjects.removeLast();
     }
 }
