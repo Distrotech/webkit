@@ -14,6 +14,7 @@ _KJS_JSObject_JSObjectSetSlot
 _KJS_JSObject_JSObjectToString
 __NPN_CreateObject
 __NPN_CreateScriptObject
+__NPN_DeallocateObject
 __NPN_Evaluate
 __NPN_GetIntIdentifier
 __NPN_GetProperty
