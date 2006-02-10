@@ -1,3 +1,15 @@
+2006-02-10  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Tim O.
+
+        Rolling out r11800 and reworked Tim's original fix
+        to call _NPN_DeallocateObject in the destructor.
+
+        * kwq/KWQKHTMLPart.mm:
+        (KWQKHTMLPart::~KWQKHTMLPart):
+        (KWQKHTMLPart::setView):
+        (KWQKHTMLPart::cleanupPluginRootObjects):
+
 === WebCore-417.20 ===
 
 2006-02-06  Timothy Hatcher  <timothy@apple.com>
