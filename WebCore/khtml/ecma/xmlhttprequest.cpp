@@ -617,7 +617,7 @@ void XMLHttpRequest::addToRequestsByDocument()
   requests->insert(this, this);
 }
 
-void XMLHttpRequest::removeFromRequestsByDocument()
+static void removeFromRequestsByDocument(XMLHttpRequest* request, DocumentImpl* doc)
 {
   assert(doc);
 
@@ -635,10 +635,18 @@ void XMLHttpRequest::removeFromRequestsByDocument()
   }
 }
 
+void XMLHttpRequest::removeFromRequestsByDocument()
+{
+  ::removeFromRequestsByDocument(this, doc);
+}
+
 void XMLHttpRequest::cancelRequests(DOM::DocumentImpl *d)
 {
-  while (QPtrDict<XMLHttpRequest> *requests = requestsByDocument().find(d))
-    QPtrDictIterator<XMLHttpRequest>(*requests).current()->abort();
+  while (QPtrDict<XMLHttpRequest> *requests = requestsByDocument().find(d)) {
+    XMLHttpRequest* request = QPtrDictIterator<XMLHttpRequest>(*requests).current();
+    ::removeFromRequestsByDocument(request, d);
+    request->abort();
+  }
 }
 
 Value XMLHttpRequestProtoFunc::tryCall(ExecState *exec, Object &thisObj, const List &args)
