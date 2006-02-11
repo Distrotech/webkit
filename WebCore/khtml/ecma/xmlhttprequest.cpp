@@ -617,20 +617,20 @@ void XMLHttpRequest::addToRequestsByDocument()
   requests->insert(this, this);
 }
 
-static void removeFromRequestsByDocument(XMLHttpRequest* request, DocumentImpl* doc)
+static void removeFromRequestsByDocument(XMLHttpRequest* request, DOM::DocumentImpl* doc)
 {
   assert(doc);
 
-  QPtrDict<XMLHttpRequest> *requests = requestsByDocument().find(doc);
+  QPtrDict<XMLHttpRequest> *requests = XMLHttpRequest::requestsByDocument().find(doc);
 
   // Since synchronous loads are not added to requestsByDocument(), we need to make sure we found the request.
-  if (!requests || !requests->find(this))
+  if (!requests || !requests->find(request))
     return;
 
-  requests->remove(this);
+  requests->remove(request);
 
   if (requests->isEmpty()) {
-    requestsByDocument().remove(doc);
+    XMLHttpRequest::requestsByDocument().remove(doc);
     delete requests;
   }
 }
