@@ -1,3 +1,14 @@
+2006-02-15  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Beth, Geoff, Maciej.
+
+        Removed #define MALLOC_FAILURE_ACTION abort() letting malloc return NULL
+
+        Fixes <rdar://problem/4365248> *SecUpd: Tiger* SureSec si#182 safari heap overflow.
+        <rdar://problem/4416122> *SecUpd: Chardonnay* SureSec si#182 safari heap overflow.
+
+        * khtml/misc/main_thread_malloc.cpp:
+
 === WebCore-417.21 ===
 
 2006-02-10  Eric Seidel  <eseidel@apple.com>
