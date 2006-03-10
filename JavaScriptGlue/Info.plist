@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>JavaScriptGlue</string>
 	<key>CFBundleGetInfoString</key>
-	<string>521.8, Copyright 2003-2006, Apple Computer Inc.</string>
+	<string>521.9, Copyright 2003-2006, Apple Computer Inc.</string>
 	<key>CFBundleIconFile</key>
 	<string></string>
 	<key>CFBundleIdentifier</key>
@@ -17,11 +17,11 @@
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
 	<key>CFBundleShortVersionString</key>
-	<string>521.8</string>
+	<string>521.9</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>521.8</string>
+	<string>521.9</string>
 	<key>NSPrincipalClass</key>
 	<string></string>
 </dict>
