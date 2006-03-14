@@ -1394,8 +1394,17 @@ WebScriptObject *KWQKHTMLPart::windowScriptObject()
 NPObject *KWQKHTMLPart::windowScriptNPObject()
 {
     if (!_windowScriptNPObject) {
-        KJS::ObjectImp *win = static_cast<KJS::ObjectImp *>(KJS::Window::retrieveWindow(this));
-        _windowScriptNPObject = _NPN_CreateScriptObject (0, win, bindingRootObject(), bindingRootObject());
+        if (d->m_bJScriptEnabled) {
+            // JavaScript is enabled, so there is a JavaScript window object.  Return an NPObject bound to the window
+            // object.
+            KJS::ObjectImp *win = KJS::Window::retrieveWindow(this);
+            assert(win);
+            _windowScriptNPObject = _NPN_CreateScriptObject(0, win, bindingRootObject(), bindingRootObject());
+        } else {
+            // JavaScript is not enabled, so we cannot bind the NPObject to the JavaScript window object.
+            // Instead, we create an NPObject of a different class, one which is not bound to a JavaScript object.
+            _windowScriptNPObject = _NPN_CreateNoScriptObject();
+        }
     }
 
     return _windowScriptNPObject;
