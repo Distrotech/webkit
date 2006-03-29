@@ -28,22 +28,21 @@
 #include "RenderContainer.h"
 #include "RenderTable.h"
 #include "RenderTextFragment.h"
-#include "render_image.h"
-#include "render_canvas.h"
+#include "RenderImage.h"
+#include "RenderCanvas.h"
 #include "render_list.h"
-#include "DocumentImpl.h"
-#include "dom_position.h"
+#include "Document.h"
+#include "Position.h"
 #include "VisiblePosition.h"
 
 #include <assert.h>
 
 // For accessibility
-#include "KWQAccObjectCache.h" 
+#include "AccessibilityObjectCache.h" 
 
-using DOM::Position;
 namespace WebCore {
 
-RenderContainer::RenderContainer(DOM::NodeImpl* node)
+RenderContainer::RenderContainer(WebCore::Node* node)
     : RenderBox(node)
 {
     m_first = 0;
@@ -64,8 +63,8 @@ void RenderContainer::destroy()
 void RenderContainer::destroyLeftoverChildren()
 {
     while (m_first) {
-        if (m_first->isListMarker())
-            m_first->remove();  // List markers are owned by their enclosing list and so don't get destroyed by this container.
+        if (m_first->isListMarker() || (m_first->style()->styleType() == RenderStyle::FIRST_LETTER && !m_first->isText()))
+            m_first->remove();  // List markers are owned by their enclosing list and so don't get destroyed by this container. Similarly, first letters are destroyed by their remaining text fragment.
         else {
         // Destroy any anonymous children remaining in the render tree, as well as implicit (shadow) DOM elements like those used in the engine-based text fields.
             if (m_first->element())
@@ -156,7 +155,7 @@ void RenderContainer::addChild(RenderObject *newChild, RenderObject *beforeChild
     }
     
     if (newChild->isText() && newChild->style()->textTransform() == CAPITALIZE) {
-        RefPtr<DOMStringImpl> textToTransform =  static_cast<RenderText*>(newChild)->originalString();
+        RefPtr<StringImpl> textToTransform =  static_cast<RenderText*>(newChild)->originalString();
         if (textToTransform)
             static_cast<RenderText*>(newChild)->setText(textToTransform.get(), true);
     }
@@ -206,10 +205,8 @@ RenderObject* RenderContainer::removeChildNode(RenderObject* oldChild)
     oldChild->setNextSibling(0);
     oldChild->setParent(0);
 
-#if __APPLE__
-    if (KWQAccObjectCache::accessibilityEnabled())
+    if (AccessibilityObjectCache::accessibilityEnabled())
         document()->getAccObjectCache()->childrenChanged(this);
-#endif
 
     return oldChild;
 }
@@ -362,10 +359,8 @@ void RenderContainer::appendChildNode(RenderObject* newChild)
     if (!newChild->isFloatingOrPositioned() && childrenInline())
         dirtyLinesFromChangedChild(newChild);
     
-#if __APPLE__
-    if (KWQAccObjectCache::accessibilityEnabled())
+    if (AccessibilityObjectCache::accessibilityEnabled())
         document()->getAccObjectCache()->childrenChanged(this);
-#endif
 }
 
 void RenderContainer::insertChildNode(RenderObject* child, RenderObject* beforeChild)
@@ -404,10 +399,8 @@ void RenderContainer::insertChildNode(RenderObject* child, RenderObject* beforeC
     if (!child->isFloating() && childrenInline())
         dirtyLinesFromChangedChild(child);
     
-#if __APPLE__
-    if (KWQAccObjectCache::accessibilityEnabled())
+    if (AccessibilityObjectCache::accessibilityEnabled())
         document()->getAccObjectCache()->childrenChanged(this);
-#endif
 }
 
 void RenderContainer::layout()
@@ -487,7 +480,7 @@ VisiblePosition RenderContainer::positionForCoordinates(int _x, int _y)
             continue;
 
         int absx, absy;
-        renderer->absolutePosition(absx, absy);
+        renderer->absolutePositionForContent(absx, absy);
         
         int top = absy + borderTop() + paddingTop();
         int bottom = top + renderer->contentHeight();
@@ -507,24 +500,24 @@ VisiblePosition RenderContainer::positionForCoordinates(int _x, int _y)
     return VisiblePosition(element(), 0, DOWNSTREAM);
 }
 
-QValueList<IntRect> RenderContainer::lineBoxRects()
+DeprecatedValueList<IntRect> RenderContainer::lineBoxRects()
 {
     if (!firstChild() && (isInline() || isAnonymousBlock())) {
-        QValueList<IntRect> rects;
+        DeprecatedValueList<IntRect> rects;
         int x = 0, y = 0;
-        absolutePosition(x, y);
+        absolutePositionForContent(x, y);
         absoluteRects(rects, x, y);
         return rects;
     }
 
     if (!firstChild())
-        return QValueList<IntRect>();
+        return DeprecatedValueList<IntRect>();
 
-    QValueList<IntRect> rects;
+    DeprecatedValueList<IntRect> rects;
     for (RenderObject *child = firstChild(); child; child = child->nextSibling()) {
         if (child->isText() || child->isInline() || child->isAnonymousBlock()) {
             int x = 0, y = 0;
-            child->absolutePosition(x, y);
+            child->absolutePositionForContent(x, y);
             child->absoluteRects(rects, x, y);
         }
     }

@@ -45,6 +45,21 @@
 - (NSPrintOperation *)printOperationWithPrintInfo:(NSPrintInfo *)printInfo;
 
 /*!
+    @method documentViewShouldHandlePrint
+    @abstract Called by the host application before it initializes and runs a print operation.
+    @result If NO is returned, the host application will abort its print operation and call -printDocumentView on the
+    WebFrameView.  The document view is then expected to run its own print operation.  If YES is returned, the host 
+    application's print operation will continue as normal.
+*/
+- (BOOL)documentViewShouldHandlePrint;
+
+/*!
+    @method printDocumentView
+    @abstract Called by the host application when the WebFrameView returns YES from -documentViewShouldHandlePrint.
+*/
+- (void)printDocumentView;
+
+/*!
     @method _largestChildWithScrollBars
     @abstract Of the child WebFrameViews that are displaying scroll bars, determines which has the largest area.
     @result A child WebFrameView that is displaying scroll bars, or nil if none.
@@ -56,5 +71,11 @@
     @result YES if at least one scroll bar is currently displayed
  */
 - (BOOL)_hasScrollBars;
+
+/*!
+    @method _contentView
+    @result The content view (NSClipView) of the WebFrameView's scroll view.
+ */
+- (NSClipView *)_contentView;
 
 @end

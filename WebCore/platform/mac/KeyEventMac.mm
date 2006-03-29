@@ -24,7 +24,7 @@
  */
 
 #import "config.h"
-#import "KeyEvent.h"
+#import "PlatformKeyboardEvent.h"
 
 #import "Logging.h"
 
@@ -318,7 +318,7 @@ static String keyIdentifierForKeyEvent(NSEvent* event)
             // FIXME: We should use something other than the vendor-area Unicode values for the above keys.
             // For now, just fall through to the default.
         default:
-            return QString().sprintf("U+%06X", toupper(c));
+            return String::sprintf("U+%06X", toupper(c));
     }
 }
 
@@ -700,13 +700,12 @@ static int WindowsKeyCodeForKeyEvent(NSEvent* event)
     return 0;
 }
 
-KeyEvent::KeyEvent(NSEvent *event, bool forceAutoRepeat)
+PlatformKeyboardEvent::PlatformKeyboardEvent(NSEvent *event, bool forceAutoRepeat)
     : m_text([event characters]),
       m_unmodifiedText([event charactersIgnoringModifiers]),
       m_keyIdentifier(keyIdentifierForKeyEvent(event)),
       m_isKeyUp([event type] == NSKeyUp),
       m_autoRepeat(forceAutoRepeat || [event isARepeat]),
-      m_isAccepted(false),
       m_WindowsKeyCode(WindowsKeyCodeForKeyEvent(event)),
       m_isKeypad(isKeypadEvent(event)),
       m_shiftKey([event modifierFlags] & NSShiftKeyMask),

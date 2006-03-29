@@ -27,7 +27,8 @@
 #include "FrameWin.h"
 
 #include "BrowserExtensionWin.h"
-#include "DocumentImpl.h"
+#include "Document.h"
+#include "PlatformKeyboardEvent.h"
 #include "KWQKHTMLSettings.h"
 #include "render_frames.h"
 #include "Plugin.h"
@@ -57,13 +58,13 @@ FrameWin::~FrameWin()
 {
 }
 
-void FrameWin::urlSelected(const KURL& url, const URLArgs&)
+void FrameWin::urlSelected(const ResourceRequest& request)
 {
     if (m_client)
-        m_client->openURL(url.url());
+        m_client->openURL(request.url().url());
 }
 
-QString FrameWin::userAgent() const
+String FrameWin::userAgent() const
 {
     return "Mozilla/5.0 (PC; U; Intel; Windows; en) AppleWebKit/420+ (KHTML, like Gecko)";
 }
@@ -84,6 +85,35 @@ bool FrameWin::runJavaScriptConfirm(String const& message)
     QChar nullChar('\0');
     text += String(&nullChar, 1);
     return (MessageBox(view()->windowHandle(), (LPCWSTR)text.unicode(), L"JavaScript Alert", MB_OKCANCEL) == IDOK);
+}
+
+// FIXME: This needs to be unified with the keyPress method on FrameMac
+bool FrameWin::keyPress(const PlatformKeyboardEvent& keyEvent)
+{
+    bool result;
+    // Check for cases where we are too early for events -- possible unmatched key up
+    // from pressing return in the location bar.
+    Document *doc = document();
+    if (!doc)
+        return false;
+    Node *node = doc->focusNode();
+    if (!node) {
+        if (doc->isHTMLDocument())
+            node = doc->body();
+        else
+            node = doc->documentElement();
+        if (!node)
+            return false;
+    }
+    
+    if (!keyEvent.isKeyUp())
+        prepareForUserAction();
+
+    result = !EventTargetNodeCast(node)->dispatchKeyEvent(keyEvent);
+
+    // FIXME: FrameMac has a keyDown/keyPress hack here which we are not copying.
+
+    return result;
 }
 
 }

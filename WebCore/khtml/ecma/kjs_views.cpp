@@ -23,16 +23,13 @@
 
 #include "kjs_css.h"
 
-#include "dom2_viewsimpl.h"
-#include "DocumentImpl.h"
+#include "AbstractView.h"
+#include "Element.h"
+#include "Document.h"
 #include "css/css_stylesheetimpl.h"
 #include "css/css_ruleimpl.h"
 
-using DOM::AbstractViewImpl;
-using DOM::DocumentImpl;
-using DOM::ElementImpl;
-using DOM::NodeImpl;
-using DOM::CSSRuleListImpl;
+using namespace WebCore;
 
 #include "kjs_views.lut.h"
 
@@ -43,7 +40,7 @@ namespace KJS {
 const ClassInfo DOMAbstractView::info = { "AbstractView", 0, &DOMAbstractViewTable, 0 };
 /*
 @begin DOMAbstractViewTable 2
-  document              DOMAbstractView::Document               DontDelete|ReadOnly
+  document              DOMAbstractView::Document_              DontDelete|ReadOnly
 @end
 @begin DOMAbstractViewProtoTable 1
   getComputedStyle      DOMAbstractView::GetComputedStyle       DontDelete|Function 2
@@ -55,7 +52,7 @@ KJS_DEFINE_PROTOTYPE(DOMAbstractViewProto)
 KJS_IMPLEMENT_PROTOFUNC(DOMAbstractViewProtoFunc)
 KJS_IMPLEMENT_PROTOTYPE("DOMAbstractView",DOMAbstractViewProto,DOMAbstractViewProtoFunc)
 
-DOMAbstractView::DOMAbstractView(ExecState *exec, AbstractViewImpl *av)
+DOMAbstractView::DOMAbstractView(ExecState *exec, AbstractView *av)
   : m_impl(av)
 {
   setPrototype(DOMAbstractViewProto::self(exec));
@@ -68,8 +65,8 @@ DOMAbstractView::~DOMAbstractView()
 
 JSValue *DOMAbstractView::getValueProperty(ExecState *exec, int token)
 {
-    assert(token == Document);
-    return getDOMNode(exec, impl()->document());
+    assert(token == Document_);
+    return toJS(exec, impl()->document());
 }
 
 bool DOMAbstractView::getOwnPropertySlot(ExecState *exec, const Identifier& propertyName, PropertySlot& slot)
@@ -81,38 +78,36 @@ JSValue *DOMAbstractViewProtoFunc::callAsFunction(ExecState *exec, JSObject *thi
 {
   if (!thisObj->inherits(&DOMAbstractView::info))
     return throwError(exec, TypeError);
-  AbstractViewImpl &abstractView = *static_cast<DOMAbstractView *>(thisObj)->impl();
+  AbstractView &abstractView = *static_cast<DOMAbstractView *>(thisObj)->impl();
   switch (id) {
     case DOMAbstractView::GetComputedStyle: {
-        ElementImpl *arg0 = toElement(args[0]);
+        Element *arg0 = toElement(args[0]);
         if (!arg0)
           return jsUndefined(); // throw exception?
         else {
-          if (DocumentImpl* doc = arg0->getDocument())
-            doc->updateLayoutIgnorePendingStylesheets();
-          return getDOMCSSStyleDeclaration(exec, abstractView.getComputedStyle(arg0, args[1]->toString(exec).domString().impl()));
+          arg0->getDocument()->updateLayoutIgnorePendingStylesheets();
+          return toJS(exec, abstractView.getComputedStyle(arg0, WebCore::String(args[1]->toString(exec)).impl()));
         }
       }
     case DOMAbstractView::GetMatchedCSSRules: {
-        ElementImpl *arg0 = toElement(args[0]);
+        Element *arg0 = toElement(args[0]);
         if (!arg0)
             return jsUndefined(); // throw exception?
         else {
             // No need to update layout, since we just want the back-end rules.
-            return getDOMCSSRuleList(exec, abstractView.getMatchedCSSRules(arg0,
-                                     args[1]->toString(exec).domString().impl()).get());
+            return toJS(exec, abstractView.getMatchedCSSRules(arg0, WebCore::String(args[1]->toString(exec)).impl()).get());
         }
     }
   }
   return jsUndefined();
 }
 
-JSValue *getDOMAbstractView(ExecState *exec, AbstractViewImpl *av)
+JSValue *toJS(ExecState *exec, AbstractView *av)
 {
-  return cacheDOMObject<AbstractViewImpl, DOMAbstractView>(exec, av);
+  return cacheDOMObject<AbstractView, DOMAbstractView>(exec, av);
 }
 
-AbstractViewImpl *toAbstractView(JSValue *val)
+AbstractView *toAbstractView(JSValue *val)
 {
   if (!val || !val->isObject(&DOMAbstractView::info))
     return 0;

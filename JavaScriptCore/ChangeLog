@@ -1,3 +1,343 @@
+2006-03-28  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Eric.
+
+        fixes <rdar://problem/4458539> Unable to include Security(public) and WebKit(private) headers
+
+        * bindings/npapi.h: added #defines after the #ifndefs
+
+2006-03-27  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Anders.
+        
+        - fixed <rdar://problem/4489745> REGRESSION: Safari crashes at to display http://www.lgphilips-lcd.com/
+
+        * kjs/nodes.cpp:
+        (Node::deref): take into account the case where the extra refcount table was never created
+
+2006-03-23  David Carson <dacarson@gmail.com>
+
+        Reviewed by Darin.
+        
+        - JSObject in LiveConnect not working.
+        http://bugzilla.opendarwin.org/show_bug.cgi?id=7917
+
+        * bindings/jni_jsobject.cpp:
+        (JavaJSObject::convertJObjectToValue): Was trying to retrieve the native pointer from the wrong base
+        class, and the GetFieldID was using the wrong signature.
+
+2006-03-23  Darin Adler  <darin@apple.com>
+
+        Reviewed by Maciej.
+
+        - fix buildbot
+
+        * JavaScriptCore.xcodeproj/project.pbxproj: Change target name to JavaScriptCore (it was "include"!?).
+        Also add -Y 3 option for linker.
+
+2006-03-23  Darin Adler  <darin@apple.com>
+
+        Reviewed by Maciej.
+
+        - fix http://bugzilla.opendarwin.org/show_bug.cgi?id=7726
+          REGRESSION: orbitz calendar fails (JavaScript function serialization/parsing)
+
+        * kjs/object.h: Take function name, as well as source URL and line number, when
+        using the special overloaded construct for making functions.
+        * kjs/object.cpp: (KJS::JSObject::construct): Ditto.
+        * kjs/function_object.h: Ditto.
+        * kjs/function_object.cpp: (FunctionObjectImp::construct): Pass a name when
+        constructing the function rather than null. Use "anonymous" when making a
+        function using the default function constructor.
+
+        * kjs/nodes2string.cpp: (FuncDeclNode::streamTo): Put a line break just before
+        a function declaration.
+
+        - unrelated fix
+
+        * kxmlcore/HashMapPtrSpec.h: Add missing needed friend declaration.
+
+2006-03-23  Darin Adler  <darin@apple.com>
+
+        Reviewed by Maciej.
+
+        - fix http://bugzilla.opendarwin.org/show_bug.cgi?id=7805
+          LEAK: method name leaks in KJS::Bindings::CInstance::invokeMethod
+
+        * bindings/c/c_utility.h: Remove NPN_UTF16FromString declaration (not implemented).
+        * bindings/c/c_utility.cpp:
+        (KJS::Bindings::convertValueToNPVariant): Use DOUBLE_TO_NPVARIANT,
+        BOOLEAN_TO_NPVARIANT, VOID_TO_NPVARIANT, NULL_TO_NPVARIANT, and
+        OBJECT_TO_NPVARIANT. In the case of OBJECT, call _NPN_RetainObject in
+        one case and remove a _NPN_ReleaseObject in another because this
+        should return a retained value.
+        (KJS::Bindings::convertNPVariantToValue): Use NPVARIANT_TO_BOOLEAN,
+        NPVARIANT_TO_INT32, and NPVARIANT_TO_DOUBLE.
+
+        * bindings/c/c_runtime.h: Removed implementations of CMethod::name and
+        CField::name that called _NPN_UTF8FromIdentifier and hence leaked.
+        * bindings/c/c_runtime.cpp:
+        (KJS::Bindings::CMethod::name): Added. Returns the string from inside the
+        method object.
+        (KJS::Bindings::CField::name): Added. Returns the string from inside the
+        field object.
+        (KJS::Bindings::CField::valueFromInstance): Added call to _NPN_ReleaseVariantValue
+        on the result of getProperty after using it to fix a storage leak.
+        (KJS::Bindings::CField::setValueToInstance): Added call to _NPN_ReleaseVariantValue
+        after pasing a value to setProperty now that the conversion function does a retain.
+
+        * bindings/c/c_instance.cpp:
+        (KJS::Bindings::CInstance::invokeMethod): Changed to use Vector for a local
+        stack buffer. Removed special case for NPVARIANT_IS_VOID because the
+        convertNPVariantToValue function handles that properly.
+        (KJS::Bindings::CInstance::invokeDefaultMethod): Ditto.
+
+        * bindings/NP_jsobject.h: Formatting changes only.
+        * bindings/NP_jsobject.cpp:
+        (jsDeallocate): Changed parameter type so we don't need a function cast.
+        (_NPN_InvokeDefault): Use VOID_TO_NPVARIANT.
+        (_NPN_Invoke): Use NULL_TO_NPVARIANT and VOID_TO_NPVARIANT.
+        (_NPN_Evaluate): Use VOID_TO_NPVARIANT.
+        (_NPN_GetProperty): Use NULL_TO_NPVARIANT and VOID_TO_NPVARIANT.
+
+        * bindings/c/c_class.cpp: Formatting changes only.
+        * bindings/c/c_class.h: Formatting changes only.
+
+        * bindings/npruntime_priv.h: Removed obsolete and now-unused functions:
+        NPN_VariantIsVoid, NPN_VariantIsNull, NPN_VariantIsUndefined,
+        NPN_VariantIsBool, NPN_VariantIsInt32, NPN_VariantIsDouble,
+        NPN_VariantIsString, NPN_VariantIsObject, NPN_VariantToBool,
+        NPN_VariantToInt32, NPN_VariantToDouble, NPN_VariantToString,
+        NPN_VariantToStringCopy, NPN_VariantToObject, NPN_InitializeVariantAsVoid,
+        NPN_InitializeVariantAsNull, NPN_InitializeVariantAsUndefined,
+        NPN_InitializeVariantWithBool, NPN_InitializeVariantWithInt32,
+        NPN_InitializeVariantWithDouble, NPN_InitializeVariantWithString,
+        NPN_InitializeVariantWithObject, and NPN_InitializeVariantWithVariant.
+        * bindings/npruntime.cpp:
+        (getIntIdentifierDictionary): Don't bother creating custom callbacks for the
+        integer dictionary since the default behavior is fine for integers.
+
+2006-03-23  Mark Rowe  <opendarwin.org@bdash.net.nz>
+
+        Reviewed and landed by Maciej.
+
+        - WebKit no longer builds with bison 2.1
+        http://bugzilla.opendarwin.org/show_bug.cgi?id=7923
+
+        * generate-derived-sources:  Handle generated header named either grammar.cpp.h
+        or grammar.hpp.
+
+2006-03-22  Maciej Stachowiak  <mjs@apple.com>
+
+        - fix the build
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+
+2006-03-21  Maciej Stachowiak  <mjs@apple.com>
+
+        * kjs/generate-derived-sources: Set executable property.
+
+2006-03-21  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+        
+        Ensure that generated source dependencies are handled properly, as follows:
+        
+        - Made an external script that generates the sources into a
+          DerivedSources dir in the build products directory.
+        - Added a new build target that builds all the generated sources
+          if needed. Sadly it has to be a target, not a phase for Xcode to notice changes.
+        - Added the DerivedSources dir in question to the include path.
+        - Added the new DerivedSources dir and its contents to the project as build-relative.
+        
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * kjs/generate-derived-sources: Added. Based on the windows version - maybe someday they
+        can share more.
+
+2006-03-11  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+        
+        - fixed "charAt layout test fails on intel macs; some NaNs are printed as -NaN"
+        http://bugzilla.opendarwin.org/show_bug.cgi?id=7745
+
+        * kjs/ustring.cpp:
+        (KJS::UString::from): Use "NaN" for all NaN values, regardless of sign.
+
+2006-03-16  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+        
+        - tweaks to my change to redo KJS::Node refcounting
+
+        * kjs/nodes.cpp:
+        (Node::ref):
+        (Node::deref):
+        (Node::refcount):
+        (Node::clearNewNodes):
+        * kjs/nodes.h:
+
+2006-03-16  Darin Adler  <darin@apple.com>
+
+        Reviewed by Maciej.
+
+        - fixed Vector so that you can pass a reference to something in the vector
+          to the append or insert functions
+
+        * kxmlcore/Vector.h:
+        (KXMLCore::Vector::expandCapacity): Added new overloads that take a pointer to adjust
+        and return the adjusted value of the pointer.
+        (KXMLCore::Vector::append): Pass a pointer when expanding the vector, and use it when
+        adding the new element. Makes the case where the element moves when the vector
+        is expanded work.
+        (KXMLCore::Vector::insert): Ditto.
+
+2006-03-15  Eric Seidel  <eseidel@apple.com>
+
+        Reviewed by adele.
+
+        Build fix.
+
+        * kjs/date_object.cpp:
+        (KJS::DateProtoFunc::callAsFunction): use size() not "len()"
+
+2006-03-15  Eric Seidel  <eseidel@apple.com>
+
+        Reviewed by mjs.
+
+        Fix CString copy constructor, fixes Date.parse("") on Win32.
+
+        * kjs/date_object.cpp:
+        (KJS::DateProtoFunc::callAsFunction):
+        * kjs/ustring.cpp:
+        (KJS::CString::CString):
+        (KJS::CString::operator=):
+
+2006-03-13  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Anders.
+        
+        - KJS::Node and KJS::StatementNode are bigger than they need to be
+        http://bugzilla.opendarwin.org/show_bug.cgi?id=7775
+
+        The memory usage of Node was reduced by 2 machine words per node:
+
+        - sourceURL was removed and only kept on FunctionBodyNode. The
+        source URL can only be distinct per function or top-level program node, 
+        and you always have one.
+        
+        - refcount was removed and kept in a separate hashtable when
+        greater than 1. newNodes set represents floating nodes with
+        refcount of 0. This helps because almost all nodes have a refcount of 1
+        for almost all of their lifetime.
+        
+        * bindings/runtime_method.cpp:
+        (RuntimeMethod::RuntimeMethod): Pass null body, added FIXME.
+        * kjs/Parser.cpp:
+        (KJS::clearNewNodes): New nodes are tracked in nodes.cpp now, but still clear
+        them at the appropriate time.
+        * kjs/context.h:
+        (KJS::ContextImp::currentBody): added; used to retrieve source URL and sid
+        for current code.
+        (KJS::ContextImp::pushIteration): moved here from LabelStack
+        (KJS::ContextImp::popIteration): ditto
+        (KJS::ContextImp::inIteration): ditto
+        (KJS::ContextImp::pushSwitch): ditto
+        (KJS::ContextImp::popSwitch): ditto
+        (KJS::ContextImp::inSwitch): ditto
+        * kjs/function.cpp:
+        (KJS::FunctionImp::FunctionImp): Add FunctionBodyNode* parameter.
+        (KJS::FunctionImp::callAsFunction): Pass body to ContextImp.
+        (KJS::FunctionImp::argumentsGetter): _context renamed to m_context.
+        (KJS::DeclaredFunctionImp::DeclaredFunctionImp): Pass body to superclass
+        constructor.
+        (KJS::GlobalFuncImp::callAsFunction): Pass progNode as body for ContextImp in
+        eval.
+        * kjs/function.h: Move body field from DeclaredFunctionImp to
+        FunctionImp.
+        * kjs/grammar.y: Change DBG; statements no longer have a sourceid.
+        * kjs/internal.cpp:
+        (KJS::ContextImp::ContextImp): Initialize new m_currentBody, m_iterationDepth
+        and m_switchDepth data members. New FunctionBodyNode* parameter - the
+        function body provides source URL and SourceId.
+        (KJS::InterpreterImp::mark): Use exception() function, not _exception directly.
+        (KJS::InterpreterImp::evaluate): Pass progNode to ContextImp constructor
+        to use as the body.
+        * kjs/internal.h:
+        (KJS::LabelStack::LabelStack): Remove iteration depth and switch depth;
+        statement label stacks don't need these and it bloats their size. Put them
+        in the ContextImp instead.
+        * kjs/interpreter.cpp:
+        (KJS::ExecState::lexicalInterpreter): Renamed _context to m_context.
+        * kjs/interpreter.h:
+        (KJS::ExecState::dynamicInterpreter): Renamed _context to m_context.
+        (KJS::ExecState::context): ditto
+        (KJS::ExecState::setException): Renamed _exception to m_exception
+        (KJS::ExecState::clearException): ditto
+        (KJS::ExecState::exception): ditto
+        (KJS::ExecState::hadException): ditto
+        (KJS::ExecState::ExecState): ditto both above renames
+        * kjs/nodes.cpp:
+        (Node::Node): Removed initialization of line, source URL and refcount. Add to
+        local newNodes set instead of involving parser.
+        (Node::ref): Instead of managing refcount directly, story refcount over 1 in a
+        HashCountedSet, and keep a separate HashSet of "floating" nodes with refcount
+        0.
+        (Node::deref): ditto
+        (Node::refcount): ditto
+        (Node::clearNewNodes): Destroy anything left in the new nodes set.
+        (currentSourceId): Inline helper to get sourceId from function body via context.
+        (currentSourceURL): ditto for sourceURL.
+        (Node::createErrorCompletion): use new helper
+        (Node::throwError): ditto
+        (Node::setExceptionDetailsIfNeeded): ditto
+        (StatementNode::StatementNode): remove initialization of l0 and sid, rename
+        l1 to m_lastLine.
+        (StatementNode::setLoc): Set own m_lastLine and Node's m_line.
+        (StatementNode::hitStatement): Get sid, first line, last line in the proper new ways.
+        (StatListNode::StatListNode): updated for setLoc changes
+        (BlockNode::BlockNode): ditto
+        (DoWhileNode::execute): excpect iteraton counts on ContextImp, not LabelStack
+        (WhileNode::execute): ditto
+        (ForNode::execute): ditto
+        (ForInNode::execute): ditto
+        (ContinueNode::execute): excpect inIteration on ContextImp, not LabelStack
+        (BreakNode::execute): excpect inIteration and inSwitch on ContextImp, not LabelStack
+        (SwitchNode::execute): expect switch counts on ContextImp, not LabelStack
+        (FunctionBodyNode::FunctionBodyNode): update for new setLoc
+        (FunctionBodyNode::processFuncDecl): reindent
+        (SourceElementsNode::SourceElementsNode): update for new setLoc
+        * kjs/nodes.h:
+        (KJS::Node::lineNo): Renamed _line to m_line
+        (KJS::StatementNode::firstLine): Use lineNo()
+        (KJS::StatementNode::lastLine): Renamed l1 to m_lastLine
+        (KJS::FunctionBodyNode::sourceId): added
+        (KJS::FunctionBodyNode::sourceURL): added
+        * kjs/testkjs.cpp:
+
+2006-03-14  Geoffrey Garen  <ggaren@apple.com>
+
+        - Fixed <rdar://problem/4478239> string sort puts "closed" before 
+        "close"
+
+        Reviewed by Eric.
+
+        * kjs/ustring.cpp:
+        (KJS::compare): Inverted a < in order to treat the longer string as > 
+        the shorter string.
+
+2006-03-12  Alexey Proskuryakov  <ap@nypop.com>
+
+        Reviewed by Maciej.
+
+        - fix http://bugzilla.opendarwin.org/show_bug.cgi?id=7708
+        REGRESSION: Flash callback to JavaScript function not working.
+
+        Test: plugins/invoke.html
+
+        * bindings/c/c_utility.cpp:
+        (KJS::Bindings::convertUTF8ToUTF16): Return a correct string length.
+
 2006-03-08  Eric Seidel  <eseidel@apple.com>
 
         Reviewed by darin.

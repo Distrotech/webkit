@@ -62,9 +62,6 @@ namespace WebCore {
             , m_bJScriptEnabled(true)
             , m_bJavaEnabled(true)
             , m_bPluginsEnabled(true)
-            , m_metaRefreshEnabled(true)
-            , m_restored(false)
-            , m_frameNameId(1)
             , m_settings(0)
             , m_job(0)
             , m_bComplete(true)
@@ -86,22 +83,22 @@ namespace WebCore {
             , m_caretVisible(false)
             , m_caretBlinks(true)
             , m_caretPaint(true)
-            , m_bDnd(true)
             , m_bFirstData(true)
-            , m_bClearing(false)
             , m_bCleared(true)
-            , m_bSecurityInQuestion(false)
-            , m_focusNodeRestored(false)
             , m_isFocused(false)
-            , m_focusNodeNumber(-1)
             , m_opener(0)
             , m_openedByJS(false)
-            , m_newJSInterpreterExists(false)
             , m_bPendingChildRedirection(false)
             , m_executingJavaScriptFormAction(false)
             , m_cancelWithLoadInProgress(false)
             , m_lifeSupportTimer(thisFrame, &Frame::lifeSupportTimerFired)
             , m_userStyleSheetLoader(0)
+            , m_autoscrollTimer(thisFrame, &Frame::autoscrollTimerFired)
+            , m_autoscrollLayer(0)
+            , m_drawSelectionOnly(false)
+            , m_markedTextUsesUnderlines(false)
+            , m_windowHasFocus(false)
+            , frameCount(0)
         {
         }
 
@@ -119,20 +116,17 @@ namespace WebCore {
         RenderPart* m_ownerRenderer;
         RefPtr<FrameView> m_view;
         BrowserExtension* m_extension;
-        RefPtr<DocumentImpl> m_doc;
+        RefPtr<Document> m_doc;
         RefPtr<Decoder> m_decoder;
-        QString m_encoding;
-        QString scheduledScript;
-        RefPtr<NodeImpl> scheduledScriptNode;
+        DeprecatedString m_encoding;
+        DeprecatedString scheduledScript;
+        RefPtr<Node> scheduledScriptNode;
 
-        KJSProxyImpl* m_jscript;
+        KJSProxy* m_jscript;
         int m_runningScripts;
         bool m_bJScriptEnabled : 1;
         bool m_bJavaEnabled : 1;
         bool m_bPluginsEnabled : 1;
-        bool m_metaRefreshEnabled : 1;
-        bool m_restored : 1;
-        int m_frameNameId;
 
         KHTMLSettings* m_settings;
 
@@ -140,7 +134,7 @@ namespace WebCore {
 
         String m_kjsStatusBarText;
         String m_kjsDefaultStatusBarText;
-        QString m_lastModified;
+        String m_lastModified;
 
         bool m_bComplete : 1;
         bool m_bLoadingMainResource : 1;
@@ -153,36 +147,35 @@ namespace WebCore {
 
         KURL m_url;
         KURL m_workingURL;
+        ResourceRequest m_request;
 
         KIO::CacheControl m_cachePolicy;
         Timer<Frame> m_redirectionTimer;
 
         RedirectionScheduled m_scheduledRedirection;
         double m_delayRedirect;
-        QString m_redirectURL;
-        QString m_redirectReferrer;
+        DeprecatedString m_redirectURL;
+        DeprecatedString m_redirectReferrer;
         int m_scheduledHistoryNavigationSteps;
 
         int m_zoomFactor;
 
-        QString m_strSelectedURL;
-        QString m_strSelectedURLTarget;
-        QString m_referrer;
+        DeprecatedString m_referrer;
 
         struct SubmitForm {
             const char* submitAction;
-            QString submitUrl;
+            String submitUrl;
             FormData submitFormData;
-            QString target;
-            QString submitContentType;
-            QString submitBoundary;
+            String target;
+            String submitContentType;
+            String submitBoundary;
         };
         SubmitForm* m_submitForm;
 
         bool m_bMousePressed;
-        RefPtr<NodeImpl> m_mousePressNode; // node under the mouse when the mouse was pressed (set in the mouse handler)
+        RefPtr<Node> m_mousePressNode; // node under the mouse when the mouse was pressed (set in the mouse handler)
 
-        ETextGranularity m_selectionGranularity;
+        TextGranularity m_selectionGranularity;
         bool m_beganSelectingText;
 
         SelectionController m_selection;
@@ -193,26 +186,19 @@ namespace WebCore {
         bool m_caretVisible : 1;
         bool m_caretBlinks : 1;
         bool m_caretPaint : 1;
-        bool m_bDnd : 1;
         bool m_bFirstData : 1;
-        bool m_bClearing : 1;
         bool m_bCleared : 1;
-        bool m_bSecurityInQuestion : 1;
-        bool m_focusNodeRestored : 1;
         bool m_isFocused : 1;
 
         EditCommandPtr m_lastEditCommand;
         int m_xPosForVerticalArrowNavigation;
-        RefPtr<CSSMutableStyleDeclarationImpl> m_typingStyle;
-
-        int m_focusNodeNumber;
+        RefPtr<CSSMutableStyleDeclaration> m_typingStyle;
 
         IntPoint m_dragStartPos;
 
         Frame* m_opener;
         HashSet<Frame*> m_openedFrames;
         bool m_openedByJS;
-        bool m_newJSInterpreterExists; // set to 1 by setOpenedByJS, for window.open
         bool m_bPendingChildRedirection;
         bool m_executingJavaScriptFormAction;
         bool m_cancelWithLoadInProgress;
@@ -220,8 +206,23 @@ namespace WebCore {
         Timer<Frame> m_lifeSupportTimer;
 
         UserStyleSheetLoader* m_userStyleSheetLoader;
+        
+        Timer<Frame> m_autoscrollTimer;
+        RenderLayer* m_autoscrollLayer;
+        
+        RefPtr<Node> m_elementToDraw;
+        bool m_drawSelectionOnly;
+        
+        HashMap<String, String> m_formValuesAboutToBeSubmitted;
+        RefPtr<Element> m_formAboutToBeSubmitted;
+        KURL m_submittedFormURL;
+        
+        bool m_markedTextUsesUnderlines;
+        DeprecatedValueList<MarkedTextUnderline> m_markedTextUnderlines;
+        bool m_windowHasFocus;
+        
+        unsigned frameCount;
     };
-
 }
 
 #endif

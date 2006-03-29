@@ -28,25 +28,19 @@
 namespace WebCore {
 
 class Frame;
-class MacFrame;
+class FrameMac;
 
 class BrowserExtensionMac : public BrowserExtension {
 public:
     BrowserExtensionMac(Frame *);
  
-    virtual void openURLRequest(const KURL &, 
-                                const URLArgs &args = URLArgs());
-    virtual void openURLNotify();
-     
-    virtual void createNewWindow(const KURL &url, 
-                                 const URLArgs &urlArgs = URLArgs());
-    virtual void createNewWindow(const KURL& url,
-                                 const URLArgs& urlArgs, 
-                                 const WindowArgs& winArgs, 
+    virtual void createNewWindow(const ResourceRequest&);
+    virtual void createNewWindow(const ResourceRequest&, 
+                                 const WindowArgs&, 
                                  Frame*& part);
 
-    virtual void setIconURL(const KURL &url);
-    virtual void setTypedIconURL(const KURL &url, const QString &type);
+    virtual void setIconURL(const KURL&);
+    virtual void setTypedIconURL(const KURL&, const String& type);
 
     virtual int getHistoryLength();
     virtual void goBackOrForward(int distance);
@@ -56,12 +50,11 @@ public:
     virtual void runModal();
     
 private:
-     void createNewWindow(const KURL &url, 
-                          const URLArgs &urlArgs, 
-                          const WindowArgs &winArgs, 
+     void createNewWindow(const ResourceRequest&, 
+                          const WindowArgs&, 
                           Frame** part);
 
-     MacFrame *m_frame;
+     FrameMac *m_frame;
 };
 
 }

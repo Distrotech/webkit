@@ -33,22 +33,28 @@ public:
     static void init();
     
     AtomicString() { }
+    AtomicString(QChar c) : m_string(add(&c, 1)) { }
     AtomicString(const char* s) : m_string(add(s)) { }
     AtomicString(const QChar* s, int length) : m_string(add(s, length)) { }
     AtomicString(const unsigned short* s, int length) : m_string(add((QChar*)s, length)) { }
-    AtomicString(const QString& s) : m_string(add(s.unicode(), s.length())) { }
+    AtomicString(const DeprecatedString& s) : m_string(add(s.unicode(), s.length())) { }
+    AtomicString(const KJS::UString& s) : m_string(add(s)) { }
+    AtomicString(const KJS::Identifier& s) : m_string(add(s)) { }
     AtomicString(StringImpl* imp) : m_string(add(imp)) { }
     AtomicString(AtomicStringImpl* imp) : m_string(imp) { }
     explicit AtomicString(const String& s) : m_string(add(s.impl())) { }
     
     operator const String&() const { return m_string; }
     const String& domString() const { return m_string; };
-    QString qstring() const { return m_string.qstring(); };
+    DeprecatedString deprecatedString() const { return m_string.deprecatedString(); };
     
+    operator KJS::Identifier() const;
+    operator KJS::UString() const;
+
     AtomicStringImpl* impl() const { return static_cast<AtomicStringImpl *>(m_string.impl()); }
     
     const QChar* unicode() const { return m_string.unicode(); }
-    uint length() const { return m_string.length(); }
+    unsigned length() const { return m_string.length(); }
     
     const QChar& operator [](unsigned int i) const { return m_string[i]; }
     
@@ -65,7 +71,7 @@ public:
     bool endsWith(const AtomicString& s, bool caseSensitive = true) const
         { return m_string.endsWith(s.domString(), caseSensitive); }
     
-    int toInt() const { return m_string.toInt(); }
+    int toInt(bool* ok = 0) const { return m_string.toInt(ok); }
     bool percentage(int& p) const { return m_string.percentage(p); }
     Length* toLengthArray(int& len) const { return m_string.toLengthArray(len); }
     Length* toCoordsArray(int& len) const { return m_string.toCoordsArray(len); }
@@ -86,6 +92,8 @@ private:
     static StringImpl* add(const char*);
     static StringImpl* add(const QChar*, int length);
     static StringImpl* add(StringImpl*);
+    static StringImpl* add(const KJS::UString&);
+    static StringImpl* add(const KJS::Identifier&);
 };
 
 inline bool operator==(const AtomicString& a, const AtomicString& b) { return a.impl() == b.impl(); }

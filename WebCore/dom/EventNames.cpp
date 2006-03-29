@@ -29,9 +29,6 @@
 #include "EventNames.h"
 #include "StaticConstructors.h"
 
-using WebCore::AtomicString;
-using WebCore::nullAtom;
-
 namespace WebCore { namespace EventNames {
 
 #define DEFINE_EVENT_GLOBAL(name) \
@@ -43,6 +40,8 @@ void init()
     static bool initialized;
     if (!initialized) {
         // Use placement new to initialize the globals.
+        
+        AtomicString::init();
         #define INITIALIZE_GLOBAL(name) new ((void*)&name##Event) AtomicString(#name);
         DOM_EVENT_NAMES_FOR_EACH(INITIALIZE_GLOBAL)
         initialized = true;

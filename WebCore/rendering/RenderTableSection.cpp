@@ -29,15 +29,16 @@
 #include "RenderTableSection.h"
 #include "RenderTableCell.h"
 #include "RenderTableRow.h"
-#include "DocumentImpl.h"
-#include "htmlnames.h"
+#include "RenderTableCol.h"
+#include "Document.h"
+#include "HTMLNames.h"
 #include <qtextstream.h>
 
 namespace WebCore {
 
 using namespace HTMLNames;
 
-RenderTableSection::RenderTableSection(NodeImpl* node)
+RenderTableSection::RenderTableSection(Node* node)
     : RenderContainer(node)
 {
     // init RenderObject attributes
@@ -145,6 +146,7 @@ bool RenderTableSection::ensureRows(int numRows)
         for (int r = nRows; r < numRows; r++) {
             grid[r].row = new Row(nCols);
             grid[r].row->fill(emptyCellStruct);
+            grid[r].rowRenderer = 0;
             grid[r].baseLine = 0;
             grid[r].height = Length();
         }
@@ -153,11 +155,11 @@ bool RenderTableSection::ensureRows(int numRows)
     return true;
 }
 
-void RenderTableSection::addCell(RenderTableCell *cell)
+void RenderTableSection::addCell(RenderTableCell *cell, RenderObject* row)
 {
     int rSpan = cell->rowSpan();
     int cSpan = cell->colSpan();
-    Array<RenderTable::ColumnStruct> &columns = table()->columns;
+    DeprecatedArray<RenderTable::ColumnStruct> &columns = table()->columns;
     int nCols = columns.size();
 
     // ### mozilla still seems to do the old HTML way, even for strict DTD
@@ -197,6 +199,8 @@ void RenderTableSection::addCell(RenderTableCell *cell)
     if (!ensureRows(cRow + rSpan))
         return;
 
+    grid[cRow].rowRenderer = row;
+
     int col = cCol;
     // tell the cell where it is
     CellStruct currentCell;
@@ -235,7 +239,7 @@ void RenderTableSection::addCell(RenderTableCell *cell)
 
 void RenderTableSection::setCellWidths()
 {
-    Array<int> &columnPos = table()->columnPos;
+    DeprecatedArray<int> &columnPos = table()->columnPos;
 
     int rows = gridRows;
     for (int i = 0; i < rows; i++) {
@@ -362,6 +366,9 @@ int RenderTableSection::layoutRows(int toAdd)
     int hspacing = table()->hBorderSpacing();
     int vspacing = table()->vBorderSpacing();
     
+    // Set the width of our section now.  The rows will also be this width.
+    m_width = table()->contentWidth();
+    
     if (toAdd && totalRows && (rowPos[totalRows] || !nextSibling())) {
 
         int totalHeight = rowPos[totalRows] + toAdd;
@@ -429,6 +436,14 @@ int RenderTableSection::layoutRows(int toAdd)
     for (int r = 0; r < totalRows; r++) {
         Row *row = grid[r].row;
         int totalCols = row->size();
+        
+        // Set the row's x/y position and width/height.
+        if (grid[r].rowRenderer) {
+            grid[r].rowRenderer->setPos(0, rowPos[r]);
+            grid[r].rowRenderer->setWidth(m_width);
+            grid[r].rowRenderer->setHeight(rowPos[r+1] - rowPos[r] - vspacing);
+        }
+
         for (int c = 0; c < nEffCols; c++) {
             CellStruct current = cellAt(r, c);
             RenderTableCell* cell = current.cell;
@@ -635,17 +650,44 @@ void RenderTableSection::paint(PaintInfo& i, int tx, int ty)
             for (; c < endcol; c++) {
                 CellStruct current = cellAt(r, c);
                 RenderTableCell *cell = current.cell;
-                
-                if (!cell || (cell->layer() && i.phase != PaintActionCollapsedTableBorders)) 
-                    continue;
-                
+                    
                 // Cells must always paint in the order in which they appear taking into account
                 // their upper left originating row/column.  For cells with rowspans, avoid repainting
                 // if we've already seen the cell.
-                if (r > startrow && (cellAt(r-1, c).cell == cell))
+                if (!cell || (r > startrow && (cellAt(r-1, c).cell == cell)))
                     continue;
 
-                cell->paint(i, tx, ty);
+                if (paintAction == PaintActionBlockBackground || paintAction == PaintActionChildBlockBackground) {
+                    // We need to handle painting a stack of backgrounds.  This stack (from bottom to top) consists of
+                    // the column group, column, row group, row, and then the cell.
+                    RenderObject* col = table()->colElement(c);
+                    RenderObject* colGroup = 0;
+                    if (col) {
+                        RenderStyle *style = col->parent()->style();
+                        if (style->display() == TABLE_COLUMN_GROUP)
+                            colGroup = col->parent();
+                    }
+                    RenderObject* row = cell->parent();
+                    
+                    // Column groups and columns first.
+                    // FIXME: Columns and column groups do not currently support opacity, and they are being painted "too late" in
+                    // the stack, since we have already opened a transparency layer (potentially) for the table row group.
+                    // Note that we deliberately ignore whether or not the cell has a layer, since these backgrounds paint "behind" the
+                    // cell.
+                    cell->paintBackgroundsBehindCell(i, tx, ty, colGroup);
+                    cell->paintBackgroundsBehindCell(i, tx, ty, col);
+                    
+                    // Paint the row group next.
+                    cell->paintBackgroundsBehindCell(i, tx, ty, this);
+                    
+                    // Paint the row next, but only if it doesn't have a layer.  If a row has a layer, it will be responsible for
+                    // painting the row background for the cell.
+                    if (!row->layer())
+                        cell->paintBackgroundsBehindCell(i, tx, ty, row);
+                }
+
+                if ((!cell->layer() && !cell->parent()->layer()) || i.phase == PaintActionCollapsedTableBorders)
+                    cell->paint(i, tx, ty);
             }
         }
     }
@@ -659,12 +701,14 @@ void RenderTableSection::recalcCells()
     gridRows = 0;
 
     for (RenderObject *row = firstChild(); row; row = row->nextSibling()) {
-        cRow++;
-        cCol = 0;
-        ensureRows(cRow + 1);
-        for (RenderObject *cell = row->firstChild(); cell; cell = cell->nextSibling())
-            if (cell->isTableCell())
-                addCell(static_cast<RenderTableCell *>(cell));
+        if (row->isTableRow()) {
+            cRow++;
+            cCol = 0;
+            ensureRows(cRow + 1);
+            for (RenderObject *cell = row->firstChild(); cell; cell = cell->nextSibling())
+                if (cell->isTableCell())
+                    addCell(static_cast<RenderTableCell *>(cell), row);
+        }
     }
     needCellRecalc = false;
     setNeedsLayout(true);
@@ -698,8 +742,30 @@ RenderObject* RenderTableSection::removeChildNode(RenderObject* child)
     return RenderContainer::removeChildNode(child);
 }
 
+// Hit Testing
+bool RenderTableSection::nodeAtPoint(NodeInfo& info, int x, int y, int tx, int ty, HitTestAction action)
+{
+    // Table sections cannot ever be hit tested.  Effectively they do not exist.
+    // Just forward to our children always.
+    tx += m_x;
+    ty += m_y;
+
+    for (RenderObject* child = lastChild(); child; child = child->previousSibling()) {
+        // FIXME: We have to skip over inline flows, since they can show up inside table rows
+        // at the moment (a demoted inline <form> for example). If we ever implement a
+        // table-specific hit-test method (which we should do for performance reasons anyway),
+        // then we can remove this check.
+        if (!child->layer() && !child->isInlineFlow() && child->nodeAtPoint(info, x, y, tx, ty, action)) {
+            setInnerNode(info);
+            return true;
+        }
+    }
+    
+    return false;
+}
+
 #ifndef NDEBUG
-void RenderTableSection::dump(QTextStream *stream, QString ind) const
+void RenderTableSection::dump(QTextStream *stream, DeprecatedString ind) const
 {
     *stream << endl << ind << "grid=(" << gridRows << "," << table()->numEffCols() << ")" << endl << ind;
     for (int r = 0; r < gridRows; r++) {

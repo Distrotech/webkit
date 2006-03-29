@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2005, 2006 Apple Computer, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -1159,7 +1159,7 @@ static WebHTMLView *lastHitView = nil;
 - (BOOL)_startDraggingImage:(NSImage *)wcDragImage at:(NSPoint)wcDragLoc operation:(NSDragOperation)op event:(NSEvent *)mouseDraggedEvent sourceIsDHTML:(BOOL)srcIsDHTML DHTMLWroteData:(BOOL)dhtmlWroteData
 {
     NSPoint mouseDownPoint = [self convertPoint:[_private->mouseDownEvent locationInWindow] fromView:nil];
-    NSDictionary *element = [self elementAtPoint:mouseDownPoint];
+    NSDictionary *element = [self elementAtPoint:mouseDownPoint allowShadowContent:YES];
 
     NSURL *linkURL = [element objectForKey:WebElementLinkURLKey];
     NSURL *imageURL = [element objectForKey:WebElementImageURLKey];
@@ -1305,7 +1305,7 @@ static WebHTMLView *lastHitView = nil;
 - (BOOL)_mayStartDragAtEventLocation:(NSPoint)location
 {
     NSPoint mouseDownPoint = [self convertPoint:location fromView:nil];
-    NSDictionary *mouseDownElement = [self elementAtPoint:mouseDownPoint];
+    NSDictionary *mouseDownElement = [self elementAtPoint:mouseDownPoint allowShadowContent:YES];
 
     ASSERT([self _webView]);
     if ([mouseDownElement objectForKey: WebElementImageKey] != nil &&
@@ -1623,10 +1623,13 @@ static WebHTMLView *lastHitView = nil;
     // Also, this is responsible for letting the bridge know if the window has gained or lost focus
     // so we can send focus and blur events.
 
-    BOOL windowIsKey = [[self window] isKeyWindow];
+    NSWindow *window = [self window];
+    BOOL windowIsKey = [window isKeyWindow];
+    BOOL windowOrSheetIsKey = windowIsKey || [[window attachedSheet] isKeyWindow];
+
     BOOL displaysWithFocusAttributes = !_private->resigningFirstResponder && windowIsKey && [self _web_firstResponderCausesFocusDisplay];
     
-    [[self _bridge] setWindowHasFocus:windowIsKey];
+    [[self _bridge] setWindowHasFocus:windowOrSheetIsKey];
     [[self _bridge] setDisplaysWithFocusAttributes:displaysWithFocusAttributes];
 }
 
@@ -2139,9 +2142,9 @@ static WebHTMLView *lastHitView = nil;
     NSWindow *window = [self window];
     if (window) {
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidBecomeKey:)
-            name:NSWindowDidBecomeKeyNotification object:window];
+            name:NSWindowDidBecomeKeyNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidResignKey:)
-            name:NSWindowDidResignKeyNotification object:window];
+            name:NSWindowDidResignKeyNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowWillClose:)
             name:NSWindowWillCloseNotification object:window];
     }
@@ -2152,9 +2155,9 @@ static WebHTMLView *lastHitView = nil;
     NSWindow *window = [self window];
     if (window) {
         [[NSNotificationCenter defaultCenter] removeObserver:self
-            name:NSWindowDidBecomeKeyNotification object:window];
+            name:NSWindowDidBecomeKeyNotification object:nil];
         [[NSNotificationCenter defaultCenter] removeObserver:self
-            name:NSWindowDidResignKeyNotification object:window];
+            name:NSWindowDidResignKeyNotification object:nil];
         [[NSNotificationCenter defaultCenter] removeObserver:self
             name:NSWindowWillCloseNotification object:window];
     }
@@ -2345,6 +2348,9 @@ static WebHTMLView *lastHitView = nil;
 
 - (BOOL)searchFor:(NSString *)string direction:(BOOL)forward caseSensitive:(BOOL)caseFlag wrap:(BOOL)wrapFlag
 {
+    if (![string length])
+        return NO;
+
     return [[self _bridge] searchFor:string direction:forward caseSensitive:caseFlag wrap:wrapFlag];
 }
 
@@ -2553,17 +2559,26 @@ static WebHTMLView *lastHitView = nil;
 
 - (void)windowDidBecomeKey:(NSNotification *)notification
 {
-    ASSERT([notification object] == [self window]);
-    [self addMouseMovedObserver];
-    [self _updateFocusState];
+    NSWindow *keyWindow = [notification object];
+
+    if (keyWindow == [self window])
+        [self addMouseMovedObserver];
+
+    if (keyWindow == [self window] || keyWindow == [[self window] attachedSheet])
+        [self _updateFocusState];
 }
 
-- (void)windowDidResignKey: (NSNotification *)notification
+- (void)windowDidResignKey:(NSNotification *)notification
 {
-    ASSERT([notification object] == [self window]);
-    [_private->compController endRevertingChange:NO moveLeft:NO];
-    [self removeMouseMovedObserver];
-    [self _updateFocusState];
+    NSWindow *formerKeyWindow = [notification object];
+
+    if (formerKeyWindow == [self window])
+        [self removeMouseMovedObserver];
+
+    if (formerKeyWindow == [self window] || formerKeyWindow == [[self window] attachedSheet]) {
+        [self _updateFocusState];
+        [_private->compController endRevertingChange:NO moveLeft:NO];
+    }
 }
 
 - (void)windowWillClose:(NSNotification *)notification
@@ -2586,7 +2601,7 @@ static WebHTMLView *lastHitView = nil;
 - (BOOL)_isSelectionEvent:(NSEvent *)event
 {
     NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
-    return [[[self elementAtPoint:point] objectForKey:WebElementIsSelectedKey] boolValue];
+    return [[[self elementAtPoint:point allowShadowContent:YES] objectForKey:WebElementIsSelectedKey] boolValue];
 }
 
 - (void)_setMouseDownEvent:(NSEvent *)event
@@ -2787,7 +2802,7 @@ done:
     }
     
     NSPoint point = [self convertPoint:[draggingInfo draggingLocation] fromView:nil];
-    NSDictionary *element = [self elementAtPoint:point];
+    NSDictionary *element = [self elementAtPoint:point allowShadowContent:YES];
     if ([[self _webView] isEditable] || [[element objectForKey:WebElementDOMNodeKey] isContentEditable]) {
         if (_private->initiatedDrag && [[element objectForKey:WebElementIsSelectedKey] boolValue]) {
             // Can't drag onto the selection being dragged.
@@ -2894,10 +2909,15 @@ done:
 
 - (NSDictionary *)elementAtPoint:(NSPoint)point
 {
+    return [self elementAtPoint:point allowShadowContent:NO];
+}
+
+- (NSDictionary *)elementAtPoint:(NSPoint)point allowShadowContent:(BOOL)allow;
+{
     DOMNode *innerNode = nil;
     DOMNode *innerNonSharedNode = nil;
     DOMElement *URLElement = nil;
-    [[self _bridge] getInnerNonSharedNode:&innerNonSharedNode innerNode:&innerNode URLElement:&URLElement atPoint:point];
+    [[self _bridge] getInnerNonSharedNode:&innerNonSharedNode innerNode:&innerNode URLElement:&URLElement atPoint:point allowShadowContent:allow];
     return [[[WebElementDictionary alloc] initWithInnerNonSharedNode:innerNonSharedNode innerNode:innerNode URLElement:URLElement andPoint:point] autorelease];
 }
 
@@ -2947,13 +2967,13 @@ done:
     
     if (view == nil) {
         view = [super nextValidKeyView];
-        // If there's no next view wired up, we must be in the last subframe.
+        // If there's no next view wired up, we must be in the last subframe, or we are
+        // being called at an unusual time when the views have not yet been wired together.
         // There's no direct link to the next valid key view; get it from the bridge.
         // Note that view == self here when nextKeyView returns nil, due to AppKit oddness.
         // We'll check for both nil and self in case the AppKit oddness goes away.
         // WebFrameView has this same kind of logic for the previousValidKeyView case.
         if (view == nil || view == self) {
-            ASSERT([self _frame] != [[self _webView] mainFrame]);
             view = [[self _bridge] nextValidKeyViewOutsideWebFrameViews];
         }
     }

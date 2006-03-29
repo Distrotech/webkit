@@ -27,8 +27,8 @@
 #import "BrowserExtensionMac.h"
 
 #import "FrameTree.h"
-#import "KWQExceptions.h"
-#import "MacFrame.h"
+#import "BlockExceptions.h"
+#import "FrameMac.h"
 #import "WebCoreFrameBridge.h"
 #import "WebCorePageBridge.h"
 #import <kxmlcore/Assertions.h>
@@ -40,51 +40,37 @@ BrowserExtensionMac::BrowserExtensionMac(Frame *frame)
 {
 }
 
-void BrowserExtensionMac::openURLRequest(const KURL& url, const URLArgs& args)
+void BrowserExtensionMac::createNewWindow(const ResourceRequest& request) 
 {
-    if (url.protocol().lower() == "javascript") {
-	m_frame->createEmptyDocument();
-	m_frame->replaceContentsWithScriptResult(url);
-     } else {
-	m_frame->openURLRequest(url, args);
-    }
+    createNewWindow(request, WindowArgs(), NULL);
 }
 
-void BrowserExtensionMac::openURLNotify()
+void BrowserExtensionMac::createNewWindow(const ResourceRequest& request, 
+                                          const WindowArgs& winArgs, 
+                                          Frame*& part)
 {
+    createNewWindow(request, winArgs, &part);
 }
 
-void BrowserExtensionMac::createNewWindow(const KURL &url, const URLArgs &urlArgs) 
-{
-    createNewWindow(url, urlArgs, WindowArgs(), NULL);
-}
-
-void BrowserExtensionMac::createNewWindow(const KURL &url, 
-						const URLArgs &urlArgs, 
-						const WindowArgs &winArgs, 
-						Frame*& part)
-{
-    createNewWindow(url, urlArgs, winArgs, &part);
-}
-
-void BrowserExtensionMac::createNewWindow(const KURL &url, 
-						const URLArgs &urlArgs, 
-						const WindowArgs &winArgs, 
-						Frame** partResult)
+void BrowserExtensionMac::createNewWindow(const ResourceRequest& request, 
+                                          const WindowArgs& winArgs, 
+                                          Frame** partResult)
 { 
-    KWQ_BLOCK_EXCEPTIONS;
+    BEGIN_BLOCK_OBJC_EXCEPTIONS;
 
-    ASSERT(!winArgs.dialog || urlArgs.frameName.isEmpty());
+    ASSERT(!winArgs.dialog || request.frameName.isEmpty());
 
     if (partResult)
 	*partResult = NULL;
+    
+    const KURL& url = request.url();
 
-    NSString *frameName = urlArgs.frameName.length() == 0 ? nil : urlArgs.frameName.getNSString();
+    NSString *frameName = request.frameName.isEmpty() ? nil : (NSString*)request.frameName;
     if (frameName) {
         // FIXME: Can't we just use m_frame->findFrame?
         if (WebCoreFrameBridge *bridge = [m_frame->bridge() findFrameNamed:frameName]) {
             if (!url.isEmpty()) {
-                DOMString argsReferrer = urlArgs.metaData().get("referrer");
+                String argsReferrer = request.referrer();
                 NSString *referrer;
                 if (!argsReferrer.isEmpty())
                     referrer = argsReferrer;
@@ -93,7 +79,7 @@ void BrowserExtensionMac::createNewWindow(const KURL &url,
 
                 [bridge loadURL:url.getNSURL() 
                        referrer:referrer 
-                         reload:urlArgs.reload 
+                         reload:request.reload 
                     userGesture:true 
                          target:nil 
                 triggeringEvent:nil 
@@ -120,7 +106,7 @@ void BrowserExtensionMac::createNewWindow(const KURL &url,
     
     WebCoreFrameBridge *bridge = [page mainFrame];
     if ([bridge impl])
-	[bridge impl]->tree()->setName(urlArgs.frameName);
+	[bridge impl]->tree()->setName(AtomicString(request.frameName));
     
     if (partResult)
 	*partResult = [bridge impl];
@@ -130,7 +116,7 @@ void BrowserExtensionMac::createNewWindow(const KURL &url,
     [bridge setScrollbarsVisible:winArgs.scrollBarsVisible];
     [bridge setWindowIsResizable:winArgs.resizable];
     
-    NSRect windowFrame = [bridge windowFrame];
+    NSRect windowFrame = [page windowFrame];
 
     NSSize size = { 1, 1 }; // workaround for 4213314
     NSSize scaleRect = [[page outerView] convertSize:size toView:nil];
@@ -162,25 +148,25 @@ void BrowserExtensionMac::createNewWindow(const KURL &url,
 	windowFrame.origin.y -= heightDelta;
     }
     
-    [bridge setWindowFrame:windowFrame];
+    [page setWindowFrame:windowFrame];
     
     [bridge showWindow];
     
-    KWQ_UNBLOCK_EXCEPTIONS;
+    END_BLOCK_OBJC_EXCEPTIONS;
 }
 
 void BrowserExtensionMac::setIconURL(const KURL &url)
 {
-    KWQ_BLOCK_EXCEPTIONS;
+    BEGIN_BLOCK_OBJC_EXCEPTIONS;
     [m_frame->bridge() setIconURL:url.getNSURL()];
-    KWQ_UNBLOCK_EXCEPTIONS;
+    END_BLOCK_OBJC_EXCEPTIONS;
 }
 
-void BrowserExtensionMac::setTypedIconURL(const KURL &url, const QString &type)
+void BrowserExtensionMac::setTypedIconURL(const KURL &url, const String &type)
 {
-    KWQ_BLOCK_EXCEPTIONS;
-    [m_frame->bridge() setIconURL:url.getNSURL() withType:type.getNSString()];
-    KWQ_UNBLOCK_EXCEPTIONS;
+    BEGIN_BLOCK_OBJC_EXCEPTIONS;
+    [m_frame->bridge() setIconURL:url.getNSURL() withType:type];
+    END_BLOCK_OBJC_EXCEPTIONS;
 }
 
 int BrowserExtensionMac::getHistoryLength()
@@ -190,32 +176,32 @@ int BrowserExtensionMac::getHistoryLength()
 
 void BrowserExtensionMac::goBackOrForward(int distance)
 {
-    KWQ_BLOCK_EXCEPTIONS;
+    BEGIN_BLOCK_OBJC_EXCEPTIONS;
     [m_frame->bridge() goBackOrForward:distance];
-    KWQ_UNBLOCK_EXCEPTIONS;
+    END_BLOCK_OBJC_EXCEPTIONS;
 }
 
 bool BrowserExtensionMac::canRunModal()
 {
-    KWQ_BLOCK_EXCEPTIONS;
+    BEGIN_BLOCK_OBJC_EXCEPTIONS;
     return [m_frame->bridge() canRunModal];
-    KWQ_UNBLOCK_EXCEPTIONS;
+    END_BLOCK_OBJC_EXCEPTIONS;
     return false;
 }
 
 bool BrowserExtensionMac::canRunModalNow()
 {
-    KWQ_BLOCK_EXCEPTIONS;
+    BEGIN_BLOCK_OBJC_EXCEPTIONS;
     return [m_frame->bridge() canRunModalNow];
-    KWQ_UNBLOCK_EXCEPTIONS;
+    END_BLOCK_OBJC_EXCEPTIONS;
     return false;
 }
 
 void BrowserExtensionMac::runModal()
 {
-    KWQ_BLOCK_EXCEPTIONS;
+    BEGIN_BLOCK_OBJC_EXCEPTIONS;
     [m_frame->bridge() runModal];
-    KWQ_UNBLOCK_EXCEPTIONS;
+    END_BLOCK_OBJC_EXCEPTIONS;
 }
 
 }

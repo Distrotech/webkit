@@ -1193,11 +1193,6 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
     streams = [[NSMutableArray alloc] init];
     pendingFrameLoads = [[NSMutableDictionary alloc] init];
 
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(preferencesHaveChanged:)
-                                                 name:WebPreferencesChangedNotification
-                                               object:nil];
-
     return self;
 }
 
@@ -1214,9 +1209,7 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
 
 - (void)dealloc
 {
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
-    
-    [self stop];
+    ASSERT(!isStarted);
 
     [plugin release];
     [streams release];
@@ -1231,11 +1224,7 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
 
 - (void)finalize
 {
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
-
-    // FIXME: Bad to stop at finalize time. Need to restructure code
-    // so that we're already stopped before we get to this point.
-    [self stop];
+    ASSERT(!isStarted);
 
     [self freeAttributeKeysAndValues];
 
@@ -1292,6 +1281,10 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
         } else {
             // View will have no associated windows.
             [self stop];
+
+            // Stop observing WebPreferencesChangedNotification -- we only need to observe this when installed in the view hierarchy.
+            // When not in the view hierarchy, -viewWillMoveToWindow: and -viewDidMoveToWindow will start/stop the plugin as needed.
+            [[NSNotificationCenter defaultCenter] removeObserver:self name:WebPreferencesChangedNotification object:nil];
         }
     }
 }
@@ -1301,6 +1294,13 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
     [self resetTrackingRect];
     
     if ([self window]) {
+        // While in the view hierarchy, observe WebPreferencesChangedNotification so that we can start/stop depending
+        // on whether plugins are enabled.
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                              selector:@selector(preferencesHaveChanged:)
+                                              name:WebPreferencesChangedNotification
+                                              object:nil];
+
         // View moved to an actual window. Start it if not already started.
         [self start];
         [self restartNullEvents];

@@ -23,38 +23,41 @@
    Boston, MA 02111-1307, USA.
 */
 
-#ifndef FRAMEVIEW_H
-#define FRAMEVIEW_H
+#ifndef FrameView_H
+#define FrameView_H
 
-#include "QString.h"
 #include "ScrollView.h"
+#include "IntSize.h"
+#include "PlatformString.h"
+#include <kxmlcore/RefPtr.h>
 
-class QStringList;
+class DeprecatedStringList;
 
 namespace WebCore {
 
 class AtomicString;
 class CSSProperty;
 class CSSStyleSelector;
-class ClipboardImpl;
-class DocumentImpl;
-class ElementImpl;
+class Clipboard;
+class Document;
+class Element;
 class Frame;
 class FrameViewPrivate;
 class GraphicsContext;
-class HTMLAnchorElementImpl;
-class HTMLDocumentImpl;
-class HTMLElementImpl;
-class HTMLFormElementImpl;
-class HTMLFrameSetElementImpl;
-class HTMLGenericFormElementImpl;
-class HTMLTitleElementImpl;
+class HTMLAnchorElement;
+class HTMLDocument;
+class HTMLElement;
+class HTMLFormElement;
+class HTMLFrameSetElement;
+class HTMLGenericFormElement;
+class HTMLTitleElement;
 class InlineBox;
 class IntRect;
-class KeyEvent;
-class MacFrame;
-class MouseEvent;
-class NodeImpl;
+class PlatformKeyboardEvent;
+class FrameMac;
+class PlatformMouseEvent;
+class MouseEventWithHitTestResults;
+class Node;
 class RenderBox;
 class RenderCanvas;
 class RenderLineEdit;
@@ -63,7 +66,8 @@ class RenderPart;
 class RenderPartObject;
 class RenderStyle;
 class RenderWidget;
-class WheelEvent;
+class PlatformWheelEvent;
+class String;
 
 template <typename T> class Timer;
 
@@ -71,14 +75,14 @@ void applyRule(CSSProperty*);
 
 class FrameView : public ScrollView {
     friend class CSSStyleSelector;
-    friend class DocumentImpl;
+    friend class Document;
     friend class Frame;
-    friend class HTMLAnchorElementImpl;
-    friend class HTMLDocumentImpl;
-    friend class HTMLFormElementImpl;
-    friend class HTMLGenericFormElementImpl;
-    friend class HTMLTitleElementImpl;
-    friend class MacFrame;
+    friend class HTMLAnchorElement;
+    friend class HTMLDocument;
+    friend class HTMLFormElement;
+    friend class HTMLGenericFormElement;
+    friend class HTMLTitleElement;
+    friend class FrameMac;
     friend class RenderBox;
     friend class RenderCanvas;
     friend class RenderLineEdit;
@@ -94,25 +98,17 @@ public:
 
     Frame* frame() const { return m_frame.get(); }
 
-    int frameWidth() const { return _width; }
-
-    void setMarginWidth(int x);
+    int frameWidth() const { return m_size.width(); }
 
     /**
-     * Returns the margin width.
+     * Gets/Sets the margin width/height
      *
      * A return value of -1 means the default value will be used.
      */
-    int marginWidth() const { return _marginWidth; }
-
-    void setMarginHeight(int y);
-
-    /**
-     * Returns the margin height.
-     *
-     * A return value of -1 means the default value will be used.
-     */
-    int marginHeight() { return _marginHeight; }
+    int marginWidth() const { return m_margins.width(); }
+    int marginHeight() { return  m_margins.height(); }
+    void setMarginWidth(int);
+    void setMarginHeight(int);
 
     virtual void setVScrollBarMode(ScrollBarMode);
     virtual void setHScrollBarMode(ScrollBarMode);
@@ -127,27 +123,26 @@ public:
 
     bool needsFullRepaint() const;
     
-    void addRepaintInfo(RenderObject* o, const IntRect& r);
+    void addRepaintInfo(RenderObject*, const IntRect&);
 
     void resetScrollBars();
 
-     void clear();
+    void clear();
 
 public:
     void clearPart();
 
-    void viewportMousePressEvent(MouseEvent*);
-    void viewportMouseDoubleClickEvent(MouseEvent*);
-    void viewportMouseMoveEvent(MouseEvent*);
-    void viewportMouseReleaseEvent(MouseEvent*);
-    void viewportWheelEvent(WheelEvent*);
-    void keyPressEvent(KeyEvent*);
+    void handleMousePressEvent(const PlatformMouseEvent&);
+    void handleMouseDoubleClickEvent(const PlatformMouseEvent&);
+    void handleMouseMoveEvent(const PlatformMouseEvent&);
+    void handleMouseReleaseEvent(const PlatformMouseEvent&);
+    void handleWheelEvent(PlatformWheelEvent&);
 
     void doAutoScroll();
 
-    bool updateDragAndDrop(const IntPoint &, ClipboardImpl *clipboard);
-    void cancelDragAndDrop(const IntPoint &, ClipboardImpl *clipboard);
-    bool performDragAndDrop(const IntPoint &, ClipboardImpl *clipboard);
+    bool updateDragAndDrop(const PlatformMouseEvent&, Clipboard*);
+    void cancelDragAndDrop(const PlatformMouseEvent&, Clipboard*);
+    bool performDragAndDrop(const PlatformMouseEvent&, Clipboard*);
 
     void layoutTimerFired(Timer<FrameView>*);
     void hoverTimerFired(Timer<FrameView>*);
@@ -164,24 +159,20 @@ public:
 
     void scheduleHoverStateUpdate();
 
-    Widget *topLevelWidget() const;
-    IntPoint mapToGlobal(const IntPoint &) const;
-    // maps "viewport" (actually Cocoa window coords) to screen coords
-    IntPoint viewportToGlobal(const IntPoint &) const;
     void adjustViewSize();
     void initScrollBars();
     
     void setHasBorder(bool);
     bool hasBorder() const;
     
-    void setResizingFrameSet(HTMLFrameSetElementImpl *);
+    void setResizingFrameSet(HTMLFrameSetElement *);
 
 #if __APPLE__
     void updateDashboardRegions();
 #endif
 
-    void ref() { ++_refCount; }
-    void deref() { if (!--_refCount) delete this; }
+    void ref() { ++m_refCount; }
+    void deref() { if (!--m_refCount) delete this; }
     
 private:
     void cleared();
@@ -189,16 +180,6 @@ private:
 
     void resetCursor();
     void invalidateClick();
-
-    /**
-     * Paints the HTML document.
-     * The document will be scaled to match the width of
-     * the rectangle and clipped to fit in the height.
-     * yOffset determines the vertical offset in the document to start with.
-     * more, if not null, will be set to true if the documents extends
-     * beyond the rc or false if everything below yOffset was painted.
-     **/
-    void paint(GraphicsContext, const IntRect&, int yOffset = 0, bool* more = 0);
 
     /**
      * Get/set the CSS Media Type.
@@ -210,8 +191,8 @@ private:
      * you only need to enable the media type in the view and if necessary
      * add the media type dependent changes to the renderer.
      */
-    void setMediaType(const QString&);
-    QString mediaType() const;
+    void setMediaType(const String&);
+    String mediaType() const;
 
     bool scrollTo(const IntRect&);
 
@@ -223,17 +204,19 @@ private:
 
     void init();
 
-    NodeImpl *nodeUnderMouse() const;
+    Node *nodeUnderMouse() const;
 
     void restoreScrollBar();
 
-    QStringList formCompletionItems(const QString &name) const;
-    void addFormCompletionItem(const QString &name, const QString &value);
+    DeprecatedStringList formCompletionItems(const String& name) const;
+    void addFormCompletionItem(const String& name, const String& value);
 
-    bool dispatchMouseEvent(const AtomicString& eventType, NodeImpl* target,
-        bool cancelable, int detail, MouseEvent*, bool setUnder);
-    bool dispatchDragEvent(const AtomicString& eventType, NodeImpl* target,
-        const IntPoint& loc, ClipboardImpl*);
+    MouseEventWithHitTestResults prepareMouseEvent(bool readonly, bool active, bool mouseMove, const PlatformMouseEvent&);
+
+    bool dispatchMouseEvent(const AtomicString& eventType, Node* target,
+        bool cancelable, int clickCount, const PlatformMouseEvent&, bool setUnder);
+    bool dispatchDragEvent(const AtomicString& eventType, Node* target,
+        const PlatformMouseEvent&, Clipboard*);
 
     void applyOverflowToViewport(RenderObject* o, ScrollBarMode& hMode, ScrollBarMode& vMode);
 
@@ -241,18 +224,13 @@ private:
 
     void updateBorder();
 
-    unsigned _refCount;
-
-    int _width;
-    int _height;
-
-    int _marginWidth;
-    int _marginHeight;
-
+    unsigned m_refCount;
+    
+    IntSize m_size;
+    IntSize m_margins;
+    
     RefPtr<Frame> m_frame;
     FrameViewPrivate* d;
-
-    QString m_medium; // media type
 };
 
 }

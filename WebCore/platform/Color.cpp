@@ -26,7 +26,8 @@
 #include "config.h"
 #include "Color.h"
 
-#include "QString.h"
+#include "DeprecatedString.h"
+#include "PlatformString.h"
 #include <kxmlcore/Assertions.h>
 
 // Turn off inlining to avoid warning with newer gcc.
@@ -55,7 +56,7 @@ RGBA32 makeRGBA(int r, int g, int b, int a)
 }
 
 // copied from css/cssparser.h
-static inline bool parseHexColor(const QString &name, RGBA32 &rgb)
+static inline bool parseHexColor(const DeprecatedString &name, RGBA32 &rgb)
 {
     int len = name.length();
     
@@ -83,7 +84,7 @@ static inline bool parseHexColor(const QString &name, RGBA32 &rgb)
     return false;
 }
 
-Color::Color(const QString &name) {
+Color::Color(const DeprecatedString &name) {
     if(name.startsWith("#")) {
         valid = parseHexColor(name.mid(1), color);
     } else {
@@ -97,7 +98,7 @@ Color::Color(const QString &name) {
 Color::Color(const char *name)
 {
     if(name[0] == '#') {
-        valid = parseHexColor(QString(name).mid(1), color);
+        valid = parseHexColor(DeprecatedString(name).mid(1), color);
     } else {
         const NamedColor *foundColor = findColor(name, strlen(name));
         color = foundColor ? foundColor->RGBValue : 0;
@@ -106,17 +107,17 @@ Color::Color(const char *name)
     }
 }
 
-QString Color::name() const
+String Color::name() const
 {
-    QString name;
+    String name;
     if (alpha() < 0xFF)
-        name.sprintf("#%02X%02X%02X%02X", red(), green(), blue(), alpha());
+        name = String::sprintf("#%02X%02X%02X%02X", red(), green(), blue(), alpha());
     else
-        name.sprintf("#%02X%02X%02X", red(), green(), blue());
+        name = String::sprintf("#%02X%02X%02X", red(), green(), blue());
     return name;
 }
 
-void Color::setNamedColor(const QString &name)
+void Color::setNamedColor(const DeprecatedString &name)
 {
     const NamedColor *foundColor = name.isAllASCII() ? findColor(name.latin1(), name.length()) : 0;
     color = foundColor ? foundColor->RGBValue : 0;

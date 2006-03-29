@@ -43,10 +43,16 @@ namespace WebCore {
 class String {
 public:
     String() { } // gives null string, distinguishable from an empty string
+    String(QChar c) : m_impl(new StringImpl(&c, 1)) { }
     String(const QChar*, unsigned length);
-    String(const QString&);
+    String(const DeprecatedString&);
+    String(const KJS::Identifier&);
+    String(const KJS::UString&);
     String(const char*);
     String(StringImpl* i) : m_impl(i) { }
+
+    operator KJS::Identifier() const;
+    operator KJS::UString() const;
 
     String& operator +=(const String&);
 
@@ -71,12 +77,15 @@ public:
         { return m_impl ? m_impl->endsWith(s.impl(), caseSensitive) : s.isEmpty(); }
 
     String& replace(QChar a, QChar b) { if (m_impl) m_impl = m_impl->replace(a, b); return *this; }
+    String& replace(QChar a, const String& b) { if (m_impl) m_impl = m_impl->replace(a, b.impl()); return *this; }
 
     unsigned length() const;
     void truncate(unsigned len);
     void remove(unsigned pos, int len = 1);
 
     String substring(unsigned pos, unsigned len = UINT_MAX) const;
+    String left(unsigned len) const { return substring(0, len); }
+    String right(unsigned len) const { return substring(length() - len, len); }
 
     // Splits the string into two. The original string gets truncated to pos, and the rest is returned.
     String split(unsigned pos);
@@ -85,10 +94,22 @@ public:
     String lower() const;
     String upper() const;
 
-    QChar *unicode() const;
-    QString qstring() const;
+    const QChar* unicode() const;
+    DeprecatedString deprecatedString() const;
+    
+    static String number(int);
+    static String number(unsigned);
+    static String number(long);
+    static String number(unsigned long);
+    static String number(double);
+    
+    static String sprintf(const char *, ...)
+#if __GNUC__
+    __attribute__ ((format (printf, 1, 2)))
+#endif
+    ;
 
-    int toInt() const;
+    int toInt(bool* ok = 0) const;
     Length* toLengthArray(int& len) const;
     Length* toCoordsArray(int& len) const;
     bool percentage(int &_percentage) const;
@@ -119,6 +140,12 @@ private:
 };
 
 String operator+(const String&, const String&);
+String operator+(const String&, const char*);
+String operator+(const char*, const String&);
+String operator+(const String&, QChar);
+String operator+(QChar, const String&);
+String operator+(const String&, char);
+String operator+(char, const String&);
 
 inline bool operator==(const String& a, const String& b) { return equal(a.impl(), b.impl()); }
 inline bool operator==(const String& a, const char* b) { return equal(a.impl(), b); }
@@ -132,10 +159,10 @@ inline bool equalIgnoringCase(const String& a, const String& b) { return equalIg
 inline bool equalIgnoringCase(const String& a, const char* b) { return equalIgnoringCase(a.impl(), b); }
 inline bool equalIgnoringCase(const char* a, const String& b) { return equalIgnoringCase(a, b.impl()); }
 
-bool operator==(const String& a, const QString& b);
-inline bool operator==( const QString& b, const String& a) { return a == b; }
-inline bool operator!=(const String& a, const QString& b) { return !(a == b); }
-inline bool operator!=(const QString& b, const String& a ) { return !(a == b); }
+bool operator==(const String& a, const DeprecatedString& b);
+inline bool operator==( const DeprecatedString& b, const String& a) { return a == b; }
+inline bool operator!=(const String& a, const DeprecatedString& b) { return !(a == b); }
+inline bool operator!=(const DeprecatedString& b, const String& a ) { return !(a == b); }
 
 }
 

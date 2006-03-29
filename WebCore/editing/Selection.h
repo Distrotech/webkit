@@ -27,8 +27,8 @@
 #define KHTML_EDITING_SELECTION_H
 
 #include <kxmlcore/PassRefPtr.h>
-#include "text_granularity.h"
-#include "dom_position.h"
+#include "TextGranularity.h"
+#include "Position.h"
 
 namespace WebCore {
 
@@ -44,6 +44,8 @@ public:
     Selection();
     Selection(const Position &, EAffinity);
     Selection(const Position &, const Position &, EAffinity);
+    
+    static Selection selectionFromContentsOfNode(Node*);
 
     EState state() const { return m_state; }
 
@@ -64,10 +66,10 @@ public:
 
     bool isBaseFirst() const { return m_baseIsFirst; }
 
-    bool expandUsingGranularity(ETextGranularity granularity);
-    ETextGranularity granularity() const { return m_granularity; }
+    bool expandUsingGranularity(TextGranularity granularity);
+    TextGranularity granularity() const { return m_granularity; }
 
-    PassRefPtr<RangeImpl> toRange() const;
+    PassRefPtr<Range> toRange() const;
 
     void debugPosition() const;
 
@@ -81,7 +83,7 @@ private:
     Position m_end;                   // end position for the selection
 
     EAffinity m_affinity;             // the upstream/downstream affinity of the caret
-    ETextGranularity m_granularity;   // granularity of start/end selection
+    TextGranularity m_granularity;   // granularity of start/end selection
 
     // these are cached, can be recalculated by validate()
     EState m_state;                   // the state of the selection
@@ -98,6 +100,6 @@ inline bool operator!=(const Selection &a, const Selection &b)
     return !(a == b);
 }
 
-} // namespace khtml
+} // namespace WebCore
 
 #endif // KHTML_EDITING_SELECTION_H

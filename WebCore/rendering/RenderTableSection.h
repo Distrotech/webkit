@@ -36,7 +36,7 @@ class RenderTableCell;
 class RenderTableSection : public RenderContainer
 {
 public:
-    RenderTableSection(DOM::NodeImpl* node);
+    RenderTableSection(WebCore::Node* node);
     ~RenderTableSection();
     virtual void destroy();
 
@@ -52,10 +52,10 @@ public:
     virtual void position(int, int, int, int, int, bool, bool, int) {}
 
 #ifndef NDEBUG
-    virtual void dump(QTextStream *stream, QString ind = "") const;
+    virtual void dump(QTextStream *stream, DeprecatedString ind = "") const;
 #endif
 
-    void addCell(RenderTableCell *cell);
+    void addCell(RenderTableCell *cell, RenderObject* row);
 
     void setCellWidths();
     void calcRowHeight();
@@ -67,9 +67,10 @@ public:
         RenderTableCell *cell;
         bool inColSpan; // true for columns after the first in a colspan
     };
-    typedef Array<CellStruct> Row;
+    typedef DeprecatedArray<CellStruct> Row;
     struct RowStruct {
-        Row *row;
+        Row* row;
+        RenderObject* rowRenderer;
         int baseLine;
         Length height;
     };
@@ -97,11 +98,13 @@ public:
 
     virtual RenderObject* removeChildNode(RenderObject* child);
 
+    virtual bool nodeAtPoint(NodeInfo& info, int x, int y, int tx, int ty, HitTestAction action);
+
     // this gets a cell grid data structure. changing the number of
     // columns is done by the table
-    Array<RowStruct> grid;
+    DeprecatedArray<RowStruct> grid;
     int gridRows;
-    Array<int> rowPos;
+    DeprecatedArray<int> rowPos;
 
     // the current insertion position
     int cCol;

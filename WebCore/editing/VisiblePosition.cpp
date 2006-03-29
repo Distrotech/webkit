@@ -25,14 +25,15 @@
 
 #include "config.h"
 #include "VisiblePosition.h"
-#include "visible_units.h"
-#include "htmlediting.h"
-#include "htmlnames.h"
-#include "render_line.h"
-#include "render_object.h"
+#include "Document.h"
+#include "Element.h"
+#include "HTMLNames.h"
 #include "InlineTextBox.h"
-#include "DocumentImpl.h"
-#include "dom2_rangeimpl.h"
+#include "Range.h"
+#include "RenderObject.h"
+#include "htmlediting.h"
+#include "render_line.h"
+#include "visible_units.h"
 
 #include <kxmlcore/Assertions.h>
 #include "Logging.h"
@@ -46,7 +47,7 @@ VisiblePosition::VisiblePosition(const Position &pos, EAffinity affinity)
     init(pos, affinity);
 }
 
-VisiblePosition::VisiblePosition(NodeImpl *node, int offset, EAffinity affinity)
+VisiblePosition::VisiblePosition(Node *node, int offset, EAffinity affinity)
 {
     init(Position(node, offset), affinity);
 }
@@ -69,13 +70,11 @@ void VisiblePosition::init(const Position &pos, EAffinity affinity)
     pos.node()->getDocument()->updateLayoutIgnorePendingStylesheets();
     Position deepPos = deepEquivalent(pos);
     if (deepPos.inRenderedContent()) {
-        m_deepPosition = deepPos;
-        Position previous = previousVisiblePosition(deepPos);
-        if (previous.isNotNull()) {
-            Position next = nextVisiblePosition(previous);
-            if (next.isNotNull())
-                m_deepPosition = next;
-        }
+        // If two visually equivalent positions are both candidates for being made the m_deepPosition,
+        // (this can happen when two rendered positions have only collapsed whitespace between them for example),
+        // we always choose the one that occurs first in the DOM to canonicalize VisiblePositions.
+        Position upstreamPosition = deepPos.upstream();
+        m_deepPosition = upstreamPosition.inRenderedContent() ? upstreamPosition : deepPos;
     } else {
         Position next = nextVisiblePosition(deepPos);
         Position prev = previousVisiblePosition(deepPos);
@@ -87,7 +86,7 @@ void VisiblePosition::init(const Position &pos, EAffinity affinity)
         else if (prev.isNull())
             m_deepPosition = next;
         else {
-            NodeImpl *originalBlock = pos.node() ? pos.node()->enclosingBlockFlowElement() : 0;
+            Node *originalBlock = pos.node() ? pos.node()->enclosingBlockFlowElement() : 0;
             bool nextIsOutsideOriginalBlock = !next.node()->isAncestor(originalBlock) && next.node() != originalBlock;
             bool prevIsOutsideOriginalBlock = !prev.node()->isAncestor(originalBlock) && prev.node() != originalBlock;
             
@@ -175,7 +174,7 @@ Position VisiblePosition::nextVisiblePosition(const Position &pos)
 
 Position VisiblePosition::deepEquivalent(const Position &pos)
 {
-    NodeImpl *node = pos.node();
+    Node *node = pos.node();
     int offset = pos.offset();
 
     if (!node)
@@ -186,7 +185,7 @@ Position VisiblePosition::deepEquivalent(const Position &pos)
 
     if (offset >= (int)node->childNodeCount()) {
         do {
-            NodeImpl *child = node->lastChild();
+            Node *child = node->lastChild();
             if (!child)
                 break;
             node = child;
@@ -197,7 +196,7 @@ Position VisiblePosition::deepEquivalent(const Position &pos)
     node = node->childNode(offset);
     ASSERT(node);
     while (!(Position(node, 0).inRenderedContent()) && !isAtomicNode(node)) {
-        NodeImpl *child = node->firstChild();
+        Node *child = node->firstChild();
         if (!child)
             break;
         node = child;
@@ -205,19 +204,19 @@ Position VisiblePosition::deepEquivalent(const Position &pos)
     return Position(node, 0);
 }
 
-int VisiblePosition::maxOffset(const NodeImpl *node)
+int VisiblePosition::maxOffset(const Node *node)
 {
-    return node->offsetInCharacters() ? (int)static_cast<const CharacterDataImpl *>(node)->length() : (int)node->childNodeCount();
+    return node->offsetInCharacters() ? (int)static_cast<const CharacterData *>(node)->length() : (int)node->childNodeCount();
 }
 
 QChar VisiblePosition::character() const
 {
     Position pos = m_deepPosition;
-    NodeImpl *node = pos.node();
+    Node *node = pos.node();
     if (!node || !node->isTextNode()) {
         return QChar();
     }
-    TextImpl *textNode = static_cast<TextImpl *>(pos.node());
+    Text *textNode = static_cast<Text *>(pos.node());
     int offset = pos.offset();
     if ((unsigned)offset >= textNode->length()) {
         return QChar();
@@ -248,7 +247,7 @@ void VisiblePosition::debugPosition(const char *msg) const
     if (isNull())
         fprintf(stderr, "Position [%s]: null\n", msg);
     else
-        fprintf(stderr, "Position [%s]: %s [%p] at %d\n", msg, m_deepPosition.node()->nodeName().qstring().latin1(), m_deepPosition.node(), m_deepPosition.offset());
+        fprintf(stderr, "Position [%s]: %s [%p] at %d\n", msg, m_deepPosition.node()->nodeName().deprecatedString().latin1(), m_deepPosition.node(), m_deepPosition.offset());
 }
 
 #ifndef NDEBUG
@@ -276,26 +275,26 @@ void showTree(const VisiblePosition &vpos)
 
 #endif
 
-PassRefPtr<RangeImpl> makeRange(const VisiblePosition &start, const VisiblePosition &end)
+PassRefPtr<Range> makeRange(const VisiblePosition &start, const VisiblePosition &end)
 {
     Position s = rangeCompliantEquivalent(start);
     Position e = rangeCompliantEquivalent(end);
-    return new RangeImpl(s.node()->getDocument(), s.node(), s.offset(), e.node(), e.offset());
+    return new Range(s.node()->getDocument(), s.node(), s.offset(), e.node(), e.offset());
 }
 
-VisiblePosition startVisiblePosition(const RangeImpl *r, EAffinity affinity)
+VisiblePosition startVisiblePosition(const Range *r, EAffinity affinity)
 {
     int exception = 0;
     return VisiblePosition(r->startContainer(exception), r->startOffset(exception), affinity);
 }
 
-VisiblePosition endVisiblePosition(const RangeImpl *r, EAffinity affinity)
+VisiblePosition endVisiblePosition(const Range *r, EAffinity affinity)
 {
     int exception = 0;
     return VisiblePosition(r->endContainer(exception), r->endOffset(exception), affinity);
 }
 
-bool setStart(RangeImpl *r, const VisiblePosition &visiblePosition)
+bool setStart(Range *r, const VisiblePosition &visiblePosition)
 {
     if (!r)
         return false;
@@ -305,7 +304,7 @@ bool setStart(RangeImpl *r, const VisiblePosition &visiblePosition)
     return code == 0;
 }
 
-bool setEnd(RangeImpl *r, const VisiblePosition &visiblePosition)
+bool setEnd(Range *r, const VisiblePosition &visiblePosition)
 {
     if (!r)
         return false;
@@ -315,7 +314,7 @@ bool setEnd(RangeImpl *r, const VisiblePosition &visiblePosition)
     return code == 0;
 }
 
-DOM::NodeImpl *enclosingBlockFlowElement(const VisiblePosition &visiblePosition)
+WebCore::Node *enclosingBlockFlowElement(const VisiblePosition &visiblePosition)
 {
     if (visiblePosition.isNull())
         return NULL;
@@ -323,7 +322,7 @@ DOM::NodeImpl *enclosingBlockFlowElement(const VisiblePosition &visiblePosition)
     return visiblePosition.deepEquivalent().node()->enclosingBlockFlowElement();
 }
 
-bool isFirstVisiblePositionInNode(const VisiblePosition &visiblePosition, const NodeImpl *node)
+bool isFirstVisiblePositionInNode(const VisiblePosition &visiblePosition, const Node *node)
 {
     if (visiblePosition.isNull())
         return false;
@@ -335,7 +334,7 @@ bool isFirstVisiblePositionInNode(const VisiblePosition &visiblePosition, const 
     return previous.isNull() || !previous.deepEquivalent().node()->isAncestor(node);
 }
 
-bool isLastVisiblePositionInNode(const VisiblePosition &visiblePosition, const NodeImpl *node)
+bool isLastVisiblePositionInNode(const VisiblePosition &visiblePosition, const Node *node)
 {
     if (visiblePosition.isNull())
         return false;
@@ -347,4 +346,4 @@ bool isLastVisiblePositionInNode(const VisiblePosition &visiblePosition, const N
     return next.isNull() || !next.deepEquivalent().node()->isAncestor(node);
 }
 
-}  // namespace DOM
+}  // namespace WebCore

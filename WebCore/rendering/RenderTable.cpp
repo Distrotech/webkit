@@ -31,16 +31,16 @@
 #include "RenderTableSection.h"
 #include "RenderTableCol.h"
 #include "RenderTableCell.h"
-#include "DocumentImpl.h"
+#include "Document.h"
 #include "table_layout.h"
-#include "htmlnames.h"
+#include "HTMLNames.h"
 #include <qtextstream.h>
 
 namespace WebCore {
 
 using namespace HTMLNames;
 
-RenderTable::RenderTable(NodeImpl* node)
+RenderTable::RenderTable(Node* node)
     : RenderBlock(node)
 {
     tCaption = 0;
@@ -264,7 +264,7 @@ void RenderTable::layout()
     int calculatedHeight = 0;
 
     RenderObject *child = firstChild();
-    while(child) {
+    while (child) {
         // FIXME: What about a form that has a display value that makes it a table section?
         if (child->needsLayout() && !(child->element() && child->element()->hasTagName(formTag)))
             child->layout();
@@ -386,13 +386,14 @@ void RenderTable::paint(PaintInfo& i, int _tx, int _ty)
     // We're done.  We don't bother painting any children.
     if (paintAction == PaintActionBlockBackground)
         return;
+
     // We don't paint our own background, but we do let the kids paint their backgrounds.
     if (paintAction == PaintActionChildBlockBackgrounds)
         paintAction = PaintActionChildBlockBackground;
     PaintInfo paintInfo(i.p, i.r, paintAction, paintingRootForChildren(i));
     
     for (RenderObject *child = firstChild(); child; child = child->nextSibling())
-        if (child->isTableSection() || child == tCaption)
+        if (!child->layer() && (child->isTableSection() || child == tCaption))
             child->paint(paintInfo, _tx, _ty);
 
     if (collapseBorders() && paintAction == PaintActionChildBlockBackground && style()->visibility() == VISIBLE) {
@@ -400,10 +401,10 @@ void RenderTable::paint(PaintInfo& i, int _tx, int _ty)
         // have all the styles sorted, we then do individual passes, painting each style of border
         // from lowest precedence to highest precedence.
         paintInfo.phase = PaintActionCollapsedTableBorders;
-        QValueList<CollapsedBorderValue> borderStyles;
+        DeprecatedValueList<CollapsedBorderValue> borderStyles;
         collectBorders(borderStyles);
-        QValueListIterator<CollapsedBorderValue> it = borderStyles.begin();
-        QValueListIterator<CollapsedBorderValue> end = borderStyles.end();
+        DeprecatedValueListIterator<CollapsedBorderValue> it = borderStyles.begin();
+        DeprecatedValueListIterator<CollapsedBorderValue> end = borderStyles.end();
         for (; it != end; ++it) {
             m_currentBorder = &(*it);
             for (RenderObject* child = firstChild(); child; child = child->nextSibling())
@@ -770,8 +771,26 @@ void RenderTable::updateFirstLetter()
 {
 }
 
+IntRect RenderTable::getOverflowClipRect(int tx, int ty)
+{
+    IntRect rect = RenderBlock::getOverflowClipRect(tx, ty);
+    
+    // If we have a caption, expand the clip to include the caption.
+    // FIXME: Technically this is wrong, but it's virtually impossible to fix this
+    // for real until captions have been re-written.
+    // FIXME: This code assumes (like all our other caption code) that only top/bottom are
+    // supported.  When we actually support left/right and stop mapping them to top/bottom,
+    // we might have to hack this code first (depending on what order we do these bug fixes in).
+    if (tCaption) {
+        rect.setHeight(height());
+        rect.setY(ty);
+    }
+
+    return rect;
+}
+
 #ifndef NDEBUG
-void RenderTable::dump(QTextStream *stream, QString ind) const
+void RenderTable::dump(QTextStream *stream, DeprecatedString ind) const
 {
     if (tCaption)
         *stream << " tCaption";

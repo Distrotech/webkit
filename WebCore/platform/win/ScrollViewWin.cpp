@@ -27,7 +27,8 @@
 #include "ScrollView.h"
 
 #include <algorithm>
-#include "IntSize.h"
+#include "FloatRect.h"
+#include "IntRect.h"
 #include <windows.h>
 
 using namespace std;
@@ -83,6 +84,15 @@ int ScrollView::visibleHeight() const
     return (bounds.bottom - bounds.top);
 }
 
+FloatRect ScrollView::visibleContentRect() const
+{
+    RECT bounds;
+    GetClientRect(windowHandle(), &bounds);
+    FloatRect contentRect = bounds;
+    contentRect.move(m_data->scrollPoint);
+    return contentRect;
+}
+
 void ScrollView::setContentsPos(int newX, int newY)
 {
     int dx = newX - contentsX();
@@ -123,13 +133,13 @@ void ScrollView::viewportToContents(int x1, int y1, int& x2, int& y2)
 {
     POINT point = {x1, y1};
     MapWindowPoints(GetAncestor(windowHandle(), GA_ROOT), windowHandle(), &point, 1);
-    x2 = point.x;
-    y2 = point.y;
+    x2 = point.x + scrollXOffset();
+    y2 = point.y + scrollYOffset();
 }
 
 void ScrollView::contentsToViewport(int x1, int y1, int& x2, int& y2)
 {
-    POINT point = {x1, y1};
+    POINT point = {x1 - scrollXOffset(), y1 - scrollYOffset()};
     MapWindowPoints(windowHandle(), GetAncestor(windowHandle(), GA_ROOT), &point, 1);
     x2 = point.x;
     y2 = point.y;

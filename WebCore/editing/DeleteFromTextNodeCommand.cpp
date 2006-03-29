@@ -26,16 +26,13 @@
 #include "config.h"
 #include "DeleteFromTextNodeCommand.h"
 
-#include "TextImpl.h"
+#include "Text.h"
 
 #include <kxmlcore/Assertions.h>
 
-using DOM::DocumentImpl;
-using DOM::TextImpl;
+namespace WebCore {
 
-namespace khtml {
-
-DeleteFromTextNodeCommand::DeleteFromTextNodeCommand(DocumentImpl *document, TextImpl *node, int offset, int count)
+DeleteFromTextNodeCommand::DeleteFromTextNodeCommand(Document *document, Text *node, int offset, int count)
     : EditCommand(document), m_node(node), m_offset(offset), m_count(count)
 {
     ASSERT(m_node);
@@ -66,4 +63,4 @@ void DeleteFromTextNodeCommand::doUnapply()
     ASSERT(ec == 0);
 }
 
-} // namespace khtml
+} // namespace WebCore

@@ -26,18 +26,18 @@
 #include "Cache.h"
 #include "CachedImage.h"
 #include "DocLoader.h"
-#include "DocumentImpl.h"
+#include "Document.h"
 #include "ExceptionCode.h"
 #include "Font.h"
-#include "HTMLElementImpl.h"
+#include "HTMLElement.h"
 #include "PlatformString.h"
 #include "StringImpl.h"
 #include "css_ruleimpl.h"
 #include "css_stylesheetimpl.h"
 #include "cssparser.h"
-#include "cssproperties.h"
+#include "CSSPropertyNames.h"
 #include "cssstyleselector.h"
-#include "cssvalues.h"
+#include "CSSValueKeywords.h"
 #include "render_style.h"
 #include <qregexp.h>
 
@@ -50,7 +50,7 @@ WebCore::String getPropertyName(unsigned short id);
 
 namespace WebCore {
 
-// Defined in css_grammar.y, but not in any header, so just declare it here for now.
+// Defined in CSSGrammar.y, but not in any header, so just declare it here for now.
 int getPropertyID(const char *str, int len);
 
 static int propertyID(const String &s)
@@ -71,7 +71,7 @@ static int propertyID(const String &s)
     int id = getPropertyID(buffer, len);
 #if SVG_SUPPORT
     if (id == 0)
-        id = getSVGCSSPropertyID(buffer, len);
+        id = SVG::getSVGCSSPropertyID(buffer, len);
 #endif
     return id;
 }
@@ -83,28 +83,27 @@ static String quoteStringIfNeeded(const String &string)
 {
     // For now, just do this for strings that start with "#" to fix Korean font names that start with "#".
     // Post-Tiger, we should isLegalIdentifier instead after working out all the ancillary issues.
-    if (string[0] != '#') {
+    if (string[0] != '#')
         return string;
-    }
 
     // FIXME: Also need to transform control characters into \ sequences.
-    QString s = string.qstring();
+    String s = string;
     s.replace('\\', "\\\\");
     s.replace('\'', "\\'");
     return '\'' + s + '\'';
 }
 
-CSSStyleDeclarationImpl::CSSStyleDeclarationImpl(CSSRuleImpl *parent)
-    : StyleBaseImpl(parent)
+CSSStyleDeclaration::CSSStyleDeclaration(CSSRule *parent)
+    : StyleBase(parent)
 {
 }
 
-bool CSSStyleDeclarationImpl::isStyleDeclaration()
+bool CSSStyleDeclaration::isStyleDeclaration()
 {
     return true;
 }
 
-PassRefPtr<CSSValueImpl> CSSStyleDeclarationImpl::getPropertyCSSValue(const String& propertyName)
+PassRefPtr<CSSValue> CSSStyleDeclaration::getPropertyCSSValue(const String& propertyName)
 {
     int propID = propertyID(propertyName);
     if (!propID)
@@ -112,7 +111,7 @@ PassRefPtr<CSSValueImpl> CSSStyleDeclarationImpl::getPropertyCSSValue(const Stri
     return getPropertyCSSValue(propID);
 }
 
-String CSSStyleDeclarationImpl::getPropertyValue(const String &propertyName)
+String CSSStyleDeclaration::getPropertyValue(const String &propertyName)
 {
     int propID = propertyID(propertyName);
     if (!propID)
@@ -120,7 +119,7 @@ String CSSStyleDeclarationImpl::getPropertyValue(const String &propertyName)
     return getPropertyValue(propID);
 }
 
-String CSSStyleDeclarationImpl::getPropertyPriority(const String &propertyName)
+String CSSStyleDeclaration::getPropertyPriority(const String &propertyName)
 {
     int propID = propertyID(propertyName);
     if (!propID)
@@ -128,7 +127,7 @@ String CSSStyleDeclarationImpl::getPropertyPriority(const String &propertyName)
     return getPropertyPriority(propID) ? "important" : "";
 }
 
-String CSSStyleDeclarationImpl::getPropertyShorthand(const String &propertyName)
+String CSSStyleDeclaration::getPropertyShorthand(const String &propertyName)
 {
     int propID = propertyID(propertyName);
     if (!propID)
@@ -139,7 +138,7 @@ String CSSStyleDeclarationImpl::getPropertyShorthand(const String &propertyName)
     return getPropertyName(shorthandID);
 }
 
-bool CSSStyleDeclarationImpl::isPropertyImplicit(const String &propertyName)
+bool CSSStyleDeclaration::isPropertyImplicit(const String &propertyName)
 {
     int propID = propertyID(propertyName);
     if (!propID)
@@ -147,7 +146,7 @@ bool CSSStyleDeclarationImpl::isPropertyImplicit(const String &propertyName)
     return isPropertyImplicit(propID);
 }
 
-void CSSStyleDeclarationImpl::setProperty(const String& propertyName, const String& value, const String& priority, ExceptionCode& ec)
+void CSSStyleDeclaration::setProperty(const String& propertyName, const String& value, const String& priority, ExceptionCode& ec)
 {
     int propID = propertyID(propertyName);
     if (!propID) // set exception?
@@ -156,7 +155,7 @@ void CSSStyleDeclarationImpl::setProperty(const String& propertyName, const Stri
     setProperty(propID, value, important, ec);
 }
 
-String CSSStyleDeclarationImpl::removeProperty(const String& propertyName, ExceptionCode& ec)
+String CSSStyleDeclaration::removeProperty(const String& propertyName, ExceptionCode& ec)
 {
     int propID = propertyID(propertyName);
     if (!propID)
@@ -164,47 +163,47 @@ String CSSStyleDeclarationImpl::removeProperty(const String& propertyName, Excep
     return removeProperty(propID, ec);
 }
 
-bool CSSStyleDeclarationImpl::isPropertyName(const String &propertyName)
+bool CSSStyleDeclaration::isPropertyName(const String &propertyName)
 {
     return propertyID(propertyName);
 }
 
 // --------------------------------------------------------------------------------------
 
-CSSMutableStyleDeclarationImpl::CSSMutableStyleDeclarationImpl()
+CSSMutableStyleDeclaration::CSSMutableStyleDeclaration()
     : m_node(0)
 {
 }
 
-CSSMutableStyleDeclarationImpl::CSSMutableStyleDeclarationImpl(CSSRuleImpl *parent)
-    : CSSStyleDeclarationImpl(parent), m_node(0)
+CSSMutableStyleDeclaration::CSSMutableStyleDeclaration(CSSRule *parent)
+    : CSSStyleDeclaration(parent), m_node(0)
 {
 }
 
-CSSMutableStyleDeclarationImpl::CSSMutableStyleDeclarationImpl(CSSRuleImpl *parent, const QValueList<CSSProperty> &values)
-    : CSSStyleDeclarationImpl(parent), m_values(values), m_node(0)
+CSSMutableStyleDeclaration::CSSMutableStyleDeclaration(CSSRule *parent, const DeprecatedValueList<CSSProperty> &values)
+    : CSSStyleDeclaration(parent), m_values(values), m_node(0)
 {
     // FIXME: This allows duplicate properties.
 }
 
-CSSMutableStyleDeclarationImpl::CSSMutableStyleDeclarationImpl(CSSRuleImpl *parent, const CSSProperty * const *properties, int numProperties)
-    : CSSStyleDeclarationImpl(parent), m_node(0)
+CSSMutableStyleDeclaration::CSSMutableStyleDeclaration(CSSRule *parent, const CSSProperty * const *properties, int numProperties)
+    : CSSStyleDeclaration(parent), m_node(0)
 {
     for (int i = 0; i < numProperties; ++i)
         m_values.append(*properties[i]);
     // FIXME: This allows duplicate properties.
 }
 
-CSSMutableStyleDeclarationImpl& CSSMutableStyleDeclarationImpl::operator=(const CSSMutableStyleDeclarationImpl& o)
+CSSMutableStyleDeclaration& CSSMutableStyleDeclaration::operator=(const CSSMutableStyleDeclaration& o)
 {
     // don't attach it to the same node, just leave the current m_node value
     m_values = o.m_values;
     return *this;
 }
 
-String CSSMutableStyleDeclarationImpl::getPropertyValue(int propertyID) const
+String CSSMutableStyleDeclaration::getPropertyValue(int propertyID) const
 {
-    RefPtr<CSSValueImpl> value = getPropertyCSSValue(propertyID);
+    RefPtr<CSSValue> value = getPropertyCSSValue(propertyID);
     if (value)
         return value->cssText();
 
@@ -297,16 +296,15 @@ String CSSMutableStyleDeclarationImpl::getPropertyValue(int propertyID) const
         return getShortHandValue( properties, 3 );
     }
     }
-    //kdDebug() << k_funcinfo << "property not found:" << propertyID << endl;
     return String();
 }
 
-String CSSMutableStyleDeclarationImpl::get4Values( const int* properties ) const
+String CSSMutableStyleDeclaration::get4Values( const int* properties ) const
 {
     String res;
     for (int i = 0; i < 4; ++i) {
         if (!isPropertyImplicit(properties[i])) {
-            RefPtr<CSSValueImpl> value = getPropertyCSSValue(properties[i]);
+            RefPtr<CSSValue> value = getPropertyCSSValue(properties[i]);
             if (!value) // apparently all 4 properties must be specified.
                 return String();
             if (!res.isNull())
@@ -317,12 +315,12 @@ String CSSMutableStyleDeclarationImpl::get4Values( const int* properties ) const
     return res;
 }
 
-String CSSMutableStyleDeclarationImpl::getShortHandValue( const int* properties, int number ) const
+String CSSMutableStyleDeclaration::getShortHandValue( const int* properties, int number ) const
 {
     String res;
     for (int i = 0; i < number; ++i) {
         if (!isPropertyImplicit(properties[i])) {
-            RefPtr<CSSValueImpl> value = getPropertyCSSValue(properties[i]);
+            RefPtr<CSSValue> value = getPropertyCSSValue(properties[i]);
             if (value) { // TODO provide default value if !value
                 if (!res.isNull())
                     res += " ";
@@ -333,28 +331,23 @@ String CSSMutableStyleDeclarationImpl::getShortHandValue( const int* properties,
     return res;
 }
 
-PassRefPtr<CSSValueImpl> CSSMutableStyleDeclarationImpl::getPropertyCSSValue(int propertyID) const
+PassRefPtr<CSSValue> CSSMutableStyleDeclaration::getPropertyCSSValue(int propertyID) const
 {
-    QValueListConstIterator<CSSProperty> end;
-    for (QValueListConstIterator<CSSProperty> it = m_values.fromLast(); it != end; --it)
+    DeprecatedValueListConstIterator<CSSProperty> end;
+    for (DeprecatedValueListConstIterator<CSSProperty> it = m_values.fromLast(); it != end; --it)
         if (propertyID == (*it).m_id)
             return (*it).value();
     return 0;
 }
 
-String CSSMutableStyleDeclarationImpl::removeProperty(int propertyID, bool notifyChanged, ExceptionCode& ec)
+String CSSMutableStyleDeclaration::removeProperty(int propertyID, bool notifyChanged, ExceptionCode& ec)
 {
     ec = 0;
 
-    if (m_node && !m_node->getDocument())
-        return ""; // FIXME: This (not well-understood) situation happens on albertsons.com.
-                   // We don't really know how they managed to run a script on a node
-                   // with no document pointer, but this sidesteps the crash.
-
     String value;
 
-    QValueListIterator<CSSProperty> end;
-    for (QValueListIterator<CSSProperty> it = m_values.fromLast(); it != end; --it)
+    DeprecatedValueListIterator<CSSProperty> end;
+    for (DeprecatedValueListIterator<CSSProperty> it = m_values.fromLast(); it != end; --it)
         if (propertyID == (*it).m_id) {
             value = (*it).value()->cssText();
             m_values.remove(it);
@@ -366,74 +359,71 @@ String CSSMutableStyleDeclarationImpl::removeProperty(int propertyID, bool notif
     return value;
 }
 
-void CSSMutableStyleDeclarationImpl::clear()
+void CSSMutableStyleDeclaration::clear()
 {
     m_values.clear();
     setChanged();
 }
 
-void CSSMutableStyleDeclarationImpl::setChanged()
+void CSSMutableStyleDeclaration::setChanged()
 {
     if (m_node) {
         m_node->setChanged();
         // FIXME: Ideally, this should be factored better and there
-        // should be a subclass of CSSMutableStyleDeclarationImpl just
+        // should be a subclass of CSSMutableStyleDeclaration just
         // for inline style declarations that handles this
-        if (m_node->isStyledElement() && this == static_cast<StyledElementImpl *>(m_node)->inlineStyleDecl())
-            static_cast<StyledElementImpl *>(m_node)->invalidateStyleAttribute();
+        if (m_node->isStyledElement() && this == static_cast<StyledElement *>(m_node)->inlineStyleDecl())
+            static_cast<StyledElement *>(m_node)->invalidateStyleAttribute();
         return;
     }
 
     // ### quick&dirty hack for KDE 3.0... make this MUCH better! (Dirk)
-    StyleBaseImpl *root = this;
-    while (StyleBaseImpl *parent = root->parent())
+    StyleBase *root = this;
+    while (StyleBase *parent = root->parent())
         root = parent;
     if (root->isCSSStyleSheet())
-        static_cast<CSSStyleSheetImpl*>(root)->doc()->updateStyleSelector();
+        static_cast<CSSStyleSheet*>(root)->doc()->updateStyleSelector();
 }
 
-bool CSSMutableStyleDeclarationImpl::getPropertyPriority(int propertyID) const
+bool CSSMutableStyleDeclaration::getPropertyPriority(int propertyID) const
 {
-    QValueListConstIterator<CSSProperty> end;
-    for (QValueListConstIterator<CSSProperty> it = m_values.begin(); it != end; ++it)
+    DeprecatedValueListConstIterator<CSSProperty> end;
+    for (DeprecatedValueListConstIterator<CSSProperty> it = m_values.begin(); it != end; ++it)
         if (propertyID == (*it).id())
             return (*it).isImportant();
     return false;
 }
 
-int CSSMutableStyleDeclarationImpl::getPropertyShorthand(int propertyID) const
+int CSSMutableStyleDeclaration::getPropertyShorthand(int propertyID) const
 {
-    QValueListConstIterator<CSSProperty> end;
-    for (QValueListConstIterator<CSSProperty> it = m_values.begin(); it != end; ++it)
+    DeprecatedValueListConstIterator<CSSProperty> end;
+    for (DeprecatedValueListConstIterator<CSSProperty> it = m_values.begin(); it != end; ++it)
         if (propertyID == (*it).id())
             return (*it).shorthandID();
     return false;
 }
 
-bool CSSMutableStyleDeclarationImpl::isPropertyImplicit(int propertyID) const
+bool CSSMutableStyleDeclaration::isPropertyImplicit(int propertyID) const
 {
-    QValueListConstIterator<CSSProperty> end;
-    for (QValueListConstIterator<CSSProperty> it = m_values.begin(); it != end; ++it)
+    DeprecatedValueListConstIterator<CSSProperty> end;
+    for (DeprecatedValueListConstIterator<CSSProperty> it = m_values.begin(); it != end; ++it)
         if (propertyID == (*it).id())
             return (*it).isImplicit();
     return false;
 }
 
-void CSSMutableStyleDeclarationImpl::setProperty(int propertyID, const String &value, bool important, ExceptionCode& ec)
+void CSSMutableStyleDeclaration::setProperty(int propertyID, const String &value, bool important, ExceptionCode& ec)
 {
     setProperty(propertyID, value, important, true, ec);
 }
 
-String CSSMutableStyleDeclarationImpl::removeProperty(int propertyID, ExceptionCode& ec)
+String CSSMutableStyleDeclaration::removeProperty(int propertyID, ExceptionCode& ec)
 {
     return removeProperty(propertyID, true, ec);
 }
 
-bool CSSMutableStyleDeclarationImpl::setProperty(int propertyID, const String &value, bool important, bool notifyChanged, ExceptionCode& ec)
+bool CSSMutableStyleDeclaration::setProperty(int propertyID, const String &value, bool important, bool notifyChanged, ExceptionCode& ec)
 {
-    if (m_node && !m_node->getDocument())
-        return false; // FIXME: This (not well-understood) situation happens on albertsons.com.  We don't really know how they managed to run a script on a node
-                      // with no document pointer, but this sidesteps the crash.
     ec = 0;
 
     removeProperty(propertyID);
@@ -447,30 +437,30 @@ bool CSSMutableStyleDeclarationImpl::setProperty(int propertyID, const String &v
     return success;
 }
 
-bool CSSMutableStyleDeclarationImpl::setProperty(int propertyID, int value, bool important, bool notifyChanged)
+bool CSSMutableStyleDeclaration::setProperty(int propertyID, int value, bool important, bool notifyChanged)
 {
     removeProperty(propertyID);
-    m_values.append(CSSProperty(propertyID, new CSSPrimitiveValueImpl(value), important));
+    m_values.append(CSSProperty(propertyID, new CSSPrimitiveValue(value), important));
     if (notifyChanged)
         setChanged();
     return true;
 }
 
-void CSSMutableStyleDeclarationImpl::setStringProperty(int propertyId, const String &value, CSSPrimitiveValueImpl::UnitTypes type, bool important)
+void CSSMutableStyleDeclaration::setStringProperty(int propertyId, const String &value, CSSPrimitiveValue::UnitTypes type, bool important)
 {
     removeProperty(propertyId);
-    m_values.append(CSSProperty(propertyId, new CSSPrimitiveValueImpl(value, type), important));
+    m_values.append(CSSProperty(propertyId, new CSSPrimitiveValue(value, type), important));
     setChanged();
 }
 
-void CSSMutableStyleDeclarationImpl::setImageProperty(int propertyId, const String &URL, bool important)
+void CSSMutableStyleDeclaration::setImageProperty(int propertyId, const String &URL, bool important)
 {
     removeProperty(propertyId);
-    m_values.append(CSSProperty(propertyId, new CSSImageValueImpl(URL, this), important));
+    m_values.append(CSSProperty(propertyId, new CSSImageValue(URL, this), important));
     setChanged();
 }
 
-void CSSMutableStyleDeclarationImpl::parseDeclaration(const String &styleDeclaration)
+void CSSMutableStyleDeclaration::parseDeclaration(const String &styleDeclaration)
 {
     m_values.clear();
     CSSParser parser(useStrictParsing());
@@ -478,7 +468,7 @@ void CSSMutableStyleDeclarationImpl::parseDeclaration(const String &styleDeclara
     setChanged();
 }
 
-void CSSMutableStyleDeclarationImpl::addParsedProperties(const CSSProperty * const *properties, int numProperties)
+void CSSMutableStyleDeclaration::addParsedProperties(const CSSProperty * const *properties, int numProperties)
 {
     for (int i = 0; i < numProperties; ++i) {
         removeProperty(properties[i]->id(), false);
@@ -488,7 +478,7 @@ void CSSMutableStyleDeclarationImpl::addParsedProperties(const CSSProperty * con
     // a notifyChanged argument to this function to follow the model of other functions in this class.
 }
 
-void CSSMutableStyleDeclarationImpl::setLengthProperty(int id, const String &value, bool important, bool /* multiLength*/)
+void CSSMutableStyleDeclaration::setLengthProperty(int id, const String &value, bool important, bool /* multiLength*/)
 {
     bool parseMode = useStrictParsing();
     setStrictParsing(false);
@@ -496,35 +486,35 @@ void CSSMutableStyleDeclarationImpl::setLengthProperty(int id, const String &val
     setStrictParsing(parseMode);
 }
 
-unsigned CSSMutableStyleDeclarationImpl::length() const
+unsigned CSSMutableStyleDeclaration::length() const
 {
     return m_values.count();
 }
 
-String CSSMutableStyleDeclarationImpl::item(unsigned i) const
+String CSSMutableStyleDeclaration::item(unsigned i) const
 {
     if (i >= m_values.count())
        return String();
     return getPropertyName(m_values[i].id());
 }
 
-CSSRuleImpl *CSSStyleDeclarationImpl::parentRule() const
+CSSRule *CSSStyleDeclaration::parentRule() const
 {
-    return (parent() && parent()->isRule()) ? static_cast<CSSRuleImpl *>(parent()) : 0;
+    return (parent() && parent()->isRule()) ? static_cast<CSSRule *>(parent()) : 0;
 }
 
-String CSSMutableStyleDeclarationImpl::cssText() const
+String CSSMutableStyleDeclaration::cssText() const
 {
     String result = "";
     
-    QValueListConstIterator<CSSProperty> end;
-    for (QValueListConstIterator<CSSProperty> it = m_values.begin(); it != end; ++it)
+    DeprecatedValueListConstIterator<CSSProperty> end;
+    for (DeprecatedValueListConstIterator<CSSProperty> it = m_values.begin(); it != end; ++it)
         result += (*it).cssText();
 
     return result;
 }
 
-void CSSMutableStyleDeclarationImpl::setCssText(const String& text, ExceptionCode& ec)
+void CSSMutableStyleDeclaration::setCssText(const String& text, ExceptionCode& ec)
 {
     ec = 0;
     m_values.clear();
@@ -534,12 +524,12 @@ void CSSMutableStyleDeclarationImpl::setCssText(const String& text, ExceptionCod
     setChanged();
 }
 
-void CSSMutableStyleDeclarationImpl::merge(CSSMutableStyleDeclarationImpl *other, bool argOverridesOnConflict)
+void CSSMutableStyleDeclaration::merge(CSSMutableStyleDeclaration *other, bool argOverridesOnConflict)
 {
-    QValueListConstIterator<CSSProperty> end;
-    for (QValueListConstIterator<CSSProperty> it = other->valuesIterator(); it != end; ++it) {
+    DeprecatedValueListConstIterator<CSSProperty> end;
+    for (DeprecatedValueListConstIterator<CSSProperty> it = other->valuesIterator(); it != end; ++it) {
         const CSSProperty &property = *it;
-        RefPtr<CSSValueImpl> value = getPropertyCSSValue(property.id());
+        RefPtr<CSSValue> value = getPropertyCSSValue(property.id());
         if (value) {
             if (!argOverridesOnConflict)
                 continue;
@@ -551,21 +541,21 @@ void CSSMutableStyleDeclarationImpl::merge(CSSMutableStyleDeclarationImpl *other
     // a notifyChanged argument to this function to follow the model of other functions in this class.
 }
 
-void CSSStyleDeclarationImpl::diff(CSSMutableStyleDeclarationImpl *style) const
+void CSSStyleDeclaration::diff(CSSMutableStyleDeclaration *style) const
 {
     if (!style)
         return;
 
-    QValueList<int> properties;
-    QValueListConstIterator<CSSProperty> end;
-    for (QValueListConstIterator<CSSProperty> it(style->valuesIterator()); it != end; ++it) {
+    DeprecatedValueList<int> properties;
+    DeprecatedValueListConstIterator<CSSProperty> end;
+    for (DeprecatedValueListConstIterator<CSSProperty> it(style->valuesIterator()); it != end; ++it) {
         const CSSProperty &property = *it;
-        RefPtr<CSSValueImpl> value = getPropertyCSSValue(property.id());
+        RefPtr<CSSValue> value = getPropertyCSSValue(property.id());
         if (value && (value->cssText() == property.value()->cssText()))
             properties.append(property.id());
     }
     
-    for (QValueListIterator<int> it(properties.begin()); it != properties.end(); ++it)
+    for (DeprecatedValueListIterator<int> it(properties.begin()); it != properties.end(); ++it)
         style->removeProperty(*it);
 }
 
@@ -611,37 +601,37 @@ static const int blockProperties[] = {
 
 const unsigned numBlockProperties = sizeof(blockProperties) / sizeof(blockProperties[0]);
 
-PassRefPtr<CSSMutableStyleDeclarationImpl> CSSMutableStyleDeclarationImpl::copyBlockProperties() const
+PassRefPtr<CSSMutableStyleDeclaration> CSSMutableStyleDeclaration::copyBlockProperties() const
 {
     return copyPropertiesInSet(blockProperties, numBlockProperties);
 }
 
-void CSSMutableStyleDeclarationImpl::removeBlockProperties()
+void CSSMutableStyleDeclaration::removeBlockProperties()
 {
     removePropertiesInSet(blockProperties, numBlockProperties);
 }
 
-void CSSMutableStyleDeclarationImpl::removeInheritableProperties()
+void CSSMutableStyleDeclaration::removeInheritableProperties()
 {
     removePropertiesInSet(inheritableProperties, numInheritableProperties);
 }
 
-PassRefPtr<CSSMutableStyleDeclarationImpl> CSSStyleDeclarationImpl::copyPropertiesInSet(const int *set, unsigned length) const
+PassRefPtr<CSSMutableStyleDeclaration> CSSStyleDeclaration::copyPropertiesInSet(const int *set, unsigned length) const
 {
-    QValueList<CSSProperty> list;
+    DeprecatedValueList<CSSProperty> list;
     for (unsigned i = 0; i < length; i++) {
-        RefPtr<CSSValueImpl> value = getPropertyCSSValue(set[i]);
+        RefPtr<CSSValue> value = getPropertyCSSValue(set[i]);
         if (value)
             list.append(CSSProperty(set[i], value.release(), false));
     }
-    return new CSSMutableStyleDeclarationImpl(0, list);
+    return new CSSMutableStyleDeclaration(0, list);
 }
 
-void CSSMutableStyleDeclarationImpl::removePropertiesInSet(const int *set, unsigned length)
+void CSSMutableStyleDeclaration::removePropertiesInSet(const int *set, unsigned length)
 {
     bool changed = false;
     for (unsigned i = 0; i < length; i++) {
-        RefPtr<CSSValueImpl> value = getPropertyCSSValue(set[i]);
+        RefPtr<CSSValue> value = getPropertyCSSValue(set[i]);
         if (value) {
             m_values.remove(CSSProperty(set[i], value.release(), false));
             changed = true;
@@ -651,61 +641,61 @@ void CSSMutableStyleDeclarationImpl::removePropertiesInSet(const int *set, unsig
         setChanged();
 }
 
-PassRefPtr<CSSMutableStyleDeclarationImpl> CSSMutableStyleDeclarationImpl::makeMutable()
+PassRefPtr<CSSMutableStyleDeclaration> CSSMutableStyleDeclaration::makeMutable()
 {
     return this;
 }
 
-PassRefPtr<CSSMutableStyleDeclarationImpl> CSSMutableStyleDeclarationImpl::copy() const
+PassRefPtr<CSSMutableStyleDeclaration> CSSMutableStyleDeclaration::copy() const
 {
-    return new CSSMutableStyleDeclarationImpl(0, m_values);
+    return new CSSMutableStyleDeclaration(0, m_values);
 }
 
 // --------------------------------------------------------------------------------------
 
-unsigned short CSSInheritedValueImpl::cssValueType() const
+unsigned short CSSInheritedValue::cssValueType() const
 {
     return CSS_INHERIT;
 }
 
-String CSSInheritedValueImpl::cssText() const
+String CSSInheritedValue::cssText() const
 {
     return "inherit";
 }
 
-unsigned short CSSInitialValueImpl::cssValueType() const
+unsigned short CSSInitialValue::cssValueType() const
 { 
     return CSS_INITIAL; 
 }
 
-String CSSInitialValueImpl::cssText() const
+String CSSInitialValue::cssText() const
 {
     return "initial";
 }
 
 // ----------------------------------------------------------------------------------------
 
-CSSValueListImpl::~CSSValueListImpl()
+CSSValueList::~CSSValueList()
 {
-    for (CSSValueImpl *val = m_values.first(); val; val = m_values.next())
+    for (CSSValue *val = m_values.first(); val; val = m_values.next())
         val->deref();
 }
 
-unsigned short CSSValueListImpl::cssValueType() const
+unsigned short CSSValueList::cssValueType() const
 {
     return CSS_VALUE_LIST;
 }
 
-void CSSValueListImpl::append(PassRefPtr<CSSValueImpl> val)
+void CSSValueList::append(PassRefPtr<CSSValue> val)
 {
     m_values.append(val.release());
 }
 
-String CSSValueListImpl::cssText() const
+String CSSValueList::cssText() const
 {
     String result = "";
 
-    for (QPtrListIterator<CSSValueImpl> iterator(m_values); iterator.current(); ++iterator) {
+    for (DeprecatedPtrListIterator<CSSValue> iterator(m_values); iterator.current(); ++iterator) {
         if (!result.isEmpty())
             result += ", ";
         result += iterator.current()->cssText();
@@ -716,68 +706,68 @@ String CSSValueListImpl::cssText() const
 
 // -------------------------------------------------------------------------------------
 
-CSSPrimitiveValue::CSSPrimitiveValueImpl()
+CSSPrimitiveValue::CSSPrimitiveValue()
 {
     m_type = 0;
 }
 
-CSSPrimitiveValue::CSSPrimitiveValueImpl(int ident)
+CSSPrimitiveValue::CSSPrimitiveValue(int ident)
 {
     m_value.ident = ident;
     m_type = CSS_IDENT;
 }
 
-CSSPrimitiveValue::CSSPrimitiveValueImpl(double num, UnitTypes type)
+CSSPrimitiveValue::CSSPrimitiveValue(double num, UnitTypes type)
 {
     m_value.num = num;
     m_type = type;
 }
 
-CSSPrimitiveValue::CSSPrimitiveValueImpl(const String& str, UnitTypes type)
+CSSPrimitiveValue::CSSPrimitiveValue(const String& str, UnitTypes type)
 {
     if ((m_value.string = str.impl()))
         m_value.string->ref();
     m_type = type;
 }
 
-CSSPrimitiveValue::CSSPrimitiveValueImpl(PassRefPtr<CounterImpl> c)
+CSSPrimitiveValue::CSSPrimitiveValue(PassRefPtr<Counter> c)
 {
     m_value.counter = c.release();
     m_type = CSS_COUNTER;
 }
 
-CSSPrimitiveValue::CSSPrimitiveValueImpl(PassRefPtr<RectImpl> r)
+CSSPrimitiveValue::CSSPrimitiveValue(PassRefPtr<RectImpl> r)
 {
     m_value.rect = r.release();
     m_type = CSS_RECT;
 }
 
 #if __APPLE__
-CSSPrimitiveValue::CSSPrimitiveValueImpl(PassRefPtr<DashboardRegionImpl> r)
+CSSPrimitiveValue::CSSPrimitiveValue(PassRefPtr<DashboardRegion> r)
 {
     m_value.region = r.release();
     m_type = CSS_DASHBOARD_REGION;
 }
 #endif
 
-CSSPrimitiveValue::CSSPrimitiveValueImpl(RGBA32 color)
+CSSPrimitiveValue::CSSPrimitiveValue(RGBA32 color)
 {
     m_value.rgbcolor = color;
     m_type = CSS_RGBCOLOR;
 }
 
-CSSPrimitiveValue::CSSPrimitiveValueImpl(PassRefPtr<PairImpl> p)
+CSSPrimitiveValue::CSSPrimitiveValue(PassRefPtr<Pair> p)
 {
     m_value.pair = p.release();
     m_type = CSS_PAIR;
 }
 
-CSSPrimitiveValueImpl::~CSSPrimitiveValueImpl()
+CSSPrimitiveValue::~CSSPrimitiveValue()
 {
     cleanup();
 }
 
-void CSSPrimitiveValueImpl::cleanup()
+void CSSPrimitiveValue::cleanup()
 {
     switch(m_type) {
     case CSS_STRING:
@@ -805,7 +795,7 @@ void CSSPrimitiveValueImpl::cleanup()
     m_type = 0;
 }
 
-int CSSPrimitiveValueImpl::computeLength(RenderStyle *style)
+int CSSPrimitiveValue::computeLength(RenderStyle *style)
 {
     double result = computeLengthFloat(style);
     // This conversion is imprecise, often resulting in values of, e.g., 44.99998.  We
@@ -814,7 +804,7 @@ int CSSPrimitiveValueImpl::computeLength(RenderStyle *style)
     return intResult;    
 }
 
-int CSSPrimitiveValueImpl::computeLength(RenderStyle *style, double multiplier)
+int CSSPrimitiveValue::computeLength(RenderStyle *style, double multiplier)
 {
     double result = multiplier * computeLengthFloat(style);
     // This conversion is imprecise, often resulting in values of, e.g., 44.99998.  We
@@ -823,7 +813,7 @@ int CSSPrimitiveValueImpl::computeLength(RenderStyle *style, double multiplier)
     return intResult;    
 }
 
-double CSSPrimitiveValueImpl::computeLengthFloat(RenderStyle *style, bool applyZoomFactor)
+double CSSPrimitiveValue::computeLengthFloat(RenderStyle *style, bool applyZoomFactor)
 {
     unsigned short type = primitiveType();
 
@@ -871,7 +861,7 @@ double CSSPrimitiveValueImpl::computeLengthFloat(RenderStyle *style, bool applyZ
     return getFloatValue(type)*factor;
 }
 
-void CSSPrimitiveValueImpl::setFloatValue( unsigned short unitType, double floatValue, ExceptionCode& ec)
+void CSSPrimitiveValue::setFloatValue( unsigned short unitType, double floatValue, ExceptionCode& ec)
 {
     ec = 0;
     cleanup();
@@ -885,7 +875,7 @@ void CSSPrimitiveValueImpl::setFloatValue( unsigned short unitType, double float
     m_type = unitType;
 }
 
-void CSSPrimitiveValueImpl::setStringValue( unsigned short stringType, const String &stringValue, ExceptionCode& ec)
+void CSSPrimitiveValue::setStringValue( unsigned short stringType, const String &stringValue, ExceptionCode& ec)
 {
     ec = 0;
     cleanup();
@@ -903,7 +893,7 @@ void CSSPrimitiveValueImpl::setStringValue( unsigned short stringType, const Str
     // ### parse ident
 }
 
-String CSSPrimitiveValueImpl::getStringValue() const
+String CSSPrimitiveValue::getStringValue() const
 {
     switch (m_type) {
         case CSS_STRING:
@@ -920,24 +910,24 @@ String CSSPrimitiveValueImpl::getStringValue() const
     return String();
 }
 
-unsigned short CSSPrimitiveValueImpl::cssValueType() const
+unsigned short CSSPrimitiveValue::cssValueType() const
 {
     return CSS_PRIMITIVE_VALUE;
 }
 
-bool CSSPrimitiveValueImpl::parseString( const String &/*string*/, bool )
+bool CSSPrimitiveValue::parseString( const String &/*string*/, bool )
 {
     // ###
     return false;
 }
 
-int CSSPrimitiveValueImpl::getIdent()
+int CSSPrimitiveValue::getIdent()
 {
     if(m_type != CSS_IDENT) return 0;
     return m_value.ident;
 }
 
-String CSSPrimitiveValueImpl::cssText() const
+String CSSPrimitiveValue::cssText() const
 {
     // ### return the original value instead of a generated one (e.g. color
     // name if it was specified) - check what spec says about this
@@ -947,55 +937,55 @@ String CSSPrimitiveValueImpl::cssText() const
             // ###
             break;
         case CSS_NUMBER:
-            text = QString::number(m_value.num);
+            text = String::number(m_value.num);
             break;
         case CSS_PERCENTAGE:
-            text = QString::number(m_value.num) + "%";
+            text = String::number(m_value.num) + "%";
             break;
         case CSS_EMS:
-            text = QString::number(m_value.num) + "em";
+            text = String::number(m_value.num) + "em";
             break;
         case CSS_EXS:
-            text = QString::number(m_value.num) + "ex";
+            text = String::number(m_value.num) + "ex";
             break;
         case CSS_PX:
-            text = QString::number(m_value.num) + "px";
+            text = String::number(m_value.num) + "px";
             break;
         case CSS_CM:
-            text = QString::number(m_value.num) + "cm";
+            text = String::number(m_value.num) + "cm";
             break;
         case CSS_MM:
-            text = QString::number(m_value.num) + "mm";
+            text = String::number(m_value.num) + "mm";
             break;
         case CSS_IN:
-            text = QString::number(m_value.num) + "in";
+            text = String::number(m_value.num) + "in";
             break;
         case CSS_PT:
-            text = QString::number(m_value.num) + "pt";
+            text = String::number(m_value.num) + "pt";
             break;
         case CSS_PC:
-            text = QString::number(m_value.num) + "pc";
+            text = String::number(m_value.num) + "pc";
             break;
         case CSS_DEG:
-            text = QString::number(m_value.num) + "deg";
+            text = String::number(m_value.num) + "deg";
             break;
         case CSS_RAD:
-            text = QString::number(m_value.num) + "rad";
+            text = String::number(m_value.num) + "rad";
             break;
         case CSS_GRAD:
-            text = QString::number(m_value.num) + "grad";
+            text = String::number(m_value.num) + "grad";
             break;
         case CSS_MS:
-            text = QString::number(m_value.num) + "ms";
+            text = String::number(m_value.num) + "ms";
             break;
         case CSS_S:
-            text = QString::number(m_value.num) + "s";
+            text = String::number(m_value.num) + "s";
             break;
         case CSS_HZ:
-            text = QString::number(m_value.num) + "hz";
+            text = String::number(m_value.num) + "hz";
             break;
         case CSS_KHZ:
-            text = QString::number(m_value.num) + "khz";
+            text = String::number(m_value.num) + "khz";
             break;
         case CSS_DIMENSION:
             // ###
@@ -1030,11 +1020,11 @@ String CSSPrimitiveValueImpl::cssText() const
                 text = "rgba(";
             else
                 text = "rgb(";
-            text += QString::number(color.red()) + ", ";
-            text += QString::number(color.green()) + ", ";
-            text += QString::number(color.blue());
+            text += String::number(color.red()) + ", ";
+            text += String::number(color.green()) + ", ";
+            text += String::number(color.blue());
             if (color.alpha() < 0xFF)
-                text += ", " + QString::number((float)color.alpha() / 0xFF);
+                text += ", " + String::number((float)color.alpha() / 0xFF);
             text += ")";
             break;
         }
@@ -1045,7 +1035,7 @@ String CSSPrimitiveValueImpl::cssText() const
             break;
 #if __APPLE__
         case CSS_DASHBOARD_REGION:
-            for (DashboardRegionImpl* region = getDashboardRegionValue(); region; region = region->m_next.get()) {
+            for (DashboardRegion* region = getDashboardRegionValue(); region; region = region->m_next.get()) {
                 text = "dashboard-region(";
                 text += region->m_label;
                 if (region->m_isCircle)
@@ -1074,29 +1064,29 @@ RectImpl::~RectImpl()
 
 // -----------------------------------------------------------------
 
-PairImpl::~PairImpl()
+Pair::~Pair()
 {
 }
 
 // -----------------------------------------------------------------
 
-CSSImageValueImpl::CSSImageValueImpl(const String& url, StyleBaseImpl *style)
-    : CSSPrimitiveValueImpl(url, CSS_URI), m_image(0), m_accessedImage(false)
+CSSImageValue::CSSImageValue(const String& url, StyleBase *style)
+    : CSSPrimitiveValue(url, CSS_URI), m_image(0), m_accessedImage(false)
 {
 }
 
-CSSImageValueImpl::CSSImageValueImpl()
-    : CSSPrimitiveValueImpl(CSS_VAL_NONE), m_image(0), m_accessedImage(true)
+CSSImageValue::CSSImageValue()
+    : CSSPrimitiveValue(CSS_VAL_NONE), m_image(0), m_accessedImage(true)
 {
 }
 
-CSSImageValueImpl::~CSSImageValueImpl()
+CSSImageValue::~CSSImageValue()
 {
     if (m_image)
         m_image->deref(this);
 }
 
-CachedImage* CSSImageValueImpl::image(DocLoader* loader)
+CachedImage* CSSImageValue::image(DocLoader* loader)
 {
     if (!m_accessedImage) {
         m_accessedImage = true;
@@ -1115,14 +1105,14 @@ CachedImage* CSSImageValueImpl::image(DocLoader* loader)
 
 // ------------------------------------------------------------------------
 
-CSSBorderImageValueImpl::CSSBorderImageValueImpl(PassRefPtr<CSSImageValueImpl> image,
+CSSBorderImageValue::CSSBorderImageValue(PassRefPtr<CSSImageValue> image,
     PassRefPtr<RectImpl> imageRect, int horizontalRule, int verticalRule)
     : m_image(image), m_imageSliceRect(imageRect)
     , m_horizontalSizeRule(horizontalRule), m_verticalSizeRule(verticalRule)
 {
 }
 
-String CSSBorderImageValueImpl::cssText() const
+String CSSBorderImageValue::cssText() const
 {
     // Image first.
     String text(m_image->cssText());
@@ -1139,20 +1129,20 @@ String CSSBorderImageValueImpl::cssText() const
     
     // Now the keywords.
     text += " ";
-    text += CSSPrimitiveValueImpl(m_horizontalSizeRule).cssText();
+    text += CSSPrimitiveValue(m_horizontalSizeRule).cssText();
     text += " ";
-    text += CSSPrimitiveValueImpl(m_verticalSizeRule).cssText();
+    text += CSSPrimitiveValue(m_verticalSizeRule).cssText();
 
     return text;
 }
 
 // ------------------------------------------------------------------------
 
-FontFamilyValueImpl::FontFamilyValueImpl(const QString& string)
-    : CSSPrimitiveValueImpl(String(), CSS_STRING)
+FontFamilyValue::FontFamilyValue(const DeprecatedString& string)
+    : CSSPrimitiveValue(String(), CSS_STRING)
 {
-    static const QRegExp parenReg(" \\(.*\\)$");
-    static const QRegExp braceReg(" \\[.*\\]$");
+    static const RegularExpression parenReg(" \\(.*\\)$");
+    static const RegularExpression braceReg(" \\[.*\\]$");
 
     parsedFontName = string;
     // a language tag is often added in braces at the end. Remove it.
@@ -1161,12 +1151,12 @@ FontFamilyValueImpl::FontFamilyValueImpl(const QString& string)
     parsedFontName.replace(braceReg, "");
 }
 
-String FontFamilyValueImpl::cssText() const
+String FontFamilyValue::cssText() const
 {
     return quoteStringIfNeeded(parsedFontName);
 }
 
-String FontValueImpl::cssText() const
+String FontValue::cssText() const
 {
     // font variant weight size / line-height family 
 
@@ -1207,15 +1197,15 @@ String FontValueImpl::cssText() const
     
 
 // Used for text-shadow and box-shadow
-ShadowValueImpl::ShadowValueImpl(PassRefPtr<CSSPrimitiveValueImpl> _x,
-    PassRefPtr<CSSPrimitiveValueImpl> _y,
-    PassRefPtr<CSSPrimitiveValueImpl> _blur,
-    PassRefPtr<CSSPrimitiveValueImpl> _color)
+ShadowValue::ShadowValue(PassRefPtr<CSSPrimitiveValue> _x,
+    PassRefPtr<CSSPrimitiveValue> _y,
+    PassRefPtr<CSSPrimitiveValue> _blur,
+    PassRefPtr<CSSPrimitiveValue> _color)
     : x(_x), y(_y), blur(_blur), color(_color)
 {
 }
 
-String ShadowValueImpl::cssText() const
+String ShadowValue::cssText() const
 {
     String text("");
 

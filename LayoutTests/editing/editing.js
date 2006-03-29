@@ -558,6 +558,32 @@ function pasteCommand() {
 
 //-------------------------------------------------------------------------------------------------------
 
+function execCreateLinkCommand(url) {
+    document.execCommand("CreateLink", false, url);
+}
+function createLinkCommand(url) {
+    if (commandDelay > 0) {
+        window.setTimeout(execCreateLinkCommand, commandCount * commandDelay, url);
+        commandCount++;
+    } else
+        execCreateLinkCommand(url);
+}
+
+//-------------------------------------------------------------------------------------------------------
+
+function execUnlinkCommand() {
+    document.execCommand("Unlink");
+}
+function unlinkCommand() {
+    if (commandDelay > 0) {
+        window.setTimeout(execUnlinkCommand, commandCount * commandDelay);
+        commandCount++;
+    } else
+        execUnlinkCommand();
+}
+
+//-------------------------------------------------------------------------------------------------------
+
 function execPasteAndMatchStyleCommand() {
     document.execCommand("PasteAndMatchStyle");
 }

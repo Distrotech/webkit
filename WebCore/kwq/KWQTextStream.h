@@ -23,50 +23,55 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef QTEXTSTREAM_H_
-#define QTEXTSTREAM_H_
+#ifndef QTextStream_H
+#define QTextStream_H
 
-#include "Array.h"
+#include "DeprecatedArray.h"
 
-class QCString;
+class DeprecatedCString;
 class QChar;
-class QString;
+class DeprecatedString;
 class QTextStream;
 
-typedef QTextStream &(*QTextStreamManipulator)(QTextStream &);
+namespace WebCore {
+    class String;
+}
+
+typedef QTextStream &(*QTextStreamManipulator)(QTextStream&);
 
 QTextStream &endl(QTextStream& stream);
 
 class QTextStream {
 public:
-    QTextStream(const ByteArray &);
-    QTextStream(QString*);
+    QTextStream(const DeprecatedByteArray&);
+    QTextStream(DeprecatedString*);
 
-    QTextStream &operator<<(char);
-    QTextStream &operator<<(const QChar &);
-    QTextStream &operator<<(short);
-    QTextStream &operator<<(unsigned short);
-    QTextStream &operator<<(int);
-    QTextStream &operator<<(unsigned);
-    QTextStream &operator<<(long);
-    QTextStream &operator<<(unsigned long);
-    QTextStream &operator<<(float);
-    QTextStream &operator<<(double);
-    QTextStream &operator<<(const char *);
-    QTextStream &operator<<(const QString &);
-    QTextStream &operator<<(const QCString &);
-    QTextStream &operator<<(void *);
+    QTextStream& operator<<(char);
+    QTextStream& operator<<(const QChar&);
+    QTextStream& operator<<(short);
+    QTextStream& operator<<(unsigned short);
+    QTextStream& operator<<(int);
+    QTextStream& operator<<(unsigned);
+    QTextStream& operator<<(long);
+    QTextStream& operator<<(unsigned long);
+    QTextStream& operator<<(float);
+    QTextStream& operator<<(double);
+    QTextStream& operator<<(const char*);
+    QTextStream& operator<<(const WebCore::String&);
+    QTextStream& operator<<(const DeprecatedString&);
+    QTextStream& operator<<(const DeprecatedCString&);
+    QTextStream& operator<<(void*);
 
-    QTextStream &operator<<(const QTextStreamManipulator &);
-    int precision(int p);
+    QTextStream& operator<<(const QTextStreamManipulator&);
+    int precision(int);
 private:
-    QTextStream(const QTextStream &);
-    QTextStream &operator=(const QTextStream &);
+    QTextStream(const QTextStream&);
+    QTextStream& operator=(const QTextStream&);
 
-    bool _hasByteArray;
-    ByteArray _byteArray;
-    QString *_string;
-    int _precision;
+    bool m_hasByteArray;
+    DeprecatedByteArray m_byteArray;
+    DeprecatedString* m_string;
+    int m_precision;
 };
 
 #endif

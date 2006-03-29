@@ -25,21 +25,14 @@
 
 #include "config.h"
 #include "SetNodeAttributeCommand.h"
-
-#include "dom_elementimpl.h"
+#include "Element.h"
 
 #include <kxmlcore/Assertions.h>
 
-using DOM::DocumentImpl;
-using DOM::ElementImpl;
-using DOM::NodeImpl;
-using DOM::DOMString;
-using DOM::QualifiedName;
+namespace WebCore {
 
-namespace khtml {
-
-SetNodeAttributeCommand::SetNodeAttributeCommand(DocumentImpl *document, ElementImpl *element, 
-                                                 const QualifiedName& attribute, const DOMString &value)
+SetNodeAttributeCommand::SetNodeAttributeCommand(Document *document, Element *element, 
+                                                 const QualifiedName& attribute, const String &value)
     : EditCommand(document), m_element(element), m_attribute(attribute), m_value(value)
 {
     ASSERT(m_element);
@@ -69,5 +62,5 @@ void SetNodeAttributeCommand::doUnapply()
     ASSERT(ec == 0);
 }
 
-} // namespace khtml
+} // namespace WebCore
 

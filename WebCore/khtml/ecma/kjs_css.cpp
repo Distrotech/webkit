@@ -27,22 +27,22 @@
 #include "css/css_ruleimpl.h"
 #include "css/css_stylesheetimpl.h"
 #include "css/css_valueimpl.h"
-#include "DocumentImpl.h"
-#include "html/html_headimpl.h" // for HTMLStyleElement
+#include "Document.h"
+#include "html_headimpl.h" // for HTMLStyleElement
 #include "kjs_dom.h"
-#include "htmlnames.h"
+#include "HTMLNames.h"
 
 #include "kjs_css.lut.h"
 
-using namespace DOM::HTMLNames;
+using namespace WebCore::HTMLNames;
 
 using namespace WebCore;
 
 namespace KJS {
 
-static DOMString cssPropertyName(const Identifier &p, bool *hadPixelOrPosPrefix = 0)
+static String cssPropertyName(const Identifier &p, bool *hadPixelOrPosPrefix = 0)
 {
-    QString prop = p.qstring();
+    DeprecatedString prop = p;
 
     int i = prop.length();
     while (--i) {
@@ -75,7 +75,7 @@ static DOMString cssPropertyName(const Identifier &p, bool *hadPixelOrPosPrefix 
 
 static bool isCSSPropertyName(const Identifier &JSPropertyName)
 {
-    return CSSStyleDeclarationImpl::isPropertyName(cssPropertyName(JSPropertyName));
+    return CSSStyleDeclaration::isPropertyName(cssPropertyName(JSPropertyName));
 }
 
 /*
@@ -101,7 +101,7 @@ KJS_IMPLEMENT_PROTOTYPE("DOMCSSStyleDeclaration", DOMCSSStyleDeclarationProto, D
 
 const ClassInfo DOMCSSStyleDeclaration::info = { "CSSStyleDeclaration", 0, &DOMCSSStyleDeclarationTable, 0 };
 
-DOMCSSStyleDeclaration::DOMCSSStyleDeclaration(ExecState *exec, CSSStyleDeclarationImpl *s)
+DOMCSSStyleDeclaration::DOMCSSStyleDeclaration(ExecState *exec, CSSStyleDeclaration *s)
   : m_impl(s)
 { 
   setPrototype(DOMCSSStyleDeclarationProto::self(exec));
@@ -128,11 +128,11 @@ JSValue *DOMCSSStyleDeclaration::cssPropertyGetter(ExecState *exec, JSObject *or
   // positioned element. if it is not a positioned element, return 0
   // from MSIE documentation ### IMPLEMENT THAT (Dirk)
   bool pixelOrPos;
-  DOMString prop = cssPropertyName(propertyName, &pixelOrPos);
-  RefPtr<CSSValueImpl> v = thisObj->m_impl->getPropertyCSSValue(prop);
+  String prop = cssPropertyName(propertyName, &pixelOrPos);
+  RefPtr<CSSValue> v = thisObj->m_impl->getPropertyCSSValue(prop);
   if (v) {
-    if (pixelOrPos && v->cssValueType() == CSSValueImpl::CSS_PRIMITIVE_VALUE)
-      return jsNumber(static_pointer_cast<CSSPrimitiveValueImpl>(v)->getFloatValue(CSSPrimitiveValue::CSS_PX));
+    if (pixelOrPos && v->cssValueType() == CSSValue::CSS_PRIMITIVE_VALUE)
+      return jsNumber(static_pointer_cast<CSSPrimitiveValue>(v)->getFloatValue(CSSPrimitiveValue::CSS_PX));
     return jsStringOrNull(v->cssText());
   }
   // If the property is a shorthand property (such as "padding"), 
@@ -172,7 +172,7 @@ JSValue *DOMCSSStyleDeclaration::getValueProperty(ExecState *exec, int token)
   case Length:
     return jsNumber(m_impl->length());
   case ParentRule:
-    return getDOMCSSRule(exec, m_impl->parentRule());
+    return toJS(exec, m_impl->parentRule());
   default:
     assert(0);
     return jsUndefined();
@@ -182,17 +182,17 @@ JSValue *DOMCSSStyleDeclaration::getValueProperty(ExecState *exec, int token)
 void DOMCSSStyleDeclaration::put(ExecState *exec, const Identifier &propertyName, JSValue *value, int attr )
 {
 #ifdef KJS_VERBOSE
-  kdDebug(6070) << "DOMCSSStyleDeclaration::put " << propertyName.qstring() << endl;
+  kdDebug(6070) << "DOMCSSStyleDeclaration::put " << propertyName << endl;
 #endif
   DOMExceptionTranslator exception(exec);
-  CSSStyleDeclarationImpl &styleDecl = *m_impl;
+  CSSStyleDeclaration &styleDecl = *m_impl;
   if (propertyName == "cssText") {
-    styleDecl.setCssText(value->toString(exec).domString(), exception);
+    styleDecl.setCssText(value->toString(exec), exception);
   } else {
     if (isCSSPropertyName(propertyName)) {
       bool pixelOrPos;
-      DOMString prop = cssPropertyName(propertyName, &pixelOrPos);
-      DOMString propvalue = value->toString(exec).domString();
+      String prop = cssPropertyName(propertyName, &pixelOrPos);
+      String propvalue = value->toString(exec);
       if (pixelOrPos)
 	propvalue += "px";
 #ifdef KJS_VERBOSE
@@ -221,15 +221,15 @@ JSValue *DOMCSSStyleDeclarationProtoFunc::callAsFunction(ExecState *exec, JSObje
   if (!thisObj->inherits(&KJS::DOMCSSStyleDeclaration::info))
     return throwError(exec, TypeError);
   DOMExceptionTranslator exception(exec);
-  CSSStyleDeclarationImpl &styleDecl = *static_cast<DOMCSSStyleDeclaration *>(thisObj)->impl();
+  CSSStyleDeclaration &styleDecl = *static_cast<DOMCSSStyleDeclaration *>(thisObj)->impl();
   UString str = args[0]->toString(exec);
-  DOM::DOMString s = str.domString();
+  WebCore::String s = str;
 
   switch (id) {
     case DOMCSSStyleDeclaration::GetPropertyValue:
       return jsStringOrNull(styleDecl.getPropertyValue(s));
     case DOMCSSStyleDeclaration::GetPropertyCSSValue:
-      return getDOMCSSValue(exec, styleDecl.getPropertyCSSValue(s).get());
+      return toJS(exec, styleDecl.getPropertyCSSValue(s).get());
     case DOMCSSStyleDeclaration::RemoveProperty:
       return jsStringOrNull(styleDecl.removeProperty(s, exception));
     case DOMCSSStyleDeclaration::GetPropertyPriority:
@@ -239,7 +239,7 @@ JSValue *DOMCSSStyleDeclarationProtoFunc::callAsFunction(ExecState *exec, JSObje
     case DOMCSSStyleDeclaration::IsPropertyImplicit:
       return jsBoolean(styleDecl.isPropertyImplicit(s));
     case DOMCSSStyleDeclaration::SetProperty:
-      styleDecl.setProperty(s, args[1]->toString(exec).domString(), args[2]->toString(exec).domString(), exception);
+      styleDecl.setProperty(s, args[1]->toString(exec), args[2]->toString(exec), exception);
       return jsUndefined();
     case DOMCSSStyleDeclaration::Item:
       return jsStringOrNull(styleDecl.item(args[0]->toInt32(exec)));
@@ -248,9 +248,9 @@ JSValue *DOMCSSStyleDeclarationProtoFunc::callAsFunction(ExecState *exec, JSObje
   }
 }
 
-JSValue *getDOMCSSStyleDeclaration(ExecState *exec, CSSStyleDeclarationImpl *s)
+JSValue *toJS(ExecState *exec, CSSStyleDeclaration *s)
 {
-  return cacheDOMObject<CSSStyleDeclarationImpl, DOMCSSStyleDeclaration>(exec, s);
+  return cacheDOMObject<CSSStyleDeclaration, DOMCSSStyleDeclaration>(exec, s);
 }
 
 // -------------------------------------------------------------------------
@@ -268,6 +268,16 @@ const ClassInfo DOMStyleSheet::info = { "StyleSheet", 0, &DOMStyleSheetTable, 0 
 @end
 */
 
+DOMStyleSheet::DOMStyleSheet(ExecState*, WebCore::StyleSheet* ss) 
+  : m_impl(ss) 
+{
+}
+
+DOMStyleSheet::DOMStyleSheet(WebCore::StyleSheet *ss) 
+  : m_impl(ss) 
+{
+}
+
 DOMStyleSheet::~DOMStyleSheet()
 {
   ScriptInterpreter::forgetDOMObject(m_impl.get());
@@ -280,22 +290,22 @@ bool DOMStyleSheet::getOwnPropertySlot(ExecState *exec, const Identifier& proper
 
 JSValue *DOMStyleSheet::getValueProperty(ExecState *exec, int token) const
 {
-  StyleSheetImpl &styleSheet = *m_impl;
+  StyleSheet &styleSheet = *m_impl;
   switch (token) {
   case Type:
     return jsStringOrNull(styleSheet.type());
   case Disabled:
     return jsBoolean(styleSheet.disabled());
   case OwnerNode:
-    return getDOMNode(exec,styleSheet.ownerNode());
+    return toJS(exec,styleSheet.ownerNode());
   case ParentStyleSheet:
-    return getDOMStyleSheet(exec,styleSheet.parentStyleSheet());
+    return toJS(exec,styleSheet.parentStyleSheet());
   case Href:
     return jsStringOrNull(styleSheet.href());
   case Title:
     return jsStringOrNull(styleSheet.title());
   case Media:
-    return getDOMMediaList(exec, styleSheet.media());
+    return toJS(exec, styleSheet.media());
   }
   return NULL;
 }
@@ -309,7 +319,7 @@ void DOMStyleSheet::put(ExecState *exec, const Identifier &propertyName, JSValue
     DOMObject::put(exec, propertyName, value, attr);
 }
 
-JSValue* getDOMStyleSheet(ExecState *exec, PassRefPtr<StyleSheetImpl> ss)
+JSValue* toJS(ExecState *exec, PassRefPtr<StyleSheet> ss)
 {
   DOMObject *ret;
   if (!ss)
@@ -319,7 +329,7 @@ JSValue* getDOMStyleSheet(ExecState *exec, PassRefPtr<StyleSheetImpl> ss)
     return ret;
   else {
     if (ss->isCSSStyleSheet())
-      ret = new DOMCSSStyleSheet(exec, static_cast<CSSStyleSheetImpl *>(ss.get()));
+      ret = new DOMCSSStyleSheet(exec, static_cast<CSSStyleSheet *>(ss.get()));
     else
       ret = new DOMStyleSheet(exec, ss.get());
     interp->putDOMObject(ss.get(), ret);
@@ -338,6 +348,12 @@ const ClassInfo DOMStyleSheetList::info = { "StyleSheetList", 0, &DOMStyleSheetL
 @end
 */
 KJS_IMPLEMENT_PROTOFUNC(DOMStyleSheetListFunc) // not really a proto, but doesn't matter
+
+DOMStyleSheetList::DOMStyleSheetList(ExecState*, WebCore::StyleSheetList* ssl, WebCore::Document* doc)
+  : m_impl(ssl)
+  , m_doc(doc) 
+{
+}
 
 DOMStyleSheetList::~DOMStyleSheetList()
 {
@@ -358,14 +374,14 @@ JSValue *DOMStyleSheetList::getValueProperty(ExecState *exec, int token) const
 JSValue *DOMStyleSheetList::indexGetter(ExecState *exec, JSObject *originalObject, const Identifier& propertyName, const PropertySlot& slot)
 {
   DOMStyleSheetList *thisObj = static_cast<DOMStyleSheetList *>(slot.slotBase());
-  return getDOMStyleSheet(exec, thisObj->m_impl->item(slot.index()));
+  return toJS(exec, thisObj->m_impl->item(slot.index()));
 }
 
 JSValue *DOMStyleSheetList::nameGetter(ExecState *exec, JSObject *originalObject, const Identifier& propertyName, const PropertySlot& slot)
 {
   DOMStyleSheetList *thisObj = static_cast<DOMStyleSheetList *>(slot.slotBase());
-  ElementImpl *element = thisObj->m_doc->getElementById(propertyName.domString().impl());
-  return getDOMStyleSheet(exec, static_cast<HTMLStyleElementImpl *>(element)->sheet());
+  Element *element = thisObj->m_doc->getElementById(propertyName);
+  return toJS(exec, static_cast<HTMLStyleElement *>(element)->sheet());
 }
 
 bool DOMStyleSheetList::getOwnPropertySlot(ExecState *exec, const Identifier& propertyName, PropertySlot& slot)
@@ -383,7 +399,7 @@ bool DOMStyleSheetList::getOwnPropertySlot(ExecState *exec, const Identifier& pr
     }
   }
 
-  StyleSheetListImpl &styleSheetList = *m_impl;
+  StyleSheetList &styleSheetList = *m_impl;
 
   // Retrieve stylesheet by index
   bool ok;
@@ -398,7 +414,7 @@ bool DOMStyleSheetList::getOwnPropertySlot(ExecState *exec, const Identifier& pr
   // ### Bad implementation because returns a single element (are IDs always unique?)
   // and doesn't look for name attribute (see implementation above).
   // But unicity of stylesheet ids is good practice anyway ;)
-  ElementImpl *element = m_doc->getElementById(propertyName.domString().impl());
+  Element *element = m_doc->getElementById(propertyName);
   if (element && element->hasTagName(styleTag)) {
     slot.setCustom(this, nameGetter);
     return true;
@@ -407,7 +423,7 @@ bool DOMStyleSheetList::getOwnPropertySlot(ExecState *exec, const Identifier& pr
   return DOMObject::getOwnPropertySlot(exec, propertyName, slot);
 }
 
-JSValue *getDOMStyleSheetList(ExecState *exec, StyleSheetListImpl *ssl, DocumentImpl *doc)
+JSValue *getDOMStyleSheetList(ExecState *exec, StyleSheetList *ssl, Document *doc)
 {
   // Can't use the cacheDOMObject macro because of the doc argument
   DOMObject *ret;
@@ -427,9 +443,9 @@ JSValue *DOMStyleSheetListFunc::callAsFunction(ExecState *exec, JSObject *thisOb
 {
   if (!thisObj->inherits(&KJS::DOMStyleSheetList::info))
     return throwError(exec, TypeError);
-  StyleSheetListImpl &styleSheetList = *static_cast<DOMStyleSheetList *>(thisObj)->impl();
+  StyleSheetList &styleSheetList = *static_cast<DOMStyleSheetList *>(thisObj)->impl();
   if (id == DOMStyleSheetList::Item)
-    return getDOMStyleSheet(exec, styleSheetList.item(args[0]->toInt32(exec)));
+    return toJS(exec, styleSheetList.item(args[0]->toInt32(exec)));
   return jsUndefined();
 }
 
@@ -452,7 +468,7 @@ KJS_DEFINE_PROTOTYPE(DOMMediaListProto)
 KJS_IMPLEMENT_PROTOFUNC(DOMMediaListProtoFunc)
 KJS_IMPLEMENT_PROTOTYPE("DOMMediaList", DOMMediaListProto, DOMMediaListProtoFunc)
 
-DOMMediaList::DOMMediaList(ExecState *exec, MediaListImpl *ml)
+DOMMediaList::DOMMediaList(ExecState *exec, MediaList *ml)
     : m_impl(ml)
 {
   setPrototype(DOMMediaListProto::self(exec));
@@ -502,31 +518,31 @@ bool DOMMediaList::getOwnPropertySlot(ExecState *exec, const Identifier& propert
 
 void DOMMediaList::put(ExecState *exec, const Identifier &propertyName, JSValue *value, int attr)
 {
-  MediaListImpl &mediaList = *m_impl;
+  MediaList &mediaList = *m_impl;
   if (propertyName == "mediaText")
-    mediaList.setMediaText(value->toString(exec).domString());
+    mediaList.setMediaText(value->toString(exec));
   else
     DOMObject::put(exec, propertyName, value, attr);
 }
 
-JSValue *getDOMMediaList(ExecState *exec, MediaListImpl *ml)
+JSValue *toJS(ExecState *exec, MediaList *ml)
 {
-  return cacheDOMObject<MediaListImpl, DOMMediaList>(exec, ml);
+  return cacheDOMObject<MediaList, DOMMediaList>(exec, ml);
 }
 
 JSValue *KJS::DOMMediaListProtoFunc::callAsFunction(ExecState *exec, JSObject *thisObj, const List &args)
 {
   if (!thisObj->inherits(&KJS::DOMMediaList::info))
     return throwError(exec, TypeError);
-  MediaListImpl &mediaList = *static_cast<DOMMediaList *>(thisObj)->impl();
+  MediaList &mediaList = *static_cast<DOMMediaList *>(thisObj)->impl();
   switch (id) {
     case DOMMediaList::Item:
       return jsStringOrNull(mediaList.item(args[0]->toInt32(exec)));
     case DOMMediaList::DeleteMedium:
-      mediaList.deleteMedium(args[0]->toString(exec).domString());
+      mediaList.deleteMedium(args[0]->toString(exec));
       return jsUndefined();
     case DOMMediaList::AppendMedium:
-      mediaList.appendMedium(args[0]->toString(exec).domString());
+      mediaList.appendMedium(args[0]->toString(exec));
       return jsUndefined();
     default:
       return jsUndefined();
@@ -556,7 +572,7 @@ KJS_DEFINE_PROTOTYPE(DOMCSSStyleSheetProto)
 KJS_IMPLEMENT_PROTOFUNC(DOMCSSStyleSheetProtoFunc)
 KJS_IMPLEMENT_PROTOTYPE("DOMCSSStyleSheet",DOMCSSStyleSheetProto,DOMCSSStyleSheetProtoFunc) // warning, use _WITH_PARENT if DOMStyleSheet gets a proto
 
-DOMCSSStyleSheet::DOMCSSStyleSheet(ExecState *exec, CSSStyleSheetImpl *ss)
+DOMCSSStyleSheet::DOMCSSStyleSheet(ExecState *exec, CSSStyleSheet *ss)
   : DOMStyleSheet(ss) 
 {
   setPrototype(DOMCSSStyleSheetProto::self(exec));
@@ -570,10 +586,10 @@ JSValue *DOMCSSStyleSheet::getValueProperty(ExecState *exec, int token) const
 {
   switch (token) {
   case OwnerRule:
-    return getDOMCSSRule(exec, static_cast<CSSStyleSheetImpl *>(impl())->ownerRule());
+    return toJS(exec, static_cast<CSSStyleSheet *>(impl())->ownerRule());
   case CssRules:
   case Rules:
-    return getDOMCSSRuleList(exec, static_cast<CSSStyleSheetImpl *>(impl())->cssRules());
+    return toJS(exec, static_cast<CSSStyleSheet *>(impl())->cssRules());
   default:
     assert(0);
     return jsUndefined();
@@ -590,16 +606,16 @@ JSValue *DOMCSSStyleSheetProtoFunc::callAsFunction(ExecState *exec, JSObject *th
   if (!thisObj->inherits(&KJS::DOMCSSStyleSheet::info))
     return throwError(exec, TypeError);
   DOMExceptionTranslator exception(exec);
-  CSSStyleSheetImpl &styleSheet = *static_cast<CSSStyleSheetImpl *>(static_cast<DOMCSSStyleSheet *>(thisObj)->impl());
+  CSSStyleSheet &styleSheet = *static_cast<CSSStyleSheet *>(static_cast<DOMCSSStyleSheet *>(thisObj)->impl());
   switch (id) {
     case DOMCSSStyleSheet::InsertRule:
-      return jsNumber(styleSheet.insertRule(args[0]->toString(exec).domString(), args[1]->toInt32(exec), exception));
+      return jsNumber(styleSheet.insertRule(args[0]->toString(exec), args[1]->toInt32(exec), exception));
     case DOMCSSStyleSheet::DeleteRule:
       styleSheet.deleteRule(args[0]->toInt32(exec), exception);
       return jsUndefined();
     case DOMCSSStyleSheet::AddRule: {
       int index = args.size() >= 3 ? args[2]->toInt32(exec) : -1;
-      styleSheet.addRule(args[0]->toString(exec).domString(), args[1]->toString(exec).domString(), index, exception);
+      styleSheet.addRule(args[0]->toString(exec), args[1]->toString(exec), index, exception);
       // As per Microsoft documentation, always return -1.
       return jsNumber(-1);
     }
@@ -623,6 +639,11 @@ const ClassInfo DOMCSSRuleList::info = { "CSSRuleList", 0, &DOMCSSRuleListTable,
 */
 KJS_IMPLEMENT_PROTOFUNC(DOMCSSRuleListFunc) // not really a proto, but doesn't matter
 
+DOMCSSRuleList::DOMCSSRuleList(ExecState *, WebCore::CSSRuleList *rl) 
+  : m_impl(rl) 
+{ 
+}
+
 DOMCSSRuleList::~DOMCSSRuleList()
 {
   ScriptInterpreter::forgetDOMObject(m_impl.get());
@@ -642,7 +663,7 @@ JSValue *DOMCSSRuleList::getValueProperty(ExecState *exec, int token) const
 JSValue *DOMCSSRuleList::indexGetter(ExecState *exec, JSObject *originalObject, const Identifier& propertyName, const PropertySlot& slot)
 {
   DOMCSSRuleList *thisObj = static_cast<DOMCSSRuleList *>(slot.slotBase());
-  return getDOMCSSRule(exec, thisObj->m_impl->item(slot.index()));
+  return toJS(exec, thisObj->m_impl->item(slot.index()));
 }
 
 bool DOMCSSRuleList::getOwnPropertySlot(ExecState *exec, const Identifier& propertyName, PropertySlot& slot)
@@ -657,7 +678,7 @@ bool DOMCSSRuleList::getOwnPropertySlot(ExecState *exec, const Identifier& prope
     return true;
   }
 
-  CSSRuleListImpl &cssRuleList = *m_impl;
+  CSSRuleList &cssRuleList = *m_impl;
 
   bool ok;
   unsigned u = propertyName.toUInt32(&ok);
@@ -673,23 +694,28 @@ JSValue *DOMCSSRuleListFunc::callAsFunction(ExecState *exec, JSObject *thisObj, 
 {
   if (!thisObj->inherits(&KJS::DOMCSSRuleList::info))
     return throwError(exec, TypeError);
-  CSSRuleListImpl &cssRuleList = *static_cast<DOMCSSRuleList *>(thisObj)->impl();
+  CSSRuleList &cssRuleList = *static_cast<DOMCSSRuleList *>(thisObj)->impl();
   switch (id) {
     case DOMCSSRuleList::Item:
-      return getDOMCSSRule(exec,cssRuleList.item(args[0]->toInt32(exec)));
+      return toJS(exec,cssRuleList.item(args[0]->toInt32(exec)));
     default:
       return jsUndefined();
   }
 }
 
-JSValue *getDOMCSSRuleList(ExecState *exec, CSSRuleListImpl *rl)
+JSValue *toJS(ExecState *exec, CSSRuleList *rl)
 {
-  return cacheDOMObject<CSSRuleListImpl, DOMCSSRuleList>(exec, rl);
+  return cacheDOMObject<CSSRuleList, DOMCSSRuleList>(exec, rl);
 }
 
 // -------------------------------------------------------------------------
 
 KJS_IMPLEMENT_PROTOFUNC(DOMCSSRuleFunc) // Not a proto, but doesn't matter
+
+DOMCSSRule::DOMCSSRule(ExecState*, WebCore::CSSRule* r)
+  : m_impl(r) 
+{
+}
 
 DOMCSSRule::~DOMCSSRule()
 {
@@ -706,7 +732,7 @@ const ClassInfo DOMCSSRule::charset_info = { "CSSCharsetRule", &DOMCSSRule::info
 
 const ClassInfo* DOMCSSRule::classInfo() const
 {
-  CSSRuleImpl &cssRule = *m_impl;
+  CSSRule &cssRule = *m_impl;
   switch (cssRule.type()) {
   case WebCore::STYLE_RULE:
     return &style_info;
@@ -773,50 +799,50 @@ bool DOMCSSRule::getOwnPropertySlot(ExecState *exec, const Identifier& propertyN
 
 JSValue *DOMCSSRule::getValueProperty(ExecState *exec, int token) const
 {
-  CSSRuleImpl &cssRule = *m_impl;
+  CSSRule &cssRule = *m_impl;
   switch (token) {
   case Type:
     return jsNumber(cssRule.type());
   case CssText:
     return jsStringOrNull(cssRule.cssText());
   case ParentStyleSheet:
-    return getDOMStyleSheet(exec,cssRule.parentStyleSheet());
+    return toJS(exec,cssRule.parentStyleSheet());
   case ParentRule:
-    return getDOMCSSRule(exec,cssRule.parentRule());
+    return toJS(exec,cssRule.parentRule());
 
   // for STYLE_RULE:
   case Style_SelectorText:
-    return jsStringOrNull(static_cast<CSSStyleRuleImpl *>(m_impl.get())->selectorText());
+    return jsStringOrNull(static_cast<CSSStyleRule *>(m_impl.get())->selectorText());
   case Style_Style:
-    return getDOMCSSStyleDeclaration(exec, static_cast<CSSStyleRuleImpl *>(m_impl.get())->style());
+    return toJS(exec, static_cast<CSSStyleRule *>(m_impl.get())->style());
 
   // for MEDIA_RULE:
   case Media_Media:
-    return getDOMMediaList(exec, static_cast<CSSMediaRuleImpl *>(m_impl.get())->media());
+    return toJS(exec, static_cast<CSSMediaRule *>(m_impl.get())->media());
   case Media_CssRules:
-    return getDOMCSSRuleList(exec, static_cast<CSSMediaRuleImpl *>(m_impl.get())->cssRules());
+    return toJS(exec, static_cast<CSSMediaRule *>(m_impl.get())->cssRules());
 
   // for FONT_FACE_RULE:
   case FontFace_Style:
-    return getDOMCSSStyleDeclaration(exec, static_cast<CSSFontFaceRuleImpl *>(m_impl.get())->style());
+    return toJS(exec, static_cast<CSSFontFaceRule *>(m_impl.get())->style());
 
   // for PAGE_RULE:
   case Page_SelectorText:
-    return jsStringOrNull(static_cast<CSSPageRuleImpl *>(m_impl.get())->selectorText());
+    return jsStringOrNull(static_cast<CSSPageRule *>(m_impl.get())->selectorText());
   case Page_Style:
-    return getDOMCSSStyleDeclaration(exec, static_cast<CSSPageRuleImpl *>(m_impl.get())->style());
+    return toJS(exec, static_cast<CSSPageRule *>(m_impl.get())->style());
 
   // for IMPORT_RULE:
   case Import_Href:
-    return jsStringOrNull(static_cast<CSSImportRuleImpl *>(m_impl.get())->href());
+    return jsStringOrNull(static_cast<CSSImportRule *>(m_impl.get())->href());
   case Import_Media:
-    return getDOMMediaList(exec, static_cast<CSSImportRuleImpl *>(m_impl.get())->media());
+    return toJS(exec, static_cast<CSSImportRule *>(m_impl.get())->media());
   case Import_StyleSheet:
-    return getDOMStyleSheet(exec, static_cast<CSSImportRuleImpl *>(m_impl.get())->styleSheet());
+    return toJS(exec, static_cast<CSSImportRule *>(m_impl.get())->styleSheet());
 
   // for CHARSET_RULE:
   case Charset_Encoding:
-    return jsStringOrNull(static_cast<CSSCharsetRuleImpl *>(m_impl.get())->encoding());
+    return jsStringOrNull(static_cast<CSSCharsetRule *>(m_impl.get())->encoding());
 
   default:
     assert(0);
@@ -848,17 +874,17 @@ void DOMCSSRule::putValueProperty(ExecState *exec, int token, JSValue *value, in
   switch (token) {
   // for STYLE_RULE:
   case Style_SelectorText:
-    static_cast<CSSStyleRuleImpl *>(m_impl.get())->setSelectorText(value->toString(exec).domString());
+    static_cast<CSSStyleRule *>(m_impl.get())->setSelectorText(value->toString(exec));
     return;
 
   // for PAGE_RULE:
   case Page_SelectorText:
-    static_cast<CSSPageRuleImpl *>(m_impl.get())->setSelectorText(value->toString(exec).domString());
+    static_cast<CSSPageRule *>(m_impl.get())->setSelectorText(value->toString(exec));
     return;
 
   // for CHARSET_RULE:
   case Charset_Encoding:
-    static_cast<CSSCharsetRuleImpl *>(m_impl.get())->setEncoding(value->toString(exec).domString());
+    static_cast<CSSCharsetRule *>(m_impl.get())->setEncoding(value->toString(exec));
     return;
   }
 }
@@ -867,12 +893,12 @@ JSValue *DOMCSSRuleFunc::callAsFunction(ExecState *exec, JSObject *thisObj, cons
 {
   if (!thisObj->inherits(&KJS::DOMCSSRule::info))
     return throwError(exec, TypeError);
-  CSSRuleImpl &cssRule = *static_cast<DOMCSSRule *>(thisObj)->impl();
+  CSSRule &cssRule = *static_cast<DOMCSSRule *>(thisObj)->impl();
 
   if (cssRule.type() == WebCore::MEDIA_RULE) {
-    CSSMediaRuleImpl &rule = static_cast<CSSMediaRuleImpl &>(cssRule);
+    CSSMediaRule &rule = static_cast<CSSMediaRule &>(cssRule);
     if (id == DOMCSSRule::Media_InsertRule)
-      return jsNumber(rule.insertRule(args[0]->toString(exec).domString(), args[1]->toInt32(exec)));
+      return jsNumber(rule.insertRule(args[0]->toString(exec), args[1]->toInt32(exec)));
     else if (id == DOMCSSRule::Media_DeleteRule)
       rule.deleteRule(args[0]->toInt32(exec));
   }
@@ -880,9 +906,9 @@ JSValue *DOMCSSRuleFunc::callAsFunction(ExecState *exec, JSObject *thisObj, cons
   return jsUndefined();
 }
 
-JSValue *getDOMCSSRule(ExecState *exec, CSSRuleImpl *r)
+JSValue *toJS(ExecState *exec, CSSRule *r)
 {
-  return cacheDOMObject<CSSRuleImpl, DOMCSSRule>(exec, r);
+  return cacheDOMObject<CSSRule, DOMCSSRule>(exec, r);
 }
 
 // -------------------------------------------------------------------------
@@ -948,7 +974,7 @@ DOMCSSValue::~DOMCSSValue()
 
 JSValue *DOMCSSValue::getValueProperty(ExecState *exec, int token) const
 {
-  CSSValueImpl &cssValue = *m_impl;
+  CSSValue &cssValue = *m_impl;
   switch (token) {
   case CssText:
     return jsStringOrNull(cssValue.cssText());
@@ -967,14 +993,14 @@ bool DOMCSSValue::getOwnPropertySlot(ExecState *exec, const Identifier& property
 
 void DOMCSSValue::put(ExecState *exec, const Identifier &propertyName, JSValue *value, int attr)
 {
-  CSSValueImpl &cssValue = *m_impl;
+  CSSValue &cssValue = *m_impl;
   if (propertyName == "cssText")
-    cssValue.setCssText(value->toString(exec).domString());
+    cssValue.setCssText(value->toString(exec));
   else
     DOMObject::put(exec, propertyName, value, attr);
 }
 
-JSValue *getDOMCSSValue(ExecState *exec, CSSValueImpl *v)
+JSValue *toJS(ExecState *exec, CSSValue *v)
 {
   DOMObject *ret;
   if (!v)
@@ -984,9 +1010,9 @@ JSValue *getDOMCSSValue(ExecState *exec, CSSValueImpl *v)
     return ret;
   else {
     if (v->isValueList())
-      ret = new DOMCSSValueList(exec, static_cast<CSSValueListImpl *>(v));
+      ret = new DOMCSSValueList(exec, static_cast<CSSValueList *>(v));
     else if (v->isPrimitiveValue())
-      ret = new DOMCSSPrimitiveValue(exec, static_cast<CSSPrimitiveValueImpl *>(v));
+      ret = new DOMCSSPrimitiveValue(exec, static_cast<CSSPrimitiveValue *>(v));
     else
       ret = new DOMCSSValue(exec,v);
     interp->putDOMObject(v, ret);
@@ -1014,13 +1040,13 @@ JSValue *CSSValueConstructor::getValueProperty(ExecState *, int token) const
 {
   switch (token) {
   case CSS_INHERIT:
-    return jsNumber(WebCore::CSSValueImpl::CSS_INHERIT);
+    return jsNumber(WebCore::CSSValue::CSS_INHERIT);
   case CSS_PRIMITIVE_VALUE:
-    return jsNumber(WebCore::CSSValueImpl::CSS_PRIMITIVE_VALUE);
+    return jsNumber(WebCore::CSSValue::CSS_PRIMITIVE_VALUE);
   case CSS_VALUE_LIST:
-    return jsNumber(WebCore::CSSValueImpl::CSS_VALUE_LIST);
+    return jsNumber(WebCore::CSSValue::CSS_VALUE_LIST);
   case CSS_CUSTOM:
-    return jsNumber(WebCore::CSSValueImpl::CSS_CUSTOM);
+    return jsNumber(WebCore::CSSValue::CSS_CUSTOM);
   }
   return NULL;
 }
@@ -1051,7 +1077,7 @@ KJS_DEFINE_PROTOTYPE(DOMCSSPrimitiveValueProto)
 KJS_IMPLEMENT_PROTOFUNC(DOMCSSPrimitiveValueProtoFunc)
 KJS_IMPLEMENT_PROTOTYPE("DOMCSSPrimitiveValue",DOMCSSPrimitiveValueProto,DOMCSSPrimitiveValueProtoFunc)
 
-DOMCSSPrimitiveValue::DOMCSSPrimitiveValue(ExecState *exec, CSSPrimitiveValueImpl *v)
+DOMCSSPrimitiveValue::DOMCSSPrimitiveValue(ExecState *exec, CSSPrimitiveValue *v)
   : DOMCSSValue(v) 
 { 
   setPrototype(DOMCSSPrimitiveValueProto::self(exec));
@@ -1060,7 +1086,7 @@ DOMCSSPrimitiveValue::DOMCSSPrimitiveValue(ExecState *exec, CSSPrimitiveValueImp
 JSValue *DOMCSSPrimitiveValue::getValueProperty(ExecState *exec, int token)
 {
   assert(token == PrimitiveType);
-  return jsNumber(static_cast<CSSPrimitiveValueImpl *>(impl())->primitiveType());
+  return jsNumber(static_cast<CSSPrimitiveValue *>(impl())->primitiveType());
 }
 
 bool DOMCSSPrimitiveValue::getOwnPropertySlot(ExecState *exec, const Identifier& propertyName, PropertySlot& slot)
@@ -1073,7 +1099,7 @@ JSValue *DOMCSSPrimitiveValueProtoFunc::callAsFunction(ExecState *exec, JSObject
   if (!thisObj->inherits(&KJS::DOMCSSPrimitiveValue::info))
     return throwError(exec, TypeError);
   DOMExceptionTranslator exception(exec);
-  CSSPrimitiveValueImpl &val = *static_cast<CSSPrimitiveValueImpl *>(static_cast<DOMCSSPrimitiveValue *>(thisObj)->impl());
+  CSSPrimitiveValue &val = *static_cast<CSSPrimitiveValue *>(static_cast<DOMCSSPrimitiveValue *>(thisObj)->impl());
   switch (id) {
     case DOMCSSPrimitiveValue::SetFloatValue:
       val.setFloatValue(args[0]->toInt32(exec), args[1]->toNumber(exec), exception);
@@ -1081,14 +1107,14 @@ JSValue *DOMCSSPrimitiveValueProtoFunc::callAsFunction(ExecState *exec, JSObject
     case DOMCSSPrimitiveValue::GetFloatValue:
       return jsNumber(val.getFloatValue(args[0]->toInt32(exec)));
     case DOMCSSPrimitiveValue::SetStringValue:
-      val.setStringValue(args[0]->toInt32(exec), args[1]->toString(exec).domString(), exception);
+      val.setStringValue(args[0]->toInt32(exec), args[1]->toString(exec), exception);
       return jsUndefined();
     case DOMCSSPrimitiveValue::GetStringValue:
       return jsStringOrNull(val.getStringValue());
     case DOMCSSPrimitiveValue::GetCounterValue:
-      return getDOMCounter(exec,val.getCounterValue());
+      return toJS(exec,val.getCounterValue());
     case DOMCSSPrimitiveValue::GetRectValue:
-      return getDOMRect(exec,val.getRectValue());
+      return toJS(exec,val.getRectValue());
     case DOMCSSPrimitiveValue::GetRGBColorValue:
       return getDOMRGBColor(exec,val.getRGBColorValue());
     default:
@@ -1159,7 +1185,7 @@ const ClassInfo DOMCSSValueList::info = { "CSSValueList", 0, &DOMCSSValueListTab
 */
 KJS_IMPLEMENT_PROTOFUNC(DOMCSSValueListFunc) // not really a proto, but doesn't matter
 
-DOMCSSValueList::DOMCSSValueList(ExecState *exec, CSSValueListImpl *v)
+DOMCSSValueList::DOMCSSValueList(ExecState *exec, CSSValueList *v)
   : DOMCSSValue(exec, v) 
 { 
 }
@@ -1167,18 +1193,18 @@ DOMCSSValueList::DOMCSSValueList(ExecState *exec, CSSValueListImpl *v)
 JSValue *DOMCSSValueList::getValueProperty(ExecState *exec, int token) const
 {
   assert(token == Length);
-  return jsNumber(static_cast<CSSValueListImpl *>(impl())->length());
+  return jsNumber(static_cast<CSSValueList *>(impl())->length());
 }
 
 JSValue *DOMCSSValueList::indexGetter(ExecState *exec, JSObject *originalObject, const Identifier& propertyName, const PropertySlot& slot)
 {
   DOMCSSValueList *thisObj = static_cast<DOMCSSValueList *>(slot.slotBase());
-  return getDOMCSSValue(exec, static_cast<CSSValueListImpl *>(thisObj->impl())->item(slot.index()));
+  return toJS(exec, static_cast<CSSValueList *>(thisObj->impl())->item(slot.index()));
 }
 
 bool DOMCSSValueList::getOwnPropertySlot(ExecState *exec, const Identifier& propertyName, PropertySlot& slot)
 {
-  CSSValueListImpl &valueList = *static_cast<CSSValueListImpl *>(impl());
+  CSSValueList &valueList = *static_cast<CSSValueList *>(impl());
   const HashEntry* entry = Lookup::findEntry(&DOMCSSValueListTable, propertyName);
   if (entry) {
     if (entry->attr & Function)
@@ -1201,10 +1227,10 @@ JSValue *DOMCSSValueListFunc::callAsFunction(ExecState *exec, JSObject *thisObj,
 {
   if (!thisObj->inherits(&KJS::DOMCSSValue::info))
     return throwError(exec, TypeError);
-  CSSValueListImpl &valueList = *static_cast<CSSValueListImpl *>(static_cast<DOMCSSValueList *>(thisObj)->impl());
+  CSSValueList &valueList = *static_cast<CSSValueList *>(static_cast<DOMCSSValueList *>(thisObj)->impl());
   switch (id) {
     case DOMCSSValueList::Item:
-      return getDOMCSSValue(exec,valueList.item(args[0]->toInt32(exec)));
+      return toJS(exec,valueList.item(args[0]->toInt32(exec)));
     default:
       return jsUndefined();
   }
@@ -1242,7 +1268,7 @@ JSValue *DOMRGBColor::getValueProperty(ExecState *exec, int token) const
     color >>= 8;
     // fall through
   case Blue:
-    return new DOMCSSPrimitiveValue(exec, new CSSPrimitiveValueImpl(color & 0xFF, CSSPrimitiveValue::CSS_NUMBER));
+    return new DOMCSSPrimitiveValue(exec, new CSSPrimitiveValue(color & 0xFF, CSSPrimitiveValue::CSS_NUMBER));
   default:
     return NULL;
   }
@@ -1280,19 +1306,19 @@ JSValue *DOMRect::getValueProperty(ExecState *exec, int token) const
   RectImpl &rect = *m_rect;
   switch (token) {
   case Top:
-    return getDOMCSSValue(exec, rect.top());
+    return toJS(exec, rect.top());
   case Right:
-    return getDOMCSSValue(exec, rect.right());
+    return toJS(exec, rect.right());
   case Bottom:
-    return getDOMCSSValue(exec, rect.bottom());
+    return toJS(exec, rect.bottom());
   case Left:
-    return getDOMCSSValue(exec, rect.left());
+    return toJS(exec, rect.left());
   default:
     return NULL;
   }
 }
 
-JSValue *getDOMRect(ExecState *exec, RectImpl *r)
+JSValue *toJS(ExecState *exec, RectImpl *r)
 {
   return cacheDOMObject<RectImpl, DOMRect>(exec, r);
 }
@@ -1320,7 +1346,7 @@ bool DOMCounter::getOwnPropertySlot(ExecState *exec, const Identifier& propertyN
 
 JSValue *DOMCounter::getValueProperty(ExecState *, int token) const
 {
-  CounterImpl &counter = *m_counter;
+  Counter &counter = *m_counter;
   switch (token) {
   case identifier:
     return jsStringOrNull(counter.identifier());
@@ -1333,9 +1359,9 @@ JSValue *DOMCounter::getValueProperty(ExecState *, int token) const
   }
 }
 
-JSValue *getDOMCounter(ExecState *exec, CounterImpl *c)
+JSValue *toJS(ExecState *exec, Counter *c)
 {
-  return cacheDOMObject<CounterImpl, DOMCounter>(exec, c);
+  return cacheDOMObject<Counter, DOMCounter>(exec, c);
 }
 
 }

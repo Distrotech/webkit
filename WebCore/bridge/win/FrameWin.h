@@ -33,7 +33,7 @@ namespace WebCore {
 class FrameWinClient
 {
 public:
-    virtual void openURL(const QString&) = 0;
+    virtual void openURL(const DeprecatedString&) = 0;
 };
 
 class FrameWin : public Frame
@@ -43,15 +43,15 @@ public:
     ~FrameWin();
 
     virtual bool openURL(const KURL&);
-    virtual void openURLRequest(const KURL&, const URLArgs&);
-    virtual void submitForm(const KURL&, const URLArgs&);
-    virtual void urlSelected(const KURL&, const URLArgs&);
+    virtual void openURLRequest(const ResourceRequest&);
+    virtual void submitForm(const ResourceRequest&);
+    virtual void urlSelected(const ResourceRequest&);
 
     virtual void setTitle(const String&);
 
-    virtual ObjectContentType objectContentType(const KURL& url, const QString& mimeType);
-    virtual Plugin* createPlugin(const KURL&, const QStringList& paramNames, const QStringList& paramValues, const QString& mimeType);
-    virtual Frame* createFrame(const KURL&, const QString& name, RenderPart* renderer, const String& referrer);
+    virtual ObjectContentType objectContentType(const KURL& url, const String& mimeType);
+    virtual Plugin* createPlugin(const KURL&, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType);
+    virtual Frame* createFrame(const KURL&, const String& name, RenderPart* renderer, const String& referrer);
 
     virtual void scheduleClose();
 
@@ -72,25 +72,25 @@ public:
     virtual bool toolbarVisible();
 
     virtual void createEmptyDocument();
-    virtual RangeImpl* markedTextRange() const;
+    virtual Range* markedTextRange() const;
 
-    virtual QString incomingReferrer() const;
-    virtual QString userAgent() const;
+    virtual String incomingReferrer() const;
+    virtual String userAgent() const;
 
-    virtual QString mimeTypeForFileName(const QString&) const;
+    virtual String mimeTypeForFileName(const String&) const;
 
     virtual void markMisspellingsInAdjacentWords(const VisiblePosition&);
     virtual void markMisspellings(const SelectionController&);
 
     virtual bool lastEventIsMouseUp() const;
 
-    virtual bool passSubframeEventToSubframe(MouseEventWithHitTestResults &);
-    virtual bool passWheelEventToChildWidget(NodeImpl*);
+    virtual bool passSubframeEventToSubframe(MouseEventWithHitTestResults &, Frame* subframePart = 0);
+    virtual bool passWheelEventToChildWidget(Node*);
     
     virtual void clearRecordedFormValues();
-    virtual void recordFormValue(const QString& name, const QString& value, HTMLFormElementImpl*);
+    virtual void recordFormValue(const DeprecatedString& name, const DeprecatedString& value, HTMLFormElement*);
 
-    virtual QString overrideMediaType() const;
+    virtual String overrideMediaType() const;
 
     virtual KJS::Bindings::Instance* getEmbedInstanceForWidget(Widget*);
     virtual KJS::Bindings::Instance* getObjectInstanceForWidget(Widget*);
@@ -119,8 +119,8 @@ public:
     virtual bool canUndo() const;
     virtual void print();
 
-protected:
-    virtual String generateFrameName();
+    bool keyPress(const PlatformKeyboardEvent&);
+
 private:
     virtual bool passMouseDownEventToWidget(Widget*);
     FrameWinClient* m_client;

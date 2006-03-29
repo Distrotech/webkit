@@ -34,7 +34,7 @@ namespace WebCore {
 class RenderTableRow : public RenderContainer
 {
 public:
-    RenderTableRow(NodeImpl*);
+    RenderTableRow(Node*);
 
     virtual void destroy();
     virtual void setStyle(RenderStyle*);
@@ -45,6 +45,12 @@ public:
     virtual void position(int, int, int, int, int, bool, bool, int) { }
     virtual void layout();
     virtual IntRect getAbsoluteRepaintRect();
+    virtual bool nodeAtPoint(NodeInfo& info, int x, int y, int tx, int ty, HitTestAction action);
+
+    // The only time rows get a layer is when they have transparency.
+    virtual bool requiresLayer() { return isTransparent() || hasOverflowClip(); }
+
+    virtual void paint(PaintInfo& i, int tx, int ty);
 
     RenderTable* table() const { return static_cast<RenderTable*>(parent()->parent()); }
     RenderTableSection* section() const { return static_cast<RenderTableSection*>(parent()); }

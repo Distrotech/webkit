@@ -25,12 +25,12 @@
 
 #import "config.h"
 #import <kxmlcore/Vector.h>
-#import "Array.h"
+#import "DeprecatedArray.h"
 #import "IntSize.h"
 #import "FloatRect.h"
 #import "Image.h"
 #import "PDFDocumentImage.h"
-#import <QString.h>
+#import "PlatformString.h"
 
 #import "WebCoreImageRendererFactory.h"
 
@@ -98,9 +98,9 @@ Image* Image::loadResource(const char *name)
     return 0;
 }
 
-bool Image::supportsType(const QString& type)
+bool Image::supportsType(const String& type)
 {
-    return [[[WebCoreImageRendererFactory sharedFactory] supportedMIMETypes] containsObject:type.getNSString()];
+    return [[[WebCoreImageRendererFactory sharedFactory] supportedMIMETypes] containsObject:type];
 }
 
 // Drawing Routines

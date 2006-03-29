@@ -88,9 +88,13 @@ my %exceptions = (
 my %otherRenames = (
     "MouseEvent" => "PlatformMouseEvent",
     "WheelEvent" => "PlatformWheelEvent",
+    "KeyEvent" => "PlatformKeyboardEvent",
     "XSLTProcessor" => "JSXSLTProcessor",
-    "Document" => "Document_",
-    "Event" => "Event_",
+    "_History" => "History_",
+    "_Location" => "Location_",
+    "_Navigator" => "Navigator_",
+    "_Screen" => "Screen_",
+    "_Window" => "Window_",
     "HTMLCollection" => "JSHTMLCollection",
     "HTMLSelectCollection" => "JSHTMLSelectCollection",
     "HTMLSelectElement" => "JSHTMLSelectElement",
@@ -108,7 +112,8 @@ my %otherRenames = (
     "render_box" => "RenderBox",
     "render_br" => "RenderBR",
     "render_canvas" => "RenderCanvas",
-    "render_canvasimage" => "RenderCanvasImage",
+    "render_canvasimage" => "RenderHTMLCanvas",
+    "RenderCanvasImage" => "RenderHTMLCanvas",
     "render_flexbox" => "RenderFlexibleBox",
     "render_flow" => "RenderFlow",
     "render_image" => "RenderImage",
@@ -137,10 +142,10 @@ my %otherRenames = (
     "KWQValueList" => "DeprecatedValueList",
     "QValueList" => "DeprecatedValueList",
     "QString" => "DeprecatedString",
+    "qstring" => "deprecatedString",
     "QCString" => "DeprecatedCString",
     "Array" => "DeprecatedArray",
     "ByteArray" => "DeprecatedByteArray",
-    "KURL" => "DeprecatedURL",
     "QStringList" => "DeprecatedStringList",
     "KWQPtrList" => "DeprecatedPtrList",
     "QPtrList" => "DeprecatedPtrList",
@@ -178,8 +183,21 @@ my %otherRenames = (
     "css_grammar" => "CSSGrammar",
     "css_computedstyle" => "CSSComputedStyleDeclaration",
     "cssproperties" => "CSSPropertyNames",
-    "cssvalues" => "CSSValueStrings",
+    "cssvalues" => "CSSValueKeywords",
     "KSVGCSSParser" => "SVGCSSParser",
+    "dispatchKHTMLEditableContentChanged" => "dispatchEditableContentChangedEvent",
+    "khtmlMousePressEvent" => "handleMousePressEvent",
+    "khtmlMouseReleaseEvent" => "handleMouseReleaseEvent",
+    "khtmlMouseDoubleClickEvent" => "handleMouseReleaseDoubleClickEvent",
+    "khtmlMouseMoveEvent" => "handleMouseMoveEvent",
+    "handleMouseMoveEventDrag" => "deleteMe1",
+    "handleMouseMoveEventOver" => "deleteMe2",
+    "handleMouseMoveEventSelection" => "handleMouseMoveEventPart2",
+    "viewportMousePressEvent" => "handleMousePressEvent",
+    "viewportMouseDoubleClickEvent" => "handleMouseDoubleClickEvent",
+    "viewportMouseMoveEvent" => "handleMouseMoveEvent",
+    "viewportMouseReleaseEvent" => "handleMouseReleaseEvent",
+    "viewportWheelEvent" => "handleWheelEvent",
 );
 
 # rename most files with names ending in Impl
@@ -198,7 +216,7 @@ for my $file (sort @paths) {
     if ($newFile{$file}) {
         my $newFile = $newFile{$file};
         print "Renaming $file to $newFile\n";
-        system "mv $file $newFile"; # use svn move when "doing the real thing"
+        system "svn move $file $newFile";
     }
 }
 
@@ -225,20 +243,19 @@ for my $file (sort @paths) {
     $newContents =~ s/namespace KSVG\b/namespace WebCore/g;
     $newContents =~ s/namespace khtml\b/namespace WebCore/g;
 
-    if ($file !~ /\.(pm|idl)$/) {
-        # fix DOMString
-        $newContents =~ s/\#define DOMStringImpl StringImpl\n//;
-        $newContents =~ s/\bDOMString\b/String/g;
-        $newContents =~ s/\bDOMStringImpl\b/StringImpl/g;
-        $newContents =~ s/\#define String String/#define DOMString String/;
-
-        # fix other identifiers that would collide otherwise
+    if ($file !~ /\.idl$/) {
         for my $from (keys %otherRenames) {
-            my $to = $otherRenames{$from};
-            $newContents =~ s/\b$from\b/$to/g;
-            $newContents =~ s/"$to"/"$from"/g;
+            $newContents =~ s/\b$from(?!["\w])/$otherRenames{$from}/g; # this " unconfuses Xcode syntax highlighting
         }
         $newContents =~ s/\#\#Event_/\#\#Event/g;
+
+        if ($file !~ /\.pm$/) {
+            # fix DOMString and QString
+            $newContents =~ s/\#define DOMStringImpl StringImpl\n//;
+            $newContents =~ s/\bDOMString\b/String/g;
+            $newContents =~ s/\bDOMStringImpl\b/StringImpl/g;
+            $newContents =~ s/\#define String String\n/#define DOMString String\n#define QString DeprecatedString\n#define qstring() deprecatedString()\n/;
+        }
     }
 
     # remove some bogus stuff
@@ -258,6 +275,28 @@ for my $file (sort @paths) {
 
     # fix typo that annoys me
     $newContents =~ s/it.s base class/its base class/;
+
+    # fix a few things that get done wrong
+
+    $newContents =~ s/Window::Event /Window::Event_/;
+    $newContents =~ s/case Event:/case Event_:/g;
+
+    $newContents =~ s/Event, InnerHeight/Event_, InnerHeight/;
+
+    $newContents =~ s/DOMAbstractView::Document /DOMAbstractView::Document_/;
+    $newContents =~ s/Window::Document /Window::Document_/;
+    $newContents =~ s/case Document:/case Document_:/g;
+    $newContents =~ s/token == Document\b/token == Document_/;
+    $newContents =~ s/Document, GetComputedStyle/Document_, GetComputedStyle/;
+    $newContents =~ s/Status, Document, Node/Status, Document_, Node/;
+
+    $newContents =~ s/XMLHttpRequest, XMLSerializer, JSDOMParser, JSXSLTProcessor/XMLHttpRequest, XMLSerializer, DOMParser_, XSLTProcessor_/;
+
+    $newContents =~ s/JSDOMParser(\s+Window::)JSDOMParser /DOMParser$1DOMParser_/;
+    $newContents =~ s/case JSDOMParser(:[^:])/case DOMParser_$1/g;
+
+    $newContents =~ s/JSXSLTProcessor(\s+Window::)JSXSLTProcessor /XSLTProcessor$1XSLTProcessor_/;
+    $newContents =~ s/case JSXSLTProcessor(:[^:])/case XSLTProcessor_$1/g;
 
     if ($newContents ne $contents) {
         open FILE, ">", $file or die;

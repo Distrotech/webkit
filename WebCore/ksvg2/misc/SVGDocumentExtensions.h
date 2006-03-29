@@ -31,18 +31,18 @@ using KXMLCore::PassRefPtr;
 
 namespace WebCore {
 
-class TimeScheduler;
-class DocumentImpl;
+class Document;
 class EventListener;
-class DOMString;
-class NodeImpl;
+class Node;
+class String;
+class TimeScheduler;
 
 class SVGDocumentExtensions {
 public:
-    SVGDocumentExtensions(DocumentImpl*);
+    SVGDocumentExtensions(Document*);
     ~SVGDocumentExtensions();
     
-    PassRefPtr<EventListener> createSVGEventListener(const DOMString& code, NodeImpl*);
+    PassRefPtr<EventListener> createSVGEventListener(const String& functionName, const String& code, Node*);
 
     TimeScheduler* timeScheduler() const { return m_timeScheduler; }
     
@@ -54,7 +54,7 @@ public:
     void setCurrentTime(float seconds);
 
 private:
-    DocumentImpl* m_doc; // weak reference
+    Document* m_doc; // weak reference
     TimeScheduler* m_timeScheduler;
 
     SVGDocumentExtensions(const SVGDocumentExtensions&);

@@ -26,10 +26,10 @@
 #import "config.h"
 #import "DOMInternal.h"
 
-#import "DocumentImpl.h"
-#import "MacFrame.h"
+#import "Document.h"
+#import "FrameMac.h"
 #import "PlatformString.h"
-#import "dom2_rangeimpl.h"
+#import "Range.h"
 #import "kjs_dom.h"
 #import "kjs_proxy.h"
 #import <JavaScriptCore/WebScriptObjectPrivate.h>
@@ -50,14 +50,14 @@ using KJS::Bindings::RootObject;
 
 static HashMap<DOMObjectInternal*, NSObject*>* wrapperCache;
 
-NSObject* getDOMWrapperImpl(DOMObjectInternal* impl)
+NSObject* getDOMWrapper(DOMObjectInternal* impl)
 {
     if (!wrapperCache)
         return nil;
     return wrapperCache->get(impl);
 }
 
-void addDOMWrapperImpl(NSObject* wrapper, DOMObjectInternal* impl)
+void addDOMWrapper(NSObject* wrapper, DOMObjectInternal* impl)
 {
     if (!wrapperCache)
         wrapperCache = new HashMap<DOMObjectInternal*, NSObject*>;
@@ -100,34 +100,32 @@ void raiseDOMException(ExceptionCode ec)
 }
 
 //------------------------------------------------------------------------------------------
-// DOMString/NSString bridging
+// String/NSString bridging
 
-DOMStringImpl::operator NSString *() const
+StringImpl::operator NSString *() const
 {
-    return [NSString stringWithCharacters:reinterpret_cast<const unichar *>(s) length:l];
+    return [NSString stringWithCharacters:reinterpret_cast<const unichar *>(m_data) length:m_length];
 }
 
-DOMString::DOMString(NSString *str)
+String::String(NSString *str)
 {
     if (!str)
         return;
 
     CFIndex size = CFStringGetLength(reinterpret_cast<CFStringRef>(str));
     if (size == 0)
-        m_impl = DOMStringImpl::empty();
+        m_impl = StringImpl::empty();
     else {
         UniChar fixedSizeBuffer[1024];
         UniChar *buffer;
-        if (size > static_cast<CFIndex>(sizeof(fixedSizeBuffer) / sizeof(UniChar))) {
+        if (size > static_cast<CFIndex>(sizeof(fixedSizeBuffer) / sizeof(UniChar)))
             buffer = static_cast<UniChar *>(fastMalloc(size * sizeof(UniChar)));
-        } else {
+        else
             buffer = fixedSizeBuffer;
-        }
         CFStringGetCharacters(reinterpret_cast<CFStringRef>(str), CFRangeMake(0, size), buffer);
-        m_impl = new DOMStringImpl(reinterpret_cast<const QChar *>(buffer), (uint)size);
-        if (buffer != fixedSizeBuffer) {
+        m_impl = new StringImpl(reinterpret_cast<const QChar *>(buffer), (unsigned)size);
+        if (buffer != fixedSizeBuffer)
             fastFree(buffer);
-        }
     }
 }
 
@@ -162,9 +160,9 @@ DOMString::DOMString(NSString *str)
         return;
     }
     
-    // Extract the DOM::NodeImpl from the ObjectiveC wrapper.
+    // Extract the WebCore::Node from the ObjectiveC wrapper.
     DOMNode *n = (DOMNode *)self;
-    NodeImpl *nodeImpl = [n _nodeImpl];
+    Node *nodeImpl = [n _node];
 
     // Dig up Interpreter and ExecState.
     Frame *frame = nodeImpl->getDocument()->frame();
@@ -172,7 +170,7 @@ DOMString::DOMString(NSString *str)
     ExecState *exec = interpreter->globalExec();
     
     // Get (or create) a cached JS object for the DOM node.
-    JSObject *scriptImp = static_cast<JSObject *>(getDOMNode(exec, nodeImpl));
+    JSObject *scriptImp = static_cast<JSObject *>(toJS(exec, nodeImpl));
 
     const RootObject *executionContext = Mac(frame)->bindingRootObject();
 

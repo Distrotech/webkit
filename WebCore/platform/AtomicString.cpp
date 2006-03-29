@@ -27,9 +27,12 @@
 #endif
 
 #include "AtomicString.h"
-#include "StaticConstructors.h"
 
+#include "StaticConstructors.h"
+#include <kjs/identifier.h>
 #include <kxmlcore/HashSet.h>
+
+using namespace KJS;
 
 namespace WebCore {
    
@@ -55,8 +58,8 @@ struct CStringTranslator
     static void translate(StringImpl*& location, const char* const& c, unsigned hash)
     {
         StringImpl* r = new StringImpl(c);
-        r->_hash = hash;
-        r->_inTable = true;
+        r->m_hash = hash;
+        r->m_inTable = true;
         location = r; 
     }
 };
@@ -64,9 +67,9 @@ struct CStringTranslator
 bool operator==(const AtomicString& a, const char* b)
 { 
     StringImpl* impl = a.impl();
-    if ((!impl || !impl->s) && !b)
+    if ((!impl || !impl->unicode()) && !b)
         return true;
-    if ((!impl || !impl->s) || !b)
+    if ((!impl || !impl->unicode()) || !b)
         return false;
     return CStringTranslator::equal(impl, b); 
 }
@@ -84,7 +87,7 @@ StringImpl* AtomicString::add(const char* c)
 
 struct QCharBuffer {
     const QChar* s;
-    uint length;
+    unsigned length;
 };
 
 struct QCharBufferTranslator {
@@ -95,16 +98,16 @@ struct QCharBufferTranslator {
 
     static bool equal(StringImpl* const& str, const QCharBuffer& buf)
     {
-        uint strLength = str->length();
-        uint bufLength = buf.length;
+        unsigned strLength = str->length();
+        unsigned bufLength = buf.length;
         if (strLength != bufLength)
             return false;
         
         const uint32_t* strChars = reinterpret_cast<const uint32_t*>(str->unicode());
         const uint32_t* bufChars = reinterpret_cast<const uint32_t*>(buf.s);
         
-        uint halfLength = strLength >> 1;
-        for (uint i = 0; i != halfLength; ++i) {
+        unsigned halfLength = strLength >> 1;
+        for (unsigned i = 0; i != halfLength; ++i) {
             if (*strChars++ != *bufChars++)
                 return false;
         }
@@ -119,8 +122,8 @@ struct QCharBufferTranslator {
     static void translate(StringImpl*& location, const QCharBuffer& buf, unsigned hash)
     {
         StringImpl *r = new StringImpl(buf.s, buf.length);
-        r->_hash = hash;
-        r->_inTable = true;
+        r->m_hash = hash;
+        r->m_inTable = true;
         
         location = r; 
     }
@@ -140,7 +143,7 @@ StringImpl* AtomicString::add(const QChar* s, int length)
 
 StringImpl* AtomicString::add(StringImpl* r)
 {
-    if (!r || r->_inTable)
+    if (!r || r->m_inTable)
         return r;
 
     if (r->length() == 0)
@@ -148,7 +151,7 @@ StringImpl* AtomicString::add(StringImpl* r)
     
     StringImpl* result = *stringTable->add(r).first;
     if (result == r)
-        r->_inTable = true;
+        r->m_inTable = true;
     return result;
 }
 
@@ -157,6 +160,25 @@ void AtomicString::remove(StringImpl* r)
     stringTable->remove(r);
 }
 
+StringImpl* AtomicString::add(const KJS::Identifier& str)
+{
+    return add(reinterpret_cast<const QChar*>(str.data()), str.size());
+}
+
+StringImpl* AtomicString::add(const KJS::UString& str)
+{
+    return add(reinterpret_cast<const QChar*>(str.data()), str.size());
+}
+
+AtomicString::operator Identifier() const
+{
+    return domString();
+}
+
+AtomicString::operator UString() const
+{
+    return domString();
+}
 
 DEFINE_GLOBAL(AtomicString, nullAtom)
 DEFINE_GLOBAL(AtomicString, emptyAtom, "")

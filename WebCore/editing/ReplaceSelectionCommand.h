@@ -28,40 +28,44 @@
 
 #include "CompositeEditCommand.h"
 #include <kxmlcore/PassRefPtr.h>
+#include <kxmlcore/HashMap.h>
+#include <kxmlcore/Vector.h>
 
 namespace WebCore {
 
-class DocumentFragmentImpl;
+class DocumentFragment;
 
-class NodeDesiredStyle {
+class RenderingInfo : public Shared<RenderingInfo> {
 public:
-    NodeDesiredStyle(PassRefPtr<NodeImpl>, PassRefPtr<CSSMutableStyleDeclarationImpl>);
+    RenderingInfo(PassRefPtr<CSSMutableStyleDeclaration>, bool);
     
-    NodeImpl* node() const { return m_node.get(); }
-    CSSMutableStyleDeclarationImpl* style() const { return m_style.get(); }
-
+    CSSMutableStyleDeclaration* style() const { return m_style.get(); }
+    bool isBlockFlow() const { return m_isBlockFlow; }
 private:
-    RefPtr<NodeImpl> m_node;
-    RefPtr<CSSMutableStyleDeclarationImpl> m_style;
+    RefPtr<CSSMutableStyleDeclaration> m_style;
+    bool m_isBlockFlow;
 };
+
+typedef Vector<RefPtr<Node> > NodeVector;
+typedef HashMap<Node*, RefPtr<RenderingInfo> > RenderingInfoMap;
 
 // --- ReplacementFragment helper class
 
 class ReplacementFragment
 {
 public:
-    ReplacementFragment(DocumentImpl *, DocumentFragmentImpl *, bool matchStyle);
+    ReplacementFragment(Document *, DocumentFragment *, bool matchStyle);
     ~ReplacementFragment();
 
     enum EFragmentType { EmptyFragment, SingleTextNodeFragment, TreeFragment };
 
-    DocumentFragmentImpl *root() const { return m_fragment.get(); }
-    NodeImpl *firstChild() const;
-    NodeImpl *lastChild() const;
+    Node *firstChild() const;
+    Node *lastChild() const;
 
-    NodeImpl *mergeStartNode() const;
+    Node *mergeStartNode() const;
 
-    const QValueList<NodeDesiredStyle> &desiredStyles() { return m_styles; }
+    const RenderingInfoMap& renderingInfo() const { return m_renderingInfo; }
+    const NodeVector& nodes() const { return m_nodes; }
 
     EFragmentType type() const { return m_type; }
     bool isEmpty() const { return m_type == EmptyFragment; }
@@ -71,32 +75,36 @@ public:
     bool hasMoreThanOneBlock() const { return m_hasMoreThanOneBlock; }
     bool hasInterchangeNewlineAtStart() const { return m_hasInterchangeNewlineAtStart; }
     bool hasInterchangeNewlineAtEnd() const { return m_hasInterchangeNewlineAtEnd; }
+    
+    bool isBlockFlow(Node*) const;
 
 private:
     // no copy construction or assignment
     ReplacementFragment(const ReplacementFragment &);
     ReplacementFragment &operator=(const ReplacementFragment &);
     
-    static bool isInterchangeNewlineNode(const NodeImpl *);
-    static bool isInterchangeConvertedSpaceSpan(const NodeImpl *);
-
-    PassRefPtr<NodeImpl> insertFragmentForTestRendering();
-    void restoreTestRenderingNodesToFragment(NodeImpl *);
-    void computeStylesUsingTestRendering(NodeImpl *);
-    void removeUnrenderedNodesUsingTestRendering(NodeImpl *);
-    int countRenderedBlocks(NodeImpl *holder);
+    static bool isInterchangeNewlineNode(const Node *);
+    static bool isInterchangeConvertedSpaceSpan(const Node *);
+    
+    PassRefPtr<Node> insertFragmentForTestRendering();
+    void saveRenderingInfo(Node*);
+    void computeStylesUsingTestRendering(Node*);
+    void removeUnrenderedNodes(Node*);
+    void restoreTestRenderingNodesToFragment(Node*);
+    int renderedBlocks(Node*);
     void removeStyleNodes();
 
     // A couple simple DOM helpers
-    NodeImpl *enclosingBlock(NodeImpl *) const;
-    void removeNode(PassRefPtr<NodeImpl>);
-    void removeNodePreservingChildren(NodeImpl *);
-    void insertNodeBefore(NodeImpl *node, NodeImpl *refNode);
+    Node *enclosingBlock(Node *) const;
+    void removeNode(PassRefPtr<Node>);
+    void removeNodePreservingChildren(Node *);
+    void insertNodeBefore(Node *node, Node *refNode);
 
     EFragmentType m_type;
-    RefPtr<DocumentImpl> m_document;
-    RefPtr<DocumentFragmentImpl> m_fragment;
-    QValueList<NodeDesiredStyle> m_styles;
+    RefPtr<Document> m_document;
+    RefPtr<DocumentFragment> m_fragment;
+    RenderingInfoMap m_renderingInfo;
+    NodeVector m_nodes;
     bool m_matchStyle;
     bool m_hasInterchangeNewlineAtStart;
     bool m_hasInterchangeNewlineAtEnd;
@@ -106,7 +114,7 @@ private:
 class ReplaceSelectionCommand : public CompositeEditCommand
 {
 public:
-    ReplaceSelectionCommand(DocumentImpl *document, DocumentFragmentImpl *fragment, bool selectReplacement=true, bool smartReplace=false, bool matchStyle=false);
+    ReplaceSelectionCommand(Document *document, DocumentFragment *fragment, bool selectReplacement=true, bool smartReplace=false, bool matchStyle=false);
     virtual ~ReplaceSelectionCommand();
     
     virtual void doApply();
@@ -115,25 +123,25 @@ public:
 private:
     void completeHTMLReplacement(const Position &lastPositionToSelect);
 
-    void insertNodeAfterAndUpdateNodesInserted(NodeImpl *insertChild, NodeImpl *refChild);
-    void insertNodeAtAndUpdateNodesInserted(NodeImpl *insertChild, NodeImpl *refChild, int offset);
-    void insertNodeBeforeAndUpdateNodesInserted(NodeImpl *insertChild, NodeImpl *refChild);
+    void insertNodeAfterAndUpdateNodesInserted(Node *insertChild, Node *refChild);
+    void insertNodeAtAndUpdateNodesInserted(Node *insertChild, Node *refChild, int offset);
+    void insertNodeBeforeAndUpdateNodesInserted(Node *insertChild, Node *refChild);
 
-    void updateNodesInserted(NodeImpl *);
-    void fixupNodeStyles(const QValueList<NodeDesiredStyle> &);
-    void removeLinePlaceholderIfNeeded(NodeImpl *);
-    void removeNodeAndPruneAncestors(NodeImpl*);
+    void updateNodesInserted(Node *);
+    void fixupNodeStyles(const NodeVector&, const RenderingInfoMap&);
+    void removeLinePlaceholderIfNeeded(Node *);
+    void removeNodeAndPruneAncestors(Node*);
 
     ReplacementFragment m_fragment;
-    RefPtr<NodeImpl> m_firstNodeInserted;
-    RefPtr<NodeImpl> m_lastNodeInserted;
-    RefPtr<NodeImpl> m_lastTopNodeInserted;
-    RefPtr<CSSMutableStyleDeclarationImpl> m_insertionStyle;
+    RefPtr<Node> m_firstNodeInserted;
+    RefPtr<Node> m_lastNodeInserted;
+    RefPtr<Node> m_lastTopNodeInserted;
+    RefPtr<CSSMutableStyleDeclaration> m_insertionStyle;
     bool m_selectReplacement;
     bool m_smartReplace;
     bool m_matchStyle;
 };
 
-} // namespace khtml
+} // namespace WebCore
 
 #endif // __replace_selection_command_h__

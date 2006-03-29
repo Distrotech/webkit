@@ -22,23 +22,22 @@
 #include "RenderTextField.h"
 
 #include <algorithm>
-#include "DocumentImpl.h"
+#include "Document.h"
 #include "Frame.h"
 #include "RenderText.h"
-#include "htmlnames.h"
-#include "HTMLInputElementImpl.h"
-#include "HTMLTextFieldInnerElementImpl.h"
-#include "dom_elementimpl.h"
+#include "HTMLNames.h"
+#include "HTMLInputElement.h"
+#include "HTMLTextFieldInnerElement.h"
 #include "SelectionController.h"
 #include "VisiblePosition.h"
-#include "visible_text.h"
+#include "TextIterator.h"
 
 namespace WebCore {
 
 using namespace HTMLNames;
 using namespace std;
 
-RenderTextField::RenderTextField(NodeImpl* node)
+RenderTextField::RenderTextField(Node* node)
 :RenderBlock(node), m_dirty(false)
 {
 }
@@ -57,7 +56,7 @@ void RenderTextField::setStyle(RenderStyle* style)
         RenderBlock* divRenderer = static_cast<RenderBlock*>(m_div->renderer());
         RenderStyle* divStyle = createDivStyle(style);
         divRenderer->setStyle(divStyle);
-        for (NodeImpl *n = m_div->firstChild(); n; n = n->traverseNextNode(m_div.get()))
+        for (Node *n = m_div->firstChild(); n; n = n->traverseNextNode(m_div.get()))
             if (n->renderer())
                 n->renderer()->setStyle(divStyle);
     }
@@ -78,10 +77,10 @@ RenderStyle* RenderTextField::createDivStyle(RenderStyle* startStyle)
 void RenderTextField::updateFromElement()
 {
     if (element()->hasTagName(inputTag)) {
-        HTMLInputElementImpl* input = static_cast<HTMLInputElementImpl*>(element());
+        HTMLInputElement* input = static_cast<HTMLInputElement*>(element());
         String value = input->value().copy();
         if (value.isNull())
-            value = String("");
+            value = "";
         unsigned ml = input->maxLength();
         bool valueHasChanged = false;
         if (value.length() > ml) {
@@ -91,7 +90,7 @@ void RenderTextField::updateFromElement()
             
         if (!m_div) {
             // Create the div and give it a parent, renderer, and style
-            m_div = new HTMLTextFieldInnerElementImpl(document(), node());
+            m_div = new HTMLTextFieldInnerElement(document(), node());
             RenderBlock* divRenderer = new (renderArena()) RenderBlock(m_div.get());
             m_div->setRenderer(divRenderer);
             m_div->setAttached();
@@ -106,10 +105,10 @@ void RenderTextField::updateFromElement()
             RenderBlock::addChild(divRenderer);
         }
         
-        TextImpl* text = static_cast<TextImpl*>(m_div->firstChild());
+        Text* text = static_cast<Text*>(m_div->firstChild());
         if (!text) {
             // Add text node to DOM tree
-            text = new TextImpl(document(), value.impl());
+            text = new Text(document(), value.impl());
             int exception = 0;
             m_div->appendChild(text, exception);
         }
@@ -177,9 +176,9 @@ void RenderTextField::setSelectionRange(int start, int end)
 VisiblePosition RenderTextField::visiblePositionForIndex(int index)
 {    
     if (index <= 0)
-        return VisiblePosition(m_div.get(), 0, UPSTREAM);
+        return VisiblePosition(m_div.get(), 0, DOWNSTREAM);
     ExceptionCode ec = 0;
-    RefPtr<RangeImpl> range = new RangeImpl(document());
+    RefPtr<Range> range = new Range(document());
     range->selectNodeContents(m_div.get(), ec);
     CharacterIterator it(range.get());
     it.advance(index - 1);
@@ -192,7 +191,7 @@ int RenderTextField::indexForVisiblePosition(const VisiblePosition& pos)
     if (!indexPosition.node() || indexPosition.node()->rootEditableElement() != m_div)
         return 0;
     ExceptionCode ec = 0;
-    RefPtr<RangeImpl> range = new RangeImpl(document());
+    RefPtr<Range> range = new Range(document());
     range->setStart(m_div.get(), 0, ec);
     range->setEnd(indexPosition.node(), indexPosition.offset(), ec);
     return TextIterator::rangeLength(range.get());
@@ -200,7 +199,7 @@ int RenderTextField::indexForVisiblePosition(const VisiblePosition& pos)
 
 void RenderTextField::subtreeHasChanged()
 {
-    HTMLInputElementImpl* input = static_cast<HTMLInputElementImpl*>(element());
+    HTMLInputElement* input = static_cast<HTMLInputElement*>(element());
     if (input) {
         input->setValueFromRenderer(text());
         setEdited(true);
@@ -216,16 +215,19 @@ String RenderTextField::text()
 
 void RenderTextField::calcMinMaxWidth()
 {
-    RenderBlock::calcMinMaxWidth();
-
     // Figure out how big a text field needs to be for a given number of characters
-    // (using "w" as the nominal character).
-    int size = static_cast<HTMLInputElementImpl*>(element())->size();
+    // (using "0" as the nominal character).
+    int size = static_cast<HTMLInputElement*>(element())->size();
     if (size <= 0)
         size = 20;
     
-    m_maxWidth = style()->font().width("w") * size + paddingLeft() + paddingRight() + borderLeft() + borderRight();
+    m_minWidth = m_maxWidth = style()->font().width("0") * size + paddingLeft() + paddingRight() + borderLeft() + borderRight();
     setMinMaxKnown();
+}
+
+void RenderTextField::forwardEvent(Event* evt)
+{
+    m_div->defaultEventHandler(evt);
 }
 
 }

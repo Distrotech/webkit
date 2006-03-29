@@ -23,7 +23,7 @@
 
 #include "kjs_window.h"
 #include "kjs_events.h"
-#include "NodeImpl.h"
+#include "Node.h"
 #include "Frame.h"
 #include <kjs/collector.h>
 
@@ -35,21 +35,21 @@ using namespace KJS;
 
 namespace WebCore {
 
-KJSProxyImpl::KJSProxyImpl(Frame *frame)
+KJSProxy::KJSProxy(Frame *frame)
 {
     m_script = 0;
     m_frame = frame;
     m_handlerLineno = 0;
 }
 
-KJSProxyImpl::~KJSProxyImpl()
+KJSProxy::~KJSProxy()
 {
     JSLock lock;
     delete m_script;
     Collector::collect();
 }
 
-JSValue* KJSProxyImpl::evaluate(const DOMString& filename, int baseLine, const DOMString& str, NodeImpl *n) 
+JSValue* KJSProxy::evaluate(const String& filename, int baseLine, const String& str, Node *n) 
 {
   // evaluate code. Returns the JS return value or 0
   // if there was none, an error occured or the type couldn't be converted.
@@ -65,8 +65,8 @@ JSValue* KJSProxyImpl::evaluate(const DOMString& filename, int baseLine, const D
 
   JSLock lock;
 
-  JSValue* thisNode = n ? Window::retrieve(m_frame) : getDOMNode(m_script->globalExec(), n);
-  Completion comp = m_script->evaluate(filename, baseLine, reinterpret_cast<KJS::UChar *>(str.unicode()), str.length(), thisNode);
+  JSValue* thisNode = n ? Window::retrieve(m_frame) : toJS(m_script->globalExec(), n);
+  Completion comp = m_script->evaluate(filename, baseLine, reinterpret_cast<const KJS::UChar *>(str.unicode()), str.length(), thisNode);
 
   if (comp.complType() == Normal || comp.complType() == ReturnValue)
     return comp.value();
@@ -75,13 +75,13 @@ JSValue* KJSProxyImpl::evaluate(const DOMString& filename, int baseLine, const D
     UString errorMessage = comp.value()->toString(m_script->globalExec());
     int lineNumber = comp.value()->toObject(m_script->globalExec())->get(m_script->globalExec(), "line")->toInt32(m_script->globalExec());
     UString sourceURL = comp.value()->toObject(m_script->globalExec())->get(m_script->globalExec(), "sourceURL")->toString(m_script->globalExec());
-    m_frame->addMessageToConsole(errorMessage.domString(), lineNumber, sourceURL.domString());
+    m_frame->addMessageToConsole(errorMessage, lineNumber, sourceURL);
   }
 
   return 0;
 }
 
-void KJSProxyImpl::clear() {
+void KJSProxy::clear() {
   // clear resources allocated by the interpreter, and make it ready to be used by another page
   // We have to keep it, so that the Window object for the frame remains the same.
   // (we used to delete and re-create it, previously)
@@ -92,23 +92,23 @@ void KJSProxyImpl::clear() {
   }
 }
 
-EventListener *KJSProxyImpl::createHTMLEventHandler(const DOMString& code, NodeImpl *node)
+EventListener* KJSProxy::createHTMLEventHandler(const String& functionName, const String& code, Node *node)
 {
     initScriptIfNeeded();
     JSLock lock;
-    return new JSLazyEventListener(code, Window::retrieveWindow(m_frame), node, m_handlerLineno);
+    return new JSLazyEventListener(functionName, code, Window::retrieveWindow(m_frame), node, m_handlerLineno);
 }
 
 #if SVG_SUPPORT
-EventListener *KJSProxyImpl::createSVGEventHandler(const DOMString& code, NodeImpl *node)
+EventListener* KJSProxy::createSVGEventHandler(const String& functionName, const String& code, Node *node)
 {
     initScriptIfNeeded();
     JSLock lock;
-    return new JSSVGLazyEventListener(code, Window::retrieveWindow(m_frame), node, m_handlerLineno);
+    return new JSSVGLazyEventListener(functionName, code, Window::retrieveWindow(m_frame), node, m_handlerLineno);
 }
 #endif
 
-void KJSProxyImpl::finishedWithEvent(EventImpl *event)
+void KJSProxy::finishedWithEvent(Event *event)
 {
   // This is called when the DOM implementation has finished with a particular event. This
   // is the case in sitations where an event has been created just for temporary usage,
@@ -117,7 +117,7 @@ void KJSProxyImpl::finishedWithEvent(EventImpl *event)
   m_script->forgetDOMObject(event);
 }
 
-ScriptInterpreter *KJSProxyImpl::interpreter()
+ScriptInterpreter *KJSProxy::interpreter()
 {
   initScriptIfNeeded();
   assert(m_script);
@@ -138,7 +138,7 @@ JSValue *TestFunctionImp::callAsFunction(ExecState *exec, JSObject */*thisObj*/,
   return jsUndefined();
 }
 
-void KJSProxyImpl::initScriptIfNeeded()
+void KJSProxy::initScriptIfNeeded()
 {
   if (m_script)
     return;
@@ -151,7 +151,7 @@ void KJSProxyImpl::initScriptIfNeeded()
   m_script = new ScriptInterpreter(globalObject, m_frame);
   globalObject->put(m_script->globalExec(), "debug", new TestFunctionImp(), Internal);
 
-  QString userAgent = m_frame->userAgent();
+  String userAgent = m_frame->userAgent();
   if (userAgent.find("Microsoft") >= 0 || userAgent.find("MSIE") >= 0)
     m_script->setCompatMode(Interpreter::IECompat);
   else

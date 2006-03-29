@@ -40,7 +40,7 @@ class Image;
 
 class CachedImage : public CachedObject, public ImageAnimationObserver {
 public:
-    CachedImage(DocLoader*, const DOMString &url, KIO::CacheControl cachePolicy, time_t expireDate);
+    CachedImage(DocLoader*, const String &url, KIO::CacheControl cachePolicy, time_t expireDate);
     virtual ~CachedImage();
 
     Image* image() const;
@@ -53,8 +53,8 @@ public:
     virtual void ref(CachedObjectClient*);
     virtual void deref(CachedObjectClient*);
 
-    virtual void data(ByteArray&, bool atEnd);
-    virtual void error(int code, const char* message);
+    virtual void data(DeprecatedByteArray&, bool atEnd);
+    virtual void error();
 
     bool isErrorImage() const { return m_errorOccurred; }
 

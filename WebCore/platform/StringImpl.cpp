@@ -29,9 +29,12 @@
 
 #include "AtomicString.h"
 #include "Length.h"
+#include <kjs/identifier.h>
 #include <kxmlcore/Assertions.h>
 #include <string.h>
+#include <unicode/ubrk.h>
 
+using namespace KJS;
 using namespace KXMLCore;
 
 namespace WebCore {
@@ -53,7 +56,7 @@ StringImpl* StringImpl::empty()
     return &e;
 }
 
-StringImpl::StringImpl(const QString& str)
+StringImpl::StringImpl(const DeprecatedString& str)
 {
     initWithQChar(str.unicode(), str.length());
 }
@@ -68,139 +71,141 @@ StringImpl::StringImpl(const char* str)
     initWithChar(str, strlen(str));
 }
 
-StringImpl::StringImpl(const char* str, unsigned int len)
+StringImpl::StringImpl(const char* str, unsigned len)
 {
     initWithChar(str, len);
 }
 
-void StringImpl::initWithChar(const char* str, unsigned int len)
+void StringImpl::initWithChar(const char* str, unsigned len)
 {
-    _hash = 0;
-    _inTable = false;
-    l = len;
-    if (!l || !str) {
-        s = 0;
+    m_hash = 0;
+    m_inTable = false;
+    m_length = len;
+    if (!m_length || !str) {
+        m_data = 0;
         return;
     }
     
-    s = newQCharVector(l);
-    int i = l;
-    QChar* ptr = s;
+    m_data = newQCharVector(m_length);
+    int i = m_length;
+    QChar* ptr = m_data;
     while (i--)
         *ptr++ = *str++;
 }
 
-void StringImpl::initWithQChar(const QChar* str, unsigned int len)
+void StringImpl::initWithQChar(const QChar* str, unsigned len)
 {
-    _hash = 0;
-    _inTable = false;
-    l = len;
-    if (!l || !str) {
-        s = 0;
+    m_hash = 0;
+    m_inTable = false;
+    m_length = len;
+    if (!m_length || !str) {
+        m_data = 0;
         return;
     }
     
-    s = newQCharVector(len);
-    memcpy(s, str, len * sizeof(QChar));
+    m_data = newQCharVector(len);
+    memcpy(m_data, str, len * sizeof(QChar));
 }
 
 StringImpl::~StringImpl()
 {
-    if (_inTable)
+    if (m_inTable)
         AtomicString::remove(this);
-    deleteQCharVector(s);
+    deleteQCharVector(m_data);
 }
 
 void StringImpl::append(const StringImpl* str)
 {
-    assert(!_inTable);
-    if(str && str->l != 0)
+    assert(!m_inTable);
+    if(str && str->m_length != 0)
     {
-        int newlen = l+str->l;
+        int newlen = m_length+str->m_length;
         QChar* c = newQCharVector(newlen);
-        memcpy(c, s, l*sizeof(QChar));
-        memcpy(c+l, str->s, str->l*sizeof(QChar));
-        deleteQCharVector(s);
-        s = c;
-        l = newlen;
+        memcpy(c, m_data, m_length*sizeof(QChar));
+        memcpy(c+m_length, str->m_data, str->m_length*sizeof(QChar));
+        deleteQCharVector(m_data);
+        m_data = c;
+        m_length = newlen;
     }
 }
 
 void StringImpl::insert(const StringImpl* str, unsigned pos)
 {
-    assert(!_inTable);
-    if (pos >= l) {
+    assert(!m_inTable);
+    if (pos >= m_length) {
         append(str);
         return;
     }
-    if (str && str->l != 0) {
-        int newlen = l + str->l;
+    if (str && str->m_length != 0) {
+        int newlen = m_length + str->m_length;
         QChar* c = newQCharVector(newlen);
-        memcpy(c, s, pos*sizeof(QChar));
-        memcpy(c+pos, str->s, str->l*sizeof(QChar));
-        memcpy(c+pos+str->l, s+pos, (l-pos)*sizeof(QChar));
-        deleteQCharVector(s);
-        s = c;
-        l = newlen;
+        memcpy(c, m_data, pos*sizeof(QChar));
+        memcpy(c+pos, str->m_data, str->m_length*sizeof(QChar));
+        memcpy(c+pos+str->m_length, m_data+pos, (m_length-pos)*sizeof(QChar));
+        deleteQCharVector(m_data);
+        m_data = c;
+        m_length = newlen;
     }
 }
 
 void StringImpl::truncate(int len)
 {
-    assert(!_inTable);
-    if (len > (int)l)
+    assert(!m_inTable);
+    if (len > (int)m_length)
         return;
     int nl = len < 1 ? 1 : len;
     QChar* c = newQCharVector(nl);
-    memcpy(c, s, nl*sizeof(QChar));
-    deleteQCharVector(s);
-    s = c;
-    l = len;
+    memcpy(c, m_data, nl*sizeof(QChar));
+    deleteQCharVector(m_data);
+    m_data = c;
+    m_length = len;
 }
 
 void StringImpl::remove(unsigned pos, int len)
 {
-    assert(!_inTable);
-    if(len <= 0) return;
-    if(pos >= l ) return;
-    if((unsigned)len > l - pos)
-    len = l - pos;
+    assert(!m_inTable);
+    if (len <= 0)
+        return;
+    if (pos >= m_length )
+        return;
+    if ((unsigned)len > m_length - pos)
+        len = m_length - pos;
 
-    unsigned newLen = l-len;
+    unsigned newLen = m_length-len;
     QChar* c = newQCharVector(newLen);
-    memcpy(c, s, pos*sizeof(QChar));
-    memcpy(c+pos, s+pos+len, (l-len-pos)*sizeof(QChar));
-    deleteQCharVector(s);
-    s = c;
-    l = newLen;
+    memcpy(c, m_data, pos*sizeof(QChar));
+    memcpy(c+pos, m_data+pos+len, (m_length-len-pos)*sizeof(QChar));
+    deleteQCharVector(m_data);
+    m_data = c;
+    m_length = newLen;
 }
 
 StringImpl* StringImpl::split(unsigned pos)
 {
-    assert(!_inTable);
-    if( pos >=l ) return new StringImpl();
+    assert(!m_inTable);
+    if( pos >=m_length ) return new StringImpl();
 
-    unsigned newLen = l-pos;
+    unsigned newLen = m_length-pos;
     QChar* c = newQCharVector(newLen);
-    memcpy(c, s+pos, newLen*sizeof(QChar));
+    memcpy(c, m_data+pos, newLen*sizeof(QChar));
 
-    StringImpl* str = new StringImpl(s + pos, newLen);
+    StringImpl* str = new StringImpl(m_data + pos, newLen);
     truncate(pos);
     return str;
 }
 
 bool StringImpl::containsOnlyWhitespace() const
 {
-    return containsOnlyWhitespace(0, l);
+    return containsOnlyWhitespace(0, m_length);
 }
 
-bool StringImpl::containsOnlyWhitespace(unsigned int from, unsigned int len) const
+bool StringImpl::containsOnlyWhitespace(unsigned from, unsigned len) const
 {
-    if (!s)
+    if (!m_data)
         return true;
     
     for (unsigned i = from; i < len; i++) {
-        QChar c = s[i];
+        QChar c = m_data[i];
         if (c.unicode() <= 0x7F) {
             if (!isspace(c.unicode()))
                 return false;
@@ -213,42 +218,42 @@ bool StringImpl::containsOnlyWhitespace(unsigned int from, unsigned int len) con
     
 StringImpl* StringImpl::substring(unsigned pos, unsigned len)
 {
-    if (pos >= l) return
+    if (pos >= m_length) return
         new StringImpl;
-    if (len > l - pos)
-        len = l - pos;
-    return new StringImpl(s + pos, len);
+    if (len > m_length - pos)
+        len = m_length - pos;
+    return new StringImpl(m_data + pos, len);
 }
 
-static Length parseLength(const QChar* s, unsigned int l)
+static Length parseLength(const QChar* m_data, unsigned int m_length)
 {
-    if (l == 0)
+    if (m_length == 0)
         return Length(1, Relative);
 
     unsigned i = 0;
-    while (i < l && s[i].isSpace())
+    while (i < m_length && m_data[i].isSpace())
         ++i;
-    if (i < l && (s[i] == '+' || s[i] == '-'))
+    if (i < m_length && (m_data[i] == '+' || m_data[i] == '-'))
         ++i;
-    while (i < l && s[i].isDigit())
+    while (i < m_length && m_data[i].isDigit())
         ++i;
 
     bool ok;
-    int r = QConstString(s, i).string().toInt(&ok);
+    int r = QConstString(m_data, i).string().toInt(&ok);
 
     /* Skip over any remaining digits, we are not that accurate (5.5% => 5%) */
-    while (i < l && (s[i].isDigit() || s[i] == '.'))
+    while (i < m_length && (m_data[i].isDigit() || m_data[i] == '.'))
         ++i;
 
     /* IE Quirk: Skip any whitespace (20 % => 20%) */
-    while (i < l && s[i].isSpace())
+    while (i < m_length && m_data[i].isSpace())
         ++i;
 
     if (ok) {
-        if (i == l) {
+        if (i == m_length)
             return Length(r, Fixed);
-        } else {
-            const QChar* next = s+i;
+        else {
+            const QChar* next = m_data+i;
 
             if (*next == '%')
                 return Length(r, Percent);
@@ -258,8 +263,8 @@ static Length parseLength(const QChar* s, unsigned int l)
         }
         return Length(r, Fixed);
     } else {
-        if (i < l) {
-            const QChar* next = s + i;
+        if (i < m_length) {
+            const QChar* next = m_data + i;
 
             if (*next == '*')
                 return Length(1, Relative);
@@ -273,21 +278,21 @@ static Length parseLength(const QChar* s, unsigned int l)
 
 Length StringImpl::toLength() const
 {
-    return parseLength(s, l);
+    return parseLength(m_data, m_length);
 }
 
 Length* StringImpl::toCoordsArray(int& len) const
 {
-    QChar* spacified = newQCharVector(l);
+    QChar* spacified = newQCharVector(m_length);
     QChar space(' ');
-    for(unsigned int i=0; i < l; i++) {
-        QChar cc = s[i];
+    for(unsigned int i=0; i < m_length; i++) {
+        QChar cc = m_data[i];
         if (cc > '9' || (cc < '0' && cc != '-' && cc != '*' && cc != '.'))
             spacified[i] = space;
         else
             spacified[i] = cc;
     }
-    QString str(spacified, l);
+    DeprecatedString str(spacified, m_length);
     deleteQCharVector(spacified);
 
     str = str.simplifyWhiteSpace();
@@ -310,7 +315,7 @@ Length* StringImpl::toCoordsArray(int& len) const
 
 Length* StringImpl::toLengthArray(int& len) const
 {
-    QString str(s, l);
+    DeprecatedString str(m_data, m_length);
     str = str.simplifyWhiteSpace();
 
     len = str.contains(',') + 1;
@@ -337,8 +342,8 @@ Length* StringImpl::toLengthArray(int& len) const
 bool StringImpl::isLower() const
 {
     unsigned int i;
-    for (i = 0; i < l; i++)
-	if (s[i].lower() != s[i])
+    for (i = 0; i < m_length; i++)
+	if (m_data[i].lower() != m_data[i])
 	    return false;
     return true;
 }
@@ -346,14 +351,14 @@ bool StringImpl::isLower() const
 StringImpl* StringImpl::lower() const
 {
     StringImpl* c = new StringImpl;
-    if (!l)
+    if (!m_length)
         return c;
 
-    c->s = newQCharVector(l);
-    c->l = l;
+    c->m_data = newQCharVector(m_length);
+    c->m_length = m_length;
 
-    for (unsigned int i = 0; i < l; i++)
-	c->s[i] = s[i].lower();
+    for (unsigned int i = 0; i < m_length; i++)
+	c->m_data[i] = m_data[i].lower();
 
     return c;
 }
@@ -361,45 +366,72 @@ StringImpl* StringImpl::lower() const
 StringImpl* StringImpl::upper() const
 {
     StringImpl* c = new StringImpl;
-    if (!l)
+    if (!m_length)
         return c;
 
-    c->s = newQCharVector(l);
-    c->l = l;
+    c->m_data = newQCharVector(m_length);
+    c->m_length = m_length;
 
-    for (unsigned int i = 0; i < l; i++)
-	c->s[i] = s[i].upper();
+    for (unsigned int i = 0; i < m_length; i++)
+	c->m_data[i] = m_data[i].upper();
 
     return c;
 }
 
-StringImpl* StringImpl::capitalize(bool runOnString) const
+static UBreakIterator* getWordBreakIterator(const QChar* string, int length)
 {
-    StringImpl* c = new StringImpl;
-    bool haveCapped = runOnString;
-    if(!l) return c;
+    // The locale is currently ignored when determining character cluster breaks.
+    // This may change in the future, according to Deborah Goldsmith.
+    static bool createdIterator = false;
+    static UBreakIterator* iterator;
+    UErrorCode status;
+    if (!createdIterator) {
+        status = U_ZERO_ERROR;
+        iterator = ubrk_open(UBRK_WORD, "en_us", 0, 0, &status);
+        createdIterator = true;
+    }
+    if (!iterator)
+        return 0;
 
-    c->s = newQCharVector(l);
-    c->l = l;
+    status = U_ZERO_ERROR;
+    ubrk_setText(iterator, reinterpret_cast<const ::UChar*>(string), length, &status);
+    if (status != U_ZERO_ERROR)
+        return 0;
 
-    if ( l ) c->s[0] = s[0].upper();
+    return iterator;
+}
+
+StringImpl* StringImpl::capitalize(QChar previous) const
+{
+    StringImpl* capitalizedString = new StringImpl;
+    if (!m_length)
+        return capitalizedString;
     
-    // This patch takes care of a lot of the text_transform: capitalize problems, particularly
-    // with the apostrophe. But it is just a temporary fix until we implement UBreakIterator as a 
-    // way to determine when to break for words.
-    for (unsigned int i = 0; i < l; i++) {
-        if (haveCapped) {
-            if (s[i].isSpace()) 
-                haveCapped = false;
-            c->s[i] = s[i];
-        } else if (s[i].isLetterOrNumber()) {
-            c->s[i] = s[i].upper();
-            haveCapped = true;
-        } else 
-            c->s[i] = s[i];
+    QChar* stringWithPrevious = newQCharVector(m_length + 1);
+    stringWithPrevious[0] = previous;
+    for (unsigned i = 1; i < m_length + 1; i++)
+        stringWithPrevious[i] = m_data[i - 1];
+    
+    UBreakIterator* boundary = getWordBreakIterator(stringWithPrevious, m_length + 1);
+    if (!boundary) {
+        deleteQCharVector(stringWithPrevious);
+        return capitalizedString;
     }
     
-    return c;
+    capitalizedString->m_data = newQCharVector(m_length);
+    capitalizedString->m_length = m_length;
+    
+    int32_t endOfWord;
+    int32_t startOfWord = ubrk_first(boundary);
+    for (endOfWord = ubrk_next(boundary); endOfWord != UBRK_DONE; startOfWord = endOfWord, endOfWord = ubrk_next(boundary)) {
+        if (startOfWord != 0) // Ignore first char of previous string
+            capitalizedString->m_data[startOfWord - 1] = stringWithPrevious[startOfWord].upper();
+        for (int i = startOfWord + 1; i < endOfWord; i++)
+            capitalizedString->m_data[i - 1] = stringWithPrevious[i];
+    }
+    
+    deleteQCharVector(stringWithPrevious);
+    return capitalizedString;
 }
 
 int StringImpl::toInt(bool* ok) const
@@ -407,33 +439,28 @@ int StringImpl::toInt(bool* ok) const
     unsigned i = 0;
 
     // Allow leading spaces.
-    for (; i != l; ++i) {
-        if (!s[i].isSpace()) {
+    for (; i != m_length; ++i) {
+        if (!m_data[i].isSpace())
             break;
-        }
     }
     
     // Allow sign.
-    if (i != l) {
-        if (s[i] == '+' || s[i] == '-') {
-            ++i;
-        }
-    }
+    if (i != m_length && (m_data[i] == '+' || m_data[i] == '-'))
+        ++i;
     
     // Allow digits.
-    for (; i != l; ++i) {
-        if (!s[i].isDigit()) {
+    for (; i != m_length; ++i) {
+        if (!m_data[i].isDigit())
             break;
-        }
     }
     
-    return QConstString(s, i).string().toInt(ok);
+    return QConstString(m_data, i).string().toInt(ok);
 }
 
-static bool equal(const QChar* a, const char* b, int l)
+static bool equal(const QChar* a, const char* b, int m_length)
 {
-    ASSERT(l >= 0);
-    while (l--) {
+    ASSERT(m_length >= 0);
+    while (m_length--) {
         if (*a != *b)
             return false;
 	a++; b++;
@@ -441,10 +468,10 @@ static bool equal(const QChar* a, const char* b, int l)
     return true;
 }
 
-static bool equalCaseInsensitive(const QChar* a, const char* b, int l)
+static bool equalCaseInsensitive(const QChar* a, const char* b, int m_length)
 {
-    ASSERT(l >= 0);
-    while (l--) {
+    ASSERT(m_length >= 0);
+    while (m_length--) {
         if (tolower(a->unicode()) != tolower(*b))
             return false;
 	a++; b++;
@@ -452,10 +479,10 @@ static bool equalCaseInsensitive(const QChar* a, const char* b, int l)
     return true;
 }
 
-static bool equalCaseInsensitive(const QChar* a, const QChar* b, int l)
+static bool equalCaseInsensitive(const QChar* a, const QChar* b, int m_length)
 {
-    ASSERT(l >= 0);
-    while (l--) {
+    ASSERT(m_length >= 0);
+    while (m_length--) {
         if (tolower(a->unicode()) != tolower(b->unicode()))
             return false;
 	a++; b++;
@@ -467,7 +494,7 @@ static bool equalCaseInsensitive(const QChar* a, const QChar* b, int l)
 // Our usage patterns are typically small strings.  In time trials
 // this simplistic algorithm is much faster than Boyer-Moore or hash
 // based algorithms.
-// NOTE: Those time trials were done when this function was part of KWQ's QString
+// NOTE: Those time trials were done when this function was part of KWQ's DeprecatedString
 // It was copied here and changed slightly since.
 int StringImpl::find(const char* chs, int index, bool caseSensitive) const
 {
@@ -475,7 +502,7 @@ int StringImpl::find(const char* chs, int index, bool caseSensitive) const
         return -1;
 
     int chsLength = strlen(chs);
-    int n = l - index;
+    int n = m_length - index;
     if (n < 0)
         return -1;
     n -= chsLength - 1;
@@ -485,18 +512,18 @@ int StringImpl::find(const char* chs, int index, bool caseSensitive) const
     const char* chsPlusOne = chs + 1;
     int chsLengthMinusOne = chsLength - 1;
     
-    const QChar* ptr = s + index - 1;
+    const QChar* ptr = m_data + index - 1;
     if (caseSensitive) {
         QChar c = *chs;
         do {
             if (*++ptr == c && equal(ptr + 1, chsPlusOne, chsLengthMinusOne))
-                return l - chsLength - n + 1;
+                return m_length - chsLength - n + 1;
         } while (--n);
     } else {
         int lc = tolower((unsigned char)*chs);
         do {
             if (tolower((++ptr)->unicode()) == lc && equalCaseInsensitive(ptr + 1, chsPlusOne, chsLengthMinusOne))
-                return l - chsLength - n + 1;
+                return m_length - chsLength - n + 1;
         } while (--n);
     }
 
@@ -506,25 +533,25 @@ int StringImpl::find(const char* chs, int index, bool caseSensitive) const
 int StringImpl::find(const QChar c, int start) const
 {
     unsigned int index = start;
-    if (index >= l )
+    if (index >= m_length )
         return -1;
-    while(index < l) {
-	if (s[index] == c)
+    while(index < m_length) {
+	if (m_data[index] == c)
             return index;
 	index++;
     }
     return -1;
 }
 
-// This was copied from KWQ's QString and made to work here w/ small modifications.
-// FIXME comments were from the QString version.
+// This was copied from DeprecatedString and made to work here w/ small modifications.
+// FIXME comments were from the DeprecatedString version.
 int StringImpl::find(const StringImpl* str, int index, bool caseSensitive) const
 {
     // FIXME, use the first character algorithm
     /*
       We use some weird hashing for efficiency's sake.  Instead of
       comparing strings, we compare the sum of str with that of
-      a part of this QString.  Only if that matches, we call memcmp
+      a part of this DeprecatedString.  Only if that matches, we call memcmp
       or ucstrnicmp.
 
       The hash value of a string is the sum of the cells of its
@@ -532,17 +559,17 @@ int StringImpl::find(const StringImpl* str, int index, bool caseSensitive) const
     */
     ASSERT(str);
     if (index < 0)
-	index += l;
-    int lstr = str->l;
-    int lthis = l - index;
-    if ((unsigned)lthis > l)
+	index += m_length;
+    int lstr = str->m_length;
+    int lthis = m_length - index;
+    if ((unsigned)lthis > m_length)
 	return -1;
     int delta = lthis - lstr;
     if (delta < 0)
 	return -1;
 
-    const QChar* uthis = s + index;
-    const QChar* ustr = str->s;
+    const QChar* uthis = m_data + index;
+    const QChar* ustr = str->m_data;
     unsigned hthis = 0;
     unsigned hstr = 0;
     if (caseSensitive) {
@@ -578,12 +605,12 @@ int StringImpl::find(const StringImpl* str, int index, bool caseSensitive) const
     }
 }
 
-bool StringImpl::endsWith(const StringImpl* s, bool caseSensitive) const
+bool StringImpl::endsWith(const StringImpl* m_data, bool caseSensitive) const
 {
-    ASSERT(s);
-    int start = l - s->l;
+    ASSERT(m_data);
+    int start = m_length - m_data->m_length;
     if (start >= 0)
-        return (find(s, start, caseSensitive) == start);
+        return (find(m_data, start, caseSensitive) == start);
     return false;
 }
 
@@ -592,25 +619,45 @@ StringImpl* StringImpl::replace(QChar oldC, QChar newC)
     if (oldC == newC)
         return this;
     unsigned i;
-    for (i = 0; i != l; ++i)
-	if (s[i] == oldC)
+    for (i = 0; i != m_length; ++i)
+	if (m_data[i] == oldC)
             break;
-    if (i == l)
+    if (i == m_length)
         return this;
 
     StringImpl* c = new StringImpl;
 
-    c->s = newQCharVector(l);
-    c->l = l;
+    c->m_data = newQCharVector(m_length);
+    c->m_length = m_length;
 
-    for (i = 0; i != l; ++i) {
-        QChar ch = s[i];
+    for (i = 0; i != m_length; ++i) {
+        QChar ch = m_data[i];
 	if (ch == oldC)
             ch = newC;
-        c->s[i] = ch;
+        c->m_data[i] = ch;
     }
 
     return c;
+}
+
+StringImpl* StringImpl::replace(unsigned index, unsigned len, const StringImpl* str)
+{
+    StringImpl* m_data = copy();
+    m_data->remove(index, len);
+    m_data->insert(str, index);
+    return m_data;
+}
+
+StringImpl* StringImpl::replace(QChar pattern, const StringImpl* str)
+{
+    int slen = str ? str->length() : 0;
+    int index = 0;
+    StringImpl* result = this;
+    while ((index = result->find(pattern, index)) >= 0) {
+        result = result->replace(index, 1, str);
+        index += slen;
+    }
+    return result;
 }
 
 bool equal(const StringImpl* a, const StringImpl* b)
@@ -625,8 +672,8 @@ bool equal(const StringImpl* a, const char* b)
     if (!b)
         return !a;
 
-    unsigned length = a->l;
-    const QChar* as = a->s;
+    unsigned length = a->length();
+    const QChar* as = a->unicode();
     for (unsigned i = 0; i != length; ++i) {
         char c = b[i];
         if (!c)
@@ -645,8 +692,8 @@ bool equal(const char* a, const StringImpl* b)
     if (!b)
         return !a;
 
-    unsigned length = b->l;
-    const QChar* bs = b->s;
+    unsigned length = b->length();
+    const QChar* bs = b->unicode();
     for (unsigned i = 0; i != length; ++i) {
         char c = a[i];
         if (!c)
@@ -670,8 +717,8 @@ bool equalIgnoringCase(const StringImpl* a, const char* b)
     if (!b)
         return !a;
 
-    unsigned length = a->l;
-    const QChar* as = a->s;
+    unsigned length = a->length();
+    const QChar* as = a->unicode();
     for (unsigned i = 0; i != length; ++i) {
         char c = b[i];
         if (!c)
@@ -690,8 +737,8 @@ bool equalIgnoringCase(const char* a, const StringImpl* b)
     if (!b)
         return !a;
 
-    unsigned length = b->l;
-    const QChar* bs = b->s;
+    unsigned length = b->length();
+    const QChar* bs = b->unicode();
     for (unsigned i = 0; i != length; ++i) {
         char c = a[i];
         if (!c)
@@ -709,27 +756,27 @@ const unsigned PHI = 0x9e3779b9U;
 
 // Paul Hsieh's SuperFastHash
 // http://www.azillionmonkeys.com/qed/hash.html
-unsigned StringImpl::computeHash(const QChar* s, unsigned len)
+unsigned StringImpl::computeHash(const QChar* m_data, unsigned len)
 {
-    unsigned l = len;
+    unsigned m_length = len;
     uint32_t hash = PHI;
     uint32_t tmp;
     
-    int rem = l & 1;
-    l >>= 1;
+    int rem = m_length & 1;
+    m_length >>= 1;
     
     // Main loop
-    for (; l > 0; l--) {
-        hash += s[0].unicode();
-        tmp = (s[1].unicode() << 11) ^ hash;
+    for (; m_length > 0; m_length--) {
+        hash += m_data[0].unicode();
+        tmp = (m_data[1].unicode() << 11) ^ hash;
         hash = (hash << 16) ^ tmp;
-        s += 2;
+        m_data += 2;
         hash += hash >> 11;
     }
     
     // Handle end case
     if (rem) {
-        hash += s[0].unicode();
+        hash += m_data[0].unicode();
         hash ^= hash << 11;
         hash += hash >> 17;
     }
@@ -752,31 +799,31 @@ unsigned StringImpl::computeHash(const QChar* s, unsigned len)
 
 // Paul Hsieh's SuperFastHash
 // http://www.azillionmonkeys.com/qed/hash.html
-unsigned StringImpl::computeHash(const char* s)
+unsigned StringImpl::computeHash(const char* m_data)
 {
     // This hash is designed to work on 16-bit chunks at a time. But since the normal case
     // (above) is to hash UTF-16 characters, we just treat the 8-bit chars as if they
     // were 16-bit chunks, which should give matching results
 
-    unsigned l = strlen(s);
+    unsigned m_length = strlen(m_data);
     uint32_t hash = PHI;
     uint32_t tmp;
     
-    int rem = l & 1;
-    l >>= 1;
+    int rem = m_length & 1;
+    m_length >>= 1;
     
     // Main loop
-    for (; l > 0; l--) {
-        hash += (unsigned char)s[0];
-        tmp = ((unsigned char)s[1] << 11) ^ hash;
+    for (; m_length > 0; m_length--) {
+        hash += (unsigned char)m_data[0];
+        tmp = ((unsigned char)m_data[1] << 11) ^ hash;
         hash = (hash << 16) ^ tmp;
-        s += 2;
+        m_data += 2;
         hash += hash >> 11;
     }
     
     // Handle end case
     if (rem) {
-        hash += (unsigned char)s[0];
+        hash += (unsigned char)m_data[0];
         hash ^= hash << 11;
         hash += hash >> 17;
     }
@@ -799,10 +846,10 @@ unsigned StringImpl::computeHash(const char* s)
 
 const char* StringImpl::ascii() const
 {
-    char* buffer = new char[l + 1];
+    char* buffer = new char[m_length + 1];
     char* p = buffer;
-    for (unsigned i = 0; i != l; ++i) {
-        unsigned short c = s[i].unicode();
+    for (unsigned i = 0; i != m_length; ++i) {
+        unsigned short c = m_data[i].unicode();
         if (c >= 0x20 && c < 0x7F)
             *p++ = c;
         else
@@ -810,6 +857,16 @@ const char* StringImpl::ascii() const
     }
     *p++ = '\0';
     return buffer;
+}
+
+StringImpl::StringImpl(const Identifier& str)
+{
+    initWithQChar(reinterpret_cast<const QChar*>(str.data()), str.size());
+}
+
+StringImpl::StringImpl(const UString& str)
+{
+    initWithQChar(reinterpret_cast<const QChar*>(str.data()), str.size());
 }
 
 } // namespace WebCore

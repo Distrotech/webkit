@@ -267,34 +267,6 @@ NSString *WebPluginContainerKey =   @"WebPluginContainer";
     [[wv _UIDelegateForwarder] webView:wv setStatusBarVisible:visible];
 }
 
-- (void)setWindowFrame:(NSRect)frameRect
-{
-    ASSERT(_frame != nil);
-    WebView *webView = [self webView];
-    [[webView _UIDelegateForwarder] webView:webView setFrame:frameRect];
-}
-
-- (NSRect)windowFrame
-{
-    ASSERT(_frame != nil);
-    WebView *webView = [self webView];
-    return [[webView _UIDelegateForwarder] webViewFrame:webView];
-}
-
-- (void)setWindowContentRect:(NSRect)contentRect
-{
-    ASSERT(_frame != nil);
-    WebView *webView = [self webView];
-    [[webView _UIDelegateForwarder] webView:webView setFrame:contentRect];
-}
-
-- (NSRect)windowContentRect
-{
-    ASSERT(_frame != nil);
-    WebView *webView = [self webView];
-    return [[webView _UIDelegateForwarder] webViewContentRect:webView];
-}
-
 - (void)setWindowIsResizable:(BOOL)resizable
 {
     ASSERT(_frame != nil);
@@ -637,7 +609,7 @@ NSString *WebPluginContainerKey =   @"WebPluginContainer";
 
 - (void)reportClientRedirectCancelled:(BOOL)cancelWithLoadInProgress
 {
-    [_frame _clientRedirectCancelled:cancelWithLoadInProgress];
+    [_frame _clientRedirectCancelledOrFinished:cancelWithLoadInProgress];
 }
 
 - (void)close
@@ -830,13 +802,10 @@ NSString *WebPluginContainerKey =   @"WebPluginContainer";
 
 - (NSView *)_nextKeyViewOutsideWebFrameViewsWithValidityCheck:(BOOL)mustBeValid
 {
-    if (_inNextKeyViewOutsideWebFrameViews) {
-        // We should never get here, but unrepro bug 3997185 says we sometimes do.
-        // So we'll fail on debug builds to try to catch the problem, but on
-        // deployment builds we'll return nil to avoid recursing forever.
-        ASSERT_NOT_REACHED();
+    // We can get here in unusual situations such as the one listed in 4451831, so we
+    // return nil to avoid an infinite recursion.
+    if (_inNextKeyViewOutsideWebFrameViews)
         return nil;
-    }
     
     _inNextKeyViewOutsideWebFrameViews = YES;
     WebView *webView = [self webView];
@@ -890,13 +859,6 @@ NSString *WebPluginContainerKey =   @"WebPluginContainer";
 - (void)tokenizerProcessedData
 {
     [_frame _checkLoadComplete];
-}
-
-// OK to be an NSString rather than an NSURL.
-// This URL is only used for coloring visited links.
-- (NSString *)requestedURLString
-{
-    return [[[[self dataSource] request] URL] _web_originalDataAsString];
 }
 
 - (NSString *)incomingReferrer
@@ -1604,6 +1566,8 @@ static id <WebFormDelegate> formDelegate(WebFrameBridge *self)
         case WebUndoActionPasteFont: return UI_STRING_KEY("Paste Font", "Paste Font (Undo action name)", "Undo action name");
         case WebUndoActionPasteRuler: return UI_STRING_KEY("Paste Ruler", "Paste Ruler (Undo action name)", "Undo action name");
         case WebUndoActionTyping: return UI_STRING_KEY("Typing", "Typing (Undo action name)", "Undo action name");
+        case WebUndoActionCreateLink: return UI_STRING_KEY("Create Link", "Create Link (Undo action name)", "Undo action name");
+        case WebUndoActionUnlink: return UI_STRING_KEY("Unlink", "Unlink (Undo action name)", "Undo action name");
     }
     return nil;
 }

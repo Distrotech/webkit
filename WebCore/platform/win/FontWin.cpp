@@ -26,61 +26,13 @@
 #include "config.h"
 #include "Font.h"
 
+#include <cairo-win32.h>
+#include "FontData.h"
 #include "FontDataSet.h"
 #include "GraphicsContext.h"
-#include <cairo.h>
-#include <cairo-win32.h>
-
+#include "IntRect.h"
 
 namespace WebCore {
-
-class FontData
-{
-public:
-    FontData(HFONT font, const FontDescription& fontDescription) {
-        m_font = font;
-        m_fontFace = cairo_win32_font_face_create_for_hfont(font);
-        cairo_matrix_t sizeMatrix, ctm;
-        cairo_matrix_init_identity(&ctm);
-        cairo_matrix_init_scale(&sizeMatrix, fontDescription.computedPixelSize(), fontDescription.computedPixelSize());
-        cairo_font_options_t* fontOptions = cairo_font_options_create();
-        m_scaledFont = cairo_scaled_font_create(m_fontFace, &sizeMatrix, &ctm, fontOptions);
-        cairo_font_options_destroy(fontOptions);
-    }
-
-    ~FontData() {
-        cairo_font_face_destroy(m_fontFace);
-        cairo_scaled_font_destroy(m_scaledFont);
-        DeleteObject(m_font);
-    }
-
-    HFONT hfont() const { return m_font; }
-    cairo_scaled_font_t* scaledFont() const { return m_scaledFont; }
-
-    void setMetrics(int ascent, int descent, int xHeight, int lineSpacing)
-    {
-        m_ascent = ascent;
-        m_descent = descent;
-        m_xHeight = xHeight;
-        m_lineSpacing = lineSpacing;
-    }
-
-    int ascent() const { return m_ascent; }
-    int descent() const { return m_descent; }
-    int xHeight() const { return m_xHeight; }
-    int lineSpacing() const { return m_lineSpacing; }
-
-private:
-    HFONT m_font;
-
-    int m_ascent;
-    int m_descent;
-    int m_xHeight;
-    int m_lineSpacing;
-
-    cairo_font_face_t* m_fontFace;
-    cairo_scaled_font_t* m_scaledFont;
-};
 
 FontData* getFontData(const FontDescription& fontDescription, const AtomicString& fontFace)
 {
@@ -136,6 +88,8 @@ FontData* getFontData(const FontDescription& fontDescription, const AtomicString
     if (resultLength > 0)
         resultLength--; // ignore the null terminator
     RestoreDC(dc, -1);
+    ReleaseDC(0, dc);
+    dc = 0;
     if (!equalIgnoringCase(fontFace, String((QChar*)name, resultLength))) {
         DeleteObject(font);
         return 0;
@@ -199,17 +153,11 @@ FontData* FontDataSet::primaryFont(const FontDescription& fontDescription) const
     return defaultFont;
 }
 
-float Font::floatWidth(const QChar* str, int slen, int pos, int len,
-                       int tabWidth, int xpos) const
+static IntSize hackishExtentForString(HDC dc, FontData* font, const QChar* str, int slen, int pos, int len, int tabWidth, int xpos)
 {
-    FontData* font = m_dataSet->primaryFont(fontDescription());
-    if (!font)
-        return 0;
-
-    HDC dc = GetDC((HWND)0); // FIXME: Need a way to get to the real HDC.
     SaveDC(dc);
 
-    SelectObject(dc, font->hfont());
+    SelectObject(dc, font->platformData().hfont());
 
     // Get the text extent of the characters.
     // FIXME: Eventually we will have to go glyph by glyph.  For now we just assume that all
@@ -223,9 +171,21 @@ float Font::floatWidth(const QChar* str, int slen, int pos, int len,
     RestoreDC(dc, -1);
 
     if (!result)
+        return IntSize();
+    return s;
+}
+
+float Font::floatWidth(const QChar* str, int slen, int pos, int len,
+                       int tabWidth, int xpos) const
+{
+    FontData* font = m_dataSet->primaryFont(fontDescription());
+    if (!font)
         return 0;
 
-    return s.cx;
+    HDC dc = GetDC((HWND)0); // FIXME: Need a way to get to the real HDC.
+    IntSize runSize = hackishExtentForString(dc, font, str, slen, pos, len, tabWidth, xpos);
+    ReleaseDC(0, dc);
+    return runSize.width();
 }
 
 int Font::ascent() const
@@ -265,6 +225,18 @@ bool Font::isFixedPitch() const
     return m_dataSet->isFixedPitch(fontDescription());
 }
 
+static void convertRange(int from, int to, int len, int& offset, int& length)
+{
+    offset = 0;
+    length = len;
+    if (from > 0) {
+        offset = from;
+        length = len - from;
+    }
+    if (to > 0)
+        length = to - from;
+}
+
 void Font::drawText(const GraphicsContext* context, int x, int y, int tabWidth, int xpos, const QChar* str, int len, int from, int to,
                     int toAdd, TextDirection d, bool visuallyOrdered) const
 {
@@ -276,16 +248,10 @@ void Font::drawText(const GraphicsContext* context, int x, int y, int tabWidth, 
     HDC dc = cairo_win32_surface_get_dc(surface);
 
     SaveDC(dc);
-    SelectObject(dc, font->hfont());
+    SelectObject(dc, font->platformData().hfont());
 
-    int offset = 0;
-    int length = len;
-    if (from > 0) {
-        offset = from;
-        length = len - from;
-    }
-    if (to > 0)
-        length = to - from;
+    int offset, length;
+    convertRange(from, to, len, offset, length);
 
     y -= font->ascent();
 
@@ -295,16 +261,84 @@ void Font::drawText(const GraphicsContext* context, int x, int y, int tabWidth, 
     TextOutW(dc, x, y, (LPCWSTR)(str+offset), length);
 
     RestoreDC(dc, -1);
+    // No need to ReleaseDC the HDC borrowed from cairo
 }
 
 void Font::drawHighlightForText(const GraphicsContext* context, int x, int y, int h, int tabWidth, int xpos, const QChar* str,
                                 int len, int from, int to, int toAdd,
                                 TextDirection d, bool visuallyOrdered, const Color& backgroundColor) const
 {
+    if (!backgroundColor.isValid())
+        return;
+
+    FontData* font = m_dataSet->primaryFont(fontDescription());
+    if (!font)
+        return;
+
+    cairo_surface_t* surface = cairo_get_target(context->platformContext());
+    HDC dc = cairo_win32_surface_get_dc(surface);
+
+    int offset, length;
+    convertRange(from, to, len, offset, length);
+    IntSize runSize = hackishExtentForString(dc, font, str, len, offset, length, tabWidth, xpos);
+
+    // FIXME: this const_cast should be removed when this code is made real.
+    const_cast<GraphicsContext*>(context)->fillRect(IntRect(IntPoint(x, y), runSize), backgroundColor);
+}
+
+IntRect Font::selectionRectForText(int x, int y, int h, int tabWidth, int xpos, const QChar* str, int slen,
+                                   int pos, int len, int toAdd, bool rtl, bool visuallyOrdered, int from, int to) const
+{
+    FontData* font = m_dataSet->primaryFont(fontDescription());
+    if (!font)
+        return IntRect();
+
+    int offset, length;
+    convertRange(from, to, len, offset, length);
+
+    HDC dc = GetDC((HWND)0); // FIXME: Need a way to get to the real HDC.
+    IntSize runSize = hackishExtentForString(dc, font, str, slen, offset, length, tabWidth, xpos);
+    ReleaseDC(0, dc);
+    return IntRect(x, y, runSize.width(), runSize.height());
+}
+
+int Font::checkSelectionPoint(const QChar* str, int slen, int offset, int len, int toAdd, int tabWidth, int xpos, int x,
+                              WebCore::TextDirection, bool visuallyOrdered, bool includePartialGlyphs) const
+{
+    FontData* font = m_dataSet->primaryFont(fontDescription());
+    if (!font)
+        return 0;
+
+    HDC dc = GetDC((HWND)0); // FIXME: Need a way to get to the real HDC.
+
+    SaveDC(dc);
+    SelectObject(dc, font->platformData().hfont());
+    
+    int* caretPositions = (int*)fastMalloc(len * sizeof(int));
+    GCP_RESULTS results;
+    memset(&results, 0, sizeof(GCP_RESULTS));
+    results.lStructSize = sizeof(GCP_RESULTS);
+    results.lpCaretPos = caretPositions;
+    results.nGlyphs = len;
+    
+    GetCharacterPlacement(dc, (LPCTSTR)(str+offset), len, 0, &results, 0);
+
+    unsigned selectionOffset = 0;
+    while (selectionOffset < len && caretPositions[selectionOffset] < x)
+        selectionOffset++;
+
+    fastFree(caretPositions);
+
+    RestoreDC(dc, -1);
+    ReleaseDC(0, dc);
+    return selectionOffset;
 }
 
 void Font::drawLineForText(const GraphicsContext* context, int x, int y, int yOffset, int width) const
 {
+    IntPoint origin(x, y + yOffset + 1);
+    IntPoint endPoint = origin + IntPoint(width, 0);
+    const_cast<GraphicsContext*>(context)->drawLine(origin, endPoint);
 }
 
 void Font::drawLineForMisspelling(const GraphicsContext* context, int x, int y, int width) const
@@ -313,8 +347,7 @@ void Font::drawLineForMisspelling(const GraphicsContext* context, int x, int y, 
 
 int Font::misspellingLineThickness(const GraphicsContext* context) const
 {
-    return 0;
+    return 1;
 }
-
 
 }

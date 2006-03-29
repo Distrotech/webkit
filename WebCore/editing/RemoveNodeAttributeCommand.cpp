@@ -25,19 +25,13 @@
 
 #include "config.h"
 #include "RemoveNodeAttributeCommand.h"
-
-#include "dom_elementimpl.h"
+#include "Element.h"
 
 #include <kxmlcore/Assertions.h>
 
-using DOM::DocumentImpl;
-using DOM::ElementImpl;
-using DOM::NodeImpl;
-using DOM::QualifiedName;
+namespace WebCore {
 
-namespace khtml {
-
-RemoveNodeAttributeCommand::RemoveNodeAttributeCommand(DocumentImpl *document, ElementImpl *element, const QualifiedName& attribute)
+RemoveNodeAttributeCommand::RemoveNodeAttributeCommand(Document *document, Element *element, const QualifiedName& attribute)
     : EditCommand(document), m_element(element), m_attribute(attribute)
 {
     ASSERT(m_element);
@@ -65,4 +59,4 @@ void RemoveNodeAttributeCommand::doUnapply()
     ASSERT(ec == 0);
 }
 
-} // namespace khtml
+} // namespace WebCore

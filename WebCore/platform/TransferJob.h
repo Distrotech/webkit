@@ -70,10 +70,10 @@ public:
 
     int error() const;
     void setError(int);
-    QString errorText() const;
+    String errorText() const;
     bool isErrorPage() const;
-    QString queryMetaData(const QString&) const;
-    void addMetaData(const QString& key, const QString& value);
+    String queryMetaData(const String&) const;
+    void addMetaData(const String& key, const String& value);
     void addMetaData(const HashMap<String, String>&);
     void kill();
 

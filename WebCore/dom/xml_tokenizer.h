@@ -30,9 +30,9 @@
 namespace WebCore {
 
 class DocLoader;
-class DocumentFragmentImpl;
-class DocumentImpl;
-class ElementImpl;
+class DocumentFragment;
+class Document;
+class Element;
 class FrameView;
 class SegmentedString;
 
@@ -51,6 +51,7 @@ public:
     virtual bool isWaitingForScripts() const = 0;
     virtual void stopParsing() { m_parserStopped = true; }
     virtual bool processingData() const { return false; }
+    virtual int executingScript() const { return 0; }
 
 protected:
     // The tokenizer has buffers, so parsing may continue even after
@@ -59,13 +60,13 @@ protected:
     bool m_parserStopped;
 };
 
-Tokenizer* newXMLTokenizer(DocumentImpl*, FrameView* = 0);
+Tokenizer* newXMLTokenizer(Document*, FrameView* = 0);
 #if KHTML_XSLT
-void* xmlDocPtrForString(const QString& source, const QString& URL = QString());
+void* xmlDocPtrForString(const DeprecatedString& source, const DeprecatedString& URL = DeprecatedString());
 void setLoaderForLibXMLCallbacks(DocLoader*);
 #endif
 HashMap<String, String> parseAttributes(const String&, bool& attrsOK);
-bool parseXMLDocumentFragment(const String&, DocumentFragmentImpl*, ElementImpl* parent = 0);
+bool parseXMLDocumentFragment(const String&, DocumentFragment*, Element* parent = 0);
 
 }
 

@@ -32,19 +32,20 @@
 #include "ApplyStyleCommand.h"
 #include "Cache.h"
 #include "CachedCSSStyleSheet.h"
-#include "DOMImplementationImpl.h"
+#include "DOMImplementation.h"
 #include "DocLoader.h"
-#include "EditingTextImpl.h"
+#include "EditingText.h"
 #include "EventNames.h"
+#include "FloatRect.h"
 #include "Frame.h"
 #include "FrameView.h"
 #include "GraphicsContext.h"
-#include "HTMLCollectionImpl.h"
-#include "HTMLFormElementImpl.h"
-#include "HTMLGenericFormElementImpl.h"
-#include "MouseEvent.h"
+#include "HTMLCollection.h"
+#include "HTMLFormElement.h"
+#include "HTMLGenericFormElement.h"
+#include "PlatformMouseEvent.h"
 #include "MouseEventWithHitTestResults.h"
-#include "NodeListImpl.h"
+#include "NodeList.h"
 #include "PlatformString.h"
 #include "Plugin.h"
 #include "RenderBlock.h"
@@ -52,26 +53,28 @@
 #include "SegmentedString.h"
 #include "TypingCommand.h"
 #include "VisiblePosition.h"
-#include "css_computedstyle.h"
+#include "CSSComputedStyleDeclaration.h"
 #include "css_valueimpl.h"
-#include "cssproperties.h"
+#include "CSSPropertyNames.h"
 #include "cssstyleselector.h"
 #include "dom2_eventsimpl.h"
-#include "dom2_rangeimpl.h"
+#include "Range.h"
 #include "html_baseimpl.h"
-#include "html_documentimpl.h"
+#include "HTMLDocument.h"
 #include "html_imageimpl.h"
 #include "html_objectimpl.h"
 #include "htmlediting.h"
-#include "htmlnames.h"
+#include "HTMLNames.h"
 #include "khtml_settings.h"
 #include "kjs_proxy.h"
 #include "kjs_window.h"
 #include "loader.h"
 #include "markup.h"
-#include "render_canvas.h"
+#include "RenderCanvas.h"
 #include "render_frames.h"
-#include "visible_text.h"
+#include "RenderLayer.h"
+#include "RenderTheme.h"
+#include "TextIterator.h"
 #include "visible_units.h"
 #include "xml_tokenizer.h"
 #include "xmlhttprequest.h"
@@ -102,6 +105,7 @@ using namespace EventNames;
 using namespace HTMLNames;
 
 const double caretBlinkFrequency = 0.5;
+const double autoscrollInterval = 0.1;
 
 class UserStyleSheetLoader : public CachedObjectClient {
 public:
@@ -116,9 +120,9 @@ public:
         m_cachedSheet->deref(this);
     }
 private:
-    virtual void setStyleSheet(const String&, const String &sheet)
+    virtual void setStyleSheet(const String& /*URL*/, const String& sheet)
     {
-        m_frame->setUserStyleSheet(sheet.qstring());
+        m_frame->setUserStyleSheet(sheet.deprecatedString());
     }
     Frame* m_frame;
     CachedCSSStyleSheet* m_cachedSheet;
@@ -142,10 +146,6 @@ static inline Frame* parentFromOwnerRenderer(RenderPart* ownerRenderer)
 
 Frame::Frame(Page* page, RenderPart* ownerRenderer) 
     : d(new FramePrivate(page, parentFromOwnerRenderer(ownerRenderer), this, ownerRenderer))
-    , _drawSelectionOnly(false)
-    , m_markedTextUsesUnderlines(false)
-    , m_windowHasFocus(false)
-    , frameCount(0)
 {
     AtomicString::init();
     Cache::init();
@@ -215,7 +215,7 @@ Frame::~Frame()
     d = 0;
 }
 
-bool Frame::didOpenURL(const KURL &url)
+bool Frame::didOpenURL(const KURL& url)
 {
   if (d->m_scheduledRedirection == locationChangeScheduledDuringLoad) {
     // A redirect was shceduled before the document was created. This can happen
@@ -228,25 +228,18 @@ bool Frame::didOpenURL(const KURL &url)
   // clear last edit command
   d->m_lastEditCommand = EditCommandPtr();
   
-  URLArgs args( d->m_extension->urlArgs() );
+  closeURL();
 
-  if (!d->m_restored)
-    closeURL();
-
-  if (d->m_restored)
-     d->m_cachePolicy = KIO::CC_Cache;
-  else if (args.reload)
+  if (d->m_request.reload)
      d->m_cachePolicy = KIO::CC_Refresh;
   else
      d->m_cachePolicy = KIO::CC_Verify;
 
-  if (args.doPost() && url.protocol().startsWith("http")) {
-      d->m_job = new TransferJob(this, "POST", url, args.postData);
-      d->m_job->addMetaData("content-type", args.contentType() );
+  if (d->m_request.doPost() && url.protocol().startsWith("http")) {
+      d->m_job = new TransferJob(this, "POST", url, d->m_request.postData);
+      d->m_job->addMetaData("content-type", d->m_request.contentType());
   } else
       d->m_job = new TransferJob(this, "GET", url);
-
-  d->m_job->addMetaData(args.metaData());
 
   d->m_bComplete = false;
   d->m_bLoadingMainResource = true;
@@ -255,18 +248,20 @@ bool Frame::didOpenURL(const KURL &url)
   d->m_kjsStatusBarText = String();
   d->m_kjsDefaultStatusBarText = String();
 
-  d->m_bJScriptEnabled = d->m_settings->isJavaScriptEnabled(url.host());
-  d->m_bJavaEnabled = d->m_settings->isJavaEnabled(url.host());
-  d->m_bPluginsEnabled = d->m_settings->isPluginsEnabled(url.host());
+  d->m_bJScriptEnabled = d->m_settings->isJavaScriptEnabled();
+  d->m_bJavaEnabled = d->m_settings->isJavaEnabled();
+  d->m_bPluginsEnabled = d->m_settings->isPluginsEnabled();
 
   // initializing d->m_url to the new url breaks relative links when opening such a link after this call and _before_ begin() is called (when the first
   // data arrives) (Simon)
   d->m_url = url;
-  if(d->m_url.protocol().startsWith("http") && !d->m_url.host().isEmpty() && d->m_url.path().isEmpty())
+  if (d->m_url.protocol().startsWith("http") && !d->m_url.host().isEmpty() && d->m_url.path().isEmpty())
     d->m_url.setPath("/");
   d->m_workingURL = d->m_url;
 
   started();
+
+  begin(d->m_workingURL);
 
   return true;
 }
@@ -296,7 +291,7 @@ void Frame::stopLoading(bool sendUnload)
 
   if (sendUnload) {
     if (d->m_doc) {
-      if (d->m_bLoadEventEmitted && !d->m_bUnloadEventEmitted ) {
+      if (d->m_bLoadEventEmitted && !d->m_bUnloadEventEmitted) {
         d->m_doc->dispatchWindowEvent(unloadEvent, false, false);
         if (d->m_doc)
           d->m_doc->updateRendering();
@@ -320,7 +315,7 @@ void Frame::stopLoading(bool sendUnload)
   
   d->m_workingURL = KURL();
 
-  if (DocumentImpl *doc = d->m_doc.get()) {
+  if (Document *doc = d->m_doc.get()) {
     if (DocLoader *docLoader = doc->docLoader())
       Cache::loader()->cancelRequests(docLoader);
       XMLHttpRequest::cancelRequests(doc);
@@ -352,31 +347,21 @@ void Frame::setView(FrameView* view)
 
 bool Frame::jScriptEnabled() const
 {
-  return d->m_bJScriptEnabled;
+    return d->m_bJScriptEnabled;
 }
 
-void Frame::setMetaRefreshEnabled( bool enable )
-{
-  d->m_metaRefreshEnabled = enable;
-}
-
-bool Frame::metaRefreshEnabled() const
-{
-  return d->m_metaRefreshEnabled;
-}
-
-KJSProxyImpl *Frame::jScript()
+KJSProxy *Frame::jScript()
 {
     if (!d->m_bJScriptEnabled)
         return 0;
 
     if (!d->m_jscript)
-        d->m_jscript = new KJSProxyImpl(this);
+        d->m_jscript = new KJSProxy(this);
 
     return d->m_jscript;
 }
 
-static bool getString(JSValue* result, QString& string)
+static bool getString(JSValue* result, DeprecatedString& string)
 {
     if (!result)
         return false;
@@ -384,14 +369,14 @@ static bool getString(JSValue* result, QString& string)
     UString ustring;
     if (!result->getString(ustring))
         return false;
-    string = ustring.qstring();
+    string = ustring;
     return true;
 }
 
 void Frame::replaceContentsWithScriptResult(const KURL& url)
 {
     JSValue* ret = executeScript(0, KURL::decode_string(url.url().mid(strlen("javascript:"))));
-    QString scriptResult;
+    DeprecatedString scriptResult;
     if (getString(ret, scriptResult)) {
         begin();
         write(scriptResult);
@@ -399,9 +384,9 @@ void Frame::replaceContentsWithScriptResult(const KURL& url)
     }
 }
 
-JSValue* Frame::executeScript(NodeImpl* n, const QString& script, bool forceUserGesture)
+JSValue* Frame::executeScript(Node* n, const DeprecatedString& script, bool forceUserGesture)
 {
-  KJSProxyImpl *proxy = jScript();
+  KJSProxy *proxy = jScript();
 
   if (!proxy)
     return 0;
@@ -410,43 +395,39 @@ JSValue* Frame::executeScript(NodeImpl* n, const QString& script, bool forceUser
   // If forceUserGesture is true, then make the script interpreter
   // treat it as if triggered by a user gesture even if there is no
   // current DOM event being processed.
-  JSValue* ret = proxy->evaluate(forceUserGesture ? QString::null : d->m_url.url(), 0, script, n);
+  JSValue* ret = proxy->evaluate(forceUserGesture ? DeprecatedString::null : d->m_url.url(), 0, script, n);
   d->m_runningScripts--;
 
   if (!d->m_runningScripts)
       submitFormAgain();
 
-  DocumentImpl::updateDocumentsRendering();
+  Document::updateDocumentsRendering();
 
   return ret;
 }
 
 bool Frame::javaEnabled() const
 {
-#ifndef Q_WS_QWS
-  return d->m_bJavaEnabled;
-#else
-  return false;
-#endif
+    return d->m_settings->isJavaEnabled();
 }
 
 bool Frame::pluginsEnabled() const
 {
-  return d->m_bPluginsEnabled;
+    return d->m_bPluginsEnabled;
 }
 
-void Frame::setAutoloadImages( bool enable )
+void Frame::setAutoloadImages(bool enable)
 {
-  if ( d->m_doc && d->m_doc->docLoader()->autoloadImages() == enable )
+  if (d->m_doc && d->m_doc->docLoader()->autoloadImages() == enable)
     return;
 
-  if ( d->m_doc )
-    d->m_doc->docLoader()->setAutoloadImages( enable );
+  if (d->m_doc)
+    d->m_doc->docLoader()->setAutoloadImages(enable);
 }
 
 bool Frame::autoloadImages() const
 {
-  if ( d->m_doc )
+  if (d->m_doc)
     return d->m_doc->docLoader()->autoloadImages();
 
   return true;
@@ -454,10 +435,9 @@ bool Frame::autoloadImages() const
 
 void Frame::clear(bool clearWindowProperties)
 {
-  if ( d->m_bCleared )
+  if (d->m_bCleared)
     return;
   d->m_bCleared = true;
-  d->m_bClearing = true;
   d->m_mousePressNode = 0;
 
   if (d->m_doc) {
@@ -469,7 +449,7 @@ void Frame::clear(bool clearWindowProperties)
   if (clearWindowProperties && d->m_jscript)
     d->m_jscript->clear();
 
-  if ( d->m_view )
+  if (d->m_view)
     d->m_view->clear();
 
   // do not drop the document before the jscript and view are cleared, as some destructors
@@ -481,34 +461,27 @@ void Frame::clear(bool clearWindowProperties)
 
   d->m_scheduledRedirection = noRedirectionScheduled;
   d->m_delayRedirect = 0;
-  d->m_redirectURL = QString::null;
-  d->m_redirectReferrer = QString::null;
+  d->m_redirectURL = DeprecatedString::null;
+  d->m_redirectReferrer = DeprecatedString::null;
   d->m_redirectLockHistory = true;
   d->m_redirectUserGesture = false;
   d->m_bHTTPRefresh = false;
-  d->m_bClearing = false;
-  d->m_frameNameId = 1;
   d->m_bFirstData = true;
 
   d->m_bMousePressed = false;
 
-  if ( !d->m_haveEncoding )
-    d->m_encoding = QString::null;
+  if (!d->m_haveEncoding)
+    d->m_encoding = DeprecatedString::null;
 }
 
-bool Frame::openFile()
-{
-  return true;
-}
-
-DocumentImpl *Frame::document() const
+Document *Frame::document() const
 {
     if (d)
         return d->m_doc.get();
     return 0;
 }
 
-void Frame::setDocument(DocumentImpl* newDoc)
+void Frame::setDocument(Document* newDoc)
 {
     if (d) {
         if (d->m_doc)
@@ -521,54 +494,46 @@ void Frame::setDocument(DocumentImpl* newDoc)
 
 void Frame::receivedFirstData()
 {
-    begin( d->m_workingURL, d->m_extension->urlArgs().xOffset, d->m_extension->urlArgs().yOffset );
-
     d->m_doc->docLoader()->setCachePolicy(d->m_cachePolicy);
     d->m_workingURL = KURL();
 
     // When the first data arrives, the metadata has just been made available
-    QString qData;
+    DeprecatedString qData;
 
     // Support for http-refresh
-    qData = d->m_job->queryMetaData("http-refresh");
-    if(!qData.isEmpty() && d->m_metaRefreshEnabled) {
+    qData = d->m_job->queryMetaData("http-refresh").deprecatedString();
+    if (!qData.isEmpty()) {
       double delay;
-      int pos = qData.find( ';' );
-      if ( pos == -1 )
-        pos = qData.find( ',' );
+      int pos = qData.find(';');
+      if (pos == -1)
+        pos = qData.find(',');
 
-      if( pos == -1 )
-      {
+      if (pos == -1) {
         delay = qData.stripWhiteSpace().toDouble();
         // We want a new history item if the refresh timeout > 1 second
-        scheduleRedirection( delay, d->m_url.url(), delay <= 1);
-      }
-      else
-      {
+        scheduleRedirection(delay, d->m_url.url(), delay <= 1);
+      } else {
         int end_pos = qData.length();
         delay = qData.left(pos).stripWhiteSpace().toDouble();
-        while ( qData[++pos] == ' ' );
-        if ( qData.find( "url", pos, false ) == pos )
-        {
+        while (qData[++pos] == ' ');
+        if (qData.find("url", pos, false) == pos) {
           pos += 3;
-          while (qData[pos] == ' ' || qData[pos] == '=' )
+          while (qData[pos] == ' ' || qData[pos] == '=')
               pos++;
-          if ( qData[pos] == '"' )
-          {
+          if (qData[pos] == '"') {
               pos++;
               int index = end_pos-1;
-              while( index > pos )
-              {
-                if ( qData[index] == '"' )
+              while (index > pos) {
+                if (qData[index] == '"')
                     break;
                 index--;
               }
-              if ( index > pos )
+              if (index > pos)
                 end_pos = index;
           }
         }
         // We want a new history item if the refresh timeout > 1 second
-        scheduleRedirection( delay, d->m_doc->completeURL( qData.mid( pos, end_pos ) ), delay <= 1);
+        scheduleRedirection(delay, d->m_doc->completeURL(qData.mid(pos, end_pos)), delay <= 1);
       }
       d->m_bHTTPRefresh = true;
     }
@@ -600,7 +565,17 @@ void Frame::childBegin()
     d->m_bComplete = false;
 }
 
-void Frame::begin( const KURL &url, int xOffset, int yOffset )
+void Frame::setResourceRequest(const ResourceRequest& request)
+{
+    d->m_request = request;
+}
+
+const ResourceRequest& Frame::resourceRequest() const
+{
+    return d->m_request;
+}
+
+void Frame::begin(const KURL& url)
 {
   if (d->m_workingURL.isEmpty())
     createEmptyDocument(); // Creates an empty document if we don't have one already
@@ -613,15 +588,10 @@ void Frame::begin( const KURL &url, int xOffset, int yOffset )
   d->m_bLoadEventEmitted = false;
   d->m_bLoadingMainResource = true;
 
-  URLArgs args( d->m_extension->urlArgs() );
-  args.xOffset = xOffset;
-  args.yOffset = yOffset;
-  d->m_extension->setURLArgs( args );
-
   KURL ref(url);
-  ref.setUser(QSTRING_NULL);
-  ref.setPass(QSTRING_NULL);
-  ref.setRef(QSTRING_NULL);
+  ref.setUser(DeprecatedString());
+  ref.setPass(DeprecatedString());
+  ref.setRef(DeprecatedString());
   d->m_referrer = ref.url();
   d->m_url = url;
   KURL baseurl;
@@ -630,40 +600,42 @@ void Frame::begin( const KURL &url, int xOffset, int yOffset )
   if (!d->m_url.isEmpty())
     baseurl = d->m_url;
 
-  if (DOMImplementationImpl::isXMLMIMEType(args.serviceType))
-    d->m_doc = DOMImplementationImpl::instance()->createDocument(d->m_view.get());
+  if (DOMImplementation::isXMLMIMEType(d->m_request.m_responseMIMEType))
+    d->m_doc = DOMImplementation::instance()->createDocument(d->m_view.get());
+  else if (d->m_request.m_responseMIMEType == "text/html")
+    d->m_doc = DOMImplementation::instance()->createHTMLDocument(d->m_view.get());
   else
-    d->m_doc = DOMImplementationImpl::instance()->createHTMLDocument(d->m_view.get());
+    return;
 
   if (!d->m_doc->attached())
-    d->m_doc->attach( );
-  d->m_doc->setURL( d->m_url.url() );
+    d->m_doc->attach();
+  d->m_doc->setURL(d->m_url.url());
   // We prefer m_baseURL over d->m_url because d->m_url changes when we are
   // about to load a new page.
-  d->m_doc->setBaseURL( baseurl.url() );
+  d->m_doc->setBaseURL(baseurl.url());
   if (d->m_decoder)
     d->m_doc->setDecoder(d->m_decoder.get());
-  d->m_doc->docLoader()->setShowAnimations( d->m_settings->showAnimations() );
+  d->m_doc->docLoader()->setShowAnimations(KHTMLSettings::KAnimationEnabled);
 
   updatePolicyBaseURL();
 
-  setAutoloadImages( d->m_settings->autoLoadImages() );
-  QString userStyleSheet = d->m_settings->userStyleSheet();
+  setAutoloadImages(d->m_settings->autoLoadImages());
+  const KURL& userStyleSheet = d->m_settings->userStyleSheetLocation();
 
-  if ( !userStyleSheet.isEmpty() )
-    setUserStyleSheet( KURL( userStyleSheet ) );
+  if (!userStyleSheet.isEmpty())
+    setUserStyleSheetLocation(KURL(userStyleSheet));
 
   restoreDocumentState();
 
   d->m_doc->implicitOpen();
   // clear widget
   if (d->m_view)
-    d->m_view->resizeContents( 0, 0 );
+    d->m_view->resizeContents(0, 0);
 }
 
 void Frame::write(const char* str, int len)
 {
-    if ( !d->m_decoder ) {
+    if (!d->m_decoder) {
         d->m_decoder = new Decoder;
         if (!d->m_encoding.isNull())
             d->m_decoder->setEncodingName(d->m_encoding.latin1(),
@@ -674,43 +646,44 @@ void Frame::write(const char* str, int len)
         if (d->m_doc)
             d->m_doc->setDecoder(d->m_decoder.get());
     }
-  if ( len == 0 )
+  if (len == 0)
     return;
 
-  if ( len == -1 )
-    len = strlen( str );
+  if (len == -1)
+    len = strlen(str);
 
-  QString decoded = d->m_decoder->decode( str, len );
+  DeprecatedString decoded = d->m_decoder->decode(str, len);
 
-  if(decoded.isEmpty()) return;
+  if (decoded.isEmpty())
+    return;
 
-  if(d->m_bFirstData) {
+  if (d->m_bFirstData) {
       // determine the parse mode
-      d->m_doc->determineParseMode( decoded );
+      d->m_doc->determineParseMode(decoded);
       d->m_bFirstData = false;
 
       // ### this is still quite hacky, but should work a lot better than the old solution
-      if(d->m_decoder->visuallyOrdered()) d->m_doc->setVisuallyOrdered();
-      d->m_doc->recalcStyle( NodeImpl::Force );
+      if (d->m_decoder->visuallyOrdered()) d->m_doc->setVisuallyOrdered();
+      d->m_doc->recalcStyle(Node::Force);
   }
 
   if (Tokenizer* t = d->m_doc->tokenizer())
-      t->write( decoded, true );
+      t->write(decoded, true);
 }
 
-void Frame::write( const QString &str )
+void Frame::write(const DeprecatedString& str)
 {
-  if ( str.isNull() )
+  if (str.isNull())
     return;
 
-  if(d->m_bFirstData) {
+  if (d->m_bFirstData) {
       // determine the parse mode
-      d->m_doc->setParseMode( DocumentImpl::Strict );
+      d->m_doc->setParseMode(Document::Strict);
       d->m_bFirstData = false;
   }
   Tokenizer* t = d->m_doc->tokenizer();
-  if(t)
-    t->write( str, true );
+  if (t)
+    t->write(str, true);
 }
 
 void Frame::end()
@@ -725,11 +698,11 @@ void Frame::endIfNotLoading()
         return;
 
     // make sure nothing's left in there...
-    if (d->m_decoder)
-        write(d->m_decoder->flush());
-    if (d->m_doc)
+    if (d->m_doc) {
+        if (d->m_decoder)
+            write(d->m_decoder->flush());
         d->m_doc->finishParsing();
-    else
+    } else
         // WebKit partially uses WebCore when loading non-HTML docs.  In these cases doc==nil, but
         // WebCore is enough involved that we need to checkCompleted() in order for m_bComplete to
         // become true.  An example is when a subframe is a pure text doc, and that subframe is the
@@ -766,7 +739,7 @@ void Frame::gotoAnchor()
     if (!d->m_url.hasRef())
         return;
 
-    QString ref = d->m_url.encodedHtmlRef();
+    DeprecatedString ref = d->m_url.encodedHtmlRef();
     if (!gotoAnchor(ref)) {
         // Can't use htmlRef() here because it doesn't know which encoding to use to decode.
         // Decoding here has to match encoding in completeURL, which means it has to use the
@@ -851,7 +824,7 @@ void Frame::checkEmitLoadEvent()
     // This must only be done when loading the frameset initially (#22039),
     // not when following a link in a frame (#44162).
     if (d->m_doc) {
-        DOMString domain = d->m_doc->domain();
+        String domain = d->m_doc->domain();
         for (Frame* child = tree()->firstChild(); child; child = child->tree()->nextSibling())
             if (child->d->m_doc)
                 child->d->m_doc->setDomain(domain);
@@ -875,14 +848,14 @@ KURL Frame::baseURL() const
     return d->m_doc->baseURL();
 }
 
-QString Frame::baseTarget() const
+String Frame::baseTarget() const
 {
     if (!d->m_doc)
-        return QString();
+        return DeprecatedString();
     return d->m_doc->baseTarget();
 }
 
-KURL Frame::completeURL( const QString &url )
+KURL Frame::completeURL(const DeprecatedString& url)
 {
     if (!d->m_doc)
         return url;
@@ -890,16 +863,16 @@ KURL Frame::completeURL( const QString &url )
     return KURL(d->m_doc->completeURL(url));
 }
 
-void Frame::scheduleRedirection( double delay, const QString &url, bool doLockHistory)
+void Frame::scheduleRedirection(double delay, const DeprecatedString& url, bool doLockHistory)
 {
     if (delay < 0 || delay > INT_MAX / 1000)
       return;
-    if ( d->m_scheduledRedirection == noRedirectionScheduled || delay <= d->m_delayRedirect )
+    if (d->m_scheduledRedirection == noRedirectionScheduled || delay <= d->m_delayRedirect)
     {
        d->m_scheduledRedirection = redirectionScheduled;
        d->m_delayRedirect = delay;
        d->m_redirectURL = url;
-       d->m_redirectReferrer = QString::null;
+       d->m_redirectReferrer = DeprecatedString::null;
        d->m_redirectLockHistory = doLockHistory;
        d->m_redirectUserGesture = false;
 
@@ -909,7 +882,7 @@ void Frame::scheduleRedirection( double delay, const QString &url, bool doLockHi
     }
 }
 
-void Frame::scheduleLocationChange(const QString &url, const QString &referrer, bool lockHistory, bool userGesture)
+void Frame::scheduleLocationChange(const DeprecatedString& url, const DeprecatedString& referrer, bool lockHistory, bool userGesture)
 {
     // Handle a location change of a page with no document as a special case.
     // This may happen when a frame changes the location of another frame.
@@ -946,7 +919,7 @@ bool Frame::isScheduledLocationChangePending() const
     return false;
 }
 
-void Frame::scheduleHistoryNavigation( int steps )
+void Frame::scheduleHistoryNavigation(int steps)
 {
     // navigation will always be allowed in the 0 steps case, which is OK because
     // that's supposed to force a reload.
@@ -957,8 +930,8 @@ void Frame::scheduleHistoryNavigation( int steps )
 
     d->m_scheduledRedirection = historyNavigationScheduled;
     d->m_delayRedirect = 0;
-    d->m_redirectURL = QString::null;
-    d->m_redirectReferrer = QString::null;
+    d->m_redirectURL = DeprecatedString::null;
+    d->m_redirectReferrer = DeprecatedString::null;
     d->m_scheduledHistoryNavigationSteps = steps;
     stopRedirectionTimer();
     if (d->m_bComplete)
@@ -974,12 +947,12 @@ void Frame::cancelRedirection(bool cancelWithLoadInProgress)
     }
 }
 
-void Frame::changeLocation(const QString &URL, const QString &referrer, bool lockHistory, bool userGesture)
+void Frame::changeLocation(const DeprecatedString& URL, const DeprecatedString& referrer, bool lockHistory, bool userGesture)
 {
     if (URL.find("javascript:", 0, false) == 0) {
-        QString script = KURL::decode_string(URL.mid(11));
+        DeprecatedString script = KURL::decode_string(URL.mid(11));
         JSValue* result = executeScript(0, script, userGesture);
-        QString scriptResult;
+        DeprecatedString scriptResult;
         if (getString(result, scriptResult)) {
             begin(url());
             write(scriptResult);
@@ -988,13 +961,12 @@ void Frame::changeLocation(const QString &URL, const QString &referrer, bool loc
         return;
     }
 
-    URLArgs args;
-
-    args.setLockHistory(lockHistory);
+    ResourceRequest request(completeURL(URL));
+    request.setLockHistory(lockHistory);
     if (!referrer.isEmpty())
-        args.metaData().set("referrer", referrer);
+        request.setReferrer(referrer);
 
-    urlSelected(URL, "_self", args);
+    urlSelected(request, "_self");
 }
 
 void Frame::redirectionTimerFired(Timer<Frame>*)
@@ -1007,7 +979,7 @@ void Frame::redirectionTimerFired(Timer<Frame>*)
         // in both IE and NS (but not in Mozilla).... we can't easily do that
         // in Konqueror...
         if (d->m_scheduledHistoryNavigationSteps == 0) // add && parent() to get only frames, but doesn't matter
-            openURL( url() ); /// ## need args.reload=true?
+            openURL(url()); /// ## need args.reload=true?
         else {
             if (d->m_extension) {
                 d->m_extension->goBackOrForward(d->m_scheduledHistoryNavigationSteps);
@@ -1016,15 +988,15 @@ void Frame::redirectionTimerFired(Timer<Frame>*)
         return;
     }
 
-    QString URL = d->m_redirectURL;
-    QString referrer = d->m_redirectReferrer;
+    DeprecatedString URL = d->m_redirectURL;
+    DeprecatedString referrer = d->m_redirectReferrer;
     bool lockHistory = d->m_redirectLockHistory;
     bool userGesture = d->m_redirectUserGesture;
 
     d->m_scheduledRedirection = noRedirectionScheduled;
     d->m_delayRedirect = 0;
-    d->m_redirectURL = QString::null;
-    d->m_redirectReferrer = QString::null;
+    d->m_redirectURL = DeprecatedString::null;
+    d->m_redirectReferrer = DeprecatedString::null;
 
     changeLocation(URL, referrer, lockHistory, userGesture);
 }
@@ -1034,18 +1006,18 @@ void Frame::receivedRedirect(TransferJob*, const KURL& url)
     d->m_workingURL = url;
 }
 
-QString Frame::encoding() const
+DeprecatedString Frame::encoding() const
 {
     if (d->m_haveEncoding && !d->m_encoding.isEmpty())
         return d->m_encoding;
 
     if (d->m_decoder && d->m_decoder->encoding().isValid())
-        return QString(d->m_decoder->encodingName());
+        return d->m_decoder->encodingName();
 
     return settings()->encoding();
 }
 
-void Frame::setUserStyleSheet(const KURL& url)
+void Frame::setUserStyleSheetLocation(const KURL& url)
 {
     delete d->m_userStyleSheetLoader;
     d->m_userStyleSheetLoader = 0;
@@ -1053,7 +1025,7 @@ void Frame::setUserStyleSheet(const KURL& url)
         d->m_userStyleSheetLoader = new UserStyleSheetLoader(this, url.url(), d->m_doc->docLoader());
 }
 
-void Frame::setUserStyleSheet(const QString& styleSheet)
+void Frame::setUserStyleSheet(const String& styleSheet)
 {
     delete d->m_userStyleSheetLoader;
     d->m_userStyleSheetLoader = 0;
@@ -1061,15 +1033,15 @@ void Frame::setUserStyleSheet(const QString& styleSheet)
         d->m_doc->setUserStyleSheet(styleSheet);
 }
 
-bool Frame::gotoAnchor( const QString &name )
+bool Frame::gotoAnchor(const String& name)
 {
   if (!d->m_doc)
     return false;
 
-  NodeImpl *n = d->m_doc->getElementById(name);
+  Node *n = d->m_doc->getElementById(AtomicString(name));
   if (!n) {
-    HTMLCollectionImpl *anchors =
-        new HTMLCollectionImpl(d->m_doc.get(), HTMLCollectionImpl::DOC_ANCHORS);
+    HTMLCollection *anchors =
+        new HTMLCollection(d->m_doc.get(), HTMLCollection::DOC_ANCHORS);
     anchors->ref();
     n = anchors->namedItem(name, !d->m_doc->inCompatMode());
     anchors->deref();
@@ -1083,10 +1055,10 @@ bool Frame::gotoAnchor( const QString &name )
 
   // We need to update the layout before scrolling, otherwise we could
   // really mess things up if an anchor scroll comes at a bad moment.
-  if ( d->m_doc ) {
+  if (d->m_doc) {
     d->m_doc->updateRendering();
     // Only do a layout if changes have occurred that make it necessary.      
-    if ( d->m_view && d->m_doc->renderer() && d->m_doc->renderer()->needsLayout() ) {
+    if (d->m_view && d->m_doc->renderer() && d->m_doc->renderer()->needsLayout()) {
       d->m_view->layout();
     }
   }
@@ -1111,17 +1083,17 @@ bool Frame::gotoAnchor( const QString &name )
   return true;
 }
 
-void Frame::setStandardFont( const QString &name )
+void Frame::setStandardFont(const String& name)
 {
-    d->m_settings->setStdFontName(name);
+    d->m_settings->setStdFontName(AtomicString(name));
 }
 
-void Frame::setFixedFont( const QString &name )
+void Frame::setFixedFont(const String& name)
 {
-    d->m_settings->setFixedFontName(name);
+    d->m_settings->setFixedFontName(AtomicString(name));
 }
 
-QString Frame::selectedText() const
+String Frame::selectedText() const
 {
     return plainText(selection().toRange().get());
 }
@@ -1131,22 +1103,22 @@ bool Frame::hasSelection() const
     return d->m_selection.isCaretOrRange();
 }
 
-SelectionController &Frame::selection() const
+SelectionController& Frame::selection() const
 {
     return d->m_selection;
 }
 
-ETextGranularity Frame::selectionGranularity() const
+TextGranularity Frame::selectionGranularity() const
 {
     return d->m_selectionGranularity;
 }
 
-void Frame::setSelectionGranularity(ETextGranularity granularity) const
+void Frame::setSelectionGranularity(TextGranularity granularity) const
 {
     d->m_selectionGranularity = granularity;
 }
 
-const SelectionController &Frame::dragCaret() const
+const SelectionController& Frame::dragCaret() const
 {
     return d->m_dragCaret;
 }
@@ -1161,7 +1133,7 @@ void Frame::setMark(const Selection& s)
     d->m_mark = s;
 }
 
-void Frame::setSelection(const SelectionController &s, bool closeTyping, bool keepTypingStyle)
+void Frame::setSelection(const SelectionController& s, bool closeTyping, bool keepTypingStyle)
 {
     if (d->m_selection == s) {
         return;
@@ -1190,7 +1162,7 @@ void Frame::setSelection(const SelectionController &s, bool closeTyping, bool ke
     respondToChangedSelection(oldSelection, closeTyping);
 }
 
-void Frame::setDragCaret(const SelectionController &dragCaret)
+void Frame::setDragCaret(const SelectionController& dragCaret)
 {
     if (d->m_dragCaret != dragCaret) {
         d->m_dragCaret.needsCaretRepaint();
@@ -1228,7 +1200,7 @@ void Frame::clearCaretRectIfNeeded()
 
 // Helper function that tells whether a particular node is an element that has an entire
 // Frame and FrameView, a <frame>, <iframe>, or <object>.
-static bool isFrameElement(const NodeImpl *n)
+static bool isFrameElement(const Node *n)
 {
     if (!n)
         return false;
@@ -1244,8 +1216,8 @@ void Frame::setFocusNodeIfNeeded()
     if (!document() || d->m_selection.isNone() || !d->m_isFocused)
         return;
 
-    NodeImpl *startNode = d->m_selection.start().node();
-    NodeImpl *target = startNode ? startNode->rootEditableElement() : 0;
+    Node *startNode = d->m_selection.start().node();
+    Node *target = startNode ? startNode->rootEditableElement() : 0;
     
     if (target) {
         RenderObject* renderer = target->renderer();
@@ -1314,54 +1286,54 @@ void Frame::caretBlinkTimerFired(Timer<Frame>*)
     d->m_selection.needsCaretRepaint();
 }
 
-void Frame::paintCaret(GraphicsContext* p, const IntRect &rect) const
+void Frame::paintCaret(GraphicsContext* p, const IntRect& rect) const
 {
     if (d->m_caretPaint)
         d->m_selection.paintCaret(p, rect);
 }
 
-void Frame::paintDragCaret(GraphicsContext* p, const IntRect &rect) const
+void Frame::paintDragCaret(GraphicsContext* p, const IntRect& rect) const
 {
     d->m_dragCaret.paintCaret(p, rect);
 }
 
-void Frame::urlSelected(const QString &url, const QString& _target, const URLArgs& args )
+void Frame::urlSelected(const DeprecatedString& url, const String& target)
 {
-  QString target = _target;
+    urlSelected(ResourceRequest(completeURL(url)), target);
+}
+
+void Frame::urlSelected(const ResourceRequest& request, const String& _target)
+{
+  String target = _target;
   if (target.isEmpty() && d->m_doc)
     target = d->m_doc->baseTarget();
 
-  if (url.startsWith("javascript:", false)) {
-    executeScript(0, KURL::decode_string(url.mid(11)), true);
+  const KURL& url = request.url();
+
+  if (url.url().startsWith("javascript:", false)) {
+    executeScript(0, KURL::decode_string(url.url().mid(11)), true);
     return;
   }
 
-  KURL cURL = completeURL(url);
-  if (!cURL.isValid())
+  if (!url.isValid())
     // ### ERROR HANDLING
     return;
 
-  URLArgs argsCopy = args;
-  argsCopy.frameName = target;
+  ResourceRequest requestCopy = request;
+  requestCopy.frameName = target;
 
-  if (d->m_bHTTPRefresh) {
+  if (d->m_bHTTPRefresh)
     d->m_bHTTPRefresh = false;
-    argsCopy.metaData().set("cache", "refresh");
-  }
 
   if (!d->m_referrer.isEmpty())
-    argsCopy.metaData().set("referrer", d->m_referrer);
+    requestCopy.setReferrer(d->m_referrer);
 
-  urlSelected(cURL, argsCopy);
+  urlSelected(requestCopy);
 }
 
-DOMString Frame::requestFrameName()
+bool Frame::requestFrame(RenderPart* renderer, const String& urlParam, const AtomicString& frameName)
 {
-    return generateFrameName();
-}
-
-bool Frame::requestFrame(RenderPart* renderer, const QString& _url, const QString& frameName)
-{
+    DeprecatedString _url = urlParam.deprecatedString();
     // Support for <frame src="javascript:string">
     KURL scriptURL;
     KURL url;
@@ -1371,12 +1343,12 @@ bool Frame::requestFrame(RenderPart* renderer, const QString& _url, const QStrin
     } else
         url = completeURL(_url);
 
-    Frame* frame = childFrameNamed(frameName);
+    Frame* frame = tree()->child(frameName);
     if (frame) {
-        URLArgs args;
-        args.metaData().set("referrer", d->m_referrer);
-        args.reload = (d->m_cachePolicy == KIO::CC_Reload) || (d->m_cachePolicy == KIO::CC_Refresh);
-        frame->openURLRequest(url, args);
+        ResourceRequest request(url);
+        request.setReferrer(d->m_referrer);
+        request.reload = (d->m_cachePolicy == KIO::CC_Reload) || (d->m_cachePolicy == KIO::CC_Refresh);
+        frame->openURLRequest(request);
     } else
         frame = loadSubframe(renderer, url, frameName, d->m_referrer);
     
@@ -1389,12 +1361,12 @@ bool Frame::requestFrame(RenderPart* renderer, const QString& _url, const QStrin
     return true;
 }
 
-bool Frame::requestObject(RenderPart* renderer, const QString& url, const QString& frameName,
-                          const QString& mimeType, const QStringList& paramNames, const QStringList& paramValues)
+bool Frame::requestObject(RenderPart* renderer, const String& url, const AtomicString& frameName,
+                          const String& mimeType, const Vector<String>& paramNames, const Vector<String>& paramValues)
 {
     KURL completedURL;
     if (!url.isEmpty())
-        completedURL = completeURL(url);
+        completedURL = completeURL(url.deprecatedString());
     
     if (url.isEmpty() && mimeType.isEmpty())
         return true;
@@ -1407,7 +1379,7 @@ bool Frame::requestObject(RenderPart* renderer, const QString& url, const QStrin
     return loadSubframe(renderer, completedURL, frameName, d->m_referrer);
 }
 
-bool Frame::shouldUsePlugin(NodeImpl* element, const KURL& url, const QString& mimeType, bool hasFallback, bool& useFallback)
+bool Frame::shouldUsePlugin(Node* element, const KURL& url, const String& mimeType, bool hasFallback, bool& useFallback)
 {
     useFallback = false;
     ObjectContentType objectType = objectContentType(url, mimeType);
@@ -1421,8 +1393,8 @@ bool Frame::shouldUsePlugin(NodeImpl* element, const KURL& url, const QString& m
 }
 
 
-bool Frame::loadPlugin(RenderPart *renderer, const KURL &url, const QString &mimeType, 
-                       const QStringList& paramNames, const QStringList& paramValues, bool useFallback)
+bool Frame::loadPlugin(RenderPart *renderer, const KURL& url, const String& mimeType, 
+                       const Vector<String>& paramNames, const Vector<String>& paramValues, bool useFallback)
 {
     if (useFallback) {
         checkEmitLoadEvent();
@@ -1444,7 +1416,7 @@ bool Frame::loadPlugin(RenderPart *renderer, const KURL &url, const QString &mim
     return true;
 }
 
-Frame* Frame::loadSubframe(RenderPart* renderer, const KURL& url, const QString& name, const DOMString& referrer)
+Frame* Frame::loadSubframe(RenderPart* renderer, const KURL& url, const String& name, const String& referrer)
 {
     Frame* frame = createFrame(url, name, renderer, referrer);
     if (!frame)  {
@@ -1473,6 +1445,18 @@ Frame* Frame::loadSubframe(RenderPart* renderer, const KURL& url, const QString&
     return frame;
 }
 
+void Frame::clearRecordedFormValues()
+{
+    d->m_formAboutToBeSubmitted = 0;
+    d->m_formValuesAboutToBeSubmitted.clear();
+}
+
+void Frame::recordFormValue(const String& name, const String& value, PassRefPtr<HTMLFormElement> element)
+{
+    d->m_formAboutToBeSubmitted = element;
+    d->m_formValuesAboutToBeSubmitted.set(name, value);
+}
+
 void Frame::submitFormAgain()
 {
     FramePrivate::SubmitForm* form = d->m_submitForm;
@@ -1483,15 +1467,15 @@ void Frame::submitFormAgain()
     delete form;
 }
 
-void Frame::submitForm( const char *action, const QString &url, const FormData &formData, const QString &_target, const QString& contentType, const QString& boundary )
+void Frame::submitForm(const char *action, const String& url, const FormData& formData, const String& _target, const String& contentType, const String& boundary)
 {
-  KURL u = completeURL( url );
+  KURL u = completeURL(url.deprecatedString());
 
   if (!u.isValid())
     // ### ERROR HANDLING!
     return;
 
-  QString urlstring = u.url();
+  DeprecatedString urlstring = u.url();
   if (urlstring.startsWith("javascript:", false)) {
     urlstring = KURL::decode_string(urlstring);
     d->m_executingJavaScriptFormAction = true;
@@ -1500,22 +1484,22 @@ void Frame::submitForm( const char *action, const QString &url, const FormData &
     return;
   }
 
-  URLArgs args;
+  ResourceRequest request;
 
   if (!d->m_referrer.isEmpty())
-     args.metaData().set("referrer", d->m_referrer);
+     request.setReferrer(d->m_referrer);
 
-  args.frameName = _target.isEmpty() ? d->m_doc->baseTarget() : _target ;
+  request.frameName = _target.isEmpty() ? d->m_doc->baseTarget() : _target ;
 
   // Handle mailto: forms
   if (u.protocol() == "mailto") {
       // 1)  Check for attach= and strip it
-      QString q = u.query().mid(1);
-      QStringList nvps = QStringList::split("&", q);
+      DeprecatedString q = u.query().mid(1);
+      DeprecatedStringList nvps = DeprecatedStringList::split("&", q);
       bool triedToAttach = false;
 
-      for (QStringList::Iterator nvp = nvps.begin(); nvp != nvps.end(); ++nvp) {
-         QStringList pair = QStringList::split("=", *nvp);
+      for (DeprecatedStringList::Iterator nvp = nvps.begin(); nvp != nvps.end(); ++nvp) {
+         DeprecatedStringList pair = DeprecatedStringList::split("=", *nvp);
          if (pair.count() >= 2) {
             if (pair.first().lower() == "attach") {
                nvp = nvps.remove(nvp);
@@ -1526,44 +1510,43 @@ void Frame::submitForm( const char *action, const QString &url, const FormData &
 
 
       // 2)  Append body=
-      QString bodyEnc;
+      DeprecatedString bodyEnc;
       if (contentType.lower() == "multipart/form-data") {
          // FIXME: is this correct?  I suspect not
          bodyEnc = KURL::encode_string(formData.flattenToString());
       } else if (contentType.lower() == "text/plain") {
          // Convention seems to be to decode, and s/&/\n/
-         QString tmpbody = formData.flattenToString();
+         DeprecatedString tmpbody = formData.flattenToString();
          tmpbody.replace('&', '\n');
          tmpbody.replace('+', ' ');
          tmpbody = KURL::decode_string(tmpbody);  // Decode the rest of it
          bodyEnc = KURL::encode_string(tmpbody);  // Recode for the URL
-      } else {
+      } else
          bodyEnc = KURL::encode_string(formData.flattenToString());
-      }
 
-      nvps.append(QString("body=%1").arg(bodyEnc));
+      nvps.append(String::sprintf("body=%s", bodyEnc.latin1()).deprecatedString());
       q = nvps.join("&");
       u.setQuery(q);
   } 
 
-  if ( strcmp( action, "get" ) == 0 ) {
+  if (strcmp(action, "get") == 0) {
     if (u.protocol() != "mailto")
-       u.setQuery( formData.flattenToString() );
-    args.setDoPost( false );
+       u.setQuery(formData.flattenToString());
+    request.setDoPost(false);
   }
   else {
-    args.postData = formData;
-    args.setDoPost( true );
+    request.postData = formData;
+    request.setDoPost(true);
 
     // construct some user headers if necessary
     if (contentType.isNull() || contentType == "application/x-www-form-urlencoded")
-      args.setContentType( "Content-Type: application/x-www-form-urlencoded" );
+      request.setContentType("Content-Type: application/x-www-form-urlencoded");
     else // contentType must be "multipart/form-data"
-      args.setContentType( "Content-Type: " + contentType + "; boundary=" + boundary );
+      request.setContentType("Content-Type: " + contentType + "; boundary=" + boundary);
   }
 
-  if ( d->m_doc->parsing() || d->m_runningScripts > 0 ) {
-    if(d->m_submitForm)
+  if (d->m_doc->parsing() || d->m_runningScripts > 0) {
+    if (d->m_submitForm)
         return;
     d->m_submitForm = new FramePrivate::SubmitForm;
     d->m_submitForm->submitAction = action;
@@ -1572,11 +1555,11 @@ void Frame::submitForm( const char *action, const QString &url, const FormData &
     d->m_submitForm->target = _target;
     d->m_submitForm->submitContentType = contentType;
     d->m_submitForm->submitBoundary = boundary;
+  } else {
+      request.setURL(u);
+      submitForm(request);
   }
-  else
-    submitForm(u, args);
 }
-
 
 void Frame::parentCompleted()
 {
@@ -1589,21 +1572,6 @@ void Frame::childCompleted(bool complete)
     if (complete && !tree()->parent())
         d->m_bPendingChildRedirection = true;
     checkCompleted();
-}
-
-Frame* Frame::findFrame(const QString& f)
-{
-    // FIXME: this only finds child frames, is it ever appropriate to use this?
-    // ### http://www.w3.org/TR/html4/appendix/notes.html#notes-frames
-    for (Frame* child = tree()->firstChild(); child; child = child->tree()->nextSibling())
-        if (child->tree()->name() == f)
-            return child;
-    return 0;
-}
-
-bool Frame::frameExists(const QString& frameName)
-{
-    return findFrame(frameName);
 }
 
 int Frame::zoomFactor() const
@@ -1619,7 +1587,7 @@ void Frame::setZoomFactor(int percent)
   d->m_zoomFactor = percent;
 
   if (d->m_doc)
-      d->m_doc->recalcStyle(NodeImpl::Force);
+      d->m_doc->recalcStyle(Node::Force);
 
   for (Frame* child = tree()->firstChild(); child; child = child->tree()->nextSibling())
       child->setZoomFactor(d->m_zoomFactor);
@@ -1650,65 +1618,34 @@ String Frame::jsDefaultStatusBarText() const
    return d->m_kjsDefaultStatusBarText;
 }
 
-QString Frame::referrer() const
+DeprecatedString Frame::referrer() const
 {
-   return d->m_referrer;
+    return d->m_referrer;
 }
 
-QString Frame::lastModified() const
+String Frame::lastModified() const
 {
-  return d->m_lastModified;
+    return d->m_lastModified;
 }
-
 
 void Frame::reparseConfiguration()
 {
-  setAutoloadImages( d->m_settings->autoLoadImages() );
-  if (d->m_doc)
-     d->m_doc->docLoader()->setShowAnimations( d->m_settings->showAnimations() );
+    setAutoloadImages(d->m_settings->autoLoadImages());
+    if (d->m_doc)
+        d->m_doc->docLoader()->setShowAnimations(KHTMLSettings::KAnimationEnabled);
+        
+    d->m_bJScriptEnabled = d->m_settings->isJavaScriptEnabled();
+    d->m_bJavaEnabled = d->m_settings->isJavaEnabled();
+    d->m_bPluginsEnabled = d->m_settings->isPluginsEnabled();
 
-  d->m_bJScriptEnabled = d->m_settings->isJavaScriptEnabled(d->m_url.host());
-  d->m_bJavaEnabled = d->m_settings->isJavaEnabled(d->m_url.host());
-  d->m_bPluginsEnabled = d->m_settings->isPluginsEnabled(d->m_url.host());
-
-  QString userStyleSheet = d->m_settings->userStyleSheet();
-  if ( !userStyleSheet.isEmpty() )
-    setUserStyleSheet( KURL( userStyleSheet ) );
-  else
-    setUserStyleSheet( QString() );
-
-  if(d->m_doc) d->m_doc->updateStyleSelector();
+    const KURL& userStyleSheetLocation = d->m_settings->userStyleSheetLocation();
+    if (!userStyleSheetLocation.isEmpty())
+        setUserStyleSheetLocation(userStyleSheetLocation);
+    else
+        setUserStyleSheet(String());
 }
 
-QStringList Frame::frameNames() const
-{
-  QStringList res;
-
-  for (Frame* child = tree()->firstChild(); child; child = child->tree()->nextSibling())
-      res += child->tree()->name().qstring();
-
-  return res;
-}
-
-QPtrList<Frame> Frame::frames() const
-{
-  QPtrList<Frame> res;
-
-  for (Frame* child = tree()->firstChild(); child; child = child->tree()->nextSibling())
-      res.append(child);
-
-  return res;
-}
-
-Frame* Frame::childFrameNamed(const QString& name) const
-{
-    for (Frame* child = tree()->firstChild(); child; child = child->tree()->nextSibling())
-        if (child->tree()->name() == name)
-            return child;
-    return 0;
-}
-
-bool Frame::shouldDragAutoNode(NodeImpl *node, int x, int y) const
+bool Frame::shouldDragAutoNode(Node *node, int x, int y) const
 {
     // No KDE impl yet
     return false;
@@ -1724,7 +1661,7 @@ bool Frame::isPointInsideSelection(int x, int y)
     
     RenderObject::NodeInfo nodeInfo(true, true);
     document()->renderer()->layer()->hitTest(nodeInfo, x, y);
-    NodeImpl *innerNode = nodeInfo.innerNode();
+    Node *innerNode = nodeInfo.innerNode();
     if (!innerNode || !innerNode->renderer())
         return false;
     
@@ -1732,7 +1669,7 @@ bool Frame::isPointInsideSelection(int x, int y)
     if (pos.isNull())
         return false;
 
-    NodeImpl *n = d->m_selection.start().node();
+    Node *n = d->m_selection.start().node();
     while (n) {
         if (n == pos.node()) {
             if ((n == d->m_selection.start().node() && pos.offset() < d->m_selection.start().offset()) ||
@@ -1749,7 +1686,7 @@ bool Frame::isPointInsideSelection(int x, int y)
    return false;
 }
 
-void Frame::selectClosestWordFromMouseEvent(MouseEvent *mouse, NodeImpl *innerNode, int x, int y)
+void Frame::selectClosestWordFromMouseEvent(const PlatformMouseEvent& mouse, Node *innerNode, int x, int y)
 {
     SelectionController selection;
 
@@ -1770,34 +1707,33 @@ void Frame::selectClosestWordFromMouseEvent(MouseEvent *mouse, NodeImpl *innerNo
         setSelection(selection);
 }
 
-void Frame::handleMousePressEventDoubleClick(MouseEventWithHitTestResults* event)
+void Frame::handleMousePressEventDoubleClick(const MouseEventWithHitTestResults& event)
 {
-    if (event->event()->button() == LeftButton) {
+    if (event.event().button() == LeftButton) {
         if (selection().isRange())
             // A double-click when range is already selected
             // should not change the selection.  So, do not call
             // selectClosestWordFromMouseEvent, but do set
-            // m_beganSelectingText to prevent khtmlMouseReleaseEvent
+            // m_beganSelectingText to prevent handleMouseReleaseEvent
             // from setting caret selection.
             d->m_beganSelectingText = true;
         else {
             int x, y;
-            view()->viewportToContents(event->event()->x(), event->event()->y(), x, y);
-            selectClosestWordFromMouseEvent(event->event(), event->innerNode(), x, y);
+            view()->viewportToContents(event.event().x(), event.event().y(), x, y);
+            selectClosestWordFromMouseEvent(event.event(), event.innerNode(), x, y);
         }
     }
 }
 
-void Frame::handleMousePressEventTripleClick(MouseEventWithHitTestResults* event)
+void Frame::handleMousePressEventTripleClick(const MouseEventWithHitTestResults& event)
 {
-    MouseEvent *mouse = event->event();
-    NodeImpl *innerNode = event->innerNode();
+    Node *innerNode = event.innerNode();
     
-    if (mouse->button() == LeftButton && innerNode && innerNode->renderer() &&
+    if (event.event().button() == LeftButton && innerNode && innerNode->renderer() &&
         mouseDownMayStartSelect() && innerNode->renderer()->shouldSelect()) {
         SelectionController selection;
         int x, y;
-        view()->viewportToContents(event->event()->x(), event->event()->y(), x, y);
+        view()->viewportToContents(event.event().x(), event.event().y(), x, y);
         VisiblePosition pos(innerNode->renderer()->positionForCoordinates(x, y));
         if (pos.isNotNull()) {
             selection.moveTo(pos);
@@ -1813,23 +1749,22 @@ void Frame::handleMousePressEventTripleClick(MouseEventWithHitTestResults* event
     }
 }
 
-void Frame::handleMousePressEventSingleClick(MouseEventWithHitTestResults* event)
+void Frame::handleMousePressEventSingleClick(const MouseEventWithHitTestResults& event)
 {
-    MouseEvent *mouse = event->event();
-    NodeImpl *innerNode = event->innerNode();
+    Node *innerNode = event.innerNode();
     
-    if (mouse->button() == LeftButton) {
+    if (event.event().button() == LeftButton) {
         if (innerNode && innerNode->renderer() &&
             mouseDownMayStartSelect() && innerNode->renderer()->shouldSelect()) {
             SelectionController sel;
             
             // Extend the selection if the Shift key is down, unless the click is in a link.
-            bool extendSelection = mouse->shiftKey() && event->url().isNull();
+            bool extendSelection = event.event().shiftKey() && event.url().isNull();
 
             // Don't restart the selection when the mouse is pressed on an
             // existing selection so we can allow for text dragging.
             int x, y;
-            view()->viewportToContents(event->event()->x(), event->event()->y(), x, y);
+            view()->viewportToContents(event.event().x(), event.event().y(), x, y);
             if (!extendSelection && isPointInsideSelection(x, y))
                 return;
 
@@ -1845,16 +1780,14 @@ void Frame::handleMousePressEventSingleClick(MouseEventWithHitTestResults* event
                 // See <rdar://problem/3668157> REGRESSION (Mail): shift-click deselects when selection 
                 // was created right-to-left
                 Position start = sel.start();
-                short before = RangeImpl::compareBoundaryPoints(pos.node(), pos.offset(), start.node(), start.offset());
-                if (before <= 0) {
+                short before = Range::compareBoundaryPoints(pos.node(), pos.offset(), start.node(), start.offset());
+                if (before <= 0)
                     sel.setBaseAndExtent(pos.node(), pos.offset(), sel.end().node(), sel.end().offset());
-                } else {
+                else
                     sel.setBaseAndExtent(start.node(), start.offset(), pos.node(), pos.offset());
-                }
 
-                if (d->m_selectionGranularity != CharacterGranularity) {
+                if (d->m_selectionGranularity != CharacterGranularity)
                     sel.expandUsingGranularity(d->m_selectionGranularity);
-                }
                 d->m_beganSelectingText = true;
             } else {
                 sel = SelectionController(visiblePos);
@@ -1867,31 +1800,23 @@ void Frame::handleMousePressEventSingleClick(MouseEventWithHitTestResults* event
     }
 }
 
-void Frame::khtmlMousePressEvent(MouseEventWithHitTestResults* event)
+void Frame::handleMousePressEvent(const MouseEventWithHitTestResults& event)
 {
-    DOMString url = event->url();
-    MouseEvent *mouse = event->event();
-    NodeImpl *innerNode = event->innerNode();
+    String url = event.url();
+    Node *innerNode = event.innerNode();
 
     d->m_mousePressNode = innerNode;
-    d->m_dragStartPos = mouse->pos();
+    d->m_dragStartPos = event.event().pos();
 
-    if (!event->url().isNull()) {
-        d->m_strSelectedURL = d->m_strSelectedURLTarget = QString::null;
-    } else {
-        d->m_strSelectedURL = event->url().qstring();
-        d->m_strSelectedURLTarget = event->target().qstring();
-    }
-
-    if (mouse->button() == LeftButton || mouse->button() == MiddleButton) {
+    if (event.event().button() == LeftButton || event.event().button() == MiddleButton) {
         d->m_bMousePressed = true;
         d->m_beganSelectingText = false;
 
-        if (mouse->clickCount() == 2) {
+        if (event.event().clickCount() == 2) {
             handleMousePressEventDoubleClick(event);
             return;
         }
-        if (mouse->clickCount() >= 3) {
+        if (event.event().clickCount() >= 3) {
             handleMousePressEventTripleClick(event);
             return;
         }
@@ -1899,21 +1824,20 @@ void Frame::khtmlMousePressEvent(MouseEventWithHitTestResults* event)
     }
 }
 
-void Frame::handleMouseMoveEventSelection(MouseEventWithHitTestResults* event)
+void Frame::handleMouseMoveEventPart2(const MouseEventWithHitTestResults& event)
 {
     // Mouse not pressed. Do nothing.
     if (!d->m_bMousePressed)
         return;
 
-    MouseEvent *mouse = event->event();
-    NodeImpl *innerNode = event->innerNode();
+    Node *innerNode = event.innerNode();
 
-    if (mouse->button() != 0 || !innerNode || !innerNode->renderer() || !mouseDownMayStartSelect() || !innerNode->renderer()->shouldSelect())
+    if (event.event().button() != 0 || !innerNode || !innerNode->renderer() || !mouseDownMayStartSelect() || !innerNode->renderer()->shouldSelect())
         return;
 
     // handle making selection
     int x, y;
-    view()->viewportToContents(event->event()->x(), event->event()->y(), x, y);
+    view()->viewportToContents(event.event().x(), event.event().y(), x, y);
     VisiblePosition pos(innerNode->renderer()->positionForCoordinates(x, y));
 
     // Don't modify the selection if we're not on a node.
@@ -1921,7 +1845,7 @@ void Frame::handleMouseMoveEventSelection(MouseEventWithHitTestResults* event)
         return;
 
     // Restart the selection if this is the first mouse move. This work is usually
-    // done in khtmlMousePressEvent, but not if the mouse press was on an existing selection.
+    // done in handleMousePressEvent, but not if the mouse press was on an existing selection.
     SelectionController sel = selection();
     sel.clearModifyBias();
     
@@ -1938,13 +1862,15 @@ void Frame::handleMouseMoveEventSelection(MouseEventWithHitTestResults* event)
         setSelection(sel);
 }
 
-void Frame::khtmlMouseMoveEvent(MouseEventWithHitTestResults* event)
+void Frame::handleMouseMoveEvent(const MouseEventWithHitTestResults& event)
 {
-    handleMouseMoveEventSelection(event);
+    handleMouseMoveEventPart2(event);
 }
 
-void Frame::khtmlMouseReleaseEvent(MouseEventWithHitTestResults* event)
+void Frame::handleMouseReleaseEvent(const MouseEventWithHitTestResults& event)
 {
+    stopAutoscrollTimer();
+    
     // Used to prevent mouseMoveEvent from initiating a drag before
     // the mouse is pressed again.
     d->m_bMousePressed = false;
@@ -1953,13 +1879,13 @@ void Frame::khtmlMouseReleaseEvent(MouseEventWithHitTestResults* event)
     // We do this so when clicking on the selection, the selection goes away.
     // However, if we are editing, place the caret.
     if (mouseDownMayStartSelect() && !d->m_beganSelectingText
-            && d->m_dragStartPos == event->event()->pos()
+            && d->m_dragStartPos == event.event().pos()
             && d->m_selection.isRange()) {
         SelectionController selection;
-        NodeImpl *node = event->innerNode();
+        Node *node = event.innerNode();
         if (node && node->isContentEditable() && node->renderer()) {
             int x, y;
-            view()->viewportToContents(event->event()->x(), event->event()->y(), x, y);
+            view()->viewportToContents(event.event().x(), event.event().y(), x, y);
             VisiblePosition pos = node->renderer()->positionForCoordinates(x, y);
             selection.moveTo(pos);
         }
@@ -1974,16 +1900,16 @@ void Frame::selectAll()
     if (!d->m_doc)
         return;
     
-    NodeImpl *startNode = d->m_selection.start().node();
-    NodeImpl *root = startNode && startNode->isContentEditable() ? startNode->rootEditableElement() : d->m_doc->documentElement();
+    Node *startNode = d->m_selection.start().node();
+    Node *root = startNode && startNode->isContentEditable() ? startNode->rootEditableElement() : d->m_doc->documentElement();
     
     selectContentsOfNode(root);
     selectFrameElementInParentIfFullySelected();
 }
 
-bool Frame::selectContentsOfNode(NodeImpl* node)
+bool Frame::selectContentsOfNode(Node* node)
 {
-    SelectionController sel = SelectionController(Position(node, 0), Position(node, maxDeepOffset(node)), DOWNSTREAM);    
+    SelectionController sel = SelectionController(Selection::selectionFromContentsOfNode(node));    
     if (shouldChangeSelection(sel)) {
         setSelection(sel);
         return true;
@@ -1991,17 +1917,17 @@ bool Frame::selectContentsOfNode(NodeImpl* node)
     return false;
 }
 
-bool Frame::shouldChangeSelection(const SelectionController &newselection) const
+bool Frame::shouldChangeSelection(const SelectionController& newselection) const
 {
     return shouldChangeSelection(d->m_selection, newselection, newselection.affinity(), false);
 }
 
-bool Frame::shouldBeginEditing(const RangeImpl *range) const
+bool Frame::shouldBeginEditing(const Range *range) const
 {
     return true;
 }
 
-bool Frame::shouldEndEditing(const RangeImpl *range) const
+bool Frame::shouldEndEditing(const Range *range) const
 {
     return true;
 }
@@ -2018,12 +1944,23 @@ EditCommandPtr Frame::lastEditCommand()
     return d->m_lastEditCommand;
 }
 
-void Frame::appliedEditing(EditCommandPtr &cmd)
+void dispatchEditableContentChangedEvent(Node* root)
+{
+    if (!root)
+        return;
+        
+    ExceptionCode ec = 0;
+    RefPtr<Event> evt = new Event(khtmlEditableContentChangedEvent, false, false);
+    EventTargetNodeCast(root)->dispatchEvent(evt, ec, true);
+}
+
+void Frame::appliedEditing(EditCommandPtr& cmd)
 {
     SelectionController sel(cmd.endingSelection());
-    if (shouldChangeSelection(sel)) {
+    if (shouldChangeSelection(sel))
         setSelection(sel, false);
-    }
+    
+    dispatchEditableContentChangedEvent(!selection().isNone() ? selection().start().node()->rootEditableElement() : 0);
 
     // Now set the typing style from the command. Clear it when done.
     // This helps make the case work where you completely delete a piece
@@ -2049,34 +1986,38 @@ void Frame::appliedEditing(EditCommandPtr &cmd)
     respondToChangedContents();
 }
 
-void Frame::unappliedEditing(EditCommandPtr &cmd)
+void Frame::unappliedEditing(EditCommandPtr& cmd)
 {
     SelectionController sel(cmd.startingSelection());
-    if (shouldChangeSelection(sel)) {
+    if (shouldChangeSelection(sel))
         setSelection(sel, true);
-    }
+    
+    dispatchEditableContentChangedEvent(!selection().isNone() ? selection().start().node()->rootEditableElement() : 0);
+        
     registerCommandForRedo(cmd);
     respondToChangedContents();
     d->m_lastEditCommand = EditCommandPtr::emptyCommand();
 }
 
-void Frame::reappliedEditing(EditCommandPtr &cmd)
+void Frame::reappliedEditing(EditCommandPtr& cmd)
 {
     SelectionController sel(cmd.endingSelection());
-    if (shouldChangeSelection(sel)) {
+    if (shouldChangeSelection(sel))
         setSelection(sel, true);
-    }
+    
+    dispatchEditableContentChangedEvent(!selection().isNone() ? selection().start().node()->rootEditableElement() : 0);
+        
     registerCommandForUndo(cmd);
     respondToChangedContents();
     d->m_lastEditCommand = EditCommandPtr::emptyCommand();
 }
 
-CSSMutableStyleDeclarationImpl *Frame::typingStyle() const
+CSSMutableStyleDeclaration *Frame::typingStyle() const
 {
     return d->m_typingStyle.get();
 }
 
-void Frame::setTypingStyle(CSSMutableStyleDeclarationImpl *style)
+void Frame::setTypingStyle(CSSMutableStyleDeclaration *style)
 {
     d->m_typingStyle = style;
 }
@@ -2086,16 +2027,16 @@ void Frame::clearTypingStyle()
     d->m_typingStyle = 0;
 }
 
-JSValue* Frame::executeScript(const QString& filename, int baseLine, NodeImpl* n, const QString &script)
+JSValue* Frame::executeScript(const String& filename, int baseLine, Node* n, const DeprecatedString& script)
 {
   // FIXME: This is missing stuff that the other executeScript has.
   // --> d->m_runningScripts and submitFormAgain.
   // Why is that OK?
-  KJSProxyImpl *proxy = jScript();
+  KJSProxy *proxy = jScript();
   if (!proxy)
     return 0;
   JSValue* ret = proxy->evaluate(filename, baseLine, script, n);
-  DocumentImpl::updateDocumentsRendering();
+  Document::updateDocumentsRendering();
   return ret;
 }
 
@@ -2121,45 +2062,6 @@ bool Frame::openedByJS()
 void Frame::setOpenedByJS(bool _openedByJS)
 {
     d->m_openedByJS = _openedByJS;
-}
-
-void Frame::preloadStyleSheet(const QString &url, const QString &stylesheet)
-{
-    Cache::preloadStyleSheet(url, stylesheet);
-}
-
-void Frame::preloadScript(const QString &url, const QString &script)
-{
-    Cache::preloadScript(url, script);
-}
-
-bool Frame::restored() const
-{
-  return d->m_restored;
-}
-
-void Frame::incrementFrameCount()
-{
-    // FIXME: this should be in Page
-    frameCount++;
-    if (tree()->parent())
-        tree()->parent()->incrementFrameCount();
-}
-
-void Frame::decrementFrameCount()
-{
-    // FIXME: this should be in Page
-    frameCount--;
-    if (tree()->parent())
-        tree()->parent()->decrementFrameCount();
-}
-
-int Frame::topLevelFrameCount()
-{
-    // FIXME: this should be in Page
-    if (tree()->parent())
-        return tree()->parent()->topLevelFrameCount();
-    return frameCount;
 }
 
 bool Frame::tabsToLinks() const
@@ -2208,7 +2110,7 @@ void Frame::undo()
 }
 
 
-void Frame::computeAndSetTypingStyle(CSSStyleDeclarationImpl *style, EditAction editingAction)
+void Frame::computeAndSetTypingStyle(CSSStyleDeclaration *style, EditAction editingAction)
 {
     if (!style || style->length() == 0) {
         clearTypingStyle();
@@ -2216,18 +2118,18 @@ void Frame::computeAndSetTypingStyle(CSSStyleDeclarationImpl *style, EditAction 
     }
 
     // Calculate the current typing style.
-    RefPtr<CSSMutableStyleDeclarationImpl> mutableStyle = style->makeMutable();
+    RefPtr<CSSMutableStyleDeclaration> mutableStyle = style->makeMutable();
     if (typingStyle()) {
         typingStyle()->merge(mutableStyle.get());
         mutableStyle = typingStyle();
     }
 
-    NodeImpl *node = VisiblePosition(selection().start(), selection().affinity()).deepEquivalent().node();
-    CSSComputedStyleDeclarationImpl computedStyle(node);
+    Node *node = VisiblePosition(selection().start(), selection().affinity()).deepEquivalent().node();
+    CSSComputedStyleDeclaration computedStyle(node);
     computedStyle.diff(mutableStyle.get());
     
     // Handle block styles, substracting these from the typing style.
-    RefPtr<CSSMutableStyleDeclarationImpl> blockStyle = mutableStyle->copyBlockProperties();
+    RefPtr<CSSMutableStyleDeclaration> blockStyle = mutableStyle->copyBlockProperties();
     blockStyle->diff(mutableStyle.get());
     if (document() && blockStyle->length() > 0) {
         EditCommandPtr cmd(new ApplyStyleCommand(document(), blockStyle.get(), editingAction));
@@ -2238,7 +2140,7 @@ void Frame::computeAndSetTypingStyle(CSSStyleDeclarationImpl *style, EditAction 
     d->m_typingStyle = mutableStyle.release();
 }
 
-void Frame::applyStyle(CSSStyleDeclarationImpl *style, EditAction editingAction)
+void Frame::applyStyle(CSSStyleDeclaration *style, EditAction editingAction)
 {
     switch (selection().state()) {
         case Selection::NONE:
@@ -2257,7 +2159,7 @@ void Frame::applyStyle(CSSStyleDeclarationImpl *style, EditAction editingAction)
     }
 }
 
-void Frame::applyParagraphStyle(CSSStyleDeclarationImpl *style, EditAction editingAction)
+void Frame::applyParagraphStyle(CSSStyleDeclaration *style, EditAction editingAction)
 {
     switch (selection().state()) {
         case Selection::NONE:
@@ -2273,13 +2175,13 @@ void Frame::applyParagraphStyle(CSSStyleDeclarationImpl *style, EditAction editi
     }
 }
 
-static void updateState(CSSMutableStyleDeclarationImpl *desiredStyle, CSSComputedStyleDeclarationImpl *computedStyle, bool &atStart, Frame::TriState &state)
+static void updateState(CSSMutableStyleDeclaration *desiredStyle, CSSComputedStyleDeclaration *computedStyle, bool& atStart, Frame::TriState& state)
 {
-    QValueListConstIterator<CSSProperty> end;
-    for (QValueListConstIterator<CSSProperty> it = desiredStyle->valuesIterator(); it != end; ++it) {
+    DeprecatedValueListConstIterator<CSSProperty> end;
+    for (DeprecatedValueListConstIterator<CSSProperty> it = desiredStyle->valuesIterator(); it != end; ++it) {
         int propertyID = (*it).id();
-        DOMString desiredProperty = desiredStyle->getPropertyValue(propertyID);
-        DOMString computedProperty = computedStyle->getPropertyValue(propertyID);
+        String desiredProperty = desiredStyle->getPropertyValue(propertyID);
+        String computedProperty = computedStyle->getPropertyValue(propertyID);
         Frame::TriState propertyState = equalIgnoringCase(desiredProperty, computedProperty)
             ? Frame::trueTriState : Frame::falseTriState;
         if (atStart) {
@@ -2292,16 +2194,16 @@ static void updateState(CSSMutableStyleDeclarationImpl *desiredStyle, CSSCompute
     }
 }
 
-Frame::TriState Frame::selectionHasStyle(CSSStyleDeclarationImpl *style) const
+Frame::TriState Frame::selectionHasStyle(CSSStyleDeclaration *style) const
 {
     bool atStart = true;
     TriState state = falseTriState;
 
-    RefPtr<CSSMutableStyleDeclarationImpl> mutableStyle = style->makeMutable();
+    RefPtr<CSSMutableStyleDeclaration> mutableStyle = style->makeMutable();
 
     if (!d->m_selection.isRange()) {
-        NodeImpl* nodeToRemove;
-        RefPtr<CSSComputedStyleDeclarationImpl> selectionStyle = selectionComputedStyle(nodeToRemove);
+        Node* nodeToRemove;
+        RefPtr<CSSComputedStyleDeclaration> selectionStyle = selectionComputedStyle(nodeToRemove);
         if (!selectionStyle)
             return falseTriState;
         updateState(mutableStyle.get(), selectionStyle.get(), atStart, state);
@@ -2311,8 +2213,8 @@ Frame::TriState Frame::selectionHasStyle(CSSStyleDeclarationImpl *style) const
             assert(ec == 0);
         }
     } else {
-        for (NodeImpl* node = d->m_selection.start().node(); node; node = node->traverseNextNode()) {
-            RefPtr<CSSComputedStyleDeclarationImpl> computedStyle = new CSSComputedStyleDeclarationImpl(node);
+        for (Node* node = d->m_selection.start().node(); node; node = node->traverseNextNode()) {
+            RefPtr<CSSComputedStyleDeclaration> computedStyle = new CSSComputedStyleDeclaration(node);
             if (computedStyle)
                 updateState(mutableStyle.get(), computedStyle.get(), atStart, state);
             if (state == mixedTriState)
@@ -2325,18 +2227,18 @@ Frame::TriState Frame::selectionHasStyle(CSSStyleDeclarationImpl *style) const
     return state;
 }
 
-bool Frame::selectionStartHasStyle(CSSStyleDeclarationImpl *style) const
+bool Frame::selectionStartHasStyle(CSSStyleDeclaration *style) const
 {
-    NodeImpl* nodeToRemove;
-    RefPtr<CSSStyleDeclarationImpl> selectionStyle = selectionComputedStyle(nodeToRemove);
+    Node* nodeToRemove;
+    RefPtr<CSSStyleDeclaration> selectionStyle = selectionComputedStyle(nodeToRemove);
     if (!selectionStyle)
         return false;
 
-    RefPtr<CSSMutableStyleDeclarationImpl> mutableStyle = style->makeMutable();
+    RefPtr<CSSMutableStyleDeclaration> mutableStyle = style->makeMutable();
 
     bool match = true;
-    QValueListConstIterator<CSSProperty> end;
-    for (QValueListConstIterator<CSSProperty> it = mutableStyle->valuesIterator(); it != end; ++it) {
+    DeprecatedValueListConstIterator<CSSProperty> end;
+    for (DeprecatedValueListConstIterator<CSSProperty> it = mutableStyle->valuesIterator(); it != end; ++it) {
         int propertyID = (*it).id();
         if (!equalIgnoringCase(mutableStyle->getPropertyValue(propertyID), selectionStyle->getPropertyValue(propertyID))) {
             match = false;
@@ -2353,14 +2255,14 @@ bool Frame::selectionStartHasStyle(CSSStyleDeclarationImpl *style) const
     return match;
 }
 
-DOMString Frame::selectionStartStylePropertyValue(int stylePropertyID) const
+String Frame::selectionStartStylePropertyValue(int stylePropertyID) const
 {
-    NodeImpl *nodeToRemove;
-    RefPtr<CSSStyleDeclarationImpl> selectionStyle = selectionComputedStyle(nodeToRemove);
+    Node *nodeToRemove;
+    RefPtr<CSSStyleDeclaration> selectionStyle = selectionComputedStyle(nodeToRemove);
     if (!selectionStyle)
-        return DOMString();
+        return String();
 
-    DOMString value = selectionStyle->getPropertyValue(stylePropertyID);
+    String value = selectionStyle->getPropertyValue(stylePropertyID);
 
     if (nodeToRemove) {
         ExceptionCode ec = 0;
@@ -2371,7 +2273,7 @@ DOMString Frame::selectionStartStylePropertyValue(int stylePropertyID) const
     return value;
 }
 
-CSSComputedStyleDeclarationImpl *Frame::selectionComputedStyle(NodeImpl *&nodeToRemove) const
+CSSComputedStyleDeclaration *Frame::selectionComputedStyle(Node *&nodeToRemove) const
 {
     nodeToRemove = 0;
 
@@ -2381,14 +2283,14 @@ CSSComputedStyleDeclarationImpl *Frame::selectionComputedStyle(NodeImpl *&nodeTo
     if (d->m_selection.isNone())
         return 0;
 
-    RefPtr<RangeImpl> range(d->m_selection.toRange());
+    RefPtr<Range> range(d->m_selection.toRange());
     Position pos = range->editingStartPosition();
 
-    ElementImpl *elem = pos.element();
+    Element *elem = pos.element();
     if (!elem)
         return 0;
     
-    RefPtr<ElementImpl> styleElement = elem;
+    RefPtr<Element> styleElement = elem;
     ExceptionCode ec = 0;
 
     if (d->m_typingStyle) {
@@ -2404,8 +2306,8 @@ CSSComputedStyleDeclarationImpl *Frame::selectionComputedStyle(NodeImpl *&nodeTo
         if (elem->renderer() && elem->renderer()->canHaveChildren()) {
             elem->appendChild(styleElement, ec);
         } else {
-            NodeImpl *parent = elem->parent();
-            NodeImpl *next = elem->nextSibling();
+            Node *parent = elem->parent();
+            Node *next = elem->nextSibling();
 
             if (next) {
                 parent->insertBefore(styleElement, next, ec);
@@ -2418,7 +2320,7 @@ CSSComputedStyleDeclarationImpl *Frame::selectionComputedStyle(NodeImpl *&nodeTo
         nodeToRemove = styleElement.get();
     }
 
-    return new CSSComputedStyleDeclarationImpl(styleElement);
+    return new CSSComputedStyleDeclaration(styleElement);
 }
 
 void Frame::applyEditingStyleToBodyElement() const
@@ -2426,10 +2328,10 @@ void Frame::applyEditingStyleToBodyElement() const
     if (!d->m_doc)
         return;
         
-    RefPtr<NodeListImpl> list = d->m_doc->getElementsByTagName("body");
+    RefPtr<NodeList> list = d->m_doc->getElementsByTagName("body");
     unsigned len = list->length();
     for (unsigned i = 0; i < len; i++) {
-        applyEditingStyleToElement(static_cast<ElementImpl *>(list->item(i)));    
+        applyEditingStyleToElement(static_cast<Element *>(list->item(i)));    
     }
 }
 
@@ -2438,31 +2340,31 @@ void Frame::removeEditingStyleFromBodyElement() const
     if (!d->m_doc)
         return;
         
-    RefPtr<NodeListImpl> list = d->m_doc->getElementsByTagName("body");
+    RefPtr<NodeList> list = d->m_doc->getElementsByTagName("body");
     unsigned len = list->length();
     for (unsigned i = 0; i < len; i++) {
-        removeEditingStyleFromElement(static_cast<ElementImpl *>(list->item(i)));    
+        removeEditingStyleFromElement(static_cast<Element *>(list->item(i)));    
     }
 }
 
-void Frame::applyEditingStyleToElement(ElementImpl *element) const
+void Frame::applyEditingStyleToElement(Element *element) const
 {
     if (!element || !element->isHTMLElement())
         return;
     
-    static_cast<HTMLElementImpl *>(element)->setContentEditable("true");
+    static_cast<HTMLElement *>(element)->setContentEditable("true");
 }
 
-void Frame::removeEditingStyleFromElement(ElementImpl *element) const
+void Frame::removeEditingStyleFromElement(Element *element) const
 {
     if (!element || !element->isHTMLElement())
         return;
         
-    static_cast<HTMLElementImpl *>(element)->setContentEditable("false");        
+    static_cast<HTMLElement *>(element)->setContentEditable("false");        
 }
 
 
-bool Frame::isCharacterSmartReplaceExempt(const QChar &, bool)
+bool Frame::isCharacterSmartReplaceExempt(const QChar&, bool)
 {
     // no smart replace
     return true;
@@ -2536,13 +2438,13 @@ void Frame::selectFrameElementInParentIfFullySelected()
         return;
 
     // Get to the <iframe> or <frame> (or even <object>) element in the parent frame.
-    DocumentImpl *doc = document();
+    Document *doc = document();
     if (!doc)
         return;
-    ElementImpl *ownerElement = doc->ownerElement();
+    Element *ownerElement = doc->ownerElement();
     if (!ownerElement)
         return;
-    NodeImpl *ownerElementParent = ownerElement->parentNode();
+    Node *ownerElementParent = ownerElement->parentNode();
     if (!ownerElementParent)
         return;
         
@@ -2564,10 +2466,10 @@ void Frame::selectFrameElementInParentIfFullySelected()
 
 void Frame::handleFallbackContent()
 {
-    ElementImpl* owner = ownerElement();
+    Element* owner = ownerElement();
     if (!owner || !owner->hasTagName(objectTag))
         return;
-    static_cast<HTMLObjectElementImpl *>(owner)->renderFallbackContent();
+    static_cast<HTMLObjectElement *>(owner)->renderFallbackContent();
 }
 
 void Frame::setSettings(KHTMLSettings *settings)
@@ -2597,16 +2499,16 @@ bool Frame::userGestureHint()
 
 RenderObject *Frame::renderer() const
 {
-    DocumentImpl *doc = document();
+    Document *doc = document();
     return doc ? doc->renderer() : 0;
 }
 
-ElementImpl* Frame::ownerElement()
+Element* Frame::ownerElement()
 {
     RenderPart* ownerElementRenderer = d->m_ownerRenderer;
     if (!ownerElementRenderer)
         return 0;
-    return static_cast<ElementImpl*>(ownerElementRenderer->element());
+    return static_cast<Element*>(ownerElementRenderer->element());
 }
 
 RenderPart* Frame::ownerRenderer()
@@ -2623,72 +2525,77 @@ IntRect Frame::selectionRect() const
     return root->selectionRect();
 }
 
+// returns FloatRect because going through IntRect would truncate any floats
+FloatRect Frame::visibleSelectionRect() const
+{
+    if (!d->m_view)
+        return FloatRect();
+    
+    return intersection(selectionRect(), d->m_view->visibleContentRect());
+}
+
 bool Frame::isFrameSet() const
 {
-    DocumentImpl* document = d->m_doc.get();
+    Document* document = d->m_doc.get();
     if (!document || !document->isHTMLDocument())
         return false;
-    NodeImpl *body = static_cast<HTMLDocumentImpl *>(document)->body();
+    Node *body = static_cast<HTMLDocument *>(document)->body();
     return body && body->renderer() && body->hasTagName(framesetTag);
 }
 
-bool Frame::openURL(const KURL &URL)
+bool Frame::openURL(const KURL& URL)
 {
     ASSERT_NOT_REACHED();
     return true;
 }
 
-void Frame::didNotOpenURL(const KURL &URL)
+void Frame::didNotOpenURL(const KURL& URL)
 {
-    if (_submittedFormURL == URL) {
-        _submittedFormURL = KURL();
-    }
+    if (d->m_submittedFormURL == URL)
+        d->m_submittedFormURL = KURL();
 }
 
 // Scans logically forward from "start", including any child frames
-static HTMLFormElementImpl *scanForForm(NodeImpl *start)
+static HTMLFormElement *scanForForm(Node *start)
 {
-    NodeImpl *n;
+    Node *n;
     for (n = start; n; n = n->traverseNextNode()) {
-        if (n->hasTagName(formTag)) {
-            return static_cast<HTMLFormElementImpl *>(n);
-        } else if (n->isHTMLElement()
-                   && static_cast<HTMLElementImpl *>(n)->isGenericFormElement()) {
-            return static_cast<HTMLGenericFormElementImpl *>(n)->form();
-        } else if (n->hasTagName(frameTag) || n->hasTagName(iframeTag)) {
-            NodeImpl *childDoc = static_cast<HTMLFrameElementImpl *>(n)->contentDocument();
-            HTMLFormElementImpl *frameResult = scanForForm(childDoc);
-            if (frameResult) {
+        if (n->hasTagName(formTag))
+            return static_cast<HTMLFormElement *>(n);
+        else if (n->isHTMLElement() && static_cast<HTMLElement*>(n)->isGenericFormElement())
+            return static_cast<HTMLGenericFormElement*>(n)->form();
+        else if (n->hasTagName(frameTag) || n->hasTagName(iframeTag)) {
+            Node *childDoc = static_cast<HTMLFrameElement *>(n)->contentDocument();
+            if (HTMLFormElement *frameResult = scanForForm(childDoc))
                 return frameResult;
-            }
         }
     }
     return 0;
 }
 
 // We look for either the form containing the current focus, or for one immediately after it
-HTMLFormElementImpl *Frame::currentForm() const
+HTMLFormElement *Frame::currentForm() const
 {
     // start looking either at the active (first responder) node, or where the selection is
-    NodeImpl *start = d->m_doc ? d->m_doc->focusNode() : 0;
+    Node *start = d->m_doc ? d->m_doc->focusNode() : 0;
     if (!start)
         start = selection().start().node();
     
     // try walking up the node tree to find a form element
-    NodeImpl *n;
+    Node *n;
     for (n = start; n; n = n->parentNode()) {
         if (n->hasTagName(formTag))
-            return static_cast<HTMLFormElementImpl *>(n);
+            return static_cast<HTMLFormElement *>(n);
         else if (n->isHTMLElement()
-                   && static_cast<HTMLElementImpl *>(n)->isGenericFormElement())
-            return static_cast<HTMLGenericFormElementImpl *>(n)->form();
+                   && static_cast<HTMLElement *>(n)->isGenericFormElement())
+            return static_cast<HTMLGenericFormElement *>(n)->form();
     }
     
     // try walking forward in the node tree to find a form element
     return start ? scanForForm(start) : 0;
 }
 
-void Frame::setEncoding(const QString &name, bool userChosen)
+void Frame::setEncoding(const DeprecatedString& name, bool userChosen)
 {
     if (!d->m_workingURL.isEmpty())
         receivedFirstData();
@@ -2742,7 +2649,7 @@ bool Frame::scrollOverflow(KWQScrollDirection direction, KWQScrollGranularity gr
         return false;
     }
     
-    NodeImpl *node = document()->focusNode();
+    Node *node = document()->focusNode();
     if (node == 0) {
         node = d->m_mousePressNode.get();
     }
@@ -2757,6 +2664,36 @@ bool Frame::scrollOverflow(KWQScrollDirection direction, KWQScrollGranularity gr
     return false;
 }
 
+void Frame::handleAutoscroll(RenderLayer* layer)
+{
+    if (d->m_autoscrollTimer.isActive())
+        return;
+    d->m_autoscrollLayer = layer;
+    startAutoscrollTimer();
+}
+
+void Frame::autoscrollTimerFired(Timer<Frame>*)
+{
+    bool isStillDown = PlatformMouseEvent::isMouseButtonDown(LeftButton);  
+    if (!isStillDown){
+        stopAutoscrollTimer();
+        return;
+    }
+    if (d->m_autoscrollLayer) {
+        d->m_autoscrollLayer->autoscroll();
+    } 
+}
+
+void Frame::startAutoscrollTimer()
+{
+    d->m_autoscrollTimer.startRepeating(autoscrollInterval);
+}
+
+void Frame::stopAutoscrollTimer()
+{
+    d->m_autoscrollTimer.stop();
+}
+
 // FIXME: why is this here instead of on the FrameView?
 void Frame::paint(GraphicsContext* p, const IntRect& rect)
 {
@@ -2768,9 +2705,9 @@ void Frame::paint(GraphicsContext* p, const IntRect& rect)
         fillWithRed = false; // Subframe, don't fill with red.
     else if (view() && view()->isTransparent())
         fillWithRed = false; // Transparent, don't fill with red.
-    else if (_drawSelectionOnly)
+    else if (d->m_drawSelectionOnly)
         fillWithRed = false; // Selections are transparent, don't fill with red.
-    else if (_elementToDraw)
+    else if (d->m_elementToDraw)
         fillWithRed = false; // Element images are transparent, don't fill with red.
     else
         fillWithRed = true;
@@ -2780,9 +2717,9 @@ void Frame::paint(GraphicsContext* p, const IntRect& rect)
 #endif
     
     if (renderer()) {
-        // _elementToDraw is used to draw only one element
-        RenderObject *eltRenderer = _elementToDraw ? _elementToDraw->renderer() : 0;
-        renderer()->layer()->paint(p, rect, _drawSelectionOnly, eltRenderer);
+        // d->m_elementToDraw is used to draw only one element
+        RenderObject *eltRenderer = d->m_elementToDraw ? d->m_elementToDraw->renderer() : 0;
+        renderer()->layer()->paint(p, rect, d->m_drawSelectionOnly, eltRenderer);
 
 #if __APPLE__
         // Regions may have changed as a result of the visibility/z-index of element changing.
@@ -2892,13 +2829,13 @@ void Frame::restoreLocationProperties(SavedProperties *locationProperties)
     }
 }
 
-void Frame::saveInterpreterBuiltins(SavedBuiltins &interpreterBuiltins)
+void Frame::saveInterpreterBuiltins(SavedBuiltins& interpreterBuiltins)
 {
     if (jScript())
         jScript()->interpreter()->saveBuiltins(interpreterBuiltins);
 }
 
-void Frame::restoreInterpreterBuiltins(const SavedBuiltins &interpreterBuiltins)
+void Frame::restoreInterpreterBuiltins(const SavedBuiltins& interpreterBuiltins)
 {
     if (jScript())
         jScript()->interpreter()->restoreBuiltins(interpreterBuiltins);
@@ -2908,7 +2845,7 @@ Frame *Frame::frameForWidget(const Widget *widget)
 {
     ASSERT_ARG(widget, widget);
     
-    NodeImpl *node = nodeForWidget(widget);
+    Node *node = nodeForWidget(widget);
     if (node)
         return frameForNode(node);
     
@@ -2917,13 +2854,13 @@ Frame *Frame::frameForWidget(const Widget *widget)
     return static_cast<const FrameView *>(widget)->frame();
 }
 
-Frame *Frame::frameForNode(NodeImpl *node)
+Frame *Frame::frameForNode(Node *node)
 {
     ASSERT_ARG(node, node);
     return node->getDocument()->frame();
 }
 
-NodeImpl* Frame::nodeForWidget(const Widget* widget)
+Node* Frame::nodeForWidget(const Widget* widget)
 {
     ASSERT_ARG(widget, widget);
     WidgetClient* client = widget->client();
@@ -2932,23 +2869,16 @@ NodeImpl* Frame::nodeForWidget(const Widget* widget)
     return client->element(const_cast<Widget*>(widget));
 }
 
-void Frame::setDocumentFocus(Widget *widget)
-{
-    NodeImpl *node = nodeForWidget(widget);
-    ASSERT(node);
-    node->getDocument()->setFocusNode(node);
-}
-
 void Frame::clearDocumentFocus(Widget *widget)
 {
-    NodeImpl *node = nodeForWidget(widget);
+    Node *node = nodeForWidget(widget);
     ASSERT(node);
     node->getDocument()->setFocusNode(0);
 }
 
-QPtrList<Frame> &Frame::mutableInstances()
+DeprecatedPtrList<Frame>& Frame::mutableInstances()
 {
-    static QPtrList<Frame> instancesList;
+    static DeprecatedPtrList<Frame> instancesList;
     return instancesList;
 }
 
@@ -2960,7 +2890,7 @@ void Frame::updatePolicyBaseURL()
         setPolicyBaseURL(d->m_url.url());
 }
 
-void Frame::setPolicyBaseURL(const DOMString &s)
+void Frame::setPolicyBaseURL(const String& s)
 {
     if (document())
         document()->setPolicyBaseURL(s);
@@ -3010,7 +2940,7 @@ void Frame::forceLayoutWithPageWidthRange(float minPageWidth, float maxPageWidth
 
 void Frame::sendResizeEvent()
 {
-    if (DocumentImpl* doc = document())
+    if (Document* doc = document())
         doc->dispatchWindowEvent(EventNames::resizeEvent, false, false);
 }
 
@@ -3018,7 +2948,7 @@ void Frame::sendScrollEvent()
 {
     FrameView *v = d->m_view.get();
     if (v) {
-        DocumentImpl *doc = document();
+        Document *doc = document();
         if (!doc)
             return;
         doc->dispatchHTMLEvent(scrollEvent, true, false);
@@ -3036,14 +2966,14 @@ bool Frame::scrollbarsVisible()
     return true;
 }
 
-void Frame::addMetaData(const QString &key, const QString &value)
+void Frame::addMetaData(const String& key, const String& value)
 {
     d->m_job->addMetaData(key, value);
 }
 
 // This does the same kind of work that Frame::openURL does, except it relies on the fact
 // that a higher level already checked that the URLs match and the scrolling is the right thing to do.
-void Frame::scrollToAnchor(const KURL &URL)
+void Frame::scrollToAnchor(const KURL& URL)
 {
     d->m_url = URL;
     started();
@@ -3064,7 +2994,7 @@ bool Frame::closeURL()
     return true;
 }
 
-bool Frame::canMouseDownStartSelect(NodeImpl* node)
+bool Frame::canMouseDownStartSelect(Node* node)
 {
     if (!node || !node->renderer())
         return true;
@@ -3082,15 +3012,15 @@ bool Frame::canMouseDownStartSelect(NodeImpl* node)
     return true;
 }
 
-void Frame::khtmlMouseDoubleClickEvent(MouseEventWithHitTestResults* event)
+void Frame::handleMouseReleaseDoubleClickEvent(const MouseEventWithHitTestResults& event)
 {
     passWidgetMouseDownEventToWidget(event, true);
 }
 
-bool Frame::passWidgetMouseDownEventToWidget(MouseEventWithHitTestResults* event, bool isDoubleClick)
+bool Frame::passWidgetMouseDownEventToWidget(const MouseEventWithHitTestResults& event, bool isDoubleClick)
 {
     // Figure out which view to send the event to.
-    RenderObject *target = event->innerNode() ? event->innerNode()->renderer() : 0;
+    RenderObject *target = event.innerNode() ? event.innerNode()->renderer() : 0;
     if (!target)
         return false;
     
@@ -3120,7 +3050,7 @@ void Frame::clearTimers(FrameView *view)
     if (view) {
         view->unscheduleRelayout();
         if (view->frame()) {
-            DocumentImpl* document = view->frame()->document();
+            Document* document = view->frame()->document();
             if (document && document->renderer() && document->renderer()->layer())
                 document->renderer()->layer()->suspendMarquees();
         }
@@ -3163,7 +3093,7 @@ void Frame::centerSelectionInVisibleArea() const
     }
 }
 
-RenderStyle *Frame::styleForSelectionStart(NodeImpl *&nodeToRemove) const
+RenderStyle *Frame::styleForSelectionStart(Node *&nodeToRemove) const
 {
     nodeToRemove = 0;
     
@@ -3175,7 +3105,7 @@ RenderStyle *Frame::styleForSelectionStart(NodeImpl *&nodeToRemove) const
     Position pos = VisiblePosition(d->m_selection.start(), d->m_selection.affinity()).deepEquivalent();
     if (!pos.inRenderedContent())
         return 0;
-    NodeImpl *node = pos.node();
+    Node *node = pos.node();
     if (!node)
         return 0;
     
@@ -3183,7 +3113,7 @@ RenderStyle *Frame::styleForSelectionStart(NodeImpl *&nodeToRemove) const
         return node->renderer()->style();
     
     ExceptionCode ec = 0;
-    RefPtr<ElementImpl> styleElement = document()->createElementNS(xhtmlNamespaceURI, "span", ec);
+    RefPtr<Element> styleElement = document()->createElementNS(xhtmlNamespaceURI, "span", ec);
     ASSERT(ec == 0);
     
     styleElement->setAttribute(styleAttr, d->m_typingStyle->cssText().impl(), ec);
@@ -3199,7 +3129,7 @@ RenderStyle *Frame::styleForSelectionStart(NodeImpl *&nodeToRemove) const
     return styleElement->renderer()->style();
 }
 
-void Frame::setMediaType(const QString &type)
+void Frame::setMediaType(const String& type)
 {
     if (d->m_view)
         d->m_view->setMediaType(type);
@@ -3210,9 +3140,9 @@ void Frame::setSelectionFromNone()
     // Put the caret someplace if the selection is empty and the part is editable.
     // This has the effect of flashing the caret in a contentEditable view automatically 
     // without requiring the programmer to set a selection explicitly.
-    DocumentImpl *doc = document();
+    Document *doc = document();
     if (doc && selection().isNone() && isContentEditable()) {
-        NodeImpl *node = doc->documentElement();
+        Node *node = doc->documentElement();
         while (node) {
             // Look for a block flow, but skip over the HTML element, since we really
             // want to get at least as far as the the BODY element in a document.
@@ -3230,19 +3160,50 @@ bool Frame::displaysWithFocusAttributes() const
     return d->m_isFocused;
 }
 
+void Frame::setDisplaysWithFocusAttributes(bool flag)
+{
+    if (d->m_isFocused == flag)
+        return;
+    
+    d->m_isFocused = flag;
+
+    // This method does the job of updating the view based on whether the view is "active".
+    // This involves three kinds of drawing updates:
+
+    // 1. The background color used to draw behind selected content (active | inactive color)
+    if (d->m_view)
+        d->m_view->updateContents(enclosingIntRect(visibleSelectionRect()));
+
+    // 2. Caret blinking (blinks | does not blink)
+    if (flag)
+        setSelectionFromNone();
+    setCaretVisible(flag);
+    
+    // 3. The drawing of a focus ring around links in web pages.
+    Document *doc = document();
+    if (doc) {
+        Node *node = doc->focusNode();
+        if (node) {
+            node->setChanged();
+            if (node->renderer() && node->renderer()->style()->hasAppearance())
+                theme()->stateChanged(node->renderer(), FocusState);
+        }
+    }
+}
+
 void Frame::setWindowHasFocus(bool flag)
 {
-    if (m_windowHasFocus == flag)
+    if (d->m_windowHasFocus == flag)
         return;
-    m_windowHasFocus = flag;
+    d->m_windowHasFocus = flag;
     
-    if (DocumentImpl *doc = document())
+    if (Document *doc = document())
         doc->dispatchWindowEvent(flag ? focusEvent : blurEvent, false, false);
 }
 
 QChar Frame::backslashAsCurrencySymbol() const
 {
-    DocumentImpl *doc = document();
+    Document *doc = document();
     if (!doc)
         return '\\';
     Decoder *decoder = doc->decoder();
@@ -3254,26 +3215,25 @@ QChar Frame::backslashAsCurrencySymbol() const
 
 bool Frame::markedTextUsesUnderlines() const
 {
-    return m_markedTextUsesUnderlines;
+    return d->m_markedTextUsesUnderlines;
 }
 
-QValueList<MarkedTextUnderline> Frame::markedTextUnderlines() const
+DeprecatedValueList<MarkedTextUnderline> Frame::markedTextUnderlines() const
 {
-    return m_markedTextUnderlines;
+    return d->m_markedTextUnderlines;
 }
 
-unsigned Frame::highlightAllMatchesForString(const QString &target, bool caseFlag)
+unsigned Frame::highlightAllMatchesForString(const String& target, bool caseFlag)
 {
-    if (target.isEmpty()) {
+    if (target.isEmpty())
         return 0;
-    }
     
-    RefPtr<RangeImpl> searchRange(rangeOfContents(document()));
+    RefPtr<Range> searchRange(rangeOfContents(document()));
     
     int exception = 0;
     unsigned matchCount = 0;
     do {
-        RefPtr<RangeImpl> resultRange(findPlainText(searchRange.get(), target, true, caseFlag));
+        RefPtr<Range> resultRange(findPlainText(searchRange.get(), target, true, caseFlag));
         if (resultRange->collapsed(exception))
             break;
         
@@ -3290,22 +3250,27 @@ void Frame::prepareForUserAction()
 {
     // Reset the multiple form submission protection code.
     // We'll let you submit the same form twice if you do two separate user actions.
-    _submittedFormURL = KURL();
+    d->m_submittedFormURL = KURL();
 }
 
-NodeImpl *Frame::mousePressNode()
+Node *Frame::mousePressNode()
 {
     return d->m_mousePressNode.get();
 }
 
-bool Frame::isComplete()
+bool Frame::isComplete() const
 {
     return d->m_bComplete;
 }
 
+bool Frame::isLoadingMainResource() const
+{
+    return d->m_bLoadingMainResource;
+}
+
 FrameTree *Frame::tree() const
 {
-    return &d->m_treeNode;
+    return& d->m_treeNode;
 }
 
 void Frame::detachFromView()
@@ -3333,7 +3298,7 @@ void Frame::frameDetached()
 
 void Frame::updateBaseURLForEmptyDocument()
 {
-    ElementImpl* owner = ownerElement();
+    Element* owner = ownerElement();
     // FIXME: Should embed be included?
     if (owner && (owner->hasTagName(iframeTag) || owner->hasTagName(objectTag) || owner->hasTagName(embedTag)))
         d->m_doc->setBaseURL(tree()->parent()->d->m_doc->baseURL());

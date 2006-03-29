@@ -19,14 +19,21 @@
 
 module core {
 
-    interface [LegacyParent=KJS::DOMNode] Attr : Node {
+    interface [LegacyParent=KJS::DOMEventTargetNode] Attr : EventTargetNode {
+
+        // DOM Level 1
+
         readonly attribute [ConvertNullStringTo=Null] DOMString name;
         readonly attribute boolean specified;
                  attribute [ConvertNullStringTo=Null] DOMString value 
-                     raises (DOMException);
+                     setter raises (DOMException);
+
+        // DOM Level 2
+
         readonly attribute Element ownerElement;
         
-        // Web inspector extension
+        // extensions
+
         readonly attribute CSSStyleDeclaration style;
     };
 

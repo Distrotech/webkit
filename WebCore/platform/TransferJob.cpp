@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2004, 2006 Apple Computer, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -25,14 +25,12 @@
 
 #include "config.h"
 #include "TransferJob.h"
-
 #include "TransferJobInternal.h"
 
 #include "KURL.h"
 #include "KWQLoader.h"
 #include "Logging.h"
 #include "formdata.h"
-#include "String.h"
 
 namespace WebCore {
 
@@ -61,13 +59,7 @@ void TransferJob::setError(int e)
     d->status = e;
 }
 
-QString TransferJob::errorText() const
-{
-    LOG(NotYetImplemented, "not yet implemented");
-    return QString::null;
-}
-
-QString TransferJob::queryMetaData(const QString &key) const
+String TransferJob::queryMetaData(const String& key) const
 {
     if (key == "HTTP-Headers") {
         assembleResponseHeaders();
@@ -78,10 +70,10 @@ QString TransferJob::queryMetaData(const QString &key) const
         // this will put it in the regular metadata dictionary
         retrieveCharset();
 
-    return d->metaData.get(key).qstring(); 
+    return d->metaData.get(key); 
 }
 
-void TransferJob::addMetaData(const QString &key, const QString &value)
+void TransferJob::addMetaData(const String& key, const String& value)
 {
     d->metaData.set(key, value);
 }

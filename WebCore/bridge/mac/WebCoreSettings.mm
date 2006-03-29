@@ -27,7 +27,7 @@
 #import "WebCoreSettings.h"
 
 #import "FoundationExtras.h"
-#import "MacFrame.h"
+#import "FrameMac.h"
 #import "KWQKHTMLSettings.h"
 #import "WebCoreFrameBridge.h"
 
@@ -57,30 +57,30 @@ using namespace WebCore;
     [super finalize];
 }
 
-- init
+- (id)init
 {
+    // A Frame may not have been created yet, so we initialize the AtomicString hash before we try and use it in KHTMLSettings.
+    AtomicString::init();
     settings = new KHTMLSettings();
     return [super init];
 }
 
 - (void)_updateAllViews
 {
-    for (QPtrListIterator<Frame> it(Frame::instances()); it.current(); ++it) {
-        MacFrame *frame = Mac(it.current());
-        if (frame->settings() == settings) {
+    for (DeprecatedPtrListIterator<Frame> it(Frame::instances()); it.current(); ++it) {
+        FrameMac *frame = Mac(it.current());
+        if (frame->settings() == settings)
             [frame->bridge() setNeedsReapplyStyles];
-        }
     }
 }
 
 - (void)setStandardFontFamily:(NSString *)s
 {
-    if ([standardFontFamily isEqualToString:s]) {
+    if ([standardFontFamily isEqualToString:s])
         return;
-    }
     [standardFontFamily release];
     standardFontFamily = [s copy];
-    settings->setStdFontName(QString::fromNSString(s));
+    settings->setStdFontName(s);
     [self _updateAllViews];
 }
 
@@ -91,12 +91,11 @@ using namespace WebCore;
 
 - (void)setFixedFontFamily:(NSString *)s
 {
-    if ([fixedFontFamily isEqualToString:s]) {
+    if ([fixedFontFamily isEqualToString:s])
         return;
-    }
     [fixedFontFamily release];
     fixedFontFamily = [s copy];
-    settings->setFixedFontName(QString::fromNSString(s));
+    settings->setFixedFontName(s);
     [self _updateAllViews];
 }
 
@@ -107,12 +106,11 @@ using namespace WebCore;
 
 - (void)setSerifFontFamily:(NSString *)s
 {
-    if ([serifFontFamily isEqualToString:s]) {
+    if ([serifFontFamily isEqualToString:s])
         return;
-    }
     [serifFontFamily release];
     serifFontFamily = [s copy];
-    settings->setSerifFontName(QString::fromNSString(s));
+    settings->setSerifFontName(s);
     [self _updateAllViews];
 }
 
@@ -123,12 +121,11 @@ using namespace WebCore;
 
 - (void)setSansSerifFontFamily:(NSString *)s
 {
-    if ([sansSerifFontFamily isEqualToString:s]) {
+    if ([sansSerifFontFamily isEqualToString:s])
         return;
-    }
     [sansSerifFontFamily release];
     sansSerifFontFamily = [s copy];
-    settings->setSansSerifFontName(QString::fromNSString(s));
+    settings->setSansSerifFontName(s);
     [self _updateAllViews];
 }
 
@@ -139,12 +136,11 @@ using namespace WebCore;
 
 - (void)setCursiveFontFamily:(NSString *)s
 {
-    if ([cursiveFontFamily isEqualToString:s]) {
+    if ([cursiveFontFamily isEqualToString:s])
         return;
-    }
     [cursiveFontFamily release];
     cursiveFontFamily = [s copy];
-    settings->setCursiveFontName(QString::fromNSString(s));
+    settings->setCursiveFontName(s);
     [self _updateAllViews];
 }
 
@@ -155,12 +151,11 @@ using namespace WebCore;
 
 - (void)setFantasyFontFamily:(NSString *)s
 {
-    if ([fantasyFontFamily isEqualToString:s]) {
+    if ([fantasyFontFamily isEqualToString:s])
         return;
-    }
     [fantasyFontFamily release];
     fantasyFontFamily = [s copy];
-    settings->setFantasyFontName(QString::fromNSString(s));
+    settings->setFantasyFontName(s);
     [self _updateAllViews];
 }
 
@@ -171,9 +166,8 @@ using namespace WebCore;
 
 - (void)setMinimumFontSize:(float)size
 {
-    if (minimumFontSize == size) {
+    if (minimumFontSize == size)
         return;
-    }
     minimumFontSize = size;
     settings->setMinFontSize((int)rint(size));
     [self _updateAllViews];
@@ -186,9 +180,8 @@ using namespace WebCore;
 
 - (void)setMinimumLogicalFontSize:(float)size
 {
-    if (minimumLogicalFontSize == size) {
+    if (minimumLogicalFontSize == size)
         return;
-    }
     minimumLogicalFontSize = size;
     settings->setMinLogicalFontSize((int)rint(size));
     [self _updateAllViews];
@@ -201,9 +194,8 @@ using namespace WebCore;
 
 - (void)setDefaultFontSize:(float)size
 {
-    if (defaultFontSize == size) {
+    if (defaultFontSize == size)
         return;
-    }
     defaultFontSize = size;
     settings->setMediumFontSize((int)rint(size));
     [self _updateAllViews];
@@ -216,9 +208,8 @@ using namespace WebCore;
 
 - (void)setDefaultFixedFontSize:(float)size
 {
-    if (defaultFixedFontSize == size) {
+    if (defaultFixedFontSize == size)
         return;
-    }
     defaultFixedFontSize = size;
     settings->setMediumFixedFontSize((int)rint(size));
     [self _updateAllViews];
@@ -286,12 +277,11 @@ using namespace WebCore;
 
 - (void)setUserStyleSheetLocation:(NSString *)s
 {
-    if ([userStyleSheetLocation isEqualToString:s]) {
+    if ([userStyleSheetLocation isEqualToString:s])
         return;
-    }
     [userStyleSheetLocation release];
     userStyleSheetLocation = [s copy];
-    settings->setUserStyleSheet(QString::fromNSString(s));
+    settings->setUserStyleSheetLocation(DeprecatedString::fromNSString(s));
     [self _updateAllViews];
 }
 
@@ -324,12 +314,11 @@ using namespace WebCore;
 
 - (void)setDefaultTextEncoding:(NSString *)s
 {
-    if ([defaultTextEncoding isEqualToString:s]) {
+    if ([defaultTextEncoding isEqualToString:s])
         return;
-    }
     [defaultTextEncoding release];
     defaultTextEncoding = [s copy];
-    settings->setEncoding(QString::fromNSString(s));
+    settings->setEncoding(DeprecatedString::fromNSString(s));
 }
 
 - (NSString *)defaultTextEncoding

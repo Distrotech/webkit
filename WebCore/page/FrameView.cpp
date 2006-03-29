@@ -29,23 +29,23 @@
 #include "Cursor.h"
 #include "EventNames.h"
 #include "Frame.h"
-#include "HTMLInputElementImpl.h"
+#include "HTMLInputElement.h"
 #include "Image.h"
-#include "KWQAccObjectCache.h"
-#include "KeyEvent.h"
-#include "MouseEvent.h"
+#include "AccessibilityObjectCache.h"
+#include "PlatformKeyboardEvent.h"
+#include "PlatformMouseEvent.h"
 #include "MouseEventWithHitTestResults.h"
 #include "RenderText.h"
 #include "SelectionController.h"
-#include "WheelEvent.h"
+#include "PlatformWheelEvent.h"
 #include "cssstyleselector.h"
 #include "dom2_eventsimpl.h"
-#include "html_documentimpl.h"
+#include "HTMLDocument.h"
 #include "html_inlineimpl.h"
-#include "htmlnames.h"
+#include "HTMLNames.h"
 #include "khtml_settings.h"
-#include "render_arena.h"
-#include "render_canvas.h"
+#include "RenderArena.h"
+#include "RenderCanvas.h"
 #include "render_frames.h"
 #include "render_line.h"
 #include "render_replaced.h"
@@ -62,6 +62,7 @@ public:
         : m_hasBorder(false)
         , layoutTimer(view, &FrameView::layoutTimerFired)
         , hoverTimer(view, &FrameView::hoverTimerFired)
+        , m_mediaType("screen")
     {
         repaintRects = 0;
         isTransparent = false;
@@ -76,6 +77,8 @@ public:
     void reset()
     {
         underMouse = 0;
+        oldUnder = 0;
+        oldSubframe = 0;
         linkPressed = false;
         useSlowRepaints = false;
         dragTarget = 0;
@@ -84,8 +87,6 @@ public:
         ignoreWheelEvents = false;
         borderX = 30;
         borderY = 30;
-        prevMouseX = -1;
-        prevMouseY = -1;
         clickCount = 0;
         clickNode = 0;
         scrollingSelf = false;
@@ -103,7 +104,9 @@ public:
         resizingFrameSet = 0;
     }
 
-    RefPtr<NodeImpl> underMouse;
+    RefPtr<Node> underMouse;
+    RefPtr<Node> oldUnder;
+    RefPtr<Frame> oldSubframe;
 
     bool borderTouched : 1;
     bool borderStart : 1;
@@ -119,9 +122,8 @@ public:
 
     int borderX, borderY;
     int clickCount;
-    RefPtr<NodeImpl> clickNode;
+    RefPtr<Node> clickNode;
 
-    int prevMouseX, prevMouseY;
     bool scrollingSelf;
     Timer<FrameView> layoutTimer;
     bool delayedLayout;
@@ -139,17 +141,18 @@ public:
     
     // Used by objects during layout to communicate repaints that need to take place only
     // after all layout has been completed.
-    QPtrList<RenderObject::RepaintInfo>* repaintRects;
+    DeprecatedPtrList<RenderObject::RepaintInfo>* repaintRects;
     
-    RefPtr<NodeImpl> dragTarget;
-    RefPtr<HTMLFrameSetElementImpl> resizingFrameSet;
+    RefPtr<Node> dragTarget;
+    RefPtr<HTMLFrameSetElement> resizingFrameSet;
+    
+    String m_mediaType;
 };
 
 FrameView::FrameView(Frame *frame)
-    : _refCount(1)
+    : m_refCount(1)
     , m_frame(frame)
     , d(new FrameViewPrivate(this))
-    , m_medium("screen")
 {
     init();
 
@@ -160,13 +163,13 @@ FrameView::~FrameView()
 {
     resetScrollBars();
 
-    ASSERT(_refCount == 0);
+    ASSERT(m_refCount == 0);
 
     if (d->hoverTimer.isActive())
         d->hoverTimer.stop();
     if (m_frame) {
         // FIXME: Is this really the right place to call detach on the document?
-        if (DocumentImpl* doc = m_frame->document())
+        if (Document* doc = m_frame->document())
             doc->detach();
         if (RenderPart* renderer = m_frame->ownerRenderer())
             renderer->setWidget(0);
@@ -193,10 +196,8 @@ void FrameView::resetScrollBars()
 
 void FrameView::init()
 {
-    _marginWidth = -1; // undefined
-    _marginHeight = -1;
-    _width = 0;
-    _height = 0;
+    m_margins = IntSize(-1, -1); // undefined
+    m_size = IntSize();
 }
 
 void FrameView::clear()
@@ -230,22 +231,22 @@ void FrameView::initScrollBars()
 void FrameView::setMarginWidth(int w)
 {
     // make it update the rendering area when set
-    _marginWidth = w;
+    m_margins.setWidth(w);
 }
 
 void FrameView::setMarginHeight(int h)
 {
     // make it update the rendering area when set
-    _marginHeight = h;
+    m_margins.setHeight(h);
 }
 
 void FrameView::adjustViewSize()
 {
     if (m_frame->document()) {
-        DocumentImpl *document = m_frame->document();
+        Document *document = m_frame->document();
 
         RenderCanvas* root = static_cast<RenderCanvas *>(document->renderer());
-        if ( !root )
+        if (!root)
             return;
         
         int docw = root->docWidth();
@@ -295,7 +296,7 @@ bool FrameView::needsFullRepaint() const
 void FrameView::addRepaintInfo(RenderObject* o, const IntRect& r)
 {
     if (!d->repaintRects) {
-        d->repaintRects = new QPtrList<RenderObject::RepaintInfo>;
+        d->repaintRects = new DeprecatedPtrList<RenderObject::RepaintInfo>;
         d->repaintRects->setAutoDelete(true);
     }
     
@@ -311,16 +312,16 @@ void FrameView::layout()
     d->delayedLayout = false;
 
     if (!m_frame) {
-        // FIXME: Do we need to set _width here?
-        // FIXME: Should we set _height here too?
-        _width = visibleWidth();
+        // FIXME: Do we need to set m_size.width here?
+        // FIXME: Should we set m_size.height here too?
+        m_size.setWidth(visibleWidth());
         return;
     }
 
-    DocumentImpl* document = m_frame->document();
+    Document* document = m_frame->document();
     if (!document) {
-        // FIXME: Should we set _height here too?
-        _width = visibleWidth();
+        // FIXME: Should we set m_size.height here too?
+        m_size.setWidth(visibleWidth());
         return;
     }
 
@@ -333,7 +334,7 @@ void FrameView::layout()
 
     RenderCanvas* root = static_cast<RenderCanvas*>(document->renderer());
     if (!root) {
-        // FIXME: Do we need to set _width or _height here?
+        // FIXME: Do we need to set m_size here?
         d->layoutSchedulingEnabled = true;
         return;
     }
@@ -343,7 +344,7 @@ void FrameView::layout()
     
     RenderObject* rootRenderer = document->documentElement() ? document->documentElement()->renderer() : 0;
     if (document->isHTMLDocument()) {
-        NodeImpl *body = static_cast<HTMLDocumentImpl*>(document)->body();
+        Node *body = static_cast<HTMLDocument*>(document)->body();
         if (body && body->renderer()) {
             if (body->hasTagName(framesetTag)) {
                 body->renderer()->setNeedsLayout(true);
@@ -397,13 +398,11 @@ void FrameView::layout()
         suppressScrollBars(false, true);
     }
 
-    int oldHeight = _height;
-    int oldWidth = _width;
-    
-    _height = visibleHeight();
-    _width = visibleWidth();
+    IntSize oldSize = m_size;
 
-    if (oldHeight != _height || oldWidth != _width)
+    m_size = IntSize(visibleWidth(), visibleHeight());
+
+    if (oldSize != m_size)
         d->doFullRepaint = true;
     
     RenderLayer* layer = root->layer();
@@ -433,8 +432,8 @@ void FrameView::layout()
         // FIXME: Could optimize this and have objects removed from this list
         // if they ever do full repaints.
         RenderObject::RepaintInfo* r;
-        QPtrListIterator<RenderObject::RepaintInfo> it(*d->repaintRects);
-        for ( ; (r = it.current()); ++it)
+        DeprecatedPtrListIterator<RenderObject::RepaintInfo> it(*d->repaintRects);
+        for (; (r = it.current()); ++it)
             r->m_object->repaintRectangle(r->m_repaintRect);
         d->repaintRects->clear();
     }
@@ -442,13 +441,12 @@ void FrameView::layout()
     d->layoutCount++;
 
 #if __APPLE__
-    if (KWQAccObjectCache::accessibilityEnabled())
+    if (AccessibilityObjectCache::accessibilityEnabled())
         root->document()->getAccObjectCache()->postNotification(root, "AXLayoutComplete");
     updateDashboardRegions();
 #endif
 
     if (root->needsLayout()) {
-        //qDebug("needs layout, delaying repaint");
         scheduleRelayout();
         return;
     }
@@ -463,32 +461,45 @@ void FrameView::layout()
 //
 /////////////////
 
-void FrameView::viewportMousePressEvent(MouseEvent* mouseEvent)
+static Frame* subframeForEvent(const MouseEventWithHitTestResults& mev)
+{
+    if (!mev.innerNode())
+        return 0;
+
+    RenderObject* renderer = mev.innerNode()->renderer();
+    if (!renderer || !renderer->isWidget())
+        return 0;
+
+    Widget* widget = static_cast<RenderWidget*>(renderer)->widget();
+    if (!widget || !widget->isFrameView())
+        return 0;
+
+    return static_cast<FrameView*>(widget)->frame();
+}
+
+void FrameView::handleMousePressEvent(const PlatformMouseEvent& mouseEvent)
 {
     if (!m_frame->document())
         return;
 
     RefPtr<FrameView> protector(this);
 
-    int xm, ym;
-    viewportToContents(mouseEvent->x(), mouseEvent->y(), xm, ym);
-
     d->mousePressed = true;
 
-    MouseEventWithHitTestResults mev = m_frame->document()->prepareMouseEvent(false, true, false, xm, ym, mouseEvent);
+    MouseEventWithHitTestResults mev = prepareMouseEvent(false, true, false, mouseEvent);
 
     if (m_frame->passSubframeEventToSubframe(mev)) {
         invalidateClick();
         return;
     }
 
-    d->clickCount = mouseEvent->clickCount();
+    d->clickCount = mouseEvent.clickCount();
     d->clickNode = mev.innerNode();
 
     bool swallowEvent = dispatchMouseEvent(mousedownEvent, mev.innerNode(), true, d->clickCount, mouseEvent, true);
 
     if (!swallowEvent) {
-        m_frame->khtmlMousePressEvent(&mev);
+        m_frame->handleMousePressEvent(mev);
         // Many AK widgets run their own event loops and consume events while the mouse is down.
         // When they finish, currentEvent is the mouseUp that they exited on.  We need to update
         // the khtml state with this mouseUp, which khtml never saw.
@@ -499,25 +510,22 @@ void FrameView::viewportMousePressEvent(MouseEvent* mouseEvent)
     }
 }
 
-void FrameView::viewportMouseDoubleClickEvent(MouseEvent* mouseEvent)
+void FrameView::handleMouseDoubleClickEvent(const PlatformMouseEvent& mouseEvent)
 {
     if (!m_frame->document())
         return;
 
     RefPtr<FrameView> protector(this);
 
-    int xm, ym;
-    viewportToContents(mouseEvent->x(), mouseEvent->y(), xm, ym);
-
     // We get this instead of a second mouse-up 
     d->mousePressed = false;
 
-    MouseEventWithHitTestResults mev = m_frame->document()->prepareMouseEvent(false, true, false, xm, ym, mouseEvent);
+    MouseEventWithHitTestResults mev = prepareMouseEvent(false, true, false, mouseEvent);
 
     if (m_frame->passSubframeEventToSubframe(mev))
         return;
 
-    d->clickCount = mouseEvent->clickCount();
+    d->clickCount = mouseEvent.clickCount();
     bool swallowEvent = dispatchMouseEvent(mouseupEvent, mev.innerNode(), true, d->clickCount, mouseEvent, false);
 
     if (mev.innerNode() == d->clickNode)
@@ -525,16 +533,16 @@ void FrameView::viewportMouseDoubleClickEvent(MouseEvent* mouseEvent)
 
     // Qt delivers a release event AND a double click event.
     if (!swallowEvent) {
-        m_frame->khtmlMouseReleaseEvent(&mev);
-        m_frame->khtmlMouseDoubleClickEvent(&mev);
+        m_frame->handleMouseReleaseEvent(mev);
+        m_frame->handleMouseReleaseDoubleClickEvent(mev);
     }
 
     invalidateClick();
 }
 
-static bool isSubmitImage(NodeImpl *node)
+static bool isSubmitImage(Node *node)
 {
-    return node && node->hasTagName(inputTag) && static_cast<HTMLInputElementImpl*>(node)->inputType() == HTMLInputElementImpl::IMAGE;
+    return node && node->hasTagName(inputTag) && static_cast<HTMLInputElement*>(node)->inputType() == HTMLInputElement::IMAGE;
 }
 
 static Cursor selectCursor(const MouseEventWithHitTestResults& event, Frame* frame, bool mousePressed)
@@ -543,7 +551,7 @@ static Cursor selectCursor(const MouseEventWithHitTestResults& event, Frame* fra
     if (mousePressed && frame->hasSelection())
         return iBeamCursor();
 
-    NodeImpl* node = event.innerNode();
+    Node* node = event.innerNode();
     RenderObject* renderer = node ? node->renderer() : 0;
     RenderStyle* style = renderer ? renderer->style() : 0;
 
@@ -591,7 +599,7 @@ static Cursor selectCursor(const MouseEventWithHitTestResults& event, Frame* fra
     return pointerCursor();
 }
 
-void FrameView::viewportMouseMoveEvent(MouseEvent* mouseEvent)
+void FrameView::handleMouseMoveEvent(const PlatformMouseEvent& mouseEvent)
 {
     // in Radar 3703768 we saw frequent crashes apparently due to the
     // part being null here, which seems impossible, so check for nil
@@ -601,11 +609,10 @@ void FrameView::viewportMouseMoveEvent(MouseEvent* mouseEvent)
     if (!m_frame || !m_frame->document())
         return;
 
+    RefPtr<FrameView> protector(this);
+    
     if (d->hoverTimer.isActive())
         d->hoverTimer.stop();
-
-    int xm, ym;
-    viewportToContents(mouseEvent->x(), mouseEvent->y(), xm, ym);
 
     if (d->resizingFrameSet) {
         dispatchMouseEvent(mousemoveEvent, d->resizingFrameSet.get(), false, 0, mouseEvent, false);
@@ -616,15 +623,24 @@ void FrameView::viewportMouseMoveEvent(MouseEvent* mouseEvent)
     // if we are allowed to select.
     // This means that :hover and :active freeze in the state they were in when the mouse
     // was pressed, rather than updating for nodes the mouse moves over as you hold the mouse down.
-    MouseEventWithHitTestResults mev = m_frame->document()->prepareMouseEvent(d->mousePressed && m_frame->mouseDownMayStartSelect(),
-        d->mousePressed, true, xm, ym, mouseEvent);
+    MouseEventWithHitTestResults mev = prepareMouseEvent(d->mousePressed && m_frame->mouseDownMayStartSelect(),
+        d->mousePressed, true, mouseEvent);
 
-    if (!m_frame->passSubframeEventToSubframe(mev))
-        setCursor(selectCursor(mev, m_frame.get(), d->mousePressed));
-        
+    if (d->oldSubframe)
+        m_frame->passSubframeEventToSubframe(mev, d->oldSubframe.get());
+
     bool swallowEvent = dispatchMouseEvent(mousemoveEvent, mev.innerNode(), false, 0, mouseEvent, true);
     if (!swallowEvent)
-        m_frame->khtmlMouseMoveEvent(&mev);
+        m_frame->handleMouseMoveEvent(mev);
+    
+    RefPtr<Frame> newSubframe = subframeForEvent(mev);
+    
+    if (newSubframe && d->oldSubframe != newSubframe)
+        m_frame->passSubframeEventToSubframe(mev, newSubframe.get());
+    else
+        setCursor(selectCursor(mev, m_frame.get(), d->mousePressed));
+    
+    d->oldSubframe = newSubframe;
 }
 
 void FrameView::invalidateClick()
@@ -633,15 +649,12 @@ void FrameView::invalidateClick()
     d->clickNode = 0;
 }
 
-void FrameView::viewportMouseReleaseEvent(MouseEvent* mouseEvent)
+void FrameView::handleMouseReleaseEvent(const PlatformMouseEvent& mouseEvent)
 {
     if (!m_frame->document())
         return;
 
     RefPtr<FrameView> protector(this);
-
-    int xm, ym;
-    viewportToContents(mouseEvent->x(), mouseEvent->y(), xm, ym);
 
     d->mousePressed = false;
 
@@ -650,7 +663,7 @@ void FrameView::viewportMouseReleaseEvent(MouseEvent* mouseEvent)
         return;
     }
 
-    MouseEventWithHitTestResults mev = m_frame->document()->prepareMouseEvent(false, false, false, xm, ym, mouseEvent);
+    MouseEventWithHitTestResults mev = prepareMouseEvent(false, false, false, mouseEvent);
 
     if (m_frame->passSubframeEventToSubframe(mev))
         return;
@@ -661,91 +674,77 @@ void FrameView::viewportMouseReleaseEvent(MouseEvent* mouseEvent)
         dispatchMouseEvent(clickEvent, mev.innerNode(), true, d->clickCount, mouseEvent, true);
 
     if (!swallowEvent)
-        m_frame->khtmlMouseReleaseEvent(&mev);
+        m_frame->handleMouseReleaseEvent(mev);
 
     invalidateClick();
 }
 
-void FrameView::keyPressEvent(KeyEvent* ke)
-{
-    if (m_frame->document() && m_frame->document()->focusNode()) {
-        if (m_frame->document()->focusNode()->dispatchKeyEvent(ke))
-            ke->accept();
-    }
-}
-
-bool FrameView::dispatchDragEvent(const AtomicString &eventType, NodeImpl *dragTarget, const IntPoint &loc, ClipboardImpl *clipboard)
+bool FrameView::dispatchDragEvent(const AtomicString& eventType, Node *dragTarget, const PlatformMouseEvent& event, Clipboard* clipboard)
 {
     int clientX, clientY;
-    viewportToContents(loc.x(), loc.y(), clientX, clientY);
-    IntPoint screenLoc = viewportToGlobal(loc);
-    int screenX = screenLoc.x();
-    int screenY = screenLoc.y();
-    bool ctrlKey = 0;   // FIXME - set up modifiers, grab from AK or CG
-    bool altKey = 0;
-    bool shiftKey = 0;
-    bool metaKey = 0;
+    viewportToContents(event.x(), event.y(), clientX, clientY);
     
-    RefPtr<MouseEventImpl> me = new MouseEventImpl(eventType,
+    RefPtr<MouseEvent> me = new MouseEvent(eventType,
         true, true, m_frame->document()->defaultView(),
-        0, screenX, screenY, clientX, clientY,
-        ctrlKey, altKey, shiftKey, metaKey,
+        0, event.globalX(), event.globalY(), clientX, clientY,
+        event.ctrlKey(), event.altKey(), event.shiftKey(), event.metaKey(),
         0, 0, clipboard);
 
     ExceptionCode ec = 0;
-    dragTarget->dispatchEvent(me.get(), ec, true);
+    EventTargetNodeCast(dragTarget)->dispatchEvent(me.get(), ec, true);
     return me->defaultPrevented();
 }
 
-bool FrameView::updateDragAndDrop(const IntPoint &loc, ClipboardImpl *clipboard)
+bool FrameView::updateDragAndDrop(const PlatformMouseEvent& event, Clipboard* clipboard)
 {
     bool accept = false;
-    int xm, ym;
-    viewportToContents(loc.x(), loc.y(), xm, ym);
-    MouseEventWithHitTestResults mev = m_frame->document()->prepareMouseEvent(true, false, false, xm, ym, 0);
+
+    MouseEventWithHitTestResults mev = prepareMouseEvent(true, false, false, PlatformMouseEvent());
 
     // Drag events should never go to text nodes (following IE, and proper mouseover/out dispatch)
-    NodeImpl* newTarget = mev.innerNode();
+    Node* newTarget = mev.innerNode();
     if (newTarget && newTarget->isTextNode())
         newTarget = newTarget->parentNode();
+    if (newTarget)
+        newTarget = newTarget->shadowAncestorNode();
 
     if (d->dragTarget != newTarget) {
         // note this ordering is explicitly chosen to match WinIE
         if (newTarget)
-            accept = dispatchDragEvent(dragenterEvent, newTarget, loc, clipboard);
+            accept = dispatchDragEvent(dragenterEvent, newTarget, event, clipboard);
         if (d->dragTarget)
-            dispatchDragEvent(dragleaveEvent, d->dragTarget.get(), loc, clipboard);
+            dispatchDragEvent(dragleaveEvent, d->dragTarget.get(), event, clipboard);
     } else {
         if (newTarget)
-            accept = dispatchDragEvent(dragoverEvent, newTarget, loc, clipboard);
+            accept = dispatchDragEvent(dragoverEvent, newTarget, event, clipboard);
     }
     d->dragTarget = newTarget;
 
     return accept;
 }
 
-void FrameView::cancelDragAndDrop(const IntPoint &loc, ClipboardImpl *clipboard)
+void FrameView::cancelDragAndDrop(const PlatformMouseEvent& event, Clipboard* clipboard)
 {
     if (d->dragTarget)
-        dispatchDragEvent(dragleaveEvent, d->dragTarget.get(), loc, clipboard);
+        dispatchDragEvent(dragleaveEvent, d->dragTarget.get(), event, clipboard);
     d->dragTarget = 0;
 }
 
-bool FrameView::performDragAndDrop(const IntPoint &loc, ClipboardImpl *clipboard)
+bool FrameView::performDragAndDrop(const PlatformMouseEvent& event, Clipboard* clipboard)
 {
     bool accept = false;
     if (d->dragTarget)
-        accept = dispatchDragEvent(dropEvent, d->dragTarget.get(), loc, clipboard);
+        accept = dispatchDragEvent(dropEvent, d->dragTarget.get(), event, clipboard);
     d->dragTarget = 0;
     return accept;
 }
 
-NodeImpl* FrameView::nodeUnderMouse() const
+Node* FrameView::nodeUnderMouse() const
 {
     return d->underMouse.get();
 }
 
-bool FrameView::scrollTo(const IntRect &bounds)
+bool FrameView::scrollTo(const IntRect& bounds)
 {
     d->scrollingSelf = true; // so scroll events get ignored
 
@@ -768,11 +767,11 @@ bool FrameView::scrollTo(const IntRect &bounds)
         xe = x + curWidth - d->borderX;
 
     // is xpos of target left of the view's border?
-    if (x < contentsX() + d->borderX )
+    if (x < contentsX() + d->borderX)
         deltax = x - contentsX() - d->borderX;
     // is xpos of target right of the view's right border?
     else if (xe + d->borderX > contentsX() + curWidth)
-        deltax = xe + d->borderX - ( contentsX() + curWidth );
+        deltax = xe + d->borderX - (contentsX() + curWidth);
     else
         deltax = 0;
 
@@ -781,7 +780,7 @@ bool FrameView::scrollTo(const IntRect &bounds)
         deltay = y - contentsY() - d->borderY;
     // is ypos of target below lower border?
     else if (ye + d->borderY > contentsY() + curHeight)
-        deltay = ye + d->borderY - ( contentsY() + curHeight );
+        deltay = ye + d->borderY - (contentsY() + curHeight);
     else
         deltay = 0;
 
@@ -818,12 +817,12 @@ void FrameView::focusNextPrevNode(bool next)
 {
     // Sets the focus node of the document to be the node after (or if next is false, before) the current focus node.
     // Only nodes that are selectable (i.e. for which isSelectable() returns true) are taken into account, and the order
-    // used is that specified in the HTML spec (see DocumentImpl::nextFocusNode() and DocumentImpl::previousFocusNode()
+    // used is that specified in the HTML spec (see Document::nextFocusNode() and Document::previousFocusNode()
     // for details).
 
-    DocumentImpl *doc = m_frame->document();
-    NodeImpl *oldFocusNode = doc->focusNode();
-    NodeImpl *newFocusNode;
+    Document *doc = m_frame->document();
+    Node *oldFocusNode = doc->focusNode();
+    Node *newFocusNode;
 
     // Find the next/previous node from the current one
     if (next)
@@ -835,7 +834,7 @@ void FrameView::focusNextPrevNode(bool next)
     // focusable node in the document, use the first one that lies within the visible area (if possible).
     if (!oldFocusNode && newFocusNode && d->scrollBarMoved) {
         bool visible = false;
-        NodeImpl *toFocus = newFocusNode;
+        Node *toFocus = newFocusNode;
         while (!visible && toFocus) {
             if (toFocus->getRect().intersects(IntRect(contentsX(), contentsY(), visibleWidth(), visibleHeight()))) {
                 // toFocus is visible in the contents area
@@ -888,20 +887,19 @@ void FrameView::focusNextPrevNode(bool next)
     m_frame->document()->setFocusNode(newFocusNode);
 }
 
-void FrameView::setMediaType( const QString &medium )
+void FrameView::setMediaType(const String& mediaType)
 {
-    m_medium = medium;
+    d->m_mediaType = mediaType;
 }
 
-QString FrameView::mediaType() const
+String FrameView::mediaType() const
 {
     // See if we have an override type.
-    QString overrideType = m_frame->overrideMediaType();
+    String overrideType = m_frame->overrideMediaType();
     if (!overrideType.isNull())
         return overrideType;
-    return m_medium;
+    return d->m_mediaType;
 }
-
 
 void FrameView::useSlowRepaints()
 {
@@ -934,59 +932,59 @@ void FrameView::restoreScrollBar()
     suppressScrollBars(false);
 }
 
-void FrameView::setResizingFrameSet(HTMLFrameSetElementImpl *frameSet)
+void FrameView::setResizingFrameSet(HTMLFrameSetElement* frameSet)
 {
     d->resizingFrameSet = frameSet;
 }
 
-bool FrameView::dispatchMouseEvent(const AtomicString& eventType, NodeImpl* targetNode, bool cancelable,
-    int detail, MouseEvent* mouseEvent, bool setUnder)
+MouseEventWithHitTestResults FrameView::prepareMouseEvent(bool readonly, bool active, bool mouseMove, const PlatformMouseEvent& mev)
+{
+    ASSERT(m_frame);
+    ASSERT(m_frame->document());
+    
+    int xm, ym;
+    viewportToContents(mev.x(), mev.y(), xm, ym);
+
+    return m_frame->document()->prepareMouseEvent(readonly, active, mouseMove, xm, ym, mev);
+}
+
+bool FrameView::dispatchMouseEvent(const AtomicString& eventType, Node* targetNode, bool cancelable,
+    int clickCount, const PlatformMouseEvent& mouseEvent, bool setUnder)
 {
     // if the target node is a text node, dispatch on the parent node - rdar://4196646
     if (targetNode && targetNode->isTextNode())
         targetNode = targetNode->parentNode();
+    if (targetNode)
+        targetNode = targetNode->shadowAncestorNode();
     d->underMouse = targetNode;
 
     // mouseout/mouseover
     if (setUnder) {
-        int clientX, clientY;
-        viewportToContents(mouseEvent->x(), mouseEvent->y(), clientX, clientY);
-        if (d->prevMouseX != clientX || d->prevMouseY != clientY) {
-            // ### this code sucks. we should save the oldUnder instead of calculating
-            // it again. calculating is expensive! (Dirk)
-            // Also, there's no guarantee that the old under node is even around any more,
-            // so we could be sending a mouseout to a node that never got a mouseover.
-            RefPtr<NodeImpl> oldUnder;
-            if (d->prevMouseX >= 0) {
-                oldUnder = m_frame->document()->prepareMouseEvent(true, false, true,
-                    d->prevMouseX, d->prevMouseY, mouseEvent).innerNode();
-                if (oldUnder && oldUnder->isTextNode())
-                    oldUnder = oldUnder->parentNode();
-            }
-            d->prevMouseX = clientX;
-            d->prevMouseY = clientY;
-            if (oldUnder != targetNode) {
-                // send mouseout event to the old node
-                if (oldUnder)
-                    oldUnder->dispatchMouseEvent(mouseEvent, mouseoutEvent, 0, targetNode);
-                // send mouseover event to the new node
-                if (targetNode)
-                    targetNode->dispatchMouseEvent(mouseEvent, mouseoverEvent, 0, oldUnder.get());
-            }
+        if (d->oldUnder && d->oldUnder->getDocument() != frame()->document())
+            d->oldUnder = 0;
+
+        if (d->oldUnder != targetNode) {
+            // send mouseout event to the old node
+            if (d->oldUnder)
+                EventTargetNodeCast(d->oldUnder.get())->dispatchMouseEvent(mouseEvent, mouseoutEvent, 0, targetNode);
+            // send mouseover event to the new node
+            if (targetNode)
+                EventTargetNodeCast(targetNode)->dispatchMouseEvent(mouseEvent, mouseoverEvent, 0, d->oldUnder.get());
         }
+        d->oldUnder = targetNode;
     }
 
     bool swallowEvent = false;
 
     if (targetNode)
-        swallowEvent = targetNode->dispatchMouseEvent(mouseEvent, eventType, detail);
+        swallowEvent = EventTargetNodeCast(targetNode)->dispatchMouseEvent(mouseEvent, eventType, clickCount);
     
     if (!swallowEvent && eventType == mousedownEvent) {
         // Focus should be shifted on mouse down, not on a click.  -dwh
         // Blur current focus node when a link/button is clicked; this
         // is expected by some sites that rely on onChange handlers running
         // from form fields before the button click is processed.
-        NodeImpl* node = targetNode;
+        Node* node = targetNode;
         RenderObject* renderer = node ? node->renderer() : 0;
                 
         // Walk up the render tree to search for a node to focus.
@@ -1004,38 +1002,39 @@ bool FrameView::dispatchMouseEvent(const AtomicString& eventType, NodeImpl* targ
                 swallowEvent = true;
         } else if (!node || !node->focused()) {
             if (!m_frame->document()->setFocusNode(0))
-            swallowEvent = true;
+                swallowEvent = true;
         }
     }
 
     return swallowEvent;
 }
 
-void FrameView::setIgnoreWheelEvents( bool e )
+void FrameView::setIgnoreWheelEvents(bool e)
 {
     d->ignoreWheelEvents = e;
 }
 
-void FrameView::viewportWheelEvent(WheelEvent* e)
+void FrameView::handleWheelEvent(PlatformWheelEvent& e)
 {
-    DocumentImpl *doc = m_frame->document();
+    Document *doc = m_frame->document();
     if (doc) {
         RenderObject *docRenderer = doc->renderer();
         if (docRenderer) {
             int x, y;
-            viewportToContents(e->x(), e->y(), x, y);
+            viewportToContents(e.x(), e.y(), x, y);
 
             RenderObject::NodeInfo hitTestResult(true, false);
             doc->renderer()->layer()->hitTest(hitTestResult, x, y); 
-            NodeImpl *node = hitTestResult.innerNode();
+            Node *node = hitTestResult.innerNode();
 
            if (m_frame->passWheelEventToChildWidget(node)) {
-                e->accept();
+                e.accept();
                 return;
             }
             if (node) {
-                node->dispatchWheelEvent(e);
-                if (e->isAccepted())
+                node = node->shadowAncestorNode();
+                EventTargetNodeCast(node)->dispatchWheelEvent(e);
+                if (e.isAccepted())
                     return;
             }
         }
@@ -1066,7 +1065,7 @@ void FrameView::layoutTimerFired(Timer<FrameView>*)
 void FrameView::hoverTimerFired(Timer<FrameView>*)
 {
     d->hoverTimer.stop();
-    m_frame->document()->prepareMouseEvent(false, false, true, d->prevMouseX, d->prevMouseY, 0);
+    prepareMouseEvent(false, false, true, PlatformMouseEvent());
 }
 
 void FrameView::scheduleRelayout()

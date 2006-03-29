@@ -23,11 +23,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef QLINEEDIT_H_
-#define QLINEEDIT_H_
+#ifndef QLineEdit_H
+#define QLineEdit_H
 
 #include "PlatformString.h"
-#include "QString.h"
 #include "TextDirection.h"
 #include "Widget.h"
 
@@ -67,8 +66,8 @@ public:
     void setReadOnly(bool);
     bool isReadOnly() const;
 
-    void setText(const DOM::DOMString&);
-    DOM::DOMString text() const;
+    void setText(const WebCore::String&);
+    WebCore::String text() const;
 
     void setWritingDirection(WebCore::TextDirection);
     
@@ -76,7 +75,7 @@ public:
     bool hasSelectedText() const;
     
     int selectionStart() const;
-    QString selectedText() const;
+    WebCore::String selectedText() const;
     void setSelection(int, int);
     
     IntSize sizeForCharacterWidth(int numCharacters) const;
@@ -88,9 +87,9 @@ public:
     Type type() const { return m_type; }
     
     void setLiveSearch(bool liveSearch);
-    void setAutoSaveName(const DOM::DOMString& name);
+    void setAutoSaveName(const WebCore::String& name);
     void setMaxResults(int maxResults);
-    void setPlaceholderString(const DOM::DOMString& placeholder);
+    void setPlaceholderString(const WebCore::String& placeholder);
     void addSearchResult();
 
 private:

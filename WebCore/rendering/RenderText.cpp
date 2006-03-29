@@ -31,14 +31,14 @@
 #include "RenderBlock.h"
 #include "VisiblePosition.h"
 #include "break_lines.h"
-#include "dom2_rangeimpl.h"
-#include "render_arena.h"
+#include "Range.h"
+#include "RenderArena.h"
 #include <kxmlcore/AlwaysInline.h>
 #include <unicode/ubrk.h>
 
 namespace WebCore {
 
-static UBreakIterator* getCharacterBreakIterator(const DOMStringImpl* i)
+static UBreakIterator* getCharacterBreakIterator(const StringImpl* i)
 {
     // The locale is currently ignored when determining character cluster breaks.
     // This may change in the future, according to Deborah Goldsmith.
@@ -87,7 +87,7 @@ int RenderText::nextOffset(int current) const
     return result;
 }
 
-RenderText::RenderText(DOM::NodeImpl* node, DOMStringImpl *_str)
+RenderText::RenderText(WebCore::Node* node, StringImpl *_str)
      : RenderObject(node), str(_str), m_firstTextBox(0), m_lastTextBox(0)
      , m_minWidth(-1), m_maxWidth(-1), m_selectionState(SelectionNone)
      , m_linesDirty(false), m_containsReversedText(false)
@@ -109,7 +109,7 @@ void RenderText::setStyle(RenderStyle *_style)
         RenderObject::setStyle( _style );
 
         if (needToTransformText) {
-            RefPtr<DOMStringImpl> textToTransform = originalString();
+            RefPtr<StringImpl> textToTransform = originalString();
             if (textToTransform)
                 setText(textToTransform.get(), true);
         }
@@ -197,12 +197,12 @@ bool RenderText::isTextFragment() const
     return false;
 }
 
-PassRefPtr<DOMStringImpl> RenderText::originalString() const
+PassRefPtr<StringImpl> RenderText::originalString() const
 {
     return element() ? element()->string() : 0;
 }
 
-void RenderText::absoluteRects(QValueList<IntRect>& rects, int _tx, int _ty)
+void RenderText::absoluteRects(DeprecatedValueList<IntRect>& rects, int _tx, int _ty)
 {
     for (InlineTextBox* box = firstTextBox(); box; box = box->nextTextBox())
         rects.append(IntRect(_tx + box->xPos(), 
@@ -211,11 +211,11 @@ void RenderText::absoluteRects(QValueList<IntRect>& rects, int _tx, int _ty)
                            box->height()));
 }
 
-QValueList<IntRect> RenderText::lineBoxRects()
+DeprecatedValueList<IntRect> RenderText::lineBoxRects()
 {
-    QValueList<IntRect> rects;
+    DeprecatedValueList<IntRect> rects;
     int x = 0, y = 0;
-    absolutePosition(x, y);
+    absolutePositionForContent(x, y);
     absoluteRects(rects, x, y);
     return rects;
 }
@@ -249,7 +249,7 @@ VisiblePosition RenderText::positionForCoordinates(int _x, int _y)
 
     int absx, absy;
     RenderBlock *cb = containingBlock();
-    cb->absolutePosition(absx, absy);
+    cb->absolutePositionForContent(absx, absy);
     if (cb->hasOverflowClip())
         cb->layer()->subtractScrollOffset(absx, absy);
 
@@ -399,7 +399,7 @@ IntRect RenderText::caretRect(int offset, EAffinity affinity, int *extraWidthToE
         *extraWidthToEndOfLine = (box->root()->width() + box->root()->xPos()) - (left + 1);
 
     int absx, absy;
-    absolutePosition(absx,absy);
+    absolutePositionForContent(absx, absy);
     left += absx;
     top += absy;
 
@@ -417,7 +417,7 @@ IntRect RenderText::caretRect(int offset, EAffinity affinity, int *extraWidthToE
 
 void RenderText::posOfChar(int chr, int &x, int &y)
 {
-    absolutePosition(x, y, false);
+    absolutePositionForContent(x, y);
 
     int pos;
     if (InlineTextBox* s = findNextInlineTextBox(chr, pos)) {
@@ -484,7 +484,7 @@ ALWAYS_INLINE int RenderText::widthFromCache(const Font *f, int start, int len, 
         return w;
     }
     
-    return f->width(str->s, str->l, start, len, tabWidth, xpos);
+    return f->width(str->unicode(), str->length(), start, len, tabWidth, xpos);
 }
 
 void RenderText::trimmedMinMaxWidth(int leadWidth,
@@ -591,8 +591,8 @@ void RenderText::calcMinMaxWidth(int leadWidth)
     // FIXME: not 100% correct for first-line
     const Font *f = font(false);
     int wordSpacing = style()->wordSpacing();
-    int len = str->l;
-    QChar *txt = str->s;
+    int len = str->length();
+    const QChar *txt = str->unicode();
     bool needsWordSpacing = false;
     bool ignoringSpaces = false;
     bool isSpace = false;
@@ -800,12 +800,12 @@ void RenderText::setSelectionState(SelectionState s)
     containingBlock()->setSelectionState(s);
 }
 
-void RenderText::setTextWithOffset(DOMStringImpl *text, uint offset, uint len, bool force)
+void RenderText::setTextWithOffset(StringImpl *text, unsigned offset, unsigned len, bool force)
 {
-    uint oldLen = str ? str->length() : 0;
-    uint newLen = text ? text->length() : 0;
+    unsigned oldLen = str ? str->length() : 0;
+    unsigned newLen = text ? text->length() : 0;
     int delta = newLen - oldLen;
-    uint end = len ? offset+len-1 : offset;
+    unsigned end = len ? offset+len-1 : offset;
 
     RootInlineBox* firstRootBox = 0;
     RootInlineBox* lastRootBox = 0;
@@ -863,7 +863,7 @@ void RenderText::setTextWithOffset(DOMStringImpl *text, uint offset, uint len, b
     setText(text, force);
 }
 
-void RenderText::setText(DOMStringImpl *text, bool force)
+void RenderText::setText(StringImpl *text, bool force)
 {
     if (!text)
         return;
@@ -881,16 +881,14 @@ void RenderText::setText(DOMStringImpl *text, bool force)
                 {
                     // find previous text renderer if one exists
                     RenderObject* o;
-                    bool runOnString = false;
-                    for (o = previousRenderer(); o && o->isInlineFlow(); o = o->previousRenderer())
+                    QChar previous = ' ';
+                    for (o = previousInPreOrder(); o && o->isInlineFlow(); o = o->previousInPreOrder())
                         ;
                     if (o && o->isText()) {
-                        DOMStringImpl* prevStr = static_cast<RenderText*>(o)->string();
-                        QChar c = (*prevStr)[prevStr->length() - 1];
-                        if (!c.isSpace())
-                            runOnString = true;
+                        StringImpl* prevStr = static_cast<RenderText*>(o)->string();
+                        previous = (*prevStr)[prevStr->length() - 1];
                     }
-                    str = str->capitalize(runOnString);
+                    str = str->capitalize(previous);
                 }
                     break;
                 case UPPERCASE:  str = str->upper();       break;
@@ -977,27 +975,28 @@ unsigned int RenderText::width(unsigned int from, unsigned int len, int xpos, bo
 {
     if (from >= str->length())
         return 0;
-    if ( from + len > str->length() ) len = str->length() - from;
+    if (from + len > str->length())
+        len = str->length() - from;
 
     const Font *f = font(firstLine);
-    return width( from, len, f, xpos );
+    return width(from, len, f, xpos);
 }
 
 unsigned int RenderText::width(unsigned int from, unsigned int len, const Font *f, int xpos) const
 {
-    if(!str->s || from > str->l ) return 0;
-    if ( from + len > str->l ) len = str->l - from;
+    if (!str->unicode() || from > str->length())
+        return 0;
+    if (from + len > str->length())
+        len = str->length() - from;
 
     int w;
-    if (!style()->preserveNewline() && f == &style()->font() && from == 0 && len == str->l ) {
+    if (!style()->preserveNewline() && f == &style()->font() && from == 0 && len == str->length())
         w = m_maxWidth;
-    } else if (f == &style()->font()) {
+    else if (f == &style()->font())
         w = widthFromCache(f, from, len, tabWidth(), xpos);
-    } else {
-        w = f->width(str->s, str->l, from, len, tabWidth(), xpos );
-    }
+    else
+        w = f->width(str->unicode(), str->length(), from, len, tabWidth(), xpos );
         
-    //kdDebug( 6040 ) << "RenderText::width(" << from << ", " << len << ") = " << w << endl;
     return w;
 }
 
@@ -1050,7 +1049,7 @@ IntRect RenderText::selectionRect()
         return rect;
 
     int absx, absy;
-    cb->absolutePosition(absx, absy);
+    cb->absolutePositionForContent(absx, absy);
     RenderLayer* layer = cb->layer();
     if (layer)
        layer->subtractScrollOffset(absx, absy); 

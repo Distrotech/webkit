@@ -30,14 +30,14 @@
 #include "GraphicsContext.h"
 #include "RenderTableCol.h"
 #include "html_tableimpl.h"
-#include "htmlnames.h"
+#include "HTMLNames.h"
 #include <qtextstream.h>
 
 namespace WebCore {
 
 using namespace HTMLNames;
 
-RenderTableCell::RenderTableCell(NodeImpl* _node)
+RenderTableCell::RenderTableCell(Node* _node)
   : RenderBlock(_node)
 {
   _col = -1;
@@ -62,9 +62,9 @@ void RenderTableCell::updateFromElement()
 {
     int oldRSpan = rSpan;
     int oldCSpan = cSpan;
-    NodeImpl* node = element();
+    Node* node = element();
     if (node && (node->hasTagName(tdTag) || node->hasTagName(thTag))) {
-        HTMLTableCellElementImpl *tc = static_cast<HTMLTableCellElementImpl *>(node);
+        HTMLTableCellElement *tc = static_cast<HTMLTableCellElement *>(node);
         cSpan = tc->colSpan();
         rSpan = tc->rowSpan();
     }
@@ -89,7 +89,7 @@ void RenderTableCell::calcMinMaxWidth()
     if (element() && style()->autoWrap()) {
         // See if nowrap was set.
         Length w = styleOrColWidth();
-        DOMString nowrap = static_cast<ElementImpl*>(element())->getAttribute(nowrapAttr);
+        String nowrap = static_cast<Element*>(element())->getAttribute(nowrapAttr);
         if (!nowrap.isNull() && w.isFixed())
             // Nowrap is set, but we didn't actually use it because of the
             // fixed width set on the cell.  Even so, it is a WinIE/Moz trait
@@ -122,15 +122,16 @@ void RenderTableCell::layout()
 void RenderTableCell::computeAbsoluteRepaintRect(IntRect& r, bool f)
 {
     r.setY(r.y() + _topExtra);
+    r.move(-parent()->xPos(), -parent()->yPos()); // Rows are in the same coordinate space, so don't add their offset in.
     RenderBlock::computeAbsoluteRepaintRect(r, f);
 }
 
 bool RenderTableCell::absolutePosition(int &xPos, int &yPos, bool f)
 {
-    bool ret = RenderBlock::absolutePosition(xPos, yPos, f);
-    if (ret)
-      yPos += _topExtra;
-    return ret;
+    bool result = RenderBlock::absolutePosition(xPos, yPos, f);
+    xPos -= parent()->xPos(); // Rows are in the same coordinate space, so don't add their offset in.
+    yPos -= parent()->yPos();
+    return result;
 }
 
 short RenderTableCell::baselinePosition(bool) const
@@ -171,8 +172,9 @@ void RenderTableCell::setStyle(RenderStyle *style)
     setShouldPaintBackgroundOrBorder(true);
 }
 
-bool RenderTableCell::requiresLayer() {
-    return isPositioned() || style()->opacity() < 1.0f || hasOverflowClip();
+bool RenderTableCell::requiresLayer()
+{
+    return isPositioned() || isTransparent() || hasOverflowClip();
 }
 
 // The following rules apply for resolving conflicts and figuring out which border
@@ -604,13 +606,13 @@ public:
     int count;
 };
 
-static void addBorderStyle(QValueList<CollapsedBorderValue>& borderStyles, CollapsedBorderValue borderValue)
+static void addBorderStyle(DeprecatedValueList<CollapsedBorderValue>& borderStyles, CollapsedBorderValue borderValue)
 {
     if (!borderValue.exists() || borderStyles.contains(borderValue))
         return;
     
-    QValueListIterator<CollapsedBorderValue> it = borderStyles.begin();
-    QValueListIterator<CollapsedBorderValue> end = borderStyles.end();
+    DeprecatedValueListIterator<CollapsedBorderValue> it = borderStyles.begin();
+    DeprecatedValueListIterator<CollapsedBorderValue> end = borderStyles.end();
     for (; it != end; ++it) {
         CollapsedBorderValue result = compareBorders(*it, borderValue);
         if (result == *it) {
@@ -622,7 +624,7 @@ static void addBorderStyle(QValueList<CollapsedBorderValue>& borderStyles, Colla
     borderStyles.append(borderValue);
 }
 
-void RenderTableCell::collectBorders(QValueList<CollapsedBorderValue>& borderStyles)
+void RenderTableCell::collectBorders(DeprecatedValueList<CollapsedBorderValue>& borderStyles)
 {
     bool rtl = table()->style()->direction() == RTL;
     addBorderStyle(borderStyles, collapsedLeftBorder(rtl));
@@ -683,13 +685,45 @@ void RenderTableCell::paintCollapsedBorder(GraphicsContext* p, int _tx, int _ty,
     }
 }
 
-IntRect RenderTableCell::getAbsoluteRepaintRect()
+void RenderTableCell::paintBackgroundsBehindCell(PaintInfo& i, int _tx, int _ty, RenderObject* backgroundObject)
 {
-    int ow = style() ? style()->outlineSize() : 0;
-    IntRect r(-ow, -ow - borderTopExtra(), 
-            overflowWidth(false) + ow * 2, overflowHeight(false) + borderTopExtra() + borderBottomExtra() + ow * 2);
-    computeAbsoluteRepaintRect(r);
-    return r;
+    if (!backgroundObject)
+        return;
+
+    RenderTable* tableElt = table();
+    if (!tableElt->collapseBorders() && style()->emptyCells() == HIDE && !firstChild())
+        return;
+
+    if (backgroundObject != this) {
+        _tx += m_x;
+        _ty += m_y + _topExtra;
+    }
+
+    int w = width();
+    int h = height() + borderTopExtra() + borderBottomExtra();
+    _ty -= borderTopExtra();
+    
+    int my = kMax(_ty, i.r.y());
+    int end = kMin(i.r.bottom(), _ty + h);
+    int mh = end - my;
+    
+    Color c = backgroundObject->style()->backgroundColor();
+    const BackgroundLayer* bgLayer = backgroundObject->style()->backgroundLayers();
+
+    if (bgLayer->hasImage() || c.isValid()) {
+	// We have to clip here because the background would paint
+        // on top of the borders otherwise.  This only matters for cells and rows.
+        bool hasLayer = backgroundObject->layer() && (backgroundObject == this || backgroundObject == parent());
+        if (hasLayer && tableElt->collapseBorders()) {
+            IntRect clipRect(_tx + borderLeft(), _ty + borderTop(),
+                w - borderLeft() - borderRight(), h - borderTop() - borderBottom());
+            i.p->save();
+            i.p->addClip(clipRect);
+        }
+        paintBackground(i.p, c, bgLayer, my, mh, _tx, _ty, w, h);
+        if (hasLayer && tableElt->collapseBorders())
+            i.p->restore();
+    }
 }
 
 void RenderTableCell::paintBoxDecorations(PaintInfo& i, int _tx, int _ty)
@@ -697,76 +731,20 @@ void RenderTableCell::paintBoxDecorations(PaintInfo& i, int _tx, int _ty)
     RenderTable* tableElt = table();
     if (!tableElt->collapseBorders() && style()->emptyCells() == HIDE && !firstChild())
         return;
-    
+ 
+    // Paint our cell background.
+    paintBackgroundsBehindCell(i, _tx, _ty, this);
+
     int w = width();
     int h = height() + borderTopExtra() + borderBottomExtra();
     _ty -= borderTopExtra();
-
-    Color c = style()->backgroundColor();
-    if (!c.isValid() && parent()) // take from row
-        c = parent()->style()->backgroundColor();
-    if (!c.isValid() && parent() && parent()->parent()) // take from rowgroup
-        c = parent()->parent()->style()->backgroundColor();
-    if (!c.isValid()) {
-	// see if we have a col or colgroup for this
-	RenderTableCol *col = table()->colElement(_col);
-	if (col) {
-	    c = col->style()->backgroundColor();
-	    if (!c.isValid()) {
-		// try column group
-		RenderStyle *style = col->parent()->style();
-		if (style->display() == TABLE_COLUMN_GROUP)
-		    c = style->backgroundColor();
-	    }
-	}
-    }
-
-    // FIXME: This code is just plain wrong.  Rows and columns should paint their backgrounds
-    // independent from the cell.
-    // ### get offsets right in case the bgimage is inherited.
-    const BackgroundLayer* bgLayer = style()->backgroundLayers();
-    if (!bgLayer->hasImage() && parent())
-        bgLayer = parent()->style()->backgroundLayers();
-    if (!bgLayer->hasImage() && parent() && parent()->parent())
-        bgLayer = parent()->parent()->style()->backgroundLayers();
-    if (!bgLayer->hasImage()) {
-	// see if we have a col or colgroup for this
-	RenderTableCol* col = table()->colElement(_col);
-	if (col) {
-	    bgLayer = col->style()->backgroundLayers();
-	    if (!bgLayer->hasImage()) {
-		// try column group
-		RenderStyle *style = col->parent()->style();
-		if (style->display() == TABLE_COLUMN_GROUP)
-		    bgLayer = style->backgroundLayers();
-	    }
-	}
-    }
-
-    int my = kMax(_ty, i.r.y());
-    int end = kMin(i.r.bottom(), _ty + h);
-    int mh = end - my;
-
-    if (bgLayer->hasImage() || c.isValid()) {
-	// We have to clip here because the backround would paint
-        // on top of the borders otherwise.
-        if (m_layer && tableElt->collapseBorders()) {
-            IntRect clipRect(_tx + borderLeft(), _ty + borderTop(),
-                w - borderLeft() - borderRight(), h - borderTop() - borderBottom());
-            i.p->save();
-            i.p->addClip(clipRect);
-        }
-        paintBackground(i.p, c, bgLayer, my, mh, _tx, _ty, w, h);
-        if (m_layer && tableElt->collapseBorders())
-            i.p->restore();
-    }
 
     if (style()->hasBorder() && !tableElt->collapseBorders())
         paintBorder(i.p, _tx, _ty, w, h, style());
 }
 
 #ifndef NDEBUG
-void RenderTableCell::dump(QTextStream *stream, QString ind) const
+void RenderTableCell::dump(QTextStream *stream, DeprecatedString ind) const
 {
     *stream << " row=" << _row;
     *stream << " col=" << _col;

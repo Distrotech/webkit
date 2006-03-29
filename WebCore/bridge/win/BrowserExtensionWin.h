@@ -34,19 +34,13 @@ class BrowserExtensionWin : public BrowserExtension {
 public:
     BrowserExtensionWin(Frame*);
  
-    virtual void openURLRequest(const KURL &, 
-                                const URLArgs &args = URLArgs());
-    virtual void openURLNotify();
-     
-    virtual void createNewWindow(const KURL &url, 
-                                 const URLArgs &urlArgs = URLArgs());
-    virtual void createNewWindow(const KURL& url,
-                                 const URLArgs& urlArgs, 
-                                 const WindowArgs& winArgs, 
+    virtual void createNewWindow(const ResourceRequest&);
+    virtual void createNewWindow(const ResourceRequest&,
+                                 const WindowArgs&, 
                                  Frame*& part);
 
-    virtual void setIconURL(const KURL &url);
-    virtual void setTypedIconURL(const KURL &url, const QString &type);
+    virtual void setIconURL(const KURL& url);
+    virtual void setTypedIconURL(const KURL& url, const String&  type);
 
     virtual int getHistoryLength();
     virtual void goBackOrForward(int distance);

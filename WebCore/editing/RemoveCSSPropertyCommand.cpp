@@ -30,13 +30,9 @@
 
 #include <kxmlcore/Assertions.h>
 
-using DOM::CSSStyleDeclarationImpl;
-using DOM::DOMString;
-using DOM::DocumentImpl;
+namespace WebCore {
 
-namespace khtml {
-
-RemoveCSSPropertyCommand::RemoveCSSPropertyCommand(DocumentImpl *document, CSSStyleDeclarationImpl *decl, int property)
+RemoveCSSPropertyCommand::RemoveCSSPropertyCommand(Document *document, CSSStyleDeclaration *decl, int property)
     : EditCommand(document), m_decl(decl->makeMutable()), m_property(property), m_important(false)
 {
     ASSERT(m_decl);
@@ -61,4 +57,4 @@ void RemoveCSSPropertyCommand::doUnapply()
     m_decl->setProperty(m_property, m_oldValue, m_important);
 }
 
-} // namespace khtml
+} // namespace WebCore

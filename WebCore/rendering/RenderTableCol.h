@@ -34,16 +34,17 @@ namespace WebCore {
 class RenderTableCol : public RenderContainer
 {
 public:
-    RenderTableCol(NodeImpl*);
+    RenderTableCol(Node*);
 
     virtual const char* renderName() const { return "RenderTableCol"; }
     virtual bool isTableCol() const { return true; }
     virtual short lineHeight(bool) const { return 0; }
     virtual void updateFromElement();
     virtual bool canHaveChildren() const;
+    virtual bool requiresLayer() { return false; }
 
 #ifndef NDEBUG
-    virtual void dump(QTextStream*, QString) const;
+    virtual void dump(QTextStream*, DeprecatedString) const;
 #endif
 
     int span() const { return m_span; }

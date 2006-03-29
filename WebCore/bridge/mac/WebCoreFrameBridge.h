@@ -34,11 +34,11 @@
 class RenderArena;
 
 namespace WebCore {
-    class MacFrame;
+    class FrameMac;
     class RenderPart;
 }
 
-typedef WebCore::MacFrame WebCoreMacFrame;
+typedef WebCore::FrameMac WebCoreMacFrame;
 typedef WebCore::RenderPart WebCoreRenderPart;
 
 #else
@@ -150,6 +150,8 @@ typedef enum {
     WebUndoActionPasteFont,
     WebUndoActionPasteRuler,
     WebUndoActionTyping,
+    WebUndoActionCreateLink,
+    WebUndoActionUnlink,
 } WebUndoAction;
 
 typedef enum {
@@ -172,8 +174,6 @@ typedef enum {
 {
     WebCoreMacFrame *m_frame;
     BOOL _shouldCreateRenderers;
-
-    NSString *_frameNamespace;
 }
 
 + (WebCoreFrameBridge *)bridgeForDOMDocument:(DOMDocument *)document;
@@ -187,8 +187,6 @@ typedef enum {
 
 - (void)setName:(NSString *)name;
 - (NSString *)name;
-/* Creates a name for an frame unnamed in the HTML.  It should produce repeatable results for loads of the same frameset. */
-- (NSString *)generateFrameName;
 
 - (WebCorePageBridge *)page;
 
@@ -211,9 +209,6 @@ typedef enum {
 
 - (WebCoreFrameBridge *)childFrameNamed:(NSString *)name;
 - (WebCoreFrameBridge *)findFrameNamed:(NSString *)name;
-
-- (void)setFrameNamespace:(NSString *)ns;
-- (NSString *)frameNamespace;
 
 - (void)provisionalLoadStarted;
 
@@ -290,7 +285,7 @@ typedef enum {
 - (NSObject *)copyRenderTree:(id <WebCoreRenderTreeCopier>)copier;
 - (NSString *)renderTreeAsExternalRepresentation;
 
-- (void)getInnerNonSharedNode:(DOMNode **)innerNonSharedNode innerNode:(DOMNode **)innerNode URLElement:(DOMElement **)URLElement atPoint:(NSPoint)point;
+- (void)getInnerNonSharedNode:(DOMNode **)innerNonSharedNode innerNode:(DOMNode **)innerNode URLElement:(DOMElement **)URLElement atPoint:(NSPoint)point allowShadowContent:(BOOL)allow;
 - (BOOL)isPointInsideSelection:(NSPoint)point;
 
 - (NSURL *)URLWithAttributeString:(NSString *)string;
@@ -518,10 +513,6 @@ typedef enum {
 - (BOOL)areScrollbarsVisible;
 - (void)setScrollbarsVisible:(BOOL)visible;
 - (NSWindow *)window;
-- (void)setWindowFrame:(NSRect)frame;
-- (NSRect)windowFrame;
-- (void)setWindowContentRect:(NSRect)frame;
-- (NSRect)windowContentRect;
 
 - (void)setWindowIsResizable:(BOOL)resizable;
 - (BOOL)windowIsResizable;
@@ -570,9 +561,6 @@ typedef enum {
 
 - (void)tokenizerProcessedData;
 
-// OK to be an NSString rather than an NSURL.
-// This URL is only used for coloring visited links.
-- (NSString *)requestedURLString;
 - (NSString *)incomingReferrer;
 
 - (NSView *)viewForPluginWithURL:(NSURL *)URL

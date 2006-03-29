@@ -34,7 +34,7 @@
 #import "KCanvasMatrix.h"
 #import "KCanvasRenderingStyle.h"
 #import "KRenderingDeviceQuartz.h"
-#import "KWQExceptions.h"
+#import "BlockExceptions.h"
 #import "QuartzSupport.h"
 #import "WKArithmeticFilter.h"
 #import "WKDiffuseLightingFilter.h"
@@ -49,7 +49,7 @@
 
 namespace WebCore {
 
-static QString KCPreviousFilterOutputName = "__previousOutput__";
+static DeprecatedString KCPreviousFilterOutputName = "__previousOutput__";
 
 static inline CIColor *ciColor(const Color &c)
 {
@@ -81,12 +81,9 @@ KCanvasFilterQuartz::~KCanvasFilterQuartz()
 
 void KCanvasFilterQuartz::prepareFilter(const FloatRect &bbox)
 {
-    if (bbox.isEmpty() || !KRenderingDeviceQuartz::filtersEnabled())
+    if (bbox.isEmpty() || !KRenderingDeviceQuartz::filtersEnabled() || m_effects.isEmpty())
         return;
 
-    if (m_effects.isEmpty())
-        return;
-    
     CGContextRef cgContext = static_cast<KRenderingDeviceQuartz*>(renderingDevice())->currentCGContext();
     
     // get a CIContext, and CGLayer for drawing in.
@@ -140,8 +137,8 @@ NSArray *KCanvasFilterQuartz::getCIFilterStack(CIImage *inputImage)
 {
     NSMutableArray *filterEffects = [NSMutableArray array];
 
-    QValueListIterator<KCanvasFilterEffect *> it = m_effects.begin();
-    QValueListIterator<KCanvasFilterEffect *> end = m_effects.end();
+    DeprecatedValueListIterator<KCanvasFilterEffect *> it = m_effects.begin();
+    DeprecatedValueListIterator<KCanvasFilterEffect *> end = m_effects.end();
 
     setImageForName(inputImage, "SourceGraphic"); // input
     for (;it != end; it++) {
@@ -154,12 +151,12 @@ NSArray *KCanvasFilterQuartz::getCIFilterStack(CIImage *inputImage)
     return filterEffects;
 }
 
-CIImage *KCanvasFilterQuartz::imageForName(const QString& name) const
+CIImage *KCanvasFilterQuartz::imageForName(const DeprecatedString& name) const
 {
     return [m_imagesByName valueForKey:name.getNSString()];
 }
 
-void KCanvasFilterQuartz::setImageForName(CIImage *image, const QString &name)
+void KCanvasFilterQuartz::setImageForName(CIImage *image, const DeprecatedString &name)
 {
     [m_imagesByName setValue:image forKey:name.getNSString()];
 }
@@ -212,7 +209,7 @@ CIImage *KCanvasFilterQuartz::inputImage(const KCanvasFilterEffect *filterEffect
     CIImage *inputImage = quartzFilter->inputImage(this); \
     FE_QUARTZ_CHECK_INPUT(inputImage) \
     CIFilter *filter; \
-    KWQ_BLOCK_EXCEPTIONS; \
+    BEGIN_BLOCK_OBJC_EXCEPTIONS; \
     filter = [CIFilter filterWithName:name]; \
     [filter setDefaults]; \
     [filter setValue:inputImage forKey:@"inputImage"];
@@ -224,7 +221,7 @@ CIImage *KCanvasFilterQuartz::inputImage(const KCanvasFilterEffect *filterEffect
 #define FE_QUARTZ_OUTPUT_RETURN \
     quartzFilter->setOutputImage(this, [filter valueForKey:@"outputImage"]); \
     return filter; \
-    KWQ_UNBLOCK_EXCEPTIONS; \
+    END_BLOCK_OBJC_EXCEPTIONS; \
     return nil;
 
 #define FE_QUARTZ_CROP_TO_RECT(rect) \
@@ -239,7 +236,7 @@ CIImage *KCanvasFilterQuartz::inputImage(const KCanvasFilterEffect *filterEffect
 CIFilter *KCanvasFEBlendQuartz::getCIFilter(KCanvasFilterQuartz *quartzFilter) const
 {
     CIFilter *filter = nil;
-    KWQ_BLOCK_EXCEPTIONS;
+    BEGIN_BLOCK_OBJC_EXCEPTIONS;
 
     switch (blendMode()) {
     case BM_NORMAL:
@@ -287,14 +284,14 @@ CIFilter *KCanvasFEBlendQuartz::getCIFilter(KCanvasFilterQuartz *quartzFilter) c
 CIFilter *KCanvasFEColorMatrixQuartz::getCIFilter(KCanvasFilterQuartz *quartzFilter) const
 {
     CIFilter *filter = nil;
-    KWQ_BLOCK_EXCEPTIONS;
+    BEGIN_BLOCK_OBJC_EXCEPTIONS;
     switch (type()) {
     case CMT_MATRIX:
     {
         CMValuesCheck(20, "matrix");
         filter = [CIFilter filterWithName:@"CIColorMatrix"];
         [filter setDefaults];
-        QValueList<float> v = values();
+        DeprecatedValueList<float> v = values();
         [filter setValue:[CIVector vectorWithX:v[0] Y:v[1] Z:v[2] W:v[3]] forKey:@"inputRVector"];
         [filter setValue:[CIVector vectorWithX:v[5] Y:v[6] Z:v[7] W:v[8]] forKey:@"inputGVector"];
         [filter setValue:[CIVector vectorWithX:v[10] Y:v[11] Z:v[12] W:v[13]] forKey:@"inputBVector"];
@@ -351,7 +348,7 @@ CIFilter *KCanvasFEColorMatrixQuartz::getCIFilter(KCanvasFilterQuartz *quartzFil
 CIFilter *KCanvasFECompositeQuartz::getCIFilter(KCanvasFilterQuartz *quartzFilter) const
 {
     CIFilter *filter = nil;
-    KWQ_BLOCK_EXCEPTIONS;
+    BEGIN_BLOCK_OBJC_EXCEPTIONS;
 
     switch (operation()) {
     case CO_OVER:
@@ -411,7 +408,7 @@ static inline CIVector *getVectorForChannel(int idx){
 CIFilter *KCanvasFEDisplacementMapQuartz::getCIFilter(KCanvasFilterQuartz *quartzFilter) const
 {
     CIFilter *filter = nil;
-    KWQ_BLOCK_EXCEPTIONS;
+    BEGIN_BLOCK_OBJC_EXCEPTIONS;
     [WKDisplacementMapFilter class];
     filter = [CIFilter filterWithName:@"WKDisplacementMapFilter"];    
     [filter setDefaults];
@@ -430,7 +427,7 @@ CIFilter *KCanvasFEDisplacementMapQuartz::getCIFilter(KCanvasFilterQuartz *quart
 static inline CIFilter *getPointLightVectors(CIFilter * normals, CIVector * lightPosition, float surfaceScale)
 {
     CIFilter *filter;
-    KWQ_BLOCK_EXCEPTIONS;
+    BEGIN_BLOCK_OBJC_EXCEPTIONS;
     filter = [CIFilter filterWithName:@"WKPointLight"];
     if (!filter)
         return nil;
@@ -439,7 +436,7 @@ static inline CIFilter *getPointLightVectors(CIFilter * normals, CIVector * ligh
     [filter setValue:lightPosition forKey:@"inputLightPosition"];    
     [filter setValue:[NSNumber numberWithFloat:surfaceScale] forKey:@"inputSurfaceScale"];
     return filter; 
-    KWQ_UNBLOCK_EXCEPTIONS;
+    END_BLOCK_OBJC_EXCEPTIONS;
     return nil;
 }
 
@@ -450,7 +447,7 @@ static CIFilter *getLightVectors(CIFilter * normals, const KCLightSource * light
     [WKSpotLightFilter class];
 
     CIFilter *filter = nil;    
-    KWQ_BLOCK_EXCEPTIONS;
+    BEGIN_BLOCK_OBJC_EXCEPTIONS;
     
     switch (light->type()) {
     case LS_DISTANT:
@@ -498,7 +495,7 @@ static CIFilter *getLightVectors(CIFilter * normals, const KCLightSource * light
         return filter;
     }
     }
-    KWQ_UNBLOCK_EXCEPTIONS;
+    END_BLOCK_OBJC_EXCEPTIONS;
     return nil;
 }
 
@@ -506,14 +503,14 @@ static CIFilter *getNormalMap(CIImage *bumpMap, float scale)
 {
     [WKNormalMapFilter class];
     CIFilter *filter;
-    KWQ_BLOCK_EXCEPTIONS;
+    BEGIN_BLOCK_OBJC_EXCEPTIONS;
     filter = [CIFilter filterWithName:@"WKNormalMap"];   
     [filter setDefaults];
     
     [filter setValue:bumpMap forKey:@"inputImage"];  
     [filter setValue:[NSNumber numberWithFloat:scale] forKey:@"inputSurfaceScale"];
     return filter;
-    KWQ_UNBLOCK_EXCEPTIONS;
+    END_BLOCK_OBJC_EXCEPTIONS;
     return nil;
 }
 
@@ -526,7 +523,7 @@ CIFilter *KCanvasFEDiffuseLightingQuartz::getCIFilter(KCanvasFilterQuartz *quart
     [WKDiffuseLightingFilter class];
     
     CIFilter *filter;
-    KWQ_BLOCK_EXCEPTIONS;
+    BEGIN_BLOCK_OBJC_EXCEPTIONS;
     filter = [CIFilter filterWithName:@"WKDiffuseLighting"];
     if (!filter)
         return nil;
@@ -556,7 +553,7 @@ CIFilter *KCanvasFEDiffuseLightingQuartz::getCIFilter(KCanvasFilterQuartz *quart
 CIFilter *KCanvasFEFloodQuartz::getCIFilter(KCanvasFilterQuartz *quartzFilter) const
 {
     CIFilter *filter;
-    KWQ_BLOCK_EXCEPTIONS;
+    BEGIN_BLOCK_OBJC_EXCEPTIONS;
     filter = [CIFilter filterWithName:@"CIConstantColorGenerator"];
     [filter setDefaults];
     CGColorRef color = cgColor(floodColor());
@@ -580,7 +577,7 @@ CIFilter *KCanvasFEImageQuartz::getCIFilter(KCanvasFilterQuartz *quartzFilter) c
         return nil;
 
     CIFilter *filter;
-    KWQ_BLOCK_EXCEPTIONS;
+    BEGIN_BLOCK_OBJC_EXCEPTIONS;
     // FIXME: This is only partially implemented (only supports images)
     CIImage *ciImage = [CIImage imageWithCGImage:cachedImage()->image()->getCGImageRef()];
     
@@ -626,10 +623,10 @@ CIFilter *KCanvasFEGaussianBlurQuartz::getCIFilter(KCanvasFilterQuartz *quartzFi
 CIFilter *KCanvasFEMergeQuartz::getCIFilter(KCanvasFilterQuartz *quartzFilter) const
 {
     CIFilter *filter = nil;
-    KWQ_BLOCK_EXCEPTIONS;
-    QStringList inputs = mergeInputs();
-    QValueListIterator<QString> it = inputs.begin();
-    QValueListIterator<QString> end = inputs.end();
+    BEGIN_BLOCK_OBJC_EXCEPTIONS;
+    DeprecatedStringList inputs = mergeInputs();
+    DeprecatedValueListIterator<DeprecatedString> it = inputs.begin();
+    DeprecatedValueListIterator<DeprecatedString> end = inputs.end();
 
     CIImage *previousOutput = quartzFilter->inputImage(this);
     for (;it != end; it++) {
@@ -663,7 +660,7 @@ CIFilter *KCanvasFESpecularLightingQuartz::getCIFilter(KCanvasFilterQuartz *quar
     [WKSpecularLightingFilter class];  
     
     CIFilter *filter;
-    KWQ_BLOCK_EXCEPTIONS;
+    BEGIN_BLOCK_OBJC_EXCEPTIONS;
     filter = [CIFilter filterWithName:@"WKSpecularLighting"];
     [filter setDefaults];
     CIImage *inputImage = quartzFilter->inputImage(this);

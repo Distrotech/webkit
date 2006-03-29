@@ -26,8 +26,8 @@
 #import "config.h"
 #import "WebCorePageBridge.h"
 
-#import "MacFrame.h"
-#import "PageMac.h"
+#import "FrameMac.h"
+#import "Page.h"
 #import "WebCoreFrameBridge.h"
 #import "Logging.h"
 
@@ -69,7 +69,7 @@ static void initializeLoggingChannelsIfNecessary()
     initializeLoggingChannelsIfNecessary();
     self = [super init];
     if (self)
-        _page = new PageMac(self);
+        _page = new Page(self);
     return self;
 }
 
@@ -87,6 +87,16 @@ static void initializeLoggingChannelsIfNecessary()
 - (WebCoreFrameBridge *)mainFrame
 {
     return Mac(_page->mainFrame())->bridge();
+}
+
+- (void)setGroupName:(NSString *)groupName
+{
+    _page->setGroupName(groupName);
+}
+
+- (NSString *)groupName
+{
+    return _page->groupName();
 }
 
 @end

@@ -18,35 +18,35 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _KJS_VIEWS_H_
-#define _KJS_VIEWS_H_
+#ifndef KJS_VIEWS_H_
+#define KJS_VIEWS_H_
 
 #include "kjs_dom.h"
 
-namespace DOM {
-    class AbstractViewImpl;
+namespace WebCore {
+    class AbstractView;
 }
 
 namespace KJS {
 
   class DOMAbstractView : public DOMObject {
   public:
-    DOMAbstractView(ExecState *, DOM::AbstractViewImpl *av);
+    DOMAbstractView(ExecState *, WebCore::AbstractView *av);
     ~DOMAbstractView();
     virtual bool getOwnPropertySlot(ExecState *, const Identifier&, PropertySlot&);
     JSValue *getValueProperty(ExecState *exec, int token);
     // no put - all read-only
     virtual const ClassInfo* classInfo() const { return &info; }
     static const ClassInfo info;
-    DOM::AbstractViewImpl *impl() const { return m_impl.get(); }
-    enum { Document, GetComputedStyle, GetMatchedCSSRules };
+    WebCore::AbstractView *impl() const { return m_impl.get(); }
+    enum { Document_, GetComputedStyle, GetMatchedCSSRules };
   private:
-    RefPtr<DOM::AbstractViewImpl> m_impl;
+    RefPtr<WebCore::AbstractView> m_impl;
   };
 
-  JSValue *getDOMAbstractView(ExecState *exec, DOM::AbstractViewImpl *av);
+  JSValue* toJS(ExecState*, WebCore::AbstractView*);
 
-  DOM::AbstractViewImpl *toAbstractView(JSValue *);
+  WebCore::AbstractView *toAbstractView(JSValue *);
 
 } // namespace
 

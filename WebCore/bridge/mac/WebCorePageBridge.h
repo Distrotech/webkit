@@ -54,6 +54,9 @@ class WebCoreFrameBridge;
 
 - (WebCoreFrameBridge *)mainFrame;
 
+- (void)setGroupName:(NSString *)groupName;
+- (NSString *)groupName;
+
 @end
 
 // The WebCorePageBridge protocol contains methods for use by the WebCore side of the bridge.
@@ -61,6 +64,9 @@ class WebCoreFrameBridge;
 @protocol WebCorePageBridge
 
 - (NSView *)outerView;
+
+- (void)setWindowFrame:(NSRect)frame;
+- (NSRect)windowFrame;
 
 @end
 
