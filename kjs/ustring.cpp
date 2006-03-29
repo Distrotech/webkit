@@ -69,13 +69,12 @@ CString::CString(const char *c, int len)
 CString::CString(const CString &b)
 {
   length = b.length;
-  if (length > 0 && b.data) {
+  if (b.data) {
     data = new char[length+1];
     memcpy(data, b.data, length + 1);
   }
-  else {
+  else
     data = 0;
-  }
 }
 
 CString::~CString()
@@ -119,13 +118,12 @@ CString &CString::operator=(const CString &str)
   if (data)
     delete [] data;
   length = str.length;
-  if (length > 0 && str.data) {
+  if (str.data) {
     data = new char[length + 1];
     memcpy(data, str.data, length + 1);
   }
-  else {
+  else
     data = 0;
-  }
 
   return *this;
 }
@@ -563,6 +561,10 @@ UString UString::from(long l)
 
 UString UString::from(double d)
 {
+  // avoid ever printing -NaN, in JS conceptually there is only one NaN value
+  if (isNaN(d))
+    return "NaN";
+
   char buf[80];
   int decimalPoint;
   int sign;
@@ -1176,13 +1178,14 @@ int compare(const UString& s1, const UString& s2)
     c2++;
     l++;
   }
+
   if (l < lmin)
     return (c1->uc > c2->uc) ? 1 : -1;
 
-  if (l1 == l2) {
+  if (l1 == l2)
     return 0;
-  }
-  return (l1 < l2) ? 1 : -1;
+
+  return (l1 > l2) ? 1 : -1;
 }
 
 inline int inlineUTF8SequenceLengthNonASCII(char b0)
