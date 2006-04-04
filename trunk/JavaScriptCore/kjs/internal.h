@@ -32,9 +32,11 @@
 #include "scope_chain.h"
 #include "types.h"
 #include "ustring.h"
+#include "InterpreterState.h"
 
 #include <kxmlcore/Noncopyable.h>
 #include <kxmlcore/RefPtr.h>
+#include <kxmlcore/Vector.h>
 
 #define I18N_NOOP(s) s
 
@@ -42,7 +44,8 @@ namespace KJS {
 
   class Debugger;
   class FunctionPrototype;
-
+  class Node;
+  
   // ---------------------------------------------------------------------------
   //                            Primitive impls
   // ---------------------------------------------------------------------------
@@ -169,6 +172,50 @@ namespace KJS {
     ProtectedPtr<JSObject> b_typeErrorPrototype;
     ProtectedPtr<JSObject> b_uriErrorPrototype;
   };
+  
+#define STACK_USES_ARRAY 1
+
+  template <typename T, size_t inlineCapacity = 0>
+      class Stack {
+    public:
+#if STACK_USES_ARRAY
+          Stack() : m_stackTop(m_stackBase - 1) { }
+          const T& peek() const { ASSERT(!isEmpty()); return *m_stackTop;}
+          void push(const T& value) {  ASSERT(size() != inlineCapacity); *(++m_stackTop) = value; }
+          T pop() { ASSERT(!isEmpty()); return *m_stackTop--; }
+          size_t size() const { return m_stackTop - m_stackBase + 1; }
+          bool isEmpty() const { return (m_stackTop < m_stackBase); }
+          // FIXME: Resize should be removed, replace with a multi-pop/shrink operation
+          void shrinkTo(size_t newSize) { m_stackTop = m_stackBase + newSize - 1; }
+          const T& at(unsigned i) const { ASSERT(i < inlineCapacity); return m_stackBase[i]; }
+          const T& operator[](unsigned i) const { return at(i); }
+    private:
+        T m_stackBase[inlineCapacity];
+        T* m_stackTop; // pointer to the last pushed value
+#else
+          const T& peek() const { return m_vector.last(); }
+          void push(const T& value) { m_vector.append(value); }
+          T pop();
+          size_t size() const { return m_vector.size(); }
+          bool isEmpty() const { return m_vector.isEmpty(); }
+          // FIXME: Resize should be removed, replace with a multi-pop/shrink operation
+          void shrinkTo(size_t newSize) { m_vector.resize(newSize); }
+          const T& at(unsigned i) const { return m_vector.at(i); }
+          const T& operator[](unsigned i) const { return at(i); }
+    private:
+        Vector<T, inlineCapacity> m_vector;
+#endif
+      };
+
+#if !STACK_USES_ARRAY
+  template <typename T, size_t inlineCapacity>
+      inline T Stack<T, inlineCapacity>::pop()
+  {
+          T& value = m_vector.last();
+          m_vector.removeLast();
+          return value;
+  }
+#endif
 
   class InterpreterImp {
     friend class Collector;
@@ -238,6 +285,58 @@ namespace KJS {
 
     void saveBuiltins (SavedBuiltins &builtins) const;
     void restoreBuiltins (const SavedBuiltins &builtins);
+    
+    struct State {
+        State() { } // Allow Stack<T> array-based allocation
+        State(InterpreterState s, Node* n) : state(s), node(n) { }
+        InterpreterState state;
+        Node* node;
+    };
+        
+    JSValue* peekValueReturn() { return m_valueReturnStack.peek(); }
+    JSValue* popValueReturn() { return m_valueReturnStack.pop(); }
+    void pushValueReturn(JSValue* value) { m_valueReturnStack.push(value); }
+    unsigned valueStackDepth() { return m_valueReturnStack.size(); }
+    
+    const State& peekNextState() const { return m_stateStack.peek(); }
+    State popNextState() { return m_stateStack.pop(); }
+    void pushNextState(const State& state) { m_stateStack.push(state); }
+    unsigned stateStackDepth() { return m_stateStack.size(); }
+    
+    struct UnwindMarker {
+        UnwindMarker() { } // Allow Stack<T> array-based allocation
+        UnwindMarker(unsigned valueBase, unsigned stateBase) : valueStackSize(valueBase), stateStackSize(stateBase) { }
+        unsigned valueStackSize;
+        unsigned stateStackSize;
+    };
+    
+    UnwindMarker pushUnwindMarker()
+    {
+        UnwindMarker unwindMarker(valueStackDepth(), stateStackDepth());
+        m_unwindMarkerStack.push(unwindMarker);
+        return unwindMarker;
+    }
+    void popUnwindMarker()
+    {
+#ifndef NDEBUG
+        const UnwindMarker& unwindMarker = m_unwindMarkerStack.peek();
+        ASSERT(valueStackDepth() == unwindMarker.valueStackSize);
+        ASSERT(stateStackDepth() == unwindMarker.stateStackSize);
+#endif
+        m_unwindMarkerStack.pop();
+    }
+    void unwindToNextMarker()
+    {
+        const UnwindMarker& unwindMarker = m_unwindMarkerStack.peek();
+        ASSERT(valueStackDepth() >= unwindMarker.valueStackSize);
+        ASSERT(stateStackDepth() >= unwindMarker.stateStackSize);
+        m_valueReturnStack.shrinkTo(unwindMarker.valueStackSize);
+        m_stateStack.shrinkTo(unwindMarker.stateStackSize);
+        m_unwindMarkerStack.pop();
+    }
+    
+    void printStateStack();
+    void printValueStack();
 
   private:
     void clear();
@@ -293,6 +392,10 @@ namespace KJS {
     ContextImp *_context;
 
     int recursion;
+        
+    Stack<JSValue*, KJS_MAX_STACK> m_valueReturnStack;
+    Stack<State, KJS_MAX_STACK> m_stateStack;
+    Stack<UnwindMarker, KJS_MAX_STACK> m_unwindMarkerStack;
   };
 
   class AttachedInterpreter;
@@ -355,5 +458,10 @@ inline void LabelStack::pop()
 }
 
 } // namespace
+
+namespace KXMLCore {
+    template<> struct IsPod<KJS::InterpreterImp::State> { static const bool value = true; };
+    template<> struct IsPod<KJS::InterpreterImp::UnwindMarker> { static const bool value = true; };
+}
 
 #endif //  INTERNAL_H
