@@ -1,0 +1,148 @@
+// -*- mode: c++; c-basic-offset: 4 -*-
+/*
+ * This file is part of the KDE libraries
+ * Copyright (C) 2005, 2006 Apple Computer, Inc.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public License
+ * along with this library; see the file COPYING.LIB.  If not, write to
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
+ *
+ */
+
+#ifndef InterpreterState_h
+#define InterpreterState_h
+
+namespace KJS {
+
+// FIXME: this should probably just be a generated source file from a perl script.
+
+#define INTERPRETER_STATE_FOR_EACH(macro) \
+    macro(EmptyStackState) \
+    macro(InternalErrorState) \
+    macro(NullNodeEvaluateState) \
+    macro(BooleanNodeEvaluateState) \
+    macro(NumberNodeEvaluateState) \
+    macro(StringNodeEvaluateState) \
+    macro(RegExpNodeEvaluateState) \
+    macro(ThisNodeEvaluateState) \
+    macro(ResolveNodeEvaluateState) \
+    macro(GroupNodeEvaluateState) \
+    macro(ElementNodeEvaluateState) \
+    macro(ElementNodeEvaluateState1) \
+    macro(ElementNodeEvaluateState2) \
+    macro(ArrayNodeEvaluateState) \
+    macro(ArrayNodeEvaluateState1) \
+    macro(ObjectLiteralNodeEvaluateState) \
+    macro(PropertyListNodeEvaluateState) \
+    macro(PropertyListNodeEvaluateState1) \
+    macro(PropertyListNodeEvaluateState2) \
+    macro(PropertyNodeEvaluateState) \
+    macro(PropertyNameNodeEvaluateState) \
+    macro(BracketAccessorNodeEvaluateState) \
+    macro(BracketAccessorNodeEvaluateState1) \
+    macro(DotAccessorNodeEvaluateState) \
+    macro(DotAccessorNodeEvaluateState1) \
+    macro(ArgumentListNodeEvaluateState) \
+    macro(ArgumentsNodeEvaluateState) \
+    macro(NewExprNodeEvaluateState) \
+    macro(NewExprNodeEvaluateState1) \
+    macro(FunctionCallValueNodeEvaluateState) \
+    macro(FunctionCallValueNodeEvaluateState1) \
+    macro(FunctionCallResolveNodeEvaluateState) \
+    macro(FunctionCallBracketNodeEvaluateState) \
+    macro(FunctionCallBracketNodeEvaluateState1) \
+    macro(FunctionCallDotNodeEvaluateState) \
+    macro(FunctionCallDotNodeEvaluateState1) \
+    macro(PostfixResolveNodeEvaluateState) \
+    macro(PostfixBracketNodeEvaluateState) \
+    macro(PostfixBracketNodeEvaluateState1) \
+    macro(PostfixDotNodeEvaluateState) \
+    macro(PostfixDotNodeEvaluateState1) \
+    macro(DeleteResolveNodeEvaluateState) \
+    macro(DeleteBracketNodeEvaluateState) \
+    macro(DeleteBracketNodeEvaluateState1) \
+    macro(DeleteDotNodeEvaluateState) \
+    macro(DeleteDotNodeEvaluateState1) \
+    macro(DeleteValueNodeEvaluateState) \
+    macro(DeleteValueNodeEvaluateState1) \
+    macro(VoidNodeEvaluateState) \
+    macro(VoidNodeEvaluateState1) \
+    macro(TypeOfResolveNodeEvaluateState) \
+    macro(TypeOfValueNodeEvaluateState) \
+    macro(TypeOfValueNodeEvaluateState1) \
+    macro(PrefixResolveNodeEvaluateState) \
+    macro(PrefixBracketNodeEvaluateState) \
+    macro(PrefixBracketNodeEvaluateState1) \
+    macro(PrefixDotNodeEvaluateState) \
+    macro(PrefixDotNodeEvaluateState1) \
+    macro(UnaryPlusNodeEvaluateState) \
+    macro(UnaryPlusNodeEvaluateState1) \
+    macro(NegateNodeEvaluateState) \
+    macro(NegateNodeEvaluateState1) \
+    macro(BitwiseNotNodeEvaluateState) \
+    macro(BitwiseNotNodeEvaluateState1) \
+    macro(LogicalNotNodeEvaluateState) \
+    macro(LogicalNotNodeEvaluateState1) \
+    macro(MultNodeEvaluateState) \
+    macro(MultNodeEvaluateState1) \
+    macro(AddNodeEvaluateState) \
+    macro(AddNodeEvaluateState1) \
+    macro(ShiftNodeEvaluateState) \
+    macro(ShiftNodeEvaluateState1) \
+    macro(RelationalNodeEvaluateState) \
+    macro(RelationalNodeEvaluateState1) \
+    macro(EqualNodeEvaluateState) \
+    macro(EqualNodeEvaluateState1) \
+    macro(BitOperNodeEvaluateState) \
+    macro(BitOperNodeEvaluateState1) \
+    macro(BinaryLogicalNodeEvaluateState) \
+    macro(BinaryLogicalNodeEvaluateState1) \
+    macro(ConditionalNodeEvaluateState) \
+    macro(ConditionalNodeEvaluateState1) \
+    macro(AssignResolveNodeEvaluateState) \
+    macro(AssignResolveNodeEvaluateState1) \
+    macro(AssignDotNodeEvaluateState) \
+    macro(AssignDotNodeEvaluateState1) \
+    macro(AssignDotNodeEvaluateState2) \
+    macro(AssignDotNodeEvaluateState3) \
+    macro(AssignBracketNodeEvaluateState) \
+    macro(AssignBracketNodeEvaluateState1) \
+    macro(CommaNodeEvaluateState) \
+    macro(CommaNodeEvaluateState1) \
+    macro(AssignExprNodeEvaluateState) \
+    macro(VarDeclNodeEvaluateState) \
+    macro(VarDeclNodeEvaluateState1) \
+    macro(VarDeclListNodeEvaluateState) \
+    macro(VarDeclListNodeEvaluateState1) \
+    macro(CaseClauseNodeEvaluateState) \
+    macro(ClauseListNodeEvaluateState) \
+    macro(CaseBlockNodeEvaluateState) \
+    macro(StatementNodeEvaluateState) \
+    macro(ParameterNodeEvaluateState) \
+    macro(FuncExprNodeEvaluateState)
+// end of macro
+
+
+enum InterpreterState {
+#define INTERPRETER_STATE_DEFINE_ENUM(name)    name,
+    INTERPRETER_STATE_FOR_EACH(INTERPRETER_STATE_DEFINE_ENUM)
+#undef INTERPRETER_STATE_DEFINE_ENUM
+    LastInterpreterState
+}; 
+
+extern const char* nameForInterpreterState[LastInterpreterState+1];
+
+}
+
+#endif

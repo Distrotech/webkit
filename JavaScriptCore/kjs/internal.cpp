@@ -282,10 +282,9 @@ InterpreterImp::InterpreterImp(Interpreter *interp, JSObject *glob)
     next = s_hook->next;
     s_hook->next->prev = this;
     s_hook->next = this;
-  } else {
+  } else
     // This is the first interpreter
     s_hook = next = prev = this;
-  }
 
   interpreterMap().set(glob, this);
 
@@ -297,6 +296,7 @@ InterpreterImp::InterpreterImp(Interpreter *interp, JSObject *glob)
   initGlobalObject();
 
   recursion = 0;
+  m_stateStack.push(State(EmptyStackState, (Node*)0));
 }
 
 void InterpreterImp::initGlobalObject()
@@ -452,6 +452,12 @@ void InterpreterImp::mark()
       global->mark();
   if (globExec.exception())
       globExec.exception()->mark();
+  unsigned size = m_valueReturnStack.size();
+  for (unsigned x = 0; x < size; x++) {
+    JSValue* val = m_valueReturnStack[x];
+    if (!val->marked())
+        val->mark();
+  }
 }
 
 bool InterpreterImp::checkSyntax(const UString &code)
@@ -603,6 +609,47 @@ InterpreterImp *InterpreterImp::interpreterWithGlobalObject(JSObject *global)
     return interpreterMap().get(global);
 }
 
+static void printUnwindMarkersIfNecessary(const Stack<InterpreterImp::UnwindMarker, KJS_MAX_STACK>& unwindStack, int& currentMarker, unsigned stackLocation, bool valueStack)
+{
+    if (currentMarker - 1 < 0)
+        return;
+    InterpreterImp::UnwindMarker unwindMarker = unwindStack[currentMarker - 1];
+    while ((currentMarker - 1 >= 0) && (valueStack ? (unwindMarker.valueStackSize - 1) == stackLocation : (unwindMarker.stateStackSize - 1) == stackLocation)) {
+        printf("=====unwind=marker=====\n");
+        unwindMarker = unwindStack[--currentMarker];
+    }
+}
+
+void InterpreterImp::printStateStack()
+{
+    printf("State Stack:\n");
+    unsigned size = m_stateStack.size();
+    if (size == 0)
+        printf("<empty>\n");
+    
+    int unwindIter = m_unwindMarkerStack.size();
+    for (int x = size-1; x >= 0; x--) {
+        printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, x, false); 
+        InterpreterState state = m_stateStack.at(x).state;
+        printf("%i: %s (%i), %p\n", x, nameForInterpreterState[state], state, m_stateStack.at(x).node);
+    }
+    printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, 0, false); 
+}
+
+void InterpreterImp::printValueStack()
+{
+    printf("Value Stack:\n");
+    unsigned size = m_valueReturnStack.size();
+    if (size == 0)
+        printf("<empty>\n");
+    
+    int unwindIter = m_unwindMarkerStack.size();
+    for (int x = size-1; x >= 0; x--) {
+        printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, x, true);
+        printf("%i: %p\n", x, m_valueReturnStack.at(x));
+    }
+    printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, 0, true);
+}
 
 // ------------------------------ InternalFunctionImp --------------------------
 
