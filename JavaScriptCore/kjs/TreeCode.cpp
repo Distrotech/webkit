@@ -54,7 +54,11 @@ const char* nameForInterpreterState[LastInterpreterState+1] = {
 #define PRINT_AS_STRING(name) #name ,
     EVALUATE_MACRO_FOR_EACH_EVALUATE_STATE(PRINT_AS_STRING)
 
-    "EvaluateExecuteBoundary",
+    "Evaluate_EvaluateList_Boundary",
+    
+    EVALUATE_MACRO_FOR_EACH_EVALUATE_LIST_STATE(PRINT_AS_STRING)
+    
+    "EvaluateList_Execute_Boundary",
     
     EVALUATE_MACRO_FOR_EACH_EXECUTE_STATE(PRINT_AS_STRING)
 #undef PRINT_AS_STRING
@@ -270,15 +274,35 @@ static ALWAYS_INLINE JSValue *valueForReadModifyAssignment(ExecState * exec, JSV
     goto interpreter_state_switch_end; \
 }
 
+#define IS_EVALUATE_STATE(state) \
+    (state >= 0 && state < Evaluate_EvaluteList_Boundary)
+
+#define IS_EVALUATE_LIST_STATE(state) \
+    (state > Evaluate_EvaluteList_Boundary && state < EvaluateList_Execute_Boundary)
+
+#define IS_EXECUTE_STATE(state) \
+    (state > EvaluateList_Execute_Boundary && state < LastInterpreterState)
+
 #define PUSH_EVALUATE(node) \
-    interpreter->pushNextState(InterpreterImp::State(node->evaluateState(), node))
+{ \
+    InterpreterState nextState = node->interpreterState(); \
+    ASSERT(IS_EVALUATE_STATE(nextState)); \
+    interpreter->pushNextState(InterpreterImp::State(nextState, node)); \
+}
     
 #define PUSH_EVALUATE_LIST(node) \
-    interpreter->pushNextState(InterpreterImp::State(node->evaluateListState(), node))
+do { \
+    InterpreterState nextState = node->interpreterState(); \
+    ASSERT(IS_EVALUATE_LIST_STATE(nextState)); \
+    interpreter->pushNextState(InterpreterImp::State(nextState, node)); \
+} while (0)
 
 #define PUSH_EXECUTE(node) \
-    interpreter->pushNextState(InterpreterImp::State(node->executeState(), node));
-
+do { \
+    InterpreterState nextState = node->interpreterState(); \
+    ASSERT(IS_EXECUTE_STATE(nextState)); \
+    interpreter->pushNextState(InterpreterImp::State(nextState, node)); \
+} while (0)
 // This explicity checks for continue state bugs
 // FIXME: This should not take an argument once we have a way to check if currentState+1 == a substate
 #define SET_CONTINUE_STATE(nextState) \
@@ -332,13 +356,7 @@ void runInterpreterEvaluateLoop(ExecState* exec)
 #endif
 
         switch (statePair.state) {
-            case EmptyStackState:
             case InternalErrorState:
-            case ArgumentListNodeEvaluateState:
-            case ArgumentsNodeEvaluateState:
-            case ClauseListNodeEvaluateState:
-            case CaseBlockNodeEvaluateState:
-            case PropertyNodeEvaluateState:
             default:
             {
                 // should never be called
@@ -1541,12 +1559,6 @@ void runInterpreterEvaluateLoop(ExecState* exec)
             {
                 PUSH_EVALUATE(static_cast<CaseClauseNode*>(currentNode)->expr.get());
                 break;
-            }
-                        
-            case StatementNodeEvaluateState:
-            case ParameterNodeEvaluateState:
-            {
-                RETURN_VALUE(jsUndefined());
             }
                 
             case FuncExprNodeEvaluateState:
