@@ -180,28 +180,25 @@ namespace KJS {
     public:
 #if STACK_USES_ARRAY
           Stack() : m_stackTop(m_stackBase - 1) { }
-          const T& peek() const { ASSERT(!isEmpty()); return *m_stackTop;}
+          T& peek() { ASSERT(!isEmpty()); return *m_stackTop;}
           void push(const T& value) {  ASSERT(size() != inlineCapacity); *(++m_stackTop) = value; }
           T pop() { ASSERT(!isEmpty()); return *m_stackTop--; }
           size_t size() const { return m_stackTop - m_stackBase + 1; }
           bool isEmpty() const { return (m_stackTop < m_stackBase); }
-          // FIXME: Resize should be removed, replace with a multi-pop/shrink operation
           void shrinkTo(size_t newSize) { m_stackTop = m_stackBase + newSize - 1; }
-          const T& at(unsigned i) const { ASSERT(i < inlineCapacity); return m_stackBase[i]; }
-          const T& operator[](unsigned i) const { return at(i); }
+          const T& operator[](unsigned i) const { ASSERT(i < inlineCapacity); return m_stackBase[i]; }
     private:
         T m_stackBase[inlineCapacity];
         T* m_stackTop; // pointer to the last pushed value
 #else
-          const T& peek() const { return m_vector.last(); }
+          T& peek() { return m_vector.last(); }
           void push(const T& value) { m_vector.append(value); }
           T pop();
           size_t size() const { return m_vector.size(); }
           bool isEmpty() const { return m_vector.isEmpty(); }
           // FIXME: Resize should be removed, replace with a multi-pop/shrink operation
           void shrinkTo(size_t newSize) { m_vector.resize(newSize); }
-          const T& at(unsigned i) const { return m_vector.at(i); }
-          const T& operator[](unsigned i) const { return at(i); }
+          const T& operator[](unsigned i) const { return m_vector.at(i); }
     private:
         Vector<T, inlineCapacity> m_vector;
 #endif
@@ -211,7 +208,7 @@ namespace KJS {
   template <typename T, size_t inlineCapacity>
       inline T Stack<T, inlineCapacity>::pop()
   {
-          T& value = m_vector.last();
+          T value = m_vector.last();
           m_vector.removeLast();
           return value;
   }
@@ -285,6 +282,11 @@ namespace KJS {
 
     void saveBuiltins (SavedBuiltins &builtins) const;
     void restoreBuiltins (const SavedBuiltins &builtins);
+            
+    JSValue* peekValueReturn() { return m_valueReturnStack.peek(); }
+    JSValue* popValueReturn() { return m_valueReturnStack.pop(); }
+    void pushValueReturn(JSValue* value) { m_valueReturnStack.push(value); }
+    unsigned valueStackDepth() { return m_valueReturnStack.size(); }
     
     struct State {
         State() { } // Allow Stack<T> array-based allocation
@@ -292,27 +294,23 @@ namespace KJS {
         InterpreterState state;
         Node* node;
     };
-        
-    JSValue* peekValueReturn() { return m_valueReturnStack.peek(); }
-    JSValue* popValueReturn() { return m_valueReturnStack.pop(); }
-    void pushValueReturn(JSValue* value) { m_valueReturnStack.push(value); }
-    unsigned valueStackDepth() { return m_valueReturnStack.size(); }
     
-    const State& peekNextState() const { return m_stateStack.peek(); }
+    const State& peekNextState() { return m_stateStack.peek(); }
     State popNextState() { return m_stateStack.pop(); }
     void pushNextState(const State& state) { m_stateStack.push(state); }
     unsigned stateStackDepth() { return m_stateStack.size(); }
     
     struct UnwindMarker {
         UnwindMarker() { } // Allow Stack<T> array-based allocation
-        UnwindMarker(unsigned valueBase, unsigned stateBase) : valueStackSize(valueBase), stateStackSize(stateBase) { }
+        UnwindMarker(unsigned valueBase, unsigned stateBase, unsigned listBase) : valueStackSize(valueBase), stateStackSize(stateBase), listStackSize(listBase) { }
         unsigned valueStackSize;
         unsigned stateStackSize;
+        unsigned listStackSize;
     };
     
     UnwindMarker pushUnwindMarker()
     {
-        UnwindMarker unwindMarker(valueStackDepth(), stateStackDepth());
+        UnwindMarker unwindMarker(valueStackDepth(), stateStackDepth(), listStackDepth());
         m_unwindMarkerStack.push(unwindMarker);
         return unwindMarker;
     }
@@ -322,6 +320,7 @@ namespace KJS {
         const UnwindMarker& unwindMarker = m_unwindMarkerStack.peek();
         ASSERT(valueStackDepth() == unwindMarker.valueStackSize);
         ASSERT(stateStackDepth() == unwindMarker.stateStackSize);
+        ASSERT(listStackDepth() == unwindMarker.listStackSize);
 #endif
         m_unwindMarkerStack.pop();
     }
@@ -330,13 +329,21 @@ namespace KJS {
         const UnwindMarker& unwindMarker = m_unwindMarkerStack.peek();
         ASSERT(valueStackDepth() >= unwindMarker.valueStackSize);
         ASSERT(stateStackDepth() >= unwindMarker.stateStackSize);
+        ASSERT(listStackDepth() >= unwindMarker.listStackSize);
         m_valueReturnStack.shrinkTo(unwindMarker.valueStackSize);
         m_stateStack.shrinkTo(unwindMarker.stateStackSize);
+        m_listReturnStack.shrinkTo(unwindMarker.listStackSize);
         m_unwindMarkerStack.pop();
     }
     
+    List& peekListReturn() { return m_listReturnStack.peek(); }
+    List popListReturn() { return m_listReturnStack.pop(); }
+    void pushListReturn(const List& list) { m_listReturnStack.push(list); }
+    unsigned listStackDepth() { return m_listReturnStack.size(); }
+    
     void printStateStack();
     void printValueStack();
+    void printListStack();
 
   private:
     void clear();
@@ -396,6 +403,7 @@ namespace KJS {
     Stack<JSValue*, KJS_MAX_STACK> m_valueReturnStack;
     Stack<State, KJS_MAX_STACK> m_stateStack;
     Stack<UnwindMarker, KJS_MAX_STACK> m_unwindMarkerStack;
+    Stack<List, KJS_MAX_STACK> m_listReturnStack;
   };
 
   class AttachedInterpreter;

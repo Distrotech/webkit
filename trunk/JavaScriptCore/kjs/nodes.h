@@ -305,8 +305,8 @@ namespace KJS {
     ArgumentListNode(Node *e) : next(this), expr(e) { Parser::noteNodeCycle(this); }
     ArgumentListNode(ArgumentListNode *l, Node *e)
       : next(l->next), expr(e) { l->next = this; }
+    virtual InterpreterState evaluateListState() const { return ArgumentListNodeEvaluateListState; }
     virtual InterpreterState evaluateState() const { return ArgumentListNodeEvaluateState; }
-    List evaluateList(ExecState*);
     virtual void streamTo(SourceStream&) const;
     PassRefPtr<ArgumentListNode> releaseNext() { return next.release(); }
     virtual void breakCycle();
@@ -318,8 +318,8 @@ namespace KJS {
     ArgumentsNode() { }
     ArgumentsNode(ArgumentListNode *l)
       : list(l->next) { Parser::removeNodeCycle(list.get()); l->next = 0; }
+    virtual InterpreterState evaluateListState() const { return ArgumentsNodeEvaluateListState; }
     virtual InterpreterState evaluateState() const { return ArgumentsNodeEvaluateState; }
-    List evaluateList(ExecState* exec) { return list ? list->evaluateList(exec) : List(); }
     virtual void streamTo(SourceStream&) const;
     RefPtr<ArgumentListNode> list;
   };
