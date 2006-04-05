@@ -28,7 +28,6 @@ namespace KJS {
 // FIXME: this should probably just be a generated source file from a perl script.
 
 #define EVALUATE_MACRO_FOR_EACH_EVALUATE_STATE(macro) \
-    macro(EmptyStackState) \
     macro(InternalErrorState) \
     macro(NullNodeEvaluateState) \
     macro(BooleanNodeEvaluateState) \
@@ -47,14 +46,11 @@ namespace KJS {
     macro(PropertyListNodeEvaluateState) \
     macro(PropertyListNodeEvaluateState1) \
     macro(PropertyListNodeEvaluateState2) \
-    macro(PropertyNodeEvaluateState) \
     macro(PropertyNameNodeEvaluateState) \
     macro(BracketAccessorNodeEvaluateState) \
     macro(BracketAccessorNodeEvaluateState1) \
     macro(DotAccessorNodeEvaluateState) \
     macro(DotAccessorNodeEvaluateState1) \
-    macro(ArgumentListNodeEvaluateState) \
-    macro(ArgumentsNodeEvaluateState) \
     macro(NewExprNodeEvaluateState) \
     macro(NewExprNodeEvaluateState1) \
     macro(FunctionCallValueNodeEvaluateState) \
@@ -130,11 +126,10 @@ namespace KJS {
     macro(VarDeclListNodeEvaluateState) \
     macro(VarDeclListNodeEvaluateState1) \
     macro(CaseClauseNodeEvaluateState) \
-    macro(ClauseListNodeEvaluateState) \
-    macro(CaseBlockNodeEvaluateState) \
-    macro(StatementNodeEvaluateState) \
-    macro(ParameterNodeEvaluateState) \
-    macro(FuncExprNodeEvaluateState) \
+    macro(FuncExprNodeEvaluateState)
+// end of macro
+
+#define EVALUATE_MACRO_FOR_EACH_EVALUATE_LIST_STATE(macro) \
     macro(ArgumentListNodeEvaluateListState) \
     macro(ArgumentListNodeEvaluateListState1) \
     macro(ArgumentListNodeEvaluateListState2) \
@@ -169,7 +164,11 @@ enum InterpreterState {
 #define PRINT_AS_ENUM(name)    name,
     EVALUATE_MACRO_FOR_EACH_EVALUATE_STATE(PRINT_AS_ENUM)
     
-    EvaluateExecuteBoundary,
+    Evaluate_EvaluteList_Boundary,
+    
+    EVALUATE_MACRO_FOR_EACH_EVALUATE_LIST_STATE(PRINT_AS_ENUM)
+    
+    EvaluateList_Execute_Boundary,
 
     EVALUATE_MACRO_FOR_EACH_EXECUTE_STATE(PRINT_AS_ENUM)
 #undef PRINT_AS_ENUM

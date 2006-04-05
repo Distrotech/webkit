@@ -296,7 +296,6 @@ InterpreterImp::InterpreterImp(Interpreter *interp, JSObject *glob)
   initGlobalObject();
 
   recursion = 0;
-  m_stateStack.push(State(EmptyStackState, (Node*)0));
 }
 
 void InterpreterImp::initGlobalObject()

@@ -74,7 +74,7 @@ static NodeCounter nodeImplCounter;
 static HashSet<Node*>* newNodes;
 static HashCountedSet<Node*>* nodeExtraRefCounts;
 
-Node::Node(InterpreterState nodeExecuteState) : m_nodeExecuteState(nodeExecuteState)
+Node::Node(InterpreterState interpreterState) : m_interpreterState(interpreterState)
 {
 #ifndef NDEBUG
     ++NodeCounter::count;
@@ -266,12 +266,6 @@ Node *GroupNode::nodeInsideAllParens()
 
 // ------------------------------ StatementNode --------------------------------
 
-StatementNode::StatementNode(InterpreterState nodeExecuteState) 
-    : Node(nodeExecuteState), m_lastLine(-1)
-{
-    m_line = -1;
-}
-
 void StatementNode::setLoc(int firstLine, int lastLine)
 {
     m_line = firstLine;
@@ -381,17 +375,15 @@ static ALWAYS_INLINE JSValue *valueForReadModifyAssignment(ExecState * exec, JSV
 // ------------------------------ StatListNode ---------------------------------
 
 StatListNode::StatListNode(StatementNode *s)
-  : statement(s), next(this)
+  : StatementNode(StatListNodeExecuteState), statement(s), next(this)
 {
-    m_nodeExecuteState = StatListNodeExecuteState;
     Parser::noteNodeCycle(this);
     setLoc(s->firstLine(), s->lastLine());
 }
  
 StatListNode::StatListNode(StatListNode *l, StatementNode *s)
-  : statement(s), next(l->next)
+  : StatementNode(StatListNodeExecuteState), statement(s), next(l->next)
 {
-    m_nodeExecuteState = StatListNodeExecuteState;
     l->next = this;
     setLoc(l->firstLine(), s->lastLine());
 }
@@ -408,12 +400,6 @@ void StatListNode::breakCycle()
 }
 
 // ------------------------------ VarDeclNode ----------------------------------
-
-    
-VarDeclNode::VarDeclNode(const Identifier &id, AssignExprNode *in, Type t)
-    : varType(t), ident(id), init(in)
-{
-}
 
 void VarDeclNode::processVarDecls(ExecState *exec)
 {
@@ -453,9 +439,8 @@ void VarStatementNode::processVarDecls(ExecState *exec)
 
 // ------------------------------ BlockNode ------------------------------------
 
-BlockNode::BlockNode(SourceElementsNode *s)
+BlockNode::BlockNode(SourceElementsNode *s) : StatementNode(BlockNodeExecuteState)
 {
-  m_nodeExecuteState = BlockNodeExecuteState;
   if (s) {
     source = s->next;
     Parser::removeNodeCycle(source.get());
@@ -509,15 +494,13 @@ void ForNode::processVarDecls(ExecState *exec)
 // ------------------------------ ForInNode ------------------------------------
 
 ForInNode::ForInNode(Node *l, Node *e, StatementNode *s)
-  : init(0L), lexpr(l), expr(e), varDecl(0L), statement(s)
+  : StatementNode(ForInNodeExecuteState), init(0L), lexpr(l), expr(e), varDecl(0L), statement(s)
 {
-    m_nodeExecuteState = ForInNodeExecuteState;    
 }
 
 ForInNode::ForInNode(const Identifier &i, AssignExprNode *in, Node *e, StatementNode *s)
-  : ident(i), init(in), expr(e), statement(s)
+  : StatementNode(ForInNodeExecuteState), ident(i), init(in), expr(e), statement(s)
 {
-  m_nodeExecuteState = ForInNodeExecuteState;    
   varDecl = new VarDeclNode(ident, init.get(), VarDeclNode::Variable);
   lexpr = new ResolveNode(ident);
 }
@@ -570,16 +553,15 @@ void ClauseListNode::breakCycle()
 
 // ------------------------------ CaseBlockNode --------------------------------
 
-CaseBlockNode::CaseBlockNode(ClauseListNode *l1, CaseClauseNode *d,
-                             ClauseListNode *l2)
+CaseBlockNode::CaseBlockNode(ClauseListNode *l1, CaseClauseNode *d, ClauseListNode *l2)
+    : Node(InternalErrorState)
 {
   if (l1) {
     list1 = l1->next;
     Parser::removeNodeCycle(list1.get());
     l1->next = 0;
-  } else {
+  } else
     list1 = 0;
-  }
 
   def = d;
 
@@ -587,9 +569,8 @@ CaseBlockNode::CaseBlockNode(ClauseListNode *l1, CaseClauseNode *d,
     list2 = l2->next;
     Parser::removeNodeCycle(list2.get());
     l2->next = 0;
-  } else {
+  } else
     list2 = 0;
-  }
 }
  
 // ECMA 12.11
@@ -754,17 +735,15 @@ void FuncDeclNode::processFuncDecl(ExecState *exec)
 int SourceElementsNode::count = 0;
 
 SourceElementsNode::SourceElementsNode(StatementNode *s1)
-    : node(s1), next(this)
+    : StatementNode(SourceElementsNodeExecuteState), node(s1), next(this)
 {
-    m_nodeExecuteState = SourceElementsNodeExecuteState;    
     Parser::noteNodeCycle(this);
     setLoc(s1->firstLine(), s1->lastLine());
 }
 
 SourceElementsNode::SourceElementsNode(SourceElementsNode *s1, StatementNode *s2)
-    : node(s2), next(s1->next)
+    : StatementNode(SourceElementsNodeExecuteState), node(s2), next(s1->next)
 {
-    m_nodeExecuteState = SourceElementsNodeExecuteState;    
     s1->next = this;
     setLoc(s1->firstLine(), s2->lastLine());
 }

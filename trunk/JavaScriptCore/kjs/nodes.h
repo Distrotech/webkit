@@ -73,7 +73,7 @@ namespace KJS {
   };
 
   struct Node {
-    explicit Node(InterpreterState = InvalidNodeExecuteState);
+    explicit Node(InterpreterState);
     virtual ~Node();
 
     UString toString() const;
@@ -86,8 +86,7 @@ namespace KJS {
     unsigned refcount();
     static void clearNewNodes();
 
-    InterpreterState executeState() { return m_nodeExecuteState; }
-    virtual InterpreterState evaluateState() const = 0;
+    InterpreterState interpreterState() { return (InterpreterState)m_interpreterState; }
 
     // FIXME: Get rid of this once all evaluates dispatch through the tree code loop
     JSValue* evaluate(ExecState*);
@@ -116,8 +115,8 @@ namespace KJS {
 
     void setExceptionDetailsIfNeeded(ExecState*);
 
-    int m_line;
-    InterpreterState m_nodeExecuteState;
+    short m_line;
+    short m_interpreterState;
     
   private:
     // prohibit these operations
@@ -126,8 +125,7 @@ namespace KJS {
   };
 
   struct StatementNode : public Node {
-    explicit StatementNode(InterpreterState NodeExecuteState = InvalidNodeExecuteState);
-    virtual InterpreterState evaluateState() const { return StatementNodeEvaluateState; }
+    explicit StatementNode(InterpreterState state) : Node(state), m_lastLine(-1) { m_line = -1; }
     void setLoc(int line0, int line1);
     int firstLine() const { return lineNo(); }
     int lastLine() const { return m_lastLine; }
@@ -143,49 +141,42 @@ namespace KJS {
   };
 
   struct NullNode : public Node {
-    NullNode() {}
-    virtual InterpreterState evaluateState() const { return NullNodeEvaluateState; }
+    NullNode() : Node(NullNodeEvaluateState) {}
     virtual void streamTo(SourceStream&) const;
   };
 
   struct BooleanNode : public Node {
-    BooleanNode(bool v) : value(v) {}
-    virtual InterpreterState evaluateState() const { return BooleanNodeEvaluateState; }
+    BooleanNode(bool v) : Node(BooleanNodeEvaluateState), value(v) {}
     virtual void streamTo(SourceStream&) const;
     bool value;
   };
 
   struct NumberNode : public Node {
-    NumberNode(double v) : value(v) {}
-    virtual InterpreterState evaluateState() const { return NumberNodeEvaluateState; }
+    NumberNode(double v) : Node(NumberNodeEvaluateState), value(v) {}
     virtual void streamTo(SourceStream&) const;
     double value;
   };
 
   struct StringNode : public Node {
-    StringNode(const UString *v) { value = *v; }
-    virtual InterpreterState evaluateState() const { return StringNodeEvaluateState; }
+    StringNode(const UString *v) : Node(StringNodeEvaluateState) { value = *v; }
     virtual void streamTo(SourceStream&) const;
     UString value;
   };
 
   struct RegExpNode : public Node {
     RegExpNode(const UString &p, const UString &f)
-      : pattern(p), flags(f) { }
-    virtual InterpreterState evaluateState() const { return RegExpNodeEvaluateState; }
+      : Node(RegExpNodeEvaluateState), pattern(p), flags(f) { }
     virtual void streamTo(SourceStream&) const;
     UString pattern, flags;
   };
 
   struct ThisNode : public Node {
-    ThisNode() {}
-    virtual InterpreterState evaluateState() const { return ThisNodeEvaluateState; }
+    ThisNode() : Node(ThisNodeEvaluateState) {}
     virtual void streamTo(SourceStream&) const;
   };
 
   struct ResolveNode : public Node {
-    ResolveNode(const Identifier &s) : ident(s) { }
-    virtual InterpreterState evaluateState() const { return ResolveNodeEvaluateState; }
+    ResolveNode(const Identifier &s) : Node(ResolveNodeEvaluateState), ident(s) { }
     virtual void streamTo(SourceStream&) const;
 
     virtual bool isLocation() const { return true; }
@@ -196,8 +187,7 @@ namespace KJS {
   };
 
   struct GroupNode : public Node {
-    GroupNode(Node *g) : group(g) { }
-    virtual InterpreterState evaluateState() const { return GroupNodeEvaluateState; }
+    GroupNode(Node *g) : Node(GroupNodeEvaluateState), group(g) { }
     virtual Node *nodeInsideAllParens();
     virtual void streamTo(SourceStream&) const;
     virtual bool isGroupNode() const { return true; }
@@ -206,10 +196,9 @@ namespace KJS {
 
   struct ElementNode : public Node {
     // list pointer is tail of a circular list, cracked in the ArrayNode ctor
-    ElementNode(int e, Node *n) : next(this), elision(e), node(n) { Parser::noteNodeCycle(this); }
+    ElementNode(int e, Node *n) : Node(ElementNodeEvaluateState), next(this), elision(e), node(n) { Parser::noteNodeCycle(this); }
     ElementNode(ElementNode *l, int e, Node *n)
-      : next(l->next), elision(e), node(n) { l->next = this; }
-    virtual InterpreterState evaluateState() const { return ElementNodeEvaluateState; }
+      : Node(ElementNodeEvaluateState), next(l->next), elision(e), node(n) { l->next = this; }
     virtual void streamTo(SourceStream&) const;
     PassRefPtr<ElementNode> releaseNext() { return next.release(); }
     virtual void breakCycle();
@@ -219,12 +208,11 @@ namespace KJS {
   };
 
   struct ArrayNode : public Node {
-    ArrayNode(int e) : elision(e), opt(true) { }
-    ArrayNode(ElementNode *ele)
-      : element(ele->next), elision(0), opt(false) { Parser::removeNodeCycle(element.get()); ele->next = 0; }
-    ArrayNode(int eli, ElementNode *ele)
-      : element(ele->next), elision(eli), opt(true) { Parser::removeNodeCycle(element.get()); ele->next = 0; }
-    virtual InterpreterState evaluateState() const { return ArrayNodeEvaluateState; }
+    ArrayNode(int e) : Node(ArrayNodeEvaluateState), elision(e), opt(true) { }
+    ArrayNode(ElementNode* ele)
+      : Node(ArrayNodeEvaluateState), element(ele->next), elision(0), opt(false) { Parser::removeNodeCycle(element.get()); ele->next = 0; }
+    ArrayNode(int eli, ElementNode* ele)
+      : Node(ArrayNodeEvaluateState), element(ele->next), elision(eli), opt(true) { Parser::removeNodeCycle(element.get()); ele->next = 0; }
     virtual void streamTo(SourceStream&) const;
     RefPtr<ElementNode> element;
     int elision;
@@ -232,9 +220,8 @@ namespace KJS {
   };
 
   struct PropertyNameNode : public Node {
-    PropertyNameNode(double d) : numeric(d) { }
-    PropertyNameNode(const Identifier &s) : str(s) { }
-    virtual InterpreterState evaluateState() const { return PropertyNameNodeEvaluateState; }
+    PropertyNameNode(double d) : Node(PropertyNameNodeEvaluateState), numeric(d) { }
+    PropertyNameNode(const Identifier &s) : Node(PropertyNameNodeEvaluateState), str(s) { }
     virtual void streamTo(SourceStream&) const;
     double numeric;
     Identifier str;
@@ -243,8 +230,7 @@ namespace KJS {
   struct PropertyNode : public Node {
     enum Type { Constant, Getter, Setter };
     PropertyNode(PropertyNameNode *n, Node *a, Type t) 
-      : name(n), assign(a), type(t) { }
-    virtual InterpreterState evaluateState() const { return PropertyNodeEvaluateState; }
+      : Node(InternalErrorState), name(n), assign(a), type(t) { }
     virtual void streamTo(SourceStream&) const;
     RefPtr<PropertyNameNode> name;
     RefPtr<Node> assign;
@@ -254,10 +240,9 @@ namespace KJS {
   struct PropertyListNode : public Node {
     // list pointer is tail of a circular list, cracked in the ObjectLiteralNode ctor
     PropertyListNode(PropertyNode *n)
-      : node(n), next(this) { Parser::noteNodeCycle(this); }
+      : Node(PropertyListNodeEvaluateState), node(n), next(this) { Parser::noteNodeCycle(this); }
     PropertyListNode(PropertyNode *n, PropertyListNode *l)
-      : node(n), next(l->next) { l->next = this; }
-    virtual InterpreterState evaluateState() const { return PropertyListNodeEvaluateState; }
+      : Node(PropertyListNodeEvaluateState), node(n), next(l->next) { l->next = this; }
     virtual void streamTo(SourceStream&) const;
     PassRefPtr<PropertyListNode> releaseNext() { return next.release(); }
     virtual void breakCycle();
@@ -266,16 +251,14 @@ namespace KJS {
   };
 
   struct ObjectLiteralNode : public Node {
-    ObjectLiteralNode() { }
-    ObjectLiteralNode(PropertyListNode *l) : list(l->next) { Parser::removeNodeCycle(list.get()); l->next = 0; }
-    virtual InterpreterState evaluateState() const { return ObjectLiteralNodeEvaluateState; }
+    ObjectLiteralNode() : Node(ObjectLiteralNodeEvaluateState) { }
+    ObjectLiteralNode(PropertyListNode *l) : Node(ObjectLiteralNodeEvaluateState), list(l->next) { Parser::removeNodeCycle(list.get()); l->next = 0; }
     virtual void streamTo(SourceStream&) const;
     RefPtr<PropertyListNode> list;
   };
 
   struct BracketAccessorNode : public Node {
-    BracketAccessorNode(Node *e1, Node *e2) : expr1(e1), expr2(e2) {}
-    virtual InterpreterState evaluateState() const { return BracketAccessorNodeEvaluateState; }
+    BracketAccessorNode(Node* e1, Node* e2) : Node(BracketAccessorNodeEvaluateState), expr1(e1), expr2(e2) {}
     virtual void streamTo(SourceStream&) const;
 
     virtual bool isLocation() const { return true; }
@@ -288,8 +271,7 @@ namespace KJS {
   };
 
   struct DotAccessorNode : public Node {
-    DotAccessorNode(Node *e, const Identifier &s) : expr(e), ident(s) { }
-    virtual InterpreterState evaluateState() const { return DotAccessorNodeEvaluateState; }
+    DotAccessorNode(Node* e, const Identifier &s) : Node(DotAccessorNodeEvaluateState), expr(e), ident(s) { }
     virtual void streamTo(SourceStream&) const;
 
     virtual bool isLocation() const { return true; }
@@ -303,11 +285,9 @@ namespace KJS {
 
   struct ArgumentListNode : public Node {
     // list pointer is tail of a circular list, cracked in the ArgumentsNode ctor
-    ArgumentListNode(Node *e) : next(this), expr(e) { Parser::noteNodeCycle(this); }
-    ArgumentListNode(ArgumentListNode *l, Node *e)
-      : next(l->next), expr(e) { l->next = this; }
-    virtual InterpreterState evaluateListState() const { return ArgumentListNodeEvaluateListState; }
-    virtual InterpreterState evaluateState() const { return ArgumentListNodeEvaluateState; }
+    ArgumentListNode(Node* e) : Node(ArgumentListNodeEvaluateListState), next(this), expr(e) { Parser::noteNodeCycle(this); }
+    ArgumentListNode(ArgumentListNode *l, Node* e)
+      : Node(ArgumentListNodeEvaluateListState), next(l->next), expr(e) { l->next = this; }
     virtual void streamTo(SourceStream&) const;
     PassRefPtr<ArgumentListNode> releaseNext() { return next.release(); }
     virtual void breakCycle();
@@ -316,43 +296,37 @@ namespace KJS {
   };
 
   struct ArgumentsNode : public Node {
-    ArgumentsNode() { }
+    ArgumentsNode() : Node(ArgumentsNodeEvaluateListState) { }
     ArgumentsNode(ArgumentListNode *l)
-      : list(l->next) { Parser::removeNodeCycle(list.get()); l->next = 0; }
-    virtual InterpreterState evaluateListState() const { return ArgumentsNodeEvaluateListState; }
-    virtual InterpreterState evaluateState() const { return ArgumentsNodeEvaluateState; }
+      : Node(ArgumentsNodeEvaluateListState), list(l->next) { Parser::removeNodeCycle(list.get()); l->next = 0; }
     virtual void streamTo(SourceStream&) const;
     RefPtr<ArgumentListNode> list;
   };
 
   struct NewExprNode : public Node {
-    NewExprNode(Node *e) : expr(e) {}
-    NewExprNode(Node *e, ArgumentsNode *a) : expr(e), args(a) {}
-    virtual InterpreterState evaluateState() const { return NewExprNodeEvaluateState; }
+    NewExprNode(Node* e) : Node(NewExprNodeEvaluateState), expr(e) {}
+    NewExprNode(Node* e, ArgumentsNode *a) : Node(NewExprNodeEvaluateState), expr(e), args(a) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr;
     RefPtr<ArgumentsNode> args;
   };
 
   struct FunctionCallValueNode : public Node {
-    FunctionCallValueNode(Node *e, ArgumentsNode *a) : expr(e), args(a) {}
-    virtual InterpreterState evaluateState() const { return FunctionCallValueNodeEvaluateState; }
+    FunctionCallValueNode(Node* e, ArgumentsNode *a) : Node(FunctionCallValueNodeEvaluateState), expr(e), args(a) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr;
     RefPtr<ArgumentsNode> args;
   };
 
   struct FunctionCallResolveNode : public Node {
-    FunctionCallResolveNode(const Identifier& i, ArgumentsNode *a) : ident(i), args(a) {}
-    virtual InterpreterState evaluateState() const { return FunctionCallResolveNodeEvaluateState; }
+    FunctionCallResolveNode(const Identifier& i, ArgumentsNode *a) : Node(FunctionCallResolveNodeEvaluateState), ident(i), args(a) {}
     virtual void streamTo(SourceStream&) const;
     Identifier ident;
     RefPtr<ArgumentsNode> args;
   };
 
   struct FunctionCallBracketNode : public Node {
-    FunctionCallBracketNode(Node *b, Node *s, ArgumentsNode *a) : base(b), subscript(s), args(a) {}
-    virtual InterpreterState evaluateState() const { return FunctionCallBracketNodeEvaluateState; }
+    FunctionCallBracketNode(Node *b, Node *s, ArgumentsNode *a) : Node(FunctionCallBracketNodeEvaluateState), base(b), subscript(s), args(a) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> base;
     RefPtr<Node> subscript;
@@ -365,8 +339,7 @@ namespace KJS {
   };
 
   struct FunctionCallDotNode : public Node {
-    FunctionCallDotNode(Node *b, const Identifier &i, ArgumentsNode *a) : base(b), ident(i), args(a) {}
-    virtual InterpreterState evaluateState() const { return FunctionCallDotNodeEvaluateState; }
+    FunctionCallDotNode(Node *b, const Identifier &i, ArgumentsNode *a) : Node(FunctionCallDotNodeEvaluateState), base(b), ident(i), args(a) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> base;
     Identifier ident;
@@ -379,16 +352,14 @@ namespace KJS {
   };
 
   struct PostfixResolveNode : public Node {
-    PostfixResolveNode(const Identifier& i, Operator o) : m_ident(i), m_oper(o) {}
-    virtual InterpreterState evaluateState() const { return PostfixResolveNodeEvaluateState; }
+    PostfixResolveNode(const Identifier& i, Operator o) : Node(PostfixResolveNodeEvaluateState), m_ident(i), m_oper(o) {}
     virtual void streamTo(SourceStream&) const;
     Identifier m_ident;
     Operator m_oper;
   };
 
   struct PostfixBracketNode : public Node {
-    PostfixBracketNode(Node *b, Node *s, Operator o) : m_base(b), m_subscript(s), m_oper(o) {}
-    virtual InterpreterState evaluateState() const { return PostfixBracketNodeEvaluateState; }
+    PostfixBracketNode(Node *b, Node *s, Operator o) : Node(PostfixBracketNodeEvaluateState), m_base(b), m_subscript(s), m_oper(o) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> m_base;
     RefPtr<Node> m_subscript;
@@ -396,8 +367,7 @@ namespace KJS {
   };
 
   struct PostfixDotNode : public Node {
-    PostfixDotNode(Node *b, const Identifier& i, Operator o) : m_base(b), m_ident(i), m_oper(o) {}
-    virtual InterpreterState evaluateState() const { return PostfixDotNodeEvaluateState; }
+    PostfixDotNode(Node *b, const Identifier& i, Operator o) : Node(PostfixDotNodeEvaluateState), m_base(b), m_ident(i), m_oper(o) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> m_base;
     Identifier m_ident;
@@ -405,67 +375,58 @@ namespace KJS {
   };
 
   struct DeleteResolveNode : public Node {
-    DeleteResolveNode(const Identifier& i) : m_ident(i) {}
-    virtual InterpreterState evaluateState() const { return DeleteResolveNodeEvaluateState; }
+    DeleteResolveNode(const Identifier& i) : Node(DeleteResolveNodeEvaluateState), m_ident(i) {}
     virtual void streamTo(SourceStream&) const;
     Identifier m_ident;
   };
 
   struct DeleteBracketNode : public Node {
-    DeleteBracketNode(Node *base, Node *subscript) : m_base(base), m_subscript(subscript) {}
-    virtual InterpreterState evaluateState() const { return DeleteBracketNodeEvaluateState; }
+    DeleteBracketNode(Node *base, Node *subscript) : Node(DeleteBracketNodeEvaluateState), m_base(base), m_subscript(subscript) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> m_base;
     RefPtr<Node> m_subscript;
   };
 
   struct DeleteDotNode : public Node {
-    DeleteDotNode(Node *base, const Identifier& i) : m_base(base), m_ident(i) {}
-    virtual InterpreterState evaluateState() const { return DeleteDotNodeEvaluateState; }
+    DeleteDotNode(Node *base, const Identifier& i) : Node(DeleteDotNodeEvaluateState), m_base(base), m_ident(i) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> m_base;
     Identifier m_ident;
   };
 
   struct DeleteValueNode : public Node {
-    DeleteValueNode(Node *e) : m_expr(e) {}
-    virtual InterpreterState evaluateState() const { return DeleteValueNodeEvaluateState; }
+    DeleteValueNode(Node* e) : Node(DeleteValueNodeEvaluateState), m_expr(e) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> m_expr;
   };
 
   struct VoidNode : public Node {
-    VoidNode(Node *e) : expr(e) {}
-    virtual InterpreterState evaluateState() const { return VoidNodeEvaluateState; }
+    VoidNode(Node* e) : Node(VoidNodeEvaluateState), expr(e) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr;
   };
 
   struct TypeOfResolveNode : public Node {
-    TypeOfResolveNode(const Identifier& i) : m_ident(i) {}
-    virtual InterpreterState evaluateState() const { return TypeOfResolveNodeEvaluateState; }
+    TypeOfResolveNode(const Identifier& i) : Node(TypeOfResolveNodeEvaluateState), m_ident(i) {}
     virtual void streamTo(SourceStream&) const;
     Identifier m_ident;
   };
 
   struct TypeOfValueNode : public Node {
-    TypeOfValueNode(Node *e) : m_expr(e) {}
-    virtual InterpreterState evaluateState() const { return TypeOfValueNodeEvaluateState; }
+    TypeOfValueNode(Node* e) : Node(TypeOfValueNodeEvaluateState), m_expr(e) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> m_expr;
   };
 
   struct PrefixResolveNode : public Node {
-    PrefixResolveNode(const Identifier& i, Operator o) : m_ident(i), m_oper(o) {}
-    virtual InterpreterState evaluateState() const { return PrefixResolveNodeEvaluateState; }
+    PrefixResolveNode(const Identifier& i, Operator o) : Node(PrefixResolveNodeEvaluateState), m_ident(i), m_oper(o) {}
     virtual void streamTo(SourceStream&) const;
     Identifier m_ident;
     Operator m_oper;
   };
 
   struct PrefixBracketNode : public Node {
-    PrefixBracketNode(Node *b, Node *s, Operator o) : m_base(b), m_subscript(s), m_oper(o) {}
-    virtual InterpreterState evaluateState() const { return PrefixBracketNodeEvaluateState; }
+    PrefixBracketNode(Node *b, Node *s, Operator o) : Node(PrefixBracketNodeEvaluateState), m_base(b), m_subscript(s), m_oper(o) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> m_base;
     RefPtr<Node> m_subscript;
@@ -473,8 +434,7 @@ namespace KJS {
   };
 
   struct PrefixDotNode : public Node {
-    PrefixDotNode(Node *b, const Identifier& i, Operator o) : m_base(b), m_ident(i), m_oper(o) {}
-    virtual InterpreterState evaluateState() const { return PrefixDotNodeEvaluateState; }
+    PrefixDotNode(Node *b, const Identifier& i, Operator o) : Node(PrefixDotNodeEvaluateState), m_base(b), m_ident(i), m_oper(o) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> m_base;
     Identifier m_ident;
@@ -482,36 +442,31 @@ namespace KJS {
   };
 
   struct UnaryPlusNode : public Node {
-    UnaryPlusNode(Node *e) : expr(e) {}
-    virtual InterpreterState evaluateState() const { return UnaryPlusNodeEvaluateState; }
+    UnaryPlusNode(Node* e) : Node(UnaryPlusNodeEvaluateState), expr(e) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr;
   };
 
   struct NegateNode : public Node {
-    NegateNode(Node *e) : expr(e) {}
-    virtual InterpreterState evaluateState() const { return NegateNodeEvaluateState; }
+    NegateNode(Node* e) : Node(NegateNodeEvaluateState), expr(e) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr;
   };
 
   struct BitwiseNotNode : public Node {
-    BitwiseNotNode(Node *e) : expr(e) {}
-    virtual InterpreterState evaluateState() const { return BitwiseNotNodeEvaluateState; }
+    BitwiseNotNode(Node* e) : Node(BitwiseNotNodeEvaluateState), expr(e) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr;
   };
 
   struct LogicalNotNode : public Node {
-    LogicalNotNode(Node *e) : expr(e) {}
-    virtual InterpreterState evaluateState() const { return LogicalNotNodeEvaluateState; }
+    LogicalNotNode(Node* e) : Node(LogicalNotNodeEvaluateState), expr(e) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr;
   };
 
   struct MultNode : public Node {
-    MultNode(Node *t1, Node *t2, char op) : term1(t1), term2(t2), oper(op) {}
-    virtual InterpreterState evaluateState() const { return MultNodeEvaluateState; }
+    MultNode(Node *t1, Node *t2, char op) : Node(MultNodeEvaluateState), term1(t1), term2(t2), oper(op) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> term1;
     RefPtr<Node> term2;
@@ -519,8 +474,7 @@ namespace KJS {
   };
 
   struct AddNode : public Node {
-    AddNode(Node *t1, Node *t2, char op) : term1(t1), term2(t2), oper(op) {}
-    virtual InterpreterState evaluateState() const { return AddNodeEvaluateState; }
+    AddNode(Node *t1, Node *t2, char op) : Node(AddNodeEvaluateState), term1(t1), term2(t2), oper(op) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> term1;
     RefPtr<Node> term2;
@@ -529,8 +483,7 @@ namespace KJS {
 
   struct ShiftNode : public Node {
     ShiftNode(Node *t1, Operator o, Node *t2)
-      : term1(t1), term2(t2), oper(o) {}
-    virtual InterpreterState evaluateState() const { return ShiftNodeEvaluateState; }
+      : Node(ShiftNodeEvaluateState), term1(t1), term2(t2), oper(o) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> term1;
     RefPtr<Node> term2;
@@ -538,9 +491,8 @@ namespace KJS {
   };
 
   struct RelationalNode : public Node {
-    RelationalNode(Node *e1, Operator o, Node *e2) :
-      expr1(e1), expr2(e2), oper(o) {}
-    virtual InterpreterState evaluateState() const { return RelationalNodeEvaluateState; }
+    RelationalNode(Node* e1, Operator o, Node* e2)
+      : Node(RelationalNodeEvaluateState), expr1(e1), expr2(e2), oper(o) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr1;
     RefPtr<Node> expr2;
@@ -548,9 +500,8 @@ namespace KJS {
   };
 
   struct EqualNode : public Node {
-    EqualNode(Node *e1, Operator o, Node *e2)
-      : expr1(e1), expr2(e2), oper(o) {}
-    virtual InterpreterState evaluateState() const { return EqualNodeEvaluateState; }
+    EqualNode(Node* e1, Operator o, Node* e2)
+      : Node(EqualNodeEvaluateState), expr1(e1), expr2(e2), oper(o) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr1;
     RefPtr<Node> expr2;
@@ -558,9 +509,8 @@ namespace KJS {
   };
 
   struct BitOperNode : public Node {
-    BitOperNode(Node *e1, Operator o, Node *e2) :
-      expr1(e1), expr2(e2), oper(o) {}
-    virtual InterpreterState evaluateState() const { return BitOperNodeEvaluateState; }
+    BitOperNode(Node* e1, Operator o, Node* e2) :
+      Node(BitOperNodeEvaluateState), expr1(e1), expr2(e2), oper(o) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr1;
     RefPtr<Node> expr2;
@@ -571,9 +521,8 @@ namespace KJS {
    * expr1 && expr2, expr1 || expr2
    */
   struct BinaryLogicalNode : public Node {
-    BinaryLogicalNode(Node *e1, Operator o, Node *e2) :
-      expr1(e1), expr2(e2), oper(o) {}
-    virtual InterpreterState evaluateState() const { return BinaryLogicalNodeEvaluateState; }
+    BinaryLogicalNode(Node* e1, Operator o, Node* e2) :
+      Node(BinaryLogicalNodeEvaluateState), expr1(e1), expr2(e2), oper(o) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr1;
     RefPtr<Node> expr2;
@@ -584,9 +533,8 @@ namespace KJS {
    * The ternary operator, "logical ? expr1 : expr2"
    */
   struct ConditionalNode : public Node {
-    ConditionalNode(Node *l, Node *e1, Node *e2) :
-      logical(l), expr1(e1), expr2(e2) {}
-    virtual InterpreterState evaluateState() const { return ConditionalNodeEvaluateState; }
+    ConditionalNode(Node *l, Node* e1, Node* e2) :
+      Node(ConditionalNodeEvaluateState), logical(l), expr1(e1), expr2(e2) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> logical;
     RefPtr<Node> expr1;
@@ -595,8 +543,7 @@ namespace KJS {
 
   struct AssignResolveNode : public Node {
     AssignResolveNode(const Identifier &ident, Operator oper, Node *right) 
-      : m_ident(ident), m_oper(oper), m_right(right) {}
-    virtual InterpreterState evaluateState() const { return AssignResolveNodeEvaluateState; }
+      : Node(AssignResolveNodeEvaluateState), m_ident(ident), m_oper(oper), m_right(right) {}
     virtual void streamTo(SourceStream&) const;
     Identifier m_ident;
     Operator m_oper;
@@ -605,8 +552,7 @@ namespace KJS {
 
   struct AssignBracketNode : public Node {
     AssignBracketNode(Node *base, Node *subscript, Operator oper, Node *right) 
-      : m_base(base), m_subscript(subscript), m_oper(oper), m_right(right) {}
-    virtual InterpreterState evaluateState() const { return AssignBracketNodeEvaluateState; }
+      : Node(AssignBracketNodeEvaluateState), m_base(base), m_subscript(subscript), m_oper(oper), m_right(right) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> m_base;
     RefPtr<Node> m_subscript;
@@ -616,8 +562,7 @@ namespace KJS {
 
   struct AssignDotNode : public Node {
     AssignDotNode(Node *base, const Identifier& ident, Operator oper, Node *right)
-      : m_base(base), m_ident(ident), m_oper(oper), m_right(right) {}
-    virtual InterpreterState evaluateState() const { return AssignDotNodeEvaluateState; }
+      : Node(AssignDotNodeEvaluateState), m_base(base), m_ident(ident), m_oper(oper), m_right(right) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> m_base;
     Identifier m_ident;
@@ -626,8 +571,7 @@ namespace KJS {
   };
 
   struct CommaNode : public Node {
-    CommaNode(Node *e1, Node *e2) : expr1(e1), expr2(e2) {}
-    virtual InterpreterState evaluateState() const { return CommaNodeEvaluateState; }
+    CommaNode(Node* e1, Node* e2) : Node(CommaNodeEvaluateState), expr1(e1), expr2(e2) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr1;
     RefPtr<Node> expr2;
@@ -646,16 +590,15 @@ namespace KJS {
   };
 
   struct AssignExprNode : public Node {
-    AssignExprNode(Node *e) : expr(e) {}
-    virtual InterpreterState evaluateState() const { return AssignExprNodeEvaluateState; }
+    AssignExprNode(Node* e) : Node(AssignExprNodeEvaluateState), expr(e) {}
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr;
   };
 
   struct VarDeclNode : public Node {
     enum Type { Variable, Constant };
-    VarDeclNode(const Identifier &id, AssignExprNode *in, Type t);
-    virtual InterpreterState evaluateState() const { return VarDeclNodeEvaluateState; }
+    VarDeclNode::VarDeclNode(const Identifier &id, AssignExprNode *in, Type t)
+      : Node(VarDeclNodeEvaluateState), varType(t), ident(id), init(in) { }
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
     Type varType;
@@ -665,10 +608,9 @@ namespace KJS {
 
   struct VarDeclListNode : public Node {
     // list pointer is tail of a circular list, cracked in the ForNode/VarStatementNode ctor
-    VarDeclListNode(VarDeclNode *v) : next(this), var(v) { Parser::noteNodeCycle(this); }
+    VarDeclListNode(VarDeclNode *v) : Node(VarDeclListNodeEvaluateState), next(this), var(v) { Parser::noteNodeCycle(this); }
     VarDeclListNode(VarDeclListNode *l, VarDeclNode *v)
-      : next(l->next), var(v) { l->next = this; }
-    virtual InterpreterState evaluateState() const { return VarDeclListNodeEvaluateState; }
+      : Node(VarDeclListNodeEvaluateState), next(l->next), var(v) { l->next = this; }
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
     PassRefPtr<VarDeclListNode> releaseNext() { return next.release(); }
@@ -701,13 +643,13 @@ namespace KJS {
   };
 
   struct ExprStatementNode : public StatementNode {
-    ExprStatementNode(Node *e) : StatementNode(ExprStatementNodeExecuteState), expr(e) { }
+    ExprStatementNode(Node* e) : StatementNode(ExprStatementNodeExecuteState), expr(e) { }
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr;
   };
 
   struct IfNode : public StatementNode {
-    IfNode(Node *e, StatementNode *s1, StatementNode *s2)
+    IfNode(Node* e, StatementNode *s1, StatementNode *s2)
         : StatementNode(IfNodeExecuteState), expr(e), statement1(s1), statement2(s2)  { }
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
@@ -717,7 +659,7 @@ namespace KJS {
   };
 
   struct DoWhileNode : public StatementNode {
-    DoWhileNode(StatementNode *s, Node *e) 
+    DoWhileNode(StatementNode *s, Node* e) 
         : StatementNode(DoWhileNodeExecuteState), statement(s), expr(e) { }
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
@@ -726,7 +668,7 @@ namespace KJS {
   };
 
   struct WhileNode : public StatementNode {
-    WhileNode(Node *e, StatementNode *s) 
+    WhileNode(Node* e, StatementNode *s) 
         : StatementNode(WhileNodeExecuteState), expr(e), statement(s) { }
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
@@ -735,9 +677,9 @@ namespace KJS {
   };
 
   struct ForNode : public StatementNode {
-    ForNode(Node *e1, Node *e2, Node *e3, StatementNode *s)
+    ForNode(Node* e1, Node* e2, Node* e3, StatementNode *s)
         : StatementNode(ForNodeExecuteState), expr1(e1), expr2(e2), expr3(e3), statement(s) { }
-    ForNode(VarDeclListNode *e1, Node *e2, Node *e3, StatementNode *s) 
+    ForNode(VarDeclListNode* e1, Node* e2, Node* e3, StatementNode *s) 
         : StatementNode(ForNodeExecuteState), expr1(e1->next), expr2(e2), expr3(e3), statement(s) 
     { 
         e1->next = 0;
@@ -752,8 +694,8 @@ namespace KJS {
   };
 
   struct ForInNode : public StatementNode {
-    ForInNode(Node *l, Node *e, StatementNode *s);
-    ForInNode(const Identifier &i, AssignExprNode *in, Node *e, StatementNode *s);
+    ForInNode(Node *l, Node* e, StatementNode *s);
+    ForInNode(const Identifier &i, AssignExprNode *in, Node* e, StatementNode *s);
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
     Identifier ident;
@@ -785,7 +727,7 @@ namespace KJS {
   };
 
   struct WithNode : public StatementNode {
-    WithNode(Node *e, StatementNode *s) : StatementNode(WithNodeExecuteState), expr(e), statement(s) { }
+    WithNode(Node* e, StatementNode *s) : StatementNode(WithNodeExecuteState), expr(e), statement(s) { }
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr;
@@ -793,9 +735,8 @@ namespace KJS {
   };
 
   struct CaseClauseNode : public Node {
-    CaseClauseNode(Node *e) : expr(e) {} 
-    CaseClauseNode(Node *e, StatListNode *l) : expr(e), next(l->next) { Parser::removeNodeCycle(next.get()); l->next = 0; }
-    virtual InterpreterState evaluateState() const { return CaseClauseNodeEvaluateState; }
+    CaseClauseNode(Node* e) : Node(CaseClauseNodeEvaluateState), expr(e) {} 
+    CaseClauseNode(Node* e, StatListNode *l) : Node(CaseClauseNodeEvaluateState), expr(e), next(l->next) { Parser::removeNodeCycle(next.get()); l->next = 0; }
     Completion evalStatements(ExecState*);
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
@@ -805,10 +746,9 @@ namespace KJS {
 
   struct ClauseListNode : public Node {
     // list pointer is tail of a circular list, cracked in the CaseBlockNode ctor
-    ClauseListNode(CaseClauseNode *c) : clause(c), next(this) { Parser::noteNodeCycle(this); }
+    ClauseListNode(CaseClauseNode *c) : Node(InternalErrorState), clause(c), next(this) { Parser::noteNodeCycle(this); }
     ClauseListNode(ClauseListNode *n, CaseClauseNode *c)
-      : clause(c), next(n->next) { n->next = this; }
-    virtual InterpreterState evaluateState() const { return ClauseListNodeEvaluateState; }
+      : Node(InternalErrorState), clause(c), next(n->next) { n->next = this; }
     CaseClauseNode *getClause() const { return clause.get(); }
     ClauseListNode *getNext() const { return next.get(); }
     virtual void processVarDecls(ExecState*);
@@ -821,7 +761,6 @@ namespace KJS {
 
   struct CaseBlockNode : public Node {
     CaseBlockNode(ClauseListNode *l1, CaseClauseNode *d, ClauseListNode *l2);
-    virtual InterpreterState evaluateState() const { return CaseBlockNodeEvaluateState; }
     Completion evalBlock(ExecState*, JSValue *input);
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
@@ -831,7 +770,7 @@ namespace KJS {
   };
 
   struct SwitchNode : public StatementNode {
-    SwitchNode(Node *e, CaseBlockNode *b) : StatementNode(SwitchNodeExecuteState), expr(e), block(b) { }
+    SwitchNode(Node* e, CaseBlockNode *b) : StatementNode(SwitchNodeExecuteState), expr(e), block(b) { }
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr;
@@ -848,7 +787,7 @@ namespace KJS {
   };
 
   struct ThrowNode : public StatementNode {
-    ThrowNode(Node *e) : StatementNode(ThrowNodeExecuteState), expr(e) { }
+    ThrowNode(Node* e) : StatementNode(ThrowNodeExecuteState), expr(e) { }
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr;
   };
@@ -866,10 +805,9 @@ namespace KJS {
 
   struct ParameterNode : public Node {
     // list pointer is tail of a circular list, cracked in the FuncDeclNode/FuncExprNode ctor
-    ParameterNode(const Identifier &i) : id(i), next(this) { Parser::noteNodeCycle(this); }
+    ParameterNode(const Identifier &i) : Node(InternalErrorState), id(i), next(this) { Parser::noteNodeCycle(this); }
     ParameterNode(ParameterNode *next, const Identifier &i)
-      : id(i), next(next->next) { next->next = this; }
-    virtual InterpreterState evaluateState() const { return ParameterNodeEvaluateState; }
+      : Node(InternalErrorState), id(i), next(next->next) { next->next = this; }
     Identifier ident() { return id; }
     ParameterNode *nextParam() { return next.get(); }
     virtual void streamTo(SourceStream&) const;
@@ -891,8 +829,7 @@ namespace KJS {
 
   struct FuncExprNode : public Node {
     FuncExprNode(const Identifier &i, FunctionBodyNode *b, ParameterNode *p = 0)
-      : ident(i), param(p ? p->next : 0), body(b) { if (p) { Parser::removeNodeCycle(param.get()); p->next = 0; } }
-    virtual InterpreterState evaluateState() const { return FuncExprNodeEvaluateState; }
+      : Node(FuncExprNodeEvaluateState), ident(i), param(p ? p->next : 0), body(b) { if (p) { Parser::removeNodeCycle(param.get()); p->next = 0; } }
     virtual void streamTo(SourceStream&) const;
     // Used for streamTo
     Identifier ident;
