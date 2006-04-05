@@ -295,8 +295,10 @@ namespace KJS {
         Node* node;
     };
 
-    Completion popCompletionReturn() { return m_completionReturn; }
-    void pushCompletionReturn(Completion c) { m_completionReturn = c; }
+    const Completion& peekCompletionReturn() { return m_completionReturnStack.peek(); }
+    Completion popCompletionReturn() { return m_completionReturnStack.pop(); }
+    void pushCompletionReturn(const Completion& c) { m_completionReturnStack.push(c); }
+    unsigned completionStackDepth() { return m_completionReturnStack.size(); }
         
     const State& peekNextState() { return m_stateStack.peek(); }
     State popNextState() { return m_stateStack.pop(); }
@@ -305,10 +307,12 @@ namespace KJS {
     
     struct UnwindMarker {
         UnwindMarker() { } // Allow Stack<T> array-based allocation
-        UnwindMarker(unsigned valueBase, unsigned stateBase, unsigned listBase) : valueStackSize(valueBase), stateStackSize(stateBase), listStackSize(listBase) { }
+        UnwindMarker(unsigned valueBase, unsigned stateBase, unsigned listBase, unsigned completionSize)
+            : valueStackSize(valueBase), stateStackSize(stateBase), listStackSize(listBase), completionStackSize(completionSize) { }
         unsigned valueStackSize;
         unsigned stateStackSize;
         unsigned listStackSize;
+        unsigned completionStackSize;
     };
     
     const UnwindMarker& peekUnwindMarker()
@@ -318,7 +322,7 @@ namespace KJS {
     
     void pushUnwindMarker()
     {
-        UnwindMarker unwindMarker(valueStackDepth(), stateStackDepth(), listStackDepth());
+        UnwindMarker unwindMarker(valueStackDepth(), stateStackDepth(), listStackDepth(), completionStackDepth());
         m_unwindMarkerStack.push(unwindMarker);
     }
     void popUnwindMarker()
@@ -328,6 +332,7 @@ namespace KJS {
         ASSERT(valueStackDepth() == unwindMarker.valueStackSize);
         ASSERT(stateStackDepth() == unwindMarker.stateStackSize);
         ASSERT(listStackDepth() == unwindMarker.listStackSize);
+        ASSERT(completionStackDepth() == unwindMarker.completionStackSize);
 #endif
         m_unwindMarkerStack.pop();
     }
@@ -337,9 +342,11 @@ namespace KJS {
         ASSERT(valueStackDepth() >= unwindMarker.valueStackSize);
         ASSERT(stateStackDepth() >= unwindMarker.stateStackSize);
         ASSERT(listStackDepth() >= unwindMarker.listStackSize);
+        ASSERT(completionStackDepth() >= unwindMarker.completionStackSize);
         m_valueReturnStack.shrinkTo(unwindMarker.valueStackSize);
         m_stateStack.shrinkTo(unwindMarker.stateStackSize);
         m_listReturnStack.shrinkTo(unwindMarker.listStackSize);
+        m_completionReturnStack.shrinkTo(unwindMarker.completionStackSize);
         m_unwindMarkerStack.pop();
     }
     
@@ -351,6 +358,7 @@ namespace KJS {
     void printStateStack();
     void printValueStack();
     void printListStack();
+    void printCompletionStack();
 
   private:
     void clear();
@@ -408,7 +416,7 @@ namespace KJS {
     int recursion;
         
     Stack<JSValue*, KJS_MAX_STACK> m_valueReturnStack;
-    Completion m_completionReturn;
+    Stack<Completion, KJS_MAX_STACK> m_completionReturnStack;
     Stack<State, KJS_MAX_STACK> m_stateStack;
     Stack<UnwindMarker, KJS_MAX_STACK> m_unwindMarkerStack;
     Stack<List, KJS_MAX_STACK> m_listReturnStack;

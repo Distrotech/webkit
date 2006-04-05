@@ -611,7 +611,8 @@ InterpreterImp *InterpreterImp::interpreterWithGlobalObject(JSObject *global)
 enum StackType {
     ValueStack,
     StateStack,
-    ListStack
+    ListStack,
+    CompletionStack
 };
 
 static unsigned sizeMarkerForStack(const InterpreterImp::UnwindMarker& unwindMarker, StackType stackType)
@@ -623,6 +624,8 @@ static unsigned sizeMarkerForStack(const InterpreterImp::UnwindMarker& unwindMar
         return unwindMarker.stateStackSize;
     case ListStack:
         return unwindMarker.listStackSize;
+    case CompletionStack:
+        return unwindMarker.completionStackSize;
     }
     ASSERT_NOT_REACHED();
     return 0;
@@ -692,6 +695,22 @@ void InterpreterImp::printListStack()
         printf(")\n");
     }
     printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, 0, ListStack);
+}
+
+void InterpreterImp::printCompletionStack()
+{
+    printf("Completion Stack:\n");
+    unsigned size = m_completionReturnStack.size();
+    if (size == 0)
+        printf("<empty>\n");
+    
+    int unwindIter = m_unwindMarkerStack.size();
+    for (int x = size-1; x >= 0; x--) {
+        printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, x, CompletionStack);
+        const Completion& c = m_completionReturnStack[x];
+        printf("%i: Type: %i Value: %p Target: %s\n", x, c.complType(), c.value(), c.target().ascii());
+    }
+    printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, 0, CompletionStack);
 }
 
 // ------------------------------ InternalFunctionImp --------------------------

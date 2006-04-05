@@ -28,7 +28,6 @@ namespace KJS {
 // FIXME: this should probably just be a generated source file from a perl script.
 
 #define EVALUATE_MACRO_FOR_EACH_EVALUATE_STATE(macro) \
-    macro(InternalErrorState) \
     macro(NullNodeEvaluateState) \
     macro(BooleanNodeEvaluateState) \
     macro(NumberNodeEvaluateState) \
@@ -137,7 +136,6 @@ namespace KJS {
 // end of macro
     
 #define EVALUATE_MACRO_FOR_EACH_EXECUTE_STATE(macro) \
-    macro(InvalidNodeExecuteState) \
     macro(StatListNodeExecuteState) \
     macro(VarStatementNodeExecuteState) \
     macro(BlockNodeExecuteState) \
@@ -161,6 +159,8 @@ namespace KJS {
 // end of macro
     
 enum InterpreterState {
+    InternalErrorState,
+    
 #define PRINT_AS_ENUM(name)    name,
     EVALUATE_MACRO_FOR_EACH_EVALUATE_STATE(PRINT_AS_ENUM)
     
