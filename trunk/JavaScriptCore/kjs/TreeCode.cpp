@@ -51,6 +51,7 @@
 namespace KJS {
 
 const char* nameForInterpreterState[LastInterpreterState+1] = {
+    "InternalErrorState",
 #define PRINT_AS_STRING(name) #name ,
     EVALUATE_MACRO_FOR_EACH_EVALUATE_STATE(PRINT_AS_STRING)
 
@@ -275,7 +276,7 @@ static ALWAYS_INLINE JSValue *valueForReadModifyAssignment(ExecState * exec, JSV
 }
 
 #define IS_EVALUATE_STATE(state) \
-    (state >= 0 && state < Evaluate_EvaluteList_Boundary)
+    (state > InternalErrorState && state < Evaluate_EvaluteList_Boundary)
 
 #define IS_EVALUATE_LIST_STATE(state) \
     (state > Evaluate_EvaluteList_Boundary && state < EvaluateList_Execute_Boundary)
@@ -1659,10 +1660,6 @@ void runInterpreterExecuteLoop(ExecState* exec)
     Node* currentNode = statePair.node;
     
     switch (statePair.state) {
-    case InvalidNodeExecuteState:
-    {
-        ASSERT_NOT_REACHED();
-    }
     case StatListNodeExecuteState:
     {
         StatListNode* statListNode = static_cast<StatListNode*>(currentNode);
