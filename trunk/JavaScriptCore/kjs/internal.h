@@ -173,7 +173,7 @@ namespace KJS {
     ProtectedPtr<JSObject> b_uriErrorPrototype;
   };
   
-#define STACK_USES_ARRAY 1
+#define STACK_USES_ARRAY 0
 
   template <typename T, size_t inlineCapacity = 0>
       class Stack {
