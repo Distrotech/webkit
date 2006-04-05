@@ -233,7 +233,6 @@ static ALWAYS_INLINE JSValue *valueForReadModifyAssignment(ExecState * exec, JSV
 #define PUSH_VALUE(value) interpreter->pushValueReturn(value)
 #define POP_VALUE() (assert(stackBase.valueStackSize <= interpreter->valueStackDepth()), interpreter->popValueReturn())
 
-// FIXME: Return values don't need to be on the stack (except possibly we pause the interpreter)
 #define RETURN_VALUE(value) \
 {\
     PUSH_VALUE(value); \
@@ -249,8 +248,23 @@ static ALWAYS_INLINE JSValue *valueForReadModifyAssignment(ExecState * exec, JSV
 
 #endif
 
+#define PEEK_VALUE() (assert(stackBase.valueStackSize <= interpreter->valueStackDepth()), interpreter->peekValueReturn())
+
+#define PUSH_LIST(list) interpreter->pushListReturn(list)
+#define PEEK_LIST() (assert(stackBase.listStackSize <= interpreter->listStackDepth()), interpreter->peekListReturn())
+#define POP_LIST() (assert(stackBase.listStackSize <= interpreter->listStackDepth()), interpreter->popListReturn())
+
+#define RETURN_LIST(list) \
+{\
+    PUSH_LIST(list); \
+    goto interpreter_state_switch_end; \
+}
+
 #define PUSH_EVALUATE(node) \
-    interpreter->pushNextState(InterpreterImp::State(node->evaluateState(), node));
+    interpreter->pushNextState(InterpreterImp::State(node->evaluateState(), node))
+    
+#define PUSH_EVALUATE_LIST(node) \
+    interpreter->pushNextState(InterpreterImp::State(node->evaluateListState(), node))
 
 // This explicity checks for continue state bugs
 // FIXME: This should not take an argument once we have a way to check if currentState+1 == a substate
@@ -277,6 +291,15 @@ static ALWAYS_INLINE JSValue *valueForReadModifyAssignment(ExecState * exec, JSV
     break; \
 }
 
+// This call can only be used for continuing with the next state
+// Use other calls to jump or loop.
+#define EVALUATE_LIST_AND_CONTINUE(node, nextState) \
+{ \
+    SET_CONTINUE_STATE(nextState); \
+    PUSH_EVALUATE_LIST(node); \
+    goto interpreter_state_switch_end; \
+}
+
 JSValue* callEvaluateOnNode(Node* node, ExecState* exec)
 {
     InterpreterImp* interpreter = exec->dynamicInterpreter()->imp();
@@ -285,7 +308,7 @@ JSValue* callEvaluateOnNode(Node* node, ExecState* exec)
     InterpreterImp::UnwindMarker stackBase = interpreter->pushUnwindMarker();
     PUSH_EVALUATE(node);
     
-    while (!exec->hadException() && interpreter->stateStackDepth() > stackBase.stateStackSize) {
+    while (interpreter->stateStackDepth() > stackBase.stateStackSize) {
     
         // FIXME: As a loop optimization, we should just peek, instead of pop here
         // Then every non-loop function would pop itself.
@@ -470,7 +493,7 @@ JSValue* callEvaluateOnNode(Node* node, ExecState* exec)
                 PropertyListNode *p = static_cast<PropertyListNode*>(currentNode);
                 JSValue* v = POP_VALUE();
                 JSValue* name = POP_VALUE();
-                JSObject* obj = static_cast<JSObject*>(interpreter->peekValueReturn());
+                JSObject* obj = static_cast<JSObject*>(PEEK_VALUE());
                 
                 Identifier propertyName = Identifier(name->toString(exec));
                 switch (p->node->type) {
@@ -540,17 +563,22 @@ JSValue* callEvaluateOnNode(Node* node, ExecState* exec)
                 
             case NewExprNodeEvaluateState:
             {
-                EVALUATE_AND_CONTINUE(static_cast<NewExprNode*>(currentNode)->expr.get(), NewExprNodeEvaluateState1)
+                NewExprNode* newExprNode = static_cast<NewExprNode*>(currentNode);
+                SET_CONTINUE_STATE(NewExprNodeEvaluateState1);
+                if (newExprNode->args)
+                    PUSH_EVALUATE_LIST(newExprNode->args.get());
+                
+                PUSH_EVALUATE(newExprNode->expr.get());
+                break;
             }
             case NewExprNodeEvaluateState1:
             {
-                JSValue* v = POP_VALUE();
                 NewExprNode* newExprNode = static_cast<NewExprNode*>(currentNode);
+                JSValue* v = POP_VALUE();
+                
                 List argList;
-                if (newExprNode->args) {
-                    argList = newExprNode->args->evaluateList(exec);
-                    KJS_CHECKEXCEPTIONVALUE();
-                }
+                if (newExprNode->args)
+                    argList = POP_LIST();
                 
                 if (!v->isObject())
                     RETURN_VALUE(newExprNode->throwError(exec, TypeError, "Value %s (result of expression %s) is not an object. Cannot be used with new.", v, newExprNode->expr.get()));
@@ -569,7 +597,7 @@ JSValue* callEvaluateOnNode(Node* node, ExecState* exec)
             case FunctionCallValueNodeEvaluateState1:
             {
                 FunctionCallValueNode* functionCallValueNode = static_cast<FunctionCallValueNode*>(currentNode);
-                JSValue* v = POP_VALUE();
+                JSValue* v = PEEK_VALUE();
                 if (!v->isObject())
                     RETURN_VALUE(functionCallValueNode->throwError(exec, TypeError, "Value %s (result of expression %s) is not object.", v, functionCallValueNode->expr.get()));
                 
@@ -577,12 +605,13 @@ JSValue* callEvaluateOnNode(Node* node, ExecState* exec)
                 
                 if (!func->implementsCall())
                     RETURN_VALUE(functionCallValueNode->throwError(exec, TypeError, "Object %s (result of expression %s) does not allow calls.", v, functionCallValueNode->expr.get()));
-                
-                List argList = functionCallValueNode->args->evaluateList(exec);
-                KJS_CHECKEXCEPTIONVALUE();
-                
+                EVALUATE_LIST_AND_CONTINUE(functionCallValueNode->args.get(), FunctionCallValueNodeEvaluateState2);
+            }
+            case FunctionCallValueNodeEvaluateState2:
+            {
+                List argList = POP_LIST();
+                JSObject *func = static_cast<JSObject*>(POP_VALUE());
                 JSObject *thisObj =  exec->dynamicInterpreter()->globalObject();
-                
                 RETURN_VALUE(func->call(exec, thisObj, argList));
             }
                 
@@ -597,8 +626,9 @@ JSValue* callEvaluateOnNode(Node* node, ExecState* exec)
                 // we must always have something in the scope chain
                 assert(iter != end);
                 
+                JSObject* resolvedFunction = 0;
                 PropertySlot slot;
-                JSObject *base;
+                JSObject* base;
                 do {
                     base = *iter;
                     if (base->getPropertySlot(exec, ident, slot)) {
@@ -608,30 +638,37 @@ JSValue* callEvaluateOnNode(Node* node, ExecState* exec)
                         if (!v->isObject())
                             RETURN_VALUE(functionCallResolveNode->throwError(exec, TypeError, "Value %s (result of expression %s) is not object.", v, ident));
                         
-                        JSObject *func = static_cast<JSObject*>(v);
+                        resolvedFunction = static_cast<JSObject*>(v);
                         
-                        if (!func->implementsCall())
+                        if (!resolvedFunction->implementsCall())
                             RETURN_VALUE(functionCallResolveNode->throwError(exec, TypeError, "Object %s (result of expression %s) does not allow calls.", v, ident));
-                        
-                        List argList = functionCallResolveNode->args->evaluateList(exec);
-                        KJS_CHECKEXCEPTIONVALUE();
-                        
-                        JSObject *thisObj = base;
-                        // ECMA 11.2.3 says that in this situation the this value should be null.
-                        // However, section 10.2.3 says that in the case where the value provided
-                        // by the caller is null, the global object should be used. It also says
-                        // that the section does not apply to interal functions, but for simplicity
-                        // of implementation we use the global object anyway here. This guarantees
-                        // that in host objects you always get a valid object for this.
-                        if (thisObj->isActivation())
-                            thisObj = exec->dynamicInterpreter()->globalObject();
-                        
-                        RETURN_VALUE(func->call(exec, thisObj, argList));
+                        break;
                     }
                     ++iter;
                 } while (iter != end);
-                             
-                RETURN_VALUE(functionCallResolveNode->throwUndefinedVariableError(exec, ident));
+                
+                if (!resolvedFunction)
+                    RETURN_VALUE(functionCallResolveNode->throwUndefinedVariableError(exec, ident));
+                
+                PUSH_VALUE(base);
+                PUSH_VALUE(resolvedFunction);
+                EVALUATE_LIST_AND_CONTINUE(functionCallResolveNode->args.get(), FunctionCallResolveNodeEvaluateState1);
+            }
+            case FunctionCallResolveNodeEvaluateState1:
+            {
+                List argList = POP_LIST();
+                JSObject* func = static_cast<JSObject*>(POP_VALUE());
+                JSObject* thisObj = static_cast<JSObject*>(POP_VALUE());
+                // ECMA 11.2.3 says that in this situation the this value should be null.
+                // However, section 10.2.3 says that in the case where the value provided
+                // by the caller is null, the global object should be used. It also says
+                // that the section does not apply to interal functions, but for simplicity
+                // of implementation we use the global object anyway here. This guarantees
+                // that in host objects you always get a valid object for this.
+                if (thisObj->isActivation())
+                    thisObj = exec->dynamicInterpreter()->globalObject();
+                
+                RETURN_VALUE(func->call(exec, thisObj, argList));
             }
                 
             case FunctionCallBracketNodeEvaluateState:
@@ -647,7 +684,7 @@ JSValue* callEvaluateOnNode(Node* node, ExecState* exec)
                 FunctionCallBracketNode* functionCallBracketNode = static_cast<FunctionCallBracketNode*>(currentNode);
                 
                 JSValue *subscriptVal = POP_VALUE();
-                JSObject *baseObj = POP_VALUE()->toObject(exec);
+                JSObject *baseObj = PEEK_VALUE()->toObject(exec);
                 
                 uint32_t i;
                 PropertySlot slot;
@@ -675,11 +712,15 @@ JSValue* callEvaluateOnNode(Node* node, ExecState* exec)
                 
                 if (!func->implementsCall())
                     RETURN_VALUE(functionCallBracketNode->throwError(exec, TypeError, "Object %s (result of expression %s[%s]) does not allow calls.", funcVal, functionCallBracketNode->base.get(), functionCallBracketNode->subscript.get()));
-                
-                List argList = functionCallBracketNode->args->evaluateList(exec);
-                KJS_CHECKEXCEPTIONVALUE();
-                
-                JSObject *thisObj = baseObj;
+            
+                PUSH_VALUE(func);
+                EVALUATE_LIST_AND_CONTINUE(functionCallBracketNode->args.get(), FunctionCallBracketNodeEvaluateState2);
+            }
+            case FunctionCallBracketNodeEvaluateState2:
+            {
+                List argList = POP_LIST();
+                JSObject *func = static_cast<JSObject*>(POP_VALUE());
+                JSObject *thisObj = POP_VALUE()->toObject(exec);
                 assert(thisObj);
                 assert(thisObj->isObject());
                 assert(!thisObj->isActivation());
@@ -694,7 +735,7 @@ JSValue* callEvaluateOnNode(Node* node, ExecState* exec)
             case FunctionCallDotNodeEvaluateState1:
             {
                 FunctionCallDotNode* functionCallDotNode = static_cast<FunctionCallDotNode*>(currentNode);
-                JSObject* baseObj = POP_VALUE()->toObject(exec);
+                JSObject* baseObj = PEEK_VALUE()->toObject(exec);
                 PropertySlot slot;
                 const Identifier& ident = functionCallDotNode->ident;
                 JSValue* funcVal = baseObj->getPropertySlot(exec, ident, slot) ? slot.getValue(exec, baseObj, ident) : jsUndefined();
@@ -703,15 +744,18 @@ JSValue* callEvaluateOnNode(Node* node, ExecState* exec)
                 if (!funcVal->isObject())
                     RETURN_VALUE(functionCallDotNode->throwError(exec, TypeError, dotExprNotAnObjectString(), funcVal, functionCallDotNode->base.get(), ident));
                 
-                JSObject *func = static_cast<JSObject*>(funcVal);
+                JSObject* func = static_cast<JSObject*>(funcVal);
                 
                 if (!func->implementsCall())
                     RETURN_VALUE(functionCallDotNode->throwError(exec, TypeError, dotExprDoesNotAllowCallsString(), funcVal, functionCallDotNode->base.get(), ident));
-                
-                List argList = functionCallDotNode->args->evaluateList(exec);
-                KJS_CHECKEXCEPTIONVALUE();
-                
-                JSObject *thisObj = baseObj;
+                PUSH_VALUE(func);
+                EVALUATE_LIST_AND_CONTINUE(functionCallDotNode->args.get(), FunctionCallDotNodeEvaluateState2);
+            }
+            case FunctionCallDotNodeEvaluateState2:
+            {
+                List argList = POP_LIST();
+                JSObject* func = static_cast<JSObject*>(POP_VALUE());
+                JSObject *thisObj = POP_VALUE()->toObject(exec);
                 assert(thisObj);
                 assert(thisObj->isObject());
                 assert(!thisObj->isActivation());
@@ -1344,7 +1388,7 @@ JSValue* callEvaluateOnNode(Node* node, ExecState* exec)
             {
                 AssignDotNode* assignDotNode = static_cast<AssignDotNode*>(currentNode);
                 JSValue* v2 = POP_VALUE();
-                JSObject* base = interpreter->peekValueReturn()->toObject(exec);
+                JSObject* base = PEEK_VALUE()->toObject(exec);
                 PropertySlot slot;
                 JSValue *v1 = base->getPropertySlot(exec, assignDotNode->m_ident, slot) ? slot.getValue(exec, base, assignDotNode->m_ident) : jsUndefined();
                 KJS_CHECKEXCEPTIONVALUE();
@@ -1524,14 +1568,65 @@ JSValue* callEvaluateOnNode(Node* node, ExecState* exec)
                 
                 RETURN_VALUE(func);
             }
+            case ArgumentListNodeEvaluateListState:
+            {
+                PUSH_LIST(List());
+                // fall through
+            }
+            case ArgumentListNodeEvaluateListState1:
+            {
+                // This has to jump due to the fall through above.
+                EVALUATE_AND_JUMP(static_cast<ArgumentListNode*>(currentNode)->expr.get(), ArgumentListNodeEvaluateListState2);
+            }
+            case ArgumentListNodeEvaluateListState2:
+            {
+                ArgumentListNode* n = static_cast<ArgumentListNode*>(currentNode);
+                JSValue* v = POP_VALUE();
+                List& l = PEEK_LIST();
+                l.append(v);
+                
+                n = n->next.get();
+                if (n) {
+                    SET_JUMP_STATE(ArgumentListNodeEvaluateListState1, n);
+                }
+                // No return, list already pushed in ArgumentListNodeEvaluateListState
+                break;
+            }
+            case ArgumentsNodeEvaluateListState:
+            {
+                ArgumentsNode* argumentsNode = static_cast<ArgumentsNode*>(currentNode);
+                if (argumentsNode->list)
+                    PUSH_EVALUATE_LIST(argumentsNode->list.get());
+                else
+                    RETURN_LIST(List());
+                break;
+            }
         }
         
         // This lable is used by RETURN_VALUE to break out of nested while loops in case statements
 interpreter_state_switch_end:
-        // FIXME: need proper exception unrolling and "detail setting" here.
-        continue;
+        if (exec->hadException()) {
+            JSValue *exceptionValue = exec->exception();
+            if (!exceptionValue->isObject())
+                break;
+            JSObject *exception = static_cast<JSObject *>(exceptionValue);
+            if (!exception->hasProperty(exec, "sourceURL"))
+                exception->put(exec, "sourceURL", jsString(currentSourceURL(exec)));
+            if (!exception->hasProperty(exec, "line")) {
+                // Unroll the state stack until we find a valid line number
+                while (interpreter->stateStackDepth() > stackBase.stateStackSize) {
+                    if (statePair.node->m_line != -1) {
+                        exception->put(exec, "line", jsNumber(statePair.node->m_line));
+                        break;
+                    }
+                    statePair = interpreter->popNextState();
+                }
+            }
+            break;
+        }
     }
     
+    // Unroll any remaining stacks
     if (exec->hadException()) {
         interpreter->unwindToNextMarker();
         return jsUndefined();
@@ -1540,20 +1635,6 @@ interpreter_state_switch_end:
     JSValue* result = interpreter->popValueReturn();
     interpreter->popUnwindMarker();
     return result;
-}
-
-// FIXME: This should be moved into the interpreter loop
-List ArgumentListNode::evaluateList(ExecState *exec)
-{
-    List l;
-    
-    for (ArgumentListNode *n = this; n; n = n->next.get()) {
-        JSValue *v = callEvaluateOnNode(n->expr.get(), exec);
-        KJS_CHECKEXCEPTIONLIST();
-        l.append(v);
-    }
-    
-    return l;
 }
 
 } // namespace KJS

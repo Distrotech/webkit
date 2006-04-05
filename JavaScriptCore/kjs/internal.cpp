@@ -609,12 +609,32 @@ InterpreterImp *InterpreterImp::interpreterWithGlobalObject(JSObject *global)
     return interpreterMap().get(global);
 }
 
-static void printUnwindMarkersIfNecessary(const Stack<InterpreterImp::UnwindMarker, KJS_MAX_STACK>& unwindStack, int& currentMarker, unsigned stackLocation, bool valueStack)
+enum StackType {
+    ValueStack,
+    StateStack,
+    ListStack
+};
+
+static unsigned sizeMarkerForStack(const InterpreterImp::UnwindMarker& unwindMarker, StackType stackType)
+{
+    switch(stackType) {
+    case ValueStack:
+        return unwindMarker.valueStackSize;
+    case StateStack:
+        return unwindMarker.stateStackSize;
+    case ListStack:
+        return unwindMarker.listStackSize;
+    }
+    ASSERT_NOT_REACHED();
+    return 0;
+}
+
+static void printUnwindMarkersIfNecessary(const Stack<InterpreterImp::UnwindMarker, KJS_MAX_STACK>& unwindStack, int& currentMarker, unsigned stackLocation, StackType stackType)
 {
     if (currentMarker - 1 < 0)
         return;
     InterpreterImp::UnwindMarker unwindMarker = unwindStack[currentMarker - 1];
-    while ((currentMarker - 1 >= 0) && (valueStack ? (unwindMarker.valueStackSize - 1) == stackLocation : (unwindMarker.stateStackSize - 1) == stackLocation)) {
+    while ((currentMarker - 1 >= 0) && (sizeMarkerForStack(unwindMarker, stackType) - 1) == stackLocation) {
         printf("=====unwind=marker=====\n");
         unwindMarker = unwindStack[--currentMarker];
     }
@@ -629,11 +649,11 @@ void InterpreterImp::printStateStack()
     
     int unwindIter = m_unwindMarkerStack.size();
     for (int x = size-1; x >= 0; x--) {
-        printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, x, false); 
-        InterpreterState state = m_stateStack.at(x).state;
-        printf("%i: %s (%i), %p\n", x, nameForInterpreterState[state], state, m_stateStack.at(x).node);
+        printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, x, StateStack); 
+        InterpreterState state = m_stateStack[x].state;
+        printf("%i: %s (%i), %p\n", x, nameForInterpreterState[state], state, m_stateStack[x].node);
     }
-    printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, 0, false); 
+    printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, 0, StateStack); 
 }
 
 void InterpreterImp::printValueStack()
@@ -645,10 +665,34 @@ void InterpreterImp::printValueStack()
     
     int unwindIter = m_unwindMarkerStack.size();
     for (int x = size-1; x >= 0; x--) {
-        printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, x, true);
-        printf("%i: %p\n", x, m_valueReturnStack.at(x));
+        printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, x, ValueStack);
+        printf("%i: %p\n", x, m_valueReturnStack[x]);
     }
-    printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, 0, true);
+    printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, 0, ValueStack);
+}
+
+void InterpreterImp::printListStack()
+{
+    printf("List Stack:\n");
+    unsigned size = m_listReturnStack.size();
+    if (size == 0)
+        printf("<empty>\n");
+    
+    int unwindIter = m_unwindMarkerStack.size();
+    for (int x = size-1; x >= 0; x--) {
+        printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, x, ListStack);
+        printf("%i: (", x);
+        const List& list = m_listReturnStack[x];
+        ListIterator itr = list.begin();
+        ListIterator end = list.end();
+        while (itr != end) {
+             printf("%p", *itr);
+             if (++itr)
+                printf(", ");
+        }
+        printf(")\n");
+    }
+    printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, 0, ListStack);
 }
 
 // ------------------------------ InternalFunctionImp --------------------------

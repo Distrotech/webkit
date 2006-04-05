@@ -59,11 +59,15 @@ namespace KJS {
     macro(NewExprNodeEvaluateState1) \
     macro(FunctionCallValueNodeEvaluateState) \
     macro(FunctionCallValueNodeEvaluateState1) \
+    macro(FunctionCallValueNodeEvaluateState2) \
     macro(FunctionCallResolveNodeEvaluateState) \
+    macro(FunctionCallResolveNodeEvaluateState1) \
     macro(FunctionCallBracketNodeEvaluateState) \
     macro(FunctionCallBracketNodeEvaluateState1) \
+    macro(FunctionCallBracketNodeEvaluateState2) \
     macro(FunctionCallDotNodeEvaluateState) \
     macro(FunctionCallDotNodeEvaluateState1) \
+    macro(FunctionCallDotNodeEvaluateState2) \
     macro(PostfixResolveNodeEvaluateState) \
     macro(PostfixBracketNodeEvaluateState) \
     macro(PostfixBracketNodeEvaluateState1) \
@@ -130,7 +134,11 @@ namespace KJS {
     macro(CaseBlockNodeEvaluateState) \
     macro(StatementNodeEvaluateState) \
     macro(ParameterNodeEvaluateState) \
-    macro(FuncExprNodeEvaluateState)
+    macro(FuncExprNodeEvaluateState) \
+    macro(ArgumentListNodeEvaluateListState) \
+    macro(ArgumentListNodeEvaluateListState1) \
+    macro(ArgumentListNodeEvaluateListState2) \
+    macro(ArgumentsNodeEvaluateListState)
 // end of macro
 
 
