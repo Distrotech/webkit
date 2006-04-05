@@ -42,7 +42,6 @@
 		14760864099C633800437128 /* JSImmediate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 14760863099C633800437128 /* JSImmediate.cpp */; };
 		1483B58A099BC1950016E4F0 /* JSImmediate.h in Headers */ = {isa = PBXBuildFile; fileRef = 1483B589099BC1950016E4F0 /* JSImmediate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		148A1627095D16BB00666D0D /* ListRefPtr.h in Headers */ = {isa = PBXBuildFile; fileRef = 148A1626095D16BB00666D0D /* ListRefPtr.h */; };
-		14A030FC09E2E8F900FCD20E /* NodeType.h in Headers */ = {isa = PBXBuildFile; fileRef = 14A030FB09E2E8F900FCD20E /* NodeType.h */; };
 		14ABB36F099C076400E2A24F /* value.h in Headers */ = {isa = PBXBuildFile; fileRef = 14ABB36E099C076400E2A24F /* value.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		14ABB455099C2A0F00E2A24F /* JSType.h in Headers */ = {isa = PBXBuildFile; fileRef = 14ABB454099C2A0F00E2A24F /* JSType.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		652C107F08DA7B1E0020887D /* protected_reference.h in Headers */ = {isa = PBXBuildFile; fileRef = 652C107E08DA7B1E0020887D /* protected_reference.h */; };
@@ -307,7 +306,6 @@
 		14760863099C633800437128 /* JSImmediate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSImmediate.cpp; sourceTree = "<group>"; };
 		1483B589099BC1950016E4F0 /* JSImmediate.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = JSImmediate.h; sourceTree = "<group>"; };
 		148A1626095D16BB00666D0D /* ListRefPtr.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ListRefPtr.h; sourceTree = "<group>"; };
-		14A030FB09E2E8F900FCD20E /* NodeType.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = NodeType.h; sourceTree = "<group>"; };
 		14ABB36E099C076400E2A24F /* value.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = value.h; sourceTree = "<group>"; };
 		14ABB454099C2A0F00E2A24F /* JSType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSType.h; sourceTree = "<group>"; };
 		45E12D8806A49B0F00E9DF84 /* testkjs.cpp */ = {isa = PBXFileReference; fileEncoding = 30; indentWidth = 2; lastKnownFileType = sourcecode.cpp.cpp; path = testkjs.cpp; sourceTree = "<group>"; tabWidth = 8; };
@@ -688,7 +686,6 @@
 		65417200039E01BA0058BFEB /* kjs */ = {
 			isa = PBXGroup;
 			children = (
-				14A030FB09E2E8F900FCD20E /* NodeType.h */,
 				938772E5038BFE19008635CE /* array_instance.h */,
 				F692A84D0255597D01FF60F7 /* array_object.cpp */,
 				F692A84E0255597D01FF60F7 /* array_object.h */,
@@ -935,7 +932,6 @@
 				65FB3F5109D11B2400F49DEB /* grammar.h in Headers */,
 				65FB3F5409D11B2400F49DEB /* regexp_object.lut.h in Headers */,
 				A8FAD14F09DCAB0B000E3CEC /* InterpreterState.h in Headers */,
-				14A030FC09E2E8F900FCD20E /* NodeType.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

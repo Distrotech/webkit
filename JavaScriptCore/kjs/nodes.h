@@ -25,7 +25,7 @@
 #ifndef NODES_H_
 #define NODES_H_
 
-#include "NodeType.h"
+#include "InterpreterState.h"
 #include "Parser.h"
 #include "internal.h"
 #include <kxmlcore/ListRefPtr.h>
@@ -72,16 +72,13 @@ namespace KJS {
 		  OpInstanceOf
   };
 
-  // FIXME: Get rid of this once the execute and evaluate trees merge
-  JSValue* callEvaluateOnNode(Node*, ExecState*);
-
   struct Node {
-    explicit Node(NodeType = InvalidNodeType);
+    explicit Node(InterpreterState = InvalidNodeExecuteState);
     virtual ~Node();
 
     UString toString() const;
     virtual void streamTo(SourceStream&) const = 0;
-    virtual void processVarDecls(ExecState *) {}
+    virtual void processVarDecls(ExecState*) {}
     int lineNo() const { return m_line; }
 
     void ref();
@@ -89,12 +86,13 @@ namespace KJS {
     unsigned refcount();
     static void clearNewNodes();
 
-    NodeType nodeType() { return m_nodeType; }
+    InterpreterState executeState() { return m_nodeExecuteState; }
     virtual InterpreterState evaluateState() const = 0;
 
-    // FIXME: Get rid of this once the execute and evaluate trees merge
-    JSValue* evaluate(ExecState* exec) { return callEvaluateOnNode(this, exec); }
-    virtual Node *nodeInsideAllParens();
+    // FIXME: Get rid of this once all evaluates dispatch through the tree code loop
+    JSValue* evaluate(ExecState*);
+
+    virtual Node* nodeInsideAllParens();
 
     virtual bool isLocation() const { return false; }
     virtual bool isResolveNode() const { return false; }
@@ -104,22 +102,22 @@ namespace KJS {
 
     virtual void breakCycle() { }
 
-    Completion createErrorCompletion(ExecState *, ErrorType, const char *msg);
-    Completion createErrorCompletion(ExecState *, ErrorType, const char *msg, const Identifier &);
+    Completion createErrorCompletion(ExecState*, ErrorType, const char *msg);
+    Completion createErrorCompletion(ExecState*, ErrorType, const char *msg, const Identifier &);
 
-    JSValue *throwError(ExecState *, ErrorType, const char *msg);
-    JSValue *throwError(ExecState *, ErrorType, const char *msg, JSValue *, Node *);
-    JSValue *throwError(ExecState *, ErrorType, const char *msg, const Identifier &);
-    JSValue *throwError(ExecState *, ErrorType, const char *msg, JSValue *, const Identifier &);
-    JSValue *throwError(ExecState *, ErrorType, const char *msg, JSValue *, Node *, Node *);
-    JSValue *throwError(ExecState *, ErrorType, const char *msg, JSValue *, Node *, const Identifier &);
+    JSValue *throwError(ExecState*, ErrorType, const char *msg);
+    JSValue *throwError(ExecState*, ErrorType, const char *msg, JSValue *, Node *);
+    JSValue *throwError(ExecState*, ErrorType, const char *msg, const Identifier &);
+    JSValue *throwError(ExecState*, ErrorType, const char *msg, JSValue *, const Identifier &);
+    JSValue *throwError(ExecState*, ErrorType, const char *msg, JSValue *, Node *, Node *);
+    JSValue *throwError(ExecState*, ErrorType, const char *msg, JSValue *, Node *, const Identifier &);
 
-    JSValue *throwUndefinedVariableError(ExecState *, const Identifier &);
+    JSValue *throwUndefinedVariableError(ExecState*, const Identifier &);
 
-    void setExceptionDetailsIfNeeded(ExecState *);
+    void setExceptionDetailsIfNeeded(ExecState*);
 
     int m_line;
-    NodeType m_nodeType;
+    InterpreterState m_nodeExecuteState;
     
   private:
     // prohibit these operations
@@ -128,13 +126,16 @@ namespace KJS {
   };
 
   struct StatementNode : public Node {
-    explicit StatementNode(NodeType nodeType = InvalidNodeType);
+    explicit StatementNode(InterpreterState NodeExecuteState = InvalidNodeExecuteState);
     virtual InterpreterState evaluateState() const { return StatementNodeEvaluateState; }
     void setLoc(int line0, int line1);
     int firstLine() const { return lineNo(); }
     int lastLine() const { return m_lastLine; }
     bool hitStatement(ExecState*);
+
+    // FIXME: Get rid of this once all executes dispatch through the tree code loop
     Completion execute(ExecState*);
+
     void pushLabel(const Identifier &id) { ls.push(id); }
     virtual void processFuncDecl(ExecState*);
     LabelStack ls;
@@ -678,7 +679,7 @@ namespace KJS {
 
   struct VarStatementNode : public StatementNode {
     VarStatementNode(VarDeclListNode *l) 
-        : StatementNode(VarStatementNodeType), next(l->next) 
+        : StatementNode(VarStatementNodeExecuteState), next(l->next) 
     {
         Parser::removeNodeCycle(next.get()); l->next = 0; 
     }
@@ -695,19 +696,19 @@ namespace KJS {
   };
 
   struct EmptyStatementNode : public StatementNode {
-    EmptyStatementNode() : StatementNode(EmptyStatementNodeType) { }
+    EmptyStatementNode() : StatementNode(EmptyStatementNodeExecuteState) { }
     virtual void streamTo(SourceStream&) const;
   };
 
   struct ExprStatementNode : public StatementNode {
-    ExprStatementNode(Node *e) : StatementNode(ExprStatementNodeType), expr(e) { }
+    ExprStatementNode(Node *e) : StatementNode(ExprStatementNodeExecuteState), expr(e) { }
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr;
   };
 
   struct IfNode : public StatementNode {
     IfNode(Node *e, StatementNode *s1, StatementNode *s2)
-        : StatementNode(IfNodeType), expr(e), statement1(s1), statement2(s2)  { }
+        : StatementNode(IfNodeExecuteState), expr(e), statement1(s1), statement2(s2)  { }
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr;
@@ -717,7 +718,7 @@ namespace KJS {
 
   struct DoWhileNode : public StatementNode {
     DoWhileNode(StatementNode *s, Node *e) 
-        : StatementNode(DoWhileNodeType), statement(s), expr(e) { }
+        : StatementNode(DoWhileNodeExecuteState), statement(s), expr(e) { }
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
     RefPtr<StatementNode> statement;
@@ -726,7 +727,7 @@ namespace KJS {
 
   struct WhileNode : public StatementNode {
     WhileNode(Node *e, StatementNode *s) 
-        : StatementNode(WhileNodeType), expr(e), statement(s) { }
+        : StatementNode(WhileNodeExecuteState), expr(e), statement(s) { }
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr;
@@ -735,9 +736,9 @@ namespace KJS {
 
   struct ForNode : public StatementNode {
     ForNode(Node *e1, Node *e2, Node *e3, StatementNode *s)
-        : StatementNode(ForNodeType), expr1(e1), expr2(e2), expr3(e3), statement(s) { }
+        : StatementNode(ForNodeExecuteState), expr1(e1), expr2(e2), expr3(e3), statement(s) { }
     ForNode(VarDeclListNode *e1, Node *e2, Node *e3, StatementNode *s) 
-        : StatementNode(ForNodeType), expr1(e1->next), expr2(e2), expr3(e3), statement(s) 
+        : StatementNode(ForNodeExecuteState), expr1(e1->next), expr2(e2), expr3(e3), statement(s) 
     { 
         e1->next = 0;
         Parser::removeNodeCycle(expr1.get()); 
@@ -764,27 +765,27 @@ namespace KJS {
   };
 
   struct ContinueNode : public StatementNode {
-    ContinueNode() : StatementNode(ContinueNodeType) { }
-    ContinueNode(const Identifier &i) : StatementNode(ContinueNodeType), ident(i) { }
+    ContinueNode() : StatementNode(ContinueNodeExecuteState) { }
+    ContinueNode(const Identifier &i) : StatementNode(ContinueNodeExecuteState), ident(i) { }
     virtual void streamTo(SourceStream&) const;
     Identifier ident;
   };
 
   struct BreakNode : public StatementNode {
-    BreakNode() : StatementNode(BreakNodeType) { }
-    BreakNode(const Identifier &i) : StatementNode(BreakNodeType), ident(i) { }
+    BreakNode() : StatementNode(BreakNodeExecuteState) { }
+    BreakNode(const Identifier &i) : StatementNode(BreakNodeExecuteState), ident(i) { }
     virtual void streamTo(SourceStream&) const;
     Identifier ident;
   };
 
   struct ReturnNode : public StatementNode {
-    ReturnNode(Node *v) : StatementNode(ReturnNodeType), value(v) { }
+    ReturnNode(Node *v) : StatementNode(ReturnNodeExecuteState), value(v) { }
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> value;
   };
 
   struct WithNode : public StatementNode {
-    WithNode(Node *e, StatementNode *s) : StatementNode(WithNodeType), expr(e), statement(s) { }
+    WithNode(Node *e, StatementNode *s) : StatementNode(WithNodeExecuteState), expr(e), statement(s) { }
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr;
@@ -830,7 +831,7 @@ namespace KJS {
   };
 
   struct SwitchNode : public StatementNode {
-    SwitchNode(Node *e, CaseBlockNode *b) : StatementNode(SwitchNodeType), expr(e), block(b) { }
+    SwitchNode(Node *e, CaseBlockNode *b) : StatementNode(SwitchNodeExecuteState), expr(e), block(b) { }
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr;
@@ -839,7 +840,7 @@ namespace KJS {
 
   struct LabelNode : public StatementNode {
     LabelNode(const Identifier &l, StatementNode *s) 
-        : StatementNode(LabelNodeType), label(l), statement(s) { }
+        : StatementNode(LabelNodeExecuteState), label(l), statement(s) { }
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
     Identifier label;
@@ -847,14 +848,14 @@ namespace KJS {
   };
 
   struct ThrowNode : public StatementNode {
-    ThrowNode(Node *e) : StatementNode(ThrowNodeType), expr(e) { }
+    ThrowNode(Node *e) : StatementNode(ThrowNodeExecuteState), expr(e) { }
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr;
   };
 
   struct TryNode : public StatementNode {
     TryNode(StatementNode *b, const Identifier &e, StatementNode *c, StatementNode *f)
-        : StatementNode(TryNodeType), tryBlock(b), exceptionIdent(e), catchBlock(c), finallyBlock(f) { }
+        : StatementNode(TryNodeExecuteState), tryBlock(b), exceptionIdent(e), catchBlock(c), finallyBlock(f) { }
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
     RefPtr<StatementNode> tryBlock;
@@ -892,7 +893,7 @@ namespace KJS {
     FuncExprNode(const Identifier &i, FunctionBodyNode *b, ParameterNode *p = 0)
       : ident(i), param(p ? p->next : 0), body(b) { if (p) { Parser::removeNodeCycle(param.get()); p->next = 0; } }
     virtual InterpreterState evaluateState() const { return FuncExprNodeEvaluateState; }
-    virtual void streamTo(SourceStream &) const;
+    virtual void streamTo(SourceStream&) const;
     // Used for streamTo
     Identifier ident;
     RefPtr<ParameterNode> param;
@@ -901,15 +902,15 @@ namespace KJS {
 
   struct FuncDeclNode : public StatementNode {
     FuncDeclNode(const Identifier &i, FunctionBodyNode *b)
-        : StatementNode(FuncDeclNodeType), ident(i), body(b) { }
+        : StatementNode(FuncDeclNodeExecuteState), ident(i), body(b) { }
     FuncDeclNode(const Identifier &i, ParameterNode *p, FunctionBodyNode *b)
-        : StatementNode(FuncDeclNodeType), ident(i), param(p->next), body(b) 
+        : StatementNode(FuncDeclNodeExecuteState), ident(i), param(p->next), body(b) 
     { 
         p->next = 0;
         Parser::removeNodeCycle(param.get());
     }
-    virtual void processFuncDecl(ExecState *);
-    virtual void streamTo(SourceStream &) const;
+    virtual void processFuncDecl(ExecState*);
+    virtual void streamTo(SourceStream&) const;
     Identifier ident;
     RefPtr<ParameterNode> param;
     RefPtr<FunctionBodyNode> body;

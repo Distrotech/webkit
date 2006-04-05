@@ -27,7 +27,7 @@ namespace KJS {
 
 // FIXME: this should probably just be a generated source file from a perl script.
 
-#define INTERPRETER_STATE_FOR_EACH(macro) \
+#define EVALUATE_MACRO_FOR_EACH_EVALUATE_STATE(macro) \
     macro(EmptyStackState) \
     macro(InternalErrorState) \
     macro(NullNodeEvaluateState) \
@@ -140,12 +140,40 @@ namespace KJS {
     macro(ArgumentListNodeEvaluateListState2) \
     macro(ArgumentsNodeEvaluateListState)
 // end of macro
-
-
+    
+#define EVALUATE_MACRO_FOR_EACH_EXECUTE_STATE(macro) \
+    macro(InvalidNodeExecuteState) \
+    macro(StatListNodeExecuteState) \
+    macro(VarStatementNodeExecuteState) \
+    macro(BlockNodeExecuteState) \
+    macro(EmptyStatementNodeExecuteState) \
+    macro(ExprStatementNodeExecuteState) \
+    macro(IfNodeExecuteState) \
+    macro(DoWhileNodeExecuteState) \
+    macro(WhileNodeExecuteState) \
+    macro(ForNodeExecuteState) \
+    macro(ForInNodeExecuteState) \
+    macro(ContinueNodeExecuteState) \
+    macro(BreakNodeExecuteState) \
+    macro(ReturnNodeExecuteState) \
+    macro(WithNodeExecuteState) \
+    macro(SwitchNodeExecuteState) \
+    macro(LabelNodeExecuteState) \
+    macro(ThrowNodeExecuteState) \
+    macro(TryNodeExecuteState) \
+    macro(FuncDeclNodeExecuteState) \
+    macro(SourceElementsNodeExecuteState)
+// end of macro
+    
 enum InterpreterState {
-#define INTERPRETER_STATE_DEFINE_ENUM(name)    name,
-    INTERPRETER_STATE_FOR_EACH(INTERPRETER_STATE_DEFINE_ENUM)
-#undef INTERPRETER_STATE_DEFINE_ENUM
+#define PRINT_AS_ENUM(name)    name,
+    EVALUATE_MACRO_FOR_EACH_EVALUATE_STATE(PRINT_AS_ENUM)
+    
+    EvaluateExecuteBoundary,
+
+    EVALUATE_MACRO_FOR_EACH_EXECUTE_STATE(PRINT_AS_ENUM)
+#undef PRINT_AS_ENUM
+
     LastInterpreterState
 }; 
 

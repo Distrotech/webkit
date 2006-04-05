@@ -294,7 +294,10 @@ namespace KJS {
         InterpreterState state;
         Node* node;
     };
-    
+
+    Completion popCompletionReturn() { return m_completionReturn; }
+    void pushCompletionReturn(Completion c) { m_completionReturn = c; }
+        
     const State& peekNextState() { return m_stateStack.peek(); }
     State popNextState() { return m_stateStack.pop(); }
     void pushNextState(const State& state) { m_stateStack.push(state); }
@@ -308,11 +311,15 @@ namespace KJS {
         unsigned listStackSize;
     };
     
-    UnwindMarker pushUnwindMarker()
+    const UnwindMarker& peekUnwindMarker()
+    {
+        return m_unwindMarkerStack.peek();
+    }
+    
+    void pushUnwindMarker()
     {
         UnwindMarker unwindMarker(valueStackDepth(), stateStackDepth(), listStackDepth());
         m_unwindMarkerStack.push(unwindMarker);
-        return unwindMarker;
     }
     void popUnwindMarker()
     {
@@ -401,6 +408,7 @@ namespace KJS {
     int recursion;
         
     Stack<JSValue*, KJS_MAX_STACK> m_valueReturnStack;
+    Completion m_completionReturn;
     Stack<State, KJS_MAX_STACK> m_stateStack;
     Stack<UnwindMarker, KJS_MAX_STACK> m_unwindMarkerStack;
     Stack<List, KJS_MAX_STACK> m_listReturnStack;
