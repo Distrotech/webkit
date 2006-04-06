@@ -160,6 +160,11 @@ namespace KJS {
     macro(ForNodeExecuteState4) \
     macro(ForInNodeExecuteState) \
     macro(ForInNodeExecuteState1) \
+    macro(ForInNodeExecuteState2) \
+    macro(ForInNodeExecuteState3) \
+    macro(ForInNodeExecuteState4) \
+    macro(ForInNodeExecuteState5) \
+    macro(ForInNodeExecuteState6) \
     macro(ContinueNodeExecuteState) \
     macro(BreakNodeExecuteState) \
     macro(ReturnNodeExecuteState) \
