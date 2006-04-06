@@ -39,9 +39,10 @@ namespace KJS {
     Continue    = 1 << 2,
     ReturnValue = 1 << 3,
     Throw       = 1 << 4,
-    Scope       = 1 << 5,
       
-    All         = ~0 // mask matching any completion type
+    Scope       = 1 << 5, // FIXME: This isn't a real unwind type -- we should do something clearer
+      
+    All         = Normal | Break | Continue | ReturnValue | Throw
   };
 
   /**
