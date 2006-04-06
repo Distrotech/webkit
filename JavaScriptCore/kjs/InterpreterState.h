@@ -138,20 +138,29 @@ namespace KJS {
 #define EVALUATE_MACRO_FOR_EACH_EXECUTE_STATE(macro) \
     macro(StatListNodeExecuteState) \
     macro(VarStatementNodeExecuteState) \
+    macro(VarStatementNodeExecuteState1) \
     macro(BlockNodeExecuteState) \
     macro(EmptyStatementNodeExecuteState) \
     macro(ExprStatementNodeExecuteState) \
+    macro(ExprStatementNodeExecuteState1) \
     macro(IfNodeExecuteState) \
+    macro(IfNodeExecuteState1) \
     macro(DoWhileNodeExecuteState) \
     macro(WhileNodeExecuteState) \
     macro(ForNodeExecuteState) \
+    macro(ForNodeExecuteState1) \
     macro(ForInNodeExecuteState) \
+    macro(ForInNodeExecuteState1) \
     macro(ContinueNodeExecuteState) \
     macro(BreakNodeExecuteState) \
     macro(ReturnNodeExecuteState) \
+    macro(ReturnNodeExecuteState1) \
     macro(WithNodeExecuteState) \
     macro(SwitchNodeExecuteState) \
+    macro(SwitchNodeExecuteState1) \
+    macro(SwitchNodeExecuteState2) \
     macro(LabelNodeExecuteState) \
+    macro(LabelNodeExecuteState1) \
     macro(ThrowNodeExecuteState) \
     macro(TryNodeExecuteState) \
     macro(FuncDeclNodeExecuteState) \

@@ -78,7 +78,7 @@ if (Debugger::debuggersPresent > 0 && \
 
 #define RETURN_COMPLETION(c) do { \
     interpreter->pushCompletionReturn(c); \
-    goto statement_node_switch_end; \
+    goto interpreter_state_switch_end; \
 } while (0)
 
 #define KJS_CHECKEXCEPTION() \
@@ -91,6 +91,15 @@ if (exec->hadException()) { \
 if (Collector::isOutOfMemory()) \
     RETURN_COMPLETION(Completion(Throw, Error::create(exec, GeneralError, "Out of memory")));
 
+#define KJS_EVALUATE_METHOD_CHECKEXCEPTION() \
+if (exec->hadException()) { \
+    setExceptionDetailsIfNeeded(exec); \
+    JSValue *ex = exec->exception(); \
+    exec->clearException(); \
+    return Completion(Throw, ex); \
+} \
+if (Collector::isOutOfMemory()) \
+    return Completion(Throw, Error::create(exec, GeneralError, "Out of memory"));
 
 #define KJS_CHECKEXCEPTIONVALUE() \
 if (exec->hadException()) { \
@@ -304,12 +313,42 @@ do { \
     ASSERT(IS_EXECUTE_STATE(nextState)); \
     interpreter->pushNextState(InterpreterImp::State(nextState, node)); \
 } while (0)
+
 // This explicity checks for continue state bugs
 // FIXME: This should not take an argument once we have a way to check if currentState+1 == a substate
 #define SET_CONTINUE_STATE(nextState) \
-{ \
+do { \
     ASSERT(nextState == statePair.state + 1); \
     SET_JUMP_STATE(nextState, currentNode); \
+} while (0)
+
+#define PUSH_LABEL(label) \
+do { \
+    interpreter->pushUnwindBarrier(Label, label); \
+    if (true) \
+        RETURN_COMPLETION(labelNode->createErrorCompletion(exec, SyntaxError, "Duplicated label %s found.", label)); \
+} while (0)
+
+#define POP_LABEL() \
+    interpreter->popUnwindBarrier(Label)
+
+#define PUSH_SWITCH() \
+    interpreter->pushUnwindBarrier(Switch)
+
+#define POP_SWITCH() \
+    interpreter->popUnwindBarrier(Switch)
+
+#define PUSH_COMPLETION(c) \
+    interpreter->pushCompletionReturn(c)
+    
+#define POP_COMPLETION(c) \
+    interpreter->popCompletionReturn()
+    
+#define EXECUTE_AND_CONTINUE(node, nextState) \
+do { \
+    SET_CONTINUE_STATE(nextState); \
+    PUSH_EXECUTE(node); \
+    goto interpreter_state_switch_end; \
 }
 
 // This call can only be used for continuing with the next state
@@ -338,12 +377,12 @@ do { \
             goto interpreter_state_switch_end; \
 }
 
-void runInterpreterEvaluateLoop(ExecState* exec)
+void runInterpreterLoop(ExecState* exec)
 {
     ASSERT(!exec->hadException());
 
     InterpreterImp* interpreter = exec->dynamicInterpreter()->imp();
-    InterpreterImp::UnwindMarker stackBase = interpreter->peekUnwindMarker();
+    InterpreterImp::UnwindBarrier stackBase = interpreter->peekUnwindBarrier();
     
     while (interpreter->stateStackDepth() > stackBase.stateStackSize) {
     
@@ -1626,536 +1665,560 @@ void runInterpreterEvaluateLoop(ExecState* exec)
                     RETURN_LIST(List());
                 break;
             }
-        }
+        
+            case StatListNodeExecuteState:
+            {
+                JSValue* v = 0;
+                StatListNode *n = static_cast<StatListNode*>(currentNode);
+                for (; n; n = n->next.get()) {
+                    Completion c = n->statement->execute(exec);
+                    KJS_ABORTPOINT()
+                    if (c.complType() != Normal)
+                        RETURN_COMPLETION(c);
+                
+                    if (c.isValueCompletion())
+                        v = c.value();
+                }
+                
+                RETURN_COMPLETION(Completion(Normal, v));
+            }
+
+            case VarStatementNodeExecuteState:
+            {
+                EVALUATE_AND_CONTINUE(static_cast<VarStatementNode*>(currentNode)->next.get(), VarStatementNodeExecuteState1);
+            }
+            case VarStatementNodeExecuteState1:
+            {
+                POP_VALUE(); // ignore return
+                RETURN_COMPLETION(Completion(Normal));
+            }
+
+            case BlockNodeExecuteState:
+            {
+                BlockNode* blockNode = static_cast<BlockNode*>(currentNode);
+                
+                if (!blockNode->source)
+                    RETURN_COMPLETION(Completion(Normal));
+                
+                blockNode->source->processFuncDecl(exec);
+                PUSH_EXECUTE(blockNode->source.get());
+            }
+
+            case EmptyStatementNodeExecuteState:
+            {
+                RETURN_COMPLETION(Completion(Normal));
+            }
+
+            case ExprStatementNodeExecuteState:
+            {
+                ExprStatementNode* exprStatementNode = static_cast<ExprStatementNode*>(currentNode);
+
+                KJS_BREAKPOINT();
+                
+                EVALUATE_AND_CONTINUE(exprStatementNode->expr.get(), ExprStatementNodeExecuteState1);
+            }
+            case ExprStatementNodeExecuteState1:
+            {
+                RETURN_COMPLETION(Completion(Normal, POP_VALUE()));
+            }
+
+            case IfNodeExecuteState:
+            {                
+                KJS_BREAKPOINT();
+                
+                EVALUATE_AND_CONTINUE(static_cast<IfNode*>(currentNode)->expr.get(), IfNodeExecuteState1);
+            }
+            case IfNodeExecuteState1:
+            {
+                IfNode* ifNode = static_cast<IfNode*>(currentNode);
+                if (POP_VALUE()->toBoolean(exec)) {
+                    PUSH_EXECUTE(ifNode->statement1.get());
+                    break;
+                }
+                
+                // no else
+                if (!ifNode->statement2)
+                    RETURN_COMPLETION(Completion(Normal));
+                
+                PUSH_EXECUTE(ifNode->statement2.get());
+                break;
+            }
+
+            case DoWhileNodeExecuteState:
+            {
+                DoWhileNode* doWhileNode = static_cast<DoWhileNode*>(currentNode);
+
+                KJS_BREAKPOINT();
+                
+                JSValue *bv;
+                Completion c;
+                
+                do {
+                    KJS_CHECKEXCEPTION();
+                    
+                    exec->context().imp()->pushIteration();
+                    c = doWhileNode->statement->execute(exec);
+                    exec->context().imp()->popIteration();
+                    if (!((c.complType() == Continue) && doWhileNode->ls.contains(c.target()))) {
+                        if ((c.complType() == Break) && doWhileNode->ls.contains(c.target()))
+                            RETURN_COMPLETION(Completion(Normal));
+                        if (c.complType() != Normal)
+                            RETURN_COMPLETION(c);
+                    }
+                    bv = doWhileNode->expr->evaluate(exec);
+                    KJS_CHECKEXCEPTION();
+                } while (bv->toBoolean(exec));
+                
+                RETURN_COMPLETION(Completion(Normal));
+            }
+
+            case WhileNodeExecuteState:
+            {
+                WhileNode* whileNode = static_cast<WhileNode*>(currentNode);
+
+                KJS_BREAKPOINT();
+                
+                JSValue *bv;
+                Completion c;
+                bool b(false);
+                JSValue *value = 0;
+                
+                while (1) {
+                    bv = whileNode->expr->evaluate(exec);
+                    KJS_CHECKEXCEPTION();
+                    b = bv->toBoolean(exec);
+                    
+                    // bail out on error
+                    KJS_CHECKEXCEPTION();
+                        
+                    if (!b)
+                        RETURN_COMPLETION(Completion(Normal, value));
+                    
+                    exec->context().imp()->pushIteration();
+                    c = whileNode->statement->execute(exec);
+                    exec->context().imp()->popIteration();
+                    if (c.isValueCompletion())
+                        value = c.value();
+                    
+                    if ((c.complType() == Continue) && whileNode->ls.contains(c.target()))
+                        continue;
+                    if ((c.complType() == Break) && whileNode->ls.contains(c.target()))
+                        RETURN_COMPLETION(Completion(Normal, value));
+                    if (c.complType() != Normal)
+                        RETURN_COMPLETION(c);
+                }
+            }
+
+            case ForNodeExecuteState:
+            {
+                ForNode* forNode = static_cast<ForNode*>(currentNode);
+                if (forNode->expr1.get())
+                    EVALUATE_AND_CONTINUE(forNode->expr1, ForNodeExecuteState1);
+            }
+            case ForNodeExecuteState1:
+            {
+                ForNode* forNode = static_cast<ForNode*>(currentNode);
+
+                JSValue *v, *cval = 0;
+                
+                if (forNode->expr1)
+                    v = POP_VALUE();
+                
+                while (1) {
+                    if (forNode->expr2) {
+                        v = forNode->expr2->evaluate(exec);
+                        KJS_CHECKEXCEPTION();
+                        if (!v->toBoolean(exec))
+                            RETURN_COMPLETION(Completion(Normal, cval));
+                    }
+                    // bail out on error
+                    KJS_CHECKEXCEPTION();
+                    
+                    exec->context().imp()->pushIteration();
+                    Completion c = forNode->statement->execute(exec);
+                    exec->context().imp()->popIteration();
+                    if (c.isValueCompletion())
+                        cval = c.value();
+                    if (!((c.complType() == Continue) && forNode->ls.contains(c.target()))) {
+                        if ((c.complType() == Break) && forNode->ls.contains(c.target()))
+                            RETURN_COMPLETION(Completion(Normal, cval));
+                        if (c.complType() != Normal)
+                            RETURN_COMPLETION(c);
+                    }
+                    if (forNode->expr3) {
+                        v = forNode->expr3->evaluate(exec);
+                        KJS_CHECKEXCEPTION();
+                    }
+                }
+            }
+
+            // ECMA 12.6.4
+            case ForInNodeExecuteState:
+            {
+                ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
+                
+                SET_CONTINUE_STATE(ForInNodeExecuteState1);
+                PUSH_EVALUATE(forInNode->expr.get());
+                if (forInNode->varDecl)
+                    PUSH_EVALUATE(forInNode->varDecl.get());
+                break;
+            }
+            case ForInNodeExecuteState1:
+            {
+                ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
+
+                JSValue *e = POP_VALUE();
+                JSValue *retval = 0;
+                JSObject *v;
+                Completion c;
+                ReferenceList propList;
+                
+                if (forInNode->varDecl)
+                    POP_VALUE(); // ignore varDecl return
+                
+                // for Null and Undefined, we want to make sure not to go through
+                // the loop at all, because their object wrappers will have a
+                // property list but will throw an exception if you attempt to
+                // access any property.
+                if (e->isUndefinedOrNull())
+                    RETURN_COMPLETION(Completion(Normal));
+                
+                v = e->toObject(exec);
+                propList = v->propList(exec);
+                
+                ReferenceListIterator propIt = propList.begin();
+                
+                while (propIt != propList.end()) {
+                    Identifier name = propIt->getPropertyName(exec);
+                    if (!v->hasProperty(exec, name)) {
+                        propIt++;
+                        continue;
+                    }
+                    
+                    JSValue *str = jsString(name.ustring());
+                    
+                    Node* lexpr = forInNode->lexpr.get();
+                    if (lexpr->isResolveNode()) {
+                        const Identifier &ident = static_cast<ResolveNode *>(lexpr)->identifier();
+                        
+                        const ScopeChain& chain = exec->context().imp()->scopeChain();
+                        ScopeChainIterator iter = chain.begin();
+                        ScopeChainIterator end = chain.end();
+                        
+                        // we must always have something in the scope chain
+                        assert(iter != end);
+                        
+                        PropertySlot slot;
+                        JSObject *o;
+                        do { 
+                            o = *iter;
+                            if (o->getPropertySlot(exec, ident, slot)) {
+                                o->put(exec, ident, str);
+                                break;
+                            }
+                            ++iter;
+                        } while (iter != end);
+                        
+                        if (iter == end)
+                            o->put(exec, ident, str);
+                    } else if (lexpr->isDotAccessorNode()) {
+                        const Identifier& ident = static_cast<DotAccessorNode *>(lexpr)->identifier();
+                        JSValue *v = static_cast<DotAccessorNode *>(lexpr)->base()->evaluate(exec);
+                        KJS_CHECKEXCEPTION();
+                        JSObject *o = v->toObject(exec);
+                        
+                        o->put(exec, ident, str);
+                    } else {
+                        assert(lexpr->isBracketAccessorNode());
+                        JSValue *v = static_cast<BracketAccessorNode *>(lexpr)->base()->evaluate(exec);
+                        KJS_CHECKEXCEPTION();
+                        JSValue *v2 = static_cast<BracketAccessorNode *>(lexpr)->subscript()->evaluate(exec);
+                        KJS_CHECKEXCEPTION();
+                        JSObject *o = v->toObject(exec);
+                        
+                        uint32_t i;
+                        if (v2->getUInt32(i))
+                            o->put(exec, i, str);
+                        o->put(exec, Identifier(v2->toString(exec)), str);
+                    }
+                    
+                    KJS_CHECKEXCEPTION();
+                        
+                    exec->context().imp()->pushIteration();
+                    c = forInNode->statement->execute(exec);
+                    exec->context().imp()->popIteration();
+                    if (c.isValueCompletion())
+                        retval = c.value();
+                    
+                    if (!((c.complType() == Continue) && forInNode->ls.contains(c.target()))) {
+                        if ((c.complType() == Break) && forInNode->ls.contains(c.target()))
+                            break;
+                        if (c.complType() != Normal) {
+                            RETURN_COMPLETION(c);
+                        }
+                    }
+                    
+                    propIt++;
+                }
+                
+                // bail out on error
+                KJS_CHECKEXCEPTION();
+                    
+                RETURN_COMPLETION(Completion(Normal, retval));
+            }
+
+            case ContinueNodeExecuteState:
+            {
+                // FIXME: This can likely be removed.
+                KJS_BREAKPOINT();
+                
+                RETURN_COMPLETION(Completion(Continue, 0, static_cast<ContinueNode*>(currentNode)->ident));
+            }
+
+            case BreakNodeExecuteState:
+            {
+                BreakNode* breakNode = static_cast<BreakNode*>(currentNode);
+
+                KJS_BREAKPOINT();
+
+                RETURN_COMPLETION(Completion(Break, 0, breakNode->ident));
+            }
+
+            case ReturnNodeExecuteState:
+            {
+                ReturnNode* returnNode = static_cast<ReturnNode*>(currentNode);
+
+                KJS_BREAKPOINT();
+                
+                CodeType codeType = exec->context().imp()->codeType();
+                if (codeType != FunctionCode && codeType != AnonymousCode ) {
+                    RETURN_COMPLETION(returnNode->createErrorCompletion(exec, SyntaxError, "Invalid return statement."));
+                }
+                
+                if (!returnNode->value)
+                    RETURN_COMPLETION(Completion(ReturnValue, jsUndefined()));
+                
+                EVALUATE_AND_CONTINUE(returnNode->value.get(), ReturnNodeExecuteState1);
+            }
+            case ReturnNodeExecuteState1:
+            {
+                JSValue* v = POP_VALUE();
+                RETURN_COMPLETION(Completion(ReturnValue, v));
+            }
+
+            case WithNodeExecuteState:
+            {
+                WithNode* withNode = static_cast<WithNode*>(currentNode);
+                
+                KJS_BREAKPOINT();
+                
+                JSValue *v = withNode->expr->evaluate(exec);
+                KJS_CHECKEXCEPTION();
+                JSObject *o = v->toObject(exec);
+                KJS_CHECKEXCEPTION();
+                exec->context().imp()->pushScope(o);
+                Completion res = withNode->statement->execute(exec);
+                exec->context().imp()->popScope();
+                
+                RETURN_COMPLETION(res);
+            }
+
+            case SwitchNodeExecuteState:
+            {                
+                KJS_BREAKPOINT();
+                
+                EVALUATE_AND_CONTINUE(static_cast<SwitchNode*>(currentNode)->expr.get(), SwitchNodeExecuteState1);
+            }
+            case SwitchNodeExecuteState1:
+            {
+                PUSH_SWITCH();
+                // no need to push, block will use execute
+                EXECUTE_AND_CONTINUE(static_cast<SwitchNode*>(currentNode)->block.get(), SwitchNodeExecuteState2);
+            }
+            case SwitchNodeExecuteState2:
+            {
+                POP_SWITCH();
+                Completion res = POP_COMPLETION();
+                
+                if ((res.complType() == Break) && static_cast<SwitchNode*>(currentNode)->ls.contains(res.target()))
+                    RETURN_COMPLETION(Completion(Normal, res.value()));
+                RETURN_COMPLETION(res);
+            }
+
+            case LabelNodeExecuteState:
+            {
+                LabelNode* labelNode = static_cast<LabelNode*>(currentNode);
+                
+                PUSH_LABEL(labelNode->label);
+                EXECUTE_AND_CONTINUE(labelNode->statement.get(), LabelNodeExecuteState1);
+            }
+            case LabelNodeExecuteState1:
+            {
+                POP_LABEL();
+                Completion e = POP_COMPLETION();
+                if ((e.complType() == Break) && (e.target() == label))
+                    RETURN_COMPLETION(Completion(Normal, e.value()));
+                RETURN_COMPLETION(e);
+            }
+
+            case ThrowNodeExecuteState:
+            {
+                ThrowNode* throwNode = static_cast<ThrowNode*>(currentNode);
+
+                KJS_BREAKPOINT();
+                
+                JSValue *v = throwNode->expr->evaluate(exec);
+                KJS_CHECKEXCEPTION();
+                    
+                RETURN_COMPLETION(Completion(Throw, v));
+            }
+
+            case TryNodeExecuteState:
+            {
+                TryNode* tryNode = static_cast<TryNode*>(currentNode);
+
+                KJS_BREAKPOINT();
+                
+                SET_CONTINUE_STATE(TryNodeExecuteState1);
+                interpreter->pushUnwindBarrier(Throw);
+                PUSH_EXECUTE(tryNode->tryBlock.get());
+                break;
+            }
+            case TryNodeExecuteState1:
+            {
+                interpreter->popUnwindBarrier(Throw);
+                Completion c = POP_COMPLETION();
+                if (tryNode->catchBlock && c.complType() == Throw) {
+                    JSObject *obj = new JSObject;
+                    obj->put(exec, tryNode->exceptionIdent, c.value(), DontDelete);
+                    exec->context().imp()->pushScope(obj);
+                    c = tryNode->catchBlock->execute(exec);
+                    exec->context().imp()->popScope();
+                }
+                // fall through
+            }
+            case TryNodeExecuteState2:
+            {
+                if (tryNode->finallyBlock) {
+                    Completion c2 = tryNode->finallyBlock->execute(exec);
+                    if (c2.complType() != Normal)
+                        c = c2;
+                }
+                
+                RETURN_COMPLETION(c);
+            }
+
+            case FuncDeclNodeExecuteState:
+            {
+                RETURN_COMPLETION(Completion(Normal));
+            }
+
+            case SourceElementsNodeExecuteState:
+            {
+                JSValue* v = 0;
+                for (SourceElementsNode *n = static_cast<SourceElementsNode*>(currentNode); n; n = n->next.get()) {
+                    Completion c = n->node->execute(exec);
+                    if (c.complType() != Normal)
+                        RETURN_COMPLETION(c);
+                    // The spec says to return the last normal completion, but it seems mozilla returns the
+                    // last normal completion which has a value.
+                    if (c.value())
+                        v = c.value();
+                }
+                
+                RETURN_COMPLETION(Completion(Normal, v));
+            }
+            
+            case CaseBlockNodeExecuteBlockWithInputValue:
+            {
+                // FIXME: This is the only execute function which actually takes an argument!
+                // This was originally called CaseBlockNode::evalBlock but was renamed
+                // CaseBlockNodeExecuteBlock to indicate the completion return
+                JSValue *input = POP_VALUE();
+              JSValue *v;
+              Completion res;
+              ClauseListNode *a = list1.get();
+              ClauseListNode *b = list2.get();
+              CaseClauseNode *clause;
+
+                while (a) {
+                  clause = a->getClause();
+                  a = a->getNext();
+                  v = clause->evaluate(exec);
+                  KJS_EVALUATE_METHOD_CHECKEXCEPTION();
+                  if (strictEqual(exec, input, v)) {
+                    res = clause->evalStatements(exec);
+                    if (res.complType() != Normal)
+                      return res;
+                    while (a) {
+                      res = a->getClause()->evalStatements(exec);
+                      if (res.complType() != Normal)
+                        return res;
+                      a = a->getNext();
+                    }
+                    break;
+                  }
+                }
+
+              while (b) {
+                clause = b->getClause();
+                b = b->getNext();
+                v = clause->evaluate(exec);
+                KJS_EVALUATE_METHOD_CHECKEXCEPTION();
+                if (strictEqual(exec, input, v)) {
+                  res = clause->evalStatements(exec);
+                  if (res.complType() != Normal)
+                    return res;
+                  goto step18;
+                }
+              }
+
+              // default clause
+              if (def) {
+                res = def->evalStatements(exec);
+                if (res.complType() != Normal)
+                  return res;
+              }
+              b = list2.get();
+             step18:
+              while (b) {
+                clause = b->getClause();
+                res = clause->evalStatements(exec);
+                if (res.complType() != Normal)
+                  return res;
+                b = b->getNext();
+              }
+
+              // bail out on error
+              KJS_EVALUATE_METHOD_CHECKEXCEPTION();
+
+              return Completion(Normal);
+            }
+
+            case CaseClauseNodeEvaluateStatements:
+            {
+              if (next)
+                return callExecuteOnNode(next.get(), exec);
+              else
+                return Completion(Normal, jsUndefined());
+            }
+                    
+        } // end switch
         
         // This label is used by RETURN_VALUE to break out of nested while loops in case statements
 interpreter_state_switch_end:
 
-        if (exec->hadException()) {
-            JSValue *exceptionValue = exec->exception();
-            if (!exceptionValue->isObject())
-                break;
-            JSObject *exception = static_cast<JSObject *>(exceptionValue);
-            if (!exception->hasProperty(exec, "sourceURL"))
-                exception->put(exec, "sourceURL", jsString(currentSourceURL(exec)));
-            if (!exception->hasProperty(exec, "line")) {
-                // Unroll the state stack until we find a valid line number
-                while (interpreter->stateStackDepth() > stackBase.stateStackSize) {
-                    if (statePair.node->m_line != -1) {
-                        exception->put(exec, "line", jsNumber(statePair.node->m_line));
-                        break;
-                    }
-                    statePair = interpreter->popNextState();
-                }
-            }
-            break;
-        }
+        if (interpreter->peekCompletion().complType() != Normal)
+            interpreter->unwindToNextBarrier();
     }
-}
-
-void runInterpreterExecuteLoop(ExecState* exec)
-{
-    InterpreterImp* interpreter = exec->dynamicInterpreter()->imp();
-    InterpreterImp::State statePair = interpreter->popNextState();
-    Node* currentNode = statePair.node;
-    
-    switch (statePair.state) {
-    case StatListNodeExecuteState:
-    {
-        StatListNode* statListNode = static_cast<StatListNode*>(currentNode);
-        
-        Completion c = statListNode->statement->execute(exec);
-        KJS_ABORTPOINT()
-        if (c.complType() != Normal)
-            RETURN_COMPLETION(c);
-    
-        JSValue *v = c.value();
-        
-        for (StatListNode *n = statListNode->next.get(); n; n = n->next.get()) {
-            Completion c2 = n->statement->execute(exec);
-            KJS_ABORTPOINT()
-            if (c2.complType() != Normal)
-                RETURN_COMPLETION(c2);
-        
-            if (c2.isValueCompletion())
-                v = c2.value();
-            c = c2;
-        }
-        
-        RETURN_COMPLETION(Completion(c.complType(), v, c.target()));
-    }
-
-    case VarStatementNodeExecuteState:
-    {
-        VarStatementNode* varStatementNode = static_cast<VarStatementNode*>(currentNode);
-
-        KJS_BREAKPOINT();
-        varStatementNode->next->evaluate(exec);
-        KJS_CHECKEXCEPTION();
-
-        RETURN_COMPLETION(Completion(Normal));
-    }
-
-    case BlockNodeExecuteState:
-    {
-        BlockNode* blockNode = static_cast<BlockNode*>(currentNode);
-        
-        if (!blockNode->source)
-            RETURN_COMPLETION(Completion(Normal));
-        
-        blockNode->source->processFuncDecl(exec);
-        RETURN_COMPLETION(blockNode->source->execute(exec));
-    }
-
-    case EmptyStatementNodeExecuteState:
-    {
-        RETURN_COMPLETION(Completion(Normal));
-    }
-
-    case ExprStatementNodeExecuteState:
-    {
-        ExprStatementNode* exprStatementNode = static_cast<ExprStatementNode*>(currentNode);
-
-        KJS_BREAKPOINT();
-        JSValue *v = exprStatementNode->expr->evaluate(exec);
-        KJS_CHECKEXCEPTION();
-            
-        RETURN_COMPLETION(Completion(Normal, v));
-    }
-
-    case IfNodeExecuteState:
-    {
-        IfNode* ifNode = static_cast<IfNode*>(currentNode);
-        
-        KJS_BREAKPOINT();
-        JSValue *v = ifNode->expr->evaluate(exec);
-        KJS_CHECKEXCEPTION();
-        bool b = v->toBoolean(exec);
-        
-        if (b)
-            RETURN_COMPLETION(ifNode->statement1->execute(exec));
-        
-        // no else
-        if (!ifNode->statement2)
-            RETURN_COMPLETION(Completion(Normal));
-        
-        RETURN_COMPLETION(ifNode->statement2->execute(exec));
-    }
-
-    case DoWhileNodeExecuteState:
-    {
-        DoWhileNode* doWhileNode = static_cast<DoWhileNode*>(currentNode);
-
-        KJS_BREAKPOINT();
-        
-        JSValue *bv;
-        Completion c;
-        
-        do {
-            KJS_CHECKEXCEPTION();
-            
-            exec->context().imp()->pushIteration();
-            c = doWhileNode->statement->execute(exec);
-            exec->context().imp()->popIteration();
-            if (!((c.complType() == Continue) && doWhileNode->ls.contains(c.target()))) {
-                if ((c.complType() == Break) && doWhileNode->ls.contains(c.target()))
-                    RETURN_COMPLETION(Completion(Normal));
-                if (c.complType() != Normal)
-                    RETURN_COMPLETION(c);
-            }
-            bv = doWhileNode->expr->evaluate(exec);
-            KJS_CHECKEXCEPTION();
-        } while (bv->toBoolean(exec));
-        
-        RETURN_COMPLETION(Completion(Normal));
-    }
-
-    case WhileNodeExecuteState:
-    {
-        WhileNode* whileNode = static_cast<WhileNode*>(currentNode);
-
-        KJS_BREAKPOINT();
-        
-        JSValue *bv;
-        Completion c;
-        bool b(false);
-        JSValue *value = 0;
-        
-        while (1) {
-            bv = whileNode->expr->evaluate(exec);
-            KJS_CHECKEXCEPTION();
-            b = bv->toBoolean(exec);
-            
-            // bail out on error
-            KJS_CHECKEXCEPTION();
-                
-            if (!b)
-                RETURN_COMPLETION(Completion(Normal, value));
-            
-            exec->context().imp()->pushIteration();
-            c = whileNode->statement->execute(exec);
-            exec->context().imp()->popIteration();
-            if (c.isValueCompletion())
-                value = c.value();
-            
-            if ((c.complType() == Continue) && whileNode->ls.contains(c.target()))
-                continue;
-            if ((c.complType() == Break) && whileNode->ls.contains(c.target()))
-                RETURN_COMPLETION(Completion(Normal, value));
-            if (c.complType() != Normal)
-                RETURN_COMPLETION(c);
-        }
-    }
-
-    case ForNodeExecuteState:
-    {
-        ForNode* forNode = static_cast<ForNode*>(currentNode);
-
-        JSValue *v, *cval = 0;
-        
-        if (forNode->expr1) {
-            v = forNode->expr1->evaluate(exec);
-            KJS_CHECKEXCEPTION();
-        }
-        while (1) {
-            if (forNode->expr2) {
-                v = forNode->expr2->evaluate(exec);
-                KJS_CHECKEXCEPTION();
-                if (!v->toBoolean(exec))
-                    RETURN_COMPLETION(Completion(Normal, cval));
-            }
-            // bail out on error
-            KJS_CHECKEXCEPTION();
-            
-            exec->context().imp()->pushIteration();
-            Completion c = forNode->statement->execute(exec);
-            exec->context().imp()->popIteration();
-            if (c.isValueCompletion())
-                cval = c.value();
-            if (!((c.complType() == Continue) && forNode->ls.contains(c.target()))) {
-                if ((c.complType() == Break) && forNode->ls.contains(c.target()))
-                    RETURN_COMPLETION(Completion(Normal, cval));
-                if (c.complType() != Normal)
-                    RETURN_COMPLETION(c);
-            }
-            if (forNode->expr3) {
-                v = forNode->expr3->evaluate(exec);
-                KJS_CHECKEXCEPTION();
-            }
-        }
-    }
-
-    // ECMA 12.6.4
-    case ForInNodeExecuteState:
-    {
-        ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
-
-        JSValue *e;
-        JSValue *retval = 0;
-        JSObject *v;
-        Completion c;
-        ReferenceList propList;
-        
-        if (forInNode->varDecl) {
-            forInNode->varDecl->evaluate(exec);
-            KJS_CHECKEXCEPTION();
-        }
-        
-        e = forInNode->expr->evaluate(exec);
-        KJS_CHECKEXCEPTION();
-        
-        // for Null and Undefined, we want to make sure not to go through
-        // the loop at all, because their object wrappers will have a
-        // property list but will throw an exception if you attempt to
-        // access any property.
-        if (e->isUndefinedOrNull()) {
-            RETURN_COMPLETION(Completion(Normal));
-        }
-        
-        v = e->toObject(exec);
-        propList = v->propList(exec);
-        
-        ReferenceListIterator propIt = propList.begin();
-        
-        while (propIt != propList.end()) {
-            Identifier name = propIt->getPropertyName(exec);
-            if (!v->hasProperty(exec, name)) {
-                propIt++;
-                continue;
-            }
-            
-            JSValue *str = jsString(name.ustring());
-            
-            Node* lexpr = forInNode->lexpr.get();
-            if (lexpr->isResolveNode()) {
-                const Identifier &ident = static_cast<ResolveNode *>(lexpr)->identifier();
-                
-                const ScopeChain& chain = exec->context().imp()->scopeChain();
-                ScopeChainIterator iter = chain.begin();
-                ScopeChainIterator end = chain.end();
-                
-                // we must always have something in the scope chain
-                assert(iter != end);
-                
-                PropertySlot slot;
-                JSObject *o;
-                do { 
-                    o = *iter;
-                    if (o->getPropertySlot(exec, ident, slot)) {
-                        o->put(exec, ident, str);
-                        break;
-                    }
-                    ++iter;
-                } while (iter != end);
-                
-                if (iter == end)
-                    o->put(exec, ident, str);
-            } else if (lexpr->isDotAccessorNode()) {
-                const Identifier& ident = static_cast<DotAccessorNode *>(lexpr)->identifier();
-                JSValue *v = static_cast<DotAccessorNode *>(lexpr)->base()->evaluate(exec);
-                KJS_CHECKEXCEPTION();
-                JSObject *o = v->toObject(exec);
-                
-                o->put(exec, ident, str);
-            } else {
-                assert(lexpr->isBracketAccessorNode());
-                JSValue *v = static_cast<BracketAccessorNode *>(lexpr)->base()->evaluate(exec);
-                KJS_CHECKEXCEPTION();
-                JSValue *v2 = static_cast<BracketAccessorNode *>(lexpr)->subscript()->evaluate(exec);
-                KJS_CHECKEXCEPTION();
-                JSObject *o = v->toObject(exec);
-                
-                uint32_t i;
-                if (v2->getUInt32(i))
-                    o->put(exec, i, str);
-                o->put(exec, Identifier(v2->toString(exec)), str);
-            }
-            
-            KJS_CHECKEXCEPTION();
-                
-            exec->context().imp()->pushIteration();
-            c = forInNode->statement->execute(exec);
-            exec->context().imp()->popIteration();
-            if (c.isValueCompletion())
-                retval = c.value();
-            
-            if (!((c.complType() == Continue) && forInNode->ls.contains(c.target()))) {
-                if ((c.complType() == Break) && forInNode->ls.contains(c.target()))
-                    break;
-                if (c.complType() != Normal) {
-                    RETURN_COMPLETION(c);
-                }
-            }
-            
-            propIt++;
-        }
-        
-        // bail out on error
-        KJS_CHECKEXCEPTION();
-            
-        RETURN_COMPLETION(Completion(Normal, retval));
-    }
-
-    case ContinueNodeExecuteState:
-    {
-        ContinueNode* continueNode = static_cast<ContinueNode*>(currentNode);
-
-        KJS_BREAKPOINT();
-        
-        Identifier& ident = continueNode->ident;
-        if (ident.isEmpty() && !exec->context().imp()->inIteration())
-            RETURN_COMPLETION(continueNode->createErrorCompletion(exec, SyntaxError, "Invalid continue statement."));
-        else if (!ident.isEmpty() && !exec->context().imp()->seenLabels()->contains(ident))
-            RETURN_COMPLETION(continueNode->createErrorCompletion(exec, SyntaxError, "Label %s not found.", ident));
-        else
-            RETURN_COMPLETION(Completion(Continue, 0, ident));
-    }
-
-    case BreakNodeExecuteState:
-    {
-        BreakNode* breakNode = static_cast<BreakNode*>(currentNode);
-
-        KJS_BREAKPOINT();
-
-        Identifier& ident = breakNode->ident;
-        if (ident.isEmpty() && !exec->context().imp()->inIteration() &&
-            !exec->context().imp()->inSwitch())
-            RETURN_COMPLETION(breakNode->createErrorCompletion(exec, SyntaxError, "Invalid break statement."));
-        else if (!ident.isEmpty() && !exec->context().imp()->seenLabels()->contains(ident))
-            RETURN_COMPLETION(breakNode->createErrorCompletion(exec, SyntaxError, "Label %s not found."));
-        else
-            RETURN_COMPLETION(Completion(Break, 0, ident));
-    }
-
-    case ReturnNodeExecuteState:
-    {
-        ReturnNode* returnNode = static_cast<ReturnNode*>(currentNode);
-
-        KJS_BREAKPOINT();
-        
-        CodeType codeType = exec->context().imp()->codeType();
-        if (codeType != FunctionCode && codeType != AnonymousCode ) {
-            RETURN_COMPLETION(returnNode->createErrorCompletion(exec, SyntaxError, "Invalid return statement."));
-        }
-        
-        if (!returnNode->value)
-            RETURN_COMPLETION(Completion(ReturnValue, jsUndefined()));
-        
-        JSValue *v = returnNode->value->evaluate(exec);
-        KJS_CHECKEXCEPTION();
-            
-        RETURN_COMPLETION(Completion(ReturnValue, v));
-    }
-
-    case WithNodeExecuteState:
-    {
-        WithNode* withNode = static_cast<WithNode*>(currentNode);
-        
-        KJS_BREAKPOINT();
-        
-        JSValue *v = withNode->expr->evaluate(exec);
-        KJS_CHECKEXCEPTION();
-        JSObject *o = v->toObject(exec);
-        KJS_CHECKEXCEPTION();
-        exec->context().imp()->pushScope(o);
-        Completion res = withNode->statement->execute(exec);
-        exec->context().imp()->popScope();
-        
-        RETURN_COMPLETION(res);
-    }
-
-    case SwitchNodeExecuteState:
-    {
-        SwitchNode* switchNode = static_cast<SwitchNode*>(currentNode);
-        
-        KJS_BREAKPOINT();
-        
-        JSValue *v = switchNode->expr->evaluate(exec);
-        KJS_CHECKEXCEPTION();
-            
-        exec->context().imp()->pushSwitch();
-        Completion res = switchNode->block->evalBlock(exec,v);
-        exec->context().imp()->popSwitch();
-        
-        if ((res.complType() == Break) && switchNode->ls.contains(res.target()))
-            RETURN_COMPLETION(Completion(Normal, res.value()));
-        RETURN_COMPLETION(res);
-    }
-
-    case LabelNodeExecuteState:
-    {
-        LabelNode* labelNode = static_cast<LabelNode*>(currentNode);
-
-        Identifier& label = labelNode->label;
-        if (!exec->context().imp()->seenLabels()->push(label))
-            RETURN_COMPLETION(labelNode->createErrorCompletion(exec, SyntaxError, "Duplicated label %s found.", label));
-        Completion e = labelNode->statement->execute(exec);
-        exec->context().imp()->seenLabels()->pop();
-        
-        if ((e.complType() == Break) && (e.target() == label))
-            RETURN_COMPLETION(Completion(Normal, e.value()));
-        RETURN_COMPLETION(e);
-    }
-
-    case ThrowNodeExecuteState:
-    {
-        ThrowNode* throwNode = static_cast<ThrowNode*>(currentNode);
-
-        KJS_BREAKPOINT();
-        
-        JSValue *v = throwNode->expr->evaluate(exec);
-        KJS_CHECKEXCEPTION();
-            
-        RETURN_COMPLETION(Completion(Throw, v));
-    }
-
-    case TryNodeExecuteState:
-    {
-        TryNode* tryNode = static_cast<TryNode*>(currentNode);
-
-        KJS_BREAKPOINT();
-        
-        Completion c = tryNode->tryBlock->execute(exec);
-        
-        if (tryNode->catchBlock && c.complType() == Throw) {
-            JSObject *obj = new JSObject;
-            obj->put(exec, tryNode->exceptionIdent, c.value(), DontDelete);
-            exec->context().imp()->pushScope(obj);
-            c = tryNode->catchBlock->execute(exec);
-            exec->context().imp()->popScope();
-        }
-        
-        if (tryNode->finallyBlock) {
-            Completion c2 = tryNode->finallyBlock->execute(exec);
-            if (c2.complType() != Normal)
-                c = c2;
-        }
-        
-        RETURN_COMPLETION(c);
-    }
-
-    case FuncDeclNodeExecuteState:
-    {
-        RETURN_COMPLETION(Completion(Normal));
-    }
-
-    case SourceElementsNodeExecuteState:
-    {
-        SourceElementsNode* sourceElementsNode = static_cast<SourceElementsNode*>(currentNode);
-
-        KJS_CHECKEXCEPTION();
-        
-        Completion c1 = sourceElementsNode->node->execute(exec);
-        KJS_CHECKEXCEPTION();
-        if (c1.complType() != Normal)
-            RETURN_COMPLETION(c1);
-        
-        for (SourceElementsNode *n = sourceElementsNode->next.get(); n; n = n->next.get()) {
-            Completion c2 = n->node->execute(exec);
-            if (c2.complType() != Normal)
-                RETURN_COMPLETION(c2);
-            // The spec says to return c2 here, but it seems that mozilla returns c1 if
-            // c2 doesn't have a value
-            if (c2.value())
-                c1 = c2;
-        }
-        
-        RETURN_COMPLETION(c1);
-    }
-        
-    default:
-    {
-        ASSERT_NOT_REACHED();
-    }
-        
-    } // switch
-statement_node_switch_end:
-    ; // empty statement to make the compiler happy
 }
 
 // Legacy execution support -- clients should treecode-ify themselves
-
-JSValue* Node::evaluate(ExecState* exec)
+Completion callExecuteOnNode(StatementNode* node, ExecState* exec)
 {
     InterpreterImp* interpreter = exec->dynamicInterpreter()->imp();
-    interpreter->pushUnwindMarker();
-    PUSH_EVALUATE(this);
-    runInterpreterEvaluateLoop(exec);
-    JSValue* v = interpreter->popValueReturn();
-
-    if (exec->hadException())
-        interpreter->unwindToNextMarker();
-    else
-        interpreter->popUnwindMarker();
-
-    return v;
-}
-
-Completion StatementNode::execute(ExecState* exec)
-{
-    InterpreterImp* interpreter = exec->dynamicInterpreter()->imp();
-    PUSH_EXECUTE(this);
-    runInterpreterExecuteLoop(exec);
+    PUSH_EXECUTE(node);
+    runInterpreterLoop(exec);
     return interpreter->popCompletionReturn();
 }
 

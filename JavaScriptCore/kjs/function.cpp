@@ -327,7 +327,7 @@ JSObject *DeclaredFunctionImp::construct(ExecState *exec, const List &args)
 
 Completion DeclaredFunctionImp::execute(ExecState *exec)
 {
-  Completion result = body->execute(exec);
+  Completion result = callExecuteOnNode(body.get(), exec);
 
   if (result.complType() == Throw || result.complType() == ReturnValue)
       return result;
@@ -812,7 +812,7 @@ JSValue *GlobalFuncImp::callAsFunction(ExecState *exec, JSObject */*thisObj*/, c
         
         // execute the code
         progNode->processVarDecls(&newExec);
-        Completion c = progNode->execute(&newExec);
+        Completion c = callExecuteOnNode(progNode.get(), &newExec);
 
         // if an exception occured, propogate it back to the previous execution object
         if (newExec.hadException())

@@ -513,7 +513,7 @@ Completion InterpreterImp::evaluate(const UChar* code, int codeLength, JSValue* 
     ContextImp ctx(globalObj, this, thisObj, progNode.get());
     ExecState newExec(m_interpreter, &ctx);
     progNode->processVarDecls(&newExec);
-    res = progNode->execute(&newExec);
+    res = callExecuteOnNode(progNode.get(), &newExec);
   }
 
   recursion--;
@@ -615,30 +615,28 @@ enum StackType {
     CompletionStack
 };
 
-static unsigned sizeMarkerForStack(const InterpreterImp::UnwindMarker& unwindMarker, StackType stackType)
+static unsigned sizeMarkerForStack(const InterpreterImp::UnwindBarrier& unwindBarrier, StackType stackType)
 {
     switch(stackType) {
     case ValueStack:
-        return unwindMarker.valueStackSize;
+        return unwindBarrier.valueStackSize;
     case StateStack:
-        return unwindMarker.stateStackSize;
+        return unwindBarrier.stateStackSize;
     case ListStack:
-        return unwindMarker.listStackSize;
-    case CompletionStack:
-        return unwindMarker.completionStackSize;
+        return unwindBarrier.listStackSize;
     }
     ASSERT_NOT_REACHED();
     return 0;
 }
 
-static void printUnwindMarkersIfNecessary(const Stack<InterpreterImp::UnwindMarker, KJS_MAX_STACK>& unwindStack, int& currentMarker, unsigned stackLocation, StackType stackType)
+static void printUnwindBarriersIfNecessary(const Stack<InterpreterImp::UnwindBarrier, KJS_MAX_STACK>& unwindStack, int& currentMarker, unsigned stackLocation, StackType stackType)
 {
     if (currentMarker - 1 < 0)
         return;
-    InterpreterImp::UnwindMarker unwindMarker = unwindStack[currentMarker - 1];
-    while ((currentMarker - 1 >= 0) && (sizeMarkerForStack(unwindMarker, stackType) - 1) == stackLocation) {
+    InterpreterImp::UnwindBarrier unwindBarrier = unwindStack[currentMarker - 1];
+    while ((currentMarker - 1 >= 0) && (sizeMarkerForStack(unwindBarrier, stackType) - 1) == stackLocation) {
         printf("=====unwind=marker=====\n");
-        unwindMarker = unwindStack[--currentMarker];
+        unwindBarrier = unwindStack[--currentMarker];
     }
 }
 
@@ -649,13 +647,13 @@ void InterpreterImp::printStateStack()
     if (size == 0)
         printf("<empty>\n");
     
-    int unwindIter = m_unwindMarkerStack.size();
+    int unwindIter = m_unwindBarrierStack.size();
     for (int x = size-1; x >= 0; x--) {
-        printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, x, StateStack); 
+        printUnwindBarriersIfNecessary(m_unwindBarrierStack, unwindIter, x, StateStack); 
         InterpreterState state = m_stateStack[x].state;
         printf("%i: %s (%i), %p\n", x, nameForInterpreterState[state], state, m_stateStack[x].node);
     }
-    printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, 0, StateStack); 
+    printUnwindBarriersIfNecessary(m_unwindBarrierStack, unwindIter, 0, StateStack); 
 }
 
 void InterpreterImp::printValueStack()
@@ -665,12 +663,12 @@ void InterpreterImp::printValueStack()
     if (size == 0)
         printf("<empty>\n");
     
-    int unwindIter = m_unwindMarkerStack.size();
+    int unwindIter = m_unwindBarrierStack.size();
     for (int x = size-1; x >= 0; x--) {
-        printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, x, ValueStack);
+        printUnwindBarriersIfNecessary(m_unwindBarrierStack, unwindIter, x, ValueStack);
         printf("%i: %p\n", x, m_valueReturnStack[x]);
     }
-    printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, 0, ValueStack);
+    printUnwindBarriersIfNecessary(m_unwindBarrierStack, unwindIter, 0, ValueStack);
 }
 
 void InterpreterImp::printListStack()
@@ -680,9 +678,9 @@ void InterpreterImp::printListStack()
     if (size == 0)
         printf("<empty>\n");
     
-    int unwindIter = m_unwindMarkerStack.size();
+    int unwindIter = m_unwindBarrierStack.size();
     for (int x = size-1; x >= 0; x--) {
-        printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, x, ListStack);
+        printUnwindBarriersIfNecessary(m_unwindBarrierStack, unwindIter, x, ListStack);
         printf("%i: (", x);
         const List& list = m_listReturnStack[x];
         ListIterator itr = list.begin();
@@ -694,23 +692,58 @@ void InterpreterImp::printListStack()
         }
         printf(")\n");
     }
-    printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, 0, ListStack);
+    printUnwindBarriersIfNecessary(m_unwindBarrierStack, unwindIter, 0, ListStack);
 }
 
-void InterpreterImp::printCompletionStack()
+void InterpreterImp::unwindToNextBarrier()
 {
-    printf("Completion Stack:\n");
-    unsigned size = m_completionReturnStack.size();
-    if (size == 0)
-        printf("<empty>\n");
+    ASSERT(m_completionReturn.complType() != Normal);
     
-    int unwindIter = m_unwindMarkerStack.size();
-    for (int x = size-1; x >= 0; x--) {
-        printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, x, CompletionStack);
-        const Completion& c = m_completionReturnStack[x];
-        printf("%i: Type: %i Value: %p Target: %s\n", x, c.complType(), c.value(), c.target().ascii());
+    const UnwindBarrier& unwindBarrier = m_unwindBarrierStack.peek();
+        
+    // if we fail to unwind, then we throw these
+
+    Identifier& ident = continueNode->ident;
+    if (ident.isEmpty() && !exec->context().imp()->inIteration())
+        RETURN_COMPLETION(continueNode->createErrorCompletion(exec, SyntaxError, "Invalid continue statement."));
+    else if (!ident.isEmpty() && !exec->context().imp()->seenLabels()->contains(ident))
+        RETURN_COMPLETION(continueNode->createErrorCompletion(exec, SyntaxError, "Label %s not found.", ident));
+    
+    if (ident.isEmpty() && !exec->context().imp()->inIteration() &&
+        !exec->context().imp()->inSwitch())
+        RETURN_COMPLETION(breakNode->createErrorCompletion(exec, SyntaxError, "Invalid break statement."));
+    else if (!ident.isEmpty() && !exec->context().imp()->seenLabels()->contains(ident))
+        RETURN_COMPLETION(breakNode->createErrorCompletion(exec, SyntaxError, "Label %s not found."));
+
+    if (exec->hadException()) {
+        JSValue *exceptionValue = exec->exception();
+        if (!exceptionValue->isObject())
+            break;
+        JSObject *exception = static_cast<JSObject *>(exceptionValue);
+        if (!exception->hasProperty(exec, "sourceURL"))
+            exception->put(exec, "sourceURL", jsString(currentSourceURL(exec)));
+        if (!exception->hasProperty(exec, "line")) {
+            // Unroll the state stack until we find a valid line number
+            while (interpreter->stateStackDepth() > stackBase.stateStackSize) {
+                if (statePair.node->m_line != -1) {
+                    exception->put(exec, "line", jsNumber(statePair.node->m_line));
+                    break;
+                }
+                statePair = interpreter->popNextState();
+            }
+        }
     }
-    printUnwindMarkersIfNecessary(m_unwindMarkerStack, unwindIter, 0, CompletionStack);
+
+    // Now that we've actually decided where to unwind to, do the unwind.
+    ASSERT(valueStackDepth() >= unwindBarrier.valueStackSize);
+    ASSERT(stateStackDepth() >= unwindBarrier.stateStackSize);
+    ASSERT(listStackDepth() >= unwindBarrier.listStackSize);
+    ASSERT(completionStackDepth() >= unwindBarrier.completionStackSize);
+    m_valueReturnStack.shrinkTo(unwindBarrier.valueStackSize);
+    m_stateStack.shrinkTo(unwindBarrier.stateStackSize);
+    m_listReturnStack.shrinkTo(unwindBarrier.listStackSize);
+    m_completionReturnStack.shrinkTo(unwindBarrier.completionStackSize);
+    m_unwindBarrierStack.pop();
 }
 
 // ------------------------------ InternalFunctionImp --------------------------
