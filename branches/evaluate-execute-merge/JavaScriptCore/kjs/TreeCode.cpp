@@ -1892,160 +1892,152 @@ void runInterpreterLoop(ExecState* exec)
                     PUSH_EVALUATE(forNode->expr3.get());
                 break;
             }
-
-            // ECMA 12.6.4
             case ForInNodeExecuteState:
             {
-                ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
-                
-                SET_CONTINUE_STATE(ForInNodeExecuteState1);
-                PUSH_EVALUATE(forInNode->expr.get());
-                if (forInNode->varDecl)
-                    PUSH_EVALUATE(forInNode->varDecl.get());
-                break;
-            }
-            case ForInNodeExecuteState1:
-            {
-                ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
-                
-                JSValue *e = POP_VALUE();
-                if (forInNode->varDecl)
-                    POP_VALUE(); // ignore varDecl return
-                
-                // for Null and Undefined, we want to make sure not to go through
-                // the loop at all, because their object wrappers will have a
-                // property list but will throw an exception if you attempt to
-                // access any property.
-                if (e->isUndefinedOrNull())
-                    RETURN_COMPLETION(Completion(Normal));
-                
-                JSObject* v = e->toObject(exec);
-                ReferenceList propList = v->propList(exec);
-                if (!propList.length())
-                    RETURN_COMPLETION(Normal);
-                
-                PUSH_VALUE(0); // FIXME: this is not safe.
-                PUSH_NODE(propList.head());
-                PUSH_UNWIND_BARRIER(Continue | Break);
-                PUSH_VALUE(v);
+                VarDeclNode* varDeclNode = static_cast<ForInNode*>(currentNode)->varDecl.get();
+                if (varDeclNode) // can this ever be NULL?
+                    EVALUATE_AND_CONTINUE(varDeclNode, ForInNodeExecuteState2); // FIXME: Does this return a value we need to pop?
+
+                 // fall through
             }
             case ForInNodeExecuteState2:
             {
-                ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
-                JSObject* v = static_cast<JSObject*>(POP_VALUE());
-                // begin loop
-                ReferenceListNode*& listNode = static_cast<ReferenceListNode*&>(PEEK_NODE());
-                const Reference &ref = listNode->reference();
-                Identifier name = ref.getPropertyName(exec);
-                
-                while (listNode && !v->hasProperty(exec, name)) {
-                    listNode->next();
-                    ref = listNode->reference();
-                    name = ref.getPropertyName(exec);
-                }
-                if (!listNode) {
-                    POP_UNWIND_BARRIER(Continue | Break);
-                    POP_NODE();
-                    RETURN_COMPLETION(Completion(Normal, POP_VALUE()));
-                }
-                
-                JSValue* str = jsString(name.ustring());
-                
-                Node* lexpr = forInNode->lexpr.get();
-                if (lexpr->isResolveNode()) {
-                    const Identifier& ident = static_cast<ResolveNode*>(lexpr)->identifier();
-                    
-                    const ScopeChain& chain = exec->context().imp()->scopeChain();
-                    ScopeChainIterator iter = chain.begin();
-                    ScopeChainIterator end = chain.end();
-                    
-                    // we must always have something in the scope chain
-                    assert(iter != end);
-                    
-                    PropertySlot slot;
-                    JSObject *o;
-                    do { 
-                        o = *iter;
-                        if (o->getPropertySlot(exec, ident, slot)) {
-                            o->put(exec, ident, str);
-                            break;
-                        }
-                        ++iter;
-                    } while (iter != end);
-                    
-                    if (iter == end)
-                        o->put(exec, ident, str);
-                    SET_JUMP_STATE(ForInNodeExecuteState5, currentNode);
-                    break;
-                }
-                
-                PUSH_VALUE(str);
-                if (lexpr->isDotAccessorNode())
-                    EVALUATE_AND_JUMP(static_cast<DotAccessorNode *>(lexpr)->base(), ForInNodeExecuteState3);
-
-                assert(lexpr->isBracketAccessorNode());
-                BracketAccessorNode* bracketAccessorNode = static_cast<BracketAccessorNode *>(lexpr);
-                
-                SET_CONTINUE_STATE(ForInNodeExecuteState4);
-                PUSH_EVALUATE(bracketAccessorNode->subscript());
-                PUSH_EVALUATE(bracketAccessorNode->base());
-                break;
+                PUSH_UNWIND_BARRIER(Break);
+                SET_JUMP_STATE(ForInNodeExecuteState6, currentNode);
+                EVALUATE_AND_CONTINUE(static_cast<ForInNode*>(currentNode)->expr.get(), ForInNodeExecuteState3);
             }
+            
             case ForInNodeExecuteState3:
             {
-                JSObject* o = POP_VALUE()->toObject(exec);
-                JSValue* str = POP_VALUE();
-                Node* lexpr = static_cast<ForInNode*>(currentNode)->lexpr.get();
-                const Identifier& ident = static_cast<DotAccessorNode *>(lexpr)->identifier();
-                o->put(exec, ident, str);
-                SET_CONTINUE_STATE(ForInNodeExecuteState5);
-            }
-            case ForInNodeExecuteState4:
-            {
-                JSValue* v2 = POP_VALUE();
-                JSObject* o = POP_VALUE()->toObject(exec);
-                JSValue* str = POP_VALUE();
-                uint32_t i;
-                if (v2->getUInt32(i))
-                    o->put(exec, i, str);
-                o->put(exec, Identifier(v2->toString(exec)), str);
-                // fall through
-            }
-            case ForInNodeExecuteState5:
-            {
-                EXECUTE_AND_CONTINUE(static_cast<ForInNode*>(currentNode)->statement.get(), ForInNodeExecuteState6);
-            }
-            case ForInNodeExecuteState6:
+                ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
+                JSValue* e = POP_VALUE();
+                
+                // Null and Undefined will throw if you call toObject on them
+                if (e->isUndefinedOrNull())
+                    RETURN_COMPLETION(Normal);
+                    
+                InterpreterState interpreterState;
+                if (forInNode->lexpr->isResolveNode())
+                    interpreterState = ForInNodeResolveNodeExecuteState;
+                else if (forInNode->lexpr->isDotAccessorNode())
+                    interpreterState = ForInNodeDotAccessorNodeExecuteState;
+                else {
+                    ASSERT(forInNode->lexpr->isBracketAccessorNode());
+                    interpreterState = ForInNodeBracketAccessorNodeExecuteState;
+                }
+                    
+                // FIXME: Continue state somewhere around here
+                
+                JSObject *o = e->toObject(exec);
+                ReferenceList propList = o->propList(exec);
+                ReferenceListIterator propIt = propList.begin();
+                while (propIt != propList.end()) {
+                    Identifier name = propIt->getPropertyName(exec);
+                    if (o->hasProperty(exec, name)) {
+                        PUSH_VALUE(jsString(name.ustring()));
+                        SET_JUMP_STATE(interpreterState, forInNode);
+                    }
+                    
+                    propIt++;
+                }
+                    
+                break;
+            }    
+            case ForInNodeResolveNodeExecuteState:
             {
                 ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
-                Completion c = POP_COMPLETION();
-                JSValue*& retval = PEEK_VALUE();
-                if (c.isValueCompletion())
-                    retval = c.value();
+                const Identifier &lexprIdent = static_cast<ResolveNode*>(forInNode->lexpr.get())->identifier();
                 
-                if (!((c.complType() == Continue) && forInNode->ls.contains(c.target()))) {
-                    ASSERT(c.complType() == Break);
-                    PUSH_UNWIND_BARRIER(Continue | Break);
-                    POP_NODE();
-                    if ((c.complType() == Break) && forInNode->ls.contains(c.target()))
-                        RETURN_COMPLETION(Completion(Normal, POP_VALUE()));
-                    if (c.complType() != Normal)
-                        RETURN_COMPLETION(c);
+                const ScopeChain& chain = exec->context().imp()->scopeChain();
+                ScopeChainIterator iter = chain.begin();
+                ScopeChainIterator end = chain.end();
+                
+                // we must always have something in the scope chain
+                assert(iter != end);
+                
+                JSValue* str = POP_VALUE();
+                PropertySlot slot;
+                JSObject* o;
+                do { 
+                    o = *iter;
+                    if (o->getPropertySlot(exec, lexprIdent, slot)) {
+                        o->put(exec, lexprIdent, str);
+                        break;
+                    }
+                    ++iter;
+                } while (iter != end);
+                    
+                if (iter == end)
+                    o->put(exec, lexprIdent, str);
+                        
+                SET_JUMP_STATE(ForInNodeExecuteState4, currentNode);
+                break;
+            }
+            
+            case ForInNodeDotAccessorNodeExecuteState:
+            {
+                ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
+                SET_JUMP_STATE(ForInNodeDotAccessorNodeExecuteState1, currentNode);
+                PUSH_EVALUATE(static_cast<DotAccessorNode*>(forInNode->lexpr.get())->base());
+                break;
+            }
+                
+            case ForInNodeDotAccessorNodeExecuteState1:
+            {
+                ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
+                JSObject* base = POP_VALUE()->toObject(exec);
+                JSValue* str = POP_VALUE();
+                
+                const Identifier& lexprIdent = static_cast<DotAccessorNode*>(forInNode->lexpr.get())->identifier();
+                base->put(exec, lexprIdent, str);
+                
+                SET_JUMP_STATE(ForInNodeExecuteState4, currentNode);
+                break;
+            }   
+            case ForInNodeBracketAccessorNodeExecuteState:
+            {
+                ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
+                SET_JUMP_STATE(ForInNodeBracketAccessorNodeExecuteState2, currentNode);
+                PUSH_EVALUATE(static_cast<BracketAccessorNode*>(forInNode->lexpr.get())->base());
+                PUSH_EVALUATE(static_cast<BracketAccessorNode*>(forInNode->lexpr.get())->subscript());
+                break;
+            }   
+            case ForInNodeBracketAccessorNodeExecuteState2:
+            {
+                JSValue* subscript = POP_VALUE();
+                JSObject* base = POP_VALUE()->toObject(exec);
+                JSValue* str = POP_VALUE();
+                
+                uint32_t i;
+                if (subscript->getUInt32(i)) {
+                    base->put(exec, i, str);
+                    base->put(exec, Identifier(subscript->toString(exec)), str);
                 }
 
-                ReferenceListNode*& listNode = static_cast<ReferenceListNode*&>(PEEK_NODE());                
-                listNode = listNode->next;
-                if (listNode) {
-                    PUSH_EVALUATE(forInNode->expr.get());
-                    SET_JUMP_STATE(ForInNodeExecuteState2, currentNode);
-                    break;
-                }
-                
-                POP_UNWIND_BARRIER(Continue | Break);
-                POP_NODE();
-                RETURN_COMPLETION(Completion(Normal, POP_VALUE()));
+                SET_JUMP_STATE(ForInNodeExecuteState4, currentNode);
+                break; // could just fall through here, but better to be explicit and consistent
+            }
+            
+            case ForInNodeExecuteState4:
+            {
+                PUSH_UNWIND_BARRIER(Continue);
+                ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
+                EXECUTE_AND_CONTINUE(forInNode->statement.get(), ForInNodeExecuteState5);
+                break;
             }
 
+            case ForInNodeExecuteState5:
+            {
+                POP_UNWIND_BARRIER(Continue);
+                break;
+            }
+                
+            case ForInNodeExecuteState6:
+            {
+                POP_UNWIND_BARRIER(Break);
+                break;
+            }
+                
             case ContinueNodeExecuteState:
             {
                 RETURN_COMPLETION(Completion(Continue, 0, static_cast<ContinueNode*>(currentNode)->ident));
@@ -2084,7 +2076,7 @@ void runInterpreterLoop(ExecState* exec)
                 WithNode* withNode = static_cast<WithNode*>(currentNode);
                 JSValue *v = POP_VALUE();
                 JSObject *o = v->toObject(exec);
-                KJS_CHECKEXCEPTION();
+                KJS_CHECKEXCEPTIONVALUE();
                 PUSH_UNWIND_BARRIER(Scope); // scope marker
                 exec->context().imp()->pushScope(o);
                 EXECUTE_AND_CONTINUE(withNode->statement.get(), WithNodeExecuteState2);
