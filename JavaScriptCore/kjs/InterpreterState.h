@@ -159,9 +159,13 @@ namespace KJS {
     macro(ForNodeExecuteState3) \
     macro(ForNodeExecuteState4) \
     macro(ForInNodeExecuteState) \
-    macro(ForInNodeExecuteState1) \
     macro(ForInNodeExecuteState2) \
     macro(ForInNodeExecuteState3) \
+    macro(ForInNodeResolveNodeExecuteState) \
+    macro(ForInNodeDotAccessorNodeExecuteState) \
+    macro(ForInNodeDotAccessorNodeExecuteState1) \
+    macro(ForInNodeBracketAccessorNodeExecuteState) \
+    macro(ForInNodeBracketAccessorNodeExecuteState2) \
     macro(ForInNodeExecuteState4) \
     macro(ForInNodeExecuteState5) \
     macro(ForInNodeExecuteState6) \
