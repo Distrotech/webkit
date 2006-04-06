@@ -42,8 +42,6 @@ namespace KJS {
   class SourceElementsNode;
   class SourceStream;
   
-  extern Completion callExecuteOnNode(StatementNode*, ExecState*);
-
   enum Operator { OpEqual,
 		  OpEqEq,
 		  OpNotEq,

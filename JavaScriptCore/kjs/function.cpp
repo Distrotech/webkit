@@ -32,6 +32,7 @@
 #include "operations.h"
 #include "debugger.h"
 #include "context.h"
+#include "TreeCode.h"
 
 #include <stdio.h>
 #include <errno.h>
