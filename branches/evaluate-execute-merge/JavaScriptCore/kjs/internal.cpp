@@ -611,8 +611,7 @@ InterpreterImp *InterpreterImp::interpreterWithGlobalObject(JSObject *global)
 enum StackType {
     ValueStack,
     StateStack,
-    ListStack,
-    CompletionStack
+    ListStack
 };
 
 static unsigned sizeMarkerForStack(const InterpreterImp::UnwindBarrier& unwindBarrier, StackType stackType)
@@ -695,41 +694,79 @@ void InterpreterImp::printListStack()
     printUnwindBarriersIfNecessary(m_unwindBarrierStack, unwindIter, 0, ListStack);
 }
 
-void InterpreterImp::unwindToNextBarrier()
+static inline const UString& currentSourceURL(ExecState* exec)
+{
+    return exec->context().imp()->currentBody()->sourceURL();
+}
+
+void InterpreterImp::unwindToNextBarrier(ExecState* exec, Node* currentNode)
 {
     ASSERT(m_completionReturn.complType() != Normal);
     
-    const UnwindBarrier& unwindBarrier = m_unwindBarrierStack.peek();
-        
-    // if we fail to unwind, then we throw these
-
-    Identifier& ident = continueNode->ident;
-    if (ident.isEmpty() && !exec->context().imp()->inIteration())
-        RETURN_COMPLETION(continueNode->createErrorCompletion(exec, SyntaxError, "Invalid continue statement."));
-    else if (!ident.isEmpty() && !exec->context().imp()->seenLabels()->contains(ident))
-        RETURN_COMPLETION(continueNode->createErrorCompletion(exec, SyntaxError, "Label %s not found.", ident));
-    
-    if (ident.isEmpty() && !exec->context().imp()->inIteration() &&
-        !exec->context().imp()->inSwitch())
-        RETURN_COMPLETION(breakNode->createErrorCompletion(exec, SyntaxError, "Invalid break statement."));
-    else if (!ident.isEmpty() && !exec->context().imp()->seenLabels()->contains(ident))
-        RETURN_COMPLETION(breakNode->createErrorCompletion(exec, SyntaxError, "Label %s not found."));
-
-    if (exec->hadException()) {
-        JSValue *exceptionValue = exec->exception();
-        if (!exceptionValue->isObject())
+    int unwindBarrierIndex = m_unwindBarrierStack.size() - 1;
+    while (unwindBarrierIndex >= 0) {
+        const UnwindBarrier& barrier = m_unwindBarrierStack[unwindBarrierIndex];
+        if (barrier.barrierType & Scope)
+            exec->context().imp()->popScope();
+        if (barrier.barrierType & m_completionReturn.complType())
             break;
-        JSObject *exception = static_cast<JSObject *>(exceptionValue);
-        if (!exception->hasProperty(exec, "sourceURL"))
-            exception->put(exec, "sourceURL", jsString(currentSourceURL(exec)));
-        if (!exception->hasProperty(exec, "line")) {
-            // Unroll the state stack until we find a valid line number
-            while (interpreter->stateStackDepth() > stackBase.stateStackSize) {
-                if (statePair.node->m_line != -1) {
-                    exception->put(exec, "line", jsNumber(statePair.node->m_line));
-                    break;
+        unwindBarrierIndex--;
+    }
+    
+    if (unwindBarrierIndex < 0) {
+        // if we failed to find a matching barrier, then we throw an error
+        
+        switch (m_completionReturn.complType()) {
+        default:
+        case Normal:
+            ASSERT_NOT_REACHED();
+            break;
+        case Break:
+        {
+            const Identifier& ident = m_completionReturn.target();
+            if (ident.isEmpty())
+                m_completionReturn = currentNode->createErrorCompletion(exec, SyntaxError, "Invalid continue statement.");
+            else if (!ident.isEmpty())
+                m_completionReturn = currentNode->createErrorCompletion(exec, SyntaxError, "Label %s not found.", ident);
+            break;
+        }
+        case Continue:
+        {
+            const Identifier& ident = m_completionReturn.target();
+            if (ident.isEmpty())
+                m_completionReturn = currentNode->createErrorCompletion(exec, SyntaxError, "Invalid continue statement.");
+            else if (!ident.isEmpty())
+                m_completionReturn = currentNode->createErrorCompletion(exec, SyntaxError, "Label %s not found.", ident);
+            break;
+        }
+        case ReturnValue:
+        case Throw:
+            // un-caught returns and throws just fall out to the caller.
+            break;
+        }
+        unwindBarrierIndex = 0;
+    }
+    
+    const UnwindBarrier& unwindBarrier = m_unwindBarrierStack[unwindBarrierIndex];
+    
+    // In case a throw was made from an internal function or eval or any other node w/o a line number
+    // we walk the state stack until we find a node with a valid line number.
+    if (exec->hadException()) {    
+        JSValue *exceptionValue = exec->exception();
+        if (exceptionValue->isObject()) {
+            JSObject *exception = static_cast<JSObject *>(exceptionValue);
+            if (!exception->hasProperty(exec, "sourceURL"))
+                exception->put(exec, "sourceURL", jsString(currentSourceURL(exec)));
+            if (!exception->hasProperty(exec, "line")) {
+                // Walk the state stack until we find a valid line number
+                int stateStackUnwindLimit = unwindBarrier.stateStackSize;
+                for (int stateStackIndex = stateStackDepth() - 1; stateStackIndex >= stateStackUnwindLimit; stateStackIndex--) {
+                    const State& state = m_stateStack[stateStackIndex];
+                    if (state.node->m_line != -1) {
+                        exception->put(exec, "line", jsNumber(state.node->m_line));
+                        break;
+                    }
                 }
-                statePair = interpreter->popNextState();
             }
         }
     }
@@ -738,12 +775,9 @@ void InterpreterImp::unwindToNextBarrier()
     ASSERT(valueStackDepth() >= unwindBarrier.valueStackSize);
     ASSERT(stateStackDepth() >= unwindBarrier.stateStackSize);
     ASSERT(listStackDepth() >= unwindBarrier.listStackSize);
-    ASSERT(completionStackDepth() >= unwindBarrier.completionStackSize);
     m_valueReturnStack.shrinkTo(unwindBarrier.valueStackSize);
     m_stateStack.shrinkTo(unwindBarrier.stateStackSize);
     m_listReturnStack.shrinkTo(unwindBarrier.listStackSize);
-    m_completionReturnStack.shrinkTo(unwindBarrier.completionStackSize);
-    m_unwindBarrierStack.pop();
 }
 
 // ------------------------------ InternalFunctionImp --------------------------

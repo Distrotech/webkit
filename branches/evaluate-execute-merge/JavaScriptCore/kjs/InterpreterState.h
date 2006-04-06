@@ -137,6 +137,8 @@ namespace KJS {
     
 #define EVALUATE_MACRO_FOR_EACH_EXECUTE_STATE(macro) \
     macro(StatListNodeExecuteState) \
+    macro(StatListNodeExecuteState1) \
+    macro(StatListNodeExecuteState2) \
     macro(VarStatementNodeExecuteState) \
     macro(VarStatementNodeExecuteState1) \
     macro(BlockNodeExecuteState) \
@@ -146,9 +148,16 @@ namespace KJS {
     macro(IfNodeExecuteState) \
     macro(IfNodeExecuteState1) \
     macro(DoWhileNodeExecuteState) \
+    macro(DoWhileNodeExecuteState1) \
     macro(WhileNodeExecuteState) \
+    macro(WhileNodeExecuteState1) \
+    macro(WhileNodeExecuteState2) \
+    macro(WhileNodeExecuteState3) \
     macro(ForNodeExecuteState) \
     macro(ForNodeExecuteState1) \
+    macro(ForNodeExecuteState2) \
+    macro(ForNodeExecuteState3) \
+    macro(ForNodeExecuteState4) \
     macro(ForInNodeExecuteState) \
     macro(ForInNodeExecuteState1) \
     macro(ContinueNodeExecuteState) \
@@ -156,15 +165,23 @@ namespace KJS {
     macro(ReturnNodeExecuteState) \
     macro(ReturnNodeExecuteState1) \
     macro(WithNodeExecuteState) \
+    macro(WithNodeExecuteState1) \
+    macro(WithNodeExecuteState2) \
     macro(SwitchNodeExecuteState) \
     macro(SwitchNodeExecuteState1) \
     macro(SwitchNodeExecuteState2) \
     macro(LabelNodeExecuteState) \
     macro(LabelNodeExecuteState1) \
     macro(ThrowNodeExecuteState) \
+    macro(ThrowNodeExecuteState1) \
     macro(TryNodeExecuteState) \
+    macro(TryNodeExecuteState1) \
+    macro(TryNodeExecuteState2) \
     macro(FuncDeclNodeExecuteState) \
-    macro(SourceElementsNodeExecuteState)
+    macro(SourceElementsNodeExecuteState) \
+    macro(SourceElementsNodeExecuteState1) \
+    macro(SourceElementsNodeExecuteState2) \
+    macro(CaseBlockNodeExecuteBlockWithInputValue)
 // end of macro
     
 enum InterpreterState {

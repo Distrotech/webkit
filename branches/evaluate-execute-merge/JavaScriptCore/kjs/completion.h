@@ -33,7 +33,16 @@ namespace KJS {
   /**
    * Completion types.
    */
-  enum ComplType { Normal, Break, Continue, ReturnValue, Throw };
+  enum ComplType {
+    Normal      = 1 << 0,
+    Break       = 1 << 1,
+    Continue    = 1 << 2,
+    ReturnValue = 1 << 3,
+    Throw       = 1 << 4,
+    
+    // This is used by InterpreterImp::UnwindState for defining extra non-conflicting enum values
+    LastComplTypeMarker
+  };
 
   /**
    * Completion objects are used to convey the return status and value
