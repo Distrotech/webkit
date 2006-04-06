@@ -354,6 +354,7 @@ namespace KJS {
     void pushNodeReturn(Node* node) { m_nodeStack.push(node); }
     unsigned nodeStackDepth() { return m_nodeStack.size(); }
     
+    void printStacks();
     void printStateStack();
     void printValueStack();
     void printListStack();

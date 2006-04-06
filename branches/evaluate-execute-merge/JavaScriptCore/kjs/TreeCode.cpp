@@ -2358,8 +2358,8 @@ interpreter_state_switch_end:
 Completion callExecuteOnNode(StatementNode* node, ExecState* exec)
 {
     InterpreterImp* interpreter = exec->dynamicInterpreter()->imp();
-    PUSH_UNWIND_BARRIER(All);
     PUSH_EXECUTE(node);
+    PUSH_UNWIND_BARRIER(All);
     runInterpreterLoop(exec);
     Completion c = interpreter->popCompletionReturn();
     POP_UNWIND_BARRIER(All);
