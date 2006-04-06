@@ -775,9 +775,11 @@ void InterpreterImp::unwindToNextBarrier(ExecState* exec, Node* currentNode)
     ASSERT(valueStackDepth() >= unwindBarrier.valueStackSize);
     ASSERT(stateStackDepth() >= unwindBarrier.stateStackSize);
     ASSERT(listStackDepth() >= unwindBarrier.listStackSize);
+    ASSERT(nodeStackDepth() >= unwindBarrier.nodeStackSize);
     m_valueReturnStack.shrinkTo(unwindBarrier.valueStackSize);
     m_stateStack.shrinkTo(unwindBarrier.stateStackSize);
     m_listReturnStack.shrinkTo(unwindBarrier.listStackSize);
+    m_nodeStack.shrinkTo(unwindBarrier.nodeStackSize);
 }
 
 // ------------------------------ InternalFunctionImp --------------------------

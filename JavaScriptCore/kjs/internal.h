@@ -310,15 +310,17 @@ namespace KJS {
     
     struct UnwindBarrier {
         UnwindBarrier() { } // Allow Stack<T> array-based allocation
-        UnwindBarrier(short type, size_t valueBase, size_t stateBase, unsigned listBase)
+        UnwindBarrier(short type, size_t valueBase, size_t stateBase, size_t listBase, size_t nodeBase)
             : barrierType(type)
             , valueStackSize(valueBase)
             , stateStackSize(stateBase)
-            , listStackSize(listBase) { }
+            , listStackSize(listBase)
+            , nodeStackSize(nodeBase) { }
         short barrierType;
         size_t valueStackSize;
         size_t stateStackSize;
         size_t listStackSize;
+        size_t nodeStackSize;
     };
     
     const UnwindBarrier& peekUnwindBarrier()
@@ -328,7 +330,7 @@ namespace KJS {
     
     void pushUnwindBarrier(short barrierType)
     {
-        UnwindBarrier unwindBarrier(barrierType, valueStackDepth(), stateStackDepth(), listStackDepth());
+        UnwindBarrier unwindBarrier(barrierType, valueStackDepth(), stateStackDepth(), listStackDepth(), nodeStackDepth());
         m_unwindBarrierStack.push(unwindBarrier);
     }
     void popUnwindBarrier()
@@ -338,6 +340,7 @@ namespace KJS {
         ASSERT(valueStackDepth() == unwindBarrier.valueStackSize);
         ASSERT(stateStackDepth() == unwindBarrier.stateStackSize);
         ASSERT(listStackDepth() == unwindBarrier.listStackSize);
+        ASSERT(nodeStackDepth() == unwindBarrier.nodeStackSize);
 #endif
         m_unwindBarrierStack.pop();
     }
@@ -347,6 +350,11 @@ namespace KJS {
     List popListReturn() { return m_listReturnStack.pop(); }
     void pushListReturn(const List& list) { m_listReturnStack.push(list); }
     unsigned listStackDepth() { return m_listReturnStack.size(); }
+    
+    Node*& peekNodeReturn() { return m_nodeStack.peek(); }
+    Node* popNodeReturn() { return m_nodeStack.pop(); }
+    void pushNodeReturn(Node* node) { m_nodeStack.push(node); }
+    unsigned nodeStackDepth() { return m_nodeStack.size(); }
     
     void printStateStack();
     void printValueStack();
