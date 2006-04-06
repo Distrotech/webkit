@@ -41,6 +41,7 @@
 #include "operations.h"
 #include "regexp_object.h"
 #include "string_object.h"
+#include "TreeCode.h"
 #include <assert.h>
 #include <kxmlcore/HashMap.h>
 #include <kxmlcore/HashSet.h>
@@ -634,7 +635,18 @@ static void printUnwindBarriersIfNecessary(const Stack<InterpreterImp::UnwindBar
         return;
     InterpreterImp::UnwindBarrier unwindBarrier = unwindStack[currentMarker - 1];
     while ((currentMarker - 1 >= 0) && (sizeMarkerForStack(unwindBarrier, stackType) - 1) == stackLocation) {
-        printf("=====unwind=marker=====\n");
+        printf("===== unwind barrier for types:");
+        if (currentMarker & Break)
+            printf(" Break");
+        if (currentMarker & Continue)
+            printf(" Continue");
+        if (currentMarker & ReturnValue)
+            printf(" ReturnValue");
+        if (currentMarker & Throw)
+            printf(" Throw");
+        if (currentMarker & Scope)
+            printf(" Scope");
+        printf("=====\n");
         unwindBarrier = unwindStack[--currentMarker];
     }
 }
@@ -665,7 +677,13 @@ void InterpreterImp::printValueStack()
     int unwindIter = m_unwindBarrierStack.size();
     for (int x = size-1; x >= 0; x--) {
         printUnwindBarriersIfNecessary(m_unwindBarrierStack, unwindIter, x, ValueStack);
-        printf("%i: %p\n", x, m_valueReturnStack[x]);
+        JSValue* v = m_valueReturnStack[x];
+        printf("%i: %p [type: %s] [value: %s]\n"
+               , x
+               , v
+               , v ? typeStringForValue(v)->toString(&globExec).cstring().c_str() : "NULL stack marker"
+               , v ? v->toString(&globExec).cstring().c_str() : "0"
+               );
     }
     printUnwindBarriersIfNecessary(m_unwindBarrierStack, unwindIter, 0, ValueStack);
 }

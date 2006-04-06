@@ -303,6 +303,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		140F536809E5B32A00F1B337 /* TreeCode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TreeCode.h; sourceTree = "<group>"; };
 		14760863099C633800437128 /* JSImmediate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSImmediate.cpp; sourceTree = "<group>"; };
 		1483B589099BC1950016E4F0 /* JSImmediate.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = JSImmediate.h; sourceTree = "<group>"; };
 		148A1626095D16BB00666D0D /* ListRefPtr.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ListRefPtr.h; sourceTree = "<group>"; };
@@ -771,6 +772,7 @@
 				F692A8860255597D01FF60F7 /* ustring.h */,
 				F692A8870255597D01FF60F7 /* value.cpp */,
 				14ABB36E099C076400E2A24F /* value.h */,
+				140F536809E5B32A00F1B337 /* TreeCode.h */,
 			);
 			path = kjs;
 			sourceTree = "<group>";

@@ -39,9 +39,9 @@ namespace KJS {
     Continue    = 1 << 2,
     ReturnValue = 1 << 3,
     Throw       = 1 << 4,
-    
-    // This is used by InterpreterImp::UnwindState for defining extra non-conflicting enum values
-    LastComplTypeMarker
+    Scope       = 1 << 5,
+      
+    All         = ~0 // mask matching any completion type
   };
 
   /**

@@ -111,7 +111,7 @@ static const char *dotExprDoesNotAllowCallsString()
     return "Object %s (result of expression %s.%s) does not allow calls.";
 }
 
-static JSValue *typeStringForValue(JSValue *v)
+JSValue *typeStringForValue(JSValue *v)
 {
     switch (v->type()) {
         case UndefinedType:
@@ -350,7 +350,7 @@ do { \
 do { \
     SET_JUMP_STATE(nextState, currentNode); \
     PUSH_EVALUATE(node); \
-    break; \
+    goto interpreter_state_switch_end; \
 } while (0)
 
 // This call can only be used for continuing with the next state
@@ -1710,6 +1710,7 @@ void runInterpreterLoop(ExecState* exec)
                 
                 blockNode->source->processFuncDecl(exec);
                 PUSH_EXECUTE(blockNode->source.get());
+                break;
             }
 
             case EmptyStatementNodeExecuteState:
@@ -2186,7 +2187,7 @@ void runInterpreterLoop(ExecState* exec)
             case SourceElementsNodeExecuteState1:
             {
                 // Have to use jump because of fall through above.
-                EVALUATE_AND_JUMP(static_cast<SourceElementsNode*>(currentNode)->node.get(), SourceElementsNodeExecuteState2);
+                EXECUTE_AND_JUMP(static_cast<SourceElementsNode*>(currentNode)->node.get(), SourceElementsNodeExecuteState2);
             }
             case SourceElementsNodeExecuteState2:
             {
@@ -2357,9 +2358,12 @@ interpreter_state_switch_end:
 Completion callExecuteOnNode(StatementNode* node, ExecState* exec)
 {
     InterpreterImp* interpreter = exec->dynamicInterpreter()->imp();
+    PUSH_UNWIND_BARRIER(All);
     PUSH_EXECUTE(node);
     runInterpreterLoop(exec);
-    return interpreter->popCompletionReturn();
+    Completion c = interpreter->popCompletionReturn();
+    POP_UNWIND_BARRIER(All);
+    return c;
 }
 
 } // namespace KJS

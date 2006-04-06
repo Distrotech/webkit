@@ -45,9 +45,7 @@ namespace KJS {
   class Debugger;
   class FunctionPrototype;
   class Node;
-  
-  const short Scope = LastComplTypeMarker;
-  
+    
   // ---------------------------------------------------------------------------
   //                            Primitive impls
   // ---------------------------------------------------------------------------
