@@ -46,6 +46,8 @@ namespace KJS {
   class FunctionPrototype;
   class Node;
   
+  const short Scope = LastComplTypeMarker;
+  
   // ---------------------------------------------------------------------------
   //                            Primitive impls
   // ---------------------------------------------------------------------------
@@ -186,6 +188,7 @@ namespace KJS {
           size_t size() const { return m_stackTop - m_stackBase + 1; }
           bool isEmpty() const { return (m_stackTop < m_stackBase); }
           void shrinkTo(size_t newSize) { m_stackTop = m_stackBase + newSize - 1; }
+          T& operator[](unsigned i) { ASSERT(i < inlineCapacity); return m_stackBase[i]; }
           const T& operator[](unsigned i) const { ASSERT(i < inlineCapacity); return m_stackBase[i]; }
     private:
         T m_stackBase[inlineCapacity];
@@ -198,6 +201,7 @@ namespace KJS {
           bool isEmpty() const { return m_vector.isEmpty(); }
           // FIXME: Resize should be removed, replace with a multi-pop/shrink operation
           void shrinkTo(size_t newSize) { m_vector.resize(newSize); }
+          T& operator[](unsigned i) { return m_vector.at(i); }
           const T& operator[](unsigned i) const { return m_vector.at(i); }
     private:
         Vector<T, inlineCapacity> m_vector;
@@ -283,7 +287,7 @@ namespace KJS {
     void saveBuiltins (SavedBuiltins &builtins) const;
     void restoreBuiltins (const SavedBuiltins &builtins);
             
-    JSValue* peekValueReturn() { return m_valueReturnStack.peek(); }
+    JSValue*& peekValueReturn() { return m_valueReturnStack.peek(); }
     JSValue* popValueReturn() { return m_valueReturnStack.pop(); }
     void pushValueReturn(JSValue* value) { m_valueReturnStack.push(value); }
     unsigned valueStackDepth() { return m_valueReturnStack.size(); }
@@ -306,14 +310,12 @@ namespace KJS {
     
     struct UnwindBarrier {
         UnwindBarrier() { } // Allow Stack<T> array-based allocation
-        UnwindBarrier(short complTypes, bool didPushScope, size_t valueBase, size_t stateBase, unsigned listBase)
-            : completionTypes(complTypes)
-            , shouldPopScope(didPushScope)
+        UnwindBarrier(short type, size_t valueBase, size_t stateBase, unsigned listBase)
+            : barrierType(type)
             , valueStackSize(valueBase)
             , stateStackSize(stateBase)
             , listStackSize(listBase) { }
-        short completionTypes;
-        bool shouldPopScope;
+        short barrierType;
         size_t valueStackSize;
         size_t stateStackSize;
         size_t listStackSize;
@@ -324,23 +326,22 @@ namespace KJS {
         return m_unwindBarrierStack.peek();
     }
     
-    void pushUnwindBarrier(short completionTypes, bool didPushScope = false)
+    void pushUnwindBarrier(short barrierType)
     {
-        UnwindBarrier unwindBarrier(completionTypes, didPushScope, valueStackDepth(), stateStackDepth(), listStackDepth());
+        UnwindBarrier unwindBarrier(barrierType, valueStackDepth(), stateStackDepth(), listStackDepth());
         m_unwindBarrierStack.push(unwindBarrier);
     }
     void popUnwindBarrier()
     {
 #ifndef NDEBUG
         const UnwindBarrier& unwindBarrier = m_unwindBarrierStack.peek();
-        ASSERT(!unwindBarrier.shouldPopScope);
         ASSERT(valueStackDepth() == unwindBarrier.valueStackSize);
         ASSERT(stateStackDepth() == unwindBarrier.stateStackSize);
         ASSERT(listStackDepth() == unwindBarrier.listStackSize);
 #endif
         m_unwindBarrierStack.pop();
     }
-    void unwindToNextBarrier();
+    void unwindToNextBarrier(ExecState* exec, Node* currentNode);
         
     List& peekListReturn() { return m_listReturnStack.peek(); }
     List popListReturn() { return m_listReturnStack.pop(); }
@@ -405,12 +406,13 @@ namespace KJS {
     ContextImp *_context;
 
     int recursion;
-        
-    Stack<JSValue*, KJS_MAX_STACK> m_valueReturnStack;
+    
     Completion m_completionReturn;
-    Stack<State, KJS_MAX_STACK> m_stateStack;
     Stack<UnwindBarrier, KJS_MAX_STACK> m_unwindBarrierStack;
+    Stack<State, KJS_MAX_STACK> m_stateStack;
+    Stack<JSValue*, KJS_MAX_STACK> m_valueReturnStack;
     Stack<List, KJS_MAX_STACK> m_listReturnStack;
+    Stack<Node*, KJS_MAX_STACK> m_nodeStack;
   };
 
   class AttachedInterpreter;
