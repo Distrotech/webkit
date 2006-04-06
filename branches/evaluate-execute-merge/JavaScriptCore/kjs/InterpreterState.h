@@ -186,7 +186,17 @@ namespace KJS {
     macro(SourceElementsNodeExecuteState) \
     macro(SourceElementsNodeExecuteState1) \
     macro(SourceElementsNodeExecuteState2) \
-    macro(CaseBlockNodeExecuteBlockWithInputValue)
+    macro(CaseBlockNodeExecuteBlockWithInputValue) \
+    macro(CaseBlockNodeExecuteBlockWithInputValue1) \
+    macro(CaseBlockNodeExecuteBlockWithInputValue2) \
+    macro(CaseBlockNodeExecuteBlockWithInputValue3) \
+    macro(CaseBlockNodeExecuteBlockWithInputValue4) \
+    macro(CaseBlockNodeExecuteBlockWithInputValue5) \
+    macro(CaseBlockNodeExecuteBlockWithInputValue6) \
+    macro(CaseBlockNodeExecuteBlockWithInputValue7) \
+    macro(CaseBlockNodeExecuteBlockWithInputValue8) \
+    macro(CaseBlockNodeExecuteBlockWithInputValue9) \
+    macro(CaseBlockNodeExecuteBlockWithInputValue10)
 // end of macro
     
 enum InterpreterState {
