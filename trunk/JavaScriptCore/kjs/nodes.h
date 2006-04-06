@@ -36,10 +36,13 @@ namespace KJS {
   struct ProgramNode;
   struct PropertyNameNode;
   struct PropertyListNode;
+  struct StatementNode;
   class Reference;
   class RegExp;
   class SourceElementsNode;
   class SourceStream;
+  
+  extern Completion callExecuteOnNode(StatementNode*, ExecState*);
 
   enum Operator { OpEqual,
 		  OpEqEq,
@@ -88,9 +91,6 @@ namespace KJS {
 
     InterpreterState interpreterState() { return (InterpreterState)m_interpreterState; }
 
-    // FIXME: Get rid of this once all evaluates dispatch through the tree code loop
-    JSValue* evaluate(ExecState*);
-
     virtual Node* nodeInsideAllParens();
 
     virtual bool isLocation() const { return false; }
@@ -130,9 +130,6 @@ namespace KJS {
     int firstLine() const { return lineNo(); }
     int lastLine() const { return m_lastLine; }
     bool hitStatement(ExecState*);
-
-    // FIXME: Get rid of this once all executes dispatch through the tree code loop
-    Completion execute(ExecState*);
 
     void pushLabel(const Identifier &id) { ls.push(id); }
     virtual void processFuncDecl(ExecState*);

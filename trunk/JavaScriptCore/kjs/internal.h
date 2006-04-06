@@ -295,61 +295,53 @@ namespace KJS {
         Node* node;
     };
 
-    const Completion& peekCompletionReturn() { return m_completionReturnStack.peek(); }
-    Completion popCompletionReturn() { return m_completionReturnStack.pop(); }
-    void pushCompletionReturn(const Completion& c) { m_completionReturnStack.push(c); }
-    unsigned completionStackDepth() { return m_completionReturnStack.size(); }
+    const Completion& peekCompletionReturn() { return m_completionReturn; }
+    Completion popCompletionReturn() { return m_completionReturn; }
+    void pushCompletionReturn(const Completion& c) { m_completionReturn = c; }
         
     const State& peekNextState() { return m_stateStack.peek(); }
     State popNextState() { return m_stateStack.pop(); }
     void pushNextState(const State& state) { m_stateStack.push(state); }
     unsigned stateStackDepth() { return m_stateStack.size(); }
     
-    struct UnwindMarker {
-        UnwindMarker() { } // Allow Stack<T> array-based allocation
-        UnwindMarker(unsigned valueBase, unsigned stateBase, unsigned listBase, unsigned completionSize)
-            : valueStackSize(valueBase), stateStackSize(stateBase), listStackSize(listBase), completionStackSize(completionSize) { }
-        unsigned valueStackSize;
-        unsigned stateStackSize;
-        unsigned listStackSize;
-        unsigned completionStackSize;
+    struct UnwindBarrier {
+        UnwindBarrier() { } // Allow Stack<T> array-based allocation
+        UnwindBarrier(short complTypes, bool didPushScope, size_t valueBase, size_t stateBase, unsigned listBase)
+            : completionTypes(complTypes)
+            , shouldPopScope(didPushScope)
+            , valueStackSize(valueBase)
+            , stateStackSize(stateBase)
+            , listStackSize(listBase) { }
+        short completionTypes;
+        bool shouldPopScope;
+        size_t valueStackSize;
+        size_t stateStackSize;
+        size_t listStackSize;
     };
     
-    const UnwindMarker& peekUnwindMarker()
+    const UnwindBarrier& peekUnwindBarrier()
     {
-        return m_unwindMarkerStack.peek();
+        return m_unwindBarrierStack.peek();
     }
     
-    void pushUnwindMarker()
+    void pushUnwindBarrier(short completionTypes, bool didPushScope = false)
     {
-        UnwindMarker unwindMarker(valueStackDepth(), stateStackDepth(), listStackDepth(), completionStackDepth());
-        m_unwindMarkerStack.push(unwindMarker);
+        UnwindBarrier unwindBarrier(completionTypes, didPushScope, valueStackDepth(), stateStackDepth(), listStackDepth());
+        m_unwindBarrierStack.push(unwindBarrier);
     }
-    void popUnwindMarker()
+    void popUnwindBarrier()
     {
 #ifndef NDEBUG
-        const UnwindMarker& unwindMarker = m_unwindMarkerStack.peek();
-        ASSERT(valueStackDepth() == unwindMarker.valueStackSize);
-        ASSERT(stateStackDepth() == unwindMarker.stateStackSize);
-        ASSERT(listStackDepth() == unwindMarker.listStackSize);
-        ASSERT(completionStackDepth() == unwindMarker.completionStackSize);
+        const UnwindBarrier& unwindBarrier = m_unwindBarrierStack.peek();
+        ASSERT(!unwindBarrier.shouldPopScope);
+        ASSERT(valueStackDepth() == unwindBarrier.valueStackSize);
+        ASSERT(stateStackDepth() == unwindBarrier.stateStackSize);
+        ASSERT(listStackDepth() == unwindBarrier.listStackSize);
 #endif
-        m_unwindMarkerStack.pop();
+        m_unwindBarrierStack.pop();
     }
-    void unwindToNextMarker()
-    {
-        const UnwindMarker& unwindMarker = m_unwindMarkerStack.peek();
-        ASSERT(valueStackDepth() >= unwindMarker.valueStackSize);
-        ASSERT(stateStackDepth() >= unwindMarker.stateStackSize);
-        ASSERT(listStackDepth() >= unwindMarker.listStackSize);
-        ASSERT(completionStackDepth() >= unwindMarker.completionStackSize);
-        m_valueReturnStack.shrinkTo(unwindMarker.valueStackSize);
-        m_stateStack.shrinkTo(unwindMarker.stateStackSize);
-        m_listReturnStack.shrinkTo(unwindMarker.listStackSize);
-        m_completionReturnStack.shrinkTo(unwindMarker.completionStackSize);
-        m_unwindMarkerStack.pop();
-    }
-    
+    void unwindToNextBarrier();
+        
     List& peekListReturn() { return m_listReturnStack.peek(); }
     List popListReturn() { return m_listReturnStack.pop(); }
     void pushListReturn(const List& list) { m_listReturnStack.push(list); }
@@ -358,7 +350,6 @@ namespace KJS {
     void printStateStack();
     void printValueStack();
     void printListStack();
-    void printCompletionStack();
 
   private:
     void clear();
@@ -416,9 +407,9 @@ namespace KJS {
     int recursion;
         
     Stack<JSValue*, KJS_MAX_STACK> m_valueReturnStack;
-    Stack<Completion, KJS_MAX_STACK> m_completionReturnStack;
+    Completion m_completionReturn;
     Stack<State, KJS_MAX_STACK> m_stateStack;
-    Stack<UnwindMarker, KJS_MAX_STACK> m_unwindMarkerStack;
+    Stack<UnwindBarrier, KJS_MAX_STACK> m_unwindBarrierStack;
     Stack<List, KJS_MAX_STACK> m_listReturnStack;
   };
 
@@ -485,7 +476,7 @@ inline void LabelStack::pop()
 
 namespace KXMLCore {
     template<> struct IsPod<KJS::InterpreterImp::State> { static const bool value = true; };
-    template<> struct IsPod<KJS::InterpreterImp::UnwindMarker> { static const bool value = true; };
+    template<> struct IsPod<KJS::InterpreterImp::UnwindBarrier> { static const bool value = true; };
 }
 
 #endif //  INTERNAL_H
