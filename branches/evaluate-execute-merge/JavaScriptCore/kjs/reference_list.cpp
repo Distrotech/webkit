@@ -87,7 +87,6 @@ void ReferenceList::swap(ReferenceList &list)
   tail = tmpTail;
 }
 
-
 void ReferenceList::append(const Reference& ref)
 {
   if (tail == NULL) {
@@ -122,20 +121,20 @@ ReferenceList::~ReferenceList()
     
 ReferenceListIterator ReferenceList::begin() const
 {
-  return ReferenceListIterator(head);
+  return ReferenceListIterator(*this, head);
 }
 
 ReferenceListIterator ReferenceList::end() const
 {
-  return ReferenceListIterator(NULL);
+  return ReferenceListIterator(*this, NULL);
 }
 
 
 // ReferenceListIterator
 
 
-ReferenceListIterator::ReferenceListIterator(ReferenceListNode *n) :
-  node(n)
+ReferenceListIterator::ReferenceListIterator(const ReferenceList& l, ReferenceListNode *n) 
+    : list(l), node(n)
 {
 }
 
