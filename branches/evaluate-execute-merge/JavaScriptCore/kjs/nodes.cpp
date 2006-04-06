@@ -50,16 +50,6 @@
 
 using namespace KJS;
 
-#define KJS_EVALUATE_METHOD_CHECKEXCEPTION \
-if (exec->hadException()) { \
-    setExceptionDetailsIfNeeded(exec); \
-    JSValue *ex = exec->exception(); \
-    exec->clearException(); \
-    return Completion(Throw, ex); \
-} \
-if (Collector::isOutOfMemory()) \
-    return Completion(Throw, Error::create(exec, GeneralError, "Out of memory"));
-
 // ------------------------------ Node -----------------------------------------
 
 #ifndef NDEBUG
@@ -522,14 +512,6 @@ void WithNode::processVarDecls(ExecState *exec)
 // ------------------------------ CaseClauseNode -------------------------------
 
 // ECMA 12.11
-Completion CaseClauseNode::evalStatements(ExecState *exec)
-{
-  if (next)
-    return next->execute(exec);
-  else
-    return Completion(Normal, jsUndefined());
-}
-
 void CaseClauseNode::processVarDecls(ExecState *exec)
 {
   if (next)
@@ -554,7 +536,7 @@ void ClauseListNode::breakCycle()
 // ------------------------------ CaseBlockNode --------------------------------
 
 CaseBlockNode::CaseBlockNode(ClauseListNode *l1, CaseClauseNode *d, ClauseListNode *l2)
-    : Node(InternalErrorState)
+    : Node(CaseBlockNodeExecuteBlockWithInputValue)
 {
   if (l1) {
     list1 = l1->next;
@@ -574,68 +556,6 @@ CaseBlockNode::CaseBlockNode(ClauseListNode *l1, CaseClauseNode *d, ClauseListNo
 }
  
 // ECMA 12.11
-Completion CaseBlockNode::evalBlock(ExecState *exec, JSValue *input)
-{
-  JSValue *v;
-  Completion res;
-  ClauseListNode *a = list1.get();
-  ClauseListNode *b = list2.get();
-  CaseClauseNode *clause;
-
-    while (a) {
-      clause = a->getClause();
-      a = a->getNext();
-      v = clause->evaluate(exec);
-      KJS_EVALUATE_METHOD_CHECKEXCEPTION
-      if (strictEqual(exec, input, v)) {
-	res = clause->evalStatements(exec);
-	if (res.complType() != Normal)
-	  return res;
-	while (a) {
-	  res = a->getClause()->evalStatements(exec);
-	  if (res.complType() != Normal)
-	    return res;
-	  a = a->getNext();
-	}
-	break;
-      }
-    }
-
-  while (b) {
-    clause = b->getClause();
-    b = b->getNext();
-    v = clause->evaluate(exec);
-    KJS_EVALUATE_METHOD_CHECKEXCEPTION
-    if (strictEqual(exec, input, v)) {
-      res = clause->evalStatements(exec);
-      if (res.complType() != Normal)
-	return res;
-      goto step18;
-    }
-  }
-
-  // default clause
-  if (def) {
-    res = def->evalStatements(exec);
-    if (res.complType() != Normal)
-      return res;
-  }
-  b = list2.get();
- step18:
-  while (b) {
-    clause = b->getClause();
-    res = clause->evalStatements(exec);
-    if (res.complType() != Normal)
-      return res;
-    b = b->getNext();
-  }
-
-  // bail out on error
-  KJS_EVALUATE_METHOD_CHECKEXCEPTION
-
-  return Completion(Normal);
-}
-
 void CaseBlockNode::processVarDecls(ExecState *exec)
 {
   if (list1)
