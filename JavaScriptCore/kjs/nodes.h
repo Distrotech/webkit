@@ -734,7 +734,6 @@ namespace KJS {
   struct CaseClauseNode : public Node {
     CaseClauseNode(Node* e) : Node(CaseClauseNodeEvaluateState), expr(e) {} 
     CaseClauseNode(Node* e, StatListNode *l) : Node(CaseClauseNodeEvaluateState), expr(e), next(l->next) { Parser::removeNodeCycle(next.get()); l->next = 0; }
-    Completion evalStatements(ExecState*);
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr;
