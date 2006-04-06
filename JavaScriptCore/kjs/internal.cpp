@@ -652,6 +652,13 @@ static void printUnwindBarriersIfNecessary(const Stack<InterpreterImp::UnwindBar
     }
 }
 
+void InterpreterImp::printStacks()
+{
+    printStateStack();
+    printValueStack();
+    printListStack();
+}
+
 void InterpreterImp::printStateStack()
 {
     printf("State Stack:\n");
