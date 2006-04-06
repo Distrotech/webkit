@@ -31,20 +31,6 @@ namespace KJS {
   class ReferenceListNode;
   class ReferenceListHeadNode;
 
-  class ReferenceListIterator {
-    friend class ReferenceList;
-  
-  public:
-    bool operator!=(const ReferenceListIterator &it) const;
-    const Reference *operator->() const;
-    const Reference &operator++(int i);
-    
-  private:
-    ReferenceListIterator(ReferenceListNode *n);
-    ReferenceListIterator();
-    ReferenceListNode *node;
-  };
-  
   class ReferenceList {
   public:
     ReferenceList();
@@ -63,6 +49,21 @@ namespace KJS {
     ReferenceListHeadNode *head;
     ReferenceListNode *tail;
   }; 
+
+  class ReferenceListIterator {
+      friend class ReferenceList;
+      
+  public:
+      bool operator!=(const ReferenceListIterator &it) const;
+      const Reference *operator->() const;
+      const Reference &operator++(int i);
+      
+  private:
+      ReferenceListIterator(const ReferenceList&, ReferenceListNode*);
+      ReferenceListIterator();
+      ReferenceList list; // hang on to the list to ensure it's not destroyed while we iterate
+      ReferenceListNode *node;
+  };
   
 }
 
