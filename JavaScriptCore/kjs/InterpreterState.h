@@ -54,6 +54,7 @@ namespace KJS {
     macro(DotAccessorNodeEvaluateState1) \
     macro(NewExprNodeEvaluateState) \
     macro(NewExprNodeEvaluateState1) \
+    macro(NewExprNodeEvaluateState2) \
     macro(FunctionCallValueNodeEvaluateState) \
     macro(FunctionCallValueNodeEvaluateState1) \
     macro(FunctionCallValueNodeEvaluateState2) \
