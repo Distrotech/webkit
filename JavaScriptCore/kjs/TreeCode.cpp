@@ -207,7 +207,7 @@ static ALWAYS_INLINE JSValue *valueForReadModifyAssignment(ExecState * exec, JSV
 }
 
 // Set this to 1 to see logging.
-#define TRACE_EXECUTION 0
+#define TRACE_EXECUTION 1
 
 #if TRACE_EXECUTION
 #define PUSH_VALUE(value) \
@@ -227,7 +227,7 @@ static ALWAYS_INLINE JSValue *valueForReadModifyAssignment(ExecState * exec, JSV
 { \
     printf("JUMP %s (%i) called on %p, jumping to %s (%i) on %p\n", nameForInterpreterState[statePair.state], statePair.state, statePair.node, nameForInterpreterState[nextState], nextState, nextNode); \
     ASSERT(nextState != statePair.state); \
-    interpreter->pushNextState(State(nextState, nextNode)); \
+    interpreter->pushNextState(InterpreterImp::State(nextState, nextNode)); \
 }
 
 #else
@@ -489,7 +489,7 @@ void runInterpreterLoop(ExecState* exec)
                 ElementNode* n = static_cast<ElementNode*>(currentNode);
                 JSValue* val = POP_VALUE();
                 int l = POP_VALUE()->toInt32(exec);
-                JSObject* array = POP_VALUE()->toObject(exec);
+                JSObject* array = static_cast<JSObject*>(PEEK_VALUE());
                 
                 l += n->elision;
                 array->put(exec, l++, val);
@@ -503,8 +503,7 @@ void runInterpreterLoop(ExecState* exec)
                     SET_JUMP_STATE(ElementNodeEvaluateState1, n);
                     break;
                 }
-                
-                RETURN_VALUE(array);
+                break; // no need to return, array already pushed.
             }
                 
             case ArrayNodeEvaluateState:
@@ -1831,7 +1830,7 @@ void runInterpreterLoop(ExecState* exec)
             case ForNodeExecuteState:
             {
                 ForNode* forNode = static_cast<ForNode*>(currentNode);
-                if (forNode->expr1.get())
+                if (forNode->expr1)
                     EVALUATE_AND_CONTINUE(forNode->expr1.get(), ForNodeExecuteState1);
             }
             case ForNodeExecuteState1:
@@ -1854,8 +1853,7 @@ void runInterpreterLoop(ExecState* exec)
             {
                 ForNode* forNode = static_cast<ForNode*>(currentNode);
                 if (forNode->expr2) {
-                    JSValue* v = POP_VALUE();
-                    if (!v->toBoolean(exec)) { // FIXME: can this throw?
+                    if (!POP_VALUE()->toBoolean(exec)) { // FIXME: can this throw?
                         POP_UNWIND_BARRIER(Continue | Break);
                         RETURN_NORMAL_COMPLETION();
                     }
@@ -1883,19 +1881,24 @@ void runInterpreterLoop(ExecState* exec)
                     PUSH_EVALUATE(forNode->expr3.get());
                 break;
             }
+            
+            
             case ForInNodeExecuteState:
             {
                 VarDeclNode* varDeclNode = static_cast<ForInNode*>(currentNode)->varDecl.get();
                 if (varDeclNode) // can this ever be NULL?
-                    EVALUATE_AND_CONTINUE(varDeclNode, ForInNodeExecuteState2); // FIXME: Does this return a value we need to pop?
+                    EVALUATE_AND_CONTINUE(varDeclNode, ForInNodeExecuteState2);
 
                  // fall through
             }
             case ForInNodeExecuteState2:
             {
+                ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
+                if (forInNode->varDecl)
+                    POP_VALUE();
                 PUSH_UNWIND_BARRIER(Break);
                 SET_JUMP_STATE(ForInNodeExecuteState6, currentNode);
-                EVALUATE_AND_CONTINUE(static_cast<ForInNode*>(currentNode)->expr.get(), ForInNodeExecuteState3);
+                EVALUATE_AND_CONTINUE(forInNode->expr.get(), ForInNodeExecuteState3);
             }
             
             case ForInNodeExecuteState3:
@@ -1933,7 +1936,7 @@ void runInterpreterLoop(ExecState* exec)
                 }
                     
                 break;
-            }    
+            }
             case ForInNodeResolveNodeExecuteState:
             {
                 ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
