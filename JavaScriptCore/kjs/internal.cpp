@@ -807,6 +807,8 @@ void InterpreterImp::unwindToNextBarrier(ExecState* exec, Node* currentNode)
     m_stateStack.shrinkTo(unwindBarrier.stateStackSize);
     m_listReturnStack.shrinkTo(unwindBarrier.listStackSize);
     m_nodeStack.shrinkTo(unwindBarrier.nodeStackSize);
+    if (unwindBarrier.barrierType != All)
+        pushNextState(unwindBarrier.continueState);
 }
 
 // ------------------------------ InternalFunctionImp --------------------------

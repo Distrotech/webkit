@@ -311,13 +311,18 @@ namespace KJS {
     
     struct UnwindBarrier {
         UnwindBarrier() { } // Allow Stack<T> array-based allocation
-        UnwindBarrier(short type, size_t valueBase, size_t stateBase, size_t listBase, size_t nodeBase)
+        UnwindBarrier(short type, const State& state, size_t valueBase, size_t stateBase, size_t listBase, size_t nodeBase)
             : barrierType(type)
+            , continueState(state)
             , valueStackSize(valueBase)
             , stateStackSize(stateBase)
             , listStackSize(listBase)
-            , nodeStackSize(nodeBase) { }
+            , nodeStackSize(nodeBase) 
+        { 
+        }
+
         short barrierType;
+        State continueState;
         size_t valueStackSize;
         size_t stateStackSize;
         size_t listStackSize;
@@ -328,10 +333,11 @@ namespace KJS {
     {
         return m_unwindBarrierStack.peek();
     }
-    
-    void pushUnwindBarrier(short barrierType)
+
+    // FIXME: ASSERT that enum/short conversion doesn't lose data
+    void pushUnwindBarrier(short barrierType, State continueState)
     {
-        UnwindBarrier unwindBarrier(barrierType, valueStackDepth(), stateStackDepth(), listStackDepth(), nodeStackDepth());
+        UnwindBarrier unwindBarrier(barrierType, continueState, valueStackDepth(), stateStackDepth(), listStackDepth(), nodeStackDepth());
         m_unwindBarrierStack.push(unwindBarrier);
     }
     void popUnwindBarrier()
