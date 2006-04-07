@@ -635,7 +635,7 @@ static void printUnwindBarriersIfNecessary(const Stack<InterpreterImp::UnwindBar
         return;
     InterpreterImp::UnwindBarrier unwindBarrier = unwindStack[currentMarker - 1];
     while ((currentMarker - 1 >= 0) && (sizeMarkerForStack(unwindBarrier, stackType) - 1) == stackLocation) {
-        printf("===== unwind barrier for types:");
+        printf("===== unwind barrier for type(s):");
         short barrierType = unwindBarrier.barrierType;
         if (barrierType & Break)
             printf(" Break");
@@ -647,7 +647,7 @@ static void printUnwindBarriersIfNecessary(const Stack<InterpreterImp::UnwindBar
             printf(" Throw");
         if (barrierType & Scope)
             printf(" Scope");
-        printf("=====\n");
+        printf(" =====\n");
         unwindBarrier = unwindStack[--currentMarker];
     }
 }

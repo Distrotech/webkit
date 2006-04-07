@@ -297,10 +297,10 @@ namespace KJS {
         Node* node;
     };
 
-    const Completion& peekCompletionReturn() { return m_completionReturn; }
-    Completion popCompletionReturn() { return m_completionReturn; }
-    void pushCompletionReturn(const Completion& c) { m_completionReturn = c; }
-        
+    const Completion& getCompletionReturn() { return m_completionReturn; }
+    void resetCompletionToNormal() { m_completionReturn = Normal; }
+    void setCompletionReturn(const Completion& c) { ASSERT(m_completionReturn.complType() == Normal); if (c.complType() != Normal || c.value()) m_completionReturn = c; }
+    
     const State& peekNextState() { return m_stateStack.peek(); }
     State popNextState() { return m_stateStack.pop(); }
     void pushNextState(const State& state) { m_stateStack.push(state); }
