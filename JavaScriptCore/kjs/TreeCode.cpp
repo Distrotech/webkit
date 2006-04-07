@@ -78,28 +78,9 @@ const char* nameForInterpreterState[LastInterpreterState+1] = {
 
 #define KJS_CHECKEXCEPTION() \
 if (exec->hadException()) { \
-    static_cast<StatementNode*>(currentNode)->setExceptionDetailsIfNeeded(exec); \
-    JSValue *ex = exec->exception(); \
-    exec->clearException(); \
-    RETURN_COMPLETION(Completion(Throw, ex)); \
-}
-
-#define KJS_CHECKEXCEPTIONVALUE() \
-if (exec->hadException()) { \
     currentNode->setExceptionDetailsIfNeeded(exec); \
-        RETURN_VALUE(jsUndefined()); \
-} \
-if (Collector::isOutOfMemory()) { \
-    RETURN_VALUE(jsUndefined()); \
-} // will be picked up by KJS_CHECKEXCEPTION() 
-
-#define KJS_CHECKEXCEPTIONLIST() \
-if (exec->hadException()) { \
-    setExceptionDetailsIfNeeded(exec); \
-        return List(); \
-} \
-if (Collector::isOutOfMemory()) \
-    return List(); // will be picked up by KJS_CHECKEXCEPTION()
+    RETURN_COMPLETION(Completion(Throw, exec->exception())); \
+}
 
 static inline int currentSourceId(ExecState* exec)
 {
@@ -626,6 +607,7 @@ void runInterpreterLoop(ExecState* exec)
                 JSValue *v1 = POP_LOCAL_VALUE();
                 JSValue *v2 = GET_VALUE_RETURN();
                 JSObject *o = v1->toObject(exec);
+                KJS_CHECKEXCEPTION();
                 uint32_t i;
                 if (v2->getUInt32(i))
                     RETURN_VALUE(o->get(exec, i));
@@ -715,7 +697,7 @@ void runInterpreterLoop(ExecState* exec)
                     base = *iter;
                     if (base->getPropertySlot(exec, ident, slot)) {
                         JSValue *v = slot.getValue(exec, base, ident);
-                        KJS_CHECKEXCEPTIONVALUE();
+                        KJS_CHECKEXCEPTION();
                         
                         if (!v->isObject())
                             RETURN_ERROR(functionCallResolveNode->throwError(exec, TypeError, "Value %s (result of expression %s) is not object.", v, ident));
@@ -768,6 +750,7 @@ void runInterpreterLoop(ExecState* exec)
                 
                 JSValue *subscriptVal = GET_VALUE_RETURN();
                 JSObject *baseObj = PEEK_LOCAL_VALUE()->toObject(exec);
+                KJS_CHECKEXCEPTION();
                 
                 uint32_t i;
                 PropertySlot slot;
@@ -786,7 +769,7 @@ void runInterpreterLoop(ExecState* exec)
                         funcVal = jsUndefined();
                 }
                 
-                KJS_CHECKEXCEPTIONVALUE();
+                KJS_CHECKEXCEPTION();
                 
                 if (!funcVal->isObject())
                     RETURN_ERROR(functionCallBracketNode->throwError(exec, TypeError, "Value %s (result of expression %s[%s]) is not object.", funcVal, functionCallBracketNode->base.get(), functionCallBracketNode->subscript.get()));
@@ -804,6 +787,7 @@ void runInterpreterLoop(ExecState* exec)
                 List argList = POP_LIST();
                 JSObject *func = static_cast<JSObject*>(POP_LOCAL_VALUE());
                 JSObject *thisObj = POP_LOCAL_VALUE()->toObject(exec);
+                KJS_CHECKEXCEPTION();
                 assert(thisObj);
                 assert(thisObj->isObject());
                 assert(!thisObj->isActivation());
@@ -819,10 +803,11 @@ void runInterpreterLoop(ExecState* exec)
             {
                 FunctionCallDotNode* functionCallDotNode = static_cast<FunctionCallDotNode*>(currentNode);
                 JSObject* baseObj = GET_VALUE_RETURN()->toObject(exec);
+                KJS_CHECKEXCEPTION();
                 PropertySlot slot;
                 const Identifier& ident = functionCallDotNode->ident;
                 JSValue* funcVal = baseObj->getPropertySlot(exec, ident, slot) ? slot.getValue(exec, baseObj, ident) : jsUndefined();
-                KJS_CHECKEXCEPTIONVALUE();
+                KJS_CHECKEXCEPTION();
                 
                 if (!funcVal->isObject())
                     RETURN_ERROR(functionCallDotNode->throwError(exec, TypeError, dotExprNotAnObjectString(), funcVal, functionCallDotNode->base.get(), ident));
@@ -840,6 +825,7 @@ void runInterpreterLoop(ExecState* exec)
                 List argList = POP_LIST();
                 JSObject* func = static_cast<JSObject*>(POP_LOCAL_VALUE());
                 JSObject *thisObj = POP_LOCAL_VALUE()->toObject(exec);
+                KJS_CHECKEXCEPTION();
                 assert(thisObj);
                 assert(thisObj->isObject());
                 assert(!thisObj->isActivation());
@@ -895,12 +881,13 @@ void runInterpreterLoop(ExecState* exec)
                 
                 JSValue *subscript = GET_VALUE_RETURN();
                 JSObject *base = POP_LOCAL_VALUE()->toObject(exec);
+                KJS_CHECKEXCEPTION();
                 
                 uint32_t propertyIndex;
                 if (subscript->getUInt32(propertyIndex)) {
                     PropertySlot slot;
                     JSValue *v = base->getPropertySlot(exec, propertyIndex, slot) ? slot.getValue(exec, base, propertyIndex) : jsUndefined();
-                    KJS_CHECKEXCEPTIONVALUE();
+                    KJS_CHECKEXCEPTION();
                     
                     double n = v->toNumber(exec);
                     
@@ -913,7 +900,7 @@ void runInterpreterLoop(ExecState* exec)
                 Identifier propertyName(subscript->toString(exec));
                 PropertySlot slot;
                 JSValue *v = base->getPropertySlot(exec, propertyName, slot) ? slot.getValue(exec, base, propertyName) : jsUndefined();
-                KJS_CHECKEXCEPTIONVALUE();
+                KJS_CHECKEXCEPTION();
                 
                 double n = v->toNumber(exec);
                 
@@ -932,10 +919,11 @@ void runInterpreterLoop(ExecState* exec)
             {
                 PostfixDotNode* postFixDotNode = static_cast<PostfixDotNode*>(currentNode);
                 JSObject* base = GET_VALUE_RETURN()->toObject(exec);
+                KJS_CHECKEXCEPTION();
                 
                 PropertySlot slot;
                 JSValue *v = base->getPropertySlot(exec, postFixDotNode->m_ident, slot) ? slot.getValue(exec, base, postFixDotNode->m_ident) : jsUndefined();
-                KJS_CHECKEXCEPTIONVALUE();
+                KJS_CHECKEXCEPTION();
                 
                 double n = v->toNumber(exec);
                 
@@ -982,6 +970,7 @@ void runInterpreterLoop(ExecState* exec)
             {
                 JSValue *subscript = GET_VALUE_RETURN();
                 JSObject *base = POP_LOCAL_VALUE()->toObject(exec);
+                KJS_CHECKEXCEPTION();
                 
                 uint32_t propertyIndex;
                 if (subscript->getUInt32(propertyIndex))
@@ -997,7 +986,7 @@ void runInterpreterLoop(ExecState* exec)
             }
             case DeleteDotNodeEvaluateState1:
             {
-                JSObject *base = GET_VALUE_RETURN()->toObject(exec);                
+                JSObject *base = GET_VALUE_RETURN()->toObject(exec);
                 RETURN_VALUE(jsBoolean(base->deleteProperty(exec, static_cast<DeleteDotNode*>(currentNode)->m_ident)));
             }
 
@@ -1102,12 +1091,13 @@ void runInterpreterLoop(ExecState* exec)
                 Operator oper = prefixBracketNode->m_oper;
                 JSValue *subscript = GET_VALUE_RETURN();
                 JSObject *base = POP_LOCAL_VALUE()->toObject(exec);
+                KJS_CHECKEXCEPTION();
                 
                 uint32_t propertyIndex;
                 if (subscript->getUInt32(propertyIndex)) {
                     PropertySlot slot;
                     JSValue *v = base->getPropertySlot(exec, propertyIndex, slot) ? slot.getValue(exec, base, propertyIndex) : jsUndefined();
-                    KJS_CHECKEXCEPTIONVALUE();
+                    KJS_CHECKEXCEPTION();
                     
                     double n = v->toNumber(exec);
                     
@@ -1121,7 +1111,7 @@ void runInterpreterLoop(ExecState* exec)
                 Identifier propertyName(subscript->toString(exec));
                 PropertySlot slot;
                 JSValue *v = base->getPropertySlot(exec, propertyName, slot) ? slot.getValue(exec, base, propertyName) : jsUndefined();
-                KJS_CHECKEXCEPTIONVALUE();
+                KJS_CHECKEXCEPTION();
                 
                 double n = v->toNumber(exec);
                 
@@ -1140,12 +1130,13 @@ void runInterpreterLoop(ExecState* exec)
             case PrefixDotNodeEvaluateState1:
             {
                 JSObject *base = GET_VALUE_RETURN()->toObject(exec);
+                KJS_CHECKEXCEPTION();
                 PrefixDotNode* prefixDotNode = static_cast<PrefixDotNode*>(currentNode);
                 const Identifier& ident = prefixDotNode->m_ident;
                 
                 PropertySlot slot;
                 JSValue *v = base->getPropertySlot(exec, ident, slot) ? slot.getValue(exec, base, ident) : jsUndefined();
-                KJS_CHECKEXCEPTIONVALUE();
+                KJS_CHECKEXCEPTION();
                 
                 double n = v->toNumber(exec);
                 double newValue = (prefixDotNode->m_oper == OpPlusPlus) ? n + 1 : n - 1;
@@ -1325,8 +1316,8 @@ void runInterpreterLoop(ExecState* exec)
             }
             case EqualNodeEvaluateState2:
             {
-                JSValue *v2 = GET_VALUE_RETURN();
-                JSValue *v1 = POP_LOCAL_VALUE();
+                JSValue* v2 = GET_VALUE_RETURN();
+                JSValue* v1 = POP_LOCAL_VALUE();
                 Operator oper = static_cast<EqualNode*>(currentNode)->oper;
                 
                 bool result;
@@ -1354,8 +1345,8 @@ void runInterpreterLoop(ExecState* exec)
             }
             case BitOperNodeEvaluateState2:
             {
-                JSValue *v2 = GET_VALUE_RETURN();
-                JSValue *v1 = POP_LOCAL_VALUE();
+                JSValue* v2 = GET_VALUE_RETURN();
+                JSValue* v1 = POP_LOCAL_VALUE();
                 Operator oper = static_cast<BitOperNode*>(currentNode)->oper;
 
                 int i1 = v1->toInt32(exec);
@@ -1443,10 +1434,10 @@ void runInterpreterLoop(ExecState* exec)
                 base->getPropertySlot(exec, ident, slot);
                 if (oper != OpEqual) {
                     JSValue* v1 = slot.getValue(exec, base, ident);
-                    KJS_CHECKEXCEPTIONVALUE();
+                    KJS_CHECKEXCEPTION();
                     v = valueForReadModifyAssignment(exec, v1, v, oper);
                 }
-                KJS_CHECKEXCEPTIONVALUE();
+                KJS_CHECKEXCEPTION();
                 
                 base->put(exec, ident, v);
                 RETURN_VALUE(v);
@@ -1471,9 +1462,10 @@ void runInterpreterLoop(ExecState* exec)
                 AssignDotNode* assignDotNode = static_cast<AssignDotNode*>(currentNode);
                 JSValue* v2 = GET_VALUE_RETURN();
                 JSObject* base = PEEK_LOCAL_VALUE()->toObject(exec);
+                KJS_CHECKEXCEPTION();
                 PropertySlot slot;
                 JSValue *v1 = base->getPropertySlot(exec, assignDotNode->m_ident, slot) ? slot.getValue(exec, base, assignDotNode->m_ident) : jsUndefined();
-                KJS_CHECKEXCEPTIONVALUE();
+                KJS_CHECKEXCEPTION();
                 
                 SET_VALUE_RETURN(valueForReadModifyAssignment(exec, v1, v2, assignDotNode->m_oper));
                 // fall through
@@ -1483,6 +1475,7 @@ void runInterpreterLoop(ExecState* exec)
                 AssignDotNode* assignDotNode = static_cast<AssignDotNode*>(currentNode);
                 JSValue* v = GET_VALUE_RETURN();
                 JSObject* base = POP_LOCAL_VALUE()->toObject(exec);
+                KJS_CHECKEXCEPTION();
                 base->put(exec, assignDotNode->m_ident, v);
                 RETURN_VALUE(v);
             }
@@ -1508,6 +1501,7 @@ void runInterpreterLoop(ExecState* exec)
                 JSValue* v = GET_VALUE_RETURN();
                 JSValue* subscript = POP_LOCAL_VALUE();            
                 JSObject* base = POP_LOCAL_VALUE()->toObject(exec);
+                KJS_CHECKEXCEPTION();
                 Operator oper = assignBracketNode->m_oper;
                 
                 uint32_t propertyIndex;
@@ -1515,10 +1509,10 @@ void runInterpreterLoop(ExecState* exec)
                     if (oper != OpEqual) {
                         PropertySlot slot;
                         JSValue *v1 = base->getPropertySlot(exec, propertyIndex, slot) ? slot.getValue(exec, base, propertyIndex) : jsUndefined();
-                        KJS_CHECKEXCEPTIONVALUE();
+                        KJS_CHECKEXCEPTION();
                         v = valueForReadModifyAssignment(exec, v1, v, oper);
                     }
-                    KJS_CHECKEXCEPTIONVALUE();
+                    KJS_CHECKEXCEPTION();
                     
                     base->put(exec, propertyIndex, v);
                     RETURN_VALUE(v);
@@ -1529,10 +1523,10 @@ void runInterpreterLoop(ExecState* exec)
                 if (oper != OpEqual) {
                     PropertySlot slot;
                     JSValue *v1 = base->getPropertySlot(exec, propertyName, slot) ? slot.getValue(exec, base, propertyName) : jsUndefined();
-                    KJS_CHECKEXCEPTIONVALUE();
+                    KJS_CHECKEXCEPTION();
                     v = valueForReadModifyAssignment(exec, v1, v, oper);
                 }
-                KJS_CHECKEXCEPTIONVALUE();
+                KJS_CHECKEXCEPTION();
                 
                 base->put(exec, propertyName, v);
                 RETURN_VALUE(v);
@@ -1627,8 +1621,8 @@ void runInterpreterLoop(ExecState* exec)
                     context->pushScope(functionScopeObject);
                 }
                 
-                FunctionImp *func = new DeclaredFunctionImp(exec, funcExprNode->ident, funcExprNode->body.get(), context->scopeChain());
-                JSObject *proto = exec->lexicalInterpreter()->builtinObject()->construct(exec, List::empty());
+                FunctionImp* func = new DeclaredFunctionImp(exec, funcExprNode->ident, funcExprNode->body.get(), context->scopeChain());
+                JSObject* proto = exec->lexicalInterpreter()->builtinObject()->construct(exec, List::empty());
                 proto->put(exec, constructorPropertyName, func, ReadOnly|DontDelete|DontEnum);
                 func->put(exec, prototypePropertyName, proto, Internal|DontDelete);
                 
@@ -1922,6 +1916,7 @@ void runInterpreterLoop(ExecState* exec)
                 SET_JUMP_STATE(ForInNodeExecutePopBreakUnwindBarrierState, currentNode);
                 
                 JSObject *o = e->toObject(exec);
+                KJS_CHECKEXCEPTION();
                 ReferenceList propList = o->propList(exec);
                 ReferenceListIterator propIt = propList.begin();
                 while (propIt != propList.end()) {
@@ -1975,6 +1970,7 @@ void runInterpreterLoop(ExecState* exec)
             {
                 ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
                 JSObject* base = GET_VALUE_RETURN()->toObject(exec);
+                KJS_CHECKEXCEPTION();
                 JSValue* str = POP_LOCAL_VALUE();
                 
                 const Identifier& lexprIdent = static_cast<DotAccessorNode*>(forInNode->lexpr.get())->identifier();
@@ -1998,6 +1994,7 @@ void runInterpreterLoop(ExecState* exec)
             case ForInNodeBracketAccessorNodeExecuteState2:
             {
                 JSObject* base = POP_LOCAL_VALUE()->toObject(exec);
+                KJS_CHECKEXCEPTION();
                 JSValue* subscript = GET_VALUE_RETURN();
                 JSValue* str = POP_LOCAL_VALUE();
                 
@@ -2076,7 +2073,7 @@ void runInterpreterLoop(ExecState* exec)
                 WithNode* withNode = static_cast<WithNode*>(currentNode);
                 JSValue *v = GET_VALUE_RETURN();
                 JSObject *o = v->toObject(exec);
-                KJS_CHECKEXCEPTIONVALUE();
+                KJS_CHECKEXCEPTION();
                 PUSH_UNWIND_BARRIER(Scope, InternalErrorState); // scope marker
                 exec->context().imp()->pushScope(o);
                 EXECUTE_AND_CONTINUE(withNode->statement.get(), WithNodeExecuteState2);
