@@ -2352,7 +2352,8 @@ interpreter_state_switch_end:
 Completion callExecuteOnNode(StatementNode* node, ExecState* exec)
 {
     InterpreterImp* interpreter = exec->dynamicInterpreter()->imp();
-    interpreter->pushUnwindBarrier(All, InterpreterImp::State(InternalErrorState, 0));
+    // FIXME: Need a way to catch unwinds without executing another statement
+    interpreter->pushUnwindBarrier(All, InterpreterImp::State(EmptyStatementNodeExecuteState, 0));
     PUSH_EXECUTE(node);
     runInterpreterLoop(exec);
     Completion c = GET_LAST_COMPLETION();
