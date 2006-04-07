@@ -222,7 +222,8 @@ namespace KJS {
     macro(CaseBlockNodeExecuteBlockWithInputValue7) \
     macro(CaseBlockNodeExecuteBlockWithInputValue8) \
     macro(CaseBlockNodeExecuteBlockWithInputValue9) \
-    macro(CaseBlockNodeExecuteBlockWithInputValue10)
+    macro(CaseBlockNodeExecuteBlockWithInputValue10) \
+    macro(CaseBlockNodeExecuteBlockWithInputValue11)
 // end of macro
     
 enum InterpreterState {
