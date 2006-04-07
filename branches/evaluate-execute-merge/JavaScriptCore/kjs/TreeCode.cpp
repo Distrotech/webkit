@@ -2093,7 +2093,7 @@ void runInterpreterLoop(ExecState* exec)
             {
                 PUSH_UNWIND_BARRIER(Break, SwitchNodeExecuteState2);
                 SET_CONTINUE_STATE(SwitchNodeExecuteState2);
-                // no need to push argument, block will use the one returned from the original evaluate
+                // CaseBlockNodeExecuteBlockWithInputValue uses the last return value as an "argument"
                 ASSERT(static_cast<SwitchNode*>(currentNode)->block->interpreterState() == CaseBlockNodeExecuteBlockWithInputValue);
                 PUSH_EXECUTE(static_cast<SwitchNode*>(currentNode)->block.get());
                 break;
@@ -2210,6 +2210,7 @@ void runInterpreterLoop(ExecState* exec)
                 // FIXME: This is the only execute function which takes an argument!
                 // This was originally called CaseBlockNode::evalBlock but was renamed
                 // CaseBlockNodeExecuteBlock to indicate the completion return
+                PUSH_LOCAL_VALUE(GET_VALUE_RETURN());
                 
                 CaseBlockNode* caseBlockNode = static_cast<CaseBlockNode*>(currentNode);
                 // Skip over "a" loops to "b" loops if possible
@@ -2218,16 +2219,17 @@ void runInterpreterLoop(ExecState* exec)
                     break;
                 }
                 
-                PUSH_NODE(caseBlockNode->list1.get());
+                PUSH_NODE(caseBlockNode->list1.get()); // push "a"
+                // fall through
             }
             case CaseBlockNodeExecuteBlockWithInputValue1: // top of first "a" loop
             {
                 ClauseListNode* a = static_cast<ClauseListNode*>(PEEK_NODE());
-                EVALUATE_AND_CONTINUE(a->getClause(), CaseBlockNodeExecuteBlockWithInputValue2);
+                EVALUATE_AND_JUMP(a->getClause(), CaseBlockNodeExecuteBlockWithInputValue2);
             }
             case CaseBlockNodeExecuteBlockWithInputValue2:
             {
-                ClauseListNode* a = static_cast<ClauseListNode*>(PEEK_NODE());
+                ClauseListNode*& a = reinterpret_cast<ClauseListNode*&>(PEEK_NODE());
                 JSValue* v = GET_VALUE_RETURN();
                 JSValue* input = PEEK_LOCAL_VALUE();
                 
@@ -2237,6 +2239,7 @@ void runInterpreterLoop(ExecState* exec)
                     break;
                 }
                 
+                a = a->getNext();
                 // jump to top of first while(a)
                 if (a) {
                     SET_JUMP_STATE(CaseBlockNodeExecuteBlockWithInputValue1, currentNode);
@@ -2282,7 +2285,7 @@ void runInterpreterLoop(ExecState* exec)
             case CaseBlockNodeExecuteBlockWithInputValue6: // top of first "b" loop
             {
                 ClauseListNode* b = static_cast<ClauseListNode*>(PEEK_NODE());
-                EVALUATE_AND_CONTINUE(b->getClause(), CaseBlockNodeExecuteBlockWithInputValue7);
+                EVALUATE_AND_JUMP(b->getClause(), CaseBlockNodeExecuteBlockWithInputValue7);
             }
             case CaseBlockNodeExecuteBlockWithInputValue7:
             {
@@ -2303,28 +2306,28 @@ void runInterpreterLoop(ExecState* exec)
                     break;
                 }
                 
-                b = static_cast<CaseBlockNode*>(currentNode)->list2.get();
-                // reset "b" and fall through
+                POP_NODE(); // pop "b"
+                // fall through
             }
             case CaseBlockNodeExecuteBlockWithInputValue8: // default clause
             {
                 CaseBlockNode* caseBlockNode = static_cast<CaseBlockNode*>(currentNode);
-                if (caseBlockNode->def) {
-                    if (caseBlockNode->def->next) {
-                        EXECUTE_AND_CONTINUE(caseBlockNode->def->next.get(), CaseBlockNodeExecuteBlockWithInputValue8);
-                        break;
-                    }
-                }
-                if (!caseBlockNode->list2) // never had a "b", we're done.
-                    RETURN_NORMAL_COMPLETION();
-                
-                // fall through
+                if (caseBlockNode->list2) {
+                    PUSH_NODE(caseBlockNode->list2.get()); // push "b"
+                    SET_JUMP_STATE(CaseBlockNodeExecuteBlockWithInputValue9, currentNode);
+                } else 
+                    SET_JUMP_STATE(CaseBlockNodeExecuteBlockWithInputValue11, currentNode);
+
+                if (caseBlockNode->def && caseBlockNode->def->next)
+                    PUSH_EXECUTE(caseBlockNode->def->next.get());
+
+                break;
             }
             case CaseBlockNodeExecuteBlockWithInputValue9: // top of second "b" loop
             {
                 ClauseListNode* b = static_cast<ClauseListNode*>(PEEK_NODE());
                 if (b->getClause()->next) {
-                    EXECUTE_AND_CONTINUE(b->getClause()->next.get(), CaseBlockNodeExecuteBlockWithInputValue10);
+                    EXECUTE_AND_JUMP(b->getClause()->next.get(), CaseBlockNodeExecuteBlockWithInputValue10);
                     break;
                 }
             }
@@ -2337,6 +2340,9 @@ void runInterpreterLoop(ExecState* exec)
                     break;
                 }
                 POP_NODE(); // done with "b"
+            }    
+            case CaseBlockNodeExecuteBlockWithInputValue11:
+            {
                 POP_LOCAL_VALUE(); // done with "input"
                 RETURN_NORMAL_COMPLETION();
             }
