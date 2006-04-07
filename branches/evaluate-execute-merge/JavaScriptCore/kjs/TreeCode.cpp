@@ -1470,13 +1470,13 @@ void runInterpreterLoop(ExecState* exec)
                 JSValue *v1 = base->getPropertySlot(exec, assignDotNode->m_ident, slot) ? slot.getValue(exec, base, assignDotNode->m_ident) : jsUndefined();
                 KJS_CHECKEXCEPTIONVALUE();
                 
-                PUSH_LOCAL_VALUE(valueForReadModifyAssignment(exec, v1, v2, assignDotNode->m_oper));
+                SET_VALUE_RETURN(valueForReadModifyAssignment(exec, v1, v2, assignDotNode->m_oper));
                 // fall through
             }
             case AssignDotNodeEvaluateState3:
             {
                 AssignDotNode* assignDotNode = static_cast<AssignDotNode*>(currentNode);
-                JSValue* v = POP_LOCAL_VALUE();
+                JSValue* v = GET_VALUE_RETURN();
                 JSObject* base = POP_LOCAL_VALUE()->toObject(exec);
                 base->put(exec, assignDotNode->m_ident, v);
                 RETURN_VALUE(v);
