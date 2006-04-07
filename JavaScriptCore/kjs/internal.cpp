@@ -427,7 +427,6 @@ InterpreterImp::~InterpreterImp()
 
 void InterpreterImp::clear()
 {
-  //fprintf(stderr,"InterpreterImp::clear\n");
   // remove from global chain (see init())
   JSLock lock;
 
@@ -435,10 +434,8 @@ void InterpreterImp::clear()
   prev->next = next;
   s_hook = next;
   if (s_hook == this)
-  {
     // This was the last interpreter
     s_hook = 0L;
-  }
   interpreterMap().remove(global);
 }
 
@@ -452,12 +449,16 @@ void InterpreterImp::mark()
       global->mark();
   if (globExec.exception())
       globExec.exception()->mark();
-  unsigned size = m_valueReturnStack.size();
+  unsigned size = m_valueStack.size();
   for (unsigned x = 0; x < size; x++) {
-    JSValue* val = m_valueReturnStack[x];
+    JSValue* val = m_valueStack[x];
     if (!val->marked())
         val->mark();
   }
+  if (m_valueReturn && !m_valueReturn->marked())
+    m_valueReturn->mark();
+  if (m_completionReturn.value() && !m_completionReturn.value()->marked())
+    m_completionReturn.value()->mark();
 }
 
 bool InterpreterImp::checkSyntax(const UString &code)
@@ -678,14 +679,14 @@ void InterpreterImp::printStateStack()
 void InterpreterImp::printValueStack()
 {
     printf("Value Stack:\n");
-    unsigned size = m_valueReturnStack.size();
+    unsigned size = m_valueStack.size();
     if (size == 0)
         printf("<empty>\n");
     
     int unwindIter = m_unwindBarrierStack.size();
     for (int x = size-1; x >= 0; x--) {
         printUnwindBarriersIfNecessary(m_unwindBarrierStack, unwindIter, x, ValueStack);
-        JSValue* v = m_valueReturnStack[x];
+        JSValue* v = m_valueStack[x];
         printf("%i: %p [type: %s] [value: %s]\n"
                , x
                , v
@@ -802,7 +803,7 @@ void InterpreterImp::unwindToNextBarrier(ExecState* exec, Node* currentNode)
     ASSERT(stateStackDepth() >= unwindBarrier.stateStackSize);
     ASSERT(listStackDepth() >= unwindBarrier.listStackSize);
     ASSERT(nodeStackDepth() >= unwindBarrier.nodeStackSize);
-    m_valueReturnStack.shrinkTo(unwindBarrier.valueStackSize);
+    m_valueStack.shrinkTo(unwindBarrier.valueStackSize);
     m_stateStack.shrinkTo(unwindBarrier.stateStackSize);
     m_listReturnStack.shrinkTo(unwindBarrier.listStackSize);
     m_nodeStack.shrinkTo(unwindBarrier.nodeStackSize);

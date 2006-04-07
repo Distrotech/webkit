@@ -45,9 +45,11 @@ namespace KJS {
     macro(PropertyListNodeEvaluateState) \
     macro(PropertyListNodeEvaluateState1) \
     macro(PropertyListNodeEvaluateState2) \
+    macro(PropertyListNodeEvaluateState3) \
     macro(PropertyNameNodeEvaluateState) \
     macro(BracketAccessorNodeEvaluateState) \
     macro(BracketAccessorNodeEvaluateState1) \
+    macro(BracketAccessorNodeEvaluateState2) \
     macro(DotAccessorNodeEvaluateState) \
     macro(DotAccessorNodeEvaluateState1) \
     macro(NewExprNodeEvaluateState) \
@@ -60,17 +62,20 @@ namespace KJS {
     macro(FunctionCallBracketNodeEvaluateState) \
     macro(FunctionCallBracketNodeEvaluateState1) \
     macro(FunctionCallBracketNodeEvaluateState2) \
+    macro(FunctionCallBracketNodeEvaluateState3) \
     macro(FunctionCallDotNodeEvaluateState) \
     macro(FunctionCallDotNodeEvaluateState1) \
     macro(FunctionCallDotNodeEvaluateState2) \
     macro(PostfixResolveNodeEvaluateState) \
     macro(PostfixBracketNodeEvaluateState) \
     macro(PostfixBracketNodeEvaluateState1) \
+    macro(PostfixBracketNodeEvaluateState2) \
     macro(PostfixDotNodeEvaluateState) \
     macro(PostfixDotNodeEvaluateState1) \
     macro(DeleteResolveNodeEvaluateState) \
     macro(DeleteBracketNodeEvaluateState) \
     macro(DeleteBracketNodeEvaluateState1) \
+    macro(DeleteBracketNodeEvaluateState2) \
     macro(DeleteDotNodeEvaluateState) \
     macro(DeleteDotNodeEvaluateState1) \
     macro(DeleteValueNodeEvaluateState) \
@@ -83,6 +88,7 @@ namespace KJS {
     macro(PrefixResolveNodeEvaluateState) \
     macro(PrefixBracketNodeEvaluateState) \
     macro(PrefixBracketNodeEvaluateState1) \
+    macro(PrefixBracketNodeEvaluateState2) \
     macro(PrefixDotNodeEvaluateState) \
     macro(PrefixDotNodeEvaluateState1) \
     macro(UnaryPlusNodeEvaluateState) \
@@ -95,16 +101,22 @@ namespace KJS {
     macro(LogicalNotNodeEvaluateState1) \
     macro(MultNodeEvaluateState) \
     macro(MultNodeEvaluateState1) \
+    macro(MultNodeEvaluateState2) \
     macro(AddNodeEvaluateState) \
     macro(AddNodeEvaluateState1) \
+    macro(AddNodeEvaluateState2) \
     macro(ShiftNodeEvaluateState) \
     macro(ShiftNodeEvaluateState1) \
+    macro(ShiftNodeEvaluateState2) \
     macro(RelationalNodeEvaluateState) \
     macro(RelationalNodeEvaluateState1) \
+    macro(RelationalNodeEvaluateState2) \
     macro(EqualNodeEvaluateState) \
     macro(EqualNodeEvaluateState1) \
+    macro(EqualNodeEvaluateState2) \
     macro(BitOperNodeEvaluateState) \
     macro(BitOperNodeEvaluateState1) \
+    macro(BitOperNodeEvaluateState2) \
     macro(BinaryLogicalNodeEvaluateState) \
     macro(BinaryLogicalNodeEvaluateState1) \
     macro(ConditionalNodeEvaluateState) \
@@ -117,6 +129,8 @@ namespace KJS {
     macro(AssignDotNodeEvaluateState3) \
     macro(AssignBracketNodeEvaluateState) \
     macro(AssignBracketNodeEvaluateState1) \
+    macro(AssignBracketNodeEvaluateState2) \
+    macro(AssignBracketNodeEvaluateState3) \
     macro(CommaNodeEvaluateState) \
     macro(CommaNodeEvaluateState1) \
     macro(AssignExprNodeEvaluateState) \
@@ -165,6 +179,7 @@ namespace KJS {
     macro(ForInNodeDotAccessorNodeExecuteState) \
     macro(ForInNodeDotAccessorNodeExecuteState1) \
     macro(ForInNodeBracketAccessorNodeExecuteState) \
+    macro(ForInNodeBracketAccessorNodeExecuteState1) \
     macro(ForInNodeBracketAccessorNodeExecuteState2) \
     macro(ForInNodeExecuteState4) \
     macro(ForInNodeExecuteState5) \

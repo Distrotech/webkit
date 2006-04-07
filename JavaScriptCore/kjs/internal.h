@@ -285,10 +285,10 @@ namespace KJS {
     void saveBuiltins (SavedBuiltins &builtins) const;
     void restoreBuiltins (const SavedBuiltins &builtins);
             
-    JSValue*& peekValueReturn() { return m_valueReturnStack.peek(); }
-    JSValue* popValueReturn() { return m_valueReturnStack.pop(); }
-    void pushValueReturn(JSValue* value) { m_valueReturnStack.push(value); }
-    unsigned valueStackDepth() { return m_valueReturnStack.size(); }
+    JSValue*& peekValueLocal() { return m_valueStack.peek(); }
+    JSValue* popValueLocal() { return m_valueStack.pop(); }
+    void pushValueLocal(JSValue* value) { m_valueStack.push(value); }
+    unsigned valueStackDepth() { return m_valueStack.size(); }
     
     struct State {
         State() { } // Allow Stack<T> array-based allocation
@@ -300,6 +300,9 @@ namespace KJS {
     const Completion& getCompletionReturn() { return m_completionReturn; }
     void resetCompletionToNormal() { m_completionReturn = Normal; }
     void setCompletionReturn(const Completion& c) { ASSERT(m_completionReturn.complType() == Normal); if (c.complType() != Normal || c.value()) m_completionReturn = c; }
+    
+    JSValue* getValueReturn() { return m_valueReturn; }
+    void setValueReturn(JSValue* v) { m_valueReturn = v; }
     
     const State& peekNextState() { return m_stateStack.peek(); }
     State popNextState() { return m_stateStack.pop(); }
@@ -349,9 +352,9 @@ namespace KJS {
     void pushListReturn(const List& list) { m_listReturnStack.push(list); }
     unsigned listStackDepth() { return m_listReturnStack.size(); }
     
-    Node*& peekNodeReturn() { return m_nodeStack.peek(); }
-    Node* popNodeReturn() { return m_nodeStack.pop(); }
-    void pushNodeReturn(Node* node) { m_nodeStack.push(node); }
+    Node*& peekNodeLocal() { return m_nodeStack.peek(); }
+    Node* popNodeLocal() { return m_nodeStack.pop(); }
+    void pushNodeLocal(Node* node) { m_nodeStack.push(node); }
     unsigned nodeStackDepth() { return m_nodeStack.size(); }
     
     void printStacks();
@@ -415,9 +418,10 @@ namespace KJS {
     int recursion;
     
     Completion m_completionReturn;
+    JSValue* m_valueReturn;
     Stack<UnwindBarrier, KJS_MAX_STACK> m_unwindBarrierStack;
     Stack<State, KJS_MAX_STACK> m_stateStack;
-    Stack<JSValue*, KJS_MAX_STACK> m_valueReturnStack;
+    Stack<JSValue*, KJS_MAX_STACK> m_valueStack;
     Stack<List, KJS_MAX_STACK> m_listReturnStack;
     Stack<Node*, KJS_MAX_STACK> m_nodeStack;
   };
