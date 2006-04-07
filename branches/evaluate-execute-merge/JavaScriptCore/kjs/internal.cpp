@@ -525,9 +525,8 @@ Completion InterpreterImp::evaluate(const UChar* code, int codeLength, JSValue* 
 
 void InterpreterImp::saveBuiltins (SavedBuiltins &builtins) const
 {
-  if (!builtins._internal) {
+  if (!builtins._internal)
     builtins._internal = new SavedBuiltinsInternal;
-  }
 
   builtins._internal->b_Object = b_Object;
   builtins._internal->b_Function = b_Function;
