@@ -629,14 +629,13 @@ static unsigned sizeMarkerForStack(const InterpreterImp::UnwindBarrier& unwindBa
     return 0;
 }
 
-static void printUnwindBarriersIfNecessary(const Stack<InterpreterImp::UnwindBarrier, KJS_MAX_STACK>& unwindStack, int& currentMarker, unsigned stackLocation, StackType stackType)
+static void printUnwindBarrier(const InterpreterImp::UnwindBarrier& unwindBarrier, bool printStackStates = false)
 {
-    if (currentMarker - 1 < 0)
-        return;
-    InterpreterImp::UnwindBarrier unwindBarrier = unwindStack[currentMarker - 1];
-    while ((currentMarker - 1 >= 0) && (sizeMarkerForStack(unwindBarrier, stackType) - 1) == stackLocation) {
-        printf("===== unwind barrier for type(s):");
-        short barrierType = unwindBarrier.barrierType;
+    printf("=== unwind barrier type(s):");
+    short barrierType = unwindBarrier.barrierType;
+    if (barrierType == All)
+        printf(" All");
+    else {
         if (barrierType & Break)
             printf(" Break");
         if (barrierType & Continue)
@@ -647,8 +646,40 @@ static void printUnwindBarriersIfNecessary(const Stack<InterpreterImp::UnwindBar
             printf(" Throw");
         if (barrierType & Scope)
             printf(" Scope");
-        printf(" =====\n");
-        unwindBarrier = unwindStack[--currentMarker];
+    }
+    printf(", state: %s (%i) node: %p", nameForInterpreterState[unwindBarrier.continueState.state], unwindBarrier.continueState.state, unwindBarrier.continueState.node);
+    if (printStackStates) {
+        printf(", values: %lu", unwindBarrier.valueStackSize);
+        printf(", states: %lu", unwindBarrier.stateStackSize);
+        printf(", lists: %lu", unwindBarrier.listStackSize);
+        printf(", nodes: %lu", unwindBarrier.nodeStackSize);
+    }
+    printf(" ===\n");
+}
+
+static void printUnwindBarriersIfNecessary(const Stack<InterpreterImp::UnwindBarrier, KJS_MAX_STACK>& unwindStack, int& currentMarker, unsigned stackLocation, StackType stackType)
+{
+    if (currentMarker < 0)
+        return;
+    InterpreterImp::UnwindBarrier unwindBarrier = unwindStack[currentMarker];
+    while ((currentMarker >= 0) && (sizeMarkerForStack(unwindBarrier, stackType) - 1) == stackLocation) {
+        printUnwindBarrier(unwindBarrier);
+        // keep searching in case there are multiple unwind markers at this position.
+        currentMarker--;
+        unwindBarrier = unwindStack[currentMarker];
+    }
+}
+
+void InterpreterImp::printUnwindBarrierStack()
+{
+    printf("UnwindBarrier Stack:\n");
+    unsigned size = m_unwindBarrierStack.size();
+    if (size == 0)
+        printf("<empty>\n");
+    
+    for (int x = size-1; x >= 0; x--) {
+        printf("%i: ", x);
+        printUnwindBarrier(m_unwindBarrierStack[x], true);
     }
 }
 
@@ -666,7 +697,7 @@ void InterpreterImp::printStateStack()
     if (size == 0)
         printf("<empty>\n");
     
-    int unwindIter = m_unwindBarrierStack.size();
+    int unwindIter = m_unwindBarrierStack.size() - 1;
     for (int x = size-1; x >= 0; x--) {
         printUnwindBarriersIfNecessary(m_unwindBarrierStack, unwindIter, x, StateStack); 
         InterpreterState state = m_stateStack[x].state;
@@ -682,7 +713,7 @@ void InterpreterImp::printValueStack()
     if (size == 0)
         printf("<empty>\n");
     
-    int unwindIter = m_unwindBarrierStack.size();
+    int unwindIter = m_unwindBarrierStack.size() - 1;
     for (int x = size-1; x >= 0; x--) {
         printUnwindBarriersIfNecessary(m_unwindBarrierStack, unwindIter, x, ValueStack);
         JSValue* v = m_valueStack[x];
@@ -703,7 +734,7 @@ void InterpreterImp::printListStack()
     if (size == 0)
         printf("<empty>\n");
     
-    int unwindIter = m_unwindBarrierStack.size();
+    int unwindIter = m_unwindBarrierStack.size() - 1;
     for (int x = size-1; x >= 0; x--) {
         printUnwindBarriersIfNecessary(m_unwindBarrierStack, unwindIter, x, ListStack);
         printf("%i: (", x);
@@ -741,10 +772,11 @@ void InterpreterImp::unwindToNextBarrier(ExecState* exec, Node* currentNode)
     
     UnwindBarrier unwindBarrier;
     
-    // FIXME: we should instead assert we always have a barrier, and move this code out elsewhere
     if (unwindBarrierIndex < 0) {
-        // if we failed to find a matching barrier, then we throw an error
+        // FIXME: This is dead code.  The proper place for this code is at the top level execute() call.
+        ASSERT_NOT_REACHED();
         
+        // if we failed to find a matching barrier, then we throw an error
         switch (m_completionReturn.complType()) {
         default:
         case Normal:

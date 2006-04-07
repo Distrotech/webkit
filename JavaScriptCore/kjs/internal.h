@@ -367,6 +367,7 @@ namespace KJS {
     void printStateStack();
     void printValueStack();
     void printListStack();
+    void printUnwindBarrierStack();
 
   private:
     void clear();
