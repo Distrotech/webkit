@@ -798,6 +798,7 @@ void InterpreterImp::unwindToNextBarrier(ExecState* exec, Node* currentNode)
                 }
             }
         }
+        exec->clearException();
     }
     
     // Now that we've actually decided where to unwind to, do the unwind.

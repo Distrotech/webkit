@@ -643,18 +643,20 @@ void runInterpreterLoop(ExecState* exec)
                 
             case NewExprNodeEvaluateState:
             {
-                NewExprNode* newExprNode = static_cast<NewExprNode*>(currentNode);
-                SET_CONTINUE_STATE(NewExprNodeEvaluateState1);
-                if (newExprNode->args)
-                    PUSH_EVALUATE_LIST(newExprNode->args.get());
-                
-                PUSH_EVALUATE(newExprNode->expr.get());
-                break;
+                EVALUATE_AND_CONTINUE(static_cast<NewExprNode*>(currentNode)->expr.get(), NewExprNodeEvaluateState1);
             }
             case NewExprNodeEvaluateState1:
             {
                 NewExprNode* newExprNode = static_cast<NewExprNode*>(currentNode);
-                JSValue* v = GET_VALUE_RETURN();
+                PUSH_LOCAL_VALUE(GET_VALUE_RETURN());
+                if (newExprNode->args)
+                    EVALUATE_LIST_AND_CONTINUE(newExprNode->args.get(), NewExprNodeEvaluateState2);
+                // fall through
+            }
+            case NewExprNodeEvaluateState2:
+            {
+                NewExprNode* newExprNode = static_cast<NewExprNode*>(currentNode);
+                JSValue* v = POP_LOCAL_VALUE();
                 
                 List argList;
                 if (newExprNode->args)
@@ -1740,13 +1742,13 @@ void runInterpreterLoop(ExecState* exec)
                 break;
             }
 
+
             case DoWhileNodeExecuteState:
             {
                 PUSH_UNWIND_BARRIER(Break, DoWhileNodeExecuteEndState);
                 PUSH_UNWIND_BARRIER(Continue, DoWhileNodeExecuteContinueState);
-                EXECUTE_AND_CONTINUE(static_cast<DoWhileNode*>(currentNode)->statement.get(), DoWhileNodeExecuteBodyState);
+                EXECUTE_AND_JUMP(static_cast<DoWhileNode*>(currentNode)->statement.get(), DoWhileNodeExecuteBodyState);
             }
-                
             case DoWhileNodeExecuteContinueState:
             {
                 ASSERT(GET_LAST_COMPLETION().complType() == Continue);
@@ -1754,20 +1756,17 @@ void runInterpreterLoop(ExecState* exec)
                 
                 // fall through
             }
-                
             case DoWhileNodeExecuteTestState:
             {
-                EVALUATE_AND_JUMP(static_cast<DoWhileNode*>(currentNode)->expr.get(), DoWhileNodeExecuteBodyState);
+                EVALUATE_AND_CONTINUE(static_cast<DoWhileNode*>(currentNode)->expr.get(), DoWhileNodeExecuteBodyState);
             }
-                
             case DoWhileNodeExecuteBodyState:
             {
                 if (GET_VALUE_RETURN()->toBoolean(exec))
-                    EXECUTE_AND_CONTINUE(static_cast<DoWhileNode*>(currentNode)->statement.get(), DoWhileNodeExecuteTestState);
+                    EXECUTE_AND_JUMP(static_cast<DoWhileNode*>(currentNode)->statement.get(), DoWhileNodeExecuteTestState);
 
                 // fall through if the test returns false
             }
-                
             case DoWhileNodeExecuteEndState:
             {
                 POP_UNWIND_BARRIER(Continue);
@@ -1781,7 +1780,8 @@ void runInterpreterLoop(ExecState* exec)
                 
                 break;
             }
-                
+            
+            
             case WhileNodeExecuteState:
             {
                 PUSH_UNWIND_BARRIER(Break, WhileNodeExecuteEndState);
@@ -1895,7 +1895,7 @@ void runInterpreterLoop(ExecState* exec)
                 ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
                 PUSH_EVALUATE(forInNode->expr.get());
                 if (VarDeclNode* varDeclNode = forInNode->varDecl.get())
-                    PUSH_EVALUATE(varDeclNode);
+                    PUSH_EVALUATE(varDeclNode); // return is ignored.
                 break;
             }
             case ForInNodeExecuteState2:
