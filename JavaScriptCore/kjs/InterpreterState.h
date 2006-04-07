@@ -187,8 +187,8 @@ namespace KJS {
     macro(ForInNodeBracketAccessorNodeExecuteState1) \
     macro(ForInNodeBracketAccessorNodeExecuteState2) \
     macro(ForInNodeExecuteBodyState) \
-    macro(ForInNodeExecuteContinueState) \
-    macro(ForInNodeExecuteBreakState) \
+    macro(ForInNodeExecutePopContinueUnwindBarrierState) \
+    macro(ForInNodeExecutePopBreakUnwindBarrierState) \
     macro(ContinueNodeExecuteState) \
     macro(BreakNodeExecuteState) \
     macro(ReturnNodeExecuteState) \
@@ -204,8 +204,9 @@ namespace KJS {
     macro(ThrowNodeExecuteState) \
     macro(ThrowNodeExecuteState1) \
     macro(TryNodeExecuteState) \
-    macro(TryNodeExecuteState1) \
-    macro(TryNodeExecuteState2) \
+    macro(TryNodeExecuteExceptionThrownState) \
+    macro(TryNodeExecutePopScopeAfterCatchBlockState) \
+    macro(TryNodeExecuteNoExceptionThrownState) \
     macro(FuncDeclNodeExecuteState) \
     macro(SourceElementsNodeExecuteState) \
     macro(SourceElementsNodeExecuteState1) \

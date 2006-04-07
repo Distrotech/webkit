@@ -239,26 +239,26 @@ static ALWAYS_INLINE JSValue *valueForReadModifyAssignment(ExecState * exec, JSV
 #define POP_LOCAL_VALUE() (assert(stackBase.valueStackSize <= interpreter->valueStackDepth()), interpreter->popValueLocal())
 
 #define RETURN_VALUE(value) \
-{\
+do {\
     SET_VALUE_RETURN(value); \
     goto interpreter_state_switch_end; \
-}
+} while (0)
 
 // All code should use SET_CONTINUE_STATE when possible, as it performs additional sanity checks.
 #define SET_JUMP_STATE(nextState, nextNode) \
-{ \
+do { \
     ASSERT(nextState != statePair.state); \
     interpreter->pushNextState(InterpreterImp::State(nextState, nextNode)); \
-}
+} while (0)
 
 #endif
 
 // This can only be used for calling yourself.
 #define SET_LOOP_STATE(nextState) \
-{ \
+do { \
     ASSERT(nextState == statePair.state); \
     interpreter->pushNextState(InterpreterImp::State(nextState, currentNode)); \
-}
+} while (0)
 
 
 #define PEEK_LOCAL_VALUE() (assert(stackBase.valueStackSize <= interpreter->valueStackDepth()), interpreter->peekValueLocal())
@@ -321,7 +321,10 @@ do { \
     
 #define GET_VALUE_RETURN() \
     interpreter->getValueReturn()
-    
+
+// FIXME: RETURN_ERROR is a stop-gap.  Eventually throwError* should be free functions which set the interpreter completion themselves
+#define RETURN_ERROR(value)   RETURN_COMPLETION(Completion(Throw, value))
+
 #define RESET_COMPLETION_TO_NORMAL() \
     interpreter->resetCompletionToNormal()
 
@@ -470,7 +473,7 @@ void runInterpreterLoop(ExecState* exec)
                     ++iter;
                 } while (iter != end);
                  
-                RETURN_VALUE(resolveNode->throwUndefinedVariableError(exec, resolveNode->ident));
+                RETURN_ERROR(resolveNode->throwUndefinedVariableError(exec, resolveNode->ident));
             }
                 
             case GroupNodeEvaluateState:
@@ -658,11 +661,11 @@ void runInterpreterLoop(ExecState* exec)
                     argList = POP_LIST();
                 
                 if (!v->isObject())
-                    RETURN_VALUE(newExprNode->throwError(exec, TypeError, "Value %s (result of expression %s) is not an object. Cannot be used with new.", v, newExprNode->expr.get()));
+                    RETURN_ERROR(newExprNode->throwError(exec, TypeError, "Value %s (result of expression %s) is not an object. Cannot be used with new.", v, newExprNode->expr.get()));
                 
                 JSObject *constr = static_cast<JSObject*>(v);
                 if (!constr->implementsConstruct())
-                    RETURN_VALUE(newExprNode->throwError(exec, TypeError, "Value %s (result of expression %s) is not a constructor. Cannot be used with new.", v, newExprNode->expr.get()));
+                    RETURN_ERROR(newExprNode->throwError(exec, TypeError, "Value %s (result of expression %s) is not a constructor. Cannot be used with new.", v, newExprNode->expr.get()));
                 
                 RETURN_VALUE(constr->construct(exec, argList));
             }
@@ -676,11 +679,11 @@ void runInterpreterLoop(ExecState* exec)
                 FunctionCallValueNode* functionCallValueNode = static_cast<FunctionCallValueNode*>(currentNode);
                 JSValue* v = GET_VALUE_RETURN();
                 if (!v->isObject())
-                    RETURN_VALUE(functionCallValueNode->throwError(exec, TypeError, "Value %s (result of expression %s) is not object.", v, functionCallValueNode->expr.get()));
+                    RETURN_ERROR(functionCallValueNode->throwError(exec, TypeError, "Value %s (result of expression %s) is not object.", v, functionCallValueNode->expr.get()));
                 
                 JSObject *func = static_cast<JSObject*>(v);
                 if (!func->implementsCall())
-                    RETURN_VALUE(functionCallValueNode->throwError(exec, TypeError, "Object %s (result of expression %s) does not allow calls.", v, functionCallValueNode->expr.get()));
+                    RETURN_ERROR(functionCallValueNode->throwError(exec, TypeError, "Object %s (result of expression %s) does not allow calls.", v, functionCallValueNode->expr.get()));
                 PUSH_LOCAL_VALUE(func);
                 EVALUATE_LIST_AND_CONTINUE(functionCallValueNode->args.get(), FunctionCallValueNodeEvaluateState2);
             }
@@ -713,19 +716,19 @@ void runInterpreterLoop(ExecState* exec)
                         KJS_CHECKEXCEPTIONVALUE();
                         
                         if (!v->isObject())
-                            RETURN_VALUE(functionCallResolveNode->throwError(exec, TypeError, "Value %s (result of expression %s) is not object.", v, ident));
+                            RETURN_ERROR(functionCallResolveNode->throwError(exec, TypeError, "Value %s (result of expression %s) is not object.", v, ident));
                         
                         resolvedFunction = static_cast<JSObject*>(v);
                         
                         if (!resolvedFunction->implementsCall())
-                            RETURN_VALUE(functionCallResolveNode->throwError(exec, TypeError, "Object %s (result of expression %s) does not allow calls.", v, ident));
+                            RETURN_ERROR(functionCallResolveNode->throwError(exec, TypeError, "Object %s (result of expression %s) does not allow calls.", v, ident));
                         break;
                     }
                     ++iter;
                 } while (iter != end);
                 
                 if (!resolvedFunction)
-                    RETURN_VALUE(functionCallResolveNode->throwUndefinedVariableError(exec, ident));
+                    RETURN_ERROR(functionCallResolveNode->throwUndefinedVariableError(exec, ident));
                 
                 PUSH_LOCAL_VALUE(base);
                 PUSH_LOCAL_VALUE(resolvedFunction);
@@ -784,12 +787,12 @@ void runInterpreterLoop(ExecState* exec)
                 KJS_CHECKEXCEPTIONVALUE();
                 
                 if (!funcVal->isObject())
-                    RETURN_VALUE(functionCallBracketNode->throwError(exec, TypeError, "Value %s (result of expression %s[%s]) is not object.", funcVal, functionCallBracketNode->base.get(), functionCallBracketNode->subscript.get()));
+                    RETURN_ERROR(functionCallBracketNode->throwError(exec, TypeError, "Value %s (result of expression %s[%s]) is not object.", funcVal, functionCallBracketNode->base.get(), functionCallBracketNode->subscript.get()));
                 
                 JSObject *func = static_cast<JSObject*>(funcVal);
                 
                 if (!func->implementsCall())
-                    RETURN_VALUE(functionCallBracketNode->throwError(exec, TypeError, "Object %s (result of expression %s[%s]) does not allow calls.", funcVal, functionCallBracketNode->base.get(), functionCallBracketNode->subscript.get()));
+                    RETURN_ERROR(functionCallBracketNode->throwError(exec, TypeError, "Object %s (result of expression %s[%s]) does not allow calls.", funcVal, functionCallBracketNode->base.get(), functionCallBracketNode->subscript.get()));
             
                 PUSH_LOCAL_VALUE(func);
                 EVALUATE_LIST_AND_CONTINUE(functionCallBracketNode->args.get(), FunctionCallBracketNodeEvaluateState3);
@@ -820,12 +823,12 @@ void runInterpreterLoop(ExecState* exec)
                 KJS_CHECKEXCEPTIONVALUE();
                 
                 if (!funcVal->isObject())
-                    RETURN_VALUE(functionCallDotNode->throwError(exec, TypeError, dotExprNotAnObjectString(), funcVal, functionCallDotNode->base.get(), ident));
+                    RETURN_ERROR(functionCallDotNode->throwError(exec, TypeError, dotExprNotAnObjectString(), funcVal, functionCallDotNode->base.get(), ident));
                 
                 JSObject* func = static_cast<JSObject*>(funcVal);
                 
                 if (!func->implementsCall())
-                    RETURN_VALUE(functionCallDotNode->throwError(exec, TypeError, dotExprDoesNotAllowCallsString(), funcVal, functionCallDotNode->base.get(), ident));
+                    RETURN_ERROR(functionCallDotNode->throwError(exec, TypeError, dotExprDoesNotAllowCallsString(), funcVal, functionCallDotNode->base.get(), ident));
                 PUSH_LOCAL_VALUE(baseObj);
                 PUSH_LOCAL_VALUE(func);
                 EVALUATE_LIST_AND_CONTINUE(functionCallDotNode->args.get(), FunctionCallDotNodeEvaluateState2);
@@ -871,7 +874,7 @@ void runInterpreterLoop(ExecState* exec)
                     ++iter;
                 } while (iter != end);
                          
-                RETURN_VALUE(postfixResolveNode->throwUndefinedVariableError(exec, ident));
+                RETURN_ERROR(postfixResolveNode->throwUndefinedVariableError(exec, ident));
             }
                 
 
@@ -1078,7 +1081,7 @@ void runInterpreterLoop(ExecState* exec)
                     ++iter;
                 } while (iter != end);
                 
-                RETURN_VALUE(prefixResolveNode->throwUndefinedVariableError(exec, ident));
+                RETURN_ERROR(prefixResolveNode->throwUndefinedVariableError(exec, ident));
             }
                 
                 
@@ -1285,12 +1288,12 @@ void runInterpreterLoop(ExecState* exec)
                 } else if (oper == OpIn) {
                     // Is all of this OK for host objects?
                     if (!v2->isObject())
-                        RETURN_VALUE(relationalNode->throwError(exec, TypeError, "Value %s (result of expression %s) is not an object. Cannot be used with IN expression.", v2, relationalNode->expr2.get()));
+                        RETURN_ERROR(relationalNode->throwError(exec, TypeError, "Value %s (result of expression %s) is not an object. Cannot be used with IN expression.", v2, relationalNode->expr2.get()));
                     JSObject *o2(static_cast<JSObject*>(v2));
                     b = o2->hasProperty(exec, Identifier(v1->toString(exec)));
                 } else {
                     if (!v2->isObject())
-                        RETURN_VALUE(relationalNode->throwError(exec, TypeError, "Value %s (result of expression %s) is not an object. Cannot be used with instanceof operator.", v2, relationalNode->expr2.get()));
+                        RETURN_ERROR(relationalNode->throwError(exec, TypeError, "Value %s (result of expression %s) is not an object. Cannot be used with instanceof operator.", v2, relationalNode->expr2.get()));
                     
                     JSObject *o2(static_cast<JSObject*>(v2));
                     if (!o2->implementsHasInstance()) {
@@ -1421,7 +1424,7 @@ void runInterpreterLoop(ExecState* exec)
                 } while (iter != end);
                 
                 if (!foundSlot && (oper != OpEqual))
-                    RETURN_VALUE(assignResolveNode->throwUndefinedVariableError(exec, ident));
+                    RETURN_ERROR(assignResolveNode->throwUndefinedVariableError(exec, ident));
                 
                 PUSH_LOCAL_VALUE(base);
                 EVALUATE_AND_CONTINUE(assignResolveNode->m_right.get(), AssignResolveNodeEvaluateState1);
@@ -1833,7 +1836,6 @@ void runInterpreterLoop(ExecState* exec)
 
                 // fall through if there's no initilization statement
             }
-                
             case ForNodeExecuteTestState:
             {
                 ForNode* forNode = static_cast<ForNode*>(currentNode);
@@ -1842,7 +1844,6 @@ void runInterpreterLoop(ExecState* exec)
                     
                 // fall through if there's no test statement
             }
-            
             case ForNodeExecuteBodyState:
             {
                 ForNode* forNode = static_cast<ForNode*>(currentNode);
@@ -1854,7 +1855,6 @@ void runInterpreterLoop(ExecState* exec)
                 
                 EXECUTE_AND_JUMP(forNode->statement.get(), ForNodeExecutePostBodyState);
             }
-                
             case ForNodeExecuteContinueState:
             {
                 ASSERT(GET_LAST_COMPLETION().complType() == Normal || GET_LAST_COMPLETION().complType() == Continue);
@@ -1862,7 +1862,6 @@ void runInterpreterLoop(ExecState* exec)
                 
                 // fall through
             }
-                
             case ForNodeExecutePostBodyState:
             {
                 ForNode* forNode = static_cast<ForNode*>(currentNode);
@@ -1871,8 +1870,8 @@ void runInterpreterLoop(ExecState* exec)
                 if (forNode->expr3)
                     PUSH_EVALUATE(forNode->expr3.get());
                 break;
+            
             }
-                
             case ForNodeExecuteEndState:
             {
                 POP_UNWIND_BARRIER(Continue);
@@ -1886,27 +1885,29 @@ void runInterpreterLoop(ExecState* exec)
                 
                 break;
             }
-        
+            
+            
             case ForInNodeExecuteState:
             {
-                PUSH_UNWIND_BARRIER(Break, ForInNodeExecuteBreakState);
+                PUSH_UNWIND_BARRIER(Break, ForInNodeExecutePopBreakUnwindBarrierState);
 
+                SET_CONTINUE_STATE(ForInNodeExecuteState2);
                 ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
                 PUSH_EVALUATE(forInNode->expr.get());
                 if (VarDeclNode* varDeclNode = forInNode->varDecl.get())
                     PUSH_EVALUATE(varDeclNode);
-                SET_CONTINUE_STATE(ForInNodeExecuteState2);
                 break;
             }
-
             case ForInNodeExecuteState2:
             {
                 ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
                 JSValue* e = GET_VALUE_RETURN();
                 
                 // Null and Undefined will throw if you call toObject on them
-                if (e->isUndefinedOrNull())
+                if (e->isUndefinedOrNull()) {
+                    POP_UNWIND_BARRIER(Break);
                     RETURN_NORMAL_COMPLETION();
+                }
                     
                 InterpreterState interpreterState;
                 if (forInNode->lexpr->isResolveNode())
@@ -1918,7 +1919,7 @@ void runInterpreterLoop(ExecState* exec)
                     interpreterState = ForInNodeBracketAccessorNodeExecuteState;
                 }
                     
-                // FIXME: Continue state somewhere around here
+                SET_JUMP_STATE(ForInNodeExecutePopBreakUnwindBarrierState, currentNode);
                 
                 JSObject *o = e->toObject(exec);
                 ReferenceList propList = o->propList(exec);
@@ -1935,7 +1936,6 @@ void runInterpreterLoop(ExecState* exec)
                     
                 break;
             }
-
             case ForInNodeResolveNodeExecuteState:
             {
                 ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
@@ -1966,7 +1966,6 @@ void runInterpreterLoop(ExecState* exec)
                 SET_JUMP_STATE(ForInNodeExecuteBodyState, currentNode);
                 break;
             }
-            
             case ForInNodeDotAccessorNodeExecuteState:
             {
                 ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
@@ -2014,26 +2013,27 @@ void runInterpreterLoop(ExecState* exec)
             
             case ForInNodeExecuteBodyState:
             {
-                PUSH_UNWIND_BARRIER(Continue, ForInNodeExecuteContinueState);
+                PUSH_UNWIND_BARRIER(Continue, ForInNodeExecutePopContinueUnwindBarrierState);
                 ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
-                EXECUTE_AND_CONTINUE(forInNode->statement.get(), ForInNodeExecuteContinueState);
+                EXECUTE_AND_CONTINUE(forInNode->statement.get(), ForInNodeExecutePopContinueUnwindBarrierState);
                 break;
             }
 
-            case ForInNodeExecuteContinueState:
+            case ForInNodeExecutePopContinueUnwindBarrierState:
             {
-                ASSERT(GET_LAST_COMPLETION().complType() == Normal || GET_LAST_COMPLETION().complType() == Continue);
-
-                RESET_COMPLETION_TO_NORMAL();
+                if (GET_LAST_COMPLETION().complType() == Continue)
+                    RESET_COMPLETION_TO_NORMAL();
+                ASSERT(GET_LAST_COMPLETION().complType() == Normal);
+                
                 POP_UNWIND_BARRIER(Continue);
                 break;
             }
-            
-            case ForInNodeExecuteBreakState:
+            case ForInNodeExecutePopBreakUnwindBarrierState:
             {
-                ASSERT(GET_LAST_COMPLETION().complType() == Break);
+                if (GET_LAST_COMPLETION().complType() == Continue)
+                    RESET_COMPLETION_TO_NORMAL();
+                ASSERT(GET_LAST_COMPLETION().complType() == Normal);
                 
-                RESET_COMPLETION_TO_NORMAL();
                 POP_UNWIND_BARRIER(Break);
                 break;
             }
@@ -2143,13 +2143,12 @@ void runInterpreterLoop(ExecState* exec)
 
             case TryNodeExecuteState:
             {
-                SET_CONTINUE_STATE(TryNodeExecuteState1);
-                PUSH_UNWIND_BARRIER(Throw, TryNodeExecuteState1);
+                PUSH_UNWIND_BARRIER(Throw, TryNodeExecuteExceptionThrownState);
+                SET_JUMP_STATE(TryNodeExecuteNoExceptionThrownState, currentNode);
                 PUSH_EXECUTE(static_cast<TryNode*>(currentNode)->tryBlock.get());
                 break;
             }
-
-            case TryNodeExecuteState1:
+            case TryNodeExecuteExceptionThrownState:
             {
                 TryNode* tryNode = static_cast<TryNode*>(currentNode);
                 POP_UNWIND_BARRIER(Throw);
@@ -2158,17 +2157,15 @@ void runInterpreterLoop(ExecState* exec)
                     RESET_COMPLETION_TO_NORMAL();
                     JSObject *obj = new JSObject;
                     obj->put(exec, tryNode->exceptionIdent, c.value(), DontDelete);
-                    SET_CONTINUE_STATE(TryNodeExecuteState2);
                     PUSH_UNWIND_BARRIER(Scope, InternalErrorState);
                     exec->context().imp()->pushScope(obj);
-                    PUSH_EXECUTE(tryNode->catchBlock.get());
-                    break;
+                    EXECUTE_AND_CONTINUE(tryNode->catchBlock.get(), TryNodeExecutePopScopeAfterCatchBlockState);
                 }
                 if (tryNode->finallyBlock)
                     PUSH_EXECUTE(tryNode->finallyBlock.get());
                 break;
             }
-            case TryNodeExecuteState2:
+            case TryNodeExecutePopScopeAfterCatchBlockState:
             {
                 // This case is only hit after successfully executing a catch block
                 exec->context().imp()->popScope();
@@ -2178,6 +2175,14 @@ void runInterpreterLoop(ExecState* exec)
                 if (tryNode->finallyBlock)
                     PUSH_EXECUTE(tryNode->finallyBlock.get());
                 break;
+            }
+            case TryNodeExecuteNoExceptionThrownState:
+            {
+                // This case is hit when nothing is thrown
+                TryNode* tryNode = static_cast<TryNode*>(currentNode);
+                POP_UNWIND_BARRIER(Throw);
+                if (tryNode->finallyBlock)
+                    PUSH_EXECUTE(tryNode->finallyBlock.get());
             }
 
             case FuncDeclNodeExecuteState:
@@ -2353,7 +2358,7 @@ Completion callExecuteOnNode(StatementNode* node, ExecState* exec)
 {
     InterpreterImp* interpreter = exec->dynamicInterpreter()->imp();
     // FIXME: Need a way to catch unwinds without executing another statement
-    interpreter->pushUnwindBarrier(All, InterpreterImp::State(EmptyStatementNodeExecuteState, 0));
+    interpreter->pushUnwindBarrier(All, InterpreterImp::State(InternalErrorState, 0));
     PUSH_EXECUTE(node);
     runInterpreterLoop(exec);
     Completion c = GET_LAST_COMPLETION();

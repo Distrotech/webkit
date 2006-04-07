@@ -740,6 +740,9 @@ void InterpreterImp::unwindToNextBarrier(ExecState* exec, Node* currentNode)
         unwindBarrierIndex--;
     }
     
+    UnwindBarrier unwindBarrier;
+    
+    // FIXME: we should instead assert we always have a barrier, and move this code out elsewhere
     if (unwindBarrierIndex < 0) {
         // if we failed to find a matching barrier, then we throw an error
         
@@ -771,10 +774,9 @@ void InterpreterImp::unwindToNextBarrier(ExecState* exec, Node* currentNode)
             // un-caught returns and throws just fall out to the caller.
             break;
         }
-        unwindBarrierIndex = 0;
-    }
-    
-    const UnwindBarrier& unwindBarrier = m_unwindBarrierStack[unwindBarrierIndex];
+        unwindBarrier = UnwindBarrier(0, State(), 0, 0, 0, 0);
+    } else
+        unwindBarrier = m_unwindBarrierStack[unwindBarrierIndex];
     
     // In case a throw was made from an internal function or eval or any other node w/o a line number
     // we walk the state stack until we find a node with a valid line number.
@@ -797,8 +799,9 @@ void InterpreterImp::unwindToNextBarrier(ExecState* exec, Node* currentNode)
             }
         }
     }
-
+    
     // Now that we've actually decided where to unwind to, do the unwind.
+    m_unwindBarrierStack.shrinkTo(unwindBarrierIndex + 1);
     ASSERT(valueStackDepth() >= unwindBarrier.valueStackSize);
     ASSERT(stateStackDepth() >= unwindBarrier.stateStackSize);
     ASSERT(listStackDepth() >= unwindBarrier.listStackSize);
@@ -807,7 +810,8 @@ void InterpreterImp::unwindToNextBarrier(ExecState* exec, Node* currentNode)
     m_stateStack.shrinkTo(unwindBarrier.stateStackSize);
     m_listReturnStack.shrinkTo(unwindBarrier.listStackSize);
     m_nodeStack.shrinkTo(unwindBarrier.nodeStackSize);
-    pushNextState(unwindBarrier.continueState);
+    if (unwindBarrier.continueState.state != InternalErrorState)
+        pushNextState(unwindBarrier.continueState);
 }
 
 // ------------------------------ InternalFunctionImp --------------------------
