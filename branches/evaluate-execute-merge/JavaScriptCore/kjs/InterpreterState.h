@@ -161,17 +161,22 @@ namespace KJS {
     macro(ExprStatementNodeExecuteState1) \
     macro(IfNodeExecuteState) \
     macro(IfNodeExecuteState1) \
-    macro(DoWhileNodeExecuteState) \
-    macro(DoWhileNodeExecuteState1) \
     macro(WhileNodeExecuteState) \
-    macro(WhileNodeExecuteState1) \
-    macro(WhileNodeExecuteState2) \
-    macro(WhileNodeExecuteState3) \
+    macro(WhileNodeExecuteContinueState) \
+    macro(WhileNodeExecuteTestState) \
+    macro(WhileNodeExecuteBodyState) \
+    macro(WhileNodeExecuteEndState) \
+    macro(DoWhileNodeExecuteState) \
+    macro(DoWhileNodeExecuteContinueState) \
+    macro(DoWhileNodeExecuteTestState) \
+    macro(DoWhileNodeExecuteBodyState) \
+    macro(DoWhileNodeExecuteEndState) \
     macro(ForNodeExecuteState) \
-    macro(ForNodeExecuteState1) \
-    macro(ForNodeExecuteState2) \
-    macro(ForNodeExecuteState3) \
-    macro(ForNodeExecuteState4) \
+    macro(ForNodeExecuteTestState) \
+    macro(ForNodeExecuteBodyState) \
+    macro(ForNodeExecuteContinueState) \
+    macro(ForNodeExecutePostBodyState) \
+    macro(ForNodeExecuteEndState) \
     macro(ForInNodeExecuteState) \
     macro(ForInNodeExecuteState2) \
     macro(ForInNodeExecuteState3) \
@@ -181,9 +186,9 @@ namespace KJS {
     macro(ForInNodeBracketAccessorNodeExecuteState) \
     macro(ForInNodeBracketAccessorNodeExecuteState1) \
     macro(ForInNodeBracketAccessorNodeExecuteState2) \
-    macro(ForInNodeExecuteState4) \
-    macro(ForInNodeExecuteState5) \
-    macro(ForInNodeExecuteState6) \
+    macro(ForInNodeExecuteBodyState) \
+    macro(ForInNodeExecuteContinueState) \
+    macro(ForInNodeExecuteBreakState) \
     macro(ContinueNodeExecuteState) \
     macro(BreakNodeExecuteState) \
     macro(ReturnNodeExecuteState) \

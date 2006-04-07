@@ -325,8 +325,8 @@ do { \
 #define RESET_COMPLETION_TO_NORMAL() \
     interpreter->resetCompletionToNormal()
 
-#define PUSH_UNWIND_BARRIER(barrierType) \
-    interpreter->pushUnwindBarrier(barrierType);
+#define PUSH_UNWIND_BARRIER(barrierType, state) \
+    interpreter->pushUnwindBarrier(barrierType, InterpreterImp::State(state, currentNode));
 
 #define POP_UNWIND_BARRIER(type) \
 do { \
@@ -1739,162 +1739,167 @@ void runInterpreterLoop(ExecState* exec)
 
             case DoWhileNodeExecuteState:
             {
-                DoWhileNode* doWhileNode = static_cast<DoWhileNode*>(currentNode);
-                SET_CONTINUE_STATE(DoWhileNodeExecuteState1);
-                PUSH_UNWIND_BARRIER(Continue | Break);
-                PUSH_EVALUATE(doWhileNode->expr.get());
-                PUSH_EXECUTE(doWhileNode->statement.get());
-                break;
+                PUSH_UNWIND_BARRIER(Break, DoWhileNodeExecuteEndState);
+                PUSH_UNWIND_BARRIER(Continue, DoWhileNodeExecuteContinueState);
+                EXECUTE_AND_CONTINUE(static_cast<DoWhileNode*>(currentNode)->statement.get(), DoWhileNodeExecuteBodyState);
             }
-            case DoWhileNodeExecuteState1:
-            {
-                DoWhileNode* doWhileNode = static_cast<DoWhileNode*>(currentNode);
-
-                JSValue* bv = GET_VALUE_RETURN();
-                Completion c = GET_LAST_COMPLETION();
-                if ((c.complType() == Continue) || (c.complType() == Break)) {
-                    if (doWhileNode->ls.contains(c.target())) {
-                        RESET_COMPLETION_TO_NORMAL();
-                        if (c.complType() == Break) {
-                            POP_UNWIND_BARRIER(Continue | Break);
-                            RETURN_COMPLETION(Completion(Normal, c.value()));
-                        }
-                    } else // let someone else try
-                        RETURN_COMPLETION(c);                       
-                }
-                ASSERT(c.complType() == Normal);
-                if (bv->toBoolean(exec)) {                    
-                    SET_LOOP_STATE(DoWhileNodeExecuteState1);
-                    PUSH_EVALUATE(doWhileNode->expr.get());
-                    PUSH_EXECUTE(doWhileNode->statement.get());
-                    break;
-                }
                 
-                POP_UNWIND_BARRIER(Continue | Break);
-                RETURN_NORMAL_COMPLETION();
-            }
-
-            case WhileNodeExecuteState:
+            case DoWhileNodeExecuteContinueState:
             {
-                // FIXME: after an initial check, a While loop becomes identical to a
-                // doWhile loop. Thus we implement them nearly identically here.
-                // These two could share more code if the Nodes used the same struct.
-                WhileNode* whileNode = static_cast<WhileNode*>(currentNode);
-                EVALUATE_AND_CONTINUE(whileNode->expr.get(), WhileNodeExecuteState1);
-            }
-            case WhileNodeExecuteState1:
-            {
-                if (!GET_VALUE_RETURN()->toBoolean(exec))
-                    RETURN_NORMAL_COMPLETION();
+                ASSERT(GET_LAST_COMPLETION().complType() == Continue);
+                RESET_COMPLETION_TO_NORMAL();
+                
                 // fall through
             }
-            case WhileNodeExecuteState2:
+                
+            case DoWhileNodeExecuteTestState:
             {
-                WhileNode* whileNode = static_cast<WhileNode*>(currentNode);
-                // need to jump here due to fall through above.
-                SET_JUMP_STATE(WhileNodeExecuteState3, currentNode);
-                PUSH_UNWIND_BARRIER(Continue | Break);
-                PUSH_EVALUATE(whileNode->expr.get());
-                PUSH_EXECUTE(whileNode->statement.get());
+                EVALUATE_AND_JUMP(static_cast<DoWhileNode*>(currentNode)->expr.get(), DoWhileNodeExecuteBodyState);
+            }
+                
+            case DoWhileNodeExecuteBodyState:
+            {
+                if (GET_VALUE_RETURN()->toBoolean(exec))
+                    EXECUTE_AND_CONTINUE(static_cast<DoWhileNode*>(currentNode)->statement.get(), DoWhileNodeExecuteTestState);
+
+                // fall through if the test returns false
+            }
+                
+            case DoWhileNodeExecuteEndState:
+            {
+                POP_UNWIND_BARRIER(Continue);
+                POP_UNWIND_BARRIER(Break);
+                
+                ComplType complType = GET_LAST_COMPLETION().complType();
+                if (complType != Normal) {
+                    ASSERT(complType == Break);
+                    RESET_COMPLETION_TO_NORMAL();
+                }
+                
                 break;
             }
-            case WhileNodeExecuteState3:
+                
+            case WhileNodeExecuteState:
             {
-                WhileNode* whileNode = static_cast<WhileNode*>(currentNode);
+                PUSH_UNWIND_BARRIER(Break, WhileNodeExecuteEndState);
+                PUSH_UNWIND_BARRIER(Continue, WhileNodeExecuteContinueState);
 
-                JSValue *bv = GET_VALUE_RETURN();
-                Completion c = GET_LAST_COMPLETION();
-                if ((c.complType() == Continue) || (c.complType() == Break)) {
-                    if (whileNode->ls.contains(c.target())) {
-                        RESET_COMPLETION_TO_NORMAL();
-                        if (c.complType() == Break) {
-                            POP_UNWIND_BARRIER(Continue | Break);
-                            RETURN_COMPLETION(Completion(Normal, c.value()));
-                        }
-                    } else // let someone else try
-                        RETURN_COMPLETION(c);                       
+                // fall through
+            }
+                
+            case WhileNodeExecuteContinueState:
+            {
+                ASSERT(GET_LAST_COMPLETION().complType() == Normal || GET_LAST_COMPLETION().complType() == Continue);
+                RESET_COMPLETION_TO_NORMAL();
+                
+                // fall through
+            }
+                
+            case WhileNodeExecuteTestState:
+            {
+                EVALUATE_AND_JUMP(static_cast<WhileNode*>(currentNode)->expr.get(), WhileNodeExecuteBodyState);
+            }
+                
+            case WhileNodeExecuteBodyState:
+            {
+                if (GET_VALUE_RETURN()->toBoolean(exec))
+                    EXECUTE_AND_JUMP(static_cast<WhileNode*>(currentNode)->statement.get(), WhileNodeExecuteTestState);
+
+                // fall through if the test returns false
+            }
+                
+            case WhileNodeExecuteEndState:
+            {
+                POP_UNWIND_BARRIER(Continue);
+                POP_UNWIND_BARRIER(Break);
+
+                ComplType complType = GET_LAST_COMPLETION().complType();
+                if (complType != Normal) {
+                    ASSERT(complType == Break);
+                    RESET_COMPLETION_TO_NORMAL();
                 }
-                ASSERT(c.complType() == Normal);
-                if (bv->toBoolean(exec)) {                    
-                    SET_LOOP_STATE(WhileNodeExecuteState2);
-                    PUSH_EVALUATE(whileNode->expr.get());
-                    PUSH_EXECUTE(whileNode->statement.get());
+                
+                break;
+            }
+                
+            case ForNodeExecuteState:
+            {
+                PUSH_UNWIND_BARRIER(Break, ForNodeExecuteEndState);
+                PUSH_UNWIND_BARRIER(Continue, ForNodeExecuteContinueState);
+                
+                ForNode* forNode = static_cast<ForNode*>(currentNode);
+                if (forNode->expr1)
+                    EVALUATE_AND_CONTINUE(forNode->expr1.get(), ForNodeExecuteTestState);
+
+                // fall through if there's no initilization statement
+            }
+                
+            case ForNodeExecuteTestState:
+            {
+                ForNode* forNode = static_cast<ForNode*>(currentNode);
+                if (forNode->expr2)
+                    EVALUATE_AND_JUMP(forNode->expr2.get(), ForNodeExecuteBodyState);
+                    
+                // fall through if there's no test statement
+            }
+            
+            case ForNodeExecuteBodyState:
+            {
+                ForNode* forNode = static_cast<ForNode*>(currentNode);
+
+                if (forNode->expr2 && !GET_VALUE_RETURN()->toBoolean(exec)) {
+                    SET_JUMP_STATE(ForNodeExecuteEndState, forNode);
                     break;
                 }
                 
-                POP_UNWIND_BARRIER(Continue | Break);
-                RETURN_NORMAL_COMPLETION();
+                EXECUTE_AND_JUMP(forNode->statement.get(), ForNodeExecutePostBodyState);
             }
-            
-            case ForNodeExecuteState:
-            {
-                ForNode* forNode = static_cast<ForNode*>(currentNode);
-                if (forNode->expr1)
-                    EVALUATE_AND_CONTINUE(forNode->expr1.get(), ForNodeExecuteState1);
-            }
-            case ForNodeExecuteState1:
-            {
-                // FIXME: after our discussion of unwind markers today, this is wrong!!
-                SET_CONTINUE_STATE(ForNodeExecuteState2);
-                PUSH_UNWIND_BARRIER(Continue | Break);
-                break;
-            }
-            case ForNodeExecuteState2:
-            {                
-                ForNode* forNode = static_cast<ForNode*>(currentNode);
-                if (forNode->expr2)
-                    EVALUATE_AND_CONTINUE(forNode->expr2.get(), ForNodeExecuteState3);
-            }
-            case ForNodeExecuteState3:
-            {
-                ForNode* forNode = static_cast<ForNode*>(currentNode);
-                if (forNode->expr2) {
-                    if (!GET_VALUE_RETURN()->toBoolean(exec)) { // FIXME: can this throw?
-                        POP_UNWIND_BARRIER(Continue | Break);
-                        RETURN_NORMAL_COMPLETION();
-                    }
-                }
                 
-                EXECUTE_AND_CONTINUE(forNode->statement.get(), ForNodeExecuteState4);
+            case ForNodeExecuteContinueState:
+            {
+                ASSERT(GET_LAST_COMPLETION().complType() == Normal || GET_LAST_COMPLETION().complType() == Continue);
+                RESET_COMPLETION_TO_NORMAL();
+                
+                // fall through
             }
-            case ForNodeExecuteState4:
+                
+            case ForNodeExecutePostBodyState:
             {
                 ForNode* forNode = static_cast<ForNode*>(currentNode);
-                Completion c = GET_LAST_COMPLETION();
-                if ((c.complType() == Continue) || (c.complType() == Break)) {
-                    if (forNode->ls.contains(c.target())) {
-                        RESET_COMPLETION_TO_NORMAL();
-                        if (c.complType() == Break) {
-                            POP_UNWIND_BARRIER(Continue | Break);
-                            RETURN_COMPLETION(Completion(Normal, c.value()));
-                        }
-                    } else // let someone else try
-                        RETURN_COMPLETION(c);                       
-                }
-                ASSERT(c.complType() == Normal);
-                SET_JUMP_STATE(ForNodeExecuteState2, currentNode);
+
+                SET_JUMP_STATE(ForNodeExecuteTestState, forNode);
                 if (forNode->expr3)
                     PUSH_EVALUATE(forNode->expr3.get());
                 break;
             }
-            
-            
+                
+            case ForNodeExecuteEndState:
+            {
+                POP_UNWIND_BARRIER(Continue);
+                POP_UNWIND_BARRIER(Break);
+                
+                ComplType complType = GET_LAST_COMPLETION().complType();
+                if (complType != Normal) {
+                    ASSERT(complType == Break);
+                    RESET_COMPLETION_TO_NORMAL();
+                }
+                
+                break;
+            }
+        
             case ForInNodeExecuteState:
             {
-                VarDeclNode* varDeclNode = static_cast<ForInNode*>(currentNode)->varDecl.get();
-                if (varDeclNode) // can this ever be NULL?
-                    EVALUATE_AND_CONTINUE(varDeclNode, ForInNodeExecuteState2);
+                PUSH_UNWIND_BARRIER(Break, ForInNodeExecuteBreakState);
 
-                 // fall through
+                ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
+                PUSH_EVALUATE(forInNode->expr.get());
+                if (VarDeclNode* varDeclNode = forInNode->varDecl.get())
+                    PUSH_EVALUATE(varDeclNode);
+                SET_CONTINUE_STATE(ForInNodeExecuteState2);
+                break;
             }
+
             case ForInNodeExecuteState2:
-            {
-                PUSH_UNWIND_BARRIER(Break);
-                SET_JUMP_STATE(ForInNodeExecuteState6, currentNode);
-                EVALUATE_AND_CONTINUE(static_cast<ForInNode*>(currentNode)->expr.get(), ForInNodeExecuteState3);
-            }
-            
-            case ForInNodeExecuteState3:
             {
                 ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
                 JSValue* e = GET_VALUE_RETURN();
@@ -1930,6 +1935,7 @@ void runInterpreterLoop(ExecState* exec)
                     
                 break;
             }
+
             case ForInNodeResolveNodeExecuteState:
             {
                 ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
@@ -1957,7 +1963,7 @@ void runInterpreterLoop(ExecState* exec)
                 if (iter == end)
                     o->put(exec, lexprIdent, str);
                         
-                SET_JUMP_STATE(ForInNodeExecuteState4, currentNode);
+                SET_JUMP_STATE(ForInNodeExecuteBodyState, currentNode);
                 break;
             }
             
@@ -1975,7 +1981,7 @@ void runInterpreterLoop(ExecState* exec)
                 const Identifier& lexprIdent = static_cast<DotAccessorNode*>(forInNode->lexpr.get())->identifier();
                 base->put(exec, lexprIdent, str);
                 
-                SET_JUMP_STATE(ForInNodeExecuteState4, currentNode);
+                SET_JUMP_STATE(ForInNodeExecuteBodyState, currentNode);
                 break;
             }
             
@@ -2002,26 +2008,32 @@ void runInterpreterLoop(ExecState* exec)
                     base->put(exec, Identifier(subscript->toString(exec)), str);
                 }
 
-                SET_JUMP_STATE(ForInNodeExecuteState4, currentNode);
+                SET_JUMP_STATE(ForInNodeExecuteBodyState, currentNode);
                 break; // could just fall through here, but better to be explicit and consistent
             }
             
-            case ForInNodeExecuteState4:
+            case ForInNodeExecuteBodyState:
             {
-                PUSH_UNWIND_BARRIER(Continue);
+                PUSH_UNWIND_BARRIER(Continue, ForInNodeExecuteContinueState);
                 ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
-                EXECUTE_AND_CONTINUE(forInNode->statement.get(), ForInNodeExecuteState5);
+                EXECUTE_AND_CONTINUE(forInNode->statement.get(), ForInNodeExecuteContinueState);
                 break;
             }
 
-            case ForInNodeExecuteState5:
+            case ForInNodeExecuteContinueState:
             {
+                ASSERT(GET_LAST_COMPLETION().complType() == Normal || GET_LAST_COMPLETION().complType() == Continue);
+
+                RESET_COMPLETION_TO_NORMAL();
                 POP_UNWIND_BARRIER(Continue);
                 break;
             }
             
-            case ForInNodeExecuteState6:
+            case ForInNodeExecuteBreakState:
             {
+                ASSERT(GET_LAST_COMPLETION().complType() == Break);
+                
+                RESET_COMPLETION_TO_NORMAL();
                 POP_UNWIND_BARRIER(Break);
                 break;
             }
@@ -2065,7 +2077,7 @@ void runInterpreterLoop(ExecState* exec)
                 JSValue *v = GET_VALUE_RETURN();
                 JSObject *o = v->toObject(exec);
                 KJS_CHECKEXCEPTIONVALUE();
-                PUSH_UNWIND_BARRIER(Scope); // scope marker
+                PUSH_UNWIND_BARRIER(Scope, InternalErrorState); // scope marker
                 exec->context().imp()->pushScope(o);
                 EXECUTE_AND_CONTINUE(withNode->statement.get(), WithNodeExecuteState2);
             }
@@ -2082,8 +2094,8 @@ void runInterpreterLoop(ExecState* exec)
             }
             case SwitchNodeExecuteState1:
             {
+                PUSH_UNWIND_BARRIER(Break, SwitchNodeExecuteState2);
                 SET_CONTINUE_STATE(SwitchNodeExecuteState2);
-                PUSH_UNWIND_BARRIER(Break);
                 // no need to push argument, block will use the one returned from the original evaluate
                 ASSERT(static_cast<SwitchNode*>(currentNode)->block->interpreterState() == CaseBlockNodeExecuteBlockWithInputValue);
                 PUSH_EXECUTE(static_cast<SwitchNode*>(currentNode)->block.get());
@@ -2103,8 +2115,8 @@ void runInterpreterLoop(ExecState* exec)
 
             case LabelNodeExecuteState:
             {                
+                PUSH_UNWIND_BARRIER(Break, LabelNodeExecuteState1);
                 SET_CONTINUE_STATE(LabelNodeExecuteState1);
-                PUSH_UNWIND_BARRIER(Break);
                 PUSH_EXECUTE(static_cast<LabelNode*>(currentNode)->statement.get());
                 break;
             }
@@ -2132,10 +2144,11 @@ void runInterpreterLoop(ExecState* exec)
             case TryNodeExecuteState:
             {
                 SET_CONTINUE_STATE(TryNodeExecuteState1);
-                PUSH_UNWIND_BARRIER(Throw);
+                PUSH_UNWIND_BARRIER(Throw, TryNodeExecuteState1);
                 PUSH_EXECUTE(static_cast<TryNode*>(currentNode)->tryBlock.get());
                 break;
             }
+
             case TryNodeExecuteState1:
             {
                 TryNode* tryNode = static_cast<TryNode*>(currentNode);
@@ -2146,7 +2159,7 @@ void runInterpreterLoop(ExecState* exec)
                     JSObject *obj = new JSObject;
                     obj->put(exec, tryNode->exceptionIdent, c.value(), DontDelete);
                     SET_CONTINUE_STATE(TryNodeExecuteState2);
-                    PUSH_UNWIND_BARRIER(Scope);
+                    PUSH_UNWIND_BARRIER(Scope, InternalErrorState);
                     exec->context().imp()->pushScope(obj);
                     PUSH_EXECUTE(tryNode->catchBlock.get());
                     break;
@@ -2339,7 +2352,7 @@ interpreter_state_switch_end:
 Completion callExecuteOnNode(StatementNode* node, ExecState* exec)
 {
     InterpreterImp* interpreter = exec->dynamicInterpreter()->imp();
-    PUSH_UNWIND_BARRIER(All);
+    interpreter->pushUnwindBarrier(All, InterpreterImp::State(InternalErrorState, 0));
     PUSH_EXECUTE(node);
     runInterpreterLoop(exec);
     Completion c = GET_LAST_COMPLETION();
