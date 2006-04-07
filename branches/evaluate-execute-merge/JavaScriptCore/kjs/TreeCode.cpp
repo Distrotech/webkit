@@ -67,7 +67,12 @@ const char* nameForInterpreterState[LastInterpreterState+1] = {
 };
 
 #define RETURN_COMPLETION(c) do { \
-    interpreter->pushCompletionReturn(c); \
+    interpreter->setCompletionReturn(c); \
+    goto interpreter_state_switch_end; \
+} while (0)
+
+#define RETURN_NORMAL_COMPLETION() do { \
+    ASSERT(interpreter->getCompletionReturn().complType() == Normal); \
     goto interpreter_state_switch_end; \
 } while (0)
 
@@ -307,11 +312,12 @@ do { \
     SET_JUMP_STATE(nextState, currentNode); \
 } while (0)
 
-#define PUSH_COMPLETION(c) \
-    interpreter->pushCompletionReturn(c)
+
+#define GET_LAST_COMPLETION() \
+    interpreter->getCompletionReturn()
     
-#define POP_COMPLETION(c) \
-    interpreter->popCompletionReturn()
+#define RESET_COMPLETION_TO_NORMAL() \
+    interpreter->resetCompletionToNormal()
 
 #define PUSH_UNWIND_BARRIER(barrierType) \
     interpreter->pushUnwindBarrier(barrierType);
@@ -382,11 +388,12 @@ void runInterpreterLoop(ExecState* exec)
         printf("EXEC %s (%i) on %p (state state: %i, value stack: %i)\n", nameForInterpreterState[statePair.state], statePair.state, statePair.node, interpreter->stateStackDepth(), interpreter->valueStackDepth());
 #endif
 
+        // FIXME: This is wrong, this won't actually return.
         if (debuggerAttached) {
             if (IS_EXECUTE_STATE(statePair.state) && !static_cast<StatementNode*>(currentNode)->hitStatement(exec))
-                RETURN_COMPLETION(Normal); // FIXME: Do something the debugger can use
+                RETURN_NORMAL_COMPLETION(); // FIXME: Do something the debugger can use
             if (interpreter->debugger() && interpreter->debugger()->imp()->aborted())
-                RETURN_COMPLETION(Normal); // FIXME: Do something the debugger can use
+                RETURN_NORMAL_COMPLETION(); // FIXME: Do something the debugger can use
         }
         
         if (Collector::isOutOfMemory())
@@ -1665,30 +1672,16 @@ void runInterpreterLoop(ExecState* exec)
         
             case StatListNodeExecuteState:
             {
-                PUSH_VALUE(0); // FIXME: not sure if this is safe
-                // fall through
+                EXECUTE_AND_CONTINUE(static_cast<StatListNode*>(currentNode)->statement.get(), StatListNodeExecuteState1);
             }
             case StatListNodeExecuteState1:
             {
-                // jump required due to fall through above
-                EXECUTE_AND_JUMP(static_cast<StatListNode*>(currentNode)->statement.get(), StatListNodeExecuteState2);
-            }
-            case StatListNodeExecuteState2:
-            {
-                StatListNode* n = static_cast<StatListNode*>(currentNode);
-                Completion c = POP_COMPLETION();
-                
-                JSValue*& v = PEEK_VALUE();
-                if (c.isValueCompletion())
-                    v = c.value();
-                
-                n = n->next.get();
-                if (n) {
-                    SET_JUMP_STATE(StatListNodeExecuteState1, n);
+                StatListNode* n = static_cast<StatListNode*>(currentNode);                                
+                if ((n = n->next.get())) {
+                    SET_JUMP_STATE(StatListNodeExecuteState, n);
                     break;
                 }
-                
-                RETURN_COMPLETION(Completion(Normal, POP_VALUE()));
+                RETURN_NORMAL_COMPLETION();
             }
 
             case VarStatementNodeExecuteState:
@@ -1696,17 +1689,16 @@ void runInterpreterLoop(ExecState* exec)
                 EVALUATE_AND_CONTINUE(static_cast<VarStatementNode*>(currentNode)->next.get(), VarStatementNodeExecuteState1);
             }
             case VarStatementNodeExecuteState1:
-            {
-                POP_VALUE(); // ignore return
-                RETURN_COMPLETION(Completion(Normal));
+                {
+                POP_VALUE(); // ignore return: eval(var x = 1) == undefined
+                RETURN_NORMAL_COMPLETION();
             }
 
             case BlockNodeExecuteState:
             {
                 BlockNode* blockNode = static_cast<BlockNode*>(currentNode);
-                
                 if (!blockNode->source)
-                    RETURN_COMPLETION(Completion(Normal));
+                    RETURN_NORMAL_COMPLETION();
                 
                 blockNode->source->processFuncDecl(exec);
                 PUSH_EXECUTE(blockNode->source.get());
@@ -1715,7 +1707,7 @@ void runInterpreterLoop(ExecState* exec)
 
             case EmptyStatementNodeExecuteState:
             {
-                RETURN_COMPLETION(Completion(Normal));
+                RETURN_NORMAL_COMPLETION();
             }
 
             case ExprStatementNodeExecuteState:
@@ -1741,7 +1733,7 @@ void runInterpreterLoop(ExecState* exec)
                 
                 // no else
                 if (!ifNode->statement2)
-                    RETURN_COMPLETION(Completion(Normal));
+                    RETURN_NORMAL_COMPLETION();
                 
                 PUSH_EXECUTE(ifNode->statement2.get());
                 break;
@@ -1751,7 +1743,6 @@ void runInterpreterLoop(ExecState* exec)
             {
                 DoWhileNode* doWhileNode = static_cast<DoWhileNode*>(currentNode);
                 SET_CONTINUE_STATE(DoWhileNodeExecuteState1);
-                PUSH_VALUE(0); // FIXME: I'm not sure this is safe!
                 PUSH_UNWIND_BARRIER(Continue | Break);
                 PUSH_EVALUATE(doWhileNode->expr.get());
                 PUSH_EXECUTE(doWhileNode->statement.get());
@@ -1762,18 +1753,18 @@ void runInterpreterLoop(ExecState* exec)
                 DoWhileNode* doWhileNode = static_cast<DoWhileNode*>(currentNode);
 
                 JSValue* bv = POP_VALUE();
-                Completion c = POP_COMPLETION();
-                JSValue*& value = PEEK_VALUE();
-                if (c.isValueCompletion())
-                    value = c.value();
-                if (!((c.complType() == Continue) && doWhileNode->ls.contains(c.target()))) {
-                    ASSERT(c.complType() == Break);
-                    POP_UNWIND_BARRIER(Continue | Break);
-                    if ((c.complType() == Break) && doWhileNode->ls.contains(c.target()))
-                        RETURN_COMPLETION(Completion(Normal, POP_VALUE()));
-                    if (c.complType() != Normal)
-                        RETURN_COMPLETION(c);
+                Completion c = GET_LAST_COMPLETION();
+                if ((c.complType() == Continue) || (c.complType() == Break)) {
+                    if (doWhileNode->ls.contains(c.target())) {
+                        RESET_COMPLETION_TO_NORMAL();
+                        if (c.complType() == Break) {
+                            POP_UNWIND_BARRIER(Continue | Break);
+                            RETURN_COMPLETION(Completion(Normal, c.value()));
+                        }
+                    } else // let someone else try
+                        RETURN_COMPLETION(c);                       
                 }
+                ASSERT(c.complType() == Normal);
                 if (bv->toBoolean(exec)) {                    
                     SET_LOOP_STATE(DoWhileNodeExecuteState1);
                     PUSH_EVALUATE(doWhileNode->expr.get());
@@ -1782,7 +1773,7 @@ void runInterpreterLoop(ExecState* exec)
                 }
                 
                 POP_UNWIND_BARRIER(Continue | Break);
-                RETURN_COMPLETION(Completion(Normal, POP_VALUE()));
+                RETURN_NORMAL_COMPLETION();
             }
 
             case WhileNodeExecuteState:
@@ -1796,8 +1787,7 @@ void runInterpreterLoop(ExecState* exec)
             case WhileNodeExecuteState1:
             {
                 if (!POP_VALUE()->toBoolean(exec))
-                    RETURN_COMPLETION(Completion(Normal));
-                PUSH_VALUE(0); // FIXME: I'm not sure this is safe
+                    RETURN_NORMAL_COMPLETION();
                 // fall through
             }
             case WhileNodeExecuteState2:
@@ -1815,18 +1805,18 @@ void runInterpreterLoop(ExecState* exec)
                 WhileNode* whileNode = static_cast<WhileNode*>(currentNode);
 
                 JSValue *bv = POP_VALUE();
-                Completion c = POP_COMPLETION();
-                JSValue*& value = PEEK_VALUE();
-                if (c.isValueCompletion())
-                    value = c.value();
-                if (!((c.complType() == Continue) && whileNode->ls.contains(c.target()))) {
-                    ASSERT(c.complType() == Break);
-                    POP_UNWIND_BARRIER(Continue | Break);
-                    if ((c.complType() == Break) && whileNode->ls.contains(c.target()))
-                        RETURN_COMPLETION(Completion(Normal, POP_VALUE()));
-                    if (c.complType() != Normal)
-                        RETURN_COMPLETION(c);
+                Completion c = GET_LAST_COMPLETION();
+                if ((c.complType() == Continue) || (c.complType() == Break)) {
+                    if (whileNode->ls.contains(c.target())) {
+                        RESET_COMPLETION_TO_NORMAL();
+                        if (c.complType() == Break) {
+                            POP_UNWIND_BARRIER(Continue | Break);
+                            RETURN_COMPLETION(Completion(Normal, c.value()));
+                        }
+                    } else // let someone else try
+                        RETURN_COMPLETION(c);                       
                 }
+                ASSERT(c.complType() == Normal);
                 if (bv->toBoolean(exec)) {                    
                     SET_LOOP_STATE(WhileNodeExecuteState2);
                     PUSH_EVALUATE(whileNode->expr.get());
@@ -1835,12 +1825,11 @@ void runInterpreterLoop(ExecState* exec)
                 }
                 
                 POP_UNWIND_BARRIER(Continue | Break);
-                RETURN_COMPLETION(Completion(Normal, POP_VALUE()));
+                RETURN_NORMAL_COMPLETION();
             }
             
             case ForNodeExecuteState:
             {
-                PUSH_VALUE(0); // FIXME: This might not be safe!
                 ForNode* forNode = static_cast<ForNode*>(currentNode);
                 if (forNode->expr1.get())
                     EVALUATE_AND_CONTINUE(forNode->expr1.get(), ForNodeExecuteState1);
@@ -1868,7 +1857,7 @@ void runInterpreterLoop(ExecState* exec)
                     JSValue* v = POP_VALUE();
                     if (!v->toBoolean(exec)) { // FIXME: can this throw?
                         POP_UNWIND_BARRIER(Continue | Break);
-                        RETURN_COMPLETION(Completion(Normal, POP_VALUE()));
+                        RETURN_NORMAL_COMPLETION();
                     }
                 }
                 
@@ -1877,17 +1866,18 @@ void runInterpreterLoop(ExecState* exec)
             case ForNodeExecuteState4:
             {
                 ForNode* forNode = static_cast<ForNode*>(currentNode);
-                Completion c = POP_COMPLETION();
-                JSValue*& cval = PEEK_VALUE();
-                if (c.isValueCompletion())
-                    cval = c.value();
-                if (!((c.complType() == Continue) && forNode->ls.contains(c.target()))) {
-                    ASSERT(c.complType() == Break);
-                    if ((c.complType() == Break) && forNode->ls.contains(c.target()))
-                        RETURN_COMPLETION(Completion(Normal, POP_VALUE()));
-                    if (c.complType() != Normal)
-                        RETURN_COMPLETION(c);
+                Completion c = GET_LAST_COMPLETION();
+                if ((c.complType() == Continue) || (c.complType() == Break)) {
+                    if (forNode->ls.contains(c.target())) {
+                        RESET_COMPLETION_TO_NORMAL();
+                        if (c.complType() == Break) {
+                            POP_UNWIND_BARRIER(Continue | Break);
+                            RETURN_COMPLETION(Completion(Normal, c.value()));
+                        }
+                    } else // let someone else try
+                        RETURN_COMPLETION(c);                       
                 }
+                ASSERT(c.complType() == Normal);
                 SET_JUMP_STATE(ForNodeExecuteState2, currentNode);
                 if (forNode->expr3)
                     PUSH_EVALUATE(forNode->expr3.get());
@@ -1915,7 +1905,7 @@ void runInterpreterLoop(ExecState* exec)
                 
                 // Null and Undefined will throw if you call toObject on them
                 if (e->isUndefinedOrNull())
-                    RETURN_COMPLETION(Normal);
+                    RETURN_NORMAL_COMPLETION();
                     
                 InterpreterState interpreterState;
                 if (forInNode->lexpr->isResolveNode())
@@ -2086,7 +2076,7 @@ void runInterpreterLoop(ExecState* exec)
             {
                 exec->context().imp()->popScope();
                 POP_UNWIND_BARRIER(Scope); // scope marker
-                RETURN_COMPLETION(POP_COMPLETION());
+                RETURN_NORMAL_COMPLETION();
             }
 
             case SwitchNodeExecuteState:
@@ -2105,10 +2095,12 @@ void runInterpreterLoop(ExecState* exec)
             case SwitchNodeExecuteState2:
             {
                 POP_UNWIND_BARRIER(Break);
-                Completion res = POP_COMPLETION();
+                Completion res = GET_LAST_COMPLETION();
                 
-                if ((res.complType() == Break) && static_cast<SwitchNode*>(currentNode)->ls.contains(res.target()))
+                if ((res.complType() == Break) && static_cast<SwitchNode*>(currentNode)->ls.contains(res.target())) {
+                    RESET_COMPLETION_TO_NORMAL();
                     RETURN_COMPLETION(Completion(Normal, res.value()));
+                }
                 RETURN_COMPLETION(res);
             }
 
@@ -2122,9 +2114,12 @@ void runInterpreterLoop(ExecState* exec)
             case LabelNodeExecuteState1:
             {
                 POP_UNWIND_BARRIER(Break);
-                Completion e = POP_COMPLETION();
-                if ((e.complType() == Break) && (e.target() == static_cast<LabelNode*>(currentNode)->label))
+                Completion e = GET_LAST_COMPLETION();
+                
+                if ((e.complType() == Break) && (e.target() == static_cast<LabelNode*>(currentNode)->label)) {
+                    RESET_COMPLETION_TO_NORMAL();
                     RETURN_COMPLETION(Completion(Normal, e.value()));
+                }
                 RETURN_COMPLETION(e);
             }
 
@@ -2148,8 +2143,9 @@ void runInterpreterLoop(ExecState* exec)
             {
                 TryNode* tryNode = static_cast<TryNode*>(currentNode);
                 POP_UNWIND_BARRIER(Throw);
-                Completion c = POP_COMPLETION();
+                Completion c = GET_LAST_COMPLETION();
                 if (tryNode->catchBlock && c.complType() == Throw) {
+                    RESET_COMPLETION_TO_NORMAL();
                     JSObject *obj = new JSObject;
                     obj->put(exec, tryNode->exceptionIdent, c.value(), DontDelete);
                     SET_CONTINUE_STATE(TryNodeExecuteState2);
@@ -2176,37 +2172,25 @@ void runInterpreterLoop(ExecState* exec)
 
             case FuncDeclNodeExecuteState:
             {
-                RETURN_COMPLETION(Completion(Normal));
+                RETURN_NORMAL_COMPLETION();
             }
 
             case SourceElementsNodeExecuteState:
-            {
-                PUSH_VALUE(0); // FIXME: I'm not sure this is safe!
-                // fall through
-            }
-            case SourceElementsNodeExecuteState1:
             {
                 // Have to use jump because of fall through above.
                 EXECUTE_AND_JUMP(static_cast<SourceElementsNode*>(currentNode)->node.get(), SourceElementsNodeExecuteState2);
             }
             case SourceElementsNodeExecuteState2:
             {
-                Completion c = POP_COMPLETION();
-                JSValue*& v = PEEK_VALUE();
+                Completion c = GET_LAST_COMPLETION();
                 SourceElementsNode* n = static_cast<SourceElementsNode*>(currentNode);
-                // The spec says to return the last normal completion, but it seems mozilla returns the
-                // last normal completion which has a value.
-                if (c.value())
-                    v = c.value();
-                n = n->next.get();
-                
-                if (n) {
-                    // FIXME, with a little more trickery this "method" could be only 2 states long.
-                    SET_JUMP_STATE(SourceElementsNodeExecuteState1, n);
+                if ((n = n->next.get())) {
+                    // FIXME, with a little more trickery this "method" could be only 1 state.
+                    SET_JUMP_STATE(SourceElementsNodeExecuteState, n);
                     break;
                 }
                 
-                RETURN_COMPLETION(Completion(Normal, POP_VALUE()));
+                RETURN_NORMAL_COMPLETION();
             }
                 
             case CaseBlockNodeExecuteBlockWithInputValue:
@@ -2320,7 +2304,7 @@ void runInterpreterLoop(ExecState* exec)
                     }
                 }
                 if (!caseBlockNode->list2) // never had a "b", we're done.
-                    RETURN_COMPLETION(Completion(Normal));
+                    RETURN_NORMAL_COMPLETION();
                 
                 // fall through
             }
@@ -2342,14 +2326,14 @@ void runInterpreterLoop(ExecState* exec)
                 }
                 POP_NODE(); // done with "b"
                 POP_VALUE(); // done with "input"
-                RETURN_COMPLETION(Completion(Normal));
+                RETURN_NORMAL_COMPLETION();
             }
             
         } // end switch
         
         // This label is used by RETURN_VALUE to break out of nested while loops in case statements
 interpreter_state_switch_end:
-        if (interpreter->peekCompletionReturn().complType() != Normal)
+        if (interpreter->getCompletionReturn().complType() != Normal)
             interpreter->unwindToNextBarrier(exec, currentNode);
     }
 }
@@ -2358,10 +2342,11 @@ interpreter_state_switch_end:
 Completion callExecuteOnNode(StatementNode* node, ExecState* exec)
 {
     InterpreterImp* interpreter = exec->dynamicInterpreter()->imp();
-    PUSH_EXECUTE(node);
     PUSH_UNWIND_BARRIER(All);
+    PUSH_EXECUTE(node);
     runInterpreterLoop(exec);
-    Completion c = interpreter->popCompletionReturn();
+    Completion c = GET_LAST_COMPLETION();
+    RESET_COMPLETION_TO_NORMAL();
     POP_UNWIND_BARRIER(All);
     return c;
 }
