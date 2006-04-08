@@ -2026,7 +2026,7 @@ void runInterpreterLoop(ExecState* exec)
             }
             case ForInNodeExecutePopBreakUnwindBarrierState:
             {
-                if (GET_LAST_COMPLETION().complType() == Continue)
+                if (GET_LAST_COMPLETION().complType() == Break)
                     RESET_COMPLETION_TO_NORMAL();
                 ASSERT(GET_LAST_COMPLETION().complType() == Normal);
                 
