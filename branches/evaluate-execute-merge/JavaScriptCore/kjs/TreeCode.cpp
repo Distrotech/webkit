@@ -1538,11 +1538,11 @@ void runInterpreterLoop(ExecState* exec)
                 RETURN_VALUE(v);
             }
                 
-                
             case CommaNodeEvaluateState:
             {
                 PUSH_EVALUATE(static_cast<CommaNode*>(currentNode)->expr2.get());
                 PUSH_EVALUATE(static_cast<CommaNode*>(currentNode)->expr1.get()); // ignore the first return value
+                break;
             }
             
             case AssignExprNodeEvaluateState:
