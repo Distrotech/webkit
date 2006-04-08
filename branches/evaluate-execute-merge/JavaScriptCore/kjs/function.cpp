@@ -69,6 +69,7 @@ FunctionImp::~FunctionImp()
 
 JSValue *FunctionImp::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
 {
+  ASSERT(!exec->hadException());
   JSObject *globalObj = exec->dynamicInterpreter()->globalObject();
 
   // enter a new execution context
@@ -309,6 +310,7 @@ bool DeclaredFunctionImp::implementsConstruct() const
 // ECMA 13.2.2 [[Construct]]
 JSObject *DeclaredFunctionImp::construct(ExecState *exec, const List &args)
 {
+  ASSERT(!exec->hadException());
   JSObject *proto;
   JSValue *p = get(exec,prototypePropertyName);
   if (p->isObject())
@@ -328,6 +330,7 @@ JSObject *DeclaredFunctionImp::construct(ExecState *exec, const List &args)
 
 Completion DeclaredFunctionImp::execute(ExecState *exec)
 {
+  ASSERT(!exec->hadException());
   Completion result = callExecuteOnNode(body.get(), exec);
 
   if (result.complType() == Throw || result.complType() == ReturnValue)
@@ -814,11 +817,9 @@ JSValue *GlobalFuncImp::callAsFunction(ExecState *exec, JSObject */*thisObj*/, c
         // execute the code
         progNode->processVarDecls(&newExec);
         Completion c = callExecuteOnNode(progNode.get(), &newExec);
+        ASSERT(!newExec.hadException()); // callExecuteOnNode always clears any execption and returns it as part of the Throw completion
 
         // if an exception occured, propogate it back to the previous execution object
-        if (newExec.hadException())
-          exec->setException(newExec.exception());
-
         res = jsUndefined();
         if (c.complType() == Throw)
           exec->setException(c.value());
