@@ -576,6 +576,7 @@ void runInterpreterLoop(ExecState* exec)
                     // FIXME: pushing "p" as the current node is dangerous
                     // If this function had to continue after this loop, currentNode would be the wrong node.
                     SET_JUMP_STATE(PropertyListNodeEvaluateState1, p);
+                    break;
                 }
                 
                 RETURN_VALUE(POP_LOCAL_VALUE());
