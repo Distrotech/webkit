@@ -373,6 +373,8 @@ namespace KXMLCore {
         const T& last() const { return at(size() - 1); }
 
         void resize(size_t size);
+        void shrinkTo(size_t size);
+        void growTo(size_t size);
         void reserveCapacity(size_t newCapacity);
 
         void clear() { resize(0); }
@@ -505,17 +507,34 @@ namespace KXMLCore {
     }
 
     template<typename T, size_t inlineCapacity>
-    void Vector<T, inlineCapacity>::resize(size_t size)
+    inline void Vector<T, inlineCapacity>::shrinkTo(size_t size)
     {
-        if (size <= m_size)
-            TypeOperations::destruct(begin() + size, end());
-        else {
-            if (size > capacity())
-                expandCapacity(size);
-            TypeOperations::initialize(end(), begin() + size);
-        }
+        ASSERT(size <= m_size);
+        
+        TypeOperations::destruct(begin() + size, end());
         
         m_size = size;
+    }
+    
+    template<typename T, size_t inlineCapacity>
+    inline void Vector<T, inlineCapacity>::growTo(size_t size)
+    {
+        ASSERT(size >= m_size);
+
+        if (size > capacity())
+            expandCapacity(size);
+        TypeOperations::initialize(end(), begin() + size);
+                
+        m_size = size;
+    }
+
+    template<typename T, size_t inlineCapacity>
+    inline void Vector<T, inlineCapacity>::resize(size_t size)
+    {
+        if (size <= m_size)
+            shrinkTo(size);
+        else
+            growTo(size);
     }
 
     template<typename T, size_t inlineCapacity>
