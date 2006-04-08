@@ -252,6 +252,15 @@ do { \
 #define PEEK_NODE() (assert(stackBase.nodeStackSize <= interpreter->nodeStackDepth()), interpreter->peekNodeLocal())
 #define POP_NODE() (assert(stackBase.nodeStackSize <= interpreter->nodeStackDepth()), interpreter->popNodeLocal())
 
+// FALL_THROUGH is used in debug builds to allow proper assert checking even
+// when some states fall through to another (thus not changing the current state)
+#if NDEBUG
+#define FALL_THROUGH() \
+    statePair.state = (InterpreterState)(statePair.state + 1)
+#else
+#define FALL_THROUGH()
+#endif
+
 #define RETURN_LIST(list) \
 do {\
     PUSH_LIST(list); \
@@ -467,12 +476,11 @@ void runInterpreterLoop(ExecState* exec)
             {
                 PUSH_LOCAL_VALUE(exec->lexicalInterpreter()->builtinArray()->construct(exec, List::empty()));
                 PUSH_LOCAL_VALUE(jsNumber(0));
-                // fall through
+                FALL_THROUGH();
             }
             case ElementNodeEvaluateState1:
             {
-                // This can't use continue, since we fell through above
-                EVALUATE_AND_JUMP(static_cast<ElementNode*>(currentNode)->node.get(), ElementNodeEvaluateState2);
+                EVALUATE_AND_CONTINUE(static_cast<ElementNode*>(currentNode)->node.get(), ElementNodeEvaluateState2);
             }
             case ElementNodeEvaluateState2:
             {
@@ -500,7 +508,7 @@ void runInterpreterLoop(ExecState* exec)
                 ArrayNode* arrayNode = static_cast<ArrayNode*>(currentNode);
                 if (arrayNode->element)
                     EVALUATE_AND_CONTINUE(arrayNode->element.get(), ArrayNodeEvaluateState1);
-                // fall through
+                FALL_THROUGH();
             }
             case ArrayNodeEvaluateState1:
             {
@@ -537,12 +545,11 @@ void runInterpreterLoop(ExecState* exec)
             {
                 JSObject* obj = exec->lexicalInterpreter()->builtinObject()->construct(exec, List::empty());
                 PUSH_LOCAL_VALUE(obj);
-                // fall through
+                FALL_THROUGH();
             }
             case PropertyListNodeEvaluateState1:
             {
-                // This has to use jump since we fell through above.
-                EVALUATE_AND_JUMP(static_cast<PropertyListNode*>(currentNode)->node->name.get(), PropertyListNodeEvaluateState2);
+                EVALUATE_AND_CONTINUE(static_cast<PropertyListNode*>(currentNode)->node->name.get(), PropertyListNodeEvaluateState2);
             }
             case PropertyListNodeEvaluateState2:
             {
@@ -634,7 +641,7 @@ void runInterpreterLoop(ExecState* exec)
                 PUSH_LOCAL_VALUE(GET_VALUE_RETURN());
                 if (newExprNode->args)
                     EVALUATE_LIST_AND_CONTINUE(newExprNode->args.get(), NewExprNodeEvaluateState2);
-                // fall through
+                FALL_THROUGH();
             }
             case NewExprNodeEvaluateState2:
             {
@@ -1467,7 +1474,7 @@ void runInterpreterLoop(ExecState* exec)
                 KJS_CHECKEXCEPTION();
                 
                 SET_VALUE_RETURN(valueForReadModifyAssignment(exec, v1, v2, assignDotNode->m_oper));
-                // fall through
+                FALL_THROUGH();
             }
             case AssignDotNodeEvaluateState3:
             {
@@ -1558,7 +1565,7 @@ void runInterpreterLoop(ExecState* exec)
                         RETURN_VALUE((JSValue*)0);
                     SET_VALUE_RETURN(jsUndefined());
                 }
-                // fall through
+                FALL_THROUGH();
             }
             case VarDeclNodeEvaluateState1:
             {
@@ -1639,12 +1646,11 @@ void runInterpreterLoop(ExecState* exec)
             case ArgumentListNodeEvaluateListState:
             {
                 PUSH_LIST(List());
-                // fall through
+                FALL_THROUGH();
             }
             case ArgumentListNodeEvaluateListState1:
             {
-                // This has to jump due to the fall through above.
-                EVALUATE_AND_JUMP(static_cast<ArgumentListNode*>(currentNode)->expr.get(), ArgumentListNodeEvaluateListState2);
+                EVALUATE_AND_CONTINUE(static_cast<ArgumentListNode*>(currentNode)->expr.get(), ArgumentListNodeEvaluateListState2);
             }
             case ArgumentListNodeEvaluateListState2:
             {
@@ -1748,8 +1754,7 @@ void runInterpreterLoop(ExecState* exec)
             {
                 ASSERT(GET_LAST_COMPLETION().complType() == Continue);
                 RESET_COMPLETION_TO_NORMAL();
-                
-                // fall through
+                FALL_THROUGH();
             }
             case DoWhileNodeExecuteTestState:
             {
@@ -1762,6 +1767,7 @@ void runInterpreterLoop(ExecState* exec)
 
                 // fall through if the test returns false
                 POP_UNWIND_BARRIER(Continue);
+                FALL_THROUGH();
             }
             case DoWhileNodeExecuteEndState:
             {
@@ -1780,19 +1786,17 @@ void runInterpreterLoop(ExecState* exec)
             {
                 PUSH_UNWIND_BARRIER(Break, WhileNodeExecuteEndState);
                 PUSH_UNWIND_BARRIER(Continue, WhileNodeExecuteContinueState);
-
-                // fall through
+                FALL_THROUGH();
             }
             case WhileNodeExecuteContinueState:
             {
                 ASSERT(GET_LAST_COMPLETION().complType() == Normal || GET_LAST_COMPLETION().complType() == Continue);
                 RESET_COMPLETION_TO_NORMAL();
-                
-                // fall through
+                FALL_THROUGH();
             }
             case WhileNodeExecuteTestState:
             {
-                EVALUATE_AND_JUMP(static_cast<WhileNode*>(currentNode)->expr.get(), WhileNodeExecuteBodyState);
+                EVALUATE_AND_CONTINUE(static_cast<WhileNode*>(currentNode)->expr.get(), WhileNodeExecuteBodyState);
             }
             case WhileNodeExecuteBodyState:
             {
@@ -1801,6 +1805,7 @@ void runInterpreterLoop(ExecState* exec)
 
                 // fall through if the test returns false
                 POP_UNWIND_BARRIER(Continue);
+                FALL_THROUGH();
             }
             case WhileNodeExecuteEndState:
             {
@@ -1825,14 +1830,16 @@ void runInterpreterLoop(ExecState* exec)
                     EVALUATE_AND_CONTINUE(forNode->expr1.get(), ForNodeExecuteTestState);
 
                 // fall through if there's no initilization statement
+                FALL_THROUGH();
             }
             case ForNodeExecuteTestState:
             {
                 ForNode* forNode = static_cast<ForNode*>(currentNode);
                 if (forNode->expr2)
-                    EVALUATE_AND_JUMP(forNode->expr2.get(), ForNodeExecuteBodyState);
+                    EVALUATE_AND_CONTINUE(forNode->expr2.get(), ForNodeExecuteBodyState);
                     
                 // fall through if there's no test statement
+                FALL_THROUGH();
             }
             case ForNodeExecuteBodyState:
             {
@@ -1850,8 +1857,7 @@ void runInterpreterLoop(ExecState* exec)
             {
                 ASSERT(GET_LAST_COMPLETION().complType() == Normal || GET_LAST_COMPLETION().complType() == Continue);
                 RESET_COMPLETION_TO_NORMAL();
-                
-                // fall through
+                FALL_THROUGH();
             }
             case ForNodeExecutePostBodyState:
             {
@@ -1998,11 +2004,9 @@ void runInterpreterLoop(ExecState* exec)
                     base->put(exec, i, str);
                     base->put(exec, Identifier(subscript->toString(exec)), str);
                 }
-
-                SET_JUMP_STATE(ForInNodeExecuteBodyState, currentNode);
-                break; // could just fall through here, but better to be explicit and consistent
-            }
-            
+                
+                FALL_THROUGH();
+            }            
             case ForInNodeExecuteBodyState:
             {
                 PUSH_UNWIND_BARRIER(Continue, ForInNodeExecutePopContinueUnwindBarrierState);
@@ -2184,10 +2188,9 @@ void runInterpreterLoop(ExecState* exec)
 
             case SourceElementsNodeExecuteState:
             {
-                // Have to use jump because of fall through above.
-                EXECUTE_AND_JUMP(static_cast<SourceElementsNode*>(currentNode)->node.get(), SourceElementsNodeExecuteState2);
+                EXECUTE_AND_CONTINUE(static_cast<SourceElementsNode*>(currentNode)->node.get(), SourceElementsNodeExecuteState1);
             }
-            case SourceElementsNodeExecuteState2:
+            case SourceElementsNodeExecuteState1:
             {
                 Completion c = GET_LAST_COMPLETION();
                 SourceElementsNode* n = static_cast<SourceElementsNode*>(currentNode);
@@ -2215,12 +2218,12 @@ void runInterpreterLoop(ExecState* exec)
                 }
                 
                 PUSH_NODE(caseBlockNode->list1.get()); // push "a"
-                // fall through
+                FALL_THROUGH();
             }
             case CaseBlockNodeExecuteBlockWithInputValue1: // top of first "a" loop
             {
                 ClauseListNode* a = static_cast<ClauseListNode*>(PEEK_NODE());
-                EVALUATE_AND_JUMP(a->getClause(), CaseBlockNodeExecuteBlockWithInputValue2);
+                EVALUATE_AND_CONTINUE(a->getClause(), CaseBlockNodeExecuteBlockWithInputValue2);
             }
             case CaseBlockNodeExecuteBlockWithInputValue2:
             {
@@ -2253,7 +2256,7 @@ void runInterpreterLoop(ExecState* exec)
                     EXECUTE_AND_CONTINUE(a->getClause()->next.get(), CaseBlockNodeExecuteBlockWithInputValue4);
                     break;
                 }
-                // fall through
+                FALL_THROUGH();
             }
             case CaseBlockNodeExecuteBlockWithInputValue4:
             {
@@ -2265,7 +2268,7 @@ void runInterpreterLoop(ExecState* exec)
                 }
                 
                 POP_NODE(); // we're done with "a"
-                // fall through to first "b" loop
+                FALL_THROUGH();
             }
             case CaseBlockNodeExecuteBlockWithInputValue5: // staging area for "b" loops
             {
@@ -2275,12 +2278,12 @@ void runInterpreterLoop(ExecState* exec)
                     break;
                 }
                 PUSH_NODE(caseBlockNode->list2.get()); // push "b"
-                // fall through
+                FALL_THROUGH();
             }
             case CaseBlockNodeExecuteBlockWithInputValue6: // top of first "b" loop
             {
                 ClauseListNode* b = static_cast<ClauseListNode*>(PEEK_NODE());
-                EVALUATE_AND_JUMP(b->getClause(), CaseBlockNodeExecuteBlockWithInputValue7);
+                EVALUATE_AND_CONTINUE(b->getClause(), CaseBlockNodeExecuteBlockWithInputValue7);
             }
             case CaseBlockNodeExecuteBlockWithInputValue7:
             {
@@ -2302,14 +2305,14 @@ void runInterpreterLoop(ExecState* exec)
                 }
                 
                 POP_NODE(); // pop "b"
-                // fall through
+                FALL_THROUGH();
             }
             case CaseBlockNodeExecuteBlockWithInputValue8: // default clause
             {
                 CaseBlockNode* caseBlockNode = static_cast<CaseBlockNode*>(currentNode);
                 if (caseBlockNode->list2) {
                     PUSH_NODE(caseBlockNode->list2.get()); // push "b"
-                    SET_JUMP_STATE(CaseBlockNodeExecuteBlockWithInputValue9, currentNode);
+                    SET_CONTINUE_STATE(CaseBlockNodeExecuteBlockWithInputValue9);
                 } else 
                     SET_JUMP_STATE(CaseBlockNodeExecuteBlockWithInputValue11, currentNode);
 
