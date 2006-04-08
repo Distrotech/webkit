@@ -2340,6 +2340,8 @@ void runInterpreterLoop(ExecState* exec)
                     EXECUTE_AND_JUMP(b->getClause()->next.get(), CaseBlockNodeExecuteBlockWithInputValue10);
                     break;
                 }
+                
+                FALL_THROUGH();
             }
             case CaseBlockNodeExecuteBlockWithInputValue10:
             {
