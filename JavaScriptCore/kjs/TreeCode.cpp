@@ -640,18 +640,16 @@ void runInterpreterLoop(ExecState* exec)
             {
                 NewExprNode* newExprNode = static_cast<NewExprNode*>(currentNode);
                 JSValue* v = POP_LOCAL_VALUE();
-                
                 List argList;
                 if (newExprNode->args)
                     argList = POP_LIST();
                 
                 if (!v->isObject())
                     RETURN_ERROR(newExprNode->throwError(exec, TypeError, "Value %s (result of expression %s) is not an object. Cannot be used with new.", v, newExprNode->expr.get()));
-                
                 JSObject *constr = static_cast<JSObject*>(v);
                 if (!constr->implementsConstruct())
                     RETURN_ERROR(newExprNode->throwError(exec, TypeError, "Value %s (result of expression %s) is not a constructor. Cannot be used with new.", v, newExprNode->expr.get()));
-                
+
                 RETURN_VALUE(constr->construct(exec, argList));
             }
                 
@@ -1761,10 +1759,10 @@ void runInterpreterLoop(ExecState* exec)
                     EXECUTE_AND_JUMP(static_cast<DoWhileNode*>(currentNode)->statement.get(), DoWhileNodeExecuteTestState);
 
                 // fall through if the test returns false
+                POP_UNWIND_BARRIER(Continue);
             }
             case DoWhileNodeExecuteEndState:
             {
-                POP_UNWIND_BARRIER(Continue);
                 POP_UNWIND_BARRIER(Break);
                 
                 ComplType complType = GET_LAST_COMPLETION().complType();
@@ -1772,7 +1770,6 @@ void runInterpreterLoop(ExecState* exec)
                     ASSERT(complType == Break);
                     RESET_COMPLETION_TO_NORMAL();
                 }
-                
                 break;
             }
             
@@ -1784,7 +1781,6 @@ void runInterpreterLoop(ExecState* exec)
 
                 // fall through
             }
-                
             case WhileNodeExecuteContinueState:
             {
                 ASSERT(GET_LAST_COMPLETION().complType() == Normal || GET_LAST_COMPLETION().complType() == Continue);
@@ -1792,23 +1788,20 @@ void runInterpreterLoop(ExecState* exec)
                 
                 // fall through
             }
-                
             case WhileNodeExecuteTestState:
             {
                 EVALUATE_AND_JUMP(static_cast<WhileNode*>(currentNode)->expr.get(), WhileNodeExecuteBodyState);
             }
-                
             case WhileNodeExecuteBodyState:
             {
                 if (GET_VALUE_RETURN()->toBoolean(exec))
                     EXECUTE_AND_JUMP(static_cast<WhileNode*>(currentNode)->statement.get(), WhileNodeExecuteTestState);
 
                 // fall through if the test returns false
+                POP_UNWIND_BARRIER(Continue);
             }
-                
             case WhileNodeExecuteEndState:
             {
-                POP_UNWIND_BARRIER(Continue);
                 POP_UNWIND_BARRIER(Break);
 
                 ComplType complType = GET_LAST_COMPLETION().complType();
@@ -1844,6 +1837,7 @@ void runInterpreterLoop(ExecState* exec)
                 ForNode* forNode = static_cast<ForNode*>(currentNode);
 
                 if (forNode->expr2 && !GET_VALUE_RETURN()->toBoolean(exec)) {
+                    POP_UNWIND_BARRIER(Continue); // we're done, no more continues possible
                     SET_JUMP_STATE(ForNodeExecuteEndState, forNode);
                     break;
                 }
@@ -1865,11 +1859,9 @@ void runInterpreterLoop(ExecState* exec)
                 if (forNode->expr3)
                     PUSH_EVALUATE(forNode->expr3.get());
                 break;
-            
             }
             case ForNodeExecuteEndState:
             {
-                POP_UNWIND_BARRIER(Continue);
                 POP_UNWIND_BARRIER(Break);
                 
                 ComplType complType = GET_LAST_COMPLETION().complType();
@@ -2352,6 +2344,10 @@ void runInterpreterLoop(ExecState* exec)
         
         // This label is used by RETURN_VALUE to break out of nested while loops in case statements
 interpreter_state_switch_end:
+        if (exec->hadException()) {
+            interpreter->resetCompletionToNormal();
+            interpreter->setCompletionReturn(Completion(Throw, exec->exception()));
+        }
         if (interpreter->getCompletionReturn().complType() != Normal)
             interpreter->unwindToNextBarrier(exec, currentNode);
     }
