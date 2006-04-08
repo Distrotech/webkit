@@ -816,6 +816,9 @@ JSValue *GlobalFuncImp::callAsFunction(ExecState *exec, JSObject */*thisObj*/, c
         
         // execute the code
         progNode->processVarDecls(&newExec);
+        
+        // The value returned by eval will become the new completion value
+        exec->dynamicInterpreter()->imp()->resetCompletionToNormal();
         Completion c = callExecuteOnNode(progNode.get(), &newExec);
         ASSERT(!newExec.hadException()); // callExecuteOnNode always clears any execption and returns it as part of the Throw completion
 
