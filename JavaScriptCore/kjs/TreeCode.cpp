@@ -1740,7 +1740,9 @@ void runInterpreterLoop(ExecState* exec)
             {
                 PUSH_UNWIND_BARRIER(Break, DoWhileNodeExecuteEndState);
                 PUSH_UNWIND_BARRIER(Continue, DoWhileNodeExecuteContinueState);
-                EXECUTE_AND_JUMP(static_cast<DoWhileNode*>(currentNode)->statement.get(), DoWhileNodeExecuteBodyState);
+                SET_VALUE_RETURN(jsBoolean(true));
+                SET_JUMP_STATE(DoWhileNodeExecuteBodyState, currentNode);
+                break;
             }
             case DoWhileNodeExecuteContinueState:
             {
