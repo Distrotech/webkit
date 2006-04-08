@@ -254,7 +254,7 @@ do { \
 
 // FALL_THROUGH is used in debug builds to allow proper assert checking even
 // when some states fall through to another (thus not changing the current state)
-#if NDEBUG
+#ifndef NDEBUG
 #define FALL_THROUGH() \
     statePair.state = (InterpreterState)(statePair.state + 1)
 #else
