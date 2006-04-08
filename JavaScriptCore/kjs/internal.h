@@ -197,8 +197,7 @@ namespace KJS {
           T pop();
           size_t size() const { return m_vector.size(); }
           bool isEmpty() const { return m_vector.isEmpty(); }
-          // FIXME: Resize should be removed, replace with a multi-pop/shrink operation
-          void shrinkTo(size_t newSize) { m_vector.resize(newSize); }
+          void shrinkTo(size_t newSize) { m_vector.shrinkTo(newSize); }
           T& operator[](unsigned i) { return m_vector.at(i); }
           const T& operator[](unsigned i) const { return m_vector.at(i); }
     private:
