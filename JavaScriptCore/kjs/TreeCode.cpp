@@ -2000,10 +2000,9 @@ void runInterpreterLoop(ExecState* exec)
                 JSValue* str = POP_LOCAL_VALUE();
                 
                 uint32_t i;
-                if (subscript->getUInt32(i)) {
+                if (subscript->getUInt32(i))
                     base->put(exec, i, str);
-                    base->put(exec, Identifier(subscript->toString(exec)), str);
-                }
+                base->put(exec, Identifier(subscript->toString(exec)), str);
                 
                 FALL_THROUGH();
             }            
@@ -2157,8 +2156,16 @@ void runInterpreterLoop(ExecState* exec)
                     exec->context().imp()->pushScope(obj);
                     EXECUTE_AND_CONTINUE(tryNode->catchBlock.get(), TryNodeExecutePopScopeAfterCatchBlockState);
                 }
-                if (tryNode->finallyBlock)
+                
+                if (tryNode->finallyBlock) {
+                    // We will have to re-throw after finally if we didn't catch this exception
+                    if (GET_LAST_COMPLETION().complType() == Throw) {
+                        PUSH_LOCAL_VALUE(c.value());
+                        RESET_COMPLETION_TO_NORMAL();
+                        SET_JUMP_STATE(TryNodeExecuteRethrowAfterFinallyState, currentNode);
+                    }
                     PUSH_EXECUTE(tryNode->finallyBlock.get());
+                }
                 break;
             }
             case TryNodeExecutePopScopeAfterCatchBlockState:
@@ -2179,6 +2186,11 @@ void runInterpreterLoop(ExecState* exec)
                 POP_UNWIND_BARRIER(Throw);
                 if (tryNode->finallyBlock)
                     PUSH_EXECUTE(tryNode->finallyBlock.get());
+                break;
+            }
+            case TryNodeExecuteRethrowAfterFinallyState:
+            {
+                RETURN_COMPLETION(Completion(Throw, POP_LOCAL_VALUE()));
             }
 
             case FuncDeclNodeExecuteState:
@@ -2292,7 +2304,7 @@ void runInterpreterLoop(ExecState* exec)
                 JSValue* input = PEEK_LOCAL_VALUE();
                 if (strictEqual(exec, input, v)) {
                     // skip over default clause, evaluate statement block if possible.
-                    SET_JUMP_STATE(CaseBlockNodeExecuteBlockWithInputValue9, currentNode);
+                    SET_JUMP_STATE(CaseBlockNodeExecuteBlockWithInputValue10, currentNode);
                     if (b->getClause()->next)
                         PUSH_EXECUTE(b->getClause()->next.get());
                     break;

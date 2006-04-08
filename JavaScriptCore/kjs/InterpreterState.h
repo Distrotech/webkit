@@ -208,6 +208,7 @@ namespace KJS {
     macro(TryNodeExecuteExceptionThrownState) \
     macro(TryNodeExecutePopScopeAfterCatchBlockState) \
     macro(TryNodeExecuteNoExceptionThrownState) \
+    macro(TryNodeExecuteRethrowAfterFinallyState) \
     macro(FuncDeclNodeExecuteState) \
     macro(SourceElementsNodeExecuteState) \
     macro(SourceElementsNodeExecuteState1) \
