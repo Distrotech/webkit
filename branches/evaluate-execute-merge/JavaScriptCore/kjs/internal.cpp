@@ -763,10 +763,23 @@ void InterpreterImp::unwindToNextBarrier(ExecState* exec, Node* currentNode)
     int unwindBarrierIndex = m_unwindBarrierStack.size() - 1;
     while (unwindBarrierIndex >= 0) {
         const UnwindBarrier& barrier = m_unwindBarrierStack[unwindBarrierIndex];
+        // FIXME: Hack for popping the scope chain when unwinding past a scope push
         if (barrier.barrierType & Scope)
             exec->context().imp()->popScope();
-        if (barrier.barrierType & m_completionReturn.complType())
-            break;
+
+        if (barrier.barrierType & m_completionReturn.complType()) {
+            if (m_completionReturn.target().isNull())
+                break;
+
+            // Only Break and Continue completions have target labels.
+            ASSERT(m_completionReturn.complType() == Break || m_completionReturn.complType() == Continue);
+            
+            // If the completion is labeled, only a label node's unwind barrier can catch it.
+            Node* barrierNode = m_stateStack[barrier.stateStackSize - 1].node;
+            if (barrierNode->isLabelNode() && 
+                static_cast<LabelNode*>(barrierNode)->label == m_completionReturn.target())
+                break;
+        }
         unwindBarrierIndex--;
     }
     

@@ -96,6 +96,7 @@ namespace KJS {
     virtual bool isBracketAccessorNode() const { return false; }
     virtual bool isDotAccessorNode() const { return false; }
     virtual bool isGroupNode() const { return false; }
+    virtual bool isLabelNode() const { return false; }
 
     virtual void breakCycle() { }
 
@@ -774,6 +775,7 @@ namespace KJS {
   struct LabelNode : public StatementNode {
     LabelNode(const Identifier &l, StatementNode *s) 
         : StatementNode(LabelNodeExecuteState), label(l), statement(s) { }
+    virtual bool isLabelNode() const { return true; }
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
     Identifier label;
