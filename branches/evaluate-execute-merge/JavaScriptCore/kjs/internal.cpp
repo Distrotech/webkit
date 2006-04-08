@@ -495,7 +495,8 @@ Completion InterpreterImp::evaluate(const UChar* code, int codeLength, JSValue* 
   if (!progNode)
     return Completion(Throw, Error::create(&globExec, SyntaxError, errMsg, errLine, sid, &sourceURL));
 
-  globExec.clearException();
+  ASSERT(!globExec.hadException());
+  ASSERT(m_completionReturn.complType() == Normal && m_completionReturn.value() == 0);
 
   recursion++;
 
@@ -507,10 +508,13 @@ Completion InterpreterImp::evaluate(const UChar* code, int codeLength, JSValue* 
       thisObj = thisV->toObject(&globExec);
 
   Completion res;
-  if (globExec.hadException())
+  if (globExec.hadException()) {
     // the thisV->toObject() conversion above might have thrown an exception - if so, propagate it
     res = Completion(Throw, globExec.exception());
-  else {
+      
+    globExec.clearException();
+    resetCompletionToNormal();
+  } else {
     // execute the code
     ContextImp ctx(globalObj, this, thisObj, progNode.get());
     ExecState newExec(m_interpreter, &ctx);
@@ -520,6 +524,9 @@ Completion InterpreterImp::evaluate(const UChar* code, int codeLength, JSValue* 
 
   recursion--;
 
+  ASSERT(!globExec.hadException());
+  ASSERT(m_completionReturn.complType() == Normal && m_completionReturn.value() == 0);
+  
   return res;
 }
 
