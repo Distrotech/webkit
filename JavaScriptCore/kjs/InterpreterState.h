@@ -211,7 +211,6 @@ namespace KJS {
     macro(FuncDeclNodeExecuteState) \
     macro(SourceElementsNodeExecuteState) \
     macro(SourceElementsNodeExecuteState1) \
-    macro(SourceElementsNodeExecuteState2) \
     macro(CaseBlockNodeExecuteBlockWithInputValue) \
     macro(CaseBlockNodeExecuteBlockWithInputValue1) \
     macro(CaseBlockNodeExecuteBlockWithInputValue2) \
