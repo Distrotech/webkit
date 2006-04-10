@@ -630,7 +630,12 @@ namespace KJS {
     BlockNode(SourceElementsNode *s);
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
-    RefPtr<SourceElementsNode> source;
+
+    // FIXME: Once all execution is stack-based, we'll only need a tail pointer, and no head
+
+    // Our ref to the list head implicitly refs the list tail
+    SourceElementsNode* sourceTail;
+    RefPtr<SourceElementsNode> sourceHead;
   };
 
   struct EmptyStatementNode : public StatementNode {
@@ -859,7 +864,10 @@ namespace KJS {
     virtual void streamTo(SourceStream&) const;
     PassRefPtr<SourceElementsNode> releaseNext() { return next.release(); }
     virtual void breakCycle();
+
+    // FIXME: Once all execution is stack-based, we'll only need a prev pointer, and no next
     RefPtr<StatementNode> node;
+    SourceElementsNode* prev; // the list is ref'd from head to tail to avoid a ref cycle
     ListRefPtr<SourceElementsNode> next;
   };
 

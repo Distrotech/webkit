@@ -554,7 +554,7 @@ void VarStatementNode::streamTo(SourceStream &s) const
 void BlockNode::streamTo(SourceStream &s) const
 {
   s << SourceStream::Endl << "{" << SourceStream::Indent
-    << source << SourceStream::Unindent << SourceStream::Endl << "}";
+    << sourceHead << SourceStream::Unindent << SourceStream::Endl << "}";
 }
 
 void EmptyStatementNode::streamTo(SourceStream &s) const

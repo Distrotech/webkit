@@ -432,18 +432,19 @@ void VarStatementNode::processVarDecls(ExecState *exec)
 BlockNode::BlockNode(SourceElementsNode *s) : StatementNode(BlockNodeExecuteState)
 {
   if (s) {
-    source = s->next.release();
-    Parser::removeNodeCycle(source.get());
+    sourceTail = s;
+    sourceHead = s->next.release();
+    Parser::removeNodeCycle(sourceHead.get());
     setLoc(s->firstLine(), s->lastLine());
   } else {
-    source = 0;
+    sourceHead = 0;
   }
 }
 
 void BlockNode::processVarDecls(ExecState *exec)
 {
-  if (source)
-    source->processVarDecls(exec);
+  if (sourceHead)
+    sourceHead->processVarDecls(exec);
 }
 
 // ------------------------------ IfNode ---------------------------------------
@@ -608,8 +609,8 @@ FunctionBodyNode::FunctionBodyNode(SourceElementsNode *s)
 
 void FunctionBodyNode::processFuncDecl(ExecState *exec)
 {
-    if (source)
-        source->processFuncDecl(exec);
+    if (sourceHead)
+        sourceHead->processFuncDecl(exec);
 }
 
 // ------------------------------ FuncDeclNode ---------------------------------
@@ -652,14 +653,14 @@ void FuncDeclNode::processFuncDecl(ExecState *exec)
 int SourceElementsNode::count = 0;
 
 SourceElementsNode::SourceElementsNode(StatementNode *s1)
-    : StatementNode(SourceElementsNodeExecuteState), node(s1), next(this)
+    : StatementNode(SourceElementsNodeExecuteState), node(s1), prev(0), next(this)
 {
     Parser::noteNodeCycle(this);
     setLoc(s1->firstLine(), s1->lastLine());
 }
 
 SourceElementsNode::SourceElementsNode(SourceElementsNode *s1, StatementNode *s2)
-    : StatementNode(SourceElementsNodeExecuteState), node(s2), next(s1->next.release())
+    : StatementNode(SourceElementsNodeExecuteState), node(s2), prev(s1), next(s1->next.release())
 {
     s1->next = this;
     setLoc(s1->firstLine(), s2->lastLine());
