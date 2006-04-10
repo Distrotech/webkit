@@ -206,9 +206,9 @@ namespace KJS {
   struct ArrayNode : public Node {
     ArrayNode(int e) : Node(ArrayNodeEvaluateState), elision(e), opt(true) { }
     ArrayNode(ElementNode* ele)
-      : Node(ArrayNodeEvaluateState), element(ele->next), elision(0), opt(false) { Parser::removeNodeCycle(element.get()); ele->next = 0; }
+      : Node(ArrayNodeEvaluateState), element(ele->next.release()), elision(0), opt(false) { Parser::removeNodeCycle(element.get()); }
     ArrayNode(int eli, ElementNode* ele)
-      : Node(ArrayNodeEvaluateState), element(ele->next), elision(eli), opt(true) { Parser::removeNodeCycle(element.get()); ele->next = 0; }
+      : Node(ArrayNodeEvaluateState), element(ele->next.release()), elision(eli), opt(true) { Parser::removeNodeCycle(element.get()); }
     virtual void streamTo(SourceStream&) const;
     RefPtr<ElementNode> element;
     int elision;
@@ -248,7 +248,7 @@ namespace KJS {
 
   struct ObjectLiteralNode : public Node {
     ObjectLiteralNode() : Node(ObjectLiteralNodeEvaluateState) { }
-    ObjectLiteralNode(PropertyListNode *l) : Node(ObjectLiteralNodeEvaluateState), list(l->next) { Parser::removeNodeCycle(list.get()); l->next = 0; }
+    ObjectLiteralNode(PropertyListNode *l) : Node(ObjectLiteralNodeEvaluateState), list(l->next.release()) { Parser::removeNodeCycle(list.get()); }
     virtual void streamTo(SourceStream&) const;
     RefPtr<PropertyListNode> list;
   };
@@ -294,7 +294,7 @@ namespace KJS {
   struct ArgumentsNode : public Node {
     ArgumentsNode() : Node(ArgumentsNodeEvaluateListState) { }
     ArgumentsNode(ArgumentListNode *l)
-      : Node(ArgumentsNodeEvaluateListState), list(l->next) { Parser::removeNodeCycle(list.get()); l->next = 0; }
+      : Node(ArgumentsNodeEvaluateListState), list(l->next.release()) { Parser::removeNodeCycle(list.get()); }
     virtual void streamTo(SourceStream&) const;
     RefPtr<ArgumentListNode> list;
   };
@@ -617,9 +617,9 @@ namespace KJS {
 
   struct VarStatementNode : public StatementNode {
     VarStatementNode(VarDeclListNode *l) 
-        : StatementNode(VarStatementNodeExecuteState), next(l->next) 
+        : StatementNode(VarStatementNodeExecuteState), next(l->next.release()) 
     {
-        Parser::removeNodeCycle(next.get()); l->next = 0; 
+        Parser::removeNodeCycle(next.get());
     }
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
@@ -676,9 +676,8 @@ namespace KJS {
     ForNode(Node* e1, Node* e2, Node* e3, StatementNode *s)
         : StatementNode(ForNodeExecuteState), expr1(e1), expr2(e2), expr3(e3), statement(s) { }
     ForNode(VarDeclListNode* e1, Node* e2, Node* e3, StatementNode *s) 
-        : StatementNode(ForNodeExecuteState), expr1(e1->next), expr2(e2), expr3(e3), statement(s) 
+        : StatementNode(ForNodeExecuteState), expr1(e1->next.release()), expr2(e2), expr3(e3), statement(s) 
     { 
-        e1->next = 0;
         Parser::removeNodeCycle(expr1.get()); 
     }
     virtual void processVarDecls(ExecState*);
@@ -732,7 +731,7 @@ namespace KJS {
 
   struct CaseClauseNode : public Node {
     CaseClauseNode(Node* e) : Node(CaseClauseNodeEvaluateState), expr(e) {} 
-    CaseClauseNode(Node* e, StatListNode *l) : Node(CaseClauseNodeEvaluateState), expr(e), next(l->next) { Parser::removeNodeCycle(next.get()); l->next = 0; }
+    CaseClauseNode(Node* e, StatListNode *l) : Node(CaseClauseNodeEvaluateState), expr(e), next(l->next.release()) { Parser::removeNodeCycle(next.get());}
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr;
@@ -825,7 +824,7 @@ namespace KJS {
 
   struct FuncExprNode : public Node {
     FuncExprNode(const Identifier &i, FunctionBodyNode *b, ParameterNode *p = 0)
-      : Node(FuncExprNodeEvaluateState), ident(i), param(p ? p->next : 0), body(b) { if (p) { Parser::removeNodeCycle(param.get()); p->next = 0; } }
+      : Node(FuncExprNodeEvaluateState), ident(i), param(p ? p->next.release() : 0), body(b) { if (p) { Parser::removeNodeCycle(param.get()); } }
     virtual void streamTo(SourceStream&) const;
     // Used for streamTo
     Identifier ident;
@@ -837,9 +836,8 @@ namespace KJS {
     FuncDeclNode(const Identifier &i, FunctionBodyNode *b)
         : StatementNode(FuncDeclNodeExecuteState), ident(i), body(b) { }
     FuncDeclNode(const Identifier &i, ParameterNode *p, FunctionBodyNode *b)
-        : StatementNode(FuncDeclNodeExecuteState), ident(i), param(p->next), body(b) 
+        : StatementNode(FuncDeclNodeExecuteState), ident(i), param(p->next.release()), body(b) 
     { 
-        p->next = 0;
         Parser::removeNodeCycle(param.get());
     }
     virtual void processFuncDecl(ExecState*);
