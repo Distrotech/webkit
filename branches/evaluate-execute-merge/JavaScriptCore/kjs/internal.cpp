@@ -643,15 +643,15 @@ static void printUnwindBarrier(const InterpreterImp::UnwindBarrier& unwindBarrie
     if (barrierType == All)
         printf(" All");
     else {
-        if (barrierType & Break)
+        if (barrierType == Break)
             printf(" Break");
-        if (barrierType & Continue)
+        if (barrierType == Continue)
             printf(" Continue");
-        if (barrierType & ReturnValue)
+        if (barrierType == ReturnValue)
             printf(" ReturnValue");
-        if (barrierType & Throw)
+        if (barrierType == Throw)
             printf(" Throw");
-        if (barrierType & Scope)
+        if (barrierType == Scope)
             printf(" Scope");
     }
     printf(", state: %s (%i) node: %p", nameForInterpreterState[unwindBarrier.continueState.state], unwindBarrier.continueState.state, unwindBarrier.continueState.node);
@@ -705,7 +705,7 @@ void InterpreterImp::printStateStack()
         printf("<empty>\n");
     
     int unwindIter = m_unwindBarrierStack.size() - 1;
-    for (int x = size-1; x >= 0; x--) {
+    for (int x = size - 1; x >= 0; x--) {
         printUnwindBarriersIfNecessary(m_unwindBarrierStack, unwindIter, x, StateStack); 
         InterpreterState state = m_stateStack[x].state;
         printf("%i: %s (%i), %p\n", x, nameForInterpreterState[state], state, m_stateStack[x].node);
@@ -721,7 +721,7 @@ void InterpreterImp::printValueStack()
         printf("<empty>\n");
     
     int unwindIter = m_unwindBarrierStack.size() - 1;
-    for (int x = size-1; x >= 0; x--) {
+    for (int x = size - 1; x >= 0; x--) {
         printUnwindBarriersIfNecessary(m_unwindBarrierStack, unwindIter, x, ValueStack);
         JSValue* v = m_valueStack[x];
         printf("%i: %p [type: %s] [value: %s]\n"
@@ -767,70 +767,63 @@ void InterpreterImp::unwindToNextBarrier(ExecState* exec, Node* currentNode)
 {
     ASSERT(m_completionReturn.complType() != Normal);
     
-    int unwindBarrierIndex = m_unwindBarrierStack.size() - 1;
-    while (unwindBarrierIndex >= 0) {
-        const UnwindBarrier& barrier = m_unwindBarrierStack[unwindBarrierIndex];
+    UnwindBarrier* barrier = 0;
+    int barrierIndex = m_unwindBarrierStack.size() - 1;
+    while (barrierIndex >= 0) {
+        barrier = &m_unwindBarrierStack[barrierIndex];
+        // FIXME: Hack for recognizing function call frame barriers
+        if (barrier->barrierType == All)
+            break;
+        
         // FIXME: Hack for popping the scope chain when unwinding past a scope push
-        if (barrier.barrierType & Scope)
+        if (barrier->barrierType == Scope)
             exec->context().imp()->popScope();
-
-        if (barrier.barrierType & m_completionReturn.complType()) {
-            if (m_completionReturn.target().isNull())
-                break;
-
-            // Only Break and Continue completions have target labels.
-            ASSERT(m_completionReturn.complType() == Break || m_completionReturn.complType() == Continue);
-            
-            // If the completion is labeled, only a label node's unwind barrier can catch it.
-            Node* barrierNode = m_stateStack[barrier.stateStackSize - 1].node;
-            if (barrierNode->isLabelNode() && 
-                static_cast<LabelNode*>(barrierNode)->label == m_completionReturn.target())
+        
+        if (barrier->barrierType == m_completionReturn.complType()) {
+            StatementNode* barrierNode = static_cast<StatementNode*>(barrier->continueState.node);
+            if (barrierNode->ls.contains(m_completionReturn.target()) || barrierNode->isLabelNode())
                 break;
         }
-        unwindBarrierIndex--;
+        barrierIndex--;
     }
     
-    UnwindBarrier unwindBarrier;
-    
-    if (unwindBarrierIndex < 0) {
-        // FIXME: This is dead code.  The proper place for this code is at the top level execute() call.
-        ASSERT_NOT_REACHED();
-        
-        // if we failed to find a matching barrier, then we throw an error
+    if (barrier->barrierType == All) { // unwinding past a function call frame
         switch (m_completionReturn.complType()) {
         default:
         case Normal:
             ASSERT_NOT_REACHED();
             break;
+        // You can't "break" out of a function
         case Break:
         {
-            const Identifier& ident = m_completionReturn.target();
-            if (ident.isEmpty())
-                m_completionReturn = currentNode->createErrorCompletion(exec, SyntaxError, "Invalid continue statement.");
-            else if (!ident.isEmpty())
-                m_completionReturn = currentNode->createErrorCompletion(exec, SyntaxError, "Label %s not found.", ident);
+            // FIXME: This check should happen at parse time. Then it can change to an ASSERT.
+            const Identifier& target = m_completionReturn.target();
+            if (target.isEmpty())
+                m_completionReturn = currentNode->createErrorCompletion(exec, SyntaxError, "Invalid break statement.");
+            else
+                m_completionReturn = currentNode->createErrorCompletion(exec, SyntaxError, "Label %s not found.", target);
             break;
         }
+        // You can't "continue" out of a function
         case Continue:
         {
-            const Identifier& ident = m_completionReturn.target();
-            if (ident.isEmpty())
+            // FIXME: This check should happen at parse time. Then it can change to an ASSERT.
+            const Identifier& target = m_completionReturn.target();
+            if (target.isEmpty())
                 m_completionReturn = currentNode->createErrorCompletion(exec, SyntaxError, "Invalid continue statement.");
-            else if (!ident.isEmpty())
-                m_completionReturn = currentNode->createErrorCompletion(exec, SyntaxError, "Label %s not found.", ident);
+            else
+                m_completionReturn = currentNode->createErrorCompletion(exec, SyntaxError, "Label %s not found.", target);
             break;
         }
+        // You can "return" and "throw" out of a function, so we propogate the completion to the calling frame
         case ReturnValue:
         case Throw:
-            // un-caught returns and throws just fall out to the caller.
             break;
         }
-        unwindBarrier = UnwindBarrier(0, State(), 0, 0, 0, 0);
-    } else
-        unwindBarrier = m_unwindBarrierStack[unwindBarrierIndex];
-    
-    // In case a throw was made from an internal function or eval or any other node w/o a line number
-    // we walk the state stack until we find a node with a valid line number.
+    }
+
+    // If a throw comes from an internal function or an eval statement, it doesn't include a line number,
+    // so we walk the state stack until we find a node with a valid line number, which should be the caller.
     if (exec->hadException()) {    
         JSValue *exceptionValue = exec->exception();
         if (exceptionValue->isObject()) {
@@ -839,7 +832,7 @@ void InterpreterImp::unwindToNextBarrier(ExecState* exec, Node* currentNode)
                 exception->put(exec, "sourceURL", jsString(currentSourceURL(exec)));
             if (!exception->hasProperty(exec, "line")) {
                 // Walk the state stack until we find a valid line number
-                int stateStackUnwindLimit = unwindBarrier.stateStackSize;
+                int stateStackUnwindLimit = barrier->stateStackSize;
                 for (int stateStackIndex = stateStackDepth() - 1; stateStackIndex >= stateStackUnwindLimit; stateStackIndex--) {
                     const State& state = m_stateStack[stateStackIndex];
                     if (state.node->m_line != -1) {
@@ -852,18 +845,24 @@ void InterpreterImp::unwindToNextBarrier(ExecState* exec, Node* currentNode)
         exec->clearException();
     }
     
-    // Now that we've actually decided where to unwind to, do the unwind.
-    m_unwindBarrierStack.shrinkTo(unwindBarrierIndex + 1);
-    ASSERT(valueStackDepth() >= unwindBarrier.valueStackSize);
-    ASSERT(stateStackDepth() >= unwindBarrier.stateStackSize);
-    ASSERT(listStackDepth() >= unwindBarrier.listStackSize);
-    ASSERT(nodeStackDepth() >= unwindBarrier.nodeStackSize);
-    m_valueStack.shrinkTo(unwindBarrier.valueStackSize);
-    m_stateStack.shrinkTo(unwindBarrier.stateStackSize);
-    m_listReturnStack.shrinkTo(unwindBarrier.listStackSize);
-    m_nodeStack.shrinkTo(unwindBarrier.nodeStackSize);
-    if (unwindBarrier.continueState.state != InternalErrorState)
-        pushNextState(unwindBarrier.continueState);
+    // Reset the unwind barrier stack
+    m_unwindBarrierStack.shrinkTo(barrierIndex + 1);
+
+    // ASSERT that unwinding travels down the stack, not up
+    ASSERT(valueStackDepth() >= barrier->valueStackSize);
+    ASSERT(stateStackDepth() >= barrier->stateStackSize);
+    ASSERT(listStackDepth() >= barrier->listStackSize);
+    ASSERT(nodeStackDepth() >= barrier->nodeStackSize);
+
+    // Unwind the stacks
+    m_stateStack.shrinkTo(barrier->stateStackSize);
+    m_valueStack.shrinkTo(barrier->valueStackSize);
+    m_listReturnStack.shrinkTo(barrier->listStackSize);
+    m_nodeStack.shrinkTo(barrier->nodeStackSize);
+    
+    // FIXME: Hack for recognizing function call frame barriers and scope chain barriers
+    if (barrier->continueState.state != InternalErrorState)
+        pushNextState(barrier->continueState);
 }
 
 // ------------------------------ InternalFunctionImp --------------------------

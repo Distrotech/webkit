@@ -197,7 +197,7 @@ static ALWAYS_INLINE JSValue *valueForReadModifyAssignment(ExecState * exec, JSV
 #define PUSH_LOCAL_VALUE(value) \
     (printf("PUSH %s (%i) called on %p, pushing %p, pre-push depth: %i\n", nameForInterpreterState[statePair.state], statePair.state, statePair.node, value, interpreter->valueStackDepth()), interpreter->pushValueLocal(value))
 
-#define POP_LOCAL_VALUE() (printf("POP %s (%i) called on %p, popping, pre-pop depth: %i\n", nameForInterpreterState[statePair.state], statePair.state, statePair.node, interpreter->valueStackDepth()), assert(stackBase.valueStackSize <= interpreter->valueStackDepth()), interpreter->popValueLocal())
+#define POP_LOCAL_VALUE() (printf("POP %s (%i) called on %p, popping, pre-pop depth: %i\n", nameForInterpreterState[statePair.state], statePair.state, statePair.node, interpreter->valueStackDepth()), assert(interpreter->valueStackDepth() > stackBase.valueStackSize), interpreter->popValueLocal())
 
 #define RETURN_VALUE(value) \
 {\
@@ -217,7 +217,7 @@ static ALWAYS_INLINE JSValue *valueForReadModifyAssignment(ExecState * exec, JSV
 #else
 
 #define PUSH_LOCAL_VALUE(value) interpreter->pushValueLocal(value)
-#define POP_LOCAL_VALUE() (assert(stackBase.valueStackSize <= interpreter->valueStackDepth()), interpreter->popValueLocal())
+#define POP_LOCAL_VALUE() (assert(interpreter->valueStackDepth() > stackBase.valueStackSize), interpreter->popValueLocal())
 
 #define RETURN_VALUE(value) \
 do {\
@@ -242,15 +242,15 @@ do { \
 } while (0)
 
 
-#define PEEK_LOCAL_VALUE() (assert(stackBase.valueStackSize <= interpreter->valueStackDepth()), interpreter->peekValueLocal())
+#define PEEK_LOCAL_VALUE() (assert(interpreter->valueStackDepth() > stackBase.valueStackSize), interpreter->peekValueLocal())
 
 #define PUSH_LIST(list) interpreter->pushListReturn(list)
-#define PEEK_LIST() (assert(stackBase.listStackSize <= interpreter->listStackDepth()), interpreter->peekListReturn())
-#define POP_LIST() (assert(stackBase.listStackSize <= interpreter->listStackDepth()), interpreter->popListReturn())
+#define PEEK_LIST() (assert(interpreter->listStackDepth() > stackBase.listStackSize), interpreter->peekListReturn())
+#define POP_LIST() (assert(interpreter->listStackDepth() > stackBase.listStackSize), interpreter->popListReturn())
 
 #define PUSH_NODE(node) interpreter->pushNodeLocal(node)
-#define PEEK_NODE() (assert(stackBase.nodeStackSize <= interpreter->nodeStackDepth()), interpreter->peekNodeLocal())
-#define POP_NODE() (assert(stackBase.nodeStackSize <= interpreter->nodeStackDepth()), interpreter->popNodeLocal())
+#define PEEK_NODE() (assert(interpreter->nodeStackDepth() > stackBase.nodeStackSize), interpreter->peekNodeLocal())
+#define POP_NODE() (assert(interpreter->nodeStackDepth() > stackBase.nodeStackSize), interpreter->popNodeLocal())
 
 // FALL_THROUGH is used in debug builds to allow proper assert checking even
 // when some states fall through to another (thus not changing the current state)
@@ -394,7 +394,8 @@ void runInterpreterLoop(ExecState* exec)
             if (interpreter->debugger() && interpreter->debugger()->imp()->aborted())
                 RETURN_NORMAL_COMPLETION(); // FIXME: Do something the debugger can use
         }
-        
+
+        // FIXME: ONLY check when checking if we've run too long
         if (Collector::isOutOfMemory())
             RETURN_COMPLETION(Completion(Throw, Error::create(exec, GeneralError, "Out of memory")));
 
@@ -1918,16 +1919,23 @@ void runInterpreterLoop(ExecState* exec)
                 
                 JSObject *o = e->toObject(exec);
                 KJS_CHECKEXCEPTION();
+                Stack<Identifier, 256> propertyStack;
                 ReferenceList propList = o->propList(exec);
                 ReferenceListIterator propIt = propList.begin();
                 while (propIt != propList.end()) {
                     Identifier name = propIt->getPropertyName(exec);
-                    if (o->hasProperty(exec, name)) {
-                        PUSH_LOCAL_VALUE(jsString(name.ustring()));
-                        SET_JUMP_STATE(interpreterState, forInNode);
-                    }
-                    
+                    if (o->hasProperty(exec, name))
+                        propertyStack.push(name);
+
                     propIt++;
+                }
+
+                // FIXME: Store these in the right order, so we don't have to reverse
+                // them to push them onto the stack
+                size_t numProperties = propertyStack.size();
+                for (size_t i = 0; i < numProperties; i++) {
+                    PUSH_LOCAL_VALUE(jsString(propertyStack.pop().ustring()));
+                    SET_JUMP_STATE(interpreterState, forInNode);
                 }
                     
                 break;
@@ -2105,7 +2113,7 @@ void runInterpreterLoop(ExecState* exec)
                     RESET_COMPLETION_TO_NORMAL();
                     RETURN_COMPLETION(Completion(Normal, res.value()));
                 }
-                RETURN_COMPLETION(res);
+                break;
             }
 
             case LabelNodeExecuteState:
@@ -2124,7 +2132,7 @@ void runInterpreterLoop(ExecState* exec)
                     RESET_COMPLETION_TO_NORMAL();
                     RETURN_COMPLETION(Completion(Normal, e.value()));
                 }
-                RETURN_COMPLETION(e);
+                break;
             }
 
             case ThrowNodeExecuteState:
@@ -2376,13 +2384,17 @@ interpreter_state_switch_end:
 Completion callExecuteOnNode(StatementNode* node, ExecState* exec)
 {
     InterpreterImp* interpreter = exec->dynamicInterpreter()->imp();
-    // FIXME: Need a way to catch unwinds without executing another statement
+
+    // FIXME: It's a bit of a hack to use InternalErrorState to represent the stack frame barrier
     interpreter->pushUnwindBarrier(All, InterpreterImp::State(InternalErrorState, 0));
+
     PUSH_EXECUTE(node);
     runInterpreterLoop(exec);
+
+    POP_UNWIND_BARRIER(All);
+
     Completion c = GET_LAST_COMPLETION();
     RESET_COMPLETION_TO_NORMAL();
-    POP_UNWIND_BARRIER(All);
     return c;
 }
 

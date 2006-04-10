@@ -123,8 +123,8 @@ Completion Interpreter::evaluate(const UString& sourceURL, int startingLineNumbe
         JSLock lock;
         ExecState *exec = rep->globalExec();
         CString f = sourceURL.UTF8String();
-        CString message = comp.value()->toObject(exec)->toString(exec).UTF8String();
-        int line = comp.value()->toObject(exec)->get(exec, "line")->toUInt32(exec);
+        CString message = comp.value()->toString(exec).UTF8String();
+        int line = comp.value()->isObject() ? comp.value()->toObject(exec)->get(exec, "line")->toUInt32(exec) : 0;
 #if PLATFORM(WIN_OS)
         printf("%s line %d: %s\n", f.c_str(), line, message.c_str());
 #else
