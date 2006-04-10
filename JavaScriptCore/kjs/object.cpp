@@ -65,7 +65,6 @@ namespace KJS {
 JSValue *JSObject::call(ExecState *exec, JSObject *thisObj, const List &args)
 {
   assert(implementsCall());
-  ASSERT(!exec->hadException());
 
 #if KJS_MAX_STACK > 0
   static int depth = 0; // sum of all concurrent interpreters

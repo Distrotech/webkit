@@ -817,13 +817,16 @@ JSValue *GlobalFuncImp::callAsFunction(ExecState *exec, JSObject */*thisObj*/, c
         // execute the code
         progNode->processVarDecls(&newExec);
         
-        // The value returned by eval will become the new completion value
+        // Eval returns the value of the last statement executed by the interpreter. We need
+        // to clear that value initially, otherwise an eval that only executed empty statements (e.g. eval(""))
+        // would return the value of the last statement executed before the eval, instead of 'undefined'.
         exec->dynamicInterpreter()->imp()->resetCompletionToNormal();
-        Completion c = callExecuteOnNode(progNode.get(), &newExec);
-        ASSERT(!newExec.hadException()); // callExecuteOnNode always clears any execption and returns it as part of the Throw completion
-
-        // if an exception occured, propogate it back to the previous execution object
         res = jsUndefined();
+
+        Completion c = callExecuteOnNode(progNode.get(), &newExec);
+        // callExecuteOnNode clears exceptions and returns them as part of a Throw completion
+        ASSERT(!newExec.hadException());
+
         if (c.complType() == Throw)
           exec->setException(c.value());
         else if (c.isValueCompletion())
