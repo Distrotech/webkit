@@ -1699,11 +1699,11 @@ void runInterpreterLoop(ExecState* exec)
             case BlockNodeExecuteState:
             {
                 BlockNode* blockNode = static_cast<BlockNode*>(currentNode);
-                if (!blockNode->source)
+                if (!blockNode->sourceHead)
                     RETURN_NORMAL_COMPLETION();
                 
-                blockNode->source->processFuncDecl(exec);
-                PUSH_EXECUTE(blockNode->source.get());
+                blockNode->sourceHead->processFuncDecl(exec);
+                PUSH_EXECUTE(blockNode->sourceTail);
                 break;
             }
 
@@ -2207,19 +2207,13 @@ void runInterpreterLoop(ExecState* exec)
 
             case SourceElementsNodeExecuteState:
             {
-                EXECUTE_AND_CONTINUE(static_cast<SourceElementsNode*>(currentNode)->node.get(), SourceElementsNodeExecuteState1);
-            }
-            case SourceElementsNodeExecuteState1:
-            {
-                Completion c = GET_LAST_COMPLETION();
                 SourceElementsNode* n = static_cast<SourceElementsNode*>(currentNode);
-                if ((n = n->next.get())) {
-                    // FIXME, with a little more trickery this "method" could be only 1 state.
-                    SET_JUMP_STATE(SourceElementsNodeExecuteState, n);
-                    break;
+                while (n) {
+                    PUSH_EXECUTE(n->node.get());
+                    n = n->prev;
                 }
                 
-                RETURN_NORMAL_COMPLETION();
+                break;
             }
                 
             case CaseBlockNodeExecuteBlockWithInputValue:
