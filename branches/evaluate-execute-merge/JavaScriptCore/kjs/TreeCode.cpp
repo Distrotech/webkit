@@ -859,8 +859,7 @@ void runInterpreterLoop(ExecState* exec)
                         JSValue *v = slot.getValue(exec, base, ident);
                         
                         double n = v->toNumber(exec);
-                        
-                        double newValue = (postfixResolveNode->m_oper == OpPlusPlus) ? n + 1 : n - 1;
+                        double newValue = (postfixResolveNode->m_oper == OpPlusPlus) ? n + 1.0 : n - 1.0;
                         base->put(exec, ident, jsNumber(newValue));
                         
                         RETURN_VALUE(jsNumber(n));
