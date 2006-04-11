@@ -377,7 +377,7 @@ namespace KXMLCore {
         void growTo(size_t size);
         void reserveCapacity(size_t newCapacity);
 
-        void clear() { resize(0); }
+        void clear() { shrinkTo(0); }
 
         template<typename U> void append(const U&);
         template<typename U> void insert(size_t position, const U&);
@@ -386,7 +386,7 @@ namespace KXMLCore {
         void removeLast() 
         {
             ASSERT(!isEmpty());
-            resize(size() - 1); 
+            shrinkTo(size() - 1); 
         }
 
         Vector(size_t size, const T& val)
@@ -432,7 +432,7 @@ namespace KXMLCore {
             return *this;
         
         if (size() > other.size())
-            resize(other.size());
+            shrinkTo(other.size());
         else if (other.size() > capacity()) {
             clear();
             reserveCapacity(other.size());
@@ -453,7 +453,7 @@ namespace KXMLCore {
             return *this;
         
         if (size() > other.size())
-            resize(other.size());
+            shrinkTo(other.size());
         else if (other.size() > capacity()) {
             clear();
             reserveCapacity(other.size());
@@ -470,7 +470,7 @@ namespace KXMLCore {
     void Vector<T, inlineCapacity>::fill(const T& val, size_t newSize)
     {
         if (size() > newSize)
-            resize(newSize);
+            shrinkTo(newSize);
         else if (newSize > capacity()) {
             clear();
             reserveCapacity(newSize);

@@ -824,12 +824,13 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 
                 JSObject* func = static_cast<JSObject*>(funcVal);
                 
-                if (!func->implementsCall())
-                    RETURN_ERROR(functionCallDotNode->throwError(exec, TypeError, dotExprDoesNotAllowCallsString(), funcVal, functionCallDotNode->base.get(), ident));
+                if (func->implementsCall()) {
+                    PUSH_LOCAL_VALUE(func); // push "FunctionImp"
+                    PUSH_LOCAL_VALUE(baseObj); // push "thisObj"
+                    EVALUATE_ARGUMENT_LIST_AND_JUMP_TO_CALL(functionCallDotNode->args.get()); // argsList is pushed as part of call
+                }
                 
-                PUSH_LOCAL_VALUE(func); // push "FunctionImp"
-                PUSH_LOCAL_VALUE(baseObj); // push "thisObj"
-                EVALUATE_ARGUMENT_LIST_AND_JUMP_TO_CALL(functionCallDotNode->args.get()); // argsList is pushed as part of call
+                RETURN_ERROR(functionCallDotNode->throwError(exec, TypeError, dotExprDoesNotAllowCallsString(), funcVal, functionCallDotNode->base.get(), ident));
             }
 
 
@@ -1692,12 +1693,12 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             case BlockNodeExecuteState:
             {
                 BlockNode* blockNode = static_cast<BlockNode*>(currentNode);
-                if (!blockNode->sourceHead)
-                    RETURN_NORMAL_COMPLETION();
-                
-                blockNode->sourceHead->processFuncDecl(exec);
-                PUSH_EXECUTE(blockNode->sourceTail);
-                break;
+                if (blockNode->sourceHead) {
+                    blockNode->sourceHead->processFuncDecl(exec);
+                    PUSH_EXECUTE(blockNode->sourceTail);
+                    break;
+                }
+                RETURN_NORMAL_COMPLETION();
             }
 
             case EmptyStatementNodeExecuteState:
@@ -1726,12 +1727,11 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                     break;
                 }
                 
-                // no else
-                if (!ifNode->statement2)
-                    RETURN_NORMAL_COMPLETION();
-                
-                PUSH_EXECUTE(ifNode->statement2.get());
-                break;
+                if (ifNode->statement2) {
+                    PUSH_EXECUTE(ifNode->statement2.get());
+                    break;
+                }
+                RETURN_NORMAL_COMPLETION();
             }
 
 
@@ -2049,13 +2049,13 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 ReturnNode* returnNode = static_cast<ReturnNode*>(currentNode);
 
                 CodeType codeType = exec->context().imp()->codeType();
-                if (codeType != FunctionCode && codeType != AnonymousCode)
-                    RETURN_COMPLETION(returnNode->createErrorCompletion(exec, SyntaxError, "Invalid return statement."));
+                if (codeType == FunctionCode || codeType == AnonymousCode) {
+                    if (!returnNode->value)
+                        RETURN_COMPLETION(Completion(ReturnValue, jsUndefined()));
+                    EVALUATE_AND_CONTINUE(returnNode->value.get(), ReturnNodeExecuteState1);
+                }
                 
-                if (!returnNode->value)
-                    RETURN_COMPLETION(Completion(ReturnValue, jsUndefined()));
-                
-                EVALUATE_AND_CONTINUE(returnNode->value.get(), ReturnNodeExecuteState1);
+                RETURN_COMPLETION(returnNode->createErrorCompletion(exec, SyntaxError, "Invalid return statement."));
             }
             case ReturnNodeExecuteState1:
             {
@@ -2201,10 +2201,10 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             case SourceElementsNodeExecuteState:
             {
                 SourceElementsNode* n = static_cast<SourceElementsNode*>(currentNode);
-                while (n) {
+                do {
                     PUSH_EXECUTE(n->node.get());
                     n = n->prev;
-                }
+                } while (n);
                 
                 break;
             }
