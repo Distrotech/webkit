@@ -262,16 +262,6 @@ void StatementNode::setLoc(int firstLine, int lastLine)
     m_lastLine = lastLine;
 }
 
-// return true if the debugger wants us to stop at this point
-bool StatementNode::hitStatement(ExecState* exec)
-{
-  Debugger *dbg = exec->dynamicInterpreter()->imp()->debugger();
-  if (dbg)
-    return dbg->atStatement(exec, currentSourceId(exec), firstLine(), lastLine());
-  else
-    return true; // continue
-}
-
 void StatementNode::processFuncDecl(ExecState*)
 {
 }

@@ -252,9 +252,18 @@ ContextImp::~ContextImp()
 
 void ContextImp::mark()
 {
-  for (ContextImp *context = this; context; context = context->_callingContext) {
-    context->scope.mark();
-  }
+    // FIXME: This context walk should go away once all Contexts are on the interpreter context stack
+    for (ContextImp *context = this; context; context = context->_callingContext)
+        context->scope.mark();
+    
+    if (_function && !_function->marked())
+        _function->mark();
+    if (activation && !activation->marked())
+        activation->mark();
+    if (!variable->marked())
+        variable->mark();
+    if (!thisVal->marked())
+        thisVal->mark();
 }
 
 // ------------------------------ InterpreterImp -------------------------------
@@ -441,24 +450,27 @@ void InterpreterImp::clear()
 
 void InterpreterImp::mark()
 {
-  if (m_interpreter)
-    m_interpreter->mark();
-  if (_context)
-    _context->mark();
-  if (global)
-      global->mark();
-  if (globExec.exception())
-      globExec.exception()->mark();
-  unsigned size = m_valueStack.size();
-  for (unsigned x = 0; x < size; x++) {
-    JSValue* val = m_valueStack[x];
-    if (!val->marked())
-        val->mark();
-  }
-  if (m_valueReturn && !m_valueReturn->marked())
-    m_valueReturn->mark();
-  if (m_completionReturn.value() && !m_completionReturn.value()->marked())
-    m_completionReturn.value()->mark();
+    if (m_interpreter)
+        m_interpreter->mark();
+    if (_context)
+        _context->mark();
+    if (global)
+        global->mark();
+    if (globExec.exception())
+        globExec.exception()->mark();
+    unsigned size = m_valueStack.size();
+    for (unsigned x = 0; x < size; x++) {
+        JSValue* val = m_valueStack[x];
+        if (!val->marked())
+            val->mark();
+    }
+    if (m_valueReturn && !m_valueReturn->marked())
+        m_valueReturn->mark();
+    if (m_completionReturn.value() && !m_completionReturn.value()->marked())
+        m_completionReturn.value()->mark();
+    size = m_execStateStack.size();
+    for (unsigned x = 0; x < size; x++)
+        m_execStateStack[x]->context().imp()->mark();
 }
 
 bool InterpreterImp::checkSyntax(const UString &code)
@@ -859,6 +871,14 @@ void InterpreterImp::unwindToNextBarrier(ExecState* exec, Node* currentNode)
     m_valueStack.shrinkTo(barrier->valueStackSize);
     m_listReturnStack.shrinkTo(barrier->listStackSize);
     m_nodeStack.shrinkTo(barrier->nodeStackSize);
+    
+    // FIXME: We really should have a more elegant ExecState cleanup mechanism, after ExecState and Context merge
+    for (unsigned x = m_execStateStack.size(); x > barrier->execStateStackSize; --x) {
+        ExecState* exec = m_execStateStack[x-1];
+        delete exec->context().imp();
+        delete exec;
+    }
+    m_execStateStack.shrinkTo(barrier->execStateStackSize);
     
     // FIXME: Hack for recognizing function call frame barriers and scope chain barriers
     if (barrier->continueState.state != InternalErrorState)

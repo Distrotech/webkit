@@ -38,6 +38,7 @@ namespace KJS {
    */
   class FunctionImp : public InternalFunctionImp {
     friend class ActivationImp;
+    friend class InterpreterImp;
   public:
     FunctionImp(ExecState* exec, const Identifier& n, FunctionBodyNode* b);
     virtual ~FunctionImp();
@@ -73,6 +74,7 @@ namespace KJS {
   };
 
   class DeclaredFunctionImp : public FunctionImp {
+    friend class InterpreterImp;
   public:
     DeclaredFunctionImp(ExecState *exec, const Identifier &n,
                         FunctionBodyNode *b, const ScopeChain &sc);

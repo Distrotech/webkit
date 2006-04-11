@@ -54,24 +54,22 @@ namespace KJS  {
     void pushScope(JSObject *s) { scope.push(s); }
     void popScope() { scope.pop(); }
     LabelStack *seenLabels() { return &ls; }
-        
+    
     void mark();
-
+    
   private:
     InterpreterImp *_interpreter;
     ContextImp *_callingContext;
     FunctionBodyNode* m_currentBody;
 
-    FunctionImp *_function;
+    FunctionImp* _function;
     const List *_arguments;
-    // because ContextImp is always allocated on the stack,
-    // there is no need to protect various pointers from conservative
-    // GC since they will be caught by the conservative sweep anyway!
-    JSObject *activation;
+    
+    JSObject* activation;
     
     ScopeChain scope;
-    JSObject *variable;
-    JSObject *thisVal;
+    JSObject* variable;
+    JSObject* thisVal;
 
     LabelStack ls;
     int m_iterationDepth;

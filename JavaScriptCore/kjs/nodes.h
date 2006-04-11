@@ -43,34 +43,34 @@ namespace KJS {
   class SourceStream;
   
   enum Operator { OpEqual,
-		  OpEqEq,
-		  OpNotEq,
-		  OpStrEq,
-		  OpStrNEq,
-		  OpPlusEq,
-		  OpMinusEq,
-		  OpMultEq,
-		  OpDivEq,
+                  OpEqEq,
+                  OpNotEq,
+                  OpStrEq,
+                  OpStrNEq,
+                  OpPlusEq,
+                  OpMinusEq,
+                  OpMultEq,
+                  OpDivEq,
                   OpPlusPlus,
-		  OpMinusMinus,
-		  OpLess,
-		  OpLessEq,
-		  OpGreater,
-		  OpGreaterEq,
-		  OpAndEq,
-		  OpXOrEq,
-		  OpOrEq,
-		  OpModEq,
+                  OpMinusMinus,
+                  OpLess,
+                  OpLessEq,
+                  OpGreater,
+                  OpGreaterEq,
+                  OpAndEq,
+                  OpXOrEq,
+                  OpOrEq,
+                  OpModEq,
                   OpAnd,
                   OpOr,
-		  OpBitAnd,
-		  OpBitXOr,
-		  OpBitOr,
-		  OpLShift,
-		  OpRShift,
-		  OpURShift,
-		  OpIn,
-		  OpInstanceOf
+                  OpBitAnd,
+                  OpBitXOr,
+                  OpBitOr,
+                  OpLShift,
+                  OpRShift,
+                  OpURShift,
+                  OpIn,
+                  OpInstanceOf
   };
 
   struct Node {
@@ -128,7 +128,6 @@ namespace KJS {
     void setLoc(int line0, int line1);
     int firstLine() const { return lineNo(); }
     int lastLine() const { return m_lastLine; }
-    bool hitStatement(ExecState*);
 
     void pushLabel(const Identifier &id) { ls.push(id); }
     virtual void processFuncDecl(ExecState*);

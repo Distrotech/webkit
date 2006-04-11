@@ -45,6 +45,7 @@ namespace KJS {
   class Debugger;
   class FunctionPrototype;
   class Node;
+  class StatementNode;
     
   // ---------------------------------------------------------------------------
   //                            Primitive impls
@@ -217,6 +218,7 @@ namespace KJS {
 
   class InterpreterImp {
     friend class Collector;
+    friend Completion callExecuteOnNode(StatementNode*, ExecState*); // FIXME: remove once all callers are rolled into the interpreter
   public:
     InterpreterImp(Interpreter *interp, JSObject *glob);
     ~InterpreterImp();
@@ -283,11 +285,14 @@ namespace KJS {
 
     void saveBuiltins (SavedBuiltins &builtins) const;
     void restoreBuiltins (const SavedBuiltins &builtins);
-            
-    JSValue*& peekValueLocal() { return m_valueStack.peek(); }
-    JSValue* popValueLocal() { return m_valueStack.pop(); }
-    void pushValueLocal(JSValue* value) { m_valueStack.push(value); }
-    unsigned valueStackDepth() { return m_valueStack.size(); }
+
+
+    /* TreeCode Support */
+    
+    void runInterpreterLoop(ExecState*);
+    
+    // FIXME: this should be private once all callers are moved into the interpreter loop
+    void resetCompletionToNormal() { m_completionReturn = Normal; }
     
     struct State {
         State() { } // Allow Stack<T> array-based allocation
@@ -295,29 +300,18 @@ namespace KJS {
         InterpreterState state;
         Node* node;
     };
-
-    const Completion& getCompletionReturn() { return m_completionReturn; }
-    void resetCompletionToNormal() { m_completionReturn = Normal; }
-    void setCompletionReturn(const Completion& c) { ASSERT(m_completionReturn.complType() == Normal); if (c.complType() != Normal || c.value()) m_completionReturn = c; }
-    
-    JSValue* getValueReturn() { return m_valueReturn; }
-    void setValueReturn(JSValue* v) { m_valueReturn = v; }
-    
-    const State& peekNextState() { return m_stateStack.peek(); }
-    State popNextState() { return m_stateStack.pop(); }
-    void pushNextState(const State& state) { m_stateStack.push(state); }
-    unsigned stateStackDepth() { return m_stateStack.size(); }
     
     struct UnwindBarrier {
         UnwindBarrier() { } // Allow Stack<T> array-based allocation
-        UnwindBarrier(short type, const State& state, size_t valueBase, size_t stateBase, size_t listBase, size_t nodeBase)
+        UnwindBarrier(short type, const State& state, size_t valueBase, size_t stateBase, size_t listBase, size_t nodeBase, size_t execBase)
             : barrierType(type)
             , continueState(state)
             , valueStackSize(valueBase)
             , stateStackSize(stateBase)
             , listStackSize(listBase)
-            , nodeStackSize(nodeBase) 
-        { 
+            , nodeStackSize(nodeBase)
+            , execStateStackSize(execBase)
+        {
         }
 
         short barrierType;
@@ -326,7 +320,25 @@ namespace KJS {
         size_t stateStackSize;
         size_t listStackSize;
         size_t nodeStackSize;
+        size_t execStateStackSize;
     };
+
+  private:
+    JSValue*& peekValueLocal() { return m_valueStack.peek(); }
+    JSValue* popValueLocal() { return m_valueStack.pop(); }
+    void pushValueLocal(JSValue* value) { m_valueStack.push(value); }
+    unsigned valueStackDepth() const { return m_valueStack.size(); }
+
+    const Completion& getCompletionReturn() { return m_completionReturn; }
+    void setCompletionReturn(const Completion& c) { ASSERT(m_completionReturn.complType() == Normal); if (c.complType() != Normal || c.value()) m_completionReturn = c; }
+    
+    JSValue* getValueReturn() { return m_valueReturn; }
+    void setValueReturn(JSValue* v) { m_valueReturn = v; }
+    
+    const State& peekNextState() { return m_stateStack.peek(); }
+    State popNextState() { return m_stateStack.pop(); }
+    void pushNextState(const State& state) { m_stateStack.push(state); }
+    unsigned stateStackDepth() const { return m_stateStack.size(); }
     
     const UnwindBarrier& peekUnwindBarrier()
     {
@@ -336,7 +348,7 @@ namespace KJS {
     // FIXME: ASSERT that enum/short conversion doesn't lose data
     void pushUnwindBarrier(short barrierType, State continueState)
     {
-        UnwindBarrier unwindBarrier(barrierType, continueState, valueStackDepth(), stateStackDepth(), listStackDepth(), nodeStackDepth());
+        UnwindBarrier unwindBarrier(barrierType, continueState, valueStackDepth(), stateStackDepth(), listStackDepth(), nodeStackDepth(), execStateStackDepth());
         m_unwindBarrierStack.push(unwindBarrier);
     }
     void popUnwindBarrier()
@@ -347,20 +359,26 @@ namespace KJS {
         ASSERT(stateStackDepth() == unwindBarrier.stateStackSize);
         ASSERT(listStackDepth() == unwindBarrier.listStackSize);
         ASSERT(nodeStackDepth() == unwindBarrier.nodeStackSize);
+        ASSERT(execStateStackDepth() == unwindBarrier.execStateStackSize);
 #endif
         m_unwindBarrierStack.pop();
     }
     void unwindToNextBarrier(ExecState* exec, Node* currentNode);
-        
+    
     List& peekListReturn() { return m_listReturnStack.peek(); }
     List popListReturn() { return m_listReturnStack.pop(); }
     void pushListReturn(const List& list) { m_listReturnStack.push(list); }
-    unsigned listStackDepth() { return m_listReturnStack.size(); }
+    unsigned listStackDepth() const { return m_listReturnStack.size(); }
     
     Node*& peekNodeLocal() { return m_nodeStack.peek(); }
     Node* popNodeLocal() { return m_nodeStack.pop(); }
     void pushNodeLocal(Node* node) { m_nodeStack.push(node); }
-    unsigned nodeStackDepth() { return m_nodeStack.size(); }
+    unsigned nodeStackDepth() const { return m_nodeStack.size(); }
+    
+    ExecState*& peekExecState() { return m_execStateStack.peek(); }
+    void pushExecState(ExecState *exec) { m_execStateStack.push(exec); }
+    ExecState* popExecState() { return m_execStateStack.pop(); }
+    unsigned execStateStackDepth() const { return m_execStateStack.size(); }
     
     void printStacks();
     void printStateStack();
@@ -368,7 +386,6 @@ namespace KJS {
     void printListStack();
     void printUnwindBarrierStack();
 
-  private:
     void clear();
     Interpreter *m_interpreter;
     JSObject *global;
@@ -430,6 +447,11 @@ namespace KJS {
     Stack<JSValue*, KJS_MAX_STACK> m_valueStack;
     Stack<List, KJS_MAX_STACK> m_listReturnStack;
     Stack<Node*, KJS_MAX_STACK> m_nodeStack;
+    
+    // FIXME: This stack does not yet contain all exec states in the call chain
+    // Eventually globalObject.eval() as well as any other creators of ExecStates
+    // should push thier ExecStates onto this stack.
+    Stack<ExecState*> m_execStateStack;
   };
 
   class AttachedInterpreter;

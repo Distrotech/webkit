@@ -57,16 +57,12 @@ namespace KJS {
     macro(NewExprNodeEvaluateState2) \
     macro(FunctionCallValueNodeEvaluateState) \
     macro(FunctionCallValueNodeEvaluateState1) \
-    macro(FunctionCallValueNodeEvaluateState2) \
     macro(FunctionCallResolveNodeEvaluateState) \
-    macro(FunctionCallResolveNodeEvaluateState1) \
     macro(FunctionCallBracketNodeEvaluateState) \
     macro(FunctionCallBracketNodeEvaluateState1) \
     macro(FunctionCallBracketNodeEvaluateState2) \
-    macro(FunctionCallBracketNodeEvaluateState3) \
     macro(FunctionCallDotNodeEvaluateState) \
     macro(FunctionCallDotNodeEvaluateState1) \
-    macro(FunctionCallDotNodeEvaluateState2) \
     macro(PostfixResolveNodeEvaluateState) \
     macro(PostfixBracketNodeEvaluateState) \
     macro(PostfixBracketNodeEvaluateState1) \
@@ -240,6 +236,10 @@ enum InterpreterState {
 
     EVALUATE_MACRO_FOR_EACH_EXECUTE_STATE(PRINT_AS_ENUM)
 #undef PRINT_AS_ENUM
+
+    JSObjectCallState,
+    JSObjectCallEndState,
+    JSObjectCallExplicitReturnState,
 
     LastInterpreterState
 }; 

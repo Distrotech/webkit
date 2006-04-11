@@ -63,6 +63,11 @@ const char* nameForInterpreterState[LastInterpreterState+1] = {
     
     EVALUATE_MACRO_FOR_EACH_EXECUTE_STATE(PRINT_AS_STRING)
 #undef PRINT_AS_STRING
+
+    "JSObjectCallState",
+    "JSObjectCallEndState",
+    "JSObjectCallExplicitReturnState",
+
     "LastInterpreterState"
 };
 
@@ -326,7 +331,16 @@ do { \
     ASSERT(interpreter->peekUnwindBarrier().barrierType == type); \
     interpreter->popUnwindBarrier(); \
 } while (0)
+
+#define PUSH_EXECSTATE(exec) \
+    interpreter->pushExecState(exec)
+
+#define POP_EXECSTATE() \
+    interpreter->popExecState()
     
+#define PEEK_EXECSTATE() \
+    interpreter->peekExecState()
+
 #define EXECUTE_AND_CONTINUE(node, nextState) \
 do { \
     SET_CONTINUE_STATE(nextState); \
@@ -367,15 +381,23 @@ do { \
     goto interpreter_state_switch_end; \
 } while (0)
 
-void runInterpreterLoop(ExecState* exec)
+// This call can only be used for jumping to the special JSObjectCallState
+#define EVALUATE_ARGUMENT_LIST_AND_JUMP_TO_CALL(argsNode) \
+{ \
+    SET_JUMP_STATE(JSObjectCallState, argsNode); \
+    PUSH_EVALUATE_LIST(argsNode); \
+    goto interpreter_state_switch_end; \
+}
+
+void InterpreterImp::runInterpreterLoop(ExecState* exec)
 {
     ASSERT(!exec->hadException());
+    ASSERT(exec->dynamicInterpreter()->imp() == this);
     
-    bool debuggerAttached = Debugger::debuggersPresent > 0;
-
-    InterpreterImp* interpreter = exec->dynamicInterpreter()->imp();
+    InterpreterImp* interpreter = this;
+    Debugger* debugger = interpreter->debugger();
     InterpreterImp::UnwindBarrier stackBase = interpreter->peekUnwindBarrier();
-    
+        
     while (interpreter->stateStackDepth() > stackBase.stateStackSize) {
     
         // FIXME: As a loop optimization, we should just peek, instead of pop here
@@ -388,10 +410,14 @@ void runInterpreterLoop(ExecState* exec)
 #endif
 
         // FIXME: This is wrong, this won't actually return.
-        if (debuggerAttached) {
-            if (IS_EXECUTE_STATE(statePair.state) && !static_cast<StatementNode*>(currentNode)->hitStatement(exec))
-                RETURN_NORMAL_COMPLETION(); // FIXME: Do something the debugger can use
-            if (interpreter->debugger() && interpreter->debugger()->imp()->aborted())
+        if (debugger) {
+            if (IS_EXECUTE_STATE(statePair.state)) {
+                StatementNode* statementNode = static_cast<StatementNode*>(currentNode);
+                bool shouldContinue = debugger->atStatement(exec, currentSourceId(exec), statementNode->firstLine(), statementNode->lastLine());
+                if (!shouldContinue)
+                    RETURN_NORMAL_COMPLETION(); // FIXME: Do something the debugger can use
+            }
+            if (debugger->imp()->aborted())
                 RETURN_NORMAL_COMPLETION(); // FIXME: Do something the debugger can use
         }
 
@@ -675,15 +701,10 @@ void runInterpreterLoop(ExecState* exec)
                 JSObject *func = static_cast<JSObject*>(v);
                 if (!func->implementsCall())
                     RETURN_ERROR(functionCallValueNode->throwError(exec, TypeError, "Object %s (result of expression %s) does not allow calls.", v, functionCallValueNode->expr.get()));
-                PUSH_LOCAL_VALUE(func);
-                EVALUATE_LIST_AND_CONTINUE(functionCallValueNode->args.get(), FunctionCallValueNodeEvaluateState2);
-            }
-            case FunctionCallValueNodeEvaluateState2:
-            {
-                List argList = POP_LIST();
-                JSObject *func = static_cast<JSObject*>(POP_LOCAL_VALUE());
-                JSObject *thisObj =  exec->dynamicInterpreter()->globalObject();
-                RETURN_VALUE(func->call(exec, thisObj, argList));
+                
+                PUSH_LOCAL_VALUE(func); // push "FunctionImp"
+                PUSH_LOCAL_VALUE(interpreter->globalObject()); // push "thisObj"
+                EVALUATE_ARGUMENT_LIST_AND_JUMP_TO_CALL(functionCallValueNode->args.get()); // argsList is pushed as part of call
             }
                 
             case FunctionCallResolveNodeEvaluateState:
@@ -721,25 +742,18 @@ void runInterpreterLoop(ExecState* exec)
                 if (!resolvedFunction)
                     RETURN_ERROR(functionCallResolveNode->throwUndefinedVariableError(exec, ident));
                 
-                PUSH_LOCAL_VALUE(base);
-                PUSH_LOCAL_VALUE(resolvedFunction);
-                EVALUATE_LIST_AND_CONTINUE(functionCallResolveNode->args.get(), FunctionCallResolveNodeEvaluateState1);
-            }
-            case FunctionCallResolveNodeEvaluateState1:
-            {
-                List argList = POP_LIST();
-                JSObject* func = static_cast<JSObject*>(POP_LOCAL_VALUE());
-                JSObject* thisObj = static_cast<JSObject*>(POP_LOCAL_VALUE());
                 // ECMA 11.2.3 says that in this situation the this value should be null.
                 // However, section 10.2.3 says that in the case where the value provided
                 // by the caller is null, the global object should be used. It also says
                 // that the section does not apply to interal functions, but for simplicity
                 // of implementation we use the global object anyway here. This guarantees
                 // that in host objects you always get a valid object for this.
-                if (thisObj->isActivation())
-                    thisObj = exec->dynamicInterpreter()->globalObject();
+                if (base->isActivation())
+                    base = interpreter->globalObject();
                 
-                RETURN_VALUE(func->call(exec, thisObj, argList));
+                PUSH_LOCAL_VALUE(resolvedFunction); // push "FunctionImp"
+                PUSH_LOCAL_VALUE(base); // push "thisObj"
+                EVALUATE_ARGUMENT_LIST_AND_JUMP_TO_CALL(functionCallResolveNode->args.get()); // argsList is pushed as part of call
             }
                 
             case FunctionCallBracketNodeEvaluateState:
@@ -756,7 +770,7 @@ void runInterpreterLoop(ExecState* exec)
                 FunctionCallBracketNode* functionCallBracketNode = static_cast<FunctionCallBracketNode*>(currentNode);
                 
                 JSValue *subscriptVal = GET_VALUE_RETURN();
-                JSObject *baseObj = PEEK_LOCAL_VALUE()->toObject(exec);
+                JSObject *baseObj = POP_LOCAL_VALUE()->toObject(exec);
                 KJS_CHECKEXCEPTION();
                 
                 uint32_t i;
@@ -785,21 +799,10 @@ void runInterpreterLoop(ExecState* exec)
                 
                 if (!func->implementsCall())
                     RETURN_ERROR(functionCallBracketNode->throwError(exec, TypeError, "Object %s (result of expression %s[%s]) does not allow calls.", funcVal, functionCallBracketNode->base.get(), functionCallBracketNode->subscript.get()));
-            
-                PUSH_LOCAL_VALUE(func);
-                EVALUATE_LIST_AND_CONTINUE(functionCallBracketNode->args.get(), FunctionCallBracketNodeEvaluateState3);
-            }
-            case FunctionCallBracketNodeEvaluateState3:
-            {
-                List argList = POP_LIST();
-                JSObject *func = static_cast<JSObject*>(POP_LOCAL_VALUE());
-                JSObject *thisObj = POP_LOCAL_VALUE()->toObject(exec);
-                KJS_CHECKEXCEPTION();
-                assert(thisObj);
-                assert(thisObj->isObject());
-                assert(!thisObj->isActivation());
-                
-                RETURN_VALUE(func->call(exec, thisObj, argList));
+                                
+                PUSH_LOCAL_VALUE(func); // push "FunctionImp"
+                PUSH_LOCAL_VALUE(baseObj); // push "thisObj"
+                EVALUATE_ARGUMENT_LIST_AND_JUMP_TO_CALL(functionCallBracketNode->args.get()); // argsList is pushed as part of call
             }
             
             case FunctionCallDotNodeEvaluateState:
@@ -823,23 +826,13 @@ void runInterpreterLoop(ExecState* exec)
                 
                 if (!func->implementsCall())
                     RETURN_ERROR(functionCallDotNode->throwError(exec, TypeError, dotExprDoesNotAllowCallsString(), funcVal, functionCallDotNode->base.get(), ident));
-                PUSH_LOCAL_VALUE(baseObj);
-                PUSH_LOCAL_VALUE(func);
-                EVALUATE_LIST_AND_CONTINUE(functionCallDotNode->args.get(), FunctionCallDotNodeEvaluateState2);
-            }
-            case FunctionCallDotNodeEvaluateState2:
-            {
-                List argList = POP_LIST();
-                JSObject* func = static_cast<JSObject*>(POP_LOCAL_VALUE());
-                JSObject *thisObj = POP_LOCAL_VALUE()->toObject(exec);
-                KJS_CHECKEXCEPTION();
-                assert(thisObj);
-                assert(thisObj->isObject());
-                assert(!thisObj->isActivation());
                 
-                RETURN_VALUE(func->call(exec, thisObj, argList));
+                PUSH_LOCAL_VALUE(func); // push "FunctionImp"
+                PUSH_LOCAL_VALUE(baseObj); // push "thisObj"
+                EVALUATE_ARGUMENT_LIST_AND_JUMP_TO_CALL(functionCallDotNode->args.get()); // argsList is pushed as part of call
             }
-                
+
+
             case PostfixResolveNodeEvaluateState:
             {
                 PostfixResolveNode* postfixResolveNode = static_cast<PostfixResolveNode*>(currentNode);
@@ -1302,7 +1295,7 @@ void runInterpreterLoop(ExecState* exec)
                         // case we return false (consistent with mozilla)
                         RETURN_VALUE(jsBoolean(false));
                         //      return throwError(exec, TypeError,
-                        //			"Object does not implement the [[HasInstance]] method." );
+                        //                      "Object does not implement the [[HasInstance]] method." );
                     }
                     RETURN_VALUE(jsBoolean(o2->hasInstance(exec, v1)));
                 }
@@ -2360,6 +2353,132 @@ void runInterpreterLoop(ExecState* exec)
                 RETURN_NORMAL_COMPLETION();
             }
             
+            case JSObjectCallState:
+            {
+                // we ignore the current node!
+                
+                /* JSObjectCallState has a unique calling convention: 
+                   Arguments are pushed on the stack in the same order
+                   you might expect to pass them to JSObject::call()
+                   i.e. func->call(exec, thisObj, args)
+                   Thus they are popped here in reverse order. */
+                
+                List args = POP_LIST();
+                JSObject* thisObj = static_cast<JSObject*>(POP_LOCAL_VALUE());
+                JSObject* functionObj = static_cast<JSObject*>(PEEK_LOCAL_VALUE()); // left on the stack for use during final cleanup state
+                if (!functionObj->inherits(&DeclaredFunctionImp::info)) {
+                    POP_LOCAL_VALUE(); // we're not coming back here, chuck the local FunctionImp pointer.
+                    RETURN_VALUE(functionObj->call(exec, thisObj, args));
+                }
+                    
+                DeclaredFunctionImp* declaredFunction = static_cast<DeclaredFunctionImp*>(functionObj);
+                
+#if KJS_MAX_STACK > 0
+                if (interpreter->execStateStackDepth() > KJS_MAX_STACK)
+                    RETURN_ERROR(throwError(exec, RangeError, "Maximum call stack size exceeded."));
+#endif
+                
+#if JAVASCRIPT_CALL_TRACING
+                static bool tracing = false;
+                if (traceJavaScript() && !tracing) {
+                    unsigned depth = interpreter->executionContextPairStackDepth();
+                    tracing = true;
+                    for (int i = 0; i < depth; i++)
+                        putchar(' ');
+                    printf("*** calling:  %s\n", toString(exec).ascii());
+                    for (int j = 0; j < args.size(); j++) {
+                        for (int i = 0; i < depth; i++)
+                            putchar(' ');
+                        printf("*** arg[%d] = %s\n", j, args[j]->toString(exec).ascii());
+                    }
+                    tracing = false;
+                }
+#endif
+                
+                JSObject *globalObj = interpreter->globalObject();
+                FunctionBodyNode* functionBodyNode = declaredFunction->body.get();
+                
+                ContextImp* ctx = new ContextImp(globalObj, interpreter, thisObj, functionBodyNode, declaredFunction->codeType(), exec->context().imp(), declaredFunction, &args);
+                ExecState *newExec = new ExecState(exec->dynamicInterpreter(), ctx);
+                PUSH_EXECSTATE(newExec);
+                
+                // assign user supplied arguments to parameters
+                declaredFunction->processParameters(newExec, args);
+                // add variable declarations (initialized to undefined)
+                declaredFunction->processVarDecls(newExec);
+                
+                if (debugger) {
+                    bool shouldContinue = debugger->callEvent(newExec, functionBodyNode->sourceId(), functionBodyNode->firstLine(), declaredFunction, args);
+                    if (!shouldContinue) {
+                        debugger->imp()->abort();
+                        RETURN_VALUE(jsUndefined()); // FIXME: This won't actualy exit the function.
+                    }
+                }
+                
+                PUSH_UNWIND_BARRIER(ReturnValue, JSObjectCallExplicitReturnState);
+                PUSH_UNWIND_BARRIER(Throw, JSObjectCallEndState);
+                exec = newExec;
+                EXECUTE_AND_JUMP(functionBodyNode, JSObjectCallEndState);
+            }
+            case JSObjectCallEndState:
+            {
+                ASSERT(GET_LAST_COMPLETION().complType() == Throw || GET_LAST_COMPLETION().complType() == Normal);
+                POP_UNWIND_BARRIER(Throw);
+                FALL_THROUGH();
+            }
+            case JSObjectCallExplicitReturnState:
+            {
+                ASSERT(GET_LAST_COMPLETION().complType() == Throw || GET_LAST_COMPLETION().complType() == ReturnValue || GET_LAST_COMPLETION().complType() == Normal);
+                POP_UNWIND_BARRIER(ReturnValue);
+                
+                DeclaredFunctionImp* declaredFunction = static_cast<DeclaredFunctionImp*>(POP_LOCAL_VALUE());
+                Completion comp = GET_LAST_COMPLETION();
+                FunctionBodyNode* functionBodyNode = declaredFunction->body.get();
+                
+                ExecState* newExec = POP_EXECSTATE();
+                exec = PEEK_EXECSTATE();
+                
+                if (debugger) {
+                    if (comp.complType() == Throw)
+                        newExec->setException(comp.value());
+                    
+                    int shouldContinue = debugger->returnEvent(newExec, functionBodyNode->sourceId(), functionBodyNode->lastLine(), declaredFunction);
+                    
+                    delete newExec->context().imp();
+                    delete newExec;
+                    if (!shouldContinue) {
+                        debugger->imp()->abort();
+                        RETURN_VALUE(jsUndefined());
+                    }
+                }
+                
+                delete newExec->context().imp();
+                delete newExec;
+                newExec = 0;
+                
+                JSValue* val;
+                if (comp.complType() == Throw) {
+                    RESET_COMPLETION_TO_NORMAL();
+                    exec->setException(comp.value()); // FIXME: this should be removed when we revise the interpreter to not use exceptions
+                    val = comp.value();
+                } else if (comp.complType() == ReturnValue) {
+                    RESET_COMPLETION_TO_NORMAL();
+                    val = comp.value();
+                } else
+                    val = jsUndefined();
+                    
+#if JAVASCRIPT_CALL_TRACING
+                if (traceJavaScript() && !tracing) {
+                    tracing = true;
+                    for (int i = 0; i < depth; i++)
+                        putchar(' ');
+                    printf("*** returning:  %s\n", val->toString(exec).ascii());
+                    tracing = false;
+                }
+#endif
+                RETURN_VALUE(val);
+            }
+            
         } // end switch
         
         // This label is used by RETURN_VALUE to break out of nested while loops in case statements
@@ -2371,6 +2490,7 @@ interpreter_state_switch_end:
         if (interpreter->getCompletionReturn().complType() != Normal)
             interpreter->unwindToNextBarrier(exec, currentNode);
     }
+    
 }
 
 // Legacy execution support -- clients should treecode-ify themselves
@@ -2378,13 +2498,16 @@ Completion callExecuteOnNode(StatementNode* node, ExecState* exec)
 {
     InterpreterImp* interpreter = exec->dynamicInterpreter()->imp();
 
+    PUSH_EXECSTATE(exec);
+    
     // FIXME: It's a bit of a hack to use InternalErrorState to represent the stack frame barrier
     interpreter->pushUnwindBarrier(All, InterpreterImp::State(InternalErrorState, 0));
 
     PUSH_EXECUTE(node);
-    runInterpreterLoop(exec);
+    interpreter->runInterpreterLoop(exec);
 
     POP_UNWIND_BARRIER(All);
+    POP_EXECSTATE();
 
     Completion c = GET_LAST_COMPLETION();
     RESET_COMPLETION_TO_NORMAL();

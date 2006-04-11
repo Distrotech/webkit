@@ -34,15 +34,15 @@ namespace KJS {
    * Completion types.
    */
   enum ComplType {
-    Normal      = 1 << 0,
-    Break       = 1 << 1,
-    Continue    = 1 << 2,
-    ReturnValue = 1 << 3,
-    Throw       = 1 << 4,
-      
-    Scope       = 1 << 5, // FIXME: This isn't a real unwind type -- we should do something clearer
-      
-    All         = Normal | Break | Continue | ReturnValue | Throw
+    Normal,
+    Break,
+    Continue,
+    ReturnValue,
+    Throw,
+    
+    // Unwind, but not completion types:
+    Scope, // FIXME: This isn't even a real unwind type -- we should do something clearer
+    All
   };
 
   /**
