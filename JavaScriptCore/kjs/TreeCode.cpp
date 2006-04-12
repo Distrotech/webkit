@@ -2099,11 +2099,12 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             case SwitchNodeExecuteState2:
             {
                 POP_UNWIND_BARRIER(Break);
-                Completion res = GET_LAST_COMPLETION();
+                const Completion& res = GET_LAST_COMPLETION();
                 
                 if ((res.complType() == Break) && static_cast<SwitchNode*>(currentNode)->ls.contains(res.target())) {
+                    Completion c(Normal, res.value());
                     RESET_COMPLETION_TO_NORMAL();
-                    RETURN_COMPLETION(Completion(Normal, res.value()));
+                    RETURN_COMPLETION(c);
                 }
                 break;
             }
@@ -2118,11 +2119,12 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             case LabelNodeExecuteState1:
             {
                 POP_UNWIND_BARRIER(Break);
-                Completion e = GET_LAST_COMPLETION();
+                const Completion& e = GET_LAST_COMPLETION();
                 
                 if ((e.complType() == Break) && (e.target() == static_cast<LabelNode*>(currentNode)->label)) {
+                    Completion c(Normal, e.value());
                     RESET_COMPLETION_TO_NORMAL();
-                    RETURN_COMPLETION(Completion(Normal, e.value()));
+                    RETURN_COMPLETION(c);
                 }
                 break;
             }
@@ -2147,11 +2149,11 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             {
                 TryNode* tryNode = static_cast<TryNode*>(currentNode);
                 POP_UNWIND_BARRIER(Throw);
-                Completion c = GET_LAST_COMPLETION();
+                const Completion& c = GET_LAST_COMPLETION();
                 if (tryNode->catchBlock && c.complType() == Throw) {
-                    RESET_COMPLETION_TO_NORMAL();
                     JSObject *obj = new JSObject;
                     obj->put(exec, tryNode->exceptionIdent, c.value(), DontDelete);
+                    RESET_COMPLETION_TO_NORMAL();
                     PUSH_UNWIND_BARRIER(Scope, InternalErrorState);
                     exec->context().imp()->pushScope(obj);
                     EXECUTE_AND_CONTINUE(tryNode->catchBlock.get(), TryNodeExecutePopScopeAfterCatchBlockState);
@@ -2432,7 +2434,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 POP_UNWIND_BARRIER(ReturnValue);
                 
                 DeclaredFunctionImp* declaredFunction = static_cast<DeclaredFunctionImp*>(POP_LOCAL_VALUE());
-                Completion comp = GET_LAST_COMPLETION();
+                const Completion& comp = GET_LAST_COMPLETION();
                 FunctionBodyNode* functionBodyNode = declaredFunction->body.get();
                 
                 ExecState* newExec = POP_EXECSTATE();
@@ -2458,12 +2460,12 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 
                 JSValue* val;
                 if (comp.complType() == Throw) {
-                    RESET_COMPLETION_TO_NORMAL();
                     exec->setException(comp.value()); // FIXME: this should be removed when we revise the interpreter to not use exceptions
                     val = comp.value();
-                } else if (comp.complType() == ReturnValue) {
                     RESET_COMPLETION_TO_NORMAL();
+                } else if (comp.complType() == ReturnValue) {
                     val = comp.value();
+                    RESET_COMPLETION_TO_NORMAL();
                 } else
                     val = jsUndefined();
                     
