@@ -25,8 +25,6 @@
 #ifndef KJS_OBJECT_H
 #define KJS_OBJECT_H
 
-// Objects
-
 // maximum global call stack size. Protects against accidental or
 // malicious infinite recursions. Define to -1 if you want no limit.
 #if PLATFORM(DARWIN)
@@ -39,10 +37,10 @@
 
 #include "JSType.h"
 #include "interpreter.h"
-#include "kxmlcore/AlwaysInline.h"
 #include "property_map.h"
 #include "property_slot.h"
 #include "scope_chain.h"
+#include <kxmlcore/AlwaysInline.h>
 
 namespace KJS {
 

@@ -35,7 +35,6 @@
 #include "InterpreterState.h"
 
 #include <kxmlcore/Noncopyable.h>
-#include <kxmlcore/RefPtr.h>
 #include <kxmlcore/Vector.h>
 
 #define I18N_NOOP(s) s

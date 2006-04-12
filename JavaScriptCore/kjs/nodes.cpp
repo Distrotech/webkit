@@ -24,29 +24,20 @@
 #include "config.h"
 #include "nodes.h"
 
-#include "collector.h"
-#include "context.h"
-#include "debugger.h"
-#include "function_object.h"
-#include "internal.h"
-#include "interpreter.h"
-#include "lexer.h"
-#include "object.h"
-#include "operations.h"
-#include "reference_list.h"
-#include "types.h"
-#include "ustring.h"
-#include "value.h"
-#include <kxmlcore/HashCountedSet.h>
-#include <kxmlcore/HashSet.h>
-
-#include <assert.h>
 #include <math.h>
-
 #ifdef KJS_DEBUG_MEM
 #include <stdio.h>
 #include <typeinfo>
 #endif
+
+#include "context.h"
+#include "debugger.h"
+#include "function_object.h"
+#include "lexer.h"
+#include "operations.h"
+#include "reference_list.h"
+#include <kxmlcore/HashSet.h>
+#include <kxmlcore/HashCountedSet.h>
 
 using namespace KJS;
 

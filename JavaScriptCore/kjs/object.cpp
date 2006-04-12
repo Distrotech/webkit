@@ -23,22 +23,14 @@
  */
 
 #include "config.h"
-#include "value.h"
 #include "object.h"
-#include "types.h"
-#include "interpreter.h"
-#include "lookup.h"
-#include "reference_list.h"
 
-#include <assert.h>
-#include <math.h>
-#include <stdio.h>
-
-#include "internal.h"
-#include "collector.h"
-#include "operations.h"
 #include "error_object.h"
+#include "lookup.h"
 #include "nodes.h"
+#include "operations.h"
+#include "reference_list.h"
+#include <math.h>
 
 #define JAVASCRIPT_CALL_TRACING 0
 
