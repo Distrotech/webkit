@@ -133,22 +133,22 @@ static void _didExecute(WebScriptObject *obj)
 
 + (BOOL)throwException:(NSString *)exceptionMessage
 {
-    InterpreterImp *first, *interp = InterpreterImp::firstInterpreter();
-
     // This code assumes that we only ever have one running interpreter.  A
     // good assumption for now, as we depend on that elsewhere.  However,
     // in the future we may have the ability to run multiple interpreters,
     // in which case this will have to change.
-    first = interp;
-    do {
-        ExecState *exec = interp->globalExec();
+
+    const InterpreterImp::InterpreterMap& map = InterpreterImp::interpreterMap();
+    InterpreterImp::InterpreterMap::const_iterator end = map.end();
+
+    for (InterpreterImp::InterpreterMap::const_iterator itr = map.begin(); itr != end; ++itr) {
         // If the interpreter has a context, we set the exception.
-        if (interp->context()) {
-            throwError(exec, GeneralError, exceptionMessage);
+        // FIXME: This will not always be true in a TreeCode world.  Many interpreters could be paused at once (and still have a context)
+        if (itr->second->context()) {
+            throwError(itr->second->globalExec(), GeneralError, exceptionMessage);
             return YES;
         }
-        interp = interp->nextInterpreter();
-    } while (interp != first);
+    }
     
     return NO;
 }

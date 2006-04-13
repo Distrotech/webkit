@@ -556,17 +556,14 @@ void ActivationImp::createArgumentsObject(ExecState *exec) const
 // ------------------------------ GlobalFunc -----------------------------------
 
 
-GlobalFuncImp::GlobalFuncImp(ExecState*, FunctionPrototype* funcProto, int i, int len, const Identifier& name)
+GlobalFuncImp::GlobalFuncImp(ExecState*, FunctionPrototype* funcProto, FunctionId i, int len, const Identifier& name)
   : InternalFunctionImp(funcProto, name)
-  , id(i)
+  , m_functionId(i)
 {
-  putDirect(lengthPropertyName, len, DontDelete|ReadOnly|DontEnum);
+    putDirect(lengthPropertyName, len, DontDelete|ReadOnly|DontEnum);
 }
 
-CodeType GlobalFuncImp::codeType() const
-{
-  return id == Eval ? EvalCode : codeType();
-}
+const ClassInfo GlobalFuncImp::info = {"Function", &InternalFunctionImp::info, 0, 0};
 
 static JSValue *encode(ExecState *exec, const List &args, const char *do_not_escape)
 {
@@ -778,7 +775,7 @@ JSValue *GlobalFuncImp::callAsFunction(ExecState *exec, JSObject */*thisObj*/, c
   static const char do_not_unescape_when_decoding_URI[] =
     "#$&+,/:;=?@";
 
-  switch (id) {
+  switch (m_functionId) {
     case Eval: { // eval()
       JSValue *x = args[0];
       if (!x->isString())

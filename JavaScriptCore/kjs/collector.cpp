@@ -441,14 +441,12 @@ void Collector::markProtectedObjects()
 bool Collector::collect()
 {
   assert(JSLock::lockCount() > 0);
-
-  if (InterpreterImp::s_hook) {
-    InterpreterImp *scr = InterpreterImp::s_hook;
-    do {
-      scr->mark();
-      scr = scr->next;
-    } while (scr != InterpreterImp::s_hook);
-  }
+  
+  const InterpreterImp::InterpreterMap& map = InterpreterImp::interpreterMap();
+  InterpreterImp::InterpreterMap::const_iterator end = map.end();
+  
+  for (InterpreterImp::InterpreterMap::const_iterator itr = map.begin(); itr != end; ++itr)
+    itr->second->mark();
 
   // MARK: first mark all referenced objects recursively starting out from the set of root objects
 
@@ -591,15 +589,7 @@ void Collector::finalCheck()
 
 size_t Collector::numInterpreters()
 {
-  size_t count = 0;
-  if (InterpreterImp::s_hook) {
-    InterpreterImp *scr = InterpreterImp::s_hook;
-    do {
-      ++count;
-      scr = scr->next;
-    } while (scr != InterpreterImp::s_hook);
-  }
-  return count;
+    return InterpreterImp::interpreterMap().size();
 }
 
 size_t Collector::numProtectedObjects()

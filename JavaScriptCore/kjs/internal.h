@@ -34,6 +34,7 @@
 #include "ustring.h"
 #include "InterpreterState.h"
 
+#include <kxmlcore/HashMap.h>
 #include <kxmlcore/Noncopyable.h>
 #include <kxmlcore/Vector.h>
 
@@ -136,7 +137,7 @@ namespace KJS {
                   AnonymousCode };
 
   class SavedBuiltinsInternal {
-    friend class InterpreterImp;
+    friend class BuiltInTypes;
   private:
     ProtectedPtr<JSObject> b_Object;
     ProtectedPtr<JSObject> b_Function;
@@ -172,48 +173,77 @@ namespace KJS {
     ProtectedPtr<JSObject> b_typeErrorPrototype;
     ProtectedPtr<JSObject> b_uriErrorPrototype;
   };
-  
-#define STACK_USES_ARRAY 0
 
-  template <typename T, size_t inlineCapacity = 0>
-      class Stack {
+    template <typename T, size_t inlineCapacity = 0>
+    class Stack {
     public:
-#if STACK_USES_ARRAY
-          Stack() : m_stackTop(m_stackBase - 1) { }
-          T& peek() { ASSERT(!isEmpty()); return *m_stackTop;}
-          void push(const T& value) {  ASSERT(size() != inlineCapacity); *(++m_stackTop) = value; }
-          T pop() { ASSERT(!isEmpty()); return *m_stackTop--; }
-          size_t size() const { return m_stackTop - m_stackBase + 1; }
-          bool isEmpty() const { return (m_stackTop < m_stackBase); }
-          void shrinkTo(size_t newSize) { m_stackTop = m_stackBase + newSize - 1; }
-          T& operator[](unsigned i) { ASSERT(i < inlineCapacity); return m_stackBase[i]; }
-          const T& operator[](unsigned i) const { ASSERT(i < inlineCapacity); return m_stackBase[i]; }
-    private:
-        T m_stackBase[inlineCapacity];
-        T* m_stackTop; // pointer to the last pushed value
-#else
-          T& peek() { return m_vector.last(); }
-          void push(const T& value) { m_vector.append(value); }
-          T pop();
-          size_t size() const { return m_vector.size(); }
-          bool isEmpty() const { return m_vector.isEmpty(); }
-          void shrinkTo(size_t newSize) { m_vector.shrinkTo(newSize); }
-          T& operator[](unsigned i) { return m_vector.at(i); }
-          const T& operator[](unsigned i) const { return m_vector.at(i); }
+        T& peek() { return m_vector.last(); }
+        T& peek(unsigned n) { return m_vector.at(size() - n - 1); }
+        void push(const T& value) { m_vector.append(value); }
+        T pop();
+        size_t size() const { return m_vector.size(); }
+        bool isEmpty() const { return m_vector.isEmpty(); }
+        void shrinkTo(size_t newSize) { m_vector.shrinkTo(newSize); }
+        T& operator[](unsigned i) { return m_vector.at(i); }
+        const T& operator[](unsigned i) const { return m_vector.at(i); }
     private:
         Vector<T, inlineCapacity> m_vector;
-#endif
-      };
+    };
 
-#if !STACK_USES_ARRAY
-  template <typename T, size_t inlineCapacity>
-      inline T Stack<T, inlineCapacity>::pop()
-  {
-          T value = m_vector.last();
-          m_vector.removeLast();
-          return value;
-  }
-#endif
+    template <typename T, size_t inlineCapacity>
+    inline T Stack<T, inlineCapacity>::pop()
+    {
+        T value = m_vector.last();
+        m_vector.removeLast();
+        return value;
+    }
+    
+    class BuiltInTypes {
+    friend class InterpreterImp;
+    private:
+    
+        void initBuiltIns(ExecState* globExec, JSObject* global);
+        void saveBuiltins(SavedBuiltins&) const;
+        void restoreBuiltins(const SavedBuiltins&);
+        
+        // Built-in properties of the object prototype. These are accessible
+        // from here even if they are replaced by js code (e.g. assigning to
+        // Array.prototype)
+
+        ProtectedPtr<JSObject> b_Object;
+        ProtectedPtr<JSObject> b_Function;
+        ProtectedPtr<JSObject> b_Array;
+        ProtectedPtr<JSObject> b_Boolean;
+        ProtectedPtr<JSObject> b_String;
+        ProtectedPtr<JSObject> b_Number;
+        ProtectedPtr<JSObject> b_Date;
+        ProtectedPtr<JSObject> b_RegExp;
+        ProtectedPtr<JSObject> b_Error;
+
+        ProtectedPtr<JSObject> b_ObjectPrototype;
+        ProtectedPtr<JSObject> b_FunctionPrototype;
+        ProtectedPtr<JSObject> b_ArrayPrototype;
+        ProtectedPtr<JSObject> b_BooleanPrototype;
+        ProtectedPtr<JSObject> b_StringPrototype;
+        ProtectedPtr<JSObject> b_NumberPrototype;
+        ProtectedPtr<JSObject> b_DatePrototype;
+        ProtectedPtr<JSObject> b_RegExpPrototype;
+        ProtectedPtr<JSObject> b_ErrorPrototype;
+
+        ProtectedPtr<JSObject> b_evalError;
+        ProtectedPtr<JSObject> b_rangeError;
+        ProtectedPtr<JSObject> b_referenceError;
+        ProtectedPtr<JSObject> b_syntaxError;
+        ProtectedPtr<JSObject> b_typeError;
+        ProtectedPtr<JSObject> b_uriError;
+
+        ProtectedPtr<JSObject> b_evalErrorPrototype;
+        ProtectedPtr<JSObject> b_rangeErrorPrototype;
+        ProtectedPtr<JSObject> b_referenceErrorPrototype;
+        ProtectedPtr<JSObject> b_syntaxErrorPrototype;
+        ProtectedPtr<JSObject> b_typeErrorPrototype;
+        ProtectedPtr<JSObject> b_uriErrorPrototype;
+    };
 
   class InterpreterImp {
     friend class Collector;
@@ -222,69 +252,63 @@ namespace KJS {
     InterpreterImp(Interpreter *interp, JSObject *glob);
     ~InterpreterImp();
 
-    JSObject *globalObject() { return global; }
+    JSObject *globalObject() { return m_globalObject; }
     Interpreter *interpreter() const { return m_interpreter; }
 
     void initGlobalObject();
 
     void mark();
 
-    ExecState *globalExec() { return &globExec; }
+    ExecState* globalExec() { return &m_globalExecState; }
     bool checkSyntax(const UString &code);
     Completion evaluate(const UChar* code, int codeLength, JSValue* thisV, const UString& sourceURL, int startingLineNumber);
-    Debugger *debugger() const { return dbg; }
-    void setDebugger(Debugger *d) { dbg = d; }
+    Debugger* debugger() const { return m_debugger; }
+    void setDebugger(Debugger* d) { m_debugger = d; }
 
-    JSObject *builtinObject() const { return b_Object; }
-    JSObject *builtinFunction() const { return b_Function; }
-    JSObject *builtinArray() const { return b_Array; }
-    JSObject *builtinBoolean() const { return b_Boolean; }
-    JSObject *builtinString() const { return b_String; }
-    JSObject *builtinNumber() const { return b_Number; }
-    JSObject *builtinDate() const { return b_Date; }
-    JSObject *builtinRegExp() const { return b_RegExp; }
-    JSObject *builtinError() const { return b_Error; }
+    JSObject* builtinObject() const { return m_builtIns.b_Object; }
+    JSObject* builtinFunction() const { return m_builtIns.b_Function; }
+    JSObject* builtinArray() const { return m_builtIns.b_Array; }
+    JSObject* builtinBoolean() const { return m_builtIns.b_Boolean; }
+    JSObject* builtinString() const { return m_builtIns.b_String; }
+    JSObject* builtinNumber() const { return m_builtIns.b_Number; }
+    JSObject* builtinDate() const { return m_builtIns.b_Date; }
+    JSObject* builtinRegExp() const { return m_builtIns.b_RegExp; }
+    JSObject* builtinError() const { return m_builtIns.b_Error; }
 
-    JSObject *builtinObjectPrototype() const { return b_ObjectPrototype; }
-    JSObject *builtinFunctionPrototype() const { return b_FunctionPrototype; }
-    JSObject *builtinArrayPrototype() const { return b_ArrayPrototype; }
-    JSObject *builtinBooleanPrototype() const { return b_BooleanPrototype; }
-    JSObject *builtinStringPrototype() const { return b_StringPrototype; }
-    JSObject *builtinNumberPrototype() const { return b_NumberPrototype; }
-    JSObject *builtinDatePrototype() const { return b_DatePrototype; }
-    JSObject *builtinRegExpPrototype() const { return b_RegExpPrototype; }
-    JSObject *builtinErrorPrototype() const { return b_ErrorPrototype; }
+    JSObject* builtinObjectPrototype() const { return m_builtIns.b_ObjectPrototype; }
+    JSObject* builtinFunctionPrototype() const { return m_builtIns.b_FunctionPrototype; }
+    JSObject* builtinArrayPrototype() const { return m_builtIns.b_ArrayPrototype; }
+    JSObject* builtinBooleanPrototype() const { return m_builtIns.b_BooleanPrototype; }
+    JSObject* builtinStringPrototype() const { return m_builtIns.b_StringPrototype; }
+    JSObject* builtinNumberPrototype() const { return m_builtIns.b_NumberPrototype; }
+    JSObject* builtinDatePrototype() const { return m_builtIns.b_DatePrototype; }
+    JSObject* builtinRegExpPrototype() const { return m_builtIns.b_RegExpPrototype; }
+    JSObject* builtinErrorPrototype() const { return m_builtIns.b_ErrorPrototype; }
 
-    JSObject *builtinEvalError() const { return b_evalError; }
-    JSObject *builtinRangeError() const { return b_rangeError; }
-    JSObject *builtinReferenceError() const { return b_referenceError; }
-    JSObject *builtinSyntaxError() const { return b_syntaxError; }
-    JSObject *builtinTypeError() const { return b_typeError; }
-    JSObject *builtinURIError() const { return b_uriError; }
+    JSObject* builtinEvalError() const { return m_builtIns.b_evalError; }
+    JSObject* builtinRangeError() const { return m_builtIns.b_rangeError; }
+    JSObject* builtinReferenceError() const { return m_builtIns.b_referenceError; }
+    JSObject* builtinSyntaxError() const { return m_builtIns.b_syntaxError; }
+    JSObject* builtinTypeError() const { return m_builtIns.b_typeError; }
+    JSObject* builtinURIError() const { return m_builtIns.b_uriError; }
 
-    JSObject *builtinEvalErrorPrototype() const { return b_evalErrorPrototype; }
-    JSObject *builtinRangeErrorPrototype() const { return b_rangeErrorPrototype; }
-    JSObject *builtinReferenceErrorPrototype() const { return b_referenceErrorPrototype; }
-    JSObject *builtinSyntaxErrorPrototype() const { return b_syntaxErrorPrototype; }
-    JSObject *builtinTypeErrorPrototype() const { return b_typeErrorPrototype; }
-    JSObject *builtinURIErrorPrototype() const { return b_uriErrorPrototype; }
+    JSObject* builtinEvalErrorPrototype() const { return m_builtIns.b_evalErrorPrototype; }
+    JSObject* builtinRangeErrorPrototype() const { return m_builtIns.b_rangeErrorPrototype; }
+    JSObject* builtinReferenceErrorPrototype() const { return m_builtIns.b_referenceErrorPrototype; }
+    JSObject* builtinSyntaxErrorPrototype() const { return m_builtIns.b_syntaxErrorPrototype; }
+    JSObject* builtinTypeErrorPrototype() const { return m_builtIns.b_typeErrorPrototype; }
+    JSObject* builtinURIErrorPrototype() const { return m_builtIns.b_uriErrorPrototype; }
 
     void setCompatMode(Interpreter::CompatMode mode) { m_compatMode = mode; }
     Interpreter::CompatMode compatMode() const { return m_compatMode; }
 
-    // Chained list of interpreters (ring)
-    static InterpreterImp* firstInterpreter() { return s_hook; }
-    InterpreterImp *nextInterpreter() const { return next; }
-    InterpreterImp *prevInterpreter() const { return prev; }
-
-    static InterpreterImp *interpreterWithGlobalObject(JSObject *);
+    static InterpreterImp *interpreterWithGlobalObject(JSObject*);
     
-    void setContext(ContextImp *c) { _context = c; }
-    ContextImp *context() const { return _context; }
-
-    void saveBuiltins (SavedBuiltins &builtins) const;
-    void restoreBuiltins (const SavedBuiltins &builtins);
-
+    void setContext(ContextImp* c) { m_context = c; }
+    ContextImp* context() const { return m_context; }
+    
+    void saveBuiltins(SavedBuiltins& builtins) const { m_builtIns.saveBuiltins(builtins); }
+    void restoreBuiltins(const SavedBuiltins& builtins) { m_builtIns.restoreBuiltins(builtins); }
 
     /* TreeCode Support */
     
@@ -322,62 +346,37 @@ namespace KJS {
         size_t execStateStackSize;
     };
 
-  private:
-    JSValue*& peekValueLocal() { return m_valueStack.peek(); }
-    JSValue* popValueLocal() { return m_valueStack.pop(); }
-    void pushValueLocal(JSValue* value) { m_valueStack.push(value); }
-    unsigned valueStackDepth() const { return m_valueStack.size(); }
+    typedef HashMap<JSObject*, InterpreterImp*> InterpreterMap;
+    static InterpreterMap& interpreterMap();
 
-    const Completion& getCompletionReturn() { return m_completionReturn; }
+  private:
+    static InterpreterMap* s_interpreterMap;
+
+    const Completion& completionReturn() { return m_completionReturn; }
     void setCompletionReturn(const Completion& c) { ASSERT(m_completionReturn.complType() == Normal); if (c.complType() != Normal || c.value()) m_completionReturn = c; }
     
-    JSValue* getValueReturn() { return m_valueReturn; }
+    JSValue* valueReturn() { return m_valueReturn; }
     void setValueReturn(JSValue* v) { m_valueReturn = v; }
     
-    const State& peekNextState() { return m_stateStack.peek(); }
-    State popNextState() { return m_stateStack.pop(); }
-    void pushNextState(const State& state) { m_stateStack.push(state); }
-    unsigned stateStackDepth() const { return m_stateStack.size(); }
-    
-    const UnwindBarrier& peekUnwindBarrier()
-    {
-        return m_unwindBarrierStack.peek();
-    }
-
     // FIXME: ASSERT that enum/short conversion doesn't lose data
     void pushUnwindBarrier(short barrierType, State continueState)
     {
-        UnwindBarrier unwindBarrier(barrierType, continueState, valueStackDepth(), stateStackDepth(), listStackDepth(), nodeStackDepth(), execStateStackDepth());
+        UnwindBarrier unwindBarrier(barrierType, continueState, m_valueStack.size(), m_stateStack.size(), m_listStack.size(), m_nodeStack.size(), m_execStateStack.size());
         m_unwindBarrierStack.push(unwindBarrier);
     }
     void popUnwindBarrier()
     {
 #ifndef NDEBUG
         const UnwindBarrier& unwindBarrier = m_unwindBarrierStack.peek();
-        ASSERT(valueStackDepth() == unwindBarrier.valueStackSize);
-        ASSERT(stateStackDepth() == unwindBarrier.stateStackSize);
-        ASSERT(listStackDepth() == unwindBarrier.listStackSize);
-        ASSERT(nodeStackDepth() == unwindBarrier.nodeStackSize);
-        ASSERT(execStateStackDepth() == unwindBarrier.execStateStackSize);
+        ASSERT(m_valueStack.size() == unwindBarrier.valueStackSize);
+        ASSERT(m_stateStack.size() == unwindBarrier.stateStackSize);
+        ASSERT(m_listStack.size() == unwindBarrier.listStackSize);
+        ASSERT(m_nodeStack.size() == unwindBarrier.nodeStackSize);
+        ASSERT(m_execStateStack.size() == unwindBarrier.execStateStackSize);
 #endif
         m_unwindBarrierStack.pop();
     }
-    void unwindToNextBarrier(ExecState* exec, Node* currentNode);
-    
-    List& peekListReturn() { return m_listReturnStack.peek(); }
-    List popListReturn() { return m_listReturnStack.pop(); }
-    void pushListReturn(const List& list) { m_listReturnStack.push(list); }
-    unsigned listStackDepth() const { return m_listReturnStack.size(); }
-    
-    Node*& peekNodeLocal() { return m_nodeStack.peek(); }
-    Node* popNodeLocal() { return m_nodeStack.pop(); }
-    void pushNodeLocal(Node* node) { m_nodeStack.push(node); }
-    unsigned nodeStackDepth() const { return m_nodeStack.size(); }
-    
-    ExecState*& peekExecState() { return m_execStateStack.peek(); }
-    void pushExecState(ExecState *exec) { m_execStateStack.push(exec); }
-    ExecState* popExecState() { return m_execStateStack.pop(); }
-    unsigned execStateStackDepth() const { return m_execStateStack.size(); }
+    void unwindToNextBarrier(ExecState*, Node* currentNode);
     
     void printStacks();
     void printStateStack();
@@ -386,71 +385,33 @@ namespace KJS {
     void printUnwindBarrierStack();
 
     void clear();
-    Interpreter *m_interpreter;
-    JSObject *global;
-    Debugger *dbg;
+    JSObject* m_globalObject;
+    Interpreter* m_interpreter;
+    Debugger* m_debugger;
 
-    // Built-in properties of the object prototype. These are accessible
-    // from here even if they are replaced by js code (e.g. assigning to
-    // Array.prototype)
-
-    ProtectedPtr<JSObject> b_Object;
-    ProtectedPtr<JSObject> b_Function;
-    ProtectedPtr<JSObject> b_Array;
-    ProtectedPtr<JSObject> b_Boolean;
-    ProtectedPtr<JSObject> b_String;
-    ProtectedPtr<JSObject> b_Number;
-    ProtectedPtr<JSObject> b_Date;
-    ProtectedPtr<JSObject> b_RegExp;
-    ProtectedPtr<JSObject> b_Error;
-
-    ProtectedPtr<JSObject> b_ObjectPrototype;
-    ProtectedPtr<JSObject> b_FunctionPrototype;
-    ProtectedPtr<JSObject> b_ArrayPrototype;
-    ProtectedPtr<JSObject> b_BooleanPrototype;
-    ProtectedPtr<JSObject> b_StringPrototype;
-    ProtectedPtr<JSObject> b_NumberPrototype;
-    ProtectedPtr<JSObject> b_DatePrototype;
-    ProtectedPtr<JSObject> b_RegExpPrototype;
-    ProtectedPtr<JSObject> b_ErrorPrototype;
-
-    ProtectedPtr<JSObject> b_evalError;
-    ProtectedPtr<JSObject> b_rangeError;
-    ProtectedPtr<JSObject> b_referenceError;
-    ProtectedPtr<JSObject> b_syntaxError;
-    ProtectedPtr<JSObject> b_typeError;
-    ProtectedPtr<JSObject> b_uriError;
-
-    ProtectedPtr<JSObject> b_evalErrorPrototype;
-    ProtectedPtr<JSObject> b_rangeErrorPrototype;
-    ProtectedPtr<JSObject> b_referenceErrorPrototype;
-    ProtectedPtr<JSObject> b_syntaxErrorPrototype;
-    ProtectedPtr<JSObject> b_typeErrorPrototype;
-    ProtectedPtr<JSObject> b_uriErrorPrototype;
-
-    ExecState globExec;
+    ExecState m_globalExecState;
     Interpreter::CompatMode m_compatMode;
-
-    // Chained list of interpreters (ring) - for collector
-    static InterpreterImp* s_hook;
-    InterpreterImp *next, *prev;
     
-    ContextImp *_context;
+    ContextImp* m_context;
 
-    int recursion;
+    int m_recursion;
     
     Completion m_completionReturn;
     JSValue* m_valueReturn;
     Stack<UnwindBarrier, KJS_MAX_STACK> m_unwindBarrierStack;
+public:
     Stack<State, KJS_MAX_STACK> m_stateStack;
+private:
     Stack<JSValue*, KJS_MAX_STACK> m_valueStack;
-    Stack<List, KJS_MAX_STACK> m_listReturnStack;
+    Stack<List, KJS_MAX_STACK> m_listStack;
     Stack<Node*, KJS_MAX_STACK> m_nodeStack;
     
     // FIXME: This stack does not yet contain all exec states in the call chain
     // Eventually globalObject.eval() as well as any other creators of ExecStates
     // should push thier ExecStates onto this stack.
     Stack<ExecState*> m_execStateStack;
+    
+    BuiltInTypes m_builtIns;
   };
 
   class AttachedInterpreter;

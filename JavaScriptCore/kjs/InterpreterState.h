@@ -238,8 +238,11 @@ enum InterpreterState {
 #undef PRINT_AS_ENUM
 
     JSObjectCallState,
-    JSObjectCallEndState,
-    JSObjectCallExplicitReturnState,
+    DeclaredFunctionCallState,
+    DeclaredFunctionCallEndState,
+    DeclaredFunctionCallExplicitReturnState,
+    GlobalFuncCallEvalState,
+    GlobalFuncCallEvalEndState,
 
     LastInterpreterState
 }; 

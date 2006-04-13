@@ -65,27 +65,14 @@ const char* nameForInterpreterState[LastInterpreterState+1] = {
 #undef PRINT_AS_STRING
 
     "JSObjectCallState",
-    "JSObjectCallEndState",
-    "JSObjectCallExplicitReturnState",
+    "DeclaredFunctionCallState",
+    "DeclaredFunctionCallEndState",
+    "DeclaredFunctionCallExplicitReturnState",
+    "GlobalFuncCallEvalState",
+    "GlobalFuncCallEvalEndState",
 
     "LastInterpreterState"
 };
-
-#define RETURN_COMPLETION(c) do { \
-    interpreter->setCompletionReturn(c); \
-    goto interpreter_state_switch_end; \
-} while (0)
-
-#define RETURN_NORMAL_COMPLETION() do { \
-    ASSERT(interpreter->getCompletionReturn().complType() == Normal); \
-    goto interpreter_state_switch_end; \
-} while (0)
-
-#define KJS_CHECKEXCEPTION() \
-if (exec->hadException()) { \
-    currentNode->setExceptionDetailsIfNeeded(exec); \
-    RETURN_COMPLETION(Completion(Throw, exec->exception())); \
-}
 
 static inline int currentSourceId(ExecState* exec)
 {
@@ -192,70 +179,42 @@ static ALWAYS_INLINE JSValue *valueForReadModifyAssignment(ExecState * exec, JSV
     return v;
 }
 
-#define SET_VALUE_RETURN(v) \
-    interpreter->setValueReturn(v)
-
-// Set this to 1 to see logging.
-#define TRACE_EXECUTION 0
-
-#if TRACE_EXECUTION
-#define PUSH_LOCAL_VALUE(value) \
-    (printf("PUSH %s (%i) called on %p, pushing %p, pre-push depth: %i\n", nameForInterpreterState[statePair.state], statePair.state, statePair.node, value, interpreter->valueStackDepth()), interpreter->pushValueLocal(value))
-
-#define POP_LOCAL_VALUE() (printf("POP %s (%i) called on %p, popping, pre-pop depth: %i\n", nameForInterpreterState[statePair.state], statePair.state, statePair.node, interpreter->valueStackDepth()), assert(interpreter->valueStackDepth() > stackBase.valueStackSize), interpreter->popValueLocal())
-
-#define RETURN_VALUE(value) \
-{\
-    JSValue* val = value; \
-    printf("RETURN %s (%i) called on %p, returning %p\n", nameForInterpreterState[statePair.state], statePair.state, statePair.node, val); \
-    SET_VALUE_RETURN(val); \
-    goto interpreter_state_switch_end; \
-}
-
-#define SET_JUMP_STATE(nextState, nextNode) \
-{ \
-    printf("JUMP %s (%i) called on %p, jumping to %s (%i) on %p\n", nameForInterpreterState[statePair.state], statePair.state, statePair.node, nameForInterpreterState[nextState], nextState, nextNode); \
-    ASSERT(nextState != statePair.state); \
-    interpreter->pushNextState(InterpreterImp::State(nextState, nextNode)); \
-}
-
-#else
-
-#define PUSH_LOCAL_VALUE(value) interpreter->pushValueLocal(value)
-#define POP_LOCAL_VALUE() (assert(interpreter->valueStackDepth() > stackBase.valueStackSize), interpreter->popValueLocal())
-
-#define RETURN_VALUE(value) \
-do {\
-    SET_VALUE_RETURN(value); \
+#define RETURN_VALUE(v) \
+do { \
+    setValueReturn(v); \
     goto interpreter_state_switch_end; \
 } while (0)
 
-// All code should use SET_CONTINUE_STATE when possible, as it performs additional sanity checks.
-#define SET_JUMP_STATE(nextState, nextNode) \
+#define RETURN_COMPLETION(c) \
+do { \
+    setCompletionReturn(c); \
+    goto interpreter_state_switch_end; \
+} while (0)
+
+#define RETURN_NORMAL_COMPLETION() do { \
+    ASSERT(completionReturn().complType() == Normal); \
+    goto interpreter_state_switch_end; \
+} while (0)
+
+#define KJS_CHECKEXCEPTION() \
+if (exec->hadException()) { \
+    currentNode->setExceptionDetailsIfNeeded(exec); \
+    RETURN_COMPLETION(Completion(Throw, exec->exception())); \
+}
+
+// Use SET_CONTINUE_STATE instead whenever possible
+#define SET_JUMP_STATE(nextState, node) \
 do { \
     ASSERT(nextState != statePair.state); \
-    interpreter->pushNextState(InterpreterImp::State(nextState, nextNode)); \
+    m_stateStack.push(InterpreterImp::State(nextState, node)); \
 } while (0)
-
-#endif
 
 // This can only be used for calling yourself.
 #define SET_LOOP_STATE(nextState) \
 do { \
     ASSERT(nextState == statePair.state); \
-    interpreter->pushNextState(InterpreterImp::State(nextState, currentNode)); \
+    m_stateStack.push(InterpreterImp::State(nextState, currentNode)); \
 } while (0)
-
-
-#define PEEK_LOCAL_VALUE() (assert(interpreter->valueStackDepth() > stackBase.valueStackSize), interpreter->peekValueLocal())
-
-#define PUSH_LIST(list) interpreter->pushListReturn(list)
-#define PEEK_LIST() (assert(interpreter->listStackDepth() > stackBase.listStackSize), interpreter->peekListReturn())
-#define POP_LIST() (assert(interpreter->listStackDepth() > stackBase.listStackSize), interpreter->popListReturn())
-
-#define PUSH_NODE(node) interpreter->pushNodeLocal(node)
-#define PEEK_NODE() (assert(interpreter->nodeStackDepth() > stackBase.nodeStackSize), interpreter->peekNodeLocal())
-#define POP_NODE() (assert(interpreter->nodeStackDepth() > stackBase.nodeStackSize), interpreter->popNodeLocal())
 
 // FALL_THROUGH is used in debug builds to allow proper assert checking even
 // when some states fall through to another (thus not changing the current state)
@@ -268,41 +227,49 @@ do { \
 
 #define RETURN_LIST(list) \
 do {\
-    PUSH_LIST(list); \
+    m_listStack.push(list); \
     goto interpreter_state_switch_end; \
 } while (0)
 
-#define IS_EVALUATE_STATE(state) \
-    (state > InternalErrorState && state < Evaluate_EvaluteList_Boundary)
+#ifndef NDEBUG
+static inline bool isEvaluateState(InterpreterState state)
+{
+    return (state > InternalErrorState && state < Evaluate_EvaluteList_Boundary);
+}
 
-#define IS_EVALUATE_LIST_STATE(state) \
-    (state > Evaluate_EvaluteList_Boundary && state < EvaluateList_Execute_Boundary)
+static inline bool isEvaluateListState(InterpreterState state)
+{
+    return (state > Evaluate_EvaluteList_Boundary && state < EvaluateList_Execute_Boundary);
+}
+#endif
 
-#define IS_EXECUTE_STATE(state) \
-    (state > EvaluateList_Execute_Boundary && state < LastInterpreterState)
+static inline bool isExecuteState(InterpreterState state)
+{
+    return (state > EvaluateList_Execute_Boundary && state < LastInterpreterState);
+}
 
-#define PUSH_EVALUATE(node) \
-do { \
-    InterpreterState nextState = node->interpreterState(); \
-    ASSERT(IS_EVALUATE_STATE(nextState)); \
-    interpreter->pushNextState(InterpreterImp::State(nextState, node)); \
-} while (0)
+static inline void pushEvaluate(InterpreterImp* interpreter, Node* node)
+{
+    InterpreterState nextState = node->interpreterState();
+    ASSERT(isEvaluateState(nextState));
+    interpreter->m_stateStack.push(InterpreterImp::State(nextState, node));
+}
     
-#define PUSH_EVALUATE_LIST(node) \
-do { \
-    InterpreterState nextState = node->interpreterState(); \
-    ASSERT(IS_EVALUATE_LIST_STATE(nextState)); \
-    interpreter->pushNextState(InterpreterImp::State(nextState, node)); \
-} while (0)
+static inline void pushEvaluateList(InterpreterImp* interpreter, Node* node)
+{
+    InterpreterState nextState = node->interpreterState();
+    ASSERT(isEvaluateListState(nextState));
+    interpreter->m_stateStack.push(InterpreterImp::State(nextState, node));
+}
 
-#define PUSH_EXECUTE(node) \
-do { \
-    InterpreterState nextState = node->interpreterState(); \
-    ASSERT(IS_EXECUTE_STATE(nextState)); \
-    interpreter->pushNextState(InterpreterImp::State(nextState, node)); \
-} while (0)
+static inline void pushExecute(InterpreterImp* interpreter, Node* node)
+{
+    InterpreterState nextState = node->interpreterState();
+    ASSERT(isExecuteState(nextState));
+    interpreter->m_stateStack.push(InterpreterImp::State(nextState, node));
+}
 
-// This explicity checks for continue state bugs
+// This explicitly checks for continue state bugs
 // FIXME: This should not take an argument once we have a way to check if currentState+1 == a substate
 #define SET_CONTINUE_STATE(nextState) \
 do { \
@@ -310,48 +277,29 @@ do { \
     SET_JUMP_STATE(nextState, currentNode); \
 } while (0)
 
-
-#define GET_LAST_COMPLETION() \
-    interpreter->getCompletionReturn()
-    
-#define GET_VALUE_RETURN() \
-    interpreter->getValueReturn()
-
 // FIXME: RETURN_ERROR is a stop-gap.  Eventually throwError* should be free functions which set the interpreter completion themselves
 #define RETURN_ERROR(value)   RETURN_COMPLETION(Completion(Throw, value))
 
-#define RESET_COMPLETION_TO_NORMAL() \
-    interpreter->resetCompletionToNormal()
-
 #define PUSH_UNWIND_BARRIER(barrierType, state) \
-    interpreter->pushUnwindBarrier(barrierType, InterpreterImp::State(state, currentNode));
+    pushUnwindBarrier(barrierType, InterpreterImp::State(state, currentNode));
 
 #define POP_UNWIND_BARRIER(type) \
 do { \
-    ASSERT(interpreter->peekUnwindBarrier().barrierType == type); \
+    ASSERT(interpreter->m_unwindBarrierStack.peek().barrierType == type); \
     interpreter->popUnwindBarrier(); \
 } while (0)
-
-#define PUSH_EXECSTATE(exec) \
-    interpreter->pushExecState(exec)
-
-#define POP_EXECSTATE() \
-    interpreter->popExecState()
-    
-#define PEEK_EXECSTATE() \
-    interpreter->peekExecState()
 
 #define EXECUTE_AND_CONTINUE(node, nextState) \
 do { \
     SET_CONTINUE_STATE(nextState); \
-    PUSH_EXECUTE(node); \
+    pushExecute(interpreter, node); \
     goto interpreter_state_switch_end; \
 } while (0)
 
 #define EXECUTE_AND_JUMP(node, nextState) \
 do { \
     SET_JUMP_STATE(nextState, currentNode); \
-    PUSH_EXECUTE(node); \
+    pushExecute(interpreter, node); \
     goto interpreter_state_switch_end; \
 } while (0)
 
@@ -360,7 +308,7 @@ do { \
 #define EVALUATE_AND_CONTINUE(node, nextState) \
 do { \
     SET_CONTINUE_STATE(nextState); \
-    PUSH_EVALUATE(node); \
+    pushEvaluate(interpreter, node); \
     goto interpreter_state_switch_end; \
 } while (0)
 
@@ -368,7 +316,7 @@ do { \
 #define EVALUATE_AND_JUMP(node, nextState) \
 do { \
     SET_JUMP_STATE(nextState, currentNode); \
-    PUSH_EVALUATE(node); \
+    pushEvaluate(interpreter, node); \
     goto interpreter_state_switch_end; \
 } while (0)
 
@@ -377,7 +325,7 @@ do { \
 #define EVALUATE_LIST_AND_CONTINUE(node, nextState) \
 do { \
     SET_CONTINUE_STATE(nextState); \
-    PUSH_EVALUATE_LIST(node); \
+    pushEvaluateList(interpreter, node); \
     goto interpreter_state_switch_end; \
 } while (0)
 
@@ -385,7 +333,7 @@ do { \
 #define EVALUATE_ARGUMENT_LIST_AND_JUMP_TO_CALL(argsNode) \
 { \
     SET_JUMP_STATE(JSObjectCallState, argsNode); \
-    PUSH_EVALUATE_LIST(argsNode); \
+    pushEvaluateList(interpreter, argsNode); \
     goto interpreter_state_switch_end; \
 }
 
@@ -395,30 +343,25 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
     ASSERT(exec->dynamicInterpreter()->imp() == this);
     
     InterpreterImp* interpreter = this;
-    Debugger* debugger = interpreter->debugger();
-    InterpreterImp::UnwindBarrier stackBase = interpreter->peekUnwindBarrier();
+    InterpreterImp::UnwindBarrier stackBase = m_unwindBarrierStack.peek();
         
-    while (interpreter->stateStackDepth() > stackBase.stateStackSize) {
+    while (m_stateStack.size() > stackBase.stateStackSize) {
     
         // FIXME: As a loop optimization, we should just peek, instead of pop here
         // Then every non-loop function would pop itself.
-        InterpreterImp::State statePair = interpreter->popNextState();
+        InterpreterImp::State statePair = m_stateStack.pop();
         Node* currentNode = statePair.node;
-        
-#if TRACE_EXECUTION
-        printf("EXEC %s (%i) on %p (state state: %i, value stack: %i)\n", nameForInterpreterState[statePair.state], statePair.state, statePair.node, interpreter->stateStackDepth(), interpreter->valueStackDepth());
-#endif
 
         // FIXME: This is wrong, this won't actually return.
-        if (debugger) {
-            if (IS_EXECUTE_STATE(statePair.state)) {
+        if (m_debugger) {
+            if (isExecuteState(statePair.state)) {
                 StatementNode* statementNode = static_cast<StatementNode*>(currentNode);
-                bool shouldContinue = debugger->atStatement(exec, currentSourceId(exec), statementNode->firstLine(), statementNode->lastLine());
+                bool shouldContinue = m_debugger->atStatement(exec, currentSourceId(exec), statementNode->firstLine(), statementNode->lastLine());
                 if (!shouldContinue)
-                    RETURN_NORMAL_COMPLETION(); // FIXME: Do something the debugger can use
+                    RETURN_NORMAL_COMPLETION(); // FIXME: Do something the m_debugger can use
             }
-            if (debugger->imp()->aborted())
-                RETURN_NORMAL_COMPLETION(); // FIXME: Do something the debugger can use
+            if (m_debugger->imp()->aborted())
+                RETURN_NORMAL_COMPLETION(); // FIXME: Do something the m_debugger can use
         }
 
         // FIXME: ONLY check when checking if we've run too long
@@ -495,14 +438,14 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 
             case GroupNodeEvaluateState:
             {
-                PUSH_EVALUATE(static_cast<GroupNode*>(currentNode)->group.get());
+                pushEvaluate(interpreter, static_cast<GroupNode*>(currentNode)->group.get());
                 break;
             }
                 
             case ElementNodeEvaluateState:
             {
-                PUSH_LOCAL_VALUE(exec->lexicalInterpreter()->builtinArray()->construct(exec, List::empty()));
-                PUSH_LOCAL_VALUE(jsNumber(0));
+                m_valueStack.push(exec->lexicalInterpreter()->builtinArray()->construct(exec, List::empty()));
+                m_valueStack.push(jsNumber(0));
                 FALL_THROUGH();
             }
             case ElementNodeEvaluateState1:
@@ -512,22 +455,22 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             case ElementNodeEvaluateState2:
             {
                 ElementNode* n = static_cast<ElementNode*>(currentNode);
-                JSValue* val = GET_VALUE_RETURN();
-                int l = POP_LOCAL_VALUE()->toInt32(exec);
-                JSObject* array = static_cast<JSObject*>(PEEK_LOCAL_VALUE());
+                JSValue* val = valueReturn();
+                int l = m_valueStack.pop()->toInt32(exec);
+                JSObject* array = static_cast<JSObject*>(m_valueStack.peek());
                 
                 l += n->elision;
                 array->put(exec, l++, val);
                 
                 n = n->next.get();
                 if (n) {
-                    PUSH_LOCAL_VALUE(jsNumber(l));
+                    m_valueStack.push(jsNumber(l));
                     // FIXME: pushing "p" as the current node is dangerous
                     // If this function used current node after this call, currentNode would be wrong.
                     SET_JUMP_STATE(ElementNodeEvaluateState1, n);
                     break;
                 }
-                RETURN_VALUE(POP_LOCAL_VALUE());
+                RETURN_VALUE(m_valueStack.pop());
             }
                 
             case ArrayNodeEvaluateState:
@@ -544,7 +487,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 int length;
                 
                 if (arrayNode->element) {
-                    array = static_cast<JSObject*>(GET_VALUE_RETURN());
+                    array = static_cast<JSObject*>(valueReturn());
                     length = arrayNode->opt ? array->get(exec, lengthPropertyName)->toInt32(exec) : 0;
                 } else {
                     array = exec->lexicalInterpreter()->builtinArray()->construct(exec, List::empty());
@@ -561,7 +504,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             {
                 ObjectLiteralNode* objectLiteralNode = static_cast<ObjectLiteralNode*>(currentNode);
                 if (objectLiteralNode->list) {
-                    PUSH_EVALUATE(objectLiteralNode->list.get());
+                    pushEvaluate(interpreter, objectLiteralNode->list.get());
                     break;
                 }
                 
@@ -571,7 +514,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             case PropertyListNodeEvaluateState:
             {
                 JSObject* obj = exec->lexicalInterpreter()->builtinObject()->construct(exec, List::empty());
-                PUSH_LOCAL_VALUE(obj);
+                m_valueStack.push(obj);
                 FALL_THROUGH();
             }
             case PropertyListNodeEvaluateState1:
@@ -580,15 +523,15 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case PropertyListNodeEvaluateState2:
             {
-                PUSH_LOCAL_VALUE(GET_VALUE_RETURN());
+                m_valueStack.push(valueReturn());
                 EVALUATE_AND_CONTINUE(static_cast<PropertyListNode*>(currentNode)->node->assign.get(), PropertyListNodeEvaluateState3);
             }
             case PropertyListNodeEvaluateState3:
             {
                 PropertyListNode* p = static_cast<PropertyListNode*>(currentNode);
-                JSValue* v = GET_VALUE_RETURN();
-                JSValue* name = POP_LOCAL_VALUE();
-                JSObject* obj = static_cast<JSObject*>(PEEK_LOCAL_VALUE());
+                JSValue* v = valueReturn();
+                JSValue* name = m_valueStack.pop();
+                JSObject* obj = static_cast<JSObject*>(m_valueStack.peek());
                 
                 Identifier propertyName = Identifier(name->toString(exec));
                 switch (p->node->type) {
@@ -613,7 +556,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                     break;
                 }
                 
-                RETURN_VALUE(POP_LOCAL_VALUE());
+                RETURN_VALUE(m_valueStack.pop());
             }
                                 
             case PropertyNameNodeEvaluateState:
@@ -634,13 +577,13 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case BracketAccessorNodeEvaluateState1:
             {
-                PUSH_LOCAL_VALUE(GET_VALUE_RETURN());
+                m_valueStack.push(valueReturn());
                 EVALUATE_AND_CONTINUE(static_cast<BracketAccessorNode*>(currentNode)->expr2.get(), BracketAccessorNodeEvaluateState2);
             }
             case BracketAccessorNodeEvaluateState2:
             {
-                JSValue *v1 = POP_LOCAL_VALUE();
-                JSValue *v2 = GET_VALUE_RETURN();
+                JSValue *v1 = m_valueStack.pop();
+                JSValue *v2 = valueReturn();
                 JSObject *o = v1->toObject(exec);
                 KJS_CHECKEXCEPTION();
                 uint32_t i;
@@ -655,7 +598,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case DotAccessorNodeEvaluateState1:
             {
-                RETURN_VALUE(GET_VALUE_RETURN()->toObject(exec)->get(exec, static_cast<DotAccessorNode*>(currentNode)->ident));
+                RETURN_VALUE(valueReturn()->toObject(exec)->get(exec, static_cast<DotAccessorNode*>(currentNode)->ident));
             }
                 
             case NewExprNodeEvaluateState:
@@ -665,7 +608,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             case NewExprNodeEvaluateState1:
             {
                 NewExprNode* newExprNode = static_cast<NewExprNode*>(currentNode);
-                PUSH_LOCAL_VALUE(GET_VALUE_RETURN());
+                m_valueStack.push(valueReturn());
                 if (newExprNode->args)
                     EVALUATE_LIST_AND_CONTINUE(newExprNode->args.get(), NewExprNodeEvaluateState2);
                 FALL_THROUGH();
@@ -673,10 +616,10 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             case NewExprNodeEvaluateState2:
             {
                 NewExprNode* newExprNode = static_cast<NewExprNode*>(currentNode);
-                JSValue* v = POP_LOCAL_VALUE();
+                JSValue* v = m_valueStack.pop();
                 List argList;
                 if (newExprNode->args)
-                    argList = POP_LIST();
+                    argList = m_listStack.pop();
                 
                 if (!v->isObject())
                     RETURN_ERROR(newExprNode->throwError(exec, TypeError, "Value %s (result of expression %s) is not an object. Cannot be used with new.", v, newExprNode->expr.get()));
@@ -694,7 +637,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             case FunctionCallValueNodeEvaluateState1:
             {
                 FunctionCallValueNode* functionCallValueNode = static_cast<FunctionCallValueNode*>(currentNode);
-                JSValue* v = GET_VALUE_RETURN();
+                JSValue* v = valueReturn();
                 if (!v->isObject())
                     RETURN_ERROR(functionCallValueNode->throwError(exec, TypeError, "Value %s (result of expression %s) is not object.", v, functionCallValueNode->expr.get()));
                 
@@ -702,8 +645,8 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 if (!func->implementsCall())
                     RETURN_ERROR(functionCallValueNode->throwError(exec, TypeError, "Object %s (result of expression %s) does not allow calls.", v, functionCallValueNode->expr.get()));
                 
-                PUSH_LOCAL_VALUE(func); // push "FunctionImp"
-                PUSH_LOCAL_VALUE(interpreter->globalObject()); // push "thisObj"
+                m_valueStack.push(func); // push "FunctionImp"
+                m_valueStack.push(globalObject()); // push "thisObj"
                 EVALUATE_ARGUMENT_LIST_AND_JUMP_TO_CALL(functionCallValueNode->args.get()); // argsList is pushed as part of call
             }
                 
@@ -749,10 +692,10 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 // of implementation we use the global object anyway here. This guarantees
                 // that in host objects you always get a valid object for this.
                 if (base->isActivation())
-                    base = interpreter->globalObject();
+                    base = globalObject();
                 
-                PUSH_LOCAL_VALUE(resolvedFunction); // push "FunctionImp"
-                PUSH_LOCAL_VALUE(base); // push "thisObj"
+                m_valueStack.push(resolvedFunction); // push "FunctionImp"
+                m_valueStack.push(base); // push "thisObj"
                 EVALUATE_ARGUMENT_LIST_AND_JUMP_TO_CALL(functionCallResolveNode->args.get()); // argsList is pushed as part of call
             }
                 
@@ -762,15 +705,15 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case FunctionCallBracketNodeEvaluateState1:
             {
-                PUSH_LOCAL_VALUE(GET_VALUE_RETURN());
+                m_valueStack.push(valueReturn());
                 EVALUATE_AND_CONTINUE(static_cast<FunctionCallBracketNode*>(currentNode)->subscript.get(), FunctionCallBracketNodeEvaluateState2);
             }
             case FunctionCallBracketNodeEvaluateState2:
             {
                 FunctionCallBracketNode* functionCallBracketNode = static_cast<FunctionCallBracketNode*>(currentNode);
                 
-                JSValue *subscriptVal = GET_VALUE_RETURN();
-                JSObject *baseObj = POP_LOCAL_VALUE()->toObject(exec);
+                JSValue *subscriptVal = valueReturn();
+                JSObject *baseObj = m_valueStack.pop()->toObject(exec);
                 KJS_CHECKEXCEPTION();
                 
                 uint32_t i;
@@ -800,8 +743,8 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 if (!func->implementsCall())
                     RETURN_ERROR(functionCallBracketNode->throwError(exec, TypeError, "Object %s (result of expression %s[%s]) does not allow calls.", funcVal, functionCallBracketNode->base.get(), functionCallBracketNode->subscript.get()));
                                 
-                PUSH_LOCAL_VALUE(func); // push "FunctionImp"
-                PUSH_LOCAL_VALUE(baseObj); // push "thisObj"
+                m_valueStack.push(func); // push "FunctionImp"
+                m_valueStack.push(baseObj); // push "thisObj"
                 EVALUATE_ARGUMENT_LIST_AND_JUMP_TO_CALL(functionCallBracketNode->args.get()); // argsList is pushed as part of call
             }
             
@@ -812,7 +755,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             case FunctionCallDotNodeEvaluateState1:
             {
                 FunctionCallDotNode* functionCallDotNode = static_cast<FunctionCallDotNode*>(currentNode);
-                JSObject* baseObj = GET_VALUE_RETURN()->toObject(exec);
+                JSObject* baseObj = valueReturn()->toObject(exec);
                 KJS_CHECKEXCEPTION();
                 PropertySlot slot;
                 const Identifier& ident = functionCallDotNode->ident;
@@ -825,8 +768,8 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 JSObject* func = static_cast<JSObject*>(funcVal);
                 
                 if (func->implementsCall()) {
-                    PUSH_LOCAL_VALUE(func); // push "FunctionImp"
-                    PUSH_LOCAL_VALUE(baseObj); // push "thisObj"
+                    m_valueStack.push(func); // push "FunctionImp"
+                    m_valueStack.push(baseObj); // push "thisObj"
                     EVALUATE_ARGUMENT_LIST_AND_JUMP_TO_CALL(functionCallDotNode->args.get()); // argsList is pushed as part of call
                 }
                 
@@ -872,15 +815,15 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case PostfixBracketNodeEvaluateState1:
             {
-                PUSH_LOCAL_VALUE(GET_VALUE_RETURN());
+                m_valueStack.push(valueReturn());
                 EVALUATE_AND_CONTINUE(static_cast<PostfixBracketNode*>(currentNode)->m_subscript.get(), PostfixBracketNodeEvaluateState2);
             }
             case PostfixBracketNodeEvaluateState2:
             {
                 PostfixBracketNode* postfixBracketNode = static_cast<PostfixBracketNode*>(currentNode);
                 
-                JSValue *subscript = GET_VALUE_RETURN();
-                JSObject *base = POP_LOCAL_VALUE()->toObject(exec);
+                JSValue *subscript = valueReturn();
+                JSObject *base = m_valueStack.pop()->toObject(exec);
                 KJS_CHECKEXCEPTION();
                 
                 uint32_t propertyIndex;
@@ -918,7 +861,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             case PostfixDotNodeEvaluateState1:
             {
                 PostfixDotNode* postFixDotNode = static_cast<PostfixDotNode*>(currentNode);
-                JSObject* base = GET_VALUE_RETURN()->toObject(exec);
+                JSObject* base = valueReturn()->toObject(exec);
                 KJS_CHECKEXCEPTION();
                 
                 PropertySlot slot;
@@ -963,13 +906,13 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case DeleteBracketNodeEvaluateState1:
             {
-                PUSH_LOCAL_VALUE(GET_VALUE_RETURN());
+                m_valueStack.push(valueReturn());
                 EVALUATE_AND_CONTINUE(static_cast<DeleteBracketNode*>(currentNode)->m_subscript.get(), DeleteBracketNodeEvaluateState2);
             }
             case DeleteBracketNodeEvaluateState2:
             {
-                JSValue *subscript = GET_VALUE_RETURN();
-                JSObject *base = POP_LOCAL_VALUE()->toObject(exec);
+                JSValue *subscript = valueReturn();
+                JSObject *base = m_valueStack.pop()->toObject(exec);
                 KJS_CHECKEXCEPTION();
                 
                 uint32_t propertyIndex;
@@ -986,7 +929,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case DeleteDotNodeEvaluateState1:
             {
-                JSObject *base = GET_VALUE_RETURN()->toObject(exec);
+                JSObject *base = valueReturn()->toObject(exec);
                 RETURN_VALUE(jsBoolean(base->deleteProperty(exec, static_cast<DeleteDotNode*>(currentNode)->m_ident)));
             }
 
@@ -1039,7 +982,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case TypeOfValueNodeEvaluateState1:
             {
-                RETURN_VALUE(typeStringForValue(GET_VALUE_RETURN()));
+                RETURN_VALUE(typeStringForValue(valueReturn()));
             }
             
             case PrefixResolveNodeEvaluateState:
@@ -1082,15 +1025,15 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case PrefixBracketNodeEvaluateState1:
             {
-                PUSH_LOCAL_VALUE(GET_VALUE_RETURN());
+                m_valueStack.push(valueReturn());
                 EVALUATE_AND_CONTINUE(static_cast<PrefixBracketNode*>(currentNode)->m_subscript.get(), PrefixBracketNodeEvaluateState2);
             }
             case PrefixBracketNodeEvaluateState2:
             {
                 PrefixBracketNode* prefixBracketNode = static_cast<PrefixBracketNode*>(currentNode);
                 Operator oper = prefixBracketNode->m_oper;
-                JSValue *subscript = GET_VALUE_RETURN();
-                JSObject *base = POP_LOCAL_VALUE()->toObject(exec);
+                JSValue *subscript = valueReturn();
+                JSObject *base = m_valueStack.pop()->toObject(exec);
                 KJS_CHECKEXCEPTION();
                 
                 uint32_t propertyIndex;
@@ -1129,7 +1072,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case PrefixDotNodeEvaluateState1:
             {
-                JSObject *base = GET_VALUE_RETURN()->toObject(exec);
+                JSObject *base = valueReturn()->toObject(exec);
                 KJS_CHECKEXCEPTION();
                 PrefixDotNode* prefixDotNode = static_cast<PrefixDotNode*>(currentNode);
                 const Identifier& ident = prefixDotNode->m_ident;
@@ -1153,7 +1096,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case UnaryPlusNodeEvaluateState1:
             {
-                double value = GET_VALUE_RETURN()->toNumber(exec);
+                double value = valueReturn()->toNumber(exec);
                 RETURN_VALUE(jsNumber(value));
             }
 
@@ -1163,7 +1106,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case NegateNodeEvaluateState1:
             {
-                double value = GET_VALUE_RETURN()->toNumber(exec);
+                double value = valueReturn()->toNumber(exec);
                 RETURN_VALUE(jsNumber(-value));
             }
             
@@ -1173,7 +1116,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case BitwiseNotNodeEvaluateState1:
             {
-                int32_t value = GET_VALUE_RETURN()->toInt32(exec);
+                int32_t value = valueReturn()->toInt32(exec);
                 RETURN_VALUE(jsNumber(~value));
             }
                 
@@ -1183,7 +1126,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case LogicalNotNodeEvaluateState1:
             {
-                bool value = GET_VALUE_RETURN()->toBoolean(exec);
+                bool value = valueReturn()->toBoolean(exec);
                 RETURN_VALUE(jsBoolean(!value));
             }
             
@@ -1193,12 +1136,12 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case MultNodeEvaluateState1:
             {
-                PUSH_LOCAL_VALUE(GET_VALUE_RETURN());
+                m_valueStack.push(valueReturn());
                 EVALUATE_AND_CONTINUE(static_cast<MultNode*>(currentNode)->term2.get(), MultNodeEvaluateState2);
             }
             case MultNodeEvaluateState2:
             {
-                RETURN_VALUE(mult(exec, POP_LOCAL_VALUE(), GET_VALUE_RETURN(), static_cast<MultNode*>(currentNode)->oper));
+                RETURN_VALUE(mult(exec, m_valueStack.pop(), valueReturn(), static_cast<MultNode*>(currentNode)->oper));
             }
             
             case AddNodeEvaluateState:
@@ -1207,12 +1150,12 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case AddNodeEvaluateState1:
             {
-                PUSH_LOCAL_VALUE(GET_VALUE_RETURN());
+                m_valueStack.push(valueReturn());
                 EVALUATE_AND_CONTINUE(static_cast<AddNode*>(currentNode)->term2.get(), AddNodeEvaluateState2);
             }
             case AddNodeEvaluateState2:
             {
-                RETURN_VALUE(add(exec, POP_LOCAL_VALUE(), GET_VALUE_RETURN(), static_cast<AddNode*>(currentNode)->oper));
+                RETURN_VALUE(add(exec, m_valueStack.pop(), valueReturn(), static_cast<AddNode*>(currentNode)->oper));
             }
             
             case ShiftNodeEvaluateState:
@@ -1221,13 +1164,13 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case ShiftNodeEvaluateState1:
             {
-                PUSH_LOCAL_VALUE(GET_VALUE_RETURN());
+                m_valueStack.push(valueReturn());
                 EVALUATE_AND_CONTINUE(static_cast<ShiftNode*>(currentNode)->term2.get(), ShiftNodeEvaluateState2);
             }
             case ShiftNodeEvaluateState2:
             {
-                JSValue *v2 = GET_VALUE_RETURN();
-                JSValue *v1 = POP_LOCAL_VALUE();
+                JSValue *v2 = valueReturn();
+                JSValue *v1 = m_valueStack.pop();
                 unsigned int i2 = v2->toUInt32(exec);
                 i2 &= 0x1f;
                 
@@ -1255,14 +1198,14 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case RelationalNodeEvaluateState1:
             {
-                PUSH_LOCAL_VALUE(GET_VALUE_RETURN());
+                m_valueStack.push(valueReturn());
                 EVALUATE_AND_CONTINUE(static_cast<RelationalNode*>(currentNode)->expr2.get(), RelationalNodeEvaluateState2);
             }
             case RelationalNodeEvaluateState2:
             {
                 RelationalNode* relationalNode = static_cast<RelationalNode*>(currentNode);
-                JSValue *v2 = GET_VALUE_RETURN();
-                JSValue *v1 = POP_LOCAL_VALUE();
+                JSValue *v2 = valueReturn();
+                JSValue *v1 = m_valueStack.pop();
                 Operator oper = relationalNode->oper;
                 
                 bool b;
@@ -1311,13 +1254,13 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case EqualNodeEvaluateState1:
             {
-                PUSH_LOCAL_VALUE(GET_VALUE_RETURN());
+                m_valueStack.push(valueReturn());
                 EVALUATE_AND_CONTINUE(static_cast<EqualNode*>(currentNode)->expr2.get(), EqualNodeEvaluateState2);
             }
             case EqualNodeEvaluateState2:
             {
-                JSValue* v2 = GET_VALUE_RETURN();
-                JSValue* v1 = POP_LOCAL_VALUE();
+                JSValue* v2 = valueReturn();
+                JSValue* v1 = m_valueStack.pop();
                 Operator oper = static_cast<EqualNode*>(currentNode)->oper;
                 
                 bool result;
@@ -1340,13 +1283,13 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case BitOperNodeEvaluateState1:
             {
-                PUSH_LOCAL_VALUE(GET_VALUE_RETURN());
+                m_valueStack.push(valueReturn());
                 EVALUATE_AND_CONTINUE(static_cast<BitOperNode*>(currentNode)->expr2.get(), BitOperNodeEvaluateState2);
             }
             case BitOperNodeEvaluateState2:
             {
-                JSValue* v2 = GET_VALUE_RETURN();
-                JSValue* v1 = POP_LOCAL_VALUE();
+                JSValue* v2 = valueReturn();
+                JSValue* v1 = m_valueStack.pop();
                 Operator oper = static_cast<BitOperNode*>(currentNode)->oper;
 
                 int i1 = v1->toInt32(exec);
@@ -1368,13 +1311,13 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case BinaryLogicalNodeEvaluateState1:
             {
-                JSValue* v1 = GET_VALUE_RETURN();
+                JSValue* v1 = valueReturn();
                 BinaryLogicalNode* binaryLogicalNode = static_cast<BinaryLogicalNode*>(currentNode);
                 Operator oper = binaryLogicalNode->oper;
                 bool b1 = v1->toBoolean(exec);
                 if ((!b1 && oper == OpAnd) || (b1 && oper == OpOr))
                     RETURN_VALUE(v1);
-                PUSH_EVALUATE(binaryLogicalNode->expr2.get());
+                pushEvaluate(interpreter, binaryLogicalNode->expr2.get());
                 break;
             }
             
@@ -1384,10 +1327,10 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case ConditionalNodeEvaluateState1:
             {
-                JSValue *v = GET_VALUE_RETURN();
+                JSValue *v = valueReturn();
                 ConditionalNode* conditionalNode = static_cast<ConditionalNode*>(currentNode);
                 RefPtr<Node> node = v->toBoolean(exec) ? conditionalNode->expr1 : conditionalNode->expr2;
-                PUSH_EVALUATE(node.get());
+                pushEvaluate(interpreter, node.get());
                 break;
             }
             
@@ -1419,7 +1362,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 if (!foundSlot && (oper != OpEqual))
                     RETURN_ERROR(assignResolveNode->throwUndefinedVariableError(exec, ident));
                 
-                PUSH_LOCAL_VALUE(base);
+                m_valueStack.push(base);
                 EVALUATE_AND_CONTINUE(assignResolveNode->m_right.get(), AssignResolveNodeEvaluateState1);
             }
             case AssignResolveNodeEvaluateState1:
@@ -1427,8 +1370,8 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 AssignResolveNode *assignResolveNode = static_cast<AssignResolveNode*>(currentNode);
                 Operator oper = assignResolveNode->m_oper;
                 const Identifier& ident = assignResolveNode->m_ident;
-                JSValue* v = GET_VALUE_RETURN();
-                JSObject* base = static_cast<JSObject*>(POP_LOCAL_VALUE());
+                JSValue* v = valueReturn();
+                JSObject* base = static_cast<JSObject*>(m_valueStack.pop());
                 // FIXME: We could avoid this slot double-lookup by having a slot stack.
                 PropertySlot slot;
                 base->getPropertySlot(exec, ident, slot);
@@ -1450,7 +1393,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case AssignDotNodeEvaluateState1:
             {
-                PUSH_LOCAL_VALUE(GET_VALUE_RETURN());
+                m_valueStack.push(valueReturn());
                 AssignDotNode* assignDotNode = static_cast<AssignDotNode*>(currentNode);
                 if (assignDotNode->m_oper == OpEqual)
                     EVALUATE_AND_JUMP(assignDotNode->m_right.get(), AssignDotNodeEvaluateState3);
@@ -1460,21 +1403,21 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             case AssignDotNodeEvaluateState2:
             {
                 AssignDotNode* assignDotNode = static_cast<AssignDotNode*>(currentNode);
-                JSValue* v2 = GET_VALUE_RETURN();
-                JSObject* base = PEEK_LOCAL_VALUE()->toObject(exec);
+                JSValue* v2 = valueReturn();
+                JSObject* base = m_valueStack.peek()->toObject(exec);
                 KJS_CHECKEXCEPTION();
                 PropertySlot slot;
                 JSValue *v1 = base->getPropertySlot(exec, assignDotNode->m_ident, slot) ? slot.getValue(exec, base, assignDotNode->m_ident) : jsUndefined();
                 KJS_CHECKEXCEPTION();
                 
-                SET_VALUE_RETURN(valueForReadModifyAssignment(exec, v1, v2, assignDotNode->m_oper));
+                setValueReturn(valueForReadModifyAssignment(exec, v1, v2, assignDotNode->m_oper));
                 FALL_THROUGH();
             }
             case AssignDotNodeEvaluateState3:
             {
                 AssignDotNode* assignDotNode = static_cast<AssignDotNode*>(currentNode);
-                JSValue* v = GET_VALUE_RETURN();
-                JSObject* base = POP_LOCAL_VALUE()->toObject(exec);
+                JSValue* v = valueReturn();
+                JSObject* base = m_valueStack.pop()->toObject(exec);
                 KJS_CHECKEXCEPTION();
                 base->put(exec, assignDotNode->m_ident, v);
                 RETURN_VALUE(v);
@@ -1487,20 +1430,20 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case AssignBracketNodeEvaluateState1:
             {
-                PUSH_LOCAL_VALUE(GET_VALUE_RETURN());
+                m_valueStack.push(valueReturn());
                 EVALUATE_AND_CONTINUE(static_cast<AssignBracketNode*>(currentNode)->m_subscript.get(), AssignBracketNodeEvaluateState2);
             }
             case AssignBracketNodeEvaluateState2:
             {
-                PUSH_LOCAL_VALUE(GET_VALUE_RETURN());
+                m_valueStack.push(valueReturn());
                 EVALUATE_AND_CONTINUE(static_cast<AssignBracketNode*>(currentNode)->m_right.get(), AssignBracketNodeEvaluateState3);
             }
             case AssignBracketNodeEvaluateState3:
             {
                 AssignBracketNode* assignBracketNode = static_cast<AssignBracketNode*>(currentNode);
-                JSValue* v = GET_VALUE_RETURN();
-                JSValue* subscript = POP_LOCAL_VALUE();            
-                JSObject* base = POP_LOCAL_VALUE()->toObject(exec);
+                JSValue* v = valueReturn();
+                JSValue* subscript = m_valueStack.pop();            
+                JSObject* base = m_valueStack.pop()->toObject(exec);
                 KJS_CHECKEXCEPTION();
                 Operator oper = assignBracketNode->m_oper;
                 
@@ -1534,14 +1477,14 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 
             case CommaNodeEvaluateState:
             {
-                PUSH_EVALUATE(static_cast<CommaNode*>(currentNode)->expr2.get());
-                PUSH_EVALUATE(static_cast<CommaNode*>(currentNode)->expr1.get()); // ignore the first return value
+                pushEvaluate(interpreter, static_cast<CommaNode*>(currentNode)->expr2.get());
+                pushEvaluate(interpreter, static_cast<CommaNode*>(currentNode)->expr1.get()); // ignore the first return value
                 break;
             }
             
             case AssignExprNodeEvaluateState:
             {
-                PUSH_EVALUATE(static_cast<AssignExprNode*>(currentNode)->expr.get());
+                pushEvaluate(interpreter, static_cast<AssignExprNode*>(currentNode)->expr.get());
                 break;
             }
                 
@@ -1556,15 +1499,15 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                     // already declared? - check with getDirect so you can override
                     // built-in properties of the global object with var declarations.
                     if (variable->getDirect(varDecl->ident))
-                        RETURN_VALUE((JSValue*)0);
-                    SET_VALUE_RETURN(jsUndefined());
+                        RETURN_VALUE((JSValue*)0); // FIXME: this is WRONG
+                    setValueReturn(jsUndefined());
                 }
                 FALL_THROUGH();
             }
             case VarDeclNodeEvaluateState1:
             {
                 VarDeclNode* varDecl = static_cast<VarDeclNode*>(currentNode);
-                JSValue* val = GET_VALUE_RETURN();
+                JSValue* val = valueReturn();
                 JSObject* variable = exec->context().imp()->variableObject();
 #ifdef KJS_VERBOSE
                 printInfo(exec, (UString("new variable ") + ident.ustring()).cstring().c_str(), val);
@@ -1602,7 +1545,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 
             case CaseClauseNodeEvaluateState:
             {
-                PUSH_EVALUATE(static_cast<CaseClauseNode*>(currentNode)->expr.get());
+                pushEvaluate(interpreter, static_cast<CaseClauseNode*>(currentNode)->expr.get());
                 break;
             }
                 
@@ -1639,7 +1582,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case ArgumentListNodeEvaluateListState:
             {
-                PUSH_LIST(List());
+                m_listStack.push(List());
                 FALL_THROUGH();
             }
             case ArgumentListNodeEvaluateListState1:
@@ -1649,8 +1592,8 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             case ArgumentListNodeEvaluateListState2:
             {
                 ArgumentListNode* n = static_cast<ArgumentListNode*>(currentNode);
-                JSValue* v = GET_VALUE_RETURN();
-                List& l = PEEK_LIST();
+                JSValue* v = valueReturn();
+                List& l = m_listStack.peek();
                 l.append(v);
                 
                 n = n->next.get();
@@ -1664,7 +1607,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             {
                 ArgumentsNode* argumentsNode = static_cast<ArgumentsNode*>(currentNode);
                 if (argumentsNode->list)
-                    PUSH_EVALUATE_LIST(argumentsNode->list.get());
+                    pushEvaluateList(interpreter, argumentsNode->list.get());
                 else
                     RETURN_LIST(List());
                 break;
@@ -1686,7 +1629,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
 
             case VarStatementNodeExecuteState:
             {
-                PUSH_EVALUATE(static_cast<VarStatementNode*>(currentNode)->next.get());
+                pushEvaluate(interpreter, static_cast<VarStatementNode*>(currentNode)->next.get());
                 break;
             }
 
@@ -1695,7 +1638,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 BlockNode* blockNode = static_cast<BlockNode*>(currentNode);
                 if (blockNode->sourceHead) {
                     blockNode->sourceHead->processFuncDecl(exec);
-                    PUSH_EXECUTE(blockNode->sourceTail);
+                    pushExecute(interpreter, blockNode->sourceTail);
                     break;
                 }
                 RETURN_NORMAL_COMPLETION();
@@ -1712,7 +1655,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case ExprStatementNodeExecuteState1:
             {
-                RETURN_COMPLETION(Completion(Normal, GET_VALUE_RETURN()));
+                RETURN_COMPLETION(Completion(Normal, valueReturn()));
             }
 
             case IfNodeExecuteState:
@@ -1722,13 +1665,13 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             case IfNodeExecuteState1:
             {
                 IfNode* ifNode = static_cast<IfNode*>(currentNode);
-                if (GET_VALUE_RETURN()->toBoolean(exec)) {
-                    PUSH_EXECUTE(ifNode->statement1.get());
+                if (valueReturn()->toBoolean(exec)) {
+                    pushExecute(interpreter, ifNode->statement1.get());
                     break;
                 }
                 
                 if (ifNode->statement2) {
-                    PUSH_EXECUTE(ifNode->statement2.get());
+                    pushExecute(interpreter, ifNode->statement2.get());
                     break;
                 }
                 RETURN_NORMAL_COMPLETION();
@@ -1739,14 +1682,14 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             {
                 PUSH_UNWIND_BARRIER(Break, DoWhileNodeExecuteEndState);
                 PUSH_UNWIND_BARRIER(Continue, DoWhileNodeExecuteContinueState);
-                SET_VALUE_RETURN(jsBoolean(true));
+                setValueReturn(jsBoolean(true));
                 SET_JUMP_STATE(DoWhileNodeExecuteBodyState, currentNode);
                 break;
             }
             case DoWhileNodeExecuteContinueState:
             {
-                ASSERT(GET_LAST_COMPLETION().complType() == Continue);
-                RESET_COMPLETION_TO_NORMAL();
+                ASSERT(completionReturn().complType() == Continue);
+                resetCompletionToNormal();
                 FALL_THROUGH();
             }
             case DoWhileNodeExecuteTestState:
@@ -1755,7 +1698,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case DoWhileNodeExecuteBodyState:
             {
-                if (GET_VALUE_RETURN()->toBoolean(exec))
+                if (valueReturn()->toBoolean(exec))
                     EXECUTE_AND_JUMP(static_cast<DoWhileNode*>(currentNode)->statement.get(), DoWhileNodeExecuteTestState);
 
                 // fall through if the test returns false
@@ -1766,10 +1709,10 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             {
                 POP_UNWIND_BARRIER(Break);
                 
-                ComplType complType = GET_LAST_COMPLETION().complType();
+                ComplType complType = completionReturn().complType();
                 if (complType != Normal) {
                     ASSERT(complType == Break);
-                    RESET_COMPLETION_TO_NORMAL();
+                    resetCompletionToNormal();
                 }
                 break;
             }
@@ -1783,8 +1726,8 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case WhileNodeExecuteContinueState:
             {
-                ASSERT(GET_LAST_COMPLETION().complType() == Normal || GET_LAST_COMPLETION().complType() == Continue);
-                RESET_COMPLETION_TO_NORMAL();
+                ASSERT(completionReturn().complType() == Normal || completionReturn().complType() == Continue);
+                resetCompletionToNormal();
                 FALL_THROUGH();
             }
             case WhileNodeExecuteTestState:
@@ -1793,7 +1736,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case WhileNodeExecuteBodyState:
             {
-                if (GET_VALUE_RETURN()->toBoolean(exec))
+                if (valueReturn()->toBoolean(exec))
                     EXECUTE_AND_JUMP(static_cast<WhileNode*>(currentNode)->statement.get(), WhileNodeExecuteTestState);
 
                 // fall through if the test returns false
@@ -1804,10 +1747,10 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             {
                 POP_UNWIND_BARRIER(Break);
 
-                ComplType complType = GET_LAST_COMPLETION().complType();
+                ComplType complType = completionReturn().complType();
                 if (complType != Normal) {
                     ASSERT(complType == Break);
-                    RESET_COMPLETION_TO_NORMAL();
+                    resetCompletionToNormal();
                 }
                 
                 break;
@@ -1838,7 +1781,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             {
                 ForNode* forNode = static_cast<ForNode*>(currentNode);
 
-                if (forNode->expr2 && !GET_VALUE_RETURN()->toBoolean(exec)) {
+                if (forNode->expr2 && !valueReturn()->toBoolean(exec)) {
                     POP_UNWIND_BARRIER(Continue); // we're done, no more continues possible
                     SET_JUMP_STATE(ForNodeExecuteEndState, forNode);
                     break;
@@ -1848,8 +1791,8 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case ForNodeExecuteContinueState:
             {
-                ASSERT(GET_LAST_COMPLETION().complType() == Normal || GET_LAST_COMPLETION().complType() == Continue);
-                RESET_COMPLETION_TO_NORMAL();
+                ASSERT(completionReturn().complType() == Normal || completionReturn().complType() == Continue);
+                resetCompletionToNormal();
                 FALL_THROUGH();
             }
             case ForNodeExecutePostBodyState:
@@ -1858,17 +1801,17 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
 
                 SET_JUMP_STATE(ForNodeExecuteTestState, forNode);
                 if (forNode->expr3)
-                    PUSH_EVALUATE(forNode->expr3.get());
+                    pushEvaluate(interpreter, forNode->expr3.get());
                 break;
             }
             case ForNodeExecuteEndState:
             {
                 POP_UNWIND_BARRIER(Break);
                 
-                ComplType complType = GET_LAST_COMPLETION().complType();
+                ComplType complType = completionReturn().complType();
                 if (complType != Normal) {
                     ASSERT(complType == Break);
-                    RESET_COMPLETION_TO_NORMAL();
+                    resetCompletionToNormal();
                 }
                 
                 break;
@@ -1881,15 +1824,15 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
 
                 SET_CONTINUE_STATE(ForInNodeExecuteState2);
                 ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
-                PUSH_EVALUATE(forInNode->expr.get());
+                pushEvaluate(interpreter, forInNode->expr.get());
                 if (VarDeclNode* varDeclNode = forInNode->varDecl.get())
-                    PUSH_EVALUATE(varDeclNode); // return is ignored.
+                    pushEvaluate(interpreter, varDeclNode); // return is ignored.
                 break;
             }
             case ForInNodeExecuteState2:
             {
                 ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
-                JSValue* e = GET_VALUE_RETURN();
+                JSValue* e = valueReturn();
                 
                 // Null and Undefined will throw if you call toObject on them
                 if (e->isUndefinedOrNull()) {
@@ -1926,7 +1869,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 // them to push them onto the stack
                 size_t numProperties = propertyStack.size();
                 for (size_t i = 0; i < numProperties; i++) {
-                    PUSH_LOCAL_VALUE(jsString(propertyStack.pop().ustring()));
+                    m_valueStack.push(jsString(propertyStack.pop().ustring()));
                     SET_JUMP_STATE(interpreterState, forInNode);
                 }
                     
@@ -1944,7 +1887,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 // we must always have something in the scope chain
                 assert(iter != end);
                 
-                JSValue* str = POP_LOCAL_VALUE();
+                JSValue* str = m_valueStack.pop();
                 PropertySlot slot;
                 JSObject* o;
                 do { 
@@ -1970,9 +1913,9 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             case ForInNodeDotAccessorNodeExecuteState1:
             {
                 ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
-                JSObject* base = GET_VALUE_RETURN()->toObject(exec);
+                JSObject* base = valueReturn()->toObject(exec);
                 KJS_CHECKEXCEPTION();
-                JSValue* str = POP_LOCAL_VALUE();
+                JSValue* str = m_valueStack.pop();
                 
                 const Identifier& lexprIdent = static_cast<DotAccessorNode*>(forInNode->lexpr.get())->identifier();
                 base->put(exec, lexprIdent, str);
@@ -1988,16 +1931,16 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case ForInNodeBracketAccessorNodeExecuteState1:
             {
-                PUSH_LOCAL_VALUE(GET_VALUE_RETURN());
+                m_valueStack.push(valueReturn());
                 ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
                 EVALUATE_AND_CONTINUE(static_cast<BracketAccessorNode*>(forInNode->lexpr.get())->subscript(), ForInNodeBracketAccessorNodeExecuteState2);
             }
             case ForInNodeBracketAccessorNodeExecuteState2:
             {
-                JSObject* base = POP_LOCAL_VALUE()->toObject(exec);
+                JSObject* base = m_valueStack.pop()->toObject(exec);
                 KJS_CHECKEXCEPTION();
-                JSValue* subscript = GET_VALUE_RETURN();
-                JSValue* str = POP_LOCAL_VALUE();
+                JSValue* subscript = valueReturn();
+                JSValue* str = m_valueStack.pop();
                 
                 uint32_t i;
                 if (subscript->getUInt32(i))
@@ -2016,18 +1959,18 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
 
             case ForInNodeExecutePopContinueUnwindBarrierState:
             {
-                if (GET_LAST_COMPLETION().complType() == Continue)
-                    RESET_COMPLETION_TO_NORMAL();
-                ASSERT(GET_LAST_COMPLETION().complType() == Normal);
+                if (completionReturn().complType() == Continue)
+                    resetCompletionToNormal();
+                ASSERT(completionReturn().complType() == Normal);
                 
                 POP_UNWIND_BARRIER(Continue);
                 break;
             }
             case ForInNodeExecutePopBreakUnwindBarrierState:
             {
-                if (GET_LAST_COMPLETION().complType() == Break)
-                    RESET_COMPLETION_TO_NORMAL();
-                ASSERT(GET_LAST_COMPLETION().complType() == Normal);
+                if (completionReturn().complType() == Break)
+                    resetCompletionToNormal();
+                ASSERT(completionReturn().complType() == Normal);
                 
                 POP_UNWIND_BARRIER(Break);
                 break;
@@ -2059,7 +2002,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case ReturnNodeExecuteState1:
             {
-                RETURN_COMPLETION(Completion(ReturnValue, GET_VALUE_RETURN()));
+                RETURN_COMPLETION(Completion(ReturnValue, valueReturn()));
             }
 
             case WithNodeExecuteState:
@@ -2069,7 +2012,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             case WithNodeExecuteState1:
             {
                 WithNode* withNode = static_cast<WithNode*>(currentNode);
-                JSValue *v = GET_VALUE_RETURN();
+                JSValue *v = valueReturn();
                 JSObject *o = v->toObject(exec);
                 KJS_CHECKEXCEPTION();
                 PUSH_UNWIND_BARRIER(Scope, InternalErrorState); // scope marker
@@ -2093,17 +2036,17 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 SET_CONTINUE_STATE(SwitchNodeExecuteState2);
                 // CaseBlockNodeExecuteBlockWithInputValue uses the last return value as an "argument"
                 ASSERT(static_cast<SwitchNode*>(currentNode)->block->interpreterState() == CaseBlockNodeExecuteBlockWithInputValue);
-                PUSH_EXECUTE(static_cast<SwitchNode*>(currentNode)->block.get());
+                pushExecute(interpreter, static_cast<SwitchNode*>(currentNode)->block.get());
                 break;
             }
             case SwitchNodeExecuteState2:
             {
                 POP_UNWIND_BARRIER(Break);
-                const Completion& res = GET_LAST_COMPLETION();
+                const Completion& res = completionReturn();
                 
                 if ((res.complType() == Break) && static_cast<SwitchNode*>(currentNode)->ls.contains(res.target())) {
                     Completion c(Normal, res.value());
-                    RESET_COMPLETION_TO_NORMAL();
+                    resetCompletionToNormal();
                     RETURN_COMPLETION(c);
                 }
                 break;
@@ -2113,17 +2056,17 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             {                
                 PUSH_UNWIND_BARRIER(Break, LabelNodeExecuteState1);
                 SET_CONTINUE_STATE(LabelNodeExecuteState1);
-                PUSH_EXECUTE(static_cast<LabelNode*>(currentNode)->statement.get());
+                pushExecute(interpreter, static_cast<LabelNode*>(currentNode)->statement.get());
                 break;
             }
             case LabelNodeExecuteState1:
             {
                 POP_UNWIND_BARRIER(Break);
-                const Completion& e = GET_LAST_COMPLETION();
+                const Completion& e = completionReturn();
                 
                 if ((e.complType() == Break) && (e.target() == static_cast<LabelNode*>(currentNode)->label)) {
                     Completion c(Normal, e.value());
-                    RESET_COMPLETION_TO_NORMAL();
+                    resetCompletionToNormal();
                     RETURN_COMPLETION(c);
                 }
                 break;
@@ -2135,25 +2078,25 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case ThrowNodeExecuteState1:
             {
-                RETURN_COMPLETION(Completion(Throw, GET_VALUE_RETURN()));
+                RETURN_COMPLETION(Completion(Throw, valueReturn()));
             }
 
             case TryNodeExecuteState:
             {
                 PUSH_UNWIND_BARRIER(Throw, TryNodeExecuteExceptionThrownState);
                 SET_JUMP_STATE(TryNodeExecuteNoExceptionThrownState, currentNode);
-                PUSH_EXECUTE(static_cast<TryNode*>(currentNode)->tryBlock.get());
+                pushExecute(interpreter, static_cast<TryNode*>(currentNode)->tryBlock.get());
                 break;
             }
             case TryNodeExecuteExceptionThrownState:
             {
                 TryNode* tryNode = static_cast<TryNode*>(currentNode);
                 POP_UNWIND_BARRIER(Throw);
-                const Completion& c = GET_LAST_COMPLETION();
+                const Completion& c = completionReturn();
                 if (tryNode->catchBlock && c.complType() == Throw) {
                     JSObject *obj = new JSObject;
                     obj->put(exec, tryNode->exceptionIdent, c.value(), DontDelete);
-                    RESET_COMPLETION_TO_NORMAL();
+                    resetCompletionToNormal();
                     PUSH_UNWIND_BARRIER(Scope, InternalErrorState);
                     exec->context().imp()->pushScope(obj);
                     EXECUTE_AND_CONTINUE(tryNode->catchBlock.get(), TryNodeExecutePopScopeAfterCatchBlockState);
@@ -2161,12 +2104,12 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 
                 if (tryNode->finallyBlock) {
                     // We will have to re-throw after finally if we didn't catch this exception
-                    if (GET_LAST_COMPLETION().complType() == Throw) {
-                        PUSH_LOCAL_VALUE(c.value());
-                        RESET_COMPLETION_TO_NORMAL();
+                    if (completionReturn().complType() == Throw) {
+                        m_valueStack.push(c.value());
+                        resetCompletionToNormal();
                         SET_JUMP_STATE(TryNodeExecuteRethrowAfterFinallyState, currentNode);
                     }
-                    PUSH_EXECUTE(tryNode->finallyBlock.get());
+                    pushExecute(interpreter, tryNode->finallyBlock.get());
                 }
                 break;
             }
@@ -2178,7 +2121,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 
                 TryNode* tryNode = static_cast<TryNode*>(currentNode);
                 if (tryNode->finallyBlock)
-                    PUSH_EXECUTE(tryNode->finallyBlock.get());
+                    pushExecute(interpreter, tryNode->finallyBlock.get());
                 break;
             }
             case TryNodeExecuteNoExceptionThrownState:
@@ -2187,12 +2130,12 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 TryNode* tryNode = static_cast<TryNode*>(currentNode);
                 POP_UNWIND_BARRIER(Throw);
                 if (tryNode->finallyBlock)
-                    PUSH_EXECUTE(tryNode->finallyBlock.get());
+                    pushExecute(interpreter, tryNode->finallyBlock.get());
                 break;
             }
             case TryNodeExecuteRethrowAfterFinallyState:
             {
-                RETURN_COMPLETION(Completion(Throw, POP_LOCAL_VALUE()));
+                RETURN_COMPLETION(Completion(Throw, m_valueStack.pop()));
             }
 
             case FuncDeclNodeExecuteState:
@@ -2204,7 +2147,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             {
                 SourceElementsNode* n = static_cast<SourceElementsNode*>(currentNode);
                 do {
-                    PUSH_EXECUTE(n->node.get());
+                    pushExecute(interpreter, n->node.get());
                     n = n->prev;
                 } while (n);
                 
@@ -2216,7 +2159,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 // FIXME: This is the only execute function which takes an argument!
                 // This was originally called CaseBlockNode::evalBlock but was renamed
                 // CaseBlockNodeExecuteBlock to indicate the completion return
-                PUSH_LOCAL_VALUE(GET_VALUE_RETURN());
+                m_valueStack.push(valueReturn());
                 
                 CaseBlockNode* caseBlockNode = static_cast<CaseBlockNode*>(currentNode);
                 // Skip over "a" loops to "b" loops if possible
@@ -2225,19 +2168,19 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                     break;
                 }
                 
-                PUSH_NODE(caseBlockNode->list1.get()); // push "a"
+                m_nodeStack.push(caseBlockNode->list1.get()); // push "a"
                 FALL_THROUGH();
             }
             case CaseBlockNodeExecuteBlockWithInputValue1: // top of first "a" loop
             {
-                ClauseListNode* a = static_cast<ClauseListNode*>(PEEK_NODE());
+                ClauseListNode* a = static_cast<ClauseListNode*>(m_nodeStack.peek());
                 EVALUATE_AND_CONTINUE(a->getClause(), CaseBlockNodeExecuteBlockWithInputValue2);
             }
             case CaseBlockNodeExecuteBlockWithInputValue2:
             {
-                ClauseListNode*& a = reinterpret_cast<ClauseListNode*&>(PEEK_NODE());
-                JSValue* v = GET_VALUE_RETURN();
-                JSValue* input = PEEK_LOCAL_VALUE();
+                Node*& a = m_nodeStack.peek();
+                JSValue* v = valueReturn();
+                JSValue* input = m_valueStack.peek();
                 
                 if (strictEqual(exec, input, v)) {
                     // more "a" pointers to evaluate, jump to second while.
@@ -2245,20 +2188,20 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                     break;
                 }
                 
-                a = a->getNext();
+                a = static_cast<ClauseListNode*>(a)->getNext();
                 // jump to top of first while(a)
                 if (a) {
                     SET_JUMP_STATE(CaseBlockNodeExecuteBlockWithInputValue1, currentNode);
                     break;
                 }
                 
-                POP_NODE(); // we're done with "a"
+                m_nodeStack.pop(); // we're done with "a"
                 SET_JUMP_STATE(CaseBlockNodeExecuteBlockWithInputValue5, currentNode); // jump to top of first "b" loop
                 break;
             }
             case CaseBlockNodeExecuteBlockWithInputValue3: // top of second while(a)
             {
-                ClauseListNode* a = static_cast<ClauseListNode*>(PEEK_NODE());
+                ClauseListNode* a = static_cast<ClauseListNode*>(m_nodeStack.peek());
                 // CaseClauseNode::evalStatements()
                 if (a->getClause()->next) {
                     EXECUTE_AND_CONTINUE(a->getClause()->next.get(), CaseBlockNodeExecuteBlockWithInputValue4);
@@ -2268,14 +2211,14 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case CaseBlockNodeExecuteBlockWithInputValue4:
             {
-                ClauseListNode*& a = reinterpret_cast<ClauseListNode*&>(PEEK_NODE());
-                a = a->getNext();
+                Node*& a = m_nodeStack.peek();
+                a = static_cast<ClauseListNode*>(a)->getNext();
                 if (a) { // still more "a" pointers to evaluate, jump to top of second while
                     SET_JUMP_STATE(CaseBlockNodeExecuteBlockWithInputValue3, currentNode);
                     break;
                 }
                 
-                POP_NODE(); // we're done with "a"
+                m_nodeStack.pop(); // we're done with "a"
                 FALL_THROUGH();
             }
             case CaseBlockNodeExecuteBlockWithInputValue5: // staging area for "b" loops
@@ -2285,53 +2228,53 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                     SET_JUMP_STATE(CaseBlockNodeExecuteBlockWithInputValue8, currentNode);
                     break;
                 }
-                PUSH_NODE(caseBlockNode->list2.get()); // push "b"
+                m_nodeStack.push(caseBlockNode->list2.get()); // push "b"
                 FALL_THROUGH();
             }
             case CaseBlockNodeExecuteBlockWithInputValue6: // top of first "b" loop
             {
-                ClauseListNode* b = static_cast<ClauseListNode*>(PEEK_NODE());
+                ClauseListNode* b = static_cast<ClauseListNode*>(m_nodeStack.peek());
                 EVALUATE_AND_CONTINUE(b->getClause(), CaseBlockNodeExecuteBlockWithInputValue7);
             }
             case CaseBlockNodeExecuteBlockWithInputValue7:
             {
-                ClauseListNode*& b = reinterpret_cast<ClauseListNode*&>(PEEK_NODE());
-                JSValue* v = GET_VALUE_RETURN();
-                JSValue* input = PEEK_LOCAL_VALUE();
+                Node*& b = m_nodeStack.peek();
+                JSValue* v = valueReturn();
+                JSValue* input = m_valueStack.peek();
                 if (strictEqual(exec, input, v)) {
                     // skip over default clause, evaluate statement block if possible.
                     SET_JUMP_STATE(CaseBlockNodeExecuteBlockWithInputValue10, currentNode);
-                    if (b->getClause()->next)
-                        PUSH_EXECUTE(b->getClause()->next.get());
+                    if (static_cast<ClauseListNode*>(b)->getClause()->next)
+                        pushExecute(interpreter, static_cast<ClauseListNode*>(b)->getClause()->next.get());
                     break;
                 }
                 
-                b = b->getNext();
+                b = static_cast<ClauseListNode*>(b)->getNext();
                 if (b) { // jump to top of first "b" loop
                     SET_JUMP_STATE(CaseBlockNodeExecuteBlockWithInputValue6, currentNode);
                     break;
                 }
                 
-                POP_NODE(); // pop "b"
+                m_nodeStack.pop(); // pop "b"
                 FALL_THROUGH();
             }
             case CaseBlockNodeExecuteBlockWithInputValue8: // default clause
             {
                 CaseBlockNode* caseBlockNode = static_cast<CaseBlockNode*>(currentNode);
                 if (caseBlockNode->list2) {
-                    PUSH_NODE(caseBlockNode->list2.get()); // push "b"
+                    m_nodeStack.push(caseBlockNode->list2.get()); // push "b"
                     SET_CONTINUE_STATE(CaseBlockNodeExecuteBlockWithInputValue9);
                 } else 
                     SET_JUMP_STATE(CaseBlockNodeExecuteBlockWithInputValue11, currentNode);
 
                 if (caseBlockNode->def && caseBlockNode->def->next)
-                    PUSH_EXECUTE(caseBlockNode->def->next.get());
+                    pushExecute(interpreter, caseBlockNode->def->next.get());
 
                 break;
             }
             case CaseBlockNodeExecuteBlockWithInputValue9: // top of second "b" loop
             {
-                ClauseListNode* b = static_cast<ClauseListNode*>(PEEK_NODE());
+                ClauseListNode* b = static_cast<ClauseListNode*>(m_nodeStack.peek());
                 if (b->getClause()->next) {
                     EXECUTE_AND_JUMP(b->getClause()->next.get(), CaseBlockNodeExecuteBlockWithInputValue10);
                     break;
@@ -2341,17 +2284,17 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
             }
             case CaseBlockNodeExecuteBlockWithInputValue10:
             {
-                ClauseListNode*& b = reinterpret_cast<ClauseListNode*&>(PEEK_NODE());
-                b = b->getNext();
+                Node*& b = m_nodeStack.peek();
+                b = static_cast<ClauseListNode*>(b)->getNext();
                 if (b) { // jump to top of second "b" loop
                     SET_JUMP_STATE(CaseBlockNodeExecuteBlockWithInputValue9, currentNode);
                     break;
                 }
-                POP_NODE(); // done with "b"
+                m_nodeStack.pop(); // done with "b"
             }    
             case CaseBlockNodeExecuteBlockWithInputValue11:
             {
-                POP_LOCAL_VALUE(); // done with "input"
+                m_valueStack.pop(); // done with "input"
                 RETURN_NORMAL_COMPLETION();
             }
             
@@ -2365,25 +2308,41 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                    i.e. func->call(exec, thisObj, args)
                    Thus they are popped here in reverse order. */
                 
-                List args = POP_LIST();
-                JSObject* thisObj = static_cast<JSObject*>(POP_LOCAL_VALUE());
-                JSObject* functionObj = static_cast<JSObject*>(PEEK_LOCAL_VALUE()); // left on the stack for use during final cleanup state
-                if (!functionObj->inherits(&DeclaredFunctionImp::info)) {
-                    POP_LOCAL_VALUE(); // we're not coming back here, chuck the local FunctionImp pointer.
-                    RETURN_VALUE(functionObj->call(exec, thisObj, args));
+                const List& args = m_listStack.peek();
+                JSObject* thisObj = static_cast<JSObject*>(m_valueStack.peek());
+                JSObject* functionObj = static_cast<JSObject*>(m_valueStack.peek(1)); // left on the stack for use during final cleanup state
+                
+                if (functionObj->inherits(&GlobalFuncImp::info) && static_cast<GlobalFuncImp*>(functionObj)->m_functionId == GlobalFuncImp::Eval) {
+                    SET_JUMP_STATE(GlobalFuncCallEvalState, currentNode);
+                    break;
+                } else if (!functionObj->inherits(&DeclaredFunctionImp::info)) {
+                    JSValue* val = functionObj->call(exec, thisObj, args);
+                    // we're done, pop the input args
+                    m_listStack.pop();
+                    m_valueStack.pop();
+                    m_valueStack.pop();
+                    RETURN_VALUE(val);
                 }
-                    
-                DeclaredFunctionImp* declaredFunction = static_cast<DeclaredFunctionImp*>(functionObj);
+                FALL_THROUGH();
+            }
+            
+            
+            case DeclaredFunctionCallState:
+            {
+                // See JSObjectCallState for notes on calling convention
+                List args = m_listStack.pop();
+                JSObject* thisObj = static_cast<JSObject*>(m_valueStack.pop());
+                DeclaredFunctionImp* declaredFunction = static_cast<DeclaredFunctionImp*>(m_valueStack.peek()); // left on the stack for use during final cleanup state
                 
 #if KJS_MAX_STACK > 0
-                if (interpreter->execStateStackDepth() > KJS_MAX_STACK)
+                if (m_execStateStack.size() > KJS_MAX_STACK)
                     RETURN_ERROR(throwError(exec, RangeError, "Maximum call stack size exceeded."));
 #endif
                 
 #if JAVASCRIPT_CALL_TRACING
                 static bool tracing = false;
                 if (traceJavaScript() && !tracing) {
-                    unsigned depth = interpreter->executionContextPairStackDepth();
+                    unsigned depth = executionContextPairStackDepth();
                     tracing = true;
                     for (int i = 0; i < depth; i++)
                         putchar(' ');
@@ -2397,59 +2356,57 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 }
 #endif
                 
-                JSObject *globalObj = interpreter->globalObject();
-                FunctionBodyNode* functionBodyNode = declaredFunction->body.get();
-                
-                ContextImp* ctx = new ContextImp(globalObj, interpreter, thisObj, functionBodyNode, declaredFunction->codeType(), exec->context().imp(), declaredFunction, &args);
-                ExecState *newExec = new ExecState(exec->dynamicInterpreter(), ctx);
-                PUSH_EXECSTATE(newExec);
+                FunctionBodyNode* functionBodyNode = declaredFunction->body.get();                
+                ContextImp* ctx = new ContextImp(globalObject(), interpreter, thisObj, functionBodyNode, declaredFunction->codeType(), exec->context().imp(), declaredFunction, &args);
+                ExecState* newExec = new ExecState(exec->dynamicInterpreter(), ctx);
+                m_execStateStack.push(newExec);
                 
                 // assign user supplied arguments to parameters
                 declaredFunction->processParameters(newExec, args);
                 // add variable declarations (initialized to undefined)
                 declaredFunction->processVarDecls(newExec);
                 
-                if (debugger) {
-                    bool shouldContinue = debugger->callEvent(newExec, functionBodyNode->sourceId(), functionBodyNode->firstLine(), declaredFunction, args);
+                if (m_debugger) {
+                    bool shouldContinue = m_debugger->callEvent(newExec, functionBodyNode->sourceId(), functionBodyNode->firstLine(), declaredFunction, args);
                     if (!shouldContinue) {
-                        debugger->imp()->abort();
+                        m_debugger->imp()->abort();
                         RETURN_VALUE(jsUndefined()); // FIXME: This won't actualy exit the function.
                     }
                 }
                 
-                PUSH_UNWIND_BARRIER(ReturnValue, JSObjectCallExplicitReturnState);
-                PUSH_UNWIND_BARRIER(Throw, JSObjectCallEndState);
+                PUSH_UNWIND_BARRIER(ReturnValue, DeclaredFunctionCallExplicitReturnState);
+                PUSH_UNWIND_BARRIER(Throw, DeclaredFunctionCallEndState);
                 exec = newExec;
-                EXECUTE_AND_JUMP(functionBodyNode, JSObjectCallEndState);
+                EXECUTE_AND_JUMP(functionBodyNode, DeclaredFunctionCallEndState);
             }
-            case JSObjectCallEndState:
+            case DeclaredFunctionCallEndState:
             {
-                ASSERT(GET_LAST_COMPLETION().complType() == Throw || GET_LAST_COMPLETION().complType() == Normal);
+                ASSERT(completionReturn().complType() == Throw || completionReturn().complType() == Normal);
                 POP_UNWIND_BARRIER(Throw);
                 FALL_THROUGH();
             }
-            case JSObjectCallExplicitReturnState:
+            case DeclaredFunctionCallExplicitReturnState:
             {
-                ASSERT(GET_LAST_COMPLETION().complType() == Throw || GET_LAST_COMPLETION().complType() == ReturnValue || GET_LAST_COMPLETION().complType() == Normal);
+                ASSERT(completionReturn().complType() == Throw || completionReturn().complType() == ReturnValue || completionReturn().complType() == Normal);
                 POP_UNWIND_BARRIER(ReturnValue);
                 
-                DeclaredFunctionImp* declaredFunction = static_cast<DeclaredFunctionImp*>(POP_LOCAL_VALUE());
-                const Completion& comp = GET_LAST_COMPLETION();
+                DeclaredFunctionImp* declaredFunction = static_cast<DeclaredFunctionImp*>(m_valueStack.pop());
+                const Completion& comp = completionReturn();
                 FunctionBodyNode* functionBodyNode = declaredFunction->body.get();
                 
-                ExecState* newExec = POP_EXECSTATE();
-                exec = PEEK_EXECSTATE();
+                ExecState* newExec = m_execStateStack.pop();
+                exec = m_execStateStack.peek();
                 
-                if (debugger) {
+                if (m_debugger) {
                     if (comp.complType() == Throw)
                         newExec->setException(comp.value());
                     
-                    int shouldContinue = debugger->returnEvent(newExec, functionBodyNode->sourceId(), functionBodyNode->lastLine(), declaredFunction);
+                    int shouldContinue = m_debugger->returnEvent(newExec, functionBodyNode->sourceId(), functionBodyNode->lastLine(), declaredFunction);
                     
                     delete newExec->context().imp();
                     delete newExec;
                     if (!shouldContinue) {
-                        debugger->imp()->abort();
+                        m_debugger->imp()->abort();
                         RETURN_VALUE(jsUndefined());
                     }
                 }
@@ -2462,10 +2419,10 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 if (comp.complType() == Throw) {
                     exec->setException(comp.value()); // FIXME: this should be removed when we revise the interpreter to not use exceptions
                     val = comp.value();
-                    RESET_COMPLETION_TO_NORMAL();
+                    resetCompletionToNormal();
                 } else if (comp.complType() == ReturnValue) {
                     val = comp.value();
-                    RESET_COMPLETION_TO_NORMAL();
+                    resetCompletionToNormal();
                 } else
                     val = jsUndefined();
                     
@@ -2481,16 +2438,75 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 RETURN_VALUE(val);
             }
             
+            
+            case GlobalFuncCallEvalState:
+            {
+                // See JSObjectCallState for notes on calling convention
+                List args = m_listStack.pop();
+                m_valueStack.pop(); // ignore passed "thisObj"
+                m_valueStack.pop(); // ignore passed "this"
+            
+                JSValue *x = args[0];
+                if (!x->isString())
+                    RETURN_VALUE(x);
+
+                UString s = x->toString(exec);
+                
+                int sid;
+                int errLine;
+                UString errMsg;
+                RefPtr<ProgramNode> programNode(Parser::parse(UString(), 0, s.data(), s.size(), &sid, &errLine, &errMsg));
+                
+                if (m_debugger) {
+                    bool shouldContinue = m_debugger->sourceParsed(exec, sid, UString(), s, errLine);
+                    if (!shouldContinue)
+                        RETURN_VALUE(jsUndefined());
+                }
+                
+                // no program node means a syntax occurred
+                if (!programNode)
+                    RETURN_ERROR(throwError(exec, SyntaxError, errMsg, errLine, sid, NULL));
+                
+                // enter a new execution context
+                JSObject *thisObj = static_cast<JSObject *>(exec->context().thisValue());                    
+                ContextImp* ctx = new ContextImp(globalObject(), interpreter, thisObj, programNode.get(), EvalCode, exec->context().imp());
+                ExecState* newExec = new ExecState(exec->dynamicInterpreter(), ctx);
+                m_execStateStack.push(newExec);
+                
+                // execute the code
+                programNode->processVarDecls(newExec);
+                m_nodeStack.push(programNode.release().release());
+                PUSH_UNWIND_BARRIER(All, GlobalFuncCallEvalEndState);
+                exec = newExec;
+                resetCompletionToNormal();
+                EXECUTE_AND_CONTINUE(m_nodeStack.peek(), GlobalFuncCallEvalEndState);
+            }
+            case GlobalFuncCallEvalEndState:
+            {
+                POP_UNWIND_BARRIER(All);
+                RefPtr<ProgramNode> programNode = adoptRef(static_cast<ProgramNode*>(m_nodeStack.pop()));
+                const Completion& comp = completionReturn();
+                
+                ExecState* newExec = m_execStateStack.pop();
+                exec = m_execStateStack.peek();
+                
+                delete newExec->context().imp();
+                delete newExec;
+                newExec = 0;
+                
+                RETURN_VALUE(comp.value() ? comp.value() : jsUndefined());
+            }
+            
         } // end switch
         
         // This label is used by RETURN_VALUE to break out of nested while loops in case statements
 interpreter_state_switch_end:
         if (exec->hadException()) {
-            interpreter->resetCompletionToNormal();
-            interpreter->setCompletionReturn(Completion(Throw, exec->exception()));
+            resetCompletionToNormal();
+            setCompletionReturn(Completion(Throw, exec->exception()));
         }
-        if (interpreter->getCompletionReturn().complType() != Normal)
-            interpreter->unwindToNextBarrier(exec, currentNode);
+        if (completionReturn().complType() != Normal)
+            unwindToNextBarrier(exec, currentNode);
     }
     
 }
@@ -2500,19 +2516,19 @@ Completion callExecuteOnNode(StatementNode* node, ExecState* exec)
 {
     InterpreterImp* interpreter = exec->dynamicInterpreter()->imp();
 
-    PUSH_EXECSTATE(exec);
+    interpreter->m_execStateStack.push(exec);
     
     // FIXME: It's a bit of a hack to use InternalErrorState to represent the stack frame barrier
     interpreter->pushUnwindBarrier(All, InterpreterImp::State(InternalErrorState, 0));
 
-    PUSH_EXECUTE(node);
+    pushExecute(interpreter, node);
     interpreter->runInterpreterLoop(exec);
 
     POP_UNWIND_BARRIER(All);
-    POP_EXECSTATE();
+    interpreter->m_execStateStack.pop();
 
-    Completion c = GET_LAST_COMPLETION();
-    RESET_COMPLETION_TO_NORMAL();
+    Completion c = interpreter->completionReturn();
+    interpreter->resetCompletionToNormal();
     return c;
 }
 

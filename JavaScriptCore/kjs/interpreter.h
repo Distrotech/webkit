@@ -31,6 +31,7 @@ namespace KJS {
 
   class ContextImp;
   class InterpreterImp;
+  class BuiltInTypes;
   class RuntimeMethod;
   class ScopeChain;
 
@@ -119,7 +120,7 @@ namespace KJS {
   class SavedBuiltinsInternal;
 
   class SavedBuiltins {
-    friend class InterpreterImp;
+    friend class BuiltInTypes;
   public:
     SavedBuiltins();
     ~SavedBuiltins();

@@ -334,14 +334,14 @@ void *Interpreter::createLanguageInstanceForValue(ExecState *exec, int language,
 }
 #endif
 
-void Interpreter::saveBuiltins (SavedBuiltins &builtins) const
+void Interpreter::saveBuiltins(SavedBuiltins& builtins) const
 {
-  rep->saveBuiltins(builtins);
+    rep->saveBuiltins(builtins);
 }
 
-void Interpreter::restoreBuiltins (const SavedBuiltins &builtins)
+void Interpreter::restoreBuiltins(const SavedBuiltins& builtins)
 {
-  rep->restoreBuiltins(builtins);
+    rep->restoreBuiltins(builtins);
 }
 
 SavedBuiltins::SavedBuiltins() : 

@@ -150,17 +150,17 @@ namespace KJS {
 
   class GlobalFuncImp : public InternalFunctionImp {
   public:
-    GlobalFuncImp(ExecState*, FunctionPrototype*, int i, int len, const Identifier&);
-    virtual JSValue *callAsFunction(ExecState *exec, JSObject *thisObj, const List &args);
-    virtual CodeType codeType() const;
-    enum { Eval, ParseInt, ParseFloat, IsNaN, IsFinite, Escape, UnEscape,
+    enum FunctionId { Eval, ParseInt, ParseFloat, IsNaN, IsFinite, Escape, UnEscape,
            DecodeURI, DecodeURIComponent, EncodeURI, EncodeURIComponent
 #ifndef NDEBUG
            , KJSPrint
 #endif
-};
-  private:
-    int id;
+    };
+    GlobalFuncImp(ExecState*, FunctionPrototype*, FunctionId, int len, const Identifier&);
+    virtual JSValue* callAsFunction(ExecState*, JSObject* thisObj, const List& args);
+    virtual const ClassInfo* classInfo() const { return &info; }
+    static const ClassInfo info;
+    FunctionId m_functionId;
   };
 
 
