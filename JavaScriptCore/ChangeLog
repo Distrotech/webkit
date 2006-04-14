@@ -6,6 +6,8 @@
         
         Expressions now form lists instead of trees, so that use of the
         state stack can be avoided.
+        
+        Makes treecode branch 10% faster.
 
         * kjs/InterpreterState.h:
         * kjs/TreeCode.cpp:
