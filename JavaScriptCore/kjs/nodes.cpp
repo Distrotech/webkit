@@ -172,6 +172,13 @@ JSValue *Node::throwError(ExecState* exec, ErrorType e, const char *msg)
     return KJS::throwError(exec, e, msg, lineNo(), currentSourceId(exec), &currentSourceURL(exec));
 }
 
+JSValue *Node::throwError(ExecState *exec, ErrorType e, const char *msg, JSValue *v)
+{
+    UString message = msg;
+    substitute(message, v->toString(exec));
+    return KJS::throwError(exec, e, message, lineNo(), currentSourceId(exec), &currentSourceURL(exec));
+}
+
 JSValue *Node::throwError(ExecState *exec, ErrorType e, const char *msg, JSValue *v, Node *expr)
 {
     UString message = msg;
@@ -179,7 +186,6 @@ JSValue *Node::throwError(ExecState *exec, ErrorType e, const char *msg, JSValue
     substitute(message, expr->toString());
     return KJS::throwError(exec, e, message, lineNo(), currentSourceId(exec), &currentSourceURL(exec));
 }
-
 
 JSValue *Node::throwError(ExecState *exec, ErrorType e, const char *msg, const Identifier &label)
 {
@@ -229,20 +235,6 @@ void Node::setExceptionDetailsIfNeeded(ExecState *exec)
             exception->put(exec, "sourceURL", jsString(currentSourceURL(exec)));
         }
     }
-}
-
-Node *Node::nodeInsideAllParens()
-{
-    return this;
-}
-
-Node *GroupNode::nodeInsideAllParens()
-{
-    Node *n = this;
-    do
-        n = static_cast<GroupNode *>(n)->group.get();
-    while (n->isGroupNode());
-    return n;
 }
 
 // ------------------------------ StatementNode --------------------------------
@@ -456,8 +448,8 @@ void WhileNode::processVarDecls(ExecState *exec)
 
 void ForNode::processVarDecls(ExecState *exec)
 {
-  if (expr1)
-    expr1->processVarDecls(exec);
+  if (decls)
+    decls->processVarDecls(exec);
 
   statement->processVarDecls(exec);
 }
@@ -469,7 +461,7 @@ ForInNode::ForInNode(Node *l, Node *e, StatementNode *s)
 {
 }
 
-ForInNode::ForInNode(const Identifier &i, AssignExprNode *in, Node *e, StatementNode *s)
+ForInNode::ForInNode(const Identifier &i, ExprNode *in, Node *e, StatementNode *s)
   : StatementNode(ForInNodeExecuteState), ident(i), init(in), expr(e), statement(s)
 {
   varDecl = new VarDeclNode(ident, init.get(), VarDeclNode::Variable);

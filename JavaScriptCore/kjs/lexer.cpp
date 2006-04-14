@@ -39,6 +39,7 @@ using namespace KJS;
 static Lexer *currLexer = 0;
 
 #ifndef KDE_USE_FINAL
+#include "expr.h"
 #include "grammar.h"
 #endif
 

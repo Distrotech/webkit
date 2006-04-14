@@ -1,3 +1,109 @@
+2006-04-14  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+        
+        - changed expression grammar production rules to make flattened output
+        
+        Expressions now form lists instead of trees, so that use of the
+        state stack can be avoided.
+
+        * kjs/InterpreterState.h:
+        * kjs/TreeCode.cpp:
+        (KJS::InterpreterImp::runInterpreterLoop):
+        * kjs/grammar.y:
+        * kjs/internal.cpp:
+        * kjs/internal.h:
+        (KJS::Stack::fromLast):
+        (KJS::Stack::swapLastTwo):
+        * kjs/lexer.cpp:
+        * kjs/nodes.cpp:
+        (Node::throwError):
+        (ForNode::processVarDecls):
+        (ForInNode::ForInNode):
+        * kjs/nodes.h:
+        (KJS::ExprNode::ExprNode):
+        (KJS::ExprNode::next):
+        (KJS::ExprStatementEndNode::ExprStatementEndNode):
+        (KJS::ExprStatementEndNode::streamTo):
+        (KJS::ArgumentEndNode::ArgumentEndNode):
+        (KJS::ArgumentEndNode::streamTo):
+        (KJS::PropertyEndNode::PropertyEndNode):
+        (KJS::PropertyEndNode::streamTo):
+        (KJS::ElementEndNode::ElementEndNode):
+        (KJS::ElementEndNode::streamTo):
+        (KJS::NullNode::NullNode):
+        (KJS::BooleanNode::BooleanNode):
+        (KJS::NumberNode::NumberNode):
+        (KJS::StringNode::StringNode):
+        (KJS::RegExpNode::RegExpNode):
+        (KJS::ThisNode::ThisNode):
+        (KJS::ResolveNode::ResolveNode):
+        (KJS::ArrayNode::ArrayNode):
+        (KJS::PropertyNode::PropertyNode):
+        (KJS::ObjectLiteralNode::ObjectLiteralNode):
+        (KJS::BracketAccessorNode::BracketAccessorNode):
+        (KJS::BracketAccessorNode::isBracketAccessorNode):
+        (KJS::DotAccessorNode::DotAccessorNode):
+        (KJS::DotAccessorNode::isDotAccessorNode):
+        (KJS::ArgumentListNode::ArgumentListNode):
+        (KJS::ArgumentListNode::streamTo):
+        (KJS::ArgumentsNode::streamTo):
+        (KJS::NewExprNode::NewExprNode):
+        (KJS::FunctionCallNode::FunctionCallNode):
+        (KJS::PostfixNode::PostfixNode):
+        (KJS::PostfixBracketNode::PostfixBracketNode):
+        (KJS::DeleteNode::DeleteNode):
+        (KJS::DeleteBracketNode::DeleteBracketNode):
+        (KJS::DeleteValueNode::DeleteValueNode):
+        (KJS::VoidNode::VoidNode):
+        (KJS::TypeOfResolveNode::TypeOfResolveNode):
+        (KJS::TypeOfValueNode::TypeOfValueNode):
+        (KJS::PrefixNode::PrefixNode):
+        (KJS::PrefixBracketNode::PrefixBracketNode):
+        (KJS::UnaryPlusNode::UnaryPlusNode):
+        (KJS::NegateNode::NegateNode):
+        (KJS::BitwiseNotNode::BitwiseNotNode):
+        (KJS::LogicalNotNode::LogicalNotNode):
+        (KJS::MultNode::MultNode):
+        (KJS::AddNode::AddNode):
+        (KJS::ShiftNode::ShiftNode):
+        (KJS::RelationalNode::RelationalNode):
+        (KJS::EqualNode::EqualNode):
+        (KJS::BitOperNode::BitOperNode):
+        (KJS::JumpNode::JumpNode):
+        (KJS::NoOpNode::NoOpNode):
+        (KJS::ReadModifyAssignNode::ReadModifyAssignNode):
+        (KJS::AssignNode::AssignNode):
+        (KJS::ReadModifyAssignBracketNode::ReadModifyAssignBracketNode):
+        (KJS::AssignBracketNode::AssignBracketNode):
+        (KJS::CommaNode::CommaNode):
+        (KJS::VarDeclNode::VarDeclNode::VarDeclNode):
+        (KJS::VarDeclEndNode::VarDeclEndNode):
+        (KJS::VarDeclEndNode::streamTo):
+        (KJS::ExprStatementNode::ExprStatementNode):
+        (KJS::IfConditionEndNode::IfConditionEndNode):
+        (KJS::IfConditionEndNode::streamTo):
+        (KJS::DoWhileTestExprEndNode::DoWhileTestExprEndNode):
+        (KJS::DoWhileTestExprEndNode::streamTo):
+        (KJS::WhileTestExprEndNode::WhileTestExprEndNode):
+        (KJS::WhileTestExprEndNode::streamTo):
+        (KJS::ForNode::ForNode):
+        (KJS::ForExprEndNode::ForExprEndNode):
+        (KJS::ForExprEndNode::streamTo):
+        (KJS::ReturnNode::ReturnNode):
+        (KJS::ValueReturnEndNode::ValueReturnEndNode):
+        (KJS::WithExprEndNode::WithExprEndNode):
+        (KJS::WithExprEndNode::streamTo):
+        (KJS::ThrowEndNode::ThrowEndNode):
+        (KJS::FuncExprNode::FuncExprNode):
+        * kjs/nodes2string.cpp:
+        (ExprNode::streamTo):
+        (ReturnNode::streamTo):
+        * kjs/testkjs.cpp:
+        (TestFunctionImp::callAsFunction): bug fix
+        (doIt): fix to avoid false positive leak reports
+        (kjsmain): ditto
+
 2006-04-11  David Harrison  <harrison@apple.com>
 
         Reviewed by Darin.

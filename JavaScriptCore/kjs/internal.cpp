@@ -277,7 +277,6 @@ InterpreterImp::InterpreterMap& InterpreterImp::interpreterMap()
     return *s_interpreterMap;
 }
 
-
 InterpreterImp::InterpreterImp(Interpreter *interpeter, JSObject *globalObject)
     : m_globalObject(globalObject)
     , m_interpreter(interpeter)

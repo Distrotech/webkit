@@ -42,6 +42,9 @@
 
 namespace KJS {
 
+  using std::swap;
+  using KXMLCore::swap;
+
   class Debugger;
   class FunctionPrototype;
   class Node;
@@ -186,6 +189,10 @@ namespace KJS {
         void shrinkTo(size_t newSize) { m_vector.shrinkTo(newSize); }
         T& operator[](unsigned i) { return m_vector.at(i); }
         const T& operator[](unsigned i) const { return m_vector.at(i); }
+        T& fromLast(unsigned i) { size_t s = size(); return m_vector.at(s - 1 - i); }
+        const T& fromLast(unsigned i) const { size_t s = size(); return m_vector.at(s - 1 - i); }
+        void swapLastTwo() { size_t s = size(); ASSERT(s >= 2); swap(m_vector[s - 1], m_vector[s - 2]); }
+
     private:
         Vector<T, inlineCapacity> m_vector;
     };

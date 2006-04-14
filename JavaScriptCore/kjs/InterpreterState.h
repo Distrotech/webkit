@@ -34,109 +34,81 @@ namespace KJS {
     macro(StringNodeEvaluateState) \
     macro(RegExpNodeEvaluateState) \
     macro(ThisNodeEvaluateState) \
-    macro(ResolveNodeEvaluateState) \
-    macro(GroupNodeEvaluateState) \
+    macro(ResolveValueEvaluateState) \
+    macro(ResolveBaseEvaluateState) \
+    macro(ResolveBaseAndValueEvaluateState) \
+    macro(ArgumentEndNodeEvaluateState) \
     macro(ElementNodeEvaluateState) \
     macro(ElementNodeEvaluateState1) \
     macro(ElementNodeEvaluateState2) \
+    macro(ElementEndNodeEvaluateState) \
     macro(ArrayNodeEvaluateState) \
     macro(ArrayNodeEvaluateState1) \
     macro(ObjectLiteralNodeEvaluateState) \
+    macro(ObjectLiteralNodeEvaluateState1) \
     macro(PropertyListNodeEvaluateState) \
     macro(PropertyListNodeEvaluateState1) \
     macro(PropertyListNodeEvaluateState2) \
-    macro(PropertyListNodeEvaluateState3) \
+    macro(PropertyEndNodeEvaluateState) \
     macro(PropertyNameNodeEvaluateState) \
-    macro(BracketAccessorNodeEvaluateState) \
-    macro(BracketAccessorNodeEvaluateState1) \
-    macro(BracketAccessorNodeEvaluateState2) \
-    macro(DotAccessorNodeEvaluateState) \
-    macro(DotAccessorNodeEvaluateState1) \
+    macro(BracketAccessorValueEvaluateState) \
+    macro(BracketAccessorBaseAndValueEvaluateState) \
+    macro(BracketAccessorBaseSubscriptAndValueEvaluateState) \
+    macro(BracketAccessorBaseAndSubscriptEvaluateState) \
+    macro(DotAccessorValueEvaluateState) \
+    macro(DotAccessorBaseEvaluateState) \
+    macro(DotAccessorBaseAndValueEvaluateState) \
     macro(NewExprNodeEvaluateState) \
     macro(NewExprNodeEvaluateState1) \
-    macro(NewExprNodeEvaluateState2) \
-    macro(FunctionCallValueNodeEvaluateState) \
-    macro(FunctionCallValueNodeEvaluateState1) \
-    macro(FunctionCallResolveNodeEvaluateState) \
-    macro(FunctionCallBracketNodeEvaluateState) \
-    macro(FunctionCallBracketNodeEvaluateState1) \
-    macro(FunctionCallBracketNodeEvaluateState2) \
-    macro(FunctionCallDotNodeEvaluateState) \
-    macro(FunctionCallDotNodeEvaluateState1) \
-    macro(PostfixResolveNodeEvaluateState) \
+    macro(FunctionCallNoBaseNodeEvaluateState) \
+    macro(FunctionCallNodeEvaluateState) \
+    macro(PostfixNodeEvaluateState) \
     macro(PostfixBracketNodeEvaluateState) \
-    macro(PostfixBracketNodeEvaluateState1) \
-    macro(PostfixBracketNodeEvaluateState2) \
-    macro(PostfixDotNodeEvaluateState) \
-    macro(PostfixDotNodeEvaluateState1) \
-    macro(DeleteResolveNodeEvaluateState) \
+    macro(DeleteNodeEvaluateState) \
     macro(DeleteBracketNodeEvaluateState) \
-    macro(DeleteBracketNodeEvaluateState1) \
-    macro(DeleteBracketNodeEvaluateState2) \
-    macro(DeleteDotNodeEvaluateState) \
-    macro(DeleteDotNodeEvaluateState1) \
     macro(DeleteValueNodeEvaluateState) \
-    macro(DeleteValueNodeEvaluateState1) \
     macro(VoidNodeEvaluateState) \
-    macro(VoidNodeEvaluateState1) \
     macro(TypeOfResolveNodeEvaluateState) \
     macro(TypeOfValueNodeEvaluateState) \
-    macro(TypeOfValueNodeEvaluateState1) \
-    macro(PrefixResolveNodeEvaluateState) \
+    macro(PrefixNodeEvaluateState) \
     macro(PrefixBracketNodeEvaluateState) \
-    macro(PrefixBracketNodeEvaluateState1) \
-    macro(PrefixBracketNodeEvaluateState2) \
-    macro(PrefixDotNodeEvaluateState) \
-    macro(PrefixDotNodeEvaluateState1) \
     macro(UnaryPlusNodeEvaluateState) \
-    macro(UnaryPlusNodeEvaluateState1) \
     macro(NegateNodeEvaluateState) \
-    macro(NegateNodeEvaluateState1) \
     macro(BitwiseNotNodeEvaluateState) \
-    macro(BitwiseNotNodeEvaluateState1) \
     macro(LogicalNotNodeEvaluateState) \
-    macro(LogicalNotNodeEvaluateState1) \
     macro(MultNodeEvaluateState) \
-    macro(MultNodeEvaluateState1) \
-    macro(MultNodeEvaluateState2) \
     macro(AddNodeEvaluateState) \
-    macro(AddNodeEvaluateState1) \
-    macro(AddNodeEvaluateState2) \
     macro(ShiftNodeEvaluateState) \
-    macro(ShiftNodeEvaluateState1) \
-    macro(ShiftNodeEvaluateState2) \
     macro(RelationalNodeEvaluateState) \
-    macro(RelationalNodeEvaluateState1) \
-    macro(RelationalNodeEvaluateState2) \
     macro(EqualNodeEvaluateState) \
-    macro(EqualNodeEvaluateState1) \
-    macro(EqualNodeEvaluateState2) \
     macro(BitOperNodeEvaluateState) \
-    macro(BitOperNodeEvaluateState1) \
-    macro(BitOperNodeEvaluateState2) \
     macro(BinaryLogicalNodeEvaluateState) \
     macro(BinaryLogicalNodeEvaluateState1) \
-    macro(ConditionalNodeEvaluateState) \
-    macro(ConditionalNodeEvaluateState1) \
-    macro(AssignResolveNodeEvaluateState) \
-    macro(AssignResolveNodeEvaluateState1) \
-    macro(AssignDotNodeEvaluateState) \
-    macro(AssignDotNodeEvaluateState1) \
-    macro(AssignDotNodeEvaluateState2) \
-    macro(AssignDotNodeEvaluateState3) \
+    macro(NoOpEvaluateState) \
+    macro(JumpEvaluateState) \
+    macro(JumpIfFalseEvaluateState) \
+    macro(JumpAndSaveIfFalseEvaluateState) \
+    macro(JumpAndSaveIfTrueEvaluateState) \
+    macro(ReadModifyAssignNodeEvaluateState) \
+    macro(AssignNodeEvaluateState) \
     macro(AssignBracketNodeEvaluateState) \
-    macro(AssignBracketNodeEvaluateState1) \
-    macro(AssignBracketNodeEvaluateState2) \
-    macro(AssignBracketNodeEvaluateState3) \
+    macro(ReadModifyAssignBracketNodeEvaluateState) \
     macro(CommaNodeEvaluateState) \
-    macro(CommaNodeEvaluateState1) \
     macro(AssignExprNodeEvaluateState) \
     macro(VarDeclNodeEvaluateState) \
-    macro(VarDeclNodeEvaluateState1) \
+    macro(VarDeclEndNodeEvaluateState) \
     macro(VarDeclListNodeEvaluateState) \
     macro(VarDeclListNodeEvaluateState1) \
     macro(CaseClauseNodeEvaluateState) \
-    macro(FuncExprNodeEvaluateState)
+    macro(FuncExprNodeEvaluateState) \
+    macro(ExprStatementEndNodeExecuteState) \
+    macro(ValueReturnEndNodeExecuteState) \
+    macro(ThrowEndNodeExecuteState) \
+    macro(IfConditionEndNodeExecuteState) \
+    macro(WithExprEndNodeExecuteState) \
+    macro(ForNodeInitOrIncrementEndState) \
+    macro(ForNodeVarDeclEndState) \
+    macro(ForNodeTestEndState)
 // end of macro
 
 #define EVALUATE_MACRO_FOR_EACH_EVALUATE_LIST_STATE(macro) \
@@ -151,26 +123,24 @@ namespace KJS {
     macro(StatListNodeExecuteState1) \
     macro(StatListNodeExecuteState2) \
     macro(VarStatementNodeExecuteState) \
-    macro(VarStatementNodeExecuteState1) \
     macro(BlockNodeExecuteState) \
     macro(EmptyStatementNodeExecuteState) \
     macro(ExprStatementNodeExecuteState) \
-    macro(ExprStatementNodeExecuteState1) \
     macro(IfNodeExecuteState) \
-    macro(IfNodeExecuteState1) \
     macro(WhileNodeExecuteState) \
     macro(WhileNodeExecuteContinueState) \
     macro(WhileNodeExecuteTestState) \
-    macro(WhileNodeExecuteBodyState) \
+    macro(WhileTestEndNodeExecuteState) \
     macro(WhileNodeExecuteEndState) \
     macro(DoWhileNodeExecuteState) \
+    macro(DoWhileNodeExecuteBodyState) \
     macro(DoWhileNodeExecuteContinueState) \
     macro(DoWhileNodeExecuteTestState) \
-    macro(DoWhileNodeExecuteBodyState) \
+    macro(DoWhileTestEndNodeExecuteState) \
     macro(DoWhileNodeExecuteEndState) \
+    macro(ForNodeVarDeclExecuteState) \
     macro(ForNodeExecuteState) \
     macro(ForNodeExecuteTestState) \
-    macro(ForNodeExecuteBodyState) \
     macro(ForNodeExecuteContinueState) \
     macro(ForNodeExecutePostBodyState) \
     macro(ForNodeExecuteEndState) \
@@ -189,17 +159,13 @@ namespace KJS {
     macro(ContinueNodeExecuteState) \
     macro(BreakNodeExecuteState) \
     macro(ReturnNodeExecuteState) \
-    macro(ReturnNodeExecuteState1) \
     macro(WithNodeExecuteState) \
-    macro(WithNodeExecuteState1) \
     macro(WithNodeExecuteState2) \
     macro(SwitchNodeExecuteState) \
     macro(SwitchNodeExecuteState1) \
     macro(SwitchNodeExecuteState2) \
     macro(LabelNodeExecuteState) \
     macro(LabelNodeExecuteState1) \
-    macro(ThrowNodeExecuteState) \
-    macro(ThrowNodeExecuteState1) \
     macro(TryNodeExecuteState) \
     macro(TryNodeExecuteExceptionThrownState) \
     macro(TryNodeExecutePopScopeAfterCatchBlockState) \

@@ -88,8 +88,6 @@ namespace KJS {
 
     InterpreterState interpreterState() { return (InterpreterState)m_interpreterState; }
 
-    virtual Node* nodeInsideAllParens();
-
     virtual bool isLocation() const { return false; }
     virtual bool isResolveNode() const { return false; }
     virtual bool isBracketAccessorNode() const { return false; }
@@ -105,6 +103,7 @@ namespace KJS {
     JSValue *throwError(ExecState*, ErrorType, const char *msg);
     JSValue *throwError(ExecState*, ErrorType, const char *msg, JSValue *, Node *);
     JSValue *throwError(ExecState*, ErrorType, const char *msg, const Identifier &);
+    JSValue *throwError(ExecState*, ErrorType, const char *msg, JSValue *);
     JSValue *throwError(ExecState*, ErrorType, const char *msg, JSValue *, const Identifier &);
     JSValue *throwError(ExecState*, ErrorType, const char *msg, JSValue *, Node *, Node *);
     JSValue *throwError(ExecState*, ErrorType, const char *msg, JSValue *, Node *, const Identifier &);
@@ -122,6 +121,14 @@ namespace KJS {
     Node(const Node &other);
   };
 
+  struct ExprNode : public Node {
+    ExprNode(InterpreterState state) : Node(state) {}
+    ExprNode* next() { return m_next.get(); }
+    virtual void streamTo(SourceStream&) const;
+
+    RefPtr<ExprNode> m_next;
+  };
+
   struct StatementNode : public Node {
     explicit StatementNode(InterpreterState state) : Node(state), m_lastLine(-1) { m_line = -1; }
     void setLoc(int line0, int line1);
@@ -134,43 +141,70 @@ namespace KJS {
     int m_lastLine;
   };
 
-  struct NullNode : public Node {
-    NullNode() : Node(NullNodeEvaluateState) {}
+  struct ExprStatementEndNode : public ExprNode {
+    ExprStatementEndNode() : ExprNode(ExprStatementEndNodeExecuteState) {}
+    virtual void streamTo(SourceStream&) const {}
+  };
+
+  struct ArgumentListNode;
+
+  struct ArgumentEndNode : public ExprNode {
+    ArgumentEndNode(ArgumentListNode* a) : ExprNode(ArgumentEndNodeEvaluateState), m_argumentList(a) {}
+    virtual void streamTo(SourceStream&) const {}
+    ArgumentListNode* m_argumentList;
+  };
+
+  struct PropertyEndNode : public ExprNode {
+    PropertyEndNode(PropertyListNode* p) : ExprNode(PropertyEndNodeEvaluateState), m_propertyList(p) {}
+    virtual void streamTo(SourceStream&) const {}
+    PropertyListNode* m_propertyList;
+  };
+
+  struct ElementNode;
+
+  struct ElementEndNode : public ExprNode {
+    ElementEndNode(ElementNode* e) : ExprNode(ElementEndNodeEvaluateState), m_element(e) {}
+    virtual void streamTo(SourceStream&) const {}
+    ElementNode* m_element;
+  };
+  
+  struct NullNode : public ExprNode {
+    NullNode() : ExprNode(NullNodeEvaluateState) {}
     virtual void streamTo(SourceStream&) const;
   };
 
-  struct BooleanNode : public Node {
-    BooleanNode(bool v) : Node(BooleanNodeEvaluateState), value(v) {}
+  struct BooleanNode : public ExprNode {
+    BooleanNode(bool v) : ExprNode(BooleanNodeEvaluateState), value(v) {}
     virtual void streamTo(SourceStream&) const;
     bool value;
   };
 
-  struct NumberNode : public Node {
-    NumberNode(double v) : Node(NumberNodeEvaluateState), value(v) {}
+  struct NumberNode : public ExprNode {
+    NumberNode(double v) : ExprNode(NumberNodeEvaluateState), value(v) {}
     virtual void streamTo(SourceStream&) const;
     double value;
   };
 
-  struct StringNode : public Node {
-    StringNode(const UString *v) : Node(StringNodeEvaluateState) { value = *v; }
+  struct StringNode : public ExprNode {
+    StringNode(const UString *v) : ExprNode(StringNodeEvaluateState) { value = *v; }
     virtual void streamTo(SourceStream&) const;
     UString value;
   };
 
-  struct RegExpNode : public Node {
+  struct RegExpNode : public ExprNode {
     RegExpNode(const UString &p, const UString &f)
-      : Node(RegExpNodeEvaluateState), pattern(p), flags(f) { }
+      : ExprNode(RegExpNodeEvaluateState), pattern(p), flags(f) { }
     virtual void streamTo(SourceStream&) const;
     UString pattern, flags;
   };
 
-  struct ThisNode : public Node {
-    ThisNode() : Node(ThisNodeEvaluateState) {}
+  struct ThisNode : public ExprNode {
+    ThisNode() : ExprNode(ThisNodeEvaluateState) {}
     virtual void streamTo(SourceStream&) const;
   };
 
-  struct ResolveNode : public Node {
-    ResolveNode(const Identifier &s) : Node(ResolveNodeEvaluateState), ident(s) { }
+  struct ResolveNode : public ExprNode {
+    ResolveNode(const Identifier &s) : ExprNode(ResolveValueEvaluateState), ident(s) { }
     virtual void streamTo(SourceStream&) const;
 
     virtual bool isLocation() const { return true; }
@@ -178,14 +212,6 @@ namespace KJS {
     const Identifier& identifier() const { return ident; }
 
     Identifier ident;
-  };
-
-  struct GroupNode : public Node {
-    GroupNode(Node *g) : Node(GroupNodeEvaluateState), group(g) { }
-    virtual Node *nodeInsideAllParens();
-    virtual void streamTo(SourceStream&) const;
-    virtual bool isGroupNode() const { return true; }
-    RefPtr<Node> group;
   };
 
   struct ElementNode : public Node {
@@ -201,12 +227,12 @@ namespace KJS {
     RefPtr<Node> node;
   };
 
-  struct ArrayNode : public Node {
-    ArrayNode(int e) : Node(ArrayNodeEvaluateState), elision(e), opt(true) { }
+  struct ArrayNode : public ExprNode {
+    ArrayNode(int e) : ExprNode(ArrayNodeEvaluateState), elision(e), opt(true) { }
     ArrayNode(ElementNode* ele)
-      : Node(ArrayNodeEvaluateState), element(ele->next.release()), elision(0), opt(false) { Parser::removeNodeCycle(element.get()); }
+      : ExprNode(ArrayNodeEvaluateState), element(ele->next.release()), elision(0), opt(false) { Parser::removeNodeCycle(element.get()); }
     ArrayNode(int eli, ElementNode* ele)
-      : Node(ArrayNodeEvaluateState), element(ele->next.release()), elision(eli), opt(true) { Parser::removeNodeCycle(element.get()); }
+      : ExprNode(ArrayNodeEvaluateState), element(ele->next.release()), elision(eli), opt(true) { Parser::removeNodeCycle(element.get()); }
     virtual void streamTo(SourceStream&) const;
     RefPtr<ElementNode> element;
     int elision;
@@ -223,11 +249,12 @@ namespace KJS {
   
   struct PropertyNode : public Node {
     enum Type { Constant, Getter, Setter };
-    PropertyNode(PropertyNameNode *n, Node *a, Type t) 
-      : Node(InternalErrorState), name(n), assign(a), type(t) { }
+    PropertyNode(PropertyNameNode* n, Node* a, ExprNode* tail, Type t) 
+      : Node(InternalErrorState), name(n), assign(a), m_tail(tail), type(t) { }
     virtual void streamTo(SourceStream&) const;
     RefPtr<PropertyNameNode> name;
     RefPtr<Node> assign;
+    ExprNode* m_tail;
     Type type;
   };
   
@@ -244,47 +271,38 @@ namespace KJS {
     ListRefPtr<PropertyListNode> next;
   };
 
-  struct ObjectLiteralNode : public Node {
-    ObjectLiteralNode() : Node(ObjectLiteralNodeEvaluateState) { }
-    ObjectLiteralNode(PropertyListNode *l) : Node(ObjectLiteralNodeEvaluateState), list(l->next.release()) { Parser::removeNodeCycle(list.get()); }
+  struct ObjectLiteralNode : public ExprNode {
+    ObjectLiteralNode() : ExprNode(ObjectLiteralNodeEvaluateState) { }
+    ObjectLiteralNode(PropertyListNode *l) : ExprNode(ObjectLiteralNodeEvaluateState), list(l->next.release()) { Parser::removeNodeCycle(list.get()); }
     virtual void streamTo(SourceStream&) const;
     RefPtr<PropertyListNode> list;
   };
 
-  struct BracketAccessorNode : public Node {
-    BracketAccessorNode(Node* e1, Node* e2) : Node(BracketAccessorNodeEvaluateState), expr1(e1), expr2(e2) {}
-    virtual void streamTo(SourceStream&) const;
+  struct BracketAccessorNode : public ExprNode {
+    BracketAccessorNode() : ExprNode(BracketAccessorValueEvaluateState) {}
 
     virtual bool isLocation() const { return true; }
     virtual bool isBracketAccessorNode() const { return true; }
-    Node *base() { return expr1.get(); }
-    Node *subscript() { return expr2.get(); }
-
-    RefPtr<Node> expr1;
-    RefPtr<Node> expr2;
   };
 
-  struct DotAccessorNode : public Node {
-    DotAccessorNode(Node* e, const Identifier &s) : Node(DotAccessorNodeEvaluateState), expr(e), ident(s) { }
-    virtual void streamTo(SourceStream&) const;
+  struct DotAccessorNode : public ExprNode {
+    DotAccessorNode(const Identifier& s) : ExprNode(DotAccessorValueEvaluateState), ident(s) { }
 
     virtual bool isLocation() const { return true; }
     virtual bool isDotAccessorNode() const { return true; }
-    Node *base() const { return expr.get(); }
     const Identifier& identifier() const { return ident; }
 
-    RefPtr<Node> expr;
     Identifier ident;
   };
 
   struct ArgumentListNode : public Node {
     // list pointer is tail of a circular list, cracked in the ArgumentsNode ctor
-    ArgumentListNode(Node* e) : Node(ArgumentListNodeEvaluateListState), next(this), expr(e) { Parser::noteNodeCycle(this); }
-    ArgumentListNode(ArgumentListNode *l, Node* e)
+    ArgumentListNode(ExprNode* e) : Node(ArgumentListNodeEvaluateListState), next(this), expr(e) { Parser::noteNodeCycle(this); }
+    ArgumentListNode(ArgumentListNode *l, ExprNode* e)
       : Node(ArgumentListNodeEvaluateListState), next(l->next), expr(e) { l->next = this; }
-    virtual void streamTo(SourceStream&) const;
     PassRefPtr<ArgumentListNode> releaseNext() { return next.release(); }
     virtual void breakCycle();
+    virtual void streamTo(SourceStream&) const {}
     ListRefPtr<ArgumentListNode> next;
     RefPtr<Node> expr;
   };
@@ -293,282 +311,153 @@ namespace KJS {
     ArgumentsNode() : Node(ArgumentsNodeEvaluateListState) { }
     ArgumentsNode(ArgumentListNode *l)
       : Node(ArgumentsNodeEvaluateListState), list(l->next.release()) { Parser::removeNodeCycle(list.get()); }
-    virtual void streamTo(SourceStream&) const;
+    virtual void streamTo(SourceStream&) const {}
     RefPtr<ArgumentListNode> list;
   };
 
-  struct NewExprNode : public Node {
-    NewExprNode(Node* e) : Node(NewExprNodeEvaluateState), expr(e) {}
-    NewExprNode(Node* e, ArgumentsNode *a) : Node(NewExprNodeEvaluateState), expr(e), args(a) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> expr;
+  struct NewExprNode : public ExprNode {
+    NewExprNode() : ExprNode(NewExprNodeEvaluateState) {}
+    NewExprNode(ArgumentsNode* a) : ExprNode(NewExprNodeEvaluateState), args(a) {}
     RefPtr<ArgumentsNode> args;
   };
 
-  struct FunctionCallValueNode : public Node {
-    FunctionCallValueNode(Node* e, ArgumentsNode *a) : Node(FunctionCallValueNodeEvaluateState), expr(e), args(a) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> expr;
+  struct FunctionCallNode : public ExprNode {
+    FunctionCallNode(ArgumentsNode* a, bool expectBase = true) : ExprNode(expectBase ?  FunctionCallNodeEvaluateState : FunctionCallNoBaseNodeEvaluateState), args(a) {}
     RefPtr<ArgumentsNode> args;
   };
 
-  struct FunctionCallResolveNode : public Node {
-    FunctionCallResolveNode(const Identifier& i, ArgumentsNode *a) : Node(FunctionCallResolveNodeEvaluateState), ident(i), args(a) {}
-    virtual void streamTo(SourceStream&) const;
-    Identifier ident;
-    RefPtr<ArgumentsNode> args;
-  };
-
-  struct FunctionCallBracketNode : public Node {
-    FunctionCallBracketNode(Node *b, Node *s, ArgumentsNode *a) : Node(FunctionCallBracketNodeEvaluateState), base(b), subscript(s), args(a) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> base;
-    RefPtr<Node> subscript;
-    RefPtr<ArgumentsNode> args;
-  };
-
-  struct FunctionCallParenBracketNode : public FunctionCallBracketNode {
-    FunctionCallParenBracketNode(Node *b, Node *s, ArgumentsNode *a) : FunctionCallBracketNode(b, s, a) {}
-    virtual void streamTo(SourceStream&) const;
-  };
-
-  struct FunctionCallDotNode : public Node {
-    FunctionCallDotNode(Node *b, const Identifier &i, ArgumentsNode *a) : Node(FunctionCallDotNodeEvaluateState), base(b), ident(i), args(a) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> base;
-    Identifier ident;
-    RefPtr<ArgumentsNode> args;
-  };
-
-  struct FunctionCallParenDotNode : public FunctionCallDotNode {
-    FunctionCallParenDotNode(Node *b, const Identifier &i, ArgumentsNode *a) : FunctionCallDotNode(b, i, a) {}
-    virtual void streamTo(SourceStream&) const;
-  };
-
-  struct PostfixResolveNode : public Node {
-    PostfixResolveNode(const Identifier& i, Operator o) : Node(PostfixResolveNodeEvaluateState), m_ident(i), m_oper(o) {}
-    virtual void streamTo(SourceStream&) const;
+  struct PostfixNode : public ExprNode {
+    PostfixNode(const Identifier& i, Operator o) : ExprNode(PostfixNodeEvaluateState), m_ident(i), m_oper(o) {}
     Identifier m_ident;
     Operator m_oper;
   };
 
-  struct PostfixBracketNode : public Node {
-    PostfixBracketNode(Node *b, Node *s, Operator o) : Node(PostfixBracketNodeEvaluateState), m_base(b), m_subscript(s), m_oper(o) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> m_base;
-    RefPtr<Node> m_subscript;
+  struct PostfixBracketNode : public ExprNode {
+    PostfixBracketNode(Operator o) : ExprNode(PostfixBracketNodeEvaluateState), m_oper(o) {}
     Operator m_oper;
   };
 
-  struct PostfixDotNode : public Node {
-    PostfixDotNode(Node *b, const Identifier& i, Operator o) : Node(PostfixDotNodeEvaluateState), m_base(b), m_ident(i), m_oper(o) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> m_base;
-    Identifier m_ident;
-    Operator m_oper;
-  };
-
-  struct DeleteResolveNode : public Node {
-    DeleteResolveNode(const Identifier& i) : Node(DeleteResolveNodeEvaluateState), m_ident(i) {}
-    virtual void streamTo(SourceStream&) const;
+  struct DeleteNode : public ExprNode {
+    DeleteNode(const Identifier& i) : ExprNode(DeleteNodeEvaluateState), m_ident(i) {}
     Identifier m_ident;
   };
 
-  struct DeleteBracketNode : public Node {
-    DeleteBracketNode(Node *base, Node *subscript) : Node(DeleteBracketNodeEvaluateState), m_base(base), m_subscript(subscript) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> m_base;
-    RefPtr<Node> m_subscript;
+  struct DeleteBracketNode : public ExprNode {
+    DeleteBracketNode() : ExprNode(DeleteBracketNodeEvaluateState) {}
   };
 
-  struct DeleteDotNode : public Node {
-    DeleteDotNode(Node *base, const Identifier& i) : Node(DeleteDotNodeEvaluateState), m_base(base), m_ident(i) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> m_base;
+  struct DeleteValueNode : public ExprNode {
+    DeleteValueNode() : ExprNode(DeleteValueNodeEvaluateState) {}
+  };
+
+  struct VoidNode : public ExprNode {
+    VoidNode() : ExprNode(VoidNodeEvaluateState) {}
+  };
+
+  struct TypeOfResolveNode : public ExprNode {
+    TypeOfResolveNode(const Identifier& i) : ExprNode(TypeOfResolveNodeEvaluateState), m_ident(i) {}
     Identifier m_ident;
   };
 
-  struct DeleteValueNode : public Node {
-    DeleteValueNode(Node* e) : Node(DeleteValueNodeEvaluateState), m_expr(e) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> m_expr;
+  struct TypeOfValueNode : public ExprNode {
+    TypeOfValueNode() : ExprNode(TypeOfValueNodeEvaluateState) {}
   };
 
-  struct VoidNode : public Node {
-    VoidNode(Node* e) : Node(VoidNodeEvaluateState), expr(e) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> expr;
-  };
-
-  struct TypeOfResolveNode : public Node {
-    TypeOfResolveNode(const Identifier& i) : Node(TypeOfResolveNodeEvaluateState), m_ident(i) {}
-    virtual void streamTo(SourceStream&) const;
-    Identifier m_ident;
-  };
-
-  struct TypeOfValueNode : public Node {
-    TypeOfValueNode(Node* e) : Node(TypeOfValueNodeEvaluateState), m_expr(e) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> m_expr;
-  };
-
-  struct PrefixResolveNode : public Node {
-    PrefixResolveNode(const Identifier& i, Operator o) : Node(PrefixResolveNodeEvaluateState), m_ident(i), m_oper(o) {}
-    virtual void streamTo(SourceStream&) const;
+  struct PrefixNode : public ExprNode {
+    PrefixNode(const Identifier& i, Operator o) : ExprNode(PrefixNodeEvaluateState), m_ident(i), m_oper(o) {}
     Identifier m_ident;
     Operator m_oper;
   };
 
-  struct PrefixBracketNode : public Node {
-    PrefixBracketNode(Node *b, Node *s, Operator o) : Node(PrefixBracketNodeEvaluateState), m_base(b), m_subscript(s), m_oper(o) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> m_base;
-    RefPtr<Node> m_subscript;
+  struct PrefixBracketNode : public ExprNode {
+    PrefixBracketNode(Operator o) : ExprNode(PrefixBracketNodeEvaluateState), m_oper(o) {}
     Operator m_oper;
   };
 
-  struct PrefixDotNode : public Node {
-    PrefixDotNode(Node *b, const Identifier& i, Operator o) : Node(PrefixDotNodeEvaluateState), m_base(b), m_ident(i), m_oper(o) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> m_base;
-    Identifier m_ident;
-    Operator m_oper;
+  struct UnaryPlusNode : public ExprNode {
+    UnaryPlusNode() : ExprNode(UnaryPlusNodeEvaluateState) {}
   };
 
-  struct UnaryPlusNode : public Node {
-    UnaryPlusNode(Node* e) : Node(UnaryPlusNodeEvaluateState), expr(e) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> expr;
+  struct NegateNode : public ExprNode {
+    NegateNode() : ExprNode(NegateNodeEvaluateState) {}
   };
 
-  struct NegateNode : public Node {
-    NegateNode(Node* e) : Node(NegateNodeEvaluateState), expr(e) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> expr;
+  struct BitwiseNotNode : public ExprNode {
+    BitwiseNotNode() : ExprNode(BitwiseNotNodeEvaluateState) {}
   };
 
-  struct BitwiseNotNode : public Node {
-    BitwiseNotNode(Node* e) : Node(BitwiseNotNodeEvaluateState), expr(e) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> expr;
+  struct LogicalNotNode : public ExprNode {
+    LogicalNotNode() : ExprNode(LogicalNotNodeEvaluateState) {}
   };
 
-  struct LogicalNotNode : public Node {
-    LogicalNotNode(Node* e) : Node(LogicalNotNodeEvaluateState), expr(e) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> expr;
-  };
-
-  struct MultNode : public Node {
-    MultNode(Node *t1, Node *t2, char op) : Node(MultNodeEvaluateState), term1(t1), term2(t2), oper(op) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> term1;
-    RefPtr<Node> term2;
+  struct MultNode : public ExprNode {
+    MultNode(char op) : ExprNode(MultNodeEvaluateState), oper(op) {}
     char oper;
   };
 
-  struct AddNode : public Node {
-    AddNode(Node *t1, Node *t2, char op) : Node(AddNodeEvaluateState), term1(t1), term2(t2), oper(op) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> term1;
-    RefPtr<Node> term2;
+  struct AddNode : public ExprNode {
+    AddNode(char op) : ExprNode(AddNodeEvaluateState), oper(op) {}
     char oper;
   };
 
-  struct ShiftNode : public Node {
-    ShiftNode(Node *t1, Operator o, Node *t2)
-      : Node(ShiftNodeEvaluateState), term1(t1), term2(t2), oper(o) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> term1;
-    RefPtr<Node> term2;
+  struct ShiftNode : public ExprNode {
+    ShiftNode(Operator o) : ExprNode(ShiftNodeEvaluateState), oper(o) {}
     Operator oper;
   };
 
-  struct RelationalNode : public Node {
-    RelationalNode(Node* e1, Operator o, Node* e2)
-      : Node(RelationalNodeEvaluateState), expr1(e1), expr2(e2), oper(o) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> expr1;
-    RefPtr<Node> expr2;
+  struct RelationalNode : public ExprNode {
+    RelationalNode(Operator o)
+      : ExprNode(RelationalNodeEvaluateState), oper(o) {}
     Operator oper;
   };
 
-  struct EqualNode : public Node {
-    EqualNode(Node* e1, Operator o, Node* e2)
-      : Node(EqualNodeEvaluateState), expr1(e1), expr2(e2), oper(o) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> expr1;
-    RefPtr<Node> expr2;
+  struct EqualNode : public ExprNode {
+    EqualNode(Operator o)
+      : ExprNode(EqualNodeEvaluateState), oper(o) {}
     Operator oper;
   };
 
-  struct BitOperNode : public Node {
-    BitOperNode(Node* e1, Operator o, Node* e2) :
-      Node(BitOperNodeEvaluateState), expr1(e1), expr2(e2), oper(o) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> expr1;
-    RefPtr<Node> expr2;
+  struct BitOperNode : public ExprNode {
+    BitOperNode(Operator o) :
+      ExprNode(BitOperNodeEvaluateState), oper(o) {}
     Operator oper;
   };
 
-  /**
-   * expr1 && expr2, expr1 || expr2
-   */
-  struct BinaryLogicalNode : public Node {
-    BinaryLogicalNode(Node* e1, Operator o, Node* e2) :
-      Node(BinaryLogicalNodeEvaluateState), expr1(e1), expr2(e2), oper(o) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> expr1;
-    RefPtr<Node> expr2;
-    Operator oper;
+  struct JumpNode : public ExprNode {
+    JumpNode(InterpreterState opcode, ExprNode* target) 
+      : ExprNode(opcode), m_target(target) {}
+    ExprNode* m_target;
   };
 
-  /**
-   * The ternary operator, "logical ? expr1 : expr2"
-   */
-  struct ConditionalNode : public Node {
-    ConditionalNode(Node *l, Node* e1, Node* e2) :
-      Node(ConditionalNodeEvaluateState), logical(l), expr1(e1), expr2(e2) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> logical;
-    RefPtr<Node> expr1;
-    RefPtr<Node> expr2;
+  struct NoOpNode : public ExprNode {
+    NoOpNode() : ExprNode(NoOpEvaluateState) {}
   };
 
-  struct AssignResolveNode : public Node {
-    AssignResolveNode(const Identifier &ident, Operator oper, Node *right) 
-      : Node(AssignResolveNodeEvaluateState), m_ident(ident), m_oper(oper), m_right(right) {}
-    virtual void streamTo(SourceStream&) const;
+  struct ReadModifyAssignNode : public ExprNode {
+    ReadModifyAssignNode(Operator oper, Identifier ident) 
+      : ExprNode(ReadModifyAssignNodeEvaluateState), m_ident(ident), m_oper(oper) {}
     Identifier m_ident;
     Operator m_oper;
-    RefPtr<Node> m_right;
   };
 
-  struct AssignBracketNode : public Node {
-    AssignBracketNode(Node *base, Node *subscript, Operator oper, Node *right) 
-      : Node(AssignBracketNodeEvaluateState), m_base(base), m_subscript(subscript), m_oper(oper), m_right(right) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> m_base;
-    RefPtr<Node> m_subscript;
-    Operator m_oper;
-    RefPtr<Node> m_right;
-  };
-
-  struct AssignDotNode : public Node {
-    AssignDotNode(Node *base, const Identifier& ident, Operator oper, Node *right)
-      : Node(AssignDotNodeEvaluateState), m_base(base), m_ident(ident), m_oper(oper), m_right(right) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> m_base;
+  struct AssignNode : public ExprNode {
+    AssignNode(Identifier ident) 
+      : ExprNode(AssignNodeEvaluateState), m_ident(ident) {}
     Identifier m_ident;
-    Operator m_oper;
-    RefPtr<Node> m_right;
   };
 
-  struct CommaNode : public Node {
-    CommaNode(Node* e1, Node* e2) : Node(CommaNodeEvaluateState), expr1(e1), expr2(e2) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> expr1;
-    RefPtr<Node> expr2;
+  struct ReadModifyAssignBracketNode : public ExprNode {
+    ReadModifyAssignBracketNode(Operator oper)
+      : ExprNode(ReadModifyAssignBracketNodeEvaluateState), m_oper(oper) {}
+    Operator m_oper;
+  };
+
+  struct AssignBracketNode : public ExprNode {
+    AssignBracketNode() : ExprNode(AssignBracketNodeEvaluateState) {}
+  };
+
+  struct CommaNode : public ExprNode {
+    CommaNode() : ExprNode(CommaNodeEvaluateState) {}
   };
 
   struct StatListNode : public StatementNode {
@@ -583,21 +472,21 @@ namespace KJS {
     ListRefPtr<StatListNode> next;
   };
 
-  struct AssignExprNode : public Node {
-    AssignExprNode(Node* e) : Node(AssignExprNodeEvaluateState), expr(e) {}
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> expr;
-  };
-
   struct VarDeclNode : public Node {
     enum Type { Variable, Constant };
-    VarDeclNode::VarDeclNode(const Identifier &id, AssignExprNode *in, Type t)
+    VarDeclNode::VarDeclNode(const Identifier &id, ExprNode* in, Type t)
       : Node(VarDeclNodeEvaluateState), varType(t), ident(id), init(in) { }
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
     Type varType;
     Identifier ident;
-    RefPtr<AssignExprNode> init;
+    RefPtr<ExprNode> init;
+  };
+
+  struct VarDeclEndNode : public ExprNode {
+    VarDeclEndNode(VarDeclNode* v) : ExprNode(VarDeclEndNodeEvaluateState), m_varDecl(v) {}
+    virtual void streamTo(SourceStream&) const {}
+    VarDeclNode* m_varDecl;
   };
 
   struct VarDeclListNode : public Node {
@@ -642,7 +531,8 @@ namespace KJS {
   };
 
   struct ExprStatementNode : public StatementNode {
-    ExprStatementNode(Node* e) : StatementNode(ExprStatementNodeExecuteState), expr(e) { }
+    ExprStatementNode(ExprNode* e) : StatementNode(ExprStatementNodeExecuteState), expr(e) { }
+
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr;
   };
@@ -657,6 +547,12 @@ namespace KJS {
     RefPtr<StatementNode> statement2;
   };
 
+  struct IfConditionEndNode : public ExprNode {
+    IfConditionEndNode(IfNode* i) : ExprNode(IfConditionEndNodeExecuteState), m_if(i) {}
+    virtual void streamTo(SourceStream&) const {}
+    IfNode* m_if;
+  };
+
   struct DoWhileNode : public StatementNode {
     DoWhileNode(StatementNode *s, Node* e) 
         : StatementNode(DoWhileNodeExecuteState), statement(s), expr(e) { }
@@ -664,6 +560,12 @@ namespace KJS {
     virtual void streamTo(SourceStream&) const;
     RefPtr<StatementNode> statement;
     RefPtr<Node> expr;
+  };
+
+  struct DoWhileTestExprEndNode : public ExprNode {
+    DoWhileTestExprEndNode(DoWhileNode* dw) : ExprNode(DoWhileTestEndNodeExecuteState), m_doWhile(dw) {}
+    virtual void streamTo(SourceStream&) const {}
+    DoWhileNode* m_doWhile;
   };
 
   struct WhileNode : public StatementNode {
@@ -675,29 +577,44 @@ namespace KJS {
     RefPtr<StatementNode> statement;
   };
 
+  struct WhileTestExprEndNode : public ExprNode {
+    WhileTestExprEndNode(WhileNode* w) : ExprNode(WhileTestEndNodeExecuteState), m_while(w) {}
+    virtual void streamTo(SourceStream&) const {}
+    WhileNode* m_while;
+  };
+
   struct ForNode : public StatementNode {
-    ForNode(Node* e1, Node* e2, Node* e3, StatementNode *s)
+    ForNode(ExprNode* e1, ExprNode* e2, ExprNode* e3, StatementNode *s)
         : StatementNode(ForNodeExecuteState), expr1(e1), expr2(e2), expr3(e3), statement(s) { }
-    ForNode(VarDeclListNode* e1, Node* e2, Node* e3, StatementNode *s) 
-        : StatementNode(ForNodeExecuteState), expr1(e1->next.release()), expr2(e2), expr3(e3), statement(s) 
+    ForNode(VarDeclListNode* e1, ExprNode* e2, ExprNode* e3, StatementNode *s) 
+        : StatementNode(ForNodeVarDeclExecuteState), decls(e1->next.release()), expr2(e2), expr3(e3), statement(s) 
     { 
-        Parser::removeNodeCycle(expr1.get()); 
+        Parser::removeNodeCycle(decls.get()); 
     }
+
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> expr1;
-    RefPtr<Node> expr2;
-    RefPtr<Node> expr3;
+    RefPtr<VarDeclListNode> decls;
+    RefPtr<ExprNode> expr1;
+    RefPtr<ExprNode> expr2;
+    RefPtr<ExprNode> expr3;
     RefPtr<StatementNode> statement;
+  };
+
+  struct ForExprEndNode : public ExprNode {
+    ForExprEndNode(ForNode* f, InterpreterState opcode) : ExprNode(opcode), m_for(f) {}
+    virtual void streamTo(SourceStream&) const {}
+    ForNode* m_for;
   };
 
   struct ForInNode : public StatementNode {
     ForInNode(Node *l, Node* e, StatementNode *s);
-    ForInNode(const Identifier &i, AssignExprNode *in, Node* e, StatementNode *s);
+    ForInNode(const Identifier &i, ExprNode *in, Node* e, StatementNode *s);
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
     Identifier ident;
-    RefPtr<AssignExprNode> init;
+    // used to be AssignExprNode
+    RefPtr<ExprNode> init;
     RefPtr<Node> lexpr;
     RefPtr<Node> expr;
     RefPtr<VarDeclNode> varDecl;
@@ -719,9 +636,12 @@ namespace KJS {
   };
 
   struct ReturnNode : public StatementNode {
-    ReturnNode(Node *v) : StatementNode(ReturnNodeExecuteState), value(v) { }
+    ReturnNode() : StatementNode(ReturnNodeExecuteState) { }
     virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> value;
+  };
+
+  struct ValueReturnEndNode : public ExprNode {
+    ValueReturnEndNode() : ExprNode(ValueReturnEndNodeExecuteState) { }
   };
 
   struct WithNode : public StatementNode {
@@ -730,6 +650,12 @@ namespace KJS {
     virtual void streamTo(SourceStream&) const;
     RefPtr<Node> expr;
     RefPtr<StatementNode> statement;
+  };
+
+  struct WithExprEndNode : public ExprNode {
+    WithExprEndNode(WithNode* w) : ExprNode(WithExprEndNodeExecuteState), m_with(w) {}
+    virtual void streamTo(SourceStream&) const {}
+    WithNode* m_with;
   };
 
   struct CaseClauseNode : public Node {
@@ -784,10 +710,8 @@ namespace KJS {
     RefPtr<StatementNode> statement;
   };
 
-  struct ThrowNode : public StatementNode {
-    ThrowNode(Node* e) : StatementNode(ThrowNodeExecuteState), expr(e) { }
-    virtual void streamTo(SourceStream&) const;
-    RefPtr<Node> expr;
+  struct ThrowEndNode : public ExprNode {
+    ThrowEndNode() : ExprNode(ThrowEndNodeExecuteState) { }
   };
 
   struct TryNode : public StatementNode {
@@ -825,9 +749,9 @@ namespace KJS {
     int m_sourceId;
   };
 
-  struct FuncExprNode : public Node {
+  struct FuncExprNode : public ExprNode {
     FuncExprNode(const Identifier &i, FunctionBodyNode *b, ParameterNode *p = 0)
-      : Node(FuncExprNodeEvaluateState), ident(i), param(p ? p->next.release() : 0), body(b) { if (p) { Parser::removeNodeCycle(param.get()); } }
+      : ExprNode(FuncExprNodeEvaluateState), ident(i), param(p ? p->next.release() : 0), body(b) { if (p) { Parser::removeNodeCycle(param.get()); } }
     virtual void streamTo(SourceStream&) const;
     // Used for streamTo
     Identifier ident;
