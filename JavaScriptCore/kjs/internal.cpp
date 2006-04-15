@@ -448,6 +448,9 @@ void InterpreterImp::mark()
         m_valueReturn->mark();
     if (m_completionReturn.value() && !m_completionReturn.value()->marked())
         m_completionReturn.value()->mark();
+    size = m_listStack.size();
+    for (unsigned x = 0; x < size; x++)
+        m_listStack[x].mark();
     size = m_execStateStack.size();
     for (unsigned x = 0; x < size; x++)
         m_execStateStack[x]->context().imp()->mark();

@@ -386,7 +386,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
 
         // FIXME: ONLY check when checking if we've run too long
         if (Collector::isOutOfMemory())
-            RETURN_COMPLETION(Completion(Throw, Error::create(exec, GeneralError, "Out of memory")));
+            RETURN_ERROR(Error::create(exec, GeneralError, "Out of memory"));
 
         switch (statePair.state) {
             case InternalErrorState:
