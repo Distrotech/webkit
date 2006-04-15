@@ -1,5 +1,11 @@
 2006-04-14  Maciej Stachowiak  <mjs@apple.com>
 
+        - missing part of last commit
+
+        * kjs/Expr.h: Added.
+
+2006-04-14  Maciej Stachowiak  <mjs@apple.com>
+
         Reviewed by Darin.
         
         - changed expression grammar production rules to make flattened output
