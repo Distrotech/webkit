@@ -55,7 +55,7 @@ static NodeCounter nodeImplCounter;
 static HashSet<Node*>* newNodes;
 static HashCountedSet<Node*>* nodeExtraRefCounts;
 
-Node::Node(InterpreterState interpreterState) : m_interpreterState(interpreterState)
+Node::Node(Opcode opcode) : m_opcode(opcode)
 {
 #ifndef NDEBUG
     ++NodeCounter::count;

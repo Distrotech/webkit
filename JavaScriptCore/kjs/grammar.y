@@ -939,13 +939,13 @@ static bool emitPrefixExpression(Expr& e, const Expr& loc, Operator op)
         return false;
     
     if (n->isResolveNode()) {
-        n->m_interpreterState = ResolveBaseAndValueEvaluateState;
+        n->m_opcode = ResolveBaseAndValueEvaluateState;
         emitUnaryExpression(e, new PrefixNode(static_cast<ResolveNode*>(n)->identifier(), op), loc);
     } else if (n->isBracketAccessorNode()) {
-        n->m_interpreterState = BracketAccessorBaseSubscriptAndValueEvaluateState;
+        n->m_opcode = BracketAccessorBaseSubscriptAndValueEvaluateState;
         emitUnaryExpression(e, new PrefixBracketNode(op), loc);
     } else {
-        n->m_interpreterState = DotAccessorBaseAndValueEvaluateState;
+        n->m_opcode = DotAccessorBaseAndValueEvaluateState;
         emitUnaryExpression(e, new PrefixNode(static_cast<DotAccessorNode*>(n)->identifier(), op), loc);
     }
 
@@ -960,13 +960,13 @@ static bool emitPostfixExpression(Expr& e, const Expr& loc, Operator op)
         return false;
     
     if (n->isResolveNode()) {
-        n->m_interpreterState = ResolveBaseAndValueEvaluateState;
+        n->m_opcode = ResolveBaseAndValueEvaluateState;
         emitUnaryExpression(e, new PostfixNode(static_cast<ResolveNode*>(n)->identifier(), op), loc);
     } else if (n->isBracketAccessorNode()) {
-        n->m_interpreterState = BracketAccessorBaseSubscriptAndValueEvaluateState;
+        n->m_opcode = BracketAccessorBaseSubscriptAndValueEvaluateState;
         emitUnaryExpression(e, new PostfixBracketNode(op), loc);
     } else {
-        n->m_interpreterState = DotAccessorBaseAndValueEvaluateState;
+        n->m_opcode = DotAccessorBaseAndValueEvaluateState;
         emitUnaryExpression(e, new PostfixNode(static_cast<DotAccessorNode*>(n)->identifier(), op), loc);
     }
 
@@ -981,14 +981,14 @@ static bool emitReadModifyAssignment(Expr& e, const Expr& loc, Operator op, cons
         return false;
 
     if (n->isResolveNode()) {
-        n->m_interpreterState = ResolveBaseAndValueEvaluateState;
+        n->m_opcode = ResolveBaseAndValueEvaluateState;
         emitBinaryExpression(e, new ReadModifyAssignNode(op, static_cast<ResolveNode*>(n)->ident), loc, expr);
     } else if (n->isBracketAccessorNode()) {
-        n->m_interpreterState = BracketAccessorBaseSubscriptAndValueEvaluateState;
+        n->m_opcode = BracketAccessorBaseSubscriptAndValueEvaluateState;
         emitBinaryExpression(e, new ReadModifyAssignBracketNode(op), loc, expr);
     } else {
         ASSERT(n->isDotAccessorNode());
-        n->m_interpreterState = DotAccessorBaseAndValueEvaluateState;
+        n->m_opcode = DotAccessorBaseAndValueEvaluateState;
         emitBinaryExpression(e, new ReadModifyAssignNode(op, static_cast<DotAccessorNode*>(n)->ident), loc, expr);
     }
 
@@ -1003,14 +1003,14 @@ static bool emitAssignment(Expr& e, const Expr& loc, const Expr& expr)
         return false;
 
     if (n->isResolveNode()) {
-        n->m_interpreterState = ResolveBaseEvaluateState;
+        n->m_opcode = ResolveBaseEvaluateState;
         emitBinaryExpression(e, new AssignNode(static_cast<ResolveNode*>(n)->ident), loc, expr);
     } else if (n->isBracketAccessorNode()) {
-        n->m_interpreterState = BracketAccessorBaseAndSubscriptEvaluateState;
+        n->m_opcode = BracketAccessorBaseAndSubscriptEvaluateState;
         emitBinaryExpression(e, new AssignBracketNode, loc, expr);
     } else {
         ASSERT(n->isDotAccessorNode());
-        n->m_interpreterState = DotAccessorBaseEvaluateState;
+        n->m_opcode = DotAccessorBaseEvaluateState;
         emitBinaryExpression(e, new AssignNode(static_cast<DotAccessorNode*>(n)->ident), loc, expr);
     }
 
@@ -1024,14 +1024,14 @@ static void emitFunctionCall(Expr& e, const Expr& func, ArgumentsNode *args)
     if (!n->isLocation()) {
         emitUnaryExpression(e, new FunctionCallNode(args, false), func);
     } else if (n->isResolveNode()) {
-        n->m_interpreterState = ResolveBaseAndValueEvaluateState;
+        n->m_opcode = ResolveBaseAndValueEvaluateState;
         emitUnaryExpression(e, new FunctionCallNode(args), func);
     } else if (n->isBracketAccessorNode()) {
-        n->m_interpreterState = BracketAccessorBaseAndValueEvaluateState;
+        n->m_opcode = BracketAccessorBaseAndValueEvaluateState;
         emitUnaryExpression(e, new FunctionCallNode(args), func);
     } else {
         ASSERT(n->isDotAccessorNode());
-        n->m_interpreterState = DotAccessorBaseAndValueEvaluateState;
+        n->m_opcode = DotAccessorBaseAndValueEvaluateState;
         emitUnaryExpression(e, new FunctionCallNode(args), func);
     }
 }
@@ -1041,7 +1041,7 @@ static void emitTypeOfExpression(Expr& e, const Expr& loc)
     Node *n = loc.tail;
 
     if (n->isResolveNode()) {
-        n->m_interpreterState = ResolveBaseEvaluateState;
+        n->m_opcode = ResolveBaseEvaluateState;
         emitUnaryExpression(e, new TypeOfResolveNode(static_cast<ResolveNode *>(n)->identifier()), loc);
     } else
         emitUnaryExpression(e, new TypeOfValueNode, loc);
@@ -1054,14 +1054,14 @@ static void emitDeleteExpression(Expr& e, const Expr& loc)
     if (!n->isLocation())
         emitUnaryExpression(e, new DeleteValueNode, loc);
     else if (n->isResolveNode()) {
-        n->m_interpreterState = ResolveBaseEvaluateState;
+        n->m_opcode = ResolveBaseEvaluateState;
         emitUnaryExpression(e, new DeleteNode(static_cast<ResolveNode *>(n)->identifier()), loc);
     } else if (n->isBracketAccessorNode()) {
-        n->m_interpreterState = BracketAccessorBaseAndSubscriptEvaluateState;
+        n->m_opcode = BracketAccessorBaseAndSubscriptEvaluateState;
         emitUnaryExpression(e, new DeleteBracketNode, loc);
     } else {
         ASSERT(n->isDotAccessorNode());
-        n->m_interpreterState = DotAccessorBaseEvaluateState;
+        n->m_opcode = DotAccessorBaseEvaluateState;
         emitUnaryExpression(e, new DeleteNode(static_cast<DotAccessorNode *>(n)->identifier()), loc);
     }
 }

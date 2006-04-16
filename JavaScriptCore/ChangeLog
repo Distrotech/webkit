@@ -1,3 +1,38 @@
+2006-04-15  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+        
+        - rename InterpreterState to Opcode
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * kjs/InterpreterState.h: Removed.
+        * kjs/Opcode.h: Added.
+        (KJS::):
+        * kjs/TreeCode.cpp:
+        (KJS::):
+        (KJS::isEvaluateOpcode):
+        (KJS::isEvaluateListOpcode):
+        (KJS::isExecuteState):
+        (KJS::pushEvaluate):
+        (KJS::pushEvaluateList):
+        (KJS::pushExecute):
+        (KJS::InterpreterImp::runInterpreterLoop):
+        * kjs/grammar.y:
+        * kjs/internal.cpp:
+        (KJS::printUnwindBarrier):
+        (KJS::InterpreterImp::printStateStack):
+        (KJS::InterpreterImp::unwindToNextBarrier):
+        * kjs/internal.h:
+        (KJS::InterpreterImp::State::State):
+        * kjs/nodes.cpp:
+        (Node::Node):
+        * kjs/nodes.h:
+        (KJS::Node::opcode):
+        (KJS::ExprNode::ExprNode):
+        (KJS::StatementNode::StatementNode):
+        (KJS::JumpNode::JumpNode):
+        (KJS::ForExprEndNode::ForExprEndNode):
+
 2006-04-14  Maciej Stachowiak  <mjs@apple.com>
 
         - missing part of last commit

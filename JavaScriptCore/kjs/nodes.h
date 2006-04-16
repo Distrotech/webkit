@@ -25,7 +25,7 @@
 #ifndef NODES_H_
 #define NODES_H_
 
-#include "InterpreterState.h"
+#include "Opcode.h"
 #include "Parser.h"
 #include "internal.h"
 #include <kxmlcore/ListRefPtr.h>
@@ -73,7 +73,7 @@ namespace KJS {
   };
 
   struct Node {
-    explicit Node(InterpreterState);
+    explicit Node(Opcode);
     virtual ~Node();
 
     UString toString() const;
@@ -86,7 +86,7 @@ namespace KJS {
     unsigned refcount();
     static void clearNewNodes();
 
-    InterpreterState interpreterState() { return (InterpreterState)m_interpreterState; }
+    Opcode opcode() { return (Opcode)m_opcode; }
 
     virtual bool isLocation() const { return false; }
     virtual bool isResolveNode() const { return false; }
@@ -113,7 +113,7 @@ namespace KJS {
     void setExceptionDetailsIfNeeded(ExecState*);
 
     short m_line;
-    short m_interpreterState;
+    short m_opcode;
     
   private:
     // prohibit these operations
@@ -122,7 +122,7 @@ namespace KJS {
   };
 
   struct ExprNode : public Node {
-    ExprNode(InterpreterState state) : Node(state) {}
+    ExprNode(Opcode opcode) : Node(opcode) {}
     ExprNode* next() { return m_next.get(); }
     virtual void streamTo(SourceStream&) const;
 
@@ -130,7 +130,7 @@ namespace KJS {
   };
 
   struct StatementNode : public Node {
-    explicit StatementNode(InterpreterState state) : Node(state), m_lastLine(-1) { m_line = -1; }
+    explicit StatementNode(Opcode opcode) : Node(opcode), m_lastLine(-1) { m_line = -1; }
     void setLoc(int line0, int line1);
     int firstLine() const { return lineNo(); }
     int lastLine() const { return m_lastLine; }
@@ -424,7 +424,7 @@ namespace KJS {
   };
 
   struct JumpNode : public ExprNode {
-    JumpNode(InterpreterState opcode, ExprNode* target) 
+    JumpNode(Opcode opcode, ExprNode* target) 
       : ExprNode(opcode), m_target(target) {}
     ExprNode* m_target;
   };
@@ -602,7 +602,7 @@ namespace KJS {
   };
 
   struct ForExprEndNode : public ExprNode {
-    ForExprEndNode(ForNode* f, InterpreterState opcode) : ExprNode(opcode), m_for(f) {}
+    ForExprEndNode(ForNode* f, Opcode opcode) : ExprNode(opcode), m_for(f) {}
     virtual void streamTo(SourceStream&) const {}
     ForNode* m_for;
   };

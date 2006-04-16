@@ -648,7 +648,7 @@ static void printUnwindBarrier(const InterpreterImp::UnwindBarrier& unwindBarrie
         if (barrierType == Scope)
             printf(" Scope");
     }
-    printf(", state: %s (%i) node: %p", nameForInterpreterState[unwindBarrier.continueState.state], unwindBarrier.continueState.state, unwindBarrier.continueState.node);
+    printf(", state: %s (%i) node: %p", nameForOpcode[unwindBarrier.continueState.opcode], unwindBarrier.continueState.opcode, unwindBarrier.continueState.node);
     if (printStackStates) {
         printf(", values: %lu", unwindBarrier.valueStackSize);
         printf(", states: %lu", unwindBarrier.stateStackSize);
@@ -701,8 +701,8 @@ void InterpreterImp::printStateStack()
     int unwindIter = m_unwindBarrierStack.size() - 1;
     for (int x = size - 1; x >= 0; x--) {
         printUnwindBarriersIfNecessary(m_unwindBarrierStack, unwindIter, x, StateStack); 
-        InterpreterState state = m_stateStack[x].state;
-        printf("%i: %s (%i), %p\n", x, nameForInterpreterState[state], state, m_stateStack[x].node);
+        Opcode opcode = m_stateStack[x].opcode;
+        printf("%i: %s (%i), %p\n", x, nameForOpcode[opcode], opcode, m_stateStack[x].node);
     }
     printUnwindBarriersIfNecessary(m_unwindBarrierStack, unwindIter, 0, StateStack); 
 }
@@ -863,7 +863,7 @@ void InterpreterImp::unwindToNextBarrier(ExecState* exec, Node* currentNode)
     m_execStateStack.shrinkTo(barrier->execStateStackSize);
     
     // FIXME: Hack for recognizing function call frame barriers and scope chain barriers
-    if (barrier->continueState.state != InternalErrorState)
+    if (barrier->continueState.opcode != InternalErrorState)
         m_stateStack.push(barrier->continueState);
 }
 

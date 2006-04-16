@@ -228,7 +228,7 @@
 		93F0B3AB09BB4DC00068FCE3 /* Parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 93F0B3A909BB4DC00068FCE3 /* Parser.cpp */; };
 		93F0B3AC09BB4DC00068FCE3 /* Parser.h in Headers */ = {isa = PBXBuildFile; fileRef = 93F0B3AA09BB4DC00068FCE3 /* Parser.h */; };
 		A89A2DBE09DCB43D007B3701 /* TreeCode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A89A2DBD09DCB43D007B3701 /* TreeCode.cpp */; };
-		A8FAD14F09DCAB0B000E3CEC /* InterpreterState.h in Headers */ = {isa = PBXBuildFile; fileRef = A8FAD14E09DCAB0B000E3CEC /* InterpreterState.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		A8FAD14F09DCAB0B000E3CEC /* Opcode.h in Headers */ = {isa = PBXBuildFile; fileRef = A8FAD14E09DCAB0B000E3CEC /* Opcode.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		E195679609E7CF1200B89D13 /* UnicodeIcu.h in Headers */ = {isa = PBXBuildFile; fileRef = E195678F09E7CF1200B89D13 /* UnicodeIcu.h */; };
 		E195679809E7CF1200B89D13 /* Unicode.h in Headers */ = {isa = PBXBuildFile; fileRef = E195679409E7CF1200B89D13 /* Unicode.h */; };
 		E195679909E7CF1200B89D13 /* UnicodeCategory.h in Headers */ = {isa = PBXBuildFile; fileRef = E195679509E7CF1200B89D13 /* UnicodeCategory.h */; };
@@ -449,7 +449,7 @@
 		93F0B3AA09BB4DC00068FCE3 /* Parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Parser.h; sourceTree = "<group>"; };
 		93F1981A08245AAE001E9ABC /* keywords.table */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = text; path = keywords.table; sourceTree = "<group>"; tabWidth = 8; };
 		A89A2DBD09DCB43D007B3701 /* TreeCode.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = TreeCode.cpp; sourceTree = "<group>"; };
-		A8FAD14E09DCAB0B000E3CEC /* InterpreterState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InterpreterState.h; sourceTree = "<group>"; };
+		A8FAD14E09DCAB0B000E3CEC /* Opcode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Opcode.h; sourceTree = "<group>"; };
 		E195678F09E7CF1200B89D13 /* UnicodeIcu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UnicodeIcu.h; sourceTree = "<group>"; };
 		E195679409E7CF1200B89D13 /* Unicode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Unicode.h; sourceTree = "<group>"; };
 		E195679509E7CF1200B89D13 /* UnicodeCategory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UnicodeCategory.h; sourceTree = "<group>"; };
@@ -773,7 +773,7 @@
 				F692A87F0255597D01FF60F7 /* string_object.cpp */,
 				F692A8800255597D01FF60F7 /* string_object.h */,
 				45E12D8806A49B0F00E9DF84 /* testkjs.cpp */,
-				A8FAD14E09DCAB0B000E3CEC /* InterpreterState.h */,
+				A8FAD14E09DCAB0B000E3CEC /* Opcode.h */,
 				A89A2DBD09DCB43D007B3701 /* TreeCode.cpp */,
 				F692A8840255597D01FF60F7 /* types.h */,
 				F692A8850255597D01FF60F7 /* ustring.cpp */,
@@ -958,7 +958,7 @@
 				65FB3F4F09D11B2400F49DEB /* date_object.lut.h in Headers */,
 				65FB3F5109D11B2400F49DEB /* grammar.h in Headers */,
 				65FB3F5409D11B2400F49DEB /* regexp_object.lut.h in Headers */,
-				A8FAD14F09DCAB0B000E3CEC /* InterpreterState.h in Headers */,
+				A8FAD14F09DCAB0B000E3CEC /* Opcode.h in Headers */,
 				E195679609E7CF1200B89D13 /* UnicodeIcu.h in Headers */,
 				E195679809E7CF1200B89D13 /* Unicode.h in Headers */,
 				E195679909E7CF1200B89D13 /* UnicodeCategory.h in Headers */,

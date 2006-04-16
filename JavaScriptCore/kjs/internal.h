@@ -32,7 +32,7 @@
 #include "scope_chain.h"
 #include "types.h"
 #include "ustring.h"
-#include "InterpreterState.h"
+#include "Opcode.h"
 
 #include <kxmlcore/HashMap.h>
 #include <kxmlcore/Noncopyable.h>
@@ -326,8 +326,8 @@ namespace KJS {
     
     struct State {
         State() { } // Allow Stack<T> array-based allocation
-        State(InterpreterState s, Node* n) : state(s), node(n) { }
-        InterpreterState state;
+        State(Opcode op, Node* n) : opcode(op), node(n) { }
+        Opcode opcode;
         Node* node;
     };
     

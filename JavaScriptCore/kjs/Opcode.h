@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef InterpreterState_h
-#define InterpreterState_h
+#ifndef Opcode_h
+#define Opcode_h
 
 namespace KJS {
 
@@ -82,8 +82,6 @@ namespace KJS {
     macro(RelationalNodeEvaluateState) \
     macro(EqualNodeEvaluateState) \
     macro(BitOperNodeEvaluateState) \
-    macro(BinaryLogicalNodeEvaluateState) \
-    macro(BinaryLogicalNodeEvaluateState1) \
     macro(NoOpEvaluateState) \
     macro(JumpEvaluateState) \
     macro(JumpIfFalseEvaluateState) \
@@ -94,7 +92,6 @@ namespace KJS {
     macro(AssignBracketNodeEvaluateState) \
     macro(ReadModifyAssignBracketNodeEvaluateState) \
     macro(CommaNodeEvaluateState) \
-    macro(AssignExprNodeEvaluateState) \
     macro(VarDeclNodeEvaluateState) \
     macro(VarDeclEndNodeEvaluateState) \
     macro(VarDeclListNodeEvaluateState) \
@@ -188,7 +185,7 @@ namespace KJS {
     macro(CaseBlockNodeExecuteBlockWithInputValue11)
 // end of macro
     
-enum InterpreterState {
+enum Opcode {
     InternalErrorState,
     
 #define PRINT_AS_ENUM(name)    name,
@@ -210,10 +207,10 @@ enum InterpreterState {
     GlobalFuncCallEvalState,
     GlobalFuncCallEvalEndState,
 
-    LastInterpreterState
+    LastOpcode
 }; 
 
-extern const char* nameForInterpreterState[LastInterpreterState+1];
+extern const char* nameForOpcode[LastOpcode+1];
 
 }
 

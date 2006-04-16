@@ -46,11 +46,11 @@
 #include "reference_list.h"
 #include <kxmlcore/HashSet.h>
 #include <kxmlcore/HashCountedSet.h>
-#include "InterpreterState.h"
+#include "Opcode.h"
 
 namespace KJS {
 
-const char* nameForInterpreterState[LastInterpreterState+1] = {
+const char* nameForOpcode[LastOpcode+1] = {
     "InternalErrorState",
 #define PRINT_AS_STRING(name) #name ,
     EVALUATE_MACRO_FOR_EACH_EVALUATE_STATE(PRINT_AS_STRING)
@@ -71,7 +71,7 @@ const char* nameForInterpreterState[LastInterpreterState+1] = {
     "GlobalFuncCallEvalState",
     "GlobalFuncCallEvalEndState",
 
-    "LastInterpreterState"
+    "LastOpcode"
 };
 
 static inline int currentSourceId(ExecState* exec)
@@ -200,14 +200,14 @@ if (exec->hadException()) { \
 // Use SET_CONTINUE_STATE instead whenever possible
 #define SET_JUMP_STATE(nextState, node) \
 do { \
-    ASSERT(nextState != statePair.state); \
+    ASSERT(nextState != statePair.opcode); \
     m_stateStack.push(InterpreterImp::State(nextState, node)); \
 } while (0)
 
 // This can only be used for calling yourself.
 #define SET_LOOP_STATE(nextState) \
 do { \
-    ASSERT(nextState == statePair.state); \
+    ASSERT(nextState == statePair.opcode); \
     m_stateStack.push(InterpreterImp::State(nextState, currentNode)); \
 } while (0)
 
@@ -215,7 +215,7 @@ do { \
 // when some states fall through to another (thus not changing the current state)
 #ifndef NDEBUG
 #define FALL_THROUGH() \
-    statePair.state = (InterpreterState)(statePair.state + 1)
+    statePair.opcode = (Opcode)(statePair.opcode + 1)
 #else
 #define FALL_THROUGH()
 #endif
@@ -227,49 +227,49 @@ do {\
 } while (0)
 
 #ifndef NDEBUG
-static inline bool isEvaluateState(InterpreterState state)
+static inline bool isEvaluateOpcode(Opcode opcode)
 {
-    return (state > InternalErrorState && state < Evaluate_EvaluteList_Boundary);
+    return (opcode > InternalErrorState && opcode < Evaluate_EvaluteList_Boundary);
 }
 
-static inline bool isEvaluateListState(InterpreterState state)
+static inline bool isEvaluateListOpcode(Opcode opcode)
 {
-    return (state > Evaluate_EvaluteList_Boundary && state < EvaluateList_Execute_Boundary);
+    return (opcode > Evaluate_EvaluteList_Boundary && opcode < EvaluateList_Execute_Boundary);
 }
 #endif
 
-static inline bool isExecuteState(InterpreterState state)
+static inline bool isExecuteState(Opcode opcode)
 {
-    return (state > EvaluateList_Execute_Boundary && state < LastInterpreterState);
+    return (opcode > EvaluateList_Execute_Boundary && opcode < LastOpcode);
 }
 
 static inline void pushEvaluate(InterpreterImp* interpreter, Node* node)
 {
-    InterpreterState nextState = node->interpreterState();
-    ASSERT(isEvaluateState(nextState));
-    interpreter->m_stateStack.push(InterpreterImp::State(nextState, node));
+    Opcode nextOpcode = node->opcode();
+    ASSERT(isEvaluateOpcode(nextOpcode));
+    interpreter->m_stateStack.push(InterpreterImp::State(nextOpcode, node));
 }
 
 static inline void pushEvaluateList(InterpreterImp* interpreter, Node* node)
 {
-    InterpreterState nextState = node->interpreterState();
-    ASSERT(isEvaluateListState(nextState));
-    interpreter->m_stateStack.push(InterpreterImp::State(nextState, node));
+    Opcode nextOpcode = node->opcode();
+    ASSERT(isEvaluateListOpcode(nextOpcode));
+    interpreter->m_stateStack.push(InterpreterImp::State(nextOpcode, node));
 }
 
 static inline void pushExecute(InterpreterImp* interpreter, Node* node)
 {
-    InterpreterState nextState = node->interpreterState();
-    ASSERT(isExecuteState(nextState));
-    interpreter->m_stateStack.push(InterpreterImp::State(nextState, node));
+    Opcode nextOpcode = node->opcode();
+    ASSERT(isExecuteOpcode(nextOpcode));
+    interpreter->m_stateStack.push(InterpreterImp::State(nextOpcode, node));
 }
 
 // This explicitly checks for continue state bugs
 // FIXME: This should not take an argument once we have a way to check if currentState+1 == a substate
-#define SET_CONTINUE_STATE(nextState) \
+#define SET_CONTINUE_STATE(nextOpcode) \
 do { \
-    ASSERT(nextState == statePair.state + 1); \
-    SET_JUMP_STATE(nextState, currentNode); \
+    ASSERT(nextOpcode == statePair.opcode + 1); \
+    SET_JUMP_STATE(nextOpcode, currentNode); \
 } while (0)
 
 // FIXME: RETURN_ERROR is a stop-gap.  Eventually throwError* should be free functions which set the interpreter completion themselves
@@ -311,8 +311,8 @@ do { \
 do { \
     currentNode = n; \
     statePair.node = currentNode; \
-    statePair.state = currentNode->interpreterState(); \
-    ASSERT(isEvaluateState(statePair.state) || statePair.state == WhileTestEndNodeExecuteState || statePair.state == DoWhileTestEndNodeExecuteState || statePair.state == JSObjectCallState); \
+    statePair.opcode = currentNode->opcode(); \
+    ASSERT(isEvaluateState(statePair.opcode) || statePair.opcode == WhileTestEndNodeExecuteState || statePair.opcode == DoWhileTestEndNodeExecuteState || statePair.opcode == JSObjectCallState); \
     goto evaluate_next_continue; \
 } while (0)
 
@@ -369,12 +369,12 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
     while (true) {
 
 #if TRACE_EXECUTION
-        printf("EXEC %s (%i) on %p (state state: %i, value stack: %i)\n", nameForInterpreterState[statePair.state], statePair.state, statePair.node, m_stateStack.size(), interpreter->valueStackDepth());
+        printf("EXEC %s (%i) on %p (state state: %i, value stack: %i)\n", nameForOpcode[statePair.opcode], statePair.opcode, statePair.node, m_stateStack.size(), interpreter->valueStackDepth());
 #endif
 
         // FIXME: This is wrong, this won't actually return.
         if (m_debugger) {
-            if (isExecuteState(statePair.state)) {
+            if (isExecuteState(statePair.opcode)) {
                 StatementNode* statementNode = static_cast<StatementNode*>(currentNode);
                 bool shouldContinue = m_debugger->atStatement(exec, currentSourceId(exec), statementNode->firstLine(), statementNode->lastLine());
                 if (!shouldContinue)
@@ -388,7 +388,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
         if (Collector::isOutOfMemory())
             RETURN_ERROR(Error::create(exec, GeneralError, "Out of memory"));
 
-        switch (statePair.state) {
+        switch (statePair.opcode) {
             case InternalErrorState:
             default:
             {
@@ -1627,14 +1627,14 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                     RETURN_NORMAL_COMPLETION();
                 }
                     
-                InterpreterState interpreterState;
+                Opcode opcode;
                 if (forInNode->lexpr->isResolveNode())
-                    interpreterState = ForInNodeResolveNodeExecuteState;
+                    opcode = ForInNodeResolveNodeExecuteState;
                 else if (forInNode->lexpr->isDotAccessorNode())
-                    interpreterState = ForInNodeDotAccessorNodeExecuteState;
+                    opcode = ForInNodeDotAccessorNodeExecuteState;
                 else {
                     ASSERT(forInNode->lexpr->isBracketAccessorNode());
-                    interpreterState = ForInNodeBracketAccessorNodeExecuteState;
+                    opcode = ForInNodeBracketAccessorNodeExecuteState;
                 }
                     
                 SET_JUMP_STATE(ForInNodeExecutePopBreakUnwindBarrierState, currentNode);
@@ -1657,7 +1657,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 size_t numProperties = propertyStack.size();
                 for (size_t i = 0; i < numProperties; i++) {
                     m_valueStack.push(jsString(propertyStack.pop().ustring()));
-                    SET_JUMP_STATE(interpreterState, forInNode);
+                    SET_JUMP_STATE(opcode, forInNode);
                 }
                     
                 break;
@@ -1843,7 +1843,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 PUSH_UNWIND_BARRIER(Break, SwitchNodeExecuteState2);
                 SET_CONTINUE_STATE(SwitchNodeExecuteState2);
                 // CaseBlockNodeExecuteBlockWithInputValue uses the last return value as an "argument"
-                ASSERT(static_cast<SwitchNode*>(currentNode)->block->interpreterState() == CaseBlockNodeExecuteBlockWithInputValue);
+                ASSERT(static_cast<SwitchNode*>(currentNode)->block->opcode() == CaseBlockNodeExecuteBlockWithInputValue);
                 pushExecute(interpreter, static_cast<SwitchNode*>(currentNode)->block.get());
                 break;
             }
