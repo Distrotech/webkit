@@ -68,6 +68,8 @@ using namespace KJS;
  static void emitNoExpr(Expr& e);
 
  static void emitForLoop(StatementNode*& stat, const Expr& init, VarDeclListNode* node, const Expr& test, const Expr& inc, StatementNode* body);
+ static bool emitForInLoop(StatementNode*& stat, const Expr& propLocation, const Expr& propSource, StatementNode* body);
+ static void emitVarDeclForInLoop(StatementNode*& stat, const Identifier& varIdent, const Expr& varInit, const Expr& propSource, StatementNode* body);
 
  static inline void emitLeafExpression(Expr& e, ExprNode* leaf) 
  {
@@ -223,7 +225,7 @@ using namespace KJS;
 %type <stat>  LabelledStatement
 %type <stat>  ReturnStatement
 %type <stat>  ThrowStatement
-%type <expr>  Initializer InitializerNoIn
+%type <expr>  Initializer InitializerNoIn InitializerNoInOpt
 %type <vlist> VariableDeclarationList VariableDeclarationListNoIn  ConstDeclarationList
 %type <decl>  VariableDeclaration VariableDeclarationNoIn ConstDeclaration
 %type <stat>  VariableStatement
@@ -234,6 +236,7 @@ using namespace KJS;
 %type <stat>  DoWhileStatement
 %type <stat>  WhileStatement
 %type <stat>  ForStatement
+%type <stat>  ForInStatement
 %type <expr>  ExprOpt ExprNoInOpt
 
 %type <param> FormalParameterList
@@ -686,7 +689,7 @@ Statement:
   | DoWhileStatement
   | WhileStatement
   | ForStatement
-  /* | ForInStatement */
+  | ForInStatement
   | ContinueStatement
   | BreakStatement
   | ReturnStatement
@@ -760,6 +763,11 @@ InitializerNoIn:
     '=' AssignmentExprNoIn              { $$ = $2; }
 ;
 
+InitializerNoInOpt:
+    /* nothing */                       { emitNoExpr($$); }
+  | '=' AssignmentExprNoIn              { $$ = $2; }
+;
+
 EmptyStatement:
     ';'                                 { $$ = new EmptyStatementNode; }
 ;
@@ -788,22 +796,12 @@ ForStatement:
 | FOR '(' VAR VariableDeclarationListNoIn ';' ExprOpt ';' ExprOpt ')' Statement
                                         { emitForLoop($$, Expr(), $4, $6, $8, $10); DBG($$, @1, @9); }
 
-/*
 ForInStatement:
     FOR '(' LeftHandSideExpr IN Expr ')' Statement
-                                        {
-                                            Node *n = $3->nodeInsideAllParens();
-                                            if (!n->isLocation())
-                                                YYABORT;
-                                            $$ = new ForInNode(n, $5, $7);
-                                            DBG($$, @1, @6);
-                                        }
-  | FOR '(' VAR IDENT IN Expr ')' Statement
-                                        { $$ = new ForInNode(*$4, 0, $6, $8); DBG($$, @1, @7); }
-  | FOR '(' VAR IDENT InitializerNoIn IN Expr ')' Statement
-                                        { $$ = new ForInNode(*$4, $5, $7, $9); DBG($$, @1, @8); }
+                                        { if (!emitForInLoop($$, $3, $5, $7)) YYABORT; DBG($$, @1, @6); }
+  | FOR '(' VAR IDENT InitializerNoInOpt IN Expr ')' Statement
+                                        { emitVarDeclForInLoop($$, *$4, $5, $7, $9); DBG($$, @1, @8); }
 ;
-*/
 
 ExprOpt:
     /* nothing */                       { emitNoExpr($$); }
@@ -1170,6 +1168,76 @@ static void emitForLoop(StatementNode*& stat, const Expr& i, VarDeclListNode* va
     update.tail->m_next = new ForExprEndNode(result, ForNodeInitOrIncrementEndState);
     stat = result;
 }
+
+static bool emitForInLoop(StatementNode*& stat, const Expr& propLocation, const Expr& propSource, StatementNode* body)
+{
+    Node *n = propLocation.tail;
+
+    if (!n->isLocation())
+        return false;
+
+    Expr updateExpr;
+    if (n->isResolveNode()) {
+        n->m_opcode = ResolveBaseEvaluateState;
+        Expr swapExpr;
+        emitLeafExpression(swapExpr, new SwapNode);
+        emitBinaryExpression(updateExpr, new AssignNode(static_cast<ResolveNode*>(n)->ident), propLocation, swapExpr);
+
+    } else if (n->isBracketAccessorNode()) {
+        n->m_opcode = BracketAccessorBaseAndSubscriptEvaluateState;
+        Expr rot3Expr;
+        emitLeafExpression(rot3Expr, new Rotate3Node);
+        emitBinaryExpression(updateExpr, new AssignBracketNode, propLocation, rot3Expr);
+    } else {
+        ASSERT(n->isDotAccessorNode());
+        n->m_opcode = DotAccessorBaseEvaluateState;
+        Expr swapExpr;
+        emitLeafExpression(swapExpr, new SwapNode);
+        emitBinaryExpression(updateExpr, new AssignNode(static_cast<DotAccessorNode*>(n)->ident), propLocation, swapExpr);
+    }
+    
+    ForInNode* forInLoop = new ForInNode(updateExpr.head, propSource.head, body);
+
+    Expr finalUpdateExpr;
+    emitUnaryExpression(finalUpdateExpr, new ForInUpdateEndNode(forInLoop), updateExpr);
+
+    Expr finalPropSource;
+    emitUnaryExpression(finalPropSource, new ForInPropSourceEndNode(forInLoop), propSource);
+
+    stat = forInLoop;
+
+    return true;
+}
+
+static void emitVarDeclForInLoop(StatementNode*& stat, const Identifier& varIdent, const Expr& varInit, const Expr& propSource, StatementNode* body)
+{
+    Expr resolveExpr;
+    ResolveNode* resolveNode = new ResolveNode(varIdent);
+    resolveNode->m_opcode = ResolveBaseEvaluateState;
+    emitLeafExpression(resolveExpr, resolveNode);
+
+    Expr swapExpr;
+    emitLeafExpression(swapExpr, new SwapNode);
+
+    Expr updateExpr;
+    emitBinaryExpression(updateExpr, new AssignNode(varIdent), resolveExpr, swapExpr);
+
+    VarDeclNode* varDecl = new VarDeclNode(varIdent, varInit.head, VarDeclNode::Variable);
+    
+    ForInNode* forInLoop = new ForInNode(varDecl, updateExpr.head, propSource.head, body);
+
+    Expr finalUpdateExpr;
+    emitUnaryExpression(finalUpdateExpr, new ForInUpdateEndNode(forInLoop), updateExpr);
+
+    Expr finalPropSource;
+    emitUnaryExpression(finalPropSource, new ForInPropSourceEndNode(forInLoop), propSource);
+
+    if (varInit.head)
+        varInit.tail->m_next = new ForInInitEndNode(forInLoop);
+
+    stat = forInLoop;
+}
+
 
 static bool makeGetterOrSetterPropertyNode(PropertyNode*& result, Identifier& getOrSet, Identifier& name, ParameterNode *params, FunctionBodyNode *body)
 {

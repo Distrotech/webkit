@@ -474,7 +474,7 @@ namespace KJS {
 
   struct VarDeclNode : public Node {
     enum Type { Variable, Constant };
-    VarDeclNode::VarDeclNode(const Identifier &id, ExprNode* in, Type t)
+    VarDeclNode::VarDeclNode(const Identifier& id, ExprNode* in, Type t)
       : Node(VarDeclNodeEvaluateState), varType(t), ident(id), init(in) { }
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
@@ -608,17 +608,39 @@ namespace KJS {
   };
 
   struct ForInNode : public StatementNode {
-    ForInNode(Node *l, Node* e, StatementNode *s);
-    ForInNode(const Identifier &i, ExprNode *in, Node* e, StatementNode *s);
+    ForInNode(ExprNode* location, ExprNode* propSource, StatementNode* s);
+    ForInNode(VarDeclNode* decl, ExprNode* location, ExprNode* propSource, StatementNode* s);
     virtual void processVarDecls(ExecState*);
     virtual void streamTo(SourceStream&) const;
     Identifier ident;
-    // used to be AssignExprNode
-    RefPtr<ExprNode> init;
-    RefPtr<Node> lexpr;
-    RefPtr<Node> expr;
+
     RefPtr<VarDeclNode> varDecl;
+    RefPtr<ExprNode> location;
+    RefPtr<ExprNode> propSource;
     RefPtr<StatementNode> statement;
+  };
+
+  struct ForInInitEndNode : public ExprNode {
+    ForInInitEndNode(ForInNode* forIn) : ExprNode(ForInInitEndState), m_forIn(forIn) {}
+    ForInNode* m_forIn;
+  };
+
+  struct ForInUpdateEndNode : public ExprNode {
+    ForInUpdateEndNode(ForInNode* forIn) : ExprNode(ForInUpdateEndState), m_forIn(forIn) {}
+    ForInNode* m_forIn;
+  };
+  
+  struct ForInPropSourceEndNode : public ExprNode {
+    ForInPropSourceEndNode(ForInNode* forIn) : ExprNode(ForInPropSourceEndState), m_forIn(forIn) {}
+    ForInNode* m_forIn;
+  };
+
+  struct SwapNode : public ExprNode {
+    SwapNode() : ExprNode(SwapEvaluateState) {}
+  };
+
+  struct Rotate3Node : public ExprNode {
+    Rotate3Node() : ExprNode(Rotate3EvaluateState) {}
   };
 
   struct ContinueNode : public StatementNode {

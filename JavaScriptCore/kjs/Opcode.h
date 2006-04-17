@@ -92,12 +92,14 @@ namespace KJS {
     macro(AssignBracketNodeEvaluateState) \
     macro(ReadModifyAssignBracketNodeEvaluateState) \
     macro(CommaNodeEvaluateState) \
+    macro(FuncExprNodeEvaluateState) \
+    macro(SwapEvaluateState) \
+    macro(Rotate3EvaluateState) \
     macro(VarDeclNodeEvaluateState) \
     macro(VarDeclEndNodeEvaluateState) \
     macro(VarDeclListNodeEvaluateState) \
     macro(VarDeclListNodeEvaluateState1) \
     macro(CaseClauseNodeEvaluateState) \
-    macro(FuncExprNodeEvaluateState) \
     macro(ExprStatementEndNodeExecuteState) \
     macro(ValueReturnEndNodeExecuteState) \
     macro(ThrowEndNodeExecuteState) \
@@ -105,7 +107,9 @@ namespace KJS {
     macro(WithExprEndNodeExecuteState) \
     macro(ForNodeInitOrIncrementEndState) \
     macro(ForNodeVarDeclEndState) \
-    macro(ForNodeTestEndState)
+    macro(ForNodeTestEndState) \
+    macro(ForInUpdateEndState) \
+    macro(ForInInitEndState)
 // end of macro
 
 #define EVALUATE_MACRO_FOR_EACH_EVALUATE_LIST_STATE(macro) \
@@ -142,15 +146,9 @@ namespace KJS {
     macro(ForNodeExecutePostBodyState) \
     macro(ForNodeExecuteEndState) \
     macro(ForInNodeExecuteState) \
-    macro(ForInNodeExecuteState2) \
-    macro(ForInNodeExecuteState3) \
-    macro(ForInNodeResolveNodeExecuteState) \
-    macro(ForInNodeDotAccessorNodeExecuteState) \
-    macro(ForInNodeDotAccessorNodeExecuteState1) \
-    macro(ForInNodeBracketAccessorNodeExecuteState) \
-    macro(ForInNodeBracketAccessorNodeExecuteState1) \
-    macro(ForInNodeBracketAccessorNodeExecuteState2) \
-    macro(ForInNodeExecuteBodyState) \
+    macro(ForInPropSourceStartState) \
+    macro(ForInPropSourceEndState) \
+    macro(ForInNodeUpdateExecuteState) \
     macro(ForInNodeExecutePopContinueUnwindBarrierState) \
     macro(ForInNodeExecutePopBreakUnwindBarrierState) \
     macro(ContinueNodeExecuteState) \

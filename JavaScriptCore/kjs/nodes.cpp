@@ -456,16 +456,14 @@ void ForNode::processVarDecls(ExecState *exec)
 
 // ------------------------------ ForInNode ------------------------------------
 
-ForInNode::ForInNode(Node *l, Node *e, StatementNode *s)
-  : StatementNode(ForInNodeExecuteState), init(0L), lexpr(l), expr(e), varDecl(0L), statement(s)
+ForInNode::ForInNode(ExprNode* l, ExprNode* ps, StatementNode* s)
+  : StatementNode(ForInNodeExecuteState), location(l), propSource(ps), statement(s)
 {
 }
 
-ForInNode::ForInNode(const Identifier &i, ExprNode *in, Node *e, StatementNode *s)
-  : StatementNode(ForInNodeExecuteState), ident(i), init(in), expr(e), statement(s)
+ForInNode::ForInNode(VarDeclNode* decl, ExprNode* l, ExprNode* ps, StatementNode* s)
+  : StatementNode(ForInNodeExecuteState), varDecl(decl), location(l), propSource(ps), statement(s)
 {
-  varDecl = new VarDeclNode(ident, init.get(), VarDeclNode::Variable);
-  lexpr = new ResolveNode(ident);
 }
 
 void ForInNode::processVarDecls(ExecState *exec)

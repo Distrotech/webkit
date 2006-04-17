@@ -238,7 +238,7 @@ static inline bool isEvaluateListOpcode(Opcode opcode)
 }
 #endif
 
-static inline bool isExecuteState(Opcode opcode)
+static inline bool isExecuteOpcode(Opcode opcode)
 {
     return (opcode > EvaluateList_Execute_Boundary && opcode < LastOpcode);
 }
@@ -312,7 +312,7 @@ do { \
     currentNode = n; \
     statePair.node = currentNode; \
     statePair.opcode = currentNode->opcode(); \
-    ASSERT(isEvaluateState(statePair.opcode) || statePair.opcode == WhileTestEndNodeExecuteState || statePair.opcode == DoWhileTestEndNodeExecuteState || statePair.opcode == JSObjectCallState); \
+    ASSERT(isEvaluateOpcode(statePair.opcode) || statePair.opcode == WhileTestEndNodeExecuteState || statePair.opcode == DoWhileTestEndNodeExecuteState || statePair.opcode == JSObjectCallState || statePair.opcode == ForInPropSourceEndState); \
     goto evaluate_next_continue; \
 } while (0)
 
@@ -374,7 +374,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
 
         // FIXME: This is wrong, this won't actually return.
         if (m_debugger) {
-            if (isExecuteState(statePair.opcode)) {
+            if (isExecuteOpcode(statePair.opcode)) {
                 StatementNode* statementNode = static_cast<StatementNode*>(currentNode);
                 bool shouldContinue = m_debugger->atStatement(exec, currentSourceId(exec), statementNode->firstLine(), statementNode->lastLine());
                 if (!shouldContinue)
@@ -1531,7 +1531,6 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 break;
             }
                 
-
             case ForNodeVarDeclExecuteState:
             {
                 PUSH_UNWIND_BARRIER(Break, ForNodeExecuteEndState);
@@ -1605,21 +1604,65 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 break;
             }
             
+            case SwapEvaluateState:
+            {
+                // stack in: [ ... a b ]
+
+                m_valueStack.swapLastTwo();
+                EVALUATE_NEXT(static_cast<ExprNode*>(currentNode)->next());
+                
+                // stack out: [ ... b a ]
+            }
+
+            case Rotate3EvaluateState:
+            {
+                // stack in: [ ... a b c ]
+                
+                JSValue*& aPos = m_valueStack.peek(2);
+                JSValue*& bPos = m_valueStack.peek(1);
+                JSValue*& cPos = m_valueStack.peek();
+                JSValue* aCopy = aPos;
+                aPos = bPos;
+                bPos = cPos;
+                cPos = aCopy;
+
+                EVALUATE_NEXT(static_cast<ExprNode*>(currentNode)->next());
+
+                // stack in: [ ... b c a ]
+            }
+
             case ForInNodeExecuteState:
             {
+                ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
+
                 PUSH_UNWIND_BARRIER(Break, ForInNodeExecutePopBreakUnwindBarrierState);
 
-                SET_CONTINUE_STATE(ForInNodeExecuteState2);
-                ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
-                pushEvaluate(interpreter, forInNode->expr.get());
-                if (VarDeclNode* varDeclNode = forInNode->varDecl.get())
-                    pushEvaluate(interpreter, varDeclNode); // return is ignored.
-                break;
+                VarDeclNode* varDeclNode = forInNode->varDecl.get();
+                if (varDeclNode && varDeclNode->init) {
+                    pushEvaluate(interpreter, varDeclNode);
+                    RETURN();
+                }
+                
+                FALL_THROUGH();
             }
-            case ForInNodeExecuteState2:
+            case ForInPropSourceStartState:
             {
                 ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
-                JSValue* e = valueReturn();
+                EVALUATE_NEXT(forInNode->propSource.get());
+            }
+            case ForInInitEndState:
+            {
+                ForInNode* forInNode = static_cast<ForInInitEndNode*>(currentNode)->m_forIn;
+                currentNode = forInNode;
+                m_valueStack.pop();
+                SET_JUMP_STATE(ForInPropSourceStartState, forInNode);
+                RETURN();
+            }
+            case ForInPropSourceEndState:
+            {
+                ForInNode* forInNode = static_cast<ForInPropSourceEndNode*>(currentNode)->m_forIn;
+                currentNode = forInNode;
+                JSValue* e = m_valueStack.pop();
                 
                 // Null and Undefined will throw if you call toObject on them
                 if (e->isUndefinedOrNull()) {
@@ -1627,17 +1670,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                     RETURN_NORMAL_COMPLETION();
                 }
                     
-                Opcode opcode;
-                if (forInNode->lexpr->isResolveNode())
-                    opcode = ForInNodeResolveNodeExecuteState;
-                else if (forInNode->lexpr->isDotAccessorNode())
-                    opcode = ForInNodeDotAccessorNodeExecuteState;
-                else {
-                    ASSERT(forInNode->lexpr->isBracketAccessorNode());
-                    opcode = ForInNodeBracketAccessorNodeExecuteState;
-                }
-                    
-                SET_JUMP_STATE(ForInNodeExecutePopBreakUnwindBarrierState, currentNode);
+                // SET_JUMP_STATE(ForInNodeExecutePopBreakUnwindBarrierState, currentNode);
                 
                 JSObject *o = e->toObject(exec);
                 KJS_CHECKEXCEPTION();
@@ -1657,109 +1690,37 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 size_t numProperties = propertyStack.size();
                 for (size_t i = 0; i < numProperties; i++) {
                     m_valueStack.push(jsString(propertyStack.pop().ustring()));
-                    SET_JUMP_STATE(opcode, forInNode);
+                }
+                m_valueStack.push(jsNumber(numProperties));
+
+                FALL_THROUGH();
+            }
+            case ForInNodeUpdateExecuteState:
+            {
+                ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
+                JSValue* countValue = m_valueStack.peek();
+                int count = countValue->toInt32(exec);
+                if (count == 0) {
+                    m_valueStack.pop();
+                    SET_JUMP_STATE(ForInNodeExecutePopBreakUnwindBarrierState, currentNode);
+                    break;
                 }
                     
-                break;
+                m_valueStack.peek() = jsNumber(count - 1);
+                m_valueStack.swapLastTwo();
+                EVALUATE_NEXT(forInNode->location.get());
             }
-            case ForInNodeResolveNodeExecuteState:
+            case ForInUpdateEndState:
             {
-                ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
-                const Identifier &lexprIdent = static_cast<ResolveNode*>(forInNode->lexpr.get())->identifier();
-                
-                const ScopeChain& chain = exec->context().imp()->scopeChain();
-                ScopeChainIterator iter = chain.begin();
-                ScopeChainIterator end = chain.end();
-                
-                // we must always have something in the scope chain
-                assert(iter != end);
-                
-                JSValue* str = m_valueStack.pop();
-                PropertySlot slot;
-                JSObject* o;
-                do { 
-                    o = *iter;
-                    if (o->getPropertySlot(exec, lexprIdent, slot)) {
-                        o->put(exec, lexprIdent, str);
-                        break;
-                    }
-                    ++iter;
-                } while (iter != end);
-                    
-                if (iter == end)
-                    o->put(exec, lexprIdent, str);
-                        
-                SET_JUMP_STATE(ForInNodeExecuteBodyState, currentNode);
-                break;
-            }
-            case ForInNodeDotAccessorNodeExecuteState:
-            {
-                // FIXME
-                ASSERT_NOT_REACHED();
-#if 0
-                ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
-                EVALUATE_AND_JUMP(static_cast<DotAccessorNode*>(forInNode->lexpr.get())->base(), ForInNodeDotAccessorNodeExecuteState1);
-#endif
-            }
-            case ForInNodeDotAccessorNodeExecuteState1:
-            {
-                ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
-                JSObject* base = valueReturn()->toObject(exec);
-                KJS_CHECKEXCEPTION();
-                JSValue* str = m_valueStack.pop();
-                
-                const Identifier& lexprIdent = static_cast<DotAccessorNode*>(forInNode->lexpr.get())->identifier();
-                base->put(exec, lexprIdent, str);
-                
-                SET_JUMP_STATE(ForInNodeExecuteBodyState, currentNode);
-                break;
-            }
-            
-            case ForInNodeBracketAccessorNodeExecuteState:
-            {
-                ASSERT_NOT_REACHED();
-                // FIXME
-#if 0
-                ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
-                EVALUATE_AND_CONTINUE(static_cast<BracketAccessorNode*>(forInNode->lexpr.get())->base(), ForInNodeBracketAccessorNodeExecuteState1);
-#endif
-            }
-            case ForInNodeBracketAccessorNodeExecuteState1:
-            {
-                ASSERT_NOT_REACHED();
-                // FIXME
-#if 0
-                m_valueStack.push(valueReturn());
-                ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
-                EVALUATE_AND_CONTINUE(static_cast<BracketAccessorNode*>(forInNode->lexpr.get())->subscript(), ForInNodeBracketAccessorNodeExecuteState2);
-#endif
-            }
-            case ForInNodeBracketAccessorNodeExecuteState2:
-            {
-                ASSERT_NOT_REACHED();
-                // FIXME
-#if 0
-                JSObject* base = m_valueStack.pop()->toObject(exec);
-                KJS_CHECKEXCEPTION();
-                JSValue* subscript = valueReturn();
-                JSValue* str = m_valueStack.pop();
-                
-                uint32_t i;
-                if (subscript->getUInt32(i))
-                    base->put(exec, i, str);
-                base->put(exec, Identifier(subscript->toString(exec)), str);
-                
-                FALL_THROUGH();
-#endif
-            }            
-            case ForInNodeExecuteBodyState:
-            {
-                PUSH_UNWIND_BARRIER(Continue, ForInNodeExecutePopContinueUnwindBarrierState);
-                ForInNode* forInNode = static_cast<ForInNode*>(currentNode);
-                EXECUTE_AND_CONTINUE(forInNode->statement.get(), ForInNodeExecutePopContinueUnwindBarrierState);
-                break;
-            }
+                m_valueStack.pop();
 
+                ForInNode* forInNode = static_cast<ForInPropSourceEndNode*>(currentNode)->m_forIn;
+                currentNode = forInNode;
+
+                PUSH_UNWIND_BARRIER(Continue, ForInNodeExecutePopContinueUnwindBarrierState);
+                EXECUTE_AND_JUMP(forInNode->statement.get(), ForInNodeExecutePopContinueUnwindBarrierState);
+                break;
+            }
             case ForInNodeExecutePopContinueUnwindBarrierState:
             {
                 if (completionReturn().complType() == Continue)
@@ -1767,6 +1728,8 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 ASSERT(completionReturn().complType() == Normal);
                 
                 POP_UNWIND_BARRIER(Continue);
+
+                SET_JUMP_STATE(ForInNodeUpdateExecuteState, currentNode);
                 break;
             }
             case ForInNodeExecutePopBreakUnwindBarrierState:
@@ -1778,8 +1741,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 POP_UNWIND_BARRIER(Break);
                 break;
             }
-            
-            
+
             case ContinueNodeExecuteState:
             {
                 RETURN_COMPLETION(Completion(Continue, 0, static_cast<ContinueNode*>(currentNode)->ident));
@@ -2328,7 +2290,6 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
                 break;
         }
     }
-    
 }
 
 // Legacy execution support -- clients should treecode-ify themselves

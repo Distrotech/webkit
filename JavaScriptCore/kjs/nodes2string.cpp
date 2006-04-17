@@ -311,14 +311,18 @@ void ForNode::streamTo(SourceStream &s) const
 void ForInNode::streamTo(SourceStream &s) const
 {
   s << SourceStream::Endl << "for (";
+#if 0
   if (varDecl)
     s << "var " << varDecl;
   else
-    s << lexpr;
+#endif
+    s << location;
   
+#if 0
   if (init)
     s << " = " << init;
-  s << " in " << expr << ")" << SourceStream::Indent
+#endif
+  s << " in " << propSource << ")" << SourceStream::Indent
     << statement << SourceStream::Unindent;
 }
 

@@ -1,3 +1,26 @@
+2006-04-17  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Geoff.
+        
+        - make for..in work again
+
+        * kjs/Opcode.h:
+        * kjs/TreeCode.cpp:
+        (KJS::isExecuteOpcode):
+        (KJS::InterpreterImp::runInterpreterLoop):
+        * kjs/grammar.y:
+        * kjs/nodes.cpp:
+        (ForInNode::ForInNode):
+        * kjs/nodes.h:
+        (KJS::VarDeclNode::VarDeclNode::VarDeclNode):
+        (KJS::ForInInitEndNode::ForInInitEndNode):
+        (KJS::ForInUpdateEndNode::ForInUpdateEndNode):
+        (KJS::ForInPropSourceEndNode::ForInPropSourceEndNode):
+        (KJS::SwapNode::SwapNode):
+        (KJS::Rotate3Node::Rotate3Node):
+        * kjs/nodes2string.cpp:
+        (ForInNode::streamTo):
+
 2006-04-15  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Darin.
