@@ -1,5 +1,12 @@
 2006-04-17  Maciej Stachowiak  <mjs@apple.com>
 
+        - fix a comment per Geoff's suggestion
+
+        * kjs/TreeCode.cpp:
+        (KJS::InterpreterImp::runInterpreterLoop):
+
+2006-04-17  Maciej Stachowiak  <mjs@apple.com>
+
         Reviewed by Geoff.
         
         - make for..in work again

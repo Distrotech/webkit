@@ -1628,7 +1628,7 @@ void InterpreterImp::runInterpreterLoop(ExecState* exec)
 
                 EVALUATE_NEXT(static_cast<ExprNode*>(currentNode)->next());
 
-                // stack in: [ ... b c a ]
+                // stack out: [ ... b c a ]
             }
 
             case ForInNodeExecuteState:
