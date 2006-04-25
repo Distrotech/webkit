@@ -2,6 +2,26 @@
 
         Merged fix from TOT to Safari-2-0-branch
 
+    2006-03-13  Eric Seidel  <eseidel@apple.com>
+
+        Reviewed by ggaren & TimH.
+
+        <rdar://problem/4473288> XSL file containing <xsl:include href="../Styles/EscapeString.xsl" /> fails to load file
+        XML_DTD_NODE objects in the tree were causing loadChildSheets to 
+        fail to preload child stylesheets, this patch causes us to 
+        correctly ignore all nodes besides the first XML_ELEMENT_NODE at 
+        the root level when searching the tree for xsl:include statements 
+        to pre-load.
+
+        Test: fast/xsl/xslt-second-level-import.xml
+
+        * khtml/xsl/xsl_stylesheetimpl.cpp:
+        (WebCore::XSLStyleSheetImpl::loadChildSheets):
+
+2006-04-25  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
     2006-03-20  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Darin.
