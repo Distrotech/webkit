@@ -10,6 +10,7 @@
 
 @interface WebPluginDocumentView : NSView <WebDocumentView, WebDocumentRepresentation>
 {
+    NSView *pluginView;
     WebPluginController *pluginController;
     WebPluginPackage *plugin;
     BOOL dataSourceHasBeenSet;

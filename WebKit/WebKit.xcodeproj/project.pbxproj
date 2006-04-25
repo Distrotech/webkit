@@ -299,6 +299,7 @@
 		B5E9281E08B6A47C00B9F2B3 /* WebMainResourceClient.m in Sources */ = {isa = PBXBuildFile; fileRef = B5E9281908B6A47C00B9F2B3 /* WebMainResourceClient.m */; };
 		B5E9286208B6AB8300B9F2B3 /* WebNewKeyGeneration.h in Headers */ = {isa = PBXBuildFile; fileRef = B5E9286108B6AB8300B9F2B3 /* WebNewKeyGeneration.h */; };
 		B5E9286F08B6AC7400B9F2B3 /* WebNewKeyGeneration.c in Sources */ = {isa = PBXBuildFile; fileRef = B5E9286E08B6AC7400B9F2B3 /* WebNewKeyGeneration.c */; };
+		DD9CC6C609FECEC600F1FCA3 /* WebPluginPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = DD9CC6C509FECEC600F1FCA3 /* WebPluginPrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildStyle section */
@@ -565,6 +566,7 @@
 		BEE18F9A0472B73200CA289C /* WebLocalizableStrings.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = WebLocalizableStrings.m; sourceTree = "<group>"; };
 		BEE52D4A0473032500CA289C /* WebKitSystemBits.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WebKitSystemBits.h; sourceTree = "<group>"; };
 		BEE52D4B0473032500CA289C /* WebKitSystemBits.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WebKitSystemBits.m; sourceTree = "<group>"; };
+		DD9CC6C509FECEC600F1FCA3 /* WebPluginPrivate.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = WebPluginPrivate.h; sourceTree = "<group>"; };
 		ED21B9810528F7AA003299AC /* WebDocumentInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WebDocumentInternal.h; sourceTree = "<group>"; };
 		ED2B2474033A2DA800C1A526 /* WebNSPasteboardExtras.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WebNSPasteboardExtras.h; sourceTree = "<group>"; };
 		ED2B2475033A2DA800C1A526 /* WebNSPasteboardExtras.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WebNSPasteboardExtras.m; sourceTree = "<group>"; };
@@ -857,6 +859,7 @@
 			isa = PBXGroup;
 			children = (
 				848DFF840365FE6A00CA2ACA /* WebPlugin.h */,
+				DD9CC6C509FECEC600F1FCA3 /* WebPluginPrivate.h */,
 				848DFF850365FE6A00CA2ACA /* WebPluginContainer.h */,
 				65836F5E07EE425900682F95 /* WebPluginContainerPrivate.h */,
 				65E1150307EFFEBF009B8BF7 /* WebPluginContainerCheck.h */,
@@ -1338,6 +1341,7 @@
 				B5E9281C08B6A47C00B9F2B3 /* WebControllerPolicyHandlerDelegate.h in Headers */,
 				B5E9281D08B6A47C00B9F2B3 /* WebMainResourceClient.h in Headers */,
 				B5E9286208B6AB8300B9F2B3 /* WebNewKeyGeneration.h in Headers */,
+				DD9CC6C609FECEC600F1FCA3 /* WebPluginPrivate.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

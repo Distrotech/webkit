@@ -85,6 +85,7 @@ _WebPlugInBaseURLKey
 _WebPlugInAttributesKey
 _WebPlugInContainerKey
 _WebPlugInModeKey
+_WebPlugInShouldLoadMainResourceKey
 
 ##
 ## Carbon Support
