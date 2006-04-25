@@ -1,3 +1,22 @@
+2006-04-25  Eric Seidel  <eseidel@apple.com>
+
+        Reviewed by ggaren.
+
+        Fixes for our 3rd and 5th most common crashtracers:
+        <rdar://problem/4233435> CrashTracer: 2698 crashes in Safari at com.apple.WebCore: khtml::RenderBlock::addChildToFlow + 156
+        <rdar://problem/4129744> [REGRESSION]CrashTracer: ..400 crashes at com.apple.WebCore: DOM::NodeImpl::createRendererIfNeeded + 44
+
+        Test case landed on trunk but not on branch.
+
+        * khtml/xml/dom_docimpl.cpp:
+        (DocumentImpl::setFocusNode): use m_inDetach bool copied from trunk
+        * khtml/xml/dom_nodeimpl.cpp:
+        (NodeImpl::NodeImpl):
+        (NodeImpl::detach): set m_inDetach
+        (NodeImpl::createRendererIfNeeded):
+        (NodeBaseImpl::removeChildren): remove node from tree before calling detach.
+        * khtml/xml/dom_nodeimpl.h:
+
 2006-04-25  Timothy Hatcher  <timothy@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch

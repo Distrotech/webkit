@@ -100,7 +100,8 @@ NodeImpl::NodeImpl(DocumentPtr *doc)
       m_hovered(false),
       m_inActiveChain( false ),
       m_styleElement( false ),
-      m_implicit( false )
+      m_implicit(false),
+      m_inDetach(false)
 {
     if (document)
         document->ref();
@@ -1201,6 +1202,7 @@ void NodeImpl::willRemove()
 
 void NodeImpl::detach()
 {
+    m_inDetach = true;
 //    assert(m_attached);
 
     if (m_render)
@@ -1211,6 +1213,7 @@ void NodeImpl::detach()
     if (doc)
         doc->incDOMTreeVersion();
     m_attached = false;
+    m_inDetach = false;
 }
 
 bool NodeImpl::maintainsState()
@@ -1378,7 +1381,7 @@ void NodeImpl::createRendererIfNeeded()
     assert(!attached());
     assert(!m_render);
     
-    NodeImpl *parent = parentNode();    
+    NodeImpl *parent = parentNode();
     assert(parent);
     
     RenderObject *parentRenderer = parent->renderer();
@@ -1940,21 +1943,23 @@ void NodeBaseImpl::removeChildren()
         NodeImpl *next = n->nextSibling();
         
         n->ref();
-
-        if (n->attached())
-	    n->detach();
+        
+        // Remove the node from the tree before calling detach or removedFromDocument (4427024, 4129744)
         n->setPreviousSibling(0);
         n->setNextSibling(0);
         n->setParent(0);
+        _first = next;
+        if (n == _last)
+            _last = 0;
+
+        if (n->attached())
+	    n->detach();
         
         if (n->inDocument())
             n->removedFromDocument();
 
         n->deref();
-
-        _first = next;
     }
-    _last = 0;
     allowEventDispatch();
     
     // Dispatch a single post-removal mutation event denoting a modified subtree.

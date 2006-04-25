@@ -2593,7 +2593,7 @@ bool DocumentImpl::setFocusNode(NodeImpl *newFocusNode)
     clearSelectionIfNeeded(newFocusNode);
 
     // Remove focus from the existing focus node (if any)
-    if (oldFocusNode) {
+    if (oldFocusNode && !oldFocusNode->m_inDetach) {
         // This goes hand in hand with the Qt focus setting below.
         if (!newFocusNode && view()) {
             view()->setFocus();
