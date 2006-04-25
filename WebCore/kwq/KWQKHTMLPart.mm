@@ -2885,6 +2885,7 @@ bool KWQKHTMLPart::sendContextMenuEvent(NSEvent *event)
         mev.innerNode.handle(), true, 0, &qev, true, NodeImpl::MousePress);
     if (!swallowEvent && !isPointInsideSelection(xm, ym) &&
         ([_bridge selectWordBeforeMenuEvent] || [_bridge isEditable] || mev.innerNode.handle()->isContentEditable())) {
+        _mouseDownMayStartSelect = true; // context menu events are always allowed to perform a selection
         selectClosestWordFromMouseEvent(&qev, mev.innerNode, xm, ym);
     }
 
