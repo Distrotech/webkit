@@ -857,6 +857,8 @@ void KWQKHTMLPart::setStatusBarText(const QString &status)
 
 void KWQKHTMLPart::scheduleClose()
 {
+    if (!shouldClose())
+        return;
     KWQ_BLOCK_EXCEPTIONS;
     [_bridge closeWindowSoon];
     KWQ_UNBLOCK_EXCEPTIONS;
