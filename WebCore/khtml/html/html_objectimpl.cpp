@@ -56,15 +56,13 @@ using namespace khtml;
 // -------------------------------------------------------------------------
 
 HTMLAppletElementImpl::HTMLAppletElementImpl(DocumentPtr *doc)
-  : HTMLElementImpl(doc)
+: HTMLElementImpl(doc)
+, m_allParamsAvailable(false)
 {
-    appletInstance = 0;
-    m_allParamsAvailable = false;
 }
 
 HTMLAppletElementImpl::~HTMLAppletElementImpl()
 {
-    delete appletInstance;
 }
 
 NodeImpl::Id HTMLAppletElementImpl::id() const
@@ -196,8 +194,8 @@ KJS::Bindings::Instance *HTMLAppletElementImpl::getAppletInstance() const
     if (!part || !part->javaEnabled())
         return 0;
 
-    if (appletInstance)
-        return appletInstance;
+    if (m_appletInstance)
+        return m_appletInstance.get();
     
     RenderApplet *r = static_cast<RenderApplet*>(m_render);
     if (r) {
@@ -206,10 +204,10 @@ KJS::Bindings::Instance *HTMLAppletElementImpl::getAppletInstance() const
             // Call into the part (and over the bridge) to pull the Bindings::Instance
             // from the guts of the plugin.
             void *_view = r->widget()->getView();
-            appletInstance = KWQ(part)->getAppletInstanceForView((NSView *)_view);
+            m_appletInstance = KWQ(part)->getAppletInstanceForView((NSView *)_view);
         }
     }
-    return appletInstance;
+    return m_appletInstance.get();
 }
 
 void HTMLAppletElementImpl::closeRenderer()
@@ -231,8 +229,9 @@ bool HTMLAppletElementImpl::allParamsAvailable()
 // -------------------------------------------------------------------------
 
 HTMLEmbedElementImpl::HTMLEmbedElementImpl(DocumentPtr *doc)
-    : HTMLElementImpl(doc), embedInstance(0)
-{}
+: HTMLElementImpl(doc)
+{
+}
 
 HTMLEmbedElementImpl::~HTMLEmbedElementImpl()
 {
@@ -250,8 +249,8 @@ KJS::Bindings::Instance *HTMLEmbedElementImpl::getEmbedInstance() const
     if (!part)
         return 0;
 
-    if (embedInstance)
-        return embedInstance;
+    if (m_embedInstance)
+        return m_embedInstance.get();
     
     RenderPartObject *r = static_cast<RenderPartObject*>(m_render);
     if (r) {
@@ -259,13 +258,13 @@ KJS::Bindings::Instance *HTMLEmbedElementImpl::getEmbedInstance() const
             // Call into the part (and over the bridge) to pull the Bindings::Instance
             // from the guts of the Java VM.
             void *_view = r->widget()->getView();
-            embedInstance = KWQ(part)->getEmbedInstanceForView((NSView *)_view);
+            m_embedInstance = KWQ(part)->getEmbedInstanceForView((NSView *)_view);
             // Applet may specified with <embed> tag.
-            if (!embedInstance)
-                embedInstance = KWQ(part)->getAppletInstanceForView((NSView *)_view);
+            if (!m_embedInstance)
+                m_embedInstance = KWQ(part)->getAppletInstanceForView((NSView *)_view);
         }
     }
-    return embedInstance;
+    return m_embedInstance.get();
 }
 #endif
 
@@ -381,11 +380,8 @@ bool HTMLEmbedElementImpl::isURLAttribute(AttributeImpl *attr) const
 // -------------------------------------------------------------------------
 
 HTMLObjectElementImpl::HTMLObjectElementImpl(DocumentPtr *doc) 
-#if APPLE_CHANGES
-: HTMLElementImpl(doc), m_imageLoader(0), objectInstance(0)
-#else
-: HTMLElementImpl(doc), m_imageLoader(0)
-#endif
+: HTMLElementImpl(doc)
+, m_imageLoader(0)
 {
     needWidgetUpdate = false;
     m_useFallbackContent = false;
@@ -409,8 +405,8 @@ KJS::Bindings::Instance *HTMLObjectElementImpl::getObjectInstance() const
     if (!part)
         return 0;
 
-    if (objectInstance)
-        return objectInstance;
+    if (m_objectInstance)
+        return m_objectInstance.get();
 
     if (RenderObject *r = m_render) {
         if (r->isWidget()) {
@@ -418,16 +414,16 @@ KJS::Bindings::Instance *HTMLObjectElementImpl::getObjectInstance() const
                 if (NSView *view = widget->getView())  {
                     // Call into the part (and over the bridge) to pull the Bindings::Instance
                     // from the guts of the plugin.
-                    objectInstance = KWQ(part)->getObjectInstanceForView(view);
+                    m_objectInstance = KWQ(part)->getObjectInstanceForView(view);
                     // Applet may specified with <object> tag.
-                    if (!objectInstance)
-                        objectInstance = KWQ(part)->getAppletInstanceForView(view);
+                    if (!m_objectInstance)
+                        m_objectInstance = KWQ(part)->getAppletInstanceForView(view);
                 }
             }
         }
     }
 
-    return objectInstance;
+    return m_objectInstance.get();
 }
 #endif
 

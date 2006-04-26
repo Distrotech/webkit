@@ -759,7 +759,7 @@ void KHTMLView::viewportMousePressEvent( QMouseEvent *_mouse )
 {
     if(!m_part->xmlDocImpl()) return;
 
-    SharedPtr<KHTMLView> protector(this);
+    khtml::SharedPtr<KHTMLView> protector(this);
 
     int xm, ym;
     viewportToContents(_mouse->x(), _mouse->y(), xm, ym);
@@ -819,7 +819,7 @@ void KHTMLView::viewportMouseDoubleClickEvent( QMouseEvent *_mouse )
 {
     if(!m_part->xmlDocImpl()) return;
 
-    SharedPtr<KHTMLView> protector(this);
+    khtml::SharedPtr<KHTMLView> protector(this);
 
     int xm, ym;
     viewportToContents(_mouse->x(), _mouse->y(), xm, ym);
@@ -1051,7 +1051,7 @@ void KHTMLView::viewportMouseReleaseEvent( QMouseEvent * _mouse )
 {
     if ( !m_part->xmlDocImpl() ) return;
 
-    SharedPtr<KHTMLView> protector(this);
+    khtml::SharedPtr<KHTMLView> protector(this);
 
     int xm, ym;
     viewportToContents(_mouse->x(), _mouse->y(), xm, ym);

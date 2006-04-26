@@ -1870,14 +1870,14 @@ bool KWQKHTMLPart::shouldClose()
     if (![_bridge canRunBeforeUnloadConfirmPanel])
         return true;
 
-    SharedPtr<DocumentImpl> document = xmlDocImpl();
+    khtml::SharedPtr<DocumentImpl> document = xmlDocImpl();
     if (!document)
         return true;
     HTMLElementImpl* body = document->body();
     if (!body)
         return true;
 
-    SharedPtr<BeforeUnloadEventImpl> event = new BeforeUnloadEventImpl;
+    khtml::SharedPtr<BeforeUnloadEventImpl> event = new BeforeUnloadEventImpl;
     event->setTarget(document.get());
     int exception = 0;
     body->dispatchGenericEvent(event.get(), exception);

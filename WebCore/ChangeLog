@@ -1,3 +1,36 @@
+2006-04-26  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
+    2006-02-15  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej, Eric.
+
+        - WebCore half of fix for <rdar://problem/4176077> CrashTracer: 6569 
+        crashes in DashboardClient at com.apple.JavaScriptCore: 
+        KJS::Bindings::ObjcFallbackObjectImp::type() 
+
+        WebCore and JavaScriptCore weren't sharing Instance objects very
+        nicely. I made them use SharedPtrs, and sent them to bed without dessert.
+
+        * khtml/html/html_objectimpl.cpp: 
+        (WebCore::HTMLAppletElementImpl::HTMLAppletElementImpl): Made 
+        appletInstance a SharedPtr
+        (WebCore::HTMLAppletElementImpl::getAppletInstance):
+        (WebCore::HTMLAppletElementImpl::detach):
+        (WebCore::HTMLEmbedElementImpl::HTMLEmbedElementImpl): Made
+        embedInstance a SharedPtr
+        (WebCore::HTMLEmbedElementImpl::getEmbedInstance):
+        (WebCore::HTMLEmbedElementImpl::detach):
+        (WebCore::HTMLObjectElementImpl::HTMLObjectElementImpl): Made
+        m_objectInstance a SharedPtr
+        (WebCore::HTMLObjectElementImpl::getObjectInstance): 
+        (WebCore::HTMLObjectElementImpl::detach):
+        * bindings/js/JSDOMCore.cpp:
+        * khtml/ecma/kjs_dom.cpp:
+        (KJS::getRuntimeObject):
+        * khtml/html/html_objectimpl.h:
+
 2006-04-25  Timothy Hatcher  <timothy@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch

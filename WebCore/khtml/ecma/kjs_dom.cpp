@@ -1658,7 +1658,7 @@ Value KJS::getRuntimeObject(ExecState *exec, const DOM::Node &node)
             
             if (appletElement->getAppletInstance()) {
                 // The instance is owned by the applet element.
-                RuntimeObjectImp *appletImp = new RuntimeObjectImp(appletElement->getAppletInstance(), false);
+                RuntimeObjectImp *appletImp = new RuntimeObjectImp(appletElement->getAppletInstance());
                 return Value(appletImp);
             }
         }
@@ -1666,7 +1666,7 @@ Value KJS::getRuntimeObject(ExecState *exec, const DOM::Node &node)
             DOM::HTMLEmbedElementImpl *embedElement = static_cast<DOM::HTMLEmbedElementImpl *>(element.handle());
             
             if (embedElement->getEmbedInstance()) {
-                RuntimeObjectImp *runtimeImp = new RuntimeObjectImp(embedElement->getEmbedInstance(), false);
+                RuntimeObjectImp *runtimeImp = new RuntimeObjectImp(embedElement->getEmbedInstance());
                 return Value(runtimeImp);
             }
         }
@@ -1674,7 +1674,7 @@ Value KJS::getRuntimeObject(ExecState *exec, const DOM::Node &node)
             DOM::HTMLObjectElementImpl *objectElement = static_cast<DOM::HTMLObjectElementImpl *>(element.handle());
             
             if (objectElement->getObjectInstance()) {
-                RuntimeObjectImp *runtimeImp = new RuntimeObjectImp(objectElement->getObjectInstance(), false);
+                RuntimeObjectImp *runtimeImp = new RuntimeObjectImp(objectElement->getObjectInstance());
                 return Value(runtimeImp);
             }
         }

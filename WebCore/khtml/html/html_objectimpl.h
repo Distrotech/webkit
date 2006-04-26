@@ -72,7 +72,7 @@ protected:
 
 private:
 #if APPLE_CHANGES
-    mutable KJS::Bindings::Instance *appletInstance;
+    mutable SharedPtr<KJS::Bindings::Instance> m_appletInstance;
     bool m_allParamsAvailable;
 #endif
 };
@@ -107,7 +107,7 @@ public:
 
 #if APPLE_CHANGES
 private:
-    mutable KJS::Bindings::Instance *embedInstance;
+    mutable SharedPtr<KJS::Bindings::Instance> m_embedInstance;
 #endif
 };
 
@@ -160,7 +160,7 @@ public:
 
 #if APPLE_CHANGES
 private:
-    mutable KJS::Bindings::Instance *objectInstance;
+    mutable SharedPtr<KJS::Bindings::Instance> m_objectInstance;
 #endif
     bool m_complete;
 };
