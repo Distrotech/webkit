@@ -21,6 +21,7 @@
 #import <WebKit/WebPluginViewFactory.h>
 #import <WebKit/WebViewPrivate.h>
 #import <WebKit/WebUIDelegate.h>
+#import <WebKit/WebNSURLExtras.h>
 
 #import <WebCore/WebCoreBridge.h>
 
@@ -293,6 +294,13 @@ static NSMutableSet *pluginViews = nil;
 - (WebView *)webView
 {
     return [[self webFrame] webView];
+}
+
+- (NSString *)URLPolicyCheckReferrer
+{
+    NSURL *responseURL = [[[[self webFrame] dataSource] response] URL];
+    ASSERT(responseURL);
+    return [responseURL _web_originalDataAsString];
 }
 
 @end

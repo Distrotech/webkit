@@ -35,4 +35,6 @@
 - (WebBridge *)bridge;
 - (WebView *)webView;
 
+- (NSString *)URLPolicyCheckReferrer;
+
 @end
