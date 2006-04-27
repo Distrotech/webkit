@@ -1,3 +1,20 @@
+2006-04-27  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
+    2006-02-20  Eric Seidel  <eseidel@apple.com>
+
+        Reviewed by darin.
+
+        <rdar://problem/4449442> GMAIL: XMLHttpRequest does not correctly report "Interactive" state on receipt of load data
+        Also cleaned up spacing a little.
+
+        No layout test possible (local loads are non incremental).
+
+        * xml/xmlhttprequest.cpp:
+        (WebCore::XMLHttpRequest::changeState):
+        (WebCore::XMLHttpRequest::slotData):
+
 2006-04-27  Adele Peterson  <adele@apple.com>
 
         Reviewed by Beth.

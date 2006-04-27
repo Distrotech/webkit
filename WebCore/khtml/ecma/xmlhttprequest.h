@@ -98,6 +98,7 @@ namespace KJS {
     Value getResponseHeader(const QString& name) const;
 
     void changeState(XMLHttpRequestState newState);
+    void callReadyStateChangeListener();
 
 public:
     static QPtrDict< QPtrDict<XMLHttpRequest> > &requestsByDocument();

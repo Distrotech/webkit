@@ -250,7 +250,12 @@ void XMLHttpRequest::changeState(XMLHttpRequestState newState)
 {
   if (state != newState) {
     state = newState;
-    
+    callReadyStateChangeListener();
+  }
+}
+   
+void XMLHttpRequest::callReadyStateChangeListener()
+{
     if (doc && doc->part() && onReadyStateChangeListener.notNull()) {
       DOM::Event ev = doc->part()->document().createEvent("HTMLEvents");
       ev.initEvent("readystatechange", true, true);
@@ -262,7 +267,6 @@ void XMLHttpRequest::changeState(XMLHttpRequestState newState)
       ev.initEvent("load", true, true);
       onLoadListener->handleEvent(ev, true);
     }
-  }
 }
 
 bool XMLHttpRequest::urlMatchesDocumentDomain(const KURL& _url) const
@@ -593,7 +597,11 @@ void XMLHttpRequest::slotData(KIO::Job*, const QByteArray &_data)
   response += decoded;
 
   if (!aborted) {
-    changeState(Interactive);
+    if (state != Interactive)
+        changeState(Interactive);
+    else
+        // Firefox calls readyStateChanged every time it receives data, 4449442
+        callReadyStateChangeListener();
   }
 }
 
