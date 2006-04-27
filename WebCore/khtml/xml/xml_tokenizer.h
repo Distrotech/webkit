@@ -83,6 +83,9 @@ private:
 };
 
 Tokenizer *newXMLTokenizer(DOM::DocumentPtr *, KHTMLView * = 0);
+#ifdef KHTML_XSLT
+void setLoaderForLibXMLCallbacks(DocLoader*);
+#endif
 QMap<QString, QString> parseAttributes(const DOM::DOMString &, bool &attrsOK);
 
 }
