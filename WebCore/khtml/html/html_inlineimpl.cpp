@@ -98,7 +98,7 @@ bool HTMLAnchorElementImpl::isKeyboardFocusable() const
         return false;
     
     if (!getDocument()->part())
-	return false;
+        return false;
 
     return getDocument()->part()->tabsToLinks();
 }
@@ -113,10 +113,10 @@ void HTMLAnchorElementImpl::defaultEventHandler(EventImpl *evt)
     // React on clicks and on keypresses.
     // Don't make this KEYUP_EVENT again, it makes khtml follow links it shouldn't,
     // when pressing Enter in the combo.
-    if ( ( evt->id() == EventImpl::KHTML_CLICK_EVENT ||
+    if ( ( evt->id() == EventImpl::CLICK_EVENT ||
          ( evt->id() == EventImpl::KEYDOWN_EVENT && m_focused)) && m_hasAnchor) {
         MouseEventImpl *e = 0;
-        if ( evt->id() == EventImpl::KHTML_CLICK_EVENT )
+        if ( evt->id() == EventImpl::CLICK_EVENT )
             e = static_cast<MouseEventImpl*>( evt );
 
         KeyboardEventImpl *k = 0;
@@ -127,8 +127,8 @@ void HTMLAnchorElementImpl::defaultEventHandler(EventImpl *evt)
         QString url;
 
         if ( e && e->button() == 2 ) {
-	    HTMLElementImpl::defaultEventHandler(evt);
-	    return;
+            HTMLElementImpl::defaultEventHandler(evt);
+            return;
         }
 
         if ( k ) {
@@ -165,8 +165,8 @@ void HTMLAnchorElementImpl::defaultEventHandler(EventImpl *evt)
                 }
                 else {
                     evt->setDefaultHandled();
-		    HTMLElementImpl::defaultEventHandler(evt);
-		    return;
+                    HTMLElementImpl::defaultEventHandler(evt);
+                    return;
                 }
             }
         }
@@ -191,15 +191,15 @@ void HTMLAnchorElementImpl::defaultEventHandler(EventImpl *evt)
                 else if ( e->button() == 2 )
                     button = Qt::RightButton;
             }
-	    else if ( k )
-	    {
-	      if ( k->shiftKey() )
+            else if ( k )
+            {
+              if ( k->shiftKey() )
                 state |= Qt::ShiftButton;
-	      if ( k->altKey() )
+              if ( k->altKey() )
                 state |= Qt::AltButton;
-	      if ( k->ctrlKey() )
+              if ( k->ctrlKey() )
                 state |= Qt::ControlButton;
-	    }
+            }
 
             if (getDocument() && getDocument()->view() && getDocument()->part()) {
                 getDocument()->view()->resetCursor();
@@ -226,7 +226,7 @@ void HTMLAnchorElementImpl::parseHTMLAttribute(HTMLAttributeImpl *attr)
     case ATTR_NAME:
     case ATTR_TITLE:
     case ATTR_REL:
-	break;
+        break;
     default:
         HTMLElementImpl::parseHTMLAttribute(attr);
     }

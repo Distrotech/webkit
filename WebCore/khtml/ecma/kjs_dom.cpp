@@ -284,11 +284,11 @@ Value DOMNode::getValueProperty(ExecState *exec, int token) const
   case OnChange:
     return getListener(DOM::EventImpl::CHANGE_EVENT);
   case OnClick:
-    return getListener(DOM::EventImpl::KHTML_CLICK_EVENT);
+    return getListener(DOM::EventImpl::CLICK_EVENT);
   case OnContextMenu:
     return getListener(DOM::EventImpl::CONTEXTMENU_EVENT);
   case OnDblClick:
-    return getListener(DOM::EventImpl::KHTML_DBLCLICK_EVENT);
+    return getListener(DOM::EventImpl::DBLCLICK_EVENT);
   case OnDragDrop:
     return getListener(DOM::EventImpl::KHTML_DRAGDROP_EVENT);
   case OnError:
@@ -436,13 +436,13 @@ void DOMNode::putValue(ExecState *exec, int token, const Value& value, int /*att
     setListener(exec,DOM::EventImpl::CHANGE_EVENT,value);
     break;
   case OnClick:
-    setListener(exec,DOM::EventImpl::KHTML_CLICK_EVENT,value);
+    setListener(exec,DOM::EventImpl::CLICK_EVENT,value);
     break;
   case OnContextMenu:
     setListener(exec,DOM::EventImpl::CONTEXTMENU_EVENT,value);
     break;
   case OnDblClick:
-    setListener(exec,DOM::EventImpl::KHTML_DBLCLICK_EVENT,value);
+    setListener(exec,DOM::EventImpl::DBLCLICK_EVENT,value);
     break;
   case OnDragDrop:
     setListener(exec,DOM::EventImpl::KHTML_DRAGDROP_EVENT,value);

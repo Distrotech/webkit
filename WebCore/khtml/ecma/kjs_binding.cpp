@@ -254,9 +254,8 @@ bool ScriptInterpreter::wasRunByUserGesture() const
   {
     int id = m_evt->handle()->id();
     bool eventOk = ( // mouse events
-      id == DOM::EventImpl::CLICK_EVENT || id == DOM::EventImpl::MOUSEDOWN_EVENT ||
-      id == DOM::EventImpl::MOUSEUP_EVENT || id == DOM::EventImpl::KHTML_DBLCLICK_EVENT ||
-      id == DOM::EventImpl::KHTML_CLICK_EVENT ||
+      id == DOM::EventImpl::CLICK_EVENT || DOM::EventImpl::DBLCLICK_EVENT || id == DOM::EventImpl::MOUSEDOWN_EVENT ||
+      id == DOM::EventImpl::MOUSEUP_EVENT ||
       // keyboard events
       id == DOM::EventImpl::KEYDOWN_EVENT || id == DOM::EventImpl::KEYPRESS_EVENT ||
       id == DOM::EventImpl::KEYUP_EVENT ||
@@ -285,9 +284,9 @@ bool ScriptInterpreter::wasRunByUserGesture() const
 bool ScriptInterpreter::isGlobalObject(const Value &v)
 {
     if (v.type() == ObjectType) {
-	Object o = v.toObject (globalExec());
-	if (o.classInfo() == &Window::info)
-	    return true;
+        Object o = v.toObject (globalExec());
+        if (o.classInfo() == &Window::info)
+            return true;
     }
     return false;
 }
@@ -310,11 +309,11 @@ void *ScriptInterpreter::createLanguageInstanceForValue (ExecState *exec, Bindin
     void *result = 0;
     
     if (language == Bindings::Instance::ObjectiveCLanguage)
-	result = createObjcInstanceForValue (exec, value, origin, current);
+        result = createObjcInstanceForValue (exec, value, origin, current);
     
     if (!result)
-	result = Interpreter::createLanguageInstanceForValue (exec, language, value, origin, current);
-	
+        result = Interpreter::createLanguageInstanceForValue (exec, language, value, origin, current);
+        
     return result;
 }
 

@@ -1,3 +1,31 @@
+2006-04-27  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Beth.
+
+        Fix for <rdar://problem/4073701> click event not sent with dispatchEvent
+
+        Removed KHTML_CLICK_EVENT and KHTML_DBLCLICK_EVENT.  Just use CLICK_EVENT and DBLCLICK_EVENT.
+
+        * khtml/ecma/kjs_binding.cpp: (KJS::ScriptInterpreter::wasRunByUserGesture):
+        * khtml/ecma/kjs_dom.cpp:
+        (DOMNode::getValueProperty):
+        (DOMNode::putValue):
+        * khtml/ecma/kjs_window.cpp:
+        (Window::get):
+        (Window::put):
+        * khtml/html/html_elementimpl.cpp:
+        (HTMLElementImpl::parseHTMLAttribute):
+        (HTMLElementImpl::click):
+        * khtml/html/html_formimpl.cpp: (DOM::HTMLInputElementImpl::defaultEventHandler):
+        * khtml/html/html_inlineimpl.cpp: (HTMLAnchorElementImpl::defaultEventHandler):
+        * khtml/html/html_objectimpl.h:
+        * khtml/khtmlview.cpp: (KHTMLView::dispatchMouseEvent):
+        * khtml/rendering/render_form.cpp: (RenderFormElement::slotClicked):
+        * khtml/xml/dom2_eventsimpl.cpp: (EventImpl::idToType):
+        * khtml/xml/dom2_eventsimpl.h: (DOM::EventImpl::):
+        * khtml/xml/dom_nodeimpl.cpp: (NodeImpl::dispatchMouseEvent):
+        * kwq/KWQAccObject.mm: (-[KWQAccObject mouseButtonListener]):
+
 2006-04-26  Timothy Hatcher  <timothy@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch

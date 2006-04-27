@@ -1902,25 +1902,8 @@ bool KHTMLView::dispatchMouseEvent(int eventId, DOM::NodeImpl *targetNode, bool 
 	// as there is no way to tell the difference between single & double clicks using DOM (only the click count is
 	// stored, which is not necessarily the same)
 	if (eventId == EventImpl::CLICK_EVENT) {
-	    me = new MouseEventImpl(EventImpl::KHTML_CLICK_EVENT,
-				    true,cancelable,m_part->xmlDocImpl()->defaultView(),
-				    detail,screenX,screenY,clientX,clientY,
-				    ctrlKey,altKey,shiftKey,metaKey,
-				    button,0);
-	    me->ref();
-	    if (defaultHandled)
-		me->setDefaultHandled();
-	    targetNode->dispatchEvent(me,exceptioncode,true);
-            if (me->defaultHandled())
-                defaultHandled = true;
-            if (me->defaultPrevented())
-                defaultPrevented = true;
-            if (me->defaultHandled() || me->defaultPrevented())
-                swallowEvent = true;
-	    me->deref();
-
             if (d->isDoubleClick) {
-                me = new MouseEventImpl(EventImpl::KHTML_DBLCLICK_EVENT,
+                me = new MouseEventImpl(EventImpl::DBLCLICK_EVENT,
                                         true,cancelable,m_part->xmlDocImpl()->defaultView(),
                                         detail,screenX,screenY,clientX,clientY,
                                         ctrlKey,altKey,shiftKey,metaKey,
