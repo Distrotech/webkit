@@ -419,8 +419,7 @@ bool ProcessingInstructionImpl::checkStyleSheet()
         
         bool isCSS = type.isEmpty() || type == "text/css";
 #ifdef KHTML_XSLT
-        m_isXSL = (type == "text/xml" || type == "text/xsl" || type == "application/xml" ||
-                   type == "application/xhtml+xml" || type == "application/rss+xml" || type == "application/atom=xml");
+        m_isXSL = khtml::isXMLMIMEType(type);
         if (!isCSS && !m_isXSL)
 #else
         if (!isCSS)

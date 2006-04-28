@@ -97,7 +97,9 @@ namespace khtml
         LRUList();
         ~LRUList();
     };
-    
+
+    bool isXMLMIMEType(const QString& mimeType);
+
     /**
      * @internal
      *
