@@ -2,6 +2,21 @@
 
         Merged fix from TOT to Safari-2-0-branch
 
+    2006-03-23  Darin Adler  <darin@apple.com>
+
+        Reviewed by Beth.
+
+        - fix <rdar://problem/4335038> REGRESSION: when max-height is none, height value is ignored
+
+        * css/cssstyleselector.cpp: (WebCore::CSSStyleSelector::applyProperty):
+        For max-height of none, set it to Length(undefinedLength, Fixed), which
+        is the correct value (same as the default). Also did some formatting fixes
+        to the height section.
+
+2006-04-28  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
     2006-04-26  Tim Omernick  <timo@apple.com>
 
         Reviewed by Hyatt.
