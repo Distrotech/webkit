@@ -1619,7 +1619,7 @@ void ApplyStyleCommand::applyRelativeFontStyleChange(CSSMutableStyleDeclarationI
         if (primitiveValue->primitiveType() == CSSPrimitiveValue::CSS_PX) {
             // Only PX handled now. If we handle more types in the future, perhaps
             // a switch statement here would be more appropriate.
-            adjustment = primitiveValue->getFloatValue(CSSPrimitiveValue::CSS_PX);
+            adjustment = primitiveValue->getFloatValue();
         }
     }
     style->removeProperty(CSS_PROP__KHTML_FONT_SIZE_DELTA);
