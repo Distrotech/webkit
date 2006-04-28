@@ -57,6 +57,7 @@ public:
     virtual bool rendererIsNeeded(khtml::RenderStyle *);
     virtual khtml::RenderObject *createRenderer(RenderArena *, khtml::RenderStyle *);
     virtual void closeRenderer();
+    virtual void detach();
 
     bool getMember(const QString &, JType &, QString &);
     bool callMember(const QString &, const QStringList &, JType &, QString &);
@@ -92,6 +93,7 @@ public:
     virtual void parseHTMLAttribute(HTMLAttributeImpl *attr);
 
     virtual void attach();
+    virtual void detach();
     virtual bool rendererIsNeeded(khtml::RenderStyle *);
     virtual khtml::RenderObject *createRenderer(RenderArena *, khtml::RenderStyle *);
     

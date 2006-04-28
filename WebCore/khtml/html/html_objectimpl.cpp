@@ -63,6 +63,8 @@ HTMLAppletElementImpl::HTMLAppletElementImpl(DocumentPtr *doc)
 
 HTMLAppletElementImpl::~HTMLAppletElementImpl()
 {
+    // m_appletInstance should have been cleaned up in detach().
+    assert(!m_appletInstance);
 }
 
 NodeImpl::Id HTMLAppletElementImpl::id() const
@@ -220,6 +222,13 @@ void HTMLAppletElementImpl::closeRenderer()
     HTMLElementImpl::closeRenderer();
 }
 
+void HTMLAppletElementImpl::detach()
+{
+    m_appletInstance = 0;
+
+    HTMLElementImpl::detach();
+}
+
 bool HTMLAppletElementImpl::allParamsAvailable()
 {
     return m_allParamsAvailable;
@@ -235,6 +244,15 @@ HTMLEmbedElementImpl::HTMLEmbedElementImpl(DocumentPtr *doc)
 
 HTMLEmbedElementImpl::~HTMLEmbedElementImpl()
 {
+    // m_embedInstance should have been cleaned up in detach().
+    assert(!m_embedInstance);
+}
+
+void HTMLEmbedElementImpl::detach()
+{
+    m_embedInstance = 0;
+
+    HTMLElementImpl::detach();
 }
 
 NodeImpl::Id HTMLEmbedElementImpl::id() const
@@ -390,6 +408,9 @@ HTMLObjectElementImpl::HTMLObjectElementImpl(DocumentPtr *doc)
 
 HTMLObjectElementImpl::~HTMLObjectElementImpl()
 {
+    // m_objectInstance should have been cleaned up in detach().
+    assert(!m_objectInstance);
+    
     delete m_imageLoader;
 }
 
@@ -587,6 +608,8 @@ void HTMLObjectElementImpl::detach()
         // Update the widget the next time we attach (detaching destroys the plugin).
         needWidgetUpdate = true;
     }
+
+    m_objectInstance = 0;
 
     HTMLElementImpl::detach();
 }
