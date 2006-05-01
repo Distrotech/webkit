@@ -1,3 +1,14 @@
+2006-05-01  Eric Seidel  <eseidel@apple.com>
+
+        Reviewed by Tim Hatcher.
+
+        Reenabled disabled code on the branch.
+        <rdar://problem/4335156> XMLHttpRequest ignores username/password passed to open()
+
+        * kwq/KWQKURL.mm:
+        (KURL::setUser):
+        (KURL::setPass):
+
 2006-05-01  Timothy Hatcher  <timothy@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch
