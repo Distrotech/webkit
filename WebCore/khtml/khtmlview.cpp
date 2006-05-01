@@ -902,11 +902,9 @@ void KHTMLView::viewportMouseMoveEvent( QMouseEvent * _mouse )
     // was pressed, rather than updating for nodes the mouse moves over as you hold the mouse down.
     DOM::NodeImpl::MouseEvent mev( _mouse->stateAfter(), DOM::NodeImpl::MouseMove );
     m_part->xmlDocImpl()->prepareMouseEvent(d->mousePressed && m_part->mouseDownMayStartSelect(), d->mousePressed, xm, ym, &mev );
-#if APPLE_CHANGES
-    if (KWQ(m_part)->passSubframeEventToSubframe(mev))
-        return;
-#endif
 
+    KWQ(m_part)->passSubframeEventToSubframe(mev);
+        
     bool swallowEvent = dispatchMouseEvent(EventImpl::MOUSEMOVE_EVENT,mev.innerNode.handle(),false,
                                            0,_mouse,true,DOM::NodeImpl::MouseMove);
 
