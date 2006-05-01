@@ -91,11 +91,14 @@ namespace KJS {
 
 ////////////////////// History Object ////////////////////////
 
-  class History : public ObjectImp {
+  class History : public DOMObject {
     friend class HistoryFunc;
   public:
     History(ExecState *exec, KHTMLPart *p)
-      : ObjectImp(exec->lexicalInterpreter()->builtinObjectPrototype()), part(p) { }
+      : part(p)
+    {
+        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
+    }
     virtual Value get(ExecState *exec, const Identifier &propertyName) const;
     Value getValueProperty(ExecState *exec, int token) const;
     virtual const ClassInfo* classInfo() const { return &info; }
@@ -106,10 +109,13 @@ namespace KJS {
     QGuardedPtr<KHTMLPart> part;
   };
 
-  class FrameArray : public ObjectImp {
+  class FrameArray : public DOMObject {
   public:
     FrameArray(ExecState *exec, KHTMLPart *p)
-      : ObjectImp(exec->lexicalInterpreter()->builtinObjectPrototype()), part(p) { }
+      : part(p)
+    {
+        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
+    }
     virtual Value get(ExecState *exec, const Identifier &propertyName) const;
     virtual UString toString(ExecState *exec) const;
   private:
@@ -152,7 +158,9 @@ const ClassInfo Screen::info = { "Screen", 0, &ScreenTable, 0 };
 
 // We set the object prototype so that toString is implemented
 Screen::Screen(ExecState *exec)
-  : ObjectImp(exec->lexicalInterpreter()->builtinObjectPrototype()) {}
+{
+    setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
+}
 
 Value Screen::get(ExecState *exec, const Identifier &p) const
 {
@@ -316,8 +324,7 @@ const ClassInfo Window::info = { "Window", 0, &WindowTable, 0 };
 IMPLEMENT_PROTOFUNC(WindowFunc)
 
 Window::Window(KHTMLPart *p)
-  : ObjectImp(/*no proto*/)
-  , m_part(p)
+  : m_part(p)
   , screen(0)
   , history(0)
   , frames(0)
@@ -2780,10 +2787,10 @@ const ClassInfo BarInfo::info = { "BarInfo", 0, 0, 0 };
 @end
 */
 BarInfo::BarInfo(ExecState *exec, KHTMLPart *p, Type barType) 
-  : ObjectImp(exec->lexicalInterpreter()->builtinObjectPrototype())
-  , m_part(p)
+  : m_part(p)
   , m_type(barType)
 {
+  setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
 }
 
 BarInfo::~BarInfo()

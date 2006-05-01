@@ -47,7 +47,7 @@ namespace KJS {
   class JSUnprotectedEventListener;
   class JSLazyEventListener;
 
-  class Screen : public ObjectImp {
+  class Screen : public DOMObject {
   public:
     Screen(ExecState *exec);
     enum {
@@ -62,7 +62,7 @@ namespace KJS {
     static const ClassInfo info;
   };
 
-  class Window : public ObjectImp {
+  class Window : public DOMObject {
     friend QGuardedPtr<KHTMLPart> getInstance();
     friend class Location;
     friend class WindowFunc;
@@ -215,7 +215,7 @@ namespace KJS {
     QMap<int, ScheduledAction*> scheduledActions;
   };
 
-  class Location : public ObjectImp {
+  class Location : public DOMObject {
   public:
     ~Location();
     virtual Value get(ExecState *exec, const Identifier &propertyName) const;
@@ -233,7 +233,7 @@ namespace KJS {
     QGuardedPtr<KHTMLPart> m_part;
   };
 
-  class Selection : public ObjectImp {
+  class Selection : public DOMObject {
   public:
     ~Selection();
     virtual Value get(ExecState *exec, const Identifier &propertyName) const;
@@ -252,7 +252,7 @@ namespace KJS {
     QGuardedPtr<KHTMLPart> m_part;
   };
 
-  class BarInfo : public ObjectImp {
+  class BarInfo : public DOMObject {
   public:
     ~BarInfo();
     virtual Value get(ExecState *exec, const Identifier &propertyName) const;

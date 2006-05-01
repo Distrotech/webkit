@@ -357,7 +357,6 @@ bool Collector::collect()
   if (InterpreterImp::s_hook) {
     InterpreterImp *scr = InterpreterImp::s_hook;
     do {
-      //fprintf( stderr, "Collector marking interpreter %p\n",(void*)scr);
       scr->mark();
       scr = scr->next;
     } while (scr != InterpreterImp::s_hook);
@@ -424,6 +423,8 @@ bool Collector::collect()
   int emptyBlocks = 0;
   int numLiveObjects = heap.numLiveObjects;
 
+  bool currentThreadIsMainThread = !pthread_is_threaded_np() || pthread_main_np();
+
   for (int block = 0; block < heap.usedBlocks; block++) {
     CollectorBlock *curBlock = heap.blocks[block];
 
@@ -439,7 +440,7 @@ bool Collector::collect()
 
       if (cell->u.freeCell.zeroIfFree != 0) {
 #if USE_CONSERVATIVE_GC
-	if (!imp->_marked)
+	if (!imp->_marked && (currentThreadIsMainThread || imp->_destructorIsThreadSafe))
 #else
 	if (!imp->refcount && imp->_flags == (ValueImp::VI_GCALLOWED | ValueImp::VI_CREATED))
 #endif
@@ -500,7 +501,7 @@ bool Collector::collect()
     ValueImp *imp = (ValueImp *)heap.oversizeCells[cell];
     
 #if USE_CONSERVATIVE_GC
-    if (!imp->_marked) {
+    if (!imp->_marked && (currentThreadIsMainThread || imp->_destructorIsThreadSafe)) {
 #else
     if (!imp->refcount && 
 	imp->_flags == (ValueImp::VI_GCALLOWED | ValueImp::VI_CREATED)) {

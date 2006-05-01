@@ -46,7 +46,9 @@ namespace KJS {
    */
   class DOMObject : public ObjectImp {
   public:
-    DOMObject() : ObjectImp() {}
+    // DOMObject Destruction is not thread-safe because JS DOM objects 
+    // wrap unsafe WebCore DOM data structures
+    DOMObject() : ObjectImp(false) {}
     virtual Value get(ExecState *exec, const Identifier &propertyName) const;
     virtual Value tryGet(ExecState *exec, const Identifier &propertyName) const
       { return ObjectImp::get(exec, propertyName); }
