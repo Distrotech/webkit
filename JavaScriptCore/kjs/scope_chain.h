@@ -27,6 +27,7 @@
 namespace KJS {
 
     class ObjectImp;
+    class ExecState;
     
     class ScopeChainNode {
     public:
@@ -60,6 +61,10 @@ namespace KJS {
         void pop();
         
         void mark();
+
+#ifndef NDEBUG        
+        void print(ExecState*);
+#endif
         
     private:
         ScopeChainNode *_node;
