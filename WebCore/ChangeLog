@@ -1,3 +1,22 @@
+2006-05-01  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
+    2006-04-24  Eric Seidel  <eseidel@apple.com>
+
+        Reviewed by mjs.
+
+        Speculative fix for our 7th worst crasher.
+        Also added ASSERTs to help us better understand the issue.
+        <rdar://problem/4153404> CrashTracer: 2412 crashes in Safari at com.apple.WebCore: khtml::RenderStyle::RenderStyle[unified] + 44
+
+        * dom/Document.cpp:
+        (WebCore::Document::recalcStyle):
+        (WebCore::Document::setInPageCache):
+        * dom/Document.h:
+        * dom/Element.cpp:
+        (WebCore::Element::recalcStyle):
+
 === WebCore-418 ===
 
 2006-04-28  Timothy Hatcher  <timothy@apple.com>

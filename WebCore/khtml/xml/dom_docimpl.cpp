@@ -1102,7 +1102,9 @@ void DocumentImpl::recalcStyle( StyleChange change )
         
     m_inStyleRecalc = true;
     
-    if( !m_render ) goto bail_out;
+    ASSERT(!renderer() || renderArena());
+    if (!renderer() || !renderArena())
+        goto bail_out;
 
     if ( change == Force ) {
         RenderStyle* oldStyle = m_render->style();
@@ -1260,11 +1262,6 @@ void DocumentImpl::attach()
     m_render = 0;
 
     NodeBaseImpl::attach();
-    m_render = render;
-}
-
-void DocumentImpl::restoreRenderer(RenderObject* render)
-{
     m_render = render;
 }
 
@@ -3064,13 +3061,13 @@ void DocumentImpl::setInPageCache(bool flag)
 
     m_inPageCache = flag;
     if (flag) {
-        assert(m_savedRenderer == 0);
+        ASSERT(m_savedRenderer == 0);
         m_savedRenderer = m_render;
-        if (m_view) {
+        if (m_view)
             m_view->resetScrollBars();
-        }
     } else {
-        assert(m_render == 0 || m_render == m_savedRenderer);
+        ASSERT(m_render == 0 || m_render == m_savedRenderer);
+        ASSERT(m_renderArena);
         m_render = m_savedRenderer;
         m_savedRenderer = 0;
     }
