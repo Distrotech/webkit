@@ -1501,20 +1501,8 @@ NSMutableDictionary *countInvocations;
     [types release];
 }
 
-#if !BUILDING_ON_PANTHER
-static bool CGContextInitialized = false;
-#endif
-
 - (void)_commonInitializationWithFrameName:(NSString *)frameName groupName:(NSString *)groupName
 {
-#if !BUILDING_ON_PANTHER         
-    if (!CGContextInitialized) {
-        CFStringRef key = CFSTR(kCGSDisableDeferredUpdates);
-        CGSSetConnectionProperty([NSApp contextID], [NSApp contextID], (CGSValueObj)key, (CGSValueObj)kCFBooleanTrue);
-        CGContextInitialized = true;
-    }
-#endif
-
     _private->drawsBackground = YES;
     _private->smartInsertDeleteEnabled = YES;
 
