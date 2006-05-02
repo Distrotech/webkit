@@ -834,4 +834,20 @@ static NSMutableDictionary *viewTypes;
     return [NSPrintOperation printOperationWithView:documentView printInfo:printInfo];
 }
 
+- (BOOL)documentViewShouldHandlePrint
+{
+    NSView *documentView = [[self _scrollView] documentView];
+    if (documentView && [documentView respondsToSelector:@selector(documentViewShouldHandlePrint)])
+        return [(id)documentView documentViewShouldHandlePrint];
+    
+    return NO;
+}
+
+- (void)printDocumentView
+{
+    NSView *documentView = [[self _scrollView] documentView];
+    if (documentView && [documentView respondsToSelector:@selector(printDocumentView)])
+        return [(id)documentView printDocumentView];
+}
+
 @end
