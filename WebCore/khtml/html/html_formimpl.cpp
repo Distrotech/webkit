@@ -101,7 +101,7 @@ private:
     QValueList<FormDataListItem> m_list;
 };
 
-HTMLFormElementImpl::HTMLFormElementImpl(DocumentPtr *doc)
+HTMLFormElementImpl::HTMLFormElementImpl(DocumentImpl *doc)
     : HTMLElementImpl(doc)
 {
     collectionInfo = 0;
@@ -776,7 +776,7 @@ void HTMLFormElementImpl::removeImgElement(HTMLImageElementImpl *e)
 
 // -------------------------------------------------------------------------
 
-HTMLGenericFormElementImpl::HTMLGenericFormElementImpl(DocumentPtr *doc, HTMLFormElementImpl *f)
+HTMLGenericFormElementImpl::HTMLGenericFormElementImpl(DocumentImpl *doc, HTMLFormElementImpl *f)
     : HTMLElementImpl(doc)
 {
     m_disabled = m_readOnly = false;
@@ -1089,7 +1089,7 @@ QString HTMLGenericFormElementImpl::findMatchingState(QStringList &states)
 
 // -------------------------------------------------------------------------
 
-HTMLButtonElementImpl::HTMLButtonElementImpl(DocumentPtr *doc, HTMLFormElementImpl *f)
+HTMLButtonElementImpl::HTMLButtonElementImpl(DocumentImpl *doc, HTMLFormElementImpl *f)
     : HTMLGenericFormElementImpl(doc, f)
 {
     m_type = SUBMIT;
@@ -1206,7 +1206,7 @@ void HTMLButtonElementImpl::accessKeyAction(bool sendToAnyElement)
 
 // -------------------------------------------------------------------------
 
-HTMLFieldSetElementImpl::HTMLFieldSetElementImpl(DocumentPtr *doc, HTMLFormElementImpl *f)
+HTMLFieldSetElementImpl::HTMLFieldSetElementImpl(DocumentImpl *doc, HTMLFormElementImpl *f)
    : HTMLGenericFormElementImpl(doc, f)
 {
 }
@@ -1237,7 +1237,7 @@ RenderObject* HTMLFieldSetElementImpl::createRenderer(RenderArena* arena, Render
 
 // -------------------------------------------------------------------------
 
-HTMLInputElementImpl::HTMLInputElementImpl(DocumentPtr *doc, HTMLFormElementImpl *f)
+HTMLInputElementImpl::HTMLInputElementImpl(DocumentImpl *doc, HTMLFormElementImpl *f)
     : HTMLGenericFormElementImpl(doc, f), m_imageLoader(0), m_valueMatchesRenderer(false)
 {
     m_type = TEXT;
@@ -2285,7 +2285,7 @@ bool HTMLInputElementImpl::isURLAttribute(AttributeImpl *attr) const
 
 // -------------------------------------------------------------------------
 
-HTMLLabelElementImpl::HTMLLabelElementImpl(DocumentPtr *doc)
+HTMLLabelElementImpl::HTMLLabelElementImpl(DocumentImpl *doc)
     : HTMLElementImpl(doc)
 {
 }
@@ -2351,7 +2351,7 @@ void HTMLLabelElementImpl::accessKeyAction(bool sendToAnyElement)
 
 // -------------------------------------------------------------------------
 
-HTMLLegendElementImpl::HTMLLegendElementImpl(DocumentPtr *doc, HTMLFormElementImpl *f)
+HTMLLegendElementImpl::HTMLLegendElementImpl(DocumentImpl *doc, HTMLFormElementImpl *f)
 : HTMLGenericFormElementImpl(doc, f)
 {
 }
@@ -2382,7 +2382,7 @@ DOMString HTMLLegendElementImpl::type() const
 
 // -------------------------------------------------------------------------
 
-HTMLSelectElementImpl::HTMLSelectElementImpl(DocumentPtr *doc, HTMLFormElementImpl *f)
+HTMLSelectElementImpl::HTMLSelectElementImpl(DocumentImpl *doc, HTMLFormElementImpl *f)
     : HTMLGenericFormElementImpl(doc, f), m_options(0)
 {
     m_multiple = false;
@@ -2850,7 +2850,7 @@ void HTMLSelectElementImpl::accessKeyAction(bool sendToAnyElement)
 
 // -------------------------------------------------------------------------
 
-HTMLKeygenElementImpl::HTMLKeygenElementImpl(DocumentPtr* doc, HTMLFormElementImpl* f)
+HTMLKeygenElementImpl::HTMLKeygenElementImpl(DocumentImpl* doc, HTMLFormElementImpl* f)
     : HTMLSelectElementImpl(doc, f)
 {
     QStringList keys = KSSLKeyGen::supportedKeySizes();
@@ -2919,7 +2919,7 @@ bool HTMLKeygenElementImpl::appendFormData(FormDataList& encoded_values, bool)
 
 // -------------------------------------------------------------------------
 
-HTMLOptGroupElementImpl::HTMLOptGroupElementImpl(DocumentPtr *doc, HTMLFormElementImpl *f)
+HTMLOptGroupElementImpl::HTMLOptGroupElementImpl(DocumentImpl *doc, HTMLFormElementImpl *f)
     : HTMLGenericFormElementImpl(doc, f)
 {
 }
@@ -2999,7 +2999,7 @@ void HTMLOptGroupElementImpl::recalcSelectOptions()
 
 // -------------------------------------------------------------------------
 
-HTMLOptionElementImpl::HTMLOptionElementImpl(DocumentPtr *doc, HTMLFormElementImpl *f)
+HTMLOptionElementImpl::HTMLOptionElementImpl(DocumentImpl *doc, HTMLFormElementImpl *f)
     : HTMLGenericFormElementImpl(doc, f)
 {
     m_selected = false;
@@ -3120,7 +3120,7 @@ HTMLSelectElementImpl *HTMLOptionElementImpl::getSelect() const
 
 // -------------------------------------------------------------------------
 
-HTMLTextAreaElementImpl::HTMLTextAreaElementImpl(DocumentPtr *doc, HTMLFormElementImpl *f)
+HTMLTextAreaElementImpl::HTMLTextAreaElementImpl(DocumentImpl *doc, HTMLFormElementImpl *f)
     : HTMLGenericFormElementImpl(doc, f), m_valueIsValid(false), m_valueMatchesRenderer(false)
 {
     // DTD requires rows & cols be specified, but we will provide reasonable defaults
@@ -3377,7 +3377,7 @@ void HTMLTextAreaElementImpl::detach()
 
 // -------------------------------------------------------------------------
 
-HTMLIsIndexElementImpl::HTMLIsIndexElementImpl(DocumentPtr *doc, HTMLFormElementImpl *f)
+HTMLIsIndexElementImpl::HTMLIsIndexElementImpl(DocumentImpl *doc, HTMLFormElementImpl *f)
     : HTMLInputElementImpl(doc, f)
 {
     m_type = TEXT;

@@ -55,7 +55,7 @@ using namespace khtml;
 
 // -------------------------------------------------------------------------
 
-HTMLAppletElementImpl::HTMLAppletElementImpl(DocumentPtr *doc)
+HTMLAppletElementImpl::HTMLAppletElementImpl(DocumentImpl *doc)
 : HTMLElementImpl(doc)
 , m_allParamsAvailable(false)
 {
@@ -237,7 +237,7 @@ bool HTMLAppletElementImpl::allParamsAvailable()
 
 // -------------------------------------------------------------------------
 
-HTMLEmbedElementImpl::HTMLEmbedElementImpl(DocumentPtr *doc)
+HTMLEmbedElementImpl::HTMLEmbedElementImpl(DocumentImpl *doc)
 : HTMLElementImpl(doc)
 {
 }
@@ -397,7 +397,7 @@ bool HTMLEmbedElementImpl::isURLAttribute(AttributeImpl *attr) const
 
 // -------------------------------------------------------------------------
 
-HTMLObjectElementImpl::HTMLObjectElementImpl(DocumentPtr *doc) 
+HTMLObjectElementImpl::HTMLObjectElementImpl(DocumentImpl *doc) 
 : HTMLElementImpl(doc)
 , m_imageLoader(0)
 {
@@ -675,7 +675,7 @@ void HTMLObjectElementImpl::renderFallbackContent()
 
 // -------------------------------------------------------------------------
 
-HTMLParamElementImpl::HTMLParamElementImpl(DocumentPtr *doc)
+HTMLParamElementImpl::HTMLParamElementImpl(DocumentImpl *doc)
     : HTMLElementImpl(doc)
 {
 }

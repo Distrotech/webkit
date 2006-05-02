@@ -112,7 +112,7 @@ public:
  *    element or ignore the tag.
  *
  */
-KHTMLParser::KHTMLParser(KHTMLView *_parent, DocumentPtr *doc, bool includesComments) 
+KHTMLParser::KHTMLParser(KHTMLView *_parent, DocumentImpl *doc, bool includesComments) 
     : current(0), currentIsReferenced(false), includesCommentsInDOM(includesComments)
 {
     //kdDebug( 6035 ) << "parser constructor" << endl;
@@ -122,19 +122,17 @@ KHTMLParser::KHTMLParser(KHTMLView *_parent, DocumentPtr *doc, bool includesComm
 
     HTMLWidget    = _parent;
     document      = doc;
-    document->ref();
 
     blockStack = 0;
 
     reset();
 }
 
-KHTMLParser::KHTMLParser(DOM::DocumentFragmentImpl *i, DocumentPtr *doc, bool includesComments)
+KHTMLParser::KHTMLParser(DOM::DocumentFragmentImpl *i, DocumentImpl *doc, bool includesComments)
     : current(0), currentIsReferenced(false), includesCommentsInDOM(includesComments)
 {
     HTMLWidget = 0;
     document = doc;
-    document->ref();
 
     blockStack = 0;
 
@@ -152,8 +150,6 @@ KHTMLParser::~KHTMLParser()
     freeBlock();
 
     setCurrent(0);
-
-    document->deref();
 
     if (isindex)
         isindex->deref();
@@ -959,7 +955,7 @@ NodeImpl *KHTMLParser::getElement(Token* t)
         }
     }
 
-    return document->document()->createHTMLElement(t->id);
+    return document->createHTMLElement(t->id);
 }
 
 #define MAX_REDUNDANT 20

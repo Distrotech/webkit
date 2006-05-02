@@ -184,6 +184,21 @@ public:
     DocumentImpl(DOMImplementationImpl *_implementation, KHTMLView *v);
     ~DocumentImpl();
 
+    virtual void removedLastRef();
+
+    // Nodes belonging to this document hold "self-only" references -
+    // these are enough to keep the document from being destroyed, but
+    // not enough to keep it from removing its children. This allows a
+    // node that outlives its document to still have a valid document
+    // pointer without introducing reference cycles
+
+    void selfOnlyRef() { ++m_selfOnlyRefCount; }
+    void selfOnlyDeref() {
+        --m_selfOnlyRefCount;
+        if (!m_selfOnlyRefCount && !refCount())
+            delete this;
+    }
+
     // DOM methods & attributes for Document
 
     DocumentTypeImpl *doctype() const;
@@ -424,14 +439,14 @@ public:
 
     QStringList availableStyleSheets() const;
 
-    NodeImpl *focusNode() const { return m_focusNode; }
+    NodeImpl *focusNode() const { return m_focusNode.get(); }
     bool setFocusNode(NodeImpl *newFocusNode);
     void clearSelectionIfNeeded(NodeImpl *newFocusNode);
 
-    NodeImpl *hoverNode() const { return m_hoverNode; }
+    NodeImpl *hoverNode() const { return m_hoverNode.get(); }
     void setHoverNode(NodeImpl *newHoverNode);
     
-    NodeImpl *activeNode() const { return m_activeNode; }
+    NodeImpl *activeNode() const { return m_activeNode.get(); }
     void setActiveNode(NodeImpl *newActiveNode);
 
     // Updates for :target (CSS3 selector).
@@ -639,9 +654,9 @@ protected:
 
     QColor m_textColor;
 
-    NodeImpl *m_focusNode;
-    NodeImpl *m_hoverNode;
-    NodeImpl *m_activeNode;
+    khtml::SharedPtr<NodeImpl> m_focusNode;
+    khtml::SharedPtr<NodeImpl> m_hoverNode;
+    khtml::SharedPtr<NodeImpl> m_activeNode;
 
     unsigned int m_domtree_version;
     
@@ -687,7 +702,7 @@ protected:
     
     DOMString m_title;
     bool m_titleSetExplicitly;
-    NodeImpl *m_titleElement;
+    khtml::SharedPtr<NodeImpl> m_titleElement;
     
     RenderArena* m_renderArena;
 
@@ -793,6 +808,7 @@ private:
     QValueList<khtml::DashboardRegionValue> m_dashboardRegions;
     bool m_hasDashboardRegions;
     bool m_dashboardRegionsDirty;
+    int m_selfOnlyRefCount;
     
     QPtrDict< QDict<HTMLInputElementImpl> > *m_selectedRadioButtons;
 
@@ -802,7 +818,7 @@ private:
 class DocumentFragmentImpl : public NodeBaseImpl
 {
 public:
-    DocumentFragmentImpl(DocumentPtr *doc);
+    DocumentFragmentImpl(DocumentImpl *doc);
 
     // DOM methods overridden from  parent classes
     virtual DOMString nodeName() const;
@@ -819,7 +835,7 @@ public:
 class DocumentTypeImpl : public NodeImpl
 {
 public:
-    DocumentTypeImpl(DOMImplementationImpl *_implementation, DocumentPtr *doc,
+    DocumentTypeImpl(DOMImplementationImpl *_implementation, DocumentImpl *doc,
                      const DOMString &qualifiedName, const DOMString &publicId,
                      const DOMString &systemId);
     ~DocumentTypeImpl();

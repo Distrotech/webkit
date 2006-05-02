@@ -78,7 +78,7 @@ static int gEventDispatchForbidden;
 using namespace DOM;
 using namespace khtml;
 
-NodeImpl::NodeImpl(DocumentPtr *doc)
+NodeImpl::NodeImpl(DocumentImpl *doc)
     : document(doc),
       m_previous(0),
       m_next(0),
@@ -103,21 +103,13 @@ NodeImpl::NodeImpl(DocumentPtr *doc)
       m_implicit(false),
       m_inDetach(false)
 {
-    if (document)
-        document->ref();
 }
 
-void NodeImpl::setDocument(DocumentPtr *doc)
+void NodeImpl::setDocument(DocumentImpl *doc)
 {
     if (inDocument())
 	return;
     
-    if (doc)
-	doc->ref();
-    
-    if (document)
-	document->deref();
-
     document = doc;
 }
 
@@ -129,8 +121,6 @@ NodeImpl::~NodeImpl()
         getDocument()->unregisterDisconnectedNodeWithEventListeners(this);
     delete m_regdListeners;
     delete m_nodeLists;
-    if (document)
-        document->deref();
     if (m_previous)
         m_previous->setNextSibling(0);
     if (m_next)
@@ -494,9 +484,9 @@ bool NodeImpl::dispatchEvent(EventImpl *evt, int &exceptioncode, bool tempEvent)
     KHTMLPart *part = nil;
     KHTMLView *view = nil;
     
-    if (document && document->document()) {
-        part = document->document()->part();
-        view = document->document()->view();
+    if (DocumentImpl *doc = getDocument()) {
+        part = doc->part();
+        view = doc->view();
         // Since event handling code could cause this object to be deleted, grab a reference to the view now
         if (view)
             view->ref();
@@ -615,39 +605,34 @@ bool NodeImpl::dispatchWindowEvent(int _id, bool canBubbleArg, bool cancelableAr
 {
     assert(!eventDispatchForbidden());
     int exceptioncode = 0;
-    EventImpl *evt = new EventImpl(static_cast<EventImpl::EventId>(_id),canBubbleArg,cancelableArg);
-    evt->setTarget( 0 );
-    evt->ref();
-    DocumentPtr *doc = document;
-    doc->ref();
-    bool r = dispatchGenericEvent( evt, exceptioncode );
-    if (!evt->defaultPrevented() && doc->document())
-	doc->document()->defaultEventHandler(evt);
-    
-    if (_id == EventImpl::LOAD_EVENT && !evt->propagationStopped() && doc->document()) {
+    khtml::SharedPtr<EventImpl> evt = new EventImpl(static_cast<EventImpl::EventId>(_id),canBubbleArg,cancelableArg);
+	khtml::SharedPtr<DocumentImpl> doc = getDocument();
+	evt->setTarget(doc.get());
+	bool r = dispatchGenericEvent(evt.get(), exceptioncode);
+    if (!evt->defaultPrevented() && doc)
+        doc->defaultEventHandler(evt.get());
+
+    if (_id == EventImpl::LOAD_EVENT && !evt->propagationStopped() && doc) {
         // For onload events, send them to the enclosing frame only.
         // This is a DOM extension and is independent of bubbling/capturing rules of
         // the DOM.  You send the event only to the enclosing frame.  It does not
         // bubble through the parent document.
-        ElementImpl* elt = doc->document()->ownerElement();
+        ElementImpl* elt = doc->ownerElement();
         if (elt && (elt->getDocument()->domain().isNull() ||
-                    elt->getDocument()->domain() == doc->document()->domain())) {
+                    elt->getDocument()->domain() == doc->domain())) {
             // We also do a security check, since we don't want to allow the enclosing
             // iframe to see loads of child documents in other domains.
             evt->setCurrentTarget(elt);
 
             // Capturing first.
-            elt->handleLocalEvents(evt,true);
+            elt->handleLocalEvents(evt.get(), true);
 
             // Bubbling second.
             if (!evt->propagationStopped())
-                elt->handleLocalEvents(evt,false);
+                elt->handleLocalEvents(evt.get(), false);
             r = !evt->defaultPrevented();
         }
     }
-
-    doc->deref();
-    evt->deref();
 
     return r;
 }
@@ -706,7 +691,7 @@ bool NodeImpl::dispatchMouseEvent(QMouseEvent *_mouse, int overrideId, int overr
 #if APPLE_CHANGES
     int screenX;
     int screenY;
-    KHTMLView *view = document->document()->view();
+    KHTMLView *view = getDocument()->view();
     if (view) {
         // This gets us as far as NSWindow coords
         QPoint windowLoc = view->contentsToViewport(_mouse->pos());
@@ -1098,7 +1083,7 @@ void NodeImpl::checkAddChild(NodeImpl *newChild, int &exceptioncode)
     // only do this once we know there won't be an exception
     if (shouldAdoptChild) {
 	KJS::ScriptInterpreter::updateDOMNodeDocument(newChild, newChild->getDocument(), getDocument());
-	newChild->setDocument(getDocument()->docPtr());
+	newChild->setDocument(getDocument());
     }
 }
 
@@ -1599,14 +1584,14 @@ void NodeImpl::formatForDebugger(char *buffer, unsigned length) const
 
 //-------------------------------------------------------------------------
 
-NodeBaseImpl::NodeBaseImpl(DocumentPtr *doc)
+NodeBaseImpl::NodeBaseImpl(DocumentImpl *doc)
     : NodeImpl(doc)
 {
     _first = _last = 0;
 }
 
 
-NodeBaseImpl::~NodeBaseImpl()
+void NodeBaseImpl::removeAllChildren()
 {
     //kdDebug( 6020 ) << "NodeBaseImpl destructor" << endl;
 
@@ -1638,7 +1623,8 @@ NodeBaseImpl::~NodeBaseImpl()
             else
                 head = n;
             tail = n;
-        }
+        } else if (n->inDocument())
+            n->removedFromDocument();
     }
     
     // Only for the top level call, do the actual deleting.
@@ -1655,9 +1641,15 @@ NodeBaseImpl::~NodeBaseImpl()
         }
         
         alreadyInsideDestructor = false;
+        _first = 0;
+        _last = 0;
     }
 }
 
+NodeBaseImpl::~NodeBaseImpl()
+{
+    removeAllChildren();
+}
 
 NodeImpl *NodeBaseImpl::firstChild() const
 {
@@ -2609,7 +2601,7 @@ NamedNodeMapImpl::~NamedNodeMapImpl()
 
 // ### unused
 #if 0
-GenericRONamedNodeMapImpl::GenericRONamedNodeMapImpl(DocumentPtr* doc)
+GenericRONamedNodeMapImpl::GenericRONamedNodeMapImpl(DocumentImpl* doc)
     : NamedNodeMapImpl()
 {
     m_doc = doc->document();

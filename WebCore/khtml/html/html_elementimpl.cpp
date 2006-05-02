@@ -221,7 +221,7 @@ void HTMLNamedAttrMapImpl::parseClassAttribute(const DOMString& classStr)
 
 // ------------------------------------------------------------------
 
-HTMLElementImpl::HTMLElementImpl(DocumentPtr *doc)
+HTMLElementImpl::HTMLElementImpl(DocumentImpl *doc)
     : ElementImpl(doc)
 {
     m_inlineStyleDecl = 0;
@@ -795,10 +795,10 @@ DocumentFragmentImpl *HTMLElementImpl::createContextualFragment(const DOMString 
     if ( !getDocument()->isHTMLDocument() )
         return NULL;
 
-    DocumentFragmentImpl *fragment = new DocumentFragmentImpl( docPtr() );
+    DocumentFragmentImpl *fragment = new DocumentFragmentImpl( getDocument() );
     fragment->ref();
     {
-        HTMLTokenizer tok(docPtr(), fragment);
+        HTMLTokenizer tok(getDocument(), fragment);
         tok.setForceSynchronous(true);            // disable asynchronous parsing
         tok.write( html.string(), true );
         tok.finish();
@@ -910,7 +910,7 @@ bool HTMLElementImpl::setInnerText( const DOMString &text )
 
     removeChildren();
 
-    TextImpl *t = new TextImpl( docPtr(), text );
+    TextImpl *t = new TextImpl( getDocument(), text );
     int ec = 0;
     appendChild( t, ec );
     if ( !ec )
@@ -945,7 +945,7 @@ bool HTMLElementImpl::setOuterText( const DOMString &text )
         return false;
     }
 
-    TextImpl *t = new TextImpl( docPtr(), text );
+    TextImpl *t = new TextImpl( getDocument(), text );
     int ec = 0;
     ref();
     parent->replaceChild(t, this, ec);
@@ -1145,7 +1145,7 @@ DOMString HTMLElementImpl::toString() const
 }
 
 // -------------------------------------------------------------------------
-HTMLGenericElementImpl::HTMLGenericElementImpl(DocumentPtr *doc, ushort i)
+HTMLGenericElementImpl::HTMLGenericElementImpl(DocumentImpl *doc, ushort i)
     : HTMLElementImpl(doc)
 {
     _id = i;

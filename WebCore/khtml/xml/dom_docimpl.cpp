@@ -157,7 +157,7 @@ DocumentTypeImpl *DOMImplementationImpl::createDocumentType( const DOMString &qu
         return 0;
     }
 
-    return new DocumentTypeImpl(this,0,qualifiedName,publicId,systemId);
+    return new DocumentTypeImpl(this, 0, qualifiedName, publicId, systemId);
 }
 
 DOMImplementationImpl* DOMImplementationImpl::getInterface(const DOMString& /*feature*/) const
@@ -262,11 +262,10 @@ QPtrList<DocumentImpl> * DocumentImpl::changedDocuments = 0;
 
 // KHTMLView might be 0
 DocumentImpl::DocumentImpl(DOMImplementationImpl *_implementation, KHTMLView *v)
-    : NodeBaseImpl( new DocumentPtr() )
+    : NodeBaseImpl(0)
       , m_domtree_version(0)
       , m_title("")
       , m_titleSetExplicitly(false)
-      , m_titleElement(0)
       , m_imageLoadEventTimer(0)
 #ifndef KHTML_NO_XBL
       , m_bindingManager(new XBLBindingManager(this))
@@ -286,10 +285,11 @@ DocumentImpl::DocumentImpl(DOMImplementationImpl *_implementation, KHTMLView *v)
     , m_designMode(inherit)
     , m_hasDashboardRegions(false)
     , m_dashboardRegionsDirty(false)
+    , m_selfOnlyRefCount(0)
     , m_selectedRadioButtons(0)
 #endif
 {
-    document->doc = this;
+    document.resetSkippingRef(this);
 
     m_paintDevice = 0;
     m_paintDeviceMetrics = 0;
@@ -318,7 +318,7 @@ DocumentImpl::DocumentImpl(DOMImplementationImpl *_implementation, KHTMLView *v)
 
     // ### this should be created during parsing a <!DOCTYPE>
     // not during construction. Not sure who added that and why (Dirk)
-    m_doctype = new DocumentTypeImpl(_implementation, document,
+    m_doctype = new DocumentTypeImpl(_implementation, this,
                                      DOMString() /* qualifiedName */,
                                      DOMString() /* publicId */,
                                      DOMString() /* systemId */);
@@ -336,9 +336,6 @@ DocumentImpl::DocumentImpl(DOMImplementationImpl *_implementation, KHTMLView *v)
     m_attrNames = 0;
     m_attrNameAlloc = 0;
     m_attrNameCount = 0;
-    m_focusNode = 0;
-    m_hoverNode = 0;
-    m_activeNode = 0;
     m_defaultView = new AbstractViewImpl(this);
     m_defaultView->ref();
     m_listenerTypes = 0;
@@ -375,6 +372,28 @@ DocumentImpl::DocumentImpl(DOMImplementationImpl *_implementation, KHTMLView *v)
     m_docID = docID++;
 }
 
+void DocumentImpl::removedLastRef()
+{
+    if (m_selfOnlyRefCount) {
+        // if removing a child removes the last self-only ref, we don't
+        // want the document to be destructed until after
+        // removeAllChildren returns, so we guard ourselves with an
+        // extra self-only ref
+
+        DocPtr<DocumentImpl> guard(this);
+
+        // we must make sure not to be retaining any of our children through
+        // these extra pointers or we will create a reference cycle
+        m_focusNode = 0;
+        m_hoverNode = 0;
+        m_activeNode = 0;
+        m_titleElement = 0;
+
+        removeAllChildren();
+    } else
+        delete this;
+}
+
 DocumentImpl::~DocumentImpl()
 {
     assert(!m_render);
@@ -388,7 +407,7 @@ DocumentImpl::~DocumentImpl()
     if (changedDocuments && m_docChanged)
         changedDocuments->remove(this);
     delete m_tokenizer;
-    document->doc = 0;
+    document.resetSkippingRef(0);
     delete m_sheet;
     delete m_styleSelector;
     delete m_docLoader;
@@ -411,16 +430,6 @@ DocumentImpl::~DocumentImpl()
     }
     m_defaultView->deref();
     m_styleSheets->deref();
-
-    if (m_focusNode)
-        m_focusNode->deref();
-    if (m_hoverNode)
-        m_hoverNode->deref();
-    if (m_activeNode)
-        m_activeNode->deref();
-
-    if (m_titleElement)
-        m_titleElement->deref();
 
     if (m_renderArena){
         delete m_renderArena;
@@ -500,49 +509,49 @@ ElementImpl *DocumentImpl::documentElement() const
 
 ElementImpl *DocumentImpl::createElement( const DOMString &name, int &exceptioncode )
 {
-    return new XMLElementImpl( document, name.implementation() );
+    return new XMLElementImpl(this, name.implementation());
 }
 
 DocumentFragmentImpl *DocumentImpl::createDocumentFragment(  )
 {
-    return new DocumentFragmentImpl( docPtr() );
+    return new DocumentFragmentImpl(getDocument());
 }
 
 TextImpl *DocumentImpl::createTextNode( const DOMString &data )
 {
-    return new TextImpl( docPtr(), data);
+    return new TextImpl(this, data);
 }
 
 CommentImpl *DocumentImpl::createComment ( const DOMString &data )
 {
-    return new CommentImpl( docPtr(), data );
+    return new CommentImpl(this, data );
 }
 
 CDATASectionImpl *DocumentImpl::createCDATASection ( const DOMString &data )
 {
-    return new CDATASectionImpl( docPtr(), data );
+    return new CDATASectionImpl(this, data );
 }
 
 ProcessingInstructionImpl *DocumentImpl::createProcessingInstruction ( const DOMString &target, const DOMString &data )
 {
-    return new ProcessingInstructionImpl( docPtr(),target,data);
+    return new ProcessingInstructionImpl(this, target, data);
 }
 
 Attr DocumentImpl::createAttribute( NodeImpl::Id id )
 {
     // Assume this is an HTML attribute, since createAttribute isn't namespace-aware.  There's no harm to XML
     // documents if we're wrong.
-    return new AttrImpl(0, docPtr(), new HTMLAttributeImpl(id, DOMString("").implementation()));
+    return new AttrImpl(0, this, new HTMLAttributeImpl(id, DOMString("").implementation()));
 }
 
 EntityReferenceImpl *DocumentImpl::createEntityReference ( const DOMString &name )
 {
-    return new EntityReferenceImpl(docPtr(), name.implementation());
+    return new EntityReferenceImpl(this, name.implementation());
 }
 
 EditingTextImpl *DocumentImpl::createEditingTextNode(const DOMString &text)
 {
-    return new EditingTextImpl(docPtr(), text);
+    return new EditingTextImpl(this, text);
 }
 
 CSSStyleDeclarationImpl *DocumentImpl::createCSSStyleDeclaration()
@@ -649,7 +658,7 @@ ElementImpl *DocumentImpl::createElementNS( const DOMString &_namespaceURI, cons
         }
     }
     if (!e)
-        e = new XMLElementImpl( document, _qualifiedName.implementation(), _namespaceURI.implementation() );
+        e = new XMLElementImpl( getDocument(), _qualifiedName.implementation(), _namespaceURI.implementation() );
 
     return e;
 }
@@ -758,17 +767,12 @@ void DocumentImpl::setTitle(DOMString title, NodeImpl *titleElement)
     if (!titleElement) {
         // Title set by JavaScript -- overrides any title elements.
         m_titleSetExplicitly = true;
-        if (m_titleElement) {
-            m_titleElement->deref();
-            m_titleElement = 0;
-        }
+		m_titleElement = 0;
     } else if (titleElement != m_titleElement) {
-        if (m_titleElement) {
+        if (m_titleElement)
             // Only allow the first title element to change the title -- others have no effect.
             return;
-        }
         m_titleElement = titleElement;
-        titleElement->ref();
     }
 
     if (m_title == title)
@@ -785,8 +789,6 @@ void DocumentImpl::removeTitle(NodeImpl *titleElement)
 
     // FIXME: Ideally we might want this to search for the first remaining title element, and use it.
     m_titleElement = 0;
-
-    titleElement->deref();
 
     if (!m_title.isEmpty()) {
         m_title = "";
@@ -818,162 +820,162 @@ ElementImpl *DocumentImpl::createHTMLElement(unsigned short tagID)
     switch (tagID)
     {
     case ID_HTML:
-        return new HTMLHtmlElementImpl(docPtr());
+        return new HTMLHtmlElementImpl(getDocument());
     case ID_HEAD:
-        return new HTMLHeadElementImpl(docPtr());
+        return new HTMLHeadElementImpl(getDocument());
     case ID_BODY:
-        return new HTMLBodyElementImpl(docPtr());
+        return new HTMLBodyElementImpl(getDocument());
 
 // head elements
     case ID_BASE:
-        return new HTMLBaseElementImpl(docPtr());
+        return new HTMLBaseElementImpl(getDocument());
     case ID_LINK:
-        return new HTMLLinkElementImpl(docPtr());
+        return new HTMLLinkElementImpl(getDocument());
     case ID_META:
-        return new HTMLMetaElementImpl(docPtr());
+        return new HTMLMetaElementImpl(getDocument());
     case ID_STYLE:
-        return new HTMLStyleElementImpl(docPtr());
+        return new HTMLStyleElementImpl(getDocument());
     case ID_TITLE:
-        return new HTMLTitleElementImpl(docPtr());
+        return new HTMLTitleElementImpl(getDocument());
 
 // frames
     case ID_FRAME:
-        return new HTMLFrameElementImpl(docPtr());
+        return new HTMLFrameElementImpl(getDocument());
     case ID_FRAMESET:
-        return new HTMLFrameSetElementImpl(docPtr());
+        return new HTMLFrameSetElementImpl(getDocument());
     case ID_IFRAME:
-        return new HTMLIFrameElementImpl(docPtr());
+        return new HTMLIFrameElementImpl(getDocument());
 
 // form elements
 // ### FIXME: we need a way to set form dependency after we have made the form elements
     case ID_FORM:
-        return new HTMLFormElementImpl(docPtr());
+        return new HTMLFormElementImpl(getDocument());
     case ID_BUTTON:
-        return new HTMLButtonElementImpl(docPtr());
+        return new HTMLButtonElementImpl(getDocument());
     case ID_FIELDSET:
-        return new HTMLFieldSetElementImpl(docPtr());
+        return new HTMLFieldSetElementImpl(getDocument());
     case ID_INPUT:
-        return new HTMLInputElementImpl(docPtr());
+        return new HTMLInputElementImpl(getDocument());
     case ID_ISINDEX:
-        return new HTMLIsIndexElementImpl(docPtr());
+        return new HTMLIsIndexElementImpl(getDocument());
     case ID_LABEL:
-        return new HTMLLabelElementImpl(docPtr());
+        return new HTMLLabelElementImpl(getDocument());
     case ID_LEGEND:
-        return new HTMLLegendElementImpl(docPtr());
+        return new HTMLLegendElementImpl(getDocument());
     case ID_OPTGROUP:
-        return new HTMLOptGroupElementImpl(docPtr());
+        return new HTMLOptGroupElementImpl(getDocument());
     case ID_OPTION:
-        return new HTMLOptionElementImpl(docPtr());
+        return new HTMLOptionElementImpl(getDocument());
     case ID_SELECT:
-        return new HTMLSelectElementImpl(docPtr());
+        return new HTMLSelectElementImpl(getDocument());
     case ID_TEXTAREA:
-        return new HTMLTextAreaElementImpl(docPtr());
+        return new HTMLTextAreaElementImpl(getDocument());
 
 // lists
     case ID_DL:
-        return new HTMLDListElementImpl(docPtr());
+        return new HTMLDListElementImpl(getDocument());
     case ID_DD:
-        return new HTMLGenericElementImpl(docPtr(), tagID);
+        return new HTMLGenericElementImpl(getDocument(), tagID);
     case ID_DT:
-        return new HTMLGenericElementImpl(docPtr(), tagID);
+        return new HTMLGenericElementImpl(getDocument(), tagID);
     case ID_UL:
-        return new HTMLUListElementImpl(docPtr());
+        return new HTMLUListElementImpl(getDocument());
     case ID_OL:
-        return new HTMLOListElementImpl(docPtr());
+        return new HTMLOListElementImpl(getDocument());
     case ID_DIR:
-        return new HTMLDirectoryElementImpl(docPtr());
+        return new HTMLDirectoryElementImpl(getDocument());
     case ID_MENU:
-        return new HTMLMenuElementImpl(docPtr());
+        return new HTMLMenuElementImpl(getDocument());
     case ID_LI:
-        return new HTMLLIElementImpl(docPtr());
+        return new HTMLLIElementImpl(getDocument());
 
 // formatting elements (block)
     case ID_BLOCKQUOTE:
-        return new HTMLBlockquoteElementImpl(docPtr());
+        return new HTMLBlockquoteElementImpl(getDocument());
     case ID_DIV:
-        return new HTMLDivElementImpl(docPtr());
+        return new HTMLDivElementImpl(getDocument());
     case ID_H1:
     case ID_H2:
     case ID_H3:
     case ID_H4:
     case ID_H5:
     case ID_H6:
-        return new HTMLHeadingElementImpl(docPtr(), tagID);
+        return new HTMLHeadingElementImpl(getDocument(), tagID);
     case ID_HR:
-        return new HTMLHRElementImpl(docPtr());
+        return new HTMLHRElementImpl(getDocument());
     case ID_P:
-        return new HTMLParagraphElementImpl(docPtr());
+        return new HTMLParagraphElementImpl(getDocument());
     case ID_PRE:
     case ID_XMP:
     case ID_PLAINTEXT:
-        return new HTMLPreElementImpl(docPtr(), tagID);
+        return new HTMLPreElementImpl(getDocument(), tagID);
     case ID_LAYER:
-        return new HTMLLayerElementImpl(docPtr());
+        return new HTMLLayerElementImpl(getDocument());
 
 // font stuff
     case ID_BASEFONT:
-        return new HTMLBaseFontElementImpl(docPtr());
+        return new HTMLBaseFontElementImpl(getDocument());
     case ID_FONT:
-        return new HTMLFontElementImpl(docPtr());
+        return new HTMLFontElementImpl(getDocument());
 
 // ins/del
     case ID_DEL:
     case ID_INS:
-        return new HTMLGenericElementImpl(docPtr(), tagID);
+        return new HTMLGenericElementImpl(getDocument(), tagID);
 
 // anchor
     case ID_A:
-        return new HTMLAnchorElementImpl(docPtr());
+        return new HTMLAnchorElementImpl(getDocument());
 
 // images
     case ID_IMG:
-        return new HTMLImageElementImpl(docPtr());
+        return new HTMLImageElementImpl(getDocument());
     case ID_MAP:
-        return new HTMLMapElementImpl(docPtr());
+        return new HTMLMapElementImpl(getDocument());
     case ID_AREA:
-        return new HTMLAreaElementImpl(docPtr());
+        return new HTMLAreaElementImpl(getDocument());
     case ID_CANVAS:
-        return new HTMLCanvasElementImpl(docPtr());
+        return new HTMLCanvasElementImpl(getDocument());
 
 // objects, applets and scripts
     case ID_APPLET:
-        return new HTMLAppletElementImpl(docPtr());
+        return new HTMLAppletElementImpl(getDocument());
     case ID_EMBED:
-        return new HTMLEmbedElementImpl(docPtr());
+        return new HTMLEmbedElementImpl(getDocument());
     case ID_OBJECT:
     {
-        HTMLObjectElementImpl *objectElement = new HTMLObjectElementImpl(docPtr());
+        HTMLObjectElementImpl *objectElement = new HTMLObjectElementImpl(getDocument());
         objectElement->setComplete(true);
         return objectElement;
     }
     case ID_PARAM:
-        return new HTMLParamElementImpl(docPtr());
+        return new HTMLParamElementImpl(getDocument());
     case ID_SCRIPT:
-        return new HTMLScriptElementImpl(docPtr());
+        return new HTMLScriptElementImpl(getDocument());
 
 // tables
     case ID_TABLE:
-        return new HTMLTableElementImpl(docPtr());
+        return new HTMLTableElementImpl(getDocument());
     case ID_CAPTION:
-        return new HTMLTableCaptionElementImpl(docPtr());
+        return new HTMLTableCaptionElementImpl(getDocument());
     case ID_COLGROUP:
     case ID_COL:
-        return new HTMLTableColElementImpl(docPtr(), tagID);
+        return new HTMLTableColElementImpl(getDocument(), tagID);
     case ID_TR:
-        return new HTMLTableRowElementImpl(docPtr());
+        return new HTMLTableRowElementImpl(getDocument());
     case ID_TD:
     case ID_TH:
-        return new HTMLTableCellElementImpl(docPtr(), tagID);
+        return new HTMLTableCellElementImpl(getDocument(), tagID);
     case ID_THEAD:
     case ID_TBODY:
     case ID_TFOOT:
-        return new HTMLTableSectionElementImpl(docPtr(), tagID, false);
+        return new HTMLTableSectionElementImpl(getDocument(), tagID, false);
 
 // inline elements
     case ID_BR:
-        return new HTMLBRElementImpl(docPtr());
+        return new HTMLBRElementImpl(getDocument());
     case ID_Q:
-        return new HTMLGenericElementImpl(docPtr(), tagID);
+        return new HTMLGenericElementImpl(getDocument(), tagID);
 
 // elements with no special representation in the DOM
 
@@ -1013,10 +1015,10 @@ ElementImpl *DocumentImpl::createHTMLElement(unsigned short tagID)
 
     case ID_BDO:
     default:
-        return new HTMLGenericElementImpl(docPtr(), tagID);
+        return new HTMLGenericElementImpl(getDocument(), tagID);
 
     case ID_MARQUEE:
-        return new HTMLMarqueeElementImpl(docPtr());
+        return new HTMLMarqueeElementImpl(getDocument());
         
 // text
     case ID_TEXT:
@@ -1054,7 +1056,7 @@ KHTMLPart *DocumentImpl::part() const
 
 RangeImpl *DocumentImpl::createRange()
 {
-    return new RangeImpl( docPtr() );
+    return new RangeImpl(this);
 }
 
 NodeIteratorImpl *DocumentImpl::createNodeIterator(NodeImpl *root, unsigned long whatToShow, 
@@ -1408,7 +1410,7 @@ void DocumentImpl::updateSelection()
 
 Tokenizer *DocumentImpl::createTokenizer()
 {
-    return newXMLTokenizer(docPtr(), m_view);
+    return newXMLTokenizer(this, m_view);
 }
 
 void DocumentImpl::setPaintDevice( QPaintDevice *dev )
@@ -1508,7 +1510,7 @@ void DocumentImpl::implicitClose()
         if (!body && isHTMLDocument()) {
             NodeImpl *de = documentElement();
             if (de) {
-                body = new HTMLBodyElementImpl(docPtr());
+                body = new HTMLBodyElementImpl(this);
                 int exceptionCode = 0;
                 de->appendChild(body, exceptionCode);
                 if (exceptionCode != 0)
@@ -2497,24 +2499,14 @@ void DocumentImpl::recalcStyleSelector()
 
 void DocumentImpl::setHoverNode(NodeImpl* newHoverNode)
 {
-    if (m_hoverNode != newHoverNode) {
-        if (m_hoverNode)
-            m_hoverNode->deref();
-        m_hoverNode = newHoverNode;
-        if (m_hoverNode)
-            m_hoverNode->ref();
-    }    
+    if (m_hoverNode != newHoverNode)
+         m_hoverNode = newHoverNode;
 }
 
 void DocumentImpl::setActiveNode(NodeImpl* newActiveNode)
 {
-    if (m_activeNode != newActiveNode) {
-        if (m_activeNode)
-            m_activeNode->deref();
-        m_activeNode = newActiveNode;
-        if (m_activeNode)
-            m_activeNode->ref();
-    }    
+    if (m_activeNode != newActiveNode)
+         m_activeNode = newActiveNode;
 }
 
 #if APPLE_CHANGES
@@ -2580,12 +2572,12 @@ bool DocumentImpl::setFocusNode(NodeImpl *newFocusNode)
         return true;
 
 #if APPLE_CHANGES
-    if (m_focusNode && m_focusNode->isContentEditable() && !relinquishesEditingFocus(m_focusNode))
+    if (m_focusNode && m_focusNode->isContentEditable() && !relinquishesEditingFocus(m_focusNode.get()))
         return false;
 #endif     
        
     bool focusChangeBlocked = false;
-    NodeImpl *oldFocusNode = m_focusNode;
+    khtml::SharedPtr<NodeImpl> oldFocusNode = m_focusNode;
     m_focusNode = 0;
     clearSelectionIfNeeded(newFocusNode);
 
@@ -2611,26 +2603,21 @@ bool DocumentImpl::setFocusNode(NodeImpl *newFocusNode)
 
         oldFocusNode->dispatchHTMLEvent(EventImpl::BLUR_EVENT, false, false);
 
-        if (m_focusNode != 0) {
+        if (m_focusNode) {
             // handler shifted focus
             focusChangeBlocked = true;
             newFocusNode = 0;
         }
         clearSelectionIfNeeded(newFocusNode);
         oldFocusNode->dispatchUIEvent(EventImpl::DOMFOCUSOUT_EVENT);
-        if (m_focusNode != 0) {
+        if (m_focusNode) {
             // handler shifted focus
             focusChangeBlocked = true;
             newFocusNode = 0;
         }
         clearSelectionIfNeeded(newFocusNode);
-        if ((oldFocusNode == this) && oldFocusNode->hasOneRef()) {
-            oldFocusNode->deref(); // deletes this
+        if ((oldFocusNode.get() == this) && oldFocusNode->hasOneRef())
             return true;
-        }
-        else {
-            oldFocusNode->deref();
-        }
     }
 
     if (newFocusNode) {
@@ -2643,7 +2630,6 @@ bool DocumentImpl::setFocusNode(NodeImpl *newFocusNode)
 #endif
         // Set focus on the new node
         m_focusNode = newFocusNode;
-        m_focusNode->ref();
         m_focusNode->dispatchHTMLEvent(EventImpl::FOCUS_EVENT, false, false);
         if (m_focusNode != newFocusNode) {
             // handler shifted focus
@@ -2660,14 +2646,14 @@ bool DocumentImpl::setFocusNode(NodeImpl *newFocusNode)
         // eww, I suck. set the qt focus correctly
         // ### find a better place in the code for this
         if (view()) {
-            QWidget *focusWidget = widgetForNode(m_focusNode);
+            QWidget *focusWidget = widgetForNode(m_focusNode.get());
             if (focusWidget) {
                 // Make sure a widget has the right size before giving it focus.
                 // Otherwise, we are testing edge cases of the QWidget code.
                 // Specifically, in WebCore this does not work well for text fields.
                 updateLayout();
                 // Re-get the widget in case updating the layout changed things.
-                focusWidget = widgetForNode(m_focusNode);
+                focusWidget = widgetForNode(m_focusNode.get());
             }
             if (focusWidget)
                 focusWidget->setFocus();
@@ -3421,7 +3407,7 @@ DocumentImpl *DocumentImpl::topDocument() const
 
 // ----------------------------------------------------------------------------
 
-DocumentFragmentImpl::DocumentFragmentImpl(DocumentPtr *doc) : NodeBaseImpl(doc)
+DocumentFragmentImpl::DocumentFragmentImpl(DocumentImpl *doc) : NodeBaseImpl(doc)
 {
 }
 
@@ -3465,7 +3451,7 @@ DOMString DocumentFragmentImpl::toString() const
 
 NodeImpl *DocumentFragmentImpl::cloneNode ( bool deep )
 {
-    DocumentFragmentImpl *clone = new DocumentFragmentImpl( docPtr() );
+    DocumentFragmentImpl *clone = new DocumentFragmentImpl( getDocument() );
     if (deep)
         cloneChildNodes(clone);
     return clone;
@@ -3474,7 +3460,7 @@ NodeImpl *DocumentFragmentImpl::cloneNode ( bool deep )
 
 // ----------------------------------------------------------------------------
 
-DocumentTypeImpl::DocumentTypeImpl(DOMImplementationImpl *implementation, DocumentPtr *doc,
+DocumentTypeImpl::DocumentTypeImpl(DOMImplementationImpl *implementation, DocumentImpl *doc,
                                    const DOMString &qualifiedName, const DOMString &publicId,
                                    const DOMString &systemId)
     : NodeImpl(doc), m_implementation(implementation),

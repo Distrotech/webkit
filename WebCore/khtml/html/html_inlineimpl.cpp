@@ -43,7 +43,7 @@
 using namespace khtml;
 using namespace DOM;
 
-HTMLAnchorElementImpl::HTMLAnchorElementImpl(DocumentPtr *doc)
+HTMLAnchorElementImpl::HTMLAnchorElementImpl(DocumentImpl *doc)
     : HTMLElementImpl(doc)
 {
     m_hasTarget = false;
@@ -246,7 +246,7 @@ bool HTMLAnchorElementImpl::isURLAttribute(AttributeImpl *attr) const
 
 // -------------------------------------------------------------------------
 
-HTMLBRElementImpl::HTMLBRElementImpl(DocumentPtr *doc) : HTMLElementImpl(doc)
+HTMLBRElementImpl::HTMLBRElementImpl(DocumentImpl *doc) : HTMLElementImpl(doc)
 {
 }
 
@@ -298,7 +298,7 @@ RenderObject *HTMLBRElementImpl::createRenderer(RenderArena *arena, RenderStyle 
 
 // -------------------------------------------------------------------------
 
-HTMLFontElementImpl::HTMLFontElementImpl(DocumentPtr *doc)
+HTMLFontElementImpl::HTMLFontElementImpl(DocumentImpl *doc)
     : HTMLElementImpl(doc)
 {
 }

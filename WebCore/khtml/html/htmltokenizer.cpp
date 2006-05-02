@@ -232,7 +232,7 @@ inline bool tagMatch(const char *s1, const QChar *s2, uint length)
 
 // ----------------------------------------------------------------------------
 
-HTMLTokenizer::HTMLTokenizer(DOM::DocumentPtr *_doc, KHTMLView *_view, bool includesComments)
+HTMLTokenizer::HTMLTokenizer(DOM::DocumentImpl *_doc, KHTMLView *_view, bool includesComments)
     : inWrite(false)
 {
     view = _view;
@@ -252,7 +252,7 @@ HTMLTokenizer::HTMLTokenizer(DOM::DocumentPtr *_doc, KHTMLView *_view, bool incl
     begin();
 }
 
-HTMLTokenizer::HTMLTokenizer(DOM::DocumentPtr *_doc, DOM::DocumentFragmentImpl *i, bool includesComments)
+HTMLTokenizer::HTMLTokenizer(DOM::DocumentImpl *_doc, DOM::DocumentFragmentImpl *i, bool includesComments)
     : inWrite(false)
 {
     view = 0;
@@ -1044,9 +1044,9 @@ void HTMLTokenizer::parseTag(TokenizerString &src)
                 unsigned short tagID = getTagID(ptr, len);
                 if (!tagID) {
                     DOMString tagName(ptr);
-                    DocumentImpl *doc = parser->docPtr()->document();
+                    DocumentImpl *doc = parser->doc();
                     if (doc->isValidName(tagName))
-                        tagID = parser->docPtr()->document()->tagId(0, tagName.implementation(), false);
+                        tagID = parser->doc()->tagId(0, tagName.implementation(), false);
                 }
                 if (tagID) {
 #ifdef TOKEN_DEBUG
@@ -1162,7 +1162,7 @@ void HTMLTokenizer::parseTag(TokenizerString &src)
                         ++src;
                     }
                     else {
-                        currToken.addAttribute(parser->docPtr()->document(), buffer, attrName, emptyAtom);
+                        currToken.addAttribute(parser->doc(), buffer, attrName, emptyAtom);
                         dest = buffer;
                         tag = SearchAttribute;
                     }
@@ -1214,7 +1214,7 @@ void HTMLTokenizer::parseTag(TokenizerString &src)
                         dest--; // remove trailing newlines
                     AtomicString v(buffer+1, dest-buffer-1);
                     attrName.setUnicode(buffer+1,dest-buffer-1); 
-                    currToken.addAttribute(parser->docPtr()->document(), buffer, attrName, v);
+                    currToken.addAttribute(parser->doc(), buffer, attrName, v);
                     tag = SearchAttribute;
                     dest = buffer;
                     tquote = NoQuote;
@@ -1238,7 +1238,7 @@ void HTMLTokenizer::parseTag(TokenizerString &src)
                         AtomicString v(buffer+1, dest-buffer-1);
                         if (!attrNamePresent)
                             attrName.setUnicode(buffer+1,dest-buffer-1); 
-                        currToken.addAttribute(parser->docPtr()->document(), buffer, attrName, v);
+                        currToken.addAttribute(parser->doc(), buffer, attrName, v);
 
                         dest = buffer;
                         tag = SearchAttribute;
@@ -1277,7 +1277,7 @@ void HTMLTokenizer::parseTag(TokenizerString &src)
                     if ( curchar <= ' ' || curchar == '>' )
                     {
                         AtomicString v(buffer+1, dest-buffer-1);
-                        currToken.addAttribute(parser->docPtr()->document(), buffer, attrName, v);
+                        currToken.addAttribute(parser->doc(), buffer, attrName, v);
                         dest = buffer;
                         tag = SearchAttribute;
                         break;

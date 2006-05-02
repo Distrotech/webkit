@@ -45,7 +45,7 @@ class DOMStringImpl;
 class HTMLAppletElementImpl : public HTMLElementImpl
 {
 public:
-    HTMLAppletElementImpl(DocumentPtr *doc);
+    HTMLAppletElementImpl(DocumentImpl *doc);
 
     ~HTMLAppletElementImpl();
 
@@ -83,7 +83,7 @@ private:
 class HTMLEmbedElementImpl : public HTMLElementImpl
 {
 public:
-    HTMLEmbedElementImpl(DocumentPtr *doc);
+    HTMLEmbedElementImpl(DocumentImpl *doc);
 
     ~HTMLEmbedElementImpl();
 
@@ -118,7 +118,7 @@ private:
 class HTMLObjectElementImpl : public HTMLElementImpl
 {
 public:
-    HTMLObjectElementImpl(DocumentPtr *doc);
+    HTMLObjectElementImpl(DocumentImpl *doc);
 
     ~HTMLObjectElementImpl();
 
@@ -173,7 +173,7 @@ class HTMLParamElementImpl : public HTMLElementImpl
 {
     friend class HTMLAppletElementImpl;
 public:
-    HTMLParamElementImpl(DocumentPtr *doc);
+    HTMLParamElementImpl(DocumentImpl *doc);
 
     ~HTMLParamElementImpl();
 

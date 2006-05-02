@@ -32,6 +32,7 @@
 #include "misc/helper.h"
 #include "misc/shared.h"
 #include "dom_atomicstring.h"
+#include "DocPtr.h"
 
 class QPainter;
 template <class type> class QPtrList;
@@ -76,24 +77,12 @@ inline Q_UINT32 makeId(Q_UINT16 n, Q_UINT16 l) { return (n << 16) | l; }
 // Can't use makeId here because it results in an "initroutine".
 const Q_UINT32 anyQName = anyNamespace << 16 | anyLocalName;
 
-class DocumentPtr : public khtml::Shared<DocumentPtr>
-{
-public:
-    DocumentImpl *document() const { return doc; }
-private:
-    DocumentPtr() { doc = 0; }
-    friend class DocumentImpl;
-    friend class DOMImplementationImpl;
-
-    DocumentImpl *doc;
-};
-
 // this class implements nodes, which can have a parent but no children:
 class NodeImpl : public khtml::TreeShared<NodeImpl>
 {
     friend class DocumentImpl;
 public:
-    NodeImpl(DocumentPtr *doc);
+    NodeImpl(DocumentImpl *doc);
     virtual ~NodeImpl();
 
     MAIN_THREAD_ALLOCATED;
@@ -250,7 +239,7 @@ public:
     bool hasChangedChild() const { return m_hasChangedChild; }
     bool hasAnchor() const { return m_hasAnchor; }
     // inDocument should also make sure a document exists in case the document has been destroyed before the node is removed from the document.
-    bool inDocument() const { return document->document() && m_inDocument; }
+    bool inDocument() const { return document.get() && m_inDocument; }
     bool styleElement() const { return m_styleElement; }
     bool implicitNode() const { return m_implicit; }
     void setHasID(bool b=true) { m_hasId = b; }
@@ -286,9 +275,9 @@ public:
     unsigned long nodeIndex() const;
     // Returns the document that this node is associated with. This is guaranteed to always be non-null, as opposed to
     // DOM's ownerDocument() which is null for Document nodes (and sometimes DocumentType nodes).
-    DocumentImpl* getDocument() const { return document->document(); }
+    DocumentImpl* getDocument() const { return document.get(); }
 
-    void setDocument(DocumentPtr *doc);
+    void setDocument(DocumentImpl *doc);
 
     void addEventListener(int id, EventListener *listener, const bool useCapture);
     void removeEventListener(int id, EventListener *listener, bool useCapture);
@@ -350,8 +339,6 @@ public:
 
     /* Like traversePreviousNode, but visits nodes before their children. */
     NodeImpl *traversePreviousNodePostOrder(const NodeImpl *stayWithin = 0) const;
-
-    DocumentPtr *docPtr() const { return document; }
 
     NodeImpl *previousEditable() const;
     NodeImpl *nextEditable() const;
@@ -474,7 +461,7 @@ public:
     void notifyLocalNodeListsSubtreeModified();
 
 private: // members
-    DocumentPtr *document;
+    DocPtr<DocumentImpl> document;
     NodeImpl *m_previous;
     NodeImpl *m_next;
 protected:
@@ -511,7 +498,7 @@ protected:
 class NodeBaseImpl : public NodeImpl
 {
 public:
-    NodeBaseImpl(DocumentPtr *doc);
+    NodeBaseImpl(DocumentImpl *doc);
     virtual ~NodeBaseImpl();
 
     // DOM methods overridden from  parent classes
@@ -526,6 +513,7 @@ public:
     // Other methods (not part of DOM)
     void willRemove();
     int willRemoveChild(NodeImpl *child);
+    void removeAllChildren();
     void removeChildren();
     void cloneChildNodes(NodeImpl *clone);
 
@@ -706,7 +694,7 @@ public:
 class GenericRONamedNodeMapImpl : public NamedNodeMapImpl
 {
 public:
-    GenericRONamedNodeMapImpl(DocumentPtr* doc);
+    GenericRONamedNodeMapImpl(DocumentImpl* doc);
     virtual ~GenericRONamedNodeMapImpl();
 
     // DOM methods & attributes for NamedNodeMap
