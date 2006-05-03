@@ -1,5 +1,15 @@
 2006-05-03  Tim Omernick  <timo@apple.com>
 
+        Reviewed by Tim H.
+
+        <rdar://problem/4536009> REGRESSION: Printing embedded plugins crashes on Safari-2-0-branch, but not in TOT
+        
+        Merge over npapi.h from the r14154 JavaScriptCore change.
+
+        * Plugins.subproj/npapi.h:
+
+2006-05-03  Tim Omernick  <timo@apple.com>
+
         Merged fix from TOT to Safari-2-0-branch
 
     2005-12-04  Tim Omernick  <timo@apple.com>
