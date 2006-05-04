@@ -1,3 +1,107 @@
+2006-05-03  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
+    2005-11-06  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Darin.
+
+        - Fixed http://bugzilla.opendarwin.org/show_bug.cgi?id=5571
+          REGRESSION (412.5-TOT): duplicated words/sentences at 
+          shakespeer.sourceforge.net
+
+        Our UTF16-modified PCRE didn't work with extended character classes
+        (classes involving characters > 255) because it used the GETCHARINC
+        macro to read through them. In UTF16 mode, GETCHARINC expects UTF16 
+        input, but PCRE encodes character classes in UTF8 regardless of the
+        input mode of the subject string.
+
+        The fix is to explicitly define GETUTF8CHARINC, and to use it,
+        rather than GETCHARINC, when reading extended character classes. 
+        
+        In UTF8 mode, we simply define GETCHARINC to be GETUTF8CHARINC.
+
+        * pcre/pcre_internal.h:
+        * pcre/pcre_xclass.c:
+        (_pcre_xclass):
+
+2006-05-03  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
+    2005-09-29  Eric Seidel  <eseidel@apple.com>
+        Fix from Mitz Pettel <opendarwin.org@mitzpettel.com>
+
+        Reviewed by darin.
+
+        Fix JSC memory smasher in TOT.
+        http://bugzilla.opendarwin.org/show_bug.cgi?id=5176
+
+        * pcre/pcre_exec.c:
+        (match):
+
+2006-05-03  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+
+    2005-09-08  Darin Adler  <darin@apple.com>
+
+        Reviewed by Geoff.
+
+        - updated to PCRE 6.1
+
+        The original PCRE 6.1 sources are checked into the tree with the tag
+        "pcre-6-1" for reference. What we're checking in right now is the original
+        plus our changes to make it support UTF-16 and at least one other tweak
+        (vertical tab considered whitespace). Our work to get our changes was
+        done on "pcre-6-1-branch", with an anchor at "pcre-6-1-anchor" so you can
+        see the evolution of the UTF-16 changes.
+        
+        Note also that there was one small change made here that's not on the branch
+        in pcre_compile.c.
+
+        * Info.plist: Updated the part of the copyright message that's about PCRE.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj: Added new PCRE source files,
+        removed obsolete ones.
+
+        * pcre/AUTHORS: Updated to PCRE 6.1. Includes credits for Apple's UTF-16
+        changes, but not the credits for Google's C++ wrapper, since we don't include that.
+        * pcre/COPYING: Updated to PCRE 6.1.
+        * pcre/LICENCE: Ditto.
+        * pcre/dftables.c: Ditto.
+        * pcre/pcre-config.h: Ditto.
+        * pcre/pcre.h: Ditto.
+
+        * pcre/pcre_compile.c: Added for PCRE 6.1.
+        * pcre/pcre_config.c: Ditto.
+        * pcre/pcre_exec.c: Ditto.
+        * pcre/pcre_fullinfo.c: Ditto.
+        * pcre/pcre_get.c: Ditto.
+        * pcre/pcre_globals.c: Ditto.
+        * pcre/pcre_info.c: Ditto.
+        * pcre/pcre_internal.h: Ditto.
+        * pcre/pcre_maketables.c: Ditto.
+        * pcre/pcre_ord2utf8.c: Ditto.
+        * pcre/pcre_printint.c: Ditto.
+        * pcre/pcre_refcount.c: Ditto.
+        * pcre/pcre_study.c: Ditto.
+        * pcre/pcre_tables.c: Ditto.
+        * pcre/pcre_try_flipped.c: Ditto.
+        * pcre/pcre_ucp_findchar.c: Ditto.
+        * pcre/pcre_version.c: Ditto.
+        * pcre/pcre_xclass.c: Ditto.
+        * pcre/ucp.h: Ditto.
+        * pcre/ucp_findchar.c: Ditto.
+        * pcre/ucpinternal.h: Ditto.
+        * pcre/ucptable.c: Ditto.
+
+        * pcre/get.c: Removed.
+        * pcre/internal.h: Removed.
+        * pcre/maketables.c: Removed.
+        * pcre/pcre.c: Removed.
+        * pcre/study.c: Removed.
+
 2006-05-01  Timothy Hatcher  <timothy@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch
