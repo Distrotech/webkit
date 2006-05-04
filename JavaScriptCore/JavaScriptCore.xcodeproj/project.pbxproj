@@ -178,7 +178,7 @@
 		DDC616650A0972F000422D0D /* pcre_ucp_findchar.c in Sources */ = {isa = PBXBuildFile; fileRef = DDC6164D0A0972EF00422D0D /* pcre_ucp_findchar.c */; };
 		DDC616670A0972F000422D0D /* pcre_xclass.c in Sources */ = {isa = PBXBuildFile; fileRef = DDC6164F0A0972EF00422D0D /* pcre_xclass.c */; };
 		DDC616680A0972F000422D0D /* pcre-config.h in Headers */ = {isa = PBXBuildFile; fileRef = DDC616500A0972EF00422D0D /* pcre-config.h */; };
-		DDC616690A0972F000422D0D /* pcre.h in Headers */ = {isa = PBXBuildFile; fileRef = DDC616510A0972EF00422D0D /* pcre.h */; };
+		DDC616690A0972F000422D0D /* pcre.h in Headers */ = {isa = PBXBuildFile; fileRef = DDC616510A0972EF00422D0D /* pcre.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		DDC6166A0A0972F000422D0D /* ucp.h in Headers */ = {isa = PBXBuildFile; fileRef = DDC616520A0972EF00422D0D /* ucp.h */; };
 		DDC6166B0A0972F000422D0D /* ucpinternal.h in Headers */ = {isa = PBXBuildFile; fileRef = DDC616530A0972EF00422D0D /* ucpinternal.h */; };
 /* End PBXBuildFile section */
