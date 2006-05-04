@@ -276,6 +276,56 @@ static void applicationInfoForMIMEType(NSString *type, NSString **name, NSImage 
     }
 }
 
+- (BOOL)acceptsFirstResponder {
+    return YES;
+}
+
+- (BOOL)becomeFirstResponder
+{
+    // This works together with setNextKeyView to splice our PDFSubview into
+    // the key loop similar to the way NSScrollView does this.
+    NSWindow *window = [self window];
+    id newFirstResponder = nil;
+    
+    if ([window keyViewSelectionDirection] == NSSelectingPrevious) {
+        NSView *previousValidKeyView = [self previousValidKeyView];
+        if ((previousValidKeyView != self) && (previousValidKeyView != PDFSubview))
+            newFirstResponder = previousValidKeyView;
+    } else {
+        NSView *PDFDocumentView = [PDFSubview documentView];
+        if ([PDFDocumentView acceptsFirstResponder]) {
+            newFirstResponder = PDFDocumentView;
+        }
+    }
+    
+    if (!newFirstResponder)
+        return NO;
+    
+    if (![window makeFirstResponder:newFirstResponder])
+        return NO;
+    
+    return YES;
+}
+
+- (void)setNextKeyView:(NSView *)aView
+{
+    // This works together with becomeFirstResponder to splice PDFSubview into
+    // the key loop similar to the way NSScrollView and NSClipView do this.
+    NSView *documentView = [PDFSubview documentView];
+    if (documentView) {
+        [documentView setNextKeyView:aView];
+        
+        // We need to make the documentView be the next view in the keyview loop.
+        // It would seem more sensible to do this in our init method, but it turns out
+        // that [NSClipView setDocumentView] won't call this method if our next key view
+        // is already set, so we wait until we're called before adding this connection.
+        // We'll also clear it when we're called with nil, so this could go through the
+        // same code path more than once successfully.
+        [super setNextKeyView: aView ? documentView : nil];
+    } else
+        [super setNextKeyView:aView];
+}
+
 @end
 
 #endif // OMIT_TIGER_FEATURES
