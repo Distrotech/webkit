@@ -9,6 +9,7 @@
 #import <WebKit/WebPluginController.h>
 
 #import <WebKit/WebBridge.h>
+#import <WebKit/WebDataSource.h>
 #import <WebKit/WebFramePrivate.h>
 #import <WebKit/WebFrameView.h>
 #import <WebKit/WebHTMLViewPrivate.h>
