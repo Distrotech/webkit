@@ -71,7 +71,6 @@ public:
     Position leadingWhitespacePosition(khtml::EAffinity affinity, bool considerNonCollapsibleWhitespace = false) const;
     Position trailingWhitespacePosition(khtml::EAffinity affinity, bool considerNonCollapsibleWhitespace = false) const;
 
-    // p.upstream() through p.downstream() is the range of positions that map to the same VisiblePosition as p.
     Position upstream(EStayInBlock stayInBlock = DoNotStayInBlock) const;
     Position downstream(EStayInBlock stayInBlock = DoNotStayInBlock) const;
     

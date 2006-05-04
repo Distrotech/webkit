@@ -83,7 +83,7 @@ void VisiblePosition::init(const Position &pos, EInitHint initHint, EAffinity af
     // If two visually equivalent positions are both candidates for being made the m_deepPosition,
     // (this can happen when two rendered positions have only collapsed whitespace between them),
     // we always choose the one that occurs first in the DOM to canonicalize VisiblePositions.
-    m_deepPosition = deepPos.upstream();
+    m_deepPosition = deepPos.upstream(StayInBlock);
     if (m_deepPosition.inRenderedContent())
         return;
     
@@ -91,7 +91,7 @@ void VisiblePosition::init(const Position &pos, EInitHint initHint, EAffinity af
     if (m_deepPosition.inRenderedContent())
         return;
 
-    m_deepPosition = deepPos.downstream();
+    m_deepPosition = deepPos.downstream(StayInBlock);
     if (m_deepPosition.inRenderedContent())
         return;
         

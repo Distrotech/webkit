@@ -329,7 +329,6 @@ static bool     isStreamer (Position pos)
     return (pos.offset() == 0);
 }
 
-// p.upstream() returns the start of the range of positions that map to the same VisiblePosition as P.
 Position Position::upstream(EStayInBlock stayInBlock) const
 {
     // start at equivalent deep position
@@ -410,7 +409,6 @@ Position Position::upstream(EStayInBlock stayInBlock) const
     return lastVisible;
 }
 
-// P.downstream() returns the end of the range of positions that map to the same VisiblePosition as P.
 Position Position::downstream(EStayInBlock stayInBlock) const
 {
     // start at equivalent deep position

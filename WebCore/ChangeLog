@@ -1,3 +1,10 @@
+2006-05-04  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by thatcher
+        
+        Used the StayInBlock variant of upstream/downstream since they behave that way in
+        tip of tree (where there is no StayInBlock parameter).
+
 2006-05-03  Timothy Hatcher  <timothy@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch

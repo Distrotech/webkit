@@ -3049,10 +3049,10 @@ void DeleteSelectionCommand::mergeParagraphs()
         
     VisiblePosition endOfParagraphToMove = endOfParagraph(startOfParagraphToMove);
 
-    Position start = startOfParagraphToMove.deepEquivalent().upstream();
+    Position start = startOfParagraphToMove.deepEquivalent().upstream(StayInBlock);
     // We upstream() the end so that we don't include collapsed whitespace in the move.
     // If we must later add a br after the merged paragraph, doing so would cause the moved unrendered space to become rendered.
-    Position end = endOfParagraphToMove.deepEquivalent().upstream();
+    Position end = endOfParagraphToMove.deepEquivalent().upstream(StayInBlock);
     SharedPtr<DOM::RangeImpl> range = new DOM::RangeImpl(document(), start.node(), start.offset(), end.node(), end.offset());
 
     // FIXME: This is an inefficient way to preserve style on nodes in the paragraph to move.  It 
