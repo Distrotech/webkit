@@ -42,6 +42,7 @@
 #import "htmlattrs.h"
 #import "htmlediting.h"
 #import "htmltags.h"
+#import "htmltokenizer.h"
 #import "khtml_part.h"
 #import "khtmlview.h"
 #import "kjs_proxy.h"
@@ -132,6 +133,7 @@ using khtml::ReplaceSelectionCommand;
 using khtml::Selection;
 using khtml::setAffinityUsingLinePosition;
 using khtml::Tokenizer;
+using khtml::HTMLTokenizer;
 using khtml::TextIterator;
 using khtml::TypingCommand;
 using khtml::UPSTREAM;
@@ -2337,6 +2339,16 @@ static HTMLFormElementImpl *formElementFromDOMElement(DOMElement *element)
 - (NSMutableDictionary *)dashboardRegions
 {
     return _part->dashboardRegionsDictionary();
+}
+
++ (BOOL)includesCommentsInDOM
+{
+    return HTMLTokenizer::includesComments();
+}
+
++ (void)setIncludesCommentsInDOM:(BOOL)include
+{
+    HTMLTokenizer::setIncludesComments(include);
 }
 
 @end

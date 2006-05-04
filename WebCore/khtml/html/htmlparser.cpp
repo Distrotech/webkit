@@ -938,8 +938,7 @@ NodeImpl *KHTMLParser::getElement(Token* t)
     case ID_COMMENT:
         if (!includesCommentsInDOM)
             return 0;
-        break;
-
+        return new CommentImpl(document, t->text);
     case ID_SCRIPT:
         {
             HTMLScriptElementImpl *scriptElement = new HTMLScriptElementImpl(document);

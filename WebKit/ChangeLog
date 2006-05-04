@@ -1,3 +1,14 @@
+2006-05-04  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Harrison.
+
+        <rdar://problem/4523536> SUTiLondon: Dashcode removes commented code from HTML files
+
+        * WebView.subproj/WebView.m:
+        (+[WebView _includesCommentsInDOM]):
+        (+[WebView _setIncludesCommentsInDOM:]):
+        * WebView.subproj/WebViewPrivate.h:
+
 2006-05-04  Tim Omernick  <timo@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch

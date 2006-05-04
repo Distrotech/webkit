@@ -230,9 +230,11 @@ inline bool tagMatch(const char *s1, const QChar *s2, uint length)
     return true;
 }
 
+static bool globalIncludesComments = 0;
+
 // ----------------------------------------------------------------------------
 
-HTMLTokenizer::HTMLTokenizer(DOM::DocumentImpl *_doc, KHTMLView *_view, bool includesComments)
+HTMLTokenizer::HTMLTokenizer(DOM::DocumentImpl *_doc, KHTMLView *_view)
     : inWrite(false)
 {
     view = _view;
@@ -240,19 +242,19 @@ HTMLTokenizer::HTMLTokenizer(DOM::DocumentImpl *_doc, KHTMLView *_view, bool inc
     scriptCode = 0;
     scriptCodeSize = scriptCodeMaxSize = scriptCodeResync = 0;
     charsets = KGlobal::charsets();
-    parser = new KHTMLParser(_view, _doc, includesComments);
+    parser = new KHTMLParser(_view, _doc, globalIncludesComments);
     m_executingScript = 0;
     loadingExtScript = false;
     onHold = false;
     attrNamePresent = false;
     timerId = 0;
-    includesCommentsInDOM = includesComments;
+    includesCommentsInDOM = globalIncludesComments;
     loadStopped = false;
     
     begin();
 }
 
-HTMLTokenizer::HTMLTokenizer(DOM::DocumentImpl *_doc, DOM::DocumentFragmentImpl *i, bool includesComments)
+HTMLTokenizer::HTMLTokenizer(DOM::DocumentImpl *_doc, DOM::DocumentFragmentImpl *i)
     : inWrite(false)
 {
     view = 0;
@@ -260,15 +262,25 @@ HTMLTokenizer::HTMLTokenizer(DOM::DocumentImpl *_doc, DOM::DocumentFragmentImpl 
     scriptCode = 0;
     scriptCodeSize = scriptCodeMaxSize = scriptCodeResync = 0;
     charsets = KGlobal::charsets();
-    parser = new KHTMLParser(i, _doc, includesComments);
+    parser = new KHTMLParser(i, _doc, globalIncludesComments);
     m_executingScript = 0;
     loadingExtScript = false;
     onHold = false;
     timerId = 0;
-    includesCommentsInDOM = includesComments;
+    includesCommentsInDOM = globalIncludesComments;
     loadStopped = false;
 
     begin();
+}
+
+void HTMLTokenizer::setIncludesComments(bool include)
+{
+    globalIncludesComments = include;
+}
+
+bool HTMLTokenizer::includesComments()
+{
+    return globalIncludesComments;
 }
 
 void HTMLTokenizer::reset()

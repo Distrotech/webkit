@@ -204,7 +204,7 @@ public:
     DocumentTypeImpl *doctype() const;
 
     DOMImplementationImpl *implementation() const;
-    virtual ElementImpl *documentElement() const;
+    ElementImpl *documentElement();
     virtual ElementImpl *createElement ( const DOMString &tagName, int &exceptioncode );
     DocumentFragmentImpl *createDocumentFragment ();
     TextImpl *createTextNode ( const DOMString &data );
@@ -657,6 +657,7 @@ protected:
     khtml::SharedPtr<NodeImpl> m_focusNode;
     khtml::SharedPtr<NodeImpl> m_hoverNode;
     khtml::SharedPtr<NodeImpl> m_activeNode;
+    khtml::SharedPtr<ElementImpl> m_documentElement;
 
     unsigned int m_domtree_version;
     

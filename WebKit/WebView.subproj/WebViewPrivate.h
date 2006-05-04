@@ -250,6 +250,9 @@ Could be worth adding to the API.
 + (void)_setShouldUseFontSmoothing:(BOOL)f;
 + (BOOL)_shouldUseFontSmoothing;
 
++ (BOOL)_includesCommentsInDOM;
++ (void)_setIncludesCommentsInDOM:(BOOL)include;
+
 @end
 
 @interface WebView (WebViewPrintingPrivate)

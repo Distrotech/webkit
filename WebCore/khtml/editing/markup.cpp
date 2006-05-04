@@ -254,7 +254,7 @@ static QString startMarkup(const NodeImpl *node, const RangeImpl *range, EAnnota
 
 static QString endMarkup(const NodeImpl *node)
 {
-    if ((!node->isHTMLElement() || endTagRequirement(node->id()) != FORBIDDEN) && node->nodeType() != Node::TEXT_NODE && node->nodeType() != Node::DOCUMENT_NODE) {
+    if ((!node->isHTMLElement() || endTagRequirement(node->id()) != FORBIDDEN) && node->nodeType() != Node::TEXT_NODE && node->nodeType() != Node::COMMENT_NODE && node->nodeType() != Node::DOCUMENT_NODE) {
         return "</" + node->nodeName().string() + ">";
     }
     return "";

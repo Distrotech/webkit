@@ -1380,6 +1380,16 @@ static bool debugWidget = true;
     return shouldUseFontSmoothing;
 }
 
++ (BOOL)_includesCommentsInDOM
+{
+    return [WebBridge includesCommentsInDOM];
+}
+
++ (void)_setIncludesCommentsInDOM:(BOOL)include
+{
+    [WebBridge setIncludesCommentsInDOM:include];
+}
+
 @end
 
 

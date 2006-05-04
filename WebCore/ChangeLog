@@ -1,3 +1,31 @@
+2006-05-04  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Harrison.
+
+        <rdar://problem/4523536> SUTiLondon: Dashcode removes commented code from HTML files
+
+        * khtml/editing/markup.cpp:
+        (khtml::endMarkup):
+        * khtml/html/html_documentimpl.cpp:
+        (HTMLDocumentImpl::createTokenizer):
+        * khtml/html/html_documentimpl.h:
+        (DOM::HTMLDocumentImpl::isHTMLDocument):
+        * khtml/html/htmlparser.cpp:
+        (KHTMLParser::getElement):
+        * khtml/html/htmltokenizer.cpp:
+        (khtml::HTMLTokenizer::HTMLTokenizer):
+        (khtml::HTMLTokenizer::setIncludesComments):
+        (khtml::HTMLTokenizer::includesComments):
+        * khtml/html/htmltokenizer.h:
+        * khtml/xml/dom_docimpl.cpp:
+        (DocumentImpl::removedLastRef):
+        (DocumentImpl::documentElement):
+        * khtml/xml/dom_docimpl.h:
+        * kwq/WebCoreBridge.h:
+        * kwq/WebCoreBridge.mm:
+        (+[WebCoreBridge includesCommentsInDOM]):
+        (+[WebCoreBridge setIncludesCommentsInDOM:]):
+
 2006-05-04  Justin Garcia  <justin.garcia@apple.com>
 
         Reviewed by thatcher

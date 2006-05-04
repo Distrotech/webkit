@@ -388,6 +388,7 @@ void DocumentImpl::removedLastRef()
         m_hoverNode = 0;
         m_activeNode = 0;
         m_titleElement = 0;
+        m_documentElement = 0;
 
         removeAllChildren();
     } else
@@ -499,12 +500,16 @@ DOMImplementationImpl *DocumentImpl::implementation() const
     return m_implementation;
 }
 
-ElementImpl *DocumentImpl::documentElement() const
+ElementImpl *DocumentImpl::documentElement()
 {
-    NodeImpl *n = firstChild();
-    while (n && n->nodeType() != Node::ELEMENT_NODE)
-      n = n->nextSibling();
-    return static_cast<ElementImpl*>(n);
+    if (!m_documentElement) {
+        NodeImpl* n = firstChild();
+        while (n && n->nodeType() != Node::ELEMENT_NODE)
+			n = n->nextSibling();
+        m_documentElement = static_cast<ElementImpl*>(n);
+    }
+
+    return m_documentElement.get();
 }
 
 ElementImpl *DocumentImpl::createElement( const DOMString &name, int &exceptioncode )
