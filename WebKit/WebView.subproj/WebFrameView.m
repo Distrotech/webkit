@@ -847,7 +847,7 @@ static NSMutableDictionary *viewTypes;
 {
     NSView *documentView = [[self _scrollView] documentView];
     if (documentView && [documentView respondsToSelector:@selector(printDocumentView)])
-        return [(id)documentView printDocumentView];
+        [(id)documentView printDocumentView];
 }
 
 @end
