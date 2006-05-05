@@ -1,3 +1,12 @@
+=== WebKit-418.3 ===
+
+2006-05-04  Timothy Hatcher  <timothy@apple.com>
+
+        Build fix for warning: 'return' with a value, in function returning void.
+
+        * WebView.subproj/WebFrameView.m:
+        (-[WebFrameView printDocumentView]):
+
 === WebKit-418.2 ===
 
 2006-05-04  Timothy Hatcher  <timothy@apple.com>
