@@ -1,3 +1,5 @@
+=== WebCore-418.2 ===
+
 2006-05-08  Justin Garcia  <justin.garcia@apple.com>
 
         Reviewed by Timothy.
@@ -9,7 +11,7 @@
 
 2006-05-05  Adele Peterson  <adele@apple.com>
 
-       Reviewed by
+       Reviewed by Timothy
 
        Merged this fix for:
        <rdar://problem/4537287> REGRESSION: All text links are broken at yahoo.com
@@ -25,10 +27,10 @@
 
         * khtml/ecma/kjs_events.cpp:
         (KJS::DOMEventProtoFunc::callAsFunction): Don't let stopPropagation fall through
-	to preventDefault.
+        to preventDefault.
         * khtml/xml/dom_nodeimpl.cpp:
         (DOM::NodeImpl::dispatchGenericEvent): Don't let stopPropagation prevent calling
-	default event handlers; only preventDefault does that.
+        default event handlers; only preventDefault does that.
 
 === WebCore-418.1 ===
 
