@@ -312,6 +312,9 @@ QString createMarkup(const RangeImpl *range, QPtrList<NodeImpl> *nodes, EAnnotat
     static const QString interchangeNewlineString = QString("<br class=\"") + AppleInterchangeNewline + "\">";
 
     int exceptionCode = 0;
+    if (range->collapsed(exceptionCode))
+        return "";
+    ASSERT(exceptionCode == 0);
     NodeImpl *commonAncestor = range->commonAncestorContainer(exceptionCode);
     ASSERT(exceptionCode == 0);
 

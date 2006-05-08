@@ -1,3 +1,12 @@
+2006-05-08  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by Timothy.
+
+        <rdar://problem/4538833> 10.4.7 regression: Mail crashing frequently since updating to SUTiLondon 8J110
+
+        * khtml/editing/markup.cpp:
+        (khtml::createMarkup): add an early return if the range is collapsed
+
 2006-05-05  Adele Peterson  <adele@apple.com>
 
        Reviewed by
