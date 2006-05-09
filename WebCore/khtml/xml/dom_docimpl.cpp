@@ -1099,6 +1099,12 @@ void DocumentImpl::setDocumentChanged(bool b)
         m_accessKeyDictValid = false;
 }
 
+void DocumentImpl::childrenChanged()
+{
+    // invalidate the document element we have cached in case it was replaced
+    m_documentElement = 0;
+}
+
 void DocumentImpl::recalcStyle( StyleChange change )
 {
 //     qDebug("recalcStyle(%p)", this);

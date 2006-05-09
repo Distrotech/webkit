@@ -218,6 +218,8 @@ public:
     ElementImpl *getElementById ( const DOMString &elementId ) const;
     ElementImpl *elementFromPoint ( const int _x, const int _y ) const;
 
+    virtual void childrenChanged();
+
     // Actually part of HTMLDocument, but used for giving XML documents a window title as well
     DOMString title() const { return m_title; }
     void setTitle(DOMString, NodeImpl *titleElement = 0);

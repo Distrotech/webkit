@@ -1,3 +1,17 @@
+2006-05-09  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Justin.
+
+        <rdar://problem/4540011> Random crash occurs at when loading espn.go.com (khtml::RenderObject::PaintInfo&, int, int)
+        
+        The crash occured because the document element was cached but later replaced by a script.
+        So the render object was accessing the old document element that no longer had a renderer.
+        When the document's children change we now invalidate the document element in case it is replaced.
+
+        * khtml/xml/dom_docimpl.cpp:
+        (DocumentImpl::childrenChanged):
+        * khtml/xml/dom_docimpl.h:
+
 === WebCore-418.2 ===
 
 2006-05-08  Justin Garcia  <justin.garcia@apple.com>
