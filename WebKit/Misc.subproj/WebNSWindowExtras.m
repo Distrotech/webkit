@@ -9,7 +9,6 @@
 #import "WebNSWindowExtras.h"
 
 #import "WebKitLogging.h"
-#import <JavaScriptCore/Assertions.h>
 #import <objc/objc-runtime.h>
 
 #define DISPLAY_REFRESH_INTERVAL (1.0 / 60.0)
