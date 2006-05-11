@@ -2719,17 +2719,6 @@ void DeleteSelectionCommand::initializePositionData()
     m_startNode = m_upstreamStart.node();
     m_startNode->ref();
 
-    //
-    // Handle detecting if the line containing the selection end is itself fully selected.
-    // This is one of the tests that determines if block merging of content needs to be done.
-    //
-    VisiblePosition visibleEnd(end, m_selectionToDelete.endAffinity());
-    if (isFirstVisiblePositionInParagraph(visibleEnd) || isLastVisiblePositionInParagraph(visibleEnd)) {
-        Position previousLineStart = previousLinePosition(visibleEnd, 0).deepEquivalent();
-        if (previousLineStart.isNull() || RangeImpl::compareBoundaryPoints(previousLineStart, m_downstreamStart) >= 0)
-            m_mergeBlocksAfterDelete = false;
-    }
-
     debugPosition("m_upstreamStart      ", m_upstreamStart);
     debugPosition("m_downstreamStart    ", m_downstreamStart);
     debugPosition("m_upstreamEnd        ", m_upstreamEnd);
@@ -3029,6 +3018,15 @@ void DeleteSelectionCommand::mergeParagraphs()
     // FIXME: Deletion should adjust selection endpoints as it removes nodes so that we never get into this state (4099839).
     if (!m_downstreamEnd.node()->inDocument() || !m_upstreamStart.node()->inDocument())
          return;
+         
+    // FIXME: The deletion algorithm shouldn't let this happen.
+    if (RangeImpl::compareBoundaryPoints(m_upstreamStart, m_downstreamEnd) > 0)
+        return;
+        
+    // FIXME: Merging will always be unnecessary in this case, but we really bail here because this is a case where
+    // deletion commonly fails to adjust its endpoints, which would cause the visible position comparison below to false negative.
+    if (m_endBlock == m_startBlock)
+        return;
          
     // Do not move content between parts of a table or list.
     if (isTableStructureNode(m_downstreamEnd.node()->enclosingBlockFlowElement()) || isTableStructureNode(m_upstreamStart.node()->enclosingBlockFlowElement()))
@@ -4923,6 +4921,9 @@ void ReplaceSelectionCommand::doApply()
     // collect information about the current selection, prior to deleting the selection
     Selection selection = endingSelection();
     ASSERT(selection.isCaretOrRange());
+    ASSERT(selection.start().node());
+    if (selection.isNone() || !selection.start().node())
+        return;
 
     VisiblePosition visibleStart(selection.start(), selection.startAffinity());
     VisiblePosition visibleEnd(selection.end(), selection.endAffinity());
