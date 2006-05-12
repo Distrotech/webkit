@@ -326,6 +326,7 @@ public:
     
     void open();
     void implicitOpen();
+    void cancelParsing();
     void close();
     void implicitClose();
     void write ( const DOMString &text );
