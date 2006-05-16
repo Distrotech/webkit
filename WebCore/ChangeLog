@@ -1,3 +1,17 @@
+2006-05-16  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Hyatt.
+
+        REGRESSION: revert SGML comment parsing fix (comment parsing causes most of usbank.com page to be missing)
+        http://bugzilla.opendarwin.org/show_bug.cgi?id=5855
+
+        This also fixes:
+        <rdar://problem/4543829> -[DOMComment nodeValue] and -[DOMComment data] returning too much
+
+        * khtml/html/htmltokenizer.cpp:
+        (khtml::HTMLTokenizer::parseComment): Revert one change made for acid2, 
+        <http://weblogs.mozillazine.org/hyatt/acid6.txt>.
+
 === WebCore-418.5 ===
 
 2006-05-12  Beth Dakin  <bdakin@apple.com>
