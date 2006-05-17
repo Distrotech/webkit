@@ -1,3 +1,25 @@
+2006-05-17  David Harrison  <harrison@apple.com>
+
+        Reviewed by Justin.
+        
+        <rdar://problem/4542925> 10.4.7 regression: Mail: Using the delete key may cause application crash in DOM::NodeImpl::isBlockFlow() const from khtml::DeleteSelectionCommand::mergeParagraphs()
+    
+        * khtml/editing/htmlediting.cpp:
+        (positionBeforeContainingSpecialElement):
+        (positionAfterContainingSpecialElement):
+        (positionOutsideContainingSpecialElement):
+        (positionBeforePossibleContainingSpecialElement):
+        (positionAfterPossibleContainingSpecialElement):
+        (DeleteSelectionCommand::initializePositionData):
+        Fix special element handling to not create selection that does not completely surround the element.
+        
+        (DeleteSelectionCommand::mergeParagraphs):
+        Incorporate the remainder of the improved merge code.
+        
+        * xml/dom_position.cpp:
+        (inRenderedContent):
+        Allow br 0 unconditionally.
+
 === WebCore-418.6 ===
 
 2006-05-16  Justin Garcia  <justin.garcia@apple.com>
