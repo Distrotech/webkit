@@ -1231,9 +1231,11 @@ void CompositeEditCommand::moveParagraphContentsToNewBlockIfNecessary(const Posi
     
     VisiblePosition visiblePos(pos, VP_DEFAULT_AFFINITY);
     VisiblePosition visibleParagraphStart(startOfParagraph(visiblePos));
-    VisiblePosition visibleParagraphEnd(endOfParagraph(visiblePos, IncludeLineBreak));
+    VisiblePosition visibleParagraphEnd(endOfParagraph(visiblePos));
+    VisiblePosition next = visibleParagraphEnd.next();
+    VisiblePosition visibleEnd = next.isNotNull() ? next : visibleParagraphEnd;
     Position paragraphStart = visibleParagraphStart.deepEquivalent().upstream(StayInBlock);
-    Position paragraphEnd = visibleParagraphEnd.deepEquivalent().upstream(StayInBlock);
+    Position paragraphEnd = visibleEnd.deepEquivalent().upstream(StayInBlock);
     Position beforeParagraphStart = paragraphStart.upstream(DoNotStayInBlock);
     
     // Perform some checks to see if we need to perform work in this function.
@@ -1251,7 +1253,7 @@ void CompositeEditCommand::moveParagraphContentsToNewBlockIfNecessary(const Posi
             ASSERT(paragraphStart.node()->isAncestor(paragraphEnd.node()->enclosingBlockFlowElement()));
             return;
         }
-        else if (isEndOfDocument(visibleParagraphEnd)) {
+        else if (isEndOfDocument(visibleEnd)) {
             // At the end of the document. We can bail here as well.
             return;
         }

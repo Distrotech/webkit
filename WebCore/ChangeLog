@@ -1,3 +1,26 @@
+2006-05-16  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by levi
+        
+        <rdar://problem/4547278> 10.4.7 regression: Mail: Triple click, then drag, fails to select an empty line following a non-empty line
+        
+        Merged in the fix for: 
+        <rdar://problem/4364427> triple-click includes first item on next line (www.apple.com, but I think I've seen it elsewhere)
+
+        * khtml/editing/htmlediting.cpp:
+        (khtml::CompositeEditCommand::moveParagraphContentsToNewBlockIfNecessary):
+        * khtml/editing/selection.cpp:
+        (khtml::Selection::validate):
+        * khtml/editing/visible_units.cpp:
+        (khtml::endOfLine):
+        (khtml::isEndOfLine):
+        (khtml::endOfParagraph):
+        (khtml::isEndOfParagraph):
+        (khtml::endOfBlock):
+        (khtml::isEndOfBlock):
+        * khtml/editing/visible_units.h:
+        (khtml::):
+
 2006-05-16  Timothy Hatcher  <timothy@apple.com>
 
         Reviewed by Hyatt.
