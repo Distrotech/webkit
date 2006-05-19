@@ -1,3 +1,24 @@
+2006-05-19  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej.
+
+        - Fixed <rdar://problem/4543569> 10.4.7 regression: Crash occurs
+        when attempting to view image in slideshow mode at
+        http://d.smugmug.com/gallery/581716 ( KJS::IfNode::execute
+        (KJS::ExecState*) + 312)
+
+        - Major fix: On alternate threads, DOMObjects remain in the
+        ScriptInterpreter's cache because they're not collected. So, they
+        need an opportunity to mark their children.
+
+        * kjs/collector.cpp:
+        (KJS::Collector::collect):
+        * kjs/internal.cpp:
+        (InterpreterImp::mark):
+        * kjs/internal.h:
+        * kjs/interpreter.h:
+        (KJS::Interpreter::mark):
+
 === JavaScriptCore-418.1 ===
 
 2006-05-03  Timothy Hatcher  <timothy@apple.com>

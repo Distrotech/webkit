@@ -1,3 +1,24 @@
+2006-05-19  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej.
+
+        - Fixed <rdar://problem/4543569> 10.4.7 regression: Crash occurs
+        when attempting to view image in slideshow mode at
+        http://d.smugmug.com/gallery/581716 ( KJS::IfNode::execute
+        (KJS::ExecState*) + 312)
+
+        - Minor fix: DOMParserConstructor needed to inherit from DOMObject to
+        prevent collection on alternate threads.
+
+        - Major fix: On alternate threads, DOMObjects remain in the
+        ScriptInterpreter's cache because they're not collected. So, they
+        need an opportunity to mark their children.
+
+        * khtml/ecma/domparser.h:
+        * khtml/ecma/kjs_binding.cpp:
+        (KJS::ScriptInterpreter::mark):
+        * khtml/ecma/kjs_binding.h:
+
 2006-05-19  Levi Weintraub  <lweintraub@apple.com>
 
         Reviewed by justin.

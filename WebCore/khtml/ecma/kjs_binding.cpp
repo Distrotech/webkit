@@ -216,7 +216,7 @@ void ScriptInterpreter::forgetAllDOMNodesForDocument(DOM::DocumentImpl *document
   domNodesPerDocument().remove(document);
 }
 
-void ScriptInterpreter::mark()
+void ScriptInterpreter::mark(bool currentThreadIsMainThread)
 {
   QPtrDictIterator<QPtrDict<DOMNode> > dictIterator(domNodesPerDocument());
 
@@ -236,6 +236,19 @@ void ScriptInterpreter::mark()
       ++nodeIterator;
     }
     ++dictIterator;
+  }
+  
+  if (!currentThreadIsMainThread) {
+      // On alternate threads, DOMObjects remain in the cache because they're not collected.
+      // So, they need an opportunity to mark their children.
+      QPtrDictIterator<DOMObject> objectIterator(domObjects());
+      DOMObject *object;
+      while ((object = objectIterator.current())) {
+        if (!object->marked())
+              object->mark();
+        
+          ++objectIterator;
+      }
   }
 }
 

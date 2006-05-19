@@ -347,7 +347,8 @@ bool Collector::collect()
   assert(Interpreter::lockCount() > 0);
 
   bool deleted = false;
-
+  bool currentThreadIsMainThread = !pthread_is_threaded_np() || pthread_main_np();
+  
 #if TEST_CONSERVATIVE_GC
   // CONSERVATIVE MARK: mark the root set using conservative GC bit (will compare later)
   ValueImp::useConservativeMark(true);
@@ -357,7 +358,7 @@ bool Collector::collect()
   if (InterpreterImp::s_hook) {
     InterpreterImp *scr = InterpreterImp::s_hook;
     do {
-      scr->mark();
+      scr->mark(currentThreadIsMainThread);
       scr = scr->next;
     } while (scr != InterpreterImp::s_hook);
   }
@@ -422,8 +423,6 @@ bool Collector::collect()
   
   int emptyBlocks = 0;
   int numLiveObjects = heap.numLiveObjects;
-
-  bool currentThreadIsMainThread = !pthread_is_threaded_np() || pthread_main_np();
 
   for (int block = 0; block < heap.usedBlocks; block++) {
     CollectorBlock *curBlock = heap.blocks[block];
