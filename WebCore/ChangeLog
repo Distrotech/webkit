@@ -1,3 +1,14 @@
+2006-05-19  Levi Weintraub  <lweintraub@apple.com>
+
+        Reviewed by justin.
+
+        When the paste performance fix was merged over, uses of isCandidate
+        were changed to isRenderedContent. isRenderedContent on the branch
+        is incorrect in a few ways.
+
+        * khtml/editing/visible_position.cpp:
+        (khtml::VisiblePosition::init):
+
 === WebCore-418.7 ===
 
 2006-05-17  David Harrison  <harrison@apple.com>

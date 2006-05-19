@@ -84,15 +84,15 @@ void VisiblePosition::init(const Position &pos, EInitHint initHint, EAffinity af
     // (this can happen when two rendered positions have only collapsed whitespace between them),
     // we always choose the one that occurs first in the DOM to canonicalize VisiblePositions.
     m_deepPosition = deepPos.upstream(StayInBlock);
-    if (m_deepPosition.inRenderedContent())
+    if (isCandidate(m_deepPosition))
         return;
     
     m_deepPosition = deepPos;
-    if (m_deepPosition.inRenderedContent())
+    if (isCandidate(m_deepPosition))
         return;
 
     m_deepPosition = deepPos.downstream(StayInBlock);
-    if (m_deepPosition.inRenderedContent())
+    if (isCandidate(m_deepPosition))
         return;
         
     // Do something rational for an input position inside unrendered whitespace that isn't really 
