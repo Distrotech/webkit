@@ -68,10 +68,6 @@
 #import <Foundation/NSURLRequestPrivate.h>
 #import <Foundation/NSUserDefaults_NSURLExtras.h>
 
-#if !BUILDING_ON_PANTHER         
-#include <CoreGraphics/CGSConnection.h>
-#endif
-
 #if __ppc__
 #define PROCESSOR "PPC"
 #elif __i386__
@@ -182,12 +178,6 @@ macro(yankAndSelect) \
 - (void)_autoscrollForDraggingInfo:(id)dragInfo timeDelta:(NSTimeInterval)repeatDelta;
 - (BOOL)_shouldAutoscrollForDraggingInfo:(id)dragInfo;
 @end
-
-#if !BUILDING_ON_PANTHER         
-@interface NSApplication (AppKitSecrectsIKnow)
-- (CGSConnectionID)contextID;
-@end
-#endif
 
 @interface WebView (WebFileInternal)
 - (void)_preflightSpellChecker;

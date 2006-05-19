@@ -24,6 +24,7 @@
 #import <WebKit/WebNSPasteboardExtras.h>
 #import <WebKit/WebNSViewExtras.h>
 #import "WebNSWindowExtras.h"
+#import "WebPreferenceKeysPrivate.h"
 #ifndef OMIT_TIGER_FEATURES
 #import <WebKit/WebPDFView.h>
 #endif
@@ -40,15 +41,19 @@
 #import <Foundation/NSDictionary_NSURLExtras.h>
 #import <Foundation/NSURLRequest.h>
 
+#include <CoreGraphics/CGSConnection.h>
+
 @interface NSClipView (AppKitSecretsIKnow)
 - (BOOL)_scrollTo:(const NSPoint *)newOrigin; // need the boolean result from this method
+@end
+
+@interface NSApplication (AppKitSecrectsIKnow)
+- (CGSConnectionID)contextID;
 @end
 
 enum {
     SpaceKey = 0x0020
 };
-
-static NSString *WebKitThrottleWindowDisplayPreferenceKey = @"WebKitThrottleWindowDisplay";
 
 @interface WebFrameView (WebFrameViewFileInternal) <WebCoreBridgeHolder>
 - (float)_verticalKeyboardScrollDistance;
@@ -331,9 +336,22 @@ static NSMutableDictionary *viewTypes;
     [super setNextKeyView:scrollView];
     
     ++WebFrameViewCount;
-    
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:WebKitThrottleWindowDisplayPreferenceKey])
+
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+
+    // Window display is throttled to 60 frames per second if WebKitThrottleWindowDisplayPreferenceKey
+    // is set to YES.  The window display throttle is OFF by default for compatibility with Mac OS X
+    // 10.4.6.
+    if ([defaults boolForKey:WebKitThrottleWindowDisplayPreferenceKey])
         [NSWindow _webkit_enableWindowDisplayThrottle];
+
+    // CoreGraphics deferred updates are disabled if WebKitEnableCoalescedUpdatesPreferenceKey is set
+    // to NO, or has no value.  For compatibility with Mac OS X 10.4.6, deferred updates are OFF by
+    // default.
+    if (![defaults boolForKey:WebKitEnableDeferredUpdatesPreferenceKey]) {
+        CFStringRef key = CFSTR(kCGSDisableDeferredUpdates);
+        CGSSetConnectionProperty([NSApp contextID], [NSApp contextID], (CGSValueObj)key, (CGSValueObj)kCFBooleanTrue);
+    }
 
     return self;
 }
