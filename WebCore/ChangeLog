@@ -1,3 +1,12 @@
+2006-05-24  Kevin Decker    <kdecker@apple.com>
+
+        Reviewed by Adele.
+
+        <rdar://problem/4557153> REGRESSION (10.4.7): Seed: Safari no longer blocks pop-up from macworld.com
+        
+        * khtml/ecma/kjs_binding.cpp:
+        (KJS::ScriptInterpreter::wasRunByUserGesture): Fixed typo from a previous check-in on 2006-04-27.
+
 === WebCore-418.8 ===
 
 2006-05-19  Geoffrey Garen  <ggaren@apple.com>

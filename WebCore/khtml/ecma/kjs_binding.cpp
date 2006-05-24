@@ -267,7 +267,7 @@ bool ScriptInterpreter::wasRunByUserGesture() const
   {
     int id = m_evt->handle()->id();
     bool eventOk = ( // mouse events
-      id == DOM::EventImpl::CLICK_EVENT || DOM::EventImpl::DBLCLICK_EVENT || id == DOM::EventImpl::MOUSEDOWN_EVENT ||
+      id == DOM::EventImpl::CLICK_EVENT || id == DOM::EventImpl::DBLCLICK_EVENT || id == DOM::EventImpl::MOUSEDOWN_EVENT ||
       id == DOM::EventImpl::MOUSEUP_EVENT ||
       // keyboard events
       id == DOM::EventImpl::KEYDOWN_EVENT || id == DOM::EventImpl::KEYPRESS_EVENT ||
