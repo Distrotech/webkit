@@ -1590,6 +1590,12 @@ void ApplyStyleCommand::applyBlockStyle(CSSMutableStyleDeclarationImpl *style)
     Position start(endingSelection().start());
     Position end(endingSelection().end());
     
+    if (RangeImpl::compareBoundaryPoints(end, start) <= 0) {
+        Position swap = end;
+        end = start;
+        start = swap;
+    }
+    
     // remove current values, if any, of the specified styles from the blocks
     // NOTE: tracks the previous block to avoid repeated processing
     // Also, gather up all the nodes we want to process in a QPtrList before
@@ -2128,7 +2134,7 @@ void ApplyStyleCommand::removeInlineStyle(CSSMutableStyleDeclarationImpl *style,
     ASSERT(end.isNotNull());
     ASSERT(start.node()->inDocument());
     ASSERT(end.node()->inDocument());
-    ASSERT(RangeImpl::compareBoundaryPoints(start, end) < 0);
+    ASSERT(RangeImpl::compareBoundaryPoints(start, end) <= 0);
     
     CSSValueImpl *textDecorationSpecialProperty = style->getPropertyCSSValue(CSS_PROP__KHTML_TEXT_DECORATIONS_IN_EFFECT);
 

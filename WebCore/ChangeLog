@@ -1,3 +1,16 @@
+2006-05-30  Levi Weintraub  <lweintraub@apple.com>
+
+        Reviewed by justin.
+
+        <rdar://problem/4039661> crash in ApplyStyleCommand::applyBlockStyle(DOM::CSSMutableStyleDeclarationImpl*, DOM::Position const&, DOM::Position const&) pasting contents of webpage into Mail or Blot
+        <rdar://problem/4029632> Mail crashes in DOM::NodeImpl::isBlockFlow() after pasting text with alignment style and BR element from Safari
+
+        * khtml/editing/htmlediting.cpp:
+        (khtml::ApplyStyleCommand::applyBlockStyle): Swap reversed start and
+        end selection points to avoid null dereference.
+        (khtml::ApplyStyleCommand::removeInlineStyle): Modified assert to
+        not complain about caret selections.
+
 === WebCore-418.10 ===
 
 2006-05-27  Geoffrey Garen  <ggaren@apple.com>
