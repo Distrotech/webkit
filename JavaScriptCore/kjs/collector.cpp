@@ -358,7 +358,7 @@ bool Collector::collect()
   if (InterpreterImp::s_hook) {
     InterpreterImp *scr = InterpreterImp::s_hook;
     do {
-      scr->mark(currentThreadIsMainThread);
+      scr->mark();
       scr = scr->next;
     } while (scr != InterpreterImp::s_hook);
   }

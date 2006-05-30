@@ -1,3 +1,19 @@
+2006-05-27  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej.
+        
+        - Rolling out the 'currentThreadIsMainThread' argument passed to
+        Interpreter::mark because the fix for <rdar://problem/4562599>
+        makes it superfluous.
+        
+        * kjs/collector.cpp:
+        (KJS::Collector::collect):
+        * kjs/internal.cpp:
+        (InterpreterImp::mark):
+        * kjs/internal.h:
+        * kjs/interpreter.h:
+        (KJS::Interpreter::mark):
+
 === JavaScriptCore-418.2 ===
 
 2006-05-19  Geoffrey Garen  <ggaren@apple.com>

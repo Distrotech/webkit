@@ -270,7 +270,7 @@ namespace KJS {
     static void unlock();
     static int lockCount();
 
-    void mark(bool currentThreadIsMainThread);
+    void mark();
 
     ExecState *globalExec() { return globExec; }
     bool checkSyntax(const UString &code);

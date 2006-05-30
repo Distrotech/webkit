@@ -133,8 +133,6 @@ namespace KJS {
      */
     bool wasRunByUserGesture() const;
 
-    virtual void mark(bool currentThreadIsMainThread);
-    
     DOM::Event *getCurrentEvent() const { return m_evt; }
 
 #if APPLE_CHANGES
@@ -150,7 +148,8 @@ namespace KJS {
 
     static QPtrDict<DOMObject> &domObjects();
     static QPtrDict<QPtrDict<DOMNode> > &domNodesPerDocument();
-
+    friend class DOMObjectsMarker;
+    
     DOM::Event *m_evt;
     bool m_inlineCode;
     bool m_timerCallback;

@@ -740,7 +740,7 @@ void InterpreterImp::clear()
   InterpreterMap::removeInterpreterForGlobalObject(global.imp());
 }
 
-void InterpreterImp::mark(bool currentThreadIsMainThread)
+void InterpreterImp::mark()
 {
   //if (exVal && !exVal->marked())
   //  exVal->mark();
@@ -758,7 +758,7 @@ void InterpreterImp::mark(bool currentThreadIsMainThread)
     BooleanImp::staticFalse->mark();
   //fprintf( stderr, "InterpreterImp::mark this=%p global.imp()=%p\n", this, global.imp() );
   if (m_interpreter)
-    m_interpreter->mark(currentThreadIsMainThread);
+    m_interpreter->mark();
   if (_context)
     _context->mark();
   if (globExec && !globExec->_exception.isNull())

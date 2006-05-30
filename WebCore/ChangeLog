@@ -1,3 +1,24 @@
+2006-05-27  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej.
+        
+        - Fixed <rdar://problem/4562599> 10.4.7 regression: After closing a 
+        window that contains macworld.com, creating a new window results in 
+        crash (KJS::PropertyMap::mark() )
+
+        ScriptInterpreter used to be responsible for marking cached DOM objects.
+        That was insufficient because once all the windows are closed, there's
+        no ScriptInterpreter left to do the marking.
+        
+        The solution here is to allocate a static, protected 'DOMObjectsMarker'
+        object that takes care of marking the DOM object caches.
+        
+        * khtml/ecma/kjs_binding.cpp:
+        (KJS::DOMObjectsMarker::mark):
+        (KJS::ScriptInterpreter::domObjects):
+        (KJS::ScriptInterpreter::domNodesPerDocument):
+        * khtml/ecma/kjs_binding.h:
+
 === WebCore-418.9 ===
 
 2006-05-24  Kevin Decker    <kdecker@apple.com>

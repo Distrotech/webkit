@@ -142,14 +142,64 @@ Value DOMFunction::call(ExecState *exec, Object &thisObj, const List &args)
   return val;
 }
 
-static QPtrDict<DOMObject> * staticDomObjects = 0;
-QPtrDict< QPtrDict<DOMNode> > * staticDOMNodesPerDocument = 0;
+class DOMObjectsMarker : public ObjectImp
+{
+public:
+  virtual void mark();
+};
+
+void DOMObjectsMarker::mark()
+{
+  ObjectImp::mark();
+  
+  QPtrDictIterator<QPtrDict<DOMNode> > dictIterator(ScriptInterpreter::domNodesPerDocument());
+  
+  QPtrDict<DOMNode> *nodeDict;
+  while ((nodeDict = dictIterator.current())) {
+    QPtrDictIterator<DOMNode> nodeIterator(*nodeDict);
+    
+    DOMNode *node;
+    while ((node = nodeIterator.current())) {
+      // don't mark wrappers for nodes that are no longer in the
+      // document - they should not be saved if the node is not
+      // otherwise reachable from JS.
+      DOM::NodeImpl *n = node->toNode().handle();
+      if (n && n->inDocument() && !node->marked())
+        node->mark();
+      
+      ++nodeIterator;
+    }
+    ++dictIterator;
+  }
+  
+  if (pthread_is_threaded_np() && !pthread_main_np()) {
+    // On alternate threads, DOMObjects remain in the cache because they're not collected.
+    // So, they need an opportunity to mark their children.
+    QPtrDictIterator<DOMObject> objectIterator(ScriptInterpreter::domObjects());
+    DOMObject *object;
+    while ((object = objectIterator.current())) {
+      if (!object->marked())
+        object->mark();
+      
+      ++objectIterator;
+    }
+  }
+}
+
+static QPtrDict<DOMObject>* staticDomObjects = 0;
+static QPtrDict< QPtrDict<DOMNode> >* staticDOMNodesPerDocument = 0;
+static DOMObjectsMarker* staticDOMObjectsMarker = 0;
 
 QPtrDict<DOMObject> & ScriptInterpreter::domObjects()
 {
-  if (!staticDomObjects) {
+  if (!staticDomObjects)
     staticDomObjects = new QPtrDict<DOMObject>(1021);
+  if (!staticDOMObjectsMarker) {
+    InterpreterLock lock;
+    staticDOMObjectsMarker = new DOMObjectsMarker();
+    gcProtect(staticDOMObjectsMarker);
   }
+    
   return *staticDomObjects;
 }
 
@@ -158,6 +208,11 @@ QPtrDict< QPtrDict<DOMNode> > & ScriptInterpreter::domNodesPerDocument()
   if (!staticDOMNodesPerDocument) {
     staticDOMNodesPerDocument = new QPtrDict<QPtrDict<DOMNode> >();
     staticDOMNodesPerDocument->setAutoDelete(true);
+  }
+  if (!staticDOMObjectsMarker) {
+    InterpreterLock lock;
+    staticDOMObjectsMarker = new DOMObjectsMarker();
+    gcProtect(staticDOMObjectsMarker);
   }
   return *staticDOMNodesPerDocument;
 }
@@ -214,42 +269,6 @@ void ScriptInterpreter::putDOMNodeForDocument(DOM::DocumentImpl *document, DOM::
 void ScriptInterpreter::forgetAllDOMNodesForDocument(DOM::DocumentImpl *document)
 {
   domNodesPerDocument().remove(document);
-}
-
-void ScriptInterpreter::mark(bool currentThreadIsMainThread)
-{
-  QPtrDictIterator<QPtrDict<DOMNode> > dictIterator(domNodesPerDocument());
-
-  QPtrDict<DOMNode> *nodeDict;
-  while ((nodeDict = dictIterator.current())) {
-    QPtrDictIterator<DOMNode> nodeIterator(*nodeDict);
-
-    DOMNode *node;
-    while ((node = nodeIterator.current())) {
-      // don't mark wrappers for nodes that are no longer in the
-      // document - they should not be saved if the node is not
-      // otherwise reachable from JS.
-      DOM::NodeImpl *n = node->toNode().handle();
-      if (n && n->inDocument() && !node->marked())
-          node->mark();
-
-      ++nodeIterator;
-    }
-    ++dictIterator;
-  }
-  
-  if (!currentThreadIsMainThread) {
-      // On alternate threads, DOMObjects remain in the cache because they're not collected.
-      // So, they need an opportunity to mark their children.
-      QPtrDictIterator<DOMObject> objectIterator(domObjects());
-      DOMObject *object;
-      while ((object = objectIterator.current())) {
-        if (!object->marked())
-              object->mark();
-        
-          ++objectIterator;
-      }
-  }
 }
 
 void ScriptInterpreter::updateDOMNodeDocument(DOM::NodeImpl *node, DOM::DocumentImpl *oldDoc, DOM::DocumentImpl *newDoc)
