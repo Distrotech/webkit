@@ -1,3 +1,24 @@
+2006-06-02  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej.
+        
+        - Fixed <rdar://problem/4568551> Hang occurs when attempting to load 
+        links found at http://reviews.cnet.com/4531-10921_7-6534826.html?tag=cnetfd.ld2
+        if you use a PAC file
+        
+        For a synchronous XMLHttpRequest, the JavaScript interpreter initiating 
+        the request would deadlock with the JavaScript interpreter spawned by 
+        the request to execute the PAC file.
+        
+        The solution here is to temporarily drop the initiating interpreter's locks
+        before making the request, and re-acquire the locks afterwards. Because
+        the initiating interpreter waits for the request to complete before
+        continuing execution, it is free to drop its locks while the request
+        is in progress.
+
+        * khtml/ecma/xmlhttprequest.cpp:
+        (KJS::XMLHttpRequest::send):
+
 2006-06-01  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Maciej.
