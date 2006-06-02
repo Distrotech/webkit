@@ -146,44 +146,54 @@ class DOMObjectsMarker : public ObjectImp
 {
 public:
   virtual void mark();
+  virtual void markOnMainThread();
+  virtual void markOnAlternateThread();
 };
 
 void DOMObjectsMarker::mark()
 {
+  if (!pthread_is_threaded_np() || pthread_main_np())
+    markOnMainThread();
+  else
+    markOnAlternateThread();
+}
+
+void DOMObjectsMarker::markOnMainThread()
+{
   ObjectImp::mark();
   
   QPtrDictIterator<QPtrDict<DOMNode> > dictIterator(ScriptInterpreter::domNodesPerDocument());
-  
-  QPtrDict<DOMNode> *nodeDict;
-  while ((nodeDict = dictIterator.current())) {
+  for (QPtrDict<DOMNode>* nodeDict = dictIterator.current(); nodeDict; nodeDict = ++dictIterator) {
     QPtrDictIterator<DOMNode> nodeIterator(*nodeDict);
-    
-    DOMNode *node;
-    while ((node = nodeIterator.current())) {
+    for (DOMNode *node = nodeIterator.current(); node; node = ++nodeIterator) {
       // don't mark wrappers for nodes that are no longer in the
       // document - they should not be saved if the node is not
       // otherwise reachable from JS.
       DOM::NodeImpl *n = node->toNode().handle();
       if (n && n->inDocument() && !node->marked())
         node->mark();
-      
-      ++nodeIterator;
     }
-    ++dictIterator;
   }
+}
+
+void DOMObjectsMarker::markOnAlternateThread()
+{
+  // On alternate threads, DOMObjects remain in the cache because they're not collected.
+  // So, they need an opportunity to mark their children.
+  ObjectImp::mark();
   
-  if (pthread_is_threaded_np() && !pthread_main_np()) {
-    // On alternate threads, DOMObjects remain in the cache because they're not collected.
-    // So, they need an opportunity to mark their children.
-    QPtrDictIterator<DOMObject> objectIterator(ScriptInterpreter::domObjects());
-    DOMObject *object;
-    while ((object = objectIterator.current())) {
-      if (!object->marked())
-        object->mark();
-      
-      ++objectIterator;
-    }
+  QPtrDictIterator<QPtrDict<DOMNode> > dictIterator(ScriptInterpreter::domNodesPerDocument());
+  for (QPtrDict<DOMNode>* nodeDict = dictIterator.current(); nodeDict; nodeDict = ++dictIterator) {
+    QPtrDictIterator<DOMNode> nodeIterator(*nodeDict);
+    for (DOMNode *node = nodeIterator.current(); node; node = ++nodeIterator)
+      if (!node->marked())
+        node->mark();
   }
+
+  QPtrDictIterator<DOMObject> objectIterator(ScriptInterpreter::domObjects());
+  for (DOMObject *object = objectIterator.current(); object; object = ++objectIterator)
+    if (!object->marked())
+      object->mark();
 }
 
 static QPtrDict<DOMObject>* staticDomObjects = 0;

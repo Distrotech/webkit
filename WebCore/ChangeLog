@@ -1,3 +1,26 @@
+2006-06-01  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej.
+        
+        - Fixed <rdar://problem/4569127> 10.4.7 regression: Crash occurs when 
+        clicking on the navigation tabs at http://www.businessweek.com/
+
+        The fix is to mark all DOM Nodes when collecting on an alternate thread -- 
+        not just the nodes that are still in a document.
+        
+        Previously, the DOMObjectsMarker didn't mark DOM nodes that were not in 
+        a document, since we assumed such nodes would either be (a) unreachable 
+        or (b) reachable, and therefore marked elsewhere. However, it seems that
+        heap/stack entropy allows for (c) non-deterministically reachable by the
+        conservative garbage collector. So, ironically, we need to mark
+        DOM nodes that are not in a document to avoid crashing when trying to
+        mark them later.
+
+        * khtml/ecma/kjs_binding.cpp:
+        (KJS::DOMObjectsMarker::mark):
+        (KJS::DOMObjectsMarker::markOnMainThread):
+        (KJS::DOMObjectsMarker::markOnAlternateThread):
+
 === WebCore-418.11 ===
 
 2006-05-30  Levi Weintraub  <lweintraub@apple.com>
