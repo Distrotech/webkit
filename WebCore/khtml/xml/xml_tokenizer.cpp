@@ -791,11 +791,18 @@ void XMLTokenizer::setTransformSource(DocumentImpl* doc)
     // good error messages.
     const QChar BOM(0xFEFF);
     const unsigned char BOMHighByte = *reinterpret_cast<const unsigned char *>(&BOM);
+
+    // the default catalog file /etc/xml/catalog does not exist, set this env var to an empty string to prevent not found errors
+    // pass 0 to setenv to allow someone to launch the app with XML_CATALOG_FILES defined to somthing meaningful
+    setenv("XML_CATALOG_FILES", "", 0);  
+
+    setLoaderForLibXMLCallbacks(doc->docLoader());
     xmlDocPtr sourceDoc = xmlReadMemory(reinterpret_cast<const char *>(m_xmlCode.unicode()),
                                         m_xmlCode.length() * sizeof(QChar),
                                         doc->URL().ascii(),
                                         BOMHighByte == 0xFF ? "UTF-16LE" : "UTF-16BE", 
                                         XML_PARSE_NOCDATA|XML_PARSE_DTDATTR|XML_PARSE_NOENT);
+    setLoaderForLibXMLCallbacks(0);
     doc->setTransformSource(sourceDoc);
 }
 #endif

@@ -1,3 +1,25 @@
+2006-06-02  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Darin and Eric.
+
+        <rdar://problem/4523402> SUTiLondon: XSL file containing <xsl:include href="../Styles/EscapeString.xsl" /> fails to load file
+
+        The decoder was returning a null string for the EscapeString stylesheet because it didn't specify an encoding.
+        If we do not find an encoding we need to assume it is UTF-8.
+
+        We also need to load DTD files in xml documents for this test to fully work like Win IE.
+        Wrapping XMLTokenizer's xmlReadMemory with setLoaderForLibXMLCallbacks to load any files XML needs through the docLoader.
+
+        However, this further exposes <rdar://problem/4292995> (libxml2 looks for file in /etc/xml/catalog, but the file is not installed)
+        This causes Safari to show an error in the activity window about file:///etc/xml/catalog. To prevent this we can set
+        the XML_CATALOG_FILES environment variable to an empty string. We will only set this env var if it hasn't been set already.
+        This allows someone to launch Safari with a custom catalog if that was ever needed.
+
+        * khtml/misc/decoder.cpp:
+        (Decoder::decode):
+        * khtml/xml/xml_tokenizer.cpp:
+        (khtml::XMLTokenizer::setTransformSource):
+
 2006-06-02  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Maciej.
