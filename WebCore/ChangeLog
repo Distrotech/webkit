@@ -1,3 +1,30 @@
+2006-06-06  Geoffrey Garen  <ggaren@apple.com>
+
+        Fix by Maciej, reviewed by Darin. I provided desk space.
+        
+        - Fixed <rdar://problem/4573918> 10.4.7 Regression: Hang randomly occurs 
+        when attempting to load http://www.apple.com/pro/profiles/ if you use a PAC file
+
+        Because the garbage collector suspends a thread while marking its stack,
+        mark methods must not call malloc, because they may end up stuck,
+        trying to acquire the malloc lock from a suspended thread.
+
+        The fix here is:
+        (1) Use a data member rather than a dictionary to track nodes that are
+        in the process of marking their subtrees.
+        (2) Avoid the case wheter calling getDOMNodeForDocument might allocate
+        the staticDOMNodesPerDocument dictionary.
+        
+        * khtml/ecma/kjs_binding.cpp:
+        (KJS::ScriptInterpreter::domObjects):
+        (KJS::ScriptInterpreter::domNodesPerDocument):
+        (KJS::ScriptInterpreter::getDOMNodeForDocument):
+        * khtml/ecma/kjs_dom.cpp:
+        (DOMNode::mark):
+        * khtml/xml/dom_nodeimpl.cpp:
+        (NodeImpl::NodeImpl):
+        * khtml/xml/dom_nodeimpl.h:
+
 === WebCore-418.12 ===
 
 2006-06-02  Timothy Hatcher  <timothy@apple.com>

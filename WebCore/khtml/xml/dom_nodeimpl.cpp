@@ -101,7 +101,8 @@ NodeImpl::NodeImpl(DocumentImpl *doc)
       m_inActiveChain( false ),
       m_styleElement( false ),
       m_implicit(false),
-      m_inDetach(false)
+      m_inDetach(false),
+      m_inSubtreeMark(false)
 {
 }
 

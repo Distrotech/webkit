@@ -202,12 +202,13 @@ static DOMObjectsMarker* staticDOMObjectsMarker = 0;
 
 QPtrDict<DOMObject> & ScriptInterpreter::domObjects()
 {
-  if (!staticDomObjects)
+  if (!staticDomObjects) {
     staticDomObjects = new QPtrDict<DOMObject>(1021);
-  if (!staticDOMObjectsMarker) {
-    InterpreterLock lock;
-    staticDOMObjectsMarker = new DOMObjectsMarker();
-    gcProtect(staticDOMObjectsMarker);
+    if (!staticDOMObjectsMarker) {
+      InterpreterLock lock;
+      staticDOMObjectsMarker = new DOMObjectsMarker();
+      gcProtect(staticDOMObjectsMarker);
+    }
   }
     
   return *staticDomObjects;
@@ -218,11 +219,11 @@ QPtrDict< QPtrDict<DOMNode> > & ScriptInterpreter::domNodesPerDocument()
   if (!staticDOMNodesPerDocument) {
     staticDOMNodesPerDocument = new QPtrDict<QPtrDict<DOMNode> >();
     staticDOMNodesPerDocument->setAutoDelete(true);
-  }
-  if (!staticDOMObjectsMarker) {
-    InterpreterLock lock;
-    staticDOMObjectsMarker = new DOMObjectsMarker();
-    gcProtect(staticDOMObjectsMarker);
+    if (!staticDOMObjectsMarker) {
+      InterpreterLock lock;
+      staticDOMObjectsMarker = new DOMObjectsMarker();
+      gcProtect(staticDOMObjectsMarker);
+    }
   }
   return *staticDOMNodesPerDocument;
 }
@@ -251,7 +252,12 @@ void ScriptInterpreter::forgetDOMObject( void* objectHandle )
 
 DOMNode *ScriptInterpreter::getDOMNodeForDocument(DOM::DocumentImpl *document, DOM::NodeImpl *node)
 {
-  QPtrDict<DOMNode> *documentDict = (QPtrDict<DOMNode> *)domNodesPerDocument()[document];
+  // Because this function gets called from inside mark, while a thread that holds the
+  // malloc lock may be suspended, we must not call malloc. Therefore, we can't call
+  // domNodePerDocument() if it will allocate the dictionary.
+  if (!staticDOMNodesPerDocument)
+    return NULL;
+  QPtrDict<DOMNode> *documentDict = domNodesPerDocument()[document];
   if (documentDict)
     return (*documentDict)[node];
 

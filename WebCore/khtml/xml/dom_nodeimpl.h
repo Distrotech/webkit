@@ -491,7 +491,9 @@ protected:
     
     bool m_inDetach : 1;
 
-    // 2 bits unused
+public:
+    bool m_inSubtreeMark : 1;
+    // 1 bits unused
 };
 
 // this is the full Node Implementation with parents and children.
