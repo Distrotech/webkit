@@ -800,7 +800,7 @@ ClipboardImpl::~ClipboardImpl()
 // -----------------------------------------------------------------------------
 
 BeforeUnloadEventImpl::BeforeUnloadEventImpl()
-    : EventImpl(BEFOREUNLOAD_EVENT, false, false)
+    : EventImpl(BEFOREUNLOAD_EVENT, false, true)
 {
 }
 

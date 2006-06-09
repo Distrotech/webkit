@@ -1881,8 +1881,8 @@ bool KWQKHTMLPart::shouldClose()
 
     khtml::SharedPtr<BeforeUnloadEventImpl> event = new BeforeUnloadEventImpl;
     event->setTarget(document.get());
-    int exception = 0;
-    body->dispatchGenericEvent(event.get(), exception);
+    document->handleWindowEvent(event.get(), false);
+
     if (!event->defaultPrevented() && document)
  	document->defaultEventHandler(event.get());
     if (event->result().isNull())
