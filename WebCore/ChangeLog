@@ -1,3 +1,5 @@
+=== WebCore-418.14 ===
+
 2006-06-09  Timothy Hatcher  <timothy@apple.com>
         
         Rolling out this fix, this caused a Mail regression.
