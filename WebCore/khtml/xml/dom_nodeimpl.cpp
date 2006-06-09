@@ -590,8 +590,7 @@ bool NodeImpl::dispatchGenericEvent( EventImpl *evt, int &/*exceptioncode */)
         it.toLast();
         for (; it.current() && !evt->defaultPrevented() && !evt->defaultHandled(); --it)
             it.current()->defaultEventHandler(evt);
-    } else if (!evt->defaultPrevented() && !evt->defaultHandled())
-        it.current()->defaultEventHandler(evt);
+    }
 
     // deref all nodes in chain
     it.toFirst();
