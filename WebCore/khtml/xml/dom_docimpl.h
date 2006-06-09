@@ -484,6 +484,7 @@ public:
     typedef QMap<QString, ProcessingInstructionImpl*> LocalStyleRefs;
     LocalStyleRefs* localStyleRefs() { return &m_localStyleRefs; }
 
+    void handleWindowEvent(EventImpl *evt, bool useCapture);
     virtual void defaultEventHandler(EventImpl *evt);
     void setHTMLWindowEventListener(int id, EventListener *listener);
     EventListener *getHTMLWindowEventListener(int id);

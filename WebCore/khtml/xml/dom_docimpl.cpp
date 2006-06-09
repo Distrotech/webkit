@@ -2768,18 +2768,23 @@ CSSStyleDeclarationImpl *DocumentImpl::getOverrideStyle(ElementImpl */*elt*/, DO
     return 0; // ###
 }
 
-void DocumentImpl::defaultEventHandler(EventImpl *evt)
+void DocumentImpl::handleWindowEvent(EventImpl *evt, bool useCapture)
 {
+    if (m_windowEventListeners.isEmpty())
+        return;
+
     // if any html event listeners are registered on the window, then dispatch them here
     QPtrList<RegisteredEventListener> listenersCopy = m_windowEventListeners;
     QPtrListIterator<RegisteredEventListener> it(listenersCopy);
     Event ev(evt);
     for (; it.current(); ++it) {
-        if (it.current()->id == evt->id()) {
+        if (it.current()->id == evt->id() && it.current()->useCapture == useCapture)
             it.current()->listener->handleEvent(ev, true);
-	}
     }
+}
 
+void DocumentImpl::defaultEventHandler(EventImpl *evt)
+{
     // handle accesskey
     if (evt->id()==EventImpl::KEYDOWN_EVENT) {
         KeyboardEventImpl *kevt = static_cast<KeyboardEventImpl *>(evt);

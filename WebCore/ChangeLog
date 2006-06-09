@@ -1,3 +1,28 @@
+2006-06-09  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+        This fixes <rdar://problem/4578533> REGRESSION: vbulletin search box closes when clicked
+
+    2006-02-08  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Maciej.
+
+        - Fixed <rdar://problem/4325160> 
+          REGRESSION(416.12-420+): window events not stopped by stopPropagation (affects macnn forums)
+
+        Tests:
+        * fast/events/window-events-bubble.html
+        * fast/events/window-events-bubble2.html
+        * fast/events/window-events-capture.html
+
+        * khtml/xml/DocumentImpl.cpp:
+        (WebCore::DocumentImpl::handleWindowEvent): Added to send events directly to the window.  This code used to be in defaultEventHandler, but that wasn't sending them at the right time.
+        (WebCore::DocumentImpl::defaultEventHandler): Moved code to send window events to handleWindowEvent.
+        * khtml/xml/DocumentImpl.h: Added handleWindowEvent.
+        * khtml/xml/NodeImpl.cpp:
+        (WebCore::NodeImpl::dispatchGenericEvent): fire window events in capture and bubble phases.
+        (WebCore::NodeImpl::dispatchWindowEvent): call handleWindowEvent.
+
 === WebCore-418.13 ===
 
 2006-06-06 Geoffrey Garen <ggaren@apple.com>

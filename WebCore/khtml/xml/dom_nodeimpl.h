@@ -289,7 +289,7 @@ public:
     bool dispatchEvent(EventImpl *evt, int &exceptioncode, bool tempEvent = false);
     bool dispatchGenericEvent( EventImpl *evt, int &exceptioncode);
     bool dispatchHTMLEvent(int _id, bool canBubbleArg, bool cancelableArg);
-    bool dispatchWindowEvent(int _id, bool canBubbleArg, bool cancelableArg);
+    void dispatchWindowEvent(int _id, bool canBubbleArg, bool cancelableArg);
     bool dispatchMouseEvent(QMouseEvent *e, int overrideId = 0, int overrideDetail = 0, bool isSimulated = false);
     bool dispatchUIEvent(int _id, int detail = 0);
     bool dispatchSubtreeModifiedEvent(bool childrenChanged = true);

@@ -527,6 +527,13 @@ bool NodeImpl::dispatchGenericEvent( EventImpl *evt, int &/*exceptioncode */)
     // trigger any capturing event handlers on our way down
     evt->setEventPhase(Event::CAPTURING_PHASE);
     QPtrListIterator<NodeImpl> it(nodeChain);
+
+    it.toFirst();
+    // Handle window events for capture phase
+    if (it.current()->isDocumentNode() && !evt->propagationStopped()) {
+        static_cast<DocumentImpl*>(it.current())->handleWindowEvent(evt, true);
+    }  
+
     for (; it.current() && it.current() != this && !evt->propagationStopped(); ++it) {
         evt->setCurrentTarget(it.current());
         it.current()->handleLocalEvents(evt,true);
@@ -565,7 +572,13 @@ bool NodeImpl::dispatchGenericEvent( EventImpl *evt, int &/*exceptioncode */)
             evt->setCurrentTarget(it.current());
             it.current()->handleLocalEvents(evt,false);
         }
-    }
+        // Handle window events for bubbling phase
+        it.toFirst();
+        if (it.current()->isDocumentNode() && !evt->propagationStopped() && !evt->getCancelBubble()) {
+            evt->setCurrentTarget(it.current());
+            static_cast<DocumentImpl*>(it.current())->handleWindowEvent(evt, false);
+        } 
+    } 
 
     evt->setCurrentTarget(0);
     evt->setEventPhase(0); // I guess this is correct, the spec does not seem to say
@@ -573,13 +586,13 @@ bool NodeImpl::dispatchGenericEvent( EventImpl *evt, int &/*exceptioncode */)
 
 
     if (evt->bubbles()) {
-	// now we call all default event handlers (this is not part of DOM - it is internal to khtml)
+        // now we call all default event handlers (this is not part of DOM - it is internal to khtml)
+        it.toLast();
+        for (; it.current() && !evt->defaultPrevented() && !evt->defaultHandled(); --it)
+            it.current()->defaultEventHandler(evt);
+    } else if (!evt->defaultPrevented() && !evt->defaultHandled())
+        it.current()->defaultEventHandler(evt);
 
-	it.toLast();
-	for (; it.current() && !evt->defaultPrevented() && !evt->defaultHandled(); --it)
-	    it.current()->defaultEventHandler(evt);
-    }
-    
     // deref all nodes in chain
     it.toFirst();
     for (; it.current(); ++it)
@@ -602,16 +615,13 @@ bool NodeImpl::dispatchHTMLEvent(int _id, bool canBubbleArg, bool cancelableArg)
     return dispatchEvent(evt,exceptioncode,true);
 }
 
-bool NodeImpl::dispatchWindowEvent(int _id, bool canBubbleArg, bool cancelableArg)
+void NodeImpl::dispatchWindowEvent(int _id, bool canBubbleArg, bool cancelableArg)
 {
     assert(!eventDispatchForbidden());
-    int exceptioncode = 0;
     khtml::SharedPtr<EventImpl> evt = new EventImpl(static_cast<EventImpl::EventId>(_id),canBubbleArg,cancelableArg);
-	khtml::SharedPtr<DocumentImpl> doc = getDocument();
-	evt->setTarget(doc.get());
-	bool r = dispatchGenericEvent(evt.get(), exceptioncode);
-    if (!evt->defaultPrevented() && doc)
-        doc->defaultEventHandler(evt.get());
+    khtml::SharedPtr<DocumentImpl> doc = getDocument();
+    evt->setTarget(doc.get());
+    doc->handleWindowEvent(evt.get(), false);
 
     if (_id == EventImpl::LOAD_EVENT && !evt->propagationStopped() && doc) {
         // For onload events, send them to the enclosing frame only.
@@ -631,11 +641,8 @@ bool NodeImpl::dispatchWindowEvent(int _id, bool canBubbleArg, bool cancelableAr
             // Bubbling second.
             if (!evt->propagationStopped())
                 elt->handleLocalEvents(evt.get(), false);
-            r = !evt->defaultPrevented();
         }
     }
-
-    return r;
 }
 
 bool NodeImpl::dispatchMouseEvent(QMouseEvent *_mouse, int overrideId, int overrideDetail, bool isSimulated)
