@@ -1,3 +1,16 @@
+2006-06-12  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Maciej, Harrison.
+
+        Fixes <rdar://problem/4582172> frameset load events don't fire (can't login into Gmail account or see map at 511.org)
+
+        Framesets need to register their load, beforeunload and unload events with the window.
+
+        * khtml/html/html_baseimpl.cpp:
+        (HTMLFrameSetElementImpl::parseHTMLAttribute):
+
+=== WebCore-418.15 ===
+
 2006-06-09  Timothy Hatcher  <timothy@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch

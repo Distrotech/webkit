@@ -615,16 +615,16 @@ void HTMLFrameSetElementImpl::parseHTMLAttribute(HTMLAttributeImpl *attr)
             frameborder = false;
         break;
     case ATTR_ONLOAD:
-        setHTMLEventListener(EventImpl::LOAD_EVENT,
-	    getDocument()->createHTMLEventListener(attr->value().string(), this));
+        getDocument()->setHTMLWindowEventListener(EventImpl::LOAD_EVENT,
+        getDocument()->createHTMLEventListener(attr->value().string(), NULL));
         break;
     case ATTR_ONBEFOREUNLOAD:
-        setHTMLEventListener(EventImpl::BEFOREUNLOAD_EVENT,
-	    getDocument()->createHTMLEventListener(attr->value().string(), this));
+        getDocument()->setHTMLWindowEventListener(EventImpl::BEFOREUNLOAD_EVENT,
+        getDocument()->createHTMLEventListener(attr->value().string(), NULL));
         break;
     case ATTR_ONUNLOAD:
-        setHTMLEventListener(EventImpl::UNLOAD_EVENT,
-	    getDocument()->createHTMLEventListener(attr->value().string(), this));
+        getDocument()->setHTMLWindowEventListener(EventImpl::UNLOAD_EVENT,
+        getDocument()->createHTMLEventListener(attr->value().string(), NULL));
         break;
     default:
         HTMLElementImpl::parseHTMLAttribute(attr);
