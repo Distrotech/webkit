@@ -529,8 +529,10 @@ bool NodeImpl::dispatchGenericEvent( EventImpl *evt, int &/*exceptioncode */)
     QPtrListIterator<NodeImpl> it(nodeChain);
 
     it.toFirst();
-    // Handle window events for capture phase
-    if (it.current()->isDocumentNode() && !evt->propagationStopped()) {
+    // Handle window events for capture phase, except load events, this quirk is needed because
+    // Mozilla used to not do the bubble or capture phase for image load events and sites mistakenly
+    // put capturing load event listeners on the window
+    if (evt->id() != EventImpl::LOAD_EVENT && it.current()->isDocumentNode() && !evt->propagationStopped()) {
         static_cast<DocumentImpl*>(it.current())->handleWindowEvent(evt, true);
     }  
 
@@ -572,9 +574,11 @@ bool NodeImpl::dispatchGenericEvent( EventImpl *evt, int &/*exceptioncode */)
             evt->setCurrentTarget(it.current());
             it.current()->handleLocalEvents(evt,false);
         }
-        // Handle window events for bubbling phase
+        // Handle window events for bubbling phase, except load events, this quirk is needed because
+        // Mozilla used to not do the bubble or capture phase for image load events and sites mistakenly
+        // put capturing load event listeners on the window
         it.toFirst();
-        if (it.current()->isDocumentNode() && !evt->propagationStopped() && !evt->getCancelBubble()) {
+        if (evt->id() != EventImpl::LOAD_EVENT && it.current()->isDocumentNode() && !evt->propagationStopped() && !evt->getCancelBubble()) {
             evt->setCurrentTarget(it.current());
             static_cast<DocumentImpl*>(it.current())->handleWindowEvent(evt, false);
         } 

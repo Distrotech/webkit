@@ -1,3 +1,14 @@
+2006-06-13  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Harrison, landed by Tim H.
+
+        Handle window events for capture phase, except load events, this quirk is needed because
+        Mozilla used to not do the bubble or capture phase for image load events and sites mistakenly
+        put capturing load event listeners on the window
+
+        * khtml/xml/dom_nodeimpl.cpp:
+        (NodeImpl::dispatchGenericEvent):
+
 === WebCore-418.16 ===
 
 2006-06-12  Timothy Hatcher  <timothy@apple.com>
