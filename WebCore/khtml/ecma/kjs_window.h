@@ -129,7 +129,9 @@ namespace KJS {
     void setReturnValueSlot(ValueImp **slot) { m_returnValueSlot = slot; }
 
     QPtrDict<JSEventListener> jsEventListeners;
+    QPtrDict<JSEventListener> jsHTMLEventListeners;
     QPtrDict<JSUnprotectedEventListener> jsUnprotectedEventListeners;
+    QPtrDict<JSUnprotectedEventListener> jsUnprotectedHTMLEventListeners;
     virtual const ClassInfo* classInfo() const { return &info; }
     static const ClassInfo info;
     enum { Closed, Crypto, DefaultStatus, Status, Document, Node, EventCtor, Range,

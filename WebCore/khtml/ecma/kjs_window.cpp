@@ -351,11 +351,21 @@ Window::~Window()
         unprotectedListeners.current()->clearWindowObj();
         ++unprotectedListeners;
     }
+    QPtrDictIterator<JSUnprotectedEventListener> unprotectedHTMLListeners(jsUnprotectedHTMLEventListeners);
+    while (unprotectedHTMLListeners.current()) {
+        unprotectedHTMLListeners.current()->clearWindowObj();
+        ++unprotectedHTMLListeners;
+    }
     
     QPtrDictIterator<JSEventListener> listeners(jsEventListeners);
     while (listeners.current()) {
         listeners.current()->clearWindowObj();
         ++listeners;
+    }
+    QPtrDictIterator<JSEventListener> htmlListeners(jsHTMLEventListeners);
+    while (htmlListeners.current()) {
+        htmlListeners.current()->clearWindowObj();
+        ++htmlListeners;
     }
     
     delete winq;
@@ -1539,7 +1549,8 @@ JSEventListener *Window::getJSEventListener(const Value& val, bool html)
     return 0;
   ObjectImp *listenerObject = static_cast<ObjectImp *>(val.imp());
 
-  JSEventListener *existingListener = jsEventListeners[listenerObject];
+  QPtrDict<JSEventListener>& listeners = html ? jsHTMLEventListeners : jsEventListeners;
+  JSEventListener *existingListener = listeners[listenerObject];
   if (existingListener)
     return existingListener;
 
@@ -1554,7 +1565,8 @@ JSUnprotectedEventListener *Window::getJSUnprotectedEventListener(const Value& v
     return 0;
   ObjectImp *listenerObject = static_cast<ObjectImp *>(val.imp());
 
-  JSUnprotectedEventListener *existingListener = jsUnprotectedEventListeners[listenerObject];
+  QPtrDict<JSUnprotectedEventListener>& listeners = html ? jsUnprotectedHTMLEventListeners : jsUnprotectedEventListeners;
+  JSUnprotectedEventListener *existingListener = listeners[listenerObject];
   if (existingListener)
     return existingListener;
 

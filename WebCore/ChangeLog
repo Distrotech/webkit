@@ -1,3 +1,26 @@
+2006-06-13  Geoffrey Garen  <ggaren@apple.com>
+
+        Patch by Darin, tweaked by me, reviewed by Harrison.
+
+        - Fixed <rdar://problem/4584598> 10.4.7 regression: Changing location 
+        for weather on yahoo.com home page redirects to another page
+       
+        We need to keep separate caches for HTML and non-HTML event listeners
+        so that, if you add one of each to the same node, the two don't clobber 
+        each other.
+
+        * khtml/ecma/kjs_events.cpp:
+        (JSUnprotectedEventListener::JSUnprotectedEventListener):
+        (JSUnprotectedEventListener::~JSUnprotectedEventListener):
+        (JSEventListener::JSEventListener):
+        (JSEventListener::~JSEventListener):
+        (JSLazyEventListener::parseCode):
+        * khtml/ecma/kjs_window.cpp:
+        (Window::~Window):
+        (Window::getJSEventListener):
+        (Window::getJSUnprotectedEventListener):
+        * khtml/ecma/kjs_window.h:
+
 === WebCore-418.17 ===
 
 2006-06-13  Maciej Stachowiak  <mjs@apple.com>
