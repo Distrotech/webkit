@@ -1,3 +1,5 @@
+=== WebCore-418.17 ===
+
 2006-06-13  Geoffrey Garen  <ggaren@apple.com>
 
         Patch by Darin, tweaked by me, reviewed by Harrison.
@@ -20,8 +22,6 @@
         (Window::getJSEventListener):
         (Window::getJSUnprotectedEventListener):
         * khtml/ecma/kjs_window.h:
-
-=== WebCore-418.17 ===
 
 2006-06-13  Maciej Stachowiak  <mjs@apple.com>
 
