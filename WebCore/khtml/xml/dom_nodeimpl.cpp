@@ -624,6 +624,7 @@ void NodeImpl::dispatchWindowEvent(int _id, bool canBubbleArg, bool cancelableAr
     khtml::SharedPtr<EventImpl> evt = new EventImpl(static_cast<EventImpl::EventId>(_id),canBubbleArg,cancelableArg);
     khtml::SharedPtr<DocumentImpl> doc = getDocument();
     evt->setTarget(doc.get());
+    doc->handleWindowEvent(evt.get(), true);
     doc->handleWindowEvent(evt.get(), false);
 
     if (_id == EventImpl::LOAD_EVENT && !evt->propagationStopped() && doc) {

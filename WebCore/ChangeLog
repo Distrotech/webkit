@@ -1,3 +1,14 @@
+2006-06-14  David Harrison  <harrison@apple.com>
+
+        Written by mjs, reviewed by Tim H.
+
+        <rdar://problem/4586051> 10.4.7 regression: 'Saved and recent' button on mapquest.com does not work
+
+        * khtml/xml/dom_nodeimpl.cpp:
+        (NodeImpl::dispatchWindowEvent):
+        Call window capturing event handlers, not just bubbling event handlers.
+        
+
 === WebCore-418.17 ===
 
 2006-06-13  Geoffrey Garen  <ggaren@apple.com>
@@ -26,6 +37,8 @@
 2006-06-13  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Harrison, landed by Tim H.
+
+        <rdar://problem/4583892> 10.4.7 regression: Hang occurs when attempting to load search results at mapquest.com
 
         Handle window events for capture phase, except load events, this quirk is needed because
         Mozilla used to not do the bubble or capture phase for image load events and sites mistakenly
