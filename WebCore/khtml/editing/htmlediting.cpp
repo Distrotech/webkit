@@ -897,13 +897,26 @@ void CompositeEditCommand::removeNodeAndPruneAncestors(DOM::NodeImpl* node)
     prune(parent);
 }
 
+bool hasARenderedDescendant(NodeImpl* node)
+{
+    NodeImpl* n = node->firstChild();
+    while (n) {
+        if (n->renderer())
+            return true;
+        n = n->traverseNextNode(node);
+    }
+    return false;
+}
+
 void CompositeEditCommand::prune(DOM::NodeImpl* node)
 {
     while (node) {
         DOM::NodeImpl* parent = node->parentNode();
         // If you change this rule you may have to add an updateLayout() here.
-        if (node->renderer() && node->renderer()->firstChild())
+        RenderObject* renderer = node->renderer();
+        if (renderer && (!renderer->canHaveChildren() || hasARenderedDescendant(node) || node->rootEditableElement() == node))
             return;
+            
         removeNode(node);
         node = parent;
     }

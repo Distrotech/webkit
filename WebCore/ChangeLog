@@ -1,3 +1,17 @@
+2006-06-14  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by thatcher, harrison
+        
+        <rdar://problem/4585175> 10.4.7 regression: Text from end of signature unexpectedly removed
+        
+        Merged fix for:
+        <http://bugzilla.opendarwin.org/show_bug.cgi?id=8459>
+        REGRESSION: Content lost during a delete/merge of whitespace:pre text
+
+        * khtml/editing/htmlediting.cpp:
+        (khtml::hasARenderedDescendant): Added.
+        (khtml::CompositeEditCommand::prune): Don't prune a leaf, the root editable element, or a container with one or more rendered descendants.
+
 === WebCore-418.18 ===
 
 2006-06-14  David Harrison  <harrison@apple.com>
