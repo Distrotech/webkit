@@ -182,6 +182,8 @@ void RenderFlow::deleteLineBoxes()
 
 void RenderFlow::detach()
 {
+    m_continuation = 0;
+
     if (!documentBeingDestroyed()) {
         if (m_firstLineBox) {
             // We can't wait for RenderContainer::detach to clear the selection,
