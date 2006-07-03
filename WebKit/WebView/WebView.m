@@ -1636,7 +1636,7 @@ NSMutableDictionary *countInvocations;
     if (_private->pluginDatabase && [_private->pluginDatabase isMIMETypeRegistered:MIMEType])
         return YES;
     
-    return nil;
+    return NO;
 }
 
 + (BOOL)canShowMIMETypeAsHTML:(NSString *)MIMEType
