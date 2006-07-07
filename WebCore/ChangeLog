@@ -8,6 +8,8 @@
         If we get back from recalcStyle, and there's only one ref, return early since the the view will be deleted when we exit layout.
         * khtml/khtmlview.h: (KHTMLView::hasOneRef): Added.
 
+=== WebCore-418.20 ===
+
 2006-07-05  Alice Liu  <alice.liu@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch
