@@ -34,14 +34,14 @@ namespace KJS {
     class ExecState;
     class JSValue;
     class JSObject;
-    class ReferenceList;
+    class PropertyNameArray;
 }
 
 /* Opaque typing convenience methods */
 
 inline KJS::ExecState* toJS(JSContextRef c)
 {
-    return reinterpret_cast<KJS::ExecState*>(const_cast<__JSContext*>(c));
+    return reinterpret_cast<KJS::ExecState*>(const_cast<OpaqueJSContext*>(c));
 }
 
 inline KJS::ExecState* toJS(JSGlobalContextRef c)
@@ -51,7 +51,7 @@ inline KJS::ExecState* toJS(JSGlobalContextRef c)
 
 inline KJS::JSValue* toJS(JSValueRef v)
 {
-    return reinterpret_cast<KJS::JSValue*>(const_cast<__JSValue*>(v));
+    return reinterpret_cast<KJS::JSValue*>(const_cast<OpaqueJSValue*>(v));
 }
 
 inline KJS::UString::Rep* toJS(JSStringRef b)
@@ -64,9 +64,9 @@ inline KJS::JSObject* toJS(JSObjectRef o)
     return reinterpret_cast<KJS::JSObject*>(o);
 }
 
-inline KJS::ReferenceList* toJS(JSPropertyListRef l)
+inline KJS::PropertyNameArray* toJS(JSPropertyNameAccumulatorRef a)
 {
-    return reinterpret_cast<KJS::ReferenceList*>(l);
+    return reinterpret_cast<KJS::PropertyNameArray*>(a);
 }
 
 inline JSValueRef toRef(KJS::JSValue* v)
@@ -94,14 +94,14 @@ inline JSObjectRef toRef(const KJS::JSObject* o)
     return reinterpret_cast<JSObjectRef>(const_cast<KJS::JSObject*>(o));
 }
 
-inline JSPropertyListRef toRef(KJS::ReferenceList* l)
-{
-    return reinterpret_cast<JSPropertyListRef>(l);
-}
-
 inline JSContextRef toRef(KJS::ExecState* e)
 {
     return reinterpret_cast<JSContextRef>(e);
+}
+
+inline JSPropertyNameAccumulatorRef toRef(KJS::PropertyNameArray* l)
+{
+    return reinterpret_cast<JSPropertyNameAccumulatorRef>(l);
 }
 
 #endif // APICast_h

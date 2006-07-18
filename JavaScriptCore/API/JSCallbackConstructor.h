@@ -28,29 +28,29 @@
 #define JSCallbackConstructor_h
 
 #include "JSObjectRef.h"
-#include "object.h"
+#include <kjs/object.h>
 
 namespace KJS {
-    
+
 class JSCallbackConstructor : public JSObject
 {
 public:
-    JSCallbackConstructor(ExecState* exec, JSObjectCallAsConstructorCallback callback);
+    JSCallbackConstructor(ExecState* exec, JSClassRef jsClass, JSObjectCallAsConstructorCallback callback);
+    virtual ~JSCallbackConstructor();
+    
+    virtual bool implementsHasInstance() const;
     
     virtual bool implementsConstruct() const;
     virtual JSObject* construct(ExecState*, const List &args);
-
-    void setPrivate(void* data);
-    void* getPrivate();
-
+    
     virtual const ClassInfo *classInfo() const { return &info; }
     static const ClassInfo info;
     
 private:
     JSCallbackConstructor(); // prevent default construction
     JSCallbackConstructor(const JSCallbackConstructor&);
-    
-    void* m_privateData;
+
+    JSClassRef m_class;
     JSObjectCallAsConstructorCallback m_callback;
 };
 

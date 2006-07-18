@@ -39,6 +39,20 @@ function shouldBe(a, b)
         print("__FAIL__: " + a + " should be " + b + " but instead is " + evalA + ".", "red");
 }
 
+function shouldThrow(a)
+{
+    var result = "__FAIL__: " + a + " did not throw an exception.";
+    
+    var evalA;
+    try {
+        eval(a);
+    } catch(e) {
+        result = "PASS: " + a + " threw: " + e;
+    }
+    
+    print(result);
+}
+
 shouldBe("typeof MyObject", "function"); // our object implements 'call'
 MyObject.cantFind = 1;
 shouldBe("MyObject.cantFind", undefined);
@@ -49,6 +63,7 @@ shouldBe("MyObject.alwaysOne", 1);
 MyObject.cantDelete = 1;
 delete MyObject.cantDelete;
 shouldBe("MyObject.cantDelete", 1);
+shouldBe("delete MyObject.throwOnDelete", 2); // deleteProperty -- should throw 2
 MyObject.cantSet = 1;
 shouldBe("MyObject.cantSet", undefined);
 
@@ -67,19 +82,43 @@ print(foundRegularType
       ? "PASS: MyObject.regularType was enumerated"
       : "__FAIL__: MyObject.regularType was not enumerated");
 
+myObject = new MyObject();
+
 shouldBe("delete MyObject.regularType", true);
 shouldBe("MyObject.regularType", undefined);
 shouldBe("MyObject(0)", 1);
 shouldBe("MyObject()", undefined);
-shouldBe("typeof new MyObject()", "object");
-shouldBe("MyObject ? 1 : 0", 2); // toBoolean -- should throw 2
+shouldBe("typeof myObject", "object");
+shouldBe("MyObject ? 1 : 0", true); // toBoolean
 shouldBe("+MyObject", 1); // toNumber
-shouldBe("(MyObject.toString())", "[object CallbackObject]"); // toString
+shouldBe("(MyObject.toString())", "[object MyObject]"); // toString
 shouldBe("MyObject - 0", NaN); // toPrimitive
 
 shouldBe("typeof MyConstructor", "object");
 constructedObject = new MyConstructor(1);
 shouldBe("typeof constructedObject", "object");
 shouldBe("constructedObject.value", 1);
-shouldBe("(new MyObject()) instanceof MyObject", true);
+shouldBe("myObject instanceof MyObject", true);
 shouldBe("(new Object()) instanceof MyObject", false);
+
+shouldThrow("MyObject.nullGetSet = 1");
+shouldThrow("MyObject.nullGetSet");
+shouldThrow("MyObject.nullCall()");
+shouldThrow("MyObject.hasPropertyLie");
+
+derived = new Derived();
+
+// base properties and functions return 1 when called/gotten; derived, 2
+shouldBe("derived.baseProtoDup()", 2);
+shouldBe("derived.baseProto()", 1);
+shouldBe("derived.baseDup", 2);
+shouldBe("derived.baseOnly", 1);
+shouldBe("derived.protoOnly()", 2);
+shouldBe("derived.protoDup", 2);
+shouldBe("derived.derivedOnly", 2)
+
+// base properties throw 1 when set; derived, 2
+shouldBe("derived.baseDup = 0", 2);
+shouldBe("derived.baseOnly = 0", 1);
+shouldBe("derived.derivedOnly = 0", 2)
+shouldBe("derived.protoDup = 0", 2);

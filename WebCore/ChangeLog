@@ -1,3 +1,63 @@
+2006-07-18  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Anders.
+        
+        <rdar://problem/4636216> NetNewsWire fails to launch on 9A224 - missing symbols
+        
+        WebCore needs to add -sub_library libobjc to maintain
+        backwards compatibility with binaries linked with WebKit
+        before JavaScriptCore moved out of WebKit.
+
+        * WebCore.xcodeproj/project.pbxproj:
+
+2006-07-17  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Darin.
+
+        <rdar://problem/4635281> JSCanvasRenderingContext2D::drawImage needs to initialize the exception code to zero
+
+        * bindings/js/JSCanvasRenderingContext2DCustom.cpp:
+        (WebCore::JSCanvasRenderingContext2D::drawImage): initialize ec to zero
+        * html/CanvasRenderingContext2D.cpp:
+        (WebCore::CanvasRenderingContext2D::drawImage): initialize ec before earlier return
+
+2006-07-17  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Maciej.
+
+        <rdar://problem/4634874> WebScriptObject and WebUndefined are no longer defined by WebKit
+
+        Moves WebScriptObject and WebUndefined to WebCore.
+
+        * WebCore.exp:
+        * WebCore.xcodeproj/project.pbxproj:
+        * bindings/objc/DOM.mm:
+        * bindings/objc/DOMCore.h:
+        * bindings/objc/DOMInternal.mm:
+        * bindings/objc/DOMUtility.mm:
+        * bindings/objc/WebScriptObject.mm: Added.
+        (+[WebUndefined allocWithZone:]):
+        (-[WebUndefined initWithCoder:]):
+        (-[WebUndefined encodeWithCoder:]):
+        (-[WebUndefined copyWithZone:]):
+        * bindings/objc/WebScriptObjectPrivate.h: Added.
+        * bridge/mac/FrameMac.mm:
+        * bridge/mac/WebCoreScriptDebugger.mm:
+
+2006-07-15  Darin Adler  <darin@apple.com>
+
+        Reviewed by John Sullivan.
+
+        - fix http://bugzilla.opendarwin.org/show_bug.cgi?id=9928
+          REGRESSION: Text Encoding menu inoperative (after gcc protocol build fix)
+
+        * bindings/objc/DOM.mm:
+        (-[DOMNode addEventListener:::]): Moved into DOMEventTarget category.
+        (-[DOMNode removeEventListener:::]): Ditto.
+        (-[DOMNode dispatchEvent:]): Ditto.
+
+        * WebCore.xcodeproj/project.pbxproj: Allow Xcode to do its thing.
+
 === Safari-521.17 ===
 
 2006-07-14  Timothy Hatcher  <timothy@apple.com>

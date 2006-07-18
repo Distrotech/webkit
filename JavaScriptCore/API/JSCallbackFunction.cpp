@@ -33,15 +33,16 @@ namespace KJS {
 
 const ClassInfo JSCallbackFunction::info = { "CallbackFunction", &InternalFunctionImp::info, 0, 0 };
 
-JSCallbackFunction::JSCallbackFunction(ExecState* exec, JSObjectCallAsFunctionCallback callback)
-    : InternalFunctionImp(static_cast<FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()))
+JSCallbackFunction::JSCallbackFunction(ExecState* exec, JSObjectCallAsFunctionCallback callback, const Identifier& name)
+    : InternalFunctionImp(static_cast<FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()), name)
     , m_callback(callback)
 {
 }
 
-bool JSCallbackFunction::implementsCall() const
-{
-    return true;
+// InternalFunctionImp mish-mashes constructor and function behavior -- we should 
+// refactor the code so this override isn't necessary
+bool JSCallbackFunction::implementsHasInstance() const { 
+    return false; 
 }
 
 JSValue* JSCallbackFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List &args)
@@ -50,21 +51,11 @@ JSValue* JSCallbackFunction::callAsFunction(ExecState* exec, JSObject* thisObj, 
     JSObjectRef thisRef = toRef(this);
     JSObjectRef thisObjRef = toRef(thisObj);
 
-    size_t argc = args.size();
-    JSValueRef argv[argc];
-    for (size_t i = 0; i < argc; i++)
-        argv[i] = toRef(args[i]);
-    return toJS(m_callback(execRef, thisRef, thisObjRef, argc, argv, toRef(exec->exceptionSlot())));
-}
-
-void JSCallbackFunction::setPrivate(void* data)
-{
-    m_privateData = data;
-}
-
-void* JSCallbackFunction::getPrivate()
-{
-    return m_privateData;
+    size_t argumentCount = args.size();
+    JSValueRef arguments[argumentCount];
+    for (size_t i = 0; i < argumentCount; i++)
+        arguments[i] = toRef(args[i]);
+    return toJS(m_callback(execRef, thisRef, thisObjRef, argumentCount, arguments, toRef(exec->exceptionSlot())));
 }
 
 } // namespace KJS

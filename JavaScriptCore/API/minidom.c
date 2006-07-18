@@ -29,7 +29,7 @@
 #include <wtf/UnusedParam.h>
 
 static char* createStringWithContentsOfFile(const char* fileName);
-static JSValueRef print(JSContextRef context, JSObjectRef object, JSObjectRef thisObject, size_t argc, JSValueRef argv[], JSValueRef* exception);
+static JSValueRef print(JSContextRef context, JSObjectRef object, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
 
 int main(int argc, char* argv[])
 {
@@ -40,11 +40,11 @@ int main(int argc, char* argv[])
     JSObjectRef globalObject = JSContextGetGlobalObject(context);
     
     JSStringRef printIString = JSStringCreateWithUTF8CString("print");
-    JSObjectSetProperty(context, globalObject, printIString, JSObjectMakeFunction(context, print), kJSPropertyAttributeNone);
+    JSObjectSetProperty(context, globalObject, printIString, JSObjectMakeFunctionWithCallback(context, printIString, print), kJSPropertyAttributeNone, NULL);
     JSStringRelease(printIString);
     
     JSStringRef node = JSStringCreateWithUTF8CString("Node");
-    JSObjectSetProperty(context, globalObject, node, JSObjectMakeConstructor(context, JSNode_construct), kJSPropertyAttributeNone);
+    JSObjectSetProperty(context, globalObject, node, JSObjectMakeConstructor(context, JSNode_class(context), JSNode_construct), kJSPropertyAttributeNone, NULL);
     JSStringRelease(node);
     
     char* scriptUTF8 = createStringWithContentsOfFile("minidom.js");
@@ -64,31 +64,24 @@ int main(int argc, char* argv[])
     JSStringRelease(script);
     free(scriptUTF8);
 
-#if 0 // used for leak/finalize debugging    
-    int i;
-    for (i = 0; i < 1000; i++) {
-        JSObjectRef o = JSObjectMake(context, NULL, NULL);
-        (void)o;
-    }
-    JSGarbageCollect();
-#endif
-    
+    globalObject = 0;
     JSGlobalContextRelease(context);
+    JSGarbageCollect(context);
     printf("PASS: Program exited normally.\n");
     return 0;
 }
 
-static JSValueRef print(JSContextRef context, JSObjectRef object, JSObjectRef thisObject, size_t argc, JSValueRef argv[], JSValueRef* exception)
+static JSValueRef print(JSContextRef context, JSObjectRef object, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
 {
-    if (argc > 0) {
-        JSStringRef string = JSValueToStringCopy(context, argv[0], NULL);
+    if (argumentCount > 0) {
+        JSStringRef string = JSValueToStringCopy(context, arguments[0], NULL);
         size_t numChars = JSStringGetMaximumUTF8CStringSize(string);
         char stringUTF8[numChars];
         JSStringGetUTF8CString(string, stringUTF8, numChars);
         printf("%s\n", stringUTF8);
     }
     
-    return JSValueMakeUndefined();
+    return JSValueMakeUndefined(context);
 }
 
 static char* createStringWithContentsOfFile(const char* fileName)

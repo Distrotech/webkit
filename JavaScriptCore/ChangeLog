@@ -1,3 +1,585 @@
+2006-07-18  Timothy Hatcher  <timothy@apple.com>
+
+        Made the following headers public:
+
+        * JavaScriptCore.h
+        * JSBase.h
+        * JSContextRef.h
+        * JSObjectRef.h
+        * JSStringRef.h
+        * JSValueRef.h
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+
+2006-07-17  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej.
+        
+        - Added automatic prototype creation for classes.
+        
+        A class stores a weak reference to a prototype, which is cleared when
+        the prototype is garbage collected, to avoid a reference cycle.
+        
+        We now have an attributes field in JSClassDefinition, that currently is
+        used only to override automatic prototype creation when you want to manage your
+        own prototypes, but can be extended in the future for other nefarious purposes.
+        
+        Similarly, we have JSObjectMake and JSObjectMakeWithPrototype, the latter
+        allowing you to manage your own prototypes.
+        
+        JSObjectMakeConstructor is more interesting now, able to make a constructor
+        on your behalf if you just give it a class.
+        
+        - Removed bogus old code from minidom.js.
+        
+        - Tweaked the headerdocs.
+        
+        - Added more GC testing, which caught some leaks, and tested more funny 
+        edge cases in lookup, which caught a lookup bug. Removed some testing 
+        we used to do with MyObject because it was redundant with the new, cool 
+        stuff.
+        
+        While fixing the lookup bug I retracted this change:
+        
+            "If a static setProperty callback returns 'false', to indicate that the
+            property was not set, we no longer forward the set request up the class
+            chain, because that's almost certainly not what the programmer expected."
+
+        Returning false when setting a static property is a little silly, but you can see
+        it being useful when shadowing a base class's static properties, and, regardless
+        of usefullness, this is the defined behavior of the setProperty callback.
+        
+        - Plus a little ASCII art, for the kids.
+
+2006-07-17  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Maciej.
+
+        <rdar://problem/4634874> WebScriptObject and WebUndefined are no longer defined by WebKit
+
+        Moves WebScriptObject and WebUndefined up to WebCore.
+        This change does create an upwards-dependancy on WebScriptObject existing
+        in the loaded process, but this code path in JavaScriptCore does not get used
+        unless it is through WebKit/WebCore. Moving all of the binding code out of
+        JavaScriptCore might make sense in the future.
+
+        * JavaScriptCore.exp:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * bindings/objc/WebScriptObject.h: Replaced.
+        * bindings/objc/WebScriptObject.mm: Removed.
+        * bindings/objc/WebScriptObjectPrivate.h: Removed.
+        * bindings/objc/objc_class.h:
+        * bindings/objc/objc_instance.h:
+        * bindings/objc/objc_instance.mm:
+        (ObjcInstance::~ObjcInstance):
+        * bindings/objc/objc_runtime.h:
+        * bindings/objc/objc_runtime.mm:
+        (convertValueToObjcObject):
+        * bindings/objc/objc_utility.mm:
+        (KJS::Bindings::convertValueToObjcValue):
+        (KJS::Bindings::convertObjcValueToValue):
+        (KJS::Bindings::createObjcInstanceForValue):
+
+2006-07-17  Darin Adler  <darin@apple.com>
+
+        * API/JSBase.h: Fix comment formatting where things used to be lined up but
+        are now ragged. Got rid of spaces that attempted to line things up.
+        * API/JSObjectRef.h: Ditto. Also add missing periods for a couple of comments.
+
+2006-07-17  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej.
+        
+        - Removed the exception parameter from the initialize callback and, by extension,
+        JSObjectMake. We have never had a need for exceptions when iniitializing,
+        so the parameter seemed likely to "get in the way." 
+        
+        Also, an exception in JavaScript is thrown in response to input -- 
+        "invalid URL", "index not a number", etc., so it's the job of the 
+        constructor function, not the initialize method, to throw.
+        
+        If initialize *really* wants to throw, it can communicate the throw to
+        the constructor through the constructed object's private data (e.g., set
+        it to NULL, signaling to the consntructor that initialization failed.)
+        
+        - Added JSObjectMakeWithData, which enables a constructor to set private
+        data on an object *before* it has been initialized. That way, the initialize
+        methods can properly operate on the data. 
+
+        * API/JSNode.c: Moved ref into the initialize method, for better encapsulation,
+        now that it's possible.
+        * API/JSNodeList.c: ditto
+        * API/minidom.c:
+        (main): Do more aggressive garbage collection to test ref/deref and 
+        initialize/finalize.
+        * API/minidom.js: store childNodes in a temporary so it doesn't get re-created
+        like a thousand times. This makes debugging ref/deref easier
+
+2006-07-17  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej.
+        
+        - Changed the initialize callback to run from least derived class (parent
+        class) to most derived class. This enables C++ style initialization,
+        and derived class overriding of member data.
+        
+        - Added excpetion propopgation to JSObjectMake, to support initialize
+        exceptions, and generally round out our policy of making function
+        signatures as long as possible.
+
+        * API/JSCallbackObject.h: Use ExecState instead of ContextRef, cuz we're
+        in C++ land now.
+
+2006-07-17  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej.
+        
+        - Changed JSObjectMakeConstructor to JSObjectMakeConstructorWithCallback,
+        to match JSObjectMakeFunctionWithCallback.
+        
+        - Added prototype parameter, so the generated constructor
+        automatically works with hasInstance / instanceof
+        
+        - Moved hasInstance implementation from InternalFunctionImp to JSObject
+        so that subclasses can inherit it without inheriting function-related baggage.
+        More refactoring here would be good, but this seems like a good short-term
+        solution.
+
+        (KJS::JSCallbackFunction::implementsHasInstance): override and return false,
+        because callback functions aren't constructors.
+
+2006-07-17  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Geoff.
+        
+        - add a JSContextRef parameter to all JSValueRef, JSObjectRef, and JSContextRef operations;
+        except JSObject{Get,Set}PrivateData which can be assumed to be simple pure accessors.
+        
+        Also renamed the parameter "context" to "ctx" because it makes the code read better with this pervasive
+        but usually uninteresting parameter.
+
+        * API/JSBase.cpp:
+        (JSEvaluateScript):
+        (JSCheckScriptSyntax):
+        (JSGarbageCollect):
+        * API/JSBase.h:
+        * API/JSCallbackObject.cpp:
+        (KJS::JSCallbackObject::JSCallbackObject):
+        (KJS::JSCallbackObject::init):
+        (KJS::JSCallbackObject::getOwnPropertySlot):
+        (KJS::JSCallbackObject::put):
+        (KJS::JSCallbackObject::deleteProperty):
+        (KJS::JSCallbackObject::toNumber):
+        (KJS::JSCallbackObject::toString):
+        * API/JSContextRef.cpp:
+        (JSGlobalContextCreate):
+        (JSGlobalContextRetain):
+        (JSGlobalContextRelease):
+        (JSContextGetGlobalObject):
+        * API/JSContextRef.h:
+        * API/JSNode.c:
+        (JSNodePrototype_appendChild):
+        (JSNodePrototype_removeChild):
+        (JSNodePrototype_replaceChild):
+        (JSNode_getNodeType):
+        (JSNode_getFirstChild):
+        (JSNode_prototype):
+        * API/JSNodeList.c:
+        (JSNodeListPrototype_item):
+        (JSNodeList_length):
+        (JSNodeList_getProperty):
+        (JSNodeList_prototype):
+        * API/JSObjectRef.cpp:
+        (JSObjectMake):
+        (JSObjectMakeFunctionWithCallback):
+        (JSObjectMakeConstructor):
+        (JSObjectMakeFunction):
+        (JSObjectGetPrototype):
+        (JSObjectSetPrototype):
+        (JSObjectHasProperty):
+        (JSObjectGetProperty):
+        (JSObjectSetProperty):
+        (JSObjectGetPropertyAtIndex):
+        (JSObjectSetPropertyAtIndex):
+        (JSObjectDeleteProperty):
+        (JSObjectIsFunction):
+        (JSObjectCallAsFunction):
+        (JSObjectIsConstructor):
+        (JSObjectCallAsConstructor):
+        (JSObjectCopyPropertyNames):
+        * API/JSObjectRef.h:
+        * API/JSStringRef.cpp:
+        * API/JSValueRef.cpp:
+        (JSValueGetType):
+        (JSValueIsUndefined):
+        (JSValueIsNull):
+        (JSValueIsBoolean):
+        (JSValueIsNumber):
+        (JSValueIsString):
+        (JSValueIsObject):
+        (JSValueIsObjectOfClass):
+        (JSValueIsEqual):
+        (JSValueIsStrictEqual):
+        (JSValueIsInstanceOfConstructor):
+        (JSValueMakeUndefined):
+        (JSValueMakeNull):
+        (JSValueMakeBoolean):
+        (JSValueMakeNumber):
+        (JSValueMakeString):
+        (JSValueToBoolean):
+        (JSValueToNumber):
+        (JSValueToStringCopy):
+        (JSValueToObject):
+        (JSValueProtect):
+        (JSValueUnprotect):
+        * API/JSValueRef.h:
+        * API/minidom.c:
+        (print):
+        * API/testapi.c:
+        (MyObject_getProperty):
+        (MyObject_deleteProperty):
+        (MyObject_callAsFunction):
+        (MyObject_callAsConstructor):
+        (MyObject_convertToType):
+        (print_callAsFunction):
+        (main):
+
+2006-07-16  Geoffrey Garen  <ggaren@apple.com>
+
+        Approved by Maciej, RS by Beth.
+        
+        JSObjectMakeFunction -> JSObjectMakeFunctionWithCallback
+        JSObjectMakeFunctionWithBody -> JSObjectMakeFunction
+        
+        because the latter is more common, and more fundamental, than the former.
+
+        * API/APICast.h:
+        (toJS):
+        * API/JSBase.h:
+        * API/JSCallbackObject.cpp:
+        (KJS::JSCallbackObject::getOwnPropertySlot):
+        (KJS::JSCallbackObject::put):
+        (KJS::JSCallbackObject::deleteProperty):
+        (KJS::JSCallbackObject::getPropertyNames):
+        (KJS::JSCallbackObject::staticValueGetter):
+        (KJS::JSCallbackObject::staticFunctionGetter):
+        * API/JSClassRef.cpp:
+        (OpaqueJSClass::OpaqueJSClass):
+        (OpaqueJSClass::~OpaqueJSClass):
+        * API/JSClassRef.h:
+        * API/JSObjectRef.cpp:
+        (JSClassCreate):
+        (JSObjectMakeFunctionWithCallback):
+        (JSObjectMakeFunction):
+        (OpaqueJSPropertyNameArray::OpaqueJSPropertyNameArray):
+        (JSObjectCopyPropertyNames):
+        * API/JSObjectRef.h:
+        * API/minidom.c:
+        (main):
+        * API/testapi.c:
+        (main):
+        * ChangeLog:
+        * JavaScriptCore.exp:
+
+2006-07-16  Geoffrey Garen  <ggaren@apple.com>
+
+        Laughed at by Beth.
+        
+        Replace __JS with OpaqueJS because the former, while used by CF, is
+        a prefix that's triply-reserved by the compiler. (_* is reserved in global 
+        names, _[A-Z] is reserved in all names, and __ is reserved in all names 
+        in C++.)
+        
+        Opaque is an alternative used by other Mac OS X framewokrs.
+
+        * API/APICast.h:
+        (toJS):
+        * API/JSBase.h:
+        * API/JSCallbackObject.cpp:
+        (KJS::JSCallbackObject::getOwnPropertySlot):
+        (KJS::JSCallbackObject::put):
+        (KJS::JSCallbackObject::deleteProperty):
+        (KJS::JSCallbackObject::getPropertyNames):
+        (KJS::JSCallbackObject::staticValueGetter):
+        (KJS::JSCallbackObject::staticFunctionGetter):
+        * API/JSClassRef.cpp:
+        (OpaqueJSClass::OpaqueJSClass):
+        (OpaqueJSClass::~OpaqueJSClass):
+        * API/JSClassRef.h:
+        * API/JSObjectRef.cpp:
+        (JSClassCreate):
+        (OpaqueJSPropertyNameArray::OpaqueJSPropertyNameArray):
+        (JSObjectCopyPropertyNames):
+
+2006-07-16  Darin Adler  <darin@apple.com>
+
+        - try to fix Windows build
+
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCore.vcproj:
+        Added some recently added files, removed some recently removed.
+
+2006-07-16  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej.
+        
+        - Change getProperty* to return undefined, rather than NULL, for missing
+        properties, since that's what the spec says. Also added exception out
+        parameters to the *Index functions, because they can call through to the
+        regular functions, which can throw for custom objects.
+
+        * API/JSObjectRef.cpp:
+        (JSObjectGetProperty):
+        (JSObjectGetPropertyAtIndex):
+        (JSObjectSetPropertyAtIndex):
+        * API/JSObjectRef.h:
+        * API/testapi.c:
+        (main):
+
+2006-07-16  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej.
+        
+        - Properly document and handle NULL callbacks for static properties. We
+        throw an exception in any case other than a ReadOnly property with a NULL
+        setProperty callback, because a NULL callback almost certainly indicates 
+        a programming error. Also throw an exception if hasProperty returns true
+        for a property that getProperty can't get.
+        
+        - If a static setProperty callback returns 'false', to indicate that the
+        property was not set, we no longer forward the set request up the class
+        chain, because that's almost certainly not what the programmer expected.
+
+        * API/JSCallbackObject.cpp:
+        (KJS::JSCallbackObject::getOwnPropertySlot):
+        (KJS::JSCallbackObject::put):
+        (KJS::JSCallbackObject::staticValueGetter):
+        (KJS::JSCallbackObject::staticFunctionGetter):
+        (KJS::JSCallbackObject::callbackGetter):
+        * API/JSObjectRef.h:
+        * API/minidom.js:
+        * API/testapi.c:
+        (MyObject_hasProperty):
+        * API/testapi.js:
+
+2006-07-16  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej.
+        
+        - Added names to functions.
+        
+        - Removed GetPrivate/SetPrivate from callbackFunctions and callbackConstructors.
+        The private data idiom is that a JS object stores its native implementation
+        as private data. For functions and constructors, the native implementation is nothing
+        more than the callback they already store, so supporting private data, too,
+        confuses the idiom. If you *really* want, you can still create a custom 
+        function with private data.
+
+        * API/JSCallbackConstructor.cpp:
+        * API/JSCallbackConstructor.h:
+        * API/JSCallbackFunction.cpp:
+        (KJS::JSCallbackFunction::JSCallbackFunction):
+        * API/JSCallbackFunction.h:
+        * API/JSCallbackObject.cpp:
+        (KJS::JSCallbackObject::staticFunctionGetter):
+        * API/JSObjectRef.cpp:
+        (JSObjectMakeFunction):
+        (JSObjectMakeFunctionWithBody):
+        (JSObjectGetPrivate):
+        (JSObjectSetPrivate):
+        * API/JSObjectRef.h:
+        * API/minidom.c:
+        (main):
+        * API/testapi.c:
+        (main):
+
+2006-07-15  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+        
+        - switch property lists to be vector+set of Identifiers instead of list of References
+        
+        This has the following benefits:
+        
+        - no duplicates in property lists
+        - simplifies API calls
+        - probably more efficient, since linked list is gone
+        - entirely removed Reference, ReferenceList and ProtectedReference types from the API
+
+        * kjs/PropertyNameArray.cpp: Added.
+        (KJS::PropertyNameArray::add): Check set, if not already there, add to
+        vector.
+        * kjs/PropertyNameArray.h: Added.
+        (KJS::PropertyNameArray::PropertyNameArray): Newly added type, combines
+        a set and a vector to make a unique but ordered list of identifiers.
+        (KJS::PropertyNameArray::begin): ditto
+        (KJS::PropertyNameArray::end): ditto
+        (KJS::PropertyNameArray::size): ditto
+        (KJS::PropertyNameArray::operator[]): ditto
+        * kjs/array_instance.h:
+        * kjs/array_object.cpp:
+        (ArrayInstance::getPropertyNames): renamed from getPropertyList, updated
+        for PropertyNameArray
+        (ArrayInstance::setLength): updated for PropertyNameArray
+        (ArrayInstance::pushUndefinedObjectsToEnd): ditto
+        * kjs/nodes.cpp:
+        (ForInNode::execute): updated for PropertyNameArray
+        * kjs/nodes.h:
+        * kjs/object.cpp:
+        (KJS::JSObject::getPropertyNames): renamed from getPropertyList, updated
+        for PropertyNameArray
+        * kjs/object.h:
+        * kjs/property_map.cpp:
+        (KJS::PropertyMap::getEnumerablePropertyNames): updated for PropertyNameArray
+        (KJS::PropertyMap::getSparseArrayPropertyNames): ditto
+        * kjs/property_map.h:
+        * kjs/protected_reference.h: Removed.
+        * kjs/reference.cpp: Removed.
+        * kjs/reference.h: Removed.
+        * kjs/reference_list.cpp: Removed.
+        * kjs/reference_list.h: Removed.
+        * kjs/scope_chain.cpp:
+        (KJS::ScopeChain::print): Use PropertyNamesArray instead of ReferenceList.
+        * kjs/string_object.cpp:
+        (StringInstance::getPropertyNames): Updated for new approach.
+        * kjs/string_object.h:
+        * kjs/ustring.h:
+        * API/APICast.h:
+        (toJS): Added overload for PropertyNameAccumulatorRef / PropertyNameArray*
+        (toRef): ditto
+        * API/JSBase.h:
+        * API/JSCallbackObject.cpp:
+        (KJS::JSCallbackObject::getPropertyNames): Fixed for new API.
+        * API/JSCallbackObject.h:
+        * API/JSObjectRef.cpp:
+        (__JSPropertyNameArray::__JSPropertyNameArray): Type used for a publicly vended
+        JSPropertyNameArrayRef.
+        (JSObjectCopyPropertyNames): New API call - renamed / refactored from 
+        JSObjectCreatePropertyList
+        (JSPropertyNameArrayRetain): new retain call for JSPropertyNameArray.
+        (JSPropertyNameArrayRelease): new release call for - " -.
+        (JSPropertyNameArrayGetCount): Instead of having to use a stateful enumerator you
+        can now get the count and items in any order.
+        (JSPropertyNameArrayGetNameAtIndex): See above.
+        (JSPropertyNameAccumulatorAddName): What you add properties to is now an opaque 
+        accumulator object.
+        * API/JSObjectRef.h: Prototyped new functions, removed old ones
+        * JavaScriptCore.exp: Updated exported symbols.
+        * JavaScriptCore.xcodeproj/project.pbxproj: Added new files, removed old.
+        * API/testapi.c:
+        (MyObject_getPropertyNames): Renamed / fixed callback to fit new paradigm.
+        (main): Updated for new API.
+
+2006-07-15  Darin Adler  <darin@apple.com>
+
+        - oops, missed a few more arrays that had to be const
+
+        * API/JSNode.c:
+        (JSNodePrototype_appendChild): Added const.
+        (JSNodePrototype_removeChild): Ditto.
+        (JSNodePrototype_replaceChild): Ditto.
+        (JSNode_construct): Ditto.
+        * API/JSNodeList.c:
+        (JSNodeListPrototype_item): Ditto.
+        * API/JSObjectRef.cpp:
+        (JSObjectMakeFunctionWithBody): Ditto.
+        (JSObjectCallAsFunction): Ditto.
+        (JSObjectCallAsConstructor): Ditto.
+        * API/minidom.c:
+        (print): Ditto.
+        * API/testapi.c:
+        (MyObject_callAsFunction): Ditto.
+        (MyObject_callAsConstructor): Ditto.
+        (print_callAsFunction): Ditto.
+        (myConstructor_callAsConstructor): Ditto.
+
+2006-07-15  Darin Adler  <darin@apple.com>
+
+        Reviewed by Maciej.
+
+        * API/JSNode.h: Made an array parameter const.
+        * API/JSObjectRef.h: Made array parameters const. Fixed a comment.
+
+2006-07-15  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej.
+        
+        - JSObjectMakeFunctionWithBody includes a function name and named parameters now.
+
+        * API/JSObjectRef.cpp:
+        (JSObjectMakeFunctionWithBody):
+        * API/JSObjectRef.h:
+        * API/testapi.c:
+        (assertEqualsAsUTF8String): More informative failure reporting.
+        (main): Test more function cases.
+
+2006-07-15  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej.
+
+        - Moved the arguments passed to JSClassCreate into a single structure,
+        called JSClassDefinition. This will enable easier structure 
+        migration/versioning in the future, if necessary.
+        
+        - Added support for class names.
+        
+        - kJSClassDefinitionNull replaces kJSObjectCallbacksNone.
+        
+        - JSClass is becoming a fairly complex struct, so I migrated all of its
+        implementation other than reference counting to the sruct.
+        
+        - Also moved JSClass* functions in the API to JSObjectRef.cpp, since they're
+        declared in JSObjectRef.h
+        
+        - Also added some more informative explanation to the class structure doc.
+        
+2006-07-15  Darin Adler  <darin@apple.com>
+
+        Reviewed by Geoff.
+
+        - fix http://bugzilla.opendarwin.org/show_bug.cgi?id=8395
+          <rdar://problem/4613467>
+          REGRESSION: RegEx seems broken for hex escaped non breaking space
+
+        Test: fast/js/regexp-extended-characters-more.html
+
+        * pcre/pcre_exec.c:
+        (match): Got rid of utf16Length local variable to guarantee there's no
+        extra stack usage in recursive calls. Fixed two places in the PCRE_UTF16
+        code that were using the length variable, which is the UTF-8 length of
+        a character in the pattern, to move in the UTF-16 subject string. Instead
+        they hardcode lengths of 1 and 2 since the code already handles BMP
+        characters and surrogate pairs separately. Also fixed some DPRINTF so
+        I could compile with DEBUG on.
+        (pcre_exec): Changed a place that was checking for multibyte characters
+        in the subject string to use ISMIDCHAR. Instead it was using hardcoded
+        logic that was right for UTF-8 but wrong for UTF-16.
+
+        * pcre/pcre_compile.c: (pcre_compile2): Fixed a DPRINTF so I could compile
+        with DEBUG on.
+
+2006-07-14  Geoffrey Garen  <ggaren@apple.com>
+
+        RS by Maciej.
+        
+        Global replace in the API of argc/argv with argumentCount/arguments.
+
+2006-07-14  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej.
+        
+        - Finalized exception handling in the API.
+        
+        setProperty can throw because it throws for built-in arrays. getProperty
+        and deleteProperty can throw because setProperty can throw and we want
+        to be consistent, and also because they seem like "actions." callAsFunction,
+        callAsConstructor, and hasInstance can throw, because they caan throw for
+        all built-ins.
+        
+        toBoolean can't throw because it's defined that way in the spec.
+        
+        - Documented that toBoolean and toObject can't be overridden by custom 
+        objects because they're defined that way in the spec.
+
 === Safari-521.17 ===
 
 2006-07-14  Geoffrey Garen  <ggaren@apple.com>

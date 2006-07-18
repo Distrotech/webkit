@@ -24,64 +24,134 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
+#include "APICast.h"
+#include "JSCallbackObject.h"
 #include "JSClassRef.h"
 #include "JSObjectRef.h"
 #include "identifier.h"
 
 using namespace KJS;
 
-const JSObjectCallbacks kJSObjectCallbacksNone = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+const JSClassDefinition kJSClassDefinitionEmpty = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-JSClassRef JSClassCreate(JSStaticValue* staticValues, JSStaticFunction* staticFunctions, const JSObjectCallbacks* callbacks, JSClassRef parentClass)
+OpaqueJSClass::OpaqueJSClass(const JSClassDefinition* definition, OpaqueJSClass* protoClass) 
+    : refCount(0)
+    , className(definition->className)
+    , parentClass(definition->parentClass)
+    , prototypeClass(0)
+    , staticValues(0)
+    , staticFunctions(0)
+    , initialize(definition->initialize)
+    , finalize(definition->finalize)
+    , hasProperty(definition->hasProperty)
+    , getProperty(definition->getProperty)
+    , setProperty(definition->setProperty)
+    , deleteProperty(definition->deleteProperty)
+    , getPropertyNames(definition->getPropertyNames)
+    , callAsFunction(definition->callAsFunction)
+    , callAsConstructor(definition->callAsConstructor)
+    , hasInstance(definition->hasInstance)
+    , convertToType(definition->convertToType)
 {
-    JSClassRef jsClass = new __JSClass;
+    if (JSStaticValue* staticValue = definition->staticValues) {
+        staticValues = new StaticValuesTable();
+        while (staticValue->name) {
+            staticValues->add(Identifier(staticValue->name).ustring().rep(), 
+                              new StaticValueEntry(staticValue->getProperty, staticValue->setProperty, staticValue->attributes));
+            ++staticValue;
+        }
+    }
+    
+    if (JSStaticFunction* staticFunction = definition->staticFunctions) {
+        staticFunctions = new StaticFunctionsTable();
+        while (staticFunction->name) {
+            staticFunctions->add(Identifier(staticFunction->name).ustring().rep(), 
+                                 new StaticFunctionEntry(staticFunction->callAsFunction, staticFunction->attributes));
+            ++staticFunction;
+        }
+    }
+        
+    if (protoClass)
+        prototypeClass = JSClassRetain(protoClass);
+}
+
+OpaqueJSClass::~OpaqueJSClass()
+{
     if (staticValues) {
-        jsClass->staticValues = new __JSClass::StaticValuesTable();
-        while (staticValues->name) {
-            jsClass->staticValues->add(Identifier(staticValues->name).ustring().rep(), 
-                                       new StaticValueEntry(staticValues->getProperty, staticValues->setProperty, staticValues->attributes));
-            ++staticValues;
-        }
+        deleteAllValues(*staticValues);
+        delete staticValues;
     }
-    
+
     if (staticFunctions) {
-        jsClass->staticFunctions = new __JSClass::StaticFunctionsTable();
-        while (staticFunctions->name) {
-            jsClass->staticFunctions->add(Identifier(staticFunctions->name).ustring().rep(), 
-                                          new StaticFunctionEntry(staticFunctions->callAsFunction, staticFunctions->attributes));
-            ++staticFunctions;
-        }
+        deleteAllValues(*staticFunctions);
+        delete staticFunctions;
     }
     
-    if (callbacks)
-        jsClass->callbacks = *callbacks;
-    else
-        jsClass->callbacks = kJSObjectCallbacksNone;
-    
-    jsClass->parent = parentClass;
-    
-    return JSClassRetain(jsClass);
+    if (prototypeClass)
+        JSClassRelease(prototypeClass);
 }
 
-JSClassRef JSClassRetain(JSClassRef jsClass)
+JSClassRef OpaqueJSClass::createNoPrototype(const JSClassDefinition* definition)
 {
-    ++jsClass->refCount;
-    return jsClass;
+    return new OpaqueJSClass(definition, 0);
 }
 
-void JSClassRelease(JSClassRef jsClass)
+void clearReferenceToPrototype(JSObjectRef prototype)
 {
-    if (--jsClass->refCount == 0) {
-        if (jsClass->staticValues) {
-            deleteAllValues(*jsClass->staticValues);
-            delete jsClass->staticValues;
-        }
+    OpaqueJSClass* jsClass = static_cast<OpaqueJSClass*>(JSObjectGetPrivate(prototype));
+    ASSERT(jsClass);
+    jsClass->cachedPrototype = 0;
+}
 
-        if (jsClass->staticFunctions) {
-            deleteAllValues(*jsClass->staticFunctions);
-            delete jsClass->staticFunctions;
-        }
+JSClassRef OpaqueJSClass::create(const JSClassDefinition* definition)
+{
+    if (JSStaticFunction* staticFunctions = definition->staticFunctions) {
+        // copy functions into a prototype class
+        JSClassDefinition protoDefinition = kJSClassDefinitionEmpty;
+        protoDefinition.staticFunctions = staticFunctions;
+        protoDefinition.finalize = clearReferenceToPrototype;
+        OpaqueJSClass* protoClass = new OpaqueJSClass(&protoDefinition, 0);
 
-        delete jsClass;
+        // remove functions from the original definition
+        JSClassDefinition objectDefinition = *definition;
+        objectDefinition.staticFunctions = 0;
+        return new OpaqueJSClass(&objectDefinition, protoClass);
     }
+
+    return new OpaqueJSClass(definition, 0);
+}
+
+/*!
+// Doc here in case we make this public. (Hopefully we won't.)
+@function
+ @abstract Returns the prototype that will be used when constructing an object with a given class.
+ @param ctx The execution context to use.
+ @param jsClass A JSClass whose prototype you want to get.
+ @result The JSObject prototype that was automatically generated for jsClass, or NULL if no prototype was automatically generated. This is the prototype that will be used when constructing an object using jsClass.
+*/
+JSObject* OpaqueJSClass::prototype(JSContextRef ctx)
+{
+    /* Class (C++) and prototype (JS) inheritance are parallel, so:
+     *     (C++)      |        (JS)
+     *   ParentClass  |   ParentClassPrototype
+     *       ^        |          ^
+     *       |        |          |
+     *  DerivedClass  |  DerivedClassPrototype
+     */
+    
+    if (!prototypeClass)
+        return 0;
+    
+    ExecState* exec = toJS(ctx);
+    
+    if (!cachedPrototype) {
+        // Recursive, but should be good enough for our purposes
+        JSObject* parentPrototype = 0;
+        if (parentClass)
+            parentPrototype = parentClass->prototype(ctx); // can be null
+        if (!parentPrototype)
+            parentPrototype = exec->dynamicInterpreter()->builtinObjectPrototype();
+        cachedPrototype = new JSCallbackObject(exec, prototypeClass, parentPrototype, this); // set ourself as the object's private data, so it can clear our reference on destruction
+    }
+    return cachedPrototype;
 }
