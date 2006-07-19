@@ -34,8 +34,7 @@
 + (NSString *)webScriptNameForKey:(const char *)name;
 + (BOOL)isKeyExcludedFromWebScript:(const char *)name;
 
-+ (id)_convertValueToObjcValue:(KJS::JSValue *)value originExecutionContext:(const KJS::Bindings::RootObject *)originExecutionContext executionContext:(const KJS::Bindings::RootObject *)executionCont
-ext;
-- _initWithJSObject:(KJS::JSObject *)imp originExecutionContext:(const KJS::Bindings::RootObject *)originExecutionContext executionContext:(const KJS::Bindings::RootObject *)executionContext ;
++ (id)_convertValueToObjcValue:(KJS::JSValue *)value originExecutionContext:(const KJS::Bindings::RootObject *)originExecutionContext executionContext:(const KJS::Bindings::RootObject *)executionContext;
+- _initWithJSObject:(KJS::JSObject *)imp originExecutionContext:(const KJS::Bindings::RootObject *)originExecutionContext executionContext:(const KJS::Bindings::RootObject *)executionContext;
 - (KJS::JSObject *)_imp;
 @end
