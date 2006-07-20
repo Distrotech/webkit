@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2004, 2006 Apple Computer, Inc.  All rights reserved.
- * Copyright (C) 2006 Alexey Proskuryakov <ap@nypop.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,16 +28,41 @@
 
 #include "TextEncoding.h"
 #include <wtf/Noncopyable.h>
+#include <unicode/ucnv.h>
+#include <unicode/utypes.h>
 
 namespace WebCore {
 
     class StreamingTextDecoder : Noncopyable {
     public:
-        static StreamingTextDecoder* create(const TextEncoding&);
-        virtual ~StreamingTextDecoder();
+        StreamingTextDecoder(const TextEncoding&);
+        ~StreamingTextDecoder();
 
-        virtual DeprecatedString toUnicode(const char* chs, int len, bool flush = false) = 0;
-        virtual DeprecatedCString fromUnicode(const DeprecatedString&, bool allowEntities = false) = 0;
+        DeprecatedString toUnicode(const char* chs, int len, bool flush = false);
+
+    private:
+        DeprecatedString convert(const char* chs, int len, bool flush)
+            { return convert(reinterpret_cast<const unsigned char*>(chs), len, flush); }
+        DeprecatedString convert(const unsigned char* chs, int len, bool flush);
+
+        bool convertIfASCII(const unsigned char*, int len, DeprecatedString&);
+        DeprecatedString convertUTF16(const unsigned char*, int len);
+        DeprecatedString convertUsingICU(const unsigned char*, int len, bool flush);
+
+        void createICUConverter();
+
+        static void appendOmittingBOM(DeprecatedString&, const UChar* characters, int byteCount);
+
+        TextEncoding m_encoding;
+        bool m_littleEndian;
+        bool m_atStart;
+        bool m_error;
+        
+        unsigned m_numBufferedBytes;
+        unsigned char m_bufferedBytes[16]; // bigger than any single multi-byte character
+        
+        // ICU decoding.
+        UConverter* m_converterICU;
     };
     
 } // namespace WebCore
