@@ -514,9 +514,8 @@ void FrameView::layout(bool allowSubtree)
     if (didFirstLayout)
         m_frame->didFirstLayout();
     
-    if (document->hasListenerType(Document::OVERFLOWCHANGED_LISTENER))
-        updateOverflowStatus(visibleWidth() < contentsWidth(),
-                             visibleHeight() < contentsHeight());
+    updateOverflowStatus(visibleWidth() < contentsWidth(),
+                         visibleHeight() < contentsHeight());
 
     // Dispatch events scheduled during layout
     dispatchScheduledEvents();    

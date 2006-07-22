@@ -71,7 +71,6 @@
 #import "WebDashboardRegion.h"
 #import "WebScriptObjectPrivate.h"
 #import "csshelper.h"
-#import "htmlediting.h"
 #import "kjs_window.h"
 #import "visible_units.h"
 #import <JavaScriptCore/NP_jsobject.h>
@@ -696,7 +695,7 @@ String FrameMac::advanceToNextMisspelling(bool startBeforeSelection)
     
     // topNode defines the whole range we want to operate on 
     Node *topNode = editableNode->rootEditableElement();
-    searchRange->setEnd(topNode, maxDeepOffset(topNode), exception);
+    searchRange->setEndAfter(topNode, exception);
 
     // Make sure start of searchRange is not in the middle of a word.  Jumping back a char and then
     // forward by a word happens to do the trick.
@@ -758,7 +757,7 @@ String FrameMac::advanceToNextMisspelling(bool startBeforeSelection)
             } else {
                 // we've gone from the selection to the end of doc, now wrap around
                 wrapped = YES;
-                searchRange->setStart(topNode, 0, exception);
+                searchRange->setStartBefore(topNode, exception);
                 // going until the end of the very first chunk we tested is far enough
                 searchRange->setEnd(searchEndAfterWrapNode, searchEndAfterWrapOffset, exception);
                 it = WordAwareIterator(searchRange.get());
