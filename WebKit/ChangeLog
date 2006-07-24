@@ -1,5 +1,3 @@
-=== Safari-521.21 ===
-
 2006-07-23  Adele Peterson  <adele@apple.com>
 
         Reviewed by Darin.
@@ -9,6 +7,8 @@
         * WebView/WebHTMLView.m: (-[WebHTMLView _web_layoutIfNeededRecursive:testDirtyRect:]):
         needsDisplay was returning NO even though the view has a dirty rect (see <rdar://problem/4647062>).  Since we know about
         the dirty rect, we don't actually need to check needsDisplay.
+
+=== Safari-521.20 ===
 
 2006-07-22  Timothy Hatcher  <timothy@apple.com>
 
@@ -64,8 +64,6 @@
 
         * WebView/WebMainResourceLoader.m:
         (-[WebMainResourceLoader receivedError:]):
-
-=== Safari-521.20 ===
 
 2006-07-21  Timothy Hatcher  <timothy@apple.com>
 
