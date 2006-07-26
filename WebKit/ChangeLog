@@ -2,6 +2,22 @@
 
         Merging CCC approved change from TOT to Safari-521 branch.
 
+    2006-07-24  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Geoff.
+        
+        - fix <rdar://problem/4609195> Help Viewer loads empty window (not getting didFailLoadingWithError: callback)
+        (without re-introducing http://bugzilla.opendarwin.org/show_bug.cgi?id=10062 )
+
+        * WebView/WebLoader.h:
+        * WebView/WebMainResourceLoader.m:
+        (-[WebMainResourceLoader receivedError:]): Copy in some code from the base class to do it in the proper
+        order, surrounding the call to [ds _receivedMainResourceError:error complete:YES].
+
+2006-07-25  Timothy Hatcher  <timothy@apple.com>
+
+        Merging CCC approved change from TOT to Safari-521 branch.
+
     2006-07-24  Timothy Hatcher  <timothy@apple.com>
 
         Reviewed by John and Darin.
