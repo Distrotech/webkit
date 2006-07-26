@@ -3207,7 +3207,7 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
 
 - (void)replaceSelectionWithNode:(DOMNode *)node
 {
-    [[self _bridgeForSelectedOrMainFrame] replaceSelectionWithNode:node selectReplacement:YES smartReplace:NO];
+    [[self _bridgeForSelectedOrMainFrame] replaceSelectionWithNode:node selectReplacement:YES smartReplace:NO matchStyle:NO];
 }    
 
 - (void)replaceSelectionWithText:(NSString *)text
@@ -3295,6 +3295,11 @@ FOR_EACH_RESPONDER_SELECTOR(FORWARD)
 - (void)_setSelectWordBeforeMenuEvent:(BOOL)flag
 {
     _private->selectWordBeforeMenuEvent = flag;
+}
+
+- (void)_replaceSelectionWithNode:(DOMNode *)node matchStyle:(BOOL)matchStyle
+{
+    [[self _bridgeForSelectedOrMainFrame] replaceSelectionWithNode:node selectReplacement:YES smartReplace:NO matchStyle:matchStyle];
 }
 
 @end
