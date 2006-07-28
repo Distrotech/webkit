@@ -1,3 +1,18 @@
+2006-07-28  Timothy Hatcher  <timothy@apple.com>
+
+        Merging CCC approved change from TOT to Safari-521 branch.
+
+    2006-07-28  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by John.
+
+        The context menu code should be checking isContentEditable
+        on DOMNode not just DOMElement. This is needed because DOMText
+        will be the node class of any text that is clicked.
+
+        * DefaultDelegates/WebDefaultContextMenuDelegate.m:
+        (-[WebDefaultUIDelegate webView:contextMenuItemsForElement:defaultMenuItems:]):
+
 === Safari-521.24 ===
 
 2006-07-27  Timothy Hatcher  <timothy@apple.com>
