@@ -505,15 +505,15 @@ void FrameView::layout(bool allowSubtree)
     updateDashboardRegions();
 #endif
 
+    if (didFirstLayout)
+        m_frame->didFirstLayout();
+    
     if (root->needsLayout()) {
         scheduleRelayout();
         return;
     }
     setStaticBackground(d->useSlowRepaints);
 
-    if (didFirstLayout)
-        m_frame->didFirstLayout();
-    
     updateOverflowStatus(visibleWidth() < contentsWidth(),
                          visibleHeight() < contentsHeight());
 
