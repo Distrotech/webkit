@@ -1,3 +1,20 @@
+2006-07-28  Beth Dakin  <bdakin@apple.com>
+
+        Rubber stamped by Maciej.
+
+        Fix for <rdar://problem/4541255> Safari hangs at http://
+        www.kutilek.de/safari-test/ somewhere from 
+        WebCore::RenderBlock::layoutInlineChildren(bool)
+
+        This is the same fix that Maciej and I did a week ago for 4529398. 
+        Rolling it onto the branch because it fixes this crash too!
+
+        * WebCore.xcodeproj/project.pbxproj: Project file wars.
+        * khtml/rendering/render_list.cpp:
+        (ListMarkerBox::detach): Remove from parent when detaching.
+        (ListMarkerBox::operator delete):
+        * khtml/rendering/render_list.h:
+
 === WebCore-418.20.1 ===
 
 2006-07-06  Adele Peterson  <adele@apple.com>
