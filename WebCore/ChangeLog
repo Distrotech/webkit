@@ -1,3 +1,20 @@
+2006-07-27  Timothy Hatcher  <timothy@apple.com>
+
+        Merging CCC approved change from TOT to Safari-521 branch.
+
+    2006-07-25  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by darin
+        
+        <rdar://problem/4468458> Incoming HTML message is editable <body contenteditable="true">
+
+        * dom/Document.cpp:
+        (WebCore::Document::inDesignMode): Removed some spaces.
+        * page/Frame.cpp:
+        (WebCore::Frame::applyEditingStyleToElement): Just add CSS properties needed for editing.
+        (WebCore::Frame::removeEditingStyleFromElement): Made this a no-op, we'll remove
+        it eventually.
+
 === Safari-521.23 ===
 
 2006-07-26  Timothy Hatcher  <timothy@apple.com>
