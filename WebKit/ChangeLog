@@ -1,3 +1,22 @@
+2006-07-27  Timothy Hatcher  <timothy@apple.com>
+
+        Merging CCC approved change from TOT to Safari-521 branch.
+
+    2006-07-25  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej, inspired by John.
+        
+        - Fixed <rdar://problem/4651931> 1% REGRESSION on iBench HTML due to 
+        repeated requests for non-existent favicon
+        
+        An optimization to avoid serializing favicon data for missing icons had stomped an
+        optimization to avoid GETing a missing favicon more than once. The solution
+        is a happy marriage of optimizations, ensuring that we *retain* the missing
+        favicon's "i am missing" data without posting a notification or saving it to disk.
+
+        * Misc/WebIconDatabase.m:
+        (-[WebIconDatabase _setIconURL:forURL:]):
+
 === Safari-521.23 ===
 
 2006-07-26  Timothy Hatcher  <timothy@apple.com>
