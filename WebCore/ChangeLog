@@ -1,3 +1,15 @@
+2006-07-28  Timothy Hatcher  <timothy@apple.com>
+
+        Merging CCC approved change from TOT to Safari-521 branch.
+
+    2006-07-28  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by John.
+
+        Adding isContentEditable to DOMNode's private category. 
+
+        * bindings/objc/DOMPrivate.h:
+
 === Safari-521.24 ===
 
 2006-07-27  Timothy Hatcher  <timothy@apple.com>
