@@ -1,3 +1,24 @@
+2006-08-04  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by me/Hyatt.
+
+        Mostly this is merging over Hyatt's fix with r15801. Some other 
+        things needed to be tweaked though. This is a better fix for 
+        <rdar://problem/4541255> Safari hangs at http://www.kutilek.de/
+        safari-test/ somewhere from 
+        WebCore::RenderBlock::layoutInlineChildren(bool)
+
+        * khtml/rendering/render_box.cpp:
+        (RenderBox::deleteLineBoxWrapper): Call remove.
+        * khtml/rendering/render_box.h:
+        * khtml/rendering/render_list.cpp: 
+        (RenderListItem::updateMarkerLocation): Call remove.
+        * khtml/rendering/render_list.h:
+        (khtml::ListMarkerBox:::InlineBox):
+        * khtml/rendering/render_object.cpp: Back out old fix.
+        (RenderObject::remove):
+        * khtml/rendering/render_object.h: Back out old fix. 
+
 2006-07-28  Beth Dakin  <bdakin@apple.com>
 
         Rubber stamped by Maciej.

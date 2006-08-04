@@ -243,8 +243,7 @@ void RenderListItem::updateMarkerLocation()
         }
         if (markerPar != lineBoxParent)
         {
-            if (markerPar)
-                markerPar->removeChild(m_marker);
+            m_marker->remove();
             if (!lineBoxParent)
                 lineBoxParent = this;
             lineBoxParent->addChild(m_marker, lineBoxParent->firstChild());
@@ -310,35 +309,6 @@ QRect RenderListItem::getAbsoluteRepaintRect()
             result.setWidth(result.width() + xoff);
     }
     return result;
-}
-
-// -----------------------------------------------------------
-#ifndef NDEBUG
-static bool listMarkerBoxDetach;
-#endif
- 
-void ListMarkerBox::detach(RenderArena* arena)
-{
-    #ifndef NDEBUG
-        listMarkerBoxDetach = true;
-    #endif
-    if (m_parent)
-        m_parent->removeChild(this);
-    delete this;
-    #ifndef NDEBUG
-        listMarkerBoxDetach = false;
-    #endif
-
-    // Recover the size left there for us by operator delete and free the memory.
-    arena->free(*(size_t *)this, this);
-}
-
-void ListMarkerBox::operator delete(void* ptr, size_t sz)
-{
-    assert(listMarkerBoxDetach);
-
-    // Stash size where destroy can find it.
-    *(size_t *)ptr = sz;
 }
 
 // -----------------------------------------------------------
