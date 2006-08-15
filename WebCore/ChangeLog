@@ -1,0 +1,40 @@
+2006-08-15  Steve Falkenburg  <sfalken@apple.com>
+
+        Initial check-in.
+
+        * ChangeLog: Added.
+        * WebCore.vcproj/WebCore.sln: Added.
+        * WebCore.vcproj/WebCore.vcproj: Added.
+        * WebCore.vcproj/build-generated-files.sh: Added.
+        * bridge/win/FrameWin.cpp: Added.
+        (WebCore::FrameWin::FrameWin):
+        (WebCore::FrameWin::~FrameWin):
+        (WebCore::FrameWin::urlSelected):
+        (WebCore::FrameWin::submitForm):
+        (WebCore::FrameWin::userAgent):
+        (WebCore::FrameWin::runJavaScriptAlert):
+        (WebCore::FrameWin::runJavaScriptConfirm):
+        (WebCore::FrameWin::keyPress):
+        (WebCore::FrameWin::setTitle):
+        (WebCore::FrameWin::setStatusBarText):
+        (WebCore::FrameWin::textFieldDidBeginEditing):
+        (WebCore::FrameWin::textFieldDidEndEditing):
+        (WebCore::FrameWin::textDidChangeInTextField):
+        (WebCore::FrameWin::doTextFieldCommandFromEvent):
+        (WebCore::FrameWin::textWillBeDeletedInTextField):
+        (WebCore::FrameWin::textDidChangeInTextArea):
+        * bridge/win/FrameWin.h: Added.
+        (WebCore::Win):
+        * platform/win/ResourceLoaderWin.cpp: Added.
+        (WebCore::addToOutstandingJobs):
+        (WebCore::removeFromOutstandingJobs):
+        (WebCore::lookupResourceLoader):
+        (WebCore::ResourceLoaderWndProc):
+        (WebCore::initializeOffScreenResourceLoaderWindow):
+        (WebCore::ResourceLoaderInternal::~ResourceLoaderInternal):
+        (WebCore::ResourceLoader::~ResourceLoader):
+        (WebCore::transferJobStatusCallback):
+        (WebCore::ResourceLoader::start):
+        (WebCore::ResourceLoader::fileLoadTimer):
+        (WebCore::ResourceLoader::cancel):
+        * platform/win/ResourceLoaderWin.h: Added.
