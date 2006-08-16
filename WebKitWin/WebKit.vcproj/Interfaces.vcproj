@@ -36,7 +36,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				AdditionalIncludeDirectories="..\COM\Interfaces"
+				AdditionalIncludeDirectories="..\Interfaces"
 				WarningLevel="1"
 				WarnAsError="true"
 				GenerateTypeLibrary="false"
@@ -120,7 +120,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				AdditionalIncludeDirectories="..\COM\Interfaces"
+				AdditionalIncludeDirectories="..\Interfaces"
 				WarningLevel="1"
 				WarnAsError="true"
 				GenerateTypeLibrary="false"
@@ -186,159 +186,159 @@
 	</References>
 	<Files>
 		<File
-			RelativePath="..\COM\Interfaces\DOMCore.idl"
+			RelativePath="..\Interfaces\DOMCore.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\DOMCSS.idl"
+			RelativePath="..\Interfaces\DOMCSS.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\DOMHTML.idl"
+			RelativePath="..\Interfaces\DOMHTML.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\DOMRange.idl"
+			RelativePath="..\Interfaces\DOMRange.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebArchive.idl"
+			RelativePath="..\Interfaces\IWebArchive.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebAttributedString.idl"
+			RelativePath="..\Interfaces\IWebAttributedString.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebBackForwardList.idl"
+			RelativePath="..\Interfaces\IWebBackForwardList.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebDataSource.idl"
+			RelativePath="..\Interfaces\IWebDataSource.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebDocument.idl"
+			RelativePath="..\Interfaces\IWebDocument.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebDownload.idl"
+			RelativePath="..\Interfaces\IWebDownload.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebEditingDelegate.idl"
+			RelativePath="..\Interfaces\IWebEditingDelegate.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebError.idl"
+			RelativePath="..\Interfaces\IWebError.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebFormDelegate.idl"
+			RelativePath="..\Interfaces\IWebFormDelegate.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebFrame.idl"
+			RelativePath="..\Interfaces\IWebFrame.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebFrameLoadDelegate.idl"
+			RelativePath="..\Interfaces\IWebFrameLoadDelegate.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebFrameLoadDelegatePrivate.idl"
+			RelativePath="..\Interfaces\IWebFrameLoadDelegatePrivate.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebFrameView.idl"
+			RelativePath="..\Interfaces\IWebFrameView.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebHistory.idl"
+			RelativePath="..\Interfaces\IWebHistory.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebHistoryItem.idl"
+			RelativePath="..\Interfaces\IWebHistoryItem.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebHistoryItemPrivate.idl"
+			RelativePath="..\Interfaces\IWebHistoryItemPrivate.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebIconDatabase.idl"
+			RelativePath="..\Interfaces\IWebIconDatabase.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebImage.idl"
+			RelativePath="..\Interfaces\IWebImage.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebMutableURLRequest.idl"
+			RelativePath="..\Interfaces\IWebMutableURLRequest.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebNotification.idl"
+			RelativePath="..\Interfaces\IWebNotification.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebNotificationCenter.idl"
+			RelativePath="..\Interfaces\IWebNotificationCenter.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebNotificationObserver.idl"
+			RelativePath="..\Interfaces\IWebNotificationObserver.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebPolicyDelegate.idl"
+			RelativePath="..\Interfaces\IWebPolicyDelegate.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebPreferences.idl"
+			RelativePath="..\Interfaces\IWebPreferences.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebResource.idl"
+			RelativePath="..\Interfaces\IWebResource.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebResourceLoadDelegate.idl"
+			RelativePath="..\Interfaces\IWebResourceLoadDelegate.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebScriptObject.idl"
+			RelativePath="..\Interfaces\IWebScriptObject.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebUIDelegate.idl"
+			RelativePath="..\Interfaces\IWebUIDelegate.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebUndoManager.idl"
+			RelativePath="..\Interfaces\IWebUndoManager.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebURLAuthenticationChallenge.idl"
+			RelativePath="..\Interfaces\IWebURLAuthenticationChallenge.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebURLRequest.idl"
+			RelativePath="..\Interfaces\IWebURLRequest.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebURLResponse.idl"
+			RelativePath="..\Interfaces\IWebURLResponse.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebView.idl"
+			RelativePath="..\Interfaces\IWebView.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\IWebViewPrivate.idl"
+			RelativePath="..\Interfaces\IWebViewPrivate.idl"
 			>
 		</File>
 		<File
-			RelativePath="..\COM\Interfaces\WebKit.idl"
+			RelativePath="..\Interfaces\WebKit.idl"
 			>
 			<FileConfiguration
 				Name="Debug|Win32"

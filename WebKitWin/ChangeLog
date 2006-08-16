@@ -1,5 +1,17 @@
 2006-08-15  Steve Falkenburg  <sfalken@apple.com>
 
+        Fix this to build in my tree.
+
+        * WebFrame.cpp:
+        (WebFrame::textFieldDidBeginEditing):
+        (WebFrame::doTextFieldCommandFromEvent):
+        (WebFrame::textWillBeDeletedInTextField):
+        * WebKit.vcproj/Interfaces.vcproj:
+        * WebKit.vcproj/WebKit.sln:
+        * WebKit.vcproj/WebKit.vcproj:
+
+2006-08-15  Steve Falkenburg  <sfalken@apple.com>
+
         Initial check-in.
 
         * CFDictionaryPropertyBag.cpp: Added.

@@ -689,14 +689,8 @@ void WebFrame::setStatusText(const String& statusText)
     }
 }
 
-void WebFrame::textFieldDidBeginEditing(Element* e)
+void WebFrame::textFieldDidBeginEditing(Element*)
 {
-    IWebFormDelegate* formDelegate;
-    if (SUCCEEDED(d->webView->formDelegate(&formDelegate))) {
-        
-        formDelegate->textFieldDidBeginEditing(e);
-        formDelegate->Release();
-    }
 }
 
 void WebFrame::textFieldDidEndEditing(Element*)
@@ -709,9 +703,10 @@ void WebFrame::textDidChangeInTextField(Element*)
 
 bool WebFrame::doTextFieldCommandFromEvent(Element*, const PlatformKeyboardEvent*)
 {
+    return false;
 }
 
-void WebFrame::textWillBeDeletedInTextField(Element* input)
+void WebFrame::textWillBeDeletedInTextField(Element*)
 {
 }
 
