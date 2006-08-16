@@ -4,7 +4,7 @@
 WebKitOutputDirUnix=`cygpath -a -u "$2"`
 WebKitOutputConfigDirUnix="${WebKitOutputDirUnix}/$1"
 
-SRCROOT="`pwd`/../.."
+SRCROOT="`pwd`/../../../../OpenSource/WebCore"
 SRCROOT=`realpath "$SRCROOT"`
 # Do a little dance to get the path into 8.3 form to make it safe for gnu make
 # http://bugzilla.opendarwin.org/show_bug.cgi?id=8173

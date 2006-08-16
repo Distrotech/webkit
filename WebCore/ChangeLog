@@ -1,5 +1,13 @@
 2006-08-15  Steve Falkenburg  <sfalken@apple.com>
 
+        Get this building.
+
+        * WebCore.vcproj/WebCore.sln:
+        * WebCore.vcproj/WebCore.vcproj:
+        * WebCore.vcproj/build-generated-files.sh:
+
+2006-08-15  Steve Falkenburg  <sfalken@apple.com>
+
         Initial check-in.
 
         * ChangeLog: Added.
