@@ -1,3 +1,47 @@
+2006-08-15  Timothy Hatcher  <timothy@apple.com>
+
+        Merged fix from Safari-2-0-branch to Safari-1-3-branch
+
+    2006-08-15  Geoffrey Garen  <ggaren@apple.com>
+
+        Merged fix from TOT to Safari-2-0-branch
+        
+        This fixes <rdar://problem/4661982> (crash in KHTMLParser::popBlock).
+        
+        - This patch reworks a previous fix for <rdar://problem/3524912> repro 
+        crash in KHTMLParser::parseToken, due to parser's current element being 
+        destroyed (www.gnnetcom.dk), along with subsequent adjustments to fix
+        leaks.
+        
+        The previous solutions caused a ~2% performance regression on iBench HTML,
+        due to RefPtr churn. The optimizations here gain back that ~2% plus ~1% more,
+        for a total win of ~3% vs current TOT.
+        
+        The solution here is:
+        (1) Don't let the parser ref document nodes -- that causes leaks.
+        (2) Handle ref/deref manually, to avoid RefPtr churn. Specifically, when 
+        moving a node between stacks or to/from 'current', rather than deref'ing
+        and then ref'ing again, simply move the node, along with its refcount, to
+        its new location, and overwrite its old location.
+ 
+        * WebCore.xcodeproj/project.pbxproj:
+        * html/HTMLParser.cpp:
+        (WebCore::HTMLStackElem::HTMLStackElem):
+        (WebCore::HTMLStackElem::derefNode):
+        (WebCore::HTMLParser::HTMLParser):
+        (WebCore::HTMLParser::setCurrent):
+        (WebCore::HTMLParser::insertNode):
+        (WebCore::HTMLParser::popNestedHeaderTag):
+        (WebCore::HTMLParser::handleResidualStyleCloseTagAcrossBlocks):
+        (WebCore::HTMLParser::reopenResidualStyleTags):
+        (WebCore::HTMLParser::pushBlock):
+        (WebCore::HTMLParser::popBlock):
+        (WebCore::HTMLParser::popOneBlockCommon):
+        (WebCore::HTMLParser::popOneBlock):
+        (WebCore::HTMLParser::moveOneBlockToStack):
+        * html/HTMLParser.h:
+
+
 2006-08-14  Timothy Hatcher  <timothy@apple.com>
 
         Merged fix from Safari-2-0-branch to Safari-1-3-branch
