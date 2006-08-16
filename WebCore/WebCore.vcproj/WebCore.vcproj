@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..\..\..\..\OpenSource\iconv\include&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\icu\include&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\libxml\include&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\libxslt\include&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore&quot;;&quot;$(ProjectDir)\..\..\&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore&quot;;&quot;$(ProjectDir)\..\..\css&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\css&quot;;&quot;$(ProjectDir)\..\..\editing&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\editing&quot;;&quot;$(ProjectDir)\..\..\rendering&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\rendering&quot;;&quot;$(ProjectDir)\..\..\bindings\js&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bindings\js&quot;;&quot;$(ProjectDir)\..\..\dom&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\dom&quot;;&quot;$(ProjectDir)\..\..\html&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\html&quot;;&quot;$(ProjectDir)\..\..\bridge&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bridge&quot;;&quot;$(ProjectDir)\..\..\bridge\win&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bridge\win&quot;;&quot;$(ProjectDir)\..\..\loader&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\loader&quot;;&quot;$(ProjectDir)\..\..\page&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\page&quot;;&quot;$(ProjectDir)\..\..\platform&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform&quot;;&quot;$(ProjectDir)\..\..\platform\cairo&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\cairo&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\png&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\png&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)\..\..\xml&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\xml&quot;;&quot;$(ProjectDir)\..\..\xpath&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\xpath&quot;;&quot;$(ProjectDir)\..\..\xpath\impl&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\xpath\impl&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore\os-win32&quot;;&quot;$(ProjectDir)\..\..\ForwardingHeaders&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\ForwardingHeaders&quot;;&quot;$(WebKitOutputDir)\WebCore.intermediate\$(ConfigurationName)\WebCore.intermediate\DerivedSources&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore\kjs&quot;;&quot;$(ProjectDir)\..\..\platform\win&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\win&quot;;&quot;$(ProjectDir)\..\..\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)\..\..\platform\cairo\cairo\src&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\cairo\cairo\src&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..\..\..\..\OpenSource\iconv\include&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\icu\include&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\libxml\include&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\libxslt\include&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore&quot;;&quot;$(ProjectDir)\..\..\&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore&quot;;&quot;$(ProjectDir)\..\..\css&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\css&quot;;&quot;$(ProjectDir)\..\..\editing&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\editing&quot;;&quot;$(ProjectDir)\..\..\rendering&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\rendering&quot;;&quot;$(ProjectDir)\..\..\bindings\js&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bindings\js&quot;;&quot;$(ProjectDir)\..\..\dom&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\dom&quot;;&quot;$(ProjectDir)\..\..\html&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\html&quot;;&quot;$(ProjectDir)\..\..\bridge&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bridge&quot;;&quot;$(ProjectDir)\..\..\bridge\win&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bridge\win&quot;;&quot;$(ProjectDir)\..\..\loader&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\loader&quot;;&quot;$(ProjectDir)\..\..\page&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\page&quot;;&quot;$(ProjectDir)\..\..\platform&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform&quot;;&quot;$(ProjectDir)\..\..\platform\cairo&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\cairo&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\png&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\png&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)\..\..\xml&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\xml&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore\os-win32&quot;;&quot;$(ProjectDir)\..\..\ForwardingHeaders&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\ForwardingHeaders&quot;;&quot;$(WebKitOutputDir)\WebCore.intermediate\$(ConfigurationName)\WebCore.intermediate\DerivedSources&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore\kjs&quot;;&quot;$(ProjectDir)\..\..\platform\win&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\win&quot;;&quot;$(ProjectDir)\..\..\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)\..\..\platform\cairo\cairo\src&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\cairo\cairo\src&quot;"
 				PreprocessorDefinitions="WIN32;KHTML_NO_XBL;KHTML_XSLT;XPATH_SUPPORT"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
@@ -108,7 +108,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..\..\..\..\OpenSource\iconv\include&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\icu\include&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\libxml\include&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\libxslt\include&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore&quot;;&quot;$(ProjectDir)\..\..\&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore&quot;;&quot;$(ProjectDir)\..\..\css&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\css&quot;;&quot;$(ProjectDir)\..\..\editing&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\editing&quot;;&quot;$(ProjectDir)\..\..\rendering&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\rendering&quot;;&quot;$(ProjectDir)\..\..\bindings\js&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bindings\js&quot;;&quot;$(ProjectDir)\..\..\dom&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\dom&quot;;&quot;$(ProjectDir)\..\..\html&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\html&quot;;&quot;$(ProjectDir)\..\..\bridge&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bridge&quot;;&quot;$(ProjectDir)\..\..\bridge\win&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bridge\win&quot;;&quot;$(ProjectDir)\..\..\loader&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\loader&quot;;&quot;$(ProjectDir)\..\..\page&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\page&quot;;&quot;$(ProjectDir)\..\..\platform&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform&quot;;&quot;$(ProjectDir)\..\..\platform\cairo&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\cairo&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\png&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\png&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)\..\..\xml&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\xml&quot;;&quot;$(ProjectDir)\..\..\xpath&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\xpath&quot;;&quot;$(ProjectDir)\..\..\xpath\impl&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\xpath\impl&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore\os-win32&quot;;&quot;$(ProjectDir)\..\..\ForwardingHeaders&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\ForwardingHeaders&quot;;&quot;$(WebKitOutputDir)\WebCore.intermediate\$(ConfigurationName)\WebCore.intermediate\DerivedSources&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore\kjs&quot;;&quot;$(ProjectDir)\..\..\platform\win&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\win&quot;;&quot;$(ProjectDir)\..\..\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)\..\..\platform\cairo\cairo\src&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\cairo\cairo\src&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..\..\..\..\OpenSource\iconv\include&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\icu\include&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\libxml\include&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\libxslt\include&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore&quot;;&quot;$(ProjectDir)\..\..\&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore&quot;;&quot;$(ProjectDir)\..\..\css&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\css&quot;;&quot;$(ProjectDir)\..\..\editing&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\editing&quot;;&quot;$(ProjectDir)\..\..\rendering&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\rendering&quot;;&quot;$(ProjectDir)\..\..\bindings\js&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bindings\js&quot;;&quot;$(ProjectDir)\..\..\dom&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\dom&quot;;&quot;$(ProjectDir)\..\..\html&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\html&quot;;&quot;$(ProjectDir)\..\..\bridge&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bridge&quot;;&quot;$(ProjectDir)\..\..\bridge\win&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bridge\win&quot;;&quot;$(ProjectDir)\..\..\loader&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\loader&quot;;&quot;$(ProjectDir)\..\..\page&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\page&quot;;&quot;$(ProjectDir)\..\..\platform&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform&quot;;&quot;$(ProjectDir)\..\..\platform\cairo&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\cairo&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\png&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\png&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)\..\..\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)\..\..\xml&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\xml&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore\os-win32&quot;;&quot;$(ProjectDir)\..\..\ForwardingHeaders&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\ForwardingHeaders&quot;;&quot;$(WebKitOutputDir)\WebCore.intermediate\$(ConfigurationName)\WebCore.intermediate\DerivedSources&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore\kjs&quot;;&quot;$(ProjectDir)\..\..\platform\win&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\win&quot;;&quot;$(ProjectDir)\..\..\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)\..\..\platform\cairo\cairo\src&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\cairo\cairo\src&quot;"
 				PreprocessorDefinitions="WIN32;KHTML_NO_XBL;KHTML_XSLT;XPATH_SUPPORT;NDEBUG"
 				ExceptionHandling="0"
 				RuntimeLibrary="2"
@@ -309,6 +309,14 @@
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSDOMImplementation.h"
 				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSDOMParser.cpp"
+					>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSDOMParser.h"
+					>
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSDOMWindow.cpp"
@@ -747,6 +755,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSNodeIterator.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSNodeIterator.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSNotation.cpp"
 				>
 			</File>
@@ -787,6 +803,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSTreeWalker.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSTreeWalker.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSUIEvent.cpp"
 				>
 			</File>
@@ -803,12 +827,12 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSXMLHttpRequest.lut.h"
-				>
+				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSXMLSerializer.cpp"
+					>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSXMLSerializer.lut.h"
-				>
+				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSXMLSerializer.h"
+					>
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSXPathEvaluator.cpp"
@@ -3191,14 +3215,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderTextArea.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderTextArea.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderTextControl.cpp"
 				>
 			</File>
@@ -3268,138 +3284,146 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="xpath"
-			>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\xpath\XPathEvaluator.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\xpath\XPathEvaluator.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\xpath\XPathExpression.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\xpath\XPathExpression.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\xpath\XPathNamespace.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\xpath\XPathNamespace.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\xpath\XPathNSResolver.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\xpath\XPathNSResolver.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\xpath\XPathResult.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\xpath\XPathResult.h"
-				>
-			</File>
-			<Filter
-				Name="impl"
-				>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\xpath\impl\XPathExpressionNode.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\xpath\impl\XPathExpressionNode.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\xpath\impl\XPathFunctions.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\xpath\impl\XPathFunctions.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\xpath\impl\XPathGrammar.y"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\xpath\impl\XPathParser.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\xpath\impl\XPathParser.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\xpath\impl\XPathPath.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\xpath\impl\XPathPath.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\xpath\impl\XPathPredicate.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\xpath\impl\XPathPredicate.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\xpath\impl\XPathStep.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\xpath\impl\XPathStep.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\xpath\impl\XPathUtil.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\xpath\impl\XPathUtil.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\xpath\impl\XPathValue.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\xpath\impl\XPathValue.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\xpath\impl\XPathVariableReference.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\xpath\impl\XPathVariableReference.h"
-					>
-				</File>
-			</Filter>
-		</Filter>
-		<Filter
 			Name="xml"
 			>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\DOMParser.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\DOMParser.h"
+				>
+			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\xml\xmlhttprequest.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\xml\xmlhttprequest.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XMLSerializer.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XMLSerializer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathEvaluator.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathEvaluator.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathExpressionNode.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathExpressionNode.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathExpression.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathExpression.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathFunctions.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathFunctions.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathGrammar.y"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathNamespace.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathNamespace.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathNSResolver.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathNSResolver.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathParser.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathParser.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathPath.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathPath.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathPredicate.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathPredicate.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathResult.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathResult.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathStep.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathStep.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathUtil.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathUtil.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathValue.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathValue.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathVariableReference.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathVariableReference.h"
 				>
 			</File>
 			<File
@@ -4878,14 +4902,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSDOMParser.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSDOMParser.h"
-					>
-				</File>
-				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSHTMLElementWrapperFactory.cpp"
 					>
 				</File>
@@ -4918,19 +4934,19 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSNodeIteratorCustom.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSTreeWalkerCustom.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSXMLHttpRequest.cpp"
 					>
 				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSXMLHttpRequest.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSXMLSerializer.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSXMLSerializer.h"
 					>
 				</File>
 				<File
