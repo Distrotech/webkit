@@ -1,5 +1,11 @@
 2006-08-17  Adam Roben  <aroben@apple.com>
 
+        Removing this unintentionally added file.
+
+        * rendering/RenderPopupMenuWin.cpp: Removed.
+
+2006-08-17  Adam Roben  <aroben@apple.com>
+
         Reviewed by Steve.
 
         Branching files from OpenSource tree r15924 to prepare for <select>
