@@ -1,3 +1,10 @@
+2006-08-17  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Maciej.
+
+        * WebKit.vcproj/WebKit.vcproj:
+        Add version.lib
+
 2006-08-15  Steve Falkenburg  <sfalken@apple.com>
 
         Fix this to build in my tree.

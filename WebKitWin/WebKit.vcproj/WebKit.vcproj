@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="8,00"
 	Name="WebKit"
 	ProjectGUID="{0662A8A9-82A3-4638-97D8-EC425D8D87C9}"
 	RootNamespace="WebKit"
@@ -68,7 +68,7 @@
 				Name="VCLinkerTool"
 				RegisterOutput="true"
 				LinkLibraryDependencies="true"
-				AdditionalDependencies="comctl32.lib wininet.lib &quot;$(ProjectDir)\..\..\..\..\OpenSource\iconv\lib\iconv.lib&quot; &quot;$(ProjectDir)\..\..\..\..\OpenSource\libxml\lib\libxml2.lib&quot; &quot;$(ProjectDir)\..\..\..\..\OpenSource\libxslt\lib\libxslt.lib&quot; &quot;$(ProjectDir)\..\..\..\..\OpenSource\icu\lib\icuuc.lib&quot; &quot;$(ProjectDir)\..\..\WebKitLibraries\WebKitSupport\lib\WebKitSupport.lib&quot;"
+				AdditionalDependencies="comctl32.lib version.lib wininet.lib &quot;$(ProjectDir)\..\..\..\..\OpenSource\iconv\lib\iconv.lib&quot; &quot;$(ProjectDir)\..\..\..\..\OpenSource\libxml\lib\libxml2.lib&quot; &quot;$(ProjectDir)\..\..\..\..\OpenSource\libxslt\lib\libxslt.lib&quot; &quot;$(ProjectDir)\..\..\..\..\OpenSource\icu\lib\icuuc.lib&quot; &quot;$(ProjectDir)\..\..\WebKitLibraries\WebKitSupport\lib\WebKitSupport.lib&quot;"
 				LinkIncremental="2"
 				ModuleDefinitionFile="WebKit.def"
 				GenerateDebugInformation="true"

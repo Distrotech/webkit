@@ -206,11 +206,6 @@ String WebCore::defaultLanguage() { return "en"; }
 
 void WebCore::findWordBoundary(UChar const* str,int len,int position,int* start, int* end) {*start=position; *end=position; }
 
-PluginInfo*PlugInInfoStore::createPluginInfoForPluginAtIndex(unsigned) { return 0;}
-unsigned PlugInInfoStore::pluginCount() const { return 0; }
-bool WebCore::PlugInInfoStore::supportsMIMEType(const WebCore::String&) { return false; }
-void WebCore::refreshPlugins(bool) { }
-
 void WebCore::ResourceLoader::assembleResponseHeaders() const { }
 void WebCore::ResourceLoader::retrieveCharset() const { }
 

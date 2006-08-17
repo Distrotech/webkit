@@ -1,3 +1,55 @@
+2006-08-17  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Maciej.
+
+        Add initial implementation of plugin database.
+        
+        * WebCore.vcproj/WebCore.vcproj:
+        Add new files.
+        
+        * platform/win/TemporaryLinkStubs.cpp:
+        Get rid of the PlugInInfoStore stubs.
+
+        * plugins/win/PlugInInfoStoreWin.cpp: Added.
+        (WebCore::PlugInInfoStore::createPluginInfoForPluginAtIndex):
+        (WebCore::PlugInInfoStore::pluginCount):
+        (WebCore::PlugInInfoStore::supportsMIMEType):
+        (WebCore::refreshPlugins):
+        * plugins/win/PluginDatabaseWin.cpp: Added.
+        (WebCore::PluginDatabaseWin::installedPlugins):
+        (WebCore::PluginDatabaseWin::refresh):
+        (WebCore::PluginDatabaseWin::plugins):
+        (WebCore::PluginDatabaseWin::getPluginsInPaths):
+        (WebCore::PluginDatabaseWin::defaultPluginPaths):
+        (WebCore::PluginDatabaseWin::isMIMETypeRegistered):
+        (WebCore::PluginDatabaseWin::pluginForMIMEType):
+        (WebCore::PluginDatabaseWin::pluginForExtension):
+        * plugins/win/PluginDatabaseWin.h: Added.
+        (WebCore::PluginDatabaseWin::setPluginPaths):
+        * plugins/win/PluginPackageWin.cpp: Added.
+        (WebCore::PluginPackageWin::~PluginPackageWin):
+        (WebCore::getVersionInfo):
+        (WebCore::splitString):
+        (WebCore::PluginPackageWin::PluginPackageWin):
+        (WebCore::PluginPackageWin::fetchInfo):
+        (WebCore::PluginPackageWin::load):
+        (WebCore::PluginPackageWin::unload):
+        (WebCore::PluginPackageWin::unloadWithoutShutdown):
+        (WebCore::PluginPackageWin::createPackage):
+        (WebCore::PluginPackageWin::hash):
+        (WebCore::PluginPackageWin::equal):
+        * plugins/win/PluginPackageWin.h: Added.
+        (WebCore::PluginPackageWin::name):
+        (WebCore::PluginPackageWin::description):
+        (WebCore::PluginPackageWin::fileName):
+        (WebCore::PluginPackageWin::mimeToDescriptions):
+        (WebCore::PluginPackageWin::mimeToExtensions):
+        (WebCore::PluginPackageWin::pluginFuncs):
+        (WebCore::PluginPackageWinHash::hash):
+        (WebCore::PluginPackageWinHash::equal):
+        (WTF::):
+        * plugins/win/npfunctions.h: Added.
+
 2006-08-17  Adam Roben  <aroben@apple.com>
 
         Removing this unintentionally added file.
