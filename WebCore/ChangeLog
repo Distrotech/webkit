@@ -1,3 +1,43 @@
+2006-08-17  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Steve.
+
+        Branching files from OpenSource tree r15924 to prepare for <select>
+        element implementation.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * rendering/RenderPopupMenuWin.h: Added.
+        (WebCore::RenderPopupMenuWin::RenderPopupMenuWin):
+        * rendering/RenderThemeWin.cpp: Added.
+        (WebCore::theme):
+        (WebCore::m_textFieldTheme):
+        (WebCore::RenderThemeWin::~RenderThemeWin):
+        (WebCore::RenderThemeWin::close):
+        (WebCore::RenderThemeWin::platformActiveSelectionBackgroundColor):
+        (WebCore::RenderThemeWin::platformInactiveSelectionBackgroundColor):
+        (WebCore::RenderThemeWin::platformActiveSelectionForegroundColor):
+        (WebCore::RenderThemeWin::platformInactiveSelectionForegroundColor):
+        (WebCore::RenderThemeWin::addIntrinsicMargins):
+        (WebCore::RenderThemeWin::supportsFocus):
+        (WebCore::RenderThemeWin::determineState):
+        (WebCore::RenderThemeWin::getThemeData):
+        (WebCore::RenderThemeWin::adjustButtonStyle):
+        (WebCore::prepareForDrawing):
+        (WebCore::doneDrawing):
+        (WebCore::RenderThemeWin::paintButton):
+        (WebCore::RenderThemeWin::setCheckboxSize):
+        (WebCore::RenderThemeWin::setRadioSize):
+        (WebCore::RenderThemeWin::adjustTextFieldStyle):
+        (WebCore::RenderThemeWin::paintTextField):
+        (WebCore::RenderThemeWin::adjustTextAreaStyle):
+        (WebCore::RenderThemeWin::paintTextArea):
+        (WebCore::RenderThemeWin::createPopupMenu):
+        * rendering/RenderThemeWin.h: Added.
+        (WebCore::ThemeData::m_state):
+        (WebCore::RenderThemeWin::supportsHover):
+        (WebCore::RenderThemeWin::paintCheckbox):
+        (WebCore::RenderThemeWin::paintRadio):
+
 2006-08-15  Steve Falkenburg  <sfalken@apple.com>
 
         Pull TemporaryLinkStubs.cpp into internal tree to fix the build.

@@ -3147,7 +3147,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderPopupMenuWin.h"
+				RelativePath="..\rendering\RenderPopupMenuWin.h"
 				>
 			</File>
 			<File
@@ -3239,11 +3239,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderThemeWin.cpp"
+				RelativePath="..\rendering\RenderThemeWin.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderThemeWin.h"
+				RelativePath="..\rendering\RenderThemeWin.h"
 				>
 			</File>
 			<File
