@@ -1,6 +1,13 @@
 2006-08-18  Anders Carlsson  <acarlsson@apple.com>
 
         * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::write):
+        (WebCore::PluginViewWin::destroyStream):
+        Another attempt at fixing the build. Make these two functions into instance methods of PluginViewWin.
+
+2006-08-18  Anders Carlsson  <acarlsson@apple.com>
+
+        * plugins/win/PluginViewWin.cpp:
         (WebCore::write):
         (WebCore::destroyStream):
         * plugins/win/PluginViewWin.h:
