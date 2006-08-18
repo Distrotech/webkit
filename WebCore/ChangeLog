@@ -1,4 +1,43 @@
-2006-08-17  Anders Carlsson  <andersca@apple.com>
+2006-08-18  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adele.
+
+        Have the NPN functions call into the plugin view. Implement some of the plugin view methods.
+
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::start):
+        (WebCore::PluginViewWin::setCurrentPluginView):
+        (WebCore::PluginViewWin::currentPluginView):
+        (WebCore::PluginViewWin::getURLNotify):
+        (WebCore::PluginViewWin::getURL):
+        (WebCore::PluginViewWin::postURLNotify):
+        (WebCore::PluginViewWin::postURL):
+        (WebCore::PluginViewWin::newStream):
+        (WebCore::write):
+        (WebCore::destroyStream):
+        (WebCore::PluginViewWin::userAgent):
+        (WebCore::PluginViewWin::status):
+        (WebCore::PluginViewWin::getValue):
+        (WebCore::PluginViewWin::setValue):
+        (WebCore::PluginViewWin::~PluginViewWin):
+        (WebCore::PluginViewWin::PluginViewWin):
+        * plugins/win/PluginViewWin.h:
+        * plugins/win/npapi.cpp:
+        (pluginViewForInstance):
+        (NPN_ReloadPlugins):
+        (NPN_GetURLNotify):
+        (NPN_GetURL):
+        (NPN_PostURLNotify):
+        (NPN_PostURL):
+        (NPN_NewStream):
+        (NPN_Write):
+        (NPN_DestroyStream):
+        (NPN_UserAgent):
+        (NPN_Status):
+        (NPN_GetValue):
+        (NPN_SetValue):
+
+2006-08-17  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Steve and Maciej.
 
@@ -66,7 +105,7 @@
         (NPN_GetJavaEnv):
         (NPN_GetJavaPeer):
 
-2006-08-17  Anders Carlsson  <andersca@apple.com>
+2006-08-17  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Maciej.
 

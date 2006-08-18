@@ -50,10 +50,24 @@ namespace WebCore {
         NPP instance() const { return m_instance; }
 
         void invokeSetWindow(WINDOWPOS* windowPos);
+        static PluginViewWin* currentPluginView();
 
+        // NPN functions
+        NPError getURLNotify(const char* url, const char* target, void* notifyData);
+        NPError getURL(const char* url, const char* target);
+        NPError postURLNotify(const char* url, const char* target, uint32 len, const char* but, NPBool file, void* notifyData);
+        NPError postURL(const char* url, const char* target, uint32 len, const char* but, NPBool file);
+        NPError newStream(NPMIMEType type, const char* target, NPStream** stream);
+        int32 write(NPP instance, NPStream* stream, int32 len, void* buffer);
+        NPError destroyStream(NPP instance, NPStream* stream, NPReason reason);
+        const char* userAgent();
+        void status(const char* message);
+        NPError getValue(NPNVariable variable, void* value);
+        NPError setValue(NPPVariable variable, void* value);
     private:
         bool start();
         void stop();
+        static void setCurrentPluginView(PluginViewWin* pluginView);
 
         RefPtr<PluginPackageWin> m_plugin;
         FrameWin* m_parentFrame;
@@ -71,6 +85,10 @@ namespace WebCore {
         NPP_t m_instanceStruct;
         NPWindow m_window;
         NPWindow m_lastSetWindow;
+
+        char* m_userAgent;
+
+        static PluginViewWin* s_currentPluginView;
     };
 
 } // namespace WebCore

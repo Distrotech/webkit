@@ -33,6 +33,8 @@
 
 namespace WebCore {
 
+PluginViewWin* PluginViewWin::s_currentPluginView = 0;
+
 const LPCWSTR kWebPluginViewWindowClassName = L"WebPluginViewWindowClass";
 
 static LRESULT CALLBACK PluginViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -101,7 +103,9 @@ bool PluginViewWin::start()
     ASSERT(m_plugin);
     ASSERT(m_plugin->pluginFuncs()->newp);
 
+    PluginViewWin::setCurrentPluginView(this);
     NPError npErr = m_plugin->pluginFuncs()->newp(m_mimeType, m_instance, m_mode, m_paramCount, m_paramNames, m_paramValues, NULL);
+    PluginViewWin::setCurrentPluginView(0);
         
     m_isStarted = true;
 
@@ -123,6 +127,16 @@ void PluginViewWin::stop()
     NPError npErr = m_plugin->pluginFuncs()->destroy(m_instance, 0);
 
     m_instance->pdata = 0;
+}
+
+void PluginViewWin::setCurrentPluginView(PluginViewWin* pluginView)
+{
+    s_currentPluginView = pluginView;
+}
+
+PluginViewWin* PluginViewWin::currentPluginView()
+{
+    return s_currentPluginView;
 }
 
 static char* createUTF8String(const String& str)
@@ -153,6 +167,83 @@ static void freeStringArray(char** stringArray, int length)
     fastFree(stringArray);
 }
 
+NPError PluginViewWin::getURLNotify(const char* url, const char* target, void* notifyData)
+{
+    DebugBreak();
+    return NPERR_GENERIC_ERROR;
+}
+
+NPError PluginViewWin::getURL(const char* url, const char* target)
+{
+    DebugBreak();
+    return NPERR_GENERIC_ERROR;
+}
+
+NPError PluginViewWin::postURLNotify(const char* url, const char* target, uint32 len, const char* but, NPBool file, void* notifyData)
+{
+    DebugBreak();
+    return NPERR_GENERIC_ERROR;
+}
+
+NPError PluginViewWin::postURL(const char* url, const char* target, uint32 len, const char* but, NPBool file)
+{
+    DebugBreak();
+    return NPERR_GENERIC_ERROR;
+}
+
+NPError PluginViewWin::newStream(NPMIMEType type, const char* target, NPStream** stream)
+{
+    DebugBreak();
+    return NPERR_GENERIC_ERROR;
+}
+
+int32 write(NPP instance, NPStream* stream, int32 len, void* buffer)
+{
+    DebugBreak();
+    return 0;
+}
+
+NPError destroyStream(NPP instance, NPStream* stream, NPReason reason)
+{
+    DebugBreak();
+    return NPERR_GENERIC_ERROR;
+}
+
+const char* PluginViewWin::userAgent()
+{
+    if (m_userAgent)
+        return m_userAgent;
+
+    m_userAgent = createUTF8String(m_parentFrame->userAgent());
+
+    return m_userAgent;
+}
+
+void PluginViewWin::status(const char* message)
+{
+    String s = DeprecatedString::fromLatin1(message);
+
+    m_parentFrame->setStatusBarText(s);
+}
+
+NPError PluginViewWin::getValue(NPNVariable variable, void* value)
+{
+    switch (variable) {
+        case NPNVWindowNPObject:
+            // FIXME: Implement
+            return NPERR_GENERIC_ERROR;
+        default:
+            DebugBreak();
+            return NPERR_GENERIC_ERROR;
+    }
+}
+
+NPError PluginViewWin::setValue(NPPVariable variable, void* value)
+{
+    DebugBreak();
+    return NPERR_GENERIC_ERROR;
+}
+
 PluginViewWin::~PluginViewWin()
 {
     stop();
@@ -161,6 +252,7 @@ PluginViewWin::~PluginViewWin()
     freeStringArray(m_paramValues, m_paramCount);
 
     fastFree(m_mimeType);
+    fastFree(m_userAgent);
 }
 
 PluginViewWin::PluginViewWin(FrameWin* parentFrame, PluginPackageWin* plugin, Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType)
@@ -168,6 +260,7 @@ PluginViewWin::PluginViewWin(FrameWin* parentFrame, PluginPackageWin* plugin, El
     , m_plugin(plugin)
     , m_isStarted(false)
     , m_url(url)
+    , m_userAgent(0)
 {
     registerPluginView();
 

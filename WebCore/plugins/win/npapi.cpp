@@ -26,6 +26,23 @@
 #include "config.h"
 #include <windows.h>
 #include "npapi.h"
+#include "PlugInInfoStore.h"
+#include "PluginViewWin.h"
+
+using namespace WebCore;
+
+// The plugin view is always the ndata of the instance,. Sometimes, plug-ins will call an instance-specific function
+// with a NULL instance. To workaround this, call the last plug-in view that made a call to a plug-in.
+// Currently, the current plug-in view is only set before NPP_New in PluginViewWin::start.
+// This specifically works around Flash and Shockwave. When we call NPP_New, they call NPN_Useragent with a NULL instance.
+static PluginViewWin* pluginViewForInstance(NPP instance)
+{
+    if (instance && instance->ndata)
+        return static_cast<PluginViewWin*>(instance->ndata);
+    else
+        return PluginViewWin::currentPluginView();
+    return 0;
+}
 
 void* NPN_MemAlloc(uint32 size)
 {
@@ -45,7 +62,7 @@ uint32 NPN_MemFlush(uint32 size)
 
 void NPN_ReloadPlugins(NPBool reloadPages)
 {
-    DebugBreak();
+    refreshPlugins(reloadPages);
 }
 
 NPError NPN_RequestRead(NPStream* stream, NPByteRange* rangeList)
@@ -56,55 +73,52 @@ NPError NPN_RequestRead(NPStream* stream, NPByteRange* rangeList)
 
 NPError NPN_GetURLNotify(NPP instance, const char* url, const char* target, void* notifyData)
 {
-    DebugBreak();
-    return NPERR_GENERIC_ERROR;
+    return pluginViewForInstance(instance)->getURLNotify(url, target, notifyData);
 }
 
 NPError NPN_GetURL(NPP instance, const char* url, const char* target)
 {
-    DebugBreak();
-    return NPERR_GENERIC_ERROR;
+    return pluginViewForInstance(instance)->getURL(url, target);
 }
 
-NPError NPN_PostURLNotify(NPP instance, const char* url, const char* target, uint32 len, const char* but, NPBool file, void* notifyData)
+NPError NPN_PostURLNotify(NPP instance, const char* url, const char* target, uint32 len, const char* buf, NPBool file, void* notifyData)
 {
-    DebugBreak();
-    return NPERR_GENERIC_ERROR;
+    return pluginViewForInstance(instance)->postURLNotify(url, target, len, buf, file, notifyData);
 }
 
 NPError NPN_PostURL(NPP instance, const char* url, const char* target, uint32 len, const char* buf, NPBool file)
 {
-    DebugBreak();
-    return NPERR_GENERIC_ERROR;
+    return pluginViewForInstance(instance)->postURL(url, target, len, buf, file);
 }
 
 NPError NPN_NewStream(NPP instance, NPMIMEType type, const char* target, NPStream** stream)
 {
-    DebugBreak();
-    return NPERR_GENERIC_ERROR;
+    return pluginViewForInstance(instance)->newStream(type, target, stream);
 }
 
 int32 NPN_Write(NPP instance, NPStream* stream, int32 len, void* buffer)
 {
-    DebugBreak();
-    return 0;
+    return pluginViewForInstance(instance)->write(stream, len, buffer);
 }
 
 NPError NPN_DestroyStream(NPP instance, NPStream* stream, NPReason reason)
 {
-    DebugBreak();
-    return NPERR_GENERIC_ERROR;
+    return pluginViewForInstance(instance)->destroyStream(stream, reason);
 }
 
 const char* NPN_UserAgent(NPP instance)
 {
-    DebugBreak();
-    return 0;
+    // FIXME: Some plug-ins call NPN_UserAgent with a null instance in their NP_initialize function!
+    // We'd need a way to get a user agent without having a frame around.
+    if (!instance)
+        return 0;
+
+    return pluginViewForInstance(instance)->userAgent();
 }
 
 void NPN_Status(NPP instance, const char* message)
 {
-    DebugBreak();
+    pluginViewForInstance(instance)->status(message);
 }
 
 void NPN_InvalidateRect(NPP instance, NPRect* invalidRect)
@@ -124,14 +138,12 @@ void NPN_ForceRedraw(NPP instance)
 
 NPError NPN_GetValue(NPP instance, NPNVariable variable, void* value)
 {
-    DebugBreak();
-    return NPERR_GENERIC_ERROR;
+    return pluginViewForInstance(instance)->getValue(variable, value);
 }
 
 NPError NPN_SetValue(NPP instance, NPPVariable variable, void* value)
 {
-    DebugBreak();
-    return NPERR_GENERIC_ERROR;
+   return pluginViewForInstance(instance)->setValue(variable, value);
 }
 
 void* NPN_GetJavaEnv()
