@@ -32,6 +32,8 @@
 #include "FramePrivate.h"
 #include "PlatformKeyboardEvent.h"
 #include "Plugin.h"
+#include "PluginDatabaseWin.h"
+#include "PluginViewWin.h"
 #include "RenderFrame.h"
 #include "ResourceLoader.h"
 #include <windows.h>
@@ -166,6 +168,23 @@ void FrameWin::textWillBeDeletedInTextField(Element* input)
 void FrameWin::textDidChangeInTextArea(Element* e)
 {
     m_client->textDidChangeInTextArea(e);
+}
+
+enum WebCore::ObjectContentType FrameWin::objectContentType(const KURL& url, const String& mimeType)
+{
+    if (mimeType.isEmpty())
+        // FIXME: Guess the MIME type from the url extension
+        return WebCore::ObjectContentNone;
+
+    if (PluginDatabaseWin::installedPlugins()->isMIMETypeRegistered(mimeType))
+        return WebCore::ObjectContentPlugin;
+
+    return (ObjectContentType)0;
+}
+
+Plugin* FrameWin::createPlugin(Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType)
+{
+    return new Plugin(PluginDatabaseWin::installedPlugins()->createPluginView(this, element, url, paramNames, paramValues, mimeType));
 }
 
 }

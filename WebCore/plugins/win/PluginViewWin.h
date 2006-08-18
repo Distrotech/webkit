@@ -23,47 +23,56 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef PluginDatabaseWin_H
-#define PluginDatabaseWin_H
+#ifndef PluginViewWin_H
+#define PluginViewWin_H
 
+#include <windows.h>
+#include <wtf/RefPtr.h>
 #include <wtf/Vector.h>
-#include <wtf/HashSet.h>
-
+#include "KURL.h"
+#include "npapi.h"
 #include "PlatformString.h"
-#include "PluginPackageWin.h"
-#include "StringHash.h"
+#include "Timer.h"
+#include "Widget.h"
 
 namespace WebCore {
     class Element;
     class FrameWin;
     class KURL;
     class PluginPackageWin;
-    class PluginViewWin;
 
-    typedef HashSet<RefPtr<PluginPackageWin>, PluginPackageWinHash> PluginSet;
-  
-    class PluginDatabaseWin {
+    class PluginViewWin : public Widget {
     public:
-        static PluginDatabaseWin* installedPlugins();
-        PluginViewWin* createPluginView(FrameWin* parentFrame, Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType);
+        PluginViewWin(FrameWin* parentFrame, PluginPackageWin* plugin, Element*, const KURL&, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType);
+        virtual ~PluginViewWin();
 
-        void refresh();
-        Vector<PluginPackageWin*> plugins() const;
-        bool isMIMETypeRegistered(const String& mimeType) const;
+        PluginPackageWin* plugin() const { return m_plugin.get(); }
+        NPP instance() const { return m_instance; }
+
+        void invokeSetWindow(WINDOWPOS* windowPos);
+
     private:
-        void setPluginPaths(const Vector<String>& paths) { m_pluginPaths = paths; }
-        PluginSet getPluginsInPaths() const;
+        bool start();
+        void stop();
 
-        PluginPackageWin* pluginForMIMEType(const String& mimeType);
-        PluginPackageWin* pluginForExtension(const String& extension);
+        RefPtr<PluginPackageWin> m_plugin;
+        FrameWin* m_parentFrame;
+        bool m_isStarted;
+        KURL m_url;
 
-        static Vector<String> defaultPluginPaths();
+        int m_mode;
+        int m_paramCount;
+        char** m_paramNames;
+        char** m_paramValues;
 
-        Vector<String> m_pluginPaths;
-        HashSet<String> m_registeredMIMETypes;
-        PluginSet m_plugins;
+        char* m_mimeType;
+        
+        NPP m_instance;
+        NPP_t m_instanceStruct;
+        NPWindow m_window;
+        NPWindow m_lastSetWindow;
     };
 
 } // namespace WebCore
 
-#endif
+#endif 

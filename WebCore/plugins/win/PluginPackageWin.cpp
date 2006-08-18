@@ -160,7 +160,6 @@ bool PluginPackageWin::load()
 
     m_browserFuncs.size = sizeof (m_browserFuncs);
     m_browserFuncs.version = NP_VERSION_MINOR;
-    /* FIXME: Implement the functions below on the browser side
     m_browserFuncs.geturl = NPN_GetURL;
     m_browserFuncs.posturl = NPN_PostURL;
     m_browserFuncs.requestread = NPN_RequestRead;
@@ -182,7 +181,7 @@ bool PluginPackageWin::load()
     m_browserFuncs.forceredraw = NPN_ForceRedraw;
     m_browserFuncs.getJavaEnv = NPN_GetJavaEnv;
     m_browserFuncs.getJavaPeer = NPN_GetJavaPeer;
-    */
+
     npErr = NP_Initialize(&m_browserFuncs);
 
     if (npErr != NPERR_NO_ERROR)

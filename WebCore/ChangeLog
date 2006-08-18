@@ -1,5 +1,73 @@
 2006-08-17  Anders Carlsson  <andersca@apple.com>
 
+        Reviewed by Steve and Maciej.
+
+        Add initial implementation of plugin view.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        Add files.
+        
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::objectContentType):
+        (WebCore::FrameWin::createPlugin):
+        Implement these functions.
+        
+        * platform/win/TemporaryLinkStubs.cpp:
+        Remove implemented functions.
+        
+        * platform/win/WidgetWin.cpp: Add this file from the open source repo
+        (WebCore::Widget::~Widget):
+        Call DestroyWindow on the hWnd.
+        
+        * plugins/win/PluginDatabaseWin.cpp:
+        (WebCore::PluginDatabaseWin::createPluginView):
+        New function which creates a plugin view.
+        
+        * plugins/win/PluginDatabaseWin.h:
+        
+        * plugins/win/PluginPackageWin.cpp:
+        (WebCore::PluginPackageWin::load):
+        Assign the browser functions. They are just stubs for now.
+               
+        * plugins/win/PluginViewWin.cpp: Added.
+        (WebCore::registerPluginView):
+        (WebCore::PluginViewWndProc):
+        (WebCore::PluginViewWin::invokeSetWindow):
+        (WebCore::PluginViewWin::start):
+        (WebCore::PluginViewWin::stop):
+        (WebCore::createUTF8String):
+        (WebCore::createUTF8StringArray):
+        (WebCore::freeStringArray):
+        (WebCore::PluginViewWin::~PluginViewWin):
+        (WebCore::PluginViewWin::PluginViewWin):
+        * plugins/win/PluginViewWin.h: Added.
+        (WebCore::PluginViewWin::plugin):
+        (WebCore::PluginViewWin::instance):
+        * plugins/win/npapi.cpp: Added.
+        (NPN_MemAlloc):
+        (NPN_MemFree):
+        (NPN_MemFlush):
+        (NPN_ReloadPlugins):
+        (NPN_RequestRead):
+        (NPN_GetURLNotify):
+        (NPN_GetURL):
+        (NPN_PostURLNotify):
+        (NPN_PostURL):
+        (NPN_NewStream):
+        (NPN_Write):
+        (NPN_DestroyStream):
+        (NPN_UserAgent):
+        (NPN_Status):
+        (NPN_InvalidateRect):
+        (NPN_InvalidateRegion):
+        (NPN_ForceRedraw):
+        (NPN_GetValue):
+        (NPN_SetValue):
+        (NPN_GetJavaEnv):
+        (NPN_GetJavaPeer):
+
+2006-08-17  Anders Carlsson  <andersca@apple.com>
+
         Reviewed by Maciej.
 
         Add initial implementation of plugin database.

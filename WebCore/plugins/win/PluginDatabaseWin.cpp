@@ -25,9 +25,11 @@
 
 #include "config.h"
 #include "PluginDatabaseWin.h"
-#include "PluginPackageWin.h"
-#include "FrameWin.h"
+
 #include <windows.h>
+#include "PluginPackageWin.h"
+#include "PluginViewWin.h"
+#include "FrameWin.h"
 
 namespace WebCore {
 
@@ -230,6 +232,29 @@ PluginPackageWin* PluginDatabaseWin::pluginForExtension(const String& extension)
     }
 
     return 0;
+}
+
+PluginViewWin* PluginDatabaseWin::createPluginView(FrameWin* parentFrame, Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType)
+{
+    PluginPackageWin* plugin = 0;
+    
+    if (!mimeType.isNull())
+        plugin = pluginForMIMEType(mimeType);
+    
+    if (!plugin) {
+        DeprecatedString path = url.path();
+        String extension = path.mid(path.findRev('.') + 1);
+
+        plugin = pluginForExtension(extension);
+
+        // FIXME: if no plugin could be found, query Windows for the mime type 
+        // corresponding to the extension.
+    }
+
+    if (!plugin || !plugin->load())
+        return 0;
+
+    return new PluginViewWin(parentFrame, plugin, element, url, paramNames, paramValues, mimeType);
 }
 
 }
