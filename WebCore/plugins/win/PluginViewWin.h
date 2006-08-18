@@ -58,8 +58,8 @@ namespace WebCore {
         NPError postURLNotify(const char* url, const char* target, uint32 len, const char* but, NPBool file, void* notifyData);
         NPError postURL(const char* url, const char* target, uint32 len, const char* but, NPBool file);
         NPError newStream(NPMIMEType type, const char* target, NPStream** stream);
-        int32 write(NPP instance, NPStream* stream, int32 len, void* buffer);
-        NPError destroyStream(NPP instance, NPStream* stream, NPReason reason);
+        int32 write(NPStream* stream, int32 len, void* buffer);
+        NPError destroyStream(NPStream* stream, NPReason reason);
         const char* userAgent();
         void status(const char* message);
         NPError getValue(NPNVariable variable, void* value);

@@ -197,13 +197,13 @@ NPError PluginViewWin::newStream(NPMIMEType type, const char* target, NPStream**
     return NPERR_GENERIC_ERROR;
 }
 
-int32 write(NPP instance, NPStream* stream, int32 len, void* buffer)
+int32 write(NPStream* stream, int32 len, void* buffer)
 {
     DebugBreak();
     return 0;
 }
 
-NPError destroyStream(NPP instance, NPStream* stream, NPReason reason)
+NPError destroyStream(NPStream* stream, NPReason reason)
 {
     DebugBreak();
     return NPERR_GENERIC_ERROR;

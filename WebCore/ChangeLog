@@ -1,5 +1,13 @@
 2006-08-18  Anders Carlsson  <acarlsson@apple.com>
 
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::write):
+        (WebCore::destroyStream):
+        * plugins/win/PluginViewWin.h:
+        Fix build by removing unneeded parameters.
+
+2006-08-18  Anders Carlsson  <acarlsson@apple.com>
+
         Reviewed by Adele.
 
         Have the NPN functions call into the plugin view. Implement some of the plugin view methods.
