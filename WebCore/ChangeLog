@@ -1,3 +1,12 @@
+2006-08-22  Geoffrey Garen  <ggaren@apple.com>
+
+        My first Windows build fix.
+
+        * WebCore.vcproj/WebCore.vcproj:
+            - Link against version.lib, since the new plug-in stuff requires it
+            - Sync the release and debug header search paths, so release
+              finds the JS bindings.
+
 2006-08-18  Anders Carlsson  <acarlsson@apple.com>
 
         * plugins/win/PluginViewWin.cpp:
