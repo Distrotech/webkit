@@ -87,6 +87,38 @@ interface IDOMHTMLCollection : IDOMObject
 }
 
 /*
+    @interface DOMHTMLOptionsCollection : DOMObject
+*/
+[
+    local,
+    object,
+    uuid(1AD98D99-163C-4c04-B6EE-85A3DD31F5C4),
+    pointer_default(unique)
+]
+interface IDOMHTMLOptionsCollection : IDOMObject
+{
+    /*
+        - (unsigned)length;
+    */
+    HRESULT length([out, retval] unsigned int* result);
+
+    /*
+        - (void)setLength:(unsigned)length;
+    */
+    HRESULT setLength([in] unsigned int length);
+
+    /*
+        - (DOMNode *)item:(unsigned)index;
+    */
+    HRESULT item([in] unsigned int index, [out, retval] IDOMNode** result);
+
+    /*
+        - (DOMNode *)namedItem:(NSString *)name;
+    */
+    HRESULT namedItem([in] BSTR name, [out, retval] IDOMNode* result);
+}
+
+/*
     @interface DOMHTMLDocument : DOMDocument
 */
 [
@@ -190,7 +222,7 @@ interface IDOMHTMLDocument : IDOMDocument
     /*
         - (DOMElement *)getElementById:(NSString *)elementId;
     */
-    HRESULT getElementById([in] BSTR elementId, [out, retval] IDOMElement** element);
+    HRESULT getElementById_([in] BSTR elementId, [out, retval] IDOMElement** element);
 
     /*
         - (DOMNodeList *)getElementsByName:(NSString *)elementName;
@@ -258,6 +290,296 @@ interface IDOMHTMLElement : IDOMElement
         - (void)setClassName:(NSString *)className;
     */
     HRESULT setClassName([in] BSTR className);
+}
+
+/*
+    @interface DOMHTMLFormElement : DOMHTMLElement
+*/
+[
+    local,
+    object,
+    uuid(DF5C0054-DDDB-4888-9198-7A4E4EBF8D69),
+    pointer_default(unique)
+]
+interface IDOMHTMLFormElement : IDOMHTMLElement
+{
+    /*
+        - (DOMHTMLCollection *)elements;
+    */
+    HRESULT elements([out, retval] IDOMHTMLCollection* result);
+
+    /*
+        - (int)length;
+    */
+    HRESULT length([out, retval] int* result);
+
+    /*
+        - (NSString *)name;
+    */
+    HRESULT name([out, retval] BSTR* result);
+
+    /*
+        - (void)setName:(NSString *)name;
+    */
+    HRESULT setName([in] BSTR name);
+
+    /*
+        - (NSString *)acceptCharset;
+    */
+    HRESULT acceptCharset([out, retval] BSTR* result);
+    /*
+        - (void)setAcceptCharset:(NSString *)acceptCharset;
+    */
+    HRESULT setAcceptCharset([in] BSTR acceptCharset);
+
+    /*
+        - (NSString *)action;
+    */
+    HRESULT action([out, retval] BSTR* result);
+
+    /*
+        - (void)setAction:(NSString *)action;
+    */
+    HRESULT setAction([in] BSTR action);
+
+    /*
+        - (NSString *)enctype;
+    */
+    HRESULT encType([out, retval] BSTR* result);
+
+    /*
+        - (void)setEnctype:(NSString *)enctype;
+    */
+    HRESULT setEnctype([out, retval] BSTR* encType);
+
+    /*
+        - (NSString *)method;
+    */
+    HRESULT method([out, retval] BSTR* method);
+
+    /*
+        - (void)setMethod:(NSString *)method;
+    */
+    HRESULT setMethod([in] BSTR method);
+
+    /*
+        - (NSString *)target;
+    */
+    HRESULT target([out, retval] BSTR* result);
+
+    /*
+        - (void)setTarget:(NSString *)target;
+    */
+    HRESULT setTarget([in] BSTR target);
+
+    /*
+        - (void)submit;
+    */
+    HRESULT submit();
+
+    /*
+        - (void)reset;
+    */
+    HRESULT reset();
+}
+
+/*
+    @interface DOMHTMLSelectElement : DOMHTMLElement
+*/
+[
+    local,
+    object,
+    uuid(3825AA04-B38F-4399-95BB-F5410B29594A),
+    pointer_default(unique)
+]
+interface IDOMHTMLSelectElement : IDOMHTMLElement
+{
+    /*
+        - (NSString *)type;
+    */
+    HRESULT type([out, retval] BSTR* result);
+
+    /*
+        - (int)selectedIndex;
+    */
+    HRESULT selectedIndex([out, retval] int* result);
+
+    /*
+        - (void)setSelectedIndex:(int)selectedIndex;
+    */
+    HRESULT setSelectedIndx([in] int selectedIndex);
+
+    /*
+        - (NSString *)value;
+    */
+    HRESULT value([out, retval] BSTR* result);
+
+    /*
+        - (void)setValue:(NSString *)value;
+    */
+    HRESULT setValue([in] BSTR value);
+
+    /*
+        - (int)length;
+    */
+    HRESULT length([out, retval] int* result);
+
+    /*
+        - (DOMHTMLFormElement *)form;
+    */
+    HRESULT form([out, retval] IDOMHTMLFormElement** result);
+
+    /*
+        - (DOMHTMLOptionsCollection *)options;
+    */
+    HRESULT options([out, retval] IDOMHTMLOptionsCollection** result);
+
+    /*
+        - (BOOL)disabled;
+    */
+    HRESULT disabled([out, retval] BOOL* result);
+
+    /*
+        - (void)setDisabled:(BOOL)disabled;
+    */
+    HRESULT setDisabled([in] BOOL disabled);
+
+    /*
+        - (BOOL)multiple;
+    */
+    HRESULT multiple([out, retval] BOOL* result);
+
+    /*
+        - (void)setMultiple:(BOOL)multiple;
+    */
+    HRESULT setMultiple([in] BOOL multiple);
+
+    /*
+        - (NSString *)name;
+    */
+    HRESULT name([out, retval] BSTR* result);
+
+    /*
+        - (void)setName:(NSString *)name;
+    */
+    HRESULT setName([in] BSTR name);
+
+    /*
+        - (int)size;
+    */
+    HRESULT size([out, retval] int* size);
+
+    /*
+        - (void)setSize:(int)size;
+    */
+    HRESULT setSize([in] int size);
+
+    /*
+        - (int)tabIndex;
+    */
+    HRESULT tabIndex([out, retval] int* result);
+
+    /*
+        - (void)setTabIndex:(int)tabIndex;
+    */
+    HRESULT setTabIndex([in] int tabIndex);
+
+    /*
+        - (void)add:(DOMHTMLElement *)element :(DOMHTMLElement *)before;
+    */
+    HRESULT add([in] IDOMHTMLElement* element, [in] IDOMHTMLElement* before);
+
+    /*
+        - (void)remove:(int)index;
+    */
+    HRESULT remove([in] int index);
+
+    /*
+        - (void)blur;
+    */
+    HRESULT blur();
+
+    /*
+        - (void)focus;
+    */
+    HRESULT focus();
+}
+
+/*
+    @interface DOMHTMLOptionElement : DOMHTMLElement
+*/
+[
+    local,
+    object,
+    uuid(0E1EF5AB-4008-4d83-9135-D4DC1B4603D4),
+    pointer_default(unique)
+]
+interface IDOMHTMLOptionElement : IDOMHTMLElement
+{
+    /*
+        - (DOMHTMLFormElement *)form;
+    */
+    HRESULT form([out, retval] IDOMHTMLFormElement** result);
+
+    /*
+        - (BOOL)defaultSelected;
+    */
+    HRESULT defaultSelected([out, retval] BOOL* result);
+
+    /*
+        - (void)setDefaultSelected:(BOOL)defaultSelected;
+    */
+    HRESULT setDefaultSelected([in] BOOL defaultSelected);
+
+    /*
+        - (NSString *)text;
+    */
+    HRESULT text([out, retval] BSTR* result);
+
+    /*
+        - (int)index;
+    */
+    HRESULT index([out, retval] int* result);
+
+    /*
+        - (BOOL)disabled;
+    */
+    HRESULT disabled([out, retval] BOOL* result);
+
+    /*
+        - (void)setDisabled:(BOOL)disabled;
+    */
+    HRESULT setDisabled([in] BOOL disabled);
+
+    /*
+        - (NSString *)label;
+    */
+    HRESULT label([out, retval] BSTR* result);
+
+    /*
+        - (void)setLabel:(NSString *)label;
+    */
+    HRESULT setLabel([in] BSTR label);
+
+    /*
+        - (BOOL)selected;
+    */
+    HRESULT selected([out, retval] BOOL* result);
+
+    /*
+        - (void)setSelected:(BOOL)selected;
+    */
+    HRESULT setSelected([in] BOOL selected);
+
+    /*
+        - (NSString *)value;
+    */
+    HRESULT value([out, retval] BSTR* result);
+
+    /*
+        - (void)setValue:(NSString *)value;
+    */
+    HRESULT setValue([in] BSTR value);
 }
 
 /*

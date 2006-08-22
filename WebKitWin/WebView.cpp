@@ -68,6 +68,7 @@ WebView::WebView()
 , m_viewWindow(0)
 , m_mainFrame(0)
 , m_frameLoadDelegate(0)
+, m_frameLoadDelegatePrivate(0)
 , m_uiDelegate(0)
 , m_formDelegate(0)
 , m_backForwardList(0)
@@ -95,6 +96,8 @@ WebView::~WebView()
         m_mainFrame->Release();
     if (m_frameLoadDelegate)
         m_frameLoadDelegate->Release();
+    if (m_frameLoadDelegatePrivate)
+        m_frameLoadDelegatePrivate->Release();
     if (m_uiDelegate)
         m_uiDelegate->Release();
     if (m_formDelegate)
@@ -1118,6 +1121,140 @@ HRESULT STDMETHODCALLTYPE WebView::registerViewClass(
     return E_NOTIMPL;
 }
 
+HRESULT STDMETHODCALLTYPE WebView::setGroupName( 
+        /* [in] */ BSTR /*groupName*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+    
+HRESULT STDMETHODCALLTYPE WebView::groupName( 
+        /* [retval][out] */ BSTR* /*groupName*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+    
+HRESULT STDMETHODCALLTYPE WebView::estimatedProgress( 
+        /* [retval][out] */ double* /*estimatedProgress*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+    
+HRESULT STDMETHODCALLTYPE WebView::isLoading( 
+        /* [retval][out] */ BOOL* /*isLoading*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+    
+HRESULT STDMETHODCALLTYPE WebView::elementAtPoint( 
+        /* [in] */ LPPOINT /*point*/,
+        /* [retval][out] */ IPropertyBag** /*elementDictionary*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+    
+HRESULT STDMETHODCALLTYPE WebView::pasteboardTypesForSelection( 
+        /* [out][in] */ int* /*count*/,
+        /* [retval][out] */ BSTR** /*types*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+    
+HRESULT STDMETHODCALLTYPE WebView::writeSelectionWithPasteboardTypes( 
+        /* [size_is][in] */ BSTR* /*types*/,
+        /* [in] */ int /*cTypes*/,
+        /* [in] */ IDataObject* /*pasteboard*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+    
+HRESULT STDMETHODCALLTYPE WebView::pasteboardTypesForElement( 
+        /* [in] */ IPropertyBag* /*elementDictionary*/,
+        /* [out][in] */ int* /*count*/,
+        /* [retval][out] */ BSTR** /*types*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+    
+HRESULT STDMETHODCALLTYPE WebView::writeElement( 
+        /* [in] */ IPropertyBag* /*elementDictionary*/,
+        /* [size_is][in] */ BSTR* /*withPasteboardTypes*/,
+        /* [in] */ int /*cWithPasteboardTypes*/,
+        /* [in] */ IDataObject* /*pasteboard*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+    
+HRESULT STDMETHODCALLTYPE WebView::moveDragCaretToPoint( 
+        /* [in] */ LPPOINT /*point*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+    
+HRESULT STDMETHODCALLTYPE WebView::removeDragCaret( void)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+    
+HRESULT STDMETHODCALLTYPE WebView::setDrawsBackground( 
+        /* [in] */ BOOL /*drawsBackground*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+    
+HRESULT STDMETHODCALLTYPE WebView::drawsBackground( 
+        /* [retval][out] */ BOOL* /*drawsBackground*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+    
+HRESULT STDMETHODCALLTYPE WebView::setMainFrameURL( 
+        /* [in] */ BSTR /*urlString*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+    
+HRESULT STDMETHODCALLTYPE WebView::mainFrameURL( 
+        /* [retval][out] */ BSTR* /*urlString*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+    
+HRESULT STDMETHODCALLTYPE WebView::mainFrameDocument( 
+        /* [retval][out] */ IDOMDocument** /*document*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+    
+HRESULT STDMETHODCALLTYPE WebView::mainFrameTitle( 
+        /* [retval][out] */ BSTR* /*title*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+    
+HRESULT STDMETHODCALLTYPE WebView::mainFrameIcon( 
+        /* [retval][out] */ IWebImage** /*icon*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+
 // IWebIBActions ---------------------------------------------------------------
 
 HRESULT STDMETHODCALLTYPE WebView::takeStringURLFrom( 
@@ -1646,5 +1783,26 @@ HRESULT STDMETHODCALLTYPE WebView::formDelegate(
     if (m_formDelegate)
         m_formDelegate->AddRef();
     *formDelegate = m_formDelegate;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebView::setFrameLoadDelegatePrivate( 
+    /* [in] */ IWebFrameLoadDelegatePrivate* d)
+{
+    if (m_frameLoadDelegatePrivate)
+        m_frameLoadDelegatePrivate->Release();
+    m_frameLoadDelegatePrivate = d;
+    if (d)
+        d->AddRef();
+
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebView::frameLoadDelegatePrivate( 
+    /* [out][retval] */ IWebFrameLoadDelegatePrivate** d)
+{
+    if (m_frameLoadDelegatePrivate)
+        m_frameLoadDelegatePrivate->AddRef();
+    *d = m_frameLoadDelegatePrivate;
     return S_OK;
 }

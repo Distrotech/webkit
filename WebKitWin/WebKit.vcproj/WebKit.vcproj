@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\loader&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\loader&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\khtml\dom&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\khtml\dom&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\khtml\ecma&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\khtml\ecma&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\html&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\html&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\khtml&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\khtml&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\css&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\css&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\khtml\misc&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\khtml\misc&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\platform&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\bridge\win&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bridge\win&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\page&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\page&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\bridge&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bridge&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\platform\cairo\cairo\src&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\cairo\cairo\src&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\platform\win&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\win&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\rendering&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\rendering&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\editing&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\editing&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\dom&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\dom&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\xml&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\xml&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\kwq&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\kwq&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\iconv&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\libxml2&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\icu\include&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore\os-win32&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore\wtf&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\ForwardingHeaders&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\ForwardingHeaders&quot;;&quot;$(ProjectDir)\..\..\WebKitLibraries\WebKitSupport\Include&quot;;&quot;$(ProjectDir)\..\..\WebKitLibraries\WebKitSupport\Include\CoreFoundation\OSXCompatibilityHeaders&quot;;&quot;$(WebKitOutputDir)\$(ConfigurationName)\$(ProjectName)&quot;;&quot;$(ProjectDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\loader&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\loader&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\khtml\dom&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\khtml\dom&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\khtml\ecma&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\khtml\ecma&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\html&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\html&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\khtml&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\khtml&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\css&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\css&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\khtml\misc&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\khtml\misc&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\platform&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\bridge\win&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bridge\win&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\page&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\page&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\bridge&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bridge&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\platform\cairo\cairo\src&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\cairo\cairo\src&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\platform\win&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\win&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\rendering&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\rendering&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\editing&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\editing&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\dom&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\dom&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\xml&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\xml&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\kwq&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\kwq&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\DerivedSources\WebCore&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\iconv&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\libxml2&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\icu\include&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore\os-win32&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore\wtf&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\ForwardingHeaders&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\ForwardingHeaders&quot;;&quot;$(ProjectDir)\..\..\WebKitLibraries\WebKitSupport\Include&quot;;&quot;$(ProjectDir)\..\..\WebKitLibraries\WebKitSupport\Include\CoreFoundation\OSXCompatibilityHeaders&quot;;&quot;$(WebKitOutputDir)\$(ConfigurationName)\$(ProjectName)&quot;;&quot;$(ProjectDir)&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;WEBKIT_EXPORTS;_WIN32_WINNT=0x500;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
@@ -126,7 +126,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\loader&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\loader&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\khtml\dom&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\khtml\dom&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\khtml\ecma&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\khtml\ecma&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\html&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\html&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\khtml&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\khtml&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\css&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\css&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\khtml\misc&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\khtml\misc&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\platform&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\bridge\win&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bridge\win&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\page&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\page&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\bridge&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bridge&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\platform\cairo\cairo\src&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\cairo\cairo\src&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\platform\win&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\win&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\rendering&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\rendering&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\editing&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\editing&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\dom&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\dom&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\xml&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\xml&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\kwq&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\kwq&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\iconv&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\libxml2&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\icu\include&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore\os-win32&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore\wtf&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\ForwardingHeaders&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\ForwardingHeaders&quot;;&quot;$(ProjectDir)\..\..\WebKitLibraries\WebKitSupport\Include&quot;;&quot;$(ProjectDir)\..\..\WebKitLibraries\WebKitSupport\Include\CoreFoundation\OSXCompatibilityHeaders&quot;;&quot;$(WebKitOutputDir)\$(ConfigurationName)\$(ProjectName)&quot;;&quot;$(ProjectDir)&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\loader&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\loader&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\khtml\dom&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\khtml\dom&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\khtml\ecma&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\khtml\ecma&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\html&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\html&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\khtml&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\khtml&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\css&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\css&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\khtml\misc&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\khtml\misc&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\platform&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\bridge\win&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bridge\win&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\page&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\page&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\bridge&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bridge&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\platform\cairo\cairo\src&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\cairo\cairo\src&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\platform\win&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\win&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\rendering&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\rendering&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\editing&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\editing&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\dom&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\dom&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\xml&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\xml&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\kwq&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\kwq&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\DerivedSources\WebCore&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\iconv&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\libxml2&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\icu\include&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore\os-win32&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore\wtf&quot;;&quot;$(ProjectDir)\..\..\WebCoreWin\ForwardingHeaders&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\ForwardingHeaders&quot;;&quot;$(ProjectDir)\..\..\WebKitLibraries\WebKitSupport\Include&quot;;&quot;$(ProjectDir)\..\..\WebKitLibraries\WebKitSupport\Include\CoreFoundation\OSXCompatibilityHeaders&quot;;&quot;$(WebKitOutputDir)\$(ConfigurationName)\$(ProjectName)&quot;;&quot;$(ProjectDir)&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;WEBKIT_EXPORTS;_WIN32_WINNT=0x500;_CRT_SECURE_NO_DEPRECATE"
 				ExceptionHandling="0"
 				RuntimeLibrary="2"
@@ -227,6 +227,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\DOMCoreClasses.h"
+				>
+			</File>
+			<File
+				RelativePath="..\DOMHTMLClasses.h"
+				>
+			</File>
+			<File
 				RelativePath="..\MarshallingHelpers.h"
 				>
 			</File>
@@ -287,6 +295,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\WebScriptObject.h"
+				>
+			</File>
+			<File
 				RelativePath="..\WebURLResponse.h"
 				>
 			</File>
@@ -300,6 +312,14 @@
 			>
 			<File
 				RelativePath="..\CFDictionaryPropertyBag.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\DOMCoreClasses.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\DOMHTMLClasses.cpp"
 				>
 			</File>
 			<File
@@ -340,6 +360,10 @@
 			</File>
 			<File
 				RelativePath="..\WebPreferences.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\WebScriptObject.cpp"
 				>
 			</File>
 			<File

@@ -170,6 +170,16 @@ void FrameWin::textDidChangeInTextArea(Element* e)
     m_client->textDidChangeInTextArea(e);
 }
 
+void FrameWin::didFirstLayout()
+{
+    m_client->didFirstLayout();
+}
+
+void FrameWin::handledOnloadEvents()
+{
+    m_client->handledOnloadEvents();
+}
+
 enum WebCore::ObjectContentType FrameWin::objectContentType(const KURL& url, const String& mimeType)
 {
     if (mimeType.isEmpty())

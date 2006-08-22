@@ -26,8 +26,10 @@
 #include "config.h"
 #include "WebKitDLL.h"
 
+#include "DOMCoreClasses.h"
 #include "IWebHistory.h"
 #include "IWebURLResponse.h"
+#include "IWebFrameLoadDelegatePrivate.h"
 #include "WebMutableURLRequest.h"
 #include "WebFrame.h"
 #include "WebHistory.h"
@@ -624,7 +626,7 @@ void WebFrame::openURL(const DeprecatedString& url, bool lockHistory)
         IWebView* newWebView;
         if (SUCCEEDED(d->webView->uiDelegate(&ui))) {
             if (SUCCEEDED(ui->createWebViewWithRequest(d->webView, request, &newWebView))) {
-                if (GetKeyState(VK_SHIFT)) {
+                if (GetAsyncKeyState(VK_SHIFT)) {
                     // Ctrl-Option-Shift-click:  Opens a link in a new window and selects it.
                     // Ctrl-Shift-click:  Opens a link in a new tab and selects it.
                     ui->webViewShow(d->webView);
@@ -689,27 +691,126 @@ void WebFrame::setStatusText(const String& statusText)
     }
 }
 
-void WebFrame::textFieldDidBeginEditing(Element*)
+void WebFrame::textFieldDidBeginEditing(Element* e)
 {
+    IWebFormDelegate* formDelegate;
+    if (SUCCEEDED(d->webView->formDelegate(&formDelegate)) && formDelegate) {
+        IDOMElement* domElement = DOMElement::createInstance(e);
+        if (domElement) {
+            IDOMHTMLInputElement* domInputElement;
+            if (SUCCEEDED(domElement->QueryInterface(IID_IDOMHTMLInputElement, (void**)&domInputElement))) {
+                formDelegate->textFieldDidBeginEditing(domInputElement, this);
+                domInputElement->Release();
+            }
+            domElement->Release();
+        }
+        formDelegate->Release();
+    }
 }
 
-void WebFrame::textFieldDidEndEditing(Element*)
+void WebFrame::textFieldDidEndEditing(Element* e)
 {
+    IWebFormDelegate* formDelegate;
+    if (SUCCEEDED(d->webView->formDelegate(&formDelegate)) && formDelegate) {
+        IDOMElement* domElement = DOMElement::createInstance(e);
+        if (domElement) {
+            IDOMHTMLInputElement* domInputElement;
+            if (SUCCEEDED(domElement->QueryInterface(IID_IDOMHTMLInputElement, (void**)&domInputElement))) {
+                formDelegate->textFieldDidEndEditing(domInputElement, this);
+                domInputElement->Release();
+            }
+            domElement->Release();
+        }
+        formDelegate->Release();
+    }
 }
 
-void WebFrame::textDidChangeInTextField(Element*)
+void WebFrame::textDidChangeInTextField(Element* e)
 {
+    IWebFormDelegate* formDelegate;
+    if (SUCCEEDED(d->webView->formDelegate(&formDelegate)) && formDelegate) {
+        IDOMElement* domElement = DOMElement::createInstance(e);
+        if (domElement) {
+            IDOMHTMLInputElement* domInputElement;
+            if (SUCCEEDED(domElement->QueryInterface(IID_IDOMHTMLInputElement, (void**)&domInputElement))) {
+                formDelegate->textDidChangeInTextField(domInputElement, this);
+                domInputElement->Release();
+            }
+            domElement->Release();
+        }
+        formDelegate->Release();
+    }
 }
 
-bool WebFrame::doTextFieldCommandFromEvent(Element*, const PlatformKeyboardEvent*)
+bool WebFrame::doTextFieldCommandFromEvent(Element* e, const PlatformKeyboardEvent*)
 {
-    return false;
+    BOOL result = FALSE;
+    IWebFormDelegate* formDelegate;
+    if (SUCCEEDED(d->webView->formDelegate(&formDelegate)) && formDelegate) {
+        IDOMElement* domElement = DOMElement::createInstance(e);
+        if (domElement) {
+            IDOMHTMLInputElement* domInputElement;
+            if (SUCCEEDED(domElement->QueryInterface(IID_IDOMHTMLInputElement, (void**)&domInputElement))) {
+                formDelegate->doCommandBySelector(domInputElement, 0 /*FIXME*/, this, &result);
+                domInputElement->Release();
+            }
+            domElement->Release();
+        }
+        formDelegate->Release();
+    }
+    return !!result;
 }
 
-void WebFrame::textWillBeDeletedInTextField(Element*)
+void WebFrame::textWillBeDeletedInTextField(Element* e)
 {
+    // We're using the deleteBackward selector for all deletion operations since the autofill code treats all deletions the same way.
+    IWebFormDelegate* formDelegate;
+    if (SUCCEEDED(d->webView->formDelegate(&formDelegate))) {
+        IDOMElement* domElement = DOMElement::createInstance(e);
+        if (domElement) {
+            IDOMHTMLInputElement* domInputElement;
+            if (SUCCEEDED(domElement->QueryInterface(IID_IDOMHTMLInputElement, (void**)&domInputElement))) {
+                BOOL result;
+                formDelegate->doCommandBySelector(domInputElement, 0 /*FIXME*/, this, &result);
+                domInputElement->Release();
+            }
+            domElement->Release();
+        }
+        formDelegate->Release();
+    }
 }
 
-void WebFrame::textDidChangeInTextArea(Element*)
+void WebFrame::textDidChangeInTextArea(Element* e)
 {
+    IWebFormDelegate* formDelegate;
+    if (SUCCEEDED(d->webView->formDelegate(&formDelegate))) {
+        IDOMElement* domElement = DOMElement::createInstance(e);
+        if (domElement) {
+            IDOMHTMLTextAreaElement* domTextAreaElement;
+            if (SUCCEEDED(domElement->QueryInterface(IID_IDOMHTMLTextAreaElement, (void**)&domTextAreaElement))) {
+                formDelegate->textDidChangeInTextArea(domTextAreaElement, this);
+                domTextAreaElement->Release();
+            }
+            domElement->Release();
+        }
+        formDelegate->Release();
+    }
+}
+
+void WebFrame::didFirstLayout()
+{
+    IWebFrameLoadDelegatePrivate* frameLoadDelegatePriv;
+    if (SUCCEEDED(d->webView->frameLoadDelegatePrivate(&frameLoadDelegatePriv))) {
+        frameLoadDelegatePriv->didFirstLayoutInFrame(d->webView, this);
+        frameLoadDelegatePriv->Release();
+    }
+}
+
+void WebFrame::handledOnloadEvents()
+{
+    IWebFrameLoadDelegatePrivate* frameLoadDelegatePriv;
+    if (SUCCEEDED(d->webView->frameLoadDelegatePrivate(&frameLoadDelegatePriv))) {
+        frameLoadDelegatePriv->didHandleOnloadEventsForFrame(d->webView, this);
+        frameLoadDelegatePriv->Release();
+    }
 }

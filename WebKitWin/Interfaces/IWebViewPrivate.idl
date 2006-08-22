@@ -51,6 +51,7 @@ cpp_quote(" */")
 import "oaidl.idl";
 import "ocidl.idl";
 import "IWebFormDelegate.idl";
+import "IWebFrameLoadDelegatePrivate.idl";
 
 [
     local,
@@ -82,4 +83,9 @@ interface IWebViewPrivate : IUnknown
 
     //- (id<WebFormDelegate>)_formDelegate;
     HRESULT formDelegate([out, retval] IWebFormDelegate** formDelegate);
+
+    HRESULT setFrameLoadDelegatePrivate([in] IWebFrameLoadDelegatePrivate* frameLoadDelegatePrivate);
+
+    HRESULT frameLoadDelegatePrivate([out, retval] IWebFrameLoadDelegatePrivate** frameLoadDelegatePrivate);
+
 }

@@ -147,6 +147,8 @@ public:
     virtual bool doTextFieldCommandFromEvent(WebCore::Element*, const WebCore::PlatformKeyboardEvent*);
     virtual void textWillBeDeletedInTextField(WebCore::Element* input);
     virtual void textDidChangeInTextArea(WebCore::Element*);
+    virtual void didFirstLayout();
+    virtual void handledOnloadEvents();
 
     // WebFrame
     void paint();

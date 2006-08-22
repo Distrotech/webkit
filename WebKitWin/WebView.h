@@ -204,6 +204,68 @@ public:
         /* [in] */ IWebDocumentRepresentation *representation,
         /* [in] */ BSTR forMIMEType);
 
+    virtual HRESULT STDMETHODCALLTYPE setGroupName( 
+        /* [in] */ BSTR groupName);
+    
+    virtual HRESULT STDMETHODCALLTYPE groupName( 
+        /* [retval][out] */ BSTR *groupName);
+    
+    virtual HRESULT STDMETHODCALLTYPE estimatedProgress( 
+        /* [retval][out] */ double *estimatedProgress);
+    
+    virtual HRESULT STDMETHODCALLTYPE isLoading( 
+        /* [retval][out] */ BOOL *isLoading);
+    
+    virtual HRESULT STDMETHODCALLTYPE elementAtPoint( 
+        /* [in] */ LPPOINT point,
+        /* [retval][out] */ IPropertyBag **elementDictionary);
+    
+    virtual HRESULT STDMETHODCALLTYPE pasteboardTypesForSelection( 
+        /* [out][in] */ int *count,
+        /* [retval][out] */ BSTR **types);
+    
+    virtual HRESULT STDMETHODCALLTYPE writeSelectionWithPasteboardTypes( 
+        /* [size_is][in] */ BSTR *types,
+        /* [in] */ int cTypes,
+        /* [in] */ IDataObject *pasteboard);
+    
+    virtual HRESULT STDMETHODCALLTYPE pasteboardTypesForElement( 
+        /* [in] */ IPropertyBag *elementDictionary,
+        /* [out][in] */ int *count,
+        /* [retval][out] */ BSTR **types);
+    
+    virtual HRESULT STDMETHODCALLTYPE writeElement( 
+        /* [in] */ IPropertyBag *elementDictionary,
+        /* [size_is][in] */ BSTR *withPasteboardTypes,
+        /* [in] */ int cWithPasteboardTypes,
+        /* [in] */ IDataObject *pasteboard);
+    
+    virtual HRESULT STDMETHODCALLTYPE moveDragCaretToPoint( 
+        /* [in] */ LPPOINT point);
+    
+    virtual HRESULT STDMETHODCALLTYPE removeDragCaret( void);
+    
+    virtual HRESULT STDMETHODCALLTYPE setDrawsBackground( 
+        /* [in] */ BOOL drawsBackground);
+    
+    virtual HRESULT STDMETHODCALLTYPE drawsBackground( 
+        /* [retval][out] */ BOOL *drawsBackground);
+    
+    virtual HRESULT STDMETHODCALLTYPE setMainFrameURL( 
+        /* [in] */ BSTR urlString);
+    
+    virtual HRESULT STDMETHODCALLTYPE mainFrameURL( 
+        /* [retval][out] */ BSTR *urlString);
+    
+    virtual HRESULT STDMETHODCALLTYPE mainFrameDocument( 
+        /* [retval][out] */ IDOMDocument **document);
+    
+    virtual HRESULT STDMETHODCALLTYPE mainFrameTitle( 
+        /* [retval][out] */ BSTR *title);
+    
+    virtual HRESULT STDMETHODCALLTYPE mainFrameIcon( 
+        /* [retval][out] */ IWebImage **icon);
+
     // IWebIBActions
 
     virtual HRESULT STDMETHODCALLTYPE takeStringURLFrom( 
@@ -411,6 +473,12 @@ public:
     virtual HRESULT STDMETHODCALLTYPE formDelegate( 
         /* [retval][out] */ IWebFormDelegate **formDelegate);
 
+    virtual HRESULT STDMETHODCALLTYPE setFrameLoadDelegatePrivate( 
+        /* [in] */ IWebFrameLoadDelegatePrivate *frameLoadDelegatePrivate);
+
+    virtual HRESULT STDMETHODCALLTYPE frameLoadDelegatePrivate( 
+        /* [retval][out] */ IWebFrameLoadDelegatePrivate **frameLoadDelegatePrivate);
+
     // WebView
 
     void mouseMoved(WPARAM, LPARAM);
@@ -431,6 +499,7 @@ protected:
     HWND m_viewWindow;
     WebFrame* m_mainFrame;
     IWebFrameLoadDelegate* m_frameLoadDelegate;
+    IWebFrameLoadDelegatePrivate* m_frameLoadDelegatePrivate;
     IWebUIDelegate* m_uiDelegate;
     IWebFormDelegate* m_formDelegate;
     IWebBackForwardList* m_backForwardList;

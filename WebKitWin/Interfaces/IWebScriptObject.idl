@@ -129,7 +129,7 @@ interface IWebScriptObject : IUnknown
         @result Returns the string representation of the object.
         - (NSString *)stringRepresentation;
     */
-    HRESULT stringRepresentation([out, retval] BSTR stringRepresentation);
+    HRESULT stringRepresentation([out, retval] BSTR* stringRepresentation);
 
     /*!
         @method propertyAtIndex:

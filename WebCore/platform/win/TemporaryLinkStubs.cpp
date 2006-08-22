@@ -211,7 +211,6 @@ void FrameWin::restoreDocumentState() { }
 void FrameWin::partClearedInBegin() { }
 void FrameWin::createEmptyDocument() { }
 String FrameWin::overrideMediaType() const { return String(); }
-void FrameWin::handledOnloadEvents() { }
 Range* FrameWin::markedTextRange() const { return 0; }
 bool FrameWin::passSubframeEventToSubframe(WebCore::MouseEventWithHitTestResults&, Frame*) { return false; }
 bool FrameWin::lastEventIsMouseUp() const { return false; }

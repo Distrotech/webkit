@@ -44,6 +44,9 @@ public:
     virtual bool doTextFieldCommandFromEvent(Element*, const PlatformKeyboardEvent*) = 0;
     virtual void textWillBeDeletedInTextField(Element* input) = 0;
     virtual void textDidChangeInTextArea(Element*) = 0;
+
+    virtual void didFirstLayout() = 0;
+    virtual void handledOnloadEvents() = 0;
 };
 
 class FrameWin : public Frame
@@ -138,6 +141,8 @@ public:
     virtual bool doTextFieldCommandFromEvent(Element*, const PlatformKeyboardEvent*);
     virtual void textWillBeDeletedInTextField(Element* input);
     virtual void textDidChangeInTextArea(Element*);
+
+    virtual void didFirstLayout();
 
 private:
     virtual bool passMouseDownEventToWidget(Widget*);

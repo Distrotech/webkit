@@ -156,7 +156,7 @@ interface IWebView : IUnknown
         WebKit will attempt to render as HTML.
         + (NSArray *)MIMETypesShownAsHTML;
     */
-    HRESULT MIMETypesShownAsHTML([out] int* count, [out, retval] BSTR** mimeTypes);
+    HRESULT MIMETypesShownAsHTML([in, out] int* count, [out, retval] BSTR** mimeTypes);
 
     /*!
         @method setMIMETypesShownAsHTML:
@@ -533,6 +533,150 @@ interface IWebView : IUnknown
         + (void)registerViewClass:(Class)viewClass representationClass:(Class)representationClass forMIMEType:(NSString *)MIMEType;
     */
     HRESULT registerViewClass([in] IWebDocumentView* view, [in] IWebDocumentRepresentation* representation, [in] BSTR forMIMEType);
+
+    /*!
+        @method setGroupName:
+        @param groupName The name of the group for this WebView.
+        @discussion JavaScript may access named frames within the same group. 
+        - (void)setGroupName:(NSString *)groupName;
+    */
+    HRESULT setGroupName([in] BSTR groupName);
+
+    /*!
+        @method groupName
+        @discussion The group name for this WebView.
+        - (NSString *)groupName;
+    */
+    HRESULT groupName([out, retval] BSTR* groupName);
+
+    /*!
+        @method estimatedProgress
+        @discussion An estimate of the percent complete for a document load.  This
+        value will range from 0 to 1.0 and, once a load completes, will remain at 1.0 
+        until a new load starts, at which point it will be reset to 0.  The value is an
+        estimate based on the total number of bytes expected to be received
+        for a document, including all it's possible subresources.  For more accurate progress
+        indication it is recommended that you implement a WebFrameLoadDelegate and a
+        WebResourceLoadDelegate.
+        - (double)estimatedProgress;
+    */
+    HRESULT estimatedProgress([out, retval] double* estimatedProgress);
+
+    /*!
+        @method isLoading
+        @discussion Returns YES if there are any pending loads.
+        - (BOOL)isLoading;
+    */
+    HRESULT isLoading([out, retval] BOOL* isLoading);
+
+    /*!
+        @method elementAtPoint:
+        @param point A point in the coordinates of the WebView
+        @result An element dictionary describing the point
+        - (NSDictionary *)elementAtPoint:(NSPoint)point;
+    */
+    HRESULT elementAtPoint([in] LPPOINT point, [out, retval] IPropertyBag** elementDictionary);
+
+    /*!
+        @method pasteboardTypesForSelection
+        @abstract Returns the pasteboard types that WebView can use for the current selection
+        - (NSArray *)pasteboardTypesForSelection;
+    */
+    HRESULT pasteboardTypesForSelection([in, out] int* count, [out, retval] BSTR** types);
+
+    /*!
+        @method writeSelectionWithPasteboardTypes:toPasteboard:
+        @abstract Writes the current selection to the pasteboard
+        @param types The types that WebView will write to the pasteboard
+        @param pasteboard The pasteboard to write to
+        - (void)writeSelectionWithPasteboardTypes:(NSArray *)types toPasteboard:(NSPasteboard *)pasteboard;
+    */
+    HRESULT writeSelectionWithPasteboardTypes([in, size_is(cTypes)] BSTR* types, [in] int cTypes, [in] IDataObject* pasteboard);
+
+    /*!
+        @method pasteboardTypesForElement:
+        @abstract Returns the pasteboard types that WebView can use for an element
+        @param element The element
+        - (NSArray *)pasteboardTypesForElement:(NSDictionary *)element;
+    */
+    HRESULT pasteboardTypesForElement([in] IPropertyBag* elementDictionary, [in, out] int* count, [out, retval] BSTR** types);
+
+    /*!
+        @method writeElement:withPasteboardTypes:toPasteboard:
+        @abstract Writes an element to the pasteboard
+        @param element The element to write to the pasteboard
+        @param types The types that WebView will write to the pasteboard
+        @param pasteboard The pasteboard to write to
+        - (void)writeElement:(NSDictionary *)element withPasteboardTypes:(NSArray *)types toPasteboard:(NSPasteboard *)pasteboard;
+    */
+    HRESULT writeElement([in] IPropertyBag* elementDictionary, [in, size_is(cWithPasteboardTypes)] BSTR* withPasteboardTypes, [in] int cWithPasteboardTypes, [in] IDataObject* pasteboard);
+
+    /*!
+        @method moveDragCaretToPoint:
+        @param point A point in the coordinates of the WebView
+        @discussion This method moves the caret that shows where something being dragged will be dropped. It may cause the WebView to scroll
+        to make the new position of the drag caret visible.
+        - (void)moveDragCaretToPoint:(NSPoint)point;
+    */
+    HRESULT moveDragCaretToPoint([in] LPPOINT point);
+
+    /*!
+        @method removeDragCaret
+        @abstract Removes the drag caret from the WebView
+        - (void)removeDragCaret;
+    */
+    HRESULT removeDragCaret();
+
+    /*!
+        @method setDrawsBackground:
+        @param drawsBackround YES to cause the receiver to draw a default white background, NO otherwise.
+        @abstract Sets whether the receiver draws a default white background when the loaded page has no background specified.
+        - (void)setDrawsBackground:(BOOL)drawsBackround;
+    */
+    HRESULT setDrawsBackground([in] BOOL drawsBackground);
+
+    /*!
+        @method drawsBackground
+        @result Returns YES if the receiver draws a default white background, NO otherwise.
+        - (BOOL)drawsBackground;
+    */
+    HRESULT drawsBackground([out, retval] BOOL* drawsBackground);
+
+    /*!
+        @method setMainFrameURL:
+        @param URLString The URL to load in the mainFrame.
+        - (void)setMainFrameURL:(NSString *)URLString;
+    */
+    HRESULT setMainFrameURL([in] BSTR urlString);
+
+    /*!
+        @method mainFrameURL
+        @result Returns the main frame's current URL.
+        - (NSString *)mainFrameURL;
+    */
+    HRESULT mainFrameURL([out, retval] BSTR* urlString);
+
+    /*!
+        @method mainFrameDocument
+        @result Returns the main frame's DOMDocument.
+        - (DOMDocument *)mainFrameDocument;
+    */
+    HRESULT mainFrameDocument([out, retval] IDOMDocument** document);
+
+    /*!
+        @method mainFrameTitle
+        @result Returns the main frame's title if any, otherwise an empty string.
+        - (NSString *)mainFrameTitle;
+    */
+    HRESULT mainFrameTitle([out, retval] BSTR* title);
+
+    /*!
+        @method mainFrameIcon
+        @discussion The methods returns the site icon for the current page loaded in the mainFrame.
+        @result Returns the main frame's icon if any, otherwise nil.
+        - (NSImage *)mainFrameIcon;
+    */
+    HRESULT mainFrameIcon([out, retval] IWebImage** icon);
 }
 
 /*
