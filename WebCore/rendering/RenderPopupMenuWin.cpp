@@ -127,6 +127,10 @@ void RenderPopupMenuWin::hidePopup()
 
 void RenderPopupMenuWin::setPositionAndSize(const IntRect& r, FrameView* v)
 {
+    // r is in absolute document coordinates, but we want to be coordinates relative to the view
+    // FIXME: Once we have frames implemented on Windows we will have to look at this again
+    IntRect rViewCoords(r.location() - v->scrollOffset(), r.size());
+
     // First, size the popup
     int itemHeight = SendMessage(m_popup, LB_GETITEMHEIGHT, 0, 0);
     HTMLSelectElement *select = static_cast<HTMLSelectElement*>(menuList()->node());
@@ -135,7 +139,7 @@ void RenderPopupMenuWin::setPositionAndSize(const IntRect& r, FrameView* v)
     // Add an extra (itemHeight / 2) here because the popup will shrink itself to not show any partial items when we call SetWindowPos()
     int popupHeight = min(maxPopupHeight, itemHeight * size + itemHeight / 2);
 
-    IntRect popupRect(r.x(), r.bottom(), r.width(), popupHeight);
+    IntRect popupRect(rViewCoords.x(), rViewCoords.bottom(), rViewCoords.width(), popupHeight);
 
     // WS_POPUP windows are positioned in screen coordinates, but popupRect is in FrameView coordinates,
     // so we have to find the screen origin of the FrameView to position correctly
@@ -152,19 +156,19 @@ void RenderPopupMenuWin::setPositionAndSize(const IntRect& r, FrameView* v)
 
     if (popupRect.bottom() > screen.height()) {
         // The popup will go off the screen, so try placing it above the menulist
-        if (viewRect.top + r.y() - popupRect.height() < 0) {
+        if (viewRect.top + rViewCoords.y() - popupRect.height() < 0) {
             // The popup won't fit above, either, so place it whereever's bigger and resize it to fit
-            if ((viewRect.top + r.y() + r.height() / 2) < (screen.height() / 2)) {
+            if ((viewRect.top + rViewCoords.y() + rViewCoords.height() / 2) < (screen.height() / 2)) {
                 // Below is bigger
                 popupRect.setHeight(screen.height() - popupRect.y());
             } else {
                 // Above is bigger
                 popupRect.setY(0);
-                popupRect.setHeight(viewRect.top + r.y());
+                popupRect.setHeight(viewRect.top + rViewCoords.y());
             }
         } else {
             // The popup fits above, so reposition it
-            popupRect.setY(viewRect.top + r.y() - popupRect.height());
+            popupRect.setY(viewRect.top + rViewCoords.y() - popupRect.height());
         }
     }
 
@@ -184,8 +188,8 @@ void RenderPopupMenuWin::setPositionAndSize(const IntRect& r, FrameView* v)
 
     // Also, if the popup is above the <select> box, the popup will be too high after resizing
     // (because it's gotten shorter), so in that case we must reposition it.
-    if (popupRect.y() < viewRect.top + r.y())
-        popupRect.setY(viewRect.top + r.y() - popupRect.height());
+    if (popupRect.y() < viewRect.top + rViewCoords.y())
+        popupRect.setY(viewRect.top + rViewCoords.y() - popupRect.height());
 
     SetWindowPos(m_container, HWND_TOP, popupRect.x(), popupRect.y(), popupRect.width(), popupRect.height(), SWP_NOACTIVATE);
 
@@ -199,7 +203,7 @@ void RenderPopupMenuWin::setPositionAndSize(const IntRect& r, FrameView* v)
         // NOTE: This may have to change for Vista
 
         // Popups should slide into view away from the <select> box
-        DWORD slideDirection = (popupRect.y() < viewRect.top + r.y()) ? AW_VER_NEGATIVE : AW_VER_POSITIVE;
+        DWORD slideDirection = (popupRect.y() < viewRect.top + rViewCoords.y()) ? AW_VER_NEGATIVE : AW_VER_POSITIVE;
 
         AnimateWindow(m_container, defaultAnimationDuration, AW_SLIDE | slideDirection);
         AnimateWindow(m_popup, defaultAnimationDuration, AW_SLIDE | slideDirection | AW_ACTIVATE);
