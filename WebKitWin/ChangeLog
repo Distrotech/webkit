@@ -1,3 +1,12 @@
+2006-08-23  Ada Chan  <adachan@apple.com>
+
+        Reviewed by sfalken.
+
+        Fixed WebHistory::removeItem() to actually remove the item from history.
+        
+        * WebHistory.cpp:
+        (WebHistory::removeItem):
+
 2006-08-22  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Lou Amadio.

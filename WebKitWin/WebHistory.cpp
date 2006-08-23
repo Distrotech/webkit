@@ -652,12 +652,14 @@ HRESULT WebHistory::removeItem(IWebHistoryItem* entry)
     // If this exact object isn't stored, then make no change.
     // FIXME: Is this the right behavior if this entry isn't present, but another entry for the same URL is?
     // Maybe need to change the API to make something like removeEntryForURLString public instead.
-
     IWebHistoryItem *matchingEntry = (IWebHistoryItem*) CFDictionaryGetValue(m_entriesByURL, urlString);
     if (matchingEntry != entry) {
         hr = E_FAIL;
         goto exit;
     }
+    hr = removeItemForURLString(urlString);
+    if (FAILED(hr))
+        goto exit;
 
     if (SUCCEEDED(hr)) {
         CFDictionaryPropertyBag* userInfo = createUserInfoFromHistoryItem(getNotificationString(kWebHistoryItemsRemovedNotification), entry);
