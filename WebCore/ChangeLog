@@ -1,3 +1,9 @@
+2006-08-23  Steve Falkenburg  <sfalken@apple.com>
+
+        Build fix (many of our include paths were wrong!)
+
+        * WebCore.vcproj/WebCore.vcproj:
+
 2006-08-23  Adam Roben  <aroben@apple.com>
 
         Reviewed by Darin, Lou, Adele.
