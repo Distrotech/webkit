@@ -25,6 +25,8 @@
 
 #include "RenderPopupMenu.h"
 
+#include <windows.h>
+
 namespace WebCore {
 
 class HTMLOptionElement;
@@ -32,18 +34,34 @@ class HTMLOptGroupElement;
 
 class RenderPopupMenuWin : public RenderPopupMenu {
 public:
-    RenderPopupMenuWin(Node* n, RenderMenuList* m) : RenderPopupMenu(n, m) {}
+    RenderPopupMenuWin(Node*, RenderMenuList*);
     ~RenderPopupMenuWin();
 
     virtual void clear();
     virtual void populate();
-    virtual void showPopup(const IntRect&, FrameView*, int index);
+    virtual void showPopup(const IntRect&, FrameView*, int);
+    virtual void hidePopup();
     
+    bool up();
+    bool down();
+
+    HWND popupHandle() const { return m_popup; }
+    HWND containerHandle() const { return m_container; }
+
+    bool wasClicked() const { return m_wasClicked; }
+    void setWasClicked(bool b) { m_wasClicked = b; }
+
 protected:
     virtual void addSeparator();
     virtual void addGroupLabel(HTMLOptGroupElement*);
     virtual void addOption(HTMLOptionElement*);
 
+    void setPositionAndSize(const IntRect&, FrameView*);
+
+    HWND m_popup;
+    HWND m_container;
+
+    bool m_wasClicked;
 };
 
 }

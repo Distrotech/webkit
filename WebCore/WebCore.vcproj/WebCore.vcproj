@@ -3149,6 +3149,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\rendering\RenderPopupMenuWin.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\rendering\RenderPopupMenuWin.h"
 				>
 			</File>

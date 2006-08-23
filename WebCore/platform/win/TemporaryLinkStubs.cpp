@@ -341,14 +341,7 @@ void Frame::setNeedsReapplyStyles() { }
 
 void Image::drawTiled(GraphicsContext*, const FloatRect&, const FloatRect&, TileRule, TileRule, CompositeOperator) { }
 
-RenderPopupMenuWin::~RenderPopupMenuWin() { notImplemented(); }
-void RenderPopupMenuWin::clear() { notImplemented(); }
-void RenderPopupMenuWin::populate() { notImplemented(); }
-void RenderPopupMenuWin::showPopup(const IntRect&, FrameView*, int index) { notImplemented(); }
 void RenderPopupMenuWin::addSeparator() { notImplemented(); }
 void RenderPopupMenuWin::addGroupLabel(HTMLOptGroupElement*) { notImplemented(); }
-void RenderPopupMenuWin::addOption(HTMLOptionElement*) { notImplemented(); }
 
-bool RenderThemeWin::paintMenuList(RenderObject*, const RenderObject::PaintInfo&, const IntRect&) { notImplemented(); return false; }
-void RenderThemeWin::adjustMenuListStyle(CSSStyleSelector*, RenderStyle*, Element*) const { notImplemented(); }
 void RenderThemeWin::systemFont(int propId, FontDescription& fontDescription) const {}

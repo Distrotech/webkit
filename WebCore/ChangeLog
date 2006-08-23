@@ -1,3 +1,50 @@
+2006-08-23  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Darin, Lou, Adele.
+
+        Initial implementation of <select> elements on Windows.
+
+        * WebCore.vcproj/WebCore.vcproj:
+            Added RenderPopupMenuWin.cpp
+        * platform/win/TemporaryLinkStubs.cpp:
+        (RenderPopupMenuWin::addGroupLabel):
+        * rendering/RenderPopupMenuWin.cpp: Added.
+        (WebCore::RenderPopupMenuWin::RenderPopupMenuWin):
+        (WebCore::RenderPopupMenuWin::~RenderPopupMenuWin):
+        (WebCore::RenderPopupMenuWin::clear):
+        (WebCore::RenderPopupMenuWin::populate):
+        (WebCore::RenderPopupMenuWin::showPopup):
+        (WebCore::RenderPopupMenuWin::hidePopup):
+        (WebCore::RenderPopupMenuWin::setPositionAndSize):
+        (WebCore::RenderPopupMenuWin::addOption):
+        (WebCore::RenderPopupMenuWin::down):
+        (WebCore::RenderPopupMenuWin::up):
+        (WebCore::registerPopup):
+        (WebCore::PopupWndProc):
+        * rendering/RenderPopupMenuWin.h:
+            Added useful properties.
+        (WebCore::RenderPopupMenuWin::popupHandle):
+        (WebCore::RenderPopupMenuWin::containerHandle):
+        (WebCore::RenderPopupMenuWin::wasClicked):
+        (WebCore::RenderPopupMenuWin::setWasClicked):
+        * rendering/RenderThemeWin.cpp:
+        (WebCore::RenderThemeWin::RenderThemeWin):
+        (WebCore::RenderThemeWin::openButtonTheme):
+        (WebCore::RenderThemeWin::openTextFieldTheme):
+        (WebCore::RenderThemeWin::openMenuListTheme):
+        (WebCore::RenderThemeWin::close):
+        (WebCore::RenderThemeWin::supportsFocus):
+        (WebCore::RenderThemeWin::determineState):
+        (WebCore::RenderThemeWin::getThemeData):
+        (WebCore::RenderThemeWin::paintButton):
+        (WebCore::RenderThemeWin::paintTextField):
+            Refactored the above methods and added cases for
+            MenulistAppearance where appropriate.
+        (WebCore::RenderThemeWin::paintMenuList):
+        (WebCore::RenderThemeWin::adjustMenuListStyle):
+            Implemented the above methods.
+        * rendering/RenderThemeWin.h:
+
 2006-08-22  Geoffrey Garen  <ggaren@apple.com>
 
         My first Windows build fix.
