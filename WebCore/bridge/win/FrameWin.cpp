@@ -30,6 +30,7 @@
 #include "Decoder.h"
 #include "Document.h"
 #include "FramePrivate.h"
+#include "Page.h"
 #include "PlatformKeyboardEvent.h"
 #include "Plugin.h"
 #include "PluginDatabaseWin.h"
@@ -83,7 +84,7 @@ void FrameWin::runJavaScriptAlert(String const& message)
     text.replace('\\', backslashAsCurrencySymbol());
     UChar nullChar = 0;
     text += String(&nullChar, 1);
-    MessageBox(view()->windowHandle(), text.characters(), L"JavaScript Alert", MB_OK);
+    MessageBox(page()->windowHandle(), text.characters(), L"JavaScript Alert", MB_OK);
 }
 
 bool FrameWin::runJavaScriptConfirm(String const& message)
@@ -92,7 +93,7 @@ bool FrameWin::runJavaScriptConfirm(String const& message)
     text.replace('\\', backslashAsCurrencySymbol());
     UChar nullChar = 0;
     text += String(&nullChar, 1);
-    return MessageBox(view()->windowHandle(), text.characters(), L"JavaScript Alert", MB_OKCANCEL) == IDOK;
+    return MessageBox(page()->windowHandle(), text.characters(), L"JavaScript Alert", MB_OKCANCEL) == IDOK;
 }
 
 // FIXME: This needs to be unified with the keyPress method on FrameMac

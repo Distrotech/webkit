@@ -110,8 +110,8 @@ public:
     virtual KJS::Bindings::Instance* getObjectInstanceForWidget(Widget*);
     virtual KJS::Bindings::Instance* getAppletInstanceForWidget(Widget*);
     
-    virtual void registerCommandForUndo(const EditCommandPtr&);
-    virtual void registerCommandForRedo(const EditCommandPtr&);
+    virtual void registerCommandForUndo(PassRefPtr<WebCore::EditCommand>);
+    virtual void registerCommandForRedo(PassRefPtr<WebCore::EditCommand>);
     virtual void clearUndoRedoOperations();
     virtual void issueUndoCommand();
     virtual void issueRedoCommand();

@@ -154,9 +154,4 @@ IntPoint Widget::mapFromGlobal(const IntPoint &p) const
     return point;
 }
 
-float Widget::scaleFactor() const
-{
-    return 1.0f;
-}
-
-}
+} // namespace WebCore

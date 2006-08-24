@@ -24,6 +24,7 @@
 #include "RenderPopupMenuWin.h"
 
 #include "FloatRect.h"
+#include "Frame.h"
 #include "FrameView.h"
 #include "HTMLOptionElement.h"
 #include "HTMLSelectElement.h"
@@ -152,7 +153,7 @@ void RenderPopupMenuWin::setPositionAndSize(const IntRect& r, FrameView* v)
     popupRect.move(viewRect.left, viewRect.top);
 
     // The popup needs to stay within the bounds of the screen and not overlap any toolbars
-    FloatRect screen = usableScreenRect(v);
+    FloatRect screen = usableScreenRect(v->frame()->page());
 
     if (popupRect.bottom() > screen.height()) {
         // The popup will go off the screen, so try placing it above the menulist
