@@ -3920,7 +3920,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\bridge\win\PageWin.cpp"
+					RelativePath="..\bridge\win\PageWin.cpp"
 					>
 				</File>
 			</Filter>

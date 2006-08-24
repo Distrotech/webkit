@@ -1,3 +1,15 @@
+2006-08-24  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Hyatt.
+
+        Branching PageWin.cpp from r15969.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * bridge/win/PageWin.cpp: Added.
+        (WebCore::Page::Page):
+        (WebCore::Page::windowRect):
+        (WebCore::Page::setWindowRect):
+
 2006-08-23  Adam Roben  <aroben@apple.com>
 
         Reviewed by Ada.
