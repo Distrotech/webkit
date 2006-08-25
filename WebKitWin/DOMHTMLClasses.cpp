@@ -1018,10 +1018,14 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setUseMap(
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::value( 
-        /* [retval][out] */ BSTR* /*result*/)
+        /* [retval][out] */ BSTR* result)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
+    WebCore::String valueString = inputElement->value();
+    *result = SysAllocStringLen(valueString.characters(), valueString.length());
+    if (valueString.length() && !*result)
+        return E_OUTOFMEMORY;
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setValue( 

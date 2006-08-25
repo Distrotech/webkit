@@ -479,6 +479,9 @@ public:
     virtual HRESULT STDMETHODCALLTYPE frameLoadDelegatePrivate( 
         /* [retval][out] */ IWebFrameLoadDelegatePrivate **frameLoadDelegatePrivate);
 
+    virtual HRESULT STDMETHODCALLTYPE scrollOffset( 
+        /* [retval][out] */ LPPOINT offset);
+
     // WebView
 
     void mouseMoved(WPARAM, LPARAM);

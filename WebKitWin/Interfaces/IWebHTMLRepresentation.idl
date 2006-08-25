@@ -50,44 +50,77 @@ cpp_quote(" */")
 
 import "oaidl.idl";
 import "ocidl.idl";
-import "IWebFormDelegate.idl";
-import "IWebFrameLoadDelegatePrivate.idl";
 
+import "DOMCore.idl";
+
+/*!
+    @class WebHTMLRepresentation
+*/
 [
     local,
     object,
-    uuid(44914369-DEB5-4fcf-A6A3-30C02E73154F),
+    uuid(E043542A-9545-4de3-8DF0-794FD6811CB1),
     pointer_default(unique)
 ]
-interface IWebViewPrivate : IUnknown
+interface IWebHTMLRepresentation : IUnknown
 {
-    /*!
-        @method _setInViewSourceMode:
-        @abstract Used to place a WebView into a special source-viewing mode.
-        - (void)_setInViewSourceMode:(BOOL)flag;
-      */
-    HRESULT setInViewSourceMode([in] BOOL flag);
+    /*
+        + (NSArray *)supportedMIMETypes;
+    */
+    HRESULT supportedMIMETypes([in, out] BSTR* types, [in, out] int* cTypes);
 
-    /*!
-        @method _inViewSourceMode;
-        @abstract Whether or not the WebView is in source-view mode for HTML.
-        - (BOOL)_inViewSourceMode;
-      */
-    HRESULT inViewSourceMode([out, retval] BOOL* flag);
+    /*
+        + (NSArray *)supportedNonImageMIMETypes;
+    */
+    HRESULT supportedNonImageMIMETypes([in, out] BSTR* types, [in, out] int* cTypes);
 
-    HRESULT viewWindow([out, retval] HWND* window);
+    /*
+        + (NSArray *)supportedImageMIMETypes;
+    */
+    HRESULT supportedImageMIMETypes([in, out] BSTR* types, [in, out] int* cTypes);
 
-    // May well become public
-    //- (void)_setFormDelegate:(id<WebFormDelegate>)delegate;
-    HRESULT setFormDelegate([in] IWebFormDelegate* formDelegate);
+    /*
+        - (NSAttributedString *)attributedStringFrom:(DOMNode *)startNode startOffset:(int)startOffset to:(DOMNode *)endNode endOffset:(int)endOffset;
+    */
+    HRESULT attributedStringFromDOMNodes([in] IDOMNode* startNode, [in] int startOffset, [in] IDOMNode* endNode, [in] int endOffset, [out, retval] IDataObject** attributedString);
 
-    //- (id<WebFormDelegate>)_formDelegate;
-    HRESULT formDelegate([out, retval] IWebFormDelegate** formDelegate);
+    /*
+        - (DOMElement *)elementWithName:(NSString *)name inForm:(DOMElement *)form;
+    */
+    HRESULT elementWithName([in] BSTR name, [in] IDOMElement* form, [out, retval] IDOMElement** element);
 
-    HRESULT setFrameLoadDelegatePrivate([in] IWebFrameLoadDelegatePrivate* frameLoadDelegatePrivate);
+    /*
+        - (BOOL)elementDoesAutoComplete:(DOMElement *)element;
+    */
+    HRESULT elementDoesAutoComplete([in] IDOMElement* element, [out, retval] BOOL* result);
 
-    HRESULT frameLoadDelegatePrivate([out, retval] IWebFrameLoadDelegatePrivate** frameLoadDelegatePrivate);
+    /*
+        - (BOOL)elementIsPassword:(DOMElement *)element;
+    */
+    HRESULT elementIsPassword([in] IDOMElement* element, [out, retval] BOOL* result);
 
-    HRESULT scrollOffset([out, retval] LPPOINT offset);
+    /*
+        - (DOMElement *)formForElement:(DOMElement *)element;
+    */
+    HRESULT formForElement([in] IDOMElement* element, [out, retval] IDOMElement** form);
 
+    /*
+        - (DOMElement *)currentForm;
+    */
+    HRESULT currentForm([out, retval] IDOMElement** form);
+
+    /*
+        - (NSArray *)controlsInForm:(DOMElement *)form;
+    */
+    HRESULT controlsInForm([in] IDOMElement* form, [in, out] IDOMElement** controls, [in, out] int* cControls);
+
+    /*
+        - (NSString *)searchForLabels:(NSArray *)labels beforeElement:(DOMElement *)element;
+    */
+    HRESULT searchForLabels([in, size_is(cLabels)] BSTR* labels, [in] int cLabels, [in] IDOMElement* beforeElement);
+
+    /*
+        - (NSString *)matchLabels:(NSArray *)labels againstElement:(DOMElement *)element;
+    */
+    HRESULT matchLabels([in, size_is(cLabels)] BSTR* labels, [in] int cLabels, [in] IDOMElement* againstElement);
 }

@@ -236,6 +236,10 @@
 			>
 		</File>
 		<File
+			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebHTMLRepresentation_i.c"
+			>
+		</File>
+		<File
 			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebIconDatabase_i.c"
 			>
 		</File>

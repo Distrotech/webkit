@@ -1806,3 +1806,12 @@ HRESULT STDMETHODCALLTYPE WebView::frameLoadDelegatePrivate(
     *d = m_frameLoadDelegatePrivate;
     return S_OK;
 }
+
+HRESULT STDMETHODCALLTYPE WebView::scrollOffset( 
+    /* [retval][out] */ LPPOINT offset)
+{
+    IntSize offsetIntSize = m_mainFrame->impl()->view()->scrollOffset();
+    offset->x = offsetIntSize.width();
+    offset->y = offsetIntSize.height();
+    return S_OK;
+}

@@ -28,6 +28,7 @@
 #include "WebDataSource.h"
 #include "IWebMutableURLRequest.h"
 #include "WebFrame.h"
+#include "WebHTMLRepresentation.h"
 
 #pragma warning( push, 0 )
 #include "KURL.h"
@@ -40,6 +41,7 @@ WebDataSource::WebDataSource()
 , m_request(0)
 , m_response(0)
 , m_initialRequest(0)
+, m_representation(0)
 , m_frame(0)
 {
     gClassCount++;
@@ -57,8 +59,20 @@ WebDataSource::~WebDataSource()
         m_response = 0;
     }
 
-    if (m_initialRequest)
+    if (m_initialRequest) {
         m_initialRequest->Release();
+        m_initialRequest = 0;
+    }
+
+    if (m_representation) {
+        m_representation->Release();
+        m_representation = 0;
+    }
+
+    if (m_frame) {
+        m_frame->Release();
+        m_frame = 0;
+    }
 
     gClassCount--;
 }
@@ -67,6 +81,8 @@ WebDataSource* WebDataSource::createInstance(WebFrame* frame)
 {
     WebDataSource* instance = new WebDataSource();
     instance->m_frame = frame;
+    if (frame)
+        frame->AddRef();
     instance->AddRef();
     return instance;
 }
@@ -124,7 +140,8 @@ HRESULT STDMETHODCALLTYPE WebDataSource::initWithRequest(
     request->AddRef();
     m_request = static_cast<IWebMutableURLRequest*>(request);
 
-    hr = m_frame->loadDataSource(this);
+    if (m_frame)
+        hr = m_frame->loadDataSource(this);
 
     if (FAILED(hr)) {
         request->Release();
@@ -142,16 +159,24 @@ HRESULT STDMETHODCALLTYPE WebDataSource::data(
 }
 
 HRESULT STDMETHODCALLTYPE WebDataSource::representation( 
-    /* [retval][out] */ IWebDocumentRepresentation** /*rep*/)
+    /* [retval][out] */ IWebDocumentRepresentation** rep)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    HRESULT hr = S_OK;
+    if (!m_representation) {
+        WebHTMLRepresentation* htmlRep = WebHTMLRepresentation::createInstance(m_frame);
+        hr = htmlRep->QueryInterface(IID_IWebDocumentRepresentation, (void**) &m_representation);
+    } else if (m_representation)
+        m_representation->AddRef();
+    *rep = m_representation;
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE WebDataSource::webFrame( 
     /* [retval][out] */ IWebFrame** frame)
 {
     *frame = m_frame;
+    if (m_frame)
+        m_frame->AddRef();
     return S_OK;
 }
 

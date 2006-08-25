@@ -198,6 +198,27 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE hasAttributes( 
         /* [retval][out] */ BOOL *result);
+
+    virtual HRESULT STDMETHODCALLTYPE isSameNode( 
+        /* [in] */ IDOMNode* other,
+        /* [retval][out] */ BOOL* result);
+    
+    virtual HRESULT STDMETHODCALLTYPE isEqualNode( 
+        /* [in] */ IDOMNode* other,
+        /* [retval][out] */ BOOL* result);
+    
+    virtual HRESULT STDMETHODCALLTYPE textContent( 
+        /* [retval][out] */ BSTR* result);
+    
+    virtual HRESULT STDMETHODCALLTYPE setTextContent( 
+        /* [in] */ BSTR text);
+    
+    virtual HRESULT STDMETHODCALLTYPE boundingBox( 
+        /* [retval][out] */ LPRECT rect);
+    
+    virtual HRESULT STDMETHODCALLTYPE lineBoxRects( 
+        /* [size_is][in] */ RECT* rects,
+        /* [in] */ int cRects);
 };
 
 class DOMDocument : public DOMNode, public IDOMDocument
@@ -324,6 +345,27 @@ public:
     virtual HRESULT STDMETHODCALLTYPE hasAttributes( 
         /* [retval][out] */ BOOL *result) { return DOMNode::hasAttributes(result); }
 
+    virtual HRESULT STDMETHODCALLTYPE isSameNode( 
+        /* [in] */ IDOMNode* other,
+        /* [retval][out] */ BOOL* result) { return DOMNode::isSameNode(other, result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE isEqualNode( 
+        /* [in] */ IDOMNode* other,
+        /* [retval][out] */ BOOL* result) { return DOMNode::isEqualNode(other, result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE textContent( 
+        /* [retval][out] */ BSTR* result) { return DOMNode::textContent(result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE setTextContent( 
+        /* [in] */ BSTR text) { return DOMNode::setTextContent(text); }
+    
+    virtual HRESULT STDMETHODCALLTYPE boundingBox( 
+        /* [retval][out] */ LPRECT rect) { return DOMNode::boundingBox(rect); }
+    
+    virtual HRESULT STDMETHODCALLTYPE lineBoxRects( 
+        /* [size_is][in] */ RECT* rects,
+        /* [in] */ int cRects) { return DOMNode::lineBoxRects(rects, cRects); }
+
     // IDOMDocument
     virtual HRESULT STDMETHODCALLTYPE doctype( 
         /* [retval][out] */ IDOMDocumentType **result);
@@ -395,7 +437,7 @@ public:
         /* [retval][out] */ IDOMElement **result);
 };
 
-class DOMElement : public DOMNode, public IDOMElement
+class DOMElement : public DOMNode, public IDOMElement, public IDOMElementPrivate
 {
 protected:
     DOMElement(WebCore::Element* e);
@@ -525,6 +567,27 @@ public:
     virtual HRESULT STDMETHODCALLTYPE hasAttributes( 
         /* [retval][out] */ BOOL *result) { return DOMNode::hasAttributes(result); }
 
+    virtual HRESULT STDMETHODCALLTYPE isSameNode( 
+        /* [in] */ IDOMNode* other,
+        /* [retval][out] */ BOOL* result) { return DOMNode::isSameNode(other, result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE isEqualNode( 
+        /* [in] */ IDOMNode* other,
+        /* [retval][out] */ BOOL* result) { return DOMNode::isEqualNode(other, result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE textContent( 
+        /* [retval][out] */ BSTR* result) { return DOMNode::textContent(result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE setTextContent( 
+        /* [in] */ BSTR text) { return DOMNode::setTextContent(text); }
+    
+    virtual HRESULT STDMETHODCALLTYPE boundingBox( 
+        /* [retval][out] */ LPRECT rect);
+    
+    virtual HRESULT STDMETHODCALLTYPE lineBoxRects( 
+        /* [size_is][in] */ RECT* rects,
+        /* [in] */ int cRects) { return DOMNode::lineBoxRects(rects, cRects); }
+
     // IDOMElement
     virtual HRESULT STDMETHODCALLTYPE tagName( 
         /* [retval][out] */ BSTR *result);
@@ -592,6 +655,16 @@ public:
         /* [in] */ BSTR namespaceURI,
         /* [in] */ BSTR localName,
         /* [retval][out] */ BOOL *result);
+
+    // IDOMElementPrivate
+    virtual HRESULT STDMETHODCALLTYPE coreElement( 
+        void** element);
+
+    virtual BOOL STDMETHODCALLTYPE isEqual( 
+        /* [in] */ IDOMElement* other);
+
+    // DOMElement
+    WebCore::Element* element() { return m_element; }
 
 protected:
     WebCore::Element* m_element;

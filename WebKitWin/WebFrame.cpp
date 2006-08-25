@@ -44,6 +44,10 @@
 #include "FrameView.h"
 #include "FrameWin.h"
 #include "GraphicsContext.h"
+#include "HTMLFormElement.h"
+#include "HTMLGenericFormElement.h"
+#include "HTMLInputElement.h"
+#include "HTMLNames.h"
 #include "Page.h"
 #include "RenderFrame.h"
 #include "cairo.h"
@@ -54,6 +58,43 @@
 #pragma warning(pop)
 
 using namespace WebCore;
+using namespace HTMLNames;
+
+//-----------------------------------------------------------------------------
+
+static HTMLFormElement *formElementFromDOMElement(IDOMElement *element)
+{
+    if (!element)
+        return 0;
+
+    IDOMElementPrivate* elePriv;
+    HRESULT hr = element->QueryInterface(IID_IDOMElementPrivate, (void**) &elePriv);
+    if (SUCCEEDED(hr)) {
+        Element* ele;
+        hr = elePriv->coreElement((void**)&ele);
+        elePriv->Release();
+        if (SUCCEEDED(hr) && ele && ele->hasTagName(formTag))
+            return static_cast<HTMLFormElement*>(ele);
+    }
+    return 0;
+}
+
+static HTMLInputElement* inputElementFromDOMElement(IDOMElement* element)
+{
+    if (!element)
+        return 0;
+
+    IDOMElementPrivate* elePriv;
+    HRESULT hr = element->QueryInterface(IID_IDOMElementPrivate, (void**) &elePriv);
+    if (SUCCEEDED(hr)) {
+        Element* ele;
+        hr = elePriv->coreElement((void**)&ele);
+        elePriv->Release();
+        if (SUCCEEDED(hr) && ele && ele->hasTagName(inputTag))
+            return static_cast<HTMLInputElement*>(ele);
+    }
+    return 0;
+}
 
 // WebFramePrivate ------------------------------------------------------------
 
@@ -173,14 +214,18 @@ HRESULT STDMETHODCALLTYPE WebFrame::name(
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::webView( 
-    /* [retval][out] */ IWebView* /*view*/)
+    /* [retval][out] */ IWebView** view)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    *view = 0;
+    if (!d->webView)
+        return E_FAIL;
+    *view = d->webView;
+    (*view)->AddRef();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::frameView( 
-    /* [retval][out] */ IWebFrameView* /*view*/)
+    /* [retval][out] */ IWebFrameView** /*view*/)
 {
     DebugBreak();
     return E_NOTIMPL;
@@ -194,7 +239,7 @@ HRESULT STDMETHODCALLTYPE WebFrame::DOMDocument(
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::frameElement( 
-    /* [retval][out] */ IDOMHTMLElement* /*frameElement*/)
+    /* [retval][out] */ IDOMHTMLElement** /*frameElement*/)
 {
     DebugBreak();
     return E_NOTIMPL;
@@ -497,6 +542,50 @@ void WebFrame::inViewSourceMode(BOOL *flag)
 void WebFrame::setInViewSourceMode(BOOL flag)
 {
     d->frame->setInViewSourceMode(!!flag);
+}
+
+HRESULT WebFrame::elementWithName(BSTR name, IDOMElement* form, IDOMElement** element)
+{
+    HTMLFormElement *formElement = formElementFromDOMElement(form);
+    if (formElement) {
+        Vector<HTMLGenericFormElement*>& elements = formElement->formElements;
+        AtomicString targetName((UChar*)name, SysStringLen(name));
+        for (unsigned int i = 0; i < elements.size(); i++) {
+            HTMLGenericFormElement *elt = elements[i];
+            // Skip option elements, other duds
+            if (elt->name() == targetName) {
+                *element = DOMElement::createInstance(elt);
+                return S_OK;
+            }
+        }
+    }
+    return E_FAIL;
+}
+
+HRESULT WebFrame::formForElement(IDOMElement* element, IDOMElement** form)
+{
+    HTMLInputElement *inputElement = inputElementFromDOMElement(element);
+    if (!inputElement)
+        return E_FAIL;
+
+    HTMLFormElement *formElement = inputElement->form();
+    if (!formElement)
+        return E_FAIL;
+
+    *form = DOMElement::createInstance(formElement);
+    return S_OK;
+}
+
+HRESULT WebFrame::elementDoesAutoComplete(IDOMElement *element, bool *result)
+{
+    *result = false;
+    HTMLInputElement *inputElement = inputElementFromDOMElement(element);
+    if (!inputElement)
+        *result = false;
+    else
+        *result = (inputElement->inputType() == HTMLInputElement::TEXT && inputElement->autoComplete());
+
+    return S_OK;
 }
 
 // ResourceLoaderClient

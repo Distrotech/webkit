@@ -105,14 +105,14 @@ interface IWebFrame : IUnknown
         @result Returns the WebView for the document that includes this frame.
         - (WebView *)webView;
     */
-    HRESULT webView([out, retval] IWebView* view);
+    HRESULT webView([out, retval] IWebView** view);
 
     /*!
         @method frameView
         @result The WebFrameView for this frame.
         - (WebFrameView *)frameView;
     */
-    HRESULT frameView([out, retval] IWebFrameView* view);
+    HRESULT frameView([out, retval] IWebFrameView** view);
 
     /*!
         @method DOMDocument
@@ -129,7 +129,7 @@ interface IWebFrame : IUnknown
         Returns nil if the frame is the main frame since there is no frame element for the frame in this case.
         - (DOMHTMLElement *)frameElement;
     */
-    HRESULT frameElement([out, retval] IDOMHTMLElement* frameElement);
+    HRESULT frameElement([out, retval] IDOMHTMLElement** frameElement);
 
     /*!
         @method loadRequest:

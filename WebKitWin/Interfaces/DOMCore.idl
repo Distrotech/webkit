@@ -241,6 +241,35 @@ interface IDOMNode : IDOMObject
         - (BOOL)hasAttributes;
     */
     HRESULT hasAttributes([out, retval] BOOL* result);
+
+    /*
+        - (BOOL)isSameNode:(DOMNode *)other;
+    */
+    HRESULT isSameNode([in] IDOMNode* other, [out, retval] BOOL* result);
+
+    /*
+        - (BOOL)isEqualNode:(DOMNode *)other;
+    */
+    HRESULT isEqualNode([in] IDOMNode* other, [out, retval] BOOL* result); 
+
+    /*
+        - (NSString *)textContent;
+    */
+    HRESULT textContent([out, retval] BSTR* result);
+
+    /*
+        - (void)setTextContent:(NSString *)text;
+    */
+    HRESULT setTextContent([in] BSTR text);
+
+    /*
+        - (NSRect)boundingBox
+    */
+    HRESULT boundingBox([out, retval] LPRECT rect);
+    /*
+        - (NSArray *)lineBoxRects
+    */
+    HRESULT lineBoxRects([in, size_is(cRects)] RECT* rects, [in] int cRects);
 }
 
 /*
@@ -593,6 +622,18 @@ interface IDOMElement : IDOMNode
         - (BOOL)hasAttributeNS:(NSString *)namespaceURI :(NSString *)localName;
     */
     HRESULT hasAttributeNS([in] BSTR namespaceURI, [in] BSTR localName, [out, retval] BOOL* result);
+}
+
+[
+    local,
+    object,
+    uuid(7FF28EC8-6DA1-498d-9A43-7E67C2D3128F),
+    pointer_default(unique)
+]
+interface IDOMElementPrivate : IUnknown
+{
+    HRESULT coreElement(void** element);
+    BOOL isEqual([in] IDOMElement* other);
 }
 
 /*

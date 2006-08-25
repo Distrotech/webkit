@@ -1,3 +1,167 @@
+2006-08-24  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Ada Chan.
+        
+        Forms autocomplete checkpoint
+        
+        DOMCoreClasses.cpp/.h
+        Add missing DOMNode methods
+        Add IDOMElementPrivate
+        Implement DOMElement::boundingBox
+        Implement DOMElement::getAttribute
+
+        DOMHTMLClasses.cpp
+        Implemented DOMHTMLInputElement::value
+
+        IWebViewPrivate.idl
+        WebView.cpp/.h
+        Added IWebViewPrivate::scrollOffset
+
+        IWebHTMLRepresentation.idl
+        WebHTMLRepresentation.cpp/.h
+        WebKitGUID.vcproj
+        Interfaces.vcproj
+        WebKit.vcproj
+        Added IWebHTMLRepresentation
+
+        WebDataSource.cpp/.h
+        Implemented WebDataSource::representation
+
+        IWebFrame.idl
+        WebFrame.cpp/.h
+        Fixed typos in some methods
+        Add additional methods to support representation
+
+        DOMCore.idl
+        Add missing methods
+        Add IDOMElementPrivate
+        
+        * DOMCoreClasses.cpp:
+        (DOMNode::isSameNode):
+        (DOMNode::isEqualNode):
+        (DOMNode::textContent):
+        (DOMNode::setTextContent):
+        (DOMNode::boundingBox):
+        (DOMNode::lineBoxRects):
+        (DOMElement::QueryInterface):
+        (DOMElement::boundingBox):
+        (DOMElement::getAttribute):
+        (DOMElement::coreElement):
+        (DOMElement::isEqual):
+        * DOMCoreClasses.h:
+        (DOMDocument::isSameNode):
+        (DOMDocument::isEqualNode):
+        (DOMDocument::textContent):
+        (DOMDocument::setTextContent):
+        (DOMDocument::boundingBox):
+        (DOMDocument::lineBoxRects):
+        (DOMElement::isSameNode):
+        (DOMElement::isEqualNode):
+        (DOMElement::textContent):
+        (DOMElement::setTextContent):
+        (DOMElement::lineBoxRects):
+        (DOMElement::element):
+        * DOMHTMLClasses.cpp:
+        (DOMHTMLInputElement::value):
+        * DOMHTMLClasses.h:
+        (DOMHTMLDocument::isSameNode):
+        (DOMHTMLDocument::isEqualNode):
+        (DOMHTMLDocument::textContent):
+        (DOMHTMLDocument::setTextContent):
+        (DOMHTMLDocument::boundingBox):
+        (DOMHTMLDocument::lineBoxRects):
+        (DOMHTMLElement::isSameNode):
+        (DOMHTMLElement::isEqualNode):
+        (DOMHTMLElement::textContent):
+        (DOMHTMLElement::setTextContent):
+        (DOMHTMLElement::boundingBox):
+        (DOMHTMLElement::lineBoxRects):
+        (DOMHTMLFormElement::isSameNode):
+        (DOMHTMLFormElement::isEqualNode):
+        (DOMHTMLFormElement::textContent):
+        (DOMHTMLFormElement::setTextContent):
+        (DOMHTMLFormElement::boundingBox):
+        (DOMHTMLFormElement::lineBoxRects):
+        (DOMHTMLSelectElement::isSameNode):
+        (DOMHTMLSelectElement::isEqualNode):
+        (DOMHTMLSelectElement::textContent):
+        (DOMHTMLSelectElement::setTextContent):
+        (DOMHTMLSelectElement::boundingBox):
+        (DOMHTMLSelectElement::lineBoxRects):
+        (DOMHTMLOptionElement::isSameNode):
+        (DOMHTMLOptionElement::isEqualNode):
+        (DOMHTMLOptionElement::textContent):
+        (DOMHTMLOptionElement::setTextContent):
+        (DOMHTMLOptionElement::boundingBox):
+        (DOMHTMLOptionElement::lineBoxRects):
+        (DOMHTMLInputElement::isSameNode):
+        (DOMHTMLInputElement::isEqualNode):
+        (DOMHTMLInputElement::textContent):
+        (DOMHTMLInputElement::setTextContent):
+        (DOMHTMLInputElement::boundingBox):
+        (DOMHTMLInputElement::lineBoxRects):
+        (DOMHTMLTextAreaElement::isSameNode):
+        (DOMHTMLTextAreaElement::isEqualNode):
+        (DOMHTMLTextAreaElement::textContent):
+        (DOMHTMLTextAreaElement::setTextContent):
+        (DOMHTMLTextAreaElement::boundingBox):
+        (DOMHTMLTextAreaElement::lineBoxRects):
+        * Interfaces/DOMCore.idl:
+        * Interfaces/IWebFrame.idl:
+        * Interfaces/IWebHTMLRepresentation.idl: Added.
+        * Interfaces/IWebViewPrivate.idl:
+        * WebDataSource.cpp:
+        (WebDataSource::WebDataSource):
+        (WebDataSource::~WebDataSource):
+        (WebDataSource::createInstance):
+        (WebDataSource::initWithRequest):
+        (WebDataSource::representation):
+        (WebDataSource::webFrame):
+        * WebDataSource.h:
+        * WebFrame.cpp:
+        (formElementFromDOMElement):
+        (inputElementFromDOMElement):
+        (WebFrame::webView):
+        (WebFrame::frameView):
+        (WebFrame::frameElement):
+        (WebFrame::elementWithName):
+        (WebFrame::formForElement):
+        (WebFrame::elementDoesAutoComplete):
+        * WebFrame.h:
+        * WebHTMLRepresentation.cpp: Added.
+        (WebHTMLRepresentation::WebHTMLRepresentation):
+        (WebHTMLRepresentation::~WebHTMLRepresentation):
+        (WebHTMLRepresentation::createInstance):
+        (WebHTMLRepresentation::QueryInterface):
+        (WebHTMLRepresentation::AddRef):
+        (WebHTMLRepresentation::Release):
+        (WebHTMLRepresentation::supportedMIMETypes):
+        (WebHTMLRepresentation::supportedNonImageMIMETypes):
+        (WebHTMLRepresentation::supportedImageMIMETypes):
+        (WebHTMLRepresentation::attributedStringFromDOMNodes):
+        (WebHTMLRepresentation::elementWithName):
+        (WebHTMLRepresentation::elementDoesAutoComplete):
+        (WebHTMLRepresentation::elementIsPassword):
+        (WebHTMLRepresentation::formForElement):
+        (WebHTMLRepresentation::currentForm):
+        (WebHTMLRepresentation::controlsInForm):
+        (WebHTMLRepresentation::searchForLabels):
+        (WebHTMLRepresentation::matchLabels):
+        (WebHTMLRepresentation::setDataSource):
+        (WebHTMLRepresentation::receivedData):
+        (WebHTMLRepresentation::receivedError):
+        (WebHTMLRepresentation::finishedLoadingWithDataSource):
+        (WebHTMLRepresentation::canProvideDocumentSource):
+        (WebHTMLRepresentation::documentSource):
+        (WebHTMLRepresentation::title):
+        * WebHTMLRepresentation.h: Added.
+        * WebKit.vcproj/Interfaces.vcproj:
+        * WebKit.vcproj/WebKit.vcproj:
+        * WebKit.vcproj/WebKitGUID.vcproj:
+        * WebView.cpp:
+        (WebView::scrollOffset):
+        * WebView.h:
+
 2006-08-23  Ada Chan  <adachan@apple.com>
 
         Reviewed by sfalken.

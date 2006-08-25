@@ -104,6 +104,7 @@ protected:
     IWebMutableURLRequest* m_initialRequest;
     IWebMutableURLRequest* m_request;
     IWebURLResponse* m_response;
+    IWebDocumentRepresentation* m_representation;
     WebFrame* m_frame;
 };
 

@@ -261,6 +261,27 @@ class DOMHTMLDocument : public DOMDocument, public IDOMHTMLDocument
     virtual HRESULT STDMETHODCALLTYPE hasAttributes( 
         /* [retval][out] */ BOOL *result) { return DOMDocument::hasAttributes(result); }
 
+    virtual HRESULT STDMETHODCALLTYPE isSameNode( 
+        /* [in] */ IDOMNode* other,
+        /* [retval][out] */ BOOL* result) { return DOMDocument::isSameNode(other, result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE isEqualNode( 
+        /* [in] */ IDOMNode* other,
+        /* [retval][out] */ BOOL* result) { return DOMDocument::isEqualNode(other, result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE textContent( 
+        /* [retval][out] */ BSTR* result) { return DOMDocument::textContent(result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE setTextContent( 
+        /* [in] */ BSTR text) { return DOMDocument::setTextContent(text); }
+    
+    virtual HRESULT STDMETHODCALLTYPE boundingBox( 
+        /* [retval][out] */ LPRECT rect) { return DOMDocument::boundingBox(rect); }
+    
+    virtual HRESULT STDMETHODCALLTYPE lineBoxRects( 
+        /* [size_is][in] */ RECT* rects,
+        /* [in] */ int cRects) { return DOMDocument::lineBoxRects(rects, cRects); }
+
     // IDOMDocument
     virtual HRESULT STDMETHODCALLTYPE doctype( 
         /* [retval][out] */ IDOMDocumentType **result);
@@ -521,6 +542,27 @@ public:
     virtual HRESULT STDMETHODCALLTYPE hasAttributes( 
         /* [retval][out] */ BOOL *result) { return DOMElement::hasAttributes(result); }
 
+    virtual HRESULT STDMETHODCALLTYPE isSameNode( 
+        /* [in] */ IDOMNode* other,
+        /* [retval][out] */ BOOL* result) { return DOMElement::isSameNode(other, result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE isEqualNode( 
+        /* [in] */ IDOMNode* other,
+        /* [retval][out] */ BOOL* result) { return DOMElement::isEqualNode(other, result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE textContent( 
+        /* [retval][out] */ BSTR* result) { return DOMElement::textContent(result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE setTextContent( 
+        /* [in] */ BSTR text) { return DOMElement::setTextContent(text); }
+    
+    virtual HRESULT STDMETHODCALLTYPE boundingBox( 
+        /* [retval][out] */ LPRECT rect) { return DOMElement::boundingBox(rect); }
+    
+    virtual HRESULT STDMETHODCALLTYPE lineBoxRects( 
+        /* [size_is][in] */ RECT* rects,
+        /* [in] */ int cRects) { return DOMElement::lineBoxRects(rects, cRects); }
+
     // IDOMElement
     virtual HRESULT STDMETHODCALLTYPE tagName( 
         /* [retval][out] */ BSTR *result) { return DOMElement::tagName(result); }
@@ -748,6 +790,27 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE hasAttributes( 
         /* [retval][out] */ BOOL *result) { return DOMHTMLElement::hasAttributes(result); }
+
+    virtual HRESULT STDMETHODCALLTYPE isSameNode( 
+        /* [in] */ IDOMNode* other,
+        /* [retval][out] */ BOOL* result) { return DOMHTMLElement::isSameNode(other, result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE isEqualNode( 
+        /* [in] */ IDOMNode* other,
+        /* [retval][out] */ BOOL* result) { return DOMHTMLElement::isEqualNode(other, result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE textContent( 
+        /* [retval][out] */ BSTR* result) { return DOMHTMLElement::textContent(result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE setTextContent( 
+        /* [in] */ BSTR text) { return DOMHTMLElement::setTextContent(text); }
+    
+    virtual HRESULT STDMETHODCALLTYPE boundingBox( 
+        /* [retval][out] */ LPRECT rect) { return DOMHTMLElement::boundingBox(rect); }
+    
+    virtual HRESULT STDMETHODCALLTYPE lineBoxRects( 
+        /* [size_is][in] */ RECT* rects,
+        /* [in] */ int cRects) { return DOMHTMLElement::lineBoxRects(rects, cRects); }
 
     // IDOMElement
     virtual HRESULT STDMETHODCALLTYPE tagName( 
@@ -1023,6 +1086,27 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE hasAttributes( 
         /* [retval][out] */ BOOL *result) { return DOMHTMLElement::hasAttributes(result); }
+
+    virtual HRESULT STDMETHODCALLTYPE isSameNode( 
+        /* [in] */ IDOMNode* other,
+        /* [retval][out] */ BOOL* result) { return DOMHTMLElement::isSameNode(other, result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE isEqualNode( 
+        /* [in] */ IDOMNode* other,
+        /* [retval][out] */ BOOL* result) { return DOMHTMLElement::isEqualNode(other, result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE textContent( 
+        /* [retval][out] */ BSTR* result) { return DOMHTMLElement::textContent(result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE setTextContent( 
+        /* [in] */ BSTR text) { return DOMHTMLElement::setTextContent(text); }
+    
+    virtual HRESULT STDMETHODCALLTYPE boundingBox( 
+        /* [retval][out] */ LPRECT rect) { return DOMHTMLElement::boundingBox(rect); }
+    
+    virtual HRESULT STDMETHODCALLTYPE lineBoxRects( 
+        /* [size_is][in] */ RECT* rects,
+        /* [in] */ int cRects) { return DOMHTMLElement::lineBoxRects(rects, cRects); }
 
     // IDOMElement
     virtual HRESULT STDMETHODCALLTYPE tagName( 
@@ -1318,6 +1402,27 @@ public:
     virtual HRESULT STDMETHODCALLTYPE hasAttributes( 
         /* [retval][out] */ BOOL *result) { return DOMHTMLElement::hasAttributes(result); }
 
+    virtual HRESULT STDMETHODCALLTYPE isSameNode( 
+        /* [in] */ IDOMNode* other,
+        /* [retval][out] */ BOOL* result) { return DOMHTMLElement::isSameNode(other, result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE isEqualNode( 
+        /* [in] */ IDOMNode* other,
+        /* [retval][out] */ BOOL* result) { return DOMHTMLElement::isEqualNode(other, result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE textContent( 
+        /* [retval][out] */ BSTR* result) { return DOMHTMLElement::textContent(result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE setTextContent( 
+        /* [in] */ BSTR text) { return DOMHTMLElement::setTextContent(text); }
+    
+    virtual HRESULT STDMETHODCALLTYPE boundingBox( 
+        /* [retval][out] */ LPRECT rect) { return DOMHTMLElement::boundingBox(rect); }
+    
+    virtual HRESULT STDMETHODCALLTYPE lineBoxRects( 
+        /* [size_is][in] */ RECT* rects,
+        /* [in] */ int cRects) { return DOMHTMLElement::lineBoxRects(rects, cRects); }
+
     // IDOMElement
     virtual HRESULT STDMETHODCALLTYPE tagName( 
         /* [retval][out] */ BSTR *result) { return DOMHTMLElement::tagName(result); }
@@ -1585,6 +1690,27 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE hasAttributes( 
         /* [retval][out] */ BOOL *result) { return DOMHTMLElement::hasAttributes(result); }
+
+    virtual HRESULT STDMETHODCALLTYPE isSameNode( 
+        /* [in] */ IDOMNode* other,
+        /* [retval][out] */ BOOL* result) { return DOMHTMLElement::isSameNode(other, result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE isEqualNode( 
+        /* [in] */ IDOMNode* other,
+        /* [retval][out] */ BOOL* result) { return DOMHTMLElement::isEqualNode(other, result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE textContent( 
+        /* [retval][out] */ BSTR* result) { return DOMHTMLElement::textContent(result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE setTextContent( 
+        /* [in] */ BSTR text) { return DOMHTMLElement::setTextContent(text); }
+    
+    virtual HRESULT STDMETHODCALLTYPE boundingBox( 
+        /* [retval][out] */ LPRECT rect) { return DOMHTMLElement::boundingBox(rect); }
+    
+    virtual HRESULT STDMETHODCALLTYPE lineBoxRects( 
+        /* [size_is][in] */ RECT* rects,
+        /* [in] */ int cRects) { return DOMHTMLElement::lineBoxRects(rects, cRects); }
 
     // IDOMElement
     virtual HRESULT STDMETHODCALLTYPE tagName( 
@@ -1927,6 +2053,27 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE hasAttributes( 
         /* [retval][out] */ BOOL *result) { return DOMHTMLElement::hasAttributes(result); }
+
+    virtual HRESULT STDMETHODCALLTYPE isSameNode( 
+        /* [in] */ IDOMNode* other,
+        /* [retval][out] */ BOOL* result) { return DOMHTMLElement::isSameNode(other, result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE isEqualNode( 
+        /* [in] */ IDOMNode* other,
+        /* [retval][out] */ BOOL* result) { return DOMHTMLElement::isEqualNode(other, result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE textContent( 
+        /* [retval][out] */ BSTR* result) { return DOMHTMLElement::textContent(result); }
+    
+    virtual HRESULT STDMETHODCALLTYPE setTextContent( 
+        /* [in] */ BSTR text) { return DOMHTMLElement::setTextContent(text); }
+    
+    virtual HRESULT STDMETHODCALLTYPE boundingBox( 
+        /* [retval][out] */ LPRECT rect) { return DOMHTMLElement::boundingBox(rect); }
+    
+    virtual HRESULT STDMETHODCALLTYPE lineBoxRects( 
+        /* [size_is][in] */ RECT* rects,
+        /* [in] */ int cRects) { return DOMHTMLElement::lineBoxRects(rects, cRects); }
 
     // IDOMElement
     virtual HRESULT STDMETHODCALLTYPE tagName( 

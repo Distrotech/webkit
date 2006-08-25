@@ -266,6 +266,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\Interfaces\IWebHTMLRepresentation.idl"
+			>
+		</File>
+		<File
 			RelativePath="..\Interfaces\IWebIconDatabase.idl"
 			>
 		</File>

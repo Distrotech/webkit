@@ -37,6 +37,7 @@
 #include "HTMLInputElement.h"
 #include "HTMLTextAreaElement.h"
 #include "HTMLNames.h"
+#include "RenderObject.h"
 #pragma warning(pop)
 
 using namespace WebCore;
@@ -255,6 +256,51 @@ HRESULT STDMETHODCALLTYPE DOMNode::hasAttributes(
     return E_NOTIMPL;
 }
 
+HRESULT STDMETHODCALLTYPE DOMNode::isSameNode( 
+    /* [in] */ IDOMNode* /*other*/,
+    /* [retval][out] */ BOOL* /*result*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE DOMNode::isEqualNode( 
+    /* [in] */ IDOMNode* /*other*/,
+    /* [retval][out] */ BOOL* /*result*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE DOMNode::textContent( 
+    /* [retval][out] */ BSTR* /*result*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE DOMNode::setTextContent( 
+    /* [in] */ BSTR /*text*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE DOMNode::boundingBox( 
+    /* [retval][out] */ LPRECT /*rect*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE DOMNode::lineBoxRects( 
+    /* [size_is][in] */ RECT* /*rects*/,
+    /* [in] */ int /*cRects*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+
 // DOMDocument - IUnknown -----------------------------------------------------
 
 HRESULT STDMETHODCALLTYPE DOMDocument::QueryInterface(REFIID riid, void** ppvObject)
@@ -415,6 +461,8 @@ HRESULT STDMETHODCALLTYPE DOMElement::QueryInterface(REFIID riid, void** ppvObje
     *ppvObject = 0;
     if (IsEqualGUID(riid, IID_IDOMElement))
         *ppvObject = static_cast<IDOMElement*>(this);
+    else if (IsEqualGUID(riid, IID_IDOMElementPrivate))
+        *ppvObject = static_cast<IDOMElementPrivate*>(this);
     else
         return DOMNode::QueryInterface(riid, ppvObject);
 
@@ -422,7 +470,29 @@ HRESULT STDMETHODCALLTYPE DOMElement::QueryInterface(REFIID riid, void** ppvObje
     return S_OK;
 }
 
-// DOMElement -----------------------------------------------------------------
+// DOMElement - IDOMNode ------------------------------------------------------
+
+HRESULT STDMETHODCALLTYPE DOMElement::boundingBox( 
+    /* [retval][out] */ LPRECT rect)
+{
+    ::SetRectEmpty(rect);
+
+    if (!m_element)
+        return E_FAIL;
+
+    WebCore::RenderObject *renderer = m_element->renderer();
+    if (renderer) {
+        IntRect boundsIntRect = renderer->absoluteBoundingBoxRect();
+        rect->left = boundsIntRect.x();
+        rect->top = boundsIntRect.y();
+        rect->right = boundsIntRect.x() + boundsIntRect.width();
+        rect->bottom = boundsIntRect.y() + boundsIntRect.height();
+    }
+
+    return S_OK;
+}
+
+// IDOMElement ----------------------------------------------------------------
 
 HRESULT STDMETHODCALLTYPE DOMElement::tagName( 
         /* [retval][out] */ BSTR* /*result*/)
@@ -432,11 +502,17 @@ HRESULT STDMETHODCALLTYPE DOMElement::tagName(
 }
     
 HRESULT STDMETHODCALLTYPE DOMElement::getAttribute( 
-        /* [in] */ BSTR /*name*/,
-        /* [retval][out] */ BSTR* /*result*/)
+        /* [in] */ BSTR name,
+        /* [retval][out] */ BSTR* result)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    if (!m_element)
+        return E_FAIL;
+    WebCore::String nameString(name, SysStringLen(name));
+    WebCore::String& attrValueString = (WebCore::String&) m_element->getAttribute(nameString);
+    *result = SysAllocStringLen(attrValueString.characters(), attrValueString.length());
+    if (attrValueString.length() && !*result)
+        return E_OUTOFMEMORY;
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE DOMElement::setResult( 
@@ -555,7 +631,34 @@ HRESULT STDMETHODCALLTYPE DOMElement::hasAttributeNS(
     return E_NOTIMPL;
 }
 
-// DOMElement -------------------------------------------------------------
+// IDOMElementPrivate ---------------------------------------------------------
+
+HRESULT DOMElement::coreElement(void **element)
+{
+    if (!m_element)
+        return E_FAIL;
+    *element = (void*) m_element;
+    return S_OK;
+}
+
+BOOL STDMETHODCALLTYPE DOMElement::isEqual( 
+    /* [in] */ IDOMElement* other)
+{
+    IDOMElementPrivate* otherPriv;
+    HRESULT hr = other->QueryInterface(IID_IDOMElementPrivate, (void**) &otherPriv);
+    if (FAILED(hr))
+        return FALSE;
+    
+    void* otherCoreEle;
+    hr = otherPriv->coreElement(&otherCoreEle);
+    otherPriv->Release();
+    if (FAILED(hr))
+        return FALSE;
+
+    return (otherCoreEle == (void*)m_element) ? TRUE : FALSE;
+}
+
+// DOMElement -----------------------------------------------------------------
 
 DOMElement::DOMElement(WebCore::Element* e)
 : m_element(0)

@@ -76,16 +76,16 @@ public:
         /* [retval][out] */ BSTR *frameName);
     
     virtual HRESULT STDMETHODCALLTYPE webView( 
-        /* [retval][out] */ IWebView *view);
+        /* [retval][out] */ IWebView **view);
     
     virtual HRESULT STDMETHODCALLTYPE frameView( 
-        /* [retval][out] */ IWebFrameView *view);
+        /* [retval][out] */ IWebFrameView **view);
     
     virtual HRESULT STDMETHODCALLTYPE DOMDocument( 
         /* [retval][out] */ IDOMDocument** document);
     
     virtual HRESULT STDMETHODCALLTYPE frameElement( 
-        /* [retval][out] */ IDOMHTMLElement *frameElement);
+        /* [retval][out] */ IDOMHTMLElement **frameElement);
     
     virtual HRESULT STDMETHODCALLTYPE loadRequest( 
         /* [in] */ IWebURLRequest *request);
@@ -158,9 +158,13 @@ public:
     HRESULT goToItem(IWebHistoryItem* item, WebFrameLoadType withLoadType);
     HRESULT loadItem(IWebHistoryItem* item, WebFrameLoadType withLoadType);
     void invalidate();
+    // WebFrame (matching WebCoreFrameBridge)
     void setTextSizeMultiplier(float multiplier);
     void inViewSourceMode(BOOL *flag);
     void setInViewSourceMode(BOOL flag);
+    HRESULT elementWithName(BSTR name, IDOMElement* form, IDOMElement** element);
+    HRESULT formForElement(IDOMElement* element, IDOMElement** form);
+    HRESULT elementDoesAutoComplete(IDOMElement* element, bool* result);
 
 protected:
     unsigned int getObjectCacheSize();
