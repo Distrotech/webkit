@@ -27,6 +27,7 @@
 #define PluginPackageWin_H
 
 #include "Shared.h"
+#include <winsock2.h>
 #include <windows.h>
 #include <wtf/HashMap.h>
 #include "StringHash.h"

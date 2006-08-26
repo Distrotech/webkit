@@ -26,6 +26,7 @@
 #ifndef PluginViewWin_H
 #define PluginViewWin_H
 
+#include <winsock2.h>
 #include <windows.h>
 #include <wtf/RefPtr.h>
 #include <wtf/Vector.h>

@@ -1,3 +1,10 @@
+2006-08-25  David Hyatt  <hyatt@apple.com>
+
+        Add code path for doing painting of a WebFrame using CG.
+
+        * WebFrame.cpp:
+        (WebFrame::paint):
+
 2006-08-24  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Ada Chan.

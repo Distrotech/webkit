@@ -26,6 +26,7 @@
 #ifndef ResourceLoaderWin_H
 #define ResourceLoaderWin_H
 
+#include <winsock2.h>
 #include <windows.h>
 
 namespace WebCore {

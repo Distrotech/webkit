@@ -24,6 +24,7 @@
  */
 
 #include "config.h"
+#include <winsock2.h>
 #include <windows.h>
 #include "npapi.h"
 #include "PlugInInfoStore.h"

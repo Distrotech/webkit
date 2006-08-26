@@ -364,6 +364,8 @@ HRESULT STDMETHODCALLTYPE WebFrame::childFrames(
 
 // WebFrame ---------------------------------------------------------------
 
+#if PLATFORM(CAIRO)
+
 void WebFrame::paint()
 {
     d->frameView->layout();
@@ -405,6 +407,60 @@ void WebFrame::paint()
 
     EndPaint(windowHandle, &ps);
 }
+
+#elif PLATFORM(CG)
+
+void WebFrame::paint()
+{
+    d->frameView->layout();
+
+    HWND windowHandle;
+    if (FAILED(d->webView->viewWindow(&windowHandle)))
+        return;
+
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(windowHandle, &ps);
+
+    IntRect documentDirtyRect = ps.rcPaint;
+    documentDirtyRect.move(d->frameView->contentsX(), d->frameView->contentsY());
+
+    SIZE size;
+    size.cx = documentDirtyRect.width();
+    size.cy = documentDirtyRect.height();
+
+    BITMAPINFO bitmapInfo;
+    bitmapInfo.bmiHeader.biSize          = sizeof(BITMAPINFOHEADER);
+    bitmapInfo.bmiHeader.biWidth         = size.cx; 
+    bitmapInfo.bmiHeader.biHeight        = size.cy;
+    bitmapInfo.bmiHeader.biPlanes        = 1;
+    bitmapInfo.bmiHeader.biBitCount      = 32;
+    bitmapInfo.bmiHeader.biCompression   = BI_RGB;
+    bitmapInfo.bmiHeader.biSizeImage     = 0;
+    bitmapInfo.bmiHeader.biXPelsPerMeter = 0;
+    bitmapInfo.bmiHeader.biYPelsPerMeter = 0;
+    bitmapInfo.bmiHeader.biClrUsed       = 0;
+    bitmapInfo.bmiHeader.biClrImportant  = 0;
+
+    void* pixels = NULL;
+    HBITMAP bitmap = CreateDIBSection(hdc, &bitmapInfo, DIB_RGB_COLORS, &pixels, NULL, 0);
+    CGColorSpaceRef deviceRGB = CGColorSpaceCreateDeviceRGB();
+    CGContextRef context = CGBitmapContextCreate(pixels, size.cx, size.cy, 8,
+                                                 size.cx * 4, deviceRGB, kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst);
+    GraphicsContext gc(context);
+
+    GdiFlush();
+    CGContextTranslateCTM(context, CGFloat(-d->frameView->contentsX() - ps.rcPaint.left),
+                                   CGFloat(-d->frameView->contentsY() - ps.rcPaint.top));
+    d->frame->paint(&gc, documentDirtyRect);
+    SetDIBitsToDevice(hdc, 0, 0, size.cx, size.cy, 0, 0, 0, size.cy, pixels, &bitmapInfo, DIB_RGB_COLORS);
+
+    CGContextRelease(context);
+    CGColorSpaceRelease(deviceRGB);
+    DeleteObject(bitmap);
+    EndPaint(windowHandle, &ps);
+}
+
+#endif
 
 Frame* WebFrame::impl()
 {

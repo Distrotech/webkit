@@ -1,3 +1,21 @@
+2006-08-25  David Hyatt  <hyatt@apple.com>
+
+        Land CG/Cairo refactoring (and add some winsock2.h).  (I do not really
+        understand why the winsock2.h stuff would suddenly be needed.)
+
+        * platform/win/ResourceLoaderWin.h:
+        * platform/win/TemporaryLinkStubs.cpp:
+        (GraphicsContext::setAlpha):
+        (GraphicsContext::drawFocusRing):
+        (GraphicsContext::drawLineForMisspelling):
+        (GraphicsContext::setCompositeOperation):
+        * plugins/win/PluginPackageWin.h:
+        * plugins/win/PluginViewWin.h:
+        * plugins/win/npapi.cpp:
+        * rendering/RenderThemeWin.cpp:
+        (WebCore::prepareForDrawing):
+        (WebCore::doneDrawing):
+
 2006-08-24  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Darin.

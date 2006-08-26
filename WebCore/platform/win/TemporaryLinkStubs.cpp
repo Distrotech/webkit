@@ -182,9 +182,11 @@ void BrowserExtensionWin::goBackOrForward(int) { notImplemented(); }
 KURL BrowserExtensionWin::historyURL(int distance) { notImplemented(); return KURL(); }
 void BrowserExtensionWin::createNewWindow(struct WebCore::ResourceRequest const&) { notImplemented(); }
 
+#if PLATFORM(CAIRO)
 void GraphicsContext::addRoundedRectClip(const IntRect& rect, const IntSize& topLeft, const IntSize& topRight,
     const IntSize& bottomLeft, const IntSize& bottomRight) { notImplemented(); }
 void GraphicsContext::addInnerRoundedRectClip(const IntRect& rect, int thickness) { notImplemented(); }
+#endif // PLATFORM(CAIRO)
 
 int WebCore::screenDepthPerComponent(const Page*) { notImplemented(); return 0; }
 bool WebCore::screenIsMonochrome(const Page*) { notImplemented(); return false; }
@@ -248,6 +250,8 @@ void ScrollView::removeChild(Widget*) { }
 void ScrollView::scrollPointRecursively(int x, int y) { }
 bool ScrollView::inWindow() const { return true; }
 
+#if PLATFORM(CAIRO)
+
 void GraphicsContext::setShadow(IntSize const&,int,Color const&) { }
 void GraphicsContext::clearShadow() { }
 void GraphicsContext::beginTransparencyLayer(float) { }
@@ -259,7 +263,6 @@ void GraphicsContext::setLineCap(LineCap) { }
 void GraphicsContext::setLineJoin(LineJoin) { }
 void GraphicsContext::setMiterLimit(float) { }
 void GraphicsContext::setAlpha(float) { }
-void GraphicsContext::setCompositeOperation(CompositeOperator) { }
 void GraphicsContext::clip(const Path&) { }
 void GraphicsContext::translate(const FloatSize&) { }
 void GraphicsContext::rotate(float) { }
@@ -282,6 +285,15 @@ void Path::closeSubpath() { }
 void Path::addArc(const FloatPoint&, float, float, float, bool) { }
 void Path::addRect(const FloatRect&) { }
 void Path::addEllipse(const FloatRect&) { }
+
+#elif PLATFORM(CG)
+
+void GraphicsContext::drawFocusRing(const Color& color) {}
+void GraphicsContext::drawLineForMisspelling(const IntPoint& point, int width) {}
+
+#endif // PLATFORM(CG)
+
+void GraphicsContext::setCompositeOperation(CompositeOperator) { }
 
 TextField::TextField(TextField::Type) { }
 TextField::~TextField() { }
@@ -340,7 +352,9 @@ void WebCore::setFocusRingColorChangeFunction(void (*)()) { }
 
 void Frame::setNeedsReapplyStyles() { }
 
+#if PLATFORM(CAIRO)
 void Image::drawTiled(GraphicsContext*, const FloatRect&, const FloatRect&, TileRule, TileRule, CompositeOperator) { }
+#endif
 
 void RenderPopupMenuWin::addSeparator() { notImplemented(); }
 void RenderPopupMenuWin::addGroupLabel(HTMLOptGroupElement*) { notImplemented(); }
