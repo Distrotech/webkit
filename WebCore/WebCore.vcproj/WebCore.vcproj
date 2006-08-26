@@ -1623,6 +1623,11 @@
 					RelativePath="..\..\..\..\OpenSource\WebCore\platform\win\GlyphMapWin.cpp"
 					>
 				</File>
+                                <File
+                                        RelativePath="..\..\..\..\OpenSource\WebCore\platform\win\ImageWin.cpp"
+                                        >
+                                </File>
+
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\platform\win\IntPointWin.cpp"
 					>
