@@ -28,6 +28,7 @@
 #include "resource.h"
 #include "WebKit.h"
 #include "WebKitClassFactory.h"
+#include "Widget.h"
 
 #pragma warning( push, 0 )
 #include <WTF/Vector.h>
@@ -46,6 +47,7 @@ STDAPI_(BOOL) DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LPVOID /*lpRe
         case DLL_PROCESS_ATTACH:
             gLockCount = gClassCount = 0;
             gInstance = hModule;
+            WebCore::Widget::instanceHandle = hModule;
             return TRUE;
 
         case DLL_THREAD_ATTACH:
