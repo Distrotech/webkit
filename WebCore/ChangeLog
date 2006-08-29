@@ -1,5 +1,31 @@
 2006-08-29  David Hyatt  <hyatt@apple.com>
 
+        This patch lands all the font changes.  It does not patch the project file
+        yet, since this was done on Mac.  Will switch to Win32 after landing this
+        and then fix any glitches.
+
+        * platform/cairo/cairo-all.c: Added.
+        * platform/cairo/pixman-all.c: Added.
+        * platform/image-decoders/jpeg/jpeg-part1.c: Added.
+        * platform/image-decoders/jpeg/jpeg-part2.c: Added.
+        * platform/image-decoders/jpeg/jpeg-part3.c: Added.
+        * platform/image-decoders/png/png-part1.c: Added.
+        * platform/image-decoders/png/png-part2.c: Added.
+        * platform/win/FontDataWin.cpp:
+        (WebCore::FontData::platformInit):
+        (WebCore::FontData::platformDestroy):
+        (WebCore::FontData::platformWidthForGlyph):
+        * platform/win/FontPlatformData.h:
+        (WebCore::FontPlatformData::FontPlatformData):
+        (WebCore::FontPlatformData::cgFont):
+        (WebCore::FontPlatformData::operator==):
+        * platform/win/FontPlatformDataWin.cpp:
+        (WebCore::m_size):
+        * platform/win/FontWin.cpp:
+        (WebCore::Font::drawGlyphs):
+
+2006-08-29  David Hyatt  <hyatt@apple.com>
+
         Forking the font files in preparation for dropping in CG code.
 
         Reviewed by adam

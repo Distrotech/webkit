@@ -23,9 +23,15 @@
 
 #include "config.h"
 #include "FontPlatformData.h"
+#if PLATFORM(CAIRO)
 #include <cairo-win32.h>
+#elif PLATFORM(CG)
+#include <ApplicationServices/ApplicationServices.h>
+#endif
 
 namespace WebCore {
+
+#if PLATFORM(CAIRO)
 
 FontPlatformData::FontPlatformData(HFONT font, int size)
 :m_font(font), m_size(size)
@@ -43,7 +49,30 @@ FontPlatformData::FontPlatformData(HFONT font, int size)
 
     m_scaledFont = cairo_scaled_font_create(m_fontFace, &sizeMatrix, &ctm, fontOptions);
 }
+
+#elif PLATFORM(CG)
+
+FontPlatformData::FontPlatformData(HFONT font, int size)
+:m_font(font), m_size(size)
+{
+    HDC hdc = GetDC(0);
+    SaveDC(hdc);
     
+    WCHAR name[100];
+    SelectObject(hdc, font);
+    int len = GetTextFaceW(hdc, 100, name);
+    
+    RestoreDC(dc, -1);
+    ReleaseDC(0, dc);
+    
+    // FIME: Need to pick up bold and italic.  Need to override antialiasing defaults to force antialiasing to be on.
+    CFStringRef cfName = CFStringCreateWithCharacters(NULL, (const UniChar*)name, len - 1);
+    m_cgFont = CGFontCreateWithFontName(cfName);
+    CFRelease(cfName);
+}
+
+#endif
+
 FontPlatformData::~FontPlatformData()
 {
 }

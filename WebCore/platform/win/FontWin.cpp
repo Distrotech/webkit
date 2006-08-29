@@ -26,7 +26,11 @@
 #include "config.h"
 #include "Font.h"
 
+#if PLATFORM(CAIRO)
 #include <cairo-win32.h>
+#elif PLATFORM(CG)
+#include <ApplicationServices/ApplicationServices.h>
+#endif
 #include "FontData.h"
 #include "FontFallbackList.h"
 #include "GraphicsContext.h"
@@ -35,6 +39,8 @@
 namespace WebCore {
 
 static void notImplemented() { puts("Not yet implemented"); _CrtDbgBreak(); }
+
+#if PLATFORM(CAIRO)
 
 void Font::drawGlyphs(GraphicsContext* graphicsContext, const FontData* font, const GlyphBuffer& glyphBuffer, 
                       int from, int numGlyphs, const FloatPoint& point) const
@@ -82,6 +88,62 @@ void Font::drawGlyphs(GraphicsContext* graphicsContext, const FontData* font, co
     cairo_win32_scaled_font_done_font(scaledFont);
     RestoreDC(dc, -1);
 }
+
+#elif PLATFORM(CG)
+
+void Font::drawGlyphs(GraphicsContext* context, const FontData* font, const GlyphBuffer& glyphBuffer, int from, int numGlyphs, const FloatPoint& point) const
+{
+    CGContextRef cgContext = context->platformContext();
+
+    //bool originalShouldUseFontSmoothing = wkCGContextGetShouldSmoothFonts(cgContext);
+    //CGContextSetShouldSmoothFonts(cgContext, WebCoreShouldUseFontSmoothing());
+
+    const FontPlatformData& platformData = font->platformData();
+    //NSFont* drawFont;
+    //if ([gContext isDrawingToScreen]) {
+    //    drawFont = [platformData.font screenFont];
+    //    if (drawFont != platformData.font)
+    //        // We are getting this in too many places (3406411); use ERROR so it only prints on debug versions for now. (We should debug this also, eventually).
+    //        LOG_ERROR("Attempting to set non-screen font (%@) when drawing to screen.  Using screen font anyway, may result in incorrect metrics.",
+    //            [[[platformData.font fontDescriptor] fontAttributes] objectForKey:NSFontNameAttribute]);
+    //} else {
+    //    drawFont = [platformData.font printerFont];
+    //    if (drawFont != platformData.font)
+    //        NSLog(@"Attempting to set non-printer font (%@) when printing.  Using printer font anyway, may result in incorrect metrics.",
+    //            [[[platformData.font fontDescriptor] fontAttributes] objectForKey:NSFontNameAttribute]);
+    //}
+
+    CGContextSetFont(cgContext, platformData.cgFont());
+
+    CGAffineTransform matrix = CGAffineTransformIdentity;
+    //memcpy(&matrix, [drawFont matrix], sizeof(matrix));
+    //if ([gContext isFlipped]) {
+    {
+        matrix.b = -matrix.b;
+        matrix.d = -matrix.d;
+    }
+    //if (platformData.syntheticOblique)
+    //    matrix = CGAffineTransformConcat(matrix, CGAffineTransformMake(1, 0, -tanf(SYNTHETIC_OBLIQUE_ANGLE * acosf(0) / 90), 1, 0, 0)); 
+    CGContextSetTextMatrix(cgContext, matrix);
+
+    //wkSetCGFontRenderingMode(cgContext, drawFont);
+    CGContextSetFontSize(cgContext, platformData.size());
+
+    CGColorRef colorRef = cgColor(context->pen().color());
+    CGContextSetFillColorWithColor(cgContext, colorRef);
+    CGColorRelease(colorRef);
+
+    CGContextSetTextPosition(cgContext, point.x(), point.y());
+    CGContextShowGlyphsWithAdvances(cgContext, glyphBuffer.glyphs(from), glyphBuffer.advances(from), numGlyphs);
+    //if (font->m_syntheticBoldOffset) {
+    //    CGContextSetTextPosition(cgContext, point.x() + font->m_syntheticBoldOffset, point.y());
+    //    CGContextShowGlyphsWithAdvances(cgContext, glyphBuffer.glyphs(from), glyphBuffer.advances(from), numGlyphs);
+    //}
+
+    //CGContextSetShouldSmoothFonts(cgContext, originalShouldUseFontSmoothing);
+}
+
+#endif // PLATFORM(CG)
 
 FloatRect Font::selectionRectForComplexText(const TextRun& run, const TextStyle& style, const IntPoint& point, int h) const
 {

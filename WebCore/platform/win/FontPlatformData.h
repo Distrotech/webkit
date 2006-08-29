@@ -27,8 +27,12 @@
 #include "StringImpl.h"
 
 typedef struct HFONT__ *HFONT;
+#if PLATFORM(CG)
+typedef struct CGFont *CGFontRef;
+#elif PLATFORM(CAIRO)
 typedef struct _cairo_scaled_font cairo_scaled_font_t;
 typedef struct _cairo_font_face cairo_font_face_t;
+#endif
 
 namespace WebCore {
 
@@ -41,19 +45,35 @@ public:
 
     // Used for deleted values in the font cache's hash tables.
     FontPlatformData(Deleted)
-    : m_font((HFONT)-1), m_fontFace(0), m_scaledFont(0), m_size(0)
+    : m_font((HFONT)-1)
+#if PLATFORM(CG)
+    , m_cgFont(NULL)
+#elif PLATFORM(CAIRO)
+    , m_fontFace(0), m_scaledFont(0)
+#endif
+    , m_size(0)
     {}
 
     FontPlatformData()
-    : m_font(0), m_fontFace(0), m_scaledFont(0), m_size(0)
+    : m_font(0)
+#if PLATFORM(CG)
+    , m_cgFont(NULL)
+#elif PLATFORM(CAIRO)
+    , m_fontFace(0), m_scaledFont(0)
+#endif
+    , m_size(0)
     {}
 
     FontPlatformData(HFONT, int size);
     ~FontPlatformData();
 
     HFONT hfont() const { return m_font; }
+#if PLATFORM(CG)
+    CGFontRef cgFont() const { return m_cgFont; }
+#elif PLATFORM(CAIRO)
     cairo_font_face_t* fontFace() const { return m_fontFace; }
     cairo_scaled_font_t* scaledFont() const { return m_scaledFont; }
+#endif
 
     int size() const { return m_size; }
 
@@ -64,14 +84,23 @@ public:
 
     bool operator==(const FontPlatformData& other) const
     { 
-        return m_font == other.m_font && m_fontFace == other.m_fontFace && 
-               m_scaledFont == other.m_scaledFont && m_size == other.m_size;
+        return m_font == other.m_font
+#if PLATFORM(CG)
+              && m_cgFont ==other.m_cgFont
+#elif PLATFORM(CAIRO)
+              && m_fontFace == other.m_fontFace && m_scaledFont == other.m_scaledFont
+#endif
+              && m_size == other.m_size;
     }
 
 private:
     HFONT m_font;
+#if PLATFORM(CG)
+    CGFontRef m_cgFont;
+#elif PLATFORM(CAIRO)
     cairo_font_face_t* m_fontFace;
     cairo_scaled_font_t* m_scaledFont;
+#endif
     int m_size;
 };
 

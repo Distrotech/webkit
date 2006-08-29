@@ -48,17 +48,16 @@ void FontData::platformInit()
     HDC dc = GetDC(0);
     SaveDC(dc);
 
-    cairo_scaled_font_t* scaledFont = m_font.scaledFont();
-    const double metricsMultiplier = cairo_win32_scaled_font_get_metrics_factor(scaledFont) * m_font.size();
+    SelectObject(dc, m_font.hfont());
 
-    cairo_win32_scaled_font_select_font(scaledFont, dc);
-
+    // FIXME: Need a CG code path for fetching metrics.  This is done using WebKitSystemInterface on Mac,
+    // so CG does have a private method for this.
     TEXTMETRIC tm;
     GetTextMetrics(dc, &tm);
-    m_ascent = lroundf(tm.tmAscent * metricsMultiplier);
-    m_descent = lroundf(tm.tmDescent * metricsMultiplier);
+    m_ascent = lroundf(tm.tmAscent);
+    m_descent = lroundf(tm.tmDescent);
     m_xHeight = m_ascent * 0.56f;  // Best guess for xHeight for non-Truetype fonts.
-    m_lineGap = lroundf(tm.tmExternalLeading * metricsMultiplier);
+    m_lineGap = lroundf(tm.tmExternalLeading);
     m_lineSpacing = m_ascent + m_descent + m_lineGap;
 
     OUTLINETEXTMETRIC otm;
@@ -68,10 +67,8 @@ void FontData::platformInit()
         MAT2 mat = { 1, 0, 0, 1 }; // The identity matrix.
         DWORD len = GetGlyphOutlineW(dc, 'x', GGO_METRICS, &gm, 0, 0, &mat);
         if (len != GDI_ERROR && gm.gmptGlyphOrigin.y > 0)
-            m_xHeight = gm.gmptGlyphOrigin.y * metricsMultiplier;
+            m_xHeight = gm.gmptGlyphOrigin.y;
     }
-
-    cairo_win32_scaled_font_done_font(scaledFont);
     
     RestoreDC(dc, -1);
     ReleaseDC(0, dc);
@@ -79,8 +76,12 @@ void FontData::platformInit()
 
 void FontData::platformDestroy()
 {
+#if PLATFORM(CG)
+    CGFontRelease(m_font.cgFont());
+#elif PLATFORM(CAIRO)
     cairo_font_face_destroy(m_font.fontFace());
     cairo_scaled_font_destroy(m_font.scaledFont());
+#endif
 
     if (m_isMLangFont) {
         // We have to release the font instead of just deleting it, since we didn't make it.
@@ -149,22 +150,19 @@ void FontData::determinePitch()
 
 float FontData::platformWidthForGlyph(Glyph glyph) const
 {
+    // FIXME: Need a CG code path for this.
     HDC dc = GetDC(0);
     SaveDC(dc);
 
-    cairo_scaled_font_t* scaledFont = m_font.scaledFont();
-    cairo_win32_scaled_font_select_font(scaledFont, dc);
+    SelectObject(dc, m_font.hfont());
 
     int width;
     GetCharWidthI(dc, glyph, 1, 0, &width);
 
-    cairo_win32_scaled_font_done_font(scaledFont);
-
     RestoreDC(dc, -1);
     ReleaseDC(0, dc);
 
-    const double metricsMultiplier = cairo_win32_scaled_font_get_metrics_factor(scaledFont) * m_font.size();
-    return width * metricsMultiplier;
+    return width;
 }
 
 }
