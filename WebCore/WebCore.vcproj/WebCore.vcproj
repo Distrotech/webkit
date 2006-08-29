@@ -1604,19 +1604,19 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\win\FontDataWin.cpp"
+					RelativePath="..\platform\win\FontDataWin.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\win\FontPlatformData.h"
+					RelativePath="..\platform\win\FontPlatformData.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\win\FontPlatformDataWin.cpp"
+					RelativePath="..\platform\win\FontPlatformDataWin.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\win\FontWin.cpp"
+					RelativePath="..\platform\win\FontWin.cpp"
 					>
 				</File>
 				<File

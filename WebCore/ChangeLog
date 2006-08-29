@@ -1,3 +1,36 @@
+2006-08-29  David Hyatt  <hyatt@apple.com>
+
+        Forking the font files in preparation for dropping in CG code.
+
+        Reviewed by adam
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/win/FontDataWin.cpp: Added.
+        (WebCore::FontData::platformInit):
+        (WebCore::FontData::platformDestroy):
+        (WebCore::FontData::smallCapsFontData):
+        (WebCore::FontData::containsCharacters):
+        (WebCore::FontData::determinePitch):
+        (WebCore::FontData::platformWidthForGlyph):
+        * platform/win/FontPlatformData.h: Added.
+        (WebCore::FontPlatformData::FontPlatformData):
+        (WebCore::FontPlatformData::hfont):
+        (WebCore::FontPlatformData::fontFace):
+        (WebCore::FontPlatformData::scaledFont):
+        (WebCore::FontPlatformData::size):
+        (WebCore::FontPlatformData::hash):
+        (WebCore::FontPlatformData::operator==):
+        * platform/win/FontPlatformDataWin.cpp: Added.
+        (WebCore::m_size):
+        (WebCore::FontPlatformData::~FontPlatformData):
+        * platform/win/FontWin.cpp: Added.
+        (WebCore::notImplemented):
+        (WebCore::Font::drawGlyphs):
+        (WebCore::Font::selectionRectForComplexText):
+        (WebCore::Font::drawComplexText):
+        (WebCore::Font::floatWidthForComplexText):
+        (WebCore::Font::offsetForPositionForComplexText):
+
 2006-08-28  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Maciej.
