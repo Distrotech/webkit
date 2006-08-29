@@ -25,7 +25,9 @@
 
 #include "RenderPopupMenu.h"
 
-#include <windows.h>
+#if PLATFORM(WIN)
+    typedef struct HWND__* HWND;
+#endif
 
 namespace WebCore {
 

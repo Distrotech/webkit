@@ -31,6 +31,7 @@
 #include "FrameWin.h"
 #include "IntRect.h"
 #include "Font.h"
+#include <windows.h>
 
 namespace WebCore {
 

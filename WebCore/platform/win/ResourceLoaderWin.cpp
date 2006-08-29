@@ -23,15 +23,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
+#include <wtf/platform.h>
+#if USE(WININET)
+
 #include "config.h"
-#include "ResourceLoader.h"
-#include "ResourceLoaderInternal.h"
 #include "ResourceLoaderWin.h"
 
 #include "DocLoader.h"
-#include "Frame.h"
 #include "Document.h"
-#include <windows.h>
+#include "Frame.h"
+#include "ResourceLoader.h"
+#include "ResourceLoaderInternal.h"
 #include <wininet.h>
 
 namespace WebCore {
@@ -187,24 +189,13 @@ LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                 buffers.dwBufferLength = bufferSize;
             }
 
-            PlatformDataStruct platformData;
-            platformData.errorString = 0;
-            platformData.error = 0;
-            platformData.loaded = ok;
-
             if (!ok) {
-                int error = GetLastError();
-                if (error == ERROR_IO_PENDING)
+                int errorCode = GetLastError();
+                if (errorCode == ERROR_IO_PENDING)
                     return 0;
                 else {
-                    DWORD errorStringChars = 0;
-                    if (!InternetGetLastResponseInfo(&platformData.error, 0, &errorStringChars)) {
-                        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
-                            platformData.errorString = new TCHAR[errorStringChars];
-                            InternetGetLastResponseInfo(&platformData.error, platformData.errorString, &errorStringChars);
-                        }
-                    }
-                    _RPTF1(_CRT_WARN, "Load error: %i\n", error);
+                    job->setError(errorCode);
+                    _RPTF1(_CRT_WARN, "Load error: %i\n", errorCode);
                 }
             }
             
@@ -212,7 +203,7 @@ LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                 InternetCloseHandle(job->d->m_secondaryHandle);
             InternetCloseHandle(job->d->m_resourceHandle);
             
-            job->client()->receivedAllData(job, &platformData);
+            job->client()->receivedAllData(job, 0);
             job->client()->receivedAllData(job);
             delete job;
         }
@@ -345,12 +336,7 @@ void ResourceLoader::fileLoadTimer(Timer<ResourceLoader>* timer)
     CloseHandle(d->m_fileHandle);
     d->m_fileHandle = 0;
 
-    PlatformDataStruct platformData;
-    platformData.errorString = 0;
-    platformData.error = 0;
-    platformData.loaded = TRUE;
-
-    d->client->receivedAllData(this, &platformData);
+    d->client->receivedAllData(this, 0);
     d->client->receivedAllData(this);
 }
 
@@ -361,17 +347,12 @@ void ResourceLoader::cancel()
     else
         d->m_fileLoadTimer.stop();
 
-    PlatformDataStruct platformData;
-    platformData.errorString = 0;
-    platformData.error = 0;
-    platformData.loaded = FALSE;
+    setError(1);
 
-    d->client->receivedAllData(this, &platformData);
+    d->client->receivedAllData(this, 0);
     d->client->receivedAllData(this);
-
-    if (!d->m_resourceHandle)
-        // Async load canceled before we have a handle -- mark ourselves as in error, to be deleted later.
-        setError(1);
 }
 
 } // namespace WebCore
+
+#endif // USE(WININET)

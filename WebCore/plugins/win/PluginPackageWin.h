@@ -26,13 +26,14 @@
 #ifndef PluginPackageWin_H
 #define PluginPackageWin_H
 
-#include "Shared.h"
 #include <winsock2.h>
 #include <windows.h>
-#include <wtf/HashMap.h>
+
+#include "Shared.h"
 #include "StringHash.h"
-#include "npfunctions.h"
 #include "PlatformString.h"
+#include "npfunctions.h"
+#include <wtf/HashMap.h>
 
 namespace WebCore {
     typedef HashMap<String, String> MIMEToDescriptionsMap;

@@ -28,13 +28,14 @@
 
 #include <winsock2.h>
 #include <windows.h>
-#include <wtf/RefPtr.h>
-#include <wtf/Vector.h>
+
 #include "KURL.h"
-#include "npapi.h"
 #include "PlatformString.h"
 #include "Timer.h"
 #include "Widget.h"
+#include "npapi.h"
+#include <wtf/RefPtr.h>
+#include <wtf/Vector.h>
 
 namespace WebCore {
     class Element;

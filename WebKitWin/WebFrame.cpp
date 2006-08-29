@@ -668,7 +668,7 @@ void WebFrame::receivedData(ResourceLoader*, const char* data, int length)
     d->frame->write(data, length);
 }
 
-void WebFrame::receivedAllData(ResourceLoader* /*job*/)
+void WebFrame::receivedAllData(ResourceLoader* job)
 {
     if (m_provisionalDataSource) {
         m_dataSource = m_provisionalDataSource;
@@ -677,15 +677,10 @@ void WebFrame::receivedAllData(ResourceLoader* /*job*/)
 
     m_quickRedirectComing = false;
     m_loadType = WebFrameLoadTypeStandard;
-}
 
-void WebFrame::receivedAllData(ResourceLoader* job, PlatformData data)
-{
     IWebFrameLoadDelegate* frameLoadDelegate;
     if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
-
-        if (data->loaded) {
-
+        if (!job->error()) {
             IWebPreferences* preferences;
             BOOL privateBrowsingEnabled = FALSE;
             if (SUCCEEDED(d->webView->preferences(&preferences)))
@@ -740,12 +735,8 @@ void WebFrame::receivedAllData(ResourceLoader* job, PlatformData data)
             }
             SysFreeString(urlBStr);
             frameLoadDelegate->didFinishLoadForFrame(d->webView, this);
-        }
-        else {
+        } else
             frameLoadDelegate->didFailLoadWithError(d->webView, 0/*FIXME*/, this);
-            m_quickRedirectComing = false;
-            m_loadType = WebFrameLoadTypeStandard;
-        }
 
         frameLoadDelegate->Release();
     }

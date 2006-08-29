@@ -31,6 +31,7 @@
 #include "RenderView.h"
 #include "Screen.h"
 #include <tchar.h>
+#include <windows.h>
 
 // Default Window animation duration in milliseconds
 static const int defaultAnimationDuration = 200;

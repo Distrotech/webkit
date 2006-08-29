@@ -26,6 +26,12 @@
 #include "WebKitDLL.h"
 #include "WebURLResponse.h"
 
+#include <wtf/platform.h>
+
+#if USE(CFNETWORK)
+#include <CFNetwork/CFURLResponsePriv.h>
+#endif
+
 #pragma warning( push, 0 )
 #include "DeprecatedString.h"
 #include "KURL.h"
@@ -63,9 +69,30 @@ WebURLResponse* WebURLResponse::createInstance(ResourceLoader* loader, PlatformR
     DeprecatedString charsetStr = loader->queryMetaData("charset").deprecatedString();
 
     if (loader && platformResponse) {
+#if USE(CFNETWORK)
+        CFStringRef mimeType = CFURLResponseGetMIMEType(platformResponse);
+#endif
         instance->m_url = SysAllocStringLen((LPCOLESTR)urlStr.unicode(), urlStr.length());
         instance->m_textEncodingName = SysAllocStringLen((LPCOLESTR)charsetStr.unicode(), charsetStr.length());
+#if USE(CFNETWORK)
+        if (mimeType) {
+            CFIndex len = CFStringGetLength(mimeType);
+            Boolean freeCharacters = FALSE;
+            const UniChar* characters = CFStringGetCharactersPtr(mimeType);
+            if (!characters) {
+                characters = (UniChar*)malloc(len * sizeof(UniChar));
+                CFStringGetCharacters(mimeType, CFRangeMake(0, len), (UniChar*)characters);
+                freeCharacters = TRUE; 
+            }
+            instance->m_mimeType = SysAllocStringLen((LPCOLESTR)characters, len);
+            if (freeCharacters) 
+                free((void *)characters);
+        } else {
+            instance->m_mimeType = 0;
+        }
+#else
         instance->m_mimeType = SysAllocString(platformResponse->contentType);
+#endif
     }
 
     return instance;

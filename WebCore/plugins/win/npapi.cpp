@@ -24,11 +24,10 @@
  */
 
 #include "config.h"
-#include <winsock2.h>
-#include <windows.h>
-#include "npapi.h"
+
 #include "PlugInInfoStore.h"
 #include "PluginViewWin.h"
+#include "npapi.h" // #includes <windows.h>
 
 using namespace WebCore;
 

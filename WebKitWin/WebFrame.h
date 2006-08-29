@@ -134,7 +134,6 @@ public:
     virtual void receivedResponse(WebCore::ResourceLoader*, WebCore::PlatformResponse);
     virtual void receivedData(WebCore::ResourceLoader*, const char*, int);
     virtual void receivedAllData(WebCore::ResourceLoader*);
-    virtual void receivedAllData(WebCore::ResourceLoader*, WebCore::PlatformData);
 
     // FrameWinClient
     virtual void openURL(const WebCore::DeprecatedString&, bool lockHistory);

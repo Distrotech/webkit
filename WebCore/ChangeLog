@@ -1,3 +1,33 @@
+2006-08-28  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej.
+
+        Landed CFNetwork loader, off by default. To enable, define:
+            KXMLCORE_PLATFORM_CF
+            KXMLCORE_USE_CFNETWORK
+
+        CFNetwork uses winsock2. If you do this, you need to make sure that winsock2.h
+        is included before windows.h in any translation unit in which it's used.
+        A lot of the jiggering in this patch is devoted to that.
+        
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/win/ResourceLoaderWin.cpp: Removed reliance on PlatformData
+        since it wasn't being used, and removing it made easy work of integrating
+        CFNetwork in a Windows-independent way.
+        (WebCore::ResourceLoaderWndProc):
+        (WebCore::ResourceLoader::fileLoadTimer):
+        (WebCore::ResourceLoader::cancel):
+        * platform/win/TemporaryLinkStubs.cpp:
+        (Path::contains):
+        * platform/win/WidgetWin.cpp:
+        * plugins/win/PluginDatabaseWin.cpp:
+        * plugins/win/PluginPackageWin.h:
+        * plugins/win/PluginViewWin.h:
+        * plugins/win/npapi.cpp:
+        * rendering/RenderPopupMenuWin.cpp:
+        * rendering/RenderPopupMenuWin.h:
+        * rendering/RenderThemeWin.cpp:
+
 2006-08-28  Ada Chan  <adachan@apple.com>
 
         Reviewed by ggaren.

@@ -454,8 +454,8 @@ exit:
         CFRelease(urlRef);
 
     if (FAILED(hr)) {
-        m_standardUserDefaults = 0;
-        CFRelease(m_standardUserDefaults);
+        if (m_standardUserDefaults)
+            CFRelease(m_standardUserDefaults);
         m_standardUserDefaults = 0;
     }
 

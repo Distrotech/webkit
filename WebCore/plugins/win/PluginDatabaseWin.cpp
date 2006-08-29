@@ -26,10 +26,10 @@
 #include "config.h"
 #include "PluginDatabaseWin.h"
 
-#include <windows.h>
 #include "PluginPackageWin.h"
 #include "PluginViewWin.h"
 #include "FrameWin.h"
+#include <windows.h>
 
 namespace WebCore {
 
