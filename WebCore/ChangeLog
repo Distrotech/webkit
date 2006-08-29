@@ -1,5 +1,11 @@
 2006-08-29  David Hyatt  <hyatt@apple.com>
 
+        Make project changes so that the forked Font files (and Cairo/JPG/PNG) are all used.
+
+        * WebCore.vcproj/WebCore.vcproj:
+
+2006-08-29  David Hyatt  <hyatt@apple.com>
+
         This patch lands all the font changes.  It does not patch the project file
         yet, since this was done on Mac.  Will switch to Win32 after landing this
         and then fix any glitches.
