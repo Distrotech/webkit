@@ -1912,11 +1912,11 @@
 				Name="cfnet"
 				>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\cfnet\KURLCFNet.cpp"
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\cf\KURLCFNet.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\cfnet\ResourceLoaderCFNet.cpp"
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\cf\ResourceLoaderCFNet.cpp"
 					>
 				</File>
 			</Filter>
