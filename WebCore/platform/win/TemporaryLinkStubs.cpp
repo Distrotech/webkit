@@ -271,7 +271,7 @@ void GraphicsContext::scale(const FloatSize&) { }
 Path::Path(){ }
 Path::~Path(){ }
 Path::Path(const Path&){ }
-bool Path::contains(const FloatPoint&) const{ return false; }
+bool Path::contains(const FloatPoint&, WindRule) const{ return false; }
 void Path::translate(const FloatSize&){ }
 FloatRect Path::boundingRect() const { return FloatRect(); }
 Path& Path::operator=(const Path&){ return*this; }

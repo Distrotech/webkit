@@ -1,3 +1,12 @@
+2006-08-28  Ada Chan  <adachan@apple.com>
+
+        Reviewed by sfalken.
+        
+        Free a malloc'ed string in an error condition.
+
+        * MarshallingHelpers.cpp:
+        (MarshallingHelpers::BSTRToCFStringRef):
+
 2006-08-25  David Hyatt  <hyatt@apple.com>
 
         Add code path for doing painting of a WebFrame using CG.

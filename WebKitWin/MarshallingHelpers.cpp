@@ -51,8 +51,11 @@ CFStringRef MarshallingHelpers::BSTRToCFStringRef(BSTR str)
         return 0;
     UInt8* utf8 = (UInt8*) malloc(result); // ownership transferred to CFURLRef
     result = WideCharToMultiByte(CP_UTF8, 0, str, urlLength, (LPSTR)utf8, result, 0, 0);
-    if (result <= 0)
+    if (result <= 0) {
+        if (utf8)
+            free(utf8);
         return 0;
+    }
 
     return CFStringCreateWithBytes(0, utf8, result-1, kCFStringEncodingUTF8, false);
 }
