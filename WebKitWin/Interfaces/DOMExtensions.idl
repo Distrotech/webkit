@@ -50,66 +50,22 @@ cpp_quote(" */")
 
 import "oaidl.idl";
 import "ocidl.idl";
-import "DOMHTML.idl";
-import "IWebFrame.idl";
 
-/*!
-    @protocol  WebFormSubmissionListener
-    @discussion .
-*/
 [
     local,
     object,
-    uuid(1911D650-035E-4204-8746-ABECF77A4C9B),
+    uuid(E6CEE774-41C6-4c1b-8832-798E49245E6B),
     pointer_default(unique)
 ]
-interface IWebFormSubmissionListener : IUnknown
+interface IDOMNodeExtensions : IUnknown
 {
-    HRESULT continueSubmit();
-}
+    /*
+        - (NSRect)boundingBox
+    */
+    HRESULT boundingBox([out, retval] LPRECT rect);
 
-/*!
-    @class WebFormDelegate
-    @discussion The WebFormDelegate class responds to all WebFormDelegate protocol
-    methods by doing nothing. It's provided for the convenience of clients who only want
-    to implement some of the above methods and ignore others.
-*/
-/*!
-    @protocol  WebFormDelegate
-    @discussion .
-
-    Various methods send by controls that edit text to their delegates, which are all
-    analogous to similar methods in AppKit/NSControl.h.
-    These methods are forwarded from widgets used in forms to the WebFormDelegate.
-*/
-[
-    local,
-    object,
-    uuid(4CBEC1BD-ABC3-4bdb-8E5E-4D3BCF9E8C1E),
-    pointer_default(unique)
-]
-interface IWebFormDelegate : IUnknown
-{
-    //- (void)textFieldDidBeginEditing:(DOMHTMLInputElement *)element inFrame:(WebFrame *)frame;
-    HRESULT textFieldDidBeginEditing([in] IDOMHTMLInputElement* element, [in] IWebFrame* frame);
-
-    //- (void)textFieldDidEndEditing:(DOMHTMLInputElement *)element inFrame:(WebFrame *)frame;
-    HRESULT textFieldDidEndEditing([in] IDOMHTMLInputElement* element, [in] IWebFrame* frame);
-
-    //- (void)textDidChangeInTextField:(DOMHTMLInputElement *)element inFrame:(WebFrame *)frame;
-    HRESULT textDidChangeInTextField([in] IDOMHTMLInputElement* element, [in] IWebFrame* frame);
-
-    //- (void)textDidChangeInTextArea:(DOMHTMLTextAreaElement *)element inFrame:(WebFrame *)frame;
-    HRESULT textDidChangeInTextArea([in] IDOMHTMLTextAreaElement* element, [in] IWebFrame* frame);
-
-    //- (BOOL)textField:(DOMHTMLInputElement *)element doCommandBySelector:(SEL)commandSelector inFrame:(WebFrame *)frame;
-    HRESULT doCommandBySelector([in] IDOMHTMLInputElement* element, int commandSelector, [in] IWebFrame* frame, [out, retval] BOOL* result);
-
-    //- (BOOL)textField:(DOMHTMLInputElement *)element shouldHandleEvent:(NSEvent *)event inFrame:(WebFrame *)frame;
-    HRESULT shouldHandleEvent([in] IDOMHTMLInputElement* element, [in] void* event, [in] IWebFrame* frame, [out, retval] BOOL* result);
-
-    // Sent when a form is just about to be submitted (before the load is started)
-    // listener must be sent continue when the delegate is done.
-    //- (void)frame:(WebFrame *)frame sourceFrame:(WebFrame *)sourceFrame willSubmitForm:(DOMElement *)form withValues:(NSDictionary *)values submissionListener:(id <WebFormSubmissionListener>)listener;
-    HRESULT willSubmitForm([in] IWebFrame* frame, [in] IWebFrame* sourceFrame, [in] IDOMElement* form, [in] IPropertyBag* values, [in] IWebFormSubmissionListener* listener);
+    /*
+        - (NSArray *)lineBoxRects
+    */
+    HRESULT lineBoxRects([in, size_is(cRects)] RECT* rects, [in] int cRects);
 }

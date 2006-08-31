@@ -27,6 +27,7 @@
 #define WebFrame_H
 
 #include "DOMCore.h"
+#include "IWebFormDelegate.h"
 #include "IWebFrame.h"
 #include "WebDataSource.h"
 
@@ -52,7 +53,7 @@ typedef enum {
     WebFrameLoadTypeReplace
 } WebFrameLoadType;
 
-class WebFrame : public IWebFrame, public WebCore::ResourceLoaderClient, public WebCore::FrameWinClient
+class WebFrame : public IWebFrame, public WebCore::ResourceLoaderClient, public WebCore::FrameWinClient, public IWebFormSubmissionListener
 {
 public:
     static WebFrame* createInstance();
@@ -129,6 +130,9 @@ public:
         /* [out] */ int *frameCount,
         /* [retval][out] */ IWebFrame ***frames);
 
+    // IWebFormSubmissionListener
+    virtual HRESULT STDMETHODCALLTYPE continueSubmit( void);
+
     // ResourceLoaderClient
     virtual void receivedRedirect(WebCore::ResourceLoader*, const WebCore::KURL&);
     virtual void receivedResponse(WebCore::ResourceLoader*, WebCore::PlatformResponse);
@@ -137,7 +141,7 @@ public:
 
     // FrameWinClient
     virtual void openURL(const WebCore::DeprecatedString&, bool lockHistory);
-    virtual void submitForm(const WebCore::String& method, const WebCore::KURL&, const WebCore::FormData*);
+    virtual void submitForm(const WebCore::String& method, const WebCore::KURL&, const WebCore::FormData*, WebCore::Element* form, WTF::HashMap<WebCore::String, WebCore::String>& formValues);
     virtual void setTitle(const WebCore::String& title);
     virtual void setStatusText(const WebCore::String& title);
     virtual void textFieldDidBeginEditing(WebCore::Element*);
@@ -164,10 +168,13 @@ public:
     HRESULT elementWithName(BSTR name, IDOMElement* form, IDOMElement** element);
     HRESULT formForElement(IDOMElement* element, IDOMElement** form);
     HRESULT elementDoesAutoComplete(IDOMElement* element, bool* result);
+    HRESULT controlsInForm(IDOMElement* form, IDOMElement** controls, int* cControls);
+    HRESULT elementIsPassword(IDOMElement* element, bool* result);
+    HRESULT searchForLabelsBeforeElement(const BSTR* labels, int cLabels, IDOMElement* beforeElement, BSTR* result);
+    HRESULT matchLabelsAgainstElement(const BSTR* labels, int cLabels, IDOMElement* againstElement, BSTR* result);
 
 protected:
     unsigned int getObjectCacheSize();
-
 
 protected:
     class WebFramePrivate;
@@ -177,6 +184,7 @@ protected:
     WebDataSource*      m_provisionalDataSource;
     WebFrameLoadType    m_loadType;
     bool                m_quickRedirectComing;
+    bool                m_continueFormSubmit;
 };
 
 #endif

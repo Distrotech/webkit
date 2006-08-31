@@ -164,7 +164,15 @@
 			>
 		</File>
 		<File
+			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\DOMExtensions_i.c"
+			>
+		</File>
+		<File
 			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\DOMHTML_i.c"
+			>
+		</File>
+		<File
+			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\DOMPrivate_i.c"
 			>
 		</File>
 		<File

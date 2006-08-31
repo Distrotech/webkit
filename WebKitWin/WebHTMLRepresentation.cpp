@@ -154,11 +154,13 @@ HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::elementDoesAutoComplete(
 }
     
 HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::elementIsPassword( 
-        /* [in] */ IDOMElement* /*element*/,
-        /* [retval][out] */ BOOL* /*result*/)
+        /* [in] */ IDOMElement* element,
+        /* [retval][out] */ BOOL* result)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    bool isPassword;
+    HRESULT hr = m_frame->elementIsPassword(element, &isPassword);
+    *result = isPassword ?  TRUE : FALSE;
+    return hr;
 }
     
 HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::formForElement( 
@@ -179,30 +181,29 @@ HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::currentForm(
 }
     
 HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::controlsInForm( 
-        /* [in] */ IDOMElement* /*form*/,
-        /* [out][in] */ IDOMElement** /*controls*/,
-        /* [out][in] */ int* /*cControls*/)
+        /* [in] */ IDOMElement* form,
+        /* [out][in] */ IDOMElement** controls,
+        /* [out][in] */ int* cControls)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    return m_frame->controlsInForm(form, controls, cControls);
 }
     
 HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::searchForLabels( 
-        /* [size_is][in] */ BSTR* /*labels*/,
-        /* [in] */ int /*cLabels*/,
-        /* [in] */ IDOMElement* /*beforeElement*/)
+        /* [size_is][in] */ BSTR* labels,
+        /* [in] */ int cLabels,
+        /* [in] */ IDOMElement* beforeElement,
+        /* [retval][out] */ BSTR* result)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    return m_frame->searchForLabelsBeforeElement(labels, cLabels, beforeElement, result);
 }
     
 HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::matchLabels( 
-        /* [size_is][in] */ BSTR* /*labels*/,
-        /* [in] */ int /*cLabels*/,
-        /* [in] */ IDOMElement* /*againstElement*/)
+        /* [size_is][in] */ BSTR* labels,
+        /* [in] */ int cLabels,
+        /* [in] */ IDOMElement* againstElement,
+        /* [retval][out] */ BSTR* result)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    return m_frame->matchLabelsAgainstElement(labels, cLabels, againstElement, result);
 }
 
 // IWebDocumentRepresentation ----------------------------------------------------------------

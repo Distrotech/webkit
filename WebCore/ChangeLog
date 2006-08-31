@@ -1,3 +1,24 @@
+2006-08-30  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Ada Chan.
+
+        Forms Auto-complete checkpoint.
+        Generic forms autocomplete drop-downs are now functional.
+        Address book autocomplete (and credit card autocomplete) is not functional.
+        
+        To do:
+        - username/password pairs autofill
+        - address book autofill
+        - single-click autofill
+        - credit card autofill
+        - keychain equivalent secure store for username/passwords and credit cards
+          (we currently use DPAPI to encrypt the form values plist but will want to
+           protect this more sensitive info using an additional user supplied password)
+
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::submitForm): Pass form values to submit form delegate
+        * bridge/win/FrameWin.h: Pass form values to submit form delegate
+
 2006-08-29  David Hyatt  <hyatt@apple.com>
 
         Make project changes so that the forked Font files (and Cairo/JPG/PNG) are all used.

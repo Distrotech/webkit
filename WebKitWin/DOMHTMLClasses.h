@@ -27,6 +27,7 @@
 #define DOMHTMLClasses_H
 
 #include "DOMHTML.h"
+#include "DOMPrivate.h"
 #include "DOMCoreClasses.h"
 #include "WebScriptObject.h"
 
@@ -140,6 +141,11 @@ class DOMHTMLOptionsCollection : public DOMObject, public IDOMHTMLOptionsCollect
 
 class DOMHTMLDocument : public DOMDocument, public IDOMHTMLDocument
 {
+protected:
+    DOMHTMLDocument();
+public:
+    DOMHTMLDocument(WebCore::Document* d) : DOMDocument(d) {}
+
     // IUnknown
     virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject);
     virtual ULONG STDMETHODCALLTYPE AddRef(void) { return DOMDocument::AddRef(); }
@@ -275,82 +281,75 @@ class DOMHTMLDocument : public DOMDocument, public IDOMHTMLDocument
     virtual HRESULT STDMETHODCALLTYPE setTextContent( 
         /* [in] */ BSTR text) { return DOMDocument::setTextContent(text); }
     
-    virtual HRESULT STDMETHODCALLTYPE boundingBox( 
-        /* [retval][out] */ LPRECT rect) { return DOMDocument::boundingBox(rect); }
-    
-    virtual HRESULT STDMETHODCALLTYPE lineBoxRects( 
-        /* [size_is][in] */ RECT* rects,
-        /* [in] */ int cRects) { return DOMDocument::lineBoxRects(rects, cRects); }
-
     // IDOMDocument
     virtual HRESULT STDMETHODCALLTYPE doctype( 
-        /* [retval][out] */ IDOMDocumentType **result);
+        /* [retval][out] */ IDOMDocumentType **result) { return DOMDocument::doctype(result); }
     
     virtual HRESULT STDMETHODCALLTYPE implementation( 
-        /* [retval][out] */ IDOMImplementation **result);
+        /* [retval][out] */ IDOMImplementation **result) { return DOMDocument::implementation(result); }
     
     virtual HRESULT STDMETHODCALLTYPE documentElement( 
-        /* [retval][out] */ IDOMElement **result);
+        /* [retval][out] */ IDOMElement **result) { return DOMDocument::documentElement(result); }
     
     virtual HRESULT STDMETHODCALLTYPE createElement( 
         /* [in] */ BSTR tagName,
-        /* [retval][out] */ IDOMElement **result);
+        /* [retval][out] */ IDOMElement **result) { return DOMDocument::createElement(tagName, result); }
     
     virtual HRESULT STDMETHODCALLTYPE createDocumentFragment( 
-        /* [retval][out] */ IDOMDocumentFragment **result);
+        /* [retval][out] */ IDOMDocumentFragment **result) { return DOMDocument::createDocumentFragment(result); }
     
     virtual HRESULT STDMETHODCALLTYPE createTextNode( 
         /* [in] */ BSTR data,
-        /* [retval][out] */ IDOMText **result);
+        /* [retval][out] */ IDOMText **result) { return DOMDocument::createTextNode(data, result); }
     
     virtual HRESULT STDMETHODCALLTYPE createComment( 
         /* [in] */ BSTR data,
-        /* [retval][out] */ IDOMComment **result);
+        /* [retval][out] */ IDOMComment **result) { return DOMDocument::createComment(data, result); }
     
     virtual HRESULT STDMETHODCALLTYPE createCDATASection( 
         /* [in] */ BSTR data,
-        /* [retval][out] */ IDOMCDATASection **result);
+        /* [retval][out] */ IDOMCDATASection **result) { return DOMDocument::createCDATASection(data, result); }
     
     virtual HRESULT STDMETHODCALLTYPE createProcessingInstruction( 
         /* [in] */ BSTR target,
         /* [in] */ BSTR data,
-        /* [retval][out] */ IDOMProcessingInstruction **result);
+        /* [retval][out] */ IDOMProcessingInstruction **result) { return DOMDocument::createProcessingInstruction(target, data, result); }
     
     virtual HRESULT STDMETHODCALLTYPE createAttribute( 
         /* [in] */ BSTR name,
-        /* [retval][out] */ IDOMAttr **result);
+        /* [retval][out] */ IDOMAttr **result) { return DOMDocument::createAttribute(name, result); }
     
     virtual HRESULT STDMETHODCALLTYPE createEntityReference( 
         /* [in] */ BSTR name,
-        /* [retval][out] */ IDOMEntityReference **result);
+        /* [retval][out] */ IDOMEntityReference **result) { return DOMDocument::createEntityReference(name, result); }
     
     virtual HRESULT STDMETHODCALLTYPE getElementsByTagName( 
         /* [in] */ BSTR tagName,
-        /* [retval][out] */ IDOMNodeList **result);
+        /* [retval][out] */ IDOMNodeList **result) { return DOMDocument::getElementsByTagName(tagName, result); }
     
     virtual HRESULT STDMETHODCALLTYPE importNode( 
         /* [in] */ IDOMNode *importedNode,
         /* [in] */ BOOL deep,
-        /* [retval][out] */ IDOMNode **result);
+        /* [retval][out] */ IDOMNode **result) { return DOMDocument::importNode(importedNode, deep, result); }
     
     virtual HRESULT STDMETHODCALLTYPE createElementNS( 
         /* [in] */ BSTR namespaceURI,
         /* [in] */ BSTR qualifiedName,
-        /* [retval][out] */ IDOMElement **result);
+        /* [retval][out] */ IDOMElement **result) { return DOMDocument::createElementNS(namespaceURI, qualifiedName, result); }
     
     virtual HRESULT STDMETHODCALLTYPE createAttributeNS( 
         /* [in] */ BSTR namespaceURI,
         /* [in] */ BSTR qualifiedName,
-        /* [retval][out] */ IDOMAttr **result);
+        /* [retval][out] */ IDOMAttr **result) { return DOMDocument::createAttributeNS(namespaceURI, qualifiedName, result); }
     
     virtual HRESULT STDMETHODCALLTYPE getElementsByTagNameNS( 
         /* [in] */ BSTR namespaceURI,
-        /* [in] */ BSTR lcoalName,
-        /* [retval][out] */ IDOMNodeList **result);
+        /* [in] */ BSTR localName,
+        /* [retval][out] */ IDOMNodeList **result) { return DOMDocument::getElementsByTagNameNS(namespaceURI, localName, result); }
     
     virtual HRESULT STDMETHODCALLTYPE getElementById( 
         /* [in] */ BSTR elementId,
-        /* [retval][out] */ IDOMElement **result);
+        /* [retval][out] */ IDOMElement **result) { return DOMDocument::getElementById(elementId, result); }
 
     // IDOMHTMLDocument
     virtual HRESULT STDMETHODCALLTYPE title( 
@@ -556,13 +555,6 @@ public:
     virtual HRESULT STDMETHODCALLTYPE setTextContent( 
         /* [in] */ BSTR text) { return DOMElement::setTextContent(text); }
     
-    virtual HRESULT STDMETHODCALLTYPE boundingBox( 
-        /* [retval][out] */ LPRECT rect) { return DOMElement::boundingBox(rect); }
-    
-    virtual HRESULT STDMETHODCALLTYPE lineBoxRects( 
-        /* [size_is][in] */ RECT* rects,
-        /* [in] */ int cRects) { return DOMElement::lineBoxRects(rects, cRects); }
-
     // IDOMElement
     virtual HRESULT STDMETHODCALLTYPE tagName( 
         /* [retval][out] */ BSTR *result) { return DOMElement::tagName(result); }
@@ -630,6 +622,10 @@ public:
         /* [in] */ BSTR namespaceURI,
         /* [in] */ BSTR localName,
         /* [retval][out] */ BOOL *result) { return DOMElement::hasAttributeNS(namespaceURI, localName, result); }
+
+    virtual HRESULT STDMETHODCALLTYPE focus( void) { return DOMElement::focus(); }
+    
+    virtual HRESULT STDMETHODCALLTYPE blur( void) { return DOMElement::blur(); }
 
     // IDOMHTMLElement
     virtual HRESULT STDMETHODCALLTYPE idName( 
@@ -805,13 +801,6 @@ public:
     virtual HRESULT STDMETHODCALLTYPE setTextContent( 
         /* [in] */ BSTR text) { return DOMHTMLElement::setTextContent(text); }
     
-    virtual HRESULT STDMETHODCALLTYPE boundingBox( 
-        /* [retval][out] */ LPRECT rect) { return DOMHTMLElement::boundingBox(rect); }
-    
-    virtual HRESULT STDMETHODCALLTYPE lineBoxRects( 
-        /* [size_is][in] */ RECT* rects,
-        /* [in] */ int cRects) { return DOMHTMLElement::lineBoxRects(rects, cRects); }
-
     // IDOMElement
     virtual HRESULT STDMETHODCALLTYPE tagName( 
         /* [retval][out] */ BSTR *result) { return DOMHTMLElement::tagName(result); }
@@ -879,6 +868,10 @@ public:
         /* [in] */ BSTR namespaceURI,
         /* [in] */ BSTR localName,
         /* [retval][out] */ BOOL *result) { return DOMHTMLElement::hasAttributeNS(namespaceURI, localName, result); }
+
+    virtual HRESULT STDMETHODCALLTYPE focus( void) { return DOMHTMLElement::focus(); }
+    
+    virtual HRESULT STDMETHODCALLTYPE blur( void) { return DOMHTMLElement::blur(); }
 
     // IDOMHTMLElement
     virtual HRESULT STDMETHODCALLTYPE idName( 
@@ -959,7 +952,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE reset( void);
 };
 
-class DOMHTMLSelectElement : public DOMHTMLElement, public IDOMHTMLSelectElement
+class DOMHTMLSelectElement : public DOMHTMLElement, public IDOMHTMLSelectElement, public IFormsAutoFillTransitionSelect
 {
 protected:
     DOMHTMLSelectElement();
@@ -1101,13 +1094,6 @@ public:
     virtual HRESULT STDMETHODCALLTYPE setTextContent( 
         /* [in] */ BSTR text) { return DOMHTMLElement::setTextContent(text); }
     
-    virtual HRESULT STDMETHODCALLTYPE boundingBox( 
-        /* [retval][out] */ LPRECT rect) { return DOMHTMLElement::boundingBox(rect); }
-    
-    virtual HRESULT STDMETHODCALLTYPE lineBoxRects( 
-        /* [size_is][in] */ RECT* rects,
-        /* [in] */ int cRects) { return DOMHTMLElement::lineBoxRects(rects, cRects); }
-
     // IDOMElement
     virtual HRESULT STDMETHODCALLTYPE tagName( 
         /* [retval][out] */ BSTR *result) { return DOMHTMLElement::tagName(result); }
@@ -1175,6 +1161,10 @@ public:
         /* [in] */ BSTR namespaceURI,
         /* [in] */ BSTR localName,
         /* [retval][out] */ BOOL *result) { return DOMHTMLElement::hasAttributeNS(namespaceURI, localName, result); }
+
+    virtual HRESULT STDMETHODCALLTYPE focus( void) { return DOMHTMLElement::focus(); }
+    
+    virtual HRESULT STDMETHODCALLTYPE blur( void) { return DOMHTMLElement::blur(); }
 
     // IDOMHTMLElement
     virtual HRESULT STDMETHODCALLTYPE idName( 
@@ -1269,9 +1259,9 @@ public:
     virtual HRESULT STDMETHODCALLTYPE remove( 
         /* [in] */ int index);
     
-    virtual HRESULT STDMETHODCALLTYPE blur( void);
-    
-    virtual HRESULT STDMETHODCALLTYPE focus( void);
+    // IFormsAutoFillTransitionSelect
+    virtual HRESULT STDMETHODCALLTYPE activateItemAtIndex( 
+        /* [in] */ int index);
 };
 
 class DOMHTMLOptionElement : public DOMHTMLElement, public IDOMHTMLOptionElement
@@ -1416,13 +1406,6 @@ public:
     virtual HRESULT STDMETHODCALLTYPE setTextContent( 
         /* [in] */ BSTR text) { return DOMHTMLElement::setTextContent(text); }
     
-    virtual HRESULT STDMETHODCALLTYPE boundingBox( 
-        /* [retval][out] */ LPRECT rect) { return DOMHTMLElement::boundingBox(rect); }
-    
-    virtual HRESULT STDMETHODCALLTYPE lineBoxRects( 
-        /* [size_is][in] */ RECT* rects,
-        /* [in] */ int cRects) { return DOMHTMLElement::lineBoxRects(rects, cRects); }
-
     // IDOMElement
     virtual HRESULT STDMETHODCALLTYPE tagName( 
         /* [retval][out] */ BSTR *result) { return DOMHTMLElement::tagName(result); }
@@ -1490,6 +1473,10 @@ public:
         /* [in] */ BSTR namespaceURI,
         /* [in] */ BSTR localName,
         /* [retval][out] */ BOOL *result) { return DOMHTMLElement::hasAttributeNS(namespaceURI, localName, result); }
+
+    virtual HRESULT STDMETHODCALLTYPE focus( void) { return DOMHTMLElement::focus(); }
+    
+    virtual HRESULT STDMETHODCALLTYPE blur( void) { return DOMHTMLElement::blur(); }
 
     // IDOMHTMLElement
     virtual HRESULT STDMETHODCALLTYPE idName( 
@@ -1563,7 +1550,7 @@ public:
         /* [in] */ BSTR value);
 };
 
-class DOMHTMLInputElement : public DOMHTMLElement, public IDOMHTMLInputElement
+class DOMHTMLInputElement : public DOMHTMLElement, public IDOMHTMLInputElement, public IFormsAutoFillTransition
 {
 protected:
     DOMHTMLInputElement();
@@ -1705,13 +1692,6 @@ public:
     virtual HRESULT STDMETHODCALLTYPE setTextContent( 
         /* [in] */ BSTR text) { return DOMHTMLElement::setTextContent(text); }
     
-    virtual HRESULT STDMETHODCALLTYPE boundingBox( 
-        /* [retval][out] */ LPRECT rect) { return DOMHTMLElement::boundingBox(rect); }
-    
-    virtual HRESULT STDMETHODCALLTYPE lineBoxRects( 
-        /* [size_is][in] */ RECT* rects,
-        /* [in] */ int cRects) { return DOMHTMLElement::lineBoxRects(rects, cRects); }
-
     // IDOMElement
     virtual HRESULT STDMETHODCALLTYPE tagName( 
         /* [retval][out] */ BSTR *result) { return DOMHTMLElement::tagName(result); }
@@ -1779,6 +1759,10 @@ public:
         /* [in] */ BSTR namespaceURI,
         /* [in] */ BSTR localName,
         /* [retval][out] */ BOOL *result) { return DOMHTMLElement::hasAttributeNS(namespaceURI, localName, result); }
+
+    virtual HRESULT STDMETHODCALLTYPE focus( void) { return DOMHTMLElement::focus(); }
+    
+    virtual HRESULT STDMETHODCALLTYPE blur( void) { return DOMHTMLElement::blur(); }
 
     // IDOMHTMLElement
     virtual HRESULT STDMETHODCALLTYPE idName( 
@@ -1916,14 +1900,42 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE setValue( 
         /* [in] */ BSTR value);
-    
-    virtual HRESULT STDMETHODCALLTYPE blur( void);
-    
-    virtual HRESULT STDMETHODCALLTYPE focus( void);
-    
+        
     virtual HRESULT STDMETHODCALLTYPE select( void);
     
     virtual HRESULT STDMETHODCALLTYPE click( void);
+
+    virtual HRESULT STDMETHODCALLTYPE setSelectionStart( 
+        /* [in] */ long start);
+    
+    virtual HRESULT STDMETHODCALLTYPE selectionStart( 
+        /* [retval][out] */ long *start);
+    
+    virtual HRESULT STDMETHODCALLTYPE setSelectionEnd( 
+        /* [in] */ long end);
+    
+    virtual HRESULT STDMETHODCALLTYPE selectionEnd( 
+        /* [retval][out] */ long *end);
+
+    // IFormsAutoFillTransition
+    virtual HRESULT STDMETHODCALLTYPE isTextField(
+        /* [retval][out] */ BOOL *result);
+    
+    virtual HRESULT STDMETHODCALLTYPE rectOnScreen( 
+        /* [retval][out] */ LPRECT rect);
+    
+    virtual HRESULT STDMETHODCALLTYPE replaceCharactersInRange( 
+        /* [in] */ int startTarget,
+        /* [in] */ int endTarget,
+        /* [in] */ BSTR replacementString,
+        /* [in] */ int index);
+    
+    virtual HRESULT STDMETHODCALLTYPE selectedRange( 
+        /* [out] */ int *start,
+        /* [out] */ int *end);
+    
+    virtual HRESULT STDMETHODCALLTYPE setAutofilled( 
+        /* [in] */ BOOL filled);
 };
 
 class DOMHTMLTextAreaElement : public DOMHTMLElement, public IDOMHTMLTextAreaElement
@@ -2068,13 +2080,6 @@ public:
     virtual HRESULT STDMETHODCALLTYPE setTextContent( 
         /* [in] */ BSTR text) { return DOMHTMLElement::setTextContent(text); }
     
-    virtual HRESULT STDMETHODCALLTYPE boundingBox( 
-        /* [retval][out] */ LPRECT rect) { return DOMHTMLElement::boundingBox(rect); }
-    
-    virtual HRESULT STDMETHODCALLTYPE lineBoxRects( 
-        /* [size_is][in] */ RECT* rects,
-        /* [in] */ int cRects) { return DOMHTMLElement::lineBoxRects(rects, cRects); }
-
     // IDOMElement
     virtual HRESULT STDMETHODCALLTYPE tagName( 
         /* [retval][out] */ BSTR *result) { return DOMHTMLElement::tagName(result); }
@@ -2142,6 +2147,10 @@ public:
         /* [in] */ BSTR namespaceURI,
         /* [in] */ BSTR localName,
         /* [retval][out] */ BOOL *result) { return DOMHTMLElement::hasAttributeNS(namespaceURI, localName, result); }
+
+    virtual HRESULT STDMETHODCALLTYPE focus( void) { return DOMHTMLElement::focus(); }
+    
+    virtual HRESULT STDMETHODCALLTYPE blur( void) { return DOMHTMLElement::blur(); }
 
     // IDOMHTMLElement
     virtual HRESULT STDMETHODCALLTYPE idName( 
@@ -2234,11 +2243,7 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE setValue( 
         /* [in] */ BSTR value);
-    
-    virtual HRESULT STDMETHODCALLTYPE blur( void);
-    
-    virtual HRESULT STDMETHODCALLTYPE focus( void);
-    
+        
     virtual HRESULT STDMETHODCALLTYPE select( void);
 };
 

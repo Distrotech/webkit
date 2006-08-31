@@ -231,6 +231,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\DOMCSSClasses.h"
+				>
+			</File>
+			<File
 				RelativePath="..\DOMHTMLClasses.h"
 				>
 			</File>
@@ -320,6 +324,10 @@
 			</File>
 			<File
 				RelativePath="..\DOMCoreClasses.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\DOMCSSClasses.cpp"
 				>
 			</File>
 			<File

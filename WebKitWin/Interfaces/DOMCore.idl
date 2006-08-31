@@ -52,6 +52,8 @@ import "oaidl.idl";
 import "ocidl.idl";
 import "IWebScriptObject.idl";
 
+cpp_quote("interface IDOMCSSStyleDeclaration;")
+
 interface IWebScriptObject;
 interface IDOMNodeList;
 interface IDOMNamedNodeMap;
@@ -65,7 +67,7 @@ interface IDOMProcessingInstruction;
 interface IDOMAttr;
 interface IDOMEntityReference;
 interface IDOMDocument;
-
+interface IDOMCSSStyleDeclaration;
 /*
     @interface DOMObject : WebScriptObject <NSCopying>
 */
@@ -261,15 +263,6 @@ interface IDOMNode : IDOMObject
         - (void)setTextContent:(NSString *)text;
     */
     HRESULT setTextContent([in] BSTR text);
-
-    /*
-        - (NSRect)boundingBox
-    */
-    HRESULT boundingBox([out, retval] LPRECT rect);
-    /*
-        - (NSArray *)lineBoxRects
-    */
-    HRESULT lineBoxRects([in, size_is(cRects)] RECT* rects, [in] int cRects);
 }
 
 /*
@@ -435,7 +428,7 @@ interface IDOMDocument : IDOMNode
     /*
         - (DOMNodeList *)getElementsByTagNameNS:(NSString *)namespaceURI :(NSString *)localName;
     */
-    HRESULT getElementsByTagNameNS([in] BSTR namespaceURI, [in] BSTR lcoalName, [out, retval] IDOMNodeList** result);
+    HRESULT getElementsByTagNameNS([in] BSTR namespaceURI, [in] BSTR localName, [out, retval] IDOMNodeList** result);
 
     /*
         - (DOMElement *)getElementById:(NSString *)elementId;
@@ -622,18 +615,120 @@ interface IDOMElement : IDOMNode
         - (BOOL)hasAttributeNS:(NSString *)namespaceURI :(NSString *)localName;
     */
     HRESULT hasAttributeNS([in] BSTR namespaceURI, [in] BSTR localName, [out, retval] BOOL* result);
+
+    /*
+        - (void)focus;
+    */
+    HRESULT focus();
+
+    /*
+        - (void)blur;
+    */
+    HRESULT blur();
 }
 
+/*
+    @interface DOMElement (DOMElementCSSInlineStyle)
+*/
 [
     local,
     object,
-    uuid(7FF28EC8-6DA1-498d-9A43-7E67C2D3128F),
+    uuid(585127E2-D698-44c4-83EC-4D1E6E07E90D),
     pointer_default(unique)
 ]
-interface IDOMElementPrivate : IUnknown
+interface IDOMElementCSSInlineStyle : IUnknown
 {
-    HRESULT coreElement(void** element);
-    BOOL isEqual([in] IDOMElement* other);
+    /*
+        - (DOMCSSStyleDeclaration *)style;
+    */
+    HRESULT style([out, retval] IDOMCSSStyleDeclaration** result);
+}
+
+/*
+    @interface DOMElement (DOMElementExtensions)
+*/
+[
+    local,
+    object,
+    uuid(98E481F5-4405-4c2a-BF77-1CE95FE5F992),
+    pointer_default(unique)
+]
+interface IDOMElementExtensions : IUnknown
+{
+    /*
+        - (int)offsetLeft;
+    */
+    HRESULT offsetLeft([out, retval] int* result);
+
+    /*
+        - (int)offsetTop;
+    */
+    HRESULT offsetTop([out, retval] int* result);
+
+    /*
+        - (int)offsetWidth;
+    */
+    HRESULT offsetWidth([out, retval] int* result);
+
+    /*
+        - (int)offsetHeight;
+    */
+    HRESULT offsetHeight([out, retval] int* result);
+
+    /*
+        - (DOMElement *)offsetParent;
+    */
+    HRESULT offsetParent([out, retval] IDOMElement** result);
+
+    /*
+        - (int)clientWidth;
+    */
+    HRESULT clientWidth([out, retval] int* result);
+
+    /*
+        - (int)clientHeight;
+    */
+    HRESULT clientHeight([out, retval] int* result);
+
+    /*
+        - (int)scrollLeft;
+    */
+    HRESULT scrollLeft([out, retval] int* result);
+
+    /*
+        - (void)setScrollLeft:(int)newScrollLeft;
+    */
+    HRESULT setScrollLeft([in] int newScrollLeft);
+
+    /*
+        - (int)scrollTop;
+    */
+    HRESULT scrollTop([out, retval] int* result);
+
+    /*
+        - (void)setScrollTop:(int)newScrollTop;
+    */
+    HRESULT setScrollTop([in] int newScrollTop);
+
+    /*
+        - (int)scrollWidth;
+    */
+    HRESULT scrollWidth([out, retval] int* result);
+
+    /*
+        - (int)scrollHeight;
+    */
+    HRESULT scrollHeight([out, retval] int* result);
+
+    /*
+        - (void)scrollIntoView:(BOOL)alignWithTop;
+    */
+    HRESULT scrollIntoView([in] BOOL alignWithTop);
+
+    /*
+        - (void)scrollIntoViewIfNeeded:(BOOL)centerIfNeeded;
+    */
+    HRESULT scrollIntoViewIfNeeded([in] BOOL centerIfNeeded);
 }
 
 /*

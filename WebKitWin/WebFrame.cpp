@@ -30,6 +30,7 @@
 #include "IWebHistory.h"
 #include "IWebURLResponse.h"
 #include "IWebFrameLoadDelegatePrivate.h"
+#include "IWebFormDelegate.h"
 #include "WebMutableURLRequest.h"
 #include "WebFrame.h"
 #include "WebHistory.h"
@@ -49,6 +50,7 @@
 #include "HTMLInputElement.h"
 #include "HTMLNames.h"
 #include "Page.h"
+#include "PlatformKeyboardEvent.h"
 #include "RenderFrame.h"
 #include "cairo.h"
 #include "cairo-win32.h"
@@ -59,6 +61,197 @@
 
 using namespace WebCore;
 using namespace HTMLNames;
+
+//-----------------------------------------------------------------------------
+
+class FormValuesPropertyBag : public IPropertyBag, public IPropertyBag2
+{
+public:
+    FormValuesPropertyBag(HashMap<String, String>* formValues) : m_formValues(formValues) {}
+
+    // IUnknown
+    virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject);
+    virtual ULONG STDMETHODCALLTYPE AddRef(void);
+    virtual ULONG STDMETHODCALLTYPE Release(void);
+
+    // IPropertyBag
+    virtual /* [local] */ HRESULT STDMETHODCALLTYPE Read( 
+        /* [in] */ LPCOLESTR pszPropName,
+        /* [out][in] */ VARIANT* pVar,
+        /* [in] */ IErrorLog* pErrorLog);
+
+    virtual HRESULT STDMETHODCALLTYPE Write( 
+        /* [in] */ LPCOLESTR pszPropName,
+        /* [in] */ VARIANT* pVar);
+
+    // IPropertyBag2
+    virtual HRESULT STDMETHODCALLTYPE Read( 
+        /* [in] */ ULONG cProperties,
+        /* [in] */ PROPBAG2 *pPropBag,
+        /* [in] */ IErrorLog *pErrLog,
+        /* [out] */ VARIANT *pvarValue,
+        /* [out] */ HRESULT *phrError);
+    
+    virtual HRESULT STDMETHODCALLTYPE Write( 
+        /* [in] */ ULONG cProperties,
+        /* [in] */ PROPBAG2 *pPropBag,
+        /* [in] */ VARIANT *pvarValue);
+    
+    virtual HRESULT STDMETHODCALLTYPE CountProperties( 
+        /* [out] */ ULONG *pcProperties);
+    
+    virtual HRESULT STDMETHODCALLTYPE GetPropertyInfo( 
+        /* [in] */ ULONG iProperty,
+        /* [in] */ ULONG cProperties,
+        /* [out] */ PROPBAG2 *pPropBag,
+        /* [out] */ ULONG *pcProperties);
+    
+    virtual HRESULT STDMETHODCALLTYPE LoadObject( 
+        /* [in] */ LPCOLESTR pstrName,
+        /* [in] */ DWORD dwHint,
+        /* [in] */ IUnknown *pUnkObject,
+        /* [in] */ IErrorLog *pErrLog);
+    
+protected:
+    HashMap<String, String>* m_formValues;
+};
+
+HRESULT STDMETHODCALLTYPE FormValuesPropertyBag::QueryInterface(REFIID riid, void** ppvObject)
+{
+    *ppvObject = 0;
+    if (IsEqualGUID(riid, IID_IUnknown))
+        *ppvObject = this;
+    else if (IsEqualGUID(riid, IID_IPropertyBag))
+        *ppvObject = static_cast<IPropertyBag*>(this);
+    else if (IsEqualGUID(riid, IID_IPropertyBag2))
+        *ppvObject = static_cast<IPropertyBag2*>(this);
+    else
+        return E_NOINTERFACE;
+
+    AddRef();
+    return S_OK;
+}
+
+ULONG STDMETHODCALLTYPE FormValuesPropertyBag::AddRef(void)
+{
+    return 1;
+}
+
+ULONG STDMETHODCALLTYPE FormValuesPropertyBag::Release(void)
+{
+    return 0;
+}
+
+HRESULT STDMETHODCALLTYPE FormValuesPropertyBag::Read(LPCOLESTR pszPropName, VARIANT* pVar, IErrorLog* /*pErrorLog*/)
+{
+    HRESULT hr = S_OK;
+
+    if (!pszPropName || !pVar)
+        return E_POINTER;
+
+    String key(pszPropName);
+    if (!m_formValues->contains(key))
+        return E_INVALIDARG;
+    
+    String value = m_formValues->get(key);
+
+    VARTYPE requestedType = V_VT(pVar);
+    VariantClear(pVar);
+    V_VT(pVar) = VT_BSTR;
+    V_BSTR(pVar) = SysAllocStringLen(value.characters(), value.length());
+    if (value.length() && !V_BSTR(pVar))
+        return E_OUTOFMEMORY;
+
+    if (requestedType != VT_BSTR && requestedType != VT_EMPTY)
+        hr = VariantChangeType(pVar, pVar, VARIANT_NOUSEROVERRIDE | VARIANT_ALPHABOOL, requestedType);
+    
+    return hr;
+}
+
+HRESULT STDMETHODCALLTYPE FormValuesPropertyBag::Write(LPCOLESTR pszPropName, VARIANT* pVar)
+{
+    if (!pszPropName || !pVar)
+        return E_POINTER;
+    VariantClear(pVar);
+    return E_FAIL;
+}
+
+HRESULT STDMETHODCALLTYPE FormValuesPropertyBag::Read( 
+    /* [in] */ ULONG cProperties,
+    /* [in] */ PROPBAG2* pPropBag,
+    /* [in] */ IErrorLog* pErrLog,
+    /* [out] */ VARIANT* pvarValue,
+    /* [out] */ HRESULT* phrError)
+{
+    if (cProperties > (size_t)m_formValues->size())
+        return E_INVALIDARG;
+    if (!pPropBag || !pvarValue || !phrError)
+        return E_POINTER;
+
+    for (ULONG i=0; i<cProperties; i++) {
+        VariantInit(&pvarValue[i]);
+        phrError[i] = Read(pPropBag->pstrName, &pvarValue[i], pErrLog);
+    }
+
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE FormValuesPropertyBag::Write( 
+    /* [in] */ ULONG /*cProperties*/,
+    /* [in] */ PROPBAG2* pPropBag,
+    /* [in] */ VARIANT* pvarValue)
+{
+    if (!pPropBag || !pvarValue)
+        return E_POINTER;
+    return E_FAIL;
+}
+
+HRESULT STDMETHODCALLTYPE FormValuesPropertyBag::CountProperties( 
+    /* [out] */ ULONG* pcProperties)
+{
+    *pcProperties = m_formValues->size();
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE FormValuesPropertyBag::GetPropertyInfo( 
+    /* [in] */ ULONG iProperty,
+    /* [in] */ ULONG cProperties,
+    /* [out] */ PROPBAG2* pPropBag,
+    /* [out] */ ULONG* pcProperties)
+{
+    if (iProperty > (size_t)m_formValues->size() || iProperty+cProperties > (size_t)m_formValues->size())
+        return E_INVALIDARG;
+    if (!pPropBag || !pcProperties)
+        return E_POINTER;
+
+    *pcProperties = 0;
+    ULONG i = 0;
+    ULONG endProperty = iProperty + cProperties;
+    for (HashMap<String, String>::iterator it = m_formValues->begin(); i<endProperty; i++) {
+        if (i >= iProperty) {
+            pPropBag[i].dwType = PROPBAG2_TYPE_DATA;
+            pPropBag[i].vt = VT_BSTR;
+            pPropBag[i].cfType = CF_TEXT;
+            pPropBag[i].dwHint = 0;
+            pPropBag[i].pstrName = const_cast<LPOLESTR>(it->first.charactersWithNullTermination());
+            (*pcProperties)++;
+        }
+        ++it;
+    }
+
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE FormValuesPropertyBag::LoadObject( 
+    /* [in] */ LPCOLESTR pstrName,
+    /* [in] */ DWORD /*dwHint*/,
+    /* [in] */ IUnknown* pUnkObject,
+    /* [in] */ IErrorLog* /*pErrLog*/)
+{
+    if (!pstrName || !pUnkObject)
+        return E_POINTER;
+    return E_FAIL;
+}
 
 //-----------------------------------------------------------------------------
 
@@ -117,6 +310,7 @@ WebFrame::WebFrame()
 , m_dataSource(0)
 , m_provisionalDataSource(0)
 , m_quickRedirectComing(false)
+, m_continueFormSubmit(false)
 {
     gClassCount++;
 }
@@ -144,6 +338,8 @@ HRESULT STDMETHODCALLTYPE WebFrame::QueryInterface(REFIID riid, void** ppvObject
         *ppvObject = static_cast<IWebFrame*>(this);
     else if (IsEqualGUID(riid, IID_IWebFrame))
         *ppvObject = static_cast<IWebFrame*>(this);
+    else if (IsEqualGUID(riid, IID_IWebFormSubmissionListener))
+        *ppvObject = static_cast<IWebFormSubmissionListener*>(this);
     else
         return E_NOINTERFACE;
 
@@ -232,10 +428,10 @@ HRESULT STDMETHODCALLTYPE WebFrame::frameView(
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::DOMDocument( 
-    /* [retval][out] */ IDOMDocument** /*document*/)
+    /* [retval][out] */ IDOMDocument** document)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    *document = DOMDocument::createInstance(d->frame->document());
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::frameElement( 
@@ -360,6 +556,14 @@ HRESULT STDMETHODCALLTYPE WebFrame::childFrames(
 {
     DebugBreak();
     return E_NOTIMPL;
+}
+
+// IWebFormSubmissionListener ---------------------------------------------
+
+HRESULT STDMETHODCALLTYPE WebFrame::continueSubmit(void)
+{
+    m_continueFormSubmit = true;
+    return S_OK;
 }
 
 // WebFrame ---------------------------------------------------------------
@@ -602,6 +806,9 @@ void WebFrame::setInViewSourceMode(BOOL flag)
 
 HRESULT WebFrame::elementWithName(BSTR name, IDOMElement* form, IDOMElement** element)
 {
+    if (!form)
+        return E_INVALIDARG;
+
     HTMLFormElement *formElement = formElementFromDOMElement(form);
     if (formElement) {
         Vector<HTMLGenericFormElement*>& elements = formElement->formElements;
@@ -620,6 +827,9 @@ HRESULT WebFrame::elementWithName(BSTR name, IDOMElement* form, IDOMElement** el
 
 HRESULT WebFrame::formForElement(IDOMElement* element, IDOMElement** form)
 {
+    if (!element)
+        return E_INVALIDARG;
+
     HTMLInputElement *inputElement = inputElementFromDOMElement(element);
     if (!inputElement)
         return E_FAIL;
@@ -635,6 +845,9 @@ HRESULT WebFrame::formForElement(IDOMElement* element, IDOMElement** form)
 HRESULT WebFrame::elementDoesAutoComplete(IDOMElement *element, bool *result)
 {
     *result = false;
+    if (!element)
+        return E_INVALIDARG;
+
     HTMLInputElement *inputElement = inputElementFromDOMElement(element);
     if (!inputElement)
         *result = false;
@@ -642,6 +855,51 @@ HRESULT WebFrame::elementDoesAutoComplete(IDOMElement *element, bool *result)
         *result = (inputElement->inputType() == HTMLInputElement::TEXT && inputElement->autoComplete());
 
     return S_OK;
+}
+
+HRESULT WebFrame::controlsInForm(IDOMElement* form, IDOMElement** controls, int* cControls)
+{
+    if (!form)
+        return E_INVALIDARG;
+
+    HTMLFormElement *formElement = formElementFromDOMElement(form);
+    if (!formElement)
+        return E_FAIL;
+
+    int inCount = *cControls;
+    int count = (int) formElement->formElements.size();
+    *cControls = count;
+    if (!controls)
+        return S_OK;
+    if (inCount < count)
+        return E_FAIL;
+
+    Vector<HTMLGenericFormElement*>& elements = formElement->formElements;
+    for (int i = 0; i < count; i++) {
+        if (elements.at(i)->isEnumeratable()) // Skip option elements, other duds
+            controls[i] = DOMElement::createInstance(elements.at(i));
+    }
+    return S_OK;
+}
+
+HRESULT WebFrame::elementIsPassword(IDOMElement *element, bool *result)
+{
+    HTMLInputElement *inputElement = inputElementFromDOMElement(element);
+    *result = inputElement != 0
+        && inputElement->inputType() == HTMLInputElement::PASSWORD;
+    return S_OK;
+}
+
+HRESULT WebFrame::searchForLabelsBeforeElement(const BSTR* /*labels*/, int /*cLabels*/, IDOMElement* /*beforeElement*/, BSTR* /*result*/)
+{
+    // FIXME
+    return E_NOTIMPL;
+}
+
+HRESULT WebFrame::matchLabelsAgainstElement(const BSTR* /*labels*/, int /*cLabels*/, IDOMElement* /*againstElement*/, BSTR* /*result*/)
+{
+    // FIXME
+    return E_NOTIMPL;
 }
 
 // ResourceLoaderClient
@@ -780,7 +1038,7 @@ exit:
     request->Release();
 }
 
-void WebFrame::submitForm(const String& method, const KURL& url, const FormData* submitFormData)
+void WebFrame::submitForm(const String& method, const KURL& url, const FormData* submitFormData, Element* form, HashMap<String, String>& formValues)
 {
     // FIXME: This is a dumb implementation, doesn't handle subframes, etc.
 
@@ -797,7 +1055,20 @@ void WebFrame::submitForm(const String& method, const KURL& url, const FormData*
     if (SUCCEEDED(request->initWithURL(urlBStr, WebURLRequestUseProtocolCachePolicy, 0))) {
         request->setHTTPMethod(methodBStr);
         request->setFormData(submitFormData);
-        loadRequest(request);
+
+        m_continueFormSubmit = true;
+        IWebFormDelegate* formDelegate;
+        if (SUCCEEDED(d->webView->formDelegate(&formDelegate)) && formDelegate) {
+            IDOMElement* ele = DOMElement::createInstance(form);
+            FormValuesPropertyBag formValuesPropBag(&formValues);
+            m_continueFormSubmit = false;
+            formDelegate->willSubmitForm(this, this, ele, &formValuesPropBag, this);
+            formDelegate->Release();
+            ele->Release();
+        }
+
+        if (m_continueFormSubmit)
+            loadRequest(request);
     }
     SysFreeString(urlBStr);
     SysFreeString(methodBStr);
@@ -878,7 +1149,7 @@ void WebFrame::textDidChangeInTextField(Element* e)
     }
 }
 
-bool WebFrame::doTextFieldCommandFromEvent(Element* e, const PlatformKeyboardEvent*)
+bool WebFrame::doTextFieldCommandFromEvent(Element* e, const PlatformKeyboardEvent* pke)
 {
     BOOL result = FALSE;
     IWebFormDelegate* formDelegate;
@@ -887,7 +1158,7 @@ bool WebFrame::doTextFieldCommandFromEvent(Element* e, const PlatformKeyboardEve
         if (domElement) {
             IDOMHTMLInputElement* domInputElement;
             if (SUCCEEDED(domElement->QueryInterface(IID_IDOMHTMLInputElement, (void**)&domInputElement))) {
-                formDelegate->doCommandBySelector(domInputElement, 0 /*FIXME*/, this, &result);
+                formDelegate->doCommandBySelector(domInputElement, pke->WindowsKeyCode(), this, &result);
                 domInputElement->Release();
             }
             domElement->Release();
@@ -901,7 +1172,7 @@ void WebFrame::textWillBeDeletedInTextField(Element* e)
 {
     // We're using the deleteBackward selector for all deletion operations since the autofill code treats all deletions the same way.
     IWebFormDelegate* formDelegate;
-    if (SUCCEEDED(d->webView->formDelegate(&formDelegate))) {
+    if (SUCCEEDED(d->webView->formDelegate(&formDelegate)) && formDelegate) {
         IDOMElement* domElement = DOMElement::createInstance(e);
         if (domElement) {
             IDOMHTMLInputElement* domInputElement;
@@ -919,7 +1190,7 @@ void WebFrame::textWillBeDeletedInTextField(Element* e)
 void WebFrame::textDidChangeInTextArea(Element* e)
 {
     IWebFormDelegate* formDelegate;
-    if (SUCCEEDED(d->webView->formDelegate(&formDelegate))) {
+    if (SUCCEEDED(d->webView->formDelegate(&formDelegate)) && formDelegate) {
         IDOMElement* domElement = DOMElement::createInstance(e);
         if (domElement) {
             IDOMHTMLTextAreaElement* domTextAreaElement;

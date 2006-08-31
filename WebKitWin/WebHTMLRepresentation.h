@@ -91,14 +91,16 @@ public:
         /* [out][in] */ int* cControls);
     
     virtual HRESULT STDMETHODCALLTYPE searchForLabels( 
-        /* [size_is][in] */ BSTR* labels,
+        /* [size_is][in] */ BSTR *labels,
         /* [in] */ int cLabels,
-        /* [in] */ IDOMElement* beforeElement);
+        /* [in] */ IDOMElement *beforeElement,
+        /* [retval][out] */ BSTR *result);
     
     virtual HRESULT STDMETHODCALLTYPE matchLabels( 
-        /* [size_is][in] */ BSTR* labels,
+        /* [size_is][in] */ BSTR *labels,
         /* [in] */ int cLabels,
-        /* [in] */ IDOMElement* againstElement);
+        /* [in] */ IDOMElement *againstElement,
+        /* [retval][out] */ BSTR *result);
 
     // IWebDocumentRepresentation
     virtual HRESULT STDMETHODCALLTYPE setDataSource( 

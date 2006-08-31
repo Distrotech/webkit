@@ -34,7 +34,7 @@ class FrameWinClient
 {
 public:
     virtual void openURL(const DeprecatedString&, bool lockHistory) = 0;
-    virtual void submitForm(const String& method, const KURL&, const FormData*) = 0;
+    virtual void submitForm(const String& method, const KURL&, const FormData*, Element* form, HashMap<String, String>& formValues) = 0;
     virtual void setTitle(const String& title) = 0;
     virtual void setStatusText(const String& statusText) = 0;
 

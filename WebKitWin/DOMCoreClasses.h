@@ -27,11 +27,15 @@
 #define DOMCoreClasses_H
 
 #include "DOMCore.h"
+#include "DOMCSS.h"
+#include "DOMExtensions.h"
+#include "DOMPrivate.h"
 #include "WebScriptObject.h"
 
 namespace WebCore
 {
     class Element;
+    class Document;
 }
 
 class DOMObject : public WebScriptObject, public IDOMObject
@@ -212,22 +216,22 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE setTextContent( 
         /* [in] */ BSTR text);
-    
-    virtual HRESULT STDMETHODCALLTYPE boundingBox( 
-        /* [retval][out] */ LPRECT rect);
-    
-    virtual HRESULT STDMETHODCALLTYPE lineBoxRects( 
-        /* [size_is][in] */ RECT* rects,
-        /* [in] */ int cRects);
 };
 
-class DOMDocument : public DOMNode, public IDOMDocument
+class DOMDocument : public DOMNode, public IDOMDocument, public IDOMViewCSS
 {
+protected:
+    DOMDocument(WebCore::Document* d);
+    ~DOMDocument();
+
+public:
+    static IDOMDocument* createInstance(WebCore::Document* d);
+
 public:
     // IUnknown
     virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject);
-    virtual ULONG STDMETHODCALLTYPE AddRef(void) { return DOMDocument::AddRef(); }
-    virtual ULONG STDMETHODCALLTYPE Release(void) { return DOMDocument::Release(); }
+    virtual ULONG STDMETHODCALLTYPE AddRef(void) { return DOMNode::AddRef(); }
+    virtual ULONG STDMETHODCALLTYPE Release(void) { return DOMNode::Release(); }
 
     // IWebScriptObject
     virtual HRESULT STDMETHODCALLTYPE throwException( 
@@ -359,13 +363,6 @@ public:
     virtual HRESULT STDMETHODCALLTYPE setTextContent( 
         /* [in] */ BSTR text) { return DOMNode::setTextContent(text); }
     
-    virtual HRESULT STDMETHODCALLTYPE boundingBox( 
-        /* [retval][out] */ LPRECT rect) { return DOMNode::boundingBox(rect); }
-    
-    virtual HRESULT STDMETHODCALLTYPE lineBoxRects( 
-        /* [size_is][in] */ RECT* rects,
-        /* [in] */ int cRects) { return DOMNode::lineBoxRects(rects, cRects); }
-
     // IDOMDocument
     virtual HRESULT STDMETHODCALLTYPE doctype( 
         /* [retval][out] */ IDOMDocumentType **result);
@@ -429,15 +426,27 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE getElementsByTagNameNS( 
         /* [in] */ BSTR namespaceURI,
-        /* [in] */ BSTR lcoalName,
+        /* [in] */ BSTR localName,
         /* [retval][out] */ IDOMNodeList **result);
     
     virtual HRESULT STDMETHODCALLTYPE getElementById( 
         /* [in] */ BSTR elementId,
         /* [retval][out] */ IDOMElement **result);
+
+    // IDOMViewCSS
+    virtual HRESULT STDMETHODCALLTYPE getComputedStyle( 
+        /* [in] */ IDOMElement *elt,
+        /* [in] */ BSTR pseudoElt,
+        /* [retval][out] */ IDOMCSSStyleDeclaration **result);
+
+    // DOMDocument
+    WebCore::Document* document() { return m_document; }
+
+protected:
+    WebCore::Document* m_document;
 };
 
-class DOMElement : public DOMNode, public IDOMElement, public IDOMElementPrivate
+class DOMElement : public DOMNode, public IDOMElement, public IDOMElementPrivate, public IDOMNodeExtensions, public IDOMElementCSSInlineStyle, public IDOMElementExtensions
 {
 protected:
     DOMElement(WebCore::Element* e);
@@ -581,13 +590,6 @@ public:
     virtual HRESULT STDMETHODCALLTYPE setTextContent( 
         /* [in] */ BSTR text) { return DOMNode::setTextContent(text); }
     
-    virtual HRESULT STDMETHODCALLTYPE boundingBox( 
-        /* [retval][out] */ LPRECT rect);
-    
-    virtual HRESULT STDMETHODCALLTYPE lineBoxRects( 
-        /* [size_is][in] */ RECT* rects,
-        /* [in] */ int cRects) { return DOMNode::lineBoxRects(rects, cRects); }
-
     // IDOMElement
     virtual HRESULT STDMETHODCALLTYPE tagName( 
         /* [retval][out] */ BSTR *result);
@@ -656,12 +658,74 @@ public:
         /* [in] */ BSTR localName,
         /* [retval][out] */ BOOL *result);
 
+    virtual HRESULT STDMETHODCALLTYPE focus( void);
+    
+    virtual HRESULT STDMETHODCALLTYPE blur( void);
+
+    // IDOMNodeExtensions
+    virtual HRESULT STDMETHODCALLTYPE boundingBox( 
+        /* [retval][out] */ LPRECT rect);
+    
+    virtual HRESULT STDMETHODCALLTYPE lineBoxRects( 
+        /* [size_is][in] */ RECT* rects,
+        /* [in] */ int cRects);
+
     // IDOMElementPrivate
     virtual HRESULT STDMETHODCALLTYPE coreElement( 
         void** element);
 
     virtual BOOL STDMETHODCALLTYPE isEqual( 
         /* [in] */ IDOMElement* other);
+
+    // IDOMElementCSSInlineStyle
+    virtual HRESULT STDMETHODCALLTYPE style( 
+        /* [retval][out] */ IDOMCSSStyleDeclaration **result);
+
+    // IDOMElementExtensions
+    virtual HRESULT STDMETHODCALLTYPE offsetLeft( 
+        /* [retval][out] */ int *result);
+    
+    virtual HRESULT STDMETHODCALLTYPE offsetTop( 
+        /* [retval][out] */ int *result);
+    
+    virtual HRESULT STDMETHODCALLTYPE offsetWidth( 
+        /* [retval][out] */ int *result);
+    
+    virtual HRESULT STDMETHODCALLTYPE offsetHeight( 
+        /* [retval][out] */ int *result);
+    
+    virtual HRESULT STDMETHODCALLTYPE offsetParent( 
+        /* [retval][out] */ IDOMElement **result);
+    
+    virtual HRESULT STDMETHODCALLTYPE clientWidth( 
+        /* [retval][out] */ int *result);
+    
+    virtual HRESULT STDMETHODCALLTYPE clientHeight( 
+        /* [retval][out] */ int *result);
+    
+    virtual HRESULT STDMETHODCALLTYPE scrollLeft( 
+        /* [retval][out] */ int *result);
+    
+    virtual HRESULT STDMETHODCALLTYPE setScrollLeft( 
+        /* [in] */ int newScrollLeft);
+    
+    virtual HRESULT STDMETHODCALLTYPE scrollTop( 
+        /* [retval][out] */ int *result);
+    
+    virtual HRESULT STDMETHODCALLTYPE setScrollTop( 
+        /* [in] */ int newScrollTop);
+    
+    virtual HRESULT STDMETHODCALLTYPE scrollWidth( 
+        /* [retval][out] */ int *result);
+    
+    virtual HRESULT STDMETHODCALLTYPE scrollHeight( 
+        /* [retval][out] */ int *result);
+    
+    virtual HRESULT STDMETHODCALLTYPE scrollIntoView( 
+        /* [in] */ BOOL alignWithTop);
+    
+    virtual HRESULT STDMETHODCALLTYPE scrollIntoViewIfNeeded( 
+        /* [in] */ BOOL centerIfNeeded);
 
     // DOMElement
     WebCore::Element* element() { return m_element; }

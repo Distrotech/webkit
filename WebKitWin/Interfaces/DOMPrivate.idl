@@ -50,66 +50,80 @@ cpp_quote(" */")
 
 import "oaidl.idl";
 import "ocidl.idl";
-import "DOMHTML.idl";
-import "IWebFrame.idl";
+import "DOMCore.idl";
 
-/*!
-    @protocol  WebFormSubmissionListener
-    @discussion .
-*/
 [
     local,
     object,
-    uuid(1911D650-035E-4204-8746-ABECF77A4C9B),
+    uuid(7FF28EC8-6DA1-498d-9A43-7E67C2D3128F),
     pointer_default(unique)
 ]
-interface IWebFormSubmissionListener : IUnknown
+interface IDOMElementPrivate : IUnknown
 {
-    HRESULT continueSubmit();
+    HRESULT coreElement(void** element);
+    BOOL isEqual([in] IDOMElement* other);
 }
 
-/*!
-    @class WebFormDelegate
-    @discussion The WebFormDelegate class responds to all WebFormDelegate protocol
-    methods by doing nothing. It's provided for the convenience of clients who only want
-    to implement some of the above methods and ignore others.
-*/
-/*!
-    @protocol  WebFormDelegate
-    @discussion .
+/*
+    All the methods in this category are used by Safari forms autofill and should not be used for any other purpose.
+    They are stopgap measures until we finish transitioning form controls to not use NSView. Each one should become
+    replaceable by public DOM API, and when that happens Safari will switch to implementations using that public API,
+    and these will be deleted.
 
-    Various methods send by controls that edit text to their delegates, which are all
-    analogous to similar methods in AppKit/NSControl.h.
-    These methods are forwarded from widgets used in forms to the WebFormDelegate.
+    @interface DOMHTMLInputElement(FormsAutoFillTransition)
 */
 [
     local,
     object,
-    uuid(4CBEC1BD-ABC3-4bdb-8E5E-4D3BCF9E8C1E),
+    uuid(2DF339BC-B48E-4d35-B93A-299756ED0B4B),
     pointer_default(unique)
 ]
-interface IWebFormDelegate : IUnknown
+interface IFormsAutoFillTransition : IUnknown
 {
-    //- (void)textFieldDidBeginEditing:(DOMHTMLInputElement *)element inFrame:(WebFrame *)frame;
-    HRESULT textFieldDidBeginEditing([in] IDOMHTMLInputElement* element, [in] IWebFrame* frame);
+    /*
+        - (BOOL)_isTextField;
+    */
+    HRESULT isTextField([out, retval] BOOL* result);
 
-    //- (void)textFieldDidEndEditing:(DOMHTMLInputElement *)element inFrame:(WebFrame *)frame;
-    HRESULT textFieldDidEndEditing([in] IDOMHTMLInputElement* element, [in] IWebFrame* frame);
+    /*
+        - (NSRect)_rectOnScreen; // bounding box of the text field, in screen coordinates
+    */
+    HRESULT rectOnScreen([out, retval] LPRECT rect);
 
-    //- (void)textDidChangeInTextField:(DOMHTMLInputElement *)element inFrame:(WebFrame *)frame;
-    HRESULT textDidChangeInTextField([in] IDOMHTMLInputElement* element, [in] IWebFrame* frame);
+    /*
+        - (void)_replaceCharactersInRange:(NSRange)targetRange withString:(NSString *)replacementString selectingFromIndex:(int)index;
+    */
+    HRESULT replaceCharactersInRange([in] int startTarget, [in] int endTarget, [in] BSTR replacementString, [in] int index);
 
-    //- (void)textDidChangeInTextArea:(DOMHTMLTextAreaElement *)element inFrame:(WebFrame *)frame;
-    HRESULT textDidChangeInTextArea([in] IDOMHTMLTextAreaElement* element, [in] IWebFrame* frame);
+    /*
+        - (NSRange)_selectedRange;
+    */
+    HRESULT selectedRange([out] int* start, [out] int* end);
 
-    //- (BOOL)textField:(DOMHTMLInputElement *)element doCommandBySelector:(SEL)commandSelector inFrame:(WebFrame *)frame;
-    HRESULT doCommandBySelector([in] IDOMHTMLInputElement* element, int commandSelector, [in] IWebFrame* frame, [out, retval] BOOL* result);
+    /*
+        - (void)_setAutofilled:(BOOL)filled;
+    */
+    HRESULT setAutofilled([in] BOOL filled);
+}
 
-    //- (BOOL)textField:(DOMHTMLInputElement *)element shouldHandleEvent:(NSEvent *)event inFrame:(WebFrame *)frame;
-    HRESULT shouldHandleEvent([in] IDOMHTMLInputElement* element, [in] void* event, [in] IWebFrame* frame, [out, retval] BOOL* result);
+/*
+    All the methods in this category are used by Safari forms autofill and should not be used for any other purpose.
+    They are stopgap measures until we finish transitioning form controls to not use NSView. Each one should become
+    replaceable by public DOM API, and when that happens Safari will switch to implementations using that public API,
+    and these will be deleted.
 
-    // Sent when a form is just about to be submitted (before the load is started)
-    // listener must be sent continue when the delegate is done.
-    //- (void)frame:(WebFrame *)frame sourceFrame:(WebFrame *)sourceFrame willSubmitForm:(DOMElement *)form withValues:(NSDictionary *)values submissionListener:(id <WebFormSubmissionListener>)listener;
-    HRESULT willSubmitForm([in] IWebFrame* frame, [in] IWebFrame* sourceFrame, [in] IDOMElement* form, [in] IPropertyBag* values, [in] IWebFormSubmissionListener* listener);
+    @interface DOMHTMLSelectElement(FormsAutoFillTransition)
+*/
+[
+    local,
+    object,
+    uuid(6959F712-1563-4661-8D8C-F4C739C55839),
+    pointer_default(unique)
+]
+interface IFormsAutoFillTransitionSelect : IUnknown
+{
+    /*
+        - (void)_activateItemAtIndex:(int)index;
+    */
+    HRESULT activateItemAtIndex([in] int index);
 }

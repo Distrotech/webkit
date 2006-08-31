@@ -1,3 +1,213 @@
+2006-08-30  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Ada Chan.
+
+        Forms Auto-complete checkpoint.
+        Generic forms autocomplete drop-downs are now functional.
+        Address book autocomplete (and credit card autocomplete) is not functional.
+        
+        To do:
+        - username/password pairs autofill
+        - address book autofill
+        - single-click autofill
+        - credit card autofill
+        - keychain equivalent secure store for username/passwords and credit cards
+          (we currently use DPAPI to encrypt the form values plist but will want to
+           protect this more sensitive info using an additional user supplied password)
+
+        DOMCoreClasses.cpp,.h:
+        Fix typo in DOMNode::QueryInterface.
+        Add IDOMViewCSS.
+        Additional DOMDocument implementation.
+        Add IDOMNodeExtensions, IDOMElementCSSInlineStyle, IDOMElementExtensions.
+        
+        DOMCSSClasses.h:
+        Added.
+        
+        DOMHTMLClasses.cpp,.h:
+        Additional implementation.
+        
+        WebFrame.cpp,.h:
+        Added IWebFormSubmissionListener.
+        Additional implementation.
+        
+        DOMPrivate.idl:
+        Added.
+        
+        DOMCore.idl:
+        Add IDOMElementCSSInlineStyle
+        Add IDOMElementExtensions
+        
+        DOMExtensions.idl:
+        Added
+        
+        IWebFormDelegate.idl:
+        Fix typos.
+        
+        DOMCSS.idl:
+        Added IDOMViewCSS.
+        
+        DOMHTML.idl:
+        Add selectionStart, selectionEnd.
+        
+        DOMCSSClasses.cpp:
+        Added.
+        
+        WebKitGUID.vcproj:
+        Added DOMExtensions_i.c, DOMPrivate_i.c.
+        
+        Interfaces.vcproj:
+        Added DOMExtensions.idl, DOMPrivate.idl.
+        
+        WebKit.vcproj:
+        Added DOMCSSClasses.cpp.
+        
+        WebHTMLRepresentation.cpp:
+        Implemented elementIsPassword, controlsInForm.
+        
+        * DOMCSSClasses.cpp: Added.
+        (DOMCSSStyleDeclaration::DOMCSSStyleDeclaration):
+        (DOMCSSStyleDeclaration::~DOMCSSStyleDeclaration):
+        (DOMCSSStyleDeclaration::createInstance):
+        (DOMCSSStyleDeclaration::QueryInterface):
+        (DOMCSSStyleDeclaration::cssText):
+        (DOMCSSStyleDeclaration::setCssText):
+        (DOMCSSStyleDeclaration::getPropertyValue):
+        (DOMCSSStyleDeclaration::getPropertyCSSValue):
+        (DOMCSSStyleDeclaration::removeProperty):
+        (DOMCSSStyleDeclaration::getPropertyPriority):
+        (DOMCSSStyleDeclaration::setProperty):
+        (DOMCSSStyleDeclaration::length):
+        (DOMCSSStyleDeclaration::item):
+        (DOMCSSStyleDeclaration::parentRule):
+        * DOMCSSClasses.h: Added.
+        (DOMCSSStyleDeclaration::AddRef):
+        (DOMCSSStyleDeclaration::Release):
+        (DOMCSSStyleDeclaration::throwException):
+        (DOMCSSStyleDeclaration::callWebScriptMethod):
+        (DOMCSSStyleDeclaration::evaluateWebScript):
+        (DOMCSSStyleDeclaration::removeWebScriptKey):
+        (DOMCSSStyleDeclaration::stringRepresentation):
+        (DOMCSSStyleDeclaration::webScriptValueAtIndex):
+        (DOMCSSStyleDeclaration::setWebScriptValueAtIndex):
+        (DOMCSSStyleDeclaration::setException):
+        * DOMCoreClasses.cpp:
+        (DOMNode::QueryInterface):
+        (DOMDocument::QueryInterface):
+        (DOMDocument::getElementsByTagNameNS):
+        (DOMDocument::getComputedStyle):
+        (DOMDocument::DOMDocument):
+        (DOMDocument::~DOMDocument):
+        (DOMDocument::createInstance):
+        (DOMElement::QueryInterface):
+        (DOMElement::lineBoxRects):
+        (DOMElement::focus):
+        (DOMElement::blur):
+        (DOMElement::style):
+        (DOMElement::offsetLeft):
+        (DOMElement::offsetTop):
+        (DOMElement::offsetWidth):
+        (DOMElement::offsetHeight):
+        (DOMElement::offsetParent):
+        (DOMElement::clientWidth):
+        (DOMElement::clientHeight):
+        (DOMElement::scrollLeft):
+        (DOMElement::setScrollLeft):
+        (DOMElement::scrollTop):
+        (DOMElement::setScrollTop):
+        (DOMElement::scrollWidth):
+        (DOMElement::scrollHeight):
+        (DOMElement::scrollIntoView):
+        (DOMElement::scrollIntoViewIfNeeded):
+        * DOMCoreClasses.h:
+        (DOMDocument::AddRef):
+        (DOMDocument::Release):
+        (DOMDocument::document):
+        * DOMHTMLClasses.cpp:
+        (DOMHTMLSelectElement::QueryInterface):
+        (DOMHTMLSelectElement::activateItemAtIndex):
+        (DOMHTMLInputElement::QueryInterface):
+        (DOMHTMLInputElement::disabled):
+        (DOMHTMLInputElement::setValue):
+        (DOMHTMLInputElement::select):
+        (DOMHTMLInputElement::click):
+        (DOMHTMLInputElement::setSelectionStart):
+        (DOMHTMLInputElement::selectionStart):
+        (DOMHTMLInputElement::setSelectionEnd):
+        (DOMHTMLInputElement::selectionEnd):
+        (DOMHTMLInputElement::isTextField):
+        (DOMHTMLInputElement::rectOnScreen):
+        (DOMHTMLInputElement::replaceCharactersInRange):
+        (DOMHTMLInputElement::selectedRange):
+        (DOMHTMLInputElement::setAutofilled):
+        * DOMHTMLClasses.h:
+        (DOMHTMLDocument::DOMHTMLDocument):
+        (DOMHTMLDocument::doctype):
+        (DOMHTMLDocument::implementation):
+        (DOMHTMLDocument::documentElement):
+        (DOMHTMLDocument::createElement):
+        (DOMHTMLDocument::createDocumentFragment):
+        (DOMHTMLDocument::createTextNode):
+        (DOMHTMLDocument::createComment):
+        (DOMHTMLDocument::createCDATASection):
+        (DOMHTMLDocument::createProcessingInstruction):
+        (DOMHTMLDocument::createAttribute):
+        (DOMHTMLDocument::createEntityReference):
+        (DOMHTMLDocument::getElementsByTagName):
+        (DOMHTMLDocument::importNode):
+        (DOMHTMLDocument::createElementNS):
+        (DOMHTMLDocument::createAttributeNS):
+        (DOMHTMLDocument::getElementsByTagNameNS):
+        (DOMHTMLDocument::getElementById):
+        (DOMHTMLElement::focus):
+        (DOMHTMLElement::blur):
+        (DOMHTMLFormElement::focus):
+        (DOMHTMLFormElement::blur):
+        (DOMHTMLSelectElement::focus):
+        (DOMHTMLSelectElement::blur):
+        (DOMHTMLOptionElement::focus):
+        (DOMHTMLOptionElement::blur):
+        (DOMHTMLInputElement::focus):
+        (DOMHTMLInputElement::blur):
+        (DOMHTMLTextAreaElement::focus):
+        (DOMHTMLTextAreaElement::blur):
+        * Interfaces/DOMCSS.idl:
+        * Interfaces/DOMCore.idl:
+        * Interfaces/DOMExtensions.idl: Added.
+        * Interfaces/DOMHTML.idl:
+        * Interfaces/DOMPrivate.idl: Added.
+        * Interfaces/IWebFormDelegate.idl:
+        * WebFrame.cpp:
+        (FormValuesPropertyBag::FormValuesPropertyBag):
+        (FormValuesPropertyBag::QueryInterface):
+        (FormValuesPropertyBag::AddRef):
+        (FormValuesPropertyBag::Release):
+        (FormValuesPropertyBag::Read):
+        (FormValuesPropertyBag::Write):
+        (FormValuesPropertyBag::CountProperties):
+        (FormValuesPropertyBag::GetPropertyInfo):
+        (FormValuesPropertyBag::LoadObject):
+        (WebFrame::WebFrame):
+        (WebFrame::QueryInterface):
+        (WebFrame::DOMDocument):
+        (WebFrame::continueSubmit):
+        (WebFrame::elementWithName):
+        (WebFrame::formForElement):
+        (WebFrame::elementDoesAutoComplete):
+        (WebFrame::controlsInForm):
+        (WebFrame::elementIsPassword):
+        (WebFrame::submitForm):
+        (WebFrame::doTextFieldCommandFromEvent):
+        (WebFrame::textWillBeDeletedInTextField):
+        (WebFrame::textDidChangeInTextArea):
+        * WebFrame.h:
+        * WebHTMLRepresentation.cpp:
+        (WebHTMLRepresentation::elementIsPassword):
+        (WebHTMLRepresentation::controlsInForm):
+        * WebKit.vcproj/Interfaces.vcproj:
+        * WebKit.vcproj/WebKit.vcproj:
+        * WebKit.vcproj/WebKitGUID.vcproj:
+
 2006-08-29  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Ada.

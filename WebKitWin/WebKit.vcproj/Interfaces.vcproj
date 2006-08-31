@@ -194,7 +194,15 @@
 			>
 		</File>
 		<File
+			RelativePath="..\Interfaces\DOMExtensions.idl"
+			>
+		</File>
+		<File
 			RelativePath="..\Interfaces\DOMHTML.idl"
+			>
+		</File>
+		<File
+			RelativePath="..\Interfaces\DOMPrivate.idl"
 			>
 		</File>
 		<File

@@ -27,9 +27,11 @@
 #include "WebKitDLL.h"
 
 #include "DOMCoreClasses.h"
+#include "DOMCSSClasses.h"
 #include "DOMHTMLClasses.h"
 
 #pragma warning(push, 0)
+#include "DOMWindow.h"
 #include "Element.h"
 #include "HTMLFormElement.h"
 #include "HTMLSelectElement.h"
@@ -65,7 +67,7 @@ HRESULT STDMETHODCALLTYPE DOMNode::QueryInterface(REFIID riid, void** ppvObject)
     if (IsEqualGUID(riid, IID_IDOMNode))
         *ppvObject = static_cast<IDOMNode*>(this);
     else
-        return DOMNode::QueryInterface(riid, ppvObject);
+        return DOMObject::QueryInterface(riid, ppvObject);
 
     AddRef();
     return S_OK;
@@ -286,21 +288,6 @@ HRESULT STDMETHODCALLTYPE DOMNode::setTextContent(
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE DOMNode::boundingBox( 
-    /* [retval][out] */ LPRECT /*rect*/)
-{
-    DebugBreak();
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE DOMNode::lineBoxRects( 
-    /* [size_is][in] */ RECT* /*rects*/,
-    /* [in] */ int /*cRects*/)
-{
-    DebugBreak();
-    return E_NOTIMPL;
-}
-
 // DOMDocument - IUnknown -----------------------------------------------------
 
 HRESULT STDMETHODCALLTYPE DOMDocument::QueryInterface(REFIID riid, void** ppvObject)
@@ -308,6 +295,8 @@ HRESULT STDMETHODCALLTYPE DOMDocument::QueryInterface(REFIID riid, void** ppvObj
     *ppvObject = 0;
     if (IsEqualGUID(riid, IID_IDOMDocument))
         *ppvObject = static_cast<IDOMDocument*>(this);
+    else if (IsEqualGUID(riid, IID_IDOMViewCSS))
+        *ppvObject = static_cast<IDOMViewCSS*>(this);
     else
         return DOMNode::QueryInterface(riid, ppvObject);
 
@@ -439,7 +428,7 @@ HRESULT STDMETHODCALLTYPE DOMDocument::createAttributeNS(
 
 HRESULT STDMETHODCALLTYPE DOMDocument::getElementsByTagNameNS( 
     /* [in] */ BSTR /*namespaceURI*/,
-    /* [in] */ BSTR /*lcoalName*/,
+    /* [in] */ BSTR /*localName*/,
     /* [retval][out] */ IDOMNodeList** /*result*/)
 {
     DebugBreak();
@@ -454,6 +443,68 @@ HRESULT STDMETHODCALLTYPE DOMDocument::getElementById(
     return E_NOTIMPL;
 }
 
+// DOMDocument - IDOMViewCSS --------------------------------------------------
+
+HRESULT STDMETHODCALLTYPE DOMDocument::getComputedStyle( 
+    /* [in] */ IDOMElement* elt,
+    /* [in] */ BSTR pseudoElt,
+    /* [retval][out] */ IDOMCSSStyleDeclaration** result)
+{
+    if (!elt || !result)
+        return E_POINTER;
+
+    DOMElement* domEle = static_cast<DOMElement*>(elt);
+    Element* element = domEle->element();
+
+    WebCore::DOMWindow* dv = m_document->defaultView();
+    String pseudoEltString(pseudoElt);
+    
+    if (!dv)
+        return E_FAIL;
+    
+    *result = DOMCSSStyleDeclaration::createInstance(dv->getComputedStyle(element, pseudoEltString.impl()).get());
+    return S_OK;
+}
+
+// DOMDocument - DOMDocument --------------------------------------------------
+
+DOMDocument::DOMDocument(WebCore::Document* d)
+: m_document(0)
+{
+    if (d)
+        d->ref();
+
+    m_document = d;
+}
+
+DOMDocument::~DOMDocument()
+{
+    if (m_document)
+        m_document->deref();
+}
+
+IDOMDocument* DOMDocument::createInstance(WebCore::Document* d)
+{
+    if (!d)
+        return 0;
+
+    HRESULT hr;
+    IDOMDocument* domDocument = 0;
+
+    if (d->isHTMLDocument()) {
+        DOMHTMLDocument* newDocument = new DOMHTMLDocument(d);
+        hr = newDocument->QueryInterface(IID_IDOMDocument, (void**)&domDocument);
+    } else {
+        DOMDocument* newDocument = new DOMDocument(d);
+        hr = newDocument->QueryInterface(IID_IDOMDocument, (void**)&domDocument);
+    }
+
+    if (FAILED(hr))
+        return 0;
+
+    return domDocument;
+}
+
 // DOMElement - IUnknown ------------------------------------------------------
 
 HRESULT STDMETHODCALLTYPE DOMElement::QueryInterface(REFIID riid, void** ppvObject)
@@ -463,6 +514,12 @@ HRESULT STDMETHODCALLTYPE DOMElement::QueryInterface(REFIID riid, void** ppvObje
         *ppvObject = static_cast<IDOMElement*>(this);
     else if (IsEqualGUID(riid, IID_IDOMElementPrivate))
         *ppvObject = static_cast<IDOMElementPrivate*>(this);
+    else if (IsEqualGUID(riid, IID_IDOMNodeExtensions))
+        *ppvObject = static_cast<IDOMNodeExtensions*>(this);
+    else if (IsEqualGUID(riid, IID_IDOMElementCSSInlineStyle))
+        *ppvObject = static_cast<IDOMElementCSSInlineStyle*>(this);
+    else if (IsEqualGUID(riid, IID_IDOMElementExtensions))
+        *ppvObject = static_cast<IDOMElementExtensions*>(this);
     else
         return DOMNode::QueryInterface(riid, ppvObject);
 
@@ -470,7 +527,7 @@ HRESULT STDMETHODCALLTYPE DOMElement::QueryInterface(REFIID riid, void** ppvObje
     return S_OK;
 }
 
-// DOMElement - IDOMNode ------------------------------------------------------
+// DOMElement - IDOMNodeExtensions---------------------------------------------
 
 HRESULT STDMETHODCALLTYPE DOMElement::boundingBox( 
     /* [retval][out] */ LPRECT rect)
@@ -490,6 +547,13 @@ HRESULT STDMETHODCALLTYPE DOMElement::boundingBox(
     }
 
     return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE DOMElement::lineBoxRects( 
+    /* [size_is][in] */ RECT* /*rects*/,
+    /* [in] */ int /*cRects*/)
+{
+    return E_NOTIMPL;
 }
 
 // IDOMElement ----------------------------------------------------------------
@@ -631,6 +695,18 @@ HRESULT STDMETHODCALLTYPE DOMElement::hasAttributeNS(
     return E_NOTIMPL;
 }
 
+HRESULT STDMETHODCALLTYPE DOMElement::focus( void)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE DOMElement::blur( void)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+
 // IDOMElementPrivate ---------------------------------------------------------
 
 HRESULT DOMElement::coreElement(void **element)
@@ -656,6 +732,162 @@ BOOL STDMETHODCALLTYPE DOMElement::isEqual(
         return FALSE;
 
     return (otherCoreEle == (void*)m_element) ? TRUE : FALSE;
+}
+
+// IDOMElementCSSInlineStyle --------------------------------------------------
+
+HRESULT STDMETHODCALLTYPE DOMElement::style( 
+    /* [retval][out] */ IDOMCSSStyleDeclaration** /*result*/)
+{
+    // FIXME
+    DebugBreak();
+    return E_NOTIMPL;
+}
+
+// IDOMElementExtensions ------------------------------------------------------
+
+HRESULT STDMETHODCALLTYPE DOMElement::offsetLeft( 
+    /* [retval][out] */ int* result)
+{
+    if (!m_element)
+        return E_FAIL;
+
+    *result = m_element->offsetLeft();
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE DOMElement::offsetTop( 
+    /* [retval][out] */ int* result)
+{
+    if (!m_element)
+        return E_FAIL;
+
+    *result = m_element->offsetTop();
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE DOMElement::offsetWidth( 
+    /* [retval][out] */ int* result)
+{
+    if (!m_element)
+        return E_FAIL;
+
+    *result = m_element->offsetWidth();
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE DOMElement::offsetHeight( 
+    /* [retval][out] */ int* result)
+{
+    if (!m_element)
+        return E_FAIL;
+
+    *result = m_element->offsetHeight();
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE DOMElement::offsetParent( 
+    /* [retval][out] */ IDOMElement** /*result*/)
+{
+    // FIXME
+    DebugBreak();
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE DOMElement::clientWidth( 
+    /* [retval][out] */ int* result)
+{
+    if (!m_element)
+        return E_FAIL;
+
+    *result = m_element->clientWidth();
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE DOMElement::clientHeight( 
+    /* [retval][out] */ int* result)
+{
+    if (!m_element)
+        return E_FAIL;
+
+    *result = m_element->clientHeight();
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE DOMElement::scrollLeft( 
+    /* [retval][out] */ int* result)
+{
+    if (!m_element)
+        return E_FAIL;
+
+    *result = m_element->scrollLeft();
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE DOMElement::setScrollLeft( 
+    /* [in] */ int /*newScrollLeft*/)
+{
+    // FIXME
+    DebugBreak();
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE DOMElement::scrollTop( 
+    /* [retval][out] */ int* result)
+{
+    if (!m_element)
+        return E_FAIL;
+
+    *result = m_element->scrollTop();
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE DOMElement::setScrollTop( 
+    /* [in] */ int /*newScrollTop*/)
+{
+    // FIXME
+    DebugBreak();
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE DOMElement::scrollWidth( 
+    /* [retval][out] */ int* result)
+{
+    if (!m_element)
+        return E_FAIL;
+
+    *result = m_element->scrollWidth();
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE DOMElement::scrollHeight( 
+    /* [retval][out] */ int* result)
+{
+    if (!m_element)
+        return E_FAIL;
+
+    *result = m_element->scrollHeight();
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE DOMElement::scrollIntoView( 
+    /* [in] */ BOOL alignWithTop)
+{
+    if (!m_element)
+        return E_FAIL;
+
+    m_element->scrollIntoView(!!alignWithTop);
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE DOMElement::scrollIntoViewIfNeeded( 
+    /* [in] */ BOOL centerIfNeeded)
+{
+    if (!m_element)
+        return E_FAIL;
+
+    m_element->scrollIntoViewIfNeeded(!!centerIfNeeded);
+    return S_OK;
 }
 
 // DOMElement -----------------------------------------------------------------

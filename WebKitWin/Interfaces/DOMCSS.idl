@@ -59,6 +59,23 @@ interface IDOMCSSStyleSheet;
 interface IDOMCSSRule;
 
 /*
+    @interface DOMDocument (DOMViewCSS)
+*/
+[
+    local,
+    object,
+    uuid(43EFE238-A4DF-400a-983D-FCE0C0F56BCD),
+    pointer_default(unique)
+]
+interface IDOMViewCSS : IUnknown
+{
+    /*
+        - (DOMCSSStyleDeclaration *)getComputedStyle:(DOMElement *)elt :(NSString *)pseudoElt;
+    */
+    HRESULT getComputedStyle([in] IDOMElement* elt, [in] BSTR pseudoElt, [out, retval] IDOMCSSStyleDeclaration** result);
+}
+
+/*
     @interface DOMCSSRuleList : DOMObject
 */
 [

@@ -501,6 +501,8 @@ HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::QueryInterface(REFIID riid, void
     *ppvObject = 0;
     if (IsEqualGUID(riid, IID_IDOMHTMLSelectElement))
         *ppvObject = static_cast<IDOMHTMLSelectElement*>(this);
+    else if (IsEqualGUID(riid, IID_IFormsAutoFillTransitionSelect))
+        *ppvObject = static_cast<IFormsAutoFillTransitionSelect*>(this);
     else
         return DOMHTMLElement::QueryInterface(riid, ppvObject);
 
@@ -651,19 +653,16 @@ HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::remove(
     return E_NOTIMPL;
 }
     
-HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::blur( void)
+// DOMHTMLSelectElement - IFormsAutoFillTransitionSelect ----------------------
+
+HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::activateItemAtIndex( 
+    /* [in] */ int /*index*/)
 {
     DebugBreak();
-    return E_NOTIMPL;
-}
-    
-HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::focus( void)
-{
-    DebugBreak();
-    return E_NOTIMPL;
+    return E_NOTIMPL;    
 }
 
-// DOMHTMLOptionElement - IUnknown ----------------------------------------------
+// DOMHTMLOptionElement - IUnknown --------------------------------------------
 
 HRESULT STDMETHODCALLTYPE DOMHTMLOptionElement::QueryInterface(REFIID riid, void** ppvObject)
 {
@@ -777,6 +776,8 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::QueryInterface(REFIID riid, void*
     *ppvObject = 0;
     if (IsEqualGUID(riid, IID_IDOMHTMLInputElement))
         *ppvObject = static_cast<IDOMHTMLInputElement*>(this);
+    else if (IsEqualGUID(riid, IID_IFormsAutoFillTransition))
+        *ppvObject = static_cast<IFormsAutoFillTransition*>(this);
     else
         return DOMHTMLElement::QueryInterface(riid, ppvObject);
 
@@ -892,10 +893,11 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setChecked(
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::disabled( 
-        /* [retval][out] */ BOOL* /*result*/)
+        /* [retval][out] */ BOOL* result)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
+    *result = inputElement->disabled() ? TRUE : FALSE;
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setDisabled( 
@@ -1029,34 +1031,101 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::value(
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setValue( 
-        /* [in] */ BSTR /*value*/)
+        /* [in] */ BSTR value)
 {
-    DebugBreak();
-    return E_NOTIMPL;
-}
-    
-HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::blur( void)
-{
-    DebugBreak();
-    return E_NOTIMPL;
-}
-    
-HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::focus( void)
-{
-    DebugBreak();
-    return E_NOTIMPL;
+    HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
+    inputElement->setValue(String((UChar*) value, SysStringLen(value)));
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::select( void)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
+    inputElement->select();
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::click( void)
 {
     DebugBreak();
     return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setSelectionStart( 
+    /* [in] */ long start)
+{
+    HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
+    inputElement->setSelectionStart(start);
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::selectionStart( 
+    /* [retval][out] */ long *start)
+{
+    HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
+    *start = inputElement->selectionStart();
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setSelectionEnd( 
+    /* [in] */ long end)
+{
+    HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
+    inputElement->setSelectionEnd(end);
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::selectionEnd( 
+    /* [retval][out] */ long *end)
+{
+    HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
+    *end = inputElement->selectionEnd();
+    return S_OK;
+}
+
+// DOMHTMLInputElement -- IFormsAutoFillTransition ----------------------------
+
+HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::isTextField(
+    /* [retval][out] */ BOOL* result)
+{
+    HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
+    *result = inputElement->isTextField() ? TRUE : FALSE;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::rectOnScreen( 
+    /* [retval][out] */ LPRECT /*rect*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::replaceCharactersInRange( 
+    /* [in] */ int /*startTarget*/,
+    /* [in] */ int /*endTarget*/,
+    /* [in] */ BSTR /*replacementString*/,
+    /* [in] */ int /*index*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::selectedRange( 
+    /* [out] */ int* start,
+    /* [out] */ int* end)
+{
+    HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
+    *start = inputElement->selectionStart();
+    *end = inputElement->selectionEnd();
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setAutofilled( 
+    /* [in] */ BOOL filled)
+{
+    HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
+    inputElement->setAutofilled(!!filled);
+    return S_OK;
 }
 
 // DOMHTMLTextAreaElement - IUnknown ----------------------------------------------
@@ -1210,18 +1279,6 @@ HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::value(
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::setValue( 
         /* [in] */ BSTR /*value*/)
-{
-    DebugBreak();
-    return E_NOTIMPL;
-}
-    
-HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::blur( void)
-{
-    DebugBreak();
-    return E_NOTIMPL;
-}
-    
-HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::focus( void)
 {
     DebugBreak();
     return E_NOTIMPL;

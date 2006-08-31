@@ -787,6 +787,16 @@ interface IDOMHTMLInputElement : IDOMElement
         - (void)click;
     */
     HRESULT click();
+
+    // FIXME - this is not in objC bindings at the moment
+    // attribute long selectionStart;
+    HRESULT setSelectionStart([in] long start);
+    HRESULT selectionStart([out, retval] long* start);
+
+    // FIXME - thisis not in the objC bindings at the moment
+    // attribute long selectionEnd;
+    HRESULT setSelectionEnd([in] long end);
+    HRESULT selectionEnd([out, retval] long* end);
 }
 
 /*
