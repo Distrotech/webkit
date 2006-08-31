@@ -1,3 +1,11 @@
+2006-08-31  Dave Hyatt <hyatt@apple.com>
+
+        Add a platform scrollbar class for Windows.  It doesn't really work yet.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/win/TemporaryLinkStubs.cpp:
+        * platform/win/PlatformScrollBarWin.cpp
+
 2006-08-31  Anders Carlsson  <acarlsson@apple.com>
 
         Fix the build.
