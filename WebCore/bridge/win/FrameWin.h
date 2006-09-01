@@ -121,7 +121,7 @@ public:
     virtual void issuePasteAndMatchStyleCommand();
     virtual void issueTransposeCommand();
     virtual void respondToChangedSelection(const SelectionController& oldSelection, bool closeTyping);
-    virtual void respondToChangedContents();
+    virtual void respondToChangedContents(const SelectionController &endingSelection);
     virtual bool shouldChangeSelection(const SelectionController& oldSelection, const SelectionController& newSelection, EAffinity affinity, bool stillSelecting) const;
     virtual void partClearedInBegin();
 

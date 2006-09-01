@@ -226,7 +226,7 @@ void FrameWin::registerCommandForUndo(PassRefPtr<WebCore::EditCommand>) { }
 void FrameWin::clearUndoRedoOperations(void) { }
 String FrameWin::incomingReferrer() const { return String(); }
 void FrameWin::markMisspellingsInAdjacentWords(WebCore::VisiblePosition const&) { }
-void FrameWin::respondToChangedContents() { }
+void FrameWin::respondToChangedContents(const SelectionController &endingSelection) { }
 
 BrowserExtensionWin::BrowserExtensionWin(WebCore::Frame*) { }
 void BrowserExtensionWin::setTypedIconURL(KURL const&, const String&) { }

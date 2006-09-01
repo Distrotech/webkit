@@ -1,3 +1,13 @@
+2006-09-01  Ada Chan  <adachan@apple.com>
+
+        Reviewed by lamadio.
+
+        Fixed build break.
+
+        * bridge/win/FrameWin.h:
+        * platform/win/TemporaryLinkStubs.cpp:
+        (FrameWin::respondToChangedContents):
+
 2006-08-31  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Steve.
