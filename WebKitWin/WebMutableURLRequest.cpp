@@ -250,10 +250,14 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setTimeoutInterval(
 }
 
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setURL( 
-    /* [in] */ BSTR /*theURL*/)
+    /* [in] */ BSTR theURL)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    if (m_url)
+        SysFreeString(m_url);
+    m_url = SysAllocString(theURL);
+    if (theURL && !m_url)
+        return E_OUTOFMEMORY;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setValue( 

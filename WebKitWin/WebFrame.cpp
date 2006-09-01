@@ -904,9 +904,23 @@ HRESULT WebFrame::matchLabelsAgainstElement(const BSTR* /*labels*/, int /*cLabel
 
 // ResourceLoaderClient
 
-void WebFrame::receivedRedirect(ResourceLoader*, const KURL&)
+void WebFrame::receivedRedirect(ResourceLoader*, const KURL& url)
 {
-    //FIXME
+    if (m_provisionalDataSource) {
+        IWebFrameLoadDelegate* frameLoadDelegate;
+        if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)) && frameLoadDelegate) {
+            IWebMutableURLRequest* mutableRequest;
+            if (SUCCEEDED(m_provisionalDataSource->request(&mutableRequest))) {
+                DeprecatedString urlStr = url.url();
+                BSTR urlBSTR = SysAllocStringLen((LPCOLESTR)urlStr.unicode(), urlStr.length());
+                mutableRequest->setURL(urlBSTR);
+                SysFreeString(urlBSTR);
+                frameLoadDelegate->didReceiveServerRedirectForProvisionalLoadForFrame(d->webView, this);
+                mutableRequest->Release();
+            }
+            frameLoadDelegate->Release();
+        }
+    }
 }
 
 void WebFrame::receivedResponse(ResourceLoader* loader, PlatformResponse platformResponse)
@@ -1014,13 +1028,13 @@ void WebFrame::openURL(const DeprecatedString& url, bool lockHistory)
     if (FAILED(request->initWithURL(urlBStr, WebURLRequestUseProtocolCachePolicy, 0)))
         goto exit;
 
-    if (GetAsyncKeyState(VK_CONTROL)) {
+    if (GetAsyncKeyState(VK_CONTROL)&0x8000) {
         // for open in new tab/window
         IWebUIDelegate* ui;
         IWebView* newWebView;
         if (SUCCEEDED(d->webView->uiDelegate(&ui))) {
             if (SUCCEEDED(ui->createWebViewWithRequest(d->webView, request, &newWebView))) {
-                if (GetAsyncKeyState(VK_SHIFT)) {
+                if (GetAsyncKeyState(VK_SHIFT)&0x8000) {
                     // Ctrl-Option-Shift-click:  Opens a link in a new window and selects it.
                     // Ctrl-Shift-click:  Opens a link in a new tab and selects it.
                     ui->webViewShow(d->webView);

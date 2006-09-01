@@ -1,5 +1,20 @@
 2006-09-01  Steve Falkenburg  <sfalken@apple.com>
 
+        Reviewed by adachan.
+
+        Process redirects received in networking layer through to application.
+        With this change, the address bar url edit field shows the proper
+        redirected URL.
+
+        Fixed GetAsyncKeyState() calls.
+
+        * WebFrame.cpp:
+        (WebFrame::receivedRedirect):
+        * WebMutableURLRequest.cpp:
+        (WebMutableURLRequest::setURL):
+
+2006-09-01  Steve Falkenburg  <sfalken@apple.com>
+
         Reviewed by kevin.
         
         Fix back/forward regression.

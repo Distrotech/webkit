@@ -72,6 +72,7 @@ static ResourceLoader* lookupResourceLoader(int jobId)
 struct JobLoadStatus {
     DWORD internetStatus;
     DWORD_PTR dwResult;
+    char* redirectURL;
 };
 
 LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -80,6 +81,7 @@ LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, L
         JobLoadStatus* jobLoadStatus = (JobLoadStatus*)lParam;
         DWORD internetStatus = jobLoadStatus->internetStatus;
         DWORD_PTR dwResult = jobLoadStatus->dwResult;
+        char* redirectURL = jobLoadStatus->redirectURL;
         delete jobLoadStatus;
         jobLoadStatus = 0;
 
@@ -143,6 +145,11 @@ LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                 job->d->m_writing = true;
                 HttpSendRequestExA(job->d->m_secondaryHandle, &buffers, 0, 0, (DWORD_PTR)job->d->m_jobId);
             }
+        } else if (internetStatus == INTERNET_STATUS_REDIRECT) {
+            KURL redirectKURL(redirectURL);
+            free(redirectURL);
+            job->client()->receivedRedirect(job, redirectKURL);
+            job->d->URL = redirectKURL;
         } else if (internetStatus == INTERNET_STATUS_REQUEST_COMPLETE) {
             if (job->d->m_writing) {
                 DWORD bytesWritten;
@@ -248,9 +255,12 @@ static void __stdcall transferJobStatusCallback(HINTERNET internetHandle, DWORD_
     switch (internetStatus) {
     case INTERNET_STATUS_HANDLE_CREATED:
     case INTERNET_STATUS_REQUEST_COMPLETE:
+    case INTERNET_STATUS_REDIRECT:
         JobLoadStatus* jobLoadStatus = new JobLoadStatus;
         jobLoadStatus->internetStatus = internetStatus;
         jobLoadStatus->dwResult = LPINTERNET_ASYNC_RESULT(statusInformation)->dwResult;
+        if (internetStatus == INTERNET_STATUS_REDIRECT)
+            jobLoadStatus->redirectURL = strdup((char*)statusInformation);
         PostMessage(transferJobWindowHandle, loadStatusMessage, (WPARAM)timerId, (LPARAM)jobLoadStatus);
     }
 }
@@ -283,7 +293,7 @@ bool ResourceLoader::start(DocLoader* docLoader)
             delete this;
             return false;
         }
-        static INTERNET_STATUS_CALLBACK callbackHandle = InternetSetStatusCallback(internetHandle, transferJobStatusCallback);
+        static INTERNET_STATUS_CALLBACK callbackHandle = InternetSetStatusCallbackA(internetHandle, transferJobStatusCallback);
 
         initializeOffScreenResourceLoaderWindow();
         d->m_jobId = addToOutstandingJobs(this);
