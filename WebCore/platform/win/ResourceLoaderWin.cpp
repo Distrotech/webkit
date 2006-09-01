@@ -23,7 +23,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include <wtf/platform.h>
+#include "config.h"
+
 #if USE(WININET)
 
 #include "config.h"

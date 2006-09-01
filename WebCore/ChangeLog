@@ -1,3 +1,17 @@
+2006-08-31  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Steve.
+
+        Add our own internal config.h so we can make changes to it.
+        
+        * WebCore.vcproj/WebCore.vcproj:
+        Add config.h to the file list, move the KXMLCORE_PLATFORM_CF to the new config.h file 
+                       
+        * config.h: Added.
+        
+        * platform/win/ResourceLoaderWin.cpp:
+        Include config.h        
+
 2006-08-31  Dave Hyatt <hyatt@apple.com>
 
         Add a platform scrollbar class for Windows.  It doesn't really work yet.
