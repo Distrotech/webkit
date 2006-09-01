@@ -1,3 +1,17 @@
+2006-09-01  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by kevin.
+        
+        Fix back/forward regression.
+        
+        Combining the two receivedAllData methods into one broke back/forward navigation,
+        since we put the resetting of m_quickRedirectComing and m_loadType at the start
+        of the combined method, but have code in the rest of receivedAllData that
+        relies on these having their old values.
+
+        * WebFrame.cpp:
+        (WebFrame::receivedAllData):
+
 2006-08-30  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Ada Chan.

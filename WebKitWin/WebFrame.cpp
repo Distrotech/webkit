@@ -933,9 +933,6 @@ void WebFrame::receivedAllData(ResourceLoader* job)
         m_provisionalDataSource = 0;
     }
 
-    m_quickRedirectComing = false;
-    m_loadType = WebFrameLoadTypeStandard;
-
     IWebFrameLoadDelegate* frameLoadDelegate;
     if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
         if (!job->error()) {
@@ -1000,6 +997,9 @@ void WebFrame::receivedAllData(ResourceLoader* job)
     }
 
     d->frame->end();
+    m_quickRedirectComing = false;
+    m_loadType = WebFrameLoadTypeStandard;
+
 }
 
 // FrameWinClient
