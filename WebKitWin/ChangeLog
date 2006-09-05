@@ -1,3 +1,51 @@
+2006-09-05  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Lou Amadio.
+
+        File Open/Save <rdar://4601527>
+        Implemened Save As to save raw page source (we don't support web archives).
+        
+        Currently we are saving a copy of the raw data in the FrameView (to
+        return when requested via IWebDataSource::data).  This needs to be
+        shared with CFNetwork once CFNetwork integration is complete.
+
+        * MemoryStream.cpp: Added.
+        (MemoryStream::MemoryStream):
+        (MemoryStream::~MemoryStream):
+        (MemoryStream::createInstance):
+        (MemoryStream::QueryInterface):
+        (MemoryStream::AddRef):
+        (MemoryStream::Release):
+        (MemoryStream::Read):
+        (MemoryStream::Write):
+        (MemoryStream::Seek):
+        (MemoryStream::SetSize):
+        (MemoryStream::CopyTo):
+        (MemoryStream::Commit):
+        (MemoryStream::Revert):
+        (MemoryStream::LockRegion):
+        (MemoryStream::UnlockRegion):
+        (MemoryStream::Stat):
+        (MemoryStream::Clone):
+        * MemoryStream.h: Added.
+        * WebDataSource.cpp:
+        (WebDataSource::data):
+        * WebFrame.cpp:
+        (WebFrame::controlsInForm):
+        (WebFrame::canProvideDocumentSource):
+        (WebFrame::receivedResponse):
+        (WebFrame::receivedData):
+        * WebFrame.h:
+        (WebFrame::data):
+        * WebHTMLRepresentation.cpp:
+        (WebHTMLRepresentation::canProvideDocumentSource):
+        * WebKit.vcproj/WebKit.vcproj:
+        * WebURLResponse.cpp:
+        (WebURLResponse::createInstance):
+        (WebURLResponse::suggestedFilename):
+        (WebURLResponse::suggestedFileExtension):
+        * WebURLResponse.h:
+
 2006-09-01  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by adachan.

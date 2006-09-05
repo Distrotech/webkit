@@ -221,14 +221,14 @@ HRESULT STDMETHODCALLTYPE WebNotificationCenter::addObserver(
     /* [in] */ IUnknown* anObject)
 {
     observer->AddRef();
-    ObserverKey* key = new ObserverKey(notificationName, anObject);
-    MappedObservers::iterator it = d->m_mappedObservers.find(*key);
+    ObserverKey key(notificationName, anObject);
+    MappedObservers::iterator it = d->m_mappedObservers.find(key);
     if (it != d->m_mappedObservers.end())
         it->second.append(observer);
     else {
         Vector<IWebNotificationObserver*> list;
         list.append(observer);
-        d->m_mappedObservers.add(*key, list);
+        d->m_mappedObservers.add(key, list);
     }
 
     return S_OK;
@@ -279,7 +279,7 @@ HRESULT STDMETHODCALLTYPE WebNotificationCenter::removeObserver(
     int i=0;
     for (Vector<IWebNotificationObserver*>::iterator it = observerList.begin(); it != end; ++it, i++) {
         if (*it == anObserver) {
-            delete (*it);
+            (*it)->Release();
             observerList.remove(i);
             break;
         }

@@ -239,10 +239,12 @@ HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::finishedLoadingWithDataSource(
 }
     
 HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::canProvideDocumentSource( 
-        /* [retval][out] */ BOOL* /*result*/)
+        /* [retval][out] */ BOOL* result)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    bool canProvideSource;
+    HRESULT hr = this->m_frame->canProvideDocumentSource(&canProvideSource);
+    *result = canProvideSource ? TRUE : FALSE;
+    return hr;
 }
     
 HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::documentSource( 

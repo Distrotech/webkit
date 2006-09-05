@@ -68,7 +68,7 @@
 				Name="VCLinkerTool"
 				RegisterOutput="true"
 				LinkLibraryDependencies="true"
-				AdditionalDependencies="comctl32.lib version.lib wininet.lib &quot;$(ProjectDir)\..\..\..\..\OpenSource\iconv\lib\iconv.lib&quot; &quot;$(ProjectDir)\..\..\..\..\OpenSource\libxml\lib\libxml2.lib&quot; &quot;$(ProjectDir)\..\..\..\..\OpenSource\libxslt\lib\libxslt.lib&quot; &quot;$(ProjectDir)\..\..\..\..\OpenSource\icu\lib\icuuc.lib&quot; &quot;$(ProjectDir)\..\..\WebKitLibraries\WebKitSupport\lib\WebKitSupport.lib&quot;"
+				AdditionalDependencies="comctl32.lib version.lib wininet.lib shlwapi.lib &quot;$(ProjectDir)\..\..\..\..\OpenSource\iconv\lib\iconv.lib&quot; &quot;$(ProjectDir)\..\..\..\..\OpenSource\libxml\lib\libxml2.lib&quot; &quot;$(ProjectDir)\..\..\..\..\OpenSource\libxslt\lib\libxslt.lib&quot; &quot;$(ProjectDir)\..\..\..\..\OpenSource\icu\lib\icuuc.lib&quot; &quot;$(ProjectDir)\..\..\WebKitLibraries\WebKitSupport\lib\WebKitSupport.lib&quot;"
 				LinkIncremental="2"
 				ModuleDefinitionFile="WebKit.def"
 				GenerateDebugInformation="true"
@@ -152,7 +152,7 @@
 				Name="VCLinkerTool"
 				RegisterOutput="true"
 				LinkLibraryDependencies="true"
-				AdditionalDependencies="comctl32.lib wininet.lib &quot;$(ProjectDir)\..\..\..\..\OpenSource\iconv\lib\iconv.lib&quot; &quot;$(ProjectDir)\..\..\..\..\OpenSource\libxml\lib\libxml2.lib&quot; &quot;$(ProjectDir)\..\..\..\..\OpenSource\libxslt\lib\libxslt.lib&quot; &quot;$(ProjectDir)\..\..\..\..\OpenSource\icu\lib\icuuc.lib&quot; &quot;$(ProjectDir)\..\..\WebKitLibraries\WebKitSupport\lib\WebKitSupport.lib&quot;"
+				AdditionalDependencies="comctl32.lib version.lib wininet.lib shlwapi.lib &quot;$(ProjectDir)\..\..\..\..\OpenSource\iconv\lib\iconv.lib&quot; &quot;$(ProjectDir)\..\..\..\..\OpenSource\libxml\lib\libxml2.lib&quot; &quot;$(ProjectDir)\..\..\..\..\OpenSource\libxslt\lib\libxslt.lib&quot; &quot;$(ProjectDir)\..\..\..\..\OpenSource\icu\lib\icuuc.lib&quot; &quot;$(ProjectDir)\..\..\WebKitLibraries\WebKitSupport\lib\WebKitSupport.lib&quot;"
 				LinkIncremental="1"
 				ModuleDefinitionFile="WebKit.def"
 				GenerateDebugInformation="true"
@@ -240,6 +240,10 @@
 			</File>
 			<File
 				RelativePath="..\MarshallingHelpers.h"
+				>
+			</File>
+			<File
+				RelativePath="..\MemoryStream.h"
 				>
 			</File>
 			<File
@@ -332,6 +336,10 @@
 			</File>
 			<File
 				RelativePath="..\DOMHTMLClasses.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\MemoryStream.cpp"
 				>
 			</File>
 			<File

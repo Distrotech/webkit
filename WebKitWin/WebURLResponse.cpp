@@ -39,6 +39,10 @@
 #include "ResourceLoaderWin.h"
 #pragma warning( pop )
 
+#include <shlobj.h>
+#include <shlwapi.h>
+#include <tchar.h>
+
 using namespace WebCore;
 
 // IWebURLResponse ----------------------------------------------------------------
@@ -65,33 +69,30 @@ WebURLResponse* WebURLResponse::createInstance(ResourceLoader* loader, PlatformR
     WebURLResponse* instance = new WebURLResponse();
     instance->AddRef();
 
-    DeprecatedString urlStr = loader->url().url();
-    DeprecatedString charsetStr = loader->queryMetaData("charset").deprecatedString();
-
     if (loader && platformResponse) {
+        // REVIEW-FIXME : likely we need to add mime type sniffing here (unless that is done within CFURLResponseGetMIMEType)
 #if USE(CFNETWORK)
         CFStringRef mimeType = CFURLResponseGetMIMEType(platformResponse);
+        CFStringRef textEncoding = CFURLResponseGetTextEncodingName(platformResponse);
 #endif
+        DeprecatedString urlStr = loader->url().url();
         instance->m_url = SysAllocStringLen((LPCOLESTR)urlStr.unicode(), urlStr.length());
-        instance->m_textEncodingName = SysAllocStringLen((LPCOLESTR)charsetStr.unicode(), charsetStr.length());
 #if USE(CFNETWORK)
-        if (mimeType) {
-            CFIndex len = CFStringGetLength(mimeType);
-            Boolean freeCharacters = FALSE;
-            const UniChar* characters = CFStringGetCharactersPtr(mimeType);
-            if (!characters) {
-                characters = (UniChar*)malloc(len * sizeof(UniChar));
-                CFStringGetCharacters(mimeType, CFRangeMake(0, len), (UniChar*)characters);
-                freeCharacters = TRUE; 
-            }
-            instance->m_mimeType = SysAllocStringLen((LPCOLESTR)characters, len);
-            if (freeCharacters) 
-                free((void *)characters);
-        } else {
-            instance->m_mimeType = 0;
+        instance->m_mimeType = MarshallingHelpers::CFStringRefToBSTR(mimeType);
+        if (textEncoding)
+            instance->m_textEncodingName = textEncoding;
+        else {
+            DeprecatedString charsetStr = loader->queryMetaData("charset").deprecatedString();
+            instance->m_textEncodingName = SysAllocStringLen((LPCOLESTR)charsetStr.unicode(), charsetStr.length());
         }
 #else
-        instance->m_mimeType = SysAllocString(platformResponse->contentType);
+        LPCTSTR separator = _tcschr(platformResponse->contentType, TEXT(';'));        
+        instance->m_mimeType = (separator) ? SysAllocStringLen(platformResponse->contentType, (UINT)(separator-platformResponse->contentType)) : SysAllocString(platformResponse->contentType);
+        if (separator) {
+            // FIXME (if we care about WinInet).  Parse charset out of Content-Type
+        }
+        DeprecatedString charsetStr = loader->queryMetaData("charset").deprecatedString();
+        instance->m_textEncodingName = SysAllocStringLen((LPCOLESTR)charsetStr.unicode(), charsetStr.length());
 #endif
     }
 
@@ -171,10 +172,52 @@ HRESULT STDMETHODCALLTYPE WebURLResponse::MIMEType(
 }
 
 HRESULT STDMETHODCALLTYPE WebURLResponse::suggestedFilename( 
-    /* [retval][out] */ BSTR* /*result*/)
+    /* [retval][out] */ BSTR* result)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    if (!m_url)
+        return E_FAIL;
+
+    TCHAR path[MAX_PATH];
+    *path = 0;
+    DWORD pathLength = ARRAYSIZE(path);
+    if (FAILED(PathCreateFromUrl(m_url, path, &pathLength, 0))) {
+        TCHAR* lastSlash = 0;
+        TCHAR* walkURL;
+        for (walkURL = m_url; *walkURL; walkURL++) {
+            if (*walkURL == TEXT('/'))
+                lastSlash = walkURL;
+            else if (*walkURL == TEXT('#') || *walkURL == TEXT('?'))
+                break;
+        }
+        TCHAR* fileNameStart = lastSlash;
+        if (fileNameStart)
+            fileNameStart++;
+        else
+            fileNameStart = m_url;
+
+        if (*lastSlash)
+            lastSlash++;
+        if (_tcsncpy_s(path, sizeof(path)/sizeof(path[0]), fileNameStart, (size_t)(walkURL-fileNameStart)))
+            return E_OUTOFMEMORY;
+    }
+
+    if (PathCleanupSpec(0, path) < 0)
+        return E_FAIL;
+
+    if (!*path)
+        _tcscpy(path, TEXT("*")); // caller will substitute page title in this case
+
+    BSTR extension;
+    if (SUCCEEDED(suggestedFileExtension(&extension))) {
+        PathRenameExtension(path, extension);
+        SysFreeString(extension);
+    }
+
+    *result = SysAllocString(path);
+    if (!result)
+        return E_OUTOFMEMORY;
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebURLResponse::textEncodingName( 
@@ -195,4 +238,54 @@ HRESULT STDMETHODCALLTYPE WebURLResponse::URL(
         return E_OUTOFMEMORY;
 
     return S_OK;
+}
+
+// WebURLResponse -------------------------------------------------------------
+
+HRESULT WebURLResponse::suggestedFileExtension(BSTR *result)
+{
+    if (!result)
+        return E_POINTER;
+
+    *result = 0;
+
+    if (!m_mimeType || !*m_mimeType)
+        return E_FAIL;
+
+    HKEY key;
+    LONG err = RegOpenKeyEx(HKEY_CLASSES_ROOT, TEXT("MIME\\Database\\Content Type"), 0, KEY_QUERY_VALUE, &key);
+    if (!err) {
+        HKEY subKey;
+        err = RegOpenKeyEx(key, m_mimeType, 0, KEY_QUERY_VALUE, &subKey);
+        if (!err) {
+            DWORD keyType = REG_SZ;
+            TCHAR extension[MAX_PATH];
+            DWORD keySize = sizeof(extension)/sizeof(extension[0]);
+            err = RegQueryValueEx(subKey, TEXT("Extension"), 0, &keyType, (LPBYTE)extension, &keySize);
+            if (!err && keyType != REG_SZ)
+                err = ERROR_INVALID_DATA;
+            if (err) {
+                // fallback handlers
+                if (!_tcscmp(m_mimeType, TEXT("text/html"))) {
+                    _tcscpy(extension, TEXT(".html"));
+                    err = 0;
+                } else if (!_tcscmp(m_mimeType, TEXT("application/xhtml+xml"))) {
+                    _tcscpy(extension, TEXT(".xhtml"));
+                    err = 0;
+                } else if (!_tcscmp(m_mimeType, TEXT("image/svg+xml"))) {
+                    _tcscpy(extension, TEXT(".svg"));
+                    err = 0;
+                }
+            }
+            if (!err) {
+                *result = SysAllocString(extension);
+                if (!*result)
+                    err = ERROR_OUTOFMEMORY;
+            }
+            RegCloseKey(subKey);
+        }
+        RegCloseKey(key);
+    }
+
+    return HRESULT_FROM_WIN32(err);
 }

@@ -172,6 +172,8 @@ public:
     HRESULT elementIsPassword(IDOMElement* element, bool* result);
     HRESULT searchForLabelsBeforeElement(const BSTR* labels, int cLabels, IDOMElement* beforeElement, BSTR* result);
     HRESULT matchLabelsAgainstElement(const BSTR* labels, int cLabels, IDOMElement* againstElement, BSTR* result);
+    HRESULT canProvideDocumentSource(bool* result);
+    const Vector<char>* data() { return &m_buffer; }
 
 protected:
     unsigned int getObjectCacheSize();
@@ -185,6 +187,7 @@ protected:
     WebFrameLoadType    m_loadType;
     bool                m_quickRedirectComing;
     bool                m_continueFormSubmit;
+    Vector<char>        m_buffer;
 };
 
 #endif

@@ -69,6 +69,9 @@ public:
         /* [retval][out] */ BSTR *result);
 
 protected:
+    HRESULT suggestedFileExtension(BSTR* result);
+
+protected:
     ULONG                       m_refCount;
     BSTR                        m_url;
     BSTR                        m_mimeType;

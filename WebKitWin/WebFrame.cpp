@@ -42,6 +42,7 @@
 #pragma warning( push, 0 )
 #include "Cache.h"
 #include "Document.h"
+#include "DOMImplementation.h"
 #include "FrameView.h"
 #include "FrameWin.h"
 #include "GraphicsContext.h"
@@ -51,6 +52,7 @@
 #include "HTMLNames.h"
 #include "Page.h"
 #include "PlatformKeyboardEvent.h"
+#include "PlugInInfoStore.h"
 #include "RenderFrame.h"
 #include "cairo.h"
 #include "cairo-win32.h"
@@ -874,10 +876,13 @@ HRESULT WebFrame::controlsInForm(IDOMElement* form, IDOMElement** controls, int*
     if (inCount < count)
         return E_FAIL;
 
+    *cControls = 0;
     Vector<HTMLGenericFormElement*>& elements = formElement->formElements;
     for (int i = 0; i < count; i++) {
-        if (elements.at(i)->isEnumeratable()) // Skip option elements, other duds
-            controls[i] = DOMElement::createInstance(elements.at(i));
+        if (elements.at(i)->isEnumeratable()) { // Skip option elements, other duds
+            controls[*cControls] = DOMElement::createInstance(elements.at(i));
+            (*cControls)++;
+        }
     }
     return S_OK;
 }
@@ -900,6 +905,28 @@ HRESULT WebFrame::matchLabelsAgainstElement(const BSTR* /*labels*/, int /*cLabel
 {
     // FIXME
     return E_NOTIMPL;
+}
+
+HRESULT WebFrame::canProvideDocumentSource(bool* result)
+{
+    HRESULT hr = S_OK;
+    *result = false;
+
+    if (!m_dataSource)
+        return E_FAIL;
+
+    IWebURLResponse* urlResponse;
+    hr = m_dataSource->response(&urlResponse);
+    if (SUCCEEDED(hr) && urlResponse) {
+        BSTR mimeTypeBStr;
+        if (SUCCEEDED(urlResponse->MIMEType(&mimeTypeBStr))) {
+            String mimeType(mimeTypeBStr, SysStringLen(mimeTypeBStr));
+            *result = (!WebCore::DOMImplementation::isTextMIMEType(mimeType) && !Image::supportsType(mimeType) && !PlugInInfoStore::supportsMIMEType(mimeType));
+            SysFreeString(mimeTypeBStr);
+        }
+        urlResponse->Release();
+    }
+    return hr;
 }
 
 // ResourceLoaderClient
@@ -930,6 +957,8 @@ void WebFrame::receivedResponse(ResourceLoader* loader, PlatformResponse platfor
         m_provisionalDataSource = 0;
     }
 
+    m_buffer.clear();
+
     WebURLResponse* response = WebURLResponse::createInstance(loader, platformResponse);
     m_dataSource->setResponse(response);
     response->Release();
@@ -938,6 +967,12 @@ void WebFrame::receivedResponse(ResourceLoader* loader, PlatformResponse platfor
 void WebFrame::receivedData(ResourceLoader*, const char* data, int length)
 {
     d->frame->write(data, length);
+
+    // save off the data as it is received (matching Mac WebLoader)
+    // FIXME - CFNetwork Integration - we need to share this with the CFNetwork in-memory cache!
+    size_t oldSize = m_buffer.size();
+    m_buffer.resize(oldSize + length);
+    memcpy(m_buffer.data() + oldSize, data, length);
 }
 
 void WebFrame::receivedAllData(ResourceLoader* job)

@@ -25,6 +25,8 @@
 
 #include "config.h"
 #include "WebKitDLL.h"
+
+#include "MemoryStream.h"
 #include "WebDataSource.h"
 #include "IWebMutableURLRequest.h"
 #include "WebFrame.h"
@@ -152,10 +154,20 @@ HRESULT STDMETHODCALLTYPE WebDataSource::initWithRequest(
 }
 
 HRESULT STDMETHODCALLTYPE WebDataSource::data( 
-    /* [retval][out] */ IStream** /*stream*/)
+    /* [retval][out] */ IStream** stream)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    *stream = 0;
+    if (!m_frame)
+        return E_FAIL;
+
+    IUnknown* frameUnknown;
+    HRESULT hr = m_frame->QueryInterface(IID_IUnknown, (void**)&frameUnknown);
+    if (FAILED(hr))
+        return hr;
+
+    *stream = MemoryStream::createInstance(frameUnknown, m_frame->data());
+    frameUnknown->Release();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebDataSource::representation( 

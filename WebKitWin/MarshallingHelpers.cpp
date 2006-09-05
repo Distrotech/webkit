@@ -62,6 +62,9 @@ CFStringRef MarshallingHelpers::BSTRToCFStringRef(BSTR str)
 
 BSTR MarshallingHelpers::CFStringRefToBSTR(CFStringRef str)
 {
+    if (!str)
+        return 0;
+
     const UniChar* uniChars = CFStringGetCharactersPtr(str);
     if (uniChars)
         return SysAllocStringLen((LPCTSTR)uniChars, CFStringGetLength(str));
