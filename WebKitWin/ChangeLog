@@ -1,3 +1,13 @@
+2006-09-06  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Darin.
+
+        Fixed various Windows build problems caused by previous checkins.
+
+        * WebKitDLL.h: Disable deprecation warning triggered by using std::copy on a Vector.
+        * WebView.cpp:
+        (WebView::keyPress): Rename selection to selectionController.
+
 2006-09-05  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Lou Amadio.

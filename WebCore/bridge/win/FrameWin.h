@@ -27,6 +27,7 @@
 #define FrameWin_H
 
 #include "Frame.h"
+#include <wtf/HashMap.h>
 
 namespace WebCore {
 
@@ -97,7 +98,7 @@ public:
     virtual String mimeTypeForFileName(const String&) const;
 
     virtual void markMisspellingsInAdjacentWords(const VisiblePosition&);
-    virtual void markMisspellings(const SelectionController&);
+    virtual void markMisspellings(const Selection&);
 
     virtual bool lastEventIsMouseUp() const;
 
@@ -120,9 +121,9 @@ public:
     virtual void issuePasteCommand();
     virtual void issuePasteAndMatchStyleCommand();
     virtual void issueTransposeCommand();
-    virtual void respondToChangedSelection(const SelectionController& oldSelection, bool closeTyping);
-    virtual void respondToChangedContents(const SelectionController &endingSelection);
-    virtual bool shouldChangeSelection(const SelectionController& oldSelection, const SelectionController& newSelection, EAffinity affinity, bool stillSelecting) const;
+    virtual void respondToChangedSelection(const Selection& oldSelection, bool closeTyping);
+    virtual void respondToChangedContents(const Selection &endingSelection);
+    virtual bool shouldChangeSelection(const Selection& oldSelection, const Selection& newSelection, EAffinity affinity, bool stillSelecting) const;
     virtual void partClearedInBegin();
 
     virtual bool canGoBackOrForward(int distance) const;

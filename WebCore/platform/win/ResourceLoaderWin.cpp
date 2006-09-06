@@ -27,9 +27,9 @@
 
 #if USE(WININET)
 
-#include "config.h"
 #include "ResourceLoaderWin.h"
 
+#include "CString.h"
 #include "DocLoader.h"
 #include "Document.h"
 #include "Frame.h"
@@ -126,22 +126,23 @@ LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                 job->d->m_secondaryHandle = HINTERNET(dwResult);
                 
                 // Need to actually send the request now.
-                DeprecatedString headers = "Content-Type: application/x-www-form-urlencoded\n";
+                String headers = "Content-Type: application/x-www-form-urlencoded\n";
                 headers += "Referer: ";
                 headers += job->d->m_postReferrer;
                 headers += "\n";
-                DeprecatedString formData = job->postData().flattenToString();
+                Vector<char> formData;
+                job->postData().flatten(formData);
                 INTERNET_BUFFERSA buffers;
                 memset(&buffers, 0, sizeof(buffers));
                 buffers.dwStructSize = sizeof(INTERNET_BUFFERSA);
-                buffers.lpcszHeader = headers.ascii();
-                buffers.dwHeadersLength = headers.length();
-                buffers.dwBufferTotal = formData.length();
+                CString headersAscii = headers.latin1();
+                buffers.lpcszHeader = headersAscii;
+                buffers.dwHeadersLength = headersAscii.length();
+                buffers.dwBufferTotal = formData.size();
                 
-                job->d->m_bytesRemainingToWrite = formData.length();
-                job->d->m_formDataString = (char*)malloc(formData.length());
-                job->d->m_formDataLength = formData.length();
-                strncpy(job->d->m_formDataString, formData.ascii(), formData.length());
+                job->d->m_bytesRemainingToWrite = formData.size();
+                job->d->m_formDataString = formData.data();
+                job->d->m_formDataLength = formData.size();
                 job->d->m_writing = true;
                 HttpSendRequestExA(job->d->m_secondaryHandle, &buffers, 0, 0, (DWORD_PTR)job->d->m_jobId);
             }
@@ -301,7 +302,7 @@ bool ResourceLoader::start(DocLoader* docLoader)
         // For form posting, we can't use InternetOpenURL.  We have to use InternetConnect followed by
         // HttpSendRequest.
         HINTERNET urlHandle;
-        DeprecatedString referrer = docLoader->frame()->referrer();
+        String referrer = docLoader->frame()->referrer();
         if (method() == "POST") {
             d->m_postReferrer = referrer;
             DeprecatedString host = d->URL.host();
@@ -313,11 +314,11 @@ bool ResourceLoader::start(DocLoader* docLoader)
             int fragmentIndex = urlStr.find('#');
             if (fragmentIndex != -1)
                 urlStr = urlStr.left(fragmentIndex);
-            DeprecatedString headers;
+            String headers;
             if (!referrer.isEmpty())
-                headers += DeprecatedString("Referer: ") + referrer + "\r\n";
+                headers += "Referer: " + referrer + "\r\n";
 
-            urlHandle = InternetOpenUrlA(internetHandle, urlStr.ascii(), headers.ascii(), headers.length(),
+            urlHandle = InternetOpenUrlA(internetHandle, urlStr.ascii(), headers.latin1(), headers.length(),
                                          INTERNET_FLAG_KEEP_CONNECTION, (DWORD_PTR)d->m_jobId);
         }
 

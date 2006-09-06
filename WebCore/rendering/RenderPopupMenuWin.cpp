@@ -24,6 +24,7 @@
 #include "RenderPopupMenuWin.h"
 
 #include "FloatRect.h"
+#include "FontData.h"
 #include "Frame.h"
 #include "FrameView.h"
 #include "HTMLOptionElement.h"

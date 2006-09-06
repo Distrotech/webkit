@@ -1,3 +1,25 @@
+2006-09-06  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Darin.
+
+        Fixed various Windows build issues caused by previous checkins.
+
+        * bridge/win/FrameWin.h: Added missing #include, updated Selection to SelectionController.
+        * platform/win/FontWin.cpp: Reorganized #includes.
+        (WebCore::Font::drawGlyphs): Used a const_cast hack to fix ultimately broken code.
+        * platform/win/ResourceLoaderWin.cpp: Added missing #include of CString.h and removed double #include of config.h.
+        (WebCore::ResourceLoaderWndProc): Removed use of String::ascii.
+        (WebCore::ResourceLoader::start): Ditto.
+        * platform/win/TemporaryLinkStubs.cpp: Added missing stubs.
+        (FrameWin::markMisspellings):
+        (FrameWin::shouldChangeSelection):
+        (FrameWin::respondToChangedSelection):
+        (FrameWin::respondToChangedContents):
+        (FrameWin::handledOnloadEvents):
+        (FrameWin::createPlugin):
+        (FrameWin::objectContentType):
+        * rendering/RenderPopupMenuWin.cpp: Added missing #include.
+
 2006-09-05  Darin Adler  <darin@apple.com>
 
         - build fix part of http://bugzilla.opendarwin.org/show_bug.cgi?id=10728

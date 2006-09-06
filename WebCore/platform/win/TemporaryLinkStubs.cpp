@@ -163,7 +163,7 @@ void FrameWin::issueUndoCommand() { notImplemented(); }
 String FrameWin::mimeTypeForFileName(String const&) const { notImplemented(); return String(); }
 void FrameWin::issuePasteCommand() { notImplemented(); }
 void FrameWin::scheduleClose() { notImplemented(); }
-void FrameWin::markMisspellings(WebCore::SelectionController const&) { notImplemented(); }
+void FrameWin::markMisspellings(WebCore::Selection const&) { notImplemented(); }
 bool FrameWin::menubarVisible() { notImplemented(); return 0; }
 bool FrameWin::personalbarVisible() { notImplemented(); return 0; }
 bool FrameWin::statusbarVisible() { notImplemented(); return 0; }
@@ -217,8 +217,8 @@ Range* FrameWin::markedTextRange() const { return 0; }
 bool FrameWin::passSubframeEventToSubframe(WebCore::MouseEventWithHitTestResults&, Frame*) { return false; }
 bool FrameWin::lastEventIsMouseUp() const { return false; }
 void FrameWin::addMessageToConsole(String const&,unsigned int,String const&) { }
-bool FrameWin::shouldChangeSelection(SelectionController const&,SelectionController const&,WebCore::EAffinity,bool) const { return true; }
-void FrameWin::respondToChangedSelection(WebCore::SelectionController const&,bool) { }
+bool FrameWin::shouldChangeSelection(Selection const&,Selection const&,WebCore::EAffinity,bool) const { return true; }
+void FrameWin::respondToChangedSelection(WebCore::Selection const&,bool) { }
 static int frameNumber = 0;
 Frame* FrameWin::createFrame(KURL const&,String const&,Element*,String const&) { return 0; }
 void FrameWin::saveDocumentState() { }
@@ -226,7 +226,10 @@ void FrameWin::registerCommandForUndo(PassRefPtr<WebCore::EditCommand>) { }
 void FrameWin::clearUndoRedoOperations(void) { }
 String FrameWin::incomingReferrer() const { return String(); }
 void FrameWin::markMisspellingsInAdjacentWords(WebCore::VisiblePosition const&) { }
-void FrameWin::respondToChangedContents(const SelectionController &endingSelection) { }
+void FrameWin::respondToChangedContents(const Selection &endingSelection) { }
+void FrameWin::handledOnloadEvents() { }
+Plugin* FrameWin::createPlugin(Element*, const KURL&,const Vector<String>&, const Vector<String>&, const String&) { return 0; }
+ObjectContentType FrameWin::objectContentType(const KURL&, const String&) { return ObjectContentNone; }
 
 BrowserExtensionWin::BrowserExtensionWin(WebCore::Frame*) { }
 void BrowserExtensionWin::setTypedIconURL(KURL const&, const String&) { }

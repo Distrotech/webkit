@@ -26,15 +26,17 @@
 #include "config.h"
 #include "Font.h"
 
+#include "FontData.h"
+#include "FontFallbackList.h"
+#include "GlyphBuffer.h"
+#include "GraphicsContext.h"
+#include "IntRect.h"
+
 #if PLATFORM(CAIRO)
 #include <cairo-win32.h>
 #elif PLATFORM(CG)
 #include <ApplicationServices/ApplicationServices.h>
 #endif
-#include "FontData.h"
-#include "FontFallbackList.h"
-#include "GraphicsContext.h"
-#include "IntRect.h"
 
 namespace WebCore {
 
@@ -73,7 +75,7 @@ void Font::drawGlyphs(GraphicsContext* graphicsContext, const FontData* font, co
     // Restore the original transform.
     SetWorldTransform(dc, &savedxform);
 
-    GlyphBufferGlyph* glyphs = glyphBuffer.glyphs(from);
+    GlyphBufferGlyph* glyphs = const_cast<GlyphBufferGlyph*>(glyphBuffer.glyphs(from));
 
     float offset = point.x();
 
