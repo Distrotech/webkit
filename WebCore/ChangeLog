@@ -1,3 +1,10 @@
+2006-09-05  Darin Adler  <darin@apple.com>
+
+        - build fix part of http://bugzilla.opendarwin.org/show_bug.cgi?id=10728
+          text encodings should work without a numeric ID
+
+        * WebCore.vcproj/WebCore.vcproj: Update for new headers.
+
 2006-09-01  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by adachan.

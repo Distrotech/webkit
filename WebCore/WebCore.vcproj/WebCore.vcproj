@@ -157,10 +157,6 @@
 			Name="DerivedSources"
 			>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\CharsetData.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\ColorData.c"
 				>
 			</File>
@@ -1157,14 +1153,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\platform\CharsetNames.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\platform\CharsetNames.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\Color.cpp"
 				>
 			</File>
@@ -1561,11 +1549,43 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextCodecLatin1.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextCodecLatin1.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextCodecUTF16.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextCodecUTF16.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextDecoder.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextDecoder.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextEncoding.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextEncoding.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextEncodingRegistry.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextEncodingRegistry.h"
 				>
 			</File>
 			<File
