@@ -95,6 +95,10 @@ static BOOL NSURLConnectionSupportsBufferedData;
 
 - (void)releaseResources
 {
+    // This assertion is in place to make sure we don't send error messages twice. However,
+    // the fix for 4719149 allows some error messages to be sent twice, so we will hit this
+    // assertion in a Debug build. We have a better solution for TOT, but hitting an assertion
+    // instead of always crashing is best and safest for Tip of Branch.
     ASSERT(!reachedTerminalState);
     
     // It's possible that when we release the handle, it will be
@@ -556,6 +560,10 @@ static BOOL NSURLConnectionSupportsBufferedData;
 
 - (void)didFailWithError:(NSError *)error
 {
+    // This assertion is in place to make sure we don't send error messages twice. However,
+    // the fix for 4719149 allows some error messages to be sent twice, so we will hit this
+    // assertion in a Debug build. We have a better solution for TOT, but hitting an assertion
+    // instead of always crashing is best and safest for Tip of Branch.
     ASSERT(!reachedTerminalState);
 
     // retain/release self in this delegate method since the additional processing can do

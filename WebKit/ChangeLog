@@ -1,3 +1,22 @@
+2006-09-07  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by Darin sort of and Maciej definitely.
+
+        Fix for <rdar://problem/4719149> Crash caused by malformed frame 
+        setup. This is the same bug as 3853672, which has been fixed on TOT 
+        for a while. We feel like this fix is much safer for the branch 
+        though.
+
+        * WebKit.xcodeproj/project.pbxproj: Version wars.
+        * WebView.subproj/WebBaseResourceHandleDelegate.m:
+        (-[NSURLProtocol releaseResources]): Added comment for assertion 
+        that will be hit.
+        (-[NSURLProtocol didFailWithError:]): Added comment for assertion 
+        that will be hit.
+        * WebView.subproj/WebDataSource.m:
+        (-[WebDataSource _receivedMainResourceError:complete:]): Retain and 
+        release all of the pieces involved with sending the error.
+
 === WebKit-418.9 ===
 === WebKit-418.8 ===
 
