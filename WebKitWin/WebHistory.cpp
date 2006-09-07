@@ -93,8 +93,8 @@ WebHistory::WebHistory()
     gClassCount++;
 
     m_entriesByURL = CFDictionaryCreateMutable(0, 0, &kCFTypeDictionaryKeyCallBacks, 0);
-    m_datesWithEntries = CFArrayCreateMutable(0, 0, 0);
-    m_entriesByDate = CFArrayCreateMutable(0, 0, 0);
+    m_datesWithEntries = CFArrayCreateMutable(0, 0, &kCFTypeArrayCallBacks);
+    m_entriesByDate = CFArrayCreateMutable(0, 0, &kCFTypeArrayCallBacks);
 
     WebPreferences* tempPrefs = WebPreferences::createInstance();
     IWebPreferences* standardPrefs;
@@ -433,7 +433,7 @@ HRESULT WebHistory::datesArray(CFMutableArrayRef* datesArray)
 {
     HRESULT hr = S_OK;
 
-    *datesArray = CFArrayCreateMutable(0, 0, 0);
+    *datesArray = CFArrayCreateMutable(0, 0, &kCFTypeArrayCallBacks);
     
     // for each date with entries
     int dateCount = CFArrayGetCount(m_entriesByDate);

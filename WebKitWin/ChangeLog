@@ -1,3 +1,13 @@
+2006-09-07  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Lou Amadio.
+        
+        Fix CFArray allocator usage for cases where we store CF types in the array.
+
+        * WebHistory.cpp:
+        (WebHistory::WebHistory):
+        (WebHistory::datesArray):
+
 2006-09-06  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Steve and Sarge
