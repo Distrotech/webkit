@@ -1,3 +1,12 @@
+2006-09-06  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Steve's rubberstamp
+
+        Three stubs were added this morning, however the methods were already implemented in
+        Internal/OpenSourceWin/WebCoreWin/bridge/win/FrameWin.cpp
+
+        * platform/win/TemporaryLinkStubs.cpp: Nuked some repeat symbols
+
 2006-09-06  Adam Roben  <aroben@apple.com>
 
         Reviewed by Darin.

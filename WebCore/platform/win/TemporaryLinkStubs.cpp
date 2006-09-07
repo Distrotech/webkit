@@ -227,9 +227,6 @@ void FrameWin::clearUndoRedoOperations(void) { }
 String FrameWin::incomingReferrer() const { return String(); }
 void FrameWin::markMisspellingsInAdjacentWords(WebCore::VisiblePosition const&) { }
 void FrameWin::respondToChangedContents(const Selection &endingSelection) { }
-void FrameWin::handledOnloadEvents() { }
-Plugin* FrameWin::createPlugin(Element*, const KURL&,const Vector<String>&, const Vector<String>&, const String&) { return 0; }
-ObjectContentType FrameWin::objectContentType(const KURL&, const String&) { return ObjectContentNone; }
 
 BrowserExtensionWin::BrowserExtensionWin(WebCore::Frame*) { }
 void BrowserExtensionWin::setTypedIconURL(KURL const&, const String&) { }
