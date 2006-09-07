@@ -1,3 +1,15 @@
+2006-09-06  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by NOBODY (OOPS!).
+
+        Added urlIcon.png as a resource for WebCore images
+
+        * WebKit.vcproj/WebKit.rc:
+        * WebKit.vcproj/resource.h:
+        * WebKit.vcproj/urlIcon.png: Added.
+        * WebKitDLL.cpp:
+        (loadResourceIntoArray): Added case for "urlIcon"
+
 2006-09-06  Adam Roben  <aroben@apple.com>
 
         Reviewed by Darin.

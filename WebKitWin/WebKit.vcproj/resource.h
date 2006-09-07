@@ -5,6 +5,7 @@
 #define IDR_WEBKIT                      1
 #define IDR_RESIZE_CORNER               2
 #define IDR_MISSING_IMAGE               3
+#define IDR_URL_ICON                    4
 
 #define BUILD_NUMBER                    1
 

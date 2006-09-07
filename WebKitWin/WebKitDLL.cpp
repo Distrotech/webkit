@@ -204,6 +204,8 @@ Vector<char> loadResourceIntoArray(const char* name)
         idr = IDR_RESIZE_CORNER;
     else if (!strcmp(name, "missingImage"))
         idr = IDR_MISSING_IMAGE;
+    else if (!strcmp(name, "urlIcon"))
+        idr = IDR_URL_ICON;
     else
         return Vector<char>();
 
