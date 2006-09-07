@@ -29,6 +29,7 @@
 #include "config.h"
 #include "Font.h"
 #include "FontCache.h"
+#include "FontData.h"
 #include "FloatRect.h"
 #include "FontDescription.h"
 #include <wtf/MathExtras.h>

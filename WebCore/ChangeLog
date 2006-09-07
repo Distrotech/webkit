@@ -1,5 +1,11 @@
 2006-09-06  Brady Eidson  <beidson@apple.com>
 
+        YABF (Yet another build fix)
+
+        * platform/win/FontDataWin.cpp: Added missing header
+
+2006-09-06  Brady Eidson  <beidson@apple.com>
+
         Reviewed by Steve's rubberstamp
 
         Three stubs were added this morning, however the methods were already implemented in
