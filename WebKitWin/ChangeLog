@@ -1,3 +1,15 @@
+2006-09-08  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Adam
+
+        Add stubs for an IconDatabase path stored as a preference
+        
+        * Interfaces/IWebPreferences.idl:
+        * WebPreferences.cpp:
+        (WebPreferences::iconDatabaseLocation):
+        (WebPreferences::setIconDatabaseLocation):
+        * WebPreferences.h:
+
 2006-09-07  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Lou Amadio.

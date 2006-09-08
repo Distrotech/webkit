@@ -431,4 +431,16 @@ interface IWebPreferences : IUnknown
         - (size_t)_objectCacheSize
     */
     HRESULT objectCacheSize([out, retval] unsigned int* enabled);
+
+    /*!
+        @method iconDatabaseLocation
+        @discussion The location of the icon database
+    */
+    HRESULT iconDatabaseLocation([out, retval] BSTR* location);
+
+    /*!
+        @method setIconDatabaseLocation:
+        @param Set the location of the icon database
+    */
+    HRESULT setIconDatabaseLocation([in] BSTR location);
 }

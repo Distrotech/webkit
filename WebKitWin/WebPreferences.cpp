@@ -994,3 +994,15 @@ HRESULT WebPreferences::objectCacheSize(unsigned int* limit)
     *limit = integerValueForKey(CFSTR(WebKitObjectCacheSizePreferenceKey));
     return S_OK;
 }
+
+HRESULT WebPreferences::iconDatabaseLocation(BSTR* )//location)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+
+HRESULT WebPreferences::setIconDatabaseLocation(BSTR )//location)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}

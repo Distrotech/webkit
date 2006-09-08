@@ -209,6 +209,13 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE objectCacheSize( 
         /* [retval][out] */ unsigned int *limit);
+    
+    virtual HRESULT STDMETHODCALLTYPE iconDatabaseLocation(
+        /* [retval][out] */ BSTR* location);
+
+    virtual HRESULT STDMETHODCALLTYPE setIconDatabaseLocation(
+        /* [in] */ BSTR location);
+
 
     // WebPreferences
     static BSTR webPreferencesChangedNotification();
