@@ -1,3 +1,12 @@
+2006-09-09  Adam Roben  <aroben@apple.com>
+
+        Reviewed by hyatt.
+
+        Remove unnecessary calls to setAffectedBy{Active,Hover}Rules
+
+        * rendering/RenderThemeWin.cpp:
+        (WebCore::RenderThemeWin::adjustMenuListStyle): Remove unnecessary calls
+
 2006-09-06  Brady Eidson  <beidson@apple.com>
 
         YABF (Yet another build fix)
