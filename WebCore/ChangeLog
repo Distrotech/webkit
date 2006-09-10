@@ -1,3 +1,11 @@
+2006-09-10  Steve Falkenburg  <sfalken@apple.com>
+
+        Rubber-stamp by aroben.
+        
+        Pick up SDK from $(WebKitSDKDir).
+
+        * WebCore.vcproj/WebCore.vcproj:
+
 2006-09-09  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by aroben.
