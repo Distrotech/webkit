@@ -1,3 +1,17 @@
+2006-09-09  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by aroben.
+
+        Boomer SDK migration.  Pull all external dependencies in from Boomer SDK.
+        
+        SDK should be installed into C:\AppleInternal
+        (substitute your system drive letter for C - scripts don't hard-code the drive letter)
+        
+        Added missing CF files to fix CFNetwork build variant
+
+        * WebCore.vcproj/WebCore.vcproj: Use include paths, libs, DLLs from %SystemDrive%\AppleInternal
+        * WebCore.vcproj/build-generated-files.sh: Don't copy open source DLLs from WebKitLibraries
+
 2006-09-09  Adam Roben  <aroben@apple.com>
 
         Reviewed by hyatt.

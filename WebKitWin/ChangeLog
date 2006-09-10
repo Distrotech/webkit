@@ -1,3 +1,19 @@
+2006-09-09  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by aroben.
+
+        Boomer SDK migration.  Pull all external dependencies in from Boomer SDK.
+        
+        SDK should be installed into C:\AppleInternal
+        (substitute your system drive letter for C - scripts don't hard-code the drive letter)
+        
+        Also fixed CFNetwork build variant
+
+        * WebKit.vcproj/WebKit.vcproj:
+        * WebKit.vcproj/WebKitGUID.vcproj:
+        * WebURLResponse.cpp:
+        (WebURLResponse::createInstance):
+
 2006-09-08  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Adam

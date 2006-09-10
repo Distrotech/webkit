@@ -25,12 +25,9 @@
 
 #include "WebKitDLL.h"
 #include "WebURLResponse.h"
+#include "MarshallingHelpers.h"
 
 #include <wtf/platform.h>
-
-#if USE(CFNETWORK)
-#include <CFNetwork/CFURLResponsePriv.h>
-#endif
 
 #pragma warning( push, 0 )
 #include "DeprecatedString.h"
@@ -80,7 +77,7 @@ WebURLResponse* WebURLResponse::createInstance(ResourceLoader* loader, PlatformR
 #if USE(CFNETWORK)
         instance->m_mimeType = MarshallingHelpers::CFStringRefToBSTR(mimeType);
         if (textEncoding)
-            instance->m_textEncodingName = textEncoding;
+            instance->m_textEncodingName = MarshallingHelpers::CFStringRefToBSTR(textEncoding);
         else {
             DeprecatedString charsetStr = loader->queryMetaData("charset").deprecatedString();
             instance->m_textEncodingName = SysAllocStringLen((LPCOLESTR)charsetStr.unicode(), charsetStr.length());

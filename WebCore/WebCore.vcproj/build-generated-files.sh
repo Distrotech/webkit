@@ -25,28 +25,3 @@ export ENCODINGS_PREFIX=""
 # FIXME: Should make XPath Support configurable someday on Win32.
 export FEATURE_DEFINES="XPATH_SUPPORT"
 make -f "$WebCore/DerivedSources.make" || exit 1
-
-cd "$SRCROOT"
-mkdir -p "${WebKitOutputConfigDirUnix}"
-
-echo "Copying necessary dll files"
-
-if [ ../libxml/bin/libxml2.dll -nt "$WebKitOutputConfigDirUnix/libxml2.dll" ]; then
-    echo "Copying libxml2.dll"
-    cp ../libxml/bin/libxml2.dll "$WebKitOutputConfigDirUnix" || exit 1
-fi
-
-if [ ../libxslt/bin/libxslt.dll -nt "$WebKitOutputConfigDirUnix/libxslt.dll" ]; then
-    echo "Copying libxslt.dll"
-    cp ../libxslt/bin/libxslt.dll "$WebKitOutputConfigDirUnix" || exit 1
-fi
-
-if [ ../iconv/bin/iconv.dll -nt "$WebKitOutputConfigDirUnix/iconv.dll" ]; then
-    echo "Copying iconv.dll"
-    cp ../iconv/bin/iconv.dll "$WebKitOutputConfigDirUnix" || exit 1
-fi
-
-if [ ../zlib/bin/zlib1.dll -nt "$WebKitOutputConfigDirUnix/zlib1.dll" ]; then
-    echo "Copying zlib1.dll"
-    cp ../zlib/bin/zlib1.dll "$WebKitOutputConfigDirUnix" || exit 1
-fi
