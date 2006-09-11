@@ -1,3 +1,26 @@
+2006-09-11  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Tim O and Maciej.
+
+        Add plugin stream object.
+        
+        * plugins/win/PluginStreamWin.cpp: Added.
+        (WebCore::PluginStreamWin::PluginStreamWin):
+        (WebCore::PluginStreamWin::~PluginStreamWin):
+        (WebCore::PluginStreamWin::setRequestHeaders):
+        (WebCore::PluginStreamWin::setPostData):
+        (WebCore::PluginStreamWin::start):
+        (WebCore::PluginStreamWin::stop):
+        (WebCore::PluginStreamWin::startStream):
+        (WebCore::PluginStreamWin::cancelAndDestroyStream):
+        (WebCore::PluginStreamWin::destroyStream):
+        (WebCore::PluginStreamWin::delayDeliveryTimerFired):
+        (WebCore::PluginStreamWin::deliverData):
+        (WebCore::PluginStreamWin::receivedResponse):
+        (WebCore::PluginStreamWin::receivedData):
+        (WebCore::PluginStreamWin::receivedAllData):
+        * plugins/win/PluginStreamWin.h: Added.
+
 2006-09-10  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Steven Falkenburg
