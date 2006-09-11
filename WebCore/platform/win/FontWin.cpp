@@ -44,9 +44,8 @@ static void notImplemented() { puts("Not yet implemented"); _CrtDbgBreak(); }
 
 #if PLATFORM(CAIRO)
 
-// FIXME - <rdar://problem/4725982> - Once printing is hooked up, pay attn to the userPrinterFont param
 void Font::drawGlyphs(GraphicsContext* graphicsContext, const FontData* font, const GlyphBuffer& glyphBuffer, 
-                      int from, int numGlyphs, const FloatPoint& point, bool usePrinterFont) const
+                      int from, int numGlyphs, const FloatPoint& point) const
 {
     cairo_t* context = graphicsContext->platformContext();
 
