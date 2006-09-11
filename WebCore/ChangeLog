@@ -1,3 +1,12 @@
+2006-09-10  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by YABF, and Adam's suggestive rubberstamp before he hopped offline
+
+        Build fix + FIXME/Radar to reflect an OpenSource change to the Font.h header
+
+        * platform/win/FontWin.cpp:
+        (WebCore::Font::drawGlyphs): Added the parameter and a FIXME 
+
 2006-09-10  Steve Falkenburg  <sfalken@apple.com>
 
         Rubber-stamp by aroben.
