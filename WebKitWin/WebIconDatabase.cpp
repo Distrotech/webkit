@@ -23,15 +23,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
+#include "config.h"
 #include "WebKitDLL.h"
 #include "WebIconDatabase.h"
 
+#pragma warning(push, 0)
+#include "loader/icon/IconDatabase.h"
+#include "platform/image.h"
+#include "platform/platformstring.h"
+#pragma warning(pop)
+
+#include "shlobj.h"
+
+using namespace WebCore;
+using namespace WTF;
+
 // WebIconDatabase ----------------------------------------------------------------
 
-WebIconDatabase* WebIconDatabase::m_sharedIconDatabase = 0;
+WebIconDatabase* WebIconDatabase::m_sharedWebIconDatabase = 0;
 
 WebIconDatabase::WebIconDatabase()
 : m_refCount(0)
+, m_iconDatabase(0)
 {
     gClassCount++;
 }
@@ -39,6 +52,45 @@ WebIconDatabase::WebIconDatabase()
 WebIconDatabase::~WebIconDatabase()
 {
     gClassCount--;
+}
+
+// FIXME - <rdar://problem/4721579>
+// This is code ripped directly from FileUtilities.cpp - it may be extremely useful
+// to have it in a centralized location in WebKit.  But also, getting the icon database
+// path should use the WebPreferences system before it falls back to some reasonable default
+HRESULT userIconDatabasePath(String& path)
+{
+    // get the path to the user's Application Data folder (Example: C:\Documents and Settings\{username}\Application Data\)
+    TCHAR appDataPath[MAX_PATH];
+    HRESULT hr = SHGetFolderPath(0, CSIDL_APPDATA | CSIDL_FLAG_CREATE, 0, 0, appDataPath);
+    if (FAILED(hr))
+        goto exit;
+
+    // make the Apple Computer and WebKit subfolder
+    path = String(appDataPath) + "\\Apple Computer\\WebKit";
+    if (!CreateDirectory(path.charactersWithNullTermination(), 0)) {
+        DWORD err = GetLastError();
+        if (err != ERROR_ALREADY_EXISTS) {
+            hr = HRESULT_FROM_WIN32(err);
+            goto exit;
+        }
+    }
+
+exit:
+    return hr;
+}
+
+void WebIconDatabase::init()
+{
+    ASSERT(!m_iconDatabase);
+    m_iconDatabase = WebCore::IconDatabase::sharedIconDatabase();
+    String databasePath;
+
+    if (SUCCEEDED(userIconDatabasePath(databasePath)))
+        if (!m_iconDatabase->open(databasePath)) {
+            LOG_ERROR("Failed to open icon database path");
+            ASSERT(false);
+        }
 }
 
 WebIconDatabase* WebIconDatabase::createInstance()
@@ -83,45 +135,61 @@ ULONG STDMETHODCALLTYPE WebIconDatabase::Release(void)
 HRESULT STDMETHODCALLTYPE WebIconDatabase::sharedIconDatabase( 
         /* [retval][out] */ IWebIconDatabase** result)
 {
-    if (!m_sharedIconDatabase)
-        m_sharedIconDatabase = createInstance();
-    else
-        m_sharedIconDatabase->AddRef();
+    if (!m_sharedWebIconDatabase) {
+        m_sharedWebIconDatabase = createInstance();
+        m_sharedWebIconDatabase->init();
+    } else
+        m_sharedWebIconDatabase->AddRef();
 
-    *result = m_sharedIconDatabase;
+    *result = m_sharedWebIconDatabase;
     return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebIconDatabase::iconForURL( 
-        /* [in] */ BSTR /*url*/,
-        /* [optional][in] */ LPSIZE /*size*/,
+        /* [in] */ BSTR url,
+        /* [optional][in] */ LPSIZE size,
         /* [optional][in] */ BOOL /*cache*/,
-        /* [retval][out] */ IWebImage** /*image*/)
+        /* [retval][out] */ HBITMAP* bitmap)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    ASSERT(m_iconDatabase);
+    IntSize intSize(*size);
+
+    Image* icon = m_iconDatabase->iconForPageURL(String(url, SysStringLen(url)), intSize);
+    if (icon) {
+        *bitmap = getOrCreateSharedBitmap(size);
+        if (!icon->getHBITMAP(*bitmap)) {
+            LOG_ERROR("Failed to draw Image to HBITMAP");
+            *bitmap = 0;
+            return E_FAIL;
+        }
+        return S_OK;
+    }
+
+    return defaultIconWithSize(size, bitmap);
 }
-    
+
 HRESULT STDMETHODCALLTYPE WebIconDatabase::defaultIconWithSize( 
-        /* [in] */ LPSIZE /*size*/,
-        /* [retval][out] */ IWebImage** /*result*/)
+        /* [in] */ LPSIZE size,
+        /* [retval][out] */ HBITMAP* result)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    *result = getOrCreateDefaultIconBitmap(size);
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebIconDatabase::retainIconForURL( 
-        /* [in] */ BSTR /*url*/)
+        /* [in] */ BSTR url)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    ASSERT(m_iconDatabase);
+    m_iconDatabase->retainIconForPageURL(String(url, SysStringLen(url)));
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebIconDatabase::releaseIconForURL( 
-        /* [in] */ BSTR /*url*/)
+        /* [in] */ BSTR url)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    ASSERT(m_iconDatabase);
+    m_iconDatabase->releaseIconForPageURL(String(url, SysStringLen(url)));
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebIconDatabase::delayDatabaseCleanup(void)
@@ -134,4 +202,52 @@ HRESULT STDMETHODCALLTYPE WebIconDatabase::allowDatabaseCleanup(void)
 {
     DebugBreak();
     return E_NOTIMPL;
+}
+
+HBITMAP createDIB(LPSIZE size)
+{
+    HBITMAP result;
+
+    BITMAPINFO bmInfo = {0};
+    bmInfo.bmiHeader.biSize = sizeof(BITMAPINFO);
+    bmInfo.bmiHeader.biWidth = size->cx;
+    bmInfo.bmiHeader.biHeight = size->cy;
+    bmInfo.bmiHeader.biPlanes = 1;
+    bmInfo.bmiHeader.biBitCount = 32;
+    bmInfo.bmiHeader.biCompression = BI_RGB;
+
+    HDC dc = GetDC(0);
+    result = CreateDIBSection(dc, &bmInfo, DIB_RGB_COLORS, 0, 0, 0);
+    ReleaseDC(0, dc);
+
+    return result;
+}
+
+HBITMAP WebIconDatabase::getOrCreateSharedBitmap(LPSIZE size)
+{
+    HBITMAP result = m_sharedIconMap.get(*size);
+    if (result)
+        return result;
+    result = createDIB(size);
+    m_sharedIconMap.set(*size, result);
+    return result;
+}
+
+HBITMAP WebIconDatabase::getOrCreateDefaultIconBitmap(LPSIZE size)
+{
+    HBITMAP result = m_defaultIconMap.get(*size);
+    if (result)
+        return result;
+
+    result = createDIB(size);
+    static Image* defaultIconImage = 0;
+    if (!defaultIconImage) {
+        defaultIconImage = Image::loadPlatformResource("urlIcon"); 
+    }
+    m_defaultIconMap.set(*size, result);
+    if (!defaultIconImage->getHBITMAP(result)) {
+        LOG_ERROR("Failed to draw Image to HBITMAP");
+        return 0;
+    }
+    return result;
 }

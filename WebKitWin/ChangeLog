@@ -1,3 +1,25 @@
+2006-09-10  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Steve Falkenburg
+        
+        Made changes to IWebIconDatabase and implemented it in WebIconDatabase
+        
+        * Interfaces/IWebIconDatabase.idl:  Returns HBITMAPs, not IWebImages
+        * WebIconDatabase.cpp:
+        (WebIconDatabase::WebIconDatabase): 
+        (userIconDatabasePath): Get the user's datapath via a shell call
+        (WebIconDatabase::init): Initialize the WebCore::IconDatabase
+        (WebIconDatabase::sharedIconDatabase): Get the shared IWebIconDatabase
+        (WebIconDatabase::iconForURL): Implemented
+        (WebIconDatabase::defaultIconWithSize): Ditto
+        (WebIconDatabase::retainIconForURL): Ditto
+        (WebIconDatabase::releaseIconForURL): Ditto
+        (createDIB): Created a DIB of a given size for storage in a hash
+        (WebIconDatabase::getOrCreateSharedBitmap): Get a "shared" bitmap from the hash, or create and store it
+        (WebIconDatabase::getOrCreateDefaultIconBitmap): Ditto for the Default Icons HBITMAPs
+        * WebIconDatabase.h: 
+        * WebKit.vcproj/WebKit.vcproj: 
+
 2006-09-10  Steve Falkenburg  <sfalken@apple.com>
 
         Rubber-stamp by aroben.

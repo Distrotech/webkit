@@ -28,13 +28,29 @@
 
 #include "IWebIconDatabase.h"
 
+#pragma warning(push, 0)
+#include <WTF/HashMap.h>
+#include <platform/IntSize.h>
+#include <platform/IntSizeHash.h>
+#pragma warning(pop)
+
+#include <windows.h>
+
+namespace WebCore
+{
+    class IconDatabase;
+}; //namespace WebCore
+using namespace WebCore;
+using namespace WTF;
+
 class WebIconDatabase : public IWebIconDatabase
 {
 public:
     static WebIconDatabase* createInstance();
-protected:
+private:
     WebIconDatabase();
     ~WebIconDatabase();
+    void init();
 public:
 
     // IUnknown
@@ -50,11 +66,11 @@ public:
         /* [in] */ BSTR url,
         /* [optional][in] */ LPSIZE size,
         /* [optional][in] */ BOOL cache,
-        /* [retval][out] */ IWebImage **image);
+        /* [retval][out] */ HBITMAP *image);
     
     virtual HRESULT STDMETHODCALLTYPE defaultIconWithSize( 
         /* [in] */ LPSIZE size,
-        /* [retval][out] */ IWebImage **result);
+        /* [retval][out] */ HBITMAP *result);
     
     virtual HRESULT STDMETHODCALLTYPE retainIconForURL( 
         /* [in] */ BSTR url);
@@ -68,7 +84,16 @@ public:
 
 protected:
     ULONG m_refCount;
-    static WebIconDatabase* m_sharedIconDatabase;
+    static WebIconDatabase* m_sharedWebIconDatabase;
+
+    IconDatabase* m_iconDatabase;
+
+    // Keep a set of HBITMAPs around for the default icon, and another
+    // to share amongst present site icons
+    HBITMAP getOrCreateSharedBitmap(LPSIZE size);
+    HBITMAP getOrCreateDefaultIconBitmap(LPSIZE size);
+    HashMap<IntSize, HBITMAP> m_defaultIconMap;
+    HashMap<IntSize, HBITMAP> m_sharedIconMap;
 };
 
 #endif

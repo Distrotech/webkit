@@ -114,14 +114,14 @@ interface IWebIconDatabase : IUnknown
         @param URL
         - (NSString *)iconURLForURL:(NSString *)URL;
     */
-    HRESULT iconForURL([in] BSTR url, [in, optional] LPSIZE size, [in, optional] BOOL cache, [out, retval] IWebImage** image);
+    HRESULT iconForURL([in] BSTR url, [in, optional] LPSIZE size, [in, optional] BOOL cache, [out, retval] HBITMAP* image);
 
     /*!
         @method defaultIconWithSize:
         @param size
         - (NSImage *)defaultIconWithSize:(NSSize)size;
     */
-    HRESULT defaultIconWithSize([in] LPSIZE size, [out, retval] IWebImage** result);
+    HRESULT defaultIconWithSize([in] LPSIZE size, [out, retval] HBITMAP* result);
 
     /*!
         @method retainIconForURL:
