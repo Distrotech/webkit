@@ -1,3 +1,15 @@
+2006-09-10  David Hyatt  <hyatt@apple.com>
+
+        Remove the addIntrinsicMargins code from the theme.  I did this
+        in the open source version but forgot to do it in the internal
+        version.
+
+        * rendering/RenderThemeWin.cpp:
+        (WebCore::RenderThemeWin::adjustButtonStyle):
+        (WebCore::RenderThemeWin::adjustTextFieldStyle):
+        (WebCore::RenderThemeWin::adjustTextAreaStyle):
+        (WebCore::RenderThemeWin::adjustMenuListStyle):
+
 2006-09-10  Brady Eidson  <beidson@apple.com>
 
         Reviewed by YABF, and Adam's suggestive rubberstamp before he hopped offline
