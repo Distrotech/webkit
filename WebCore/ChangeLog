@@ -1,5 +1,10 @@
 2006-09-11  Anders Carlsson  <acarlsson@apple.com>
 
+        * WebCore.vcproj/WebCore.vcproj:
+        Fix build.
+        
+2006-09-11  Anders Carlsson  <acarlsson@apple.com>
+
         Reviewed by Tim O and Maciej.
 
         Add plugin stream object.
