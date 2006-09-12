@@ -1,3 +1,26 @@
+2006-09-12  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Tim O.
+
+        Add scripting support for plugins.
+        
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::FrameWin):
+        (WebCore::FrameWin::addPluginRootObject):
+        (WebCore::FrameWin::cleanupPluginObjects):
+        (WebCore::FrameWin::bindingRootObject):
+        (WebCore::FrameWin::windowScriptNPObject):
+        * bridge/win/FrameWin.h:
+        * plugins/win/PluginPackageWin.cpp:
+        (WebCore::PluginPackageWin::load):
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::getValue):
+        * plugins/win/npapi.cpp:
+        (NPN_RequestRead):
+        (NPN_InvalidateRect):
+        (NPN_InvalidateRegion):
+        (NPN_ForceRedraw):
+
 2006-09-12  Adam Roben  <aroben@apple.com>
 
         Reviewed many times by darin, hyatt.

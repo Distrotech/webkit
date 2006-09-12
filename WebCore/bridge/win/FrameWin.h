@@ -29,6 +29,14 @@
 #include "Frame.h"
 #include <wtf/HashMap.h>
 
+class NPObject;
+
+namespace KJS {
+    namespace Bindings {
+        class RootObject;
+    }
+}
+
 namespace WebCore {
 
 class FrameWinClient
@@ -145,9 +153,19 @@ public:
 
     virtual void didFirstLayout();
 
+    void addPluginRootObject(KJS::Bindings::RootObject* root);
+    KJS::Bindings::RootObject* bindingRootObject();
+    NPObject* windowScriptNPObject();
+
 private:
+    virtual void cleanupPluginObjects();
     virtual bool passMouseDownEventToWidget(Widget*);
     FrameWinClient* m_client;
+
+    KJS::Bindings::RootObject* m_bindingRoot; // The root object used for objects
+                                              // bound outside the context of a plugin.
+    Vector<KJS::Bindings::RootObject*> m_rootObjects;
+    NPObject* m_windowScriptNPObject;
 };
 
 inline FrameWin* Win(Frame* frame) { return static_cast<FrameWin*>(frame); }

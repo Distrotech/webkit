@@ -392,9 +392,18 @@ void PluginViewWin::status(const char* message)
 NPError PluginViewWin::getValue(NPNVariable variable, void* value)
 {
     switch (variable) {
-        case NPNVWindowNPObject:
-            // FIXME: Implement
-            return NPERR_GENERIC_ERROR;
+        case NPNVWindowNPObject: {
+            NPObject* windowScriptObject = m_parentFrame->windowScriptNPObject();
+
+            // Return value is expected to be retained, as described here: <http://www.mozilla.org/projects/plugin/npruntime.html>
+            if (windowScriptObject)
+                _NPN_RetainObject(windowScriptObject);
+
+            void** v = (void**)value;
+            *v = windowScriptObject;
+            
+            return NPERR_NO_ERROR;
+        }
         default:
             DebugBreak();
             return NPERR_GENERIC_ERROR;

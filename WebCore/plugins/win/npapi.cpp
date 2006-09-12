@@ -67,7 +67,6 @@ void NPN_ReloadPlugins(NPBool reloadPages)
 
 NPError NPN_RequestRead(NPStream* stream, NPByteRange* rangeList)
 {
-    DebugBreak();
     return NPERR_GENERIC_ERROR;
 }
 
@@ -123,17 +122,17 @@ void NPN_Status(NPP instance, const char* message)
 
 void NPN_InvalidateRect(NPP instance, NPRect* invalidRect)
 {
-    DebugBreak();
+    // FIXME: Windowless plug-ins are currently unsupported
 }
 
 void NPN_InvalidateRegion(NPP instance, NPRegion invalidRegion)
 {
-    DebugBreak();
+    // FIXME: Windowless plug-ins are currently unsupported
 }
 
 void NPN_ForceRedraw(NPP instance)
 {
-    DebugBreak();
+    // FIXME: Windowless plug-ins are currently unsupported
 }
 
 NPError NPN_GetValue(NPP instance, NPNVariable variable, void* value)

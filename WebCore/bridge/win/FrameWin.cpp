@@ -26,10 +26,15 @@
 #include "config.h"
 #include "FrameWin.h"
 
+#include <winsock2.h>
+#include <windows.h>
 #include "BrowserExtensionWin.h"
 #include "Decoder.h"
 #include "Document.h"
 #include "FramePrivate.h"
+#include "kjs_window.h"
+#include "NP_jsobject.h"
+#include "npruntime_impl.h"
 #include "Page.h"
 #include "PlatformKeyboardEvent.h"
 #include "Plugin.h"
@@ -37,15 +42,17 @@
 #include "PluginViewWin.h"
 #include "RenderFrame.h"
 #include "ResourceLoader.h"
-#include <windows.h>
+#include "runtime_root.h"
 
 namespace WebCore {
 
 FrameWin::FrameWin(Page* page, Element* ownerElement, FrameWinClient* client)
     : Frame(page, ownerElement)
+    , m_client(client)
+    , m_bindingRoot(0)
+    , m_windowScriptNPObject(0)
 {
     d->m_extension = new BrowserExtensionWin(this);
-    m_client = client;
 }
 
 FrameWin::~FrameWin()
@@ -196,6 +203,65 @@ enum WebCore::ObjectContentType FrameWin::objectContentType(const KURL& url, con
 Plugin* FrameWin::createPlugin(Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType)
 {
     return new Plugin(PluginDatabaseWin::installedPlugins()->createPluginView(this, element, url, paramNames, paramValues, mimeType));
+}
+
+void FrameWin::addPluginRootObject(KJS::Bindings::RootObject* root)
+{
+    m_rootObjects.append(root);
+}
+
+void FrameWin::cleanupPluginObjects()
+{
+    // Delete old plug-in data structures
+    KJS::JSLock;
+
+    unsigned count = m_rootObjects.size();
+    for (unsigned i = 0; i < count; i++)
+        m_rootObjects[i]->removeAllNativeReferences();
+    m_rootObjects.clear();
+
+    m_bindingRoot = 0;
+
+    if (m_windowScriptNPObject) {
+        // Call _NPN_DeallocateObject() instead of _NPN_ReleaseObject() so that we don't leak if a plugin fails to release the window
+        // script object properly.
+        // This shouldn't cause any problems for plugins since they should have already been stopped and destroyed at this point.
+        _NPN_DeallocateObject(m_windowScriptNPObject);
+        m_windowScriptNPObject = 0;
+    }
+}
+
+KJS::Bindings::RootObject* FrameWin::bindingRootObject()
+{
+    ASSERT(jScriptEnabled());
+    if (!m_bindingRoot) {
+        KJS::JSLock lock;
+        m_bindingRoot = new KJS::Bindings::RootObject(0); // The root gets deleted by JavaScriptCore
+        KJS::JSObject* win = KJS::Window::retrieveWindow(this);
+        m_bindingRoot->setRootObjectImp(win);
+        m_bindingRoot->setInterpreter(jScript()->interpreter());
+        addPluginRootObject(m_bindingRoot);
+    }
+    return m_bindingRoot;
+}
+
+NPObject* FrameWin::windowScriptNPObject()
+{
+    if (!m_windowScriptNPObject) {
+        if (jScriptEnabled()) {
+            // JavaScript is enabled, so there is a JavaScript window object. Return an NPObject bound to the window
+            // object.
+            KJS::JSObject* win = KJS::Window::retrieveWindow(this);
+            ASSERT(win);
+            m_windowScriptNPObject = _NPN_CreateScriptObject(0, win, bindingRootObject(), bindingRootObject());
+        } else {
+            // JavaScript is not enabled, so we cannot bind the NPObject to the JavaScript window object.
+            // Instead, we create an NPObject of a different class, one which is not bound to a JavaScript object.
+            m_windowScriptNPObject = _NPN_CreateNoScriptObject();
+        }
+    }
+
+    return m_windowScriptNPObject;
 }
 
 }

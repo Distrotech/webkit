@@ -26,6 +26,7 @@
 #include "config.h"
 #include "PluginPackageWin.h"
 #include "DeprecatedString.h"
+#include "npruntime_impl.h"
 
 namespace WebCore {
 
@@ -181,6 +182,23 @@ bool PluginPackageWin::load()
     m_browserFuncs.forceredraw = NPN_ForceRedraw;
     m_browserFuncs.getJavaEnv = NPN_GetJavaEnv;
     m_browserFuncs.getJavaPeer = NPN_GetJavaPeer;
+
+    m_browserFuncs.releasevariantvalue = _NPN_ReleaseVariantValue;
+    m_browserFuncs.getstringidentifier = _NPN_GetStringIdentifier;
+    m_browserFuncs.getstringidentifiers = _NPN_GetStringIdentifiers;
+    m_browserFuncs.getintidentifier = _NPN_GetIntIdentifier;
+    m_browserFuncs.identifierisstring = _NPN_IdentifierIsString;
+    m_browserFuncs.utf8fromidentifier = _NPN_UTF8FromIdentifier;
+    m_browserFuncs.createobject = _NPN_CreateObject;
+    m_browserFuncs.retainobject = _NPN_RetainObject;
+    m_browserFuncs.releaseobject = _NPN_ReleaseObject;
+    m_browserFuncs.invoke = _NPN_Invoke;
+    m_browserFuncs.invokeDefault = _NPN_InvokeDefault;
+    m_browserFuncs.evaluate = _NPN_Evaluate;
+    m_browserFuncs.getproperty = _NPN_GetProperty;
+    m_browserFuncs.setproperty = _NPN_SetProperty;
+    m_browserFuncs.removeproperty = _NPN_RemoveProperty;
+    m_browserFuncs.setexception = _NPN_SetException;
 
     npErr = NP_Initialize(&m_browserFuncs);
 
