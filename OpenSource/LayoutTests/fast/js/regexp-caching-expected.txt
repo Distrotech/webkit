@@ -1,0 +1,180 @@
+This test checks our implementation of the special RegExp member variables.
+
+Properties of RegExp at startup:
+
+input: {} (read-write)
+
+$5: {} (read-only)
+
+$3: {} (read-only)
+
+$1: {} (read-only)
+
+multiline: {false} (read-write)
+
+lastParen: {} (read-only)
+
+rightContext: {} (read-only)
+
+lastMatch: {} (read-only)
+
+$4: {} (read-only)
+
+leftContext: {} (read-only)
+
+$2: {} (read-only)
+
+$6: {} (read-only)
+
+$7: {} (read-only)
+
+$8: {} (read-only)
+
+$9: {} (read-only)
+
+
+Properties of RegExp after /(1)(2)(3)(4)(5)(6)(7)(8)(9)(0)/.exec(<1234567890>):
+
+input: {<1234567890>}
+
+$5: {5}
+
+$3: {3}
+
+$1: {1}
+
+multiline: {false}
+
+lastParen: {0}
+
+rightContext: {>}
+
+lastMatch: {1234567890}
+
+$4: {4}
+
+leftContext: {<}
+
+$2: {2}
+
+$6: {6}
+
+$7: {7}
+
+$8: {8}
+
+$9: {9}
+
+
+RegExp.$0 does not exist
+
+RegExp.$10 does not exist
+
+RegExp uses RegExp.input
+
+RegExp.multiline coerces values to booleans
+
+RegExp.input coerces values to strings
+
+
+Properties of RegExp after /(1)(2)(3)(4)(5)(6)(7)(8)(9)(0)/.exec(XXX):
+
+input: {0}
+
+$5: {}
+
+$3: {}
+
+$1: {}
+
+multiline: {true}
+
+lastParen: {}
+
+rightContext: {}
+
+lastMatch: {}
+
+$4: {}
+
+leftContext: {0}
+
+$2: {}
+
+$6: {}
+
+$7: {}
+
+$8: {}
+
+$9: {}
+
+
+---------- [Cleared RegExp values] ----------
+
+Properties of RegExp after <1234567890>.search(/(1)(2)(3)(4)(5)(6)(7)(8)(9)(0)/):
+
+input: {<1234567890>}
+
+$5: {5}
+
+$3: {3}
+
+$1: {1}
+
+multiline: {true}
+
+lastParen: {0}
+
+rightContext: {>}
+
+lastMatch: {1234567890}
+
+$4: {4}
+
+leftContext: {<}
+
+$2: {2}
+
+$6: {6}
+
+$7: {7}
+
+$8: {8}
+
+$9: {9}
+
+
+---------- [Cleared RegExp values] ----------
+
+Properties of RegExp after <1234567890>.replace(/(1)(2)(3)(4)(5)(6)(7)(8)(9)(0)/):
+
+input: {<1234567890>}
+
+$5: {5}
+
+$3: {3}
+
+$1: {1}
+
+multiline: {true}
+
+lastParen: {0}
+
+rightContext: {>}
+
+lastMatch: {1234567890}
+
+$4: {4}
+
+leftContext: {<}
+
+$2: {2}
+
+$6: {6}
+
+$7: {7}
+
+$8: {8}
+
+$9: {9}

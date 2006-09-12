@@ -1,0 +1,916 @@
+#!/usr/bin/perl
+
+# Copyright (C) 2005, 2006 Apple Computer, Inc.  All rights reserved.
+# Copyright (C) 2006 Alexey Proskuryakov (ap@nypop.com)
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# 1.  Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer. 
+# 2.  Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution. 
+# 3.  Neither the name of Apple Computer, Inc. ("Apple") nor the names of
+#     its contributors may be used to endorse or promote products derived
+#     from this software without specific prior written permission. 
+#
+# THIS SOFTWARE IS PROVIDED BY APPLE AND ITS CONTRIBUTORS "AS IS" AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL APPLE OR ITS CONTRIBUTORS BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+# THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Script to run the Web Kit Open Source Project layout tests.
+
+# Run all the tests passed in on the command line.
+# If no tests are passed, find all the .html, .shtml, .xml, .xhtml, .pl, .php (and svg) files in the test directory.
+
+# Run each text.
+# Compare against the existing file xxx-expected.txt.
+# If there is a mismatch, generate xxx-actual.txt and xxx-diffs.txt.
+
+# At the end, report:
+#   the number of tests that got the expected results
+#   the number of tests that ran, but did not get the expected results
+#   the number of tests that failed to run
+#   the number of tests that were run but had no expected results to compare against
+
+use strict;
+use warnings;
+
+use Cwd;
+use File::Basename;
+use File::Copy;
+use File::Find;
+use File::Path;
+use File::Spec;
+use File::Spec::Functions;
+use FindBin;
+use Getopt::Long;
+use IPC::Open2;
+use Time::HiRes qw(time);
+
+use lib $FindBin::Bin;
+use webkitdirs;
+
+sub closeDumpRenderTree();
+sub closeHTTPD();
+sub countAndPrintLeaks($$$);
+sub fileNameWithNumber($$);
+sub numericcmp($$);
+sub openDumpRenderTreeIfNeeded();
+sub openHTTPDIfNeeded();
+sub pathcmp($$);
+sub processIgnoreTests($);
+sub slowestcmp($$);
+sub splitpath($);
+
+# Argument handling
+my $checkLeaks = '';
+my $guardMalloc = '';
+my $httpdPort = 8000;
+my $ignoreTests = '';
+my $launchSafari = 1;
+my $pixelTests = '';
+my $quiet = '';
+my $repaintSweepHorizontally = '';
+my $repaintTests = '';
+my $report10Slowest = 0;
+my $resetResults = 0;
+my $showHelp = 0;
+my $singly = 0;
+my $testHTTP = 1;
+my $testOnlySVGs = '';
+my $testResultsDirectory = "/tmp/layout-test-results";
+my $verbose = 0;
+
+my $expectedTag = "expected";
+if (isCygwin()) {
+    $expectedTag = "expected-win";
+} elsif (isQt()) {
+    $expectedTag = "expected-qt";
+}
+
+my $actualTag = "actual";
+if (isCygwin()) {
+    $actualTag = "actual-win";
+} elsif (isQt()) {
+    $actualTag = "actual-qt";
+}
+
+my $diffsTag = "diffs";
+if (isCygwin()) {
+    $actualTag = "diffs-win";
+} elsif (isQt()) {
+    $actualTag = "diffs-qt";
+}
+
+my $usage =
+    "Usage: " . basename($0) . " [options] [testdir|testpath ...]\n" .
+    "  -g|--guard-malloc       Enable malloc guard\n" .
+    "  --help                  Show this help message\n" .
+    "  -h|--horizontal-sweep   Change repaint to sweep horizontally instead of vertically (implies --repaint-tests)\n" .
+    "  --[no-]http             Run (or do not run) http tests (default: " . ($testHTTP ? "run" : "do not run") . ")\n" .
+    "  -i|--ignore-tests       Comma-separated list of directories or tests to ignore\n" .
+    "  --[no-]launch-safari    Launch (or do not launch) Safari to display test results (default: "
+        . ($launchSafari ? "launch" : "do not launch") . ")\n" .
+    "  -l|--leaks              Enable leaks checking\n" .
+    "  -p|--pixel-tests        Enable pixel tests\n" .
+    "  --port                  Web server port to use with http tests\n" .
+    "  -q|--quiet              Less verbose output\n" .
+    "  -r|--repaint-tests      Run repaint tests (implies --pixel-tests)\n" .
+    "  --reset-results         Reset ALL results (including pixel tests if --pixel-tests is set)\n" .
+    "  -o|--results-directory  Output results directory (default: " . $testResultsDirectory . ")\n" .
+    "  -1|--singly             Isolate each test case run (implies --verbose)\n" .
+    "  --slowest               Report the 10 slowest tests\n" .
+    "  --svg                   Run only SVG tests (implies --pixel-tests)\n" .
+    "  -v|--verbose            More verbose output (overrides --quiet)\n" .
+    "  --debug|--release       Set DumpRenderTree build configuration\n";
+
+# Parse out build options (--debug or --release) first
+my $buildConfiguration = setConfiguration();
+
+my $getOptionsResult = GetOptions(
+    'guard-malloc|g' => \$guardMalloc,
+    'help' => \$showHelp,
+    'horizontal-sweep|h' => \$repaintSweepHorizontally,
+    'http!' => \$testHTTP,
+    'ignore-tests|i=s' => \$ignoreTests,
+    'launch-safari!' => \$launchSafari,
+    'leaks|l' => \$checkLeaks,
+    'pixel-tests|p' => \$pixelTests,
+    'port=i' => \$httpdPort,
+    'quiet|q' => \$quiet,
+    'repaint-tests|r' => \$repaintTests,
+    'reset-results' => \$resetResults,
+    'results-directory|o=s' => \$testResultsDirectory,
+    'singly|1' => \$singly,
+    'slowest' => \$report10Slowest,
+    'svg' => \$testOnlySVGs, 
+    'verbose|v' => \$verbose,
+);
+
+if (!$getOptionsResult || $showHelp) {
+    print STDERR $usage;
+    exit 1;
+}
+
+$repaintTests = 1 if $repaintSweepHorizontally;
+
+$pixelTests = 1 if $testOnlySVGs;
+$pixelTests = 1 if $repaintTests;
+
+$verbose = 1 if $singly;
+
+my $productDir = productDir();
+
+chdirWebKit();
+
+my @buildOptions = ();
+if ($buildConfiguration) {
+    push @buildOptions, '--' . lc($buildConfiguration);
+}
+my $buildResult = system "WebKitTools/Scripts/build-dumprendertree", @buildOptions;
+exit WEXITSTATUS($buildResult) if $buildResult;
+
+my $dumpToolName = "DumpRenderTree";
+my $tool = "$productDir/$dumpToolName";
+die "can't find executable $dumpToolName (looked in $productDir)\n" if !-x $tool;
+
+my $imageDiffTool = "$productDir/ImageDiff";
+die "can't find executable $imageDiffTool (looked in $productDir)\n" if $pixelTests && !-x $imageDiffTool;
+
+checkFrameworks();
+
+my $layoutTestsName = $testOnlySVGs ? "LayoutTests/svg" : "LayoutTests";
+my $testDirectory = File::Spec->rel2abs($layoutTestsName);
+my $testResults = catfile($testResultsDirectory, "results.html");
+
+print "Running tests from $testDirectory\n";
+
+my @tests = ();
+
+my %ignoredFiles = ();
+my %ignoredDirectories = ();
+my %ignoredLocalDirectories = map { $_ => 1 } qw(.svn _svn resources);
+my %supportedFileExtensions = map { $_ => 1 } qw(html shtml xml xhtml pl php);
+if ($testOnlySVGs) {
+    %supportedFileExtensions = map { $_ => 1 } qw(svg xml);
+} elsif (checkWebCoreSVGSupport($testOnlySVGs)) { 
+    $supportedFileExtensions{'svg'} = 1;
+} else {
+    $ignoredLocalDirectories{'svg'} = 1;
+}
+if (!$testHTTP) {
+    $ignoredDirectories{'http'} = 1;
+}
+
+if ($ignoreTests) {
+    processIgnoreTests($ignoreTests);
+}
+
+my $directoryFilter = sub {
+    return () if exists $ignoredLocalDirectories{basename($File::Find::dir)};
+    return () if exists $ignoredDirectories{File::Spec->abs2rel($File::Find::dir, $testDirectory)};
+    return @_;
+};
+
+my $fileFilter = sub {
+    my $filename = $_;
+    if ($filename =~ /\.([^.]+)$/) {
+        if (exists $supportedFileExtensions{$1}) {
+            my $path = File::Spec->abs2rel(catfile($File::Find::dir, $filename), $testDirectory);
+            push @tests, $path if !exists $ignoredFiles{$path};
+        }
+    }
+};
+
+for my $test (@ARGV) {
+    $test =~ s/^($layoutTestsName|$testDirectory)\///;
+    my $fullPath = catfile($testDirectory, $test);
+    if (file_name_is_absolute($test)) {
+        print "can't run test $test outside $testDirectory\n";
+    } elsif (-f $fullPath) {
+        my ($filename, $pathname, $fileExtension) = fileparse($test, qr{\.[^.]+$});
+        if (!exists $supportedFileExtensions{substr($fileExtension, 1)}) {
+            print "test $test does not have a supported extension\n";
+        } elsif ($testHTTP || $pathname !~ /^http\//) {
+            push @tests, $test;
+        }
+    } elsif (-d $fullPath) {
+        find({ preprocess => $directoryFilter, wanted => $fileFilter }, $fullPath);
+    } else {
+        print "test $test not found\n";
+    }
+}
+if (!scalar @ARGV) {
+    find({ preprocess => $directoryFilter, wanted => $fileFilter }, $testDirectory);
+}
+
+die "no tests to run\n" if !@tests;
+
+@tests = sort pathcmp @tests;
+
+my %counts;
+my %tests;
+my %imagesPresent;
+my %durations;
+my $count = 0;
+my $maxTestsPerLeaksRun = 1000; # more than 3000 and malloc logging will normally run out of memory
+my $leaksOutputFileNumber = 1;
+my $totalLeaks = 0;
+
+my @toolArgs = ();
+push @toolArgs, "--dump-all-pixels" if $pixelTests && $resetResults;
+push @toolArgs, "--pixel-tests" if $pixelTests;
+push @toolArgs, "--repaint" if $repaintTests;
+push @toolArgs, "--horizontal-sweep" if $repaintSweepHorizontally;
+push @toolArgs, "-";
+
+$| = 1;
+
+my $imageDiffToolPID;
+if ($pixelTests) {
+    local %ENV;
+    $ENV{MallocStackLogging} = 1 if $checkLeaks;
+    $imageDiffToolPID = open2(\*DIFFIN, \*DIFFOUT, $imageDiffTool, "") or die "unable to open $imageDiffTool\n";
+}
+
+my $dumpToolPID;
+my $toolOpen = 0;
+
+my $atLineStart = 1;
+my $lastDirectory = "";
+
+my $httpdOpen = 0;
+
+print "Testing ", scalar @tests, " test cases.\n";
+my $overallStartTime = time;
+
+for my $test (@tests) {
+    next if $test eq 'results.html';
+
+    openDumpRenderTreeIfNeeded();
+
+    my $base = $test;
+    $base =~ s/\.[a-zA-Z]+$//;
+    
+    if ($verbose) {
+        print "running $test -> ";
+        $atLineStart = 0;
+    } elsif (!$quiet) {
+        my $dir = $base;
+        $dir =~ s|/[^/]+$||;
+        if ($dir ne $lastDirectory) {
+            print "\n" unless $atLineStart;
+            print "$dir ";
+            $lastDirectory = $dir;
+        }
+        print ".";
+        $atLineStart = 0;
+    }
+
+    my $result;
+
+    my $startTime = time if $report10Slowest;
+
+    if ($test !~ /^http\//) {
+        my $testPath = "$testDirectory/$test";
+        if (isCygwin()) {
+            $testPath = `cygpath -m -s "$testPath"`;
+        }
+        else {
+            $testPath = canonpath($testPath);
+        }
+        print OUT "$testPath\n";
+    } else {
+        openHTTPDIfNeeded();
+        
+        my $path = canonpath($test);
+        $path =~ s/^http\/tests\///;
+        print OUT "http://127.0.0.1:$httpdPort/$path\n";
+    }
+
+    my $actual = "";
+    while (<IN>) {
+        last if /#EOF/;
+        $actual .= $_;
+    }
+
+    $durations{$test} = time - $startTime if $report10Slowest;
+
+    my $expected;
+    if (!$resetResults && open EXPECTED, "<", "$testDirectory/$base-$expectedTag.txt") {
+        $expected = "";
+        while (<EXPECTED>) {
+            $expected .= $_;
+        }
+        close EXPECTED;
+    }
+
+    if ($checkLeaks && $singly) {
+        print "        $test -> ";
+    }
+
+    my $actualPNG = "";
+    my $diffPNG = "";
+    my $diffPercentage = "";
+    my $diffResult = "passed";
+    
+    if ($pixelTests) {
+        my $actualHash = "";
+        my $expectedHash = "";
+        my $actualPNGSize = 0;
+        while (<IN>) {
+            last if /#EOF/;
+            if (/ActualHash: ([a-f0-9]{32})/) {
+                $actualHash = $1;
+            } elsif (/BaselineHash: ([a-f0-9]{32})/) {
+                $expectedHash = $1;
+            } elsif (/Content-length: (\d+)\s*/) {
+                $actualPNGSize = $1;
+                read(IN, $actualPNG, $actualPNGSize);
+            }
+        }
+
+        if ($expectedHash ne $actualHash && -f "$testDirectory/$base-$expectedTag.png") {
+            my $expectedPNGSize = -s "$testDirectory/$base-$expectedTag.png";
+            my $expectedPNG = "";
+            open EXPECTEDPNG, "$testDirectory/$base-$expectedTag.png";
+            read(EXPECTEDPNG, $expectedPNG, $expectedPNGSize);
+
+            print DIFFOUT "Content-length: $actualPNGSize\n";
+            print DIFFOUT $actualPNG;
+
+            print DIFFOUT "Content-length: $expectedPNGSize\n";
+            print DIFFOUT $expectedPNG;
+
+            while (<DIFFIN>) {
+                last if /^error/ || /^diff:/;
+                if (/Content-length: (\d+)\s*/) {
+                    read(DIFFIN, $diffPNG, $1);
+                }
+            }
+
+            if (/^diff: (.+)% (passed|failed)/) {
+                $diffPercentage = $1;
+                $diffResult = $2;
+            }
+        }
+
+        if ($actualPNGSize && ($resetResults || !-f "$testDirectory/$base-$expectedTag.png")) {
+            open EXPECTED, ">", "$testDirectory/$base-expected.png" or die "could not create $testDirectory/$base-expected.png\n";
+            print EXPECTED $actualPNG;
+            close EXPECTED;
+        }
+
+        # update the expected hash if the image diff said that there was no difference
+        if ($actualHash ne "" && ($resetResults || !-f "$testDirectory/$base-$expectedTag.checksum")) {
+            open EXPECTED, ">", "$testDirectory/$base-$expectedTag.checksum" or die "could not create $testDirectory/$base-$expectedTag.checksum\n";
+            print EXPECTED $actualHash;
+            close EXPECTED;
+        }
+    }
+
+    if (!defined $expected) {
+        if ($verbose) {
+            print "new " . ($resetResults ? "result" : "test") ."\n";
+            $atLineStart = 1;
+        }
+        $result = "new";
+        open EXPECTED, ">", "$testDirectory/$base-$expectedTag.txt" or die "could not create $testDirectory/$base-$expectedTag.txt\n";
+        print EXPECTED $actual;
+        close EXPECTED;
+        unlink "$testResultsDirectory/$base-$actualTag.txt";
+        unlink "$testResultsDirectory/$base-$diffsTag.txt";
+    } elsif ($actual eq $expected && $diffResult eq "passed") {
+        if ($verbose) {
+            print "succeeded\n";
+            $atLineStart = 1;
+        }
+        $result = "match";
+        unlink "$testResultsDirectory/$base-$actualTag.txt";
+        unlink "$testResultsDirectory/$base-$diffsTag.txt";
+    } else {
+        unless ($verbose) {
+            print "\n" unless $atLineStart;
+            print "$test -> ";
+        }
+        print "failed\n";
+        $atLineStart = 1;
+
+        $result = "mismatch";
+
+        my $dir = "$testResultsDirectory/$base";
+        $dir =~ s|/([^/]+)$|| or die "Failed to find test name from base\n";
+        my $testName = $1;
+        mkpath $dir;
+
+        open ACTUAL, ">", "$testResultsDirectory/$base-$actualTag.txt" or die;
+        print ACTUAL $actual;
+        close ACTUAL;
+
+        system "diff -u \"$testDirectory/$base-$expectedTag.txt\" \"$testResultsDirectory/$base-$actualTag.txt\" > \"$testResultsDirectory/$base-$diffsTag.txt\"";
+
+        if ($pixelTests && $diffPNG && $diffPNG ne "") {
+            $imagesPresent{$base} = 1;
+
+            open ACTUAL, ">", "$testResultsDirectory/$base-$actualTag.png" or die;
+            print ACTUAL $actualPNG;
+            close ACTUAL;
+
+            open DIFF, ">", "$testResultsDirectory/$base-$diffsTag.png" or die;
+            print DIFF $diffPNG;
+            close DIFF;
+            
+            copy("$testDirectory/$base-$expectedTag.png", "$testResultsDirectory/$base-$expectedTag.png");
+
+            open DIFFHTML, ">$testResultsDirectory/$base-$diffsTag.html" or die;
+            print DIFFHTML "<html>\n";
+            print DIFFHTML "<head>\n";
+            print DIFFHTML "<title>$base Image Compare</title>\n";
+            print DIFFHTML "<script language=\"Javascript\" type=\"text/javascript\">\n";
+            print DIFFHTML "var currentImage = 0;\n";
+            print DIFFHTML "var imageNames = new Array(\"Actual\", \"Expected\");\n";
+            print DIFFHTML "var imagePaths = new Array(\"$testName-$actualTag.png\", \"$testName-$expectedTag.png\");\n";
+            if (-f "$testDirectory/$base-w3c.png") {
+                copy("$testDirectory/$base-w3c.png", "$testResultsDirectory/$base-w3c.png");
+                print DIFFHTML "imageNames.push(\"W3C\");\n";
+                print DIFFHTML "imagePaths.push(\"$testName-w3c.png\");\n";
+            }
+            print DIFFHTML "function animateImage() {\n";
+            print DIFFHTML "    var image = document.getElementById(\"animatedImage\");\n";
+            print DIFFHTML "    var imageText = document.getElementById(\"imageText\");\n";
+            print DIFFHTML "    image.src = imagePaths[currentImage];\n";
+            print DIFFHTML "    imageText.innerHTML = imageNames[currentImage] + \" Image\";\n";
+            print DIFFHTML "    currentImage = (currentImage + 1) % imageNames.length;\n";
+            print DIFFHTML "    setTimeout('animateImage()',2000);\n";
+            print DIFFHTML "}\n";
+            print DIFFHTML "</script>\n";
+            print DIFFHTML "</head>\n";
+            print DIFFHTML "<body onLoad=\"animateImage();\">\n";
+            print DIFFHTML "<table>\n";
+            if ($diffPercentage) {
+                print DIFFHTML "<tr>\n";
+                print DIFFHTML "<td>Difference between images: <a href=\"$testName-$diffsTag.png\">$diffPercentage%</a></td>\n";
+                print DIFFHTML "</tr>\n";
+            }
+            print DIFFHTML "<tr>\n";
+            print DIFFHTML "<td id=\"imageText\" style=\"text-weight: bold;\">Actual Image</td>\n";
+            print DIFFHTML "</tr>\n";
+            print DIFFHTML "<tr>\n";
+            print DIFFHTML "<td><img src=\"$testName-$actualTag.png\" id=\"animatedImage\"></td>\n";
+            print DIFFHTML "</tr>\n";
+            print DIFFHTML "</table>\n";
+            print DIFFHTML "</body>\n";
+            print DIFFHTML "</html>\n";
+        }
+    }
+
+    if ($checkLeaks && $toolOpen) {
+        if ($singly) {
+            $totalLeaks += countAndPrintLeaks($dumpToolName, $dumpToolPID, "$testResultsDirectory/$base-leaks.txt");
+        } elsif ($count && (($count % $maxTestsPerLeaksRun) == 0)) {
+            my $leaksFileName = fileNameWithNumber($dumpToolName, $leaksOutputFileNumber);
+            my $leaksCount = countAndPrintLeaks($dumpToolName, $dumpToolPID, "$testResultsDirectory/$leaksFileName-leaks.txt");
+            $leaksOutputFileNumber++ if ($leaksCount);
+            $totalLeaks += $leaksCount;
+            closeDumpRenderTree();
+        }
+    }
+
+    if ($singly && $toolOpen) {
+        closeDumpRenderTree();
+    }
+
+    $count += 1;
+    $counts{$result} += 1;
+    push @{$tests{$result}}, $test;
+}
+printf "\n%0.2fs total testing time\n", (time - $overallStartTime) . "";
+
+closeHTTPD();
+
+if ($checkLeaks && !$singly && $toolOpen) {
+    my $leaksFileName = fileNameWithNumber($dumpToolName, $leaksOutputFileNumber);
+    $totalLeaks += countAndPrintLeaks($dumpToolName, $dumpToolPID, "$testResultsDirectory/$leaksFileName-leaks.txt");
+    $leaksOutputFileNumber++;
+}
+
+# FIXME: Do we really want to check the image-comparison tool for leaks every time?
+if ($checkLeaks && $pixelTests) {
+    $totalLeaks += countAndPrintLeaks("ImageDiff", $imageDiffToolPID, "$testResultsDirectory/ImageDiff-leaks.txt");
+}
+
+if ($totalLeaks) {
+    print "\nWARNING: $totalLeaks total leaks found!\n";
+    print "See above for individual leaks results.\n" if ($leaksOutputFileNumber > 2);
+}
+
+close IN;
+close OUT;
+
+if ($report10Slowest) {
+    print "\n\nThe 10 slowest tests:\n\n";
+    my $count = 0;
+    for my $test (sort slowestcmp keys %durations) {
+        printf "%0.2f secs: %s\n", $durations{$test}, $test;
+        last if ++$count == 10;
+    }
+}
+
+print "\n";
+
+if ($resetResults || ($counts{match} && $counts{match} == $count)) {
+    print "all $count test cases succeeded\n";
+    unlink $testResults;
+    exit;
+}
+
+my %text = (
+    match => "succeeded",
+    mismatch => "had incorrect layout",
+    new => "were new",
+    fail => "failed (tool did not execute successfully)",
+);
+
+for my $type ("match", "mismatch", "new", "fail") {
+    my $c = $counts{$type};
+    if ($c) {
+        my $t = $text{$type};
+        my $message;
+        if ($c == 1) {
+            $t =~ s/were/was/;
+            $message = sprintf "1 test case (%d%%) %s\n", 1 * 100 / $count, $t;
+        } else {
+            $message = sprintf "%d test cases (%d%%) %s\n", $c, $c * 100 / $count, $t;
+        }
+        $message =~ s-\(0%\)-(<1%)-;
+        print $message;
+    }
+}
+
+mkpath $testResultsDirectory;
+
+open HTML, ">", $testResults or die;
+print HTML "<html>\n";
+print HTML "<head>\n";
+print HTML "<title>Layout Test Results</title>\n";
+print HTML "</head>\n";
+print HTML "<body>\n";
+
+if ($counts{mismatch}) {
+    print HTML "<p>Tests where results did not match expected results:</p>\n";
+    print HTML "<table>\n";
+    for my $test (@{$tests{mismatch}}) {
+        my $base = $test;
+        $base =~ s/\.[a-zA-Z]+$//;
+        copy("$testDirectory/$base-$expectedTag.txt", "$testResultsDirectory/$base-$expectedTag.txt");
+        print HTML "<tr>\n";            
+        print HTML "<td><a href=\"$testDirectory/$test\">$base</a></td>\n";
+        if (-s "$testResultsDirectory/$base-$diffsTag.txt") {
+            print HTML "<td><a href=\"$base-$expectedTag.txt\">expected</a></td>\n";
+            print HTML "<td><a href=\"$base-$actualTag.txt\">actual</a></td>\n";
+            print HTML "<td><a href=\"$base-$diffsTag.txt\">diffs</a></td>\n";
+        } else {
+            print HTML "<td></td><td></td><td></td>\n";
+        }
+        if ($pixelTests) {
+            if ($imagesPresent{$base}) {
+                print HTML "<td><a href=\"$base-$expectedTag.png\">expected image</a></td>\n";
+                print HTML "<td><a href=\"$base-$diffsTag.html\">image diffs</a></td>\n";
+            } else {
+                print HTML "<td></td><td></td>\n";
+            }            
+        }
+        print HTML "</tr>\n";
+    }
+    print HTML "</table>\n";
+}
+
+if ($counts{fail}) {
+    print HTML "<p>Tests that caused the DumpRenderTree tool to fail:</p>\n";
+    print HTML "<table>\n";
+    for my $test (@{$tests{fail}}) {
+        my $base = $test;
+        $base =~ s/\.[a-zA-Z]+$//;
+        print HTML "<tr>\n";
+        print HTML "<td><a href=\"$testDirectory/$test\">$base</a></td>\n";
+        print HTML "</tr>\n";
+    }
+    print HTML "</table>\n";
+}
+
+if ($counts{new}) {
+    print HTML "<p>Tests that had no expected results (probably new):</p>\n";
+    print HTML "<table>\n";
+    for my $test (@{$tests{new}}) {
+        my $base = $test;
+        $base =~ s/\.[a-zA-Z]+$//;
+        print HTML "<tr>\n";
+        print HTML "<td><a href=\"$testDirectory/$test\">$base</a></td>\n";
+        print HTML "<td><a href=\"$testDirectory/$base-$expectedTag.txt\">results</a></td>\n";
+        if ($pixelTests && -f "$testDirectory/$base-$expectedTag.png") {
+            print HTML "<td><a href=\"$testDirectory/$base-$expectedTag.png\">image</a></td>\n";
+        }
+        print HTML "</tr>\n";
+    }
+    print HTML "</table>\n";
+}
+
+print HTML "</body>\n";
+print HTML "</html>\n";
+close HTML;
+
+system "WebKitTools/Scripts/run-safari", "-NSOpen", $testResults if $launchSafari;
+
+exit 1;
+
+sub countAndPrintLeaks($$$)
+{
+    my ($toolName, $toolPID, $leaksFilePath) = @_;
+
+    print "\n" unless $atLineStart;
+    $atLineStart = 1;
+
+    # We are excluding the following reported leaks so they don't get in our way when looking for WebKit leaks:
+
+    my @exclude = (
+        "pthread_create", # false positive leak of 'THRD', Radar 3387783
+        "_CFPreferencesDomainDeepCopyDictionary", # leak apparently in CFPreferences, Radar 4220786
+        "FOGetCoveredUnicodeChars", # leak apparently in ATS, Radar 3943604
+        "PCFragPrepareClosureFromFile", # leak in Code Fragment Manager, Radar 3426998
+        "Flash_EnforceLocalSecurity", # leaks in flash plugin code, Radar 4449747
+        "ICCFPrefWrapper::GetPrefDictionary()" # leaks in quicktime plugin code, Radar 4449794
+    );
+
+    # Note that the exclusion for bug 3387783 doesn't quite work right; sometimes a leak of 'THRD' will
+    # still appear in the leaks output.
+
+    my $excludes = "-exclude '" . (join "' -exclude '", @exclude) . "'";
+
+    print " ? checking for leaks in $toolName\n";
+    my $leaksOutput = `leaks $excludes $toolPID`;
+    my ($count, $bytes) = $leaksOutput =~ /Process $toolPID: (\d+) leaks? for (\d+) total/;
+    my ($excluded) = $leaksOutput =~ /(\d+) leaks? excluded/;
+
+    my $adjustedCount = $count;
+    $adjustedCount -= $excluded if $excluded;
+
+    if (!$adjustedCount) {
+        print " - no leaks found\n";
+        unlink $leaksFilePath;
+        return 0;
+    } else {
+        my $dir = $leaksFilePath;
+        $dir =~ s|/[^/]+$|| or die;
+        mkpath $dir;
+
+        if ($excluded) {
+            print " + $adjustedCount leaks ($bytes bytes including $excluded excluded leaks) were found, details in $leaksFilePath\n";
+        } else {
+            print " + $count leaks ($bytes bytes) were found, details in $leaksFilePath\n";
+        }
+
+        open LEAKS, ">", $leaksFilePath or die;
+        print LEAKS $leaksOutput;
+        close LEAKS;
+    }
+
+    return $adjustedCount;
+}
+
+# Break up a path into the directory (with slash) and base name.
+sub splitpath($)
+{
+    my ($path) = @_;
+
+    my $pathSeparator = "/";
+    my $dirname = dirname($path) . $pathSeparator;
+    $dirname = "" if $dirname eq "." . $pathSeparator;
+
+    return ($dirname, basename($path));
+}
+
+# Sort first by directory, then by file, so all paths in one directory are grouped
+# rather than being interspersed with items from subdirectories.
+# Use numericcmp to sort directory and filenames to make order logical.
+sub pathcmp($$)
+{
+    my ($patha, $pathb) = @_;
+
+    my ($dira, $namea) = splitpath($patha);
+    my ($dirb, $nameb) = splitpath($pathb);
+
+    return numericcmp($dira, $dirb) if $dira ne $dirb;
+    return numericcmp($namea, $nameb);
+}
+
+# Sort numeric parts of strings as numbers, other parts as strings.
+# Makes 1.33 come after 1.3, which is cool.
+sub numericcmp($$)
+{
+    my ($aa, $bb) = @_;
+
+    my @a = split /(\d+)/, $aa;
+    my @b = split /(\d+)/, $bb;
+
+    # Compare one chunk at a time.
+    # Each chunk is either all numeric digits, or all not numeric digits.
+    while (@a && @b) {
+        my $a = shift @a;
+        my $b = shift @b;
+        
+        # Use numeric comparison if chunks are non-equal numbers.
+        return $a <=> $b if $a =~ /^\d/ && $b =~ /^\d/ && $a != $b;
+
+        # Use string comparison if chunks are any other kind of non-equal string.
+        return $a cmp $b if $a ne $b;
+    }
+    
+    # One of the two is now empty; compare lengths for result in this case.
+    return @a <=> @b;
+}
+
+# Sort slowest tests first.
+sub slowestcmp($$)
+{
+    my ($testa, $testb) = @_;
+
+    my $dura = $durations{$testa};
+    my $durb = $durations{$testb};
+    return $durb <=> $dura if $dura != $durb;
+    return pathcmp($testa, $testb);
+}
+
+sub openDumpRenderTreeIfNeeded()
+{
+    return if $toolOpen;
+
+    # Save some requires variables for the linux environment...
+    my $homeDir = $ENV{'HOME'};
+    my $dbusAddress = $ENV{'DBUS_SESSION_BUS_ADDRESS'};
+
+    local %ENV;
+    $ENV{DISPLAY} = ":0" if isQt();
+    $ENV{HOME} = $homeDir if isQt();
+    $ENV{DBUS_SESSION_BUS_ADDRESS} = $dbusAddress if isQt();
+    $ENV{DYLD_FRAMEWORK_PATH} = $productDir;
+    $ENV{XML_CATALOG_FILES} = ""; # work around missing /etc/catalog <rdar://problem/4292995>
+    $ENV{MallocStackLogging} = 1 if $checkLeaks;
+    $ENV{DYLD_INSERT_LIBRARIES} = "/usr/lib/libgmalloc.dylib" if $guardMalloc;
+    $dumpToolPID = open2(\*IN, \*OUT, $tool, @toolArgs) or die "Failed to start tool: $tool\n";
+    $toolOpen = 1;
+}
+
+sub closeDumpRenderTree()
+{
+    return if !$toolOpen;
+
+    close IN;
+    close OUT;
+    waitpid $dumpToolPID, 0;
+    $toolOpen = 0;
+}
+
+sub openHTTPDIfNeeded()
+{
+    return if $httpdOpen;
+
+    mkdir "/tmp/WebKit";
+    
+    if (-f "/tmp/WebKit/httpd.pid") {
+        my $oldPid = `cat /tmp/WebKit/httpd.pid`;
+        chomp $oldPid;
+        if (0 != kill 0, $oldPid) {
+            print "\nhttpd is already running: pid $oldPid, killing...\n";
+            kill 15, $oldPid;
+            
+            my $retryCount = 20;
+            while ((0 != kill 0, $oldPid) && $retryCount) {
+                sleep 1;
+                --$retryCount;
+            }
+            
+            die "Timed out waiting for httpd to quit" unless $retryCount;
+        }
+    }
+    
+    my $httpdPath = "/usr/sbin/httpd";
+    my $httpdConfig = "$testDirectory/http/conf/httpd.conf";
+    $httpdConfig = "$testDirectory/http/conf/apache2-httpd.conf" if `$httpdPath -v` =~ m|Apache/2|;
+    my $documentRoot = "$testDirectory/http/tests";
+    my $typesConfig = "$testDirectory/http/conf/mime.types";
+    my $listen = "127.0.0.1:$httpdPort";
+    my $absTestResultsDirectory = File::Spec->rel2abs(glob $testResultsDirectory);
+
+    mkpath $absTestResultsDirectory;
+
+    open2(\*HTTPDIN, \*HTTPDOUT, $httpdPath, 
+        "-f", "$httpdConfig",
+        "-C", "DocumentRoot \"$documentRoot\"",
+        "-C", "Listen $listen",
+        "-c", "TypesConfig \"$typesConfig\"",
+        "-c", "CustomLog \"$absTestResultsDirectory/access_log.txt\" common",
+        "-c", "ErrorLog \"$absTestResultsDirectory/error_log.txt\"",
+        # Apache wouldn't run CGIs with permissions==700 otherwise
+        "-c", "User \"#$<\"");
+
+    my $retryCount = 20;
+    while (system("/usr/bin/curl -q --silent --stderr - --output /dev/null $listen") && $retryCount) {
+        sleep 1;
+        --$retryCount;
+    }
+    
+    die "Timed out waiting for httpd to start" unless $retryCount;
+    
+    $httpdOpen = 1;
+}
+
+sub closeHTTPD()
+{
+    return if !$httpdOpen;
+
+    close HTTPDIN;
+    close HTTPDOUT;
+
+    kill 15, `cat /tmp/WebKit/httpd.pid` if -f "/tmp/WebKit/httpd.pid";
+
+    $httpdOpen = 0;
+}
+
+sub fileNameWithNumber($$)
+{
+    my ($base, $number) = @_;
+    return "$base$number" if ($number > 1);
+    return $base;
+}
+
+sub processIgnoreTests($) {
+    my @ignoreList = split(/\s*,\s*/, shift);
+    my $addIgnoredDirectories = sub {
+        return () if exists $ignoredLocalDirectories{basename($File::Find::dir)};
+        $ignoredDirectories{File::Spec->abs2rel($File::Find::dir, $testDirectory)} = 1;
+        return @_;
+    };
+    foreach my $item (@ignoreList) {
+        my $path = catfile($testDirectory, $item); 
+        if (-d $path) {
+            $ignoredDirectories{$item} = 1;
+            find({ preprocess => $addIgnoredDirectories, wanted => sub {} }, $path);
+        }
+        elsif (-f $path) {
+            $ignoredFiles{$item} = 1;
+        }
+        else {
+            print "ignoring '$item' on ignore-tests list\n";
+        }
+    }
+}

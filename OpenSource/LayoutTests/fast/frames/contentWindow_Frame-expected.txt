@@ -1,0 +1,20 @@
+layer at (0,0) size 800x600
+  RenderView at (0,0) size 800x600
+layer at (0,0) size 800x600
+  RenderBlock {HTML} at (0,0) size 800x600
+    RenderFrameSet {FRAMESET} at (0,0) size 800x600
+      RenderFrame {FRAME} at (0,0) size 800x178
+        layer at (0,0) size 798x174
+          RenderView at (0,0) size 798x174
+        layer at (0,0) size 798x174
+          RenderBlock {HTML} at (0,0) size 798x174
+            RenderBody {BODY} at (8,8) size 782x158
+              RenderBlock {DIV} at (0,0) size 782x18
+                RenderText {#text} at (0,0) size 74x18
+                  text run at (0,0) width 74: "about:blank"
+      RenderFrame {FRAME} at (0,182) size 800x418
+        layer at (0,0) size 798x414
+          RenderView at (0,0) size 798x414
+        layer at (0,0) size 798x8
+          RenderBlock {HTML} at (0,0) size 798x8
+            RenderBody {BODY} at (8,8) size 782x0
