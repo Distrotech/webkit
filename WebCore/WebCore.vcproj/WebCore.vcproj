@@ -1283,7 +1283,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\platform\FileButton.h"
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\FileChooser.h"
 				>
 			</File>
 			<File
@@ -1388,6 +1388,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\GraphicsTypes.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\Icon.h"
 				>
 			</File>
 			<File
@@ -2553,11 +2557,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderFileButton.cpp"
+				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderFileUploadControl.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderFileButton.h"
+				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderFileUploadControl.h"
 				>
 			</File>
 			<File

@@ -33,7 +33,7 @@
 #include "Node.h"
 #include "TextField.h"
 #include "Font.h"
-#include "FileButton.h"
+#include "FileChooser.h"
 #include "PopUpButton.h"
 #include "IntPoint.h"
 #include "Widget.h"
@@ -110,16 +110,6 @@ void ListBox::setWritingDirection(TextDirection) { notImplemented(); }
 void ListBox::setEnabled(bool) { notImplemented(); }
 void ListBox::clear() { notImplemented(); }
 bool ListBox::checksDescendantsForFocus() const { notImplemented(); return 0; }
-
-FileButton::FileButton(Frame*) { notImplemented(); }
-void FileButton::click(bool) { notImplemented(); }
-IntSize FileButton::sizeForCharacterWidth(int) const { notImplemented(); return IntSize(); }
-Widget::FocusPolicy FileButton::focusPolicy() const { notImplemented(); return NoFocus; }
-WebCore::IntRect FileButton::frameGeometry() const { notImplemented(); return IntRect(); }
-void FileButton::setFilename(DeprecatedString const&) { notImplemented(); }
-int FileButton::baselinePosition(int) const { notImplemented(); return 0; }
-void FileButton::setFrameGeometry(WebCore::IntRect const&) { notImplemented(); }
-void FileButton::setDisabled(bool) { notImplemented(); }
 
 Widget::FocusPolicy Slider::focusPolicy() const { notImplemented(); return NoFocus; }
 Widget::FocusPolicy ListBox::focusPolicy() const { notImplemented(); return NoFocus; }
@@ -202,6 +192,8 @@ bool WebCore::historyContains(DeprecatedString const&) { return false; }
 String WebCore::submitButtonDefaultLabel() { return "Submit"; }
 String WebCore::inputElementAltText() { return DeprecatedString(); }
 String WebCore::resetButtonDefaultLabel() { return "Reset"; }
+String WebCore::fileButtonChooseFileLabel() { return "Browse..."; }
+String WebCore::fileButtonNoFileSelectedLabel() { return "no file selected"; }
 String WebCore::defaultLanguage() { return "en"; }
 
 void WebCore::findWordBoundary(UChar const* str,int len,int position,int* start, int* end) {*start=position; *end=position; }
@@ -343,3 +335,12 @@ void RenderPopupMenuWin::addSeparator() { notImplemented(); }
 void RenderPopupMenuWin::addGroupLabel(HTMLOptGroupElement*) { notImplemented(); }
 
 void RenderThemeWin::systemFont(int propId, FontDescription& fontDescription) const {}
+
+FileChooser::FileChooser(Document*, RenderFileUploadControl*) { }
+FileChooser::~FileChooser() { }
+void FileChooser::openFileChooser() { notImplemented(); }
+String FileChooser::basenameForWidth(int width) const { notImplemented(); return String(); }
+void FileChooser::uploadControlDetaching() { }
+
+Icon::~Icon() { }
+void Icon::paint(GraphicsContext*, const IntRect&) { notImplemented(); }

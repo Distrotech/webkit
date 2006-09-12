@@ -1,3 +1,24 @@
+2006-09-12  Adam Roben  <aroben@apple.com>
+
+        Reviewed many times by darin, hyatt.
+
+        Add stubs for new engine-based file upload control implementation and
+        Icon class.
+
+        * WebCore.vcproj/WebCore.vcproj: Add new engine-based files, remove old
+        widget-based files.
+        * platform/win/TemporaryLinkStubs.cpp: Add stubs for FileChooser and
+        Icon methods, and add two new LocalizedString methods.
+        (WebCore::fileButtonChooseFileLabel):
+        (WebCore::fileButtonNoFileSelectedLabel):
+        (FileChooser::FileChooser):
+        (FileChooser::~FileChooser):
+        (FileChooser::openFileChooser):
+        (FileChooser::basenameForWidth):
+        (FileChooser::uploadControlDetaching):
+        (Icon::~Icon):
+        (Icon::paint):
+
 2006-09-11  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Tim O.
