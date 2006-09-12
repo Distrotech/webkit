@@ -29,11 +29,14 @@
 #include <winsock2.h>
 #include <windows.h>
 
+#include "CString.h"
+#include "IntRect.h"
 #include "KURL.h"
 #include "PlatformString.h"
 #include "Timer.h"
 #include "Widget.h"
 #include "npapi.h"
+#include <wtf/HashSet.h>
 #include <wtf/RefPtr.h>
 #include <wtf/Vector.h>
 
@@ -42,16 +45,20 @@ namespace WebCore {
     class FrameWin;
     class KURL;
     class PluginPackageWin;
+    class PluginRequestWin;
+    class PluginStreamWin;
 
     class PluginViewWin : public Widget {
     public:
         PluginViewWin(FrameWin* parentFrame, PluginPackageWin* plugin, Element*, const KURL&, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType);
         virtual ~PluginViewWin();
 
+        virtual void setFrameGeometry(const IntRect &rect);
+
         PluginPackageWin* plugin() const { return m_plugin.get(); }
         NPP instance() const { return m_instance; }
 
-        void invokeSetWindow(WINDOWPOS* windowPos);
+        void updateSize();
         static PluginViewWin* currentPluginView();
 
         // NPN functions
@@ -70,25 +77,33 @@ namespace WebCore {
         bool start();
         void stop();
         static void setCurrentPluginView(PluginViewWin* pluginView);
-
+        NPError loadURL(const String& method, const KURL& url, const String& target, void* notifyData, bool sendNotification);
         RefPtr<PluginPackageWin> m_plugin;
         FrameWin* m_parentFrame;
+        IntRect m_contentRect;
         bool m_isStarted;
         KURL m_url;
+
+        void performRequest(PluginRequestWin*);
+        void scheduleRequest(PluginRequestWin*);
+        void requestTimerFired(Timer<PluginViewWin>*);
+        Timer<PluginViewWin> m_requestTimer;
 
         int m_mode;
         int m_paramCount;
         char** m_paramNames;
         char** m_paramValues;
 
-        char* m_mimeType;
+        CString m_mimeType;
+        CString m_userAgent;
         
         NPP m_instance;
         NPP_t m_instanceStruct;
         NPWindow m_window;
         NPWindow m_lastSetWindow;
 
-        char* m_userAgent;
+        HashSet<PluginStreamWin*> m_streams;
+        Vector<PluginRequestWin*> m_requests;
 
         static PluginViewWin* s_currentPluginView;
     };

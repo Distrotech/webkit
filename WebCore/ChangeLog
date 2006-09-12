@@ -1,5 +1,42 @@
 2006-09-11  Anders Carlsson  <acarlsson@apple.com>
 
+        Reviewed by Tim O.
+
+        Add stream and URL handling to PluginViewWin. Include PluginStreamWin.cpp in the build.
+        Also fix a number of bugs discovered when loading various plugins.
+        
+        * WebCore.vcproj/WebCore.vcproj:
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginRequestWin::PluginRequestWin):
+        (WebCore::PluginRequestWin::url):
+        (WebCore::PluginRequestWin::target):
+        (WebCore::PluginRequestWin::notifyData):
+        (WebCore::PluginRequestWin::sendNotification):
+        (WebCore::scriptStringIfJavaScriptURL):
+        (WebCore::registerPluginView):
+        (WebCore::PluginViewWndProc):
+        (WebCore::PluginViewWin::updateSize):
+        (WebCore::PluginViewWin::setFrameGeometry):
+        (WebCore::PluginViewWin::start):
+        (WebCore::PluginViewWin::stop):
+        (WebCore::createUTF8String):
+        (WebCore::PluginViewWin::performRequest):
+        (WebCore::PluginViewWin::requestTimerFired):
+        (WebCore::PluginViewWin::scheduleRequest):
+        (WebCore::PluginViewWin::loadURL):
+        (WebCore::makeURL):
+        (WebCore::PluginViewWin::getURLNotify):
+        (WebCore::PluginViewWin::getURL):
+        (WebCore::PluginViewWin::newStream):
+        (WebCore::PluginViewWin::write):
+        (WebCore::PluginViewWin::destroyStream):
+        (WebCore::PluginViewWin::userAgent):
+        (WebCore::PluginViewWin::~PluginViewWin):
+        (WebCore::PluginViewWin::PluginViewWin):
+        * plugins/win/PluginViewWin.h:
+
+2006-09-11  Anders Carlsson  <acarlsson@apple.com>
+
         * WebCore.vcproj/WebCore.vcproj:
         Fix build.
         

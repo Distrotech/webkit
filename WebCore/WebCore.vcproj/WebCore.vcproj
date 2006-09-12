@@ -4648,6 +4648,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\plugins\win\PluginStreamWin.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\plugins\win\PluginStreamWin.h"
+					>
+				</File>
+				<File
 					RelativePath="..\plugins\win\PluginViewWin.cpp"
 					>
 				</File>
