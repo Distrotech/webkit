@@ -1,5 +1,13 @@
 2006-09-13  Adam Roben  <aroben@apple.com>
 
+        Build fix
+
+        * WebCore.vcproj/WebCore.vcproj: Rename KHTML_XSLT to XSLT_SUPPORT,
+        remove KHTML_NO_XBL
+        * config.h: Ditto.
+
+2006-09-13  Adam Roben  <aroben@apple.com>
+
         Reviewed by beidson.
 
         Initial implementation of Icon, FileChooser on Windows.
