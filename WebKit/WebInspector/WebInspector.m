@@ -391,15 +391,15 @@ static NSMapTable *lastChildIgnoringWhitespaceCache = NULL;
 
         NSNumber *baseValue = [topArea valueForKey:@"clientHeight"];
         NSString *newValue = [NSString stringWithFormat:@"%dpx", [baseValue unsignedLongValue] - delta];
-        [[topArea style] setProperty:@"height" value:newValue priority:@""];
+        [[topArea style] setProperty:@"height" :newValue :@""];
 
         baseValue = [splitter valueForKey:@"offsetTop"];
         newValue = [NSString stringWithFormat:@"%dpx", [baseValue unsignedLongValue] - delta];
-        [[splitter style] setProperty:@"top" value:newValue priority:@""];
+        [[splitter style] setProperty:@"top" :newValue :@""];
 
         baseValue = [bottomArea valueForKey:@"offsetTop"];
         newValue = [NSString stringWithFormat:@"%dpx", [baseValue unsignedLongValue] - delta];
-        [[bottomArea style] setProperty:@"top" value:newValue priority:@""];
+        [[bottomArea style] setProperty:@"top" :newValue :@""];
 
         [window setFrame:proposedRect display:YES];
         lastLocation = newLocation;
@@ -785,7 +785,7 @@ static NSMapTable *lastChildIgnoringWhitespaceCache = NULL;
         [[[_private->domDocument getElementsByTagName:@"head"] item:0] appendChild:style];
     }
 
-    [style setAttribute:@"id" value:@"systemColors"];
+    [style setAttribute:@"id" :@"systemColors"];
     [style setTextContent:styleText];
 }
 
