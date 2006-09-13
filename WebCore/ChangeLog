@@ -1,3 +1,10 @@
+2006-09-13  Adam Roben  <aroben@apple.com>
+
+        Build fix
+
+        * WebCore.vcproj/build-generated-files.sh: Export SOURCE_ROOT which is
+        now used by CodeGenerator.pm
+
 2006-09-12  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Tim O.

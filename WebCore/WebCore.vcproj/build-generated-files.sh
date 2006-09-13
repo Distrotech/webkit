@@ -11,6 +11,7 @@ SRCROOT=`realpath "$SRCROOT"`
 SRCROOT=`cygpath -m -s "$SRCROOT"`
 SRCROOT=`cygpath -u "$SRCROOT"`
 export SRCROOT
+export SOURCE_ROOT=$SRCROOT
 
 # FIXME: Eventually win32 might wish to generate to the Debug/Release output directories.
 export BUILT_PRODUCTS_DIR="$SRCROOT"
