@@ -1,3 +1,11 @@
+2006-09-13  Lou Amadio  <lamadio@apple.com>
+
+        Reviewed by sfalken
+
+        - Fixed retail build by adding the SDK entry for SQLite
+
+        * WebCore.vcproj/WebCore.vcproj:
+
 2006-09-13  Adam Roben  <aroben@apple.com>
 
         Build fix
