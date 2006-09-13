@@ -1,3 +1,29 @@
+2006-09-13  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Tim O.
+
+        Implement postURL and postURLNotify.
+
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::PluginStreamWin::~PluginStreamWin):
+        (WebCore::PluginStreamWin::start):
+        (WebCore::PluginStreamWin::startStream):
+        (WebCore::PluginStreamWin::cancelAndDestroyStream):
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::start):
+        (WebCore::PluginViewWin::loadURL):
+        (WebCore::PluginViewWin::getURLNotify):
+        (WebCore::PluginViewWin::getURL):
+        (WebCore::startsWithBlankLine):
+        (WebCore::locationAfterFirstBlankLine):
+        (WebCore::findEOL):
+        (WebCore::capitalizeRFC822HeaderFieldName):
+        (WebCore::parseRFC822HeaderFields):
+        (WebCore::PluginViewWin::handlePost):
+        (WebCore::PluginViewWin::postURLNotify):
+        (WebCore::PluginViewWin::postURL):
+        * plugins/win/PluginViewWin.h:
+
 2006-09-13  Lou Amadio  <lamadio@apple.com>
 
         Reviewed by sfalken

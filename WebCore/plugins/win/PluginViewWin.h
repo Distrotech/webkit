@@ -36,6 +36,7 @@
 #include "Timer.h"
 #include "Widget.h"
 #include "npapi.h"
+#include <wtf/HashMap.h>
 #include <wtf/HashSet.h>
 #include <wtf/RefPtr.h>
 #include <wtf/Vector.h>
@@ -77,7 +78,8 @@ namespace WebCore {
         bool start();
         void stop();
         static void setCurrentPluginView(PluginViewWin* pluginView);
-        NPError loadURL(const String& method, const KURL& url, const String& target, void* notifyData, bool sendNotification);
+        NPError loadURL(const String& method, const KURL& url, const String& target, void* notifyData, bool sendNotification, HashMap<String, String>* headers, const char* postData, unsigned postDataLength);
+        NPError handlePost(const char* url, const char* target, uint32 len, const char* buf, bool file, void* notifyData, bool sendNotification, bool allowHeaders);
         RefPtr<PluginPackageWin> m_plugin;
         FrameWin* m_parentFrame;
         IntRect m_contentRect;

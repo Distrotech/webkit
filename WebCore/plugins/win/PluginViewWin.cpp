@@ -163,7 +163,7 @@ bool PluginViewWin::start()
     m_isStarted = true;
 
     if (m_url.isValid())
-        loadURL("GET", m_url, String(), 0, false);
+        loadURL("GET", m_url, String(), 0, false, 0, 0, 0);
 
     return true;
 }
@@ -256,7 +256,7 @@ void PluginViewWin::performRequest(PluginRequestWin* request)
             stream->receivedAllData(0, 0);
         }
     } else {
-        // FIXME: Open the window here.
+        // FIXME: radar://4730678 Support opening windows
         DebugBreak();
     }
 }
@@ -281,7 +281,7 @@ void PluginViewWin::scheduleRequest(PluginRequestWin* request)
     m_requestTimer.startOneShot(0);
 }
 
-NPError PluginViewWin::loadURL(const String& method, const KURL& url, const String& target, void* notifyData, bool sendNotification)
+NPError PluginViewWin::loadURL(const String& method, const KURL& url, const String& target, void* notifyData, bool sendNotification, HashMap<String, String>* headers, const char* postData, unsigned postDataLength)
 {
     ASSERT(method == "GET" || method == "POST");
 
@@ -313,6 +313,11 @@ NPError PluginViewWin::loadURL(const String& method, const KURL& url, const Stri
         scheduleRequest(request);
     } else {
         PluginStreamWin* stream = new PluginStreamWin(this, m_parentFrame->document()->docLoader(), method, url, notifyData, sendNotification);
+        if (headers)
+            stream->setRequestHeaders(*headers);
+        if (postData)
+            stream->setPostData(postData, postDataLength);
+
         m_streams.add(stream);
 
         stream->start();
@@ -334,24 +339,253 @@ static KURL makeURL(const KURL& baseURL, const char* relativeURLString)
 
 NPError PluginViewWin::getURLNotify(const char* url, const char* target, void* notifyData)
 {
-    return loadURL("GET", makeURL(m_url, url), DeprecatedString::fromLatin1(target), notifyData, true);
+    return loadURL("GET", makeURL(m_url, url), DeprecatedString::fromLatin1(target), notifyData, true, 0, 0, 0);
 }
 
 NPError PluginViewWin::getURL(const char* url, const char* target)
 {
-    return loadURL("GET", makeURL(m_url, url), DeprecatedString::fromLatin1(target), 0, false);
+    return loadURL("GET", makeURL(m_url, url), DeprecatedString::fromLatin1(target), 0, false, 0, 0, 0);
 }
 
-NPError PluginViewWin::postURLNotify(const char* url, const char* target, uint32 len, const char* but, NPBool file, void* notifyData)
+static inline bool startsWithBlankLine(const Vector<char>& buffer)
 {
-    DebugBreak();
-    return NPERR_GENERIC_ERROR;
+    return buffer.size() > 0 && buffer[0] == '\n';
 }
 
-NPError PluginViewWin::postURL(const char* url, const char* target, uint32 len, const char* but, NPBool file)
+static inline int locationAfterFirstBlankLine(const Vector<char>& buffer)
 {
-    DebugBreak();
-    return NPERR_GENERIC_ERROR;
+    const char* bytes = buffer.data();
+    unsigned length = buffer.size();
+
+    for (unsigned i = 0; i < length - 4; i++) {
+        // Support for Acrobat. It sends "\n\n".
+        if (bytes[i] == '\n' && bytes[i + 1] == '\n')
+            return i + 2;
+        
+        // Returns the position after 2 CRLF's or 1 CRLF if it is the first line.
+        if (bytes[i] == '\r' && bytes[i + 1] == '\n') {
+            i += 2;
+            if (i == 2)
+                return i;
+            else if (bytes[i] == '\n')
+                // Support for Director. It sends "\r\n\n" (3880387).
+                return i + 1;
+            else if (bytes[i] == '\r' && bytes[i + 1] == '\n')
+                // Support for Flash. It sends "\r\n\r\n" (3758113).
+                return i + 2;
+        }
+    }
+
+    return -1;
+}
+
+static inline const char* findEOL(const char* bytes, unsigned length)
+{
+    // According to the HTTP specification EOL is defined as
+    // a CRLF pair. Unfortunately, some servers will use LF
+    // instead. Worse yet, some servers will use a combination
+    // of both (e.g. <header>CRLFLF<body>), so findEOL needs
+    // to be more forgiving. It will now accept CRLF, LF or
+    // CR.
+    //
+    // It returns NULL if EOLF is not found or it will return
+    // a pointer to the first terminating character.
+    for (unsigned i = 0; i < length; i++) {
+        if (bytes[i] == '\n')
+            return bytes + i;
+        if (bytes[i] == '\r') {
+            // Check to see if spanning buffer bounds
+            // (CRLF is across reads). If so, wait for
+            // next read.
+            if (i + 1 == length)
+                break;
+
+            return bytes + i;
+        }
+    }
+
+    return 0;
+}
+
+static inline String capitalizeRFC822HeaderFieldName(const String& name)
+{
+    bool capitalizeCharacter = true;
+    String result;
+
+    for (unsigned i = 0; i < name.length(); i++) {
+        UChar c;
+
+        if (capitalizeCharacter && name[i] >= 'a' && name[i] <= 'z')
+            c = toupper(name[i]);
+        else if (!capitalizeCharacter && name[i] >= 'A' && name[i] <= 'Z')
+            c = tolower(name[i]);
+        else
+            c = name[i];
+
+        if (name[i] == '-')
+            capitalizeCharacter = true;
+        else
+            capitalizeCharacter = false;
+
+        result.append(c);
+    }
+
+    return result;
+}
+
+static inline HashMap<String, String> parseRFC822HeaderFields(const Vector<char>& buffer, unsigned length)
+{
+    const char* bytes = buffer.data();
+    const char* eol;
+    String lastKey;
+    HashMap<String, String> headerFields;
+
+    // Loop ove rlines until we're past the header, or we can't find any more end-of-lines
+    while ((eol = findEOL(bytes, length))) {
+        const char* line = bytes;
+        int lineLength = eol - bytes;
+        
+        // Move bytes to the character after the terminator as returned by findEOL.
+        bytes = eol + 1;
+        if ((*eol == '\r') && (*bytes == '\n'))
+            bytes++; // Safe since findEOL won't return a spanning CRLF.
+
+        length -= (bytes - line);
+        if (lineLength == 0)
+            // Blank line; we're at the end of the header
+            break;
+        else if (*line == ' ' || *line == '\t') {
+            // Continuation of the previous header
+            if (lastKey.isNull()) {
+                // malformed header; ignore it and continue
+                continue;
+            } else {
+                // Merge the continuation of the previous header
+                String currentValue = headerFields.get(lastKey);
+                String newValue = DeprecatedString::fromLatin1(line, lineLength);
+
+                headerFields.set(lastKey, currentValue + newValue);
+            }
+        } else {
+            // Brand new header
+            const char* colon;
+            for (colon = line; *colon != ':' && colon != eol; colon++) {
+                // empty loop
+            }
+            if (colon == eol) 
+                // malformed header; ignore it and continue
+                continue;
+            else {
+                lastKey = capitalizeRFC822HeaderFieldName(DeprecatedString::fromLatin1(line, colon - line));
+                String value;
+
+                for (colon++; colon != eol; colon++) {
+                    if (*colon != ' ' && *colon != '\t')
+                        break;
+                }
+                if (colon == eol)
+                    value = "";
+                else
+                    value = DeprecatedString::fromLatin1(colon, eol - colon);
+
+                String oldValue = headerFields.get(lastKey);
+                if (!oldValue.isNull()) {
+                    String tmp = oldValue;
+                    tmp += ", ";
+                    tmp += value;
+                    value = tmp;
+                }
+
+                headerFields.set(lastKey, value);
+            }
+        }
+    }
+
+    return headerFields;
+}
+
+NPError PluginViewWin::handlePost(const char* url, const char* target, uint32 len, const char* buf, bool file, void* notifyData, bool sendNotification, bool allowHeaders)
+{
+    if (!url || !len || !buf)
+        return NPERR_INVALID_PARAM;
+
+    HashMap<String, String> headerFields;
+    Vector<char> buffer;
+    
+    if (file) {
+        String filename = DeprecatedString::fromLatin1(buf, len);
+
+        if (filename.startsWith("file:///"))
+            filename = filename.deprecatedString().mid(8);
+
+        // Get file info
+        WIN32_FILE_ATTRIBUTE_DATA attrs;
+        if (GetFileAttributesExW(filename.charactersWithNullTermination(), GetFileExInfoStandard, &attrs) == 0)
+            return NPERR_FILE_NOT_FOUND;
+
+        if (attrs.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            return NPERR_FILE_NOT_FOUND;
+
+        HANDLE fileHandle = CreateFileW(filename.charactersWithNullTermination(), FILE_READ_DATA, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+        
+        if (fileHandle == INVALID_HANDLE_VALUE)
+            return NPERR_FILE_NOT_FOUND;
+
+        buffer.resize(attrs.nFileSizeLow);
+
+        DWORD bytesRead;
+        int retval = ReadFile(fileHandle, buffer.data(), attrs.nFileSizeLow, &bytesRead, 0);
+
+        CloseHandle(fileHandle);
+
+        if (retval == 0 || bytesRead != attrs.nFileSizeLow)
+            return NPERR_FILE_NOT_FOUND;
+    } else {
+        buffer.resize(len);
+        memcpy(buffer.data(), buf, len);
+    }
+
+    const char* postData = buffer.data();
+    int postDataLength = buffer.size();
+    
+    if (allowHeaders) {
+        if (startsWithBlankLine(buffer)) {
+            postData++;
+            postDataLength--;
+        } else {
+            int location = locationAfterFirstBlankLine(buffer);
+            if (location != -1) {
+                // If the blank line is somewhere in the middle of the buffer, everything before is the header
+                headerFields = parseRFC822HeaderFields(buffer, location);
+                unsigned dataLength = buffer.size() - location;
+
+                // Sometimes plugins like to set Content-Length themselves when they post,
+                // but WebFoundation does not like that. So we will remove the header
+                // and instead truncate the data to the requested length.
+                String contentLength = headerFields.get("Content-Length");
+
+                if (!contentLength.isNull())
+                    dataLength = min(contentLength.toInt(), dataLength);
+                headerFields.remove("Content-Length");
+
+                postData += location;
+                postDataLength = dataLength;
+            }
+        }
+    }
+
+    return loadURL("POST", makeURL(m_url, url), DeprecatedString::fromLatin1(target), notifyData, sendNotification, &headerFields, postData, postDataLength);
+}
+
+NPError PluginViewWin::postURLNotify(const char* url, const char* target, uint32 len, const char* buf, NPBool file, void* notifyData)
+{
+    return handlePost(url, target, len, buf, file, notifyData, true, true);
+}
+
+NPError PluginViewWin::postURL(const char* url, const char* target, uint32 len, const char* buf, NPBool file)
+{
+    // As documented, only allow headers to be specified via NPP_PostURL when using a file.
+    return handlePost(url, target, len, buf, file, 0, false, file);
 }
 
 NPError PluginViewWin::newStream(NPMIMEType type, const char* target, NPStream** stream)
@@ -404,6 +638,11 @@ NPError PluginViewWin::getValue(NPNVariable variable, void* value)
             
             return NPERR_NO_ERROR;
         }
+
+        case NPNVPluginElementNPObject:
+            // FIXME: Should support getting NPNVPluginElementNPObject
+            return NPERR_GENERIC_ERROR;
+
         default:
             DebugBreak();
             return NPERR_GENERIC_ERROR;

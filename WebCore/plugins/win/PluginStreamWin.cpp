@@ -70,7 +70,7 @@ PluginStreamWin::~PluginStreamWin()
     delete m_deliveryData;
     delete m_completeDeliveryData;
 
-    free((void*)m_stream.url);
+    free((char*)m_stream.url);
 }
 
 void PluginStreamWin::setRequestHeaders(const HashMap<String, String>& headers)
@@ -91,16 +91,19 @@ void PluginStreamWin::start()
     m_resourceLoader = new ResourceLoader(this, m_method, m_url, m_postData);
 
     // Assemble headers
-    String requestHeaders;
-    HashMap<String, String>::const_iterator end = m_headers.end();
-    for (HashMap<String, String>::const_iterator it = m_headers.begin(); it != end; ++it) {
-        requestHeaders += it->first;
-        requestHeaders += ": ";
-        requestHeaders += it->second;
-        requestHeaders += "\r\n";
+    if (!m_headers.isEmpty()) {
+        String requestHeaders;
+        HashMap<String, String>::const_iterator end = m_headers.end();
+        for (HashMap<String, String>::const_iterator it = m_headers.begin(); it != end; ++it) {
+            requestHeaders += it->first;
+            requestHeaders += ": ";
+            requestHeaders += it->second;
+            requestHeaders += "\r\n";
+        }
+
+        m_resourceLoader->addMetaData("customHTTPHeader", requestHeaders);
     }
 
-    m_resourceLoader->addMetaData("customHTTPHeader", requestHeaders);
     m_resourceLoader->start(m_docLoader);
 }
 
@@ -116,8 +119,7 @@ void PluginStreamWin::startStream(const KURL& responseURL, long long expectedCon
 {
     ASSERT(!m_streamStarted);
 
-    free((void*)(m_stream.url));
-    m_stream.url = strdup(responseURL.url().utf8());
+    m_stream.url = _strdup(responseURL.url().utf8());
     
     CString mimeTypeStr = mimeType.utf8();
     
@@ -143,8 +145,8 @@ void PluginStreamWin::startStream(const KURL& responseURL, long long expectedCon
 
 void PluginStreamWin::cancelAndDestroyStream(NPReason reason)
 {
-    stop();
     destroyStream(reason);
+    stop();
 }
 
 void PluginStreamWin::destroyStream(NPReason reason)
