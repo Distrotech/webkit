@@ -1690,6 +1690,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\platform\win\FileChooserWin.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\platform\win\FontCacheWin.cpp"
 					>
 				</File>
@@ -1711,6 +1715,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\platform\win\GlyphMapWin.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\win\IconWin.cpp"
 					>
 				</File>
 				<File

@@ -335,12 +335,3 @@ void RenderPopupMenuWin::addSeparator() { notImplemented(); }
 void RenderPopupMenuWin::addGroupLabel(HTMLOptGroupElement*) { notImplemented(); }
 
 void RenderThemeWin::systemFont(int propId, FontDescription& fontDescription) const {}
-
-FileChooser::FileChooser(Document*, RenderFileUploadControl*) { }
-FileChooser::~FileChooser() { }
-void FileChooser::openFileChooser() { notImplemented(); }
-String FileChooser::basenameForWidth(int width) const { notImplemented(); return String(); }
-void FileChooser::uploadControlDetaching() { }
-
-Icon::~Icon() { }
-void Icon::paint(GraphicsContext*, const IntRect&) { notImplemented(); }

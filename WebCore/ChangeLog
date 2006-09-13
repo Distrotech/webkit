@@ -1,3 +1,24 @@
+2006-09-13  Adam Roben  <aroben@apple.com>
+
+        Reviewed by beidson.
+
+        Initial implementation of Icon, FileChooser on Windows.
+
+        * WebCore.vcproj/WebCore.vcproj: Added FileChooserWin.cpp, IconWin.cpp
+        * platform/win/FileChooserWin.cpp: Added.
+        (WebCore::FileChooser::FileChooser):
+        (WebCore::FileChooser::openFileChooser):
+        (WebCore::FileChooser::basenameForWidth):
+        (WebCore::FileChooser::uploadControlDetaching):
+        (WebCore::FileChooser::chooseFile):
+        * platform/win/IconWin.cpp: Added.
+        (WebCore::Icon::Icon):
+        (WebCore::Icon::~Icon):
+        (WebCore::Icon::newIconForFile):
+        (WebCore::Icon::paint):
+        * platform/win/TemporaryLinkStubs.cpp: Removed FileChooser, Icon stub
+        functions
+
 2006-09-13  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Tim O.
