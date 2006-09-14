@@ -1,3 +1,14 @@
+2006-09-14  Adam Roben  <aroben@apple.com>
+
+        Reviewed by sfalken.
+
+        A little #include cleanup
+
+        * WebCore.vcproj/WebCore.vcproj: Add loader/icon to
+        AdditionalIncludeDirectories
+        * platform/win/TemporaryLinkStubs.cpp: Remove "loader/icon" from
+        #include of IconLoader.h
+
 2006-09-14  Brady Eidson  <beidson@apple.com>
 
         Build Fix

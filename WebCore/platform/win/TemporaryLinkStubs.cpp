@@ -61,7 +61,7 @@
 #include "TextBoundaries.h"
 #include "AXObjectCache.h"
 #include "RenderPopupMenuWin.h"
-#include "loader/icon/IconLoader.h"
+#include "IconLoader.h"
 
 using namespace WebCore;
 
