@@ -1,4 +1,5 @@
-/*
+/*job
+
  * Copyright (C) 2004, 2006 Apple Computer, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -141,8 +142,11 @@ LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                 buffers.dwBufferTotal = formData.size();
                 
                 job->d->m_bytesRemainingToWrite = formData.size();
-                job->d->m_formDataString = formData.data();
-                job->d->m_formDataLength = formData.size();
+                size_t dataSize = formData.size();
+                char* data = new char[dataSize];
+                strncpy(data, formData.data(), dataSize);
+                job->d->m_formDataString = data;
+                job->d->m_formDataLength = dataSize;
                 job->d->m_writing = true;
                 HttpSendRequestExA(job->d->m_secondaryHandle, &buffers, 0, 0, (DWORD_PTR)job->d->m_jobId);
             }
@@ -163,7 +167,7 @@ LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                     // End the request.
                     job->d->m_writing = false;
                     HttpEndRequest(job->d->m_secondaryHandle, 0, 0, (DWORD_PTR)job->d->m_jobId);
-                    free(job->d->m_formDataString);
+                    delete[] job->d->m_formDataString;
                     job->d->m_formDataString = 0;
                 }
                 return 0;

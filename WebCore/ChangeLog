@@ -1,3 +1,13 @@
+2006-09-14  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Lou Amadio.
+
+        iBench fix - fix WinInet form post code to not reference a stale pointer.
+        (found by Application Verifier)
+
+        * platform/win/ResourceLoaderWin.cpp:
+        (WebCore::ResourceLoaderWndProc):
+
 2006-09-14  Adam Roben  <aroben@apple.com>
 
         Reviewed by sfalken.

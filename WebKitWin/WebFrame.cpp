@@ -1113,7 +1113,8 @@ void WebFrame::submitForm(const String& method, const KURL& url, const FormData*
             m_continueFormSubmit = false;
             formDelegate->willSubmitForm(this, this, ele, &formValuesPropBag, this);
             formDelegate->Release();
-            ele->Release();
+            if (ele)
+                ele->Release();
         }
 
         if (m_continueFormSubmit)
