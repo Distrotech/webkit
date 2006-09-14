@@ -1,3 +1,17 @@
+2006-09-13  Ada Chan  <adachan@apple.com>
+
+        Reviewed by sfalken
+        
+        - WebBackForwardList::containsItem()
+            - we can break once we've found the item
+        - Fixed a crashing bug with WebNotificationCenter::addObserver.
+
+        * WebBackForwardList.cpp:
+        (WebBackForwardList::containsItem):
+        * WebNotificationCenter.cpp:
+        (ObserverKey::ObserverKey):
+        (ObserverKey::operator=):
+
 2006-09-10  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Steve Falkenburg

@@ -286,8 +286,10 @@ HRESULT STDMETHODCALLTYPE WebBackForwardList::containsItem(
     *result = FALSE;
     Vector<WebHistoryItem*>::iterator end = m_list.end();
     for (Vector<WebHistoryItem*>::iterator it = m_list.begin(); it != end; ++it) {
-        if (item == *it)
+        if (item == *it) {
             *result = TRUE;
+            break;
+        }
     }
     return S_OK;
 }

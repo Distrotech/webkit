@@ -51,9 +51,11 @@ class ObserverKey
     friend ObserverHash;
 public:
     ObserverKey(BSTR n = 0, IUnknown* o = 0);
+    ObserverKey(const ObserverKey& key);
     ~ObserverKey();
 
     bool operator==(const ObserverKey &) const;
+    ObserverKey& operator=(const ObserverKey &);
 
 private:
     BSTR m_notificationName;
@@ -70,6 +72,11 @@ ObserverKey::ObserverKey(BSTR n, IUnknown* o)
         m_notificationName = SysAllocString(n);
     if (o)
        o->AddRef();
+}
+
+ObserverKey::ObserverKey(const ObserverKey& other)
+{
+    *this = other;
 }
 
 ObserverKey::~ObserverKey()
@@ -92,6 +99,17 @@ bool ObserverKey::operator==(const ObserverKey &other) const
         return false;
 
     return !_tcscmp(m_notificationName, other.m_notificationName);
+}
+
+ObserverKey& ObserverKey::operator=(const ObserverKey& other)
+{
+    m_notificationName = other.m_notificationName;
+    if (m_notificationName && m_notificationName != (BSTR)-1)
+        m_notificationName = SysAllocString(m_notificationName);
+    m_anObject = other.m_anObject;
+    if (m_anObject)
+        m_anObject->AddRef();
+    return *this;
 }
 
 struct ObserverKeyTraits : WTF::GenericHashTraits<ObserverKey> {
