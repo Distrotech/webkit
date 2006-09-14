@@ -3454,6 +3454,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\dom\RangeException.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\dom\RegisteredEventListener.cpp"
 				>
 			</File>
