@@ -17,14 +17,15 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(WebKitOutputDir)\WebCore.intermediate\$(ConfigurationName)\WebCore.intermediate"
-			IntermediateDirectory="$(WebKitOutputDir)\WebCore.intermediate\$(ConfigurationName)\WebCore.intermediate"
+			OutputDirectory="$(WebKitOutputDir)\lib"
+			IntermediateDirectory="$(WebKitOutputDir)\obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="4"
 			CharacterSet="1"
+			DeleteExtensionsOnClean="*.obj;*.ilk;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;$(TargetPath)"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="bash build-generated-files.sh &quot;$(ConfigurationName)&quot; &quot;$(WebKitOutputDir)&quot;&#x0D;&#x0A;"
+				CommandLine="bash build-generated-files.sh &quot;$(WebKitOutputDir)&quot; &quot;$(WebKitSDKDir)&quot;&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -41,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(WebKitSDKDir)\include&quot;;&quot;$(WebKitSDKDir)\include\iconv&quot;;&quot;$(WebKitSDKDir)\include\icu&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore&quot;;&quot;$(ProjectDir)\..\&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore&quot;;&quot;$(ProjectDir)\..\css&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\css&quot;;&quot;$(ProjectDir)\..\editing&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\editing&quot;;&quot;$(ProjectDir)\..\rendering&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\rendering&quot;;&quot;$(ProjectDir)\..\bindings\js&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bindings\js&quot;;&quot;$(ProjectDir)\..\dom&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\dom&quot;;&quot;$(ProjectDir)\..\html&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\html&quot;;&quot;$(ProjectDir)\..\bridge&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bridge&quot;;&quot;$(ProjectDir)\..\bridge\win&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bridge\win&quot;;&quot;$(ProjectDir)\..\loader&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\loader&quot;;&quot;$(ProjectDir)\..\page&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\page&quot;;&quot;$(ProjectDir)\..\platform&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform&quot;;&quot;$(ProjectDir)\..\platform\cairo&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\cairo&quot;;&quot;$(ProjectDir)\..\platform\image-decoders&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders&quot;;&quot;$(ProjectDir)\..\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)\..\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)\..\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)\..\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)\..\platform\image-decoders\png&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\png&quot;;&quot;$(ProjectDir)\..\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)\..\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)\..\xml&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\xml&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore\bindings&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore\os-win32&quot;;&quot;$(ProjectDir)\..\ForwardingHeaders&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\ForwardingHeaders&quot;;&quot;$(WebKitOutputDir)\WebCore.intermediate\$(ConfigurationName)\WebCore.intermediate\DerivedSources&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore\kjs&quot;;&quot;$(ProjectDir)\..\platform\win&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\win&quot;;&quot;$(ProjectDir)\..\plugins\win&quot;;&quot;$(ProjectDir)\..\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)\..\platform\cairo\cairo\src&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\cairo\cairo\src&quot;;&quot;$(WebKitSDKDir)\Include&quot;;&quot;$(WebKitSDKDir)\Include\CoreFoundation\OSXCompatibilityHeaders&quot;;&quot;$(WebKitSDKDir)\Include\CoreFoundation\OSXCompatibilityHeaders\GNUCompatibility&quot;;&quot;$(WebKitSDKDir)\include\SQLite&quot;"
+				AdditionalIncludeDirectories="&quot;$(WebKitSDKDir)\include&quot;;&quot;$(WebKitSDKDir)\include\iconv&quot;;&quot;$(WebKitSDKDir)\include\icu&quot;;&quot;$(WebKitSDKDir)\include\sqlite&quot;;&quot;$(ProjectDir)..\&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore&quot;;&quot;$(ProjectDir)..\css&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\css&quot;;&quot;$(ProjectDir)..\editing&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\editing&quot;;&quot;$(ProjectDir)..\rendering&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\rendering&quot;;&quot;$(ProjectDir)..\bindings\js&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bindings\js&quot;;&quot;$(ProjectDir)..\dom&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\dom&quot;;&quot;$(ProjectDir)..\html&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\html&quot;;&quot;$(ProjectDir)..\bridge&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge&quot;;&quot;$(ProjectDir)..\bridge\win&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge\win&quot;;&quot;$(ProjectDir)..\loader&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\loader&quot;;&quot;$(ProjectDir)..\page&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\page&quot;;&quot;$(ProjectDir)..\platform&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform&quot;;&quot;$(ProjectDir)..\platform\cairo&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cairo&quot;;&quot;$(ProjectDir)..\platform\image-decoders&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders&quot;;&quot;$(ProjectDir)..\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)..\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)..\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)..\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)..\platform\image-decoders\png&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\png&quot;;&quot;$(ProjectDir)..\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)..\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)..\xml&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\xml&quot;;&quot;$(WebKitSDKDir)\include\JavaScriptCore\bindings&quot;;&quot;$(WebKitSDKDir)\include\JavaScriptCore&quot;;&quot;$(WebKitSDKDir)\include\JavaScriptCore\os-win32&quot;;&quot;$(ProjectDir)..\ForwardingHeaders&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ForwardingHeaders&quot;;&quot;$(WebKitOutputDir)\obj\WebCore\DerivedSources&quot;;&quot;$(WebKitSDKDir)\include\JavaScriptCore\kjs&quot;;&quot;$(ProjectDir)..\platform\win&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\win&quot;;&quot;$(ProjectDir)..\plugins\win&quot;;&quot;$(ProjectDir)..\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)..\platform\cairo\cairo\src&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cairo\cairo\src&quot;;&quot;$(WebKitSDKDir)\Include&quot;;&quot;$(WebKitSDKDir)\Include\CoreFoundation\OSXCompatibilityHeaders&quot;;&quot;$(WebKitSDKDir)\Include\CoreFoundation\OSXCompatibilityHeaders\GNUCompatibility&quot;"
 				PreprocessorDefinitions="WIN32;__WIN32__;XSLT_SUPPORT;XPATH_SUPPORT"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
@@ -65,6 +66,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)\$(ProjectName)_debug.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -80,19 +82,21 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\DerivedSources&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\loader\icon&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\html&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\css&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\platform\win&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\bridge\win&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\page&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\rendering&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\editing&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\dom&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\xml&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\platform\cairo\cairo\src&quot;&#x0D;&#x0A;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\config.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitOutputDir)\obj\WebCore\DerivedSources\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\DerivedSources&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\loader\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\loader&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\loader\icon\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\loader\icon&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\html\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\html&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\css\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\css&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\platform&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\platform\win&quot;&#x0D;&#x0A;xcopy /y &quot;$(ProjectDir)..\platform\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\platform\win&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cairo\cairo\src\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\platform\cairo\cairo\src&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\bridge&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\bridge\win&quot;&#x0D;&#x0A;xcopy /y &quot;$(ProjectDir)..\bridge\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\bridge\win&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\page\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\page&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\rendering\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\rendering&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\editing\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\editing&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\dom\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\dom&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\xml\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\xml&quot;&#x0D;&#x0A;&#x0D;&#x0A;dstroot-to-sdk.cmd WebCore&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(WebKitOutputDir)\WebCore.intermediate\$(ConfigurationName)\WebCore.intermediate"
-			IntermediateDirectory="$(WebKitOutputDir)\WebCore.intermediate\$(ConfigurationName)\WebCore.intermediate"
+			OutputDirectory="$(WebKitOutputDir)\lib"
+			IntermediateDirectory="$(WebKitOutputDir)\obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="4"
 			CharacterSet="1"
+			DeleteExtensionsOnClean="*.obj;*.ilk;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;$(TargetPath)"
 			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="bash build-generated-files.sh &quot;$(ConfigurationName)&quot; &quot;$(WebKitOutputDir)&quot;&#x0D;&#x0A;"
+				CommandLine="bash build-generated-files.sh &quot;$(WebKitOutputDir)&quot; &quot;$(WebKitSDKDir)&quot;&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -108,7 +112,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(WebKitSDKDir)\include&quot;;&quot;$(WebKitSDKDir)\include\iconv&quot;;&quot;$(WebKitSDKDir)\include\icu&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore&quot;;&quot;$(ProjectDir)\..\&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore&quot;;&quot;$(ProjectDir)\..\css&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\css&quot;;&quot;$(ProjectDir)\..\editing&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\editing&quot;;&quot;$(ProjectDir)\..\rendering&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\rendering&quot;;&quot;$(ProjectDir)\..\bindings\js&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bindings\js&quot;;&quot;$(ProjectDir)\..\dom&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\dom&quot;;&quot;$(ProjectDir)\..\html&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\html&quot;;&quot;$(ProjectDir)\..\bridge&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bridge&quot;;&quot;$(ProjectDir)\..\bridge\win&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\bridge\win&quot;;&quot;$(ProjectDir)\..\loader&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\loader&quot;;&quot;$(ProjectDir)\..\page&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\page&quot;;&quot;$(ProjectDir)\..\platform&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform&quot;;&quot;$(ProjectDir)\..\platform\cairo&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\cairo&quot;;&quot;$(ProjectDir)\..\platform\image-decoders&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders&quot;;&quot;$(ProjectDir)\..\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)\..\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)\..\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)\..\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)\..\platform\image-decoders\png&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\png&quot;;&quot;$(ProjectDir)\..\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)\..\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)\..\xml&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\xml&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore\bindings&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore\os-win32&quot;;&quot;$(ProjectDir)\..\ForwardingHeaders&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\ForwardingHeaders&quot;;&quot;$(WebKitOutputDir)\WebCore.intermediate\$(ConfigurationName)\WebCore.intermediate\DerivedSources&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\JavaScriptCore\kjs&quot;;&quot;$(ProjectDir)\..\platform\win&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\win&quot;;&quot;$(ProjectDir)\..\plugins\win&quot;;&quot;$(ProjectDir)\..\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)\..\platform\cairo\cairo\src&quot;;&quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\platform\cairo\cairo\src&quot;;&quot;$(WebKitSDKDir)\Include&quot;;&quot;$(WebKitSDKDir)\Include\CoreFoundation\OSXCompatibilityHeaders&quot;;&quot;$(WebKitSDKDir)\Include\CoreFoundation\OSXCompatibilityHeaders\GNUCompatibility&quot;;&quot;$(WebKitSDKDir)\include\SQLite&quot;"
+				AdditionalIncludeDirectories="&quot;$(WebKitSDKDir)\include&quot;;&quot;$(WebKitSDKDir)\include\iconv&quot;;&quot;$(WebKitSDKDir)\include\icu&quot;;&quot;$(WebKitSDKDir)\include\sqlite&quot;;&quot;$(ProjectDir)..\&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore&quot;;&quot;$(ProjectDir)..\css&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\css&quot;;&quot;$(ProjectDir)..\editing&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\editing&quot;;&quot;$(ProjectDir)..\rendering&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\rendering&quot;;&quot;$(ProjectDir)..\bindings\js&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bindings\js&quot;;&quot;$(ProjectDir)..\dom&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\dom&quot;;&quot;$(ProjectDir)..\html&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\html&quot;;&quot;$(ProjectDir)..\bridge&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge&quot;;&quot;$(ProjectDir)..\bridge\win&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge\win&quot;;&quot;$(ProjectDir)..\loader&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\loader&quot;;&quot;$(ProjectDir)..\page&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\page&quot;;&quot;$(ProjectDir)..\platform&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform&quot;;&quot;$(ProjectDir)..\platform\cairo&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cairo&quot;;&quot;$(ProjectDir)..\platform\image-decoders&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders&quot;;&quot;$(ProjectDir)..\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)..\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)..\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)..\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)..\platform\image-decoders\png&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\png&quot;;&quot;$(ProjectDir)..\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)..\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)..\xml&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\xml&quot;;&quot;$(WebKitSDKDir)\include\JavaScriptCore\bindings&quot;;&quot;$(WebKitSDKDir)\include\JavaScriptCore&quot;;&quot;$(WebKitSDKDir)\include\JavaScriptCore\os-win32&quot;;&quot;$(ProjectDir)..\ForwardingHeaders&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ForwardingHeaders&quot;;&quot;$(WebKitOutputDir)\obj\WebCore\DerivedSources&quot;;&quot;$(WebKitSDKDir)\include\JavaScriptCore\kjs&quot;;&quot;$(ProjectDir)..\platform\win&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\win&quot;;&quot;$(ProjectDir)..\plugins\win&quot;;&quot;$(ProjectDir)..\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)..\platform\cairo\cairo\src&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cairo\cairo\src&quot;;&quot;$(WebKitSDKDir)\Include&quot;;&quot;$(WebKitSDKDir)\Include\CoreFoundation\OSXCompatibilityHeaders&quot;;&quot;$(WebKitSDKDir)\Include\CoreFoundation\OSXCompatibilityHeaders\GNUCompatibility&quot;"
 				PreprocessorDefinitions="WIN32;__WIN32__;XSLT_SUPPORT;XPATH_SUPPORT;NDEBUG;KXMLCORE_PLATFORM_CF"
 				ExceptionHandling="0"
 				RuntimeLibrary="2"
@@ -145,6 +149,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\DerivedSources&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\loader\icon&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\html&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\css&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\platform\win&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\bridge\win&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\page&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\rendering&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\editing&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\dom&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\xml&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\platform\cairo\cairo\src&quot;&#x0D;&#x0A;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\config.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitOutputDir)\obj\WebCore\DerivedSources\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\DerivedSources&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\loader\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\loader&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\loader\icon\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\loader\icon&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\html\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\html&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\css\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\css&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\platform&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\platform\win&quot;&#x0D;&#x0A;xcopy /y &quot;$(ProjectDir)..\platform\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\platform\win&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cairo\cairo\src\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\platform\cairo\cairo\src&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\bridge&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\bridge\win&quot;&#x0D;&#x0A;xcopy /y &quot;$(ProjectDir)..\bridge\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\bridge\win&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\page\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\page&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\rendering\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\rendering&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\editing\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\editing&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\dom\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\dom&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\xml\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\xml&quot;&#x0D;&#x0A;&#x0D;&#x0A;dstroot-to-sdk.cmd WebCore&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -155,771 +160,771 @@
 			Name="DerivedSources"
 			>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\ColorData.c"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\ColorData.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\CSSGrammar.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\CSSGrammar.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\CSSGrammar.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\CSSGrammar.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\HTMLEntityNames.c"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\HTMLEntityNames.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\HTMLNames.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\HTMLNames.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\HTMLNames.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\HTMLNames.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSAttr.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSAttr.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSAttr.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSAttr.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSCanvasGradient.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSCanvasGradient.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSCanvasGradient.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSCanvasGradient.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSCanvasPattern.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSCanvasPattern.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSCanvasPattern.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSCanvasPattern.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSCanvasRenderingContext2D.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSCanvasRenderingContext2D.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSCanvasRenderingContext2D.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSCanvasRenderingContext2D.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSCharacterData.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSCharacterData.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSCharacterData.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSCharacterData.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSCounter.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSCounter.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSCounter.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSCounter.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSCSSPrimitiveValue.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSCSSPrimitiveValue.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSCSSPrimitiveValue.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSCSSPrimitiveValue.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSCSSRule.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSCSSRule.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSCSSRule.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSCSSRule.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSCSSRuleList.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSCSSRuleList.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSCSSRuleList.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSCSSRuleList.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSCSSStyleDeclaration.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSCSSStyleDeclaration.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSCSSStyleDeclaration.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSCSSStyleDeclaration.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSCSSValue.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSCSSValue.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSCSSValue.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSCSSValue.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSCSSValueList.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSCSSValueList.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSCSSValueList.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSCSSValueList.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSDocument.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSDocument.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSDocument.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSDocument.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSDocumentFragment.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSDocumentFragment.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSDocumentFragment.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSDocumentFragment.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSDocumentType.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSDocumentType.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSDocumentType.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSDocumentType.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSDOMImplementation.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSDOMImplementation.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSDOMImplementation.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSDOMImplementation.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSDOMParser.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSDOMParser.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSDOMParser.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSDOMParser.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSDOMWindow.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSDOMWindow.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSDOMWindow.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSDOMWindow.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSEntity.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSEntity.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSEntity.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSEntity.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSEvent.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSEvent.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSEvent.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSEvent.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLAnchorElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLAnchorElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLAnchorElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLAnchorElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLAppletElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLAppletElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLAppletElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLAppletElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLAreaElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLAreaElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLAreaElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLAreaElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLBaseElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLBaseElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLBaseElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLBaseElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLBaseFontElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLBaseFontElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLBaseFontElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLBaseFontElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLBlockquoteElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLBlockquoteElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLBlockquoteElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLBlockquoteElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLBodyElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLBodyElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLBodyElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLBodyElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLBRElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLBRElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLBRElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLBRElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLButtonElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLButtonElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLButtonElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLButtonElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLCanvasElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLCanvasElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLCanvasElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLCanvasElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLDirectoryElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLDirectoryElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLDirectoryElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLDirectoryElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLDivElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLDivElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLDivElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLDivElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLDListElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLDListElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLDListElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLDListElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLDocument.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLDocument.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLDocument.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLDocument.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLFieldSetElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLFieldSetElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLFieldSetElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLFieldSetElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLFontElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLFontElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\webcore\JSHTMLFormElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLFormElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLFormElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLFormElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLHeadElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLHeadElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLHeadElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLHeadElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLHeadingElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLHeadingElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLHeadingElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLHeadingElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLHRElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLHRElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLHRElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLHRElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLHtmlElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLHtmlElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLHtmlElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLHtmlElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLImageElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLImageElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLImageElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLImageElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLInputElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLInputElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLInputElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLInputElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLIsIndexElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLIsIndexElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLIsIndexElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLIsIndexElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLLabelElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLLabelElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLLabelElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLLabelElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLLegendElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLLegendElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLLegendElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLLegendElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLLIElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLLIElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLLIElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLLIElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLLinkElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLLinkElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLLinkElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLLinkElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLMapElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLMapElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLMapElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLMapElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLMenuElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLMenuElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLMenuElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLMenuElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLMetaElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLMetaElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLMetaElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLMetaElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLModElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLModElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLModElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLModElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLOListElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLOListElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLOListElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLOListElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLOptGroupElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLOptGroupElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLOptGroupElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLOptGroupElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLOptionElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLOptionElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLOptionElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLOptionElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLOptionsCollection.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLOptionsCollection.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLOptionsCollection.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLOptionsCollection.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLParagraphElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLParagraphElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLParagraphElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLParagraphElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLParamElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLParamElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLParamElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLParamElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLPreElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLPreElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLPreElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLPreElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLQuoteElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLQuoteElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLQuoteElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLQuoteElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLScriptElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLScriptElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLScriptElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLScriptElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLStyleElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLStyleElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLStyleElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLStyleElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLTextAreaElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLTextAreaElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLTextAreaElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLTextAreaElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLTitleElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLTitleElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLTitleElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLTitleElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLUListElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLUListElement.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSHTMLUListElement.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLUListElement.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSKeyboardEvent.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSKeyboardEvent.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSKeyboardEvent.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSKeyboardEvent.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSMouseEvent.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSMouseEvent.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSMouseEvent.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSMouseEvent.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSMutationEvent.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSMutationEvent.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSMutationEvent.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSMutationEvent.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSNode.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSNode.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSNode.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSNode.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSNodeFilter.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSNodeFilter.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSNodeFilter.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSNodeFilter.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSNodeIterator.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSNodeIterator.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSNodeIterator.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSNodeIterator.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSNotation.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSNotation.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSNotation.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSNotation.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSOverflowEvent.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSOverflowEvent.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSOverflowEvent.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSOverflowEvent.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSProcessingInstruction.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSProcessingInstruction.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSProcessingInstruction.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSProcessingInstruction.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSRange.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSRange.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSRange.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSRange.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSRangeException.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSRangeException.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSRangeException.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSRangeException.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSText.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSText.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSText.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSText.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSTreeWalker.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSTreeWalker.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSTreeWalker.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSTreeWalker.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSUIEvent.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSUIEvent.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSUIEvent.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSUIEvent.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSWheelEvent.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSWheelEvent.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSWheelEvent.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSWheelEvent.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSXMLSerializer.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSXMLSerializer.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSXMLSerializer.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSXMLSerializer.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSXPathEvaluator.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSXPathEvaluator.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSXPathEvaluator.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSXPathEvaluator.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSXPathExpression.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSXPathExpression.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSXPathExpression.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSXPathExpression.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSXPathNSResolver.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSXPathNSResolver.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSXPathNSResolver.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSXPathNSResolver.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSXPathResult.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSXPathResult.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSXPathResult.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSXPathResult.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\JSXSLTProcessor.lut.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSXSLTProcessor.lut.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\kjs_css.lut.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\kjs_css.lut.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\kjs_dom.lut.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\kjs_dom.lut.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\kjs_events.lut.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\kjs_events.lut.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\kjs_html.lut.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\kjs_html.lut.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\kjs_navigator.lut.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\kjs_navigator.lut.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\kjs_traversal.lut.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\kjs_traversal.lut.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\kjs_window.lut.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\kjs_window.lut.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\UserAgentStyleSheets.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\UserAgentStyleSheets.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\UserAgentStyleSheetsData.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\UserAgentStyleSheetsData.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\XLinkNames.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\XLinkNames.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\XPathGrammar.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\XPathGrammar.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\DerivedSources\WebCore\XPathGrammar.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\XPathGrammar.h"
 				>
 			</File>
 		</Filter>
@@ -980,6 +985,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\page\Plugin.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\page\ResourceRequest.h"
 				>
 			</File>
 			<File
@@ -1048,6 +1057,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\loader\CachedXSLStyleSheet.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\CachePolicy.h"
 				>
 			</File>
 			<File
@@ -1196,10 +1209,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\AtomicStringImpl.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\platform\Brush.h"
 				>
 			</File>
 			<File
@@ -1479,6 +1488,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\PlatformScrollBar.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\PlatformString.h"
 				>
 			</File>
@@ -1587,6 +1600,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\StringHash.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\StringImpl.cpp"
 				>
 			</File>
@@ -1600,10 +1617,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextBoundaries.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextBox.h"
 				>
 			</File>
 			<File
@@ -1628,6 +1641,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextDecoder.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextDirection.h"
 				>
 			</File>
 			<File
@@ -1659,11 +1676,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextStyle.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\Timer.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\Timer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\UChar.h"
 				>
 			</File>
 			<File
@@ -1831,11 +1856,23 @@
 					Name="png"
 					>
 					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\image-decoders\png\mozpngconf.h"
+						>
+					</File>
+					<File
 						RelativePath="..\platform\image-decoders\png\png-part1.c"
 						>
 					</File>
 					<File
 						RelativePath="..\platform\image-decoders\png\png-part2.c"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\image-decoders\png\png.h"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\image-decoders\png\pngconf.h"
 						>
 					</File>
 					<File
@@ -1947,6 +1984,14 @@
 					Name="jpeg"
 					>
 					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\image-decoders\jpeg\jconfig.h"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\image-decoders\jpeg\jmorecfg.h"
+						>
+					</File>
+					<File
 						RelativePath="..\platform\image-decoders\jpeg\jpeg-part1.c"
 						>
 					</File>
@@ -1964,6 +2009,10 @@
 					</File>
 					<File
 						RelativePath="..\..\..\..\OpenSource\WebCore\platform\image-decoders\jpeg\JPEGImageDecoder.h"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\image-decoders\jpeg\jpeglib.h"
 						>
 					</File>
 				</Filter>
@@ -3158,6 +3207,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\dom\DocumentFragment.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\dom\DocumentMarker.h"
 				>
 			</File>
 			<File

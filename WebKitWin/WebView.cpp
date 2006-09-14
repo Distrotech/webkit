@@ -36,16 +36,16 @@
 #include "WebPreferences.h"
 
 #pragma warning( push, 0 )
-#include "ResourceLoaderClient.h"
-#include "FrameWin.h"
-#include "Document.h"
-#include "FrameView.h"
-#include "IntRect.h"
-#include "Page.h"
-#include "PlatformKeyboardEvent.h"
-#include "PlatformMouseEvent.h"
-#include "SelectionController.h"
-#include "TypingCommand.h"
+#include <WebCore/platform/ResourceLoaderClient.h>
+#include <WebCore/bridge/win/FrameWin.h>
+#include <WebCore/dom/Document.h>
+#include <WebCore/page/FrameView.h>
+#include <WebCore/platform/IntRect.h>
+#include <WebCore/page/Page.h>
+#include <WebCore/platform/PlatformKeyboardEvent.h>
+#include <WebCore/platform/PlatformMouseEvent.h>
+#include <WebCore/editing/SelectionController.h>
+#include <WebCore/editing/TypingCommand.h>
 #pragma warning(pop)
 
 using namespace WebCore;

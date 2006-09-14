@@ -1,3 +1,33 @@
+2006-09-12  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by NOBODY (OOPS!).
+
+        Get Boomer ready for B&I submission.
+      
+        Projects can now all build independent of one another
+        without groping for headers or source across trees.
+
+        * DOMCSSClasses.cpp: Use more explicit include paths to highlight external headers.
+        * DOMCSSClasses.h: Use more explicit include paths to highlight external headers.
+        * DOMCoreClasses.cpp: Use more explicit include paths to highlight external headers.
+        * DOMHTMLClasses.cpp: Use more explicit include paths to highlight external headers.
+        * WebDataSource.cpp: Use more explicit include paths to highlight external headers.
+        * WebFrame.cpp: Use more explicit include paths to highlight external headers.
+        * WebFrame.h: Use more explicit include paths to highlight external headers.
+        * WebHTMLRepresentation.cpp: Use more explicit include paths to highlight external headers.
+        * WebHistory.cpp: Fix capitalization of wtf.
+        * WebKit.vcproj/Interfaces.vcproj: Updated to new obj layout.
+        * WebKit.vcproj/WebKit.sln: Updated standalone sln for use by B&I.
+        * WebKit.vcproj/WebKit.vcproj: Updated to new obj layout.
+        * WebKit.vcproj/WebKitGUID.vcproj: Updated to new obj layout.
+        * WebKit.vcproj/dstroot-to-sdk.cmd: Copy built bits back to WebKitSDKDir for dependent builds.
+        * WebKitDLL.cpp: Use more explicit include paths to highlight external headers.
+        * WebNotificationCenter.cpp: Use more explicit include paths to highlight external headers.
+        * WebPreferences.cpp: Fix capitalization of wtf.
+        * WebURLResponse.cpp: Use more explicit include paths to highlight external headers.
+        * WebURLResponse.h: Use more explicit include paths to highlight external headers.
+        * WebView.cpp: Use more explicit include paths to highlight external headers.
+
 2006-09-13  Ada Chan  <adachan@apple.com>
 
         Reviewed by sfalken

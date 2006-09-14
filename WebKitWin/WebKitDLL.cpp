@@ -28,10 +28,10 @@
 #include "resource.h"
 #include "WebKit.h"
 #include "WebKitClassFactory.h"
-#include "Widget.h"
 
 #pragma warning( push, 0 )
-#include <WTF/Vector.h>
+#include <WebCore/platform/Widget.h>
+#include <wtf/Vector.h>
 #pragma warning(pop)
 
 #include <tchar.h>

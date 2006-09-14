@@ -35,7 +35,7 @@
 #pragma warning( push, 0 )
 #include <wtf/HashTraits.h>
 #include <wtf/HashMap.h>
-#include "StringImpl.h"
+#include <WebCore/platform/StringImpl.h>
 #pragma warning(pop)
 
 #include <tchar.h>

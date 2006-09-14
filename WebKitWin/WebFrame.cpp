@@ -40,25 +40,25 @@
 #include "WebURLResponse.h"
 
 #pragma warning( push, 0 )
-#include "Cache.h"
-#include "Document.h"
-#include "DOMImplementation.h"
-#include "FrameView.h"
-#include "FrameWin.h"
-#include "GraphicsContext.h"
-#include "HTMLFormElement.h"
-#include "HTMLGenericFormElement.h"
-#include "HTMLInputElement.h"
-#include "HTMLNames.h"
-#include "Page.h"
-#include "PlatformKeyboardEvent.h"
-#include "PlugInInfoStore.h"
-#include "RenderFrame.h"
+#include <WebCore/loader/Cache.h>
+#include <WebCore/dom/Document.h>
+#include <WebCore/dom/DOMImplementation.h>
+#include <WebCore/page/FrameView.h>
+#include <WebCore/bridge/win/FrameWin.h>
+#include <WebCore/platform/GraphicsContext.h>
+#include <WebCore/html/HTMLFormElement.h>
+#include <WebCore/html/HTMLGenericFormElement.h>
+#include <WebCore/html/HTMLInputElement.h>
+#include <WebCore/DerivedSources/HTMLNames.h>
+#include <WebCore/page/Page.h>
+#include <WebCore/platform/PlatformKeyboardEvent.h>
+#include <WebCore/platform/PlugInInfoStore.h>
+#include <WebCore/rendering/RenderFrame.h>
+#include <WebCore/platform/ResourceLoader.h>
+#include <WebCore/platform/win/ResourceLoaderWin.h>
+#include <wtf/MathExtras.h>
 #include "cairo.h"
 #include "cairo-win32.h"
-#include "ResourceLoader.h"
-#include "ResourceLoaderWin.h"
-#include "MathExtras.h"
 #pragma warning(pop)
 
 using namespace WebCore;

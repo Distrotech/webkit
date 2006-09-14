@@ -31,15 +31,15 @@
 #include "DOMHTMLClasses.h"
 
 #pragma warning(push, 0)
-#include "DOMWindow.h"
-#include "Element.h"
-#include "HTMLFormElement.h"
-#include "HTMLSelectElement.h"
-#include "HTMLOptionElement.h"
-#include "HTMLInputElement.h"
-#include "HTMLTextAreaElement.h"
-#include "HTMLNames.h"
-#include "RenderObject.h"
+#include <WebCore/page/DOMWindow.h>
+#include <WebCore/dom/Element.h>
+#include <WebCore/html/HTMLFormElement.h>
+#include <WebCore/html/HTMLSelectElement.h>
+#include <WebCore/html/HTMLOptionElement.h>
+#include <WebCore/html/HTMLInputElement.h>
+#include <WebCore/html/HTMLTextAreaElement.h>
+#include <WebCore/DerivedSources/HTMLNames.h>
+#include <WebCore/rendering/RenderObject.h>
 #pragma warning(pop)
 
 using namespace WebCore;

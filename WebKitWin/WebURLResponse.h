@@ -30,7 +30,7 @@
 
 #include "IWebURLResponse.h"
 
-#include "ResourceLoaderClient.h"
+#include <WebCore/platform/ResourceLoaderClient.h>
 
 class WebURLResponse : public IWebURLResponse
 {

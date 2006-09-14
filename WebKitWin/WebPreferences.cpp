@@ -32,7 +32,7 @@
 #include "WebPreferenceKeysPrivate.h"
 
 #pragma warning( push, 0 )
-#include <WTF/Vector.h>
+#include <wtf/Vector.h>
 #pragma warning( pop )
 
 #include <CoreFoundation/CoreFoundation.h>

@@ -32,9 +32,10 @@
 #include "WebDataSource.h"
 
 #pragma warning(push, 0)
-#include "ResourceLoaderClient.h"
-#include "FrameWin.h"
-#include "PlatformString.h"
+#include <WebCore/Platform/ResourceLoaderClient.h>
+#include <WebCore/bridge/win/FrameWin.h>
+#include <WebCore/Platform/PlatformString.h>
+#include <WTF/HashMap.h>
 #pragma warning(pop)
 
 namespace WebCore {

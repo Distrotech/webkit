@@ -33,7 +33,7 @@
 #include "WebHTMLRepresentation.h"
 
 #pragma warning( push, 0 )
-#include "KURL.h"
+#include <WebCore/platform/KURL.h>
 #pragma warning(pop)
 
 // WebDataSource ----------------------------------------------------------------

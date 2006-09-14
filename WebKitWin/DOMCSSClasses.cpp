@@ -29,7 +29,7 @@
 #include "DOMCSSClasses.h"
 
 #pragma warning(push, 0)
-#include "PlatformString.h"
+#include <WebCore/platform/PlatformString.h>
 #pragma warning(pop)
 
 // DOMCSSStyleDeclaration - DOMCSSStyleDeclaration ----------------------------

@@ -29,7 +29,7 @@
 #include "DOMCSS.h"
 #include "DOMCoreClasses.h"
 
-#include "CSSStyleDeclaration.h"
+#include <WebCore/css/CSSStyleDeclaration.h>
 
 class DOMCSSStyleDeclaration : public DOMObject, public IDOMCSSStyleDeclaration
 {

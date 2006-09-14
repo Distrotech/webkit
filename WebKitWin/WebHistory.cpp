@@ -35,7 +35,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 
 #pragma warning( push, 0 )
-#include <WTF/Vector.h>
+#include <wtf/Vector.h>
 #pragma warning( pop )
 
 CFStringRef DatesArrayKey = CFSTR("WebHistoryDates");

@@ -1,3 +1,17 @@
+2006-09-12  Steve Falkenburg  <sfalken@apple.com>
+
+        Rubber-stamped by Ada.
+
+        Get Boomer ready for B&I submission.
+       
+        Projects can now all build independent of one another
+        without groping for headers or source across trees.
+
+        * WebCore.vcproj/WebCore.sln: Fix standalone sln for use by B&I.
+        * WebCore.vcproj/WebCore.vcproj: Update to new obj layout.
+        * WebCore.vcproj/build-generated-files.sh: Build derived sources into obj, update to new obj layout.
+        * WebCore.vcproj/dstroot-to-sdk.cmd: Copy built bits back to WebKitSDKDir for dependent builds.
+
 2006-09-13  Adam Roben  <aroben@apple.com>
 
         Build fix

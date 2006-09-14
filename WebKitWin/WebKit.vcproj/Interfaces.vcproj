@@ -17,13 +17,14 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(WebKitOutputDir)\$(ConfigurationName)\WebKit"
-			IntermediateDirectory="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate"
+			OutputDirectory="$(WebKitOutputDir)\include\WebKit"
+			IntermediateDirectory="$(WebKitOutputDir)\obj\WebKit\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="1"
 			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				CommandLine="mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\obj\WebKit\$(ProjectName)&quot;&#x0D;&#x0A;exit /b&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -40,8 +41,8 @@
 				WarningLevel="1"
 				WarnAsError="true"
 				GenerateTypeLibrary="false"
-				TypeLibraryName="$(OutDir)\WebKit.tlb"
-				OutputDirectory="$(IntDir)"
+				TypeLibraryName="$(ProjectDir)\WebKit.tlb"
+				OutputDirectory="$(WebKitOutputDir)\obj\WebKit\$(ProjectName)"
 				HeaderFileName="$(OutDir)\$(InputName).h"
 			/>
 			<Tool
@@ -95,19 +96,20 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="xcopy /y &quot;$(TargetDir)WebKit.tlb&quot; &quot;$(ProjectDir)&quot;"
+				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(WebKitOutputDir)\$(ConfigurationName)\WebKit"
-			IntermediateDirectory="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate"
+			OutputDirectory="$(WebKitOutputDir)\include\WebKit"
+			IntermediateDirectory="$(WebKitOutputDir)\obj\WebKit\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="1"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				CommandLine="mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\obj\WebKit\$(ProjectName)&quot;&#x0D;&#x0A;exit /b&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -124,8 +126,8 @@
 				WarningLevel="1"
 				WarnAsError="true"
 				GenerateTypeLibrary="false"
-				TypeLibraryName="$(OutDir)\WebKit.tlb"
-				OutputDirectory="$(IntDir)"
+				TypeLibraryName="$(ProjectDir)\WebKit.tlb"
+				OutputDirectory="$(WebKitOutputDir)\obj\WebKit\$(ProjectName)"
 				HeaderFileName="$(OutDir)\$(InputName).h"
 			/>
 			<Tool
@@ -178,7 +180,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="xcopy /y &quot;$(TargetDir)WebKit.tlb&quot; &quot;$(ProjectDir)&quot;"
+				CommandLine=""
 			/>
 		</Configuration>
 	</Configurations>

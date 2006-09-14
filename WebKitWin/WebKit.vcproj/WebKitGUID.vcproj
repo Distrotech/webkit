@@ -17,8 +17,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(WebKitOutputDir)\$(ConfigurationName)\WebKit"
-			IntermediateDirectory="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\$(ProjectName).intermediate"
+			OutputDirectory="$(WebKitOutputDir)\lib"
+			IntermediateDirectory="$(WebKitOutputDir)\obj\WebKit\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="4"
 			CharacterSet="1"
 			>
@@ -67,6 +67,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)\$(ProjectName)_debug.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -86,8 +87,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(WebKitOutputDir)\$(ConfigurationName)\WebKit"
-			IntermediateDirectory="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\$(ProjectName).intermediate"
+			OutputDirectory="$(WebKitOutputDir)\lib"
+			IntermediateDirectory="$(WebKitOutputDir)\obj\WebKit\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="4"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
@@ -156,171 +157,171 @@
 	</References>
 	<Files>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\DOMCore_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\DOMCore_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\DOMCSS_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\DOMCSS_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\DOMExtensions_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\DOMExtensions_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\DOMHTML_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\DOMHTML_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\DOMPrivate_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\DOMPrivate_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\DOMRange_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\DOMRange_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebArchive_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebArchive_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebAttributedString_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebAttributedString_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebBackForwardList_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebBackForwardList_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebDataSource_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebDataSource_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebDocument_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebDocument_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebDownload_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebDownload_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebEditingDelegate_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebEditingDelegate_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebError_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebError_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebFormDelegate_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebFormDelegate_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebFrame_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebFrame_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebFrameLoadDelegate_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebFrameLoadDelegate_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebFrameLoadDelegatePrivate_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebFrameLoadDelegatePrivate_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebFrameView_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebFrameView_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebHistory_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebHistory_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebHistoryItem_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebHistoryItem_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebHistoryItemPrivate_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebHistoryItemPrivate_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebHTMLRepresentation_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebHTMLRepresentation_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebIconDatabase_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebIconDatabase_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebImage_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebImage_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebMutableURLRequest_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebMutableURLRequest_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebNotification_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebNotification_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebNotificationCenter_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebNotificationCenter_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebNotificationObserver_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebNotificationObserver_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebPolicyDelegate_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebPolicyDelegate_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebPreferences_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebPreferences_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebResource_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebResource_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebResourceLoadDelegate_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebResourceLoadDelegate_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebScriptObject_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebScriptObject_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebUIDelegate_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebUIDelegate_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebUndoManager_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebUndoManager_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebURLAuthenticationChallenge_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebURLAuthenticationChallenge_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebURLRequest_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebURLRequest_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebURLResponse_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebURLResponse_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebView_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebView_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\IWebViewPrivate_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebViewPrivate_i.c"
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\WebKit.intermediate\$(ConfigurationName)\Interfaces.intermediate\WebKit_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\WebKit_i.c"
 			>
 		</File>
 	</Files>
