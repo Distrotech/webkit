@@ -61,6 +61,7 @@
 #include "TextBoundaries.h"
 #include "AXObjectCache.h"
 #include "RenderPopupMenuWin.h"
+#include "loader/icon/IconLoader.h"
 
 using namespace WebCore;
 
@@ -335,3 +336,7 @@ void RenderPopupMenuWin::addSeparator() { notImplemented(); }
 void RenderPopupMenuWin::addGroupLabel(HTMLOptGroupElement*) { notImplemented(); }
 
 void RenderThemeWin::systemFont(int propId, FontDescription& fontDescription) const {}
+
+
+void IconLoader::receivedResponse(ResourceLoader*, PlatformResponse) { notImplemented(); }
+void IconLoader::notifyIconChanged(const KURL& iconURL) { notImplemented(); }

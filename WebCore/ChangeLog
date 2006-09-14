@@ -1,3 +1,12 @@
+2006-09-14  Brady Eidson  <beidson@apple.com>
+
+        Build Fix
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/win/TemporaryLinkStubs.cpp:
+        (IconLoader::receivedResponse):
+        (IconLoader::notifyIconChanged):
+
 2006-09-13  Steve Falkenburg  <sfalken@apple.com>
 
         Fixes for submission of WebCore.  Doesn't affect build.

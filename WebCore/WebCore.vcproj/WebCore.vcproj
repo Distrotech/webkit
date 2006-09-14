@@ -1151,6 +1151,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\loader\icon\IconLoader.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\loader\icon\IconLoader.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\loader\icon\SQLDatabase.cpp"
 					>
 				</File>
