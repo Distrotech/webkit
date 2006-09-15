@@ -1,3 +1,10 @@
+2006-09-15  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Steve.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        Add JavaScriptCore/ to include path.
+
 2006-09-15  Adam Roben  <aroben@apple.com>
 
         Reviewed by sfalken.
