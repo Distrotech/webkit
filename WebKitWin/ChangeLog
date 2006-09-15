@@ -1,3 +1,26 @@
+2006-09-15  Adam Roben  <aroben@apple.com>
+
+        Reviewed by sfalken.
+
+        Implement historyContains() on Windows (rdar://4733770)
+
+        * WebHistory.cpp: Add new private _WebCoreHistoryProvider class.
+        (WebHistory::setOptionalSharedHistory): Call
+        WebCore::WebCoreHistory::setHistoryProvider so that WebCore can access
+        history.
+        (WebHistory::itemForURL): Extract itemForURLString method.
+        (WebHistory::itemForURLString): Added.
+        (WebHistory::containsItemForURLString): Added.
+        (_WebCoreHistoryProvider::_WebCoreHistoryProvider): Added.
+        (_WebCoreHistoryProvider::~_WebCoreHistoryProvider): Added.
+        (matchLetter): Ported from Mac's WebHistory.m.
+        (matchUnicodeLetter): Ditto.
+        (_WebCoreHistoryProvider::containsItemForURLLatin1): Ditto.
+        (_WebCoreHistoryProvider::containsItemForURLUnicode): Ditto.
+        * WebHistory.h: Fix typo: IID_WebHistoryItemPrivate -->
+        IID_WebHistoryPrivate, added new methods to IWebHistoryPrivate and
+        WebHistory
+
 2006-09-14  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Lou Amadio.

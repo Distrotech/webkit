@@ -1,3 +1,21 @@
+2006-09-15  Adam Roben  <aroben@apple.com>
+
+        Reviewed by sfalken.
+
+        Implement historyContains() on Windows (rdar://4733770)
+
+        * WebCore.vcproj/WebCore.vcproj: Add
+        platform\win\WebCoreHistory.{cpp,h} and bridge\win\HistoryWin.cpp to
+        project.
+        * bridge/win/HistoryWin.cpp: Added.
+        (WebCore::historyContains):
+        * platform/win/TemporaryLinkStubs.cpp: Remove stub for
+        WebCore::historyContains()
+        * platform/win/WebCoreHistory.cpp: Added.
+        (WebCore::WebCoreHistory::setHistoryProvider):
+        (WebCore::WebCoreHistory::historyProvider):
+        * platform/win/WebCoreHistory.h: Added.
+
 2006-09-14  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Lou Amadio.

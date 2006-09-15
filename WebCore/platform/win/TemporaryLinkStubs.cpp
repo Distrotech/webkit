@@ -189,7 +189,6 @@ const Cursor& WebCore::moveCursor() { return localCursor; }
 
 bool AXObjectCache::gAccessibilityEnabled = false;
 
-bool WebCore::historyContains(DeprecatedString const&) { return false; }
 String WebCore::submitButtonDefaultLabel() { return "Submit"; }
 String WebCore::inputElementAltText() { return DeprecatedString(); }
 String WebCore::resetButtonDefaultLabel() { return "Reset"; }

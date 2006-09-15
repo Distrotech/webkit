@@ -33,6 +33,7 @@
 #include "CFDictionaryPropertyBag.h"
 
 #include <CoreFoundation/CoreFoundation.h>
+#include <WebCore/platform/win/WebCoreHistory.h>
 
 #pragma warning( push, 0 )
 #include <wtf/Vector.h>
@@ -44,6 +45,19 @@ CFStringRef FileVersionKey = CFSTR("WebHistoryFileVersion");
 const IID IID_IWebHistoryPrivate = { 0x3de04e59, 0x93f9, 0x4369, { 0x8b, 0x43, 0x97, 0x64, 0x58, 0xd7, 0xe3, 0x19 } };
 
 #define currentFileVersion 1
+
+class _WebCoreHistoryProvider : public WebCore::WebCoreHistoryProvider {
+public:
+    _WebCoreHistoryProvider(IWebHistory* history);
+    ~_WebCoreHistoryProvider();
+
+    virtual bool containsItemForURLLatin1(const char* latin1, unsigned int length);
+    virtual bool containsItemForURLUnicode(const UChar* unicode, unsigned int length);
+
+private:
+    IWebHistory* m_history;
+    IWebHistoryPrivate* m_historyPrivate;
+};
 
 static bool areEqualOrClose(double d1, double d2)
 {
@@ -195,6 +209,8 @@ HRESULT STDMETHODCALLTYPE WebHistory::optionalSharedHistory(
 HRESULT STDMETHODCALLTYPE WebHistory::setOptionalSharedHistory( 
     /* [in] */ IWebHistory* history)
 {
+    WebCore::WebCoreHistory::setHistoryProvider(new _WebCoreHistoryProvider(history));
+
     if (m_optionalSharedHistory) {
         m_optionalSharedHistory->Release();
         m_optionalSharedHistory = 0;        
@@ -586,25 +602,6 @@ HRESULT STDMETHODCALLTYPE WebHistory::orderedItemsLastVisitedOnDay(
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE WebHistory::itemForURL( 
-    /* [in] */ BSTR url,
-    /* [retval][out] */ IWebHistoryItem** item)
-{
-    if (!item)
-        return E_FAIL;
-    *item = 0;
-
-    CFStringRef urlString = MarshallingHelpers::BSTRToCFStringRef(url);
-    IWebHistoryItem* foundItem = (IWebHistoryItem*) CFDictionaryGetValue(m_entriesByURL, urlString);
-    CFRelease(urlString);
-    if (!foundItem)
-        return E_FAIL;
-
-    foundItem->AddRef();
-    *item = foundItem;
-    return S_OK;
-}
-
 HRESULT STDMETHODCALLTYPE WebHistory::setHistoryItemLimit( 
     /* [in] */ int limit)
 {
@@ -761,6 +758,43 @@ HRESULT WebHistory::addItemForURL(BSTR url, BSTR title)
 exit:
     if (item)
         item->Release();
+    return hr;
+}
+
+HRESULT WebHistory::itemForURLString(
+    /* [in] */ CFStringRef urlString,
+    /* [retval][out] */ IWebHistoryItem** item)
+{
+    if (!item)
+        return E_FAIL;
+    *item = 0;
+
+    IWebHistoryItem* foundItem = (IWebHistoryItem*) CFDictionaryGetValue(m_entriesByURL, urlString);
+    if (!foundItem)
+        return E_FAIL;
+
+    foundItem->AddRef();
+    *item = foundItem;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebHistory::itemForURL( 
+    /* [in] */ BSTR url,
+    /* [retval][out] */ IWebHistoryItem** item)
+{
+    CFStringRef urlString = MarshallingHelpers::BSTRToCFStringRef(url);
+    HRESULT hr = itemForURLString(urlString, item);
+    CFRelease(urlString);
+    return hr;
+}
+
+HRESULT WebHistory::containsItemForURLString(
+    /* [in] */ void* urlCFString,
+    /* [retval][out] */ BOOL* contains)
+{
+    IWebHistoryItem* item = 0;
+    HRESULT hr = itemForURLString((CFStringRef)urlCFString, &item);
+    *contains = SUCCEEDED(hr);
     return hr;
 }
 
@@ -926,4 +960,154 @@ IWebHistoryPrivate* WebHistory::optionalSharedHistoryInternal()
 
     historyPrivate->Release(); // don't add an additional ref for this internal call
     return historyPrivate;
+}
+
+// _WebCoreHistoryProvider ----------------------------------------------------------------
+
+_WebCoreHistoryProvider::_WebCoreHistoryProvider(IWebHistory* history)
+    : m_history(history)
+    , m_historyPrivate(0)
+{
+    m_history->AddRef();
+}
+
+_WebCoreHistoryProvider::~_WebCoreHistoryProvider()
+{
+    if (m_historyPrivate)
+        m_historyPrivate->Release();
+    m_history->Release();
+}
+
+static inline bool matchLetter(char c, char lowercaseLetter)
+{
+    return (c | 0x20) == lowercaseLetter;
+}
+
+static inline bool matchUnicodeLetter(UniChar c, UniChar lowercaseLetter)
+{
+    return (c | 0x20) == lowercaseLetter;
+}
+
+bool _WebCoreHistoryProvider::containsItemForURLLatin1(const char* latin1, unsigned int length)
+{
+    const int bufferSize = 2048;
+    const char *latin1Str = latin1;
+    char staticStrBuffer[bufferSize];
+    char *strBuffer = 0;
+    bool needToAddSlash = false;
+
+    if (length >= 6 &&
+        matchLetter(latin1[0], 'h') &&
+        matchLetter(latin1[1], 't') &&
+        matchLetter(latin1[2], 't') &&
+        matchLetter(latin1[3], 'p') &&
+        (latin1[4] == ':' 
+        || (matchLetter(latin1[4], 's') && latin1[5] == ':'))) {
+            int pos = latin1[4] == ':' ? 5 : 6;
+            // skip possible initial two slashes
+            if (latin1[pos] == '/' && latin1[pos + 1] == '/') {
+                pos += 2;
+            }
+
+            const char* nextSlash = strchr(latin1 + pos, '/');
+            if (!nextSlash)
+                needToAddSlash = true;
+    }
+
+    if (needToAddSlash) {
+        if (length + 1 <= bufferSize)
+            strBuffer = staticStrBuffer;
+        else
+            strBuffer = (char*)malloc(length + 2);
+        memcpy(strBuffer, latin1, length + 1);
+        strBuffer[length] = '/';
+        strBuffer[length+1] = '\0';
+        length++;
+
+        latin1Str = strBuffer;
+    }
+
+    if (!m_historyPrivate) {
+        HRESULT hr = m_history->QueryInterface(IID_IWebHistoryPrivate, (void**)&m_historyPrivate);
+        if (!SUCCEEDED(hr)) {
+            if (strBuffer != staticStrBuffer)
+                free(strBuffer);
+            m_historyPrivate = 0;
+            return false;
+        }
+    }
+    
+    CFStringRef str = CFStringCreateWithCStringNoCopy(NULL, latin1Str, kCFStringEncodingWindowsLatin1, kCFAllocatorNull);
+    BOOL result = FALSE;
+    HRESULT hr = m_historyPrivate->containsItemForURLString((void*)str, &result);
+    ASSERT(SUCCEEDED(hr) == !!result);
+    CFRelease(str);
+
+    if (strBuffer != staticStrBuffer)
+        free(strBuffer);
+
+    return !!result;
+}
+
+bool _WebCoreHistoryProvider::containsItemForURLUnicode(const UChar* unicode, unsigned int length)
+{
+    const int bufferSize = 1024;
+    const UChar *unicodeStr = unicode;
+    UChar staticStrBuffer[bufferSize];
+    UChar *strBuffer = 0;
+    bool needToAddSlash = false;
+
+    if (length >= 6 &&
+        matchUnicodeLetter(unicode[0], 'h') &&
+        matchUnicodeLetter(unicode[1], 't') &&
+        matchUnicodeLetter(unicode[2], 't') &&
+        matchUnicodeLetter(unicode[3], 'p') &&
+        (unicode[4] == ':' 
+        || (matchUnicodeLetter(unicode[4], 's') && unicode[5] == ':'))) {
+
+            unsigned pos = unicode[4] == ':' ? 5 : 6;
+
+            // skip possible initial two slashes
+            if (pos + 1 < length && unicode[pos] == '/' && unicode[pos + 1] == '/')
+                pos += 2;
+
+            while (pos < length && unicode[pos] != '/')
+                pos++;
+
+            if (pos == length)
+                needToAddSlash = true;
+    }
+
+    if (needToAddSlash) {
+        if (length + 1 <= bufferSize)
+            strBuffer = staticStrBuffer;
+        else
+            strBuffer = (UChar*)malloc(sizeof(UChar) * (length + 1));
+        memcpy(strBuffer, unicode, 2 * length);
+        strBuffer[length] = '/';
+        length++;
+
+        unicodeStr = strBuffer;
+    }
+
+    if (!m_historyPrivate) {
+        HRESULT hr = m_history->QueryInterface(IID_IWebHistoryPrivate, (void**)&m_historyPrivate);
+        if (!SUCCEEDED(hr)) {
+            if (strBuffer != staticStrBuffer)
+                free(strBuffer);
+            m_historyPrivate = 0;
+            return false;
+        }
+    }
+
+    CFStringRef str = CFStringCreateWithCharactersNoCopy(NULL, (const UniChar*)unicodeStr, length, kCFAllocatorNull);
+    BOOL result = FALSE;
+    HRESULT hr = m_historyPrivate->containsItemForURLString((void*)str, &result);
+    ASSERT(SUCCEEDED(hr) == !!result);
+    CFRelease(str);
+
+    if (strBuffer != staticStrBuffer)
+        free(strBuffer);
+
+    return !!result;
 }

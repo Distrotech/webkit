@@ -33,12 +33,17 @@
 //-----------------------------------------------------------------------------
 
 // {3DE04E59-93F9-4369-8B43-976458D7E319}
-DEFINE_GUID(IID_IWebHistoryItemPrivate, 0x3de04e59, 0x93f9, 0x4369, 0x8b, 0x43, 0x97, 0x64, 0x58, 0xd7, 0xe3, 0x19);
+DEFINE_GUID(IID_IWebHistoryPrivate, 0x3de04e59, 0x93f9, 0x4369, 0x8b, 0x43, 0x97, 0x64, 0x58, 0xd7, 0xe3, 0x19);
 
 interface IWebHistoryPrivate : public IUnknown
 {
 public:
-    virtual HRESULT STDMETHODCALLTYPE addItemForURL(BSTR url, BSTR title) = 0;
+    virtual HRESULT STDMETHODCALLTYPE addItemForURL(
+        /* [in] */ BSTR url,
+        /* [in] */ BSTR title) = 0;
+    virtual HRESULT STDMETHODCALLTYPE containsItemForURLString(
+        /* [in] */ void* urlCFString,
+        /* [retval][out] */ BOOL* contains) = 0;
 };
 
 //-----------------------------------------------------------------------------
@@ -114,6 +119,7 @@ public:
     // WebHistory
     static IWebHistoryPrivate* optionalSharedHistoryInternal();
     virtual HRESULT STDMETHODCALLTYPE addItemForURL(BSTR url, BSTR title);
+    virtual HRESULT STDMETHODCALLTYPE containsItemForURLString(void* urlCFString, BOOL* contains);
 
 protected:
     enum NotificationType
@@ -140,6 +146,7 @@ protected:
     bool findIndex(int* index, CFAbsoluteTime forDay);
     static CFAbsoluteTime timeToDate(CFAbsoluteTime time);
     BSTR getNotificationString(NotificationType notifyType);
+    HRESULT itemForURLString(CFStringRef urlString, IWebHistoryItem** item);
 
 protected:
     ULONG m_refCount;
