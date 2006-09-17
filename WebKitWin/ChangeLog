@@ -1,3 +1,11 @@
+2006-09-17  Adam Roben  <aroben@apple.com>
+
+        Build fix.
+
+        * WebView.cpp:
+        (WebView::keyPress): Add new "userTriggered" argument to calls to
+        SelectionController::modify
+
 2006-09-15  Adam Roben  <aroben@apple.com>
 
         Reviewed by sfalken.

@@ -159,16 +159,16 @@ bool WebView::keyPress(WPARAM wParam, LPARAM lParam)
                 TypingCommand::forwardDeleteKeyPressed(frame->document());
                 break;
             case VK_LEFT:
-                frame->selectionController()->modify(SelectionController::MOVE, SelectionController::LEFT, CharacterGranularity);
+                frame->selectionController()->modify(SelectionController::MOVE, SelectionController::LEFT, CharacterGranularity, true);
                 break;
             case VK_RIGHT:
-                frame->selectionController()->modify(SelectionController::MOVE, SelectionController::RIGHT, CharacterGranularity);
+                frame->selectionController()->modify(SelectionController::MOVE, SelectionController::RIGHT, CharacterGranularity, true);
                 break;
             case VK_UP:
-                frame->selectionController()->modify(SelectionController::MOVE, SelectionController::BACKWARD, ParagraphGranularity);
+                frame->selectionController()->modify(SelectionController::MOVE, SelectionController::BACKWARD, ParagraphGranularity, true);
                 break;
             case VK_DOWN:
-                frame->selectionController()->modify(SelectionController::MOVE, SelectionController::FORWARD, ParagraphGranularity);
+                frame->selectionController()->modify(SelectionController::MOVE, SelectionController::FORWARD, ParagraphGranularity, true);
                 break;
             case VK_RETURN:
                 if (start->isContentRichlyEditable())
