@@ -1,3 +1,13 @@
+2006-09-18  Brady Eidson  <beidson@apple.com>
+
+        Rubberstamp by Adam
+
+        Build fix
+
+        * bridge/win/FrameWin.h:
+        * platform/win/TemporaryLinkStubs.cpp:
+        (FrameWin::originalRequestURL):
+
 2006-09-18  Sean Gies  <seangies@apple.com>
 
         Reviewed by Adam Roben.

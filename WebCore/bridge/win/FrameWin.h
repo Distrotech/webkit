@@ -158,6 +158,7 @@ public:
     NPObject* windowScriptNPObject();
 
 private:
+    virtual KURL originalRequestURL() const;
     virtual void cleanupPluginObjects();
     virtual bool passMouseDownEventToWidget(Widget*);
     FrameWinClient* m_client;
