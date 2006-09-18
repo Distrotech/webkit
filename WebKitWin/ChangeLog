@@ -1,3 +1,11 @@
+2006-09-18  Adam Roben  <aroben@apple.com>
+
+        Build fix (release).
+
+        * WebHistory.cpp:
+        (_WebCoreHistoryProvider::containsItemForURLLatin1): Remove unused HRESULT.
+        (_WebCoreHistoryProvider::containsItemForURLUnicode): Ditto.
+
 2006-09-17  Adam Roben  <aroben@apple.com>
 
         Build fix.

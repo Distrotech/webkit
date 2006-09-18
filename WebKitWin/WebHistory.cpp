@@ -1039,8 +1039,7 @@ bool _WebCoreHistoryProvider::containsItemForURLLatin1(const char* latin1, unsig
     
     CFStringRef str = CFStringCreateWithCStringNoCopy(NULL, latin1Str, kCFStringEncodingWindowsLatin1, kCFAllocatorNull);
     BOOL result = FALSE;
-    HRESULT hr = m_historyPrivate->containsItemForURLString((void*)str, &result);
-    ASSERT(SUCCEEDED(hr) == !!result);
+    m_historyPrivate->containsItemForURLString((void*)str, &result);
     CFRelease(str);
 
     if (strBuffer != staticStrBuffer)
@@ -1102,8 +1101,7 @@ bool _WebCoreHistoryProvider::containsItemForURLUnicode(const UChar* unicode, un
 
     CFStringRef str = CFStringCreateWithCharactersNoCopy(NULL, (const UniChar*)unicodeStr, length, kCFAllocatorNull);
     BOOL result = FALSE;
-    HRESULT hr = m_historyPrivate->containsItemForURLString((void*)str, &result);
-    ASSERT(SUCCEEDED(hr) == !!result);
+    m_historyPrivate->containsItemForURLString((void*)str, &result);
     CFRelease(str);
 
     if (strBuffer != staticStrBuffer)
