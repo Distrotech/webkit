@@ -1,3 +1,17 @@
+2006-09-18  Sean Gies  <seangies@apple.com>
+
+        Reviewed by Adam Roben.
+
+        Changes to bring up CoreGraphics on Windows.
+
+        * WebCore.vcproj/WebCore.vcproj: Search platform/cg for headers.  Compile platform/cg/*.cpp.
+             Add AffineTransform.cpp to build.
+        * platform/win/FontDataWin.cpp: Include CG before using it.
+        * platform/win/FontPlatformDataWin.cpp: Fixed typo.
+        * platform/win/ImageWin.cpp: Include CG and winsock2.  Implement CG version of Image::getHBITMAP.
+             In Cairo version of Image::getHBITMAP, use correct bitmapInfo field and return true for success.
+             Fixed image loading bug.
+
 2006-09-18  Brady Eidson  <beidson@apple.com>
 
         Rubberstamp by Adam

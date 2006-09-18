@@ -27,6 +27,7 @@
  */
 
 #include "config.h"
+#include <winsock2.h>
 #include "Font.h"
 #include "FontCache.h"
 #include "FontData.h"
@@ -35,8 +36,12 @@
 #include <wtf/MathExtras.h>
 #include <unicode/uchar.h>
 #include <unicode/unorm.h>
+#if PLATFORM(CAIRO)
 #include <cairo.h>
 #include <cairo-win32.h>
+#elif PLATFORM(CG)
+#include <ApplicationServices/ApplicationServices.h>
+#endif
 #include <mlang.h>
 
 namespace WebCore

@@ -1,3 +1,9 @@
+2006-09-18  Sean Gies  <seangies@apple.com>
+
+        Reviewed by Adam Roben.
+
+        * WebKit.vcproj/WebKit.vcproj:  Link to CoreGraphics and copy its binaries to output dir.
+
 2006-09-18  Adam Roben  <aroben@apple.com>
 
         Build fix (release).

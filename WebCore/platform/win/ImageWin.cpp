@@ -29,11 +29,12 @@
 
 #if PLATFORM(CAIRO)
 #include <cairo.h>
-#else
+#elif PLATFORM(CG)
 #include <ApplicationServices/ApplicationServices.h>
 #endif
 
 #if PLATFORM(WIN)
+#include <winsock2.h>
 #include <windows.h>
 #endif
 
@@ -57,7 +58,7 @@ Image* Image::loadPlatformResource(const char *name)
 #if PLATFORM(CAIRO)
     img->setNativeData(&arr, true);
 #else
-    CFDataRef data = CFDataCreateWithBytesNoCopy(0, reinterpret_cast<const UInt8*>(arr.data()), arr.size(), kCFAllocatorNull);
+    CFDataRef data = CFDataCreate(0, reinterpret_cast<const UInt8*>(arr.data()), arr.size());
     img->setNativeData(data, true);
     CFRelease(data);
 #endif
@@ -70,6 +71,8 @@ bool Image::supportsType(const String& type)
     return false;
 }
 
+#if PLATFORM(CAIRO)
+
 bool Image::getHBITMAP(HBITMAP bmp)
 {
     ASSERT(bmp);
@@ -79,7 +82,7 @@ bool Image::getHBITMAP(HBITMAP bmp)
 
     // If this is a 32bpp bitmap, which it always should be, we'll clear it so alpha-wise it will be visible
     if (bmpInfo.bmBitsPixel == 32) {
-        int bufferSize = bmpInfo.bmWidth * bmpInfo.bmHeight * 4;
+        int bufferSize = bmpInfo.bmWidthBytes * bmpInfo.bmHeight;
         memset(bmpInfo.bmBits, 255, bufferSize);
     }
 
@@ -95,7 +98,36 @@ bool Image::getHBITMAP(HBITMAP bmp)
 
     // Do cleanup
     DeleteDC(tempDC);
-    return false;
+    return true;
 }
+
+#elif PLATFORM(CG)
+
+bool Image::getHBITMAP(HBITMAP bmp)
+{
+    ASSERT(bmp);
+
+    BITMAP bmpInfo;
+    GetObject(bmp, sizeof(BITMAP), &bmpInfo);
+
+    // If this is a 32bpp bitmap, which it always should be, we'll clear it so alpha-wise it will be visible
+    ASSERT(bmpInfo.bmBitsPixel == 32);
+    int bufferSize = bmpInfo.bmWidthBytes * bmpInfo.bmHeight;
+    memset(bmpInfo.bmBits, 255, bufferSize);
+    
+    CGColorSpaceRef deviceRGB = CGColorSpaceCreateDeviceRGB();
+    CGContextRef cgContext = CGBitmapContextCreate(bmpInfo.bmBits, bmpInfo.bmWidth, bmpInfo.bmHeight,
+        8, bmpInfo.bmWidthBytes, deviceRGB, kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst);
+    GraphicsContext gc(cgContext);
+    IntSize imageSize = Image::size();
+    draw(&gc, FloatRect(0, 0, bmpInfo.bmWidth, bmpInfo.bmHeight), FloatRect(0, 0, imageSize.width(), imageSize.height()), CompositeCopy);
+
+    // Do cleanup
+    CGContextRelease(cgContext);
+    CGColorSpaceRelease(deviceRGB);
+    return true;
+}
+
+#endif
 
 } // namespace WebCore

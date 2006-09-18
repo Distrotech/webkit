@@ -62,10 +62,10 @@ FontPlatformData::FontPlatformData(HFONT font, int size)
     SelectObject(hdc, font);
     int len = GetTextFaceW(hdc, 100, name);
     
-    RestoreDC(dc, -1);
-    ReleaseDC(0, dc);
+    RestoreDC(hdc, -1);
+    ReleaseDC(0, hdc);
     
-    // FIME: Need to pick up bold and italic.  Need to override antialiasing defaults to force antialiasing to be on.
+    // FIXME: Need to pick up bold and italic.  Need to override antialiasing defaults to force antialiasing to be on.
     CFStringRef cfName = CFStringCreateWithCharacters(NULL, (const UniChar*)name, len - 1);
     m_cgFont = CGFontCreateWithFontName(cfName);
     CFRelease(cfName);
