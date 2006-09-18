@@ -1727,7 +1727,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\win\FontCacheWin.cpp"
+					RelativePath="..\platform\win\FontCacheWin.cpp"
 					>
 				</File>
 				<File
