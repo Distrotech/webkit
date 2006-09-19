@@ -2,6 +2,15 @@
 
         Reviewed by Adam Roben.
 
+        Support bold & italics.
+
+        * platform/win/FontPlatformDataWin.cpp: Use GetOutlineTextMetrics instead of GetTextFace to
+            query HFONT name.
+
+2006-09-18  Sean Gies  <seangies@apple.com>
+
+        Reviewed by Adam Roben.
+
         Changes to bring up CoreGraphics on Windows.
 
         * WebCore.vcproj/WebCore.vcproj: Search platform/cg for headers.  Compile platform/cg/*.cpp.

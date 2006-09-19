@@ -53,22 +53,28 @@ FontPlatformData::FontPlatformData(HFONT font, int size)
 #elif PLATFORM(CG)
 
 FontPlatformData::FontPlatformData(HFONT font, int size)
-:m_font(font), m_size(size)
+:m_font(font), m_size(size), m_cgFont(NULL)
 {
     HDC hdc = GetDC(0);
     SaveDC(hdc);
     
-    WCHAR name[100];
     SelectObject(hdc, font);
-    int len = GetTextFaceW(hdc, 100, name);
-    
+    UINT bufferSize = GetOutlineTextMetrics(hdc, 0, NULL);
+    OUTLINETEXTMETRICW* metrics = (OUTLINETEXTMETRICW*)malloc(bufferSize);
+
+    if (metrics != NULL)
+    {
+        GetOutlineTextMetricsW(hdc, bufferSize, metrics);
+        WCHAR* faceName = (WCHAR*)((uintptr_t)metrics + (uintptr_t)metrics->otmpFaceName);
+        
+        // FIXME: Need to pick up bold and italic.  Need to override antialiasing defaults to force antialiasing to be on.
+        CFStringRef cfName = CFStringCreateWithCharacters(NULL, (const UniChar*)faceName, wcslen(faceName));
+        m_cgFont = CGFontCreateWithFontName(cfName);
+        CFRelease(cfName);
+    }
+
     RestoreDC(hdc, -1);
     ReleaseDC(0, hdc);
-    
-    // FIXME: Need to pick up bold and italic.  Need to override antialiasing defaults to force antialiasing to be on.
-    CFStringRef cfName = CFStringCreateWithCharacters(NULL, (const UniChar*)name, len - 1);
-    m_cgFont = CGFontCreateWithFontName(cfName);
-    CFRelease(cfName);
 }
 
 #endif
