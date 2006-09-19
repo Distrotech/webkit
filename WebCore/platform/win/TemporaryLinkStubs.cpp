@@ -164,6 +164,7 @@ bool FrameWin::canPaste() const { notImplemented(); return 0; }
 bool FrameWin::canGoBackOrForward(int) const { notImplemented(); return 0; }
 void FrameWin::issuePasteAndMatchStyleCommand() { notImplemented(); }
 KURL FrameWin::originalRequestURL() const { notImplemented(); return KURL(); }
+bool FrameWin::isLoadTypeReload(void) { notImplemented(); return false; }
 
 bool BrowserExtensionWin::canRunModal() { notImplemented(); return 0; }
 void BrowserExtensionWin::createNewWindow(struct WebCore::ResourceRequest const&,struct WebCore::WindowArgs const&,Frame*&) { notImplemented(); }

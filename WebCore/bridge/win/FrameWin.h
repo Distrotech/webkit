@@ -157,6 +157,9 @@ public:
     KJS::Bindings::RootObject* bindingRootObject();
     NPObject* windowScriptNPObject();
 
+protected:
+    virtual bool isLoadTypeReload();
+
 private:
     virtual KURL originalRequestURL() const;
     virtual void cleanupPluginObjects();

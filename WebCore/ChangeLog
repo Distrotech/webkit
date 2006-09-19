@@ -1,3 +1,13 @@
+2006-09-18  Brady Eidson  <beidson@apple.com>
+
+        YABF, and merged a change from open source ResourceLoaderWin.cpp
+
+        * bridge/win/FrameWin.h:
+        * platform/win/ResourceLoaderWin.cpp:
+        (WebCore::ResourceLoader::fileLoadTimer):
+        * platform/win/TemporaryLinkStubs.cpp:
+        (FrameWin::isLoadTypeReload):
+
 2006-09-18  Sean Gies  <seangies@apple.com>
 
         Reviewed by Adam Roben.
