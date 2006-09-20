@@ -154,6 +154,20 @@ void FontData::determinePitch()
     ReleaseDC(0, dc);
 }
 
+#if PLATFORM(CG)
+
+float FontData::platformWidthForGlyph(Glyph glyph) const
+{
+    CGFontRef font = m_font.cgFont();
+    float pointSize = m_font.size();
+    int advance = 0;
+    float unitsPerEm = (float)CGFontGetUnitsPerEm(font);
+    CGFontGetGlyphAdvances(font, &glyph, 1, &advance);
+    return advance*pointSize/unitsPerEm;
+}
+
+#else
+
 float FontData::platformWidthForGlyph(Glyph glyph) const
 {
     // FIXME: Need a CG code path for this.
@@ -170,5 +184,7 @@ float FontData::platformWidthForGlyph(Glyph glyph) const
 
     return width;
 }
+
+#endif
 
 }
