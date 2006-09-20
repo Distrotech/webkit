@@ -87,10 +87,8 @@ void WebIconDatabase::init()
     String databasePath;
 
     if (SUCCEEDED(userIconDatabasePath(databasePath)))
-        if (!m_iconDatabase->open(databasePath)) {
+        if (!m_iconDatabase->open(databasePath))
             LOG_ERROR("Failed to open icon database path");
-            ASSERT(false);
-        }
 }
 
 WebIconDatabase* WebIconDatabase::createInstance()

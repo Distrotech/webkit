@@ -1,3 +1,12 @@
+2006-09-20  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Adam
+        
+        Removed an overzealous assertion that was made irrelevant by an earlier checking to WebCore::IconDatabase
+
+        * WebIconDatabase.cpp:
+        (WebIconDatabase::init):
+
 2006-09-18  Sean Gies  <seangies@apple.com>
 
         Reviewed by Adam Roben.
