@@ -2125,6 +2125,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\platform\cg\ColorCG.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\platform\cg\FloatPointCG.cpp"
 					>
 				</File>

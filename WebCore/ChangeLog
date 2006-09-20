@@ -2,6 +2,15 @@
 
         Reviewed by Adam Roben.
 
+        Added platform/cg/ColorCG.cpp
+
+        * WebCore.vcproj/WebCore.vcproj: Add ColorCG.cpp
+        * platform/cg/ColorCG.cpp: Added.
+
+2006-09-20  Sean Gies  <seangies@apple.com>
+
+        Reviewed by Adam Roben.
+
         Fixed ugly text spacing issues with CG for Windows.
 
         * platform/win/FontDataWin.cpp: Reimplement platformWidthForGlyph using CG APIs.
