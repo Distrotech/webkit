@@ -488,6 +488,7 @@ public:
     void mouseDown(WPARAM, LPARAM);
     void mouseUp(WPARAM, LPARAM);
     void mouseDoubleClick(WPARAM, LPARAM);
+    void mouseWheel(WPARAM, LPARAM);
     bool keyPress(WPARAM, LPARAM);
     HRESULT goToItem(IWebHistoryItem* item, WebFrameLoadType withLoadType);
     HRESULT updateWebCoreSettingsFromPreferences(IWebPreferences* preferences);

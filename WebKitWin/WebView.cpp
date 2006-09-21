@@ -44,6 +44,7 @@
 #include <WebCore/page/Page.h>
 #include <WebCore/platform/PlatformKeyboardEvent.h>
 #include <WebCore/platform/PlatformMouseEvent.h>
+#include <WebCore/platform/PlatformWheelEvent.h>
 #include <WebCore/editing/SelectionController.h>
 #include <WebCore/editing/TypingCommand.h>
 #pragma warning(pop)
@@ -145,6 +146,12 @@ void WebView::mouseDoubleClick(WPARAM wParam, LPARAM lParam)
 {
     PlatformMouseEvent mouseEvent(m_viewWindow, wParam, lParam, 2);
     m_mainFrame->impl()->view()->handleMouseReleaseEvent(mouseEvent);
+}
+
+void WebView::mouseWheel(WPARAM wParam, LPARAM lParam)
+{
+    PlatformWheelEvent wheelEvent(m_viewWindow, wParam, lParam);
+    m_mainFrame->impl()->view()->handleWheelEvent(wheelEvent);
 }
 
 bool WebView::keyPress(WPARAM wParam, LPARAM lParam)
@@ -271,6 +278,10 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
         case WM_RBUTTONDBLCLK:
             if (webView)
                 webView->mouseDoubleClick(wParam, lParam);
+            break;
+        case WM_MOUSEWHEEL:
+            if (webView)
+                webView->mouseWheel(wParam, lParam);
             break;
         case WM_HSCROLL: {
             if (mainFrameImpl) {

@@ -1,3 +1,42 @@
+2006-09-21  2006-09-21  Dave Hyatt <hyatt@apple.com>
+
+        Implement mouse wheel scrolling on Win32.  Also forked ScrollViewWin.cpp and fixed some bugs in it.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/win/ScrollViewWin.cpp: Added.
+        (WebCore::ScrollView::ScrollViewPrivate::ScrollViewPrivate):
+        (WebCore::ScrollView::ScrollView):
+        (WebCore::ScrollView::~ScrollView):
+        (WebCore::ScrollView::updateContents):
+        (WebCore::ScrollView::visibleWidth):
+        (WebCore::ScrollView::visibleHeight):
+        (WebCore::ScrollView::visibleContentRect):
+        (WebCore::ScrollView::setContentsPos):
+        (WebCore::ScrollView::resizeContents):
+        (WebCore::ScrollView::contentsX):
+        (WebCore::ScrollView::contentsY):
+        (WebCore::ScrollView::contentsWidth):
+        (WebCore::ScrollView::contentsHeight):
+        (WebCore::ScrollView::viewportToContents):
+        (WebCore::ScrollView::contentsToViewport):
+        (WebCore::ScrollView::scrollOffset):
+        (WebCore::ScrollView::maximumScroll):
+        (WebCore::ScrollView::scrollBy):
+        (WebCore::ScrollView::hScrollBarMode):
+        (WebCore::ScrollView::vScrollBarMode):
+        (WebCore::ScrollView::suppressScrollBars):
+        (WebCore::ScrollView::setHScrollBarMode):
+        (WebCore::ScrollView::setVScrollBarMode):
+        (WebCore::ScrollView::setScrollBarsMode):
+        (WebCore::ScrollView::setStaticBackground):
+        (WebCore::ScrollView::updateScrollInfo):
+        (WebCore::ScrollView::updateScrollBars):
+        (WebCore::ScrollView::wheelEvent):
+        * platform/win/WheelEventWin.cpp: Added.
+        (WebCore::positionForEvent):
+        (WebCore::globalPositionForEvent):
+        (WebCore::PlatformWheelEvent::PlatformWheelEvent):
+
 2006-09-20  Sean Gies  <seangies@apple.com>
 
         Reviewed by Adam Roben.

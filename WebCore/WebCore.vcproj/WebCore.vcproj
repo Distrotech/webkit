@@ -1817,7 +1817,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\win\ScrollViewWin.cpp"
+					RelativePath="..\platform\win\ScrollViewWin.cpp"
 					>
 				</File>
 				<File
@@ -1838,6 +1838,10 @@
 				</File>
 				<File
 					RelativePath="..\platform\win\WebCoreHistory.h"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\win\WheelEventWin.cpp"
 					>
 				</File>
 				<File
