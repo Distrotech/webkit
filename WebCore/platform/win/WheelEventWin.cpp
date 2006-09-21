@@ -34,6 +34,7 @@ namespace WebCore {
 static IntPoint positionForEvent(HWND hWnd, LPARAM lParam)
 {
     POINT point = {LOWORD(lParam), HIWORD(lParam)};
+    ScreenToClient(hWnd, &point);
     MapWindowPoints(hWnd, GetAncestor(hWnd, GA_ROOT), &point, 1);
     return point;
 }
@@ -41,7 +42,6 @@ static IntPoint positionForEvent(HWND hWnd, LPARAM lParam)
 static IntPoint globalPositionForEvent(HWND hWnd, LPARAM lParam)
 {
     POINT point = {LOWORD(lParam), HIWORD(lParam)};
-    ClientToScreen(hWnd, &point);
     return point;
 }
 
