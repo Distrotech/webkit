@@ -1,5 +1,4 @@
-/*job
-
+/*
  * Copyright (C) 2004, 2006 Apple Computer, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,15 +26,15 @@
 #include "config.h"
 
 #if USE(WININET)
-
+#include "ResourceLoader.h"
+#include "ResourceLoaderInternal.h"
 #include "ResourceLoaderWin.h"
 
 #include "CString.h"
 #include "DocLoader.h"
-#include "Document.h"
 #include "Frame.h"
-#include "ResourceLoader.h"
-#include "ResourceLoaderInternal.h"
+#include "Document.h"
+#include <windows.h>
 #include <wininet.h>
 
 namespace WebCore {
@@ -112,7 +111,7 @@ LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                         urlStr = urlStr.left(fragmentIndex);
                     static LPCSTR accept[2]={"*/*", NULL};
                     HINTERNET urlHandle = HttpOpenRequestA(job->d->m_resourceHandle, 
-                                                           "POST", urlStr.ascii(), 0, 0, accept,
+                                                           "POST", urlStr.latin1(), 0, 0, accept,
                                                            INTERNET_FLAG_KEEP_CONNECTION | 
                                                            INTERNET_FLAG_FORMS_SUBMIT |
                                                            INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE,
@@ -203,12 +202,12 @@ LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             }
 
             if (!ok) {
-                int errorCode = GetLastError();
-                if (errorCode == ERROR_IO_PENDING)
+                int error = GetLastError();
+                if (error == ERROR_IO_PENDING)
                     return 0;
                 else {
-                    job->setError(errorCode);
-                    _RPTF1(_CRT_WARN, "Load error: %i\n", errorCode);
+                    job->setError(error);
+                    _RPTF1(_CRT_WARN, "Load error: %i\n", error);
                 }
             }
             
@@ -263,9 +262,10 @@ static void __stdcall transferJobStatusCallback(HINTERNET internetHandle, DWORD_
     case INTERNET_STATUS_REDIRECT:
         JobLoadStatus* jobLoadStatus = new JobLoadStatus;
         jobLoadStatus->internetStatus = internetStatus;
-        jobLoadStatus->dwResult = LPINTERNET_ASYNC_RESULT(statusInformation)->dwResult;
         if (internetStatus == INTERNET_STATUS_REDIRECT)
             jobLoadStatus->redirectURL = strdup((char*)statusInformation);
+        else
+            jobLoadStatus->dwResult = LPINTERNET_ASYNC_RESULT(statusInformation)->dwResult;
         PostMessage(transferJobWindowHandle, loadStatusMessage, (WPARAM)timerId, (LPARAM)jobLoadStatus);
     }
 }
@@ -279,6 +279,8 @@ bool ResourceLoader::start(DocLoader* docLoader)
             path = path.mid(1);
         d->m_fileHandle = CreateFileA(path.ascii(), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
+        // FIXME: perhaps this error should be reported asynchronously for
+        // consistency.
         if (d->m_fileHandle == INVALID_HANDLE_VALUE) {
             delete this;
             return false;
@@ -320,7 +322,7 @@ bool ResourceLoader::start(DocLoader* docLoader)
                 urlStr = urlStr.left(fragmentIndex);
             String headers;
             if (!referrer.isEmpty())
-                headers += "Referer: " + referrer + "\r\n";
+                headers += String("Referer: ") + referrer + "\r\n";
 
             urlHandle = InternetOpenUrlA(internetHandle, urlStr.ascii(), headers.latin1(), headers.length(),
                                          INTERNET_FLAG_KEEP_CONNECTION, (DWORD_PTR)d->m_jobId);
@@ -351,10 +353,17 @@ void ResourceLoader::fileLoadTimer(Timer<ResourceLoader>* timer)
         // Check for end of file. 
     } while (result && bytesRead);
 
-    CloseHandle(d->m_fileHandle);
-    d->m_fileHandle = 0;
+    // FIXME: handle errors better
 
-    d->client->receivedAllData(this, 0);
+    CloseHandle(d->m_fileHandle);
+    d->m_fileHandle = INVALID_HANDLE_VALUE;
+
+    PlatformDataStruct platformData;
+    platformData.errorString = 0;
+    platformData.error = 0;
+    platformData.loaded = TRUE;
+
+    d->client->receivedAllData(this, &platformData);
     d->client->receivedAllData(this);
 }
 
@@ -366,8 +375,12 @@ void ResourceLoader::cancel()
         d->m_fileLoadTimer.stop();
 
     setError(1);
+    PlatformDataStruct platformData;
+    platformData.errorString = 0;
+    platformData.error = 0;
+    platformData.loaded = FALSE;
 
-    d->client->receivedAllData(this, 0);
+    d->client->receivedAllData(this, &platformData);
     d->client->receivedAllData(this);
 }
 

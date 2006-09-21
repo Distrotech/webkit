@@ -1,3 +1,17 @@
+2006-09-21  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Anders
+
+        Fixed one definite bug and did alot of cleanup to make it resemble the unforked version of the file
+        in preparation for merging it back out
+
+        * platform/win/ResourceLoaderWin.cpp:
+        (WebCore::ResourceLoaderWndProc):
+        (WebCore::transferJobStatusCallback): Fixed a bug here!  :)
+        (WebCore::ResourceLoader::start):
+        (WebCore::ResourceLoader::fileLoadTimer):
+        (WebCore::ResourceLoader::cancel):
+
 2006-09-21  2006-09-21  Dave Hyatt <hyatt@apple.com>
 
         Implement mouse wheel scrolling on Win32.  Also forked ScrollViewWin.cpp and fixed some bugs in it.
