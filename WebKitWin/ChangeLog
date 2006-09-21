@@ -1,3 +1,9 @@
+2006-09-21  Sean Gies  <seangies@apple.com>
+
+        Reviewed by Adam Roben.
+
+        * WebKit.vcproj/WebKit.vcproj: Link against CoreGraphics.
+
 2006-09-21  Dave Hyatt <hyatt@apple.com>
 
         Implement mouse wheel scrolling on Win32.
