@@ -80,6 +80,8 @@ typedef float CGFloat;
 #if PLATFORM(WIN)
 #define KXMLCORE_USE_JAVASCRIPTCORE_BINDINGS 1
 #define KXMLCORE_USE_NPOBJECT 1
+//#define KXMLCORE_PLATFORM_CG 1
+//#undef KXMLCORE_PLATFORM_CAIRO
 #endif
 
 #define _WINSOCKAPI_ // Prevent inclusion of winsock.h in windows.h

@@ -1,3 +1,11 @@
+2006-09-21  Luke Wallis  <wallis@apple.com>
+
+        Rubber stamped by Steve.
+
+        Added (commented out for now) defines for building on PLATFORM(CG).
+
+        * config.h:
+
 2006-09-21  Luke Wallis <wallis@apple.com>
 
         Reviewed by Adam Roben.
