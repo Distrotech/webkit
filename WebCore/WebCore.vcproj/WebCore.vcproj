@@ -2145,11 +2145,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\cg\GraphicsContextCG.cpp"
+					RelativePath="..\platform\cg\GraphicsContextCG.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\cg\GraphicsContextPlatformPrivate.h"
+					RelativePath="..\platform\cg\GraphicsContextPlatformPrivate.h"
 					>
 				</File>
 				<File

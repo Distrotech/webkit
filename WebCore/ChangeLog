@@ -2,6 +2,15 @@
 
         Reviewed by Adam Roben.
 
+        Forked GraphicsContextCG.cpp and GraphicsContextPlatformPrivate.h from open source #16504.
+
+        * platform/cg/GraphicsContextCG.cpp: Added.
+        * platform/cg/GraphicsContextPlatformPrivate.h: Added.
+
+2006-09-21  Sean Gies  <seangies@apple.com>
+
+        Reviewed by Adam Roben.
+
         Support synthetic bold and/or oblique with CG.
 
         * platform/win/FontCacheWin.cpp: Pass new arguments to updated FontPlatformData constructor.
