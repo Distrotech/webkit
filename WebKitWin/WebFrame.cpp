@@ -57,12 +57,16 @@
 #include <WebCore/platform/ResourceLoader.h>
 #include <WebCore/platform/win/ResourceLoaderWin.h>
 #include <wtf/MathExtras.h>
+#if PLATFORM(CAIRO)
 #include "cairo.h"
 #include "cairo-win32.h"
+#endif
 #pragma warning(pop)
 
 using namespace WebCore;
 using namespace HTMLNames;
+
+#define FLASH_REDRAW 0
 
 //-----------------------------------------------------------------------------
 
@@ -642,39 +646,58 @@ void WebFrame::paint()
     IntRect documentDirtyRect = ps.rcPaint;
     documentDirtyRect.move(d->frameView->contentsX(), d->frameView->contentsY());
 
+#if FLASH_REDRAW
+    {
+        RECT rect = documentDirtyRect;
+        HBRUSH yellowBrush = CreateSolidBrush(RGB(255, 255, 0));
+        FillRect(hdc, &rect, yellowBrush);
+        DeleteObject(yellowBrush);
+        GdiFlush();
+        Sleep(50);
+    }
+#endif
+
     SIZE size;
     size.cx = documentDirtyRect.width();
     size.cy = documentDirtyRect.height();
 
-    BITMAPINFO bitmapInfo;
-    bitmapInfo.bmiHeader.biSize          = sizeof(BITMAPINFOHEADER);
-    bitmapInfo.bmiHeader.biWidth         = size.cx; 
-    bitmapInfo.bmiHeader.biHeight        = size.cy;
-    bitmapInfo.bmiHeader.biPlanes        = 1;
-    bitmapInfo.bmiHeader.biBitCount      = 32;
-    bitmapInfo.bmiHeader.biCompression   = BI_RGB;
-    bitmapInfo.bmiHeader.biSizeImage     = 0;
-    bitmapInfo.bmiHeader.biXPelsPerMeter = 0;
-    bitmapInfo.bmiHeader.biYPelsPerMeter = 0;
-    bitmapInfo.bmiHeader.biClrUsed       = 0;
-    bitmapInfo.bmiHeader.biClrImportant  = 0;
+    if (size.cx > 0 && size.cy > 0)
+    {
+        BITMAPINFO bitmapInfo;
+        bitmapInfo.bmiHeader.biSize          = sizeof(BITMAPINFOHEADER);
+        bitmapInfo.bmiHeader.biWidth         = size.cx; 
+        bitmapInfo.bmiHeader.biHeight        = size.cy;
+        bitmapInfo.bmiHeader.biPlanes        = 1;
+        bitmapInfo.bmiHeader.biBitCount      = 32;
+        bitmapInfo.bmiHeader.biCompression   = BI_RGB;
+        bitmapInfo.bmiHeader.biSizeImage     = 0;
+        bitmapInfo.bmiHeader.biXPelsPerMeter = 0;
+        bitmapInfo.bmiHeader.biYPelsPerMeter = 0;
+        bitmapInfo.bmiHeader.biClrUsed       = 0;
+        bitmapInfo.bmiHeader.biClrImportant  = 0;
 
-    void* pixels = NULL;
-    HBITMAP bitmap = CreateDIBSection(hdc, &bitmapInfo, DIB_RGB_COLORS, &pixels, NULL, 0);
-    CGColorSpaceRef deviceRGB = CGColorSpaceCreateDeviceRGB();
-    CGContextRef context = CGBitmapContextCreate(pixels, size.cx, size.cy, 8,
-                                                 size.cx * 4, deviceRGB, kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst);
-    GraphicsContext gc(context);
+        void* pixels = NULL;
+        HBITMAP bitmap = CreateDIBSection(hdc, &bitmapInfo, DIB_RGB_COLORS, &pixels, NULL, 0);
+        HDC bitmapDC = CreateCompatibleDC(hdc);
+        HBITMAP oldBitmap = (HBITMAP)SelectObject(bitmapDC, bitmap);
+        ASSERT(oldBitmap != NULL);
 
-    GdiFlush();
-    CGContextTranslateCTM(context, CGFloat(-d->frameView->contentsX() - ps.rcPaint.left),
-                                   CGFloat(-d->frameView->contentsY() - ps.rcPaint.top));
-    d->frame->paint(&gc, documentDirtyRect);
-    SetDIBitsToDevice(hdc, 0, 0, size.cx, size.cy, 0, 0, 0, size.cy, pixels, &bitmapInfo, DIB_RGB_COLORS);
+        {
+            GraphicsContext gc(bitmapDC);
 
-    CGContextRelease(context);
-    CGColorSpaceRelease(deviceRGB);
-    DeleteObject(bitmap);
+            GdiFlush();
+            CGContextTranslateCTM(gc.platformContext(), CGFloat(-d->frameView->contentsX() - ps.rcPaint.left),
+                                                        CGFloat(-d->frameView->contentsY() - ps.rcPaint.top));
+            d->frame->paint(&gc, documentDirtyRect);
+            SetDIBitsToDevice(hdc, ps.rcPaint.left, ps.rcPaint.top,
+                size.cx, size.cy, 0, 0, 0, size.cy, pixels, &bitmapInfo, DIB_RGB_COLORS);
+        }
+
+        SelectObject(bitmapDC, oldBitmap);
+        DeleteDC(bitmapDC);
+        DeleteObject(bitmap);
+    }
+
     EndPaint(windowHandle, &ps);
 }
 

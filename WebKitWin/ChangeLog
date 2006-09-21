@@ -2,6 +2,18 @@
 
         Reviewed by Adam Roben.
 
+        Support form controls when rendering with CG. 
+        Fix some re-painting issues.
+
+        * WebFrame.cpp: (WebFrame::paint):
+            Added debug code to flash redrawn area.
+            Construct GraphicsContext using DIB HDC, rather than a CGContext.
+            Blit offscreen buffer using the dirty rectangle's offset.
+
+2006-09-21  Sean Gies  <seangies@apple.com>
+
+        Reviewed by Adam Roben.
+
         * WebKit.vcproj/WebKit.vcproj: Link against CoreGraphics.
 
 2006-09-21  Dave Hyatt <hyatt@apple.com>

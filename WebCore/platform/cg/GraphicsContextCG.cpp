@@ -763,6 +763,49 @@ void GraphicsContext::drawLineForText(const IntPoint& point, int yOffset, int wi
     CGContextRestoreGState(platformContext());
 }
 
+#if PLATFORM(WIN)
+
+CGContextRef CGContextWithHDC(HDC hdc)
+{
+    HBITMAP bitmap = (HBITMAP)GetCurrentObject(hdc, OBJ_BITMAP);
+    CGColorSpaceRef deviceRGB = CGColorSpaceCreateDeviceRGB();
+    BITMAP info;
+
+    GetObject(bitmap, sizeof(info), &info);
+    ASSERT(info.bmBitsPixel == 32);
+    CGContextRef context = CGBitmapContextCreate(info.bmBits, info.bmWidth, info.bmHeight, 8,
+                                                 info.bmWidthBytes, deviceRGB, kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst);
+    CGColorSpaceRelease(deviceRGB);
+    return context;
+}
+
+GraphicsContext::GraphicsContext(HDC hdc)
+    : m_common(createGraphicsContextPrivate())
+    , m_data(new GraphicsContextPlatformPrivate(CGContextWithHDC(hdc)))
+{
+    CGContextRelease(m_data->m_cgContext);
+    m_data->m_hdc = hdc;
+    setPaintingDisabled(!m_data->m_cgContext);
+}
+
+HDC GraphicsContext::getWindowsContext()
+{
+    CGContextFlush(platformContext());
+    HDC hdc = m_data->m_hdc;
+    if (hdc != 0)
+        SaveDC(hdc);
+    return hdc;
+}
+
+void GraphicsContext::releaseWindowsContext()
+{
+    HDC hdc = m_data->m_hdc;
+    if (hdc != 0)
+        RestoreDC(hdc, -1);
+}
+
+#endif // PLATFORM(WIN)
+
 }
 
 #endif // PLATFORM(CG)

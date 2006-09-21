@@ -30,6 +30,9 @@ class GraphicsContextPlatformPrivate {
 public:
     GraphicsContextPlatformPrivate(CGContextRef cgContext)
     :m_cgContext(cgContext)
+#if PLATFORM(WIN)
+    ,m_hdc(0)
+#endif
     {
         CGContextRetain(m_cgContext);
     }
@@ -41,6 +44,9 @@ public:
 
     CGContextRef m_cgContext;
     IntRect m_focusRingClip; // Work around CG bug in focus ring clipping.
+#if PLATFORM(WIN)
+    HDC m_hdc;
+#endif
 };
 
 }

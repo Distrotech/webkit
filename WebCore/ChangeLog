@@ -1,3 +1,17 @@
+2006-09-21  Sean Gies  <seangies@apple.com>
+
+        Reviewed by Adam Roben.
+
+        Draw form controls when rendering with CG.
+
+        * platform/cg/GraphicsContextCG.cpp:
+        (WebCore::CGContextWithHDC): New function to create CGContext given an HDC.
+        (WebCore::GraphicsContext::GraphicsContext): New constructor that takes an HDC.
+        (WebCore::GraphicsContext::getWindowsContext): Return underlying HDC to client.
+        (WebCore::GraphicsContext::releaseWindowsContext): Restore underlying HDC after client mucked with it.
+        * platform/cg/GraphicsContextPlatformPrivate.h: Add field to hold HDC.
+        * rendering/RenderThemeWin.cpp: Implement prepareForDrawing and doneDrawing for CG.
+
 2006-09-21  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Tim O.
