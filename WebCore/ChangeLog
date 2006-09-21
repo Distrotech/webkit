@@ -1,3 +1,18 @@
+2006-09-21  Sean Gies  <seangies@apple.com>
+
+        Reviewed by Adam Roben.
+
+        Support synthetic bold and/or oblique with CG.
+
+        * platform/win/FontCacheWin.cpp: Pass new arguments to updated FontPlatformData constructor.
+        * platform/win/FontDataWin.cpp:
+        (WebCore::FontData::platformInit): Choose synthetic bold offset.
+        (WebCore::FontData::platformWidthForGlyph): Take synthetic bold offset into account.
+        * platform/win/FontPlatformData.h: Add fields for synthetic styles.
+        * platform/win/FontPlatformDataWin.cpp: Ask HFONT if it supports bold or italics.
+        * platform/win/FontWin.cpp:
+        (WebCore::Font::drawGlyphs): Restore code for implementing synthetic stlyes.
+
 2006-09-21  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Anders

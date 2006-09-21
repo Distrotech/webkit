@@ -33,7 +33,7 @@ namespace WebCore {
 
 #if PLATFORM(CAIRO)
 
-FontPlatformData::FontPlatformData(HFONT font, int size)
+FontPlatformData::FontPlatformData(HFONT font, int size, bool bold, bool oblique)
 :m_font(font), m_size(size)
 {  
     m_fontFace = cairo_win32_font_face_create_for_hfont(font);
@@ -52,7 +52,7 @@ FontPlatformData::FontPlatformData(HFONT font, int size)
 
 #elif PLATFORM(CG)
 
-FontPlatformData::FontPlatformData(HFONT font, int size)
+FontPlatformData::FontPlatformData(HFONT font, int size, bool bold, bool oblique)
 :m_font(font), m_size(size), m_cgFont(NULL)
 {
     HDC hdc = GetDC(0);
@@ -60,17 +60,25 @@ FontPlatformData::FontPlatformData(HFONT font, int size)
     
     SelectObject(hdc, font);
     UINT bufferSize = GetOutlineTextMetrics(hdc, 0, NULL);
-    OUTLINETEXTMETRICW* metrics = (OUTLINETEXTMETRICW*)malloc(bufferSize);
-
-    if (metrics != NULL)
+    ASSERT_WITH_MESSAGE(bufferSize != 0, "Bitmap fonts not supported with CoreGraphics.");
+    if (bufferSize != 0)
     {
-        GetOutlineTextMetricsW(hdc, bufferSize, metrics);
-        WCHAR* faceName = (WCHAR*)((uintptr_t)metrics + (uintptr_t)metrics->otmpFaceName);
-        
-        // FIXME: Need to pick up bold and italic.  Need to override antialiasing defaults to force antialiasing to be on.
-        CFStringRef cfName = CFStringCreateWithCharacters(NULL, (const UniChar*)faceName, wcslen(faceName));
-        m_cgFont = CGFontCreateWithFontName(cfName);
-        CFRelease(cfName);
+        OUTLINETEXTMETRICW* metrics = (OUTLINETEXTMETRICW*)malloc(bufferSize);
+
+        if (metrics != NULL)
+        {
+            GetOutlineTextMetricsW(hdc, bufferSize, metrics);
+            WCHAR* faceName = (WCHAR*)((uintptr_t)metrics + (uintptr_t)metrics->otmpFaceName);
+            bool fontIsBold    = (metrics->otmfsSelection & (1<<5)) != 0;
+            bool fontIsOblique = (metrics->otmfsSelection & (1<<0)) != 0;
+
+            m_syntheticBold = bold && !fontIsBold;
+            m_syntheticOblique = oblique && !fontIsOblique;
+
+            CFStringRef cfName = CFStringCreateWithCharacters(NULL, (const UniChar*)faceName, wcslen(faceName));
+            m_cgFont = CGFontCreateWithFontName(cfName);
+            CFRelease(cfName);
+        }
     }
 
     RestoreDC(hdc, -1);

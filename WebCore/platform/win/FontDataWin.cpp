@@ -51,6 +51,8 @@ void FontData::platformInit()
 {    
     m_isMLangFont = false;
 
+    m_syntheticBoldOffset = m_font.syntheticBold() ? ceilf(m_font.size() / 24.0f) : 0.f;
+
     HDC dc = GetDC(0);
     SaveDC(dc);
 
@@ -109,7 +111,7 @@ FontData* FontData::smallCapsFontData(const FontDescription& fontDescription) co
         int smallCapsHeight = lroundf(0.70f * fontDescription.computedSize());
         winfont.lfHeight = -smallCapsHeight;
         HFONT hfont = CreateFontIndirect(&winfont);
-        m_smallCapsFontData = new FontData(FontPlatformData(hfont, smallCapsHeight));
+        m_smallCapsFontData = new FontData(FontPlatformData(hfont, smallCapsHeight, fontDescription.bold(), fontDescription.italic()));
     }
     return m_smallCapsFontData;
 }
@@ -154,23 +156,19 @@ void FontData::determinePitch()
     ReleaseDC(0, dc);
 }
 
-#if PLATFORM(CG)
-
 float FontData::platformWidthForGlyph(Glyph glyph) const
 {
+#if PLATFORM(CG)
+
     CGFontRef font = m_font.cgFont();
     float pointSize = m_font.size();
     int advance = 0;
     float unitsPerEm = (float)CGFontGetUnitsPerEm(font);
     CGFontGetGlyphAdvances(font, &glyph, 1, &advance);
-    return advance*pointSize/unitsPerEm;
-}
+    return advance*pointSize/unitsPerEm + m_syntheticBoldOffset;
 
 #else
 
-float FontData::platformWidthForGlyph(Glyph glyph) const
-{
-    // FIXME: Need a CG code path for this.
     HDC dc = GetDC(0);
     SaveDC(dc);
 
@@ -183,8 +181,8 @@ float FontData::platformWidthForGlyph(Glyph glyph) const
     ReleaseDC(0, dc);
 
     return width;
-}
 
 #endif
+}
 
 }

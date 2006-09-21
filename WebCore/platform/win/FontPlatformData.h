@@ -64,7 +64,7 @@ public:
     , m_size(0)
     {}
 
-    FontPlatformData(HFONT, int size);
+    FontPlatformData(HFONT, int size, bool bold, bool oblique);
     ~FontPlatformData();
 
     HFONT hfont() const { return m_font; }
@@ -76,6 +76,8 @@ public:
 #endif
 
     int size() const { return m_size; }
+    bool syntheticBold() const { return m_syntheticBold; }
+    bool syntheticOblique() const { return m_syntheticOblique; }
 
     unsigned hash() const
     { 
@@ -102,6 +104,8 @@ private:
     cairo_scaled_font_t* m_scaledFont;
 #endif
     int m_size;
+    bool m_syntheticBold;
+    bool m_syntheticOblique;
 };
 
 }

@@ -77,7 +77,7 @@ const FontData* FontCache::getFontDataForCharacters(const Font& font, const UCha
     if (cchActual) {
         HFONT result;
         if (langFontLink->MapFont(hdc, actualCodePages, characters[0], &result) == S_OK) {
-            fontData = new FontData(FontPlatformData(result, font.fontDescription().computedPixelSize()));
+            fontData = new FontData(FontPlatformData(result, font.fontDescription().computedPixelSize(), font.fontDescription().bold(), font.fontDescription().italic()));
             fontData->setIsMLangFont();
         }
     }
@@ -137,7 +137,8 @@ FontPlatformData* FontCache::createFontPlatformData(const FontDescription& fontD
         return 0;
     }
     
-    return new FontPlatformData(hfont, fontDescription.computedPixelSize());
+    return new FontPlatformData(hfont, fontDescription.computedPixelSize(),
+        fontDescription.bold(), fontDescription.italic());
 }
 
 }

@@ -42,11 +42,13 @@ namespace WebCore {
 
 static void notImplemented() { puts("Not yet implemented"); _CrtDbgBreak(); }
 
-#if PLATFORM(CAIRO)
+const int syntheticObliqueAngle = 14;
 
 void Font::drawGlyphs(GraphicsContext* graphicsContext, const FontData* font, const GlyphBuffer& glyphBuffer, 
                       int from, int numGlyphs, const FloatPoint& point) const
 {
+#if PLATFORM(CAIRO)
+
     cairo_t* context = graphicsContext->platformContext();
 
     // Set the text color to use for drawing.
@@ -89,13 +91,11 @@ void Font::drawGlyphs(GraphicsContext* graphicsContext, const FontData* font, co
 
     cairo_win32_scaled_font_done_font(scaledFont);
     RestoreDC(dc, -1);
-}
 
 #elif PLATFORM(CG)
 
-void Font::drawGlyphs(GraphicsContext* context, const FontData* font, const GlyphBuffer& glyphBuffer, int from, int numGlyphs, const FloatPoint& point) const
-{
-    CGContextRef cgContext = context->platformContext();
+    // FIXME: Need to override antialiasing defaults to force antialiasing to be on.
+    CGContextRef cgContext = graphicsContext->platformContext();
 
     //bool originalShouldUseFontSmoothing = wkCGContextGetShouldSmoothFonts(cgContext);
     //CGContextSetShouldSmoothFonts(cgContext, WebCoreShouldUseFontSmoothing());
@@ -124,28 +124,31 @@ void Font::drawGlyphs(GraphicsContext* context, const FontData* font, const Glyp
         matrix.b = -matrix.b;
         matrix.d = -matrix.d;
     }
-    //if (platformData.syntheticOblique)
-    //    matrix = CGAffineTransformConcat(matrix, CGAffineTransformMake(1, 0, -tanf(SYNTHETIC_OBLIQUE_ANGLE * acosf(0) / 90), 1, 0, 0)); 
+    if (platformData.syntheticOblique())
+    {
+        static float skew = -tanf(syntheticObliqueAngle * acosf(0) / 90);
+        matrix = CGAffineTransformConcat(matrix, CGAffineTransformMake(1, 0, skew, 1, 0, 0));
+    }
     CGContextSetTextMatrix(cgContext, matrix);
 
     //wkSetCGFontRenderingMode(cgContext, drawFont);
     CGContextSetFontSize(cgContext, platformData.size());
 
-    CGColorRef colorRef = cgColor(context->pen().color());
+    CGColorRef colorRef = cgColor(graphicsContext->pen().color());
     CGContextSetFillColorWithColor(cgContext, colorRef);
     CGColorRelease(colorRef);
 
     CGContextSetTextPosition(cgContext, point.x(), point.y());
     CGContextShowGlyphsWithAdvances(cgContext, glyphBuffer.glyphs(from), glyphBuffer.advances(from), numGlyphs);
-    //if (font->m_syntheticBoldOffset) {
-    //    CGContextSetTextPosition(cgContext, point.x() + font->m_syntheticBoldOffset, point.y());
-    //    CGContextShowGlyphsWithAdvances(cgContext, glyphBuffer.glyphs(from), glyphBuffer.advances(from), numGlyphs);
-    //}
+    if (font->m_syntheticBoldOffset) {
+        CGContextSetTextPosition(cgContext, point.x() + font->m_syntheticBoldOffset, point.y());
+        CGContextShowGlyphsWithAdvances(cgContext, glyphBuffer.glyphs(from), glyphBuffer.advances(from), numGlyphs);
+    }
 
     //CGContextSetShouldSmoothFonts(cgContext, originalShouldUseFontSmoothing);
-}
 
 #endif // PLATFORM(CG)
+}
 
 FloatRect Font::selectionRectForComplexText(const TextRun& run, const TextStyle& style, const IntPoint& point, int h) const
 {
