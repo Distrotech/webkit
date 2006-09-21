@@ -226,6 +226,10 @@ void WebPreferences::initialize()
     key = CFSTR(WebKitHistoryAgeInDaysLimitKey);
     if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
         CFDictionaryAddValue(m_standardUserDefaults, key,                               CFSTR("7"));
+
+    key = CFSTR(WebKitIconDatabaseEnabledPreferenceKey);
+    if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
+        CFDictionaryAddValue(m_standardUserDefaults, key,                               kCFBooleanTrue);
 }
 
 const void* WebPreferences::valueForKey(CFStringRef key)
@@ -1005,4 +1009,16 @@ HRESULT WebPreferences::setIconDatabaseLocation(BSTR )//location)
 {
     DebugBreak();
     return E_NOTIMPL;
+}
+
+HRESULT WebPreferences::iconDatabaseEnabled(BOOL* enabled)//location)
+{
+    *enabled = boolValueForKey(CFSTR(WebKitIconDatabaseEnabledPreferenceKey));
+    return S_OK;
+}
+
+HRESULT WebPreferences::setIconDatabaseEnabled(BOOL enabled )//location)
+{
+    setBoolValue(CFSTR(WebKitIconDatabaseEnabledPreferenceKey), enabled);
+    return S_OK;
 }

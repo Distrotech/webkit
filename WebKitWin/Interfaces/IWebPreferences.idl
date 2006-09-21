@@ -443,4 +443,16 @@ interface IWebPreferences : IUnknown
         @param Set the location of the icon database
     */
     HRESULT setIconDatabaseLocation([in] BSTR location);
+
+    /*!
+        @method iconDatabaseEnabled:
+        @discussion Whether or not the icon database is enabled
+    */
+    HRESULT iconDatabaseEnabled([out, retval] BOOL* enabled);
+
+    /*!
+        @method setIconDatabaseEnabled:
+        @param Enable/disable the icon database
+    */
+    HRESULT setIconDatabaseEnabled([in] BOOL enabled);
 }

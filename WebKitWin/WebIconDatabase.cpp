@@ -26,6 +26,7 @@
 #include "config.h"
 #include "WebKitDLL.h"
 #include "WebIconDatabase.h"
+#include "WebPreferences.h"
 
 #pragma warning(push, 0)
 #include "loader/icon/IconDatabase.h"
@@ -84,8 +85,20 @@ void WebIconDatabase::init()
 {
     ASSERT(!m_iconDatabase);
     m_iconDatabase = WebCore::IconDatabase::sharedIconDatabase();
-    String databasePath;
 
+    WebPreferences* prefs = WebPreferences::createInstance();
+    IWebPreferences* standardPrefs;
+    BOOL enabled = FALSE;
+    if (SUCCEEDED(prefs->standardPreferences(&standardPrefs)))
+        if (FAILED(standardPrefs->iconDatabaseEnabled(&enabled))) {
+            enabled = FALSE;
+            LOG_ERROR("Unable to get icon database enabled preference");
+        }
+
+    m_iconDatabase->setEnabled(!!enabled);
+    prefs->Release();
+
+    String databasePath;
     if (SUCCEEDED(userIconDatabasePath(databasePath)))
         if (!m_iconDatabase->open(databasePath))
             LOG_ERROR("Failed to open icon database path");

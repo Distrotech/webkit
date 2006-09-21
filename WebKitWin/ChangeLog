@@ -1,5 +1,21 @@
 2006-09-20  Brady Eidson  <beidson@apple.com>
 
+        Reviewed by Steve
+
+        Hooked up the preference for enabled/disabling the icon database
+        
+        * Interfaces/IWebPreferences.idl:
+        * WebIconDatabase.cpp:
+        (WebIconDatabase::init):
+        * WebPreferenceKeysPrivate.h:
+        * WebPreferences.cpp:
+        (WebPreferences::initialize):
+        (WebPreferences::iconDatabaseEnabled):
+        (WebPreferences::setIconDatabaseEnabled):
+        * WebPreferences.h:
+
+2006-09-20  Brady Eidson  <beidson@apple.com>
+
         Reviewed by Adam
         
         Removed an overzealous assertion that was made irrelevant by an earlier checking to WebCore::IconDatabase

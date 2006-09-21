@@ -216,6 +216,11 @@ public:
     virtual HRESULT STDMETHODCALLTYPE setIconDatabaseLocation(
         /* [in] */ BSTR location);
 
+    virtual HRESULT STDMETHODCALLTYPE iconDatabaseEnabled(
+        /* [retval][out] */ BOOL* enabled);
+
+    virtual HRESULT STDMETHODCALLTYPE setIconDatabaseEnabled(
+        /* [in] */ BOOL enabled);
 
     // WebPreferences
     static BSTR webPreferencesChangedNotification();
