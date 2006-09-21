@@ -32,6 +32,8 @@
 #include "Element.h"
 #include "FrameTree.h"
 #include "FrameWin.h"
+#include "HTMLNames.h"
+#include "HTMLPlugInElement.h"
 #include "PluginPackageWin.h"
 #include "kjs_binding.h"
 #include "kjs_proxy.h"
@@ -45,6 +47,8 @@ using KJS::JSObject;
 using KJS::JSValue;
 
 namespace WebCore {
+
+using namespace HTMLNames;
 
 class PluginRequestWin {
 public:
@@ -639,10 +643,21 @@ NPError PluginViewWin::getValue(NPNVariable variable, void* value)
             return NPERR_NO_ERROR;
         }
 
-        case NPNVPluginElementNPObject:
-            // FIXME: Should support getting NPNVPluginElementNPObject
-            return NPERR_GENERIC_ERROR;
+        case NPNVPluginElementNPObject: {
+            NPObject* pluginScriptObject = 0;
 
+//            if (m_element->hasTagName(appletTag) || m_element->hasTagName(embedTag) || m_element->hasTagName(objectTag))
+//                pluginScriptObject = static_cast<HTMLPlugInElement*>(m_element)->getNPObject();
+
+            // Return value is expected to be retained, as described here: <http://www.mozilla.org/projects/plugin/npruntime.html>
+            if (pluginScriptObject)
+                _NPN_RetainObject(pluginScriptObject);
+
+            void** v = (void**)value;
+            *v = pluginScriptObject;
+
+            return NPERR_NO_ERROR;
+        }
         default:
             DebugBreak();
             return NPERR_GENERIC_ERROR;
@@ -669,6 +684,7 @@ PluginViewWin::~PluginViewWin()
 PluginViewWin::PluginViewWin(FrameWin* parentFrame, PluginPackageWin* plugin, Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType)
     : m_parentFrame(parentFrame)
     , m_plugin(plugin)
+    , m_element(element)
     , m_isStarted(false)
     , m_url(url)
     , m_requestTimer(this, &PluginViewWin::requestTimerFired)
