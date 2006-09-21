@@ -51,7 +51,9 @@ void FontData::platformInit()
 {    
     m_isMLangFont = false;
 
+#if PLATFORM(CG)
     m_syntheticBoldOffset = m_font.syntheticBold() ? ceilf(m_font.size() / 24.0f) : 0.f;
+#endif
 
     HDC dc = GetDC(0);
     SaveDC(dc);

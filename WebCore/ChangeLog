@@ -1,3 +1,12 @@
+2006-09-21  Luke Wallis <wallis@apple.com>
+
+        Reviewed by Adam Roben.
+
+        Fix build. Added #if PLATFORM(CG) around variable defined only for CG.
+
+        * platform/win/FontDataWin.cpp:
+        (WebCore::FontData::platformInit):
+
 2006-09-21  Sean Gies  <seangies@apple.com>
 
         Reviewed by Adam Roben.
