@@ -1,3 +1,46 @@
+2006-09-20  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Ada Chan.
+        
+        <rdar://4601547> Character encoding menu/switching
+        
+        Encoding menu and prefs pop-up are now hooked up and working.
+        
+        There's currently a problem where the encoding doesn't get
+        picked up out of the incoming HTML document out of <meta>, so
+        the text encoding menu comes in especially handy at the moment.
+
+        * Interfaces/IWebDataSource.idl:
+        * WebDataSource.cpp:
+        (WebDataSource::WebDataSource):
+        (WebDataSource::~WebDataSource):
+        (WebDataSource::overrideEncoding):
+        (WebDataSource::setOverrideEncoding):
+        (WebDataSource::QueryInterface):
+        (WebDataSource::textEncodingName):
+        * WebDataSource.h:
+        * WebFrame.cpp:
+        (WebFrame::WebFrame):
+        (WebFrame::loadRequest):
+        (WebFrame::reloadAllowingStaleDataWithOverrideEncoding):
+        (WebFrame::receivedResponse):
+        (WebFrame::receivedData):
+        (WebFrame::receivedAllData):
+        * WebFrame.h:
+        * WebKit.vcproj/WebKitGUID.vcproj:
+        * WebMutableURLRequest.cpp:
+        (WebMutableURLRequest::WebMutableURLRequest):
+        (WebMutableURLRequest::setCachePolicy):
+        * WebMutableURLRequest.h:
+        * WebURLResponse.cpp:
+        (WebURLResponse::textEncodingName):
+        * WebView.cpp:
+        (WebView::WebView):
+        (WebView::supportsTextEncoding):
+        (WebView::setCustomTextEncodingName):
+        (WebView::customTextEncodingName):
+        * WebView.h:
+
 2006-09-20  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Steve

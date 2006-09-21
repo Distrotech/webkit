@@ -31,7 +31,7 @@
 class WebFrame;
 class WebMutableURLRequest;
 
-class WebDataSource : public IWebDataSource
+class WebDataSource : public IWebDataSource, public IWebDataSourcePrivate
 {
 public:
     static WebDataSource* createInstance(WebFrame* frame);
@@ -96,6 +96,14 @@ public:
     virtual HRESULT STDMETHODCALLTYPE addSubresource( 
         /* [in] */ IWebResource *subresource);
 
+    // IWebDataSourcePrivate
+
+    virtual HRESULT STDMETHODCALLTYPE overrideEncoding( 
+        /* [retval][out] */ BSTR *encoding);
+    
+    virtual HRESULT STDMETHODCALLTYPE setOverrideEncoding( 
+        /* [in] */ BSTR encoding);
+
     // WebDataSource
     HRESULT setResponse(IWebURLResponse* response);
 
@@ -106,6 +114,7 @@ protected:
     IWebURLResponse* m_response;
     IWebDocumentRepresentation* m_representation;
     WebFrame* m_frame;
+    BSTR m_overrideEncoding;
 };
 
 #endif

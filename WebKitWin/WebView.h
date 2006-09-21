@@ -511,6 +511,7 @@ protected:
     bool m_userAgentOverridden;
     BSTR m_userAgent;
     float m_textSizeMultiplier;
+    BSTR m_overrideEncoding;
 };
 
 #endif

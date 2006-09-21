@@ -224,3 +224,15 @@ interface IWebDataSource : IUnknown
     */
     HRESULT addSubresource([in] IWebResource* subresource);
 }
+
+[
+    local,
+    object,
+    uuid(4B80B7D4-98D7-4a80-AF46-2AF84B2F2E8F),
+    pointer_default(unique)
+]
+interface IWebDataSourcePrivate : IUnknown
+{
+    HRESULT overrideEncoding([out, retval] BSTR* encoding);
+    HRESULT setOverrideEncoding([in] BSTR encoding);
+}

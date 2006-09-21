@@ -220,6 +220,9 @@ HRESULT STDMETHODCALLTYPE WebURLResponse::suggestedFilename(
 HRESULT STDMETHODCALLTYPE WebURLResponse::textEncodingName( 
     /* [retval][out] */ BSTR* result)
 {
+    if (!result)
+        return E_INVALIDARG;
+
     *result = SysAllocString(m_textEncodingName);
     if (m_textEncodingName && !*result)
         return E_OUTOFMEMORY;

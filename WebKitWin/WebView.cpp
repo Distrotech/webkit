@@ -48,6 +48,8 @@
 #include <WebCore/editing/TypingCommand.h>
 #pragma warning(pop)
 
+#include <tchar.h>
+
 using namespace WebCore;
 
 const LPCWSTR kWebViewWindowClassName = L"WebViewWindowClass";
@@ -76,6 +78,7 @@ WebView::WebView()
 , m_userAgentOverridden(false)
 , m_userAgent(0)
 , m_textSizeMultiplier(1)
+, m_overrideEncoding(0)
 {
     SetRectEmpty(&m_frame);
 
@@ -108,6 +111,8 @@ WebView::~WebView()
     SysFreeString(m_frameName);
     SysFreeString(m_groupName);
     SysFreeString(m_userAgent);
+    SysFreeString(m_overrideEncoding);
+
     gClassCount--;
 }
 
@@ -995,24 +1000,79 @@ HRESULT STDMETHODCALLTYPE WebView::userAgentForURL(
 }
 
 HRESULT STDMETHODCALLTYPE WebView::supportsTextEncoding( 
-    /* [retval][out] */ BOOL* /*supports*/)
+    /* [retval][out] */ BOOL* supports)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    *supports = TRUE;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::setCustomTextEncodingName( 
-    /* [in] */ BSTR /*encodingName*/)
+    /* [in] */ BSTR encodingName)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    if (!m_mainFrame)
+        return E_FAIL;
+
+    if (m_overrideEncoding) {
+        SysFreeString(m_overrideEncoding);
+        m_overrideEncoding = 0;
+    }
+    m_overrideEncoding = SysAllocString(encodingName);
+    if (encodingName && !m_overrideEncoding)
+        return E_OUTOFMEMORY;
+
+    HRESULT hr;
+    BSTR oldEncoding;
+    hr = customTextEncodingName(&oldEncoding);
+    if (SUCCEEDED(hr)) {
+        if (oldEncoding != encodingName && (!oldEncoding || !encodingName || _tcscmp(oldEncoding, encodingName)))
+            hr = m_mainFrame->reloadAllowingStaleDataWithOverrideEncoding(encodingName);
+        SysFreeString(oldEncoding);
+    }
+
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::customTextEncodingName( 
-    /* [retval][out] */ BSTR* /*encodingName*/)
+    /* [retval][out] */ BSTR* encodingName)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    HRESULT hr = S_OK;
+    IWebDataSource *dataSource = 0;
+    IWebDataSourcePrivate *dataSourcePrivate = 0;
+    *encodingName = 0;
+
+    if (!m_mainFrame) {
+        hr = E_FAIL;
+        goto exit;
+    }
+
+    if (FAILED(m_mainFrame->provisionalDataSource(&dataSource)) || !dataSource) {
+        hr = m_mainFrame->dataSource(&dataSource);
+        if (FAILED(hr) || !dataSource)
+            goto exit;
+    }
+
+    hr = dataSource->QueryInterface(IID_IWebDataSourcePrivate, (void**)&dataSourcePrivate);
+    if (FAILED(hr))
+        goto exit;
+
+    hr = dataSourcePrivate->overrideEncoding(encodingName);
+    if (FAILED(hr))
+        goto exit;
+
+    if (!*encodingName) {
+        *encodingName = SysAllocString(m_overrideEncoding);
+        if (m_overrideEncoding && !*encodingName) {
+            hr = E_OUTOFMEMORY;
+            goto exit;
+        }
+    }
+
+exit:
+    if (dataSourcePrivate)
+        dataSourcePrivate->Release();
+    if (dataSource)
+        dataSource->Release();
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::setMediaStyle( 

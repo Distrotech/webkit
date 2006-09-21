@@ -26,6 +26,11 @@
 #include "WebKitDLL.h"
 #include "WebMutableURLRequest.h"
 
+#pragma warning(push, 0)
+#include <WebCore/loader/FormData.h>
+#include <WebCore/platform/CString.h>
+#pragma warning(pop)
+
 // IWebURLRequest ----------------------------------------------------------------
 
 WebMutableURLRequest::WebMutableURLRequest()
@@ -37,6 +42,18 @@ WebMutableURLRequest::WebMutableURLRequest()
 , m_submitFormData(0)
 {
     gClassCount++;
+}
+
+WebMutableURLRequest::WebMutableURLRequest(IWebMutableURLRequest* req)
+{
+    WebMutableURLRequest* other = static_cast<WebMutableURLRequest*>(req);
+
+    m_refCount = 1;
+    m_url = SysAllocString(other->m_url);
+    m_cachePolicy = other->m_cachePolicy;
+    m_timeoutInterval = other->m_timeoutInterval;
+    m_method = SysAllocString(other->m_method);
+    m_submitFormData = other->m_submitFormData ? (new WebCore::FormData(other->m_submitFormData->flattenToString().latin1())) : 0;
 }
 
 WebMutableURLRequest::~WebMutableURLRequest()
@@ -201,10 +218,10 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setAllHTTPHeaderFields(
 }
 
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setCachePolicy( 
-    /* [in] */ WebURLRequestCachePolicy /*policy*/)
+    /* [in] */ WebURLRequestCachePolicy policy)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    m_cachePolicy = policy;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setHTTPBody( 

@@ -310,9 +310,11 @@ WebFrame::WebFrame()
 : m_refCount(0)
 , d(new WebFrame::WebFramePrivate)
 , m_dataSource(0)
+, m_dataSourcePrivate(0)
 , m_provisionalDataSource(0)
 , m_quickRedirectComing(false)
 , m_continueFormSubmit(false)
+, m_textEncoding(0)
 {
     gClassCount++;
 }
@@ -321,6 +323,7 @@ WebFrame::~WebFrame()
 {
     delete d->frame->page();
     delete d;
+    SysFreeString(m_textEncoding);
     gClassCount--;
 }
 
@@ -455,8 +458,17 @@ HRESULT STDMETHODCALLTYPE WebFrame::loadRequest(
     }
 
     m_provisionalDataSource = WebDataSource::createInstance(this);
+    BSTR encoding = 0;
+    if (SUCCEEDED(d->webView->customTextEncodingName(&encoding)) && encoding) {
+        hr = m_provisionalDataSource->setOverrideEncoding(encoding);
+        if (FAILED(hr))
+            goto exit;
+    }
+
     hr = m_provisionalDataSource->initWithRequest(request);
 
+exit:
+    SysFreeString(encoding);
     return hr;
 }
 
@@ -929,6 +941,66 @@ HRESULT WebFrame::canProvideDocumentSource(bool* result)
     return hr;
 }
 
+HRESULT WebFrame::reloadAllowingStaleDataWithOverrideEncoding(BSTR encoding)
+{
+    HRESULT hr = S_OK;
+    IWebMutableURLRequest* dsRequest = 0;
+    WebMutableURLRequest* request = 0;
+    WebDataSource* newDataSource = 0;
+    BSTR unreachableURL = 0;
+
+    if (!m_dataSource)
+        goto exit;
+
+    hr = m_dataSource->request(&dsRequest);
+    if (FAILED(hr))
+        return hr;
+    request = new WebMutableURLRequest(dsRequest);
+    if (!request) {
+        hr = E_OUTOFMEMORY;
+        goto exit;
+    }
+
+    // FIXME - from Mac code
+    //if (SUCCEEDED(m_dataSource->unreachableURL(&unreachableURL)) && unreachableURL) {
+    //    if (FAILED(request->setURL(unreachableURL)))
+    //        goto exit;
+    //}
+
+    if (FAILED(request->setCachePolicy(WebURLRequestReturnCacheDataElseLoad)))
+        goto exit;
+
+    newDataSource = WebDataSource::createInstance(this);
+    if (FAILED(newDataSource->setOverrideEncoding(encoding)))
+        goto exit;
+
+    m_loadType = WebFrameLoadTypeReloadAllowingStaleData;
+
+    if (m_provisionalDataSource) {
+        m_provisionalDataSource->Release();
+        m_provisionalDataSource = 0;
+        // FIXME - cancel the outstanding request?
+    }
+    m_provisionalDataSource = newDataSource;
+
+    if (FAILED(newDataSource->initWithRequest(request)))
+        goto exit;
+
+    request->Release();
+    request = 0;
+
+    // hold the ref for storage in m_provisionalDataSource
+    newDataSource = 0;
+
+exit:
+    if (dsRequest)
+        dsRequest->Release();
+    if (request)
+        request->Release();
+    SysFreeString(unreachableURL);
+    return hr;
+}
+
 // ResourceLoaderClient
 
 void WebFrame::receivedRedirect(ResourceLoader*, const KURL& url)
@@ -954,6 +1026,9 @@ void WebFrame::receivedResponse(ResourceLoader* loader, PlatformResponse platfor
 {
     if (m_provisionalDataSource) {
         m_dataSource = m_provisionalDataSource;
+        if (m_dataSourcePrivate)
+            m_dataSourcePrivate->Release();
+        m_dataSource->QueryInterface(IID_IWebDataSourcePrivate, (void**)&m_dataSourcePrivate);
         m_provisionalDataSource = 0;
     }
 
@@ -961,11 +1036,23 @@ void WebFrame::receivedResponse(ResourceLoader* loader, PlatformResponse platfor
 
     WebURLResponse* response = WebURLResponse::createInstance(loader, platformResponse);
     m_dataSource->setResponse(response);
+    if (m_textEncoding) {
+        SysFreeString(m_textEncoding);
+        m_textEncoding = 0;
+    }
+    response->textEncodingName(&m_textEncoding);
     response->Release();
 }
 
 void WebFrame::receivedData(ResourceLoader*, const char* data, int length)
 {
+    // Set the encoding. This only needs to be done once, but it's harmless to do it again later.
+    BSTR encoding = 0;
+    m_dataSourcePrivate->overrideEncoding(&encoding);
+    bool userChosen = !!encoding;
+    d->frame->setEncoding(WebCore::String(encoding ? encoding : m_textEncoding), userChosen);
+    SysFreeString(encoding);
+
     d->frame->write(data, length);
 
     // save off the data as it is received (matching Mac WebLoader)
@@ -981,6 +1068,11 @@ void WebFrame::receivedAllData(ResourceLoader* job)
         m_dataSource = m_provisionalDataSource;
         m_provisionalDataSource = 0;
     }
+    if (m_dataSourcePrivate) {
+        m_dataSourcePrivate->Release();
+        m_dataSourcePrivate = 0;
+    }
+    m_dataSource->QueryInterface(IID_IWebDataSourcePrivate, (void**)&m_dataSourcePrivate);
 
     IWebFrameLoadDelegate* frameLoadDelegate;
     if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
@@ -998,7 +1090,8 @@ void WebFrame::receivedAllData(ResourceLoader* job)
             DATE visitedTime = 0;
             SystemTimeToVariantTime(&currentTime, &visitedTime);
 
-            if (m_loadType != WebFrameLoadTypeBack && m_loadType != WebFrameLoadTypeForward && m_loadType != WebFrameLoadTypeIndexedBackForward && !m_quickRedirectComing) {
+            if (m_loadType != WebFrameLoadTypeBack && m_loadType != WebFrameLoadTypeForward && m_loadType != WebFrameLoadTypeIndexedBackForward &&
+                m_loadType != WebFrameLoadTypeReload && m_loadType != WebFrameLoadTypeReloadAllowingStaleData && !m_quickRedirectComing) {
                 BSTR titleBStr = SysAllocStringLen((LPCOLESTR)d->title.characters(), d->title.length());
                 WebHistoryItem* historyItem = WebHistoryItem::createInstance();
                 if (SUCCEEDED(historyItem->initWithURLString(urlBStr, titleBStr, visitedTime))) {

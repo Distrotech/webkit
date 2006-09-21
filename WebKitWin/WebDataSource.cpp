@@ -45,6 +45,7 @@ WebDataSource::WebDataSource()
 , m_initialRequest(0)
 , m_representation(0)
 , m_frame(0)
+, m_overrideEncoding(0)
 {
     gClassCount++;
 }
@@ -76,6 +77,8 @@ WebDataSource::~WebDataSource()
         m_frame = 0;
     }
 
+    SysFreeString(m_overrideEncoding);
+
     gClassCount--;
 }
 
@@ -99,6 +102,28 @@ HRESULT WebDataSource::setResponse(IWebURLResponse* response)
     return S_OK;
 }
 
+// IWebDataSourcePrivate ------------------------------------------------------
+
+HRESULT STDMETHODCALLTYPE WebDataSource::overrideEncoding( 
+    /* [retval][out] */ BSTR *encoding)
+{
+    *encoding = SysAllocString(m_overrideEncoding);
+    if (m_overrideEncoding && !*encoding)
+        return E_OUTOFMEMORY;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebDataSource::setOverrideEncoding( 
+    /* [in] */ BSTR encoding)
+{
+    if (m_overrideEncoding)
+        SysFreeString(m_overrideEncoding);
+    m_overrideEncoding = SysAllocString(encoding);
+    if (encoding && !m_overrideEncoding)
+        return E_OUTOFMEMORY;
+    return S_OK;
+}
+
 // IUnknown -------------------------------------------------------------------
 
 HRESULT STDMETHODCALLTYPE WebDataSource::QueryInterface(REFIID riid, void** ppvObject)
@@ -108,6 +133,8 @@ HRESULT STDMETHODCALLTYPE WebDataSource::QueryInterface(REFIID riid, void** ppvO
         *ppvObject = static_cast<IWebDataSource*>(this);
     else if (IsEqualGUID(riid, IID_IWebDataSource))
         *ppvObject = static_cast<IWebDataSource*>(this);
+    else if (IsEqualGUID(riid, IID_IWebDataSourcePrivate))
+        *ppvObject = static_cast<IWebDataSourcePrivate*>(this);
     else
         return E_NOINTERFACE;
 
@@ -220,10 +247,15 @@ HRESULT STDMETHODCALLTYPE WebDataSource::response(
 }
 
 HRESULT STDMETHODCALLTYPE WebDataSource::textEncodingName( 
-    /* [retval][out] */ BSTR* /*name*/)
+    /* [retval][out] */ BSTR* name)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    if (!name)
+        return E_INVALIDARG;
+    *name = 0;
+    if (!m_response)
+        return E_FAIL;
+
+    return m_response->textEncodingName(name);
 }
 
 HRESULT STDMETHODCALLTYPE WebDataSource::isLoading( 

@@ -39,6 +39,7 @@ class WebMutableURLRequest : public IWebMutableURLRequest
 {
 public:
     static WebMutableURLRequest* createInstance();
+    WebMutableURLRequest(IWebMutableURLRequest* req);
 protected:
     WebMutableURLRequest();
     ~WebMutableURLRequest();
