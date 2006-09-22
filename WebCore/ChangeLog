@@ -1,3 +1,12 @@
+2006-09-21  Sean Gies  <seangies@apple.com>
+
+        Reviewed by NOBODY (OOPS!).
+
+        Unfork GraphicsContextCG.cpp.
+
+        * WebCore.vcproj/WebCore.vcproj: Unfork GraphicsContextCG.cpp and add GraphicsContextWin.cpp
+        * platform/win/GraphicsContextWin.cpp: Added.
+
 2006-09-21  Luke Wallis  <wallis@apple.com>
 
         Rubber stamped by Steve.

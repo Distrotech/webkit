@@ -1755,6 +1755,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\platform\win\GraphicsContextWin.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\platform\win\IconWin.cpp"
 					>
 				</File>
@@ -2145,7 +2149,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\platform\cg\GraphicsContextCG.cpp"
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\cg\GraphicsContextCG.cpp"
 					>
 				</File>
 				<File
