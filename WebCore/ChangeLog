@@ -1,6 +1,6 @@
 2006-09-22  Dave Hyatt <hyatt@apple.com>
 
-        Scrollbar prep work.
+        Scrollbar preparation work.
         
         (1) Add support for enabling/disabling widgets.
         (2) Add support for invalidation of part or all of a widget.
