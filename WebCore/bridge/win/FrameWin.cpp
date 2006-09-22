@@ -144,7 +144,8 @@ void FrameWin::setTitle(const String &title)
     String text = title;
     text.replace('\\', backslashAsCurrencySymbol());
 
-    m_client->setTitle(text);
+    if (m_client)
+        m_client->setTitle(text);
 }
 
 void FrameWin::setStatusBarText(const String& status)
@@ -152,47 +153,58 @@ void FrameWin::setStatusBarText(const String& status)
     String text = status;
     text.replace('\\', backslashAsCurrencySymbol());
 
-    m_client->setStatusText(text);
+    if (m_client)
+        m_client->setStatusText(text);
 }
 
 void FrameWin::textFieldDidBeginEditing(Element* e)
 {
-    m_client->textFieldDidBeginEditing(e);
+    if (m_client)
+        m_client->textFieldDidBeginEditing(e);
 }
 
 void FrameWin::textFieldDidEndEditing(Element* e)
 {
-    m_client->textFieldDidEndEditing(e);
+    if (m_client)
+        m_client->textFieldDidEndEditing(e);
 }
 
 void FrameWin::textDidChangeInTextField(Element* e)
 {
-    m_client->textDidChangeInTextField(e);
+    if (m_client)
+        m_client->textDidChangeInTextField(e);
 }
 
 bool FrameWin::doTextFieldCommandFromEvent(Element* e, const PlatformKeyboardEvent* pke)
 {
-    return m_client->doTextFieldCommandFromEvent(e, pke);
+    if (m_client)
+        return m_client->doTextFieldCommandFromEvent(e, pke);
+
+    return false;
 }
 
 void FrameWin::textWillBeDeletedInTextField(Element* input)
 {
-    m_client->textWillBeDeletedInTextField(input);
+    if (m_client)
+        m_client->textWillBeDeletedInTextField(input);
 }
 
 void FrameWin::textDidChangeInTextArea(Element* e)
 {
-    m_client->textDidChangeInTextArea(e);
+    if (m_client)
+        m_client->textDidChangeInTextArea(e);
 }
 
 void FrameWin::didFirstLayout()
 {
-    m_client->didFirstLayout();
+    if (m_client)
+        m_client->didFirstLayout();
 }
 
 void FrameWin::handledOnloadEvents()
 {
-    m_client->handledOnloadEvents();
+    if (m_client)
+        m_client->handledOnloadEvents();
 }
 
 enum WebCore::ObjectContentType FrameWin::objectContentType(const KURL& url, const String& mimeType)
@@ -212,9 +224,27 @@ Plugin* FrameWin::createPlugin(Element* element, const KURL& url, const Vector<S
     return new Plugin(PluginDatabaseWin::installedPlugins()->createPluginView(this, element, url, paramNames, paramValues, mimeType));
 }
 
+Frame* FrameWin::createFrame(const KURL& url, const String& name, Element* ownerElement, const String& referrer)
+{
+    if (m_client)
+        return m_client->createFrame(url, name, ownerElement, referrer);
+
+    return 0;
+}
+
 void FrameWin::addPluginRootObject(KJS::Bindings::RootObject* root)
 {
     m_rootObjects.append(root);
+}
+
+bool FrameWin::passSubframeEventToSubframe(WebCore::MouseEventWithHitTestResults&, Frame*)
+{
+    return false; 
+}
+
+bool FrameWin::lastEventIsMouseUp() const
+{
+    return false;
 }
 
 void FrameWin::cleanupPluginObjects()
@@ -271,4 +301,4 @@ NPObject* FrameWin::windowScriptNPObject()
     return m_windowScriptNPObject;
 }
 
-}
+} // namespace WebCore

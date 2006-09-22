@@ -1,3 +1,29 @@
+2006-09-21  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej, Hyatt, Steve.
+    
+        frames!
+        
+        Prep work:
+            - moved ScrollViewWin into OpenSourceWin
+            - set eol-style:native on some files and corrected line endings
+            - updated the WebCore project so that you don't need cygwin in your Windows path
+              to build correctly.
+
+        Real work:
+
+            On Windows, Widgets are no longer interfaces to Windows UI tookit objects. They're 
+            just positioned objects.
+                
+            Widgets position themselves relative to their parents. The top-level widget technically
+            has a position relative to the WebView, but that's academic, since it's always (0, 0).
+            All widgets draw inside a common containing window (the WebView window). ScrollView 
+            handles transformation, clipping, and dirty rect management.
+            
+            I've filed a bunch of bugs on remaining frames work. Most notably, closing a page with
+            a frame in it causes a crash because WebCore depends on WebKit to manage frame lifetime.
+            I'm going to fix that by integrating frame ownership into the DOM.
+            
 2006-09-21  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Anders.

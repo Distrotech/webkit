@@ -29,6 +29,7 @@
 #include "FrameView.h"
 #include "HTMLOptionElement.h"
 #include "HTMLSelectElement.h"
+#include "Page.h"
 #include "RenderView.h"
 #include "Screen.h"
 #include <tchar.h>
@@ -59,7 +60,7 @@ RenderPopupMenuWin::RenderPopupMenuWin(Node* n, RenderMenuList* m)
     m_container = CreateWindowEx(0, kPopupWindowClassName, _T("PopupMenuContainer"),
         WS_POPUP | WS_CLIPCHILDREN,
         0, 0, 0, 0,
-        menuList()->view()->frameView()->windowHandle(), 0, 0, 0);
+        n->document()->frame()->view()->containingWindow(), 0, 0, 0);
 
     if (!m_container)
         return;
@@ -147,7 +148,7 @@ void RenderPopupMenuWin::setPositionAndSize(const IntRect& r, FrameView* v)
     // WS_POPUP windows are positioned in screen coordinates, but popupRect is in FrameView coordinates,
     // so we have to find the screen origin of the FrameView to position correctly
     RECT viewRect = {0};
-    GetWindowRect(v->windowHandle(), &viewRect);
+    GetWindowRect(v->frame()->view()->containingWindow(), &viewRect);
     if (IsRectEmpty(&viewRect))
         return;
 
@@ -277,7 +278,7 @@ static ATOM registerPopup()
     wcex.lpfnWndProc    = PopupWndProc;
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = sizeof(void*); // For the RenderPopupMenuWin pointer
-    wcex.hInstance      = Widget::instanceHandle;
+    wcex.hInstance      = Page::instanceHandle();
     wcex.hIcon          = 0;
     wcex.hCursor        = LoadCursor(0, IDC_ARROW);
     wcex.hbrBackground  = 0;

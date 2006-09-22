@@ -39,8 +39,12 @@
 #pragma warning(pop)
 
 namespace WebCore {
+    class Element;
     class Frame;
+    class Page;
 }
+
+class WebView;
 
 typedef enum {
     WebFrameLoadTypeStandard,
@@ -69,11 +73,6 @@ public:
     virtual ULONG STDMETHODCALLTYPE Release(void);
 
     //IWebFrame
-    virtual HRESULT STDMETHODCALLTYPE initWithName( 
-        /* [in] */ BSTR name,
-        /* [in] */ IWebFrameView *view,
-        /* [in] */ IWebView *webView);
-    
     virtual HRESULT STDMETHODCALLTYPE name( 
         /* [retval][out] */ BSTR *frameName);
     
@@ -141,6 +140,9 @@ public:
     virtual void receivedAllData(WebCore::ResourceLoader*);
 
     // FrameWinClient
+    virtual void ref();
+    virtual void deref();
+    virtual WebCore::Frame* createFrame(const WebCore::KURL& URL, const WebCore::String& name, WebCore::Element* ownerElement, const WebCore::String& referrer);
     virtual void openURL(const WebCore::DeprecatedString&, bool lockHistory);
     virtual void submitForm(const WebCore::String& method, const WebCore::KURL&, const WebCore::FormData*, WebCore::Element* form, WTF::HashMap<WebCore::String, WebCore::String>& formValues);
     virtual void setTitle(const WebCore::String& title);
@@ -159,6 +161,7 @@ public:
     virtual bool runJavaScriptPrompt(const WebCore::String& message, const WebCore::String& defaultValue, WebCore::String& result);
 
     // WebFrame
+    void initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, WebCore::Page* page, WebCore::Element* ownerElement);
     void paint();
     WebCore::Frame* impl();
     HRESULT loadDataSource(WebDataSource* dataSource);

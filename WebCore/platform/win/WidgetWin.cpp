@@ -27,53 +27,49 @@
 #include "Widget.h"
 
 #include "Cursor.h"
+#include "Document.h"
+#include "Element.h"
 #include "GraphicsContext.h"
 #include "FrameWin.h"
 #include "IntRect.h"
 #include "Font.h"
+#include "WidgetClient.h"
+#include <winsock2.h>
 #include <windows.h>
 
 namespace WebCore {
 
-HINSTANCE Widget::instanceHandle = 0;
-
 class WidgetPrivate
 {
 public:
-    HWND windowHandle;
     Font font;
     WidgetClient* client;
+    Widget* parent;
+    HWND containingWindow;
+    IntRect frameRect;
 };
 
 Widget::Widget()
     : data(new WidgetPrivate)
 {
-    data->windowHandle = 0;
     data->client = 0;
-}
-
-Widget::Widget(HWND hWnd)
-    : data(new WidgetPrivate)
-{
-    data->windowHandle = hWnd;
+    data->parent = 0;
+    data->containingWindow = 0;
 }
 
 Widget::~Widget() 
 {
-    if (data->windowHandle)
-        DestroyWindow(data->windowHandle);
-
     delete data;
 }
 
-HWND Widget::windowHandle() const
+void Widget::setContainingWindow(HWND containingWindow)
 {
-    return data->windowHandle;
+    data->containingWindow = containingWindow;
 }
 
-void Widget::setWindowHandle(HWND hWnd)
+HWND Widget::containingWindow() const
 {
-    data->windowHandle = hWnd;
+    return data->containingWindow;
 }
 
 void Widget::setClient(WidgetClient* c)
@@ -88,30 +84,48 @@ WidgetClient* Widget::client() const
 
 IntRect Widget::frameGeometry() const
 {
-    RECT frame;
-    if (GetWindowRect(data->windowHandle, &frame)) {
-        if (HWND parent = GetParent(data->windowHandle))
-            MapWindowPoints(NULL, parent, (LPPOINT)&frame, 2);
-        return frame;
-    }
-    
-    return IntRect();
+    return data->frameRect;
+}
+
+void Widget::setFrameGeometry(const IntRect &rect)
+{
+    data->frameRect = rect;
+}
+
+void Widget::setParent(Widget* w)
+{
+    data->parent = w;
+}
+
+Widget* Widget::parent() const
+{
+    return data->parent;
 }
 
 bool Widget::hasFocus() const
 {
-    return (data->windowHandle == GetForegroundWindow());
+    if (WidgetClient* client = data->client)
+        if (Element* element = client->element(const_cast<Widget*>(this)))
+            if (element == element->document()->focusNode())
+                return true;
+
+    return false;
 }
 
 void Widget::setFocus()
 {
-    SetFocus(data->windowHandle);
 }
 
 void Widget::clearFocus()
 {
-    FrameWin::clearDocumentFocus(this);
-    SetFocus(0);
+}
+
+void Widget::show()
+{
+}
+
+void Widget::hide()
+{
 }
 
 const Font& Widget::font() const
@@ -126,33 +140,48 @@ void Widget::setFont(const Font& font)
 
 void Widget::setCursor(const Cursor& cursor)
 {
-    // SetCursor only works until the next event is recieved.
+    // SetCursor only works until the next event is received.
     // However, we call this method on every mouse-moved,
     // so this should work well enough for our purposes.
     if (HCURSOR c = cursor.impl())
         SetCursor(c);
 }
 
-void Widget::show()
+IntRect Widget::convertToContainingWindow(const IntRect& rect) const
 {
-    ShowWindow(data->windowHandle, SW_SHOWNA);
+    IntRect convertedRect = rect;
+    convertedRect.setLocation(convertToContainingWindow(convertedRect.location()));
+    return convertedRect;
 }
 
-void Widget::hide()
+IntPoint Widget::convertToContainingWindow(const IntPoint& point) const
 {
-    ShowWindow(data->windowHandle, SW_HIDE);
+    IntPoint convertedPoint = point;
+
+    const Widget* w = this;
+    do {
+        convertedPoint.move(w->x(), w->y());
+        w = w->parent();
+    } while (w);
+
+    return convertedPoint;
 }
 
-void Widget::setFrameGeometry(const IntRect &rect)
+IntPoint Widget::convertFromContainingWindow(const IntPoint& point) const
 {
-    MoveWindow(data->windowHandle, rect.x(), rect.y(), rect.width(), rect.height(), false);
+    IntPoint convertedPoint = point;
+
+    const Widget* w = this;
+    do {
+        convertedPoint.move(-w->x(), -w->y());
+        w = w->parent();
+    } while (w);
+
+    return convertedPoint;
 }
 
-IntPoint Widget::mapFromGlobal(const IntPoint &p) const
+void Widget::paint(GraphicsContext*, const IntRect&)
 {
-    POINT point = p;
-    ScreenToClient(data->windowHandle, &point);
-    return point;
 }
 
 } // namespace WebCore

@@ -32,10 +32,10 @@
 
 namespace WebCore {
 
-Page::Page(HWND windowHandle)
+HINSTANCE Page::s_instanceHandle = 0;
+
+Page::Page()
     : m_frameCount(0)
-    , m_widget(0)
-    , m_windowHandle(windowHandle)
 {
     init();
 }
@@ -43,13 +43,13 @@ Page::Page(HWND windowHandle)
 FloatRect Page::windowRect() const
 {
     RECT rect;
-    GetWindowRect(m_windowHandle, &rect);
+    GetWindowRect(mainFrame()->view()->containingWindow(), &rect);
     return rect;
 }
 
 void Page::setWindowRect(const FloatRect& r)
 {
-    MoveWindow(m_windowHandle, r.x(), r.y(), r.width(), r.height(), true);
+    MoveWindow(mainFrame()->view()->containingWindow(), r.x(), r.y(), r.width(), r.height(), true);
 }
 
 } // namespace WebCore

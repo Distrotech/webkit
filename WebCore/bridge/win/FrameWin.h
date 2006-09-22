@@ -28,6 +28,7 @@
 
 #include "Frame.h"
 #include <wtf/HashMap.h>
+#include <wtf/RefPtr.h>
 
 class NPObject;
 
@@ -42,6 +43,10 @@ namespace WebCore {
 class FrameWinClient
 {
 public:
+    virtual void ref() = 0;
+    virtual void deref() = 0;
+
+    virtual Frame* createFrame(const KURL& URL, const String& name, Element* ownerElement, const String& referrer) = 0;
     virtual void openURL(const DeprecatedString&, bool lockHistory) = 0;
     virtual void submitForm(const String& method, const KURL&, const FormData*, Element* form, HashMap<String, String>& formValues) = 0;
     virtual void setTitle(const String& title) = 0;
@@ -169,7 +174,7 @@ private:
     virtual KURL originalRequestURL() const;
     virtual void cleanupPluginObjects();
     virtual bool passMouseDownEventToWidget(Widget*);
-    FrameWinClient* m_client;
+    RefPtr<FrameWinClient> m_client;
 
     KJS::Bindings::RootObject* m_bindingRoot; // The root object used for objects
                                               // bound outside the context of a plugin.

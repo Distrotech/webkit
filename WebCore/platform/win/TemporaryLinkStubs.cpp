@@ -67,9 +67,6 @@ using namespace WebCore;
 
 static void notImplemented() { puts("Not yet implemented"); _CrtDbgBreak(); }
 
-void FrameView::updateBorder() { notImplemented(); }
-bool FrameView::isFrameView() const { notImplemented(); return 0; }
-
 Widget::FocusPolicy PopUpButton::focusPolicy() const { notImplemented(); return NoFocus; }
 void PopUpButton::populate() { notImplemented(); }
 
@@ -202,18 +199,17 @@ void WebCore::findWordBoundary(UChar const* str,int len,int position,int* start,
 void WebCore::ResourceLoader::assembleResponseHeaders() const { }
 void WebCore::ResourceLoader::retrieveCharset() const { }
 
+void FrameView::updateBorder() { }
+
 void FrameWin::restoreDocumentState() { }
 void FrameWin::partClearedInBegin() { }
 void FrameWin::createEmptyDocument() { }
 String FrameWin::overrideMediaType() const { return String(); }
 Range* FrameWin::markedTextRange() const { return 0; }
-bool FrameWin::passSubframeEventToSubframe(WebCore::MouseEventWithHitTestResults&, Frame*) { return false; }
-bool FrameWin::lastEventIsMouseUp() const { return false; }
 void FrameWin::addMessageToConsole(String const&,unsigned int,String const&) { }
 bool FrameWin::shouldChangeSelection(Selection const&,Selection const&,WebCore::EAffinity,bool) const { return true; }
 void FrameWin::respondToChangedSelection(WebCore::Selection const&,bool) { }
 static int frameNumber = 0;
-Frame* FrameWin::createFrame(KURL const&,String const&,Element*,String const&) { return 0; }
 void FrameWin::saveDocumentState() { }
 void FrameWin::registerCommandForUndo(PassRefPtr<WebCore::EditCommand>) { }
 void FrameWin::clearUndoRedoOperations(void) { }
@@ -234,13 +230,10 @@ void CheckCacheObjectStatus(DocLoader*, CachedResource*) { }
 }
 
 void Widget::setEnabled(bool) { }
-void Widget::paint(GraphicsContext*,IntRect const&) { }
 void Widget::setIsSelected(bool) { }
 
-void ScrollView::addChild(Widget*,int,int) { }
-void ScrollView::removeChild(Widget*) { }
-void ScrollView::scrollPointRecursively(int x, int y) { }
 bool ScrollView::inWindow() const { return true; }
+void ScrollView::scrollPointRecursively(int x, int y) { }
 
 #if PLATFORM(CAIRO)
 
@@ -256,7 +249,6 @@ void GraphicsContext::setLineJoin(LineJoin) { }
 void GraphicsContext::setMiterLimit(float) { }
 void GraphicsContext::setAlpha(float) { }
 void GraphicsContext::clip(const Path&) { }
-void GraphicsContext::translate(const FloatSize&) { }
 void GraphicsContext::rotate(float) { }
 void GraphicsContext::scale(const FloatSize&) { }
 

@@ -238,7 +238,6 @@ HRESULT STDMETHODCALLTYPE WebNotificationCenter::addObserver(
     /* [in] */ BSTR notificationName,
     /* [in] */ IUnknown* anObject)
 {
-    observer->AddRef();
     ObserverKey key(notificationName, anObject);
     MappedObservers::iterator it = d->m_mappedObservers.find(key);
     if (it != d->m_mappedObservers.end())

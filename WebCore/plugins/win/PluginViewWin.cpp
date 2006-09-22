@@ -34,6 +34,7 @@
 #include "FrameWin.h"
 #include "HTMLNames.h"
 #include "HTMLPlugInElement.h"
+#include "Page.h"
 #include "PluginPackageWin.h"
 #include "kjs_binding.h"
 #include "kjs_proxy.h"
@@ -92,7 +93,7 @@ static bool registerPluginView()
     if (haveRegisteredWindowClass)
         return true;
 
-    ASSERT(Widget::instanceHandle);
+    ASSERT(Page::instanceHandle());
 
     WNDCLASSEX wcex;
 
@@ -102,7 +103,7 @@ static bool registerPluginView()
     wcex.lpfnWndProc    = PluginViewWndProc;
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = 0;
-    wcex.hInstance      = Widget::instanceHandle;
+    wcex.hInstance      = Page::instanceHandle();
     wcex.hIcon          = 0;
     wcex.hCursor        = LoadCursor(0, IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)COLOR_WINDOW;
@@ -120,36 +121,66 @@ static LRESULT CALLBACK PluginViewWndProc(HWND hWnd, UINT message, WPARAM wParam
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-void PluginViewWin::updateSize()
+void PluginViewWin::setFrameGeometry(const IntRect& rect)
 {
-    RECT rect;
-
-    GetClientRect(windowHandle(), &rect);
-
-    m_window.x = 0;
-    m_window.y = 0;
-    m_window.width = rect.right - rect.left;
-    m_window.height = rect.bottom - rect.top;
-
-    m_window.clipRect.left = 0;
-    m_window.clipRect.top = 0;
-    m_window.clipRect.right = rect.right - rect.left;
-    m_window.clipRect.left = rect.bottom - rect.top;
-
-    if (m_plugin->pluginFuncs()->setwindow)
-        m_plugin->pluginFuncs()->setwindow(m_instance, &m_window);
-}
-
-void PluginViewWin::setFrameGeometry(const IntRect &rect)
-{
-    // FIXME: It makes more sense for this check to be in WidgetWin.cpp
-    if (rect == m_contentRect)
+    if (rect == frameGeometry())
         return;
 
-    m_contentRect = rect;
-    Widget::setFrameGeometry(rect);
+    if (HWND window = m_window) {
+        IntRect windowRect = parent() ? parent()->convertToContainingWindow(rect) : rect;
+        MoveWindow(window, windowRect.x(), windowRect.y(), windowRect.width(), windowRect.height(), false);
+    }
 
-    updateSize();
+    setNPWindowSize(rect.size());
+
+    Widget::setFrameGeometry(rect);
+}
+
+void PluginViewWin::setFocus()
+{
+    if (HWND window = m_window)
+        SetFocus(window);
+
+    Widget::setFocus();
+}
+
+void PluginViewWin::clearFocus()
+{
+    SetFocus(0);
+
+    Widget::clearFocus();
+}
+
+void PluginViewWin::show()
+{
+    if (HWND window = m_window)
+        ShowWindow(window, SW_SHOWNA);
+
+    Widget::show();
+}
+
+void PluginViewWin::hide()
+{
+    if (HWND window = m_window)
+        ShowWindow(window, SW_HIDE);
+
+    Widget::hide();
+}
+
+void PluginViewWin::setNPWindowSize(const IntSize& size)
+{
+    m_npWindow.x = 0;
+    m_npWindow.y = 0;
+    m_npWindow.width = size.width();
+    m_npWindow.height = size.height();
+
+    m_npWindow.clipRect.left = 0;
+    m_npWindow.clipRect.top = 0;
+    m_npWindow.clipRect.right = size.width();
+    m_npWindow.clipRect.bottom = size.height();
+
+    if (m_plugin->pluginFuncs()->setwindow)
+        m_plugin->pluginFuncs()->setwindow(m_instance, &m_npWindow);
 }
 
 bool PluginViewWin::start()
@@ -184,9 +215,9 @@ void PluginViewWin::stop()
     m_isStarted = false;
 
     // Clear the window
-    m_window.window = 0;
+    m_npWindow.window = 0;
     if (m_plugin->pluginFuncs()->setwindow)
-        m_plugin->pluginFuncs()->setwindow(m_instance, &m_window);
+        m_plugin->pluginFuncs()->setwindow(m_instance, &m_npWindow);
 
     // Destroy the plugin
     NPError npErr = m_plugin->pluginFuncs()->destroy(m_instance, 0);
@@ -679,6 +710,9 @@ PluginViewWin::~PluginViewWin()
 
     freeStringArray(m_paramNames, m_paramCount);
     freeStringArray(m_paramValues, m_paramCount);
+
+    if (m_window)
+        DestroyWindow(m_window);
 }
 
 PluginViewWin::PluginViewWin(FrameWin* parentFrame, PluginPackageWin* plugin, Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType)
@@ -703,13 +737,14 @@ PluginViewWin::PluginViewWin(FrameWin* parentFrame, PluginPackageWin* plugin, El
     m_mode = element->document()->isPluginDocument() ? NP_FULL : NP_EMBED;
 
     HWND pluginWnd = CreateWindowEx(0, kWebPluginViewWindowClassName, 0, WS_CHILD, 
-                        0, 0, 0, 0, m_parentFrame->view()->windowHandle(), 0, Widget::instanceHandle, 0);
+                        0, 0, 0, 0, m_parentFrame->view()->containingWindow(), 0, Page::instanceHandle(), 0);
 
     SetProp(pluginWnd, kWebPluginViewProperty, this);
-    setWindowHandle(pluginWnd);
 
-    m_window.type = NPWindowTypeWindow;
-    m_window.window = pluginWnd;
+    m_npWindow.type = NPWindowTypeWindow;
+    m_npWindow.window = pluginWnd;
+
+    m_window = pluginWnd;
 
     start();
 }

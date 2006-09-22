@@ -23,8 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "config.h"
-
+#include <wtf/platform.h>
 #if USE(WININET)
 #include "ResourceLoader.h"
 #include "ResourceLoaderInternal.h"
@@ -34,6 +33,10 @@
 #include "DocLoader.h"
 #include "Frame.h"
 #include "Document.h"
+#include "Frame.h"
+#include "Page.h"
+#include "ResourceLoader.h"
+#include "ResourceLoaderInternal.h"
 #include <windows.h>
 #include <wininet.h>
 
@@ -233,12 +236,12 @@ static void initializeOffScreenResourceLoaderWindow()
     memset(&wcex, 0, sizeof(WNDCLASSEX));
     wcex.cbSize = sizeof(WNDCLASSEX);
     wcex.lpfnWndProc    = ResourceLoaderWndProc;
-    wcex.hInstance      = Widget::instanceHandle;
+    wcex.hInstance      = Page::instanceHandle();
     wcex.lpszClassName  = kResourceLoaderWindowClassName;
     RegisterClassEx(&wcex);
 
     transferJobWindowHandle = CreateWindow(kResourceLoaderWindowClassName, 0, 0, CW_USEDEFAULT, 0, CW_USEDEFAULT, 0,
-        HWND_MESSAGE, 0, Widget::instanceHandle, 0);
+        HWND_MESSAGE, 0, Page::instanceHandle(), 0);
     loadStatusMessage = RegisterWindowMessage(L"com.apple.WebKit.ResourceLoaderLoadStatus");
 }
 

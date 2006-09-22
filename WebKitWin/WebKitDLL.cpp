@@ -24,12 +24,14 @@
  */
 
 #include "WebKitDLL.h"
-#include "IWebURLResponse.h"
+
 #include "resource.h"
+#include "IWebURLResponse.h"
 #include "WebKit.h"
 #include "WebKitClassFactory.h"
 
 #pragma warning( push, 0 )
+#include <WebCore/page/Page.h>
 #include <WebCore/platform/Widget.h>
 #include <wtf/Vector.h>
 #pragma warning(pop)
@@ -47,7 +49,7 @@ STDAPI_(BOOL) DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LPVOID /*lpRe
         case DLL_PROCESS_ATTACH:
             gLockCount = gClassCount = 0;
             gInstance = hModule;
-            WebCore::Widget::instanceHandle = hModule;
+            WebCore::Page::setInstanceHandle(hModule);
             return TRUE;
 
         case DLL_THREAD_ATTACH:

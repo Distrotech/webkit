@@ -61,7 +61,7 @@ void FileChooser::openFileChooser()
     fileBuf[0] = '\0';
 
     ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = uploadControl()->view()->frameView()->windowHandle();
+    ofn.hwndOwner = uploadControl()->view()->frameView()->containingWindow();
     ofn.lpstrFilter = _T("All Files\0*.*\0\0");
     ofn.lpstrFile = fileBuf;
     ofn.nMaxFile = sizeof(fileBuf);

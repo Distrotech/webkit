@@ -50,6 +50,7 @@
 #include <WebCore/html/HTMLGenericFormElement.h>
 #include <WebCore/html/HTMLInputElement.h>
 #include <WebCore/DerivedSources/HTMLNames.h>
+#include <WebCore/page/FrameTree.h>
 #include <WebCore/page/Page.h>
 #include <WebCore/platform/PlatformKeyboardEvent.h>
 #include <WebCore/platform/PlugInInfoStore.h>
@@ -302,8 +303,8 @@ public:
     WebFramePrivate() { }
     ~WebFramePrivate() { }
 
-    RefPtr<Frame> frame;
-    RefPtr<FrameView> frameView;
+    Frame* frame;
+    FrameView* frameView;
     WebView* webView;
     String title;
 };
@@ -325,7 +326,6 @@ WebFrame::WebFrame()
 
 WebFrame::~WebFrame()
 {
-    delete d->frame->page();
     delete d;
     SysFreeString(m_textEncoding);
     gClassCount--;
@@ -371,45 +371,6 @@ ULONG STDMETHODCALLTYPE WebFrame::Release(void)
 }
 
 // IWebFrame -------------------------------------------------------------------
-
-HRESULT STDMETHODCALLTYPE WebFrame::initWithName( 
-    /* [in] */ BSTR /*name*/,
-    /* [in] */ IWebFrameView* /*view*/,
-    /* [in] */ IWebView* webView)
-{
-    if (webView)
-        webView->AddRef();
-
-    d->webView = static_cast<WebView*>(webView);
-    HWND windowHandle;
-    HRESULT hr = d->webView->viewWindow(&windowHandle);
-    if (FAILED(hr))
-        return hr;
-
-    Page* page = new Page(windowHandle);
-    Frame* frame = new FrameWin(page, 0, this);
-
-    // FIXME: This is one-time initialization, but it gets the value of the setting from the
-    // current WebView. That's a mismatch and not good!
-    static bool initializedObjectCacheSize = false;
-    if (!initializedObjectCacheSize) {
-        Cache::setSize(getObjectCacheSize());
-        initializedObjectCacheSize = true;
-    }
-
-    d->frame = frame;
-    frame->deref(); // Frames are created with a refcount of 1.  Release this ref, since we've assigned it to a RefPtr
-    page->setMainFrame(frame);
-    FrameView* frameView = new FrameView(frame);
-    d->frameView = frameView;
-    frameView->deref(); // FrameViews are created with a refcount of 1.  Release this ref, since we've assigned it to a RefPtr
-    d->frame->setView(frameView);
-    d->frameView->setWindowHandle(windowHandle);
-
-    d->frame->setSettings(d->webView->settings());
-
-    return S_OK;
-}
 
 HRESULT STDMETHODCALLTYPE WebFrame::name( 
     /* [retval][out] */ BSTR* /*frameName*/)
@@ -586,6 +547,34 @@ HRESULT STDMETHODCALLTYPE WebFrame::continueSubmit(void)
 
 // WebFrame ---------------------------------------------------------------
 
+void WebFrame::initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, Page* page, Element* ownerElement)
+{
+    d->webView = static_cast<WebView*>(webView);
+    HWND viewWindow;
+    HRESULT hr = d->webView->viewWindow(&viewWindow);
+    ASSERT(!FAILED(hr));
+
+    Frame* frame = new FrameWin(static_cast<Page*>(page), static_cast<Element*>(ownerElement), this);
+    d->frame = frame;
+
+    FrameView* frameView = new FrameView(frame);
+    d->frameView = frameView;
+
+    frame->setSettings(d->webView->settings());
+    frame->setView(frameView);
+    frameView->deref(); // FrameViews are created with a ref count of 1. Release this ref since we've assigned it to frame.
+
+    frameView->setContainingWindow(viewWindow);
+
+    // FIXME: This is one-time initialization, but it gets the value of the setting from the
+    // current WebView. That's a mismatch and not good!
+    static bool initializedObjectCacheSize = false;
+    if (!initializedObjectCacheSize) {
+        Cache::setSize(getObjectCacheSize());
+        initializedObjectCacheSize = true;
+    }
+}
+
 #if PLATFORM(CAIRO)
 
 void WebFrame::paint()
@@ -604,19 +593,17 @@ void WebFrame::paint()
                                                             ps.rcPaint.bottom - ps.rcPaint.top); 
 
     cairo_t* context = cairo_create(surface);
-    GraphicsContext gc(context);
+    cairo_translate(context, -ps.rcPaint.left, -ps.rcPaint.top);
     
-    IntRect documentDirtyRect = ps.rcPaint;
-    documentDirtyRect.move(d->frameView->contentsX(), d->frameView->contentsY());
-
     HDC surfaceDC = cairo_win32_surface_get_dc(surface);
     SaveDC(surfaceDC);
-    cairo_translate(context, -d->frameView->contentsX() - ps.rcPaint.left, 
-                             -d->frameView->contentsY() - ps.rcPaint.top);
-    d->frame->paint(&gc, documentDirtyRect);
-    RestoreDC(surfaceDC, -1);
 
+    GraphicsContext gc(context);
+    d->frameView->paint(&gc, ps.rcPaint);
+
+    RestoreDC(surfaceDC, -1);
     cairo_destroy(context);
+
     context = cairo_create(finalSurface);
     cairo_set_operator(context, CAIRO_OPERATOR_SOURCE);
     cairo_set_source_surface(context, surface, ps.rcPaint.left, ps.rcPaint.top);
@@ -705,7 +692,7 @@ void WebFrame::paint()
 
 Frame* WebFrame::impl()
 {
-    return d->frame.get();
+    return d->frame;
 }
 
 HRESULT WebFrame::loadDataSource(WebDataSource* dataSource)
@@ -1168,6 +1155,50 @@ void WebFrame::receivedAllData(ResourceLoader* job)
 }
 
 // FrameWinClient
+
+void WebFrame::ref()
+{
+    this->AddRef();
+}
+
+void WebFrame::deref()
+{
+    this->Release();
+}
+
+Frame* WebFrame::createFrame(const KURL& URL, const String& name, Element* ownerElement, const String& /* referrer */)
+{
+    WebFrame* webFrame = WebFrame::createInstance();
+    webFrame->initWithWebFrameView(0, d->webView, d->frame->page(), ownerElement);
+
+    Frame* frame = webFrame->impl();
+    d->frame->tree()->appendChild(frame);
+    frame->deref(); // Frames are created with a refcount of 1. Release this ref, since we've assigned it to d->frame.
+    webFrame->Release(); // The same goes for webFrame, which is owned by frame.
+
+    frame->tree()->setName(name);
+
+    WebMutableURLRequest* request = WebMutableURLRequest::createInstance();
+    String urlString = String(URL.url());
+    BSTR urlBStr = SysAllocStringLen(urlString.characters(), urlString.length());
+    BSTR method = SysAllocString(L"GET");
+
+    HRESULT hr;
+    hr = request->initWithURL(urlBStr, WebURLRequestUseProtocolCachePolicy, 0);
+    if (FAILED(hr))
+        return frame;
+
+    hr = request->setHTTPMethod(method);
+    if (FAILED(hr))
+        return frame;
+
+    SysFreeString(urlBStr);
+    SysFreeString(method);
+
+    webFrame->loadRequest(request);
+
+    return frame;
+}
 
 void WebFrame::openURL(const DeprecatedString& url, bool lockHistory)
 {

@@ -54,12 +54,10 @@ namespace WebCore {
         PluginViewWin(FrameWin* parentFrame, PluginPackageWin* plugin, Element*, const KURL&, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType);
         virtual ~PluginViewWin();
 
-        virtual void setFrameGeometry(const IntRect &rect);
-
         PluginPackageWin* plugin() const { return m_plugin.get(); }
         NPP instance() const { return m_instance; }
 
-        void updateSize();
+        void setNPWindowSize(const IntSize&);
         static PluginViewWin* currentPluginView();
 
         // NPN functions
@@ -74,7 +72,20 @@ namespace WebCore {
         void status(const char* message);
         NPError getValue(NPNVariable variable, void* value);
         NPError setValue(NPPVariable variable, void* value);
+
+        // Widget functions
+        virtual void setFrameGeometry(const IntRect&);
+
+        virtual void setFocus();
+        virtual void clearFocus();
+
+        virtual void show();
+        virtual void hide();
+
     private:
+        PluginViewWin();
+        PluginViewWin(const PluginViewWin&);
+
         bool start();
         void stop();
         static void setCurrentPluginView(PluginViewWin* pluginView);
@@ -83,7 +94,6 @@ namespace WebCore {
         RefPtr<PluginPackageWin> m_plugin;
         Element* m_element;
         FrameWin* m_parentFrame;
-        IntRect m_contentRect;
         bool m_isStarted;
         KURL m_url;
 
@@ -102,11 +112,13 @@ namespace WebCore {
         
         NPP m_instance;
         NPP_t m_instanceStruct;
-        NPWindow m_window;
+        NPWindow m_npWindow;
         NPWindow m_lastSetWindow;
 
         HashSet<PluginStreamWin*> m_streams;
         Vector<PluginRequestWin*> m_requests;
+
+        HWND m_window; // for windowed plug-ins
 
         static PluginViewWin* s_currentPluginView;
     };

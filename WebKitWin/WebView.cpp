@@ -81,9 +81,6 @@ WebView::WebView()
 , m_textSizeMultiplier(1)
 , m_overrideEncoding(0)
 {
-    SetRectEmpty(&m_frame);
-
-    m_mainFrame = WebFrame::createInstance();
     m_backForwardList = WebBackForwardList::createInstance();
 
     gClassCount++;
@@ -96,8 +93,6 @@ WebView::~WebView()
 
     if (m_backForwardList)
         m_backForwardList->Release();
-    if (m_mainFrame)
-        m_mainFrame->Release();
     if (m_frameLoadDelegate)
         m_frameLoadDelegate->Release();
     if (m_frameLoadDelegatePrivate)
@@ -108,6 +103,8 @@ WebView::~WebView()
         m_formDelegate->Release();
     if (m_preferences)
         m_preferences->Release();
+
+    delete m_page;
 
     SysFreeString(m_frameName);
     SysFreeString(m_groupName);
@@ -127,25 +124,25 @@ WebView* WebView::createInstance()
 void WebView::mouseMoved(WPARAM wParam, LPARAM lParam)
 {
     PlatformMouseEvent mouseEvent(m_viewWindow, wParam, lParam, 0);
-    m_mainFrame->impl()->view()->handleMouseMoveEvent(mouseEvent);
+    m_page->mainFrame()->view()->handleMouseMoveEvent(mouseEvent);
 }
 
 void WebView::mouseDown(WPARAM wParam, LPARAM lParam)
 {
     PlatformMouseEvent mouseEvent(m_viewWindow, wParam, lParam, 1);
-    m_mainFrame->impl()->view()->handleMousePressEvent(mouseEvent);
+    m_page->mainFrame()->view()->handleMousePressEvent(mouseEvent);
 }
 
 void WebView::mouseUp(WPARAM wParam, LPARAM lParam)
 {
     PlatformMouseEvent mouseEvent(m_viewWindow, wParam, lParam, 1);
-    m_mainFrame->impl()->view()->handleMouseReleaseEvent(mouseEvent);
+    m_page->mainFrame()->view()->handleMouseReleaseEvent(mouseEvent);
 }
 
 void WebView::mouseDoubleClick(WPARAM wParam, LPARAM lParam)
 {
     PlatformMouseEvent mouseEvent(m_viewWindow, wParam, lParam, 2);
-    m_mainFrame->impl()->view()->handleMouseReleaseEvent(mouseEvent);
+    m_page->mainFrame()->view()->handleMouseReleaseEvent(mouseEvent);
 }
 
 void WebView::mouseWheel(WPARAM wParam, LPARAM lParam)
@@ -158,7 +155,7 @@ bool WebView::keyPress(WPARAM wParam, LPARAM lParam)
 {
     PlatformKeyboardEvent keyEvent(m_viewWindow, wParam, lParam);
 
-    FrameWin* frame = static_cast<FrameWin*>(m_mainFrame->impl());
+    FrameWin* frame = static_cast<FrameWin*>(m_page->mainFrame());
     bool handled = frame->keyPress(keyEvent);
     if (!handled && !keyEvent.isKeyUp()) {
         Node* start = frame->selectionController()->start().node();
@@ -197,7 +194,7 @@ bool WebView::keyPress(WPARAM wParam, LPARAM lParam)
     return handled;
 }
 
-static ATOM registerWebView()
+static ATOM registerWebViewWindowClass()
 {
     static bool haveRegisteredWindowClass = false;
     if (haveRegisteredWindowClass)
@@ -325,8 +322,12 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             break;
         }
         case WM_SIZE:
-            if (mainFrameImpl && lParam != 0 && !mainFrameImpl->loading())
-                mainFrameImpl->impl()->sendResizeEvent();
+            if (mainFrameImpl && lParam != 0) {
+                mainFrameImpl->impl()->view()->resize(LOWORD(lParam), HIWORD(lParam));
+
+                if (!mainFrameImpl->loading())
+                    mainFrameImpl->impl()->sendResizeEvent();
+            }
             break;
         case WM_SETFOCUS:
             if (mainFrameImpl) {
@@ -734,7 +735,7 @@ HRESULT STDMETHODCALLTYPE WebView::URLTitleFromPasteboard(
 }
 
 HRESULT STDMETHODCALLTYPE WebView::initWithFrame( 
-    /* [in] */ RECT* frame,
+    /* [in] */ RECT* /* frame */,
     /* [in] */ BSTR frameName,
     /* [in] */ BSTR groupName)
 {
@@ -743,20 +744,26 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     if (m_viewWindow)
         return E_FAIL;
 
-    m_frame = *frame;
+    registerWebViewWindowClass();
+    m_viewWindow = CreateWindowEx(0, kWebViewWindowClassName, 0, WS_CHILD | WS_HSCROLL | WS_VSCROLL,
+        CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, m_hostWindow, 0, gInstance, 0);
+
     m_frameName = SysAllocString(frameName);
     m_groupName = SysAllocString(groupName);
 
-    registerWebView();
+    m_page = new Page();
 
-    m_viewWindow = CreateWindowEx(0, kWebViewWindowClassName, 0, WS_CHILD | WS_HSCROLL | WS_VSCROLL,
-       CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, m_hostWindow, 0, gInstance, 0);
+    WebFrame* webFrame = WebFrame::createInstance();
+    webFrame->initWithWebFrameView(0 /*FIXME*/, this, m_page, 0);
+    m_mainFrame = webFrame;
 
-    m_mainFrame->initWithName(0, 0/*FIXME*/, this);
+    Frame* frame = webFrame->impl();
+    m_page->setMainFrame(frame);
+    frame->deref(); // WebCore frames are created with a ref count of 1. Release this ref, since m_page owns frame now.
+    webFrame->Release(); // The same goes for webFrame, which is owned by frame.
 
     #pragma warning(suppress: 4244)
     SetWindowLongPtr(m_viewWindow, 0, (LONG_PTR)this);
-
     ShowWindow(m_viewWindow, SW_SHOW);
 
     // Update WebCore with preferences.  These values will either come from an archived WebPreferences,
@@ -1881,7 +1888,7 @@ HRESULT STDMETHODCALLTYPE WebView::frameLoadDelegatePrivate(
 HRESULT STDMETHODCALLTYPE WebView::scrollOffset( 
     /* [retval][out] */ LPPOINT offset)
 {
-    IntSize offsetIntSize = m_mainFrame->impl()->view()->scrollOffset();
+    IntSize offsetIntSize = m_page->mainFrame()->view()->scrollOffset();
     offset->x = offsetIntSize.width();
     offset->y = offsetIntSize.height();
     return S_OK;

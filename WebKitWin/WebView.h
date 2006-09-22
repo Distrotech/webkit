@@ -483,7 +483,6 @@ public:
         /* [retval][out] */ LPPOINT offset);
 
     // WebView
-
     void mouseMoved(WPARAM, LPARAM);
     void mouseDown(WPARAM, LPARAM);
     void mouseUp(WPARAM, LPARAM);
@@ -496,12 +495,12 @@ public:
 
 protected:
     ULONG m_refCount;
-    RECT m_frame;
     BSTR m_frameName;
     BSTR m_groupName;
     HWND m_hostWindow;
     HWND m_viewWindow;
     WebFrame* m_mainFrame;
+    WebCore::Page* m_page;
     IWebFrameLoadDelegate* m_frameLoadDelegate;
     IWebFrameLoadDelegatePrivate* m_frameLoadDelegatePrivate;
     IWebUIDelegate* m_uiDelegate;
