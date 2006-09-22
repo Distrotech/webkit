@@ -82,25 +82,32 @@ void FrameWin::submitForm(const ResourceRequest& request)
 
 String FrameWin::userAgent() const
 {
-    return "Mozilla/5.0 (PC; U; Intel; Windows; en) AppleWebKit/420+ (KHTML, like Gecko)";
+    return m_client->userAgent();
 }
 
 void FrameWin::runJavaScriptAlert(String const& message)
 {
     String text = message;
     text.replace('\\', backslashAsCurrencySymbol());
-    UChar nullChar = 0;
-    text += String(&nullChar, 1);
-    MessageBox(page()->windowHandle(), text.characters(), L"JavaScript Alert", MB_OK);
+    m_client->runJavaScriptAlert(text);
 }
 
 bool FrameWin::runJavaScriptConfirm(String const& message)
 {
     String text = message;
     text.replace('\\', backslashAsCurrencySymbol());
-    UChar nullChar = 0;
-    text += String(&nullChar, 1);
-    return MessageBox(page()->windowHandle(), text.characters(), L"JavaScript Alert", MB_OKCANCEL) == IDOK;
+    return m_client->runJavaScriptConfirm(text);
+}
+
+bool FrameWin::runJavaScriptPrompt(String const& message, String const& defaultValue, String& result)
+{
+    String modifiedMessage = message;
+    modifiedMessage.replace('\\', backslashAsCurrencySymbol());
+    String modifiedDefaultValue = defaultValue;
+    modifiedDefaultValue.replace('\\', backslashAsCurrencySymbol());
+    bool succeeded = m_client->runJavaScriptPrompt(modifiedMessage, modifiedDefaultValue, result);
+    result.replace(backslashAsCurrencySymbol(), '\\');
+    return succeeded;
 }
 
 // FIXME: This needs to be unified with the keyPress method on FrameMac

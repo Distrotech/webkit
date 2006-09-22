@@ -153,6 +153,10 @@ public:
     virtual void textDidChangeInTextArea(WebCore::Element*);
     virtual void didFirstLayout();
     virtual void handledOnloadEvents();
+    virtual WebCore::String userAgent();
+    virtual void runJavaScriptAlert(const WebCore::String&);
+    virtual bool runJavaScriptConfirm(const WebCore::String&);
+    virtual bool runJavaScriptPrompt(const WebCore::String& message, const WebCore::String& defaultValue, WebCore::String& result);
 
     // WebFrame
     void paint();

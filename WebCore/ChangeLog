@@ -1,3 +1,22 @@
+2006-09-21  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Anders.
+        
+        <rdar://4516072>
+        <rdar://4601320>
+        
+        Implemented JavaScript alert/confirm/prompt inside app.
+        This is done via IWebUIDelegate.
+
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::userAgent):
+        (WebCore::FrameWin::runJavaScriptAlert):
+        (WebCore::FrameWin::runJavaScriptConfirm):
+        (WebCore::FrameWin::runJavaScriptPrompt):
+        * bridge/win/FrameWin.h:
+        * platform/win/TemporaryLinkStubs.cpp:
+        (FrameWin::registerCommandForRedo):
+
 2006-09-21  Sean Gies  <seangies@apple.com>
 
         Reviewed by NOBODY (OOPS!).

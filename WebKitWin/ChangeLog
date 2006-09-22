@@ -1,3 +1,20 @@
+2006-09-21  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Anders.
+        
+        <rdar://4516072>
+        <rdar://4601320>
+        
+        Implemented JavaScript alert/confirm/prompt inside app.
+        This is done via IWebUIDelegate.
+
+        * WebFrame.cpp:
+        (WebFrame::userAgent):
+        (WebFrame::runJavaScriptAlert):
+        (WebFrame::runJavaScriptConfirm):
+        (WebFrame::runJavaScriptPrompt):
+        * WebFrame.h:
+
 2006-09-21  Sean Gies  <seangies@apple.com>
 
         Reviewed by Adam Roben.

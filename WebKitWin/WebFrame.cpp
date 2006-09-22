@@ -1387,3 +1387,53 @@ void WebFrame::handledOnloadEvents()
         frameLoadDelegatePriv->Release();
     }
 }
+
+String WebFrame::userAgent()
+{
+    return "Mozilla/5.0 (PC; U; Intel; Windows; en) AppleWebKit/420+ (KHTML, like Gecko)";
+}
+
+void WebFrame::runJavaScriptAlert(const String& message)
+{
+    IWebUIDelegate* ui;
+    if (SUCCEEDED(d->webView->uiDelegate(&ui))) {
+        BSTR messageBSTR = SysAllocStringLen(message.characters(), message.length());
+        ui->runJavaScriptAlertPanelWithMessage(d->webView, messageBSTR);
+        SysFreeString(messageBSTR);
+        ui->Release();
+    }
+}
+
+bool WebFrame::runJavaScriptConfirm(const String& message)
+{
+    BOOL result = false;
+    IWebUIDelegate* ui;
+    if (SUCCEEDED(d->webView->uiDelegate(&ui))) {
+        BSTR messageBSTR = SysAllocStringLen(message.characters(), message.length());
+        ui->runJavaScriptConfirmPanelWithMessage(d->webView, messageBSTR, &result);
+        SysFreeString(messageBSTR);
+        ui->Release();
+    }
+    return !!result;
+}
+
+bool WebFrame::runJavaScriptPrompt(const String& message, const String& defaultValue, String& result)
+{
+    bool succeeded = false;
+    IWebUIDelegate* ui;
+    if (SUCCEEDED(d->webView->uiDelegate(&ui))) {
+        BSTR messageBSTR = SysAllocStringLen(message.characters(), message.length());
+        BSTR defaultValueBSTR = SysAllocStringLen(defaultValue.characters(), defaultValue.length());
+        BSTR resultBSTR = 0;
+        if (SUCCEEDED(ui->runJavaScriptTextInputPanelWithPrompt(d->webView, messageBSTR, defaultValueBSTR, &resultBSTR))) {
+            succeeded = !!resultBSTR;
+            if (succeeded)
+                result = String(resultBSTR, SysStringLen(resultBSTR));
+        }
+        SysFreeString(messageBSTR);
+        SysFreeString(defaultValueBSTR);
+        SysFreeString(resultBSTR);
+        ui->Release();
+    }
+    return succeeded;
+}

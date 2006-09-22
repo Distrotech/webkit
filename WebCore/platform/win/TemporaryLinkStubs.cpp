@@ -140,7 +140,6 @@ KJS::Bindings::Instance* FrameWin::getEmbedInstanceForWidget(Widget *) { notImpl
 bool FrameWin::canRedo() const { notImplemented(); return 0; }
 bool FrameWin::canUndo() const { notImplemented(); return 0; }
 void FrameWin::registerCommandForRedo(PassRefPtr<WebCore::EditCommand>) { notImplemented(); }
-bool FrameWin::runJavaScriptPrompt(String const&,String const&,String &) { notImplemented(); return 0; }
 bool FrameWin::shouldInterruptJavaScript() { notImplemented(); return false; }
 bool FrameWin::openURL(KURL const&) { notImplemented(); return 0; }
 void FrameWin::print() { notImplemented(); }
