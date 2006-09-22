@@ -1500,10 +1500,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\platform\PlatformScrollBar.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\PlatformString.h"
 				>
 			</File>
@@ -1802,6 +1798,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\platform\win\MouseEventWin.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\win\PlatformScrollBar.h"
 					>
 				</File>
 				<File
