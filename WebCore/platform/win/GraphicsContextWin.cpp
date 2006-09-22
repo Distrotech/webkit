@@ -31,7 +31,9 @@
 #include "Path.h"
 #include <wtf/MathExtras.h>
 
+#if PLATFORM(CG)
 #include "GraphicsContextPlatformPrivate.h"
+#endif
 
 using namespace std;
 

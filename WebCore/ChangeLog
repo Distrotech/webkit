@@ -1,3 +1,12 @@
+2006-09-21  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Hyatt.
+
+        windows build fix
+
+        * platform/win/GraphicsContextWin.cpp:
+        wrapped a CG #include in #if PLATFORM(CG)
+
 2006-09-21  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Maciej, Hyatt, Steve.
