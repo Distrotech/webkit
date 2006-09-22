@@ -326,8 +326,5 @@ void Image::drawTiled(GraphicsContext*, const FloatRect&, const FloatRect&, Tile
 void RenderPopupMenuWin::addSeparator() { notImplemented(); }
 void RenderPopupMenuWin::addGroupLabel(HTMLOptGroupElement*) { notImplemented(); }
 
-void RenderThemeWin::systemFont(int propId, FontDescription& fontDescription) const {}
-
-
 void IconLoader::receivedResponse(ResourceLoader*, PlatformResponse) { notImplemented(); }
 void IconLoader::notifyIconChanged(const KURL& iconURL) { notImplemented(); }

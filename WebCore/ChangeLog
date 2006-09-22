@@ -1,5 +1,15 @@
 2006-09-22  Dave Hyatt <hyatt@apple.com>
 
+        Implement support for CSS2 system fonts on Win32.  Implement support for our special control font so that controls now
+        pick up the correct font from the system.  This fixes the crazy form control font sizes on e.g., www.google.com.
+
+        * platform/win/TemporaryLinkStubs.cpp:
+        * rendering/RenderThemeWin.cpp:
+        (WebCore::fillFontDescription):
+        (WebCore::RenderThemeWin::systemFont):
+
+2006-09-22  Dave Hyatt <hyatt@apple.com>
+
         Scrollbar preparation work.
         
         (1) Add support for enabling/disabling widgets.
