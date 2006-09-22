@@ -551,8 +551,7 @@ void WebFrame::initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, 
 {
     d->webView = static_cast<WebView*>(webView);
     HWND viewWindow;
-    HRESULT hr = d->webView->viewWindow(&viewWindow);
-    ASSERT(!FAILED(hr));
+    d->webView->viewWindow(&viewWindow);
 
     Frame* frame = new FrameWin(static_cast<Page*>(page), static_cast<Element*>(ownerElement), this);
     d->frame = frame;
