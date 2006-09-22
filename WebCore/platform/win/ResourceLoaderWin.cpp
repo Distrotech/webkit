@@ -25,19 +25,15 @@
 
 #include <wtf/platform.h>
 #if USE(WININET)
+#include "ResourceLoaderWin.h"
 #include "ResourceLoader.h"
 #include "ResourceLoaderInternal.h"
-#include "ResourceLoaderWin.h"
 
 #include "CString.h"
 #include "DocLoader.h"
 #include "Frame.h"
 #include "Document.h"
-#include "Frame.h"
 #include "Page.h"
-#include "ResourceLoader.h"
-#include "ResourceLoaderInternal.h"
-#include <windows.h>
 #include <wininet.h>
 
 namespace WebCore {

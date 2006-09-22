@@ -1,3 +1,10 @@
+2006-09-21  Brady Eidson <beidson@apple.com>
+
+        Build was broken for at least some, and I think my checkin that messed with 
+        #include orders was to blame (and it was messy, broken or not) - this cleans that up
+
+        * platform/win/ResourceLoaderWin.cpp:
+
 2006-09-21  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by Hyatt.
