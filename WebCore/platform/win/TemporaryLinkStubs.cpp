@@ -229,7 +229,6 @@ void CheckCacheObjectStatus(DocLoader*, CachedResource*) { }
 
 }
 
-void Widget::setEnabled(bool) { }
 void Widget::setIsSelected(bool) { }
 
 bool ScrollView::inWindow() const { return true; }

@@ -1,3 +1,26 @@
+2006-09-22  Dave Hyatt <hyatt@apple.com>
+
+        Scrollbar prep work.
+        
+        (1) Add support for enabling/disabling widgets.
+        (2) Add support for invalidation of part or all of a widget.
+        (3) Clean up some of the Win32 scrollbar code.  All that's left is painting
+        and event handling. (Oh, is that all...) :)
+
+        Reviewed by anders
+
+        * platform/win/PlatformScrollBarWin.cpp:
+        (WebCore::PlatformScrollBar::setScrollBarValue):
+        (WebCore::PlatformScrollBar::setKnobProportion):
+        (WebCore::PlatformScrollBar::setEnabled):
+        (WebCore::PlatformScrollBar::paint):
+        * platform/win/TemporaryLinkStubs.cpp:
+        * platform/win/WidgetWin.cpp:
+        (WebCore::Widget::Widget):
+        (WebCore::Widget::setEnabled):
+        (WebCore::Widget::invalidate):
+        (WebCore::Widget::invalidateRect):
+
 2006-09-21  Brady Eidson <beidson@apple.com>
 
         Build was broken for at least some, and I think my checkin that messed with 

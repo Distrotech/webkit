@@ -47,6 +47,7 @@ public:
     Widget* parent;
     HWND containingWindow;
     IntRect frameRect;
+    bool enabled;
 };
 
 Widget::Widget()
@@ -55,6 +56,7 @@ Widget::Widget()
     data->client = 0;
     data->parent = 0;
     data->containingWindow = 0;
+    data->enabled = true;
 }
 
 Widget::~Widget() 
@@ -182,6 +184,25 @@ IntPoint Widget::convertFromContainingWindow(const IntPoint& point) const
 
 void Widget::paint(GraphicsContext*, const IntRect&)
 {
+}
+
+void Widget::setEnabled(bool e)
+{
+    if (e != data->enabled) {
+        data->enabled = e;
+        invalidate();
+    }
+}
+
+void Widget::invalidate()
+{
+    invalidateRect(frameGeometry());
+}
+
+void Widget::invalidateRect(const IntRect& r)
+{
+    IntRect windowRect = convertToContainingWindow(r);
+    ::InvalidateRect(containingWindow(), &RECT(windowRect), false);
 }
 
 } // namespace WebCore
