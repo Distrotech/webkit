@@ -1,3 +1,22 @@
+2006-09-22  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Steve
+
+        Landed from OpenSource - that version now supports Redirect like we need, and is a little cleaner design
+
+        * platform/win/ResourceLoaderWin.cpp:
+        (WebCore::):
+        (WebCore::ResourceLoaderWndProc):
+        (WebCore::initializeOffScreenResourceLoaderWindow):
+        (WebCore::ResourceLoaderInternal::~ResourceLoaderInternal):
+        (WebCore::ResourceLoader::onHandleCreated):
+        (WebCore::ResourceLoader::onRequestRedirected):
+        (WebCore::ResourceLoader::onRequestComplete):
+        (WebCore::transferJobStatusCallback):
+        (WebCore::ResourceLoader::start):
+        (WebCore::ResourceLoader::fileLoadTimer):
+        (WebCore::ResourceLoader::cancel):
+
 2006-09-22  Dave Hyatt <hyatt@apple.com>
 
         Implement support for CSS2 system fonts on Win32.  Implement support for our special control font so that controls now
