@@ -1,5 +1,11 @@
 2006-09-22  Brady Eidson  <beidson@apple.com>
 
+        Forgot some lines we needed to keep for the internal build in my last checkin
+
+        * platform/win/ResourceLoaderWin.cpp:
+
+2006-09-22  Brady Eidson  <beidson@apple.com>
+
         Reviewed by Steve
 
         Landed from OpenSource - that version now supports Redirect like we need, and is a little cleaner design

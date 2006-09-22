@@ -23,6 +23,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
+#include <wtf/platform.h>
+#if USE(WININET)
+
 #include "config.h"
 #include "ResourceLoader.h"
 #include "ResourceLoaderInternal.h"
@@ -422,3 +425,6 @@ void ResourceLoader::cancel()
 }
 
 } // namespace WebCore
+
+#endif // USE(WININET)
+
