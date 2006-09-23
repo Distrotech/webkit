@@ -25,19 +25,15 @@
 
 #include <wtf/platform.h>
 #if USE(WININET)
-
-#include "config.h"
+#include "ResourceLoaderWin.h"
 #include "ResourceLoader.h"
 #include "ResourceLoaderInternal.h"
-#include "ResourceLoaderWin.h"
 
 #include "CString.h"
 #include "DocLoader.h"
 #include "Frame.h"
 #include "Document.h"
 #include "Page.h"
-#include "Logging.h"
-#include <windows.h>
 #include <wininet.h>
 
 namespace WebCore {
@@ -46,23 +42,8 @@ static unsigned transferJobId = 0;
 static HashMap<int, ResourceLoader*>* jobIdMap = 0;
 
 static HWND transferJobWindowHandle = 0;
+static UINT loadStatusMessage = 0;
 const LPCWSTR kResourceLoaderWindowClassName = L"ResourceLoaderWindowClass";
-
-// Message types for internal use (keep in sync with kMessageHandlers)
-enum {
-  kHandleCreatedMessage = WM_USER,
-  kRequestRedirectedMessage,
-  kRequestCompleteMessage
-};
-
-typedef void (ResourceLoader:: *ResourceLoaderEventHandler)(LPARAM);
-static const ResourceLoaderEventHandler kMessageHandlers[] = {
-    &ResourceLoader::onHandleCreated,
-    &ResourceLoader::onRequestRedirected,
-    &ResourceLoader::onRequestComplete
-};
-static const int kNumMessageHandlers =
-    sizeof(kMessageHandlers) / sizeof(kMessageHandlers[0]);
 
 static int addToOutstandingJobs(ResourceLoader* job)
 {
@@ -87,23 +68,159 @@ static ResourceLoader* lookupResourceLoader(int jobId)
     return jobIdMap->get(jobId);
 }
 
-static LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message,
-                                              WPARAM wParam, LPARAM lParam)
+struct JobLoadStatus {
+    DWORD internetStatus;
+    DWORD_PTR dwResult;
+    char* redirectURL;
+};
+
+LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    if (message >= kHandleCreatedMessage) {
-        UINT index = message - kHandleCreatedMessage;
-        if (index < kNumMessageHandlers) {
-            unsigned jobId = (unsigned) wParam;
-            ResourceLoader* job = lookupResourceLoader(jobId);
-            if (job) {
-                ASSERT(job->d->m_jobId == jobId);
-                ASSERT(job->d->m_threadId == GetCurrentThreadId());
-                (job->*(kMessageHandlers[index]))(lParam);
-            }
+    if (message == loadStatusMessage) {
+        JobLoadStatus* jobLoadStatus = (JobLoadStatus*)lParam;
+        DWORD internetStatus = jobLoadStatus->internetStatus;
+        DWORD_PTR dwResult = jobLoadStatus->dwResult;
+        char* redirectURL = jobLoadStatus->redirectURL;
+        delete jobLoadStatus;
+        jobLoadStatus = 0;
+
+        // If we get a message about a job we no longer know about (already deleted), ignore it.
+        unsigned jobId = (unsigned)wParam;
+        ResourceLoader* job = lookupResourceLoader(jobId);
+        if (!job)
             return 0;
+
+        ASSERT(job->d->m_jobId == jobId);
+        ASSERT(job->d->m_threadId == GetCurrentThreadId());
+
+        if (internetStatus == INTERNET_STATUS_HANDLE_CREATED) {
+            if (!job->d->m_resourceHandle) {
+                job->d->m_resourceHandle = HINTERNET(dwResult);
+                if (job->d->status != 0) {
+                    // We were canceled before Windows actually created a handle for us, close and delete now.
+                    InternetCloseHandle(job->d->m_resourceHandle);
+                    delete job;
+                }
+
+                if (job->method() == "POST") {
+                    // FIXME: Too late to set referrer properly.
+                    DeprecatedString urlStr = job->d->URL.path();
+                    int fragmentIndex = urlStr.find('#');
+                    if (fragmentIndex != -1)
+                        urlStr = urlStr.left(fragmentIndex);
+                    static LPCSTR accept[2]={"*/*", NULL};
+                    HINTERNET urlHandle = HttpOpenRequestA(job->d->m_resourceHandle, 
+                                                           "POST", urlStr.latin1(), 0, 0, accept,
+                                                           INTERNET_FLAG_KEEP_CONNECTION | 
+                                                           INTERNET_FLAG_FORMS_SUBMIT |
+                                                           INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE,
+                                                           (DWORD_PTR)job->d->m_jobId);
+                    if (urlHandle == INVALID_HANDLE_VALUE) {
+                        InternetCloseHandle(job->d->m_resourceHandle);
+                        delete job;
+                    }
+                }
+            } else if (!job->d->m_secondaryHandle) {
+                assert(job->method() == "POST");
+                job->d->m_secondaryHandle = HINTERNET(dwResult);
+                
+                // Need to actually send the request now.
+                String headers = "Content-Type: application/x-www-form-urlencoded\n";
+                headers += "Referer: ";
+                headers += job->d->m_postReferrer;
+                headers += "\n";
+                Vector<char> formData;
+                job->postData().flatten(formData);
+                INTERNET_BUFFERSA buffers;
+                memset(&buffers, 0, sizeof(buffers));
+                buffers.dwStructSize = sizeof(INTERNET_BUFFERSA);
+                CString headersAscii = headers.latin1();
+                buffers.lpcszHeader = headersAscii;
+                buffers.dwHeadersLength = headersAscii.length();
+                buffers.dwBufferTotal = formData.size();
+                
+                job->d->m_bytesRemainingToWrite = formData.size();
+                size_t dataSize = formData.size();
+                char* data = new char[dataSize];
+                strncpy(data, formData.data(), dataSize);
+                job->d->m_formDataString = data;
+                job->d->m_formDataLength = dataSize;
+                job->d->m_writing = true;
+                HttpSendRequestExA(job->d->m_secondaryHandle, &buffers, 0, 0, (DWORD_PTR)job->d->m_jobId);
+            }
+        } else if (internetStatus == INTERNET_STATUS_REDIRECT) {
+            KURL redirectKURL(redirectURL); 
+            free(redirectURL);
+            job->client()->receivedRedirect(job, redirectKURL);
+            job->d->URL = redirectKURL;
+        } else if (internetStatus == INTERNET_STATUS_REQUEST_COMPLETE) {
+            if (job->d->m_writing) {
+                DWORD bytesWritten;
+                InternetWriteFile(job->d->m_secondaryHandle,
+                                  job->d->m_formDataString + (job->d->m_formDataLength - job->d->m_bytesRemainingToWrite),
+                                  job->d->m_bytesRemainingToWrite,
+                                  &bytesWritten);
+                job->d->m_bytesRemainingToWrite -= bytesWritten;
+                if (!job->d->m_bytesRemainingToWrite) {
+                    // End the request.
+                    job->d->m_writing = false;
+                    HttpEndRequest(job->d->m_secondaryHandle, 0, 0, (DWORD_PTR)job->d->m_jobId);
+                    delete[] job->d->m_formDataString;
+                    job->d->m_formDataString = 0;
+                }
+                return 0;
+            }
+
+            HINTERNET handle = (job->method() == "POST") ? job->d->m_secondaryHandle : job->d->m_resourceHandle;
+            BOOL ok = FALSE;
+
+            static const int bufferSize = 32768;
+            char buffer[bufferSize];
+            INTERNET_BUFFERSA buffers;
+            buffers.dwStructSize = sizeof(INTERNET_BUFFERSA);
+            buffers.lpvBuffer = buffer;
+            buffers.dwBufferLength = bufferSize;
+
+            bool receivedAnyData = false;
+            while ((ok = InternetReadFileExA(handle, &buffers, IRF_NO_WAIT, (DWORD_PTR)job)) && buffers.dwBufferLength) {
+                if (!receivedAnyData) {
+                    receivedAnyData = true;
+                    PlatformResponseStruct response = {0};
+                    WCHAR contentTypeStr[256];
+                    DWORD headerLength = (sizeof(contentTypeStr)/sizeof(contentTypeStr[0]))-1;
+                    if (HttpQueryInfo(handle, HTTP_QUERY_CONTENT_TYPE, contentTypeStr, &headerLength, 0))
+                        response.contentType = contentTypeStr;
+                    WCHAR contentLengthStr[32];
+                    headerLength = (sizeof(contentLengthStr)/sizeof(contentLengthStr[0]))-1;
+                    if (HttpQueryInfo(handle, HTTP_QUERY_CONTENT_LENGTH, contentLengthStr, &headerLength, 0))
+                        response.contentLength = _wtol(contentLengthStr);
+                    job->client()->receivedResponse(job, &response);
+                }
+                job->client()->receivedData(job, buffer, buffers.dwBufferLength);
+                buffers.dwBufferLength = bufferSize;
+            }
+
+            if (!ok) {
+                int error = GetLastError();
+                if (error == ERROR_IO_PENDING)
+                    return 0;
+                else {
+                    job->setError(error);
+                    _RPTF1(_CRT_WARN, "Load error: %i\n", error);
+                }
+            }
+            
+            if (job->d->m_secondaryHandle)
+                InternetCloseHandle(job->d->m_secondaryHandle);
+            InternetCloseHandle(job->d->m_resourceHandle);
+            
+            job->client()->receivedAllData(job, 0);
+            job->client()->receivedAllData(job);
+            delete job;
         }
-    }
-    return DefWindowProc(hWnd, message, wParam, lParam);
+    } else
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    return 0;
 }
 
 static void initializeOffScreenResourceLoaderWindow()
@@ -121,11 +238,12 @@ static void initializeOffScreenResourceLoaderWindow()
 
     transferJobWindowHandle = CreateWindow(kResourceLoaderWindowClassName, 0, 0, CW_USEDEFAULT, 0, CW_USEDEFAULT, 0,
         HWND_MESSAGE, 0, Page::instanceHandle(), 0);
+    loadStatusMessage = RegisterWindowMessage(L"com.apple.WebKit.ResourceLoaderLoadStatus");
 }
 
 ResourceLoaderInternal::~ResourceLoaderInternal()
 {
-    if (m_fileHandle != INVALID_HANDLE_VALUE)
+    if (m_fileHandle)
         CloseHandle(m_fileHandle);
 }
 
@@ -135,180 +253,20 @@ ResourceLoader::~ResourceLoader()
         removeFromOutstandingJobs(d->m_jobId);
 }
 
-void ResourceLoader::onHandleCreated(LPARAM lParam)
+static void __stdcall transferJobStatusCallback(HINTERNET internetHandle, DWORD_PTR timerId, DWORD internetStatus, LPVOID statusInformation, DWORD statusInformationLength)
 {
-    if (!d->m_resourceHandle) {
-        d->m_resourceHandle = HINTERNET(lParam);
-        if (d->status != 0) {
-            // We were canceled before Windows actually created a handle for us, close and delete now.
-            InternetCloseHandle(d->m_resourceHandle);
-            delete this;
-            return;
-        }
-
-        if (method() == "POST") {
-            // FIXME: Too late to set referrer properly.
-            DeprecatedString urlStr = d->URL.path();
-            int fragmentIndex = urlStr.find('#');
-            if (fragmentIndex != -1)
-                urlStr = urlStr.left(fragmentIndex);
-            static LPCSTR accept[2]={"*/*", NULL};
-            HINTERNET urlHandle = HttpOpenRequestA(d->m_resourceHandle, 
-                                                   "POST", urlStr.latin1(), 0, 0, accept,
-                                                   INTERNET_FLAG_KEEP_CONNECTION | 
-                                                   INTERNET_FLAG_FORMS_SUBMIT |
-                                                   INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE,
-                                                   (DWORD_PTR)d->m_jobId);
-            if (urlHandle == INVALID_HANDLE_VALUE) {
-                InternetCloseHandle(d->m_resourceHandle);
-                delete this;
-            }
-        }
-    } else if (!d->m_secondaryHandle) {
-        assert(method() == "POST");
-        d->m_secondaryHandle = HINTERNET(lParam);
-        
-        // Need to actually send the request now.
-        String headers = "Content-Type: application/x-www-form-urlencoded\n";
-        headers += "Referer: ";
-        headers += d->m_postReferrer;
-        headers += "\n";
-        String formData = postData().flattenToString();
-        INTERNET_BUFFERSA buffers;
-        memset(&buffers, 0, sizeof(buffers));
-        buffers.dwStructSize = sizeof(INTERNET_BUFFERSA);
-        buffers.lpcszHeader = headers.latin1();
-        buffers.dwHeadersLength = headers.length();
-        buffers.dwBufferTotal = formData.length();
-        
-        d->m_bytesRemainingToWrite = formData.length();
-        d->m_formDataString = (char*)malloc(formData.length());
-        d->m_formDataLength = formData.length();
-        strncpy(d->m_formDataString, formData.latin1(), formData.length());
-        d->m_writing = true;
-        HttpSendRequestExA(d->m_secondaryHandle, &buffers, 0, 0, (DWORD_PTR)d->m_jobId);
-    }
-}
-
-void ResourceLoader::onRequestRedirected(LPARAM lParam)
-{
-    // If already canceled, then ignore this event.
-    if (d->status != 0)
-        return;
-
-    KURL url(String((StringImpl*) lParam).deprecatedString());
-    client()->receivedRedirect(this, url);
-}
-
-void ResourceLoader::onRequestComplete(LPARAM lParam)
-{
-    if (d->m_writing) {
-        DWORD bytesWritten;
-        InternetWriteFile(d->m_secondaryHandle,
-                          d->m_formDataString + (d->m_formDataLength - d->m_bytesRemainingToWrite),
-                          d->m_bytesRemainingToWrite,
-                          &bytesWritten);
-        d->m_bytesRemainingToWrite -= bytesWritten;
-        if (!d->m_bytesRemainingToWrite) {
-            // End the request.
-            d->m_writing = false;
-            HttpEndRequest(d->m_secondaryHandle, 0, 0, (DWORD_PTR)d->m_jobId);
-            free(d->m_formDataString);
-            d->m_formDataString = 0;
-        }
-        return;
-    }
-
-    HINTERNET handle = (method() == "POST") ? d->m_secondaryHandle : d->m_resourceHandle;
-    BOOL ok = FALSE;
-
-    static const int bufferSize = 32768;
-    char buffer[bufferSize];
-    INTERNET_BUFFERSA buffers;
-    buffers.dwStructSize = sizeof(INTERNET_BUFFERSA);
-    buffers.lpvBuffer = buffer;
-    buffers.dwBufferLength = bufferSize;
-
-    bool receivedAnyData = false;
-    while ((ok = InternetReadFileExA(handle, &buffers, IRF_NO_WAIT, (DWORD_PTR)this)) && buffers.dwBufferLength) {
-        if (!receivedAnyData) {
-            receivedAnyData = true;
-            client()->receivedResponse(this, 0);
-        }
-        client()->receivedData(this, buffer, buffers.dwBufferLength);
-        buffers.dwBufferLength = bufferSize;
-    }
-
-    PlatformDataStruct platformData;
-    platformData.errorString = 0;
-    platformData.error = 0;
-    platformData.loaded = ok;
-
-    if (!ok) {
-        int error = GetLastError();
-        if (error == ERROR_IO_PENDING)
-            return;
-        DWORD errorStringChars = 0;
-        if (!InternetGetLastResponseInfo(&platformData.error, 0, &errorStringChars)) {
-            if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
-                platformData.errorString = new TCHAR[errorStringChars];
-                InternetGetLastResponseInfo(&platformData.error, platformData.errorString, &errorStringChars);
-            }
-        }
-        setError(error);
-        if (platformData.errorString)
-            LOG(Loading, "Load error(%i): %s\n", error, platformData.errorString);
-        else
-            LOG(Loading, "Load error(%i)\n", error);
-    }
-    
-    if (d->m_secondaryHandle)
-        InternetCloseHandle(d->m_secondaryHandle);
-    InternetCloseHandle(d->m_resourceHandle);
-    
-    client()->receivedAllData(this, &platformData);
-    client()->receivedAllData(this);
-    delete this;
-}
-
-static void __stdcall transferJobStatusCallback(HINTERNET internetHandle,
-                                                DWORD_PTR jobId,
-                                                DWORD internetStatus,
-                                                LPVOID statusInformation,
-                                                DWORD statusInformationLength)
-{
-    UINT msg;
-    LPARAM lParam;
-
     switch (internetStatus) {
     case INTERNET_STATUS_HANDLE_CREATED:
-        // tell the main thread about the newly created handle
-        msg = kHandleCreatedMessage;
-        lParam = (LPARAM) LPINTERNET_ASYNC_RESULT(statusInformation)->dwResult;
-        break;
     case INTERNET_STATUS_REQUEST_COMPLETE:
-        // tell the main thread that the request is done
-        msg = kRequestCompleteMessage;
-        lParam = 0;
-        break;
     case INTERNET_STATUS_REDIRECT:
-        // tell the main thread to observe this redirect (FIXME: we probably
-        // need to block the redirect at this point so the application can
-        // decide whether or not to follow the redirect)
-        msg = kRequestRedirectedMessage;
-        lParam = (LPARAM) new StringImpl((const UChar*) statusInformation,
-                                         statusInformationLength);
-        break;
-    case INTERNET_STATUS_USER_INPUT_REQUIRED:
-        // FIXME: prompt the user if necessary
-        ResumeSuspendedDownload(internetHandle, 0);
-    case INTERNET_STATUS_STATE_CHANGE:
-        // may need to call ResumeSuspendedDownload here as well
-    default:
-        return;
+        JobLoadStatus* jobLoadStatus = new JobLoadStatus;
+        jobLoadStatus->internetStatus = internetStatus;
+        if (internetStatus == INTERNET_STATUS_REDIRECT)
+            jobLoadStatus->redirectURL = strdup((char*)statusInformation);
+        else
+            jobLoadStatus->dwResult = LPINTERNET_ASYNC_RESULT(statusInformation)->dwResult;
+        PostMessage(transferJobWindowHandle, loadStatusMessage, (WPARAM)timerId, (LPARAM)jobLoadStatus);
     }
-
-    PostMessage(transferJobWindowHandle, msg, (WPARAM) jobId, lParam);
 }
 
 bool ResourceLoader::start(DocLoader* docLoader)
@@ -341,7 +299,7 @@ bool ResourceLoader::start(DocLoader* docLoader)
             delete this;
             return false;
         }
-        static INTERNET_STATUS_CALLBACK callbackHandle = InternetSetStatusCallback(internetHandle, transferJobStatusCallback);
+        static INTERNET_STATUS_CALLBACK callbackHandle = InternetSetStatusCallbackA(internetHandle, transferJobStatusCallback);
 
         initializeOffScreenResourceLoaderWindow();
         d->m_jobId = addToOutstandingJobs(this);
@@ -390,8 +348,7 @@ void ResourceLoader::fileLoadTimer(Timer<ResourceLoader>* timer)
         const int bufferSize = 8192;
         char buffer[bufferSize];
         result = ReadFile(d->m_fileHandle, &buffer, bufferSize, &bytesRead, NULL); 
-        if (result && bytesRead)
-            d->client->receivedData(this, buffer, bytesRead);
+        d->client->receivedData(this, buffer, bytesRead);
         // Check for end of file. 
     } while (result && bytesRead);
 
@@ -416,6 +373,7 @@ void ResourceLoader::cancel()
     else
         d->m_fileLoadTimer.stop();
 
+    setError(1);
     PlatformDataStruct platformData;
     platformData.errorString = 0;
     platformData.error = 0;
@@ -423,13 +381,8 @@ void ResourceLoader::cancel()
 
     d->client->receivedAllData(this, &platformData);
     d->client->receivedAllData(this);
-
-    if (!d->m_resourceHandle)
-        // Async load canceled before we have a handle -- mark ourselves as in error, to be deleted later.
-        setError(1);
 }
 
 } // namespace WebCore
 
 #endif // USE(WININET)
-
