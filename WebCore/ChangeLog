@@ -1,3 +1,9 @@
+2006-09-22  Steve Falkenburg  <sfalken@apple.com>
+
+        Fix release build some more.
+
+        * WebCore.vcproj/WebCore.vcproj:
+
 2006-09-22  Brady Eidson  <beidson@apple.com>
 
         Extremely urgent update to my last two patches (without it, many urls will fail to load)
