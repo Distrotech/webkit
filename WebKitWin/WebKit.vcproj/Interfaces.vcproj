@@ -328,6 +328,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\Interfaces\IWebUIDelegatePrivate.idl"
+			>
+		</File>
+		<File
 			RelativePath="..\Interfaces\IWebUndoManager.idl"
 			>
 		</File>

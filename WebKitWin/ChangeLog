@@ -1,3 +1,15 @@
+2006-09-22  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Ada.
+        
+        Added IWebUIDelegatePrivate::webViewResizerSize so the engine can
+        leave space for the vertical scroll bar.
+
+        * Interfaces/IWebUIDelegatePrivate.idl: Added.
+        * WebKit.vcproj/Interfaces.vcproj:
+        * WebKit.vcproj/WebKit.vcproj:
+        * WebKit.vcproj/WebKitGUID.vcproj:
+
 2006-09-22  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by Adele.
