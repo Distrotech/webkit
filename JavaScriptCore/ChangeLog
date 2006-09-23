@@ -1,3 +1,28 @@
+2006-09-22  Darin Adler  <darin@apple.com>
+
+        Reviewed by Alice.
+
+        * wtf/Vector.h: Add an append that takes a pointer and length.
+        Generalize the existing Vector append to work on vectors with
+        any value for inlineCapacity. Change the append algorithm so
+        it doesn't check capacity each time through the loop.
+
+2006-09-22  Steve Falkenburg  <sfalken@apple.com>
+
+        Fix release build.
+
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCore.vcproj:
+
+2006-09-21  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej.
+
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCore.vcproj:
+        Updated to include the right path.
+        * wtf/FastMalloc.h: #include Platform.h, since we use Platform macros.
+
+=== Safari-521.27 ===
+
 2006-09-20  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Dave Hyatt.
