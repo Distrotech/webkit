@@ -36,6 +36,7 @@
 #include "Frame.h"
 #include "Document.h"
 #include "Page.h"
+#include "Logging.h"
 #include <windows.h>
 #include <wininet.h>
 
@@ -254,7 +255,11 @@ void ResourceLoader::onRequestComplete(LPARAM lParam)
                 InternetGetLastResponseInfo(&platformData.error, platformData.errorString, &errorStringChars);
             }
         }
-        _RPTF1(_CRT_WARN, "Load error: %i\n", error);
+        setError(error);
+        if (platformData.errorString)
+            LOG(Loading, "Load error(%i): %s\n", error, platformData.errorString);
+        else
+            LOG(Loading, "Load error(%i)\n", error);
     }
     
     if (d->m_secondaryHandle)

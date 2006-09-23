@@ -1,5 +1,12 @@
 2006-09-22  Brady Eidson  <beidson@apple.com>
 
+        Extremely urgent update to my last two patches (without it, many urls will fail to load)
+
+        * platform/win/ResourceLoaderWin.cpp:
+        (WebCore::ResourceLoader::onRequestComplete):
+
+2006-09-22  Brady Eidson  <beidson@apple.com>
+
         Forgot some lines we needed to keep for the internal build in my last checkin
 
         * platform/win/ResourceLoaderWin.cpp:
