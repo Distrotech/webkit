@@ -1,3 +1,21 @@
+2006-09-24  Dave Hyatt  <hyatt@apple.com>
+
+        Update the scrollbar API to match the changes in the public tree.
+        
+        Start implementing the Win32 scrollbar.  Add some scaffolding for grabbing uxtheme.dll info and also
+        add some utility functions for breaking the scrollbar into individual components.
+        
+        * platform/win/PlatformScrollBar.h:
+        * platform/win/PlatformScrollBarWin.cpp:
+        (WebCore::PlatformScrollBar::PlatformScrollBar):
+        (WebCore::PlatformScrollBar::updateThumbPosition):
+        (WebCore::PlatformScrollBar::updateThumbProportion):
+        (WebCore::PlatformScrollBar::paint):
+        (WebCore::PlatformScrollBar::backButtonRect):
+        (WebCore::PlatformScrollBar::forwardButtonRect):
+        (WebCore::PlatformScrollBar::trackRect):
+        (WebCore::PlatformScrollBar::splitTrack):
+
 2006-09-22  Steve Falkenburg  <sfalken@apple.com>
 
         Fix release build some more.

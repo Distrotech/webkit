@@ -38,14 +38,22 @@ public:
 
     virtual bool isWidget() const { return true; }
 
-    virtual void setScrollBarValue(int v);
-    virtual void setKnobProportion(int visibleSize, int totalSize);
-
     virtual int width() const;
     virtual int height() const;
     virtual void setRect(const IntRect&);
     virtual void setEnabled(bool);
     virtual void paint(GraphicsContext*, const IntRect& damageRect);
+
+protected:    
+    virtual void updateThumbPosition();
+    virtual void updateThumbProportion();
+
+private:
+    IntRect backButtonRect();
+    IntRect forwardButtonRect();
+    IntRect trackRect();
+
+    void splitTrack(const IntRect& trackRect, IntRect& beforeThumbRect, IntRect& thumbRect, IntRect& afterThumbRect);
 };
 
 }
