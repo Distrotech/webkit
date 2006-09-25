@@ -1,3 +1,12 @@
+2006-09-25  Adam Roben  <aroben@apple.com>
+
+        Rubberstamped by sfalken.
+
+        Make notImplemented() crash even when not linked against the debug CRT.
+
+        * platform/win/TemporaryLinkStubs.cpp:
+        (notImplemented): Change _CrtDbgBreak() to ASSERT(0)
+
 2006-09-24  Dave Hyatt  <hyatt@apple.com>
 
         Update the scrollbar API to match the changes in the public tree.

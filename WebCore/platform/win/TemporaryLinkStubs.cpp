@@ -65,7 +65,7 @@
 
 using namespace WebCore;
 
-static void notImplemented() { puts("Not yet implemented"); _CrtDbgBreak(); }
+static void notImplemented() { puts("Not yet implemented"); ASSERT(0); }
 
 Widget::FocusPolicy PopUpButton::focusPolicy() const { notImplemented(); return NoFocus; }
 void PopUpButton::populate() { notImplemented(); }
