@@ -630,7 +630,7 @@ void WebFrame::paint(HDC dc, LPARAM options)
 
 #elif PLATFORM(CG)
 
-void WebFrame::paint()
+void WebFrame::paint(HDC dc, LPARAM options)
 {
     d->frameView->layout();
 

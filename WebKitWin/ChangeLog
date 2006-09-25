@@ -1,3 +1,10 @@
+2006-09-25  Steve Falkenburg  <sfalken@apple.com>
+
+        Add missing parameters to CG paint case.
+
+        * WebFrame.cpp:
+        (WebFrame::paint):
+
 2006-09-24  Steve Falkenburg  <sfalken@apple.com>
 
         Implemented WM_PRINTCLIENT so we can take a screenshot
