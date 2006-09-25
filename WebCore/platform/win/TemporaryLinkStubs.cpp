@@ -159,8 +159,8 @@ void FrameWin::issueTransposeCommand() { notImplemented(); }
 bool FrameWin::canPaste() const { notImplemented(); return 0; }
 bool FrameWin::canGoBackOrForward(int) const { notImplemented(); return 0; }
 void FrameWin::issuePasteAndMatchStyleCommand() { notImplemented(); }
-KURL FrameWin::originalRequestURL() const { notImplemented(); return KURL(); }
-bool FrameWin::isLoadTypeReload(void) { notImplemented(); return false; }
+KURL FrameWin::originalRequestURL() const { return KURL(); }
+bool FrameWin::isLoadTypeReload(void) { return false; }
 
 bool BrowserExtensionWin::canRunModal() { notImplemented(); return 0; }
 void BrowserExtensionWin::createNewWindow(struct WebCore::ResourceRequest const&,struct WebCore::WindowArgs const&,Frame*&) { notImplemented(); }
@@ -326,5 +326,5 @@ void Image::drawTiled(GraphicsContext*, const FloatRect&, const FloatRect&, Tile
 void RenderPopupMenuWin::addSeparator() { notImplemented(); }
 void RenderPopupMenuWin::addGroupLabel(HTMLOptGroupElement*) { notImplemented(); }
 
-void IconLoader::receivedResponse(ResourceLoader*, PlatformResponse) { notImplemented(); }
-void IconLoader::notifyIconChanged(const KURL& iconURL) { notImplemented(); }
+void IconLoader::receivedResponse(ResourceLoader*, PlatformResponse) { }
+void IconLoader::notifyIconChanged(const KURL& iconURL) { }

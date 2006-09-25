@@ -2,6 +2,18 @@
 
         Rubberstamped by sfalken.
 
+        Remove calls to notImplemented() from functions that can fail safely.
+
+        * platform/win/TemporaryLinkStubs.cpp:
+        (FrameWin::originalRequestURL):
+        (FrameWin::isLoadTypeReload):
+        (IconLoader::receivedResponse):
+        (IconLoader::notifyIconChanged):
+
+2006-09-25  Adam Roben  <aroben@apple.com>
+
+        Rubberstamped by sfalken.
+
         Make notImplemented() crash even when not linked against the debug CRT.
 
         * platform/win/TemporaryLinkStubs.cpp:
