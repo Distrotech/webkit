@@ -576,7 +576,7 @@ void WebFrame::initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, 
 
 #if PLATFORM(CAIRO)
 
-void WebFrame::paint()
+void WebFrame::paint(HDC dc, LPARAM options)
 {
     d->frameView->layout();
 
@@ -584,36 +584,48 @@ void WebFrame::paint()
     if (FAILED(d->webView->viewWindow(&windowHandle)))
         return;
 
+    RECT rcPaint;
+    HDC hdc;
     PAINTSTRUCT ps;
-    HDC hdc = BeginPaint(windowHandle, &ps);
+    if (!dc) {
+        hdc = BeginPaint(windowHandle, &ps);
+        rcPaint = ps.rcPaint;
+    } else {
+        hdc = dc;
+        GetClientRect(windowHandle, &rcPaint);
+        if (options & PRF_ERASEBKGND)
+            FillRect(hdc, &rcPaint, (HBRUSH)GetStockObject(WHITE_BRUSH));
+    }
+
     cairo_surface_t* finalSurface = cairo_win32_surface_create(hdc);
     cairo_surface_t* surface = cairo_win32_surface_create_with_dib(CAIRO_FORMAT_ARGB32,  
-                                                            ps.rcPaint.right - ps.rcPaint.left,  
-                                                            ps.rcPaint.bottom - ps.rcPaint.top); 
+                                                            rcPaint.right - rcPaint.left,  
+                                                            rcPaint.bottom - rcPaint.top); 
 
     cairo_t* context = cairo_create(surface);
-    cairo_translate(context, -ps.rcPaint.left, -ps.rcPaint.top);
+    cairo_translate(context, -rcPaint.left, -rcPaint.top);
     
     HDC surfaceDC = cairo_win32_surface_get_dc(surface);
     SaveDC(surfaceDC);
 
     GraphicsContext gc(context);
-    d->frameView->paint(&gc, ps.rcPaint);
+    d->frameView->paint(&gc, rcPaint);
 
     RestoreDC(surfaceDC, -1);
     cairo_destroy(context);
 
     context = cairo_create(finalSurface);
     cairo_set_operator(context, CAIRO_OPERATOR_SOURCE);
-    cairo_set_source_surface(context, surface, ps.rcPaint.left, ps.rcPaint.top);
-    cairo_rectangle(context, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right, ps.rcPaint.bottom);
+    cairo_set_source_surface(context, surface, rcPaint.left, rcPaint.top);
+    cairo_rectangle(context, rcPaint.left, rcPaint.top, rcPaint.right, rcPaint.bottom);
     cairo_fill(context);
     cairo_destroy(context);
 
     cairo_surface_destroy(surface);
     cairo_surface_destroy(finalSurface);
 
-    EndPaint(windowHandle, &ps);
+    if (!dc)
+        EndPaint(windowHandle, &ps);
 }
 
 #elif PLATFORM(CG)
@@ -626,10 +638,20 @@ void WebFrame::paint()
     if (FAILED(d->webView->viewWindow(&windowHandle)))
         return;
 
+    RECT rcPaint;
+    HDC hdc;
     PAINTSTRUCT ps;
-    HDC hdc = BeginPaint(windowHandle, &ps);
+    if (!dc) {
+        hdc = BeginPaint(windowHandle, &ps);
+        rcPaint = ps.rcPaint;
+    } else {
+        hdc = dc;
+        GetClientRect(windowHandle, &rcPaint);
+        if (options & PRF_ERASEBKGND)
+            FillRect(hdc, &rcPaint, (HBRUSH)GetStockObject(WHITE_BRUSH));
+    }
 
-    IntRect documentDirtyRect = ps.rcPaint;
+    IntRect documentDirtyRect = rcPaint;
     documentDirtyRect.move(d->frameView->contentsX(), d->frameView->contentsY());
 
 #if FLASH_REDRAW
@@ -672,10 +694,10 @@ void WebFrame::paint()
             GraphicsContext gc(bitmapDC);
 
             GdiFlush();
-            CGContextTranslateCTM(gc.platformContext(), CGFloat(-d->frameView->contentsX() - ps.rcPaint.left),
-                                                        CGFloat(-d->frameView->contentsY() - ps.rcPaint.top));
+            CGContextTranslateCTM(gc.platformContext(), CGFloat(-d->frameView->contentsX() - rcPaint.left),
+                                                        CGFloat(-d->frameView->contentsY() - rcPaint.top));
             d->frame->paint(&gc, documentDirtyRect);
-            SetDIBitsToDevice(hdc, ps.rcPaint.left, ps.rcPaint.top,
+            SetDIBitsToDevice(hdc, rcPaint.left, rcPaint.top,
                 size.cx, size.cy, 0, 0, 0, size.cy, pixels, &bitmapInfo, DIB_RGB_COLORS);
         }
 
@@ -684,7 +706,8 @@ void WebFrame::paint()
         DeleteObject(bitmap);
     }
 
-    EndPaint(windowHandle, &ps);
+    if (!dc)
+        EndPaint(windowHandle, &ps);
 }
 
 #endif

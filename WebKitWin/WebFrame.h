@@ -162,7 +162,7 @@ public:
 
     // WebFrame
     void initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, WebCore::Page* page, WebCore::Element* ownerElement);
-    void paint();
+    void paint(HDC dc, LPARAM options);
     WebCore::Frame* impl();
     HRESULT loadDataSource(WebDataSource* dataSource);
     bool loading();

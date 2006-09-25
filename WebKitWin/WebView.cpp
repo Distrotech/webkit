@@ -239,12 +239,16 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                 IWebDataSource* dataSource = 0;
                 mainFrameImpl->dataSource(&dataSource);
                 if (!dataSource || !mainFrameImpl->loading())
-                    mainFrameImpl->paint();
+                    mainFrameImpl->paint(0, 0);
                 else
                     ValidateRect(hWnd, 0);
                 if (dataSource)
                     dataSource->Release();
             }
+            break;
+        case WM_PRINTCLIENT:
+            if (mainFrameImpl)
+                mainFrameImpl->paint((HDC)wParam, lParam);
             break;
         case WM_DESTROY:
             // Do nothing?
