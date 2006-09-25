@@ -2222,6 +2222,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\css\CSSCursorImageValue.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\css\CSSCursorImageValue.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\css\CSSFontFaceRule.cpp"
 				>
 			</File>

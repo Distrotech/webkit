@@ -26,13 +26,14 @@
 #include "config.h"
 #include "GraphicsContext.h"
 
-
 #include "AffineTransform.h"
 #include "Path.h"
 #include <wtf/MathExtras.h>
 
 #if PLATFORM(CG)
 #include "GraphicsContextPlatformPrivate.h"
+#elif PLATFORM(CAIRO)
+#include <cairo-win32.h>
 #endif
 
 using namespace std;
@@ -68,18 +69,67 @@ HDC GraphicsContext::getWindowsContext()
 {
     CGContextFlush(platformContext());
     HDC hdc = m_data->m_hdc;
-    if (hdc != 0)
-        SaveDC(hdc);
+    if (!hdc)
+        return 0;
+        
+    SaveDC(hdc);
+
+    // Convert the transform
+    SetGraphicsMode(hdc, GM_ADVANCED); // We need this call for themes to honor world transforms.
+    CGAffineTransform mat = CGContextGetCTM(platformContext());
+    XFORM xform;
+    xform.eM11 = mat.a;
+    xform.eM12 = mat.b;
+    xform.eM21 = mat.c;
+    xform.eM22 = mat.d;
+    xform.eDx = mat.tx;
+    xform.eDy = mat.ty;
+    SetWorldTransform(hdc, &xform);
+
+    // FIXME: Need to convert the clip as well.
     return hdc;
 }
 
 void GraphicsContext::releaseWindowsContext()
 {
     HDC hdc = m_data->m_hdc;
-    if (hdc != 0)
+    if (hdc)
         RestoreDC(hdc, -1);
 }
 
-#endif // PLATFORM(CG)
+#elif PLATFORM(CAIRO)
+
+HDC GraphicsContext::getWindowsContext()
+{
+    cairo_surface_t* surface = cairo_get_target(platformContext());
+    HDC hdc = cairo_win32_surface_get_dc(surface);    
+    SaveDC(hdc);
+
+    // FIXME: We need to make sure a clip is really set on the HDC.
+    // Call SetWorldTransform to honor the current Cairo transform.
+    SetGraphicsMode(hdc, GM_ADVANCED); // We need this call for themes to honor world transforms.
+    cairo_matrix_t mat;
+    cairo_get_matrix(platformContext(), &mat);
+    XFORM xform;
+    xform.eM11 = mat.xx;
+    xform.eM12 = mat.xy;
+    xform.eM21 = mat.yx;
+    xform.eM22 = mat.yy;
+    xform.eDx = mat.x0;
+    xform.eDy = mat.y0;
+    SetWorldTransform(hdc, &xform);
+
+    return hdc;
+}
+
+void GraphicsContext::releaseWindowsContext()
+{
+    cairo_surface_t* surface = cairo_get_target(platformContext());
+    HDC hdc = cairo_win32_surface_get_dc(surface);
+    RestoreDC(hdc, -1);
+    cairo_surface_mark_dirty(surface);
+}
+
+#endif
 
 }

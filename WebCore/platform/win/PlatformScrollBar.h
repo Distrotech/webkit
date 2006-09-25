@@ -49,11 +49,15 @@ protected:
     virtual void updateThumbProportion();
 
 private:
-    IntRect backButtonRect();
-    IntRect forwardButtonRect();
-    IntRect trackRect();
+    IntRect backButtonRect() const;
+    IntRect forwardButtonRect() const;
+    IntRect trackRect() const;
 
-    void splitTrack(const IntRect& trackRect, IntRect& beforeThumbRect, IntRect& thumbRect, IntRect& afterThumbRect);
+    int thumbPosition() const;
+    int thumbLength() const;
+    int trackLength() const;
+
+    void splitTrack(const IntRect& trackRect, IntRect& beforeThumbRect, IntRect& thumbRect, IntRect& afterThumbRect) const;
 };
 
 }
