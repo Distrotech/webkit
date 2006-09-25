@@ -323,8 +323,8 @@ void Frame::setNeedsReapplyStyles() { }
 void Image::drawTiled(GraphicsContext*, const FloatRect&, const FloatRect&, TileRule, TileRule, CompositeOperator) { }
 #endif
 
-void RenderPopupMenuWin::addSeparator() { notImplemented(); }
-void RenderPopupMenuWin::addGroupLabel(HTMLOptGroupElement*) { notImplemented(); }
+void RenderPopupMenuWin::addSeparator() { }
+void RenderPopupMenuWin::addGroupLabel(HTMLOptGroupElement*) { }
 
 void IconLoader::receivedResponse(ResourceLoader*, PlatformResponse) { }
 void IconLoader::notifyIconChanged(const KURL& iconURL) { }

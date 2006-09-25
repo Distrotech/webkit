@@ -2,6 +2,16 @@
 
         Rubberstamped by sfalken.
 
+        More notImplemented()-ectomy.
+
+        * platform/win/TemporaryLinkStubs.cpp:
+        (RenderPopupMenuWin::addSeparator):
+        (RenderPopupMenuWin::addGroupLabel):
+
+2006-09-25  Adam Roben  <aroben@apple.com>
+
+        Rubberstamped by sfalken.
+
         Remove calls to notImplemented() from functions that can fail safely.
 
         * platform/win/TemporaryLinkStubs.cpp:
