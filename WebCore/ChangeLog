@@ -1,3 +1,13 @@
+2006-09-26  Lou Amadio  <lamadio@apple.com>
+
+        Reviewed by ggaren
+        Uninitialized variable caused a memory corruption on cnn.com
+
+        WARNING: NO TEST CASES ADDED OR CHANGED
+
+        * plugins/win/PlugInInfoStoreWin.cpp:
+        (WebCore::PlugInInfoStore::createPluginInfoForPluginAtIndex):
+
 2006-09-26  Dave Hyatt  <hyatt@apple.com>
 
         Fix my buggy invalidateRect implementation for Win32 widgets.

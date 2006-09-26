@@ -48,6 +48,7 @@ PluginInfo* PlugInInfoStore::createPluginInfoForPluginAtIndex(unsigned i)
         
         mime->type = it->first;
         mime->desc = it->second;
+        mime->plugin = info;
 
         Vector<String> extensions = package->mimeToExtensions().get(mime->type);
         
