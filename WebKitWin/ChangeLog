@@ -1,3 +1,15 @@
+2006-09-26  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam Roben.
+
+        Fixed encoding menu.
+        Set mime type in request.
+
+        * WebFrame.cpp:
+        (WebFrame::receivedResponse):
+        * WebView.cpp:
+        (WebView::setCustomTextEncodingName):
+
 2006-09-26  Sean Gies  <seangies@apple.com>
 
         Reviewed by Adam Roben.

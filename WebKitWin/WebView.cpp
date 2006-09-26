@@ -1040,18 +1040,17 @@ HRESULT STDMETHODCALLTYPE WebView::setCustomTextEncodingName(
     if (!m_mainFrame)
         return E_FAIL;
 
-    if (m_overrideEncoding) {
-        SysFreeString(m_overrideEncoding);
-        m_overrideEncoding = 0;
-    }
-    m_overrideEncoding = SysAllocString(encodingName);
-    if (encodingName && !m_overrideEncoding)
-        return E_OUTOFMEMORY;
-
     HRESULT hr;
     BSTR oldEncoding;
     hr = customTextEncodingName(&oldEncoding);
     if (SUCCEEDED(hr)) {
+        if (m_overrideEncoding) {
+            SysFreeString(m_overrideEncoding);
+            m_overrideEncoding = 0;
+        }
+        m_overrideEncoding = SysAllocString(encodingName);
+        if (encodingName && !m_overrideEncoding)
+            return E_OUTOFMEMORY;
         if (oldEncoding != encodingName && (!oldEncoding || !encodingName || _tcscmp(oldEncoding, encodingName)))
             hr = m_mainFrame->reloadAllowingStaleDataWithOverrideEncoding(encodingName);
         SysFreeString(oldEncoding);

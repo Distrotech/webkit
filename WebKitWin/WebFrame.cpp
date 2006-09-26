@@ -1067,12 +1067,23 @@ void WebFrame::receivedResponse(ResourceLoader* loader, PlatformResponse platfor
     m_buffer.clear();
 
     WebURLResponse* response = WebURLResponse::createInstance(loader, platformResponse);
+
     m_dataSource->setResponse(response);
+    
     if (m_textEncoding) {
         SysFreeString(m_textEncoding);
         m_textEncoding = 0;
     }
     response->textEncodingName(&m_textEncoding);
+
+    ResourceRequest request = d->frame->resourceRequest();
+    BSTR mimeType;
+    if (SUCCEEDED(response->MIMEType(&mimeType))) {
+        request.m_responseMIMEType = String(mimeType, SysStringLen(mimeType));
+        SysFreeString(mimeType);
+        d->frame->setResourceRequest(request);
+    }
+
     response->Release();
 }
 
