@@ -1,5 +1,22 @@
 2006-09-25  Adam Roben  <aroben@apple.com>
 
+        Rubberstamped by sfalken.
+
+        Set svn:eol-style to native and cleanup line endings on plugins files.
+
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::PluginStreamWin::PluginStreamWin):
+        (WebCore::PluginStreamWin::~PluginStreamWin):
+        (WebCore::PluginStreamWin::start):
+        (WebCore::PluginStreamWin::startStream):
+        (WebCore::PluginStreamWin::destroyStream):
+        (WebCore::PluginStreamWin::deliverData):
+        (WebCore::PluginStreamWin::receivedResponse):
+        (WebCore::PluginStreamWin::receivedData):
+        (WebCore::PluginStreamWin::receivedAllData):
+
+2006-09-25  Adam Roben  <aroben@apple.com>
+
         Reviewed by Brady.
 
         Fixes <rdar://problem/4749494>
