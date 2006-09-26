@@ -1,3 +1,13 @@
+2006-09-26  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Geoff.
+        
+        Don't add subframes to global history or back/forward.
+
+        * WebFrame.cpp:
+        (WebFrame::receivedAllData):
+        (WebFrame::createFrame):
+
 2006-09-26  Dave Hyatt  <hyatt@apple.com>
 
         Make sure we respond to Windows XP theme changes in the engine.

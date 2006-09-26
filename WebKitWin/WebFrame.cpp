@@ -1123,7 +1123,8 @@ void WebFrame::receivedAllData(ResourceLoader* job)
             SystemTimeToVariantTime(&currentTime, &visitedTime);
 
             if (m_loadType != WebFrameLoadTypeBack && m_loadType != WebFrameLoadTypeForward && m_loadType != WebFrameLoadTypeIndexedBackForward &&
-                m_loadType != WebFrameLoadTypeReload && m_loadType != WebFrameLoadTypeReloadAllowingStaleData && !m_quickRedirectComing) {
+                m_loadType != WebFrameLoadTypeReload && m_loadType != WebFrameLoadTypeReloadAllowingStaleData && m_loadType != WebFrameLoadTypeInternal &&
+                !m_quickRedirectComing) {
                 BSTR titleBStr = SysAllocStringLen((LPCOLESTR)d->title.characters(), d->title.length());
                 WebHistoryItem* historyItem = WebHistoryItem::createInstance();
                 if (SUCCEEDED(historyItem->initWithURLString(urlBStr, titleBStr, visitedTime))) {
@@ -1217,6 +1218,7 @@ Frame* WebFrame::createFrame(const KURL& URL, const String& name, Element* owner
     SysFreeString(urlBStr);
     SysFreeString(method);
 
+    webFrame->m_loadType = WebFrameLoadTypeInternal;
     webFrame->loadRequest(request);
 
     return frame;
