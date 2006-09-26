@@ -115,7 +115,7 @@ Widget::FocusPolicy TextField::focusPolicy() const { notImplemented(); return No
 
 Cursor::Cursor(Image*, const IntPoint&) { notImplemented(); }
 
-PlatformMouseEvent::PlatformMouseEvent(const CurrentEventTag&) { notImplemented(); }
+PlatformMouseEvent::PlatformMouseEvent(const CurrentEventTag&) { }
 String WebCore::searchableIndexIntroduction() { notImplemented(); return String(); }
 
 int WebCore::findNextSentenceFromIndex(UChar const*,int,int,bool) { notImplemented(); return 0; }
@@ -145,7 +145,7 @@ bool FrameWin::passMouseDownEventToWidget(Widget*) { notImplemented(); return 0;
 void FrameWin::issueCutCommand() { notImplemented(); }
 void FrameWin::issueCopyCommand() { notImplemented(); }
 void FrameWin::openURLRequest(struct WebCore::ResourceRequest const&) { notImplemented(); }
-bool FrameWin::passWheelEventToChildWidget(Node*) { notImplemented(); return 0; }
+bool FrameWin::passWheelEventToChildWidget(Node*) { return 0; }
 void FrameWin::issueUndoCommand() { notImplemented(); }
 String FrameWin::mimeTypeForFileName(String const&) const { notImplemented(); return String(); }
 void FrameWin::issuePasteCommand() { notImplemented(); }

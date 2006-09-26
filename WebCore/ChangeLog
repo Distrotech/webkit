@@ -2,6 +2,16 @@
 
         Rubberstamped by sfalken.
 
+        Continuing the removal of unnecessary notImplemented() calls.
+
+        * platform/win/TemporaryLinkStubs.cpp:
+        (PlatformMouseEvent::PlatformMouseEvent):
+        (FrameWin::passWheelEventToChildWidget):
+
+2006-09-25  Adam Roben  <aroben@apple.com>
+
+        Rubberstamped by sfalken.
+
         More notImplemented()-ectomy.
 
         * platform/win/TemporaryLinkStubs.cpp:
