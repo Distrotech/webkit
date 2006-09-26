@@ -1,5 +1,21 @@
 2006-09-25  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Brady.
+
+        Fixes <rdar://problem/4749494>
+        Crash/ASSERT in plugins at Fark.com
+
+        * platform/win/ResourceLoaderWin.cpp: Store whether a particular job
+        has received a response within the ResourceLoader object itself, since
+        it's possible that we will enter the InternetReadFileExA while loop
+        twice for the same job.
+        (WebCore::ResourceLoaderWndProc): Ask the job whether it has received a
+        response instead of assuming it hasn't.
+        (WebCore::ResourceLoader::setHasReceivedResponse): Added.
+        (WebCore::ResourceLoader::hasReceivedResponse): Added.
+
+2006-09-25  Adam Roben  <aroben@apple.com>
+
         Rubberstamped by sfalken.
 
         Continuing the removal of unnecessary notImplemented() calls.

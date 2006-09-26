@@ -181,10 +181,9 @@ LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             buffers.lpvBuffer = buffer;
             buffers.dwBufferLength = bufferSize;
 
-            bool receivedAnyData = false;
             while ((ok = InternetReadFileExA(handle, &buffers, IRF_NO_WAIT, (DWORD_PTR)job)) && buffers.dwBufferLength) {
-                if (!receivedAnyData) {
-                    receivedAnyData = true;
+                if (!job->hasReceivedResponse()) {
+                    job->setHasReceivedResponse();
                     PlatformResponseStruct response = {0};
                     WCHAR contentTypeStr[256];
                     DWORD headerLength = (sizeof(contentTypeStr)/sizeof(contentTypeStr[0]))-1;
@@ -381,6 +380,16 @@ void ResourceLoader::cancel()
 
     d->client->receivedAllData(this, &platformData);
     d->client->receivedAllData(this);
+}
+
+void ResourceLoader::setHasReceivedResponse(bool b)
+{
+    d->m_hasReceivedResponse = b;
+}
+
+bool ResourceLoader::hasReceivedResponse() const
+{
+    return d->m_hasReceivedResponse;
 }
 
 } // namespace WebCore
