@@ -171,7 +171,7 @@ void BrowserExtensionWin::createNewWindow(struct WebCore::ResourceRequest const&
 
 #if PLATFORM(CAIRO)
 void GraphicsContext::addRoundedRectClip(const IntRect& rect, const IntSize& topLeft, const IntSize& topRight,
-    const IntSize& bottomLeft, const IntSize& bottomRight) { notImplemented(); }
+    const IntSize& bottomLeft, const IntSize& bottomRight) { }
 void GraphicsContext::addInnerRoundedRectClip(const IntRect& rect, int thickness) { notImplemented(); }
 #endif // PLATFORM(CAIRO)
 
