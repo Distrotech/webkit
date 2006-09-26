@@ -201,7 +201,7 @@ void Widget::setEnabled(bool e)
 
 void Widget::invalidate()
 {
-    invalidateRect(frameGeometry());
+    invalidateRect(IntRect(0, 0, width(), height()));
 }
 
 void Widget::invalidateRect(const IntRect& r)

@@ -67,6 +67,8 @@ private:
     void paintTrack(HDC, const IntRect&, bool start) const;
     void paintThumb(HDC, const IntRect&) const;
     void paintGripper(HDC, const IntRect&) const;
+
+    void invalidateTrack();
 };
 
 }

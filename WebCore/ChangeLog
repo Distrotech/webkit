@@ -1,5 +1,27 @@
 2006-09-26  Dave Hyatt  <hyatt@apple.com>
 
+        Fix my buggy invalidateRect implementation for Win32 widgets.
+        
+        Clean up my rect computation code in scrollbar to use x() and y() instead of
+        frameGeometry().x()/y().
+        
+        Add a new invalidateTrack() method that invalidates the track (and handles
+        putting the rect into the right coordinate space for proper invalidation
+        now that I fixed invalidateRect).
+
+        * platform/win/PlatformScrollBar.h:
+        * platform/win/PlatformScrollBarWin.cpp:
+        (WebCore::PlatformScrollBar::updateThumbPosition):
+        (WebCore::PlatformScrollBar::updateThumbProportion):
+        (WebCore::PlatformScrollBar::invalidateTrack):
+        (WebCore::PlatformScrollBar::backButtonRect):
+        (WebCore::PlatformScrollBar::forwardButtonRect):
+        (WebCore::PlatformScrollBar::trackRect):
+        * platform/win/WidgetWin.cpp:
+        (WebCore::Widget::invalidate):
+
+2006-09-26  Dave Hyatt  <hyatt@apple.com>
+
         Teach all our Win32 theme code (RenderTheme and PlatformScrollBar) how to respond correctly to OS theme changes.
         
         Implement painting of scrollbars using theme APIs.  The arrow buttons, track, thumb and gripper all paint properly
