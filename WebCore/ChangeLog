@@ -1,3 +1,9 @@
+2006-09-26  Sean Gies  <seangies@apple.com>
+
+        Reviewed by Adam Roben.
+
+        * WebCore.vcproj/WebCore.vcproj: Use Debug DLL C runtime for debug config.
+
 2006-09-26  Lou Amadio  <lamadio@apple.com>
 
         Reviewed by ggaren

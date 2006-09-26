@@ -1,3 +1,11 @@
+2006-09-26  Sean Gies  <seangies@apple.com>
+
+        Reviewed by Adam Roben.
+
+        * WebKit.vcproj/WebKit.vcproj: Link to debug libraries for debug config.
+            Copy debug libraries to target dir.  Copy .pdb files along with .dll files.
+        * WebKit.vcproj/WebKitGUID.vcproj: Link to Debug DLL C runtime.
+
 2006-09-26  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Geoff.
