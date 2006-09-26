@@ -1,3 +1,10 @@
+2006-09-26  Sean Gies  <seangies@apple.com>
+
+        Reviewed by Brady Eidson.
+
+        * WebFrame.cpp:
+        (WebFrame::paint): Flip coordinates of CGBitmapContext.
+
 2006-09-26  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Adam Roben.

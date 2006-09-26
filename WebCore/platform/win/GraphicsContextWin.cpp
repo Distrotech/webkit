@@ -42,7 +42,7 @@ namespace WebCore {
 
 #if PLATFORM(CG)
 
-CGContextRef CGContextWithHDC(HDC hdc)
+static CGContextRef CGContextWithHDC(HDC hdc)
 {
     HBITMAP bitmap = (HBITMAP)GetCurrentObject(hdc, OBJ_BITMAP);
     CGColorSpaceRef deviceRGB = CGColorSpaceCreateDeviceRGB();
@@ -53,6 +53,11 @@ CGContextRef CGContextWithHDC(HDC hdc)
     CGContextRef context = CGBitmapContextCreate(info.bmBits, info.bmWidth, info.bmHeight, 8,
                                                  info.bmWidthBytes, deviceRGB, kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst);
     CGColorSpaceRelease(deviceRGB);
+
+    // Flip coords
+    CGContextTranslateCTM(context, 0, info.bmHeight);
+    CGContextScaleCTM(context, 1, -1);
+    
     return context;
 }
 
@@ -74,16 +79,24 @@ HDC GraphicsContext::getWindowsContext()
         
     SaveDC(hdc);
 
+    // Get the dimensions out of HDC's bitmap
+    HBITMAP bitmap = (HBITMAP)GetCurrentObject(hdc, OBJ_BITMAP);
+    BITMAP info;
+    GetObject(bitmap, sizeof(info), &info);
+
     // Convert the transform
     SetGraphicsMode(hdc, GM_ADVANCED); // We need this call for themes to honor world transforms.
     CGAffineTransform mat = CGContextGetCTM(platformContext());
+    mat = CGAffineTransformTranslate(mat, 0, info.bmHeight);
+    mat = CGAffineTransformScale(mat, 1, -1);
+
     XFORM xform;
     xform.eM11 = mat.a;
     xform.eM12 = mat.b;
     xform.eM21 = mat.c;
     xform.eM22 = mat.d;
     xform.eDx = mat.tx;
-    xform.eDy = mat.ty;
+    xform.eDy = -mat.ty;
     SetWorldTransform(hdc, &xform);
 
     // FIXME: Need to convert the clip as well.

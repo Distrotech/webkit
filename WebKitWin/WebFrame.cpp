@@ -674,7 +674,7 @@ void WebFrame::paint(HDC dc, LPARAM options)
         BITMAPINFO bitmapInfo;
         bitmapInfo.bmiHeader.biSize          = sizeof(BITMAPINFOHEADER);
         bitmapInfo.bmiHeader.biWidth         = size.cx; 
-        bitmapInfo.bmiHeader.biHeight        = size.cy;
+        bitmapInfo.bmiHeader.biHeight        = -size.cy;
         bitmapInfo.bmiHeader.biPlanes        = 1;
         bitmapInfo.bmiHeader.biBitCount      = 32;
         bitmapInfo.bmiHeader.biCompression   = BI_RGB;
