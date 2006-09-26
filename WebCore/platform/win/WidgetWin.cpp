@@ -186,6 +186,11 @@ void Widget::paint(GraphicsContext*, const IntRect&)
 {
 }
 
+bool Widget::isEnabled() const
+{
+    return data->enabled;
+}
+
 void Widget::setEnabled(bool e)
 {
     if (e != data->enabled) {

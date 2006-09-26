@@ -30,8 +30,10 @@
 #include "FloatRect.h"
 #include "Frame.h"
 #include "FrameView.h"
+#include "RenderTheme.h" // FIXME: This sucks, but scrollview should eventually merge into FrameView anyway.
 #include "GraphicsContext.h"
 #include "IntRect.h"
+#include "PlatformScrollBar.h"
 #include "PlatformWheelEvent.h"
 #include "ScrollBar.h"
 #include <algorithm>
@@ -326,6 +328,13 @@ void ScrollView::paint(GraphicsContext* context, const IntRect& rect)
     static_cast<const FrameView*>(this)->frame()->paint(context, documentDirtyRect);
 
     context->restore();
+}
+
+void ScrollView::themeChanged()
+{
+    PlatformScrollBar::themeChanged();
+    theme()->themeChanged();
+    invalidate();
 }
 
 void ScrollView::wheelEvent(PlatformWheelEvent& e)

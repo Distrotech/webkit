@@ -29,6 +29,8 @@
 #include "Widget.h"
 #include "ScrollBar.h"
 
+typedef struct HDC__* HDC;
+
 namespace WebCore {
 
 class PlatformScrollBar : public Widget, public ScrollBar {
@@ -44,6 +46,8 @@ public:
     virtual void setEnabled(bool);
     virtual void paint(GraphicsContext*, const IntRect& damageRect);
 
+    static void themeChanged();
+
 protected:    
     virtual void updateThumbPosition();
     virtual void updateThumbProportion();
@@ -52,12 +56,17 @@ private:
     IntRect backButtonRect() const;
     IntRect forwardButtonRect() const;
     IntRect trackRect() const;
+    IntRect gripperRect(const IntRect& thumbRect) const;    
+    void splitTrack(const IntRect& trackRect, IntRect& beforeThumbRect, IntRect& thumbRect, IntRect& afterThumbRect) const;
 
     int thumbPosition() const;
     int thumbLength() const;
     int trackLength() const;
 
-    void splitTrack(const IntRect& trackRect, IntRect& beforeThumbRect, IntRect& thumbRect, IntRect& afterThumbRect) const;
+    void paintButton(HDC, const IntRect&, bool start) const;
+    void paintTrack(HDC, const IntRect&, bool start) const;
+    void paintThumb(HDC, const IntRect&) const;
+    void paintGripper(HDC, const IntRect&) const;
 };
 
 }

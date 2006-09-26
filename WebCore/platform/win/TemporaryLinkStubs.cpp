@@ -71,7 +71,6 @@ Widget::FocusPolicy PopUpButton::focusPolicy() const { notImplemented(); return 
 void PopUpButton::populate() { notImplemented(); }
 
 void Widget::enableFlushDrawing() { notImplemented(); }
-bool Widget::isEnabled() const { notImplemented(); return 0; }
 Widget::FocusPolicy Widget::focusPolicy() const { notImplemented(); return NoFocus; }
 void Widget::disableFlushDrawing() { notImplemented(); }
 GraphicsContext* Widget::lockDrawingFocus() { notImplemented(); return 0; }

@@ -1,3 +1,43 @@
+2006-09-26  Dave Hyatt  <hyatt@apple.com>
+
+        Teach all our Win32 theme code (RenderTheme and PlatformScrollBar) how to respond correctly to OS theme changes.
+        
+        Implement painting of scrollbars using theme APIs.  The arrow buttons, track, thumb and gripper all paint properly
+        now.  Next up is hit testing and proper hover feedback.
+        
+        Reviewed by andersca
+        
+        * platform/win/PlatformScrollBar.h:
+        * platform/win/PlatformScrollBarWin.cpp:
+        (WebCore::PlatformScrollBar::PlatformScrollBar):
+        (WebCore::PlatformScrollBar::paint):
+        (WebCore::PlatformScrollBar::backButtonRect):
+        (WebCore::PlatformScrollBar::forwardButtonRect):
+        (WebCore::PlatformScrollBar::trackRect):
+        (WebCore::PlatformScrollBar::gripperRect):
+        (WebCore::PlatformScrollBar::splitTrack):
+        (WebCore::PlatformScrollBar::thumbPosition):
+        (WebCore::PlatformScrollBar::thumbLength):
+        (WebCore::PlatformScrollBar::paintButton):
+        (WebCore::PlatformScrollBar::paintTrack):
+        (WebCore::PlatformScrollBar::paintThumb):
+        (WebCore::PlatformScrollBar::paintGripper):
+        (WebCore::PlatformScrollBar::themeChanged):
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::themeChanged):
+        * platform/win/TemporaryLinkStubs.cpp:
+        (Widget::enableFlushDrawing):
+        * platform/win/WidgetWin.cpp:
+        (WebCore::Widget::isEnabled):
+        * rendering/RenderThemeWin.cpp:
+        (WebCore::RenderThemeWin::RenderThemeWin):
+        (WebCore::RenderThemeWin::openButtonTheme):
+        (WebCore::RenderThemeWin::openTextFieldTheme):
+        (WebCore::RenderThemeWin::openMenuListTheme):
+        (WebCore::RenderThemeWin::close):
+        (WebCore::RenderThemeWin::themeChanged):
+        * rendering/RenderThemeWin.h:
+
 2006-09-25  Adam Roben  <aroben@apple.com>
 
         Rubberstamped by sfalken.

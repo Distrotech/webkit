@@ -1,3 +1,12 @@
+2006-09-26  Dave Hyatt  <hyatt@apple.com>
+
+        Make sure we respond to Windows XP theme changes in the engine.
+        
+        Reviewed by andersca
+
+        * WebView.cpp:
+        (WebViewWndProc):
+
 2006-09-25  Steve Falkenburg  <sfalken@apple.com>
 
         Add missing parameters to CG paint case.

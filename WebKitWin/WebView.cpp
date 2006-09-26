@@ -56,6 +56,8 @@ using namespace WebCore;
 const LPCWSTR kWebViewWindowClassName = L"WebViewWindowClass";
 static bool nextCharIsInputText = false;
 
+const int WM_XP_THEMECHANGED = 0x031A;
+
 static ATOM registerWebView();
 static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 static int calculateScrollDelta(WPARAM wParam, int oldPosition, int pageSize);
@@ -346,6 +348,10 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                 // FIXME: This is wrong.
                 mainFrameImpl->impl()->setIsActive(false);
             }
+            break;
+        case WM_XP_THEMECHANGED:
+            if (mainFrameImpl)
+                mainFrameImpl->impl()->view()->themeChanged();
             break;
         default:
             lResult = DefWindowProc(hWnd, message, wParam, lParam);
