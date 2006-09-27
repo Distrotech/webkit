@@ -33,6 +33,7 @@
 
 #pragma warning( push, 0 )
 #include <wtf/Vector.h>
+#include <WebCore/platform/Font.h>
 #pragma warning( pop )
 
 #include <CoreFoundation/CoreFoundation.h>
@@ -92,6 +93,8 @@ WebPreferences* WebPreferences::getInstanceForIdentifier(BSTR identifier)
 
 void WebPreferences::initialize()
 {
+    WebCore::Font::setCodePath(WebCore::Font::Simple);
+
     if (!m_standardUserDefaults)
         m_standardUserDefaults = CFDictionaryCreateMutable(0, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 

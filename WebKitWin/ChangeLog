@@ -1,3 +1,17 @@
+2006-09-27  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam.
+        
+        Fix <rdar://problem/4753220>.
+        Hang using bugreporter in Boomer.
+        
+        Force text into simple code path in all cases.
+
+        * WebFrame.cpp:
+        (FormValuesPropertyBag::GetPropertyInfo):
+        * WebPreferences.cpp:
+        (WebPreferences::initialize):
+
 2006-09-26  Steve Falkenburg  <sfalken@apple.com>
 
         Build fix for clean release build.

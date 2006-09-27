@@ -236,12 +236,12 @@ HRESULT STDMETHODCALLTYPE FormValuesPropertyBag::GetPropertyInfo(
     ULONG endProperty = iProperty + cProperties;
     for (HashMap<String, String>::iterator it = m_formValues->begin(); i<endProperty; i++) {
         if (i >= iProperty) {
-            pPropBag[i].dwType = PROPBAG2_TYPE_DATA;
-            pPropBag[i].vt = VT_BSTR;
-            pPropBag[i].cfType = CF_TEXT;
-            pPropBag[i].dwHint = 0;
-            pPropBag[i].pstrName = const_cast<LPOLESTR>(it->first.charactersWithNullTermination());
-            (*pcProperties)++;
+            int storeIndex = (*pcProperties)++;
+            pPropBag[storeIndex].dwType = PROPBAG2_TYPE_DATA;
+            pPropBag[storeIndex].vt = VT_BSTR;
+            pPropBag[storeIndex].cfType = CF_TEXT;
+            pPropBag[storeIndex].dwHint = 0;
+            pPropBag[storeIndex].pstrName = const_cast<LPOLESTR>(it->first.charactersWithNullTermination());
         }
         ++it;
     }
