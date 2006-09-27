@@ -1,3 +1,9 @@
+2006-09-27  Steve Falkenburg  <sfalken@apple.com>
+
+        B&I build script tweaks.
+
+        * WebKit.vcproj/WebKit.make:
+
 2006-09-27  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Steve

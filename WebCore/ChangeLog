@@ -1,5 +1,11 @@
 2006-09-27  Steve Falkenburg  <sfalken@apple.com>
 
+        B&I build script tweaks.
+
+        * WebCore.vcproj/WebCore.make:
+
+2006-09-27  Steve Falkenburg  <sfalken@apple.com>
+
         Reviewed by Hyatt.
 
         Turn on CG
