@@ -111,6 +111,17 @@ WebIconDatabase* WebIconDatabase::createInstance()
     return instance;
 }
 
+WebIconDatabase* WebIconDatabase::sharedWebIconDatabase()
+{
+    if (m_sharedWebIconDatabase) {
+        m_sharedWebIconDatabase->AddRef();
+        return m_sharedWebIconDatabase;
+    }
+    m_sharedWebIconDatabase = createInstance();
+    m_sharedWebIconDatabase->init();
+    return m_sharedWebIconDatabase;
+}
+
 // IUnknown -------------------------------------------------------------------
 
 HRESULT STDMETHODCALLTYPE WebIconDatabase::QueryInterface(REFIID riid, void** ppvObject)
@@ -146,13 +157,7 @@ ULONG STDMETHODCALLTYPE WebIconDatabase::Release(void)
 HRESULT STDMETHODCALLTYPE WebIconDatabase::sharedIconDatabase( 
         /* [retval][out] */ IWebIconDatabase** result)
 {
-    if (!m_sharedWebIconDatabase) {
-        m_sharedWebIconDatabase = createInstance();
-        m_sharedWebIconDatabase->init();
-    } else
-        m_sharedWebIconDatabase->AddRef();
-
-    *result = m_sharedWebIconDatabase;
+    *result = sharedWebIconDatabase();
     return S_OK;
 }
     

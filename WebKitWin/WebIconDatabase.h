@@ -47,6 +47,7 @@ class WebIconDatabase : public IWebIconDatabase
 {
 public:
     static WebIconDatabase* createInstance();
+    static WebIconDatabase* sharedWebIconDatabase();
 private:
     WebIconDatabase();
     ~WebIconDatabase();

@@ -28,6 +28,7 @@
 
 #include "IWebHistoryItem.h"
 #include "IWebHistoryItemPrivate.h"
+#include "IWebIconDatabase.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 
@@ -89,6 +90,8 @@ protected:
     BSTR m_title;
     DATE m_lastVisited;
     int m_visitedCount;
+
+    static IWebIconDatabase* m_sharedIconDatabase;
 };
 
 #endif

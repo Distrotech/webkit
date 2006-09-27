@@ -232,7 +232,7 @@ void WebPreferences::initialize()
 
     key = CFSTR(WebKitIconDatabaseEnabledPreferenceKey);
     if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
-        CFDictionaryAddValue(m_standardUserDefaults, key,                               kCFBooleanFalse);
+        CFDictionaryAddValue(m_standardUserDefaults, key,                               kCFBooleanTrue);
 }
 
 const void* WebPreferences::valueForKey(CFStringRef key)

@@ -26,10 +26,15 @@
 #include "WebKitDLL.h"
 
 #include "WebHistoryItem.h"
+#include "WebIconDatabase.h"
+
+#include "logging.h"
 
 #include "MarshallingHelpers.h"
 
 // WebHistoryItem ----------------------------------------------------------------
+
+IWebIconDatabase* WebHistoryItem::m_sharedIconDatabase = 0;
 
 WebHistoryItem::WebHistoryItem()
 : m_refCount(0)
@@ -37,6 +42,9 @@ WebHistoryItem::WebHistoryItem()
 , m_title(0)
 , m_visitedCount(0)
 {
+    if (!m_sharedIconDatabase)
+        m_sharedIconDatabase = WebIconDatabase::sharedWebIconDatabase();
+
     gClassCount++;
 }
 
@@ -102,8 +110,18 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::initFromDictionaryRepresentation(void*
         goto exit;
     }
 
-    SysFreeString(m_url);
+    if (m_url) {
+        hr = m_sharedIconDatabase->releaseIconForURL(m_url);
+        if (FAILED(hr))
+            goto exit;
+        SysFreeString(m_url);
+    }
+
     m_url = url;
+    hr = m_sharedIconDatabase->retainIconForURL(m_url);
+    if (FAILED(hr))
+        goto exit;
+    
     SysFreeString(m_title);
     m_title = title;
     m_visitedCount = visitedCount;
@@ -235,6 +253,15 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::initWithURLString(
     /* [in] */ BSTR title,
     /* [in] */ DATE lastVisited)
 {
+    if (m_url) {
+        if (FAILED(m_sharedIconDatabase->releaseIconForURL(m_url)))
+            LOG_ERROR("Failed to release icon");
+        SysFreeString(m_url);
+    }
+
+    if (FAILED(m_sharedIconDatabase->retainIconForURL(urlString)))
+        LOG_ERROR("Failed to retain icon");
+    
     m_url = SysAllocString(urlString);
     m_title = SysAllocString(title);
     m_lastVisited = lastVisited;

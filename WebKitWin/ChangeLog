@@ -1,3 +1,25 @@
+2006-09-27  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Steve
+
+        -Flipped the icon database back to ON by default as the crasher is resolved in WebCore
+        -WebHistoryItems now retain/release their URLs in the Icon DB
+        
+        * WebHistoryItem.cpp:
+        (WebHistoryItem::WebHistoryItem): Make sure the shared icon database has been referenced
+        (WebHistoryItem::initFromDictionaryRepresentation): Retain/release the url
+        (WebHistoryItem::initWithURLString): Ditto
+        
+        * WebHistoryItem.h: Keep a static reference to the shared icon database
+        
+        * WebIconDatabase.cpp:
+        (WebIconDatabase::sharedWebIconDatabase): Added - for the shared WebIconDatabase object 
+        (WebIconDatabase::sharedIconDatabase): Changed to return the shared WebIconDatabase as the shared IWebIconDatabase
+        * WebIconDatabase.h:
+        
+        * WebPreferences.cpp:
+        (WebPreferences::initialize): IconDatabase ON by default
+
 2006-09-27  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Adam.
