@@ -198,7 +198,7 @@ void ScrollView::scrollBy(int dx, int dy)
 
     if (!m_data->hasStaticBackground) { // The main frame can just blit the WebView window
         // FIXME: Could make this more efficient by passing a valid clip rect for only the document content.
-        ScrollWindowEx(containingWindow(), -scrollDelta.width(), -scrollDelta.height(), 0, 0, 0, 0, SW_INVALIDATE);
+        ScrollWindowEx(containingWindow(), -scrollDelta.width(), -scrollDelta.height(), 0, 0, 0, 0, SW_INVALIDATE | SW_SCROLLCHILDREN);
     } else {
         // FIXME: Find a way to blit subframes without blitting overlapping content
         RECT dirtyRect = convertToContainingWindow(frameGeometry());
