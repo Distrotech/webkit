@@ -1,5 +1,14 @@
 2006-09-27  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Lou.
+
+        Fix crash in plugins due to Flash on nytimes.com
+
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::PluginStreamWin::PluginStreamWin): memset m_stream to 0
+
+2006-09-27  Adam Roben  <aroben@apple.com>
+
         Reviewed by sfalken.
 
         Scroll plugins (at least in some cases).

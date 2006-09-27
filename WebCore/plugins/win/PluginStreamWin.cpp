@@ -59,7 +59,7 @@ PluginStreamWin::PluginStreamWin(PluginViewWin* pluginView, DocLoader* docLoader
     , m_pluginFuncs(pluginView->plugin()->pluginFuncs())
     , m_instance(pluginView->instance())
 {
-    m_stream.url = 0;
+    memset(&m_stream, 0, sizeof(m_stream));
 }
 
 PluginStreamWin::~PluginStreamWin()
