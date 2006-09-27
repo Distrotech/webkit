@@ -292,7 +292,6 @@ void PluginViewWin::performRequest(PluginRequestWin* request)
         }
     } else {
         // FIXME: radar://4730678 Support opening windows
-        DebugBreak();
     }
 }
 

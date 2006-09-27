@@ -1,3 +1,12 @@
+2006-09-27  Adam Roben  <aroben@apple.com>
+
+        Reviewed by sfalken.
+
+        Don't die when plugins try to open a new window.
+
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::performRequest): Remove call to DebugBreak()
+
 2006-09-27  Steve Falkenburg  <sfalken@apple.com>
 
         B&I build script tweaks.
