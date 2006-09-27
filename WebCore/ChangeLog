@@ -1,3 +1,11 @@
+2006-09-27  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Hyatt.
+
+        Turn on CG
+
+        * config.h:
+
 2006-09-27  Adam Roben  <aroben@apple.com>
 
         Reviewed by Lou.
