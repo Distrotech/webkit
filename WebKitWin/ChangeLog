@@ -1,3 +1,10 @@
+2006-09-27  Brady Eidson  <beidson@apple.com>
+
+        Disabled WebIconDatabase for now until I can figure out the crash...!
+
+        * WebPreferences.cpp:
+        (WebPreferences::initialize):
+
 2006-09-26  Steve Falkenburg  <sfalken@apple.com>
 
         Build tweaks
