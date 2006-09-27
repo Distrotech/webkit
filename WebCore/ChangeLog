@@ -1,3 +1,11 @@
+2006-09-27  Sean Gies  <seangies@apple.com>
+
+        Reviewed by Brady Eidson.
+
+        * WebCore.vcproj/WebCore.vcproj: Added platform/win/WebCoreSystemInterface.h/cpp
+        * platform/win/WebCoreSystemInterface.cpp: Added.
+        * platform/win/WebCoreSystemInterface.h: Added.
+
 2006-09-26  Adam Roben  <aroben@apple.com>
 
         Reviewed by sfalken.

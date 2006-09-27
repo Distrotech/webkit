@@ -1845,6 +1845,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\platform\win\WebCoreSystemInterface.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\win\WebCoreSystemInterface.h"
+					>
+				</File>
+				<File
 					RelativePath="..\platform\win\WheelEventWin.cpp"
 					>
 				</File>
