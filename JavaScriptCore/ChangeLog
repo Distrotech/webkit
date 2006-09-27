@@ -1,0 +1,6 @@
+2006-09-27  Steve Falkenburg  <sfalken@apple.com>
+
+        B&I build script.
+
+        * JavaScriptCore.vcproj/JavaScriptCore.make: Added.
+
