@@ -1,3 +1,20 @@
+2006-09-26  Steve Falkenburg  <sfalken@apple.com>
+
+        More temporary link stubs moved.
+        Build tweaks.
+
+        * ChangeLog:
+        * WebCore.vcproj/WebCore.make: Added.
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/win/TemporaryLinkStubs.cpp:
+        (ListBox::isSelected):
+        (ListBox::setWritingDirection):
+        (ListBox::clear):
+        (ListBox::doneAppendingItems):
+        (ListBox::setEnabled):
+        (ListBox::appendItem):
+        (ListBox::setSelected):
+
 2006-09-26  Sean Gies  <seangies@apple.com>
 
         Reviewed by Brady Eidson.

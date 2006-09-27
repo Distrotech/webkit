@@ -98,14 +98,8 @@ Slider::~Slider() { notImplemented(); }
 void Slider::setFont(WebCore::Font const&) { notImplemented(); }
 double Slider::value() const { notImplemented(); return 0; }
 
-void ListBox::setSelected(int,bool) { notImplemented(); }
 IntSize ListBox::sizeForNumberOfLines(int) const { notImplemented(); return IntSize(); }
 bool ListBox::isSelected(int) const { notImplemented(); return 0; }
-void ListBox::appendItem(DeprecatedString const&,ListBoxItemType,bool) { notImplemented(); }
-void ListBox::doneAppendingItems() { notImplemented(); }
-void ListBox::setWritingDirection(TextDirection) { notImplemented(); }
-void ListBox::setEnabled(bool) { notImplemented(); }
-void ListBox::clear() { notImplemented(); }
 bool ListBox::checksDescendantsForFocus() const { notImplemented(); return 0; }
 
 Widget::FocusPolicy Slider::focusPolicy() const { notImplemented(); return NoFocus; }
@@ -312,6 +306,12 @@ ListBox::ListBox() { }
 ListBox::~ListBox() { }
 void ListBox::setSelectionMode(ListBox::SelectionMode) { }
 void ListBox::setFont(WebCore::Font const&) { }
+void ListBox::setWritingDirection(TextDirection) { }
+void ListBox::clear() { }
+void ListBox::doneAppendingItems() { }
+void ListBox::setEnabled(bool) { }
+void ListBox::appendItem(DeprecatedString const&,ListBoxItemType,bool) { }
+void ListBox::setSelected(int,bool) { }
 
 Color WebCore::focusRingColor() { return 0xFF0000FF; }
 void WebCore::setFocusRingColorChangeFunction(void (*)()) { }
