@@ -286,7 +286,7 @@ void PluginViewWin::performRequest(PluginRequestWin* request)
 
             CString cstr = resultString.utf8();
             PluginStreamWin* stream = new PluginStreamWin(this, m_parentFrame->document()->docLoader(), "GET", request->url(), request->notifyData(), request->sendNotification());
-            stream->startStream(m_url, cstr.length(), 0, "text/plain");
+            stream->startStream(request->url(), cstr.length(), 0, "text/plain");
             stream->receivedData(0, cstr, cstr.length());
             stream->receivedAllData(0, 0);
         }

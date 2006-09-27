@@ -73,7 +73,7 @@ namespace WebCore {
         PluginViewWin* m_pluginView;
         void* m_notifyData;
         bool m_sendNotification;
-        bool m_streamStarted;
+        bool m_isTerminated;
 
         HashMap<String, String> m_headers;
         FormData m_postData;

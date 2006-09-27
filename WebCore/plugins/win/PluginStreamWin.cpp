@@ -52,7 +52,7 @@ PluginStreamWin::PluginStreamWin(PluginViewWin* pluginView, DocLoader* docLoader
     , m_pluginView(pluginView)
     , m_notifyData(notifyData)
     , m_sendNotification(sendNotification)
-    , m_streamStarted(false)
+    , m_isTerminated(false)
     , m_delayDeliveryTimer(this, &PluginStreamWin::delayDeliveryTimerFired)
     , m_deliveryData(0)
     , m_completeDeliveryData(0)
@@ -64,7 +64,7 @@ PluginStreamWin::PluginStreamWin(PluginViewWin* pluginView, DocLoader* docLoader
 
 PluginStreamWin::~PluginStreamWin()
 {
-    ASSERT(!m_streamStarted);
+    ASSERT(m_isTerminated);
     ASSERT(!m_resourceLoader);
 
     delete m_deliveryData;
@@ -111,13 +111,11 @@ void PluginStreamWin::stop()
 {
     m_resourceLoader->kill();
     m_resourceLoader = 0;
-
-    m_streamStarted = false;
 }
 
 void PluginStreamWin::startStream(const KURL& responseURL, long long expectedContentLength, int lastModifiedTime, const String& mimeType)
 {
-    ASSERT(!m_streamStarted);
+    ASSERT(!m_isTerminated);
 
     m_stream.url = _strdup(responseURL.url().utf8());
     
@@ -139,8 +137,6 @@ void PluginStreamWin::startStream(const KURL& responseURL, long long expectedCon
         stop();
         return;
     }
-
-    m_streamStarted = true;
 }
 
 void PluginStreamWin::cancelAndDestroyStream(NPReason reason)
@@ -166,7 +162,7 @@ void PluginStreamWin::destroyStream(NPReason reason)
 
 void PluginStreamWin::destroyStream()
 {
-    if (!m_streamStarted)
+    if (m_isTerminated)
         return;
 
     ASSERT (m_reason != WEB_REASON_NONE);
@@ -189,7 +185,7 @@ void PluginStreamWin::destroyStream()
     if (m_sendNotification)
         m_pluginFuncs->urlnotify(m_instance, m_url.url().utf8(), m_reason, m_notifyData);
 
-    m_streamStarted = false;
+    m_isTerminated = true;
     m_pluginView = 0;
 }
 

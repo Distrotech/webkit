@@ -1,3 +1,28 @@
+2006-09-26  Adam Roben  <aroben@apple.com>
+
+        Reviewed by sfalken.
+
+        Fixes <rdar://problem/4751600>
+        Hang on Amazon.com involving Flash
+
+        * plugins/win/PluginStreamWin.cpp: Rename m_streamStarted to
+        m_isTerminated to match Mac code (m_isTerminated is the negation of
+        m_streamStarted)
+        (WebCore::PluginStreamWin::PluginStreamWin): Initialize m_isTerminated
+        to false to match Mac code.
+        (WebCore::PluginStreamWin::~PluginStreamWin): Rename and negate.
+        (WebCore::PluginStreamWin::stop): Remove assignment of m_streamStarted
+        to match Mac code.
+        (WebCore::PluginStreamWin::startStream): Rename and negate. Remove
+        now-unnecessary assignment of m_streamStarted to true because we set
+        m_isTerminated to false in the constructor.
+        (WebCore::PluginStreamWin::destroyStream): Rename and negate.
+        * plugins/win/PluginStreamWin.h: Rename m_streamStarted to
+        m_isTerminated.
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::performRequest): Send the correct response URL
+        to the plugin.
+
 2006-09-26  Steve Falkenburg  <sfalken@apple.com>
 
         More temporary link stubs moved.
