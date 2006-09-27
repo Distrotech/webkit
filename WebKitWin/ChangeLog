@@ -1,3 +1,9 @@
+2006-09-26  Steve Falkenburg  <sfalken@apple.com>
+
+        Build fix for clean release build.
+
+        * WebKit.vcproj/WebKitGUID.vcproj:
+
 2006-09-27  Brady Eidson  <beidson@apple.com>
 
         Disabled WebIconDatabase for now until I can figure out the crash...!
