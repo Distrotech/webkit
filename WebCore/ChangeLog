@@ -1,3 +1,15 @@
+2006-09-27  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Steve & Adam.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        Added files to the project file
+        * platform/win/TemporaryLinkStubs.cpp:
+        Removed stub for findWordBoundary
+        * platform/win/TextBoundariesWin.cpp: Added.
+        Implemented cross-platform findWordBoundary.  We're still keeping the mac one intact for now. 
+        (WebCore::findWordBoundary):
+
 2006-09-28  Adam Roben  <aroben@apple.com>
 
         Reviewed by Adele.

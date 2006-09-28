@@ -45,6 +45,7 @@
 #include <WebCore/platform/PlatformKeyboardEvent.h>
 #include <WebCore/platform/PlatformMouseEvent.h>
 #include <WebCore/platform/PlatformWheelEvent.h>
+#include <WebCore/editing/CommandByName.h>
 #include <WebCore/editing/SelectionController.h>
 #include <WebCore/editing/TypingCommand.h>
 #pragma warning(pop)
@@ -125,32 +126,56 @@ WebView* WebView::createInstance()
 
 void WebView::mouseMoved(WPARAM wParam, LPARAM lParam)
 {
-    PlatformMouseEvent mouseEvent(m_viewWindow, wParam, lParam, 0);
+    PlatformMouseEvent mouseEvent(m_viewWindow, wParam, lParam);
     m_page->mainFrame()->view()->handleMouseMoveEvent(mouseEvent);
 }
 
 void WebView::mouseDown(WPARAM wParam, LPARAM lParam)
 {
-    PlatformMouseEvent mouseEvent(m_viewWindow, wParam, lParam, 1);
+    PlatformMouseEvent mouseEvent(m_viewWindow, wParam, lParam);
     m_page->mainFrame()->view()->handleMousePressEvent(mouseEvent);
 }
 
 void WebView::mouseUp(WPARAM wParam, LPARAM lParam)
 {
-    PlatformMouseEvent mouseEvent(m_viewWindow, wParam, lParam, 1);
-    m_page->mainFrame()->view()->handleMouseReleaseEvent(mouseEvent);
-}
-
-void WebView::mouseDoubleClick(WPARAM wParam, LPARAM lParam)
-{
-    PlatformMouseEvent mouseEvent(m_viewWindow, wParam, lParam, 2);
-    m_page->mainFrame()->view()->handleMouseReleaseEvent(mouseEvent);
+    PlatformMouseEvent mouseEvent(m_viewWindow, wParam, lParam);
+    if (mouseEvent.clickCount() % 2 == 0)
+        m_page->mainFrame()->view()->handleMouseDoubleClickEvent(mouseEvent);
+    else
+        m_page->mainFrame()->view()->handleMouseReleaseEvent(mouseEvent);
 }
 
 void WebView::mouseWheel(WPARAM wParam, LPARAM lParam)
 {
     PlatformWheelEvent wheelEvent(m_viewWindow, wParam, lParam);
     m_mainFrame->impl()->view()->handleWheelEvent(wheelEvent);
+}
+
+bool WebView::execCommand(WPARAM wParam, LPARAM /*lParam*/)
+{
+    FrameWin* frame = static_cast<FrameWin*>(m_page->mainFrame());
+    bool handled = false;
+    switch (LOWORD(wParam))
+    {
+    case Cut:
+        handled = frame->command()->execCommand("Cut");
+        break;
+    case Copy:
+        handled = frame->command()->execCommand("Copy");
+        break;
+    case Paste:
+        handled = frame->command()->execCommand("Paste");
+        break;
+    case ForwardDelete:
+        handled = frame->command()->execCommand("Clear");
+        break;
+    case SelectAll:
+        handled = frame->command()->execCommand("SelectAll");
+        break;
+    default:
+        break;
+    }
+    return handled;
 }
 
 bool WebView::keyPress(WPARAM wParam, LPARAM lParam)
@@ -170,16 +195,28 @@ bool WebView::keyPress(WPARAM wParam, LPARAM lParam)
                 TypingCommand::forwardDeleteKeyPressed(frame->document());
                 break;
             case VK_LEFT:
-                frame->selectionController()->modify(SelectionController::MOVE, SelectionController::LEFT, CharacterGranularity, true);
+                if (::GetKeyState(VK_SHIFT) < 0)
+                    frame->command()->execCommand("SelectLeft");
+                else
+                    frame->command()->execCommand("MoveLeft");
                 break;
             case VK_RIGHT:
-                frame->selectionController()->modify(SelectionController::MOVE, SelectionController::RIGHT, CharacterGranularity, true);
+                if (::GetKeyState(VK_SHIFT) < 0)
+                    frame->command()->execCommand("SelectRight");
+                else
+                    frame->command()->execCommand("MoveRight");
                 break;
             case VK_UP:
-                frame->selectionController()->modify(SelectionController::MOVE, SelectionController::BACKWARD, ParagraphGranularity, true);
+                if (::GetKeyState(VK_SHIFT) < 0)
+                    frame->command()->execCommand("SelectUp");
+                else
+                    frame->command()->execCommand("MoveUp");
                 break;
             case VK_DOWN:
-                frame->selectionController()->modify(SelectionController::MOVE, SelectionController::FORWARD, ParagraphGranularity, true);
+                if (::GetKeyState(VK_SHIFT) < 0)
+                    frame->command()->execCommand("SelectDown");
+                else
+                    frame->command()->execCommand("MoveDown");
                 break;
             case VK_RETURN:
                 if (start->isContentRichlyEditable())
@@ -267,6 +304,9 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             SetFocus(hWnd);
         case WM_MBUTTONDOWN:
         case WM_RBUTTONDOWN:
+        case WM_LBUTTONDBLCLK:
+        case WM_MBUTTONDBLCLK:
+        case WM_RBUTTONDBLCLK:
             if (webView)
                 webView->mouseDown(wParam, lParam);
             break;
@@ -275,12 +315,6 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
         case WM_RBUTTONUP:
             if (webView)
                 webView->mouseUp(wParam, lParam);
-            break;
-        case WM_LBUTTONDBLCLK:
-        case WM_MBUTTONDBLCLK:
-        case WM_RBUTTONDBLCLK:
-            if (webView)
-                webView->mouseDoubleClick(wParam, lParam);
             break;
         case WM_MOUSEWHEEL:
             if (webView)
@@ -348,6 +382,13 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                 // FIXME: This is wrong.
                 mainFrameImpl->impl()->setIsActive(false);
             }
+            break;
+        case WM_CUT:
+        case WM_COPY:
+        case WM_PASTE:
+        case WM_CLEAR:
+        case WM_COMMAND:
+            webView->execCommand(wParam, lParam);
             break;
         case WM_XP_THEMECHANGED:
             if (mainFrameImpl)

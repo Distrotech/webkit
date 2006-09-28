@@ -1,3 +1,25 @@
+2006-09-27  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Steve & Adam.
+
+        This patch implements keyboard selection and select-all.  
+        This patch also hooks up engine side of copy/cut/paste but that won't work until we have clipboards.  
+
+        * Interfaces/IWebView.idl:
+        Added enum for commands to be called by name
+        * WebView.cpp:
+        next 3 functions handle mouseevents so that multiple-click selection works
+        (WebView::mouseMoved):
+        (WebView::mouseDown):
+        (WebView::mouseUp):
+        (WebView::execCommand):
+        Handled cut/copy/paste/delete/selectall
+        (WebView::keyPress):
+        Handled keyboard selection
+        (WebViewWndProc):
+        * WebView.h:
+        Added prototype for execCommand function
+
 2006-09-27  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Maciej.

@@ -1837,6 +1837,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\platform\win\TextBoundariesWin.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\platform\win\WebCoreHistory.cpp"
 					>
 				</File>
@@ -3703,6 +3707,14 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\editing\BreakBlockquoteCommand.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\editing\CommandByName.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\editing\CommandByName.h"
 				>
 			</File>
 			<File

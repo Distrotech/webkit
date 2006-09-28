@@ -48,6 +48,9 @@ cpp_quote(" * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
 cpp_quote(" * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. ")
 cpp_quote(" */")
 
+cpp_quote("/* identifiers for commands that can be called by the webview's frame */")
+cpp_quote("enum WebViewCmd { Cut = 100, Copy, Paste, ForwardDelete, SelectAll };")
+
 import "oaidl.idl";
 import "ocidl.idl";
 import "IWebUIDelegate.idl";

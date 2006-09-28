@@ -183,8 +183,6 @@ String WebCore::fileButtonChooseFileLabel() { return "Browse..."; }
 String WebCore::fileButtonNoFileSelectedLabel() { return "no file selected"; }
 String WebCore::defaultLanguage() { return "en"; }
 
-void WebCore::findWordBoundary(UChar const* str,int len,int position,int* start, int* end) { LOG_NOIMPL(); *start=position; *end=position; }
-
 void WebCore::ResourceLoader::assembleResponseHeaders() const { LOG_NOIMPL(); }
 void WebCore::ResourceLoader::retrieveCharset() const { LOG_NOIMPL(); }
 
