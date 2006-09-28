@@ -1,3 +1,21 @@
+2006-09-28  Dave Hyatt  <hyatt@apple.com>
+
+        Eliminate the use of MapWindowPoints on Win32. Just use the outermost HWND as the point of reference for events.  
+        
+        Stub out the mouse methods from the open source checkin and add a new member variable to track the current hovered scrollbar part.
+
+        * platform/win/PlatformScrollBar.h:
+        (WebCore::):
+        * platform/win/PlatformScrollBarWin.cpp:
+        (WebCore::PlatformScrollBar::PlatformScrollBar):
+        (WebCore::PlatformScrollBar::mouseMoved):
+        (WebCore::PlatformScrollBar::mouseExited):
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::viewportToContents):
+        (WebCore::ScrollView::contentsToViewport):
+        * platform/win/WheelEventWin.cpp:
+        (WebCore::positionForEvent):
+
 2006-09-27  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Maciej.

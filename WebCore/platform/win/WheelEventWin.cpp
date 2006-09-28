@@ -35,7 +35,6 @@ static IntPoint positionForEvent(HWND hWnd, LPARAM lParam)
 {
     POINT point = {LOWORD(lParam), HIWORD(lParam)};
     ScreenToClient(hWnd, &point);
-    MapWindowPoints(hWnd, GetAncestor(hWnd, GA_ROOT), &point, 1);
     return point;
 }
 

@@ -33,6 +33,8 @@ typedef struct HDC__* HDC;
 
 namespace WebCore {
 
+enum ScrollBarPart { NoPart, BackButton, BackTrack, Thumb, ForwardTrack, ForwardButton };
+
 class PlatformScrollBar : public Widget, public ScrollBar {
 public:
     PlatformScrollBar(ScrollBarClient*, ScrollBarOrientation);
@@ -45,6 +47,8 @@ public:
     virtual void setRect(const IntRect&);
     virtual void setEnabled(bool);
     virtual void paint(GraphicsContext*, const IntRect& damageRect);
+    virtual void mouseMoved(const PlatformMouseEvent&);
+    virtual void mouseExited();
 
     static void themeChanged();
 
@@ -67,8 +71,12 @@ private:
     void paintTrack(HDC, const IntRect&, bool start) const;
     void paintThumb(HDC, const IntRect&) const;
     void paintGripper(HDC, const IntRect&) const;
+    
+    ScrollBarPart hitTest(const PlatformMouseEvent&);
 
     void invalidateTrack();
+
+    ScrollBarPart m_hoveredPart;
 };
 
 }
