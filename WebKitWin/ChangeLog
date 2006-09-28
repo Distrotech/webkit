@@ -1,5 +1,21 @@
 2006-09-27  Steve Falkenburg  <sfalken@apple.com>
 
+        Reviewed by Maciej.
+
+        Leave ChickenCat SDK untouched by build.
+        
+        This change will become necessary once we have JavaScriptCore,
+        WebCore, WebKit, and SafariWin in the ChickenCat SDK.
+        
+        Prefer pulling project dependencies from WebKitOutputDir over
+        WebKitSDKDir.  Don't copy build output back over to WebKitSDKDir.
+
+        * WebKit.vcproj/WebKit.vcproj:
+        * WebKit.vcproj/WebKitGUID.vcproj:
+        * WebKit.vcproj/dstroot-to-sdk.cmd: Removed.
+
+2006-09-27  Steve Falkenburg  <sfalken@apple.com>
+
         B&I build script tweaks.
 
         * WebKit.vcproj/WebKit.make:
