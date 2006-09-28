@@ -1,3 +1,11 @@
+2006-09-27  Steve Falkenburg  <sfalken@apple.com>
+
+        B&I build fixes
+
+        * WebCore.vcproj/WebCore.make:
+        * WebCore.vcproj/WebCore.vcproj:
+        * WebCore.vcproj/build-generated-files.sh:
+
 2006-09-27  Adam Roben  <aroben@apple.com>
 
         Reviewed by sfalken.

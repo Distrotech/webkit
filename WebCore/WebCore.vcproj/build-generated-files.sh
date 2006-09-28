@@ -1,25 +1,25 @@
 #!/usr/bin/bash
 
 if [ -e "../../../../OpenSource/WebCore" ]; then
-    SRCROOT="`pwd`/../../../../OpenSource/WebCore"
+    XSRCROOT="`pwd`/../../../../OpenSource/WebCore"
 else
-    SRCROOT="`pwd`/.."
+    XSRCROOT="`pwd`/.."
 fi
-SRCROOT=`realpath "$SRCROOT"`
+XSRCROOT=`realpath "$XSRCROOT"`
 # Do a little dance to get the path into 8.3 form to make it safe for gnu make
 # http://bugzilla.opendarwin.org/show_bug.cgi?id=8173
-SRCROOT=`cygpath -m -s "$SRCROOT"`
-SRCROOT=`cygpath -u "$SRCROOT"`
-export SRCROOT
-export SOURCE_ROOT=$SRCROOT
+XSRCROOT=`cygpath -m -s "$XSRCROOT"`
+XSRCROOT=`cygpath -u "$XSRCROOT"`
+export XSRCROOT
+export SOURCE_ROOT=$XSRCROOT
 
-DSTROOT="$1"
-export DSTROOT
+XDSTROOT="$1"
+export XDSTROOT
 # Do a little dance to get the path into 8.3 form to make it safe for gnu make
 # http://bugzilla.opendarwin.org/show_bug.cgi?id=8173
-DSTROOT=`cygpath -m -s "$DSTROOT"`
-DSTROOT=`cygpath -u "$DSTROOT"`
-export DSTROOT
+XDSTROOT=`cygpath -m -s "$XDSTROOT"`
+XDSTROOT=`cygpath -u "$XDSTROOT"`
+export XDSTROOT
 
 SDKROOT="$2"
 export SDKROOT
@@ -29,13 +29,13 @@ SDKROOT=`cygpath -m -s "$SDKROOT"`
 SDKROOT=`cygpath -u "$SDKROOT"`
 export SDKROOT
 
-export BUILT_PRODUCTS_DIR="$DSTROOT/obj/WebCore"
+export BUILT_PRODUCTS_DIR="$XDSTROOT/obj/WebCore"
 export CREATE_HASH_TABLE="$SDKROOT/include/JavaScriptCore/kjs/create_hash_table"
 
 mkdir -p "${BUILT_PRODUCTS_DIR}/DerivedSources"
 cd "${BUILT_PRODUCTS_DIR}/DerivedSources"
 
-export WebCore="${SRCROOT}"
+export WebCore="${XSRCROOT}"
 export ENCODINGS_FILE="${WebCore}/platform/win/win-encodings.txt";
 export ENCODINGS_PREFIX=""
 # FIXME: Should make XPath Support configurable someday on Win32.

@@ -25,7 +25,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="set PATH=%PATH%;%SystemDrive%\cygwin\bin&#x0D;&#x0A;&#x0D;&#x0A;bash build-generated-files.sh &quot;$(WebKitOutputDir)&quot; &quot;$(WebKitSDKDir)&quot;&#x0D;&#x0A;"
+				CommandLine="set PATH=%SystemDrive%\cygwin\bin;%PATH%&#x0D;&#x0A;&#x0D;&#x0A;bash build-generated-files.sh &quot;$(WebKitOutputDir)&quot; &quot;$(WebKitSDKDir)&quot;&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -96,7 +96,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="set PATH=%PATH%;%SystemDrive%\cygwin\bin&#x0D;&#x0A;&#x0D;&#x0A;bash build-generated-files.sh &quot;$(WebKitOutputDir)&quot; &quot;$(WebKitSDKDir)&quot;&#x0D;&#x0A;"
+				CommandLine="set PATH=%SystemDrive%\cygwin\bin;%PATH%&#x0D;&#x0A;&#x0D;&#x0A;bash build-generated-files.sh &quot;$(WebKitOutputDir)&quot; &quot;$(WebKitSDKDir)&quot;&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
