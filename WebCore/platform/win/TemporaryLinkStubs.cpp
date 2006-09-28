@@ -43,13 +43,13 @@
 #include "JavaAppletWidget.h"
 #include "KURL.h"
 #include "Language.h"
+#include "ListBox.h"
 #include "LocalizedStrings.h"
 #include "Node.h"
 #include "NotImplemented.h"
 #include "Path.h"
 #include "PlatformMouseEvent.h"
 #include "PlugInInfoStore.h"
-#include "PopUpButton.h"
 #include "RenderPopupMenuWin.h"
 #include "RenderTheme.h"
 #include "RenderThemeWin.h"
@@ -65,9 +65,6 @@
 #include <stdlib.h>
 
 using namespace WebCore;
-
-Widget::FocusPolicy PopUpButton::focusPolicy() const { LOG_NOIMPL(); return NoFocus; }
-void PopUpButton::populate() { STOP_NOIMPL(); }
 
 void Widget::enableFlushDrawing() { STOP_NOIMPL(); }
 Widget::FocusPolicy Widget::focusPolicy() const { LOG_NOIMPL(); return NoFocus; }
@@ -288,18 +285,6 @@ void TextField::setColors(Color const&,Color const&) { LOG_NOIMPL(); }
 IntSize TextField::sizeForCharacterWidth(int) const { LOG_NOIMPL(); return IntSize(); }
 int TextField::baselinePosition(int) const { LOG_NOIMPL(); return 0; }
 void TextField::setLiveSearch(bool) { LOG_NOIMPL(); }
-
-PopUpButton::PopUpButton() { LOG_NOIMPL(); }
-PopUpButton::~PopUpButton() { LOG_NOIMPL(); }
-void PopUpButton::setFont(WebCore::Font const&) { LOG_NOIMPL(); }
-int PopUpButton::baselinePosition(int) const { LOG_NOIMPL(); return 0; }
-void PopUpButton::setWritingDirection(TextDirection) { LOG_NOIMPL(); }
-void PopUpButton::clear() { LOG_NOIMPL(); }
-void PopUpButton::appendItem(DeprecatedString const&,ListBoxItemType,bool) { LOG_NOIMPL(); }
-void PopUpButton::setCurrentItem(int) { LOG_NOIMPL(); }
-IntSize PopUpButton::sizeHint() const { LOG_NOIMPL(); return IntSize(); }
-IntRect PopUpButton::frameGeometry() const { LOG_NOIMPL(); return IntRect(); }
-void PopUpButton::setFrameGeometry(IntRect const&) { LOG_NOIMPL(); }
 
 ListBox::ListBox() { LOG_NOIMPL(); }
 ListBox::~ListBox() { LOG_NOIMPL(); }

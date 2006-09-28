@@ -1,5 +1,14 @@
 2006-09-28  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Adele.
+
+        Remove never-to-be-used PopUpButton
+
+        * WebCore.vcproj/WebCore.vcproj: Remove PopUpButton.h
+        * platform/win/TemporaryLinkStubs.cpp: Remove PopUpButton:: methods
+
+2006-09-28  Adam Roben  <aroben@apple.com>
+
         Reviewed by Alice.
 
         Replace notImplemented() with LOG_NOIMPL() and STOP_NOIMPL() macros

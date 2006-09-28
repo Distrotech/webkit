@@ -1512,10 +1512,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\platform\PopUpButton.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\RegularExpression.cpp"
 				>
 			</File>
