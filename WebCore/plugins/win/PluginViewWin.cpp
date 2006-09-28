@@ -34,6 +34,7 @@
 #include "FrameWin.h"
 #include "HTMLNames.h"
 #include "HTMLPlugInElement.h"
+#include "NotImplemented.h"
 #include "Page.h"
 #include "PluginPackageWin.h"
 #include "kjs_binding.h"
@@ -695,6 +696,7 @@ NPError PluginViewWin::getValue(NPNVariable variable, void* value)
 
 NPError PluginViewWin::setValue(NPPVariable variable, void* value)
 {
+    LOG_NOIMPL();
     return NPERR_GENERIC_ERROR;
 }
 

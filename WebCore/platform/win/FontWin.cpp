@@ -31,6 +31,7 @@
 #include "GlyphBuffer.h"
 #include "GraphicsContext.h"
 #include "IntRect.h"
+#include "NotImplemented.h"
 
 #if PLATFORM(CAIRO)
 #include <cairo-win32.h>
@@ -39,8 +40,6 @@
 #endif
 
 namespace WebCore {
-
-static void notImplemented() { puts("Not yet implemented"); _CrtDbgBreak(); }
 
 const int syntheticObliqueAngle = 14;
 
@@ -152,24 +151,24 @@ void Font::drawGlyphs(GraphicsContext* graphicsContext, const FontData* font, co
 
 FloatRect Font::selectionRectForComplexText(const TextRun& run, const TextStyle& style, const IntPoint& point, int h) const
 {
-    notImplemented();
+    LOG_NOIMPL();
     return FloatRect();
 }
 
 void Font::drawComplexText(GraphicsContext* graphicsContext, const TextRun& run, const TextStyle& style, const FloatPoint& point) const
 {
-    notImplemented();
+    LOG_NOIMPL();
 }
 
 float Font::floatWidthForComplexText(const TextRun& run, const TextStyle& style) const
 {
-    notImplemented();
+    LOG_NOIMPL();
     return 0;
 }
 
 int Font::offsetForPositionForComplexText(const TextRun& run, const TextStyle& style, int x, bool includePartialGlyphs) const
 {
-    notImplemented();
+    LOG_NOIMPL();
     return 0;
 }
 

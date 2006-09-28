@@ -1,5 +1,219 @@
 2006-09-28  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Alice.
+
+        Replace notImplemented() with LOG_NOIMPL() and STOP_NOIMPL() macros
+        which generate debug output. STOP_NOIMPL() also generates a debug
+        break. Replace calls to notImplemented() with
+        LOG_NOIMPL()/STOP_NOIMPL() as appropriate. This should stop some unnecessary
+        crashes where notImplemented() was called from a method that can fail
+        safely.
+
+        * WebCore.vcproj/WebCore.vcproj: Added NotImplemented.h
+        * platform/win/FontWin.cpp: Use LOG_NOIMPL() instead of notImplemented().
+        (WebCore::Font::selectionRectForComplexText):
+        (WebCore::Font::drawComplexText):
+        (WebCore::Font::floatWidthForComplexText):
+        (WebCore::Font::offsetForPositionForComplexText):
+        * platform/win/NotImplemented.h: Added. Contains new LOG_NOIMPL() and
+        STOP_NOIMPL() macros.
+        * platform/win/TemporaryLinkStubs.cpp: Use LOG_NOIMPL() and
+        STOP_NOIMPL() instead of notImplemented() or nothing.
+        (PopUpButton::focusPolicy):
+        (PopUpButton::populate):
+        (Widget::enableFlushDrawing):
+        (Widget::focusPolicy):
+        (Widget::disableFlushDrawing):
+        (Widget::lockDrawingFocus):
+        (Widget::unlockDrawingFocus):
+        (JavaAppletWidget::JavaAppletWidget):
+        (TextField::selectAll):
+        (TextField::addSearchResult):
+        (TextField::selectionStart):
+        (TextField::hasSelectedText):
+        (TextField::selectedText):
+        (TextField::setAutoSaveName):
+        (TextField::checksDescendantsForFocus):
+        (TextField::setSelection):
+        (TextField::setMaxResults):
+        (TextField::edited):
+        (Slider::Slider):
+        (Slider::sizeHint):
+        (Slider::setValue):
+        (Slider::setMaxValue):
+        (Slider::setMinValue):
+        (Slider::~Slider):
+        (Slider::setFont):
+        (Slider::value):
+        (ListBox::sizeForNumberOfLines):
+        (ListBox::isSelected):
+        (ListBox::checksDescendantsForFocus):
+        (Slider::focusPolicy):
+        (ListBox::focusPolicy):
+        (TextField::focusPolicy):
+        (Cursor::Cursor):
+        (PlatformMouseEvent::PlatformMouseEvent):
+        (WebCore::searchableIndexIntroduction):
+        (WebCore::findNextSentenceFromIndex):
+        (WebCore::findSentenceBoundary):
+        (WebCore::findNextWordFromIndex):
+        (WebCore::ServeSynchronousRequest):
+        (FrameWin::focusWindow):
+        (FrameWin::unfocusWindow):
+        (FrameWin::locationbarVisible):
+        (FrameWin::registerCommandForRedo):
+        (FrameWin::getObjectInstanceForWidget):
+        (FrameWin::getEmbedInstanceForWidget):
+        (FrameWin::getAppletInstanceForWidget):
+        (FrameWin::canRedo):
+        (FrameWin::canUndo):
+        (FrameWin::canPaste):
+        (FrameWin::canGoBackOrForward):
+        (FrameWin::shouldInterruptJavaScript):
+        (FrameWin::openURL):
+        (FrameWin::print):
+        (FrameWin::passMouseDownEventToWidget):
+        (FrameWin::issueCutCommand):
+        (FrameWin::issueCopyCommand):
+        (FrameWin::issuePasteCommand):
+        (FrameWin::issueUndoCommand):
+        (FrameWin::issueRedoCommand):
+        (FrameWin::issuePasteAndMatchStyleCommand):
+        (FrameWin::issueTransposeCommand):
+        (FrameWin::passWheelEventToChildWidget):
+        (FrameWin::mimeTypeForFileName):
+        (FrameWin::scheduleClose):
+        (FrameWin::markMisspellings):
+        (FrameWin::menubarVisible):
+        (FrameWin::personalbarVisible):
+        (FrameWin::statusbarVisible):
+        (FrameWin::toolbarVisible):
+        (FrameWin::originalRequestURL):
+        (FrameWin::isLoadTypeReload):
+        (BrowserExtensionWin::canRunModal):
+        (BrowserExtensionWin::createNewWindow):
+        (BrowserExtensionWin::canRunModalNow):
+        (BrowserExtensionWin::runModal):
+        (BrowserExtensionWin::goBackOrForward):
+        (BrowserExtensionWin::historyURL):
+        (GraphicsContext::addRoundedRectClip):
+        (GraphicsContext::addInnerRoundedRectClip):
+        (WebCore::screenDepthPerComponent):
+        (WebCore::screenIsMonochrome):
+        (WebCore::moveCursor):
+        (WebCore::inputElementAltText):
+        (WebCore::findWordBoundary):
+        (WebCore::ResourceLoader::assembleResponseHeaders):
+        (WebCore::ResourceLoader::retrieveCharset):
+        (FrameView::updateBorder):
+        (FrameWin::restoreDocumentState):
+        (FrameWin::partClearedInBegin):
+        (FrameWin::createEmptyDocument):
+        (FrameWin::overrideMediaType):
+        (FrameWin::markedTextRange):
+        (FrameWin::addMessageToConsole):
+        (FrameWin::shouldChangeSelection):
+        (FrameWin::respondToChangedSelection):
+        (FrameWin::saveDocumentState):
+        (FrameWin::registerCommandForUndo):
+        (FrameWin::clearUndoRedoOperations):
+        (FrameWin::incomingReferrer):
+        (FrameWin::markMisspellingsInAdjacentWords):
+        (FrameWin::respondToChangedContents):
+        (BrowserExtensionWin::BrowserExtensionWin):
+        (BrowserExtensionWin::setTypedIconURL):
+        (BrowserExtensionWin::setIconURL):
+        (BrowserExtensionWin::getHistoryLength):
+        (WebCore::CheckIfReloading):
+        (WebCore::CheckCacheObjectStatus):
+        (Widget::setIsSelected):
+        (ScrollView::inWindow):
+        (ScrollView::scrollPointRecursively):
+        (GraphicsContext::setShadow):
+        (GraphicsContext::clearShadow):
+        (GraphicsContext::beginTransparencyLayer):
+        (GraphicsContext::endTransparencyLayer):
+        (GraphicsContext::clearRect):
+        (GraphicsContext::strokeRect):
+        (GraphicsContext::setLineWidth):
+        (GraphicsContext::setLineCap):
+        (GraphicsContext::setLineJoin):
+        (GraphicsContext::setMiterLimit):
+        (GraphicsContext::setAlpha):
+        (GraphicsContext::clip):
+        (GraphicsContext::rotate):
+        (GraphicsContext::scale):
+        (Path::Path):
+        (Path::~Path):
+        (Path::contains):
+        (Path::translate):
+        (Path::boundingRect):
+        (Path::operator=):
+        (Path::clear):
+        (Path::moveTo):
+        (Path::addLineTo):
+        (Path::addQuadCurveTo):
+        (Path::addBezierCurveTo):
+        (Path::addArcTo):
+        (Path::closeSubpath):
+        (Path::addArc):
+        (Path::addRect):
+        (Path::addEllipse):
+        (GraphicsContext::drawFocusRing):
+        (GraphicsContext::drawLineForMisspelling):
+        (GraphicsContext::setCompositeOperation):
+        (TextField::TextField):
+        (TextField::~TextField):
+        (TextField::setFont):
+        (TextField::setAlignment):
+        (TextField::setWritingDirection):
+        (TextField::maxLength):
+        (TextField::setMaxLength):
+        (TextField::text):
+        (TextField::setText):
+        (TextField::cursorPosition):
+        (TextField::setCursorPosition):
+        (TextField::setEdited):
+        (TextField::setReadOnly):
+        (TextField::setPlaceholderString):
+        (TextField::setColors):
+        (TextField::sizeForCharacterWidth):
+        (TextField::baselinePosition):
+        (TextField::setLiveSearch):
+        (PopUpButton::PopUpButton):
+        (PopUpButton::~PopUpButton):
+        (PopUpButton::setFont):
+        (PopUpButton::baselinePosition):
+        (PopUpButton::setWritingDirection):
+        (PopUpButton::clear):
+        (PopUpButton::appendItem):
+        (PopUpButton::setCurrentItem):
+        (PopUpButton::sizeHint):
+        (PopUpButton::frameGeometry):
+        (PopUpButton::setFrameGeometry):
+        (ListBox::ListBox):
+        (ListBox::~ListBox):
+        (ListBox::setSelectionMode):
+        (ListBox::setFont):
+        (ListBox::setWritingDirection):
+        (ListBox::clear):
+        (ListBox::doneAppendingItems):
+        (ListBox::setEnabled):
+        (ListBox::appendItem):
+        (ListBox::setSelected):
+        (WebCore::focusRingColor):
+        (WebCore::setFocusRingColorChangeFunction):
+        (Frame::setNeedsReapplyStyles):
+        (Image::drawTiled):
+        (RenderPopupMenuWin::addSeparator):
+        (RenderPopupMenuWin::addGroupLabel):
+        (IconLoader::receivedResponse):
+        (IconLoader::notifyIconChanged):
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::setValue):
+
+2006-09-28  Adam Roben  <aroben@apple.com>
+
         Rubberstamped by sfalken.
 
         Remove calls to DebugBreak() from plugin code.
