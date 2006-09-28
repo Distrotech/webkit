@@ -689,14 +689,12 @@ NPError PluginViewWin::getValue(NPNVariable variable, void* value)
             return NPERR_NO_ERROR;
         }
         default:
-            DebugBreak();
             return NPERR_GENERIC_ERROR;
     }
 }
 
 NPError PluginViewWin::setValue(NPPVariable variable, void* value)
 {
-    DebugBreak();
     return NPERR_GENERIC_ERROR;
 }
 
