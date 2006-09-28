@@ -1,3 +1,14 @@
+2006-09-28  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Anders.
+
+        Fail without crashing and log an error when CG encounters a bitmap
+        font.
+
+        * platform/win/FontPlatformDataWin.cpp:
+        (WebCore::FontPlatformData::FontPlatformData): Trade LOG_ERROR for
+        ASSERT_WITH_MESSAGE
+
 2006-09-27  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by Steve & Adam.
