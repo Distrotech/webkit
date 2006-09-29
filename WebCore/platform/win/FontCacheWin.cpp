@@ -111,7 +111,11 @@ FontPlatformData* FontCache::createFontPlatformData(const FontDescription& fontD
     winfont.lfUnderline = false;
     winfont.lfStrikeOut = false;
     winfont.lfCharSet = DEFAULT_CHARSET;
+#if PLATFORM(CG)
+    winfont.lfOutPrecision = OUT_TT_ONLY_PRECIS;
+#else
     winfont.lfOutPrecision = OUT_TT_PRECIS;
+#endif
     winfont.lfQuality = 5; // Force cleartype.
     winfont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
     winfont.lfItalic = fontDescription.italic();
