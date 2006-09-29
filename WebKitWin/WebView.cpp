@@ -818,7 +818,7 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
         return E_FAIL;
 
     registerWebViewWindowClass();
-    m_viewWindow = CreateWindowEx(0, kWebViewWindowClassName, 0, WS_CHILD | WS_HSCROLL | WS_VSCROLL,
+    m_viewWindow = CreateWindowEx(0, kWebViewWindowClassName, 0, WS_CHILD | WS_HSCROLL | WS_VSCROLL | WS_CLIPCHILDREN,
         CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, m_hostWindow, 0, gInstance, 0);
 
     m_frameName = SysAllocString(frameName);

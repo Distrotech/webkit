@@ -1,3 +1,16 @@
+2006-09-29  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam, Geoff.
+        
+        Fix <rdar://4757392>
+        Plug-ins flash to white while scrolling.
+        
+        Set WS_CLIPCHILDREN on browser windows to clip out plug-in HWNDs
+        when drawing.
+
+        * WebView.cpp:
+        (WebView::initWithFrame):
+
 2006-09-29  Dave Hyatt  <hyatt@apple.com>
 
         Fix mouse event click handling to be correct.
