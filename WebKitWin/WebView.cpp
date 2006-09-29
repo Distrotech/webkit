@@ -124,25 +124,58 @@ WebView* WebView::createInstance()
     return instance;
 }
 
-void WebView::mouseMoved(WPARAM wParam, LPARAM lParam)
+void WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
 {
-    PlatformMouseEvent mouseEvent(m_viewWindow, wParam, lParam);
-    m_page->mainFrame()->view()->handleMouseMoveEvent(mouseEvent);
-}
+    static LONG globalClickCount;
+    static IntPoint globalPrevPoint;
+    static MouseButton globalPrevButton;
+    static LONG globalPrevMouseDownTime;
 
-void WebView::mouseDown(WPARAM wParam, LPARAM lParam)
-{
+    // Create our event.
     PlatformMouseEvent mouseEvent(m_viewWindow, wParam, lParam);
-    m_page->mainFrame()->view()->handleMousePressEvent(mouseEvent);
-}
+   
+    bool insideThreshold = abs(globalPrevPoint.x() - mouseEvent.pos().x()) < ::GetSystemMetrics(SM_CXDOUBLECLK) &&
+                           abs(globalPrevPoint.y() - mouseEvent.pos().y()) < ::GetSystemMetrics(SM_CYDOUBLECLK);
+    LONG messageTime = ::GetMessageTime();
+    
+    if (message == WM_LBUTTONDOWN || message == WM_MBUTTONDOWN || message == WM_RBUTTONDOWN) {
+        // FIXME: I'm not sure if this is the "right" way to do this
+        // but without this call, we never become focused since we don't allow
+        // the default handling of mouse events.
+        SetFocus(m_viewWindow);
 
-void WebView::mouseUp(WPARAM wParam, LPARAM lParam)
-{
-    PlatformMouseEvent mouseEvent(m_viewWindow, wParam, lParam);
-    if (mouseEvent.clickCount() % 2 == 0)
-        m_page->mainFrame()->view()->handleMouseDoubleClickEvent(mouseEvent);
-    else
+        // Always start capturing events when the mouse goes down in our HWND.
+        ::SetCapture(m_viewWindow);
+            
+        if (((messageTime - globalPrevMouseDownTime) < (LONG)::GetDoubleClickTime()) && 
+            insideThreshold &&
+            mouseEvent.button() == globalPrevButton)
+            globalClickCount++;
+        else
+            // Reset the click count.
+            globalClickCount = 1;
+        globalPrevMouseDownTime = messageTime;
+        
+        mouseEvent.setClickCount(globalClickCount);
+        m_page->mainFrame()->view()->handleMousePressEvent(mouseEvent);
+
+    } else if (message == WM_LBUTTONDBLCLK || message == WM_MBUTTONDBLCLK || message == WM_RBUTTONDBLCLK) {
+        globalClickCount = 2;
+        mouseEvent.setClickCount(globalClickCount);
+        m_page->mainFrame()->view()->handleMousePressEvent(mouseEvent);
+    } else if (message == WM_LBUTTONUP || message == WM_MBUTTONUP || message == WM_RBUTTONUP) {
+        // Record the global position and the button of the up.
+        globalPrevButton = mouseEvent.button();
+        globalPrevPoint = mouseEvent.pos();
+        mouseEvent.setClickCount(globalClickCount);
         m_page->mainFrame()->view()->handleMouseReleaseEvent(mouseEvent);
+        ::ReleaseCapture();
+    } else if (message == WM_MOUSEMOVE) {
+        if (!insideThreshold)
+            globalClickCount = 0;
+        mouseEvent.setClickCount(globalClickCount);
+        m_page->mainFrame()->view()->handleMouseMoveEvent(mouseEvent);
+    }
 }
 
 void WebView::mouseWheel(WPARAM wParam, LPARAM lParam)
@@ -293,28 +326,17 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             // Do nothing?
             break;
         case WM_MOUSEMOVE:
-            if (webView)
-                webView->mouseMoved(wParam, lParam);
-            break;
         case WM_LBUTTONDOWN:
-            // Make ourselves the focused window before doing anything else
-            // FIXME: I'm not sure if this is the "right" way to do this
-            // but w/o this call, we never become focused since we don't allow
-            // the default handling of mouse events.
-            SetFocus(hWnd);
         case WM_MBUTTONDOWN:
         case WM_RBUTTONDOWN:
         case WM_LBUTTONDBLCLK:
         case WM_MBUTTONDBLCLK:
         case WM_RBUTTONDBLCLK:
-            if (webView)
-                webView->mouseDown(wParam, lParam);
-            break;
         case WM_LBUTTONUP:
         case WM_MBUTTONUP:
         case WM_RBUTTONUP:
             if (webView)
-                webView->mouseUp(wParam, lParam);
+                webView->handleMouseEvent(message, wParam, lParam);
             break;
         case WM_MOUSEWHEEL:
             if (webView)

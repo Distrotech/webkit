@@ -483,10 +483,7 @@ public:
         /* [retval][out] */ LPPOINT offset);
 
     // WebView
-    void mouseMoved(WPARAM, LPARAM);
-    void mouseDown(WPARAM, LPARAM);
-    void mouseUp(WPARAM, LPARAM);
-    void mouseDoubleClick(WPARAM, LPARAM);
+    void handleMouseEvent(UINT, WPARAM, LPARAM);
     void mouseWheel(WPARAM, LPARAM);
     bool execCommand(WPARAM wParam, LPARAM lParam);
     bool keyPress(WPARAM, LPARAM);

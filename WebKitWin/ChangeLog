@@ -1,3 +1,14 @@
+2006-09-29  Dave Hyatt  <hyatt@apple.com>
+
+        Fix mouse event click handling to be correct.
+        
+        Reviewed by mjs
+
+        * WebView.cpp:
+        (WebView::handleMouseEvent):
+        (WebViewWndProc):
+        * WebView.h:
+
 2006-09-28  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Maciej.
