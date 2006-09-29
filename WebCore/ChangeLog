@@ -1,6 +1,6 @@
 2006-09-29  Adele Peterson  <adele@apple.com>
 
-        Reviewed by NOBODY (OOPS!).
+        Reviewed by Adam.
 
         Updated constructor for PlatformScrollBar to include controlSize argument.
 
