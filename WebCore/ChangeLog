@@ -1,3 +1,13 @@
+2006-09-29  Adele Peterson  <adele@apple.com>
+
+        Reviewed by NOBODY (OOPS!).
+
+        Updated constructor for PlatformScrollBar to include controlSize argument.
+
+        * platform/win/PlatformScrollBar.h:
+        * platform/win/PlatformScrollBarWin.cpp:
+        (WebCore::PlatformScrollBar::PlatformScrollBar):
+
 2006-09-29  Adam Roben  <aroben@apple.com>
 
         Reviewed by hyatt.
