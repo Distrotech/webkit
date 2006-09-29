@@ -1,3 +1,17 @@
+2006-09-28  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Hyatt.
+
+        Avoid creating LOGFONTs for bitmap fonts under CG, since we don't
+        support them anyway.
+
+        * platform/win/FontCacheWin.cpp:
+        (WebCore::FontCache::createFontPlatformData): Set lfOutPrecision to
+        OUT_TT_ONLY_PRECIS to avoid bitmap fonts.
+        * platform/win/FontPlatformDataWin.cpp:
+        (WebCore::FontPlatformData::FontPlatformData): Change the LOG_ERROR
+        back to an ASSERT since we should never reach this condition now.
+
 2006-09-28  Dave Hyatt  <hyatt@apple.com>
 
         This patch eliminates viewportToContents/contentsToViewport in favor of convertTo/FromContainingWindow.
