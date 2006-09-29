@@ -33,7 +33,7 @@ typedef struct HDC__* HDC;
 
 namespace WebCore {
 
-enum ScrollBarPart { NoPart, BackButton, BackTrack, Thumb, ForwardTrack, ForwardButton };
+enum ScrollBarPart { NoPart, BackButtonPart, BackTrackPart, ThumbPart, ForwardTrackPart, ForwardButtonPart };
 
 class PlatformScrollBar : public Widget, public ScrollBar {
 public:
@@ -73,7 +73,8 @@ private:
     void paintGripper(HDC, const IntRect&) const;
     
     ScrollBarPart hitTest(const PlatformMouseEvent&);
-
+    
+    void invalidatePart(ScrollBarPart);
     void invalidateTrack();
 
     ScrollBarPart m_hoveredPart;

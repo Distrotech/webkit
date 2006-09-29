@@ -1,3 +1,19 @@
+2006-09-28  Dave Hyatt  <hyatt@apple.com>
+
+        Make scrollbars on Win32 respond to hover events.  The thumb and arrow buttons will now properly hover when
+        the mouse enters and exits them.
+        
+        * platform/win/PlatformScrollBar.h:
+        * platform/win/PlatformScrollBarWin.cpp:
+        (WebCore::PlatformScrollBar::invalidatePart):
+        (WebCore::PlatformScrollBar::paintButton):
+        (WebCore::PlatformScrollBar::paintTrack):
+        (WebCore::PlatformScrollBar::paintThumb):
+        (WebCore::PlatformScrollBar::paintGripper):
+        (WebCore::PlatformScrollBar::hitTest):
+        (WebCore::PlatformScrollBar::mouseMoved):
+        (WebCore::PlatformScrollBar::mouseExited):
+
 2006-09-28  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Maciej.
