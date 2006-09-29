@@ -2,10 +2,11 @@
 BUILDSTYLE=Release
 !ENDIF
 
-all:
+install:
 	set WebKitSDKDir="$(SRCROOT)\AppleInternal"
-	set WebKitOutputDir=$(SYMROOT)
+	set WebKitOutputDir=$(OBJROOT)
+	set BuildBot=1
 	devenv "WebKit.sln" /rebuild $(BUILDSTYLE)
-	xcopy "$(SYMROOT)\bin\*" "$(DSTROOT)\AppleInternal\bin\" /e/v/i/h/y
-	xcopy "$(SYMROOT)\include\*" "$(DSTROOT)\AppleInternal\include\" /e/v/i/h/y	
-	xcopy "$(SYMROOT)\lib\*" "$(DSTROOT)\AppleInternal\lib\" /e/v/i/h/y	
+	xcopy "$(OBJROOT)\bin\*" "$(DSTROOT)\AppleInternal\bin\" /e/v/i/h/y
+	xcopy "$(OBJROOT)\include\*" "$(DSTROOT)\AppleInternal\include\" /e/v/i/h/y	
+	xcopy "$(OBJROOT)\lib\*" "$(DSTROOT)\AppleInternal\lib\" /e/v/i/h/y	

@@ -20,6 +20,7 @@
 			OutputDirectory="$(WebKitOutputDir)\bin"
 			IntermediateDirectory="$(WebKitOutputDir)\obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="2"
+			InheritedPropertySheets=".\debug.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -62,17 +63,16 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
-				CommandLine="mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CoreFoundation_debug.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CoreFoundation_debug.pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CFNetwork_debug.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CFNetwork_debug.pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CoreGraphics_debug.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CoreGraphics_debug.pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\dnssd.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\iconv.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\icudt34.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\icuin34_debug.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\icuin34_debug.pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\icuuc34_debug.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\icuuc34_debug.pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\libxml2.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\libxslt.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\pthreadVC2_debug.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\pthreadVC2_debug.pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\SQLite3.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\SQLite3.pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\SQLite3_debug.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\SQLite3_debug.pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\zlib1_debug.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\zlib1_debug.pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;"
+				CommandLine="if not &quot;$(BuildBot)&quot;==&quot;&quot; exit /b&#x0D;&#x0A;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CoreFoundation$(ConfigSuffix).dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CoreFoundation$(ConfigSuffix).pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CFNetwork$(ConfigSuffix).dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CFNetwork$(ConfigSuffix).pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CoreGraphics$(ConfigSuffix).dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CoreGraphics$(ConfigSuffix).pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\dnssd.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\iconv.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\icudt34.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\icudt34$(ConfigSuffix).dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\icuin34$(ConfigSuffix).dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\icuin34$(ConfigSuffix).pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\icuuc34$(ConfigSuffix).dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\icuuc34$(ConfigSuffix).pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\libxml2.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\libxslt.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\pthreadVC2$(ConfigSuffix).dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\pthreadVC2$(ConfigSuffix).pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\SQLite3.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\SQLite3.pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\SQLite3$(ConfigSuffix).dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\SQLite3$(ConfigSuffix).pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\zlib1$(ConfigSuffix).dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\zlib1$(ConfigSuffix).pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				RegisterOutput="true"
 				LinkLibraryDependencies="false"
-				AdditionalDependencies="comctl32.lib version.lib wininet.lib shlwapi.lib iconv.lib libxml2.lib libxslt.lib icuuc_debug.lib CoreFoundation_debug.lib CFNetwork_debug.lib CoreGraphics_debug.lib JavaScriptCore_debug.lib WebKitGUID_debug.lib WebCore_debug.lib SQLite3_debug.lib"
-				OutputFile="$(OutDir)\$(ProjectName)_debug.dll"
+				AdditionalDependencies="comctl32.lib version.lib wininet.lib shlwapi.lib iconv.lib libxml2.lib libxslt.lib icuuc$(ConfigSuffix).lib CoreFoundation$(ConfigSuffix).lib CFNetwork$(ConfigSuffix).lib CoreGraphics$(ConfigSuffix).lib JavaScriptCore$(ConfigSuffix).lib WebKitGUID$(ConfigSuffix).lib WebCore$(ConfigSuffix).lib SQLite3$(ConfigSuffix).lib"
+				OutputFile="$(OutDir)\$(ProjectName)$(ConfigSuffix).dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(WebKitOutputDir)\lib&quot;;&quot;$(WebKitSDKDir)\lib&quot;"
-				ModuleDefinitionFile="WebKit.def"
+				ModuleDefinitionFile="WebKit$(ConfigSuffix).def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -100,7 +100,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine=""
+				CommandLine="if not &quot;$(BuildBot)&quot;==&quot;&quot; exit /b&#x0D;&#x0A;&#x0D;&#x0A;regsvr32 /s &quot;$(TargetPath)&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(TargetPath)&quot; &quot;$(WebKitSDKDir)\bin&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -108,6 +108,7 @@
 			OutputDirectory="$(WebKitOutputDir)\bin"
 			IntermediateDirectory="$(WebKitOutputDir)\obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="2"
+			InheritedPropertySheets=".\release.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -148,16 +149,16 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
-				CommandLine="mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CoreFoundation.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CoreFoundation.pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CFNetwork.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CFNetwork.pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CoreGraphics.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CoreGraphics.pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\dnssd.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\iconv.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\icudt34.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\icuin34.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\icuin34.pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\icuuc34.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\icuuc34.pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\libxml2.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\libxslt.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\pthreadVC2.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\pthreadVC2.pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\SQLite3.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\SQLite3.pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\zlib1.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\zlib1.pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;"
+				CommandLine="if not &quot;$(BuildBot)&quot;==&quot;&quot; exit /b&#x0D;&#x0A;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CoreFoundation$(ConfigSuffix).dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CoreFoundation$(ConfigSuffix).pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CFNetwork$(ConfigSuffix).dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CFNetwork$(ConfigSuffix).pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CoreGraphics$(ConfigSuffix).dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\CoreGraphics$(ConfigSuffix).pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\dnssd.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\iconv.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\icudt34.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\icudt34$(ConfigSuffix).dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\icuin34$(ConfigSuffix).dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\icuin34$(ConfigSuffix).pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\icuuc34$(ConfigSuffix).dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\icuuc34$(ConfigSuffix).pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\libxml2.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\libxslt.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\pthreadVC2$(ConfigSuffix).dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\pthreadVC2$(ConfigSuffix).pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\SQLite3.dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\SQLite3.pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\SQLite3$(ConfigSuffix).dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\SQLite3$(ConfigSuffix).pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\zlib1$(ConfigSuffix).dll&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitSDKDir)\bin\zlib1$(ConfigSuffix).pdb&quot; &quot;$(WebKitOutputDir)\bin&quot;&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				RegisterOutput="true"
 				LinkLibraryDependencies="false"
-				AdditionalDependencies="comctl32.lib version.lib wininet.lib shlwapi.lib iconv.lib libxml2.lib libxslt.lib icuuc.lib CoreFoundation.lib CFNetwork.lib CoreGraphics.lib JavaScriptCore.lib WebKitGUID.lib WebCore.lib SQLite3.lib"
+				AdditionalDependencies="comctl32.lib version.lib wininet.lib shlwapi.lib iconv.lib libxml2.lib libxslt.lib icuuc$(ConfigSuffix).lib CoreFoundation$(ConfigSuffix).lib CFNetwork$(ConfigSuffix).lib CoreGraphics$(ConfigSuffix).lib JavaScriptCore$(ConfigSuffix).lib WebKitGUID$(ConfigSuffix).lib WebCore$(ConfigSuffix).lib SQLite3$(ConfigSuffix).lib"
+				OutputFile="$(OutDir)\$(ProjectName)$(ConfigSuffix).dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(WebKitOutputDir)\lib&quot;;&quot;$(WebKitSDKDir)\lib&quot;"
-				ModuleDefinitionFile="WebKit.def"
+				ModuleDefinitionFile="WebKit$(ConfigSuffix).def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -187,7 +188,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine=""
+				CommandLine="if not &quot;$(BuildBot)&quot;==&quot;&quot; exit /b&#x0D;&#x0A;&#x0D;&#x0A;regsvr32 /s &quot;$(TargetPath)&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(TargetPath)&quot; &quot;$(WebKitSDKDir)\bin&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>

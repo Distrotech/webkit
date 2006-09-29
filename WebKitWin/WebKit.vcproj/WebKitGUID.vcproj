@@ -20,6 +20,7 @@
 			OutputDirectory="$(WebKitOutputDir)\lib"
 			IntermediateDirectory="$(WebKitOutputDir)\obj\WebKit\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="4"
+			InheritedPropertySheets=".\debug.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -67,7 +68,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(OutDir)\$(ProjectName)_debug.lib"
+				OutputFile="$(OutDir)\$(ProjectName)$(ConfigSuffix).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -91,6 +92,7 @@
 			OutputDirectory="$(WebKitOutputDir)\lib"
 			IntermediateDirectory="$(WebKitOutputDir)\obj\WebKit\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="4"
+			InheritedPropertySheets=".\release.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -136,6 +138,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)\$(ProjectName)$(ConfigSuffix).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"

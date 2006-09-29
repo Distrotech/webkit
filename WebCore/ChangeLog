@@ -1,3 +1,17 @@
+2006-09-28  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Maciej.
+
+        Use $(ConfigSuffix) set via vsprops files to add _debug
+        to end of debug filenames.
+
+        Update B&I build script.
+
+        * WebCore.vcproj/WebCore.make:
+        * WebCore.vcproj/WebCore.vcproj:
+        * WebCore.vcproj/debug.vsprops: Added.
+        * WebCore.vcproj/release.vsprops: Added.
+
 2006-09-28  Adam Roben  <aroben@apple.com>
 
         Reviewed by Hyatt.
