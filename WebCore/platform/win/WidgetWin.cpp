@@ -149,36 +149,21 @@ void Widget::setCursor(const Cursor& cursor)
         SetCursor(c);
 }
 
-IntRect Widget::convertToContainingWindow(const IntRect& rect) const
-{
-    IntRect convertedRect = rect;
-    convertedRect.setLocation(convertToContainingWindow(convertedRect.location()));
-    return convertedRect;
-}
-
 IntPoint Widget::convertToContainingWindow(const IntPoint& point) const
 {
     IntPoint convertedPoint = point;
-
-    const Widget* w = this;
-    do {
-        convertedPoint.move(w->x(), w->y());
-        w = w->parent();
-    } while (w);
-
+    convertedPoint.move(x(), y());
+    if (parent())
+        convertedPoint = parent()->convertToContainingWindow(convertedPoint);
     return convertedPoint;
 }
 
 IntPoint Widget::convertFromContainingWindow(const IntPoint& point) const
 {
     IntPoint convertedPoint = point;
-
-    const Widget* w = this;
-    do {
-        convertedPoint.move(-w->x(), -w->y());
-        w = w->parent();
-    } while (w);
-
+    convertedPoint.move(-x(), -y());
+    if (parent())
+        convertedPoint = parent()->convertFromContainingWindow(convertedPoint);
     return convertedPoint;
 }
 

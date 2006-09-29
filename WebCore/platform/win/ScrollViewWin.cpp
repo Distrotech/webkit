@@ -74,10 +74,7 @@ ScrollView::~ScrollView()
 
 void ScrollView::updateContents(const IntRect& rect, bool now)
 {
-    IntRect viewRect = rect; // rect is in document coordinates
-    viewRect.move(-m_data->scrollOffset);
-    viewRect.intersect(frameGeometry());
-    IntRect containingWindowRect = convertToContainingWindow(viewRect);
+    IntRect containingWindowRect = Widget::convertToContainingWindow(rect);
 
     RECT containingWindowRectWin = containingWindowRect;
     HWND containingWindowHandle = containingWindow();
@@ -148,17 +145,16 @@ int ScrollView::contentsHeight() const
     return m_data->contentsSize.height();
 }
 
-IntPoint ScrollView::viewportToContents(const IntPoint& viewportPoint)
+IntPoint ScrollView::convertToContainingWindow(const IntPoint& point) const
 {
-    IntPoint contentsPoint = convertFromContainingWindow(viewportPoint);
-    contentsPoint += scrollOffset();
-    return contentsPoint;
+    IntPoint convertedPoint = point - scrollOffset();
+    return Widget::convertToContainingWindow(convertedPoint);
 }
 
-IntPoint ScrollView::contentsToViewport(const IntPoint& contentsPoint)
+IntPoint ScrollView::convertFromContainingWindow(const IntPoint& point) const
 {
-    IntPoint viewportPoint = contentsPoint - scrollOffset();
-    return convertToContainingWindow(viewportPoint);
+    IntPoint convertedPoint = point + scrollOffset();
+    return Widget::convertFromContainingWindow(convertedPoint);
 }
 
 IntSize ScrollView::scrollOffset() const
@@ -195,7 +191,7 @@ void ScrollView::scrollBy(int dx, int dy)
         ScrollWindowEx(containingWindow(), -scrollDelta.width(), -scrollDelta.height(), 0, 0, 0, 0, SW_INVALIDATE | SW_SCROLLCHILDREN);
     } else {
         // FIXME: Find a way to blit subframes without blitting overlapping content
-        RECT dirtyRect = convertToContainingWindow(frameGeometry());
+        RECT dirtyRect = Widget::convertToContainingWindow(IntRect(contentsX(), contentsY(), width(), height()));
         InvalidateRect(containingWindow(), &dirtyRect, true);
     }
 }

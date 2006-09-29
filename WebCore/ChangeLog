@@ -1,3 +1,21 @@
+2006-09-28  Dave Hyatt  <hyatt@apple.com>
+
+        This patch eliminates viewportToContents/contentsToViewport in favor of convertTo/FromContainingWindow.
+        ScrollView now subclasses these methods to factor in its scrollOffset and to deal with the document
+        view.
+       
+        Reviewed by mjs (the convertTo/From changes), (I added the elimination of viewportToContents to
+        the patch after review, once I realized that these new functions essentially do the same thing.)
+
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::updateContents):
+        (WebCore::ScrollView::convertToContainingWindow):
+        (WebCore::ScrollView::convertFromContainingWindow):
+        (WebCore::ScrollView::scrollBy):
+        * platform/win/WidgetWin.cpp:
+        (WebCore::Widget::convertToContainingWindow):
+        (WebCore::Widget::convertFromContainingWindow):
+
 2006-09-28  Adam Roben  <aroben@apple.com>
 
         Reviewed by Anders.
