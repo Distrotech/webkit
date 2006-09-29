@@ -1796,11 +1796,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\win\MouseEventWin.cpp"
+					RelativePath="..\platform\win\NotImplemented.h"
 					>
 				</File>
 				<File
-					RelativePath="..\platform\win\NotImplemented.h"
+					RelativePath="..\platform\win\PlatformMouseEventWin.cpp"
 					>
 				</File>
 				<File

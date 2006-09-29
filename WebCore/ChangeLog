@@ -1,3 +1,10 @@
+2006-09-29  Dave Hyatt  <hyatt@apple.com>
+
+        Fork MouseEventWin.cpp into (the better-named) PlatformMouseEventWin.cpp.
+        
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/win/PlatformMouseEventWin.cpp: Added.
+
 2006-09-28  Dave Hyatt  <hyatt@apple.com>
 
         Make scrollbars scroll correctly when setValue is called.  Needed to do float math instead of integer
