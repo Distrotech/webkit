@@ -1,3 +1,26 @@
+2006-09-29  Adam Roben  <aroben@apple.com>
+
+        Reviewed by hyatt.
+
+        Add error logging to plugin code.
+
+        * WebCore.vcproj/WebCore.vcproj: Added PluginDebug.h
+        * platform/win/NotImplemented.h: Add surrounding #ifndef/#endif
+        * plugins/win/PluginDebug.h: Added.
+        * plugins/win/PluginPackageWin.cpp: Add error logging
+        (WebCore::PluginPackageWin::load):
+        * plugins/win/PluginStreamWin.cpp: Ditto.
+        (WebCore::PluginStreamWin::startStream):
+        (WebCore::PluginStreamWin::destroyStream):
+        (WebCore::PluginStreamWin::deliverData):
+        (WebCore::PluginStreamWin::receivedAllData):
+        * plugins/win/PluginViewWin.cpp: Ditto.
+        (WebCore::PluginViewWin::start):
+        (WebCore::PluginViewWin::stop):
+        (WebCore::PluginViewWin::newStream):
+        (WebCore::PluginViewWin::write):
+        (WebCore::PluginViewWin::destroyStream):
+
 2006-09-29  Dave Hyatt  <hyatt@apple.com>
 
         Fork MouseEventWin.cpp into (the better-named) PlatformMouseEventWin.cpp.

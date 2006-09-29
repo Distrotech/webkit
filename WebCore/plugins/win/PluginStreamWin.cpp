@@ -27,6 +27,7 @@
 #include "PluginStreamWin.h"
 
 #include "CString.h"
+#include "PluginDebug.h"
 #include "PluginPackageWin.h"
 #include "PluginViewWin.h"
 #include "ResourceLoader.h"
@@ -134,6 +135,7 @@ void PluginStreamWin::startStream(const KURL& responseURL, long long expectedCon
     NPError npErr = m_pluginFuncs->newstream(m_instance, (NPMIMEType)(const char*)mimeTypeStr, &m_stream, false, &m_transferMode);
 
     if (npErr != NPERR_NO_ERROR) {
+        LOG_NPERROR(npErr);
         stop();
         return;
     }
@@ -178,6 +180,7 @@ void PluginStreamWin::destroyStream()
 
         NPError npErr;
         npErr = m_pluginFuncs->destroystream(m_instance, &m_stream, m_reason);
+        LOG_NPERROR(npErr);
 
         m_stream.ndata = 0;
     }
@@ -220,6 +223,7 @@ void PluginStreamWin::deliverData()
             // Write the data
             deliveryBytes = m_pluginFuncs->write(m_instance, &m_stream, m_offset, dataLength, (void*)data);
             if (deliveryBytes < 0) {
+                LOG_PLUGIN_NET_ERROR();
                 cancelAndDestroyStream(NPRES_NETWORK_ERR);
                 return;
             }
@@ -298,13 +302,16 @@ void PluginStreamWin::receivedAllData(ResourceLoader* resourceLoader, PlatformDa
     if (m_resourceLoader)
         m_resourceLoader = 0;
 
-    if (resourceLoader && resourceLoader->error() != 0)
+    if (resourceLoader && resourceLoader->error() != 0) {
+        LOG_PLUGIN_NET_ERROR();
         destroyStream(NPRES_NETWORK_ERR);
+    }
 
     if ((m_transferMode == NP_ASFILE || m_transferMode == NP_ASFILEONLY) && !m_path) {
         char tempPath[MAX_PATH];
 
         if (GetTempPathA(sizeof(tempPath), tempPath) == 0) {
+            LOG_PLUGIN_NET_ERROR();
             destroyStream(NPRES_NETWORK_ERR);
             return;
         }
@@ -312,6 +319,7 @@ void PluginStreamWin::receivedAllData(ResourceLoader* resourceLoader, PlatformDa
         char tempName[MAX_PATH];
 
         if (GetTempFileNameA(tempPath, "WKP", 0, tempName) == 0) {
+            LOG_PLUGIN_NET_ERROR();
             destroyStream(NPRES_NETWORK_ERR);
             return;
         }
@@ -319,6 +327,7 @@ void PluginStreamWin::receivedAllData(ResourceLoader* resourceLoader, PlatformDa
         HANDLE tempFile = CreateFileA(tempName, GENERIC_READ | GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
         if (tempFile == INVALID_HANDLE_VALUE) {
+            LOG_PLUGIN_NET_ERROR();
             destroyStream(NPRES_NETWORK_ERR);
             return;
         }
@@ -328,6 +337,7 @@ void PluginStreamWin::receivedAllData(ResourceLoader* resourceLoader, PlatformDa
         CloseHandle(tempFile);
 
         if (!retval || written != m_completeDeliveryData->size()) {
+            LOG_PLUGIN_NET_ERROR();
             destroyStream(NPRES_NETWORK_ERR);
             return;
         }

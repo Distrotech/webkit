@@ -25,8 +25,10 @@
 
 #include "config.h"
 #include "PluginPackageWin.h"
+
 #include "DeprecatedString.h"
 #include "npruntime_impl.h"
+#include "PluginDebug.h"
 
 namespace WebCore {
 
@@ -156,6 +158,7 @@ bool PluginPackageWin::load()
         goto abort;
 
     npErr = NP_GetEntryPoints(&m_pluginFuncs);
+    LOG_NPERROR(npErr);
     if (npErr != NPERR_NO_ERROR)
         goto abort;
 
@@ -201,6 +204,7 @@ bool PluginPackageWin::load()
     m_browserFuncs.setexception = _NPN_SetException;
 
     npErr = NP_Initialize(&m_browserFuncs);
+    LOG_NPERROR(npErr);
 
     if (npErr != NPERR_NO_ERROR)
         goto abort;

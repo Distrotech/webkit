@@ -23,6 +23,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
+#ifndef NOT_IMPLEMENTED_H__
+#define NOT_IMPLEMENTED_H__
+
 #define LOG_NOIMPL() \
     static bool havePrinted = false; \
     if (!havePrinted) { \
@@ -31,3 +34,5 @@
     }
 
 #define STOP_NOIMPL() LOG_NOIMPL(); _CrtDbgBreak()
+
+#endif

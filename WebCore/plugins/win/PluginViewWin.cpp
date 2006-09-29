@@ -40,6 +40,7 @@
 #include "kjs_binding.h"
 #include "kjs_proxy.h"
 #include "npruntime_impl.h"
+#include "PluginDebug.h"
 #include "PluginPackageWin.h"
 #include "PluginStreamWin.h"
 
@@ -194,6 +195,7 @@ bool PluginViewWin::start()
 
     PluginViewWin::setCurrentPluginView(this);
     NPError npErr = m_plugin->pluginFuncs()->newp((NPMIMEType)(const char*)m_mimeType, m_instance, m_mode, m_paramCount, m_paramNames, m_paramValues, NULL);
+    LOG_NPERROR(npErr);
     PluginViewWin::setCurrentPluginView(0);
         
     m_isStarted = true;
@@ -222,6 +224,7 @@ void PluginViewWin::stop()
 
     // Destroy the plugin
     NPError npErr = m_plugin->pluginFuncs()->destroy(m_instance, 0);
+    LOG_NPERROR(npErr);
 
     m_instance->pdata = 0;
 }
@@ -625,18 +628,21 @@ NPError PluginViewWin::postURL(const char* url, const char* target, uint32 len, 
 
 NPError PluginViewWin::newStream(NPMIMEType type, const char* target, NPStream** stream)
 {
+    LOG_NOIMPL();
     // Unsupported
     return NPERR_GENERIC_ERROR;
 }
 
 int32 PluginViewWin::write(NPStream* stream, int32 len, void* buffer)
 {
+    LOG_NOIMPL();
     // Unsupported
     return -1;
 }
 
 NPError PluginViewWin::destroyStream(NPStream* stream, NPReason reason)
 {
+    LOG_NOIMPL();
     // Unsupported
     return NPERR_GENERIC_ERROR;
 }
