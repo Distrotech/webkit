@@ -124,7 +124,7 @@ void WebPreferences::initialize()
 
     key = CFSTR(WebKitMinimumFontSizePreferenceKey);
     if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
-        CFDictionaryAddValue(m_standardUserDefaults, key,                               CFSTR("1"));
+        CFDictionaryAddValue(m_standardUserDefaults, key,                               CFSTR("0"));
 
     key = CFSTR(WebKitMinimumLogicalFontSizePreferenceKey);
     if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
