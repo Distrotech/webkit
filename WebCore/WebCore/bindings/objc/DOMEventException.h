@@ -24,9 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-extern NSString * const DOMRangeException;
+@class NSString;
 
-enum DOMRangeExceptionCode {
-    DOM_BAD_BOUNDARYPOINTS_ERR        = 1,
-    DOM_INVALID_NODE_TYPE_ERR         = 2
+extern NSString * const DOMEventException;
+
+enum DOMEventExceptionCode {
+    DOM_UNSPECIFIED_EVENT_TYPE_ERR = 0
 };

@@ -24,9 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-extern NSString * const DOMXPathException;
+@class NSString;
 
-enum DOMXPathExceptionCode {
-    DOM_INVALID_EXPRESSION_ERR      = 51,
-    DOM_TYPE_ERR                    = 52
+extern NSString * const DOMRangeException;
+
+enum DOMRangeExceptionCode {
+    DOM_BAD_BOUNDARYPOINTS_ERR        = 1,
+    DOM_INVALID_NODE_TYPE_ERR         = 2
 };
