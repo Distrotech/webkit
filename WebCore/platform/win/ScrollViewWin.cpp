@@ -103,9 +103,7 @@ int ScrollView::visibleHeight() const
 FloatRect ScrollView::visibleContentRect() const
 {
     // FIXME: Subframes need to subtract scrollbar width & height when scrollbars are showing
-    FloatRect contentRect = frameGeometry();
-    contentRect.move(m_data->scrollOffset);
-    return contentRect;
+    return FloatRect(contentsX(), contentsY(), width(), height());
 }
 
 void ScrollView::setContentsPos(int newX, int newY)
@@ -186,14 +184,13 @@ void ScrollView::scrollBy(int dx, int dy)
     if (scrollDelta == IntSize())
         return;
 
+    RECT dirtyRect = Widget::convertToContainingWindow(IntRect(contentsX(), contentsY(), width(), height()));
     if (!m_data->hasStaticBackground) { // The main frame can just blit the WebView window
         // FIXME: Could make this more efficient by passing a valid clip rect for only the document content.
-        ScrollWindowEx(containingWindow(), -scrollDelta.width(), -scrollDelta.height(), 0, 0, 0, 0, SW_INVALIDATE | SW_SCROLLCHILDREN);
-    } else {
         // FIXME: Find a way to blit subframes without blitting overlapping content
-        RECT dirtyRect = Widget::convertToContainingWindow(IntRect(contentsX(), contentsY(), width(), height()));
+        ScrollWindowEx(containingWindow(), -scrollDelta.width(), -scrollDelta.height(), &dirtyRect, &dirtyRect, 0, 0, SW_INVALIDATE | SW_SCROLLCHILDREN);
+    } else
         InvalidateRect(containingWindow(), &dirtyRect, true);
-    }
 }
 
 WebCore::ScrollBarMode ScrollView::hScrollBarMode() const
@@ -290,7 +287,15 @@ void ScrollView::addChild(Widget* child, int x, int y)
 
 void ScrollView::removeChild(Widget* child)
 { 
+    if (child == capturingChild()) {
+        // If our child (or one of its descendants is capturing mouse events but suddenly goes away,
+        // we become the new capturer.
+        setCapturingChild(0);
+        setCapturingMouse(true);
+    }
+
     child->setParent(0);
+    
 }
 
 void ScrollView::paint(GraphicsContext* context, const IntRect& rect)

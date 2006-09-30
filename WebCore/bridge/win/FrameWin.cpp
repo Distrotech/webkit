@@ -237,16 +237,6 @@ void FrameWin::addPluginRootObject(KJS::Bindings::RootObject* root)
     m_rootObjects.append(root);
 }
 
-bool FrameWin::passSubframeEventToSubframe(WebCore::MouseEventWithHitTestResults&, Frame*)
-{
-    return false; 
-}
-
-bool FrameWin::lastEventIsMouseUp() const
-{
-    return false;
-}
-
 void FrameWin::cleanupPluginObjects()
 {
     // Delete old plug-in data structures

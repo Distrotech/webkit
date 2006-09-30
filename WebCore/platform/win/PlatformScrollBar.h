@@ -48,8 +48,9 @@ public:
     virtual void setRect(const IntRect&);
     virtual void setEnabled(bool);
     virtual void paint(GraphicsContext*, const IntRect& damageRect);
-    virtual void mouseMoved(const PlatformMouseEvent&);
-    virtual void mouseExited();
+    virtual void handleMouseMoveEvent(const PlatformMouseEvent&);
+    virtual void handleMouseOutEvent(const PlatformMouseEvent&);
+    virtual void handleMouseReleaseEvent(const PlatformMouseEvent&);
 
     static void themeChanged();
 

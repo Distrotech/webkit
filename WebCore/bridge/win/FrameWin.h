@@ -119,9 +119,6 @@ public:
     virtual void markMisspellings(const Selection&);
 
     virtual bool lastEventIsMouseUp() const;
-
-    virtual bool passSubframeEventToSubframe(MouseEventWithHitTestResults &, Frame* subframePart = 0);
-    virtual bool passWheelEventToChildWidget(Node*);
     
     virtual String overrideMediaType() const;
 
@@ -173,7 +170,7 @@ protected:
 private:
     virtual KURL originalRequestURL() const;
     virtual void cleanupPluginObjects();
-    virtual bool passMouseDownEventToWidget(Widget*);
+    
     RefPtr<FrameWinClient> m_client;
 
     KJS::Bindings::RootObject* m_bindingRoot; // The root object used for objects

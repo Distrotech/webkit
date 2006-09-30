@@ -48,6 +48,8 @@ public:
     HWND containingWindow;
     IntRect frameRect;
     bool enabled;
+    bool capturingMouse;
+    Widget* capturingChild;
 };
 
 Widget::Widget()
@@ -57,6 +59,8 @@ Widget::Widget()
     data->parent = 0;
     data->containingWindow = 0;
     data->enabled = true;
+    data->capturingMouse = false;
+    data->capturingChild = 0;
 }
 
 Widget::~Widget() 
@@ -193,6 +197,37 @@ void Widget::invalidateRect(const IntRect& r)
 {
     IntRect windowRect = convertToContainingWindow(r);
     ::InvalidateRect(containingWindow(), &RECT(windowRect), false);
+}
+
+bool Widget::capturingMouse() const
+{
+    return data->capturingMouse;
+}
+
+void Widget::setCapturingMouse(bool capturingMouse)
+{
+    data->capturingMouse = capturingMouse;
+    if (parent())
+        parent()->setCapturingChild(capturingMouse ? this : 0);
+}
+
+Widget* Widget::capturingTarget()
+{
+    if (capturingMouse() || !capturingChild())
+        return this;
+    return capturingChild()->capturingTarget(); 
+}
+
+Widget* Widget::capturingChild()
+{
+    return data->capturingChild;
+}
+
+void Widget::setCapturingChild(Widget* w)
+{
+    data->capturingChild = w;
+    if (parent())
+        parent()->setCapturingChild(w ? this : 0);
 }
 
 } // namespace WebCore

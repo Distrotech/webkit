@@ -1,3 +1,40 @@
+2006-09-30  Dave Hyatt  <hyatt@apple.com>
+
+        This patch makes iframes and frames able to receive mouse events.  Down, up, click, selection
+        all work.  This patch also fixes bugs in scrolling and makes wheel events work on iframes.
+        A capturing system for routing events to the proper subwidget when the mouse has down
+        is also stubbed out (but not yet used).
+        
+        Reviewed by andersca
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * bridge/win/FrameViewWin.cpp: Added.
+        (WebCore::FrameView::passMousePressEventToSubframe):
+        (WebCore::FrameView::passMouseMoveEventToSubframe):
+        (WebCore::FrameView::passMouseReleaseEventToSubframe):
+        (WebCore::FrameView::passWheelEventToSubframe):
+        * bridge/win/FrameWin.cpp:
+        * bridge/win/FrameWin.h:
+        * platform/win/PlatformScrollBar.h:
+        * platform/win/PlatformScrollBarWin.cpp:
+        (WebCore::PlatformScrollBar::handleMouseMoveEvent):
+        (WebCore::PlatformScrollBar::handleMouseOutEvent):
+        (WebCore::PlatformScrollBar::handleMouseReleaseEvent):
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::visibleContentRect):
+        (WebCore::ScrollView::scrollBy):
+        (WebCore::ScrollView::removeChild):
+        * platform/win/TemporaryLinkStubs.cpp:
+        (FrameWin::print):
+        (FrameWin::lastEventIsMouseUp):
+        * platform/win/WidgetWin.cpp:
+        (WebCore::Widget::Widget):
+        (WebCore::Widget::capturingMouse):
+        (WebCore::Widget::setCapturingMouse):
+        (WebCore::Widget::capturingTarget):
+        (WebCore::Widget::capturingChild):
+        (WebCore::Widget::setCapturingChild):
+
 2006-09-29  Steve Falkenburg  <sfalken@apple.com>
 
         Fix the build.

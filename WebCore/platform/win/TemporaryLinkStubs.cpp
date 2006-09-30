@@ -131,7 +131,6 @@ bool FrameWin::canGoBackOrForward(int) const { LOG_NOIMPL(); return false; }
 bool FrameWin::shouldInterruptJavaScript() { LOG_NOIMPL(); return false; }
 bool FrameWin::openURL(KURL const&) { LOG_NOIMPL(); return false; }
 void FrameWin::print() { LOG_NOIMPL(); }
-bool FrameWin::passMouseDownEventToWidget(Widget*) { LOG_NOIMPL(); return false; }
 void FrameWin::issueCutCommand() { LOG_NOIMPL(); }
 void FrameWin::issueCopyCommand() { LOG_NOIMPL(); }
 void FrameWin::issuePasteCommand() { LOG_NOIMPL(); }
@@ -139,8 +138,8 @@ void FrameWin::issueUndoCommand() { LOG_NOIMPL(); }
 void FrameWin::issueRedoCommand(void) { LOG_NOIMPL(); }
 void FrameWin::issuePasteAndMatchStyleCommand() { LOG_NOIMPL(); }
 void FrameWin::issueTransposeCommand() { LOG_NOIMPL(); }
+bool FrameWin::lastEventIsMouseUp() const { return false; }
 void FrameWin::openURLRequest(struct WebCore::ResourceRequest const&) { LOG_NOIMPL(); }
-bool FrameWin::passWheelEventToChildWidget(Node*) { LOG_NOIMPL(); return false; }
 String FrameWin::mimeTypeForFileName(String const&) const { LOG_NOIMPL(); return String(); }
 void FrameWin::scheduleClose() { STOP_NOIMPL(); }
 void FrameWin::markMisspellings(WebCore::Selection const&) { LOG_NOIMPL(); }
