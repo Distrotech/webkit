@@ -43,9 +43,9 @@
     return [self _appletElement]->align();
 }
 
-- (void)setAlign:(NSString *)align
+- (void)setAlign:(NSString *)newAlign
 {
-    [self _appletElement]->setAlign(align);
+    [self _appletElement]->setAlign(newAlign);
 }
 
 - (NSString *)alt
@@ -53,9 +53,9 @@
     return [self _appletElement]->alt();
 }
 
-- (void)setAlt:(NSString *)alt
+- (void)setAlt:(NSString *)newAlt
 {
-    [self _appletElement]->setAlt(alt);
+    [self _appletElement]->setAlt(newAlt);
 }
 
 - (NSString *)archive
@@ -63,9 +63,9 @@
     return [self _appletElement]->archive();
 }
 
-- (void)setArchive:(NSString *)archive
+- (void)setArchive:(NSString *)newArchive
 {
-    [self _appletElement]->setArchive(archive);
+    [self _appletElement]->setArchive(newArchive);
 }
 
 - (NSString *)code
@@ -73,9 +73,9 @@
     return [self _appletElement]->code();
 }
 
-- (void)setCode:(NSString *)code
+- (void)setCode:(NSString *)newCode
 {
-    [self _appletElement]->setCode(code);
+    [self _appletElement]->setCode(newCode);
 }
 
 - (NSString *)codeBase
@@ -83,9 +83,9 @@
     return [self _appletElement]->codeBase();
 }
 
-- (void)setCodeBase:(NSString *)codeBase
+- (void)setCodeBase:(NSString *)newCodeBase
 {
-    [self _appletElement]->setCodeBase(codeBase);
+    [self _appletElement]->setCodeBase(newCodeBase);
 }
 
 - (NSString *)height
@@ -93,9 +93,9 @@
     return [self _appletElement]->height();
 }
 
-- (void)setHeight:(NSString *)height
+- (void)setHeight:(NSString *)newHeight
 {
-    [self _appletElement]->setHeight(height);
+    [self _appletElement]->setHeight(newHeight);
 }
 
 //FIXME: DOM spec says hspace should be a DOMString, not an int
@@ -104,9 +104,9 @@
     return [self _appletElement]->hspace().toInt();
 }
 
-- (void)setHspace:(int)hspace
+- (void)setHspace:(int)newHspace
 {
-    [self _appletElement]->setHspace(WebCore::String::number(hspace));
+    [self _appletElement]->setHspace(WebCore::String::number(newHspace));
 }
 
 - (NSString *)name
@@ -114,9 +114,9 @@
     return [self _appletElement]->name();
 }
 
-- (void)setName:(NSString *)name
+- (void)setName:(NSString *)newName
 {
-    [self _appletElement]->setName(name);
+    [self _appletElement]->setName(newName);
 }
 
 - (NSString *)object
@@ -124,9 +124,9 @@
     return [self _appletElement]->object();
 }
 
-- (void)setObject:(NSString *)object
+- (void)setObject:(NSString *)newObject
 {
-    [self _appletElement]->setObject(object);
+    [self _appletElement]->setObject(newObject);
 }
 
 //FIXME: DOM spec says vspace should be a DOMString, not an int
@@ -135,9 +135,9 @@
     return [self _appletElement]->vspace().toInt();
 }
 
-- (void)setVspace:(int)vspace
+- (void)setVspace:(int)newVspace
 {
-    [self _appletElement]->setVspace(WebCore::String::number(vspace));
+    [self _appletElement]->setVspace(WebCore::String::number(newVspace));
 }
 
 - (NSString *)width
@@ -145,9 +145,9 @@
     return [self _appletElement]->width();
 }
 
-- (void)setWidth:(NSString *)width
+- (void)setWidth:(NSString *)newWidth
 {
-    [self _appletElement]->setWidth(width);
+    [self _appletElement]->setWidth(newWidth);
 }
 
 @end
