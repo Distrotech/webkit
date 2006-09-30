@@ -1,5 +1,14 @@
 2006-09-29  Steve Falkenburg  <sfalken@apple.com>
 
+        Reviewed by Geoff.
+
+        Allow WebKit to query for the rect
+        of the resizer rather than just its size.
+
+        * Interfaces/IWebUIDelegatePrivate.idl:
+
+2006-09-29  Steve Falkenburg  <sfalken@apple.com>
+
         Reviewed by Adam, Geoff.
         
         Fix <rdar://4757392>

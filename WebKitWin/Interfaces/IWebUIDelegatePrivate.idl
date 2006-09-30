@@ -62,5 +62,5 @@ interface IWebView;
 ]
 interface IWebUIDelegatePrivate : IUnknown
 {
-    HRESULT webViewResizerSize([in] IWebView* sender, [out, retval] SIZE* size);
+    HRESULT webViewResizerRect([in] IWebView* sender, [out, retval] RECT* rect);
 }
