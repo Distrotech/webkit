@@ -1,3 +1,26 @@
+2006-10-01  Dave Hyatt  <hyatt@apple.com>
+
+        Hook up the mouse capture architecture so that child widgets capture events while the mouse is pressed.
+        
+        Hook up tracking the pressed object on a scrollbar and proper painting of the scrollbar's
+        pressed state.
+        
+        * bridge/win/FrameViewWin.cpp:
+        (WebCore::FrameView::passMousePressEventToSubframe):
+        (WebCore::FrameView::passMousePressEventToScrollbar):
+        * platform/win/PlatformScrollBar.h:
+        * platform/win/PlatformScrollBarWin.cpp:
+        (WebCore::PlatformScrollBar::PlatformScrollBar):
+        (WebCore::PlatformScrollBar::paintButton):
+        (WebCore::PlatformScrollBar::paintTrack):
+        (WebCore::PlatformScrollBar::paintThumb):
+        (WebCore::PlatformScrollBar::paintGripper):
+        (WebCore::PlatformScrollBar::handleMouseMoveEvent):
+        (WebCore::PlatformScrollBar::handleMousePressEvent):
+        (WebCore::PlatformScrollBar::handleMouseReleaseEvent):
+        * platform/win/WidgetWin.cpp:
+        (WebCore::Widget::setCapturingChild):
+
 2006-09-30  Dave Hyatt  <hyatt@apple.com>
 
         This patch makes iframes and frames able to receive mouse events.  Down, up, click, selection

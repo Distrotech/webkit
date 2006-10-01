@@ -27,12 +27,15 @@
 #include "FrameView.h"
 #include "Frame.h"
 #include "MouseEventWithHitTestResults.h"
+#include "PlatformScrollBar.h"
 #include "PlatformWheelEvent.h"
 
 namespace WebCore {
 
 bool FrameView::passMousePressEventToSubframe(MouseEventWithHitTestResults& mev, Frame* subframe)
 {
+    if (capturingMouse())
+        subframe->view()->setCapturingMouse(true);
     subframe->view()->handleMousePressEvent(mev.event());
     return true;
 }
@@ -54,5 +57,13 @@ bool FrameView::passWheelEventToSubframe(PlatformWheelEvent& e, Frame* subframe)
     subframe->view()->wheelEvent(e);
     return e.isAccepted();
 }
-    
+
+bool FrameView::passMousePressEventToScrollbar(MouseEventWithHitTestResults& mev)
+{
+    if (!mev.scrollbar()->isEnabled())
+        return false;
+    mev.scrollbar()->handleMousePressEvent(mev.event());
+    return true;
+}
+
 }

@@ -48,8 +48,10 @@ public:
     virtual void setRect(const IntRect&);
     virtual void setEnabled(bool);
     virtual void paint(GraphicsContext*, const IntRect& damageRect);
+
     virtual void handleMouseMoveEvent(const PlatformMouseEvent&);
     virtual void handleMouseOutEvent(const PlatformMouseEvent&);
+    virtual void handleMousePressEvent(const PlatformMouseEvent&);
     virtual void handleMouseReleaseEvent(const PlatformMouseEvent&);
 
     static void themeChanged();
@@ -80,6 +82,7 @@ private:
     void invalidateTrack();
 
     ScrollBarPart m_hoveredPart;
+    ScrollBarPart m_pressedPart;
 };
 
 }

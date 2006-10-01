@@ -226,6 +226,8 @@ Widget* Widget::capturingChild()
 void Widget::setCapturingChild(Widget* w)
 {
     data->capturingChild = w;
+    if (capturingMouse() && w)
+        data->capturingMouse = false;
     if (parent())
         parent()->setCapturingChild(w ? this : 0);
 }
