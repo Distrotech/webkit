@@ -78,11 +78,15 @@ private:
     
     ScrollBarPart hitTest(const PlatformMouseEvent&);
     
+    void startTimerIfNeeded();
+    void stopTimerIfNeeded();
+
     void invalidatePart(ScrollBarPart);
     void invalidateTrack();
 
     ScrollBarPart m_hoveredPart;
     ScrollBarPart m_pressedPart;
+    int m_pressedPos;
 };
 
 }

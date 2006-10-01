@@ -26,6 +26,7 @@
 #include "PlatformMouseEvent.h"
 
 #include <windows.h>
+#include <windowsx.h>
 
 namespace WebCore {
 
@@ -35,13 +36,13 @@ const PlatformMouseEvent::CurrentEventTag PlatformMouseEvent::currentEvent = {};
 
 static IntPoint positionForEvent(HWND hWnd, LPARAM lParam)
 {
-    POINT point = {LOWORD(lParam), HIWORD(lParam)};
+    POINT point = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
     return point;
 }
 
 static IntPoint globalPositionForEvent(HWND hWnd, LPARAM lParam)
 {
-    POINT point = {LOWORD(lParam), HIWORD(lParam)};
+    POINT point = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
     ClientToScreen(hWnd, &point);
     return point;
 }

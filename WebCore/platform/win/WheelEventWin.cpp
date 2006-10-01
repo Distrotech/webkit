@@ -26,6 +26,7 @@
 #include "PlatformWheelEvent.h"
 
 #include <windows.h>
+#include <windowsx.h>
 
 namespace WebCore {
 
@@ -33,14 +34,14 @@ namespace WebCore {
 
 static IntPoint positionForEvent(HWND hWnd, LPARAM lParam)
 {
-    POINT point = {LOWORD(lParam), HIWORD(lParam)};
+    POINT point = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
     ScreenToClient(hWnd, &point);
     return point;
 }
 
 static IntPoint globalPositionForEvent(HWND hWnd, LPARAM lParam)
 {
-    POINT point = {LOWORD(lParam), HIWORD(lParam)};
+    POINT point = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
     return point;
 }
 
