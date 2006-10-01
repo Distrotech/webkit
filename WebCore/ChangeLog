@@ -1,4 +1,24 @@
 2006-10-01  Dave Hyatt  <hyatt@apple.com>
+
+        Finish the scrollbar.  Handle arrow and track scrolling.  Everything is finished now except for implementing a Win2k look.
+
+        * platform/win/PlatformScrollBar.h:
+        * platform/win/PlatformScrollBarWin.cpp:
+        (WebCore::PlatformScrollBar::PlatformScrollBar):
+        (WebCore::PlatformScrollBar::~PlatformScrollBar):
+        (WebCore::PlatformScrollBar::thumbRect):
+        (WebCore::PlatformScrollBar::handleMouseMoveEvent):
+        (WebCore::PlatformScrollBar::handleMousePressEvent):
+        (WebCore::PlatformScrollBar::handleMouseReleaseEvent):
+        (WebCore::PlatformScrollBar::startTimerIfNeeded):
+        (WebCore::PlatformScrollBar::stopTimerIfNeeded):
+        (WebCore::PlatformScrollBar::autoscrollPressedPart):
+        (WebCore::PlatformScrollBar::autoscrollTimerFired):
+        (WebCore::PlatformScrollBar::pressedPartScrollDirection):
+        (WebCore::PlatformScrollBar::pressedPartScrollGranularity):
+        (WebCore::PlatformScrollBar::thumbUnderMouse):
+
+2006-10-01  Dave Hyatt  <hyatt@apple.com>
         
         Make thumb dragging work on the scrollbar.
         

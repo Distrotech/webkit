@@ -28,6 +28,7 @@
 
 #include "Widget.h"
 #include "ScrollBar.h"
+#include "Timer.h"
 
 typedef struct HDC__* HDC;
 
@@ -56,6 +57,8 @@ public:
 
     static void themeChanged();
 
+    void autoscrollTimerFired(Timer<PlatformScrollBar>*);
+
 protected:    
     virtual void updateThumbPosition();
     virtual void updateThumbProportion();
@@ -64,6 +67,7 @@ private:
     IntRect backButtonRect() const;
     IntRect forwardButtonRect() const;
     IntRect trackRect() const;
+    IntRect thumbRect() const;
     IntRect gripperRect(const IntRect& thumbRect) const;    
     void splitTrack(const IntRect& trackRect, IntRect& beforeThumbRect, IntRect& thumbRect, IntRect& afterThumbRect) const;
 
@@ -78,8 +82,13 @@ private:
     
     ScrollBarPart hitTest(const PlatformMouseEvent&);
     
-    void startTimerIfNeeded();
+    void startTimerIfNeeded(double delay);
     void stopTimerIfNeeded();
+    void autoscrollPressedPart(double delay);
+    ScrollDirection pressedPartScrollDirection();
+    ScrollGranularity pressedPartScrollGranularity();
+
+    bool thumbUnderMouse();
 
     void invalidatePart(ScrollBarPart);
     void invalidateTrack();
@@ -87,6 +96,7 @@ private:
     ScrollBarPart m_hoveredPart;
     ScrollBarPart m_pressedPart;
     int m_pressedPos;
+    Timer<PlatformScrollBar> m_scrollTimer;
 };
 
 }
