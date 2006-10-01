@@ -697,8 +697,7 @@ void WebFrame::paint(HDC dc, LPARAM options)
             CGContextTranslateCTM(gc.platformContext(), CGFloat(-d->frameView->contentsX() - rcPaint.left),
                                                         CGFloat(-d->frameView->contentsY() - rcPaint.top));
             d->frame->paint(&gc, documentDirtyRect);
-            SetDIBitsToDevice(hdc, rcPaint.left, rcPaint.top,
-                size.cx, size.cy, 0, 0, 0, size.cy, pixels, &bitmapInfo, DIB_RGB_COLORS);
+            BitBlt(hdc, rcPaint.left, rcPaint.top, size.cx, size.cy, bitmapDC, 0, 0, SRCCOPY);
         }
 
         SelectObject(bitmapDC, oldBitmap);

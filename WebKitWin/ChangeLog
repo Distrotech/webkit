@@ -1,3 +1,10 @@
+2006-09-30  Dave Hyatt  <hyatt@apple.com>
+
+        Switch over from SetDIBBitsToDevice to BitBlt, since BitBlt is supposedly faster according to MSDN.
+
+        * WebFrame.cpp:
+        (WebFrame::paint):
+
 2006-09-29  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Geoff.
