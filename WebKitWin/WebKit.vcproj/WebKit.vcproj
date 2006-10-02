@@ -100,7 +100,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="if not &quot;$(BuildBot)&quot;==&quot;&quot; exit /b&#x0D;&#x0A;&#x0D;&#x0A;regsvr32 /s &quot;$(TargetPath)&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(TargetPath)&quot; &quot;$(WebKitSDKDir)\bin&quot;&#x0D;&#x0A;"
+				CommandLine="if not &quot;$(BuildBot)&quot;==&quot;&quot; exit /b&#x0D;&#x0A;&#x0D;&#x0A;regsvr32 /s &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -188,7 +188,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="if not &quot;$(BuildBot)&quot;==&quot;&quot; exit /b&#x0D;&#x0A;&#x0D;&#x0A;regsvr32 /s &quot;$(TargetPath)&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(TargetPath)&quot; &quot;$(WebKitSDKDir)\bin&quot;&#x0D;&#x0A;"
+				CommandLine="if not &quot;$(BuildBot)&quot;==&quot;&quot; exit /b&#x0D;&#x0A;&#x0D;&#x0A;regsvr32 /s &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
 	</Configurations>

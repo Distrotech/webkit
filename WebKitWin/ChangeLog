@@ -1,3 +1,9 @@
+2006-10-02  Adam Roben  <aroben@apple.com>
+
+        Build fix: Don't copy WebKit(_debug).dll into $WebKitSDKDir
+
+        * WebKit.vcproj/WebKit.vcproj: Remove xcopy call
+
 2006-09-30  Dave Hyatt  <hyatt@apple.com>
 
         Switch over from SetDIBBitsToDevice to BitBlt, since BitBlt is supposedly faster according to MSDN.
