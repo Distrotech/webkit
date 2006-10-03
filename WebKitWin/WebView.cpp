@@ -132,7 +132,7 @@ void WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
     static LONG globalPrevMouseDownTime;
 
     // Create our event.
-    PlatformMouseEvent mouseEvent(m_viewWindow, wParam, lParam);
+    PlatformMouseEvent mouseEvent(m_viewWindow, message, wParam, lParam);
    
     bool insideThreshold = abs(globalPrevPoint.x() - mouseEvent.pos().x()) < ::GetSystemMetrics(SM_CXDOUBLECLK) &&
                            abs(globalPrevPoint.y() - mouseEvent.pos().y()) < ::GetSystemMetrics(SM_CYDOUBLECLK);
