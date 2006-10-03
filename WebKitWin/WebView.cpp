@@ -315,7 +315,7 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             if (mainFrameImpl) {
                 IWebDataSource* dataSource = 0;
                 mainFrameImpl->dataSource(&dataSource);
-                if (!dataSource || !mainFrameImpl->loading())
+                if (!dataSource || mainFrameImpl->impl()->view()->didFirstLayout())
                     mainFrameImpl->paint(0, 0);
                 else
                     ValidateRect(hWnd, 0);
@@ -340,11 +340,11 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
         case WM_LBUTTONUP:
         case WM_MBUTTONUP:
         case WM_RBUTTONUP:
-            if (webView)
+            if (webView && mainFrameImpl->impl()->view()->didFirstLayout())
                 webView->handleMouseEvent(message, wParam, lParam);
             break;
         case WM_MOUSEWHEEL:
-            if (webView)
+            if (webView && mainFrameImpl->impl()->view()->didFirstLayout())
                 webView->mouseWheel(wParam, lParam);
             break;
         case WM_HSCROLL: {

@@ -1,3 +1,16 @@
+2006-10-02  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Geoff, Hyatt.
+        
+        <rdar://4757389> Browser locks up while navigating to a new page
+        <rdar://4757407> Images fail to load at https://webmail.apple.com
+
+        * WebFrame.cpp: Preserve old document until new doc has started loading.
+        (WebFrame::loadDataSource): Don't destroy old document when a new load kicks off.
+        (WebFrame::receivedResponse): Destroy old document when first data is received for new doc.
+        * WebView.cpp: Fix painting suppression code.
+        (WebViewWndProc): Suppress painting, mouse events until first layout instead of while loading.
+
 2006-10-02  Adam Roben  <aroben@apple.com>
 
         Build fix: Don't copy WebKit(_debug).dll into $WebKitSDKDir

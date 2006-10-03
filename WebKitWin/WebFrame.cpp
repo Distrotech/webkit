@@ -730,8 +730,6 @@ HRESULT WebFrame::loadDataSource(WebDataSource* dataSource)
             hr = request->HTTPMethod(&method);
             if (SUCCEEDED(hr)) {
                 KURL kurl(DeprecatedString((DeprecatedChar*)url, SysStringLen(url)));
-                d->frame->didOpenURL(kurl);
-                d->frame->begin(kurl);
                 String methodString(method, SysStringLen(method));
                 ResourceLoader* job;
                 const FormData* formData = 0;
@@ -743,6 +741,8 @@ HRESULT WebFrame::loadDataSource(WebDataSource* dataSource)
                     job = new ResourceLoader(this, methodString, kurl, *formData);
                 else
                     job = new ResourceLoader(this, methodString, kurl);
+                if (!d->frame->document())
+                    d->frame->begin(); // FIXME - the frame should do this for us
                 job->start(d->frame->document()->docLoader());
                 IWebFrameLoadDelegate* frameLoadDelegate;
                 if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
@@ -1062,6 +1062,9 @@ void WebFrame::receivedResponse(ResourceLoader* loader, PlatformResponse platfor
         m_dataSource->QueryInterface(IID_IWebDataSourcePrivate, (void**)&m_dataSourcePrivate);
         m_provisionalDataSource = 0;
     }
+
+    d->frame->didOpenURL(loader->url());
+    d->frame->begin(loader->url());
 
     m_buffer.clear();
 

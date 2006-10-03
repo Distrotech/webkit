@@ -1,3 +1,30 @@
+2006-10-02  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Hyatt.
+
+        <rdar://4757387> (partial fix) Unable to sign on to my.yahoo.com
+        <rdar://4757405> (partial fix) Unable to log onto secure site (www.schwab.com)
+        <rdar://4757411> (partial fix) Unable to log onto any AppleConnect site (but using back and resubmiting works)
+
+        WinInet fixes.
+        Don't post data using HTTP when HTTPS should be used.
+        Fix redirect from POST to GET case.
+        
+        There is a remaining bug with the way that we queue WinInet callbacks
+        still to be addressed.
+
+        * platform/win/ResourceLoaderWin.cpp:
+        (WebCore::addToOutstandingJobs): Skip dwContext of 0 (rollover case).
+        (WebCore::ResourceLoaderWndProc): Call default wndproc properly.
+            Pass INTERNET_FLAG_SECURE when necessary for HTTPS.
+            Fix redirect code.
+            Initialize buffers struct.
+            Pass proper context in InternetReadFileExA
+        (WebCore::initializeOffScreenResourceLoaderWindow): Init a struct to {0} instead of using memset.
+        (WebCore::transferJobStatusCallback): Prevent future bugs by making an else a bit more explicit.
+        (WebCore::ResourceLoader::start): Pass proper port for HTTP vs. HTTPS.
+        (WebCore::ResourceLoader::cancel): Zero out handle when closing.
+
 2006-10-01  Dave Hyatt  <hyatt@apple.com>
 
         Finish the scrollbar.  Handle arrow and track scrolling.  Everything is finished now except for implementing a Win2k look.
