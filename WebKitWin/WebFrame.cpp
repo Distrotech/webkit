@@ -1505,3 +1505,13 @@ bool WebFrame::runJavaScriptPrompt(const String& message, const String& defaultV
     }
     return succeeded;
 }
+
+bool WebFrame::tabsToLinks() const
+{
+    BOOL enabled = FALSE;
+    IWebPreferences* preferences;
+    if (SUCCEEDED(d->webView->preferences(&preferences)))
+        preferences->tabsToLinks(&enabled);
+
+    return !!enabled;
+}

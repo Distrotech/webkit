@@ -159,6 +159,7 @@ public:
     virtual void runJavaScriptAlert(const WebCore::String&);
     virtual bool runJavaScriptConfirm(const WebCore::String&);
     virtual bool runJavaScriptPrompt(const WebCore::String& message, const WebCore::String& defaultValue, WebCore::String& result);
+    virtual bool tabsToLinks() const;
 
     // WebFrame
     void initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, WebCore::Page* page, WebCore::Element* ownerElement);

@@ -218,7 +218,6 @@ void CheckCacheObjectStatus(DocLoader*, CachedResource*) { LOG_NOIMPL(); }
 void Widget::setIsSelected(bool) { LOG_NOIMPL(); }
 
 bool ScrollView::inWindow() const { LOG_NOIMPL(); return true; }
-void ScrollView::scrollPointRecursively(int x, int y) { LOG_NOIMPL(); }
 
 #if PLATFORM(CAIRO)
 

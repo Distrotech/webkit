@@ -139,6 +139,19 @@ bool FrameWin::keyPress(const PlatformKeyboardEvent& keyEvent)
     return result;
 }
 
+bool FrameWin::tabsToLinks() const
+{
+    if (m_client)
+        return m_client->tabsToLinks();
+
+    return false;
+}
+
+bool FrameWin::tabsToAllControls() const
+{
+    return true;
+}
+
 void FrameWin::setTitle(const String &title)
 {
     String text = title;

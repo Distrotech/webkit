@@ -66,6 +66,8 @@ public:
     virtual void runJavaScriptAlert(const WebCore::String&) = 0;
     virtual bool runJavaScriptConfirm(const WebCore::String&) = 0;
     virtual bool runJavaScriptPrompt(const WebCore::String& message, const WebCore::String& defaultValue, WebCore::String& result) = 0;
+
+    virtual bool tabsToLinks() const = 0;
 };
 
 class FrameWin : public Frame
@@ -140,6 +142,9 @@ public:
     virtual void respondToChangedContents(const Selection &endingSelection);
     virtual bool shouldChangeSelection(const Selection& oldSelection, const Selection& newSelection, EAffinity affinity, bool stillSelecting) const;
     virtual void partClearedInBegin();
+
+    virtual bool tabsToLinks() const;
+    virtual bool tabsToAllControls() const;
 
     virtual bool canGoBackOrForward(int distance) const;
     virtual void handledOnloadEvents();

@@ -1,3 +1,16 @@
+2006-10-03  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Darin.
+
+        Part of fix for <rdar://problem/4603342>
+        Keyboard navigability
+
+        Implement methods to determine tabbing preferences.
+
+        * WebFrame.cpp:
+        (WebFrame::tabsToLinks):
+        * WebFrame.h:
+
 2006-10-04  Darin Adler  <darin@apple.com>
 
         Reviewed by Adam.

@@ -193,6 +193,12 @@ void ScrollView::scrollBy(int dx, int dy)
         InvalidateRect(containingWindow(), &dirtyRect, true);
 }
 
+void ScrollView::scrollPointRecursively(int x, int y)
+{
+    // FIXME: This code ignorantly assumes we have no subframes. Need to recursively handle subframes.
+    scrollBy(x - m_data->scrollOffset.width(), y - m_data->scrollOffset.height());
+}
+
 WebCore::ScrollBarMode ScrollView::hScrollBarMode() const
 {
     return m_data->hScrollBarMode;

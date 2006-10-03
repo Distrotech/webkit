@@ -1,3 +1,23 @@
+2006-10-03  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Darin.
+
+        Fixes <rdar://problem/4603342>
+        Keyboard navigability
+
+        Implement tabbing between form elements (in the single-frame case).
+
+        * bridge/win/FrameWin.cpp: Add methods to determine tabbing
+        preferences.
+        (WebCore::FrameWin::tabsToLinks):
+        (WebCore::FrameWin::tabsToAllControls):
+        * bridge/win/FrameWin.h: Add tabsToLinks() to FrameWinClient
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::scrollPointRecursively): Implemented for
+        single-frame case.
+        * platform/win/TemporaryLinkStubs.cpp: Remove stub for now-implemented
+        ScrollView::scrollPointsRecursively
+
 2006-10-02  Adam Roben  <aroben@apple.com>
 
         Reviewed by Maciej.
