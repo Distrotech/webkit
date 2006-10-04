@@ -355,6 +355,7 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             if (nextCharIsInputText && mainFrameImpl) {
                 UChar c = (UChar)wParam;
                 TypingCommand::insertText(mainFrameImpl->impl()->document(), String(&c, 1), false);
+                mainFrameImpl->impl()->revealSelection(RenderLayer::gAlignToEdgeIfNeeded); 
                 nextCharIsInputText = false;
             }
             break;
