@@ -75,6 +75,7 @@ namespace WebCore {
 
         // Widget functions
         virtual void setFrameGeometry(const IntRect&);
+        virtual void scrolled() const;
 
         virtual void setFocus();
         virtual void clearFocus();

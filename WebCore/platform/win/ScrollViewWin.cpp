@@ -34,36 +34,105 @@
 #include "GraphicsContext.h"
 #include "IntRect.h"
 #include "PlatformScrollBar.h"
+#include "PlatformMouseEvent.h"
 #include "PlatformWheelEvent.h"
 #include "ScrollBar.h"
 #include <algorithm>
 #include <winsock2.h>
 #include <windows.h>
 #include <wtf/Assertions.h>
+#include <wtf/HashSet.h>
 
 using namespace std;
 
 namespace WebCore {
 
-class ScrollView::ScrollViewPrivate {
+class ScrollView::ScrollViewPrivate : public ScrollBarClient {
 public:
-    ScrollViewPrivate()
-        : hasStaticBackground(false)
-        , suppressScrollBars(false)
-        , vScrollBarMode(ScrollBarAuto)
-        , hScrollBarMode(ScrollBarAuto)
+    ScrollViewPrivate(ScrollView* view)
+        : m_view(view)
+        , m_hasStaticBackground(false)
+        , m_scrollBarsSuppressed(false)
+        , m_inUpdateScrollBars(false)
+        , m_vScrollBarMode(ScrollBarAuto)
+        , m_hScrollBarMode(ScrollBarAuto)
     {
     }
-    IntSize scrollOffset;
-    IntSize contentsSize;
-    bool hasStaticBackground;
-    bool suppressScrollBars;
-    ScrollBarMode vScrollBarMode;
-    ScrollBarMode hScrollBarMode;
+
+    void setHasHorizontalScrollBar(bool hasBar);
+    void setHasVerticalScrollBar(bool hasBar);
+
+    void valueChanged(ScrollBar*);
+
+    ScrollView* m_view;
+    IntSize m_scrollOffset;
+    IntSize m_contentsSize;
+    IntSize m_viewSize;
+    bool m_hasStaticBackground;
+    bool m_scrollBarsSuppressed;
+    bool m_inUpdateScrollBars;
+    ScrollBarMode m_vScrollBarMode;
+    ScrollBarMode m_hScrollBarMode;
+    RefPtr<PlatformScrollBar> m_vBar;
+    RefPtr<PlatformScrollBar> m_hBar;
+    HashSet<const Widget*> m_children;
 };
 
+void ScrollView::ScrollViewPrivate::setHasHorizontalScrollBar(bool hasBar)
+{
+    if (ScrollBar::hasPlatformScrollBars()) {
+        if (hasBar && !m_hBar) {
+            m_hBar = new PlatformScrollBar(this, HorizontalScrollBar, RegularScrollBar);
+            m_view->addChild(m_hBar.get());
+        } else if (!hasBar && m_hBar) {
+            m_view->removeChild(m_hBar.get());
+            m_hBar = 0;
+        }
+    }
+}
+
+void ScrollView::ScrollViewPrivate::setHasVerticalScrollBar(bool hasBar)
+{
+    if (ScrollBar::hasPlatformScrollBars()) {
+        if (hasBar && !m_vBar) {
+            m_vBar = new PlatformScrollBar(this, VerticalScrollBar, RegularScrollBar);
+            m_view->addChild(m_vBar.get());
+        } else if (!hasBar && m_vBar) {
+            m_view->removeChild(m_vBar.get());
+            m_vBar = 0;
+        }
+    }
+}
+
+void ScrollView::ScrollViewPrivate::valueChanged(ScrollBar* bar)
+{
+    // Figure out if we really moved.
+    IntSize newOffset = m_scrollOffset;
+    if (bar == m_hBar)
+        newOffset.setWidth(bar->value());
+    else if (bar == m_vBar)
+        newOffset.setHeight(bar->value());
+    IntSize scrollDelta = newOffset - m_scrollOffset;
+    if (scrollDelta == IntSize())
+        return;
+    m_scrollOffset = newOffset;
+
+    if (m_scrollBarsSuppressed)
+        return;
+
+    RECT dirtyRect = m_view->convertToContainingWindow(IntRect(0, 0, m_view->visibleWidth(), m_view->visibleHeight()));
+    if (!m_hasStaticBackground) { // The main frame can just blit the WebView window
+        // FIXME: Could make this more efficient by passing a valid clip rect for only the document content.
+        // FIXME: Find a way to blit subframes without blitting overlapping content
+        ::ScrollWindowEx(m_view->containingWindow(), -scrollDelta.width(), -scrollDelta.height(), &dirtyRect, &dirtyRect, 0, 0, SW_INVALIDATE | SW_SCROLLCHILDREN);
+    } else
+        ::InvalidateRect(m_view->containingWindow(), &dirtyRect, false);
+
+    m_view->scrolled();
+}
+
 ScrollView::ScrollView()
-    : m_data(new ScrollViewPrivate())
+    : m_data(new ScrollViewPrivate(this))
 {
 }
 
@@ -74,7 +143,12 @@ ScrollView::~ScrollView()
 
 void ScrollView::updateContents(const IntRect& rect, bool now)
 {
-    IntRect containingWindowRect = Widget::convertToContainingWindow(rect);
+    if (rect.isEmpty())
+        return;
+
+    IntPoint windowPoint = contentsToWindow(rect.location());
+    IntRect containingWindowRect = rect;
+    containingWindowRect.setLocation(windowPoint);
 
     RECT containingWindowRectWin = containingWindowRect;
     HWND containingWindowHandle = containingWindow();
@@ -85,25 +159,24 @@ void ScrollView::updateContents(const IntRect& rect, bool now)
     ReleaseDC(containingWindowHandle, dc);
 #endif
 
-    InvalidateRect(containingWindowHandle, &containingWindowRectWin, true);
+    ::InvalidateRect(containingWindowHandle, &containingWindowRectWin, false);
     if (now)
-        UpdateWindow(containingWindowHandle);
+        ::UpdateWindow(containingWindowHandle);
 }
 
 int ScrollView::visibleWidth() const
 {
-    return visibleContentRect().width();
+    return width() - (m_data->m_vBar ? m_data->m_vBar->width() : 0);
 }
 
 int ScrollView::visibleHeight() const
 {
-    return visibleContentRect().height();
+    return height() - (m_data->m_hBar ? m_data->m_hBar->height() : 0);
 }
 
 FloatRect ScrollView::visibleContentRect() const
 {
-    // FIXME: Subframes need to subtract scrollbar width & height when scrollbars are showing
-    return FloatRect(contentsX(), contentsY(), width(), height());
+    return FloatRect(contentsX(), contentsY(), visibleWidth(), visibleHeight());
 }
 
 void ScrollView::setContentsPos(int newX, int newY)
@@ -115,12 +188,13 @@ void ScrollView::setContentsPos(int newX, int newY)
 
 void ScrollView::resizeContents(int w, int h)
 {
-    IntSize newSize(w, h);
-    if (m_data->contentsSize != newSize) {
-        m_data->contentsSize = newSize;
-        updateScrollBars();
-    } else
-        fprintf(stdout, "resizeContents\n");
+    IntSize newContentsSize(w, h);
+    IntSize newViewSize(width(), height());
+    if (m_data->m_contentsSize != newContentsSize || m_data->m_viewSize != newViewSize) {
+        m_data->m_contentsSize = newContentsSize;
+        m_data->m_viewSize = newViewSize;
+        updateScrollBars(m_data->m_scrollOffset);
+    }
 }
 
 int ScrollView::contentsX() const
@@ -135,160 +209,249 @@ int ScrollView::contentsY() const
 
 int ScrollView::contentsWidth() const
 {
-    return m_data->contentsSize.width();
+    return m_data->m_contentsSize.width();
 }
 
 int ScrollView::contentsHeight() const
 {
-    return m_data->contentsSize.height();
+    return m_data->m_contentsSize.height();
 }
 
-IntPoint ScrollView::convertToContainingWindow(const IntPoint& point) const
+IntPoint ScrollView::windowToContents(const IntPoint& windowPoint) const
 {
-    IntPoint convertedPoint = point - scrollOffset();
-    return Widget::convertToContainingWindow(convertedPoint);
+    IntPoint viewPoint = convertFromContainingWindow(windowPoint);
+    return viewPoint + scrollOffset();
 }
 
-IntPoint ScrollView::convertFromContainingWindow(const IntPoint& point) const
+IntPoint ScrollView::contentsToWindow(const IntPoint& contentsPoint) const
 {
-    IntPoint convertedPoint = point + scrollOffset();
-    return Widget::convertFromContainingWindow(convertedPoint);
+    IntPoint viewPoint = contentsPoint - scrollOffset();
+    return convertToContainingWindow(viewPoint);  
+}
+
+IntPoint ScrollView::convertChildToSelf(const Widget* child, const IntPoint& point) const
+{
+    IntPoint newPoint = point;
+    if (child != m_data->m_hBar && child != m_data->m_vBar)
+        newPoint = point - scrollOffset();
+    return Widget::convertChildToSelf(child, newPoint);
+}
+
+IntPoint ScrollView::convertSelfToChild(const Widget* child, const IntPoint& point) const
+{
+    IntPoint newPoint = point;
+    if (child != m_data->m_hBar && child != m_data->m_vBar)
+        newPoint = point + scrollOffset();
+    return Widget::convertSelfToChild(child, newPoint);
 }
 
 IntSize ScrollView::scrollOffset() const
 {
-    return m_data->scrollOffset;
+    return m_data->m_scrollOffset;
 }
 
 IntSize ScrollView::maximumScroll() const
 {
-    IntSize delta = (m_data->contentsSize - IntSize(visibleWidth(), visibleHeight())) - m_data->scrollOffset;
+    IntSize delta = (m_data->m_contentsSize - IntSize(visibleWidth(), visibleHeight())) - scrollOffset();
     delta.clampNegativeToZero();
     return delta;
 }
 
 void ScrollView::scrollBy(int dx, int dy)
 {
-    IntSize scrollOffset = m_data->scrollOffset;
+    IntSize scrollOffset = m_data->m_scrollOffset;
     IntSize newScrollOffset = scrollOffset + IntSize(dx, dy).shrunkTo(maximumScroll());
     newScrollOffset.clampNegativeToZero();
 
     if (newScrollOffset == scrollOffset)
         return;
 
-    m_data->scrollOffset = newScrollOffset;
-    updateScrollBars();
-
-    // ScrollBar updates can fail, so we check the final delta before scrolling
-    IntSize scrollDelta = m_data->scrollOffset - scrollOffset;
-    if (scrollDelta == IntSize())
-        return;
-
-    RECT dirtyRect = Widget::convertToContainingWindow(IntRect(contentsX(), contentsY(), width(), height()));
-    if (!m_data->hasStaticBackground) { // The main frame can just blit the WebView window
-        // FIXME: Could make this more efficient by passing a valid clip rect for only the document content.
-        // FIXME: Find a way to blit subframes without blitting overlapping content
-        ScrollWindowEx(containingWindow(), -scrollDelta.width(), -scrollDelta.height(), &dirtyRect, &dirtyRect, 0, 0, SW_INVALIDATE | SW_SCROLLCHILDREN);
-    } else
-        InvalidateRect(containingWindow(), &dirtyRect, true);
+    updateScrollBars(newScrollOffset);
 }
 
 void ScrollView::scrollPointRecursively(int x, int y)
 {
-    // FIXME: This code ignorantly assumes we have no subframes. Need to recursively handle subframes.
-    scrollBy(x - m_data->scrollOffset.width(), y - m_data->scrollOffset.height());
+    IntPoint p(max(0, x), max(0, y));
+    ScrollView* view = this;
+    ScrollView* oldView = view;
+    while (view) {
+        view->setContentsPos(p.x(), p.y());
+        p.move(view->x() - view->scrollOffset().width(), view->y() - view->scrollOffset().height());
+        view = static_cast<ScrollView*>(parent());
+    }
 }
 
 WebCore::ScrollBarMode ScrollView::hScrollBarMode() const
 {
-    return m_data->hScrollBarMode;
+    return m_data->m_hScrollBarMode;
 }
 
 WebCore::ScrollBarMode ScrollView::vScrollBarMode() const
 {
-    return m_data->vScrollBarMode;
+    return m_data->m_vScrollBarMode;
 }
 
 void ScrollView::suppressScrollBars(bool suppressed, bool repaintOnSuppress)
 {
-    m_data->suppressScrollBars = suppressed;
-    if (repaintOnSuppress)
-        updateScrollBars();
+    m_data->m_scrollBarsSuppressed = suppressed;
+    if (repaintOnSuppress && !suppressed) {
+        if (m_data->m_hBar)
+            m_data->m_hBar->invalidate();
+        if (m_data->m_vBar)
+            m_data->m_vBar->invalidate();
+    }
 }
 
 void ScrollView::setHScrollBarMode(ScrollBarMode newMode)
 {
-    if (m_data->hScrollBarMode != newMode) {
-        m_data->hScrollBarMode = newMode;
-        updateScrollBars();
+    if (m_data->m_hScrollBarMode != newMode) {
+        m_data->m_hScrollBarMode = newMode;
+        updateScrollBars(m_data->m_scrollOffset);
     }
 }
 
 void ScrollView::setVScrollBarMode(ScrollBarMode newMode)
 {
-    if (m_data->vScrollBarMode != newMode) {
-        m_data->vScrollBarMode = newMode;
-        updateScrollBars();
+    if (m_data->m_vScrollBarMode != newMode) {
+        m_data->m_vScrollBarMode = newMode;
+        updateScrollBars(m_data->m_scrollOffset);
     }
 }
 
 void ScrollView::setScrollBarsMode(ScrollBarMode newMode)
 {
-    m_data->hScrollBarMode = m_data->vScrollBarMode = newMode;
-    updateScrollBars();
+    if (m_data->m_hScrollBarMode != newMode ||
+        m_data->m_vScrollBarMode != newMode) {
+        m_data->m_hScrollBarMode = m_data->m_vScrollBarMode = newMode;
+        updateScrollBars(m_data->m_scrollOffset);
+    }
 }
 
 void ScrollView::setStaticBackground(bool flag)
 {
-    m_data->hasStaticBackground = flag;
+    m_data->m_hasStaticBackground = flag;
 }
 
-int ScrollView::updateScrollInfo(short type, int current, int max, int pageSize)
+void ScrollView::updateScrollBars(const IntSize& desiredOffset)
 {
-    if (!parent()) {
-        SCROLLINFO si;
-        si.cbSize = sizeof(si);
-        si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS;
-        si.nMin   = 0;
-        si.nMax   = max;
-        si.nPage  = pageSize;
-        si.nPos   = current;
-        SetScrollInfo(containingWindow(), type, &si, TRUE);
-        GetScrollInfo(containingWindow(), type, &si);
-        return si.nPos;
+    // Don't allow re-entrancy into this function.
+    if (m_data->m_inUpdateScrollBars)
+        return;
+    
+    m_data->m_inUpdateScrollBars = true;
+
+    bool hasVerticalScrollBar = m_data->m_vBar;
+    bool hasHorizontalScrollBar = m_data->m_hBar;
+    bool oldHasVertical = hasVerticalScrollBar;
+    bool oldHasHorizontal = hasHorizontalScrollBar;
+    ScrollBarMode hScroll = m_data->m_hScrollBarMode;
+    ScrollBarMode vScroll = m_data->m_vScrollBarMode;
+    
+    const int cVerticalWidth = PlatformScrollBar::verticalScrollBarWidth();
+    const int cHorizontalHeight = PlatformScrollBar::horizontalScrollBarHeight();
+
+    for (int pass = 0; pass < 2; pass++) {
+        bool scrollsVertically;
+        bool scrollsHorizontally;
+
+        if (!m_data->m_scrollBarsSuppressed && (hScroll == ScrollBarAuto || vScroll == ScrollBarAuto)) {
+            // Do a layout if pending before checking if scrollbars are needed.
+            if (isFrameView() && (hasVerticalScrollBar != oldHasVertical || hasHorizontalScrollBar != oldHasHorizontal))
+                static_cast<FrameView*>(this)->layout();
+             
+            scrollsVertically = (vScroll == ScrollBarAlwaysOn) || (vScroll == ScrollBarAuto && contentsHeight() > height());
+            if (scrollsVertically)
+                scrollsHorizontally = (hScroll == ScrollBarAlwaysOn) || (hScroll == ScrollBarAuto && contentsWidth() + cVerticalWidth > width());
+            else {
+                scrollsHorizontally = (hScroll == ScrollBarAlwaysOn) || (hScroll == ScrollBarAuto && contentsWidth() > width());
+                if (scrollsHorizontally)
+                    scrollsVertically = (vScroll == ScrollBarAlwaysOn) || (vScroll == ScrollBarAuto && contentsHeight() + cHorizontalHeight > height());
+            }
+        }
+        else {
+            scrollsHorizontally = (hScroll == ScrollBarAuto) ? hasHorizontalScrollBar : (hScroll == ScrollBarAlwaysOn);
+            scrollsVertically = (vScroll == ScrollBarAuto) ? hasVerticalScrollBar : (vScroll == ScrollBarAlwaysOn);
+        }
+        
+        if (hasVerticalScrollBar != scrollsVertically) {
+            m_data->setHasVerticalScrollBar(scrollsVertically);
+            hasVerticalScrollBar = scrollsVertically;
+        }
+
+        if (hasHorizontalScrollBar != scrollsHorizontally) {
+            m_data->setHasHorizontalScrollBar(scrollsHorizontally);
+            hasHorizontalScrollBar = scrollsHorizontally;
+        }
     }
-
-    // FIXME: Handle scrolling for subframes
-    return current;
-}
-
-void ScrollView::updateScrollBars()
-{ 
+    
+    // Set up the range (and page step/line step).
     IntSize maxScrollPosition(contentsWidth() - visibleWidth(), contentsHeight() - visibleHeight());
-    IntSize scroll = scrollOffset().shrunkTo(maxScrollPosition);
+    IntSize scroll = desiredOffset.shrunkTo(maxScrollPosition);
     scroll.clampNegativeToZero();
 
-    m_data->scrollOffset = 
-        IntSize(updateScrollInfo(SB_HORZ, scroll.width(), contentsWidth() - 1, width()),
-                updateScrollInfo(SB_VERT, scroll.height(), contentsHeight() - 1, height()));
+    // FIXME: Need to write code to avoid the Safari resizer.
+    if (m_data->m_hBar) {
+        int clientWidth = visibleWidth();
+        m_data->m_hBar->setEnabled(contentsWidth() > clientWidth);
+        int pageStep = (clientWidth - PAGE_KEEP);
+        if (pageStep < 0) pageStep = clientWidth;
+        IntRect oldRect(m_data->m_hBar->frameGeometry());
+        m_data->m_hBar->setRect(IntRect(0, 
+                                        height() - m_data->m_hBar->height(),
+                                        width() - (m_data->m_vBar ? m_data->m_vBar->width() : 0),
+                                        m_data->m_hBar->height()));
+        if (!m_data->m_scrollBarsSuppressed && oldRect != m_data->m_hBar->frameGeometry())
+            m_data->m_hBar->invalidate();
 
-    // FIXME: Use custom scrollbars, which will allow us to show/hide scrollbars for subframes, too
-    if (!parent()) {
-        if (m_data->hScrollBarMode != ScrollBarAuto || m_data->suppressScrollBars)
-            ShowScrollBar(containingWindow(), SB_HORZ, (m_data->hScrollBarMode != ScrollBarAlwaysOff) && !m_data->suppressScrollBars);
-        if (m_data->vScrollBarMode != ScrollBarAuto || m_data->suppressScrollBars)
-            ShowScrollBar(containingWindow(), SB_VERT, (m_data->vScrollBarMode != ScrollBarAlwaysOff) && !m_data->suppressScrollBars);
+        if (m_data->m_scrollBarsSuppressed)
+            m_data->m_hBar->setSuppressInvalidation(true);
+        m_data->m_hBar->setSteps(LINE_STEP, pageStep);
+        m_data->m_hBar->setProportion(clientWidth, contentsWidth());
+        m_data->m_hBar->setValue(scroll.width());
+        if (m_data->m_scrollBarsSuppressed)
+            m_data->m_hBar->setSuppressInvalidation(false); 
     }
+    if (m_data->m_vBar) {
+        int clientHeight = visibleHeight();
+        m_data->m_vBar->setEnabled(contentsHeight() > clientHeight);
+        int pageStep = (clientHeight - PAGE_KEEP);
+        if (pageStep < 0) pageStep = clientHeight;
+        IntRect oldRect(m_data->m_vBar->frameGeometry());
+        m_data->m_vBar->setRect(IntRect(width() - m_data->m_vBar->width(), 
+                                        0,
+                                        m_data->m_vBar->width(),
+                                        height() - (m_data->m_hBar ? m_data->m_hBar->height() : 0)));
+        if (!m_data->m_scrollBarsSuppressed && oldRect != m_data->m_vBar->frameGeometry())
+            m_data->m_vBar->invalidate();
+
+        if (m_data->m_scrollBarsSuppressed)
+            m_data->m_vBar->setSuppressInvalidation(true);
+        m_data->m_vBar->setSteps(LINE_STEP, pageStep);
+        m_data->m_vBar->setProportion(clientHeight, contentsHeight());
+        m_data->m_vBar->setValue(scroll.height());
+        if (m_data->m_scrollBarsSuppressed)
+            m_data->m_vBar->setSuppressInvalidation(false);
+    }
+
+    m_data->m_inUpdateScrollBars = false;
+}
+
+PlatformScrollBar* ScrollView::scrollbarUnderMouse(const PlatformMouseEvent& mouseEvent)
+{
+    IntPoint viewPoint = convertFromContainingWindow(mouseEvent.pos());
+    if (m_data->m_hBar && m_data->m_hBar->frameGeometry().contains(viewPoint))
+        return m_data->m_hBar.get();
+    if (m_data->m_vBar && m_data->m_vBar->frameGeometry().contains(viewPoint))
+        return m_data->m_vBar.get();
+    return 0;
 }
 
 void ScrollView::addChild(Widget* child, int x, int y) 
 { 
-    // we don't need to do the offscreen position initialization that KDE needs
-    if (x != -500000)
-        child->move(x, y);
-
+    child->move(x, y);
     child->setParent(this);
     child->setContainingWindow(containingWindow());
+    m_data->m_children.add(child);
 }
 
 void ScrollView::removeChild(Widget* child)
@@ -301,7 +464,7 @@ void ScrollView::removeChild(Widget* child)
     }
 
     child->setParent(0);
-    
+    m_data->m_children.remove(child);
 }
 
 void ScrollView::paint(GraphicsContext* context, const IntRect& rect)
@@ -318,17 +481,42 @@ void ScrollView::paint(GraphicsContext* context, const IntRect& rect)
 
     context->save();
 
-    context->addClip(frameGeometry());
-
     context->translate(x(), y());
     documentDirtyRect.move(-x(), -y());
 
     context->translate(-contentsX(), -contentsY());
     documentDirtyRect.move(contentsX(), contentsY());
 
+    context->addClip(enclosingIntRect(visibleContentRect()));
+
     static_cast<const FrameView*>(this)->frame()->paint(context, documentDirtyRect);
 
     context->restore();
+
+    // Now paint the scrollbars.
+    if (!m_data->m_scrollBarsSuppressed && (m_data->m_hBar || m_data->m_vBar)) {
+        context->save();
+        IntRect scrollViewDirtyRect = rect;
+        scrollViewDirtyRect.intersect(frameGeometry());
+        context->translate(x(), y());
+        scrollViewDirtyRect.move(-x(), -y());
+        if (m_data->m_hBar)
+            m_data->m_hBar->paint(context, scrollViewDirtyRect);
+        if (m_data->m_vBar)
+            m_data->m_vBar->paint(context, scrollViewDirtyRect);
+        
+        if (m_data->m_hBar && m_data->m_vBar) {
+            // Fill the scroll corner box with a light grey color.
+            IntRect scrollCornerRect(width() - m_data->m_vBar->width(),
+                                     height() - m_data->m_hBar->height(),
+                                     m_data->m_vBar->width(),
+                                     m_data->m_hBar->height());
+            if (scrollCornerRect.intersects(scrollViewDirtyRect))
+                context->fillRect(scrollCornerRect, Color(makeRGB(221,221,221)));
+        }
+
+        context->restore();
+    }
 }
 
 void ScrollView::themeChanged()
@@ -349,6 +537,13 @@ void ScrollView::wheelEvent(PlatformWheelEvent& e)
         e.accept();
 
     scrollBy(-e.deltaX() * LINE_STEP, -e.deltaY() * LINE_STEP);
+}
+
+void ScrollView::scrolled() const
+{
+    HashSet<const Widget*>::const_iterator end = m_data->m_children.end();
+    for (HashSet<const Widget*>::const_iterator current = m_data->m_children.begin(); current != end; ++current)
+        (*current)->scrolled();
 }
 
 } // namespace WebCore

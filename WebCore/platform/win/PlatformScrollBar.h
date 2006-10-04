@@ -56,6 +56,8 @@ public:
     virtual void handleMouseReleaseEvent(const PlatformMouseEvent&);
 
     static void themeChanged();
+    static int horizontalScrollBarHeight();
+    static int verticalScrollBarWidth();
 
     void autoscrollTimerFired(Timer<PlatformScrollBar>*);
 

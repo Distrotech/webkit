@@ -50,6 +50,7 @@ public:
     bool enabled;
     bool capturingMouse;
     Widget* capturingChild;
+    bool suppressInvalidation;
 };
 
 Widget::Widget()
@@ -61,6 +62,7 @@ Widget::Widget()
     data->enabled = true;
     data->capturingMouse = false;
     data->capturingChild = 0;
+    data->suppressInvalidation = false;
 }
 
 Widget::~Widget() 
@@ -155,20 +157,32 @@ void Widget::setCursor(const Cursor& cursor)
 
 IntPoint Widget::convertToContainingWindow(const IntPoint& point) const
 {
-    IntPoint convertedPoint = point;
-    convertedPoint.move(x(), y());
-    if (parent())
-        convertedPoint = parent()->convertToContainingWindow(convertedPoint);
-    return convertedPoint;
+    IntPoint windowPoint = point;
+    for (const Widget *parentWidget = parent(), *childWidget = this;
+         parentWidget;
+         childWidget = parentWidget, parentWidget = parentWidget->parent())
+        windowPoint = parentWidget->convertChildToSelf(childWidget, windowPoint);
+    return windowPoint;
 }
 
 IntPoint Widget::convertFromContainingWindow(const IntPoint& point) const
 {
-    IntPoint convertedPoint = point;
-    convertedPoint.move(-x(), -y());
-    if (parent())
-        convertedPoint = parent()->convertFromContainingWindow(convertedPoint);
-    return convertedPoint;
+    IntPoint widgetPoint = point;
+    for (const Widget *parentWidget = parent(), *childWidget = this;
+         parentWidget;
+         childWidget = parentWidget, parentWidget = parentWidget->parent())
+        widgetPoint = parentWidget->convertSelfToChild(childWidget, widgetPoint);
+    return widgetPoint;
+}
+
+IntPoint Widget::convertChildToSelf(const Widget* child, const IntPoint& point) const
+{
+    return IntPoint(point.x() + child->x(), point.y() + child->y());
+}
+
+IntPoint Widget::convertSelfToChild(const Widget* child, const IntPoint& point) const
+{
+    return IntPoint(point.x() - child->x(), point.y() - child->y());
 }
 
 void Widget::paint(GraphicsContext*, const IntRect&)
@@ -188,6 +202,11 @@ void Widget::setEnabled(bool e)
     }
 }
 
+void Widget::setSuppressInvalidation(bool suppress)
+{
+    data->suppressInvalidation = suppress;
+}
+
 void Widget::invalidate()
 {
     invalidateRect(IntRect(0, 0, width(), height()));
@@ -195,6 +214,8 @@ void Widget::invalidate()
 
 void Widget::invalidateRect(const IntRect& r)
 {
+    if (data->suppressInvalidation)
+        return;
     IntRect windowRect = convertToContainingWindow(r);
     ::InvalidateRect(containingWindow(), &RECT(windowRect), false);
 }

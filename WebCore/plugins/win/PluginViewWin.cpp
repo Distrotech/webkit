@@ -32,6 +32,7 @@
 #include "Element.h"
 #include "FrameTree.h"
 #include "FrameWin.h"
+#include "FrameView.h"
 #include "HTMLNames.h"
 #include "HTMLPlugInElement.h"
 #include "NotImplemented.h"
@@ -119,7 +120,6 @@ static bool registerPluginView()
 static LRESULT CALLBACK PluginViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     PluginViewWin* pluginView = reinterpret_cast<PluginViewWin*>(GetProp(hWnd, kWebPluginViewProperty));
-
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
@@ -128,14 +128,26 @@ void PluginViewWin::setFrameGeometry(const IntRect& rect)
     if (rect == frameGeometry())
         return;
 
-    if (HWND window = m_window) {
-        IntRect windowRect = parent() ? parent()->convertToContainingWindow(rect) : rect;
-        MoveWindow(window, windowRect.x(), windowRect.y(), windowRect.width(), windowRect.height(), false);
+    if (parent() && parent()->isFrameView()) {
+        FrameView* frameView = static_cast<FrameView*>(parent());
+        IntPoint point(rect.location());
+        point = frameView->contentsToWindow(point);
+        ::MoveWindow(m_window, point.x(), point.y(), rect.width(), rect.height(), false); // Layout handles invalidation for us in this case.
     }
 
     setNPWindowSize(rect.size());
 
     Widget::setFrameGeometry(rect);
+}
+
+void PluginViewWin::scrolled() const
+{
+    if (parent() && parent()->isFrameView()) {
+        FrameView* frameView = static_cast<FrameView*>(parent());
+        IntPoint point(x(), y());
+        point = frameView->contentsToWindow(point);
+        ::MoveWindow(m_window, point.x(), point.y(), width(), height(), true); // Invalidate when we move the child.
+    }
 }
 
 void PluginViewWin::setFocus()

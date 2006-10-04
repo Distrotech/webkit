@@ -1,3 +1,65 @@
+2006-10-03  Dave Hyatt  <hyatt@apple.com>
+
+        Land the new ScrollView.
+        
+        Reviewed by anders
+
+        * bridge/win/FrameViewWin.cpp:
+        (WebCore::FrameView::passMousePressEventToScrollbar):
+        * platform/win/PlatformScrollBar.h:
+        * platform/win/PlatformScrollBarWin.cpp:
+        (WebCore::PlatformScrollBar::thumbLength):
+        (WebCore::PlatformScrollBar::hitTest):
+        (WebCore::PlatformScrollBar::horizontalScrollBarHeight):
+        (WebCore::PlatformScrollBar::verticalScrollBarWidth):
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::ScrollViewPrivate::ScrollViewPrivate):
+        (WebCore::ScrollView::ScrollViewPrivate::setHasHorizontalScrollBar):
+        (WebCore::ScrollView::ScrollViewPrivate::setHasVerticalScrollBar):
+        (WebCore::ScrollView::ScrollViewPrivate::valueChanged):
+        (WebCore::ScrollView::ScrollView):
+        (WebCore::ScrollView::updateContents):
+        (WebCore::ScrollView::visibleWidth):
+        (WebCore::ScrollView::visibleHeight):
+        (WebCore::ScrollView::visibleContentRect):
+        (WebCore::ScrollView::resizeContents):
+        (WebCore::ScrollView::contentsWidth):
+        (WebCore::ScrollView::contentsHeight):
+        (WebCore::ScrollView::windowToContents):
+        (WebCore::ScrollView::contentsToWindow):
+        (WebCore::ScrollView::convertChildToSelf):
+        (WebCore::ScrollView::convertSelfToChild):
+        (WebCore::ScrollView::scrollOffset):
+        (WebCore::ScrollView::maximumScroll):
+        (WebCore::ScrollView::scrollBy):
+        (WebCore::ScrollView::scrollPointRecursively):
+        (WebCore::ScrollView::hScrollBarMode):
+        (WebCore::ScrollView::vScrollBarMode):
+        (WebCore::ScrollView::suppressScrollBars):
+        (WebCore::ScrollView::setHScrollBarMode):
+        (WebCore::ScrollView::setVScrollBarMode):
+        (WebCore::ScrollView::setScrollBarsMode):
+        (WebCore::ScrollView::setStaticBackground):
+        (WebCore::ScrollView::updateScrollBars):
+        (WebCore::ScrollView::scrollbarUnderMouse):
+        (WebCore::ScrollView::addChild):
+        (WebCore::ScrollView::removeChild):
+        (WebCore::ScrollView::paint):
+        (WebCore::ScrollView::scrolled):
+        * platform/win/WidgetWin.cpp:
+        (WebCore::Widget::Widget):
+        (WebCore::Widget::convertToContainingWindow):
+        (WebCore::Widget::convertFromContainingWindow):
+        (WebCore::Widget::convertChildToSelf):
+        (WebCore::Widget::convertSelfToChild):
+        (WebCore::Widget::setSuppressInvalidation):
+        (WebCore::Widget::invalidateRect):
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWndProc):
+        (WebCore::PluginViewWin::setFrameGeometry):
+        (WebCore::PluginViewWin::scrolled):
+        * plugins/win/PluginViewWin.h:
+
 2006-10-03  Adam Roben  <aroben@apple.com>
 
         Reviewed by Steve.
