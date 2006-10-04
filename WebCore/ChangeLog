@@ -1,3 +1,20 @@
+2006-10-05  Darin Adler  <darin@apple.com>
+
+        Reviewed by Adam.
+
+        - fix <rdar://problem/4764253>
+          frame targeting not implemented.
+
+        * bridge/win/FrameWin.h: Added new window boolean to openURL. Also changed
+        type from DeprecatedString to String.
+        * bridge/win/FrameWin.cpp: (WebCore::FrameWin::urlSelected): Added logic
+        to do frame targeting.
+
+        * platform/win/BString.h: Added. Convenience for working with
+        BSTR and handling allocation/free.
+        * platform/win/BString.cpp: Added.
+        * WebCore.vcproj/WebCore.vcproj: Added new files.
+
 2006-10-03  Dave Hyatt  <hyatt@apple.com>
 
         Land the new ScrollView.

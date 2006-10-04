@@ -1714,6 +1714,14 @@
 				Name="win"
 				>
 				<File
+					RelativePath="..\platform\win\BString.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\win\BString.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\platform\win\CookieJarWin.cpp"
 					>
 				</File>

@@ -1,3 +1,16 @@
+2006-10-05  Darin Adler  <darin@apple.com>
+
+        Reviewed by Adam.
+
+        - fix <rdar://problem/4764253>
+          frame targeting not implemented.
+
+        * WebFrame.h: Added newWindow parameter to openURL and changed the URL
+        parameter to a String.
+        * WebFrame.cpp: (WebFrame::openURL): Changed code to use BString to convert
+        the String to a BSTR. Also respect the newWindow parameter and changed the
+        new window code slightly, adding a FIXME.
+
 2006-10-04 Dave Hyatt  <hyatt@apple.com>
 
         Fix painting so that we only do a layout if one is really needed.  This actually fixes the non-blinking caret in

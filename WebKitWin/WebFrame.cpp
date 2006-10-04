@@ -40,6 +40,7 @@
 #include "WebURLResponse.h"
 
 #pragma warning( push, 0 )
+#include <WebCore/platform/win/BString.h>
 #include <WebCore/loader/Cache.h>
 #include <WebCore/dom/Document.h>
 #include <WebCore/dom/DOMImplementation.h>
@@ -1295,18 +1296,22 @@ Frame* WebFrame::createFrame(const KURL& URL, const String& name, Element* owner
     return frame;
 }
 
-void WebFrame::openURL(const DeprecatedString& url, bool lockHistory)
+void WebFrame::openURL(const String& URL, bool newWindow, bool lockHistory)
 {
-    DeprecatedString terminatedURL(url);
-    terminatedURL.append('\0');
+    // FIXME: Modifier key handling should be earlier, since we aren't guaranteed
+    // that this URL open is coming from a user action, and we want the modifiers
+    // from the event at the time of the action, not irght now.
+    if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
+        newWindow = true;
 
-    BSTR urlBStr = SysAllocString((LPCTSTR)terminatedURL.unicode());
+    BString urlBStr = URL;
+
     IWebMutableURLRequest* request = WebMutableURLRequest::createInstance();
     if (FAILED(request->initWithURL(urlBStr, WebURLRequestUseProtocolCachePolicy, 0)))
         goto exit;
 
-    if (GetAsyncKeyState(VK_CONTROL)&0x8000) {
-        // for open in new tab/window
+    if (newWindow) {
+        // new tab/window
         IWebUIDelegate* ui;
         IWebView* newWebView;
         if (SUCCEEDED(d->webView->uiDelegate(&ui))) {
@@ -1325,7 +1330,6 @@ void WebFrame::openURL(const DeprecatedString& url, bool lockHistory)
     }
 
 exit:
-    SysFreeString(urlBStr);
     request->Release();
 }
 

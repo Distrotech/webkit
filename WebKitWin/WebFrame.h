@@ -143,8 +143,8 @@ public:
     // FrameWinClient
     virtual void ref();
     virtual void deref();
-    virtual WebCore::Frame* createFrame(const WebCore::KURL& URL, const WebCore::String& name, WebCore::Element* ownerElement, const WebCore::String& referrer);
-    virtual void openURL(const WebCore::DeprecatedString&, bool lockHistory);
+    virtual WebCore::Frame* createFrame(const WebCore::KURL&, const WebCore::String& name, WebCore::Element* ownerElement, const WebCore::String& referrer);
+    virtual void openURL(const WebCore::String& URL, bool newWindow, bool lockHistory);
     virtual void submitForm(const WebCore::String& method, const WebCore::KURL&, const WebCore::FormData*, WebCore::Element* form, WTF::HashMap<WebCore::String, WebCore::String>& formValues);
     virtual void setTitle(const WebCore::String& title);
     virtual void setStatusText(const WebCore::String& title);

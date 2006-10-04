@@ -63,8 +63,11 @@ FrameWin::~FrameWin()
 
 void FrameWin::urlSelected(const ResourceRequest& request)
 {
-    if (m_client)
-        m_client->openURL(request.url().url(), request.lockHistory());
+    Frame* targetFrame = tree()->find(request.frameName);
+    bool newWindow = !targetFrame;
+    FrameWinClient* client = targetFrame ? Win(targetFrame)->m_client.get() : m_client.get();
+    if (client)
+        client->openURL(request.url().url(), newWindow, request.lockHistory());
 }
 
 void FrameWin::submitForm(const ResourceRequest& request)

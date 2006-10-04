@@ -40,14 +40,13 @@ namespace KJS {
 
 namespace WebCore {
 
-class FrameWinClient
-{
+class FrameWinClient {
 public:
     virtual void ref() = 0;
     virtual void deref() = 0;
 
-    virtual Frame* createFrame(const KURL& URL, const String& name, Element* ownerElement, const String& referrer) = 0;
-    virtual void openURL(const DeprecatedString&, bool lockHistory) = 0;
+    virtual Frame* createFrame(const KURL&, const String& name, Element* ownerElement, const String& referrer) = 0;
+    virtual void openURL(const String& URL, bool newWindow, bool lockHistory) = 0;
     virtual void submitForm(const String& method, const KURL&, const FormData*, Element* form, HashMap<String, String>& formValues) = 0;
     virtual void setTitle(const String& title) = 0;
     virtual void setStatusText(const String& statusText) = 0;
