@@ -209,8 +209,11 @@ void PluginStreamWin::deliverData()
 {
     ASSERT(m_deliveryData);
     
-    if (m_streamState != StreamStarted)
+    if (m_streamState == StreamStopped)
+        // FIXME: We should cancel our job in the ResourceLoader on error so we don't reach this case
         return;
+
+    ASSERT(m_streamState != StreamBeforeStarted);
 
     if (!m_stream.ndata || m_deliveryData->size() == 0)
         return;
@@ -281,8 +284,11 @@ void PluginStreamWin::receivedData(ResourceLoader* resourceLoader, const char* d
     ASSERT(resourceLoader == m_resourceLoader);
     ASSERT(length > 0);
 
-    if (m_streamState != StreamStarted)
+    if (m_streamState == StreamStopped)
+        // FIXME: We should cancel our job in the ResourceLoader on error so we don't reach this case
         return;
+
+    ASSERT(m_streamState != StreamBeforeStarted);
 
     if (!m_deliveryData)
         m_deliveryData = new Vector<char>;
@@ -310,8 +316,11 @@ void PluginStreamWin::receivedAllData(ResourceLoader* resourceLoader, PlatformDa
 {
     ASSERT(resourceLoader == m_resourceLoader);
 
-    if (m_streamState != StreamStarted)
+    if (m_streamState == StreamStopped)
+        // FIXME: We should cancel our job in the ResourceLoader on error so we don't reach this case
         return;
+
+    ASSERT(m_streamState != StreamBeforeStarted);
 
     // The resource loader gets deleted after having received all data
     if (m_resourceLoader)

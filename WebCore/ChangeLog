@@ -1,5 +1,18 @@
 2006-10-03  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Steve.
+
+        Improvements to error handling in PluginStreamWin.
+
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::PluginStreamWin::deliverData): Fail quietly if called after
+        termination (due to bad error handling in ResourceLoaderWin), ASSERT if
+        called before stream has been started.
+        (WebCore::PluginStreamWin::receivedData): Ditto.
+        (WebCore::PluginStreamWin::receivedAllData): Ditto.
+
+2006-10-03  Adam Roben  <aroben@apple.com>
+
         Reviewed by Anders.
 
         Fixes <rdar://problem/4760963>
