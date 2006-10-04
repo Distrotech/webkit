@@ -1,3 +1,14 @@
+2006-10-05  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        rdar://problem/4757081
+        Crashes/hangs when using Flash 8 plugin (Flash 9 works MUCH better)
+        
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::PluginStreamWin::startStream):
+        Encode javascript URLs before passing them to the plugin.
+
 2006-10-05  Darin Adler  <darin@apple.com>
 
         Reviewed by Adam.

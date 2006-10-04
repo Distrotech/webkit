@@ -123,7 +123,12 @@ void PluginStreamWin::startStream(const KURL& responseURL, long long expectedCon
 {
     ASSERT(m_streamState == StreamBeforeStarted);
 
-    m_stream.url = _strdup(responseURL.url().utf8());
+    // Some plugins (Flash) expect that javascript URLs are passed back decoded as this is the
+    // format used when requesting the URL.
+    if (responseURL.protocol() == "javascript")
+        m_stream.url = _strdup(responseURL.decode_string(responseURL.url()).utf8());
+    else
+        m_stream.url = _strdup(responseURL.url().utf8());
     
     CString mimeTypeStr = mimeType.utf8();
     
