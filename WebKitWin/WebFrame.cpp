@@ -300,13 +300,14 @@ static HTMLInputElement* inputElementFromDOMElement(IDOMElement* element)
 
 class WebFrame::WebFramePrivate {
 public:
-    WebFramePrivate() { }
+    WebFramePrivate() :frame(0), frameView(0), webView(0), needsLayout(false) { }
     ~WebFramePrivate() { }
 
     Frame* frame;
     FrameView* frameView;
     WebView* webView;
     String title;
+    bool needsLayout;
 };
 
 // WebFrame ----------------------------------------------------------------
@@ -578,7 +579,8 @@ void WebFrame::initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, 
 
 void WebFrame::paint(HDC dc, LPARAM options)
 {
-    d->frameView->layout();
+    // Do a layout first so that everything we render is always current.
+    layoutIfNeeded();
 
     HWND windowHandle;
     if (FAILED(d->webView->viewWindow(&windowHandle)))
@@ -632,7 +634,8 @@ void WebFrame::paint(HDC dc, LPARAM options)
 
 void WebFrame::paint(HDC dc, LPARAM options)
 {
-    d->frameView->layout();
+    // Do a layout first so that everything we render is always current.
+    layoutIfNeeded();
 
     HWND windowHandle;
     if (FAILED(d->webView->viewWindow(&windowHandle)))
@@ -751,6 +754,20 @@ void WebFrame::paintSingleRect(HDC hdc, const IntRect& dirtyRect)
 }
 
 #endif
+
+void WebFrame::layoutIfNeeded()
+{
+    if (d->needsLayout) {
+        d->frameView->layout();
+        d->needsLayout = false;
+    } else if (d->frameView->layoutPending())
+        d->frameView->layout();
+}
+
+void WebFrame::setNeedsLayout()
+{
+    d->needsLayout = true;
+}
 
 Frame* WebFrame::impl()
 {

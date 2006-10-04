@@ -1,3 +1,17 @@
+2006-10-04 Dave Hyatt  <hyatt@apple.com>
+
+        Fix painting so that we only do a layout if one is really needed.  This actually fixes the non-blinking caret in
+        text fields.
+       
+        * WebFrame.cpp:
+        (WebFrame::WebFramePrivate::needsLayout):
+        (WebFrame::paint):
+        (WebFrame::layoutIfNeeded):
+        (WebFrame::setNeedsLayout):
+        * WebFrame.h:
+        * WebView.cpp:
+        (WebViewWndProc):
+
 2006-10-03  Dave Hyatt  <hyatt@apple.com>
 
         Implement the same smart rect painting algorithm that I implemented on Mac a while back (where sometimes we don't use

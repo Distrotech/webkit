@@ -366,6 +366,7 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
         }
         case WM_SIZE:
             if (mainFrameImpl && lParam != 0) {
+                mainFrameImpl->setNeedsLayout();
                 mainFrameImpl->impl()->view()->resize(LOWORD(lParam), HIWORD(lParam));
 
                 if (!mainFrameImpl->loading())

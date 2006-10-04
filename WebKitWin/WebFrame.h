@@ -166,6 +166,8 @@ public:
     void initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, WebCore::Page* page, WebCore::Element* ownerElement);
     void paint(HDC dc, LPARAM options);
     void paintSingleRect(HDC hdc, const WebCore::IntRect& dirtyRect);
+    void layoutIfNeeded();
+    void setNeedsLayout();
     WebCore::Frame* impl();
     HRESULT loadDataSource(WebDataSource* dataSource);
     bool loading();
