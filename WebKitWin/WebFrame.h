@@ -42,6 +42,7 @@ namespace WebCore {
     class Element;
     class Frame;
     class Page;
+    class IntRect;
 }
 
 class WebView;
@@ -164,6 +165,7 @@ public:
     // WebFrame
     void initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, WebCore::Page* page, WebCore::Element* ownerElement);
     void paint(HDC dc, LPARAM options);
+    void paintSingleRect(HDC hdc, const WebCore::IntRect& dirtyRect);
     WebCore::Frame* impl();
     HRESULT loadDataSource(WebDataSource* dataSource);
     bool loading();

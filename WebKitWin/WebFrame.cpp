@@ -640,8 +640,12 @@ void WebFrame::paint(HDC dc, LPARAM options)
 
     RECT rcPaint;
     HDC hdc;
+    HRGN region = 0;
+    int regionType = NULLREGION;
     PAINTSTRUCT ps;
     if (!dc) {
+        region = CreateRectRgn(0,0,0,0);
+        regionType = GetUpdateRgn(windowHandle, region, false);
         hdc = BeginPaint(windowHandle, &ps);
         rcPaint = ps.rcPaint;
     } else {
@@ -652,11 +656,51 @@ void WebFrame::paint(HDC dc, LPARAM options)
     }
 
     IntRect documentDirtyRect = rcPaint;
-    documentDirtyRect.move(d->frameView->contentsX(), d->frameView->contentsY());
+    
+    // This emulates the Mac smarts for painting rects intelligently.  This is
+    // very important for us, since we double buffer based off dirty rects.
+    bool useDocumentDirtyRect = true;
+    if (region && regionType == COMPLEXREGION) {
+        const int cRectThreshold = 10;
+        const float cWastedSpaceThreshold = 0.75f;
+        DWORD regionDataSize = GetRegionData(region, sizeof(RGNDATA), NULL);
+        if (regionDataSize) {
+            RGNDATA* regionData = (RGNDATA*)malloc(regionDataSize);
+            GetRegionData(region, regionDataSize, regionData);
+            if (regionData->rdh.nCount <= cRectThreshold) {
+                double unionPixels = documentDirtyRect.width() * documentDirtyRect.height();
+                double singlePixels = 0;
+                
+                unsigned i;
+                RECT* rect;
+                for (i = 0, rect = (RECT*)regionData->Buffer; i < regionData->rdh.nCount; i++, rect++)
+                    singlePixels += (rect->right - rect->left) * (rect->bottom - rect->top);
+                double wastedSpace = 1.0 - (singlePixels / unionPixels);
+                if (wastedSpace > cWastedSpaceThreshold) {
+                    // Paint individual rects.
+                    useDocumentDirtyRect = false;
+                    for (i = 0, rect = (RECT*)regionData->Buffer; i < regionData->rdh.nCount; i++, rect++)
+                        paintSingleRect(hdc, IntRect(*rect));
+                }
+            }
+            free(regionData);
+        }
+    }
+    
+    ::DeleteObject(region);
 
+    if (useDocumentDirtyRect)
+        paintSingleRect(hdc, documentDirtyRect);
+
+    if (!dc)
+        EndPaint(windowHandle, &ps);
+}
+
+void WebFrame::paintSingleRect(HDC hdc, const IntRect& dirtyRect)
+{
 #if FLASH_REDRAW
     {
-        RECT rect = documentDirtyRect;
+        RECT rect = dirtyRect;
         HBRUSH yellowBrush = CreateSolidBrush(RGB(255, 255, 0));
         FillRect(hdc, &rect, yellowBrush);
         DeleteObject(yellowBrush);
@@ -666,8 +710,8 @@ void WebFrame::paint(HDC dc, LPARAM options)
 #endif
 
     SIZE size;
-    size.cx = documentDirtyRect.width();
-    size.cy = documentDirtyRect.height();
+    size.cx = dirtyRect.width();
+    size.cy = dirtyRect.height();
 
     if (size.cx > 0 && size.cy > 0)
     {
@@ -694,19 +738,16 @@ void WebFrame::paint(HDC dc, LPARAM options)
             GraphicsContext gc(bitmapDC);
 
             GdiFlush();
-            CGContextTranslateCTM(gc.platformContext(), CGFloat(-d->frameView->contentsX() - rcPaint.left),
-                                                        CGFloat(-d->frameView->contentsY() - rcPaint.top));
-            d->frame->paint(&gc, documentDirtyRect);
-            BitBlt(hdc, rcPaint.left, rcPaint.top, size.cx, size.cy, bitmapDC, 0, 0, SRCCOPY);
+            CGContextTranslateCTM(gc.platformContext(), CGFloat(-dirtyRect.x()),
+                                                        CGFloat(-dirtyRect.y()));
+            d->frameView->paint(&gc, dirtyRect);
+            BitBlt(hdc, dirtyRect.x(), dirtyRect.y(), size.cx, size.cy, bitmapDC, 0, 0, SRCCOPY);
         }
 
         SelectObject(bitmapDC, oldBitmap);
         DeleteDC(bitmapDC);
         DeleteObject(bitmap);
     }
-
-    if (!dc)
-        EndPaint(windowHandle, &ps);
 }
 
 #endif

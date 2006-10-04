@@ -61,8 +61,6 @@ const int WM_XP_THEMECHANGED = 0x031A;
 
 static ATOM registerWebView();
 static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-static int calculateScrollDelta(WPARAM wParam, int oldPosition, int pageSize);
-static int scrollMessageForKey(WPARAM keyCode);
 
 // WebView ----------------------------------------------------------------
 
@@ -347,31 +345,9 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             if (webView && mainFrameImpl->impl()->view()->didFirstLayout())
                 webView->mouseWheel(wParam, lParam);
             break;
-        case WM_HSCROLL: {
-            if (mainFrameImpl) {
-                ScrollView* view = mainFrameImpl->impl()->view();
-                view->scrollBy(calculateScrollDelta(wParam, view->contentsX(), view->visibleWidth()), 0);
-                mainFrameImpl->impl()->sendScrollEvent();
-            }
-            break;
-        }
-        case WM_VSCROLL: {
-            if (mainFrameImpl) {
-                ScrollView* view = mainFrameImpl->impl()->view();
-                view->scrollBy(0, calculateScrollDelta(wParam, view->contentsY(), view->visibleHeight()));
-                mainFrameImpl->impl()->sendScrollEvent();
-            }
-            break;
-        }
         case WM_KEYDOWN: {
-            // FIXME: First we should send key events up through the DOM
-            // to form controls, etc.  If they are not handled, we fall
-            // through to the top level webView and do things like scrolling
-            if (webView && webView->keyPress(wParam, lParam))
-                break;
-            DWORD wScrollNotify = scrollMessageForKey(wParam);
-            if (wScrollNotify != -1)
-                SendMessage(hWnd, WM_VSCROLL, MAKELONG(wScrollNotify, 0), 0L);
+            if (webView)
+                webView->keyPress(wParam, lParam);
             break;
         }
         case WM_CHAR: {
@@ -431,46 +407,6 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
     return lResult;
 }
 
-#define LINE_SCROLL_SIZE 30
-
-static int calculateScrollDelta(WPARAM wParam, int oldPosition, int pageSize)
-{
-    switch (LOWORD(wParam)) {
-        case SB_PAGEUP: 
-            return -(pageSize - LINE_SCROLL_SIZE); 
-         case SB_PAGEDOWN: 
-            return (pageSize - LINE_SCROLL_SIZE); 
-        case SB_LINEUP: 
-            return -LINE_SCROLL_SIZE;
-        case SB_LINEDOWN: 
-            return LINE_SCROLL_SIZE;
-        case SB_THUMBPOSITION: 
-        case SB_THUMBTRACK:
-            return HIWORD(wParam) - oldPosition; 
-    }
-    return 0;
-}
-
-static int scrollMessageForKey(WPARAM keyCode)
-{
-    switch (keyCode) {
-    case VK_UP:
-        return SB_LINEUP;
-    case VK_PRIOR: 
-        return SB_PAGEUP;
-    case VK_NEXT:
-        return SB_PAGEDOWN;
-    case VK_DOWN:
-        return SB_LINEDOWN;
-    case VK_HOME:
-        return SB_TOP;
-    case VK_END:
-        return SB_BOTTOM;
-    case VK_SPACE:
-        return (GetAsyncKeyState(VK_SHIFT) & 0x8000) ? SB_PAGEUP : SB_PAGEDOWN;
-    }
-    return -1;
-}
 
 HRESULT WebView::goToItem(IWebHistoryItem* item, WebFrameLoadType withLoadType)
 {
@@ -823,7 +759,7 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
         return E_FAIL;
 
     registerWebViewWindowClass();
-    m_viewWindow = CreateWindowEx(0, kWebViewWindowClassName, 0, WS_CHILD | WS_HSCROLL | WS_VSCROLL | WS_CLIPCHILDREN,
+    m_viewWindow = CreateWindowEx(0, kWebViewWindowClassName, 0, WS_CHILD | WS_CLIPCHILDREN,
         CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, m_hostWindow, 0, gInstance, 0);
 
     m_frameName = SysAllocString(frameName);

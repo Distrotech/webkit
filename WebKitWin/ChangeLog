@@ -1,3 +1,18 @@
+2006-10-03  Dave Hyatt  <hyatt@apple.com>
+
+        Implement the same smart rect painting algorithm that I implemented on Mac a while back (where sometimes we don't use
+        the big unioned invalidation rect but instead paint single rects out of the update region.
+        
+        Reviewed by anders
+
+        * WebFrame.cpp:
+        (WebFrame::paint):
+        (WebFrame::paintSingleRect):
+        * WebFrame.h:
+        * WebView.cpp:
+        (WebViewWndProc):
+        (WebView::initWithFrame):
+
 2006-10-03  Adam Roben  <aroben@apple.com>
 
         Reviewed by Darin.
