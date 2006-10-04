@@ -43,6 +43,8 @@ namespace WebCore {
     class DocLoader;
     class PluginViewWin;
 
+    enum PluginStreamState { StreamBeforeStarted, StreamStarted, StreamStopped };
+
     class PluginStreamWin : ResourceLoaderClient {
     public:
         PluginStreamWin(PluginViewWin*, DocLoader*, const String& method, const KURL&, void* notifyData, bool sendNotification);
@@ -73,7 +75,7 @@ namespace WebCore {
         PluginViewWin* m_pluginView;
         void* m_notifyData;
         bool m_sendNotification;
-        bool m_isTerminated;
+        PluginStreamState m_streamState;
 
         HashMap<String, String> m_headers;
         FormData m_postData;

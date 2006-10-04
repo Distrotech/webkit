@@ -1,5 +1,29 @@
 2006-10-03  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Anders.
+
+        Fixes <rdar://problem/4760963>
+        Failed ASSERT in PluginStreamWin::~PluginStreamWin at espn.com
+
+        We now store the state of a stream as a tri-state enum in
+        m_streamState. This allows us to differentiate between before and after the
+        stream has been started.
+
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::PluginStreamWin::PluginStreamWin): Initialize members of
+        m_stream struct individually.
+        (WebCore::PluginStreamWin::~PluginStreamWin):
+        (WebCore::PluginStreamWin::startStream):
+        (WebCore::PluginStreamWin::destroyStream):
+        (WebCore::PluginStreamWin::deliverData): Return early if the stream
+        isn't started.
+        (WebCore::PluginStreamWin::receivedData): Ditto.
+        (WebCore::PluginStreamWin::receivedAllData): Ditto.
+        * plugins/win/PluginStreamWin.h:
+        (WebCore::): Add PluginStreamState enum.
+
+2006-10-03  Adam Roben  <aroben@apple.com>
+
         Reviewed by Darin.
 
         Fixes <rdar://problem/4603342>

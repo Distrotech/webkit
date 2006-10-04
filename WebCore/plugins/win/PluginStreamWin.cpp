@@ -53,19 +53,24 @@ PluginStreamWin::PluginStreamWin(PluginViewWin* pluginView, DocLoader* docLoader
     , m_pluginView(pluginView)
     , m_notifyData(notifyData)
     , m_sendNotification(sendNotification)
-    , m_isTerminated(false)
+    , m_streamState(StreamBeforeStarted)
     , m_delayDeliveryTimer(this, &PluginStreamWin::delayDeliveryTimerFired)
     , m_deliveryData(0)
     , m_completeDeliveryData(0)
     , m_pluginFuncs(pluginView->plugin()->pluginFuncs())
     , m_instance(pluginView->instance())
 {
-    memset(&m_stream, 0, sizeof(m_stream));
+    m_stream.url = 0;
+    m_stream.ndata = 0;
+    m_stream.pdata = 0;
+    m_stream.end = 0;
+    m_stream.notifyData = 0;
+    m_stream.lastmodified = 0;
 }
 
 PluginStreamWin::~PluginStreamWin()
 {
-    ASSERT(m_isTerminated);
+    ASSERT(m_streamState != StreamStarted);
     ASSERT(!m_resourceLoader);
 
     delete m_deliveryData;
@@ -116,7 +121,7 @@ void PluginStreamWin::stop()
 
 void PluginStreamWin::startStream(const KURL& responseURL, long long expectedContentLength, int lastModifiedTime, const String& mimeType)
 {
-    ASSERT(!m_isTerminated);
+    ASSERT(m_streamState == StreamBeforeStarted);
 
     m_stream.url = _strdup(responseURL.url().utf8());
     
@@ -133,6 +138,7 @@ void PluginStreamWin::startStream(const KURL& responseURL, long long expectedCon
     m_reason = WEB_REASON_NONE;
 
     NPError npErr = m_pluginFuncs->newstream(m_instance, (NPMIMEType)(const char*)mimeTypeStr, &m_stream, false, &m_transferMode);
+    m_streamState = StreamStarted;
 
     if (npErr != NPERR_NO_ERROR) {
         LOG_NPERROR(npErr);
@@ -164,7 +170,7 @@ void PluginStreamWin::destroyStream(NPReason reason)
 
 void PluginStreamWin::destroyStream()
 {
-    if (m_isTerminated)
+    if (m_streamState == StreamStopped)
         return;
 
     ASSERT (m_reason != WEB_REASON_NONE);
@@ -188,7 +194,7 @@ void PluginStreamWin::destroyStream()
     if (m_sendNotification)
         m_pluginFuncs->urlnotify(m_instance, m_url.url().utf8(), m_reason, m_notifyData);
 
-    m_isTerminated = true;
+    m_streamState = StreamStopped;
     m_pluginView = 0;
 }
 
@@ -202,6 +208,9 @@ void PluginStreamWin::delayDeliveryTimerFired(Timer<PluginStreamWin>* timer)
 void PluginStreamWin::deliverData()
 {
     ASSERT(m_deliveryData);
+    
+    if (m_streamState != StreamStarted)
+        return;
 
     if (!m_stream.ndata || m_deliveryData->size() == 0)
         return;
@@ -272,6 +281,9 @@ void PluginStreamWin::receivedData(ResourceLoader* resourceLoader, const char* d
     ASSERT(resourceLoader == m_resourceLoader);
     ASSERT(length > 0);
 
+    if (m_streamState != StreamStarted)
+        return;
+
     if (!m_deliveryData)
         m_deliveryData = new Vector<char>;
 
@@ -297,6 +309,9 @@ void PluginStreamWin::receivedData(ResourceLoader* resourceLoader, const char* d
 void PluginStreamWin::receivedAllData(ResourceLoader* resourceLoader, PlatformData platformData)
 {
     ASSERT(resourceLoader == m_resourceLoader);
+
+    if (m_streamState != StreamStarted)
+        return;
 
     // The resource loader gets deleted after having received all data
     if (m_resourceLoader)
