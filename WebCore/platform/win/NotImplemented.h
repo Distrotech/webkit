@@ -26,13 +26,16 @@
 #ifndef NOT_IMPLEMENTED_H__
 #define NOT_IMPLEMENTED_H__
 
-#define LOG_NOIMPL() \
-    static bool havePrinted = false; \
-    if (!havePrinted) { \
-        _RPTF1(_CRT_WARN, "%s is not implemented\n", __FUNCTION__); \
-        havePrinted = true; \
-    }
+#include <wtf/Assertions.h>
 
-#define STOP_NOIMPL() LOG_NOIMPL(); _CrtDbgBreak()
+#define LOG_NOIMPL() do { \
+        static bool havePrinted = false; \
+        if (!havePrinted) { \
+            LOG_ERROR("%s is not implemented", __FUNCTION__); \
+            havePrinted = true; \
+        } \
+    } while (0)
+
+#define STOP_NOIMPL() FATAL("%s is not implemented", __FUNCTION__)
 
 #endif
