@@ -1,3 +1,9 @@
+2006-10-05  Adam Roben  <aroben@apple.com>
+
+        Build fix. Remove RenderImageButton.{h,cpp}.
+
+        * WebCore.vcproj/WebCore.vcproj:
+
 2006-10-05  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Darin.

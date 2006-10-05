@@ -2825,14 +2825,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderImageButton.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderImageButton.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderInline.cpp"
 				>
 			</File>
