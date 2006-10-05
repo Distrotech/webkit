@@ -23,8 +23,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef PlatformScrollBar_h
-#define PlatformScrollBar_h
+#ifndef PlatformScrollbar_h
+#define PlatformScrollbar_h
 
 #include "Widget.h"
 #include "ScrollBar.h"
@@ -34,13 +34,13 @@ typedef struct HDC__* HDC;
 
 namespace WebCore {
 
-enum ScrollBarPart { NoPart, BackButtonPart, BackTrackPart, ThumbPart, ForwardTrackPart, ForwardButtonPart };
+enum ScrollbarPart { NoPart, BackButtonPart, BackTrackPart, ThumbPart, ForwardTrackPart, ForwardButtonPart };
 
-class PlatformScrollBar : public Widget, public ScrollBar {
+class PlatformScrollbar : public Widget, public Scrollbar {
 public:
-    PlatformScrollBar(ScrollBarClient*, ScrollBarOrientation, ScrollBarControlSize);
+    PlatformScrollbar(ScrollbarClient*, ScrollbarOrientation, ScrollbarControlSize);
 
-    virtual ~PlatformScrollBar();
+    virtual ~PlatformScrollbar();
 
     virtual bool isWidget() const { return true; }
 
@@ -56,10 +56,10 @@ public:
     virtual void handleMouseReleaseEvent(const PlatformMouseEvent&);
 
     static void themeChanged();
-    static int horizontalScrollBarHeight();
-    static int verticalScrollBarWidth();
+    static int horizontalScrollbarHeight();
+    static int verticalScrollbarWidth();
 
-    void autoscrollTimerFired(Timer<PlatformScrollBar>*);
+    void autoscrollTimerFired(Timer<PlatformScrollbar>*);
 
 protected:    
     virtual void updateThumbPosition();
@@ -82,7 +82,7 @@ private:
     void paintThumb(HDC, const IntRect&) const;
     void paintGripper(HDC, const IntRect&) const;
     
-    ScrollBarPart hitTest(const PlatformMouseEvent&);
+    ScrollbarPart hitTest(const PlatformMouseEvent&);
     
     void startTimerIfNeeded(double delay);
     void stopTimerIfNeeded();
@@ -92,16 +92,16 @@ private:
 
     bool thumbUnderMouse();
 
-    void invalidatePart(ScrollBarPart);
+    void invalidatePart(ScrollbarPart);
     void invalidateTrack();
 
-    ScrollBarPart m_hoveredPart;
-    ScrollBarPart m_pressedPart;
+    ScrollbarPart m_hoveredPart;
+    ScrollbarPart m_pressedPart;
     int m_pressedPos;
-    Timer<PlatformScrollBar> m_scrollTimer;
+    Timer<PlatformScrollbar> m_scrollTimer;
 };
 
 }
 
-#endif // PlatformScrollBar_h
+#endif // PlatformScrollbar_h
 

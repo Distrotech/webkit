@@ -1,3 +1,77 @@
+2006-10-05  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Darin.
+        
+        Fixed <rdar://problem/4766987>
+        
+        - renamed ScrollBar to Scrollbar and scroll bar to scrollbar in every case
+        except for file names.
+        
+        - fixed RenderLayer to properly tear down scrollbars, removing them from
+        their parents.
+
+        * bridge/win/FrameViewWin.cpp:
+        (WebCore::FrameView::passMousePressEventToScrollbar):
+        * platform/win/PlatformScrollBar.h:
+        (WebCore::):
+        * platform/win/PlatformScrollBarWin.cpp:
+        (WebCore::PlatformScrollbar::PlatformScrollbar):
+        (WebCore::PlatformScrollbar::~PlatformScrollbar):
+        (WebCore::PlatformScrollbar::updateThumbPosition):
+        (WebCore::PlatformScrollbar::updateThumbProportion):
+        (WebCore::PlatformScrollbar::invalidateTrack):
+        (WebCore::PlatformScrollbar::invalidatePart):
+        (WebCore::PlatformScrollbar::width):
+        (WebCore::PlatformScrollbar::height):
+        (WebCore::PlatformScrollbar::setRect):
+        (WebCore::PlatformScrollbar::setEnabled):
+        (WebCore::PlatformScrollbar::paint):
+        (WebCore::PlatformScrollbar::backButtonRect):
+        (WebCore::PlatformScrollbar::forwardButtonRect):
+        (WebCore::PlatformScrollbar::trackRect):
+        (WebCore::PlatformScrollbar::thumbRect):
+        (WebCore::PlatformScrollbar::gripperRect):
+        (WebCore::PlatformScrollbar::splitTrack):
+        (WebCore::PlatformScrollbar::thumbPosition):
+        (WebCore::PlatformScrollbar::thumbLength):
+        (WebCore::PlatformScrollbar::trackLength):
+        (WebCore::PlatformScrollbar::paintButton):
+        (WebCore::PlatformScrollbar::paintTrack):
+        (WebCore::PlatformScrollbar::paintThumb):
+        (WebCore::PlatformScrollbar::paintGripper):
+        (WebCore::PlatformScrollbar::hitTest):
+        (WebCore::PlatformScrollbar::handleMouseMoveEvent):
+        (WebCore::PlatformScrollbar::handleMouseOutEvent):
+        (WebCore::PlatformScrollbar::handleMousePressEvent):
+        (WebCore::PlatformScrollbar::handleMouseReleaseEvent):
+        (WebCore::PlatformScrollbar::startTimerIfNeeded):
+        (WebCore::PlatformScrollbar::stopTimerIfNeeded):
+        (WebCore::PlatformScrollbar::autoscrollPressedPart):
+        (WebCore::PlatformScrollbar::autoscrollTimerFired):
+        (WebCore::PlatformScrollbar::pressedPartScrollDirection):
+        (WebCore::PlatformScrollbar::pressedPartScrollGranularity):
+        (WebCore::PlatformScrollbar::thumbUnderMouse):
+        (WebCore::PlatformScrollbar::themeChanged):
+        (WebCore::PlatformScrollbar::horizontalScrollbarHeight):
+        (WebCore::PlatformScrollbar::verticalScrollbarWidth):
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::ScrollViewPrivate::ScrollViewPrivate):
+        (WebCore::ScrollView::ScrollViewPrivate::setHasHorizontalScrollbar):
+        (WebCore::ScrollView::ScrollViewPrivate::setHasVerticalScrollbar):
+        (WebCore::ScrollView::ScrollViewPrivate::valueChanged):
+        (WebCore::ScrollView::resizeContents):
+        (WebCore::ScrollView::scrollBy):
+        (WebCore::ScrollView::hScrollbarMode):
+        (WebCore::ScrollView::vScrollbarMode):
+        (WebCore::ScrollView::suppressScrollbars):
+        (WebCore::ScrollView::setHScrollbarMode):
+        (WebCore::ScrollView::setVScrollbarMode):
+        (WebCore::ScrollView::setScrollbarsMode):
+        (WebCore::ScrollView::updateScrollbars):
+        (WebCore::ScrollView::scrollbarUnderMouse):
+        (WebCore::ScrollView::paint):
+        (WebCore::ScrollView::themeChanged):
+
 2006-10-05  Adam Roben  <aroben@apple.com>
 
         Reviewed by Maciej.

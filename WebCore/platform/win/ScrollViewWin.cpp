@@ -47,42 +47,42 @@ using namespace std;
 
 namespace WebCore {
 
-class ScrollView::ScrollViewPrivate : public ScrollBarClient {
+class ScrollView::ScrollViewPrivate : public ScrollbarClient {
 public:
     ScrollViewPrivate(ScrollView* view)
         : m_view(view)
         , m_hasStaticBackground(false)
-        , m_scrollBarsSuppressed(false)
-        , m_inUpdateScrollBars(false)
-        , m_vScrollBarMode(ScrollBarAuto)
-        , m_hScrollBarMode(ScrollBarAuto)
+        , m_scrollbarsSuppressed(false)
+        , m_inUpdateScrollbars(false)
+        , m_vScrollbarMode(ScrollbarAuto)
+        , m_hScrollbarMode(ScrollbarAuto)
     {
     }
 
-    void setHasHorizontalScrollBar(bool hasBar);
-    void setHasVerticalScrollBar(bool hasBar);
+    void setHasHorizontalScrollbar(bool hasBar);
+    void setHasVerticalScrollbar(bool hasBar);
 
-    void valueChanged(ScrollBar*);
+    void valueChanged(Scrollbar*);
 
     ScrollView* m_view;
     IntSize m_scrollOffset;
     IntSize m_contentsSize;
     IntSize m_viewSize;
     bool m_hasStaticBackground;
-    bool m_scrollBarsSuppressed;
-    bool m_inUpdateScrollBars;
-    ScrollBarMode m_vScrollBarMode;
-    ScrollBarMode m_hScrollBarMode;
-    RefPtr<PlatformScrollBar> m_vBar;
-    RefPtr<PlatformScrollBar> m_hBar;
+    bool m_scrollbarsSuppressed;
+    bool m_inUpdateScrollbars;
+    ScrollbarMode m_vScrollbarMode;
+    ScrollbarMode m_hScrollbarMode;
+    RefPtr<PlatformScrollbar> m_vBar;
+    RefPtr<PlatformScrollbar> m_hBar;
     HashSet<const Widget*> m_children;
 };
 
-void ScrollView::ScrollViewPrivate::setHasHorizontalScrollBar(bool hasBar)
+void ScrollView::ScrollViewPrivate::setHasHorizontalScrollbar(bool hasBar)
 {
-    if (ScrollBar::hasPlatformScrollBars()) {
+    if (Scrollbar::hasPlatformScrollbars()) {
         if (hasBar && !m_hBar) {
-            m_hBar = new PlatformScrollBar(this, HorizontalScrollBar, RegularScrollBar);
+            m_hBar = new PlatformScrollbar(this, HorizontalScrollbar, RegularScrollbar);
             m_view->addChild(m_hBar.get());
         } else if (!hasBar && m_hBar) {
             m_view->removeChild(m_hBar.get());
@@ -91,11 +91,11 @@ void ScrollView::ScrollViewPrivate::setHasHorizontalScrollBar(bool hasBar)
     }
 }
 
-void ScrollView::ScrollViewPrivate::setHasVerticalScrollBar(bool hasBar)
+void ScrollView::ScrollViewPrivate::setHasVerticalScrollbar(bool hasBar)
 {
-    if (ScrollBar::hasPlatformScrollBars()) {
+    if (Scrollbar::hasPlatformScrollbars()) {
         if (hasBar && !m_vBar) {
-            m_vBar = new PlatformScrollBar(this, VerticalScrollBar, RegularScrollBar);
+            m_vBar = new PlatformScrollbar(this, VerticalScrollbar, RegularScrollbar);
             m_view->addChild(m_vBar.get());
         } else if (!hasBar && m_vBar) {
             m_view->removeChild(m_vBar.get());
@@ -104,7 +104,7 @@ void ScrollView::ScrollViewPrivate::setHasVerticalScrollBar(bool hasBar)
     }
 }
 
-void ScrollView::ScrollViewPrivate::valueChanged(ScrollBar* bar)
+void ScrollView::ScrollViewPrivate::valueChanged(Scrollbar* bar)
 {
     // Figure out if we really moved.
     IntSize newOffset = m_scrollOffset;
@@ -117,7 +117,7 @@ void ScrollView::ScrollViewPrivate::valueChanged(ScrollBar* bar)
         return;
     m_scrollOffset = newOffset;
 
-    if (m_scrollBarsSuppressed)
+    if (m_scrollbarsSuppressed)
         return;
 
     RECT dirtyRect = m_view->convertToContainingWindow(IntRect(0, 0, m_view->visibleWidth(), m_view->visibleHeight()));
@@ -193,7 +193,7 @@ void ScrollView::resizeContents(int w, int h)
     if (m_data->m_contentsSize != newContentsSize || m_data->m_viewSize != newViewSize) {
         m_data->m_contentsSize = newContentsSize;
         m_data->m_viewSize = newViewSize;
-        updateScrollBars(m_data->m_scrollOffset);
+        updateScrollbars(m_data->m_scrollOffset);
     }
 }
 
@@ -266,7 +266,7 @@ void ScrollView::scrollBy(int dx, int dy)
     if (newScrollOffset == scrollOffset)
         return;
 
-    updateScrollBars(newScrollOffset);
+    updateScrollbars(newScrollOffset);
 }
 
 void ScrollView::scrollPointRecursively(int x, int y)
@@ -281,19 +281,19 @@ void ScrollView::scrollPointRecursively(int x, int y)
     }
 }
 
-WebCore::ScrollBarMode ScrollView::hScrollBarMode() const
+WebCore::ScrollbarMode ScrollView::hScrollbarMode() const
 {
-    return m_data->m_hScrollBarMode;
+    return m_data->m_hScrollbarMode;
 }
 
-WebCore::ScrollBarMode ScrollView::vScrollBarMode() const
+WebCore::ScrollbarMode ScrollView::vScrollbarMode() const
 {
-    return m_data->m_vScrollBarMode;
+    return m_data->m_vScrollbarMode;
 }
 
-void ScrollView::suppressScrollBars(bool suppressed, bool repaintOnSuppress)
+void ScrollView::suppressScrollbars(bool suppressed, bool repaintOnSuppress)
 {
-    m_data->m_scrollBarsSuppressed = suppressed;
+    m_data->m_scrollbarsSuppressed = suppressed;
     if (repaintOnSuppress && !suppressed) {
         if (m_data->m_hBar)
             m_data->m_hBar->invalidate();
@@ -302,28 +302,28 @@ void ScrollView::suppressScrollBars(bool suppressed, bool repaintOnSuppress)
     }
 }
 
-void ScrollView::setHScrollBarMode(ScrollBarMode newMode)
+void ScrollView::setHScrollbarMode(ScrollbarMode newMode)
 {
-    if (m_data->m_hScrollBarMode != newMode) {
-        m_data->m_hScrollBarMode = newMode;
-        updateScrollBars(m_data->m_scrollOffset);
+    if (m_data->m_hScrollbarMode != newMode) {
+        m_data->m_hScrollbarMode = newMode;
+        updateScrollbars(m_data->m_scrollOffset);
     }
 }
 
-void ScrollView::setVScrollBarMode(ScrollBarMode newMode)
+void ScrollView::setVScrollbarMode(ScrollbarMode newMode)
 {
-    if (m_data->m_vScrollBarMode != newMode) {
-        m_data->m_vScrollBarMode = newMode;
-        updateScrollBars(m_data->m_scrollOffset);
+    if (m_data->m_vScrollbarMode != newMode) {
+        m_data->m_vScrollbarMode = newMode;
+        updateScrollbars(m_data->m_scrollOffset);
     }
 }
 
-void ScrollView::setScrollBarsMode(ScrollBarMode newMode)
+void ScrollView::setScrollbarsMode(ScrollbarMode newMode)
 {
-    if (m_data->m_hScrollBarMode != newMode ||
-        m_data->m_vScrollBarMode != newMode) {
-        m_data->m_hScrollBarMode = m_data->m_vScrollBarMode = newMode;
-        updateScrollBars(m_data->m_scrollOffset);
+    if (m_data->m_hScrollbarMode != newMode ||
+        m_data->m_vScrollbarMode != newMode) {
+        m_data->m_hScrollbarMode = m_data->m_vScrollbarMode = newMode;
+        updateScrollbars(m_data->m_scrollOffset);
     }
 }
 
@@ -332,55 +332,55 @@ void ScrollView::setStaticBackground(bool flag)
     m_data->m_hasStaticBackground = flag;
 }
 
-void ScrollView::updateScrollBars(const IntSize& desiredOffset)
+void ScrollView::updateScrollbars(const IntSize& desiredOffset)
 {
     // Don't allow re-entrancy into this function.
-    if (m_data->m_inUpdateScrollBars)
+    if (m_data->m_inUpdateScrollbars)
         return;
     
-    m_data->m_inUpdateScrollBars = true;
+    m_data->m_inUpdateScrollbars = true;
 
-    bool hasVerticalScrollBar = m_data->m_vBar;
-    bool hasHorizontalScrollBar = m_data->m_hBar;
-    bool oldHasVertical = hasVerticalScrollBar;
-    bool oldHasHorizontal = hasHorizontalScrollBar;
-    ScrollBarMode hScroll = m_data->m_hScrollBarMode;
-    ScrollBarMode vScroll = m_data->m_vScrollBarMode;
+    bool hasVerticalScrollbar = m_data->m_vBar;
+    bool hasHorizontalScrollbar = m_data->m_hBar;
+    bool oldHasVertical = hasVerticalScrollbar;
+    bool oldHasHorizontal = hasHorizontalScrollbar;
+    ScrollbarMode hScroll = m_data->m_hScrollbarMode;
+    ScrollbarMode vScroll = m_data->m_vScrollbarMode;
     
-    const int cVerticalWidth = PlatformScrollBar::verticalScrollBarWidth();
-    const int cHorizontalHeight = PlatformScrollBar::horizontalScrollBarHeight();
+    const int cVerticalWidth = PlatformScrollbar::verticalScrollbarWidth();
+    const int cHorizontalHeight = PlatformScrollbar::horizontalScrollbarHeight();
 
     for (int pass = 0; pass < 2; pass++) {
         bool scrollsVertically;
         bool scrollsHorizontally;
 
-        if (!m_data->m_scrollBarsSuppressed && (hScroll == ScrollBarAuto || vScroll == ScrollBarAuto)) {
+        if (!m_data->m_scrollbarsSuppressed && (hScroll == ScrollbarAuto || vScroll == ScrollbarAuto)) {
             // Do a layout if pending before checking if scrollbars are needed.
-            if (isFrameView() && (hasVerticalScrollBar != oldHasVertical || hasHorizontalScrollBar != oldHasHorizontal))
+            if (isFrameView() && (hasVerticalScrollbar != oldHasVertical || hasHorizontalScrollbar != oldHasHorizontal))
                 static_cast<FrameView*>(this)->layout();
              
-            scrollsVertically = (vScroll == ScrollBarAlwaysOn) || (vScroll == ScrollBarAuto && contentsHeight() > height());
+            scrollsVertically = (vScroll == ScrollbarAlwaysOn) || (vScroll == ScrollbarAuto && contentsHeight() > height());
             if (scrollsVertically)
-                scrollsHorizontally = (hScroll == ScrollBarAlwaysOn) || (hScroll == ScrollBarAuto && contentsWidth() + cVerticalWidth > width());
+                scrollsHorizontally = (hScroll == ScrollbarAlwaysOn) || (hScroll == ScrollbarAuto && contentsWidth() + cVerticalWidth > width());
             else {
-                scrollsHorizontally = (hScroll == ScrollBarAlwaysOn) || (hScroll == ScrollBarAuto && contentsWidth() > width());
+                scrollsHorizontally = (hScroll == ScrollbarAlwaysOn) || (hScroll == ScrollbarAuto && contentsWidth() > width());
                 if (scrollsHorizontally)
-                    scrollsVertically = (vScroll == ScrollBarAlwaysOn) || (vScroll == ScrollBarAuto && contentsHeight() + cHorizontalHeight > height());
+                    scrollsVertically = (vScroll == ScrollbarAlwaysOn) || (vScroll == ScrollbarAuto && contentsHeight() + cHorizontalHeight > height());
             }
         }
         else {
-            scrollsHorizontally = (hScroll == ScrollBarAuto) ? hasHorizontalScrollBar : (hScroll == ScrollBarAlwaysOn);
-            scrollsVertically = (vScroll == ScrollBarAuto) ? hasVerticalScrollBar : (vScroll == ScrollBarAlwaysOn);
+            scrollsHorizontally = (hScroll == ScrollbarAuto) ? hasHorizontalScrollbar : (hScroll == ScrollbarAlwaysOn);
+            scrollsVertically = (vScroll == ScrollbarAuto) ? hasVerticalScrollbar : (vScroll == ScrollbarAlwaysOn);
         }
         
-        if (hasVerticalScrollBar != scrollsVertically) {
-            m_data->setHasVerticalScrollBar(scrollsVertically);
-            hasVerticalScrollBar = scrollsVertically;
+        if (hasVerticalScrollbar != scrollsVertically) {
+            m_data->setHasVerticalScrollbar(scrollsVertically);
+            hasVerticalScrollbar = scrollsVertically;
         }
 
-        if (hasHorizontalScrollBar != scrollsHorizontally) {
-            m_data->setHasHorizontalScrollBar(scrollsHorizontally);
-            hasHorizontalScrollBar = scrollsHorizontally;
+        if (hasHorizontalScrollbar != scrollsHorizontally) {
+            m_data->setHasHorizontalScrollbar(scrollsHorizontally);
+            hasHorizontalScrollbar = scrollsHorizontally;
         }
     }
     
@@ -400,15 +400,15 @@ void ScrollView::updateScrollBars(const IntSize& desiredOffset)
                                         height() - m_data->m_hBar->height(),
                                         width() - (m_data->m_vBar ? m_data->m_vBar->width() : 0),
                                         m_data->m_hBar->height()));
-        if (!m_data->m_scrollBarsSuppressed && oldRect != m_data->m_hBar->frameGeometry())
+        if (!m_data->m_scrollbarsSuppressed && oldRect != m_data->m_hBar->frameGeometry())
             m_data->m_hBar->invalidate();
 
-        if (m_data->m_scrollBarsSuppressed)
+        if (m_data->m_scrollbarsSuppressed)
             m_data->m_hBar->setSuppressInvalidation(true);
         m_data->m_hBar->setSteps(LINE_STEP, pageStep);
         m_data->m_hBar->setProportion(clientWidth, contentsWidth());
         m_data->m_hBar->setValue(scroll.width());
-        if (m_data->m_scrollBarsSuppressed)
+        if (m_data->m_scrollbarsSuppressed)
             m_data->m_hBar->setSuppressInvalidation(false); 
     }
     if (m_data->m_vBar) {
@@ -421,22 +421,22 @@ void ScrollView::updateScrollBars(const IntSize& desiredOffset)
                                         0,
                                         m_data->m_vBar->width(),
                                         height() - (m_data->m_hBar ? m_data->m_hBar->height() : 0)));
-        if (!m_data->m_scrollBarsSuppressed && oldRect != m_data->m_vBar->frameGeometry())
+        if (!m_data->m_scrollbarsSuppressed && oldRect != m_data->m_vBar->frameGeometry())
             m_data->m_vBar->invalidate();
 
-        if (m_data->m_scrollBarsSuppressed)
+        if (m_data->m_scrollbarsSuppressed)
             m_data->m_vBar->setSuppressInvalidation(true);
         m_data->m_vBar->setSteps(LINE_STEP, pageStep);
         m_data->m_vBar->setProportion(clientHeight, contentsHeight());
         m_data->m_vBar->setValue(scroll.height());
-        if (m_data->m_scrollBarsSuppressed)
+        if (m_data->m_scrollbarsSuppressed)
             m_data->m_vBar->setSuppressInvalidation(false);
     }
 
-    m_data->m_inUpdateScrollBars = false;
+    m_data->m_inUpdateScrollbars = false;
 }
 
-PlatformScrollBar* ScrollView::scrollbarUnderMouse(const PlatformMouseEvent& mouseEvent)
+PlatformScrollbar* ScrollView::scrollbarUnderMouse(const PlatformMouseEvent& mouseEvent)
 {
     IntPoint viewPoint = convertFromContainingWindow(mouseEvent.pos());
     if (m_data->m_hBar && m_data->m_hBar->frameGeometry().contains(viewPoint))
@@ -494,7 +494,7 @@ void ScrollView::paint(GraphicsContext* context, const IntRect& rect)
     context->restore();
 
     // Now paint the scrollbars.
-    if (!m_data->m_scrollBarsSuppressed && (m_data->m_hBar || m_data->m_vBar)) {
+    if (!m_data->m_scrollbarsSuppressed && (m_data->m_hBar || m_data->m_vBar)) {
         context->save();
         IntRect scrollViewDirtyRect = rect;
         scrollViewDirtyRect.intersect(frameGeometry());
@@ -521,7 +521,7 @@ void ScrollView::paint(GraphicsContext* context, const IntRect& rect)
 
 void ScrollView::themeChanged()
 {
-    PlatformScrollBar::themeChanged();
+    PlatformScrollbar::themeChanged();
     theme()->themeChanged();
     invalidate();
 }
