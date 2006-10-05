@@ -1,22 +1,27 @@
+2006-10-05  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Adam.
+
+        - changed ResourceLoader to be refcounted
+
+        It keeps a ref on itself while loading as well. This makes
+        for a much saner memory management model than the previous.
+
+        In addition, keep it ref'd across all of ResourceLoaderWndProc
+        to avoid sending messages to jobs that get deleted partway.
+
+        This fixes <rdar://problem/4766859> Crash in ResourceLoaderWndProc - line 232 at televisionwithoutpity.com, washingtonpost.com
+
+
+        * WebFrame.cpp:
+        (WebFrame::loadDataSource):
+
 2006-10-05  Dave Hyatt  <hyatt@apple.com>
 
         Make key events work with iframes.  Implement scrolling keyboard behavior.  Fix a bug with mouse wheeling that
         made it fail on iframes nested within iframes.
         
         Reviewed by mjs
-
-        * ChangeLog:
-        * WebView.cpp:
-        (WebView::handleMouseEvent):
-        (WebView::focusedTarget):
-        (WebView::focusedTargetFrame):
-        (WebView::keyPress):
-        (WebViewWndProc):
-        * WebView.h:
-
-2006-10-05  U-ISABELLA\David Hyatt,S-1-5-21-1085031214-1417001333-725345543-1003  <set EMAIL_ADDRESS environment variable>
-
-        Reviewed by NOBODY (OOPS!).
 
         * WebView.cpp:
         (WebView::handleMouseEvent):

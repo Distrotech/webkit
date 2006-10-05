@@ -790,19 +790,19 @@ HRESULT WebFrame::loadDataSource(WebDataSource* dataSource)
             if (SUCCEEDED(hr)) {
                 KURL kurl(DeprecatedString((DeprecatedChar*)url, SysStringLen(url)));
                 String methodString(method, SysStringLen(method));
-                ResourceLoader* job;
+                RefPtr<ResourceLoader> loader;
                 const FormData* formData = 0;
                 if (wcscmp(method, TEXT("GET"))) {
                     WebMutableURLRequest* requestImpl = static_cast<WebMutableURLRequest*>(request);
                     formData = requestImpl->formData();
                 }
                 if (formData)
-                    job = new ResourceLoader(this, methodString, kurl, *formData);
+                    loader = ResourceLoader::create(this, methodString, kurl, *formData);
                 else
-                    job = new ResourceLoader(this, methodString, kurl);
+                    loader = ResourceLoader::create(this, methodString, kurl);
                 if (!d->frame->document())
                     d->frame->begin(); // FIXME - the frame should do this for us
-                job->start(d->frame->document()->docLoader());
+                loader->start(d->frame->document()->docLoader());
                 IWebFrameLoadDelegate* frameLoadDelegate;
                 if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
                     frameLoadDelegate->didStartProvisionalLoadForFrame(d->webView, this);

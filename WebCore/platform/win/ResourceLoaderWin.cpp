@@ -90,8 +90,11 @@ LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 
     // If we get a message about a job we no longer know about (already deleted), ignore it.
     unsigned jobId = (unsigned)wParam;
-    ResourceLoader* job = lookupResourceLoader(jobId);
+    RefPtr<ResourceLoader> job = lookupResourceLoader(jobId);
     if (!job)
+        return 0;
+
+    if (job->d->m_cancelled)
         return 0;
 
     ASSERT(job->d->m_jobId == jobId);
@@ -103,7 +106,8 @@ LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             if (job->d->status != 0) {
                 // We were canceled before Windows actually created a handle for us, close and delete now.
                 InternetCloseHandle(job->d->m_resourceHandle);
-                delete job;
+                job->kill();
+                return 0;
             }
 
             if (job->method() == "POST") {
@@ -123,7 +127,8 @@ LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                                                        (DWORD_PTR)job->d->m_jobId);
                 if (urlHandle == INVALID_HANDLE_VALUE) {
                     InternetCloseHandle(job->d->m_resourceHandle);
-                    delete job;
+                    job->kill();
+                    return 0;
                 }
             }
         } else if (!job->d->m_secondaryHandle) {
@@ -157,7 +162,7 @@ LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, L
     } else if (internetStatus == INTERNET_STATUS_REDIRECT) {
         KURL redirectKURL(redirectURL); 
         free(redirectURL);
-        job->client()->receivedRedirect(job, redirectKURL);
+        job->client()->receivedRedirect(job.get(), redirectKURL);
         job->d->URL = redirectKURL;
         if (job->d->method == "POST") {
             bool redirectAsGet = true;
@@ -227,9 +232,9 @@ LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                 headerLength = (sizeof(contentLengthStr)/sizeof(contentLengthStr[0]))-1;
                 if (HttpQueryInfo(handle, HTTP_QUERY_CONTENT_LENGTH, contentLengthStr, &headerLength, 0))
                     response.contentLength = _wtol(contentLengthStr);
-                job->client()->receivedResponse(job, &response);
+                job->client()->receivedResponse(job.get(), &response);
             }
-            job->client()->receivedData(job, buffer, buffers.dwBufferLength);
+            job->client()->receivedData(job.get(), buffer, buffers.dwBufferLength);
             buffers.dwBufferLength = ARRAYSIZE(buffer);
         }
 
@@ -247,9 +252,9 @@ LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             InternetCloseHandle(job->d->m_secondaryHandle);
         InternetCloseHandle(job->d->m_resourceHandle);
         
-        job->client()->receivedAllData(job, 0);
-        job->client()->receivedAllData(job);
-        delete job;
+        job->client()->receivedAllData(job.get(), 0);
+        job->client()->receivedAllData(job.get());
+        job->kill();
     }
 
     return 0;
@@ -302,6 +307,9 @@ static void __stdcall transferJobStatusCallback(HINTERNET internetHandle, DWORD_
 
 bool ResourceLoader::start(DocLoader* docLoader)
 {
+    ref();
+    d->m_loading = true;
+
     if (d->URL.isLocalFile()) {
         DeprecatedString path = d->URL.path();
         // windows does not enjoy a leading slash on paths

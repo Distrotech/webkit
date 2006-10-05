@@ -71,7 +71,7 @@ namespace WebCore {
         String m_method;
         KURL m_url;
         DocLoader* m_docLoader;
-        ResourceLoader* m_resourceLoader;
+        RefPtr<ResourceLoader> m_resourceLoader;
         PluginViewWin* m_pluginView;
         void* m_notifyData;
         bool m_sendNotification;

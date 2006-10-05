@@ -49,7 +49,6 @@ PluginStreamWin::PluginStreamWin(PluginViewWin* pluginView, DocLoader* docLoader
     : m_method(method)
     , m_url(url)
     , m_docLoader(docLoader)
-    , m_resourceLoader(0)
     , m_pluginView(pluginView)
     , m_notifyData(notifyData)
     , m_sendNotification(sendNotification)
@@ -94,7 +93,7 @@ void PluginStreamWin::start()
 {
     // FIXME: Should ask the bridge if the URL can be loaded.
 
-    m_resourceLoader = new ResourceLoader(this, m_method, m_url, m_postData);
+    m_resourceLoader = ResourceLoader::create(this, m_method, m_url, m_postData);
 
     // Assemble headers
     if (!m_headers.isEmpty()) {
@@ -115,7 +114,8 @@ void PluginStreamWin::start()
 
 void PluginStreamWin::stop()
 {
-    m_resourceLoader->kill();
+    if (m_resourceLoader)
+        m_resourceLoader->kill();
     m_resourceLoader = 0;
 }
 

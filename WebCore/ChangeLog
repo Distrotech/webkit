@@ -1,3 +1,26 @@
+2006-10-05  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Adam.
+
+        - changed ResourceLoader to be refcounted
+
+        It keeps a ref on itself while loading as well. This makes
+        for a much saner memory management model than the previous.
+
+        In addition, keep it ref'd across all of ResourceLoaderWndProc
+        to avoid sending messages to jobs that get deleted partway.
+
+        This fixes <rdar://problem/4766859> Crash in ResourceLoaderWndProc - line 232 at televisionwithoutpity.com, washingtonpost.com
+
+        * platform/win/ResourceLoaderWin.cpp:
+        (WebCore::ResourceLoaderWndProc):
+        (WebCore::ResourceLoader::start):
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::PluginStreamWin::PluginStreamWin):
+        (WebCore::PluginStreamWin::start):
+        (WebCore::PluginStreamWin::stop):
+        * plugins/win/PluginStreamWin.h:
+
 2006-10-05  Dave Hyatt  <hyatt@apple.com>
 
         Make key events work with iframes.  Implement scrolling keyboard behavior.  Fix a bug with mouse wheeling that
