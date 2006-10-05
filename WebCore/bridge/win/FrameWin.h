@@ -89,6 +89,8 @@ public:
 
     virtual void scheduleClose();
 
+    virtual void frameDetached();
+
     virtual void focusWindow();
     virtual void unfocusWindow();
     

@@ -248,6 +248,13 @@ Frame* FrameWin::createFrame(const KURL& url, const String& name, Element* owner
     return 0;
 }
 
+void FrameWin::frameDetached()
+{
+    // FIXME: This code should be unified w/ FrameMac and moved into Frame
+    detachChildren();
+    tree()->parent()->tree()->removeChild(this);
+}
+
 void FrameWin::addPluginRootObject(KJS::Bindings::RootObject* root)
 {
     m_rootObjects.append(root);
