@@ -657,6 +657,19 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE setClassName( 
         /* [in] */ BSTR className);
+
+    virtual HRESULT STDMETHODCALLTYPE innerHTML( 
+        /* [retval][out] */ BSTR *result);
+        
+    virtual HRESULT STDMETHODCALLTYPE setInnerHTML( 
+        /* [in] */ BSTR html);
+        
+    virtual HRESULT STDMETHODCALLTYPE innerText( 
+        /* [retval][out] */ BSTR *result);
+        
+    virtual HRESULT STDMETHODCALLTYPE setInnerText( 
+        /* [in] */ BSTR text);        
+
 };
 
 class DOMHTMLFormElement : public DOMHTMLElement, public IDOMHTMLFormElement
@@ -903,6 +916,18 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE setClassName( 
         /* [in] */ BSTR className) { return DOMHTMLElement::setClassName(className); }
+
+    virtual HRESULT STDMETHODCALLTYPE innerHTML( 
+        /* [retval][out] */ BSTR *result) { return DOMHTMLElement::innerHTML(result); }
+        
+    virtual HRESULT STDMETHODCALLTYPE setInnerHTML( 
+        /* [in] */ BSTR html) { return DOMHTMLElement::setInnerHTML(html); }
+        
+    virtual HRESULT STDMETHODCALLTYPE innerText( 
+        /* [retval][out] */ BSTR *result) { return DOMHTMLElement::innerText(result); }
+        
+    virtual HRESULT STDMETHODCALLTYPE setInnerText( 
+        /* [in] */ BSTR text) { return DOMHTMLElement::setInnerText(text); }
 
     // IDOMHTMLFormElement
     virtual HRESULT STDMETHODCALLTYPE elements( 
@@ -1196,6 +1221,18 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE setClassName( 
         /* [in] */ BSTR className) { return DOMHTMLElement::setClassName(className); }
+
+    virtual HRESULT STDMETHODCALLTYPE innerHTML( 
+        /* [retval][out] */ BSTR *result) { return DOMHTMLElement::innerHTML(result); }
+        
+    virtual HRESULT STDMETHODCALLTYPE setInnerHTML( 
+        /* [in] */ BSTR html) { return DOMHTMLElement::setInnerHTML(html); }
+        
+    virtual HRESULT STDMETHODCALLTYPE innerText( 
+        /* [retval][out] */ BSTR *result) { return DOMHTMLElement::innerText(result); }
+        
+    virtual HRESULT STDMETHODCALLTYPE setInnerText( 
+        /* [in] */ BSTR text) { return DOMHTMLElement::setInnerText(text); }
 
     // IDOMHTMLSelectElement
     virtual HRESULT STDMETHODCALLTYPE type( 
@@ -1509,6 +1546,18 @@ public:
     virtual HRESULT STDMETHODCALLTYPE setClassName( 
         /* [in] */ BSTR className) { return DOMHTMLElement::setClassName(className); }
 
+    virtual HRESULT STDMETHODCALLTYPE innerHTML( 
+        /* [retval][out] */ BSTR *result) { return DOMHTMLElement::innerHTML(result); }
+        
+    virtual HRESULT STDMETHODCALLTYPE setInnerHTML( 
+        /* [in] */ BSTR html) { return DOMHTMLElement::setInnerHTML(html); }
+        
+    virtual HRESULT STDMETHODCALLTYPE innerText( 
+        /* [retval][out] */ BSTR *result) { return DOMHTMLElement::innerText(result); }
+        
+    virtual HRESULT STDMETHODCALLTYPE setInnerText( 
+        /* [in] */ BSTR text) { return DOMHTMLElement::setInnerText(text); }
+
     // IDOMHTMLOptionElement
     virtual HRESULT STDMETHODCALLTYPE form( 
         /* [retval][out] */ IDOMHTMLFormElement **result);
@@ -1794,6 +1843,18 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE setClassName( 
         /* [in] */ BSTR className) { return DOMHTMLElement::setClassName(className); }
+
+    virtual HRESULT STDMETHODCALLTYPE innerHTML( 
+        /* [retval][out] */ BSTR *result) { return DOMHTMLElement::innerHTML(result); }
+        
+    virtual HRESULT STDMETHODCALLTYPE setInnerHTML( 
+        /* [in] */ BSTR html) { return DOMHTMLElement::setInnerHTML(html); }
+        
+    virtual HRESULT STDMETHODCALLTYPE innerText( 
+        /* [retval][out] */ BSTR *result) { return DOMHTMLElement::innerText(result); }
+        
+    virtual HRESULT STDMETHODCALLTYPE setInnerText( 
+        /* [in] */ BSTR text) { return DOMHTMLElement::setInnerText(text); }
 
     // IDOMHTMLInputElement
     virtual HRESULT STDMETHODCALLTYPE defaultValue( 
@@ -2182,6 +2243,18 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE setClassName( 
         /* [in] */ BSTR className) { return DOMHTMLElement::setClassName(className); }
+
+    virtual HRESULT STDMETHODCALLTYPE innerHTML( 
+        /* [retval][out] */ BSTR *result) { return DOMHTMLElement::innerHTML(result); }
+        
+    virtual HRESULT STDMETHODCALLTYPE setInnerHTML( 
+        /* [in] */ BSTR html) { return DOMHTMLElement::setInnerHTML(html); }
+        
+    virtual HRESULT STDMETHODCALLTYPE innerText( 
+        /* [retval][out] */ BSTR *result) { return DOMHTMLElement::innerText(result); }
+        
+    virtual HRESULT STDMETHODCALLTYPE setInnerText( 
+        /* [in] */ BSTR text) { return DOMHTMLElement::setInnerText(text); }
 
     // IDOMHTMLTextArea
     virtual HRESULT STDMETHODCALLTYPE defaultValue( 

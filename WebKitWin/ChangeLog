@@ -1,3 +1,58 @@
+2006-10-05  Anders Carlsson <acarlsson@apple.com>
+
+        Reviewed by Maciej.
+
+        A couple of changes needed for the new DumpRenderTree.
+        
+        * DOMCoreClasses.cpp:
+        (DOMDocument::documentElement):
+        Implement.
+        
+        * DOMHTMLClasses.cpp:
+        (DOMHTMLElement::innerHTML):
+        (DOMHTMLElement::setInnerHTML):
+        (DOMHTMLElement::innerText):
+        (DOMHTMLElement::setInnerText):
+        * DOMHTMLClasses.h:
+        (DOMHTMLFormElement::innerHTML):
+        (DOMHTMLFormElement::setInnerHTML):
+        (DOMHTMLFormElement::innerText):
+        (DOMHTMLFormElement::setInnerText):
+        (DOMHTMLSelectElement::innerHTML):
+        (DOMHTMLSelectElement::setInnerHTML):
+        (DOMHTMLSelectElement::innerText):
+        (DOMHTMLSelectElement::setInnerText):
+        (DOMHTMLOptionElement::innerHTML):
+        (DOMHTMLOptionElement::setInnerHTML):
+        (DOMHTMLOptionElement::innerText):
+        (DOMHTMLOptionElement::setInnerText):
+        (DOMHTMLInputElement::innerHTML):
+        (DOMHTMLInputElement::setInnerHTML):
+        (DOMHTMLInputElement::innerText):
+        (DOMHTMLInputElement::setInnerText):
+        (DOMHTMLTextAreaElement::innerHTML):
+        (DOMHTMLTextAreaElement::setInnerHTML):
+        (DOMHTMLTextAreaElement::innerText):
+        (DOMHTMLTextAreaElement::setInnerText):
+        * Interfaces/DOMHTML.idl:
+        Implement innerText and add stubs for innerHTML, setInnerHTML and setInnerText.
+        
+        * Interfaces/IWebFramePrivate.idl: Added.
+        * WebFrame.cpp:
+        (WebFrame::QueryInterface):
+        (WebFrame::renderTreeAsExternalRepresentation):
+        (WebFrame::receivedAllData):
+        Call Frame::end() before calling the frame load delegate methods. This matches the mac behavior.
+        
+        (WebFrame::didFirstLayout):
+        (WebFrame::handledOnloadEvents):
+        Add null checks for frameLoadDelegatePriv, all clients might not use it.
+        
+        * WebFrame.h:
+        * WebKit.vcproj/Interfaces.vcproj:
+        * WebKit.vcproj/WebKitGUID.vcproj:
+        Add new interface, IWebFramePrivate, which supports getting the render tree as text.
+
 2006-10-05  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Adam.

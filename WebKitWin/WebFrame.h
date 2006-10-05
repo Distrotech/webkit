@@ -29,6 +29,7 @@
 #include "DOMCore.h"
 #include "IWebFormDelegate.h"
 #include "IWebFrame.h"
+#include "IWebFramePrivate.h"
 #include "WebDataSource.h"
 
 #pragma warning(push, 0)
@@ -59,7 +60,7 @@ typedef enum {
     WebFrameLoadTypeReplace
 } WebFrameLoadType;
 
-class WebFrame : public IWebFrame, public WebCore::ResourceLoaderClient, public WebCore::FrameWinClient, public IWebFormSubmissionListener
+class WebFrame : public IWebFrame, IWebFramePrivate, public WebCore::ResourceLoaderClient, public WebCore::FrameWinClient, public IWebFormSubmissionListener
 {
 public:
     static WebFrame* createInstance();
@@ -130,6 +131,10 @@ public:
     virtual HRESULT STDMETHODCALLTYPE childFrames( 
         /* [out] */ int *frameCount,
         /* [retval][out] */ IWebFrame ***frames);
+
+    // IWebFramePrivate
+    virtual HRESULT STDMETHODCALLTYPE renderTreeAsExternalRepresentation(
+        /* [retval][out] */ BSTR *result);
 
     // IWebFormSubmissionListener
     virtual HRESULT STDMETHODCALLTYPE continueSubmit( void);

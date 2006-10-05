@@ -321,10 +321,10 @@ HRESULT STDMETHODCALLTYPE DOMDocument::implementation(
 }
 
 HRESULT STDMETHODCALLTYPE DOMDocument::documentElement( 
-    /* [retval][out] */ IDOMElement** /*result*/)
+    /* [retval][out] */ IDOMElement** result)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    *result = DOMElement::createInstance(m_document->documentElement());
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE DOMDocument::createElement( 

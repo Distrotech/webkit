@@ -290,6 +290,26 @@ interface IDOMHTMLElement : IDOMElement
         - (void)setClassName:(NSString *)className;
     */
     HRESULT setClassName([in] BSTR className);
+
+    /*
+        - (NSString *)innerHTML;
+    */
+    HRESULT innerHTML([out, retval] BSTR* result);
+    
+    /*
+        - (void)setInnerHTML:(NSString *)innerHTML;
+    */
+    HRESULT setInnerHTML([in] BSTR html);
+
+    /*
+        - (NSString *)innerHTML;
+    */
+    HRESULT innerText([out, retval] BSTR* result);
+
+    /*
+        - (void)setInnerText:(NSString *)innerText;
+    */
+    HRESULT setInnerText([in] BSTR text);
 }
 
 /*

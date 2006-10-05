@@ -368,6 +368,35 @@ HRESULT STDMETHODCALLTYPE DOMHTMLElement::setClassName(
     return E_NOTIMPL;
 }
 
+HRESULT STDMETHODCALLTYPE DOMHTMLElement::innerHTML( 
+        /* [retval][out] */ BSTR* /*result*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+        
+HRESULT STDMETHODCALLTYPE DOMHTMLElement::setInnerHTML( 
+        /* [in] */ BSTR /*html*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+        
+HRESULT STDMETHODCALLTYPE DOMHTMLElement::innerText( 
+        /* [retval][out] */ BSTR* result)
+{
+    String text = static_cast<HTMLElement*>(m_element)->innerText();
+    *result = SysAllocStringLen(text.characters(), text.length());
+    return S_OK;
+}
+        
+HRESULT STDMETHODCALLTYPE DOMHTMLElement::setInnerText( 
+        /* [in] */ BSTR /*text*/)
+{
+    DebugBreak();
+    return E_NOTIMPL;
+}
+
 // DOMHTMLFormElement - IUnknown ----------------------------------------------
 
 HRESULT STDMETHODCALLTYPE DOMHTMLFormElement::QueryInterface(REFIID riid, void** ppvObject)

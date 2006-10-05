@@ -56,6 +56,7 @@
 #include <WebCore/platform/PlatformKeyboardEvent.h>
 #include <WebCore/platform/PlugInInfoStore.h>
 #include <WebCore/rendering/RenderFrame.h>
+#include <WebCore/rendering/RenderTreeAsText.h>
 #include <WebCore/platform/ResourceLoader.h>
 #include <WebCore/platform/win/ResourceLoaderWin.h>
 #include <wtf/MathExtras.h>
@@ -349,6 +350,8 @@ HRESULT STDMETHODCALLTYPE WebFrame::QueryInterface(REFIID riid, void** ppvObject
         *ppvObject = static_cast<IWebFrame*>(this);
     else if (IsEqualGUID(riid, IID_IWebFrame))
         *ppvObject = static_cast<IWebFrame*>(this);
+    else if (IsEqualGUID(riid, IID_IWebFramePrivate))
+        *ppvObject = static_cast<IWebFramePrivate*>(this);
     else if (IsEqualGUID(riid, IID_IWebFormSubmissionListener))
         *ppvObject = static_cast<IWebFormSubmissionListener*>(this);
     else
@@ -537,6 +540,18 @@ HRESULT STDMETHODCALLTYPE WebFrame::childFrames(
 {
     DebugBreak();
     return E_NOTIMPL;
+}
+
+// IWebFramePrivaete ------------------------------------------------------
+
+HRESULT STDMETHODCALLTYPE WebFrame::renderTreeAsExternalRepresentation(
+    /* [retval][out] */ BSTR *result)
+{
+    DeprecatedString representation = externalRepresentation(d->frame->renderer());
+
+    *result = SysAllocStringLen((LPCOLESTR)representation.unicode(), representation.length());
+
+    return S_OK;
 }
 
 // IWebFormSubmissionListener ---------------------------------------------
@@ -1178,6 +1193,8 @@ void WebFrame::receivedAllData(ResourceLoader* job)
     }
     m_dataSource->QueryInterface(IID_IWebDataSourcePrivate, (void**)&m_dataSourcePrivate);
 
+    d->frame->end();
+
     IWebFrameLoadDelegate* frameLoadDelegate;
     if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
         if (!job->error()) {
@@ -1243,7 +1260,6 @@ void WebFrame::receivedAllData(ResourceLoader* job)
         frameLoadDelegate->Release();
     }
 
-    d->frame->end();
     m_quickRedirectComing = false;
     m_loadType = WebFrameLoadTypeStandard;
 
@@ -1503,7 +1519,7 @@ void WebFrame::textDidChangeInTextArea(Element* e)
 void WebFrame::didFirstLayout()
 {
     IWebFrameLoadDelegatePrivate* frameLoadDelegatePriv;
-    if (SUCCEEDED(d->webView->frameLoadDelegatePrivate(&frameLoadDelegatePriv))) {
+    if (SUCCEEDED(d->webView->frameLoadDelegatePrivate(&frameLoadDelegatePriv)) && frameLoadDelegatePriv) {
         frameLoadDelegatePriv->didFirstLayoutInFrame(d->webView, this);
         frameLoadDelegatePriv->Release();
     }
@@ -1512,7 +1528,7 @@ void WebFrame::didFirstLayout()
 void WebFrame::handledOnloadEvents()
 {
     IWebFrameLoadDelegatePrivate* frameLoadDelegatePriv;
-    if (SUCCEEDED(d->webView->frameLoadDelegatePrivate(&frameLoadDelegatePriv))) {
+    if (SUCCEEDED(d->webView->frameLoadDelegatePrivate(&frameLoadDelegatePriv))  && frameLoadDelegatePriv) {
         frameLoadDelegatePriv->didHandleOnloadEventsForFrame(d->webView, this);
         frameLoadDelegatePriv->Release();
     }

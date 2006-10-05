@@ -262,6 +262,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\Interfaces\IWebFramePrivate.idl"
+			>
+		</File>
+		<File
 			RelativePath="..\Interfaces\IWebFrameView.idl"
 			>
 		</File>
