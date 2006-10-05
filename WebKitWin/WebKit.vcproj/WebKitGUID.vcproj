@@ -234,7 +234,7 @@
 			>
 		</File>
 		<File
-			RelativePath="..\..\..\..\..\webkitbuild\obj\webkit\interfaces\IWebFramePrivate_i.c"
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebFramePrivate_i.c"
 			>
 		</File>
 		<File
