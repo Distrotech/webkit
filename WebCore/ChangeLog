@@ -1,5 +1,12 @@
 2006-10-05  Adam Roben  <aroben@apple.com>
 
+        Build fix.
+
+        * platform/win/TemporaryLinkStubs.cpp:
+        (BrowserExtensionWin::BrowserExtensionWin): Change Frame* to FrameWin*
+
+2006-10-05  Adam Roben  <aroben@apple.com>
+
         Build fix. Remove RenderImageButton.{h,cpp}.
 
         * WebCore.vcproj/WebCore.vcproj:

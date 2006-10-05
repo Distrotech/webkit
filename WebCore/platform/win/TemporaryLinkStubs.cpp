@@ -203,7 +203,7 @@ String FrameWin::incomingReferrer() const { LOG_NOIMPL(); return String(); }
 void FrameWin::markMisspellingsInAdjacentWords(WebCore::VisiblePosition const&) { LOG_NOIMPL(); }
 void FrameWin::respondToChangedContents(const Selection &endingSelection) { LOG_NOIMPL(); }
 
-BrowserExtensionWin::BrowserExtensionWin(WebCore::Frame*) { LOG_NOIMPL(); }
+BrowserExtensionWin::BrowserExtensionWin(WebCore::FrameWin*) { LOG_NOIMPL(); }
 void BrowserExtensionWin::setTypedIconURL(KURL const&, const String&) { LOG_NOIMPL(); }
 void BrowserExtensionWin::setIconURL(KURL const&) { LOG_NOIMPL(); }
 int BrowserExtensionWin::getHistoryLength() { LOG_NOIMPL(); return 0; }
