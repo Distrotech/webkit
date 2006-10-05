@@ -1,3 +1,9 @@
+2006-10-05  Adam Roben  <aroben@apple.com>
+
+        Build fix.
+
+        * WebKit.vcproj/WebKitGUID.vcproj: Fix patch to IWebFramePrivate_i.c
+
 2006-10-05  Anders Carlsson <acarlsson@apple.com>
 
         Reviewed by Maciej.
