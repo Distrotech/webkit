@@ -1,3 +1,29 @@
+2006-10-05  Dave Hyatt  <hyatt@apple.com>
+
+        Make key events work with iframes.  Implement scrolling keyboard behavior.  Fix a bug with mouse wheeling that
+        made it fail on iframes nested within iframes.
+        
+        Reviewed by mjs
+
+        * bridge/win/FrameViewWin.cpp:
+        (WebCore::FrameView::passWheelEventToSubframe):
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::scroll):
+        * platform/win/WidgetWin.cpp:
+        (WebCore::Widget::Widget):
+        (WebCore::Widget::capturingMouse):
+        (WebCore::Widget::setCapturingMouse):
+        (WebCore::Widget::capturingTarget):
+        (WebCore::Widget::setCapturingChild):
+        (WebCore::Widget::hasFocus):
+        (WebCore::Widget::setFocus):
+        (WebCore::Widget::clearFocus):
+        (WebCore::Widget::setFocused):
+        (WebCore::Widget::focusedTarget):
+        (WebCore::Widget::focusedChild):
+        (WebCore::Widget::setFocusedChild):
+        (WebCore::Widget::clearFocusFromDescendants):
+
 2006-10-05  Adam Roben  <aroben@apple.com>
 
         Reviewed by Maciej and Tim H.

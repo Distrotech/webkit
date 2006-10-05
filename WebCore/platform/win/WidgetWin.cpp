@@ -48,8 +48,8 @@ public:
     HWND containingWindow;
     IntRect frameRect;
     bool enabled;
-    bool capturingMouse;
     Widget* capturingChild;
+    Widget* focusedChild;
     bool suppressInvalidation;
 };
 
@@ -60,8 +60,8 @@ Widget::Widget()
     data->parent = 0;
     data->containingWindow = 0;
     data->enabled = true;
-    data->capturingMouse = false;
     data->capturingChild = 0;
+    data->focusedChild = 0;
     data->suppressInvalidation = false;
 }
 
@@ -108,24 +108,6 @@ void Widget::setParent(Widget* w)
 Widget* Widget::parent() const
 {
     return data->parent;
-}
-
-bool Widget::hasFocus() const
-{
-    if (WidgetClient* client = data->client)
-        if (Element* element = client->element(const_cast<Widget*>(this)))
-            if (element == element->document()->focusNode())
-                return true;
-
-    return false;
-}
-
-void Widget::setFocus()
-{
-}
-
-void Widget::clearFocus()
-{
 }
 
 void Widget::show()
@@ -229,19 +211,20 @@ void Widget::invalidateRect(const IntRect& r)
 
 bool Widget::capturingMouse() const
 {
-    return data->capturingMouse;
+    // This is true only if we are at the end of the capturing chain, i.e., if we are the capturingTarget.
+    return data->capturingChild == this;
 }
 
 void Widget::setCapturingMouse(bool capturingMouse)
 {
-    data->capturingMouse = capturingMouse;
+    data->capturingChild = capturingMouse ? this : 0;
     if (parent())
         parent()->setCapturingChild(capturingMouse ? this : 0);
 }
 
 Widget* Widget::capturingTarget()
 {
-    if (capturingMouse() || !capturingChild())
+    if (!capturingChild() || capturingChild() == this)
         return this;
     return capturingChild()->capturingTarget(); 
 }
@@ -254,10 +237,64 @@ Widget* Widget::capturingChild()
 void Widget::setCapturingChild(Widget* w)
 {
     data->capturingChild = w;
-    if (capturingMouse() && w)
-        data->capturingMouse = false;
     if (parent())
         parent()->setCapturingChild(w ? this : 0);
+}
+
+// These three methods are actually used in WebCore.
+bool Widget::hasFocus() const
+{
+    return data->focusedChild == this;
+}
+
+void Widget::setFocus()
+{
+    setFocused(true);
+}
+
+void Widget::clearFocus()
+{
+    setFocused(false);
+}
+
+// The focus implementation.
+void Widget::setFocused(bool focused)
+{
+    if (focused && data->focusedChild == this)
+        return;
+    clearFocusFromDescendants();
+    data->focusedChild = focused ? this : 0;
+    if (parent())
+        parent()->setFocusedChild(focused ? this : 0);
+}
+
+Widget* Widget::focusedTarget()
+{
+    if (!focusedChild() || focusedChild() == this)
+        return this;
+    return focusedChild()->focusedTarget(); 
+}
+
+Widget* Widget::focusedChild()
+{
+    return data->focusedChild;
+}
+
+void Widget::setFocusedChild(Widget* w)
+{
+    if (data->focusedChild == w)
+        return;
+    clearFocusFromDescendants();
+    data->focusedChild = w;
+    if (parent())
+        parent()->setFocusedChild(w ? this : 0);
+}
+
+void Widget::clearFocusFromDescendants()
+{
+    if (focusedChild() && focusedChild() != this)
+        focusedChild()->clearFocusFromDescendants();
+    data->focusedChild = 0;
 }
 
 } // namespace WebCore

@@ -546,4 +546,12 @@ void ScrollView::scrolled() const
         (*current)->scrolled();
 }
 
+void ScrollView::scroll(ScrollDirection direction, ScrollGranularity granularity)
+{
+    if  ((direction == ScrollUp || direction == ScrollDown) && m_data->m_vBar)
+        m_data->m_vBar->scroll(direction, granularity);
+    else if (m_data->m_hBar)
+        m_data->m_hBar->scroll(direction, granularity);
+}
+
 } // namespace WebCore

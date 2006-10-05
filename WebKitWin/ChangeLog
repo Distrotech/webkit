@@ -1,3 +1,31 @@
+2006-10-05  Dave Hyatt  <hyatt@apple.com>
+
+        Make key events work with iframes.  Implement scrolling keyboard behavior.  Fix a bug with mouse wheeling that
+        made it fail on iframes nested within iframes.
+        
+        Reviewed by mjs
+
+        * ChangeLog:
+        * WebView.cpp:
+        (WebView::handleMouseEvent):
+        (WebView::focusedTarget):
+        (WebView::focusedTargetFrame):
+        (WebView::keyPress):
+        (WebViewWndProc):
+        * WebView.h:
+
+2006-10-05  U-ISABELLA\David Hyatt,S-1-5-21-1085031214-1417001333-725345543-1003  <set EMAIL_ADDRESS environment variable>
+
+        Reviewed by NOBODY (OOPS!).
+
+        * WebView.cpp:
+        (WebView::handleMouseEvent):
+        (WebView::focusedTarget):
+        (WebView::focusedTargetFrame):
+        (WebView::keyPress):
+        (WebViewWndProc):
+        * WebView.h:
+
 2006-10-04  Adele Peterson  <adele@apple.com>
 
         Reviewed by Adam. 

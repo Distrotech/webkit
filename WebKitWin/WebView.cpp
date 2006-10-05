@@ -157,7 +157,6 @@ void WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
         
         mouseEvent.setClickCount(globalClickCount);
         m_page->mainFrame()->view()->handleMousePressEvent(mouseEvent);
-
     } else if (message == WM_LBUTTONDBLCLK || message == WM_MBUTTONDBLCLK || message == WM_RBUTTONDBLCLK) {
         globalClickCount = 2;
         mouseEvent.setClickCount(globalClickCount);
@@ -214,11 +213,22 @@ bool WebView::execCommand(WPARAM wParam, LPARAM /*lParam*/)
     return handled;
 }
 
+FrameView* WebView::focusedTarget()
+{
+    return static_cast<FrameView*>(m_page->mainFrame()->view()->focusedTarget());
+}
+
+Frame* WebView::focusedTargetFrame()
+{
+    return focusedTarget()->frame();
+}
+
 bool WebView::keyPress(WPARAM wParam, LPARAM lParam)
 {
     PlatformKeyboardEvent keyEvent(m_viewWindow, wParam, lParam);
+    FrameWin* frame = static_cast<FrameWin*>(focusedTargetFrame());
 
-    FrameWin* frame = static_cast<FrameWin*>(m_page->mainFrame());
+    // FIXME: Kind of gross that this is here.
     bool handled = frame->keyPress(keyEvent);
     if (!handled && !keyEvent.isKeyUp()) {
         Node* start = frame->selectionController()->start().node();
@@ -264,6 +274,53 @@ bool WebView::keyPress(WPARAM wParam, LPARAM lParam)
                 nextCharIsInputText = true;
             }
             handled = true;
+        } else {
+            // Need to scroll the page if the arrow keys, space(shift), pgup/dn, or home/end are hit.
+            ScrollDirection direction;
+            ScrollGranularity granularity;
+            switch (keyEvent.WindowsKeyCode()) {
+            case VK_LEFT:
+                granularity = ScrollByLine;
+                direction = ScrollLeft;
+                break;
+            case VK_RIGHT:
+                granularity = ScrollByLine;
+                direction = ScrollRight;
+                break;
+            case VK_UP:
+                granularity = ScrollByLine;
+                direction = ScrollUp;
+                break;
+            case VK_DOWN:
+                granularity = ScrollByLine;
+                direction = ScrollDown;
+                break;
+            case VK_HOME:
+                granularity = ScrollByDocument;
+                direction = ScrollUp;
+                break;
+            case VK_END:
+                granularity = ScrollByDocument;
+                direction = ScrollDown;
+                break;
+            case VK_SPACE:
+                granularity = ScrollByPage;
+                direction = (GetKeyState(VK_SHIFT) & 0x8000) ? ScrollUp : ScrollDown;
+                break;
+            case VK_PRIOR:
+                granularity = ScrollByPage;
+                direction = ScrollUp;
+                break;
+            case VK_NEXT:
+                granularity = ScrollByPage;
+                direction = ScrollDown;
+                break;
+            default:
+                return handled;
+            }
+
+            focusedTarget()->scroll(direction, granularity);
+            handled = true;
         }
     }
     return handled;
@@ -308,22 +365,23 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             mainFrameImpl = static_cast<WebFrame*>(mainFrame);
     }
 
+    if (!mainFrameImpl)
+        return DefWindowProc(hWnd, message, wParam, lParam);
+
     switch (message) {
-        case WM_PAINT:
-            if (mainFrameImpl) {
-                IWebDataSource* dataSource = 0;
-                mainFrameImpl->dataSource(&dataSource);
-                if (!dataSource || mainFrameImpl->impl()->view()->didFirstLayout())
-                    mainFrameImpl->paint(0, 0);
-                else
-                    ValidateRect(hWnd, 0);
-                if (dataSource)
-                    dataSource->Release();
-            }
+        case WM_PAINT: {
+            IWebDataSource* dataSource = 0;
+            mainFrameImpl->dataSource(&dataSource);
+            if (!dataSource || mainFrameImpl->impl()->view()->didFirstLayout())
+                mainFrameImpl->paint(0, 0);
+            else
+                ValidateRect(hWnd, 0);
+            if (dataSource)
+                dataSource->Release();
             break;
+        }
         case WM_PRINTCLIENT:
-            if (mainFrameImpl)
-                mainFrameImpl->paint((HDC)wParam, lParam);
+            mainFrameImpl->paint((HDC)wParam, lParam);
             break;
         case WM_DESTROY:
             // Do nothing?
@@ -338,21 +396,20 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
         case WM_LBUTTONUP:
         case WM_MBUTTONUP:
         case WM_RBUTTONUP:
-            if (webView && mainFrameImpl->impl()->view()->didFirstLayout())
+            if (mainFrameImpl->impl()->view()->didFirstLayout())
                 webView->handleMouseEvent(message, wParam, lParam);
             break;
         case WM_MOUSEWHEEL:
-            if (webView && mainFrameImpl->impl()->view()->didFirstLayout())
+            if (mainFrameImpl->impl()->view()->didFirstLayout())
                 webView->mouseWheel(wParam, lParam);
             break;
         case WM_KEYDOWN: {
-            if (webView)
-                webView->keyPress(wParam, lParam);
+            webView->keyPress(wParam, lParam);
             break;
         }
         case WM_CHAR: {
             // FIXME: We need to use WM_UNICHAR to support international text.
-            if (nextCharIsInputText && mainFrameImpl) {
+            if (nextCharIsInputText) {
                 UChar c = (UChar)wParam;
                 TypingCommand::insertText(mainFrameImpl->impl()->document(), String(&c, 1), false);
                 mainFrameImpl->impl()->revealSelection(RenderLayer::gAlignToEdgeIfNeeded); 
@@ -361,12 +418,11 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             break;
         }
         case WM_KEYUP: {
-            if (webView)
-                webView->keyPress(wParam, lParam);
+            webView->keyPress(wParam, lParam);
             break;
         }
         case WM_SIZE:
-            if (mainFrameImpl && lParam != 0) {
+            if (lParam != 0) {
                 mainFrameImpl->setNeedsLayout();
                 mainFrameImpl->impl()->view()->resize(LOWORD(lParam), HIWORD(lParam));
 
@@ -375,19 +431,26 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             }
             break;
         case WM_SETFOCUS:
-            if (mainFrameImpl) {
-                mainFrameImpl->impl()->setWindowHasFocus(true);
-                // FIXME: This is wrong. Should listen to WM_ACTIVATE instead.
-                mainFrameImpl->impl()->setIsActive(true);
+            // It's ok to just always do setWindowHasFocus, since we won't fire the focus event on the DOM
+            // window unless the value changes.  It's also ok to do setIsActive inside focus,
+            // because Windows has no concept of having to update control tints (e.g., graphite vs. aqua)
+            // and therefore only needs to update the selection (which is limited to the focused frame).
+            webView->focusedTargetFrame()->setWindowHasFocus(true);
+            webView->focusedTargetFrame()->setIsActive(true);
+            break;
+        case WM_KILLFOCUS: {
+            // However here we have to be careful.  If we are losing focus because of a deactivate,
+            // then we need to remember our focused target for restoration later.  
+            // If we are losing focus to another part of our window, then we are no longer focused for real
+            // and we need to clear out the focused target.
+            if (GetAncestor(hWnd, GA_ROOT) != GetActiveWindow())
+                webView->focusedTargetFrame()->setIsActive(false);
+            else {
+                webView->focusedTarget()->setFocused(false);
+                webView->focusedTargetFrame()->setWindowHasFocus(false);
             }
             break;
-        case WM_KILLFOCUS:
-            if (mainFrameImpl) {
-                mainFrameImpl->impl()->setWindowHasFocus(false);
-                // FIXME: This is wrong.
-                mainFrameImpl->impl()->setIsActive(false);
-            }
-            break;
+        }
         case WM_CUT:
         case WM_COPY:
         case WM_PASTE:

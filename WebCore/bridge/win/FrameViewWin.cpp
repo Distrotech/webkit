@@ -52,10 +52,10 @@ bool FrameView::passMouseReleaseEventToSubframe(MouseEventWithHitTestResults& me
     return true;
 }
 
-bool FrameView::passWheelEventToSubframe(PlatformWheelEvent& e, Frame* subframe)
+bool FrameView::passWheelEventToSubframe(PlatformWheelEvent& wheelEvent, Frame* subframe)
 {
-    subframe->view()->wheelEvent(e);
-    return e.isAccepted();
+    subframe->view()->handleWheelEvent(wheelEvent);
+    return wheelEvent.isAccepted();
 }
 
 bool FrameView::passMousePressEventToScrollbar(MouseEventWithHitTestResults& mev, PlatformScrollBar* scrollbar)

@@ -487,6 +487,8 @@ public:
     void mouseWheel(WPARAM, LPARAM);
     bool execCommand(WPARAM wParam, LPARAM lParam);
     bool keyPress(WPARAM, LPARAM);
+    WebCore::FrameView* focusedTarget();
+    WebCore::Frame* focusedTargetFrame();
     HRESULT goToItem(IWebHistoryItem* item, WebFrameLoadType withLoadType);
     HRESULT updateWebCoreSettingsFromPreferences(IWebPreferences* preferences);
     WebCore::Settings* settings();
