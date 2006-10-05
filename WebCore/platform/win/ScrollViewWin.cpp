@@ -487,7 +487,7 @@ void ScrollView::paint(GraphicsContext* context, const IntRect& rect)
     context->translate(-contentsX(), -contentsY());
     documentDirtyRect.move(contentsX(), contentsY());
 
-    context->addClip(enclosingIntRect(visibleContentRect()));
+    context->clip(enclosingIntRect(visibleContentRect()));
 
     static_cast<const FrameView*>(this)->frame()->paint(context, documentDirtyRect);
 
