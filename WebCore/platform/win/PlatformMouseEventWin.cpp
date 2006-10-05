@@ -25,6 +25,7 @@
 
 #include "PlatformMouseEvent.h"
 
+#include <wtf/Assertions.h>
 #include <windows.h>
 #include <windowsx.h>
 
@@ -72,6 +73,16 @@ PlatformMouseEvent::PlatformMouseEvent(HWND hWnd, UINT message, WPARAM wParam, L
         case WM_MBUTTONDBLCLK:
             m_button = MiddleButton;
             break;
+        case WM_MOUSEMOVE:
+            if (wParam & MK_LBUTTON)
+                m_button = LeftButton;
+            else if (wParam & MK_MBUTTON)
+                m_button = MiddleButton;
+            else if (wParam & MK_RBUTTON)
+                m_button = RightButton;
+            break;
+        default:
+            ASSERT_NOT_REACHED();
     }
 }
 
