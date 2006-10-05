@@ -1,3 +1,30 @@
+2006-10-05  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Maciej.
+
+        Fixes <rdar://problem/4757387>
+        Unable to sign on to my.yahoo.com
+
+        This patch fixes a number of bugs that all resulted in not being able
+        to log on to many websites. The problems were that we weren't allowing
+        redirects between HTTP and HTTPS sites and weren't correctly handling
+        redirects from POST requests to GET requests.
+
+        * platform/win/ResourceLoaderWin.cpp:
+        (WebCore::globalInternetHandle): Move internetHandle and callbackHandle
+        into file scope, and add this function to initialize them.
+        (WebCore::logLastError): Add this debug logging function to give more
+        readable WinInet error messages.
+        (WebCore::ResourceLoaderWndProc): The most substantial change here is
+        to allow redirects from POST to GET to function correctly. To do this
+        we have to create a new HINTERNET for the GET. We also have to be sure
+        not to try to read from our now-invalid handles after the redirect.
+        (WebCore::transferJobStatusCallback): Rename timerId to jobId, since
+        that's what it is.
+        (WebCore::ResourceLoader::start): Call new static initializer, and pass
+        flags to allow HTTP<->HTTPS redirects. Also change a few delete calls
+        to kill().
+
 2006-10-05  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Adam.
