@@ -1,3 +1,19 @@
+2006-10-05  David Hyatt  <hyatt@apple.com>
+
+        Stub out GraphicsContextPlatformPrivate methods so that the HDC can
+        be updated when clips/transforms are applied.
+
+        Reviewed by darin
+
+        * platform/cg/GraphicsContextPlatformPrivate.h:
+        (WebCore::GraphicsContextPlatformPrivate::save):
+        (WebCore::GraphicsContextPlatformPrivate::restore):
+        (WebCore::GraphicsContextPlatformPrivate::clip):
+        (WebCore::GraphicsContextPlatformPrivate::scale):
+        (WebCore::GraphicsContextPlatformPrivate::rotate):
+        (WebCore::GraphicsContextPlatformPrivate::translate):
+        (WebCore::GraphicsContextPlatformPrivate::concatCTM):
+
 2006-10-05  Adam Roben  <aroben@apple.com>
 
         Build fix.
