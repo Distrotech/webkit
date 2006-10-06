@@ -1,3 +1,15 @@
+2006-10-06  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Brady and Geoff.
+
+        <rdar://problems/4769023>
+        Crash on cnettv.com - PluginStreamWin::receivedResponse
+        
+        * platform/win/ResourceLoaderWin.cpp:
+        (WebCore::ResourceLoaderWndProc):
+        If the Content-Type header is missing, try to figure o ut the content type
+        from the file extension. Failing that, just use "application/octet-stream".
+
 2006-10-06  Adam Roben  <aroben@apple.com>
 
         Reviewed by Maciej.

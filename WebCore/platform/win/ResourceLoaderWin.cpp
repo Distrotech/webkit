@@ -37,6 +37,7 @@
 #include "Page.h"
 #include <tchar.h>
 #include <wininet.h>
+#include <shlwapi.h>
 
 namespace WebCore {
 
@@ -307,6 +308,29 @@ LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                     DWORD headerLength = (sizeof(contentTypeStr)/sizeof(contentTypeStr[0]))-1;
                     if (HttpQueryInfo(handle, HTTP_QUERY_CONTENT_TYPE, contentTypeStr, &headerLength, 0))
                         response.contentType = contentTypeStr;
+
+                    if (!response.contentType) {
+                        // Try to figure out the content type from the URL extension
+
+                        DeprecatedString urlStr = job->d->URL.url();
+                        int fragmentIndex = urlStr.find('#');
+                        if (fragmentIndex != -1)
+                            urlStr = urlStr.left(fragmentIndex);
+                        int extensionIndex = urlStr.findRev('.');
+                        if (extensionIndex != -1) {
+                            String extension = urlStr.mid(extensionIndex);
+                            DWORD keyType;
+                            DWORD contentTypeStrLen = sizeof(contentTypeStr);
+                            HRESULT result = SHGetValue(HKEY_CLASSES_ROOT, extension.charactersWithNullTermination(), TEXT("Content Type"), &keyType, (LPVOID)contentTypeStr, &contentTypeStrLen);
+                            if (result == ERROR_SUCCESS && keyType == REG_SZ)
+                                response.contentType = contentTypeStr;
+                        }
+                    }
+
+                    // Bail out and use application/octet-stream
+                    if (!response.contentType)
+                        response.contentType = TEXT("application/octet-stream");
+
                     DWORD contentLength;
                     DWORD contentLengthSize = sizeof(contentLength);
                     if (HttpQueryInfo(handle, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &contentLength, &contentLengthSize, 0))
