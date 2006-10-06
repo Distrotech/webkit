@@ -66,9 +66,4 @@ bool FrameView::passMousePressEventToScrollbar(MouseEventWithHitTestResults& mev
     return true;
 }
 
-IntRect FrameView::windowResizerRect() const
-{
-    return m_frame->windowResizerRect();
-}
-
 }

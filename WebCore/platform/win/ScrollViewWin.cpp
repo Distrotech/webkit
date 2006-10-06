@@ -591,4 +591,9 @@ void ScrollView::scroll(ScrollDirection direction, ScrollGranularity granularity
         m_data->m_hBar->scroll(direction, granularity);
 }
 
+IntRect ScrollView::windowResizerRect()
+{
+    return static_cast<FrameView*>(this)->frame()->windowResizerRect();
+}
+
 } // namespace WebCore
