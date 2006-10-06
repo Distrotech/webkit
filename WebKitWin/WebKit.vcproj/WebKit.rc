@@ -58,8 +58,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,0,0,100
- PRODUCTVERSION 3,0,0,100
+ FILEVERSION 3,0,521,28
+ PRODUCTVERSION 3,0,521,28
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -75,13 +75,13 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "FileDescription", "WebKit Dynamic Link Library"
-            VALUE "FileVersion", "3.0.0.100"
+            VALUE "FileVersion", "3.0 521.28b"
             VALUE "CompanyName", "Apple Computer, Inc."
             VALUE "InternalName", "WebKit"
             VALUE "LegalCopyright", "Copyright Apple Computer, Inc. 2006"
             VALUE "OriginalFilename", "WebKit.dll"
             VALUE "ProductName", " Safari"
-            VALUE "ProductVersion", "3.0.0.100"
+            VALUE "ProductVersion", "3.0 521.28b"
         END
     END
     BLOCK "VarFileInfo"

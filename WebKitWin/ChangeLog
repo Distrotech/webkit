@@ -1,5 +1,16 @@
 2006-10-06  Steve Falkenburg  <sfalken@apple.com>
 
+        Use a better versioning scheme.
+        
+        Out version #s for Boomer are the same as the last Mac
+        submission + the addition of "b".
+        
+        This first versioned submission is 521.28b
+
+        * WebKit.vcproj/WebKit.rc:
+
+2006-10-06  Steve Falkenburg  <sfalken@apple.com>
+
         Bump version number.
 
         * WebKit.vcproj/WebKit.rc:
