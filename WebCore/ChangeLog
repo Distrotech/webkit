@@ -1,5 +1,15 @@
 2006-10-06  Dave Hyatt  <hyatt@apple.com>
 
+        Fix the plugins on cnn.com.  Don't let the scroll view move child plugins around if it hasn't even been parented yet.
+        
+        Fix an assert in widget destructors caused by not unparenting a ScrollView's scrollbars in its destructor.
+        
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::ScrollViewPrivate::~ScrollViewPrivate):
+        (WebCore::ScrollView::setFrameGeometry):
+
+2006-10-06  Dave Hyatt  <hyatt@apple.com>
+
         Make sure that plugin windows get properly moved if an ancestor scrollview is shifted without changing its size (meaning
         that layout doesn't get called on the scrollview to update the widget positions).
         
