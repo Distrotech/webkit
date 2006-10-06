@@ -200,6 +200,8 @@ void ScrollView::setFrameGeometry(const IntRect& newGeometry)
     Widget::setFrameGeometry(newGeometry);
     if (newGeometry.width() != oldGeometry.width() || newGeometry.height() != oldGeometry.height())
         updateScrollbars(m_data->m_scrollOffset);
+    else if (newGeometry.x() != oldGeometry.x() || newGeometry.y() != oldGeometry.y())
+        scrolled(); // FIXME: Should probably rename this method.  This is about making sure plugin descendants move properly.
 }
 
 int ScrollView::contentsX() const

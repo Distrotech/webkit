@@ -1,3 +1,13 @@
+2006-10-06  Dave Hyatt  <hyatt@apple.com>
+
+        Make sure that plugin windows get properly moved if an ancestor scrollview is shifted without changing its size (meaning
+        that layout doesn't get called on the scrollview to update the widget positions).
+        
+        Fixes the plugins on osnews.com.
+        
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::setFrameGeometry):
+
 2006-10-05  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by aroben.
