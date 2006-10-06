@@ -67,7 +67,6 @@ public:
     ScrollView* m_view;
     IntSize m_scrollOffset;
     IntSize m_contentsSize;
-    IntSize m_viewSize;
     bool m_hasStaticBackground;
     bool m_scrollbarsSuppressed;
     bool m_inUpdateScrollbars;
@@ -189,12 +188,18 @@ void ScrollView::setContentsPos(int newX, int newY)
 void ScrollView::resizeContents(int w, int h)
 {
     IntSize newContentsSize(w, h);
-    IntSize newViewSize(width(), height());
-    if (m_data->m_contentsSize != newContentsSize || m_data->m_viewSize != newViewSize) {
+    if (m_data->m_contentsSize != newContentsSize) {
         m_data->m_contentsSize = newContentsSize;
-        m_data->m_viewSize = newViewSize;
         updateScrollbars(m_data->m_scrollOffset);
     }
+}
+
+void ScrollView::setFrameGeometry(const IntRect& newGeometry)
+{
+    IntRect oldGeometry = frameGeometry();
+    Widget::setFrameGeometry(newGeometry);
+    if (newGeometry.width() != oldGeometry.width() || newGeometry.height() != oldGeometry.height())
+        updateScrollbars(m_data->m_scrollOffset);
 }
 
 int ScrollView::contentsX() const

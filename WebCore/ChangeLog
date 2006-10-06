@@ -1,5 +1,14 @@
 2006-10-05  Dave Hyatt  <hyatt@apple.com>
 
+        Fix a bug where scrollbars would incorrectly show up for iframes when they weren't needed.
+        Change the flow of control to be more like Mac.
+
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::resizeContents):
+        (WebCore::ScrollView::setFrameGeometry):
+
+2006-10-05  Dave Hyatt  <hyatt@apple.com>
+
         Fix clipping and transforms by making sure to propagate them as they happen on the CGContext over into the HDC.
         
         * platform/cg/GraphicsContextPlatformPrivate.h:
