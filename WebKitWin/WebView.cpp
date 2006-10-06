@@ -74,6 +74,7 @@ WebView::WebView()
 , m_frameLoadDelegate(0)
 , m_frameLoadDelegatePrivate(0)
 , m_uiDelegate(0)
+, m_uiDelegatePrivate(0)
 , m_formDelegate(0)
 , m_backForwardList(0)
 , m_preferences(0)
@@ -100,6 +101,8 @@ WebView::~WebView()
         m_frameLoadDelegatePrivate->Release();
     if (m_uiDelegate)
         m_uiDelegate->Release();
+    if (m_uiDelegatePrivate)
+        m_uiDelegatePrivate->Release();
     if (m_formDelegate)
         m_formDelegate->Release();
     if (m_preferences)
@@ -326,6 +329,21 @@ bool WebView::keyPress(WPARAM wParam, LPARAM lParam)
     return handled;
 }
 
+bool WebView::inResizer(LPARAM lParam)
+{
+    if (!m_uiDelegatePrivate)
+        return false;
+
+    RECT r;
+    if (FAILED(m_uiDelegatePrivate->webViewResizerRect(this, &r)))
+        return false;
+
+    POINT pt;
+    pt.x = LOWORD(lParam);
+    pt.y = HIWORD(lParam);
+    return !!PtInRect(&r, pt);
+}
+
 static ATOM registerWebViewWindowClass()
 {
     static bool haveRegisteredWindowClass = false;
@@ -387,6 +405,9 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             // Do nothing?
             break;
         case WM_MOUSEMOVE:
+            if (webView->inResizer(lParam))
+                SetCursor(LoadCursor(0, IDC_SIZENWSE));
+            // fall through
         case WM_LBUTTONDOWN:
         case WM_MBUTTONDOWN:
         case WM_RBUTTONDOWN:
@@ -876,6 +897,15 @@ HRESULT STDMETHODCALLTYPE WebView::setUIDelegate(
     m_uiDelegate = d;
     if (d)
         d->AddRef();
+
+    if (m_uiDelegatePrivate) {
+        m_uiDelegatePrivate->Release();
+        m_uiDelegatePrivate = 0;
+    }
+    if (d) {
+        if (FAILED(d->QueryInterface(IID_IWebUIDelegatePrivate, (void**)&m_uiDelegatePrivate)))
+            m_uiDelegatePrivate = 0;
+    }
 
     return S_OK;
 }

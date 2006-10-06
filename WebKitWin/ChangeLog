@@ -1,3 +1,29 @@
+2006-10-06  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by aroben.
+
+        Scrollbars now dodge resizing gripper.
+        Resizing gripper now paints via web ui delegate.
+        Debug vcproj fixes.
+        Fix redirects to search.com.
+        Add support for painting and cursor tracking of resizer.
+
+        * Interfaces/IWebUIDelegatePrivate.idl: added webViewDrawResizer.
+        * WebFrame.cpp:
+        (WebFrame::paint): added gripper drawing code.
+        (WebFrame::receivedResponse): tell the app when we commit a page load.
+        (WebFrame::windowResizerRect): added.
+        (WebFrame::paintGripper): added.
+        * WebFrame.h: added windowResizerRect, paintGripper.
+        * WebKit.vcproj/WebKit.vcproj: Link against debug libs, debug MSVC library in debug build.
+        * WebView.cpp:
+        (WebView::WebView):
+        (WebView::~WebView):
+        (WebView::inResizer):
+        (WebViewWndProc):
+        (WebView::setUIDelegate):
+        * WebView.h:
+
 2006-10-05  Dave Hyatt  <hyatt@apple.com>
 
         Fix clipping and transforms by making sure to propagate them as they happen on the CGContext over into the HDC.

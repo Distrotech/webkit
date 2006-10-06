@@ -314,4 +314,9 @@ NPObject* FrameWin::windowScriptNPObject()
     return m_windowScriptNPObject;
 }
 
+IntRect FrameWin::windowResizerRect() const
+{
+    return m_client->windowResizerRect();
+}
+
 } // namespace WebCore

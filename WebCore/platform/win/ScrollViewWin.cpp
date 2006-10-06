@@ -394,6 +394,12 @@ void ScrollView::updateScrollbars(const IntSize& desiredOffset)
     IntSize scroll = desiredOffset.shrunkTo(maxScrollPosition);
     scroll.clampNegativeToZero();
 
+    IntRect resizerRect;
+    if (m_data->m_hBar != m_data->m_vBar) {
+        resizerRect = windowResizerRect();
+        resizerRect.setLocation(windowToContents(resizerRect.location()));
+    }
+
     // FIXME: Need to write code to avoid the Safari resizer.
     if (m_data->m_hBar) {
         int clientWidth = visibleWidth();
@@ -401,10 +407,19 @@ void ScrollView::updateScrollbars(const IntSize& desiredOffset)
         int pageStep = (clientWidth - PAGE_KEEP);
         if (pageStep < 0) pageStep = clientWidth;
         IntRect oldRect(m_data->m_hBar->frameGeometry());
-        m_data->m_hBar->setRect(IntRect(0, 
-                                        height() - m_data->m_hBar->height(),
-                                        width() - (m_data->m_vBar ? m_data->m_vBar->width() : 0),
-                                        m_data->m_hBar->height()));
+        IntRect hBarRect = IntRect(0,
+                                   height() - m_data->m_hBar->height(),
+                                   width() - (m_data->m_vBar ? m_data->m_vBar->width() : 0),
+                                   m_data->m_hBar->height());
+        if (hBarRect.intersects(resizerRect)) {
+            if (hBarRect.right() > resizerRect.x() && hBarRect.x() < resizerRect.x())
+                hBarRect.setWidth(hBarRect.width() - (hBarRect.right()-resizerRect.x()));
+            else if (hBarRect.x() < resizerRect.right() && hBarRect.right() > resizerRect.right()) {
+                hBarRect.setWidth(hBarRect.width() - (resizerRect.right()-hBarRect.x()));
+                hBarRect.setX(resizerRect.x());
+            }
+        }
+        m_data->m_hBar->setRect(hBarRect);
         if (!m_data->m_scrollbarsSuppressed && oldRect != m_data->m_hBar->frameGeometry())
             m_data->m_hBar->invalidate();
 
@@ -422,10 +437,19 @@ void ScrollView::updateScrollbars(const IntSize& desiredOffset)
         int pageStep = (clientHeight - PAGE_KEEP);
         if (pageStep < 0) pageStep = clientHeight;
         IntRect oldRect(m_data->m_vBar->frameGeometry());
-        m_data->m_vBar->setRect(IntRect(width() - m_data->m_vBar->width(), 
-                                        0,
-                                        m_data->m_vBar->width(),
-                                        height() - (m_data->m_hBar ? m_data->m_hBar->height() : 0)));
+        IntRect vBarRect = IntRect(width() - m_data->m_vBar->width(), 
+                                   0,
+                                   m_data->m_vBar->width(),
+                                   height() - (m_data->m_hBar ? m_data->m_hBar->height() : 0));
+        if (vBarRect.intersects(resizerRect)) {
+            if (vBarRect.bottom() > resizerRect.y() && vBarRect.y() < resizerRect.y())
+                vBarRect.setHeight(vBarRect.height() - (vBarRect.bottom()-resizerRect.y()));
+            else if (vBarRect.y() < resizerRect.bottom() && vBarRect.bottom() > resizerRect.bottom()) {
+                vBarRect.setHeight(vBarRect.height() - (resizerRect.bottom()-vBarRect.y()));
+                vBarRect.setY(resizerRect.y());
+            }
+        }
+        m_data->m_vBar->setRect(vBarRect);
         if (!m_data->m_scrollbarsSuppressed && oldRect != m_data->m_vBar->frameGeometry())
             m_data->m_vBar->invalidate();
 

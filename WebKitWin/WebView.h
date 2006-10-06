@@ -30,6 +30,7 @@
 #include "IWebViewPrivate.h"
 #include "WebFrame.h"
 #include "IWebNotificationObserver.h"
+#include "IWebUIDelegatePrivate.h"
 
 #include "Settings.h"
 
@@ -492,6 +493,7 @@ public:
     HRESULT goToItem(IWebHistoryItem* item, WebFrameLoadType withLoadType);
     HRESULT updateWebCoreSettingsFromPreferences(IWebPreferences* preferences);
     WebCore::Settings* settings();
+    bool inResizer(LPARAM lParam);
 
 protected:
     ULONG m_refCount;
@@ -504,6 +506,7 @@ protected:
     IWebFrameLoadDelegate* m_frameLoadDelegate;
     IWebFrameLoadDelegatePrivate* m_frameLoadDelegatePrivate;
     IWebUIDelegate* m_uiDelegate;
+    IWebUIDelegatePrivate* m_uiDelegatePrivate;
     IWebFormDelegate* m_formDelegate;
     IWebBackForwardList* m_backForwardList;
     IWebPreferences* m_preferences;

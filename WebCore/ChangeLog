@@ -1,3 +1,17 @@
+2006-10-05  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by aroben.
+
+        Scrollbars now dodge resizing gripper.
+
+        * bridge/win/FrameViewWin.cpp:
+        (WebCore::FrameView::windowResizerRect): added.
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::windowResizerRect): added.
+        * bridge/win/FrameWin.h:
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::updateScrollbars): Scrollbars now dodge resizing gripper.
+
 2006-10-05  Dave Hyatt  <hyatt@apple.com>
 
         Fix a bug where scrollbars would incorrectly show up for iframes when they weren't needed.

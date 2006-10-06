@@ -166,6 +166,7 @@ public:
     virtual bool runJavaScriptConfirm(const WebCore::String&);
     virtual bool runJavaScriptPrompt(const WebCore::String& message, const WebCore::String& defaultValue, WebCore::String& result);
     virtual bool tabsToLinks() const;
+    virtual WebCore::IntRect windowResizerRect() const;
 
     // WebFrame
     void initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, WebCore::Page* page, WebCore::Element* ownerElement);
@@ -196,6 +197,7 @@ public:
 
 protected:
     unsigned int getObjectCacheSize();
+    void paintGripper(HDC dc);
 
 protected:
     class WebFramePrivate;

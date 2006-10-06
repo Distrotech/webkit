@@ -67,6 +67,8 @@ public:
     virtual bool runJavaScriptPrompt(const WebCore::String& message, const WebCore::String& defaultValue, WebCore::String& result) = 0;
 
     virtual bool tabsToLinks() const = 0;
+
+    virtual IntRect windowResizerRect() const = 0;
 };
 
 class FrameWin : public Frame
@@ -169,6 +171,8 @@ public:
     void addPluginRootObject(KJS::Bindings::RootObject* root);
     KJS::Bindings::RootObject* bindingRootObject();
     NPObject* windowScriptNPObject();
+
+    virtual IntRect windowResizerRect() const;
 
 protected:
     virtual bool isLoadTypeReload();

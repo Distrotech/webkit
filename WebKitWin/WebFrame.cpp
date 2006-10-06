@@ -31,6 +31,7 @@
 #include "IWebURLResponse.h"
 #include "IWebFrameLoadDelegatePrivate.h"
 #include "IWebFormDelegate.h"
+#include "IWebUIDelegatePrivate.h"
 #include "WebMutableURLRequest.h"
 #include "WebFrame.h"
 #include "WebHistory.h"
@@ -642,6 +643,8 @@ void WebFrame::paint(HDC dc, LPARAM options)
     cairo_surface_destroy(surface);
     cairo_surface_destroy(finalSurface);
 
+    paintGripper(hdc);
+
     if (!dc)
         EndPaint(windowHandle, &ps);
 }
@@ -710,6 +713,8 @@ void WebFrame::paint(HDC dc, LPARAM options)
 
     if (useDocumentDirtyRect)
         paintSingleRect(hdc, documentDirtyRect);
+
+    paintGripper(hdc);
 
     if (!dc)
         EndPaint(windowHandle, &ps);
@@ -1135,6 +1140,12 @@ void WebFrame::receivedResponse(ResourceLoader* loader, PlatformResponse platfor
             m_dataSourcePrivate->Release();
         m_dataSource->QueryInterface(IID_IWebDataSourcePrivate, (void**)&m_dataSourcePrivate);
         m_provisionalDataSource = 0;
+
+        IWebFrameLoadDelegate* frameLoadDelegate;
+        if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
+            frameLoadDelegate->didCommitLoadForFrame(d->webView, this);
+            frameLoadDelegate->Release();
+        }
     }
 
     d->frame->didOpenURL(loader->url());
@@ -1592,4 +1603,36 @@ bool WebFrame::tabsToLinks() const
         preferences->tabsToLinks(&enabled);
 
     return !!enabled;
+}
+
+IntRect WebFrame::windowResizerRect() const
+{
+    IWebUIDelegate* ui;
+    if (SUCCEEDED(d->webView->uiDelegate(&ui))) {
+        IWebUIDelegatePrivate* uiPrivate;
+        if (SUCCEEDED(ui->QueryInterface(IID_IWebUIDelegatePrivate, (void**)&uiPrivate))) {
+            RECT r;
+            if (SUCCEEDED(uiPrivate->webViewResizerRect(d->webView, &r)))
+                return IntRect(r.left, r.top, r.right-r.left, r.bottom-r.top);
+            uiPrivate->Release();
+        }
+        ui->Release();
+    }
+    return IntRect();
+}
+
+void WebFrame::paintGripper(HDC dc)
+{
+    IWebUIDelegate* ui;
+    if (SUCCEEDED(d->webView->uiDelegate(&ui))) {
+        IWebUIDelegatePrivate* uiPrivate;
+        if (SUCCEEDED(ui->QueryInterface(IID_IWebUIDelegatePrivate, (void**)&uiPrivate))) {
+            RECT r;
+            if (SUCCEEDED(uiPrivate->webViewResizerRect(d->webView, &r))) {
+                uiPrivate->webViewDrawResizer(d->webView, dc, &r);
+            }
+            uiPrivate->Release();
+        }
+        ui->Release();
+    }
 }
