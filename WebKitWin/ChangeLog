@@ -1,5 +1,24 @@
 2006-10-06  Steve Falkenburg  <sfalken@apple.com>
 
+        Reviewed by Adam, Lou.
+
+        <rdar://4754295> Corrupt history.plist = crash on startup
+        
+        Fix improper CF usage that likely led to retain/release imbalances.
+
+        Resizer fixes.
+        We now properly invalidate and draw overlapping contents or opaque.
+
+        * Interfaces/IWebUIDelegatePrivate.idl:
+        * WebFrame.cpp:
+        (WebFrame::paintGripper):
+        * WebHistory.cpp:
+        (WebHistory::saveHistoryGuts):
+        * WebHistoryItem.cpp:
+        (WebHistoryItem::dictionaryRepresentation):
+
+2006-10-06  Steve Falkenburg  <sfalken@apple.com>
+
         Reviewed by aroben.
 
         Scrollbars now dodge resizing gripper.

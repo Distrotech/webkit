@@ -63,5 +63,5 @@ interface IWebView;
 interface IWebUIDelegatePrivate : IUnknown
 {
     HRESULT webViewResizerRect([in] IWebView* sender, [out, retval] RECT* rect);
-    HRESULT webViewDrawResizer([in] IWebView* sender, [in] HDC dc, [in] RECT* rect);
+    HRESULT webViewDrawResizer([in] IWebView* sender, [in] HDC dc, [in] BOOL overlapsContent, [in] RECT* rect);
 }

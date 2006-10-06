@@ -159,7 +159,7 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::dictionaryRepresentation(void** dictio
     }
     keys[keyCount]   = visitCountKey;
     values[keyCount++] = CFNumberCreate(0, kCFNumberIntType, &m_visitedCount);
-    *dictionaryRef = CFDictionaryCreate(0, (const void**)keys, (const void**)values, keyCount, 0, 0);
+    *dictionaryRef = CFDictionaryCreate(0, (const void**)keys, (const void**)values, keyCount, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
     
     return S_OK;
 }

@@ -1629,7 +1629,8 @@ void WebFrame::paintGripper(HDC dc)
         if (SUCCEEDED(ui->QueryInterface(IID_IWebUIDelegatePrivate, (void**)&uiPrivate))) {
             RECT r;
             if (SUCCEEDED(uiPrivate->webViewResizerRect(d->webView, &r))) {
-                uiPrivate->webViewDrawResizer(d->webView, dc, &r);
+                ScrollView* scrollView = d->frameView;
+                uiPrivate->webViewDrawResizer(d->webView, dc, (scrollView->resizerOverlapsContent() ? TRUE : FALSE), &r);
             }
             uiPrivate->Release();
         }

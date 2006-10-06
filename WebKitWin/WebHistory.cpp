@@ -424,7 +424,7 @@ HRESULT WebHistory::saveHistoryGuts(CFURLRef url, IWebError** error)
     values[0] = entries;
     keys[1]   = FileVersionKey;
     values[1] = CFNumberCreate(0, kCFNumberIntType, &version);
-    dictionary = CFDictionaryCreate(0, (const void**)keys, (const void**)values, sizeof(keys)/sizeof(keys[0]), 0, 0);
+    dictionary = CFDictionaryCreate(0, (const void**)keys, (const void**)values, sizeof(keys)/sizeof(keys[0]), &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 
     if (!CFPropertyListWriteToStream(dictionary, stream, kCFPropertyListXMLFormat_v1_0, 0)) {
         hr = E_FAIL;
