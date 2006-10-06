@@ -1,5 +1,11 @@
 2006-10-06  Steve Falkenburg  <sfalken@apple.com>
 
+        Bump version number.
+
+        * WebKit.vcproj/WebKit.rc:
+
+2006-10-06  Steve Falkenburg  <sfalken@apple.com>
+
         Reviewed by Adam, Lou.
 
         <rdar://4754295> Corrupt history.plist = crash on startup
