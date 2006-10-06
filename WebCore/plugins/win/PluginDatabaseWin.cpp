@@ -30,6 +30,7 @@
 #include "PluginViewWin.h"
 #include "FrameWin.h"
 #include <windows.h>
+#include <shlwapi.h>
 
 namespace WebCore {
 
@@ -188,9 +189,24 @@ Vector<String> PluginDatabaseWin::defaultPluginPaths()
                 RegCloseKey(extensionsKey);
             }
         }
+        
+        RegCloseKey(key);
     }
 
-    RegCloseKey(key);
+    // The WMP plugin segfaults for some reason so it's disabled for now
+#if 0
+    // Windows Media Player
+    {
+        DWORD type;
+        WCHAR installationDirectoryStr[_MAX_PATH];
+        DWORD installationDirectorySize = sizeof(installationDirectoryStr);
+
+        result = SHGetValue(HKEY_LOCAL_MACHINE, TEXT("Software\\Microsoft\\MediaPlayer"), TEXT("Installation Directory"), &type, (LPBYTE)&installationDirectoryStr, &installationDirectorySize);
+
+        if (result == ERROR_SUCCESS && type == REG_SZ)
+            paths.append(String(installationDirectoryStr, installationDirectorySize / sizeof(WCHAR) - 1));
+    }
+#endif
 
     // FIXME: We should get other plugin directories, for example Java, Flash, Quicktime etc. 
 

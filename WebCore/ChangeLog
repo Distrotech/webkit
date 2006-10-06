@@ -1,5 +1,13 @@
 2006-10-06  Anders Carlsson  <acarlsson@apple.com>
 
+        Reviewed by Adam.
+
+        * plugins/win/PluginDatabaseWin.cpp:
+        (WebCore::PluginDatabaseWin::defaultPluginPaths):
+        Add (commented out) WMP plugin check.
+
+2006-10-06  Anders Carlsson  <acarlsson@apple.com>
+
         Reviewed by Brady and Geoff.
 
         <rdar://problems/4769023>
