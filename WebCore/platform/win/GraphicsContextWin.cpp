@@ -162,7 +162,7 @@ void GraphicsContextPlatformPrivate::concatCTM(const AffineTransform& transform)
     xform.eM21 = mat.c;
     xform.eM22 = mat.d;
     xform.eDx = mat.tx;
-    xform.eDy = -mat.ty;
+    xform.eDy = mat.ty;
     ModifyWorldTransform(m_hdc, &xform, MWT_LEFTMULTIPLY);
 }
 
