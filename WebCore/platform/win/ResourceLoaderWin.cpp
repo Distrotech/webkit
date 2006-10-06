@@ -43,28 +43,9 @@ namespace WebCore {
 static unsigned transferJobId = 0;
 static HashMap<int, ResourceLoader*>* jobIdMap = 0;
 
-static HINTERNET internetHandle = 0;
-static INTERNET_STATUS_CALLBACK callbackHandle = 0;
-
 static HWND transferJobWindowHandle = 0;
 static UINT loadStatusMessage = 0;
 const LPCWSTR kResourceLoaderWindowClassName = L"ResourceLoaderWindowClass";
-
-static HINTERNET globalInternetHandle(const String& userAgentStr)
-{
-    if (!internetHandle) {
-        LPCWSTR userAgent = reinterpret_cast<const WCHAR*>(userAgentStr.characters());
-        // leak the Internet for now
-        internetHandle = InternetOpen(userAgent, INTERNET_OPEN_TYPE_PRECONFIG, 0, 0, INTERNET_FLAG_ASYNC);
-        if (!internetHandle) {
-            return false;
-        }
-
-        callbackHandle = InternetSetStatusCallbackA(internetHandle, transferJobStatusCallback);
-    }
-
-    return internetHandle;
-}
 
 static int addToOutstandingJobs(ResourceLoader* job)
 {
@@ -94,6 +75,7 @@ static ResourceLoader* lookupResourceLoader(int jobId)
 struct JobLoadStatus {
     DWORD internetStatus;
     DWORD_PTR dwResult;
+    DWORD dwError;
     char* redirectURL;
 };
 
@@ -129,6 +111,7 @@ LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, L
     JobLoadStatus* jobLoadStatus = (JobLoadStatus*)lParam;
     DWORD internetStatus = jobLoadStatus->internetStatus;
     DWORD_PTR dwResult = jobLoadStatus->dwResult;
+    DWORD dwError = jobLoadStatus->dwError;
     char* redirectURL = jobLoadStatus->redirectURL;
     delete jobLoadStatus;
     jobLoadStatus = 0;
@@ -155,7 +138,8 @@ LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                 return 0;
             }
 
-            if (job->method() == "POST") {
+            bool isPost = job->method() == "POST";
+            if (isPost || job->d->m_resend) {
                 // FIXME: Too late to set referrer properly.
                 DeprecatedString urlStr = job->d->URL.path();
                 int fragmentIndex = urlStr.find('#');
@@ -167,7 +151,7 @@ LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                 if (job->url().protocol() == "https")
                     flags |= INTERNET_FLAG_SECURE;
                 HINTERNET urlHandle = HttpOpenRequestA(job->d->m_resourceHandle, 
-                                                       "POST", urlStr.latin1(), 0, 0, accept,
+                                                       isPost ? "POST" : "GET", urlStr.latin1(), 0, 0, accept,
                                                        flags,
                                                        (DWORD_PTR)job->d->m_jobId);
                 if (urlHandle == INVALID_HANDLE_VALUE) {
@@ -177,32 +161,37 @@ LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                 }
             }
         } else if (!job->d->m_secondaryHandle) {
-            ASSERT(job->method() == "POST");
+            bool isPost = (job->method() == "POST"); 
+            ASSERT(isPost || job->d->m_resend);
             job->d->m_secondaryHandle = HINTERNET(dwResult);
             
             // Need to actually send the request now.
-            String headers = "Content-Type: application/x-www-form-urlencoded\n";
+            INTERNET_BUFFERSA buffers = {0};
+            Vector<char> formData;
+            String headers;
+            if (isPost) {
+                headers = "Content-Type: application/x-www-form-urlencoded\r\n";
+                job->postData().flatten(formData);
+                buffers.dwStructSize = sizeof(INTERNET_BUFFERSA);
+                size_t dataSize = formData.size();
+                char* data = new char[dataSize];
+                strncpy(data, formData.data(), dataSize);
+                delete[] job->d->m_formDataString;
+                job->d->m_formDataString = data;
+                job->d->m_formDataLength = dataSize;
+                job->d->m_writing = true;
+            }
             headers += "Referer: ";
             headers += job->d->m_postReferrer;
-            headers += "\n";
-            Vector<char> formData;
-            job->postData().flatten(formData);
-            INTERNET_BUFFERSA buffers = {0};
-            buffers.dwStructSize = sizeof(INTERNET_BUFFERSA);
+            headers += "\r\n";
             CString headersAscii = headers.latin1();
             buffers.lpcszHeader = headersAscii;
             buffers.dwHeadersLength = headersAscii.length();
             buffers.dwHeadersTotal = headersAscii.length();
             buffers.dwBufferTotal = formData.size();
-            
             job->d->m_bytesRemainingToWrite = formData.size();
-            size_t dataSize = formData.size();
-            char* data = new char[dataSize];
-            strncpy(data, formData.data(), dataSize);
-            job->d->m_formDataString = data;
-            job->d->m_formDataLength = dataSize;
-            job->d->m_writing = true;
-            HttpSendRequestExA(job->d->m_secondaryHandle, &buffers, 0, 0, (DWORD_PTR)job->d->m_jobId);
+
+            HttpSendRequestExA(job->d->m_secondaryHandle, &buffers, 0, HSR_INITIATE, (DWORD_PTR)job->d->m_jobId);
         }
     } else if (internetStatus == INTERNET_STATUS_REDIRECT) {
         KURL redirectKURL(redirectURL); 
@@ -211,125 +200,132 @@ LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, L
         job->d->URL = redirectKURL;
         if (job->d->method == "POST") {
             bool redirectAsGet = true;
-            char statusCode[32];
-            DWORD statusCodeLength = ARRAYSIZE(statusCode)-1;
-            if (job->d->m_secondaryHandle && HttpQueryInfoA(job->d->m_secondaryHandle, HTTP_QUERY_STATUS_CODE, statusCode, &statusCodeLength, 0)) {
+            DWORD statusCode;
+            DWORD statusCodeLength = sizeof(statusCode);
+            if (job->d->m_secondaryHandle && HttpQueryInfoA(job->d->m_secondaryHandle, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &statusCode, &statusCodeLength, 0)) {
                 // see <http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html>
-                if (!strcmp(statusCode, "302")) {
+                if (statusCode == HTTP_STATUS_REDIRECT) {
                     // FIXME - spec says we need to prompt user
                     redirectAsGet = true;
-                } else if (!strcmp(statusCode, "303"))
+                } else if (statusCode == HTTP_STATUS_REDIRECT_METHOD)
                     redirectAsGet = true;
-                else if (!strcmp(statusCode, "301"))
+                else if (statusCode == HTTP_STATUS_MOVED)
                     redirectAsGet = false;
-                else if (!strcmp(statusCode, "307")) {
+                else if (statusCode == HTTP_STATUS_REDIRECT_KEEP_VERB) {
                     // FIXME - spec says we need to prompt user
                     redirectAsGet = false;
                 }
             }
             if (job->d->m_secondaryHandle) {
-                if (redirectAsGet)
-                    // We need to skip our next call to InternetReadFileEx because our handles will have closed by the time we get there.
-                    job->d->m_skipNextRead = true;
+                InternetCloseHandle(job->d->m_secondaryHandle);
+                job->d->m_secondaryHandle = 0;
+                job->d->m_writing = false;
+            }
+            if (redirectAsGet)
+                job->d->method = "GET";
+        }
+    } else if (internetStatus == INTERNET_STATUS_REQUEST_COMPLETE) {
+        bool reissueRequest = false;
+        HINTERNET handle = (job->method() == "GET" && !job->d->m_resend) ? job->d->m_resourceHandle : job->d->m_secondaryHandle;
+
+        // handle confirmation-required redirects by reissuing the request to the redirected URL
+        if (dwError == ERROR_HTTP_REDIRECT_NEEDS_CONFIRMATION)
+            reissueRequest = true;
+
+        // handle HTTP authentication (harder since we're using InternetOpenURL)
+        DWORD handleType;
+        DWORD handleTypeSize = sizeof(handleType);
+        if (InternetQueryOption(handle, INTERNET_OPTION_HANDLE_TYPE, &handleType, &handleTypeSize) &&
+                (handleType == INTERNET_HANDLE_TYPE_HTTP_REQUEST || handleType == INTERNET_HANDLE_TYPE_CONNECT_HTTP)) {
+            DWORD optionCode;
+            DWORD optionSize = sizeof(optionCode);
+            if (HttpQueryInfo(handle, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &optionCode, &optionSize, 0) && optionCode == HTTP_STATUS_DENIED) {
+                if (handleType == INTERNET_HANDLE_TYPE_CONNECT_HTTP)
+                    reissueRequest = true;
+                else if (handleType == INTERNET_HANDLE_TYPE_HTTP_REQUEST) {
+                    // then query for the user's credentials
+                    if (InternetErrorDlg(GetDesktopWindow(), handle, ERROR_INTERNET_INCORRECT_PASSWORD, FLAGS_ERROR_UI_FILTER_FOR_ERRORS | FLAGS_ERROR_UI_FLAGS_GENERATE_DATA | FLAGS_ERROR_UI_FLAGS_CHANGE_OPTIONS, 0) == ERROR_INTERNET_FORCE_RETRY) {
+                        // then resend the request (handle has had username/password added via InternetErrorDlg call above)
+                        HttpSendRequest(handle, 0, 0, 0, 0);
+                        return 0;
+                    }
+                }
+            }
+        }
+
+        if (reissueRequest) {
+            if (job->d->m_secondaryHandle) {
                 InternetCloseHandle(job->d->m_secondaryHandle);
                 job->d->m_secondaryHandle = 0;
                 job->d->m_writing = false;
                 delete[] job->d->m_formDataString;
                 job->d->m_formDataString = 0;
                 job->d->m_bytesRemainingToWrite = 0;
-            }
-            if (redirectAsGet) {
-                if (job->d->m_resourceHandle) {
-                    InternetCloseHandle(job->d->m_resourceHandle);
-                    job->d->m_resourceHandle = 0;
+              }
+            InternetCloseHandle(job->d->m_resourceHandle);
+            job->d->m_resourceHandle = 0;
+            removeFromOutstandingJobs(job->d->m_jobId);
+            job->startHTTPRequest(job->d->m_postReferrer);
+              return 0;
+          }
+  
+        if (dwError == ERROR_SUCCESS) {
+            if (job->d->m_writing) {
+                DWORD bytesWritten;
+                InternetWriteFile(job->d->m_secondaryHandle,
+                                  job->d->m_formDataString + (job->d->m_formDataLength - job->d->m_bytesRemainingToWrite),
+                                  job->d->m_bytesRemainingToWrite,
+                                  &bytesWritten);
+                job->d->m_bytesRemainingToWrite -= bytesWritten;
+                if (!job->d->m_bytesRemainingToWrite) {
+                    // End the request.
+                    job->d->m_writing = false;
+                    HttpEndRequest(job->d->m_secondaryHandle, 0, 0, (DWORD_PTR)job->d->m_jobId);
+                    delete[] job->d->m_formDataString;
+                    job->d->m_formDataString = 0;
                 }
-
-                // We need to create a new HINTERNET for the GET request
-                HINTERNET urlHandle;
-                {
-                    // FIXME: This code is copied exactly out of ResourceLoader::start (except for the lack of setting Referrer).
-                    // Need a way to avoid this copy-and-paste.
-                    DeprecatedString urlStr = job->d->URL.url();
-                    int fragmentIndex = urlStr.find('#');
-                    if (fragmentIndex != -1)
-                        urlStr = urlStr.left(fragmentIndex);
-                    String headers;
-
-                    DWORD flags = INTERNET_FLAG_KEEP_CONNECTION | INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTPS | INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTP;
-                    if (job->d->URL.protocol() == "https")
-                        flags |= INTERNET_FLAG_SECURE;
-
-                    urlHandle = InternetOpenUrlA(internetHandle, urlStr.ascii(), headers.latin1(), headers.length(),
-                        flags, (DWORD_PTR)job->d->m_jobId);
-                }
-
-                if (urlHandle == INVALID_HANDLE_VALUE) {
-                    job->kill();
-                    return 0;
-                }
-
-                job->d->method = "GET";
-            }
-        }
-    } else if (internetStatus == INTERNET_STATUS_REQUEST_COMPLETE) {
-        if (job->d->m_writing) {
-            DWORD bytesWritten;
-            InternetWriteFile(job->d->m_secondaryHandle,
-                              job->d->m_formDataString + (job->d->m_formDataLength - job->d->m_bytesRemainingToWrite),
-                              job->d->m_bytesRemainingToWrite,
-                              &bytesWritten);
-            job->d->m_bytesRemainingToWrite -= bytesWritten;
-            if (!job->d->m_bytesRemainingToWrite) {
-                // End the request.
-                job->d->m_writing = false;
-                HttpEndRequest(job->d->m_secondaryHandle, 0, 0, (DWORD_PTR)job->d->m_jobId);
-                delete[] job->d->m_formDataString;
-                job->d->m_formDataString = 0;
-            }
-            return 0;
-        }
-
-        if (job->d->m_skipNextRead) {
-            job->d->m_skipNextRead = false;
-            return 0;
-        }
-
-        HINTERNET handle = job->method() == "GET" ? job->d->m_resourceHandle : job->d->m_secondaryHandle;
-        BOOL ok = FALSE;
-
-        char buffer[32768];
-        INTERNET_BUFFERSA buffers = {0};
-        buffers.dwStructSize = sizeof(INTERNET_BUFFERSA);
-        buffers.lpvBuffer = buffer;
-        buffers.dwBufferLength = ARRAYSIZE(buffer);
-        buffers.dwBufferTotal = sizeof(buffer);
-
-        while ((ok = InternetReadFileExA(handle, &buffers, IRF_NO_WAIT, (DWORD_PTR)job->d->m_jobId)) && buffers.dwBufferLength) {
-            if (!job->hasReceivedResponse()) {
-                job->setHasReceivedResponse();
-                PlatformResponseStruct response = {0};
-                WCHAR contentTypeStr[256];
-                DWORD headerLength = (sizeof(contentTypeStr)/sizeof(contentTypeStr[0]))-1;
-                if (HttpQueryInfo(handle, HTTP_QUERY_CONTENT_TYPE, contentTypeStr, &headerLength, 0))
-                    response.contentType = contentTypeStr;
-                WCHAR contentLengthStr[32];
-                headerLength = (sizeof(contentLengthStr)/sizeof(contentLengthStr[0]))-1;
-                if (HttpQueryInfo(handle, HTTP_QUERY_CONTENT_LENGTH, contentLengthStr, &headerLength, 0))
-                    response.contentLength = _wtol(contentLengthStr);
-                job->client()->receivedResponse(job.get(), &response);
-            }
-            job->client()->receivedData(job.get(), buffer, buffers.dwBufferLength);
-            buffers.dwBufferLength = ARRAYSIZE(buffer);
-        }
-
-        if (!ok) {
-            int error = GetLastError();
-            if (error == ERROR_IO_PENDING)
                 return 0;
-            else {
-                job->setError(error);
-                logLastError(error, _T(__FUNCTION__), __LINE__);
+            } else if (job->d->m_resend) {
+                HttpEndRequest(job->d->m_secondaryHandle, 0, 0, (DWORD_PTR)job->d->m_jobId);
+                return 0;
+              }
+
+            BOOL ok = FALSE;
+
+            char buffer[32768];
+            INTERNET_BUFFERSA buffers = {0};
+            buffers.dwStructSize = sizeof(INTERNET_BUFFERSA);
+            buffers.lpvBuffer = buffer;
+              buffers.dwBufferLength = ARRAYSIZE(buffer);
+            buffers.dwBufferTotal = sizeof(buffer);
+  
+            while ((ok = InternetReadFileExA(handle, &buffers, IRF_NO_WAIT, (DWORD_PTR)job->d->m_jobId)) && buffers.dwBufferLength) {
+                if (!job->d->m_hasReceivedResponse) {
+                    job->d->m_hasReceivedResponse = true;
+                    PlatformResponseStruct response = {0};
+                    WCHAR contentTypeStr[256];
+                    DWORD headerLength = (sizeof(contentTypeStr)/sizeof(contentTypeStr[0]))-1;
+                    if (HttpQueryInfo(handle, HTTP_QUERY_CONTENT_TYPE, contentTypeStr, &headerLength, 0))
+                        response.contentType = contentTypeStr;
+                    DWORD contentLength;
+                    DWORD contentLengthSize = sizeof(contentLength);
+                    if (HttpQueryInfo(handle, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &contentLength, &contentLengthSize, 0))
+                        response.contentLength = contentLength;
+                    job->client()->receivedResponse(job.get(), &response);
+                }
+                job->client()->receivedData(job.get(), buffer, buffers.dwBufferLength);
+                buffers.dwBufferLength = ARRAYSIZE(buffer);
+              }
+            if (!ok) {
+                dwError = GetLastError();
+                if (dwError == ERROR_IO_PENDING)
+                    return 0;
             }
+        }
+
+        if (dwError != ERROR_SUCCESS) {
+            job->setError(dwError);
+            logLastError(dwError, _T(__FUNCTION__), __LINE__);
         }
 
         if (job->d->m_secondaryHandle)
@@ -363,6 +359,8 @@ static void initializeOffScreenResourceLoaderWindow()
 
 ResourceLoaderInternal::~ResourceLoaderInternal()
 {
+    delete[] m_formDataString;
+
     if (m_fileHandle)
         CloseHandle(m_fileHandle);
 }
@@ -375,18 +373,77 @@ ResourceLoader::~ResourceLoader()
 
 static void __stdcall transferJobStatusCallback(HINTERNET internetHandle, DWORD_PTR jobId, DWORD internetStatus, LPVOID statusInformation, DWORD statusInformationLength)
 {
+    bool shouldPost = false;
+    JobLoadStatus* jobLoadStatus;
+    LPINTERNET_ASYNC_RESULT result;
+
     switch (internetStatus) {
     case INTERNET_STATUS_HANDLE_CREATED:
     case INTERNET_STATUS_REQUEST_COMPLETE:
-    case INTERNET_STATUS_REDIRECT:
-        JobLoadStatus* jobLoadStatus = new JobLoadStatus;
+        shouldPost = true;
+        jobLoadStatus = new JobLoadStatus;
         jobLoadStatus->internetStatus = internetStatus;
-        if (internetStatus == INTERNET_STATUS_REDIRECT)
-            jobLoadStatus->redirectURL = strdup((char*)statusInformation);
-        else if (internetStatus == INTERNET_STATUS_HANDLE_CREATED || internetStatus == INTERNET_STATUS_REQUEST_COMPLETE)
-            jobLoadStatus->dwResult = LPINTERNET_ASYNC_RESULT(statusInformation)->dwResult;
-        PostMessage(transferJobWindowHandle, loadStatusMessage, (WPARAM)jobId, (LPARAM)jobLoadStatus);
+        result = (LPINTERNET_ASYNC_RESULT)statusInformation;
+        jobLoadStatus->dwResult = result->dwResult;
+        jobLoadStatus->dwError = result->dwError;
+        break;
+    case INTERNET_STATUS_REDIRECT:
+        shouldPost = true;
+        jobLoadStatus = new JobLoadStatus;
+        jobLoadStatus->internetStatus = internetStatus;
+        jobLoadStatus->redirectURL = strdup((char*)statusInformation);
+        break;
     }
+
+    if (shouldPost)
+        PostMessage(transferJobWindowHandle, loadStatusMessage, (WPARAM)jobId, (LPARAM)jobLoadStatus);
+}
+
+static HINTERNET internetOpenHandle;
+
+bool ResourceLoader::startHTTPRequest(const String& referrer)
+{
+    d->m_jobId = addToOutstandingJobs(this);
+    d->m_postReferrer = referrer;
+
+    // For form posting, we can't use InternetOpenURL.  We have to use InternetConnect followed by
+    // HttpSendRequest.
+    HINTERNET urlHandle;
+    if (method() == "POST" || d->m_resend) {
+        DeprecatedString host = d->URL.host();
+        host += "\0";
+        INTERNET_PORT port = d->URL.port();
+        if (!port) {
+            if (d->URL.protocol() == "https")
+                port = INTERNET_DEFAULT_HTTPS_PORT;
+            else
+                port = INTERNET_DEFAULT_HTTP_PORT;
+        }
+        urlHandle = InternetConnectA(internetOpenHandle, host.ascii(), port, 0, 0, 
+                                     INTERNET_SERVICE_HTTP,  0, (DWORD_PTR)d->m_jobId);
+    } else {
+        DeprecatedString urlStr = d->URL.url();
+        int fragmentIndex = urlStr.find('#');
+        if (fragmentIndex != -1)
+            urlStr = urlStr.left(fragmentIndex);
+        String headers;
+        if (!referrer.isEmpty())
+            headers += String("Referer: ") + referrer + "\r\n";
+        DWORD flags = INTERNET_FLAG_KEEP_CONNECTION | INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTP | INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTPS
+                    | INTERNET_FLAG_NO_CACHE_WRITE;
+        if (url().protocol() == "https")
+            flags |= INTERNET_FLAG_SECURE;
+
+        urlHandle = InternetOpenUrlA(internetOpenHandle, urlStr.ascii(), headers.latin1(), headers.length(),
+                                     flags, (DWORD_PTR)d->m_jobId);
+    }
+
+    if (urlHandle == INVALID_HANDLE_VALUE) {
+        delete this;
+        return false;
+    }
+    d->m_threadId = GetCurrentThreadId();
+    return true;
 }
 
 bool ResourceLoader::start(DocLoader* docLoader)
@@ -411,56 +468,20 @@ bool ResourceLoader::start(DocLoader* docLoader)
         d->m_fileLoadTimer.startOneShot(0.0);
         return true;
     } else {
-        HINTERNET internetHandle = globalInternetHandle(docLoader->frame()->userAgent() + String("", 1));
-        if (!internetHandle) {
-            kill();
+        if (!internetOpenHandle) {
+            String userAgentStr = docLoader->frame()->userAgent() + String("", 1);
+            LPCWSTR userAgent = reinterpret_cast<const WCHAR*>(userAgentStr.characters());
+            // leak the Internet for now
+            internetOpenHandle = InternetOpen(userAgent, INTERNET_OPEN_TYPE_PRECONFIG, 0, 0, INTERNET_FLAG_ASYNC);
+        }
+        if (!internetOpenHandle) {
+            delete this;
             return false;
         }
+        static INTERNET_STATUS_CALLBACK callbackHandle = InternetSetStatusCallbackA(internetOpenHandle, transferJobStatusCallback);
 
         initializeOffScreenResourceLoaderWindow();
-        d->m_jobId = addToOutstandingJobs(this);
-
-        // For form posting, we can't use InternetOpenURL.  We have to use InternetConnect followed by
-        // HttpSendRequest.
-        HINTERNET urlHandle;
-        String referrer = docLoader->frame()->referrer();
-        if (method() == "POST") {
-            d->m_postReferrer = referrer;
-            DeprecatedString host = d->URL.host();
-            host += "\0";
-            INTERNET_PORT port = d->URL.port();
-            if (!port) {
-                if (d->URL.protocol().compare("https"))
-                    port = INTERNET_DEFAULT_HTTP_PORT;
-                else
-                    port = INTERNET_DEFAULT_HTTPS_PORT;
-            }
-            urlHandle = InternetConnectA(internetHandle, host.ascii(), port, 0, 0, 
-                                         INTERNET_SERVICE_HTTP, 0, (DWORD_PTR)d->m_jobId);
-        } else {
-            DeprecatedString urlStr = d->URL.url();
-            int fragmentIndex = urlStr.find('#');
-            if (fragmentIndex != -1)
-                urlStr = urlStr.left(fragmentIndex);
-            String headers;
-            if (!referrer.isEmpty())
-                headers += String("Referer: ") + referrer + "\r\n";
-
-            DWORD flags = INTERNET_FLAG_KEEP_CONNECTION | INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTPS | INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTP;
-            if (d->URL.protocol() == "https")
-                flags |= INTERNET_FLAG_SECURE;
-
-            urlHandle = InternetOpenUrlA(internetHandle, urlStr.ascii(), headers.latin1(), headers.length(),
-                                         flags, (DWORD_PTR)d->m_jobId);
-        }
-
-        if (urlHandle == INVALID_HANDLE_VALUE) {
-            kill();
-            return false;
-        }
-        d->m_threadId = GetCurrentThreadId();
-
-        return true;
+        return startHTTPRequest(docLoader->frame()->referrer());
     }
 }
 
@@ -510,16 +531,6 @@ void ResourceLoader::cancel()
 
     d->client->receivedAllData(this, &platformData);
     d->client->receivedAllData(this);
-}
-
-void ResourceLoader::setHasReceivedResponse(bool b)
-{
-    d->m_hasReceivedResponse = b;
-}
-
-bool ResourceLoader::hasReceivedResponse() const
-{
-    return d->m_hasReceivedResponse;
 }
 
 } // namespace WebCore

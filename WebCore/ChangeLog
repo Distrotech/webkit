@@ -1,3 +1,31 @@
+2006-10-06  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Maciej.
+
+        Some loader improvements, courtesy of Steve.
+
+        Functionally, the improvements are these:
+        1. Support HTTP Authentication
+        2. Respect WinInet errors better
+
+        There are also some general code cleanups, like extracting the creation
+        of an HTTP request into its own method.
+
+        * platform/win/ResourceLoaderWin.cpp: Add dwError field to
+        JobLoadStatus to store WinInet error codes. Also removed the
+        globalInternetHandle() function as the global HINTERNET is now only
+        needed within startHTTPRequest.
+        (WebCore::ResourceLoaderWndProc): Respect error codes and add HTTP
+        Authentication support. Also, process HTTP status codes as ints instead
+        of strings.
+        (WebCore::ResourceLoaderInternal::~ResourceLoaderInternal): Cleanup
+        m_formData
+        (WebCore::transferJobStatusCallback): Cleanup the code, and set
+        dwError.
+        (WebCore::ResourceLoader::startHTTPRequest): New method to start a new
+        HTTP request.
+        (WebCore::ResourceLoader::start): Restructure code.
+
 2006-10-06  Dave Hyatt  <hyatt@apple.com>
 
         Fix the plugins on cnn.com.  Don't let the scroll view move child plugins around if it hasn't even been parented yet.
