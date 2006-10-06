@@ -1,3 +1,22 @@
+2006-10-05  Dave Hyatt  <hyatt@apple.com>
+
+        Fix clipping and transforms by making sure to propagate them as they happen on the CGContext over into the HDC.
+        
+        * platform/cg/GraphicsContextPlatformPrivate.h:
+        * platform/win/GraphicsContextWin.cpp:
+        (WebCore::CGContextWithHDC):
+        (WebCore::GraphicsContext::getWindowsContext):
+        (WebCore::GraphicsContext::releaseWindowsContext):
+        (WebCore::GraphicsContextPlatformPrivate::save):
+        (WebCore::GraphicsContextPlatformPrivate::restore):
+        (WebCore::GraphicsContextPlatformPrivate::clip):
+        (WebCore::GraphicsContextPlatformPrivate::scale):
+        (WebCore::GraphicsContextPlatformPrivate::rotate):
+        (WebCore::GraphicsContextPlatformPrivate::translate):
+        (WebCore::GraphicsContextPlatformPrivate::concatCTM):
+        * platform/win/TemporaryLinkStubs.cpp:
+        (GraphicsContextPlatformPrivate::clip):
+
 2006-10-05  Geoffrey Garen  <ggaren@apple.com>
 
         build fix.

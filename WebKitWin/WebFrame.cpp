@@ -754,12 +754,12 @@ void WebFrame::paintSingleRect(HDC hdc, const IntRect& dirtyRect)
         ASSERT(oldBitmap != NULL);
 
         {
+            SaveDC(bitmapDC);
             GraphicsContext gc(bitmapDC);
-
             GdiFlush();
-            CGContextTranslateCTM(gc.platformContext(), CGFloat(-dirtyRect.x()),
-                                                        CGFloat(-dirtyRect.y()));
+            gc.translate(CGFloat(-dirtyRect.x()), CGFloat(-dirtyRect.y()));
             d->frameView->paint(&gc, dirtyRect);
+            RestoreDC(bitmapDC, -1);
             BitBlt(hdc, dirtyRect.x(), dirtyRect.y(), size.cx, size.cy, bitmapDC, 0, 0, SRCCOPY);
         }
 

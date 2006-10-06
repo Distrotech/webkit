@@ -37,6 +37,7 @@
 #include "FrameView.h"
 #include "FrameWin.h"
 #include "GraphicsContext.h"
+#include "GraphicsContextPlatformPrivate.h"
 #include "History.h"
 #include "IconLoader.h"
 #include "IntPoint.h"
@@ -163,6 +164,10 @@ void GraphicsContext::addRoundedRectClip(const IntRect& rect, const IntSize& top
     const IntSize& bottomLeft, const IntSize& bottomRight) { LOG_NOIMPL(); }
 void GraphicsContext::addInnerRoundedRectClip(const IntRect& rect, int thickness) { LOG_NOIMPL(); }
 #endif // PLATFORM(CAIRO)
+
+#if PLATFORM(CG)
+void GraphicsContextPlatformPrivate::clip(const Path&) { LOG_NOIMPL(); }
+#endif
 
 int WebCore::screenDepthPerComponent(const Page*) { LOG_NOIMPL(); return 0; }
 bool WebCore::screenIsMonochrome(const Page*) { LOG_NOIMPL(); return false; }

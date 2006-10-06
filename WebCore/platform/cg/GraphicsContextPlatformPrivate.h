@@ -42,7 +42,8 @@ public:
         CGContextRelease(m_cgContext);
     }
 
-    // FIXME: Implement these methods
+#if PLATFORM(MAC)
+    // These methods do nothing on Mac.
     void save() {}
     void restore() {}
     void clip(const IntRect&) {}
@@ -51,12 +52,21 @@ public:
     void rotate(float) {}
     void translate(float, float) {}
     void concatCTM(const AffineTransform&) {}
+#else
+    // On Windows, we need to update the HDC for form controls to draw in the right place.
+    void save();
+    void restore();
+    void clip(const IntRect&);
+    void clip(const Path&);
+    void scale(const FloatSize&);
+    void rotate(float);
+    void translate(float, float);
+    void concatCTM(const AffineTransform&);
 
-    CGContextRef m_cgContext;
-    IntRect m_focusRingClip; // Work around CG bug in focus ring clipping.
-#if PLATFORM(WIN)
     HDC m_hdc;
 #endif
+    CGContextRef m_cgContext;
+    IntRect m_focusRingClip; // Work around CG bug in focus ring clipping.
 };
 
 }

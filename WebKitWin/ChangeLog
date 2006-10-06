@@ -1,3 +1,10 @@
+2006-10-05  Dave Hyatt  <hyatt@apple.com>
+
+        Fix clipping and transforms by making sure to propagate them as they happen on the CGContext over into the HDC.
+        
+        * WebFrame.cpp:
+        (WebFrame::paintSingleRect):
+
 2006-10-05  Adam Roben  <aroben@apple.com>
 
         Build fix.
