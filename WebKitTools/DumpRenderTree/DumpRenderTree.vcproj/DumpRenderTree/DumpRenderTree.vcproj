@@ -17,9 +17,10 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(WebKitOutputDir)\$(ConfigurationName)"
-			IntermediateDirectory="$(WebKitOutputDir)\DumpRenderTree.intermediate\$(ConfigurationName)\DumpRenderTree.intermediate"
+			OutputDirectory="$(WebKitOutputDir)\bin"
+			IntermediateDirectory="$(WebKitOutputDir)\obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets=".\debug.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -40,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..\..\..\..\WebCore\platform\cairo\cairo\src&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\DerivedSources\WebCore&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\loader&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\css&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\platform&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\bridge\win&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\page&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\bridge&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\platform\win&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\html&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\rendering&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\editing&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\dom&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\xml&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\kwq&quot;;&quot;$(ProjectDir)\..\..\..\..\iconv&quot;;&quot;$(ProjectDir)\..\..\..\..\libxml2&quot;;&quot;$(ProjectDir)\..\..\..\..\icu\include&quot;;&quot;$(ProjectDir)\..\..\..\..\JavaScriptCore&quot;;&quot;$(ProjectDir)\..\..\..\..\JavaScriptCore\os-win32&quot;;&quot;$(ProjectDir)\..\..\..\..\JavaScriptCore\wtf&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\ForwardingHeaders&quot;"
+				AdditionalIncludeDirectories="$(WebKitSDKDir)\Include;$(WebKitOutputDir)\Include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_SCL_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,9 +62,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="&quot;$(WebKitOutputDir)\WebCore.intermediate\$(ConfigurationName)\WebCore.intermediate\WebCore.lib&quot;&#x0D;&#x0A;&quot;$(WebKitOutputDir)\lib\JavaScriptCore.lib&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\..\..\..\..\iconv\lib\iconv.lib&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\..\..\..\..\libxml\lib\libxml2.lib&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\..\..\..\..\libxslt\lib\libxslt.lib&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\..\..\..\..\icu\lib\icuuc.lib&quot;"
-				AdditionalDependencies="wininet.lib"
+				AdditionalDependencies="WebKitGUID$(ConfigSuffix).lib"
+				OutputFile="$(OutDir)\$(ProjectName)$(ConfigSuffix).exe"
 				LinkIncremental="2"
+				AdditionalLibraryDirectories="&quot;$(WebKitOutputDir)\lib&quot;;&quot;$(WebKitSDKDir)\lib&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -95,9 +97,10 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(WebKitOutputDir)\$(ConfigurationName)"
-			IntermediateDirectory="$(WebKitOutputDir)\DumpRenderTree.intermediate\$(ConfigurationName)\DumpRenderTree.intermediate"
+			OutputDirectory="$(WebKitOutputDir)\bin"
+			IntermediateDirectory="$(WebKitOutputDir)\obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets=".\release.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -138,7 +141,8 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="&quot;$(WebKitOutputDir)\WebCore.intermediate\$(ConfigurationName)\WebCore.intermediate\WebCore.lib&quot;&#x0D;&#x0A;&quot;$(WebKitOutputDir)\lib\JavaScriptCore.lib&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\..\..\..\..\iconv\lib\iconv.lib&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\..\..\..\..\libxml\lib\libxml2.lib&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\..\..\..\..\libxslt\lib\libxslt.lib&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\..\..\..\..\icu\lib\icuuc.lib&quot;"
-				AdditionalDependencies="wininet.lib"
+				AdditionalDependencies="WebKitGUID$(ConfigSuffix).lib"
+				OutputFile="$(OutDir)\$(ProjectName)$(ConfigSuffix).exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -182,6 +186,14 @@
 			>
 			<File
 				RelativePath=".\DumpRenderTree.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\WaitUntilDoneDelegate.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\WaitUntilDoneDelegate.h"
 				>
 			</File>
 		</Filter>

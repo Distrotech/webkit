@@ -1,0 +1,65 @@
+2006-10-06  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Maciej.
+
+        Land new version of DumpRenderTree that uses the WebKit APIs.
+        
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (initialize):
+        (dump):
+        (runTest):
+        (main):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.vcproj:
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.cpp: Added.
+        (WaitUntilDoneDelegate::QueryInterface):
+        (WaitUntilDoneDelegate::AddRef):
+        (WaitUntilDoneDelegate::Release):
+        (WaitUntilDoneDelegate::didStartProvisionalLoadForFrame):
+        (WaitUntilDoneDelegate::didReceiveTitle):
+        (WaitUntilDoneDelegate::didFinishLoadForFrame):
+        (WaitUntilDoneDelegate::runJavaScriptAlertPanelWithMessage):
+        (WaitUntilDoneDelegate::windowScriptObjectAvailable):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.h: Added.
+        (WaitUntilDoneDelegate::WaitUntilDoneDelegate):
+        (WaitUntilDoneDelegate::didReceiveServerRedirectForProvisionalLoadForFrame):
+        (WaitUntilDoneDelegate::didFailProvisionalLoadWithError):
+        (WaitUntilDoneDelegate::didCommitLoadForFrame):
+        (WaitUntilDoneDelegate::didReceiveIcon):
+        (WaitUntilDoneDelegate::didFailLoadWithError):
+        (WaitUntilDoneDelegate::didChangeLocationWithinPageForFrame):
+        (WaitUntilDoneDelegate::willPerformClientRedirectToURL):
+        (WaitUntilDoneDelegate::didCancelClientRedirectForFrame):
+        (WaitUntilDoneDelegate::willCloseFrame):
+        (WaitUntilDoneDelegate::createWebViewWithRequest):
+        (WaitUntilDoneDelegate::webViewShow):
+        (WaitUntilDoneDelegate::webViewClose):
+        (WaitUntilDoneDelegate::webViewFocus):
+        (WaitUntilDoneDelegate::webViewUnfocus):
+        (WaitUntilDoneDelegate::webViewFirstResponder):
+        (WaitUntilDoneDelegate::makeFirstResponder):
+        (WaitUntilDoneDelegate::setStatusText):
+        (WaitUntilDoneDelegate::webViewStatusText):
+        (WaitUntilDoneDelegate::webViewAreToolbarsVisible):
+        (WaitUntilDoneDelegate::setToolbarsVisible):
+        (WaitUntilDoneDelegate::webViewIsStatusBarVisible):
+        (WaitUntilDoneDelegate::setStatusBarVisible):
+        (WaitUntilDoneDelegate::webViewIsResizable):
+        (WaitUntilDoneDelegate::setResizable):
+        (WaitUntilDoneDelegate::setFrame):
+        (WaitUntilDoneDelegate::webViewFrame):
+        (WaitUntilDoneDelegate::setContentRect):
+        (WaitUntilDoneDelegate::webViewContentRect):
+        (WaitUntilDoneDelegate::runJavaScriptConfirmPanelWithMessage):
+        (WaitUntilDoneDelegate::runJavaScriptTextInputPanelWithPrompt):
+        (WaitUntilDoneDelegate::runOpenPanelForFileButtonWithResultListener):
+        (WaitUntilDoneDelegate::mouseDidMoveOverElement):
+        (WaitUntilDoneDelegate::contextMenuItemsForElement):
+        (WaitUntilDoneDelegate::validateUserInterfaceItem):
+        (WaitUntilDoneDelegate::shouldPerformAction):
+        (WaitUntilDoneDelegate::dragDestinationActionMaskForDraggingInfo):
+        (WaitUntilDoneDelegate::willPerformDragDestinationAction):
+        (WaitUntilDoneDelegate::dragSourceActionMaskForPoint):
+        (WaitUntilDoneDelegate::willPerformDragSourceAction):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/debug.vsprops: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/release.vsprops: Added.
+

@@ -25,96 +25,214 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include <WebKit/IWebURLResponse.h>
+#include <WebKit/IWebViewPrivate.h>
+#include <WebKit/WebKit.h>
+#include <WebKit/IWebFramePrivate.h>
+#include "atlstr.h"
 
-#include "config.h"
-#include "FrameWin.h"
-#include "FrameView.h"
-#include "Page.h"
-#include "Document.h"
-#include "markup.h"
-#include "RenderTreeAsText.h"
+#include "WaitUntilDoneDelegate.h"
 
-#include <io.h>
-#include <fcntl.h>
-#include <direct.h>
+const LPCWSTR kDumpRenderTreeClassName = L"DumpRenderTreeWindow";
 
-using namespace WebCore;
+IWebFrame* frame;
+HWND hostWindow;
 
-Vector<char> loadResourceIntoArray(char const *) { Vector<char> v; return v; }
+const unsigned maxViewWidth = 800;
+const unsigned maxViewHeight = 600;
 
-static void localFileTest(FrameWin* frame, char* path)
+static void initialize(HINSTANCE hInstance)
 {
-    frame->begin();
-    FILE* file = fopen(path, "rb");
-    if (!file) {
-        fprintf(stderr, "Failed to open file: %s\n", path);
-        return;
-    }
+    // Init COM
+    CoInitialize(NULL);
 
-    char buffer[4000];
-    int newBytes = 0;
-    while ((newBytes = fread(buffer, 1, 4000, file)) > 0) {
-        frame->write(buffer, newBytes);
-    }
-    fclose(file);
-    frame->end();
+    // Register a host window
+    WNDCLASSEX wcex;
+
+    wcex.cbSize = sizeof(WNDCLASSEX);
+
+    wcex.style         = CS_HREDRAW | CS_VREDRAW;
+    wcex.lpfnWndProc   = DefWindowProc;
+    wcex.cbClsExtra    = 0;
+    wcex.cbWndExtra    = 0;
+    wcex.hInstance     = hInstance;
+    wcex.hIcon         = 0;
+    wcex.hCursor       = LoadCursor(NULL, IDC_ARROW);
+    wcex.hbrBackground = 0;
+    wcex.lpszMenuName  = 0;
+    wcex.lpszClassName = kDumpRenderTreeClassName;
+    wcex.hIconSm       = 0;
+
+    RegisterClassEx(&wcex);
+
+    hostWindow = CreateWindow(kDumpRenderTreeClassName, TEXT("DumpRenderTree"), WS_OVERLAPPEDWINDOW,
+      CW_USEDEFAULT, maxViewWidth, CW_USEDEFAULT, maxViewHeight, 0, 0, hInstance, NULL);
+
 }
 
-static void dumpRenderTreeMain(FrameWin* frame)
+static bool dumpTree = true;
+static bool dumpAsText = false;
+static bool printSeparators;
+
+#include <stdio.h>
+
+void dump()
 {
-    char filenameBuffer[2048];
-    while (fgets(filenameBuffer, sizeof(filenameBuffer), stdin)) {
-        char *newLineCharacter = strchr(filenameBuffer, '\n');
-        if (newLineCharacter)
-            *newLineCharacter = '\0';
+    HRESULT hr;
+    BSTR resultString = 0;
+
+    if (dumpTree) {
+        if (dumpAsText) {
+            IDOMDocument* document;
+            hr = frame->DOMDocument(&document);
+
+            IDOMElement* documentElement;
+            hr = document->documentElement(&documentElement);
+
+            IDOMHTMLElement* htmlElement;
+            hr = documentElement->QueryInterface(IID_IDOMHTMLElement, (void**)&htmlElement);
+            if (SUCCEEDED(hr)) {
+                hr = htmlElement->innerText(&resultString);
+                htmlElement->Release();
+            } else
+                hr = documentElement->textContent(&resultString);
+            documentElement->Release();
+            document->Release();
+        } else {
+            IWebFramePrivate* framePrivate;
+            hr = frame->QueryInterface(IID_IWebFramePrivate, (void**)&framePrivate);
+            if (FAILED(hr))
+                goto fail;
+            hr = framePrivate->renderTreeAsExternalRepresentation(&resultString);
+            framePrivate->Release();
+        }
         
-        if (!*filenameBuffer)
-            continue;
-            
-        localFileTest(frame, filenameBuffer);
-        DeprecatedString renderDump = externalRepresentation(frame->renderer());
-        puts(renderDump.ascii());
-        puts("#EOF\n");
-
-        fflush(stdout);
+        if (!resultString)
+            printf("ERROR: nil result from %s", dumpAsText ? "IDOMElement::innerText" : "IFrameViewPrivate::renderTreeAsExternalRepresentation");
+        else {
+            _putws(resultString);
+            SysFreeString(resultString);
+        }
     }
+
+    if (printSeparators)
+        puts("#EOF");
+fail:
+    return;
 }
 
-static void dumpRenderTreeToStdOut(FrameWin* frame)
+static void runTest(const char* pathOrURL)
 {
-    DeprecatedString renderDump = externalRepresentation(frame->renderer());
-    printf("\n\nRenderTree:\n\n%s", renderDump.ascii());
-}
+    CStringT<char, StrTraitATL<char> > urlString;
+    BSTR urlBStr;
+    static BSTR methodBStr = 0;
+ 
+    if (!methodBStr)
+        methodBStr = SysAllocString(TEXT("GET"));
 
-static void serializeToStdOut(FrameWin* frame)
-{
-    DeprecatedString markup = createMarkup(frame->document());
-    printf("Source:\n\n%s", markup.ascii());
+    if (strncmp(pathOrURL, "http://", 7) == 0) {
+        urlString = pathOrURL;
+    } else {
+        urlString = "file:///";
+        urlString += pathOrURL;
+    }
+
+    urlBStr = urlString.AllocSysString();
+    IWebMutableURLRequest* request;
+    HRESULT hr = CoCreateInstance(CLSID_WebMutableURLRequest, 0, CLSCTX_ALL, IID_IWebMutableURLRequest, (void**)&request);
+    if (FAILED(hr))
+        goto exit;
+
+    hr = request->initWithURL(urlBStr, WebURLRequestUseProtocolCachePolicy, 0);
+    SysFreeString(methodBStr);
+
+    hr = request->setHTTPMethod(methodBStr);
+    hr = frame->loadRequest(request);
+    request->Release();
+
+    MSG msg;
+    while (GetMessage(&msg, NULL, 0, 0)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+
+exit:
+    return;
 }
 
 int main(int argc, char* argv[])
 {
-    Page* page = new Page(0);
-    FrameWin* frame = new FrameWin(page, 0, 0);
-    FrameView* frameView = new FrameView(frame);
-    frame->setView(frameView);
-    
-    if (argc == 2 && strcmp(argv[1], "-") == 0)
-        dumpRenderTreeMain(frame);
-    else {
-        // Default file for debugging in visual studio
-        char *fileToTest = "c:\\cygwin\\tmp\\test.html";
-        if (argc == 2)
-            fileToTest = argv[1];
-        localFileTest(frame, fileToTest);
-        serializeToStdOut(frame);
-        dumpRenderTreeToStdOut(frame);
-        if (argc != 2) {
-            // Keep window open for visual studio debugging.
+    initialize(GetModuleHandle(NULL));
+
+    // FIXME: options
+
+    IWebView* webView;
+    HRESULT hr = CoCreateInstance(CLSID_WebView, 0, CLSCTX_ALL, IID_IWebView, (void**)&webView);
+    if (FAILED(hr))
+        goto exit;
+
+    hr = webView->setHostWindow(hostWindow);
+    if (FAILED(hr))
+        goto exit;
+
+    RECT clientRect;
+    clientRect.left = 0;
+    clientRect.top = 0;
+    clientRect.right = maxViewWidth;
+    clientRect.bottom = maxViewHeight;
+
+    hr = webView->initWithFrame(&clientRect, 0, 0);
+    if (FAILED(hr))
+        goto exit;
+
+    IWebViewPrivate* viewPrivate;
+    HWND viewHwnd;
+    hr = webView->QueryInterface(IID_IWebViewPrivate, (void**)&viewPrivate);
+    if (FAILED(hr))
+        goto exit;
+    hr = viewPrivate->viewWindow(&viewHwnd);
+    viewPrivate->Release();
+
+    MoveWindow(viewHwnd, 0, 0, maxViewWidth, maxViewHeight, false);
+
+    WaitUntilDoneDelegate* delegate = new WaitUntilDoneDelegate();
+    hr = webView->setFrameLoadDelegate(delegate);
+    delegate->Release();
+
+    hr = webView->setUIDelegate(delegate);
+
+    IWebPreferences* preferences;
+    hr = webView->preferences(&preferences);
+    if (FAILED(hr))
+        goto exit;
+
+    hr = webView->mainFrame(&frame);
+    if (FAILED(hr))
+        goto exit;
+
+    if (argc == 2 && strcmp(argv[1], "-") == 0) {
+        char filenameBuffer[2048];
+        printSeparators = true;
+        while (fgets(filenameBuffer, sizeof(filenameBuffer), stdin)) {
+            char* newLineCharacter = strchr(filenameBuffer, '\n');
+            if (newLineCharacter)
+                *newLineCharacter = '\0';
+            
+            if (strlen(filenameBuffer) == 0)
+                continue;
+
+            runTest(filenameBuffer);
             fflush(stdout);
-            while(1);
         }
+    } else {
+        printSeparators = argc > 2;
+        for (int i = 1; i != argc; i++) 
+            runTest(argv[i]);
     }
 
+    webView->Release();
+
     return 0;
+exit:
+    return -1;
 }
