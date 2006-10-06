@@ -44,7 +44,7 @@ class WidgetPrivate
 public:
     Font font;
     WidgetClient* client;
-    Widget* parent;
+    ScrollView* parent;
     HWND containingWindow;
     IntRect frameRect;
     bool enabled;
@@ -67,6 +67,7 @@ Widget::Widget()
 
 Widget::~Widget() 
 {
+    ASSERT(!parent());
     delete data;
 }
 
@@ -100,14 +101,20 @@ void Widget::setFrameGeometry(const IntRect &rect)
     data->frameRect = rect;
 }
 
-void Widget::setParent(Widget* w)
+void Widget::setParent(ScrollView* v)
 {
-    data->parent = w;
+    data->parent = v;
 }
 
-Widget* Widget::parent() const
+ScrollView* Widget::parent() const
 {
     return data->parent;
+}
+
+void Widget::removeFromParent()
+{
+    if (parent())
+        parent()->removeChild(this);
 }
 
 void Widget::show()

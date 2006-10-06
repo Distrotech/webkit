@@ -1,3 +1,13 @@
+2006-10-05  Geoffrey Garen  <ggaren@apple.com>
+
+        build fix.
+        
+        * platform/win/WidgetWin.cpp:
+        (WebCore::Widget::~Widget):
+        (WebCore::Widget::setParent):
+        (WebCore::Widget::parent):
+        (WebCore::Widget::removeFromParent):
+
 2006-10-05  David Hyatt  <hyatt@apple.com>
 
         Stub out GraphicsContextPlatformPrivate methods so that the HDC can
