@@ -123,31 +123,66 @@ static LRESULT CALLBACK PluginViewWndProc(HWND hWnd, UINT message, WPARAM wParam
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
+void PluginViewWin::updateHwnd(bool invalidate) const
+{
+    if (parent()) {
+        FrameView* frameView = static_cast<FrameView*>(parent());
+        IntRect rect(frameGeometry());
+        IntPoint point(rect.location());
+        point = frameView->contentsToWindow(point);
+        
+        IntRect newWindowRect(point, rect.size());
+        if (newWindowRect != m_windowRect) {
+            m_windowRect = newWindowRect;
+            ::MoveWindow(m_window, point.x(), point.y(), rect.width(), rect.height(), invalidate);
+        }
+
+        IntRect newClipRect = windowClipRect();
+        if (newClipRect != m_clipRect) {
+            m_clipRect = newClipRect;
+             // Create a rectangular region
+            int left = m_clipRect.x() - m_windowRect.x();
+            int top = m_clipRect.y() - m_windowRect.y();
+            HRGN rgn = ::CreateRectRgn(left, top, left + m_clipRect.width(), top + m_clipRect.height());
+            ::SetWindowRgn(m_window, rgn, invalidate);
+        }
+    }
+}
+
+IntRect PluginViewWin::windowClipRect() const
+{
+    // Start by clipping to our bounds.
+    IntRect clipRect(m_windowRect);
+ 
+    // Take our element and get the clip rect from the enclosing layer.
+    RenderLayer* layer = m_element->renderer()->enclosingLayer();
+
+    // Apply the clip from the layer.
+    FrameView* parentView = m_element->document()->view();
+    IntRect layerClipRect = layer->documentClipRect();
+    layerClipRect.setLocation(parentView->contentsToWindow(layerClipRect.location()));
+    clipRect.intersect(layerClipRect);
+
+    // Now apply the clip from our ancestor.
+    clipRect.intersect(parentView->windowClipRect());
+    return clipRect;
+}
+
 void PluginViewWin::setFrameGeometry(const IntRect& rect)
 {
     if (rect == frameGeometry())
         return;
 
-    if (parent() && parent()->isFrameView()) {
-        FrameView* frameView = static_cast<FrameView*>(parent());
-        IntPoint point(rect.location());
-        point = frameView->contentsToWindow(point);
-        ::MoveWindow(m_window, point.x(), point.y(), rect.width(), rect.height(), false); // Layout handles invalidation for us in this case.
-    }
-
     setNPWindowSize(rect.size());
 
     Widget::setFrameGeometry(rect);
+
+    updateHwnd(false);
 }
 
-void PluginViewWin::scrolled() const
+void PluginViewWin::geometryChanged() const
 {
-    if (parent() && parent()->isFrameView()) {
-        FrameView* frameView = static_cast<FrameView*>(parent());
-        IntPoint point(x(), y());
-        point = frameView->contentsToWindow(point);
-        ::MoveWindow(m_window, point.x(), point.y(), width(), height(), true); // Invalidate when we move the child.
-    }
+    updateHwnd(true);
 }
 
 void PluginViewWin::setFocus()

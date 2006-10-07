@@ -75,13 +75,15 @@ namespace WebCore {
 
         // Widget functions
         virtual void setFrameGeometry(const IntRect&);
-        virtual void scrolled() const;
+        virtual void geometryChanged() const;
 
         virtual void setFocus();
         virtual void clearFocus();
 
         virtual void show();
         virtual void hide();
+
+        virtual IntRect windowClipRect() const;
 
     private:
         PluginViewWin();
@@ -103,6 +105,8 @@ namespace WebCore {
         void requestTimerFired(Timer<PluginViewWin>*);
         Timer<PluginViewWin> m_requestTimer;
 
+        void updateHwnd(bool invalidate) const;
+
         int m_mode;
         int m_paramCount;
         char** m_paramNames;
@@ -120,6 +124,8 @@ namespace WebCore {
         Vector<PluginRequestWin*> m_requests;
 
         HWND m_window; // for windowed plug-ins
+        mutable IntRect m_clipRect; // The clip rect to apply to a windowed plug-in
+        mutable IntRect m_windowRect; // Our window rect.
 
         static PluginViewWin* s_currentPluginView;
     };

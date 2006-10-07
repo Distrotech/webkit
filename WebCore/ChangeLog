@@ -1,3 +1,29 @@
+2006-10-06  Dave Hyatt  <hyatt@apple.com>
+
+        Implement flawless clipping of windowed plugins, including
+        respecting nested frames, CSS overflow and CSS clip.  (This
+        puts Boomer way ahead of Mac as far as plugin clipping is
+        concerned).
+        
+        Implement support for correct blitting of scrolled subframes,
+        even when clipped by enclosing scrollviews.
+
+        Fix a crash caused by focused children not being cleaned up
+        when they are removed from a scrollview.
+
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::ScrollViewPrivate::valueChanged):
+        (WebCore::ScrollView::setFrameGeometry):
+        (WebCore::ScrollView::addChild):
+        (WebCore::ScrollView::removeChild):
+        (WebCore::ScrollView::geometryChanged):
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::updateHwnd):
+        (WebCore::PluginViewWin::windowClipRect):
+        (WebCore::PluginViewWin::setFrameGeometry):
+        (WebCore::PluginViewWin::geometryChanged):
+        * plugins/win/PluginViewWin.h:
+
 2006-10-06  Geoffrey Garen  <ggaren@apple.com>
 
         Fixed <rdar://4768789> Crash on ebay.com in Frame::didOpenURL

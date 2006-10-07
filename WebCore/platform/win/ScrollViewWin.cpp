@@ -131,11 +131,11 @@ void ScrollView::ScrollViewPrivate::valueChanged(Scrollbar* bar)
     if (!m_hasStaticBackground) { // The main frame can just blit the WebView window
         // FIXME: Could make this more efficient by passing a valid clip rect for only the document content.
         // FIXME: Find a way to blit subframes without blitting overlapping content
-        ::ScrollWindowEx(m_view->containingWindow(), -scrollDelta.width(), -scrollDelta.height(), &dirtyRect, &dirtyRect, 0, 0, SW_INVALIDATE | SW_SCROLLCHILDREN);
+        ::ScrollWindowEx(m_view->containingWindow(), -scrollDelta.width(), -scrollDelta.height(), &dirtyRect, &RECT(m_view->windowClipRect()), 0, 0, SW_INVALIDATE | SW_SCROLLCHILDREN);
     } else
         ::InvalidateRect(m_view->containingWindow(), &dirtyRect, false);
 
-    m_view->scrolled();
+    m_view->geometryChanged();
 }
 
 ScrollView::ScrollView()
@@ -206,10 +206,14 @@ void ScrollView::setFrameGeometry(const IntRect& newGeometry)
 {
     IntRect oldGeometry = frameGeometry();
     Widget::setFrameGeometry(newGeometry);
+
+    if (newGeometry == oldGeometry)
+        return;
+
     if (newGeometry.width() != oldGeometry.width() || newGeometry.height() != oldGeometry.height())
         updateScrollbars(m_data->m_scrollOffset);
-    else if (parent() && (newGeometry.x() != oldGeometry.x() || newGeometry.y() != oldGeometry.y()))
-        scrolled(); // FIXME: Should probably rename this method.  This is about making sure plugin descendants move properly.
+    
+    geometryChanged();
 }
 
 int ScrollView::contentsX() const
@@ -484,9 +488,8 @@ PlatformScrollbar* ScrollView::scrollbarUnderMouse(const PlatformMouseEvent& mou
     return 0;
 }
 
-void ScrollView::addChild(Widget* child, int x, int y) 
+void ScrollView::addChild(Widget* child) 
 { 
-    child->move(x, y);
     child->setParent(this);
     child->setContainingWindow(containingWindow());
     m_data->m_children.add(child);
@@ -499,6 +502,11 @@ void ScrollView::removeChild(Widget* child)
         // we become the new capturer.
         setCapturingChild(0);
         setCapturingMouse(true);
+    }
+    if (child == focusedChild()) {
+        // If our child is focused and goes away, then we become the new focused element.
+        setFocusedChild(0);
+        setFocused(true);
     }
 
     child->setParent(0);
@@ -577,11 +585,11 @@ void ScrollView::wheelEvent(PlatformWheelEvent& e)
     scrollBy(-e.deltaX() * LINE_STEP, -e.deltaY() * LINE_STEP);
 }
 
-void ScrollView::scrolled() const
+void ScrollView::geometryChanged() const
 {
     HashSet<const Widget*>::const_iterator end = m_data->m_children.end();
     for (HashSet<const Widget*>::const_iterator current = m_data->m_children.begin(); current != end; ++current)
-        (*current)->scrolled();
+        (*current)->geometryChanged();
 }
 
 void ScrollView::scroll(ScrollDirection direction, ScrollGranularity granularity)
