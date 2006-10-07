@@ -475,7 +475,7 @@ void ScrollView::updateScrollbars(const IntSize& desiredOffset)
             m_data->m_vBar->setSuppressInvalidation(false);
     }
 
-    if (oldHasVertical != m_data->m_vBar || oldHasHorizontal != m_data->m_hBar)
+    if (oldHasVertical != (m_data->m_vBar != 0) || oldHasHorizontal != (m_data->m_hBar != 0))
         geometryChanged();
 
     m_data->m_inUpdateScrollbars = false;
