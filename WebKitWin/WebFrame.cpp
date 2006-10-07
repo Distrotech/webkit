@@ -1160,6 +1160,66 @@ void WebFrame::receivedResponse(ResourceLoader* loader, PlatformResponse platfor
     d->frame->didOpenURL(loader->url());
     d->frame->begin(loader->url());
 
+    IWebFrameLoadDelegate* frameLoadDelegate;
+    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
+        IWebPreferences* preferences;
+        BOOL privateBrowsingEnabled = FALSE;
+        if (SUCCEEDED(d->webView->preferences(&preferences)))
+            preferences->privateBrowsingEnabled(&privateBrowsingEnabled);
+
+        DeprecatedString urlStr = loader->url().url();
+        BSTR urlBStr = SysAllocStringLen((LPCOLESTR)urlStr.unicode(), urlStr.length());
+
+        SYSTEMTIME currentTime;
+        GetSystemTime(&currentTime);
+        DATE visitedTime = 0;
+        SystemTimeToVariantTime(&currentTime, &visitedTime);
+
+        if (m_loadType != WebFrameLoadTypeBack && m_loadType != WebFrameLoadTypeForward && m_loadType != WebFrameLoadTypeIndexedBackForward &&
+            m_loadType != WebFrameLoadTypeReload && m_loadType != WebFrameLoadTypeReloadAllowingStaleData && m_loadType != WebFrameLoadTypeInternal &&
+            !m_quickRedirectComing) {
+            BSTR titleBStr = SysAllocStringLen((LPCOLESTR)d->title.characters(), d->title.length());
+            WebHistoryItem* historyItem = WebHistoryItem::createInstance();
+            if (SUCCEEDED(historyItem->initWithURLString(urlBStr, titleBStr, visitedTime))) {
+                
+                // add this site to the back/forward list
+                IWebBackForwardList* backForwardList;
+                if (SUCCEEDED(d->webView->backForwardList(&backForwardList))) {
+                    backForwardList->addItem(historyItem);
+                    backForwardList->Release();
+                }
+                
+                // add this site to the history if private browsing is disabled
+                if (!privateBrowsingEnabled) {
+                    IWebHistoryPrivate* history = WebHistory::optionalSharedHistoryInternal();
+                    if (history)
+                        history->addItemForURL(urlBStr, titleBStr);
+                }
+                historyItem->Release(); // ref adopted by history list if needed
+            }
+            SysFreeString(titleBStr);
+        } else {
+            if (!privateBrowsingEnabled) {
+                IWebHistoryPrivate* history = WebHistory::optionalSharedHistoryInternal();
+                WebHistory* historyInternal = static_cast<WebHistory*>(history);
+                if (historyInternal) {
+                    IWebHistoryItem* item;
+                    if (SUCCEEDED(historyInternal->itemForURL(urlBStr, &item))) {
+                        IWebHistoryItemPrivate* itemPrivate;
+                        if (SUCCEEDED(item->QueryInterface(IID_IWebHistoryItemPrivate, (void**)&itemPrivate))) {
+                            itemPrivate->setLastVisitedTimeInterval(visitedTime);
+                            itemPrivate->Release();
+                            // FIXME - bumping the last visited time doesn't mark the history as changed
+                        }
+                        item->Release();
+                    }
+                }
+            }
+        }
+        SysFreeString(urlBStr);
+        frameLoadDelegate->Release();
+    }
+
     m_buffer.clear();
 
     WebURLResponse* response = WebURLResponse::createInstance(loader, platformResponse);
@@ -1217,64 +1277,9 @@ void WebFrame::receivedAllData(ResourceLoader* job)
 
     IWebFrameLoadDelegate* frameLoadDelegate;
     if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
-        if (!job->error()) {
-            IWebPreferences* preferences;
-            BOOL privateBrowsingEnabled = FALSE;
-            if (SUCCEEDED(d->webView->preferences(&preferences)))
-                preferences->privateBrowsingEnabled(&privateBrowsingEnabled);
-
-            DeprecatedString urlStr = job->url().url();
-            BSTR urlBStr = SysAllocStringLen((LPCOLESTR)urlStr.unicode(), urlStr.length());
-
-            SYSTEMTIME currentTime;
-            GetSystemTime(&currentTime);
-            DATE visitedTime = 0;
-            SystemTimeToVariantTime(&currentTime, &visitedTime);
-
-            if (m_loadType != WebFrameLoadTypeBack && m_loadType != WebFrameLoadTypeForward && m_loadType != WebFrameLoadTypeIndexedBackForward &&
-                m_loadType != WebFrameLoadTypeReload && m_loadType != WebFrameLoadTypeReloadAllowingStaleData && m_loadType != WebFrameLoadTypeInternal &&
-                !m_quickRedirectComing) {
-                BSTR titleBStr = SysAllocStringLen((LPCOLESTR)d->title.characters(), d->title.length());
-                WebHistoryItem* historyItem = WebHistoryItem::createInstance();
-                if (SUCCEEDED(historyItem->initWithURLString(urlBStr, titleBStr, visitedTime))) {
-                    
-                    // add this site to the back/forward list
-                    IWebBackForwardList* backForwardList;
-                    if (SUCCEEDED(d->webView->backForwardList(&backForwardList))) {
-                        backForwardList->addItem(historyItem);
-                        backForwardList->Release();
-                    }
-                    
-                    // add this site to the history if private browsing is disabled
-                    if (!privateBrowsingEnabled) {
-                        IWebHistoryPrivate* history = WebHistory::optionalSharedHistoryInternal();
-                        if (history)
-                            history->addItemForURL(urlBStr, titleBStr);
-                    }
-                    historyItem->Release(); // ref adopted by history list if needed
-                }
-                SysFreeString(titleBStr);
-            } else {
-                if (!privateBrowsingEnabled) {
-                    IWebHistoryPrivate* history = WebHistory::optionalSharedHistoryInternal();
-                    WebHistory* historyInternal = static_cast<WebHistory*>(history);
-                    if (historyInternal) {
-                        IWebHistoryItem* item;
-                        if (SUCCEEDED(historyInternal->itemForURL(urlBStr, &item))) {
-                            IWebHistoryItemPrivate* itemPrivate;
-                            if (SUCCEEDED(item->QueryInterface(IID_IWebHistoryItemPrivate, (void**)&itemPrivate))) {
-                                itemPrivate->setLastVisitedTimeInterval(visitedTime);
-                                itemPrivate->Release();
-                                // FIXME - bumping the last visited time doesn't mark the history as changed
-                            }
-                            item->Release();
-                        }
-                    }
-                }
-            }
-            SysFreeString(urlBStr);
+        if (!job->error())
             frameLoadDelegate->didFinishLoadForFrame(d->webView, this);
-        } else
+        else
             frameLoadDelegate->didFailLoadWithError(d->webView, 0/*FIXME*/, this);
 
         frameLoadDelegate->Release();

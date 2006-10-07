@@ -1,5 +1,17 @@
 2006-10-07  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Anders.
+
+        Merge of OpenSource r16884
+        http://bugs.webkit.org/show_bug.cgi?id=11199
+        Update Session History when a load is committed rather than completed.
+
+        * WebFrame.cpp:
+        (WebFrame::receivedResponse):
+        (WebFrame::receivedAllData):
+
+2006-10-07  Adam Roben  <aroben@apple.com>
+
         Reviewed by Steve.
 
         Fix for failed ASSERT on iBench.
