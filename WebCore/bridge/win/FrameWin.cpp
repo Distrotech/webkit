@@ -32,6 +32,9 @@
 #include "Decoder.h"
 #include "Document.h"
 #include "FramePrivate.h"
+#include "FrameView.h"
+#include "HTMLNames.h"
+#include "HTMLIFrameElement.h"
 #include "kjs_window.h"
 #include "NP_jsobject.h"
 #include "npruntime_impl.h"
@@ -43,8 +46,11 @@
 #include "RenderFrame.h"
 #include "ResourceLoader.h"
 #include "runtime_root.h"
+#include "ScrollbarMode.h"
 
 namespace WebCore {
+
+using namespace HTMLNames;
 
 FrameWin::FrameWin(Page* page, Element* ownerElement, FrameWinClient* client)
     : Frame(page, ownerElement)
@@ -244,10 +250,25 @@ Plugin* FrameWin::createPlugin(Element* element, const KURL& url, const Vector<S
 
 Frame* FrameWin::createFrame(const KURL& url, const String& name, Element* ownerElement, const String& referrer)
 {
-    if (m_client)
-        return m_client->createFrame(url, name, ownerElement, referrer);
-
-    return 0;
+    Frame* result = 0;
+    if (m_client) {
+        result = m_client->createFrame(url, name, ownerElement, referrer);
+        if (result) {
+            // Propagate the marginwidth/height and scrolling modes to the view.
+            if (ownerElement->hasTagName(frameTag) || ownerElement->hasTagName(iframeTag)) {
+                HTMLFrameElement* frameElt = static_cast<HTMLFrameElement*>(ownerElement);
+                if (frameElt->scrollingMode() == ScrollbarAlwaysOff)
+                    result->view()->setScrollbarsMode(ScrollbarAlwaysOff);
+                int marginWidth = frameElt->getMarginWidth();
+                int marginHeight = frameElt->getMarginHeight();
+                if (marginWidth != -1)
+                    result->view()->setMarginWidth(marginWidth);
+                if (marginHeight != -1)
+                    result->view()->setMarginHeight(marginHeight);
+            }
+        }
+    }
+    return result;
 }
 
 void FrameWin::frameDetached()

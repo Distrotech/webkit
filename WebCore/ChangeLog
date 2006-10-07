@@ -1,5 +1,13 @@
 2006-10-07  Dave Hyatt  <hyatt@apple.com>
 
+        Make sure frames and iframes honor scrolling="no" and
+        margins.
+
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::createFrame):
+
+2006-10-07  Dave Hyatt  <hyatt@apple.com>
+
         Fix the resizer rect so that it is in the ScrollView's coordinate space and not in the document's coordinate space.
         (Fixes all the layout errors with the scrollbar overlapping the resizer.)
         
