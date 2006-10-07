@@ -392,21 +392,15 @@ void ScrollView::updateScrollbars(const IntSize& desiredOffset)
             scrollsVertically = (vScroll == ScrollbarAuto) ? hasVerticalScrollbar : (vScroll == ScrollbarAlwaysOn);
         }
         
-        bool scrollbarsChanged = false;
         if (hasVerticalScrollbar != scrollsVertically) {
-            scrollbarsChanged = true;
             m_data->setHasVerticalScrollbar(scrollsVertically);
             hasVerticalScrollbar = scrollsVertically;
         }
 
         if (hasHorizontalScrollbar != scrollsHorizontally) {
-            scrollbarsChanged = true;
             m_data->setHasHorizontalScrollbar(scrollsHorizontally);
             hasHorizontalScrollbar = scrollsHorizontally;
         }
-
-        if (scrollbarsChanged)
-            geometryChanged(); // If scrollbars come/go it could affect plugin clip regions.
     }
     
     // Set up the range (and page step/line step).
@@ -480,6 +474,9 @@ void ScrollView::updateScrollbars(const IntSize& desiredOffset)
         if (m_data->m_scrollbarsSuppressed)
             m_data->m_vBar->setSuppressInvalidation(false);
     }
+
+    if (oldHasVertical != m_data->m_vBar || oldHasHorizontal != m_data->m_hBar)
+        geometryChanged();
 
     m_data->m_inUpdateScrollbars = false;
 }
