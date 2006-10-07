@@ -1,3 +1,14 @@
+2006-10-07  Dave Hyatt  <hyatt@apple.com>
+
+        Fix the resizer rect so that it is in the ScrollView's coordinate space and not in the document's coordinate space.
+        (Fixes all the layout errors with the scrollbar overlapping the resizer.)
+        
+        Fill scroll corners with white, since it matches Mac (and our chosen resizer look) and looks nicer anyway.
+        
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::updateScrollbars):
+        (WebCore::ScrollView::paint):
+
 2006-10-06  Dave Hyatt  <hyatt@apple.com>
 
         Make sure to update plugin clip regions when scrollbars come and go on a scrollview.

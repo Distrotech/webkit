@@ -415,7 +415,7 @@ void ScrollView::updateScrollbars(const IntSize& desiredOffset)
     IntRect resizerRect;
     if (!resizerOverlapsContent || resizerNeedsInvalidation) {
         resizerRect = windowResizerRect();
-        resizerRect.setLocation(windowToContents(resizerRect.location()));
+        resizerRect.setLocation(convertFromContainingWindow(resizerRect.location()));
         if (resizerNeedsInvalidation)
             invalidateRect(resizerRect);
     }
@@ -555,13 +555,13 @@ void ScrollView::paint(GraphicsContext* context, const IntRect& rect)
             m_data->m_vBar->paint(context, scrollViewDirtyRect);
         
         if (m_data->m_hBar && m_data->m_vBar) {
-            // Fill the scroll corner box with a light grey color.
+            // Fill the scroll corner box with white.
             IntRect scrollCornerRect(width() - m_data->m_vBar->width(),
                                      height() - m_data->m_hBar->height(),
                                      m_data->m_vBar->width(),
                                      m_data->m_hBar->height());
             if (scrollCornerRect.intersects(scrollViewDirtyRect))
-                context->fillRect(scrollCornerRect, Color(makeRGB(221,221,221)));
+                context->fillRect(scrollCornerRect, Color::white);
         }
 
         context->restore();
