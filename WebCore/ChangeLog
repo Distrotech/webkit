@@ -1,5 +1,13 @@
 2006-10-06  Dave Hyatt  <hyatt@apple.com>
 
+        Revise the cached clip rect so that it is in the HWND's coordinate space.  This way SetWindowRgn
+        doesn't get wastefully called when the plugin is scrolled.
+       
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::updateHwnd):
+
+2006-10-06  Dave Hyatt  <hyatt@apple.com>
+
         Implement flawless clipping of windowed plugins, including
         respecting nested frames, CSS overflow and CSS clip.  (This
         puts Boomer way ahead of Mac as far as plugin clipping is

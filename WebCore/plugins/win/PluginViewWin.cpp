@@ -138,12 +138,12 @@ void PluginViewWin::updateHwnd(bool invalidate) const
         }
 
         IntRect newClipRect = windowClipRect();
+        newClipRect.move(-m_windowRect.x(), -m_windowRect.y());
         if (newClipRect != m_clipRect) {
             m_clipRect = newClipRect;
-             // Create a rectangular region
-            int left = m_clipRect.x() - m_windowRect.x();
-            int top = m_clipRect.y() - m_windowRect.y();
-            HRGN rgn = ::CreateRectRgn(left, top, left + m_clipRect.width(), top + m_clipRect.height());
+            // Create a rectangular region.  Note that SetWindowRgn actually assumes ownership of the
+            // region, which is why we don't delete the region.
+            HRGN rgn = ::CreateRectRgn(m_clipRect.x(), m_clipRect.y(), m_clipRect.right(), m_clipRect.bottom());
             ::SetWindowRgn(m_window, rgn, invalidate);
         }
     }
