@@ -392,15 +392,21 @@ void ScrollView::updateScrollbars(const IntSize& desiredOffset)
             scrollsVertically = (vScroll == ScrollbarAuto) ? hasVerticalScrollbar : (vScroll == ScrollbarAlwaysOn);
         }
         
+        bool scrollbarsChanged = false;
         if (hasVerticalScrollbar != scrollsVertically) {
+            scrollbarsChanged = true;
             m_data->setHasVerticalScrollbar(scrollsVertically);
             hasVerticalScrollbar = scrollsVertically;
         }
 
         if (hasHorizontalScrollbar != scrollsHorizontally) {
+            scrollbarsChanged = true;
             m_data->setHasHorizontalScrollbar(scrollsHorizontally);
             hasHorizontalScrollbar = scrollsHorizontally;
         }
+
+        if (scrollbarsChanged)
+            geometryChanged(); // If scrollbars come/go it could affect plugin clip regions.
     }
     
     // Set up the range (and page step/line step).

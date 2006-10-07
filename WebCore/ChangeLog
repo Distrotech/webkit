@@ -1,5 +1,12 @@
 2006-10-06  Dave Hyatt  <hyatt@apple.com>
 
+        Make sure to update plugin clip regions when scrollbars come and go on a scrollview.
+       
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::updateScrollbars):
+
+2006-10-06  Dave Hyatt  <hyatt@apple.com>
+
         Revise the cached clip rect so that it is in the HWND's coordinate space.  This way SetWindowRgn
         doesn't get wastefully called when the plugin is scrolled.
        
