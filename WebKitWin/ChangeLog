@@ -1,4 +1,26 @@
-2006-10-06  Steve Falkenburg  <sfalken@apple.com>
+2006-10-06  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Adam Roben, esq.
+        
+        Fixed <rdar://4768789> Crash on ebay.com in Frame::didOpenURL
+        
+        The issue was a resource loader making a callback to a
+        frame after the frame had been destroyed. This doesn't happen on Mac
+        because Mac WebKit cancels all loads before tearing down frames.
+        
+        The solution is to add a callback to Win WebKit to allow a frame
+        to cancel its main resource load. This is a temporary work-around.
+        It is temporary because it doesn't address pending subresource loads.
+        The long-term solution we anticipate is to have a legitimate loader
+        inside WebCore.
+
+        * WebFrame.cpp:
+        (WebFrame::loadDataSource):
+        (WebFrame::stopMainResourceLoad):
+        (WebFrame::receivedAllData):
+        * WebFrame.h:
+
+006-10-06  Steve Falkenburg  <sfalken@apple.com>
 
         Use a better versioning scheme.
         

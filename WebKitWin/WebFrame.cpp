@@ -810,19 +810,18 @@ HRESULT WebFrame::loadDataSource(WebDataSource* dataSource)
             if (SUCCEEDED(hr)) {
                 KURL kurl(DeprecatedString((DeprecatedChar*)url, SysStringLen(url)));
                 String methodString(method, SysStringLen(method));
-                RefPtr<ResourceLoader> loader;
                 const FormData* formData = 0;
                 if (wcscmp(method, TEXT("GET"))) {
                     WebMutableURLRequest* requestImpl = static_cast<WebMutableURLRequest*>(request);
                     formData = requestImpl->formData();
                 }
                 if (formData)
-                    loader = ResourceLoader::create(this, methodString, kurl, *formData);
+                    m_loader = ResourceLoader::create(this, methodString, kurl, *formData);
                 else
-                    loader = ResourceLoader::create(this, methodString, kurl);
+                    m_loader = ResourceLoader::create(this, methodString, kurl);
                 if (!d->frame->document())
                     d->frame->begin(); // FIXME - the frame should do this for us
-                loader->start(d->frame->document()->docLoader());
+                m_loader->start(d->frame->document()->docLoader());
                 IWebFrameLoadDelegate* frameLoadDelegate;
                 if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
                     frameLoadDelegate->didStartProvisionalLoadForFrame(d->webView, this);
@@ -837,6 +836,16 @@ HRESULT WebFrame::loadDataSource(WebDataSource* dataSource)
     SysFreeString(method);
 
     return hr;
+}
+
+void WebFrame::stopMainResourceLoad()
+{
+    // FIXME: Frames should be able to cancel all loads, not just the main resource
+    // load. This is temporary glue code that should be replaced by a real loader inside
+    // WebCore.
+    if (m_loader)
+        m_loader->kill();
+    m_loader = 0;
 }
 
 bool WebFrame::loading()
@@ -1194,6 +1203,8 @@ void WebFrame::receivedData(ResourceLoader*, const char* data, int length)
 
 void WebFrame::receivedAllData(ResourceLoader* job)
 {
+    ASSERT(job == m_loader);
+
     if (m_provisionalDataSource) {
         m_dataSource = m_provisionalDataSource;
         m_provisionalDataSource = 0;
@@ -1273,7 +1284,7 @@ void WebFrame::receivedAllData(ResourceLoader* job)
 
     m_quickRedirectComing = false;
     m_loadType = WebFrameLoadTypeStandard;
-
+    m_loader = 0;
 }
 
 // FrameWinClient

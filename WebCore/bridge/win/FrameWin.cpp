@@ -58,7 +58,9 @@ FrameWin::FrameWin(Page* page, Element* ownerElement, FrameWinClient* client)
 FrameWin::~FrameWin()
 {
     setView(0);
-    clearRecordedFormValues();    
+    clearRecordedFormValues();
+    if (m_client)
+        m_client->stopMainResourceLoad();
 }
 
 void FrameWin::urlSelected(const ResourceRequest& request)

@@ -36,6 +36,7 @@
 #include <WebCore/Platform/ResourceLoaderClient.h>
 #include <WebCore/bridge/win/FrameWin.h>
 #include <WebCore/Platform/PlatformString.h>
+#include <WTF/RefPtr.h>
 #include <WTF/HashMap.h>
 #pragma warning(pop)
 
@@ -149,6 +150,7 @@ public:
     virtual void ref();
     virtual void deref();
     virtual WebCore::Frame* createFrame(const WebCore::KURL&, const WebCore::String& name, WebCore::Element* ownerElement, const WebCore::String& referrer);
+    virtual void stopMainResourceLoad();
     virtual void openURL(const WebCore::String& URL, bool newWindow, bool lockHistory);
     virtual void submitForm(const WebCore::String& method, const WebCore::KURL&, const WebCore::FormData*, WebCore::Element* form, WTF::HashMap<WebCore::String, WebCore::String>& formValues);
     virtual void setTitle(const WebCore::String& title);
@@ -211,6 +213,7 @@ protected:
     bool                m_continueFormSubmit;
     Vector<char>        m_buffer;
     BSTR                m_textEncoding;
+    RefPtr<WebCore::ResourceLoader> m_loader;
 };
 
 #endif
