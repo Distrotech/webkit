@@ -1,3 +1,13 @@
+2006-10-07  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Steve.
+
+        Fix for failed ASSERT on iBench.
+
+        * WebFrame.cpp:
+        (WebFrame::receivedAllData): Be a bit more lenient about what
+        ResourceLoader has called WebFrame::receivedAllData
+
 2006-10-06  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Adam Roben, esq.

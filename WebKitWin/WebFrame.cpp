@@ -1203,8 +1203,6 @@ void WebFrame::receivedData(ResourceLoader*, const char* data, int length)
 
 void WebFrame::receivedAllData(ResourceLoader* job)
 {
-    ASSERT(job == m_loader);
-
     if (m_provisionalDataSource) {
         m_dataSource = m_provisionalDataSource;
         m_provisionalDataSource = 0;
@@ -1284,7 +1282,12 @@ void WebFrame::receivedAllData(ResourceLoader* job)
 
     m_quickRedirectComing = false;
     m_loadType = WebFrameLoadTypeStandard;
-    m_loader = 0;
+
+    // FIXME: It seems we can have more than one main ResourceLoader per-frame. Ideally,
+    // we'd keep track of all of them. However, this is all expected to change as the loader
+    // in WebCore becomes more full-featured, so we'll just do the bare minimum for now.
+    if (job == m_loader)
+        m_loader = 0;
 }
 
 // FrameWinClient
