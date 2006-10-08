@@ -1,5 +1,15 @@
 2006-10-07  Dave Hyatt  <hyatt@apple.com>
 
+        Add code to paint the Windows 2000 and "Windows Classic" theme look for scrollbars.
+
+        * platform/win/PlatformScrollBarWin.cpp:
+        (WebCore::PlatformScrollbar::paintButton):
+        (WebCore::PlatformScrollbar::paintTrack):
+        (WebCore::PlatformScrollbar::paintThumb):
+        (WebCore::PlatformScrollbar::paintGripper):
+
+2006-10-07  Dave Hyatt  <hyatt@apple.com>
+
         Make sure frames and iframes honor scrolling="no" and
         margins.
 
