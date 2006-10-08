@@ -1,3 +1,13 @@
+2006-10-07  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam.
+
+        Fix <rdar://4772205> Regression (r10623): WinInet loader doesn't ever write to the cache.        
+
+        * platform/win/ResourceLoaderWin.cpp:
+        (WebCore::ResourceLoaderWndProc): Apply POST related flags only for posts.
+        (WebCore::ResourceLoader::startHTTPRequest): Don't add no-cache-write flag to non-post transactions.
+
 2006-10-07  Dave Hyatt  <hyatt@apple.com>
 
         Add code to paint the Windows 2000 and "Windows Classic" theme look for scrollbars.

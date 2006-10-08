@@ -147,10 +147,11 @@ LRESULT CALLBACK ResourceLoaderWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                 if (fragmentIndex != -1)
                     urlStr = urlStr.left(fragmentIndex);
                 static LPCSTR accept[2]={"*/*", NULL};
-                DWORD flags = INTERNET_FLAG_KEEP_CONNECTION | INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTPS | INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTP
-                    | INTERNET_FLAG_FORMS_SUBMIT | INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE;
+                DWORD flags = INTERNET_FLAG_KEEP_CONNECTION | INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTPS | INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTP;
                 if (job->url().protocol() == "https")
                     flags |= INTERNET_FLAG_SECURE;
+                if (isPost)
+                    flags |= INTERNET_FLAG_FORMS_SUBMIT | INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE;
                 HINTERNET urlHandle = HttpOpenRequestA(job->d->m_resourceHandle, 
                                                        isPost ? "POST" : "GET", urlStr.latin1(), 0, 0, accept,
                                                        flags,
@@ -453,8 +454,7 @@ bool ResourceLoader::startHTTPRequest(const String& referrer)
         String headers;
         if (!referrer.isEmpty())
             headers += String("Referer: ") + referrer + "\r\n";
-        DWORD flags = INTERNET_FLAG_KEEP_CONNECTION | INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTP | INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTPS
-                    | INTERNET_FLAG_NO_CACHE_WRITE;
+        DWORD flags = INTERNET_FLAG_KEEP_CONNECTION | INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTP | INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTPS;
         if (url().protocol() == "https")
             flags |= INTERNET_FLAG_SECURE;
 
