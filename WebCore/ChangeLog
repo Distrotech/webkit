@@ -1,3 +1,24 @@
+2006-10-08  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Maciej.
+
+        Port of OpenSource r16526, r16528
+
+        Break up ResourceLoaderWndProc into callback functions.
+
+        * platform/win/ResourceLoaderWin.cpp: Fix up #includes
+        (WebCore::): Remove loadStatusMessage, struct JobLoadStatus, add
+        messageHandlers array.
+        (WebCore::ResourceLoaderWndProc): Split handling of different messages
+        into callbacks.
+        (WebCore::ResourceLoader::onHandleCreated): New callback.
+        (WebCore::ResourceLoader::onRequestRedirected): New callback.
+        (WebCore::ResourceLoader::onRequestComplete): New callback.
+        (WebCore::initializeOffScreenResourceLoaderWindow): No need to register
+        loadStatusMessage anymore.
+        (WebCore::transferJobStatusCallback): Change how information is passed
+        into ResourceLoaderWndProc.
+
 2006-10-08  Dave Hyatt  <hyatt@apple.com>
 
         Add support for the Win2k/Classic theme for all controls.
