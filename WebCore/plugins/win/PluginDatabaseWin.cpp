@@ -208,7 +208,21 @@ Vector<String> PluginDatabaseWin::defaultPluginPaths()
     }
 #endif
 
-    // FIXME: We should get other plugin directories, for example Java, Flash, Quicktime etc. 
+    // QuickTime
+    {
+        DWORD type;
+        WCHAR installationDirectoryStr[_MAX_PATH];
+        DWORD installationDirectorySize = sizeof(installationDirectoryStr);
+
+        result = SHGetValue(HKEY_LOCAL_MACHINE, TEXT("Software\\Apple Computer, Inc.\\QuickTime"), TEXT("InstallDir"), &type, (LPBYTE)&installationDirectoryStr, &installationDirectorySize);
+
+        if (result == ERROR_SUCCESS && type == REG_SZ) {
+            String pluginDir = String(installationDirectoryStr, installationDirectorySize / sizeof(WCHAR) - 1) + "\\plugins";
+            paths.append(pluginDir);
+        }
+    }
+
+    // FIXME: We should get other plugin directories, for example Java, Flash etc. 
 
     return paths;
 }

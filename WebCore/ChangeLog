@@ -1,3 +1,21 @@
+2006-10-09  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Steve.
+
+        Fix <rdar://problem/4773320>
+        Safari didn't pick up quicktime that was already installed
+        
+        * plugins/win/PluginDatabaseWin.cpp:
+        (WebCore::PluginDatabaseWin::defaultPluginPaths):
+        
+2006-10-09  Anders Carlsson  <acarlsson@apple.com>
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * bridge/win/FrameWin.h:
+        * platform/win/TemporaryLinkStubs.cpp:
+        (FrameWin::createJavaAppletWidget):
+        Fix build.
+
 2006-10-09  Adam Roben  <aroben@apple.com>
 
         Reviewed by Adele.
