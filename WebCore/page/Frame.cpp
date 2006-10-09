@@ -192,8 +192,6 @@ Frame::~Frame()
     --FrameCounter::count;
 #endif
 
-    cancelAndClear();
-
     if (d->m_jscript && d->m_jscript->haveInterpreter())
         if (Window* w = Window::retrieveWindow(this)) {
             w->disconnectFrame();
