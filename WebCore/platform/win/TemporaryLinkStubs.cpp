@@ -41,7 +41,6 @@
 #include "History.h"
 #include "IconLoader.h"
 #include "IntPoint.h"
-#include "JavaAppletWidget.h"
 #include "KURL.h"
 #include "Language.h"
 #include "ListBox.h"
@@ -72,8 +71,6 @@ Widget::FocusPolicy Widget::focusPolicy() const { LOG_NOIMPL(); return NoFocus; 
 void Widget::disableFlushDrawing() { STOP_NOIMPL(); }
 GraphicsContext* Widget::lockDrawingFocus() { STOP_NOIMPL(); return 0; }
 void Widget::unlockDrawingFocus(GraphicsContext*) { STOP_NOIMPL(); }
-
-JavaAppletWidget::JavaAppletWidget(IntSize const&,Element*,WTF::HashMap<String,String> const&) { STOP_NOIMPL(); }
 
 void TextField::selectAll() { LOG_NOIMPL(); }
 void TextField::addSearchResult() { LOG_NOIMPL(); }
@@ -150,6 +147,7 @@ bool FrameWin::statusbarVisible() { LOG_NOIMPL(); return false; }
 bool FrameWin::toolbarVisible() { LOG_NOIMPL(); return false; }
 KURL FrameWin::originalRequestURL() const { LOG_NOIMPL(); return KURL(); }
 bool FrameWin::isLoadTypeReload(void) { LOG_NOIMPL(); return false; }
+Widget* FrameWin::createJavaAppletWidget(const IntSize&, Element* element, const HashMap<String, String>& args) { STOP_NOIMPL(); return 0; }
 
 bool BrowserExtensionWin::canRunModal() { LOG_NOIMPL(); return false; }
 void BrowserExtensionWin::createNewWindow(struct WebCore::ResourceRequest const&,struct WebCore::WindowArgs const&,Frame*&) { STOP_NOIMPL(); }

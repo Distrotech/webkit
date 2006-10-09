@@ -3688,10 +3688,6 @@
 				RelativePath="..\..\..\..\OpenSource\WebCore\bridge\History.h"
 				>
 			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\bridge\JavaAppletWidget.h"
-				>
-			</File>
 			<Filter
 				Name="win"
 				>
