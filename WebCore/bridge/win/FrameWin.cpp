@@ -67,6 +67,8 @@ FrameWin::~FrameWin()
     clearRecordedFormValues();
     if (m_client)
         m_client->stopMainResourceLoad();
+
+    cancelAndClear();
 }
 
 void FrameWin::urlSelected(const ResourceRequest& request)
