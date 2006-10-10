@@ -230,6 +230,10 @@ void WebPreferences::initialize()
     if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
         CFDictionaryAddValue(m_standardUserDefaults, key,                               CFSTR("7"));
 
+    key = CFSTR(WebKitIconDatabaseLocationKey);
+    if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
+        CFDictionaryAddValue(m_standardUserDefaults, key,                               CFSTR(""));
+
     key = CFSTR(WebKitIconDatabaseEnabledPreferenceKey);
     if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
         CFDictionaryAddValue(m_standardUserDefaults, key,                               kCFBooleanTrue);
@@ -1002,16 +1006,18 @@ HRESULT WebPreferences::objectCacheSize(unsigned int* limit)
     return S_OK;
 }
 
-HRESULT WebPreferences::iconDatabaseLocation(BSTR* )//location)
+HRESULT WebPreferences::iconDatabaseLocation(
+    /* [out] */ BSTR* location)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    *location = stringValueForKey(CFSTR(WebKitIconDatabaseLocationKey));
+    return (*location) ? S_OK : E_FAIL;
 }
 
-HRESULT WebPreferences::setIconDatabaseLocation(BSTR )//location)
+HRESULT WebPreferences::setIconDatabaseLocation(
+    /* [in] */ BSTR location)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    setStringValue(CFSTR(WebKitIconDatabaseLocationKey), location);
+    return S_OK;
 }
 
 HRESULT WebPreferences::iconDatabaseEnabled(BOOL* enabled)//location)

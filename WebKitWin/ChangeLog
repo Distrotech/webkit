@@ -1,3 +1,18 @@
+2006-10-09  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Steve
+
+        <rdar://4721579> - WebPreferences for IconDatabase hooked up
+        This completes the above task by implementing the icon database location preference
+        
+        * WebIconDatabase.cpp:
+        (WebIconDatabase::init): Get the location from the prefs, fallback to the default via shell call
+        * WebPreferenceKeysPrivate.h:
+        * WebPreferences.cpp:
+        (WebPreferences::initialize):
+        (WebPreferences::iconDatabaseLocation):
+        (WebPreferences::setIconDatabaseLocation):
+
 2006-10-07  Adam Roben  <aroben@apple.com>
 
         Reviewed by Anders.

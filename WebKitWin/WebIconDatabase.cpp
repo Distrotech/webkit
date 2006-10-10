@@ -94,13 +94,21 @@ void WebIconDatabase::init()
             enabled = FALSE;
             LOG_ERROR("Unable to get icon database enabled preference");
         }
-
     m_iconDatabase->setEnabled(!!enabled);
+    
+    BSTR prefDatabasePath = 0;
+    if (FAILED(standardPrefs->iconDatabaseLocation(&prefDatabasePath)))
+        LOG_ERROR("Unable to get icon database location preference");
+
     prefs->Release();
 
-    String databasePath;
-    if (SUCCEEDED(userIconDatabasePath(databasePath)))
-        if (!m_iconDatabase->open(databasePath))
+    String databasePath(prefDatabasePath, SysStringLen(prefDatabasePath));
+    SysFreeString(prefDatabasePath);
+    if (databasePath.isEmpty())
+        if (FAILED(userIconDatabasePath(databasePath)))
+            LOG_ERROR("Failed to construct default icon database path");
+    
+    if (!m_iconDatabase->open(databasePath))
             LOG_ERROR("Failed to open icon database path");
 }
 
