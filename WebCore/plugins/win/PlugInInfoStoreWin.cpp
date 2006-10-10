@@ -65,14 +65,12 @@ PluginInfo* PlugInInfoStore::createPluginInfoForPluginAtIndex(unsigned i)
 
 unsigned PlugInInfoStore::pluginCount() const
 {
-    PluginDatabaseWin *db = PluginDatabaseWin::installedPlugins();
-
-    return db->plugins().size();
+    return PluginDatabaseWin::installedPlugins()->plugins().size();
 }
 
-bool PlugInInfoStore::supportsMIMEType(const WebCore::String&) 
+bool PlugInInfoStore::supportsMIMEType(const WebCore::String& mimeType) 
 {
-    return false;
+    return PluginDatabaseWin::installedPlugins()->isMIMETypeRegistered(mimeType);
 }
 
 void refreshPlugins(bool reloadOpenPages)

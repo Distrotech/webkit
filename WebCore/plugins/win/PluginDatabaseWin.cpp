@@ -148,10 +148,46 @@ PluginSet PluginDatabaseWin::getPluginsInPaths() const
     return plugins;
 }
 
-Vector<String> PluginDatabaseWin::defaultPluginPaths()
+static inline Vector<int> parseVersionString(const String& versionString)
 {
-    Vector<String> paths;
+    Vector<int> version;
 
+    int startPos = 0;
+    int endPos;
+    
+    while (startPos < versionString.length()) {
+        for (endPos = startPos; endPos < versionString.length(); ++endPos)
+            if (versionString[endPos] == '.' || versionString[endPos] == '_')
+                break;
+
+        int versionComponent = versionString.substring(startPos, endPos - startPos).toInt();
+        version.append(versionComponent);
+
+        startPos = endPos + 1;
+    }
+
+    return version;
+}
+
+// This returns whether versionA is higher than versionB
+static inline bool compareVersions(const Vector<int>& versionA, const Vector<int>& versionB)
+{
+    for (unsigned i = 0; i < versionA.size(); i++) {
+        if (i >= versionB.size())
+            return true;
+
+        if (versionA[i] > versionB[i])
+            return true;
+        else if (versionA[i] < versionB[i])
+            return false;
+    }
+
+    // If we come here, the versions are either the same or versionB has an extra component, just return false
+    return false;
+}
+
+static inline void addMozillaPluginPaths(Vector<String>& paths)
+{
     // Enumerate all Mozilla plugin directories in the registry
     HKEY key;
     LONG result;
@@ -192,44 +228,145 @@ Vector<String> PluginDatabaseWin::defaultPluginPaths()
         
         RegCloseKey(key);
     }
+}
 
-    // The WMP plugin segfaults for some reason so it's disabled for now
-#if 0
-    // Windows Media Player
-    {
-        DWORD type;
-        WCHAR installationDirectoryStr[_MAX_PATH];
-        DWORD installationDirectorySize = sizeof(installationDirectoryStr);
+static inline void addWindowsMediaPlayerPluginPath(Vector<String>& paths)
+{
+    DWORD type;
+    WCHAR installationDirectoryStr[_MAX_PATH];
+    DWORD installationDirectorySize = sizeof(installationDirectoryStr);
 
-        result = SHGetValue(HKEY_LOCAL_MACHINE, TEXT("Software\\Microsoft\\MediaPlayer"), TEXT("Installation Directory"), &type, (LPBYTE)&installationDirectoryStr, &installationDirectorySize);
+    HRESULT result = SHGetValue(HKEY_LOCAL_MACHINE, TEXT("Software\\Microsoft\\MediaPlayer"), TEXT("Installation Directory"), &type, (LPBYTE)&installationDirectoryStr, &installationDirectorySize);
 
-        if (result == ERROR_SUCCESS && type == REG_SZ)
-            paths.append(String(installationDirectoryStr, installationDirectorySize / sizeof(WCHAR) - 1));
+    if (result == ERROR_SUCCESS && type == REG_SZ)
+        paths.append(String(installationDirectoryStr, installationDirectorySize / sizeof(WCHAR) - 1));
+}
+
+static inline void addQuickTimePluginPath(Vector<String>& paths)
+{
+    DWORD type;
+    WCHAR installationDirectoryStr[_MAX_PATH];
+    DWORD installationDirectorySize = sizeof(installationDirectoryStr);
+
+    HRESULT result = SHGetValue(HKEY_LOCAL_MACHINE, TEXT("Software\\Apple Computer, Inc.\\QuickTime"), TEXT("InstallDir"), &type, (LPBYTE)&installationDirectoryStr, &installationDirectorySize);
+
+    if (result == ERROR_SUCCESS && type == REG_SZ) {
+        String pluginDir = String(installationDirectoryStr, installationDirectorySize / sizeof(WCHAR) - 1) + "\\plugins";
+        paths.append(pluginDir);
     }
-#endif
+}
 
-    // QuickTime
-    {
-        DWORD type;
-        WCHAR installationDirectoryStr[_MAX_PATH];
-        DWORD installationDirectorySize = sizeof(installationDirectoryStr);
+static inline void addJavaPluginPath(Vector<String>& paths)
+{
+    HKEY key;
+    HRESULT result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT("Software\\JavaSoft\\Java Plug-in"), 0, KEY_READ, &key);
+    
+    if (result != ERROR_SUCCESS)
+        return;
 
-        result = SHGetValue(HKEY_LOCAL_MACHINE, TEXT("Software\\Apple Computer, Inc.\\QuickTime"), TEXT("InstallDir"), &type, (LPBYTE)&installationDirectoryStr, &installationDirectorySize);
+    WCHAR name[128];
+    FILETIME lastModified;
 
-        if (result == ERROR_SUCCESS && type == REG_SZ) {
-            String pluginDir = String(installationDirectoryStr, installationDirectorySize / sizeof(WCHAR) - 1) + "\\plugins";
-            paths.append(pluginDir);
+    Vector<int> latestJavaVersion;
+    String latestJavaVersionString;
+
+    // Enumerate subkeys
+    for (int i = 0;; i++) {
+        DWORD nameLen = sizeof(name) / sizeof(WCHAR);
+        result = RegEnumKeyExW(key, i, name, &nameLen, 0, 0, 0, &lastModified);
+
+        if (result != ERROR_SUCCESS)
+            break;
+
+        Vector<int> javaVersion = parseVersionString(String(name, nameLen));
+        if (compareVersions(javaVersion, latestJavaVersion)) {
+            latestJavaVersion = javaVersion;
+            latestJavaVersionString = String(name, nameLen);
         }
     }
 
-    // FIXME: We should get other plugin directories, for example Java, Flash etc. 
+    if (!latestJavaVersionString.isNull()) {
+        DWORD type;
+        WCHAR javaHomeStr[_MAX_PATH];
+        DWORD javaHomeSize = sizeof(javaHomeStr);
+
+        String javaPluginKeyPath = "Software\\JavaSoft\\Java Plug-in\\" + latestJavaVersionString;
+        result = SHGetValue(HKEY_LOCAL_MACHINE, javaPluginKeyPath.charactersWithNullTermination(), TEXT("JavaHome"), &type, (LPBYTE)javaHomeStr, &javaHomeSize);
+
+        if (result == ERROR_SUCCESS) {
+            String javaPluginPath = String(javaHomeStr, javaHomeSize / sizeof(WCHAR) - 1) + "\\bin";
+            paths.append(javaPluginPath);
+        }
+    }
+
+    RegCloseKey(key);
+}
+
+static inline void addAdobeAcrobatPluginPath(Vector<String>& paths)
+{
+    HKEY key;
+    HRESULT result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT("Software\\Adobe\\Acrobat Reader"), 0, KEY_READ, &key);
+    if (result != ERROR_SUCCESS)
+        return;
+
+    WCHAR name[128];
+    FILETIME lastModified;
+
+    Vector<int> latestAcrobatVersion;
+    String latestAcrobatVersionString;
+
+    // Enumerate subkeys
+    for (int i = 0;; i++) {
+        DWORD nameLen = sizeof(name) / sizeof(WCHAR);
+        result = RegEnumKeyExW(key, i, name, &nameLen, 0, 0, 0, &lastModified);
+
+        if (result != ERROR_SUCCESS)
+            break;
+
+        Vector<int> acrobatVersion = parseVersionString(String(name, nameLen));
+        if (compareVersions(acrobatVersion, latestAcrobatVersion)) {
+            latestAcrobatVersion = acrobatVersion;
+            latestAcrobatVersionString = String(name, nameLen);
+        }
+    }
+
+    if (!latestAcrobatVersionString.isNull()) {
+        DWORD type;
+        WCHAR acrobatInstallPathStr[_MAX_PATH];
+        DWORD acrobatInstallPathSize = sizeof(acrobatInstallPathStr);
+
+        String acrobatPluginKeyPath = "Software\\Adobe\\Acrobat Reader\\" + latestAcrobatVersionString + "\\InstallPath";
+        result = SHGetValue(HKEY_LOCAL_MACHINE, acrobatPluginKeyPath.charactersWithNullTermination(), 0, &type, (LPBYTE)acrobatInstallPathStr, &acrobatInstallPathSize);
+
+        if (result == ERROR_SUCCESS) {
+            String acrobatPluginPath = String(acrobatInstallPathStr, acrobatInstallPathSize / sizeof(WCHAR) - 1) + "\\browser";
+            paths.append(acrobatPluginPath);
+        }
+    }
+
+    RegCloseKey(key);
+}
+
+Vector<String> PluginDatabaseWin::defaultPluginPaths()
+{
+    Vector<String> paths;
+
+    addJavaPluginPath(paths);
+    addQuickTimePluginPath(paths);
+    addAdobeAcrobatPluginPath(paths);
+    addMozillaPluginPaths(paths);
+
+    // The WMP plugin segfaults for some reason so it's disabled for now
+    // addWindowsMediaPlayerPluginPath(paths);
+
+    // FIXME: We should get other plugin directories, for example Flash etc. 
 
     return paths;
 }
 
 bool PluginDatabaseWin::isMIMETypeRegistered(const String& mimeType) const
 {
-    return m_registeredMIMETypes.contains(mimeType);
+    return !mimeType.isNull() && m_registeredMIMETypes.contains(mimeType);
 }
 
 PluginPackageWin* PluginDatabaseWin::pluginForMIMEType(const String& mimeType)

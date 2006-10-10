@@ -1,5 +1,53 @@
 2006-10-09  Anders Carlsson  <acarlsson@apple.com>
 
+        Reviewed by Maciej.
+
+        Fix <rdar://problem/4756255>
+        PDF/Acrobat Reader plugin don't work
+        
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::getObjectInstanceForWidget):
+        (WebCore::FrameWin::getEmbedInstanceForWidget):
+        Implement these, getting the instance from the plugin view.
+        
+        * platform/win/TemporaryLinkStubs.cpp:
+        Remove functions that are now implemented.
+        
+        * plugins/win/PlugInInfoStoreWin.cpp:
+        (WebCore::PlugInInfoStore::pluginCount):
+        (WebCore::PlugInInfoStore::supportsMIMEType):
+        Implement this, returning whether we a plugin exists for a given mime type.
+        
+        * plugins/win/PluginDatabaseWin.cpp:
+        (WebCore::parseVersionString):
+        (WebCore::compareVersions):
+        New functions for handling versions.
+        
+        (WebCore::addMozillaPluginPaths):
+        (WebCore::addWindowsMediaPlayerPluginPath):
+        (WebCore::addQuickTimePluginPath):
+        (WebCore::addJavaPluginPath):
+        (WebCore::addAdobeAcrobatPluginPath):
+        (WebCore::PluginDatabaseWin::defaultPluginPaths):
+        Factor out checks into separate functions, add checks for Java and Adobe Acrobat.
+
+        (WebCore::PluginDatabaseWin::isMIMETypeRegistered):
+        Handle null MIME types.
+        
+        * plugins/win/PluginPackageWin.cpp:
+        (WebCore::PluginPackageWin::load):
+        Add some missing functions. Unload the library if the load failed.
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::getValue):
+        Uncomment code for getting the element object.
+        
+        (WebCore::PluginViewWin::bindingInstance):
+        * plugins/win/PluginViewWin.h:
+        New function which fetches the plugin NPObject and wraps it in an instance.
+
+2006-10-09  Anders Carlsson  <acarlsson@apple.com>
+
         Reviewed by Steve.
 
         Fix <rdar://problem/4773320>

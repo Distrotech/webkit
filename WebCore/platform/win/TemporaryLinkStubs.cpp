@@ -119,8 +119,6 @@ void FrameWin::focusWindow() { LOG_NOIMPL(); }
 void FrameWin::unfocusWindow() { LOG_NOIMPL(); }
 bool FrameWin::locationbarVisible() { LOG_NOIMPL(); return 0; }
 void FrameWin::registerCommandForRedo(PassRefPtr<WebCore::EditCommand>) { STOP_NOIMPL(); }
-KJS::Bindings::Instance* FrameWin::getObjectInstanceForWidget(Widget *) { STOP_NOIMPL(); return 0; }
-KJS::Bindings::Instance* FrameWin::getEmbedInstanceForWidget(Widget *) { STOP_NOIMPL(); return 0; }
 KJS::Bindings::Instance* FrameWin::getAppletInstanceForWidget(Widget*) { STOP_NOIMPL(); return 0; }
 bool FrameWin::canRedo() const { LOG_NOIMPL(); return false; }
 bool FrameWin::canUndo() const { LOG_NOIMPL(); return false; }

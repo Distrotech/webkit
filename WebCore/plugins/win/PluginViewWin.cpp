@@ -40,15 +40,18 @@
 #include "PluginPackageWin.h"
 #include "kjs_binding.h"
 #include "kjs_proxy.h"
+#include "kjs_window.h"
 #include "npruntime_impl.h"
 #include "PluginDebug.h"
 #include "PluginPackageWin.h"
 #include "PluginStreamWin.h"
+#include "runtime_root.h"
 
 using KJS::Interpreter;
 using KJS::JSLock;
 using KJS::JSObject;
 using KJS::JSValue;
+using KJS::Window;
 
 namespace WebCore {
 
@@ -730,8 +733,8 @@ NPError PluginViewWin::getValue(NPNVariable variable, void* value)
         case NPNVPluginElementNPObject: {
             NPObject* pluginScriptObject = 0;
 
-//            if (m_element->hasTagName(appletTag) || m_element->hasTagName(embedTag) || m_element->hasTagName(objectTag))
-//                pluginScriptObject = static_cast<HTMLPlugInElement*>(m_element)->getNPObject();
+            if (m_element->hasTagName(appletTag) || m_element->hasTagName(embedTag) || m_element->hasTagName(objectTag))
+                pluginScriptObject = static_cast<HTMLPlugInElement*>(m_element)->getNPObject();
 
             // Return value is expected to be retained, as described here: <http://www.mozilla.org/projects/plugin/npruntime.html>
             if (pluginScriptObject)
@@ -751,6 +754,28 @@ NPError PluginViewWin::setValue(NPPVariable variable, void* value)
 {
     LOG_NOIMPL();
     return NPERR_GENERIC_ERROR;
+}
+
+KJS::Bindings::Instance* PluginViewWin::bindingInstance()
+{
+    NPObject* object = 0;
+    if (!m_plugin->pluginFuncs()->getvalue)
+        return 0;
+    NPError error = m_plugin->pluginFuncs()->getvalue(m_instance, NPPVpluginScriptableNPObject, &object);
+
+    if (error != NPERR_NO_ERROR || !object)
+        return 0;
+
+    KJS::Bindings::RootObject *root = new KJS::Bindings::RootObject(this);    // The root gets deleted by JavaScriptCore.
+    root->setRootObjectImp(Window::retrieveWindow(m_parentFrame));
+    root->setInterpreter(m_parentFrame->jScript()->interpreter());
+    m_parentFrame->addPluginRootObject(root);
+
+    KJS::Bindings::Instance *instance = KJS::Bindings::Instance::createBindingForLanguageInstance(KJS::Bindings::Instance::CLanguage, object, root);
+
+    _NPN_ReleaseObject(object);
+
+    return instance;
 }
 
 PluginViewWin::~PluginViewWin()

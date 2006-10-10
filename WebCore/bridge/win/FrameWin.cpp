@@ -339,6 +339,18 @@ NPObject* FrameWin::windowScriptNPObject()
     return m_windowScriptNPObject;
 }
 
+KJS::Bindings::Instance* FrameWin::getObjectInstanceForWidget(Widget* widget) 
+{
+    // FIXME: Ideally we'd assert that the widget is a plugin view here but that can't be done without changing the header in the open source tree
+    return static_cast<PluginViewWin*>(widget)->bindingInstance();    
+}
+
+KJS::Bindings::Instance* FrameWin::getEmbedInstanceForWidget(Widget* widget)
+{
+    // FIXME: Ideally we'd assert that the widget is a plugin view here but that can't be done without changing the header in the open source tree
+    return static_cast<PluginViewWin*>(widget)->bindingInstance();
+}
+
 IntRect FrameWin::windowResizerRect() const
 {
     return m_client->windowResizerRect();

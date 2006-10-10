@@ -41,6 +41,12 @@
 #include <wtf/RefPtr.h>
 #include <wtf/Vector.h>
 
+namespace KJS {
+    namespace Bindings {
+        class Instance;
+    }
+}
+
 namespace WebCore {
     class Element;
     class FrameWin;
@@ -48,7 +54,7 @@ namespace WebCore {
     class PluginPackageWin;
     class PluginRequestWin;
     class PluginStreamWin;
-
+    
     class PluginViewWin : public Widget {
     public:
         PluginViewWin(FrameWin* parentFrame, PluginPackageWin* plugin, Element*, const KURL&, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType);
@@ -59,6 +65,8 @@ namespace WebCore {
 
         void setNPWindowSize(const IntSize&);
         static PluginViewWin* currentPluginView();
+
+        KJS::Bindings::Instance* bindingInstance();
 
         // NPN functions
         NPError getURLNotify(const char* url, const char* target, void* notifyData);

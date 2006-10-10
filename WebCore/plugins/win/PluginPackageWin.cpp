@@ -146,6 +146,8 @@ bool PluginPackageWin::load()
     if (!m_module)
         return false;
 
+    m_isLoaded = true;
+
     NP_GetEntryPointsFuncPtr NP_GetEntryPoints = 0;
     NP_InitializeFuncPtr NP_Initialize = 0;
     NPError npErr;
@@ -201,6 +203,8 @@ bool PluginPackageWin::load()
     m_browserFuncs.getproperty = _NPN_GetProperty;
     m_browserFuncs.setproperty = _NPN_SetProperty;
     m_browserFuncs.removeproperty = _NPN_RemoveProperty;
+    m_browserFuncs.hasproperty = _NPN_HasMethod;
+    m_browserFuncs.hasmethod = _NPN_HasProperty;
     m_browserFuncs.setexception = _NPN_SetException;
 
     npErr = NP_Initialize(&m_browserFuncs);
@@ -208,8 +212,6 @@ bool PluginPackageWin::load()
 
     if (npErr != NPERR_NO_ERROR)
         goto abort;
-
-    m_isLoaded = true;
 
     return true;
 abort:
