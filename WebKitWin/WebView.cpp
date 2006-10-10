@@ -432,8 +432,8 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             // FIXME: We need to use WM_UNICHAR to support international text.
             if (nextCharIsInputText) {
                 UChar c = (UChar)wParam;
-                TypingCommand::insertText(mainFrameImpl->impl()->document(), String(&c, 1), false);
-                mainFrameImpl->impl()->revealSelection(RenderLayer::gAlignToEdgeIfNeeded); 
+                TypingCommand::insertText(webView->focusedTargetFrame()->document(), String(&c, 1), false);
+                webView->focusedTargetFrame()->revealSelection(RenderLayer::gAlignToEdgeIfNeeded); 
                 nextCharIsInputText = false;
             }
             break;
