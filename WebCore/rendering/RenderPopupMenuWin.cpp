@@ -1,6 +1,4 @@
 /*
- * This file is part of the popup menu implementation for <select> elements in WebCore.
- *
  * Copyright (C) 2006 Apple Computer, Inc.
  *
  * This library is free software; you can redistribute it and/or
@@ -244,7 +242,8 @@ bool RenderPopupMenuWin::down()
     if (sel < 0 || sel >= SendMessage(m_popup, LB_GETCOUNT, 0, 0))
         return false;
 
-    menuList()->valueChanged(sel);
+    menuList()->setTextFromOption(sel);
+    menuList()->valueChanged(sel, false);
 
     return true;
 }
@@ -258,7 +257,8 @@ bool RenderPopupMenuWin::up()
     if (sel < 0 || sel >= SendMessage(m_popup, LB_GETCOUNT, 0, 0))
         return false;
 
-    menuList()->valueChanged(sel);
+    menuList()->setTextFromOption(sel);
+    menuList()->valueChanged(sel, false);
 
     return true;
 }
@@ -311,12 +311,10 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 popup->menuList()->hidePopup();
             break;
         case WM_COMMAND:
-            if (popup && HIWORD(wParam) == LBN_SELCHANGE) {
+            if (popup && HIWORD(wParam) == LBN_SELCHANGE && popup->wasClicked()) {
                 popup->menuList()->valueChanged(SendMessage(popup->popupHandle(), LB_GETCURSEL, 0, 0));
-                if (popup->wasClicked()) {
-                    popup->menuList()->hidePopup();
-                    popup->setWasClicked(false);
-                }
+                popup->menuList()->hidePopup();
+                popup->setWasClicked(false);
             }
             break;
         case WM_VKEYTOITEM:
@@ -333,6 +331,7 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                         lResult = -1;
                         break;
                     case VK_RETURN:
+                        popup->menuList()->valueChanged(SendMessage(popup->popupHandle(), LB_GETCURSEL, 0, 0));
                     case VK_ESCAPE:
                         popup->menuList()->hidePopup();
                         lResult = -2;

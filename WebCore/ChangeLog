@@ -1,3 +1,21 @@
+2006-10-10  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Adele.
+
+        Fixes <rdar://problem/4763246>
+        Using arrow keys in <select> popup fires onChange event
+
+        Also updates text shown in <select> element on page when using arrow
+        keys to change selection within the popup menu, and makes onChange fire
+        in the same cases as Firefox/IE.
+
+        * rendering/RenderPopupMenuWin.cpp:
+        (WebCore::RenderPopupMenuWin::down): Update text of the <select>
+        control. Change call to valueChanged() so that onChange doesn't fire.
+        (WebCore::RenderPopupMenuWin::up): Ditto.
+        (WebCore::PopupWndProc): Don't fire onChange anytime selection changes.
+        Fire onChange when pressing Enter
+
 2006-10-09  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Maciej.
