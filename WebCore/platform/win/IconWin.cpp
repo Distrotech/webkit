@@ -62,15 +62,11 @@ void Icon::paint(GraphicsContext* context, const IntRect& r)
     if (context->paintingDisabled())
         return;
 
-#if PLATFORM(CAIRO)
-    cairo_surface_t* surface = cairo_get_target(context->platformContext());
-    HDC hdc = cairo_win32_surface_get_dc(surface);
-    SaveDC(hdc);
+    HDC hdc = context->getWindowsContext();
 
     DrawIconEx(hdc, r.x(), r.y(), m_hIcon, r.width(), r.height(), 0, 0, DI_NORMAL);
 
-    RestoreDC(hdc, -1);
-#endif
+    context->releaseWindowsContext();
 }
 
 }
