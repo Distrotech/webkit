@@ -48,13 +48,12 @@ PassRefPtr<Icon> Icon::newIconForFile(const String& filename)
     memset(&sfi, 0, sizeof(sfi));
 
     String tmpFilename = filename;
-    if (SHGetFileInfo(tmpFilename.charactersWithNullTermination(), 0, &sfi, sizeof(sfi), SHGFI_ICON | SHGFI_SHELLICONSIZE | SHGFI_SMALLICON)) {
-        Icon* icon = new Icon();  
-        icon->m_hIcon = sfi.hIcon;
-        return icon;
-    }
+    if (!SHGetFileInfo(tmpFilename.charactersWithNullTermination(), 0, &sfi, sizeof(sfi), SHGFI_ICON | SHGFI_SHELLICONSIZE | SHGFI_SMALLICON))
+        return 0;
 
-    return 0;
+    Icon* icon = new Icon();  
+    icon->m_hIcon = sfi.hIcon;
+    return icon;
 }
 
 void Icon::paint(GraphicsContext* context, const IntRect& r)
