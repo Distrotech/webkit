@@ -41,8 +41,7 @@ namespace WebCore {
 
 PassRefPtr<FileChooser> FileChooser::create(Document* document, RenderFileUploadControl* uploadControl)
 {
-    PassRefPtr<FileChooser> fileChooser(new FileChooser(document, uploadControl));
-    return fileChooser;
+    return new FileChooser(document, uploadControl);
 }
 
 FileChooser::FileChooser(Document* document, RenderFileUploadControl* uploadControl)

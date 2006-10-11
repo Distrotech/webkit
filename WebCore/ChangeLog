@@ -1,3 +1,15 @@
+2006-10-11  Adam Roben  <aroben@apple.com>
+
+        Rubberstamped by Anders.
+
+        Clean up FileChooser::create, Icon::create.
+
+        * platform/win/FileChooserWin.cpp:
+        (WebCore::FileChooser::create): Just return a FileChooser* and let the
+        implicit cast happen.
+        * platform/win/IconWin.cpp:
+        (WebCore::Icon::newIconForFile): Ditto for Icon*.
+
 2006-10-10  Adam Roben  <aroben@apple.com>
 
         Reviewed by Oliver.

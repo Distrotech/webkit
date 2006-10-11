@@ -49,12 +49,12 @@ PassRefPtr<Icon> Icon::newIconForFile(const String& filename)
 
     String tmpFilename = filename;
     if (SHGetFileInfo(tmpFilename.charactersWithNullTermination(), 0, &sfi, sizeof(sfi), SHGFI_ICON | SHGFI_SHELLICONSIZE | SHGFI_SMALLICON)) {
-        PassRefPtr<Icon> icon(new Icon());  
+        Icon* icon = new Icon();  
         icon->m_hIcon = sfi.hIcon;
         return icon;
     }
 
-    return PassRefPtr<Icon>(0);
+    return 0;
 }
 
 void Icon::paint(GraphicsContext* context, const IntRect& r)
