@@ -1,3 +1,17 @@
+2006-10-10  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam.
+        
+        <rdar://4775676>
+        Crash in CoreFoundation parsing a "corrupt" plist
+        
+        Prevent crash when we encounter a corrupt history plist by using
+        structured exception handling to catch the crash and return
+        an empty history list.
+
+        * WebHistory.cpp:
+        (WebHistory::loadHistoryGutsFromURL):
+
 2006-10-11  Darin Adler  <darin@apple.com>
 
         Reviewed by Beth.

@@ -286,7 +286,14 @@ HRESULT WebHistory::loadHistoryGutsFromURL(CFURLRef url, CFMutableArrayRef disca
         goto exit;
     }
 
-    historyList = (CFDictionaryRef) CFPropertyListCreateFromStream(0, stream, 0, kCFPropertyListImmutable, &format, 0);
+    __try // FIXME- <rdar://4754295> Prevent crash when reading corrupt plists for the seed.  Real fix is to figure out why CF$UID plist entries get written out by CF occasionally.
+    {
+        historyList = (CFDictionaryRef) CFPropertyListCreateFromStream(0, stream, 0, kCFPropertyListImmutable, &format, 0);
+    }
+    __except(1) // FIXME- <rdar://4754295> Prevent crash when reading corrupt plists for the seed.  Real fix is to figure out why CF$UID plist entries get written out by CF occasionally.
+    {
+        historyList = 0;
+    }
     if (!historyList) {
         hr = E_FAIL;
         goto exit;
