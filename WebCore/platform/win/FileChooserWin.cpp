@@ -39,6 +39,12 @@
 
 namespace WebCore {
 
+PassRefPtr<FileChooser> FileChooser::create(Document* document, RenderFileUploadControl* uploadControl)
+{
+    PassRefPtr<FileChooser> fileChooser(new FileChooser(document, uploadControl));
+    return fileChooser;
+}
+
 FileChooser::FileChooser(Document* document, RenderFileUploadControl* uploadControl)
     : m_document(document)
     , m_uploadControl(uploadControl)
@@ -67,6 +73,10 @@ void FileChooser::openFileChooser()
     ofn.nMaxFile = sizeof(fileBuf);
     ofn.lpstrTitle = _T("Upload file");
     ofn.Flags = OFN_ENABLESIZING | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+
+    // We need this protector because otherwise we can be deleted if the file upload control is detached while
+    // we're within the GetOpenFileName call.
+    RefPtr<FileChooser> protector(this);
 
     if (GetOpenFileName(&ofn))
         chooseFile(String(fileBuf));

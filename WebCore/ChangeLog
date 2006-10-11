@@ -1,5 +1,18 @@
 2006-10-10  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Oliver.
+
+        Fixes <rdar://problem/4731316>
+        Crash when <input type="file"> element removed while file chooser is open
+
+        * platform/win/FileChooserWin.cpp: Make FileChooser ref-counted.
+        (WebCore::FileChooser::create):
+        (WebCore::FileChooser::openFileChooser): Add a protector RefPtr around
+        the call to GetOpenFileName so we don't get deleted while the file
+        chooser window is open.
+
+2006-10-10  Adam Roben  <aroben@apple.com>
+
         Reviewed by Anders.
 
         Fixes <rdar://problem/4772428>
