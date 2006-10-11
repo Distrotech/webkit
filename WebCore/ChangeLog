@@ -1,5 +1,16 @@
 2006-10-10  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Anders.
+
+        Fixes <rdar://problem/4772428>
+        <select> popup menus positioned incorrectly within frames
+
+        * rendering/RenderPopupMenuWin.cpp:
+        (WebCore::RenderPopupMenuWin::setPositionAndSize): Use
+        contentsToWindow() instead of scrollOffset() to correct menu location.
+
+2006-10-10  Adam Roben  <aroben@apple.com>
+
         Reviewed by Adele.
 
         Fixes <rdar://problem/4763246>

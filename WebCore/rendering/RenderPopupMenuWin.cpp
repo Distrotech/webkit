@@ -129,9 +129,8 @@ void RenderPopupMenuWin::hidePopup()
 
 void RenderPopupMenuWin::setPositionAndSize(const IntRect& r, FrameView* v)
 {
-    // r is in absolute document coordinates, but we want to be coordinates relative to the view
-    // FIXME: Once we have frames implemented on Windows we will have to look at this again
-    IntRect rViewCoords(r.location() - v->scrollOffset(), r.size());
+    // r is in absolute document coordinates, but we want to be coordinates relative to the WebView
+    IntRect rViewCoords(v->contentsToWindow(r.location()), r.size());
 
     // First, size the popup
     int itemHeight = SendMessage(m_popup, LB_GETITEMHEIGHT, 0, 0);
@@ -143,7 +142,7 @@ void RenderPopupMenuWin::setPositionAndSize(const IntRect& r, FrameView* v)
 
     IntRect popupRect(rViewCoords.x(), rViewCoords.bottom(), rViewCoords.width(), popupHeight);
 
-    // WS_POPUP windows are positioned in screen coordinates, but popupRect is in FrameView coordinates,
+    // WS_POPUP windows are positioned in screen coordinates, but popupRect is in WebView coordinates,
     // so we have to find the screen origin of the FrameView to position correctly
     RECT viewRect = {0};
     GetWindowRect(v->frame()->view()->containingWindow(), &viewRect);
