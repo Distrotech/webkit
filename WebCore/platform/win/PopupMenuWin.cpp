@@ -19,7 +19,7 @@
  */
 
 #include "config.h"
-#include "RenderPopupMenuWin.h"
+#include "PopupMenu.h"
 
 #include "FloatRect.h"
 #include "FontData.h"
@@ -28,6 +28,7 @@
 #include "HTMLOptionElement.h"
 #include "HTMLSelectElement.h"
 #include "Page.h"
+#include "RenderMenuList.h"
 #include "RenderView.h"
 #include "Screen.h"
 #include <tchar.h>
@@ -44,8 +45,8 @@ static LPCTSTR kPopupWindowClassName = _T("PopupWindowContainerClass");
 static ATOM registerPopup();
 static LRESULT CALLBACK PopupWndProc(HWND, UINT, WPARAM, LPARAM);
 
-RenderPopupMenuWin::RenderPopupMenuWin(Node* n, RenderMenuList* m)
-    : RenderPopupMenu(n, m)
+PopupMenu::PopupMenu(RenderMenuList* m)
+    : m_menuList(m)
     , m_popup(0)
     , m_container(0)
     , m_wasClicked(false)
@@ -58,7 +59,7 @@ RenderPopupMenuWin::RenderPopupMenuWin(Node* n, RenderMenuList* m)
     m_container = CreateWindowEx(0, kPopupWindowClassName, _T("PopupMenuContainer"),
         WS_POPUP | WS_CLIPCHILDREN,
         0, 0, 0, 0,
-        n->document()->frame()->view()->containingWindow(), 0, 0, 0);
+        menuList()->document()->frame()->view()->containingWindow(), 0, 0, 0);
 
     if (!m_container)
         return;
@@ -72,7 +73,7 @@ RenderPopupMenuWin::RenderPopupMenuWin(Node* n, RenderMenuList* m)
         m_container, 0, 0, 0);
 }
 
-RenderPopupMenuWin::~RenderPopupMenuWin()
+PopupMenu::~PopupMenu()
 {
     if (m_popup)
         DestroyWindow(m_popup);
@@ -80,7 +81,7 @@ RenderPopupMenuWin::~RenderPopupMenuWin()
         DestroyWindow(m_container);
 }
 
-void RenderPopupMenuWin::clear()
+void PopupMenu::clear()
 {
     if (!m_popup)
         return;
@@ -88,17 +89,17 @@ void RenderPopupMenuWin::clear()
     SendMessage(m_popup, LB_RESETCONTENT, 0, 0);
 }
 
-void RenderPopupMenuWin::populate()
+void PopupMenu::populate()
 {
     if (!m_popup)
         return;
 
     clear();
 
-    RenderPopupMenu::populate();
+    PopupMenu::populate();
 }
 
-void RenderPopupMenuWin::showPopup(const IntRect& r, FrameView* v, int index)
+void PopupMenu::show(const IntRect& r, FrameView* v, int index)
 {
     if (!m_popup)
         return;
@@ -122,12 +123,12 @@ void RenderPopupMenuWin::showPopup(const IntRect& r, FrameView* v, int index)
     SetFocus(m_popup);
 }
 
-void RenderPopupMenuWin::hidePopup()
+void PopupMenu::hide()
 {
     ShowWindow(m_container, SW_HIDE);
 }
 
-void RenderPopupMenuWin::setPositionAndSize(const IntRect& r, FrameView* v)
+void PopupMenu::setPositionAndSize(const IntRect& r, FrameView* v)
 {
     // r is in absolute document coordinates, but we want to be coordinates relative to the WebView
     IntRect rViewCoords(v->contentsToWindow(r.location()), r.size());
@@ -211,7 +212,7 @@ void RenderPopupMenuWin::setPositionAndSize(const IntRect& r, FrameView* v)
     }
 }
 
-void RenderPopupMenuWin::addOption(HTMLOptionElement* element)
+void PopupMenu::addOption(HTMLOptionElement* element)
 {
     if (!m_popup)
         return;
@@ -232,12 +233,19 @@ void RenderPopupMenuWin::addOption(HTMLOptionElement* element)
     free(text);
 }
 
-bool RenderPopupMenuWin::down()
+int PopupMenu::focusedIndex() const
+{
+    if (!m_popup)
+        return -1;
+
+    return SendMessage(m_popup, LB_GETCURSEL, 0, 0);
+}
+bool PopupMenu::down()
 {
     if (!m_popup)
         return false;
 
-    int sel = SendMessage(m_popup, LB_GETCURSEL, 0, 0) + 1;
+    int sel = focusedIndex() + 1;
     if (sel < 0 || sel >= SendMessage(m_popup, LB_GETCOUNT, 0, 0))
         return false;
 
@@ -247,12 +255,12 @@ bool RenderPopupMenuWin::down()
     return true;
 }
 
-bool RenderPopupMenuWin::up()
+bool PopupMenu::up()
 {
     if (!m_popup)
         return false;
 
-    int sel = SendMessage(m_popup, LB_GETCURSEL, 0, 0) - 1;
+    int sel = focusedIndex() - 1;
     if (sel < 0 || sel >= SendMessage(m_popup, LB_GETCOUNT, 0, 0))
         return false;
 
@@ -276,7 +284,7 @@ static ATOM registerPopup()
     wcex.style          = 0;
     wcex.lpfnWndProc    = PopupWndProc;
     wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = sizeof(void*); // For the RenderPopupMenuWin pointer
+    wcex.cbWndExtra     = sizeof(void*); // For the PopupMenu pointer
     wcex.hInstance      = Page::instanceHandle();
     wcex.hIcon          = 0;
     wcex.hCursor        = LoadCursor(0, IDC_ARROW);
@@ -297,7 +305,7 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 
     LRESULT lResult = 0;
     LONG_PTR longPtr = GetWindowLongPtr(hWnd, 0);
-    RenderPopupMenuWin* popup = reinterpret_cast<RenderPopupMenuWin*>(longPtr);
+    PopupMenu* popup = reinterpret_cast<PopupMenu*>(longPtr);
 
     switch (message) {
         case WM_ACTIVATE:
@@ -311,7 +319,7 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             break;
         case WM_COMMAND:
             if (popup && HIWORD(wParam) == LBN_SELCHANGE && popup->wasClicked()) {
-                popup->menuList()->valueChanged(SendMessage(popup->popupHandle(), LB_GETCURSEL, 0, 0));
+                popup->menuList()->valueChanged(popup->focusedIndex());
                 popup->menuList()->hidePopup();
                 popup->setWasClicked(false);
             }
@@ -330,7 +338,7 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                         lResult = -1;
                         break;
                     case VK_RETURN:
-                        popup->menuList()->valueChanged(SendMessage(popup->popupHandle(), LB_GETCURSEL, 0, 0));
+                        popup->menuList()->valueChanged(popup->focusedIndex());
                     case VK_ESCAPE:
                         popup->menuList()->hidePopup();
                         lResult = -2;

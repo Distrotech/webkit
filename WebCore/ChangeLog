@@ -1,3 +1,41 @@
+2006-10-12  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Adele.
+
+        Move popup menu code out of rendering/ and into platform/.
+        RenderPopupMenu becomes PopupMenu, the
+        RenderPopupMenuMac/RenderPopupMenuWin subclasses and all the associated
+        virtual methods go away, RenderTheme gets to stop worrying about popup
+        menus, PopupMenu becomes ref-counted, and everyone becomes happy.
+
+        * WebCore.vcproj/WebCore.vcproj: Move files within project.
+        * platform/win/PopupMenuWin.cpp: Moved from
+        rendering/RenderPopupMenuWin.cpp. Rename RenderPopupMenuWin to
+        PopupMenu.
+        (WebCore::PopupMenu::PopupMenu):
+        (WebCore::PopupMenu::~PopupMenu):
+        (WebCore::PopupMenu::clear):
+        (WebCore::PopupMenu::populate):
+        (WebCore::PopupMenu::show):
+        (WebCore::PopupMenu::hide):
+        (WebCore::PopupMenu::setPositionAndSize):
+        (WebCore::PopupMenu::addOption):
+        (WebCore::PopupMenu::focusedIndex): New method to get the index of the
+        element that is currently highlighted. This won't always be the same as
+        the selectedIndex because of mouse hot-tracking.
+        (WebCore::PopupMenu::down):
+        (WebCore::PopupMenu::up):
+        (WebCore::registerPopup):
+        (WebCore::PopupWndProc): Use focusedIndex() instead of sending messages
+        to the popup window.
+        * platform/win/TemporaryLinkStubs.cpp: Rename RenderPopupMenuWin to PopupMenu.
+        (PopupMenu::addSeparator):
+        (PopupMenu::addGroupLabel):
+        * rendering/RenderPopupMenuWin.cpp: Removed.
+        * rendering/RenderPopupMenuWin.h: Removed.
+        * rendering/RenderThemeWin.cpp: Get rid of createPopupMenu() method.
+        * rendering/RenderThemeWin.h: Ditto.
+
 2006-10-12  Dave Hyatt  <hyatt@apple.com>
 
         Implement full-blown double buffering (keeping a bitmap in the WebView that holds the backing store for it).

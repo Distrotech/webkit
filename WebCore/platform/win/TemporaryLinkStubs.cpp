@@ -50,7 +50,7 @@
 #include "Path.h"
 #include "PlatformMouseEvent.h"
 #include "PlugInInfoStore.h"
-#include "RenderPopupMenuWin.h"
+#include "PopupMenu.h"
 #include "RenderTheme.h"
 #include "RenderThemeWin.h"
 #include "ResourceLoader.h"
@@ -303,8 +303,8 @@ void Frame::setNeedsReapplyStyles() { LOG_NOIMPL(); }
 void Image::drawTiled(GraphicsContext*, const FloatRect&, const FloatRect&, TileRule, TileRule, CompositeOperator) { LOG_NOIMPL(); }
 #endif
 
-void RenderPopupMenuWin::addSeparator() { LOG_NOIMPL(); }
-void RenderPopupMenuWin::addGroupLabel(HTMLOptGroupElement*) { LOG_NOIMPL(); }
+void PopupMenu::addSeparator() { LOG_NOIMPL(); }
+void PopupMenu::addGroupLabel(HTMLOptGroupElement*) { LOG_NOIMPL(); }
 
 void IconLoader::receivedResponse(ResourceLoader*, PlatformResponse) { LOG_NOIMPL(); }
 void IconLoader::notifyIconChanged(const KURL& iconURL) { LOG_NOIMPL(); }

@@ -1515,6 +1515,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\PopupMenu.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\PopupMenu.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\RegularExpression.cpp"
 				>
 			</File>
@@ -1817,6 +1825,10 @@
 				</File>
 				<File
 					RelativePath="..\platform\win\PlatformScrollBarWin.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\win\PopupMenuWin.cpp"
 					>
 				</File>
 				<File
@@ -2918,22 +2930,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderPartObject.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderPopupMenu.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderPopupMenu.h"
-				>
-			</File>
-			<File
-				RelativePath="..\rendering\RenderPopupMenuWin.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\rendering\RenderPopupMenuWin.h"
 				>
 			</File>
 			<File
