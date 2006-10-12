@@ -55,6 +55,8 @@ public:
     virtual void handleMousePressEvent(const PlatformMouseEvent&);
     virtual void handleMouseReleaseEvent(const PlatformMouseEvent&);
 
+    virtual IntRect windowClipRect() const;
+
     static void themeChanged();
     static int horizontalScrollbarHeight();
     static int verticalScrollbarWidth();

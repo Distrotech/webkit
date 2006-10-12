@@ -351,9 +351,25 @@ KJS::Bindings::Instance* FrameWin::getEmbedInstanceForWidget(Widget* widget)
     return static_cast<PluginViewWin*>(widget)->bindingInstance();
 }
 
+// FIXME: These methods should really call through to a PageClient rather than using FrameClient.
 IntRect FrameWin::windowResizerRect() const
 {
     return m_client->windowResizerRect();
+}
+
+void FrameWin::addToDirtyRegion(const IntRect& dirtyRect)
+{
+    m_client->addToDirtyRegion(dirtyRect);
+}
+
+void FrameWin::scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect)
+{
+    m_client->scrollBackingStore(dx, dy, scrollViewRect, clipRect);
+}
+
+void FrameWin::updateBackingStore()
+{
+    m_client->updateBackingStore();
 }
 
 } // namespace WebCore

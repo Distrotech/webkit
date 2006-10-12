@@ -495,6 +495,19 @@ public:
     WebCore::Settings* settings();
     bool inResizer(LPARAM lParam);
 
+    void paint(HDC, LPARAM);
+    void paintIntoBackingStore(WebCore::FrameView*, HDC bitmapDC, LPRECT dirtyRect);
+    void paintIntoWindow(HDC bitmapDC, HDC windowDC, LPRECT dirtyRect);
+
+    bool ensureBackingStore();
+    void addToDirtyRegion(const WebCore::IntRect&);
+    void addToDirtyRegion(HRGN);
+    void scrollBackingStore(WebCore::FrameView*, int dx, int dy, const WebCore::IntRect& scrollViewRect, const WebCore::IntRect& clipRect);
+    void updateBackingStore(WebCore::FrameView*, HDC, bool backingStoreCompletelyDirty);
+
+    // Convenient to be able to violate the rules of COM here for easy movement to the frame.
+    WebFrame* topLevelFrame() { return m_mainFrame; }
+
 protected:
     ULONG m_refCount;
     BSTR m_frameName;
@@ -503,6 +516,11 @@ protected:
     HWND m_viewWindow;
     WebFrame* m_mainFrame;
     WebCore::Page* m_page;
+    
+    HBITMAP m_backingStoreBitmap;
+    SIZE m_backingStoreSize;
+    HRGN m_backingStoreDirtyRegion;
+
     IWebFrameLoadDelegate* m_frameLoadDelegate;
     IWebFrameLoadDelegatePrivate* m_frameLoadDelegatePrivate;
     IWebUIDelegate* m_uiDelegate;

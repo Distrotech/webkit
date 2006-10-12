@@ -1,3 +1,32 @@
+2006-10-12  Dave Hyatt  <hyatt@apple.com>
+
+        Implement full-blown double buffering (keeping a bitmap in the WebView that holds the backing store for it).
+        
+        Reviewed by mjs
+
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::addToDirtyRegion):
+        (WebCore::FrameWin::scrollBackingStore):
+        (WebCore::FrameWin::updateBackingStore):
+        * bridge/win/FrameWin.h:
+        * platform/win/PlatformScrollBar.h:
+        * platform/win/PlatformScrollBarWin.cpp:
+        (WebCore::PlatformScrollbar::windowClipRect):
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::ScrollViewPrivate::valueChanged):
+        (WebCore::ScrollView::ScrollViewPrivate::windowClipRect):
+        (WebCore::ScrollView::updateContents):
+        (WebCore::ScrollView::updateScrollbars):
+        (WebCore::ScrollView::windowResizerRect):
+        (WebCore::ScrollView::addToDirtyRegion):
+        (WebCore::ScrollView::scrollBackingStore):
+        (WebCore::ScrollView::updateBackingStore):
+        * platform/win/WidgetWin.cpp:
+        (WebCore::Widget::suppressInvalidation):
+        (WebCore::Widget::invalidateRect):
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::windowClipRect):
+
 2006-10-11  Adam Roben  <aroben@apple.com>
 
         Rubberstamped by Brady.

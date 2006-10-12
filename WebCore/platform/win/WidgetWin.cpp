@@ -33,6 +33,7 @@
 #include "FrameWin.h"
 #include "IntRect.h"
 #include "Font.h"
+#include "ScrollView.h"
 #include "WidgetClient.h"
 #include <winsock2.h>
 #include <windows.h>
@@ -198,6 +199,11 @@ void Widget::setEnabled(bool e)
     }
 }
 
+bool Widget::suppressInvalidation() const
+{
+    return data->suppressInvalidation;
+}
+
 void Widget::setSuppressInvalidation(bool suppress)
 {
     data->suppressInvalidation = suppress;
@@ -212,8 +218,22 @@ void Widget::invalidateRect(const IntRect& r)
 {
     if (data->suppressInvalidation)
         return;
+
+    // Get the root widget.
+    ScrollView* outermostView = parent();
+    while (outermostView && outermostView->parent())
+        outermostView = outermostView->parent();
+    if (!outermostView)
+        return;
+
     IntRect windowRect = convertToContainingWindow(r);
+
+    // Get our clip rect and intersect with it to ensure we don't invalidate too much.
+    IntRect clipRect = windowClipRect();
+    windowRect.intersect(clipRect);
+
     ::InvalidateRect(containingWindow(), &RECT(windowRect), false);
+    outermostView->addToDirtyRegion(windowRect);
 }
 
 bool Widget::capturingMouse() const

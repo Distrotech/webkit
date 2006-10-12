@@ -41,6 +41,7 @@
 #include <WebCore/dom/Document.h>
 #include <WebCore/page/FrameView.h>
 #include <WebCore/platform/IntRect.h>
+#include <WebCore/platform/GraphicsContext.h>
 #include <WebCore/page/Page.h>
 #include <WebCore/platform/PlatformKeyboardEvent.h>
 #include <WebCore/platform/PlatformMouseEvent.h>
@@ -71,6 +72,8 @@ WebView::WebView()
 , m_hostWindow(0)
 , m_viewWindow(0)
 , m_mainFrame(0)
+, m_backingStoreBitmap(0)
+, m_backingStoreDirtyRegion(0)
 , m_frameLoadDelegate(0)
 , m_frameLoadDelegatePrivate(0)
 , m_uiDelegate(0)
@@ -84,6 +87,7 @@ WebView::WebView()
 , m_overrideEncoding(0)
 {
     m_backForwardList = WebBackForwardList::createInstance();
+    m_backingStoreSize.cx = m_backingStoreSize.cy = 0;
 
     gClassCount++;
 }
@@ -123,6 +127,273 @@ WebView* WebView::createInstance()
     WebView* instance = new WebView();
     instance->AddRef();
     return instance;
+}
+
+bool WebView::ensureBackingStore()
+{
+    RECT windowRect;
+    ::GetClientRect(m_viewWindow, &windowRect);
+    LONG width = windowRect.right - windowRect.left;
+    LONG height = windowRect.bottom - windowRect.top;
+    if (width > 0 && height > 0 && (width != m_backingStoreSize.cx || height != m_backingStoreSize.cy)) {
+        m_backingStoreSize.cx = width;
+        m_backingStoreSize.cy = height;
+        BITMAPINFO bitmapInfo;
+        bitmapInfo.bmiHeader.biSize          = sizeof(BITMAPINFOHEADER);
+        bitmapInfo.bmiHeader.biWidth         = width; 
+        bitmapInfo.bmiHeader.biHeight        = -height;
+        bitmapInfo.bmiHeader.biPlanes        = 1;
+        bitmapInfo.bmiHeader.biBitCount      = 32;
+        bitmapInfo.bmiHeader.biCompression   = BI_RGB;
+        bitmapInfo.bmiHeader.biSizeImage     = 0;
+        bitmapInfo.bmiHeader.biXPelsPerMeter = 0;
+        bitmapInfo.bmiHeader.biYPelsPerMeter = 0;
+        bitmapInfo.bmiHeader.biClrUsed       = 0;
+        bitmapInfo.bmiHeader.biClrImportant  = 0;
+
+        if (m_backingStoreBitmap)
+            ::DeleteObject(m_backingStoreBitmap);
+
+        void* pixels = NULL;
+        m_backingStoreBitmap = ::CreateDIBSection(NULL, &bitmapInfo, DIB_RGB_COLORS, &pixels, NULL, 0);
+        return true;
+    }
+
+    return false;
+}
+
+void WebView::addToDirtyRegion(const IntRect& dirtyRect)
+{
+    HRGN newRegion = ::CreateRectRgn(dirtyRect.x(), dirtyRect.y(),
+                                     dirtyRect.right(), dirtyRect.bottom());
+    addToDirtyRegion(newRegion);
+}
+
+void WebView::addToDirtyRegion(HRGN newRegion)
+{
+    if (m_backingStoreDirtyRegion) {
+        HRGN combinedRegion = ::CreateRectRgn(0,0,0,0);
+        ::CombineRgn(combinedRegion, m_backingStoreDirtyRegion, newRegion, RGN_OR);
+        ::DeleteObject(m_backingStoreDirtyRegion);
+        ::DeleteObject(newRegion);
+        m_backingStoreDirtyRegion = combinedRegion;
+    } else
+        m_backingStoreDirtyRegion = newRegion;
+}
+
+void WebView::scrollBackingStore(FrameView* frameView, int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect)
+{
+    // Make a region to hold the invalidated scroll area.
+    HRGN updateRegion = ::CreateRectRgn(0, 0, 0, 0);
+
+    // Collect our device context info and select the bitmap to scroll.
+    HDC windowDC = ::GetDC(m_viewWindow);
+    HDC bitmapDC = ::CreateCompatibleDC(windowDC);
+    ::SelectObject(bitmapDC, m_backingStoreBitmap);
+    
+    // Scroll the bitmap.
+    RECT scrollRectWin(scrollViewRect);
+    RECT clipRectWin(clipRect);
+    ::ScrollDC(bitmapDC, dx, dy, &scrollRectWin, &clipRectWin, updateRegion, 0);
+    RECT regionBox;
+    ::GetRgnBox(updateRegion, &regionBox);
+
+    // Flush.
+    GdiFlush();
+
+    // Add the dirty region to the backing store's dirty region.
+    addToDirtyRegion(updateRegion);
+
+    // Update the backing store.
+    updateBackingStore(frameView, bitmapDC, false);
+
+    // Clean up.
+    ::DeleteDC(bitmapDC);
+    ::ReleaseDC(m_viewWindow, windowDC);
+}
+
+void WebView::updateBackingStore(FrameView* frameView, HDC dc, bool backingStoreCompletelyDirty)
+{
+    HDC windowDC = 0;
+    HDC bitmapDC = dc;
+    if (!dc) {
+        windowDC = ::GetDC(m_viewWindow);
+        bitmapDC = ::CreateCompatibleDC(windowDC);
+        ::SelectObject(bitmapDC, m_backingStoreBitmap);
+    }
+
+    if (m_backingStoreDirtyRegion || backingStoreCompletelyDirty) {
+        // This emulates the Mac smarts for painting rects intelligently.  This is
+        // very important for us, since we double buffer based off dirty rects.
+        bool useRegionBox = true;
+        const int cRectThreshold = 10;
+        const float cWastedSpaceThreshold = 0.75f;
+        RECT regionBox;
+        if (!backingStoreCompletelyDirty) {
+            ::GetRgnBox(m_backingStoreDirtyRegion, &regionBox);
+            DWORD regionDataSize = GetRegionData(m_backingStoreDirtyRegion, sizeof(RGNDATA), NULL);
+            if (regionDataSize) {
+                RGNDATA* regionData = (RGNDATA*)malloc(regionDataSize);
+                GetRegionData(m_backingStoreDirtyRegion, regionDataSize, regionData);
+                if (regionData->rdh.nCount <= cRectThreshold) {
+                    double unionPixels = (regionBox.right - regionBox.left) * (regionBox.bottom - regionBox.top);
+                    double singlePixels = 0;
+                    
+                    unsigned i;
+                    RECT* rect;
+                    for (i = 0, rect = (RECT*)regionData->Buffer; i < regionData->rdh.nCount; i++, rect++)
+                        singlePixels += (rect->right - rect->left) * (rect->bottom - rect->top);
+                    double wastedSpace = 1.0 - (singlePixels / unionPixels);
+                    if (wastedSpace > cWastedSpaceThreshold) {
+                        // Paint individual rects.
+                        useRegionBox = false;
+                        for (i = 0, rect = (RECT*)regionData->Buffer; i < regionData->rdh.nCount; i++, rect++)
+                            paintIntoBackingStore(frameView, bitmapDC, rect);
+                    }
+                }
+                free(regionData);
+            }
+        } else
+            ::GetClientRect(m_viewWindow, &regionBox);
+
+        if (useRegionBox)
+            paintIntoBackingStore(frameView, bitmapDC, &regionBox);
+
+        if (m_backingStoreDirtyRegion) {
+            ::DeleteObject(m_backingStoreDirtyRegion);
+            m_backingStoreDirtyRegion = 0;
+        }
+    }
+
+    if (!dc) {
+        ::DeleteDC(bitmapDC);
+        ::ReleaseDC(m_viewWindow, windowDC);
+    }
+
+    GdiFlush();
+}
+
+void WebView::paint(HDC dc, LPARAM options)
+{
+    // Do a layout first so that everything we render is always current.
+    m_mainFrame->layoutIfNeeded();
+
+    FrameView* frameView = m_mainFrame->impl()->view();
+
+    RECT rcPaint;
+    HDC hdc;
+    HRGN region = 0;
+    int regionType = NULLREGION;
+    PAINTSTRUCT ps;
+    if (!dc) {
+        region = CreateRectRgn(0,0,0,0);
+        regionType = GetUpdateRgn(m_viewWindow, region, false);
+        hdc = BeginPaint(m_viewWindow, &ps);
+        rcPaint = ps.rcPaint;
+    } else {
+        hdc = dc;
+        ::GetClientRect(m_viewWindow, &rcPaint);
+        if (options & PRF_ERASEBKGND)
+            ::FillRect(hdc, &rcPaint, (HBRUSH)GetStockObject(WHITE_BRUSH));
+    }
+
+    HDC bitmapDC = ::CreateCompatibleDC(hdc);
+    bool backingStoreCompletelyDirty = ensureBackingStore();
+    ::SelectObject(bitmapDC, m_backingStoreBitmap);
+
+    // Update our backing store if needed.
+    updateBackingStore(frameView, bitmapDC, backingStoreCompletelyDirty);
+
+    // Now we blit the updated backing store
+    IntRect windowDirtyRect = rcPaint;
+    
+    // Apply the same heuristic for this update region too.
+    bool useWindowDirtyRect = true;
+    if (region && regionType == COMPLEXREGION) {
+        const int cRectThreshold = 10;
+        const float cWastedSpaceThreshold = 0.75f;
+        DWORD regionDataSize = GetRegionData(region, sizeof(RGNDATA), NULL);
+        if (regionDataSize) {
+            RGNDATA* regionData = (RGNDATA*)malloc(regionDataSize);
+            GetRegionData(region, regionDataSize, regionData);
+            if (regionData->rdh.nCount <= cRectThreshold) {
+                double unionPixels = windowDirtyRect.width() * windowDirtyRect.height();
+                double singlePixels = 0;
+                
+                unsigned i;
+                RECT* rect;
+                for (i = 0, rect = (RECT*)regionData->Buffer; i < regionData->rdh.nCount; i++, rect++)
+                    singlePixels += (rect->right - rect->left) * (rect->bottom - rect->top);
+                double wastedSpace = 1.0 - (singlePixels / unionPixels);
+                if (wastedSpace > cWastedSpaceThreshold) {
+                    // Paint individual rects.
+                    useWindowDirtyRect = false;
+                    for (i = 0, rect = (RECT*)regionData->Buffer; i < regionData->rdh.nCount; i++, rect++)
+                        paintIntoWindow(bitmapDC, hdc, rect);
+                }
+            }
+            free(regionData);
+        }
+    }
+    
+    ::DeleteObject(region);
+
+    if (useWindowDirtyRect)
+        paintIntoWindow(bitmapDC, hdc, &rcPaint);
+
+    ::DeleteDC(bitmapDC);
+
+    // Paint the gripper.
+    IWebUIDelegate* ui;
+    if (SUCCEEDED(uiDelegate(&ui))) {
+        IWebUIDelegatePrivate* uiPrivate;
+        if (SUCCEEDED(ui->QueryInterface(IID_IWebUIDelegatePrivate, (void**)&uiPrivate))) {
+            RECT r;
+            if (SUCCEEDED(uiPrivate->webViewResizerRect(this, &r)))
+                uiPrivate->webViewDrawResizer(this, hdc, (frameView->resizerOverlapsContent() ? true : false), &r);
+            uiPrivate->Release();
+        }
+        ui->Release();
+    }
+
+    if (!dc)
+        EndPaint(m_viewWindow, &ps);
+}
+
+void WebView::paintIntoBackingStore(FrameView* frameView, HDC bitmapDC, LPRECT dirtyRect)
+{
+#if FLASH_BACKING_STORE_REDRAW
+    HDC dc = ::GetDC(m_viewWindow);
+    HBRUSH yellowBrush = CreateSolidBrush(RGB(255, 255, 0));
+    FillRect(dc, dirtyRect, yellowBrush);
+    DeleteObject(yellowBrush);
+    GdiFlush();
+    Sleep(50);
+    paintIntoWindow(bitmapDC, dc, dirtyRect);
+    ::ReleaseDC(m_viewWindow, dc);
+#endif
+
+    GraphicsContext gc(bitmapDC);
+    gc.save();
+    gc.clip(IntRect(*dirtyRect));
+    frameView->paint(&gc, IntRect(*dirtyRect));
+    gc.restore();
+}
+
+void WebView::paintIntoWindow(HDC bitmapDC, HDC windowDC, LPRECT dirtyRect)
+{
+#if FLASH_WINDOW_REDRAW
+    HBRUSH greenBrush = CreateSolidBrush(RGB(0, 255, 0));
+    FillRect(windowDC, dirtyRect, greenBrush);
+    DeleteObject(greenBrush);
+    GdiFlush();
+    Sleep(50);
+#endif
+
+    // Blit the dirty rect from the backing store into the same position
+    // in the destination DC.
+    BitBlt(windowDC, dirtyRect->left, dirtyRect->top, dirtyRect->right - dirtyRect->left, dirtyRect->bottom - dirtyRect->top, bitmapDC,
+           dirtyRect->left, dirtyRect->top, SRCCOPY);
 }
 
 void WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
@@ -372,17 +643,9 @@ static ATOM registerWebViewWindowClass()
 static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     LRESULT lResult = 0;
-    HRESULT hr = S_OK;
     LONG_PTR longPtr = GetWindowLongPtr(hWnd, 0);
     WebView* webView = reinterpret_cast<WebView*>(longPtr);
-    IWebFrame* mainFrame = 0;
-    WebFrame* mainFrameImpl = 0;
-    if (webView) {
-        hr = webView->mainFrame(&mainFrame);
-        if (SUCCEEDED(hr))
-            mainFrameImpl = static_cast<WebFrame*>(mainFrame);
-    }
-
+    WebFrame* mainFrameImpl = webView ? webView->topLevelFrame() : 0;
     if (!mainFrameImpl)
         return DefWindowProc(hWnd, message, wParam, lParam);
 
@@ -391,7 +654,7 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             IWebDataSource* dataSource = 0;
             mainFrameImpl->dataSource(&dataSource);
             if (!dataSource || mainFrameImpl->impl()->view()->didFirstLayout())
-                mainFrameImpl->paint(0, 0);
+                webView->paint(0, 0);
             else
                 ValidateRect(hWnd, 0);
             if (dataSource)
@@ -399,7 +662,7 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             break;
         }
         case WM_PRINTCLIENT:
-            mainFrameImpl->paint((HDC)wParam, lParam);
+            webView->paint((HDC)wParam, lParam);
             break;
         case WM_DESTROY:
             // Do nothing?
@@ -486,9 +749,6 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
         default:
             lResult = DefWindowProc(hWnd, message, wParam, lParam);
     }
-
-    if (mainFrame)
-        mainFrame->Release();
 
     return lResult;
 }

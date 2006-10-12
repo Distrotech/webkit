@@ -1,3 +1,27 @@
+2006-10-12  Dave Hyatt  <hyatt@apple.com>
+
+        Implement full-blown double buffering (keeping a bitmap in the WebView that holds the backing store for it).
+        
+        Reviewed by mjs
+        
+        * WebFrame.cpp:
+        (WebFrame::addToDirtyRegion):
+        (WebFrame::scrollBackingStore):
+        (WebFrame::updateBackingStore):
+        * WebFrame.h:
+        * WebView.cpp:
+        (WebView::WebView):
+        (WebView::ensureBackingStore):
+        (WebView::addToDirtyRegion):
+        (WebView::scrollBackingStore):
+        (WebView::updateBackingStore):
+        (WebView::paint):
+        (WebView::paintIntoBackingStore):
+        (WebView::paintIntoWindow):
+        (WebViewWndProc):
+        * WebView.h:
+        (WebView::topLevelFrame):
+
 2006-10-10  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Adam.

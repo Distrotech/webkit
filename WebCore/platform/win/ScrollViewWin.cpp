@@ -28,9 +28,11 @@
 #include "ScrollView.h"
 
 #include "FloatRect.h"
-#include "Frame.h"
+
+#include "FrameWin.h" // FIXME: These three includes suck, but scrollview should eventually merge into FrameView anyway.
 #include "FrameView.h"
-#include "RenderTheme.h" // FIXME: This sucks, but scrollview should eventually merge into FrameView anyway.
+#include "RenderTheme.h" 
+
 #include "GraphicsContext.h"
 #include "IntRect.h"
 #include "PlatformScrollBar.h"
@@ -69,7 +71,8 @@ public:
     void setHasHorizontalScrollbar(bool hasBar);
     void setHasVerticalScrollbar(bool hasBar);
 
-    void valueChanged(Scrollbar*);
+    virtual void valueChanged(Scrollbar*);
+    virtual IntRect windowClipRect() const;
 
     ScrollView* m_view;
     IntSize m_scrollOffset;
@@ -82,6 +85,7 @@ public:
     ScrollbarMode m_hScrollbarMode;
     RefPtr<PlatformScrollbar> m_vBar;
     RefPtr<PlatformScrollbar> m_hBar;
+    HRGN m_dirtyRegion;
     HashSet<const Widget*> m_children;
 };
 
@@ -127,15 +131,36 @@ void ScrollView::ScrollViewPrivate::valueChanged(Scrollbar* bar)
     if (m_scrollbarsSuppressed)
         return;
 
-    RECT dirtyRect = m_view->convertToContainingWindow(IntRect(0, 0, m_view->visibleWidth(), m_view->visibleHeight()));
-    if (!m_hasStaticBackground) { // The main frame can just blit the WebView window
-        // FIXME: Could make this more efficient by passing a valid clip rect for only the document content.
-        // FIXME: Find a way to blit subframes without blitting overlapping content
-        ::ScrollWindowEx(m_view->containingWindow(), -scrollDelta.width(), -scrollDelta.height(), &dirtyRect, &RECT(m_view->windowClipRect()), 0, 0, SW_INVALIDATE | SW_SCROLLCHILDREN);
-    } else
-        ::InvalidateRect(m_view->containingWindow(), &dirtyRect, false);
+    // Since scrolling is double buffered, we will be blitting the scroll view's intersection
+    // with the clip rect every time to keep it smooth.
+    HWND containingWindowHandle = m_view->containingWindow();
+    IntRect clipRect = m_view->windowClipRect();
+    IntRect scrollViewRect = m_view->convertToContainingWindow(IntRect(0, 0, m_view->visibleWidth(), m_view->visibleHeight()));
+    IntRect updateRect = clipRect;
+    updateRect.intersect(scrollViewRect);
+    ::InvalidateRect(containingWindowHandle, &RECT(updateRect), false);
 
+    if (!m_hasStaticBackground) // The main frame can just blit the WebView window
+       // FIXME: Find a way to blit subframes without blitting overlapping content
+       m_view->scrollBackingStore(-scrollDelta.width(), -scrollDelta.height(), scrollViewRect, clipRect);
+    else  {
+       // We need to go ahead and repaint the entire backing store.  Do it now before moving the
+       // plugins.
+       m_view->addToDirtyRegion(updateRect);
+       m_view->updateBackingStore();
+    }
+
+    // This call will move child HWNDs (plugins) and invalidate them as well.
     m_view->geometryChanged();
+
+    // Now update the window (which should do nothing but a blit of the backing store's updateRect and so should
+    // be very fast).
+    ::UpdateWindow(containingWindowHandle);
+}
+
+IntRect ScrollView::ScrollViewPrivate::windowClipRect() const
+{
+    return static_cast<const FrameView*>(m_view)->windowClipRect(false);
 }
 
 ScrollView::ScrollView()
@@ -160,13 +185,11 @@ void ScrollView::updateContents(const IntRect& rect, bool now)
     RECT containingWindowRectWin = containingWindowRect;
     HWND containingWindowHandle = containingWindow();
 
-#if PAINT_FLASHING_DEBUG
-    HDC dc = GetDC(containingWindowHandle);
-    FillRect(dc, &containingWindowRectWin, (HBRUSH)GetStockObject(BLACK_BRUSH));
-    ReleaseDC(containingWindowHandle, dc);
-#endif
-
     ::InvalidateRect(containingWindowHandle, &containingWindowRectWin, false);
+
+    // Cache the dirty spot.
+    addToDirtyRegion(containingWindowRect);
+
     if (now)
         ::UpdateWindow(containingWindowHandle);
 }
@@ -375,7 +398,7 @@ void ScrollView::updateScrollbars(const IntSize& desiredOffset)
 
         if (!m_data->m_scrollbarsSuppressed && (hScroll == ScrollbarAuto || vScroll == ScrollbarAuto)) {
             // Do a layout if pending before checking if scrollbars are needed.
-            if (isFrameView() && (hasVerticalScrollbar != oldHasVertical || hasHorizontalScrollbar != oldHasHorizontal))
+            if (hasVerticalScrollbar != oldHasVertical || hasHorizontalScrollbar != oldHasHorizontal)
                 static_cast<FrameView*>(this)->layout();
              
             scrollsVertically = (vScroll == ScrollbarAlwaysOn) || (vScroll == ScrollbarAuto && contentsHeight() > height());
@@ -605,12 +628,29 @@ void ScrollView::scroll(ScrollDirection direction, ScrollGranularity granularity
 
 IntRect ScrollView::windowResizerRect()
 {
-    return static_cast<FrameView*>(this)->frame()->windowResizerRect();
+    return Win(static_cast<FrameView*>(this)->frame())->windowResizerRect();
 }
 
 bool ScrollView::resizerOverlapsContent() const
 {
     return m_data->m_resizerOverlapsContent;
+}
+
+void ScrollView::addToDirtyRegion(const IntRect& containingWindowRect)
+{
+    Win(static_cast<FrameView*>(this)->frame())->addToDirtyRegion(containingWindowRect);
+}
+
+void ScrollView::scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect)
+{
+    // Scroll the backing store.
+    Win(static_cast<FrameView*>(this)->frame())->scrollBackingStore(dx, dy, scrollViewRect, clipRect);
+}
+
+void ScrollView::updateBackingStore()
+{
+    // Update the backing store.
+    Win(static_cast<FrameView*>(this)->frame())->updateBackingStore();
 }
 
 } // namespace WebCore

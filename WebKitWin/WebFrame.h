@@ -169,11 +169,12 @@ public:
     virtual bool runJavaScriptPrompt(const WebCore::String& message, const WebCore::String& defaultValue, WebCore::String& result);
     virtual bool tabsToLinks() const;
     virtual WebCore::IntRect windowResizerRect() const;
+    virtual void addToDirtyRegion(const WebCore::IntRect&);
+    virtual void scrollBackingStore(int dx, int dy, const WebCore::IntRect& scrollViewRect, const WebCore::IntRect& clipRect);
+    virtual void updateBackingStore();
 
     // WebFrame
     void initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, WebCore::Page* page, WebCore::Element* ownerElement);
-    void paint(HDC dc, LPARAM options);
-    void paintSingleRect(HDC hdc, const WebCore::IntRect& dirtyRect);
     void layoutIfNeeded();
     void setNeedsLayout();
     WebCore::Frame* impl();
@@ -199,7 +200,6 @@ public:
 
 protected:
     unsigned int getObjectCacheSize();
-    void paintGripper(HDC dc);
 
 protected:
     class WebFramePrivate;

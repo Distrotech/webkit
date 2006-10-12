@@ -156,18 +156,12 @@ IntRect PluginViewWin::windowClipRect() const
 {
     // Start by clipping to our bounds.
     IntRect clipRect(m_windowRect);
- 
-    // Take our element and get the clip rect from the enclosing layer.
+    
+    // Take our element and get the clip rect from the enclosing layer and frame view.
     RenderLayer* layer = m_element->renderer()->enclosingLayer();
-
-    // Apply the clip from the layer.
     FrameView* parentView = m_element->document()->view();
-    IntRect layerClipRect = layer->documentClipRect();
-    layerClipRect.setLocation(parentView->contentsToWindow(layerClipRect.location()));
-    clipRect.intersect(layerClipRect);
+    clipRect.intersect(parentView->windowClipRectForLayer(layer, true));
 
-    // Now apply the clip from our ancestor.
-    clipRect.intersect(parentView->windowClipRect());
     return clipRect;
 }
 

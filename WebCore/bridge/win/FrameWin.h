@@ -69,7 +69,11 @@ public:
 
     virtual bool tabsToLinks() const = 0;
 
+    // FIXME: These four methods should really be on a PageClient.  Many others probably should be too.
     virtual IntRect windowResizerRect() const = 0;
+    virtual void addToDirtyRegion(const IntRect&) = 0;
+    virtual void scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect) = 0;
+    virtual void updateBackingStore() = 0;
 };
 
 class FrameWin : public Frame
@@ -174,7 +178,11 @@ public:
     KJS::Bindings::RootObject* bindingRootObject();
     NPObject* windowScriptNPObject();
 
-    virtual IntRect windowResizerRect() const;
+    IntRect windowResizerRect() const;
+    
+    void addToDirtyRegion(const IntRect&);
+    void scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect);
+    void updateBackingStore();
 
 protected:
     virtual bool isLoadTypeReload();

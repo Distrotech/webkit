@@ -592,190 +592,6 @@ void WebFrame::initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, 
     }
 }
 
-#if PLATFORM(CAIRO)
-
-void WebFrame::paint(HDC dc, LPARAM options)
-{
-    // Do a layout first so that everything we render is always current.
-    layoutIfNeeded();
-
-    HWND windowHandle;
-    if (FAILED(d->webView->viewWindow(&windowHandle)))
-        return;
-
-    RECT rcPaint;
-    HDC hdc;
-    PAINTSTRUCT ps;
-    if (!dc) {
-        hdc = BeginPaint(windowHandle, &ps);
-        rcPaint = ps.rcPaint;
-    } else {
-        hdc = dc;
-        GetClientRect(windowHandle, &rcPaint);
-        if (options & PRF_ERASEBKGND)
-            FillRect(hdc, &rcPaint, (HBRUSH)GetStockObject(WHITE_BRUSH));
-    }
-
-    cairo_surface_t* finalSurface = cairo_win32_surface_create(hdc);
-    cairo_surface_t* surface = cairo_win32_surface_create_with_dib(CAIRO_FORMAT_ARGB32,  
-                                                            rcPaint.right - rcPaint.left,  
-                                                            rcPaint.bottom - rcPaint.top); 
-
-    cairo_t* context = cairo_create(surface);
-    cairo_translate(context, -rcPaint.left, -rcPaint.top);
-    
-    HDC surfaceDC = cairo_win32_surface_get_dc(surface);
-    SaveDC(surfaceDC);
-
-    GraphicsContext gc(context);
-    d->frameView->paint(&gc, rcPaint);
-
-    RestoreDC(surfaceDC, -1);
-    cairo_destroy(context);
-
-    context = cairo_create(finalSurface);
-    cairo_set_operator(context, CAIRO_OPERATOR_SOURCE);
-    cairo_set_source_surface(context, surface, rcPaint.left, rcPaint.top);
-    cairo_rectangle(context, rcPaint.left, rcPaint.top, rcPaint.right, rcPaint.bottom);
-    cairo_fill(context);
-    cairo_destroy(context);
-
-    cairo_surface_destroy(surface);
-    cairo_surface_destroy(finalSurface);
-
-    paintGripper(hdc);
-
-    if (!dc)
-        EndPaint(windowHandle, &ps);
-}
-
-#elif PLATFORM(CG)
-
-void WebFrame::paint(HDC dc, LPARAM options)
-{
-    // Do a layout first so that everything we render is always current.
-    layoutIfNeeded();
-
-    HWND windowHandle;
-    if (FAILED(d->webView->viewWindow(&windowHandle)))
-        return;
-
-    RECT rcPaint;
-    HDC hdc;
-    HRGN region = 0;
-    int regionType = NULLREGION;
-    PAINTSTRUCT ps;
-    if (!dc) {
-        region = CreateRectRgn(0,0,0,0);
-        regionType = GetUpdateRgn(windowHandle, region, false);
-        hdc = BeginPaint(windowHandle, &ps);
-        rcPaint = ps.rcPaint;
-    } else {
-        hdc = dc;
-        GetClientRect(windowHandle, &rcPaint);
-        if (options & PRF_ERASEBKGND)
-            FillRect(hdc, &rcPaint, (HBRUSH)GetStockObject(WHITE_BRUSH));
-    }
-
-    IntRect documentDirtyRect = rcPaint;
-    
-    // This emulates the Mac smarts for painting rects intelligently.  This is
-    // very important for us, since we double buffer based off dirty rects.
-    bool useDocumentDirtyRect = true;
-    if (region && regionType == COMPLEXREGION) {
-        const int cRectThreshold = 10;
-        const float cWastedSpaceThreshold = 0.75f;
-        DWORD regionDataSize = GetRegionData(region, sizeof(RGNDATA), NULL);
-        if (regionDataSize) {
-            RGNDATA* regionData = (RGNDATA*)malloc(regionDataSize);
-            GetRegionData(region, regionDataSize, regionData);
-            if (regionData->rdh.nCount <= cRectThreshold) {
-                double unionPixels = documentDirtyRect.width() * documentDirtyRect.height();
-                double singlePixels = 0;
-                
-                unsigned i;
-                RECT* rect;
-                for (i = 0, rect = (RECT*)regionData->Buffer; i < regionData->rdh.nCount; i++, rect++)
-                    singlePixels += (rect->right - rect->left) * (rect->bottom - rect->top);
-                double wastedSpace = 1.0 - (singlePixels / unionPixels);
-                if (wastedSpace > cWastedSpaceThreshold) {
-                    // Paint individual rects.
-                    useDocumentDirtyRect = false;
-                    for (i = 0, rect = (RECT*)regionData->Buffer; i < regionData->rdh.nCount; i++, rect++)
-                        paintSingleRect(hdc, IntRect(*rect));
-                }
-            }
-            free(regionData);
-        }
-    }
-    
-    ::DeleteObject(region);
-
-    if (useDocumentDirtyRect)
-        paintSingleRect(hdc, documentDirtyRect);
-
-    paintGripper(hdc);
-
-    if (!dc)
-        EndPaint(windowHandle, &ps);
-}
-
-void WebFrame::paintSingleRect(HDC hdc, const IntRect& dirtyRect)
-{
-#if FLASH_REDRAW
-    {
-        RECT rect = dirtyRect;
-        HBRUSH yellowBrush = CreateSolidBrush(RGB(255, 255, 0));
-        FillRect(hdc, &rect, yellowBrush);
-        DeleteObject(yellowBrush);
-        GdiFlush();
-        Sleep(50);
-    }
-#endif
-
-    SIZE size;
-    size.cx = dirtyRect.width();
-    size.cy = dirtyRect.height();
-
-    if (size.cx > 0 && size.cy > 0)
-    {
-        BITMAPINFO bitmapInfo;
-        bitmapInfo.bmiHeader.biSize          = sizeof(BITMAPINFOHEADER);
-        bitmapInfo.bmiHeader.biWidth         = size.cx; 
-        bitmapInfo.bmiHeader.biHeight        = -size.cy;
-        bitmapInfo.bmiHeader.biPlanes        = 1;
-        bitmapInfo.bmiHeader.biBitCount      = 32;
-        bitmapInfo.bmiHeader.biCompression   = BI_RGB;
-        bitmapInfo.bmiHeader.biSizeImage     = 0;
-        bitmapInfo.bmiHeader.biXPelsPerMeter = 0;
-        bitmapInfo.bmiHeader.biYPelsPerMeter = 0;
-        bitmapInfo.bmiHeader.biClrUsed       = 0;
-        bitmapInfo.bmiHeader.biClrImportant  = 0;
-
-        void* pixels = NULL;
-        HBITMAP bitmap = CreateDIBSection(hdc, &bitmapInfo, DIB_RGB_COLORS, &pixels, NULL, 0);
-        HDC bitmapDC = CreateCompatibleDC(hdc);
-        HBITMAP oldBitmap = (HBITMAP)SelectObject(bitmapDC, bitmap);
-        ASSERT(oldBitmap != NULL);
-
-        {
-            SaveDC(bitmapDC);
-            GraphicsContext gc(bitmapDC);
-            GdiFlush();
-            gc.translate(CGFloat(-dirtyRect.x()), CGFloat(-dirtyRect.y()));
-            d->frameView->paint(&gc, dirtyRect);
-            RestoreDC(bitmapDC, -1);
-            BitBlt(hdc, dirtyRect.x(), dirtyRect.y(), size.cx, size.cy, bitmapDC, 0, 0, SRCCOPY);
-        }
-
-        SelectObject(bitmapDC, oldBitmap);
-        DeleteDC(bitmapDC);
-        DeleteObject(bitmap);
-    }
-}
-
-#endif
-
 void WebFrame::layoutIfNeeded()
 {
     if (d->needsLayout) {
@@ -1640,19 +1456,18 @@ IntRect WebFrame::windowResizerRect() const
     return IntRect();
 }
 
-void WebFrame::paintGripper(HDC dc)
+void WebFrame::addToDirtyRegion(const IntRect& dirtyRect)
 {
-    IWebUIDelegate* ui;
-    if (SUCCEEDED(d->webView->uiDelegate(&ui))) {
-        IWebUIDelegatePrivate* uiPrivate;
-        if (SUCCEEDED(ui->QueryInterface(IID_IWebUIDelegatePrivate, (void**)&uiPrivate))) {
-            RECT r;
-            if (SUCCEEDED(uiPrivate->webViewResizerRect(d->webView, &r))) {
-                ScrollView* scrollView = d->frameView;
-                uiPrivate->webViewDrawResizer(d->webView, dc, (scrollView->resizerOverlapsContent() ? TRUE : FALSE), &r);
-            }
-            uiPrivate->Release();
-        }
-        ui->Release();
-    }
+    d->webView->addToDirtyRegion(dirtyRect);
 }
+
+void WebFrame::scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect)
+{
+    d->webView->scrollBackingStore(d->webView->topLevelFrame()->impl()->view(), dx, dy, scrollViewRect, clipRect);
+}
+
+void WebFrame::updateBackingStore()
+{
+    d->webView->updateBackingStore(d->webView->topLevelFrame()->impl()->view(), 0, false);
+}
+
