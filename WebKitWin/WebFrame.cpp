@@ -1050,10 +1050,10 @@ void WebFrame::receivedResponse(ResourceLoader* loader, PlatformResponse platfor
 
     ResourceRequest request = d->frame->resourceRequest();
     BSTR mimeType;
+    d->frame->setResourceRequest(request);
     if (SUCCEEDED(response->MIMEType(&mimeType))) {
-        request.m_responseMIMEType = String(mimeType, SysStringLen(mimeType));
+        d->frame->setResponseMIMEType(String(mimeType, SysStringLen(mimeType)));
         SysFreeString(mimeType);
-        d->frame->setResourceRequest(request);
     }
 
     response->Release();

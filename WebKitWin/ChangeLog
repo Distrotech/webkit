@@ -1,3 +1,10 @@
+2006-10-12  Adam Roben  <aroben@apple.com>
+
+        Build fix (broken by OpenSource r17006)
+
+        * WebFrame.cpp:
+        (WebFrame::receivedResponse):
+
 2006-10-12  Dave Hyatt  <hyatt@apple.com>
 
         Implement full-blown double buffering (keeping a bitmap in the WebView that holds the backing store for it).
