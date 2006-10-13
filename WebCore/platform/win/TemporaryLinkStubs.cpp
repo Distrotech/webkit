@@ -34,6 +34,7 @@
 #include "EditCommand.h"
 #include "FileChooser.h"
 #include "Font.h"
+#include "FrameLoadRequest.h"
 #include "FrameView.h"
 #include "FrameWin.h"
 #include "GraphicsContext.h"
@@ -135,7 +136,7 @@ void FrameWin::issueRedoCommand(void) { LOG_NOIMPL(); }
 void FrameWin::issuePasteAndMatchStyleCommand() { LOG_NOIMPL(); }
 void FrameWin::issueTransposeCommand() { LOG_NOIMPL(); }
 bool FrameWin::lastEventIsMouseUp() const { return false; }
-void FrameWin::openURLRequest(struct WebCore::ResourceRequest const&) { LOG_NOIMPL(); }
+void FrameWin::openURLRequest(const struct WebCore::FrameLoadRequest&) { LOG_NOIMPL(); }
 String FrameWin::mimeTypeForFileName(String const&) const { LOG_NOIMPL(); return String(); }
 void FrameWin::scheduleClose() { STOP_NOIMPL(); }
 void FrameWin::markMisspellings(WebCore::Selection const&) { LOG_NOIMPL(); }
@@ -148,12 +149,12 @@ bool FrameWin::isLoadTypeReload(void) { LOG_NOIMPL(); return false; }
 Widget* FrameWin::createJavaAppletWidget(const IntSize&, Element* element, const HashMap<String, String>& args) { STOP_NOIMPL(); return 0; }
 
 bool BrowserExtensionWin::canRunModal() { LOG_NOIMPL(); return false; }
-void BrowserExtensionWin::createNewWindow(struct WebCore::ResourceRequest const&,struct WebCore::WindowArgs const&,Frame*&) { STOP_NOIMPL(); }
+void BrowserExtensionWin::createNewWindow(struct WebCore::FrameLoadRequest const&,struct WebCore::WindowArgs const&,Frame*&) { STOP_NOIMPL(); }
 bool BrowserExtensionWin::canRunModalNow() { LOG_NOIMPL(); return false; }
 void BrowserExtensionWin::runModal() { STOP_NOIMPL(); }
 void BrowserExtensionWin::goBackOrForward(int) { LOG_NOIMPL(); }
 KURL BrowserExtensionWin::historyURL(int distance) { LOG_NOIMPL(); return KURL(); }
-void BrowserExtensionWin::createNewWindow(struct WebCore::ResourceRequest const&) { STOP_NOIMPL(); }
+void BrowserExtensionWin::createNewWindow(struct WebCore::FrameLoadRequest const&) { STOP_NOIMPL(); }
 
 void GraphicsContextPlatformPrivate::clip(const Path&) { LOG_NOIMPL(); }
 

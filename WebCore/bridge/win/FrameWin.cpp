@@ -32,6 +32,7 @@
 #include "Decoder.h"
 #include "Document.h"
 #include "FramePrivate.h"
+#include "FrameLoadRequest.h"
 #include "FrameView.h"
 #include "HTMLNames.h"
 #include "HTMLIFrameElement.h"
@@ -71,24 +72,24 @@ FrameWin::~FrameWin()
     cancelAndClear();
 }
 
-void FrameWin::urlSelected(const ResourceRequest& request)
+void FrameWin::urlSelected(const FrameLoadRequest& request)
 {
-    Frame* targetFrame = tree()->find(request.frameName);
+    Frame* targetFrame = tree()->find(request.m_frameName);
     bool newWindow = !targetFrame;
     FrameWinClient* client = targetFrame ? Win(targetFrame)->m_client.get() : m_client.get();
     if (client)
-        client->openURL(request.url().url(), newWindow, request.lockHistory());
+        client->openURL(request.m_request.url().url(), newWindow, request.lockHistory());
 }
 
-void FrameWin::submitForm(const ResourceRequest& request)
+void FrameWin::submitForm(const FrameLoadRequest& request)
 {
     // FIXME: this is a hack inherited from FrameMac, and should be pushed into Frame
-    if (d->m_submittedFormURL == request.url())
+    if (d->m_submittedFormURL == request.m_request.url())
         return;
-    d->m_submittedFormURL = request.url();
+    d->m_submittedFormURL = request.m_request.url();
 
     if (m_client)
-        m_client->submitForm(request.doPost() ? "POST" : "GET", request.url(), &request.postData, d->m_formAboutToBeSubmitted.get(), d->m_formValuesAboutToBeSubmitted);
+        m_client->submitForm(request.m_request.doPost() ? "POST" : "GET", request.m_request.url(), &request.m_request.postData, d->m_formAboutToBeSubmitted.get(), d->m_formValuesAboutToBeSubmitted);
 
     clearRecordedFormValues();
 }

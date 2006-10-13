@@ -4645,6 +4645,10 @@
 			RelativePath="..\config.h"
 			>
 		</File>
+		<File
+			RelativePath="..\..\..\..\OpenSource\WebCore\page\FrameLoadRequest.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

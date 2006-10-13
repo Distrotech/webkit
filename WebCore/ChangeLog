@@ -1,3 +1,18 @@
+2006-10-13  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+
+        - split FrameLoadRequest off from ResourceRequest - it's a ResourceRequest plus frame name plus lockHistory bool
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::urlSelected):
+        (WebCore::FrameWin::submitForm):
+        * bridge/win/FrameWin.h:
+        * platform/win/TemporaryLinkStubs.cpp:
+        (BrowserExtensionWin::createNewWindow):
+        (IconLoader::notifyIconChanged):
+
 2006-10-13  Dave Hyatt  <hyatt@apple.com>
 
         Make form controls work inside transparency layers by having
