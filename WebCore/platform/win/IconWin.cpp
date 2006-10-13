@@ -61,7 +61,7 @@ void Icon::paint(GraphicsContext* context, const IntRect& r)
 
     DrawIconEx(hdc, r.x(), r.y(), m_hIcon, r.width(), r.height(), 0, 0, DI_NORMAL);
 
-    context->releaseWindowsContext();
+    context->releaseWindowsContext(hdc);
 }
 
 }

@@ -1,3 +1,31 @@
+2006-10-13  Dave Hyatt  <hyatt@apple.com>
+
+        Make form controls work inside transparency layers by having
+        them draw into bitmap that is then turned into a CGImageRef
+        and blended into the CG transparency layer.
+
+        Reviewed by aroben
+
+        * platform/cg/GraphicsContextPlatformPrivate.h:
+        (WebCore::GraphicsContextPlatformPrivate::GraphicsContextPlatformPrivate):
+        (WebCore::GraphicsContextPlatformPrivate::beginTransparencyLayer):
+        (WebCore::GraphicsContextPlatformPrivate::endTransparencyLayer):
+        * platform/win/GraphicsContextWin.cpp:
+        (WebCore::GraphicsContext::getWindowsContext):
+        (WebCore::GraphicsContext::releaseWindowsContext):
+        * platform/win/IconWin.cpp:
+        (WebCore::Icon::paint):
+        * platform/win/PlatformScrollBar.h:
+        * platform/win/PlatformScrollBarWin.cpp:
+        (WebCore::PlatformScrollbar::PlatformScrollbar):
+        (WebCore::PlatformScrollbar::paint):
+        (WebCore::PlatformScrollbar::paintButton):
+        (WebCore::PlatformScrollbar::paintTrack):
+        (WebCore::PlatformScrollbar::paintThumb):
+        * rendering/RenderThemeWin.cpp:
+        (WebCore::RenderThemeWin::RenderThemeWin):
+        (WebCore::drawControl):
+
 2006-10-12  Dave Hyatt  <hyatt@apple.com>
 
         Voting Cairo off the island

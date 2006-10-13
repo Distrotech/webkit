@@ -67,15 +67,94 @@ GraphicsContext::GraphicsContext(HDC hdc)
     setPaintingDisabled(!m_data->m_cgContext);
 }
 
-HDC GraphicsContext::getWindowsContext()
+HDC GraphicsContext::getWindowsContext(bool supportAlphaBlend, const IntRect* dstRect)
 {
+    if (m_data->m_transparencyCount) {
+        // We're in a transparency layer.
+        ASSERT(dstRect);
+        if (!dstRect)
+            return 0;
+    
+        // Create a bitmap DC in which to draw.
+        BITMAPINFO bitmapInfo;
+        bitmapInfo.bmiHeader.biSize          = sizeof(BITMAPINFOHEADER);
+        bitmapInfo.bmiHeader.biWidth         = dstRect->width(); 
+        bitmapInfo.bmiHeader.biHeight        = dstRect->height();
+        bitmapInfo.bmiHeader.biPlanes        = 1;
+        bitmapInfo.bmiHeader.biBitCount      = 32;
+        bitmapInfo.bmiHeader.biCompression   = BI_RGB;
+        bitmapInfo.bmiHeader.biSizeImage     = 0;
+        bitmapInfo.bmiHeader.biXPelsPerMeter = 0;
+        bitmapInfo.bmiHeader.biYPelsPerMeter = 0;
+        bitmapInfo.bmiHeader.biClrUsed       = 0;
+        bitmapInfo.bmiHeader.biClrImportant  = 0;
+
+        void* pixels = 0;
+        HBITMAP bitmap = ::CreateDIBSection(NULL, &bitmapInfo, DIB_RGB_COLORS, &pixels, 0, 0);
+        if (!bitmap)
+            return 0;
+
+        HDC bitmapDC = ::CreateCompatibleDC(m_data->m_hdc);
+        ::SelectObject(bitmapDC, bitmap);
+
+        // Fill our buffer with clear if we're going to alpha blend.
+        if (supportAlphaBlend) {
+            BITMAP bmpInfo;
+            GetObject(bitmap, sizeof(bmpInfo), &bmpInfo);
+            int bufferSize = bmpInfo.bmWidthBytes * bmpInfo.bmHeight;
+            memset(bmpInfo.bmBits, 0, bufferSize);
+        }
+
+        // Make sure we can do world transforms.
+        SetGraphicsMode(bitmapDC, GM_ADVANCED);
+
+        // Apply a translation to our context so that the drawing done will be at (0,0) of the bitmap.
+        XFORM xform;
+        xform.eM11 = 1.0;
+        xform.eM12 = 0;
+        xform.eM21 = 0;
+        xform.eM22 = 1.0;
+        xform.eDx = -dstRect->x();
+        xform.eDy = -dstRect->y();
+        ::SetWorldTransform(bitmapDC, &xform);
+
+        return bitmapDC;
+    }
+
     CGContextFlush(platformContext());
     m_data->save();
     return m_data->m_hdc;
 }
 
-void GraphicsContext::releaseWindowsContext()
+void GraphicsContext::releaseWindowsContext(HDC hdc, bool supportAlphaBlend, const IntRect* dstRect)
 {
+    if (hdc && m_data->m_transparencyCount) {
+        HBITMAP bitmap = (HBITMAP)GetCurrentObject(hdc, OBJ_BITMAP);
+
+        // Need to make a CGImage out of the bitmap's pixel buffer and then draw
+        // it into our context.
+        BITMAP info;
+        GetObject(bitmap, sizeof(info), &info);
+        ASSERT(info.bmBitsPixel == 32);
+
+        CGColorSpaceRef deviceRGB = CGColorSpaceCreateDeviceRGB();
+        CGContextRef bitmapContext = CGBitmapContextCreate(info.bmBits, info.bmWidth, info.bmHeight, 8,
+                                                           info.bmWidthBytes, deviceRGB, kCGBitmapByteOrder32Little | 
+                                                           (supportAlphaBlend ? kCGImageAlphaPremultipliedFirst : kCGImageAlphaNoneSkipFirst));
+        CGColorSpaceRelease(deviceRGB);
+
+        CGImageRef image = CGBitmapContextCreateImage(bitmapContext);
+        CGContextDrawImage(m_data->m_cgContext, *dstRect, image);
+        
+        // Delete all our junk.
+        CGImageRelease(image);
+        CGContextRelease(bitmapContext);
+        ::DeleteDC(hdc);
+        ::DeleteObject(bitmap);
+
+        return;
+    }
+
     m_data->restore();
 }
 

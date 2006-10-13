@@ -29,9 +29,10 @@ namespace WebCore
 class GraphicsContextPlatformPrivate {
 public:
     GraphicsContextPlatformPrivate(CGContextRef cgContext)
-    :m_cgContext(cgContext)
+    : m_cgContext(cgContext)
 #if PLATFORM(WIN)
-    ,m_hdc(0)
+    , m_hdc(0)
+    , m_transparencyCount(0)
 #endif
     {
         CGContextRetain(m_cgContext);
@@ -52,6 +53,8 @@ public:
     void rotate(float) {}
     void translate(float, float) {}
     void concatCTM(const AffineTransform&) {}
+    void beginTransparencyLayer() {}
+    void endTransparencyLayer() {}
 #else
     // On Windows, we need to update the HDC for form controls to draw in the right place.
     void save();
@@ -62,8 +65,12 @@ public:
     void rotate(float);
     void translate(float, float);
     void concatCTM(const AffineTransform&);
+    void beginTransparencyLayer() { m_transparencyCount++; }
+    void endTransparencyLayer() { m_transparencyCount--; }
 
     HDC m_hdc;
+    unsigned m_transparencyCount;
+
 #endif
     CGContextRef m_cgContext;
     IntRect m_focusRingClip; // Work around CG bug in focus ring clipping.

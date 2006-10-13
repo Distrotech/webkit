@@ -79,10 +79,10 @@ private:
     int thumbLength() const;
     int trackLength() const;
 
-    void paintButton(HDC, const IntRect&, bool start) const;
-    void paintTrack(HDC, const IntRect&, bool start) const;
-    void paintThumb(HDC, const IntRect&) const;
-    void paintGripper(HDC, const IntRect&) const;
+    void paintButton(GraphicsContext*, const IntRect& buttonRect, bool start, const IntRect& damageRect) const;
+    void paintTrack(GraphicsContext*, const IntRect& trackRect, bool start, const IntRect& damageRect) const;
+    void paintThumb(GraphicsContext*, const IntRect& thumbRect, const IntRect& damageRect) const;
+    void paintGripper(HDC, const IntRect& gripperRect) const;
     
     ScrollbarPart hitTest(const PlatformMouseEvent&);
     
