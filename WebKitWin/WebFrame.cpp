@@ -61,10 +61,6 @@
 #include <WebCore/platform/ResourceLoader.h>
 #include <WebCore/platform/win/ResourceLoaderWin.h>
 #include <wtf/MathExtras.h>
-#if PLATFORM(CAIRO)
-#include "cairo.h"
-#include "cairo-win32.h"
-#endif
 #pragma warning(pop)
 
 using namespace WebCore;
