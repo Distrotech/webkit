@@ -1,5 +1,14 @@
 2006-10-12  Adele Peterson  <adele@apple.com>
 
+        RS by Geoff.
+
+        Renamed uploadControlDetaching to disconnectUploadControl.
+
+        * platform/win/FileChooserWin.cpp:
+        (WebCore::FileChooser::disconnectUploadControl):
+
+2006-10-12  Adele Peterson  <adele@apple.com>
+
         Reviewed by Alice. 
 
         Fixed a small oversight from the last checkin.  The populate method was calling itself, 

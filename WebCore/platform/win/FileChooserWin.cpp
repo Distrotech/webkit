@@ -95,7 +95,7 @@ String FileChooser::basenameForWidth(int width) const
     return String(basename);
 }
 
-void FileChooser::uploadControlDetaching()
+void FileChooser::disconnectUploadControl()
 {
     m_uploadControl = 0;
 }
