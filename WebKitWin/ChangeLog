@@ -1,3 +1,12 @@
+2006-10-13  Dave Hyatt  <hyatt@apple.com>
+
+        Make sure the backing store is flushed when themes are changed.
+
+        Reviewed by aroben
+
+        * WebView.cpp:
+        (WebViewWndProc):
+
 2006-10-12  Adam Roben  <aroben@apple.com>
 
         Build fix (broken by OpenSource r17006)

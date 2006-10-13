@@ -763,8 +763,10 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             webView->execCommand(wParam, lParam);
             break;
         case WM_XP_THEMECHANGED:
-            if (mainFrameImpl)
+            if (mainFrameImpl) {
+                webView->deleteBackingStore();
                 mainFrameImpl->impl()->view()->themeChanged();
+            }
             break;
         default:
             lResult = DefWindowProc(hWnd, message, wParam, lParam);
