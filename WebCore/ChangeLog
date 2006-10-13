@@ -1,3 +1,13 @@
+2006-10-12  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Alice. 
+
+        Fixed a small oversight from the last checkin.  The populate method was calling itself, 
+        instead of the newly renamed addItems method.
+
+        * platform/win/PopupMenuWin.cpp:
+        (WebCore::PopupMenu::populate):
+
 2006-10-12  Adam Roben  <aroben@apple.com>
 
         Reviewed by Adele.

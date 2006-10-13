@@ -96,7 +96,7 @@ void PopupMenu::populate()
 
     clear();
 
-    PopupMenu::populate();
+    PopupMenu::addItems();
 }
 
 void PopupMenu::show(const IntRect& r, FrameView* v, int index)
