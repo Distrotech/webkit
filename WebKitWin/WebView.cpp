@@ -129,6 +129,21 @@ WebView* WebView::createInstance()
     return instance;
 }
 
+void WebView::deleteBackingStore()
+{
+    if (m_backingStoreBitmap) {
+        ::DeleteObject(m_backingStoreBitmap);
+        m_backingStoreBitmap = 0;
+    }
+
+    if (m_backingStoreDirtyRegion) {
+        ::DeleteObject(m_backingStoreDirtyRegion);
+        m_backingStoreDirtyRegion = 0;
+    }
+
+    m_backingStoreSize.cx = m_backingStoreSize.cy = 0;
+}
+
 bool WebView::ensureBackingStore()
 {
     RECT windowRect;
@@ -136,6 +151,8 @@ bool WebView::ensureBackingStore()
     LONG width = windowRect.right - windowRect.left;
     LONG height = windowRect.bottom - windowRect.top;
     if (width > 0 && height > 0 && (width != m_backingStoreSize.cx || height != m_backingStoreSize.cy)) {
+        deleteBackingStore();
+
         m_backingStoreSize.cx = width;
         m_backingStoreSize.cy = height;
         BITMAPINFO bitmapInfo;
@@ -150,9 +167,6 @@ bool WebView::ensureBackingStore()
         bitmapInfo.bmiHeader.biYPelsPerMeter = 0;
         bitmapInfo.bmiHeader.biClrUsed       = 0;
         bitmapInfo.bmiHeader.biClrImportant  = 0;
-
-        if (m_backingStoreBitmap)
-            ::DeleteObject(m_backingStoreBitmap);
 
         void* pixels = NULL;
         m_backingStoreBitmap = ::CreateDIBSection(NULL, &bitmapInfo, DIB_RGB_COLORS, &pixels, NULL, 0);
@@ -714,22 +728,28 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                     mainFrameImpl->impl()->sendResizeEvent();
             }
             break;
+        case WM_SHOWWINDOW:
+            lResult = DefWindowProc(hWnd, message, wParam, lParam);
+            if (wParam == 0)
+                // The window is being hidden (e.g., because we switched tabs.
+                // Null out our backing store.
+                webView->deleteBackingStore();
+            break;
         case WM_SETFOCUS:
             // It's ok to just always do setWindowHasFocus, since we won't fire the focus event on the DOM
             // window unless the value changes.  It's also ok to do setIsActive inside focus,
             // because Windows has no concept of having to update control tints (e.g., graphite vs. aqua)
             // and therefore only needs to update the selection (which is limited to the focused frame).
-            webView->focusedTargetFrame()->setWindowHasFocus(true);
             webView->focusedTargetFrame()->setIsActive(true);
+            webView->focusedTargetFrame()->setWindowHasFocus(true);
             break;
         case WM_KILLFOCUS: {
             // However here we have to be careful.  If we are losing focus because of a deactivate,
             // then we need to remember our focused target for restoration later.  
             // If we are losing focus to another part of our window, then we are no longer focused for real
             // and we need to clear out the focused target.
-            if (GetAncestor(hWnd, GA_ROOT) != GetActiveWindow())
-                webView->focusedTargetFrame()->setIsActive(false);
-            else {
+            webView->focusedTargetFrame()->setIsActive(false);
+            if (GetAncestor(hWnd, GA_ROOT) == GetActiveWindow()) {
                 webView->focusedTarget()->setFocused(false);
                 webView->focusedTargetFrame()->setWindowHasFocus(false);
             }
