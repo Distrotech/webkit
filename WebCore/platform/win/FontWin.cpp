@@ -32,12 +32,7 @@
 #include "GraphicsContext.h"
 #include "IntRect.h"
 #include "NotImplemented.h"
-
-#if PLATFORM(CAIRO)
-#include <cairo-win32.h>
-#elif PLATFORM(CG)
 #include <ApplicationServices/ApplicationServices.h>
-#endif
 
 namespace WebCore {
 
@@ -46,53 +41,6 @@ const int syntheticObliqueAngle = 14;
 void Font::drawGlyphs(GraphicsContext* graphicsContext, const FontData* font, const GlyphBuffer& glyphBuffer, 
                       int from, int numGlyphs, const FloatPoint& point) const
 {
-#if PLATFORM(CAIRO)
-
-    cairo_t* context = graphicsContext->platformContext();
-
-    // Set the text color to use for drawing.
-    float red, green, blue, alpha;
-    Color penColor = graphicsContext->pen().color();
-    penColor.getRGBA(red, green, blue, alpha);
-    cairo_set_source_rgba(context, red, green, blue, alpha);
-    
-    cairo_surface_t* surface = cairo_get_target(context);
-    HDC dc = cairo_win32_surface_get_dc(surface);
-
-    // Cairo alters this but we need to preserve it.
-    XFORM savedxform;
-    GetWorldTransform(dc, &savedxform);
-
-    // Select our font face/size.
-    cairo_set_font_face(context, font->m_font.fontFace());
-    cairo_set_font_size(context, font->m_font.size());
-
-    SaveDC(dc);
-
-    // Select the scaled font.
-    cairo_scaled_font_t* scaledFont = font->m_font.scaledFont();
-    cairo_win32_scaled_font_select_font(scaledFont, dc);
-
-    // Restore the original transform.
-    SetWorldTransform(dc, &savedxform);
-
-    GlyphBufferGlyph* glyphs = const_cast<GlyphBufferGlyph*>(glyphBuffer.glyphs(from));
-
-    float offset = point.x();
-
-    for (unsigned i = 0; i < numGlyphs; i++) {
-        glyphs[i].x = offset;
-        glyphs[i].y = point.y();
-        offset += glyphBuffer.advanceAt(from + i);
-    }
-
-    cairo_show_glyphs(context, glyphs, numGlyphs);
-
-    cairo_win32_scaled_font_done_font(scaledFont);
-    RestoreDC(dc, -1);
-
-#elif PLATFORM(CG)
-
     // FIXME: Need to override antialiasing defaults to force antialiasing to be on.
     CGContextRef cgContext = graphicsContext->platformContext();
 
@@ -145,8 +93,6 @@ void Font::drawGlyphs(GraphicsContext* graphicsContext, const FontData* font, co
     }
 
     //CGContextSetShouldSmoothFonts(cgContext, originalShouldUseFontSmoothing);
-
-#endif // PLATFORM(CG)
 }
 
 FloatRect Font::selectionRectForComplexText(const TextRun& run, const TextStyle& style, const IntPoint& point, int h) const

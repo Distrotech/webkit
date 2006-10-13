@@ -155,15 +155,7 @@ void BrowserExtensionWin::goBackOrForward(int) { LOG_NOIMPL(); }
 KURL BrowserExtensionWin::historyURL(int distance) { LOG_NOIMPL(); return KURL(); }
 void BrowserExtensionWin::createNewWindow(struct WebCore::ResourceRequest const&) { STOP_NOIMPL(); }
 
-#if PLATFORM(CAIRO)
-void GraphicsContext::addRoundedRectClip(const IntRect& rect, const IntSize& topLeft, const IntSize& topRight,
-    const IntSize& bottomLeft, const IntSize& bottomRight) { LOG_NOIMPL(); }
-void GraphicsContext::addInnerRoundedRectClip(const IntRect& rect, int thickness) { LOG_NOIMPL(); }
-#endif // PLATFORM(CAIRO)
-
-#if PLATFORM(CG)
 void GraphicsContextPlatformPrivate::clip(const Path&) { LOG_NOIMPL(); }
-#endif
 
 int WebCore::screenDepthPerComponent(const Page*) { LOG_NOIMPL(); return 0; }
 bool WebCore::screenIsMonochrome(const Page*) { LOG_NOIMPL(); return false; }
@@ -220,48 +212,8 @@ void Widget::setIsSelected(bool) { LOG_NOIMPL(); }
 
 bool ScrollView::inWindow() const { LOG_NOIMPL(); return true; }
 
-#if PLATFORM(CAIRO)
-
-void GraphicsContext::setShadow(IntSize const&,int,Color const&) { LOG_NOIMPL(); }
-void GraphicsContext::clearShadow() { LOG_NOIMPL(); }
-void GraphicsContext::beginTransparencyLayer(float) { LOG_NOIMPL(); }
-void GraphicsContext::endTransparencyLayer() { LOG_NOIMPL(); }
-void GraphicsContext::clearRect(const FloatRect&) { LOG_NOIMPL(); }
-void GraphicsContext::strokeRect(const FloatRect&, float) { LOG_NOIMPL(); }
-void GraphicsContext::setLineWidth(float) { LOG_NOIMPL(); }
-void GraphicsContext::setLineCap(LineCap) { LOG_NOIMPL(); }
-void GraphicsContext::setLineJoin(LineJoin) { LOG_NOIMPL(); }
-void GraphicsContext::setMiterLimit(float) { LOG_NOIMPL(); }
-void GraphicsContext::setAlpha(float) { LOG_NOIMPL(); }
-void GraphicsContext::clip(const Path&) { LOG_NOIMPL(); }
-void GraphicsContext::rotate(float) { LOG_NOIMPL(); }
-void GraphicsContext::scale(const FloatSize&) { LOG_NOIMPL(); }
-
-Path::Path(){ LOG_NOIMPL(); }
-Path::~Path(){ LOG_NOIMPL(); }
-Path::Path(const Path&){ LOG_NOIMPL(); }
-bool Path::contains(const FloatPoint&, WindRule) const{ LOG_NOIMPL(); return false; }
-void Path::translate(const FloatSize&){ LOG_NOIMPL(); }
-FloatRect Path::boundingRect() const { LOG_NOIMPL(); return FloatRect(); }
-Path& Path::operator=(const Path&){ LOG_NOIMPL(); return*this; }
-void Path::clear() { LOG_NOIMPL(); }
-void Path::moveTo(const FloatPoint&) { LOG_NOIMPL(); }
-void Path::addLineTo(const FloatPoint&) { LOG_NOIMPL(); }
-void Path::addQuadCurveTo(const FloatPoint&, const FloatPoint&) { LOG_NOIMPL(); }
-void Path::addBezierCurveTo(const FloatPoint&, const FloatPoint&, const FloatPoint&) { LOG_NOIMPL(); }
-void Path::addArcTo(const FloatPoint&, const FloatPoint&, float) { LOG_NOIMPL(); }
-void Path::closeSubpath() { LOG_NOIMPL(); }
-void Path::addArc(const FloatPoint&, float, float, float, bool) { LOG_NOIMPL(); }
-void Path::addRect(const FloatRect&) { LOG_NOIMPL(); }
-void Path::addEllipse(const FloatRect&) { LOG_NOIMPL(); }
-
-#elif PLATFORM(CG)
-
 void GraphicsContext::drawFocusRing(const Color& color) { LOG_NOIMPL(); }
 void GraphicsContext::drawLineForMisspelling(const IntPoint& point, int width) { LOG_NOIMPL(); }
-
-#endif // PLATFORM(CG)
-
 void GraphicsContext::setCompositeOperation(CompositeOperator) { LOG_NOIMPL(); }
 
 TextField::TextField(TextField::Type) { LOG_NOIMPL(); }
@@ -298,10 +250,6 @@ Color WebCore::focusRingColor() { LOG_NOIMPL(); return 0xFF0000FF; }
 void WebCore::setFocusRingColorChangeFunction(void (*)()) { LOG_NOIMPL(); }
 
 void Frame::setNeedsReapplyStyles() { LOG_NOIMPL(); }
-
-#if PLATFORM(CAIRO)
-void Image::drawTiled(GraphicsContext*, const FloatRect&, const FloatRect&, TileRule, TileRule, CompositeOperator) { LOG_NOIMPL(); }
-#endif
 
 void PopupMenu::addSeparator() { LOG_NOIMPL(); }
 void PopupMenu::addGroupLabel(HTMLOptGroupElement*) { LOG_NOIMPL(); }

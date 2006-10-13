@@ -23,34 +23,9 @@
 
 #include "config.h"
 #include "FontPlatformData.h"
-#if PLATFORM(CAIRO)
-#include <cairo-win32.h>
-#elif PLATFORM(CG)
 #include <ApplicationServices/ApplicationServices.h>
-#endif
 
 namespace WebCore {
-
-#if PLATFORM(CAIRO)
-
-FontPlatformData::FontPlatformData(HFONT font, int size, bool bold, bool oblique)
-:m_font(font), m_size(size)
-{  
-    m_fontFace = cairo_win32_font_face_create_for_hfont(font);
-    cairo_matrix_t sizeMatrix, ctm;
-    cairo_matrix_init_identity(&ctm);
-    cairo_matrix_init_scale(&sizeMatrix, size, size);
-
-    static cairo_font_options_t* fontOptions;
-    if (!fontOptions)
-        // Force ClearType-level quality.
-        fontOptions = cairo_font_options_create();
-    cairo_font_options_set_antialias(fontOptions, CAIRO_ANTIALIAS_SUBPIXEL);
-
-    m_scaledFont = cairo_scaled_font_create(m_fontFace, &sizeMatrix, &ctm, fontOptions);
-}
-
-#elif PLATFORM(CG)
 
 FontPlatformData::FontPlatformData(HFONT font, int size, bool bold, bool oblique)
     : m_font(font)
@@ -89,8 +64,6 @@ FontPlatformData::FontPlatformData(HFONT font, int size, bool bold, bool oblique
     RestoreDC(hdc, -1);
     ReleaseDC(0, hdc);
 }
-
-#endif
 
 FontPlatformData::~FontPlatformData()
 {

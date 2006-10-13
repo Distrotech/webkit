@@ -36,12 +36,7 @@
 #include <wtf/MathExtras.h>
 #include <unicode/uchar.h>
 #include <unicode/unorm.h>
-#if PLATFORM(CAIRO)
-#include <cairo.h>
-#include <cairo-win32.h>
-#elif PLATFORM(CG)
 #include <ApplicationServices/ApplicationServices.h>
-#endif
 #include <mlang.h>
 
 namespace WebCore
@@ -51,9 +46,7 @@ void FontData::platformInit()
 {    
     m_isMLangFont = false;
 
-#if PLATFORM(CG)
     m_syntheticBoldOffset = m_font.syntheticBold() ? ceilf(m_font.size() / 24.0f) : 0.f;
-#endif
 
     HDC dc = GetDC(0);
     SaveDC(dc);
@@ -86,12 +79,7 @@ void FontData::platformInit()
 
 void FontData::platformDestroy()
 {
-#if PLATFORM(CG)
     CGFontRelease(m_font.cgFont());
-#elif PLATFORM(CAIRO)
-    cairo_font_face_destroy(m_font.fontFace());
-    cairo_scaled_font_destroy(m_font.scaledFont());
-#endif
 
     if (m_isMLangFont) {
         // We have to release the font instead of just deleting it, since we didn't make it.
@@ -160,31 +148,12 @@ void FontData::determinePitch()
 
 float FontData::platformWidthForGlyph(Glyph glyph) const
 {
-#if PLATFORM(CG)
-
     CGFontRef font = m_font.cgFont();
     float pointSize = m_font.size();
     int advance = 0;
     float unitsPerEm = (float)CGFontGetUnitsPerEm(font);
     CGFontGetGlyphAdvances(font, &glyph, 1, &advance);
     return advance*pointSize/unitsPerEm + m_syntheticBoldOffset;
-
-#else
-
-    HDC dc = GetDC(0);
-    SaveDC(dc);
-
-    SelectObject(dc, m_font.hfont());
-
-    int width;
-    GetCharWidthI(dc, glyph, 1, 0, &width);
-
-    RestoreDC(dc, -1);
-    ReleaseDC(0, dc);
-
-    return width;
-
-#endif
 }
 
 }

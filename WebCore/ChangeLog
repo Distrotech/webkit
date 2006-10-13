@@ -1,3 +1,33 @@
+2006-10-12  Dave Hyatt  <hyatt@apple.com>
+
+        Voting Cairo off the island
+
+        or
+
+        Jeff Probst: "Cairo, the tribe has spoken.  It's time for you
+        to go."
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/win/FontDataWin.cpp:
+        (WebCore::FontData::platformInit):
+        (WebCore::FontData::platformDestroy):
+        (WebCore::FontData::platformWidthForGlyph):
+        * platform/win/FontPlatformData.h:
+        (WebCore::FontPlatformData::FontPlatformData):
+        (WebCore::FontPlatformData::hfont):
+        (WebCore::FontPlatformData::cgFont):
+        (WebCore::FontPlatformData::operator==):
+        * platform/win/FontPlatformDataWin.cpp:
+        * platform/win/FontWin.cpp:
+        (WebCore::Font::drawGlyphs):
+        * platform/win/GraphicsContextWin.cpp:
+        * platform/win/IconWin.cpp:
+        * platform/win/ImageWin.cpp:
+        (WebCore::Image::loadPlatformResource):
+        * platform/win/TemporaryLinkStubs.cpp:
+        (GraphicsContextPlatformPrivate::clip):
+        (GraphicsContext::drawLineForMisspelling):
+
 2006-10-12  Adele Peterson  <adele@apple.com>
 
         RS by Geoff.

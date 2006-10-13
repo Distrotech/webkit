@@ -25,10 +25,6 @@
 #include "PlatformString.h"
 #include <windows.h>
 
-#if PLATFORM(CAIRO)
-#include <cairo-win32.h>
-#endif
-
 namespace WebCore {
 
 Icon::Icon()

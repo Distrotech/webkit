@@ -26,17 +26,10 @@
 #include "config.h"
 #include "Image.h"
 #include "GraphicsContext.h"
-
-#if PLATFORM(CAIRO)
-#include <cairo.h>
-#elif PLATFORM(CG)
 #include <ApplicationServices/ApplicationServices.h>
-#endif
 
-#if PLATFORM(WIN)
 #include <winsock2.h>
 #include <windows.h>
-#endif
 
 // This function loads resources from WebKit
 Vector<char> loadResourceIntoArray(const char*);
@@ -55,13 +48,9 @@ Image* Image::loadPlatformResource(const char *name)
 {
     Vector<char> arr = loadResourceIntoArray(name);
     Image* img = new Image;
-#if PLATFORM(CAIRO)
-    img->setNativeData(&arr, true);
-#else
     CFDataRef data = CFDataCreate(0, reinterpret_cast<const UInt8*>(arr.data()), arr.size());
     img->setNativeData(data, true);
     CFRelease(data);
-#endif
     return img;
 }
 
@@ -70,38 +59,6 @@ bool Image::supportsType(const String& type)
     // FIXME: Implement.
     return false;
 }
-
-#if PLATFORM(CAIRO)
-
-bool Image::getHBITMAP(HBITMAP bmp)
-{
-    ASSERT(bmp);
-
-    BITMAP bmpInfo;
-    GetObject(bmp, sizeof(BITMAP), &bmpInfo);
-
-    // If this is a 32bpp bitmap, which it always should be, we'll clear it so alpha-wise it will be visible
-    if (bmpInfo.bmBitsPixel == 32) {
-        int bufferSize = bmpInfo.bmWidthBytes * bmpInfo.bmHeight;
-        memset(bmpInfo.bmBits, 255, bufferSize);
-    }
-
-    HDC tempDC = CreateCompatibleDC(0);
-    if (!tempDC) {
-        LOG_ERROR("Failed to create in-memory DC for Image::blit()");
-        return false;
-    }
-    SelectObject(tempDC, bmp);
-    GraphicsContext gc(tempDC);
-    IntSize imageSize = Image::size();
-    draw(&gc, FloatRect(0, 0, bmpInfo.bmWidth, bmpInfo.bmHeight), FloatRect(0, 0, imageSize.width(), imageSize.height()), CompositeCopy);
-
-    // Do cleanup
-    DeleteDC(tempDC);
-    return true;
-}
-
-#elif PLATFORM(CG)
 
 bool Image::getHBITMAP(HBITMAP bmp)
 {
@@ -127,7 +84,5 @@ bool Image::getHBITMAP(HBITMAP bmp)
     CGColorSpaceRelease(deviceRGB);
     return true;
 }
-
-#endif
 
 } // namespace WebCore
