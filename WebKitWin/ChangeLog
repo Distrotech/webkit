@@ -1,3 +1,16 @@
+2006-10-15  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Geoff, Anders.
+
+        Fix crash on startup.
+
+        We were crashing somewhere inside Frame::setResourceRequest. I'm not
+        sure what change made this start crashing.
+
+        * WebFrame.cpp:
+        (WebFrame::receivedResponse): Remove useless calls to
+        Frame::resourceRequest and Frame::setResourceRequest.
+
 2006-10-13  Dave Hyatt  <hyatt@apple.com>
 
         Make sure the backing store is flushed when themes are changed.

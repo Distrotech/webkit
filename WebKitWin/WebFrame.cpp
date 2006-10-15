@@ -1044,9 +1044,7 @@ void WebFrame::receivedResponse(ResourceLoader* loader, PlatformResponse platfor
     }
     response->textEncodingName(&m_textEncoding);
 
-    ResourceRequest request = d->frame->resourceRequest();
     BSTR mimeType;
-    d->frame->setResourceRequest(request);
     if (SUCCEEDED(response->MIMEType(&mimeType))) {
         d->frame->setResponseMIMEType(String(mimeType, SysStringLen(mimeType)));
         SysFreeString(mimeType);
