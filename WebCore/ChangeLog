@@ -1,3 +1,18 @@
+2006-10-15  Adam Roben  <aroben@apple.com>
+
+        Build fix.
+
+        Merge OpenSource r17056 to TemporaryLinkStubs.cpp.
+
+        * platform/win/TemporaryLinkStubs.cpp:
+        (WebCore::CacheObjectExpiresTime):
+        (WebCore::ResponseIsMultipart):
+        (WebCore::ResponseMIMEType):
+        (WebCore::IsResponseURLEqualToURL):
+        (WebCore::ResponseURL):
+        (WebCore::CachedResource::setResponse):
+        (WebCore::CachedResource::setAllData):
+
 2006-10-13  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Darin.

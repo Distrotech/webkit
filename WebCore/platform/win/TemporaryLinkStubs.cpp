@@ -29,6 +29,7 @@
 
 #include "AXObjectCache.h"
 #include "BrowserExtensionWin.h"
+#include "CachedResource.h"
 #include "CookieJar.h"
 #include "Cursor.h"
 #include "EditCommand.h"
@@ -206,6 +207,13 @@ namespace WebCore {
 
 bool CheckIfReloading(WebCore::DocLoader*) { LOG_NOIMPL(); return false; }
 void CheckCacheObjectStatus(DocLoader*, CachedResource*) { LOG_NOIMPL(); }
+time_t CacheObjectExpiresTime(DocLoader*, PlatformResponse) { LOG_NOIMPL(); return 0; }
+bool ResponseIsMultipart(PlatformResponse) { LOG_NOIMPL(); return false; }
+DeprecatedString ResponseMIMEType(PlatformResponse) { LOG_NOIMPL(); return DeprecatedString(); }
+bool IsResponseURLEqualToURL(PlatformResponse, const String& URL) { LOG_NOIMPL(); return false; }
+DeprecatedString ResponseURL(PlatformResponse) { LOG_NOIMPL(); return DeprecatedString(); }
+void CachedResource::setResponse(PlatformResponse) { LOG_NOIMPL(); }
+void CachedResource::setAllData(PlatformData) { LOG_NOIMPL(); }
 
 }
 
