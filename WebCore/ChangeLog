@@ -156,6 +156,9 @@
         virtual methods go away, RenderTheme gets to stop worrying about popup
         menus, PopupMenu becomes ref-counted, and everyone becomes happy.
 
+        Also fixes <rdar://problem/4710456> Get rid of RenderPopupMenu{Win,Mac}
+        classes.
+
         * WebCore.vcproj/WebCore.vcproj: Move files within project.
         * platform/win/PopupMenuWin.cpp: Moved from
         rendering/RenderPopupMenuWin.cpp. Rename RenderPopupMenuWin to
