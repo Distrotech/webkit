@@ -2,6 +2,15 @@
 
         Reviewed by John.
 
+        Forgot to save these changes John suggested before checking in.
+
+        * platform/win/PopupMenuWin.cpp:
+        (WebCore::PopupMenu::drawItem):
+
+2006-10-16  Adam Roben  <aroben@apple.com>
+
+        Reviewed by John.
+
         Fix: <rdar://problem/4709480> Implement option groups
         Fix: <rdar://problem/4785693> Use CG to draw popup menu items
         Fix: <rdar://problem/4709487> Implement separators in <select> popups

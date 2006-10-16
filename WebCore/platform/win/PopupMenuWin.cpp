@@ -355,17 +355,15 @@ void PopupMenu::drawItem(LPDRAWITEMSTRUCT drawInfo)
         optionTextColor = element->renderStyle() ? element->renderStyle()->color() : menuList()->style()->color();
     }
 
-    // Draw the background for this list box item
+    // Draw the background for this menu item
     if (!element->renderStyle() || element->renderStyle()->visibility() != HIDDEN) {
-        if (optionBackgroundColor.hasAlpha() && optionBackgroundColor != menuList()->style()->backgroundColor()) {
-            //Color menuBackgroundColor = menuList()->style()->backgroundColor().alpha() ? menuList()->style()->backgroundColor().blendWithWhite() : Color::white;
+        if (optionBackgroundColor.hasAlpha() && optionBackgroundColor != menuList()->style()->backgroundColor())
             context.fillRect(bitmapRect, menuList()->style()->backgroundColor());
-        }
         context.fillRect(bitmapRect, optionBackgroundColor);
     }
 
     if (element->hasTagName(hrTag)) {
-        IntRect separatorRect(bitmapRect.x() + separatorPadding, (bitmapRect.height() - separatorHeight) / 2, bitmapRect.width() - 2 * separatorPadding, 1);
+        IntRect separatorRect(bitmapRect.x() + separatorPadding, (bitmapRect.height() - separatorHeight) / 2, bitmapRect.width() - 2 * separatorPadding, separatorHeight);
         context.fillRect(separatorRect, optionTextColor);
     } else {
         String itemText;
