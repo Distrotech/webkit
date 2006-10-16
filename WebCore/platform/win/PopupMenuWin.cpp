@@ -25,21 +25,27 @@
 #include "FontData.h"
 #include "Frame.h"
 #include "FrameView.h"
+#include "GraphicsContext.h"
+#include "HTMLNames.h"
 #include "HTMLOptionElement.h"
+#include "HTMLOptGroupElement.h"
 #include "HTMLSelectElement.h"
 #include "Page.h"
 #include "RenderMenuList.h"
+#include "RenderThemeWin.h"
 #include "RenderView.h"
 #include "Screen.h"
 #include <tchar.h>
 #include <windows.h>
 
+namespace WebCore {
+
+using namespace HTMLNames;
+
 // Default Window animation duration in milliseconds
 static const int defaultAnimationDuration = 200;
 // Maximum height of a popup window
 static const int maxPopupHeight = 320;
-
-namespace WebCore {
 
 static LPCTSTR kPopupWindowClassName = _T("PopupWindowContainerClass");
 static ATOM registerPopup();
@@ -51,26 +57,6 @@ PopupMenu::PopupMenu(RenderMenuList* m)
     , m_container(0)
     , m_wasClicked(false)
 {
-    // FIXME: Might be nice to move all this code (which can possibly fail) into an initialization
-    // function so that we don't have a failing constructor (which is hard/impossible to check for)
-    
-    registerPopup();
-
-    m_container = CreateWindowEx(0, kPopupWindowClassName, _T("PopupMenuContainer"),
-        WS_POPUP | WS_CLIPCHILDREN,
-        0, 0, 0, 0,
-        menuList()->document()->frame()->view()->containingWindow(), 0, 0, 0);
-
-    if (!m_container)
-        return;
-
-    SetWindowLongPtr(m_container, 0, (LONG_PTR)this);
-
-    // FIXME: Should we also use LBS_COMBOBOX here? What does that do?
-    m_popup = CreateWindowEx(0, _T("ListBox"), _T("PopupMenu"),
-        WS_CHILD | WS_BORDER | WS_VSCROLL | LBS_NOTIFY | LBS_HASSTRINGS | LBS_WANTKEYBOARDINPUT,
-        0, 0, 0, 0,
-        m_container, 0, 0, 0);
 }
 
 PopupMenu::~PopupMenu()
@@ -101,11 +87,28 @@ void PopupMenu::populate()
 
 void PopupMenu::show(const IntRect& r, FrameView* v, int index)
 {
+    if (!m_popup) {
+        registerPopup();
+
+        m_container = CreateWindowEx(0, kPopupWindowClassName, _T("PopupMenuContainer"),
+            WS_POPUP | WS_CLIPCHILDREN,
+            0, 0, 0, 0,
+            menuList()->document()->frame()->view()->containingWindow(), 0, 0, 0);
+
+        if (!m_container)
+            return;
+
+        SetWindowLongPtr(m_container, 0, (LONG_PTR)this);
+
+        // FIXME: Should we also use LBS_COMBOBOX here? What does that do?
+        m_popup = CreateWindowEx(0, _T("ListBox"), _T("PopupMenu"),
+            WS_CHILD | WS_BORDER | WS_VSCROLL | LBS_NOTIFY | LBS_HASSTRINGS | LBS_WANTKEYBOARDINPUT | LBS_OWNERDRAWFIXED,
+            0, 0, 0, 0,
+            m_container, 0, 0, 0);
+    }
+
     if (!m_popup)
         return;
-
-    // FIXME: Should use RenderThemeWin::systemFont unless explicitly styled
-    SendMessage(m_popup, WM_SETFONT, (WPARAM)menuList()->font(false).fontDataAt(0)->platformData().hfont(), MAKELPARAM(false, 0));
 
     populate();
     if (SendMessage(m_popup, LB_GETCOUNT, 0, 0) <= 0)
@@ -212,25 +215,39 @@ void PopupMenu::setPositionAndSize(const IntRect& r, FrameView* v)
     }
 }
 
-void PopupMenu::addOption(HTMLOptionElement* element)
+static void addString(HWND hWnd, const String& string)
 {
-    if (!m_popup)
+    if (!hWnd)
         return;
 
-    String optionText = element->optionText();
- 
-    UChar* text = (UChar*)malloc((optionText.length() + 1) * sizeof(UChar));
+    UChar* text = (UChar*)malloc((string.length() + 1) * sizeof(UChar));
     if (!text)
         return;
 
-    if (_tcsncpy_s(text, optionText.length() + 1, optionText.characters(), optionText.length())) {
+    if (_tcsncpy_s(text, string.length() + 1, string.characters(), string.length())) {
         free(text);
         return;
     }
 
-    SendMessage(m_popup, LB_ADDSTRING, 0, (LPARAM)text);
+    SendMessage(hWnd, LB_ADDSTRING, 0, (LPARAM)text);
 
     free(text);
+
+}
+
+void PopupMenu::addOption(HTMLOptionElement* element)
+{
+    addString(m_popup, element->optionText());
+}
+
+void PopupMenu::addGroupLabel(HTMLOptGroupElement* element)
+{
+    addString(m_popup, element->groupLabelText());
+}
+
+void PopupMenu::addSeparator()
+{
+    addString(m_popup, "");
 }
 
 int PopupMenu::focusedIndex() const
@@ -240,17 +257,28 @@ int PopupMenu::focusedIndex() const
 
     return SendMessage(m_popup, LB_GETCURSEL, 0, 0);
 }
+
 bool PopupMenu::down()
 {
     if (!m_popup)
         return false;
 
-    int sel = focusedIndex() + 1;
-    if (sel < 0 || sel >= SendMessage(m_popup, LB_GETCOUNT, 0, 0))
+    HTMLSelectElement* select = static_cast<HTMLSelectElement*>(menuList()->node());
+    const Vector<HTMLElement*>& listItems = select->listItems();
+    size_t size = listItems.size();
+
+    int i;
+    for (i = focusedIndex() + 1;
+         i >= 0 && i < size && (listItems[i]->disabled() || !listItems[i]->hasTagName(optionTag));
+         ++i);
+
+    if (i < 0 || i >= size)
         return false;
 
-    menuList()->setTextFromOption(sel);
-    menuList()->valueChanged(sel, false);
+    ::SendMessage(m_popup, LB_SETCURSEL, (WPARAM)i, 0);
+
+    menuList()->setTextFromOption(select->listToOptionIndex(i));
+    menuList()->valueChanged(i, false);
 
     return true;
 }
@@ -260,14 +288,119 @@ bool PopupMenu::up()
     if (!m_popup)
         return false;
 
-    int sel = focusedIndex() - 1;
-    if (sel < 0 || sel >= SendMessage(m_popup, LB_GETCOUNT, 0, 0))
+    HTMLSelectElement* select = static_cast<HTMLSelectElement*>(menuList()->node());
+    const Vector<HTMLElement*>& listItems = select->listItems();
+    size_t size = listItems.size();
+
+    int i;
+    for (i = focusedIndex() - 1;
+         i >= 0 && i < size && (listItems[i]->disabled() || !listItems[i]->hasTagName(optionTag));
+         --i);
+
+    if (i < 0 || i >= size)
         return false;
 
-    menuList()->setTextFromOption(sel);
-    menuList()->valueChanged(sel, false);
+    ::SendMessage(m_popup, LB_SETCURSEL, (WPARAM)i, 0);
+
+    menuList()->setTextFromOption(select->listToOptionIndex(i));
+    menuList()->valueChanged(i, false);
 
     return true;
+}
+
+const int separatorPadding = 4;
+const int separatorHeight = 1;
+void PopupMenu::drawItem(LPDRAWITEMSTRUCT drawInfo)
+{
+    IntRect menuRect = drawInfo->rcItem;
+
+    IntRect bitmapRect = drawInfo->rcItem;
+    bitmapRect.setLocation(IntPoint(0, 0));
+
+    HDC bitmapDC = ::CreateCompatibleDC(drawInfo->hDC);
+
+    // Create a bitmap DC in which to draw.
+    BITMAPINFO bitmapInfo;
+    bitmapInfo.bmiHeader.biSize          = sizeof(BITMAPINFOHEADER);
+    bitmapInfo.bmiHeader.biWidth         = bitmapRect.width(); 
+    bitmapInfo.bmiHeader.biHeight        = -bitmapRect.height();
+    bitmapInfo.bmiHeader.biPlanes        = 1;
+    bitmapInfo.bmiHeader.biBitCount      = 32;
+    bitmapInfo.bmiHeader.biCompression   = BI_RGB;
+    bitmapInfo.bmiHeader.biSizeImage     = 0;
+    bitmapInfo.bmiHeader.biXPelsPerMeter = 0;
+    bitmapInfo.bmiHeader.biYPelsPerMeter = 0;
+    bitmapInfo.bmiHeader.biClrUsed       = 0;
+    bitmapInfo.bmiHeader.biClrImportant  = 0;
+
+    void* pixels = 0;
+    HBITMAP bitmap = ::CreateDIBSection(bitmapDC, &bitmapInfo, DIB_RGB_COLORS, &pixels, 0, 0);
+    if (!bitmap)
+        return;
+
+    HBITMAP oldBMP = (HBITMAP)::SelectObject(bitmapDC, bitmap);
+
+    GraphicsContext context(bitmapDC);
+
+    HTMLSelectElement* select = static_cast<HTMLSelectElement*>(menuList()->node());
+    const Vector<HTMLElement*>& listItems = select->listItems();
+    HTMLElement* element = listItems[drawInfo->itemID];
+
+    Color optionBackgroundColor, optionTextColor;
+    if (drawInfo->itemState & ODS_SELECTED) {
+        optionBackgroundColor = theme()->platformActiveSelectionBackgroundColor();
+        optionTextColor = theme()->platformActiveSelectionForegroundColor();
+    } else {
+        optionBackgroundColor = element->renderStyle() ? element->renderStyle()->backgroundColor() : menuList()->style()->backgroundColor();
+        optionTextColor = element->renderStyle() ? element->renderStyle()->color() : menuList()->style()->color();
+    }
+
+    // Draw the background for this list box item
+    if (!element->renderStyle() || element->renderStyle()->visibility() != HIDDEN) {
+        if (optionBackgroundColor.hasAlpha() && optionBackgroundColor != menuList()->style()->backgroundColor()) {
+            //Color menuBackgroundColor = menuList()->style()->backgroundColor().alpha() ? menuList()->style()->backgroundColor().blendWithWhite() : Color::white;
+            context.fillRect(bitmapRect, menuList()->style()->backgroundColor());
+        }
+        context.fillRect(bitmapRect, optionBackgroundColor);
+    }
+
+    if (element->hasTagName(hrTag)) {
+        IntRect separatorRect(bitmapRect.x() + separatorPadding, (bitmapRect.height() - separatorHeight) / 2, bitmapRect.width() - 2 * separatorPadding, 1);
+        context.fillRect(separatorRect, optionTextColor);
+    } else {
+        String itemText;
+        if (element->hasTagName(optionTag))
+            itemText = static_cast<HTMLOptionElement*>(element)->optionText();
+        else if (element->hasTagName(optgroupTag))
+            itemText = static_cast<HTMLOptGroupElement*>(element)->groupLabelText();
+       
+        TextRun textRun(itemText.characters(), itemText.length());
+
+        RenderStyle* itemStyle = element->renderStyle();
+        if (!itemStyle)
+            itemStyle = menuList()->style();
+            
+        context.setPen(optionTextColor);
+        
+        Font itemFont = menuList()->style()->font();
+        if (element->hasTagName(optgroupTag)) {
+            FontDescription d = itemFont.fontDescription();
+            d.setBold(true);
+            itemFont = Font(d, itemFont.letterSpacing(), itemFont.wordSpacing());
+            itemFont.update();
+        }
+        context.setFont(itemFont);
+        
+        // Draw the item text
+        if (itemStyle->visibility() != HIDDEN)
+            context.drawText(textRun, IntPoint(0, itemFont.ascent() + (bitmapRect.height() - itemFont.height()) / 2));
+    }
+
+    ::BitBlt(drawInfo->hDC, menuRect.x(), menuRect.y(), menuRect.width(), menuRect.height(), bitmapDC, bitmapRect.x(), bitmapRect.y(), SRCCOPY);
+
+    ::SelectObject(bitmapDC, oldBMP);
+    ::DeleteObject(bitmap);
+    ::DeleteDC(bitmapDC);
 }
 
 static ATOM registerPopup()
@@ -307,6 +440,9 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
     LONG_PTR longPtr = GetWindowLongPtr(hWnd, 0);
     PopupMenu* popup = reinterpret_cast<PopupMenu*>(longPtr);
 
+    LPMEASUREITEMSTRUCT measureInfo;
+    LPDRAWITEMSTRUCT drawInfo;
+
     switch (message) {
         case WM_ACTIVATE:
             if (popup && wParam == WA_INACTIVE)
@@ -318,10 +454,12 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 popup->menuList()->hidePopup();
             break;
         case WM_COMMAND:
-            if (popup && HIWORD(wParam) == LBN_SELCHANGE && popup->wasClicked()) {
-                popup->menuList()->valueChanged(popup->focusedIndex());
-                popup->menuList()->hidePopup();
-                popup->setWasClicked(false);
+            if (popup && HIWORD(wParam) == LBN_SELCHANGE) {
+                if (popup->wasClicked()) {
+                    popup->menuList()->valueChanged(popup->focusedIndex());
+                    popup->menuList()->hidePopup();
+                    popup->setWasClicked(false);
+                }
             }
             break;
         case WM_VKEYTOITEM:
@@ -330,12 +468,12 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                     case VK_DOWN:
                     case VK_RIGHT:
                         popup->down();
-                        lResult = -1;
+                        lResult = -2;
                         break;
                     case VK_UP:
                     case VK_LEFT:
                         popup->up();
-                        lResult = -1;
+                        lResult = -2;
                         break;
                     case VK_RETURN:
                         popup->menuList()->valueChanged(popup->focusedIndex());
@@ -354,9 +492,21 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 if (!GetClientRect(popup->popupHandle(), &rect))
                     break;
                 if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom)
-                    popup->setWasClicked(true);
+                    popup->setWasClicked();
             }
             break;
+        case WM_MEASUREITEM:
+            measureInfo = (LPMEASUREITEMSTRUCT)lParam;
+            ASSERT(measureInfo->CtlType == ODT_LISTBOX);
+            // FIXME: This will have to change when <rdar://4772506> is fixed.
+            measureInfo->itemWidth = popup->menuList()->width();
+            measureInfo->itemHeight = popup->menuList()->font(false).height();
+            lResult = TRUE;
+            break;
+        case WM_DRAWITEM:
+            drawInfo = (LPDRAWITEMSTRUCT)lParam;
+            ASSERT(drawInfo->CtlType == ODT_LISTBOX);
+            popup->drawItem(drawInfo);
         default:
             lResult = DefWindowProc(hWnd, message, wParam, lParam);
     }

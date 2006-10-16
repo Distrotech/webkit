@@ -260,8 +260,5 @@ void WebCore::setFocusRingColorChangeFunction(void (*)()) { LOG_NOIMPL(); }
 
 void Frame::setNeedsReapplyStyles() { LOG_NOIMPL(); }
 
-void PopupMenu::addSeparator() { LOG_NOIMPL(); }
-void PopupMenu::addGroupLabel(HTMLOptGroupElement*) { LOG_NOIMPL(); }
-
 void IconLoader::receivedResponse(ResourceLoader*, PlatformResponse) { LOG_NOIMPL(); }
 void IconLoader::notifyIconChanged(const KURL& iconURL) { LOG_NOIMPL(); }
