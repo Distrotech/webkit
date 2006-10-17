@@ -147,13 +147,13 @@ void PopupMenu::setPositionAndSize(const IntRect& r, FrameView* v)
     int itemHeight = SendMessage(m_popup, LB_GETITEMHEIGHT, 0, 0);
     HTMLSelectElement *select = static_cast<HTMLSelectElement*>(menuList()->node());
     const Vector<HTMLElement*>& items = select->listItems();
-    size_t size = items.size();
+    size_t itemCount = items.size();
     // Add an extra (itemHeight / 2) here because the popup will shrink itself to not show any partial items when we call SetWindowPos()
-    int naturalHeight = itemHeight * size + itemHeight / 2;
+    int naturalHeight = itemHeight * itemCount + itemHeight / 2;
     int popupHeight = min(maxPopupHeight, naturalHeight);
     
     int popupWidth = 0;
-    for (int i = 0; i < size; ++i) {
+    for (int i = 0; i < itemCount; ++i) {
         String text;
         if (items[i]->hasTagName(optionTag))
             text = static_cast<HTMLOptionElement*>(items[i])->optionText();
@@ -177,7 +177,11 @@ void PopupMenu::setPositionAndSize(const IntRect& r, FrameView* v)
     // The popup should be at least as wide as the control on the page
     popupWidth = max(rViewCoords.width(), popupWidth);
 
-    IntRect popupRect(menuList()->style()->direction() == LTR ? rViewCoords.right() - popupWidth : rViewCoords.x(), rViewCoords.bottom(), popupWidth, popupHeight);
+    // LTR <select>s get a right-aligned popup, RTL <select>s get a left-aligned popup
+    // This will cause the popup's scrollbar to always be aligned with the <select>'s dropdown button
+    int popupX = menuList()->style()->direction() == LTR ? rViewCoords.right() - popupWidth : rViewCoords.x();
+
+    IntRect popupRect(popupX, rViewCoords.bottom(), popupWidth, popupHeight);
 
     // WS_POPUP windows are positioned in screen coordinates, but popupRect is in WebView coordinates,
     // so we have to find the screen origin of the FrameView to position correctly

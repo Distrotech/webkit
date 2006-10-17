@@ -1,5 +1,14 @@
 2006-10-17  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Geoff.
+
+        A couple of cleanups that Geoff suggested after my last checkin.
+
+        * platform/win/PopupMenuWin.cpp:
+        (WebCore::PopupMenu::setPositionAndSize):
+
+2006-10-17  Adam Roben  <aroben@apple.com>
+
         Reviewed by Adele.
 
         Fix: <rdar://problem/4772506> <select> popup menu should not clip items
