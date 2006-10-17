@@ -587,6 +587,7 @@ HRESULT STDMETHODCALLTYPE WebPreferences::standardPreferences(
             return hr;
     }
 
+    m_standardPreferences->AddRef();
     *standardPreferences = m_standardPreferences;
     return hr;
 }

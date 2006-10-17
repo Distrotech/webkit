@@ -291,7 +291,7 @@ HRESULT STDMETHODCALLTYPE WebNotificationCenter::removeObserver(
     if (it == d->m_mappedObservers.end())
         return E_FAIL;
 
-    Vector<IWebNotificationObserver*> observerList = it->second;
+    Vector<IWebNotificationObserver*>& observerList = it->second;
     Vector<IWebNotificationObserver*>::iterator end = observerList.end();
     int i=0;
     for (Vector<IWebNotificationObserver*>::iterator it = observerList.begin(); it != end; ++it, i++) {
