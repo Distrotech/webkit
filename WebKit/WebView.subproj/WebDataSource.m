@@ -812,14 +812,32 @@
 
 - (void)_receivedMainResourceError:(NSError *)error complete:(BOOL)isComplete
 {
+    WebDataSource* dataSource = self;
+    WebView* view = [self _webView];
+    WebFrame* frame = [self webFrame];
+    WebBridge *bridge = [frame _bridge];
+
+    // Retain the bridge because the stop may destroy it.
+    [dataSource retain];
+    [view retain];
+    [frame retain];
+    [bridge retain];
+
     if (isComplete) {
+        // FIXME: Don't want to do this if an entirely new load is going, so should check
+        // that both data sources on the frame are either self or nil.
         // Can't call [self _bridge] because we might not have commited yet
-        [[[self webFrame] _bridge] stop];
-    }        
-    [[self webFrame] _receivedMainResourceError:error];
-    [[self _webView] _mainReceivedError:error
-                           fromDataSource:self
-                                 complete:isComplete];
+        [bridge stop];
+    }
+
+    [frame _receivedMainResourceError:error];
+    if ([self webFrame])    
+        [view _mainReceivedError:error fromDataSource:self complete:isComplete];
+
+    [bridge release];
+    [frame release];
+    [view release];
+    [dataSource release];
 }
 
 - (void)_updateIconDatabaseWithURL:(NSURL *)iconURL
