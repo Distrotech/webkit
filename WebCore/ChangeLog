@@ -1,5 +1,25 @@
 2006-10-16  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Kevin.
+
+        Fix: <rdar://problem/4758923> <select> menu text doesn't draw right
+        aligned on right-to-left sites
+
+        * platform/win/PopupMenuWin.cpp:
+        (WebCore::PopupMenu::show): Pass appropriate styles to CreateWindowEx
+        so that we get a left-aligned scrollbar in RTL popups.
+        (WebCore::PopupMenu::drawItem): Set text to be right-aligned and draw
+        RTL when direction:rtl is set.
+        (WebCore::PopupWndProc): Add 1px of vertical height to each menu item
+        to match RenderListBox.
+        * rendering/RenderThemeWin.cpp:
+        (WebCore::RenderThemeWin::paintMenuList): Draw the dropdown button on
+        the left when in RTL.
+        (WebCore::RenderThemeWin::adjustMenuListStyle): Set padding to allow
+        for the dropdown button being on the left in RTL.
+
+2006-10-16  Adam Roben  <aroben@apple.com>
+
         Reviewed by John.
 
         Forgot to save these changes John suggested before checking in.

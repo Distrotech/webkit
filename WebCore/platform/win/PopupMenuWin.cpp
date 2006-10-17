@@ -35,6 +35,7 @@
 #include "RenderThemeWin.h"
 #include "RenderView.h"
 #include "Screen.h"
+#include "TextStyle.h"
 #include <tchar.h>
 #include <windows.h>
 
@@ -100,8 +101,14 @@ void PopupMenu::show(const IntRect& r, FrameView* v, int index)
 
         SetWindowLongPtr(m_container, 0, (LONG_PTR)this);
 
+        DWORD exStyle = 0;
+        if (menuList()->style()->direction() == LTR)
+            exStyle |= WS_EX_RIGHTSCROLLBAR | WS_EX_LTRREADING;
+        else
+            exStyle |= WS_EX_LEFTSCROLLBAR | WS_EX_RTLREADING;
+
         // FIXME: Should we also use LBS_COMBOBOX here? What does that do?
-        m_popup = CreateWindowEx(0, _T("ListBox"), _T("PopupMenu"),
+        m_popup = CreateWindowEx(exStyle, _T("ListBox"), _T("PopupMenu"),
             WS_CHILD | WS_BORDER | WS_VSCROLL | LBS_NOTIFY | LBS_HASSTRINGS | LBS_WANTKEYBOARDINPUT | LBS_OWNERDRAWFIXED,
             0, 0, 0, 0,
             m_container, 0, 0, 0);
@@ -390,8 +397,11 @@ void PopupMenu::drawItem(LPDRAWITEMSTRUCT drawInfo)
         context.setFont(itemFont);
         
         // Draw the item text
-        if (itemStyle->visibility() != HIDDEN)
-            context.drawText(textRun, IntPoint(0, itemFont.ascent() + (bitmapRect.height() - itemFont.height()) / 2));
+        if (itemStyle->visibility() != HIDDEN) {
+            int textX = itemStyle->direction() == LTR ? 0 : bitmapRect.right() - itemFont.width(textRun);
+            int textY = itemFont.ascent() + (bitmapRect.height() - itemFont.height()) / 2;
+            context.drawText(textRun, IntPoint(textX, textY), TextStyle(0, 0, 0, itemStyle->direction() == RTL));
+        }
     }
 
     ::BitBlt(drawInfo->hDC, menuRect.x(), menuRect.y(), menuRect.width(), menuRect.height(), bitmapDC, bitmapRect.x(), bitmapRect.y(), SRCCOPY);
@@ -429,6 +439,7 @@ static ATOM registerPopup()
     return RegisterClassEx(&wcex);
 }
 
+const int optionSpacingMiddle = 1;
 static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     // FIXME: The popup selection should follow the mouse pointer without a click.
@@ -498,7 +509,7 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             ASSERT(measureInfo->CtlType == ODT_LISTBOX);
             // FIXME: This will have to change when <rdar://4772506> is fixed.
             measureInfo->itemWidth = popup->menuList()->width();
-            measureInfo->itemHeight = popup->menuList()->font(false).height();
+            measureInfo->itemHeight = popup->menuList()->font(false).height() + optionSpacingMiddle;
             lResult = TRUE;
             break;
         case WM_DRAWITEM:
