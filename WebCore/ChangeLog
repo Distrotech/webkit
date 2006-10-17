@@ -1,3 +1,21 @@
+2006-10-17  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Adele.
+
+        Fix: <rdar://problem/4772506> <select> popup menu should not clip items
+        when width: is set.
+
+        Popups are now sized and positioned as follows:
+        1. Popups are at least as wide as the <select> control on the page.
+        2. Popups for LTR <select>s are right-aligned with the <select>, popups
+           for RTL <select>s are left-aligned. This means the scrollbar in the
+           popup will always line up with the dropdown button in the <select>.
+        3. Popups try to be wide enough to fit their widest item, but will
+           shrink to ensure they don't extend off the screen.
+
+        * platform/win/PopupMenuWin.cpp:
+        (WebCore::PopupMenu::setPositionAndSize):
+
 2006-10-16  Adam Roben  <aroben@apple.com>
 
         Reviewed by Kevin.

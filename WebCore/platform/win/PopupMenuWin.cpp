@@ -149,9 +149,35 @@ void PopupMenu::setPositionAndSize(const IntRect& r, FrameView* v)
     const Vector<HTMLElement*>& items = select->listItems();
     size_t size = items.size();
     // Add an extra (itemHeight / 2) here because the popup will shrink itself to not show any partial items when we call SetWindowPos()
-    int popupHeight = min(maxPopupHeight, itemHeight * size + itemHeight / 2);
+    int naturalHeight = itemHeight * size + itemHeight / 2;
+    int popupHeight = min(maxPopupHeight, naturalHeight);
+    
+    int popupWidth = 0;
+    for (int i = 0; i < size; ++i) {
+        String text;
+        if (items[i]->hasTagName(optionTag))
+            text = static_cast<HTMLOptionElement*>(items[i])->optionText();
+        else if (items[i]->hasTagName(optgroupTag))
+            text = static_cast<HTMLOptGroupElement*>(items[i])->groupLabelText();
 
-    IntRect popupRect(rViewCoords.x(), rViewCoords.bottom(), rViewCoords.width(), popupHeight);
+        if (text.isEmpty())
+            continue;
+
+        popupWidth = max(popupWidth, menuList()->font(false).width(TextRun(text.characters(), text.length())));
+    }
+
+    if (naturalHeight > maxPopupHeight)
+        // We need room for a scrollbar
+        popupWidth += ::GetSystemMetrics(SM_CXVSCROLL);
+
+    // The popup window has a 1px border (because the WS_BORDER style) which is included in its width,
+    // so we need to widen it by 2px to make sure everything will fit
+    popupWidth += 2;
+
+    // The popup should be at least as wide as the control on the page
+    popupWidth = max(rViewCoords.width(), popupWidth);
+
+    IntRect popupRect(menuList()->style()->direction() == LTR ? rViewCoords.right() - popupWidth : rViewCoords.x(), rViewCoords.bottom(), popupWidth, popupHeight);
 
     // WS_POPUP windows are positioned in screen coordinates, but popupRect is in WebView coordinates,
     // so we have to find the screen origin of the FrameView to position correctly
@@ -166,6 +192,7 @@ void PopupMenu::setPositionAndSize(const IntRect& r, FrameView* v)
     // The popup needs to stay within the bounds of the screen and not overlap any toolbars
     FloatRect screen = usableScreenRect(v->frame()->page());
 
+    // Check that we don't go off the screen vertically
     if (popupRect.bottom() > screen.height()) {
         // The popup will go off the screen, so try placing it above the menulist
         if (viewRect.top + rViewCoords.y() - popupRect.height() < 0) {
@@ -183,6 +210,13 @@ void PopupMenu::setPositionAndSize(const IntRect& r, FrameView* v)
             popupRect.setY(viewRect.top + rViewCoords.y() - popupRect.height());
         }
     }
+
+    // Check that we don't go off the screen horizontally
+    if (menuList()->style()->direction() == LTR && popupRect.x() < screen.x()) {
+        popupRect.setWidth(popupRect.width() - (screen.x() - popupRect.x()));
+        popupRect.setX(screen.x());
+    } else if (menuList()->style()->direction() == RTL && popupRect.right() > screen.right())
+        popupRect.setWidth(popupRect.width() - (popupRect.right() - screen.right()));
 
     // Place the popup container and the popup.
     // The container (with style WS_POPUP) is positioned in screen coordinates, and the popup
