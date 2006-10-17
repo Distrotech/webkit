@@ -4049,6 +4049,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\html\HTMLFrameElementBase.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\html\HTMLFrameElementBase.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\html\HTMLFrameSetElement.cpp"
 				>
 			</File>
