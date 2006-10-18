@@ -54,6 +54,7 @@ cpp_quote("enum WebViewCmd { Cut = 100, Copy, Paste, ForwardDelete, SelectAll };
 import "oaidl.idl";
 import "ocidl.idl";
 import "IWebUIDelegate.idl";
+import "IWebURLResponse.idl";
 import "IWebResourceLoadDelegate.idl";
 import "IWebDownload.idl";
 import "IWebFrameLoadDelegate.idl";

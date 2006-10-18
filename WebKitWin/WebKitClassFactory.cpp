@@ -26,7 +26,6 @@
 #include "WebKitDLL.h"
 #include "WebKitClassFactory.h"
 #include "WebMutableURLRequest.h"
-#include "IWebURLResponse.h"
 #include "WebKit.h"
 #include "WebFrame.h"
 #include "WebView.h"

@@ -26,7 +26,6 @@
 #include "config.h"
 #include "WebKitDLL.h"
 
-#include "IWebURLResponse.h"
 #include "WebKit.h"
 #include "WebView.h"
 

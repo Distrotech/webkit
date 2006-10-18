@@ -29,7 +29,6 @@
 #include "DOMCoreClasses.h"
 #include "IWebHistory.h"
 #include "IWebHistoryItemPrivate.h"
-#include "IWebURLResponse.h"
 #include "IWebFrameLoadDelegatePrivate.h"
 #include "IWebFormDelegate.h"
 #include "IWebUIDelegatePrivate.h"
