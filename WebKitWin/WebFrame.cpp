@@ -28,6 +28,7 @@
 
 #include "DOMCoreClasses.h"
 #include "IWebHistory.h"
+#include "IWebHistoryItemPrivate.h"
 #include "IWebURLResponse.h"
 #include "IWebFrameLoadDelegatePrivate.h"
 #include "IWebFormDelegate.h"
@@ -35,6 +36,7 @@
 #include "WebMutableURLRequest.h"
 #include "WebFrame.h"
 #include "WebHistory.h"
+#include "WebKit.h"
 #include "WebView.h"
 #include "WebDataSource.h"
 #include "WebHistoryItem.h"
@@ -305,7 +307,6 @@ public:
     Frame* frame;
     FrameView* frameView;
     WebView* webView;
-    String title;
     bool needsLayout;
 };
 
@@ -563,7 +564,10 @@ HRESULT STDMETHODCALLTYPE WebFrame::continueSubmit(void)
 
 void WebFrame::initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, Page* page, Element* ownerElement)
 {
-    d->webView = static_cast<WebView*>(webView);
+    if (FAILED(webView->QueryInterface(CLSID_WebView, (void**)&d->webView)))
+        return;
+    d->webView->Release(); // don't hold the extra ref
+
     HWND viewWindow;
     d->webView->viewWindow(&viewWindow);
 
@@ -624,8 +628,11 @@ HRESULT WebFrame::loadDataSource(WebDataSource* dataSource)
                 String methodString(method, SysStringLen(method));
                 const FormData* formData = 0;
                 if (wcscmp(method, TEXT("GET"))) {
-                    WebMutableURLRequest* requestImpl = static_cast<WebMutableURLRequest*>(request);
-                    formData = requestImpl->formData();
+                    WebMutableURLRequest* requestImpl;
+                    if (SUCCEEDED(request->QueryInterface(CLSID_WebMutableURLRequest, (void**)&requestImpl))) {
+                        formData = requestImpl->formData();
+                        requestImpl->Release();
+                    }
                 }
                 if (formData)
                     m_loader = ResourceLoader::create(this, methodString, kurl, *formData);
@@ -667,11 +674,11 @@ bool WebFrame::loading()
 
 HRESULT WebFrame::goToItem(IWebHistoryItem* item, WebFrameLoadType withLoadType)
 {
-    IWebBackForwardList* backForwardList;
-    HRESULT hr = d->webView->backForwardList(&backForwardList);
-    if (SUCCEEDED(hr)) {
-        backForwardList->goToItem(item);
-        backForwardList->Release();
+    HRESULT hr = S_OK;
+    IWebBackForwardList* list = backForwardList();
+    if (list) {
+        list->goToItem(item);
+        list->Release();
         hr = loadItem(item, withLoadType);
     }
     return hr;
@@ -942,9 +949,8 @@ void WebFrame::receivedRedirect(ResourceLoader*, const KURL& url)
             IWebMutableURLRequest* mutableRequest;
             if (SUCCEEDED(m_provisionalDataSource->request(&mutableRequest))) {
                 DeprecatedString urlStr = url.url();
-                BSTR urlBSTR = SysAllocStringLen((LPCOLESTR)urlStr.unicode(), urlStr.length());
-                mutableRequest->setURL(urlBSTR);
-                SysFreeString(urlBSTR);
+                BString urlBStr((LPCOLESTR)urlStr.unicode(), urlStr.length());
+                mutableRequest->setURL(urlBStr);
                 frameLoadDelegate->didReceiveServerRedirectForProvisionalLoadForFrame(d->webView, this);
                 mutableRequest->Release();
             }
@@ -980,7 +986,7 @@ void WebFrame::receivedResponse(ResourceLoader* loader, PlatformResponse platfor
             preferences->privateBrowsingEnabled(&privateBrowsingEnabled);
 
         DeprecatedString urlStr = loader->url().url();
-        BSTR urlBStr = SysAllocStringLen((LPCOLESTR)urlStr.unicode(), urlStr.length());
+        BString urlBStr((LPCOLESTR)urlStr.unicode(), urlStr.length());
 
         SYSTEMTIME currentTime;
         GetSystemTime(&currentTime);
@@ -990,45 +996,44 @@ void WebFrame::receivedResponse(ResourceLoader* loader, PlatformResponse platfor
         if (m_loadType != WebFrameLoadTypeBack && m_loadType != WebFrameLoadTypeForward && m_loadType != WebFrameLoadTypeIndexedBackForward &&
             m_loadType != WebFrameLoadTypeReload && m_loadType != WebFrameLoadTypeReloadAllowingStaleData && m_loadType != WebFrameLoadTypeInternal &&
             !m_quickRedirectComing) {
-            BSTR titleBStr = SysAllocStringLen((LPCOLESTR)d->title.characters(), d->title.length());
-            WebHistoryItem* historyItem = WebHistoryItem::createInstance();
-            if (SUCCEEDED(historyItem->initWithURLString(urlBStr, titleBStr, visitedTime))) {
+            IWebHistoryItem* item;
+            item = WebHistoryItem::createInstance();
+            if (SUCCEEDED(item->initWithURLString(urlBStr, 0, visitedTime))) {
                 
                 // add this site to the back/forward list
-                IWebBackForwardList* backForwardList;
-                if (SUCCEEDED(d->webView->backForwardList(&backForwardList))) {
-                    backForwardList->addItem(historyItem);
-                    backForwardList->Release();
+                IWebBackForwardList* list = backForwardList();
+                if (list) {
+                    list->addItem(item);
+                    list->Release();
                 }
                 
                 // add this site to the history if private browsing is disabled
                 if (!privateBrowsingEnabled) {
-                    IWebHistoryPrivate* history = WebHistory::optionalSharedHistoryInternal();
-                    if (history)
-                        history->addItemForURL(urlBStr, titleBStr);
-                }
-                historyItem->Release(); // ref adopted by history list if needed
-            }
-            SysFreeString(titleBStr);
-        } else {
-            if (!privateBrowsingEnabled) {
-                IWebHistoryPrivate* history = WebHistory::optionalSharedHistoryInternal();
-                WebHistory* historyInternal = static_cast<WebHistory*>(history);
-                if (historyInternal) {
-                    IWebHistoryItem* item;
-                    if (SUCCEEDED(historyInternal->itemForURL(urlBStr, &item))) {
-                        IWebHistoryItemPrivate* itemPrivate;
-                        if (SUCCEEDED(item->QueryInterface(IID_IWebHistoryItemPrivate, (void**)&itemPrivate))) {
-                            itemPrivate->setLastVisitedTimeInterval(visitedTime);
-                            itemPrivate->Release();
-                            // FIXME - bumping the last visited time doesn't mark the history as changed
-                        }
-                        item->Release();
+                    WebHistory* history = webHistory();
+                    if (history) {
+                        history->addItemForURL(urlBStr, 0);
+                        history->Release();
                     }
                 }
             }
+        } else {
+            if (!privateBrowsingEnabled) {
+                WebHistory* history = webHistory();
+                if (history) {
+                    IWebHistoryItem* item;
+                    if (SUCCEEDED(history->itemForURL(urlBStr, &item))) {
+                        IWebHistoryItemPrivate* itemPrivate;
+                        if (SUCCEEDED(item->QueryInterface(IID_IWebHistoryItemPrivate, (void**)&itemPrivate))) {
+                            itemPrivate->setLastVisitedTimeInterval(visitedTime);
+                            // FIXME - bumping the last visited time doesn't mark the history as changed
+                            itemPrivate->Release();
+                        }
+                        item->Release();
+                    }
+                    history->Release();
+                }
+            }
         }
-        SysFreeString(urlBStr);
         frameLoadDelegate->Release();
     }
 
@@ -1131,7 +1136,7 @@ Frame* WebFrame::createFrame(const KURL& URL, const String& name, Element* owner
 
     WebMutableURLRequest* request = WebMutableURLRequest::createInstance();
     String urlString = String(URL.url());
-    BSTR urlBStr = SysAllocStringLen(urlString.characters(), urlString.length());
+    BString urlBStr(urlString);
     BSTR method = SysAllocString(L"GET");
 
     HRESULT hr;
@@ -1143,7 +1148,6 @@ Frame* WebFrame::createFrame(const KURL& URL, const String& name, Element* owner
     if (FAILED(hr))
         return frame;
 
-    SysFreeString(urlBStr);
     SysFreeString(method);
 
     webFrame->m_loadType = WebFrameLoadTypeInternal;
@@ -1193,15 +1197,11 @@ void WebFrame::submitForm(const String& method, const KURL& url, const FormData*
 {
     // FIXME: This is a dumb implementation, doesn't handle subframes, etc.
 
-    DeprecatedString terminatedURL(url.url());
-    terminatedURL.append('\0');
-    DeprecatedString terminatedMethod(method.deprecatedString());
-    terminatedMethod.append('\0');
-
     m_quickRedirectComing = false;
     m_loadType = WebFrameLoadTypeStandard;
-    BSTR urlBStr = SysAllocString((LPCTSTR)terminatedURL.unicode());
-    BSTR methodBStr = SysAllocString((LPCTSTR)terminatedMethod.unicode());
+    DeprecatedString urlStr = url.url();
+    BString urlBStr((LPCOLESTR)urlStr.unicode(), urlStr.length());
+    BString methodBStr(method);
     WebMutableURLRequest* request = WebMutableURLRequest::createInstance();
     if (SUCCEEDED(request->initWithURL(urlBStr, WebURLRequestUseProtocolCachePolicy, 0))) {
         request->setHTTPMethod(methodBStr);
@@ -1222,20 +1222,54 @@ void WebFrame::submitForm(const String& method, const KURL& url, const FormData*
         if (m_continueFormSubmit)
             loadRequest(request);
     }
-    SysFreeString(urlBStr);
-    SysFreeString(methodBStr);
     request->Release();
 }
 
 void WebFrame::setTitle(const String& title)
 {
-    d->title = title;
+    BString titleBStr(title);
+
     IWebFrameLoadDelegate* frameLoadDelegate;
     if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
-        BSTR titleBStr = SysAllocStringLen(title.characters(), title.length());
         frameLoadDelegate->didReceiveTitle(d->webView, titleBStr, this);
-        SysFreeString(titleBStr);
         frameLoadDelegate->Release();
+    }
+
+    BOOL privateBrowsingEnabled = FALSE;
+    IWebPreferences* preferences;
+    if (SUCCEEDED(d->webView->preferences(&preferences)))
+        preferences->privateBrowsingEnabled(&privateBrowsingEnabled);
+    if (!privateBrowsingEnabled) {
+        // update title in global history
+        WebHistory* history = webHistory();
+        if (history) {
+            IWebHistoryItem* item;
+            DeprecatedString urlStr = d->frame->url().url();
+            BString urlBStr = BString((LPCOLESTR)urlStr.unicode(), urlStr.length());
+            if (SUCCEEDED(history->itemForURL(urlBStr, &item))) {
+                IWebHistoryItemPrivate* itemPrivate;
+                if (SUCCEEDED(item->QueryInterface(IID_IWebHistoryItemPrivate, (void**)&itemPrivate))) {
+                    itemPrivate->setTitle(titleBStr);
+                    itemPrivate->Release();
+                }
+                item->Release();
+            }
+            history->Release();
+        }
+    }
+    // update title in back/forward list
+    IWebBackForwardList* list = backForwardList();
+    if (list) {
+        IWebHistoryItem* item;
+        if (SUCCEEDED(list->currentItem(&item))) {
+            IWebHistoryItemPrivate* itemPrivate;
+            if (SUCCEEDED(item->QueryInterface(IID_IWebHistoryItemPrivate, (void**)&itemPrivate))) {
+                itemPrivate->setTitle(titleBStr);
+                itemPrivate->Release();
+            }
+            item->Release();
+        }
+        list->Release();
     }
 }
 
@@ -1465,3 +1499,30 @@ void WebFrame::updateBackingStore()
     d->webView->updateBackingStore(d->webView->topLevelFrame()->impl()->view(), 0, false);
 }
 
+IWebBackForwardList* WebFrame::backForwardList()
+{
+    if (this != d->webView->topLevelFrame())
+        return 0; // FIXME - need to maintain back/forward for subframes
+    
+    IWebBackForwardList* backForwardList;
+    if (FAILED(d->webView->backForwardList(&backForwardList)))
+        return 0;
+
+    return backForwardList;
+}
+
+WebHistory* WebFrame::webHistory()
+{
+    if (this != d->webView->topLevelFrame())
+        return 0;
+
+    IWebHistoryPrivate* historyInternal = WebHistory::optionalSharedHistoryInternal(); // does not add a ref
+    if (!historyInternal)
+        return 0;
+
+    WebHistory* webHistory;
+    if (FAILED(historyInternal->QueryInterface(CLSID_WebHistory, (void**)&webHistory)))
+        return 0;
+
+    return webHistory;
+}

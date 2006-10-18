@@ -148,7 +148,7 @@ bool FrameWin::isLoadTypeReload(void) { LOG_NOIMPL(); return false; }
 Widget* FrameWin::createJavaAppletWidget(const IntSize&, Element* element, const HashMap<String, String>& args) { STOP_NOIMPL(); return 0; }
 
 bool BrowserExtensionWin::canRunModal() { LOG_NOIMPL(); return false; }
-void BrowserExtensionWin::createNewWindow(struct WebCore::FrameLoadRequest const&,struct WebCore::WindowArgs const&,Frame*&) { STOP_NOIMPL(); }
+void BrowserExtensionWin::createNewWindow(struct WebCore::FrameLoadRequest const&,struct WebCore::WindowFeatures const&,Frame*&) { STOP_NOIMPL(); }
 bool BrowserExtensionWin::canRunModalNow() { LOG_NOIMPL(); return false; }
 void BrowserExtensionWin::runModal() { STOP_NOIMPL(); }
 void BrowserExtensionWin::goBackOrForward(int) { LOG_NOIMPL(); }

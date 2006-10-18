@@ -26,11 +26,13 @@
 #include "WebKitDLL.h"
 #include "WebHistory.h"
 
+#include "CFDictionaryPropertyBag.h"
+#include "IWebURLResponse.h"
 #include "MarshallingHelpers.h"
 #include "WebHistoryItem.h"
-#include "WebPreferences.h"
+#include "WebKit.h"
 #include "WebNotificationCenter.h"
-#include "CFDictionaryPropertyBag.h"
+#include "WebPreferences.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <WebCore/platform/win/WebCoreHistory.h>
@@ -167,7 +169,9 @@ BSTR WebHistory::getNotificationString(NotificationType notifyType)
 HRESULT STDMETHODCALLTYPE WebHistory::QueryInterface(REFIID riid, void** ppvObject)
 {
     *ppvObject = 0;
-    if (IsEqualGUID(riid, IID_IUnknown))
+    if (IsEqualGUID(riid, CLSID_WebHistory))
+        *ppvObject = this;
+    else if (IsEqualGUID(riid, IID_IUnknown))
         *ppvObject = static_cast<IWebHistory*>(this);
     else if (IsEqualGUID(riid, IID_IWebHistory))
         *ppvObject = static_cast<IWebHistory*>(this);

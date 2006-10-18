@@ -1,3 +1,39 @@
+2006-10-17  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by ggaren.
+
+        <rdar://4781999> History menu gets borked if you visit a page with no title.
+        <rdar://4782002> The History menu is frequently utterly corrupted, with incorrect favicons next to mismatched titles.
+        <rdar://4780252> Page titles in History menu are incorrect
+        <rdar://4760334> Pages without title show an old title instead of a default title
+
+        * Interfaces/IWebHistoryItemPrivate.idl: added setTitle to set title for a page after we receive it
+        * WebFrame.cpp: Removed unnecessary WebFramePrivate::title
+        (WebFrame::goToItem): Get back/forward list via frame-aware getter
+        (WebFrame::receivedRedirect): Use BString
+        (WebFrame::receivedResponse): Use BString. Get back/forward list, history via frame-aware getters.
+        (WebFrame::createFrame): Use BString
+        (WebFrame::submitForm): Clean up up BSTR usage
+        (WebFrame::setTitle): Set title in back/forward, history when received
+        (WebFrame::backForwardList): Frame-aware getter for back/forward
+        (WebFrame::webHistory): Frame-aware getter for history
+        * WebFrame.h: Added frame-aware getters for history, back/forward
+        * WebHistory.cpp: Reorder includes.
+        (WebHistory::QueryInterface): Support QI to WebHistory via CLSID (avoids yucky static cast in other places)
+        * WebHistoryItem.cpp:
+        (WebHistoryItem::setTitle): Added
+        * WebHistoryItem.h: Added setTitle
+        * WebView.cpp:
+        (WebView::QueryInterface): Support QI to WebView via CLSID
+
+2006-10-17  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Maciej.
+        
+        Switch over to ICU 3.6
+
+        * WebKit.vcproj/WebKit.vcproj:
+
 2006-10-17  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Brady.

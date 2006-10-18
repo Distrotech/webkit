@@ -67,4 +67,5 @@ interface IWebHistoryItemPrivate : IUnknown
     HRESULT hasURLString([out, retval] BOOL* hasURL);
     HRESULT mergeAutoCompleteHints([in] IWebHistoryItem* otherItem);
     HRESULT setLastVisitedTimeInterval([in] DATE time);
+    HRESULT setTitle([in] BSTR title);
 }

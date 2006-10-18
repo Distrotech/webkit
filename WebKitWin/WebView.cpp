@@ -27,6 +27,7 @@
 #include "WebKitDLL.h"
 
 #include "IWebURLResponse.h"
+#include "WebKit.h"
 #include "WebView.h"
 
 #include "IWebNotification.h"
@@ -1026,7 +1027,9 @@ Settings* WebView::settings()
 HRESULT STDMETHODCALLTYPE WebView::QueryInterface(REFIID riid, void** ppvObject)
 {
     *ppvObject = 0;
-    if (IsEqualGUID(riid, IID_IUnknown))
+    if (IsEqualGUID(riid, CLSID_WebView))
+        *ppvObject = this;
+    else if (IsEqualGUID(riid, IID_IUnknown))
         *ppvObject = static_cast<IWebView*>(this);
     else if (IsEqualGUID(riid, IID_IWebView))
         *ppvObject = static_cast<IWebView*>(this);

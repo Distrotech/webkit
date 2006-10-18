@@ -214,6 +214,17 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::setLastVisitedTimeInterval(DATE time)
     return S_OK;
 }
 
+HRESULT STDMETHODCALLTYPE WebHistoryItem::setTitle(BSTR title)
+{
+    if (m_title)
+        SysFreeString(m_title);
+    m_title = SysAllocString(title);
+    if (title && !m_title)
+        return E_OUTOFMEMORY;
+
+    return S_OK;
+}
+
 // IUnknown -------------------------------------------------------------------
 
 HRESULT STDMETHODCALLTYPE WebHistoryItem::QueryInterface(REFIID riid, void** ppvObject)

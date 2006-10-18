@@ -24,6 +24,8 @@
  */
 
 #include "WebKitDLL.h"
+#include "IWebURLResponse.h"
+#include "WebKit.h"
 #include "WebMutableURLRequest.h"
 
 #pragma warning(push, 0)
@@ -75,6 +77,8 @@ WebMutableURLRequest* WebMutableURLRequest::createInstance()
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::QueryInterface(REFIID riid, void** ppvObject)
 {
     *ppvObject = 0;
+    if (IsEqualGUID(riid, CLSID_WebMutableURLRequest))
+        *ppvObject = this;
     if (IsEqualGUID(riid, IID_IUnknown))
         *ppvObject = static_cast<IWebURLRequest*>(this);
     else if (IsEqualGUID(riid, IID_IWebMutableURLRequest))

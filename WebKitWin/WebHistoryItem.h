@@ -83,6 +83,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE hasURLString(BOOL* hasURL);
     virtual HRESULT STDMETHODCALLTYPE mergeAutoCompleteHints(IWebHistoryItem* otherItem);
     virtual HRESULT STDMETHODCALLTYPE setLastVisitedTimeInterval(DATE time);
+    virtual HRESULT STDMETHODCALLTYPE setTitle(BSTR title);
 
 protected:
     ULONG m_refCount;

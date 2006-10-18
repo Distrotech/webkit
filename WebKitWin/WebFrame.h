@@ -48,6 +48,8 @@ namespace WebCore {
 }
 
 class WebView;
+class WebHistory;
+interface IWebHistoryItemPrivate;
 
 typedef enum {
     WebFrameLoadTypeStandard,
@@ -197,6 +199,8 @@ public:
     HRESULT canProvideDocumentSource(bool* result);
     const Vector<char>* data() { return &m_buffer; }
     HRESULT reloadAllowingStaleDataWithOverrideEncoding(BSTR encoding);
+    IWebBackForwardList* backForwardList();
+    WebHistory* webHistory();
 
 protected:
     unsigned int getObjectCacheSize();
