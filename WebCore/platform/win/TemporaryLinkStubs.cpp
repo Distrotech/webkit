@@ -102,8 +102,6 @@ Widget::FocusPolicy Slider::focusPolicy() const { LOG_NOIMPL(); return NoFocus; 
 Widget::FocusPolicy ListBox::focusPolicy() const { LOG_NOIMPL(); return NoFocus; }
 Widget::FocusPolicy TextField::focusPolicy() const { LOG_NOIMPL(); return NoFocus; }
 
-Cursor::Cursor(Image*, const IntPoint&) { STOP_NOIMPL(); }
-
 PlatformMouseEvent::PlatformMouseEvent(const CurrentEventTag&) { LOG_NOIMPL(); }
 String WebCore::searchableIndexIntroduction() { LOG_NOIMPL(); return String(); }
 
@@ -223,7 +221,6 @@ bool ScrollView::inWindow() const { LOG_NOIMPL(); return true; }
 
 void GraphicsContext::drawFocusRing(const Color& color) { LOG_NOIMPL(); }
 void GraphicsContext::drawLineForMisspelling(const IntPoint& point, int width) { LOG_NOIMPL(); }
-void GraphicsContext::setCompositeOperation(CompositeOperator) { LOG_NOIMPL(); }
 
 TextField::TextField(TextField::Type) { LOG_NOIMPL(); }
 TextField::~TextField() { LOG_NOIMPL(); }

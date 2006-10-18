@@ -67,14 +67,13 @@ bool Image::getHBITMAP(HBITMAP bmp)
     BITMAP bmpInfo;
     GetObject(bmp, sizeof(BITMAP), &bmpInfo);
 
-    // If this is a 32bpp bitmap, which it always should be, we'll clear it so alpha-wise it will be visible
     ASSERT(bmpInfo.bmBitsPixel == 32);
     int bufferSize = bmpInfo.bmWidthBytes * bmpInfo.bmHeight;
-    memset(bmpInfo.bmBits, 255, bufferSize);
     
     CGColorSpaceRef deviceRGB = CGColorSpaceCreateDeviceRGB();
     CGContextRef cgContext = CGBitmapContextCreate(bmpInfo.bmBits, bmpInfo.bmWidth, bmpInfo.bmHeight,
-        8, bmpInfo.bmWidthBytes, deviceRGB, kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst);
+        8, bmpInfo.bmWidthBytes, deviceRGB, kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst);
+  
     GraphicsContext gc(cgContext);
     IntSize imageSize = Image::size();
     draw(&gc, FloatRect(0, 0, bmpInfo.bmWidth, bmpInfo.bmHeight), FloatRect(0, 0, imageSize.width(), imageSize.height()), CompositeCopy);

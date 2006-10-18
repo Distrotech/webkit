@@ -645,7 +645,7 @@ static ATOM registerWebViewWindowClass()
     wcex.cbWndExtra     = 4; // 4 bytes for the IWebView pointer
     wcex.hInstance      = gInstance;
     wcex.hIcon          = 0;
-    wcex.hCursor        = LoadCursor(0, IDC_ARROW);
+    wcex.hCursor        = 0;
     wcex.hbrBackground  = 0;
     wcex.lpszMenuName   = 0;
     wcex.lpszClassName  = kWebViewWindowClassName;
