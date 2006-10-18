@@ -153,7 +153,6 @@ bool BrowserExtensionWin::canRunModalNow() { LOG_NOIMPL(); return false; }
 void BrowserExtensionWin::runModal() { STOP_NOIMPL(); }
 void BrowserExtensionWin::goBackOrForward(int) { LOG_NOIMPL(); }
 KURL BrowserExtensionWin::historyURL(int distance) { LOG_NOIMPL(); return KURL(); }
-void BrowserExtensionWin::createNewWindow(struct WebCore::FrameLoadRequest const&) { STOP_NOIMPL(); }
 
 void GraphicsContextPlatformPrivate::clip(const Path&) { LOG_NOIMPL(); }
 
@@ -197,8 +196,6 @@ void FrameWin::markMisspellingsInAdjacentWords(WebCore::VisiblePosition const&) 
 void FrameWin::respondToChangedContents(const Selection &endingSelection) { LOG_NOIMPL(); }
 
 BrowserExtensionWin::BrowserExtensionWin(WebCore::FrameWin*) { LOG_NOIMPL(); }
-void BrowserExtensionWin::setTypedIconURL(KURL const&, const String&) { LOG_NOIMPL(); }
-void BrowserExtensionWin::setIconURL(KURL const&) { LOG_NOIMPL(); }
 int BrowserExtensionWin::getHistoryLength() { LOG_NOIMPL(); return 0; }
 
 namespace WebCore {
