@@ -237,6 +237,10 @@ void WebPreferences::initialize()
     key = CFSTR(WebKitIconDatabaseEnabledPreferenceKey);
     if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
         CFDictionaryAddValue(m_standardUserDefaults, key,                               kCFBooleanTrue);
+
+    key = CFSTR(WebKitFontSmothingTypePreferenceKey);
+    if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
+        CFDictionaryAddValue(m_standardUserDefaults, key,                               CFSTR("2"));
 }
 
 const void* WebPreferences::valueForKey(CFStringRef key)
@@ -1030,5 +1034,19 @@ HRESULT WebPreferences::iconDatabaseEnabled(BOOL* enabled)//location)
 HRESULT WebPreferences::setIconDatabaseEnabled(BOOL enabled )//location)
 {
     setBoolValue(CFSTR(WebKitIconDatabaseEnabledPreferenceKey), enabled);
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebPreferences::fontSmoothing( 
+    /* [retval][out] */ FontSmoothingType* smoothingType)
+{
+    *smoothingType = (FontSmoothingType) integerValueForKey(CFSTR(WebKitFontSmothingTypePreferenceKey));
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebPreferences::setFontSmoothing( 
+    /* [in] */ FontSmoothingType smoothingType)
+{
+    setIntegerValue(CFSTR(WebKitFontSmothingTypePreferenceKey), smoothingType);
     return S_OK;
 }

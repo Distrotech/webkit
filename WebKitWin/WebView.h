@@ -173,7 +173,7 @@ public:
         /* [retval][out] */ BSTR *result);
     
     virtual HRESULT STDMETHODCALLTYPE windowScriptObject( 
-        /* [retval][out] */ IWebScriptObject *webScriptObject);
+        /* [retval][out] */ IWebScriptObject **webScriptObject);
     
     virtual HRESULT STDMETHODCALLTYPE setPreferences( 
         /* [in] */ IWebPreferences *prefs);
@@ -265,7 +265,7 @@ public:
         /* [retval][out] */ BSTR *title);
     
     virtual HRESULT STDMETHODCALLTYPE mainFrameIcon( 
-        /* [retval][out] */ IWebImage **icon);
+        /* [retval][out] */ HBITMAP *icon);
 
     // IWebIBActions
 
@@ -357,7 +357,7 @@ public:
         /* [retval][out] */ int *tag);
     
     virtual HRESULT STDMETHODCALLTYPE undoManager( 
-        /* [retval][out] */ IWebUndoManager *manager);
+        /* [retval][out] */ IWebUndoManager **manager);
     
     virtual HRESULT STDMETHODCALLTYPE setEditingDelegate( 
         /* [in] */ IWebViewEditingDelegate *d);

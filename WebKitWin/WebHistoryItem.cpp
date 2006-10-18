@@ -322,7 +322,7 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::alternateTitle(
 }
 
 HRESULT STDMETHODCALLTYPE WebHistoryItem::icon( 
-    /* [in] */ IWebImage* /*image*/)
+    /* [out, retval] */ HBITMAP* /*image*/)
 {
     DebugBreak();
     return E_NOTIMPL;

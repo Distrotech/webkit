@@ -368,7 +368,7 @@ public:
         /* [retval][out] */ BSTR *result);
     
     virtual HRESULT STDMETHODCALLTYPE body( 
-        /* [retval][out] */ IDOMHTMLElement *bodyElement);
+        /* [retval][out] */ IDOMHTMLElement **bodyElement);
     
     virtual HRESULT STDMETHODCALLTYPE setBody( 
         /* [in] */ IDOMHTMLElement *body);
@@ -931,7 +931,7 @@ public:
 
     // IDOMHTMLFormElement
     virtual HRESULT STDMETHODCALLTYPE elements( 
-        /* [retval][out] */ IDOMHTMLCollection *result);
+        /* [retval][out] */ IDOMHTMLCollection **result);
     
     virtual HRESULT STDMETHODCALLTYPE length( 
         /* [retval][out] */ int *result);
@@ -1870,7 +1870,7 @@ public:
         /* [in] */ BSTR checked);
     
     virtual HRESULT STDMETHODCALLTYPE form( 
-        /* [retval][out] */ IDOMHTMLElement *result);
+        /* [retval][out] */ IDOMHTMLElement **result);
     
     virtual HRESULT STDMETHODCALLTYPE accept( 
         /* [retval][out] */ BSTR *result);
@@ -2264,7 +2264,7 @@ public:
         /* [in] */ BSTR val);
     
     virtual HRESULT STDMETHODCALLTYPE form( 
-        /* [retval][out] */ IDOMHTMLElement *result);
+        /* [retval][out] */ IDOMHTMLElement **result);
     
     virtual HRESULT STDMETHODCALLTYPE accessKey( 
         /* [retval][out] */ BSTR *result);

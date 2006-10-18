@@ -195,7 +195,7 @@ interface IWebDocumentText : IUnknown
         @result Attributed string that represents the current selection.
         - (NSAttributedString *)selectedAttributedString;
     */
-    HRESULT selectedAttributedString([out, retval] IWebAttributedString* result);
+    HRESULT selectedAttributedString([out, retval] IWebAttributedString** result);
 
     /*!
         @method selectAll

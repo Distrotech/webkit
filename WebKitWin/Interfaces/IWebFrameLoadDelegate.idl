@@ -50,7 +50,6 @@ cpp_quote(" */")
 
 import "oaidl.idl";
 import "ocidl.idl";
-import "IWebImage.idl";
 import "IWebScriptObject.idl";
 import "IWebView.idl";
 import "IWebFrame.idl";
@@ -59,7 +58,6 @@ interface IWebError;
 interface IWebFrame;
 interface IWebScriptObject;
 interface IWebView;
-interface IWebImage;
 
 /*!
     @category WebFrameLoadDelegate
@@ -145,7 +143,7 @@ interface IWebFrameLoadDelegate : IUnknown
         @param frame The frame for which a page icon has been received
         - (void)webView:(WebView *)sender didReceiveIcon:(NSImage *)image forFrame:(WebFrame *)frame;
     */
-    HRESULT didReceiveIcon([in] IWebView* webView, [in] IWebImage* image, [in] IWebFrame* frame);
+    HRESULT didReceiveIcon([in] IWebView* webView, [in] HBITMAP image, [in] IWebFrame* frame);
 
     /*!
         @method webView:didFinishLoadForFrame:

@@ -50,7 +50,6 @@ cpp_quote(" */")
 
 import "oaidl.idl";
 import "ocidl.idl";
-import "IWebImage.idl";
 
 /*!
     @class WebHistoryItem
@@ -144,5 +143,5 @@ interface IWebHistoryItem : IUnknown
         @result The icon associated with this item's URL.
         - (NSImage *)icon;
     */
-    HRESULT icon([in] IWebImage* image);
+    HRESULT icon([out, retval] HBITMAP* image);
 }

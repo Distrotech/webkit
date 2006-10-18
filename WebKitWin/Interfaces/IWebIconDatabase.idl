@@ -54,7 +54,6 @@ cpp_quote("#define WebIconDatabaseDidRemoveAllIconsNotification TEXT(\"WebIconDa
 
 import "oaidl.idl";
 import "ocidl.idl";
-import "IWebImage.idl";
 
 /*!
     @class WebIconDatabase

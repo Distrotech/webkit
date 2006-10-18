@@ -114,7 +114,7 @@ interface IDOMRange : IDOMObject
     /*
         - (DOMNode *)commonAncestorContainer;
     */
-    HRESULT commonAncestorContainer([out, retval] IDOMNode* container);
+    HRESULT commonAncestorContainer([out, retval] IDOMNode** container);
 
     /*
         - (void)setStart:(DOMNode *)refNode :(int)offset;

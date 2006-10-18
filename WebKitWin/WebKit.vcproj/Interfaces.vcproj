@@ -290,10 +290,6 @@
 			>
 		</File>
 		<File
-			RelativePath="..\Interfaces\IWebImage.idl"
-			>
-		</File>
-		<File
 			RelativePath="..\Interfaces\IWebMutableURLRequest.idl"
 			>
 		</File>

@@ -94,7 +94,7 @@ interface IWebArchive : IUnknown
         @result The main resource of the archive.
         - (WebResource *)mainResource;
     */
-    HRESULT mainResource([out, retval] IWebResource* resource);
+    HRESULT mainResource([out, retval] IWebResource** resource);
 
     /*!
         @method subresources

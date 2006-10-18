@@ -222,6 +222,12 @@ public:
     virtual HRESULT STDMETHODCALLTYPE setIconDatabaseEnabled(
         /* [in] */ BOOL enabled);
 
+    virtual HRESULT STDMETHODCALLTYPE fontSmoothing( 
+        /* [retval][out] */ FontSmoothingType* smoothingType);
+    
+    virtual HRESULT STDMETHODCALLTYPE setFontSmoothing( 
+        /* [in] */ FontSmoothingType smoothingType);
+
     // WebPreferences
     static BSTR webPreferencesChangedNotification();
 

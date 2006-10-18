@@ -115,7 +115,7 @@ interface IDOMHTMLOptionsCollection : IDOMObject
     /*
         - (DOMNode *)namedItem:(NSString *)name;
     */
-    HRESULT namedItem([in] BSTR name, [out, retval] IDOMNode* result);
+    HRESULT namedItem([in] BSTR name, [out, retval] IDOMNode** result);
 }
 
 /*
@@ -157,7 +157,7 @@ interface IDOMHTMLDocument : IDOMDocument
     /*
         - (DOMHTMLElement *)body;
     */
-    HRESULT body([out, retval] IDOMHTMLElement* bodyElement);
+    HRESULT body([out, retval] IDOMHTMLElement** bodyElement);
 
     /*
         - (void)setBody:(DOMHTMLElement *)body;
@@ -326,7 +326,7 @@ interface IDOMHTMLFormElement : IDOMHTMLElement
     /*
         - (DOMHTMLCollection *)elements;
     */
-    HRESULT elements([out, retval] IDOMHTMLCollection* result);
+    HRESULT elements([out, retval] IDOMHTMLCollection** result);
 
     /*
         - (int)length;
@@ -636,7 +636,7 @@ interface IDOMHTMLInputElement : IDOMElement
     /*
         - (DOMHTMLFormElement *)form;
     */
-    HRESULT form([out, retval] IDOMHTMLElement* result);
+    HRESULT form([out, retval] IDOMHTMLElement** result);
 
     /*
         - (NSString *)accept;
@@ -843,7 +843,7 @@ interface IDOMHTMLTextAreaElement : IDOMHTMLElement
     /*
         - (DOMHTMLFormElement *)form;
     */
-    HRESULT form([out, retval] IDOMHTMLElement* result);
+    HRESULT form([out, retval] IDOMHTMLElement** result);
 
     /*
         - (NSString *)accessKey;

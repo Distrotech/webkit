@@ -53,6 +53,13 @@ cpp_quote("#define WebPreferencesChangedNotification TEXT(\"WebPreferencesChange
 import "oaidl.idl";
 import "ocidl.idl";
 
+typedef enum FontSmoothingType {
+    FontSmoothingTypeStandard=0,
+    FontSmoothingTypeLight,
+    FontSmoothingTypeMedium,
+    FontSmoothingTypeStrong
+} FontSmoothingType;
+
 /*!
     @class WebPreferences
 
@@ -455,4 +462,7 @@ interface IWebPreferences : IUnknown
         @param Enable/disable the icon database
     */
     HRESULT setIconDatabaseEnabled([in] BOOL enabled);
+
+    HRESULT fontSmoothing([out, retval] FontSmoothingType* smoothingType);
+    HRESULT setFontSmoothing([in] FontSmoothingType smoothingType);
 }

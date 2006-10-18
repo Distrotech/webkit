@@ -149,5 +149,5 @@ interface IWebViewEditingDelegate : IUnknown
     /*
         - (NSUndoManager *)undoManagerForWebView:(WebView *)webView;
     */
-    HRESULT undoManagerForWebView([in] IWebView* webView, [out, retval] IWebUndoManager* undoManager);
+    HRESULT undoManagerForWebView([in] IWebView* webView, [out, retval] IWebUndoManager** undoManager);
 }

@@ -1,3 +1,57 @@
+2006-10-18  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Lou.
+
+        <rdar://4781998> Need API for setting the rendering modes
+        
+        Added font smoothing preference
+        Fixed some COM interface typos
+        Removed use of IWebImage (we use HBITMAP instead)
+
+        * DOMHTMLClasses.cpp:
+        (DOMHTMLDocument::body): fixed typos
+        (DOMHTMLFormElement::elements): fixed typos
+        (DOMHTMLInputElement::form): fixed typos
+        (DOMHTMLTextAreaElement::form): fixed typos
+        * DOMHTMLClasses.h: fixed typos
+        * Interfaces/DOMCSS.idl: fixed typos
+        * Interfaces/DOMHTML.idl: fixed typos
+        * Interfaces/DOMRange.idl: fixed typos
+        * Interfaces/IWebArchive.idl: fixed typos
+        * Interfaces/IWebDataSource.idl: fixed typos
+        * Interfaces/IWebDocument.idl: fixed typos
+        * Interfaces/IWebEditingDelegate.idl: fixed typos
+        * Interfaces/IWebFrameLoadDelegate.idl: fixed typos
+        * Interfaces/IWebFrameView.idl: fixed typos
+        * Interfaces/IWebHistoryItem.idl: fixed typos
+        * Interfaces/IWebIconDatabase.idl: fixed typos
+        * Interfaces/IWebImage.idl: Removed.
+        * Interfaces/IWebPreferences.idl: added font smoothing getter/setter
+        * Interfaces/IWebURLAuthenticationChallenge.idl:
+        * Interfaces/IWebView.idl: fixed typos
+        * Interfaces/WebKit.idl: removed IWebImage
+        * WebDataSource.cpp:
+        (WebDataSource::webArchive): fixed typos
+        (WebDataSource::mainResource): fixed typos
+        (WebDataSource::subresourceForURL): fixed typos
+        * WebDataSource.h: fixed typos
+        * WebHistoryItem.cpp:
+        (WebHistoryItem::icon): fixed typos
+        * WebHistoryItem.h: fixed typos
+        * WebKit.vcproj/Interfaces.vcproj: removed IWebImage
+        * WebKit.vcproj/WebKitGUID.vcproj: removed IWebImage
+        * WebPreferenceKeysPrivate.h: added font smoothing prefs key
+        * WebPreferences.cpp:
+        (WebPreferences::initialize): font smoothing pref
+        (WebPreferences::fontSmoothing): added
+        (WebPreferences::setFontSmoothing): added
+        * WebPreferences.h: added font smoothing getter/setter
+        * WebView.cpp:
+        (WebView::windowScriptObject): fixed typos
+        (WebView::mainFrameIcon): removed IWebImage
+        (WebView::undoManager): fixed typos
+        * WebView.h:
+
 2006-10-17  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by ggaren.

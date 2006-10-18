@@ -73,7 +73,7 @@ interface IWebFrameView : IUnknown
         @result The WebFrameView's frame.
         - (WebFrame *)webFrame;
    */
-   HRESULT webFrame([out, retval] IWebFrame* frame);
+   HRESULT webFrame([out, retval] IWebFrame** frame);
  
     /*!
         @method documentView
@@ -81,7 +81,7 @@ interface IWebFrameView : IUnknown
         @result The subview that renders the WebFrameView's contents
         - (NSView <WebDocumentView> *)documentView;
     */
-   HRESULT documentView([out, retval] IWebDocumentView* view);
+   HRESULT documentView([out, retval] IWebDocumentView** view);
 
     /*!
         @method setAllowsScrolling:

@@ -1509,7 +1509,7 @@ HRESULT STDMETHODCALLTYPE WebView::stringByEvaluatingJavaScriptFromString(
 }
 
 HRESULT STDMETHODCALLTYPE WebView::windowScriptObject( 
-    /* [retval][out] */ IWebScriptObject* /*webScriptObject*/)
+    /* [retval][out] */ IWebScriptObject** /*webScriptObject*/)
 {
     DebugBreak();
     return E_NOTIMPL;
@@ -1720,7 +1720,7 @@ HRESULT STDMETHODCALLTYPE WebView::mainFrameTitle(
 }
     
 HRESULT STDMETHODCALLTYPE WebView::mainFrameIcon( 
-        /* [retval][out] */ IWebImage** /*icon*/)
+        /* [retval][out] */ HBITMAP* /*icon*/)
 {
     DebugBreak();
     return E_NOTIMPL;
@@ -1961,7 +1961,7 @@ HRESULT STDMETHODCALLTYPE WebView::spellCheckerDocumentTag(
 }
     
 HRESULT STDMETHODCALLTYPE WebView::undoManager( 
-        /* [retval][out] */ IWebUndoManager* /*manager*/)
+        /* [retval][out] */ IWebUndoManager** /*manager*/)
 {
     DebugBreak();
     return E_NOTIMPL;

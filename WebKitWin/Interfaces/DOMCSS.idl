@@ -94,7 +94,7 @@ interface IDOMCSSRuleList : IDOMObject
     /*
         - (DOMCSSRule *)item:(unsigned)index;
     */
-    HRESULT item([in] UINT index, [out, retval] IDOMCSSRule* result);
+    HRESULT item([in] UINT index, [out, retval] IDOMCSSRule** result);
 }
 
 /*
@@ -126,12 +126,12 @@ interface IDOMCSSRule : IDOMObject
     /*
         - (DOMCSSStyleSheet *)parentStyleSheet;
     */
-    HRESULT parentStyleSheet([out, retval] IDOMCSSStyleSheet* sheet);
+    HRESULT parentStyleSheet([out, retval] IDOMCSSStyleSheet** sheet);
 
     /*
         - (DOMCSSRule *)parentRule;
     */
-    HRESULT parentRule([out, retval] IDOMCSSRule* rule);
+    HRESULT parentRule([out, retval] IDOMCSSRule** rule);
 }
 
 /*

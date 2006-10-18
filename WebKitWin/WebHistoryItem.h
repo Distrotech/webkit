@@ -73,7 +73,7 @@ public:
         /* [in] */ BSTR title);
     
     virtual HRESULT STDMETHODCALLTYPE icon( 
-        /* [in] */ IWebImage *image);
+        /* [out, retval] */ HBITMAP *image);
 
     // IWebHistoryItemPrivate
     virtual HRESULT STDMETHODCALLTYPE initFromDictionaryRepresentation(void* dictionary);

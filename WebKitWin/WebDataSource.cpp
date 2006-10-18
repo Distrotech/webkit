@@ -280,14 +280,14 @@ HRESULT STDMETHODCALLTYPE WebDataSource::unreachableURL(
 }
 
 HRESULT STDMETHODCALLTYPE WebDataSource::webArchive( 
-    /* [retval][out] */ IWebArchive* /*archive*/)
+    /* [retval][out] */ IWebArchive** /*archive*/)
 {
     DebugBreak();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebDataSource::mainResource( 
-    /* [retval][out] */ IWebResource* /*resource*/)
+    /* [retval][out] */ IWebResource** /*resource*/)
 {
     DebugBreak();
     return E_NOTIMPL;
@@ -303,7 +303,7 @@ HRESULT STDMETHODCALLTYPE WebDataSource::subresources(
 
 HRESULT STDMETHODCALLTYPE WebDataSource::subresourceForURL( 
     /* [in] */ BSTR /*url*/,
-    /* [retval][out] */ IWebResource* /*resource*/)
+    /* [retval][out] */ IWebResource** /*resource*/)
 {
     DebugBreak();
     return E_NOTIMPL;

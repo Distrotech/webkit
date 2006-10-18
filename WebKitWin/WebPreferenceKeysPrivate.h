@@ -81,3 +81,6 @@
 // From WebHistory.h
 #define WebKitHistoryItemLimitKey "WebKitHistoryItemLimit" // default: "1000"
 #define WebKitHistoryAgeInDaysLimitKey "WebKitHistoryAgeInDaysLimit" // default: "7"
+
+// Windows-specific keys
+#define WebKitFontSmothingTypePreferenceKey "WebKitFontSmoothingType" // default: FontSmoothingTypeMedium (2)

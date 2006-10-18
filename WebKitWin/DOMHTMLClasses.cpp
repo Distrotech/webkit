@@ -178,7 +178,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLDocument::URL(
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLDocument::body( 
-        /* [retval][out] */ IDOMHTMLElement* /*bodyElement*/)
+        /* [retval][out] */ IDOMHTMLElement** /*bodyElement*/)
 {
     DebugBreak();
     return E_NOTIMPL;
@@ -414,7 +414,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLFormElement::QueryInterface(REFIID riid, void**
 // DOMHTMLFormElement ---------------------------------------------------------
 
 HRESULT STDMETHODCALLTYPE DOMHTMLFormElement::elements( 
-        /* [retval][out] */ IDOMHTMLCollection* /*result*/)
+        /* [retval][out] */ IDOMHTMLCollection** /*result*/)
 {
     DebugBreak();
     return E_NOTIMPL;
@@ -845,7 +845,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setDefaultChecked(
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::form( 
-        /* [retval][out] */ IDOMHTMLElement* /*result*/)
+        /* [retval][out] */ IDOMHTMLElement** /*result*/)
 {
     DebugBreak();
     return E_NOTIMPL;
@@ -1188,7 +1188,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::setDefaultValue(
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::form( 
-        /* [retval][out] */ IDOMHTMLElement* /*result*/)
+        /* [retval][out] */ IDOMHTMLElement** /*result*/)
 {
     DebugBreak();
     return E_NOTIMPL;

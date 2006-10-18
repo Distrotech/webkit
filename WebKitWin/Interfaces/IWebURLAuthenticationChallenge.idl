@@ -79,7 +79,7 @@ interface IWebURLAuthenticationChallenge : IUnknown
     /*
         - (NSURLResponse *)failureResponse
     */
-    HRESULT failureResponse([out, retval] IWebURLResponse* result);
+    HRESULT failureResponse([out, retval] IWebURLResponse** result);
 
     /*
         - (id)initWithAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge sender:(id<NSURLAuthenticationChallengeSender>)sender

@@ -181,7 +181,7 @@ interface IWebDataSource : IUnknown
         called on the DOM document instead.
         - (WebArchive *)webArchive;
     */
-    HRESULT webArchive([out, retval] IWebArchive* archive);
+    HRESULT webArchive([out, retval] IWebArchive** archive);
 
     /*!
         @method mainResource
@@ -191,7 +191,7 @@ interface IWebDataSource : IUnknown
         WebDataSource's webArchive isn't sufficient.
         - (WebResource *)mainResource;
     */
-    HRESULT mainResource([out, retval] IWebResource* resource);
+    HRESULT mainResource([out, retval] IWebResource** resource);
 
     /*!
         @method subresources
@@ -208,7 +208,7 @@ interface IWebDataSource : IUnknown
         @description Returns non-nil if the data source has fully downloaded a subresource with the given URL.
         - (WebResource *)subresourceForURL:(NSURL *)URL;
     */
-    HRESULT subresourceForURL([in] BSTR url, [out, retval] IWebResource* resource);
+    HRESULT subresourceForURL([in] BSTR url, [out, retval] IWebResource** resource);
 
     /*!
         @method addSubresource:

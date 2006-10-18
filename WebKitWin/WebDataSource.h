@@ -80,10 +80,10 @@ public:
         /* [retval][out] */ BSTR *url);
     
     virtual HRESULT STDMETHODCALLTYPE webArchive( 
-        /* [retval][out] */ IWebArchive *archive);
+        /* [retval][out] */ IWebArchive **archive);
     
     virtual HRESULT STDMETHODCALLTYPE mainResource( 
-        /* [retval][out] */ IWebResource *resource);
+        /* [retval][out] */ IWebResource **resource);
     
     virtual HRESULT STDMETHODCALLTYPE subresources( 
         /* [out] */ int *resourceCount,
@@ -91,7 +91,7 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE subresourceForURL( 
         /* [in] */ BSTR url,
-        /* [retval][out] */ IWebResource *resource);
+        /* [retval][out] */ IWebResource **resource);
     
     virtual HRESULT STDMETHODCALLTYPE addSubresource( 
         /* [in] */ IWebResource *subresource);

@@ -458,7 +458,7 @@ interface IWebView : IUnknown
         @result Returns the window object from the script environment.
         - (WebScriptObject *)windowScriptObject;
     */
-    HRESULT windowScriptObject([out, retval] IWebScriptObject* webScriptObject);
+    HRESULT windowScriptObject([out, retval] IWebScriptObject** webScriptObject);
 
     /*!
         @method setPreferences:
@@ -679,7 +679,7 @@ interface IWebView : IUnknown
         @result Returns the main frame's icon if any, otherwise nil.
         - (NSImage *)mainFrameIcon;
     */
-    HRESULT mainFrameIcon([out, retval] IWebImage** icon);
+    HRESULT mainFrameIcon([out, retval] HBITMAP* icon);
 }
 
 /*
@@ -845,7 +845,7 @@ interface IWebViewEditing : IUnknown
     /*
         - (NSUndoManager *)undoManager;
     */
-    HRESULT undoManager([out, retval] IWebUndoManager* manager);
+    HRESULT undoManager([out, retval] IWebUndoManager** manager);
 
     /*
         - (void)setEditingDelegate:(id)delegate;
