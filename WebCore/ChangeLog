@@ -1,3 +1,11 @@
+2006-10-17  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Maciej.
+
+        Turn off a very noisy warning (unknown pragma) caused by an Interfacer include
+
+        * WebCore.vcproj/WebCore.vcproj:
+
 2006-10-17  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Brady.
