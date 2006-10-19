@@ -175,7 +175,7 @@ String WebCore::fileButtonNoFileSelectedLabel() { return "no file selected"; }
 String WebCore::defaultLanguage() { return "en"; }
 
 void WebCore::ResourceLoader::assembleResponseHeaders() const { LOG_NOIMPL(); }
-void WebCore::ResourceLoader::retrieveCharset() const { LOG_NOIMPL(); }
+void WebCore::ResourceLoader::retrieveResponseEncoding() const { LOG_NOIMPL(); }
 
 void FrameView::updateBorder() { LOG_NOIMPL(); }
 

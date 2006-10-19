@@ -586,7 +586,7 @@ void WebFrame::initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, 
     // current WebView. That's a mismatch and not good!
     static bool initializedObjectCacheSize = false;
     if (!initializedObjectCacheSize) {
-        Cache::setSize(getObjectCacheSize());
+        cache()->setMaximumSize(getObjectCacheSize());
         initializedObjectCacheSize = true;
     }
 }

@@ -1,3 +1,9 @@
+2006-10-19  Anders Carlsson <acarlsson@apple.com>
+
+        * WebFrame.cpp:
+        (WebFrame::initWithWebFrameView):
+        Build fix.
+
 2006-10-18  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by Steve.
