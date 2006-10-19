@@ -75,13 +75,13 @@ typedef float CGFloat;
 #endif
 
 // Special tweaks for the internal tree
-#define KXMLCORE_PLATFORM_CF 1
+#define WTF_PLATFORM_CF 1
 
 #if PLATFORM(WIN)
-#define KXMLCORE_USE_JAVASCRIPTCORE_BINDINGS 1
-#define KXMLCORE_USE_NPOBJECT 1
-#define KXMLCORE_PLATFORM_CG 1
-#undef KXMLCORE_PLATFORM_CAIRO
+#define WTF_USE_JAVASCRIPTCORE_BINDINGS 1
+#define WTF_USE_NPOBJECT 1
+#define WTF_PLATFORM_CG 1
+#undef WTF_PLATFORM_CAIRO
 #endif
 
 #define _WINSOCKAPI_ // Prevent inclusion of winsock.h in windows.h
