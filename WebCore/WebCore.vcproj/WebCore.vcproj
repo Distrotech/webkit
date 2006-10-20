@@ -1515,10 +1515,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\platform\PopupMenu.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\PopupMenu.h"
 				>
 			</File>

@@ -52,7 +52,6 @@
 #include "Path.h"
 #include "PlatformMouseEvent.h"
 #include "PlugInInfoStore.h"
-#include "PopupMenu.h"
 #include "RenderTheme.h"
 #include "RenderThemeWin.h"
 #include "ResourceLoader.h"

@@ -48,58 +48,45 @@ static const int defaultAnimationDuration = 200;
 // Maximum height of a popup window
 static const int maxPopupHeight = 320;
 
-static LPCTSTR kPopupWindowClassName = _T("PopupWindowContainerClass");
+const int optionSpacingMiddle = 1;
+const int popupWindowBorderWidth = 1;
+
+static LPCTSTR kPopupWindowClassName = _T("PopupWindowClass");
 static ATOM registerPopup();
 static LRESULT CALLBACK PopupWndProc(HWND, UINT, WPARAM, LPARAM);
 
 PopupMenu::PopupMenu(RenderMenuList* m)
     : m_menuList(m)
     , m_popup(0)
-    , m_container(0)
+    , m_DC(0)
+    , m_bmp(0)
     , m_wasClicked(false)
+    , m_windowRect(IntRect())
+    , m_itemHeight(0)
+    , m_focusedIndex(0)
+    , m_scrollOffset(0)
+    , m_wheelDelta(0)
 {
 }
 
 PopupMenu::~PopupMenu()
 {
+    if (m_bmp)
+        ::DeleteObject(m_bmp);
+    if (m_DC)
+        ::DeleteObject(m_DC);
     if (m_popup)
-        DestroyWindow(m_popup);
-    if (m_container)
-        DestroyWindow(m_container);
-}
-
-void PopupMenu::clear()
-{
-    if (!m_popup)
-        return;
-
-    SendMessage(m_popup, LB_RESETCONTENT, 0, 0);
-}
-
-void PopupMenu::populate()
-{
-    if (!m_popup)
-        return;
-
-    clear();
-
-    PopupMenu::addItems();
+        ::DestroyWindow(m_popup);
 }
 
 void PopupMenu::show(const IntRect& r, FrameView* v, int index)
 {
+    calculatePositionAndSize(r, v);
+    if (m_windowRect.isEmpty())
+        return;
+
     if (!m_popup) {
         registerPopup();
-
-        m_container = CreateWindowEx(0, kPopupWindowClassName, _T("PopupMenuContainer"),
-            WS_POPUP | WS_CLIPCHILDREN,
-            0, 0, 0, 0,
-            menuList()->document()->frame()->view()->containingWindow(), 0, 0, 0);
-
-        if (!m_container)
-            return;
-
-        SetWindowLongPtr(m_container, 0, (LONG_PTR)this);
 
         DWORD exStyle = 0;
         if (menuList()->style()->direction() == LTR)
@@ -107,51 +94,63 @@ void PopupMenu::show(const IntRect& r, FrameView* v, int index)
         else
             exStyle |= WS_EX_LEFTSCROLLBAR | WS_EX_RTLREADING;
 
-        // FIXME: Should we also use LBS_COMBOBOX here? What does that do?
-        m_popup = CreateWindowEx(exStyle, _T("ListBox"), _T("PopupMenu"),
-            WS_CHILD | WS_BORDER | WS_VSCROLL | LBS_NOTIFY | LBS_HASSTRINGS | LBS_WANTKEYBOARDINPUT | LBS_OWNERDRAWFIXED,
+        // Even though we already know our size and location at this point, we pass (0,0,0,0) as our size/location here.
+        // We need to wait until after the call to ::SetWindowLongPtr to set our size so that in our WM_SIZE handler we can get access to the PopupMenu object
+        m_popup = ::CreateWindowEx(exStyle, kPopupWindowClassName, _T("PopupMenu"),
+            WS_POPUP | WS_BORDER | WS_VSCROLL,
             0, 0, 0, 0,
-            m_container, 0, 0, 0);
+            v->containingWindow(), 0, 0, 0);
+
+        if (!m_popup)
+            return;
+
+        ::SetWindowLongPtr(m_popup, 0, (LONG_PTR)this);
     }
 
-    if (!m_popup)
-        return;
+    ::SetWindowPos(m_popup, HWND_TOP, m_windowRect.x(), m_windowRect.y(), m_windowRect.width(), m_windowRect.height(), 0);
 
-    populate();
-    if (SendMessage(m_popup, LB_GETCOUNT, 0, 0) <= 0)
-        return;
-    ASSERT(SendMessage(m_popup, LB_GETCOUNT, 0, 0) > index);
+    // Determine whether we should animate our popups
+    // Note: Must use 'BOOL' and 'FALSE' instead of 'bool' and 'false' to avoid stack corruption with SystemParametersInfo
+    BOOL shouldAnimate = FALSE;
+    ::SystemParametersInfo(SPI_GETCOMBOBOXANIMATION, 0, &shouldAnimate, 0);
 
-    setPositionAndSize(r, v);
+    if (shouldAnimate) {
+        RECT viewRect = {0};
+        ::GetWindowRect(v->containingWindow(), &viewRect);
 
-    SendMessage(m_popup, LB_SETCURSEL, index, 0);
+        if (!::IsRectEmpty(&viewRect)) {
+            // Popups should slide into view away from the <select> box
+            // NOTE: This may have to change for Vista
+            DWORD slideDirection = (m_windowRect.y() < viewRect.top + v->contentsToWindow(r.location()).y()) ? AW_VER_NEGATIVE : AW_VER_POSITIVE;
 
-    // Finally we can show the popup
-    ShowWindow(m_container, SW_SHOW);
-    ShowWindow(m_popup, SW_SHOW);
-
-    SetFocus(m_popup);
+            ::AnimateWindow(m_popup, defaultAnimationDuration, AW_SLIDE | slideDirection | AW_ACTIVATE);
+        }
+    } else
+        ::ShowWindow(m_popup, SW_SHOWNORMAL);
 }
 
 void PopupMenu::hide()
 {
-    ShowWindow(m_container, SW_HIDE);
+    ::ShowWindow(m_popup, SW_HIDE);
 }
 
-void PopupMenu::setPositionAndSize(const IntRect& r, FrameView* v)
+void PopupMenu::calculatePositionAndSize(const IntRect& r, FrameView* v)
 {
     // r is in absolute document coordinates, but we want to be coordinates relative to the WebView
     IntRect rViewCoords(v->contentsToWindow(r.location()), r.size());
 
-    // First, size the popup
-    int itemHeight = SendMessage(m_popup, LB_GETITEMHEIGHT, 0, 0);
     HTMLSelectElement *select = static_cast<HTMLSelectElement*>(menuList()->node());
     const Vector<HTMLElement*>& items = select->listItems();
+
+    // First, determine the popup's height
     size_t itemCount = items.size();
-    // Add an extra (itemHeight / 2) here because the popup will shrink itself to not show any partial items when we call SetWindowPos()
-    int naturalHeight = itemHeight * itemCount + itemHeight / 2;
+    m_itemHeight = menuList()->font(false).height() + optionSpacingMiddle;
+    int naturalHeight = m_itemHeight * itemCount;
     int popupHeight = min(maxPopupHeight, naturalHeight);
+    // The popup should show an integral number of items (i.e. no partial items should be visible)
+    popupHeight -= popupHeight % m_itemHeight;
     
+    // Next determine its width
     int popupWidth = 0;
     for (int i = 0; i < itemCount; ++i) {
         String text;
@@ -170,9 +169,9 @@ void PopupMenu::setPositionAndSize(const IntRect& r, FrameView* v)
         // We need room for a scrollbar
         popupWidth += ::GetSystemMetrics(SM_CXVSCROLL);
 
-    // The popup window has a 1px border (because the WS_BORDER style) which is included in its width,
-    // so we need to widen it by 2px to make sure everything will fit
-    popupWidth += 2;
+    // Leave room for the border
+    popupWidth += 2 * popupWindowBorderWidth;
+    popupHeight += 2 * popupWindowBorderWidth;
 
     // The popup should be at least as wide as the control on the page
     popupWidth = max(rViewCoords.width(), popupWidth);
@@ -186,8 +185,8 @@ void PopupMenu::setPositionAndSize(const IntRect& r, FrameView* v)
     // WS_POPUP windows are positioned in screen coordinates, but popupRect is in WebView coordinates,
     // so we have to find the screen origin of the FrameView to position correctly
     RECT viewRect = {0};
-    GetWindowRect(v->frame()->view()->containingWindow(), &viewRect);
-    if (IsRectEmpty(&viewRect))
+    ::GetWindowRect(v->containingWindow(), &viewRect);
+    if (::IsRectEmpty(&viewRect))
         return;
 
     // Translate popupRect into screen coordinates
@@ -222,85 +221,33 @@ void PopupMenu::setPositionAndSize(const IntRect& r, FrameView* v)
     } else if (menuList()->style()->direction() == RTL && popupRect.right() > screen.right())
         popupRect.setWidth(popupRect.width() - (popupRect.right() - screen.right()));
 
-    // Place the popup container and the popup.
-    // The container (with style WS_POPUP) is positioned in screen coordinates, and the popup
-    // (with style WS_CHILD) is positioned relative to the container.
-    SetWindowPos(m_container, HWND_TOP, popupRect.x(), popupRect.y(), popupRect.width(), popupRect.height(), SWP_NOACTIVATE);
-    SetWindowPos(m_popup, 0, 0, 0, popupRect.width(), popupRect.height(), SWP_NOACTIVATE | SWP_NOZORDER);
-
-    // Placing the popup also resizes it to an integral multiple of the item height (so that no partial items are shown)
-    // This means we need to resize the container.
-    RECT rect = {0};
-    GetWindowRect(m_popup, &rect);
-    if (IsRectEmpty(&rect))
-        return;
-    popupRect.setHeight(rect.bottom - rect.top);
-
-    // Also, if the popup is above the <select> box, the popup will be too high after resizing
-    // (because it's gotten shorter), so in that case we must reposition it.
-    if (popupRect.y() < viewRect.top + rViewCoords.y())
-        popupRect.setY(viewRect.top + rViewCoords.y() - popupRect.height());
-
-    SetWindowPos(m_container, HWND_TOP, popupRect.x(), popupRect.y(), popupRect.width(), popupRect.height(), SWP_NOACTIVATE);
-
-    // Determine whether we should animate our popups
-    // Note: Must use 'BOOL' and 'FALSE' instead of 'bool' and 'false' to avoid stack corruption with SystemParametersInfo
-    BOOL shouldAnimate = FALSE;
-    SystemParametersInfo(SPI_GETCOMBOBOXANIMATION, 0, &shouldAnimate, 0);
-
-    if (shouldAnimate) {
-        // Set the windows to animate when shown
-        // NOTE: This may have to change for Vista
-
-        // Popups should slide into view away from the <select> box
-        DWORD slideDirection = (popupRect.y() < viewRect.top + rViewCoords.y()) ? AW_VER_NEGATIVE : AW_VER_POSITIVE;
-
-        AnimateWindow(m_container, defaultAnimationDuration, AW_SLIDE | slideDirection);
-        AnimateWindow(m_popup, defaultAnimationDuration, AW_SLIDE | slideDirection | AW_ACTIVATE);
-    }
+    m_windowRect = popupRect;
+    return;
 }
 
-static void addString(HWND hWnd, const String& string)
+bool PopupMenu::setFocusedIndex(int i, bool fireOnChange)
 {
-    if (!hWnd)
-        return;
+    HTMLSelectElement* select = static_cast<HTMLSelectElement*>(menuList()->node());
+    const Vector<HTMLElement*>& listItems = select->listItems();
 
-    UChar* text = (UChar*)malloc((string.length() + 1) * sizeof(UChar));
-    if (!text)
-        return;
+    if (i < 0 || i >= select->listItems().size() || i == m_focusedIndex)
+        return false;
 
-    if (_tcsncpy_s(text, string.length() + 1, string.characters(), string.length())) {
-        free(text);
-        return;
-    }
+    HTMLElement* element = listItems[i];
 
-    SendMessage(hWnd, LB_ADDSTRING, 0, (LPARAM)text);
+    if (!(element->hasTagName(optionTag) && !static_cast<HTMLOptionElement*>(element)->disabled()))
+        return false;
 
-    free(text);
+    menuList()->setTextFromOption(select->listToOptionIndex(i));
+    menuList()->valueChanged(i, fireOnChange);
 
-}
+    invalidateItem(m_focusedIndex);
+    invalidateItem(i);
+    ::UpdateWindow(m_popup);
 
-void PopupMenu::addOption(HTMLOptionElement* element)
-{
-    addString(m_popup, element->optionText());
-}
+    m_focusedIndex = i;
 
-void PopupMenu::addGroupLabel(HTMLOptGroupElement* element)
-{
-    addString(m_popup, element->groupLabelText());
-}
-
-void PopupMenu::addSeparator()
-{
-    addString(m_popup, "");
-}
-
-int PopupMenu::focusedIndex() const
-{
-    if (!m_popup)
-        return -1;
-
-    return SendMessage(m_popup, LB_GETCURSEL, 0, 0);
+    return true;
 }
 
 bool PopupMenu::down()
@@ -312,20 +259,13 @@ bool PopupMenu::down()
     const Vector<HTMLElement*>& listItems = select->listItems();
     size_t size = listItems.size();
 
+    int selectedListIndex = select->optionToListIndex(select->selectedIndex());
     int i;
-    for (i = focusedIndex() + 1;
+    for (i = selectedListIndex + 1;
          i >= 0 && i < size && (listItems[i]->disabled() || !listItems[i]->hasTagName(optionTag));
          ++i);
 
-    if (i < 0 || i >= size)
-        return false;
-
-    ::SendMessage(m_popup, LB_SETCURSEL, (WPARAM)i, 0);
-
-    menuList()->setTextFromOption(select->listToOptionIndex(i));
-    menuList()->valueChanged(i, false);
-
-    return true;
+    return setFocusedIndex(i);
 }
 
 bool PopupMenu::up()
@@ -337,80 +277,130 @@ bool PopupMenu::up()
     const Vector<HTMLElement*>& listItems = select->listItems();
     size_t size = listItems.size();
 
+    int selectedListIndex = select->optionToListIndex(select->selectedIndex());
     int i;
-    for (i = focusedIndex() - 1;
+    for (i = selectedListIndex - 1;
          i >= 0 && i < size && (listItems[i]->disabled() || !listItems[i]->hasTagName(optionTag));
          --i);
 
-    if (i < 0 || i >= size)
-        return false;
+    return setFocusedIndex(i);
+}
 
-    ::SendMessage(m_popup, LB_SETCURSEL, (WPARAM)i, 0);
+void PopupMenu::invalidateItem(int index)
+{
+    if (!m_popup)
+        return;
 
-    menuList()->setTextFromOption(select->listToOptionIndex(i));
-    menuList()->valueChanged(i, false);
+    RECT damageRect;
+    damageRect.left = 0;
+    damageRect.right = m_windowRect.width() - 2 * popupWindowBorderWidth;
+    damageRect.top = m_itemHeight * index - m_scrollOffset;
+    damageRect.bottom = damageRect.top + m_itemHeight;
 
-    return true;
+    ::InvalidateRect(m_popup, &damageRect, true);
+}
+
+IntRect PopupMenu::clientRect() const
+{
+    IntRect clientRect = m_windowRect;
+    clientRect.inflate(-popupWindowBorderWidth);
+    clientRect.setLocation(IntPoint(0, 0));
+    return clientRect;
+}
+
+void PopupMenu::incrementWheelDelta(int delta)
+{
+    m_wheelDelta += delta;
+}
+
+void PopupMenu::reduceWheelDelta(int delta)
+{
+    ASSERT(delta >= 0);
+    ASSERT(delta <= abs(m_wheelDelta));
+
+    if (m_wheelDelta > 0)
+        m_wheelDelta -= delta;
+    else if (m_wheelDelta < 0)
+        m_wheelDelta += delta;
+    else
+        return;
 }
 
 const int separatorPadding = 4;
 const int separatorHeight = 1;
-void PopupMenu::drawItem(LPDRAWITEMSTRUCT drawInfo)
+void PopupMenu::paint(const IntRect& damageRect, HDC hdc)
 {
-    IntRect menuRect = drawInfo->rcItem;
-
-    IntRect bitmapRect = drawInfo->rcItem;
-    bitmapRect.setLocation(IntPoint(0, 0));
-
-    HDC bitmapDC = ::CreateCompatibleDC(drawInfo->hDC);
-
-    // Create a bitmap DC in which to draw.
-    BITMAPINFO bitmapInfo;
-    bitmapInfo.bmiHeader.biSize          = sizeof(BITMAPINFOHEADER);
-    bitmapInfo.bmiHeader.biWidth         = bitmapRect.width(); 
-    bitmapInfo.bmiHeader.biHeight        = -bitmapRect.height();
-    bitmapInfo.bmiHeader.biPlanes        = 1;
-    bitmapInfo.bmiHeader.biBitCount      = 32;
-    bitmapInfo.bmiHeader.biCompression   = BI_RGB;
-    bitmapInfo.bmiHeader.biSizeImage     = 0;
-    bitmapInfo.bmiHeader.biXPelsPerMeter = 0;
-    bitmapInfo.bmiHeader.biYPelsPerMeter = 0;
-    bitmapInfo.bmiHeader.biClrUsed       = 0;
-    bitmapInfo.bmiHeader.biClrImportant  = 0;
-
-    void* pixels = 0;
-    HBITMAP bitmap = ::CreateDIBSection(bitmapDC, &bitmapInfo, DIB_RGB_COLORS, &pixels, 0, 0);
-    if (!bitmap)
+    if (!m_popup)
         return;
 
-    HBITMAP oldBMP = (HBITMAP)::SelectObject(bitmapDC, bitmap);
+    if (!m_DC) {
+        m_DC = ::CreateCompatibleDC(::GetDC(m_popup));
+        if (!m_DC)
+            return;
+    }
 
-    GraphicsContext context(bitmapDC);
+    if (!m_bmp) {
+        BITMAPINFO bitmapInfo;
+        bitmapInfo.bmiHeader.biSize          = sizeof(BITMAPINFOHEADER);
+        bitmapInfo.bmiHeader.biWidth         = clientRect().width(); 
+        bitmapInfo.bmiHeader.biHeight        = -clientRect().height();
+        bitmapInfo.bmiHeader.biPlanes        = 1;
+        bitmapInfo.bmiHeader.biBitCount      = 32;
+        bitmapInfo.bmiHeader.biCompression   = BI_RGB;
+        bitmapInfo.bmiHeader.biSizeImage     = 0;
+        bitmapInfo.bmiHeader.biXPelsPerMeter = 0;
+        bitmapInfo.bmiHeader.biYPelsPerMeter = 0;
+        bitmapInfo.bmiHeader.biClrUsed       = 0;
+        bitmapInfo.bmiHeader.biClrImportant  = 0;
+
+        void* pixels = 0;
+        m_bmp = ::CreateDIBSection(m_DC, &bitmapInfo, DIB_RGB_COLORS, &pixels, 0, 0);
+        if (!m_bmp)
+            return;
+
+        ::SelectObject(m_DC, m_bmp);
+    }
+
+    GraphicsContext context(m_DC);
 
     HTMLSelectElement* select = static_cast<HTMLSelectElement*>(menuList()->node());
     const Vector<HTMLElement*>& listItems = select->listItems();
-    HTMLElement* element = listItems[drawInfo->itemID];
+    size_t itemCount = listItems.size();
 
-    Color optionBackgroundColor, optionTextColor;
-    if (drawInfo->itemState & ODS_SELECTED) {
-        optionBackgroundColor = theme()->platformActiveSelectionBackgroundColor();
-        optionTextColor = theme()->platformActiveSelectionForegroundColor();
-    } else {
-        optionBackgroundColor = element->renderStyle() ? element->renderStyle()->backgroundColor() : menuList()->style()->backgroundColor();
-        optionTextColor = element->renderStyle() ? element->renderStyle()->color() : menuList()->style()->color();
-    }
+    // listRect is the damageRect translated into the coordinates of the entire menu list (which is itemCount * m_itemHeight pixels tall)
+    IntRect listRect = damageRect;
+    listRect.move(IntSize(0, m_scrollOffset));
 
-    // Draw the background for this menu item
-    if (!element->renderStyle() || element->renderStyle()->visibility() != HIDDEN) {
-        if (optionBackgroundColor.hasAlpha() && optionBackgroundColor != menuList()->style()->backgroundColor())
-            context.fillRect(bitmapRect, menuList()->style()->backgroundColor());
-        context.fillRect(bitmapRect, optionBackgroundColor);
-    }
+    for (int y = listRect.y(); y < listRect.bottom(); y += m_itemHeight) {
+        int index = y / m_itemHeight;
 
-    if (element->hasTagName(hrTag)) {
-        IntRect separatorRect(bitmapRect.x() + separatorPadding, (bitmapRect.height() - separatorHeight) / 2, bitmapRect.width() - 2 * separatorPadding, separatorHeight);
-        context.fillRect(separatorRect, optionTextColor);
-    } else {
+        HTMLElement* element = listItems[index];
+
+        Color optionBackgroundColor, optionTextColor;
+        if (element->hasTagName(optionTag) && static_cast<HTMLOptionElement*>(element)->selected()) {
+            optionBackgroundColor = theme()->platformActiveSelectionBackgroundColor();
+            optionTextColor = theme()->platformActiveSelectionForegroundColor();
+        } else {
+            optionBackgroundColor = element->renderStyle() ? element->renderStyle()->backgroundColor() : menuList()->style()->backgroundColor();
+            optionTextColor = element->renderStyle() ? element->renderStyle()->color() : menuList()->style()->color();
+        }
+
+        // itemRect is in client coordinates
+        IntRect itemRect(0, index * m_itemHeight - m_scrollOffset, damageRect.width(), m_itemHeight);
+
+        // Draw the background for this menu item
+        if (!element->renderStyle() || element->renderStyle()->visibility() != HIDDEN) {
+            if (optionBackgroundColor.hasAlpha() && optionBackgroundColor != menuList()->style()->backgroundColor())
+                context.fillRect(itemRect, menuList()->style()->backgroundColor());
+            context.fillRect(itemRect, optionBackgroundColor);
+        }
+
+        if (element->hasTagName(hrTag)) {
+            IntRect separatorRect(itemRect.x() + separatorPadding, itemRect.y() + (itemRect.height() - separatorHeight) / 2, itemRect.width() - 2 * separatorPadding, separatorHeight);
+            context.fillRect(separatorRect, optionTextColor);
+            continue;
+        }
+
         String itemText;
         if (element->hasTagName(optionTag))
             itemText = static_cast<HTMLOptionElement*>(element)->optionText();
@@ -436,17 +426,16 @@ void PopupMenu::drawItem(LPDRAWITEMSTRUCT drawInfo)
         
         // Draw the item text
         if (itemStyle->visibility() != HIDDEN) {
-            int textX = itemStyle->direction() == LTR ? 0 : bitmapRect.right() - itemFont.width(textRun);
-            int textY = itemFont.ascent() + (bitmapRect.height() - itemFont.height()) / 2;
+            int textX = itemStyle->direction() == LTR ? 0 : itemRect.right() - itemFont.width(textRun);
+            int textY = itemRect.y() + itemFont.ascent() + (itemRect.height() - itemFont.height()) / 2;
             context.drawText(textRun, IntPoint(textX, textY), TextStyle(0, 0, 0, itemStyle->direction() == RTL));
         }
     }
 
-    ::BitBlt(drawInfo->hDC, menuRect.x(), menuRect.y(), menuRect.width(), menuRect.height(), bitmapDC, bitmapRect.x(), bitmapRect.y(), SRCCOPY);
+    if (!hdc)
+        hdc = ::GetDC(m_popup);
 
-    ::SelectObject(bitmapDC, oldBMP);
-    ::DeleteObject(bitmap);
-    ::DeleteDC(bitmapDC);
+    ::BitBlt(hdc, damageRect.x(), damageRect.y(), damageRect.width(), damageRect.height(), m_DC, damageRect.x(), damageRect.y(), SRCCOPY);
 }
 
 static ATOM registerPopup()
@@ -463,7 +452,7 @@ static ATOM registerPopup()
     wcex.style          = 0;
     wcex.lpfnWndProc    = PopupWndProc;
     wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = sizeof(void*); // For the PopupMenu pointer
+    wcex.cbWndExtra     = sizeof(PopupMenu*); // For the PopupMenu pointer
     wcex.hInstance      = Page::instanceHandle();
     wcex.hIcon          = 0;
     wcex.hCursor        = LoadCursor(0, IDC_ARROW);
@@ -474,23 +463,33 @@ static ATOM registerPopup()
 
     haveRegisteredWindowClass = true;
 
-    return RegisterClassEx(&wcex);
+    return ::RegisterClassEx(&wcex);
 }
 
-const int optionSpacingMiddle = 1;
+const int smoothScrollAnimationDuration = 5000;
 static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    // FIXME: The popup selection should follow the mouse pointer without a click.
-    // Currently, we only get selection on keypress or mousedown.
-
     LRESULT lResult = 0;
     LONG_PTR longPtr = GetWindowLongPtr(hWnd, 0);
     PopupMenu* popup = reinterpret_cast<PopupMenu*>(longPtr);
 
-    LPMEASUREITEMSTRUCT measureInfo;
-    LPDRAWITEMSTRUCT drawInfo;
-
     switch (message) {
+        case WM_SIZE:
+            if (popup) {
+                int pageSize = popup->windowRect().height() / popup->itemHeight();
+                SCROLLINFO scrollInfo;
+                scrollInfo.cbSize = sizeof(scrollInfo);
+                scrollInfo.fMask = SIF_PAGE | SIF_POS | SIF_RANGE;
+                scrollInfo.nMin = 0;
+                scrollInfo.nMax = static_cast<HTMLSelectElement*>(popup->menuList()->node())->listItems().size() - 1;
+                scrollInfo.nPage = pageSize;
+                scrollInfo.nPos = popup->scrollOffset() / popup->itemHeight();
+
+                ::SetScrollInfo(popup->popupHandle(), SB_VERT, &scrollInfo, TRUE);
+
+                popup->setScrollOffset(scrollInfo.nPos * popup->itemHeight());
+            }
+            break;
         case WM_ACTIVATE:
             if (popup && wParam == WA_INACTIVE)
                 popup->menuList()->hidePopup();
@@ -500,60 +499,125 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 // Focus is going elsewhere, so hide
                 popup->menuList()->hidePopup();
             break;
-        case WM_COMMAND:
-            if (popup && HIWORD(wParam) == LBN_SELCHANGE) {
-                if (popup->wasClicked()) {
-                    popup->menuList()->valueChanged(popup->focusedIndex());
-                    popup->menuList()->hidePopup();
-                    popup->setWasClicked(false);
-                }
-            }
-            break;
-        case WM_VKEYTOITEM:
+        case WM_KEYDOWN:
             if (popup) {
+                lResult = 0;
                 switch (LOWORD(wParam)) {
                     case VK_DOWN:
                     case VK_RIGHT:
                         popup->down();
-                        lResult = -2;
+                        if (popup->focusedIndex() * popup->itemHeight() - popup->scrollOffset() >= popup->clientRect().height())
+                            // FIXME: <rdar://4795151> Need to scroll to reveal selection, not just one line
+                            ::SendMessage(popup->popupHandle(), WM_VSCROLL, SB_LINEDOWN, 0);
                         break;
                     case VK_UP:
                     case VK_LEFT:
                         popup->up();
-                        lResult = -2;
+                        if (popup->focusedIndex() * popup->itemHeight() - popup->scrollOffset() < 0)
+                            // FIXME: <rdar://4795151> Need to scroll to reveal selection, not just one line
+                            ::SendMessage(popup->popupHandle(), WM_VSCROLL, SB_LINEUP, 0);
                         break;
                     case VK_RETURN:
                         popup->menuList()->valueChanged(popup->focusedIndex());
                     case VK_ESCAPE:
                         popup->menuList()->hidePopup();
-                        lResult = -2;
                         break;
+                    default:
+                        lResult = 1;
                 }
             }
             break;
-        case WM_PARENTNOTIFY:
-            if (popup && LOWORD(wParam) == WM_LBUTTONDOWN) {
-                // We only want to register clicks that were not on the popup's scrollbar
-                int x = LOWORD(lParam), y = HIWORD(lParam);
-                RECT rect;
-                if (!GetClientRect(popup->popupHandle(), &rect))
-                    break;
-                if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom)
-                    popup->setWasClicked();
+        case WM_MOUSEMOVE:
+            if (popup) {
+                BOOL shouldHotTrack = FALSE;
+                ::SystemParametersInfo(SPI_GETHOTTRACKING, 0, &shouldHotTrack, 0);
+
+                if (shouldHotTrack || wParam == MK_LBUTTON)
+                    popup->setFocusedIndex(popup->listIndexAtPoint(MAKEPOINTS(lParam)));
             }
             break;
-        case WM_MEASUREITEM:
-            measureInfo = (LPMEASUREITEMSTRUCT)lParam;
-            ASSERT(measureInfo->CtlType == ODT_LISTBOX);
-            // FIXME: This will have to change when <rdar://4772506> is fixed.
-            measureInfo->itemWidth = popup->menuList()->width();
-            measureInfo->itemHeight = popup->menuList()->font(false).height() + optionSpacingMiddle;
-            lResult = TRUE;
+        case WM_LBUTTONDOWN:
+            if (popup)
+                popup->setFocusedIndex(popup->listIndexAtPoint(MAKEPOINTS(lParam)));
             break;
-        case WM_DRAWITEM:
-            drawInfo = (LPDRAWITEMSTRUCT)lParam;
-            ASSERT(drawInfo->CtlType == ODT_LISTBOX);
-            popup->drawItem(drawInfo);
+        case WM_LBUTTONUP:
+            if (popup) {
+                popup->setFocusedIndex(popup->listIndexAtPoint(MAKEPOINTS(lParam)), true);
+                popup->menuList()->hidePopup();
+            }
+            break;
+        case WM_MOUSEWHEEL:
+            if (popup) {
+                for (popup->incrementWheelDelta(GET_WHEEL_DELTA_WPARAM(wParam)); abs(popup->wheelDelta()) >= WHEEL_DELTA; popup->reduceWheelDelta(WHEEL_DELTA))
+                    ::SendMessage(popup->popupHandle(), WM_VSCROLL, popup->wheelDelta() > 0 ? SB_LINEUP : SB_LINEDOWN, 0);
+            }
+            break;
+        case WM_PAINT:
+            if (popup) {
+                PAINTSTRUCT paintInfo;
+                ::BeginPaint(popup->popupHandle(), &paintInfo);
+                popup->paint(paintInfo.rcPaint);
+                ::EndPaint(popup->popupHandle(), &paintInfo);
+                lResult = 0;
+            }
+            break;
+        case WM_PRINTCLIENT:
+            if (popup)
+                popup->paint(popup->clientRect(), (HDC)wParam);
+            break;
+        case WM_VSCROLL:
+            if (popup) {
+                SCROLLINFO scrollInfo;
+                scrollInfo.cbSize = sizeof(scrollInfo);
+                scrollInfo.fMask = SIF_ALL;
+                if (!::GetScrollInfo(popup->popupHandle(), SB_VERT, &scrollInfo))
+                    break;
+
+                int oldPosition = scrollInfo.nPos;
+
+                switch (LOWORD(wParam)) {
+                    case SB_LINEUP:
+                        --scrollInfo.nPos;
+                        break;
+                    case SB_LINEDOWN:
+                        ++scrollInfo.nPos;
+                        break;
+                    case SB_PAGEUP:
+                        scrollInfo.nPos -= popup->windowRect().height() / popup->itemHeight();
+                        break;
+                    case SB_PAGEDOWN:
+                        scrollInfo.nPos += popup->windowRect().height() / popup->itemHeight();
+                        break;
+                    case SB_THUMBTRACK:
+                        scrollInfo.nPos = scrollInfo.nTrackPos;
+                        break;
+                    default:
+                        break;
+                }
+
+                scrollInfo.fMask = SIF_POS;
+                ::SetScrollInfo(popup->popupHandle(), SB_VERT, &scrollInfo, TRUE);
+                ::GetScrollInfo(popup->popupHandle(), SB_VERT, &scrollInfo);
+
+                if (oldPosition == scrollInfo.nPos)
+                    // No scrolling was performed (we were already at the top or bottom)
+                    break;
+
+                popup->setScrollOffset(scrollInfo.nPos * popup->itemHeight());
+
+                UINT flags = SW_INVALIDATE;
+
+#ifdef CAN_SET_SMOOTH_SCROLLING_DURATION
+                BOOL shouldSmoothScroll = FALSE;
+                ::SystemParametersInfo(SPI_GETLISTBOXSMOOTHSCROLLING, 0, &shouldSmoothScroll, 0);
+                if (shouldSmoothScroll)
+                    flags |= MAKEWORD(SW_SMOOTHSCROLL, smoothScrollAnimationDuration);
+#endif
+
+                ::ScrollWindowEx(popup->popupHandle(), 0, (oldPosition - scrollInfo.nPos) * popup->itemHeight(), 0, 0, 0, 0, flags);
+                ::UpdateWindow(popup->popupHandle());
+            }
+            break;
         default:
             lResult = DefWindowProc(hWnd, message, wParam, lParam);
     }

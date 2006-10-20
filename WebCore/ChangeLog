@@ -1,5 +1,56 @@
 2006-10-19  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Ada.
+
+        This is a partial reimplementation of PopupMenu for Windows. The old
+        implementation used the Win32 ListBox control, but as we needed to
+        customize the behavior more and more it began to make sense to roll our
+        own popup from scratch. That is what this patch accomplishes. And...
+
+        Fix: <rdar://problem/4709416>
+        Implement mouse hot-tracking for <select> menus
+        (It was easier to implement this than to leave it broken.)
+
+        * WebCore.vcproj/WebCore.vcproj: Removed PopupMenu.cpp from project.
+        * platform/win/PopupMenuWin.cpp: Carnage. PopupMenu has gained a slew
+        of new private instance variables to maintain the window state.
+        m_container has been removed as it is no longer needed.
+        (WebCore::PopupMenu::PopupMenu): Initialize new variables.
+        (WebCore::PopupMenu::~PopupMenu): Clean up new variables.
+        (WebCore::PopupMenu::show): Now that we don't have m_container, m_popup
+        gets the WS_BORDER and WS_POPUP styles. Also moved code to animate the
+        window out of the old PopupMenu::setPositionAndSize() into this method
+        since it fits the purpose of this method better.
+        (WebCore::PopupMenu::hide):
+        (WebCore::PopupMenu::calculatePositionAndSize): Renamed from
+        setPositionAndSize(), as this method no longer actually sets the window
+        position and size, just calculates it. It also now makes sure the
+        window is sized to never show partial items, and takes into account the
+        window's border when calculating the size.
+        (WebCore::PopupMenu::setFocusedIndex): New method to handle setting the
+        selected index of the <select> and highlighting the item in the popup menu.
+        (WebCore::PopupMenu::down): Use setSelectedIndex() to do the dirty work.
+        (WebCore::PopupMenu::up): Ditto.
+        (WebCore::PopupMenu::invalidateItem): New method to invalidate the
+        rectangle in the popup menu for this item.
+        (WebCore::PopupMenu::clientRect): New method to calculate an IntRect
+        for the client area of the window.
+        (WebCore::PopupMenu::incrementWheelDelta): New method to add the wheel
+        delta obtained from a WM_MOUSEWHEEL message to any pre-existing delta.
+        (WebCore::PopupMenu::reduceWheelDelta): New method to reduce the
+        pre-existing wheel delta by a given amount towards 0.
+        (WebCore::PopupMenu::paint): Does the work that PopupMenu::drawItem
+        did, but for every item contained within the damageRect. Can also paint
+        into a passed-in HDC (needed for window animations and smooth-scrolling).
+        (WebCore::registerPopup): Changed a void* to a PopupMenu*, since that's
+        what it really is.
+        (WebCore::PopupWndProc): Added code to handle all the messages any
+        self-respecting window would handle, and removed messages only relevant
+        to the ListBox control.
+        * platform/win/TemporaryLinkStubs.cpp: Removed unneeded #include.
+
+2006-10-19  Adam Roben  <aroben@apple.com>
+
         Rubberstamped by Maciej.
 
         Build fix.
