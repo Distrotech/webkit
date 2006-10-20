@@ -239,6 +239,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\DOMEventsClasses.h"
+				>
+			</File>
+			<File
 				RelativePath="..\DOMHTMLClasses.h"
 				>
 			</File>
@@ -336,6 +340,10 @@
 			</File>
 			<File
 				RelativePath="..\DOMCSSClasses.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\DOMEventsClasses.cpp"
 				>
 			</File>
 			<File

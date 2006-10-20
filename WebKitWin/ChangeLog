@@ -1,3 +1,28 @@
+2006-10-19  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://4771958>
+        Holding down Ctrl when a redirect happens opens the redirected page in a new tab
+
+        <rdar://4781981> 
+        View Source is using syntax highlighting and should probably punt on
+        that (due to its many issues) and show the original data in a WebView
+        as plaintext.
+        
+        Also added a bunch of DOM bindings for events.
+
+        * DOMEventsClasses.cpp: Added.
+        * DOMEventsClasses.h: Added.
+        * Interfaces/DOMEvents.idl: Added.
+        * WebFrame.cpp:
+        (WebFrame::loadData): Implemented
+        (WebFrame::openURL): Added triggeringEvent parameter
+        * WebFrame.h: Added triggeringEvent parameter
+        * WebKit.vcproj/Interfaces.vcproj: Added DOMEvents.idl, DOMWindow.idl
+        * WebKit.vcproj/WebKit.vcproj: Added DOMEventsClasses.cpp, DOMEventsClasses.h 
+        * WebKit.vcproj/WebKitGUID.vcproj: Added DOMEvents_i.c
+
 2006-10-19  Anders Carlsson <acarlsson@apple.com>
 
         * WebFrame.cpp:

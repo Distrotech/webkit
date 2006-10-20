@@ -1,3 +1,19 @@
+2006-10-19  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://4771958> Holding down Ctrl when a redirect happens opens the redirected page in a new tab
+        
+        Send triggering event to url selection.
+
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::urlSelected): Add triggeringEvent parameter
+        * bridge/win/FrameWin.h: Add triggeringEvent parameter
+        * platform/win/PlatformMouseEventWin.cpp:
+        (WebCore::PlatformMouseEvent::PlatformMouseEvent): Call GetKeyState instead of GetAsyncKeyState
+        * platform/win/WheelEventWin.cpp:
+        (WebCore::PlatformWheelEvent::PlatformWheelEvent): Call GetKeyState instead of GetAsyncKeyState
+
 2006-10-19  Adam Roben  <aroben@apple.com>
 
         Reviewed by Ada.

@@ -72,13 +72,13 @@ FrameWin::~FrameWin()
     cancelAndClear();
 }
 
-void FrameWin::urlSelected(const FrameLoadRequest& request)
+void FrameWin::urlSelected(const FrameLoadRequest& request, const Event* triggeringEvent)
 {
     Frame* targetFrame = tree()->find(request.m_frameName);
     bool newWindow = !targetFrame;
     FrameWinClient* client = targetFrame ? Win(targetFrame)->m_client.get() : m_client.get();
     if (client)
-        client->openURL(request.m_request.url().url(), newWindow, request.lockHistory());
+        client->openURL(request.m_request.url().url(), triggeringEvent, newWindow, request.lockHistory());
 }
 
 void FrameWin::submitForm(const FrameLoadRequest& request)

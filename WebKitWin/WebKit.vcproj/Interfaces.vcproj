@@ -198,6 +198,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\Interfaces\DOMEvents.idl"
+			>
+		</File>
+		<File
 			RelativePath="..\Interfaces\DOMExtensions.idl"
 			>
 		</File>
@@ -211,6 +215,10 @@
 		</File>
 		<File
 			RelativePath="..\Interfaces\DOMRange.idl"
+			>
+		</File>
+		<File
+			RelativePath="..\Interfaces\DOMWindow.idl"
 			>
 		</File>
 		<File

@@ -44,8 +44,12 @@
 #pragma warning( push, 0 )
 #include <WebCore/platform/win/BString.h>
 #include <WebCore/loader/Cache.h>
+#include <WebCore/page/DOMWindow.h>
 #include <WebCore/dom/Document.h>
 #include <WebCore/dom/DOMImplementation.h>
+#include <WebCore/dom/Event.h>
+#include <WebCore/dom/KeyboardEvent.h>
+#include <WebCore/dom/MouseRelatedEvent.h>
 #include <WebCore/page/FrameView.h>
 #include <WebCore/bridge/win/FrameWin.h>
 #include <WebCore/platform/GraphicsContext.h>
@@ -440,13 +444,40 @@ exit:
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::loadData( 
-    /* [in] */ IStream* /*data*/,
-    /* [in] */ BSTR /*mimeType*/,
-    /* [in] */ BSTR /*textEncodingName*/,
-    /* [in] */ BSTR /*url*/)
+    /* [in] */ IStream* data,
+    /* [in] */ BSTR mimeType,
+    /* [in] */ BSTR textEncodingName,
+    /* [in] */ BSTR url)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    if (mimeType) {
+        String mimeTypeString(mimeType, SysStringLen(mimeType));
+        d->frame->setResponseMIMEType(mimeTypeString);
+    }
+
+    if (textEncodingName) {
+        String encodingString(textEncodingName, SysStringLen(textEncodingName));
+        d->frame->setEncoding(encodingString, false);
+    }
+
+    if (url) {
+        DeprecatedString urlString((DeprecatedChar*)url, SysStringLen(url));
+        d->frame->begin(KURL(urlString));
+    }
+    else
+        d->frame->begin();
+
+    STATSTG stat;
+    if (SUCCEEDED(data->Stat(&stat, STATFLAG_NONAME))) {
+        if (!stat.cbSize.HighPart && stat.cbSize.LowPart) {
+            Vector<char> dataBuffer(stat.cbSize.LowPart);
+            ULONG read;
+            if (SUCCEEDED(data->Read(dataBuffer.data(), (ULONG)dataBuffer.size(), &read)))
+                d->frame->write(dataBuffer.data(), read);
+        }
+    }
+
+    d->frame->end();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::loadHTMLString( 
@@ -1157,12 +1188,23 @@ Frame* WebFrame::createFrame(const KURL& URL, const String& name, Element* owner
     return frame;
 }
 
-void WebFrame::openURL(const String& URL, bool newWindow, bool lockHistory)
+void WebFrame::openURL(const String& URL, const Event* triggeringEvent, bool newWindow, bool lockHistory)
 {
-    // FIXME: Modifier key handling should be earlier, since we aren't guaranteed
-    // that this URL open is coming from a user action, and we want the modifiers
-    // from the event at the time of the action, not irght now.
-    if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
+    bool ctrlPressed = false;
+    bool shiftPressed = false;
+    if (triggeringEvent) {
+        if (triggeringEvent->isMouseEvent()) {
+            const MouseRelatedEvent* mouseEvent = static_cast<const MouseRelatedEvent*>(triggeringEvent);
+            ctrlPressed = mouseEvent->ctrlKey();
+            shiftPressed = mouseEvent->shiftKey();
+        } else if (triggeringEvent->isKeyboardEvent()) {
+            const KeyboardEvent* keyEvent = static_cast<const KeyboardEvent*>(triggeringEvent);
+            ctrlPressed = keyEvent->ctrlKey();
+            shiftPressed = keyEvent->shiftKey();
+        }
+    }
+
+    if (ctrlPressed)
         newWindow = true;
 
     BString urlBStr = URL;
@@ -1177,7 +1219,7 @@ void WebFrame::openURL(const String& URL, bool newWindow, bool lockHistory)
         IWebView* newWebView;
         if (SUCCEEDED(d->webView->uiDelegate(&ui))) {
             if (SUCCEEDED(ui->createWebViewWithRequest(d->webView, request, &newWebView))) {
-                if (GetAsyncKeyState(VK_SHIFT)&0x8000) {
+                if (shiftPressed) {
                     // Ctrl-Option-Shift-click:  Opens a link in a new window and selects it.
                     // Ctrl-Shift-click:  Opens a link in a new tab and selects it.
                     ui->webViewShow(d->webView);

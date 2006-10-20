@@ -46,7 +46,7 @@ public:
     virtual void deref() = 0;
 
     virtual Frame* createFrame(const KURL&, const String& name, Element* ownerElement, const String& referrer) = 0;
-    virtual void openURL(const String& URL, bool newWindow, bool lockHistory) = 0;
+    virtual void openURL(const String& URL, const Event* triggeringEvent, bool newWindow, bool lockHistory) = 0;
     virtual void stopMainResourceLoad() = 0;
     virtual void submitForm(const String& method, const KURL&, const FormData*, Element* form, HashMap<String, String>& formValues) = 0;
     virtual void setTitle(const String& title) = 0;
@@ -84,7 +84,7 @@ public:
 
     virtual bool openURL(const KURL&);
     virtual void submitForm(const FrameLoadRequest&);
-    virtual void urlSelected(const FrameLoadRequest&);
+    virtual void urlSelected(const FrameLoadRequest&, const Event* triggeringEvent);
     virtual void openURLRequest(const FrameLoadRequest&);
 
     virtual void setTitle(const String&);
