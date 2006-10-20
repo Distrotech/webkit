@@ -714,13 +714,15 @@ static unsigned long long WebSystemMainMemory()
 
 unsigned int WebFrame::getObjectCacheSize()
 {
-    unsigned int cacheSize = 16777216;
+    unsigned int cacheSize = 33554432;
     IWebPreferences* preferences;
     if (SUCCEEDED(d->webView->preferences(&preferences)))
         preferences->objectCacheSize(&cacheSize);
 
     unsigned long long memSize = WebSystemMainMemory();
     unsigned int multiplier = 1;
+    if (memSize >= 2048 * 1024 * 1000 /*1024*/)
+        multiplier = 8;
     if (memSize >= 1024 * 1024 * 1000 /*1024*/)
         multiplier = 4;
     else if (memSize >= 512 * 1024 * 1024)
