@@ -267,6 +267,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\WebEditorClient.h"
+				>
+			</File>
+			<File
 				RelativePath="..\WebFrame.h"
 				>
 			</File>
@@ -360,6 +364,10 @@
 			</File>
 			<File
 				RelativePath="..\WebDataSource.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\WebEditorClient.cpp"
 				>
 			</File>
 			<File

@@ -54,6 +54,7 @@ import "IWebNotification.idl";
 import "DOMCore.idl";
 import "DOMRange.idl";
 import "IWebUndoManager.idl";
+import "IWebView.idl";
 
 interface IDOMCSSStyleDeclaration;
 interface IDOMRange;

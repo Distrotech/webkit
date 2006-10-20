@@ -79,7 +79,7 @@ public:
 class FrameWin : public Frame
 {
 public:
-    FrameWin(Page*, Element*, FrameWinClient*);
+    FrameWin(Page*, Element*, FrameWinClient*, EditorClient*);
     ~FrameWin();
 
     virtual bool openURL(const KURL&);

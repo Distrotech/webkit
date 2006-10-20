@@ -1,3 +1,36 @@
+2006-10-20  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Steve and Maciej.
+
+        Adding knowledge of the Editor and EditorClient to Windows WebKit
+
+        * Interfaces/IWebEditingDelegate.idl:
+        needs IWebView.idl
+        
+        * WebEditorClient.cpp: Added
+        (WebEditorClient::WebEditorClient):
+        (WebEditorClient::~WebEditorClient):
+        (WebEditorClient::shouldDeleteRange):
+        (WebEditorClient::shouldBeginEditingInRange):
+        (WebEditorClient::shouldEndEditingInRange):
+        (WebEditorClient::shouldInsertNode):
+        (WebEditorClient::shouldApplyStyle):
+        (WebEditorClient::shouldChangeTypingStyle):
+        (WebEditorClient::webViewDidBeginEditing):
+        (WebEditorClient::webViewDidChange):
+        (WebEditorClient::webViewDidEndEditing):
+        (WebEditorClient::webViewDidChangeTypingStyle):
+        (WebEditorClient::webViewDidChangeSelection):
+        
+        * WebEditorClient.h: Added.
+        
+        * WebFrame.cpp:
+        (WebFrame::initWithWebFrameView):
+        created an editor client
+        
+        * WebKit.vcproj/WebKit.vcproj:
+        added WebEditorClient files
+
 2006-10-20  Steve Falkenburg  <sfalken@apple.com>
 
         Implement (barely) more of DOMWindow.idl.

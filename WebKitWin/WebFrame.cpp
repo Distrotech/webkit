@@ -33,6 +33,7 @@
 #include "IWebFormDelegate.h"
 #include "IWebUIDelegatePrivate.h"
 #include "WebMutableURLRequest.h"
+#include "WebEditorClient.h"
 #include "WebFrame.h"
 #include "WebHistory.h"
 #include "WebKit.h"
@@ -601,7 +602,8 @@ void WebFrame::initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, 
     HWND viewWindow;
     d->webView->viewWindow(&viewWindow);
 
-    Frame* frame = new FrameWin(static_cast<Page*>(page), static_cast<Element*>(ownerElement), this);
+
+    Frame* frame = new FrameWin(page, ownerElement, this, new WebEditorClient(d->webView));
     d->frame = frame;
 
     FrameView* frameView = new FrameView(frame);

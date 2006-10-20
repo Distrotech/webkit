@@ -1,3 +1,25 @@
+2006-10-20  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Steve.
+
+        Adding knowledge of the Editor and EditorClient to Windows WebCore
+
+        No layout tests needed
+        
+        * WebCore.vcproj/WebCore.vcproj:
+        added Sound.h, SoundWin.cpp, EditorClient.h, Editor.h&.cpp
+
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::FrameWin):
+        added client to constructor params
+
+        * bridge/win/FrameWin.h:
+        added client to constructor params
+
+        * platform/win/SoundWin.cpp: Added.
+        (WebCore::systemBeep):
+        Calls windows system beep
+
 2006-10-19  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Adam.

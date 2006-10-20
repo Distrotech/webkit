@@ -1583,6 +1583,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\Sound.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\SSLKeyGenerator.h"
 				>
 			</File>
@@ -1845,6 +1849,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\platform\win\SharedTimerWin.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\win\SoundWin.cpp"
 					>
 				</File>
 				<File
@@ -3425,6 +3433,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\bridge\EditorClient.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\bridge\History.h"
 				>
 			</File>
@@ -3538,6 +3550,14 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\editing\EditCommand.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\editing\Editor.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\editing\Editor.h"
 				>
 			</File>
 			<File
