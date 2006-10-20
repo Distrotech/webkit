@@ -148,7 +148,7 @@ void WebPreferences::initialize()
 
     key = CFSTR(WebKitObjectCacheSizePreferenceKey);
     if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
-        CFDictionaryAddValue(m_standardUserDefaults, key,                               CFSTR("16777216"));
+        CFDictionaryAddValue(m_standardUserDefaults, key,                               CFSTR("33554432"));
 
     key = CFSTR(WebKitUserStyleSheetEnabledPreferenceKey);
     if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
