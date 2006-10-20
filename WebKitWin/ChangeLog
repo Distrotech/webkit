@@ -1,3 +1,12 @@
+2006-10-20  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Darin.
+
+        Build fix.
+        Stubbing out DOMWindow.idl, which was forgotten in the last checkin.
+
+        * Interfaces/DOMWindow.idl: Added.
+
 2006-10-19  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Adam.
