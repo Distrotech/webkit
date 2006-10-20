@@ -9,7 +9,9 @@
 
         Fix: <rdar://problem/4709416>
         Implement mouse hot-tracking for <select> menus
-        (It was easier to implement this than to leave it broken.)
+        Fix: <rdar://problem/4786763>
+        Can select disabled options in <select> menus using mouse
+        (It was easier to implement these than to leave them broken.)
 
         * WebCore.vcproj/WebCore.vcproj: Removed PopupMenu.cpp from project.
         * platform/win/PopupMenuWin.cpp: Carnage. PopupMenu has gained a slew
