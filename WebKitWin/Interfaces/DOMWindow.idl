@@ -51,13 +51,60 @@ cpp_quote(" */")
 import "oaidl.idl";
 import "ocidl.idl";
 import "DOMCore.idl";
+import "DOMCSS.idl";
 
 [
     local,
     object,
-    uuid(62343a9e-a779-4e91-818a-14fc178cf4c3),
+    uuid(19126DDF-E82F-46c0-A2F9-16879D7DADC5),
     pointer_default(unique)
 ]
-interface IDOMWindow: IDOMObject
+interface IDOMWindow : IDOMObject
 {
+    // DOM Level 2 AbstractView Interface
+    //readonly attribute Document document;
+    HRESULT document([out, retval] IDOMDocument* result);
+
+    // DOM Level 2 Style Interface
+    //CSSStyleDeclaration getComputedStyle(in Element element,
+    //                                     in DOMString pseudoElement);
+    HRESULT getComputedStyle([in] IDOMElement* element, [in] BSTR pseudoElement);
+
+    // WebKit extensions
+    //CSSRuleList getMatchedCSSRules(in Element element,
+    //                               in DOMString pseudoElement,
+    //                               in [Optional] boolean authorOnly);
+    HRESULT getMatchedCSSRules([in] IDOMElement* element, [in] BSTR pseudoElement, [in] BOOL authorOnly, [out, retval] IDOMCSSRuleList** result);
+
+    //readonly attribute double devicePixelRatio;
+    HRESULT devicePixelRatio([out, retval] double* result);
+
+    // Global constructors
+    //attribute CSSPrimitiveValueConstructor CSSPrimitiveValue;
+    //attribute CSSRuleConstructor CSSRule;
+    //attribute CSSStyleDeclarationConstructor CSSStyleDeclaration;
+    //attribute CSSValueConstructor CSSValue;
+    //attribute DocumentConstructor Document;
+    //attribute DocumentFragmentConstructor DocumentFragment;
+    //attribute DOMParserConstructor DOMParser;
+    //attribute ElementConstructor Element;
+    //attribute EventConstructor Event;
+    //attribute HTMLElementConstructor HTMLElement;
+    //attribute HTMLDocumentConstructor HTMLDocument;
+    //attribute MutationEventConstructor MutationEvent;
+    //attribute NodeConstructor Node;
+    //attribute NodeFilterConstructor NodeFilter;
+    //attribute RangeConstructor Range;
+    //attribute RangeExceptionConstructor RangeException;
+
+    // Mozilla has a separate XMLDocument object for XML documents. 
+    // We just use Document for this.
+    //attribute DocumentConstructor XMLDocument;
+
+    //attribute XMLSerializerConstructor XMLSerializer;
+
+    //#ifdef XPATH_SUPPORT
+    //attribute XPathEvaluatorConstructor XPathEvaluator;
+    //attribute XPathResultConstructor XPathResult;
+    //#endif
 }

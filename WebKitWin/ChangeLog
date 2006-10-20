@@ -1,3 +1,9 @@
+2006-10-20  Steve Falkenburg  <sfalken@apple.com>
+
+        Implement (barely) more of DOMWindow.idl.
+
+        * Interfaces/DOMWindow.idl:
+
 2006-10-20  Adam Roben  <aroben@apple.com>
 
         Reviewed by Darin.
