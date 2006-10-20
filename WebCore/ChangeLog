@@ -1,3 +1,12 @@
+2006-10-19  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Steve.
+
+        - speculative build fix for Windows for my recent changes.
+
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::submitForm):
+
 2006-10-19  Anders Carlsson  <acarlsson@apple.com>
 
        * platform/win/TemporaryLinkStubs.cpp:
