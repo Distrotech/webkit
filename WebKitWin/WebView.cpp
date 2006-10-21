@@ -111,6 +111,8 @@ WebView::~WebView()
 
     delete m_page;
 
+    deleteBackingStore();
+
     gClassCount--;
 }
 

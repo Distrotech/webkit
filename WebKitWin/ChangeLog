@@ -1,3 +1,14 @@
+2006-10-20  Dave Hyatt  <hyatt@apple.com>
+
+        Fix build bustage with spaces in names in cygwin home dirs with webkit's auto-version.sh script.
+       
+        * WebKit.vcproj/auto-version.sh:
+       
+        Fix a horrible memory leak with multiple windows.  WebViews need to delete their backing stores.
+        
+        * WebView.cpp:
+        (WebView::~WebView):
+
 2006-10-20  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Hyatt.
