@@ -1,5 +1,12 @@
 2006-10-20  Steve Falkenburg  <sfalken@apple.com>
 
+        Build fix.
+
+        * WebView.cpp:
+        (webKitVersion):
+
+2006-10-20  Steve Falkenburg  <sfalken@apple.com>
+
         Reviewed by Ada.
         
         <rdar://4778502> Boomer userAgent string needs to support pulling in proper build #, plus customization

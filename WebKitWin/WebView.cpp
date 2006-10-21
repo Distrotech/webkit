@@ -1050,7 +1050,7 @@ static String language()
 static String webKitVersion()
 {
     String versionStr = "420+";
-    void* data;
+    void* data = 0;
 
     struct LANGANDCODEPAGE {
         WORD wLanguage;
