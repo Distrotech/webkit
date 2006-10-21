@@ -757,11 +757,13 @@ unsigned int WebFrame::getObjectCacheSize()
 
     unsigned long long memSize = WebSystemMainMemory();
     unsigned int multiplier = 1;
+    
+    // 2GB and greater will be 128mb.  1gb and greater will be 64mb.
+    // Otherwise just use 32mb.  On Windows the reported memory is
+    // a bit smaller, so we use 1000 instead of 1024 as a fudge factor.
     if (memSize >= 2048 * 1024 * 1000 /*1024*/)
-        multiplier = 8;
-    else if (memSize >= 1024 * 1024 * 1000 /*1024*/)
         multiplier = 4;
-    else if (memSize >= 512 * 1024 * 1024)
+    else if (memSize >= 1024 * 1024 * 1000 /*1024*/)
         multiplier = 2;
 
     return cacheSize * multiplier;
