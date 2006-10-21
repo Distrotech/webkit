@@ -96,7 +96,12 @@ void FrameWin::submitForm(const FrameLoadRequest& request)
 
 String FrameWin::userAgent() const
 {
-    return m_client->userAgent();
+    return m_client->userAgentForURL(originalRequestURL());
+}
+
+KURL FrameWin::originalRequestURL() const
+{
+    return m_client->originalRequestURL();
 }
 
 void FrameWin::runJavaScriptAlert(String const& message)

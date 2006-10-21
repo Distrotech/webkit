@@ -462,7 +462,8 @@ HRESULT STDMETHODCALLTYPE WebFrame::loadData(
 
     if (url) {
         DeprecatedString urlString((DeprecatedChar*)url, SysStringLen(url));
-        d->frame->begin(KURL(urlString));
+        m_originalRequestURL = KURL(urlString);
+        d->frame->begin(m_originalRequestURL);
     }
     else
         d->frame->begin();
@@ -489,7 +490,8 @@ HRESULT STDMETHODCALLTYPE WebFrame::loadHTMLString(
 
     if (baseURL) {
         DeprecatedString baseURLString((DeprecatedChar*)baseURL, SysStringLen(baseURL));
-        d->frame->begin(KURL(baseURLString));
+        m_originalRequestURL = KURL(baseURLString);
+        d->frame->begin(m_originalRequestURL);
     }
     else
         d->frame->begin();
@@ -657,6 +659,7 @@ HRESULT WebFrame::loadDataSource(WebDataSource* dataSource)
             hr = request->HTTPMethod(&method);
             if (SUCCEEDED(hr)) {
                 KURL kurl(DeprecatedString((DeprecatedChar*)url, SysStringLen(url)));
+                m_originalRequestURL = kurl;
                 String methodString(method, SysStringLen(method));
                 const FormData* formData = 0;
                 if (wcscmp(method, TEXT("GET"))) {
@@ -1453,9 +1456,14 @@ void WebFrame::handledOnloadEvents()
     }
 }
 
-String WebFrame::userAgent()
+const String& WebFrame::userAgentForURL(const KURL& url)
 {
-    return "Mozilla/5.0 (PC; U; Intel; Windows; en) AppleWebKit/420+ (KHTML, like Gecko)";
+    return d->webView->userAgentForKURL(url);
+}
+
+const KURL& WebFrame::originalRequestURL()
+{
+    return m_originalRequestURL;
 }
 
 void WebFrame::runJavaScriptAlert(const String& message)

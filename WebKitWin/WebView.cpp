@@ -49,6 +49,7 @@
 #include <WebCore/editing/CommandByName.h>
 #include <WebCore/editing/SelectionController.h>
 #include <WebCore/editing/TypingCommand.h>
+#include <WebCore/platform/cstring.h>
 #pragma warning(pop)
 
 #include <tchar.h>
@@ -67,8 +68,6 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 
 WebView::WebView()
 : m_refCount(0)
-, m_frameName(0)
-, m_groupName(0)
 , m_hostWindow(0)
 , m_viewWindow(0)
 , m_mainFrame(0)
@@ -82,9 +81,7 @@ WebView::WebView()
 , m_backForwardList(0)
 , m_preferences(0)
 , m_userAgentOverridden(false)
-, m_userAgent(0)
 , m_textSizeMultiplier(1)
-, m_overrideEncoding(0)
 {
     m_backForwardList = WebBackForwardList::createInstance();
     m_backingStoreSize.cx = m_backingStoreSize.cy = 0;
@@ -113,11 +110,6 @@ WebView::~WebView()
         m_preferences->Release();
 
     delete m_page;
-
-    SysFreeString(m_frameName);
-    SysFreeString(m_groupName);
-    SysFreeString(m_userAgent);
-    SysFreeString(m_overrideEncoding);
 
     gClassCount--;
 }
@@ -1021,6 +1013,89 @@ Settings* WebView::settings()
     return &m_settings;
 }
 
+static String osVersion()
+{
+    String osVersion;
+    OSVERSIONINFO versionInfo = {0};
+    versionInfo.dwOSVersionInfoSize = sizeof(versionInfo);
+    GetVersionEx(&versionInfo);
+
+    if (versionInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
+        if (versionInfo.dwMajorVersion == 4) {
+            if (versionInfo.dwMinorVersion == 0)
+                osVersion = "Windows 95";
+            else if (versionInfo.dwMinorVersion == 10)
+                osVersion = "Windows 98";
+            else if (versionInfo.dwMinorVersion == 90)
+                osVersion = "Windows 98; Win 9x 4.90";
+        }
+    } else if (versionInfo.dwPlatformId == VER_PLATFORM_WIN32_NT)
+        osVersion = String::sprintf("Windows NT %d.%d", versionInfo.dwMajorVersion, versionInfo.dwMinorVersion);
+
+    if (!osVersion.length())
+        osVersion = String::sprintf("Windows %d.%d", versionInfo.dwMajorVersion, versionInfo.dwMinorVersion);
+
+    return osVersion;
+}
+
+static String language()
+{
+    TCHAR languageName[256];
+    if (!GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SISO639LANGNAME, languageName, ARRAYSIZE(languageName)))
+        return "en";
+    else
+        return String(languageName, (unsigned int)_tcslen(languageName));
+}
+
+static String webKitVersion()
+{
+    String versionStr = "420+";
+    void* data;
+
+    struct LANGANDCODEPAGE {
+        WORD wLanguage;
+        WORD wCodePage;
+    } *lpTranslate;
+
+    TCHAR path[MAX_PATH];
+    GetModuleFileName(gInstance, path, ARRAYSIZE(path));
+    DWORD handle;
+    DWORD versionSize = GetFileVersionInfoSize(path, &handle);
+    if (!versionSize)
+        goto exit;
+    data = malloc(versionSize);
+    if (!data)
+        goto exit;
+    if (!GetFileVersionInfo(path, 0, versionSize, data))
+        goto exit;
+    UINT cbTranslate;
+    if (!VerQueryValue(data, TEXT("\\VarFileInfo\\Translation"), (LPVOID*)&lpTranslate, &cbTranslate))
+        goto exit;
+    TCHAR key[256];
+    _stprintf_s(key, ARRAYSIZE(key), TEXT("\\StringFileInfo\\%04x%04x\\ProductVersion"), lpTranslate[0].wLanguage, lpTranslate[0].wCodePage);
+    LPCTSTR productVersion;
+    UINT productVersionLength;
+    if (!VerQueryValue(data, (LPTSTR)(LPCTSTR)key, (void**)&productVersion, &productVersionLength))
+        goto exit;
+    versionStr = String(productVersion, productVersionLength);
+
+exit:
+    if (data)
+        free(data);
+    return versionStr;
+}
+
+const String& WebView::userAgentForKURL(const KURL& /*url*/)
+{
+    if (m_userAgentOverridden)
+        return m_userAgentCustom;
+
+    if (!m_userAgentStandard.length())
+        m_userAgentStandard = String::sprintf("Mozilla/5.0 (Windows; U; %s; %s) AppleWebKit/%s (KHTML, like Gecko)%s%s", osVersion().latin1().data(), language().latin1().data(), webKitVersion().latin1().data(), (m_applicationName.length() ? " " : ""), m_applicationName.latin1().data());
+
+    return m_userAgentStandard;
+}
+
 // IUnknown -------------------------------------------------------------------
 
 HRESULT STDMETHODCALLTYPE WebView::QueryInterface(REFIID riid, void** ppvObject)
@@ -1120,7 +1195,7 @@ HRESULT STDMETHODCALLTYPE WebView::URLTitleFromPasteboard(
 
 HRESULT STDMETHODCALLTYPE WebView::initWithFrame( 
     /* [in] */ RECT* /* frame */,
-    /* [in] */ BSTR frameName,
+    /* [in] */ BSTR /*frameName*/,
     /* [in] */ BSTR groupName)
 {
     HRESULT hr = S_OK;
@@ -1132,8 +1207,7 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     m_viewWindow = CreateWindowEx(0, kWebViewWindowClassName, 0, WS_CHILD | WS_CLIPCHILDREN,
         CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, m_hostWindow, 0, gInstance, 0);
 
-    m_frameName = SysAllocString(frameName);
-    m_groupName = SysAllocString(groupName);
+    m_groupName = String(groupName, SysStringLen(groupName));
 
     m_page = new Page();
 
@@ -1375,39 +1449,52 @@ HRESULT STDMETHODCALLTYPE WebView::textSizeMultiplier(
 }
 
 HRESULT STDMETHODCALLTYPE WebView::setApplicationNameForUserAgent( 
-    /* [in] */ BSTR /*applicationName*/)
+    /* [in] */ BSTR applicationName)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    m_applicationName = String(applicationName, SysStringLen(applicationName));
+    m_userAgentStandard = String();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::applicationNameForUserAgent( 
-    /* [retval][out] */ BSTR* /*applicationName*/)
+    /* [retval][out] */ BSTR* applicationName)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    *applicationName = SysAllocStringLen(m_applicationName.characters(), m_applicationName.length());
+    if (!*applicationName && m_applicationName.length())
+        return E_OUTOFMEMORY;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::setCustomUserAgent( 
-    /* [in] */ BSTR /*userAgentString*/)
+    /* [in] */ BSTR userAgentString)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    m_userAgentOverridden = true;
+    m_userAgentCustom = String(userAgentString, SysStringLen(userAgentString));
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::customUserAgent( 
-    /* [retval][out] */ BSTR* /*userAgentString*/)
+    /* [retval][out] */ BSTR* userAgentString)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    *userAgentString = 0;
+    if (!m_userAgentOverridden)
+        return S_OK;
+    *userAgentString = SysAllocStringLen(m_userAgentCustom.characters(), m_userAgentCustom.length());
+    if (!*userAgentString && m_userAgentCustom.length())
+        return E_OUTOFMEMORY;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::userAgentForURL( 
-    /* [in] */ BSTR /*url*/,
-    /* [retval][out] */ BSTR* /*userAgent*/)
+    /* [in] */ BSTR url,
+    /* [retval][out] */ BSTR* userAgent)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    DeprecatedString urlStr((DeprecatedChar*)url, SysStringLen(url));
+    String userAgentString = this->userAgentForKURL(KURL(urlStr));
+    *userAgent = SysAllocStringLen(userAgentString.characters(), userAgentString.length());
+    if (!*userAgent && userAgentString.length())
+        return E_OUTOFMEMORY;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::supportsTextEncoding( 
@@ -1427,13 +1514,7 @@ HRESULT STDMETHODCALLTYPE WebView::setCustomTextEncodingName(
     BSTR oldEncoding;
     hr = customTextEncodingName(&oldEncoding);
     if (SUCCEEDED(hr)) {
-        if (m_overrideEncoding) {
-            SysFreeString(m_overrideEncoding);
-            m_overrideEncoding = 0;
-        }
-        m_overrideEncoding = SysAllocString(encodingName);
-        if (encodingName && !m_overrideEncoding)
-            return E_OUTOFMEMORY;
+        m_overrideEncoding = String(encodingName, SysStringLen(encodingName));
         if (oldEncoding != encodingName && (!oldEncoding || !encodingName || _tcscmp(oldEncoding, encodingName)))
             hr = m_mainFrame->reloadAllowingStaleDataWithOverrideEncoding(encodingName);
         SysFreeString(oldEncoding);
@@ -1469,12 +1550,12 @@ HRESULT STDMETHODCALLTYPE WebView::customTextEncodingName(
     if (FAILED(hr))
         goto exit;
 
-    if (!*encodingName) {
-        *encodingName = SysAllocString(m_overrideEncoding);
-        if (m_overrideEncoding && !*encodingName) {
-            hr = E_OUTOFMEMORY;
-            goto exit;
-        }
+    if (!*encodingName)
+        *encodingName = SysAllocStringLen(m_overrideEncoding.characters(), m_overrideEncoding.length());
+
+    if (!*encodingName && m_overrideEncoding.length()) {
+        hr = E_OUTOFMEMORY;
+        goto exit;
     }
 
 exit:
@@ -1592,17 +1673,19 @@ HRESULT STDMETHODCALLTYPE WebView::registerViewClass(
 }
 
 HRESULT STDMETHODCALLTYPE WebView::setGroupName( 
-        /* [in] */ BSTR /*groupName*/)
+        /* [in] */ BSTR groupName)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    m_groupName = String(groupName, SysStringLen(groupName));
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::groupName( 
-        /* [retval][out] */ BSTR* /*groupName*/)
+        /* [retval][out] */ BSTR* groupName)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    *groupName = SysAllocStringLen(m_groupName.characters(), m_groupName.length());
+    if (!*groupName && m_groupName.length())
+        return E_OUTOFMEMORY;
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::estimatedProgress( 
@@ -2194,11 +2277,6 @@ HRESULT STDMETHODCALLTYPE WebView::onNotify(
     hr = unkPrefs->QueryInterface(IID_IWebPreferences, (void**)&preferences);
     if (FAILED(hr))
         return hr;
-
-    if (m_userAgentOverridden) {
-        SysFreeString(m_userAgent);
-        m_userAgent = 0;
-    }
 
     hr = updateWebCoreSettingsFromPreferences(preferences);
     preferences->Release();

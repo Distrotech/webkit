@@ -165,7 +165,8 @@ public:
     virtual void textDidChangeInTextArea(WebCore::Element*);
     virtual void didFirstLayout();
     virtual void handledOnloadEvents();
-    virtual WebCore::String userAgent();
+    virtual const WebCore::String& userAgentForURL(const WebCore::KURL&);
+    virtual const WebCore::KURL& originalRequestURL();
     virtual void runJavaScriptAlert(const WebCore::String&);
     virtual bool runJavaScriptConfirm(const WebCore::String&);
     virtual bool runJavaScriptPrompt(const WebCore::String& message, const WebCore::String& defaultValue, WebCore::String& result);
@@ -218,6 +219,7 @@ protected:
     Vector<char>        m_buffer;
     BSTR                m_textEncoding;
     RefPtr<WebCore::ResourceLoader> m_loader;
+    WebCore::KURL       m_originalRequestURL;
 };
 
 #endif

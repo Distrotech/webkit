@@ -62,7 +62,8 @@ public:
     virtual void didFirstLayout() = 0;
     virtual void handledOnloadEvents() = 0;
 
-    virtual String userAgent() = 0;
+    virtual const String& userAgentForURL(const KURL&) = 0;
+    virtual const KURL& originalRequestURL() = 0;
     virtual void runJavaScriptAlert(const WebCore::String&) = 0;
     virtual bool runJavaScriptConfirm(const WebCore::String&) = 0;
     virtual bool runJavaScriptPrompt(const WebCore::String& message, const WebCore::String& defaultValue, WebCore::String& result) = 0;

@@ -508,11 +508,11 @@ public:
 
     // Convenient to be able to violate the rules of COM here for easy movement to the frame.
     WebFrame* topLevelFrame() { return m_mainFrame; }
+    const WebCore::String& userAgentForKURL(const WebCore::KURL& url);
 
 protected:
     ULONG m_refCount;
-    BSTR m_frameName;
-    BSTR m_groupName;
+    WebCore::String m_groupName;
     HWND m_hostWindow;
     HWND m_viewWindow;
     WebFrame* m_mainFrame;
@@ -531,9 +531,11 @@ protected:
     IWebPreferences* m_preferences;
     WebCore::Settings m_settings;
     bool m_userAgentOverridden;
-    BSTR m_userAgent;
+    WebCore::String m_userAgentCustom;
+    WebCore::String m_userAgentStandard;
     float m_textSizeMultiplier;
-    BSTR m_overrideEncoding;
+    WebCore::String m_overrideEncoding;
+    WebCore::String m_applicationName;
 };
 
 #endif

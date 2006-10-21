@@ -1,3 +1,23 @@
+2006-10-20  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Ada.
+
+        <rdar://4778502> Boomer userAgent string needs to support pulling in proper build #, plus customization
+
+        Useragent/versioning changes
+        
+        Stamp auto-generated version number into DLL and into user agent.
+        Generate a real user agent string instead of hardcoding one.
+        Support client supplying an application name for the user agent.
+        Support client overriding the useragent (for debug menu).
+        Support per-URL user agents (not used at least for now).
+
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::userAgent): Now calls userAgentForURL
+        (WebCore::FrameWin::originalRequestURL): Implemented
+        * bridge/win/FrameWin.h: changed userAgent to userAgentForURL, added originalRequestURL
+        * platform/win/TemporaryLinkStubs.cpp: Removed originalRequestURL
+
 2006-10-20  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by Steve.
