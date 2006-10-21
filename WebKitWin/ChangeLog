@@ -1,3 +1,13 @@
+2006-10-21  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Geoff.
+
+        Stub out the new shouldShowDeleteInterface method.
+
+        * WebEditorClient.cpp:
+        (WebEditorClient::shouldShowDeleteInterface):
+        * WebEditorClient.h:
+
 2006-10-20  Dave Hyatt  <hyatt@apple.com>
 
         Fix build bustage with spaces in names in cygwin home dirs with webkit's auto-version.sh script.

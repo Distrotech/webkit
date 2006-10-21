@@ -31,6 +31,7 @@
 #include "WebView.h"
 
 #pragma warning(push, 0)
+#include <WebCore/html/HTMLElement.h>
 #include <WebCore/dom/Range.h>
 #include <WebCore/platform/win/NotImplemented.h>
 #pragma warning(pop)
@@ -103,3 +104,6 @@ void WebEditorClient::webViewDidChangeSelection(WebNotification* /*notification*
 
 //NSUndoManager* WebEditorClient::undoManagerForWebView(WebView *webView)
 //{  LOG_NOIMPL(); return NULL; }
+
+bool WebEditorClient::shouldShowDeleteInterface(HTMLElement* /*element*/)
+{ LOG_NOIMPL(); return false; }

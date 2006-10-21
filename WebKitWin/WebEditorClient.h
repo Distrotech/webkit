@@ -37,8 +37,9 @@ class WebNotification;
 
 namespace WebCore {
 
-class Node;
 class CSSStyleDeclaration;
+class HTMLElement;
+class Node;
 
 class WebEditorClient : public EditorClient
 {
@@ -62,6 +63,8 @@ public:
     void webViewDidChangeTypingStyle(WebNotification *notification);
     void webViewDidChangeSelection(WebNotification *notification);
 //    NSUndoManager* undoManagerForWebView(WebView *webView);
+
+    bool shouldShowDeleteInterface(HTMLElement*);
 
 private:
     WebView* m_webView;
