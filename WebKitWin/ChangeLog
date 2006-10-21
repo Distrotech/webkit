@@ -1,5 +1,13 @@
 2006-10-20  Steve Falkenburg  <sfalken@apple.com>
 
+        Reviewed by Hyatt.
+        
+        Make the auto-version script work with paths that contain spaces
+
+        * WebKit.vcproj/auto-version.sh:
+
+2006-10-20  Steve Falkenburg  <sfalken@apple.com>
+
         Build fix.
 
         * WebView.cpp:
