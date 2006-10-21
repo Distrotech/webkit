@@ -82,6 +82,8 @@ typedef float CGFloat;
 #define WTF_USE_NPOBJECT 1
 #define WTF_PLATFORM_CG 1
 #undef WTF_PLATFORM_CAIRO
+#define WTF_USE_CFNETWORK 1
+#undef WTF_USE_WININET
 #endif
 
 #define _WINSOCKAPI_ // Prevent inclusion of winsock.h in windows.h
