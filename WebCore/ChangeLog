@@ -1,5 +1,26 @@
 2006-10-21  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Anders.
+
+        Fix: <rdar://problem/4794151> Popup should scroll to reveal selected
+        item, not just one line at a time
+        Fix: <rdar://problem/4794229> Popup hot-tracking should not change text
+        in <select> control
+
+        * platform/win/PopupMenuWin.cpp:
+        (WebCore::PopupMenu::calculatePositionAndSize): Cleaned up code by
+        translating into screen coordinates right away.
+        (WebCore::PopupMenu::setFocusedIndex): Added parameter to specify
+        whether the text in the <select> control should be updated.
+        (WebCore::PopupMenu::scrollTo): Extracted scrolling code from
+        PopupWndProc to here.
+        (WebCore::PopupMenu::scrollToRevealSelection): New method.
+        (WebCore::PopupWndProc): Use scrollToRevealSelection() instead of
+        manually scrolling one line at a time. Fixed a bug in detecting a
+        mouse drag.  Pass in HDC from ::BeginPaint to PopupMenu::paint.
+
+2006-10-21  Adam Roben  <aroben@apple.com>
+
         Build fix.
 
         * WebCore.vcproj/WebCore.vcproj: Add new DeleteButton* files to
