@@ -1,3 +1,10 @@
+2006-10-21  Adam Roben  <aroben@apple.com>
+
+        Build fix.
+
+        * WebCore.vcproj/WebCore.vcproj: Add new DeleteButton* files to
+        project.
+
 2006-10-20  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Anders.
