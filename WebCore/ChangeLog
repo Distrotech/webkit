@@ -1,3 +1,13 @@
+2006-10-22  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Steve.
+
+        Fix some crashes caused by the <select> element being detached while
+        the popup is open.
+
+        * platform/win/PopupMenuWin.cpp:
+        (WebCore::PopupWndProc):
+
 2006-10-21  Adam Roben  <aroben@apple.com>
 
         Reviewed by Anders.

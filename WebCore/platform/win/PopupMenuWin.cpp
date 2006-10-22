@@ -539,16 +539,16 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             }
             break;
         case WM_ACTIVATE:
-            if (popup && wParam == WA_INACTIVE)
+            if (popup && popup->menuList() && wParam == WA_INACTIVE)
                 popup->menuList()->hidePopup();
             break;
         case WM_KILLFOCUS:
-            if (popup && (HWND)wParam != popup->popupHandle())
+            if (popup && popup->menuList() && (HWND)wParam != popup->popupHandle())
                 // Focus is going elsewhere, so hide
                 popup->menuList()->hidePopup();
             break;
         case WM_KEYDOWN:
-            if (popup) {
+            if (popup && popup->menuList()) {
                 lResult = 0;
                 switch (LOWORD(wParam)) {
                     case VK_DOWN:
@@ -585,7 +585,7 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 popup->setFocusedIndex(popup->listIndexAtPoint(MAKEPOINTS(lParam)), false);
             break;
         case WM_LBUTTONUP:
-            if (popup) {
+            if (popup && popup->menuList()) {
                 popup->setFocusedIndex(popup->listIndexAtPoint(MAKEPOINTS(lParam)), true, true);
                 popup->menuList()->hidePopup();
             }
