@@ -1,3 +1,13 @@
+2006-10-22  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Anders.
+
+        - updated for new ResourceLoader file locations.
+
+        * WebCore.vcproj/WebCore.vcproj: Updated file paths.
+        * platform/win/ResourceLoaderWin.cpp: Moved to platform/network/win
+        * platform/win/ResourceLoaderWin.h: ditto
+
 2006-10-22  Adam Roben  <aroben@apple.com>
 
         Reviewed by Steve.
