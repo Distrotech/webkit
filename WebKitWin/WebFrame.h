@@ -33,7 +33,7 @@
 #include "WebDataSource.h"
 
 #pragma warning(push, 0)
-#include <WebCore/Platform/ResourceLoaderClient.h>
+#include <WebCore/platform/network/ResourceLoaderClient.h>
 #include <WebCore/bridge/win/FrameWin.h>
 #include <WebCore/Platform/PlatformString.h>
 #include <WTF/RefPtr.h>

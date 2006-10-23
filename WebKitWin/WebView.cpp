@@ -36,7 +36,7 @@
 #include "WebPreferences.h"
 
 #pragma warning( push, 0 )
-#include <WebCore/platform/ResourceLoaderClient.h>
+#include <WebCore/platform/network/ResourceLoaderClient.h>
 #include <WebCore/bridge/win/FrameWin.h>
 #include <WebCore/dom/Document.h>
 #include <WebCore/page/FrameView.h>

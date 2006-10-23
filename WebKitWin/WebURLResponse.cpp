@@ -32,8 +32,8 @@
 #pragma warning( push, 0 )
 #include <WebCore/platform/DeprecatedString.h>
 #include <WebCore/platform/KURL.h>
-#include <WebCore/platform/ResourceLoader.h>
-#include <WebCore/platform/win/ResourceLoaderWin.h>
+#include <WebCore/platform/network/ResourceLoader.h>
+#include <WebCore/platform/network/win/ResourceLoaderWin.h>
 #pragma warning( pop )
 
 #include <shlobj.h>

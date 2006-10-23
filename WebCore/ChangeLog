@@ -2,6 +2,13 @@
 
         Build fix.
 
+        * WebCore.vcproj/WebCore.vcproj: Copy headers from new platform/network
+        directory and subdirectories.
+
+2006-10-23  Adam Roben  <aroben@apple.com>
+
+        Build fix.
+
         * plugins/win/PluginStreamWin.h: Rename methods to match Maciej's
         changes.
 

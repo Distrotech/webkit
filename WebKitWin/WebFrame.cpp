@@ -64,8 +64,8 @@
 #include <WebCore/platform/PlugInInfoStore.h>
 #include <WebCore/rendering/RenderFrame.h>
 #include <WebCore/rendering/RenderTreeAsText.h>
-#include <WebCore/platform/ResourceLoader.h>
-#include <WebCore/platform/win/ResourceLoaderWin.h>
+#include <WebCore/platform/network/ResourceLoader.h>
+#include <WebCore/platform/network/win/ResourceLoaderWin.h>
 #include <wtf/MathExtras.h>
 #pragma warning(pop)
 
