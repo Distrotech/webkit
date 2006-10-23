@@ -2,6 +2,31 @@
 
         Reviewed by Adele.
 
+        Fix: <rdar://problem/4796994> Styled <select>s should still use Windows
+        theme
+
+        The fix is to do most of our drawing for menulists in
+        RenderThemeWin::paintMenuListButton (which is called for styled
+        <select>s), and then do any extra drawing for unstyled <select>s in
+        RenderThemeWin::paintMenuList.
+
+        * rendering/RenderThemeWin.cpp:
+        (WebCore::RenderThemeWin::getThemeData): Case for
+        MenulistButtonAppearance should be the same as MenulistAppearance.
+        (WebCore::RenderThemeWin::paintMenuList): Draw the border, then defer
+        to paintMenuListButton to handle the rest of painting.
+        (WebCore::RenderThemeWin::adjustMenuListStyle): Reset the border so we
+        can draw our own, then defer to adjustMenuListStyle.
+        (WebCore::RenderThemeWin::adjustMenuListButtonStyle): Code moved from
+        adjustMenuListStyle, less the call to resetBorder().
+        (WebCore::RenderThemeWin::paintMenuListButton): Code moved from
+        paintMenuList, less the border-drawing code.
+        * rendering/RenderThemeWin.h:
+
+2006-10-23  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Adele.
+
         Fix: <rdar://problem/4786759> PageUp/PageDown/Home/End don't work in
         <select> menus
 
