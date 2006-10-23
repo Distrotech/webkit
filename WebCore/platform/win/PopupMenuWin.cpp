@@ -244,47 +244,87 @@ bool PopupMenu::setFocusedIndex(int i, bool setControlText, bool fireOnChange)
 
     invalidateItem(m_focusedIndex);
     invalidateItem(i);
-    ::UpdateWindow(m_popup);
 
     m_focusedIndex = i;
+
+    if (!scrollToRevealSelection())
+        ::UpdateWindow(m_popup);
 
     return true;
 }
 
-bool PopupMenu::down()
+void PopupMenu::focusFirst()
 {
-    if (!m_popup)
-        return false;
+    if (!menuList())
+        return;
 
     HTMLSelectElement* select = static_cast<HTMLSelectElement*>(menuList()->node());
     const Vector<HTMLElement*>& listItems = select->listItems();
     size_t size = listItems.size();
 
-    int selectedListIndex = select->optionToListIndex(select->selectedIndex());
-    int i;
-    for (i = selectedListIndex + 1;
-         i >= 0 && i < size && (listItems[i]->disabled() || !listItems[i]->hasTagName(optionTag));
-         ++i);
-
-    return setFocusedIndex(i);
+    for (int i = 0; i < size; ++i)
+        if (listItems[i]->hasTagName(optionTag) && !listItems[i]->disabled()) {
+            setFocusedIndex(i);
+            break;
+        }
 }
 
-bool PopupMenu::up()
+void PopupMenu::focusLast()
 {
-    if (!m_popup)
+    if (!menuList())
+        return;
+
+    HTMLSelectElement* select = static_cast<HTMLSelectElement*>(menuList()->node());
+    const Vector<HTMLElement*>& listItems = select->listItems();
+    size_t size = listItems.size();
+
+    for (int i = size - 1; i > 0; --i)
+        if (listItems[i]->hasTagName(optionTag) && !listItems[i]->disabled()) {
+            setFocusedIndex(i);
+            break;
+        }
+}
+
+bool PopupMenu::down(unsigned lines)
+{
+    if (!menuList())
         return false;
 
     HTMLSelectElement* select = static_cast<HTMLSelectElement*>(menuList()->node());
     const Vector<HTMLElement*>& listItems = select->listItems();
     size_t size = listItems.size();
 
-    int selectedListIndex = select->optionToListIndex(select->selectedIndex());
-    int i;
-    for (i = selectedListIndex - 1;
-         i >= 0 && i < size && (listItems[i]->disabled() || !listItems[i]->hasTagName(optionTag));
-         --i);
+    int lastSelectableIndex, selectedListIndex;
+    lastSelectableIndex = selectedListIndex = select->optionToListIndex(select->selectedIndex());
+    for (int i = selectedListIndex + 1; i >= 0 && i < size; ++i)
+        if (listItems[i]->hasTagName(optionTag) && !listItems[i]->disabled()) {
+            lastSelectableIndex = i;
+            if (i >= selectedListIndex + (int)lines)
+                break;
+        }
 
-    return setFocusedIndex(i);
+    return setFocusedIndex(lastSelectableIndex);
+}
+
+bool PopupMenu::up(unsigned lines)
+{
+    if (!menuList())
+        return false;
+
+    HTMLSelectElement* select = static_cast<HTMLSelectElement*>(menuList()->node());
+    const Vector<HTMLElement*>& listItems = select->listItems();
+    size_t size = listItems.size();
+
+    int lastSelectableIndex, selectedListIndex;
+    lastSelectableIndex = selectedListIndex = select->optionToListIndex(select->selectedIndex());
+    for (int i = selectedListIndex - 1; i >= 0 && i < size; --i)
+        if (listItems[i]->hasTagName(optionTag) && !listItems[i]->disabled()) {
+            lastSelectableIndex = i;
+            if (i <= selectedListIndex - (int)lines)
+                break;
+        }
+
+    return setFocusedIndex(lastSelectableIndex);
 }
 
 void PopupMenu::invalidateItem(int index)
@@ -292,13 +332,11 @@ void PopupMenu::invalidateItem(int index)
     if (!m_popup)
         return;
 
-    RECT damageRect;
-    damageRect.left = 0;
-    damageRect.right = m_windowRect.width() - 2 * popupWindowBorderWidth;
-    damageRect.top = m_itemHeight * index - m_scrollOffset;
-    damageRect.bottom = damageRect.top + m_itemHeight;
+    IntRect damageRect(clientRect());
+    damageRect.setY(m_itemHeight * index - m_scrollOffset);
+    damageRect.setHeight(m_itemHeight);
 
-    ::InvalidateRect(m_popup, &damageRect, true);
+    ::InvalidateRect(m_popup, &RECT(damageRect), true);
 }
 
 IntRect PopupMenu::clientRect() const
@@ -327,16 +365,16 @@ void PopupMenu::reduceWheelDelta(int delta)
         return;
 }
 
-void PopupMenu::scrollTo(int line)
+bool PopupMenu::scrollTo(int line)
 {
     if (!m_popup)
-        return;
+        return false;
 
     SCROLLINFO scrollInfo;
     scrollInfo.cbSize = sizeof(scrollInfo);
     scrollInfo.fMask = SIF_POS;
     if (!::GetScrollInfo(m_popup, SB_VERT, &scrollInfo))
-        return;
+        return false;
 
     int oldPosition = scrollInfo.nPos;
     scrollInfo.nPos = line;
@@ -346,7 +384,7 @@ void PopupMenu::scrollTo(int line)
 
     if (oldPosition == scrollInfo.nPos)
         // No scrolling was performed (we were already at the top or bottom)
-        return;
+        return false;
 
     m_scrollOffset = scrollInfo.nPos * m_itemHeight;
 
@@ -361,17 +399,21 @@ void PopupMenu::scrollTo(int line)
 
     ::ScrollWindowEx(m_popup, 0, (oldPosition - scrollInfo.nPos) * m_itemHeight, 0, 0, 0, 0, flags);
     ::UpdateWindow(m_popup);
+
+    return true;
 }
 
-void PopupMenu::scrollToRevealSelection()
+bool PopupMenu::scrollToRevealSelection()
 {
     IntRect client = clientRect();
     IntRect focusedRect(client.x(), m_focusedIndex * m_itemHeight, client.width(), m_itemHeight);
 
     if (focusedRect.y() < m_scrollOffset)
-        scrollTo(m_focusedIndex);
+        return scrollTo(m_focusedIndex);
     else if (focusedRect.bottom() > m_scrollOffset + client.height())
-        scrollTo(m_focusedIndex - client.height() / m_itemHeight + 1);
+        return scrollTo(m_focusedIndex - client.height() / m_itemHeight + 1);
+
+    return false;
 }
 
 const int separatorPadding = 4;
@@ -554,12 +596,34 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                     case VK_DOWN:
                     case VK_RIGHT:
                         popup->down();
-                        popup->scrollToRevealSelection();
                         break;
                     case VK_UP:
                     case VK_LEFT:
                         popup->up();
-                        popup->scrollToRevealSelection();
+                        break;
+                    case VK_HOME:
+                        popup->focusFirst();
+                        break;
+                    case VK_END:
+                        popup->focusLast();
+                        break;
+                    case VK_PRIOR:
+                        if (popup->focusedIndex() * popup->itemHeight() != popup->scrollOffset()) {
+                            // Set the selection to the first visible item
+                            int firstVisibleItem = popup->scrollOffset() / popup->itemHeight();
+                            popup->up(popup->focusedIndex() - firstVisibleItem);
+                        } else
+                            // The first visible item is selected, so move the selection back one page
+                            popup->up(popup->clientRect().height() / popup->itemHeight());
+                        break;
+                    case VK_NEXT:
+                        if ((popup->focusedIndex() + 1) * popup->itemHeight() != popup->scrollOffset() + popup->clientRect().height()) {
+                            // Set the selection to the last visible item
+                            int lastVisibleItem = (popup->scrollOffset() + popup->clientRect().height()) / popup->itemHeight() - 1;
+                            popup->down(lastVisibleItem - popup->focusedIndex());
+                        } else
+                            // The last visible item is selected, so move the selection forward one page
+                            popup->down(popup->clientRect().height() / popup->itemHeight());
                         break;
                     case VK_RETURN:
                         popup->menuList()->valueChanged(popup->focusedIndex());

@@ -1,5 +1,27 @@
 2006-10-23  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Adele.
+
+        Fix: <rdar://problem/4786759> PageUp/PageDown/Home/End don't work in
+        <select> menus
+
+        * platform/win/PopupMenuWin.cpp:
+        (WebCore::PopupMenu::setFocusedIndex): Only call ::UpdateWindow if we
+        didn't scroll, because scrolling will do the update for us.
+        (WebCore::PopupMenu::focusFirst): New method.
+        (WebCore::PopupMenu::focusLast): New method.
+        (WebCore::PopupMenu::down): Add a parameter to specify how far we
+        should try to move the selection.
+        (WebCore::PopupMenu::up): Ditto.
+        (WebCore::PopupMenu::invalidateItem): Cleanup code by using IntRect
+        instead of RECT.
+        (WebCore::PopupMenu::scrollTo): Return a boolean to say whether
+        scrolling actually happened.
+        (WebCore::PopupMenu::scrollToRevealSelection): Ditto.
+        (WebCore::PopupWndProc): Handle PageUp/PageDown/Home/End.
+
+2006-10-23  Adam Roben  <aroben@apple.com>
+
         Build fix.
 
         * WebCore.vcproj/WebCore.vcproj: Copy headers from new platform/network
