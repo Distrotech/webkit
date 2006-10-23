@@ -284,7 +284,7 @@ void PluginStreamWin::receivedResponse(ResourceLoader* resourceLoader, PlatformR
     startStream(responseURL, contentLength, lastModifiedTime, mimeType);
 }
 
-void PluginStreamWin::receivedData(ResourceLoader* resourceLoader, const char* data, int length)
+void PluginStreamWin::didReceiveData(ResourceLoader* resourceLoader, const char* data, int length)
 {
     ASSERT(resourceLoader == m_resourceLoader);
     ASSERT(length > 0);
@@ -317,7 +317,7 @@ void PluginStreamWin::receivedData(ResourceLoader* resourceLoader, const char* d
         deliverData();
 }
 
-void PluginStreamWin::receivedAllData(ResourceLoader* resourceLoader, PlatformData platformData)
+void PluginStreamWin::didFinishLoading(ResourceLoader* resourceLoader, PlatformData platformData)
 {
     ASSERT(resourceLoader == m_resourceLoader);
 

@@ -351,7 +351,7 @@ void ResourceLoader::onRequestComplete(LPARAM lParam)
                     response.contentLength = contentLength;
                 client()->receivedResponse(this, &response);
             }
-            client()->receivedData(this, buffer, buffers.dwBufferLength);
+            client()->didReceiveData(this, buffer, buffers.dwBufferLength);
             buffers.dwBufferLength = ARRAYSIZE(buffer);
           }
         if (!ok) {
@@ -371,7 +371,7 @@ void ResourceLoader::onRequestComplete(LPARAM lParam)
     InternetCloseHandle(d->m_resourceHandle);
     
     client()->receivedAllData(this, 0);
-    client()->receivedAllData(this);
+    client()->didFinishLoading(this);
     kill();
 }
 
@@ -546,7 +546,8 @@ void ResourceLoader::fileLoadTimer(Timer<ResourceLoader>* timer)
     platformData.loaded = TRUE;
 
     d->client->receivedAllData(this, &platformData);
-    d->client->receivedAllData(this);
+    // actually, should report error here
+    d->client->didFinishLoading(this);
 }
 
 void ResourceLoader::cancel()
@@ -565,7 +566,8 @@ void ResourceLoader::cancel()
     platformData.loaded = FALSE;
 
     d->client->receivedAllData(this, &platformData);
-    d->client->receivedAllData(this);
+    // FIXME: do we want "noisy cancel" semantics?
+    d->client->didFinishLoading(this);
 }
 
 } // namespace WebCore

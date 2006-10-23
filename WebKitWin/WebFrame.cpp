@@ -1097,7 +1097,7 @@ void WebFrame::receivedResponse(ResourceLoader* loader, PlatformResponse platfor
     response->Release();
 }
 
-void WebFrame::receivedData(ResourceLoader*, const char* data, int length)
+void WebFrame::didReceiveData(ResourceLoader*, const char* data, int length)
 {
     // Set the encoding. This only needs to be done once, but it's harmless to do it again later.
     BSTR encoding = 0;
@@ -1115,7 +1115,7 @@ void WebFrame::receivedData(ResourceLoader*, const char* data, int length)
     memcpy(m_buffer.data() + oldSize, data, length);
 }
 
-void WebFrame::receivedAllData(ResourceLoader* job)
+void WebFrame::didFinishLoading(ResourceLoader* job)
 {
     if (m_provisionalDataSource) {
         m_dataSource = m_provisionalDataSource;

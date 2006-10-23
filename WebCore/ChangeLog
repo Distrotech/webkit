@@ -1,3 +1,19 @@
+2006-10-23  Maciej Stachowiak  <mjs@apple.com>
+
+        Rubber-stamped by Anders.
+
+        - fixed for ResourceLoader refactoring.
+
+        * platform/network/win/ResourceLoaderWin.cpp:
+        (WebCore::ResourceLoader::onRequestComplete):
+        (WebCore::ResourceLoader::fileLoadTimer):
+        (WebCore::ResourceLoader::cancel):
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::PluginStreamWin::didReceiveData):
+        (WebCore::PluginStreamWin::didFinishLoading):
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::performRequest):
+
 2006-10-22  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Anders.

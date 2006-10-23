@@ -145,8 +145,8 @@ public:
     // ResourceLoaderClient
     virtual void receivedRedirect(WebCore::ResourceLoader*, const WebCore::KURL&);
     virtual void receivedResponse(WebCore::ResourceLoader*, WebCore::PlatformResponse);
-    virtual void receivedData(WebCore::ResourceLoader*, const char*, int);
-    virtual void receivedAllData(WebCore::ResourceLoader*);
+    virtual void didReceiveData(WebCore::ResourceLoader*, const char*, int);
+    virtual void didFinishLoading(WebCore::ResourceLoader*);
 
     // FrameWinClient
     virtual void ref();

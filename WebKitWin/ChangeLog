@@ -1,3 +1,14 @@
+2006-10-23  Maciej Stachowiak  <mjs@apple.com>
+
+        Rubber-stamped by Anders.
+
+        - fixed for ResourceLoader refactoring.
+
+        * WebFrame.cpp:
+        (WebFrame::didReceiveData):
+        (WebFrame::didFinishLoading):
+        * WebFrame.h:
+
 2006-10-21  Timothy Hatcher  <timothy@apple.com>
 
         Reviewed by Geoff.
