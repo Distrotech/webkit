@@ -1,3 +1,10 @@
+2006-10-23  Adam Roben  <aroben@apple.com>
+
+        Build fix.
+
+        * WebCore.vcproj/WebCore.vcproj: Copied AdditionalIncludeDirectories
+        from Release to All Configurations.
+
 2006-10-23  Maciej Stachowiak  <mjs@apple.com>
 
         Rubber-stamped by Anders.
