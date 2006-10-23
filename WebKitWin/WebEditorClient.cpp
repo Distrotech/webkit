@@ -41,11 +41,11 @@ using namespace WebCore;
 WebEditorClient::WebEditorClient(WebView* webView)
 : m_webView(webView)
 {
-    m_webView->AddRef();
+    // No need to hold our own ref to m_webView, since we are in its ownership chain:
+    // Ownership is WebView->Page->Frame->Editor->EditorClient.
 }
 WebEditorClient::~WebEditorClient()
 {
-    m_webView->Release();
 }
 
 bool WebEditorClient::shouldDeleteRange(Range* /*range*/)

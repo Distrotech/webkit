@@ -604,7 +604,6 @@ void WebFrame::initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, 
     HWND viewWindow;
     d->webView->viewWindow(&viewWindow);
 
-
     Frame* frame = new FrameWin(page, ownerElement, this, new WebEditorClient(d->webView));
     d->frame = frame;
 
@@ -1525,18 +1524,20 @@ bool WebFrame::tabsToLinks() const
 
 IntRect WebFrame::windowResizerRect() const
 {
+    IntRect intRect;
+
     IWebUIDelegate* ui;
     if (SUCCEEDED(d->webView->uiDelegate(&ui))) {
         IWebUIDelegatePrivate* uiPrivate;
         if (SUCCEEDED(ui->QueryInterface(IID_IWebUIDelegatePrivate, (void**)&uiPrivate))) {
             RECT r;
             if (SUCCEEDED(uiPrivate->webViewResizerRect(d->webView, &r)))
-                return IntRect(r.left, r.top, r.right-r.left, r.bottom-r.top);
+                intRect = IntRect(r.left, r.top, r.right-r.left, r.bottom-r.top);
             uiPrivate->Release();
         }
         ui->Release();
     }
-    return IntRect();
+    return intRect;
 }
 
 void WebFrame::addToDirtyRegion(const IntRect& dirtyRect)

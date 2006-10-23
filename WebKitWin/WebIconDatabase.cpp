@@ -52,6 +52,7 @@ WebIconDatabase::WebIconDatabase()
 
 WebIconDatabase::~WebIconDatabase()
 {
+    delete m_iconDatabase;
     gClassCount--;
 }
 

@@ -1,3 +1,29 @@
+2006-10-23  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Lou.
+
+        * MarshallingHelpers.cpp:
+        (MarshallingHelpers::BSTRToCFStringRef): Fix leak in BSTRToCFStringRef
+        * WebEditorClient.cpp:
+        (WebEditorClient::WebEditorClient): Break dependency cycle by not holding a COM ref to the WebView
+        (WebEditorClient::~WebEditorClient): Break dependency cycle by not holding a COM ref to the WebView
+        * WebFrame.cpp:
+        (WebFrame::initWithWebFrameView):
+        (WebFrame::windowResizerRect): Fix reference leaks
+        * WebHistory.cpp:
+        (createUserInfoFromArray): Fixed leak of key CFStringRef.
+        (WebHistory::setOptionalSharedHistory): Made this callable with a 0 to release shared history
+        (_WebCoreHistoryProvider::_WebCoreHistoryProvider): Don't hold a ref to the WebHistory
+        (_WebCoreHistoryProvider::~_WebCoreHistoryProvider): Don't hold a ref to the WebHistory
+        (_WebCoreHistoryProvider::containsItemForURLLatin1): Don't hold a ref to the WebHistoryPrivate
+        * WebHistoryItem.cpp:
+        (WebHistoryItem::WebHistoryItem): Don't hold a reference to the WebIconDatabase
+        * WebIconDatabase.cpp:
+        (WebIconDatabase::~WebIconDatabase): Delete core icon db on delete
+        * WebNotificationCenter.cpp:
+        (ObserverKey::ObserverKey): Init data to 0 before calling assignment op
+        (ObserverKey::operator=): Free old string, release old ref if needed before copy
+
 2006-10-23  Adam Roben  <aroben@apple.com>
 
         Build fix.

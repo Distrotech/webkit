@@ -75,6 +75,8 @@ ObserverKey::ObserverKey(BSTR n, IUnknown* o)
 }
 
 ObserverKey::ObserverKey(const ObserverKey& other)
+: m_notificationName(0)
+, m_anObject(0)
 {
     *this = other;
 }
@@ -103,12 +105,18 @@ bool ObserverKey::operator==(const ObserverKey &other) const
 
 ObserverKey& ObserverKey::operator=(const ObserverKey& other)
 {
+    if (m_notificationName && m_notificationName != (BSTR)-1)
+        SysFreeString(m_notificationName);
     m_notificationName = other.m_notificationName;
     if (m_notificationName && m_notificationName != (BSTR)-1)
         m_notificationName = SysAllocString(m_notificationName);
-    m_anObject = other.m_anObject;
-    if (m_anObject)
-        m_anObject->AddRef();
+    if (m_anObject != other.m_anObject) {
+        if (m_anObject)
+            m_anObject->Release();
+        m_anObject = other.m_anObject;
+        if (m_anObject)
+            m_anObject->AddRef();
+    }
     return *this;
 }
 

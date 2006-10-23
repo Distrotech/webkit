@@ -45,19 +45,7 @@ CFURLRef MarshallingHelpers::BSTRToCFURLRef(BSTR urlStr)
 
 CFStringRef MarshallingHelpers::BSTRToCFStringRef(BSTR str)
 {
-    DWORD urlLength = SysStringLen(str)+1;
-    int result = WideCharToMultiByte(CP_UTF8, 0, str, urlLength, 0, 0, 0, 0);
-    if (result <= 0)
-        return 0;
-    UInt8* utf8 = (UInt8*) malloc(result); // ownership transferred to CFURLRef
-    result = WideCharToMultiByte(CP_UTF8, 0, str, urlLength, (LPSTR)utf8, result, 0, 0);
-    if (result <= 0) {
-        if (utf8)
-            free(utf8);
-        return 0;
-    }
-
-    return CFStringCreateWithBytes(0, utf8, result-1, kCFStringEncodingUTF8, false);
+    return CFStringCreateWithCharacters(0, (const UniChar*)(str ? str : TEXT("")), SysStringLen(str));
 }
 
 BSTR MarshallingHelpers::CFStringRefToBSTR(CFStringRef str)

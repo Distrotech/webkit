@@ -73,6 +73,7 @@ static CFDictionaryPropertyBag* createUserInfoFromArray(BSTR notificationStr, CF
     // CFDictionary will release reference to this CFString
     CFStringRef key = MarshallingHelpers::BSTRToCFStringRef(notificationStr);
     CFDictionaryAddValue(dictionary, (const void*) key, (const void*) arrayItem);
+    CFRelease(key);
     CFDictionaryPropertyBag* result = CFDictionaryPropertyBag::createInstance();
     result->setDictionary(dictionary);
     CFRelease(dictionary);
@@ -213,16 +214,18 @@ HRESULT STDMETHODCALLTYPE WebHistory::optionalSharedHistory(
 HRESULT STDMETHODCALLTYPE WebHistory::setOptionalSharedHistory( 
     /* [in] */ IWebHistory* history)
 {
-    WebCore::WebCoreHistory::setHistoryProvider(new _WebCoreHistoryProvider(history));
-
     if (m_optionalSharedHistory) {
         m_optionalSharedHistory->Release();
         m_optionalSharedHistory = 0;        
     }
 
+    _WebCoreHistoryProvider* coreHistory = 0;
     m_optionalSharedHistory = history;
-    if (history)
+    if (history) {
         history->AddRef();
+        coreHistory = new _WebCoreHistoryProvider(history);
+    }
+    WebCore::WebCoreHistory::setHistoryProvider(coreHistory);
 
     return S_OK;
 }
@@ -979,14 +982,10 @@ _WebCoreHistoryProvider::_WebCoreHistoryProvider(IWebHistory* history)
     : m_history(history)
     , m_historyPrivate(0)
 {
-    m_history->AddRef();
 }
 
 _WebCoreHistoryProvider::~_WebCoreHistoryProvider()
 {
-    if (m_historyPrivate)
-        m_historyPrivate->Release();
-    m_history->Release();
 }
 
 static inline bool matchLetter(char c, char lowercaseLetter)
@@ -1039,8 +1038,10 @@ bool _WebCoreHistoryProvider::containsItemForURLLatin1(const char* latin1, unsig
     }
 
     if (!m_historyPrivate) {
-        HRESULT hr = m_history->QueryInterface(IID_IWebHistoryPrivate, (void**)&m_historyPrivate);
-        if (!SUCCEEDED(hr)) {
+        if (SUCCEEDED(m_history->QueryInterface(IID_IWebHistoryPrivate, (void**)&m_historyPrivate))) {
+            // don't hold a ref - we're owned by IWebHistory/IWebHistoryPrivate
+            m_historyPrivate->Release();
+        } else {
             if (strBuffer != staticStrBuffer)
                 free(strBuffer);
             m_historyPrivate = 0;

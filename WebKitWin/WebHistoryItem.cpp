@@ -42,8 +42,10 @@ WebHistoryItem::WebHistoryItem()
 , m_title(0)
 , m_visitedCount(0)
 {
-    if (!m_sharedIconDatabase)
+    if (!m_sharedIconDatabase) {
         m_sharedIconDatabase = WebIconDatabase::sharedWebIconDatabase();
+        m_sharedIconDatabase->Release(); // don't hold our own ref to this - none of our objects outlive the other objects that hold refs
+    }
 
     gClassCount++;
 }
