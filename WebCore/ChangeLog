@@ -2,6 +2,13 @@
 
         Build fix.
 
+        * plugins/win/PluginStreamWin.h: Rename methods to match Maciej's
+        changes.
+
+2006-10-23  Adam Roben  <aroben@apple.com>
+
+        Build fix.
+
         * WebCore.vcproj/WebCore.vcproj: Copied AdditionalIncludeDirectories
         from Release to All Configurations.
 
