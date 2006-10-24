@@ -49,6 +49,7 @@
 #include "LocalizedStrings.h"
 #include "Node.h"
 #include "NotImplemented.h"
+#include "Page.h"
 #include "Path.h"
 #include "PlatformMouseEvent.h"
 #include "PlugInInfoStore.h"
@@ -122,7 +123,6 @@ KJS::Bindings::Instance* FrameWin::getAppletInstanceForWidget(Widget*) { STOP_NO
 bool FrameWin::canRedo() const { LOG_NOIMPL(); return false; }
 bool FrameWin::canUndo() const { LOG_NOIMPL(); return false; }
 bool FrameWin::canPaste() const { LOG_NOIMPL(); return false; }
-bool FrameWin::canGoBackOrForward(int) const { LOG_NOIMPL(); return false; }
 bool FrameWin::shouldInterruptJavaScript() { LOG_NOIMPL(); return false; }
 bool FrameWin::openURL(KURL const&) { LOG_NOIMPL(); return false; }
 void FrameWin::print() { LOG_NOIMPL(); }
@@ -145,12 +145,16 @@ bool FrameWin::toolbarVisible() { LOG_NOIMPL(); return false; }
 bool FrameWin::isLoadTypeReload(void) { LOG_NOIMPL(); return false; }
 Widget* FrameWin::createJavaAppletWidget(const IntSize&, Element* element, const HashMap<String, String>& args) { STOP_NOIMPL(); return 0; }
 
-bool BrowserExtensionWin::canRunModal() { LOG_NOIMPL(); return false; }
+bool FrameWin::canGoBackOrForward(int) const { LOG_NOIMPL(); return false; }
+void FrameWin::goBackOrForward(int) { LOG_NOIMPL(); }
+int FrameWin::getHistoryLength() { LOG_NOIMPL(); return 0; }
+KURL FrameWin::historyURL(int distance) { LOG_NOIMPL(); return KURL(); }
+
 void BrowserExtensionWin::createNewWindow(struct WebCore::FrameLoadRequest const&,struct WebCore::WindowFeatures const&,Frame*&) { STOP_NOIMPL(); }
-bool BrowserExtensionWin::canRunModalNow() { LOG_NOIMPL(); return false; }
-void BrowserExtensionWin::runModal() { STOP_NOIMPL(); }
-void BrowserExtensionWin::goBackOrForward(int) { LOG_NOIMPL(); }
-KURL BrowserExtensionWin::historyURL(int distance) { LOG_NOIMPL(); return KURL(); }
+
+bool Page::canRunModal() { LOG_NOIMPL(); return false; }
+bool Page::canRunModalNow() { LOG_NOIMPL(); return false; }
+void Page::runModal() { STOP_NOIMPL(); }
 
 void GraphicsContextPlatformPrivate::clip(const Path&) { LOG_NOIMPL(); }
 
@@ -194,7 +198,6 @@ void FrameWin::markMisspellingsInAdjacentWords(WebCore::VisiblePosition const&) 
 void FrameWin::respondToChangedContents(const Selection &endingSelection) { LOG_NOIMPL(); }
 
 BrowserExtensionWin::BrowserExtensionWin(WebCore::FrameWin*) { LOG_NOIMPL(); }
-int BrowserExtensionWin::getHistoryLength() { LOG_NOIMPL(); return 0; }
 
 namespace WebCore {
 

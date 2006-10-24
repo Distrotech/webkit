@@ -156,7 +156,6 @@ public:
     virtual bool tabsToLinks() const;
     virtual bool tabsToAllControls() const;
 
-    virtual bool canGoBackOrForward(int distance) const;
     virtual void handledOnloadEvents();
 
     virtual bool canPaste() const;
@@ -184,6 +183,11 @@ public:
     void addToDirtyRegion(const IntRect&);
     void scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect);
     void updateBackingStore();
+
+    virtual bool canGoBackOrForward(int) const;
+    virtual void goBackOrForward(int);
+    virtual int getHistoryLength();
+    virtual KURL historyURL(int distance);
 
 protected:
     virtual bool isLoadTypeReload();
