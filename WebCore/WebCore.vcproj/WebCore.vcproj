@@ -991,10 +991,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\page\ResourceRequest.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\page\Settings.h"
 				>
 			</File>
@@ -1088,6 +1084,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\loader\FormData.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\FrameLoaderTypes.h"
 				>
 			</File>
 			<File
@@ -1876,6 +1876,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\cf\RetainPtr.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\platform\cf\StringCF.cpp"
 					>
 				</File>
@@ -2384,6 +2388,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\break_lines.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\CounterListItem.h"
 				>
 			</File>
 			<File
@@ -4559,6 +4567,38 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSNodeIteratorCustom.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSSVGElementWrapperFactory.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSSVGElementWrapperFactory.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSSVGNumber.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSSVGNumber.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSSVGPoint.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSSVGPoint.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSSVGRect.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSSVGRect.h"
 					>
 				</File>
 				<File
