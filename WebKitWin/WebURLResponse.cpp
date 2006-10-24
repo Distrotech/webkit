@@ -79,8 +79,8 @@ WebURLResponse* WebURLResponse::createInstance(ResourceLoader* loader, PlatformR
         if (textEncoding)
             instance->m_textEncodingName = MarshallingHelpers::CFStringRefToBSTR(textEncoding);
         else {
-            DeprecatedString charsetStr = loader->queryMetaData("charset").deprecatedString();
-            instance->m_textEncodingName = SysAllocStringLen((LPCOLESTR)charsetStr.unicode(), charsetStr.length());
+            String encoding = loader->responseEncoding();
+            instance->m_textEncodingName = SysAllocStringLen((LPCOLESTR)encoding.characters(), encoding.length());
         }
 #else
         LPCTSTR separator = _tcschr(platformResponse->contentType, TEXT(';'));        
@@ -88,8 +88,8 @@ WebURLResponse* WebURLResponse::createInstance(ResourceLoader* loader, PlatformR
         if (separator) {
             // FIXME (if we care about WinInet).  Parse charset out of Content-Type
         }
-        DeprecatedString charsetStr = loader->queryMetaData("charset").deprecatedString();
-        instance->m_textEncodingName = SysAllocStringLen((LPCOLESTR)charsetStr.unicode(), charsetStr.length());
+        String encoding = loader->responseEncoding();
+        instance->m_textEncodingName = SysAllocStringLen((LPCOLESTR)encoding.characters(), encoding.length());
 #endif
     }
 

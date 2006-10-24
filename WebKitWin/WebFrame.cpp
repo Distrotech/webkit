@@ -657,9 +657,11 @@ HRESULT WebFrame::loadDataSource(WebDataSource* dataSource)
         if (SUCCEEDED(hr)) {
             hr = request->HTTPMethod(&method);
             if (SUCCEEDED(hr)) {
-                KURL kurl(DeprecatedString((DeprecatedChar*)url, SysStringLen(url)));
-                m_originalRequestURL = kurl;
-                String methodString(method, SysStringLen(method));
+                ResourceRequest resourceRequest;
+                resourceRequest.setURL(DeprecatedString((DeprecatedChar*)url, SysStringLen(url)));
+                resourceRequest.setHTTPMethod(String(method, SysStringLen(method)));
+
+                m_originalRequestURL = resourceRequest.url();
                 const FormData* formData = 0;
                 if (wcscmp(method, TEXT("GET"))) {
                     WebMutableURLRequest* requestImpl;
@@ -669,12 +671,11 @@ HRESULT WebFrame::loadDataSource(WebDataSource* dataSource)
                     }
                 }
                 if (formData)
-                    m_loader = ResourceLoader::create(this, methodString, kurl, *formData);
-                else
-                    m_loader = ResourceLoader::create(this, methodString, kurl);
+                    resourceRequest.setHTTPBody(*formData);
+
+                m_loader = ResourceLoader::create(resourceRequest, this, d->frame->document()->docLoader());
                 if (!d->frame->document())
                     d->frame->begin(); // FIXME - the frame should do this for us
-                m_loader->start(d->frame->document()->docLoader());
                 IWebFrameLoadDelegate* frameLoadDelegate;
                 if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
                     frameLoadDelegate->didStartProvisionalLoadForFrame(d->webView, this);
