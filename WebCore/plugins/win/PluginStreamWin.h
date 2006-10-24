@@ -46,7 +46,7 @@ namespace WebCore {
 
     enum PluginStreamState { StreamBeforeStarted, StreamStarted, StreamStopped };
 
-    class PluginStreamWin : ResourceLoaderClient {
+    class PluginStreamWin : public ResourceLoaderClient {
     public:
         PluginStreamWin(PluginViewWin*, DocLoader*, const String& method, const KURL&, void* notifyData, bool sendNotification);
         ~PluginStreamWin();
@@ -62,7 +62,8 @@ namespace WebCore {
         // ResourceLoaderClient
         virtual void receivedResponse(ResourceLoader*, PlatformResponse);
         virtual void didReceiveData(ResourceLoader*, const char*, int);
-        virtual void didFinishLoading(ResourceLoader*, PlatformData);
+        virtual void receivedAllData(ResourceLoader*, PlatformData);
+
     private:
         void deliverData();
         void cancelAndDestroyStream(NPReason);

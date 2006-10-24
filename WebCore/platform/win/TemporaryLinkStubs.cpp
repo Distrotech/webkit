@@ -111,7 +111,7 @@ int WebCore::findNextWordFromIndex(UChar const*,int,int,bool) { LOG_NOIMPL(); re
 
 namespace WebCore {
 
-Vector<char> ServeSynchronousRequest(Loader*,DocLoader*,ResourceLoader*,KURL&,DeprecatedString&) { STOP_NOIMPL(); return Vector<char>(); }
+Vector<char> ServeSynchronousRequest(Loader*,DocLoader*,const ResourceRequest&, KURL&,DeprecatedString&) { STOP_NOIMPL(); return Vector<char>(); }
 
 }
 

@@ -336,7 +336,7 @@ void PluginViewWin::performRequest(PluginRequestWin* request)
             PluginStreamWin* stream = new PluginStreamWin(this, m_parentFrame->document()->docLoader(), "GET", request->url(), request->notifyData(), request->sendNotification());
             stream->startStream(request->url(), cstr.length(), 0, "text/plain");
             stream->didReceiveData(0, cstr, cstr.length());
-            stream->didFinishLoading(0, 0);
+            stream->receivedAllData(0, 0);
         }
     } else {
         // FIXME: radar://4730678 Support opening windows

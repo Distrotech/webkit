@@ -1,3 +1,18 @@
+2006-10-24  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Geoff.
+
+        - update for ResourceLoader API changes
+
+        * platform/win/TemporaryLinkStubs.cpp:
+        (WebCore::ServeSynchronousRequest):
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::PluginStreamWin::start):
+        (WebCore::PluginStreamWin::receivedAllData):
+        * plugins/win/PluginStreamWin.h:
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::performRequest):
+
 2006-10-24  Geoffrey Garen  <ggaren@apple.com>
 
         Rolling out my last change because it broke the world.

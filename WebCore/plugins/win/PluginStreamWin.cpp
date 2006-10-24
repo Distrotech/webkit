@@ -93,20 +93,12 @@ void PluginStreamWin::start()
 {
     // FIXME: Should ask the bridge if the URL can be loaded.
 
-    m_resourceLoader = ResourceLoader::create(this, m_method, m_url, m_postData);
+    ResourceRequest request(m_url);
+    request.setHTTPMethod(m_method);
+    request.setHTTPBody(m_postData);
+    request.addHTTPHeaderFields(m_headers);
 
-    // Assemble headers
-    // FIXME: ResourceLoader::setRequestHeaders should really take a HTTPHeaderMap instead of a 
-    // HashMap<String, String>, but as that function is going away we won't change it for now but
-    // work around it instead.
-    HashMap<String, String> headers;
-
-    ResourceRequest::HTTPHeaderMap::const_iterator end = m_headers.end();
-    for (ResourceRequest::HTTPHeaderMap::const_iterator it = m_headers.begin(); it != end; ++it)
-        headers.set(it->first, it->second);
-
-    m_resourceLoader->setRequestHeaders(headers);
-    m_resourceLoader->start(m_docLoader);
+    m_resourceLoader = ResourceLoader::create(request, this, m_docLoader);
 }
 
 void PluginStreamWin::stop()
@@ -316,7 +308,7 @@ void PluginStreamWin::didReceiveData(ResourceLoader* resourceLoader, const char*
         deliverData();
 }
 
-void PluginStreamWin::didFinishLoading(ResourceLoader* resourceLoader, PlatformData platformData)
+void PluginStreamWin::receivedAllData(ResourceLoader* resourceLoader, PlatformData platformData)
 {
     ASSERT(resourceLoader == m_resourceLoader);
 
