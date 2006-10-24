@@ -673,9 +673,9 @@ HRESULT WebFrame::loadDataSource(WebDataSource* dataSource)
                 if (formData)
                     resourceRequest.setHTTPBody(*formData);
 
-                m_loader = ResourceLoader::create(resourceRequest, this, d->frame->document()->docLoader());
                 if (!d->frame->document())
                     d->frame->begin(); // FIXME - the frame should do this for us
+                m_loader = ResourceLoader::create(resourceRequest, this, d->frame->document()->docLoader());
                 IWebFrameLoadDelegate* frameLoadDelegate;
                 if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
                     frameLoadDelegate->didStartProvisionalLoadForFrame(d->webView, this);

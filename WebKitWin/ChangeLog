@@ -1,5 +1,11 @@
 2006-10-24  Anders Carlsson  <acarlsson@apple.com>
 
+        * WebFrame.cpp:
+        (WebFrame::loadDataSource):
+        Forgot to save before committing. Call begin before trying to access the document.
+
+2006-10-24  Anders Carlsson  <acarlsson@apple.com>
+
         Fix build. (Update for changes to ResourceLoader)
         
         * WebFrame.cpp:
