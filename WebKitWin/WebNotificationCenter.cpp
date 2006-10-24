@@ -248,6 +248,7 @@ HRESULT STDMETHODCALLTYPE WebNotificationCenter::addObserver(
 {
     ObserverKey key(notificationName, anObject);
     MappedObservers::iterator it = d->m_mappedObservers.find(key);
+    observer->AddRef();
     if (it != d->m_mappedObservers.end())
         it->second.append(observer);
     else {
