@@ -124,6 +124,7 @@ bool FrameWin::canRedo() const { LOG_NOIMPL(); return false; }
 bool FrameWin::canUndo() const { LOG_NOIMPL(); return false; }
 bool FrameWin::canPaste() const { LOG_NOIMPL(); return false; }
 bool FrameWin::shouldInterruptJavaScript() { LOG_NOIMPL(); return false; }
+bool FrameWin::openURL(KURL const&) { LOG_NOIMPL(); return false; }
 void FrameWin::print() { LOG_NOIMPL(); }
 void FrameWin::issueCutCommand() { LOG_NOIMPL(); }
 void FrameWin::issueCopyCommand() { LOG_NOIMPL(); }
@@ -133,6 +134,7 @@ void FrameWin::issueRedoCommand(void) { LOG_NOIMPL(); }
 void FrameWin::issuePasteAndMatchStyleCommand() { LOG_NOIMPL(); }
 void FrameWin::issueTransposeCommand() { LOG_NOIMPL(); }
 bool FrameWin::lastEventIsMouseUp() const { return false; }
+void FrameWin::openURLRequest(const struct WebCore::FrameLoadRequest&) { LOG_NOIMPL(); }
 String FrameWin::mimeTypeForFileName(String const&) const { LOG_NOIMPL(); return String(); }
 void FrameWin::scheduleClose() { STOP_NOIMPL(); }
 void FrameWin::markMisspellings(WebCore::Selection const&) { LOG_NOIMPL(); }
