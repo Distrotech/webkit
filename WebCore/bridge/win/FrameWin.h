@@ -83,10 +83,8 @@ public:
     FrameWin(Page*, Element*, FrameWinClient*, EditorClient*);
     ~FrameWin();
 
-    virtual bool openURL(const KURL&);
     virtual void submitForm(const FrameLoadRequest&);
     virtual void urlSelected(const FrameLoadRequest&, const Event* triggeringEvent);
-    virtual void openURLRequest(const FrameLoadRequest&);
 
     virtual void setTitle(const String&);
     virtual void setStatusBarText(const String&);
