@@ -36,6 +36,7 @@
 #include "npfunctions.h"
 #include "PlatformString.h"
 #include "ResourceLoaderClient.h"
+#include "ResourceRequest.h"
 #include "StringHash.h"
 #include "Timer.h"
 
@@ -50,7 +51,7 @@ namespace WebCore {
         PluginStreamWin(PluginViewWin*, DocLoader*, const String& method, const KURL&, void* notifyData, bool sendNotification);
         ~PluginStreamWin();
 
-        void setRequestHeaders(const HashMap<String, String>& headers);
+        void setRequestHeaders(const ResourceRequest::HTTPHeaderMap& headers);
         void setPostData(const char* data, int len);
 
         void start();
@@ -77,7 +78,7 @@ namespace WebCore {
         bool m_sendNotification;
         PluginStreamState m_streamState;
 
-        HashMap<String, String> m_headers;
+        ResourceRequest::HTTPHeaderMap m_headers;
         FormData m_postData;
 
         Timer<PluginStreamWin> m_delayDeliveryTimer;

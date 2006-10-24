@@ -103,12 +103,17 @@ bool PluginPackageWin::fetchInfo()
     LPVOID versionInfoData = fastMalloc(versionInfoSize);
 
     if (!GetFileVersionInfoW(m_path.charactersWithNullTermination(), 0, versionInfoSize, versionInfoData)) {
-        free(versionInfoData);
+        fastFree(versionInfoData);
         return false;
     }
 
     m_name = getVersionInfo(versionInfoData, "ProductName");
     m_description = getVersionInfo(versionInfoData, "FileDescription");
+
+    if (m_name.isNull() || m_description.isNull()) {
+        fastFree(versionInfoData);
+        return false;
+    }
 
     Vector<String> mimeTypes = splitString(getVersionInfo(versionInfoData, "MIMEType"), '|', -1);
     Vector<String> fileExtents = splitString(getVersionInfo(versionInfoData, "FileExtents"), '|', mimeTypes.size());

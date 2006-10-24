@@ -78,7 +78,7 @@ PluginStreamWin::~PluginStreamWin()
     free((char*)m_stream.url);
 }
 
-void PluginStreamWin::setRequestHeaders(const HashMap<String, String>& headers)
+void PluginStreamWin::setRequestHeaders(const ResourceRequest::HTTPHeaderMap& headers)
 {
     m_headers = headers;
 }
@@ -96,19 +96,16 @@ void PluginStreamWin::start()
     m_resourceLoader = ResourceLoader::create(this, m_method, m_url, m_postData);
 
     // Assemble headers
-    if (!m_headers.isEmpty()) {
-        String requestHeaders;
-        HashMap<String, String>::const_iterator end = m_headers.end();
-        for (HashMap<String, String>::const_iterator it = m_headers.begin(); it != end; ++it) {
-            requestHeaders += it->first;
-            requestHeaders += ": ";
-            requestHeaders += it->second;
-            requestHeaders += "\r\n";
-        }
+    // FIXME: ResourceLoader::setRequestHeaders should really take a HTTPHeaderMap instead of a 
+    // HashMap<String, String>, but as that function is going away we won't change it for now but
+    // work around it instead.
+    HashMap<String, String> headers;
 
-        m_resourceLoader->addMetaData("customHTTPHeader", requestHeaders);
-    }
+    ResourceRequest::HTTPHeaderMap::const_iterator end = m_headers.end();
+    for (ResourceRequest::HTTPHeaderMap::const_iterator it = m_headers.begin(); it != end; ++it)
+        headers.set(it->first, it->second);
 
+    m_resourceLoader->setRequestHeaders(headers);
     m_resourceLoader->start(m_docLoader);
 }
 
@@ -116,6 +113,8 @@ void PluginStreamWin::stop()
 {
     if (m_resourceLoader)
         m_resourceLoader->kill();
+
+    m_streamState = StreamStopped;
     m_resourceLoader = 0;
 }
 

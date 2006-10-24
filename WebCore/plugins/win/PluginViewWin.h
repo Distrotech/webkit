@@ -33,6 +33,7 @@
 #include "IntRect.h"
 #include "KURL.h"
 #include "PlatformString.h"
+#include "ResourceRequest.h"
 #include "Timer.h"
 #include "Widget.h"
 #include "npapi.h"
@@ -100,7 +101,7 @@ namespace WebCore {
         bool start();
         void stop();
         static void setCurrentPluginView(PluginViewWin* pluginView);
-        NPError loadURL(const String& method, const KURL& url, const String& target, void* notifyData, bool sendNotification, HashMap<String, String>* headers, const char* postData, unsigned postDataLength);
+        NPError loadURL(const String& method, const KURL& url, const String& target, void* notifyData, bool sendNotification, ResourceRequest::HTTPHeaderMap* headers, const char* postData, unsigned postDataLength);
         NPError handlePost(const char* url, const char* target, uint32 len, const char* buf, bool file, void* notifyData, bool sendNotification, bool allowHeaders);
         RefPtr<PluginPackageWin> m_plugin;
         Element* m_element;

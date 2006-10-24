@@ -1,3 +1,30 @@
+2006-10-24  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://problem/4760429> Crash in PluginStreamWin::~PluginStreamWin when 
+        navigating away from mcdonalds.com
+        
+        * plugins/win/PluginPackageWin.cpp:
+        (WebCore::PluginPackageWin::fetchInfo):
+        Use fastFree instead of free when memory is allocated by fastMalloc. 
+        If the plugin name or description is null, don't try to fetch info about the plugin.
+        
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::PluginStreamWin::setRequestHeaders):
+        (WebCore::PluginStreamWin::start):
+        (WebCore::PluginStreamWin::stop):
+        * plugins/win/PluginStreamWin.h:
+        Change type of header map to ResourceRequest::HTTPHeaderMap. When a plugin is stopped,
+        set its state to StreamStopped.
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::loadURL):
+        (WebCore::parseRFC822HeaderFields):
+        (WebCore::PluginViewWin::handlePost):
+        * plugins/win/PluginViewWin.h:
+        Update for type changes to the header map.
+
 2006-10-24  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Anders.
