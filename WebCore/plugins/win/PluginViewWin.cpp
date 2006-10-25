@@ -363,7 +363,7 @@ void PluginViewWin::scheduleRequest(PluginRequestWin* request)
     m_requestTimer.startOneShot(0);
 }
 
-NPError PluginViewWin::loadURL(const String& method, const KURL& url, const String& target, void* notifyData, bool sendNotification, ResourceRequest::HTTPHeaderMap* headers, const char* postData, unsigned postDataLength)
+NPError PluginViewWin::loadURL(const String& method, const KURL& url, const String& target, void* notifyData, bool sendNotification, HTTPHeaderMap* headers, const char* postData, unsigned postDataLength)
 {
     ASSERT(method == "GET" || method == "POST");
 
@@ -515,12 +515,12 @@ static inline String capitalizeRFC822HeaderFieldName(const String& name)
     return result;
 }
 
-static inline ResourceRequest::HTTPHeaderMap parseRFC822HeaderFields(const Vector<char>& buffer, unsigned length)
+static inline HTTPHeaderMap parseRFC822HeaderFields(const Vector<char>& buffer, unsigned length)
 {
     const char* bytes = buffer.data();
     const char* eol;
     String lastKey;
-    ResourceRequest::HTTPHeaderMap headerFields;
+    HTTPHeaderMap headerFields;
 
     // Loop ove rlines until we're past the header, or we can't find any more end-of-lines
     while ((eol = findEOL(bytes, length))) {
@@ -591,7 +591,7 @@ NPError PluginViewWin::handlePost(const char* url, const char* target, uint32 le
     if (!url || !len || !buf)
         return NPERR_INVALID_PARAM;
 
-    ResourceRequest::HTTPHeaderMap headerFields;
+    HTTPHeaderMap headerFields;
     Vector<char> buffer;
     
     if (file) {

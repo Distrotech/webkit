@@ -51,7 +51,7 @@ namespace WebCore {
         PluginStreamWin(PluginViewWin*, DocLoader*, const String& method, const KURL&, void* notifyData, bool sendNotification);
         ~PluginStreamWin();
 
-        void setRequestHeaders(const ResourceRequest::HTTPHeaderMap& headers);
+        void setRequestHeaders(const HTTPHeaderMap& headers);
         void setPostData(const char* data, int len);
 
         void start();
@@ -79,7 +79,7 @@ namespace WebCore {
         bool m_sendNotification;
         PluginStreamState m_streamState;
 
-        ResourceRequest::HTTPHeaderMap m_headers;
+        HTTPHeaderMap m_headers;
         FormData m_postData;
 
         Timer<PluginStreamWin> m_delayDeliveryTimer;

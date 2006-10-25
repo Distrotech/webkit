@@ -78,7 +78,7 @@ PluginStreamWin::~PluginStreamWin()
     free((char*)m_stream.url);
 }
 
-void PluginStreamWin::setRequestHeaders(const ResourceRequest::HTTPHeaderMap& headers)
+void PluginStreamWin::setRequestHeaders(const HTTPHeaderMap& headers)
 {
     m_headers = headers;
 }
