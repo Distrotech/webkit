@@ -3,6 +3,7 @@ BUILDSTYLE=Release
 !ENDIF
 
 install:
+    set BuildBot=1
 	set WebKitSDKDir="$(SRCROOT)\AppleInternal"
 	set WebKitOutputDir=$(OBJROOT)
 	devenv "JavaScriptCore.sln" /rebuild $(BUILDSTYLE)

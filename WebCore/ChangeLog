@@ -1,5 +1,11 @@
 2006-10-24  Steve Falkenburg  <sfalken@apple.com>
 
+        Build fix for official builds
+
+        * WebCore.vcproj/WebCore.make:
+
+2006-10-24  Steve Falkenburg  <sfalken@apple.com>
+
         Fix build so it can be submitted.
 
         * WebCore.vcproj/WebCore.vcproj:
