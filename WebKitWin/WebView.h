@@ -26,13 +26,14 @@
 #ifndef WebView_H
 #define WebView_H
 
+#include "IWebNotificationObserver.h"
+#include "IWebUIDelegatePrivate.h"
 #include "IWebView.h"
 #include "IWebViewPrivate.h"
 #include "WebFrame.h"
-#include "IWebNotificationObserver.h"
-#include "IWebUIDelegatePrivate.h"
 
-#include "Settings.h"
+#include <WebCore/Page/Settings.h>
+#include <WebCore/platform/IntRect.h>
 
 class WebFrame;
 class WebBackForwardList;
@@ -498,6 +499,7 @@ public:
     void paint(HDC, LPARAM);
     void paintIntoBackingStore(WebCore::FrameView*, HDC bitmapDC, LPRECT dirtyRect);
     void paintIntoWindow(HDC bitmapDC, HDC windowDC, LPRECT dirtyRect);
+    void print(HDC dc, LPARAM options);
 
     bool ensureBackingStore();
     void addToDirtyRegion(const WebCore::IntRect&);
@@ -536,6 +538,7 @@ protected:
     float m_textSizeMultiplier;
     WebCore::String m_overrideEncoding;
     WebCore::String m_applicationName;
+    Vector<WebCore::IntRect> m_pages;
 };
 
 #endif

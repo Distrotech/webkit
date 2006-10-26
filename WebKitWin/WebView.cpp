@@ -404,6 +404,116 @@ void WebView::paintIntoWindow(HDC bitmapDC, HDC windowDC, LPRECT dirtyRect)
            dirtyRect->left, dirtyRect->top, SRCCOPY);
 }
 
+void WebView::print(HDC dc, LPARAM options)
+{
+    FrameWin* frame = static_cast<FrameWin*>(focusedTargetFrame());
+    if (options == 0) // Start job
+    {
+        if (dc && frame->document())
+        {
+            IntRect printRect(0, 0, 
+                              ::GetDeviceCaps(dc, PHYSICALWIDTH)  - 2 * ::GetDeviceCaps(dc, PHYSICALOFFSETX),
+                              ::GetDeviceCaps(dc, PHYSICALHEIGHT) - 2 * ::GetDeviceCaps(dc, PHYSICALOFFSETY) );
+
+            frame->document()->setPrinting (true);
+
+            m_pages = frame->computePageRects(printRect, 1.0);
+        }
+    }
+    else if (options == (-1))   // End job
+    {
+        if (frame->document())
+            frame->document()->setPrinting (false);
+        m_pages.clear();
+    }
+    else if (dc && options == (-2))  // Verify page
+    {
+        UINT pageNo = *(UINT*)dc;
+        size_t pageCount = m_pages.size();
+
+        if (pageCount < 1 || pageNo < 1 || pageNo > (UINT) pageCount)
+        {
+            *(UINT*)dc = (UINT)(-1);
+        }
+    }
+    else if (dc && (UINT)options <= m_pages.size())
+    {
+        IntRect printRect(0, 0, 
+                          ::GetDeviceCaps(dc, PHYSICALWIDTH)  - 2 * ::GetDeviceCaps(dc, PHYSICALOFFSETX),
+                          ::GetDeviceCaps(dc, PHYSICALHEIGHT) - 2 * ::GetDeviceCaps(dc, PHYSICALOFFSETY) );
+
+        RECT rcPaint = printRect;
+
+#ifdef PRE_FILL_BLANKS
+        HBRUSH yellowBrush = CreateSolidBrush(RGB(255, 255, 0));
+        FillRect(dc, &rcPaint, yellowBrush);
+#endif
+
+        IntRect pageRect = m_pages[(long)options-1];
+ 
+        BITMAPINFO bitmapInfo;
+        bitmapInfo.bmiHeader.biSize          = sizeof(BITMAPINFOHEADER);
+        bitmapInfo.bmiHeader.biWidth         = printRect.width(); 
+        bitmapInfo.bmiHeader.biHeight        = -printRect.height();
+        bitmapInfo.bmiHeader.biPlanes        = 1;
+        bitmapInfo.bmiHeader.biBitCount      = 32;
+        bitmapInfo.bmiHeader.biCompression   = BI_RGB;
+        bitmapInfo.bmiHeader.biSizeImage     = 0;
+        bitmapInfo.bmiHeader.biXPelsPerMeter = 0;
+        bitmapInfo.bmiHeader.biYPelsPerMeter = 0;
+        bitmapInfo.bmiHeader.biClrUsed       = 0;
+        bitmapInfo.bmiHeader.biClrImportant  = 0;
+
+        void* pixels = NULL;
+        HBITMAP bitmap = CreateDIBSection(dc, &bitmapInfo, DIB_RGB_COLORS, &pixels, NULL, 0);
+        HDC bitmapDC = CreateCompatibleDC(dc);
+        HBITMAP oldBitmap = (HBITMAP)SelectObject(bitmapDC, bitmap);
+        ASSERT(oldBitmap != NULL);
+
+        FillRect(bitmapDC, &rcPaint, (HBRUSH)GetStockObject(WHITE_BRUSH));
+
+#ifdef PRE_FILL_BLANKS
+        HBRUSH redBrush = CreateSolidBrush(RGB(255, 0, 0));
+        FillRect(bitmapDC, &rcPaint, redBrush);
+#endif
+  
+        {
+            GraphicsContext gc(bitmapDC);
+
+            GdiFlush();
+
+#define USE_SCALING 1
+#if (USE_SCALING)            
+            CGFloat scale = (float)printRect.width()/ (float)pageRect.width();
+            CGContextScaleCTM(gc.platformContext(), scale, scale);
+#endif            
+            CGContextTranslateCTM(gc.platformContext(), CGFloat(-pageRect.x()),
+                                                        CGFloat(-pageRect.y()));
+
+            frame->paint(&gc, pageRect);
+            
+#if !(USE_SCALING)            
+            // StretchBlt is faster than drawing directly using scaling in CTM, however
+            // the size of the printer DC can be really big (e.g. letter page on an average
+            // printer is about 7000 * 5000). This can cause StretchBlt to fail if there is
+            // not enough memory (it actually happened to me few times). If that happens the printed 
+            // content will look like a page thumbnail and the user may be a bit unhappy...
+            
+            StretchBlt(bitmapDC, 
+                       0, 0, printRect.width(), printRect.height(),
+                       bitmapDC,
+                       0, 0, fullPageRect.width(), fullPageRect.height(),
+                       SRCCOPY);
+#endif            
+           BitBlt(dc, 0, 0, printRect.width(), printRect.height(), bitmapDC, 0, 0, SRCCOPY);
+        }
+
+        SelectObject(bitmapDC, oldBitmap);
+        DeleteDC(bitmapDC);
+        DeleteObject(bitmap);
+    }
+}
+
 void WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
 {
     static LONG globalClickCount;
@@ -670,7 +780,7 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             break;
         }
         case WM_PRINTCLIENT:
-            webView->paint((HDC)wParam, lParam);
+            webView->print((HDC)wParam, lParam);
             break;
         case WM_DESTROY:
             // Do nothing?
