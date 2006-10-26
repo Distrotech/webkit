@@ -1,5 +1,11 @@
 2006-10-26  Adam Roben  <aroben@apple.com>
 
+        Forgot to make the change to Release as well in my last checkin.
+
+        * WebCore.vcproj/WebCore.vcproj:
+
+2006-10-26  Adam Roben  <aroben@apple.com>
+
         Rubberstamped by Steve.
 
         Add some missing '/d' flags to xcopy calls to only copy headers if
@@ -57,7 +63,6 @@
         back to the WebView for handling. Also omove handling of Return/Escape
         into the WM_CHAR event, as this is recommended by MSDN.
 
->>>>>>> .r10871
 2006-10-25  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Darin.
