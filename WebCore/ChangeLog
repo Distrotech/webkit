@@ -1,3 +1,26 @@
+2006-10-26  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        Use FrameLoadRequest and ResourceRequest instead of passing around
+        the individual components.
+        
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::PluginStreamWin::PluginStreamWin):
+        (WebCore::PluginStreamWin::start):
+        (WebCore::PluginStreamWin::destroyStream):
+        * plugins/win/PluginStreamWin.h:
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginRequestWin::PluginRequestWin):
+        (WebCore::PluginRequestWin::frameLoadRequest):
+        (WebCore::PluginViewWin::start):
+        (WebCore::PluginViewWin::performRequest):
+        (WebCore::PluginViewWin::load):
+        (WebCore::PluginViewWin::getURLNotify):
+        (WebCore::PluginViewWin::getURL):
+        (WebCore::PluginViewWin::handlePost):
+        * plugins/win/PluginViewWin.h:
+
 2006-10-26  Adam Roben  <aroben@apple.com>
 
         Reviewed by Adele.
@@ -19,6 +42,7 @@
         back to the WebView for handling. Also omove handling of Return/Escape
         into the WM_CHAR event, as this is recommended by MSDN.
 
+>>>>>>> .r10871
 2006-10-25  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Darin.

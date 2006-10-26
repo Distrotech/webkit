@@ -45,9 +45,8 @@
 
 namespace WebCore {
 
-PluginStreamWin::PluginStreamWin(PluginViewWin* pluginView, DocLoader* docLoader, const String& method, const KURL& url, void* notifyData, bool sendNotification)
-    : m_method(method)
-    , m_url(url)
+PluginStreamWin::PluginStreamWin(PluginViewWin* pluginView, DocLoader* docLoader, const ResourceRequest& resourceRequest, bool sendNotification, void* notifyData)
+    : m_resourceRequest(resourceRequest)
     , m_docLoader(docLoader)
     , m_pluginView(pluginView)
     , m_notifyData(notifyData)
@@ -78,27 +77,9 @@ PluginStreamWin::~PluginStreamWin()
     free((char*)m_stream.url);
 }
 
-void PluginStreamWin::setRequestHeaders(const HTTPHeaderMap& headers)
-{
-    m_headers = headers;
-}
-
-void PluginStreamWin::setPostData(const char* data, int len)
-{
-    m_postData = FormData();
-    m_postData.appendData(data, len);
-}
-
 void PluginStreamWin::start()
 {
-    // FIXME: Should ask the bridge if the URL can be loaded.
-
-    ResourceRequest request(m_url);
-    request.setHTTPMethod(m_method);
-    request.setHTTPBody(m_postData);
-    request.addHTTPHeaderFields(m_headers);
-
-    m_resourceLoader = ResourceLoader::create(request, this, m_docLoader);
+    m_resourceLoader = ResourceLoader::create(m_resourceRequest, this, m_docLoader);
 }
 
 void PluginStreamWin::stop()
@@ -188,7 +169,7 @@ void PluginStreamWin::destroyStream()
     }
 
     if (m_sendNotification)
-        m_pluginFuncs->urlnotify(m_instance, m_url.url().utf8(), m_reason, m_notifyData);
+        m_pluginFuncs->urlnotify(m_instance, m_resourceRequest.url().url().utf8(), m_reason, m_notifyData);
 
     m_streamState = StreamStopped;
     m_pluginView = 0;

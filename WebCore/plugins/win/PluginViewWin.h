@@ -50,6 +50,7 @@ namespace KJS {
 
 namespace WebCore {
     class Element;
+    class FrameLoadRequest;
     class FrameWin;
     class KURL;
     class PluginPackageWin;
@@ -100,8 +101,8 @@ namespace WebCore {
 
         bool start();
         void stop();
-        static void setCurrentPluginView(PluginViewWin* pluginView);
-        NPError loadURL(const String& method, const KURL& url, const String& target, void* notifyData, bool sendNotification, HTTPHeaderMap* headers, const char* postData, unsigned postDataLength);
+        static void setCurrentPluginView(PluginViewWin*);
+        NPError PluginViewWin::load(const FrameLoadRequest&, bool sendNotification, void* notifyData);
         NPError handlePost(const char* url, const char* target, uint32 len, const char* buf, bool file, void* notifyData, bool sendNotification, bool allowHeaders);
         RefPtr<PluginPackageWin> m_plugin;
         Element* m_element;

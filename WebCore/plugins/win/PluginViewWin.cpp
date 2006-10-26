@@ -30,6 +30,7 @@
 #include <kjs/value.h>
 #include "Document.h"
 #include "Element.h"
+#include "FrameLoadRequest.h"
 #include "FrameTree.h"
 #include "FrameWin.h"
 #include "FrameView.h"
@@ -59,19 +60,16 @@ using namespace HTMLNames;
 
 class PluginRequestWin {
 public:
-    PluginRequestWin(const KURL& url, const String& target, void* notifyData, bool sendNotification)
-        : m_url(url)
-        , m_target(target)
+    PluginRequestWin(const FrameLoadRequest& frameLoadRequest, bool sendNotification, void* notifyData)
+        : m_frameLoadRequest(frameLoadRequest)
         , m_notifyData(notifyData)
         , m_sendNotification(sendNotification) { }
 public:
-    KURL url() const { return m_url; }
-    String target() const { return m_target; }
+    const FrameLoadRequest& frameLoadRequest() const { return m_frameLoadRequest; }
     void* notifyData() const { return m_notifyData; }
     bool sendNotification() const { return m_sendNotification; }
 private:
-    KURL m_url;
-    String m_target;
+    FrameLoadRequest m_frameLoadRequest;
     void* m_notifyData;
     bool m_sendNotification;
     // FIXME: user gesture
@@ -244,8 +242,12 @@ bool PluginViewWin::start()
         
     m_isStarted = true;
 
-    if (m_url.isValid())
-        loadURL("GET", m_url, String(), 0, false, 0, 0, 0);
+    if (m_url.isValid()) {
+        FrameLoadRequest frameLoadRequest;
+        frameLoadRequest.m_request.setHTTPMethod("GET");
+        frameLoadRequest.m_request.setURL(m_url);
+        load(frameLoadRequest, false, 0);
+    }
 
     return true;
 }
@@ -313,14 +315,15 @@ static void freeStringArray(char** stringArray, int length)
 
 void PluginViewWin::performRequest(PluginRequestWin* request)
 {
-    String jsString = scriptStringIfJavaScriptURL(request->url());
+    KURL requestURL = request->frameLoadRequest().m_request.url();
+    String jsString = scriptStringIfJavaScriptURL(requestURL);
 
     if (!jsString.isNull()) {
-        if (!request->target().isNull()) {
+        if (!request->frameLoadRequest().m_frameName.isNull()) {
             // FIXME: If the result is a string, we probably want to put that string into the frame, just
             // like we do in KHTMLPartBrowserExtension::openURLRequest.
             if (request->sendNotification())
-                m_plugin->pluginFuncs()->urlnotify(m_instance, request->url().url().utf8(), NPRES_DONE, request->notifyData());
+                m_plugin->pluginFuncs()->urlnotify(m_instance, requestURL.url().utf8(), NPRES_DONE, request->notifyData());
         } else {
             JSValue* result = m_parentFrame->executeScript(0, jsString.deprecatedString(), true);
             String resultString;
@@ -333,8 +336,8 @@ void PluginViewWin::performRequest(PluginRequestWin* request)
                 return;
 
             CString cstr = resultString.utf8();
-            PluginStreamWin* stream = new PluginStreamWin(this, m_parentFrame->document()->docLoader(), "GET", request->url(), request->notifyData(), request->sendNotification());
-            stream->startStream(request->url(), cstr.length(), 0, "text/plain");
+            PluginStreamWin* stream = new PluginStreamWin(this, m_parentFrame->document()->docLoader(), request->frameLoadRequest().m_request, request->sendNotification(), request->notifyData());
+            stream->startStream(requestURL, cstr.length(), 0, "text/plain");
             stream->didReceiveData(0, cstr, cstr.length());
             stream->receivedAllData(0, 0);
         }
@@ -363,16 +366,19 @@ void PluginViewWin::scheduleRequest(PluginRequestWin* request)
     m_requestTimer.startOneShot(0);
 }
 
-NPError PluginViewWin::loadURL(const String& method, const KURL& url, const String& target, void* notifyData, bool sendNotification, HTTPHeaderMap* headers, const char* postData, unsigned postDataLength)
+NPError PluginViewWin::load(const FrameLoadRequest& frameLoadRequest, bool sendNotification, void* notifyData)
 {
-    ASSERT(method == "GET" || method == "POST");
+    ASSERT(frameLoadRequest.m_request.httpMethod() == "GET" || frameLoadRequest.m_request.httpMethod() == "POST");
 
+    KURL url = frameLoadRequest.m_request.url();
+    
     if (!url.isValid())
         return NPERR_INVALID_URL;
 
     // FIXME: don't let a plugin start any loads if it is no longer part of a document that is being 
     // displayed
 
+    String target = frameLoadRequest.m_frameName;
     String jsString = scriptStringIfJavaScriptURL(url);
     if (!jsString.isNull()) {
         if (!m_parentFrame->jScriptEnabled()) {
@@ -391,15 +397,10 @@ NPError PluginViewWin::loadURL(const String& method, const KURL& url, const Stri
             return NPERR_INVALID_PARAM;
         }
 
-        PluginRequestWin* request = new PluginRequestWin(url, target, notifyData, sendNotification);
+        PluginRequestWin* request = new PluginRequestWin(frameLoadRequest, sendNotification, notifyData);
         scheduleRequest(request);
     } else {
-        PluginStreamWin* stream = new PluginStreamWin(this, m_parentFrame->document()->docLoader(), method, url, notifyData, sendNotification);
-        if (headers)
-            stream->setRequestHeaders(*headers);
-        if (postData)
-            stream->setPostData(postData, postDataLength);
-
+        PluginStreamWin* stream = new PluginStreamWin(this, m_parentFrame->document()->docLoader(), frameLoadRequest.m_request, sendNotification, notifyData);
         m_streams.add(stream);
 
         stream->start();
@@ -421,12 +422,24 @@ static KURL makeURL(const KURL& baseURL, const char* relativeURLString)
 
 NPError PluginViewWin::getURLNotify(const char* url, const char* target, void* notifyData)
 {
-    return loadURL("GET", makeURL(m_url, url), DeprecatedString::fromLatin1(target), notifyData, true, 0, 0, 0);
+    FrameLoadRequest frameLoadRequest;
+
+    frameLoadRequest.m_frameName = DeprecatedString::fromLatin1(target);
+    frameLoadRequest.m_request.setHTTPMethod("GET");
+    frameLoadRequest.m_request.setURL(makeURL(m_url, url));
+
+    return load(frameLoadRequest, true, notifyData);
 }
 
 NPError PluginViewWin::getURL(const char* url, const char* target)
 {
-    return loadURL("GET", makeURL(m_url, url), DeprecatedString::fromLatin1(target), 0, false, 0, 0, 0);
+    FrameLoadRequest frameLoadRequest;
+
+    frameLoadRequest.m_frameName = DeprecatedString::fromLatin1(target);
+    frameLoadRequest.m_request.setHTTPMethod("GET");
+    frameLoadRequest.m_request.setURL(makeURL(m_url, url));
+
+    return load(frameLoadRequest, false, 0);
 }
 
 static inline bool startsWithBlankLine(const Vector<char>& buffer)
@@ -591,6 +604,8 @@ NPError PluginViewWin::handlePost(const char* url, const char* target, uint32 le
     if (!url || !len || !buf)
         return NPERR_INVALID_PARAM;
 
+    FrameLoadRequest frameLoadRequest;
+
     HTTPHeaderMap headerFields;
     Vector<char> buffer;
     
@@ -656,7 +671,14 @@ NPError PluginViewWin::handlePost(const char* url, const char* target, uint32 le
         }
     }
 
-    return loadURL("POST", makeURL(m_url, url), DeprecatedString::fromLatin1(target), notifyData, sendNotification, &headerFields, postData, postDataLength);
+    frameLoadRequest.m_frameName = DeprecatedString::fromLatin1(target);
+    frameLoadRequest.m_request.setHTTPMethod("POST");
+    frameLoadRequest.m_request.setURL(makeURL(m_url, url));
+    frameLoadRequest.m_request.addHTTPHeaderFields(headerFields);
+    frameLoadRequest.m_request.setHTTPBody(FormData(postData, postDataLength));
+    frameLoadRequest.m_frameName = target;
+
+    return load(frameLoadRequest, sendNotification, notifyData);
 }
 
 NPError PluginViewWin::postURLNotify(const char* url, const char* target, uint32 len, const char* buf, NPBool file, void* notifyData)

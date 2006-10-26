@@ -31,7 +31,6 @@
 #include <wtf/HashMap.h>
 #include <wtf/Vector.h>
 #include "CString.h"
-#include "FormData.h"
 #include "KURL.h"
 #include "npfunctions.h"
 #include "PlatformString.h"
@@ -48,11 +47,8 @@ namespace WebCore {
 
     class PluginStreamWin : public ResourceLoaderClient {
     public:
-        PluginStreamWin(PluginViewWin*, DocLoader*, const String& method, const KURL&, void* notifyData, bool sendNotification);
+        PluginStreamWin(PluginViewWin*, DocLoader*, const ResourceRequest&, bool sendNotification, void* notifyData);
         ~PluginStreamWin();
-
-        void setRequestHeaders(const HTTPHeaderMap& headers);
-        void setPostData(const char* data, int len);
 
         void start();
         void stop();
@@ -70,17 +66,13 @@ namespace WebCore {
         void destroyStream(NPReason);
         void destroyStream();
 
-        String m_method;
-        KURL m_url;
+        ResourceRequest m_resourceRequest;
         DocLoader* m_docLoader;
         RefPtr<ResourceLoader> m_resourceLoader;
         PluginViewWin* m_pluginView;
         void* m_notifyData;
         bool m_sendNotification;
         PluginStreamState m_streamState;
-
-        HTTPHeaderMap m_headers;
-        FormData m_postData;
 
         Timer<PluginStreamWin> m_delayDeliveryTimer;
         void delayDeliveryTimerFired(Timer<PluginStreamWin>*);
