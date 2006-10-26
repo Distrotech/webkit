@@ -1,5 +1,11 @@
 2006-10-26  Anders Carlsson  <acarlsson@apple.com>
 
+        * platform/win/TemporaryLinkStubs.cpp:
+        (GraphicsContext::drawLineForMisspellingOrBadGrammar):
+        Build fix from Oliver.
+        
+2006-10-26  Anders Carlsson  <acarlsson@apple.com>
+
         Reviewed by Adam.
 
         Use FrameLoadRequest and ResourceRequest instead of passing around
