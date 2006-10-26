@@ -63,7 +63,6 @@ PopupMenu::PopupMenu(RenderMenuList* m)
     , m_wasClicked(false)
     , m_windowRect(IntRect())
     , m_itemHeight(0)
-    , m_focusedIndex(0)
     , m_scrollOffset(0)
     , m_wheelDelta(0)
 {
@@ -230,7 +229,7 @@ bool PopupMenu::setFocusedIndex(int i, bool setControlText, bool fireOnChange)
     HTMLSelectElement* select = static_cast<HTMLSelectElement*>(menuList()->node());
     const Vector<HTMLElement*>& listItems = select->listItems();
 
-    if (i < 0 || i >= select->listItems().size() || i == m_focusedIndex)
+    if (i < 0 || i >= select->listItems().size() || i == focusedIndex())
         return false;
 
     HTMLElement* element = listItems[i];
@@ -238,19 +237,26 @@ bool PopupMenu::setFocusedIndex(int i, bool setControlText, bool fireOnChange)
     if (!(element->hasTagName(optionTag) && !static_cast<HTMLOptionElement*>(element)->disabled()))
         return false;
 
+    invalidateItem(focusedIndex());
+    invalidateItem(i);
+
     if (setControlText)
         menuList()->setTextFromOption(select->listToOptionIndex(i));
     menuList()->valueChanged(i, fireOnChange);
-
-    invalidateItem(m_focusedIndex);
-    invalidateItem(i);
-
-    m_focusedIndex = i;
 
     if (!scrollToRevealSelection())
         ::UpdateWindow(m_popup);
 
     return true;
+}
+
+int PopupMenu::focusedIndex() const
+{
+    if (!menuList())
+        return 0;
+
+    HTMLSelectElement* select = static_cast<HTMLSelectElement*>(menuList()->node());
+    return select->optionToListIndex(select->selectedIndex());
 }
 
 void PopupMenu::focusFirst()
@@ -406,14 +412,24 @@ bool PopupMenu::scrollTo(int line)
 bool PopupMenu::scrollToRevealSelection()
 {
     IntRect client = clientRect();
-    IntRect focusedRect(client.x(), m_focusedIndex * m_itemHeight, client.width(), m_itemHeight);
+    IntRect focusedRect(client.x(), focusedIndex() * m_itemHeight, client.width(), m_itemHeight);
 
     if (focusedRect.y() < m_scrollOffset)
-        return scrollTo(m_focusedIndex);
+        return scrollTo(focusedIndex());
     else if (focusedRect.bottom() > m_scrollOffset + client.height())
-        return scrollTo(m_focusedIndex - client.height() / m_itemHeight + 1);
+        return scrollTo(focusedIndex() - client.height() / m_itemHeight + 1);
 
     return false;
+}
+
+void PopupMenu::updateFromElement()
+{
+    if (!m_popup)
+        return;
+
+    ::InvalidateRect(m_popup, 0, true);
+    if (!scrollToRevealSelection())
+        ::UpdateWindow(m_popup);
 }
 
 const int separatorPadding = 4;
@@ -625,13 +641,35 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                             // The last visible item is selected, so move the selection forward one page
                             popup->down(popup->clientRect().height() / popup->itemHeight());
                         break;
-                    case VK_RETURN:
-                        popup->menuList()->valueChanged(popup->focusedIndex());
-                    case VK_ESCAPE:
+                    case VK_TAB:
+                        ::SendMessage(popup->menuList()->document()->view()->containingWindow(), message, wParam, lParam);
                         popup->menuList()->hidePopup();
                         break;
                     default:
+                        if (isprint(::MapVirtualKey(LOWORD(wParam), 2)))
+                            // Send the keydown to the WebView so it can be used for type-ahead find
+                            ::SendMessage(popup->menuList()->document()->view()->containingWindow(), message, wParam, lParam);
+                        else
+                            lResult = 1;
+                        break;
+                }
+            }
+            break;
+        case WM_CHAR:
+            if (popup && popup->menuList()) {
+                lResult = 0;
+                switch (wParam) {
+                    case 0x0D:   // Enter/Return
+                        popup->menuList()->valueChanged(popup->focusedIndex());
+                    case 0x1B:   // Escape
+                        popup->menuList()->hidePopup();
+                        break;
+                    case 0x09:   // TAB
+                    case 0x08:   // Backspace
+                    case 0x0A:   // Linefeed
+                    default:     // Character
                         lResult = 1;
+                        break;
                 }
             }
             break;

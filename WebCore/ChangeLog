@@ -1,3 +1,24 @@
+2006-10-26  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Adele.
+
+        Fix: <rdar://problem/4794162> Implement type-ahead find for popup menus
+        Fix: <rdar://problem/4800486> Pressing TAB while a popup is focused
+        should close the popup and move selection in the page
+
+        * platform/win/PopupMenuWin.cpp:
+        (WebCore::PopupMenu::PopupMenu): Don't cache the focused index.
+        (WebCore::PopupMenu::focusedIndex): Always get the focused index from
+        the HTMLSelectElement.
+        (WebCore::PopupMenu::setFocusedIndex): Invalidate before calling
+        valueChanged(), as this will change the result of focusedIndex().
+        (WebCore::PopupMenu::scrollToRevealSelection):
+        (WebCore::PopupMenu::updateFromElement): New method to repaint/rescroll
+        the popup.
+        (WebCore::PopupWndProc): Send TAB keypresses and printable characters
+        back to the WebView for handling. Also omove handling of Return/Escape
+        into the WM_CHAR event, as this is recommended by MSDN.
+
 2006-10-25  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Darin.
