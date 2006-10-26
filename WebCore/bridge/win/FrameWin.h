@@ -131,6 +131,8 @@ public:
     virtual bool lastEventIsMouseUp() const;
     
     virtual String overrideMediaType() const;
+    virtual void setupRootForPrinting(bool onOrOff);
+    virtual Vector<IntRect> computePageRects(const IntRect& printRect, float userScaleFactor);
 
     virtual KJS::Bindings::Instance* getEmbedInstanceForWidget(Widget*);
     virtual KJS::Bindings::Instance* getObjectInstanceForWidget(Widget*);

@@ -45,6 +45,7 @@
 #include "PluginDatabaseWin.h"
 #include "PluginViewWin.h"
 #include "RenderFrame.h"
+#include "RenderView.h"
 #include "ResourceLoader.h"
 #include "runtime_root.h"
 #include "ScrollbarMode.h"
@@ -97,6 +98,70 @@ void FrameWin::submitForm(const FrameLoadRequest& request)
 String FrameWin::userAgent() const
 {
     return m_client->userAgentForURL(originalRequestURL());
+}
+
+// Set or unset the printing mode in the view.  We only toy with this if we're printing.
+void FrameWin::setupRootForPrinting(bool onOrOff)
+{
+    if (document() && document()->printing()) {
+        RenderView *root = static_cast<RenderView *>(document()->renderer());
+        if (root) {
+            root->setPrintingMode(onOrOff);
+        }
+    }
+}
+
+Vector<IntRect> FrameWin::computePageRects(const IntRect& printRect, float userScaleFactor)
+{
+    setupRootForPrinting(true);
+    
+    Vector<IntRect> pages;
+
+    if (!document() || !view()|| !document()->renderer()) return pages;
+ 
+    RenderView* root = static_cast<RenderView *>(document()->renderer());
+
+    if (!root) {
+        LOG_ERROR("document to be printed has no renderer");
+        return pages;
+    }
+
+    if (userScaleFactor <= 0) {
+        LOG_ERROR("userScaleFactor has bad value %.2f", userScaleFactor);
+        return pages;
+    }
+    
+    float ratio = (float)printRect.height() / (float)printRect.width();
+ 
+    float pageWidth  = (float) root->docWidth();
+    float pageHeight = pageWidth * ratio;
+
+    if (pageHeight <= 0) {
+        LOG_ERROR("pageHeight has bad value %.2f", pageHeight);
+        return pages;
+    }
+
+    float currPageHeight = pageHeight / userScaleFactor;
+    float docHeight      = root->layer()->height();
+    float docWidth       = root->layer()->width();
+    float currPageWidth  = pageWidth / userScaleFactor;
+    
+    for (float i = 0; i < docHeight; i += currPageHeight) {
+        float proposedBottom = min(docHeight, i + pageHeight);
+        adjustPageHeight(&proposedBottom, i, proposedBottom, i);
+        currPageHeight = max(1.0f, proposedBottom - i);
+       
+        int x = 0;
+        int y = i;
+        int wide = currPageWidth;
+        int high = currPageHeight;
+        IntRect pageRect(x, y, wide, high);
+        pages.append(pageRect);
+    }
+    
+    setupRootForPrinting (false);
+    
+    return pages;
 }
 
 KURL FrameWin::originalRequestURL() const
