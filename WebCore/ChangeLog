@@ -1,3 +1,12 @@
+2006-10-27  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Oliver.
+
+        <rdar://problem/4730678> Plug-ins should be able to open URLs
+
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::performRequest):
+
 2006-10-26  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by John Sullivan.

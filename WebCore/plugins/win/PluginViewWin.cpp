@@ -342,7 +342,12 @@ void PluginViewWin::performRequest(PluginRequestWin* request)
             stream->receivedAllData(0, 0);
         }
     } else {
-        // FIXME: radar://4730678 Support opening windows
+        // FIXME: <rdar://problem/4807453> if the load request has post data it needs to be sent by the frame.
+        m_parentFrame->urlSelected(request->frameLoadRequest(), 0);
+
+        // FIXME: <rdar://problem/4807469> This should be sent when the document has finished loading
+        if (request->sendNotification())
+            m_plugin->pluginFuncs()->urlnotify(m_instance, requestURL.url().utf8(), NPRES_DONE, request->notifyData());
     }
 }
 
