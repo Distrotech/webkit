@@ -347,10 +347,31 @@ static inline void addAdobeAcrobatPluginPath(Vector<String>& paths)
     RegCloseKey(key);
 }
 
+static inline void addPluginPath(Vector<String>& paths)
+{
+    WCHAR moduleFileNameStr[_MAX_PATH];
+
+    int moduleFileNameLen = GetModuleFileName(0, moduleFileNameStr, _MAX_PATH);
+
+    if (!moduleFileNameLen)
+        return;
+
+    String moduleFileName = String(moduleFileNameStr, moduleFileNameLen);
+    int i = moduleFileName.reverseFind('\\');
+    if (i == -1)
+        return;
+
+    String pluginsPath = moduleFileName.left(i);
+    pluginsPath.append("\\Plugins");
+
+    paths.append(pluginsPath);
+}
+
 Vector<String> PluginDatabaseWin::defaultPluginPaths()
 {
     Vector<String> paths;
 
+    addPluginPath(paths);
     addJavaPluginPath(paths);
     addQuickTimePluginPath(paths);
     addAdobeAcrobatPluginPath(paths);
@@ -409,8 +430,8 @@ PluginViewWin* PluginDatabaseWin::createPluginView(FrameWin* parentFrame, Elemen
         plugin = pluginForMIMEType(mimeType);
     
     if (!plugin) {
-        DeprecatedString path = url.path();
-        String extension = path.mid(path.findRev('.') + 1);
+        String path = url.path();
+        String extension = path.substring(path.reverseFind('.') + 1);
 
         plugin = pluginForExtension(extension);
 
