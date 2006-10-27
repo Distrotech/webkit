@@ -1,5 +1,25 @@
 2006-10-26  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Beth.
+
+        Fix: <rdar://problem/4799084> Text and dropdown button too close
+        together in <select>s
+        Fix: <rdar://problem/4800493> Popup menus should be positioned so that
+        their text is horizontally aligned with the <select> control's text
+
+        * platform/win/PopupMenuWin.cpp:
+        (WebCore::PopupMenu::calculatePositionAndSize): Switch alignment of LTR
+        vs. RTL popups, and add padding to align the text.
+        (WebCore::PopupMenu::paint): Add padding from the <select> control to
+        align the text with the <select> control's text.
+        * rendering/RenderThemeWin.cpp: Set svn:eol-style native.
+        (WebCore::RenderThemeWin::systemFont): Clean up line endings.
+        (WebCore::RenderThemeWin::adjustMenuListButtonStyle): Add some extra
+        padding between the dropdown button and text.
+        (WebCore::RenderThemeWin::paintMenuListButton): Clean up code a bit.
+
+2006-10-26  Adam Roben  <aroben@apple.com>
+
         Forgot to make the change to Release as well in my last checkin.
 
         * WebCore.vcproj/WebCore.vcproj:

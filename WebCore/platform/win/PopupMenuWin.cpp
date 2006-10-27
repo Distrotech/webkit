@@ -133,6 +133,7 @@ void PopupMenu::hide()
     ::ShowWindow(m_popup, SW_HIDE);
 }
 
+const int endOfLinePadding = 2;
 void PopupMenu::calculatePositionAndSize(const IntRect& r, FrameView* v)
 {
     // r is in absolute document coordinates, but we want to be in screen coordinates
@@ -178,6 +179,11 @@ void PopupMenu::calculatePositionAndSize(const IntRect& r, FrameView* v)
         // We need room for a scrollbar
         popupWidth += ::GetSystemMetrics(SM_CXVSCROLL);
 
+    // Add padding to align the popup text with the <select> text
+    // Note: We can't add paddingRight() in LTR or paddingLeft() in RTL because those values include the width
+    // of the dropdown button, so we must use our own endOfLinePadding constant.
+    popupWidth += endOfLinePadding + (menuList()->style()->direction() == LTR ? menuList()->paddingLeft() : menuList()->paddingRight());
+
     // Leave room for the border
     popupWidth += 2 * popupWindowBorderWidth;
     popupHeight += 2 * popupWindowBorderWidth;
@@ -185,9 +191,9 @@ void PopupMenu::calculatePositionAndSize(const IntRect& r, FrameView* v)
     // The popup should be at least as wide as the control on the page
     popupWidth = max(rScreenCoords.width(), popupWidth);
 
-    // LTR <select>s get a right-aligned popup, RTL <select>s get a left-aligned popup
-    // This will cause the popup's scrollbar to always be aligned with the <select>'s dropdown button
-    int popupX = menuList()->style()->direction() == LTR ? rScreenCoords.right() - popupWidth : rScreenCoords.x();
+    // LTR <select>s get a left-aligned popup, RTL <select>s get a right-aligned popup
+    // This will cause the popup's text to always be aligned with the <select>'s text
+    int popupX = menuList()->style()->direction() == LTR ? rScreenCoords.x() : rScreenCoords.right() - popupWidth;
 
     IntRect popupRect(popupX, rScreenCoords.bottom(), popupWidth, popupHeight);
 
@@ -532,7 +538,7 @@ void PopupMenu::paint(const IntRect& damageRect, HDC hdc)
         
         // Draw the item text
         if (itemStyle->visibility() != HIDDEN) {
-            int textX = itemStyle->direction() == LTR ? 0 : itemRect.right() - itemFont.width(textRun);
+            int textX = itemStyle->direction() == LTR ? menuList()->paddingLeft() : itemRect.right() - itemFont.width(textRun) - menuList()->paddingRight();
             int textY = itemRect.y() + itemFont.ascent() + (itemRect.height() - itemFont.height()) / 2;
             context.drawText(textRun, IntPoint(textX, textY), TextStyle(0, 0, 0, itemStyle->direction() == RTL));
         }
