@@ -31,9 +31,7 @@
 
 #include "WebHistoryItem.h"
 
-#pragma warning(push, 0)
 #include <WTF/Vector.h>
-#pragma warning(pop)
 
 class WebBackForwardList : public IWebBackForwardList
 {

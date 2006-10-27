@@ -29,10 +29,11 @@
 #include "IWebIconDatabase.h"
 
 #pragma warning(push, 0)
-#include <WTF/HashMap.h>
 #include <platform/IntSize.h>
 #include <platform/IntSizeHash.h>
 #pragma warning(pop)
+
+#include <WTF/HashMap.h>
 
 #include <windows.h>
 

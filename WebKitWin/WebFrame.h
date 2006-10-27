@@ -36,9 +36,10 @@
 #include <WebCore/platform/network/ResourceLoaderClient.h>
 #include <WebCore/bridge/win/FrameWin.h>
 #include <WebCore/Platform/PlatformString.h>
+#pragma warning(pop)
+
 #include <WTF/RefPtr.h>
 #include <WTF/HashMap.h>
-#pragma warning(pop)
 
 namespace WebCore {
     class Element;

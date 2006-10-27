@@ -1,3 +1,13 @@
+2006-10-27  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Maciej.
+        
+        Tighten up warning levels by removing #pragma warning(push, 0), pop
+
+        * WebBackForwardList.h:
+        * WebFrame.h:
+        * WebIconDatabase.h:
+
 2006-10-25  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Darin.
