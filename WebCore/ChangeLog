@@ -1,5 +1,17 @@
 2006-10-26  Anders Carlsson  <acarlsson@apple.com>
 
+        Reviewed by John Sullivan.
+
+        <rdar://problem/4764502> PluginStreams should cancel their loader jobs on error
+
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::PluginStreamWin::receivedResponse):
+        (WebCore::PluginStreamWin::didReceiveData):
+        (WebCore::PluginStreamWin::receivedAllData):
+        Modify assertions. None of the above functions should be run after aborting the load.
+
+2006-10-26  Anders Carlsson  <acarlsson@apple.com>
+
         Reviewed by Adam.
 
         * plugins/win/PluginDatabaseWin.cpp:

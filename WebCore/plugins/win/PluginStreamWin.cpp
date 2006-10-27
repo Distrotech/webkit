@@ -238,6 +238,8 @@ void PluginStreamWin::deliverData()
 void PluginStreamWin::receivedResponse(ResourceLoader* resourceLoader, PlatformResponse response)
 {
     ASSERT(resourceLoader == m_resourceLoader);
+    ASSERT(m_streamState == StreamBeforeStarted);
+
 #if USE(CFNETWORK)
     String mimeType = CFURLResponseGetMIMEType(response);
     int contentLength = CFURLResponseGetExpectedContentLength(response);
@@ -260,13 +262,8 @@ void PluginStreamWin::didReceiveData(ResourceLoader* resourceLoader, const char*
 {
     ASSERT(resourceLoader == m_resourceLoader);
     ASSERT(length > 0);
-
-    if (m_streamState == StreamStopped)
-        // FIXME: We should cancel our job in the ResourceLoader on error so we don't reach this case
-        return;
-
-    ASSERT(m_streamState != StreamBeforeStarted);
-
+    ASSERT(m_streamState == StreamStarted);
+    
     if (!m_deliveryData)
         m_deliveryData = new Vector<char>;
 
@@ -292,12 +289,7 @@ void PluginStreamWin::didReceiveData(ResourceLoader* resourceLoader, const char*
 void PluginStreamWin::receivedAllData(ResourceLoader* resourceLoader, PlatformData platformData)
 {
     ASSERT(resourceLoader == m_resourceLoader);
-
-    if (m_streamState == StreamStopped)
-        // FIXME: We should cancel our job in the ResourceLoader on error so we don't reach this case
-        return;
-
-    ASSERT(m_streamState != StreamBeforeStarted);
+    ASSERT(m_streamState == StreamStarted || resourceLoader->error() != 0);
 
     // The resource loader gets deleted after having received all data
     if (m_resourceLoader)
