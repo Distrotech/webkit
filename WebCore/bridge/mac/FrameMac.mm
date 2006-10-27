@@ -199,8 +199,9 @@ void FrameMac::loadRequest(const FrameLoadRequest& request, bool userGesture, NS
         return;
     if (hideReferrer)
         referrer = nil;
-           
-    WebCoreFrameBridge *targetFrame = Mac(tree()->find(request.m_frameName))->bridge();
+    
+    FrameMac *target = Mac(tree()->find(request.m_frameName));
+    WebCoreFrameBridge *targetFrame = target ? target->bridge() : nil;
     if (![_bridge canTargetLoadInFrame:targetFrame])
         return;
         
