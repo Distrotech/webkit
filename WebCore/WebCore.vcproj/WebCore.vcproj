@@ -2451,6 +2451,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\HitTestResult.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\HitTestResult.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\InlineBox.cpp"
 				>
 			</File>

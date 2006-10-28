@@ -1,3 +1,10 @@
+2006-10-28  Adam Roben  <aroben@apple.com>
+
+        Build fix.
+
+        * WebCore.vcproj/WebCore.vcproj: Adding new HitTestResult.{cpp,h}
+        files.
+
 2006-10-27  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Oliver.
