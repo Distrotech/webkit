@@ -1,3 +1,41 @@
+2006-10-29  Maciej Stachowiak  <mjs@apple.com>
+
+        Rubber stamped by Darin.
+
+        - renamed ResourceLoader to ResourceHandle (and same for related classes)
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * bridge/win/FrameWin.cpp:
+        * platform/network/win/ResourceHandleWin.cpp: Added.
+        (WebCore::):
+        (WebCore::addToOutstandingJobs):
+        (WebCore::lookupResourceHandle):
+        (WebCore::ResourceHandleWndProc):
+        (WebCore::ResourceHandle::onHandleCreated):
+        (WebCore::ResourceHandle::onRequestRedirected):
+        (WebCore::ResourceHandle::onRequestComplete):
+        (WebCore::initializeOffScreenResourceHandleWindow):
+        (WebCore::ResourceHandleInternal::~ResourceHandleInternal):
+        (WebCore::ResourceHandle::~ResourceHandle):
+        (WebCore::ResourceHandle::startHTTPRequest):
+        (WebCore::ResourceHandle::start):
+        (WebCore::ResourceHandle::fileLoadTimer):
+        (WebCore::ResourceHandle::cancel):
+        * platform/network/win/ResourceHandleWin.h: Added.
+        * platform/network/win/ResourceLoaderWin.cpp: Removed.
+        * platform/network/win/ResourceLoaderWin.h: Removed.
+        * platform/win/TemporaryLinkStubs.cpp:
+        (WebCore::ResourceHandle::assembleResponseHeaders):
+        (WebCore::ResourceHandle::retrieveResponseEncoding):
+        (IconLoader::receivedResponse):
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::PluginStreamWin::start):
+        (WebCore::PluginStreamWin::deliverData):
+        (WebCore::PluginStreamWin::receivedResponse):
+        (WebCore::PluginStreamWin::didReceiveData):
+        (WebCore::PluginStreamWin::receivedAllData):
+        * plugins/win/PluginStreamWin.h:
+
 2006-10-28  Adam Roben  <aroben@apple.com>
 
         Build fix.

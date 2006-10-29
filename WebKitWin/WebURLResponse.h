@@ -30,12 +30,12 @@
 
 #include "IWebURLResponse.h"
 
-#include <WebCore/platform/network/ResourceLoaderClient.h>
+#include <WebCore/platform/network/ResourceHandleClient.h>
 
 class WebURLResponse : public IWebURLResponse
 {
 public:
-    static WebURLResponse* createInstance(WebCore::ResourceLoader* loader, WebCore::PlatformResponse platformResponse);
+    static WebURLResponse* createInstance(WebCore::ResourceHandle* loader, WebCore::PlatformResponse platformResponse);
 protected:
     WebURLResponse();
     ~WebURLResponse();

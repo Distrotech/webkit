@@ -55,7 +55,7 @@
 #include "PlugInInfoStore.h"
 #include "RenderTheme.h"
 #include "RenderThemeWin.h"
-#include "ResourceLoader.h"
+#include "ResourceHandle.h"
 #include "Screen.h"
 #include "ScrollBar.h"
 #include "Slider.h"
@@ -174,8 +174,8 @@ String WebCore::fileButtonChooseFileLabel() { return "Browse..."; }
 String WebCore::fileButtonNoFileSelectedLabel() { return "no file selected"; }
 String WebCore::defaultLanguage() { return "en"; }
 
-void WebCore::ResourceLoader::assembleResponseHeaders() const { LOG_NOIMPL(); }
-void WebCore::ResourceLoader::retrieveResponseEncoding() const { LOG_NOIMPL(); }
+void WebCore::ResourceHandle::assembleResponseHeaders() const { LOG_NOIMPL(); }
+void WebCore::ResourceHandle::retrieveResponseEncoding() const { LOG_NOIMPL(); }
 
 void FrameView::updateBorder() { LOG_NOIMPL(); }
 
@@ -253,5 +253,5 @@ void WebCore::setFocusRingColorChangeFunction(void (*)()) { LOG_NOIMPL(); }
 
 void Frame::setNeedsReapplyStyles() { LOG_NOIMPL(); }
 
-void IconLoader::receivedResponse(ResourceLoader*, PlatformResponse) { LOG_NOIMPL(); }
+void IconLoader::receivedResponse(ResourceHandle*, PlatformResponse) { LOG_NOIMPL(); }
 void IconLoader::notifyIconChanged(const KURL& iconURL) { LOG_NOIMPL(); }

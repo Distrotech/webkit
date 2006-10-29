@@ -32,8 +32,8 @@
 #pragma warning( push, 0 )
 #include <WebCore/platform/DeprecatedString.h>
 #include <WebCore/platform/KURL.h>
-#include <WebCore/platform/network/ResourceLoader.h>
-#include <WebCore/platform/network/win/ResourceLoaderWin.h>
+#include <WebCore/platform/network/ResourceHandle.h>
+#include <WebCore/platform/network/win/ResourceHandleWin.h>
 #pragma warning( pop )
 
 #include <shlobj.h>
@@ -61,7 +61,7 @@ WebURLResponse::~WebURLResponse()
     gClassCount--;
 }
 
-WebURLResponse* WebURLResponse::createInstance(ResourceLoader* loader, PlatformResponse platformResponse)
+WebURLResponse* WebURLResponse::createInstance(ResourceHandle* loader, PlatformResponse platformResponse)
 {
     WebURLResponse* instance = new WebURLResponse();
     instance->AddRef();

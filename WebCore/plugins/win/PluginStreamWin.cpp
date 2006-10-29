@@ -30,13 +30,13 @@
 #include "PluginDebug.h"
 #include "PluginPackageWin.h"
 #include "PluginViewWin.h"
-#include "ResourceLoader.h"
+#include "ResourceHandle.h"
 
 #if USE(CFNETWORK)
 #include <CFNetwork/CFNetwork.h>
 #include <CFNetwork/CFURLResponsePriv.h>
 #elif USE(WININET)
-#include "ResourceLoaderWin.h"
+#include "ResourceHandleWin.h"
 #else 
 #error No loader framework defined
 #endif
@@ -79,7 +79,7 @@ PluginStreamWin::~PluginStreamWin()
 
 void PluginStreamWin::start()
 {
-    m_resourceLoader = ResourceLoader::create(m_resourceRequest, this, m_docLoader);
+    m_resourceLoader = ResourceHandle::create(m_resourceRequest, this, m_docLoader);
 }
 
 void PluginStreamWin::stop()
@@ -187,7 +187,7 @@ void PluginStreamWin::deliverData()
     ASSERT(m_deliveryData);
     
     if (m_streamState == StreamStopped)
-        // FIXME: We should cancel our job in the ResourceLoader on error so we don't reach this case
+        // FIXME: We should cancel our job in the ResourceHandle on error so we don't reach this case
         return;
 
     ASSERT(m_streamState != StreamBeforeStarted);
@@ -235,7 +235,7 @@ void PluginStreamWin::deliverData()
     } 
 }
 
-void PluginStreamWin::receivedResponse(ResourceLoader* resourceLoader, PlatformResponse response)
+void PluginStreamWin::receivedResponse(ResourceHandle* resourceLoader, PlatformResponse response)
 {
     ASSERT(resourceLoader == m_resourceLoader);
     ASSERT(m_streamState == StreamBeforeStarted);
@@ -258,7 +258,7 @@ void PluginStreamWin::receivedResponse(ResourceLoader* resourceLoader, PlatformR
     startStream(responseURL, contentLength, lastModifiedTime, mimeType);
 }
 
-void PluginStreamWin::didReceiveData(ResourceLoader* resourceLoader, const char* data, int length)
+void PluginStreamWin::didReceiveData(ResourceHandle* resourceLoader, const char* data, int length)
 {
     ASSERT(resourceLoader == m_resourceLoader);
     ASSERT(length > 0);
@@ -286,7 +286,7 @@ void PluginStreamWin::didReceiveData(ResourceLoader* resourceLoader, const char*
         deliverData();
 }
 
-void PluginStreamWin::receivedAllData(ResourceLoader* resourceLoader, PlatformData platformData)
+void PluginStreamWin::receivedAllData(ResourceHandle* resourceLoader, PlatformData platformData)
 {
     ASSERT(resourceLoader == m_resourceLoader);
     ASSERT(m_streamState == StreamStarted || resourceLoader->error() != 0);

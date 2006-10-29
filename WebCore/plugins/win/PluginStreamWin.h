@@ -34,7 +34,7 @@
 #include "KURL.h"
 #include "npfunctions.h"
 #include "PlatformString.h"
-#include "ResourceLoaderClient.h"
+#include "ResourceHandleClient.h"
 #include "ResourceRequest.h"
 #include "StringHash.h"
 #include "Timer.h"
@@ -45,7 +45,7 @@ namespace WebCore {
 
     enum PluginStreamState { StreamBeforeStarted, StreamStarted, StreamStopped };
 
-    class PluginStreamWin : public ResourceLoaderClient {
+    class PluginStreamWin : public ResourceHandleClient {
     public:
         PluginStreamWin(PluginViewWin*, DocLoader*, const ResourceRequest&, bool sendNotification, void* notifyData);
         ~PluginStreamWin();
@@ -55,10 +55,10 @@ namespace WebCore {
 
         void startStream(const KURL& responseURL, long long expectedContentLength, int lastModifiedTime, const String& mimeType);
         
-        // ResourceLoaderClient
-        virtual void receivedResponse(ResourceLoader*, PlatformResponse);
-        virtual void didReceiveData(ResourceLoader*, const char*, int);
-        virtual void receivedAllData(ResourceLoader*, PlatformData);
+        // ResourceHandleClient
+        virtual void receivedResponse(ResourceHandle*, PlatformResponse);
+        virtual void didReceiveData(ResourceHandle*, const char*, int);
+        virtual void receivedAllData(ResourceHandle*, PlatformData);
 
     private:
         void deliverData();
@@ -68,7 +68,7 @@ namespace WebCore {
 
         ResourceRequest m_resourceRequest;
         DocLoader* m_docLoader;
-        RefPtr<ResourceLoader> m_resourceLoader;
+        RefPtr<ResourceHandle> m_resourceLoader;
         PluginViewWin* m_pluginView;
         void* m_notifyData;
         bool m_sendNotification;

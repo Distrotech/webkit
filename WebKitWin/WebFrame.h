@@ -33,7 +33,7 @@
 #include "WebDataSource.h"
 
 #pragma warning(push, 0)
-#include <WebCore/platform/network/ResourceLoaderClient.h>
+#include <WebCore/platform/network/ResourceHandleClient.h>
 #include <WebCore/bridge/win/FrameWin.h>
 #include <WebCore/Platform/PlatformString.h>
 #pragma warning(pop)
@@ -64,7 +64,7 @@ typedef enum {
     WebFrameLoadTypeReplace
 } WebFrameLoadType;
 
-class WebFrame : public IWebFrame, IWebFramePrivate, public WebCore::ResourceLoaderClient, public WebCore::FrameWinClient, public IWebFormSubmissionListener
+class WebFrame : public IWebFrame, IWebFramePrivate, public WebCore::ResourceHandleClient, public WebCore::FrameWinClient, public IWebFormSubmissionListener
 {
 public:
     static WebFrame* createInstance();
@@ -143,11 +143,11 @@ public:
     // IWebFormSubmissionListener
     virtual HRESULT STDMETHODCALLTYPE continueSubmit( void);
 
-    // ResourceLoaderClient
-    virtual void receivedRedirect(WebCore::ResourceLoader*, const WebCore::KURL&);
-    virtual void receivedResponse(WebCore::ResourceLoader*, WebCore::PlatformResponse);
-    virtual void didReceiveData(WebCore::ResourceLoader*, const char*, int);
-    virtual void didFinishLoading(WebCore::ResourceLoader*);
+    // ResourceHandleClient
+    virtual void receivedRedirect(WebCore::ResourceHandle*, const WebCore::KURL&);
+    virtual void receivedResponse(WebCore::ResourceHandle*, WebCore::PlatformResponse);
+    virtual void didReceiveData(WebCore::ResourceHandle*, const char*, int);
+    virtual void didFinishLoading(WebCore::ResourceHandle*);
 
     // FrameWinClient
     virtual void ref();
@@ -219,7 +219,7 @@ protected:
     bool                m_continueFormSubmit;
     Vector<char>        m_buffer;
     BSTR                m_textEncoding;
-    RefPtr<WebCore::ResourceLoader> m_loader;
+    RefPtr<WebCore::ResourceHandle> m_loader;
     WebCore::KURL       m_originalRequestURL;
 };
 

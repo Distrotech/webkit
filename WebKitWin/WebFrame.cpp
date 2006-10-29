@@ -64,8 +64,8 @@
 #include <WebCore/platform/PlugInInfoStore.h>
 #include <WebCore/rendering/RenderFrame.h>
 #include <WebCore/rendering/RenderTreeAsText.h>
-#include <WebCore/platform/network/ResourceLoader.h>
-#include <WebCore/platform/network/win/ResourceLoaderWin.h>
+#include <WebCore/platform/network/ResourceHandle.h>
+#include <WebCore/platform/network/win/ResourceHandleWin.h>
 #include <wtf/MathExtras.h>
 #pragma warning(pop)
 
@@ -675,7 +675,7 @@ HRESULT WebFrame::loadDataSource(WebDataSource* dataSource)
 
                 if (!d->frame->document())
                     d->frame->begin(); // FIXME - the frame should do this for us
-                m_loader = ResourceLoader::create(resourceRequest, this, d->frame->document()->docLoader());
+                m_loader = ResourceHandle::create(resourceRequest, this, d->frame->document()->docLoader());
                 IWebFrameLoadDelegate* frameLoadDelegate;
                 if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
                     frameLoadDelegate->didStartProvisionalLoadForFrame(d->webView, this);
@@ -978,9 +978,9 @@ exit:
     return hr;
 }
 
-// ResourceLoaderClient
+// ResourceHandleClient
 
-void WebFrame::receivedRedirect(ResourceLoader*, const KURL& url)
+void WebFrame::receivedRedirect(ResourceHandle*, const KURL& url)
 {
     if (m_provisionalDataSource) {
         IWebFrameLoadDelegate* frameLoadDelegate;
@@ -998,7 +998,7 @@ void WebFrame::receivedRedirect(ResourceLoader*, const KURL& url)
     }
 }
 
-void WebFrame::receivedResponse(ResourceLoader* loader, PlatformResponse platformResponse)
+void WebFrame::receivedResponse(ResourceHandle* loader, PlatformResponse platformResponse)
 {
     if (m_provisionalDataSource) {
         m_dataSource = m_provisionalDataSource;
@@ -1097,7 +1097,7 @@ void WebFrame::receivedResponse(ResourceLoader* loader, PlatformResponse platfor
     response->Release();
 }
 
-void WebFrame::didReceiveData(ResourceLoader*, const char* data, int length)
+void WebFrame::didReceiveData(ResourceHandle*, const char* data, int length)
 {
     // Set the encoding. This only needs to be done once, but it's harmless to do it again later.
     BSTR encoding = 0;
@@ -1115,7 +1115,7 @@ void WebFrame::didReceiveData(ResourceLoader*, const char* data, int length)
     memcpy(m_buffer.data() + oldSize, data, length);
 }
 
-void WebFrame::didFinishLoading(ResourceLoader* job)
+void WebFrame::didFinishLoading(ResourceHandle* job)
 {
     if (m_provisionalDataSource) {
         m_dataSource = m_provisionalDataSource;
@@ -1142,7 +1142,7 @@ void WebFrame::didFinishLoading(ResourceLoader* job)
     m_quickRedirectComing = false;
     m_loadType = WebFrameLoadTypeStandard;
 
-    // FIXME: It seems we can have more than one main ResourceLoader per-frame. Ideally,
+    // FIXME: It seems we can have more than one main ResourceHandle per-frame. Ideally,
     // we'd keep track of all of them. However, this is all expected to change as the loader
     // in WebCore becomes more full-featured, so we'll just do the bare minimum for now.
     if (job == m_loader)

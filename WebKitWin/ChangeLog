@@ -1,3 +1,21 @@
+2006-10-29  Maciej Stachowiak  <mjs@apple.com>
+
+        Rubber stamped by Darin.
+
+        - renamed ResourceLoader to ResourceHandle (and same for related classes)
+
+        * WebFrame.cpp:
+        (WebFrame::loadDataSource):
+        (WebFrame::receivedRedirect):
+        (WebFrame::receivedResponse):
+        (WebFrame::didReceiveData):
+        (WebFrame::didFinishLoading):
+        * WebFrame.h:
+        * WebURLResponse.cpp:
+        (WebURLResponse::createInstance):
+        * WebURLResponse.h:
+        * WebView.cpp:
+
 2006-10-27  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Maciej.

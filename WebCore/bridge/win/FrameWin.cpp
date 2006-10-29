@@ -46,7 +46,7 @@
 #include "PluginViewWin.h"
 #include "RenderFrame.h"
 #include "RenderView.h"
-#include "ResourceLoader.h"
+#include "ResourceHandle.h"
 #include "runtime_root.h"
 #include "ScrollbarMode.h"
 

@@ -1956,30 +1956,30 @@
 				Name="network"
 				>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\ResourceLoader.cpp"
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\ResourceHandle.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\ResourceLoader.h"
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\ResourceHandle.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\ResourceLoaderClient.h"
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\ResourceHandleClient.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\ResourceLoaderInternal.h"
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\ResourceHandleInternal.h"
 					>
 				</File>
 				<Filter
 					Name="win"
 					>
 					<File
-						RelativePath="..\platform\network\win\ResourceLoaderWin.cpp"
+						RelativePath="..\platform\network\win\ResourceHandleWin.cpp"
 						>
 					</File>
 					<File
-						RelativePath="..\platform\network\win\ResourceLoaderWin.h"
+						RelativePath="..\platform\network\win\ResourceHandleWin.h"
 						>
 					</File>
 				</Filter>
@@ -1987,7 +1987,7 @@
 					Name="cf"
 					>
 					<File
-						RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\cf\ResourceLoaderCFNet.cpp"
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\cf\ResourceHandleCFNet.cpp"
 						>
 						<FileConfiguration
 							Name="Debug|Win32"
