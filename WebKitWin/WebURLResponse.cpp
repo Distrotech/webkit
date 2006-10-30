@@ -33,7 +33,7 @@
 #include <WebCore/platform/DeprecatedString.h>
 #include <WebCore/platform/KURL.h>
 #include <WebCore/platform/network/ResourceHandle.h>
-#include <WebCore/platform/network/win/ResourceHandleWin.h>
+#include <WebCore/platform/win/BString.h>
 #pragma warning( pop )
 
 #include <shlobj.h>
@@ -45,53 +45,20 @@ using namespace WebCore;
 // IWebURLResponse ----------------------------------------------------------------
 
 WebURLResponse::WebURLResponse()
-: m_refCount(0)
-, m_url(0)
-, m_mimeType(0)
-, m_textEncodingName(0)
 {
     gClassCount++;
 }
 
 WebURLResponse::~WebURLResponse()
 {
-    SysFreeString(m_url);
-    SysFreeString(m_mimeType);
-    SysFreeString(m_textEncodingName);
     gClassCount--;
 }
 
-WebURLResponse* WebURLResponse::createInstance(ResourceHandle* loader, PlatformResponse platformResponse)
+WebURLResponse* WebURLResponse::createInstance(const ResourceResponse& response)
 {
     WebURLResponse* instance = new WebURLResponse();
     instance->AddRef();
-
-    if (loader && platformResponse) {
-        // REVIEW-FIXME : likely we need to add mime type sniffing here (unless that is done within CFURLResponseGetMIMEType)
-#if USE(CFNETWORK)
-        CFStringRef mimeType = CFURLResponseGetMIMEType(platformResponse);
-        CFStringRef textEncoding = CFURLResponseGetTextEncodingName(platformResponse);
-#endif
-        DeprecatedString urlStr = loader->url().url();
-        instance->m_url = SysAllocStringLen((LPCOLESTR)urlStr.unicode(), urlStr.length());
-#if USE(CFNETWORK)
-        instance->m_mimeType = MarshallingHelpers::CFStringRefToBSTR(mimeType);
-        if (textEncoding)
-            instance->m_textEncodingName = MarshallingHelpers::CFStringRefToBSTR(textEncoding);
-        else {
-            String encoding = loader->responseEncoding();
-            instance->m_textEncodingName = SysAllocStringLen((LPCOLESTR)encoding.characters(), encoding.length());
-        }
-#else
-        LPCTSTR separator = _tcschr(platformResponse->contentType, TEXT(';'));        
-        instance->m_mimeType = (separator) ? SysAllocStringLen(platformResponse->contentType, (UINT)(separator-platformResponse->contentType)) : SysAllocString(platformResponse->contentType);
-        if (separator) {
-            // FIXME (if we care about WinInet).  Parse charset out of Content-Type
-        }
-        String encoding = loader->responseEncoding();
-        instance->m_textEncodingName = SysAllocStringLen((LPCOLESTR)encoding.characters(), encoding.length());
-#endif
-    }
+    instance->m_response = response;
 
     return instance;
 }
@@ -131,7 +98,7 @@ ULONG STDMETHODCALLTYPE WebURLResponse::Release(void)
 HRESULT STDMETHODCALLTYPE WebURLResponse::expectedContentLength( 
     /* [retval][out] */ long long* result)
 {
-    *result = m_expectedContentLength;
+    *result = m_response.expectedContentLength();
     return S_OK;
 }
 
@@ -141,28 +108,16 @@ HRESULT STDMETHODCALLTYPE WebURLResponse::initWithURL(
     /* [in] */ int expectedContentLength,
     /* [in] */ BSTR textEncodingName)
 {
-    if (m_url || m_mimeType || m_textEncodingName)
-        return E_FAIL;
-
-    m_url = SysAllocString(url);
-    if (url && !m_url)
-        return E_OUTOFMEMORY;
-    m_mimeType = SysAllocString(mimeType);
-    if (mimeType && !m_mimeType)
-        return E_OUTOFMEMORY;
-    m_expectedContentLength = expectedContentLength;
-    m_textEncodingName = textEncodingName;
-    if (textEncodingName && !m_textEncodingName)
-        return E_OUTOFMEMORY;
-
+    m_response = ResourceResponse(String(url).deprecatedString(), String(mimeType), expectedContentLength, String(textEncodingName), String());
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebURLResponse::MIMEType( 
     /* [retval][out] */ BSTR* result)
 {
-    *result = SysAllocString(m_mimeType);
-    if (m_mimeType && !*result)
+    BString mimeType(m_response.mimeType());
+    *result = mimeType.release();
+    if (!m_response.mimeType().isNull() && !*result)
         return E_OUTOFMEMORY;
 
     return S_OK;
@@ -171,16 +126,18 @@ HRESULT STDMETHODCALLTYPE WebURLResponse::MIMEType(
 HRESULT STDMETHODCALLTYPE WebURLResponse::suggestedFilename( 
     /* [retval][out] */ BSTR* result)
 {
-    if (!m_url)
+    if (m_response.url().isEmpty())
         return E_FAIL;
 
+    // FIXME: this logic should be at the network layer
+    BString url(m_response.url().url());
     TCHAR path[MAX_PATH];
     *path = 0;
     DWORD pathLength = ARRAYSIZE(path);
-    if (FAILED(PathCreateFromUrl(m_url, path, &pathLength, 0))) {
+    if (FAILED(PathCreateFromUrl(url, path, &pathLength, 0))) {
         TCHAR* lastSlash = 0;
         TCHAR* walkURL;
-        for (walkURL = m_url; *walkURL; walkURL++) {
+        for (walkURL = url; *walkURL; walkURL++) {
             if (*walkURL == TEXT('/'))
                 lastSlash = walkURL;
             else if (*walkURL == TEXT('#') || *walkURL == TEXT('?'))
@@ -190,7 +147,7 @@ HRESULT STDMETHODCALLTYPE WebURLResponse::suggestedFilename(
         if (fileNameStart)
             fileNameStart++;
         else
-            fileNameStart = m_url;
+            fileNameStart = url;
 
         if (*lastSlash)
             lastSlash++;
@@ -223,8 +180,9 @@ HRESULT STDMETHODCALLTYPE WebURLResponse::textEncodingName(
     if (!result)
         return E_INVALIDARG;
 
-    *result = SysAllocString(m_textEncodingName);
-    if (m_textEncodingName && !*result)
+    BString textEncodingName(m_response.textEncodingName());
+    *result = textEncodingName.release();
+    if (!m_response.textEncodingName().isNull() && !*result)
         return E_OUTOFMEMORY;
 
     return S_OK;
@@ -233,8 +191,12 @@ HRESULT STDMETHODCALLTYPE WebURLResponse::textEncodingName(
 HRESULT STDMETHODCALLTYPE WebURLResponse::URL( 
     /* [retval][out] */ BSTR* result)
 {
-    *result = SysAllocString(m_url);
-    if (m_url && !*result)
+    if (!result)
+        return E_INVALIDARG;
+
+    BString url(m_response.url().url());
+    *result = url.release();
+    if (!m_response.url().isEmpty() && !*result)
         return E_OUTOFMEMORY;
 
     return S_OK;
@@ -249,14 +211,15 @@ HRESULT WebURLResponse::suggestedFileExtension(BSTR *result)
 
     *result = 0;
 
-    if (!m_mimeType || !*m_mimeType)
+    if (m_response.mimeType().isEmpty())
         return E_FAIL;
 
+    BString mimeType(m_response.mimeType());
     HKEY key;
     LONG err = RegOpenKeyEx(HKEY_CLASSES_ROOT, TEXT("MIME\\Database\\Content Type"), 0, KEY_QUERY_VALUE, &key);
     if (!err) {
         HKEY subKey;
-        err = RegOpenKeyEx(key, m_mimeType, 0, KEY_QUERY_VALUE, &subKey);
+        err = RegOpenKeyEx(key, mimeType, 0, KEY_QUERY_VALUE, &subKey);
         if (!err) {
             DWORD keyType = REG_SZ;
             TCHAR extension[MAX_PATH];
@@ -266,13 +229,13 @@ HRESULT WebURLResponse::suggestedFileExtension(BSTR *result)
                 err = ERROR_INVALID_DATA;
             if (err) {
                 // fallback handlers
-                if (!_tcscmp(m_mimeType, TEXT("text/html"))) {
+                if (!_tcscmp(mimeType, TEXT("text/html"))) {
                     _tcscpy(extension, TEXT(".html"));
                     err = 0;
-                } else if (!_tcscmp(m_mimeType, TEXT("application/xhtml+xml"))) {
+                } else if (!_tcscmp(mimeType, TEXT("application/xhtml+xml"))) {
                     _tcscpy(extension, TEXT(".xhtml"));
                     err = 0;
-                } else if (!_tcscmp(m_mimeType, TEXT("image/svg+xml"))) {
+                } else if (!_tcscmp(mimeType, TEXT("image/svg+xml"))) {
                     _tcscpy(extension, TEXT(".svg"));
                     err = 0;
                 }

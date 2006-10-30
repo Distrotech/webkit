@@ -998,7 +998,7 @@ void WebFrame::receivedRedirect(ResourceHandle*, const KURL& url)
     }
 }
 
-void WebFrame::receivedResponse(ResourceHandle* loader, PlatformResponse platformResponse)
+void WebFrame::didReceiveResponse(ResourceHandle*, const ResourceResponse& response)
 {
     if (m_provisionalDataSource) {
         m_dataSource = m_provisionalDataSource;
@@ -1014,8 +1014,8 @@ void WebFrame::receivedResponse(ResourceHandle* loader, PlatformResponse platfor
         }
     }
 
-    d->frame->didOpenURL(loader->url());
-    d->frame->begin(loader->url());
+    d->frame->didOpenURL(response.url());
+    d->frame->begin(response.url());
 
     IWebFrameLoadDelegate* frameLoadDelegate;
     if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
@@ -1024,9 +1024,7 @@ void WebFrame::receivedResponse(ResourceHandle* loader, PlatformResponse platfor
         if (SUCCEEDED(d->webView->preferences(&preferences)))
             preferences->privateBrowsingEnabled(&privateBrowsingEnabled);
 
-        DeprecatedString urlStr = loader->url().url();
-        BString urlBStr((LPCOLESTR)urlStr.unicode(), urlStr.length());
-
+        BString urlBStr(response.url().url());
         SYSTEMTIME currentTime;
         GetSystemTime(&currentTime);
         DATE visitedTime = 0;
@@ -1078,23 +1076,23 @@ void WebFrame::receivedResponse(ResourceHandle* loader, PlatformResponse platfor
 
     m_buffer.clear();
 
-    WebURLResponse* response = WebURLResponse::createInstance(loader, platformResponse);
+    WebURLResponse* webResponse = WebURLResponse::createInstance(response);
 
-    m_dataSource->setResponse(response);
+    m_dataSource->setResponse(webResponse);
     
     if (m_textEncoding) {
         SysFreeString(m_textEncoding);
         m_textEncoding = 0;
     }
-    response->textEncodingName(&m_textEncoding);
+    webResponse->textEncodingName(&m_textEncoding);
 
     BSTR mimeType;
-    if (SUCCEEDED(response->MIMEType(&mimeType))) {
+    if (SUCCEEDED(webResponse->MIMEType(&mimeType))) {
         d->frame->setResponseMIMEType(String(mimeType, SysStringLen(mimeType)));
         SysFreeString(mimeType);
     }
 
-    response->Release();
+    webResponse->Release();
 }
 
 void WebFrame::didReceiveData(ResourceHandle*, const char* data, int length)

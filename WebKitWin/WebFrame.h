@@ -145,7 +145,7 @@ public:
 
     // ResourceHandleClient
     virtual void receivedRedirect(WebCore::ResourceHandle*, const WebCore::KURL&);
-    virtual void receivedResponse(WebCore::ResourceHandle*, WebCore::PlatformResponse);
+    virtual void didReceiveResponse(WebCore::ResourceHandle*, const WebCore::ResourceResponse&);
     virtual void didReceiveData(WebCore::ResourceHandle*, const char*, int);
     virtual void didFinishLoading(WebCore::ResourceHandle*);
 

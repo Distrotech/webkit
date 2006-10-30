@@ -30,12 +30,14 @@
 
 #include "IWebURLResponse.h"
 
-#include <WebCore/platform/network/ResourceHandleClient.h>
+#pragma warning(push, 0)
+#include <WebCore/platform/network/ResourceResponse.h>
+#pragma warning(pop)
 
 class WebURLResponse : public IWebURLResponse
 {
 public:
-    static WebURLResponse* createInstance(WebCore::ResourceHandle* loader, WebCore::PlatformResponse platformResponse);
+    static WebURLResponse* createInstance(const WebCore::ResourceResponse& response);
 protected:
     WebURLResponse();
     ~WebURLResponse();
@@ -72,11 +74,8 @@ protected:
     HRESULT suggestedFileExtension(BSTR* result);
 
 protected:
-    ULONG                       m_refCount;
-    BSTR                        m_url;
-    BSTR                        m_mimeType;
-    BSTR                        m_textEncodingName;
-    DWORD                       m_expectedContentLength;
+    ULONG m_refCount;
+    WebCore::ResourceResponse m_response;
 };
 
 #endif

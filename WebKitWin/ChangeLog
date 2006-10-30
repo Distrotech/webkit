@@ -1,5 +1,29 @@
 2006-10-29  Maciej Stachowiak  <mjs@apple.com>
 
+        Reviewed by Anders.
+
+        - added ResourceResponse class and didReceiveResponse delegate call
+
+        * WebFrame.cpp:
+        (WebFrame::didReceiveResponse): Updated from receivedResponse.
+        * WebFrame.h:
+        * WebURLResponse.cpp:
+        (WebURLResponse::WebURLResponse): Reimplemented to work in terms
+        of WebCore::ResourceResponse (ditto for below). Uses BString
+        to convert strings as needed.
+        (WebURLResponse::~WebURLResponse):
+        (WebURLResponse::createInstance):
+        (WebURLResponse::expectedContentLength):
+        (WebURLResponse::initWithURL):
+        (WebURLResponse::MIMEType):
+        (WebURLResponse::suggestedFilename):
+        (WebURLResponse::textEncodingName):
+        (WebURLResponse::URL):
+        (WebURLResponse::suggestedFileExtension):
+        * WebURLResponse.h:
+
+2006-10-29  Maciej Stachowiak  <mjs@apple.com>
+
         Rubber stamped by Darin.
 
         - renamed ResourceLoader to ResourceHandle (and same for related classes)

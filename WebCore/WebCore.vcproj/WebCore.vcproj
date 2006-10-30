@@ -1063,14 +1063,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\loader\TextResourceDecoder.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\loader\TextResourceDecoder.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\loader\DocLoader.cpp"
 				>
 			</File>
@@ -1132,6 +1124,14 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\loader\TextDocument.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\TextResourceDecoder.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\TextResourceDecoder.h"
 				>
 			</File>
 			<Filter
@@ -1579,22 +1579,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextCodec.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextCodec.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextCodecICU.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextCodecICU.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\String.cpp"
 				>
 			</File>
@@ -1616,6 +1600,22 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextBoundaries.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextCodec.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextCodec.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextCodecICU.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextCodecICU.h"
 				>
 			</File>
 			<File
@@ -2007,6 +2007,14 @@
 								XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
 							/>
 						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\cf\ResourceResponseCFNet.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\cf\ResourceResponseCFNet.h"
+						>
 					</File>
 				</Filter>
 			</Filter>

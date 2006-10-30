@@ -1,3 +1,14 @@
+2006-10-29  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Anders.
+
+        - added ResourceResponse class and didReceiveResponse delegate call
+
+        * WebCore.vcproj/WebCore.vcproj: Added new files.
+        * platform/win/TemporaryLinkStubs.cpp:
+        (WebCore::ServeSynchronousRequest): Changed prototype to match
+        new version.
+
 2006-10-29  Darin Adler  <darin@apple.com>
 
         - update for the WebCore renames
