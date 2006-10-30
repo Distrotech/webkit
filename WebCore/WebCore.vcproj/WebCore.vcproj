@@ -951,6 +951,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\page\FrameLoadRequest.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\page\FramePrivate.h"
 				>
 			</File>
@@ -1051,6 +1055,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\CachedXBLDocument.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\CachedXBLDocument.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\loader\CachedXSLStyleSheet.cpp"
 				>
 			</File>
@@ -1071,11 +1083,39 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\DocumentLoader.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\DocumentLoader.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\loader\FormData.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\loader\FormData.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\FormState.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\FormState.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\FrameLoader.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\FrameLoader.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\FrameLoaderClient.h"
 				>
 			</File>
 			<File
@@ -1103,6 +1143,22 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\MainResourceLoader.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\MainResourceLoader.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\NetscapePlugInStreamLoader.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\NetscapePlugInStreamLoader.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\loader\PluginDocument.cpp"
 				>
 			</File>
@@ -1116,6 +1172,22 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\loader\Request.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\ResourceLoader.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\ResourceLoader.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\SubresourceLoader.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\SubresourceLoader.h"
 				>
 			</File>
 			<File
@@ -1524,6 +1596,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\RegularExpression.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\ResourceRequest.h"
 				>
 			</File>
 			<File
@@ -4773,14 +4849,6 @@
 		</Filter>
 		<File
 			RelativePath="..\config.h"
-			>
-		</File>
-		<File
-			RelativePath="..\..\..\..\OpenSource\WebCore\page\FrameLoadRequest.h"
-			>
-		</File>
-		<File
-			RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\ResourceRequest.h"
 			>
 		</File>
 	</Files>

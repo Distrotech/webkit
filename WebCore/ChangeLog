@@ -1,3 +1,10 @@
+2006-10-31  Darin Adler  <darin@apple.com>
+
+        Reviewed by Adam.
+
+        * WebCore.vcproj/WebCore.vcproj: Added new source files from the
+        loader directory.
+
 2006-10-29  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Anders.
