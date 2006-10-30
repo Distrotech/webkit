@@ -1063,11 +1063,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\loader\Decoder.cpp"
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\TextResourceDecoder.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\loader\Decoder.h"
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\TextResourceDecoder.h"
 				>
 			</File>
 			<File
@@ -1579,19 +1579,19 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\platform\StreamingTextDecoder.cpp"
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextCodec.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\platform\StreamingTextDecoder.h"
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextCodec.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\platform\StreamingTextDecoderICU.cpp"
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextCodecICU.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\platform\StreamingTextDecoderICU.h"
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextCodecICU.h"
 				>
 			</File>
 			<File

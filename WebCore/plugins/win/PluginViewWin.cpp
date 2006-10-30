@@ -386,7 +386,7 @@ NPError PluginViewWin::load(const FrameLoadRequest& frameLoadRequest, bool sendN
     String target = frameLoadRequest.m_frameName;
     String jsString = scriptStringIfJavaScriptURL(url);
     if (!jsString.isNull()) {
-        if (!m_parentFrame->jScriptEnabled()) {
+        if (!m_parentFrame->javaScriptEnabled()) {
             // Return NPERR_GENERIC_ERROR if JS is disabled. This is what Mozilla does.
             return NPERR_GENERIC_ERROR;
         } else if (target.isNull() && m_mode == NP_FULL) {
@@ -789,7 +789,7 @@ KJS::Bindings::Instance* PluginViewWin::bindingInstance()
 
     KJS::Bindings::RootObject *root = new KJS::Bindings::RootObject(this);    // The root gets deleted by JavaScriptCore.
     root->setRootObjectImp(Window::retrieveWindow(m_parentFrame));
-    root->setInterpreter(m_parentFrame->jScript()->interpreter());
+    root->setInterpreter(m_parentFrame->scriptProxy()->interpreter());
     m_parentFrame->addPluginRootObject(root);
 
     KJS::Bindings::Instance *instance = KJS::Bindings::Instance::createBindingForLanguageInstance(KJS::Bindings::Instance::CLanguage, object, root);

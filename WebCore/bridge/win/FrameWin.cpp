@@ -29,7 +29,7 @@
 #include <winsock2.h>
 #include <windows.h>
 #include "BrowserExtensionWin.h"
-#include "Decoder.h"
+#include "TextResourceDecoder.h"
 #include "Document.h"
 #include "FramePrivate.h"
 #include "FrameLoadRequest.h"
@@ -379,13 +379,13 @@ void FrameWin::cleanupPluginObjects()
 
 KJS::Bindings::RootObject* FrameWin::bindingRootObject()
 {
-    ASSERT(jScriptEnabled());
+    ASSERT(javaScriptEnabled());
     if (!m_bindingRoot) {
         KJS::JSLock lock;
         m_bindingRoot = new KJS::Bindings::RootObject(0); // The root gets deleted by JavaScriptCore
         KJS::JSObject* win = KJS::Window::retrieveWindow(this);
         m_bindingRoot->setRootObjectImp(win);
-        m_bindingRoot->setInterpreter(jScript()->interpreter());
+        m_bindingRoot->setInterpreter(scriptProxy()->interpreter());
         addPluginRootObject(m_bindingRoot);
     }
     return m_bindingRoot;
@@ -394,7 +394,7 @@ KJS::Bindings::RootObject* FrameWin::bindingRootObject()
 NPObject* FrameWin::windowScriptNPObject()
 {
     if (!m_windowScriptNPObject) {
-        if (jScriptEnabled()) {
+        if (javaScriptEnabled()) {
             // JavaScript is enabled, so there is a JavaScript window object. Return an NPObject bound to the window
             // object.
             KJS::JSObject* win = KJS::Window::retrieveWindow(this);
