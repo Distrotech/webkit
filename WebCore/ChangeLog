@@ -1,3 +1,31 @@
+2006-10-30  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        If there's no plug-in for a given mime type, or if the plug-in fails
+        to initialize, draw the "missing plug-in" icon.
+
+        * plugins/win/PluginDatabaseWin.cpp:
+        (WebCore::PluginDatabaseWin::createPluginView):
+        If no plug-in can be found, create a null plugin view.
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::paint):
+        If the plugin hasn't been started, paint the missing plugin image.
+        
+        (WebCore::PluginViewWin::setNPWindowSize):
+        Return early if the plugin hasn't been started.
+        
+        (WebCore::PluginViewWin::start):
+        Return if the plugin couldn't be created.
+        
+        (WebCore::PluginViewWin::createNullPluginView):
+        New function which just creates a plugin view and doesn't try to start its plugin
+        (because there is none).
+        
+        (WebCore::PluginViewWin::PluginViewWin):
+        New constructor for the null plugin view.
+        
 2006-10-31  Darin Adler  <darin@apple.com>
 
         Reviewed by Adam.

@@ -1,3 +1,16 @@
+2006-10-30  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        Add "null plugin" image resource.
+        
+        * WebKit.vcproj/WebKit.rc:
+        * WebKit.vcproj/WebKit.vcproj:
+        * WebKit.vcproj/nullplugin.png: Added.
+        * WebKit.vcproj/resource.h:
+        * WebKitDLL.cpp:
+        (loadResourceIntoArray):
+
 2006-10-29  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Anders.

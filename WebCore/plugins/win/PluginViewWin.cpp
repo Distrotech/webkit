@@ -34,6 +34,8 @@
 #include "FrameTree.h"
 #include "FrameWin.h"
 #include "FrameView.h"
+#include "GraphicsContext.h"
+#include "Image.h"
 #include "HTMLNames.h"
 #include "HTMLPlugInElement.h"
 #include "NotImplemented.h"
@@ -172,7 +174,7 @@ void PluginViewWin::setFrameGeometry(const IntRect& rect)
 
     Widget::setFrameGeometry(rect);
 
-    updateHwnd(false);
+    updateHwnd(true);
 }
 
 void PluginViewWin::geometryChanged() const
@@ -211,8 +213,35 @@ void PluginViewWin::hide()
     Widget::hide();
 }
 
+void PluginViewWin::paint(GraphicsContext* context, const IntRect& rect)
+{
+    if (m_isStarted)
+        return;
+
+    // Draw the "missing plugin" image
+
+    static Image* nullPluginImage;
+    if (!nullPluginImage)
+        nullPluginImage = Image::loadPlatformResource("nullPlugin");
+
+    IntRect imageRect(frameGeometry().x(), frameGeometry().y(), nullPluginImage->width(), nullPluginImage->height());
+
+    int xOffset = (frameGeometry().width() - imageRect.width()) / 2;
+    int yOffset = (frameGeometry().height() - imageRect.height()) / 2;
+
+    imageRect.move(xOffset, yOffset);
+
+    if (!rect.intersects(imageRect))
+        return;
+
+    context->drawImage(nullPluginImage, imageRect.location());
+}
+
 void PluginViewWin::setNPWindowSize(const IntSize& size)
 {
+    if (!m_isStarted)
+        return;
+
     m_npWindow.x = 0;
     m_npWindow.y = 0;
     m_npWindow.width = size.width();
@@ -240,6 +269,9 @@ bool PluginViewWin::start()
     LOG_NPERROR(npErr);
     PluginViewWin::setCurrentPluginView(0);
         
+    if (npErr != NPERR_NO_ERROR)
+        return false;
+
     m_isStarted = true;
 
     if (m_url.isValid()) {
@@ -813,6 +845,25 @@ PluginViewWin::~PluginViewWin()
         DestroyWindow(m_window);
 }
 
+PluginViewWin* PluginViewWin::createNullPluginView(FrameWin* parentFrame, Element* element)
+{
+    return new PluginViewWin(parentFrame, element);
+}
+
+PluginViewWin::PluginViewWin(FrameWin* parentFrame, Element* element)
+    : m_parentFrame(parentFrame)
+    , m_plugin(0)
+    , m_element(element)
+    , m_isStarted(false)
+    , m_requestTimer(this, &PluginViewWin::requestTimerFired)
+    , m_window(0)
+    , m_paramCount(0)
+    , m_paramNames(0)
+    , m_paramValues(0)
+    , m_mode(0)
+{
+}
+
 PluginViewWin::PluginViewWin(FrameWin* parentFrame, PluginPackageWin* plugin, Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType)
     : m_parentFrame(parentFrame)
     , m_plugin(plugin)
@@ -820,9 +871,8 @@ PluginViewWin::PluginViewWin(FrameWin* parentFrame, PluginPackageWin* plugin, El
     , m_isStarted(false)
     , m_url(url)
     , m_requestTimer(this, &PluginViewWin::requestTimerFired)
+    , m_window(0)
 {
-    registerPluginView();
-
     m_instance = &m_instanceStruct;
     m_instance->ndata = this;
 
@@ -834,17 +884,19 @@ PluginViewWin::PluginViewWin(FrameWin* parentFrame, PluginPackageWin* plugin, El
 
     m_mode = element->document()->isPluginDocument() ? NP_FULL : NP_EMBED;
 
-    HWND pluginWnd = CreateWindowEx(0, kWebPluginViewWindowClassName, 0, WS_CHILD, 
-                        0, 0, 0, 0, m_parentFrame->view()->containingWindow(), 0, Page::instanceHandle(), 0);
+    if (!start())
+        return;
 
-    SetProp(pluginWnd, kWebPluginViewProperty, this);
+    registerPluginView();
+
+    m_window = CreateWindowEx(0, kWebPluginViewWindowClassName, 0, WS_CHILD, 
+                              0, 0, 0, 0, m_parentFrame->view()->containingWindow(), 0, Page::instanceHandle(), 0);
+
+    SetProp(m_window, kWebPluginViewProperty, this);
 
     m_npWindow.type = NPWindowTypeWindow;
-    m_npWindow.window = pluginWnd;
+    m_npWindow.window = m_window;
 
-    m_window = pluginWnd;
-
-    start();
 }
 
 } // namespace WebCore

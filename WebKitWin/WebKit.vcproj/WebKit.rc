@@ -100,6 +100,7 @@ END
 IDR_RESIZE_CORNER                PNG                     "textAreaResizeCorner.png"
 IDR_MISSING_IMAGE                PNG                     "missingImage.png"
 IDR_URL_ICON                     PNG                     "urlIcon.png"
+IDR_NULL_PLUGIN                  PNG                     "nullplugin.png"
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 

@@ -208,6 +208,8 @@ Vector<char> loadResourceIntoArray(const char* name)
         idr = IDR_MISSING_IMAGE;
     else if (!strcmp(name, "urlIcon"))
         idr = IDR_URL_ICON;
+    else if (!strcmp(name, "nullPlugin"))
+        idr = IDR_NULL_PLUGIN;
     else
         return Vector<char>();
 

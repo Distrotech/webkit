@@ -58,8 +58,11 @@ namespace WebCore {
     class PluginStreamWin;
     
     class PluginViewWin : public Widget {
+    friend static LRESULT CALLBACK PluginViewWndProc(HWND, UINT, WPARAM, LPARAM);
+
     public:
         PluginViewWin(FrameWin* parentFrame, PluginPackageWin* plugin, Element*, const KURL&, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType);
+        static PluginViewWin* createNullPluginView(FrameWin* parentFrame, Element*);
         virtual ~PluginViewWin();
 
         PluginPackageWin* plugin() const { return m_plugin.get(); }
@@ -93,16 +96,15 @@ namespace WebCore {
         virtual void show();
         virtual void hide();
 
+        virtual void paint(GraphicsContext*, const IntRect&);
+
         virtual IntRect windowClipRect() const;
-
     private:
-        PluginViewWin();
-        PluginViewWin(const PluginViewWin&);
-
+        PluginViewWin(FrameWin* parentFrame, Element*);
         bool start();
         void stop();
         static void setCurrentPluginView(PluginViewWin*);
-        NPError PluginViewWin::load(const FrameLoadRequest&, bool sendNotification, void* notifyData);
+        NPError load(const FrameLoadRequest&, bool sendNotification, void* notifyData);
         NPError handlePost(const char* url, const char* target, uint32 len, const char* buf, bool file, void* notifyData, bool sendNotification, bool allowHeaders);
         RefPtr<PluginPackageWin> m_plugin;
         Element* m_element;

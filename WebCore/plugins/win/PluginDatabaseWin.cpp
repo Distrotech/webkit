@@ -372,7 +372,7 @@ Vector<String> PluginDatabaseWin::defaultPluginPaths()
     Vector<String> paths;
 
     addPluginPath(paths);
-    addJavaPluginPath(paths);
+    //addJavaPluginPath(paths);
     addQuickTimePluginPath(paths);
     addAdobeAcrobatPluginPath(paths);
     addMozillaPluginPaths(paths);
@@ -440,7 +440,7 @@ PluginViewWin* PluginDatabaseWin::createPluginView(FrameWin* parentFrame, Elemen
     }
 
     if (!plugin || !plugin->load())
-        return 0;
+        return PluginViewWin::createNullPluginView(parentFrame, element);
 
     return new PluginViewWin(parentFrame, plugin, element, url, paramNames, paramValues, mimeType);
 }

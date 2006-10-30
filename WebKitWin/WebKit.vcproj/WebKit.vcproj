@@ -429,6 +429,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\nullplugin.png"
+				>
+			</File>
+			<File
 				RelativePath=".\textAreaResizeCorner.png"
 				>
 			</File>
