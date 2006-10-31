@@ -677,7 +677,7 @@ HRESULT WebFrame::loadDataSource(WebDataSource* dataSource)
                     d->frame->begin(); // FIXME - the frame should do this for us
                 m_loader = ResourceHandle::create(resourceRequest, this, d->frame->document()->docLoader());
                 IWebFrameLoadDelegate* frameLoadDelegate;
-                if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
+                if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)) && frameLoadDelegate) {
                     frameLoadDelegate->didStartProvisionalLoadForFrame(d->webView, this);
                     frameLoadDelegate->Release();
                 }
@@ -1008,7 +1008,7 @@ void WebFrame::didReceiveResponse(ResourceHandle*, const ResourceResponse& respo
         m_provisionalDataSource = 0;
 
         IWebFrameLoadDelegate* frameLoadDelegate;
-        if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
+        if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)) && frameLoadDelegate) {
             frameLoadDelegate->didCommitLoadForFrame(d->webView, this);
             frameLoadDelegate->Release();
         }
@@ -1018,7 +1018,7 @@ void WebFrame::didReceiveResponse(ResourceHandle*, const ResourceResponse& respo
     d->frame->begin(response.url());
 
     IWebFrameLoadDelegate* frameLoadDelegate;
-    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
+    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)) && frameLoadDelegate) {
         IWebPreferences* preferences;
         BOOL privateBrowsingEnabled = FALSE;
         if (SUCCEEDED(d->webView->preferences(&preferences)))
@@ -1128,7 +1128,7 @@ void WebFrame::didFinishLoading(ResourceHandle* job)
     d->frame->end();
 
     IWebFrameLoadDelegate* frameLoadDelegate;
-    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
+    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)) && frameLoadDelegate) {
         if (!job->error())
             frameLoadDelegate->didFinishLoadForFrame(d->webView, this);
         else
@@ -1222,7 +1222,7 @@ void WebFrame::openURL(const String& URL, const Event* triggeringEvent, bool new
         // new tab/window
         IWebUIDelegate* ui;
         IWebView* newWebView;
-        if (SUCCEEDED(d->webView->uiDelegate(&ui))) {
+        if (SUCCEEDED(d->webView->uiDelegate(&ui)) && ui) {
             if (SUCCEEDED(ui->createWebViewWithRequest(d->webView, request, &newWebView))) {
                 if (shiftPressed) {
                     // Ctrl-Option-Shift-click:  Opens a link in a new window and selects it.
@@ -1278,7 +1278,7 @@ void WebFrame::setTitle(const String& title)
     BString titleBStr(title);
 
     IWebFrameLoadDelegate* frameLoadDelegate;
-    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
+    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)) && frameLoadDelegate) {
         frameLoadDelegate->didReceiveTitle(d->webView, titleBStr, this);
         frameLoadDelegate->Release();
     }
@@ -1324,7 +1324,7 @@ void WebFrame::setTitle(const String& title)
 void WebFrame::setStatusText(const String& statusText)
 {
     IWebUIDelegate* uiDelegate;
-    if (SUCCEEDED(d->webView->uiDelegate(&uiDelegate))) {
+    if (SUCCEEDED(d->webView->uiDelegate(&uiDelegate)) && uiDelegate) {
         BSTR statusBStr = SysAllocStringLen(statusText.characters(), statusText.length());
         uiDelegate->setStatusText(d->webView, statusBStr);
         SysFreeString(statusBStr);
@@ -1469,7 +1469,7 @@ const KURL& WebFrame::originalRequestURL()
 void WebFrame::runJavaScriptAlert(const String& message)
 {
     IWebUIDelegate* ui;
-    if (SUCCEEDED(d->webView->uiDelegate(&ui))) {
+    if (SUCCEEDED(d->webView->uiDelegate(&ui)) && ui) {
         BSTR messageBSTR = SysAllocStringLen(message.characters(), message.length());
         ui->runJavaScriptAlertPanelWithMessage(d->webView, messageBSTR);
         SysFreeString(messageBSTR);
@@ -1481,7 +1481,7 @@ bool WebFrame::runJavaScriptConfirm(const String& message)
 {
     BOOL result = false;
     IWebUIDelegate* ui;
-    if (SUCCEEDED(d->webView->uiDelegate(&ui))) {
+    if (SUCCEEDED(d->webView->uiDelegate(&ui)) && ui) {
         BSTR messageBSTR = SysAllocStringLen(message.characters(), message.length());
         ui->runJavaScriptConfirmPanelWithMessage(d->webView, messageBSTR, &result);
         SysFreeString(messageBSTR);
@@ -1494,7 +1494,7 @@ bool WebFrame::runJavaScriptPrompt(const String& message, const String& defaultV
 {
     bool succeeded = false;
     IWebUIDelegate* ui;
-    if (SUCCEEDED(d->webView->uiDelegate(&ui))) {
+    if (SUCCEEDED(d->webView->uiDelegate(&ui)) && ui) {
         BSTR messageBSTR = SysAllocStringLen(message.characters(), message.length());
         BSTR defaultValueBSTR = SysAllocStringLen(defaultValue.characters(), defaultValue.length());
         BSTR resultBSTR = 0;
@@ -1526,7 +1526,7 @@ IntRect WebFrame::windowResizerRect() const
     IntRect intRect;
 
     IWebUIDelegate* ui;
-    if (SUCCEEDED(d->webView->uiDelegate(&ui))) {
+    if (SUCCEEDED(d->webView->uiDelegate(&ui)) && ui) {
         IWebUIDelegatePrivate* uiPrivate;
         if (SUCCEEDED(ui->QueryInterface(IID_IWebUIDelegatePrivate, (void**)&uiPrivate))) {
             RECT r;

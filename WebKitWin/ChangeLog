@@ -1,3 +1,22 @@
+2006-10-29  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam, Ada.
+
+        Expose printing methods in IWebViewPrivate and removed LPARAM-based dispatching.
+        Call StretchDIBits instead of BitBlt.
+        Add a maximum DPI (currently set at 300) to speed up printing.
+        Add support needed for print preview.
+
+        * Interfaces/IWebViewPrivate.idl: added startPrintJob, endPrintJob, getPrintedPageCount, printPage
+        * WebView.cpp: Added MAXIMUM_DPI setting to limit the size of print jobs for performance reasons
+        (getPrintRects): Added. Factored out of print, added maximum DPI handling.
+        (WebView::startPrintJob): Factored out of print
+        (WebView::endPrintJob): Factored out of print
+        (WebView::getPrintedPageCount): Factored out of print
+        (WebView::printPage): Factored out of print.  Replaced call to BitBlt with StretchDIBits
+        (WebViewWndProc): Re-add support for printing a window (used by bug reporter code)
+        * WebView.h: added startPrintJob, endPrintJob, getPrintedPageCount, printPage
+
 2006-10-30  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.

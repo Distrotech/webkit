@@ -484,6 +484,20 @@ public:
     virtual HRESULT STDMETHODCALLTYPE scrollOffset( 
         /* [retval][out] */ LPPOINT offset);
 
+    virtual HRESULT STDMETHODCALLTYPE startPrintJob( 
+        /* [in] */ HDC printDC);
+    
+    virtual HRESULT STDMETHODCALLTYPE endPrintJob( 
+        /* [in] */ HDC printDC);
+    
+    virtual HRESULT STDMETHODCALLTYPE getPrintedPageCount( 
+        /* [in] */ HDC printDC,
+        /* [retval][out] */ UINT *pageCount);
+    
+    virtual HRESULT STDMETHODCALLTYPE printPage( 
+        /* [in] */ HDC printDC,
+        UINT pageNumber);
+
     // WebView
     void handleMouseEvent(UINT, WPARAM, LPARAM);
     void mouseWheel(WPARAM, LPARAM);
@@ -495,12 +509,10 @@ public:
     HRESULT updateWebCoreSettingsFromPreferences(IWebPreferences* preferences);
     WebCore::Settings* settings();
     bool inResizer(LPARAM lParam);
-
     void paint(HDC, LPARAM);
     void paintIntoBackingStore(WebCore::FrameView*, HDC bitmapDC, LPRECT dirtyRect);
     void paintIntoWindow(HDC bitmapDC, HDC windowDC, LPRECT dirtyRect);
     void print(HDC dc, LPARAM options);
-
     bool ensureBackingStore();
     void addToDirtyRegion(const WebCore::IntRect&);
     void addToDirtyRegion(HRGN);

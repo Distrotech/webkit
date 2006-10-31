@@ -85,9 +85,12 @@ interface IWebViewPrivate : IUnknown
     HRESULT formDelegate([out, retval] IWebFormDelegate** formDelegate);
 
     HRESULT setFrameLoadDelegatePrivate([in] IWebFrameLoadDelegatePrivate* frameLoadDelegatePrivate);
-
     HRESULT frameLoadDelegatePrivate([out, retval] IWebFrameLoadDelegatePrivate** frameLoadDelegatePrivate);
 
     HRESULT scrollOffset([out, retval] LPPOINT offset);
-
+    
+    HRESULT startPrintJob([in] HDC printDC);
+    HRESULT endPrintJob([in] HDC printDC);
+    HRESULT getPrintedPageCount([in] HDC printDC, [out, retval] UINT* pageCount);
+    HRESULT printPage([in] HDC printDC, UINT pageNumber);
 }
