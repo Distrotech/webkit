@@ -1,3 +1,16 @@
+2006-10-31  Adam Roben  <aroben@apple.com>
+
+        Build fixes.
+
+        * WebEditorClient.cpp: Add stubs for new methods.
+        (WebEditorClient::isContinuousSpellCheckingEnabled):
+        (WebEditorClient::isGrammarCheckingEnabled):
+        (WebEditorClient::spellCheckerDocumentTag):
+        * WebEditorClient.h: Add declarations for new methods.
+        * WebFrame.cpp: Fix #includes to use new platform/graphics directory.
+        * WebView.cpp: Ditto.
+        * WebKit.vcproj/WebKit.vcproj: Add platform/graphics to include path.
+
 2006-10-29  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Adam, Ada.

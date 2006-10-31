@@ -36,20 +36,20 @@
 #include "WebPreferences.h"
 
 #pragma warning( push, 0 )
-#include <WebCore/platform/network/ResourceHandleClient.h>
 #include <WebCore/bridge/win/FrameWin.h>
 #include <WebCore/dom/Document.h>
-#include <WebCore/page/FrameView.h>
-#include <WebCore/platform/IntRect.h>
-#include <WebCore/platform/GraphicsContext.h>
-#include <WebCore/page/Page.h>
-#include <WebCore/platform/PlatformKeyboardEvent.h>
-#include <WebCore/platform/PlatformMouseEvent.h>
-#include <WebCore/platform/PlatformWheelEvent.h>
 #include <WebCore/editing/CommandByName.h>
 #include <WebCore/editing/SelectionController.h>
 #include <WebCore/editing/TypingCommand.h>
-#include <WebCore/platform/cstring.h>
+#include <WebCore/page/FrameView.h>
+#include <WebCore/page/Page.h>
+#include <WebCore/platform/CString.h>
+#include <WebCore/platform/graphics/GraphicsContext.h>
+#include <WebCore/platform/IntRect.h>
+#include <WebCore/platform/network/ResourceHandleClient.h>
+#include <WebCore/platform/PlatformKeyboardEvent.h>
+#include <WebCore/platform/PlatformMouseEvent.h>
+#include <WebCore/platform/PlatformWheelEvent.h>
 #pragma warning(pop)
 
 #include <tchar.h>

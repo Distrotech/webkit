@@ -74,22 +74,22 @@ FrameWin::~FrameWin()
 
 void FrameWin::urlSelected(const FrameLoadRequest& request, const Event* triggeringEvent)
 {
-    Frame* targetFrame = tree()->find(request.m_frameName);
+    Frame* targetFrame = tree()->find(request.frameName());
     bool newWindow = !targetFrame;
     FrameWinClient* client = targetFrame ? Win(targetFrame)->m_client.get() : m_client.get();
     if (client)
-        client->openURL(request.m_request.url().url(), triggeringEvent, newWindow, request.lockHistory());
+        client->openURL(request.resourceRequest().url().url(), triggeringEvent, newWindow, request.lockHistory());
 }
 
 void FrameWin::submitForm(const FrameLoadRequest& request)
 {
     // FIXME: this is a hack inherited from FrameMac, and should be pushed into Frame
-    if (d->m_submittedFormURL == request.m_request.url())
+    if (d->m_submittedFormURL == request.resourceRequest().url())
         return;
-    d->m_submittedFormURL = request.m_request.url();
+    d->m_submittedFormURL = request.resourceRequest().url();
 
     if (m_client)
-        m_client->submitForm(request.m_request.httpMethod(), request.m_request.url(), &request.m_request.httpBody(), d->m_formAboutToBeSubmitted.get(), d->m_formValuesAboutToBeSubmitted);
+        m_client->submitForm(request.resourceRequest().httpMethod(), request.resourceRequest().url(), &request.resourceRequest().httpBody(), d->m_formAboutToBeSubmitted.get(), d->m_formValuesAboutToBeSubmitted);
 
     clearRecordedFormValues();
 }

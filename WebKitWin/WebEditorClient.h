@@ -47,6 +47,12 @@ public:
     WebEditorClient(WebView* webView);
     ~WebEditorClient();
 
+    // EditorClient
+    virtual bool isContinuousSpellCheckingEnabled();
+    virtual bool isGrammarCheckingEnabled();
+    virtual int spellCheckerDocumentTag();
+
+
     bool shouldDeleteRange(Range* range);
     bool shouldBeginEditingInRange(Range *range);
     bool shouldEndEditingInRange(Range *range);

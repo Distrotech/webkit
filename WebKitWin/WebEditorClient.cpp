@@ -48,6 +48,24 @@ WebEditorClient::~WebEditorClient()
 {
 }
 
+bool WebEditorClient::isContinuousSpellCheckingEnabled()
+{
+    LOG_NOIMPL();
+    return false;
+}
+
+bool WebEditorClient::isGrammarCheckingEnabled()
+{
+    LOG_NOIMPL();
+    return false;
+}
+
+int WebEditorClient::spellCheckerDocumentTag()
+{
+    LOG_NOIMPL();
+    return 0;
+}
+
 bool WebEditorClient::shouldDeleteRange(Range* /*range*/)
 {
     BOOL result = false;

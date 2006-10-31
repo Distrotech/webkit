@@ -1,3 +1,22 @@
+2006-10-31  Adam Roben  <aroben@apple.com>
+
+        Build fixes.
+
+        * WebCore.vcproj/WebCore.vcproj: Add new platform/graphics directory to
+        our include path, and copy headers from there for WebKit's benefit.
+        * bridge/win/FrameWin.cpp: Update accessors of FrameLoadRequest.
+        (WebCore::FrameWin::urlSelected):
+        (WebCore::FrameWin::submitForm):
+        * plugins/win/PluginViewWin.cpp: Ditto.
+        (WebCore::PluginViewWin::start):
+        (WebCore::PluginViewWin::performRequest):
+        (WebCore::PluginViewWin::load):
+        (WebCore::PluginViewWin::getURLNotify):
+        (WebCore::PluginViewWin::getURL):
+        (WebCore::PluginViewWin::handlePost):
+        * plugins/win/PluginViewWin.h: Correct forward declaration of
+        FrameLoadRequest.
+
 2006-10-30  Darin Adler  <darin@apple.com>
 
         Reviewed by Anders.

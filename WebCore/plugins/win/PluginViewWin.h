@@ -50,7 +50,7 @@ namespace KJS {
 
 namespace WebCore {
     class Element;
-    class FrameLoadRequest;
+    struct FrameLoadRequest;
     class FrameWin;
     class KURL;
     class PluginPackageWin;
