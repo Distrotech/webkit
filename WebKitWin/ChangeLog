@@ -1,3 +1,9 @@
+2006-10-31  Steve Falkenburg  <sfalken@apple.com>
+
+        Bumped version to 521.29
+
+        * WebKit.vcproj/VERSION:
+
 2006-10-30  Kevin McCullough  <KMcCullough@apple.com>
 
         Reviewed by Steve.

@@ -1583,10 +1583,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\ResourceRequest.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\Screen.h"
 				>
 			</File>
@@ -2036,6 +2032,10 @@
 				Name="network"
 				>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\HTTPHeaderMap.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\ResourceHandle.cpp"
 					>
 				</File>
@@ -2049,6 +2049,14 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\ResourceHandleInternal.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\ResourceRequest.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\ResourceResponse.h"
 					>
 				</File>
 				<Filter
@@ -2097,6 +2105,26 @@
 						>
 					</File>
 				</Filter>
+			</Filter>
+			<Filter
+				Name="graphics"
+				>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\GraphicsContext.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\GraphicsContext.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\GraphicsTypes.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\GraphicsTypes.h"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter
