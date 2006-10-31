@@ -1,5 +1,12 @@
 2006-10-31  Steve Falkenburg  <sfalken@apple.com>
 
+        Another fix for B&I submission
+        (missing .h files from the WebCore vcproj prevents proper merging of OpenSource/Internal WebCore trees)
+
+        * WebCore.vcproj/WebCore.vcproj:
+
+2006-10-31  Steve Falkenburg  <sfalken@apple.com>
+
         Remove extra files I accidently added
 
         * WebCore.vcproj/WebCore.vcproj:

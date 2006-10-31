@@ -1151,6 +1151,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\NavigationAction.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\loader\NetscapePlugInStreamLoader.cpp"
 				>
 			</File>
