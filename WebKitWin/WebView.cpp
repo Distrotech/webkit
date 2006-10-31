@@ -50,9 +50,11 @@
 #include <WebCore/platform/PlatformKeyboardEvent.h>
 #include <WebCore/platform/PlatformMouseEvent.h>
 #include <WebCore/platform/PlatformWheelEvent.h>
+#include <WebCore/platform/win/BString.h>
 #pragma warning(pop)
 
 #include <tchar.h>
+#include <JavaScriptCore/kjs/value.h>
 
 using namespace WebCore;
 
@@ -1755,11 +1757,17 @@ HRESULT STDMETHODCALLTYPE WebView::mediaStyle(
 }
 
 HRESULT STDMETHODCALLTYPE WebView::stringByEvaluatingJavaScriptFromString( 
-    /* [in] */ BSTR /*script*/,
-    /* [retval][out] */ BSTR* /*result*/)
+    /* [in] */ BSTR script, // assumes input does not have "JavaScript" at the begining.
+    /* [retval][out] */ BSTR* result)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    m_mainFrame->impl()->createEmptyDocument();
+    KJS::JSValue* scriptExecutionResult = m_mainFrame->impl()->executeScript(0, WebCore::String(script), true);
+    if(!scriptExecutionResult)
+        return E_FAIL;
+    else if (scriptExecutionResult->isString())
+        *result = BString(String(scriptExecutionResult->getString()));
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::windowScriptObject( 

@@ -1,3 +1,12 @@
+2006-10-30  Kevin McCullough  <KMcCullough@apple.com>
+
+        Reviewed by Steve.
+
+        - Added basic functionality for running javascript from the address bar.  Currently no return results are evaluated so use alert messages to see the results.
+
+        * WebView.cpp:
+        (WebView::stringByEvaluatingJavaScriptFromString):
+
 2006-10-31  Adam Roben  <aroben@apple.com>
 
         Build fixes.
