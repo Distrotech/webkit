@@ -2106,26 +2106,6 @@
 					</File>
 				</Filter>
 			</Filter>
-			<Filter
-				Name="graphics"
-				>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\GraphicsContext.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\GraphicsContext.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\GraphicsTypes.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\GraphicsTypes.h"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="css"

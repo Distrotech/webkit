@@ -1,5 +1,11 @@
 2006-10-31  Steve Falkenburg  <sfalken@apple.com>
 
+        Remove extra files I accidently added
+
+        * WebCore.vcproj/WebCore.vcproj:
+
+2006-10-31  Steve Falkenburg  <sfalken@apple.com>
+
         Build fixes for submission merge script
 
         * WebCore.vcproj/WebCore.vcproj:
