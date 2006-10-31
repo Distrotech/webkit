@@ -352,8 +352,7 @@ void PluginViewWin::performRequest(PluginRequestWin* request)
 
     if (!jsString.isNull()) {
         if (!request->frameLoadRequest().m_frameName.isNull()) {
-            // FIXME: If the result is a string, we probably want to put that string into the frame, just
-            // like we do in KHTMLPartBrowserExtension::openURLRequest.
+            // FIXME: If the result is a string, we probably want to put that string into the frame.
             if (request->sendNotification())
                 m_plugin->pluginFuncs()->urlnotify(m_instance, requestURL.url().utf8(), NPRES_DONE, request->notifyData());
         } else {

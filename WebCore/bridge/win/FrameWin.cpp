@@ -28,17 +28,14 @@
 
 #include <winsock2.h>
 #include <windows.h>
-#include "BrowserExtensionWin.h"
-#include "TextResourceDecoder.h"
+
 #include "Document.h"
-#include "FramePrivate.h"
 #include "FrameLoadRequest.h"
+#include "FramePrivate.h"
 #include "FrameView.h"
-#include "HTMLNames.h"
 #include "HTMLIFrameElement.h"
-#include "kjs_window.h"
+#include "HTMLNames.h"
 #include "NP_jsobject.h"
-#include "npruntime_impl.h"
 #include "Page.h"
 #include "PlatformKeyboardEvent.h"
 #include "Plugin.h"
@@ -47,8 +44,11 @@
 #include "RenderFrame.h"
 #include "RenderView.h"
 #include "ResourceHandle.h"
-#include "runtime_root.h"
 #include "ScrollbarMode.h"
+#include "TextResourceDecoder.h"
+#include "kjs_window.h"
+#include "npruntime_impl.h"
+#include "runtime_root.h"
 
 namespace WebCore {
 
@@ -60,7 +60,6 @@ FrameWin::FrameWin(Page* page, Element* ownerElement, FrameWinClient* client, Ed
     , m_bindingRoot(0)
     , m_windowScriptNPObject(0)
 {
-    d->m_extension = new BrowserExtensionWin(this);
 }
 
 FrameWin::~FrameWin()

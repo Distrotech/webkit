@@ -28,7 +28,6 @@
 #define WIN32_COMPILE_HACK
 
 #include "AXObjectCache.h"
-#include "BrowserExtensionWin.h"
 #include "CachedResource.h"
 #include "CookieJar.h"
 #include "Cursor.h"
@@ -150,8 +149,6 @@ void FrameWin::goBackOrForward(int) { LOG_NOIMPL(); }
 int FrameWin::getHistoryLength() { LOG_NOIMPL(); return 0; }
 KURL FrameWin::historyURL(int distance) { LOG_NOIMPL(); return KURL(); }
 
-void BrowserExtensionWin::createNewWindow(struct WebCore::FrameLoadRequest const&,struct WebCore::WindowFeatures const&,Frame*&) { STOP_NOIMPL(); }
-
 bool Page::canRunModal() { LOG_NOIMPL(); return false; }
 bool Page::canRunModalNow() { LOG_NOIMPL(); return false; }
 void Page::runModal() { STOP_NOIMPL(); }
@@ -193,8 +190,6 @@ void FrameWin::clearUndoRedoOperations(void) { LOG_NOIMPL(); }
 String FrameWin::incomingReferrer() const { LOG_NOIMPL(); return String(); }
 void FrameWin::markMisspellingsInAdjacentWords(WebCore::VisiblePosition const&) { LOG_NOIMPL(); }
 void FrameWin::respondToChangedContents(const Selection &endingSelection) { LOG_NOIMPL(); }
-
-BrowserExtensionWin::BrowserExtensionWin(WebCore::FrameWin*) { LOG_NOIMPL(); }
 
 namespace WebCore {
 

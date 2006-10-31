@@ -3559,10 +3559,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\bridge\BrowserExtension.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\bridge\EditorClient.h"
 				>
 			</File>
@@ -3577,10 +3573,6 @@
 			<Filter
 				Name="win"
 				>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\bridge\win\BrowserExtensionWin.h"
-					>
-				</File>
 				<File
 					RelativePath="..\bridge\win\FrameViewWin.cpp"
 					>
