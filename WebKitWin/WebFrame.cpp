@@ -539,7 +539,8 @@ HRESULT STDMETHODCALLTYPE WebFrame::provisionalDataSource(
 
 HRESULT STDMETHODCALLTYPE WebFrame::stopLoading( void)
 {
-//    DebugBreak();
+    // FIXME: should be telling the FrameLoader to stop loading once that is portable
+    d->frame->stopLoading(false);
     return E_NOTIMPL;
 }
 

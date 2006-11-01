@@ -1,3 +1,17 @@
+2006-10-31  Marvin Decker  <marv.decker@gmail.com>
+        
+        Reviewed by Maciej.
+        
+        - merged changes for:
+        
+                - fixed "Stop and reload don't work on the WebView"
+                http://bugs.webkit.org/show_bug.cgi?id=11285
+        
+        Most of htis was already in this tree.
+
+        * WebFrame.cpp:
+        (WebFrame::stopLoading): Implement. Added FIXME.
+
 2006-10-31  Steve Falkenburg  <sfalken@apple.com>
 
         Bumped version to 521.29
