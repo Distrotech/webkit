@@ -1,5 +1,11 @@
 2006-11-01  Anders Carlsson  <acarlsson@apple.com>
 
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::PluginStreamWin::startStream):
+        Build fix.
+        
+2006-11-01  Anders Carlsson  <acarlsson@apple.com>
+
         Reviewed by Adam.
 
         Convert plugin code over to using ResourceResponse.

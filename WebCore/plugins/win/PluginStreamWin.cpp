@@ -43,6 +43,8 @@
 
 #define WEB_REASON_NONE -1
 
+using std::max;
+
 namespace WebCore {
 
 PluginStreamWin::PluginStreamWin(PluginViewWin* pluginView, DocLoader* docLoader, const ResourceRequest& resourceRequest, bool sendNotification, void* notifyData)
@@ -108,7 +110,7 @@ void PluginStreamWin::startStream()
     
     m_stream.pdata = 0;
     m_stream.ndata = this;
-    m_stream.end = max(m_resourceResponse.expectedContentLength(), 0);
+    m_stream.end = max(m_resourceResponse.expectedContentLength(), static_cast<long long>(0));
     m_stream.lastmodified = m_resourceResponse.lastModifiedDate();
     m_stream.notifyData = m_notifyData;
 
