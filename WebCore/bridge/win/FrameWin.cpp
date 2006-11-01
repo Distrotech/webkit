@@ -421,6 +421,20 @@ KJS::Bindings::Instance* FrameWin::getEmbedInstanceForWidget(Widget* widget)
     return static_cast<PluginViewWin*>(widget)->bindingInstance();
 }
 
+Widget* FrameWin::createJavaAppletWidget(const IntSize&, Element* element, const HashMap<String, String>& args)
+{
+    Vector<String> paramNames;
+    Vector<String> paramValues;
+
+    HashMap<String, String>::const_iterator end = args.end();
+    for (HashMap<String, String>::const_iterator it = args.begin(); it != end; ++it) {
+        paramNames.append(it->first);
+        paramValues.append(it->second);
+    }
+
+    return PluginDatabaseWin::installedPlugins()->createPluginView(this, element, KURL(), paramNames, paramValues, "application/x-java-applet");
+}
+
 // FIXME: These methods should really call through to a PageClient rather than using FrameClient.
 IntRect FrameWin::windowResizerRect() const
 {

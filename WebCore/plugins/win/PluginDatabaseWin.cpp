@@ -256,52 +256,6 @@ static inline void addQuickTimePluginPath(Vector<String>& paths)
     }
 }
 
-static inline void addJavaPluginPath(Vector<String>& paths)
-{
-    HKEY key;
-    HRESULT result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT("Software\\JavaSoft\\Java Plug-in"), 0, KEY_READ, &key);
-    
-    if (result != ERROR_SUCCESS)
-        return;
-
-    WCHAR name[128];
-    FILETIME lastModified;
-
-    Vector<int> latestJavaVersion;
-    String latestJavaVersionString;
-
-    // Enumerate subkeys
-    for (int i = 0;; i++) {
-        DWORD nameLen = sizeof(name) / sizeof(WCHAR);
-        result = RegEnumKeyExW(key, i, name, &nameLen, 0, 0, 0, &lastModified);
-
-        if (result != ERROR_SUCCESS)
-            break;
-
-        Vector<int> javaVersion = parseVersionString(String(name, nameLen));
-        if (compareVersions(javaVersion, latestJavaVersion)) {
-            latestJavaVersion = javaVersion;
-            latestJavaVersionString = String(name, nameLen);
-        }
-    }
-
-    if (!latestJavaVersionString.isNull()) {
-        DWORD type;
-        WCHAR javaHomeStr[_MAX_PATH];
-        DWORD javaHomeSize = sizeof(javaHomeStr);
-
-        String javaPluginKeyPath = "Software\\JavaSoft\\Java Plug-in\\" + latestJavaVersionString;
-        result = SHGetValue(HKEY_LOCAL_MACHINE, javaPluginKeyPath.charactersWithNullTermination(), TEXT("JavaHome"), &type, (LPBYTE)javaHomeStr, &javaHomeSize);
-
-        if (result == ERROR_SUCCESS) {
-            String javaPluginPath = String(javaHomeStr, javaHomeSize / sizeof(WCHAR) - 1) + "\\bin";
-            paths.append(javaPluginPath);
-        }
-    }
-
-    RegCloseKey(key);
-}
-
 static inline void addAdobeAcrobatPluginPath(Vector<String>& paths)
 {
     HKEY key;
@@ -372,7 +326,6 @@ Vector<String> PluginDatabaseWin::defaultPluginPaths()
     Vector<String> paths;
 
     addPluginPath(paths);
-    //addJavaPluginPath(paths);
     addQuickTimePluginPath(paths);
     addAdobeAcrobatPluginPath(paths);
     addMozillaPluginPaths(paths);

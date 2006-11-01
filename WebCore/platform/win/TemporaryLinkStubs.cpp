@@ -142,7 +142,6 @@ bool FrameWin::personalbarVisible() { LOG_NOIMPL(); return false; }
 bool FrameWin::statusbarVisible() { LOG_NOIMPL(); return false; }
 bool FrameWin::toolbarVisible() { LOG_NOIMPL(); return false; }
 bool FrameWin::isLoadTypeReload(void) { LOG_NOIMPL(); return false; }
-Widget* FrameWin::createJavaAppletWidget(const IntSize&, Element* element, const HashMap<String, String>& args) { STOP_NOIMPL(); return 0; }
 
 bool FrameWin::canGoBackOrForward(int) const { LOG_NOIMPL(); return false; }
 void FrameWin::goBackOrForward(int) { LOG_NOIMPL(); }

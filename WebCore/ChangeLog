@@ -1,5 +1,20 @@
 2006-11-01  Anders Carlsson  <acarlsson@apple.com>
 
+        Reviewed by Geoff.
+
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::createJavaAppletWidget):
+        Ask the plugin database to create a java applet plugin.
+
+        * platform/win/TemporaryLinkStubs.cpp:
+        Remove FrameWin::createJavaAppletWidget.
+        
+        * plugins/win/PluginDatabaseWin.cpp:
+        (WebCore::PluginDatabaseWin::defaultPluginPaths):
+        Don't look for the Sun Java plugin anymore.
+
+2006-11-01  Anders Carlsson  <acarlsson@apple.com>
+
         * plugins/win/PluginStreamWin.cpp:
         (WebCore::PluginStreamWin::startStream):
         Build fix.
