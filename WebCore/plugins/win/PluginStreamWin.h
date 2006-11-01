@@ -36,6 +36,7 @@
 #include "PlatformString.h"
 #include "ResourceHandleClient.h"
 #include "ResourceRequest.h"
+#include "ResourceResponse.h"
 #include "StringHash.h"
 #include "Timer.h"
 
@@ -53,12 +54,12 @@ namespace WebCore {
         void start();
         void stop();
 
-        void startStream(const KURL& responseURL, long long expectedContentLength, int lastModifiedTime, const String& mimeType);
+        void startStream();
         
         // ResourceHandleClient
-        virtual void receivedResponse(ResourceHandle*, PlatformResponse);
+        virtual void didReceiveResponse(ResourceHandle*, const ResourceResponse&);
         virtual void didReceiveData(ResourceHandle*, const char*, int);
-        virtual void receivedAllData(ResourceHandle*, PlatformData);
+        virtual void didFinishLoading(ResourceHandle*);
 
     private:
         void deliverData();
@@ -67,6 +68,8 @@ namespace WebCore {
         void destroyStream();
 
         ResourceRequest m_resourceRequest;
+        ResourceResponse m_resourceResponse;
+
         DocLoader* m_docLoader;
         RefPtr<ResourceHandle> m_resourceLoader;
         PluginViewWin* m_pluginView;

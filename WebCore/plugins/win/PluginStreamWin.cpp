@@ -91,9 +91,11 @@ void PluginStreamWin::stop()
     m_resourceLoader = 0;
 }
 
-void PluginStreamWin::startStream(const KURL& responseURL, long long expectedContentLength, int lastModifiedTime, const String& mimeType)
+void PluginStreamWin::startStream()
 {
     ASSERT(m_streamState == StreamBeforeStarted);
+
+    const KURL& responseURL = m_resourceResponse.url();
 
     // Some plugins (Flash) expect that javascript URLs are passed back decoded as this is the
     // format used when requesting the URL.
@@ -102,12 +104,12 @@ void PluginStreamWin::startStream(const KURL& responseURL, long long expectedCon
     else
         m_stream.url = _strdup(responseURL.url().utf8());
     
-    CString mimeTypeStr = mimeType.utf8();
+    CString mimeTypeStr = m_resourceResponse.mimeType().utf8();
     
     m_stream.pdata = 0;
     m_stream.ndata = this;
-    m_stream.end = expectedContentLength > 0 ? expectedContentLength : 0;
-    m_stream.lastmodified = lastModifiedTime;
+    m_stream.end = max(m_resourceResponse.expectedContentLength(), 0);
+    m_stream.lastmodified = m_resourceResponse.lastModifiedDate();
     m_stream.notifyData = m_notifyData;
 
     m_transferMode = NP_NORMAL;
@@ -235,27 +237,14 @@ void PluginStreamWin::deliverData()
     } 
 }
 
-void PluginStreamWin::receivedResponse(ResourceHandle* resourceLoader, PlatformResponse response)
+void PluginStreamWin::didReceiveResponse(ResourceHandle* resourceLoader, const ResourceResponse& response)
 {
     ASSERT(resourceLoader == m_resourceLoader);
     ASSERT(m_streamState == StreamBeforeStarted);
 
-#if USE(CFNETWORK)
-    String mimeType = CFURLResponseGetMIMEType(response);
-    int contentLength = CFURLResponseGetExpectedContentLength(response);
-    KURL responseURL = CFURLResponseGetURL(response);
-    int lastModifiedTime = CFURLResponseGetLastModifiedDate(response) + kCFAbsoluteTimeIntervalSince1970;
-#endif
-#if USE(WININET)
-    String mimeType = String(response->contentType, wcslen(response->contentType));
-    int contentLength = response->contentLength;
-    // FIXME: Should pass the response URL
-    KURL responseURL = m_url;
-    // FIXME: Should use a valid value
-    int lastModifiedTime = 0;
-#endif
+    m_resourceResponse = response;
 
-    startStream(responseURL, contentLength, lastModifiedTime, mimeType);
+    startStream();
 }
 
 void PluginStreamWin::didReceiveData(ResourceHandle* resourceLoader, const char* data, int length)
@@ -286,7 +275,7 @@ void PluginStreamWin::didReceiveData(ResourceHandle* resourceLoader, const char*
         deliverData();
 }
 
-void PluginStreamWin::receivedAllData(ResourceHandle* resourceLoader, PlatformData platformData)
+void PluginStreamWin::didFinishLoading(ResourceHandle* resourceLoader)
 {
     ASSERT(resourceLoader == m_resourceLoader);
     ASSERT(m_streamState == StreamStarted || resourceLoader->error() != 0);

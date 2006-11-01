@@ -1,3 +1,17 @@
+2006-11-01  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        Convert plugin code over to using ResourceResponse.
+        
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::PluginStreamWin::startStream):
+        (WebCore::PluginStreamWin::didReceiveResponse):
+        (WebCore::PluginStreamWin::didFinishLoading):
+        * plugins/win/PluginStreamWin.h:
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::performRequest):
+
 2006-10-31  Steve Falkenburg  <sfalken@apple.com>
 
         Yet more B&I build fixes

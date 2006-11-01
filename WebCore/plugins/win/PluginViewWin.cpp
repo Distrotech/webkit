@@ -368,9 +368,9 @@ void PluginViewWin::performRequest(PluginRequestWin* request)
 
             CString cstr = resultString.utf8();
             PluginStreamWin* stream = new PluginStreamWin(this, m_parentFrame->document()->docLoader(), request->frameLoadRequest().resourceRequest(), request->sendNotification(), request->notifyData());
-            stream->startStream(requestURL, cstr.length(), 0, "text/plain");
+            stream->didReceiveResponse(0, ResourceResponse(requestURL, "text/plain", cstr.length(), "", ""));
             stream->didReceiveData(0, cstr, cstr.length());
-            stream->receivedAllData(0, 0);
+            stream->didFinishLoading(0);
         }
     } else {
         // FIXME: <rdar://problem/4807453> if the load request has post data it needs to be sent by the frame.
