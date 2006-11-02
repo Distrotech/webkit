@@ -1,3 +1,53 @@
+2006-11-01  Ada Chan  <adachan@apple.com>
+
+        Reviewed by sfalken.
+        
+        Implemented the DOM API that pubsub needs:
+        IDOMDocument::getElementsByTagName
+        IDOMDocument::getElementsByTagNameNS (they don't need this, but might as well add it)
+        IDOMNodeList
+        IDOMNode::nodeValue
+        
+        Added something I'll need for RSS integration:
+        IWebHistoryItemPrivate::RSSFeedReferrer
+        IWebHistoryItemPrivate::setRSSFeedReferrer
+
+        * DOMCoreClasses.cpp:
+        (DOMNode::nodeValue):
+        (DOMNode::DOMNode):
+        (DOMNode::~DOMNode):
+        (DOMNode::createInstance):
+        (DOMNodeList::QueryInterface):
+        (DOMNodeList::item):
+        (DOMNodeList::length):
+        (DOMNodeList::DOMNodeList):
+        (DOMNodeList::~DOMNodeList):
+        (DOMNodeList::createInstance):
+        (DOMDocument::getElementsByTagName):
+        (DOMDocument::getElementsByTagNameNS):
+        (DOMDocument::DOMDocument):
+        (DOMDocument::~DOMDocument):
+        (DOMElement::DOMElement):
+        (DOMElement::~DOMElement):
+        * DOMCoreClasses.h:
+        (DOMNodeList::AddRef):
+        (DOMNodeList::Release):
+        (DOMNodeList::throwException):
+        (DOMNodeList::callWebScriptMethod):
+        (DOMNodeList::evaluateWebScript):
+        (DOMNodeList::removeWebScriptKey):
+        (DOMNodeList::stringRepresentation):
+        (DOMNodeList::webScriptValueAtIndex):
+        (DOMNodeList::setWebScriptValueAtIndex):
+        (DOMNodeList::setException):
+        * Interfaces/IWebHistoryItemPrivate.idl:
+        * WebHistoryItem.cpp:
+        (WebHistoryItem::WebHistoryItem):
+        (WebHistoryItem::~WebHistoryItem):
+        (WebHistoryItem::RSSFeedReferrer):
+        (WebHistoryItem::setRSSFeedReferrer):
+        * WebHistoryItem.h:
+
 2006-10-31  Marvin Decker  <marv.decker@gmail.com>
         
         Reviewed by Maciej.

@@ -84,11 +84,14 @@ public:
     virtual HRESULT STDMETHODCALLTYPE mergeAutoCompleteHints(IWebHistoryItem* otherItem);
     virtual HRESULT STDMETHODCALLTYPE setLastVisitedTimeInterval(DATE time);
     virtual HRESULT STDMETHODCALLTYPE setTitle(BSTR title);
+    virtual HRESULT STDMETHODCALLTYPE RSSFeedReferrer(BSTR* url);
+    virtual HRESULT STDMETHODCALLTYPE setRSSFeedReferrer(BSTR url);
 
 protected:
     ULONG m_refCount;
     BSTR m_url;
     BSTR m_title;
+    BSTR m_RSSFeedReferrer;
     DATE m_lastVisited;
     int m_visitedCount;
 

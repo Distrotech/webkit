@@ -41,6 +41,7 @@ WebHistoryItem::WebHistoryItem()
 , m_url(0)
 , m_title(0)
 , m_visitedCount(0)
+, m_RSSFeedReferrer(0)
 {
     if (!m_sharedIconDatabase) {
         m_sharedIconDatabase = WebIconDatabase::sharedWebIconDatabase();
@@ -54,6 +55,7 @@ WebHistoryItem::~WebHistoryItem()
 {
     SysFreeString(m_url);
     SysFreeString(m_title);
+    SysFreeString(m_RSSFeedReferrer);
     gClassCount--;
 }
 
@@ -222,6 +224,23 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::setTitle(BSTR title)
         SysFreeString(m_title);
     m_title = SysAllocString(title);
     if (title && !m_title)
+        return E_OUTOFMEMORY;
+
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebHistoryItem::RSSFeedReferrer(BSTR* url)
+{
+    *url = SysAllocString(m_RSSFeedReferrer);
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebHistoryItem::setRSSFeedReferrer(BSTR url)
+{
+    if (m_RSSFeedReferrer)
+        SysFreeString(m_RSSFeedReferrer);
+    m_RSSFeedReferrer = SysAllocString(url);
+    if (url && !m_RSSFeedReferrer)
         return E_OUTOFMEMORY;
 
     return S_OK;

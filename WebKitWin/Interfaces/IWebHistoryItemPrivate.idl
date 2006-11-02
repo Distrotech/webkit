@@ -68,4 +68,6 @@ interface IWebHistoryItemPrivate : IUnknown
     HRESULT mergeAutoCompleteHints([in] IWebHistoryItem* otherItem);
     HRESULT setLastVisitedTimeInterval([in] DATE time);
     HRESULT setTitle([in] BSTR title);
+    HRESULT RSSFeedReferrer([out, retval] BSTR* url);
+    HRESULT setRSSFeedReferrer([in] BSTR url);
 }

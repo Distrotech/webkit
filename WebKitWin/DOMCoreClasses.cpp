@@ -33,6 +33,7 @@
 #pragma warning(push, 0)
 #include <WebCore/page/DOMWindow.h>
 #include <WebCore/dom/Element.h>
+#include <WebCore/dom/NodeList.h>
 #include <WebCore/html/HTMLFormElement.h>
 #include <WebCore/html/HTMLSelectElement.h>
 #include <WebCore/html/HTMLOptionElement.h>
@@ -83,10 +84,15 @@ HRESULT STDMETHODCALLTYPE DOMNode::nodeName(
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::nodeValue( 
-    /* [retval][out] */ BSTR* /*result*/)
+    /* [retval][out] */ BSTR* result)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    if (!m_node)
+        return E_FAIL;
+    WebCore::String nodeValueStr = m_node->nodeValue();
+    *result = SysAllocStringLen(nodeValueStr.characters(), nodeValueStr.length());
+    if (nodeValueStr.length() && !*result)
+        return E_OUTOFMEMORY;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::setNodeValue( 
@@ -288,6 +294,139 @@ HRESULT STDMETHODCALLTYPE DOMNode::setTextContent(
     return E_NOTIMPL;
 }
 
+// DOMNode - DOMNode ----------------------------------------------------------
+
+DOMNode::DOMNode(WebCore::Node* n)
+: m_node(0)
+{
+    if (n)
+        n->ref();
+
+    m_node = n;
+}
+
+DOMNode::~DOMNode()
+{
+    if (m_node)
+        m_node->deref();
+}
+
+IDOMNode* DOMNode::createInstance(WebCore::Node* n)
+{
+    if (!n)
+        return 0;
+
+    HRESULT hr = S_OK;
+    IDOMNode* domNode = 0;
+    WebCore::Node::NodeType nodeType = n->nodeType();
+
+    switch (nodeType) {
+        case WebCore::Node::ELEMENT_NODE: 
+        {
+            IDOMElement* newElement = DOMElement::createInstance(static_cast<WebCore::Element*>(n));
+            if (newElement) {
+                hr = newElement->QueryInterface(IID_IDOMNode, (void**)&domNode);
+                newElement->Release();
+            }
+        }
+        break;
+        case WebCore::Node::DOCUMENT_NODE:
+        {
+            IDOMDocument* newDocument = DOMDocument::createInstance(static_cast<WebCore::Document*>(n));
+            if (newDocument) {
+                hr = newDocument->QueryInterface(IID_IDOMNode, (void**)&domNode);
+                newDocument->Release();
+            }
+        }
+        break;
+        default:
+        {
+            DOMNode* newNode = new DOMNode(n);
+            hr = newNode->QueryInterface(IID_IDOMNode, (void**)&domNode);
+        }
+        break;
+    }
+
+    if (FAILED(hr))
+        return 0;
+
+    return domNode;
+}
+
+// DOMNodeList - IUnknown -----------------------------------------------------
+
+HRESULT STDMETHODCALLTYPE DOMNodeList::QueryInterface(REFIID riid, void** ppvObject)
+{
+    *ppvObject = 0;
+    if (IsEqualGUID(riid, IID_IDOMNodeList))
+        *ppvObject = static_cast<IDOMNodeList*>(this);
+    else
+        return DOMObject::QueryInterface(riid, ppvObject);
+
+    AddRef();
+    return S_OK;
+}
+
+// IDOMNodeList ---------------------------------------------------------------
+
+HRESULT STDMETHODCALLTYPE DOMNodeList::item( 
+    /* [in] */ UINT index,
+    /* [retval][out] */ IDOMNode **result)
+{
+    *result = 0;
+    if (!m_nodeList)
+        return E_FAIL;
+
+    WebCore::Node* itemNode = m_nodeList->item(index);
+    if (!itemNode)
+        return E_FAIL;
+
+    *result = DOMNode::createInstance(itemNode);
+    if (!(*result))
+        return E_FAIL;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE DOMNodeList::length( 
+        /* [retval][out] */ UINT *result)
+{
+    *result = 0;
+    if (!m_nodeList)
+        return E_FAIL;
+    *result = m_nodeList->length();
+    return S_OK;
+}
+
+// DOMNodeList - DOMNodeList --------------------------------------------------
+
+DOMNodeList::DOMNodeList(WebCore::NodeList* l)
+: m_nodeList(0)
+{
+    if (l)
+        l->ref();
+
+    m_nodeList = l;
+}
+
+DOMNodeList::~DOMNodeList()
+{
+    if (m_nodeList)
+        m_nodeList->deref();
+}
+
+IDOMNodeList* DOMNodeList::createInstance(WebCore::NodeList* l)
+{
+    if (!l)
+        return 0;
+
+    IDOMNodeList* domNodeList = 0;
+    DOMNodeList* newNodeList = new DOMNodeList(l);
+    if (FAILED(newNodeList->QueryInterface(IID_IDOMNodeList, (void**)&domNodeList)))
+        return 0;
+
+    return domNodeList;
+}
+
 // DOMDocument - IUnknown -----------------------------------------------------
 
 HRESULT STDMETHODCALLTYPE DOMDocument::QueryInterface(REFIID riid, void** ppvObject)
@@ -392,11 +531,17 @@ HRESULT STDMETHODCALLTYPE DOMDocument::createEntityReference(
 }
 
 HRESULT STDMETHODCALLTYPE DOMDocument::getElementsByTagName( 
-    /* [in] */ BSTR /*tagName*/,
-    /* [retval][out] */ IDOMNodeList** /*result*/)
+    /* [in] */ BSTR tagName,
+    /* [retval][out] */ IDOMNodeList** result)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    if (!m_document)
+        return E_FAIL;
+
+    String tagNameString(tagName);
+    *result = DOMNodeList::createInstance(m_document->getElementsByTagName(tagNameString).get());
+    if (!(*result))
+        return E_FAIL;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE DOMDocument::importNode( 
@@ -427,12 +572,19 @@ HRESULT STDMETHODCALLTYPE DOMDocument::createAttributeNS(
 }
 
 HRESULT STDMETHODCALLTYPE DOMDocument::getElementsByTagNameNS( 
-    /* [in] */ BSTR /*namespaceURI*/,
-    /* [in] */ BSTR /*localName*/,
-    /* [retval][out] */ IDOMNodeList** /*result*/)
+    /* [in] */ BSTR namespaceURI,
+    /* [in] */ BSTR localName,
+    /* [retval][out] */ IDOMNodeList** result)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    if (!m_document)
+        return E_FAIL;
+
+    String namespaceURIString(namespaceURI);
+    String localNameString(localName);
+    *result = DOMNodeList::createInstance(m_document->getElementsByTagNameNS(namespaceURIString, localNameString).get());
+    if (!(*result))
+        return E_FAIL;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE DOMDocument::getElementById( 
@@ -469,18 +621,13 @@ HRESULT STDMETHODCALLTYPE DOMDocument::getComputedStyle(
 // DOMDocument - DOMDocument --------------------------------------------------
 
 DOMDocument::DOMDocument(WebCore::Document* d)
-: m_document(0)
+: DOMNode(d)
+, m_document(d)
 {
-    if (d)
-        d->ref();
-
-    m_document = d;
 }
 
 DOMDocument::~DOMDocument()
 {
-    if (m_document)
-        m_document->deref();
 }
 
 IDOMDocument* DOMDocument::createInstance(WebCore::Document* d)
@@ -893,18 +1040,13 @@ HRESULT STDMETHODCALLTYPE DOMElement::scrollIntoViewIfNeeded(
 // DOMElement -----------------------------------------------------------------
 
 DOMElement::DOMElement(WebCore::Element* e)
-: m_element(0)
+: DOMNode(e)
+, m_element(e)
 {
-    if (e)
-        e->ref();
-
-    m_element = e;
 }
 
 DOMElement::~DOMElement()
 {
-    if (m_element)
-        m_element->deref();
 }
 
 IDOMElement* DOMElement::createInstance(WebCore::Element* e)
