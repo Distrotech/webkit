@@ -1,3 +1,11 @@
+2006-11-02  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Oliver.
+
+        Add forked copy of CursorWin.cpp
+        
+        * platform/win/CursorWin.cpp: Added.
+
 2006-11-01  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Adam.
