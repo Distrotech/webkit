@@ -1,3 +1,23 @@
+2006-11-01  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Adam.
+
+        Adding SVG_SUPPORT to Boomer.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * WebCore.vcproj/build-generated-files.sh:
+        * kcanvas/device/quartz/KCanvasFilterQuartz.cpp: Added.
+        (WebCore::KCanvasFilterQuartz::KCanvasFilterQuartz):
+        (WebCore::KCanvasFilterQuartz::~KCanvasFilterQuartz):
+        (WebCore::KCanvasFilterQuartz::prepareFilter):
+        (WebCore::KCanvasFilterQuartz::applyFilter):
+        (WebCore::KCanvasFilterQuartz::imageForName):
+        (WebCore::KCanvasFilterQuartz::setImageForName):
+        (WebCore::KCanvasFilterQuartz::setOutputImage):
+        (WebCore::KCanvasFilterQuartz::inputImage):
+        * platform/graphics/svg/cg/SVGResourceMaskerCg.cpp: Added.
+        (WebCore::SVGResourceMasker::applyMask):
+
 2006-11-01  Beth Dakin  <bdakin@apple.com>
 
         Reviewed by Adam.
