@@ -30,7 +30,6 @@
 #include "AXObjectCache.h"
 #include "CachedResource.h"
 #include "CookieJar.h"
-#include "Cursor.h"
 #include "EditCommand.h"
 #include "FileChooser.h"
 #include "Font.h"
@@ -160,9 +159,6 @@ bool WebCore::screenIsMonochrome(const Page*) { LOG_NOIMPL(); return false; }
 /********************************************************/
 /* Completely empty stubs (mostly to allow DRT to run): */
 /********************************************************/
-static Cursor localCursor;
-const Cursor& WebCore::moveCursor() { LOG_NOIMPL(); return localCursor; }
-
 bool AXObjectCache::gAccessibilityEnabled = false;
 
 String WebCore::submitButtonDefaultLabel() { return "Submit"; }

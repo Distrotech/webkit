@@ -2,6 +2,20 @@
 
         Reviewed by Oliver.
 
+        * WebCore.vcproj/WebCore.vcproj:
+        Use the forked CursorWin.cpp
+        
+        * platform/win/CursorWin.cpp:
+        (WebCore::moveCursor):
+        Implement this.
+        
+        * platform/win/TemporaryLinkStubs.cpp:
+        Get rid of it here.
+        
+2006-11-02  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Oliver.
+
         Add forked copy of CursorWin.cpp
         
         * platform/win/CursorWin.cpp: Added.

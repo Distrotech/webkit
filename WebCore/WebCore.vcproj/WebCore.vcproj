@@ -2726,7 +2726,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\win\CursorWin.cpp"
+					RelativePath="..\platform\win\CursorWin.cpp"
 					>
 				</File>
 				<File
