@@ -4067,14 +4067,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\SVGRenderAsText.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\SVGRenderAsText.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\SVGRenderTreeAsText.cpp"
 				>
 			</File>

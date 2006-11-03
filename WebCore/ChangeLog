@@ -1,5 +1,11 @@
 2006-11-03  Anders Carlsson  <acarlsson@apple.com>
 
+        Remove SVGRenderAsText files from the project.
+        
+        * WebCore.vcproj/WebCore.vcproj:
+
+2006-11-03  Anders Carlsson  <acarlsson@apple.com>
+
         Build fix.
         
         * platform/win/TemporaryLinkStubs.cpp:
