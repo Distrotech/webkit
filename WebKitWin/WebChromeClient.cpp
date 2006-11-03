@@ -25,6 +25,7 @@
 
 #pragma warning(push)
 #pragma warning(disable: 4127) // conditional expression is constant
+#pragma warning(disable: 4996) // deprecated function
 
 #include "config.h"
 #include "WebChromeClient.h"
@@ -42,8 +43,6 @@ WebChromeClient::WebChromeClient(WebView* webView)
 {
 }
 
-#pragma warning(push)
-#pragma warning(disable: 4996) // deprecated function
 
 bool WebChromeClient::canRunModal()
 {
@@ -56,5 +55,4 @@ void WebChromeClient::runModal()
     LOG_NOIMPL();
 }
 
-#pragma warning(pop) // 4996
 #pragma warning(pop) // 4127
