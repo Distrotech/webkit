@@ -32,6 +32,7 @@
 #include "IWebNotification.h"
 #include "WebFrame.h"
 #include "WebBackForwardList.h"
+#include "WebChromeClient.h"
 #include "WebNotificationCenter.h"
 #include "WebPreferences.h"
 
@@ -1385,7 +1386,7 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
 
     m_groupName = String(groupName, SysStringLen(groupName));
 
-    m_page = new Page();
+    m_page = new Page(WebChromeClient::create(this));
 
     WebFrame* webFrame = WebFrame::createInstance();
     webFrame->initWithWebFrameView(0 /*FIXME*/, this, m_page, 0);

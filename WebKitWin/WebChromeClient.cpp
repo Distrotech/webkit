@@ -23,27 +23,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
+#pragma warning(push)
+#pragma warning(disable: 4127) // conditional expression is constant
+
 #include "config.h"
-#include "Page.h"
+#include "WebChromeClient.h"
 
-#include "Frame.h"
-#include "FloatRect.h"
-#include <windows.h>
+#include "WebView.h"
+#include <WebCore/platform/win/NotImplemented.h>
 
-namespace WebCore {
-
-HINSTANCE Page::s_instanceHandle = 0;
-
-FloatRect Page::windowRect() const
+PassRefPtr<WebChromeClient> WebChromeClient::create(WebView* webView)
 {
-    RECT rect;
-    GetWindowRect(mainFrame()->view()->containingWindow(), &rect);
-    return rect;
+    return new WebChromeClient(webView);
 }
 
-void Page::setWindowRect(const FloatRect& r)
+WebChromeClient::WebChromeClient(WebView* webView)
+    : m_webView(webView)
 {
-    MoveWindow(mainFrame()->view()->containingWindow(), r.x(), r.y(), r.width(), r.height(), true);
 }
 
-} // namespace WebCore
+#pragma warning(push)
+#pragma warning(disable: 4996) // deprecated function
+
+bool WebChromeClient::canRunModal()
+{
+    LOG_NOIMPL();
+    return false;
+}
+
+void WebChromeClient::runModal()
+{
+    LOG_NOIMPL();
+}
+
+#pragma warning(pop) // 4996
+#pragma warning(pop) // 4127

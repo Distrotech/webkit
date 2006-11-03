@@ -1,3 +1,15 @@
+2006-11-03  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Darin, Beth.
+
+        Updated to use ChromeClient.
+        
+        * WebCore.vcproj/WebCore.vcproj:
+        * bridge/win/PageWin.cpp:
+        * loader/win/ResourceLoaderWin.cpp: Added.
+        (WebCore::ResourceLoader::loadsBlocked):
+        * platform/win/TemporaryLinkStubs.cpp:
+
 2006-11-02  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Oliver.

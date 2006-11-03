@@ -23,27 +23,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "config.h"
-#include "Page.h"
+#include <WebCore/page/ChromeClient.h>
+#include <wtf/Forward.h>
 
-#include "Frame.h"
-#include "FloatRect.h"
-#include <windows.h>
+class WebView;
 
-namespace WebCore {
+class WebChromeClient : public WebCore::ChromeClient {
+public:
+    static PassRefPtr<WebChromeClient> create(WebView*);
 
-HINSTANCE Page::s_instanceHandle = 0;
+    virtual bool canRunModal();
+    virtual void runModal();
 
-FloatRect Page::windowRect() const
-{
-    RECT rect;
-    GetWindowRect(mainFrame()->view()->containingWindow(), &rect);
-    return rect;
-}
+private:
+    WebChromeClient(WebView*);
 
-void Page::setWindowRect(const FloatRect& r)
-{
-    MoveWindow(mainFrame()->view()->containingWindow(), r.x(), r.y(), r.width(), r.height(), true);
-}
-
-} // namespace WebCore
+    WebView* m_webView;
+};

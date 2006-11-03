@@ -365,6 +365,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\WebChromeClient.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\WebChromeClient.h"
+				>
+			</File>
+			<File
 				RelativePath="..\WebDataSource.cpp"
 				>
 			</File>

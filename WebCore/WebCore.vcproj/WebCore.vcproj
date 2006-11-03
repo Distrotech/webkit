@@ -1879,6 +1879,18 @@
 			Name="page"
 			>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\page\Chrome.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\page\Chrome.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\page\ChromeClient.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\page\DOMWindow.cpp"
 				>
 			</File>
@@ -2203,6 +2215,14 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\loader\icon\SQLTransaction.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="win"
+				>
+				<File
+					RelativePath="..\loader\win\ResourceLoaderWin.cpp"
 					>
 				</File>
 			</Filter>

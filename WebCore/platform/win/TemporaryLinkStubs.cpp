@@ -147,10 +147,6 @@ void FrameWin::goBackOrForward(int) { LOG_NOIMPL(); }
 int FrameWin::getHistoryLength() { LOG_NOIMPL(); return 0; }
 KURL FrameWin::historyURL(int distance) { LOG_NOIMPL(); return KURL(); }
 
-bool Page::canRunModal() { LOG_NOIMPL(); return false; }
-bool Page::canRunModalNow() { LOG_NOIMPL(); return false; }
-void Page::runModal() { STOP_NOIMPL(); }
-
 void GraphicsContextPlatformPrivate::clip(const Path&) { LOG_NOIMPL(); }
 
 int WebCore::screenDepthPerComponent(const Page*) { LOG_NOIMPL(); return 0; }

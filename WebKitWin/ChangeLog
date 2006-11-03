@@ -1,3 +1,19 @@
+2006-11-03  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Darin, Beth.
+
+        Updated to use ChromeClient.
+        
+        * WebChromeClient.cpp: Added.
+        (WebChromeClient::create):
+        (WebChromeClient::WebChromeClient):
+        (WebChromeClient::canRunModal):
+        (WebChromeClient::runModal):
+        * WebChromeClient.h: Added.
+        * WebKit.vcproj/WebKit.vcproj:
+        * WebView.cpp:
+        (WebView::initWithFrame):
+
 2006-11-01  Ada Chan  <adachan@apple.com>
 
         Reviewed by sfalken.
