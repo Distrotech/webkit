@@ -185,7 +185,7 @@ bool ResponseIsMultipart(PlatformResponse) { LOG_NOIMPL(); return false; }
 DeprecatedString ResponseMIMEType(PlatformResponse) { LOG_NOIMPL(); return DeprecatedString(); }
 bool IsResponseURLEqualToURL(PlatformResponse, const String& URL) { LOG_NOIMPL(); return false; }
 DeprecatedString ResponseURL(PlatformResponse) { LOG_NOIMPL(); return DeprecatedString(); }
-void CachedResource::setPlatformResponse(PlatformResponse) { LOG_NOIMPL(); }
+void CachedResource::setResponse(PlatformResponse) { LOG_NOIMPL(); }
 void CachedResource::setAllData(PlatformData) { LOG_NOIMPL(); }
 
 }

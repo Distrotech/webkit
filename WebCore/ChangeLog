@@ -1,3 +1,18 @@
+2006-11-03  Steve Falkenburg  <sfalken@apple.com>
+
+        Fix build
+
+        * config.h: Touched to cause re-build w/ SVG_SUPPORT enabled
+        * platform/win/TemporaryLinkStubs.cpp:
+        (WebCore::CachedResource::setResponse): Added
+
+2006-11-03  Steve Falkenburg  <sfalken@apple.com>
+
+        Fix build
+
+        * platform/win/TemporaryLinkStubs.cpp:
+        (WebCore::CachedResource::setResponse):
+
 2006-11-03  Adele Peterson  <adele@apple.com>
 
         Reviewed by Oliver.
