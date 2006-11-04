@@ -2491,10 +2491,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\platform\ListBox.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\LocalizedStrings.h"
 				>
 			</File>
@@ -3544,14 +3540,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\DataRef.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\DeprecatedRenderSelect.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\DeprecatedRenderSelect.h"
 				>
 			</File>
 			<File

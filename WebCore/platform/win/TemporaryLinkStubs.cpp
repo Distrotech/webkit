@@ -43,7 +43,6 @@
 #include "IntPoint.h"
 #include "KURL.h"
 #include "Language.h"
-#include "ListBox.h"
 #include "LoaderFunctions.h"
 #include "LocalizedStrings.h"
 #include "Node.h"
@@ -94,12 +93,7 @@ Slider::~Slider() { STOP_NOIMPL(); }
 void Slider::setFont(WebCore::Font const&) { STOP_NOIMPL(); }
 double Slider::value() const { STOP_NOIMPL(); return 0; }
 
-IntSize ListBox::sizeForNumberOfLines(int) const { LOG_NOIMPL(); return IntSize(); }
-bool ListBox::isSelected(int) const { LOG_NOIMPL(); return false; }
-bool ListBox::checksDescendantsForFocus() const { LOG_NOIMPL(); return false; }
-
 Widget::FocusPolicy Slider::focusPolicy() const { LOG_NOIMPL(); return NoFocus; }
-Widget::FocusPolicy ListBox::focusPolicy() const { LOG_NOIMPL(); return NoFocus; }
 Widget::FocusPolicy TextField::focusPolicy() const { LOG_NOIMPL(); return NoFocus; }
 
 PlatformMouseEvent::PlatformMouseEvent(const CurrentEventTag&) { LOG_NOIMPL(); }
@@ -221,17 +215,6 @@ void TextField::setColors(Color const&,Color const&) { LOG_NOIMPL(); }
 IntSize TextField::sizeForCharacterWidth(int) const { LOG_NOIMPL(); return IntSize(); }
 int TextField::baselinePosition(int) const { LOG_NOIMPL(); return 0; }
 void TextField::setLiveSearch(bool) { LOG_NOIMPL(); }
-
-ListBox::ListBox() { LOG_NOIMPL(); }
-ListBox::~ListBox() { LOG_NOIMPL(); }
-void ListBox::setSelectionMode(ListBox::SelectionMode) { LOG_NOIMPL(); }
-void ListBox::setFont(WebCore::Font const&) { LOG_NOIMPL(); }
-void ListBox::setWritingDirection(TextDirection) { LOG_NOIMPL(); }
-void ListBox::clear() { LOG_NOIMPL(); }
-void ListBox::doneAppendingItems() { LOG_NOIMPL(); }
-void ListBox::setEnabled(bool) { LOG_NOIMPL(); }
-void ListBox::appendItem(DeprecatedString const&,ListBoxItemType,bool) { LOG_NOIMPL(); }
-void ListBox::setSelected(int,bool) { LOG_NOIMPL(); }
 
 Color WebCore::focusRingColor() { LOG_NOIMPL(); return 0xFF0000FF; }
 void WebCore::setFocusRingColorChangeFunction(void (*)()) { LOG_NOIMPL(); }
