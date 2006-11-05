@@ -3107,6 +3107,14 @@
 					Name="cf"
 					>
 					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\cf\FormDataStreamCFNet.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\cf\FormDataStreamCFNet.h"
+						>
+					</File>
+					<File
 						RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\cf\ResourceHandleCFNet.cpp"
 						>
 						<FileConfiguration
@@ -3127,6 +3135,14 @@
 								XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
 							/>
 						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\cf\ResourceRequestCFNet.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\cf\ResourceRequestCFNet.h"
+						>
 					</File>
 					<File
 						RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\cf\ResourceResponseCFNet.cpp"

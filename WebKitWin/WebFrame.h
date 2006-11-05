@@ -144,7 +144,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE continueSubmit( void);
 
     // ResourceHandleClient
-    virtual void receivedRedirect(WebCore::ResourceHandle*, const WebCore::KURL&);
+    virtual void willSendRequest(WebCore::ResourceHandle*, const WebCore::ResourceRequest&, const WebCore::ResourceResponse& redirectResponse);
     virtual void didReceiveResponse(WebCore::ResourceHandle*, const WebCore::ResourceResponse&);
     virtual void didReceiveData(WebCore::ResourceHandle*, const char*, int);
     virtual void didFinishLoading(WebCore::ResourceHandle*);

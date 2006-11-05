@@ -981,14 +981,14 @@ exit:
 
 // ResourceHandleClient
 
-void WebFrame::receivedRedirect(ResourceHandle*, const KURL& url)
+void WebFrame::willSendRequest(ResourceHandle*, const ResourceRequest& request, const ResourceResponse&)
 {
     if (m_provisionalDataSource) {
         IWebFrameLoadDelegate* frameLoadDelegate;
         if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)) && frameLoadDelegate) {
             IWebMutableURLRequest* mutableRequest;
             if (SUCCEEDED(m_provisionalDataSource->request(&mutableRequest))) {
-                DeprecatedString urlStr = url.url();
+                DeprecatedString urlStr = request.url().url();
                 BString urlBStr((LPCOLESTR)urlStr.unicode(), urlStr.length());
                 mutableRequest->setURL(urlBStr);
                 frameLoadDelegate->didReceiveServerRedirectForProvisionalLoadForFrame(d->webView, this);

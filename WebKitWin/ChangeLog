@@ -1,3 +1,15 @@
+2006-11-03  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Adele.
+        
+        - replaced receivedRedirect with new willSendRequest delegate
+        - removed most mac-specific loader functions
+        - use ResourceResponse more in loader code
+
+        * WebFrame.cpp:
+        (WebFrame::willSendRequest): Rearranged from former receivedRedirect.
+        * WebFrame.h:
+
 2006-11-03  Anders Carlsson  <acarlsson@apple.com>
 
         Build fix.
