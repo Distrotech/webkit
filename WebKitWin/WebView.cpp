@@ -1391,11 +1391,7 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     WebFrame* webFrame = WebFrame::createInstance();
     webFrame->initWithWebFrameView(0 /*FIXME*/, this, m_page, 0);
     m_mainFrame = webFrame;
-
-    Frame* frame = webFrame->impl();
-    m_page->setMainFrame(frame);
-    frame->deref(); // WebCore frames are created with a ref count of 1. Release this ref, since m_page owns frame now.
-    webFrame->Release(); // The same goes for webFrame, which is owned by frame.
+    webFrame->Release(); // The WebFrame is owned by the Frame, so release our reference to it.
 
     #pragma warning(suppress: 4244)
     SetWindowLongPtr(m_viewWindow, 0, (LONG_PTR)this);

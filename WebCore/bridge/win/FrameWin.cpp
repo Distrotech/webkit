@@ -72,16 +72,16 @@ FrameWin::~FrameWin()
     cancelAndClear();
 }
 
-void FrameWin::urlSelected(const FrameLoadRequest& request, const Event* triggeringEvent)
+void FrameWin::urlSelected(const FrameLoadRequest& request, Event* event)
 {
     Frame* targetFrame = tree()->find(request.frameName());
     bool newWindow = !targetFrame;
     FrameWinClient* client = targetFrame ? Win(targetFrame)->m_client.get() : m_client.get();
     if (client)
-        client->openURL(request.resourceRequest().url().url(), triggeringEvent, newWindow, request.lockHistory());
+        client->openURL(request.resourceRequest().url().url(), event, newWindow, request.lockHistory());
 }
 
-void FrameWin::submitForm(const FrameLoadRequest& request)
+void FrameWin::submitForm(const FrameLoadRequest& request, Event*)
 {
     // FIXME: this is a hack inherited from FrameMac, and should be pushed into Frame
     if (d->m_submittedFormURL == request.resourceRequest().url())
