@@ -27,6 +27,7 @@
 #include "Page.h"
 
 #include "Frame.h"
+#include "FrameView.h"
 #include "FloatRect.h"
 #include <windows.h>
 

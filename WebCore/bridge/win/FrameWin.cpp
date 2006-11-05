@@ -30,6 +30,7 @@
 #include <windows.h>
 
 #include "Document.h"
+#include "EditorClient.h"
 #include "FrameLoadRequest.h"
 #include "FramePrivate.h"
 #include "FrameView.h"
@@ -46,6 +47,7 @@
 #include "ResourceHandle.h"
 #include "ScrollbarMode.h"
 #include "TextResourceDecoder.h"
+#include "kjs_proxy.h"
 #include "kjs_window.h"
 #include "npruntime_impl.h"
 #include "runtime_root.h"
