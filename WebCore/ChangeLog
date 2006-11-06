@@ -1,3 +1,9 @@
+2006-11-06  Steve Falkenburg  <sfalken@apple.com>
+
+        Fix double-include of FormData.cpp/.h.
+
+        * WebCore.vcproj/WebCore.vcproj:
+
 2006-11-06  Maciej Stachowiak  <mjs@apple.com>
         
         - build fixes, adjusted for file move
