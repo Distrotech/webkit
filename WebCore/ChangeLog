@@ -1,3 +1,9 @@
+2006-11-06  Maciej Stachowiak  <mjs@apple.com>
+        
+        - build fixes, adjusted for file move
+
+        * WebCore.vcproj/WebCore.vcproj:
+
 2006-11-05  Beth Dakin  <bdakin@apple.com>
 
         Reviewed by Steve and Anders.
