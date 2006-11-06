@@ -83,6 +83,8 @@ public:
     FrameWin(Page*, Element*, FrameWinClient*, EditorClient*);
     ~FrameWin();
 
+    FrameWinClient* client() { return m_client.get(); }
+
     virtual void submitForm(const FrameLoadRequest&, Event*);
     virtual void urlSelected(const FrameLoadRequest&, Event*);
 

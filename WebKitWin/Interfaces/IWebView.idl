@@ -92,6 +92,21 @@ interface IWebDocumentRepresentation;
 interface IWebUndoManager;
 interface IWebViewEditingDelegate;
 
+/* These are the keys for the WebElementPropertyBag */
+const BSTR WebElementDOMNodeKey = L"WebElementDOMNodeKey";
+const BSTR WebElementFrameKey = L"WebElementFrameKey";
+const BSTR WebElementImageAltStringKey = L"WebElementImageAltStringKey";
+const BSTR WebElementImageKey = L"WebElementImageKey";
+const BSTR WebElementImageRectKey = L"WebElementImageRectKey";
+const BSTR WebElementImageURLKey = L"WebElementImageURLKey";
+const BSTR WebElementIsSelectedKey = L"WebElementIsSelectedKey";
+const BSTR WebElementSpellingToolTipKey = L"WebElementSpellingToolTipKey";
+const BSTR WebElementTitleKey = L"WebElementTitleKey";
+const BSTR WebElementLinkURLKey = L"WebElementLinkURLKey";
+const BSTR WebElementLinkTargetFrameKey = L"WebElementLinkTargetFrameKey";
+const BSTR WebElementLinkTitleKey = L"WebElementLinkTitleKey";
+const BSTR WebElementLinkLabelKey = L"WebElementLinkLabelKey";
+
 /*!
     @class WebView
     WebView manages the interaction between WebFrameViews and WebDataSources.  Modification

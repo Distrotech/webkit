@@ -23,42 +23,37 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef MarshallingHelpers_H
-#define MarshallingHelpers_H
-
-#include <CoreFoundation/CoreFoundation.h>
+#ifndef WebElementPropertyBag_H
+#define WebElementPropertyBag_H
 
 namespace WebCore {
-    class IntRect;
+    class HitTestResult;
 }
 
-class MarshallingHelpers
+class WebElementPropertyBag : public IPropertyBag
 {
 public:
-    static CFURLRef BSTRToCFURLRef(BSTR urlStr);
-    static CFStringRef BSTRToCFStringRef(BSTR str);
-    static BSTR CFStringRefToBSTR(CFStringRef str);
-    static int CFNumberRefToInt(CFNumberRef num);
-    static CFNumberRef intToCFNumberRef(int num);
-    static CFAbsoluteTime DATEToCFAbsoluteTime(DATE date);
-    static DATE CFAbsoluteTimeToDATE(CFAbsoluteTime absoluteTime);
-    static SAFEARRAY* stringArrayToSafeArray(CFArrayRef inArray);
-    static SAFEARRAY* intArrayToSafeArray(CFArrayRef inArray);
-    static SAFEARRAY* intRectToSafeArray(const WebCore::IntRect& rect);
-    static SAFEARRAY* iunknownArrayToSafeArray(CFArrayRef inArray);
-    static CFArrayRef safeArrayToStringArray(SAFEARRAY* inArray);
-    static CFArrayRef safeArrayToIntArray(SAFEARRAY* inArray);
-    static CFArrayRef safeArrayToIUnknownArray(SAFEARRAY* inArray);
-    static const void* IUnknownRetainCallback(CFAllocatorRef allocator, const void* value);
-    static void IUnknownReleaseCallback(CFAllocatorRef allocator, const void* value);
-    static CFArrayCallBacks kIUnknownArrayCallBacks;
+    WebElementPropertyBag(const WebCore::HitTestResult&);
+    ~WebElementPropertyBag();
+
+    // IUnknown
+    virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject);
+    virtual ULONG STDMETHODCALLTYPE AddRef(void);
+    virtual ULONG STDMETHODCALLTYPE Release(void);
+
+    // IPropertyBag
+    virtual /* [local] */ HRESULT STDMETHODCALLTYPE Read( 
+        /* [in] */ LPCOLESTR pszPropName,
+        /* [out][in] */ VARIANT *pVar,
+        /* [in] */ IErrorLog *pErrorLog);
+        
+    virtual HRESULT STDMETHODCALLTYPE Write( 
+        /* [in] */ LPCOLESTR pszPropName,
+        /* [in] */ VARIANT *pVar);
 
 private:
-    static CFAbsoluteTime MarshallingHelpers::windowsEpochAbsoluteTime();
-
-private:
-    MarshallingHelpers();
-    ~MarshallingHelpers();
+    WebCore::HitTestResult* m_result;
+    ULONG m_refCount;
 };
 
-#endif
+#endif // WebElementPropertyBag_H

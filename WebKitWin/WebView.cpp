@@ -30,6 +30,7 @@
 #include "WebView.h"
 
 #include "IWebNotification.h"
+#include "WebElementPropertyBag.h"
 #include "WebFrame.h"
 #include "WebBackForwardList.h"
 #include "WebChromeClient.h"
@@ -46,6 +47,7 @@
 #include <WebCore/page/Page.h>
 #include <WebCore/platform/CString.h>
 #include <WebCore/platform/graphics/GraphicsContext.h>
+#include <WebCore/rendering/HitTestResult.h>
 #include <WebCore/platform/IntRect.h>
 #include <WebCore/platform/network/ResourceHandleClient.h>
 #include <WebCore/platform/PlatformKeyboardEvent.h>
@@ -1882,11 +1884,16 @@ HRESULT STDMETHODCALLTYPE WebView::isLoading(
 }
     
 HRESULT STDMETHODCALLTYPE WebView::elementAtPoint( 
-        /* [in] */ LPPOINT /*point*/,
-        /* [retval][out] */ IPropertyBag** /*elementDictionary*/)
+        /* [in] */ LPPOINT point,
+        /* [retval][out] */ IPropertyBag** elementDictionary)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    Frame* frame = m_mainFrame->impl();
+    IntPoint webCorePoint = IntPoint(point->x, point->y);
+    HitTestResult result = HitTestResult(webCorePoint);
+    if (frame->renderer())
+        result = frame->hitTestResultAtPoint(webCorePoint, false);
+    *elementDictionary = new WebElementPropertyBag(result);
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::pasteboardTypesForSelection( 

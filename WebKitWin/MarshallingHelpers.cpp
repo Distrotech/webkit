@@ -27,6 +27,8 @@
 
 #include "MarshallingHelpers.h"
 
+#include <WebCore/platform/IntRect.h>
+
 static const double secondsPerDay = 60 * 60 * 24;
 
 CFArrayCallBacks MarshallingHelpers::kIUnknownArrayCallBacks = {0, IUnknownRetainCallback, IUnknownReleaseCallback, 0, 0};
@@ -138,6 +140,31 @@ SAFEARRAY* MarshallingHelpers::intArrayToSafeArray(CFArrayRef inArray)
         ::SafeArrayPutElement(sa, &count, &number);
         count++;
     }
+    return sa;
+}
+
+SAFEARRAY* MarshallingHelpers::intRectToSafeArray(const WebCore::IntRect& rect)
+{
+    SAFEARRAY* sa = ::SafeArrayCreateVector(VT_I4, 0, 4);
+    long count = 0;
+    int value;
+
+    value = rect.x();
+    ::SafeArrayPutElement(sa, &count, &value);
+    count++;
+
+    value = rect.y();
+    ::SafeArrayPutElement(sa, &count, &value);
+    count++;
+
+    value = rect.width();
+    ::SafeArrayPutElement(sa, &count, &value);
+    count++;
+
+    value = rect.height();
+    ::SafeArrayPutElement(sa, &count, &value);
+    count++;
+
     return sa;
 }
 

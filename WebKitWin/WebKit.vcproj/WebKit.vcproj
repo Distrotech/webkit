@@ -273,6 +273,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\WebElementPropertyBag.h"
+				>
+			</File>
+			<File
 				RelativePath="..\WebFrame.h"
 				>
 			</File>
@@ -378,6 +382,10 @@
 			</File>
 			<File
 				RelativePath="..\WebEditorClient.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\WebElementPropertyBag.cpp"
 				>
 			</File>
 			<File

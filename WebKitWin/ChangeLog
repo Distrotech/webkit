@@ -1,3 +1,35 @@
+2006-11-05  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by Steve and Anders. And sort of Maciej.
+
+        Here is a basic implementation of elementAtPoint for Boomer.
+
+        * Interfaces/IWebView.idl: The definitions of the 
+        WebElementPropertyBag keys.
+        * MarshallingHelpers.cpp:
+        (MarshallingHelpers::intRectToSafeArray): New safe array creation
+        function that creates a safe array out of an IntRect.
+        * MarshallingHelpers.h:
+        * WebElementPropertyBag.cpp: Added. This is the equivalent of
+        WebElementDictionary on the Mac.
+        (WebElementPropertyBag::WebElementPropertyBag):
+        (WebElementPropertyBag::~WebElementPropertyBag):
+        (WebElementPropertyBag::QueryInterface):
+        (WebElementPropertyBag::AddRef):
+        (WebElementPropertyBag::Release):
+        (isEqual):
+        (convertStringToVariant):
+        (WebElementPropertyBag::Read): This is the bulk of the class. It
+        compares the input key to all of the possible keys and calls the
+        appropriate function for each.
+        (WebElementPropertyBag::Write): Writing is not actually allowed.
+        * WebElementPropertyBag.h: Added.
+        * WebKit.vcproj/WebKit.vcproj:
+        * WebView.cpp:
+        (WebView::elementAtPoint): Call into frame to get the HitTestResult
+        for the point and set elementDictionary to the
+        WebElementPropertyBag for the result.
+
 2006-11-05  Steve Falkenburg  <sfalken@apple.com>
 
         Fix build breaks
