@@ -95,8 +95,8 @@ HRESULT convertStringToVariant(VARIANT* pVar, const String& string)
     V_VT(pVar) = VT_BSTR;
     V_BSTR(pVar) = SysAllocStringLen(string.characters(), string.length());
     if (string.length() && !V_BSTR(pVar))
-        return S_OK;
-    return E_OUTOFMEMORY;
+        return E_OUTOFMEMORY;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebElementPropertyBag::Read(LPCOLESTR pszPropName, VARIANT *pVar, IErrorLog * /*pErrorLog*/)

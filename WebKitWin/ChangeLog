@@ -1,3 +1,12 @@
+2006-11-06  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by Anders.
+
+        Oops! Silly mistake!
+
+        * WebElementPropertyBag.cpp:
+        (convertStringToVariant):
+
 2006-11-06  Steve Falkenburg  <sfalken@apple.com>
 
         Fix build
