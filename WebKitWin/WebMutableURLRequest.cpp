@@ -29,7 +29,7 @@
 #include "WebMutableURLRequest.h"
 
 #pragma warning(push, 0)
-#include <WebCore/loader/FormData.h>
+#include <WebCore/platform/network/FormData.h>
 #include <WebCore/platform/CString.h>
 #pragma warning(pop)
 

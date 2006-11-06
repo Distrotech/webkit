@@ -1,3 +1,9 @@
+2006-11-06  Steve Falkenburg  <sfalken@apple.com>
+
+        Fix build
+
+        * WebMutableURLRequest.cpp:
+
 2006-11-05  Beth Dakin  <bdakin@apple.com>
 
         Reviewed by Steve and Anders. And sort of Maciej.
