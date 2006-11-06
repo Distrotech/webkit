@@ -2047,14 +2047,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\loader\FormData.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\loader\FormData.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\loader\FormState.cpp"
 				>
 			</File>
@@ -3063,6 +3055,14 @@
 			<Filter
 				Name="network"
 				>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\FormData.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\FormData.h"
+					>
+				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\HTTPHeaderMap.h"
 					>

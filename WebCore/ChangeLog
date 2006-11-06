@@ -1,5 +1,11 @@
 2006-11-05  Steve Falkenburg  <sfalken@apple.com>
 
+        Fix build
+
+        * WebCore.vcproj/WebCore.vcproj:
+
+2006-11-05  Steve Falkenburg  <sfalken@apple.com>
+
         Fix build breaks
 
         * bridge/win/FrameWin.cpp:
