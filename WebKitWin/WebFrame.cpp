@@ -61,6 +61,7 @@
 #include <WebCore/platform/graphics/GraphicsContext.h>
 #include <WebCore/platform/network/ResourceHandle.h>
 #include <WebCore/platform/network/win/ResourceHandleWin.h>
+#include <WebCore/platform/network/ResourceRequest.h>
 #include <WebCore/platform/PlatformKeyboardEvent.h>
 #include <WebCore/platform/PlugInInfoStore.h>
 #include <WebCore/platform/win/BString.h>

@@ -35,6 +35,7 @@
 #pragma warning(push, 0)
 #include <WebCore/platform/network/ResourceHandleClient.h>
 #include <WebCore/bridge/win/FrameWin.h>
+#include <WebCore/Platform/KURL.h>
 #include <WebCore/Platform/PlatformString.h>
 #pragma warning(pop)
 
