@@ -212,5 +212,3 @@ Color WebCore::focusRingColor() { LOG_NOIMPL(); return 0xFF0000FF; }
 void WebCore::setFocusRingColorChangeFunction(void (*)()) { LOG_NOIMPL(); }
 
 void Frame::setNeedsReapplyStyles() { LOG_NOIMPL(); }
-
-void IconLoader::notifyIconChanged(const KURL& iconURL) { LOG_NOIMPL(); }
