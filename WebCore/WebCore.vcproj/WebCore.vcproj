@@ -2555,10 +2555,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\platform\Screen.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\ScrollBar.cpp"
 				>
 			</File>
@@ -5998,10 +5994,6 @@
 		<Filter
 			Name="ksvg2"
 			>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\ksvg.h"
-				>
-			</File>
 			<Filter
 				Name="svg"
 				>
@@ -7070,14 +7062,6 @@
 					</File>
 					<File
 						RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\quartz\KCanvasItemQuartz.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\quartz\KCanvasMaskerQuartz.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\quartz\KCanvasResourcesQuartz.h"
 						>
 					</File>
 					<File

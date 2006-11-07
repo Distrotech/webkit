@@ -1,3 +1,9 @@
+2006-11-07  Steve Falkenburg  <sfalken@apple.com>
+
+        Versioning
+
+        * WebKit.vcproj/VERSION:
+
 2006-11-06  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Geoff.
