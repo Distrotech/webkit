@@ -1,3 +1,9 @@
+2006-11-06  Kevin McCullough  <kmccullough@apple.com>
+
+        -Fix test fields accepting text.
+
+        * WebCore.vcproj/WebCore.vcproj:
+
 2006-11-06  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Dave Hyatt.
