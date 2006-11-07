@@ -1,3 +1,12 @@
+2006-11-06  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Geoff.
+        
+        Export JavaScriptCore C API via WebKit.
+
+        * WebKit.vcproj/WebKit.def:
+        * WebKit.vcproj/WebKit_debug.def:
+
 2006-11-06  Kevin McCullough  <kmccullough@apple.com>
 
         -Fix test fields accepting text.
