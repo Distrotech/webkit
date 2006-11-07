@@ -46,7 +46,7 @@ WebChromeClient::WebChromeClient(WebView* webView)
 {
 }
 
-// FIXME: These should be API calls
+// FIXME: These functions should make delegate calls instead of sizing by themselves.
 
 void WebChromeClient::setWindowRect(const FloatRect& r)
 {

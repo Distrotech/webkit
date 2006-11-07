@@ -1,5 +1,22 @@
 2006-11-06  Geoffrey Garen  <ggaren@apple.com>
 
+        Oops. Forgot to add these files.
+        
+        Changed comment that Darin mentioned, too.
+
+        * WebChromeClient.cpp:
+        * WebScreenClient.cpp: Added.
+        (WebScreenClient::create):
+        (WebScreenClient::WebScreenClient):
+        (WebScreenClient::depth):
+        (WebScreenClient::depthPerComponent):
+        (WebScreenClient::isMonochrome):
+        (WebScreenClient::rect):
+        (WebScreenClient::usableRect):
+        * WebScreenClient.h: Added.
+
+2006-11-06  Geoffrey Garen  <ggaren@apple.com>
+
         Reviewed by Darin.
         
         Stubbed out the Chrome and Screen clients.
