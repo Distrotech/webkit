@@ -1,5 +1,17 @@
 2006-11-06  Anders Carlsson  <acarlsson@apple.com>
 
+        Reviewed by Dave Hyatt.
+
+        <rdar://problem/4778180>
+        wikipedia.org crashes when loading
+        
+        * platform/win/GlyphMapWin.cpp:
+        (WebCore::GlyphMap::fillPage):
+        Don't call GetGlyphIndices on buffers larger than the page size. GetGlyphIndicies doesn't know anything about
+        Unicode supplementary characters and will overwrite the local buffer if the passed-in buffer is bigger than  the page size.
+
+2006-11-06  Anders Carlsson  <acarlsson@apple.com>
+
         Fork GlyphMapWin.cpp
         
         * platform/win/GlyphMapWin.cpp: Added.

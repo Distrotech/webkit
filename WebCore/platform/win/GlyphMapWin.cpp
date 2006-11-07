@@ -36,6 +36,12 @@ namespace WebCore
 
 bool GlyphMap::fillPage(GlyphPage* page, UChar* buffer, unsigned bufferLength, const FontData* fontData)
 {
+    // bufferLength will be greater than the glyph page size if the buffer has Unicode supplementary characters.
+    // GetGlyphIndices doesn't support this so ScriptGetCMap should be used instead. It seems that supporting this
+    // would require modifying the registry (see http://www.i18nguy.com/surrogates.html) so we won't support this for now.
+    if (bufferLength > GlyphPage::size)
+        return false;
+
     HDC dc = GetDC((HWND)0);
     SaveDC(dc);
     SelectObject(dc, fontData->m_font.hfont());
