@@ -143,9 +143,6 @@ KURL FrameWin::historyURL(int distance) { LOG_NOIMPL(); return KURL(); }
 
 void GraphicsContextPlatformPrivate::clip(const Path&) { LOG_NOIMPL(); }
 
-int WebCore::screenDepthPerComponent(const Page*) { LOG_NOIMPL(); return 0; }
-bool WebCore::screenIsMonochrome(const Page*) { LOG_NOIMPL(); return false; }
-
 /********************************************************/
 /* Completely empty stubs (mostly to allow DRT to run): */
 /********************************************************/

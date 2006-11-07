@@ -265,6 +265,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\WebChromeClient.h"
+				>
+			</File>
+			<File
 				RelativePath="..\WebDataSource.h"
 				>
 			</File>
@@ -325,6 +329,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\WebScreenClient.h"
+				>
+			</File>
+			<File
 				RelativePath="..\WebScriptObject.h"
 				>
 			</File>
@@ -373,10 +381,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\WebChromeClient.h"
-				>
-			</File>
-			<File
 				RelativePath="..\WebDataSource.cpp"
 				>
 			</File>
@@ -422,6 +426,10 @@
 			</File>
 			<File
 				RelativePath="..\WebPreferences.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\WebScreenClient.cpp"
 				>
 			</File>
 			<File

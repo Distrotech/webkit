@@ -30,8 +30,11 @@
 #include "config.h"
 #include "WebChromeClient.h"
 
+#include "FloatRect.h"
 #include "WebView.h"
 #include <WebCore/platform/win/NotImplemented.h>
+
+using namespace WebCore;
 
 PassRefPtr<WebChromeClient> WebChromeClient::create(WebView* webView)
 {
@@ -43,6 +46,64 @@ WebChromeClient::WebChromeClient(WebView* webView)
 {
 }
 
+// FIXME: These should be API calls
+
+void WebChromeClient::setWindowRect(const FloatRect& r)
+{
+    HWND window;
+    if (SUCCEEDED(m_webView->hostWindow(&window)))
+        MoveWindow(window, static_cast<int>(r.x()), static_cast<int>(r.y()), static_cast<int>(r.width()), static_cast<int>(r.height()), true);
+}
+
+FloatRect WebChromeClient::windowRect()
+{
+    HWND window;
+    if (SUCCEEDED(m_webView->hostWindow(&window))) {
+        RECT rect;
+        GetWindowRect(window, &rect);
+        return FloatRect(rect);
+    }
+    return FloatRect();
+}
+
+FloatRect WebChromeClient::pageRect()
+{
+    LOG_NOIMPL();
+    return FloatRect();
+}
+
+float WebChromeClient::scaleFactor()
+{
+    LOG_NOIMPL();
+    return 0.0;
+}
+
+void WebChromeClient::focus()
+{
+    LOG_NOIMPL();
+}
+
+void WebChromeClient::unfocus()
+{
+    LOG_NOIMPL();
+}
+
+Page* WebChromeClient::createWindow(const FrameLoadRequest&)
+{
+    LOG_NOIMPL();
+    return 0;
+}
+
+Page* WebChromeClient::createModalDialog(const FrameLoadRequest&)
+{
+    LOG_NOIMPL();
+    return 0;
+}
+
+void WebChromeClient::show()
+{
+    LOG_NOIMPL();
+}
 
 bool WebChromeClient::canRunModal()
 {
@@ -55,4 +116,53 @@ void WebChromeClient::runModal()
     LOG_NOIMPL();
 }
 
-#pragma warning(pop) // 4127
+void WebChromeClient::setToolbarsVisible(bool)
+{
+    LOG_NOIMPL();
+}
+
+bool WebChromeClient::toolbarsVisible()
+{
+    LOG_NOIMPL();
+    return false;
+}
+
+void WebChromeClient::setStatusbarVisible(bool)
+{
+    LOG_NOIMPL();
+}
+
+bool WebChromeClient::statusbarVisible()
+{
+    LOG_NOIMPL();
+    return false;
+}
+
+void WebChromeClient::setScrollbarsVisible(bool)
+{
+    LOG_NOIMPL();
+}
+
+bool WebChromeClient::scrollbarsVisible()
+{
+    LOG_NOIMPL();
+    return false;
+}
+
+void WebChromeClient::setMenubarVisible(bool)
+{
+    LOG_NOIMPL();
+}
+
+bool WebChromeClient::menubarVisible()
+{
+    LOG_NOIMPL();
+    return false;
+}
+
+void WebChromeClient::setResizable(bool)
+{
+    LOG_NOIMPL();
+}
+
+#pragma warning(pop)

@@ -36,6 +36,7 @@
 #include "WebChromeClient.h"
 #include "WebNotificationCenter.h"
 #include "WebPreferences.h"
+#include "WebScreenClient.h"
 
 #pragma warning( push, 0 )
 #include <WebCore/bridge/win/FrameWin.h>
@@ -1388,7 +1389,7 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
 
     m_groupName = String(groupName, SysStringLen(groupName));
 
-    m_page = new Page(WebChromeClient::create(this));
+    m_page = new Page(WebChromeClient::create(this), WebScreenClient::create(this));
 
     WebFrame* webFrame = WebFrame::createInstance();
     webFrame->initWithWebFrameView(0 /*FIXME*/, this, m_page, 0);

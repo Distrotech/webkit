@@ -35,16 +35,4 @@ namespace WebCore {
 
 HINSTANCE Page::s_instanceHandle = 0;
 
-FloatRect Page::windowRect() const
-{
-    RECT rect;
-    GetWindowRect(mainFrame()->view()->containingWindow(), &rect);
-    return rect;
-}
-
-void Page::setWindowRect(const FloatRect& r)
-{
-    MoveWindow(mainFrame()->view()->containingWindow(), r.x(), r.y(), r.width(), r.height(), true);
-}
-
 } // namespace WebCore

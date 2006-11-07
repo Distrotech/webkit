@@ -1,3 +1,33 @@
+2006-11-06  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Darin.
+        
+        Stubbed out the Chrome and Screen clients.
+
+        * WebChromeClient.cpp:
+        (WebChromeClient::setWindowRect):
+        (WebChromeClient::windowRect):
+        (WebChromeClient::pageRect):
+        (WebChromeClient::scaleFactor):
+        (WebChromeClient::focus):
+        (WebChromeClient::unfocus):
+        (WebChromeClient::createWindow):
+        (WebChromeClient::createModalDialog):
+        (WebChromeClient::show):
+        (WebChromeClient::setToolbarsVisible):
+        (WebChromeClient::toolbarsVisible):
+        (WebChromeClient::setStatusbarVisible):
+        (WebChromeClient::statusbarVisible):
+        (WebChromeClient::setScrollbarsVisible):
+        (WebChromeClient::scrollbarsVisible):
+        (WebChromeClient::setMenubarVisible):
+        (WebChromeClient::menubarVisible):
+        (WebChromeClient::setResizable):
+        * WebChromeClient.h:
+        * WebKit.vcproj/WebKit.vcproj:
+        * WebView.cpp:
+        (WebView::initWithFrame):
+
 2006-11-06  Beth Dakin  <bdakin@apple.com>
 
         Reviewed by Anders.
