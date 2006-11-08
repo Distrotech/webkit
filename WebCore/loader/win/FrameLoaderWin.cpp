@@ -164,4 +164,15 @@ void FrameLoader::setTitle(const String& title)
         client->setTitle(title);
 }
 
+void FrameWin::partClearedInBegin()
+{
+    if (FrameWinClient* client = Win(frame)->client()) {   
+        JSContextRef context = reinterpret_cast<JSContextRef>(scriptProxy()->interpreter()->globalExec());
+        JSObjectRef object = reinterpret_cast<JSObjectRef>(KJS::Window::retrieve(this));
+
+        client->windowScriptObjectAvailable(context, object);
+    }
+}
+
+
 }

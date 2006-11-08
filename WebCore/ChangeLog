@@ -1,3 +1,13 @@
+2006-11-08  Anders Carlsson  <acarlsson@apple.com>
+
+        A blind attempt at fixing the build.
+        
+        * bridge/win/FrameWin.cpp:
+        * loader/win/FrameLoaderWin.cpp:
+        (WebCore::FrameWin::partClearedInBegin):
+        * platform/win/TemporaryLinkStubs.cpp:
+        (FrameLoader::restoreDocumentState):
+
 2006-11-07  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Anders.

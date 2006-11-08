@@ -210,7 +210,6 @@ void PolicyCheck::call(PolicyAction) { LOG_NOIMPL(); }
 
 void FrameLoader::saveDocumentState() { LOG_NOIMPL(); }
 void FrameLoader::restoreDocumentState() { LOG_NOIMPL(); }
-void FrameLoader::partClearedInBegin() { LOG_NOIMPL(); }
 void FrameLoader::goBackOrForward(int) { LOG_NOIMPL(); }
 KURL FrameLoader::historyURL(int) { LOG_NOIMPL(); return KURL(); }
 bool FrameLoader::canGoBackOrForward(int) const { LOG_NOIMPL(); return false; }
