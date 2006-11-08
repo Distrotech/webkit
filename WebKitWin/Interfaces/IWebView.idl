@@ -108,6 +108,24 @@ const BSTR WebElementLinkTitleKey = L"WebElementLinkTitleKey";
 const BSTR WebElementLinkLabelKey = L"WebElementLinkLabelKey";
 
 /*!
+    @class IEnumTextMatches
+*/
+[
+    local,
+    object,
+    uuid(C0CDE63A-5ED1-453f-B937-93B1A61AD3B3),
+    pointer_default(unique)
+]
+interface IEnumTextMatches : IUnknown
+{
+    HRESULT Next(ULONG celt, RECT* rect, ULONG* pceltFetched);
+    HRESULT Skip(ULONG celt);
+    HRESULT Reset(void);
+    HRESULT Clone(IEnumTextMatches** ppenum);
+};
+
+
+/*!
     @class WebView
     WebView manages the interaction between WebFrameViews and WebDataSources.  Modification
     of the policies and behavior of the WebKit is largely managed by WebViews and their

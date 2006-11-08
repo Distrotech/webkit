@@ -239,7 +239,11 @@ void GraphicsContextPlatformPrivate::concatCTM(const AffineTransform& transform)
     ModifyWorldTransform(m_hdc, &xform, MWT_LEFTMULTIPLY);
 }
 
-void GraphicsContext::setCompositeOperation(CompositeOperator mode) { 
+void GraphicsContext::setCompositeOperation(CompositeOperator mode) 
+{ 
+    if (paintingDisabled())
+        return;
+
     CGBlendMode target = kCGBlendModeNormal;   
     switch (mode) {
         case CompositeClear:

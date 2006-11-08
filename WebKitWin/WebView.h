@@ -38,7 +38,15 @@
 class WebFrame;
 class WebBackForwardList;
 
-class WebView : public IWebView, public IWebViewPrivate, public IWebIBActions, public IWebViewCSS, public IWebViewEditing, public IWebViewUndoableEditing, public IWebViewEditingActions, public IWebNotificationObserver
+class WebView 
+    : public IWebView
+    , public IWebViewPrivate
+    , public IWebIBActions
+    , public IWebViewCSS
+    , public IWebViewEditing
+    , public IWebViewUndoableEditing
+    , public IWebViewEditingActions
+    , public IWebNotificationObserver
 {
 public:
     static WebView* createInstance();
@@ -497,6 +505,20 @@ public:
     virtual HRESULT STDMETHODCALLTYPE printPage( 
         /* [in] */ HDC printDC,
         UINT pageNumber);
+
+    virtual HRESULT STDMETHODCALLTYPE markAllMatchesForText(
+        BSTR search, BOOL caseSensitive, BOOL highlight, UINT limit, UINT* matches);
+
+    virtual HRESULT STDMETHODCALLTYPE unmarkAllTextMatches();
+
+    virtual HRESULT STDMETHODCALLTYPE rectsForTextMatches(
+        IEnumTextMatches** pmatches);
+
+    virtual HRESULT STDMETHODCALLTYPE generateSelectionImage(
+        BOOL forceWhiteText, HBITMAP* image);
+
+    virtual HRESULT STDMETHODCALLTYPE selectionImageRect(
+        RECT* rc);
 
     // WebView
     void handleMouseEvent(UINT, WPARAM, LPARAM);

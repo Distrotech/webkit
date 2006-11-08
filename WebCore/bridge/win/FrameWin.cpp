@@ -29,6 +29,7 @@
 #include <winsock2.h>
 #include <windows.h>
 
+#include "floatrect.h"
 #include "Document.h"
 #include "EditorClient.h"
 #include "FrameLoader.h"
@@ -52,6 +53,10 @@
 #include "kjs_window.h"
 #include "npruntime_impl.h"
 #include "runtime_root.h"
+#include "GraphicsContext.h"
+#if PLATFORM(CG)
+#include <CoreGraphics/CoreGraphics.h>
+#endif
 
 namespace WebCore {
 
@@ -345,4 +350,53 @@ void FrameWin::updateBackingStore()
     m_client->updateBackingStore();
 }
 
+HBITMAP FrameWin::imageFromRect(IntRect rect)
+{
+#if PLATFORM(CG)
+    void* bits;
+    HDC hdc = CreateCompatibleDC(0);
+    int w = rect.width();
+    int h = rect.height();
+    BITMAPINFO bmp = { { sizeof(BITMAPINFOHEADER), w, h, 1, 32 } };
+
+    HBITMAP hbmp = CreateDIBSection(0, &bmp, DIB_RGB_COLORS, (void**)&bits, 0, 0);
+    HBITMAP hbmpOld = (HBITMAP)SelectObject(hdc, hbmp);
+    CGColorSpaceRef deviceRGB = CGColorSpaceCreateDeviceRGB();
+    CGContextRef context = CGBitmapContextCreate((void*)bits, w, h,
+        8, w * sizeof(RGBQUAD), deviceRGB, kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst);
+    CGColorSpaceRelease(deviceRGB);
+
+    CGContextSaveGState(context);
+
+    IntSize offset = view()->scrollOffset();
+    rect.move(-offset.width(), -offset.height());
+    CGContextTranslateCTM(context, -rect.x(), -rect.y());
+
+    GraphicsContext gc(context);
+    view()->paint(&gc, rect);
+
+    CGContextRelease(context);
+    SelectObject(hdc, hbmpOld);
+    DeleteDC(hdc);
+
+    return hbmp;
+#else
+    return 0;
+#endif
+}
+
+HBITMAP FrameWin::imageFromSelection(bool forceWhiteText)
+{
+    d->m_paintRestriction = forceWhiteText ? PaintRestrictionSelectionOnlyWhiteText : PaintRestrictionSelectionOnly;
+    FloatRect fr = visibleSelectionRect();
+    IntRect ir((int)fr.x(), (int)fr.y(),(int)fr.width(),(int)fr.height());
+
+    HBITMAP hbmp = imageFromRect(ir);
+    d->m_paintRestriction = PaintRestrictionNone;
+
+    return hbmp;
+}
+
+
 } // namespace WebCore
+

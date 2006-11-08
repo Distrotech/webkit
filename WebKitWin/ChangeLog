@@ -1,3 +1,36 @@
+2006-11-07  Lou Amadio  <lamadio@apple.com>
+
+        Reviewed by sfalken, adam
+         Implemented Find banner, overlay, bouncy.
+         plummed some find, search and marking in WebCore & WebKit
+         Added SDC - a DC wrapper with knowledge of CG
+         Added button element
+         Ported AppKit's oval button drawing code
+         Abstracted the high performance animations
+
+        * Interfaces/IWebUIDelegatePrivate.idl:
+        * Interfaces/IWebView.idl:
+        * WebFrame.h:
+        * WebView.cpp:
+        (WebView::scrollBackingStore):
+        (incrementFrame):
+        (WebView::searchFor):
+        (WebView::markAllMatchesForText):
+        (WebView::unmarkAllTextMatches):
+        (WebView::rectsForTextMatches):
+        (WebView::generateSelectionImage):
+        (WebView::selectionImageRect):
+        (EnumTextMatches::EnumTextMatches):
+        (EnumTextMatches::QueryInterface):
+        (EnumTextMatches::AddRef):
+        (EnumTextMatches::Release):
+        (EnumTextMatches::Next):
+        (EnumTextMatches::Skip):
+        (EnumTextMatches::Reset):
+        (EnumTextMatches::Clone):
+        (createMatchEnumerator):
+        * WebView.h:
+
 2006-11-08  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.

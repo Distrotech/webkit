@@ -35,6 +35,9 @@ typedef struct OpaqueJSValue* JSObjectRef;
 
 class NPObject;
 
+// Forward declared so we don't need wingdi.h.
+typedef struct HBITMAP__* HBITMAP;
+
 namespace KJS {
     namespace Bindings {
         class RootObject;
@@ -158,6 +161,9 @@ public:
     void addToDirtyRegion(const IntRect&);
     void scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect);
     void updateBackingStore();
+
+    HBITMAP imageFromSelection(bool forceWhiteText);
+    HBITMAP imageFromRect(IntRect rect);
 
 private:
     virtual void cleanupPluginObjects();

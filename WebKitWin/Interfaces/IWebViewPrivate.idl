@@ -93,4 +93,11 @@ interface IWebViewPrivate : IUnknown
     HRESULT endPrintJob([in] HDC printDC);
     HRESULT getPrintedPageCount([in] HDC printDC, [out, retval] UINT* pageCount);
     HRESULT printPage([in] HDC printDC, UINT pageNumber);
+
+    // Support for displaying multiple text matches.
+    HRESULT markAllMatchesForText([in] BSTR search, [in] BOOL caseSensitive, [in] BOOL highlight, [in] UINT limit, [out] UINT* matches);
+    HRESULT unmarkAllTextMatches();
+    HRESULT rectsForTextMatches([out]IEnumTextMatches** pmatches);
+    HRESULT selectionImageRect([in, out] RECT* rc);
+    HRESULT generateSelectionImage(BOOL forceWhiteText, [out,retval] HBITMAP* image);
 }

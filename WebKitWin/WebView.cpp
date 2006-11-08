@@ -45,6 +45,7 @@
 #include <WebCore/editing/TypingCommand.h>
 #include <WebCore/loader/FrameLoader.h>
 #include <WebCore/page/FrameView.h>
+#include <WebCore/page/FrameTree.h>
 #include <WebCore/page/Page.h>
 #include <WebCore/platform/CString.h>
 #include <WebCore/platform/graphics/GraphicsContext.h>
@@ -69,6 +70,8 @@ const int WM_XP_THEMECHANGED = 0x031A;
 
 static ATOM registerWebView();
 static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
+HRESULT createMatchEnumerator(Vector<IntRect>* rects, IEnumTextMatches** matches);
 
 // WebView ----------------------------------------------------------------
 
@@ -218,12 +221,16 @@ void WebView::scrollBackingStore(FrameView* frameView, int dx, int dy, const Int
     // Add the dirty region to the backing store's dirty region.
     addToDirtyRegion(updateRegion);
 
+    if (m_uiDelegatePrivate)
+        m_uiDelegatePrivate->webViewScrolled(this);
+
     // Update the backing store.
     updateBackingStore(frameView, bitmapDC, false);
 
     // Clean up.
     ::DeleteDC(bitmapDC);
     ::ReleaseDC(m_viewWindow, windowDC);
+
 }
 
 void WebView::updateBackingStore(FrameView* frameView, HDC dc, bool backingStoreCompletelyDirty)
@@ -1834,15 +1841,146 @@ HRESULT STDMETHODCALLTYPE WebView::hostWindow(
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE WebView::searchFor( 
-    /* [in] */ BSTR /*str*/,
-    /* [in] */ BOOL /*forward*/,
-    /* [in] */ BOOL /*caseFlag*/,
-    /* [in] */ BOOL /*wrapFlag*/,
-    /* [retval][out] */ BOOL* /*found*/)
+
+static Frame *incrementFrame(Frame *curr, bool forward, bool wrapFlag)
 {
-    DebugBreak();
-    return E_NOTIMPL;
+    return forward
+        ? curr->tree()->traverseNextWithWrap(wrapFlag)
+        : curr->tree()->traversePreviousWithWrap(wrapFlag);
+}
+
+HRESULT STDMETHODCALLTYPE WebView::searchFor( 
+    /* [in] */ BSTR str,
+    /* [in] */ BOOL forward,
+    /* [in] */ BOOL caseFlag,
+    /* [in] */ BOOL wrapFlag,
+    /* [retval][out] */ BOOL* found)
+{
+    if (!found)
+        return E_INVALIDARG;
+    
+    if (!m_page || !m_page->mainFrame())
+        return E_UNEXPECTED;
+
+    if (!str || !SysStringLen(str))
+        return E_INVALIDARG;
+
+    String search(str, SysStringLen(str));
+
+
+    bool shouldWrap = false;
+    WebCore::Frame* frame = m_page->mainFrame();
+    do {
+        *found = frame->findString(search, !!forward, !!caseFlag, shouldWrap);
+        frame = incrementFrame(frame, !!forward, false);
+        if (!frame && !*found && !!wrapFlag && !shouldWrap) {
+            shouldWrap = true;
+            frame = m_page->mainFrame();
+        }
+    } while (frame && !*found);
+
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebView::markAllMatchesForText(
+    BSTR str, BOOL caseSensitive, BOOL highlight, UINT limit, UINT* matches)
+{
+    if (!matches)
+        return E_INVALIDARG;
+
+    if (!m_page || !m_page->mainFrame())
+        return E_UNEXPECTED;
+
+    if (!str || !SysStringLen(str))
+        return E_INVALIDARG;
+
+    String search(str, SysStringLen(str));
+    *matches = 0;
+
+    WebCore::Frame* frame = m_page->mainFrame();
+    do {
+        frame->setMarkedTextMatchesAreHighlighted(!!highlight);
+        *matches += frame->markAllMatchesForText(search, !!caseSensitive, (limit == 0)? 0 : (limit - *matches));
+        frame = incrementFrame(frame, true, false);
+    } while (frame);
+
+    return S_OK;
+
+}
+
+HRESULT STDMETHODCALLTYPE WebView::unmarkAllTextMatches()
+{
+    if (!m_page || !m_page->mainFrame())
+        return E_UNEXPECTED;
+
+    WebCore::Frame* frame = m_page->mainFrame();
+    do {
+        frame->document()->removeMarkers(DocumentMarker::TextMatch);
+        frame = incrementFrame(frame, true, false);
+    } while (frame);
+
+
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebView::rectsForTextMatches(
+    IEnumTextMatches** pmatches)
+{
+    Vector<IntRect> allRects;
+    WebCore::Frame* frame = m_page->mainFrame();
+    do {
+        Vector<IntRect> frameRects = frame->document()->renderedRectsForMarkers(DocumentMarker::TextMatch);
+        IntPoint frameOffset(-frame->view()->scrollOffset().width(), -frame->view()->scrollOffset().height());
+        frameOffset = frame->view()->convertToContainingWindow(frameOffset);
+
+        Vector<IntRect>::iterator end = frameRects.end();
+        for (Vector<IntRect>::iterator it = frameRects.begin(); it < end; it++) {
+            it->move(frameOffset.x(), frameOffset.y());
+            allRects.append(*it);
+        }
+        frame = incrementFrame(frame, true, false);
+    } while (frame);
+
+    return createMatchEnumerator(&allRects, pmatches);
+}
+
+HRESULT STDMETHODCALLTYPE WebView::generateSelectionImage(BOOL forceWhiteText, HBITMAP* image)
+{
+    *image = 0;
+
+    WebCore::Frame* frame = m_page->mainFrame();
+    do {
+        if (!frame->selectionController()->isNone())
+            break;
+        frame = incrementFrame(frame, true, true);
+    } while (frame);
+
+    if (frame)
+        *image = Win(frame)->imageFromSelection(forceWhiteText?TRUE:FALSE);
+
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebView::selectionImageRect(RECT* rc)
+{
+    WebCore::Frame* frame = m_page->mainFrame();
+    do {
+        if (!frame->selectionController()->isNone())
+            break;
+        frame = incrementFrame(frame, true, true);
+    } while (frame);
+
+    if (frame) {
+        IntRect ir = frame->selectionRect();
+        ir = frame->view()->convertToContainingWindow(ir);
+        ir.move(-frame->view()->scrollOffset().width(), -frame->view()->scrollOffset().height());
+        rc->left = ir.x();
+        rc->top = ir.y();
+        rc->bottom = rc->top + ir.height();
+        rc->right = rc->left + ir.width();
+    }
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::registerViewClass( 
@@ -2549,4 +2687,79 @@ HRESULT STDMETHODCALLTYPE WebView::scrollOffset(
     offset->x = offsetIntSize.width();
     offset->y = offsetIntSize.height();
     return S_OK;
+}
+
+class EnumTextMatches : public IEnumTextMatches
+{
+    long m_ref;
+    UINT m_index;
+    Vector<IntRect> m_rects;
+public:
+    EnumTextMatches(Vector<IntRect>* rects) : m_index(0), m_ref(1)
+    {
+        m_rects = *rects;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppv)
+    {
+        if (riid == IID_IUnknown || riid == IID_IEnumTextMatches) {
+            *ppv = this;
+            AddRef();
+        }
+
+        return *ppv?S_OK:E_NOINTERFACE;
+    }
+
+    virtual ULONG STDMETHODCALLTYPE AddRef()
+    {
+        return m_ref++;
+    }
+    
+    virtual ULONG STDMETHODCALLTYPE Release()
+    {
+        if (m_ref == 1) {
+            delete this;
+            return 0;
+        }
+        else
+            return m_ref--;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE Next(ULONG, RECT* rect, ULONG* pceltFetched)
+    {
+        if (m_index < m_rects.size()) {
+            if (pceltFetched)
+                *pceltFetched = 1;
+            *rect = m_rects[m_index];
+            m_index++;
+            return S_OK;
+        }
+
+        if (pceltFetched)
+            *pceltFetched = 0;
+
+        return S_FALSE;
+    }
+    virtual HRESULT STDMETHODCALLTYPE Skip(ULONG celt)
+    {
+        m_index += celt;
+        return S_OK;
+    }
+    virtual HRESULT STDMETHODCALLTYPE Reset(void)
+    {
+        m_index = 0;
+        return S_OK;
+    }
+    virtual HRESULT STDMETHODCALLTYPE Clone(IEnumTextMatches**)
+    {
+        return E_NOTIMPL;
+    }
+};
+
+
+
+HRESULT createMatchEnumerator(Vector<IntRect>* rects, IEnumTextMatches** matches)
+{
+    *matches = new EnumTextMatches(rects);
+    return (*matches)?S_OK:E_OUTOFMEMORY;
 }

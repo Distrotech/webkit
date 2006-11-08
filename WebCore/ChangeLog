@@ -1,3 +1,23 @@
+2006-11-07  Lou Amadio  <lamadio@apple.com>
+
+        Reviewed by sfalken, adam
+
+         Implemented Find banner, overlay, bouncy.
+         plummed some find, search and marking in WebCore & WebKit
+         Added SDC - a DC wrapper with knowledge of CG
+         Added button element
+         Ported AppKit's oval button drawing code
+         Abstracted the high performance animations
+
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::imageFromRect):
+        (WebCore::FrameWin::imageFromSelection):
+        * bridge/win/FrameWin.h:
+        * platform/win/GraphicsContextWin.cpp:
+        (WebCore::GraphicsContext::setCompositeOperation):
+        * platform/win/TemporaryLinkStubs.cpp:
+        (Frame::setNeedsReapplyStyles):
+
 2006-11-08  Anders Carlsson  <acarlsson@apple.com>
 
         Build fixes.
