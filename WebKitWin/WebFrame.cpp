@@ -329,6 +329,7 @@ WebFrame::WebFrame()
 , m_quickRedirectComing(false)
 , m_continueFormSubmit(false)
 , m_textEncoding(0)
+, m_firstLayoutDone(false)
 {
     gClassCount++;
 }
@@ -589,6 +590,13 @@ HRESULT STDMETHODCALLTYPE WebFrame::renderTreeAsExternalRepresentation(
     return S_OK;
 }
 
+HRESULT STDMETHODCALLTYPE WebFrame::firstLayoutDone(
+    /* [retval][out] */ BOOL* result)
+{
+    *result = m_firstLayoutDone;
+    return S_OK;
+}
+
 // IWebFormSubmissionListener ---------------------------------------------
 
 HRESULT STDMETHODCALLTYPE WebFrame::continueSubmit(void)
@@ -654,6 +662,7 @@ HRESULT WebFrame::loadDataSource(WebDataSource* dataSource)
     HRESULT hr = S_OK;
     BSTR url = 0;
     BSTR method = 0;
+    m_firstLayoutDone = false;
 
     IWebMutableURLRequest* request;
     hr = dataSource->request(&request);
@@ -1450,6 +1459,7 @@ void WebFrame::didFirstLayout()
         frameLoadDelegatePriv->didFirstLayoutInFrame(d->webView, this);
         frameLoadDelegatePriv->Release();
     }
+    m_firstLayoutDone = true;
 }
 
 void WebFrame::dispatchDidHandleOnloadEvents()

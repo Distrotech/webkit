@@ -149,6 +149,9 @@ public:
     virtual HRESULT STDMETHODCALLTYPE renderTreeAsExternalRepresentation(
         /* [retval][out] */ BSTR *result);
 
+    virtual HRESULT STDMETHODCALLTYPE firstLayoutDone(
+        /* [retval][out] */ BOOL* result);
+
     // IWebFormSubmissionListener
     virtual HRESULT STDMETHODCALLTYPE continueSubmit( void);
 
@@ -303,6 +306,7 @@ protected:
     BSTR                m_textEncoding;
     RefPtr<WebCore::ResourceHandle> m_loader;
     WebCore::KURL       m_originalRequestURL;
+    bool                m_firstLayoutDone;
 };
 
 #endif

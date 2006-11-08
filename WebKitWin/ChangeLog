@@ -1,3 +1,18 @@
+2006-11-07  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Steve.
+        
+        Added a new API in IWebFramePrivate called firstLayoutDone that returns whether the frame has done its first layout.
+        Implement that API in WebFrame.
+
+        * Interfaces/IWebFramePrivate.idl:
+        * WebFrame.cpp:
+        (WebFrame::WebFrame):
+        (WebFrame::firstLayoutDone):
+        (WebFrame::loadDataSource):
+        (WebFrame::didFirstLayout):
+        * WebFrame.h:
+
 2006-11-07  Lou Amadio  <lamadio@apple.com>
 
         Reviewed by sfalken, adam

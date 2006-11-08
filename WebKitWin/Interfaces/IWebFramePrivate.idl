@@ -60,4 +60,5 @@ import "ocidl.idl";
 interface IWebFramePrivate : IUnknown
 {
     HRESULT renderTreeAsExternalRepresentation([out, retval] BSTR* result);
+    HRESULT firstLayoutDone([out, retval] BOOL* result);
 }

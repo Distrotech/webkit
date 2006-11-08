@@ -1,3 +1,19 @@
+2006-11-07  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Steve.
+
+        Make the Slider implementation call LOG_NOIMPL() instead of STOP_NOIMPL() so the RSS feed page can load.
+
+        * platform/win/TemporaryLinkStubs.cpp:
+        (Slider::Slider):
+        (Slider::sizeHint):
+        (Slider::setValue):
+        (Slider::setMaxValue):
+        (Slider::setMinValue):
+        (Slider::~Slider):
+        (Slider::setFont):
+        (Slider::value):
+
 2006-11-07  Lou Amadio  <lamadio@apple.com>
 
         Reviewed by sfalken, adam

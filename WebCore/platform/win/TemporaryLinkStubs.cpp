@@ -89,14 +89,14 @@ void TextField::setSelection(int,int) { LOG_NOIMPL(); }
 void TextField::setMaxResults(int) { LOG_NOIMPL(); }
 bool TextField::edited() const { LOG_NOIMPL(); return false; }
 
-Slider::Slider() { STOP_NOIMPL(); }
-IntSize Slider::sizeHint() const { STOP_NOIMPL(); return IntSize(); }
-void Slider::setValue(double) { STOP_NOIMPL(); }
-void Slider::setMaxValue(double) { STOP_NOIMPL(); }
-void Slider::setMinValue(double) { STOP_NOIMPL(); }
-Slider::~Slider() { STOP_NOIMPL(); }
-void Slider::setFont(WebCore::Font const&) { STOP_NOIMPL(); }
-double Slider::value() const { STOP_NOIMPL(); return 0; }
+Slider::Slider() { LOG_NOIMPL(); }
+IntSize Slider::sizeHint() const { LOG_NOIMPL(); return IntSize(); }
+void Slider::setValue(double) { LOG_NOIMPL(); }
+void Slider::setMaxValue(double) { LOG_NOIMPL(); }
+void Slider::setMinValue(double) { LOG_NOIMPL(); }
+Slider::~Slider() { LOG_NOIMPL(); }
+void Slider::setFont(WebCore::Font const&) { LOG_NOIMPL(); }
+double Slider::value() const { LOG_NOIMPL(); return 0; }
 
 Widget::FocusPolicy Slider::focusPolicy() const { LOG_NOIMPL(); return NoFocus; }
 Widget::FocusPolicy TextField::focusPolicy() const { LOG_NOIMPL(); return NoFocus; }
