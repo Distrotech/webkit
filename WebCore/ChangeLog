@@ -1,3 +1,36 @@
+2006-11-07  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Anders.
+        
+        Removed ScreenClient. It was highly unpopular, risking my midterm re-election.
+        
+        None of Screen's responsibilities require up-calls to WebKit or delegates, 
+        so WebCore can handle it all.
+        
+        Moved Screen back from page/ to platform/ because it's a platform
+        abstraction again.
+        
+        Fixed bug where Screen would query the default screen instead of the screen
+        on which the active window was located. (The code is written in Klingon,
+        but that's cool.)
+        
+        Implemented some missing screen functionality on Win.
+        
+        I can't fully verify this code because I can't load files without crashing
+        in CFNetwork, but I exercised most of it with javascript: URLs and the
+        debugger reported reasonable values.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/win/ScreenWin.cpp: Added. Merged over from opensource tree.
+        (WebCore::getWindow):
+        (WebCore::getMonitorInfo):
+        (WebCore::getDeviceInfo):
+        (WebCore::Screen::depth):
+        (WebCore::Screen::depthPerComponent):
+        (WebCore::Screen::isMonochrome):
+        (WebCore::Screen::rect):
+        (WebCore::Screen::usableRect):
+
 2006-11-07  Darin Adler  <darin@apple.com>
 
         Reviewed by Geoff.

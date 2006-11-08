@@ -1,3 +1,12 @@
+2006-11-07  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Anders.
+        
+        Removed ScreenClient. It was highly unpopular, risking my midterm re-election.
+        
+        None of Screen's responsibilities require up-calls to WebKit or delegates, 
+        so WebCore can handle it all.
+
 2006-11-07  Darin Adler  <darin@apple.com>
 
         Reviewed by Geoff.
