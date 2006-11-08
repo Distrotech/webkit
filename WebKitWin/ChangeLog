@@ -1,3 +1,11 @@
+2006-11-08  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        More fiddling with midl to get our JSC API types recognized.
+        
+        * Interfaces/IWebFrameLoadDelegate.idl:
+
 2006-11-07  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Anders.

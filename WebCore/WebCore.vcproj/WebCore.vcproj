@@ -2774,7 +2774,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\win\GlyphMapWin.cpp"
+					RelativePath="..\platform\win\GlyphMapWin.cpp"
 					>
 				</File>
 				<File
@@ -2844,7 +2844,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\win\ScreenWin.cpp"
+					RelativePath="..\platform\win\ScreenWin.cpp"
 					>
 				</File>
 				<File

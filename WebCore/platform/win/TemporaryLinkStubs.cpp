@@ -200,8 +200,6 @@ void WebCore::setFocusRingColorChangeFunction(void (*)()) { LOG_NOIMPL(); }
 
 void Frame::setNeedsReapplyStyles() { LOG_NOIMPL(); }
 
-void IconLoader::notifyIconChanged(const KURL& iconURL) { LOG_NOIMPL(); }
-
 PolicyCheck::PolicyCheck() { LOG_NOIMPL(); }
 void PolicyCheck::clear() { LOG_NOIMPL(); }
 void PolicyCheck::call() { LOG_NOIMPL(); }
