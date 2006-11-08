@@ -1,3 +1,65 @@
+2006-11-07  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Geoff.
+        
+        Fix the build. Hook up a layoutTestController and implement dumpAsText, waitUntilDone and notifyDone.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (dump):
+        (main):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.h: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.vcproj:
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/LayoutTestController.cpp: Added.
+        (dumpAsTextCallback):
+        (waitUntilDoneCallback):
+        (notifyDoneCallback):
+        (getClass):
+        (createLayoutTestController):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/LayoutTestController.h: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.cpp:
+        (WaitUntilDoneDelegate::didFinishLoadForFrame):
+        (WaitUntilDoneDelegate::windowScriptObjectAvailable):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.h:
+        (WaitUntilDoneDelegate::didReceiveServerRedirectForProvisionalLoadForFrame):
+        (WaitUntilDoneDelegate::didFailProvisionalLoadWithError):
+        (WaitUntilDoneDelegate::didCommitLoadForFrame):
+        (WaitUntilDoneDelegate::didReceiveIcon):
+        (WaitUntilDoneDelegate::didFailLoadWithError):
+        (WaitUntilDoneDelegate::didChangeLocationWithinPageForFrame):
+        (WaitUntilDoneDelegate::willPerformClientRedirectToURL):
+        (WaitUntilDoneDelegate::didCancelClientRedirectForFrame):
+        (WaitUntilDoneDelegate::willCloseFrame):
+        (WaitUntilDoneDelegate::createWebViewWithRequest):
+        (WaitUntilDoneDelegate::webViewShow):
+        (WaitUntilDoneDelegate::webViewClose):
+        (WaitUntilDoneDelegate::webViewFocus):
+        (WaitUntilDoneDelegate::webViewUnfocus):
+        (WaitUntilDoneDelegate::webViewFirstResponder):
+        (WaitUntilDoneDelegate::makeFirstResponder):
+        (WaitUntilDoneDelegate::setStatusText):
+        (WaitUntilDoneDelegate::webViewStatusText):
+        (WaitUntilDoneDelegate::webViewAreToolbarsVisible):
+        (WaitUntilDoneDelegate::setToolbarsVisible):
+        (WaitUntilDoneDelegate::webViewIsStatusBarVisible):
+        (WaitUntilDoneDelegate::setStatusBarVisible):
+        (WaitUntilDoneDelegate::webViewIsResizable):
+        (WaitUntilDoneDelegate::setResizable):
+        (WaitUntilDoneDelegate::setFrame):
+        (WaitUntilDoneDelegate::webViewFrame):
+        (WaitUntilDoneDelegate::setContentRect):
+        (WaitUntilDoneDelegate::webViewContentRect):
+        (WaitUntilDoneDelegate::runJavaScriptConfirmPanelWithMessage):
+        (WaitUntilDoneDelegate::runJavaScriptTextInputPanelWithPrompt):
+        (WaitUntilDoneDelegate::runOpenPanelForFileButtonWithResultListener):
+        (WaitUntilDoneDelegate::mouseDidMoveOverElement):
+        (WaitUntilDoneDelegate::contextMenuItemsForElement):
+        (WaitUntilDoneDelegate::validateUserInterfaceItem):
+        (WaitUntilDoneDelegate::shouldPerformAction):
+        (WaitUntilDoneDelegate::dragDestinationActionMaskForDraggingInfo):
+        (WaitUntilDoneDelegate::willPerformDragDestinationAction):
+        (WaitUntilDoneDelegate::dragSourceActionMaskForPoint):
+        (WaitUntilDoneDelegate::willPerformDragSourceAction):
+
 2006-10-06  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Maciej.

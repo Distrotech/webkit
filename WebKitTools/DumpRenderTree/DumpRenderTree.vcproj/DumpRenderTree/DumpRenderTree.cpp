@@ -71,39 +71,39 @@ static void initialize(HINSTANCE hInstance)
 }
 
 static bool dumpTree = true;
-static bool dumpAsText = false;
+bool dumpAsText = false;
+bool waitToDump = false;
 static bool printSeparators;
 
 #include <stdio.h>
 
 void dump()
 {
-    HRESULT hr;
     BSTR resultString = 0;
 
     if (dumpTree) {
         if (dumpAsText) {
             IDOMDocument* document;
-            hr = frame->DOMDocument(&document);
+            frame->DOMDocument(&document);
 
             IDOMElement* documentElement;
-            hr = document->documentElement(&documentElement);
+            document->documentElement(&documentElement);
 
             IDOMHTMLElement* htmlElement;
-            hr = documentElement->QueryInterface(IID_IDOMHTMLElement, (void**)&htmlElement);
+            HRESULT hr = documentElement->QueryInterface(IID_IDOMHTMLElement, (void**)&htmlElement);
             if (SUCCEEDED(hr)) {
-                hr = htmlElement->innerText(&resultString);
+                htmlElement->innerText(&resultString);
                 htmlElement->Release();
             } else
-                hr = documentElement->textContent(&resultString);
+                documentElement->textContent(&resultString);
             documentElement->Release();
             document->Release();
         } else {
             IWebFramePrivate* framePrivate;
-            hr = frame->QueryInterface(IID_IWebFramePrivate, (void**)&framePrivate);
+            HRESULT hr = frame->QueryInterface(IID_IWebFramePrivate, (void**)&framePrivate);
             if (FAILED(hr))
                 goto fail;
-            hr = framePrivate->renderTreeAsExternalRepresentation(&resultString);
+            framePrivate->renderTreeAsExternalRepresentation(&resultString);
             framePrivate->Release();
         }
         
@@ -118,6 +118,8 @@ void dump()
     if (printSeparators)
         puts("#EOF");
 fail:
+    // This will exit from our message loop
+    PostQuitMessage(0);
     return;
 }
 
@@ -143,11 +145,11 @@ static void runTest(const char* pathOrURL)
     if (FAILED(hr))
         goto exit;
 
-    hr = request->initWithURL(urlBStr, WebURLRequestUseProtocolCachePolicy, 0);
+    request->initWithURL(urlBStr, WebURLRequestUseProtocolCachePolicy, 0);
     SysFreeString(methodBStr);
 
-    hr = request->setHTTPMethod(methodBStr);
-    hr = frame->loadRequest(request);
+    request->setHTTPMethod(methodBStr);
+    frame->loadRequest(request);
     request->Release();
 
     MSG msg;
@@ -190,22 +192,28 @@ int main(int argc, char* argv[])
     hr = webView->QueryInterface(IID_IWebViewPrivate, (void**)&viewPrivate);
     if (FAILED(hr))
         goto exit;
-    hr = viewPrivate->viewWindow(&viewHwnd);
-    viewPrivate->Release();
+    viewPrivate->viewWindow(&viewHwnd);
 
     MoveWindow(viewHwnd, 0, 0, maxViewWidth, maxViewHeight, false);
 
-    WaitUntilDoneDelegate* delegate = new WaitUntilDoneDelegate();
-    hr = webView->setFrameLoadDelegate(delegate);
-    delegate->Release();
+    WaitUntilDoneDelegate* waitDelegate = new WaitUntilDoneDelegate();
+    webView->setFrameLoadDelegate(waitDelegate);
+    waitDelegate->Release();
 
-    hr = webView->setUIDelegate(delegate);
+    webView->setUIDelegate(waitDelegate);
+    waitDelegate->Release();
 
     IWebPreferences* preferences;
     hr = webView->preferences(&preferences);
     if (FAILED(hr))
         goto exit;
 
+    IWebIconDatabase* iconDatabase;
+    IWebIconDatabase* tmpIconDatabase;
+    CoCreateInstance(CLSID_WebIconDatabase, 0, CLSCTX_ALL, IID_IWebIconDatabase, (void**)&tmpIconDatabase);
+
+    tmpIconDatabase->sharedIconDatabase(&iconDatabase);
+        
     hr = webView->mainFrame(&frame);
     if (FAILED(hr))
         goto exit;
@@ -231,6 +239,7 @@ int main(int argc, char* argv[])
     }
 
     webView->Release();
+    iconDatabase->Release();
 
     return 0;
 exit:

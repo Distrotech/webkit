@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(WebKitSDKDir)\Include;$(WebKitOutputDir)\Include"
+				AdditionalIncludeDirectories="&quot;$(WebKitOutputDir)\Include&quot;;&quot;$(WebKitOutputDir)\Include\JavaScriptCore&quot;;&quot;$(WebKitSDKDir)\Include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_SCL_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -62,10 +62,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="WebKitGUID$(ConfigSuffix).lib"
+				AdditionalDependencies="WebKitGUID$(ConfigSuffix).lib WebKit$(ConfigSuffix).lib"
 				OutputFile="$(OutDir)\$(ProjectName)$(ConfigSuffix).exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(WebKitOutputDir)\lib&quot;;&quot;$(WebKitSDKDir)\lib&quot;"
+				AdditionalLibraryDirectories="&quot;$(WebKitOutputDir)\lib&quot;;&quot;$(WebKitSDKDir)\lib&quot;;&quot;$(WebKitOutputDir)\bin&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -186,6 +186,18 @@
 			>
 			<File
 				RelativePath=".\DumpRenderTree.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DumpRenderTree.h"
+				>
+			</File>
+			<File
+				RelativePath=".\LayoutTestController.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\LayoutTestController.h"
 				>
 			</File>
 			<File

@@ -28,6 +28,10 @@
 #include <stdio.h>
 #include "WaitUntilDoneDelegate.h"
 #include <WebKit/IWebFramePrivate.h>
+#include <JavaScriptCore/JavaScriptCore.h>
+
+#include "DumpRenderTree.h"
+#include "LayoutTestController.h"
 
 HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::QueryInterface(REFIID riid, void** ppvObject)
 {
@@ -72,14 +76,14 @@ HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::didReceiveTitle(
     return S_OK;
 }
 
-extern void dump();
+
 
 HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::didFinishLoadForFrame( 
         /* [in] */ IWebView* webView,
         /* [in] */ IWebFrame* frame)
 {
-    dump();
-    PostQuitMessage(0);
+    if (!waitToDump)
+        dump();
 
     return S_OK;
 }
@@ -93,9 +97,16 @@ HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::runJavaScriptAlertPanelWithMess
     return S_OK;
 }
 
+
 HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::windowScriptObjectAvailable( 
-        /* [in] */ IWebView *webView,
-        /* [in] */ IWebScriptObject *windowScriptObject)
+        /* [in] */ IWebView *sender,
+        /* [in] */ JSContextRef context,
+        /* [in] */ JSObjectRef windowObject)
 {
+    JSStringRef layoutTestControllerStr = JSStringCreateWithUTF8CString("layoutTestController");
+    JSValueRef theController = makeLayoutTestController(context);
+    JSObjectSetProperty(context, windowObject, layoutTestControllerStr, theController, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete, 0);
+    JSStringRelease(layoutTestControllerStr);
+
     return S_OK;
 }
