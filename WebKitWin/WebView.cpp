@@ -44,6 +44,7 @@
 #include <WebCore/editing/CommandByName.h>
 #include <WebCore/editing/SelectionController.h>
 #include <WebCore/editing/TypingCommand.h>
+#include <WebCore/loader/FrameLoader.h>
 #include <WebCore/page/FrameView.h>
 #include <WebCore/page/Page.h>
 #include <WebCore/platform/CString.h>
@@ -1760,8 +1761,8 @@ HRESULT STDMETHODCALLTYPE WebView::stringByEvaluatingJavaScriptFromString(
     /* [in] */ BSTR script, // assumes input does not have "JavaScript" at the begining.
     /* [retval][out] */ BSTR* result)
 {
-    m_mainFrame->impl()->createEmptyDocument();
-    KJS::JSValue* scriptExecutionResult = m_mainFrame->impl()->executeScript(0, WebCore::String(script), true);
+    m_mainFrame->impl()->loader()->createEmptyDocument();
+    KJS::JSValue* scriptExecutionResult = m_mainFrame->impl()->loader()->executeScript(0, WebCore::String(script), true);
     if(!scriptExecutionResult)
         return E_FAIL;
     else if (scriptExecutionResult->isString())

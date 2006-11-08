@@ -1947,6 +1947,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\page\PageState.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\page\PageState.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\page\Plugin.h"
 				>
 			</File>
@@ -2225,6 +2233,10 @@
 			<Filter
 				Name="win"
 				>
+				<File
+					RelativePath="..\loader\win\FrameLoaderWin.cpp"
+					>
+				</File>
 				<File
 					RelativePath="..\loader\win\ResourceLoaderWin.cpp"
 					>

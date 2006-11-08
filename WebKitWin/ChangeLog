@@ -1,3 +1,94 @@
+2006-11-07  Darin Adler  <darin@apple.com>
+
+        Reviewed by Geoff.
+
+        - moved loader code from Frame/FrameMac to FrameLoader
+
+        * WebFrame.cpp:
+        (WebFrame::loadData):
+        (WebFrame::loadHTMLString):
+        (WebFrame::stopLoading):
+        (WebFrame::reload):
+        (WebFrame::initWithWebFrameView):
+        (WebFrame::loadDataSource):
+        (WebFrame::didReceiveResponse):
+        (WebFrame::didReceiveData):
+        (WebFrame::didFinishLoading):
+        (WebFrame::setTitle):
+        (WebFrame::dispatchDidHandleOnloadEvents):
+        (WebFrame::detachFrameLoader):
+        (WebFrame::hasWebView):
+        (WebFrame::hasFrameView):
+        (WebFrame::hasBackForwardList):
+        (WebFrame::resetBackForwardList):
+        (WebFrame::provisionalItemIsTarget):
+        (WebFrame::loadProvisionalItemFromPageCache):
+        (WebFrame::invalidateCurrentItemPageCache):
+        (WebFrame::privateBrowsingEnabled):
+        (WebFrame::makeDocumentView):
+        (WebFrame::makeRepresentation):
+        (WebFrame::forceLayout):
+        (WebFrame::forceLayoutForNonHTML):
+        (WebFrame::updateHistoryForCommit):
+        (WebFrame::updateHistoryForBackForwardNavigation):
+        (WebFrame::updateHistoryForReload):
+        (WebFrame::updateHistoryForStandardLoad):
+        (WebFrame::updateHistoryForInternalLoad):
+        (WebFrame::updateHistoryAfterClientRedirect):
+        (WebFrame::setCopiesOnScroll):
+        (WebFrame::tokenForLoadErrorReset):
+        (WebFrame::resetAfterLoadError):
+        (WebFrame::doNotResetAfterLoadError):
+        (WebFrame::willCloseDocument):
+        (WebFrame::detachedFromParent1):
+        (WebFrame::detachedFromParent2):
+        (WebFrame::detachedFromParent3):
+        (WebFrame::detachedFromParent4):
+        (WebFrame::loadedFromPageCache):
+        (WebFrame::dispatchDidReceiveServerRedirectForProvisionalLoad):
+        (WebFrame::dispatchDidCancelClientRedirect):
+        (WebFrame::dispatchWillPerformClientRedirect):
+        (WebFrame::dispatchDidChangeLocationWithinPage):
+        (WebFrame::dispatchWillClose):
+        (WebFrame::dispatchDidStartProvisionalLoad):
+        (WebFrame::dispatchDidReceiveTitle):
+        (WebFrame::dispatchDidCommitLoad):
+        (WebFrame::dispatchDidFinishLoad):
+        (WebFrame::dispatchDidFirstLayout):
+        (WebFrame::dispatchShow):
+        (WebFrame::cancelPolicyCheck):
+        (WebFrame::dispatchWillSubmitForm):
+        (WebFrame::dispatchDidLoadMainResource):
+        (WebFrame::clearLoadingFromPageCache):
+        (WebFrame::isLoadingFromPageCache):
+        (WebFrame::revertToProvisionalState):
+        (WebFrame::clearUnarchivingState):
+        (WebFrame::progressStarted):
+        (WebFrame::progressCompleted):
+        (WebFrame::setMainFrameDocumentReady):
+        (WebFrame::willChangeTitle):
+        (WebFrame::didChangeTitle):
+        (WebFrame::finishedLoading):
+        (WebFrame::finalSetupForReplace):
+        (WebFrame::setDefersLoading):
+        (WebFrame::isArchiveLoadPending):
+        (WebFrame::cancelPendingArchiveLoad):
+        (WebFrame::clearArchivedResources):
+        (WebFrame::canShowMIMEType):
+        (WebFrame::representationExistsForURLScheme):
+        (WebFrame::generatedMIMETypeForURLScheme):
+        (WebFrame::frameLoadCompleted):
+        (WebFrame::restoreScrollPositionAndViewState):
+        (WebFrame::provisionalLoadStarted):
+        (WebFrame::shouldTreatURLAsSameAsCurrent):
+        (WebFrame::addHistoryItemForFragmentScroll):
+        (WebFrame::didFinishLoad):
+        (WebFrame::prepareForDataSourceReplacement):
+        (WebFrame::userAgent):
+        * WebFrame.h:
+        * WebView.cpp:
+        (WebView::stringByEvaluatingJavaScriptFromString):
+
 2006-11-07  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Oliver.

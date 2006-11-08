@@ -31,6 +31,7 @@
 
 #include "Document.h"
 #include "EditorClient.h"
+#include "FrameLoader.h"
 #include "FrameLoadRequest.h"
 #include "FramePrivate.h"
 #include "FrameView.h"
@@ -56,7 +57,7 @@ namespace WebCore {
 
 using namespace HTMLNames;
 
-FrameWin::FrameWin(Page* page, Element* ownerElement, FrameWinClient* client, EditorClient* editorClient)
+FrameWin::FrameWin(Page* page, Element* ownerElement, FrameWinClient* client, PassRefPtr<EditorClient> editorClient)
     : Frame(page, ownerElement, editorClient)
     , m_client(client)
     , m_bindingRoot(0)
@@ -67,38 +68,11 @@ FrameWin::FrameWin(Page* page, Element* ownerElement, FrameWinClient* client, Ed
 FrameWin::~FrameWin()
 {
     setView(0);
-    clearRecordedFormValues();
+    loader()->clearRecordedFormValues();
     if (m_client)
         m_client->stopMainResourceLoad();
 
-    cancelAndClear();
-}
-
-void FrameWin::urlSelected(const FrameLoadRequest& request, Event* event)
-{
-    Frame* targetFrame = tree()->find(request.frameName());
-    bool newWindow = !targetFrame;
-    FrameWinClient* client = targetFrame ? Win(targetFrame)->m_client.get() : m_client.get();
-    if (client)
-        client->openURL(request.resourceRequest().url().url(), event, newWindow, request.lockHistory());
-}
-
-void FrameWin::submitForm(const FrameLoadRequest& request, Event*)
-{
-    // FIXME: this is a hack inherited from FrameMac, and should be pushed into Frame
-    if (d->m_submittedFormURL == request.resourceRequest().url())
-        return;
-    d->m_submittedFormURL = request.resourceRequest().url();
-
-    if (m_client)
-        m_client->submitForm(request.resourceRequest().httpMethod(), request.resourceRequest().url(), &request.resourceRequest().httpBody(), d->m_formAboutToBeSubmitted.get(), d->m_formValuesAboutToBeSubmitted);
-
-    clearRecordedFormValues();
-}
-
-String FrameWin::userAgent() const
-{
-    return m_client->userAgentForURL(originalRequestURL());
+    loader()->cancelAndClear();
 }
 
 // Set or unset the printing mode in the view.  We only toy with this if we're printing.
@@ -163,11 +137,6 @@ Vector<IntRect> FrameWin::computePageRects(const IntRect& printRect, float userS
     setupRootForPrinting (false);
     
     return pages;
-}
-
-KURL FrameWin::originalRequestURL() const
-{
-    return m_client->originalRequestURL();
 }
 
 void FrameWin::runJavaScriptAlert(String const& message)
@@ -237,15 +206,6 @@ bool FrameWin::tabsToAllControls() const
     return true;
 }
 
-void FrameWin::setTitle(const String &title)
-{
-    String text = title;
-    text.replace('\\', backslashAsCurrencySymbol());
-
-    if (m_client)
-        m_client->setTitle(text);
-}
-
 void FrameWin::setStatusBarText(const String& status)
 {
     String text = status;
@@ -291,65 +251,6 @@ void FrameWin::textDidChangeInTextArea(Element* e)
 {
     if (m_client)
         m_client->textDidChangeInTextArea(e);
-}
-
-void FrameWin::didFirstLayout()
-{
-    if (m_client)
-        m_client->didFirstLayout();
-}
-
-void FrameWin::handledOnloadEvents()
-{
-    if (m_client)
-        m_client->handledOnloadEvents();
-}
-
-enum WebCore::ObjectContentType FrameWin::objectContentType(const KURL& url, const String& mimeType)
-{
-    if (mimeType.isEmpty())
-        // FIXME: Guess the MIME type from the url extension
-        return WebCore::ObjectContentNone;
-
-    if (PluginDatabaseWin::installedPlugins()->isMIMETypeRegistered(mimeType))
-        return WebCore::ObjectContentPlugin;
-
-    return (ObjectContentType)0;
-}
-
-Plugin* FrameWin::createPlugin(Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType)
-{
-    return new Plugin(PluginDatabaseWin::installedPlugins()->createPluginView(this, element, url, paramNames, paramValues, mimeType));
-}
-
-Frame* FrameWin::createFrame(const KURL& url, const String& name, Element* ownerElement, const String& referrer)
-{
-    Frame* result = 0;
-    if (m_client) {
-        result = m_client->createFrame(url, name, ownerElement, referrer);
-        if (result) {
-            // Propagate the marginwidth/height and scrolling modes to the view.
-            if (ownerElement->hasTagName(frameTag) || ownerElement->hasTagName(iframeTag)) {
-                HTMLFrameElement* frameElt = static_cast<HTMLFrameElement*>(ownerElement);
-                if (frameElt->scrollingMode() == ScrollbarAlwaysOff)
-                    result->view()->setScrollbarsMode(ScrollbarAlwaysOff);
-                int marginWidth = frameElt->getMarginWidth();
-                int marginHeight = frameElt->getMarginHeight();
-                if (marginWidth != -1)
-                    result->view()->setMarginWidth(marginWidth);
-                if (marginHeight != -1)
-                    result->view()->setMarginHeight(marginHeight);
-            }
-        }
-    }
-    return result;
-}
-
-void FrameWin::frameDetached()
-{
-    // FIXME: This code should be unified w/ FrameMac and moved into Frame
-    detachChildren();
-    tree()->parent()->tree()->removeChild(this);
 }
 
 void FrameWin::addPluginRootObject(KJS::Bindings::RootObject* root)
@@ -421,20 +322,6 @@ KJS::Bindings::Instance* FrameWin::getEmbedInstanceForWidget(Widget* widget)
 {
     // FIXME: Ideally we'd assert that the widget is a plugin view here but that can't be done without changing the header in the open source tree
     return static_cast<PluginViewWin*>(widget)->bindingInstance();
-}
-
-Widget* FrameWin::createJavaAppletWidget(const IntSize&, Element* element, const HashMap<String, String>& args)
-{
-    Vector<String> paramNames;
-    Vector<String> paramValues;
-
-    HashMap<String, String>::const_iterator end = args.end();
-    for (HashMap<String, String>::const_iterator it = args.begin(); it != end; ++it) {
-        paramNames.append(it->first);
-        paramValues.append(it->second);
-    }
-
-    return PluginDatabaseWin::installedPlugins()->createPluginView(this, element, KURL(), paramNames, paramValues, "application/x-java-applet");
 }
 
 // FIXME: These methods should really call through to a PageClient rather than using FrameClient.

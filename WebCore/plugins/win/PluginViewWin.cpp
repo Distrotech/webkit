@@ -26,10 +26,9 @@
 #include "config.h"
 #include "PluginViewWin.h"
 
-#include <kjs/JSLock.h>
-#include <kjs/value.h>
 #include "Document.h"
 #include "Element.h"
+#include "FrameLoader.h"
 #include "FrameLoadRequest.h"
 #include "FrameTree.h"
 #include "FrameWin.h"
@@ -44,11 +43,13 @@
 #include "kjs_binding.h"
 #include "kjs_proxy.h"
 #include "kjs_window.h"
-#include "npruntime_impl.h"
 #include "PluginDebug.h"
 #include "PluginPackageWin.h"
 #include "PluginStreamWin.h"
+#include "npruntime_impl.h"
 #include "runtime_root.h"
+#include <kjs/JSLock.h>
+#include <kjs/value.h>
 
 using KJS::Interpreter;
 using KJS::JSLock;
@@ -356,7 +357,7 @@ void PluginViewWin::performRequest(PluginRequestWin* request)
             if (request->sendNotification())
                 m_plugin->pluginFuncs()->urlnotify(m_instance, requestURL.url().utf8(), NPRES_DONE, request->notifyData());
         } else {
-            JSValue* result = m_parentFrame->executeScript(0, jsString.deprecatedString(), true);
+            JSValue* result = m_parentFrame->loader()->executeScript(0, jsString.deprecatedString(), true);
             String resultString;
             if (result && result->isString()) {
                 JSLock lock;
@@ -374,7 +375,7 @@ void PluginViewWin::performRequest(PluginRequestWin* request)
         }
     } else {
         // FIXME: <rdar://problem/4807453> if the load request has post data it needs to be sent by the frame.
-        m_parentFrame->urlSelected(request->frameLoadRequest(), 0);
+        m_parentFrame->loader()->urlSelected(request->frameLoadRequest(), 0);
 
         // FIXME: <rdar://problem/4807469> This should be sent when the document has finished loading
         if (request->sendNotification())
@@ -750,11 +751,8 @@ NPError PluginViewWin::destroyStream(NPStream* stream, NPReason reason)
 
 const char* PluginViewWin::userAgent()
 {
-    if (!m_userAgent.isNull())
-        return m_userAgent;
-
-    m_userAgent = m_parentFrame->userAgent().utf8();
-
+    if (m_userAgent.isNull())
+        m_userAgent = m_parentFrame->loader()->userAgent().utf8();
     return m_userAgent;
 }
 

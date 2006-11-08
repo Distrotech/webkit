@@ -1,3 +1,64 @@
+2006-11-07  Darin Adler  <darin@apple.com>
+
+        Reviewed by Geoff.
+
+        - moved loader code from Frame/FrameMac to FrameLoader
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::FrameWin):
+        (WebCore::FrameWin::~FrameWin):
+        * bridge/win/FrameWin.h:
+        * loader/win/FrameLoaderWin.cpp: Added.
+        (WebCore::FrameLoader::submitForm):
+        (WebCore::FrameLoader::urlSelected):
+        (WebCore::FrameLoader::originalRequestURL):
+        (WebCore::FrameLoader::didFirstLayout):
+        (WebCore::FrameLoader::objectContentType):
+        (WebCore::FrameLoader::createPlugin):
+        (WebCore::FrameLoader::createFrame):
+        (WebCore::FrameLoader::detachFromParent):
+        (WebCore::FrameLoader::createJavaAppletWidget):
+        (WebCore::FrameLoader::setTitle):
+        * platform/win/TemporaryLinkStubs.cpp:
+        (FrameWin::markMisspellings):
+        (FrameWin::respondToChangedSelection):
+        (FrameWin::clearUndoRedoOperations):
+        (IconLoader::notifyIconChanged):
+        (PolicyCheck::PolicyCheck):
+        (PolicyCheck::clear):
+        (PolicyCheck::call):
+        (PolicyCheck::clearRequest):
+        (FrameLoader::saveDocumentState):
+        (FrameLoader::restoreDocumentState):
+        (FrameLoader::partClearedInBegin):
+        (FrameLoader::goBackOrForward):
+        (FrameLoader::historyURL):
+        (FrameLoader::canGoBackOrForward):
+        (FrameLoader::getHistoryLength):
+        (DocumentLoader::setupForReplaceByMIMEType):
+        (ResourceLoader::cancel):
+        (DocumentLoader::stopLoading):
+        (DocumentLoader::setLoading):
+        (DocumentLoader::updateLoading):
+        (DocumentLoader::setFrame):
+        (DocumentLoader::stopRecordingResponses):
+        (DocumentLoader::isStopping):
+        (DocumentLoader::setPrimaryLoadComplete):
+        (DocumentLoader::finishedLoading):
+        (DocumentLoader::URL):
+        (DocumentLoader::isLoadingInAPISense):
+        (DocumentLoader::frameLoader):
+        (FrameLoader::overrideMediaType):
+        (FrameLoader::redirectDataToPlugin):
+        (FrameLoader::checkLoadCompleteForThisFrame):
+        (FrameLoader::loadEmptyDocumentSynchronously):
+        (FrameLoader::startLoading):
+        (FrameLoader::referrer):
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::performRequest):
+        (WebCore::PluginViewWin::userAgent):
+
 2006-11-07  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Oliver.

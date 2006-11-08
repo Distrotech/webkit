@@ -63,7 +63,6 @@ public:
     virtual void textDidChangeInTextArea(Element*) = 0;
 
     virtual void didFirstLayout() = 0;
-    virtual void handledOnloadEvents() = 0;
 
     virtual const String& userAgentForURL(const KURL&) = 0;
     virtual const KURL& originalRequestURL() = 0;
@@ -82,34 +81,19 @@ public:
     virtual void windowScriptObjectAvailable(JSContextRef context, JSObjectRef windowObject) = 0;
 };
 
-class FrameWin : public Frame
-{
+class FrameWin : public Frame {
 public:
-    FrameWin(Page*, Element*, FrameWinClient*, EditorClient*);
+    FrameWin(Page*, Element*, FrameWinClient*, PassRefPtr<EditorClient>);
     ~FrameWin();
 
     FrameWinClient* client() { return m_client.get(); }
 
-    virtual void submitForm(const FrameLoadRequest&, Event*);
-    virtual void urlSelected(const FrameLoadRequest&, Event*);
-
-    virtual void setTitle(const String&);
     virtual void setStatusBarText(const String&);
-
-    virtual ObjectContentType objectContentType(const KURL& url, const String& mimeType);
-    virtual Plugin* createPlugin(Element*, const KURL&, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType);
-    virtual Frame* createFrame(const KURL&, const String& name, Element* ownerElement, const String& referrer);
-    virtual Widget* createJavaAppletWidget(const IntSize&, Element*, const HashMap<String, String>& args);
 
     virtual void scheduleClose();
 
-    virtual void frameDetached();
-
     virtual void focusWindow();
     virtual void unfocusWindow();
-    
-    virtual void saveDocumentState();
-    virtual void restoreDocumentState();
     
     virtual void addMessageToConsole(const String& message,  unsigned int lineNumber, const String& sourceID);
 
@@ -118,11 +102,7 @@ public:
     virtual bool runJavaScriptPrompt(const String& message, const String& defaultValue, String& result);
     virtual bool shouldInterruptJavaScript();
     
-    virtual void createEmptyDocument();
     virtual Range* markedTextRange() const;
-
-    virtual String incomingReferrer() const;
-    virtual String userAgent() const;
 
     virtual String mimeTypeForFileName(const String&) const;
 
@@ -131,7 +111,6 @@ public:
 
     virtual bool lastEventIsMouseUp() const;
     
-    virtual String overrideMediaType() const;
     virtual void setupRootForPrinting(bool onOrOff);
     virtual Vector<IntRect> computePageRects(const IntRect& printRect, float userScaleFactor);
 
@@ -152,12 +131,9 @@ public:
     virtual void respondToChangedSelection(const Selection& oldSelection, bool closeTyping);
     virtual void respondToChangedContents(const Selection &endingSelection);
     virtual bool shouldChangeSelection(const Selection& oldSelection, const Selection& newSelection, EAffinity affinity, bool stillSelecting) const;
-    virtual void partClearedInBegin();
 
     virtual bool tabsToLinks() const;
     virtual bool tabsToAllControls() const;
-
-    virtual void handledOnloadEvents();
 
     virtual bool canPaste() const;
     virtual bool canRedo() const;
@@ -173,8 +149,6 @@ public:
     virtual void textWillBeDeletedInTextField(Element* input);
     virtual void textDidChangeInTextArea(Element*);
 
-    virtual void didFirstLayout();
-
     void addPluginRootObject(KJS::Bindings::RootObject* root);
     KJS::Bindings::RootObject* bindingRootObject();
     NPObject* windowScriptNPObject();
@@ -185,16 +159,7 @@ public:
     void scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect);
     void updateBackingStore();
 
-    virtual bool canGoBackOrForward(int) const;
-    virtual void goBackOrForward(int);
-    virtual int getHistoryLength();
-    virtual KURL historyURL(int distance);
-
-protected:
-    virtual bool isLoadTypeReload();
-
 private:
-    virtual KURL originalRequestURL() const;
     virtual void cleanupPluginObjects();
     
     RefPtr<FrameWinClient> m_client;

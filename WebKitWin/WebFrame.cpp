@@ -55,6 +55,8 @@
 #include <WebCore/html/HTMLInputElement.h>
 #include <WebCore/loader/Cache.h>
 #include <WebCore/page/DOMWindow.h>
+#include <WebCore/loader/FormState.h>
+#include <WebCore/loader/FrameLoader.h>
 #include <WebCore/page/FrameTree.h>
 #include <WebCore/page/FrameView.h>
 #include <WebCore/page/Page.h>
@@ -65,6 +67,7 @@
 #include <WebCore/platform/PlatformKeyboardEvent.h>
 #include <WebCore/platform/PlugInInfoStore.h>
 #include <WebCore/platform/win/BString.h>
+#include <WebCore/platform/win/NotImplemented.h>
 #include <WebCore/rendering/RenderFrame.h>
 #include <WebCore/rendering/RenderTreeAsText.h>
 #include <wtf/MathExtras.h>
@@ -453,21 +456,21 @@ HRESULT STDMETHODCALLTYPE WebFrame::loadData(
 {
     if (mimeType) {
         String mimeTypeString(mimeType, SysStringLen(mimeType));
-        d->frame->setResponseMIMEType(mimeTypeString);
+        d->frame->loader()->setResponseMIMEType(mimeTypeString);
     }
 
     if (textEncodingName) {
         String encodingString(textEncodingName, SysStringLen(textEncodingName));
-        d->frame->setEncoding(encodingString, false);
+        d->frame->loader()->setEncoding(encodingString, false);
     }
 
     if (url) {
         DeprecatedString urlString((DeprecatedChar*)url, SysStringLen(url));
         m_originalRequestURL = KURL(urlString);
-        d->frame->begin(m_originalRequestURL);
+        d->frame->loader()->begin(m_originalRequestURL);
     }
     else
-        d->frame->begin();
+        d->frame->loader()->begin();
 
     STATSTG stat;
     if (SUCCEEDED(data->Stat(&stat, STATFLAG_NONAME))) {
@@ -475,11 +478,11 @@ HRESULT STDMETHODCALLTYPE WebFrame::loadData(
             Vector<char> dataBuffer(stat.cbSize.LowPart);
             ULONG read;
             if (SUCCEEDED(data->Read(dataBuffer.data(), (ULONG)dataBuffer.size(), &read)))
-                d->frame->write(dataBuffer.data(), read);
+                d->frame->loader()->write(dataBuffer.data(), read);
         }
     }
 
-    d->frame->end();
+    d->frame->loader()->end();
     return S_OK;
 }
 
@@ -492,12 +495,12 @@ HRESULT STDMETHODCALLTYPE WebFrame::loadHTMLString(
     if (baseURL) {
         DeprecatedString baseURLString((DeprecatedChar*)baseURL, SysStringLen(baseURL));
         m_originalRequestURL = KURL(baseURLString);
-        d->frame->begin(m_originalRequestURL);
+        d->frame->loader()->begin(m_originalRequestURL);
     }
     else
-        d->frame->begin();
-    d->frame->write(htmlString);
-    d->frame->end();
+        d->frame->loader()->begin();
+    d->frame->loader()->write(htmlString);
+    d->frame->loader()->end();
 
     return S_OK;
 }
@@ -540,15 +543,14 @@ HRESULT STDMETHODCALLTYPE WebFrame::provisionalDataSource(
 
 HRESULT STDMETHODCALLTYPE WebFrame::stopLoading( void)
 {
-    // FIXME: should be telling the FrameLoader to stop loading once that is portable
-    d->frame->stopLoading(false);
+    d->frame->loader()->stopLoading(false);
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::reload( void)
 {
-    if (!d->frame->url().url().startsWith("javascript:", false))
-        d->frame->scheduleLocationChange(d->frame->url().url(), d->frame->referrer(), true/*lock history*/, true/*userGesture*/);
+    if (!d->frame->loader()->url().url().startsWith("javascript:", false))
+        d->frame->loader()->scheduleLocationChange(d->frame->loader()->url().url(), d->frame->loader()->outgoingReferrer(), true/*lock history*/, true/*userGesture*/);
     return S_OK;
 }
 
@@ -608,6 +610,7 @@ void WebFrame::initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, 
 
     Frame* frame = new FrameWin(page, ownerElement, this, new WebEditorClient(d->webView));
     d->frame = frame;
+    frame->loader()->setClient(this);
 
     FrameView* frameView = new FrameView(frame);
     d->frameView = frameView;
@@ -676,7 +679,7 @@ HRESULT WebFrame::loadDataSource(WebDataSource* dataSource)
                     resourceRequest.setHTTPBody(*formData);
 
                 if (!d->frame->document())
-                    d->frame->begin(); // FIXME - the frame should do this for us
+                    d->frame->loader()->begin(); // FIXME - the frame should do this for us
                 m_loader = ResourceHandle::create(resourceRequest, this, d->frame->document()->docLoader());
                 IWebFrameLoadDelegate* frameLoadDelegate;
                 if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)) && frameLoadDelegate) {
@@ -1016,8 +1019,8 @@ void WebFrame::didReceiveResponse(ResourceHandle*, const ResourceResponse& respo
         }
     }
 
-    d->frame->didOpenURL(response.url());
-    d->frame->begin(response.url());
+    d->frame->loader()->didOpenURL(response.url());
+    d->frame->loader()->begin(response.url());
 
     IWebFrameLoadDelegate* frameLoadDelegate;
     if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)) && frameLoadDelegate) {
@@ -1090,7 +1093,7 @@ void WebFrame::didReceiveResponse(ResourceHandle*, const ResourceResponse& respo
 
     BSTR mimeType;
     if (SUCCEEDED(webResponse->MIMEType(&mimeType))) {
-        d->frame->setResponseMIMEType(String(mimeType, SysStringLen(mimeType)));
+        d->frame->loader()->setResponseMIMEType(String(mimeType, SysStringLen(mimeType)));
         SysFreeString(mimeType);
     }
 
@@ -1103,10 +1106,10 @@ void WebFrame::didReceiveData(ResourceHandle*, const char* data, int length)
     BSTR encoding = 0;
     m_dataSourcePrivate->overrideEncoding(&encoding);
     bool userChosen = !!encoding;
-    d->frame->setEncoding(WebCore::String(encoding ? encoding : m_textEncoding), userChosen);
+    d->frame->loader()->setEncoding(WebCore::String(encoding ? encoding : m_textEncoding), userChosen);
     SysFreeString(encoding);
 
-    d->frame->write(data, length);
+    d->frame->loader()->write(data, length);
 
     // save off the data as it is received (matching Mac WebLoader)
     // FIXME - CFNetwork Integration - we need to share this with the CFNetwork in-memory cache!
@@ -1127,7 +1130,7 @@ void WebFrame::didFinishLoading(ResourceHandle* job)
     }
     m_dataSource->QueryInterface(IID_IWebDataSourcePrivate, (void**)&m_dataSourcePrivate);
 
-    d->frame->end();
+    d->frame->loader()->end();
 
     IWebFrameLoadDelegate* frameLoadDelegate;
     if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)) && frameLoadDelegate) {
@@ -1294,7 +1297,7 @@ void WebFrame::setTitle(const String& title)
         WebHistory* history = webHistory();
         if (history) {
             IWebHistoryItem* item;
-            DeprecatedString urlStr = d->frame->url().url();
+            DeprecatedString urlStr = d->frame->loader()->url().url();
             BString urlBStr = BString((LPCOLESTR)urlStr.unicode(), urlStr.length());
             if (SUCCEEDED(history->itemForURL(urlBStr, &item))) {
                 IWebHistoryItemPrivate* itemPrivate;
@@ -1449,7 +1452,7 @@ void WebFrame::didFirstLayout()
     }
 }
 
-void WebFrame::handledOnloadEvents()
+void WebFrame::dispatchDidHandleOnloadEvents()
 {
     IWebFrameLoadDelegatePrivate* frameLoadDelegatePriv;
     if (SUCCEEDED(d->webView->frameLoadDelegatePrivate(&frameLoadDelegatePriv))  && frameLoadDelegatePriv) {
@@ -1593,3 +1596,366 @@ WebHistory* WebFrame::webHistory()
 
     return webHistory;
 }
+
+void WebFrame::detachFrameLoader()
+{
+}
+
+bool WebFrame::hasWebView() const
+{
+    LOG_NOIMPL();
+    return true;
+}
+
+bool WebFrame::hasFrameView() const
+{
+    STOP_NOIMPL();
+    return true;
+}
+
+bool WebFrame::hasBackForwardList() const
+{
+    LOG_NOIMPL();
+    return false;
+}
+
+void WebFrame::resetBackForwardList()
+{
+    LOG_NOIMPL();
+}
+
+bool WebFrame::provisionalItemIsTarget() const
+{
+    STOP_NOIMPL();
+    return false;
+}
+
+bool WebFrame::loadProvisionalItemFromPageCache()
+{
+    STOP_NOIMPL();
+    return false;
+}
+
+void WebFrame::invalidateCurrentItemPageCache()
+{
+    LOG_NOIMPL();
+}
+
+bool WebFrame::privateBrowsingEnabled() const
+{
+    LOG_NOIMPL();
+    return false;
+}
+
+void WebFrame::makeDocumentView()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::makeRepresentation(DocumentLoader*)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::forceLayout()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::forceLayoutForNonHTML()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::updateHistoryForCommit()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::updateHistoryForBackForwardNavigation()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::updateHistoryForReload()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::updateHistoryForStandardLoad()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::updateHistoryForInternalLoad()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::updateHistoryAfterClientRedirect()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::setCopiesOnScroll()
+{
+    LOG_NOIMPL();
+}
+
+LoadErrorResetToken* WebFrame::tokenForLoadErrorReset()
+{
+    LOG_NOIMPL();
+    return 0;
+}
+
+void WebFrame::resetAfterLoadError(LoadErrorResetToken*)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::doNotResetAfterLoadError(LoadErrorResetToken*)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::willCloseDocument()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::detachedFromParent1()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::detachedFromParent2()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::detachedFromParent3()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::detachedFromParent4()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::loadedFromPageCache()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchDidReceiveServerRedirectForProvisionalLoad()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchDidCancelClientRedirect()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchWillPerformClientRedirect(const KURL&, double /*interval*/, double /*fireDate*/)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchDidChangeLocationWithinPage()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchWillClose()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchDidStartProvisionalLoad()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchDidReceiveTitle(const String& /*title*/)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchDidCommitLoad()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchDidFinishLoad()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchDidFirstLayout()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchShow()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::cancelPolicyCheck()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchWillSubmitForm(FramePolicyFunction, PassRefPtr<FormState>)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchDidLoadMainResource(DocumentLoader*)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::clearLoadingFromPageCache(DocumentLoader*)
+{
+    LOG_NOIMPL();
+}
+
+bool WebFrame::isLoadingFromPageCache(DocumentLoader*)
+{
+    LOG_NOIMPL();
+    return false;
+}
+
+void WebFrame::revertToProvisionalState(DocumentLoader*)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::clearUnarchivingState(DocumentLoader*)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::progressStarted()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::progressCompleted()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::setMainFrameDocumentReady(bool)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::willChangeTitle(DocumentLoader*)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::didChangeTitle(DocumentLoader*)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::finishedLoading(DocumentLoader*)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::finalSetupForReplace(DocumentLoader*)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::setDefersLoading(bool)
+{
+    LOG_NOIMPL();
+}
+
+bool WebFrame::isArchiveLoadPending(ResourceLoader*) const
+{
+    LOG_NOIMPL();
+    return false;
+}
+
+void WebFrame::cancelPendingArchiveLoad(ResourceLoader*)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::clearArchivedResources()
+{
+    LOG_NOIMPL();
+}
+
+bool WebFrame::canShowMIMEType(const String& /*MIMEType*/) const
+{
+    STOP_NOIMPL();
+    return false;
+}
+
+bool WebFrame::representationExistsForURLScheme(const String& /*URLScheme*/) const
+{
+    STOP_NOIMPL();
+    return false;
+}
+
+String WebFrame::generatedMIMETypeForURLScheme(const String& /*URLScheme*/) const
+{
+    STOP_NOIMPL();
+    return String();
+}
+
+void WebFrame::frameLoadCompleted()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::restoreScrollPositionAndViewState()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::provisionalLoadStarted()
+{
+    LOG_NOIMPL();
+}
+
+bool WebFrame::shouldTreatURLAsSameAsCurrent(const KURL&) const
+{
+    LOG_NOIMPL();
+    return false;
+}
+
+void WebFrame::addHistoryItemForFragmentScroll()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::didFinishLoad()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::prepareForDataSourceReplacement()
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::setTitle(const String& /*title*/, const KURL&)
+{
+    LOG_NOIMPL();
+}
+
+String WebFrame::userAgent()
+{
+    return userAgentForURL(KURL());
+}
+

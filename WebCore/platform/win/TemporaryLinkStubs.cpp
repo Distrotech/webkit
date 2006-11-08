@@ -30,9 +30,13 @@
 #include "AXObjectCache.h"
 #include "CachedResource.h"
 #include "CookieJar.h"
+#include "DocumentLoader.h"
 #include "EditCommand.h"
+#include "Element.h"
 #include "FileChooser.h"
 #include "Font.h"
+#include "FormState.h"
+#include "FrameLoader.h"
 #include "FrameLoadRequest.h"
 #include "FrameView.h"
 #include "FrameWin.h"
@@ -54,6 +58,7 @@
 #include "RenderTheme.h"
 #include "RenderThemeWin.h"
 #include "ResourceHandle.h"
+#include "ResourceLoader.h"
 #include "ResourceResponse.h"
 #include "Screen.h"
 #include "ScrollBar.h"
@@ -129,12 +134,6 @@ bool FrameWin::lastEventIsMouseUp() const { return false; }
 String FrameWin::mimeTypeForFileName(String const&) const { LOG_NOIMPL(); return String(); }
 void FrameWin::scheduleClose() { STOP_NOIMPL(); }
 void FrameWin::markMisspellings(WebCore::Selection const&) { LOG_NOIMPL(); }
-bool FrameWin::isLoadTypeReload(void) { LOG_NOIMPL(); return false; }
-
-bool FrameWin::canGoBackOrForward(int) const { LOG_NOIMPL(); return false; }
-void FrameWin::goBackOrForward(int) { LOG_NOIMPL(); }
-int FrameWin::getHistoryLength() { LOG_NOIMPL(); return 0; }
-KURL FrameWin::historyURL(int distance) { LOG_NOIMPL(); return KURL(); }
 
 void GraphicsContextPlatformPrivate::clip(const Path&) { LOG_NOIMPL(); }
 
@@ -152,18 +151,12 @@ String WebCore::defaultLanguage() { return "en"; }
 
 void FrameView::updateBorder() { LOG_NOIMPL(); }
 
-void FrameWin::restoreDocumentState() { LOG_NOIMPL(); }
-void FrameWin::createEmptyDocument() { LOG_NOIMPL(); }
-String FrameWin::overrideMediaType() const { LOG_NOIMPL(); return String(); }
 Range* FrameWin::markedTextRange() const { LOG_NOIMPL(); return 0; }
 void FrameWin::addMessageToConsole(String const&,unsigned int,String const&) { LOG_NOIMPL(); }
 bool FrameWin::shouldChangeSelection(Selection const&,Selection const&,WebCore::EAffinity,bool) const { LOG_NOIMPL(); return true; }
 void FrameWin::respondToChangedSelection(WebCore::Selection const&,bool) { LOG_NOIMPL(); }
-static int frameNumber = 0;
-void FrameWin::saveDocumentState() { LOG_NOIMPL(); }
 void FrameWin::registerCommandForUndo(PassRefPtr<WebCore::EditCommand>) { LOG_NOIMPL(); }
 void FrameWin::clearUndoRedoOperations(void) { LOG_NOIMPL(); }
-String FrameWin::incomingReferrer() const { LOG_NOIMPL(); return String(); }
 void FrameWin::markMisspellingsInAdjacentWords(WebCore::VisiblePosition const&) { LOG_NOIMPL(); }
 void FrameWin::respondToChangedContents(const Selection &endingSelection) { LOG_NOIMPL(); }
 
@@ -206,3 +199,40 @@ Color WebCore::focusRingColor() { LOG_NOIMPL(); return 0xFF0000FF; }
 void WebCore::setFocusRingColorChangeFunction(void (*)()) { LOG_NOIMPL(); }
 
 void Frame::setNeedsReapplyStyles() { LOG_NOIMPL(); }
+
+void IconLoader::notifyIconChanged(const KURL& iconURL) { LOG_NOIMPL(); }
+
+PolicyCheck::PolicyCheck() { LOG_NOIMPL(); }
+void PolicyCheck::clear() { LOG_NOIMPL(); }
+void PolicyCheck::call() { LOG_NOIMPL(); }
+void PolicyCheck::clearRequest() { LOG_NOIMPL(); }
+void PolicyCheck::call(PolicyAction) { LOG_NOIMPL(); }
+
+void FrameLoader::saveDocumentState() { LOG_NOIMPL(); }
+void FrameLoader::restoreDocumentState() { LOG_NOIMPL(); }
+void FrameLoader::partClearedInBegin() { LOG_NOIMPL(); }
+void FrameLoader::goBackOrForward(int) { LOG_NOIMPL(); }
+KURL FrameLoader::historyURL(int) { LOG_NOIMPL(); return KURL(); }
+bool FrameLoader::canGoBackOrForward(int) const { LOG_NOIMPL(); return false; }
+int FrameLoader::getHistoryLength() { LOG_NOIMPL(); return 0; }
+
+void DocumentLoader::setupForReplaceByMIMEType(String const &) { STOP_NOIMPL(); }
+void ResourceLoader::cancel() { STOP_NOIMPL(); }
+void DocumentLoader::stopLoading() { STOP_NOIMPL(); }
+void DocumentLoader::setLoading(bool) { STOP_NOIMPL(); }
+void DocumentLoader::updateLoading() { STOP_NOIMPL(); }
+void DocumentLoader::setFrame(Frame*) { STOP_NOIMPL(); }
+void DocumentLoader::stopRecordingResponses() { STOP_NOIMPL(); }
+bool DocumentLoader::isStopping()const { STOP_NOIMPL(); return false; }
+void DocumentLoader::setPrimaryLoadComplete(bool) { STOP_NOIMPL(); }
+void DocumentLoader::finishedLoading() { STOP_NOIMPL(); }
+KURL DocumentLoader::URL()const { STOP_NOIMPL(); return KURL(); }
+bool DocumentLoader::isLoadingInAPISense()const { STOP_NOIMPL(); return false; }
+FrameLoader* DocumentLoader::frameLoader()const { STOP_NOIMPL(); return 0; }
+
+String FrameLoader::overrideMediaType()const { LOG_NOIMPL(); return String(); }
+void FrameLoader::redirectDataToPlugin(Widget*) { STOP_NOIMPL(); }
+void FrameLoader::checkLoadCompleteForThisFrame() { LOG_NOIMPL(); }
+void FrameLoader::loadEmptyDocumentSynchronously() { LOG_NOIMPL(); }
+void FrameLoader::startLoading() { STOP_NOIMPL(); }
+String FrameLoader::referrer() const { LOG_NOIMPL(); return String(); }
