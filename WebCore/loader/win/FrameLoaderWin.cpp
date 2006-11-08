@@ -164,7 +164,7 @@ void FrameLoader::setTitle(const String& title)
         client->setTitle(title);
 }
 
-void FrameWin::partClearedInBegin()
+void FrameLoader::partClearedInBegin()
 {
     if (FrameWinClient* client = Win(frame)->client()) {   
         JSContextRef context = reinterpret_cast<JSContextRef>(scriptProxy()->interpreter()->globalExec());

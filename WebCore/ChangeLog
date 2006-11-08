@@ -1,5 +1,12 @@
 2006-11-08  Anders Carlsson  <acarlsson@apple.com>
 
+        It's FrameLoader, not FrameWin.
+        
+        * loader/win/FrameLoaderWin.cpp:
+        (WebCore::FrameLoader::partClearedInBegin):
+
+2006-11-08  Anders Carlsson  <acarlsson@apple.com>
+
         A blind attempt at fixing the build.
         
         * bridge/win/FrameWin.cpp:
