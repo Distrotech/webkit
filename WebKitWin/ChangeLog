@@ -1,3 +1,19 @@
+2006-11-07  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Oliver.
+
+        Call IWebFrameLoadDelegate::windowScriptObject available when the
+        window script object is available.
+        
+        * Interfaces/IWebFrameLoadDelegate.idl:
+        Get MIDL to understand the JSC API types.
+        
+        * WebFrame.cpp:
+        (WebFrame::windowScriptObjectAvailable):
+        Call into the delegate.
+        
+        * WebFrame.h:
+
 2006-11-07  Steve Falkenburg  <sfalken@apple.com>
 
         Versioning

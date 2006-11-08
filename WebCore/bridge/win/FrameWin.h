@@ -30,6 +30,9 @@
 #include <wtf/HashMap.h>
 #include <wtf/RefPtr.h>
 
+typedef const struct OpaqueJSContext* JSContextRef;
+typedef struct OpaqueJSValue* JSObjectRef;
+
 class NPObject;
 
 namespace KJS {
@@ -75,6 +78,8 @@ public:
     virtual void addToDirtyRegion(const IntRect&) = 0;
     virtual void scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect) = 0;
     virtual void updateBackingStore() = 0;
+
+    virtual void windowScriptObjectAvailable(JSContextRef context, JSObjectRef windowObject) = 0;
 };
 
 class FrameWin : public Frame
@@ -113,12 +118,6 @@ public:
     virtual bool runJavaScriptPrompt(const String& message, const String& defaultValue, String& result);
     virtual bool shouldInterruptJavaScript();
     
-    virtual bool locationbarVisible();
-    virtual bool menubarVisible();
-    virtual bool personalbarVisible();
-    virtual bool statusbarVisible();
-    virtual bool toolbarVisible();
-
     virtual void createEmptyDocument();
     virtual Range* markedTextRange() const;
 

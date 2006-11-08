@@ -49,6 +49,9 @@ namespace WebCore {
     class IntRect;
 }
 
+typedef const struct OpaqueJSContext* JSContextRef;
+typedef struct OpaqueJSValue* JSObjectRef;
+
 class WebView;
 class WebHistory;
 interface IWebHistoryItemPrivate;
@@ -177,6 +180,7 @@ public:
     virtual void addToDirtyRegion(const WebCore::IntRect&);
     virtual void scrollBackingStore(int dx, int dy, const WebCore::IntRect& scrollViewRect, const WebCore::IntRect& clipRect);
     virtual void updateBackingStore();
+    virtual void windowScriptObjectAvailable(JSContextRef context, JSObjectRef windowObject);
 
     // WebFrame
     void initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, WebCore::Page* page, WebCore::Element* ownerElement);

@@ -111,7 +111,6 @@ Vector<char> ServeSynchronousRequest(Loader*,DocLoader*,const ResourceRequest&,R
 
 void FrameWin::focusWindow() { LOG_NOIMPL(); }
 void FrameWin::unfocusWindow() { LOG_NOIMPL(); }
-bool FrameWin::locationbarVisible() { LOG_NOIMPL(); return 0; }
 void FrameWin::registerCommandForRedo(PassRefPtr<WebCore::EditCommand>) { STOP_NOIMPL(); }
 KJS::Bindings::Instance* FrameWin::getAppletInstanceForWidget(Widget*) { STOP_NOIMPL(); return 0; }
 bool FrameWin::canRedo() const { LOG_NOIMPL(); return false; }
@@ -130,10 +129,6 @@ bool FrameWin::lastEventIsMouseUp() const { return false; }
 String FrameWin::mimeTypeForFileName(String const&) const { LOG_NOIMPL(); return String(); }
 void FrameWin::scheduleClose() { STOP_NOIMPL(); }
 void FrameWin::markMisspellings(WebCore::Selection const&) { LOG_NOIMPL(); }
-bool FrameWin::menubarVisible() { LOG_NOIMPL(); return false; }
-bool FrameWin::personalbarVisible() { LOG_NOIMPL(); return false; }
-bool FrameWin::statusbarVisible() { LOG_NOIMPL(); return false; }
-bool FrameWin::toolbarVisible() { LOG_NOIMPL(); return false; }
 bool FrameWin::isLoadTypeReload(void) { LOG_NOIMPL(); return false; }
 
 bool FrameWin::canGoBackOrForward(int) const { LOG_NOIMPL(); return false; }
@@ -158,7 +153,6 @@ String WebCore::defaultLanguage() { return "en"; }
 void FrameView::updateBorder() { LOG_NOIMPL(); }
 
 void FrameWin::restoreDocumentState() { LOG_NOIMPL(); }
-void FrameWin::partClearedInBegin() { LOG_NOIMPL(); }
 void FrameWin::createEmptyDocument() { LOG_NOIMPL(); }
 String FrameWin::overrideMediaType() const { LOG_NOIMPL(); return String(); }
 Range* FrameWin::markedTextRange() const { LOG_NOIMPL(); return 0; }

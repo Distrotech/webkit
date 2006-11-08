@@ -54,6 +54,16 @@ import "IWebScriptObject.idl";
 import "IWebView.idl";
 import "IWebFrame.idl";
 
+cpp_quote("// this is done because midl strips the const")
+cpp_quote("#if 0")
+typedef const struct OpaqueJSContext* JSContextRef;
+cpp_quote("#else")
+cpp_quote("typedef const struct OpaqueJSContext* JSContextRef;")
+cpp_quote("#endif")
+
+typedef struct OpaqueJSValue* JSObjectRef;
+
+
 interface IWebError;
 interface IWebFrame;
 interface IWebScriptObject;
@@ -221,5 +231,5 @@ interface IWebFrameLoadDelegate : IUnknown
         @param windowScriptObject The WebScriptObject for the window in the scripting environment.
         - (void)webView:(WebView *)webView windowScriptObjectAvailable:(WebScriptObject *)windowScriptObject;
     */
-    HRESULT windowScriptObjectAvailable([in] IWebView* webView, [in] IWebScriptObject* windowScriptObject);
+    HRESULT windowScriptObjectAvailable([in] IWebView* webView, [in] JSContextRef context, [in] JSObjectRef windowScriptObject);
 }

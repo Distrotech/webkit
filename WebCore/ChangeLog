@@ -1,3 +1,17 @@
+2006-11-07  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Oliver.
+
+        Let the Frame client know when the window object is available.
+
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::partClearedInBegin):
+        * bridge/win/FrameWin.h:
+        * platform/win/TemporaryLinkStubs.cpp:
+        (FrameWin::unfocusWindow):
+        (FrameWin::markMisspellings):
+        (FrameWin::restoreDocumentState):
+
 2006-11-07  Adam Roben  <aroben@apple.com>
 
         Build fix.

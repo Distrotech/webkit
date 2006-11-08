@@ -1556,6 +1556,16 @@ void WebFrame::updateBackingStore()
     d->webView->updateBackingStore(d->webView->topLevelFrame()->impl()->view(), 0, false);
 }
 
+void WebFrame::windowScriptObjectAvailable(JSContextRef context, JSObjectRef windowObject)
+{
+    IWebFrameLoadDelegate* frameLoadDelegate;
+    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)) && frameLoadDelegate) {
+        frameLoadDelegate->windowScriptObjectAvailable(d->webView, context, windowObject);
+        frameLoadDelegate->Release();
+    }
+}
+
+
 IWebBackForwardList* WebFrame::backForwardList()
 {
     if (this != d->webView->topLevelFrame())

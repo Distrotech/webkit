@@ -458,4 +458,12 @@ void FrameWin::updateBackingStore()
     m_client->updateBackingStore();
 }
 
+void FrameWin::partClearedInBegin()
+{
+    JSContextRef context = reinterpret_cast<JSContextRef>(scriptProxy()->interpreter()->globalExec());
+    JSObjectRef object = reinterpret_cast<JSObjectRef>(KJS::Window::retrieve(this));
+
+    m_client->windowScriptObjectAvailable(context, object);
+}
+
 } // namespace WebCore
