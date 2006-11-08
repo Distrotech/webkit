@@ -1,5 +1,13 @@
 2006-11-08  Anders Carlsson  <acarlsson@apple.com>
 
+        (I'm not doing this to get commit 11000)
+        
+        * loader/win/FrameLoaderWin.cpp:
+        (WebCore::FrameLoader::partClearedInBegin):
+        It's m_frame, not frame. 
+        
+2006-11-08  Anders Carlsson  <acarlsson@apple.com>
+
         It's FrameLoader, not FrameWin.
         
         * loader/win/FrameLoaderWin.cpp:
