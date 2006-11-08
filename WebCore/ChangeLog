@@ -1,5 +1,11 @@
 2006-11-08  Anders Carlsson  <acarlsson@apple.com>
 
+        * loader/win/FrameLoaderWin.cpp:
+        (WebCore::FrameLoader::partClearedInBegin):
+        Use m_frame instead of this, include the correct files.
+        
+2006-11-08  Anders Carlsson  <acarlsson@apple.com>
+
         (I'm not doing this to get commit 11000)
         
         * loader/win/FrameLoaderWin.cpp:

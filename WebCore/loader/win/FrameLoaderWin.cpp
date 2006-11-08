@@ -34,6 +34,9 @@
 #include "FrameTree.h"
 #include "FrameView.h"
 #include "FrameWin.h"
+#include "kjs_binding.h"
+#include "kjs_proxy.h"
+#include "kjs_window.h"
 #include "HTMLFormElement.h"
 #include "HTMLFrameElement.h"
 #include "HTMLNames.h"
@@ -167,8 +170,8 @@ void FrameLoader::setTitle(const String& title)
 void FrameLoader::partClearedInBegin()
 {
     if (FrameWinClient* client = Win(m_frame)->client()) {   
-        JSContextRef context = reinterpret_cast<JSContextRef>(scriptProxy()->interpreter()->globalExec());
-        JSObjectRef object = reinterpret_cast<JSObjectRef>(KJS::Window::retrieve(this));
+        JSContextRef context = reinterpret_cast<JSContextRef>(m_frame->scriptProxy()->interpreter()->globalExec());
+        JSObjectRef object = reinterpret_cast<JSObjectRef>(KJS::Window::retrieve(m_frame));
 
         client->windowScriptObjectAvailable(context, object);
     }
