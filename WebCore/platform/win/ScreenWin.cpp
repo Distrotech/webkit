@@ -35,31 +35,21 @@
 
 namespace WebCore {
 
-static HWND getWindow(Page* page)
+// Returns info for the default monitor if widget is NULL
+static MONITORINFOEX monitorInfoForWidget(Widget* widget)
 {
-    Frame* frame = page->mainFrame();
-    if (!frame)
-        return 0;
-
-    FrameView* frameView = frame->view();
-    if (!frameView)
-        return 0;
-
-    return frameView->containingWindow();
-}
-
-static MONITORINFOEX getMonitorInfo(HWND window)
-{
+    HWND window = widget ? widget->containingWindow() : 0;
     HMONITOR monitor = MonitorFromWindow(window, MONITOR_DEFAULTTOPRIMARY);
+
     MONITORINFOEX monitorInfo;
     monitorInfo.cbSize = sizeof(MONITORINFOEX);
     GetMonitorInfo(monitor, &monitorInfo);
     return monitorInfo;
 }
 
-static DEVMODE getDeviceInfo(HWND window)
+static DEVMODE deviceInfoForWidget(Widget* widget)
 {
-    MONITORINFOEX monitorInfo = getMonitorInfo(window);
+    MONITORINFOEX monitorInfo = monitorInfoForWidget(widget);
 
     DEVMODE deviceInfo;
     deviceInfo.dmSize = sizeof(DEVMODE);
@@ -69,34 +59,34 @@ static DEVMODE getDeviceInfo(HWND window)
     return deviceInfo;
 }
 
-int Screen::depth() const
+int screenDepth(Widget* widget)
 {
-    DEVMODE deviceInfo = getDeviceInfo(getWindow(m_page));
+    DEVMODE deviceInfo = deviceInfoForWidget(widget);
     return deviceInfo.dmBitsPerPel;
 }
 
-int Screen::depthPerComponent() const
+int screenDepthPerComponent(Widget* widget)
 {
     // FIXME: Assumes RGB -- not sure if this is right.
-    DEVMODE deviceInfo = getDeviceInfo(getWindow(m_page));
+    DEVMODE deviceInfo = deviceInfoForWidget(widget);
     return deviceInfo.dmBitsPerPel / 3;
 }
 
-bool Screen::isMonochrome() const
+bool screenIsMonochrome(Widget* widget)
 {
-    DEVMODE deviceInfo = getDeviceInfo(getWindow(m_page));
+    DEVMODE deviceInfo = deviceInfoForWidget(widget);
     return deviceInfo.dmColor == DMCOLOR_MONOCHROME;
 }
 
-FloatRect Screen::rect() const
+FloatRect screenRect(Widget* widget)
 {
-    MONITORINFOEX monitorInfo = getMonitorInfo(getWindow(m_page));
+    MONITORINFOEX monitorInfo = monitorInfoForWidget(widget);
     return monitorInfo.rcMonitor;
 }
 
-FloatRect Screen::usableRect() const
+FloatRect screenAvailableRect(Widget* widget)
 {
-    MONITORINFOEX monitorInfo = getMonitorInfo(getWindow(m_page));
+    MONITORINFOEX monitorInfo = monitorInfoForWidget(widget);
     return monitorInfo.rcWork;
 }
 

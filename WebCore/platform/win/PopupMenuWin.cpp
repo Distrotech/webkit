@@ -198,7 +198,7 @@ void PopupMenu::calculatePositionAndSize(const IntRect& r, FrameView* v)
     IntRect popupRect(popupX, rScreenCoords.bottom(), popupWidth, popupHeight);
 
     // The popup needs to stay within the bounds of the screen and not overlap any toolbars
-    FloatRect screen = v->frame()->page()->screen()->usableRect();
+    FloatRect screen = screenAvailableRect(v);
 
     // Check that we don't go off the screen vertically
     if (popupRect.bottom() > screen.height()) {
