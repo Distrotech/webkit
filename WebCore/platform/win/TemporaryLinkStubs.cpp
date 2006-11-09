@@ -176,7 +176,7 @@ bool ScrollView::inWindow() const { LOG_NOIMPL(); return true; }
 void GraphicsContext::drawFocusRing(const Color& color) { LOG_NOIMPL(); }
 void GraphicsContext::drawLineForMisspellingOrBadGrammar(const IntPoint& point, int width, bool grammar) { LOG_NOIMPL(); }
 
-TextField::TextField(TextField::Type) { LOG_NOIMPL(); }
+TextField::TextField() { LOG_NOIMPL(); }
 TextField::~TextField() { LOG_NOIMPL(); }
 void TextField::setFont(WebCore::Font const&) { LOG_NOIMPL(); }
 void TextField::setAlignment(HorizontalAlignment) { LOG_NOIMPL(); }

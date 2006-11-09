@@ -189,7 +189,7 @@ bool FrameWin::keyPress(const PlatformKeyboardEvent& keyEvent)
     }
     
     if (!keyEvent.isKeyUp())
-        prepareForUserAction();
+        loader()->resetMultipleFormSubmissionProtection();
 
     result = !EventTargetNodeCast(node)->dispatchKeyEvent(keyEvent);
 

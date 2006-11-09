@@ -46,6 +46,8 @@ namespace KJS {
 
 namespace WebCore {
 
+class FormData;
+
 class FrameWinClient {
 public:
     virtual void ref() = 0;
