@@ -56,11 +56,10 @@ public:
     virtual bool shouldBeginEditing(Range*);
     virtual bool shouldEndEditing(Range*);
     virtual void didBeginEditing();
+    virtual void respondToChangedContents();
     virtual void didEndEditing();
 
     bool shouldDeleteRange(Range*);
-    bool shouldBeginEditingInRange(Range*);
-    bool shouldEndEditingInRange(Range*);
     bool shouldInsertNode(Node*, Range* replacingRange, WebViewInsertAction givenAction);
 //    bool shouldInsertText(BSTR text, Range* replacingRange, WebViewInsertAction givenAction);
 //    bool shouldChangeSelectedRange(Range* currentRange, Range* toProposedRange, NSSelectionAffinity selectionAffinity, bool stillSelecting);
@@ -68,9 +67,6 @@ public:
     bool shouldChangeTypingStyle(CSSStyleDeclaration* currentStyle, CSSStyleDeclaration* toProposedStyle);
 //    bool doCommandBySelector(SEL selector);
 
-    void webViewDidBeginEditing(WebNotification*);
-    void webViewDidChange(WebNotification*);
-    void webViewDidEndEditing(WebNotification*);
     void webViewDidChangeTypingStyle(WebNotification*);
     void webViewDidChangeSelection(WebNotification*);
 //    NSUndoManager* undoManagerForWebView(WebView*);

@@ -83,6 +83,11 @@ void WebEditorClient::didBeginEditing()
     LOG_NOIMPL();
 }
 
+void WebEditorClient::respondToChangedContents()
+{
+    LOG_NOIMPL();
+}
+
 void WebEditorClient::didEndEditing()
 {
     LOG_NOIMPL();
@@ -100,12 +105,6 @@ bool WebEditorClient::shouldDeleteRange(Range* /*range*/)
     }
     return !!result;
 }
-
-bool WebEditorClient::shouldBeginEditingInRange(Range* /*range*/)
-{ LOG_NOIMPL(); return false; }
-
-bool WebEditorClient::shouldEndEditingInRange(Range* /*range*/)
-{ LOG_NOIMPL(); return false; }
 
 bool WebEditorClient::shouldInsertNode(Node* /*node*/, Range* /*replacingRange*/, WebViewInsertAction /*givenAction*/)
 { LOG_NOIMPL(); return false; }
@@ -125,16 +124,6 @@ bool WebEditorClient::shouldChangeTypingStyle(CSSStyleDeclaration* /*currentStyl
 //bool WebEditorClient::doCommandBySelector(SEL selector)
 //{ LOG_NOIMPL(); return false; }
 
-
-
-void WebEditorClient::webViewDidBeginEditing(WebNotification* /*notification*/)
-{  LOG_NOIMPL(); }
-
-void WebEditorClient::webViewDidChange(WebNotification* /*notification*/)
-{  LOG_NOIMPL(); }
-
-void WebEditorClient::webViewDidEndEditing(WebNotification* /*notification*/)
-{  LOG_NOIMPL(); }
 
 void WebEditorClient::webViewDidChangeTypingStyle(WebNotification* /*notification*/)
 {  LOG_NOIMPL(); }

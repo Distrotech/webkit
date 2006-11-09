@@ -1,3 +1,13 @@
+2006-11-09  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Anders.
+
+        Build fixes
+
+        * WebEditorClient.cpp:
+        (WebEditorClient::respondToChangedContents):
+        * WebEditorClient.h:
+
 2006-11-08  Adam Roben  <aroben@apple.com>
 
         Reviewed by Steve.
