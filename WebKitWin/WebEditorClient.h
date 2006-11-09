@@ -44,7 +44,7 @@ class Node;
 class WebEditorClient : public EditorClient
 {
 public:
-    WebEditorClient(WebView* webView);
+    WebEditorClient(WebView*);
     ~WebEditorClient();
 
     // EditorClient
@@ -53,22 +53,27 @@ public:
     virtual int spellCheckerDocumentTag();
 
 
-    bool shouldDeleteRange(Range* range);
-    bool shouldBeginEditingInRange(Range *range);
-    bool shouldEndEditingInRange(Range *range);
-    bool shouldInsertNode(Node *node, Range* replacingRange, WebViewInsertAction givenAction);
-//    bool shouldInsertText(BSTR text, Range *replacingRange, WebViewInsertAction givenAction);
-//    bool shouldChangeSelectedRange(Range *currentRange, Range *toProposedRange, NSSelectionAffinity selectionAffinity, bool stillSelecting);
-    bool shouldApplyStyle(CSSStyleDeclaration *style, Range *toElementsInDOMRange);
-    bool shouldChangeTypingStyle(CSSStyleDeclaration *currentStyle, CSSStyleDeclaration *toProposedStyle);
+    virtual bool shouldBeginEditing(Range*);
+    virtual bool shouldEndEditing(Range*);
+    virtual void didBeginEditing();
+    virtual void didEndEditing();
+
+    bool shouldDeleteRange(Range*);
+    bool shouldBeginEditingInRange(Range*);
+    bool shouldEndEditingInRange(Range*);
+    bool shouldInsertNode(Node*, Range* replacingRange, WebViewInsertAction givenAction);
+//    bool shouldInsertText(BSTR text, Range* replacingRange, WebViewInsertAction givenAction);
+//    bool shouldChangeSelectedRange(Range* currentRange, Range* toProposedRange, NSSelectionAffinity selectionAffinity, bool stillSelecting);
+    bool shouldApplyStyle(CSSStyleDeclaration*, Range* toElementsInDOMRange);
+    bool shouldChangeTypingStyle(CSSStyleDeclaration* currentStyle, CSSStyleDeclaration* toProposedStyle);
 //    bool doCommandBySelector(SEL selector);
 
-    void webViewDidBeginEditing(WebNotification *notification);
-    void webViewDidChange(WebNotification *notification);
-    void webViewDidEndEditing(WebNotification *notification);
-    void webViewDidChangeTypingStyle(WebNotification *notification);
-    void webViewDidChangeSelection(WebNotification *notification);
-//    NSUndoManager* undoManagerForWebView(WebView *webView);
+    void webViewDidBeginEditing(WebNotification*);
+    void webViewDidChange(WebNotification*);
+    void webViewDidEndEditing(WebNotification*);
+    void webViewDidChangeTypingStyle(WebNotification*);
+    void webViewDidChangeSelection(WebNotification*);
+//    NSUndoManager* undoManagerForWebView(WebView*);
 
     bool shouldShowDeleteInterface(HTMLElement*);
 

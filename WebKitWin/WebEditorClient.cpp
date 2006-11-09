@@ -66,6 +66,28 @@ int WebEditorClient::spellCheckerDocumentTag()
     return 0;
 }
 
+bool WebEditorClient::shouldBeginEditing(Range*)
+{
+    LOG_NOIMPL();
+    return false;
+}
+
+bool WebEditorClient::shouldEndEditing(Range*)
+{
+    LOG_NOIMPL();
+    return false;
+}
+
+void WebEditorClient::didBeginEditing()
+{
+    LOG_NOIMPL();
+}
+
+void WebEditorClient::didEndEditing()
+{
+    LOG_NOIMPL();
+}
+
 bool WebEditorClient::shouldDeleteRange(Range* /*range*/)
 {
     BOOL result = false;

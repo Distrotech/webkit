@@ -1,3 +1,15 @@
+2006-11-08  Adam Roben  <aroben@apple.com>
+
+        Build fix.
+
+        * WebEditorClient.cpp: Added stubs for new methods from EditorClient.h.
+        (WebEditorClient::shouldBeginEditing):
+        (WebEditorClient::shouldEndEditing):
+        (WebEditorClient::didBeginEditing):
+        (WebEditorClient::didEndEditing):
+        * WebEditorClient.h: Added new methods from EditorClient.h and cleaned
+        up placement of *s.
+
 2006-11-08  Beth Dakin  <bdakin@apple.com>
 
         Reviewed by Adam.
