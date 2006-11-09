@@ -15,7 +15,8 @@ echo -n `cat "$SRCPATH/VERSION"` > "$VERSIONFILE"
 BLDMAJORVERSION=`sed 's/\([^\.]*\)\.\([^.]*\)\.\([^\.]*\)/\1/' "$VERSIONFILE"`
 BLDMINORVERSION=`sed 's/\([^\.]*\)\.\([^.]*\)\.\([^\.]*\)/\2/' "$VERSIONFILE"`
 BLDVARIANTVERSION=`sed 's/\([^\.]*\)\.\([^.]*\)\.\([^\.]*\)/\3/' "$VERSIONFILE"`
-SVNREVISION=`svn info | grep '^Revision' | sed 's/^Revision: \(.*\)/\1/'`
+SVNINTERNALREVISION=`svn info | grep '^Revision' | sed 's/^Revision: \(.*\)/\1/'`
+SVNOPENSOURCEREVISION=`svn info "$SRCPATH/../../../../OpenSource" | grep '^Revision' | sed 's/^Revision: \(.*\)/\1/'`
 
 BLDNMBR=`cat "$VERSIONFILE"`
 BLDNMBRSHORT=`cat "$VERSIONFILE"`
@@ -28,8 +29,7 @@ if [ "$BUILDBOT" == "" -o "$ARCHIVE_BUILD" == "1" ]; then
     echo -n `whoami` >> "$VERSIONFILE"
     echo -n " - " >> "$VERSIONFILE"
     echo -n `date` >> "$VERSIONFILE"
-    echo -n " - r" >> "$VERSIONFILE"
-    echo -n $SVNREVISION >> "$VERSIONFILE"
+    echo -n " - r$SVNOPENSOURCEREVISION/r$SVNINTERNALREVISION" >> "$VERSIONFILE"
     BLDNMBR=`cat "$VERSIONFILE"`
 fi
 

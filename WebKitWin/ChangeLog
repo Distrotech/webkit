@@ -1,5 +1,15 @@
 2006-11-09  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Steve.
+
+        Put the OpenSource revision in the WebKit.dll version info.
+
+        * WebKit.vcproj/WebKit.vcproj: touch WebKit.rc before building to force
+        it to recompile.
+        * WebKit.vcproj/auto-version.sh: Get the OpenSource revision and put it in autoversion.h.
+
+2006-11-09  Adam Roben  <aroben@apple.com>
+
         Fix line-endings.
 
         * WebEditorClient.cpp:

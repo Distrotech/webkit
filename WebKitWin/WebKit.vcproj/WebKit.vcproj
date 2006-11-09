@@ -25,7 +25,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="set PATH=%SystemDrive%\cygwin\bin;%PATH%&#x0D;&#x0A;&#x0D;&#x0A;bash auto-version.sh &quot;$(InputDir).&quot; &quot;$(IntDir)&quot;&#x0D;&#x0A;"
+				CommandLine="set PATH=%SystemDrive%\cygwin\bin;%PATH%&#x0D;&#x0A;&#x0D;&#x0A;bash auto-version.sh &quot;$(InputDir).&quot; &quot;$(IntDir)&quot;&#x0D;&#x0A;touch &quot;$(ProjectDir)/WebKit.rc&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -115,7 +115,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="set PATH=%SystemDrive%\cygwin\bin;%PATH%&#x0D;&#x0A;&#x0D;&#x0A;bash auto-version.sh &quot;$(InputDir).&quot; &quot;$(IntDir)&quot;&#x0D;&#x0A;"
+				CommandLine="set PATH=%SystemDrive%\cygwin\bin;%PATH%&#x0D;&#x0A;&#x0D;&#x0A;bash auto-version.sh &quot;$(InputDir).&quot; &quot;$(IntDir)&quot;&#x0D;&#x0A;touch &quot;$(ProjectDir)/WebKit.rc&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
