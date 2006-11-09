@@ -40,6 +40,9 @@
 #include "HTMLFormElement.h"
 #include "HTMLFrameElement.h"
 #include "HTMLNames.h"
+#include "kjs_proxy.h"
+#include "kjs_binding.h"
+#include "kjs_window.h"
 #include "PluginDatabaseWin.h"
 #include "PluginViewWin.h"
 

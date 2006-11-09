@@ -59,6 +59,7 @@ namespace WebCore {
         // ResourceHandleClient
         virtual void didReceiveResponse(ResourceHandle*, const ResourceResponse&);
         virtual void didReceiveData(ResourceHandle*, const char*, int);
+        virtual void didFailLoadingWithError(ResourceHandle*, const ResourceError&);
         virtual void didFinishLoading(ResourceHandle*);
 
     private:

@@ -1127,7 +1127,7 @@ void WebFrame::didReceiveData(ResourceHandle*, const char* data, int length)
     memcpy(m_buffer.data() + oldSize, data, length);
 }
 
-void WebFrame::didFinishLoading(ResourceHandle* job)
+void WebFrame::didFinishLoading(ResourceHandle* handle)
 {
     if (m_provisionalDataSource) {
         m_dataSource = m_provisionalDataSource;
@@ -1143,11 +1143,7 @@ void WebFrame::didFinishLoading(ResourceHandle* job)
 
     IWebFrameLoadDelegate* frameLoadDelegate;
     if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)) && frameLoadDelegate) {
-        if (!job->error())
-            frameLoadDelegate->didFinishLoadForFrame(d->webView, this);
-        else
-            frameLoadDelegate->didFailLoadWithError(d->webView, 0/*FIXME*/, this);
-
+        frameLoadDelegate->didFinishLoadForFrame(d->webView, this);
         frameLoadDelegate->Release();
     }
 
@@ -1157,9 +1153,37 @@ void WebFrame::didFinishLoading(ResourceHandle* job)
     // FIXME: It seems we can have more than one main ResourceHandle per-frame. Ideally,
     // we'd keep track of all of them. However, this is all expected to change as the loader
     // in WebCore becomes more full-featured, so we'll just do the bare minimum for now.
-    if (job == m_loader)
+    if (handle == m_loader)
         m_loader = 0;
 }
+
+void WebFrame::didFailWithError(ResourceHandle* handle, const ResourceError&)
+{
+    if (m_provisionalDataSource) {
+        m_provisionalDataSource->Release();
+        m_provisionalDataSource = 0;
+    }
+    m_dataSource->QueryInterface(IID_IWebDataSourcePrivate, (void**)&m_dataSourcePrivate);
+
+    d->frame->loader()->end();
+
+    IWebFrameLoadDelegate* frameLoadDelegate;
+    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)) && frameLoadDelegate) {
+        // FIXME: turn ResourceError into IWebError
+        frameLoadDelegate->didFailLoadWithError(d->webView, 0/*FIXME*/, this);
+        frameLoadDelegate->Release();
+    }
+
+    m_quickRedirectComing = false;
+    m_loadType = WebFrameLoadTypeStandard;
+
+    // FIXME: It seems we can have more than one main ResourceHandle per-frame. Ideally,
+    // we'd keep track of all of them. However, this is all expected to change as the loader
+    // in WebCore becomes more full-featured, so we'll just do the bare minimum for now.
+    if (handle == m_loader)
+        m_loader = 0;
+}
+
 
 // FrameWinClient
 

@@ -277,19 +277,26 @@ void PluginStreamWin::didReceiveData(ResourceHandle* resourceLoader, const char*
         deliverData();
 }
 
-void PluginStreamWin::didFinishLoading(ResourceHandle* resourceLoader)
+void PluginStreamWin::didFailLoadingWithError(ResourceHandle* handle, const ResourceError&)
 {
-    ASSERT(resourceLoader == m_resourceLoader);
-    ASSERT(m_streamState == StreamStarted || resourceLoader->error() != 0);
+    ASSERT(handle == m_resourceLoader);
 
     // The resource loader gets deleted after having received all data
     if (m_resourceLoader)
         m_resourceLoader = 0;
 
-    if (resourceLoader && resourceLoader->error() != 0) {
-        LOG_PLUGIN_NET_ERROR();
-        destroyStream(NPRES_NETWORK_ERR);
-    }
+    LOG_PLUGIN_NET_ERROR();
+    destroyStream(NPRES_NETWORK_ERR);
+}
+
+void PluginStreamWin::didFinishLoading(ResourceHandle* handle)
+{
+    ASSERT(handle == m_resourceLoader);
+    ASSERT(m_streamState == StreamStarted);
+
+    // The resource loader gets deleted after having received all data
+    if (m_resourceLoader)
+        m_resourceLoader = 0;
 
     if ((m_transferMode == NP_ASFILE || m_transferMode == NP_ASFILEONLY) && !m_path) {
         char tempPath[MAX_PATH];

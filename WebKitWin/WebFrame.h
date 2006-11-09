@@ -48,6 +48,7 @@ namespace WebCore {
     class Frame;
     class Page;
     class IntRect;
+    class ResourceError;
 }
 
 typedef const struct OpaqueJSContext* JSContextRef;
@@ -160,6 +161,7 @@ public:
     virtual void didReceiveResponse(WebCore::ResourceHandle*, const WebCore::ResourceResponse&);
     virtual void didReceiveData(WebCore::ResourceHandle*, const char*, int);
     virtual void didFinishLoading(WebCore::ResourceHandle*);
+    virtual void didFailWithError(WebCore::ResourceHandle*, const WebCore::ResourceError&);
 
     // FrameWinClient
     virtual void ref();

@@ -1,3 +1,14 @@
+2006-11-08  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Geoff.
+
+        - added ResourceError class and didFailWithError client method
+        
+        * WebFrame.cpp:
+        (WebFrame::didFinishLoading):
+        (WebFrame::didFailWithError):
+        * WebFrame.h:
+
 2006-11-08  Adam Roben  <aroben@apple.com>
 
         Build fix.
