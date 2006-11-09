@@ -166,6 +166,14 @@ HRESULT STDMETHODCALLTYPE WebElementPropertyBag::Read(LPCOLESTR pszPropName, VAR
         return convertStringToVariant(pVar, m_result->titleDisplayString());
     else if (isEqual(WebElementLinkLabelKey, key))
         return convertStringToVariant(pVar, m_result->textContent());
+    else if (isEqual(WebElementIsContentEditableKey, key)) {
+        V_VT(pVar) = VT_BOOL;
+        if (m_result->isContentEditable())
+            V_BOOL(pVar) = VARIANT_TRUE;
+        else
+            V_BOOL(pVar) = VARIANT_FALSE;
+        return S_OK;
+    }
 
     return E_INVALIDARG;
 }

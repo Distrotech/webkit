@@ -106,6 +106,7 @@ const BSTR WebElementLinkURLKey = L"WebElementLinkURLKey";
 const BSTR WebElementLinkTargetFrameKey = L"WebElementLinkTargetFrameKey";
 const BSTR WebElementLinkTitleKey = L"WebElementLinkTitleKey";
 const BSTR WebElementLinkLabelKey = L"WebElementLinkLabelKey";
+const BSTR WebElementIsContentEditableKey = L"WebElementIsContentEditableKey";
 
 /*!
     @class IEnumTextMatches

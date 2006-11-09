@@ -1,3 +1,14 @@
+2006-11-08  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by Adam.
+
+        Add clause for new WebElementIsContentEditableKey to the Read 
+        fucntion.
+
+        * Interfaces/IWebView.idl:
+        * WebElementPropertyBag.cpp:
+        (WebElementPropertyBag::Read):
+
 2006-11-07  Ada Chan  <adachan@apple.com>
 
         Reviewed by Steve.
