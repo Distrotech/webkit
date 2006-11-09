@@ -28,27 +28,82 @@
 #include "PlatformString.h"
 #include "DeprecatedString.h"
 #include <windows.h>
+#if USE(CFNETWORK)
+#include <CoreFoundation/CoreFoundation.h>
+#include <CFNetwork/CFHTTPCookiesPriv.h>
+#else
 #include <Wininet.h>
+#endif
 
 namespace WebCore
 {
 
+#if USE(CFNETWORK)
+    static const CFStringRef s_setCookieKeyCF = CFSTR("Set-Cookie");
+    static const CFStringRef s_cookieCF = CFSTR("Cookie");
+#endif
+
+
 void setCookies(const KURL& url, const KURL& policyURL, const String& value)
 {
+#if USE(CFNETWORK)
+    CFURLRef urlCF = url.createCFURL();
+    CFURLRef policyUrlCF = policyURL.createCFURL();
+
+    // <http://bugzilla.opendarwin.org/show_bug.cgi?id=6531>, <rdar://4409034>
+    // cookiesWithResponseHeaderFields doesn't parse cookies without a value
+    String cookieString = value.contains('=') ? value : value + "=";
+
+    CFStringRef cookiesCF = cookieString.createCFString();
+    CFDictionaryRef headerCF =  CFDictionaryCreate(kCFAllocatorDefault, (const void**)&s_setCookieKeyCF, 
+        (const void**)&cookiesCF, 1, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+
+
+    // Create default store. Don't use CFHTTPCookieStorageGetBaseStorage (it is nyi)
+    CFHTTPCookieStorageRef cfCookieStoreCF = CFHTTPCookieStorageCreateFromFile(0, 0, 0);
+
+    _CFHTTPCookieStorageSetCookiesWithResponseHeaderFields(cfCookieStoreCF, urlCF, headerCF,
+        policyUrlCF, CFHTTPCookieStorageAcceptPolicyAlways);
+
+    CFRelease(headerCF);
+    CFRelease(cookiesCF);
+    CFRelease(policyUrlCF);
+    CFRelease(urlCF);
+
+    CFRelease(cfCookieStoreCF);
+#else
     // FIXME: Deal with the policy URL.
     DeprecatedString str = url.url();
     str.append((UChar)'\0');
     DeprecatedString val = value.deprecatedString();
     val.append((UChar)'\0');
     InternetSetCookie((UChar*)str.unicode(), 0, (UChar*)val.unicode());
+#endif
 }
 
 String cookies(const KURL& url)
 {
+#if USE(CFNETWORK)
+    String cookieString;
+    CFURLRef urlCF = url.createCFURL();
+    // Create default store. Don't use CFHTTPCookieStorageGetBaseStorage (it is nyi)
+    CFHTTPCookieStorageRef cfCookieStoreCF = CFHTTPCookieStorageCreateFromFile(0, 0, 0);
+
+    CFArrayRef cookiesCF = CFHTTPCookieStorageCopyCookiesForURL(cfCookieStoreCF, urlCF, FALSE);
+    CFDictionaryRef headerCF = CFHTTPCookieCopyRequestHeaderFields(kCFAllocatorDefault, cookiesCF);
+    CFStringRef valueCF = (CFStringRef)CFDictionaryGetValue(headerCF, s_cookieCF);
+    cookieString = String(valueCF); // No need to release valueCF, released by headerCF
+    CFRelease(cookiesCF);
+    CFRelease(headerCF);
+    CFRelease(urlCF);
+    CFRelease(cfCookieStoreCF);
+
+    return cookieString;
+#else
     DeprecatedString str = url.url();
     str.append((UChar)'\0');
 
-    DWORD count;
+    DWORD count = str.length();
     InternetGetCookie((UChar*)str.unicode(), 0, 0, &count);
     if (count <= 1) // Null terminator counts as 1.
         return String();
@@ -58,6 +113,7 @@ String cookies(const KURL& url)
     String& result = String(buffer, count-1); // Ignore the null terminator.
     delete[] buffer;
     return result;
+#endif
 }
 
 bool cookiesEnabled()

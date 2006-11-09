@@ -2742,10 +2742,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\win\CookieJarWin.cpp"
-					>
-				</File>
-				<File
 					RelativePath="..\platform\win\CursorWin.cpp"
 					>
 				</File>
@@ -3067,6 +3063,10 @@
 			<Filter
 				Name="network"
 				>
+				<File
+					RelativePath="..\platform\network\win\CookieJarWin.cpp"
+					>
+				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\FormData.cpp"
 					>
