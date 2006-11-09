@@ -21,7 +21,7 @@ BLDNMBR=`cat "$VERSIONFILE"`
 BLDNMBRSHORT=`cat "$VERSIONFILE"`
 BUILDER=""
 
-if [ "$BUILDBOT" == "" ]; then
+if [ "$BUILDBOT" == "" -o "$ARCHIVE_BUILD" == "1" ]; then
     echo -n "+" >> "$VERSIONFILE"
     BLDNMBRSHORT=`cat "$VERSIONFILE"`
     echo -n " " >> "$VERSIONFILE"

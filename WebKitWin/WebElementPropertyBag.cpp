@@ -96,6 +96,7 @@ HRESULT convertStringToVariant(VARIANT* pVar, const String& string)
     V_BSTR(pVar) = SysAllocStringLen(string.characters(), string.length());
     if (string.length() && !V_BSTR(pVar))
         return E_OUTOFMEMORY;
+
     return S_OK;
 }
 

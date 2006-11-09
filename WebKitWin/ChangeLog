@@ -1,3 +1,11 @@
+2006-11-08  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Steve.
+
+        Make the same change here as made in r11013.
+
+        * WebKit.vcproj/auto-version.sh:
+
 2006-11-08  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Geoff.
