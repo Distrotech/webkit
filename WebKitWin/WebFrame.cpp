@@ -946,7 +946,7 @@ HRESULT WebFrame::reloadAllowingStaleDataWithOverrideEncoding(BSTR encoding)
     hr = m_dataSource->request(&dsRequest);
     if (FAILED(hr))
         return hr;
-    request = WebMutableURLRequest::createInstance(dsRequest);
+    request = new WebMutableURLRequest(dsRequest);
     if (!request) {
         hr = E_OUTOFMEMORY;
         goto exit;

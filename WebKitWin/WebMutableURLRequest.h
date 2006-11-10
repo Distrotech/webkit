@@ -29,31 +29,17 @@
 #include "config.h"
 
 #include "IWebMutableURLRequest.h"
-#pragma warning(push, 0)
-#include <WebCore/platform/network/ResourceRequest.h>
-#pragma warning(pop)
 
 namespace WebCore
 {
     class FormData;
 }
 
-inline WebCore::ResourceRequestCachePolicy core(WebURLRequestCachePolicy policy)
-{
-    return static_cast<WebCore::ResourceRequestCachePolicy>(policy);
-}
-
-inline WebURLRequestCachePolicy kit(WebCore::ResourceRequestCachePolicy policy)
-{
-    return static_cast<WebURLRequestCachePolicy>(policy);
-}
-
 class WebMutableURLRequest : public IWebMutableURLRequest
 {
 public:
     static WebMutableURLRequest* createInstance();
-    static WebMutableURLRequest* createInstance(const WebCore::ResourceRequest&);
-    static WebMutableURLRequest* createInstance(IWebMutableURLRequest* req);
+    WebMutableURLRequest(IWebMutableURLRequest* req);
 protected:
     WebMutableURLRequest();
     ~WebMutableURLRequest();
@@ -68,7 +54,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE requestWithURL( 
         /* [in] */ BSTR theURL,
         /* [optional][in] */ WebURLRequestCachePolicy cachePolicy,
-        /* [optional][in] */ double timeoutInterval);
+        /* [optional][in] */ UINT timeoutInterval);
     
     virtual HRESULT STDMETHODCALLTYPE allHTTPHeaderFields( 
         /* [retval][out] */ IPropertyBag **result);
@@ -91,13 +77,13 @@ public:
     virtual HRESULT STDMETHODCALLTYPE initWithURL( 
         /* [in] */ BSTR url,
         /* [optional][in] */ WebURLRequestCachePolicy cachePolicy,
-        /* [optional][in] */ double timeoutInterval);
+        /* [optional][in] */ UINT timeoutInterval);
     
     virtual HRESULT STDMETHODCALLTYPE mainDocumentURL( 
         /* [retval][out] */ BSTR *result);
     
     virtual HRESULT STDMETHODCALLTYPE timeoutInterval( 
-        /* [retval][out] */ double *result);
+        /* [retval][out] */ UINT *result);
     
     virtual HRESULT STDMETHODCALLTYPE URL( 
         /* [retval][out] */ BSTR *result);
@@ -133,7 +119,7 @@ public:
         /* [in] */ BSTR theURL);
     
     virtual HRESULT STDMETHODCALLTYPE setTimeoutInterval( 
-        /* [in] */ double timeoutInterval);
+        /* [in] */ UINT timeoutInterval);
     
     virtual HRESULT STDMETHODCALLTYPE setURL( 
         /* [in] */ BSTR theURL);
@@ -147,8 +133,12 @@ public:
     const WebCore::FormData* formData();
 
 protected:
-    ULONG m_refCount;
-    WebCore::ResourceRequest m_request;
+    ULONG                       m_refCount;
+    BSTR                        m_url;
+    BSTR                        m_method;
+    WebURLRequestCachePolicy    m_cachePolicy;
+    UINT                        m_timeoutInterval;
+    const WebCore::FormData*    m_submitFormData;
 };
 
 #endif

@@ -71,7 +71,7 @@ interface IWebURLRequest : IUnknown
         + (id)requestWithURL:(NSURL *)theURL
         + (id)requestWithURL:(NSURL *)theURL cachePolicy:(NSURLRequestCachePolicy)cachePolicy timeoutInterval:(NSTimeInterval)timeoutInterval
     */
-    HRESULT requestWithURL([in] BSTR theURL, [in, optional] WebURLRequestCachePolicy cachePolicy, [in, optional] double timeoutInterval);
+    HRESULT requestWithURL([in] BSTR theURL, [in, optional] WebURLRequestCachePolicy cachePolicy, [in, optional] UINT timeoutInterval);
 
     /*
         - (NSDictionary *)allHTTPHeaderFields
@@ -107,7 +107,7 @@ interface IWebURLRequest : IUnknown
         - (id)initWithURL:(NSURL *)theURL
         - (id)initWithURL:(NSURL *)theURL cachePolicy:(NSURLRequestCachePolicy)cachePolicy timeoutInterval:(NSTimeInterval)timeoutInterval
     */
-    HRESULT initWithURL([in] BSTR url, [in, optional] WebURLRequestCachePolicy cachePolicy, [in, optional] double timeoutInterval);
+    HRESULT initWithURL([in] BSTR url, [in, optional] WebURLRequestCachePolicy cachePolicy, [in, optional] UINT timeoutInterval);
 
     /*
         - (NSURL *)mainDocumentURL
@@ -117,7 +117,7 @@ interface IWebURLRequest : IUnknown
     /*
         -(NSTimeInterval)timeoutInterval
     */
-    HRESULT timeoutInterval([out, retval] double* result);
+    HRESULT timeoutInterval([out, retval] UINT* result);
 
     /*
         -(NSURL *)URL

@@ -105,7 +105,7 @@ interface IWebMutableURLRequest : IWebURLRequest
     /*
         - (void)setTimeoutInterval:(NSTimeInterval)timeoutInterval
     */
-    HRESULT setTimeoutInterval([in] double timeoutInterval);
+    HRESULT setTimeoutInterval([in] UINT timeoutInterval);
 
     /*
         - (void)setURL:(NSURL *)theURL

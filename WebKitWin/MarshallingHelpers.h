@@ -30,30 +30,27 @@
 
 namespace WebCore {
     class IntRect;
-    class KURL;
 }
 
 class MarshallingHelpers
 {
 public:
-    static WebCore::KURL BSTRToKURL(BSTR);
-    static BSTR KURLToBSTR(const WebCore::KURL&);
-    static CFURLRef BSTRToCFURLRef(BSTR);
-    static CFStringRef BSTRToCFStringRef(BSTR);
-    static BSTR CFStringRefToBSTR(CFStringRef);
-    static int CFNumberRefToInt(CFNumberRef);
-    static CFNumberRef intToCFNumberRef(int);
-    static CFAbsoluteTime DATEToCFAbsoluteTime(DATE);
-    static DATE CFAbsoluteTimeToDATE(CFAbsoluteTime);
-    static SAFEARRAY* stringArrayToSafeArray(CFArrayRef);
-    static SAFEARRAY* intArrayToSafeArray(CFArrayRef);
-    static SAFEARRAY* intRectToSafeArray(const WebCore::IntRect&);
-    static SAFEARRAY* iunknownArrayToSafeArray(CFArrayRef);
-    static CFArrayRef safeArrayToStringArray(SAFEARRAY*);
-    static CFArrayRef safeArrayToIntArray(SAFEARRAY*);
-    static CFArrayRef safeArrayToIUnknownArray(SAFEARRAY*);
-    static const void* IUnknownRetainCallback(CFAllocatorRef, const void*);
-    static void IUnknownReleaseCallback(CFAllocatorRef, const void*);
+    static CFURLRef BSTRToCFURLRef(BSTR urlStr);
+    static CFStringRef BSTRToCFStringRef(BSTR str);
+    static BSTR CFStringRefToBSTR(CFStringRef str);
+    static int CFNumberRefToInt(CFNumberRef num);
+    static CFNumberRef intToCFNumberRef(int num);
+    static CFAbsoluteTime DATEToCFAbsoluteTime(DATE date);
+    static DATE CFAbsoluteTimeToDATE(CFAbsoluteTime absoluteTime);
+    static SAFEARRAY* stringArrayToSafeArray(CFArrayRef inArray);
+    static SAFEARRAY* intArrayToSafeArray(CFArrayRef inArray);
+    static SAFEARRAY* intRectToSafeArray(const WebCore::IntRect& rect);
+    static SAFEARRAY* iunknownArrayToSafeArray(CFArrayRef inArray);
+    static CFArrayRef safeArrayToStringArray(SAFEARRAY* inArray);
+    static CFArrayRef safeArrayToIntArray(SAFEARRAY* inArray);
+    static CFArrayRef safeArrayToIUnknownArray(SAFEARRAY* inArray);
+    static const void* IUnknownRetainCallback(CFAllocatorRef allocator, const void* value);
+    static void IUnknownReleaseCallback(CFAllocatorRef allocator, const void* value);
     static CFArrayCallBacks kIUnknownArrayCallBacks;
 
 private:

@@ -589,11 +589,6 @@ exit:
     return hr;
 }
 
-Page* WebView::page()
-{
-    return m_page;
-}
-
 void WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
 {
     static LONG globalClickCount;
@@ -2766,15 +2761,4 @@ HRESULT createMatchEnumerator(Vector<IntRect>* rects, IEnumTextMatches** matches
 {
     *matches = new EnumTextMatches(rects);
     return (*matches)?S_OK:E_OUTOFMEMORY;
-}
-
-Page* core(IWebView* iWebView)
-{
-    Page* page = 0;
-    WebView* webView = 0;
-    if (SUCCEEDED(iWebView->QueryInterface(CLSID_WebView, (void**)&webView)) && webView) {
-        page = webView->page();
-        webView->Release();
-    }
-    return page;
 }
