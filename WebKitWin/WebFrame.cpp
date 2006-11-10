@@ -1163,7 +1163,6 @@ void WebFrame::didFailWithError(ResourceHandle* handle, const ResourceError&)
         m_provisionalDataSource->Release();
         m_provisionalDataSource = 0;
     }
-    m_dataSource->QueryInterface(IID_IWebDataSourcePrivate, (void**)&m_dataSourcePrivate);
 
     d->frame->loader()->end();
 
