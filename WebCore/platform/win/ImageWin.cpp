@@ -30,7 +30,8 @@
 
 #include <winsock2.h>
 #include <windows.h>
-
+#include "PlatformString.h"
+#include "MimeTypeRegistry.h"
 // This function loads resources from WebKit
 Vector<char> loadResourceIntoArray(const char*);
 
@@ -52,12 +53,6 @@ Image* Image::loadPlatformResource(const char *name)
     img->setNativeData(data, true);
     CFRelease(data);
     return img;
-}
-
-bool Image::supportsType(const String& type)
-{
-    // FIXME: Implement.
-    return false;
 }
 
 bool Image::getHBITMAP(HBITMAP bmp)

@@ -1,3 +1,21 @@
+2006-11-09  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Brady.
+
+        Added Windows side of MIME Type registry, and updated 
+        objectContentType and ImageWin to make use of it
+        
+        This fixes <rdar://problem/4791483> 
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * loader/win/FrameLoaderWin.cpp:
+        (WebCore::FrameLoader::objectContentType):
+        * platform/win/ImageWin.cpp:
+        * platform/win/MimeTypeRegistryWin.cpp: Added.
+        (WebCore::getMIMETypeForUTI):
+        (WebCore::mimeTypeForExtension):
+        (WebCore::MimeTypeRegistry::getMIMETypeForExtension):
+
 2006-11-09  Lou Amadio  <lamadio@apple.com>
 
         Reviewed by mjs

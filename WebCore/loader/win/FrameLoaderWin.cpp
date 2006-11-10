@@ -45,6 +45,7 @@
 #include "kjs_window.h"
 #include "PluginDatabaseWin.h"
 #include "PluginViewWin.h"
+#include "MimeTypeRegistry.h"
 
 namespace WebCore {
 
@@ -101,14 +102,26 @@ void FrameLoader::didFirstLayout()
         client->didFirstLayout();
 }
 
-enum WebCore::ObjectContentType FrameLoader::objectContentType(const KURL& url, const String& mimeType)
+enum WebCore::ObjectContentType FrameLoader::objectContentType(const KURL& url, const String& mimeTypeIn)
 {
+    String mimeType = mimeTypeIn;
+    if (mimeType.isEmpty()) {
+        mimeType = MimeTypeRegistry::getMIMETypeForExtension(url.path().mid(url.path().findRev('.')+1));
+        if(mimeType.isEmpty())
+            return WebCore::ObjectContentNone;
+    }
+
     if (mimeType.isEmpty())
-        // FIXME: Guess the MIME type from the url extension
-        return WebCore::ObjectContentNone;
+        return ObjectContentFrame; // Go ahead and hope that we can display the content.
+
+    if (MimeTypeRegistry::isSupportedImageMIMEType(mimeType))
+        return WebCore::ObjectContentFrame;
 
     if (PluginDatabaseWin::installedPlugins()->isMIMETypeRegistered(mimeType))
         return WebCore::ObjectContentPlugin;
+
+    if (MimeTypeRegistry::isSupportedNonImageMIMEType(mimeType))
+        return WebCore::ObjectContentFrame;
 
     return (ObjectContentType)0;
 }
