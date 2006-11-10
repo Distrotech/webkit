@@ -1,3 +1,9 @@
+2006-11-10  Steve Falkenburg  <sfalken@apple.com>
+
+        Bump version number for submission
+
+        * WebKit.vcproj/VERSION:
+
 2006-11-10  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Darin
