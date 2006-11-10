@@ -1806,6 +1806,11 @@ void WebFrame::dispatchWillClose()
     LOG_NOIMPL();
 }
 
+void WebFrame::dispatchDidReceiveIcon()
+{
+    LOG_NOIMPL();
+}
+
 void WebFrame::dispatchDidStartProvisionalLoad()
 {
     LOG_NOIMPL();

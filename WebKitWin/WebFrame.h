@@ -227,6 +227,7 @@ public:
     virtual void dispatchWillPerformClientRedirect(const WebCore::KURL&, double interval, double fireDate);
     virtual void dispatchDidChangeLocationWithinPage();
     virtual void dispatchWillClose();
+    virtual void dispatchDidReceiveIcon();
     virtual void dispatchDidStartProvisionalLoad();
     virtual void dispatchDidReceiveTitle(const WebCore::String& title);
     virtual void dispatchDidCommitLoad();
