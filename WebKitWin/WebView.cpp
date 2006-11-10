@@ -1217,10 +1217,10 @@ static String osVersion()
                 osVersion = "Windows 98; Win 9x 4.90";
         }
     } else if (versionInfo.dwPlatformId == VER_PLATFORM_WIN32_NT)
-        osVersion = String::sprintf("Windows NT %d.%d", versionInfo.dwMajorVersion, versionInfo.dwMinorVersion);
+        osVersion = String::format("Windows NT %d.%d", versionInfo.dwMajorVersion, versionInfo.dwMinorVersion);
 
     if (!osVersion.length())
-        osVersion = String::sprintf("Windows %d.%d", versionInfo.dwMajorVersion, versionInfo.dwMinorVersion);
+        osVersion = String::format("Windows %d.%d", versionInfo.dwMajorVersion, versionInfo.dwMinorVersion);
 
     return osVersion;
 }
@@ -1278,7 +1278,7 @@ const String& WebView::userAgentForKURL(const KURL& /*url*/)
         return m_userAgentCustom;
 
     if (!m_userAgentStandard.length())
-        m_userAgentStandard = String::sprintf("Mozilla/5.0 (Windows; U; %s; %s) AppleWebKit/%s (KHTML, like Gecko)%s%s", osVersion().latin1().data(), language().latin1().data(), webKitVersion().latin1().data(), (m_applicationName.length() ? " " : ""), m_applicationName.latin1().data());
+        m_userAgentStandard = String::format("Mozilla/5.0 (Windows; U; %s; %s) AppleWebKit/%s (KHTML, like Gecko)%s%s", osVersion().latin1().data(), language().latin1().data(), webKitVersion().latin1().data(), (m_applicationName.length() ? " " : ""), m_applicationName.latin1().data());
 
     return m_userAgentStandard;
 }
