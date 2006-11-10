@@ -1,3 +1,14 @@
+2006-11-09  Lou Amadio  <lamadio@apple.com>
+
+        Reviewed by mjs
+        Correct the broken search implementations based on original webkit
+        <rdar://4827714>
+
+        * WebView.cpp:
+        (WebView::searchFor):
+        (WebView::generateSelectionImage):
+        (WebView::selectionImageRect):
+
 2006-11-09  Adam Roben  <aroben@apple.com>
 
         Reviewed by Steve.

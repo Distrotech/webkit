@@ -1868,16 +1868,25 @@ HRESULT STDMETHODCALLTYPE WebView::searchFor(
     String search(str, SysStringLen(str));
 
 
-    bool shouldWrap = false;
-    WebCore::Frame* frame = m_page->mainFrame();
+    WebCore::Frame* frame = focusedTargetFrame();
+    WebCore::Frame* startFrame = frame;
     do {
-        *found = frame->findString(search, !!forward, !!caseFlag, shouldWrap);
-        frame = incrementFrame(frame, !!forward, false);
-        if (!frame && !*found && !!wrapFlag && !shouldWrap) {
-            shouldWrap = true;
-            frame = m_page->mainFrame();
+        *found = frame->findString(search, !!forward, !!caseFlag, false);
+        if (*found) {
+            if (frame != startFrame)
+                startFrame->selectionController()->clear();
+            frame->view()->setFocus();
+            return S_OK;
         }
-    } while (frame && !*found);
+        frame = incrementFrame(frame, !!forward, !!wrapFlag);
+    } while (frame && frame != startFrame);
+
+    // Search contents of startFrame, on the other side of the selection that we did earlier.
+    // We cheat a bit and just research with wrap on
+    if (wrapFlag && !startFrame->selectionController()->isNone()) {
+        *found = startFrame->findString(search, !!forward, !!caseFlag, true);
+        frame->view()->setFocus();
+    }
 
     return S_OK;
 }
@@ -1948,12 +1957,7 @@ HRESULT STDMETHODCALLTYPE WebView::generateSelectionImage(BOOL forceWhiteText, H
 {
     *image = 0;
 
-    WebCore::Frame* frame = m_page->mainFrame();
-    do {
-        if (!frame->selectionController()->isNone())
-            break;
-        frame = incrementFrame(frame, true, true);
-    } while (frame);
+    WebCore::Frame* frame = focusedTargetFrame();
 
     if (frame)
         *image = Win(frame)->imageFromSelection(forceWhiteText?TRUE:FALSE);
@@ -1963,12 +1967,7 @@ HRESULT STDMETHODCALLTYPE WebView::generateSelectionImage(BOOL forceWhiteText, H
 
 HRESULT STDMETHODCALLTYPE WebView::selectionImageRect(RECT* rc)
 {
-    WebCore::Frame* frame = m_page->mainFrame();
-    do {
-        if (!frame->selectionController()->isNone())
-            break;
-        frame = incrementFrame(frame, true, true);
-    } while (frame);
+    WebCore::Frame* frame = focusedTargetFrame();
 
     if (frame) {
         IntRect ir = frame->selectionRect();

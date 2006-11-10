@@ -1,3 +1,11 @@
+2006-11-09  Lou Amadio  <lamadio@apple.com>
+
+        Reviewed by mjs
+        Corrected positioning of text for find overlay on subframes
+
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::imageFromRect):
+
 2006-11-08  Lou Amadio  <lamadio@apple.com>
 
         Reviewed by ggaren

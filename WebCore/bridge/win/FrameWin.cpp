@@ -370,6 +370,7 @@ HBITMAP FrameWin::imageFromRect(IntRect rect)
 
     IntSize offset = view()->scrollOffset();
     rect.move(-offset.width(), -offset.height());
+    rect = view()->convertToContainingWindow(rect);
     CGContextTranslateCTM(context, -rect.x(), -rect.y());
 
     GraphicsContext gc(context);
