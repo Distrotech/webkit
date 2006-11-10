@@ -23,16 +23,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#pragma warning(push)
-#pragma warning(disable: 4127) // conditional expression is constant
-#pragma warning(disable: 4996) // deprecated function
-
 #include "config.h"
 #include "WebChromeClient.h"
 
-#include "FloatRect.h"
 #include "WebView.h"
+#include "WebMutableURLRequest.h"
+#pragma warning(push, 0)
+#include <WebCore/page/FrameLoadRequest.h>
+#include <WebCore/platform/FloatRect.h>
 #include <WebCore/platform/win/NotImplemented.h>
+#pragma warning(pop)
 
 using namespace WebCore;
 
@@ -88,10 +88,23 @@ void WebChromeClient::unfocus()
     LOG_NOIMPL();
 }
 
-Page* WebChromeClient::createWindow(const FrameLoadRequest&)
+Page* WebChromeClient::createWindow(const FrameLoadRequest& frameLoadRequest)
 {
-    LOG_NOIMPL();
-    return 0;
+    IWebMutableURLRequest* request = WebMutableURLRequest::createInstance(frameLoadRequest.resourceRequest());
+    Page* page = 0;
+
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+        IWebView* webView = 0;
+        if(SUCCEEDED(uiDelegate->createWebViewWithRequest(m_webView, request, &webView)) && webView) {
+            page = core(webView);
+            webView->Release();
+        }
+        uiDelegate->Release();
+    }
+
+    request->Release();
+    return page;
 }
 
 Page* WebChromeClient::createModalDialog(const FrameLoadRequest&)
@@ -164,5 +177,3 @@ void WebChromeClient::setResizable(bool)
 {
     LOG_NOIMPL();
 }
-
-#pragma warning(pop)

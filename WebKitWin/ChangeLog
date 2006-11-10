@@ -1,3 +1,22 @@
+2006-11-09  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Steve Falkenberg.
+        
+        Implemented window.open.
+        
+        - Converted WebMutableURLRequest to use a ResourceRequest as its
+        backing store, to avoid yet another way of representing this data.
+        - Changed WebMutableURLRequests's timeoutInterval to double, to match
+        ResourceRequest and NSURLRequest.
+        - Added BSTRToKURL and KURLToBSTR helper functions.
+        - Made disabling of warnings 4127 and 4996 a project-wide setting, since headers
+        were already doing it haphazardly, and they're basically the stupidest
+        warnings evar.
+        - Added page accessor on WebView, and core(), for converting from WebView
+        to page.
+
+        * MarshallingHelpers.h: Removed unnecessary variable names from declarations.
+
 2006-11-10  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Darin

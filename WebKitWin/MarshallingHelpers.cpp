@@ -27,11 +27,28 @@
 
 #include "MarshallingHelpers.h"
 
+#pragma warning(push, 0)
 #include <WebCore/platform/IntRect.h>
+#include <WebCore/platform/KURL.h>
+#include <WebCore/platform/PlatformString.h>
+#pragma warning(pop)
+
+using namespace WebCore;
 
 static const double secondsPerDay = 60 * 60 * 24;
 
 CFArrayCallBacks MarshallingHelpers::kIUnknownArrayCallBacks = {0, IUnknownRetainCallback, IUnknownReleaseCallback, 0, 0};
+
+KURL MarshallingHelpers::BSTRToKURL(BSTR urlStr)
+{
+    return KURL(String(urlStr, SysStringLen(urlStr)).deprecatedString());
+}
+
+BSTR MarshallingHelpers::KURLToBSTR(const KURL& url)
+{
+    String urlString(url.url());
+    return SysAllocStringLen(urlString.characters(), urlString.length());
+}
 
 CFURLRef MarshallingHelpers::BSTRToCFURLRef(BSTR urlStr)
 {

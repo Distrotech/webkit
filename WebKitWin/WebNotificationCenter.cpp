@@ -23,8 +23,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#pragma warning( disable: 4996 ) // warning C4996: 'std::_Copy_opt' was declared deprecated
-
 #include "config.h"
 #include "WebKitDLL.h"
 

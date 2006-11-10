@@ -55,10 +55,4 @@ extern HINSTANCE gInstance;
 }
 #endif
 
-// disable warning C4127: conditional expression is constant
-#pragma warning( disable : 4127 )
-
-// disable warning C4996: 'function' was declared deprecated
-#pragma warning( disable : 4996 )
-
 #endif

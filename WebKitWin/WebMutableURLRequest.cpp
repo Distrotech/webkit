@@ -23,45 +23,32 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "WebKitDLL.h"
-#include "IWebURLResponse.h"
-#include "WebKit.h"
 #include "WebMutableURLRequest.h"
 
+#include "IWebURLResponse.h"
+#include "MarshallingHelpers.h"
+
+#include "WebKitDLL.h"
+#include "WebKit.h"
+
 #pragma warning(push, 0)
-#include <WebCore/platform/network/FormData.h>
+#include <WebCore/platform/win/BString.h>
 #include <WebCore/platform/CString.h>
+#include <WebCore/platform/network/FormData.h>
 #pragma warning(pop)
+
+using namespace WebCore;
 
 // IWebURLRequest ----------------------------------------------------------------
 
 WebMutableURLRequest::WebMutableURLRequest()
-: m_refCount(0)
-, m_url(0)
-, m_cachePolicy(WebURLRequestUseProtocolCachePolicy)
-, m_timeoutInterval(0)
-, m_method(0)
-, m_submitFormData(0)
+    : m_refCount(0)
 {
     gClassCount++;
 }
 
-WebMutableURLRequest::WebMutableURLRequest(IWebMutableURLRequest* req)
-{
-    WebMutableURLRequest* other = static_cast<WebMutableURLRequest*>(req);
-
-    m_refCount = 1;
-    m_url = SysAllocString(other->m_url);
-    m_cachePolicy = other->m_cachePolicy;
-    m_timeoutInterval = other->m_timeoutInterval;
-    m_method = SysAllocString(other->m_method);
-    m_submitFormData = other->m_submitFormData ? (new WebCore::FormData(other->m_submitFormData->flattenToString().latin1())) : 0;
-}
-
 WebMutableURLRequest::~WebMutableURLRequest()
 {
-    SysFreeString(m_url);
-    SysFreeString(m_method);
     gClassCount--;
 }
 
@@ -69,6 +56,22 @@ WebMutableURLRequest* WebMutableURLRequest::createInstance()
 {
     WebMutableURLRequest* instance = new WebMutableURLRequest();
     instance->AddRef();
+    return instance;
+}
+
+WebMutableURLRequest* WebMutableURLRequest::createInstance(IWebMutableURLRequest* req)
+{
+    WebMutableURLRequest* instance = new WebMutableURLRequest();
+    instance->AddRef();
+    instance->m_request = static_cast<WebMutableURLRequest*>(req)->m_request;
+    return instance;
+}
+
+WebMutableURLRequest* WebMutableURLRequest::createInstance(const ResourceRequest& request)
+{
+    WebMutableURLRequest* instance = new WebMutableURLRequest();
+    instance->AddRef();
+    instance->m_request = request;
     return instance;
 }
 
@@ -111,7 +114,7 @@ ULONG STDMETHODCALLTYPE WebMutableURLRequest::Release(void)
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::requestWithURL( 
     /* [in] */ BSTR /*theURL*/,
     /* [optional][in] */ WebURLRequestCachePolicy /*cachePolicy*/,
-    /* [optional][in] */ UINT /*timeoutInterval*/)
+    /* [optional][in] */ double /*timeoutInterval*/)
 {
     DebugBreak();
     return E_NOTIMPL;
@@ -127,7 +130,7 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::allHTTPHeaderFields(
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::cachePolicy( 
     /* [retval][out] */ WebURLRequestCachePolicy* result)
 {
-    *result = m_cachePolicy;
+    *result = kit(m_request.cachePolicy());
     return S_OK;
 }
 
@@ -148,7 +151,8 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::HTTPBodyStream(
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::HTTPMethod( 
     /* [retval][out] */ BSTR* result)
 {
-    *result = SysAllocString(m_method ? m_method : TEXT("GET"));
+    BString httpMethod = BString(m_request.httpMethod());
+    *result = httpMethod.release();
     return S_OK;
 }
 
@@ -162,11 +166,11 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::HTTPShouldHandleCookies(
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::initWithURL( 
     /* [in] */ BSTR url,
     /* [optional][in] */ WebURLRequestCachePolicy cachePolicy,
-    /* [optional][in] */ UINT timeoutInterval)
+    /* [optional][in] */ double timeoutInterval)
 {
-    m_url = SysAllocString(url);
-    m_cachePolicy = cachePolicy;
-    m_timeoutInterval = timeoutInterval;
+    m_request.setURL(MarshallingHelpers::BSTRToKURL(url));
+    m_request.setCachePolicy(core(cachePolicy));
+    m_request.setTimeoutInterval(timeoutInterval);
 
     return S_OK;
 }
@@ -174,14 +178,14 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::initWithURL(
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::mainDocumentURL( 
     /* [retval][out] */ BSTR* result)
 {
-    *result = SysAllocString(m_url);
+    *result = MarshallingHelpers::KURLToBSTR(m_request.url());
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::timeoutInterval( 
-    /* [retval][out] */ UINT* result)
+    /* [retval][out] */ double* result)
 {
-    *result = m_timeoutInterval;
+    *result = m_request.timeoutInterval();
     return S_OK;
 }
 
@@ -189,10 +193,10 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::URL(
     /* [retval][out] */ BSTR* result)
 {
     *result = 0;
-    if (!m_url)
+    if (m_request.isEmpty())
         return E_FAIL;
 
-    *result = SysAllocString(m_url);
+    *result = MarshallingHelpers::KURLToBSTR(m_request.url());
     return S_OK;
 }
 
@@ -224,7 +228,7 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setAllHTTPHeaderFields(
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setCachePolicy( 
     /* [in] */ WebURLRequestCachePolicy policy)
 {
-    m_cachePolicy = policy;
+    m_request.setCachePolicy(core(policy));
     return S_OK;
 }
 
@@ -245,7 +249,7 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setHTTPBodyStream(
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setHTTPMethod( 
     /* [in] */ BSTR method)
 {
-    m_method = SysAllocString(method);
+    m_request.setHTTPMethod(String(method));
     return S_OK;
 }
 
@@ -264,20 +268,16 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setMainDocumentURL(
 }
 
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setTimeoutInterval( 
-    /* [in] */ UINT /*timeoutInterval*/)
+    /* [in] */ double /*timeoutInterval*/)
 {
     DebugBreak();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setURL( 
-    /* [in] */ BSTR theURL)
+    /* [in] */ BSTR url)
 {
-    if (m_url)
-        SysFreeString(m_url);
-    m_url = SysAllocString(theURL);
-    if (theURL && !m_url)
-        return E_OUTOFMEMORY;
+    m_request.setURL(MarshallingHelpers::BSTRToKURL(url));
     return S_OK;
 }
 
@@ -289,14 +289,14 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setValue(
     return E_NOTIMPL;
 }
 
-// IWebMutableURLRequest ----------------------------------------------------
+// IWebURLRequest --------------------------------------------------------
 
-void WebMutableURLRequest::setFormData(const WebCore::FormData* data)
+void WebMutableURLRequest::setFormData(const FormData* data)
 {
-    m_submitFormData = data;
+    m_request.setHTTPBody(*data);
 }
 
-const WebCore::FormData* WebMutableURLRequest::formData()
+const FormData* WebMutableURLRequest::formData()
 {
-    return m_submitFormData;
+    return &m_request.httpBody();
 }
