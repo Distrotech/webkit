@@ -1,3 +1,11 @@
+2006-11-09  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam.
+        
+        Copy resources for CFNetwork (needed for next SDK)
+
+        * WebKit.vcproj/WebKit.vcproj:
+
 2006-11-09  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.
