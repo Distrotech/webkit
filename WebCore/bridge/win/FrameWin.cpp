@@ -169,8 +169,8 @@ bool FrameWin::runJavaScriptPrompt(String const& message, String const& defaultV
     return succeeded;
 }
 
-// FIXME: This needs to be unified with the keyPress method on FrameMac
-bool FrameWin::keyPress(const PlatformKeyboardEvent& keyEvent)
+// FIXME: This needs to be unified with the keyEvent method on FrameMac
+bool FrameWin::keyEvent(const PlatformKeyboardEvent& keyEvent)
 {
     bool result;
     // Check for cases where we are too early for events -- possible unmatched key up

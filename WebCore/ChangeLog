@@ -1,3 +1,14 @@
+2006-11-11  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Oliver.
+
+        Rename keyPress to keyEvent, it's used for both key presses
+        and releases.
+        
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::keyEvent):
+        * bridge/win/FrameWin.h:
+
 2006-11-11  Adam Roben  <aroben@apple.com>
 
         Reviewed by Geoff.

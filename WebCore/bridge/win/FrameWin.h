@@ -145,7 +145,7 @@ public:
     virtual bool canUndo() const;
     virtual void print();
 
-    bool keyPress(const PlatformKeyboardEvent&);
+    bool keyEvent(const PlatformKeyboardEvent&);
 
     virtual void textFieldDidBeginEditing(Element*);
     virtual void textFieldDidEndEditing(Element*);

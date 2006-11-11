@@ -1,3 +1,35 @@
+2006-11-11  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Oliver.
+
+        Clean up the event handling code.
+        
+        * WebEditorClient.cpp:
+        (WebEditorClient::shouldBeginEditing):
+        (WebEditorClient::shouldEndEditing):
+        (WebEditorClient::shouldApplyStyle):
+        Change these to return true. Eventually they will call the editing delegate.
+        
+        * WebView.cpp:
+        (WebView::execCommand):
+        Update to call the editor's execCommand.
+        
+        (WebView::keyUp):
+        New function that forwards the event to FrameWin.
+        
+        (editCommandForKey):
+        New function that given a key returns an edit command from a table. Eventually this table
+        should be moved into WebCore.
+        
+        (WebView::handleEditingKeyboardEvent):
+        New function that handles editing events.
+        
+        (WebView::keyDown):
+        If the frame is editable, call handleEditingKeyboardEvent.
+        
+        (WebViewWndProc):
+        * WebView.h:
+
 2006-11-11  Adam Roben  <aroben@apple.com>
 
         Reviewed by Geoff.
@@ -32,6 +64,7 @@
         * WebView.cpp:
         * WebView.h:
 
+>>>>>>> .r11059
 2006-11-10  Adam Roben  <aroben@apple.com>
 
         Reviewed by Steve.

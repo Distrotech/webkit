@@ -69,13 +69,13 @@ int WebEditorClient::spellCheckerDocumentTag()
 bool WebEditorClient::shouldBeginEditing(Range*)
 {
     LOG_NOIMPL();
-    return false;
+    return true;
 }
 
 bool WebEditorClient::shouldEndEditing(Range*)
 {
     LOG_NOIMPL();
-    return false;
+    return true;
 }
 
 void WebEditorClient::didBeginEditing()
@@ -116,7 +116,7 @@ bool WebEditorClient::shouldInsertNode(Node* /*node*/, Range* /*replacingRange*/
 //{ LOG_NOIMPL(); return false; }
 
 bool WebEditorClient::shouldApplyStyle(CSSStyleDeclaration* /*style*/, Range* /*toElementsInDOMRange*/)
-{ LOG_NOIMPL(); return false; }
+{ LOG_NOIMPL(); return true; }
 
 bool WebEditorClient::shouldChangeTypingStyle(CSSStyleDeclaration* /*currentStyle*/, CSSStyleDeclaration* /*toProposedStyle*/)
 { LOG_NOIMPL(); return false; }

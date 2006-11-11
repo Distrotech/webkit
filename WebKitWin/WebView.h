@@ -524,7 +524,8 @@ public:
     void handleMouseEvent(UINT, WPARAM, LPARAM);
     void mouseWheel(WPARAM, LPARAM);
     bool execCommand(WPARAM wParam, LPARAM lParam);
-    bool keyPress(WPARAM, LPARAM);
+    bool keyDown(WPARAM, LPARAM);
+    bool keyUp(WPARAM, LPARAM);
     WebCore::FrameView* focusedTarget();
     WebCore::Frame* focusedTargetFrame();
     HRESULT goToItem(IWebHistoryItem* item, WebFrameLoadType withLoadType);
@@ -545,6 +546,9 @@ public:
     // Convenient to be able to violate the rules of COM here for easy movement to the frame.
     WebFrame* topLevelFrame() { return m_mainFrame; }
     const WebCore::String& userAgentForKURL(const WebCore::KURL& url);
+
+private:
+    bool handleEditingKeyboardEvent(WebCore::FrameWin*, const WebCore::PlatformKeyboardEvent&);
 
 protected:
     ULONG m_refCount;

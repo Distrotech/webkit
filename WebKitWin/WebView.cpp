@@ -42,6 +42,7 @@
 #include <WebCore/CommandByName.h>
 #include <WebCore/CString.h>
 #include <WebCore/Document.h>
+#include <WebCore/Editor.h>
 #include <WebCore/FrameLoader.h>
 #include <WebCore/FrameTree.h>
 #include <WebCore/FrameView.h>
@@ -64,7 +65,6 @@
 using namespace WebCore;
 
 const LPCWSTR kWebViewWindowClassName = L"WebViewWindowClass";
-static bool nextCharIsInputText = false;
 
 const int WM_XP_THEMECHANGED = 0x031A;
 
@@ -657,22 +657,21 @@ bool WebView::execCommand(WPARAM wParam, LPARAM /*lParam*/)
 {
     FrameWin* frame = static_cast<FrameWin*>(m_page->mainFrame());
     bool handled = false;
-    switch (LOWORD(wParam))
-    {
+    switch (LOWORD(wParam)) {
     case Cut:
-        handled = frame->command()->execCommand("Cut");
+        handled = frame->editor()->execCommand("Cut");
         break;
     case Copy:
-        handled = frame->command()->execCommand("Copy");
+        handled = frame->editor()->execCommand("Copy");
         break;
     case Paste:
-        handled = frame->command()->execCommand("Paste");
+        handled = frame->editor()->execCommand("Paste");
         break;
     case ForwardDelete:
-        handled = frame->command()->execCommand("Clear");
+        handled = frame->editor()->execCommand("ForwardDelete");
         break;
     case SelectAll:
-        handled = frame->command()->execCommand("SelectAll");
+        handled = frame->editor()->execCommand("SelectAll");
         break;
     default:
         break;
@@ -690,107 +689,165 @@ Frame* WebView::focusedTargetFrame()
     return focusedTarget()->frame();
 }
 
-bool WebView::keyPress(WPARAM wParam, LPARAM lParam)
+bool WebView::keyUp(WPARAM wParam, LPARAM lParam)
 {
     PlatformKeyboardEvent keyEvent(m_viewWindow, wParam, lParam);
     FrameWin* frame = static_cast<FrameWin*>(focusedTargetFrame());
 
-    // FIXME: Kind of gross that this is here.
-    bool handled = frame->keyPress(keyEvent);
-    if (!handled && !keyEvent.isKeyUp()) {
-        Node* start = frame->selectionController()->start().node();
-        if (start && start->isContentEditable()) {
-            switch(keyEvent.WindowsKeyCode()) {
-            case VK_BACK:
-                TypingCommand::deleteKeyPressed(frame->document());
-                break;
-            case VK_DELETE:
-                TypingCommand::forwardDeleteKeyPressed(frame->document());
-                break;
-            case VK_LEFT:
-                if (::GetKeyState(VK_SHIFT) < 0)
-                    frame->command()->execCommand("SelectLeft");
-                else
-                    frame->command()->execCommand("MoveLeft");
-                break;
-            case VK_RIGHT:
-                if (::GetKeyState(VK_SHIFT) < 0)
-                    frame->command()->execCommand("SelectRight");
-                else
-                    frame->command()->execCommand("MoveRight");
-                break;
-            case VK_UP:
-                if (::GetKeyState(VK_SHIFT) < 0)
-                    frame->command()->execCommand("SelectUp");
-                else
-                    frame->command()->execCommand("MoveUp");
-                break;
-            case VK_DOWN:
-                if (::GetKeyState(VK_SHIFT) < 0)
-                    frame->command()->execCommand("SelectDown");
-                else
-                    frame->command()->execCommand("MoveDown");
-                break;
-            case VK_RETURN:
-                if (start->isContentRichlyEditable())
-                    TypingCommand::insertParagraphSeparator(frame->document());
-                else
-                    TypingCommand::insertLineBreak(frame->document());
-                break;
-            default:
-                nextCharIsInputText = true;
-            }
-            handled = true;
-        } else {
-            // Need to scroll the page if the arrow keys, space(shift), pgup/dn, or home/end are hit.
-            ScrollDirection direction;
-            ScrollGranularity granularity;
-            switch (keyEvent.WindowsKeyCode()) {
-            case VK_LEFT:
-                granularity = ScrollByLine;
-                direction = ScrollLeft;
-                break;
-            case VK_RIGHT:
-                granularity = ScrollByLine;
-                direction = ScrollRight;
-                break;
-            case VK_UP:
-                granularity = ScrollByLine;
-                direction = ScrollUp;
-                break;
-            case VK_DOWN:
-                granularity = ScrollByLine;
-                direction = ScrollDown;
-                break;
-            case VK_HOME:
-                granularity = ScrollByDocument;
-                direction = ScrollUp;
-                break;
-            case VK_END:
-                granularity = ScrollByDocument;
-                direction = ScrollDown;
-                break;
-            case VK_SPACE:
-                granularity = ScrollByPage;
-                direction = (GetKeyState(VK_SHIFT) & 0x8000) ? ScrollUp : ScrollDown;
-                break;
-            case VK_PRIOR:
-                granularity = ScrollByPage;
-                direction = ScrollUp;
-                break;
-            case VK_NEXT:
-                granularity = ScrollByPage;
-                direction = ScrollDown;
-                break;
-            default:
-                return handled;
-            }
+    return frame->keyEvent(keyEvent);
+}
 
-            focusedTarget()->scroll(direction, granularity);
-            handled = true;
-        }
+static const unsigned CtrlKey = 1 << 0;
+static const unsigned AltKey = 1 << 1;
+static const unsigned ShiftKey = 1 << 2;
+
+
+struct KeyEntry {
+    unsigned virtualKey;
+    unsigned modifiers;
+    const char* name;
+};
+
+static const KeyEntry keyEntries[] = {
+    { VK_LEFT,   0,                  "MoveLeft"                                    },
+    { VK_LEFT,   ShiftKey,           "MoveLeftAndModifySelection"                  },
+    { VK_LEFT,   CtrlKey,            "MoveWordLeft"                                },
+    { VK_LEFT,   CtrlKey | ShiftKey, "MoveWordLeftAndModifySelection"              },
+    { VK_RIGHT,  0,                  "MoveRight"                                   },
+    { VK_RIGHT,  ShiftKey,           "MoveRightAndModifySelection"                 },
+    { VK_RIGHT,  CtrlKey,            "MoveWordRight"                               },
+    { VK_RIGHT,  CtrlKey | ShiftKey, "MoveWordRightAndModifySelection"             },
+    { VK_UP,     0,                  "MoveUp"                                      },
+    { VK_UP,     ShiftKey,           "MoveUpAndModifySelection"                    },
+    { VK_DOWN,   0,                  "MoveDown"                                    },
+    { VK_DOWN,   ShiftKey,           "MoveDownAndModifySelection"                  },
+    { VK_HOME,   0,                  "MoveToBeginningOfLine"                       },
+    { VK_HOME,   ShiftKey,           "MoveToBeginningOfLineAndModifySelection"     },
+    { VK_HOME,   CtrlKey,            "MoveToBeginningOfDocument"                   },
+    { VK_HOME,   CtrlKey | ShiftKey, "MoveToBeginningOfDocumentAndModifySelection" },
+
+    { VK_END,    0,                  "MoveToEndOfLine"                             },
+    { VK_END,    ShiftKey,           "MoveToEndOfLineAndModifySelection"           },
+    { VK_END,    CtrlKey,            "MoveToEndOfDocument"                         },
+    { VK_END,    CtrlKey | ShiftKey, "MoveToEndOfDocumentAndModifySelection"       },
+
+    { VK_BACK,   0,                  "Delete"                                      },
+    { VK_DELETE, 0,                  "ForwardDelete"                               },
+    
+    { 'B',       CtrlKey,            "ToggleBold"                                  },
+    { 'I',       CtrlKey,            "ToggleItalic"                                },
+};
+
+const char* editCommandForKey(const PlatformKeyboardEvent& keyEvent)
+{
+    static HashMap<int, const char*>* commandsMap = 0;
+
+    if (!commandsMap) {
+        commandsMap = new HashMap<int, const char*>;
+
+        for (unsigned i = 0; i < _countof(keyEntries); i++)
+            commandsMap->set(keyEntries[i].modifiers << 16 | keyEntries[i].virtualKey, keyEntries[i].name);
     }
-    return handled;
+
+    unsigned modifiers = 0;
+    if (keyEvent.shiftKey())
+        modifiers |= ShiftKey;
+    if (keyEvent.altKey())
+        modifiers |= AltKey;
+    if (keyEvent.ctrlKey())
+        modifiers |= CtrlKey;
+
+    return commandsMap->get(modifiers << 16 | keyEvent.WindowsKeyCode());
+}
+
+
+bool WebView::handleEditingKeyboardEvent(FrameWin* frame, const PlatformKeyboardEvent& keyEvent)
+{
+    const char* editCommand = editCommandForKey(keyEvent);
+
+    if (editCommand) {
+        frame->editor()->execCommand(editCommand);
+        return true;
+    }
+
+    // We don't want unhandled commands sent to the char handler
+    if (keyEvent.ctrlKey())
+        return true;
+
+    switch (keyEvent.WindowsKeyCode()) {
+        // Say we handle this so it won't get passed to the char handler.
+        case VK_ESCAPE:
+            break;
+        case VK_RETURN:
+            if (frame->selectionController()->isContentRichlyEditable())
+                TypingCommand::insertParagraphSeparator(frame->document());
+            else
+                TypingCommand::insertLineBreak(frame->document());
+            break;
+        default:
+            return false;
+    }
+    return true;
+}
+
+bool WebView::keyDown(WPARAM wParam, LPARAM lParam)
+{
+    PlatformKeyboardEvent keyEvent(m_viewWindow, wParam, lParam);
+    FrameWin* frame = static_cast<FrameWin*>(focusedTargetFrame());
+
+    if (frame->keyEvent(keyEvent))
+        return true;
+
+    if (frame->selectionController()->isContentEditable())
+        return handleEditingKeyboardEvent(frame, keyEvent);
+
+    // Need to scroll the page if the arrow keys, space(shift), pgup/dn, or home/end are hit.
+    ScrollDirection direction;
+    ScrollGranularity granularity;
+    switch (keyEvent.WindowsKeyCode()) {
+        case VK_LEFT:
+            granularity = ScrollByLine;
+            direction = ScrollLeft;
+            break;
+        case VK_RIGHT:
+            granularity = ScrollByLine;
+            direction = ScrollRight;
+            break;
+        case VK_UP:
+            granularity = ScrollByLine;
+            direction = ScrollUp;
+            break;
+        case VK_DOWN:
+            granularity = ScrollByLine;
+            direction = ScrollDown;
+            break;
+        case VK_HOME:
+            granularity = ScrollByDocument;
+            direction = ScrollUp;
+            break;
+        case VK_END:
+            granularity = ScrollByDocument;
+            direction = ScrollDown;
+            break;
+        case VK_SPACE:
+            granularity = ScrollByPage;
+            direction = (GetKeyState(VK_SHIFT) & 0x8000) ? ScrollUp : ScrollDown;
+            break;
+        case VK_PRIOR:
+            granularity = ScrollByPage;
+            direction = ScrollUp;
+            break;
+        case VK_NEXT:
+            granularity = ScrollByPage;
+            direction = ScrollDown;
+            break;
+        default:
+            return false;
+    }
+
+    focusedTarget()->scroll(direction, granularity);
+
+    return true;
 }
 
 bool WebView::inResizer(LPARAM lParam)
@@ -835,6 +892,7 @@ static ATOM registerWebViewWindowClass()
 
 static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    static bool handledByKeydown = false;
     LRESULT lResult = 0;
     LONG_PTR longPtr = GetWindowLongPtr(hWnd, 0);
     WebView* webView = reinterpret_cast<WebView*>(longPtr);
@@ -880,24 +938,20 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             if (mainFrameImpl->impl()->view()->didFirstLayout())
                 webView->mouseWheel(wParam, lParam);
             break;
-        case WM_KEYDOWN: {
-            webView->keyPress(wParam, lParam);
+        case WM_KEYDOWN:
+            handledByKeydown = webView->keyDown(wParam, lParam);
             break;
-        }
-        case WM_CHAR: {
-            // FIXME: We need to use WM_UNICHAR to support international text.
-            if (nextCharIsInputText) {
+        case WM_KEYUP:
+            webView->keyUp(wParam, lParam);
+            break;
+        case WM_CHAR: 
+            if (!handledByKeydown) {
+                // FIXME: We need to use WM_UNICHAR to support supplementary characters.
                 UChar c = (UChar)wParam;
                 TypingCommand::insertText(webView->focusedTargetFrame()->document(), String(&c, 1), false);
                 webView->focusedTargetFrame()->revealSelection(RenderLayer::gAlignToEdgeIfNeeded); 
-                nextCharIsInputText = false;
             }
             break;
-        }
-        case WM_KEYUP: {
-            webView->keyPress(wParam, lParam);
-            break;
-        }
         case WM_SIZE:
             if (lParam != 0) {
                 mainFrameImpl->setNeedsLayout();
