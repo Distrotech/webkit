@@ -1,3 +1,12 @@
+2006-11-11  Darin Adler  <darin@apple.com>
+
+        - blind attempt to fix the build
+
+        * platform/win/CursorWin.cpp:
+        (WebCore::verticalTextCursor): Added. Just returns the pointer cursor.
+        (WebCore::cellCursor): Ditto.
+        (WebCore::contextMenuCursor): Ditto.
+
 2006-11-10  Steve Falkenburg  <sfalken@apple.com>
 
         Build fix for opensource/internal merge script.

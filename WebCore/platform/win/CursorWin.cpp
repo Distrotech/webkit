@@ -275,4 +275,19 @@ const Cursor& moveCursor()
     return c;
 }
 
+const Cursor& verticalTextCursor()
+{
+    return pointerCursor();
+}
+
+const Cursor& cellCursor()
+{
+    return pointerCursor();
+}
+
+const Cursor& contextMenuCursor()
+{
+    return pointerCursor();
+}
+
 }
