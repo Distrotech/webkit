@@ -3110,6 +3110,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\ResourceError.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\ResourceHandle.cpp"
 					>
 				</File>
