@@ -45,7 +45,6 @@ WebIconDatabase* WebIconDatabase::m_sharedWebIconDatabase = 0;
 
 WebIconDatabase::WebIconDatabase()
 : m_refCount(0)
-, m_iconDatabase(0)
 {
     gClassCount++;
 }
@@ -83,9 +82,6 @@ exit:
 
 void WebIconDatabase::init()
 {
-    ASSERT(!m_iconDatabase);
-    m_iconDatabase = WebCore::IconDatabase::sharedIconDatabase();
-
     WebPreferences* prefs = WebPreferences::createInstance();
     IWebPreferences* standardPrefs;
     BOOL enabled = FALSE;
@@ -94,7 +90,7 @@ void WebIconDatabase::init()
             enabled = FALSE;
             LOG_ERROR("Unable to get icon database enabled preference");
         }
-    m_iconDatabase->setEnabled(!!enabled);
+    IconDatabase::sharedIconDatabase()->setEnabled(!!enabled);
     
     BSTR prefDatabasePath = 0;
     if (FAILED(standardPrefs->iconDatabaseLocation(&prefDatabasePath)))
@@ -108,7 +104,7 @@ void WebIconDatabase::init()
         if (FAILED(userIconDatabasePath(databasePath)))
             LOG_ERROR("Failed to construct default icon database path");
     
-    if (!m_iconDatabase->open(databasePath))
+    if (!IconDatabase::sharedIconDatabase()->open(databasePath))
             LOG_ERROR("Failed to open icon database path");
 }
 
@@ -175,10 +171,9 @@ HRESULT STDMETHODCALLTYPE WebIconDatabase::iconForURL(
         /* [optional][in] */ BOOL /*cache*/,
         /* [retval][out] */ HBITMAP* bitmap)
 {
-    ASSERT(m_iconDatabase);
     IntSize intSize(*size);
 
-    Image* icon = m_iconDatabase->iconForPageURL(String(url, SysStringLen(url)), intSize);
+    Image* icon = IconDatabase::sharedIconDatabase()->iconForPageURL(String(url, SysStringLen(url)), intSize);
     if (icon) {
         *bitmap = getOrCreateSharedBitmap(size);
         if (!icon->getHBITMAP(*bitmap)) {
@@ -203,16 +198,14 @@ HRESULT STDMETHODCALLTYPE WebIconDatabase::defaultIconWithSize(
 HRESULT STDMETHODCALLTYPE WebIconDatabase::retainIconForURL( 
         /* [in] */ BSTR url)
 {
-    ASSERT(m_iconDatabase);
-    m_iconDatabase->retainIconForPageURL(String(url, SysStringLen(url)));
+    IconDatabase::sharedIconDatabase()->retainIconForPageURL(String(url, SysStringLen(url)));
     return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebIconDatabase::releaseIconForURL( 
         /* [in] */ BSTR url)
 {
-    ASSERT(m_iconDatabase);
-    m_iconDatabase->releaseIconForPageURL(String(url, SysStringLen(url)));
+    IconDatabase::sharedIconDatabase()->releaseIconForPageURL(String(url, SysStringLen(url)));
     return S_OK;
 }
     

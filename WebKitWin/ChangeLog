@@ -1,3 +1,18 @@
+2006-11-10  Brady Eidson  <beidson@apple.com>
+
+        Enthousiastically review by Beth (with exclamation marks and everything!!!1!!one!)
+
+        No need for WebIconDatabase to keep its own reference to the
+        WebCore::IconDatabase
+        
+        * WebIconDatabase.cpp:
+        (WebIconDatabase::WebIconDatabase):
+        (WebIconDatabase::init):
+        (WebIconDatabase::iconForURL):
+        (WebIconDatabase::retainIconForURL):
+        (WebIconDatabase::releaseIconForURL):
+        * WebIconDatabase.h:
+
 2006-11-10  Steve Falkenburg  <sfalken@apple.com>
 
         Bump version number for submission

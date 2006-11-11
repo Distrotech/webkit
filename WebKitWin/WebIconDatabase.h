@@ -88,8 +88,6 @@ protected:
     ULONG m_refCount;
     static WebIconDatabase* m_sharedWebIconDatabase;
 
-    IconDatabase* m_iconDatabase;
-
     // Keep a set of HBITMAPs around for the default icon, and another
     // to share amongst present site icons
     HBITMAP getOrCreateSharedBitmap(LPSIZE size);
