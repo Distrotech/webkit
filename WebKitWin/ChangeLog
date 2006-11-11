@@ -1,3 +1,11 @@
+2006-11-10  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Steve.
+
+        Archive builds should still copy SDK .dlls into $WebKitOutputDir.
+
+        * WebKit.vcproj/WebKit.vcproj:
+
 2006-11-10  Brady Eidson  <beidson@apple.com>
 
         Enthousiastically review by Beth (with exclamation marks and everything!!!1!!one!)
