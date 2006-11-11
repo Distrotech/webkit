@@ -1,3 +1,14 @@
+=== Safari-521.30 ===
+
+2006-11-10  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Hyatt.
+
+        Check for BHIDDEN in isVisible() also.
+
+        * rendering/RenderStyle.h:
+        (WebCore::BorderValue::isVisible):
+
 2006-11-10  Timothy Hatcher  <timothy@apple.com>
 
         Reviewed by Adam.
