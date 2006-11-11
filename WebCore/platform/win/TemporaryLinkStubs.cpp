@@ -106,7 +106,6 @@ String WebCore::searchableIndexIntroduction() { LOG_NOIMPL(); return String(); }
 
 int WebCore::findNextSentenceFromIndex(UChar const*,int,int,bool) { LOG_NOIMPL(); return 0; }
 void WebCore::findSentenceBoundary(UChar const*,int,int,int*,int*) { LOG_NOIMPL(); }
-int WebCore::findNextWordFromIndex(UChar const*,int,int,bool) { LOG_NOIMPL(); return 0; }
 
 namespace WebCore {
 

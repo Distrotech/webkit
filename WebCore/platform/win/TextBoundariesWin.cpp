@@ -27,9 +27,43 @@
 #include "TextBoundaries.h"
 
 #include <unicode/ubrk.h>
+#include <unicode/uchar.h>
 #include "StringImpl.h"
 
 namespace WebCore {
+
+int findNextWordFromIndex(const UChar* chars, int len, int position, bool forward)
+{
+    UBreakIterator* it = getWordBreakIterator(chars, len);
+
+    int newPosition = position;
+
+    if (forward) {
+        position = ubrk_following(it, position);
+        while (position != UBRK_DONE) {
+            // We stop searching when the character preceeding the break
+            // is alphanumeric.
+            if (position < len && u_isalnum(chars[position - 1]))
+                return position;
+
+            position = ubrk_following(it, position);
+        }
+
+        return len;
+    } else {
+        position = ubrk_preceding(it, position);
+        while (position != UBRK_DONE) {
+            // We stop searching when the character following the break
+            // is alphanumeric.
+            if (position > 0 && u_isalnum(chars[position]))
+                return position;
+
+            position = ubrk_preceding(it, position);
+        }
+
+        return 0;
+    }
+}
 
 void findWordBoundary(const UChar* chars, int len, int position, int* start, int* end)
 {
