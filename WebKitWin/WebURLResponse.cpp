@@ -30,10 +30,10 @@
 #include <wtf/platform.h>
 
 #pragma warning( push, 0 )
-#include <WebCore/platform/DeprecatedString.h>
-#include <WebCore/platform/KURL.h>
-#include <WebCore/platform/network/ResourceHandle.h>
-#include <WebCore/platform/win/BString.h>
+#include <WebCore/BString.h>
+#include <WebCore/DeprecatedString.h>
+#include <WebCore/KURL.h>
+#include <WebCore/ResourceHandle.h>
 #pragma warning( pop )
 
 #include <shlobj.h>

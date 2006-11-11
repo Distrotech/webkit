@@ -35,7 +35,7 @@
 #include "WebPreferences.h"
 
 #include <CoreFoundation/CoreFoundation.h>
-#include <WebCore/platform/win/WebCoreHistory.h>
+#include <WebCore/WebCoreHistory.h>
 
 #pragma warning( push, 0 )
 #include <wtf/Vector.h>

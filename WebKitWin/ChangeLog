@@ -1,3 +1,37 @@
+2006-11-11  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Geoff.
+
+        Update WebCore #includes to use a flat directory structure.
+
+        * DOMCSSClasses.cpp:
+        * DOMCSSClasses.h:
+        * DOMCoreClasses.cpp:
+        * DOMEventsClasses.cpp:
+        * DOMHTMLClasses.cpp:
+        * MarshallingHelpers.cpp:
+        * WebChromeClient.cpp:
+        * WebChromeClient.h:
+        * WebDataSource.cpp:
+        * WebEditorClient.cpp:
+        * WebEditorClient.h:
+        * WebElementPropertyBag.cpp:
+        * WebFrame.cpp:
+        * WebFrame.h:
+        * WebHTMLRepresentation.cpp:
+        * WebHistory.cpp:
+        * WebIconDatabase.cpp:
+        * WebIconDatabase.h:
+        * WebKit.vcproj/WebKit.vcproj:
+        * WebKitDLL.cpp:
+        * WebMutableURLRequest.cpp:
+        * WebNotificationCenter.cpp:
+        * WebPreferences.cpp:
+        * WebURLResponse.cpp:
+        * WebURLResponse.h:
+        * WebView.cpp:
+        * WebView.h:
+
 2006-11-10  Adam Roben  <aroben@apple.com>
 
         Reviewed by Steve.

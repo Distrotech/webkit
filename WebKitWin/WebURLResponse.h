@@ -31,7 +31,7 @@
 #include "IWebURLResponse.h"
 
 #pragma warning(push, 0)
-#include <WebCore/platform/network/ResourceResponse.h>
+#include <WebCore/ResourceResponse.h>
 #pragma warning(pop)
 
 class WebURLResponse : public IWebURLResponse

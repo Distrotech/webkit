@@ -32,7 +32,7 @@
 
 #include "FloatRect.h"
 #include "WebView.h"
-#include <WebCore/platform/win/NotImplemented.h>
+#include <WebCore/NotImplemented.h>
 
 using namespace WebCore;
 

@@ -29,10 +29,10 @@
 #include "DOMEventsClasses.h"
 
 #pragma warning( push, 0 )
-#include <WebCore/page/DOMWindow.h>
-#include <WebCore/dom/Event.h>
-#include <WebCore/dom/KeyboardEvent.h>
-#include <WebCore/dom/MouseEvent.h>
+#include <WebCore/DOMWindow.h>
+#include <WebCore/Event.h>
+#include <WebCore/KeyboardEvent.h>
+#include <WebCore/MouseEvent.h>
 #pragma warning( pop )
 
 // DOMEventListener -----------------------------------------------------------

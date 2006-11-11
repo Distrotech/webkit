@@ -29,8 +29,8 @@
 #include "WebMutableURLRequest.h"
 
 #pragma warning(push, 0)
-#include <WebCore/platform/network/FormData.h>
-#include <WebCore/platform/CString.h>
+#include <WebCore/CString.h>
+#include <WebCore/FormData.h>
 #pragma warning(pop)
 
 // IWebURLRequest ----------------------------------------------------------------

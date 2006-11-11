@@ -32,8 +32,8 @@
 #include "WebPreferenceKeysPrivate.h"
 
 #pragma warning( push, 0 )
+#include <WebCore/Font.h>
 #include <wtf/Vector.h>
-#include <WebCore/platform/Font.h>
 #pragma warning( pop )
 
 #include <CoreFoundation/CoreFoundation.h>

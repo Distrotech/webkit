@@ -29,8 +29,8 @@
 #include "IWebIconDatabase.h"
 
 #pragma warning(push, 0)
-#include <platform/IntSize.h>
-#include <platform/IntSizeHash.h>
+#include <WebCore/IntSize.h>
+#include <WebCore/IntSizeHash.h>
 #pragma warning(pop)
 
 #include <WTF/HashMap.h>

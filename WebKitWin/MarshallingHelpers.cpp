@@ -27,7 +27,7 @@
 
 #include "MarshallingHelpers.h"
 
-#include <WebCore/platform/IntRect.h>
+#include <WebCore/IntRect.h>
 
 static const double secondsPerDay = 60 * 60 * 24;
 

@@ -32,8 +32,8 @@
 #include "IWebViewPrivate.h"
 #include "WebFrame.h"
 
-#include <WebCore/Page/Settings.h>
-#include <WebCore/platform/IntRect.h>
+#include <WebCore/IntRect.h>
+#include <WebCore/Settings.h>
 
 class WebFrame;
 class WebBackForwardList;

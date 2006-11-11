@@ -33,9 +33,9 @@
 #include "WebNotification.h"
 
 #pragma warning( push, 0 )
-#include <wtf/HashTraits.h>
+#include <WebCore/StringImpl.h>
 #include <wtf/HashMap.h>
-#include <WebCore/platform/StringImpl.h>
+#include <wtf/HashTraits.h>
 #pragma warning(pop)
 
 #include <tchar.h>

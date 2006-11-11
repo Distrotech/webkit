@@ -30,7 +30,7 @@
 #include "WebFrame.h"
 
 #pragma warning(push, 0)
-#include <WebCore/html/HTMLInputElement.h>
+#include <WebCore/HTMLInputElement.h>
 #pragma warning(pop)
 
 using namespace WebCore;

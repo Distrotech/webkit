@@ -31,8 +31,8 @@
 #include "WebKitClassFactory.h"
 
 #pragma warning( push, 0 )
-#include <WebCore/page/Page.h>
-#include <WebCore/platform/Widget.h>
+#include <WebCore/Page.h>
+#include <WebCore/Widget.h>
 #include <wtf/Vector.h>
 #pragma warning(pop)
 

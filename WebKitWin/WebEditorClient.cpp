@@ -31,9 +31,9 @@
 #include "WebView.h"
 
 #pragma warning(push, 0)
-#include <WebCore/html/HTMLElement.h>
-#include <WebCore/dom/Range.h>
-#include <WebCore/platform/win/NotImplemented.h>
+#include <WebCore/HTMLElement.h>
+#include <WebCore/NotImplemented.h>
+#include <WebCore/Range.h>
 #pragma warning(pop)
 
 using namespace WebCore;

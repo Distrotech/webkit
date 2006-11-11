@@ -33,11 +33,11 @@
 #include "WebDataSource.h"
 
 #pragma warning(push, 0)
-#include <WebCore/platform/network/ResourceHandleClient.h>
-#include <WebCore/loader/FrameLoaderClient.h>
-#include <WebCore/bridge/win/FrameWin.h>
-#include <WebCore/Platform/KURL.h>
-#include <WebCore/Platform/PlatformString.h>
+#include <WebCore/ResourceHandleClient.h>
+#include <WebCore/FrameLoaderClient.h>
+#include <WebCore/FrameWin.h>
+#include <WebCore/KURL.h>
+#include <WebCore/PlatformString.h>
 #pragma warning(pop)
 
 #include <WTF/RefPtr.h>

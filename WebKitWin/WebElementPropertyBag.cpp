@@ -31,11 +31,11 @@
 #include "WebFrame.h"
 
 #pragma warning(push, 0)
-#include <WebCore/dom/Document.h>
-#include <WebCore/bridge/win/FrameWin.h>
-#include <WebCore/rendering/HitTestResult.h>
-#include <WebCore/platform/Image.h>
-#include <WebCore/platform/KURL.h>
+#include <WebCore/Document.h>
+#include <WebCore/FrameWin.h>
+#include <WebCore/HitTestResult.h>
+#include <WebCore/Image.h>
+#include <WebCore/KURL.h>
 #pragma warning(pop)
 
 using namespace WebCore;

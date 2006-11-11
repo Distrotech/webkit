@@ -1,3 +1,21 @@
+2006-11-11  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Geoff.
+
+        Move graphics-related files to platform/graphics to stay in sync with
+        changes from OpenSource r17727.
+
+        Also, as discussed with Darin and Steve, we now copy all our headers to
+        a flat include/WebCore directory instead of copying the directory
+        structure of WebCore. This mirrors how Mac builds.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/cg/ColorCG.cpp: Removed.
+        * platform/cg/GraphicsContextCG.cpp: Removed.
+        * platform/cg/GraphicsContextPlatformPrivate.h: Removed.
+        * platform/win/IconWin.cpp: Removed.
+        * platform/win/ImageWin.cpp: Removed.
+
 2006-11-11  Darin Adler  <darin@apple.com>
 
         - blind attempt to fix the build

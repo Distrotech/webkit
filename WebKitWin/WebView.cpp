@@ -38,24 +38,24 @@
 #include "WebPreferences.h"
 
 #pragma warning( push, 0 )
-#include <WebCore/bridge/win/FrameWin.h>
-#include <WebCore/dom/Document.h>
-#include <WebCore/editing/CommandByName.h>
-#include <WebCore/editing/SelectionController.h>
-#include <WebCore/editing/TypingCommand.h>
-#include <WebCore/loader/FrameLoader.h>
-#include <WebCore/page/FrameView.h>
-#include <WebCore/page/FrameTree.h>
-#include <WebCore/page/Page.h>
-#include <WebCore/platform/CString.h>
-#include <WebCore/platform/graphics/GraphicsContext.h>
-#include <WebCore/rendering/HitTestResult.h>
-#include <WebCore/platform/IntRect.h>
-#include <WebCore/platform/network/ResourceHandleClient.h>
-#include <WebCore/platform/PlatformKeyboardEvent.h>
-#include <WebCore/platform/PlatformMouseEvent.h>
-#include <WebCore/platform/PlatformWheelEvent.h>
-#include <WebCore/platform/win/BString.h>
+#include <WebCore/BString.h>
+#include <WebCore/CommandByName.h>
+#include <WebCore/CString.h>
+#include <WebCore/Document.h>
+#include <WebCore/FrameLoader.h>
+#include <WebCore/FrameTree.h>
+#include <WebCore/FrameView.h>
+#include <WebCore/FrameWin.h>
+#include <WebCore/GraphicsContext.h>
+#include <WebCore/HitTestResult.h>
+#include <WebCore/IntRect.h>
+#include <WebCore/Page.h>
+#include <WebCore/PlatformKeyboardEvent.h>
+#include <WebCore/PlatformMouseEvent.h>
+#include <WebCore/PlatformWheelEvent.h>
+#include <WebCore/ResourceHandleClient.h>
+#include <WebCore/SelectionController.h>
+#include <WebCore/TypingCommand.h>
 #pragma warning(pop)
 
 #include <tchar.h>

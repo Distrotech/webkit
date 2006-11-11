@@ -23,7 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include <WebCore/page/ChromeClient.h>
+#include <WebCore/ChromeClient.h>
 #include <wtf/Forward.h>
 
 class WebView;

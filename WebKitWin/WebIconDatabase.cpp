@@ -29,9 +29,9 @@
 #include "WebPreferences.h"
 
 #pragma warning(push, 0)
-#include "loader/icon/IconDatabase.h"
-#include "platform/image.h"
-#include "platform/platformstring.h"
+#include <WebCore/IconDatabase.h>
+#include <WebCore/Image.h>
+#include <WebCore/PlatformString.h>
 #pragma warning(pop)
 
 #include "shlobj.h"

@@ -27,7 +27,7 @@
 #define WebEditorClient_H
 
 #pragma warning(push, 0)
-#include <WebCore/bridge/EditorClient.h>
+#include <WebCore/EditorClient.h>
 #pragma warning(pop)
 
 #include "IWebEditingDelegate.h"
