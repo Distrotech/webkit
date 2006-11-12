@@ -1,3 +1,21 @@
+2006-11-12  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Steven Falkenberg.
+        
+        Fixed up work-arounds to MSVC warning silliness.
+        
+        Replaced in-place disabling of "conditional expression is constant" warning
+        with project-wide setting. (We use do { } while(0); for macro scoping.)
+        
+        Replaced in-place and project-wide disabling of "xxx was declared deprecated" 
+        warning with project-wide setting only to disable Microsoft's made-up deprecation 
+        warnings related to std:: functions.
+
+        * WebChromeClient.cpp:
+        (WebChromeClient::setResizable):
+        * WebKit.vcproj/WebKit.vcproj:
+        * WebKitDLL.h:
+
 2006-11-11  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Maciej Stachowiak.

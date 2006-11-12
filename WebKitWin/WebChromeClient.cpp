@@ -23,10 +23,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#pragma warning(push)
-#pragma warning(disable: 4127) // conditional expression is constant
-#pragma warning(disable: 4996) // deprecated function
-
 #include "config.h"
 #include "WebChromeClient.h"
 
@@ -174,5 +170,3 @@ void WebChromeClient::setResizable(bool)
 {
     LOG_NOIMPL();
 }
-
-#pragma warning(pop)

@@ -30,10 +30,6 @@
 #define _HAS_EXCEPTIONS 0
 #endif
 
-#ifndef _SECURE_SCL_DEPRECATE
-#define _SECURE_SCL_DEPRECATE 0
-#endif
-
 #include <winsock2.h>
 #include <windows.h>
 
@@ -55,10 +51,4 @@ extern HINSTANCE gInstance;
 }
 #endif
 
-// disable warning C4127: conditional expression is constant
-#pragma warning( disable : 4127 )
-
-// disable warning C4996: 'function' was declared deprecated
-#pragma warning( disable : 4996 )
-
-#endif
+#endif // WebKitDLL_H
