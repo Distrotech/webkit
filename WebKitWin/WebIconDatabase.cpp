@@ -26,14 +26,13 @@
 #include "config.h"
 #include "WebKitDLL.h"
 #include "WebIconDatabase.h"
-#include "WebPreferences.h"
 
+#include "WebPreferences.h"
 #pragma warning(push, 0)
 #include <WebCore/IconDatabase.h>
 #include <WebCore/Image.h>
 #include <WebCore/PlatformString.h>
 #pragma warning(pop)
-
 #include "shlobj.h"
 
 using namespace WebCore;

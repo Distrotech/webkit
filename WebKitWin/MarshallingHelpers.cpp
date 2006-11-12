@@ -24,7 +24,6 @@
  */
 
 #include "WebKitDLL.h"
-
 #include "MarshallingHelpers.h"
 
 #include <WebCore/IntRect.h>

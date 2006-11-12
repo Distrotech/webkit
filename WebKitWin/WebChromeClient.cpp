@@ -46,6 +46,16 @@ WebChromeClient::WebChromeClient(WebView* webView)
 {
 }
 
+void WebChromeClient::ref()
+{
+    Shared<WebChromeClient>::ref();
+}
+
+void WebChromeClient::deref()
+{
+    Shared<WebChromeClient>::deref();
+}
+
 // FIXME: These functions should make delegate calls instead of sizing by themselves.
 
 void WebChromeClient::setWindowRect(const FloatRect& r)

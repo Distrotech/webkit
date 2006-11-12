@@ -28,7 +28,6 @@
 
 #include "DOMCore.h"
 #include "WebFrame.h"
-
 #pragma warning(push, 0)
 #include <WebCore/HTMLInputElement.h>
 #pragma warning(pop)

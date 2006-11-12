@@ -25,18 +25,16 @@
 
 #include "config.h"
 #include "WebKitDLL.h"
-
-#include "WebKit.h"
 #include "WebView.h"
 
 #include "IWebNotification.h"
+#include "WebKit.h"
 #include "WebElementPropertyBag.h"
 #include "WebFrame.h"
 #include "WebBackForwardList.h"
 #include "WebChromeClient.h"
 #include "WebNotificationCenter.h"
 #include "WebPreferences.h"
-
 #pragma warning( push, 0 )
 #include <WebCore/BString.h>
 #include <WebCore/CommandByName.h>
@@ -58,9 +56,8 @@
 #include <WebCore/SelectionController.h>
 #include <WebCore/TypingCommand.h>
 #pragma warning(pop)
-
-#include <tchar.h>
 #include <JavaScriptCore/kjs/value.h>
+#include <tchar.h>
 
 using namespace WebCore;
 

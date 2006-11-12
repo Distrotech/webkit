@@ -166,6 +166,7 @@ public:
     // FrameWinClient
     virtual void ref();
     virtual void deref();
+
     virtual WebCore::Frame* createFrame(const WebCore::KURL&, const WebCore::String& name, WebCore::Element* ownerElement, const WebCore::String& referrer);
     virtual void stopMainResourceLoad();
     virtual void openURL(const WebCore::String& URL, const WebCore::Event* triggeringEvent, bool newWindow, bool lockHistory);

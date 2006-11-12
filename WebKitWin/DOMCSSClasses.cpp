@@ -25,7 +25,6 @@
 
 #include "config.h"
 #include "WebKitDLL.h"
-
 #include "DOMCSSClasses.h"
 
 #pragma warning(push, 0)

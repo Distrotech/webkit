@@ -26,11 +26,11 @@
 #ifndef WebEditorClient_H
 #define WebEditorClient_H
 
+#include "IWebEditingDelegate.h"
 #pragma warning(push, 0)
 #include <WebCore/EditorClient.h>
+#include <WebCore/platform/Shared.h>
 #pragma warning(pop)
-
-#include "IWebEditingDelegate.h"
 
 class WebView;
 class WebNotification;
@@ -41,42 +41,40 @@ class CSSStyleDeclaration;
 class HTMLElement;
 class Node;
 
-class WebEditorClient : public EditorClient
-{
+}
+
+class WebEditorClient : public WebCore::EditorClient, public WebCore::Shared<WebEditorClient> {
 public:
     WebEditorClient(WebView*);
-    ~WebEditorClient();
 
-    // EditorClient
+    virtual void ref();
+    virtual void deref();
+
     virtual bool isContinuousSpellCheckingEnabled();
     virtual bool isGrammarCheckingEnabled();
     virtual int spellCheckerDocumentTag();
 
 
-    virtual bool shouldBeginEditing(Range*);
-    virtual bool shouldEndEditing(Range*);
+    virtual bool shouldBeginEditing(WebCore::Range*);
+    virtual bool shouldEndEditing(WebCore::Range*);
+
     virtual void didBeginEditing();
-    virtual void respondToChangedContents();
     virtual void didEndEditing();
 
-    bool shouldDeleteRange(Range*);
-    bool shouldInsertNode(Node*, Range* replacingRange, WebViewInsertAction givenAction);
-//    bool shouldInsertText(BSTR text, Range* replacingRange, WebViewInsertAction givenAction);
-//    bool shouldChangeSelectedRange(Range* currentRange, Range* toProposedRange, NSSelectionAffinity selectionAffinity, bool stillSelecting);
-    bool shouldApplyStyle(CSSStyleDeclaration*, Range* toElementsInDOMRange);
-    bool shouldChangeTypingStyle(CSSStyleDeclaration* currentStyle, CSSStyleDeclaration* toProposedStyle);
-//    bool doCommandBySelector(SEL selector);
+    virtual void respondToChangedContents();
+
+    bool shouldShowDeleteInterface(WebCore::HTMLElement*);
+    bool shouldDeleteRange(WebCore::Range*);
+
+    bool shouldInsertNode(WebCore::Node*, WebCore::Range* replacingRange, WebViewInsertAction);
+    bool shouldApplyStyle(WebCore::CSSStyleDeclaration*, WebCore::Range*);
+    bool shouldChangeTypingStyle(WebCore::CSSStyleDeclaration* currentStyle, WebCore::CSSStyleDeclaration* toProposedStyle);
 
     void webViewDidChangeTypingStyle(WebNotification*);
     void webViewDidChangeSelection(WebNotification*);
-//    NSUndoManager* undoManagerForWebView(WebView*);
-
-    bool shouldShowDeleteInterface(HTMLElement*);
 
 private:
     WebView* m_webView;
 };
-
-}
 
 #endif // WebEditorClient_H

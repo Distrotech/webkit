@@ -1,3 +1,19 @@
+2006-11-11  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+
+        - Fixed <rdar://problem/4831461> Crash in FrameLoader::~FrameLoader when navigating away from ebay.com 
+
+        - Changed WebKit clients to match new virtual ref/deref scheme in WebCore.
+
+        - Removed WebEditorClient from the WebCore namespace because it's a 
+        WebKit class, not a WebCore class.
+
+        - Standardized some header #includes to match Mac:
+            - alphabetical
+            - config.h, WebKitDLL.h, and class headers go together at the top
+            - everything else comes after a line break
+
 2006-11-11  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Oliver.

@@ -25,7 +25,6 @@
 
 #include "config.h"
 #include "WebKitDLL.h"
-
 #include "MemoryStream.h"
 
 // MemoryStream ---------------------------------------------------------------

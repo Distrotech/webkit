@@ -25,17 +25,15 @@
 
 #include "WebKitDLL.h"
 #include "WebURLResponse.h"
+
 #include "MarshallingHelpers.h"
-
 #include <wtf/platform.h>
-
 #pragma warning( push, 0 )
 #include <WebCore/BString.h>
 #include <WebCore/DeprecatedString.h>
 #include <WebCore/KURL.h>
 #include <WebCore/ResourceHandle.h>
 #pragma warning( pop )
-
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <tchar.h>

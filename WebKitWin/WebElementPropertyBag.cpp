@@ -29,7 +29,6 @@
 #include "MarshallingHelpers.h"
 #include "DOMCoreClasses.h"
 #include "WebFrame.h"
-
 #pragma warning(push, 0)
 #include <WebCore/Document.h>
 #include <WebCore/FrameWin.h>

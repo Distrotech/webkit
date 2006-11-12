@@ -27,17 +27,14 @@
 
 #include "config.h"
 #include "WebKitDLL.h"
-
 #include "WebNotificationCenter.h"
 
 #include "WebNotification.h"
-
 #pragma warning( push, 0 )
 #include <WebCore/StringImpl.h>
 #include <wtf/HashMap.h>
 #include <wtf/HashTraits.h>
 #pragma warning(pop)
-
 #include <tchar.h>
 
 using namespace WebCore;

@@ -33,10 +33,8 @@
 #include "WebKit.h"
 #include "WebNotificationCenter.h"
 #include "WebPreferences.h"
-
 #include <CoreFoundation/CoreFoundation.h>
 #include <WebCore/WebCoreHistory.h>
-
 #pragma warning( push, 0 )
 #include <wtf/Vector.h>
 #pragma warning( pop )

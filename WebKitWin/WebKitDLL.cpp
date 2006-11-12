@@ -25,17 +25,15 @@
 
 #include "WebKitDLL.h"
 
-#include "resource.h"
 #include "IWebURLResponse.h"
 #include "WebKit.h"
 #include "WebKitClassFactory.h"
-
+#include "resource.h"
 #pragma warning( push, 0 )
 #include <WebCore/Page.h>
 #include <WebCore/Widget.h>
 #include <wtf/Vector.h>
 #pragma warning(pop)
-
 #include <tchar.h>
 #include <olectl.h>
 

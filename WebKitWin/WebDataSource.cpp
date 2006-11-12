@@ -25,10 +25,10 @@
 
 #include "config.h"
 #include "WebKitDLL.h"
-
-#include "MemoryStream.h"
 #include "WebDataSource.h"
+
 #include "IWebMutableURLRequest.h"
+#include "MemoryStream.h"
 #include "WebFrame.h"
 #include "WebHTMLRepresentation.h"
 

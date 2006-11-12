@@ -25,11 +25,10 @@
 
 #include "config.h"
 #include "WebKitDLL.h"
-
 #include "DOMCoreClasses.h"
+
 #include "DOMCSSClasses.h"
 #include "DOMHTMLClasses.h"
-
 #pragma warning(push, 0)
 #include <WebCore/DOMWindow.h>
 #include <WebCore/Element.h>

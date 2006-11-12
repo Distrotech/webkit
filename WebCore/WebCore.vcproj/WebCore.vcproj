@@ -2235,6 +2235,10 @@
 			Name="platform"
 			>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\AbstractShared.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\Arena.cpp"
 				>
 			</File>

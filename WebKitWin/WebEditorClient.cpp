@@ -27,9 +27,9 @@
 #include "WebKitDLL.h"
 #include "WebEditorClient.h"
 
+#include "IWebEditingDelegate.h"
 #include "IWebURLResponse.h"
 #include "WebView.h"
-
 #pragma warning(push, 0)
 #include <WebCore/HTMLElement.h>
 #include <WebCore/NotImplemented.h>
@@ -41,11 +41,16 @@ using namespace WebCore;
 WebEditorClient::WebEditorClient(WebView* webView)
 : m_webView(webView)
 {
-    // No need to hold our own ref to m_webView, since we are in its ownership chain:
-    // Ownership is WebView->Page->Frame->Editor->EditorClient.
 }
-WebEditorClient::~WebEditorClient()
+
+void WebEditorClient::ref()
 {
+    Shared<WebEditorClient>::ref();
+}
+
+void WebEditorClient::deref()
+{
+    Shared<WebEditorClient>::deref();
 }
 
 bool WebEditorClient::isContinuousSpellCheckingEnabled()

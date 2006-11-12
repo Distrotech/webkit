@@ -25,6 +25,8 @@
 
 #include "WebKitDLL.h"
 #include "WebKitClassFactory.h"
+
+#include "CFDictionaryPropertyBag.h"
 #include "WebMutableURLRequest.h"
 #include "WebKit.h"
 #include "WebFrame.h"
@@ -32,7 +34,6 @@
 #include "WebIconDatabase.h"
 #include "WebNotificationCenter.h"
 #include "WebHistory.h"
-#include "CFDictionaryPropertyBag.h"
 #include "WebHistoryItem.h"
 
 // WebKitClassFactory ---------------------------------------------------------

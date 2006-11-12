@@ -25,6 +25,7 @@
 
 #include "config.h"
 #include "WebKitDLL.h"
+#include "WebFrame.h"
 
 #include "DOMCoreClasses.h"
 #include "IWebHistory.h"
@@ -34,14 +35,12 @@
 #include "IWebUIDelegatePrivate.h"
 #include "WebMutableURLRequest.h"
 #include "WebEditorClient.h"
-#include "WebFrame.h"
 #include "WebHistory.h"
 #include "WebKit.h"
 #include "WebView.h"
 #include "WebDataSource.h"
 #include "WebHistoryItem.h"
 #include "WebURLResponse.h"
-
 #pragma warning( push, 0 )
 #include <WebCore/BString.h>
 #include <WebCore/Cache.h>

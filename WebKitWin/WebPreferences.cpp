@@ -25,17 +25,14 @@
 
 #include "config.h"
 #include "WebKitDLL.h"
-
 #include "WebPreferences.h"
 
 #include "WebNotificationCenter.h"
 #include "WebPreferenceKeysPrivate.h"
-
 #pragma warning( push, 0 )
 #include <WebCore/Font.h>
 #include <wtf/Vector.h>
 #pragma warning( pop )
-
 #include <CoreFoundation/CoreFoundation.h>
 #include <shlobj.h>
 #include <shfolder.h>

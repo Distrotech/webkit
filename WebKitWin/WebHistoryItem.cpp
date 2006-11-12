@@ -24,13 +24,11 @@
  */
 
 #include "WebKitDLL.h"
-
 #include "WebHistoryItem.h"
-#include "WebIconDatabase.h"
-
-#include "logging.h"
 
 #include "MarshallingHelpers.h"
+#include "WebIconDatabase.h"
+#include "logging.h"
 
 // WebHistoryItem ----------------------------------------------------------------
 
