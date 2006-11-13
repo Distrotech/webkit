@@ -1,5 +1,12 @@
 2006-11-13  Adam Roben  <aroben@apple.com>
 
+        Fix line-endings and svn properties.
+
+        * WebChromeClient.cpp:
+        * WebChromeClient.h:
+
+2006-11-13  Adam Roben  <aroben@apple.com>
+
         Build fix.
 
         * MarshallingHelpers.cpp:
