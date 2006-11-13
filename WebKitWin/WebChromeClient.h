@@ -24,7 +24,7 @@
  */
 
 #include <WebCore/ChromeClient.h>
-#include <WebCore/platform/Shared.h>
+#include <WebCore/Shared.h>
 #include <wtf/Forward.h>
 
 class WebView;

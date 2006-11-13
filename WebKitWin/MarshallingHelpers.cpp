@@ -27,9 +27,9 @@
 #include "MarshallingHelpers.h"
 
 #pragma warning(push, 0)
-#include <WebCore/platform/IntRect.h>
-#include <WebCore/platform/KURL.h>
-#include <WebCore/platform/PlatformString.h>
+#include <WebCore/IntRect.h>
+#include <WebCore/KURL.h>
+#include <WebCore/PlatformString.h>
 #pragma warning(pop)
 
 using namespace WebCore;

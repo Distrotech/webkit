@@ -29,7 +29,7 @@
 #include "IWebEditingDelegate.h"
 #pragma warning(push, 0)
 #include <WebCore/EditorClient.h>
-#include <WebCore/platform/Shared.h>
+#include <WebCore/Shared.h>
 #pragma warning(pop)
 
 class WebView;

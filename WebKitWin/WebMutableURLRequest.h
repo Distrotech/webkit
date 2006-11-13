@@ -30,7 +30,7 @@
 
 #include "IWebMutableURLRequest.h"
 #pragma warning(push, 0)
-#include <WebCore/platform/network/ResourceRequest.h>
+#include <WebCore/ResourceRequest.h>
 #pragma warning(pop)
 
 namespace WebCore

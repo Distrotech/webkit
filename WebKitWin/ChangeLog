@@ -1,3 +1,13 @@
+2006-11-13  Adam Roben  <aroben@apple.com>
+
+        Build fix.
+
+        * MarshallingHelpers.cpp:
+        * WebChromeClient.cpp:
+        * WebChromeClient.h:
+        * WebEditorClient.h:
+        * WebMutableURLRequest.h:
+
 2006-11-12  Geoffrey Garen  <ggaren@apple.com>
 
         * WebChromeClient.cpp: Fixed up #include.
