@@ -1,5 +1,9 @@
 2006-11-12  Geoffrey Garen  <ggaren@apple.com>
 
+        * WebChromeClient.cpp: Fixed up #include.
+
+2006-11-12  Geoffrey Garen  <ggaren@apple.com>
+
         Reviewed by Steve Falkenberg.
 
         Implemented window.open. Rough around the edges right now.

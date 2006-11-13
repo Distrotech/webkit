@@ -26,11 +26,11 @@
 #include "config.h"
 #include "WebChromeClient.h"
 
-#include "FloatRect.h"
 #include "WebMutableURLRequest.h"
 #include "WebView.h"
 #pragma warning(push, 0)
 #include <WebCore/page/FrameLoadRequest.h>
+#include <WebCore/platform/FloatRect.h>
 #include <WebCore/NotImplemented.h>
 #pragma warning(pop)
 
