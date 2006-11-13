@@ -1,3 +1,27 @@
+2006-11-13  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Darin Adler, Anders Carlsson.
+        
+        More window.open work.
+        
+        - Hooked up all of WebChromeClient that the App currently supports.
+
+        * WebChromeClient.cpp:
+        (WebChromeClient::scaleFactor):
+        (WebChromeClient::focus):
+        (WebChromeClient::unfocus):
+        (WebChromeClient::createModalDialog):
+        (WebChromeClient::show):
+        (WebChromeClient::canRunModal):
+        (WebChromeClient::runModal):
+        (WebChromeClient::setToolbarsVisible):
+        (WebChromeClient::toolbarsVisible):
+        (WebChromeClient::setStatusbarVisible):
+        (WebChromeClient::statusbarVisible):
+        (WebChromeClient::setMenubarVisible):
+        (WebChromeClient::menubarVisible):
+        (WebChromeClient::setResizable):
+
 2006-11-13  Adam Roben  <aroben@apple.com>
 
         Fix line-endings and svn properties.

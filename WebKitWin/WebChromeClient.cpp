@@ -84,18 +84,26 @@ FloatRect WebChromeClient::pageRect()
 
 float WebChromeClient::scaleFactor()
 {
-    LOG_NOIMPL();
-    return 0.0;
+    // Windows doesn't support UI scaling.
+    return 1.0;
 }
 
 void WebChromeClient::focus()
 {
-    LOG_NOIMPL();
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+        uiDelegate->webViewFocus(m_webView);
+        uiDelegate->Release();
+    }
 }
 
 void WebChromeClient::unfocus()
 {
-    LOG_NOIMPL();
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+        uiDelegate->webViewUnfocus(m_webView);
+        uiDelegate->Release();
+    }
 }
 
 Page* WebChromeClient::createWindow(const FrameLoadRequest& frameLoadRequest)
@@ -120,46 +128,82 @@ Page* WebChromeClient::createWindow(const FrameLoadRequest& frameLoadRequest)
 
 Page* WebChromeClient::createModalDialog(const FrameLoadRequest&)
 {
-    LOG_NOIMPL();
-    return 0;
+    Page* page = 0;
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+        LOG_NOIMPL();
+        uiDelegate->Release();
+    }
+    return page;
 }
 
 void WebChromeClient::show()
 {
-    LOG_NOIMPL();
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+        uiDelegate->webViewShow(m_webView);
+        uiDelegate->Release();
+    }
 }
 
 bool WebChromeClient::canRunModal()
 {
-    LOG_NOIMPL();
-    return false;
+    bool result = false;
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+        LOG_NOIMPL();
+        uiDelegate->Release();
+    }
+    return result;
 }
 
 void WebChromeClient::runModal()
 {
-    LOG_NOIMPL();
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+        LOG_NOIMPL();
+        uiDelegate->Release();
+    }
 }
 
-void WebChromeClient::setToolbarsVisible(bool)
+void WebChromeClient::setToolbarsVisible(bool visible)
 {
-    LOG_NOIMPL();
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+        uiDelegate->setToolbarsVisible(m_webView, visible);
+        uiDelegate->Release();
+    }
 }
 
 bool WebChromeClient::toolbarsVisible()
 {
-    LOG_NOIMPL();
-    return false;
+    BOOL result = false;
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+        uiDelegate->webViewAreToolbarsVisible(m_webView, &result);
+        uiDelegate->Release();
+    }
+    return result != false;
 }
 
-void WebChromeClient::setStatusbarVisible(bool)
+void WebChromeClient::setStatusbarVisible(bool visible)
 {
-    LOG_NOIMPL();
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+        uiDelegate->setStatusBarVisible(m_webView, visible);
+        uiDelegate->Release();
+    }
 }
 
 bool WebChromeClient::statusbarVisible()
 {
-    LOG_NOIMPL();
-    return false;
+    BOOL result = false;
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+        uiDelegate->webViewIsStatusBarVisible(m_webView, &result);
+        uiDelegate->Release();
+    }
+    return result != false;
 }
 
 void WebChromeClient::setScrollbarsVisible(bool)
@@ -175,16 +219,29 @@ bool WebChromeClient::scrollbarsVisible()
 
 void WebChromeClient::setMenubarVisible(bool)
 {
-    LOG_NOIMPL();
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+        LOG_NOIMPL();
+        uiDelegate->Release();
+    }
 }
 
 bool WebChromeClient::menubarVisible()
 {
-    LOG_NOIMPL();
-    return false;
+    bool result = false;
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+        LOG_NOIMPL();
+        uiDelegate->Release();
+    }
+    return result;
 }
 
-void WebChromeClient::setResizable(bool)
+void WebChromeClient::setResizable(bool resizable)
 {
-    LOG_NOIMPL();
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+        uiDelegate->setResizable(m_webView, resizable);
+        uiDelegate->Release();
+    }
 }
