@@ -38,6 +38,8 @@
 class WebFrame;
 class WebBackForwardList;
 
+WebCore::Page* core(IWebView*);
+
 class WebView 
     : public IWebView
     , public IWebViewPrivate
@@ -521,6 +523,7 @@ public:
         RECT* rc);
 
     // WebView
+    WebCore::Page* page();
     void handleMouseEvent(UINT, WPARAM, LPARAM);
     void mouseWheel(WPARAM, LPARAM);
     bool execCommand(WPARAM wParam, LPARAM lParam);

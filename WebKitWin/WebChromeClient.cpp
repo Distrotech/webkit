@@ -27,8 +27,12 @@
 #include "WebChromeClient.h"
 
 #include "FloatRect.h"
+#include "WebMutableURLRequest.h"
 #include "WebView.h"
+#pragma warning(push, 0)
+#include <WebCore/page/FrameLoadRequest.h>
 #include <WebCore/NotImplemented.h>
+#pragma warning(pop)
 
 using namespace WebCore;
 
@@ -94,10 +98,24 @@ void WebChromeClient::unfocus()
     LOG_NOIMPL();
 }
 
-Page* WebChromeClient::createWindow(const FrameLoadRequest&)
+Page* WebChromeClient::createWindow(const FrameLoadRequest& frameLoadRequest)
 {
-    LOG_NOIMPL();
-    return 0;
+    Page* page = 0;
+    IWebMutableURLRequest* request = WebMutableURLRequest::createInstance(frameLoadRequest.resourceRequest());
+
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+        IWebView* webView = 0;
+        if (SUCCEEDED(uiDelegate->createWebViewWithRequest(m_webView, request, &webView)) && webView) {
+            page = core(webView);
+            webView->Release();
+        }
+    
+        uiDelegate->Release();
+    }
+
+    request->Release();
+    return page;
 }
 
 Page* WebChromeClient::createModalDialog(const FrameLoadRequest&)
