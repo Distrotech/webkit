@@ -1,3 +1,12 @@
+2006-11-13  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        * platform/win/PopupMenuWin.cpp:
+        (WebCore::PopupWndProc):
+        Make sure to call valueChanged after hiding the popup so that change events will 
+        be delivered correctly.
+
 2006-11-13  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Anders, Lou.

@@ -666,7 +666,9 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 lResult = 0;
                 switch (wParam) {
                     case 0x0D:   // Enter/Return
+                        popup->menuList()->hidePopup();
                         popup->menuList()->valueChanged(popup->focusedIndex());
+                        break;
                     case 0x1B:   // Escape
                         popup->menuList()->hidePopup();
                         break;
@@ -694,8 +696,8 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             break;
         case WM_LBUTTONUP:
             if (popup && popup->menuList()) {
-                popup->setFocusedIndex(popup->listIndexAtPoint(MAKEPOINTS(lParam)), true, true);
                 popup->menuList()->hidePopup();
+                popup->menuList()->valueChanged(popup->focusedIndex());
             }
             break;
         case WM_MOUSEWHEEL:
