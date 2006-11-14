@@ -285,12 +285,12 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setValue(
 
 // IWebMutableURLRequest ----------------------------------------------------
 
-void WebMutableURLRequest::setFormData(const WebCore::FormData* data)
+void WebMutableURLRequest::setFormData(const PassRefPtr<WebCore::FormData> data)
 {
-    m_request.setHTTPBody(*data);
+    m_request.setHTTPBody(data);
 }
 
-const WebCore::FormData* WebMutableURLRequest::formData()
+const PassRefPtr<WebCore::FormData> WebMutableURLRequest::formData()
 {
-    return &m_request.httpBody();
+    return m_request.httpBody();
 }

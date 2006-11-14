@@ -1,3 +1,15 @@
+2006-11-13  Brady Eidson  <beidson@apple.com>
+
+        Rubberstamped by Maciej
+
+        Windows half of 17755 - Make FormData shared
+
+        * bridge/win/FrameWin.h:
+        * loader/win/FrameLoaderWin.cpp:
+        (WebCore::FrameLoader::submitForm):
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::handlePost):
+
 2006-11-13  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.

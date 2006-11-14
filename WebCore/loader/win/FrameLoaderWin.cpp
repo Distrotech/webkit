@@ -30,6 +30,7 @@
 #include "FrameLoader.h"
 
 #include "Element.h"
+#include "FormData.h"
 #include "FrameLoadRequest.h"
 #include "FrameTree.h"
 #include "FrameView.h"
@@ -73,7 +74,7 @@ void FrameLoader::submitForm(const FrameLoadRequest& request, Event* event)
     if (FrameWinClient* client = Win(m_frame)->client())
         client->submitForm(request.resourceRequest().httpMethod(),
             request.resourceRequest().url(),
-            &request.resourceRequest().httpBody(),
+            request.resourceRequest().httpBody(),
             m_formAboutToBeSubmitted.get(),
             m_formValuesAboutToBeSubmitted);
 

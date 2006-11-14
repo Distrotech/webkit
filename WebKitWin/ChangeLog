@@ -1,3 +1,18 @@
+2006-11-13  Brady Eidson  <beidson@apple.com>
+
+        Rubberstamped by Maciej
+
+        Windows half of 17755 - Make FormData shared
+        
+        * WebFrame.cpp:
+        (WebFrame::loadDataSource):
+        (WebFrame::submitForm):
+        * WebFrame.h:
+        * WebMutableURLRequest.cpp:
+        (WebMutableURLRequest::setFormData):
+        (WebMutableURLRequest::formData):
+        * WebMutableURLRequest.h:
+
 2006-11-13  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.

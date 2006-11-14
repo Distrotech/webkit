@@ -170,7 +170,7 @@ public:
     virtual WebCore::Frame* createFrame(const WebCore::KURL&, const WebCore::String& name, WebCore::Element* ownerElement, const WebCore::String& referrer);
     virtual void stopMainResourceLoad();
     virtual void openURL(const WebCore::String& URL, const WebCore::Event* triggeringEvent, bool newWindow, bool lockHistory);
-    virtual void submitForm(const WebCore::String& method, const WebCore::KURL&, const WebCore::FormData*, WebCore::Element* form, WTF::HashMap<WebCore::String, WebCore::String>& formValues);
+    virtual void submitForm(const WebCore::String& method, const WebCore::KURL&, const PassRefPtr<WebCore::FormData>, WebCore::Element* form, WTF::HashMap<WebCore::String, WebCore::String>& formValues);
     virtual void setTitle(const WebCore::String& title);
     virtual void setStatusText(const WebCore::String& title);
     virtual void textFieldDidBeginEditing(WebCore::Element*);

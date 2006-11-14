@@ -675,7 +675,7 @@ HRESULT WebFrame::loadDataSource(WebDataSource* dataSource)
                 resourceRequest.setHTTPMethod(String(method, SysStringLen(method)));
 
                 m_originalRequestURL = resourceRequest.url();
-                const FormData* formData = 0;
+                RefPtr<FormData> formData;
                 if (wcscmp(method, TEXT("GET"))) {
                     WebMutableURLRequest* requestImpl;
                     if (SUCCEEDED(request->QueryInterface(CLSID_WebMutableURLRequest, (void**)&requestImpl))) {
@@ -684,7 +684,7 @@ HRESULT WebFrame::loadDataSource(WebDataSource* dataSource)
                     }
                 }
                 if (formData)
-                    resourceRequest.setHTTPBody(*formData);
+                    resourceRequest.setHTTPBody(formData);
 
                 if (!d->frame->document())
                     d->frame->loader()->begin(); // FIXME - the frame should do this for us
@@ -1277,7 +1277,7 @@ exit:
     request->Release();
 }
 
-void WebFrame::submitForm(const String& method, const KURL& url, const FormData* submitFormData, Element* form, HashMap<String, String>& formValues)
+void WebFrame::submitForm(const String& method, const KURL& url, const PassRefPtr<FormData> submitFormData, Element* form, HashMap<String, String>& formValues)
 {
     // FIXME: This is a dumb implementation, doesn't handle subframes, etc.
 

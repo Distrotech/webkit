@@ -143,8 +143,8 @@ public:
         /* [in] */ BSTR field);
 
     // IWebURLRequest
-    void setFormData(const WebCore::FormData* data);
-    const WebCore::FormData* formData();
+    void setFormData(const PassRefPtr<WebCore::FormData> data);
+    const PassRefPtr<WebCore::FormData> formData();
 
 protected:
     ULONG m_refCount;
