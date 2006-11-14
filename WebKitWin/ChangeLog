@@ -1,3 +1,19 @@
+2006-11-13  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        Various editing fixes.
+        
+        * WebView.cpp:
+        (WebView::execCommand):
+        Use the focused frame, not the main frame.
+        
+        (WebView::focusedTarget):
+        Add FIXME comment.
+        
+        (WebView::keyDown):
+        Return false for unknown keydown messages when not in editing mode.
+
 2006-11-13  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Anders, Lou.

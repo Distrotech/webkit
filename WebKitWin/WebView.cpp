@@ -657,7 +657,7 @@ void WebView::mouseWheel(WPARAM wParam, LPARAM lParam)
 
 bool WebView::execCommand(WPARAM wParam, LPARAM /*lParam*/)
 {
-    FrameWin* frame = static_cast<FrameWin*>(m_page->mainFrame());
+    Frame* frame = focusedTargetFrame();
     bool handled = false;
     switch (LOWORD(wParam)) {
     case Cut:
@@ -683,6 +683,7 @@ bool WebView::execCommand(WPARAM wParam, LPARAM /*lParam*/)
 
 FrameView* WebView::focusedTarget()
 {
+    // FIXME: I'm not sure this cast is valid if you have a focused plug-in.
     return static_cast<FrameView*>(m_page->mainFrame()->view()->focusedTarget());
 }
 
@@ -844,7 +845,8 @@ bool WebView::keyDown(WPARAM wParam, LPARAM lParam)
             direction = ScrollDown;
             break;
         default:
-            return false;
+            // We return true here so the WM_CHAR handler won't pick up unhandled messages.
+            return true;
     }
 
     focusedTarget()->scroll(direction, granularity);
