@@ -301,7 +301,7 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::initWithURLString(
 HRESULT STDMETHODCALLTYPE WebHistoryItem::originalURLString( 
     /* [retval][out] */ BSTR* /*url*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -329,20 +329,20 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::lastVisitedTimeInterval(
 HRESULT STDMETHODCALLTYPE WebHistoryItem::setAlternateTitle( 
     /* [retval][out] */ BSTR* /*title*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebHistoryItem::alternateTitle( 
     /* [in] */ BSTR /*title*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebHistoryItem::icon( 
     /* [out, retval] */ HBITMAP* /*image*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }

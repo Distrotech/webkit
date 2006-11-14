@@ -84,14 +84,14 @@ HRESULT STDMETHODCALLTYPE DOMCSSStyleDeclaration::QueryInterface(REFIID riid, vo
 HRESULT STDMETHODCALLTYPE DOMCSSStyleDeclaration::cssText( 
     /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMCSSStyleDeclaration::setCssText( 
     /* [in] */ BSTR /*cssText*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -114,7 +114,7 @@ HRESULT STDMETHODCALLTYPE DOMCSSStyleDeclaration::getPropertyCSSValue(
     /* [in] */ BSTR /*propertyName*/,
     /* [retval][out] */ IDOMCSSValue** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -122,7 +122,7 @@ HRESULT STDMETHODCALLTYPE DOMCSSStyleDeclaration::removeProperty(
     /* [in] */ BSTR /*propertyName*/,
     /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -130,7 +130,7 @@ HRESULT STDMETHODCALLTYPE DOMCSSStyleDeclaration::getPropertyPriority(
     /* [in] */ BSTR /*propertyName*/,
     /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -139,14 +139,14 @@ HRESULT STDMETHODCALLTYPE DOMCSSStyleDeclaration::setProperty(
     /* [in] */ BSTR /*value*/,
     /* [in] */ BSTR /*priority*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMCSSStyleDeclaration::length( 
     /* [retval][out] */ UINT* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -154,13 +154,13 @@ HRESULT STDMETHODCALLTYPE DOMCSSStyleDeclaration::item(
     /* [in] */ UINT /*index*/,
     /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMCSSStyleDeclaration::parentRule( 
     /* [retval][out] */ IDOMCSSRule** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }

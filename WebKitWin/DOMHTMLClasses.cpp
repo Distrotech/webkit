@@ -59,7 +59,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLCollection::QueryInterface(REFIID riid, void** 
 HRESULT STDMETHODCALLTYPE DOMHTMLCollection::length( 
     /* [retval][out] */ UINT* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -67,7 +67,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLCollection::item(
     /* [in] */ UINT /*index*/,
     /* [retval][out] */ IDOMNode** /*node*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -75,7 +75,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLCollection::namedItem(
     /* [in] */ BSTR /*name*/,
     /* [retval][out] */ IDOMNode** /*node*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -98,14 +98,14 @@ HRESULT STDMETHODCALLTYPE DOMHTMLOptionsCollection::QueryInterface(REFIID riid, 
 HRESULT STDMETHODCALLTYPE DOMHTMLOptionsCollection::length( 
     /* [retval][out] */ unsigned int* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMHTMLOptionsCollection::setLength( 
     /* [in] */ unsigned int /*length*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -113,7 +113,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLOptionsCollection::item(
     /* [in] */ unsigned int /*index*/,
     /* [retval][out] */ IDOMNode** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -121,7 +121,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLOptionsCollection::namedItem(
     /* [in] */ BSTR /*name*/,
     /* [retval][out] */ IDOMNode* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -144,124 +144,124 @@ HRESULT STDMETHODCALLTYPE DOMHTMLDocument::QueryInterface(REFIID riid, void** pp
 HRESULT STDMETHODCALLTYPE DOMHTMLDocument::title( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLDocument::setTitle( 
         /* [in] */ BSTR /*title*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLDocument::referrer( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLDocument::domain( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLDocument::URL( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLDocument::body( 
         /* [retval][out] */ IDOMHTMLElement** /*bodyElement*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLDocument::setBody( 
         /* [in] */ IDOMHTMLElement* /*body*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLDocument::images( 
         /* [retval][out] */ IDOMHTMLCollection** /*collection*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLDocument::applets( 
         /* [retval][out] */ IDOMHTMLCollection** /*collection*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLDocument::links( 
         /* [retval][out] */ IDOMHTMLCollection** /*collection*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLDocument::forms( 
         /* [retval][out] */ IDOMHTMLCollection** /*collection*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLDocument::anchors( 
         /* [retval][out] */ IDOMHTMLCollection** /*collection*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLDocument::cookie( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLDocument::setCookie( 
         /* [in] */ BSTR /*cookie*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLDocument::open( void)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLDocument::close( void)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLDocument::write( 
         /* [in] */ BSTR /*text*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLDocument::writeln( 
         /* [in] */ BSTR /*text*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -269,7 +269,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLDocument::getElementById_(
         /* [in] */ BSTR /*elementId*/,
         /* [retval][out] */ IDOMElement** /*element*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -277,7 +277,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLDocument::getElementsByName(
         /* [in] */ BSTR /*elementName*/,
         /* [retval][out] */ IDOMNodeList** /*nodeList*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -300,84 +300,84 @@ HRESULT STDMETHODCALLTYPE DOMHTMLElement::QueryInterface(REFIID riid, void** ppv
 HRESULT STDMETHODCALLTYPE DOMHTMLElement::idName( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLElement::setIdName( 
         /* [in] */ BSTR /*idName*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLElement::title( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLElement::setTitle( 
         /* [in] */ BSTR /*title*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLElement::lang( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLElement::setLang( 
         /* [in] */ BSTR /*lang*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLElement::dir( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLElement::setDir( 
         /* [in] */ BSTR /*dir*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLElement::className( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLElement::setClassName( 
         /* [in] */ BSTR /*className*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMHTMLElement::innerHTML( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
         
 HRESULT STDMETHODCALLTYPE DOMHTMLElement::setInnerHTML( 
         /* [in] */ BSTR /*html*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
         
@@ -392,7 +392,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLElement::innerText(
 HRESULT STDMETHODCALLTYPE DOMHTMLElement::setInnerText( 
         /* [in] */ BSTR /*text*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -415,110 +415,110 @@ HRESULT STDMETHODCALLTYPE DOMHTMLFormElement::QueryInterface(REFIID riid, void**
 HRESULT STDMETHODCALLTYPE DOMHTMLFormElement::elements( 
         /* [retval][out] */ IDOMHTMLCollection** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLFormElement::length( 
         /* [retval][out] */ int* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLFormElement::name( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLFormElement::setName( 
         /* [in] */ BSTR /*name*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLFormElement::acceptCharset( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLFormElement::setAcceptCharset( 
         /* [in] */ BSTR /*acceptCharset*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLFormElement::action( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLFormElement::setAction( 
         /* [in] */ BSTR /*action*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLFormElement::encType( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLFormElement::setEnctype( 
         /* [retval][out] */ BSTR* /*encType*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLFormElement::method( 
         /* [retval][out] */ BSTR* /*method*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLFormElement::setMethod( 
         /* [in] */ BSTR /*method*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLFormElement::target( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLFormElement::setTarget( 
         /* [in] */ BSTR /*target*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLFormElement::submit( void)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLFormElement::reset( void)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -543,126 +543,126 @@ HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::QueryInterface(REFIID riid, void
 HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::type( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::selectedIndex( 
         /* [retval][out] */ int* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::setSelectedIndx( 
         /* [in] */ int /*selectedIndex*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::value( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::setValue( 
         /* [in] */ BSTR /*value*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::length( 
         /* [retval][out] */ int* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::form( 
         /* [retval][out] */ IDOMHTMLFormElement** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::options( 
         /* [retval][out] */ IDOMHTMLOptionsCollection** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::disabled( 
         /* [retval][out] */ BOOL* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::setDisabled( 
         /* [in] */ BOOL /*disabled*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::multiple( 
         /* [retval][out] */ BOOL* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::setMultiple( 
         /* [in] */ BOOL /*multiple*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::name( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::setName( 
         /* [in] */ BSTR /*name*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::size( 
         /* [retval][out] */ int* /*size*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::setSize( 
         /* [in] */ int /*size*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::tabIndex( 
         /* [retval][out] */ int* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::setTabIndex( 
         /* [in] */ int /*tabIndex*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -670,14 +670,14 @@ HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::add(
         /* [in] */ IDOMHTMLElement* /*element*/,
         /* [in] */ IDOMHTMLElement* /*before*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::remove( 
         /* [in] */ int /*index*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -686,7 +686,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::remove(
 HRESULT STDMETHODCALLTYPE DOMHTMLSelectElement::activateItemAtIndex( 
     /* [in] */ int /*index*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;    
 }
 
@@ -709,91 +709,91 @@ HRESULT STDMETHODCALLTYPE DOMHTMLOptionElement::QueryInterface(REFIID riid, void
 HRESULT STDMETHODCALLTYPE DOMHTMLOptionElement::form( 
         /* [retval][out] */ IDOMHTMLFormElement** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLOptionElement::defaultSelected( 
         /* [retval][out] */ BOOL* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLOptionElement::setDefaultSelected( 
         /* [in] */ BOOL /*defaultSelected*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLOptionElement::text( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLOptionElement::index( 
         /* [retval][out] */ int* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLOptionElement::disabled( 
         /* [retval][out] */ BOOL* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLOptionElement::setDisabled( 
         /* [in] */ BOOL /*disabled*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLOptionElement::label( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLOptionElement::setLabel( 
         /* [in] */ BSTR /*label*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLOptionElement::selected( 
         /* [retval][out] */ BOOL* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLOptionElement::setSelected( 
         /* [in] */ BOOL /*selected*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLOptionElement::value( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLOptionElement::setValue( 
         /* [in] */ BSTR /*value*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -818,105 +818,105 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::QueryInterface(REFIID riid, void*
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::defaultValue( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setDefaultValue( 
         /* [in] */ BSTR /*val*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::defaultChecked( 
         /* [retval][out] */ BOOL* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setDefaultChecked( 
         /* [in] */ BSTR /*checked*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::form( 
         /* [retval][out] */ IDOMHTMLElement** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::accept( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setAccept( 
         /* [in] */ BSTR /*accept*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::accessKey( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setAccessKey( 
         /* [in] */ BSTR /*key*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::align( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setAlign( 
         /* [in] */ BSTR /*align*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::alt( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setAlt( 
         /* [in] */ BSTR /*alt*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::checked( 
         /* [retval][out] */ BOOL* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setChecked( 
         /* [in] */ BOOL /*checked*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -931,119 +931,119 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::disabled(
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setDisabled( 
         /* [in] */ BOOL /*disabled*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::maxLength( 
         /* [retval][out] */ int* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setMaxLength( 
         /* [in] */ int /*maxLength*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::name( 
         /* [retval][out] */ BSTR* /*name*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setName( 
         /* [in] */ BSTR /*name*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::readOnly( 
         /* [retval][out] */ BOOL* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setReadOnly( 
         /* [in] */ BOOL /*readOnly*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::size( 
         /* [retval][out] */ unsigned int* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setSize( 
         /* [in] */ unsigned int /*size*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::src( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setSrc( 
         /* [in] */ BSTR /*src*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::tabIndex( 
         /* [retval][out] */ int* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setTabIndex( 
         /* [in] */ int /*tabIndex*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::type( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setType( 
         /* [in] */ BSTR /*type*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::useMap( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setUseMap( 
         /* [in] */ BSTR /*useMap*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -1075,7 +1075,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::select( void)
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::click( void)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -1124,7 +1124,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::isTextField(
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::rectOnScreen( 
     /* [retval][out] */ LPRECT /*rect*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -1134,7 +1134,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::replaceCharactersInRange(
     /* [in] */ BSTR /*replacementString*/,
     /* [in] */ int /*index*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -1175,145 +1175,145 @@ HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::QueryInterface(REFIID riid, vo
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::defaultValue( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::setDefaultValue( 
         /* [in] */ BSTR /*val*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::form( 
         /* [retval][out] */ IDOMHTMLElement** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::accessKey( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::setAccessKey( 
         /* [in] */ BSTR /*key*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::cols( 
         /* [retval][out] */ int* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::setCols( 
         /* [in] */ int /*cols*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::disabled( 
         /* [retval][out] */ BOOL* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::setDisabled( 
         /* [in] */ BOOL /*disabled*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::name( 
         /* [retval][out] */ BSTR* /*name*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::setName( 
         /* [in] */ BSTR /*name*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::readOnly( 
         /* [retval][out] */ BOOL* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::setReadOnly( 
         /* [in] */ BOOL /*readOnly*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::rows( 
         /* [retval][out] */ int* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::setRows( 
         /* [in] */ int /*rows*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::tabIndex( 
         /* [retval][out] */ int* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::setTabIndex( 
         /* [in] */ int /*tabIndex*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::type( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::value( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::setValue( 
         /* [in] */ BSTR /*value*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::select( void)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }

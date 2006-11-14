@@ -386,7 +386,7 @@ ULONG STDMETHODCALLTYPE WebFrame::Release(void)
 HRESULT STDMETHODCALLTYPE WebFrame::name( 
     /* [retval][out] */ BSTR* /*frameName*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -404,7 +404,7 @@ HRESULT STDMETHODCALLTYPE WebFrame::webView(
 HRESULT STDMETHODCALLTYPE WebFrame::frameView( 
     /* [retval][out] */ IWebFrameView** /*view*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -418,7 +418,7 @@ HRESULT STDMETHODCALLTYPE WebFrame::DOMDocument(
 HRESULT STDMETHODCALLTYPE WebFrame::frameElement( 
     /* [retval][out] */ IDOMHTMLElement** /*frameElement*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -510,14 +510,14 @@ HRESULT STDMETHODCALLTYPE WebFrame::loadAlternateHTMLString(
     /* [in] */ BSTR /*baseURL*/,
     /* [in] */ BSTR /*unreachableURL*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::loadArchive( 
     /* [in] */ IWebArchive* /*archive*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -558,14 +558,14 @@ HRESULT STDMETHODCALLTYPE WebFrame::findFrameNamed(
     /* [in] */ BSTR /*name*/,
     /* [retval][out] */ IWebFrame** /*frame*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::parentFrame( 
     /* [retval][out] */ IWebFrame** /*frame*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -573,7 +573,7 @@ HRESULT STDMETHODCALLTYPE WebFrame::childFrames(
     /* [out] */ int* /*frameCount*/,
     /* [retval][out] */ IWebFrame*** /*frames*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -684,7 +684,7 @@ HRESULT WebFrame::loadDataSource(WebDataSource* dataSource)
                     }
                 }
                 if (formData)
-                    resourceRequest.setHTTPBody(formData);
+                    resourceRequest.setHTTPBody(formData.release());
 
                 if (!d->frame->document())
                     d->frame->loader()->begin(); // FIXME - the frame should do this for us

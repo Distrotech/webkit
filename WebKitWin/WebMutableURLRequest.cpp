@@ -114,14 +114,14 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::requestWithURL(
     /* [optional][in] */ WebURLRequestCachePolicy /*cachePolicy*/,
     /* [optional][in] */ double /*timeoutInterval*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::allHTTPHeaderFields( 
     /* [retval][out] */ IPropertyBag** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -135,14 +135,14 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::cachePolicy(
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::HTTPBody( 
     /* [retval][out] */ IStream** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::HTTPBodyStream( 
     /* [retval][out] */ IStream** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -157,7 +157,7 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::HTTPMethod(
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::HTTPShouldHandleCookies( 
     /* [retval][out] */ BOOL* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -198,7 +198,7 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::valueForHTTPHeaderField(
     /* [in] */ BSTR /*field*/,
     /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -208,14 +208,14 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::addValue(
     /* [in] */ BSTR /*value*/,
     /* [in] */ BSTR /*field*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setAllHTTPHeaderFields( 
     /* [in] */ IPropertyBag* /*headerFields*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -229,14 +229,14 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setCachePolicy(
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setHTTPBody( 
     /* [in] */ IStream* /*data*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setHTTPBodyStream( 
     /* [in] */ IStream* /*data*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -250,21 +250,21 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setHTTPMethod(
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setHTTPShouldHandleCookies( 
     /* [in] */ BOOL /*handleCookies*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setMainDocumentURL( 
     /* [in] */ BSTR /*theURL*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setTimeoutInterval( 
     /* [in] */ double /*timeoutInterval*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -279,7 +279,7 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setValue(
     /* [in] */ BSTR /*value*/,
     /* [in] */ BSTR /*field*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 

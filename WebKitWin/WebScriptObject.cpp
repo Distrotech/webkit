@@ -24,7 +24,10 @@
  */
 
 #include "WebKitDLL.h"
+
 #include "WebScriptObject.h"
+
+#include <wtf/Assertions.h>
 
 // WebScriptObject ------------------------------------------------------------
 
@@ -75,7 +78,7 @@ HRESULT STDMETHODCALLTYPE WebScriptObject::throwException(
     /* [in] */ BSTR /*exceptionMessage*/,
     /* [retval][out] */ BOOL* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -85,7 +88,7 @@ HRESULT STDMETHODCALLTYPE WebScriptObject::callWebScriptMethod(
     /* [in] */ int /*cArgs*/,
     /* [retval][out] */ VARIANT* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -93,21 +96,21 @@ HRESULT STDMETHODCALLTYPE WebScriptObject::evaluateWebScript(
     /* [in] */ BSTR /*script*/,
     /* [retval][out] */ VARIANT* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebScriptObject::removeWebScriptKey( 
     /* [in] */ BSTR /*name*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebScriptObject::stringRepresentation( 
     /* [retval][out] */ BSTR* /*stringRepresentation*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -115,7 +118,7 @@ HRESULT STDMETHODCALLTYPE WebScriptObject::webScriptValueAtIndex(
     /* [in] */ unsigned int /*index*/,
     /* [retval][out] */ VARIANT* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -123,13 +126,13 @@ HRESULT STDMETHODCALLTYPE WebScriptObject::setWebScriptValueAtIndex(
     /* [in] */ unsigned int /*index*/,
     /* [in] */ VARIANT /*val*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebScriptObject::setException( 
     /* [in] */ BSTR /*description*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }

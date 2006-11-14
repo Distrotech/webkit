@@ -100,7 +100,7 @@ HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::supportedMIMETypes(
         /* [out][in] */ BSTR* /*types*/,
         /* [out][in] */ int* /*cTypes*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -108,7 +108,7 @@ HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::supportedNonImageMIMETypes(
         /* [out][in] */ BSTR* /*types*/,
         /* [out][in] */ int* /*cTypes*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -116,7 +116,7 @@ HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::supportedImageMIMETypes(
         /* [out][in] */ BSTR* /*types*/,
         /* [out][in] */ int* /*cTypes*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -127,7 +127,7 @@ HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::attributedStringFromDOMNodes(
         /* [in] */ int /*endOffset*/,
         /* [retval][out] */ IDataObject** /*attributedString*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -175,7 +175,7 @@ HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::formForElement(
 HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::currentForm( 
         /* [retval][out] */ IDOMElement** /*form*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -210,7 +210,7 @@ HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::matchLabels(
 HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::setDataSource( 
         /* [in] */ IWebDataSource* /*dataSource*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -218,7 +218,7 @@ HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::receivedData(
         /* [in] */ IStream* /*data*/,
         /* [in] */ IWebDataSource* /*dataSource*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -226,14 +226,14 @@ HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::receivedError(
         /* [in] */ IWebError* /*error*/,
         /* [in] */ IWebDataSource* /*dataSource*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::finishedLoadingWithDataSource( 
         /* [in] */ IWebDataSource* /*dataSource*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -249,13 +249,13 @@ HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::canProvideDocumentSource(
 HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::documentSource( 
         /* [retval][out] */ BSTR* /*source*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::title( 
         /* [retval][out] */ BSTR* /*docTitle*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }

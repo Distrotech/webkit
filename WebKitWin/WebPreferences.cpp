@@ -84,7 +84,7 @@ WebPreferences* WebPreferences::getInstanceForIdentifier(BSTR identifier)
     }    
     
     //WebPreferences *instance = [webPreferencesInstances objectForKey:[self _concatenateKeyWithIBCreatorID:ident]];
-    DebugBreak(); //FIXME
+    ASSERT_NOT_REACHED(); //FIXME
     return 0;
 }
 
@@ -618,7 +618,7 @@ HRESULT STDMETHODCALLTYPE WebPreferences::initWithIdentifier(
 HRESULT STDMETHODCALLTYPE WebPreferences::identifier( 
     /* [retval][out] */ BSTR* /*ident*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 

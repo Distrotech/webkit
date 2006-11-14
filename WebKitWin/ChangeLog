@@ -1,3 +1,25 @@
+2006-11-14  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Steve.
+
+        Replace all instances of DebugBreak() with ASSERT_NOT_REACHED() so that
+        it will be compiled out for Release builds.
+
+        * DOMCSSClasses.cpp:
+        * DOMCoreClasses.cpp:
+        * DOMHTMLClasses.cpp:
+        * WebBackForwardList.cpp:
+        * WebDataSource.cpp:
+        * WebFrame.cpp:
+        * WebHTMLRepresentation.cpp:
+        * WebHistoryItem.cpp:
+        * WebIconDatabase.cpp:
+        * WebMutableURLRequest.cpp:
+        * WebNotification.cpp:
+        * WebPreferences.cpp:
+        * WebScriptObject.cpp:
+        * WebView.cpp:
+
 2006-11-13  Brady Eidson  <beidson@apple.com>
 
         Rubberstamped by Maciej

@@ -261,35 +261,35 @@ HRESULT STDMETHODCALLTYPE WebDataSource::textEncodingName(
 HRESULT STDMETHODCALLTYPE WebDataSource::isLoading( 
     /* [retval][out] */ BOOL* /*loading*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebDataSource::pageTitle( 
     /* [retval][out] */ BSTR* /*title*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebDataSource::unreachableURL( 
     /* [retval][out] */ BSTR* /*url*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebDataSource::webArchive( 
     /* [retval][out] */ IWebArchive** /*archive*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebDataSource::mainResource( 
     /* [retval][out] */ IWebResource** /*resource*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -297,7 +297,7 @@ HRESULT STDMETHODCALLTYPE WebDataSource::subresources(
     /* [out] */ int* /*resourceCount*/,
     /* [retval][out] */ IWebResource*** /*resources*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -305,13 +305,13 @@ HRESULT STDMETHODCALLTYPE WebDataSource::subresourceForURL(
     /* [in] */ BSTR /*url*/,
     /* [retval][out] */ IWebResource** /*resource*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebDataSource::addSubresource( 
     /* [in] */ IWebResource* /*subresource*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }

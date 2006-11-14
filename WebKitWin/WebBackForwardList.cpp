@@ -310,13 +310,13 @@ HRESULT STDMETHODCALLTYPE WebBackForwardList::itemAtIndex(
 HRESULT STDMETHODCALLTYPE WebBackForwardList::setPageCacheSize( 
     /* [in] */ UINT /*size*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebBackForwardList::pageCacheSize( 
     /* [retval][out] */ UINT* /*size*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }

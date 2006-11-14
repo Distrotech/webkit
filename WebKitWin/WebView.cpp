@@ -1393,7 +1393,7 @@ HRESULT STDMETHODCALLTYPE WebView::canShowMIMEType(
     /* [in] */ BSTR /*mimeType*/,
     /* [retval][out] */ BOOL* /*canShow*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -1410,7 +1410,7 @@ HRESULT STDMETHODCALLTYPE WebView::MIMETypesShownAsHTML(
     /* [out] */ int* /*count*/,
     /* [retval][out] */ BSTR** /*mimeTypes*/) 
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -1418,7 +1418,7 @@ HRESULT STDMETHODCALLTYPE WebView::setMIMETypesShownAsHTML(
         /* [size_is][in] */ BSTR* /*mimeTypes*/,
         /* [in] */ int /*cMimeTypes*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -1426,7 +1426,7 @@ HRESULT STDMETHODCALLTYPE WebView::URLFromPasteboard(
     /* [in] */ IDataObject* /*pasteboard*/,
     /* [retval][out] */ BSTR* /*url*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -1434,7 +1434,7 @@ HRESULT STDMETHODCALLTYPE WebView::URLTitleFromPasteboard(
     /* [in] */ IDataObject* /*pasteboard*/,
     /* [retval][out] */ BSTR* /*urlTitle*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -1521,28 +1521,28 @@ HRESULT STDMETHODCALLTYPE WebView::uiDelegate(
 HRESULT STDMETHODCALLTYPE WebView::setResourceLoadDelegate( 
     /* [in] */ IWebResourceLoadDelegate* /*d*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::resourceLoadDelegate( 
     /* [out][retval] */ IWebResourceLoadDelegate** /*d*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::setDownloadDelegate( 
     /* [in] */ IWebDownloadDelegate* /*d*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::downloadDelegate( 
     /* [out][retval] */ IWebDownloadDelegate** /*d*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -1570,14 +1570,14 @@ HRESULT STDMETHODCALLTYPE WebView::frameLoadDelegate(
 HRESULT STDMETHODCALLTYPE WebView::setPolicyDelegate( 
     /* [in] */ IWebPolicyDelegate* /*d*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::policyDelegate( 
     /* [out][retval] */ IWebPolicyDelegate** /*d*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -1810,14 +1810,14 @@ exit:
 HRESULT STDMETHODCALLTYPE WebView::setMediaStyle( 
     /* [in] */ BSTR /*media*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::mediaStyle( 
     /* [retval][out] */ BSTR* /*media*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -1838,14 +1838,14 @@ HRESULT STDMETHODCALLTYPE WebView::stringByEvaluatingJavaScriptFromString(
 HRESULT STDMETHODCALLTYPE WebView::windowScriptObject( 
     /* [retval][out] */ IWebScriptObject** /*webScriptObject*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::setPreferences( 
     /* [in] */ IWebPreferences* /*prefs*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -1870,14 +1870,14 @@ HRESULT STDMETHODCALLTYPE WebView::preferences(
 HRESULT STDMETHODCALLTYPE WebView::setPreferencesIdentifier( 
     /* [in] */ BSTR /*anIdentifier*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::preferencesIdentifier( 
     /* [retval][out] */ BSTR* /*anIdentifier*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -2045,7 +2045,7 @@ HRESULT STDMETHODCALLTYPE WebView::registerViewClass(
     /* [in] */ IWebDocumentRepresentation* /*representation*/,
     /* [in] */ BSTR /*forMIMEType*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -2068,14 +2068,14 @@ HRESULT STDMETHODCALLTYPE WebView::groupName(
 HRESULT STDMETHODCALLTYPE WebView::estimatedProgress( 
         /* [retval][out] */ double* /*estimatedProgress*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::isLoading( 
         /* [retval][out] */ BOOL* /*isLoading*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -2096,7 +2096,7 @@ HRESULT STDMETHODCALLTYPE WebView::pasteboardTypesForSelection(
         /* [out][in] */ int* /*count*/,
         /* [retval][out] */ BSTR** /*types*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -2105,7 +2105,7 @@ HRESULT STDMETHODCALLTYPE WebView::writeSelectionWithPasteboardTypes(
         /* [in] */ int /*cTypes*/,
         /* [in] */ IDataObject* /*pasteboard*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -2114,7 +2114,7 @@ HRESULT STDMETHODCALLTYPE WebView::pasteboardTypesForElement(
         /* [out][in] */ int* /*count*/,
         /* [retval][out] */ BSTR** /*types*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -2124,69 +2124,69 @@ HRESULT STDMETHODCALLTYPE WebView::writeElement(
         /* [in] */ int /*cWithPasteboardTypes*/,
         /* [in] */ IDataObject* /*pasteboard*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::moveDragCaretToPoint( 
         /* [in] */ LPPOINT /*point*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::removeDragCaret( void)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::setDrawsBackground( 
         /* [in] */ BOOL /*drawsBackground*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::drawsBackground( 
         /* [retval][out] */ BOOL* /*drawsBackground*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::setMainFrameURL( 
         /* [in] */ BSTR /*urlString*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::mainFrameURL( 
         /* [retval][out] */ BSTR* /*urlString*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::mainFrameDocument( 
         /* [retval][out] */ IDOMDocument** /*document*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::mainFrameTitle( 
         /* [retval][out] */ BSTR* /*title*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::mainFrameIcon( 
         /* [retval][out] */ HBITMAP* /*icon*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -2195,7 +2195,7 @@ HRESULT STDMETHODCALLTYPE WebView::mainFrameIcon(
 HRESULT STDMETHODCALLTYPE WebView::takeStringURLFrom( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -2242,7 +2242,7 @@ HRESULT STDMETHODCALLTYPE WebView::canGoBack(
 HRESULT STDMETHODCALLTYPE WebView::goBack( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -2271,7 +2271,7 @@ HRESULT STDMETHODCALLTYPE WebView::canGoForward(
 HRESULT STDMETHODCALLTYPE WebView::goForward( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -2325,7 +2325,7 @@ HRESULT STDMETHODCALLTYPE WebView::computedStyleForElement(
         /* [in] */ BSTR /*pseudoElement*/,
         /* [retval][out] */ IDOMCSSStyleDeclaration** /*style*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -2335,7 +2335,7 @@ HRESULT STDMETHODCALLTYPE WebView::editableDOMRangeForPoint(
         /* [in] */ LPPOINT /*point*/,
         /* [retval][out] */ IDOMRange** /*range*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -2343,105 +2343,105 @@ HRESULT STDMETHODCALLTYPE WebView::setSelectedDOMRange(
         /* [in] */ IDOMRange* /*range*/,
         /* [in] */ WebSelectionAffinity /*affinity*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::selectedDOMRange( 
         /* [retval][out] */ IDOMRange** /*range*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::selectionAffinity( 
         /* [retval][out][retval][out] */ WebSelectionAffinity* /*affinity*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::setEditable( 
         /* [in] */ BOOL /*flag*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::isEditable( 
         /* [retval][out] */ BOOL* /*isEditable*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::setTypingStyle( 
         /* [in] */ IDOMCSSStyleDeclaration* /*style*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::typingStyle( 
         /* [retval][out] */ IDOMCSSStyleDeclaration** /*style*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::setSmartInsertDeleteEnabled( 
         /* [in] */ BOOL /*flag*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::smartInsertDeleteEnabled( 
         /* [in] */ BOOL /*enabled*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::setContinuousSpellCheckingEnabled( 
         /* [in] */ BOOL /*flag*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::isContinuousSpellCheckingEnabled( 
         /* [retval][out] */ BOOL* /*enabled*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::spellCheckerDocumentTag( 
         /* [retval][out] */ int* /*tag*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::undoManager( 
         /* [retval][out] */ IWebUndoManager** /*manager*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::setEditingDelegate( 
         /* [in] */ IWebViewEditingDelegate* /*d*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::editingDelegate( 
         /* [retval][out] */ IWebViewEditingDelegate** /*d*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -2449,7 +2449,7 @@ HRESULT STDMETHODCALLTYPE WebView::styleDeclarationWithText(
         /* [in] */ BSTR /*text*/,
         /* [retval][out] */ IDOMCSSStyleDeclaration** /*style*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -2458,41 +2458,41 @@ HRESULT STDMETHODCALLTYPE WebView::styleDeclarationWithText(
 HRESULT STDMETHODCALLTYPE WebView::replaceSelectionWithNode( 
         /* [in] */ IDOMNode* /*node*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::replaceSelectionWithText( 
         /* [in] */ BSTR /*text*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::replaceSelectionWithMarkupString( 
         /* [in] */ BSTR /*markupString*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::replaceSelectionWithArchive( 
         /* [in] */ IWebArchive* /*archive*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::deleteSelection( void)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::applyStyle( 
         /* [in] */ IDOMCSSStyleDeclaration* /*style*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -2501,147 +2501,147 @@ HRESULT STDMETHODCALLTYPE WebView::applyStyle(
 HRESULT STDMETHODCALLTYPE WebView::copy( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::cut( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::paste( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::copyFont( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::pasteFont( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::delete_( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::pasteAsPlainText( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::pasteAsRichText( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::changeFont( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::changeAttributes( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::changeDocumentBackgroundColor( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::changeColor( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::alignCenter( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::alignJustified( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::alignLeft( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::alignRight( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::checkSpelling( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::showGuessPanel( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::performFindPanelAction( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::startSpeaking( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::stopSpeaking( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 

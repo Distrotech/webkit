@@ -25,7 +25,10 @@
 
 #include "config.h"
 #include "WebKitDLL.h"
+
 #include "WebNotification.h"
+
+#include <wtf/Assertions.h>
 
 // WebNotification ------------------------------------------------------------
 
@@ -101,7 +104,7 @@ HRESULT STDMETHODCALLTYPE WebNotification::notificationWithName(
     /* [in] */ IUnknown* /*anObject*/,
     /* [optional][in] */ IPropertyBag* /*userInfo*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 

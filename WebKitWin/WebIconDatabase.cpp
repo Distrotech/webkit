@@ -210,13 +210,13 @@ HRESULT STDMETHODCALLTYPE WebIconDatabase::releaseIconForURL(
     
 HRESULT STDMETHODCALLTYPE WebIconDatabase::delayDatabaseCleanup(void)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebIconDatabase::allowDatabaseCleanup(void)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 

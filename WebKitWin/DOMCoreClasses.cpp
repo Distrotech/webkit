@@ -78,7 +78,7 @@ HRESULT STDMETHODCALLTYPE DOMNode::QueryInterface(REFIID riid, void** ppvObject)
 HRESULT STDMETHODCALLTYPE DOMNode::nodeName( 
     /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -97,70 +97,70 @@ HRESULT STDMETHODCALLTYPE DOMNode::nodeValue(
 HRESULT STDMETHODCALLTYPE DOMNode::setNodeValue( 
     /* [in] */ BSTR /*value*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::nodeType( 
     /* [retval][out] */ unsigned short* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::parentNode( 
     /* [retval][out] */ IDOMNode** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::childNodes( 
     /* [retval][out] */ IDOMNodeList** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::firstChild( 
     /* [retval][out] */ IDOMNode** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::lastChild( 
     /* [retval][out] */ IDOMNode** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::previousSibling( 
     /* [retval][out] */ IDOMNode** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::nextSibling( 
     /* [retval][out] */ IDOMNode** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::attributes( 
     /* [retval][out] */ IDOMNamedNodeMap** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::ownerDocument( 
     /* [retval][out] */ IDOMDocument** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -169,7 +169,7 @@ HRESULT STDMETHODCALLTYPE DOMNode::insertBefore(
     /* [in] */ IDOMNode* /*refChild*/,
     /* [retval][out] */ IDOMNode** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -178,7 +178,7 @@ HRESULT STDMETHODCALLTYPE DOMNode::replaceChild(
     /* [in] */ IDOMNode* /*oldChild*/,
     /* [retval][out] */ IDOMNode** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -186,7 +186,7 @@ HRESULT STDMETHODCALLTYPE DOMNode::removeChild(
     /* [in] */ IDOMNode* /*oldChild*/,
     /* [retval][out] */ IDOMNode** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -194,14 +194,14 @@ HRESULT STDMETHODCALLTYPE DOMNode::appendChild(
     /* [in] */ IDOMNode* /*oldChild*/,
     /* [retval][out] */ IDOMNode** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::hasChildNodes( 
     /* [retval][out] */ BOOL* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -209,13 +209,13 @@ HRESULT STDMETHODCALLTYPE DOMNode::cloneNode(
     /* [in] */ BOOL /*deep*/,
     /* [retval][out] */ IDOMNode** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::normalize( void)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -224,42 +224,42 @@ HRESULT STDMETHODCALLTYPE DOMNode::isSupported(
     /* [in] */ BSTR /*version*/,
     /* [retval][out] */ BOOL* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::namespaceURI( 
     /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::prefix( 
     /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::setPrefix( 
     /* [in] */ BSTR /*prefix*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::localName( 
     /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::hasAttributes( 
     /* [retval][out] */ BOOL* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -267,7 +267,7 @@ HRESULT STDMETHODCALLTYPE DOMNode::isSameNode(
     /* [in] */ IDOMNode* /*other*/,
     /* [retval][out] */ BOOL* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -275,21 +275,21 @@ HRESULT STDMETHODCALLTYPE DOMNode::isEqualNode(
     /* [in] */ IDOMNode* /*other*/,
     /* [retval][out] */ BOOL* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::textContent( 
     /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::setTextContent( 
     /* [in] */ BSTR /*text*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -447,14 +447,14 @@ HRESULT STDMETHODCALLTYPE DOMDocument::QueryInterface(REFIID riid, void** ppvObj
 HRESULT STDMETHODCALLTYPE DOMDocument::doctype( 
     /* [retval][out] */ IDOMDocumentType** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMDocument::implementation( 
     /* [retval][out] */ IDOMImplementation** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -469,14 +469,14 @@ HRESULT STDMETHODCALLTYPE DOMDocument::createElement(
     /* [in] */ BSTR /*tagName*/,
     /* [retval][out] */ IDOMElement** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMDocument::createDocumentFragment( 
     /* [retval][out] */ IDOMDocumentFragment** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -484,7 +484,7 @@ HRESULT STDMETHODCALLTYPE DOMDocument::createTextNode(
     /* [in] */ BSTR /*data*/,
     /* [retval][out] */ IDOMText** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -492,7 +492,7 @@ HRESULT STDMETHODCALLTYPE DOMDocument::createComment(
     /* [in] */ BSTR /*data*/,
     /* [retval][out] */ IDOMComment** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -500,7 +500,7 @@ HRESULT STDMETHODCALLTYPE DOMDocument::createCDATASection(
     /* [in] */ BSTR /*data*/,
     /* [retval][out] */ IDOMCDATASection** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -509,7 +509,7 @@ HRESULT STDMETHODCALLTYPE DOMDocument::createProcessingInstruction(
     /* [in] */ BSTR /*data*/,
     /* [retval][out] */ IDOMProcessingInstruction** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -517,7 +517,7 @@ HRESULT STDMETHODCALLTYPE DOMDocument::createAttribute(
     /* [in] */ BSTR /*name*/,
     /* [retval][out] */ IDOMAttr** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -525,7 +525,7 @@ HRESULT STDMETHODCALLTYPE DOMDocument::createEntityReference(
     /* [in] */ BSTR /*name*/,
     /* [retval][out] */ IDOMEntityReference** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -548,7 +548,7 @@ HRESULT STDMETHODCALLTYPE DOMDocument::importNode(
     /* [in] */ BOOL /*deep*/,
     /* [retval][out] */ IDOMNode** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -557,7 +557,7 @@ HRESULT STDMETHODCALLTYPE DOMDocument::createElementNS(
     /* [in] */ BSTR /*qualifiedName*/,
     /* [retval][out] */ IDOMElement** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -566,7 +566,7 @@ HRESULT STDMETHODCALLTYPE DOMDocument::createAttributeNS(
     /* [in] */ BSTR /*qualifiedName*/,
     /* [retval][out] */ IDOMAttr** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -590,7 +590,7 @@ HRESULT STDMETHODCALLTYPE DOMDocument::getElementById(
     /* [in] */ BSTR /*elementId*/,
     /* [retval][out] */ IDOMElement** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -707,7 +707,7 @@ HRESULT STDMETHODCALLTYPE DOMElement::lineBoxRects(
 HRESULT STDMETHODCALLTYPE DOMElement::tagName( 
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -729,14 +729,14 @@ HRESULT STDMETHODCALLTYPE DOMElement::setResult(
         /* [in] */ BSTR /*name*/,
         /* [in] */ BSTR /*value*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMElement::removeAttribute( 
         /* [in] */ BSTR /*name*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -744,7 +744,7 @@ HRESULT STDMETHODCALLTYPE DOMElement::getAttributeNode(
         /* [in] */ BSTR /*name*/,
         /* [retval][out] */ IDOMAttr** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -752,7 +752,7 @@ HRESULT STDMETHODCALLTYPE DOMElement::setAttributeNode(
         /* [in] */ IDOMAttr* /*newAttr*/,
         /* [retval][out] */ IDOMAttr** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -760,7 +760,7 @@ HRESULT STDMETHODCALLTYPE DOMElement::removeAttributeNode(
         /* [in] */ IDOMAttr* /*oldAttr*/,
         /* [retval][out] */ IDOMAttr** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -768,7 +768,7 @@ HRESULT STDMETHODCALLTYPE DOMElement::getElementsByTagName(
         /* [in] */ BSTR /*name*/,
         /* [retval][out] */ IDOMNodeList** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -777,7 +777,7 @@ HRESULT STDMETHODCALLTYPE DOMElement::getAttributeNS(
         /* [in] */ BSTR /*localName*/,
         /* [retval][out] */ BSTR* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -786,7 +786,7 @@ HRESULT STDMETHODCALLTYPE DOMElement::setAttributeNS(
         /* [in] */ BSTR /*qualifiedName*/,
         /* [in] */ BSTR /*value*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -794,7 +794,7 @@ HRESULT STDMETHODCALLTYPE DOMElement::removeAttributeNS(
         /* [in] */ BSTR /*namespaceURI*/,
         /* [in] */ BSTR /*localName*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -803,7 +803,7 @@ HRESULT STDMETHODCALLTYPE DOMElement::getAttributeNodeNS(
         /* [in] */ BSTR /*localName*/,
         /* [retval][out] */ IDOMAttr** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -811,7 +811,7 @@ HRESULT STDMETHODCALLTYPE DOMElement::setAttributeNodeNS(
         /* [in] */ IDOMAttr* /*newAttr*/,
         /* [retval][out] */ IDOMAttr** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -820,7 +820,7 @@ HRESULT STDMETHODCALLTYPE DOMElement::getElementsByTagNameNS(
         /* [in] */ BSTR /*localName*/,
         /* [retval][out] */ IDOMNodeList** /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -828,7 +828,7 @@ HRESULT STDMETHODCALLTYPE DOMElement::hasAttribute(
         /* [in] */ BSTR /*name*/,
         /* [retval][out] */ BOOL* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
     
@@ -837,19 +837,19 @@ HRESULT STDMETHODCALLTYPE DOMElement::hasAttributeNS(
         /* [in] */ BSTR /*localName*/,
         /* [retval][out] */ BOOL* /*result*/)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMElement::focus( void)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMElement::blur( void)
 {
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -886,7 +886,7 @@ HRESULT STDMETHODCALLTYPE DOMElement::style(
     /* [retval][out] */ IDOMCSSStyleDeclaration** /*result*/)
 {
     // FIXME
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -936,7 +936,7 @@ HRESULT STDMETHODCALLTYPE DOMElement::offsetParent(
     /* [retval][out] */ IDOMElement** /*result*/)
 {
     // FIXME
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -974,7 +974,7 @@ HRESULT STDMETHODCALLTYPE DOMElement::setScrollLeft(
     /* [in] */ int /*newScrollLeft*/)
 {
     // FIXME
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
@@ -992,7 +992,7 @@ HRESULT STDMETHODCALLTYPE DOMElement::setScrollTop(
     /* [in] */ int /*newScrollTop*/)
 {
     // FIXME
-    DebugBreak();
+    ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
 
