@@ -683,8 +683,8 @@ HRESULT WebFrame::loadDataSource(WebDataSource* dataSource)
                         requestImpl->Release();
                     }
                 }
-                if (formData)
-                    resourceRequest.setHTTPBody(formData.release());
+                
+                resourceRequest.setHTTPBody(formData.release());
 
                 if (!d->frame->document())
                     d->frame->loader()->begin(); // FIXME - the frame should do this for us
