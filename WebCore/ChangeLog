@@ -1,5 +1,11 @@
 2006-11-15  Steve Falkenburg  <sfalken@apple.com>
 
+        Remove header from vcproj that no longer exists
+
+        * WebCore.vcproj/WebCore.vcproj:
+
+2006-11-15  Steve Falkenburg  <sfalken@apple.com>
+
         Fix the B&I build
 
         * WebCore.vcproj/WebCore.vcproj:
