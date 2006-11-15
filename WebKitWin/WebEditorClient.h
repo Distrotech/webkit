@@ -73,6 +73,16 @@ public:
     void webViewDidChangeTypingStyle(WebNotification*);
     void webViewDidChangeSelection(WebNotification*);
 
+    void registerCommandForUndo(PassRefPtr<WebCore::EditCommand>);
+    void registerCommandForRedo(PassRefPtr<WebCore::EditCommand>);
+    void clearUndoRedoOperations();
+
+    bool canUndo() const;
+    bool canRedo() const;
+    
+    void undo();
+    void redo();
+
 private:
     WebView* m_webView;
 };

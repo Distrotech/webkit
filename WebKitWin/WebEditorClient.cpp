@@ -31,6 +31,7 @@
 #include "IWebURLResponse.h"
 #include "WebView.h"
 #pragma warning(push, 0)
+#include <WebCore/EditCommand.h>
 #include <WebCore/HTMLElement.h>
 #include <WebCore/NotImplemented.h>
 #include <WebCore/Range.h>
@@ -141,3 +142,33 @@ void WebEditorClient::webViewDidChangeSelection(WebNotification* /*notification*
 
 bool WebEditorClient::shouldShowDeleteInterface(HTMLElement* /*element*/)
 { LOG_NOIMPL(); return false; }
+
+void WebEditorClient::registerCommandForUndo(PassRefPtr<EditCommand>)
+{
+}
+
+void WebEditorClient::registerCommandForRedo(PassRefPtr<EditCommand>)
+{
+}
+
+void WebEditorClient::clearUndoRedoOperations()
+{
+}
+
+bool WebEditorClient::canUndo() const
+{
+    return false;
+}
+
+bool WebEditorClient::canRedo() const
+{
+    return false;
+}
+
+void WebEditorClient::undo()
+{
+}
+
+void WebEditorClient::redo()
+{
+}

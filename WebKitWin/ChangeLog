@@ -1,3 +1,17 @@
+2006-11-14  Anders Carlsson  <acarlsson@apple.com>
+
+        Build fix.
+        
+        * WebEditorClient.cpp:
+        (WebEditorClient::registerCommandForUndo):
+        (WebEditorClient::registerCommandForRedo):
+        (WebEditorClient::clearUndoRedoOperations):
+        (WebEditorClient::canUndo):
+        (WebEditorClient::canRedo):
+        (WebEditorClient::undo):
+        (WebEditorClient::redo):
+        * WebEditorClient.h:
+
 2006-11-14  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Anders
