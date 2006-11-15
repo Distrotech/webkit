@@ -1,3 +1,34 @@
+2006-11-15  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Darin.
+
+        Add an undo manager to the editor client. Make it possible for applications to invoke undo/redo.        
+
+        * Interfaces/IWebView.idl:
+        * WebEditorClient.cpp:
+        (WebUndoManager::WebUndoManager):
+        (WebUndoManager::~WebUndoManager):
+        (WebUndoManager::clearCommands):
+        (WebUndoManager::registerCommand):
+        (WebUndoManager::undo):
+        (WebUndoManager::redo):
+        (WebUndoManager::canUndo):
+        (WebUndoManager::canRedo):
+        (WebUndoManager::undoOrRedo):
+        (WebEditorClient::WebEditorClient):
+        (WebEditorUndoCommand::WebEditorUndoCommand):
+        (WebEditorUndoCommand::execute):
+        (WebEditorClient::registerCommandForUndo):
+        (WebEditorClient::registerCommandForRedo):
+        (WebEditorClient::clearUndoRedoOperations):
+        (WebEditorClient::canUndo):
+        (WebEditorClient::canRedo):
+        (WebEditorClient::undo):
+        (WebEditorClient::redo):
+        * WebEditorClient.h:
+        * WebView.cpp:
+        (WebView::execCommand):
+
 2006-11-15  Steve Falkenburg  <sfalken@apple.com>
 
         Fix bug in my last check-in preventing proper COM registration
@@ -38,6 +69,7 @@
         (isEditable):
         * WebEditorClient.h:
 
+>>>>>>> .r11113
 2006-11-14  Darin Adler  <darin@apple.com>
 
         Reviewed by Anders.

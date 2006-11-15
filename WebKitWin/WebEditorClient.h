@@ -30,10 +30,12 @@
 #pragma warning(push, 0)
 #include <WebCore/EditorClient.h>
 #include <WebCore/Shared.h>
+#include <wtf/OwnPtr.h>
 #pragma warning(pop)
 
 class WebView;
 class WebNotification;
+class WebUndoManager;
 
 namespace WebCore {
 
@@ -87,6 +89,7 @@ public:
 
 private:
     WebView* m_webView;
+    OwnPtr<WebUndoManager> m_undoManager;
 };
 
 #endif // WebEditorClient_H

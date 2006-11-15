@@ -1,3 +1,16 @@
+2006-11-15  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Darin.
+    
+        Remove some (now) obsolete methods.
+        
+        * bridge/win/FrameWin.h:
+        * platform/win/TemporaryLinkStubs.cpp:
+        (FrameWin::unfocusWindow):
+        (FrameWin::getAppletInstanceForWidget):
+        (FrameWin::issuePasteCommand):
+        (FrameWin::respondToChangedSelection):
+
 2006-11-15  Steve Falkenburg  <sfalken@apple.com>
 
         Remove header from vcproj that no longer exists

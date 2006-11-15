@@ -49,7 +49,7 @@ cpp_quote(" * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAG
 cpp_quote(" */")
 
 cpp_quote("/* identifiers for commands that can be called by the webview's frame */")
-cpp_quote("enum WebViewCmd { Cut = 100, Copy, Paste, ForwardDelete, SelectAll };")
+cpp_quote("enum WebViewCmd { Cut = 100, Copy, Paste, ForwardDelete, SelectAll, Undo, Redo };")
 
 import "oaidl.idl";
 import "ocidl.idl";

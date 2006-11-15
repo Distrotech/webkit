@@ -121,11 +121,6 @@ public:
     virtual KJS::Bindings::Instance* getObjectInstanceForWidget(Widget*);
     virtual KJS::Bindings::Instance* getAppletInstanceForWidget(Widget*);
     
-    virtual void registerCommandForUndo(PassRefPtr<WebCore::EditCommand>);
-    virtual void registerCommandForRedo(PassRefPtr<WebCore::EditCommand>);
-    virtual void clearUndoRedoOperations();
-    virtual void issueUndoCommand();
-    virtual void issueRedoCommand();
     virtual void issueCutCommand();
     virtual void issueCopyCommand();
     virtual void issuePasteCommand();
@@ -136,8 +131,6 @@ public:
     virtual bool shouldChangeSelection(const Selection& oldSelection, const Selection& newSelection, EAffinity affinity, bool stillSelecting) const;
 
     virtual bool canPaste() const;
-    virtual bool canRedo() const;
-    virtual bool canUndo() const;
     virtual void print();
 
     bool keyEvent(const PlatformKeyboardEvent&);

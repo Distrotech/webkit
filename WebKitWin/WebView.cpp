@@ -676,6 +676,12 @@ bool WebView::execCommand(WPARAM wParam, LPARAM /*lParam*/)
     case SelectAll:
         handled = frame->editor()->execCommand("SelectAll");
         break;
+    case Undo:
+        handled = frame->editor()->execCommand("Undo");
+        break;
+    case Redo:
+        handled = frame->editor()->execCommand("Redo");
+        break;
     default:
         break;
     }

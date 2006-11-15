@@ -39,8 +39,82 @@
 
 using namespace WebCore;
 
+class WebUndoCommand {
+public:
+    virtual void execute() = 0;
+};
+
+class WebUndoManager {
+public:
+    WebUndoManager() 
+        : m_inUndo(false)
+        , m_inRedo(false) {}
+
+    ~WebUndoManager() 
+    {
+        clearCommands();
+    }
+
+    void clearCommands()
+    {
+        deleteAllValues(m_undoStack);
+        m_undoStack.resize(0);
+
+        deleteAllValues(m_redoStack);
+        m_redoStack.resize(0);
+    }
+
+    void registerCommand(WebUndoCommand* command) 
+    {
+        if (!m_inUndo && !m_inRedo)
+            m_redoStack.clear();
+
+        if (m_inUndo) {
+            m_redoStack.append(command);
+        } else {
+            m_undoStack.append(command);
+        }
+    }
+
+    void undo() 
+    {
+        m_inUndo = true;
+        undoOrRedo(m_undoStack);
+        m_inUndo = false;
+    }
+
+    void redo()
+    {
+        m_inRedo = true;
+        undoOrRedo(m_redoStack);
+        m_inRedo = false;
+    }
+
+    bool canUndo() { return !m_undoStack.isEmpty(); }
+    bool canRedo() { return !m_redoStack.isEmpty(); }
+
+private:
+    void undoOrRedo(Vector<WebUndoCommand*>& stack)
+    {
+        ASSERT(!stack.isEmpty());
+
+        OwnPtr<WebUndoCommand> command(stack[static_cast<int>(stack.size()) - 1]);
+        stack.removeLast();
+
+        command->execute();
+    }
+
+    bool m_inUndo;
+    bool m_inRedo;
+
+    Vector<WebUndoCommand*> m_undoStack;
+    Vector<WebUndoCommand*> m_redoStack;
+
+};
+
 WebEditorClient::WebEditorClient(WebView* webView)
-: m_webView(webView)
+    : m_webView(webView)
+    , m_undoManager(new WebUndoManager)
 {
 }
 
@@ -143,34 +217,59 @@ void WebEditorClient::webViewDidChangeSelection(WebNotification* /*notification*
 bool WebEditorClient::shouldShowDeleteInterface(HTMLElement* /*element*/)
 { LOG_NOIMPL(); return false; }
 
-void WebEditorClient::registerCommandForUndo(PassRefPtr<EditCommand>)
+class WebEditorUndoCommand : public WebUndoCommand 
 {
+public:
+    WebEditorUndoCommand(PassRefPtr<EditCommand> editCommand, bool isUndo)
+        : m_editCommand(editCommand)
+        , m_isUndo(isUndo) { }
+
+    void execute()
+    {
+        if (m_isUndo)
+            m_editCommand->unapply();
+        else
+            m_editCommand->reapply();
+    }
+
+private:
+    RefPtr<EditCommand> m_editCommand;
+    bool m_isUndo;
+};
+
+void WebEditorClient::registerCommandForUndo(PassRefPtr<EditCommand> command)
+{
+    m_undoManager->registerCommand(new WebEditorUndoCommand(command, true));
 }
 
-void WebEditorClient::registerCommandForRedo(PassRefPtr<EditCommand>)
+void WebEditorClient::registerCommandForRedo(PassRefPtr<EditCommand> command)
 {
+    m_undoManager->registerCommand(new WebEditorUndoCommand(command, false));
 }
 
 void WebEditorClient::clearUndoRedoOperations()
 {
+    m_undoManager->clearCommands();
 }
 
 bool WebEditorClient::canUndo() const
 {
-    return false;
+    return m_undoManager->canUndo();
 }
 
 bool WebEditorClient::canRedo() const
 {
-    return false;
+    return m_undoManager->canRedo();
 }
 
 void WebEditorClient::undo()
 {
+    return m_undoManager->undo();
 }
 
 void WebEditorClient::redo()
 {
+    return m_undoManager->redo();
 }
 
 bool WebEditorClient::selectWordBeforeMenuEvent()

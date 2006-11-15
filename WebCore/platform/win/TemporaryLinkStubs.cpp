@@ -116,18 +116,13 @@ Vector<char> ServeSynchronousRequest(Loader*,DocLoader*,const ResourceRequest&,R
 
 void FrameWin::focusWindow() { LOG_NOIMPL(); }
 void FrameWin::unfocusWindow() { LOG_NOIMPL(); }
-void FrameWin::registerCommandForRedo(PassRefPtr<WebCore::EditCommand>) { STOP_NOIMPL(); }
 KJS::Bindings::Instance* FrameWin::getAppletInstanceForWidget(Widget*) { STOP_NOIMPL(); return 0; }
-bool FrameWin::canRedo() const { LOG_NOIMPL(); return false; }
-bool FrameWin::canUndo() const { LOG_NOIMPL(); return false; }
 bool FrameWin::canPaste() const { LOG_NOIMPL(); return false; }
 bool FrameWin::shouldInterruptJavaScript() { LOG_NOIMPL(); return false; }
 void FrameWin::print() { LOG_NOIMPL(); }
 void FrameWin::issueCutCommand() { LOG_NOIMPL(); }
 void FrameWin::issueCopyCommand() { LOG_NOIMPL(); }
 void FrameWin::issuePasteCommand() { LOG_NOIMPL(); }
-void FrameWin::issueUndoCommand() { LOG_NOIMPL(); }
-void FrameWin::issueRedoCommand(void) { LOG_NOIMPL(); }
 void FrameWin::issuePasteAndMatchStyleCommand() { LOG_NOIMPL(); }
 void FrameWin::issueTransposeCommand() { LOG_NOIMPL(); }
 String FrameWin::mimeTypeForFileName(String const&) const { LOG_NOIMPL(); return String(); }
@@ -154,8 +149,6 @@ Range* FrameWin::markedTextRange() const { LOG_NOIMPL(); return 0; }
 void FrameWin::addMessageToConsole(String const&,unsigned int,String const&) { LOG_NOIMPL(); }
 bool FrameWin::shouldChangeSelection(Selection const&,Selection const&,WebCore::EAffinity,bool) const { LOG_NOIMPL(); return true; }
 void FrameWin::respondToChangedSelection(WebCore::Selection const&,bool) { LOG_NOIMPL(); }
-void FrameWin::registerCommandForUndo(PassRefPtr<WebCore::EditCommand>) { LOG_NOIMPL(); }
-void FrameWin::clearUndoRedoOperations(void) { LOG_NOIMPL(); }
 void FrameWin::markMisspellingsInAdjacentWords(WebCore::VisiblePosition const&) { LOG_NOIMPL(); }
 void FrameWin::respondToChangedContents(const Selection &endingSelection) { LOG_NOIMPL(); }
 
