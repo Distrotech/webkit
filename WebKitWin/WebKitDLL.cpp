@@ -85,75 +85,114 @@ STDAPI DllCanUnloadNow(void)
     return S_FALSE;
 }
 
+static CLSID gRegCLSIDs[] = {
+    CLSID_WebView,
+    CLSID_WebIconDatabase,
+    CLSID_WebMutableURLRequest,
+    CLSID_WebNotificationCenter,
+    CLSID_WebHistory,
+    CLSID_CFDictionaryPropertyBag,
+    CLSID_WebHistoryItem
+};
+
+static const int gSlotsPerEntry = 7;
 static LPCTSTR gRegTable[][3] = {
 //key                                                                                       value name              value }
 
-{ TEXT("CLSID\\{ED2B13E0-66AB-4cc2-9B9F-5B8F85D9AD1D}"),                                    0,                      TEXT("WebView") },
-{ TEXT("CLSID\\{ED2B13E0-66AB-4cc2-9B9F-5B8F85D9AD1D}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{ED2B13E0-66AB-4cc2-9B9F-5B8F85D9AD1D}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{ED2B13E0-66AB-4cc2-9B9F-5B8F85D9AD1D}\\ProgID"),                            0,                      TEXT("WebKit.WebView.3") },
-{ TEXT("CLSID\\{ED2B13E0-66AB-4cc2-9B9F-5B8F85D9AD1D}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebView") },
+{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebView") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebView.3") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebView") },
 { TEXT("WebKit.WebView.3"),                                                                 0,                      TEXT("WebView") },
-{ TEXT("WebKit.WebView.3\\CLSID"),                                                          0,                      TEXT("{ED2B13E0-66AB-4cc2-9B9F-5B8F85D9AD1D}") },
+{ TEXT("WebKit.WebView.3\\CLSID"),                                                          0,                      TEXT("{########-####-####-####-############}") },
 
-{ TEXT("CLSID\\{982FE6C0-60BB-4c12-A3D4-0381428CCCB1}"),                                    0,                      TEXT("WebIconDatabase") },
-{ TEXT("CLSID\\{982FE6C0-60BB-4c12-A3D4-0381428CCCB1}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{982FE6C0-60BB-4c12-A3D4-0381428CCCB1}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{982FE6C0-60BB-4c12-A3D4-0381428CCCB1}\\ProgID"),                            0,                      TEXT("WebKit.WebIconDatabase.3") },
-{ TEXT("CLSID\\{982FE6C0-60BB-4c12-A3D4-0381428CCCB1}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebIconDatabase") },
+{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebIconDatabase") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebIconDatabase.3") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebIconDatabase") },
 { TEXT("WebKit.WebIconDatabase.3"),                                                         0,                      TEXT("WebIconDatabase") },
-{ TEXT("WebKit.WebIconDatabase.3\\CLSID"),                                                  0,                      TEXT("{982FE6C0-60BB-4c12-A3D4-0381428CCCB1}") },
+{ TEXT("WebKit.WebIconDatabase.3\\CLSID"),                                                  0,                      TEXT("{########-####-####-####-############}") },
 
-{ TEXT("CLSID\\{C77FFC11-EE19-4337-92F6-52BF16B0C1A7}"),                                    0,                      TEXT("WebMutableURLRequest") },
-{ TEXT("CLSID\\{C77FFC11-EE19-4337-92F6-52BF16B0C1A7}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{C77FFC11-EE19-4337-92F6-52BF16B0C1A7}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{C77FFC11-EE19-4337-92F6-52BF16B0C1A7}\\ProgID"),                            0,                      TEXT("WebKit.WebMutableURLRequest.3") },
-{ TEXT("CLSID\\{C77FFC11-EE19-4337-92F6-52BF16B0C1A7}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebMutableURLRequest") },
+{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebMutableURLRequest") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebMutableURLRequest.3") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebMutableURLRequest") },
 { TEXT("WebKit.WebMutableURLRequest.3"),                                                    0,                      TEXT("WebMutableURLRequest") },
-{ TEXT("WebKit.WebMutableURLRequest.3\\CLSID"),                                             0,                      TEXT("{C77FFC11-EE19-4337-92F6-52BF16B0C1A7}") },
+{ TEXT("WebKit.WebMutableURLRequest.3\\CLSID"),                                             0,                      TEXT("{########-####-####-####-############}") },
 
-{ TEXT("CLSID\\{D2F0B459-88CC-4323-A87C-58057357B2E0}"),                                    0,                      TEXT("WebNotificationCenter") },
-{ TEXT("CLSID\\{D2F0B459-88CC-4323-A87C-58057357B2E0}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{D2F0B459-88CC-4323-A87C-58057357B2E0}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{D2F0B459-88CC-4323-A87C-58057357B2E0}\\ProgID"),                            0,                      TEXT("WebKit.WebNotificationCenter.3") },
-{ TEXT("CLSID\\{D2F0B459-88CC-4323-A87C-58057357B2E0}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebNotificationCenter") },
+{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebNotificationCenter") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebNotificationCenter.3") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebNotificationCenter") },
 { TEXT("WebKit.WebNotificationCenter.3"),                                                   0,                      TEXT("WebNotificationCenter") },
-{ TEXT("WebKit.WebNotificationCenter.3\\CLSID"),                                            0,                      TEXT("{D2F0B459-88CC-4323-A87C-58057357B2E0}") },
+{ TEXT("WebKit.WebNotificationCenter.3\\CLSID"),                                            0,                      TEXT("{########-####-####-####-############}") },
 
-{ TEXT("CLSID\\{FE0AC8FF-0357-4141-97BE-B663DF80DAB9}"),                                    0,                      TEXT("WebHistory") },
-{ TEXT("CLSID\\{FE0AC8FF-0357-4141-97BE-B663DF80DAB9}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{FE0AC8FF-0357-4141-97BE-B663DF80DAB9}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{FE0AC8FF-0357-4141-97BE-B663DF80DAB9}\\ProgID"),                            0,                      TEXT("WebKit.WebHistory.3") },
-{ TEXT("CLSID\\{FE0AC8FF-0357-4141-97BE-B663DF80DAB9}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebHistory") },
+{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebHistory") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebHistory.3") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebHistory") },
 { TEXT("WebKit.WebHistory.3"),                                                              0,                      TEXT("WebHistory") },
-{ TEXT("WebKit.WebHistory.3\\CLSID"),                                                       0,                      TEXT("{FE0AC8FF-0357-4141-97BE-B663DF80DAB9}") },
+{ TEXT("WebKit.WebHistory.3\\CLSID"),                                                       0,                      TEXT("{########-####-####-####-############}") },
 
-{ TEXT("CLSID\\{20919C16-3B48-4d52-88CC-8DC516E647DE}"),                                    0,                      TEXT("CFDictionaryPropertyBag") },
-{ TEXT("CLSID\\{20919C16-3B48-4d52-88CC-8DC516E647DE}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{20919C16-3B48-4d52-88CC-8DC516E647DE}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{20919C16-3B48-4d52-88CC-8DC516E647DE}\\ProgID"),                            0,                      TEXT("WebKit.CFDictionaryPropertyBag.3") },
-{ TEXT("CLSID\\{20919C16-3B48-4d52-88CC-8DC516E647DE}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.CFDictionaryPropertyBag") },
+{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("CFDictionaryPropertyBag") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.CFDictionaryPropertyBag.3") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.CFDictionaryPropertyBag") },
 { TEXT("WebKit.CFDictionaryPropertyBag.3"),                                                 0,                      TEXT("CFDictionaryPropertyBag") },
-{ TEXT("WebKit.CFDictionaryPropertyBag.3\\CLSID"),                                          0,                      TEXT("{20919C16-3B48-4d52-88CC-8DC516E647DE}") },
+{ TEXT("WebKit.CFDictionaryPropertyBag.3\\CLSID"),                                          0,                      TEXT("{########-####-####-####-############}") },
 
-{ TEXT("CLSID\\{FB97D506-ED53-40bc-815D-07936D7840F6}"),                                    0,                      TEXT("WebHistoryItem") },
-{ TEXT("CLSID\\{FB97D506-ED53-40bc-815D-07936D7840F6}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{FB97D506-ED53-40bc-815D-07936D7840F6}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{FB97D506-ED53-40bc-815D-07936D7840F6}\\ProgID"),                            0,                      TEXT("WebKit.WebHistoryItem.3") },
-{ TEXT("CLSID\\{FB97D506-ED53-40bc-815D-07936D7840F6}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebHistoryItem") },
+{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebHistoryItem") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebHistoryItem.3") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebHistoryItem") },
 { TEXT("WebKit.WebHistoryItem.3"),                                                          0,                      TEXT("WebHistoryItem") },
-{ TEXT("WebKit.WebHistoryItem.3\\CLSID"),                                                   0,                      TEXT("{FB97D506-ED53-40bc-815D-07936D7840F6}") }
+{ TEXT("WebKit.WebHistoryItem.3\\CLSID"),                                                   0,                      TEXT("{########-####-####-####-############}") }
 };
+
+static void substituteGUID(LPTSTR str, const UUID* guid)
+{
+    if (!guid)
+        return;
+
+    TCHAR uuidString[40];
+    _stprintf_s(uuidString, ARRAYSIZE(uuidString), TEXT("%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X"), guid->Data1, guid->Data2, guid->Data3,
+        guid->Data4[0], guid->Data4[1], guid->Data4[2], guid->Data4[3], guid->Data4[4], guid->Data4[5], guid->Data4[6], guid->Data4[7]);
+
+    LPCTSTR guidPattern = TEXT("########-####-####-####-############");
+    size_t patternLength = _tcslen(guidPattern);
+    size_t strLength = _tcslen(str);
+    LPTSTR guidSubStr = str;
+    while (strLength) {
+        guidSubStr = _tcsstr(guidSubStr, guidPattern);
+        if (!guidSubStr)
+            break;
+        _tcsncpy(guidSubStr, uuidString, patternLength);
+        guidSubStr += patternLength;
+        strLength -= (guidSubStr - str);
+    }
+}
 
 STDAPI DllUnregisterServer(void)
 {
     HRESULT hr = S_OK;
 
-    int nEntries = sizeof(gRegTable)/sizeof(*gRegTable);
+    int nEntries = ARRAYSIZE(gRegTable);
     for (int i = nEntries - 1; i >= 0; i--) {
-        LPCTSTR pszKeyName = gRegTable[i][0];
-        if (RegDeleteKey(HKEY_CLASSES_ROOT, pszKeyName))
-            hr = S_FALSE;
+        LPTSTR pszKeyName = _tcsdup(gRegTable[i][0]);
+        if (pszKeyName) {
+            substituteGUID(pszKeyName, &gRegCLSIDs[i/gSlotsPerEntry]);
+            if (RegDeleteKey(HKEY_CLASSES_ROOT, pszKeyName))
+                hr = S_FALSE;
+            free(pszKeyName);
+        } else
+            hr = E_OUTOFMEMORY;
     }
     return hr;
 }
@@ -167,29 +206,44 @@ STDAPI DllRegisterServer(void)
     GetModuleFileName(gInstance, szFileName, MAX_PATH);
 
     // register entries from table
-    int nEntries = sizeof(gRegTable)/sizeof(*gRegTable);
+    int nEntries = ARRAYSIZE(gRegTable);
     for (int i = 0; SUCCEEDED(hr) && i < nEntries; i++) {
-        LPCTSTR pszKeyName   = gRegTable[i][0];
-        LPCTSTR pszValueName = gRegTable[i][1];
-        LPCTSTR pszValue     = gRegTable[i][2];
+        LPTSTR pszKeyName   = _tcsdup(gRegTable[i][0]);
+        LPTSTR pszValueName = _tcsdup(gRegTable[i][1]);
+        LPTSTR pszValue     = (gRegTable[i][2] != (LPTSTR)-1) ? _tcsdup(gRegTable[i][2]) : (LPTSTR)-1;
 
-        // map rogue value to module file name
-        if (pszValue == (LPCTSTR)-1)
-            pszValue = szFileName;
+        if (pszKeyName && pszValueName && pszValue) {
 
-        // create the key
-        HKEY hkey;
-        LONG err = RegCreateKey(HKEY_CLASSES_ROOT, pszKeyName, &hkey);
-        if (err == ERROR_SUCCESS) {
-            // set the value
-            err = RegSetValueEx(hkey, pszValueName, 0, REG_SZ, (const BYTE*)pszValue, (DWORD) sizeof(pszValue[0])*(_tcslen(pszValue) + 1));
-            RegCloseKey(hkey);
+            int clsidIndex = i/gSlotsPerEntry;
+            substituteGUID(pszKeyName, &gRegCLSIDs[clsidIndex]);
+            substituteGUID(pszValueName, &gRegCLSIDs[clsidIndex]);
+
+            // map rogue value to module file name
+            if (pszValue == (LPTSTR)-1)
+                pszValue = szFileName;
+            else
+                substituteGUID(pszValue, &gRegCLSIDs[clsidIndex]);
+
+            // create the key
+            HKEY hkey;
+            LONG err = RegCreateKey(HKEY_CLASSES_ROOT, pszKeyName, &hkey);
+            if (err == ERROR_SUCCESS) {
+                // set the value
+                err = RegSetValueEx(hkey, pszValueName, 0, REG_SZ, (const BYTE*)pszValue, (DWORD) sizeof(pszValue[0])*(_tcslen(pszValue) + 1));
+                RegCloseKey(hkey);
+            }
+            if (err != ERROR_SUCCESS || FAILED(hr)) {
+                // if cannot add key or value, back out and fail
+                DllUnregisterServer(); 
+                hr = SELFREG_E_CLASS;
+            }
         }
-        if (err != ERROR_SUCCESS || FAILED(hr)) {
-            // if cannot add key or value, back out and fail
-            DllUnregisterServer(); 
-            hr = SELFREG_E_CLASS;
-        }
+        if (pszKeyName)
+            free(pszKeyName);
+        if (pszValueName)
+            free(pszValueName);
+        if (pszValue && pszValue != (LPTSTR)-1)
+            free(pszValue);
     }
 
     return hr;

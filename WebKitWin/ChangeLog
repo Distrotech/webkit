@@ -1,3 +1,19 @@
+2006-11-15  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam.
+
+        Use separate CLSIDs for buildbot builds.
+        
+        This allows independent installs of an official build (for everyday web browsing/dogfooding)
+        alongside a developer build (to write code, debug in Visual Studio).
+
+        * Interfaces/WebKit.idl: Add a second set of CLSIDs for builbot-based builds.
+        * WebKit.vcproj/Interfaces.vcproj: Add a preprocessor define __BUILDBOT__ set to 1 for official builds, 0 otherwise (use #if to check).
+        * WebKitDLL.cpp: Convert CLSIDs to strings via code instead of copying string literals from elsewhere.
+        (substituteGUID): Added.
+        (DllUnregisterServer): Substitute CLSIDs into reg keys.
+        (DllRegisterServer): Substitute CLSIDs into reg keys.
+
 2006-11-15  Adam Roben  <aroben@apple.com>
 
         It's too early in the morning to be fixing the build.

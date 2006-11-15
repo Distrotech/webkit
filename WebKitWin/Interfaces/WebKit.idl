@@ -80,11 +80,19 @@ import "IWebNotificationObserver.idl";
 import "IWebHistory.idl";
 
 [
+#if __BUILDBOT__
+    uuid(2a748656-625d-4207-b29f-40c95bfeb3a9)
+#else
     uuid(D3217C21-2D11-450d-9389-06F0BD4D8AD9)
+#endif
 ]
 library WebKit
 {
+#if __BUILDBOT__
+    [uuid(d6bca079-f61c-4e1e-b453-32a0477d02e3)]
+#else
     [uuid(ED2B13E0-66AB-4cc2-9B9F-5B8F85D9AD1D)]
+#endif
     coclass WebView {
         interface IWebView;
         interface IWebIBActions;
@@ -96,32 +104,56 @@ library WebKit
         interface IWebViewPrivate;
     }
 
+#if __BUILDBOT__
+    [uuid(66827ec1-3aef-4241-bac5-f776b44f030f)]
+#else
     [uuid(982FE6C0-60BB-4c12-A3D4-0381428CCCB1)]
+#endif
     coclass WebIconDatabase {
         interface IWebIconDatabase;
     }
 
+#if __BUILDBOT__
+    [uuid(a062ecc3-bb1b-4694-a569-f59e0ad6be0c)]
+#else
     [uuid(C77FFC11-EE19-4337-92F6-52BF16B0C1A7)]
+#endif
     coclass WebMutableURLRequest {
         interface IWebMutableURLRequest;
     }
 
+#if __BUILDBOT__
+    [uuid(ba590766-0a6f-46c7-b96e-743490d94cb7)]
+#else
     [uuid(D2F0B459-88CC-4323-A87C-58057357B2E0)]
+#endif
     coclass WebNotificationCenter {
         interface IWebNotificationCenter;
     }
 
+#if __BUILDBOT__
+    [uuid(a4b9b45d-949f-4c8c-9b92-6fbfcc1caaa2)]
+#else
     [uuid(FE0AC8FF-0357-4141-97BE-B663DF80DAB9)]
+#endif
     coclass WebHistory {
         interface IWebHistory;
     }
 
+#if __BUILDBOT__
+    [uuid(dd653964-4d37-4fb2-9cb6-6a9a97719332)]
+#else
     [uuid(20919C16-3B48-4d52-88CC-8DC516E647DE)]
+#endif
     coclass CFDictionaryPropertyBag {
         interface IPropertyBag;
     }
 
+#if __BUILDBOT__
+    [uuid(6be190e9-1725-4e4a-88db-6a9fe242c9e5)]
+#else
     [uuid(FB97D506-ED53-40bc-815D-07936D7840F6)]
+#endif
     coclass WebHistoryItem {
         interface IWebHistoryItem;
     }
