@@ -158,7 +158,7 @@ static LPCTSTR gRegTable[][3] = {
 
 static void substituteGUID(LPTSTR str, const UUID* guid)
 {
-    if (!guid)
+    if (!guid || !str)
         return;
 
     TCHAR uuidString[40];

@@ -1,3 +1,10 @@
+2006-11-15  Steve Falkenburg  <sfalken@apple.com>
+
+        Take another pass at fixing COM registration
+
+        * WebKitDLL.cpp:
+        (substituteGUID):
+
 2006-11-15  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Darin.
