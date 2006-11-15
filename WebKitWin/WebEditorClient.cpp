@@ -173,12 +173,12 @@ void WebEditorClient::redo()
 {
 }
 
-bool selectWordBeforeMenuEvent()
+bool WebEditorClient::selectWordBeforeMenuEvent()
 {
     return false;
 }
 
-bool isEditable()
+bool WebEditorClient::isEditable()
 {
     return false;
 }

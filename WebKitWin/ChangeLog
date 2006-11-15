@@ -1,5 +1,13 @@
 2006-11-15  Adam Roben  <aroben@apple.com>
 
+        It's too early in the morning to be fixing the build.
+
+        * WebEditorClient.cpp:
+        (WebEditorClient::selectWordBeforeMenuEvent):
+        (WebEditorClient::isEditable):
+
+2006-11-15  Adam Roben  <aroben@apple.com>
+
         Build fix.
 
         * WebEditorClient.cpp:
