@@ -210,7 +210,8 @@ STDAPI DllRegisterServer(void)
     for (int i = 0; SUCCEEDED(hr) && i < nEntries; i++) {
         LPTSTR pszKeyName   = _tcsdup(gRegTable[i][0]);
         LPTSTR pszValueName = gRegTable[i][1] ? _tcsdup(gRegTable[i][1]) : 0;
-        LPTSTR pszValue     = (gRegTable[i][2] != (LPTSTR)-1) ? _tcsdup(gRegTable[i][2]) : (LPTSTR)-1;
+        LPTSTR allocatedValue   = (gRegTable[i][2] != (LPTSTR)-1) ? _tcsdup(gRegTable[i][2]) : (LPTSTR)-1;
+        LPTSTR pszValue     = allocatedValue;
 
         if (pszKeyName && pszValue) {
 
@@ -242,8 +243,8 @@ STDAPI DllRegisterServer(void)
             free(pszKeyName);
         if (pszValueName)
             free(pszValueName);
-        if (pszValue && pszValue != (LPTSTR)-1)
-            free(pszValue);
+        if (allocatedValue && allocatedValue != (LPTSTR)-1)
+            free(allocatedValue);
     }
 
     return hr;

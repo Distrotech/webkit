@@ -1,3 +1,12 @@
+2006-11-15  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Steve.
+
+        Fixed a bad free in DllRegisterServer.
+
+        * WebKitDLL.cpp:
+        (DllRegisterServer):
+
 2006-11-15  Steve Falkenburg  <sfalken@apple.com>
 
         Take another pass at fixing COM registration
