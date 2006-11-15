@@ -114,8 +114,6 @@ public:
     virtual void markMisspellingsInAdjacentWords(const VisiblePosition&);
     virtual void markMisspellings(const Selection&);
 
-    virtual bool lastEventIsMouseUp() const;
-    
     virtual void setupRootForPrinting(bool onOrOff);
     virtual Vector<IntRect> computePageRects(const IntRect& printRect, float userScaleFactor);
 
@@ -136,9 +134,6 @@ public:
     virtual void respondToChangedSelection(const Selection& oldSelection, bool closeTyping);
     virtual void respondToChangedContents(const Selection &endingSelection);
     virtual bool shouldChangeSelection(const Selection& oldSelection, const Selection& newSelection, EAffinity affinity, bool stillSelecting) const;
-
-    virtual bool tabsToLinks() const;
-    virtual bool tabsToAllControls() const;
 
     virtual bool canPaste() const;
     virtual bool canRedo() const;

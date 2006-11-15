@@ -1,3 +1,26 @@
+2006-11-14  Darin Adler  <darin@apple.com>
+
+        Reviewed by NOBODY (OOPS!).
+
+        - update for creation of EventHandler
+
+        * WebCore.vcproj/WebCore.vcproj: Added EventHandler.cpp/h/Win.cpp.
+
+        * bridge/win/FrameWin.h: Moved virtual functions lastEventIsMouseUp,
+        tabsToLinks, and tabsToAllControls to EventHandler.
+        * bridge/win/FrameWin.cpp: Ditto.
+
+        * bridge/win/FrameViewWin.cpp: Moved passMousePressEventToSubframe and similar
+        functions to EventHandler.
+
+        * page/win/EventHandlerWin.cpp: Added. Code from FrameViewWin and FrameWin.
+
+        * platform/win/PlatformScrollBarWin.cpp:
+        (WebCore::PlatformScrollbar::handleMouseReleaseEvent): Call the setMousePressed
+        function in its new home in EventHandler.
+
+        * platform/win/TemporaryLinkStubs.cpp: Moved lastEventIsMouseUp stub to EventHandler.
+
 2006-11-13  Brady Eidson  <beidson@apple.com>
 
         Rubberstamped by Maciej

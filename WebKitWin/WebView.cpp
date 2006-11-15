@@ -41,6 +41,7 @@
 #include <WebCore/CString.h>
 #include <WebCore/Document.h>
 #include <WebCore/Editor.h>
+#include <WebCore/EventHandler.h>
 #include <WebCore/FrameLoader.h>
 #include <WebCore/FrameTree.h>
 #include <WebCore/FrameView.h>
@@ -625,11 +626,11 @@ void WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
         globalPrevMouseDownTime = messageTime;
         
         mouseEvent.setClickCount(globalClickCount);
-        m_page->mainFrame()->view()->handleMousePressEvent(mouseEvent);
+        m_page->mainFrame()->eventHandler()->handleMousePressEvent(mouseEvent);
     } else if (message == WM_LBUTTONDBLCLK || message == WM_MBUTTONDBLCLK || message == WM_RBUTTONDBLCLK) {
         globalClickCount = 2;
         mouseEvent.setClickCount(globalClickCount);
-        m_page->mainFrame()->view()->handleMousePressEvent(mouseEvent);
+        m_page->mainFrame()->eventHandler()->handleMousePressEvent(mouseEvent);
     } else if (message == WM_LBUTTONUP || message == WM_MBUTTONUP || message == WM_RBUTTONUP) {
         // Record the global position and the button of the up.
         globalPrevButton = mouseEvent.button();
@@ -652,7 +653,7 @@ void WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
 void WebView::mouseWheel(WPARAM wParam, LPARAM lParam)
 {
     PlatformWheelEvent wheelEvent(m_viewWindow, wParam, lParam);
-    m_mainFrame->impl()->view()->handleWheelEvent(wheelEvent);
+    m_mainFrame->impl()->eventHandler()->handleWheelEvent(wheelEvent);
 }
 
 bool WebView::execCommand(WPARAM wParam, LPARAM /*lParam*/)
@@ -2087,7 +2088,7 @@ HRESULT STDMETHODCALLTYPE WebView::elementAtPoint(
     IntPoint webCorePoint = IntPoint(point->x, point->y);
     HitTestResult result = HitTestResult(webCorePoint);
     if (frame->renderer())
-        result = frame->hitTestResultAtPoint(webCorePoint, false);
+        result = frame->eventHandler()->hitTestResultAtPoint(webCorePoint, false);
     *elementDictionary = new WebElementPropertyBag(result);
     return S_OK;
 }

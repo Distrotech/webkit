@@ -47,7 +47,6 @@
 #include "RenderFrame.h"
 #include "RenderView.h"
 #include "ResourceHandle.h"
-#include "ScrollbarMode.h"
 #include "TextResourceDecoder.h"
 #include "kjs_proxy.h"
 #include "kjs_window.h"
@@ -196,19 +195,6 @@ bool FrameWin::keyEvent(const PlatformKeyboardEvent& keyEvent)
     // FIXME: FrameMac has a keyDown/keyPress hack here which we are not copying.
 
     return result;
-}
-
-bool FrameWin::tabsToLinks() const
-{
-    if (m_client)
-        return m_client->tabsToLinks();
-
-    return false;
-}
-
-bool FrameWin::tabsToAllControls() const
-{
-    return true;
 }
 
 void FrameWin::setStatusBarText(const String& status)

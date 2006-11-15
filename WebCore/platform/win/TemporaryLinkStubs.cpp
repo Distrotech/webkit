@@ -33,6 +33,7 @@
 #include "DocumentLoader.h"
 #include "EditCommand.h"
 #include "Element.h"
+#include "EventHandler.h"
 #include "FileChooser.h"
 #include "Font.h"
 #include "FormState.h"
@@ -129,7 +130,6 @@ void FrameWin::issueUndoCommand() { LOG_NOIMPL(); }
 void FrameWin::issueRedoCommand(void) { LOG_NOIMPL(); }
 void FrameWin::issuePasteAndMatchStyleCommand() { LOG_NOIMPL(); }
 void FrameWin::issueTransposeCommand() { LOG_NOIMPL(); }
-bool FrameWin::lastEventIsMouseUp() const { return false; }
 String FrameWin::mimeTypeForFileName(String const&) const { LOG_NOIMPL(); return String(); }
 void FrameWin::scheduleClose() { STOP_NOIMPL(); }
 void FrameWin::markMisspellings(WebCore::Selection const&) { LOG_NOIMPL(); }
@@ -232,3 +232,5 @@ void FrameLoader::checkLoadCompleteForThisFrame() { LOG_NOIMPL(); }
 void FrameLoader::loadEmptyDocumentSynchronously() { LOG_NOIMPL(); }
 void FrameLoader::startLoading() { STOP_NOIMPL(); }
 String FrameLoader::referrer() const { LOG_NOIMPL(); return String(); }
+
+bool EventHandler::lastEventIsMouseUp() const { return false; }

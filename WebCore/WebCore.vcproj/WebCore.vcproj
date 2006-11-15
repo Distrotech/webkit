@@ -1899,6 +1899,18 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\page\EventHandler.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\page\EventHandler.h"
+				>
+			</File>
+			<File
+				RelativePath="..\page\win\EventHandlerWin.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\page\Frame.cpp"
 				>
 			</File>

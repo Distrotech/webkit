@@ -25,45 +25,7 @@
 
 #include "config.h"
 #include "FrameView.h"
-#include "Frame.h"
-#include "MouseEventWithHitTestResults.h"
-#include "PlatformScrollBar.h"
-#include "PlatformWheelEvent.h"
 
 namespace WebCore {
-
-bool FrameView::passMousePressEventToSubframe(MouseEventWithHitTestResults& mev, Frame* subframe)
-{
-    if (capturingMouse())
-        subframe->view()->setCapturingMouse(true);
-    subframe->view()->handleMousePressEvent(mev.event());
-    return true;
-}
-
-bool FrameView::passMouseMoveEventToSubframe(MouseEventWithHitTestResults& mev, Frame* subframe)
-{
-    subframe->view()->handleMouseMoveEvent(mev.event());
-    return true;
-}
-
-bool FrameView::passMouseReleaseEventToSubframe(MouseEventWithHitTestResults& mev, Frame* subframe)
-{
-    subframe->view()->handleMouseReleaseEvent(mev.event());
-    return true;
-}
-
-bool FrameView::passWheelEventToSubframe(PlatformWheelEvent& wheelEvent, Frame* subframe)
-{
-    subframe->view()->handleWheelEvent(wheelEvent);
-    return wheelEvent.isAccepted();
-}
-
-bool FrameView::passMousePressEventToScrollbar(MouseEventWithHitTestResults& mev, PlatformScrollbar* scrollbar)
-{
-    if (!scrollbar || !scrollbar->isEnabled())
-        return false;
-    scrollbar->handleMousePressEvent(mev.event());
-    return true;
-}
 
 }
