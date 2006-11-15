@@ -1,5 +1,12 @@
 2006-11-15  Steve Falkenburg  <sfalken@apple.com>
 
+        Fix bug in my last check-in preventing proper COM registration
+
+        * WebKitDLL.cpp:
+        (DllRegisterServer):
+
+2006-11-15  Steve Falkenburg  <sfalken@apple.com>
+
         Reviewed by Adam.
 
         Use separate CLSIDs for buildbot builds.
