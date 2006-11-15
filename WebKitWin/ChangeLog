@@ -1,3 +1,12 @@
+2006-11-15  Adam Roben  <aroben@apple.com>
+
+        Build fix.
+
+        * WebEditorClient.cpp:
+        (selectWordBeforeMenuEvent):
+        (isEditable):
+        * WebEditorClient.h:
+
 2006-11-14  Darin Adler  <darin@apple.com>
 
         Reviewed by Anders.

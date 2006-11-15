@@ -172,3 +172,13 @@ void WebEditorClient::undo()
 void WebEditorClient::redo()
 {
 }
+
+bool selectWordBeforeMenuEvent()
+{
+    return false;
+}
+
+bool isEditable()
+{
+    return false;
+}

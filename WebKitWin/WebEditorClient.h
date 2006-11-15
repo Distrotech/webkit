@@ -54,6 +54,8 @@ public:
     virtual bool isGrammarCheckingEnabled();
     virtual int spellCheckerDocumentTag();
 
+    virtual bool selectWordBeforeMenuEvent();
+    virtual bool isEditable();
 
     virtual bool shouldBeginEditing(WebCore::Range*);
     virtual bool shouldEndEditing(WebCore::Range*);
