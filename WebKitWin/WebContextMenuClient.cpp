@@ -23,52 +23,48 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include <WebCore/ChromeClient.h>
-#include <WebCore/Shared.h>
-#include <wtf/Forward.h>
+#include "config.h"
+#include "WebContextMenuClient.h"
 
-class WebView;
+#include "WebView.h"
 
-class WebChromeClient : public WebCore::ChromeClient, public WebCore::Shared<WebChromeClient> {
-public:
-    static PassRefPtr<WebChromeClient> create(WebView*);
+#pragma warning(push, 0)
+#include <WebCore/ContextMenu.h>
+#pragma warning(pop)
 
-    virtual void ref();
-    virtual void deref();
+using namespace WebCore;
 
-    virtual void setWindowRect(const WebCore::FloatRect&);
-    virtual WebCore::FloatRect windowRect();
-    
-    virtual WebCore::FloatRect pageRect();
-    
-    virtual float scaleFactor();
+PassRefPtr<WebContextMenuClient> WebContextMenuClient::create(WebView* webView)
+{
+    return new WebContextMenuClient(webView);
+}
 
-    virtual void focus();
-    virtual void unfocus();
+WebContextMenuClient::WebContextMenuClient(WebView* webView)
+    : m_webView(webView)
+{
+}
 
-    virtual WebCore::Page* createWindow(const WebCore::FrameLoadRequest&);
-    virtual WebCore::Page* createModalDialog(const WebCore::FrameLoadRequest&);
-    virtual void show();
+void WebContextMenuClient::ref()
+{
+    Shared<WebContextMenuClient>::ref();
+}
 
-    virtual bool canRunModal();
-    virtual void runModal();
+void WebContextMenuClient::deref()
+{
+    Shared<WebContextMenuClient>::deref();
+}
 
-    virtual void setToolbarsVisible(bool);
-    virtual bool toolbarsVisible();
-    
-    virtual void setStatusbarVisible(bool);
-    virtual bool statusbarVisible();
-    
-    virtual void setScrollbarsVisible(bool);
-    virtual bool scrollbarsVisible();
-    
-    virtual void setMenubarVisible(bool);
-    virtual bool menubarVisible();
+void WebContextMenuClient::addCustomContextMenuItems(ContextMenu* menu)
+{
+    IWebUIDelegate* uiDelegate = 0;
+    if (FAILED(m_webView->uiDelegate(&uiDelegate)))
+        return;
 
-    virtual void setResizable(bool);
+    ASSERT(uiDelegate);
 
-private:
-    WebChromeClient(WebView*);
+    HMENU newMenu = 0;
+    uiDelegate->contextMenuItemsForElement(m_webView, 0, menu->platformMenuDescription(), &newMenu);
+    uiDelegate->Release();
 
-    WebView* m_webView;
-};
+    menu->setPlatformMenuDescription(newMenu);
+}

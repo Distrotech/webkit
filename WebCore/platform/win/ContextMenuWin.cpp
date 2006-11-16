@@ -32,6 +32,14 @@
 
 namespace WebCore {
 
+unsigned ContextMenu::itemCount()
+{
+    if (!m_menu)
+        return 0;
+
+    return ::GetMenuItemCount(m_menu);
+}
+
 void ContextMenu::insertItem(unsigned int position, ContextMenuItem item)
 {
     if (!m_menu) {
@@ -69,6 +77,11 @@ void ContextMenu::insertItem(unsigned int position, ContextMenuItem item)
 
     if (item.type == ActionType)
         free(titleString);
+}
+
+void ContextMenu::appendItem(ContextMenuItem item)
+{
+    insertItem(itemCount(), item);
 }
 
 void ContextMenu::setPlatformMenuDescription(HMENU menu)

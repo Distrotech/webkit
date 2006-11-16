@@ -246,18 +246,3 @@ void WebChromeClient::setResizable(bool resizable)
         uiDelegate->Release();
     }
 }
-
-void WebChromeClient::addCustomContextMenuItems(ContextMenu* menu)
-{
-    IWebUIDelegate* uiDelegate = 0;
-    if (FAILED(m_webView->uiDelegate(&uiDelegate)))
-        return;
-
-    ASSERT(uiDelegate);
-
-    HMENU newMenu = 0;
-    uiDelegate->contextMenuItemsForElement(m_webView, 0, menu->platformMenuDescription(), &newMenu);
-    uiDelegate->Release();
-
-    menu->setPlatformMenuDescription(newMenu);
-}

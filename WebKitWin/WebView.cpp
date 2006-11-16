@@ -33,6 +33,7 @@
 #include "WebFrame.h"
 #include "WebBackForwardList.h"
 #include "WebChromeClient.h"
+#include "WebContextMenuClient.h"
 #include "WebNotificationCenter.h"
 #include "WebPreferences.h"
 #pragma warning( push, 0 )
@@ -1461,7 +1462,7 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
 
     m_groupName = String(groupName, SysStringLen(groupName));
 
-    m_page = new Page(WebChromeClient::create(this));
+    m_page = new Page(WebChromeClient::create(this), WebContextMenuClient::create(this));
 
     WebFrame* webFrame = WebFrame::createInstance();
     webFrame->initWithWebFrameView(0 /*FIXME*/, this, m_page, 0);
