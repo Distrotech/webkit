@@ -1,3 +1,22 @@
+2006-11-15  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Anders Carlsson.
+        
+        Fixed flash of plug-in content outside its containing iframe while 
+        scrolling the iframe.
+        
+        The problem was that the plug-in would draw between our call to MoveWindow
+        and our call to SetWindowRgn. The solution here is to lock all updates in 
+        the plug-in's HWND until we've called both MoveWindow and SetWindowRgn.
+        
+        Tested with Quicktime and Flash.
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::updateHwnd):
+        (WebCore::PluginViewWin::setFrameGeometry):
+        (WebCore::PluginViewWin::geometryChanged):
+        * plugins/win/PluginViewWin.h: Removed bogus invalidate parameter to updateHwnd.
+
 2006-11-15  Adele Peterson  <adele@apple.com>
 
         Reviewed by Adam.

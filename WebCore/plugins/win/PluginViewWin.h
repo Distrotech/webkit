@@ -117,7 +117,7 @@ namespace WebCore {
         void requestTimerFired(Timer<PluginViewWin>*);
         Timer<PluginViewWin> m_requestTimer;
 
-        void updateHwnd(bool invalidate) const;
+        void updateHwnd() const;
 
         int m_mode;
         int m_paramCount;

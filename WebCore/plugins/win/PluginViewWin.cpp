@@ -127,18 +127,20 @@ static LRESULT CALLBACK PluginViewWndProc(HWND hWnd, UINT message, WPARAM wParam
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-void PluginViewWin::updateHwnd(bool invalidate) const
+void PluginViewWin::updateHwnd() const
 {
     if (parent()) {
         FrameView* frameView = static_cast<FrameView*>(parent());
         IntRect rect(frameGeometry());
         IntPoint point(rect.location());
         point = frameView->contentsToWindow(point);
-        
+
+        ::LockWindowUpdate(m_window);
+
         IntRect newWindowRect(point, rect.size());
         if (newWindowRect != m_windowRect) {
             m_windowRect = newWindowRect;
-            ::MoveWindow(m_window, point.x(), point.y(), rect.width(), rect.height(), invalidate);
+            ::MoveWindow(m_window, point.x(), point.y(), rect.width(), rect.height(), false);
         }
 
         IntRect newClipRect = windowClipRect();
@@ -148,8 +150,14 @@ void PluginViewWin::updateHwnd(bool invalidate) const
             // Create a rectangular region.  Note that SetWindowRgn actually assumes ownership of the
             // region, which is why we don't delete the region.
             HRGN rgn = ::CreateRectRgn(m_clipRect.x(), m_clipRect.y(), m_clipRect.right(), m_clipRect.bottom());
-            ::SetWindowRgn(m_window, rgn, invalidate);
+            ::SetWindowRgn(m_window, rgn, false);
         }
+
+        ::LockWindowUpdate(0);
+
+        RECT r = m_clipRect;
+        ::InvalidateRect(m_window, &r, false);
+        ::UpdateWindow(m_window);
     }
 }
 
@@ -175,12 +183,12 @@ void PluginViewWin::setFrameGeometry(const IntRect& rect)
 
     Widget::setFrameGeometry(rect);
 
-    updateHwnd(true);
+    updateHwnd();
 }
 
 void PluginViewWin::geometryChanged() const
 {
-    updateHwnd(true);
+    updateHwnd();
 }
 
 void PluginViewWin::setFocus()
