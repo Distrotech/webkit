@@ -1,3 +1,12 @@
+2006-11-15  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Adam.
+
+        Adding RenderSlider class, and removing DeprecatedSlider and Slider classes.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/win/TemporaryLinkStubs.cpp:
+
 2006-11-15  Beth Dakin  <bdakin@apple.com>
         &   Adam Roben  <aroben@apple.com>
 

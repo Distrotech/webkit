@@ -63,7 +63,6 @@
 #include "ResourceResponse.h"
 #include "Screen.h"
 #include "ScrollBar.h"
-#include "Slider.h"
 #include "TextBoundaries.h"
 #include "TextField.h"
 #include "Widget.h"
@@ -90,16 +89,6 @@ void TextField::setSelection(int,int) { LOG_NOIMPL(); }
 void TextField::setMaxResults(int) { LOG_NOIMPL(); }
 bool TextField::edited() const { LOG_NOIMPL(); return false; }
 
-Slider::Slider() { LOG_NOIMPL(); }
-IntSize Slider::sizeHint() const { LOG_NOIMPL(); return IntSize(); }
-void Slider::setValue(double) { LOG_NOIMPL(); }
-void Slider::setMaxValue(double) { LOG_NOIMPL(); }
-void Slider::setMinValue(double) { LOG_NOIMPL(); }
-Slider::~Slider() { LOG_NOIMPL(); }
-void Slider::setFont(WebCore::Font const&) { LOG_NOIMPL(); }
-double Slider::value() const { LOG_NOIMPL(); return 0; }
-
-Widget::FocusPolicy Slider::focusPolicy() const { LOG_NOIMPL(); return NoFocus; }
 Widget::FocusPolicy TextField::focusPolicy() const { LOG_NOIMPL(); return NoFocus; }
 
 PlatformMouseEvent::PlatformMouseEvent(const CurrentEventTag&) { LOG_NOIMPL(); }

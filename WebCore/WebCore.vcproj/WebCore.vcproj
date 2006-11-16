@@ -2531,10 +2531,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\platform\Slider.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\Sound.h"
 				>
 			</File>
@@ -3619,14 +3615,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\DeprecatedSlider.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\DeprecatedSlider.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\EllipsisBox.cpp"
 				>
 			</File>
@@ -3952,6 +3940,14 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderReplaced.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderSlider.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderSlider.h"
 				>
 			</File>
 			<File
