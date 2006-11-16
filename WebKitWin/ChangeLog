@@ -1,3 +1,14 @@
+2006-11-15  Beth Dakin  <bdakin@apple.com>
+        &   Adam Roben  <aroben@apple.com>
+
+        Reviewed by Adam and Beth.
+
+        Internal side of r17796.
+
+        * WebChromeClient.cpp:
+        (WebChromeClient::addCustomContextMenuItems):
+        * WebChromeClient.h:
+
 2006-11-15  Ada Chan  <adachan@apple.com>
 
         Reviewed by Steve.

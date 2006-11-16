@@ -1,3 +1,15 @@
+2006-11-15  Beth Dakin  <bdakin@apple.com>
+        &   Adam Roben  <aroben@apple.com>
+
+        Reviewed by Adam and Beth.
+
+        Internal side of r17796.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/win/ContextMenuWin.cpp: Added.
+        (WebCore::ContextMenu::insertItem):
+        (WebCore::ContextMenu::setPlatformMenuDescription):
+
 2006-11-15  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Darin.

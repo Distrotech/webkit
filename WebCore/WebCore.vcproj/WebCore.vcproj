@@ -2279,6 +2279,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\ContextMenu.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\ContextMenu.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\CookieJar.h"
 				>
 			</File>
@@ -2671,6 +2679,10 @@
 				</File>
 				<File
 					RelativePath="..\platform\win\BString.h"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\win\ContextMenuWin.cpp"
 					>
 				</File>
 				<File

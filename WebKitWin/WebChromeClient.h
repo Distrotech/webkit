@@ -67,6 +67,8 @@ public:
 
     virtual void setResizable(bool);
 
+    virtual void addCustomContextMenuItems(WebCore::ContextMenu*);
+
 private:
     WebChromeClient(WebView*);
 
