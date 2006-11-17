@@ -93,6 +93,8 @@ public:
         /* [in] */ BSTR frameName,
         /* [in] */ BSTR groupName);
     
+    virtual HRESULT STDMETHODCALLTYPE close();
+
     virtual HRESULT STDMETHODCALLTYPE setUIDelegate( 
         /* [in] */ IWebUIDelegate *d);
     

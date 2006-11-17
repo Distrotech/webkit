@@ -1496,6 +1496,30 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     return hr;
 }
 
+HRESULT STDMETHODCALLTYPE WebView::close()
+{
+    IWebNotificationCenter* notifyCenter = WebNotificationCenter::defaultCenterInternal();
+    notifyCenter->removeObserver(this, WebPreferences::webPreferencesChangedNotification(), 0);
+
+    setHostWindow(0);
+    setFrameLoadDelegate(0);
+    setFrameLoadDelegatePrivate(0);
+    setUIDelegate(0);
+    setFormDelegate(0);
+
+    if (m_backForwardList) {
+        m_backForwardList->Release();
+        m_backForwardList = 0;
+    }
+
+    delete m_page;
+    m_page = 0;
+
+    deleteBackingStore();
+
+    return S_OK;
+}
+
 HRESULT STDMETHODCALLTYPE WebView::setUIDelegate( 
     /* [in] */ IWebUIDelegate* d)
 {

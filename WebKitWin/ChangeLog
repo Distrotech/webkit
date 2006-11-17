@@ -1,3 +1,15 @@
+2006-11-18  Darin Adler  <darin@apple.com>
+
+        Reviewed by Adele.
+
+        - fix leak of WebView when you close a tab or window
+
+        * Interfaces/IWebView.idl: Added a close function, like the close method
+        we added to WebView on the Macintosh side.
+
+        * WebView.h: Added close function.
+        * WebView.cpp: (WebView::close): First cut at implementation of close.
+
 2006-11-16  Adam Roben  <aroben@apple.com>
 
         Reviewed by Steve, Ada.

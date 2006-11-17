@@ -243,6 +243,8 @@ interface IWebView : IUnknown
     */
     HRESULT initWithFrame([in] RECT* frame, [in] BSTR frameName, [in] BSTR groupName);
 
+    HRESULT close();
+
     /*!
         @method setUIDelegate:
         @abstract Set the WebView's WebUIDelegate.
