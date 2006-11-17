@@ -1,3 +1,21 @@
+2006-11-16  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Adam.
+
+        Added theme for sider.
+
+        * rendering/RenderThemeWin.cpp:
+        (WebCore::RenderThemeWin::sliderTheme):
+        (WebCore::RenderThemeWin::close):
+        (WebCore::RenderThemeWin::determineSliderThumbState):
+        (WebCore::RenderThemeWin::getClassicThemeData):
+        (WebCore::RenderThemeWin::getThemeData):
+        (WebCore::drawControl):
+        (WebCore::RenderThemeWin::paintSliderTrack):
+        (WebCore::RenderThemeWin::paintSliderThumb):
+        (WebCore::RenderThemeWin::adjustSliderThumbSize):
+        * rendering/RenderThemeWin.h:
+
 2006-11-15  Adam Roben  <aroben@apple.com>
 
         Reviewed by Anders.
