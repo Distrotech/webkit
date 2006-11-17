@@ -1,3 +1,12 @@
+2006-11-16  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Steve, Ada.
+
+        Added new WebMenuItemBaseApplicationTag to the WebMenuItemTag enum to
+        keep WebKit apps from conflicting with WebKit context menu identifiers.
+
+        * Interfaces/IWebUIDelegate.idl:
+
 2006-11-15  Adam Roben  <aroben@apple.com>
 
         Reviewed by Anders.
