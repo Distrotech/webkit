@@ -1,3 +1,12 @@
+2006-11-18  Adam Roben  <aroben@apple.com>
+
+        Build fix from OpenSource r17841.
+
+        * platform/win/CursorWin.cpp: New method stubs.
+        (WebCore::aliasCursor):
+        (WebCore::progressCursor):
+        (WebCore::noDropCursor):
+
 2006-11-17  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.

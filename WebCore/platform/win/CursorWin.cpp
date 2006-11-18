@@ -290,4 +290,19 @@ const Cursor& contextMenuCursor()
     return pointerCursor();
 }
 
+const Cursor& aliasCursor()
+{
+    return pointerCursor();
+}
+
+const Cursor& progressCursor()
+{
+    return pointerCursor();
+}
+
+const Cursor& noDropCursor()
+{
+    return pointerCursor();
+}
+
 }
