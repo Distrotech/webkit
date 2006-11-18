@@ -35,15 +35,13 @@
 #include "FrameTree.h"
 #include "FrameView.h"
 #include "FrameWin.h"
-#include "kjs_binding.h"
-#include "kjs_proxy.h"
-#include "kjs_window.h"
 #include "HTMLFormElement.h"
 #include "HTMLFrameElement.h"
 #include "HTMLNames.h"
 #include "kjs_proxy.h"
 #include "kjs_binding.h"
 #include "kjs_window.h"
+#include "Page.h"
 #include "PluginDatabaseWin.h"
 #include "PluginViewWin.h"
 #include "MimeTypeRegistry.h"
@@ -65,13 +63,27 @@ void FrameLoader::submitForm(const FrameLoadRequest& request, Event* event)
     // than replacing this frame's content, so this check is flawed. On the other hand, the check is hardly
     // needed any more now that we reset m_submittedFormURL on each mouse or key down event.
     Frame* target = m_frame->tree()->find(request.frameName());
+
+    if (!target) {
+        // this means that target == _blank, so open a new window.
+        Page* page = m_frame->page();
+        if (!page)
+            return;
+
+        Page* newPage = page->chrome()->createWindow(request);
+        if (!newPage)
+            return;
+
+        target = newPage->mainFrame();
+    }
+
     if (m_frame->tree()->isDescendantOf(target)) {
         if (m_submittedFormURL == request.resourceRequest().url())
             return;
         m_submittedFormURL = request.resourceRequest().url();
     }
 
-    if (FrameWinClient* client = Win(m_frame)->client())
+    if (FrameWinClient* client = Win(target)->client())
         client->submitForm(request.resourceRequest().httpMethod(),
             request.resourceRequest().url(),
             request.resourceRequest().httpBody(),

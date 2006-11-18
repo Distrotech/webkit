@@ -1,3 +1,13 @@
+2006-11-17  Kevin McCullough  <kmccullough@apple.com>
+
+        Reviewed by Adam.
+
+        - Fixes Targetted Form Submission to now work. Radar: 4762693
+
+        * ChangeLog:
+        * loader/win/FrameLoaderWin.cpp:
+        (WebCore::FrameLoader::submitForm):
+
 2006-11-16  Adele Peterson  <adele@apple.com>
 
         Reviewed by Adam.
