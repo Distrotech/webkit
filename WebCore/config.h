@@ -39,6 +39,11 @@ typedef float CGFloat;
 
 #if PLATFORM(WIN_OS)
 
+// If we don't define these, they get defined in windef.h. 
+// We want to use std::min and std::max
+#define max max
+#define min min
+
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0500
 #endif

@@ -27,6 +27,8 @@
 #include "WebKitDLL.h"
 #include "MemoryStream.h"
 
+using std::min;
+
 // MemoryStream ---------------------------------------------------------------
 
 MemoryStream::MemoryStream(IUnknown* bufferOwner, const Vector<char>* buffer)

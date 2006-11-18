@@ -1,3 +1,21 @@
+2006-11-17  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        Make sure that all .cpp files and none of the headers include config.h.
+        
+        * MemoryStream.cpp:
+        * WebBackForwardList.cpp:
+        * WebBackForwardList.h:
+        * WebElementPropertyBag.cpp:
+        * WebHTMLRepresentation.cpp:
+        * WebKitClassFactory.cpp:
+        * WebKitDLL.cpp:
+        * WebMutableURLRequest.cpp:
+        * WebMutableURLRequest.h:
+        * WebURLResponse.cpp:
+        * WebURLResponse.h:
+
 2006-11-18  Darin Adler  <darin@apple.com>
 
         Reviewed by Adele.

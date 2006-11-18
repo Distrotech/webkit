@@ -44,6 +44,7 @@
 #define WEB_REASON_NONE -1
 
 using std::max;
+using std::min;
 
 namespace WebCore {
 

@@ -57,6 +57,8 @@ using KJS::JSObject;
 using KJS::JSValue;
 using KJS::Window;
 
+using std::min;
+
 namespace WebCore {
 
 using namespace HTMLNames;
@@ -707,7 +709,7 @@ NPError PluginViewWin::handlePost(const char* url, const char* target, uint32 le
                 String contentLength = headerFields.get("Content-Length");
 
                 if (!contentLength.isNull())
-                    dataLength = min(contentLength.toInt(), dataLength);
+                    dataLength = min(contentLength.toInt(), (int)dataLength);
                 headerFields.remove("Content-Length");
 
                 postData += location;

@@ -26,8 +26,6 @@
 #ifndef WebURLResponse_H
 #define WebURLResponse_H
 
-#include "config.h"
-
 #include "IWebURLResponse.h"
 
 #pragma warning(push, 0)

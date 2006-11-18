@@ -34,6 +34,8 @@
 #include <windows.h>
 #include <mlang.h>
 
+using std::min;
+
 namespace WebCore
 {
 
@@ -120,7 +122,7 @@ FontPlatformData* FontCache::createFontPlatformData(const FontDescription& fontD
     winfont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
     winfont.lfItalic = fontDescription.italic();
     winfont.lfWeight = fontDescription.bold() ? 700 : 400; // FIXME: Support weights for real.
-    int len = min(family.length(), LF_FACESIZE - 1);
+    int len = min(family.length(), (unsigned int)LF_FACESIZE - 1);
     memcpy(winfont.lfFaceName, family.characters(), len * sizeof(WORD));
     winfont.lfFaceName[len] = '\0';
 

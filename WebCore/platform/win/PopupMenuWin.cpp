@@ -39,6 +39,8 @@
 #include <tchar.h>
 #include <windows.h>
 
+using std::min;
+
 namespace WebCore {
 
 using namespace HTMLNames;

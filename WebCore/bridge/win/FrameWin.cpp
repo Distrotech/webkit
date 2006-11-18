@@ -57,6 +57,8 @@
 #include <CoreGraphics/CoreGraphics.h>
 #endif
 
+using std::min;
+
 namespace WebCore {
 
 using namespace HTMLNames;

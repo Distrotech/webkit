@@ -1,3 +1,18 @@
+2006-11-17  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        Add #defines in config.h to prevent the min and max macros from being used.
+
+        * bridge/win/FrameWin.cpp:
+        * config.h:
+        * platform/win/FontCacheWin.cpp:
+        (WebCore::FontCache::createFontPlatformData):
+        * platform/win/PopupMenuWin.cpp:
+        * plugins/win/PluginStreamWin.cpp:
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::handlePost):
+
 2006-11-17  Kevin McCullough  <kmccullough@apple.com>
 
         Reviewed by Adam.
