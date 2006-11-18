@@ -2,6 +2,16 @@
 
         Reviewed by Adele.
 
+        - fix leak of Document ref count seen in updateCounterpartURLForRSS
+
+        * WebScriptObject.h: Changed destructor to be virtual. Without this,
+        when the COM object was released we wouldn't release the underlying
+        WebCore::Node.
+
+2006-11-18  Darin Adler  <darin@apple.com>
+
+        Reviewed by Adele.
+
         - fix leak of WebView when you close a tab or window
 
         * Interfaces/IWebView.idl: Added a close function, like the close method

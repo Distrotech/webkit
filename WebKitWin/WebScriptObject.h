@@ -32,7 +32,7 @@ class WebScriptObject : public IWebScriptObject
 {
 public:
     WebScriptObject();
-    ~WebScriptObject();
+    virtual ~WebScriptObject();
 
     // IUnknown
     virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject);
