@@ -1,3 +1,18 @@
+2006-11-19  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by Adam.
+
+        Boomer part of context menu actions.
+
+        * bridge/win/FrameWin.h: New spelling functions on Frame.
+        * platform/win/ContextMenuWin.cpp:
+        (WebCore::ContextMenu::show):
+        (WebCore::ContextMenu::hide):
+        * platform/win/TemporaryLinkStubs.cpp: New stubs.
+        (FrameWin::ignoreSpelling):
+        (FrameWin::learnSpelling):
+        (FrameLoader::reload):
+
 2006-11-18  Adam Roben  <aroben@apple.com>
 
         Build fix from OpenSource r17841.

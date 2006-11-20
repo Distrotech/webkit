@@ -138,6 +138,8 @@ Range* FrameWin::markedTextRange() const { LOG_NOIMPL(); return 0; }
 void FrameWin::addMessageToConsole(String const&,unsigned int,String const&) { LOG_NOIMPL(); }
 bool FrameWin::shouldChangeSelection(Selection const&,Selection const&,WebCore::EAffinity,bool) const { LOG_NOIMPL(); return true; }
 void FrameWin::respondToChangedSelection(WebCore::Selection const&,bool) { LOG_NOIMPL(); }
+void FrameWin::ignoreSpelling() { LOG_NOIMPL(); }
+void FrameWin::learnSpelling() { LOG_NOIMPL(); }
 void FrameWin::markMisspellingsInAdjacentWords(WebCore::VisiblePosition const&) { LOG_NOIMPL(); }
 void FrameWin::respondToChangedContents(const Selection &endingSelection) { LOG_NOIMPL(); }
 
@@ -193,6 +195,7 @@ void FrameLoader::goBackOrForward(int) { LOG_NOIMPL(); }
 KURL FrameLoader::historyURL(int) { LOG_NOIMPL(); return KURL(); }
 bool FrameLoader::canGoBackOrForward(int) const { LOG_NOIMPL(); return false; }
 int FrameLoader::getHistoryLength() { LOG_NOIMPL(); return 0; }
+void FrameLoader::reload() { LOG_NOIMPL(); }
 
 void DocumentLoader::setupForReplaceByMIMEType(String const &) { STOP_NOIMPL(); }
 void ResourceLoader::cancel() { STOP_NOIMPL(); }

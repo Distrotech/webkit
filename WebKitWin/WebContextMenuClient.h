@@ -37,6 +37,11 @@ public:
     virtual void deref();
 
     virtual void addCustomContextMenuItems(WebCore::ContextMenu*);
+    
+    virtual void copyLinkToClipboard(WebCore::HitTestResult);
+    virtual void downloadURL(WebCore::KURL);
+    virtual void copyImageToClipboard(WebCore::HitTestResult);
+    virtual void lookUpInDictionary(WebCore::Frame*);
 
 private:
     WebContextMenuClient(WebView*);

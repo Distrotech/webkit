@@ -189,8 +189,8 @@ bool WebEditorClient::shouldDeleteRange(Range* /*range*/)
 bool WebEditorClient::shouldInsertNode(Node* /*node*/, Range* /*replacingRange*/, WebViewInsertAction /*givenAction*/)
 { LOG_NOIMPL(); return false; }
 
-//bool WebEditorClient::shouldInsertText(BSTR /*text*/, Range* /*replacingRange*/, WebViewInsertAction /*givenAction*/)
-//{ LOG_NOIMPL(); return false; }
+bool WebEditorClient::shouldInsertText(String /* text */, Range* /* replacingRange */) /* WebViewInsertAction givenAction) */
+{ LOG_NOIMPL(); return false; }
 
 //bool WebEditorClient::shouldChangeSelectedRange(Range *currentRange, Range *toProposedRange, SelectionAffinity selectionAffinity, bool stillSelecting)
 //{ LOG_NOIMPL(); return false; }

@@ -61,6 +61,7 @@ public:
 
     virtual bool shouldBeginEditing(WebCore::Range*);
     virtual bool shouldEndEditing(WebCore::Range*);
+    virtual bool shouldInsertText(WebCore::String, WebCore::Range*);
 
     virtual void didBeginEditing();
     virtual void didEndEditing();

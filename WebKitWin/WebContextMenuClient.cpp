@@ -30,6 +30,7 @@
 
 #pragma warning(push, 0)
 #include <WebCore/ContextMenu.h>
+#include <WebCore/NotImplemented.h>
 #pragma warning(pop)
 
 using namespace WebCore;
@@ -67,4 +68,24 @@ void WebContextMenuClient::addCustomContextMenuItems(ContextMenu* menu)
     uiDelegate->Release();
 
     menu->setPlatformMenuDescription(newMenu);
+}
+
+void WebContextMenuClient::copyLinkToClipboard(HitTestResult)
+{
+    LOG_NOIMPL();
+}
+
+void WebContextMenuClient::downloadURL(KURL)
+{
+    LOG_NOIMPL();
+}
+
+void WebContextMenuClient::copyImageToClipboard(HitTestResult)
+{
+    LOG_NOIMPL();
+}
+
+void WebContextMenuClient::lookUpInDictionary(Frame*)
+{
+    LOG_NOIMPL();
 }

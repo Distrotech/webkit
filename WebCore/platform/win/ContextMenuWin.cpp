@@ -101,4 +101,12 @@ void ContextMenu::setPlatformMenuDescription(HMENU menu)
     ::SetMenuInfo(m_menu, &info);
 }
 
+void ContextMenu::show()
+{
+}
+
+void ContextMenu::hide()
+{
+}
+
 }

@@ -1,3 +1,19 @@
+2006-11-19  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by Adam.
+
+        * WebContextMenuClient.cpp: Stubs for the currently client-
+        dependent menu actions.
+        (WebContextMenuClient::copyLinkToClipboard):
+        (WebContextMenuClient::downloadURL):
+        (WebContextMenuClient::copyImageToClipboard):
+        (WebContextMenuClient::lookUpInDictionary):
+        * WebContextMenuClient.h:
+        * WebEditorClient.cpp:
+        (WebEditorClient::shouldInsertText): Remove comment markers since 
+        this is implemented now on the Mac.
+        * WebEditorClient.h:
+
 2006-11-17  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.
