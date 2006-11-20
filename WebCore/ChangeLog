@@ -1,3 +1,15 @@
+2006-11-20  Anders Carlsson  <acarlsson@apple.com>
+
+        Fix build.
+        
+        * WebCore.vcproj/WebCore.vcproj:
+        * kcanvas/device/quartz/KCanvasFilterQuartz.cpp: Removed.
+        * platform/graphics/svg/cg/SVGResourceFilterCg.cpp: Added.
+        (WebCore::SVGResourceFilter::SVGResourceFilter):
+        (WebCore::SVGResourceFilter::~SVGResourceFilter):
+        (WebCore::SVGResourceFilter::prepareFilter):
+        (WebCore::SVGResourceFilter::applyFilter):
+
 2006-11-19  Beth Dakin  <bdakin@apple.com>
 
         Reviewed by Adam.

@@ -29,48 +29,26 @@
 #include "config.h"
 #ifdef SVG_SUPPORT
 #include "NotImplemented.h"
-#include "KCanvasFilterQuartz.h"
+#include "SVGResourceFilter.h"
 
 namespace WebCore {
 
-KCanvasFilterQuartz::KCanvasFilterQuartz()
+SVGResourceFilter::SVGResourceFilter()
 {
 }
 
-KCanvasFilterQuartz::~KCanvasFilterQuartz()
+SVGResourceFilter::~SVGResourceFilter()
 {
 }
 
-void KCanvasFilterQuartz::prepareFilter(const FloatRect &bbox)
+void SVGResourceFilter::prepareFilter(const FloatRect &bbox)
 {
     LOG_NOIMPL();
 }
 
-void KCanvasFilterQuartz::applyFilter(const FloatRect &bbox)
+void SVGResourceFilter::applyFilter(const FloatRect &bbox)
 {
     LOG_NOIMPL();
-}
-
-CIImage *KCanvasFilterQuartz::imageForName(const String& name) const
-{
-    LOG_NOIMPL();
-    return 0;
-}
-
-void KCanvasFilterQuartz::setImageForName(CIImage *image, const String &name)
-{
-    LOG_NOIMPL();
-}
-
-void KCanvasFilterQuartz::setOutputImage(const KCanvasFilterEffect *filterEffect, CIImage *output)
-{
-    LOG_NOIMPL();
-}
-
-CIImage *KCanvasFilterQuartz::inputImage(const KCanvasFilterEffect *filterEffect)
-{
-    LOG_NOIMPL();
-    return 0;
 }
 
 }
