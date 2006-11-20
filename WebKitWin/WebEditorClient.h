@@ -61,7 +61,7 @@ public:
 
     virtual bool shouldBeginEditing(WebCore::Range*);
     virtual bool shouldEndEditing(WebCore::Range*);
-    virtual bool shouldInsertText(WebCore::String, WebCore::Range*);
+    virtual bool shouldInsertText(WebCore::String, WebCore::Range*, WebCore::EditorInsertAction);
 
     virtual void didBeginEditing();
     virtual void didEndEditing();
@@ -71,7 +71,7 @@ public:
     bool shouldShowDeleteInterface(WebCore::HTMLElement*);
     bool shouldDeleteRange(WebCore::Range*);
 
-    bool shouldInsertNode(WebCore::Node*, WebCore::Range* replacingRange, WebViewInsertAction);
+    bool shouldInsertNode(WebCore::Node*, WebCore::Range* replacingRange, WebCore::EditorInsertAction);
     bool shouldApplyStyle(WebCore::CSSStyleDeclaration*, WebCore::Range*);
     bool shouldChangeTypingStyle(WebCore::CSSStyleDeclaration* currentStyle, WebCore::CSSStyleDeclaration* toProposedStyle);
 
