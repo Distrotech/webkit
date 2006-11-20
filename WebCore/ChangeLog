@@ -1,5 +1,11 @@
 2006-11-20  Anders Carlsson  <acarlsson@apple.com>
 
+        Add the same include paths to the debug build.
+        
+        * WebCore.vcproj/WebCore.vcproj:
+
+2006-11-20  Anders Carlsson  <acarlsson@apple.com>
+
         Fix build.
         
         * WebCore.vcproj/WebCore.vcproj:
