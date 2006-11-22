@@ -1,5 +1,21 @@
 2006-11-21  Anders Carlsson  <acarlsson@apple.com>
 
+        Reviewed by Lou, Dave Hyatt.
+
+        <rdar://problem/4761639>
+        Group label in list box doesn't appear as bold
+        
+        <rdar://problem/4805795>
+        <optgroup> labels should be bold in popup menus
+        
+        * platform/win/FontPlatformDataWin.cpp:
+        (WebCore::enumStylesCallback):
+        (WebCore::FontPlatformData::FontPlatformData):
+        Enumerate the existing font styles and decide what to synthesize
+        depending on what styles are available.
+
+2006-11-21  Anders Carlsson  <acarlsson@apple.com>
+
         Fix build.
         
         * WebCore.vcproj/WebCore.vcproj:
