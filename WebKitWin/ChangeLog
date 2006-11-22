@@ -1,3 +1,23 @@
+2006-11-21  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        Various fixes for getting file upload working.
+        
+        * WebFrame.cpp:
+        (WebFrame::loadDataSource):
+        Set the header fields on the new request.
+        
+        (WebFrame::submitForm):
+        * WebFrame.h:
+        Update submitForm, it now takes a FrameLoadRequest.
+        
+        * WebMutableURLRequest.cpp:
+        (WebMutableURLRequest::addHTTPHeaderFields):
+        (WebMutableURLRequest::httpHeaderFields):
+        * WebMutableURLRequest.h:
+        New functions for getting and setting HTTP headers.
+
 2006-11-20  Anders Carlsson  <acarlsson@apple.com>
 
         Fix build.

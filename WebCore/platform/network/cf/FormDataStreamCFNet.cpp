@@ -138,7 +138,11 @@ static void advanceCurrentStream(FormStreamFields *form)
         form->currentData = data;
     } else {
         CFStringRef filename = nextInput.m_filename.createCFString();
+#if PLATFORM(WIN)
+        CFURLRef fileURL = CFURLCreateWithFileSystemPath(0, filename, kCFURLWindowsPathStyle, FALSE);
+#else
         CFURLRef fileURL = CFURLCreateWithFileSystemPath(0, filename, kCFURLPOSIXPathStyle, FALSE);
+#endif
         CFRelease(filename);
         form->currentStream = CFReadStreamCreateWithFile(0, fileURL);
         CFRelease(fileURL);
@@ -347,7 +351,7 @@ void setHTTPBody(CFMutableURLRequestRef request, PassRefPtr<FormData> formData)
     }
 
     static CFReadStreamCallBacks formDataStreamCallbacks = 
-        { 1, formCreate, formFinalize, 0, formOpen, 0, formRead, 0, formCanRead, formClose, 0, 0, 0, formSchedule, formUnschedule};
+        { 1, formCreate, formFinalize, 0, formOpen, 0, formRead, 0, formCanRead, formClose, 0, 0, 0, formSchedule, formUnschedule };
 
     CFReadStreamRef stream = CFReadStreamCreate(0, &formDataStreamCallbacks, formData.releaseRef());
     CFURLRequestSetHTTPRequestBodyStream(request, stream);

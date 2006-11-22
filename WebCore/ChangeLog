@@ -1,5 +1,24 @@
 2006-11-21  Anders Carlsson  <acarlsson@apple.com>
 
+        Reviewed by Adam.
+
+        Various fixes that make file upload possible.
+        
+        * bridge/win/FrameWin.h:
+        * loader/win/FrameLoaderWin.cpp:
+        (WebCore::FrameLoader::submitForm):
+        Change submitForm to take a FrameLoadRequest.
+        
+        * platform/network/cf/FormDataStreamCFNet.cpp:
+        (WebCore::advanceCurrentStream):
+        Pass kCFURLWindowsPathStyle to CFURLCreateWithFileSystemPath.
+        
+        * platform/network/cf/ResourceHandleCFNet.cpp:
+        (WebCore::willSendRequest):
+        Call the client method.
+
+2006-11-21  Anders Carlsson  <acarlsson@apple.com>
+
         Rubber-stamped by Maciej.
 
         Fork the CF loader.

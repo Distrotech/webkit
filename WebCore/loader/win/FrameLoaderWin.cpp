@@ -84,9 +84,7 @@ void FrameLoader::submitForm(const FrameLoadRequest& request, Event* event)
     }
 
     if (FrameWinClient* client = Win(target)->client())
-        client->submitForm(request.resourceRequest().httpMethod(),
-            request.resourceRequest().url(),
-            request.resourceRequest().httpBody(),
+        client->submitForm(request,
             m_formAboutToBeSubmitted.get(),
             m_formValuesAboutToBeSubmitted);
 

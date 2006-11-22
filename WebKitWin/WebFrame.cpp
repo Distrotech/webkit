@@ -50,6 +50,7 @@
 #include <WebCore/Event.h>
 #include <WebCore/FormState.h>
 #include <WebCore/FrameLoader.h>
+#include <WebCore/FrameLoadRequest.h>
 #include <WebCore/FrameTree.h>
 #include <WebCore/FrameView.h>
 #include <WebCore/FrameWin.h>
@@ -680,6 +681,8 @@ HRESULT WebFrame::loadDataSource(WebDataSource* dataSource)
                     WebMutableURLRequest* requestImpl;
                     if (SUCCEEDED(request->QueryInterface(CLSID_WebMutableURLRequest, (void**)&requestImpl))) {
                         formData = requestImpl->formData();
+                        resourceRequest.addHTTPHeaderFields(requestImpl->httpHeaderFields());
+
                         requestImpl->Release();
                     }
                 }
@@ -1277,19 +1280,20 @@ exit:
     request->Release();
 }
 
-void WebFrame::submitForm(const String& method, const KURL& url, const PassRefPtr<FormData> submitFormData, Element* form, HashMap<String, String>& formValues)
+void WebFrame::submitForm(const FrameLoadRequest& frameLoadRequest, Element* form, HashMap<String, String>& formValues)
 {
     // FIXME: This is a dumb implementation, doesn't handle subframes, etc.
 
     m_quickRedirectComing = false;
     m_loadType = WebFrameLoadTypeStandard;
-    DeprecatedString urlStr = url.url();
+    DeprecatedString urlStr = frameLoadRequest.resourceRequest().url().url();
     BString urlBStr((LPCOLESTR)urlStr.unicode(), urlStr.length());
-    BString methodBStr(method);
+    BString methodBStr(frameLoadRequest.resourceRequest().httpMethod());
     WebMutableURLRequest* request = WebMutableURLRequest::createInstance();
     if (SUCCEEDED(request->initWithURL(urlBStr, WebURLRequestUseProtocolCachePolicy, 0))) {
         request->setHTTPMethod(methodBStr);
-        request->setFormData(submitFormData);
+        request->setFormData(frameLoadRequest.resourceRequest().httpBody());
+        request->addHTTPHeaderFields(frameLoadRequest.resourceRequest().httpHeaderFields());
 
         m_continueFormSubmit = true;
         IWebFormDelegate* formDelegate;

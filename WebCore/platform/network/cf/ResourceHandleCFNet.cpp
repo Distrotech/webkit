@@ -59,11 +59,12 @@ CFURLRequestRef willSendRequest(CFURLConnectionRef conn, CFURLRequestRef cfReque
     CFRelease(str);
 #endif
 
-    if (ResourceHandleClient* c = handle->client()) {
+    if (ResourceHandleClient* client = handle->client()) {
         ResourceRequest request;
         getResourceRequest(request, cfRequest);
         ResourceResponse redirectResponse;
         getResourceResponse(redirectResponse, cfRedirectResponse);
+        client->willSendRequest(handle, request, redirectResponse);
         return cfURLRequest(request);
     }
 

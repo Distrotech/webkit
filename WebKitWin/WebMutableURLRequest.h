@@ -142,8 +142,10 @@ public:
 
     // IWebURLRequest
     void setFormData(const PassRefPtr<WebCore::FormData> data);
-    const PassRefPtr<WebCore::FormData> formData();
-
+    const PassRefPtr<WebCore::FormData> formData() const;
+    
+    void addHTTPHeaderFields(const WebCore::HTTPHeaderMap& headerFields);
+    const WebCore::HTTPHeaderMap& httpHeaderFields() const;
 protected:
     ULONG m_refCount;
     WebCore::ResourceRequest m_request;

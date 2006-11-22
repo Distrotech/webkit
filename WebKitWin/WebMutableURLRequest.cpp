@@ -286,12 +286,22 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setValue(
 
 // IWebMutableURLRequest ----------------------------------------------------
 
-void WebMutableURLRequest::setFormData(const PassRefPtr<WebCore::FormData> data)
+void WebMutableURLRequest::setFormData(const PassRefPtr<FormData> data)
 {
     m_request.setHTTPBody(data);
 }
 
-const PassRefPtr<WebCore::FormData> WebMutableURLRequest::formData()
+const PassRefPtr<FormData> WebMutableURLRequest::formData() const
 {
     return m_request.httpBody();
+}
+
+void WebMutableURLRequest::addHTTPHeaderFields(const HTTPHeaderMap& headerFields)
+{
+    m_request.addHTTPHeaderFields(headerFields);
+}
+
+const HTTPHeaderMap& WebMutableURLRequest::httpHeaderFields() const
+{
+    return m_request.httpHeaderFields();
 }
