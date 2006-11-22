@@ -2995,6 +2995,54 @@
 					Name="svg"
 					>
 					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\SVGPaintServer.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\SVGPaintServer.h"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\SVGPaintServerGradient.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\SVGPaintServerGradient.h"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\SVGPaintServerLinearGradient.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\SVGPaintServerLinearGradient.h"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\SVGPaintServerPattern.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\SVGPaintServerPattern.h"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\SVGPaintServerRadialGradient.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\SVGPaintServerRadialGradient.h"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\SVGPaintServerSolid.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\SVGPaintServerSolid.h"
+						>
+					</File>
+					<File
 						RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\SVGResource.cpp"
 						>
 					</File>
@@ -3046,6 +3094,22 @@
 						Name="cg"
 						>
 						<File
+							RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\cg\SVGPaintServerCg.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\cg\SVGPaintServerGradientCg.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\cg\SVGPaintServerPatternCg.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\cg\SVGPaintServerSolidCg.cpp"
+							>
+						</File>
+						<File
 							RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\cg\SVGResourceClipperCg.cpp"
 							>
 						</File>
@@ -3059,10 +3123,6 @@
 						</File>
 						<File
 							RelativePath="..\platform\graphics\svg\cg\SVGResourceMaskerCg.cpp"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\cg\SVGResourceMaskerCg.h"
 							>
 						</File>
 					</Filter>
@@ -7245,34 +7305,6 @@
 					RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\KRenderingDevice.h"
 					>
 				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\KRenderingPaintServer.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\KRenderingPaintServerGradient.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\KRenderingPaintServerGradient.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\KRenderingPaintServerPattern.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\KRenderingPaintServerPattern.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\KRenderingPaintServerSolid.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\KRenderingPaintServerSolid.h"
-					>
-				</File>
 				<Filter
 					Name="quartz"
 					>
@@ -7281,27 +7313,11 @@
 						>
 					</File>
 					<File
-						RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\quartz\KCanvasItemQuartz.h"
-						>
-					</File>
-					<File
 						RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\quartz\KRenderingDeviceQuartz.cpp"
 						>
 					</File>
 					<File
 						RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\quartz\KRenderingDeviceQuartz.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\quartz\KRenderingPaintServerGradientQuartz.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\quartz\KRenderingPaintServerQuartz.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\quartz\KRenderingPaintServerQuartz.h"
 						>
 					</File>
 					<File
