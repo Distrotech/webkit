@@ -1,5 +1,59 @@
 2006-11-21  Anders Carlsson  <acarlsson@apple.com>
 
+        Rubber-stamped by Maciej.
+
+        Fork the CF loader.
+        
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/network/cf/FormDataStreamCFNet.cpp: Added.
+        (WebCore::getStreamFormDatas):
+        (WebCore::pairRetain):
+        (WebCore::pairRelease):
+        (WebCore::pairEqual):
+        (WebCore::pairHash):
+        (WebCore::closeCurrentStream):
+        (WebCore::scheduleWithPair):
+        (WebCore::advanceCurrentStream):
+        (WebCore::openNextStream):
+        (WebCore::formCreate):
+        (WebCore::formFinalize):
+        (WebCore::formOpen):
+        (WebCore::formRead):
+        (WebCore::formCanRead):
+        (WebCore::formClose):
+        (WebCore::formSchedule):
+        (WebCore::formUnschedule):
+        (WebCore::formEventCallback):
+        (WebCore::setHTTPBody):
+        (WebCore::httpBodyFromStream):
+        * platform/network/cf/FormDataStreamCFNet.h: Added.
+        * platform/network/cf/ResourceHandleCFNet.cpp: Added.
+        (WebCore::willSendRequest):
+        (WebCore::didReceiveResponse):
+        (WebCore::didReceiveData):
+        (WebCore::didFinishLoading):
+        (WebCore::didFail):
+        (WebCore::willCacheResponse):
+        (WebCore::didReceiveChallenge):
+        (WebCore::addHeadersFromHashMap):
+        (WebCore::ResourceHandleInternal::~ResourceHandleInternal):
+        (WebCore::ResourceHandle::~ResourceHandle):
+        (WebCore::arrayFromFormData):
+        (WebCore::emptyPerform):
+        (WebCore::runLoaderThread):
+        (WebCore::ResourceHandle::start):
+        (WebCore::ResourceHandle::cancel):
+        * platform/network/cf/ResourceRequestCFNet.cpp: Added.
+        (WebCore::getResourceRequest):
+        (WebCore::addHeadersFromHashMap):
+        (WebCore::cfURLRequest):
+        * platform/network/cf/ResourceRequestCFNet.h: Added.
+        * platform/network/cf/ResourceResponseCFNet.cpp: Added.
+        (WebCore::getResourceResponse):
+        * platform/network/cf/ResourceResponseCFNet.h: Added.
+
+2006-11-21  Anders Carlsson  <acarlsson@apple.com>
+
         Reviewed by Lou, Dave Hyatt.
 
         <rdar://problem/4761639>
