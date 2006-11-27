@@ -1604,7 +1604,6 @@ void WebFrame::windowScriptObjectAvailable(JSContextRef context, JSObjectRef win
     }
 }
 
-
 IWebBackForwardList* WebFrame::backForwardList()
 {
     if (this != d->webView->topLevelFrame())

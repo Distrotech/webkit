@@ -135,7 +135,6 @@ String WebCore::defaultLanguage() { return "en"; }
 void FrameView::updateBorder() { LOG_NOIMPL(); }
 
 Range* FrameWin::markedTextRange() const { LOG_NOIMPL(); return 0; }
-void FrameWin::addMessageToConsole(String const&,unsigned int,String const&) { LOG_NOIMPL(); }
 bool FrameWin::shouldChangeSelection(Selection const&,Selection const&,WebCore::EAffinity,bool) const { LOG_NOIMPL(); return true; }
 void FrameWin::respondToChangedSelection(WebCore::Selection const&,bool) { LOG_NOIMPL(); }
 void FrameWin::ignoreSpelling() { LOG_NOIMPL(); }

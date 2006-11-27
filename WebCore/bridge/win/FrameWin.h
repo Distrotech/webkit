@@ -100,8 +100,6 @@ public:
     virtual void focusWindow();
     virtual void unfocusWindow();
     
-    virtual void addMessageToConsole(const String& message,  unsigned int lineNumber, const String& sourceID);
-
     virtual void runJavaScriptAlert(const String& message);
     virtual bool runJavaScriptConfirm(const String& message);
     virtual bool runJavaScriptPrompt(const String& message, const String& defaultValue, String& result);

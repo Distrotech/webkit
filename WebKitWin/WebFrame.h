@@ -191,7 +191,7 @@ public:
     virtual void scrollBackingStore(int dx, int dy, const WebCore::IntRect& scrollViewRect, const WebCore::IntRect& clipRect);
     virtual void updateBackingStore();
     virtual void windowScriptObjectAvailable(JSContextRef context, JSObjectRef windowObject);
-
+    
     // FrameLoaderClient
     virtual void detachFrameLoader();
     virtual bool hasWebView() const;

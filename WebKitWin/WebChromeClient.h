@@ -67,6 +67,8 @@ public:
 
     virtual void setResizable(bool);
 
+    virtual void addMessageToConsole(const WebCore::String& message, unsigned line, const WebCore::String& url);
+
 private:
     WebChromeClient(WebView*);
 

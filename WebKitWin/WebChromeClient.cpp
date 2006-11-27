@@ -29,6 +29,7 @@
 #include "WebMutableURLRequest.h"
 #include "WebView.h"
 #pragma warning(push, 0)
+#include <WebCore/BString.h>
 #include <WebCore/ContextMenu.h>
 #include <WebCore/FloatRect.h>
 #include <WebCore/FrameLoadRequest.h>
@@ -246,3 +247,17 @@ void WebChromeClient::setResizable(bool resizable)
         uiDelegate->Release();
     }
 }
+
+void WebChromeClient::addMessageToConsole(const String& message, unsigned line, const String& url)
+{
+    IWebUIDelegate* ui;
+    if (SUCCEEDED(m_webView->uiDelegate(&ui)) && ui) {
+        IWebUIDelegatePrivate* uiPrivate;
+        if (SUCCEEDED(ui->QueryInterface(IID_IWebUIDelegatePrivate, (void**)&uiPrivate))) {
+            uiPrivate->webViewAddMessageToConsole(m_webView, BString(message), line, BString(url));
+            uiPrivate->Release();
+        }
+        ui->Release();
+    }
+}
+
