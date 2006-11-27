@@ -139,6 +139,13 @@ interface IWebIconDatabase : IUnknown
     HRESULT releaseIconForURL([in] BSTR url);
 
     /*!
+        @method removeAllIcons:
+        @abstract Emtpies the Icon Database
+        - (void)removeAllIcons;
+    */
+    HRESULT removeAllIcons();
+
+    /*!
         @method delayDatabaseCleanup:
         @discussion Only effective if called before the database begins removing icons.
         delayDatabaseCleanUp increments an internal counter that when 0 begins the database clean-up.

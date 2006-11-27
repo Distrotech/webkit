@@ -207,6 +207,12 @@ HRESULT STDMETHODCALLTYPE WebIconDatabase::releaseIconForURL(
     IconDatabase::sharedIconDatabase()->releaseIconForPageURL(String(url, SysStringLen(url)));
     return S_OK;
 }
+
+HRESULT STDMETHODCALLTYPE WebIconDatabase::removeAllIcons(void)
+{
+    IconDatabase::sharedIconDatabase()->removeAllIcons();
+    return S_OK;
+}
     
 HRESULT STDMETHODCALLTYPE WebIconDatabase::delayDatabaseCleanup(void)
 {

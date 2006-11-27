@@ -79,6 +79,8 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE releaseIconForURL( 
         /* [in] */ BSTR url);
+
+    virtual HRESULT STDMETHODCALLTYPE removeAllIcons( void);
     
     virtual HRESULT STDMETHODCALLTYPE delayDatabaseCleanup( void);
     
