@@ -131,34 +131,34 @@ static LRESULT CALLBACK PluginViewWndProc(HWND hWnd, UINT message, WPARAM wParam
 
 void PluginViewWin::updateHwnd() const
 {
-    if (parent()) {
-        FrameView* frameView = static_cast<FrameView*>(parent());
-        IntRect rect(frameGeometry());
-        IntPoint point(rect.location());
-        point = frameView->contentsToWindow(point);
+    FrameView* frameView = static_cast<FrameView*>(parent());
+    if (!frameView)
+        return;
 
-        ::LockWindowUpdate(m_window);
+    IntRect oldWindowRect = m_windowRect;
+    IntRect oldClipRect = m_clipRect;
 
-        IntRect newWindowRect(point, rect.size());
-        if (newWindowRect != m_windowRect) {
-            m_windowRect = newWindowRect;
-            ::MoveWindow(m_window, point.x(), point.y(), rect.width(), rect.height(), false);
-        }
+    m_windowRect = IntRect(frameView->contentsToWindow(frameGeometry().location()), frameGeometry().size());
+    m_clipRect = windowClipRect();
+    m_clipRect.move(-m_windowRect.x(), -m_windowRect.y());
 
-        IntRect newClipRect = windowClipRect();
-        newClipRect.move(-m_windowRect.x(), -m_windowRect.y());
-        if (newClipRect != m_clipRect) {
-            m_clipRect = newClipRect;
-            // Create a rectangular region.  Note that SetWindowRgn actually assumes ownership of the
-            // region, which is why we don't delete the region.
-            HRGN rgn = ::CreateRectRgn(m_clipRect.x(), m_clipRect.y(), m_clipRect.right(), m_clipRect.bottom());
-            ::SetWindowRgn(m_window, rgn, false);
-        }
+    if (m_windowRect != oldWindowRect || m_clipRect != oldClipRect) {
+        HRGN rgn;
 
-        ::LockWindowUpdate(0);
+        // To prevent flashes while scrolling, we disable drawing during the window
+        // update process by clipping the window to the zero rect.
+        rgn = ::CreateRectRgn(0, 0, 0, 0);
+        ::SetWindowRgn(m_window, rgn, false);
 
-        RECT r = m_clipRect;
-        ::InvalidateRect(m_window, &r, false);
+        if (m_windowRect != oldWindowRect)
+            ::MoveWindow(m_window, m_windowRect.x(), m_windowRect.y(), m_windowRect.width(), m_windowRect.height(), false);
+
+        // Re-enable drawing. (This serves the double purpose of updating the clip rect if it has changed.)
+        rgn = ::CreateRectRgn(m_clipRect.x(), m_clipRect.y(), m_clipRect.right(), m_clipRect.bottom());
+        ::SetWindowRgn(m_window, rgn, false);
+
+        RECT rect = m_clipRect;
+        ::InvalidateRect(m_window, &rect, false);
         ::UpdateWindow(m_window);
     }
 }

@@ -1,5 +1,24 @@
 2006-11-28  Geoffrey Garen  <ggaren@apple.com>
 
+        Reviewed by Anders Carlsson.
+
+        Fixed <rdar://problem/4844863> REGRESSION: screen flashes when scrolling/
+        resizing page with plug-in (@ cnn.com, for example).
+
+        LockWindowUpdate was to blame. It turns out that using LockWindowUpdate
+        was wrong to begin with. It's really only intended for use in drag-n-drop
+        operations, which explains why only one window can be locked at a time.
+        (See http://blogs.msdn.com/oldnewthing/archive/2004/06/10/152612.aspx.)
+        
+        The new solution I've implemented for avoiding plug-in fragments while scrolling
+        is simply to clip the plug-in to the zero rect before moving it, and
+        then to un-clip it when done.
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::updateHwnd):
+
+2006-11-28  Geoffrey Garen  <ggaren@apple.com>
+
         Reviewed by Adam.
 
         Fixed <rdar://problem/4844848> REGRESSION: extra cross-library ref/deref 
