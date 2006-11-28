@@ -28,12 +28,13 @@
 #include "WebView.h"
 
 #include "IWebNotification.h"
-#include "WebKit.h"
+#include "WebEditorClient.h"
 #include "WebElementPropertyBag.h"
 #include "WebFrame.h"
 #include "WebBackForwardList.h"
 #include "WebChromeClient.h"
 #include "WebContextMenuClient.h"
+#include "WebKit.h"
 #include "WebNotificationCenter.h"
 #include "WebPreferences.h"
 #pragma warning( push, 0 )
@@ -1462,7 +1463,7 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
 
     m_groupName = String(groupName, SysStringLen(groupName));
 
-    m_page = new Page(WebChromeClient::create(this), WebContextMenuClient::create(this));
+    m_page = new Page(new WebChromeClient(this), new WebContextMenuClient(this), new WebEditorClient(this));
 
     WebFrame* webFrame = WebFrame::createInstance();
     webFrame->initWithWebFrameView(0 /*FIXME*/, this, m_page, 0);

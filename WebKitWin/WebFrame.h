@@ -193,7 +193,7 @@ public:
     virtual void windowScriptObjectAvailable(JSContextRef context, JSObjectRef windowObject);
     
     // FrameLoaderClient
-    virtual void detachFrameLoader();
+    virtual void frameLoaderDestroyed();
     virtual bool hasWebView() const;
     virtual bool hasFrameView() const;
     virtual bool hasBackForwardList() const;

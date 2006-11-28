@@ -616,8 +616,10 @@ void WebFrame::initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, 
     HWND viewWindow;
     d->webView->viewWindow(&viewWindow);
 
-    Frame* frame = new FrameWin(page, ownerElement, this, new WebEditorClient(d->webView));
+    Frame* frame = new FrameWin(page, ownerElement, this);
     d->frame = frame;
+
+    this->AddRef(); // We release this ref in frameLoaderDestroyed()
     frame->loader()->setClient(this);
 
     FrameView* frameView = new FrameView(frame);
@@ -1198,6 +1200,11 @@ void WebFrame::deref()
     this->Release();
 }
 
+void WebFrame::frameLoaderDestroyed()
+{
+    this->Release();
+}
+
 Frame* WebFrame::createFrame(const KURL& URL, const String& name, Element* ownerElement, const String& /* referrer */)
 {
     WebFrame* webFrame = WebFrame::createInstance();
@@ -1630,10 +1637,6 @@ WebHistory* WebFrame::webHistory()
         return 0;
 
     return webHistory;
-}
-
-void WebFrame::detachFrameLoader()
-{
 }
 
 bool WebFrame::hasWebView() const

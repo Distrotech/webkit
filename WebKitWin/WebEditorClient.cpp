@@ -118,14 +118,9 @@ WebEditorClient::WebEditorClient(WebView* webView)
 {
 }
 
-void WebEditorClient::ref()
+void WebEditorClient::pageDestroyed()
 {
-    Shared<WebEditorClient>::ref();
-}
-
-void WebEditorClient::deref()
-{
-    Shared<WebEditorClient>::deref();
+    delete this;
 }
 
 bool WebEditorClient::isContinuousSpellCheckingEnabled()

@@ -29,7 +29,6 @@
 #include "IWebEditingDelegate.h"
 #pragma warning(push, 0)
 #include <WebCore/EditorClient.h>
-#include <WebCore/Shared.h>
 #include <wtf/OwnPtr.h>
 #pragma warning(pop)
 
@@ -45,12 +44,11 @@ class Node;
 
 }
 
-class WebEditorClient : public WebCore::EditorClient, public WebCore::Shared<WebEditorClient> {
+class WebEditorClient : public WebCore::EditorClient {
 public:
     WebEditorClient(WebView*);
 
-    virtual void ref();
-    virtual void deref();
+    virtual void pageDestroyed();
 
     virtual bool isContinuousSpellCheckingEnabled();
     virtual bool isGrammarCheckingEnabled();

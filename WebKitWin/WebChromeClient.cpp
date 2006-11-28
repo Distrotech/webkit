@@ -38,24 +38,14 @@
 
 using namespace WebCore;
 
-PassRefPtr<WebChromeClient> WebChromeClient::create(WebView* webView)
-{
-    return new WebChromeClient(webView);
-}
-
 WebChromeClient::WebChromeClient(WebView* webView)
     : m_webView(webView)
 {
 }
 
-void WebChromeClient::ref()
+void WebChromeClient::chromeDestroyed()
 {
-    Shared<WebChromeClient>::ref();
-}
-
-void WebChromeClient::deref()
-{
-    Shared<WebChromeClient>::deref();
+    delete this;
 }
 
 void WebChromeClient::setWindowRect(const FloatRect& r)

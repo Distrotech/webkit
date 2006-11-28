@@ -24,17 +24,15 @@
  */
 
 #include <WebCore/ContextMenuClient.h>
-#include <WebCore/Shared.h>
 #include <wtf/Forward.h>
 
 class WebView;
 
-class WebContextMenuClient : public WebCore::ContextMenuClient, public WebCore::Shared<WebContextMenuClient> {
+class WebContextMenuClient : public WebCore::ContextMenuClient {
 public:
-    static PassRefPtr<WebContextMenuClient> create(WebView*);
+    WebContextMenuClient(WebView*);
 
-    virtual void ref();
-    virtual void deref();
+    virtual void contextMenuDestroyed();
 
     virtual void addCustomContextMenuItems(WebCore::ContextMenu*);
     
@@ -44,7 +42,5 @@ public:
     virtual void lookUpInDictionary(WebCore::Frame*);
 
 private:
-    WebContextMenuClient(WebView*);
-
     WebView* m_webView;
 };
