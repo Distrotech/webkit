@@ -31,6 +31,7 @@
 #include "IWebURLResponse.h"
 #include "WebView.h"
 #pragma warning(push, 0)
+#include <WebCore/BString.h>
 #include <WebCore/EditCommand.h>
 #include <WebCore/HTMLElement.h>
 #include <WebCore/NotImplemented.h>
@@ -170,22 +171,44 @@ void WebEditorClient::didEndEditing()
 
 bool WebEditorClient::shouldDeleteRange(Range* /*range*/)
 {
-    BOOL result = false;
-    IWebViewEditingDelegate* editingDelegate;
-    // FIXME: DOMRange needs to be implemented before anything meaningful can be done here
-    IDOMRange* domRange(0);
-    if (SUCCEEDED(m_webView->editingDelegate(&editingDelegate))) {
-        editingDelegate->shouldDeleteDOMRange(m_webView, domRange, &result);
-        editingDelegate->Release();
-    }
-    return !!result;
+    LOG_NOIMPL(); 
+    return true; 
+
+    // FIXME: calling m_webView->editingDelegate() will cause an assertion failure so we don't want to enable this code until that's implemented. 
+    //BOOL result = false;
+    //IWebViewEditingDelegate* editingDelegate;
+    //// FIXME: DOMRange needs to be implemented before anything meaningful can be done here
+    //IDOMRange* domRange(0);
+    //if (SUCCEEDED(m_webView->editingDelegate(&editingDelegate))) {
+    //    editingDelegate->shouldDeleteDOMRange(m_webView, domRange, &result);
+    //    editingDelegate->Release();
+    //}
+    //return !!result;
 }
 
 bool WebEditorClient::shouldInsertNode(Node* /*node*/, Range* /*replacingRange*/, EditorInsertAction /*givenAction*/)
-{ LOG_NOIMPL(); return false; }
+{ 
+    LOG_NOIMPL(); 
+    return true; 
+}
 
-bool WebEditorClient::shouldInsertText(String /* text */, Range* /* replacingRange */, EditorInsertAction /*givenAction*/) 
-{ LOG_NOIMPL(); return false; }
+bool WebEditorClient::shouldInsertText(String /*str*/, Range* /* replacingRange */, EditorInsertAction /*givenAction*/)
+{     
+    LOG_NOIMPL(); 
+    return true; 
+
+    // FIXME: calling m_webView->editingDelegate() will cause an assertion failure so we don't want to enable this code until that's implemented. 
+    //BOOL result = false;
+    //IWebViewEditingDelegate* editingDelegate;
+    //// FIXME: DOMRange needs to be implemented before anything meaningful can be done here
+    //IDOMRange* domRange(0); // make a DOMRange from replacingRange
+    //BString text(str);
+    //if (SUCCEEDED(m_webView->editingDelegate(&editingDelegate))) {
+    //    editingDelegate->shouldInsertText(m_webView, text, domRange, (WebViewInsertAction) givenAction, &result);
+    //    editingDelegate->Release();
+    //}
+    //return !!result;
+}
 
 //bool WebEditorClient::shouldChangeSelectedRange(Range *currentRange, Range *toProposedRange, SelectionAffinity selectionAffinity, bool stillSelecting)
 //{ LOG_NOIMPL(); return false; }
@@ -199,7 +222,6 @@ bool WebEditorClient::shouldChangeTypingStyle(CSSStyleDeclaration* /*currentStyl
 //bool WebEditorClient::doCommandBySelector(SEL selector)
 //{ LOG_NOIMPL(); return false; }
 
-
 void WebEditorClient::webViewDidChangeTypingStyle(WebNotification* /*notification*/)
 {  LOG_NOIMPL(); }
 
@@ -210,6 +232,9 @@ void WebEditorClient::webViewDidChangeSelection(WebNotification* /*notification*
 //{  LOG_NOIMPL(); return NULL; }
 
 bool WebEditorClient::shouldShowDeleteInterface(HTMLElement* /*element*/)
+{ LOG_NOIMPL(); return false; }
+
+bool WebEditorClient::smartInsertDeleteEnabled(void)
 { LOG_NOIMPL(); return false; }
 
 class WebEditorUndoCommand : public WebUndoCommand 

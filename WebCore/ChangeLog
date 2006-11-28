@@ -1,3 +1,53 @@
+2006-11-28  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Ada, Adam, and Lou.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        Added the files listed below
+        
+        * platform/win/ClipboardWin.h: Added.
+        * platform/win/ClipboardWin.cpp: Added.
+        Added the minimum stubs for the ClipboardWin class
+        (WebCore::ClipboardWin::isForDragging):
+        (WebCore::ClipboardWin::dropEffect):
+        (WebCore::ClipboardWin::setDropEffect):
+        (WebCore::ClipboardWin::effectAllowed):
+        (WebCore::ClipboardWin::setEffectAllowed):
+        (WebCore::ClipboardWin::clearData):
+        (WebCore::ClipboardWin::clearAllData):
+        (WebCore::ClipboardWin::getData):
+        (WebCore::ClipboardWin::setData):
+        (WebCore::ClipboardWin::types):
+        (WebCore::ClipboardWin::dragLocation):
+        (WebCore::ClipboardWin::dragImage):
+        (WebCore::ClipboardWin::setDragImage):
+        (WebCore::ClipboardWin::dragImageElement):
+        (WebCore::ClipboardWin::setDragImageElement):
+        (WebCore::ClipboardWin::setAccessPolicy):
+        (WebCore::ClipboardWin::~ClipboardWin):
+
+        * platform/win/EditorWin.cpp: Added.
+        Added this to make dispatchCPPEvent happy. 
+        (WebCore::Editor::newGeneralClipboard):
+
+        * platform/win/PasteboardWin.cpp: Added.
+        The pasteboard class follows a singleton pattern
+        Implemented the following to support CF_HTML, CF_UNICODE, and CF_TEXT
+        (WebCore::Pasteboard::generalPasteboard):
+        (WebCore::Pasteboard::Pasteboard):
+        (WebCore::Pasteboard::~Pasteboard):
+        (WebCore::Pasteboard::registerSelectionPasteboardTypes):
+        (WebCore::Pasteboard::clearTypes):
+        (WebCore::Pasteboard::writeSelection):
+        (WebCore::Pasteboard::createHandleFromString):
+        (WebCore::Pasteboard::createHandleFromCString):
+        (WebCore::Pasteboard::createCF_HTMLFromRange):
+        (WebCore::Pasteboard::replaceNBSP):
+        (WebCore::Pasteboard::canSmartReplace):
+        (WebCore::Pasteboard::plainText):
+        (WebCore::Pasteboard::documentFragment):
+        (WebCore::PasteboardOwnerWndProc):
+
 2006-11-28  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Anders Carlsson.
@@ -830,7 +880,6 @@
         * platform/win/TemporaryLinkStubs.cpp:
         (WebCore::CachedResource::setResponse): Added
 
->>>>>>> .r10971
 2006-11-03  Adele Peterson  <adele@apple.com>
 
         Reviewed by Oliver.

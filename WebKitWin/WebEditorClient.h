@@ -76,6 +76,8 @@ public:
     void webViewDidChangeTypingStyle(WebNotification*);
     void webViewDidChangeSelection(WebNotification*);
 
+    bool smartInsertDeleteEnabled();
+
     void registerCommandForUndo(PassRefPtr<WebCore::EditCommand>);
     void registerCommandForRedo(PassRefPtr<WebCore::EditCommand>);
     void clearUndoRedoOperations();

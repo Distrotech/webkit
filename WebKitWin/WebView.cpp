@@ -61,6 +61,7 @@
 #pragma warning(pop)
 #include <JavaScriptCore/kjs/value.h>
 #include <tchar.h>
+#include <atldef.h>
 
 using namespace WebCore;
 
@@ -663,15 +664,6 @@ bool WebView::execCommand(WPARAM wParam, LPARAM /*lParam*/)
     Frame* frame = focusedTargetFrame();
     bool handled = false;
     switch (LOWORD(wParam)) {
-    case Cut:
-        handled = frame->editor()->execCommand("Cut");
-        break;
-    case Copy:
-        handled = frame->editor()->execCommand("Copy");
-        break;
-    case Paste:
-        handled = frame->editor()->execCommand("Paste");
-        break;
     case ForwardDelete:
         handled = frame->editor()->execCommand("ForwardDelete");
         break;
@@ -1002,9 +994,17 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             break;
         }
         case WM_CUT:
+            webView->cut(0);
+            break;
         case WM_COPY:
+            webView->copy(0);
+            break;
         case WM_PASTE:
+            webView->paste(0);
+            break;
         case WM_CLEAR:
+            webView->delete_(0);
+            break;
         case WM_COMMAND:
             webView->execCommand(wParam, lParam);
             break;
@@ -2534,22 +2534,26 @@ HRESULT STDMETHODCALLTYPE WebView::applyStyle(
 HRESULT STDMETHODCALLTYPE WebView::copy( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    //WebCore::Frame* frame = m_page->mainFrame()->editor()->copy();
+    m_page->mainFrame()->editor()->copy();
+//    frame->editor()->copy();
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::cut( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    FrameWin* frame = static_cast<FrameWin*>(m_page->mainFrame());
+    frame->editor()->cut();
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::paste( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    FrameWin* frame = static_cast<FrameWin*>(m_page->mainFrame());
+    frame->editor()->paste();
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::copyFont( 
@@ -2569,6 +2573,11 @@ HRESULT STDMETHODCALLTYPE WebView::pasteFont(
 HRESULT STDMETHODCALLTYPE WebView::delete_( 
         /* [in] */ IUnknown* /*sender*/)
 {
+/*
+    FrameWin* frame = static_cast<FrameWin*>(m_page->mainFrame());
+    frame->editor()->performDelete();
+    return S_OK;
+*/
     ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }

@@ -1,3 +1,28 @@
+2006-11-28  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Ada, Adam, and Lou.
+
+        * WebEditorClient.h:
+        * WebEditorClient.cpp:
+        These 3 functions are, for now, hard-coded to return true, letting paste work.
+        Commented out previous unused code because the app would crash if the editingDelegate was called
+        (WebEditorClient::shouldDeleteRange):
+        (WebEditorClient::shouldInsertNode):
+        (WebEditorClient::shouldInsertText):
+        stub impl for:
+        (WebEditorClient::smartInsertDeleteEnabled):
+
+        * WebView.cpp:
+        moved where cut/copy/paste was handled from
+        (WebView::execCommand):
+        (WebViewWndProc):
+        
+        call the editor's version of these 4:
+        (WebView::copy):
+        (WebView::cut):
+        (WebView::paste):
+        (WebView::delete_):
+
 2006-11-28  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Adam.

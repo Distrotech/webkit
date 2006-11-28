@@ -2471,6 +2471,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\Pasteboard.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\PlatformKeyboardEvent.h"
 				>
 			</File>
@@ -2686,11 +2690,23 @@
 					>
 				</File>
 				<File
+					RelativePath="..\platform\win\ClipboardWin.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\win\ClipboardWin.h"
+					>
+				</File>
+				<File
 					RelativePath="..\platform\win\ContextMenuWin.cpp"
 					>
 				</File>
 				<File
 					RelativePath="..\platform\win\CursorWin.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\win\EditorWin.cpp"
 					>
 				</File>
 				<File
@@ -2753,6 +2769,10 @@
 				</File>
 				<File
 					RelativePath="..\platform\win\NotImplemented.h"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\win\PasteboardWin.cpp"
 					>
 				</File>
 				<File
@@ -4614,6 +4634,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\dom\Clipboard.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\dom\ClipboardAccessPolicy.h"
 				>
 			</File>
 			<File
