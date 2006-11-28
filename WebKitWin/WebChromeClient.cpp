@@ -58,23 +58,29 @@ void WebChromeClient::deref()
     Shared<WebChromeClient>::deref();
 }
 
-// FIXME: These functions should make delegate calls instead of sizing by themselves.
-
 void WebChromeClient::setWindowRect(const FloatRect& r)
 {
-    HWND window;
-    if (SUCCEEDED(m_webView->hostWindow(&window)))
-        MoveWindow(window, static_cast<int>(r.x()), static_cast<int>(r.y()), static_cast<int>(r.width()), static_cast<int>(r.height()), true);
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
+        RECT rect = IntRect(r);
+        uiDelegate->setFrame(m_webView, &rect);
+        uiDelegate->Release();
+    }
 }
 
 FloatRect WebChromeClient::windowRect()
 {
-    HWND window;
-    if (SUCCEEDED(m_webView->hostWindow(&window))) {
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
         RECT rect;
-        GetWindowRect(window, &rect);
-        return FloatRect(rect);
+        HRESULT retval = uiDelegate->webViewFrame(m_webView, &rect);
+
+        uiDelegate->Release();
+
+        if (SUCCEEDED(retval))
+            return rect;
     }
+
     return FloatRect();
 }
 

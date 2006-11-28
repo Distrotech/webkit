@@ -369,7 +369,7 @@ interface IWebUIDelegate : IUnknown
         @discussion 
         - (NSRect)webViewFrame:(WebView *)sender;
     */
-    HRESULT webViewFrame([in] IWebView* sender, [out, retval] RECT** frame);
+    HRESULT webViewFrame([in] IWebView* sender, [out, retval] RECT* frame);
 
     /*!
         @method webView:setContentRect:
@@ -390,7 +390,7 @@ interface IWebUIDelegate : IUnknown
         @discussion 
         - (NSRect)webViewContentRect:(WebView *)sender;
     */
-    HRESULT webViewContentRect([in] IWebView* sender, [out, retval] RECT** contentRect);
+    HRESULT webViewContentRect([in] IWebView* sender, [out, retval] RECT* contentRect);
 
     /*!
         @method webView:runJavaScriptAlertPanelWithMessage:

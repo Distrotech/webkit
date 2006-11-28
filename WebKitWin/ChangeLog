@@ -1,3 +1,18 @@
+2006-11-27  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://problem/4814582>
+        JavaScript window.resizeTo doesn't work
+        
+        * Interfaces/IWebUIDelegate.idl:
+        Fix declarations.
+        
+        * WebChromeClient.cpp:
+        (WebChromeClient::setWindowRect):
+        (WebChromeClient::windowRect):
+        Call the COM methods.
+
 2006-11-26  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.
