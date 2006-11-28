@@ -253,6 +253,7 @@ public:
     virtual bool isArchiveLoadPending(WebCore::ResourceLoader*) const;
     virtual void cancelPendingArchiveLoad(WebCore::ResourceLoader*);
     virtual void clearArchivedResources();
+    virtual bool canHandleRequest(const WebCore::ResourceRequest&) const;
     virtual bool canShowMIMEType(const WebCore::String& MIMEType) const;
     virtual bool representationExistsForURLScheme(const WebCore::String& URLScheme) const;
     virtual WebCore::String generatedMIMETypeForURLScheme(const WebCore::String& URLScheme) const;

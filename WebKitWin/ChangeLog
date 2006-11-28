@@ -1,3 +1,13 @@
+2006-11-27  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by Adam.
+
+        Stub for canHandleRequest() to remove FIXME from ContextMenu.cpp
+
+        * WebFrame.cpp:
+        (WebFrame::canHandleRequest):
+        * WebFrame.h:
+
 2006-11-27  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.

@@ -1935,6 +1935,12 @@ void WebFrame::clearArchivedResources()
     LOG_NOIMPL();
 }
 
+bool WebFrame::canHandleRequest(const ResourceRequest&) const
+{
+    LOG_NOIMPL();
+    return false;
+}
+
 bool WebFrame::canShowMIMEType(const String& /*MIMEType*/) const
 {
     STOP_NOIMPL();
