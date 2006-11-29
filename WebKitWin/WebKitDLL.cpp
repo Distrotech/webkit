@@ -257,11 +257,6 @@ STDAPI DllRegisterServer(void)
                 err = RegSetValueEx(hkey, pszValueName, 0, REG_SZ, (const BYTE*)pszValue, (DWORD) sizeof(pszValue[0])*(_tcslen(pszValue) + 1));
                 RegCloseKey(hkey);
             }
-            if (err != ERROR_SUCCESS || FAILED(hr)) {
-                // if cannot add key or value, back out and fail
-                DllUnregisterServer(); 
-                hr = SELFREG_E_CLASS;
-            }
         }
         if (pszKeyName)
             free(pszKeyName);

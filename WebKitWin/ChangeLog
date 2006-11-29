@@ -1,3 +1,13 @@
+2006-11-29  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Anders.
+        
+        Minor fix to my recent COM registration/Vista fix.
+        Ignore errors during registration.  Vista locks off more of
+        HKCU\Software\Classes than I thought.
+
+        * WebKitDLL.cpp:
+
 2006-11-29  Adam Roben  <aroben@apple.com>
 
         Reviewed by Adele.
