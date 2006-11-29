@@ -29,6 +29,7 @@
 #include "config.h"
 #include "FrameLoader.h"
 
+#include "Chrome.h"
 #include "Element.h"
 #include "FormData.h"
 #include "FrameLoadRequest.h"

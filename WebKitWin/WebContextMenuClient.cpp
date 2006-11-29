@@ -26,6 +26,7 @@
 #include "config.h"
 #include "WebContextMenuClient.h"
 
+#include "WebElementPropertyBag.h"
 #include "WebView.h"
 
 #pragma warning(push, 0)
@@ -54,10 +55,31 @@ void WebContextMenuClient::addCustomContextMenuItems(ContextMenu* menu)
     ASSERT(uiDelegate);
 
     HMENU newMenu = 0;
-    uiDelegate->contextMenuItemsForElement(m_webView, 0, menu->platformMenuDescription(), &newMenu);
+    WebElementPropertyBag propertyBag(menu->hitTestResult());
+    uiDelegate->contextMenuItemsForElement(m_webView, &propertyBag, menu->platformDescription(), &newMenu);
     uiDelegate->Release();
 
-    menu->setPlatformMenuDescription(newMenu);
+    menu->setPlatformDescription(newMenu);
+}
+
+void WebContextMenuClient::contextMenuItemSelected(ContextMenuItem* item)
+{
+    ASSERT(item->menu());
+    ASSERT(item->type() == ActionType);
+    
+    if (!item->platformDescription())
+        return;
+
+    IWebUIDelegate* uiDelegate = 0;
+    if (FAILED(m_webView->uiDelegate(&uiDelegate)))
+        return;
+
+    ASSERT(uiDelegate);
+
+    WebElementPropertyBag propertyBag(item->menu()->hitTestResult());
+            
+    uiDelegate->contextMenuItemSelected(m_webView, item->platformDescription(), &propertyBag);
+    uiDelegate->Release();
 }
 
 void WebContextMenuClient::copyLinkToClipboard(HitTestResult)

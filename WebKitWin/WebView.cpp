@@ -40,6 +40,7 @@
 #pragma warning( push, 0 )
 #include <WebCore/BString.h>
 #include <WebCore/CommandByName.h>
+#include <WebCore/ContextMenuController.h>
 #include <WebCore/CString.h>
 #include <WebCore/Document.h>
 #include <WebCore/Editor.h>
@@ -60,10 +61,12 @@
 #include <WebCore/TypingCommand.h>
 #pragma warning(pop)
 #include <JavaScriptCore/kjs/value.h>
-#include <tchar.h>
 #include <atldef.h>
+#include <tchar.h>
+#include <windowsx.h>
 
 using namespace WebCore;
+using std::min;
 
 const LPCWSTR kWebViewWindowClassName = L"WebViewWindowClass";
 
@@ -595,7 +598,75 @@ Page* WebView::page()
     return m_page;
 }
 
-void WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
+bool WebView::handleContextMenuEvent(WPARAM wParam, LPARAM lParam)
+{
+    static const int contextMenuMargin = 1;
+
+    // Translate the screen coordinates into window coordinates
+    POINT coords = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+    if (coords.x == -1 || coords.y == -1) {
+        FrameView* view = m_page->mainFrame()->view();
+        if (!view)
+            return false;
+
+        int rightAligned = ::GetSystemMetrics(SM_MENUDROPALIGNMENT);
+        IntPoint location;
+
+        // The context menu event was generated from the keyboard, so show the context menu by the current selection.
+        Position start = m_page->mainFrame()->selectionController()->selection().start();
+        Position end = m_page->mainFrame()->selectionController()->selection().end();
+
+        if (!start.node() || !end.node())
+            location = IntPoint(rightAligned ? view->contentsWidth() - contextMenuMargin : contextMenuMargin, contextMenuMargin);
+        else {
+            RenderObject* renderer = start.node()->renderer();
+            if (!renderer)
+                return false;
+
+            // Calculate the rect of the first line of the selection (cribbed from -[WebCoreFrameBridge firstRectForDOMRange:]).
+            int extraWidthToEndOfLine = 0;
+            IntRect startCaretRect = renderer->caretRect(start.offset(), DOWNSTREAM, &extraWidthToEndOfLine);
+            IntRect endCaretRect = renderer->caretRect(end.offset(), UPSTREAM);
+
+            IntRect firstRect;
+            if (startCaretRect.y() == endCaretRect.y())
+                firstRect = IntRect(min(startCaretRect.x(), endCaretRect.x()), startCaretRect.y(), abs(endCaretRect.x() - startCaretRect.x()), max(startCaretRect.height(), endCaretRect.height()));
+            else
+                firstRect = IntRect(startCaretRect.x(), startCaretRect.y(), startCaretRect.width() + extraWidthToEndOfLine, startCaretRect.height());
+
+            location = IntPoint(rightAligned ? firstRect.right() : firstRect.x(), firstRect.bottom());
+        }
+
+        location = view->contentsToWindow(location);
+        // FIXME: The IntSize(0, -1) is a hack to get the hit-testing to result in the selected element.
+        // Ideally we'd have the position of a context menu event be separate from its target node.
+        coords = location + IntSize(0, -1);
+    } else {
+        if (!::ScreenToClient(m_viewWindow, &coords))
+            return false;
+    }
+
+    lParam = MAKELPARAM(coords.x, coords.y);
+
+    PlatformMouseEvent mouseEvent(m_viewWindow, WM_RBUTTONUP, wParam, lParam);
+    return m_page->mainFrame()->eventHandler()->sendContextMenuEvent(mouseEvent);
+}
+
+void WebView::performContextMenuAction(WPARAM wParam, LPARAM lParam)
+{
+    ContextMenu* menu = m_page->contextMenuController()->contextMenu();
+    ASSERT(menu);
+
+    if ((HMENU)lParam != menu->platformDescription()) {
+        ASSERT(0);
+        return;
+    }
+
+    ContextMenuItem item = menu->at((int)wParam);
+    m_page->contextMenuController()->contextMenuItemSelected(&item);
+}
+
+bool WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
 {
     static LONG globalClickCount;
     static IntPoint globalPrevPoint;
@@ -609,6 +680,7 @@ void WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
                            abs(globalPrevPoint.y() - mouseEvent.pos().y()) < ::GetSystemMetrics(SM_CYDOUBLECLK);
     LONG messageTime = ::GetMessageTime();
     
+    bool handled = false;
     if (message == WM_LBUTTONDOWN || message == WM_MBUTTONDOWN || message == WM_RBUTTONDOWN) {
         // FIXME: I'm not sure if this is the "right" way to do this
         // but without this call, we never become focused since we don't allow
@@ -629,11 +701,11 @@ void WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
         globalPrevMouseDownTime = messageTime;
         
         mouseEvent.setClickCount(globalClickCount);
-        m_page->mainFrame()->eventHandler()->handleMousePressEvent(mouseEvent);
+        handled = m_page->mainFrame()->eventHandler()->handleMousePressEvent(mouseEvent);
     } else if (message == WM_LBUTTONDBLCLK || message == WM_MBUTTONDBLCLK || message == WM_RBUTTONDBLCLK) {
         globalClickCount = 2;
         mouseEvent.setClickCount(globalClickCount);
-        m_page->mainFrame()->eventHandler()->handleMousePressEvent(mouseEvent);
+        handled = m_page->mainFrame()->eventHandler()->handleMousePressEvent(mouseEvent);
     } else if (message == WM_LBUTTONUP || message == WM_MBUTTONUP || message == WM_RBUTTONUP) {
         // Record the global position and the button of the up.
         globalPrevButton = mouseEvent.button();
@@ -641,7 +713,7 @@ void WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
         mouseEvent.setClickCount(globalClickCount);
         Widget* capturingTarget = m_page->mainFrame()->view()->capturingTarget();
         ASSERT(capturingTarget);
-        capturingTarget->handleMouseReleaseEvent(mouseEvent);
+        handled = capturingTarget->handleMouseReleaseEvent(mouseEvent);
         capturingTarget->setCapturingMouse(false);
         ::ReleaseCapture();
     } else if (message == WM_MOUSEMOVE) {
@@ -649,14 +721,16 @@ void WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
             globalClickCount = 0;
         mouseEvent.setClickCount(globalClickCount);
         Widget* capturingTarget = m_page->mainFrame()->view()->capturingTarget();
-        capturingTarget->handleMouseMoveEvent(mouseEvent);
+        handled = capturingTarget->handleMouseMoveEvent(mouseEvent);
     }
+
+    return handled;
 }
 
-void WebView::mouseWheel(WPARAM wParam, LPARAM lParam)
+bool WebView::mouseWheel(WPARAM wParam, LPARAM lParam)
 {
     PlatformWheelEvent wheelEvent(m_viewWindow, wParam, lParam);
-    m_mainFrame->impl()->eventHandler()->handleWheelEvent(wheelEvent);
+    return m_mainFrame->impl()->eventHandler()->handleWheelEvent(wheelEvent);
 }
 
 bool WebView::execCommand(WPARAM wParam, LPARAM /*lParam*/)
@@ -905,6 +979,8 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
     if (!mainFrameImpl)
         return DefWindowProc(hWnd, message, wParam, lParam);
 
+    bool handled = true;
+
     switch (message) {
         case WM_PAINT: {
             IWebDataSource* dataSource = 0;
@@ -937,17 +1013,17 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
         case WM_MBUTTONUP:
         case WM_RBUTTONUP:
             if (mainFrameImpl->impl()->view()->didFirstLayout())
-                webView->handleMouseEvent(message, wParam, lParam);
+                handled = webView->handleMouseEvent(message, wParam, lParam);
             break;
         case WM_MOUSEWHEEL:
             if (mainFrameImpl->impl()->view()->didFirstLayout())
-                webView->mouseWheel(wParam, lParam);
+                handled = webView->mouseWheel(wParam, lParam);
             break;
         case WM_KEYDOWN:
-            handledByKeydown = webView->keyDown(wParam, lParam);
+            handled = handledByKeydown = webView->keyDown(wParam, lParam);
             break;
         case WM_KEYUP:
-            webView->keyUp(wParam, lParam);
+            handled = webView->keyUp(wParam, lParam);
             break;
         case WM_CHAR: 
             if (!handledByKeydown) {
@@ -1006,7 +1082,13 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             webView->delete_(0);
             break;
         case WM_COMMAND:
-            webView->execCommand(wParam, lParam);
+            handled = webView->execCommand(wParam, lParam);
+            break;
+        case WM_CONTEXTMENU:
+            handled = webView->handleContextMenuEvent(wParam, lParam);
+            break;
+        case WM_MENUCOMMAND:
+            webView->performContextMenuAction(wParam, lParam);
             break;
         case WM_XP_THEMECHANGED:
             if (mainFrameImpl) {
@@ -1015,9 +1097,13 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             }
             break;
         default:
-            lResult = DefWindowProc(hWnd, message, wParam, lParam);
+            handled = false;
+            break;
     }
 
+    if (!handled)
+        lResult = DefWindowProc(hWnd, message, wParam, lParam);
+    
     return lResult;
 }
 

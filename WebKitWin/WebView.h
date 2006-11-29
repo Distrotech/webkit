@@ -526,8 +526,10 @@ public:
 
     // WebView
     WebCore::Page* page();
-    void handleMouseEvent(UINT, WPARAM, LPARAM);
-    void mouseWheel(WPARAM, LPARAM);
+    bool handleMouseEvent(UINT, WPARAM, LPARAM);
+    bool handleContextMenuEvent(WPARAM, LPARAM);
+    void performContextMenuAction(WPARAM, LPARAM);
+    bool mouseWheel(WPARAM, LPARAM);
     bool execCommand(WPARAM wParam, LPARAM lParam);
     bool keyDown(WPARAM, LPARAM);
     bool keyUp(WPARAM, LPARAM);

@@ -538,4 +538,14 @@ interface IWebUIDelegate : IUnknown
         - (void)webView:(WebView *)webView willPerformDragSourceAction:(WebDragSourceAction)action fromPoint:(NSPoint)point withPasteboard:(NSPasteboard *)pasteboard;
     */
     HRESULT willPerformDragSourceAction([in] IWebView* webView, [in] WebDragSourceAction action, [in] LPPOINT point, [in] IDataObject* pasteboard);
+
+    /*!
+        @method webView:contextMenuItemSelected:ForElement:
+        @abstract Perform the action associated with the selected item.
+        @param sender The WebView sending the delegate method.
+        @param item The menu item that was selected.
+        @param element A dictionary representation of the clicked element.
+    */
+    HRESULT contextMenuItemSelected([in] IWebView* sender, [in] void* item, [in] IPropertyBag* element);
+
 }

@@ -1,3 +1,45 @@
+2006-11-28  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Ada and Beth.
+
+        Fix: <rdar://problem/4601523> Contextual Menus (in web content)
+
+        * Interfaces/IWebUIDelegate.idl: Added a new delegate method to be
+        called when the user clicks on one of the application's context menu
+        items.
+
+        Client updates from WebCore.
+
+        * WebContextMenuClient.cpp:
+        (WebContextMenuClient::addCustomContextMenuItems): Updated for method
+        name changes.
+        (WebContextMenuClient::contextMenuItemSelected): New client method that
+        calls the UI delegate.
+        * WebContextMenuClient.h: Updated to match ContextMenuClient.h
+
+        Windows context menu event handling.
+
+        * WebView.cpp:
+        (WebView::handleContextMenuEvent): New method to send a context menu
+        event down into WebCore.
+        (WebView::performContextMenuAction): New method to tell the
+        ContextMenuController that the user clicked on a context menu item.
+        (WebView::handleMouseEvent): Return a bool to signify whether the event
+        was handled.
+        (WebView::mouseWheel): Ditto.
+        (WebViewWndProc): Handle WM_CONTEXTMENU and WM_MENUCOMMAND messages,
+        and pass unhandled events to DefWindowProc.
+        * WebView.h: New declarations.
+
+        Small (but necessary) fixes.
+
+        * WebElementPropertyBag.cpp:
+        (isEqual): Fixed to deal with LPCWSTRs, which is what was being passed
+        in anyway.
+        (WebElementPropertyBag::Read): Use FAILED() to check the return value
+        of QueryInterface.
+        * WebElementPropertyBag.h: Added missing #include.
+
 2006-11-28  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by Ada, Adam, and Lou.

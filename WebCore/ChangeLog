@@ -1,3 +1,46 @@
+2006-11-28  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Ada and Beth.
+
+        Fix: <rdar://problem/4601523> Contextual Menus (in web content)
+
+        * WebCore.vcproj/WebCore.vcproj: Defined WEBCORE_CONTEXT_MENUS to turn
+        on the context menus. Added new ContextMenuItem files.
+        * platform/win/ContextMenuItemWin.cpp: Added.
+        (WebCore::ContextMenuItem::ContextMenuItem):
+        * platform/win/ContextMenuWin.cpp:
+        (WebCore::ContextMenu::itemCount): Updated to match ContextMenu.h and
+        ContextMenuItem changes.
+        (WebCore::ContextMenu::insertItem): Ditto.
+        (WebCore::ContextMenu::appendItem): Ditto.
+        (WebCore::ContextMenu::at): New method, similar to Vector<T>::at.
+        (WebCore::ContextMenu::setPlatformDescription): Use MIM_APPLYTOSUBMENUS
+        to make sure all submenus get the MNS_NOTIFYBYPOS style.
+        (WebCore::ContextMenu::show): Implemented.
+
+        Updates to match OpenSource changes.
+
+        * loader/win/FrameLoaderWin.cpp: Added missing #include.
+        * page/win/EventHandlerWin.cpp: Return bools to signify whether the
+        event was handled.
+        (WebCore::EventHandler::passMousePressEventToSubframe):
+        (WebCore::EventHandler::passMouseMoveEventToSubframe):
+        (WebCore::EventHandler::passMouseReleaseEventToSubframe):
+        (WebCore::EventHandler::passWheelEventToSubframe):
+        (WebCore::EventHandler::passMousePressEventToScrollbar):
+        * platform/win/PlatformScrollBar.h: Ditto.
+        * platform/win/PlatformScrollBarWin.cpp: Ditto.
+        (WebCore::PlatformScrollbar::handleMouseMoveEvent):
+        (WebCore::PlatformScrollbar::handleMouseOutEvent):
+        (WebCore::PlatformScrollbar::handleMousePressEvent):
+        (WebCore::PlatformScrollbar::handleMouseReleaseEvent):
+
+        Small fix inspired by WebView.cpp changes.
+
+        * platform/win/PopupMenuWin.cpp:
+        (WebCore::PopupMenu::calculatePositionAndSize): Use ::ClientToScreen to
+        do coordinate conversion instead of doing it ourselves.
+
 2006-11-28  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.

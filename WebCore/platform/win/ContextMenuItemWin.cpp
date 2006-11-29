@@ -23,39 +23,41 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef WebElementPropertyBag_H
-#define WebElementPropertyBag_H
+#include "config.h"
+#include "ContextMenuItem.h"
 
-#include "ocidl.h"
+#include <windows.h>
 
 namespace WebCore {
-    class HitTestResult;
+
+ContextMenuItem::ContextMenuItem(LPMENUITEMINFO item, ContextMenu* menu)
+    : m_menu(menu)
+    , m_platformDescription(item)
+{
+    switch (item->fType) {
+        case MFT_STRING:
+            m_type = ActionType;
+            m_title = String(item->dwTypeData, item->cch);
+            m_action = static_cast<ContextMenuAction>(item->wID);
+            break;
+        case MFT_SEPARATOR:
+            m_type = SeparatorType;
+            m_title = String();
+            m_action = ContextMenuItemTagNoAction;
+            break;
+        default:
+            ASSERT_NOT_REACHED();
+            break;
+    }
 }
 
-class WebElementPropertyBag : public IPropertyBag
+ContextMenuItem::~ContextMenuItem()
 {
-public:
-    WebElementPropertyBag(const WebCore::HitTestResult&);
-    ~WebElementPropertyBag();
+    if (m_platformDescription) {
+        if (m_platformDescription->fType == MFT_STRING)
+            free(m_platformDescription->dwTypeData);
+        free(m_platformDescription);
+    }
+}
 
-    // IUnknown
-    virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject);
-    virtual ULONG STDMETHODCALLTYPE AddRef(void);
-    virtual ULONG STDMETHODCALLTYPE Release(void);
-
-    // IPropertyBag
-    virtual /* [local] */ HRESULT STDMETHODCALLTYPE Read( 
-        /* [in] */ LPCOLESTR pszPropName,
-        /* [out][in] */ VARIANT *pVar,
-        /* [in] */ IErrorLog *pErrorLog);
-        
-    virtual HRESULT STDMETHODCALLTYPE Write( 
-        /* [in] */ LPCOLESTR pszPropName,
-        /* [in] */ VARIANT *pVar);
-
-private:
-    WebCore::HitTestResult* m_result;
-    ULONG m_refCount;
-};
-
-#endif // WebElementPropertyBag_H
+}

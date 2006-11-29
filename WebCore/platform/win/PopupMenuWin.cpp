@@ -140,16 +140,15 @@ void PopupMenu::calculatePositionAndSize(const IntRect& r, FrameView* v)
 {
     // r is in absolute document coordinates, but we want to be in screen coordinates
 
-    RECT viewRect = {0};
-    ::GetWindowRect(v->containingWindow(), &viewRect);
-    if (::IsRectEmpty(&viewRect))
-        return;
-
     // First, move to WebView coordinates
     IntRect rScreenCoords(v->contentsToWindow(r.location()), r.size());
 
     // Then, translate to screen coordinates
-    rScreenCoords.move(viewRect.left, viewRect.top);
+    POINT location(rScreenCoords.location());
+    if (!::ClientToScreen(v->containingWindow(), &location))
+        return;
+
+    rScreenCoords.setLocation(location);
 
     HTMLSelectElement *select = static_cast<HTMLSelectElement*>(menuList()->node());
     const Vector<HTMLElement*>& items = select->listItems();

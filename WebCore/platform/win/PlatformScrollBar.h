@@ -50,10 +50,10 @@ public:
     virtual void setEnabled(bool);
     virtual void paint(GraphicsContext*, const IntRect& damageRect);
 
-    virtual void handleMouseMoveEvent(const PlatformMouseEvent&);
-    virtual void handleMouseOutEvent(const PlatformMouseEvent&);
-    virtual void handleMousePressEvent(const PlatformMouseEvent&);
-    virtual void handleMouseReleaseEvent(const PlatformMouseEvent&);
+    virtual bool handleMouseMoveEvent(const PlatformMouseEvent&);
+    virtual bool handleMouseOutEvent(const PlatformMouseEvent&);
+    virtual bool handleMousePressEvent(const PlatformMouseEvent&);
+    virtual bool handleMouseReleaseEvent(const PlatformMouseEvent&);
 
     virtual IntRect windowClipRect() const;
 

@@ -38,34 +38,29 @@ bool EventHandler::passMousePressEventToSubframe(MouseEventWithHitTestResults& m
 {
     if (m_frame->view()->capturingMouse())
         subframe->view()->setCapturingMouse(true);
-    subframe->eventHandler()->handleMousePressEvent(mev.event());
-    return true;
+    return subframe->eventHandler()->handleMousePressEvent(mev.event());
 }
 
 bool EventHandler::passMouseMoveEventToSubframe(MouseEventWithHitTestResults& mev, Frame* subframe)
 {
-    subframe->view()->handleMouseMoveEvent(mev.event());
-    return true;
+    return subframe->view()->handleMouseMoveEvent(mev.event());
 }
 
 bool EventHandler::passMouseReleaseEventToSubframe(MouseEventWithHitTestResults& mev, Frame* subframe)
 {
-    subframe->view()->handleMouseReleaseEvent(mev.event());
-    return true;
+    return subframe->view()->handleMouseReleaseEvent(mev.event());
 }
 
 bool EventHandler::passWheelEventToSubframe(PlatformWheelEvent& wheelEvent, Frame* subframe)
 {
-    subframe->eventHandler()->handleWheelEvent(wheelEvent);
-    return wheelEvent.isAccepted();
+    return subframe->eventHandler()->handleWheelEvent(wheelEvent);
 }
 
 bool EventHandler::passMousePressEventToScrollbar(MouseEventWithHitTestResults& mev, PlatformScrollbar* scrollbar)
 {
     if (!scrollbar || !scrollbar->isEnabled())
         return false;
-    scrollbar->handleMousePressEvent(mev.event());
-    return true;
+    return scrollbar->handleMousePressEvent(mev.event());
 }
 
 bool EventHandler::tabsToAllControls(KeyboardEvent*) const

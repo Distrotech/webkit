@@ -83,11 +83,9 @@ ULONG STDMETHODCALLTYPE WebElementPropertyBag::Release(void)
     return newRef;
 }
 
-static bool isEqual(BSTR s1, BSTR s2)
+static bool isEqual(LPCWSTR s1, LPCWSTR s2)
 {
-    if (SysStringLen(s1) != SysStringLen(s2))
-        return false;
-    return wcscmp((wchar_t*)s1, (wchar_t*)s2) == 0;
+    return !wcscmp(s1, s2);
 }
 
 HRESULT convertStringToVariant(VARIANT* pVar, const String& string)
@@ -122,7 +120,7 @@ HRESULT STDMETHODCALLTYPE WebElementPropertyBag::Read(LPCOLESTR pszPropName, VAR
         FrameWin* frameWin = Win(m_result->innerNonSharedNode()->document()->frame());
         WebFrame* webFrame = static_cast<WebFrame*>(frameWin->client());
         IWebFrame* iWebFrame;
-        if (!webFrame->QueryInterface(IID_IWebFrame, (void**)&iWebFrame))
+        if (FAILED(webFrame->QueryInterface(IID_IWebFrame, (void**)&iWebFrame)))
             return E_FAIL;
         V_VT(pVar) = VT_UNKNOWN;
         V_UNKNOWN(pVar) = iWebFrame;
@@ -158,7 +156,7 @@ HRESULT STDMETHODCALLTYPE WebElementPropertyBag::Read(LPCOLESTR pszPropName, VAR
             return E_FAIL;
         WebFrame* webFrame = static_cast<WebFrame*>(frameWin->client());
         IWebFrame* iWebFrame;
-        if (!webFrame->QueryInterface(IID_IWebFrame, (void**)&iWebFrame))
+        if (FAILED(webFrame->QueryInterface(IID_IWebFrame, (void**)&iWebFrame)))
             return E_FAIL;
         V_VT(pVar) = VT_UNKNOWN;
         V_UNKNOWN(pVar) = iWebFrame;

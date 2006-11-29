@@ -27,12 +27,16 @@
 #include "ContextMenu.h"
 
 #include "CString.h"
-#include "NotImplemented.h"
+#include "Document.h"
+#include "Frame.h"
+#include "FrameView.h"
+#include "Node.h"
+#include <tchar.h>
 #include <windows.h>
 
 namespace WebCore {
 
-unsigned ContextMenu::itemCount()
+unsigned ContextMenu::itemCount() const
 {
     if (!m_menu)
         return 0;
@@ -40,28 +44,28 @@ unsigned ContextMenu::itemCount()
     return ::GetMenuItemCount(m_menu);
 }
 
-void ContextMenu::insertItem(unsigned int position, ContextMenuItem item)
+void ContextMenu::insertItem(unsigned int position, const ContextMenuItem& item)
 {
     if (!m_menu) {
         HMENU menu = ::CreatePopupMenu();
         if (!menu)
             return;
-        setPlatformMenuDescription(menu);
+        setPlatformDescription(menu);
     }
 
     MENUITEMINFO info;
     info.cbSize = sizeof(info);
     info.fMask = MIIM_FTYPE;
     
-    LPWSTR titleString;
+    LPWSTR titleString = 0;
 
-    switch (item.type) {
+    switch (item.type()) {
         case ActionType:
             info.fMask |= MIIM_STRING | MIIM_ID;
             info.fType = MFT_STRING;
-            info.wID = item.action;
-            info.cch = item.title.length();
-            titleString = _wcsdup(item.title.charactersWithNullTermination());
+            info.wID = item.action();
+            info.cch = item.title().length();
+            titleString = _tcsdup(item.title().charactersWithNullTermination());
             info.dwTypeData = titleString;
             break;
         case SeparatorType:
@@ -73,18 +77,51 @@ void ContextMenu::insertItem(unsigned int position, ContextMenuItem item)
             break;
     }
 
-    ::InsertMenuItem(m_menu, position, true, &info);
+    ::InsertMenuItem(m_menu, position, TRUE, &info);
 
-    if (item.type == ActionType)
+    if (titleString)
         free(titleString);
 }
 
-void ContextMenu::appendItem(ContextMenuItem item)
+void ContextMenu::appendItem(const ContextMenuItem& item)
 {
     insertItem(itemCount(), item);
 }
 
-void ContextMenu::setPlatformMenuDescription(HMENU menu)
+ContextMenuItem ContextMenu::at(unsigned index)
+{
+    if (index >= itemCount())
+        return 0;
+
+    LPMENUITEMINFO info = (LPMENUITEMINFO)malloc(sizeof(MENUITEMINFO));
+    if (!info)
+        return 0;
+
+    memset(info, 0, sizeof(MENUITEMINFO));
+
+    info->cbSize = sizeof(MENUITEMINFO);
+    
+    info->fMask = MIIM_FTYPE | MIIM_ID | MIIM_STRING;
+
+    if (!::GetMenuItemInfo(m_menu, index, TRUE, info)) {
+        free(info);
+        return 0;
+    }
+
+    if (info->fType == MFT_STRING) {
+        LPTSTR buffer = (LPTSTR)malloc(++info->cch * sizeof(TCHAR));
+        if (!buffer) {
+            free(info);
+            return 0;
+        }
+        info->dwTypeData = buffer;
+        ::GetMenuItemInfo(m_menu, index, TRUE, info);
+    }
+    
+    return ContextMenuItem(info, this);
+}
+
+void ContextMenu::setPlatformDescription(HMENU menu)
 {
     if (!menu || menu == m_menu)
         return;
@@ -96,13 +133,41 @@ void ContextMenu::setPlatformMenuDescription(HMENU menu)
 
     MENUINFO info;
     info.cbSize = sizeof(info);
-    info.fMask = MIM_STYLE;
+    info.fMask = MIM_STYLE | MIM_APPLYTOSUBMENUS;
     info.dwStyle = MNS_NOTIFYBYPOS;
     ::SetMenuInfo(m_menu, &info);
 }
 
 void ContextMenu::show()
 {
+    if (!m_menu)
+        return;
+
+    Node* node = m_hitTestResult.innerNonSharedNode();
+    if (!node)
+        return;
+
+    Frame* frame = node->document()->frame();
+    if (!frame)
+        return;
+
+    FrameView* view = frame->view();
+    if (!view)
+        return;
+
+    POINT point(view->contentsToWindow(m_hitTestResult.point()));
+
+    // Translate the point to screen coordinates
+    if (!::ClientToScreen(view->containingWindow(), &point))
+        return;
+
+    UINT flags = TPM_LEFTBUTTON | TPM_TOPALIGN | TPM_VERPOSANIMATION | TPM_HORIZONTAL;
+    if (::GetSystemMetrics(SM_MENUDROPALIGNMENT))
+        flags |= TPM_RIGHTALIGN | TPM_HORNEGANIMATION;
+    else
+        flags |= TPM_LEFTALIGN | TPM_HORPOSANIMATION;
+
+    ::TrackPopupMenuEx(m_menu, flags, point.x, point.y, view->containingWindow(), 0);
 }
 
 void ContextMenu::hide()
