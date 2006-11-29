@@ -183,18 +183,26 @@ static void substituteGUID(LPTSTR str, const UUID* guid)
 STDAPI DllUnregisterServer(void)
 {
     HRESULT hr = S_OK;
+    HKEY userClasses;
+
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("SOFTWARE\\CLASSES"), 0, KEY_WRITE, &userClasses) != ERROR_SUCCESS)
+        userClasses = 0;
 
     int nEntries = ARRAYSIZE(gRegTable);
     for (int i = nEntries - 1; i >= 0; i--) {
         LPTSTR pszKeyName = _tcsdup(gRegTable[i][0]);
         if (pszKeyName) {
             substituteGUID(pszKeyName, &gRegCLSIDs[i/gSlotsPerEntry]);
-            if (RegDeleteKey(HKEY_CLASSES_ROOT, pszKeyName))
-                hr = S_FALSE;
+            RegDeleteKey(HKEY_CLASSES_ROOT, pszKeyName);
+            if (userClasses)
+                RegDeleteKey(userClasses, pszKeyName);
             free(pszKeyName);
         } else
             hr = E_OUTOFMEMORY;
     }
+
+    if (userClasses)
+        RegCloseKey(userClasses);
     return hr;
 }
 
@@ -205,6 +213,10 @@ STDAPI DllRegisterServer(void)
     // look up server's file name
     TCHAR szFileName[MAX_PATH];
     GetModuleFileName(gInstance, szFileName, MAX_PATH);
+
+    HKEY userClasses;
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("SOFTWARE\\CLASSES"), 0, KEY_WRITE, &userClasses) != ERROR_SUCCESS)
+        userClasses = 0;
 
     // register entries from table
     int nEntries = ARRAYSIZE(gRegTable);
@@ -229,6 +241,8 @@ STDAPI DllRegisterServer(void)
             // create the key
             HKEY hkey;
             LONG err = RegCreateKey(HKEY_CLASSES_ROOT, pszKeyName, &hkey);
+            if (err != ERROR_SUCCESS && userClasses)
+                err = RegCreateKey(userClasses, pszKeyName, &hkey);
             if (err == ERROR_SUCCESS) {
                 // set the value
                 err = RegSetValueEx(hkey, pszValueName, 0, REG_SZ, (const BYTE*)pszValue, (DWORD) sizeof(pszValue[0])*(_tcslen(pszValue) + 1));
@@ -248,6 +262,8 @@ STDAPI DllRegisterServer(void)
             free(allocatedValue);
     }
 
+    if (userClasses)
+        RegCloseKey(userClasses);
     return hr;
 }
 
