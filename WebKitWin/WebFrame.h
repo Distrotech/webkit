@@ -58,6 +58,8 @@ class WebView;
 class WebHistory;
 interface IWebHistoryItemPrivate;
 
+unsigned long long WebSystemMainMemory();
+
 typedef enum {
     WebFrameLoadTypeStandard,
     WebFrameLoadTypeBack,

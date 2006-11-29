@@ -39,6 +39,7 @@ public:
 protected:
     WebBackForwardList();
     ~WebBackForwardList();
+    void clearPageCache();
 
 public:
     // IUnknown
@@ -109,6 +110,7 @@ protected:
     Vector<WebHistoryItem*> m_list;
     int m_position;
     unsigned int m_maximumSize;
+    UINT m_pageCacheSize;
 };
 
 #endif

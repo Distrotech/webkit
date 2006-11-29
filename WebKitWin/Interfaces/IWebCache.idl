@@ -50,26 +50,16 @@ cpp_quote(" */")
 
 import "oaidl.idl";
 import "ocidl.idl";
-import "IWebHistoryItem.idl";
 
 [
     local,
     object,
-    uuid(E9D5DC2C-192F-4795-B0EC-4E770E539D97),
+    uuid(0673E6F5-AE63-4871-AAC6-6A1E0E6A99AB),
     pointer_default(unique)
 ]
-interface IWebHistoryItemPrivate : IUnknown
+interface IWebCache : IUnknown
 {
-    HRESULT initFromDictionaryRepresentation([in] void* dictionary);
-    HRESULT dictionaryRepresentation([out, retval] void** dictionary);
-    HRESULT visitCount([out, retval] int *count);
-    HRESULT setVisitCount([in] int count);
-    HRESULT hasURLString([out, retval] BOOL* hasURL);
-    HRESULT mergeAutoCompleteHints([in] IWebHistoryItem* otherItem);
-    HRESULT setLastVisitedTimeInterval([in] DATE time);
-    HRESULT setTitle([in] BSTR title);
-    HRESULT RSSFeedReferrer([out, retval] BSTR* url);
-    HRESULT setRSSFeedReferrer([in] BSTR url);
-    HRESULT hasPageCache([out, retval] BOOL* hasCache);
-    HRESULT setHasPageCache([in] BOOL hasCache);
+    HRESULT statistics([in, out] int* count, [in] IPropertyBag** s);
+    HRESULT empty();
+    HRESULT setDisabled([in] BOOL disabled);
 }

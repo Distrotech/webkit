@@ -267,6 +267,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\WebCache.h"
+				>
+			</File>
+			<File
 				RelativePath="..\WebChromeClient.h"
 				>
 			</File>
@@ -376,6 +380,10 @@
 			</File>
 			<File
 				RelativePath="..\WebBackForwardList.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\WebCache.cpp"
 				>
 			</File>
 			<File

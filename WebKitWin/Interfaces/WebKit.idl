@@ -78,6 +78,7 @@ import "IWebIconDatabase.idl";
 import "IWebNotificationCenter.idl";
 import "IWebNotificationObserver.idl";
 import "IWebHistory.idl";
+import "IWebCache.idl";
 
 [
 #if __BUILDBOT__
@@ -156,5 +157,14 @@ library WebKit
 #endif
     coclass WebHistoryItem {
         interface IWebHistoryItem;
+    }
+
+#if __BUILDBOT__
+    [uuid(f71071fd-a51b-4b69-9eb6-44374405e80c)]
+#else
+    [uuid(DDAE0034-5E0F-487c-83C0-07626051C17F)]
+#endif
+    coclass WebCache {
+        interface IWebCache;
     }
 }

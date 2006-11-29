@@ -236,6 +236,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\Interfaces\IWebCache.idl"
+			>
+		</File>
+		<File
 			RelativePath="..\Interfaces\IWebDataSource.idl"
 			>
 		</File>

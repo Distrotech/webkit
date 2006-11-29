@@ -64,6 +64,11 @@ WebHistoryItem* WebHistoryItem::createInstance()
     return instance;
 }
 
+void WebHistoryItem::releaseAllPendingPageCaches()
+{
+    // FIXME - TODO
+}
+
 // IWebHistoryItemPrivate -----------------------------------------------------
 
 static CFStringRef urlKey = CFSTR("");
@@ -242,6 +247,19 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::setRSSFeedReferrer(BSTR url)
         return E_OUTOFMEMORY;
 
     return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebHistoryItem::hasPageCache(BOOL* /*hasCache*/)
+{
+    // FIXME - TODO
+    ASSERT_NOT_REACHED();
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE WebHistoryItem::setHasPageCache(BOOL /*hasCache*/)
+{
+    // FIXME - TODO
+    return E_NOTIMPL;
 }
 
 // IUnknown -------------------------------------------------------------------

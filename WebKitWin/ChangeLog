@@ -1,3 +1,50 @@
+2006-11-28  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://4850020> Clear cache in WebKit
+        - Added the IWebCache interface, which contains API to clear and 
+        disable the cache
+        - Added implementation of WebCache which implements IWebCache.
+        - the page cache related calls added in WebHistoryItem are
+        just stubs right now because we haven't implemented page cache yet.        
+
+        * Interfaces/IWebCache.idl: Added.
+        * Interfaces/IWebHistoryItemPrivate.idl:
+        * Interfaces/WebKit.idl:
+        * WebBackForwardList.cpp:
+        (WebBackForwardList::WebBackForwardList):
+        (WebBackForwardList::clearPageCache):
+        (WebBackForwardList::setPageCacheSize):
+        (WebBackForwardList::pageCacheSize):
+        * WebBackForwardList.h:
+        * WebCache.cpp: Added.
+        (WebCache::WebCache):
+        (WebCache::~WebCache):
+        (WebCache::createInstance):
+        (WebCache::QueryInterface):
+        (WebCache::AddRef):
+        (WebCache::Release):
+        (WebCache::statistics):
+        (WebCache::empty):
+        (WebCache::setDisabled):
+        * WebCache.h: Added.
+        * WebFrame.cpp:
+        (WebSystemMainMemory):
+        * WebFrame.h:
+        * WebHistoryItem.cpp:
+        (WebHistoryItem::releaseAllPendingPageCaches):
+        (WebHistoryItem::hasPageCache):
+        (WebHistoryItem::setHasPageCache):
+        * WebHistoryItem.h:
+        * WebKit.vcproj/Interfaces.vcproj:
+        * WebKit.vcproj/WebKit.vcproj:
+        * WebKit.vcproj/WebKitGUID.vcproj:
+        * WebKitClassFactory.cpp:
+        (WebKitClassFactory::CreateInstance):
+        * WebKitDLL.cpp:
+        (DllGetClassObject):
+
 2006-11-28  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Beth Dakin.

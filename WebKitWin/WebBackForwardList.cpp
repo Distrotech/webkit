@@ -26,8 +26,12 @@
 #include "config.h"
 #include "WebKitDLL.h"
 #include "WebBackForwardList.h"
+#include "WebFrame.h"
+#include "WebPreferences.h"
 
 using std::min;
+
+const UINT computeDefaultPageCacheSize = UINT_MAX;
 
 // WebBackForwardList ----------------------------------------------------------------
 
@@ -35,6 +39,7 @@ WebBackForwardList::WebBackForwardList()
 : m_refCount(0)
 , m_position(-1)
 , m_maximumSize(100) // typically set by browser app
+, m_pageCacheSize(computeDefaultPageCacheSize)
 {
     gClassCount++;
 }
@@ -310,16 +315,57 @@ HRESULT STDMETHODCALLTYPE WebBackForwardList::itemAtIndex(
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE WebBackForwardList::setPageCacheSize( 
-    /* [in] */ UINT /*size*/)
+void WebBackForwardList::clearPageCache()
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    WebHistoryItem* currentItem = (m_list.size() > 0) ? m_list[m_position] : 0;
+
+    Vector<WebHistoryItem*>::iterator end = m_list.end();
+    for (Vector<WebHistoryItem*>::iterator it = m_list.begin(); it != end; ++it) {
+        // Don't clear the current item.  Objects are still in use.
+        if (currentItem != *it) {
+            IWebHistoryItemPrivate* priv;
+            if (SUCCEEDED((*it)->QueryInterface(IID_IWebHistoryItemPrivate, (void**) &priv))) {
+                priv->setHasPageCache(FALSE);
+                priv->Release();
+            }
+        }
+    }
+
+    WebHistoryItem::releaseAllPendingPageCaches();
+}
+
+HRESULT STDMETHODCALLTYPE WebBackForwardList::setPageCacheSize( 
+    /* [in] */ UINT size)
+{
+    m_pageCacheSize = size;
+    if (!size)
+        clearPageCache();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebBackForwardList::pageCacheSize( 
-    /* [retval][out] */ UINT* /*size*/)
+    /* [retval][out] */ UINT* size)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (m_pageCacheSize == computeDefaultPageCacheSize) {
+        UINT cacheSize;
+        WebPreferences* prefs = WebPreferences::createInstance();
+        IWebPreferences* standardPrefs = 0;
+        if (!prefs || FAILED(prefs->standardPreferences(&standardPrefs)) || FAILED(standardPrefs->pageCacheSize(&cacheSize)))
+            cacheSize = 3;  // 3 is the default value for WebKitPageCacheSizePreferenceKey
+        if (prefs)
+            prefs->Release();
+        if (standardPrefs)
+            standardPrefs->Release();
+        unsigned long long memSize = WebSystemMainMemory();
+        
+        // On Windows the reported memory is a bit smaller, so we use 1000 instead of 1024 as a fudge factor.
+        if (memSize >= 1024 * 1024 * 1000 /*1024*/)
+            m_pageCacheSize = cacheSize;
+        else if (memSize >= 512 * 1024 * 1000 /*1024*/)
+            m_pageCacheSize = cacheSize - 1;
+        else
+            m_pageCacheSize = cacheSize - 2;
+    }
+    *size = m_pageCacheSize;
+    return S_OK;
 }

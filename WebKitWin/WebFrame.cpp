@@ -755,7 +755,7 @@ HRESULT WebFrame::loadItem(IWebHistoryItem* item, WebFrameLoadType withLoadType)
     return hr;
 }
 
-static unsigned long long WebSystemMainMemory()
+unsigned long long WebSystemMainMemory()
 {
     MEMORYSTATUSEX statex;
     

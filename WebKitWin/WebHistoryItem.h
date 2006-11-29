@@ -86,6 +86,10 @@ public:
     virtual HRESULT STDMETHODCALLTYPE setTitle(BSTR title);
     virtual HRESULT STDMETHODCALLTYPE RSSFeedReferrer(BSTR* url);
     virtual HRESULT STDMETHODCALLTYPE setRSSFeedReferrer(BSTR url);
+    virtual HRESULT STDMETHODCALLTYPE hasPageCache(BOOL *hasCache);
+    virtual HRESULT STDMETHODCALLTYPE setHasPageCache(BOOL hasCache);
+
+    static void releaseAllPendingPageCaches();
 
 protected:
     ULONG m_refCount;
