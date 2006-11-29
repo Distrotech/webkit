@@ -38,7 +38,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="__BUILDBOT__=0$(BuildBot)"
+				PreprocessorDefinitions="__ARCHIVE_BUILD__=0$(ARCHIVE_BUILD);__BUILDBOT__=0$(BuildBot)"
 				AdditionalIncludeDirectories="..\Interfaces"
 				WarningLevel="1"
 				WarnAsError="true"
@@ -125,7 +125,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="__BUILDBOT__=0$(BuildBot)"
+				PreprocessorDefinitions="__ARCHIVE_BUILD__=0$(ARCHIVE_BUILD);__BUILDBOT__=0$(BuildBot)"
 				AdditionalIncludeDirectories="..\Interfaces"
 				WarningLevel="1"
 				WarnAsError="true"

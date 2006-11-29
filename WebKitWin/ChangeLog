@@ -1,3 +1,15 @@
+2006-11-29  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Adele.
+
+        Give archive builds a separate set of CLSIDs so that they may be
+        installed/run alongside B&I builds and development builds.
+
+        * Interfaces/WebKit.idl:
+        * WebKit.vcproj/Interfaces.vcproj:
+        * WebKit.vcproj/WebKit.vcproj: Don't register WebKit.dll if
+        ARCHIVE_BUILD or BuildBot is defined.
+
 2006-11-28  Ada Chan  <adachan@apple.com>
 
         Reviewed by Adam.
