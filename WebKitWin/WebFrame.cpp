@@ -616,11 +616,9 @@ void WebFrame::initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, 
     HWND viewWindow;
     d->webView->viewWindow(&viewWindow);
 
-    Frame* frame = new FrameWin(page, ownerElement, this);
-    d->frame = frame;
-
     this->AddRef(); // We release this ref in frameLoaderDestroyed()
-    frame->loader()->setClient(this);
+    Frame* frame = new FrameWin(page, ownerElement, this, this);
+    d->frame = frame;
 
     FrameView* frameView = new FrameView(frame);
     d->frameView = frameView;

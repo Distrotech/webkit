@@ -88,7 +88,7 @@ public:
 
 class FrameWin : public Frame {
 public:
-    FrameWin(Page*, Element*, FrameWinClient*);
+    FrameWin(Page*, Element*, FrameWinClient*, FrameLoaderClient*);
     ~FrameWin();
 
     FrameWinClient* client() { return m_client.get(); }

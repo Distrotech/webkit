@@ -63,9 +63,9 @@ namespace WebCore {
 
 using namespace HTMLNames;
 
-FrameWin::FrameWin(Page* page, Element* ownerElement, FrameWinClient* client)
-    : Frame(page, ownerElement)
-    , m_client(client)
+FrameWin::FrameWin(Page* page, Element* ownerElement, FrameWinClient* frameWinClient, FrameLoaderClient* frameLoaderClient)
+    : Frame(page, ownerElement, frameLoaderClient)
+    , m_client(frameWinClient)
     , m_bindingRoot(0)
     , m_windowScriptNPObject(0)
 {
