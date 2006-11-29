@@ -5169,6 +5169,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\editing\EditorInsertAction.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\editing\FormatBlockCommand.cpp"
 				>
 			</File>
