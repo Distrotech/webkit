@@ -3420,6 +3420,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\ResourceResponse.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\ResourceResponse.h"
 					>
 				</File>
@@ -3455,15 +3459,7 @@
 						>
 					</File>
 					<File
-						RelativePath="..\platform\network\cf\ResourceRequestCFNet.h"
-						>
-					</File>
-					<File
 						RelativePath="..\platform\network\cf\ResourceResponseCFNet.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\platform\network\cf\ResourceResponseCFNet.h"
 						>
 					</File>
 				</Filter>

@@ -33,9 +33,7 @@
 #include "FrameLoader.h"
 #include "ResourceHandle.h"
 #include "ResourceHandleInternal.h"
-#include "ResourceRequestCFNet.h"
 #include "ResourceResponse.h"
-#include "ResourceResponseCFNet.h"
 
 #include <WTF/HashMap.h>
 
@@ -61,9 +59,7 @@ CFURLRequestRef willSendRequest(CFURLConnectionRef conn, CFURLRequestRef cfReque
 
     if (ResourceHandleClient* client = handle->client()) {
         ResourceRequest request(cfRequest);
-        ResourceResponse redirectResponse;
-        getResourceResponse(redirectResponse, cfRedirectResponse);
-        client->willSendRequest(handle, request, redirectResponse);
+        client->willSendRequest(handle, request, cfRedirectResponse);
         return request.cfURLRequest();
     }
 
@@ -82,9 +78,7 @@ void didReceiveResponse(CFURLConnectionRef conn, CFURLResponseRef cfResponse, co
 
     if (ResourceHandleClient* client = handle->client()) {
         client->receivedResponse(handle, cfResponse);
-        ResourceResponse response;
-        getResourceResponse(response, cfResponse);
-        client->didReceiveResponse(handle, response);
+        client->didReceiveResponse(handle, cfResponse);
     }
 }
 
