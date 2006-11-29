@@ -1,3 +1,19 @@
+2006-11-28  Anders Carlsson  <acarlsson@apple.com>
+
+        Fix the build by doing the same changes that were done in the open source WebCore repo.
+        
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/network/cf/ResourceHandleCFNet.cpp:
+        (WebCore::willSendRequest):
+        (WebCore::didReceiveResponse):
+        (WebCore::ResourceHandle::start):
+        * platform/network/cf/ResourceRequestCFNet.cpp:
+        (WebCore::ResourceRequest::cfURLRequest):
+        (WebCore::addHeadersFromHashMap):
+        (WebCore::ResourceRequest::doUpdatePlatformRequest):
+        (WebCore::ResourceRequest::doUpdateResourceRequest):
+        * platform/network/cf/ResourceRequestCFNet.h:
+
 2006-11-28  Adam Roben  <aroben@apple.com>
 
         Reviewed by Ada and Beth.

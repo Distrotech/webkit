@@ -60,12 +60,11 @@ CFURLRequestRef willSendRequest(CFURLConnectionRef conn, CFURLRequestRef cfReque
 #endif
 
     if (ResourceHandleClient* client = handle->client()) {
-        ResourceRequest request;
-        getResourceRequest(request, cfRequest);
+        ResourceRequest request(cfRequest);
         ResourceResponse redirectResponse;
         getResourceResponse(redirectResponse, cfRedirectResponse);
         client->willSendRequest(handle, request, redirectResponse);
-        return cfURLRequest(request);
+        return request.cfURLRequest();
     }
 
     return cfRequest;
@@ -82,10 +81,10 @@ void didReceiveResponse(CFURLConnectionRef conn, CFURLResponseRef cfResponse, co
 #endif
 
     if (ResourceHandleClient* client = handle->client()) {
-      client->receivedResponse(handle, cfResponse);
-      ResourceResponse response;
-      getResourceResponse(response, cfResponse);
-      client->didReceiveResponse(handle, response);
+        client->receivedResponse(handle, cfResponse);
+        ResourceResponse response;
+        getResourceResponse(response, cfResponse);
+        client->didReceiveResponse(handle, response);
     }
 }
 
@@ -242,7 +241,7 @@ bool ResourceHandle::start(DocLoader* docLoader)
     if (!referrer.isEmpty() && referrer.find("file:", 0, false) != 0)
         d->m_request.setHTTPReferrer(referrer);
 
-    CFURLRequestRef request = cfURLRequest(d->m_request);
+    CFURLRequestRef request = d->m_request.cfURLRequest();
 
     ref();
     d->m_loading = true;
