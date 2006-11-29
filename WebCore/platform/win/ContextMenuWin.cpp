@@ -36,22 +36,30 @@
 
 namespace WebCore {
 
+ContextMenu::ContextMenu(const HitTestResult& result)
+    : m_hitTestResult(result)
+    , m_platformDescription(::CreatePopupMenu())
+{
+}
+
+ContextMenu::~ContextMenu()
+{
+    if (m_platformDescription)
+        ::DestroyMenu(m_platformDescription);
+}
+
 unsigned ContextMenu::itemCount() const
 {
-    if (!m_menu)
+    if (!m_platformDescription)
         return 0;
 
-    return ::GetMenuItemCount(m_menu);
+    return ::GetMenuItemCount(m_platformDescription);
 }
 
 void ContextMenu::insertItem(unsigned int position, const ContextMenuItem& item)
 {
-    if (!m_menu) {
-        HMENU menu = ::CreatePopupMenu();
-        if (!menu)
-            return;
-        setPlatformDescription(menu);
-    }
+    if (!m_platformDescription)
+        return;
 
     MENUITEMINFO info;
     info.cbSize = sizeof(info);
@@ -77,7 +85,7 @@ void ContextMenu::insertItem(unsigned int position, const ContextMenuItem& item)
             break;
     }
 
-    ::InsertMenuItem(m_menu, position, TRUE, &info);
+    ::InsertMenuItem(m_platformDescription, position, TRUE, &info);
 
     if (titleString)
         free(titleString);
@@ -103,7 +111,7 @@ ContextMenuItem ContextMenu::at(unsigned index)
     
     info->fMask = MIIM_FTYPE | MIIM_ID | MIIM_STRING;
 
-    if (!::GetMenuItemInfo(m_menu, index, TRUE, info)) {
+    if (!::GetMenuItemInfo(m_platformDescription, index, TRUE, info)) {
         free(info);
         return 0;
     }
@@ -115,7 +123,7 @@ ContextMenuItem ContextMenu::at(unsigned index)
             return 0;
         }
         info->dwTypeData = buffer;
-        ::GetMenuItemInfo(m_menu, index, TRUE, info);
+        ::GetMenuItemInfo(m_platformDescription, index, TRUE, info);
     }
     
     return ContextMenuItem(info, this);
@@ -123,24 +131,24 @@ ContextMenuItem ContextMenu::at(unsigned index)
 
 void ContextMenu::setPlatformDescription(HMENU menu)
 {
-    if (!menu || menu == m_menu)
+    if (menu == m_platformDescription)
         return;
     
-    if (m_menu)
-        ::DestroyMenu(m_menu);
+    if (m_platformDescription)
+        ::DestroyMenu(m_platformDescription);
 
-    m_menu = menu;
+    m_platformDescription = menu;
 
     MENUINFO info;
     info.cbSize = sizeof(info);
     info.fMask = MIM_STYLE | MIM_APPLYTOSUBMENUS;
     info.dwStyle = MNS_NOTIFYBYPOS;
-    ::SetMenuInfo(m_menu, &info);
+    ::SetMenuInfo(m_platformDescription, &info);
 }
 
 void ContextMenu::show()
 {
-    if (!m_menu)
+    if (!m_platformDescription)
         return;
 
     Node* node = m_hitTestResult.innerNonSharedNode();
@@ -167,7 +175,7 @@ void ContextMenu::show()
     else
         flags |= TPM_LEFTALIGN | TPM_HORPOSANIMATION;
 
-    ::TrackPopupMenuEx(m_menu, flags, point.x, point.y, view->containingWindow(), 0);
+    ::TrackPopupMenuEx(m_platformDescription, flags, point.x, point.y, view->containingWindow(), 0);
 }
 
 void ContextMenu::hide()
