@@ -1,3 +1,18 @@
+2006-11-28  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+        
+        <rdar://problem/4850883>
+        Crash loading pdf page (W4 form)
+        
+        * platform/win/TemporaryLinkStubs.cpp:
+        (FrameLoader::redirectDataToPlugin):
+        * loader/win/FrameLoaderWin.cpp:
+        (WebCore::FrameLoader::redirectDataToPlugin):
+        Move the function to FrameLoaderWin.cpp and get rid of STOP_NOIMPL() for now, 
+        we do things differently on Windows so this function doesn't need do do anything.
+        I've filed 4852889 about redoing this once the loader has been ported.
+
 2006-11-28  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by Ada, Adam, and Lou.
@@ -48,6 +63,7 @@
         (WebCore::Pasteboard::documentFragment):
         (WebCore::PasteboardOwnerWndProc):
 
+>>>>>>> .r11196
 2006-11-28  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Anders Carlsson.

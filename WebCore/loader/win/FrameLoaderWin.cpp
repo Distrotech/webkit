@@ -204,5 +204,9 @@ void FrameLoader::partClearedInBegin()
     }
 }
 
+void FrameLoader::redirectDataToPlugin(Widget*) 
+{
+    // FIXME: This should eventually go away, see 4852889 for more info
+}
 
 }

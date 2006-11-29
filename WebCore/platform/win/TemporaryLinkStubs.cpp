@@ -213,7 +213,6 @@ bool DocumentLoader::isLoadingInAPISense()const { STOP_NOIMPL(); return false; }
 FrameLoader* DocumentLoader::frameLoader()const { STOP_NOIMPL(); return 0; }
 
 String FrameLoader::overrideMediaType()const { LOG_NOIMPL(); return String(); }
-void FrameLoader::redirectDataToPlugin(Widget*) { STOP_NOIMPL(); }
 void FrameLoader::checkLoadCompleteForThisFrame() { LOG_NOIMPL(); }
 void FrameLoader::loadEmptyDocumentSynchronously() { LOG_NOIMPL(); }
 void FrameLoader::startLoading() { STOP_NOIMPL(); }
