@@ -1594,6 +1594,9 @@ HRESULT STDMETHODCALLTYPE WebView::close()
     setUIDelegate(0);
     setFormDelegate(0);
 
+    if (Frame* frame = m_page->mainFrame())
+        frame->loader()->detachFromParent();
+
     if (m_backForwardList) {
         m_backForwardList->Release();
         m_backForwardList = 0;

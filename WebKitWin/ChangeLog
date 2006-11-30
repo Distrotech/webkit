@@ -1,3 +1,21 @@
+2006-11-30  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Beth Dakin.
+        
+        Fixed <rdar://problem/4844838> Whole document leak seen 
+        running HTML iBench
+
+        Copied *very nice* (NOT!) WebKit Mac idiom of calling
+        FrameLoader::detachFromParent when closing the WebView.
+        We need to do this so event listeners that retain the document
+        get destroyed, and so the unload event gets dispatched.
+
+        This is pretty silly. Instead, the document/frame/interpreter should
+        be responsible for cleaning up after itself.
+        
+        * WebView.cpp:
+        (WebView::close):
+
 2006-11-30  Steve Falkenburg  <sfalken@apple.com>
 
         build WebKit.lib to proper directory

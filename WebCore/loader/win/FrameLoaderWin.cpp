@@ -168,12 +168,6 @@ Frame* FrameLoader::createFrame(const KURL& url, const String& name, Element* ow
     return result;
 }
 
-void FrameLoader::detachFromParent()
-{
-    detachChildren();
-    m_frame->tree()->parent()->tree()->removeChild(m_frame);
-}
-
 Widget* FrameLoader::createJavaAppletWidget(const IntSize&, Element* element, const HashMap<String, String>& args)
 {
     Vector<String> paramNames;

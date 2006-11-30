@@ -1,3 +1,14 @@
+2006-11-30  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Beth Dakin.
+        
+        Fixed <rdar://problem/4844838> Whole document leak seen 
+        running HTML iBench
+
+        * loader/win/FrameLoaderWin.cpp: Removed custom implementation
+        for detachFromParent, since FrameLoader has a cross-platform
+        version now.
+
 2006-11-30  Steve Falkenburg  <sfalken@apple.com>
 
         B&I build fix.  Add missing header files to vcproj.
