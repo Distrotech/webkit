@@ -148,7 +148,6 @@ void FrameWin::respondToChangedContents(const Selection &endingSelection) { LOG_
 
 bool CheckIfReloading(WebCore::DocLoader*) { LOG_NOIMPL(); return false; }
 void CheckCacheObjectStatus(DocLoader*, CachedResource*) { LOG_NOIMPL(); }
-void CachedResource::setPlatformResponse(struct _CFURLResponse*) { LOG_NOIMPL(); }
 void CachedResource::setAllData(PlatformData) { LOG_NOIMPL(); }
 
 }

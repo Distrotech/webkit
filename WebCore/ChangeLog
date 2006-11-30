@@ -1,5 +1,12 @@
 2006-11-29  Anders Carlsson  <acarlsson@apple.com>
 
+        Build fix.
+        
+        * platform/win/TemporaryLinkStubs.cpp:
+        Remove unused function.
+
+2006-11-29  Anders Carlsson  <acarlsson@apple.com>
+
         Reviewed by Oliver.
 
         Fix fast/dom/xmlhttprequest-get layout test failure.
