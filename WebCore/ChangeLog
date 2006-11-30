@@ -1,5 +1,15 @@
 2006-11-29  Anders Carlsson  <acarlsson@apple.com>
 
+        Reviewed by Oliver.
+
+        Fix fast/dom/xmlhttprequest-get layout test failure.
+
+        * platform/network/cf/ResourceResponseCFNet.cpp:
+        (WebCore::ResourceResponse::doUpdateResourceResponse):
+        Initialize the status code to 0 for non-http responses.
+
+2006-11-29  Anders Carlsson  <acarlsson@apple.com>
+
         Reviewed by Darin.
 
         Have ResourceResponse hold on to the platform object and do lazy

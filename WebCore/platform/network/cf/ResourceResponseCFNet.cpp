@@ -78,8 +78,8 @@ void ResourceResponse::doUpdateResourceResponse()
         CFDictionaryGetKeysAndValues(headers, keys.data(), values.data());
         for (int i = 0; i < headerCount; ++i)
             m_httpHeaderFields.set((CFStringRef)keys[i], (CFStringRef)values[i]);
-    }
-
+    } else
+        m_httpStatusCode = 0;
 }
 
 }
