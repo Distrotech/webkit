@@ -3118,6 +3118,18 @@
 						Name="cg"
 						>
 						<File
+							RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\cg\CgSupport.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\cg\CgSupport.h"
+							>
+						</File>
+						<File
+							RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\cg\RenderPathCg.cpp"
+							>
+						</File>
+						<File
 							RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\cg\SVGPaintServerCg.cpp"
 							>
 						</File>
@@ -7319,46 +7331,6 @@
 					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\misc\SVGImageLoader.h"
 					>
 				</File>
-			</Filter>
-		</Filter>
-		<Filter
-			Name="kcanvas"
-			>
-			<Filter
-				Name="device"
-				>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\KRenderingDevice.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\KRenderingDevice.h"
-					>
-				</File>
-				<Filter
-					Name="quartz"
-					>
-					<File
-						RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\quartz\KCanvasItemQuartz.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\quartz\KRenderingDeviceQuartz.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\quartz\KRenderingDeviceQuartz.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\quartz\QuartzSupport.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\..\OpenSource\WebCore\kcanvas\device\quartz\QuartzSupport.h"
-						>
-					</File>
-				</Filter>
 			</Filter>
 		</Filter>
 		<File

@@ -32,7 +32,7 @@
 
 namespace WebCore {
 
-void SVGResourceMasker::applyMask(const FloatRect& boundingBox) const
+void SVGResourceMasker::applyMask(GraphicsContext*, const FloatRect&) const
 {
     LOG_NOIMPL();
 }

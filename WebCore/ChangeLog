@@ -1,3 +1,16 @@
+2006-11-30  Adam Roben  <aroben@apple.com>
+
+        Build fix. 
+
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/graphics/svg/cg/SVGResourceFilterCg.cpp:
+        (WebCore::SVGResourceFilter::prepareFilter):
+        (WebCore::SVGResourceFilter::applyFilter):
+        (WebCore::SVGResourceFilter::createFilterEffect):
+        * platform/graphics/svg/cg/SVGResourceMaskerCg.cpp:
+        (WebCore::SVGResourceMasker::applyMask):
+
 2006-11-30  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Beth Dakin.

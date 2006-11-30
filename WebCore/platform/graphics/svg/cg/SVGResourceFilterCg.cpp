@@ -41,14 +41,20 @@ SVGResourceFilter::~SVGResourceFilter()
 {
 }
 
-void SVGResourceFilter::prepareFilter(const FloatRect &bbox)
+void SVGResourceFilter::prepareFilter(GraphicsContext*&, const FloatRect&)
 {
     LOG_NOIMPL();
 }
 
-void SVGResourceFilter::applyFilter(const FloatRect &bbox)
+void SVGResourceFilter::applyFilter(GraphicsContext*&, const FloatRect&)
 {
     LOG_NOIMPL();
+}
+
+
+SVGFilterEffect* SVGResourceFilter::createFilterEffect(const SVGFilterEffectType&)
+{
+    return NULL;
 }
 
 }
