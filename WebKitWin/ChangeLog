@@ -1,3 +1,9 @@
+2006-11-30  Steve Falkenburg  <sfalken@apple.com>
+
+        build WebKit.lib to proper directory
+
+        * WebKit.vcproj/WebKit.vcproj:
+
 2006-11-29  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Anders.
