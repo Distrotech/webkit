@@ -1,3 +1,11 @@
+2006-12-01  Steve Falkenburg  <sfalken@apple.com>
+
+        Fix post-build step.
+        Need to copy CoreFoundation resources.
+        Bundles aren't config specific - removed ConfigSuffix from copy commands for resources.
+
+        * WebKit.vcproj\WebKit.vcproj:
+
 2006-11-30  Steve Falkenburg  <sfalken@apple.com>
 
         Fix build.
