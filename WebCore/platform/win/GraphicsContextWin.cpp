@@ -27,6 +27,7 @@
 #include "GraphicsContext.h"
 
 #include "AffineTransform.h"
+#include "NotImplemented.h"
 #include "Path.h"
 #include <wtf/MathExtras.h>
 
@@ -35,6 +36,8 @@
 using namespace std;
 
 namespace WebCore {
+
+class SVGImageResource;
 
 static CGContextRef CGContextWithHDC(HDC hdc)
 {
@@ -291,5 +294,14 @@ void GraphicsContext::setCompositeOperation(CompositeOperator mode)
     }
     CGContextSetBlendMode(platformContext(), target);
 }
+
+#ifdef SVG_SUPPORT
+GraphicsContext* contextForImage(SVGImageResource*)
+{
+    // FIXME: This should go in GraphicsContextCG.cpp
+    LOG_NOIMPL();
+    return 0;
+}
+#endif
 
 }

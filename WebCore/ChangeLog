@@ -1,5 +1,16 @@
 2006-11-30  Adam Roben  <aroben@apple.com>
 
+        Build fix.
+
+        * platform/graphics/cg/GraphicsContextCG.cpp: Removed. This file was
+        un-forked a while ago.
+        * platform/win/ContextMenuWin.cpp:
+        (WebCore::ContextMenu::platformDescription):
+        * platform/win/GraphicsContextWin.cpp:
+        (WebCore::contextForImage):
+
+2006-11-30  Adam Roben  <aroben@apple.com>
+
         Build fix. 
 
 

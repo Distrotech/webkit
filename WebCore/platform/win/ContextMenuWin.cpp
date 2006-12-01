@@ -146,6 +146,11 @@ void ContextMenu::setPlatformDescription(HMENU menu)
     ::SetMenuInfo(m_platformDescription, &info);
 }
 
+HMENU ContextMenu::platformDescription() const
+{
+    return m_platformDescription;
+}
+
 void ContextMenu::show()
 {
     if (!m_platformDescription)
