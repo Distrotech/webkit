@@ -179,7 +179,7 @@ bool FrameWin::keyEvent(const PlatformKeyboardEvent& keyEvent)
     Document *doc = document();
     if (!doc)
         return false;
-    Node *node = doc->focusNode();
+    Node *node = doc->focusedNode();
     if (!node) {
         if (doc->isHTMLDocument())
             node = doc->body();

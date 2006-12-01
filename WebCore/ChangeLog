@@ -1,3 +1,14 @@
+2006-11-30  Geoffrey Garen  <ggaren@apple.com>
+
+        Rubber Stamped by Anders Carlsson.
+
+        Global rename of Document::focusNode to Document::focusedNode. 'focusNode'
+        suggested a command, and conflicted with a different meaning for 'focusNode'
+        in the Mozilla selection API.
+
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::keyEvent):
+
 2006-11-30  Adam Roben  <aroben@apple.com>
 
         Lather, rinse, repeat.
