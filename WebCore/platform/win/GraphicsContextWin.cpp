@@ -37,7 +37,7 @@ using namespace std;
 
 namespace WebCore {
 
-class SVGImageResource;
+class SVGResourceImage;
 
 static CGContextRef CGContextWithHDC(HDC hdc)
 {
@@ -296,7 +296,7 @@ void GraphicsContext::setCompositeOperation(CompositeOperator mode)
 }
 
 #ifdef SVG_SUPPORT
-GraphicsContext* contextForImage(SVGImageResource*)
+GraphicsContext* contextForImage(SVGResourceImage*)
 {
     // FIXME: This should go in GraphicsContextCG.cpp
     LOG_NOIMPL();
