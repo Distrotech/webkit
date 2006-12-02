@@ -26,29 +26,84 @@
 #include "config.h"
 #include "ContextMenuItem.h"
 
+#include "ContextMenu.h"
+
+#include "CString.h"
 #include <windows.h>
 
 namespace WebCore {
 
-ContextMenuItem::ContextMenuItem(LPMENUITEMINFO item, ContextMenu* menu)
-    : m_menu(menu)
+ContextMenuItem::ContextMenuItem(LPMENUITEMINFO item, ContextMenu* parentMenu)
+    : m_parentMenu(parentMenu)
     , m_platformDescription(item)
 {
     switch (item->fType) {
         case MFT_STRING:
-            m_type = ActionType;
-            m_title = String(item->dwTypeData, item->cch);
-            m_action = static_cast<ContextMenuAction>(item->wID);
+            if (item->hSubMenu)
+                m_type = SubmenuType;
+            else
+                m_type = ActionType;
             break;
         case MFT_SEPARATOR:
             m_type = SeparatorType;
-            m_title = String();
-            m_action = ContextMenuItemTagNoAction;
-            break;
+            break; 
         default:
             ASSERT_NOT_REACHED();
             break;
     }
+}
+
+ContextMenuItem::ContextMenuItem(ContextMenu* parentMenu, ContextMenu* subMenu)
+    : m_parentMenu(parentMenu)
+    , m_platformDescription(0)
+    , m_type(SeparatorType)
+{
+    m_platformDescription = (LPMENUITEMINFO)malloc(sizeof(MENUITEMINFO));
+    if (!m_platformDescription)
+        return;
+
+    memset(m_platformDescription, 0, sizeof(MENUITEMINFO));
+    m_platformDescription->cbSize = sizeof(MENUITEMINFO);
+
+    m_platformDescription->wID = ContextMenuItemTagNoAction;
+    if (subMenu) {
+        m_platformDescription->fMask |= MIIM_SUBMENU;
+        m_platformDescription->hSubMenu = subMenu->platformDescription();
+    }
+}
+
+ContextMenuItem::ContextMenuItem(ContextMenuItemType type, ContextMenuAction action, const String& title, ContextMenu* parentMenu, 
+    ContextMenu* subMenu)
+    : m_parentMenu(parentMenu)
+    , m_type(type)
+{
+    m_platformDescription = (LPMENUITEMINFO)malloc(sizeof(MENUITEMINFO));
+    if (!m_platformDescription)
+        return;
+
+    memset(m_platformDescription, 0, sizeof(MENUITEMINFO));
+    m_platformDescription->cbSize = sizeof(MENUITEMINFO);
+    m_platformDescription->fMask = MIIM_FTYPE;
+
+    if (m_type == SeparatorType) {
+        m_platformDescription->fType = MFT_SEPARATOR;
+        return;
+    }
+    
+    if (subMenu) {
+        m_platformDescription->fMask |= MIIM_STRING | MIIM_SUBMENU;
+        m_platformDescription->hSubMenu = subMenu->platformDescription();
+    } else
+        m_platformDescription->fMask |= MIIM_STRING | MIIM_ID;
+
+    m_platformDescription->fType = MFT_STRING;
+    
+    if (type == ActionType)
+        m_platformDescription->wID = action;
+    
+    String t = title;
+    m_platformDescription->cch = t.length();
+    m_platformDescription->dwTypeData = wcsdup(t.charactersWithNullTermination());
 }
 
 ContextMenuItem::~ContextMenuItem()
@@ -58,6 +113,52 @@ ContextMenuItem::~ContextMenuItem()
             free(m_platformDescription->dwTypeData);
         free(m_platformDescription);
     }
+}
+
+PlatformMenuItemDescription ContextMenuItem::platformDescription() const
+{
+    return m_platformDescription;
+}
+
+ContextMenuAction ContextMenuItem::action() const
+{ 
+    return static_cast<ContextMenuAction>(m_platformDescription->wID);
+}
+
+String ContextMenuItem::title() const 
+{
+    return String(m_platformDescription->dwTypeData, wcslen(m_platformDescription->dwTypeData));
+}
+
+PlatformMenuDescription ContextMenuItem::platformSubMenu() const
+{
+    return m_platformDescription->hSubMenu;
+}
+
+void ContextMenuItem::setAction(ContextMenuAction action)
+{
+    m_platformDescription->wID = action; 
+}
+
+void ContextMenuItem::setTitle(String title)
+{
+    if (m_platformDescription->dwTypeData)
+        free(m_platformDescription->dwTypeData);
+    
+    m_platformDescription->cch = title.length();
+    m_platformDescription->dwTypeData = wcsdup(title.charactersWithNullTermination());
+}
+
+void ContextMenuItem::setSubMenu(ContextMenu* subMenu)
+{
+    if (subMenu->platformDescription() == m_platformDescription->hSubMenu)
+        return;
+
+    if (m_platformDescription->hSubMenu)
+        ::DestroyMenu(m_platformDescription->hSubMenu);
+    
+    m_platformDescription->fMask |= MIIM_SUBMENU;
+    m_platformDescription->hSubMenu = subMenu->platformDescription();
 }
 
 }

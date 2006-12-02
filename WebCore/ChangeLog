@@ -1,3 +1,25 @@
+2006-12-01  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by Adam.
+
+        Support for sub-menus in WebCore context menus. Also some
+        adjustments to make ContextMenuItem class a wrapper for the
+        platformDescription. (In this case, a wrapper for LPMENUITEMINFO.)
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/win/ContextMenuItemWin.cpp:
+        (WebCore::ContextMenuItem::ContextMenuItem):
+        (WebCore::ContextMenuItem::platformDescription):
+        (WebCore::ContextMenuItem::action):
+        (WebCore::ContextMenuItem::title):
+        (WebCore::ContextMenuItem::platformSubMenu):
+        (WebCore::ContextMenuItem::setAction):
+        (WebCore::ContextMenuItem::setTitle):
+        (WebCore::ContextMenuItem::setSubMenu):
+        * platform/win/ContextMenuWin.cpp:
+        (WebCore::ContextMenu::ContextMenu):
+        (WebCore::ContextMenu::insertItem):
+
 2006-11-30  Geoffrey Garen  <ggaren@apple.com>
 
         Rubber Stamped by Anders Carlsson.

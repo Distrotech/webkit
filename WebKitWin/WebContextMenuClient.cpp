@@ -64,7 +64,7 @@ void WebContextMenuClient::addCustomContextMenuItems(ContextMenu* menu)
 
 void WebContextMenuClient::contextMenuItemSelected(ContextMenuItem* item)
 {
-    ASSERT(item->menu());
+    ASSERT(item->parentMenu());
     ASSERT(item->type() == ActionType);
     
     if (!item->platformDescription())
@@ -76,7 +76,7 @@ void WebContextMenuClient::contextMenuItemSelected(ContextMenuItem* item)
 
     ASSERT(uiDelegate);
 
-    WebElementPropertyBag propertyBag(item->menu()->hitTestResult());
+    WebElementPropertyBag propertyBag(item->parentMenu()->hitTestResult());
             
     uiDelegate->contextMenuItemSelected(m_webView, item->platformDescription(), &propertyBag);
     uiDelegate->Release();

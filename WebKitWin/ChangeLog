@@ -1,3 +1,14 @@
+2006-12-01  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by Adam.
+
+        Changes to support sub-menus for WebCore ContextMenus.
+
+        * Interfaces/IWebUIDelegate.idl: New tags.
+        * WebContextMenuClient.cpp:
+        (WebContextMenuClient::contextMenuItemSelected): ContextMenu::menu
+        () is now called parentMenu()
+
 2006-12-01  Steve Falkenburg  <sfalken@apple.com>
 
         Fix post-build step.

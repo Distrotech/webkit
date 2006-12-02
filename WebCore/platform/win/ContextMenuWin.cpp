@@ -42,6 +42,12 @@ ContextMenu::ContextMenu(const HitTestResult& result)
 {
 }
 
+ContextMenu::ContextMenu(const HitTestResult& result, const PlatformMenuDescription menu)
+    : m_hitTestResult(result)
+    , m_platformDescription(menu)
+{
+}
+
 ContextMenu::~ContextMenu()
 {
     if (m_platformDescription)
@@ -60,35 +66,7 @@ void ContextMenu::insertItem(unsigned int position, const ContextMenuItem& item)
 {
     if (!m_platformDescription)
         return;
-
-    MENUITEMINFO info;
-    info.cbSize = sizeof(info);
-    info.fMask = MIIM_FTYPE;
-    
-    LPWSTR titleString = 0;
-
-    switch (item.type()) {
-        case ActionType:
-            info.fMask |= MIIM_STRING | MIIM_ID;
-            info.fType = MFT_STRING;
-            info.wID = item.action();
-            info.cch = item.title().length();
-            titleString = _tcsdup(item.title().charactersWithNullTermination());
-            info.dwTypeData = titleString;
-            break;
-        case SeparatorType:
-            info.fType = MFT_SEPARATOR;
-            break;
-        case SubmenuType:
-        default:
-            ASSERT_NOT_REACHED();
-            break;
-    }
-
-    ::InsertMenuItem(m_platformDescription, position, TRUE, &info);
-
-    if (titleString)
-        free(titleString);
+    ::InsertMenuItem(m_platformDescription, position, TRUE, item.platformDescription());
 }
 
 void ContextMenu::appendItem(const ContextMenuItem& item)

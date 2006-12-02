@@ -94,7 +94,28 @@ typedef enum WebMenuItemTag {
     WebMenuItemPDFContinuous,
     WebMenuItemPDFNextPage,
     WebMenuItemPDFPreviousPage,
-    // FIXME: Review this name before release!
+    // FIXME: Review these names before release!
+    WebMenuItemTagOpenLink = 1000,
+    WebMenuItemTagSpellingAndGrammarMenu,
+    WebMenuItemTagShowSpellingAndGrammar,
+    WebMenuItemTagCheckDocumentNow,
+    WebMenuItemTagCheckSpellingWhileTyping,
+    WebMenuItemTagCheckGrammarWithSpelling,
+    WebMenuItemTagFontMenu,
+    WebMenuItemTagShowFonts,
+    WebMenuItemTagBold,
+    WebMenuItemTagItalic,
+    WebMenuItemTagUnderline,
+    WebMenuItemTagOutline,
+    WebMenuItemTagStyles,
+    WebMenuItemTagShowColors,
+    WebMenuItemTagSpeechMenu,
+    WebMenuItemTagStartSpeaking,
+    WebMenuItemTagStopSpeaking,
+    WebMenuItemTagWritingDirectionMenu,
+    WebMenuItemTagDefaultDirection,
+    WebMenuItemTagLeftToRight,
+    WebMenuItemTagRightToLeft,
     WebMenuItemBaseApplicationTag=10000
 } WebMenuItemTag;
 

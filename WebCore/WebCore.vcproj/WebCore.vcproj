@@ -7337,6 +7337,10 @@
 			RelativePath="..\config.h"
 			>
 		</File>
+		<File
+			RelativePath="..\..\..\..\OpenSource\WebCore\platform\PlatformMenuDescription.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
