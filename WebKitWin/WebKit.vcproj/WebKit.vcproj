@@ -70,7 +70,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkLibraryDependencies="false"
-				AdditionalDependencies="comctl32.lib version.lib wininet.lib shlwapi.lib iconv$(ConfigSuffix).lib libxml2$(ConfigSuffix).lib libxslt$(ConfigSuffix).lib icuuc$(ConfigSuffix).lib CoreFoundation$(ConfigSuffix).lib CFNetwork$(ConfigSuffix).lib CoreGraphics$(ConfigSuffix).lib JavaScriptCore$(ConfigSuffix).lib WebKitGUID$(ConfigSuffix).lib WebCore$(ConfigSuffix).lib WTF$(ConfigSuffix).lib SQLite3$(ConfigSuffix).lib"
+				AdditionalDependencies="comctl32.lib version.lib wininet.lib shlwapi.lib iconv$(ConfigSuffix).lib libxml2$(ConfigSuffix).lib libxslt$(ConfigSuffix).lib icuuc$(ConfigSuffix).lib SQLite3$(ConfigSuffix).lib CoreFoundation$(ConfigSuffix).lib CFNetwork$(ConfigSuffix).lib CoreGraphics$(ConfigSuffix).lib JavaScriptCore$(ConfigSuffix).lib WebKitGUID$(ConfigSuffix).lib WebCore$(ConfigSuffix).lib WTF$(ConfigSuffix).lib"
 				OutputFile="$(OutDir)\$(ProjectName)$(ConfigSuffix).dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(WebKitOutputDir)\lib&quot;;&quot;$(WebKitSDKDir)\lib&quot;"
@@ -159,7 +159,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkLibraryDependencies="false"
-				AdditionalDependencies="comctl32.lib version.lib wininet.lib shlwapi.lib iconv$(ConfigSuffix).lib libxml2$(ConfigSuffix).lib libxslt$(ConfigSuffix).lib icuuc$(ConfigSuffix).lib CoreFoundation$(ConfigSuffix).lib CFNetwork$(ConfigSuffix).lib CoreGraphics$(ConfigSuffix).lib JavaScriptCore$(ConfigSuffix).lib WebKitGUID$(ConfigSuffix).lib WebCore$(ConfigSuffix).lib WTF$(ConfigSuffix).lib SQLite3$(ConfigSuffix).lib"
+				AdditionalDependencies="comctl32.lib version.lib wininet.lib shlwapi.lib iconv$(ConfigSuffix).lib libxml2$(ConfigSuffix).lib libxslt$(ConfigSuffix).lib icuuc$(ConfigSuffix).lib SQLite3$(ConfigSuffix).lib CoreFoundation$(ConfigSuffix).lib CFNetwork$(ConfigSuffix).lib CoreGraphics$(ConfigSuffix).lib JavaScriptCore$(ConfigSuffix).lib WebKitGUID$(ConfigSuffix).lib WebCore$(ConfigSuffix).lib WTF$(ConfigSuffix).lib"
 				OutputFile="$(OutDir)\$(ProjectName)$(ConfigSuffix).dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(WebKitOutputDir)\lib&quot;;&quot;$(WebKitSDKDir)\lib&quot;"

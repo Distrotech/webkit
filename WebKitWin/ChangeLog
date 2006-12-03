@@ -1,3 +1,18 @@
+2006-12-02  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Ada.
+        
+        <rdar://4853816> CFNetwork crash on Vista loading any SSL page
+
+        Change link order so secur32.dll is initialized prior to its
+        indirect use in code called by CoreGraphics DllMain.
+        
+        To help avoid similar problems in the future, I reordered the
+        imported DLLs by level/dependency so things like CoreFoundation
+        is listed prior to CFNetwork and CoreGraphics.        
+
+        * WebKit.vcproj/WebKit.vcproj:
+
 2006-12-01  Beth Dakin  <bdakin@apple.com>
 
         Reviewed by Adam.
