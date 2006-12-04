@@ -1,3 +1,23 @@
+2006-12-04  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Oliver.
+
+        Fixed <rdar://problem/4822632> clicks don't work if you move mouse immediately
+        This bug was fixed by implementing EventHandler::handleDrag.  The part of that
+        function after the drag hysteresis is exceeded remains unimplemented until 
+        drag&drop is implemented. 
+
+        * page/win/EventHandlerWin.cpp:
+        (WebCore::dragState):
+        (WebCore::EventHandler::dragHysteresisExceeded):
+        (WebCore::EventHandler::handleDrag):
+        (WebCore::EventHandler::handleMouseUp):
+        (WebCore::EventHandler::shouldDragAutoNode):
+        (WebCore::EventHandler::focusDocumentView):
+        (WebCore::EventHandler::passWidgetMouseDownEventToWidget):
+        * platform/win/PlatformMouseEventWin.cpp:
+        (WebCore::PlatformMouseEvent::PlatformMouseEvent):
+
 2006-12-01  Beth Dakin  <bdakin@apple.com>
 
         Reviewed by Adam.

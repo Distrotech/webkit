@@ -1,3 +1,22 @@
+2006-12-04  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Oliver.
+
+        Fixed <rdar://problem/4822632> clicks don't work if you move mouse immediately
+        This bug was fixed by implementing EventHandler::handleDrag.
+
+        * WebView.cpp:
+        (WebView::WebView):
+        Added a data member
+        (WebView::handleMouseEvent):
+        Create the mouse event telling it it activated the webview
+        (WebViewWndProc):
+        Call setMouseActivated upon receiving the relevent message
+        * WebView.h:
+        (WebView::setMouseActivated):
+        Added this function so that the webview knows if it 
+        was brought to the foreground by a mouse event
+
 2006-12-02  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Ada.

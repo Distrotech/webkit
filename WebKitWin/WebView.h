@@ -527,6 +527,7 @@ public:
     // WebView
     WebCore::Page* page();
     bool handleMouseEvent(UINT, WPARAM, LPARAM);
+    void setMouseActivated(bool flag) { m_mouseActivated = flag; }
     bool handleContextMenuEvent(WPARAM, LPARAM);
     void performContextMenuAction(WPARAM, LPARAM);
     bool mouseWheel(WPARAM, LPARAM);
@@ -584,6 +585,7 @@ protected:
     WebCore::String m_overrideEncoding;
     WebCore::String m_applicationName;
     Vector<WebCore::IntRect> m_pages;
+    bool m_mouseActivated;
 };
 
 #endif

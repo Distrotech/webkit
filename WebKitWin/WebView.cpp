@@ -95,6 +95,7 @@ WebView::WebView()
 , m_preferences(0)
 , m_userAgentOverridden(false)
 , m_textSizeMultiplier(1)
+, m_mouseActivated(false)
 {
     m_backForwardList = WebBackForwardList::createInstance();
     m_backingStoreSize.cx = m_backingStoreSize.cy = 0;
@@ -674,7 +675,7 @@ bool WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
     static LONG globalPrevMouseDownTime;
 
     // Create our event.
-    PlatformMouseEvent mouseEvent(m_viewWindow, message, wParam, lParam);
+    PlatformMouseEvent mouseEvent(m_viewWindow, message, wParam, lParam, m_mouseActivated);
    
     bool insideThreshold = abs(globalPrevPoint.x() - mouseEvent.pos().x()) < ::GetSystemMetrics(SM_CXDOUBLECLK) &&
                            abs(globalPrevPoint.y() - mouseEvent.pos().y()) < ::GetSystemMetrics(SM_CYDOUBLECLK);
@@ -723,7 +724,7 @@ bool WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
         Widget* capturingTarget = m_page->mainFrame()->view()->capturingTarget();
         handled = capturingTarget->handleMouseMoveEvent(mouseEvent);
     }
-
+    setMouseActivated(false);
     return handled;
 }
 
@@ -1095,6 +1096,9 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                 webView->deleteBackingStore();
                 mainFrameImpl->impl()->view()->themeChanged();
             }
+            break;
+        case WM_MOUSEACTIVATE:
+            webView->setMouseActivated(true);
             break;
         default:
             handled = false;
