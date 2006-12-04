@@ -87,9 +87,7 @@ void PluginStreamWin::start()
 
 void PluginStreamWin::stop()
 {
-    if (m_resourceLoader)
-        m_resourceLoader->kill();
-
+    m_resourceLoader = 0;
     m_streamState = StreamStopped;
     m_resourceLoader = 0;
 }

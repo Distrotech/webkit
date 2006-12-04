@@ -109,7 +109,6 @@ void didFinishLoading(CFURLConnectionRef conn, const void* clientInfo)
 
     job->client()->receivedAllData(job, 0);
     job->client()->didFinishLoading(job);
-    job->kill();
 }
 
 void didFail(CFURLConnectionRef conn, CFStreamError error, const void* clientInfo) 
@@ -135,7 +134,6 @@ void didFail(CFURLConnectionRef conn, CFStreamError error, const void* clientInf
     // FIXME: we'd really like to include a failing URL and a localized description but you can't
     // get a CFErrorRef out of an NSURLConnection, only a CFStreamError
     handle->client()->didFailWithError(handle, ResourceError(domain, error.error, String(), String()));
-    handle->kill();
 }
 
 CFCachedURLResponseRef willCacheResponse(CFURLConnectionRef conn, CFCachedURLResponseRef cachedResponse, const void* clientInfo) 
@@ -237,7 +235,6 @@ bool ResourceHandle::start(DocLoader* docLoader)
 
     CFURLRequestRef request = d->m_request.cfURLRequest();
 
-    ref();
     d->m_loading = true;
     
     CFURLConnectionClient client = {0, this, 0, 0, 0, willSendRequest, didReceiveResponse, didReceiveData, NULL, didFinishLoading, didFail, willCacheResponse, didReceiveChallenge};

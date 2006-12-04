@@ -713,8 +713,6 @@ void WebFrame::stopMainResourceLoad()
     // FIXME: Frames should be able to cancel all loads, not just the main resource
     // load. This is temporary glue code that should be replaced by a real loader inside
     // WebCore.
-    if (m_loader)
-        m_loader->kill();
     m_loader = 0;
 }
 
