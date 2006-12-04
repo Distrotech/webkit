@@ -32,10 +32,11 @@
 #include "Document.h"
 #include "Element.h"
 #include "Frame.h"
+#include "NotImplemented.h"
 #include "Page.h"
+#include "Range.h"
 #include "TextEncoding.h"
 #include "markup.h"
-#include "NotImplemented.h"
 
 namespace WebCore {
 
@@ -45,13 +46,10 @@ UINT CF_HTML                        = ::RegisterClipboardFormat(L"HTML Format");
 
 static LRESULT CALLBACK PasteboardOwnerWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-Pasteboard* Pasteboard::s_generalPasteboard = 0;
-
 Pasteboard* Pasteboard::generalPasteboard() 
 {
-    if (!s_generalPasteboard)
-        s_generalPasteboard = new Pasteboard();
-    return s_generalPasteboard;
+    static Pasteboard* pasteboard = new Pasteboard;
+    return pasteboard;
 }
 
 Pasteboard::Pasteboard()
@@ -66,14 +64,6 @@ Pasteboard::Pasteboard()
 
     m_owner = ::CreateWindow(L"PasteboardOwnerWindowClass", L"PasteboardOwnerWindow", 0, 0, 0, 0, 0,
         HWND_MESSAGE, 0, 0, 0);
-}
-
-Pasteboard::~Pasteboard()
-{
-    delete s_generalPasteboard;
-    s_generalPasteboard = 0;
-    if (m_owner)
-        ::DestroyWindow(m_owner);
 }
 
 HashSet<int> Pasteboard::registerSelectionPasteboardTypes()

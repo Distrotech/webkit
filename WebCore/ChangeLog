@@ -1,3 +1,10 @@
+2006-12-04  Darin Adler  <darin@apple.com>
+
+        Reviewed by Alice.
+
+        * platform/win/PasteboardWin.cpp: (WebCore::Pasteboard::generalPasteboard):
+        Got rid of s_generalPasteboard. Also removed definition of destructor.
+
 2006-12-04  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Darin, Geoff.
