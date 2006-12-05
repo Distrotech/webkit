@@ -76,10 +76,8 @@ void didReceiveResponse(CFURLConnectionRef conn, CFURLResponseRef cfResponse, co
     CFRelease(str);
 #endif
 
-    if (ResourceHandleClient* client = handle->client()) {
-        client->receivedResponse(handle, cfResponse);
+    if (ResourceHandleClient* client = handle->client())
         client->didReceiveResponse(handle, cfResponse);
-    }
 }
 
 void didReceiveData(CFURLConnectionRef conn, CFDataRef data, CFIndex originalLength, const void* clientInfo) 
@@ -99,7 +97,7 @@ void didReceiveData(CFURLConnectionRef conn, CFDataRef data, CFIndex originalLen
 
 void didFinishLoading(CFURLConnectionRef conn, const void* clientInfo) 
 {
-    ResourceHandle* job = (ResourceHandle*)clientInfo;
+    ResourceHandle* handle = (ResourceHandle*)clientInfo;
 
 #if defined(LOG_RESOURCELOADER_EVENTS)
     CFStringRef str = CFStringCreateWithFormat(0, 0, CFSTR("didFinishLoading(conn=%p, job = %p)\n"), conn, job);
@@ -107,8 +105,7 @@ void didFinishLoading(CFURLConnectionRef conn, const void* clientInfo)
     CFRelease(str);
 #endif
 
-    job->client()->receivedAllData(job, 0);
-    job->client()->didFinishLoading(job);
+    handle->client()->didFinishLoading(handle);
 }
 
 void didFail(CFURLConnectionRef conn, CFStreamError error, const void* clientInfo) 

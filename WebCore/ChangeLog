@@ -1,3 +1,17 @@
+2006-12-04  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Darin.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        Add SubresourceClient.h
+        
+        * platform/network/cf/ResourceHandleCFNet.cpp:
+        (WebCore::didReceiveResponse):
+        Get rid of the receivedResponse call.
+        
+        (WebCore::didFinishLoading):
+        Get rid of the receivedAllData call, that's handled by the subresource loader now.
+
 2006-12-04  Darin Adler  <darin@apple.com>
 
         Reviewed by Adele.

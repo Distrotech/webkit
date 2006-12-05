@@ -2175,6 +2175,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\SubresourceLoaderClient.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\loader\TextDocument.cpp"
 				>
 			</File>
