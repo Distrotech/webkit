@@ -1,3 +1,10 @@
+2006-12-05  John Sullivan  <sullivan@apple.com>
+
+        * platform/win/TemporaryLinkStubs.cpp:
+        (WebCore::FrameWin::isSelectionUngrammatical):
+        (WebCore::FrameWin::guessesForUngrammaticalSelection):
+        added stubs to correspond to new Frame functions
+
 2006-12-04  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Darin.
