@@ -84,9 +84,5 @@ EXPORTS
 ;   	KJS_JSObject_JSObjectSetMember
 ;   	KJS_JSObject_JSObjectSetSlot
 ;   	KJS_JSObject_JSObjectToString
-	    WTFLog
-	    WTFReportArgumentAssertionFailure
-	    WTFReportAssertionFailure
-	    WTFReportAssertionFailureWithMessage
-	    WTFReportError
-	    WTFReportFatalError
+        WebLocalizedString
+        SetWebLocalizedStringMainBundle

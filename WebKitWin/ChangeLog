@@ -1,3 +1,33 @@
+2006-12-04  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Darin.
+
+        Checkpoint of <rdar://4601521>
+        Use CoreFoundation bundles w/ Localizable.strings for localization.
+
+        We're using the WebKit extract-localizable-strings script to generate these files,
+        and will use a cross-platform merged string file when we ship.
+
+        * English.lproj/Localizable.strings: Added.
+        * English.lproj/StringsNotToBeLocalized.txt: Added.
+        * WebKit.vcproj/WebKit.def: Export WebLocalizableStrings routines
+        * WebKit.vcproj/WebKit.vcproj: define FRAMEWORK_NAME=WebKit, added WebLocalizableStings, copy English.lproj to bin/en.lproj to get localized strings
+        * WebKit.vcproj/WebKit_debug.def: Export WebLocalizableStrings routines
+        * WebLocalizableStrings.cpp: Added.
+        * WebLocalizableStrings.h: Added.
+
+2006-12-04  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by NOBODY (OOPS!).
+        
+        Checkpoint of <rdar://4601521>
+        Use CoreFoundation bundles w/ Localizable.strings for localization.
+
+        We're using the WebKit extract-localizable-strings script to generate these files,
+        and will use a cross-platform merged string file when we ship.        
+
+        * WebLocalizableStrings.h: Added.
+
 2006-12-04  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Darin, Geoff.
@@ -58,7 +88,7 @@
         Need to copy CoreFoundation resources.
         Bundles aren't config specific - removed ConfigSuffix from copy commands for resources.
 
-        * WebKit.vcproj\WebKit.vcproj:
+        * WebKit.vcproj/WebKit.vcproj:
 
 2006-11-30  Steve Falkenburg  <sfalken@apple.com>
 
