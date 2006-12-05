@@ -1,3 +1,17 @@
+2006-12-04  Kevin McCullough  <KMcCullough@apple.com>
+
+        Reviewed by Darin.
+
+        - removed the guards for the "multiple forms submission" issue, which may not be
+          an issue anymore and the guards prevent perfectly legitimate websites from
+          working correctly.
+
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::keyEvent):
+        * config.h:
+        * loader/win/FrameLoaderWin.cpp:
+        (WebCore::FrameLoader::submitForm):
+
 2006-12-04  Darin Adler  <darin@apple.com>
 
         Reviewed by Alice.

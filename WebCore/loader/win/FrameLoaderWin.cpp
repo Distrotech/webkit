@@ -78,11 +78,13 @@ void FrameLoader::submitForm(const FrameLoadRequest& request, Event* event)
         target = newPage->mainFrame();
     }
 
+#ifdef MULTIPLE_FORM_SUBMISSION_PROTECTION
     if (m_frame->tree()->isDescendantOf(target)) {
         if (m_submittedFormURL == request.resourceRequest().url())
             return;
         m_submittedFormURL = request.resourceRequest().url();
     }
+#endif
 
     if (FrameWinClient* client = Win(target)->client())
         client->submitForm(request,
