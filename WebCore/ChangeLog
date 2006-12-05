@@ -2,6 +2,13 @@
 
         Build fix.
         
+        * platform/win/CursorWin.cpp:
+        (WebCore::copyCursor):
+
+2006-12-05  Alice Liu  <alice.liu@apple.com>
+
+        Build fix.
+        
         * bridge/win/FrameWin.h:
         added missing declarations for the functions in John's checkin, below. 
 

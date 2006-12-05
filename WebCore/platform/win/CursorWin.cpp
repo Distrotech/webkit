@@ -305,4 +305,9 @@ const Cursor& noDropCursor()
     return pointerCursor();
 }
 
+const Cursor& copyCursor()
+{
+    return pointerCursor();
+}
+
 }
