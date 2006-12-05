@@ -1,3 +1,18 @@
+2006-12-05  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Geoff Garen
+
+        Changes to keep up with Frame -> Editor changes in WebCore
+
+        * bridge/win/FrameWin.h:
+        remove ignoreSpelling() and learnSpelling()
+
+        * platform/win/TemporaryLinkStubs.cpp:
+        (WebCore::Editor::ignoreSpelling):
+        moved from FrameWin to Editor
+        (WebCore::Editor::learnSpelling):
+        ditto
+
 2006-12-05  Alice Liu  <alice.liu@apple.com>
 
         Build fix.

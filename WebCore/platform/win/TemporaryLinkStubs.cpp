@@ -139,14 +139,15 @@ void FrameView::updateBorder() { LOG_NOIMPL(); }
 Range* FrameWin::markedTextRange() const { LOG_NOIMPL(); return 0; }
 bool FrameWin::shouldChangeSelection(Selection const&,Selection const&,WebCore::EAffinity,bool) const { LOG_NOIMPL(); return true; }
 void FrameWin::respondToChangedSelection(WebCore::Selection const&,bool) { LOG_NOIMPL(); }
-void FrameWin::ignoreSpelling() { LOG_NOIMPL(); }
-void FrameWin::learnSpelling() { LOG_NOIMPL(); }
 bool FrameWin::isSelectionMisspelled() { LOG_NOIMPL(); return false; }
 bool FrameWin::isSelectionUngrammatical() { LOG_NOIMPL(); return false; }
 Vector<String> FrameWin::guessesForMisspelledSelection() { LOG_NOIMPL(); return Vector<String>(); }
 Vector<String> FrameWin::guessesForUngrammaticalSelection() { LOG_NOIMPL(); return Vector<String>(); }
 void FrameWin::markMisspellingsInAdjacentWords(WebCore::VisiblePosition const&) { LOG_NOIMPL(); }
 void FrameWin::respondToChangedContents(const Selection &endingSelection) { LOG_NOIMPL(); }
+
+void Editor::ignoreSpelling() { LOG_NOIMPL(); }
+void Editor::learnSpelling() { LOG_NOIMPL(); }
 
 bool CheckIfReloading(WebCore::DocLoader*) { LOG_NOIMPL(); return false; }
 void CheckCacheObjectStatus(DocLoader*, CachedResource*) { LOG_NOIMPL(); }
