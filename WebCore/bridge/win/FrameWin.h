@@ -111,8 +111,10 @@ public:
 
     virtual void ignoreSpelling();
     virtual void learnSpelling();
+    virtual bool isSelectionUngrammatical();
     virtual bool isSelectionMisspelled();
     virtual Vector<String> guessesForMisspelledSelection();
+    virtual Vector<String> guessesForUngrammaticalSelection();
     virtual void markMisspellingsInAdjacentWords(const VisiblePosition&);
     virtual void markMisspellings(const Selection&);
 
