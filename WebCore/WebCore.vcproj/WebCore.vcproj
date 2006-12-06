@@ -5325,14 +5325,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\editing\RebalanceWhitespaceCommand.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\editing\RebalanceWhitespaceCommand.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\editing\RemoveCSSPropertyCommand.cpp"
 				>
 			</File>

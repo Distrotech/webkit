@@ -1,3 +1,11 @@
+2006-12-06  Anders Carlsson  <acarlsson@apple.com>
+
+        Build fixes.
+        
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/win/TemporaryLinkStubs.cpp:
+        (FrameWin::scheduleClose):
+
 2006-12-05  John Sullivan  <sullivan@apple.com>
 
         Try to keep the windows build happy with Frame -> Editor changes...
