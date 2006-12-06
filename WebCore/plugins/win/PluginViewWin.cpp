@@ -378,7 +378,7 @@ void PluginViewWin::performRequest(PluginRequestWin* request)
                 return;
 
             CString cstr = resultString.utf8();
-            PluginStreamWin* stream = new PluginStreamWin(this, m_parentFrame->document()->docLoader(), request->frameLoadRequest().resourceRequest(), request->sendNotification(), request->notifyData());
+            PluginStreamWin* stream = new PluginStreamWin(this, m_parentFrame, request->frameLoadRequest().resourceRequest(), request->sendNotification(), request->notifyData());
             stream->didReceiveResponse(0, ResourceResponse(requestURL, "text/plain", cstr.length(), "", ""));
             stream->didReceiveData(0, cstr, cstr.length());
             stream->didFinishLoading(0);
@@ -447,7 +447,7 @@ NPError PluginViewWin::load(const FrameLoadRequest& frameLoadRequest, bool sendN
         PluginRequestWin* request = new PluginRequestWin(frameLoadRequest, sendNotification, notifyData);
         scheduleRequest(request);
     } else {
-        PluginStreamWin* stream = new PluginStreamWin(this, m_parentFrame->document()->docLoader(), frameLoadRequest.resourceRequest(), sendNotification, notifyData);
+        PluginStreamWin* stream = new PluginStreamWin(this, m_parentFrame, frameLoadRequest.resourceRequest(), sendNotification, notifyData);
         m_streams.add(stream);
 
         stream->start();

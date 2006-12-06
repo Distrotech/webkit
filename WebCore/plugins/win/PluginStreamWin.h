@@ -34,21 +34,21 @@
 #include "KURL.h"
 #include "npfunctions.h"
 #include "PlatformString.h"
-#include "ResourceHandleClient.h"
+#include "SubresourceLoaderClient.h"
 #include "ResourceRequest.h"
 #include "ResourceResponse.h"
 #include "StringHash.h"
 #include "Timer.h"
 
 namespace WebCore {
-    class DocLoader;
+    class Frame;
     class PluginViewWin;
 
     enum PluginStreamState { StreamBeforeStarted, StreamStarted, StreamStopped };
 
-    class PluginStreamWin : public ResourceHandleClient {
+    class PluginStreamWin : SubresourceLoaderClient {
     public:
-        PluginStreamWin(PluginViewWin*, DocLoader*, const ResourceRequest&, bool sendNotification, void* notifyData);
+        PluginStreamWin(PluginViewWin*, Frame*, const ResourceRequest&, bool sendNotification, void* notifyData);
         ~PluginStreamWin();
 
         void start();
@@ -56,11 +56,11 @@ namespace WebCore {
 
         void startStream();
         
-        // ResourceHandleClient
-        virtual void didReceiveResponse(ResourceHandle*, const ResourceResponse&);
-        virtual void didReceiveData(ResourceHandle*, const char*, int);
-        virtual void didFailLoadingWithError(ResourceHandle*, const ResourceError&);
-        virtual void didFinishLoading(ResourceHandle*);
+        // SubresourceLoaderClient
+        virtual void didReceiveResponse(SubresourceLoader*, const ResourceResponse&);
+        virtual void didReceiveData(SubresourceLoader*, const char*, int);
+        virtual void didFail(SubresourceLoader*, const ResourceError&);
+        virtual void didFinishLoading(SubresourceLoader*);
 
     private:
         void deliverData();
@@ -71,8 +71,8 @@ namespace WebCore {
         ResourceRequest m_resourceRequest;
         ResourceResponse m_resourceResponse;
 
-        DocLoader* m_docLoader;
-        RefPtr<ResourceHandle> m_resourceLoader;
+        Frame* m_frame;
+        RefPtr<SubresourceLoader> m_loader;
         PluginViewWin* m_pluginView;
         void* m_notifyData;
         bool m_sendNotification;

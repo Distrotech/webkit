@@ -30,7 +30,7 @@
 #include "PluginDebug.h"
 #include "PluginPackageWin.h"
 #include "PluginViewWin.h"
-#include "ResourceHandle.h"
+#include "SubresourceLoader.h"
 
 #if USE(CFNETWORK)
 #include <CFNetwork/CFNetwork.h>
@@ -48,9 +48,9 @@ using std::min;
 
 namespace WebCore {
 
-PluginStreamWin::PluginStreamWin(PluginViewWin* pluginView, DocLoader* docLoader, const ResourceRequest& resourceRequest, bool sendNotification, void* notifyData)
+PluginStreamWin::PluginStreamWin(PluginViewWin* pluginView, Frame* frame, const ResourceRequest& resourceRequest, bool sendNotification, void* notifyData)
     : m_resourceRequest(resourceRequest)
-    , m_docLoader(docLoader)
+    , m_frame(frame)
     , m_pluginView(pluginView)
     , m_notifyData(notifyData)
     , m_sendNotification(sendNotification)
@@ -72,7 +72,7 @@ PluginStreamWin::PluginStreamWin(PluginViewWin* pluginView, DocLoader* docLoader
 PluginStreamWin::~PluginStreamWin()
 {
     ASSERT(m_streamState != StreamStarted);
-    ASSERT(!m_resourceLoader);
+    ASSERT(!m_loader);
 
     delete m_deliveryData;
     delete m_completeDeliveryData;
@@ -82,14 +82,13 @@ PluginStreamWin::~PluginStreamWin()
 
 void PluginStreamWin::start()
 {
-    m_resourceLoader = ResourceHandle::create(m_resourceRequest, this, m_docLoader);
+    m_loader = SubresourceLoader::create(m_frame, this, m_resourceRequest);
 }
 
 void PluginStreamWin::stop()
 {
-    m_resourceLoader = 0;
     m_streamState = StreamStopped;
-    m_resourceLoader = 0;
+    m_loader = 0;
 }
 
 void PluginStreamWin::startStream()
@@ -190,7 +189,7 @@ void PluginStreamWin::deliverData()
     ASSERT(m_deliveryData);
     
     if (m_streamState == StreamStopped)
-        // FIXME: We should cancel our job in the ResourceHandle on error so we don't reach this case
+        // FIXME: We should cancel our job in the SubresourceLoader on error so we don't reach this case
         return;
 
     ASSERT(m_streamState != StreamBeforeStarted);
@@ -238,9 +237,9 @@ void PluginStreamWin::deliverData()
     } 
 }
 
-void PluginStreamWin::didReceiveResponse(ResourceHandle* resourceLoader, const ResourceResponse& response)
+void PluginStreamWin::didReceiveResponse(SubresourceLoader* loader, const ResourceResponse& response)
 {
-    ASSERT(resourceLoader == m_resourceLoader);
+    ASSERT(loader == m_loader);
     ASSERT(m_streamState == StreamBeforeStarted);
 
     m_resourceResponse = response;
@@ -248,9 +247,9 @@ void PluginStreamWin::didReceiveResponse(ResourceHandle* resourceLoader, const R
     startStream();
 }
 
-void PluginStreamWin::didReceiveData(ResourceHandle* resourceLoader, const char* data, int length)
+void PluginStreamWin::didReceiveData(SubresourceLoader* loader, const char* data, int length)
 {
-    ASSERT(resourceLoader == m_resourceLoader);
+    ASSERT(loader == m_loader);
     ASSERT(length > 0);
     ASSERT(m_streamState == StreamStarted);
     
@@ -276,26 +275,22 @@ void PluginStreamWin::didReceiveData(ResourceHandle* resourceLoader, const char*
         deliverData();
 }
 
-void PluginStreamWin::didFailLoadingWithError(ResourceHandle* handle, const ResourceError&)
+void PluginStreamWin::didFail(SubresourceLoader* loader, const ResourceError&)
 {
-    ASSERT(handle == m_resourceLoader);
+    ASSERT(loader == m_loader);
 
-    // The resource loader gets deleted after having received all data
-    if (m_resourceLoader)
-        m_resourceLoader = 0;
+    m_loader = 0;
 
     LOG_PLUGIN_NET_ERROR();
     destroyStream(NPRES_NETWORK_ERR);
 }
 
-void PluginStreamWin::didFinishLoading(ResourceHandle* handle)
+void PluginStreamWin::didFinishLoading(SubresourceLoader* loader)
 {
-    ASSERT(handle == m_resourceLoader);
+    ASSERT(loader == m_loader);
     ASSERT(m_streamState == StreamStarted);
 
-    // The resource loader gets deleted after having received all data
-    if (m_resourceLoader)
-        m_resourceLoader = 0;
+    m_loader = 0;
 
     if ((m_transferMode == NP_ASFILE || m_transferMode == NP_ASFILEONLY) && !m_path) {
         char tempPath[MAX_PATH];
