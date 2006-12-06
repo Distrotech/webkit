@@ -109,13 +109,6 @@ public:
 
     virtual String mimeTypeForFileName(const String&) const;
 
-    virtual bool isSelectionUngrammatical();
-    virtual bool isSelectionMisspelled();
-    virtual Vector<String> guessesForMisspelledSelection();
-    virtual Vector<String> guessesForUngrammaticalSelection();
-    virtual void markMisspellingsInAdjacentWords(const VisiblePosition&);
-    virtual void markMisspellings(const Selection&);
-
     virtual void setupRootForPrinting(bool onOrOff);
     virtual Vector<IntRect> computePageRects(const IntRect& printRect, float userScaleFactor);
 

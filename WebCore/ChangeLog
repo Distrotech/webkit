@@ -1,3 +1,19 @@
+2006-12-05  John Sullivan  <sullivan@apple.com>
+
+        Try to keep the windows build happy with Frame -> Editor changes...
+
+        * bridge/win/FrameWin.h:
+        removed declarations of spelling and grammar functions
+
+        * platform/win/TemporaryLinkStubs.cpp:
+        changed spelling and grammar functions from FrameWin:: to Editor::
+        (WebCore::Editor::isSelectionMisspelled):
+        (WebCore::Editor::isSelectionUngrammatical):
+        (WebCore::Editor::guessesForMisspelledSelection):
+        (WebCore::Editor::guessesForUngrammaticalSelection):
+        (WebCore::Editor::markMisspellingsInAdjacentWords):
+        (WebCore::Editor::advanceToNextMisspelling):
+
 2006-12-05  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Maciej.
