@@ -183,7 +183,6 @@ ResourceHandle::~ResourceHandle()
     CFShow(str);
     CFRelease(str);
 #endif
-    delete d;
 }
 
 CFArrayRef arrayFromFormData(const FormData& d)
