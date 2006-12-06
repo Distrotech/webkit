@@ -1,5 +1,11 @@
 2006-12-05  Steve Falkenburg  <sfalken@apple.com>
 
+        Fix the build
+
+        * platform/win/TemporaryLinkStubs.cpp:
+
+2006-12-05  Steve Falkenburg  <sfalken@apple.com>
+
         B&I build fix.
         ...and add ImageAnimationObserver.h into its new location.
 

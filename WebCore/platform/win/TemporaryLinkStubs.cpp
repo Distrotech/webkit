@@ -32,6 +32,7 @@
 #include "CookieJar.h"
 #include "DocumentLoader.h"
 #include "EditCommand.h"
+#include "Editor.h"
 #include "Element.h"
 #include "EventHandler.h"
 #include "FileChooser.h"
