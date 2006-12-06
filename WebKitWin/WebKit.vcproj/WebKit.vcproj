@@ -103,7 +103,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebKit&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)\..\WebLocalizableStrings.h&quot; &quot;$(WebKitOutputDir)\include\WebKit&quot;&#x0D;&#x0A;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(OutDir)\WebKit.resources\en.lproj&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\English.lproj\Localizable.strings&quot; &quot;$(OutDir)\WebKit.resources\en.lproj\&quot;&#x0D;&#x0A;&#x0D;&#x0A;if not &quot;$(ARCHIVE_BUILD)&quot;==&quot;&quot; exit /b&#x0D;&#x0A;if not &quot;$(BuildBot)&quot;==&quot;&quot; exit /b&#x0D;&#x0A;&#x0D;&#x0A;regsvr32 /s &quot;$(TargetPath)&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(TargetPath)&quot; &quot;$(WebKitSDKDir)\bin&quot;&#x0D;&#x0A;"
+				CommandLine="mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebKit&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)\..\WebLocalizableStrings.h&quot; &quot;$(WebKitOutputDir)\include\WebKit&quot;&#x0D;&#x0A;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(OutDir)\WebKit.resources\en.lproj&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\English.lproj\Localizable.strings&quot; &quot;$(OutDir)\WebKit.resources\en.lproj\&quot;&#x0D;&#x0A;&#x0D;&#x0A;if not &quot;$(ARCHIVE_BUILD)&quot;==&quot;&quot; exit /b&#x0D;&#x0A;if not &quot;$(BuildBot)&quot;==&quot;&quot; exit /b&#x0D;&#x0A;&#x0D;&#x0A;regsvr32 /s &quot;$(TargetPath)&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -194,7 +194,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebKit&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)\..\WebLocalizableStrings.h&quot; &quot;$(WebKitOutputDir)\include\WebKit&quot;&#x0D;&#x0A;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(OutDir)\WebKit.resources\en.lproj&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\English.lproj\Localizable.strings&quot; &quot;$(OutDir)\WebKit.resources\en.lproj\&quot;&#x0D;&#x0A;&#x0D;&#x0A;if not &quot;$(ARCHIVE_BUILD)&quot;==&quot;&quot; exit /b&#x0D;&#x0A;if not &quot;$(BuildBot)&quot;==&quot;&quot; exit /b&#x0D;&#x0A;&#x0D;&#x0A;regsvr32 /s &quot;$(TargetPath)&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(TargetPath)&quot; &quot;$(WebKitSDKDir)\bin&quot;&#x0D;&#x0A;"
+				CommandLine="mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebKit&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)\..\WebLocalizableStrings.h&quot; &quot;$(WebKitOutputDir)\include\WebKit&quot;&#x0D;&#x0A;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(OutDir)\WebKit.resources\en.lproj&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\English.lproj\Localizable.strings&quot; &quot;$(OutDir)\WebKit.resources\en.lproj\&quot;&#x0D;&#x0A;&#x0D;&#x0A;if not &quot;$(ARCHIVE_BUILD)&quot;==&quot;&quot; exit /b&#x0D;&#x0A;if not &quot;$(BuildBot)&quot;==&quot;&quot; exit /b&#x0D;&#x0A;&#x0D;&#x0A;regsvr32 /s &quot;$(TargetPath)&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>

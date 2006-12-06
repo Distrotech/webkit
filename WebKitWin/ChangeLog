@@ -1,3 +1,11 @@
+2006-12-06  Steve Falkenburg  <sfalken@apple.com>
+
+        Rubber-stamped by Adam.
+        
+        Don't copy WebKit{_debug}.dll back to AppleInternal/bin (SDK)
+
+        * WebKit.vcproj/WebKit.vcproj:
+
 2006-12-04  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Darin.
