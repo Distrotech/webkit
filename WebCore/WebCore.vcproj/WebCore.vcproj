@@ -2443,10 +2443,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\platform\ImageAnimationObserver.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\KURL.cpp"
 				>
 			</File>
