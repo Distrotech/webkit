@@ -1,6 +1,13 @@
 2006-12-05  Steve Falkenburg  <sfalken@apple.com>
 
         B&I build fix.
+        ...and add ImageAnimationObserver.h into its new location.
+
+        * WebCore.vcproj/WebCore.vcproj:
+
+2006-12-05  Steve Falkenburg  <sfalken@apple.com>
+
+        B&I build fix.
         Remove ImageAnimationObserver.h from vcproj.
 
         * WebCore.vcproj/WebCore.vcproj:

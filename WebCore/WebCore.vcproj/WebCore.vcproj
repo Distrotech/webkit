@@ -2952,6 +2952,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\ImageAnimationObserver.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\ImageSource.h"
 					>
 				</File>
