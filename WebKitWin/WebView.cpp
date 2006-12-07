@@ -961,7 +961,7 @@ static ATOM registerWebViewWindowClass()
     wcex.cbWndExtra     = 4; // 4 bytes for the IWebView pointer
     wcex.hInstance      = gInstance;
     wcex.hIcon          = 0;
-    wcex.hCursor        = 0;
+    wcex.hCursor        = ::LoadCursor(0, IDC_ARROW);
     wcex.hbrBackground  = 0;
     wcex.lpszMenuName   = 0;
     wcex.lpszClassName  = kWebViewWindowClassName;
@@ -1638,8 +1638,10 @@ HRESULT STDMETHODCALLTYPE WebView::setUIDelegate(
 HRESULT STDMETHODCALLTYPE WebView::uiDelegate( 
     /* [out][retval] */ IWebUIDelegate** d)
 {
-    if (m_uiDelegate)
-        m_uiDelegate->AddRef();
+    if (!m_uiDelegate)
+        return E_FAIL;
+
+    m_uiDelegate->AddRef();
     *d = m_uiDelegate;
     return S_OK;
 }
