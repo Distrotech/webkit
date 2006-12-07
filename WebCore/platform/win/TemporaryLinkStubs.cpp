@@ -200,6 +200,8 @@ KURL FrameLoader::historyURL(int) { LOG_NOIMPL(); return KURL(); }
 bool FrameLoader::canGoBackOrForward(int) const { LOG_NOIMPL(); return false; }
 int FrameLoader::getHistoryLength() { LOG_NOIMPL(); return 0; }
 void FrameLoader::reload() { LOG_NOIMPL(); }
+void FrameLoader::load(const FrameLoadRequest&, bool userGesture, Event*, Element* form,
+                       const HashMap<String, String>& formValues) { LOG_NOIMPL(); }
 
 void DocumentLoader::setupForReplaceByMIMEType(String const &) { STOP_NOIMPL(); }
 void ResourceLoader::cancel() { STOP_NOIMPL(); }

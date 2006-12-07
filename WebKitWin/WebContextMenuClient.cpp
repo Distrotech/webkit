@@ -62,7 +62,7 @@ void WebContextMenuClient::addCustomContextMenuItems(ContextMenu* menu)
     menu->setPlatformDescription(newMenu);
 }
 
-void WebContextMenuClient::contextMenuItemSelected(ContextMenuItem* item)
+void WebContextMenuClient::contextMenuItemSelected(const ContextMenuItem* item)
 {
     ASSERT(item->parentMenu());
     ASSERT(item->type() == ActionType);
@@ -82,17 +82,17 @@ void WebContextMenuClient::contextMenuItemSelected(ContextMenuItem* item)
     uiDelegate->Release();
 }
 
-void WebContextMenuClient::copyLinkToClipboard(HitTestResult)
+void WebContextMenuClient::copyLinkToClipboard(const HitTestResult&)
 {
     LOG_NOIMPL();
 }
 
-void WebContextMenuClient::downloadURL(KURL)
+void WebContextMenuClient::downloadURL(const KURL&)
 {
     LOG_NOIMPL();
 }
 
-void WebContextMenuClient::copyImageToClipboard(HitTestResult)
+void WebContextMenuClient::copyImageToClipboard(const HitTestResult&)
 {
     LOG_NOIMPL();
 }

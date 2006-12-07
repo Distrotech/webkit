@@ -35,11 +35,11 @@ public:
     virtual void contextMenuDestroyed();
 
     virtual void addCustomContextMenuItems(WebCore::ContextMenu*);
-    virtual void contextMenuItemSelected(WebCore::ContextMenuItem*);
+    virtual void contextMenuItemSelected(const WebCore::ContextMenuItem*);
     
-    virtual void copyLinkToClipboard(WebCore::HitTestResult);
-    virtual void downloadURL(WebCore::KURL);
-    virtual void copyImageToClipboard(WebCore::HitTestResult);
+    virtual void copyLinkToClipboard(const WebCore::HitTestResult&);
+    virtual void downloadURL(const WebCore::KURL&);
+    virtual void copyImageToClipboard(const WebCore::HitTestResult&);
     virtual void lookUpInDictionary(WebCore::Frame*);
 
 private:
