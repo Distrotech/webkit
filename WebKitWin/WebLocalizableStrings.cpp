@@ -30,14 +30,20 @@
 
 #pragma warning(push, 0)
 #include <WebCore/PlatformString.h>
+#include <WebCore/StringHash.h>
 #pragma warning(pop)
 
 #include <WTF/Assertions.h>
+#include <WTF/HashMap.h>
 #include <CoreFoundation/CoreFoundation.h>
+
+using namespace WebCore;
 
 WebLocalizableStringsBundle WebKitLocalizableStringsBundle = { "com.apple.WebKit", 0 };
 
-CFBundleRef localizedStringsMainBundle;
+static CFBundleRef localizedStringsMainBundle;
+static HashMap<String, String> mainBundleLocStrings;
+static HashMap<String, String> frameworkLocStrings;
 
 static CFBundleRef createWebKitBundle()
 {
@@ -60,7 +66,7 @@ static CFBundleRef createWebKitBundle()
     if (wcscat_s(pathStr, MAX_PATH, L"\\WebKit.resources"))
         return 0;
 
-    WebCore::String bundlePathString(pathStr);
+    String bundlePathString(pathStr);
     CFStringRef bundlePathCFString = bundlePathString.createCFString();
     if (!bundlePathCFString)
         return 0;
@@ -84,7 +90,7 @@ void SetWebLocalizedStringMainBundle(CFBundleRef bundle)
     localizedStringsMainBundle = bundle;
 }
 
-CFStringRef WebLocalizedString(WebLocalizableStringsBundle* stringsBundle, const char* key)
+CFStringRef WebLocalizedString(WebLocalizableStringsBundle* stringsBundle, const UniChar* key)
 {
     CFBundleRef bundle;
     if (!stringsBundle) {
@@ -103,9 +109,37 @@ CFStringRef WebLocalizedString(WebLocalizableStringsBundle* stringsBundle, const
         }
     }
     static CFStringRef notFound = CFSTR("localized string not found");
-    CFStringRef keyString = CFStringCreateWithCStringNoCopy(0, key, kCFStringEncodingUTF8, kCFAllocatorNull);
+    CFStringRef keyString = CFStringCreateWithCharacters(0, key, (CFIndex)wcslen(reinterpret_cast<const wchar_t*>(key)));
     CFStringRef result = CFCopyLocalizedStringWithDefaultValue(keyString, 0, bundle, notFound, 0);
     CFRelease(keyString);
     ASSERT_WITH_MESSAGE(result != notFound, "could not find localizable string %s in bundle", key);
     return result;
+}
+
+LPCTSTR WebLocalizedLPCTSTR(WebLocalizableStringsBundle* stringsBundle, LPCTSTR key)
+{
+    if (!key)
+        return 0;
+    String keyString(key);
+    if (!stringsBundle && mainBundleLocStrings.contains(keyString))
+        return mainBundleLocStrings.get(keyString).charactersWithNullTermination();
+    if (stringsBundle && stringsBundle->bundle == WebKitLocalizableStringsBundle.bundle && frameworkLocStrings.contains(keyString))
+        return frameworkLocStrings.get(keyString).charactersWithNullTermination();
+
+    CFStringRef cfStr = WebLocalizedString(stringsBundle, reinterpret_cast<const UniChar*>(key));
+    String str(cfStr);
+    if (cfStr)
+        CFRelease(cfStr);
+    for (unsigned int i=1; i<str.length(); i++)
+        if (str[i] == '@' && str[i-1] == '%')
+            str.replace(i, 1, "s");
+
+    LPCTSTR lpszStr = str.charactersWithNullTermination();
+
+    if (!stringsBundle)
+        mainBundleLocStrings.set(keyString, str);
+    else if (stringsBundle)
+        frameworkLocStrings.set(keyString, str);
+
+    return lpszStr;
 }

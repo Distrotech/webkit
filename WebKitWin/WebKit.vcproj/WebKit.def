@@ -85,4 +85,5 @@ EXPORTS
 ;   	KJS_JSObject_JSObjectSetSlot
 ;   	KJS_JSObject_JSObjectToString
         WebLocalizedString
+        WebLocalizedLPCTSTR
         SetWebLocalizedStringMainBundle
