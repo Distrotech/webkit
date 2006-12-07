@@ -691,7 +691,7 @@ HRESULT WebFrame::loadDataSource(WebDataSource* dataSource)
 
                 if (!d->frame->document())
                     d->frame->loader()->begin(); // FIXME - the frame should do this for us
-                m_loader = ResourceHandle::create(resourceRequest, this, d->frame->document()->docLoader());
+                m_loader = ResourceHandle::create(resourceRequest, this, d->frame->document()->docLoader(), false);
                 IWebFrameLoadDelegate* frameLoadDelegate;
                 if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)) && frameLoadDelegate) {
                     frameLoadDelegate->didStartProvisionalLoadForFrame(d->webView, this);
@@ -1109,7 +1109,7 @@ void WebFrame::didReceiveResponse(ResourceHandle*, const ResourceResponse& respo
     webResponse->Release();
 }
 
-void WebFrame::didReceiveData(ResourceHandle*, const char* data, int length)
+void WebFrame::didReceiveData(ResourceHandle*, const char* data, int length, int)
 {
     // Set the encoding. This only needs to be done once, but it's harmless to do it again later.
     BSTR encoding = 0;
@@ -1157,7 +1157,7 @@ void WebFrame::didFinishLoading(ResourceHandle* handle)
         m_loader = 0;
 }
 
-void WebFrame::didFailWithError(ResourceHandle* handle, const ResourceError&)
+void WebFrame::didFail(ResourceHandle* handle, const ResourceError&)
 {
     if (m_provisionalDataSource) {
         m_provisionalDataSource->Release();

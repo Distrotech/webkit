@@ -161,9 +161,9 @@ public:
     // ResourceHandleClient
     virtual void willSendRequest(WebCore::ResourceHandle*, const WebCore::ResourceRequest&, const WebCore::ResourceResponse& redirectResponse);
     virtual void didReceiveResponse(WebCore::ResourceHandle*, const WebCore::ResourceResponse&);
-    virtual void didReceiveData(WebCore::ResourceHandle*, const char*, int);
+    virtual void didReceiveData(WebCore::ResourceHandle*, const char*, int, int);
     virtual void didFinishLoading(WebCore::ResourceHandle*);
-    virtual void didFailWithError(WebCore::ResourceHandle*, const WebCore::ResourceError&);
+    virtual void didFail(WebCore::ResourceHandle*, const WebCore::ResourceError&);
 
     // FrameWinClient
     virtual void ref();

@@ -1,3 +1,13 @@
+2006-12-06  Anders Carlsson  <acarlsson@apple.com>
+
+        Fix the build.
+
+        * WebFrame.cpp:
+        (WebFrame::loadDataSource):
+        (WebFrame::didReceiveData):
+        (WebFrame::didFail):
+        * WebFrame.h:
+
 2006-12-06  Steve Falkenburg  <sfalken@apple.com>
 
         Rubber-stamped by Adam.
