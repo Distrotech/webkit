@@ -196,7 +196,16 @@ bool FrameWin::keyEvent(const PlatformKeyboardEvent& keyEvent)
 
     result = !EventTargetNodeCast(node)->dispatchKeyEvent(keyEvent);
 
-    // FIXME: FrameMac has a keyDown/keyPress hack here which we are not copying.
+    // We want to send both a down and a press for the initial key event. (This is the behavior of other browsers)
+    // To get the rest of WebCore to do this, we send a second KeyPress with "is repeat" set to true,
+    // which causes it to send a press to the DOM.
+    // We should do this a better way.
+    if (!keyEvent.isKeyUp() && !keyEvent.isAutoRepeat()) {
+        PlatformKeyboardEvent keyPressedEvent(keyEvent);
+        keyPressedEvent.setIsAutoRepeat(true);
+        if (!EventTargetNodeCast(node)->dispatchKeyEvent(keyPressedEvent))
+            result = true;
+    }
 
     return result;
 }
