@@ -36,12 +36,14 @@ namespace WebCore {
 ContextMenuItem::ContextMenuItem(LPMENUITEMINFO item, ContextMenu* parentMenu)
     : m_parentMenu(parentMenu)
     , m_platformDescription(item)
+    , m_subMenu(0)
 {
     switch (item->fType) {
         case MFT_STRING:
-            if (item->hSubMenu)
+            if (item->hSubMenu) {
                 m_type = SubmenuType;
-            else
+                m_subMenu.set(new ContextMenu(parentMenu->hitTestResult(), item->hSubMenu));
+            } else
                 m_type = ActionType;
             break;
         case MFT_SEPARATOR:
@@ -56,6 +58,7 @@ ContextMenuItem::ContextMenuItem(LPMENUITEMINFO item, ContextMenu* parentMenu)
 ContextMenuItem::ContextMenuItem(ContextMenu* parentMenu, ContextMenu* subMenu)
     : m_parentMenu(parentMenu)
     , m_platformDescription(0)
+    , m_subMenu(subMenu)
     , m_type(SeparatorType)
 {
     m_platformDescription = (LPMENUITEMINFO)malloc(sizeof(MENUITEMINFO));
@@ -75,6 +78,7 @@ ContextMenuItem::ContextMenuItem(ContextMenu* parentMenu, ContextMenu* subMenu)
 ContextMenuItem::ContextMenuItem(ContextMenuItemType type, ContextMenuAction action, const String& title, ContextMenu* parentMenu, 
     ContextMenu* subMenu)
     : m_parentMenu(parentMenu)
+    , m_subMenu(subMenu)
     , m_type(type)
 {
     m_platformDescription = (LPMENUITEMINFO)malloc(sizeof(MENUITEMINFO));
@@ -132,7 +136,7 @@ String ContextMenuItem::title() const
 
 PlatformMenuDescription ContextMenuItem::platformSubMenu() const
 {
-    return m_platformDescription->hSubMenu;
+    return m_subMenu->platformDescription();
 }
 
 void ContextMenuItem::setAction(ContextMenuAction action)
@@ -156,7 +160,8 @@ void ContextMenuItem::setSubMenu(ContextMenu* subMenu)
 
     if (m_platformDescription->hSubMenu)
         ::DestroyMenu(m_platformDescription->hSubMenu);
-    
+
+    m_subMenu.set(subMenu);
     m_platformDescription->fMask |= MIIM_SUBMENU;
     m_platformDescription->hSubMenu = subMenu->platformDescription();
 }
