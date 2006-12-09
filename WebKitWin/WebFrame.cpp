@@ -1271,6 +1271,8 @@ void WebFrame::openURL(const String& URL, const Event* triggeringEvent, bool new
                     // Ctrl-Shift-click:  Opens a link in a new tab and selects it.
                     ui->webViewShow(d->webView);
                 }
+                newWebView->Release();
+                newWebView = 0;
             }
             ui->Release();
         }
