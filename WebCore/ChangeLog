@@ -1,5 +1,12 @@
 2006-12-08  Adam Roben  <aroben@apple.com>
 
+        Rubberstamped by Anders.
+
+        * platform/win/FontPlatformDataWin.cpp:
+        (WebCore::FontPlatformData::FontPlatformData): Fix use of min().
+
+2006-12-08  Adam Roben  <aroben@apple.com>
+
         Build fix.
 
         * WebCore.vcproj/WebCore.vcproj:

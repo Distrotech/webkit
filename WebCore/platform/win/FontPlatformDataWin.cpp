@@ -25,6 +25,8 @@
 #include "FontPlatformData.h"
 #include <ApplicationServices/ApplicationServices.h>
 
+using std::min;
+
 namespace WebCore {
 
 static const int Bold = (1 << 0);
@@ -72,7 +74,7 @@ FontPlatformData::FontPlatformData(HFONT font, int size, bool bold, bool oblique
         if (bold || oblique) {
             LOGFONT logFont;
 
-            int len = min(wcslen(faceName), LF_FACESIZE - 1);
+            int len = min((int)wcslen(faceName), LF_FACESIZE - 1);
             memcpy(logFont.lfFaceName, faceName, len * sizeof(WORD));
             logFont.lfFaceName[len] = '\0';
             logFont.lfCharSet = metrics->otmTextMetrics.tmCharSet;
