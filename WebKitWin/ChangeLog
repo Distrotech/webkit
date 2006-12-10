@@ -1,3 +1,13 @@
+2006-12-09  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Darin.
+
+        Build fix.
+
+        * WebKit.vcproj/WebKit.vcproj: Added WebCore/ForwardingHeaders to the
+        include path.
+        * WebView.cpp: Updated to reflect the newly-flattend JSCore headers.
+
 2006-12-08  Kevin McCullough  <kmccullough@apple.com>
 
         Reviewed by Adam.

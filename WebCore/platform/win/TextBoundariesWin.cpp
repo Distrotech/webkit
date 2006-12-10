@@ -26,15 +26,14 @@
 #include "config.h"
 #include "TextBoundaries.h"
 
-#include <unicode/ubrk.h>
-#include <unicode/uchar.h>
 #include "StringImpl.h"
+#include "TextBreakIterator.h"
 
 namespace WebCore {
 
 int findNextWordFromIndex(const UChar* chars, int len, int position, bool forward)
 {
-    UBreakIterator* it = getWordBreakIterator(chars, len);
+    UBreakIterator* it = wordBreakIterator(chars, len);
 
     int newPosition = position;
 
@@ -67,7 +66,7 @@ int findNextWordFromIndex(const UChar* chars, int len, int position, bool forwar
 
 void findWordBoundary(const UChar* chars, int len, int position, int* start, int* end)
 {
-    UBreakIterator* it = getWordBreakIterator(chars, len);
+    UBreakIterator* it = wordBreakIterator(chars, len);
     *end = ubrk_following(it, position);
     if (*end < 0)
         *end = ubrk_last(it);

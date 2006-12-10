@@ -60,7 +60,7 @@
 #include <WebCore/SelectionController.h>
 #include <WebCore/TypingCommand.h>
 #pragma warning(pop)
-#include <JavaScriptCore/kjs/value.h>
+#include <JavaScriptCore/value.h>
 #include <atldef.h>
 #include <tchar.h>
 #include <windowsx.h>

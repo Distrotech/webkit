@@ -43,7 +43,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(WebKitOutputDir)\include&quot;;&quot;$(WebKitSDKDir)\include&quot;;&quot;$(WebKitSDKDir)\include\icu&quot;;&quot;$(WebKitSDKDir)\include\iconv&quot;;&quot;$(WebKitSDKDir)\include\sqlite&quot;;&quot;$(ProjectDir)..\&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore&quot;;&quot;$(ProjectDir)..\css&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\css&quot;;&quot;$(ProjectDir)..\editing&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\editing&quot;;&quot;$(ProjectDir)..\rendering&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\rendering&quot;;&quot;$(ProjectDir)..\bindings\js&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bindings\js&quot;;&quot;$(ProjectDir)..\dom&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\dom&quot;;&quot;$(ProjectDir)..\html&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\html&quot;;&quot;$(ProjectDir)..\bridge&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge&quot;;&quot;$(ProjectDir)..\bridge\win&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge\win&quot;;&quot;$(ProjectDir)..\loader&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\loader&quot;;&quot;$(ProjectDir)..\loader\icon&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\loader\icon&quot;;&quot;$(ProjectDir)..\page&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\page&quot;;&quot;$(ProjectDir)..\platform&quot;;&quot;$(ProjectDir)..\platform\network&quot;;&quot;$(ProjectDir)..\platform\network\win&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cf&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\network&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\network\cf&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\network\win&quot;;&quot;$(ProjectDir)..\platform\graphics&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics&quot;;&quot;$(ProjectDir)..\platform\graphics\cairo&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\cairo&quot;;&quot;$(ProjectDir)..\platform\graphics\cg&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\cg&quot;;&quot;$(ProjectDir)..\platform\graphics\win&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\win&quot;;&quot;$(ProjectDir)..\platform\image-decoders&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders&quot;;&quot;$(ProjectDir)..\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)..\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)..\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)..\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)..\platform\image-decoders\png&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\png&quot;;&quot;$(ProjectDir)..\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)..\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)..\xml&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\xml&quot;;&quot;$(WebKitOutputDir)\include\JavaScriptCore\bindings&quot;;&quot;$(WebKitSDKDir)\include\JavaScriptCore\bindings&quot;;&quot;$(WebKitOutputDir)\include\JavaScriptCore&quot;;&quot;$(WebKitSDKDir)\include\JavaScriptCore&quot;;&quot;$(WebKitOutputDir)\include\JavaScriptCore\JavaScriptCore&quot;;&quot;$(WebKitSDKDir)\include\JavaScriptCore\JavaScriptCore&quot;;&quot;$(WebKitOutputDir)\include\JavaScriptCore\os-win32&quot;;&quot;$(WebKitSDKDir)\include\JavaScriptCore\os-win32&quot;;&quot;$(ProjectDir)..\ForwardingHeaders&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ForwardingHeaders&quot;;&quot;$(WebKitOutputDir)\obj\WebCore\DerivedSources&quot;;&quot;$(WebKitOutputDir)\include\JavaScriptCore\kjs&quot;;&quot;$(WebKitSDKDir)\include\JavaScriptCore\kjs&quot;;&quot;$(ProjectDir)..\platform\win&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\win&quot;;&quot;$(ProjectDir)..\plugins\win&quot;;&quot;$(ProjectDir)..\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)..\platform\cairo\cairo\src&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cairo\cairo\src&quot;;&quot;$(WebKitSDKDir)\Include\CoreFoundation\OSXCompatibilityHeaders&quot;;&quot;$(WebKitSDKDir)\Include\CoreFoundation\OSXCompatibilityHeaders\GNUCompatibility&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\svg&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\svg\cg&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\svg\filters&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\kcanvas&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\kcanvas\device&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\kcanvas\device\quartz&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\css&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\events&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\misc&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\svg&quot;"
+				AdditionalIncludeDirectories="&quot;$(WebKitOutputDir)\include&quot;;&quot;$(WebKitSDKDir)\include&quot;;&quot;$(WebKitSDKDir)\include\icu&quot;;&quot;$(WebKitSDKDir)\include\iconv&quot;;&quot;$(WebKitSDKDir)\include\sqlite&quot;;&quot;$(ProjectDir)..\&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore&quot;;&quot;$(ProjectDir)..\css&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\css&quot;;&quot;$(ProjectDir)..\editing&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\editing&quot;;&quot;$(ProjectDir)..\rendering&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\rendering&quot;;&quot;$(ProjectDir)..\bindings\js&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bindings\js&quot;;&quot;$(ProjectDir)..\dom&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\dom&quot;;&quot;$(ProjectDir)..\html&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\html&quot;;&quot;$(ProjectDir)..\bridge&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge&quot;;&quot;$(ProjectDir)..\bridge\win&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge\win&quot;;&quot;$(ProjectDir)..\loader&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\loader&quot;;&quot;$(ProjectDir)..\loader\icon&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\loader\icon&quot;;&quot;$(ProjectDir)..\page&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\page&quot;;&quot;$(ProjectDir)..\platform&quot;;&quot;$(ProjectDir)..\platform\network&quot;;&quot;$(ProjectDir)..\platform\network\win&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cf&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\network&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\network\cf&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\network\win&quot;;&quot;$(ProjectDir)..\platform\graphics&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics&quot;;&quot;$(ProjectDir)..\platform\graphics\cairo&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\cairo&quot;;&quot;$(ProjectDir)..\platform\graphics\cg&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\cg&quot;;&quot;$(ProjectDir)..\platform\graphics\win&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\win&quot;;&quot;$(ProjectDir)..\platform\image-decoders&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders&quot;;&quot;$(ProjectDir)..\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)..\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)..\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)..\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)..\platform\image-decoders\png&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\png&quot;;&quot;$(ProjectDir)..\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)..\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)..\xml&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\xml&quot;;&quot;$(WebKitOutputDir)\include\JavaScriptCore&quot;;&quot;$(WebKitSDKDir)\include\JavaScriptCore&quot;;&quot;$(ProjectDir)..\ForwardingHeaders&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ForwardingHeaders&quot;;&quot;$(WebKitOutputDir)\obj\WebCore\DerivedSources&quot;;&quot;$(ProjectDir)..\platform\win&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\win&quot;;&quot;$(ProjectDir)..\plugins\win&quot;;&quot;$(ProjectDir)..\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)..\platform\cairo\cairo\src&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cairo\cairo\src&quot;;&quot;$(WebKitSDKDir)\Include\CoreFoundation\OSXCompatibilityHeaders&quot;;&quot;$(WebKitSDKDir)\Include\CoreFoundation\OSXCompatibilityHeaders\GNUCompatibility&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\svg&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\svg\cg&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\svg\filters&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\kcanvas&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\kcanvas\device&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\kcanvas\device\quartz&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\css&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\events&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\misc&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\svg&quot;"
 				PreprocessorDefinitions="WIN32;__WIN32__;_SCL_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_DEPRECATE;XSLT_SUPPORT;XPATH_SUPPORT;SVG_SUPPORT;WEBCORE_CONTEXT_MENUS"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
@@ -83,7 +83,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\&quot;&#x0D;&#x0A;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\config.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitOutputDir)\obj\WebCore\DerivedSources\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\loader\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\loader\icon\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\html\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\css\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cf\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y &quot;$(ProjectDir)..\platform\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\network\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\platform\network\cf\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\network\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y &quot;$(ProjectDir)..\platform\network\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cairo\cairo\src\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y &quot;$(ProjectDir)..\bridge\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\page\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\rendering\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\editing\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\dom\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\xml\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\plugins\win\npfunctions.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\css\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\events\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\misc\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\scripts\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\svg\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;"
+				CommandLine="mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\ForwardingHeaders&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\ForwardingHeaders\kjs&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\ForwardingHeaders\pcre&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\ForwardingHeaders\wtf&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\ForwardingHeaders\wtf\unicode&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\ForwardingHeaders\wtf\unicode\icu&quot;&#x0D;&#x0A;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\config.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitOutputDir)\obj\WebCore\DerivedSources\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\loader\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\loader\icon\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\html\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\css\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cf\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y &quot;$(ProjectDir)..\platform\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\network\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\platform\network\cf\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\network\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y &quot;$(ProjectDir)..\platform\network\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cairo\cairo\src\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y &quot;$(ProjectDir)..\bridge\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\page\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\rendering\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\editing\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\dom\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\xml\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\plugins\win\npfunctions.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\css\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\events\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\misc\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\scripts\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\svg\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\ForwardingHeaders\kjs\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\ForwardingHeaders\kjs&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\ForwardingHeaders\pcre\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\ForwardingHeaders\pcre&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\ForwardingHeaders\wtf&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\unicode\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\ForwardingHeaders\wtf\unicode&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\unicode\icu\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\ForwardingHeaders\wtf\unicode\icu&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -114,8 +114,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(WebKitOutputDir)\include&quot;;&quot;$(WebKitSDKDir)\include&quot;;&quot;$(WebKitSDKDir)\include\icu&quot;;&quot;$(WebKitSDKDir)\include\iconv&quot;;&quot;$(WebKitSDKDir)\include\sqlite&quot;;&quot;$(ProjectDir)..\&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore&quot;;&quot;$(ProjectDir)..\css&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\css&quot;;&quot;$(ProjectDir)..\editing&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\editing&quot;;&quot;$(ProjectDir)..\rendering&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\rendering&quot;;&quot;$(ProjectDir)..\bindings\js&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bindings\js&quot;;&quot;$(ProjectDir)..\dom&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\dom&quot;;&quot;$(ProjectDir)..\html&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\html&quot;;&quot;$(ProjectDir)..\bridge&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge&quot;;&quot;$(ProjectDir)..\bridge\win&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge\win&quot;;&quot;$(ProjectDir)..\loader&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\loader&quot;;&quot;$(ProjectDir)..\loader\icon&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\loader\icon&quot;;&quot;$(ProjectDir)..\page&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\page&quot;;&quot;$(ProjectDir)..\platform&quot;;&quot;$(ProjectDir)..\platform\network&quot;;&quot;$(ProjectDir)..\platform\network\win&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cf&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\network&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\network\cf&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\network\win&quot;;&quot;$(ProjectDir)..\platform\graphics&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics&quot;;&quot;$(ProjectDir)..\platform\graphics\cairo&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\cairo&quot;;&quot;$(ProjectDir)..\platform\graphics\cg&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\cg&quot;;&quot;$(ProjectDir)..\platform\graphics\win&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\win&quot;;&quot;$(ProjectDir)..\platform\image-decoders&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders&quot;;&quot;$(ProjectDir)..\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)..\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)..\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)..\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)..\platform\image-decoders\png&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\png&quot;;&quot;$(ProjectDir)..\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)..\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)..\xml&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\xml&quot;;&quot;$(WebKitOutputDir)\include\JavaScriptCore\bindings&quot;;&quot;$(WebKitSDKDir)\include\JavaScriptCore\bindings&quot;;&quot;$(WebKitOutputDir)\include\JavaScriptCore&quot;;&quot;$(WebKitSDKDir)\include\JavaScriptCore&quot;;&quot;$(WebKitOutputDir)\include\JavaScriptCore\JavaScriptCore&quot;;&quot;$(WebKitSDKDir)\include\JavaScriptCore\JavaScriptCore&quot;;&quot;$(WebKitOutputDir)\include\JavaScriptCore\os-win32&quot;;&quot;$(WebKitSDKDir)\include\JavaScriptCore\os-win32&quot;;&quot;$(ProjectDir)..\ForwardingHeaders&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ForwardingHeaders&quot;;&quot;$(WebKitOutputDir)\obj\WebCore\DerivedSources&quot;;&quot;$(WebKitOutputDir)\include\JavaScriptCore\kjs&quot;;&quot;$(WebKitSDKDir)\include\JavaScriptCore\kjs&quot;;&quot;$(ProjectDir)..\platform\win&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\win&quot;;&quot;$(ProjectDir)..\plugins\win&quot;;&quot;$(ProjectDir)..\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)..\platform\cairo\cairo\src&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cairo\cairo\src&quot;;&quot;$(WebKitSDKDir)\Include\CoreFoundation\OSXCompatibilityHeaders&quot;;&quot;$(WebKitSDKDir)\Include\CoreFoundation\OSXCompatibilityHeaders\GNUCompatibility&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\svg&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\svg\cg&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\svg\filters&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\kcanvas&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\kcanvas\device&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\kcanvas\device\quartz&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\css&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\events&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\misc&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\svg&quot;"
-				PreprocessorDefinitions="WIN32;__WIN32__;XSLT_SUPPORT;XPATH_SUPPORT;NDEBUG;WTF_PLATFORM_CF;SVG_SUPPORT;WEBCORE_CONTEXT_MENUS"
+				AdditionalIncludeDirectories="&quot;$(WebKitOutputDir)\include&quot;;&quot;$(WebKitSDKDir)\include&quot;;&quot;$(WebKitSDKDir)\include\icu&quot;;&quot;$(WebKitSDKDir)\include\iconv&quot;;&quot;$(WebKitSDKDir)\include\sqlite&quot;;&quot;$(ProjectDir)..\&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore&quot;;&quot;$(ProjectDir)..\css&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\css&quot;;&quot;$(ProjectDir)..\editing&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\editing&quot;;&quot;$(ProjectDir)..\rendering&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\rendering&quot;;&quot;$(ProjectDir)..\bindings\js&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bindings\js&quot;;&quot;$(ProjectDir)..\dom&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\dom&quot;;&quot;$(ProjectDir)..\html&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\html&quot;;&quot;$(ProjectDir)..\bridge&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge&quot;;&quot;$(ProjectDir)..\bridge\win&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge\win&quot;;&quot;$(ProjectDir)..\loader&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\loader&quot;;&quot;$(ProjectDir)..\loader\icon&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\loader\icon&quot;;&quot;$(ProjectDir)..\page&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\page&quot;;&quot;$(ProjectDir)..\platform&quot;;&quot;$(ProjectDir)..\platform\network&quot;;&quot;$(ProjectDir)..\platform\network\win&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cf&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\network&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\network\cf&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\network\win&quot;;&quot;$(ProjectDir)..\platform\graphics&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics&quot;;&quot;$(ProjectDir)..\platform\graphics\cairo&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\cairo&quot;;&quot;$(ProjectDir)..\platform\graphics\cg&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\cg&quot;;&quot;$(ProjectDir)..\platform\graphics\win&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\win&quot;;&quot;$(ProjectDir)..\platform\image-decoders&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders&quot;;&quot;$(ProjectDir)..\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\bmp&quot;;&quot;$(ProjectDir)..\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\gif&quot;;&quot;$(ProjectDir)..\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\ico&quot;;&quot;$(ProjectDir)..\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\jpeg&quot;;&quot;$(ProjectDir)..\platform\image-decoders\png&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\png&quot;;&quot;$(ProjectDir)..\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\xbm&quot;;&quot;$(ProjectDir)..\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\image-decoders\zlib&quot;;&quot;$(ProjectDir)..\xml&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\xml&quot;;&quot;$(WebKitOutputDir)\include\JavaScriptCore&quot;;&quot;$(WebKitSDKDir)\include\JavaScriptCore&quot;;&quot;$(ProjectDir)..\ForwardingHeaders&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ForwardingHeaders&quot;;&quot;$(WebKitOutputDir)\obj\WebCore\DerivedSources&quot;;&quot;$(ProjectDir)..\platform\win&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\win&quot;;&quot;$(ProjectDir)..\plugins\win&quot;;&quot;$(ProjectDir)..\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cairo\pixman\src&quot;;&quot;$(ProjectDir)..\platform\cairo\cairo\src&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cairo\cairo\src&quot;;&quot;$(WebKitSDKDir)\Include\CoreFoundation\OSXCompatibilityHeaders&quot;;&quot;$(WebKitSDKDir)\Include\CoreFoundation\OSXCompatibilityHeaders\GNUCompatibility&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\svg&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\svg\cg&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\svg\filters&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\kcanvas&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\kcanvas\device&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\kcanvas\device\quartz&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\css&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\events&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\misc&quot;;&quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\svg&quot;"
+				PreprocessorDefinitions="WIN32;__WIN32__;XSLT_SUPPORT;XPATH_SUPPORT;NDEBUG;SVG_SUPPORT;WEBCORE_CONTEXT_MENUS"
 				ExceptionHandling="0"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="false"
@@ -152,7 +152,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\&quot;&#x0D;&#x0A;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\config.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitOutputDir)\obj\WebCore\DerivedSources\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\loader\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\loader\icon\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\html\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\css\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cf\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y &quot;$(ProjectDir)..\platform\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\network\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\platform\network\cf\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\network\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y &quot;$(ProjectDir)..\platform\network\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cairo\cairo\src\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y &quot;$(ProjectDir)..\bridge\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\page\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\rendering\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\editing\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\dom\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\xml\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\plugins\win\npfunctions.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\css\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\events\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\misc\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\scripts\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\svg\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;"
+				CommandLine="mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\ForwardingHeaders&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\ForwardingHeaders\kjs&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\ForwardingHeaders\pcre&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\ForwardingHeaders\wtf&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\ForwardingHeaders\wtf\unicode&quot;&#x0D;&#x0A;mkdir 2&gt;NUL &quot;$(WebKitOutputDir)\include\WebCore\ForwardingHeaders\wtf\unicode\icu&quot;&#x0D;&#x0A;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\config.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(WebKitOutputDir)\obj\WebCore\DerivedSources\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\loader\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\loader\icon\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\html\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\css\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cf\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\graphics\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y &quot;$(ProjectDir)..\platform\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\network\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\platform\network\cf\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\network\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y &quot;$(ProjectDir)..\platform\network\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\platform\cairo\cairo\src\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\bridge\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y &quot;$(ProjectDir)..\bridge\win\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\page\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\rendering\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\editing\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\dom\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\xml\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\plugins\win\npfunctions.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\css\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\events\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\misc\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\scripts\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)..\..\..\..\OpenSource\WebCore\ksvg2\svg\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\ForwardingHeaders\kjs\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\ForwardingHeaders\kjs&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\ForwardingHeaders\pcre\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\ForwardingHeaders\pcre&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\ForwardingHeaders\wtf&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\unicode\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\ForwardingHeaders\wtf\unicode&quot;&#x0D;&#x0A;xcopy /y /d &quot;$(ProjectDir)\..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\unicode\icu\*.h&quot; &quot;$(WebKitOutputDir)\include\WebCore\ForwardingHeaders\wtf\unicode\icu&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -2483,6 +2483,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\PlatformMenuDescription.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\PlatformMouseEvent.h"
 				>
 			</File>
@@ -2580,6 +2584,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextBoundaries.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextBreakIteratorICU.cpp"
 				>
 			</File>
 			<File
@@ -4997,6 +5005,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\dom\StyleElement.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\dom\StyleElement.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\dom\Text.cpp"
 				>
 			</File>
@@ -7341,12 +7357,164 @@
 				</File>
 			</Filter>
 		</Filter>
+		<Filter
+			Name="ForwardingHeaders"
+			>
+			<Filter
+				Name="wtf"
+				>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\AlwaysInline.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\Assertions.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\FastMalloc.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\Forward.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\GetPtr.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\HashCountedSet.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\HashMap.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\HashSet.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\HashTraits.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\MathExtras.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\Noncopyable.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\OwnArrayPtr.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\OwnPtr.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\PassRefPtr.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\Platform.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\RefPtr.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\Vector.h"
+					>
+				</File>
+				<Filter
+					Name="unicode"
+					>
+					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\unicode\Unicode.h"
+						>
+					</File>
+					<Filter
+						Name="icu"
+						>
+						<File
+							RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\unicode\icu\UnicodeIcu.h"
+							>
+						</File>
+					</Filter>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="kjs"
+				>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\kjs\collector.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\kjs\dtoa.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\kjs\identifier.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\kjs\internal.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\kjs\interpreter.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\kjs\JSLock.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\kjs\lookup.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\kjs\object.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\kjs\operations.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\kjs\property_map.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\kjs\protect.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\kjs\SavedBuiltins.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\kjs\string_object.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="pcre"
+				>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\pcre\pcre.h"
+					>
+				</File>
+			</Filter>
+		</Filter>
 		<File
 			RelativePath="..\config.h"
-			>
-		</File>
-		<File
-			RelativePath="..\..\..\..\OpenSource\WebCore\platform\PlatformMenuDescription.h"
 			>
 		</File>
 	</Files>
