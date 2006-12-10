@@ -152,7 +152,8 @@ void ContextMenu::show()
     if (!::ClientToScreen(view->containingWindow(), &point))
         return;
 
-    UINT flags = TPM_LEFTBUTTON | TPM_TOPALIGN | TPM_VERPOSANIMATION | TPM_HORIZONTAL;
+    // Surprisingly, TPM_RIGHTBUTTON means that items are selectable with either the right OR left mouse button
+    UINT flags = TPM_RIGHTBUTTON | TPM_TOPALIGN | TPM_VERPOSANIMATION | TPM_HORIZONTAL;
     if (::GetSystemMetrics(SM_MENUDROPALIGNMENT))
         flags |= TPM_RIGHTALIGN | TPM_HORNEGANIMATION;
     else
