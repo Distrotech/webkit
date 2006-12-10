@@ -1,5 +1,7 @@
 #!/usr/bin/bash
 
+NUMCPUS=`../../../Tools/Scripts/num-cpus`
+
 if [ -e "../../../../OpenSource/WebCore" ]; then
     XSRCROOT="`pwd`/../../../../OpenSource/WebCore"
 else
@@ -45,4 +47,4 @@ export ENCODINGS_FILE="${WebCore}/platform/win/win-encodings.txt";
 export ENCODINGS_PREFIX=""
 # FIXME: Should make XPath Support configurable someday on Win32.
 export FEATURE_DEFINES="XPATH_SUPPORT SVG_SUPPORT"
-make -f "$WebCore/DerivedSources.make" || exit 1
+make -f "$WebCore/DerivedSources.make" -j ${NUMCPUS} || exit 1

@@ -2,6 +2,15 @@
 
         Reviewed by Hyatt.
 
+        Use num-cpus to determine the number of jobs make should run
+        concurrently.
+
+        * WebCore.vcproj/build-generated-files.sh:
+
+2006-12-09  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Hyatt.
+
         Fix: <rdar://problem/4860184> Can't select context menu items with the
         right mouse button
 
