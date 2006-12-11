@@ -1,3 +1,13 @@
+2006-12-08  Lou Amadio  <lamadio@apple.com>
+
+        Reviewed by NOBODY (OOPS!).
+
+        * WebView.cpp:
+        (WebView::handleMouseEvent):
+                Route mouse event to the delegate
+        (WebView::initWithFrame):
+                Removed CW_USEDEFAULT on the CreateWindow - incorrect to use on a child window.
+
 2006-12-09  Adam Roben  <aroben@apple.com>
 
         Reviewed by Darin.

@@ -723,6 +723,15 @@ bool WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
         mouseEvent.setClickCount(globalClickCount);
         Widget* capturingTarget = m_page->mainFrame()->view()->capturingTarget();
         handled = capturingTarget->handleMouseMoveEvent(mouseEvent);
+
+        if (m_uiDelegate) {
+            IPropertyBag* props;
+            POINT pt = {mouseEvent.pos().x(), mouseEvent.pos().y()};
+            if (SUCCEEDED(elementAtPoint(&pt, &props))) {
+                m_uiDelegate->mouseDidMoveOverElement((IWebView*)this, props, (UINT)lParam);
+                props->Release();
+            }
+        }
     }
     setMouseActivated(false);
     return handled;
@@ -1549,7 +1558,7 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
 
     registerWebViewWindowClass();
     m_viewWindow = CreateWindowEx(0, kWebViewWindowClassName, 0, WS_CHILD | WS_CLIPCHILDREN,
-        CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, m_hostWindow, 0, gInstance, 0);
+        0, 0, 0, 0, m_hostWindow, 0, gInstance, 0);
 
     m_groupName = String(groupName, SysStringLen(groupName));
 
