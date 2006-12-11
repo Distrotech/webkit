@@ -1311,6 +1311,14 @@
 				>
 			</File>
 			<File
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSSVGNumber.cpp"
+				>
+			</File>
+			<File
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSSVGNumber.h"
+				>
+			</File>
+			<File
 				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSSVGNumberList.cpp"
 				>
 			</File>
@@ -1511,6 +1519,14 @@
 				>
 			</File>
 			<File
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSSVGPoint.cpp"
+				>
+			</File>
+			<File
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSSVGPoint.h"
+				>
+			</File>
+			<File
 				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSSVGPointList.cpp"
 				>
 			</File>
@@ -1548,6 +1564,14 @@
 			</File>
 			<File
 				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSSVGRadialGradientElement.h"
+				>
+			</File>
+			<File
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSSVGRect.cpp"
+				>
+			</File>
+			<File
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSSVGRect.h"
 				>
 			</File>
 			<File
@@ -6173,30 +6197,6 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSSVGElementWrapperFactory.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSSVGNumber.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSSVGNumber.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSSVGPoint.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSSVGPoint.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSSVGRect.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSSVGRect.h"
 					>
 				</File>
 				<File
