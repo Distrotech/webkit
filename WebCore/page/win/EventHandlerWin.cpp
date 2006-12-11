@@ -181,7 +181,7 @@ bool EventHandler::handleDrag(const MouseEventWithHitTestResults& event)
         // last time, then m_bMousePressed might still be set. So we
         // clear it now to make sure the next move after a drag
         // doesn't look like a drag.
-        m_bMousePressed = false;
+        m_mousePressed = false;
     }
     return false;
 }
