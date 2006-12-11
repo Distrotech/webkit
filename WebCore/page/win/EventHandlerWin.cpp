@@ -178,7 +178,7 @@ bool EventHandler::handleDrag(const MouseEventWithHitTestResults& event)
             
     } else {
         // If we allowed the other side of the bridge to handle a drag
-        // last time, then m_bMousePressed might still be set. So we
+        // last time, then m_mousePressed might still be set. So we
         // clear it now to make sure the next move after a drag
         // doesn't look like a drag.
         m_mousePressed = false;

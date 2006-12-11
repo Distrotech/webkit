@@ -46,8 +46,9 @@
 namespace WebCore {
     class Element;
     class Frame;
-    class Page;
+    class HTMLFrameOwnerElement;
     class IntRect;
+    class Page;
     class ResourceError;
 }
 
@@ -169,7 +170,7 @@ public:
     virtual void ref();
     virtual void deref();
 
-    virtual WebCore::Frame* createFrame(const WebCore::KURL&, const WebCore::String& name, WebCore::Element* ownerElement, const WebCore::String& referrer);
+    virtual WebCore::Frame* createFrame(const WebCore::KURL&, const WebCore::String& name, WebCore::HTMLFrameOwnerElement*, const WebCore::String& referrer);
     virtual void stopMainResourceLoad();
     virtual void openURL(const WebCore::String& URL, const WebCore::Event* triggeringEvent, bool newWindow, bool lockHistory);
     virtual void submitForm(const WebCore::FrameLoadRequest&, WebCore::Element* form, HashMap<WebCore::String, WebCore::String>& formValues);
@@ -270,7 +271,7 @@ public:
     virtual WebCore::String userAgent();
 
     // WebFrame
-    void initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, WebCore::Page* page, WebCore::Element* ownerElement);
+    void initWithWebFrameView(IWebFrameView*, IWebView*, WebCore::Page*, WebCore::HTMLFrameOwnerElement*);
     void layoutIfNeeded();
     void setNeedsLayout();
     WebCore::Frame* impl();

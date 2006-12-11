@@ -33,7 +33,6 @@
 #include "DocumentLoader.h"
 #include "EditCommand.h"
 #include "Editor.h"
-#include "Element.h"
 #include "EventHandler.h"
 #include "FileChooser.h"
 #include "Font.h"
@@ -45,6 +44,7 @@
 #include "GraphicsContext.h"
 #include "GraphicsContextPlatformPrivate.h"
 #include "History.h"
+#include "HTMLFormElement.h"
 #include "IconLoader.h"
 #include "IntPoint.h"
 #include "KURL.h"
@@ -200,7 +200,7 @@ KURL FrameLoader::historyURL(int) { LOG_NOIMPL(); return KURL(); }
 bool FrameLoader::canGoBackOrForward(int) const { LOG_NOIMPL(); return false; }
 int FrameLoader::getHistoryLength() { LOG_NOIMPL(); return 0; }
 void FrameLoader::reload() { LOG_NOIMPL(); }
-void FrameLoader::load(const FrameLoadRequest&, bool userGesture, Event*, Element* form,
+void FrameLoader::load(const FrameLoadRequest&, bool userGesture, Event*, HTMLFormElement*,
                        const HashMap<String, String>& formValues) { LOG_NOIMPL(); }
 
 void DocumentLoader::setupForReplaceByMIMEType(String const &) { STOP_NOIMPL(); }

@@ -29,7 +29,7 @@
 #include <winsock2.h>
 #include <windows.h>
 
-#include "floatrect.h"
+#include "FloatRect.h"
 #include "Document.h"
 #include "EditorClient.h"
 #include "FrameLoader.h"
@@ -53,6 +53,7 @@
 #include "npruntime_impl.h"
 #include "runtime_root.h"
 #include "GraphicsContext.h"
+
 #if PLATFORM(CG)
 #include <CoreGraphics/CoreGraphics.h>
 #endif
@@ -63,7 +64,7 @@ namespace WebCore {
 
 using namespace HTMLNames;
 
-FrameWin::FrameWin(Page* page, Element* ownerElement, FrameWinClient* frameWinClient, FrameLoaderClient* frameLoaderClient)
+FrameWin::FrameWin(Page* page, HTMLFrameOwnerElement* ownerElement, FrameWinClient* frameWinClient, FrameLoaderClient* frameLoaderClient)
     : Frame(page, ownerElement, frameLoaderClient)
     , m_client(frameWinClient)
     , m_bindingRoot(0)
@@ -397,6 +398,4 @@ HBITMAP FrameWin::imageFromSelection(bool forceWhiteText)
     return hbmp;
 }
 
-
 } // namespace WebCore
-

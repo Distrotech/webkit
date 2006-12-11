@@ -1,3 +1,20 @@
+2006-12-11  Darin Adler  <darin@apple.com>
+
+        Reviewed by Brady.
+
+        - http://bugs.webkit.org/show_bug.cgi?id=11794
+          fix lifetime problems affecting Frame's ownerElement pointer
+
+        * WebCore.vcproj/WebCore.vcproj: Update for added files.
+
+        * bridge/win/FrameWin.h:
+        * bridge/win/FrameWin.cpp: (WebCore::FrameWin::FrameWin):
+        * loader/win/FrameLoaderWin.cpp: (WebCore::FrameLoader::createFrame):
+        Changed to use HTMLFrameOwnerElement.
+
+        * platform/win/TemporaryLinkStubs.cpp: (FrameLoader::load):
+        Changed to use HTMLFormElement.
+
 2006-12-11  Beth Dakin  <bdakin@apple.com>
 
         Reviewed by Adam.

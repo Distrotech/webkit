@@ -147,7 +147,7 @@ Widget* FrameLoader::createPlugin(Element* element, const KURL& url,
         createPluginView(Win(m_frame), element, url, paramNames, paramValues, mimeType);
 }
 
-Frame* FrameLoader::createFrame(const KURL& url, const String& name, Element* ownerElement, const String& referrer)
+Frame* FrameLoader::createFrame(const KURL& url, const String& name, HTMLFrameOwnerElement* ownerElement, const String& referrer)
 {
     Frame* result = 0;
     if (FrameWinClient* client = Win(m_frame)->client()) {

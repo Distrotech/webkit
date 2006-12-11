@@ -1,12 +1,22 @@
-2006-12-08  Lou Amadio  <lamadio@apple.com>
+2006-12-11  Darin Adler  <darin@apple.com>
 
-        Reviewed by NOBODY (OOPS!).
+        Reviewed by Brady.
+
+        - http://bugs.webkit.org/show_bug.cgi?id=11794
+          fix lifetime problems affecting Frame's ownerElement pointer
+
+        * WebFrame.h:
+        * WebFrame.cpp:
+        (WebFrame::initWithWebFrameView): Changed to use HTMLFrameOwnerElement.
+        (WebFrame::createFrame): Ditto.
+
+2006-12-08  Lou Amadio  <lamadio@apple.com>
 
         * WebView.cpp:
         (WebView::handleMouseEvent):
-                Route mouse event to the delegate
+        Route mouse event to the delegate
         (WebView::initWithFrame):
-                Removed CW_USEDEFAULT on the CreateWindow - incorrect to use on a child window.
+        Removed CW_USEDEFAULT on the CreateWindow - incorrect to use on a child window.
 
 2006-12-09  Adam Roben  <aroben@apple.com>
 

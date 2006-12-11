@@ -5753,6 +5753,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\html\HTMLFrameOwnerElement.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\html\HTMLFrameOwnerElement.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\html\HTMLFrameSetElement.cpp"
 				>
 			</File>

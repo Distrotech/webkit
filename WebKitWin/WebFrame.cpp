@@ -607,7 +607,7 @@ HRESULT STDMETHODCALLTYPE WebFrame::continueSubmit(void)
 
 // WebFrame ---------------------------------------------------------------
 
-void WebFrame::initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, Page* page, Element* ownerElement)
+void WebFrame::initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, Page* page, HTMLFrameOwnerElement* ownerElement)
 {
     if (FAILED(webView->QueryInterface(CLSID_WebView, (void**)&d->webView)))
         return;
@@ -1201,7 +1201,7 @@ void WebFrame::frameLoaderDestroyed()
     this->Release();
 }
 
-Frame* WebFrame::createFrame(const KURL& URL, const String& name, Element* ownerElement, const String& /* referrer */)
+Frame* WebFrame::createFrame(const KURL& URL, const String& name, HTMLFrameOwnerElement* ownerElement, const String& /* referrer */)
 {
     WebFrame* webFrame = WebFrame::createInstance();
     webFrame->initWithWebFrameView(0, d->webView, d->frame->page(), ownerElement);
