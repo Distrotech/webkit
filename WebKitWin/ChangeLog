@@ -1,3 +1,9 @@
+2006-12-12  Anders Carlsson  <acarlsson@apple.com>
+
+        * WebFrame.cpp:
+        (WebFrame::loadDataSource):
+        Update for changes to ResourceHandle.
+
 2006-12-11  Beth Dakin  <bdakin@apple.com>
 
         Reviewed by Adam.

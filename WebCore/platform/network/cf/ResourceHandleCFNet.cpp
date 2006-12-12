@@ -222,10 +222,10 @@ void runLoaderThread(void *unused)
     CFRunLoopRun();
 }
 
-bool ResourceHandle::start(DocLoader* docLoader)
+bool ResourceHandle::start(Frame* frame)
 {
-    d->m_request.setHTTPUserAgent(docLoader->frame()->loader()->userAgent());
-    String referrer = docLoader->frame()->loader()->referrer();
+    d->m_request.setHTTPUserAgent(frame->loader()->userAgent());
+    String referrer = frame->loader()->referrer();
     if (!referrer.isEmpty() && referrer.find("file:", 0, false) != 0)
         d->m_request.setHTTPReferrer(referrer);
 

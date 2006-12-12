@@ -224,3 +224,6 @@ void FrameLoader::startLoading() { STOP_NOIMPL(); }
 String FrameLoader::referrer() const { LOG_NOIMPL(); return String(); }
 
 bool EventHandler::lastEventIsMouseUp() const { return false; }
+
+bool ResourceHandle::loadsBlocked() { return false; }
+

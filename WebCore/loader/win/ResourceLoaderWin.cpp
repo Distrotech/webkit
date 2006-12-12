@@ -31,9 +31,4 @@
 
 namespace WebCore {
 
-bool ResourceLoader::loadsBlocked()
-{
-    return false;
-}
-
 }

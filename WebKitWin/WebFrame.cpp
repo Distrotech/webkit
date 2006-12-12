@@ -691,7 +691,7 @@ HRESULT WebFrame::loadDataSource(WebDataSource* dataSource)
 
                 if (!d->frame->document())
                     d->frame->loader()->begin(); // FIXME - the frame should do this for us
-                m_loader = ResourceHandle::create(resourceRequest, this, d->frame->document()->docLoader(), false);
+                m_loader = ResourceHandle::create(resourceRequest, this, d->frame, false);
                 IWebFrameLoadDelegate* frameLoadDelegate;
                 if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)) && frameLoadDelegate) {
                     frameLoadDelegate->didStartProvisionalLoadForFrame(d->webView, this);
