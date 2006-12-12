@@ -62,37 +62,29 @@ PlatformMouseEvent::PlatformMouseEvent(HWND hWnd, UINT message, WPARAM wParam, L
 
     switch (message) {
         case WM_LBUTTONDOWN:
-            m_type = LeftMouseDown;
         case WM_LBUTTONUP:
-            m_type = LeftMouseUp;
         case WM_LBUTTONDBLCLK:
             m_button = LeftButton;
             break;
         case WM_RBUTTONDOWN:
-            m_type = RightMouseDown;
         case WM_RBUTTONUP:
-            m_type = RightMouseUp;
         case WM_RBUTTONDBLCLK:
             m_button = RightButton;
             break;
         case WM_MBUTTONDOWN:
-            m_type = MiddleMouseDown;
         case WM_MBUTTONUP:
-            m_type = MiddleMouseUp;
         case WM_MBUTTONDBLCLK:
             m_button = MiddleButton;
             break;
         case WM_MOUSEMOVE:
-            if (wParam & MK_LBUTTON) {
-                m_type = LeftMouseDragged;
+            if (wParam & MK_LBUTTON)
                 m_button = LeftButton;
-            } else if (wParam & MK_MBUTTON) {
-                m_type = MiddleMouseDragged;
+            else if (wParam & MK_MBUTTON)
                 m_button = MiddleButton;
-            } else if (wParam & MK_RBUTTON) {
-                m_type = RightMouseDragged;
+            else if (wParam & MK_RBUTTON)
                 m_button = RightButton;
-            }
+            else
+                m_button = NoButton;
             break;
         default:
             ASSERT_NOT_REACHED();

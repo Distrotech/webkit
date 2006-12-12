@@ -1444,8 +1444,8 @@ const String& WebView::userAgentForKURL(const KURL& /*url*/)
         return m_userAgentCustom;
 
     if (!m_userAgentStandard.length())
-        m_userAgentStandard = String::format("Mozilla/5.0 (Windows; U; %s; %s) AppleWebKit/%s (KHTML, like Gecko)%s%s", osVersion().latin1().data(), language().latin1().data(), webKitVersion().latin1().data(), (m_applicationName.length() ? " " : ""), m_applicationName.latin1().data());
-
+//        m_userAgentStandard = String::format("Mozilla/5.0 (Windows; U; %s; %s) AppleWebKit/%s (KHTML, like Gecko)%s%s", osVersion().latin1().data(), language().latin1().data(), webKitVersion().latin1().data(), (m_applicationName.length() ? " " : ""), m_applicationName.latin1().data());
+        m_userAgentStandard = String::format("Mozilla/5.0 (Macintosh; U; Intel Mac OS X; %s) AppleWebKit/%s (KHTML, like Gecko) Safari/521.31", language().latin1().data(), webKitVersion().latin1().data(), (m_applicationName.length() ? " " : ""), m_applicationName.latin1().data(), osVersion().latin1().data());
     return m_userAgentStandard;
 }
 
@@ -2638,28 +2638,33 @@ HRESULT STDMETHODCALLTYPE WebView::applyStyle(
 HRESULT STDMETHODCALLTYPE WebView::copy( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    //WebCore::Frame* frame = m_page->mainFrame()->editor()->copy();
     m_page->mainFrame()->editor()->copy();
-//    frame->editor()->copy();
     return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::cut( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    FrameWin* frame = static_cast<FrameWin*>(m_page->mainFrame());
-    frame->editor()->cut();
+    m_page->mainFrame()->editor()->cut();
     return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::paste( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    FrameWin* frame = static_cast<FrameWin*>(m_page->mainFrame());
-    frame->editor()->paste();
+    m_page->mainFrame()->editor()->paste();
     return S_OK;
 }
     
+HRESULT STDMETHODCALLTYPE WebView::copyURL( 
+        /* [in] */ BSTR url)
+{
+    String temp(url, SysStringLen(url));
+    m_page->mainFrame()->editor()->copyURL(KURL(temp.deprecatedString()), "");
+    return S_OK;
+}
+
+
 HRESULT STDMETHODCALLTYPE WebView::copyFont( 
         /* [in] */ IUnknown* /*sender*/)
 {

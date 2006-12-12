@@ -1,3 +1,43 @@
+2006-12-11  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by ggaren.
+
+        Fixed <rdar://problem/4854901> "Copy Link" and "Copy Image Address" context menu items don't work
+        And some cleanup of PlatformMouseEvent(Win)
+
+        * page/win/EventHandlerWin.cpp:
+        (WebCore::EventHandler::handleDrag):
+        Removed unnecessary check for mouse event type
+        
+        * platform/win/PasteboardWin.cpp:
+        
+        (WebCore::PasteboardOwnerWndProc):
+        (WebCore::createGlobalData):
+        Added more overloaded implemtations and renamed from createHandle
+        
+        (WebCore::markupToCF_HTML):
+        Changed to handle less-specific input and renamed from createCF_HTML
+        
+        (WebCore::urlToMarkup):
+        (WebCore::Pasteboard::writeURL):
+        Added these. 
+        
+        (WebCore::replaceNBSP):
+        Moved out of Pasteboard class
+        
+        (WebCore::Pasteboard::clear):
+        Renamed from clearTypes.
+        
+        (WebCore::Pasteboard::writeSelection):
+        (WebCore::Pasteboard::canSmartReplace):
+        (WebCore::Pasteboard::plainText):
+        (WebCore::Pasteboard::documentFragment):
+        Trivial cleanup of these.
+        
+        * platform/win/PlatformMouseEventWin.cpp:
+        (WebCore::PlatformMouseEvent::PlatformMouseEvent):
+        Removed anything having to do with unnecessary m_type
+
 2006-12-11  Darin Adler  <darin@apple.com>
 
         Reviewed by Brady.

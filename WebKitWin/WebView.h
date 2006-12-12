@@ -412,6 +412,9 @@ public:
     virtual HRESULT STDMETHODCALLTYPE paste( 
         /* [in] */ IUnknown *sender);
     
+    virtual HRESULT STDMETHODCALLTYPE copyURL( 
+        /* [in] */ BSTR url);
+
     virtual HRESULT STDMETHODCALLTYPE copyFont( 
         /* [in] */ IUnknown *sender);
     

@@ -969,6 +969,11 @@ interface IWebViewEditingActions : IUnknown
     HRESULT paste([in] IUnknown* sender);
 
     /*
+        - (void)copyURL:(id)sender;
+    */
+    HRESULT copyURL([in] BSTR url);
+
+    /*
         - (void)copyFont:(id)sender;
     */
     HRESULT copyFont([in] IUnknown* sender);

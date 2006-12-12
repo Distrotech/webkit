@@ -122,7 +122,7 @@ bool EventHandler::dragHysteresisExceeded(const IntPoint& dragViewportLocation) 
 
 bool EventHandler::handleDrag(const MouseEventWithHitTestResults& event)
 {
-    if (event.event().type() == LeftMouseDragged) {
+    if (event.event().button() == LeftButton) {
         // Careful that the drag starting logic stays in sync with eventMayStartDrag()
             
         if (m_mouseDownMayStartDrag && !dragState().m_dragSrc) {

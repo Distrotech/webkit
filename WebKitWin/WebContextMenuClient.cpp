@@ -82,11 +82,6 @@ void WebContextMenuClient::contextMenuItemSelected(const ContextMenuItem* item)
     uiDelegate->Release();
 }
 
-void WebContextMenuClient::copyLinkToClipboard(const HitTestResult&)
-{
-    LOG_NOIMPL();
-}
-
 void WebContextMenuClient::downloadURL(const KURL&)
 {
     LOG_NOIMPL();

@@ -1,3 +1,28 @@
+2006-12-11  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by ggaren.
+
+        Fixed <rdar://problem/4854901> "Copy Link" and "Copy Image Address" context menu items don't work
+
+        * Interfaces/IWebView.idl:
+        Added copyURL.
+        
+        * WebContextMenuClient.cpp:
+        * WebContextMenuClient.h:
+        Removed copyLinkToClipboard
+        
+        * WebView.cpp:
+        (WebView::copy):
+        (WebView::cut):
+        (WebView::paste):
+        Trivial cleanup of these
+        
+        (WebView::copyURL):
+        Added this.
+        
+        * WebView.h:
+        Added copyURL.
+
 2006-12-11  Darin Adler  <darin@apple.com>
 
         Reviewed by Brady.

@@ -32,6 +32,7 @@
 #include "Document.h"
 #include "Element.h"
 #include "Frame.h"
+#include "KURL.h"
 #include "NotImplemented.h"
 #include "Page.h"
 #include "Range.h"
@@ -40,88 +41,53 @@
 
 namespace WebCore {
 
-UINT WebArchivePboardTypeID         = ::RegisterClipboardFormat(L"Apple Web Archive pasteboard type");
-UINT WebRTFPboardTypeID             = ::RegisterClipboardFormat(L"Rich Text Format");
-UINT CF_HTML                        = ::RegisterClipboardFormat(L"HTML Format");
+static UINT HTMLClipboardFormat = 0;
+static UINT BookmarkClipboardFormat = 0;
 
-static LRESULT CALLBACK PasteboardOwnerWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-
-Pasteboard* Pasteboard::generalPasteboard() 
+static LRESULT CALLBACK PasteboardOwnerWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    static Pasteboard* pasteboard = new Pasteboard;
-    return pasteboard;
-}
+    LRESULT lresult = 0;
+    LONG_PTR longPtr = GetWindowLongPtr(hWnd, 0);
 
-Pasteboard::Pasteboard()
-{ 
-    // make a dummy HWND to be the Windows clipboard's owner
-    WNDCLASSEX wcex = {0};
-    wcex.cbSize = sizeof(WNDCLASSEX);
-    wcex.lpfnWndProc    = PasteboardOwnerWndProc;
-    wcex.hInstance      = Page::instanceHandle();
-    wcex.lpszClassName  = L"PasteboardOwnerWindowClass";
-    ::RegisterClassEx(&wcex);
-
-    m_owner = ::CreateWindow(L"PasteboardOwnerWindowClass", L"PasteboardOwnerWindow", 0, 0, 0, 0, 0,
-        HWND_MESSAGE, 0, 0, 0);
-}
-
-HashSet<int> Pasteboard::registerSelectionPasteboardTypes()
-{
-    HashSet<int> types;
-    types.add(WebArchivePboardTypeID);
-    types.add(CF_HTML);
-    types.add(WebRTFPboardTypeID);
-    types.add(CF_UNICODETEXT);
-
-    return types;
-}
-
-void Pasteboard::clearTypes()
-{
-    if (::OpenClipboard(m_owner)) {
-        ::EmptyClipboard();
-        ::CloseClipboard();
+    switch(message) {
+    case WM_RENDERFORMAT:
+        // This message comes when SetClipboardData was sent a null data handle 
+        // and now it's come time to put the data on the clipboard.
+        break;
+    case WM_RENDERALLFORMATS:
+        // This message comes when SetClipboardData was sent a null data handle
+        // and now this application is about to quit, so it must put data on 
+        // the clipboard before it exits.
+        break;
+    case WM_DRAWCLIPBOARD:
+        break;
+    case WM_DESTROY:
+        break;
+    case WM_CHANGECBCHAIN:
+        break;
+    default:
+        lresult = DefWindowProc(hWnd, message, wParam, lParam);
+        break;
     }
+    return lresult;
 }
 
-void Pasteboard::writeSelection(PassRefPtr<Range> selectedRange, bool canSmartCopyOrDelete, Frame* frame)
+static HGLOBAL createGlobalData(const KURL& url, const String& title)
 {
-    clearTypes();
-    HashSet<int> types = registerSelectionPasteboardTypes();
-    bool result = false;
-    HANDLE handle;
-    
-    // FIXME: WebArchivePboardType unsupported for now
+    String mutableURL(url.url());
+    String mutableTitle(title);
+    SIZE_T size = mutableURL.length() + mutableTitle.length() + 2;  // +1 for "\n" and +1 for null terminator
+    HGLOBAL cbData = ::GlobalAlloc(GPTR, size * sizeof(UChar));
 
-    // Put CF_HTML format on the pasteboard 
-    if (types.contains(CF_HTML)) {
-        if (::OpenClipboard(m_owner)) {
-            HGLOBAL cbData = createHandle(createCF_HTMLFromRange(selectedRange));
-            if (!::SetClipboardData(CF_HTML, cbData))
-                ::GlobalFree(cbData);
-            ::CloseClipboard();
-        }
+    if (cbData) {
+        PWSTR buffer = (PWSTR)::GlobalLock(cbData);
+        swprintf_s(buffer, size, L"%s\n%s", mutableURL.charactersWithNullTermination(), mutableTitle.charactersWithNullTermination());
+        ::GlobalUnlock(cbData);
     }
-
-    // FIXME: WebRTFPboardType unsupported for now
-    
-    // Put plain string on the pasteboard. CF_UNICODETEXT covers CF_TEXT as well
-    if (types.contains(CF_UNICODETEXT)) {
-        String str = frame->selectedText();
-        replaceNBSP(str);
-        if (::OpenClipboard(m_owner)) {
-            HGLOBAL cbData = createHandle(str);
-            if (!::SetClipboardData(CF_UNICODETEXT, cbData))
-                ::GlobalFree(cbData);
-            ::CloseClipboard();
-        }
-    }
-    
-    // not going to support WebSmartPastePboardType like we do on the Mac, or at least we appear to but not really
+    return cbData;
 }
 
-HGLOBAL Pasteboard::createHandle(String str)
+static HGLOBAL createGlobalData(String str)
 {   
     SIZE_T size = (str.length() + 1) * sizeof(UChar);
     HGLOBAL cbData = ::GlobalAlloc(GPTR, size);
@@ -133,7 +99,7 @@ HGLOBAL Pasteboard::createHandle(String str)
     return cbData;
 }
 
-HGLOBAL Pasteboard::createHandle(CString str)
+static HGLOBAL createGlobalData(CString str)
 {
     SIZE_T size = (str.length() + 1) * sizeof(char);
     HGLOBAL cbData = ::GlobalAlloc(GPTR, size);
@@ -145,24 +111,23 @@ HGLOBAL Pasteboard::createHandle(CString str)
     return cbData;
 }
 
- 
 // Documentation for the CF_HTML format is available at http://msdn.microsoft.com/workshop/networking/clipboard/htmlclipboard.asp
-DeprecatedCString Pasteboard::createCF_HTMLFromRange(PassRefPtr<Range> selectedRange)
+static DeprecatedCString markupToCF_HTML(const String& markup, const String& srcURL)
 {
-    String markup = selectedRange->toHTML();
     if (!markup.length())
         return DeprecatedCString();
+
     DeprecatedCString cf_html        ("Version:0.9");
     DeprecatedCString startHTML      ("\nStartHTML:");
     DeprecatedCString endHTML        ("\nEndHTML:");
     DeprecatedCString startFragment  ("\nStartFragment:");
     DeprecatedCString endFragment    ("\nEndFragment:");
     DeprecatedCString sourceURL      ("\nSourceURL:");
-    ExceptionCode ec = 0;
-    DeprecatedCString URL = selectedRange->startContainer(ec)->document()->URL().utf8();
-    bool shouldFillSourceURL = (URL != "about:blank");
+
+    bool shouldFillSourceURL = !srcURL.isEmpty() && (srcURL != "about:blank");
     if (shouldFillSourceURL)
-        sourceURL.append(URL);
+        sourceURL.append(srcURL.utf8());
+
     DeprecatedCString startMarkup    ("\n<HTML>\n<BODY>\n<!--StartFragment-->\n");
     DeprecatedCString endMarkup      ("\n<!--EndFragment-->\n</BODY>\n</HTML>");
 
@@ -194,14 +159,120 @@ DeprecatedCString Pasteboard::createCF_HTMLFromRange(PassRefPtr<Range> selectedR
     return cf_html;
 }
 
-void Pasteboard::replaceNBSP(String& str)
+static String urlToMarkup(const KURL& url, const String& title)
+{
+    String markup("<a href=\"");
+    markup.append(url.url());
+    markup.append("\">");
+    markup.append(title);
+    markup.append("</a>");
+    return markup;
+}
+
+static void replaceNBSP(String& str)
 {
     const unsigned short NonBreakingSpaceCharacter = 0xA0;
     str.replace(NonBreakingSpaceCharacter, " ");
 }
 
+Pasteboard* Pasteboard::generalPasteboard() 
+{
+    static Pasteboard* pasteboard = new Pasteboard;
+    return pasteboard;
+}
+
+Pasteboard::Pasteboard()
+{ 
+    // make a dummy HWND to be the Windows clipboard's owner
+    WNDCLASSEX wcex = {0};
+    wcex.cbSize = sizeof(WNDCLASSEX);
+    wcex.lpfnWndProc    = PasteboardOwnerWndProc;
+    wcex.hInstance      = Page::instanceHandle();
+    wcex.lpszClassName  = L"PasteboardOwnerWindowClass";
+    ::RegisterClassEx(&wcex);
+
+    m_owner = ::CreateWindow(L"PasteboardOwnerWindowClass", L"PasteboardOwnerWindow", 0, 0, 0, 0, 0,
+        HWND_MESSAGE, 0, 0, 0);
+
+    HTMLClipboardFormat = ::RegisterClipboardFormat(L"HTML Format");
+    BookmarkClipboardFormat = ::RegisterClipboardFormat(L"UniformResourceLocatorW");
+}
+
+void Pasteboard::clear()
+{
+    if (::OpenClipboard(m_owner)) {
+        ::EmptyClipboard();
+        ::CloseClipboard();
+    }
+}
+
+void Pasteboard::writeSelection(Range* selectedRange, bool canSmartCopyOrDelete, Frame* frame)
+{
+    clear();
+    
+    // Put CF_HTML format on the pasteboard 
+    if (::OpenClipboard(m_owner)) {
+        ExceptionCode ec = 0;
+        HGLOBAL cbData = createGlobalData(markupToCF_HTML(selectedRange->toHTML(), selectedRange->startContainer(ec)->document()->URL()));
+        if (!::SetClipboardData(HTMLClipboardFormat, cbData))
+            ::GlobalFree(cbData);
+        ::CloseClipboard();
+    }
+    
+    // Put plain string on the pasteboard. CF_UNICODETEXT covers CF_TEXT as well
+    String str = frame->selectedText();
+    replaceNBSP(str);
+    if (::OpenClipboard(m_owner)) {
+        HGLOBAL cbData = createGlobalData(str);
+        if (!::SetClipboardData(CF_UNICODETEXT, cbData))
+            ::GlobalFree(cbData);
+        ::CloseClipboard();
+    }
+}
+
+void Pasteboard::writeURL(const KURL& url, const String& titleStr, Frame* frame)
+{
+    ASSERT(!url.isEmpty());
+
+    clear();
+
+    String title(titleStr);
+    if (title.isEmpty()) {
+        title = url.lastPathComponent();
+        if (title.isEmpty())
+            title = url.host();
+    }
+
+    // write to clipboard in format com.apple.safari.bookmarkdata to be able to paste into the bookmarks view with appropriate title
+    if (::OpenClipboard(m_owner)) {
+        HGLOBAL cbData = createGlobalData(url, title);
+        if (!::SetClipboardData(BookmarkClipboardFormat, cbData))
+            ::GlobalFree(cbData);
+        ::CloseClipboard();
+    }
+
+    // write to clipboard in format CF_HTML to be able to paste into contenteditable areas as a link
+    if (::OpenClipboard(m_owner)) {
+        HGLOBAL cbData = createGlobalData(markupToCF_HTML(urlToMarkup(url, title), ""));
+        if (!::SetClipboardData(HTMLClipboardFormat, cbData))
+            ::GlobalFree(cbData);
+        ::CloseClipboard();
+    }
+
+    // bare-bones CF_UNICODETEXT support
+    if (::OpenClipboard(m_owner)) {
+        HGLOBAL cbData = createGlobalData(url.url());
+        if (!::SetClipboardData(CF_UNICODETEXT, cbData))
+            ::GlobalFree(cbData);
+        ::CloseClipboard();
+    }
+}
+
 bool Pasteboard::canSmartReplace()
-{ LOG_NOIMPL(); return false; }
+{ 
+    // WebSmartPastePboardType is unavailable
+    return false; 
+}
 
 String Pasteboard::plainText(Frame* frame)
 {
@@ -229,22 +300,16 @@ String Pasteboard::plainText(Frame* frame)
             ::CloseClipboard();
     }
 
-    // FIXME: WebRTFPboardType unsupported for now 
-
     return String();
 }
 
 PassRefPtr<DocumentFragment> Pasteboard::documentFragment(Frame* frame, PassRefPtr<Range> context, bool allowPlainText, bool& chosePlainText)
 {
     chosePlainText = false;
-
-    // FIXME: Unsupported at this time
-    //if (::IsClipboardFormatAvailable(WebArchivePboardTypeID))
-    //if (::IsClipboardFormatAvailable(CF_HDROP)) // is this the proper analog for NSFilenamesPboardType?
     
-    if (::IsClipboardFormatAvailable(CF_HTML) && ::OpenClipboard(m_owner)) {
+    if (::IsClipboardFormatAvailable(HTMLClipboardFormat) && ::OpenClipboard(m_owner)) {
         // get data off of clipboard
-        HANDLE cbData = ::GetClipboardData(CF_HTML);
+        HANDLE cbData = ::GetClipboardData(HTMLClipboardFormat);
         if (cbData) {
             SIZE_T dataSize = ::GlobalSize(cbData);
             String cf_html((char*)::GlobalLock(cbData), dataSize);
@@ -271,23 +336,7 @@ PassRefPtr<DocumentFragment> Pasteboard::documentFragment(Frame* frame, PassRefP
         } else 
             ::CloseClipboard();
     }
-    
-    // FIXME: Unsupported at this time
-    //if (::IsClipboardFormatAvailable(WebRTFPboardType))
-    
-    // FIXME: Unsupported at this time
-    if (::IsClipboardFormatAvailable(CF_TIFF)) {
-        //ExceptionCode ec;
-        //RefPtr<Element> image = frame->document()->createElement("img", ec);
-        //HANDLE cbDataHandle = ::GetClipboardData(CF_TIFF);
-        //image->setAttribute("src", ???, ec);
-        //RefPtr<DocumentFragment> fragment = frame->document()->createDocumentFragment();
-        //if (fragment) {
-        //    fragment->appendChild(image, ec);
-        //    return fragment.release();
-        //}
-    }
- 
+     
     if (allowPlainText && ::IsClipboardFormatAvailable(CF_UNICODETEXT)) {
         chosePlainText = true;
         if (::OpenClipboard(m_owner)) {
@@ -323,34 +372,6 @@ PassRefPtr<DocumentFragment> Pasteboard::documentFragment(Frame* frame, PassRefP
     }
     
     return 0;
-}
-
-static LRESULT CALLBACK PasteboardOwnerWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    LRESULT lresult = 0;
-    LONG_PTR longPtr = GetWindowLongPtr(hWnd, 0);
-
-    switch(message) {
-    case WM_RENDERFORMAT:
-        // This message comes when SetClipboardData was sent a null data handle 
-        // and now it's come time to put the data on the clipboard.
-        break;
-    case WM_RENDERALLFORMATS:
-        // This message comes when SetClipboardData was sent a null data handle
-        // and now this application is about to quit, so it must put data on 
-        // the clipboard before it exits.
-        break;
-    case WM_DRAWCLIPBOARD:
-        break;
-    case WM_DESTROY:
-        break;
-    case WM_CHANGECBCHAIN:
-        break;
-    default:
-        lresult = DefWindowProc(hWnd, message, wParam, lParam);
-        break;
-    }
-    return lresult;
 }
 
 } // namespace WebCore

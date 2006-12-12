@@ -37,7 +37,6 @@ public:
     virtual void addCustomContextMenuItems(WebCore::ContextMenu*);
     virtual void contextMenuItemSelected(const WebCore::ContextMenuItem*);
     
-    virtual void copyLinkToClipboard(const WebCore::HitTestResult&);
     virtual void downloadURL(const WebCore::KURL&);
     virtual void copyImageToClipboard(const WebCore::HitTestResult&);
     virtual void lookUpInDictionary(WebCore::Frame*);
