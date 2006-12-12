@@ -1,3 +1,10 @@
+2006-12-11  Steve Falkenburg  <sfalken@apple.com>
+
+        B&I build fix.
+        Remove platform/UChar.h from our vcproj, since it doesn't exist anymore.
+
+        * WebCore.vcproj/WebCore.vcproj:
+
 2006-12-11  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by ggaren.
