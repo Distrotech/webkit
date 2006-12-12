@@ -1,3 +1,9 @@
+2006-12-13  Darin Adler  <darin@apple.com>
+
+        - fix build
+
+        * WebCore.vcproj/WebCore.vcproj: Added missing files, removed obsolete files.
+
 2006-12-11  Adam Roben  <aroben@apple.com>
 
         Build fix.

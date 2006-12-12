@@ -6216,6 +6216,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSSVGMatrixCustom.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSTreeWalkerCustom.cpp"
 					>
 				</File>
@@ -6861,14 +6865,6 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGMaskElement.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGMatrix.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGMatrix.h"
 					>
 				</File>
 				<File
