@@ -2611,6 +2611,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextBreakIterator.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextBreakIteratorICU.cpp"
 				>
 			</File>
