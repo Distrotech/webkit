@@ -130,10 +130,20 @@ bool WebEditorClient::isContinuousSpellCheckingEnabled()
     return false;
 }
 
+void WebEditorClient::toggleContinuousSpellChecking()
+{
+    LOG_NOIMPL();
+}
+
 bool WebEditorClient::isGrammarCheckingEnabled()
 {
     LOG_NOIMPL();
     return false;
+}
+
+void WebEditorClient::toggleGrammarChecking()
+{
+    LOG_NOIMPL();
 }
 
 int WebEditorClient::spellCheckerDocumentTag()

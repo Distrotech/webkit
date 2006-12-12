@@ -40,6 +40,8 @@ public:
     virtual void downloadURL(const WebCore::KURL&);
     virtual void copyImageToClipboard(const WebCore::HitTestResult&);
     virtual void lookUpInDictionary(WebCore::Frame*);
+    virtual void speak(const WebCore::String&);
+    virtual void stopSpeaking();
 
 private:
     WebView* m_webView;

@@ -1,3 +1,22 @@
+2006-12-11  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by Adam.
+
+        Boomer WebKit support for editing sub-menu actions for WebCore
+        context menus.
+
+        * Interfaces/IWebUIDelegate.idl: Re-named some of the spelling
+        sub-menu tags.
+        * WebContextMenuClient.cpp: New functions for the speech sub-menu.
+        (WebContextMenuClient::speak):
+        (WebContextMenuClient::stopSpeaking):
+        * WebContextMenuClient.h:
+        * WebEditorClient.cpp: New functions to toggle spelling/grammar
+        checking.
+        (WebEditorClient::toggleContinuousSpellChecking):
+        (WebEditorClient::toggleGrammarChecking):
+        * WebEditorClient.h:
+
 2006-12-11  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by ggaren.

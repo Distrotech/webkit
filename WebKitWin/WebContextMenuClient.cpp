@@ -96,3 +96,13 @@ void WebContextMenuClient::lookUpInDictionary(Frame*)
 {
     LOG_NOIMPL();
 }
+
+void WebContextMenuClient::speak(const String&)
+{
+    LOG_NOIMPL();
+}
+
+void WebContextMenuClient::stopSpeaking()
+{
+    LOG_NOIMPL();
+}

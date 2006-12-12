@@ -51,7 +51,9 @@ public:
     virtual void pageDestroyed();
 
     virtual bool isContinuousSpellCheckingEnabled();
+    virtual void toggleGrammarChecking();
     virtual bool isGrammarCheckingEnabled();
+    virtual void toggleContinuousSpellChecking();
     virtual int spellCheckerDocumentTag();
 
     virtual bool selectWordBeforeMenuEvent();
