@@ -1,3 +1,11 @@
+2006-12-12  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam.
+
+        B&I build fix
+
+        * WebCore.vcproj/build-generated-files.sh:
+
 2006-12-12  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by Geoff.

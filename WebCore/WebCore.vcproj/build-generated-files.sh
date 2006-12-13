@@ -33,10 +33,10 @@ export SDKROOT
 
 export BUILT_PRODUCTS_DIR="$XDSTROOT/obj/WebCore"
 
-if [ -e "$XDSTROOT/include/JavaScriptCore/kjs/create_hash_table" ]; then
-    export CREATE_HASH_TABLE="$XDSTROOT/include/JavaScriptCore/kjs/create_hash_table"
+if [ -e "$XDSTROOT/include/JavaScriptCore/create_hash_table" ]; then
+    export CREATE_HASH_TABLE="$XDSTROOT/include/JavaScriptCore/create_hash_table"
 else
-    export CREATE_HASH_TABLE="$SDKROOT/include/JavaScriptCore/kjs/create_hash_table"
+    export CREATE_HASH_TABLE="$SDKROOT/include/JavaScriptCore/create_hash_table"
 fi
 
 mkdir -p "${BUILT_PRODUCTS_DIR}/DerivedSources"
