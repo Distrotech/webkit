@@ -7416,6 +7416,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\HashTable.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\HashTraits.h"
 					>
 				</File>
@@ -7445,6 +7449,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\RefPtr.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\StringExtras.h"
 					>
 				</File>
 				<File
@@ -7521,6 +7529,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\kjs\string_object.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\kjs\value.h"
 					>
 				</File>
 			</Filter>
