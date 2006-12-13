@@ -1,3 +1,16 @@
+2006-12-13  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Darin Adler, Dave Hyatt.
+        
+        Fixed <rdar://problem/4840261> Frame::setIsActive not called when frames 
+        are focused/unfocused
+        
+        Updated WebKit to use new FocusController tracking of the focused frame.
+        
+        * WebView.cpp:
+        (WebViewWndProc): Fixed a minor bug where we wouldn't fire the blur event
+        when changing focus to the location bar.
+
 2006-12-12  Anders Carlsson  <acarlsson@apple.com>
 
         * WebFrame.cpp:

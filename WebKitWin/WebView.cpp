@@ -45,6 +45,7 @@
 #include <WebCore/Document.h>
 #include <WebCore/Editor.h>
 #include <WebCore/EventHandler.h>
+#include <WebCore/FocusController.h>
 #include <WebCore/FrameLoader.h>
 #include <WebCore/FrameTree.h>
 #include <WebCore/FrameView.h>
@@ -450,7 +451,7 @@ HRESULT STDMETHODCALLTYPE WebView::startPrintJob(
     if (!printDC)
         return E_POINTER;
 
-    FrameWin* frame = static_cast<FrameWin*>(focusedTargetFrame());
+    FrameWin* frame = static_cast<FrameWin*>(m_page->focusController()->focusedOrMainFrame());
     if (!frame || !frame->document() || frame->document()->printing())
         return E_FAIL;
 
@@ -468,7 +469,7 @@ HRESULT STDMETHODCALLTYPE WebView::startPrintJob(
 HRESULT STDMETHODCALLTYPE WebView::endPrintJob( 
     /* [in] */ HDC /*printDC*/)
 {
-    FrameWin* frame = static_cast<FrameWin*>(focusedTargetFrame());
+    FrameWin* frame = static_cast<FrameWin*>(m_page->focusController()->focusedOrMainFrame());
     if (!frame || !frame->document() || !frame->document()->printing())
         return E_FAIL;
 
@@ -484,7 +485,7 @@ HRESULT STDMETHODCALLTYPE WebView::getPrintedPageCount(
     if (!printDC)
         return E_POINTER;
 
-    FrameWin* frame = static_cast<FrameWin*>(focusedTargetFrame());
+    FrameWin* frame = static_cast<FrameWin*>(m_page->focusController()->focusedOrMainFrame());
     if (!frame || !frame->document())
         return E_FAIL;
 
@@ -512,7 +513,7 @@ HRESULT STDMETHODCALLTYPE WebView::printPage(
     HDC bitmapDC = 0;
     HBITMAP bitmap = 0;
 
-    FrameWin* frame = static_cast<FrameWin*>(focusedTargetFrame());
+    FrameWin* frame = static_cast<FrameWin*>(m_page->focusController()->focusedOrMainFrame());
     if (!frame || !frame->document())
         return E_FAIL;
 
@@ -745,7 +746,7 @@ bool WebView::mouseWheel(WPARAM wParam, LPARAM lParam)
 
 bool WebView::execCommand(WPARAM wParam, LPARAM /*lParam*/)
 {
-    Frame* frame = focusedTargetFrame();
+    Frame* frame = m_page->focusController()->focusedOrMainFrame();
     bool handled = false;
     switch (LOWORD(wParam)) {
     case ForwardDelete:
@@ -766,21 +767,10 @@ bool WebView::execCommand(WPARAM wParam, LPARAM /*lParam*/)
     return handled;
 }
 
-FrameView* WebView::focusedTarget()
-{
-    // FIXME: I'm not sure this cast is valid if you have a focused plug-in.
-    return static_cast<FrameView*>(m_page->mainFrame()->view()->focusedTarget());
-}
-
-Frame* WebView::focusedTargetFrame()
-{
-    return focusedTarget()->frame();
-}
-
 bool WebView::keyUp(WPARAM wParam, LPARAM lParam)
 {
     PlatformKeyboardEvent keyEvent(m_viewWindow, wParam, lParam);
-    FrameWin* frame = static_cast<FrameWin*>(focusedTargetFrame());
+    FrameWin* frame = static_cast<FrameWin*>(m_page->focusController()->focusedOrMainFrame());
 
     return frame->keyEvent(keyEvent);
 }
@@ -881,7 +871,7 @@ bool WebView::handleEditingKeyboardEvent(FrameWin* frame, const PlatformKeyboard
 bool WebView::keyDown(WPARAM wParam, LPARAM lParam)
 {
     PlatformKeyboardEvent keyEvent(m_viewWindow, wParam, lParam);
-    FrameWin* frame = static_cast<FrameWin*>(focusedTargetFrame());
+    FrameWin* frame = static_cast<FrameWin*>(m_page->focusController()->focusedOrMainFrame());
 
     if (frame->keyEvent(keyEvent))
         return true;
@@ -934,7 +924,7 @@ bool WebView::keyDown(WPARAM wParam, LPARAM lParam)
             return true;
     }
 
-    focusedTarget()->scroll(direction, granularity);
+    m_page->focusController()->focusedOrMainFrame()->view()->scroll(direction, granularity);
 
     return true;
 }
@@ -1039,8 +1029,8 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             if (!handledByKeydown) {
                 // FIXME: We need to use WM_UNICHAR to support supplementary characters.
                 UChar c = (UChar)wParam;
-                TypingCommand::insertText(webView->focusedTargetFrame()->document(), String(&c, 1), false);
-                webView->focusedTargetFrame()->revealSelection(RenderLayer::gAlignToEdgeIfNeeded); 
+                TypingCommand::insertText(webView->page()->focusController()->focusedOrMainFrame()->document(), String(&c, 1), false);
+                webView->page()->focusController()->focusedOrMainFrame()->revealSelection(RenderLayer::gAlignToEdgeIfNeeded); 
             }
             break;
         case WM_SIZE:
@@ -1059,24 +1049,32 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                 // Null out our backing store.
                 webView->deleteBackingStore();
             break;
-        case WM_SETFOCUS:
+        case WM_SETFOCUS: {
             // It's ok to just always do setWindowHasFocus, since we won't fire the focus event on the DOM
             // window unless the value changes.  It's also ok to do setIsActive inside focus,
             // because Windows has no concept of having to update control tints (e.g., graphite vs. aqua)
             // and therefore only needs to update the selection (which is limited to the focused frame).
-            webView->focusedTargetFrame()->setIsActive(true);
-            webView->focusedTargetFrame()->setWindowHasFocus(true);
+            FocusController* focusController = webView->page()->focusController();
+            if (Frame* frame = focusController->focusedFrame()) {
+                frame->setIsActive(true);
+                frame->setWindowHasFocus(true);
+            } else
+                focusController->setFocusedFrame(webView->page()->mainFrame());
             break;
+        }
         case WM_KILLFOCUS: {
             // However here we have to be careful.  If we are losing focus because of a deactivate,
             // then we need to remember our focused target for restoration later.  
             // If we are losing focus to another part of our window, then we are no longer focused for real
             // and we need to clear out the focused target.
-            webView->focusedTargetFrame()->setIsActive(false);
-            if (GetAncestor(hWnd, GA_ROOT) == GetActiveWindow()) {
-                webView->focusedTarget()->setFocused(false);
-                webView->focusedTargetFrame()->setWindowHasFocus(false);
-            }
+            FocusController* focusController = webView->page()->focusController();
+            if (GetAncestor(hWnd, GA_ROOT) != GetFocus()) {
+                if (Frame* frame = focusController->focusedFrame()) {
+                    frame->setIsActive(false);
+                    frame->setWindowHasFocus(false);
+                }
+            } else
+                focusController->setFocusedFrame(0);
             break;
         }
         case WM_CUT:
@@ -2063,7 +2061,7 @@ HRESULT STDMETHODCALLTYPE WebView::searchFor(
     String search(str, SysStringLen(str));
 
 
-    WebCore::Frame* frame = focusedTargetFrame();
+    WebCore::Frame* frame = m_page->focusController()->focusedOrMainFrame();
     WebCore::Frame* startFrame = frame;
     do {
         *found = frame->findString(search, !!forward, !!caseFlag, false);
@@ -2152,7 +2150,7 @@ HRESULT STDMETHODCALLTYPE WebView::generateSelectionImage(BOOL forceWhiteText, H
 {
     *image = 0;
 
-    WebCore::Frame* frame = focusedTargetFrame();
+    WebCore::Frame* frame = m_page->focusController()->focusedOrMainFrame();
 
     if (frame)
         *image = Win(frame)->imageFromSelection(forceWhiteText?TRUE:FALSE);
@@ -2162,7 +2160,7 @@ HRESULT STDMETHODCALLTYPE WebView::generateSelectionImage(BOOL forceWhiteText, H
 
 HRESULT STDMETHODCALLTYPE WebView::selectionImageRect(RECT* rc)
 {
-    WebCore::Frame* frame = focusedTargetFrame();
+    WebCore::Frame* frame = m_page->focusController()->focusedOrMainFrame();
 
     if (frame) {
         IntRect ir = frame->selectionRect();

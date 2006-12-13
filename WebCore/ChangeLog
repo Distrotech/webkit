@@ -1,3 +1,25 @@
+2006-12-13  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Darin Adler, Dave Hyatt.
+        
+        Fixed <rdar://problem/4840261> Frame::setIsActive not called when frames 
+        are focused/unfocused
+        
+        Minor problems remain with focus in frames, but basic editing / cursor
+        focus works.
+        
+        I moved tracking of the focused frame from the Widget hiearchy to Page's
+        FocusController. Not all widgets are frames, so this change cleaned up a 
+        dubious static cast. Also, the DOM needs to track frame focus because (1) 
+        it needs to respond to focus changes and (2) you can focus an element / 
+        frame even before it has a renderer / widget.
+
+        * page/win/EventHandlerWin.cpp:
+        (WebCore::EventHandler::focusDocumentView): Implemented. This function is
+        poorly named, based on the Mac design.
+        (WebCore::PluginViewWin::hasFocus): Added for completeness. It's not really
+        used on Windows, though.
+
 2006-12-13  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Adam.

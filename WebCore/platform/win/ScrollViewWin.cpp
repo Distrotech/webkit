@@ -529,11 +529,6 @@ void ScrollView::removeChild(Widget* child)
         setCapturingChild(0);
         setCapturingMouse(true);
     }
-    if (child == focusedChild()) {
-        // If our child is focused and goes away, then we become the new focused element.
-        setFocusedChild(0);
-        setFocused(true);
-    }
 
     child->setParent(0);
     m_data->m_children.remove(child);

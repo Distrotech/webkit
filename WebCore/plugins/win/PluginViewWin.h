@@ -90,6 +90,7 @@ namespace WebCore {
         virtual void setFrameGeometry(const IntRect&);
         virtual void geometryChanged() const;
 
+        virtual bool hasFocus() const;
         virtual void setFocus();
         virtual void clearFocus();
 

@@ -29,11 +29,13 @@
 #include "ClipboardWin.h"
 #include "Cursor.h"
 #include "FloatPoint.h"
+#include "FocusController.h"
 #include "FrameView.h"
 #include "FrameWin.h"
 #include "HitTestRequest.h"
 #include "HitTestResult.h"
 #include "MouseEventWithHitTestResults.h"
+#include "Page.h"
 #include "PlatformScrollbar.h"
 #include "PlatformWheelEvent.h"
 #include "SelectionController.h"
@@ -200,7 +202,10 @@ bool EventHandler::shouldDragAutoNode(Node*, const IntPoint&) const
 
 void EventHandler::focusDocumentView()
 {
-    LOG_NOIMPL();
+    Page* page = m_frame->page();
+    if (!page)
+        return;
+    page->focusController()->setFocusedFrame(m_frame);
 }
 
 bool EventHandler::passWidgetMouseDownEventToWidget(const MouseEventWithHitTestResults&)

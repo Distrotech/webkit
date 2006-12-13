@@ -193,6 +193,11 @@ void PluginViewWin::geometryChanged() const
     updateHwnd();
 }
 
+bool PluginViewWin::hasFocus() const
+{
+    return m_window && m_window == GetFocus();
+}
+
 void PluginViewWin::setFocus()
 {
     if (HWND window = m_window)

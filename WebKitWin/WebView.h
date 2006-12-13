@@ -537,8 +537,6 @@ public:
     bool execCommand(WPARAM wParam, LPARAM lParam);
     bool keyDown(WPARAM, LPARAM);
     bool keyUp(WPARAM, LPARAM);
-    WebCore::FrameView* focusedTarget();
-    WebCore::Frame* focusedTargetFrame();
     HRESULT goToItem(IWebHistoryItem* item, WebFrameLoadType withLoadType);
     HRESULT updateWebCoreSettingsFromPreferences(IWebPreferences* preferences);
     WebCore::Settings* settings();
