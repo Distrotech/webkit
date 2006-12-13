@@ -26,8 +26,7 @@
 #ifndef BString_h
 #define BString_h
 
-#define NOMINMAX
-#include <windows.h>
+typedef wchar_t* BSTR;
 
 namespace WebCore {
 

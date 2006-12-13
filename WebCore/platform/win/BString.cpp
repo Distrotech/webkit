@@ -27,6 +27,7 @@
 #include "BString.h"
 
 #include "PlatformString.h"
+#include <windows.h>
 
 namespace WebCore {
 
