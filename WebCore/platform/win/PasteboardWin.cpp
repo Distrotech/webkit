@@ -326,9 +326,13 @@ PassRefPtr<DocumentFragment> Pasteboard::documentFragment(Frame* frame, PassRefP
                 srcURL = cf_html.substring(srcStart, srcEnd-srcStart).stripWhiteSpace();
             }
 
-            // obtain markup portion
+            // find the markup between "<!--StartFragment -->" and "<!--EndFragment -->", accounting for browser quirks
             unsigned markupStart = cf_html.find("<html", 0, false);
-            String markup = cf_html.substring(markupStart);
+            unsigned tagStart = cf_html.find("startfragment", markupStart, false);
+            unsigned fragmentStart = cf_html.find('>', tagStart) + 1;
+            unsigned tagEnd = cf_html.find("endfragment", fragmentStart, false);
+            unsigned fragmentEnd = cf_html.reverseFind('<', tagEnd);
+            String markup = cf_html.substring(fragmentStart, fragmentEnd - fragmentStart).stripWhiteSpace();
 
             RefPtr<DocumentFragment> fragment = createFragmentFromMarkup(frame->document(), markup, srcURL);
             if (fragment)
