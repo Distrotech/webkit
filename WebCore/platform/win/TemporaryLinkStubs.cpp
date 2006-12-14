@@ -98,12 +98,6 @@ String WebCore::searchableIndexIntroduction() { LOG_NOIMPL(); return String(); }
 int WebCore::findNextSentenceFromIndex(UChar const*,int,int,bool) { LOG_NOIMPL(); return 0; }
 void WebCore::findSentenceBoundary(UChar const*,int,int,int*,int*) { LOG_NOIMPL(); }
 
-namespace WebCore {
-
-Vector<char> ServeSynchronousRequest(Loader*,DocLoader*,const ResourceRequest&,ResourceResponse&) { STOP_NOIMPL(); return Vector<char>(); }
-
-}
-
 void FrameWin::focusWindow() { LOG_NOIMPL(); }
 void FrameWin::unfocusWindow() { LOG_NOIMPL(); }
 KJS::Bindings::Instance* FrameWin::getAppletInstanceForWidget(Widget*) { STOP_NOIMPL(); return 0; }
@@ -222,8 +216,9 @@ void FrameLoader::checkLoadCompleteForThisFrame() { LOG_NOIMPL(); }
 void FrameLoader::loadEmptyDocumentSynchronously() { LOG_NOIMPL(); }
 void FrameLoader::startLoading() { STOP_NOIMPL(); }
 String FrameLoader::referrer() const { LOG_NOIMPL(); return String(); }
+void FrameLoader::loadResourceSynchronously(const ResourceRequest&, ResourceResponse&, Vector<char>&) { }
 
 bool EventHandler::lastEventIsMouseUp() const { return false; }
 
 bool ResourceHandle::loadsBlocked() { return false; }
-
+void ResourceHandle::loadResourceSynchronously(const ResourceRequest&, ResourceResponse&, Vector<char>&, ResourceError&) { }
