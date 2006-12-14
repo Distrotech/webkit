@@ -2325,6 +2325,8 @@ static WebHTMLView *lastHitView = nil;
         NSSize newLayoutFrameSize = [[[self superview] superview] frame].size;
         if (_private->laidOutAtLeastOnce && !NSEqualSizes(_private->lastLayoutFrameSize, newLayoutFrameSize)) {
             [[self _bridge] sendResizeEvent];
+            if ([[self _bridge] needsLayout])
+                [[self _bridge] forceLayoutAdjustingViewSize:NO];
         }
         _private->laidOutAtLeastOnce = YES;
         _private->lastLayoutSize = [(NSClipView *)[self superview] documentVisibleRect].size;
