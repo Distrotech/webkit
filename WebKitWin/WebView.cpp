@@ -424,6 +424,11 @@ void WebView::paintIntoWindow(HDC bitmapDC, HDC windowDC, LPRECT dirtyRect)
            dirtyRect->left, dirtyRect->top, SRCCOPY);
 }
 
+void WebView::frameRect(RECT* rect)
+{
+    ::GetWindowRect(m_viewWindow, rect);
+}
+
 #define MAXIMUM_DPI 300
 
 static void getPrintRects(HDC printDC, IntRect& devicePrintRect, IntRect& rasterizingPrintRect)

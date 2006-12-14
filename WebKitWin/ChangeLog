@@ -1,3 +1,22 @@
+2006-12-14  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Steve.
+
+        Implemented WebChromeClient::pageRect() to return the bounds of the WebView.
+        Implemented WebFrame::parentFrame().
+        Added a temporary implementation of WebDataSource::isLoading().
+
+        * WebChromeClient.cpp:
+        (WebChromeClient::pageRect):
+        * WebDataSource.cpp:
+        (WebDataSource::isLoading):
+        * WebFrame.cpp:
+        (kit):
+        (WebFrame::parentFrame):
+        * WebView.cpp:
+        (WebView::frameRect):
+        * WebView.h:
+
 2006-12-13  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Darin Adler, Dave Hyatt.

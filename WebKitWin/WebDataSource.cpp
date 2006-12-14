@@ -259,10 +259,11 @@ HRESULT STDMETHODCALLTYPE WebDataSource::textEncodingName(
 }
 
 HRESULT STDMETHODCALLTYPE WebDataSource::isLoading( 
-    /* [retval][out] */ BOOL* /*loading*/)
+    /* [retval][out] */ BOOL* loading)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    // FIXME - the right way is to call isLoadingInAPISense on the loader <rdar://4883687>
+    *loading = m_frame ? m_frame->loading() : false;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebDataSource::pageTitle( 

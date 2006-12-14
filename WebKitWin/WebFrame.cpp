@@ -79,6 +79,19 @@ using namespace HTMLNames;
 #define FLASH_REDRAW 0
 
 //-----------------------------------------------------------------------------
+// Helpers to convert from WebCore to WebKit type
+WebFrame* kit(Frame* frame)
+{
+    if (frame) {
+        FrameWin* frameWin = Win(frame);
+        FrameWinClient* frameWinClient = frameWin->client();
+        if (frameWinClient)
+            return static_cast<WebFrame*>(frameWinClient);  // eek, is there a better way than static cast?
+    }
+    return 0;
+}
+
+//-----------------------------------------------------------------------------
 
 class FormValuesPropertyBag : public IPropertyBag, public IPropertyBag2
 {
@@ -564,10 +577,17 @@ HRESULT STDMETHODCALLTYPE WebFrame::findFrameNamed(
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::parentFrame( 
-    /* [retval][out] */ IWebFrame** /*frame*/)
+    /* [retval][out] */ IWebFrame** frame)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    HRESULT hr = S_OK;
+    *frame = 0;
+    Frame* coreFrame = impl();
+    if (coreFrame) {
+        WebFrame* webFrame = kit(coreFrame->tree()->parent());
+        if (webFrame)
+            hr = webFrame->QueryInterface(IID_IWebFrame, (void**) frame);
+    }
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::childFrames( 

@@ -76,8 +76,9 @@ FloatRect WebChromeClient::windowRect()
 
 FloatRect WebChromeClient::pageRect()
 {
-    LOG_NOIMPL();
-    return FloatRect();
+    RECT rect;
+    m_webView->frameRect(&rect);
+    return rect;
 }
 
 float WebChromeClient::scaleFactor()
