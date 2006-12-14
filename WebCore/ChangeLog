@@ -1,3 +1,13 @@
+2006-12-14  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Adele.
+
+        Build fix.
+
+        * platform/win/TemporaryLinkStubs.cpp:
+        (DocumentLoader::URL):
+        (ResourceHandle::loadResourceSynchronously):
+
 2006-12-14  Anders Carlsson  <acarlsson@apple.com>
 
         Fix the build.

@@ -207,7 +207,7 @@ void DocumentLoader::stopRecordingResponses() { STOP_NOIMPL(); }
 bool DocumentLoader::isStopping()const { STOP_NOIMPL(); return false; }
 void DocumentLoader::setPrimaryLoadComplete(bool) { STOP_NOIMPL(); }
 void DocumentLoader::finishedLoading() { STOP_NOIMPL(); }
-const KURL& DocumentLoader::URL()const { STOP_NOIMPL(); return KURL(); }
+const KURL& DocumentLoader::URL() const { STOP_NOIMPL(); KURL* url = new KURL(); return *url; } // Eww, leaky. Implement this please.
 bool DocumentLoader::isLoadingInAPISense()const { STOP_NOIMPL(); return false; }
 FrameLoader* DocumentLoader::frameLoader()const { STOP_NOIMPL(); return 0; }
 
@@ -221,4 +221,4 @@ void FrameLoader::loadResourceSynchronously(const ResourceRequest&, ResourceResp
 bool EventHandler::lastEventIsMouseUp() const { return false; }
 
 bool ResourceHandle::loadsBlocked() { return false; }
-void ResourceHandle::loadResourceSynchronously(const ResourceRequest&, ResourceResponse&, Vector<char>&, ResourceError&) { }
+void ResourceHandle::loadResourceSynchronously(const ResourceRequest&, ResourceError&, ResourceResponse&, Vector<char>&) { }
