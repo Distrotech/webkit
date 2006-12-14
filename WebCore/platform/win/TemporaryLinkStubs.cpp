@@ -189,7 +189,7 @@ void Frame::setNeedsReapplyStyles() { LOG_NOIMPL(); }
 
 PolicyCheck::PolicyCheck() { LOG_NOIMPL(); }
 void PolicyCheck::clear() { LOG_NOIMPL(); }
-void PolicyCheck::call() { LOG_NOIMPL(); }
+void PolicyCheck::call(bool) { LOG_NOIMPL(); }
 void PolicyCheck::clearRequest() { LOG_NOIMPL(); }
 void PolicyCheck::call(PolicyAction) { LOG_NOIMPL(); }
 
@@ -213,7 +213,7 @@ void DocumentLoader::stopRecordingResponses() { STOP_NOIMPL(); }
 bool DocumentLoader::isStopping()const { STOP_NOIMPL(); return false; }
 void DocumentLoader::setPrimaryLoadComplete(bool) { STOP_NOIMPL(); }
 void DocumentLoader::finishedLoading() { STOP_NOIMPL(); }
-KURL DocumentLoader::URL()const { STOP_NOIMPL(); return KURL(); }
+const KURL& DocumentLoader::URL()const { STOP_NOIMPL(); return KURL(); }
 bool DocumentLoader::isLoadingInAPISense()const { STOP_NOIMPL(); return false; }
 FrameLoader* DocumentLoader::frameLoader()const { STOP_NOIMPL(); return 0; }
 
