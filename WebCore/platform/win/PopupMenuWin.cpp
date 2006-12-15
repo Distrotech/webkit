@@ -21,17 +21,14 @@
 #include "config.h"
 #include "PopupMenu.h"
 
+#include "Document.h"
 #include "FloatRect.h"
 #include "FontData.h"
 #include "Frame.h"
 #include "FrameView.h"
 #include "GraphicsContext.h"
 #include "HTMLNames.h"
-#include "HTMLOptionElement.h"
-#include "HTMLOptGroupElement.h"
-#include "HTMLSelectElement.h"
 #include "Page.h"
-#include "RenderMenuList.h"
 #include "RenderThemeWin.h"
 #include "RenderView.h"
 #include "Screen.h"
@@ -57,8 +54,8 @@ static LPCTSTR kPopupWindowClassName = _T("PopupWindowClass");
 static ATOM registerPopup();
 static LRESULT CALLBACK PopupWndProc(HWND, UINT, WPARAM, LPARAM);
 
-PopupMenu::PopupMenu(RenderMenuList* m)
-    : m_menuList(m)
+PopupMenu::PopupMenu(PopupMenuClient* client)
+    : m_popupClient(client)
     , m_popup(0)
     , m_DC(0)
     , m_bmp(0)
@@ -90,7 +87,7 @@ void PopupMenu::show(const IntRect& r, FrameView* v, int index)
         registerPopup();
 
         DWORD exStyle = 0;
-        if (menuList()->style()->direction() == LTR)
+        if (client()->clientStyle()->direction() == LTR)
             exStyle |= WS_EX_RIGHTSCROLLBAR | WS_EX_LTRREADING;
         else
             exStyle |= WS_EX_LEFTSCROLLBAR | WS_EX_RTLREADING;
@@ -150,12 +147,9 @@ void PopupMenu::calculatePositionAndSize(const IntRect& r, FrameView* v)
 
     rScreenCoords.setLocation(location);
 
-    HTMLSelectElement *select = static_cast<HTMLSelectElement*>(menuList()->node());
-    const Vector<HTMLElement*>& items = select->listItems();
-
     // First, determine the popup's height
-    size_t itemCount = items.size();
-    m_itemHeight = menuList()->font(false).height() + optionSpacingMiddle;
+    size_t itemCount = client()->listSize();
+    m_itemHeight = client()->clientStyle()->font().height() + optionSpacingMiddle;
     int naturalHeight = m_itemHeight * itemCount;
     int popupHeight = min(maxPopupHeight, naturalHeight);
     // The popup should show an integral number of items (i.e. no partial items should be visible)
@@ -164,16 +158,11 @@ void PopupMenu::calculatePositionAndSize(const IntRect& r, FrameView* v)
     // Next determine its width
     int popupWidth = 0;
     for (int i = 0; i < itemCount; ++i) {
-        String text;
-        if (items[i]->hasTagName(optionTag))
-            text = static_cast<HTMLOptionElement*>(items[i])->optionText();
-        else if (items[i]->hasTagName(optgroupTag))
-            text = static_cast<HTMLOptGroupElement*>(items[i])->groupLabelText();
-
+        String text = client()->itemText(i);
         if (text.isEmpty())
             continue;
 
-        popupWidth = max(popupWidth, menuList()->font(false).width(TextRun(text.characters(), text.length())));
+        popupWidth = max(popupWidth, client()->clientStyle()->font().width(TextRun(text.characters(), text.length())));
     }
 
     if (naturalHeight > maxPopupHeight)
@@ -183,7 +172,7 @@ void PopupMenu::calculatePositionAndSize(const IntRect& r, FrameView* v)
     // Add padding to align the popup text with the <select> text
     // Note: We can't add paddingRight() in LTR or paddingLeft() in RTL because those values include the width
     // of the dropdown button, so we must use our own endOfLinePadding constant.
-    popupWidth += endOfLinePadding + (menuList()->style()->direction() == LTR ? menuList()->paddingLeft() : menuList()->paddingRight());
+    popupWidth += endOfLinePadding + (client()->clientStyle()->direction() == LTR ? client()->clientPaddingLeft() : client()->clientPaddingRight());
 
     // Leave room for the border
     popupWidth += 2 * popupWindowBorderWidth;
@@ -194,7 +183,7 @@ void PopupMenu::calculatePositionAndSize(const IntRect& r, FrameView* v)
 
     // LTR <select>s get a left-aligned popup, RTL <select>s get a right-aligned popup
     // This will cause the popup's text to always be aligned with the <select>'s text
-    int popupX = menuList()->style()->direction() == LTR ? rScreenCoords.x() : rScreenCoords.right() - popupWidth;
+    int popupX = client()->clientStyle()->direction() == LTR ? rScreenCoords.x() : rScreenCoords.right() - popupWidth;
 
     IntRect popupRect(popupX, rScreenCoords.bottom(), popupWidth, popupHeight);
 
@@ -203,7 +192,7 @@ void PopupMenu::calculatePositionAndSize(const IntRect& r, FrameView* v)
 
     // Check that we don't go off the screen vertically
     if (popupRect.bottom() > screen.height()) {
-        // The popup will go off the screen, so try placing it above the menulist
+        // The popup will go off the screen, so try placing it above the client
         if (rScreenCoords.y() - popupRect.height() < 0) {
             // The popup won't fit above, either, so place it whereever's bigger and resize it to fit
             if ((rScreenCoords.y() + rScreenCoords.height() / 2) < (screen.height() / 2)) {
@@ -221,10 +210,10 @@ void PopupMenu::calculatePositionAndSize(const IntRect& r, FrameView* v)
     }
 
     // Check that we don't go off the screen horizontally
-    if (menuList()->style()->direction() == LTR && popupRect.x() < screen.x()) {
+    if (client()->clientStyle()->direction() == LTR && popupRect.x() < screen.x()) {
         popupRect.setWidth(popupRect.width() - (screen.x() - popupRect.x()));
         popupRect.setX(screen.x());
-    } else if (menuList()->style()->direction() == RTL && popupRect.right() > screen.right())
+    } else if (client()->clientStyle()->direction() == RTL && popupRect.right() > screen.right())
         popupRect.setWidth(popupRect.width() - (popupRect.right() - screen.right()));
 
     m_windowRect = popupRect;
@@ -233,23 +222,18 @@ void PopupMenu::calculatePositionAndSize(const IntRect& r, FrameView* v)
 
 bool PopupMenu::setFocusedIndex(int i, bool setControlText, bool fireOnChange)
 {
-    HTMLSelectElement* select = static_cast<HTMLSelectElement*>(menuList()->node());
-    const Vector<HTMLElement*>& listItems = select->listItems();
-
-    if (i < 0 || i >= select->listItems().size() || i == focusedIndex())
+    if (i < 0 || i >= client()->listSize() || i == focusedIndex())
         return false;
 
-    HTMLElement* element = listItems[i];
-
-    if (!(element->hasTagName(optionTag) && !static_cast<HTMLOptionElement*>(element)->disabled()))
+    if (!client()->itemIsEnabled(i))
         return false;
 
     invalidateItem(focusedIndex());
     invalidateItem(i);
 
     if (setControlText)
-        menuList()->setTextFromOption(select->listToOptionIndex(i));
-    menuList()->valueChanged(i, fireOnChange);
+        client()->setTextFromItem(i);
+    client()->valueChanged(i, fireOnChange);
 
     if (!scrollToRevealSelection())
         ::UpdateWindow(m_popup);
@@ -259,24 +243,21 @@ bool PopupMenu::setFocusedIndex(int i, bool setControlText, bool fireOnChange)
 
 int PopupMenu::focusedIndex() const
 {
-    if (!menuList())
+    if (!client())
         return 0;
 
-    HTMLSelectElement* select = static_cast<HTMLSelectElement*>(menuList()->node());
-    return select->optionToListIndex(select->selectedIndex());
+    return client()->selectedIndex();
 }
 
 void PopupMenu::focusFirst()
 {
-    if (!menuList())
+    if (!client())
         return;
 
-    HTMLSelectElement* select = static_cast<HTMLSelectElement*>(menuList()->node());
-    const Vector<HTMLElement*>& listItems = select->listItems();
-    size_t size = listItems.size();
+    size_t size = client()->listSize();
 
     for (int i = 0; i < size; ++i)
-        if (listItems[i]->hasTagName(optionTag) && !listItems[i]->disabled()) {
+        if (client()->itemIsEnabled(i)) {
             setFocusedIndex(i);
             break;
         }
@@ -284,15 +265,13 @@ void PopupMenu::focusFirst()
 
 void PopupMenu::focusLast()
 {
-    if (!menuList())
+    if (!client())
         return;
 
-    HTMLSelectElement* select = static_cast<HTMLSelectElement*>(menuList()->node());
-    const Vector<HTMLElement*>& listItems = select->listItems();
-    size_t size = listItems.size();
+    size_t size = client()->listSize();
 
     for (int i = size - 1; i > 0; --i)
-        if (listItems[i]->hasTagName(optionTag) && !listItems[i]->disabled()) {
+        if (client()->itemIsEnabled(i)) {
             setFocusedIndex(i);
             break;
         }
@@ -300,17 +279,15 @@ void PopupMenu::focusLast()
 
 bool PopupMenu::down(unsigned lines)
 {
-    if (!menuList())
+    if (!client())
         return false;
 
-    HTMLSelectElement* select = static_cast<HTMLSelectElement*>(menuList()->node());
-    const Vector<HTMLElement*>& listItems = select->listItems();
-    size_t size = listItems.size();
+    size_t size = client()->listSize();
 
     int lastSelectableIndex, selectedListIndex;
-    lastSelectableIndex = selectedListIndex = select->optionToListIndex(select->selectedIndex());
+    lastSelectableIndex = selectedListIndex = client()->selectedIndex();
     for (int i = selectedListIndex + 1; i >= 0 && i < size; ++i)
-        if (listItems[i]->hasTagName(optionTag) && !listItems[i]->disabled()) {
+        if (client()->itemIsEnabled(i)) {
             lastSelectableIndex = i;
             if (i >= selectedListIndex + (int)lines)
                 break;
@@ -321,17 +298,15 @@ bool PopupMenu::down(unsigned lines)
 
 bool PopupMenu::up(unsigned lines)
 {
-    if (!menuList())
+    if (!client())
         return false;
 
-    HTMLSelectElement* select = static_cast<HTMLSelectElement*>(menuList()->node());
-    const Vector<HTMLElement*>& listItems = select->listItems();
-    size_t size = listItems.size();
+    size_t size = client()->listSize();
 
     int lastSelectableIndex, selectedListIndex;
-    lastSelectableIndex = selectedListIndex = select->optionToListIndex(select->selectedIndex());
+    lastSelectableIndex = selectedListIndex = client()->selectedIndex();
     for (int i = selectedListIndex - 1; i >= 0 && i < size; --i)
-        if (listItems[i]->hasTagName(optionTag) && !listItems[i]->disabled()) {
+        if (client()->itemIsEnabled(i)) {
             lastSelectableIndex = i;
             if (i <= selectedListIndex - (int)lines)
                 break;
@@ -476,9 +451,7 @@ void PopupMenu::paint(const IntRect& damageRect, HDC hdc)
 
     GraphicsContext context(m_DC);
 
-    HTMLSelectElement* select = static_cast<HTMLSelectElement*>(menuList()->node());
-    const Vector<HTMLElement*>& listItems = select->listItems();
-    size_t itemCount = listItems.size();
+    size_t itemCount = client()->listSize();
 
     // listRect is the damageRect translated into the coordinates of the entire menu list (which is itemCount * m_itemHeight pixels tall)
     IntRect listRect = damageRect;
@@ -487,49 +460,40 @@ void PopupMenu::paint(const IntRect& damageRect, HDC hdc)
     for (int y = listRect.y(); y < listRect.bottom(); y += m_itemHeight) {
         int index = y / m_itemHeight;
 
-        HTMLElement* element = listItems[index];
-
         Color optionBackgroundColor, optionTextColor;
-        if (element->hasTagName(optionTag) && static_cast<HTMLOptionElement*>(element)->selected()) {
+        if (client()->itemIsSelected(index)) {
             optionBackgroundColor = theme()->platformActiveSelectionBackgroundColor();
             optionTextColor = theme()->platformActiveSelectionForegroundColor();
         } else {
-            optionBackgroundColor = element->renderStyle() ? element->renderStyle()->backgroundColor() : menuList()->style()->backgroundColor();
-            optionTextColor = element->renderStyle() ? element->renderStyle()->color() : menuList()->style()->color();
+            optionBackgroundColor = client()->itemStyle(index)->backgroundColor();
+            optionTextColor = client()->itemStyle(index)->color();
         }
 
         // itemRect is in client coordinates
         IntRect itemRect(0, index * m_itemHeight - m_scrollOffset, damageRect.width(), m_itemHeight);
 
         // Draw the background for this menu item
-        if (!element->renderStyle() || element->renderStyle()->visibility() != HIDDEN) {
-            if (optionBackgroundColor.hasAlpha() && optionBackgroundColor != menuList()->style()->backgroundColor())
-                context.fillRect(itemRect, menuList()->style()->backgroundColor());
+        if (client()->itemStyle(index)->visibility() != HIDDEN) {
+            if (optionBackgroundColor.hasAlpha() && optionBackgroundColor != client()->clientStyle()->backgroundColor())
+                context.fillRect(itemRect, client()->clientStyle()->backgroundColor());
             context.fillRect(itemRect, optionBackgroundColor);
         }
 
-        if (element->hasTagName(hrTag)) {
+        if (client()->itemIsSeparator(index)) {
             IntRect separatorRect(itemRect.x() + separatorPadding, itemRect.y() + (itemRect.height() - separatorHeight) / 2, itemRect.width() - 2 * separatorPadding, separatorHeight);
             context.fillRect(separatorRect, optionTextColor);
             continue;
         }
 
-        String itemText;
-        if (element->hasTagName(optionTag))
-            itemText = static_cast<HTMLOptionElement*>(element)->optionText();
-        else if (element->hasTagName(optgroupTag))
-            itemText = static_cast<HTMLOptGroupElement*>(element)->groupLabelText();
-       
+        String itemText = client()->itemText(index);
         TextRun textRun(itemText.characters(), itemText.length());
 
-        RenderStyle* itemStyle = element->renderStyle();
-        if (!itemStyle)
-            itemStyle = menuList()->style();
+        RenderStyle* itemStyle = client()->itemStyle(index);
             
         context.setPen(optionTextColor);
         
-        Font itemFont = menuList()->style()->font();
-        if (element->hasTagName(optgroupTag)) {
+        Font itemFont = client()->clientStyle()->font();
+        if (client()->itemIsLabel(index)) {
             FontDescription d = itemFont.fontDescription();
             d.setBold(true);
             itemFont = Font(d, itemFont.letterSpacing(), itemFont.wordSpacing());
@@ -539,7 +503,7 @@ void PopupMenu::paint(const IntRect& damageRect, HDC hdc)
         
         // Draw the item text
         if (itemStyle->visibility() != HIDDEN) {
-            int textX = itemStyle->direction() == LTR ? menuList()->paddingLeft() : itemRect.right() - itemFont.width(textRun) - menuList()->paddingRight();
+            int textX = itemStyle->direction() == LTR ? client()->clientPaddingLeft() : itemRect.right() - itemFont.width(textRun) - client()->clientPaddingRight();
             int textY = itemRect.y() + itemFont.ascent() + (itemRect.height() - itemFont.height()) / 2;
             context.drawText(textRun, IntPoint(textX, textY), TextStyle(0, 0, 0, itemStyle->direction() == RTL));
         }
@@ -594,7 +558,7 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 scrollInfo.cbSize = sizeof(scrollInfo);
                 scrollInfo.fMask = SIF_PAGE | SIF_POS | SIF_RANGE;
                 scrollInfo.nMin = 0;
-                scrollInfo.nMax = static_cast<HTMLSelectElement*>(popup->menuList()->node())->listItems().size() - 1;
+                scrollInfo.nMax = popup->client()->listSize() - 1;
                 scrollInfo.nPage = pageSize;
                 scrollInfo.nPos = popup->scrollOffset() / popup->itemHeight();
 
@@ -604,16 +568,16 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             }
             break;
         case WM_ACTIVATE:
-            if (popup && popup->menuList() && wParam == WA_INACTIVE)
-                popup->menuList()->hidePopup();
+            if (popup && popup->client() && wParam == WA_INACTIVE)
+                popup->client()->hidePopup();
             break;
         case WM_KILLFOCUS:
-            if (popup && popup->menuList() && (HWND)wParam != popup->popupHandle())
+            if (popup && popup->client() && (HWND)wParam != popup->popupHandle())
                 // Focus is going elsewhere, so hide
-                popup->menuList()->hidePopup();
+                popup->client()->hidePopup();
             break;
         case WM_KEYDOWN:
-            if (popup && popup->menuList()) {
+            if (popup && popup->client()) {
                 lResult = 0;
                 switch (LOWORD(wParam)) {
                     case VK_DOWN:
@@ -649,13 +613,13 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                             popup->down(popup->clientRect().height() / popup->itemHeight());
                         break;
                     case VK_TAB:
-                        ::SendMessage(popup->menuList()->document()->view()->containingWindow(), message, wParam, lParam);
-                        popup->menuList()->hidePopup();
+                        ::SendMessage(popup->client()->clientDocument()->view()->containingWindow(), message, wParam, lParam);
+                        popup->client()->hidePopup();
                         break;
                     default:
                         if (isprint(::MapVirtualKey(LOWORD(wParam), 2)))
                             // Send the keydown to the WebView so it can be used for type-ahead find
-                            ::SendMessage(popup->menuList()->document()->view()->containingWindow(), message, wParam, lParam);
+                            ::SendMessage(popup->client()->clientDocument()->view()->containingWindow(), message, wParam, lParam);
                         else
                             lResult = 1;
                         break;
@@ -663,15 +627,15 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             }
             break;
         case WM_CHAR:
-            if (popup && popup->menuList()) {
+            if (popup && popup->client()) {
                 lResult = 0;
                 switch (wParam) {
                     case 0x0D:   // Enter/Return
-                        popup->menuList()->hidePopup();
-                        popup->menuList()->valueChanged(popup->focusedIndex());
+                        popup->client()->hidePopup();
+                        popup->client()->valueChanged(popup->focusedIndex());
                         break;
                     case 0x1B:   // Escape
-                        popup->menuList()->hidePopup();
+                        popup->client()->hidePopup();
                         break;
                     case 0x09:   // TAB
                     case 0x08:   // Backspace
@@ -696,9 +660,9 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 popup->setFocusedIndex(popup->listIndexAtPoint(MAKEPOINTS(lParam)), false);
             break;
         case WM_LBUTTONUP:
-            if (popup && popup->menuList()) {
-                popup->menuList()->hidePopup();
-                popup->menuList()->valueChanged(popup->focusedIndex());
+            if (popup && popup->client()) {
+                popup->client()->hidePopup();
+                popup->client()->valueChanged(popup->focusedIndex());
             }
             break;
         case WM_MOUSEWHEEL:

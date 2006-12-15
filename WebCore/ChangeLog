@@ -1,3 +1,22 @@
+2006-12-14  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Adam. 
+
+        Update PopupMenu code to use new PopupMenuClient instead of RenderMenuList.
+
+        * platform/win/PopupMenuWin.cpp:
+        (WebCore::PopupMenu::PopupMenu):
+        (WebCore::PopupMenu::show):
+        (WebCore::PopupMenu::calculatePositionAndSize):
+        (WebCore::PopupMenu::setFocusedIndex):
+        (WebCore::PopupMenu::focusedIndex):
+        (WebCore::PopupMenu::focusFirst):
+        (WebCore::PopupMenu::focusLast):
+        (WebCore::PopupMenu::down):
+        (WebCore::PopupMenu::up):
+        (WebCore::PopupMenu::paint):
+        (WebCore::PopupWndProc):
+
 2006-12-14  Steve Falkenburg  <sfalken@apple.com>
 
         Build fix.
