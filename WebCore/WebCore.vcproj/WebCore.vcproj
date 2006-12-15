@@ -6228,6 +6228,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSSVGPODTypeWrapper.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSTreeWalkerCustom.cpp"
 					>
 				</File>
