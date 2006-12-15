@@ -236,6 +236,7 @@ void *_NSSoftLinkingGetFrameworkFuncPtr(NSString *inUmbrellaFrameworkName,
     ASSERT(autoscrollTriggerEvent == nil);
     
     [mouseDownEvent release];
+    [keyDownEvent release];
     [draggingImageURL release];
     [pluginController release];
     [toolTip release];
@@ -3255,14 +3256,17 @@ static WebHTMLView *lastHitView = nil;
 
 - (void)keyDown:(NSEvent *)event
 {
+    BOOL eventWasSentToWebCore = (_private->keyDownEvent == event);
+
     [self retain];
 
     BOOL callSuper = NO;
 
-    _private->keyDownEvent = event;
+    [_private->keyDownEvent release];
+    _private->keyDownEvent = [event retain];
 
     WebBridge *bridge = [self _bridge];
-    if ([bridge interceptKeyEvent:event toView:self]) {
+    if (!eventWasSentToWebCore && [bridge interceptKeyEvent:event toView:self]) {
         // WebCore processed a key event, bail on any outstanding complete: UI
         [_private->compController endRevertingChange:YES moveLeft:NO];
     } else if (_private->compController && [_private->compController filterKeyDown:event]) {
@@ -3281,17 +3285,17 @@ static WebHTMLView *lastHitView = nil;
     } else {
         [NSCursor setHiddenUntilMouseMoves:YES];
     }
-
-    _private->keyDownEvent = nil;
     
     [self release];
 }
 
 - (void)keyUp:(NSEvent *)event
 {
+    BOOL eventWasSentToWebCore = (_private->keyDownEvent == event);
+
     [self retain];
     
-    if (![[self _bridge] interceptKeyEvent:event toView:self]) {
+    if (eventWasSentToWebCore || ![[self _bridge] interceptKeyEvent:event toView:self]) {
         [super keyUp:event];
     }
     
@@ -3841,18 +3845,21 @@ static WebHTMLView *lastHitView = nil;
     if ([self _handleStyleKeyEquivalent:event]) {
         return YES;
     }
-    
-    BOOL ret;
-    
+
+    BOOL eventWasSentToWebCore = (_private->keyDownEvent == event);
+    BOOL ret = NO;
+
+    [_private->keyDownEvent release];
+    _private->keyDownEvent = [event retain];
+
     [self retain];
     
     // Pass command-key combos through WebCore if there is a key binding available for
     // this event. This lets web pages have a crack at intercepting command-modified keypresses.
     // But don't do it if we have already handled the event.
-    if (event != _private->keyDownEvent
-            && [self _web_firstResponderIsSelfOrDescendantView]
-            && [[self _bridge] interceptKeyEvent:event toView:self]) {
-        
+    if (!eventWasSentToWebCore
+        && [self _web_firstResponderIsSelfOrDescendantView]
+        && [[self _bridge] interceptKeyEvent:event toView:self]) {
         ret = YES;
     }
     else
