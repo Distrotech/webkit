@@ -64,22 +64,26 @@ bool EventHandler::passMousePressEventToSubframe(MouseEventWithHitTestResults& m
 {
     if (m_frame->view()->capturingMouse())
         subframe->view()->setCapturingMouse(true);
-    return subframe->eventHandler()->handleMousePressEvent(mev.event());
+    subframe->eventHandler()->handleMousePressEvent(mev.event());
+    return true;
 }
 
 bool EventHandler::passMouseMoveEventToSubframe(MouseEventWithHitTestResults& mev, Frame* subframe)
 {
-    return subframe->view()->handleMouseMoveEvent(mev.event());
+    subframe->view()->handleMouseMoveEvent(mev.event());
+    return true;
 }
 
 bool EventHandler::passMouseReleaseEventToSubframe(MouseEventWithHitTestResults& mev, Frame* subframe)
 {
-    return subframe->view()->handleMouseReleaseEvent(mev.event());
+    subframe->view()->handleMouseReleaseEvent(mev.event());
+    return true;
 }
 
 bool EventHandler::passWheelEventToSubframe(PlatformWheelEvent& wheelEvent, Frame* subframe)
 {
-    return subframe->eventHandler()->handleWheelEvent(wheelEvent);
+    subframe->eventHandler()->handleWheelEvent(wheelEvent);
+    return true;
 }
 
 bool EventHandler::passMousePressEventToScrollbar(MouseEventWithHitTestResults& mev, PlatformScrollbar* scrollbar)
