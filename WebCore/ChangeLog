@@ -1,8 +1,21 @@
 2006-12-14  Geoffrey Garen  <ggaren@apple.com>
 
-        Reviewed by NOBODY (OOPS!).
-
-        WARNING: NO TEST CASES ADDED OR CHANGED
+        Reviewed by Brady Eidson.
+        
+        Fixed <rdar://problem/4760682> Crash clicking nav links at left loading 
+        www.tivofaq.com
+        
+        The underlying problem is that we can't resize framesets. I've filed that
+        as <rdar://problem/4885227>.
+        
+        I've fixed the proximate problem: we were interpreting a click as a frameset
+        resize, because the subframe event handler was returning false. A Subframe 
+        event handler needs to return true to indicate that the subframe has handled 
+        the event. This is how the Mac works, despite the plethora of convoluted code 
+        suggesting otherwise.
+        
+        We should really remove these meaningless return values and unify Mac and 
+        Windows event handling, but that's beyond the scope of this patch.
 
         * page/win/EventHandlerWin.cpp:
         (WebCore::EventHandler::passMousePressEventToSubframe):
