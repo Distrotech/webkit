@@ -223,6 +223,3 @@ bool EventHandler::lastEventIsMouseUp() const { return false; }
 
 bool ResourceHandle::loadsBlocked() { return false; }
 void ResourceHandle::loadResourceSynchronously(const ResourceRequest&, ResourceError&, ResourceResponse&, Vector<char>&) { }
-
-void SubresourceLoader::didCancel(const ResourceError&) { }
-
