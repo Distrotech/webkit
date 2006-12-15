@@ -1,5 +1,12 @@
 2006-12-14  Steve Falkenburg  <sfalken@apple.com>
 
+        Build fix.
+
+        * platform/win/TemporaryLinkStubs.cpp:
+        (SubresourceLoader::didCancel):
+
+2006-12-14  Steve Falkenburg  <sfalken@apple.com>
+
         B&I build fix. Added JSSVGPODTypeWrapper.h to the vcproj.
 
         * WebCore.vcproj/WebCore.vcproj:
