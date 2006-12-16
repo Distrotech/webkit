@@ -1,3 +1,8 @@
+2006-12-15  Anders Carlson  <acarlsson@apple.com>
+
+        * platform/win/TemporaryLinkStubs.cpp:
+        Remove DocumentLoader::isStopped because it's now in DocumentLoader.cpp.
+        
 2006-12-15  Geoffrey Garen  <ggaren@apple.com>
 
         I'm in ur prjct, fxng ur build.

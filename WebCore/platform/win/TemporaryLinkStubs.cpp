@@ -205,7 +205,6 @@ void DocumentLoader::setLoading(bool) { STOP_NOIMPL(); }
 void DocumentLoader::updateLoading() { STOP_NOIMPL(); }
 void DocumentLoader::setFrame(Frame*) { STOP_NOIMPL(); }
 void DocumentLoader::stopRecordingResponses() { STOP_NOIMPL(); }
-bool DocumentLoader::isStopping()const { STOP_NOIMPL(); return false; }
 void DocumentLoader::setPrimaryLoadComplete(bool) { STOP_NOIMPL(); }
 void DocumentLoader::finishedLoading() { STOP_NOIMPL(); }
 const KURL& DocumentLoader::URL() const { STOP_NOIMPL(); KURL* url = new KURL(); return *url; } // Eww, leaky. Implement this please.
