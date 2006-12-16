@@ -1,3 +1,26 @@
+2006-12-16  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by Adam.
+
+        In the process of making enabled/disabled items and item state work
+        on Boomer, we discovered that we could not get our sub-menus to
+        work with using notify by position. This switches the Boomer
+        context menus over to use the more conventional menu command
+        notification of id. This sends a WM_COMMAND message instead of a
+        WM_MENUCOMMAND message. We can differentiate the context menu
+        WM_COMMAND messaged from the other ones because the high word of
+        wParam is 0 when the message comes from a menu. So now WM_COMMAND
+        handles the context menu actions.
+
+        * Interfaces/IWebUIDelegate.idl: If-def not needed here.
+        * WebContextMenuClient.cpp:
+        (WebContextMenuClient::contextMenuItemSelected): Now takes a
+        pointer to the parentMenu.
+        * WebContextMenuClient.h:
+        * WebView.cpp:
+        (WebView::performContextMenuAction):
+        (WebViewWndProc):
+
 2006-12-14  Adele Peterson  <adele@apple.com>
 
         Reviewed by Adam.

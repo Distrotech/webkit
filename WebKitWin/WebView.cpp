@@ -659,18 +659,13 @@ bool WebView::handleContextMenuEvent(WPARAM wParam, LPARAM lParam)
     return m_page->mainFrame()->eventHandler()->sendContextMenuEvent(mouseEvent);
 }
 
-void WebView::performContextMenuAction(WPARAM wParam, LPARAM lParam)
+void WebView::performContextMenuAction(WPARAM wParam, LPARAM /*lParam*/)
 {
     ContextMenu* menu = m_page->contextMenuController()->contextMenu();
     ASSERT(menu);
-
-    if ((HMENU)lParam != menu->platformDescription()) {
-        ASSERT(0);
-        return;
-    }
-
-    ContextMenuItem item = menu->at((int)wParam);
-    m_page->contextMenuController()->contextMenuItemSelected(&item);
+    ContextMenuItem* item = menu->itemWithAction((ContextMenuAction)wParam);
+    m_page->contextMenuController()->contextMenuItemSelected(item);
+    delete item;
 }
 
 bool WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
@@ -1095,13 +1090,13 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             webView->delete_(0);
             break;
         case WM_COMMAND:
-            handled = webView->execCommand(wParam, lParam);
+            if (HIWORD(wParam))
+                handled = webView->execCommand(wParam, lParam);
+            else // If the high word of wParam is 0, the message is from a menu
+                webView->performContextMenuAction(wParam, lParam);
             break;
         case WM_CONTEXTMENU:
             handled = webView->handleContextMenuEvent(wParam, lParam);
-            break;
-        case WM_MENUCOMMAND:
-            webView->performContextMenuAction(wParam, lParam);
             break;
         case WM_XP_THEMECHANGED:
             if (mainFrameImpl) {

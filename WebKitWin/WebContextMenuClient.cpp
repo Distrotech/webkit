@@ -62,13 +62,9 @@ void WebContextMenuClient::addCustomContextMenuItems(ContextMenu* menu)
     menu->setPlatformDescription(newMenu);
 }
 
-void WebContextMenuClient::contextMenuItemSelected(const ContextMenuItem* item)
+void WebContextMenuClient::contextMenuItemSelected(ContextMenuItem* item, const ContextMenu* parentMenu)
 {
-    ASSERT(item->parentMenu());
     ASSERT(item->type() == ActionType);
-    
-    if (!item->platformDescription())
-        return;
 
     IWebUIDelegate* uiDelegate = 0;
     if (FAILED(m_webView->uiDelegate(&uiDelegate)))
@@ -76,9 +72,9 @@ void WebContextMenuClient::contextMenuItemSelected(const ContextMenuItem* item)
 
     ASSERT(uiDelegate);
 
-    WebElementPropertyBag propertyBag(item->parentMenu()->hitTestResult());
+    WebElementPropertyBag propertyBag(parentMenu->hitTestResult());
             
-    uiDelegate->contextMenuItemSelected(m_webView, item->platformDescription(), &propertyBag);
+    uiDelegate->contextMenuItemSelected(m_webView, item->releasePlatformDescription(), &propertyBag);
     uiDelegate->Release();
 }
 
