@@ -1,3 +1,32 @@
+2006-12-16  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by Adam (and partially Geoff).
+
+        Boomer side of making WebCore Context Menus support state and
+        enabled/disabled, and re-architecture of ContextMenuItem.
+
+        * platform/win/ContextMenuItemWin.cpp: ContextMenuItem class holds
+        the platformDescription as the sole member variable. Changes to
+        account for this.
+        (WebCore::ContextMenuItem::ContextMenuItem): Same.
+        (WebCore::ContextMenuItem::releasePlatformDescription): Same.
+        (WebCore::ContextMenuItem::type): Same
+        (WebCore::ContextMenuItem::platformSubMenu): Same.
+        (WebCore::ContextMenuItem::setType): Same.
+        (WebCore::ContextMenuItem::setTitle): Same.
+        (WebCore::ContextMenuItem::setSubMenu): Same.
+        (WebCore::ContextMenuItem::setChecked): Same.
+        (WebCore::ContextMenuItem::setEnabled): Same.
+        * platform/win/ContextMenuWin.cpp:
+        (WebCore::ContextMenu::insertItem): Takes ownership of the item by
+        calling releasePlatformDescription()
+        (WebCore::ContextMenu::appendItem): Same.
+        (WebCore::ContextMenu::itemWithAction): This is the new at(). Since
+        we are no longer using notifybypos, we instead need a way to find a
+        menu item by its action. (Its ID.)
+        (WebCore::ContextMenu::setPlatformDescription): No longer use
+        notifybypos.
+
 2006-12-16  Adele Peterson  <adele@apple.com>
 
         RS by Adam.

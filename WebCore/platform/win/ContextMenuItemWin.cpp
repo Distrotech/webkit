@@ -33,33 +33,12 @@
 
 namespace WebCore {
 
-ContextMenuItem::ContextMenuItem(LPMENUITEMINFO item, ContextMenu* parentMenu)
-    : m_parentMenu(parentMenu)
-    , m_platformDescription(item)
-    , m_subMenu(0)
+ContextMenuItem::ContextMenuItem(LPMENUITEMINFO item)
+    : m_platformDescription(item)
 {
-    switch (item->fType) {
-        case MFT_STRING:
-            if (item->hSubMenu) {
-                m_type = SubmenuType;
-                m_subMenu.set(new ContextMenu(parentMenu->hitTestResult(), item->hSubMenu));
-            } else
-                m_type = ActionType;
-            break;
-        case MFT_SEPARATOR:
-            m_type = SeparatorType;
-            break; 
-        default:
-            ASSERT_NOT_REACHED();
-            break;
-    }
 }
 
-ContextMenuItem::ContextMenuItem(ContextMenu* parentMenu, ContextMenu* subMenu)
-    : m_parentMenu(parentMenu)
-    , m_platformDescription(0)
-    , m_subMenu(subMenu)
-    , m_type(SeparatorType)
+ContextMenuItem::ContextMenuItem(ContextMenu* subMenu)
 {
     m_platformDescription = (LPMENUITEMINFO)malloc(sizeof(MENUITEMINFO));
     if (!m_platformDescription)
@@ -75,11 +54,7 @@ ContextMenuItem::ContextMenuItem(ContextMenu* parentMenu, ContextMenu* subMenu)
     }
 }
 
-ContextMenuItem::ContextMenuItem(ContextMenuItemType type, ContextMenuAction action, const String& title, ContextMenu* parentMenu, 
-    ContextMenu* subMenu)
-    : m_parentMenu(parentMenu)
-    , m_subMenu(subMenu)
-    , m_type(type)
+ContextMenuItem::ContextMenuItem(ContextMenuItemType type, ContextMenuAction action, const String& title, ContextMenu* subMenu)
 {
     m_platformDescription = (LPMENUITEMINFO)malloc(sizeof(MENUITEMINFO));
     if (!m_platformDescription)
@@ -89,7 +64,7 @@ ContextMenuItem::ContextMenuItem(ContextMenuItemType type, ContextMenuAction act
     m_platformDescription->cbSize = sizeof(MENUITEMINFO);
     m_platformDescription->fMask = MIIM_FTYPE;
 
-    if (m_type == SeparatorType) {
+    if (type == SeparatorType) {
         m_platformDescription->fType = MFT_SEPARATOR;
         return;
     }
@@ -119,9 +94,31 @@ ContextMenuItem::~ContextMenuItem()
     }
 }
 
-PlatformMenuItemDescription ContextMenuItem::platformDescription() const
+LPMENUITEMINFO ContextMenuItem::releasePlatformDescription()
 {
-    return m_platformDescription;
+    LPMENUITEMINFO info = m_platformDescription;
+    m_platformDescription = 0;
+    return info;
+}
+
+ContextMenuItemType ContextMenuItem::type() const
+{
+    ContextMenuItemType type = ActionType;
+   
+    switch (m_platformDescription->fType) {
+        case MFT_STRING:
+            if (m_platformDescription->hSubMenu)
+                type = SubmenuType;
+            break;
+        case MFT_SEPARATOR:
+            type = SeparatorType;
+            break;
+        default:
+            ASSERT_NOT_REACHED();
+            break;
+    }
+
+    return type;
 }
 
 ContextMenuAction ContextMenuItem::action() const
@@ -136,7 +133,15 @@ String ContextMenuItem::title() const
 
 PlatformMenuDescription ContextMenuItem::platformSubMenu() const
 {
-    return m_subMenu->platformDescription();
+    return m_platformDescription->hSubMenu;
+}
+
+void ContextMenuItem::setType(ContextMenuItemType type)
+{
+    if (type == SeparatorType)
+        m_platformDescription->fType = MFT_SEPARATOR;
+    else
+        m_platformDescription->fType = MFT_STRING;
 }
 
 void ContextMenuItem::setAction(ContextMenuAction action)
@@ -144,13 +149,14 @@ void ContextMenuItem::setAction(ContextMenuAction action)
     m_platformDescription->wID = action; 
 }
 
-void ContextMenuItem::setTitle(String title)
+void ContextMenuItem::setTitle(const String& title)
 {
     if (m_platformDescription->dwTypeData)
         free(m_platformDescription->dwTypeData);
     
     m_platformDescription->cch = title.length();
-    m_platformDescription->dwTypeData = wcsdup(title.charactersWithNullTermination());
+    String titleCopy = title;
+    m_platformDescription->dwTypeData = wcsdup(titleCopy.charactersWithNullTermination());
 }
 
 void ContextMenuItem::setSubMenu(ContextMenu* subMenu)
@@ -161,9 +167,32 @@ void ContextMenuItem::setSubMenu(ContextMenu* subMenu)
     if (m_platformDescription->hSubMenu)
         ::DestroyMenu(m_platformDescription->hSubMenu);
 
-    m_subMenu.set(subMenu);
     m_platformDescription->fMask |= MIIM_SUBMENU;
     m_platformDescription->hSubMenu = subMenu->platformDescription();
+}
+
+void ContextMenuItem::setChecked(bool checked)
+{
+    m_platformDescription->fMask |= MIIM_STATE;
+    if (checked) {
+        m_platformDescription->fState &= ~MFS_UNCHECKED;
+        m_platformDescription->fState |= MFS_CHECKED;
+    } else {
+        m_platformDescription->fState &= ~MFS_CHECKED;
+        m_platformDescription->fState |= MFS_UNCHECKED;
+    }
+}
+
+void ContextMenuItem::setEnabled(bool enabled)
+{
+    m_platformDescription->fMask |= MIIM_STATE;
+    if (enabled) {
+        m_platformDescription->fState &= ~MFS_DISABLED;
+        m_platformDescription->fState |= MFS_ENABLED;
+    } else {
+        m_platformDescription->fState &= ~MFS_ENABLED;
+        m_platformDescription->fState |= MFS_DISABLED;
+    }
 }
 
 }
