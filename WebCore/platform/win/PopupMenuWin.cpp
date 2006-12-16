@@ -220,7 +220,7 @@ void PopupMenu::calculatePositionAndSize(const IntRect& r, FrameView* v)
     return;
 }
 
-bool PopupMenu::setFocusedIndex(int i, bool setControlText, bool fireOnChange)
+bool PopupMenu::setFocusedIndex(int i, bool hotTracking, bool fireOnChange)
 {
     if (i < 0 || i >= client()->listSize() || i == focusedIndex())
         return false;
@@ -231,9 +231,11 @@ bool PopupMenu::setFocusedIndex(int i, bool setControlText, bool fireOnChange)
     invalidateItem(focusedIndex());
     invalidateItem(i);
 
-    if (setControlText)
+    if (!hotTracking)
         client()->setTextFromItem(i);
-    client()->valueChanged(i, fireOnChange);
+    
+    if (!hotTracking || client()->valueShouldChangeOnHotTrack())
+        client()->valueChanged(i, fireOnChange);
 
     if (!scrollToRevealSelection())
         ::UpdateWindow(m_popup);
@@ -629,10 +631,13 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
         case WM_CHAR:
             if (popup && popup->client()) {
                 lResult = 0;
+                int index;
                 switch (wParam) {
                     case 0x0D:   // Enter/Return
                         popup->client()->hidePopup();
-                        popup->client()->valueChanged(popup->focusedIndex());
+                        index = popup->focusedIndex();
+                        ASSERT(index >= 0);
+                        popup->client()->valueChanged(index);
                         break;
                     case 0x1B:   // Escape
                         popup->client()->hidePopup();
@@ -652,17 +657,19 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 ::SystemParametersInfo(SPI_GETHOTTRACKING, 0, &shouldHotTrack, 0);
 
                 if (shouldHotTrack || wParam & MK_LBUTTON)
-                    popup->setFocusedIndex(popup->listIndexAtPoint(MAKEPOINTS(lParam)), false);
+                    popup->setFocusedIndex(popup->listIndexAtPoint(MAKEPOINTS(lParam)), true);
             }
             break;
         case WM_LBUTTONDOWN:
             if (popup)
-                popup->setFocusedIndex(popup->listIndexAtPoint(MAKEPOINTS(lParam)), false);
+                popup->setFocusedIndex(popup->listIndexAtPoint(MAKEPOINTS(lParam)), true);
             break;
         case WM_LBUTTONUP:
             if (popup && popup->client()) {
                 popup->client()->hidePopup();
-                popup->client()->valueChanged(popup->focusedIndex());
+                int index = popup->focusedIndex();
+                if (index >= 0)
+                    popup->client()->valueChanged(index);
             }
             break;
         case WM_MOUSEWHEEL:

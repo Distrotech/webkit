@@ -2547,6 +2547,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\PopupMenuClient.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\RegularExpression.cpp"
 				>
 			</File>
@@ -2572,6 +2576,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\ScrollView.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\SearchPopupMenu.h"
 				>
 			</File>
 			<File
@@ -2853,6 +2861,10 @@
 				</File>
 				<File
 					RelativePath="..\platform\win\ScrollViewWin.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\win\SearchPopupMenuWin.cpp"
 					>
 				</File>
 				<File

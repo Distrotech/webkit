@@ -32,6 +32,11 @@ Icon::Icon()
 {
 }
 
+Icon::Icon(HICON icon)
+    : m_hIcon(icon)
+{
+}
+
 Icon::~Icon()
 {
     if (m_hIcon)
