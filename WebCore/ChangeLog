@@ -1,5 +1,14 @@
 2006-12-16  Adele Peterson  <adele@apple.com>
 
+        RS by Adam.
+
+        Removed TextField, RenderLineEdit classes.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/win/TemporaryLinkStubs.cpp:
+
+2006-12-16  Adele Peterson  <adele@apple.com>
+
         Reviewed by Adam.
 
         Added PopupMenu and theme code for:

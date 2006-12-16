@@ -2703,10 +2703,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextField.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextStream.cpp"
 				>
 			</File>
@@ -4206,14 +4202,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderLegend.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderLineEdit.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderLineEdit.h"
 				>
 			</File>
 			<File

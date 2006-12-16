@@ -66,7 +66,6 @@
 #include "ScrollBar.h"
 #include "SubresourceLoader.h"
 #include "TextBoundaries.h"
-#include "TextField.h"
 #include "Widget.h"
 #include "loader.h"
 #include <stdio.h>
@@ -79,19 +78,6 @@ Widget::FocusPolicy Widget::focusPolicy() const { LOG_NOIMPL(); return NoFocus; 
 void Widget::disableFlushDrawing() { STOP_NOIMPL(); }
 GraphicsContext* Widget::lockDrawingFocus() { STOP_NOIMPL(); return 0; }
 void Widget::unlockDrawingFocus(GraphicsContext*) { STOP_NOIMPL(); }
-
-void TextField::selectAll() { LOG_NOIMPL(); }
-void TextField::addSearchResult() { LOG_NOIMPL(); }
-int TextField::selectionStart() const { LOG_NOIMPL(); return 0; }
-bool TextField::hasSelectedText() const { LOG_NOIMPL(); return false; }
-String TextField::selectedText() const { LOG_NOIMPL(); return String(); }
-void TextField::setAutoSaveName(String const&) { LOG_NOIMPL(); }
-bool TextField::checksDescendantsForFocus() const { LOG_NOIMPL(); return false; }
-void TextField::setSelection(int,int) { LOG_NOIMPL(); }
-void TextField::setMaxResults(int) { LOG_NOIMPL(); }
-bool TextField::edited() const { LOG_NOIMPL(); return false; }
-
-Widget::FocusPolicy TextField::focusPolicy() const { LOG_NOIMPL(); return NoFocus; }
 
 PlatformMouseEvent::PlatformMouseEvent(const CurrentEventTag&) { LOG_NOIMPL(); }
 String WebCore::searchableIndexIntroduction() { LOG_NOIMPL(); return String(); }
@@ -157,25 +143,6 @@ bool ScrollView::inWindow() const { LOG_NOIMPL(); return true; }
 
 void GraphicsContext::drawFocusRing(const Color& color) { LOG_NOIMPL(); }
 void GraphicsContext::drawLineForMisspellingOrBadGrammar(const IntPoint& point, int width, bool grammar) { LOG_NOIMPL(); }
-
-TextField::TextField() { LOG_NOIMPL(); }
-TextField::~TextField() { LOG_NOIMPL(); }
-void TextField::setFont(WebCore::Font const&) { LOG_NOIMPL(); }
-void TextField::setAlignment(HorizontalAlignment) { LOG_NOIMPL(); }
-void TextField::setWritingDirection(TextDirection) { LOG_NOIMPL(); }
-int TextField::maxLength() const { LOG_NOIMPL(); return 0; }
-void TextField::setMaxLength(int) { LOG_NOIMPL(); }
-String TextField::text() const { LOG_NOIMPL(); return String(); }
-void TextField::setText(String const&) { LOG_NOIMPL(); }
-int TextField::cursorPosition() const { LOG_NOIMPL(); return 0; }
-void TextField::setCursorPosition(int) { LOG_NOIMPL(); }
-void TextField::setEdited(bool) { LOG_NOIMPL(); }
-void TextField::setReadOnly(bool) { LOG_NOIMPL(); }
-void TextField::setPlaceholderString(String const&) { LOG_NOIMPL(); }
-void TextField::setColors(Color const&,Color const&) { LOG_NOIMPL(); }
-IntSize TextField::sizeForCharacterWidth(int) const { LOG_NOIMPL(); return IntSize(); }
-int TextField::baselinePosition(int) const { LOG_NOIMPL(); return 0; }
-void TextField::setLiveSearch(bool) { LOG_NOIMPL(); }
 
 Color WebCore::focusRingColor() { LOG_NOIMPL(); return 0xFF0000FF; }
 void WebCore::setFocusRingColorChangeFunction(void (*)()) { LOG_NOIMPL(); }
