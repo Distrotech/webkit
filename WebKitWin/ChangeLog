@@ -1,3 +1,20 @@
+2006-12-18  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://problem/4853363> hook up various deletion-related functions in WebView
+
+        * WebView.cpp:
+        (WebView::execCommand):
+        Removed the case for ForwardDelete, since it shouldn't be handled there
+        (WebView::deleteSelection):
+        Implemented
+        (WebView::copy):
+        (WebView::cut):
+        (WebView::paste):
+        (WebView::delete_):
+        Use the Editor's execCommand for these editor-responsible functions
+
 2006-12-18  Kevin McCullough  <KMcCullough@apple.com>
 
         Reviewed by Oliver.

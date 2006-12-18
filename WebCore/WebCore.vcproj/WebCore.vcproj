@@ -5265,6 +5265,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\editing\EditorDeleteAction.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\editing\EditorInsertAction.h"
 				>
 			</File>

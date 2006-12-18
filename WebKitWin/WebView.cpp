@@ -750,9 +750,6 @@ bool WebView::execCommand(WPARAM wParam, LPARAM /*lParam*/)
     Frame* frame = m_page->focusController()->focusedOrMainFrame();
     bool handled = false;
     switch (LOWORD(wParam)) {
-    case ForwardDelete:
-        handled = frame->editor()->execCommand("ForwardDelete");
-        break;
     case SelectAll:
         handled = frame->editor()->execCommand("SelectAll");
         break;
@@ -810,7 +807,7 @@ static const KeyEntry keyEntries[] = {
     { VK_END,    CtrlKey,            "MoveToEndOfDocument"                         },
     { VK_END,    CtrlKey | ShiftKey, "MoveToEndOfDocumentAndModifySelection"       },
 
-    { VK_BACK,   0,                  "Delete"                                      },
+    { VK_BACK,   0,                  "BackwardDelete"                              },
     { VK_DELETE, 0,                  "ForwardDelete"                               },
     
     { 'B',       CtrlKey,            "ToggleBold"                                  },
@@ -2621,8 +2618,8 @@ HRESULT STDMETHODCALLTYPE WebView::replaceSelectionWithArchive(
     
 HRESULT STDMETHODCALLTYPE WebView::deleteSelection( void)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    m_page->mainFrame()->editor()->deleteSelectionWithSmartDelete();
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::applyStyle( 
@@ -2637,24 +2634,24 @@ HRESULT STDMETHODCALLTYPE WebView::applyStyle(
 HRESULT STDMETHODCALLTYPE WebView::copy( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    m_page->mainFrame()->editor()->copy();
+    m_page->mainFrame()->editor()->execCommand("Copy");
     return S_OK;
 }
-    
+
 HRESULT STDMETHODCALLTYPE WebView::cut( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    m_page->mainFrame()->editor()->cut();
+    m_page->mainFrame()->editor()->execCommand("Cut");
     return S_OK;
 }
-    
+
 HRESULT STDMETHODCALLTYPE WebView::paste( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    m_page->mainFrame()->editor()->paste();
+    m_page->mainFrame()->editor()->execCommand("Paste");
     return S_OK;
 }
-    
+
 HRESULT STDMETHODCALLTYPE WebView::copyURL( 
         /* [in] */ BSTR url)
 {
@@ -2681,13 +2678,8 @@ HRESULT STDMETHODCALLTYPE WebView::pasteFont(
 HRESULT STDMETHODCALLTYPE WebView::delete_( 
         /* [in] */ IUnknown* /*sender*/)
 {
-/*
-    FrameWin* frame = static_cast<FrameWin*>(m_page->mainFrame());
-    frame->editor()->performDelete();
+    m_page->mainFrame()->editor()->execCommand("Delete");
     return S_OK;
-*/
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::pasteAsPlainText( 

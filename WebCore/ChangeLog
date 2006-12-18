@@ -1,3 +1,12 @@
+2006-12-18  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://problem/4853363> hook up various deletion-related functions in WebView
+
+        * WebCore.vcproj/WebCore.vcproj:
+        Added file EditorDeleteAction.h
+
 2006-12-18  Kevin McCullough  <KMcCullough@apple.com>
 
         Reviewed by Oliver.
