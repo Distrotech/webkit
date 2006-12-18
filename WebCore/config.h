@@ -24,18 +24,7 @@
 
 #if __APPLE__
 #define HAVE_FUNC_USLEEP 1
-
-#ifndef CGFLOAT_DEFINED
-#ifdef __LP64__
-typedef double CGFloat;
-#else
-typedef float CGFloat;
-#endif
-#define CGFLOAT_DEFINED 1
-#endif
-
 #endif /* __APPLE__ */
-
 
 // If we don't define these, they get defined in windef.h. 
 // We want to use std::min and std::max
@@ -89,5 +78,16 @@ typedef float CGFloat;
 #define WTF_USE_CFNETWORK 1
 #undef WTF_USE_WININET
 #endif
+
+#if PLATFORM(CG)
+#ifndef CGFLOAT_DEFINED
+#ifdef __LP64__
+typedef double CGFloat;
+#else
+typedef float CGFloat;
+#endif
+#define CGFLOAT_DEFINED 1
+#endif
+#endif /* PLATFORM(CG) */
 
 #define _WINSOCKAPI_ // Prevent inclusion of winsock.h in windows.h

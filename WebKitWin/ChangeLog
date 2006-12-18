@@ -1,3 +1,11 @@
+2006-12-18  Kevin McCullough  <KMcCullough@apple.com>
+
+        Reviewed by Oliver.
+
+        - Remove CG header includes in open source files
+
+        * WebView.cpp:
+
 2006-12-16  Beth Dakin  <bdakin@apple.com>
 
         Reviewed by Adam.
