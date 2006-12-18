@@ -6800,14 +6800,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGHelper.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGHelper.h"
-					>
-				</File>
-				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGImageElement.cpp"
 					>
 				</File>

@@ -1,3 +1,11 @@
+2006-12-18  Adam Roben  <aroben@apple.com>
+
+        Build fixes.
+
+        * WebCore.vcproj/WebCore.vcproj: Removed deleted files.
+        * platform/win/CursorWin.cpp: Added missing method.
+        (WebCore::noneCursor):
+
 2006-12-16  Beth Dakin  <bdakin@apple.com>
 
         Reviewed by Adam (and partially Geoff).

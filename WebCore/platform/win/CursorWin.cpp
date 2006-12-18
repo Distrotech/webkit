@@ -310,4 +310,9 @@ const Cursor& copyCursor()
     return pointerCursor();
 }
 
+const Cursor& noneCursor()
+{
+    return pointerCursor();
+}
+
 }
