@@ -81,9 +81,13 @@ void Font::drawGlyphs(GraphicsContext* graphicsContext, const FontData* font, co
     //wkSetCGFontRenderingMode(cgContext, drawFont);
     CGContextSetFontSize(cgContext, platformData.size());
 
-    CGColorRef colorRef = cgColor(graphicsContext->pen().color());
-    CGContextSetFillColorWithColor(cgContext, colorRef);
-    CGColorRelease(colorRef);
+    // Stroke comes from the pen, and we just update this from our cross-platform data every time.
+    // FIXME: We should consider pushing pen color updates into CG synchronously at the time they happen.
+    if (context->textDrawingMode() & cTextStroke) {
+        CGColorRef colorRef = cgColor(graphicsContext->pen().color());
+        CGContextSetStrokeColorWithColor(cgContext, colorRef);
+        CGColorRelease(colorRef);
+    }
 
     CGContextSetTextPosition(cgContext, point.x(), point.y());
     CGContextShowGlyphsWithAdvances(cgContext, glyphBuffer.glyphs(from), glyphBuffer.advances(from), numGlyphs);
