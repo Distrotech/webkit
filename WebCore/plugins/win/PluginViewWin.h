@@ -112,6 +112,7 @@ namespace WebCore {
         FrameWin* m_parentFrame;
         bool m_isStarted;
         KURL m_url;
+        KURL m_baseURL;
 
         void performRequest(PluginRequestWin*);
         void scheduleRequest(PluginRequestWin*);

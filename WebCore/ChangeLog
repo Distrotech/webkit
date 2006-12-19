@@ -1,3 +1,18 @@
+2006-12-18  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam and Oliver.
+
+        <rdar://problem/4856014> Target weekly ad doesn't work.
+        
+        Store the real base URL and use it for requests.
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::getURLNotify):
+        (WebCore::PluginViewWin::getURL):
+        (WebCore::PluginViewWin::handlePost):
+        (WebCore::PluginViewWin::PluginViewWin):
+        * plugins/win/PluginViewWin.h:
+
 2006-12-19  Darin Adler  <darin@apple.com>
 
         * platform/win/FontWin.cpp: (WebCore::Font::drawGlyphs): Fix build,

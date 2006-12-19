@@ -478,7 +478,7 @@ NPError PluginViewWin::getURLNotify(const char* url, const char* target, void* n
 
     frameLoadRequest.setFrameName(target);
     frameLoadRequest.resourceRequest().setHTTPMethod("GET");
-    frameLoadRequest.resourceRequest().setURL(makeURL(m_url, url));
+    frameLoadRequest.resourceRequest().setURL(makeURL(m_baseURL, url));
 
     return load(frameLoadRequest, true, notifyData);
 }
@@ -489,7 +489,7 @@ NPError PluginViewWin::getURL(const char* url, const char* target)
 
     frameLoadRequest.setFrameName(target);
     frameLoadRequest.resourceRequest().setHTTPMethod("GET");
-    frameLoadRequest.resourceRequest().setURL(makeURL(m_url, url));
+    frameLoadRequest.resourceRequest().setURL(makeURL(m_baseURL, url));
 
     return load(frameLoadRequest, false, 0);
 }
@@ -724,7 +724,7 @@ NPError PluginViewWin::handlePost(const char* url, const char* target, uint32 le
     }
 
     frameLoadRequest.resourceRequest().setHTTPMethod("POST");
-    frameLoadRequest.resourceRequest().setURL(makeURL(m_url, url));
+    frameLoadRequest.resourceRequest().setURL(makeURL(m_baseURL, url));
     frameLoadRequest.resourceRequest().addHTTPHeaderFields(headerFields);
     frameLoadRequest.resourceRequest().setHTTPBody(PassRefPtr<FormData>(new FormData(postData, postDataLength)));
     frameLoadRequest.setFrameName(target);
@@ -881,6 +881,7 @@ PluginViewWin::PluginViewWin(FrameWin* parentFrame, PluginPackageWin* plugin, El
     , m_element(element)
     , m_isStarted(false)
     , m_url(url)
+    , m_baseURL(m_parentFrame->loader()->completeURL(m_parentFrame->document()->baseURL()))
     , m_requestTimer(this, &PluginViewWin::requestTimerFired)
     , m_window(0)
 {
