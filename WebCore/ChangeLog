@@ -1,3 +1,13 @@
+2006-12-19  Brady Eidson  <beidson@apple.com>
+
+        Change by Lou, reviewed by Brady
+
+        Scrolling caused Desktop flickering as well as other strange
+        flickering in the case of a missing plug-in
+
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::updateHwnd):
+
 2006-12-19  Anders Carlsson  <acarlsson@apple.com>
 
         * WebCore.vcproj/WebCore.vcproj:

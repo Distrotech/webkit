@@ -132,7 +132,7 @@ static LRESULT CALLBACK PluginViewWndProc(HWND hWnd, UINT message, WPARAM wParam
 void PluginViewWin::updateHwnd() const
 {
     FrameView* frameView = static_cast<FrameView*>(parent());
-    if (!frameView)
+    if (!frameView || !m_window)
         return;
 
     IntRect oldWindowRect = m_windowRect;
