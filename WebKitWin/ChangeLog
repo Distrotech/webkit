@@ -1,3 +1,17 @@
+2006-12-18  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Alice
+        
+        Fixes <rdar://4821724> - Wrong site icon displays for sites who don't actually have an icon
+        
+        We judged whether or not a site has an icon based on whether or not the IconDatabase returned
+        a valid Image.
+        In the case of sites without an icon, we actually get returned a valid Image with dimensions 0x0.
+        WebKit on OS X correctly handles this case via NSImage goodness - now we manually handle it on Windows
+
+        * WebIconDatabase.cpp:
+        (WebIconDatabase::iconForURL): Check the width() as an additional case to fallback to the default icon
+
 2006-12-18  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Adam.

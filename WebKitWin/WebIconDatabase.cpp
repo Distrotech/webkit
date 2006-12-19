@@ -20,7 +20,7 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "config.h"
@@ -90,7 +90,7 @@ void WebIconDatabase::init()
             LOG_ERROR("Unable to get icon database enabled preference");
         }
     IconDatabase::sharedIconDatabase()->setEnabled(!!enabled);
-    
+
     BSTR prefDatabasePath = 0;
     if (FAILED(standardPrefs->iconDatabaseLocation(&prefDatabasePath)))
         LOG_ERROR("Unable to get icon database location preference");
@@ -102,7 +102,7 @@ void WebIconDatabase::init()
     if (databasePath.isEmpty())
         if (FAILED(userIconDatabasePath(databasePath)))
             LOG_ERROR("Failed to construct default icon database path");
-    
+
     if (!IconDatabase::sharedIconDatabase()->open(databasePath))
             LOG_ERROR("Failed to open icon database path");
 }
@@ -157,14 +157,14 @@ ULONG STDMETHODCALLTYPE WebIconDatabase::Release(void)
 
 // IWebIconDatabase --------------------------------------------------------------------
 
-HRESULT STDMETHODCALLTYPE WebIconDatabase::sharedIconDatabase( 
+HRESULT STDMETHODCALLTYPE WebIconDatabase::sharedIconDatabase(
         /* [retval][out] */ IWebIconDatabase** result)
 {
     *result = sharedWebIconDatabase();
     return S_OK;
 }
-    
-HRESULT STDMETHODCALLTYPE WebIconDatabase::iconForURL( 
+
+HRESULT STDMETHODCALLTYPE WebIconDatabase::iconForURL(
         /* [in] */ BSTR url,
         /* [optional][in] */ LPSIZE size,
         /* [optional][in] */ BOOL /*cache*/,
@@ -173,7 +173,9 @@ HRESULT STDMETHODCALLTYPE WebIconDatabase::iconForURL(
     IntSize intSize(*size);
 
     Image* icon = IconDatabase::sharedIconDatabase()->iconForPageURL(String(url, SysStringLen(url)), intSize);
-    if (icon) {
+
+    // Make sure we check for the case of an "empty image"
+    if (icon && icon->width()) {
         *bitmap = getOrCreateSharedBitmap(size);
         if (!icon->getHBITMAP(*bitmap)) {
             LOG_ERROR("Failed to draw Image to HBITMAP");
@@ -186,22 +188,22 @@ HRESULT STDMETHODCALLTYPE WebIconDatabase::iconForURL(
     return defaultIconWithSize(size, bitmap);
 }
 
-HRESULT STDMETHODCALLTYPE WebIconDatabase::defaultIconWithSize( 
+HRESULT STDMETHODCALLTYPE WebIconDatabase::defaultIconWithSize(
         /* [in] */ LPSIZE size,
         /* [retval][out] */ HBITMAP* result)
 {
     *result = getOrCreateDefaultIconBitmap(size);
     return S_OK;
 }
-    
-HRESULT STDMETHODCALLTYPE WebIconDatabase::retainIconForURL( 
+
+HRESULT STDMETHODCALLTYPE WebIconDatabase::retainIconForURL(
         /* [in] */ BSTR url)
 {
     IconDatabase::sharedIconDatabase()->retainIconForPageURL(String(url, SysStringLen(url)));
     return S_OK;
 }
-    
-HRESULT STDMETHODCALLTYPE WebIconDatabase::releaseIconForURL( 
+
+HRESULT STDMETHODCALLTYPE WebIconDatabase::releaseIconForURL(
         /* [in] */ BSTR url)
 {
     IconDatabase::sharedIconDatabase()->releaseIconForPageURL(String(url, SysStringLen(url)));
@@ -213,13 +215,13 @@ HRESULT STDMETHODCALLTYPE WebIconDatabase::removeAllIcons(void)
     IconDatabase::sharedIconDatabase()->removeAllIcons();
     return S_OK;
 }
-    
+
 HRESULT STDMETHODCALLTYPE WebIconDatabase::delayDatabaseCleanup(void)
 {
     ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
-    
+
 HRESULT STDMETHODCALLTYPE WebIconDatabase::allowDatabaseCleanup(void)
 {
     ASSERT_NOT_REACHED();
@@ -264,7 +266,7 @@ HBITMAP WebIconDatabase::getOrCreateDefaultIconBitmap(LPSIZE size)
     result = createDIB(size);
     static Image* defaultIconImage = 0;
     if (!defaultIconImage) {
-        defaultIconImage = Image::loadPlatformResource("urlIcon"); 
+        defaultIconImage = Image::loadPlatformResource("urlIcon");
     }
     m_defaultIconMap.set(*size, result);
     if (!defaultIconImage->getHBITMAP(result)) {
