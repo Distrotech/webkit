@@ -251,7 +251,7 @@ void WebChromeClient::addMessageToConsole(const String& message, unsigned line, 
     if (SUCCEEDED(m_webView->uiDelegate(&ui)) && ui) {
         IWebUIDelegatePrivate* uiPrivate;
         if (SUCCEEDED(ui->QueryInterface(IID_IWebUIDelegatePrivate, (void**)&uiPrivate))) {
-            uiPrivate->webViewAddMessageToConsole(m_webView, BString(message), line, BString(url));
+            uiPrivate->webViewAddMessageToConsole(m_webView, BString(message), line, BString(url), true);
             uiPrivate->Release();
         }
         ui->Release();
