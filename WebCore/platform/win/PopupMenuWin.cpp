@@ -492,7 +492,7 @@ void PopupMenu::paint(const IntRect& damageRect, HDC hdc)
 
         RenderStyle* itemStyle = client()->itemStyle(index);
             
-        context.setPen(optionTextColor);
+        context.setFillColor(optionTextColor);
         
         Font itemFont = client()->clientStyle()->font();
         if (client()->itemIsLabel(index)) {
