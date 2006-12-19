@@ -3012,6 +3012,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\ImageBuffer.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\ImageBuffer.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\ImageSource.h"
 					>
 				</File>
@@ -3214,10 +3222,6 @@
 							>
 						</File>
 						<File
-							RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\cg\SVGResourceImageCg.cpp"
-							>
-						</File>
-						<File
 							RelativePath="..\platform\graphics\svg\cg\SVGResourceMaskerCg.cpp"
 							>
 						</File>
@@ -3408,6 +3412,10 @@
 					</File>
 					<File
 						RelativePath="..\platform\graphics\cg\GraphicsContextPlatformPrivate.h"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\cg\ImageBufferCG.cpp"
 						>
 					</File>
 					<File
