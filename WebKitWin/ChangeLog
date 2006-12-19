@@ -1,3 +1,15 @@
+2006-12-18  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam.
+        
+        Added loadType to IWebFramePrivate.
+
+        * Interfaces/IWebFramePrivate.idl: Added loadType
+        * WebFrame.cpp: Fixed line endings
+        (WebFrame::loadType): Added
+        * WebFrame.h: Fixed line endings
+        * WebKit.vcproj/WebKit.vcproj: Moved WebLocalizableStrings.h to proper folder
+
 2006-12-18  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by Adam.

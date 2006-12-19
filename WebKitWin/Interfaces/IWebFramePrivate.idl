@@ -50,6 +50,19 @@ cpp_quote(" */")
 
 import "oaidl.idl";
 import "ocidl.idl";
+
+typedef enum {
+    WebFrameLoadTypeStandard,
+    WebFrameLoadTypeBack,
+    WebFrameLoadTypeForward,
+    WebFrameLoadTypeIndexedBackForward, // a multi-item hop in the backforward list
+    WebFrameLoadTypeReload,
+    WebFrameLoadTypeReloadAllowingStaleData,
+    WebFrameLoadTypeSame,               // user loads same URL again (but not reload button)
+    WebFrameLoadTypeInternal,
+    WebFrameLoadTypeReplace
+} WebFrameLoadType;
+
 [
     local,
     object,
@@ -61,4 +74,5 @@ interface IWebFramePrivate : IUnknown
 {
     HRESULT renderTreeAsExternalRepresentation([out, retval] BSTR* result);
     HRESULT firstLayoutDone([out, retval] BOOL* result);
+    HRESULT loadType([out, retval] WebFrameLoadType* type);
 }

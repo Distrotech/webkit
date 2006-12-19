@@ -61,18 +61,6 @@ interface IWebHistoryItemPrivate;
 
 unsigned long long WebSystemMainMemory();
 
-typedef enum {
-    WebFrameLoadTypeStandard,
-    WebFrameLoadTypeBack,
-    WebFrameLoadTypeForward,
-    WebFrameLoadTypeIndexedBackForward, // a multi-item hop in the backforward list
-    WebFrameLoadTypeReload,
-    WebFrameLoadTypeReloadAllowingStaleData,
-    WebFrameLoadTypeSame,               // user loads same URL again (but not reload button)
-    WebFrameLoadTypeInternal,
-    WebFrameLoadTypeReplace
-} WebFrameLoadType;
-
 class WebFrame : public IWebFrame, IWebFramePrivate
     , public WebCore::ResourceHandleClient
     , public WebCore::FrameWinClient
@@ -155,6 +143,9 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE firstLayoutDone(
         /* [retval][out] */ BOOL* result);
+
+    virtual HRESULT STDMETHODCALLTYPE loadType( 
+        /* [retval][out] */ WebFrameLoadType* type);
 
     // IWebFormSubmissionListener
     virtual HRESULT STDMETHODCALLTYPE continueSubmit( void);

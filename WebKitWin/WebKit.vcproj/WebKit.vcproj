@@ -226,10 +226,6 @@
 				RelativePath="..\WebLocalizableStrings.cpp"
 				>
 			</File>
-			<File
-				RelativePath="..\WebLocalizableStrings.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -326,6 +322,10 @@
 			</File>
 			<File
 				RelativePath="..\WebKitDLL.h"
+				>
+			</File>
+			<File
+				RelativePath="..\WebLocalizableStrings.h"
 				>
 			</File>
 			<File

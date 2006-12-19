@@ -617,6 +617,14 @@ HRESULT STDMETHODCALLTYPE WebFrame::firstLayoutDone(
     return S_OK;
 }
 
+HRESULT STDMETHODCALLTYPE WebFrame::loadType( 
+    /* [retval][out] */ WebFrameLoadType* type)
+{
+    *type = m_loadType;
+    return S_OK;
+}
+
+
 // IWebFormSubmissionListener ---------------------------------------------
 
 HRESULT STDMETHODCALLTYPE WebFrame::continueSubmit(void)
