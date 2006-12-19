@@ -29,14 +29,15 @@
 
 #include "CFDictionaryPropertyBag.h"
 #include "WebCache.h"
-#include "WebMutableURLRequest.h"
-#include "WebKit.h"
 #include "WebFrame.h"
-#include "WebView.h"
-#include "WebIconDatabase.h"
-#include "WebNotificationCenter.h"
 #include "WebHistory.h"
 #include "WebHistoryItem.h"
+#include "WebIconDatabase.h"
+#include "WebKit.h"
+#include "WebMutableURLRequest.h"
+#include "WebNotificationCenter.h"
+#include "WebPreferences.h"
+#include "WebView.h"
 
 // WebKitClassFactory ---------------------------------------------------------
 
@@ -108,6 +109,8 @@ HRESULT STDMETHODCALLTYPE WebKitClassFactory::CreateInstance(IUnknown* pUnkOuter
         unknown = static_cast<IWebHistoryItem*>(WebHistoryItem::createInstance());
     else if (IsEqualGUID(m_targetClass, CLSID_WebCache))
         unknown = static_cast<IWebCache*>(WebCache::createInstance());
+    else if (IsEqualGUID(m_targetClass, CLSID_WebPreferences))
+        unknown = static_cast<IWebPreferences*>(WebPreferences::createInstance());
     else
         return CLASS_E_CLASSNOTAVAILABLE;
 

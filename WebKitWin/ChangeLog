@@ -1,3 +1,15 @@
+2006-12-19  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Lou, Adele.
+        
+        Added CLSID for WebPreferences
+
+        * Interfaces/WebKit.idl:
+        * WebKitClassFactory.cpp:
+        (WebKitClassFactory::CreateInstance):
+        * WebKitDLL.cpp:
+        (DllGetClassObject):
+
 2006-12-18  Ada Chan  <adachan@apple.com>
 
         Reviewed by Adam.

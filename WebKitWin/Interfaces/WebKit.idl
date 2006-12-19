@@ -185,4 +185,15 @@ library WebKit
     coclass WebCache {
         interface IWebCache;
     }
+
+#if __ARCHIVE_BUILD__
+    [uuid(CC914F49-2385-4943-9B3F-E17501383F5B)]
+#elif __BUILDBOT__
+    [uuid(67B89F90-F778-438b-ABBF-34D1ACBF8651)]
+#else
+    [uuid(ED09A6DB-6A68-413c-BB4A-EAB435E63E88)]
+#endif
+    coclass WebPreferences {
+        interface IWebPreferences;
+    }
 }
