@@ -95,8 +95,6 @@ public:
 
     virtual void setStatusBarText(const String&);
 
-    virtual void scheduleClose();
-
     virtual void focusWindow();
     virtual void unfocusWindow();
     

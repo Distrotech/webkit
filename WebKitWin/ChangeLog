@@ -1,3 +1,23 @@
+2006-12-18  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Adam.
+        
+        - Added runBeforeUnloadConfirmPanelWithMessage to IWebUIDelegate.
+        - implemented canRunBeforeUnloadConfirmPanel, runBeforeUnloadConfirmPanel, and closeWindowSoon
+        in WebChromeClient
+        - implemented WebView::closeWindow().
+
+        * Interfaces/IWebUIDelegate.idl:
+        * WebChromeClient.cpp:
+        (WebChromeClient::canRunBeforeUnloadConfirmPanel):
+        (WebChromeClient::runBeforeUnloadConfirmPanel):
+        (WebChromeClient::closeWindowSoon):
+        * WebChromeClient.h:
+        * WebFrame.h:
+        * WebView.cpp:
+        (WebView::closeWindow):
+        * WebView.h:
+
 2006-12-18  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Alice

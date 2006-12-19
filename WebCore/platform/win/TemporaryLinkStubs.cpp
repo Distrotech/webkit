@@ -97,7 +97,6 @@ void FrameWin::issuePasteCommand() { LOG_NOIMPL(); }
 void FrameWin::issuePasteAndMatchStyleCommand() { LOG_NOIMPL(); }
 void FrameWin::issueTransposeCommand() { LOG_NOIMPL(); }
 String FrameWin::mimeTypeForFileName(String const&) const { LOG_NOIMPL(); return String(); }
-void FrameWin::scheduleClose() { STOP_NOIMPL(); }
 
 void GraphicsContextPlatformPrivate::clip(const Path&) { LOG_NOIMPL(); }
 

@@ -552,6 +552,7 @@ public:
     void updateBackingStore(WebCore::FrameView*, HDC, bool backingStoreCompletelyDirty);
     void deleteBackingStore();
     void frameRect(RECT* rect);
+    void closeWindow();
 
     // Convenient to be able to violate the rules of COM here for easy movement to the frame.
     WebFrame* topLevelFrame() { return m_mainFrame; }

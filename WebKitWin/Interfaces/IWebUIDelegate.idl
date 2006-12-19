@@ -51,7 +51,9 @@ cpp_quote(" */")
 import "oaidl.idl";
 import "ocidl.idl";
 import "IWebURLRequest.idl";
+import "IWebFrame.idl";
 
+interface IWebFrame;
 interface IWebView;
 interface IWebURLRequest;
 
@@ -451,6 +453,20 @@ interface IWebUIDelegate : IUnknown
         - (NSString *)webView:(WebView *)sender runJavaScriptTextInputPanelWithPrompt:(NSString *)prompt defaultText:(NSString *)defaultText;
     */
     HRESULT runJavaScriptTextInputPanelWithPrompt([in] IWebView* sender, [in] BSTR message, [in] BSTR defaultText, [out, retval] BSTR* result);
+
+    /*!
+        @method webView:runJavaScriptConfirmPanelWithMessage:initiatedByFrame:
+        @abstract Display a confirm panel by an "before unload" event handler.
+        @param sender The WebView sending the delegate method.
+        @param message The message to display.
+        @param frame The WebFrame whose JavaScript initiated this call.
+        @result YES if the user hit OK, NO if the user chose Cancel.
+        @discussion Clients should include a message in addition to the one
+        supplied by the web page that indicates. The panel should have 
+        two buttons, e.g. "OK" and "Cancel".
+        - (BOOL)webView:(WebView *)sender runBeforeUnloadConfirmPanelWithMessage:(NSString *)message initiatedByFrame:(WebFrame *)frame;
+    */
+    HRESULT runBeforeUnloadConfirmPanelWithMessage([in] IWebView* sender, [in] BSTR message, [in] IWebFrame* initiatedByFrame, [out, retval] BOOL* result);
 
     /*!
         @method webView:runOpenPanelForFileButtonWithResultListener:

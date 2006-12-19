@@ -430,6 +430,15 @@ void WebView::frameRect(RECT* rect)
     ::GetWindowRect(m_viewWindow, rect);
 }
 
+void WebView::closeWindow()
+{
+    IWebUIDelegate* ui;
+    if (SUCCEEDED(uiDelegate(&ui))) {
+        ui->webViewClose(this);
+        ui->Release();
+    }
+}
+
 #define MAXIMUM_DPI 300
 
 static void getPrintRects(HDC printDC, IntRect& devicePrintRect, IntRect& rasterizingPrintRect)

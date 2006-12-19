@@ -67,6 +67,11 @@ public:
 
     virtual void addMessageToConsole(const WebCore::String& message, unsigned line, const WebCore::String& url);
 
+    virtual bool canRunBeforeUnloadConfirmPanel();
+    virtual bool runBeforeUnloadConfirmPanel(const WebCore::String& message, WebCore::Frame* frame);
+
+    virtual void closeWindowSoon();
+
 private:
     WebView* m_webView;
 };

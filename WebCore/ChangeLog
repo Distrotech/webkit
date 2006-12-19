@@ -1,3 +1,14 @@
+2006-12-18  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Adam.
+
+        Removed scheduleClose() from FrameWin.  The implementation has
+        been moved to Frame.cpp.                
+
+        * bridge/win/FrameWin.h:
+        * platform/win/TemporaryLinkStubs.cpp:
+        (FrameWin::mimeTypeForFileName):
+
 2006-12-18  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam and Oliver.

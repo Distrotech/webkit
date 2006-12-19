@@ -60,6 +60,7 @@ class WebHistory;
 interface IWebHistoryItemPrivate;
 
 unsigned long long WebSystemMainMemory();
+WebFrame* kit(WebCore::Frame* frame);
 
 class WebFrame : public IWebFrame, IWebFramePrivate
     , public WebCore::ResourceHandleClient
