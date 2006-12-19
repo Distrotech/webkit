@@ -94,6 +94,8 @@ PluginViewWin* PluginViewWin::s_currentPluginView = 0;
 const LPCWSTR kWebPluginViewWindowClassName = L"WebPluginView";
 const LPCWSTR kWebPluginViewProperty = L"WebPluginViewProperty";
 
+static const char* MozillaUserAgent = "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1) Gecko/20061010 Firefox/2.0";
+
 static LRESULT CALLBACK PluginViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 static bool registerPluginView()
@@ -766,6 +768,9 @@ NPError PluginViewWin::destroyStream(NPStream* stream, NPReason reason)
 
 const char* PluginViewWin::userAgent()
 {
+    if (m_quirks & PluginQuirkWantsMozillaUserAgent)
+        return MozillaUserAgent;
+
     if (m_userAgent.isNull())
         m_userAgent = m_parentFrame->loader()->userAgent().utf8();
     return m_userAgent;
@@ -856,6 +861,16 @@ PluginViewWin::~PluginViewWin()
         DestroyWindow(m_window);
 }
 
+void PluginViewWin::determineQuirks(const String& mimeType)
+{
+    // FIXME: Remove return once windowless plugins are well-supported.
+    return;
+
+    // The flash plugin only requests windowless plugins if we return a mozilla user agent
+    if (mimeType == "application/x-shockwave-flash")
+        m_quirks |= PluginQuirkWantsMozillaUserAgent;
+}
+
 PluginViewWin* PluginViewWin::createNullPluginView(FrameWin* parentFrame, Element* element)
 {
     return new PluginViewWin(parentFrame, element);
@@ -872,6 +887,9 @@ PluginViewWin::PluginViewWin(FrameWin* parentFrame, Element* element)
     , m_paramNames(0)
     , m_paramValues(0)
     , m_mode(0)
+    , m_quirks(0)
+    , m_windowless(true)
+    , m_transparent(false)
 {
 }
 
@@ -884,6 +902,9 @@ PluginViewWin::PluginViewWin(FrameWin* parentFrame, PluginPackageWin* plugin, El
     , m_baseURL(m_parentFrame->loader()->completeURL(m_parentFrame->document()->baseURL()))
     , m_requestTimer(this, &PluginViewWin::requestTimerFired)
     , m_window(0)
+    , m_quirks(0)
+    , m_windowless(false)
+    , m_transparent(false)
 {
     m_instance = &m_instanceStruct;
     m_instance->ndata = this;
@@ -895,6 +916,8 @@ PluginViewWin::PluginViewWin(FrameWin* parentFrame, PluginPackageWin* plugin, El
     m_paramValues = createUTF8StringArray(paramValues);
 
     m_mode = element->document()->isPluginDocument() ? NP_FULL : NP_EMBED;
+
+    determineQuirks(mimeType);
 
     if (!start())
         return;

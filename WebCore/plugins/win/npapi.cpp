@@ -107,12 +107,14 @@ NPError NPN_DestroyStream(NPP instance, NPStream* stream, NPReason reason)
 
 const char* NPN_UserAgent(NPP instance)
 {
-    // FIXME: Some plug-ins call NPN_UserAgent with a null instance in their NP_initialize function!
-    // We'd need a way to get a user agent without having a frame around.
-    if (!instance)
-        return 0;
+    PluginViewWin* view = pluginViewForInstance(instance);
 
-    return pluginViewForInstance(instance)->userAgent();
+     // FIXME: Some plug-ins call NPN_UserAgent with a null instance in their NP_initialize function!
+     // We'd need a way to get a user agent without having a frame around.
+     if (!view)
+         return 0;
+ 
+    return view->userAgent();
 }
 
 void NPN_Status(NPP instance, const char* message)

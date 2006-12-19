@@ -57,6 +57,10 @@ namespace WebCore {
     class PluginRequestWin;
     class PluginStreamWin;
     
+    enum PluginQuirks {
+        PluginQuirkWantsMozillaUserAgent = 1 << 0,
+    };
+
     class PluginViewWin : public Widget {
     friend static LRESULT CALLBACK PluginViewWndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -120,6 +124,7 @@ namespace WebCore {
         Timer<PluginViewWin> m_requestTimer;
 
         void updateHwnd() const;
+        void determineQuirks(const String& mimeType);
 
         int m_mode;
         int m_paramCount;
@@ -132,10 +137,13 @@ namespace WebCore {
         NPP m_instance;
         NPP_t m_instanceStruct;
         NPWindow m_npWindow;
-        NPWindow m_lastSetWindow;
 
         HashSet<PluginStreamWin*> m_streams;
         Vector<PluginRequestWin*> m_requests;
+
+        int m_quirks;
+        bool m_windowless;
+        bool m_transparent;
 
         HWND m_window; // for windowed plug-ins
         mutable IntRect m_clipRect; // The clip rect to apply to a windowed plug-in

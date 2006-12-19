@@ -1,3 +1,19 @@
+2006-12-19  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Kevin Decker.
+
+        Add (currently disabled) plugin quirks. This is necessary in order to get the Flash plugin
+        to request windowless plugins (which it only will do if it think it's running on a Mozilla browser).
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::userAgent):
+        (WebCore::PluginViewWin::determineQuirks):
+        (WebCore::PluginViewWin::PluginViewWin):
+        * plugins/win/PluginViewWin.h:
+        (WebCore::):
+        * plugins/win/npapi.cpp:
+        (NPN_UserAgent):
+
 2006-12-19  Brady Eidson  <beidson@apple.com>
 
         Change by Lou, reviewed by Brady
