@@ -26,13 +26,14 @@
 #include "config.h"
 
 #if USE(CFNETWORK)
+#include "ResourceHandle.h"
+#include "ResourceHandleInternal.h"
 
 #include "DocLoader.h"
 #include "Frame.h"
-#include "ResourceError.h"
 #include "FrameLoader.h"
-#include "ResourceHandle.h"
-#include "ResourceHandleInternal.h"
+#include "Logging.h"
+#include "ResourceError.h"
 #include "ResourceResponse.h"
 
 #include <WTF/HashMap.h>
@@ -44,18 +45,13 @@
 #include <CFNetwork/CFNetwork.h>
 #include <CFNetwork/CFNetworkPriv.h>
 
-//#define LOG_RESOURCELOADER_EVENTS 1
-
 namespace WebCore {
 
 CFURLRequestRef willSendRequest(CFURLConnectionRef conn, CFURLRequestRef cfRequest, CFURLResponseRef cfRedirectResponse, const void* clientInfo)
 {
     ResourceHandle* handle = (ResourceHandle*)clientInfo;
-#if defined(LOG_RESOURCELOADER_EVENTS)
-    CFStringRef str = CFStringCreateWithFormat(0, 0, CFSTR("willSendRequest(conn=%p, job = %p)\n"), conn, handle);
-    CFShow(str);
-    CFRelease(str);
-#endif
+
+    LOG(Network, "CFNet - willSendRequest(conn=%p, handle=%p) (%s)", conn, handle, handle->url().url().ascii());
 
     if (ResourceHandleClient* client = handle->client()) {
         ResourceRequest request(cfRequest);
@@ -70,11 +66,7 @@ void didReceiveResponse(CFURLConnectionRef conn, CFURLResponseRef cfResponse, co
 {
     ResourceHandle* handle = (ResourceHandle*)clientInfo;
 
-#if defined(LOG_RESOURCELOADER_EVENTS)
-    CFStringRef str = CFStringCreateWithFormat(0, 0, CFSTR("didReceiveResponse(conn=%p, job = %p)\n"), conn, handle);
-    CFShow(str);
-    CFRelease(str);
-#endif
+    LOG(Network, "CFNet - didReceiveResponse(conn=%p, handle=%p) (%s)", conn, handle, handle->url().url().ascii());
 
     if (ResourceHandleClient* client = handle->client())
         client->didReceiveResponse(handle, cfResponse);
@@ -82,28 +74,20 @@ void didReceiveResponse(CFURLConnectionRef conn, CFURLResponseRef cfResponse, co
 
 void didReceiveData(CFURLConnectionRef conn, CFDataRef data, CFIndex originalLength, const void* clientInfo) 
 {
-    ResourceHandle* job = (ResourceHandle*)clientInfo;
+    ResourceHandle* handle = (ResourceHandle*)clientInfo;
     const UInt8* bytes = CFDataGetBytePtr(data);
     CFIndex length = CFDataGetLength(data);
 
-#if defined(LOG_RESOURCELOADER_EVENTS)
-    CFStringRef str = CFStringCreateWithFormat(0, 0, CFSTR("didReceiveData(conn=%p, job = %p, numBytes = %d)\n"), conn, job, length);
-    CFShow(str);
-    CFRelease(str);
-#endif
+    LOG(Network, "CFNet - didReceiveData(conn=%p, handle=%p, bytes=%d) (%s)", conn, handle, length, handle->url().url().ascii());
 
-    job->client()->didReceiveData(job, (const char*)bytes, length, originalLength);
+    handle->client()->didReceiveData(handle, (const char*)bytes, length, originalLength);
 }
 
 void didFinishLoading(CFURLConnectionRef conn, const void* clientInfo) 
 {
     ResourceHandle* handle = (ResourceHandle*)clientInfo;
 
-#if defined(LOG_RESOURCELOADER_EVENTS)
-    CFStringRef str = CFStringCreateWithFormat(0, 0, CFSTR("didFinishLoading(conn=%p, job = %p)\n"), conn, job);
-    CFShow(str);
-    CFRelease(str);
-#endif
+    LOG(Network, "CFNet - didFinishLoading(conn=%p, handle=%p) (%s)", conn, handle, handle->url().url().ascii());
 
     handle->client()->didFinishLoading(handle);
 }
@@ -112,11 +96,7 @@ void didFail(CFURLConnectionRef conn, CFStreamError error, const void* clientInf
 {
     ResourceHandle* handle = (ResourceHandle*)clientInfo;
 
-#if defined(LOG_RESOURCELOADER_EVENTS)
-    CFStringRef str = CFStringCreateWithFormat(0, 0, CFSTR("didFail(conn=%p, job = %p, error = {%d, %d})\n"), conn, job, error.domain, error.error);
-    CFShow(str);
-    CFRelease(str);
-#endif
+    LOG(Network, "CFNet - didFail(conn=%p, handle=%p, error = {%d, %d}) (%s)", conn, handle, error.domain, error.error, handle->url().url().ascii());
 
     String domain;
     switch(error.domain) {
@@ -164,12 +144,8 @@ void addHeadersFromHashMap(CFMutableURLRequestRef request, const HTTPHeaderMap& 
 ResourceHandleInternal::~ResourceHandleInternal()
 {
     if (m_connection) {
+        LOG(Network, "CFNet - Cancelling connection %p (%s)", m_connection, m_request.url().url().ascii());
 
-#if defined(LOG_RESOURCELOADER_EVENTS)
-        CFStringRef str = CFStringCreateWithFormat(0, 0, CFSTR("Cancelling connection %p\n"), m_connection);
-        CFShow(str);
-        CFRelease(str);
-#endif
         CFURLConnectionCancel(m_connection);
         CFRelease(m_connection);
         m_connection = 0;
@@ -178,11 +154,7 @@ ResourceHandleInternal::~ResourceHandleInternal()
 
 ResourceHandle::~ResourceHandle()
 {
-#if defined(LOG_RESOURCELOADER_EVENTS)
-    CFStringRef str = CFStringCreateWithFormat(0, 0, CFSTR("Destroying job %p\n"), this);
-    CFShow(str);
-    CFRelease(str);
-#endif
+    LOG(Network, "CFNet - Destroying job %p (%s)", this, d->m_request.url().url().ascii());
 }
 
 CFArrayRef arrayFromFormData(const FormData& d)
@@ -247,13 +219,8 @@ bool ResourceHandle::start(Frame* frame)
     CFURLConnectionScheduleDownloadWithRunLoop(d->m_connection, loaderRL, kCFRunLoopDefaultMode);
     CFURLConnectionStart(d->m_connection);
 
-#if defined(LOG_RESOURCELOADER_EVENTS)
-    CFURLRef url = d->m_request.url().createCFURL();
-    CFStringRef outStr = CFStringCreateWithFormat(0, 0, CFSTR("Starting URL %@ (job = %p, connection = %p)\n"), CFURLGetString(url), this, d->m_connection);
-    CFShow(outStr);
-    CFRelease(outStr);
-    CFRelease(url);
-#endif
+    LOG(Network, "CFNet - Starting URL %s (handle=%p, conn=%p)", d->m_request.url().url().ascii(), this, d->m_connection);
+
     return true;
 }
 

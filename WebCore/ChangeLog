@@ -1,3 +1,20 @@
+2006-12-19  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Ada
+
+        -Changed CFNetwork debugging output to use a logging channel
+        -Added the url to each logging message - the debugging output was quite crippled without this
+        
+        * platform/network/cf/ResourceHandleCFNet.cpp:
+        (WebCore::willSendRequest):
+        (WebCore::didReceiveResponse):
+        (WebCore::didReceiveData):
+        (WebCore::didFinishLoading):
+        (WebCore::didFail):
+        (WebCore::ResourceHandleInternal::~ResourceHandleInternal):
+        (WebCore::ResourceHandle::~ResourceHandle):
+        (WebCore::ResourceHandle::start):
+
 2006-12-19  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Geoff.
