@@ -80,6 +80,10 @@ void Font::drawGlyphs(GraphicsContext* graphicsContext, const FontData* font, co
 
     //wkSetCGFontRenderingMode(cgContext, drawFont);
     CGContextSetFontSize(cgContext, platformData.size());
+    
+    if (graphicsContext->textDrawingMode() & cTextStroke)
+        CGContextSetLineWidth(cgContext, graphicsContext->strokeThickness());
+
     CGContextSetTextPosition(cgContext, point.x(), point.y());
     CGContextShowGlyphsWithAdvances(cgContext, glyphBuffer.glyphs(from), glyphBuffer.advances(from), numGlyphs);
     if (font->m_syntheticBoldOffset) {

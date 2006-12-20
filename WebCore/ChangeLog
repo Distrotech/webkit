@@ -1,3 +1,10 @@
+2006-12-20  David Hyatt  <hyatt@apple.com>
+
+        Add support for stroking and filling of text to CSS.  Boomer side.  Same code as in FontMac.
+
+        * platform/win/FontWin.cpp:
+        (WebCore::Font::drawGlyphs):
+
 2006-12-19  Steve Falkenburg  <sfalken@apple.com>
 
         Remove non-existent header from vcproj
