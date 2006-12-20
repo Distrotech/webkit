@@ -101,6 +101,8 @@ IDR_RESIZE_CORNER                PNG                     "textAreaResizeCorner.p
 IDR_MISSING_IMAGE                PNG                     "missingImage.png"
 IDR_URL_ICON                     PNG                     "urlIcon.png"
 IDR_NULL_PLUGIN                  PNG                     "nullplugin.png"
+IDR_DELETE_BUTTON                PNG                     "deleteButton.png"
+IDR_DELETE_BUTTON_PRESSED        PNG                     "deleteButtonPressed.png"
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
