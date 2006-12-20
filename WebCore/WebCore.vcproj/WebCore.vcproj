@@ -3159,10 +3159,6 @@
 						>
 					</File>
 					<File
-						RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\SVGResourceImage.h"
-						>
-					</File>
-					<File
 						RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\svg\SVGResourceListener.h"
 						>
 					</File>

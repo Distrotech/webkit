@@ -1,3 +1,9 @@
+2006-12-19  Steve Falkenburg  <sfalken@apple.com>
+
+        Remove non-existent header from vcproj
+
+        * WebCore.vcproj/WebCore.vcproj:
+
 2006-12-19  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Ada
