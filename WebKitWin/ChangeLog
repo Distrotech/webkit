@@ -1,5 +1,13 @@
 2006-12-19  Alice Liu  <alice.liu@apple.com>
 
+        In r11349 I accidentally checked in my local change to the user agent.  
+        Here I am changing it back to what it used to be. 
+
+        * WebView.cpp:
+        (WebView::userAgentForKURL):
+
+2006-12-19  Alice Liu  <alice.liu@apple.com>
+
         Reviewed by Brady.
 
         <rdar://problem/4796729> add "deleteButton" image resource

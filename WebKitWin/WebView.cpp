@@ -1449,8 +1449,7 @@ const String& WebView::userAgentForKURL(const KURL& /*url*/)
         return m_userAgentCustom;
 
     if (!m_userAgentStandard.length())
-//        m_userAgentStandard = String::format("Mozilla/5.0 (Windows; U; %s; %s) AppleWebKit/%s (KHTML, like Gecko)%s%s", osVersion().latin1().data(), language().latin1().data(), webKitVersion().latin1().data(), (m_applicationName.length() ? " " : ""), m_applicationName.latin1().data());
-        m_userAgentStandard = String::format("Mozilla/5.0 (Macintosh; U; Intel Mac OS X; %s) AppleWebKit/%s (KHTML, like Gecko) Safari/521.31", language().latin1().data(), webKitVersion().latin1().data(), (m_applicationName.length() ? " " : ""), m_applicationName.latin1().data(), osVersion().latin1().data());
+        m_userAgentStandard = String::format("Mozilla/5.0 (Windows; U; %s; %s) AppleWebKit/%s (KHTML, like Gecko)%s%s", osVersion().latin1().data(), language().latin1().data(), webKitVersion().latin1().data(), (m_applicationName.length() ? " " : ""), m_applicationName.latin1().data());
     return m_userAgentStandard;
 }
 
