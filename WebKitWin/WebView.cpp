@@ -737,8 +737,8 @@ bool WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
 
         if (m_uiDelegate) {
             IPropertyBag* props;
-            POINT pt = {mouseEvent.pos().x(), mouseEvent.pos().y()};
-            if (SUCCEEDED(elementAtPoint(&pt, &props))) {
+            POINT contentsPoint = m_page->mainFrame()->view()->windowToContents(mouseEvent.pos());
+            if (SUCCEEDED(elementAtPoint(&contentsPoint, &props))) {
                 m_uiDelegate->mouseDidMoveOverElement((IWebView*)this, props, (UINT)lParam);
                 props->Release();
             }
