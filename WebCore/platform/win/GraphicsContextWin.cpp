@@ -33,6 +33,9 @@
 
 #include "GraphicsContextPlatformPrivate.h"
 
+// This is SPI, so don't put this in OpenSource!
+CG_EXTERN void CGContextSetFocusRingWithColor(CGContextRef context, CGFloat blur, CGColorRef color, const CGRect *clipRect, CFDictionaryRef options);
+
 using namespace std;
 
 namespace WebCore {
@@ -293,6 +296,41 @@ void GraphicsContext::setCompositeOperation(CompositeOperator mode)
             break;
     }
     CGContextSetBlendMode(platformContext(), target);
+}
+
+void GraphicsContext::drawFocusRing(const Color& color)
+{
+    if (paintingDisabled())
+        return;
+
+    float radius = (focusRingWidth() - 1) / 2.0f;
+    int offset = radius + focusRingOffset();
+    CGColorRef colorRef = color.isValid() ? cgColor(color) : 0;
+
+    CGMutablePathRef focusRingPath = CGPathCreateMutable();
+    const Vector<IntRect>& rects = focusRingRects();
+    unsigned rectCount = rects.size();
+    for (unsigned i = 0; i < rectCount; i++)
+        CGPathAddRect(focusRingPath, 0, CGRectInset(rects[i], -offset, -offset));
+
+    CGContextRef context = platformContext();
+    CGContextSaveGState(context);
+
+    CGContextBeginPath(context);
+    CGContextAddPath(context, focusRingPath);
+
+    // FIXME: We clear the fill color here to avoid getting a black fill when drawing the focus ring.
+    // Find out from CG if this is their bug.
+    CGContextSetRGBFillColor(context, 0, 0, 0, 0);
+
+    CGContextSetFocusRingWithColor(context, radius, colorRef, 0, (CFDictionaryRef)0);
+    CGContextFillPath(context);
+
+    CGColorRelease(colorRef);
+
+    CGPathRelease(focusRingPath);
+
+    CGContextRestoreGState(context);
 }
 
 #ifdef SVG_SUPPORT

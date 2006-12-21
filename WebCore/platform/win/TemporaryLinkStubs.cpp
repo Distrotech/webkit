@@ -140,10 +140,9 @@ void Widget::setIsSelected(bool) { LOG_NOIMPL(); }
 
 bool ScrollView::inWindow() const { LOG_NOIMPL(); return true; }
 
-void GraphicsContext::drawFocusRing(const Color& color) { LOG_NOIMPL(); }
 void GraphicsContext::drawLineForMisspellingOrBadGrammar(const IntPoint& point, int width, bool grammar) { LOG_NOIMPL(); }
 
-Color WebCore::focusRingColor() { LOG_NOIMPL(); return 0xFF0000FF; }
+Color WebCore::focusRingColor() { LOG_NOIMPL(); return 0xFF7DADD9; }
 void WebCore::setFocusRingColorChangeFunction(void (*)()) { LOG_NOIMPL(); }
 
 void Frame::setNeedsReapplyStyles() { LOG_NOIMPL(); }
