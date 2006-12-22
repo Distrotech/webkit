@@ -499,19 +499,15 @@ public:
     virtual HRESULT STDMETHODCALLTYPE scrollOffset( 
         /* [retval][out] */ LPPOINT offset);
 
-    virtual HRESULT STDMETHODCALLTYPE startPrintJob( 
-        /* [in] */ HDC printDC);
-    
-    virtual HRESULT STDMETHODCALLTYPE endPrintJob( 
-        /* [in] */ HDC printDC);
-    
     virtual HRESULT STDMETHODCALLTYPE getPrintedPageCount( 
         /* [in] */ HDC printDC,
         /* [retval][out] */ UINT *pageCount);
     
-    virtual HRESULT STDMETHODCALLTYPE printPage( 
-        /* [in] */ HDC printDC,
-        UINT pageNumber);
+    virtual HRESULT STDMETHODCALLTYPE spoolPages( 
+    /* [in] */ HDC printDC,
+    /* [in] */ UINT startPage,
+    /* [in] */ UINT endPage,
+    /* [retval][out] */ void* ctx);
 
     virtual HRESULT STDMETHODCALLTYPE markAllMatchesForText(
         BSTR search, BOOL caseSensitive, BOOL highlight, UINT limit, UINT* matches);
@@ -544,13 +540,13 @@ public:
     void paint(HDC, LPARAM);
     void paintIntoBackingStore(WebCore::FrameView*, HDC bitmapDC, LPRECT dirtyRect);
     void paintIntoWindow(HDC bitmapDC, HDC windowDC, LPRECT dirtyRect);
-    void print(HDC dc, LPARAM options);
     bool ensureBackingStore();
     void addToDirtyRegion(const WebCore::IntRect&);
     void addToDirtyRegion(HRGN);
     void scrollBackingStore(WebCore::FrameView*, int dx, int dy, const WebCore::IntRect& scrollViewRect, const WebCore::IntRect& clipRect);
     void updateBackingStore(WebCore::FrameView*, HDC, bool backingStoreCompletelyDirty);
     void deleteBackingStore();
+    Vector<WebCore::IntRect> computePageRects(HDC printDC);
     void frameRect(RECT* rect);
     void closeWindow();
 
@@ -587,7 +583,6 @@ protected:
     float m_textSizeMultiplier;
     WebCore::String m_overrideEncoding;
     WebCore::String m_applicationName;
-    Vector<WebCore::IntRect> m_pages;
     bool m_mouseActivated;
 };
 
