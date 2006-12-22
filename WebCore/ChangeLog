@@ -1,3 +1,9 @@
+2006-12-22  Anders Carlsson  <acarlsson@apple.com>
+
+        Build fix.
+        
+        * WebCore.vcproj/WebCore.vcproj:
+
 2006-12-22  John Sullivan  <sullivan@apple.com>
 
         Reviewed by Kevin Decker
