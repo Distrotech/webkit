@@ -1,3 +1,13 @@
+2006-12-22  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Kevin Decker
+
+        Renamed stub method name to match change in WebCore
+
+        * platform/win/TemporaryLinkStubs.cpp:
+        (WebCore::Editor::markMisspellingsAfterTypingToPosition):
+        renamed from markMisspellingsInAdjacentWords
+
 2006-12-20  Adam Roben  <aroben@apple.com>
 
         Reviewed by Hyatt.

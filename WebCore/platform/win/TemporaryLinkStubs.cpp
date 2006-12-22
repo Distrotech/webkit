@@ -127,7 +127,7 @@ bool Editor::isSelectionMisspelled() { LOG_NOIMPL(); return false; }
 bool Editor::isSelectionUngrammatical() { LOG_NOIMPL(); return false; }
 Vector<String> Editor::guessesForMisspelledSelection() { LOG_NOIMPL(); return Vector<String>(); }
 Vector<String> Editor::guessesForUngrammaticalSelection() { LOG_NOIMPL(); return Vector<String>(); }
-void Editor::markMisspellingsInAdjacentWords(WebCore::VisiblePosition const&) { LOG_NOIMPL(); }
+void Editor::markMisspellingsAfterTypingToPosition(WebCore::VisiblePosition const&) { LOG_NOIMPL(); }
 void Editor::advanceToNextMisspelling(bool) { LOG_NOIMPL(); }
     
 bool CheckIfReloading(WebCore::DocLoader*) { LOG_NOIMPL(); return false; }
