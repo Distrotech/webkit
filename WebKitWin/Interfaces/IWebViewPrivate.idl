@@ -89,10 +89,8 @@ interface IWebViewPrivate : IUnknown
 
     HRESULT scrollOffset([out, retval] LPPOINT offset);
     
-    HRESULT startPrintJob([in] HDC printDC);
-    HRESULT endPrintJob([in] HDC printDC);
     HRESULT getPrintedPageCount([in] HDC printDC, [out, retval] UINT* pageCount);
-    HRESULT printPage([in] HDC printDC, UINT pageNumber);
+    HRESULT spoolPages([in] HDC printDC, [in] UINT startPage, [in] UINT endPage, [out, retval] void* ctx);
 
     // Support for displaying multiple text matches.
     HRESULT markAllMatchesForText([in] BSTR search, [in] BOOL caseSensitive, [in] BOOL highlight, [in] UINT limit, [out] UINT* matches);
