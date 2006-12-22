@@ -67,6 +67,12 @@
 #include <tchar.h>
 #include <windowsx.h>
 
+extern "C" {
+    CGAffineTransform CGContextGetBaseCTM(CGContextRef c);
+    void CGContextSetBaseCTM(CGContextRef c, CGAffineTransform m);
+    void CGContextSetCTM(CGContextRef c, CGAffineTransform transform);
+};
+
 using namespace WebCore;
 using std::min;
 
@@ -439,57 +445,23 @@ void WebView::closeWindow()
     }
 }
 
-#define MAXIMUM_DPI 300
-
-static void getPrintRects(HDC printDC, IntRect& devicePrintRect, IntRect& rasterizingPrintRect)
+Vector<WebCore::IntRect> WebView::computePageRects(HDC printDC)
 {
-    devicePrintRect = IntRect(0, 0, 0, 0);
-    rasterizingPrintRect = IntRect(0, 0, 0, 0);
+    Vector<IntRect> pages;
+
     if (!printDC)
-        return;
+        return pages;
 
-    int dpiX = GetDeviceCaps(printDC, LOGPIXELSX);
-    int dpiY = GetDeviceCaps(printDC, LOGPIXELSY);
-    double scaleX = (dpiX <= MAXIMUM_DPI) ? 1.0 : (double)MAXIMUM_DPI / (double)dpiX;
-    double scaleY = (dpiY <= MAXIMUM_DPI) ? 1.0 : (double)MAXIMUM_DPI / (double)dpiY;
-
-    devicePrintRect = IntRect(0, 0, 
+    IntRect printerRect = IntRect(0, 0, 
                       GetDeviceCaps(printDC, PHYSICALWIDTH)  - 2 * GetDeviceCaps(printDC, PHYSICALOFFSETX),
                       GetDeviceCaps(printDC, PHYSICALHEIGHT) - 2 * GetDeviceCaps(printDC, PHYSICALOFFSETY) );
-    rasterizingPrintRect = devicePrintRect;
-    rasterizingPrintRect.setSize(IntSize((int)(scaleX*devicePrintRect.width()), (int)(scaleY*devicePrintRect.height())));
-}
-
-HRESULT STDMETHODCALLTYPE WebView::startPrintJob( 
-    /* [in] */ HDC printDC)
-{
-    if (!printDC)
-        return E_POINTER;
 
     FrameWin* frame = static_cast<FrameWin*>(m_page->focusController()->focusedOrMainFrame());
-    if (!frame || !frame->document() || frame->document()->printing())
-        return E_FAIL;
-
-    IntRect devicePrintRect;
-    IntRect rasterizingPrintRect;
-    getPrintRects(printDC, devicePrintRect, rasterizingPrintRect);
-    if (rasterizingPrintRect.isEmpty())
-        return E_FAIL;
-
     frame->document()->setPrinting(true);
-    m_pages = frame->computePageRects(rasterizingPrintRect, 1.0f);
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE WebView::endPrintJob( 
-    /* [in] */ HDC /*printDC*/)
-{
-    FrameWin* frame = static_cast<FrameWin*>(m_page->focusController()->focusedOrMainFrame());
-    if (!frame || !frame->document() || !frame->document()->printing())
-        return E_FAIL;
-
+    pages = frame->computePageRects(printerRect, 1.0);
     frame->document()->setPrinting(false);
-    return S_OK;
+
+    return pages;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::getPrintedPageCount( 
@@ -504,110 +476,72 @@ HRESULT STDMETHODCALLTYPE WebView::getPrintedPageCount(
     if (!frame || !frame->document())
         return E_FAIL;
 
-    if (frame->document()->printing())
-        *pageCount = (UINT) m_pages.size();
-    else {
-        IntRect devicePrintRect;
-        IntRect rasterizingPrintRect;
-        getPrintRects(printDC, devicePrintRect, rasterizingPrintRect);
-        if (rasterizingPrintRect.isEmpty())
-            return E_FAIL;
-        *pageCount = (UINT) frame->computePageRects(rasterizingPrintRect, 1.0f).size();
-    }
+    Vector<IntRect> pages = computePageRects(printDC);
+    *pageCount = (UINT) pages.size();
+    
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE WebView::printPage( 
+HRESULT STDMETHODCALLTYPE WebView::spoolPages( 
     /* [in] */ HDC printDC,
-    UINT pageNumber)
+    /* [in] */ UINT startPage,
+    /* [in] */ UINT endPage,
+    /* [retval][out] */ void* ctx)
 {
-    if (!printDC)
+    if (!printDC || !ctx)
         return E_POINTER;
 
-    HRESULT hr = S_OK;
-    HDC bitmapDC = 0;
-    HBITMAP bitmap = 0;
+    PlatformGraphicsContext* pctx = (PlatformGraphicsContext*)ctx;
 
     FrameWin* frame = static_cast<FrameWin*>(m_page->focusController()->focusedOrMainFrame());
     if (!frame || !frame->document())
         return E_FAIL;
 
-    // will be false if we're called from print preview
-    bool inPrintJob = frame->document()->printing();
-    if (!inPrintJob)
-        startPrintJob(printDC);
+    Vector<IntRect> pages = computePageRects(printDC);
 
-    IntRect devicePrintRect;
-    IntRect rasterizingPrintRect;
-    getPrintRects(printDC, devicePrintRect, rasterizingPrintRect);
-    if (devicePrintRect.isEmpty() || rasterizingPrintRect.isEmpty())
+    if (pages.size() == 0 || startPage > pages.size())
         return E_FAIL;
 
-    RECT rcPaint = devicePrintRect;
-#ifdef PRE_FILL_BLANKS
-    HBRUSH yellowBrush = CreateSolidBrush(RGB(255, 255, 0));
-    FillRect(dc, &rcPaint, yellowBrush);
-#endif
+    if (startPage > 0)
+        startPage--;
 
-    if (pageNumber <= m_pages.size()) {
-        IntRect pageRect = m_pages[(long)pageNumber-1];
+    if (endPage == 0)
+        endPage = (UINT)pages.size();
 
-        BITMAPINFO bitmapInfo;
-        bitmapInfo.bmiHeader.biSize          = sizeof(BITMAPINFOHEADER);
-        bitmapInfo.bmiHeader.biWidth         = rasterizingPrintRect.width(); 
-        bitmapInfo.bmiHeader.biHeight        = -rasterizingPrintRect.height();
-        bitmapInfo.bmiHeader.biPlanes        = 1;
-        bitmapInfo.bmiHeader.biBitCount      = 32;
-        bitmapInfo.bmiHeader.biCompression   = BI_RGB;
-        bitmapInfo.bmiHeader.biSizeImage     = 0;
-        bitmapInfo.bmiHeader.biXPelsPerMeter = 0;
-        bitmapInfo.bmiHeader.biYPelsPerMeter = 0;
-        bitmapInfo.bmiHeader.biClrUsed       = 0;
-        bitmapInfo.bmiHeader.biClrImportant  = 0;
+    frame->document()->setPrinting(true);
 
-        void* pixels = 0;
-        bitmap = CreateDIBSection(printDC, &bitmapInfo, DIB_RGB_COLORS, &pixels, 0, 0);
-        if (!bitmap) {
-            hr = E_OUTOFMEMORY;
-            goto exit;
-        }
-        bitmapDC = CreateCompatibleDC(printDC);
-        if (!bitmapDC) {
-            hr = E_OUTOFMEMORY;
-            goto exit;
-        }
-        HBITMAP oldBitmap = (HBITMAP)SelectObject(bitmapDC, bitmap);
-        ASSERT(oldBitmap);
+    WebCore::GraphicsContext spoolCtx = GraphicsContext (pctx);
 
-        FillRect(bitmapDC, &rcPaint, (HBRUSH)GetStockObject(WHITE_BRUSH));
-#ifdef PRE_FILL_BLANKS
-        HBRUSH redBrush = CreateSolidBrush(RGB(255, 0, 0));
-        FillRect(bitmapDC, &rcPaint, redBrush);
-#endif
+    for (UINT ii = startPage; ii < endPage; ii++)
+    {
+        IntRect pageRect = pages[ii];
 
-        GraphicsContext gc(bitmapDC);
+        CGContextSaveGState(pctx);
 
-        CGFloat scale = (float)rasterizingPrintRect.width()/ (float)pageRect.width();
-        CGContextScaleCTM(gc.platformContext(), scale, scale);
-        CGContextTranslateCTM(gc.platformContext(), CGFloat(-pageRect.x()),
-                                                    CGFloat(-pageRect.y()));
+        CGRect mediaBox = CGRectMake(CGFloat(0),
+                                     CGFloat(0),
+                                     CGFloat(pageRect.width()),
+                                     CGFloat(pageRect.height()));
 
+        CGContextBeginPage(pctx, &mediaBox);
 
-        frame->paint(&gc, pageRect);
+        CGFloat scale = (float)mediaBox.size.width/ (float)pageRect.width();
+        CGAffineTransform ctm = CGContextGetBaseCTM(pctx);
+        ctm = CGAffineTransformScale(ctm, -scale, -scale);
+        ctm = CGAffineTransformTranslate(ctm, CGFloat(-pageRect.x()), CGFloat(-pageRect.y()));
+        CGContextScaleCTM(pctx, scale, scale);
+        CGContextTranslateCTM(pctx, CGFloat(-pageRect.x()), CGFloat(-pageRect.y()));
+        CGContextSetBaseCTM(pctx, ctm);
 
-        StretchDIBits(printDC, 0, 0, devicePrintRect.width(), devicePrintRect.height(), 0, 0, rasterizingPrintRect.width(), rasterizingPrintRect.height(), pixels, &bitmapInfo, DIB_RGB_COLORS, SRCCOPY);
+        frame->paint(&spoolCtx, pageRect);
 
-        SelectObject(bitmapDC, oldBitmap);
+        CGContextEndPage(pctx);
+        CGContextRestoreGState(pctx);
     }
 
-exit:
-    if (bitmapDC)
-        DeleteDC(bitmapDC);
-    if (bitmap)
-        DeleteObject(bitmap);
-    if (!inPrintJob)
-        endPrintJob(printDC);
-    return hr;
+    frame->document()->setPrinting(false);
+ 
+    return S_OK;
 }
 
 Page* WebView::page()
