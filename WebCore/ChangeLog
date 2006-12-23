@@ -1,3 +1,11 @@
+2006-12-22  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Anders.
+
+        Build fix.
+
+        * WebCore.vcproj/WebCore.vcproj:
+
 2006-12-22  Anders Carlsson  <acarlsson@apple.com>
 
         Build fix.

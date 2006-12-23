@@ -6248,6 +6248,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSSVGPathSegListCustom.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSSVGPODTypeWrapper.h"
 					>
 				</File>
@@ -6929,10 +6933,6 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\svgpathparser.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGPathSeg.cpp"
 					>
 				</File>
 				<File
