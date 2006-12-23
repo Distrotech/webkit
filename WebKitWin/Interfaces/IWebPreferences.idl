@@ -60,6 +60,14 @@ typedef enum FontSmoothingType {
     FontSmoothingTypeStrong
 } FontSmoothingType;
 
+typedef enum WebKitEditableLinkBehavior {
+    WebKitEditableLinkDefaultBehavior = 0,
+    WebKitEditableLinkAlwaysLive,
+    WebKitEditableLinkOnlyLiveWithShiftKey,
+    WebKitEditableLinkLiveWhenNotFocused,
+    WebKitEditableLinkNeverLive
+} WebKitEditableLinkBehavior;
+
 /*!
     @class WebPreferences
 
@@ -465,4 +473,15 @@ interface IWebPreferences : IUnknown
 
     HRESULT fontSmoothing([out, retval] FontSmoothingType* smoothingType);
     HRESULT setFontSmoothing([in] FontSmoothingType smoothingType);
+
+    /*
+        - (WebKitEditableLinkBehavior)editableLinkBehavior;
+    */
+    HRESULT editableLinkBehavior([out, retval] WebKitEditableLinkBehavior* editableLinkBehavior);
+
+    /*
+        - (void)setEditableLinkBehavior:(WebKitEditableLinkBehavior)behavior;
+    */
+    HRESULT setEditableLinkBehavior([in] WebKitEditableLinkBehavior behavior);
+
 }

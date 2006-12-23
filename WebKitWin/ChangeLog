@@ -1,3 +1,21 @@
+2006-12-22  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Geoff.
+
+        Fixed <rdar://4766681> and <rdar://4766685> concerning editable link behavior
+
+        * Interfaces/IWebPreferences.idl:
+        * WebHistoryItem.cpp:
+        (WebHistoryItem::dictionaryRepresentation):
+        * WebPreferenceKeysPrivate.h:
+        * WebPreferences.cpp:
+        (WebPreferences::initialize):
+        (WebPreferences::editableLinkBehavior):
+        (WebPreferences::setEditableLinkBehavior):
+        * WebPreferences.h:
+        * WebView.cpp:
+        (WebView::updateWebCoreSettingsFromPreferences):
+
 2006-12-20  Adam Roben  <aroben@apple.com>
 
         Reviewed by Mark Rowe.

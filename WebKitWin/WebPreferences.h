@@ -228,6 +228,12 @@ public:
     virtual HRESULT STDMETHODCALLTYPE setFontSmoothing( 
         /* [in] */ FontSmoothingType smoothingType);
 
+    virtual HRESULT STDMETHODCALLTYPE editableLinkBehavior( 
+        /* [retval][out] */ WebKitEditableLinkBehavior* behavior);
+    
+    virtual HRESULT STDMETHODCALLTYPE setEditableLinkBehavior( 
+        /* [in] */ WebKitEditableLinkBehavior behavior);
+
     // WebPreferences
     static BSTR webPreferencesChangedNotification();
 

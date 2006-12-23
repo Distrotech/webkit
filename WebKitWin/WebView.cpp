@@ -1292,6 +1292,16 @@ HRESULT WebView::updateWebCoreSettingsFromPreferences(IWebPreferences* preferenc
         changed = true;
     }
 
+    //[_private->settings setEditableLinkBehavior:[preferences editableLinkBehavior]];
+    WebKitEditableLinkBehavior behavior;
+    hr = preferences->editableLinkBehavior(&behavior);
+    if (FAILED(hr))
+        return hr;
+    if (m_settings.editableLinkBehavior() != behavior) {
+        m_settings.setEditableLinkBehavior((WebCore::Settings::EditableLinkBehavior)behavior);
+        changed = true;
+    }
+
     if (changed) {
         Page::setNeedsReapplyStylesForSettingsChange(&m_settings);
         m_mainFrame->invalidate(); //FIXME

@@ -219,6 +219,12 @@ void WebPreferences::initialize()
     if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
         CFDictionaryAddValue(m_standardUserDefaults, key,                               CFSTR("0"));
 
+    key = CFSTR(WebKitEditableLinkBehaviorPreferenceKey);
+    CFStringRef linkBehaviorStringRef = CFStringCreateWithFormat(0, 0, CFSTR("%d"), WebKitEditableLinkDefaultBehavior);
+    if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
+        CFDictionaryAddValue(m_standardUserDefaults, key,                               linkBehaviorStringRef);
+    CFRelease(linkBehaviorStringRef);
+
     key = CFSTR(WebKitHistoryItemLimitKey);
     if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
         CFDictionaryAddValue(m_standardUserDefaults, key,                               CFSTR("1000"));
@@ -1045,5 +1051,31 @@ HRESULT STDMETHODCALLTYPE WebPreferences::setFontSmoothing(
     /* [in] */ FontSmoothingType smoothingType)
 {
     setIntegerValue(CFSTR(WebKitFontSmothingTypePreferenceKey), smoothingType);
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebPreferences::editableLinkBehavior(
+    /* [out, retval] */ WebKitEditableLinkBehavior* editableLinkBehavior)
+{
+    WebKitEditableLinkBehavior value = (WebKitEditableLinkBehavior) integerValueForKey(CFSTR(WebKitEditableLinkBehaviorPreferenceKey));
+    switch (value) {
+        case WebKitEditableLinkDefaultBehavior:
+        case WebKitEditableLinkAlwaysLive:
+        case WebKitEditableLinkOnlyLiveWithShiftKey:
+        case WebKitEditableLinkLiveWhenNotFocused:
+        case WebKitEditableLinkNeverLive:
+            *editableLinkBehavior = value;
+            break;
+        default: // ensure that a valid result is returned
+            *editableLinkBehavior = WebKitEditableLinkDefaultBehavior;
+            break;
+    }
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebPreferences::setEditableLinkBehavior(
+    /* [in] */ WebKitEditableLinkBehavior behavior)
+{
+    setIntegerValue(CFSTR(WebKitEditableLinkBehaviorPreferenceKey), behavior);
     return S_OK;
 }
