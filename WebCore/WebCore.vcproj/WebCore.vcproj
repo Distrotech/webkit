@@ -6260,6 +6260,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSSVGPointListCustom.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSTreeWalkerCustom.cpp"
 					>
 				</File>
