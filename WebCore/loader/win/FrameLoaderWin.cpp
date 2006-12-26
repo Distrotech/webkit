@@ -46,6 +46,7 @@
 #include "PluginDatabaseWin.h"
 #include "PluginViewWin.h"
 #include "MimeTypeRegistry.h"
+#include "Settings.h"
 
 namespace WebCore {
 
@@ -193,7 +194,7 @@ void FrameLoader::setTitle(const String& title)
 
 void FrameLoader::partClearedInBegin()
 {
-    if (!m_frame->javaScriptEnabled())
+    if (!m_frame->settings()->isJavaScriptEnabled())
         return;
 
     if (FrameWinClient* client = Win(m_frame)->client()) {   

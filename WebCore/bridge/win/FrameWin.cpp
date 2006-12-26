@@ -53,6 +53,7 @@
 #include "npruntime_impl.h"
 #include "runtime_root.h"
 #include "GraphicsContext.h"
+#include "Settings.h"
 
 #if PLATFORM(CG)
 #include <CoreGraphics/CoreGraphics.h>
@@ -286,7 +287,7 @@ void FrameWin::cleanupPluginObjects()
 
 KJS::Bindings::RootObject* FrameWin::bindingRootObject()
 {
-    ASSERT(javaScriptEnabled());
+    ASSERT(settings()->isJavaScriptEnabled());
     if (!m_bindingRoot) {
         KJS::JSLock lock;
         m_bindingRoot = new KJS::Bindings::RootObject(0); // The root gets deleted by JavaScriptCore
@@ -301,7 +302,7 @@ KJS::Bindings::RootObject* FrameWin::bindingRootObject()
 NPObject* FrameWin::windowScriptNPObject()
 {
     if (!m_windowScriptNPObject) {
-        if (javaScriptEnabled()) {
+        if (settings()->isJavaScriptEnabled()) {
             // JavaScript is enabled, so there is a JavaScript window object. Return an NPObject bound to the window
             // object.
             KJS::JSObject* win = KJS::Window::retrieveWindow(this);

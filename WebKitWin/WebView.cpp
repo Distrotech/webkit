@@ -60,6 +60,7 @@
 #include <WebCore/PlatformWheelEvent.h>
 #include <WebCore/ResourceHandleClient.h>
 #include <WebCore/SelectionController.h>
+#include <WebCore/Settings.h>
 #include <WebCore/TypingCommand.h>
 #pragma warning(pop)
 #include <JavaScriptCore/value.h>
@@ -1072,247 +1073,133 @@ HRESULT WebView::updateWebCoreSettingsFromPreferences(IWebPreferences* preferenc
     BSTR str;
     int size;
     BOOL enabled;
-    bool newEnabled;
-    bool changed = false;
     
-    //[_private->settings setCursiveFontFamily:[preferences cursiveFontFamily]];
+    Settings* settings = m_page->settings();
+
     hr = preferences->cursiveFontFamily(&str);
     if (FAILED(hr))
         return hr;
-    AtomicString cursiveFont(str, SysStringLen(str));
-    if (m_settings.cursiveFontName() != cursiveFont) {
-        m_settings.setCursiveFontName(cursiveFont);
-        changed = true;
-    }
+    settings->setCursiveFontFamily(AtomicString(str, SysStringLen(str)));
     SysFreeString(str);
 
-    //[_private->settings setDefaultFixedFontSize:[preferences defaultFixedFontSize]];
     hr = preferences->defaultFixedFontSize(&size);
     if (FAILED(hr))
         return hr;
-    if (m_settings.mediumFixedFontSize() != size) {
-        m_settings.setMediumFixedFontSize(size);
-        changed = true;
-    }
+    settings->setDefaultFixedFontSize(size);
 
-    //[_private->settings setDefaultFontSize:[preferences defaultFontSize]];
     hr = preferences->defaultFontSize(&size);
     if (FAILED(hr))
         return hr;
-    if (m_settings.mediumFontSize() != size) {
-        m_settings.setMediumFontSize(size);
-        changed = true;
-    }
+    settings->setDefaultFontSize(size);
     
-    //[_private->settings setDefaultTextEncoding:[preferences defaultTextEncodingName]];
     hr = preferences->defaultTextEncodingName(&str);
     if (FAILED(hr))
         return hr;
-    DeprecatedString encoding((DeprecatedChar*)str, SysStringLen(str));
-    if (m_settings.encoding() != encoding) {
-        m_settings.setEncoding(encoding);
-        changed = true;
-    }
+    settings->setDefaultTextEncodingName(String(str, SysStringLen(str)));
     SysFreeString(str);
 
-    //[_private->settings setFantasyFontFamily:[preferences fantasyFontFamily]];
     hr = preferences->fantasyFontFamily(&str);
     if (FAILED(hr))
         return hr;
-    AtomicString fantasyFont(str, SysStringLen(str));
-    if (m_settings.fantasyFontName() != fantasyFont) {
-        m_settings.setFantasyFontName(fantasyFont);
-        changed = true;
-    }
+    settings->setFantasyFontFamily(AtomicString(str, SysStringLen(str)));
     SysFreeString(str);
 
-    //[_private->settings setFixedFontFamily:[preferences fixedFontFamily]];
     hr = preferences->fixedFontFamily(&str);
     if (FAILED(hr))
         return hr;
-    AtomicString fixedFont(str, SysStringLen(str));
-    if (m_settings.fixedFontName() != fixedFont) {
-        m_settings.setFixedFontName(fixedFont);
-        changed = true;
-    }
+    settings->setFixedFontFamily(AtomicString(str, SysStringLen(str)));
     SysFreeString(str);
 
-    //[_private->settings setJavaEnabled:[preferences isJavaEnabled]];
     hr = preferences->isJavaEnabled(&enabled);
     if (FAILED(hr))
         return hr;
-    newEnabled = !!enabled;
-    if (m_settings.isJavaEnabled() != newEnabled) {
-        m_settings.setIsJavaEnabled(newEnabled);
-        changed = true;
-    }
+    settings->setJavaEnabled(!!enabled);
 
-    //[_private->settings setJavaScriptEnabled:[preferences isJavaScriptEnabled]];
     hr = preferences->isJavaScriptEnabled(&enabled);
     if (FAILED(hr))
         return hr;
-    newEnabled = !!enabled;
-    if (m_settings.isJavaScriptEnabled() != newEnabled) {
-        m_settings.setIsJavaScriptEnabled(newEnabled);
-        changed = true;
-    }
+    settings->setJavaScriptEnabled(!!enabled);
 
-    //[_private->settings setJavaScriptCanOpenWindowsAutomatically:[preferences javaScriptCanOpenWindowsAutomatically]];
     hr = preferences->javaScriptCanOpenWindowsAutomatically(&enabled);
     if (FAILED(hr))
         return hr;
-    newEnabled = !!enabled;
-    if (m_settings.JavaScriptCanOpenWindowsAutomatically() != newEnabled) {
-        m_settings.setJavaScriptCanOpenWindowsAutomatically(newEnabled);
-        changed = true;
-    }
+    settings->setJavaScriptCanOpenWindowsAutomatically(!!enabled);
 
-    //[_private->settings setMinimumFontSize:[preferences minimumFontSize]];
     hr = preferences->minimumFontSize(&size);
     if (FAILED(hr))
         return hr;
-    if (m_settings.minFontSize() != size) {
-        m_settings.setMinFontSize(size);
-        changed = true;
-    }
+    settings->setMinimumFontSize(size);
 
-    //[_private->settings setMinimumLogicalFontSize:[preferences minimumLogicalFontSize]];
     hr = preferences->minimumLogicalFontSize(&size);
     if (FAILED(hr))
         return hr;
-    if (m_settings.minLogicalFontSize() != size) {
-        m_settings.setMinLogicalFontSize(size);
-        changed = true;
-    }
+    settings->setMinimumLogicalFontSize(size);
 
-    //[_private->settings setPluginsEnabled:[preferences arePlugInsEnabled]];
     hr = preferences->arePlugInsEnabled(&enabled);
     if (FAILED(hr))
         return hr;
-    newEnabled = !!enabled;
-    if (m_settings.isPluginsEnabled() != newEnabled) {
-        m_settings.setArePluginsEnabled(newEnabled);
-        changed = true;
-    }
+    settings->setPluginsEnabled(!!enabled);
 
-    //[_private->settings setPrivateBrowsingEnabled:[preferences privateBrowsingEnabled]];
     hr = preferences->privateBrowsingEnabled(&enabled);
     if (FAILED(hr))
         return hr;
-    newEnabled = !!enabled;
-    if (m_settings.privateBrowsingEnabled() != newEnabled) {
-        m_settings.setPrivateBrowsingEnabled(newEnabled);
-        changed = true;
-    }
+    settings->setPrivateBrowsingEnabled(!!enabled);
 
-    //[_private->settings setSansSerifFontFamily:[preferences sansSerifFontFamily]];
     hr = preferences->sansSerifFontFamily(&str);
     if (FAILED(hr))
         return hr;
-    AtomicString sansSerifFont(str, SysStringLen(str));
-    if (m_settings.sansSerifFontName() != sansSerifFont) {
-        m_settings.setSansSerifFontName(sansSerifFont);
-        changed = true;
-    }
+    settings->setSansSerifFontFamily(AtomicString(str, SysStringLen(str)));
     SysFreeString(str);
 
-    //[_private->settings setSerifFontFamily:[preferences serifFontFamily]];
     hr = preferences->serifFontFamily(&str);
     if (FAILED(hr))
         return hr;
-    AtomicString serifFont(str, SysStringLen(str));
-    if (m_settings.serifFontName() != serifFont) {
-        m_settings.setSerifFontName(serifFont);
-        changed = true;
-    }
+    settings->setSerifFontFamily(AtomicString(str, SysStringLen(str)));
     SysFreeString(str);
 
-    //[_private->settings setStandardFontFamily:[preferences standardFontFamily]];
     hr = preferences->standardFontFamily(&str);
     if (FAILED(hr))
         return hr;
-    AtomicString standardFont(str, SysStringLen(str));
-    if (m_settings.stdFontName() != standardFont) {
-        m_settings.setStdFontName(standardFont);
-        changed = true;
-    }
+    settings->setStandardFontFamily(AtomicString(str, SysStringLen(str)));
     SysFreeString(str);
 
-    //[_private->settings setWillLoadImagesAutomatically:[preferences loadsImagesAutomatically]];
     hr = preferences->loadsImagesAutomatically(&enabled);
     if (FAILED(hr))
         return hr;
-    newEnabled = !!enabled;
-    if (m_settings.autoLoadImages() != newEnabled) {
-        m_settings.setAutoLoadImages(newEnabled);
-        changed = true;
-    }
+    settings->setLoadsImagesAutomatically(!!enabled);
 
-    //if ([preferences userStyleSheetEnabled]) {
     hr = preferences->userStyleSheetEnabled(&enabled);
     if (FAILED(hr))
         return hr;
     if (enabled) {
-        //[_private->settings setUserStyleSheetLocation:[[preferences userStyleSheetLocation] _web_originalDataAsString]];
         hr = preferences->userStyleSheetLocation(&str);
         if (FAILED(hr))
             return hr;
-        DeprecatedString newURL((DeprecatedChar*)str, SysStringLen(str));
-        if (m_settings.userStyleSheetLocation().url() != newURL) {
-            m_settings.setUserStyleSheetLocation(KURL(newURL));
-            changed = true;
-        }
+        settings->setUserStyleSheetLocation(KURL(DeprecatedString((DeprecatedChar*)str, SysStringLen(str))));
         SysFreeString(str);
     } else {
-        //[_private->settings setUserStyleSheetLocation:@""];
-        DeprecatedString emptyURLStr("");
-        if (m_settings.userStyleSheetLocation().url() != emptyURLStr) {
-            m_settings.setUserStyleSheetLocation(KURL(emptyURLStr));
-            changed = true;
-        }
+        settings->setUserStyleSheetLocation(KURL(DeprecatedString("")));
     }
 
-    //[_private->settings setShouldPrintBackgrounds:[preferences shouldPrintBackgrounds]];
     hr = preferences->shouldPrintBackgrounds(&enabled);
     if (FAILED(hr))
         return hr;
-    newEnabled = !!enabled;
-    if (m_settings.shouldPrintBackgrounds() != newEnabled) {
-        m_settings.setShouldPrintBackgrounds(newEnabled);
-        changed = true;
-    }
+    settings->setShouldPrintBackgrounds(!!enabled);
 
-    //[_private->settings setTextAreasAreResizable:[preferences textAreasAreResizable]];
     hr = preferences->textAreasAreResizable(&enabled);
     if (FAILED(hr))
         return hr;
-    newEnabled = !!enabled;
-    if (m_settings.textAreasAreResizable() != newEnabled) {
-        m_settings.setTextAreasAreResizable(newEnabled);
-        changed = true;
-    }
+    settings->setTextAreasAreResizable(!!enabled);
 
-    //[_private->settings setEditableLinkBehavior:[preferences editableLinkBehavior]];
     WebKitEditableLinkBehavior behavior;
     hr = preferences->editableLinkBehavior(&behavior);
     if (FAILED(hr))
         return hr;
-    if (m_settings.editableLinkBehavior() != behavior) {
-        m_settings.setEditableLinkBehavior((WebCore::Settings::EditableLinkBehavior)behavior);
-        changed = true;
-    }
+    settings->setEditableLinkBehavior((EditableLinkBehavior)behavior);
 
-    if (changed) {
-        Page::setNeedsReapplyStylesForSettingsChange(&m_settings);
-        m_mainFrame->invalidate(); //FIXME
-    }
+    m_mainFrame->invalidate(); // FIXME
 
     return S_OK;
-}
-
-Settings* WebView::settings()
-{
-    return &m_settings;
 }
 
 static String osVersion()

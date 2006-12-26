@@ -1,3 +1,20 @@
+2006-12-25  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+
+        Removed WebCoreSettings, cleaned up WebCore::Settings.
+
+        * WebFrame.cpp:
+        (WebFrame::initWithWebFrameView): Used core() here, now that WebView::settings()
+        is gone.
+
+        * WebView.cpp:
+        (WebView::updateWebCoreSettingsFromPreferences): Simplified this code, now
+        that WebCore handles most of it.
+
+        * WebView.h: Removed settings() accessor. Settings belong to the WebCore
+        page, not the WebView.
+
 2006-12-22  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by Geoff.

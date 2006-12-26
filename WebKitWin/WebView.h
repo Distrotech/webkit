@@ -33,7 +33,6 @@
 #include "WebFrame.h"
 
 #include <WebCore/IntRect.h>
-#include <WebCore/Settings.h>
 
 class WebFrame;
 class WebBackForwardList;
@@ -535,7 +534,6 @@ public:
     bool keyUp(WPARAM, LPARAM);
     HRESULT goToItem(IWebHistoryItem* item, WebFrameLoadType withLoadType);
     HRESULT updateWebCoreSettingsFromPreferences(IWebPreferences* preferences);
-    WebCore::Settings* settings();
     bool inResizer(LPARAM lParam);
     void paint(HDC, LPARAM);
     void paintIntoBackingStore(WebCore::FrameView*, HDC bitmapDC, LPRECT dirtyRect);
@@ -576,7 +574,6 @@ protected:
     IWebFormDelegate* m_formDelegate;
     IWebBackForwardList* m_backForwardList;
     IWebPreferences* m_preferences;
-    WebCore::Settings m_settings;
     bool m_userAgentOverridden;
     WebCore::String m_userAgentCustom;
     WebCore::String m_userAgentStandard;

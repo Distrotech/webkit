@@ -48,6 +48,7 @@
 #include "PluginStreamWin.h"
 #include "npruntime_impl.h"
 #include "runtime_root.h"
+#include "Settings.h"
 #include <kjs/JSLock.h>
 #include <kjs/value.h>
 
@@ -435,7 +436,7 @@ NPError PluginViewWin::load(const FrameLoadRequest& frameLoadRequest, bool sendN
     String target = frameLoadRequest.frameName();
     String jsString = scriptStringIfJavaScriptURL(url);
     if (!jsString.isNull()) {
-        if (!m_parentFrame->javaScriptEnabled()) {
+        if (!m_parentFrame->settings()->isJavaScriptEnabled()) {
             // Return NPERR_GENERIC_ERROR if JS is disabled. This is what Mozilla does.
             return NPERR_GENERIC_ERROR;
         } else if (target.isNull() && m_mode == NP_FULL) {
