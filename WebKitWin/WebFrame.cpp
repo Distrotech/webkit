@@ -1782,11 +1782,6 @@ void WebFrame::doNotResetAfterLoadError(LoadErrorResetToken*)
     LOG_NOIMPL();
 }
 
-void WebFrame::willCloseDocument()
-{
-    LOG_NOIMPL();
-}
-
 void WebFrame::detachedFromParent1()
 {
     LOG_NOIMPL();

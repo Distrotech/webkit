@@ -211,7 +211,6 @@ public:
     virtual WebCore::LoadErrorResetToken* tokenForLoadErrorReset();
     virtual void resetAfterLoadError(WebCore::LoadErrorResetToken*);
     virtual void doNotResetAfterLoadError(WebCore::LoadErrorResetToken*);
-    virtual void willCloseDocument();
     virtual void detachedFromParent1();
     virtual void detachedFromParent2();
     virtual void detachedFromParent3();
