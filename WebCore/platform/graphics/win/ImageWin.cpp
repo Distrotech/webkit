@@ -25,6 +25,7 @@
 
 #include "config.h"
 #include "Image.h"
+#include "BitmapImage.h"
 #include "GraphicsContext.h"
 #include <ApplicationServices/ApplicationServices.h>
 
@@ -37,25 +38,25 @@ Vector<char> loadResourceIntoArray(const char*);
 
 namespace WebCore {
 
-void Image::initPlatformData()
+void BitmapImage::initPlatformData()
 {
 }
 
-void Image::invalidatePlatformData()
+void BitmapImage::invalidatePlatformData()
 {
 }
 
 Image* Image::loadPlatformResource(const char *name)
 {
     Vector<char> arr = loadResourceIntoArray(name);
-    Image* img = new Image;
+    BitmapImage* img = new BitmapImage;
     CFDataRef data = CFDataCreate(0, reinterpret_cast<const UInt8*>(arr.data()), arr.size());
     img->setNativeData(data, true);
     CFRelease(data);
     return img;
 }
 
-bool Image::getHBITMAP(HBITMAP bmp)
+bool BitmapImage::getHBITMAP(HBITMAP bmp)
 {
     ASSERT(bmp);
 
@@ -70,7 +71,7 @@ bool Image::getHBITMAP(HBITMAP bmp)
         8, bmpInfo.bmWidthBytes, deviceRGB, kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst);
   
     GraphicsContext gc(cgContext);
-    IntSize imageSize = Image::size();
+    IntSize imageSize = BitmapImage::size();
     draw(&gc, FloatRect(0, 0, bmpInfo.bmWidth, bmpInfo.bmHeight), FloatRect(0, 0, imageSize.width(), imageSize.height()), CompositeCopy);
 
     // Do cleanup

@@ -2944,6 +2944,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\BitmapImage.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\BitmapImage.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\Color.cpp"
 					>
 				</File>
@@ -6925,6 +6933,14 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGPaint.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGParserUtilities.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGParserUtilities.h"
 					>
 				</File>
 				<File
