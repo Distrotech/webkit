@@ -271,7 +271,7 @@ void FrameWin::cleanupPluginObjects()
 
     unsigned count = m_rootObjects.size();
     for (unsigned i = 0; i < count; i++)
-        m_rootObjects[i]->removeAllNativeReferences();
+        m_rootObjects[i]->destroy();
     m_rootObjects.clear();
 
     m_bindingRoot = 0;
