@@ -1,3 +1,12 @@
+2006-12-29  Geoffrey Garen  <ggaren@apple.com>
+        
+        Build fix.
+
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::bindingRootObject):
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::bindingInstance):
+
 2006-12-27  Oliver Hunt <oliver@apple.com>
 
         Build fix

@@ -836,9 +836,7 @@ KJS::Bindings::Instance* PluginViewWin::bindingInstance()
     if (error != NPERR_NO_ERROR || !object)
         return 0;
 
-    KJS::Bindings::RootObject *root = new KJS::Bindings::RootObject(this);    // The root gets deleted by JavaScriptCore.
-    root->setRootObjectImp(Window::retrieveWindow(m_parentFrame));
-    root->setInterpreter(m_parentFrame->scriptProxy()->interpreter());
+    KJS::Bindings::RootObject *root = new KJS::Bindings::RootObject(this, m_parentFrame->scriptProxy()->interpreter());    // The root gets deleted by JavaScriptCore.
     m_parentFrame->addPluginRootObject(root);
 
     KJS::Bindings::Instance *instance = KJS::Bindings::Instance::createBindingForLanguageInstance(KJS::Bindings::Instance::CLanguage, object, root);
