@@ -3064,6 +3064,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\PathTraversalState.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\PathTraversalState.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\Pen.cpp"
 					>
 				</File>
@@ -6484,6 +6492,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGAnimateMotionElement.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGAnimateMotionElement.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGAnimateTransformElement.cpp"
 					>
 				</File>
@@ -6952,14 +6968,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\svgpathparser.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\svgpathparser.h"
-					>
-				</File>
-				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGPathSeg.h"
 					>
 				</File>
@@ -7392,14 +7400,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\misc\KSVGTimeScheduler.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\misc\KSVGTimeScheduler.h"
-					>
-				</File>
-				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\misc\SVGDocumentExtensions.cpp"
 					>
 				</File>
@@ -7413,6 +7413,22 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\misc\SVGImageLoader.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\misc\SVGTimer.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\misc\SVGTimer.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\misc\TimeScheduler.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\misc\TimeScheduler.h"
 					>
 				</File>
 			</Filter>
