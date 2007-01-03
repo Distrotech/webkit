@@ -463,4 +463,17 @@ unsigned MappedAttributeHash::hash(const MappedAttributeKey& key)
     return hash;
 }
 
+void StyledElement::copyNonAttributeProperties(const Element *sourceElement)
+{
+    const StyledElement* source = static_cast<const StyledElement*>(sourceElement);
+    if (!source->m_inlineStyleDecl)
+        return;
+
+    *getInlineStyleDecl() = *source->m_inlineStyleDecl;
+    m_isStyleAttributeValid = source->m_isStyleAttributeValid;
+    m_synchronizingStyleAttribute = source->m_synchronizingStyleAttribute;
+    
+    Element::copyNonAttributeProperties(sourceElement);
+}
+
 }
