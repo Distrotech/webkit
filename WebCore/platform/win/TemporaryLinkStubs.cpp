@@ -115,6 +115,44 @@ String WebCore::resetButtonDefaultLabel() { return "Reset"; }
 String WebCore::fileButtonChooseFileLabel() { return "Browse..."; }
 String WebCore::fileButtonNoFileSelectedLabel() { return "no file selected"; }
 String WebCore::defaultLanguage() { return "en"; }
+String WebCore::contextMenuItemTagOpenLinkInNewWindow() { return "Open Link in New Window"; }
+String WebCore::contextMenuItemTagDownloadLinkToDisk() { return "Download Linked File"; }
+String WebCore::contextMenuItemTagCopyLinkToClipboard() { return "Copy Link"; }
+String WebCore::contextMenuItemTagOpenImageInNewWindow() { return "Open Image in New Window"; }
+String WebCore::contextMenuItemTagDownloadImageToDisk() { return "Download Image"; }
+String WebCore::contextMenuItemTagCopyImageToClipboard() { return "Copy Image"; }
+String WebCore::contextMenuItemTagOpenFrameInNewWindow() { return "Open Frame in New Window"; }
+String WebCore::contextMenuItemTagCopy() { return "Copy"; }
+String WebCore::contextMenuItemTagGoBack() { return "Back"; }
+String WebCore::contextMenuItemTagGoForward() { return "Forward"; }
+String WebCore::contextMenuItemTagStop() { return "Stop"; }
+String WebCore::contextMenuItemTagReload() { return "Reload"; }
+String WebCore::contextMenuItemTagCut() { return "Cut"; }
+String WebCore::contextMenuItemTagPaste() { return "Paste"; }
+String WebCore::contextMenuItemTagNoGuessesFound() { return "No Guesses Found"; }
+String WebCore::contextMenuItemTagIgnoreSpelling() { return "Ignore Spelling"; }
+String WebCore::contextMenuItemTagLearnSpelling() { return "Learn Spelling"; }
+String WebCore::contextMenuItemTagSearchWeb() { return "Search in Google"; }
+String WebCore::contextMenuItemTagLookUpInDictionary() { return "Look Up in Dictionary"; }
+String WebCore::contextMenuItemTagOpenLink() { return "Open Link"; }
+String WebCore::contextMenuItemTagIgnoreGrammar() { return "Ignore Grammar"; }
+String WebCore::contextMenuItemTagSpellingMenu() { return "Spelling and Grammar"; }
+String WebCore::contextMenuItemTagCheckSpelling() { return "Check Document Now"; }
+String WebCore::contextMenuItemTagCheckSpellingWhileTyping() { return "Check Spelling While Typing"; }
+String WebCore::contextMenuItemTagCheckGrammarWithSpelling() { return "Check Grammar With Spelling"; }
+String WebCore::contextMenuItemTagFontMenu() { return "Font"; }
+String WebCore::contextMenuItemTagBold() { return "Bold"; }
+String WebCore::contextMenuItemTagItalic() { return "Italic"; }
+String WebCore::contextMenuItemTagUnderline() { return "Underline"; }
+String WebCore::contextMenuItemTagOutline() { return "Outline"; }
+String WebCore::contextMenuItemTagWritingDirectionMenu() { return "Writing Direction"; }
+String WebCore::contextMenuItemTagDefaultDirection() { return "Default"; }
+String WebCore::contextMenuItemTagLeftToRight() { return "Left to Right"; }
+String WebCore::contextMenuItemTagRightToLeft() { return "Right to Left"; }
+String WebCore::contextMenuItemTagShowSpellingPanel(bool show)
+{
+    return show ? "Show Spelling and Grammar" : "Hide Spelling and Grammar";
+}
 
 namespace WebCore {
 
