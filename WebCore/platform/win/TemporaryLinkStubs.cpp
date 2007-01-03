@@ -51,9 +51,11 @@
 #include "Language.h"
 #include "LoaderFunctions.h"
 #include "LocalizedStrings.h"
+#include "NavigationAction.h"
 #include "Node.h"
 #include "NotImplemented.h"
 #include "Page.h"
+#include "PageCache.h"
 #include "Path.h"
 #include "PlatformMouseEvent.h"
 #include "PlugInInfoStore.h"
@@ -62,9 +64,11 @@
 #include "ResourceHandle.h"
 #include "ResourceLoader.h"
 #include "ResourceResponse.h"
+#include "ResourceRequest.h"
 #include "Screen.h"
 #include "ScrollBar.h"
 #include "SubresourceLoader.h"
+#include "SystemTime.h"
 #include "TextBoundaries.h"
 #include "Widget.h"
 #include "loader.h"
@@ -153,9 +157,6 @@ void PolicyCheck::call(bool) { LOG_NOIMPL(); }
 void PolicyCheck::clearRequest() { LOG_NOIMPL(); }
 void PolicyCheck::call(PolicyAction) { LOG_NOIMPL(); }
 
-void FrameLoader::saveDocumentState() { LOG_NOIMPL(); }
-void FrameLoader::restoreDocumentState() { LOG_NOIMPL(); }
-void FrameLoader::goBackOrForward(int) { LOG_NOIMPL(); }
 KURL FrameLoader::historyURL(int) { LOG_NOIMPL(); return KURL(); }
 bool FrameLoader::canGoBackOrForward(int) const { LOG_NOIMPL(); return false; }
 int FrameLoader::getHistoryLength() { LOG_NOIMPL(); return 0; }
@@ -187,3 +188,26 @@ bool EventHandler::lastEventIsMouseUp() const { return false; }
 
 bool ResourceHandle::loadsBlocked() { return false; }
 void ResourceHandle::loadResourceSynchronously(const ResourceRequest&, ResourceError&, ResourceResponse&, Vector<char>&) { }
+
+// CRITFIXME: See if any of the following are actually implemented in OpenSource and copy the impls to internal
+ResourceRequest& DocumentLoader::request() { STOP_NOIMPL(); static ResourceRequest rr;  return rr; }
+const ResourceRequest& DocumentLoader::request() const { STOP_NOIMPL(); static ResourceRequest rr;  return rr; }
+const ResourceRequest& DocumentLoader::originalRequest() const { STOP_NOIMPL(); static ResourceRequest rr;  return rr; }
+String DocumentLoader::title() const { LOG_NOIMPL(); return "Unimplemented - No Title"; }
+const KURL DocumentLoader::unreachableURL() const { LOG_NOIMPL(); static KURL k; return k; }
+KURL DocumentLoader::urlForHistory() const { LOG_NOIMPL(); return KURL(); }
+void DocumentLoader::setCommitted(bool) { LOG_NOIMPL(); }
+void DocumentLoader::prepareForLoadStart(){ LOG_NOIMPL(); }
+void DocumentLoader::replaceRequestURLForAnchorScroll(const KURL&) { LOG_NOIMPL(); }
+bool DocumentLoader::isClientRedirect() const { LOG_NOIMPL(); return false; }
+bool DocumentLoader::isLoading() const { LOG_NOIMPL(); return false; }
+bool DocumentLoader::getResponseRefreshAndModifiedHeaders(String&, String&) const { LOG_NOIMPL(); return false; }
+void FrameLoader::applyUserAgent(ResourceRequest&) { LOG_NOIMPL(); }
+KURL FrameLoader::dataURLBaseFromRequest(const ResourceRequest&) const { LOG_NOIMPL(); return KURL(); }
+void FrameLoader::load(const ResourceRequest&, const NavigationAction&, FrameLoadType, PassRefPtr<FormState>) { LOG_NOIMPL(); }
+void FrameLoader::load(DocumentLoader*, FrameLoadType, PassRefPtr<FormState>) { LOG_NOIMPL(); }
+void FrameLoader::opened() { LOG_NOIMPL(); }
+bool ResourceHandle::willLoadFromCache(ResourceRequest&) { LOG_NOIMPL(); return false; }
+float WebCore::userIdleTime() { LOG_NOIMPL(); return 0.0; }
+void PageCache::close() { LOG_NOIMPL(); }
+

@@ -191,26 +191,12 @@ public:
     virtual void frameLoaderDestroyed();
     virtual bool hasWebView() const;
     virtual bool hasFrameView() const;
-    virtual bool hasBackForwardList() const;
-    virtual void resetBackForwardList();
-    virtual bool provisionalItemIsTarget() const;
-    virtual bool loadProvisionalItemFromPageCache();
-    virtual void invalidateCurrentItemPageCache();
     virtual bool privateBrowsingEnabled() const;
     virtual void makeDocumentView();
     virtual void makeRepresentation(WebCore::DocumentLoader*);
     virtual void forceLayout();
     virtual void forceLayoutForNonHTML();
-    virtual void updateHistoryForCommit();
-    virtual void updateHistoryForBackForwardNavigation();
-    virtual void updateHistoryForReload();
-    virtual void updateHistoryForStandardLoad();
-    virtual void updateHistoryForInternalLoad();
-    virtual void updateHistoryAfterClientRedirect();
     virtual void setCopiesOnScroll();
-    virtual WebCore::LoadErrorResetToken* tokenForLoadErrorReset();
-    virtual void resetAfterLoadError(WebCore::LoadErrorResetToken*);
-    virtual void doNotResetAfterLoadError(WebCore::LoadErrorResetToken*);
     virtual void detachedFromParent1();
     virtual void detachedFromParent2();
     virtual void detachedFromParent3();
@@ -232,8 +218,6 @@ public:
     virtual void cancelPolicyCheck();
     virtual void dispatchWillSubmitForm(WebCore::FramePolicyFunction, PassRefPtr<WebCore::FormState>);
     virtual void dispatchDidLoadMainResource(WebCore::DocumentLoader*);
-    virtual void clearLoadingFromPageCache(WebCore::DocumentLoader*);
-    virtual bool isLoadingFromPageCache(WebCore::DocumentLoader*);
     virtual void revertToProvisionalState(WebCore::DocumentLoader*);
     virtual void clearUnarchivingState(WebCore::DocumentLoader*);
     virtual void progressStarted();
@@ -260,6 +244,13 @@ public:
     virtual void prepareForDataSourceReplacement();
     virtual void setTitle(const WebCore::String& title, const WebCore::KURL&);
     virtual WebCore::String userAgent();
+    virtual void setDocumentViewFromPageCache(WebCore::PageCache *);
+    virtual void updateGlobalHistoryForStandardLoad(const WebCore::KURL &);
+    virtual void updateGlobalHistoryForReload(const WebCore::KURL &);
+    virtual bool shouldGoToHistoryItem(WebCore::HistoryItem *) const;
+    virtual void saveScrollPositionAndViewStateToItem(WebCore::HistoryItem *);
+    virtual void saveDocumentViewToPageCache(WebCore::PageCache *);
+    virtual bool canCachePage(void) const;
 
     // WebFrame
     void initWithWebFrameView(IWebFrameView*, IWebView*, WebCore::Page*, WebCore::HTMLFrameOwnerElement*);

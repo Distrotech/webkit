@@ -1,3 +1,30 @@
+2007-01-02  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Lou
+
+        Temporary Link Stub fix for Back/Forward cache landing in OpenSource
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/win/TemporaryLinkStubs.cpp:
+        (DocumentLoader::request):
+        (DocumentLoader::originalRequest):
+        (DocumentLoader::title):
+        (DocumentLoader::unreachableURL):
+        (DocumentLoader::urlForHistory):
+        (DocumentLoader::setCommitted):
+        (DocumentLoader::prepareForLoadStart):
+        (DocumentLoader::replaceRequestURLForAnchorScroll):
+        (DocumentLoader::isClientRedirect):
+        (DocumentLoader::isLoading):
+        (DocumentLoader::getResponseRefreshAndModifiedHeaders):
+        (FrameLoader::applyUserAgent):
+        (FrameLoader::dataURLBaseFromRequest):
+        (FrameLoader::load):
+        (FrameLoader::opened):
+        (ResourceHandle::willLoadFromCache):
+        (WebCore::userIdleTime):
+        (PageCache::close):
+
 2007-01-02  Anders Carlsson  <acarlsson@apple.com>
 
         Build fix.

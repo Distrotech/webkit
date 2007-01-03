@@ -1,3 +1,19 @@
+2007-01-02  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Lou
+        
+        Temporary Link Stub fix for Back/Forward cache landing in OpenSource
+
+        * WebFrame.cpp:
+        (WebFrame::setDocumentViewFromPageCache):
+        (WebFrame::updateGlobalHistoryForStandardLoad):
+        (WebFrame::updateGlobalHistoryForReload):
+        (WebFrame::shouldGoToHistoryItem):
+        (WebFrame::saveScrollPositionAndViewStateToItem):
+        (WebFrame::saveDocumentViewToPageCache):
+        (WebFrame::canCachePage):
+        * WebFrame.h:
+
 2006-12-26  Geoffrey Garen  <ggaren@apple.com>
 
         Build fix.

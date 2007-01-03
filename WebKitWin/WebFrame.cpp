@@ -1677,34 +1677,6 @@ bool WebFrame::hasFrameView() const
     return true;
 }
 
-bool WebFrame::hasBackForwardList() const
-{
-    LOG_NOIMPL();
-    return false;
-}
-
-void WebFrame::resetBackForwardList()
-{
-    LOG_NOIMPL();
-}
-
-bool WebFrame::provisionalItemIsTarget() const
-{
-    STOP_NOIMPL();
-    return false;
-}
-
-bool WebFrame::loadProvisionalItemFromPageCache()
-{
-    STOP_NOIMPL();
-    return false;
-}
-
-void WebFrame::invalidateCurrentItemPageCache()
-{
-    LOG_NOIMPL();
-}
-
 bool WebFrame::privateBrowsingEnabled() const
 {
     LOG_NOIMPL();
@@ -1731,53 +1703,7 @@ void WebFrame::forceLayoutForNonHTML()
     LOG_NOIMPL();
 }
 
-void WebFrame::updateHistoryForCommit()
-{
-    LOG_NOIMPL();
-}
-
-void WebFrame::updateHistoryForBackForwardNavigation()
-{
-    LOG_NOIMPL();
-}
-
-void WebFrame::updateHistoryForReload()
-{
-    LOG_NOIMPL();
-}
-
-void WebFrame::updateHistoryForStandardLoad()
-{
-    LOG_NOIMPL();
-}
-
-void WebFrame::updateHistoryForInternalLoad()
-{
-    LOG_NOIMPL();
-}
-
-void WebFrame::updateHistoryAfterClientRedirect()
-{
-    LOG_NOIMPL();
-}
-
 void WebFrame::setCopiesOnScroll()
-{
-    LOG_NOIMPL();
-}
-
-LoadErrorResetToken* WebFrame::tokenForLoadErrorReset()
-{
-    LOG_NOIMPL();
-    return 0;
-}
-
-void WebFrame::resetAfterLoadError(LoadErrorResetToken*)
-{
-    LOG_NOIMPL();
-}
-
-void WebFrame::doNotResetAfterLoadError(LoadErrorResetToken*)
 {
     LOG_NOIMPL();
 }
@@ -1882,17 +1808,6 @@ void WebFrame::dispatchDidLoadMainResource(DocumentLoader*)
     LOG_NOIMPL();
 }
 
-void WebFrame::clearLoadingFromPageCache(DocumentLoader*)
-{
-    LOG_NOIMPL();
-}
-
-bool WebFrame::isLoadingFromPageCache(DocumentLoader*)
-{
-    LOG_NOIMPL();
-    return false;
-}
-
 void WebFrame::revertToProvisionalState(DocumentLoader*)
 {
     LOG_NOIMPL();
@@ -1902,7 +1817,7 @@ void WebFrame::clearUnarchivingState(DocumentLoader*)
 {
     LOG_NOIMPL();
 }
-
+    
 void WebFrame::progressStarted()
 {
     LOG_NOIMPL();
@@ -2028,4 +1943,42 @@ String WebFrame::userAgent()
 {
     return userAgentForURL(KURL());
 }
+
+void WebFrame::setDocumentViewFromPageCache(PageCache*)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::updateGlobalHistoryForStandardLoad(const KURL&)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::updateGlobalHistoryForReload(const KURL&)
+{
+    LOG_NOIMPL();
+}
+
+bool WebFrame::shouldGoToHistoryItem(HistoryItem*) const
+{
+    LOG_NOIMPL();
+    return false;
+}
+
+void WebFrame::saveScrollPositionAndViewStateToItem(HistoryItem*)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::saveDocumentViewToPageCache(PageCache*)
+{
+    LOG_NOIMPL();
+}
+
+bool WebFrame::canCachePage() const
+{
+    LOG_NOIMPL();
+    return false;
+}
+
 
