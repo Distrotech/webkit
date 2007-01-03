@@ -124,17 +124,17 @@ void NPN_Status(NPP instance, const char* message)
 
 void NPN_InvalidateRect(NPP instance, NPRect* invalidRect)
 {
-    // FIXME: Windowless plug-ins are currently unsupported
+    pluginViewForInstance(instance)->invalidateRect(invalidRect);
 }
 
 void NPN_InvalidateRegion(NPP instance, NPRegion invalidRegion)
 {
-    // FIXME: Windowless plug-ins are currently unsupported
+    pluginViewForInstance(instance)->invalidateRegion(invalidRegion);
 }
 
 void NPN_ForceRedraw(NPP instance)
 {
-    // FIXME: Windowless plug-ins are currently unsupported
+    pluginViewForInstance(instance)->forceRedraw();
 }
 
 NPError NPN_GetValue(NPP instance, NPNVariable variable, void* value)

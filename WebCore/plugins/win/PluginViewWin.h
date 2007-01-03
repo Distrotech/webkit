@@ -52,6 +52,8 @@ namespace WebCore {
     class Element;
     struct FrameLoadRequest;
     class FrameWin;
+    class KeyboardEvent;
+    class MouseEvent;
     class KURL;
     class PluginPackageWin;
     class PluginRequestWin;
@@ -72,7 +74,7 @@ namespace WebCore {
         PluginPackageWin* plugin() const { return m_plugin.get(); }
         NPP instance() const { return m_instance; }
 
-        void setNPWindowSize(const IntSize&);
+        void setNPWindowRect(const IntRect&);
         static PluginViewWin* currentPluginView();
 
         KJS::Bindings::Instance* bindingInstance();
@@ -89,6 +91,9 @@ namespace WebCore {
         void status(const char* message);
         NPError getValue(NPNVariable variable, void* value);
         NPError setValue(NPPVariable variable, void* value);
+        void invalidateRect(NPRect*);
+        void invalidateRegion(NPRegion);
+        void forceRedraw();
 
         // Widget functions
         virtual void setFrameGeometry(const IntRect&);
@@ -104,6 +109,8 @@ namespace WebCore {
         virtual void paint(GraphicsContext*, const IntRect&);
 
         virtual IntRect windowClipRect() const;
+
+        virtual void handleEvent(Event*);
     private:
         PluginViewWin(FrameWin* parentFrame, Element*);
         bool start();
@@ -123,8 +130,12 @@ namespace WebCore {
         void requestTimerFired(Timer<PluginViewWin>*);
         Timer<PluginViewWin> m_requestTimer;
 
-        void updateHwnd() const;
+        void updateWindow() const;
         void determineQuirks(const String& mimeType);
+        void paintMissingPluginIcon(GraphicsContext*, const IntRect&);
+
+        void handleKeyboardEvent(KeyboardEvent*);
+        void handleMouseEvent(MouseEvent*);
 
         int m_mode;
         int m_paramCount;
@@ -142,8 +153,8 @@ namespace WebCore {
         Vector<PluginRequestWin*> m_requests;
 
         int m_quirks;
-        bool m_windowless;
-        bool m_transparent;
+        bool m_isWindowed;
+        bool m_isTransparent;
 
         HWND m_window; // for windowed plug-ins
         mutable IntRect m_clipRect; // The clip rect to apply to a windowed plug-in

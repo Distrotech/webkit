@@ -28,6 +28,7 @@
 
 #include "Document.h"
 #include "Element.h"
+#include "EventNames.h"
 #include "FrameLoader.h"
 #include "FrameLoadRequest.h"
 #include "FrameTree.h"
@@ -37,6 +38,8 @@
 #include "Image.h"
 #include "HTMLNames.h"
 #include "HTMLPlugInElement.h"
+#include "KeyboardEvent.h"
+#include "MouseEvent.h"
 #include "NotImplemented.h"
 #include "Page.h"
 #include "PluginPackageWin.h"
@@ -62,6 +65,7 @@ using std::min;
 
 namespace WebCore {
 
+using namespace EventNames;
 using namespace HTMLNames;
 
 class PluginRequestWin {
@@ -132,11 +136,10 @@ static LRESULT CALLBACK PluginViewWndProc(HWND hWnd, UINT message, WPARAM wParam
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-void PluginViewWin::updateHwnd() const
+void PluginViewWin::updateWindow() const
 {
+    ASSERT(parent()->isFrameView());
     FrameView* frameView = static_cast<FrameView*>(parent());
-    if (!frameView || !m_window)
-        return;
 
     IntRect oldWindowRect = m_windowRect;
     IntRect oldClipRect = m_clipRect;
@@ -145,7 +148,7 @@ void PluginViewWin::updateHwnd() const
     m_clipRect = windowClipRect();
     m_clipRect.move(-m_windowRect.x(), -m_windowRect.y());
 
-    if (m_windowRect != oldWindowRect || m_clipRect != oldClipRect) {
+    if (m_window && (m_windowRect != oldWindowRect || m_clipRect != oldClipRect)) {
         HRGN rgn;
 
         // To prevent flashes while scrolling, we disable drawing during the window
@@ -184,16 +187,16 @@ void PluginViewWin::setFrameGeometry(const IntRect& rect)
     if (rect == frameGeometry())
         return;
 
-    setNPWindowSize(rect.size());
+    setNPWindowRect(rect);
 
     Widget::setFrameGeometry(rect);
 
-    updateHwnd();
+    updateWindow();
 }
 
 void PluginViewWin::geometryChanged() const
 {
-    updateHwnd();
+    updateWindow();
 }
 
 bool PluginViewWin::hasFocus() const
@@ -232,13 +235,8 @@ void PluginViewWin::hide()
     Widget::hide();
 }
 
-void PluginViewWin::paint(GraphicsContext* context, const IntRect& rect)
+void PluginViewWin::paintMissingPluginIcon(GraphicsContext* context, const IntRect& rect)
 {
-    if (m_isStarted)
-        return;
-
-    // Draw the "missing plugin" image
-
     static Image* nullPluginImage;
     if (!nullPluginImage)
         nullPluginImage = Image::loadPlatformResource("nullPlugin");
@@ -256,20 +254,170 @@ void PluginViewWin::paint(GraphicsContext* context, const IntRect& rect)
     context->drawImage(nullPluginImage, imageRect.location());
 }
 
-void PluginViewWin::setNPWindowSize(const IntSize& size)
+void PluginViewWin::paint(GraphicsContext* context, const IntRect& rect)
+{
+    if (!m_isStarted) {
+        // Draw the "missing plugin" image
+        paintMissingPluginIcon(context, rect);
+        return;
+    }
+
+    if (m_isWindowed)
+        return;
+
+    HDC hdc = context->getWindowsContext();
+
+    // The plugin expects that the passed in DC has window coordinates.
+    // (This probably breaks funky SVG transform stuff)
+    XFORM transform;
+    GetWorldTransform(hdc, &transform);
+    transform.eDx = 0;
+    transform.eDy = 0;
+    SetWorldTransform(hdc, &transform);
+
+    NPEvent npEvent;
+
+    m_npWindow.type = NPWindowTypeDrawable;
+    m_npWindow.window = hdc;
+
+    ASSERT(parent()->isFrameView());
+    IntPoint p = static_cast<FrameView*>(parent())->contentsToWindow(frameGeometry().location());
+    
+    WINDOWPOS windowpos;
+    memset(&windowpos, 0, sizeof(windowpos));
+
+    windowpos.x = p.x();
+    windowpos.y = p.y();
+    windowpos.cx = frameGeometry().width();
+    windowpos.cy = frameGeometry().height();
+
+    npEvent.event = WM_WINDOWPOSCHANGED;
+    npEvent.lParam = reinterpret_cast<uint32>(&windowpos);
+    npEvent.wParam = 0;
+    if (m_plugin->pluginFuncs()->event)
+        m_plugin->pluginFuncs()->event(m_instance, &npEvent);
+
+
+    setNPWindowRect(frameGeometry());
+
+    npEvent.event = WM_PAINT;
+    npEvent.wParam = reinterpret_cast<uint32>(hdc);
+
+    // This is supposed to be a pointer to the dirty rect, but it seems that the Flash plugin 
+    // ignores it so we just pass null.
+    npEvent.lParam = 0;
+
+    if (m_plugin->pluginFuncs()->event)
+        m_plugin->pluginFuncs()->event(m_instance, &npEvent);
+
+    context->releaseWindowsContext(hdc);
+}
+
+void PluginViewWin::handleKeyboardEvent(KeyboardEvent* event)
+{
+    NPEvent npEvent;
+
+    npEvent.wParam = event->keyCode();    
+
+    if (event->type() == keydownEvent) {
+        npEvent.event = WM_KEYDOWN;
+        npEvent.lParam = 0;
+    } else if (event->type() == keyupEvent) {
+        npEvent.event = WM_KEYUP;
+        npEvent.lParam = 0x8000;
+    }
+
+    if (!m_plugin->pluginFuncs()->event(m_instance, &npEvent))
+        event->setDefaultHandled();
+}
+
+void PluginViewWin::handleMouseEvent(MouseEvent* event)
+{
+    NPEvent npEvent;
+
+    IntPoint p = static_cast<FrameView*>(parent())->contentsToWindow(IntPoint(event->pageX(), event->pageY()));
+
+    npEvent.lParam = MAKELPARAM(p.x(), p.y());
+    npEvent.wParam = 0;
+
+    if (event->ctrlKey())
+        npEvent.wParam |= MK_CONTROL;
+    if (event->shiftKey())
+        npEvent.wParam |= MK_SHIFT;
+
+    if (event->type() == mousemoveEvent) {
+        npEvent.event = WM_MOUSEMOVE;
+        
+        if (event->button() == 0)
+            npEvent.wParam |= MK_LBUTTON;
+        else if (event->button() == 1)
+            npEvent.wParam |= MK_MBUTTON;
+        else if (event->button() == 2)
+            npEvent.wParam |= MK_RBUTTON;
+    } else if (event->type() == mousedownEvent) {
+        switch (event->button()) {
+            case 0:
+                npEvent.event = WM_LBUTTONDOWN;
+
+                // Focus the plugin
+                m_parentFrame->document()->setFocusedNode(m_element);
+                break;
+            case 1:
+                npEvent.event = WM_MBUTTONDOWN;
+                break;
+            case 2:
+                npEvent.event = WM_RBUTTONDOWN;
+                break;
+        }
+    } else if (event->type() == mouseupEvent) {
+        switch (event->button()) {
+            case 0:
+                npEvent.event = WM_LBUTTONUP;
+                break;
+            case 1:
+                npEvent.event = WM_MBUTTONUP;
+                break;
+            case 2:
+                npEvent.event = WM_RBUTTONUP;
+                break;
+        }
+    }
+
+    if (!m_plugin->pluginFuncs()->event(m_instance, &npEvent))
+        event->setDefaultHandled();
+}
+
+void PluginViewWin::handleEvent(Event* event)
+{
+    if (!m_plugin || m_isWindowed)
+        return;
+
+    if (event->isMouseEvent())
+        handleMouseEvent(static_cast<MouseEvent*>(event));
+    else if (event->isKeyboardEvent())
+        handleKeyboardEvent(static_cast<KeyboardEvent*>(event));
+}
+
+void PluginViewWin::setNPWindowRect(const IntRect& rect)
 {
     if (!m_isStarted)
         return;
 
-    m_npWindow.x = 0;
-    m_npWindow.y = 0;
-    m_npWindow.width = size.width();
-    m_npWindow.height = size.height();
+    if (m_isWindowed) {
+        m_npWindow.x = rect.x();
+        m_npWindow.y = rect.y();
+    } else {
+        IntPoint p = static_cast<FrameView*>(parent())->contentsToWindow(rect.location());
+        m_npWindow.x = p.x();
+        m_npWindow.y = p.y();
+    }
+    m_npWindow.width = rect.width();
+    m_npWindow.height = rect.height();
 
     m_npWindow.clipRect.left = 0;
     m_npWindow.clipRect.top = 0;
-    m_npWindow.clipRect.right = size.width();
-    m_npWindow.clipRect.bottom = size.height();
+    m_npWindow.clipRect.right = rect.width();
+    m_npWindow.clipRect.bottom = rect.height();
 
     if (m_plugin->pluginFuncs()->setwindow)
         m_plugin->pluginFuncs()->setwindow(m_instance, &m_npWindow);
@@ -815,6 +963,14 @@ NPError PluginViewWin::getValue(NPNVariable variable, void* value)
 
             return NPERR_NO_ERROR;
         }
+
+        case NPNVnetscapeWindow: {
+            HWND* w = reinterpret_cast<HWND*>(value);
+
+            *w = containingWindow();
+
+            return NPERR_NO_ERROR;
+        }
         default:
             return NPERR_GENERIC_ERROR;
     }
@@ -822,8 +978,46 @@ NPError PluginViewWin::getValue(NPNVariable variable, void* value)
 
 NPError PluginViewWin::setValue(NPPVariable variable, void* value)
 {
-    LOG_NOIMPL();
-    return NPERR_GENERIC_ERROR;
+    switch (variable) {
+        case NPPVpluginWindowBool:
+            m_isWindowed = value;
+            return NPERR_NO_ERROR;
+        case NPPVpluginTransparentBool:
+            m_isTransparent = value;
+            return NPERR_NO_ERROR;
+        default:
+            LOG_NOIMPL();
+            return NPERR_GENERIC_ERROR;
+    }
+}
+
+void PluginViewWin::invalidateRect(NPRect* rect)
+{
+    if (!rect) {
+        invalidate();
+        return;
+    }
+
+    IntRect r(rect->left, rect->top, rect->right - rect->left, rect->bottom - rect->top);
+
+    Widget::invalidateRect(r);
+}
+
+void PluginViewWin::invalidateRegion(NPRegion region)
+{
+    RECT r;
+
+    if (GetRgnBox(region, &r) == 0) {
+        invalidate();
+        return;
+    }
+
+    Widget::invalidateRect(r);
+}
+
+void PluginViewWin::forceRedraw()
+{
+    ::UpdateWindow(containingWindow());
 }
 
 KJS::Bindings::Instance* PluginViewWin::bindingInstance()
@@ -862,9 +1056,6 @@ PluginViewWin::~PluginViewWin()
 
 void PluginViewWin::determineQuirks(const String& mimeType)
 {
-    // FIXME: Remove return once windowless plugins are well-supported.
-    return;
-
     // The flash plugin only requests windowless plugins if we return a mozilla user agent
     if (mimeType == "application/x-shockwave-flash")
         m_quirks |= PluginQuirkWantsMozillaUserAgent;
@@ -887,8 +1078,8 @@ PluginViewWin::PluginViewWin(FrameWin* parentFrame, Element* element)
     , m_paramValues(0)
     , m_mode(0)
     , m_quirks(0)
-    , m_windowless(true)
-    , m_transparent(false)
+    , m_isWindowed(false)
+    , m_isTransparent(false)
 {
 }
 
@@ -902,8 +1093,8 @@ PluginViewWin::PluginViewWin(FrameWin* parentFrame, PluginPackageWin* plugin, El
     , m_requestTimer(this, &PluginViewWin::requestTimerFired)
     , m_window(0)
     , m_quirks(0)
-    , m_windowless(false)
-    , m_transparent(false)
+    , m_isWindowed(true)
+    , m_isTransparent(false)
 {
     m_instance = &m_instanceStruct;
     m_instance->ndata = this;
@@ -921,16 +1112,20 @@ PluginViewWin::PluginViewWin(FrameWin* parentFrame, PluginPackageWin* plugin, El
     if (!start())
         return;
 
-    registerPluginView();
+    if (m_isWindowed) {
+        registerPluginView();
 
-    m_window = CreateWindowEx(0, kWebPluginViewWindowClassName, 0, WS_CHILD, 
-                              0, 0, 0, 0, m_parentFrame->view()->containingWindow(), 0, Page::instanceHandle(), 0);
+        m_window = CreateWindowEx(0, kWebPluginViewWindowClassName, 0, WS_CHILD, 
+                                  0, 0, 0, 0, m_parentFrame->view()->containingWindow(), 0, Page::instanceHandle(), 0);
 
-    SetProp(m_window, kWebPluginViewProperty, this);
+        SetProp(m_window, kWebPluginViewProperty, this);
 
-    m_npWindow.type = NPWindowTypeWindow;
-    m_npWindow.window = m_window;
-
+        m_npWindow.type = NPWindowTypeWindow;
+        m_npWindow.window = m_window;
+    } else {
+        m_npWindow.type = NPWindowTypeDrawable;
+        m_npWindow.window = 0;
+    }
 }
 
 } // namespace WebCore

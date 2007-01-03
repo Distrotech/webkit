@@ -1,3 +1,54 @@
+2007-01-03  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Geoff.
+
+        <rdar://problem/4857027>
+        ragnarok online misrenders (due to lack of support for windowless plugins)
+
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::updateWindow):
+        Rename from updateHwnd since this now handles updating the clip rect for windowless plugins.
+        
+        (WebCore::PluginViewWin::paintMissingPluginIcon):
+        New function which paints the missing plugin icon.
+        
+        (WebCore::PluginViewWin::paint):
+        Do windowless painting here.
+        
+        (WebCore::PluginViewWin::handleKeyboardEvent):
+        (WebCore::PluginViewWin::handleMouseEvent):
+        (WebCore::PluginViewWin::handleEvent):
+        New functions for handling mouse and keyboard events, translating them and handing them to the plugin.
+        
+        (WebCore::PluginViewWin::setNPWindowRect):
+        Set correct window rect for windowless plugins.
+        
+        (WebCore::PluginViewWin::getValue):
+        Add variable for containing HWND.
+        
+        (WebCore::PluginViewWin::setValue):
+        Add windowless and transparent variables.
+        
+        (WebCore::PluginViewWin::invalidateRect):
+        (WebCore::PluginViewWin::invalidateRegion):
+        (WebCore::PluginViewWin::forceRedraw):
+        Implement these.
+        
+        (WebCore::PluginViewWin::determineQuirks):
+        Set quirks now that we support windowless flash.
+        
+        (WebCore::PluginViewWin::PluginViewWin):
+        Only create the window if the plugin isn't windowless.
+        
+        * plugins/win/PluginViewWin.h:
+        New declarations.
+        
+        * plugins/win/npapi.cpp:
+        (NPN_InvalidateRect):
+        (NPN_InvalidateRegion):
+        (NPN_ForceRedraw):
+        Implement these and forward them to the plugin view.
+
 2007-01-02  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Lou
