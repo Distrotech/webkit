@@ -1201,8 +1201,8 @@ static WebHTMLView *lastHitView = nil;
     forceWebHTMLViewHitTest = NO;
     
     WebHTMLView *view = nil;
-    if ([hitView isKindOfClass:[WebHTMLView class]]) 
-        view = (WebHTMLView *)hitView; 
+    if ([hitView isKindOfClass:[WebHTMLView class]] && ![[(WebHTMLView *)hitView _webView] isHoverFeedbackSuspended])
+        view = (WebHTMLView *)hitView;    
 
     if (view)
         [view retain];
@@ -5312,6 +5312,11 @@ static DOMRange *unionDOMRanges(DOMRange *a, DOMRange *b)
     rect.origin = [[self window] convertBaseToScreen:rect.origin];
     NSData *data = [attrString RTFFromRange:NSMakeRange(0, [attrString length]) documentAttributes:nil];
     dictionaryServiceWindowShow(data, rect, (writingDirection == NSWritingDirectionRightToLeft) ? 1 : 0);
+}
+
+- (void)_hoverFeedbackSuspendedChanged
+{
+    [self _updateMouseoverWithFakeEvent];
 }
 
 @end
