@@ -1,3 +1,11 @@
+2007-01-03  Darin Adler  <darin@apple.com>
+
+        Reviewed by Adele.
+
+        - removed some obsolete source files
+
+        * WebCore.vcproj/WebCore.vcproj: Removed obsolete files.
+
 2007-01-03  Beth Dakin  <bdakin@apple.com>
 
         Reviewed by John.
