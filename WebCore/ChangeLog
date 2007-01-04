@@ -1,3 +1,12 @@
+2007-01-04  David Hyatt  <hyatt@apple.com>
+
+        Always use 1.0 as the synthetic bold offset for now.  Fixes bug 9534.
+
+        Reviewed by olliej
+
+        * platform/win/FontDataWin.cpp:
+        (WebCore::FontData::platformInit):
+
 2007-01-03  Darin Adler  <darin@apple.com>
 
         Reviewed by Adele.
