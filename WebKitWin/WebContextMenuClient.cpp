@@ -46,11 +46,11 @@ void WebContextMenuClient::contextMenuDestroyed()
     delete this;
 }
 
-void WebContextMenuClient::addCustomContextMenuItems(ContextMenu* menu)
+HMENU WebContextMenuClient::getCustomMenuFromDefaultItems(ContextMenu* menu)
 {
     IWebUIDelegate* uiDelegate = 0;
     if (FAILED(m_webView->uiDelegate(&uiDelegate)))
-        return;
+        return 0;
 
     ASSERT(uiDelegate);
 
@@ -59,7 +59,7 @@ void WebContextMenuClient::addCustomContextMenuItems(ContextMenu* menu)
     uiDelegate->contextMenuItemsForElement(m_webView, &propertyBag, menu->platformDescription(), &newMenu);
     uiDelegate->Release();
 
-    menu->setPlatformDescription(newMenu);
+    return newMenu;
 }
 
 void WebContextMenuClient::contextMenuItemSelected(ContextMenuItem* item, const ContextMenu* parentMenu)
