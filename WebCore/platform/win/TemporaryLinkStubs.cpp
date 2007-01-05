@@ -174,7 +174,6 @@ void Editor::advanceToNextMisspelling(bool) { LOG_NOIMPL(); }
     
 bool CheckIfReloading(WebCore::DocLoader*) { LOG_NOIMPL(); return false; }
 void CheckCacheObjectStatus(DocLoader*, CachedResource*) { LOG_NOIMPL(); }
-void CachedResource::setAllData(PlatformData) { LOG_NOIMPL(); }
 
 }
 

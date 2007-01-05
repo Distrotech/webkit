@@ -27,6 +27,7 @@
 
 #if USE(CFNETWORK)
 #include "ResourceHandle.h"
+#include "ResourceHandleClient.h"
 #include "ResourceHandleInternal.h"
 
 #include "DocLoader.h"
@@ -234,6 +235,17 @@ void ResourceHandle::cancel()
 
     // FIXME: need real cancel error
     d->m_client->didFail(this, ResourceError());
+}
+
+PassRefPtr<SharedBuffer> ResourceHandle::bufferedData()
+{
+    ASSERT_NOT_REACHED();
+    return 0;
+}
+
+bool ResourceHandle::supportsBufferedData()
+{
+    return false;
 }
 
 } // namespace WebCore

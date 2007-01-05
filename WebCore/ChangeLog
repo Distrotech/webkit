@@ -1,3 +1,14 @@
+2007-01-05  Anders Carlsson  <acarlsson@apple.com>
+
+        Fix the build.
+        
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/network/cf/ResourceHandleCFNet.cpp:
+        (WebCore::ResourceHandle::bufferedData):
+        (WebCore::ResourceHandle::supportsBufferedData):
+        * platform/win/TemporaryLinkStubs.cpp:
+        (WebCore::CheckCacheObjectStatus):
+
 2007-01-04  David Hyatt  <hyatt@apple.com>
 
         Always use 1.0 as the synthetic bold offset for now.  Fixes bug 9534.
