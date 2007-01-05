@@ -45,6 +45,7 @@
 #include <WebCore/BString.h>
 #include <WebCore/Cache.h>
 #include <WebCore/Document.h>
+#include <WebCore/DocumentLoader.h>
 #include <WebCore/DOMImplementation.h>
 #include <WebCore/DOMWindow.h>
 #include <WebCore/Event.h>
@@ -1981,4 +1982,57 @@ bool WebFrame::canCachePage() const
     return false;
 }
 
+PassRefPtr<DocumentLoader> WebFrame::createDocumentLoader(const ResourceRequest& request)
+{
+    // FIXME: This should create a subclass of DocumentLoader that contains the data source
+    RefPtr<DocumentLoader> loader = new DocumentLoader(request);
+
+    return loader.release();
+}
+
+void WebFrame::setMainDocumentError(WebCore::DocumentLoader*, const WebCore::ResourceError&)
+{
+    LOG_NOIMPL();
+}
+
+ResourceError WebFrame::cancelledError(const WebCore::ResourceRequest&)
+{
+    LOG_NOIMPL();
+    return ResourceError();
+}
+
+ResourceError WebFrame::cannotShowURLError(const WebCore::ResourceRequest&)
+{
+    LOG_NOIMPL();
+    return ResourceError();
+}
+
+ResourceError WebFrame::interruptForPolicyChangeError(const WebCore::ResourceRequest&)
+{
+    LOG_NOIMPL();
+    return ResourceError();
+}
+
+ResourceError WebFrame::cannotShowMIMETypeError(const WebCore::ResourceResponse&)
+{
+    LOG_NOIMPL();
+    return ResourceError();
+}
+
+ResourceError WebFrame::fileDoesNotExistError(const WebCore::ResourceResponse&)
+{
+    LOG_NOIMPL();
+    return ResourceError();
+}
+
+bool WebFrame::shouldFallBack(const ResourceError&)
+{
+    LOG_NOIMPL();
+    return false;
+}
+
+void WebFrame::committedLoad(WebCore::DocumentLoader*, const char*, int)
+{
+    LOG_NOIMPL();
+}
 

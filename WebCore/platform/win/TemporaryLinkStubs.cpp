@@ -201,24 +201,15 @@ void FrameLoader::reload() { LOG_NOIMPL(); }
 void FrameLoader::load(const FrameLoadRequest&, bool userGesture, Event*, HTMLFormElement*,
                        const HashMap<String, String>& formValues) { LOG_NOIMPL(); }
 
-void DocumentLoader::setupForReplaceByMIMEType(String const &) { STOP_NOIMPL(); }
 void ResourceLoader::cancel() { STOP_NOIMPL(); }
-void DocumentLoader::stopLoading() { STOP_NOIMPL(); }
-void DocumentLoader::setLoading(bool) { STOP_NOIMPL(); }
-void DocumentLoader::updateLoading() { STOP_NOIMPL(); }
-void DocumentLoader::setFrame(Frame*) { STOP_NOIMPL(); }
-void DocumentLoader::stopRecordingResponses() { STOP_NOIMPL(); }
-void DocumentLoader::setPrimaryLoadComplete(bool) { STOP_NOIMPL(); }
-void DocumentLoader::finishedLoading() { STOP_NOIMPL(); }
-const KURL& DocumentLoader::URL() const { STOP_NOIMPL(); KURL* url = new KURL(); return *url; } // Eww, leaky. Implement this please.
-bool DocumentLoader::isLoadingInAPISense()const { STOP_NOIMPL(); return false; }
-FrameLoader* DocumentLoader::frameLoader()const { STOP_NOIMPL(); return 0; }
 
 String FrameLoader::overrideMediaType()const { LOG_NOIMPL(); return String(); }
 void FrameLoader::checkLoadCompleteForThisFrame() { LOG_NOIMPL(); }
 void FrameLoader::loadEmptyDocumentSynchronously() { LOG_NOIMPL(); }
 void FrameLoader::startLoading() { STOP_NOIMPL(); }
 String FrameLoader::referrer() const { LOG_NOIMPL(); return String(); }
+void FrameLoader::didChangeTitle(DocumentLoader*) { LOG_NOIMPL(); }
+
 void FrameLoader::loadResourceSynchronously(const ResourceRequest&, ResourceResponse&, Vector<char>&) { }
 
 bool EventHandler::lastEventIsMouseUp() const { return false; }
@@ -227,17 +218,7 @@ bool ResourceHandle::loadsBlocked() { return false; }
 void ResourceHandle::loadResourceSynchronously(const ResourceRequest&, ResourceError&, ResourceResponse&, Vector<char>&) { }
 
 // CRITFIXME: See if any of the following are actually implemented in OpenSource and copy the impls to internal
-ResourceRequest& DocumentLoader::request() { STOP_NOIMPL(); static ResourceRequest rr;  return rr; }
-const ResourceRequest& DocumentLoader::request() const { STOP_NOIMPL(); static ResourceRequest rr;  return rr; }
-const ResourceRequest& DocumentLoader::originalRequest() const { STOP_NOIMPL(); static ResourceRequest rr;  return rr; }
-String DocumentLoader::title() const { LOG_NOIMPL(); return "Unimplemented - No Title"; }
 const KURL DocumentLoader::unreachableURL() const { LOG_NOIMPL(); static KURL k; return k; }
-KURL DocumentLoader::urlForHistory() const { LOG_NOIMPL(); return KURL(); }
-void DocumentLoader::setCommitted(bool) { LOG_NOIMPL(); }
-void DocumentLoader::prepareForLoadStart(){ LOG_NOIMPL(); }
-void DocumentLoader::replaceRequestURLForAnchorScroll(const KURL&) { LOG_NOIMPL(); }
-bool DocumentLoader::isClientRedirect() const { LOG_NOIMPL(); return false; }
-bool DocumentLoader::isLoading() const { LOG_NOIMPL(); return false; }
 bool DocumentLoader::getResponseRefreshAndModifiedHeaders(String&, String&) const { LOG_NOIMPL(); return false; }
 void FrameLoader::applyUserAgent(ResourceRequest&) { LOG_NOIMPL(); }
 KURL FrameLoader::dataURLBaseFromRequest(const ResourceRequest&) const { LOG_NOIMPL(); return KURL(); }

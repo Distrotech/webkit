@@ -1,3 +1,21 @@
+2007-01-05  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        Add stubs for new FrameLoaderClient methods.
+        
+        * WebFrame.cpp:
+        (WebFrame::createDocumentLoader):
+        (WebFrame::setMainDocumentError):
+        (WebFrame::cancelledError):
+        (WebFrame::cannotShowURLError):
+        (WebFrame::interruptForPolicyChangeError):
+        (WebFrame::cannotShowMIMETypeError):
+        (WebFrame::fileDoesNotExistError):
+        (WebFrame::shouldFallBack):
+        (WebFrame::committedLoad):
+        * WebFrame.h:
+
 2007-01-04  Adam Roben  <aroben@apple.com>
 
         Reviewed by Geoff.

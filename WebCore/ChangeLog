@@ -1,5 +1,14 @@
 2007-01-05  Anders Carlsson  <acarlsson@apple.com>
 
+        Fix build.
+        
+        * platform/win/TemporaryLinkStubs.cpp:
+        (ResourceLoader::cancel):
+        (FrameLoader::didChangeTitle):
+        (DocumentLoader::unreachableURL):
+
+2007-01-05  Anders Carlsson  <acarlsson@apple.com>
+
         Fix the build.
         
         * WebCore.vcproj/WebCore.vcproj:
