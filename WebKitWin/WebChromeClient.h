@@ -24,6 +24,7 @@
  */
 
 #include <WebCore/ChromeClient.h>
+#include <WebCore/FocusDirection.h>
 #include <wtf/Forward.h>
 
 class WebView;
@@ -43,6 +44,9 @@ public:
 
     virtual void focus();
     virtual void unfocus();
+
+    virtual bool canTakeFocus(WebCore::FocusDirection);
+    virtual void takeFocus(WebCore::FocusDirection);
 
     virtual WebCore::Page* createWindow(const WebCore::FrameLoadRequest&);
     virtual WebCore::Page* createModalDialog(const WebCore::FrameLoadRequest&);

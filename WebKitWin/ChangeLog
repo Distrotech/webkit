@@ -1,3 +1,37 @@
+2007-01-04  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Geoff.
+
+        Fix: <rdar://4763580> Support tabbing between subframes
+        Fix: <rdar://4763595> Support tabbing out of the document back into the
+        Safari UI
+
+        * Interfaces/IWebUIDelegate.idl: Added declarations of new methods.
+        * WebBackForwardList.cpp:
+        (WebBackForwardList::backItem): Changed to return E_FAIL if returning a
+        null pointer.
+        (WebBackForwardList::currentItem): Ditto.
+        (WebBackForwardList::forwardItem): Ditto.
+        * WebChromeClient.cpp:
+        (WebChromeClient::canTakeFocus): Added new click method.
+        (WebChromeClient::takeFocus): Ditto.
+        (WebChromeClient::focus): Removed unnecessary null check.
+        (WebChromeClient::unfocus): Ditto.
+        (WebChromeClient::createWindow): Ditto.
+        (WebChromeClient::createModalDialog): Ditto.
+        (WebChromeClient::show): Ditto.
+        (WebChromeClient::canRunModal): Ditto.
+        (WebChromeClient::runModal): Ditto.
+        (WebChromeClient::setToolbarsVisible): Ditto.
+        (WebChromeClient::toolbarsVisible): Ditto.
+        (WebChromeClient::setStatusbarVisible): Ditto.
+        (WebChromeClient::statusbarVisible): Ditto.
+        (WebChromeClient::setMenubarVisible): Ditto.
+        (WebChromeClient::menubarVisible): Ditto.
+        (WebChromeClient::setResizable): Ditto.
+        (WebChromeClient::addMessageToConsole): Ditto.
+        * WebChromeClient.h: Added declarations.
+
 2007-01-04  Beth Dakin  <bdakin@apple.com>
 
         Reviewed by Adam.

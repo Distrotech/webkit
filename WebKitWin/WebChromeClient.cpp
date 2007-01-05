@@ -90,7 +90,7 @@ float WebChromeClient::scaleFactor()
 void WebChromeClient::focus()
 {
     IWebUIDelegate* uiDelegate = 0;
-    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
         uiDelegate->webViewFocus(m_webView);
         uiDelegate->Release();
     }
@@ -99,8 +99,31 @@ void WebChromeClient::focus()
 void WebChromeClient::unfocus()
 {
     IWebUIDelegate* uiDelegate = 0;
-    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
         uiDelegate->webViewUnfocus(m_webView);
+        uiDelegate->Release();
+    }
+}
+
+bool WebChromeClient::canTakeFocus(FocusDirection direction)
+{
+    IWebUIDelegate* uiDelegate = 0;
+    BOOL bForward = (direction == FocusDirectionForward) ? TRUE : FALSE;
+    BOOL result = FALSE;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
+        uiDelegate->canTakeFocus(m_webView, bForward, &result);
+        uiDelegate->Release();
+    }
+
+    return !!result;
+}
+
+void WebChromeClient::takeFocus(FocusDirection direction)
+{
+    IWebUIDelegate* uiDelegate = 0;
+    BOOL bForward = (direction == FocusDirectionForward) ? TRUE : FALSE;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
+        uiDelegate->takeFocus(m_webView, bForward);
         uiDelegate->Release();
     }
 }
@@ -111,9 +134,9 @@ Page* WebChromeClient::createWindow(const FrameLoadRequest& frameLoadRequest)
     IWebMutableURLRequest* request = WebMutableURLRequest::createInstance(frameLoadRequest.resourceRequest());
 
     IWebUIDelegate* uiDelegate = 0;
-    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
         IWebView* webView = 0;
-        if (SUCCEEDED(uiDelegate->createWebViewWithRequest(m_webView, request, &webView)) && webView) {
+        if (SUCCEEDED(uiDelegate->createWebViewWithRequest(m_webView, request, &webView))) {
             page = core(webView);
             webView->Release();
         }
@@ -129,7 +152,7 @@ Page* WebChromeClient::createModalDialog(const FrameLoadRequest&)
 {
     Page* page = 0;
     IWebUIDelegate* uiDelegate = 0;
-    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
         LOG_NOIMPL();
         uiDelegate->Release();
     }
@@ -139,7 +162,7 @@ Page* WebChromeClient::createModalDialog(const FrameLoadRequest&)
 void WebChromeClient::show()
 {
     IWebUIDelegate* uiDelegate = 0;
-    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
         uiDelegate->webViewShow(m_webView);
         uiDelegate->Release();
     }
@@ -149,7 +172,7 @@ bool WebChromeClient::canRunModal()
 {
     bool result = false;
     IWebUIDelegate* uiDelegate = 0;
-    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
         LOG_NOIMPL();
         uiDelegate->Release();
     }
@@ -159,7 +182,7 @@ bool WebChromeClient::canRunModal()
 void WebChromeClient::runModal()
 {
     IWebUIDelegate* uiDelegate = 0;
-    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
         LOG_NOIMPL();
         uiDelegate->Release();
     }
@@ -168,7 +191,7 @@ void WebChromeClient::runModal()
 void WebChromeClient::setToolbarsVisible(bool visible)
 {
     IWebUIDelegate* uiDelegate = 0;
-    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
         uiDelegate->setToolbarsVisible(m_webView, visible);
         uiDelegate->Release();
     }
@@ -178,7 +201,7 @@ bool WebChromeClient::toolbarsVisible()
 {
     BOOL result = false;
     IWebUIDelegate* uiDelegate = 0;
-    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
         uiDelegate->webViewAreToolbarsVisible(m_webView, &result);
         uiDelegate->Release();
     }
@@ -188,7 +211,7 @@ bool WebChromeClient::toolbarsVisible()
 void WebChromeClient::setStatusbarVisible(bool visible)
 {
     IWebUIDelegate* uiDelegate = 0;
-    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
         uiDelegate->setStatusBarVisible(m_webView, visible);
         uiDelegate->Release();
     }
@@ -198,7 +221,7 @@ bool WebChromeClient::statusbarVisible()
 {
     BOOL result = false;
     IWebUIDelegate* uiDelegate = 0;
-    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
         uiDelegate->webViewIsStatusBarVisible(m_webView, &result);
         uiDelegate->Release();
     }
@@ -219,7 +242,7 @@ bool WebChromeClient::scrollbarsVisible()
 void WebChromeClient::setMenubarVisible(bool)
 {
     IWebUIDelegate* uiDelegate = 0;
-    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
         LOG_NOIMPL();
         uiDelegate->Release();
     }
@@ -229,7 +252,7 @@ bool WebChromeClient::menubarVisible()
 {
     bool result = false;
     IWebUIDelegate* uiDelegate = 0;
-    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
         LOG_NOIMPL();
         uiDelegate->Release();
     }
@@ -239,7 +262,7 @@ bool WebChromeClient::menubarVisible()
 void WebChromeClient::setResizable(bool resizable)
 {
     IWebUIDelegate* uiDelegate = 0;
-    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate)) && uiDelegate) {
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
         uiDelegate->setResizable(m_webView, resizable);
         uiDelegate->Release();
     }
@@ -247,14 +270,14 @@ void WebChromeClient::setResizable(bool resizable)
 
 void WebChromeClient::addMessageToConsole(const String& message, unsigned line, const String& url)
 {
-    IWebUIDelegate* ui;
-    if (SUCCEEDED(m_webView->uiDelegate(&ui)) && ui) {
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
         IWebUIDelegatePrivate* uiPrivate;
-        if (SUCCEEDED(ui->QueryInterface(IID_IWebUIDelegatePrivate, (void**)&uiPrivate))) {
+        if (SUCCEEDED(uiDelegate->QueryInterface(IID_IWebUIDelegatePrivate, (void**)&uiPrivate))) {
             uiPrivate->webViewAddMessageToConsole(m_webView, BString(message), line, BString(url), true);
             uiPrivate->Release();
         }
-        ui->Release();
+        uiDelegate->Release();
     }
 }
 

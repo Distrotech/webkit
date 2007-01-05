@@ -167,7 +167,7 @@ HRESULT STDMETHODCALLTYPE WebBackForwardList::backItem(
         *item = m_list[m_position-1];
         (*item)->AddRef();
     }
-    return S_OK;
+    return *item ? S_OK : E_FAIL;
 }
 
 HRESULT STDMETHODCALLTYPE WebBackForwardList::currentItem( 
@@ -178,7 +178,7 @@ HRESULT STDMETHODCALLTYPE WebBackForwardList::currentItem(
         *item = m_list[m_position];
         (*item)->AddRef();
     }
-    return S_OK;
+    return *item ? S_OK : E_FAIL;
 }
 
 HRESULT STDMETHODCALLTYPE WebBackForwardList::forwardItem( 
@@ -189,7 +189,7 @@ HRESULT STDMETHODCALLTYPE WebBackForwardList::forwardItem(
         *item = m_list[m_position+1];
         (*item)->AddRef();
     }
-    return S_OK;
+    return *item ? S_OK : E_FAIL;
 }
 
 HRESULT STDMETHODCALLTYPE WebBackForwardList::backListWithLimit( 

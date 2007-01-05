@@ -586,4 +586,20 @@ interface IWebUIDelegate : IUnknown
     */
     HRESULT contextMenuItemSelected([in] IWebView* sender, [in] void* item, [in] IPropertyBag* element);
 
+    /*!
+        @method webView:canTakeFocus:
+        @abstract Informs whether focus can be transferred out of the WebView in the specified direction
+        @param sender The WebView sending the delegate method.
+        @param forward Whether focus is moving forward or backward.
+    */
+    HRESULT canTakeFocus([in] IWebView* sender, [in] BOOL forward, [out] BOOL* result);
+
+    /*!
+        @method webView:takeFocus:
+        @abstract Instructs the delegate to take focus out of the WebView
+        @param sender The WebView sending the delegate method.
+        @param forward Whether focus is moving forward or backward.
+    */
+    HRESULT takeFocus([in] IWebView* sender, [in] BOOL forward);
+
 }
