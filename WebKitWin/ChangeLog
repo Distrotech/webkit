@@ -1,3 +1,36 @@
+2007-01-05  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        Add stubs for FrameLoaderClient methods.
+        
+        * WebFrame.cpp:
+        (WebFrame::setMainDocumentError):
+        (WebFrame::cancelledError):
+        (WebFrame::cannotShowURLError):
+        (WebFrame::interruptForPolicyChangeError):
+        (WebFrame::cannotShowMIMETypeError):
+        (WebFrame::fileDoesNotExistError):
+        (WebFrame::committedLoad):
+        (WebFrame::dispatchDecidePolicyForMIMEType):
+        (WebFrame::dispatchDecidePolicyForNewWindowAction):
+        (WebFrame::dispatchDecidePolicyForNavigationAction):
+        (WebFrame::dispatchUnableToImplementPolicy):
+        (WebFrame::download):
+        (WebFrame::willUseArchive):
+        (WebFrame::dispatchWillSendRequest):
+        (WebFrame::dispatchDidReceiveResponse):
+        (WebFrame::dispatchDidReceiveContentLength):
+        (WebFrame::dispatchDidFinishLoading):
+        (WebFrame::dispatchDidFailLoading):
+        (WebFrame::dispatchDidLoadResourceFromMemoryCache):
+        (WebFrame::dispatchDidFailProvisionalLoad):
+        (WebFrame::dispatchDidFailLoad):
+        (WebFrame::dispatchCreatePage):
+        (WebFrame::incrementProgress):
+        (WebFrame::completeProgress):
+        (WebFrame::startDownload):
+
 2007-01-05  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by Lou.

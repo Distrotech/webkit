@@ -1990,36 +1990,36 @@ PassRefPtr<DocumentLoader> WebFrame::createDocumentLoader(const ResourceRequest&
     return loader.release();
 }
 
-void WebFrame::setMainDocumentError(WebCore::DocumentLoader*, const WebCore::ResourceError&)
+void WebFrame::setMainDocumentError(DocumentLoader*, const ResourceError&)
 {
     LOG_NOIMPL();
 }
 
-ResourceError WebFrame::cancelledError(const WebCore::ResourceRequest&)
-{
-    LOG_NOIMPL();
-    return ResourceError();
-}
-
-ResourceError WebFrame::cannotShowURLError(const WebCore::ResourceRequest&)
+ResourceError WebFrame::cancelledError(const ResourceRequest&)
 {
     LOG_NOIMPL();
     return ResourceError();
 }
 
-ResourceError WebFrame::interruptForPolicyChangeError(const WebCore::ResourceRequest&)
+ResourceError WebFrame::cannotShowURLError(const ResourceRequest&)
 {
     LOG_NOIMPL();
     return ResourceError();
 }
 
-ResourceError WebFrame::cannotShowMIMETypeError(const WebCore::ResourceResponse&)
+ResourceError WebFrame::interruptForPolicyChangeError(const ResourceRequest&)
 {
     LOG_NOIMPL();
     return ResourceError();
 }
 
-ResourceError WebFrame::fileDoesNotExistError(const WebCore::ResourceResponse&)
+ResourceError WebFrame::cannotShowMIMETypeError(const ResourceResponse&)
+{
+    LOG_NOIMPL();
+    return ResourceError();
+}
+
+ResourceError WebFrame::fileDoesNotExistError(const ResourceResponse&)
 {
     LOG_NOIMPL();
     return ResourceError();
@@ -2031,7 +2031,105 @@ bool WebFrame::shouldFallBack(const ResourceError&)
     return false;
 }
 
-void WebFrame::committedLoad(WebCore::DocumentLoader*, const char*, int)
+void WebFrame::committedLoad(DocumentLoader*, const char*, int)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchDecidePolicyForMIMEType(FramePolicyFunction, const String&, const ResourceRequest&)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchDecidePolicyForNewWindowAction(FramePolicyFunction, const NavigationAction&, const ResourceRequest&, const String&)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchDecidePolicyForNavigationAction(FramePolicyFunction, const NavigationAction&, const ResourceRequest&)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchUnableToImplementPolicy(const ResourceError&)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::download(ResourceHandle*, const ResourceRequest&, const ResourceResponse&)
+{
+    LOG_NOIMPL();
+}
+
+bool WebFrame::willUseArchive(ResourceLoader*, const ResourceRequest&, const KURL&) const
+{
+    LOG_NOIMPL();
+    return false;
+}
+
+void WebFrame::dispatchWillSendRequest(DocumentLoader*, id, ResourceRequest&, const ResourceResponse&)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchDidReceiveResponse(DocumentLoader*, id, const ResourceResponse&)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchDidReceiveContentLength(DocumentLoader*, id, int)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchDidFinishLoading(DocumentLoader*, id)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchDidFailLoading(DocumentLoader*, id, const ResourceError&)
+{
+    LOG_NOIMPL();
+}
+
+bool WebFrame::dispatchDidLoadResourceFromMemoryCache(DocumentLoader*, const ResourceRequest&, const ResourceResponse&, int)
+{
+    LOG_NOIMPL();
+    return false;
+}
+
+void WebFrame::dispatchDidFailProvisionalLoad(const ResourceError&)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchDidFailLoad(const ResourceError&)
+{
+    LOG_NOIMPL();
+}
+
+Frame* WebFrame::dispatchCreatePage()
+{
+    LOG_NOIMPL();
+    return 0;
+}
+
+void WebFrame::incrementProgress(id, const ResourceResponse&)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::incrementProgress(id, const char*, int)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::completeProgress(id)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::startDownload(const ResourceRequest&)
 {
     LOG_NOIMPL();
 }

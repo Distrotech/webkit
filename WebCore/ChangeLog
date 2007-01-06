@@ -1,5 +1,22 @@
 2007-01-05  Anders Carlsson  <acarlsson@apple.com>
 
+        Reviewed by Adam.
+
+        Update temporary link stubs.
+        
+        * platform/win/TemporaryLinkStubs.cpp:
+        (FrameLoader::referrer):
+        (FrameLoader::overrideMediaType):
+        (FrameLoader::checkLoadCompleteForThisFrame):
+        (DocumentLoader::getResponseRefreshAndModifiedHeaders):
+        (MainResourceLoader::create):
+        (ResourceLoader::cancel):
+        (ResourceLoader::load):
+        (ResourceLoader::releaseResources):
+        (ResourceLoader::addData):
+
+2007-01-05  Anders Carlsson  <acarlsson@apple.com>
+
         Fix build.
         
         * platform/win/TemporaryLinkStubs.cpp:

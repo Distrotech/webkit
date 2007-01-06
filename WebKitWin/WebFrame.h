@@ -261,6 +261,25 @@ public:
     virtual WebCore::ResourceError fileDoesNotExistError(const WebCore::ResourceResponse&);
     virtual bool shouldFallBack(const WebCore::ResourceError&);
     virtual void committedLoad(WebCore::DocumentLoader*, const char*, int);
+    virtual void dispatchDecidePolicyForMIMEType(WebCore::FramePolicyFunction, const WebCore::String& MIMEType, const WebCore::ResourceRequest&);
+    virtual void dispatchDecidePolicyForNewWindowAction(WebCore::FramePolicyFunction, const WebCore::NavigationAction&, const WebCore::ResourceRequest&, const WebCore::String& frameName);
+    virtual void dispatchDecidePolicyForNavigationAction(WebCore::FramePolicyFunction, const WebCore::NavigationAction&, const WebCore::ResourceRequest&);
+    virtual void dispatchUnableToImplementPolicy(const WebCore::ResourceError&);
+    virtual bool willUseArchive(WebCore::ResourceLoader*, const WebCore::ResourceRequest&, const WebCore::KURL& originalURL) const;
+    virtual void download(WebCore::ResourceHandle*, const WebCore::ResourceRequest&, const WebCore::ResourceResponse&);
+    virtual void dispatchWillSendRequest(WebCore::DocumentLoader*, id identifier, WebCore::ResourceRequest&, const WebCore::ResourceResponse& redirectResponse);
+    virtual void dispatchDidReceiveResponse(WebCore::DocumentLoader*, id identifier, const WebCore::ResourceResponse&);
+    virtual void dispatchDidReceiveContentLength(WebCore::DocumentLoader*, id identifier, int lengthReceived);
+    virtual void dispatchDidFinishLoading(WebCore::DocumentLoader*, id identifier);
+    virtual void dispatchDidFailLoading(WebCore::DocumentLoader*, id identifier, const WebCore::ResourceError&);
+    virtual bool dispatchDidLoadResourceFromMemoryCache(WebCore::DocumentLoader*, const WebCore::ResourceRequest&, const WebCore::ResourceResponse&, int length);
+    virtual void dispatchDidFailProvisionalLoad(const WebCore::ResourceError&);
+    virtual void dispatchDidFailLoad(const WebCore::ResourceError&);
+    virtual WebCore::Frame* dispatchCreatePage();
+    virtual void incrementProgress(id identifier, const WebCore::ResourceResponse&);
+    virtual void incrementProgress(id identifier, const char*, int);
+    virtual void completeProgress(id identifier);
+    virtual void startDownload(const WebCore::ResourceRequest&);
 
     // WebFrame
     void initWithWebFrameView(IWebFrameView*, IWebView*, WebCore::Page*, WebCore::HTMLFrameOwnerElement*);

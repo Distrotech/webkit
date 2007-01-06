@@ -51,6 +51,7 @@
 #include "Language.h"
 #include "LoaderFunctions.h"
 #include "LocalizedStrings.h"
+#include "MainResourceLoader.h"
 #include "NavigationAction.h"
 #include "Node.h"
 #include "NotImplemented.h"
@@ -188,29 +189,16 @@ void WebCore::setFocusRingColorChangeFunction(void (*)()) { LOG_NOIMPL(); }
 
 void Frame::setNeedsReapplyStyles() { LOG_NOIMPL(); }
 
-PolicyCheck::PolicyCheck() { LOG_NOIMPL(); }
-void PolicyCheck::clear() { LOG_NOIMPL(); }
-void PolicyCheck::call(bool) { LOG_NOIMPL(); }
-void PolicyCheck::clearRequest() { LOG_NOIMPL(); }
-void PolicyCheck::call(PolicyAction) { LOG_NOIMPL(); }
-
 KURL FrameLoader::historyURL(int) { LOG_NOIMPL(); return KURL(); }
 bool FrameLoader::canGoBackOrForward(int) const { LOG_NOIMPL(); return false; }
 int FrameLoader::getHistoryLength() { LOG_NOIMPL(); return 0; }
-void FrameLoader::reload() { LOG_NOIMPL(); }
-void FrameLoader::load(const FrameLoadRequest&, bool userGesture, Event*, HTMLFormElement*,
-                       const HashMap<String, String>& formValues) { LOG_NOIMPL(); }
+String FrameLoader::referrer() const { return String(); }
 
 void ResourceLoader::cancel() { STOP_NOIMPL(); }
 
 String FrameLoader::overrideMediaType()const { LOG_NOIMPL(); return String(); }
-void FrameLoader::checkLoadCompleteForThisFrame() { LOG_NOIMPL(); }
-void FrameLoader::loadEmptyDocumentSynchronously() { LOG_NOIMPL(); }
-void FrameLoader::startLoading() { STOP_NOIMPL(); }
-String FrameLoader::referrer() const { LOG_NOIMPL(); return String(); }
 void FrameLoader::didChangeTitle(DocumentLoader*) { LOG_NOIMPL(); }
-
-void FrameLoader::loadResourceSynchronously(const ResourceRequest&, ResourceResponse&, Vector<char>&) { }
+void FrameLoader::checkLoadCompleteForThisFrame() { LOG_NOIMPL(); }
 
 bool EventHandler::lastEventIsMouseUp() const { return false; }
 
@@ -220,12 +208,13 @@ void ResourceHandle::loadResourceSynchronously(const ResourceRequest&, ResourceE
 // CRITFIXME: See if any of the following are actually implemented in OpenSource and copy the impls to internal
 const KURL DocumentLoader::unreachableURL() const { LOG_NOIMPL(); static KURL k; return k; }
 bool DocumentLoader::getResponseRefreshAndModifiedHeaders(String&, String&) const { LOG_NOIMPL(); return false; }
-void FrameLoader::applyUserAgent(ResourceRequest&) { LOG_NOIMPL(); }
-KURL FrameLoader::dataURLBaseFromRequest(const ResourceRequest&) const { LOG_NOIMPL(); return KURL(); }
-void FrameLoader::load(const ResourceRequest&, const NavigationAction&, FrameLoadType, PassRefPtr<FormState>) { LOG_NOIMPL(); }
-void FrameLoader::load(DocumentLoader*, FrameLoadType, PassRefPtr<FormState>) { LOG_NOIMPL(); }
-void FrameLoader::opened() { LOG_NOIMPL(); }
 bool ResourceHandle::willLoadFromCache(ResourceRequest&) { LOG_NOIMPL(); return false; }
 float WebCore::userIdleTime() { LOG_NOIMPL(); return 0.0; }
 void PageCache::close() { LOG_NOIMPL(); }
+
+PassRefPtr<MainResourceLoader> MainResourceLoader::create(Frame*) { STOP_NOIMPL(); return 0; }
+void ResourceLoader::cancel(const ResourceError&) { STOP_NOIMPL(); }
+bool ResourceLoader::load(const ResourceRequest&) { STOP_NOIMPL(); return false; }
+void ResourceLoader::releaseResources() { STOP_NOIMPL(); }
+void ResourceLoader::addData(const char*, int, bool allAtOnce) { STOP_NOIMPL(); }
 
