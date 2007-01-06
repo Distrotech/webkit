@@ -1,3 +1,20 @@
+2007-01-05  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Lou.
+
+        Fixed <rdar://problem/4853400> disable commands in the Edit menu when they're not applicable
+        and <rdar://problem/4769487> Some editing operations should be disabled in View Source window
+
+        * Interfaces/IWebView.idl:
+        * WebView.cpp:
+        (WebView::hasSelectedRange):
+        (WebView::cutEnabled):
+        (WebView::copyEnabled):
+        (WebView::pasteEnabled):
+        (WebView::deleteEnabled):
+        (WebView::editingEnabled):
+        * WebView.h:
+
 2007-01-05  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.

@@ -380,6 +380,24 @@ public:
     virtual HRESULT STDMETHODCALLTYPE styleDeclarationWithText( 
         /* [in] */ BSTR text,
         /* [retval][out] */ IDOMCSSStyleDeclaration **style);
+    
+    virtual HRESULT STDMETHODCALLTYPE hasSelectedRange( 
+        /* [retval][out] */ BOOL *hasSelectedRange);
+    
+    virtual HRESULT STDMETHODCALLTYPE cutEnabled( 
+        /* [retval][out] */ BOOL *enabled);
+    
+    virtual HRESULT STDMETHODCALLTYPE copyEnabled( 
+        /* [retval][out] */ BOOL *enabled);
+    
+    virtual HRESULT STDMETHODCALLTYPE pasteEnabled( 
+        /* [retval][out] */ BOOL *enabled);
+    
+    virtual HRESULT STDMETHODCALLTYPE deleteEnabled( 
+        /* [retval][out] */ BOOL *enabled);
+
+    virtual HRESULT STDMETHODCALLTYPE editingEnabled( 
+        /* [retval][out] */ BOOL *enabled);
 
     // IWebViewUndoableEditing
 

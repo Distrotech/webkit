@@ -2424,6 +2424,48 @@ HRESULT STDMETHODCALLTYPE WebView::styleDeclarationWithText(
     ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
+    
+HRESULT STDMETHODCALLTYPE WebView::hasSelectedRange( 
+        /* [retval][out] */ BOOL* hasSelectedRange)
+{
+    *hasSelectedRange = m_page->mainFrame()->selectionController()->isRange();
+    return S_OK;
+}
+    
+HRESULT STDMETHODCALLTYPE WebView::cutEnabled( 
+        /* [retval][out] */ BOOL* enabled)
+{
+    *enabled = m_page->mainFrame()->editor()->canCut() || m_page->mainFrame()->editor()->canDHTMLCut();
+    return S_OK;
+}
+    
+HRESULT STDMETHODCALLTYPE WebView::copyEnabled( 
+        /* [retval][out] */ BOOL* enabled)
+{
+    *enabled = m_page->mainFrame()->editor()->canCopy() || m_page->mainFrame()->editor()->canDHTMLCopy();
+    return S_OK;
+}
+    
+HRESULT STDMETHODCALLTYPE WebView::pasteEnabled( 
+        /* [retval][out] */ BOOL* enabled)
+{
+    *enabled = m_page->mainFrame()->editor()->canPaste() || m_page->mainFrame()->editor()->canDHTMLPaste();
+    return S_OK;
+}
+    
+HRESULT STDMETHODCALLTYPE WebView::deleteEnabled( 
+        /* [retval][out] */ BOOL* enabled)
+{
+    *enabled = m_page->mainFrame()->editor()->canDelete();
+    return S_OK;
+}
+    
+HRESULT STDMETHODCALLTYPE WebView::editingEnabled( 
+        /* [retval][out] */ BOOL* enabled)
+{
+    *enabled = m_page->mainFrame()->editor()->canEdit();
+    return S_OK;
+}
 
 // IWebViewUndoableEditing -----------------------------------------------------
 

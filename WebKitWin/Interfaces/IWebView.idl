@@ -898,6 +898,36 @@ interface IWebViewEditing : IUnknown
         - (DOMCSSStyleDeclaration *)styleDeclarationWithText:(NSString *)text;
     */
     HRESULT styleDeclarationWithText([in] BSTR text, [out, retval] IDOMCSSStyleDeclaration** style);
+
+    /*
+        - (BOOL)hasSelectedRange;
+    */
+    HRESULT hasSelectedRange([out, retval] BOOL* hasSelectedRange);
+
+    /*
+        - (BOOL)cutEnabled;
+    */
+    HRESULT cutEnabled([out, retval] BOOL* enabled);
+
+    /*
+        - (BOOL)copyEnabled;
+    */
+    HRESULT copyEnabled([out, retval] BOOL* enabled);
+
+    /*
+        - (BOOL)pasteEnabled;
+    */
+    HRESULT pasteEnabled([out, retval] BOOL* enabled);
+
+    /*
+        - (BOOL)deleteEnabled;
+    */
+    HRESULT deleteEnabled([out, retval] BOOL* enabled);
+
+    /*
+        - (BOOL)editingEnabled;
+    */
+    HRESULT editingEnabled([out, retval] BOOL* enabled);
 }
 
 /*
