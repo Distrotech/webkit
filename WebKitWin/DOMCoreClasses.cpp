@@ -31,6 +31,7 @@
 #include "DOMHTMLClasses.h"
 #pragma warning(push, 0)
 #include <WebCore/DOMWindow.h>
+#include <WebCore/document.h>
 #include <WebCore/Element.h>
 #include <WebCore/HTMLFormElement.h>
 #include <WebCore/HTMLInputElement.h>
@@ -331,7 +332,7 @@ IDOMNode* DOMNode::createInstance(WebCore::Node* n)
         break;
         case WebCore::Node::DOCUMENT_NODE:
         {
-            IDOMDocument* newDocument = DOMDocument::createInstance(static_cast<WebCore::Document*>(n));
+            IDOMDocument* newDocument = DOMDocument::createInstance(n->document());
             if (newDocument) {
                 hr = newDocument->QueryInterface(IID_IDOMNode, (void**)&domNode);
                 newDocument->Release();

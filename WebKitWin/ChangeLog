@@ -1,3 +1,14 @@
+2007-01-08  Lou Amadio  <lamadio@apple.com>
+
+        Reviewed by ggaren
+
+        * DOMCoreClasses.cpp:
+        (DOMNode::createInstance):
+                Build break
+        * WebView.cpp:
+        (WebView::handleMouseEvent):
+                passing incorrect flag
+
 2007-01-08  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Brady.
