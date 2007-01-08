@@ -7396,6 +7396,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\misc\PointerEventsHitRules.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\misc\PointerEventsHitRules.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\misc\SVGDocumentExtensions.cpp"
 					>
 				</File>
