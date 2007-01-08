@@ -1,3 +1,29 @@
+2007-01-08  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Brady.
+        
+        Use a WebCore HistoryItem object to back WebHistoryItem.
+        
+        * WebHistoryItem.cpp:
+        (WebHistoryItem::WebHistoryItem):
+        (WebHistoryItem::~WebHistoryItem):
+        (WebHistoryItem::createInstance):
+        (WebHistoryItem::initFromDictionaryRepresentation):
+        (WebHistoryItem::dictionaryRepresentation):
+        (WebHistoryItem::hasURLString):
+        (WebHistoryItem::visitCount):
+        (WebHistoryItem::setVisitCount):
+        (WebHistoryItem::mergeAutoCompleteHints):
+        (WebHistoryItem::setLastVisitedTimeInterval):
+        (WebHistoryItem::setTitle):
+        (WebHistoryItem::RSSFeedReferrer):
+        (WebHistoryItem::setRSSFeedReferrer):
+        (WebHistoryItem::initWithURLString):
+        (WebHistoryItem::URLString):
+        (WebHistoryItem::title):
+        (WebHistoryItem::lastVisitedTimeInterval):
+        * WebHistoryItem.h:
+
 2007-01-05  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.

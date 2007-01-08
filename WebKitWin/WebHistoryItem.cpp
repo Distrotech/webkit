@@ -23,6 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
+#include "config.h"
 #include "WebKitDLL.h"
 #include "WebHistoryItem.h"
 
@@ -30,36 +31,37 @@
 #include "WebIconDatabase.h"
 #include "logging.h"
 
+#pragma warning(push, 0)
+#include <WebCore/BString.h>
+#include <WebCore/HistoryItem.h>
+#pragma warning(pop)
+
+using namespace WebCore;
+
 // WebHistoryItem ----------------------------------------------------------------
 
-IWebIconDatabase* WebHistoryItem::m_sharedIconDatabase = 0;
-
-WebHistoryItem::WebHistoryItem()
+WebHistoryItem::WebHistoryItem(PassRefPtr<HistoryItem> historyItem)
 : m_refCount(0)
-, m_url(0)
-, m_title(0)
-, m_visitedCount(0)
-, m_RSSFeedReferrer(0)
+, m_historyItem(historyItem)
 {
-    if (!m_sharedIconDatabase) {
-        m_sharedIconDatabase = WebIconDatabase::sharedWebIconDatabase();
-        m_sharedIconDatabase->Release(); // don't hold our own ref to this - none of our objects outlive the other objects that hold refs
-    }
-
     gClassCount++;
 }
 
 WebHistoryItem::~WebHistoryItem()
 {
-    SysFreeString(m_url);
-    SysFreeString(m_title);
-    SysFreeString(m_RSSFeedReferrer);
     gClassCount--;
 }
 
 WebHistoryItem* WebHistoryItem::createInstance()
 {
-    WebHistoryItem* instance = new WebHistoryItem();
+    WebHistoryItem* instance = new WebHistoryItem(0);
+    instance->AddRef();
+    return instance;
+}
+
+WebHistoryItem* WebHistoryItem::createInstance(PassRefPtr<HistoryItem> historyItem)
+{
+    WebHistoryItem* instance = new WebHistoryItem(historyItem);
     instance->AddRef();
     return instance;
 }
@@ -80,8 +82,6 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::initFromDictionaryRepresentation(void*
 {
     CFDictionaryRef dictionaryRef = (CFDictionaryRef) dictionary;
     HRESULT hr = S_OK;
-    BSTR url = 0;
-    BSTR title = 0;
     int visitedCount = 0;
     CFAbsoluteTime lastVisitedTime = 0.0;
 
@@ -110,36 +110,15 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::initFromDictionaryRepresentation(void*
         goto exit;
     }
 
-    url = urlStringRef ? MarshallingHelpers::CFStringRefToBSTR(urlStringRef) : 0;
-    title = titleRef ? MarshallingHelpers::CFStringRefToBSTR(titleRef) : 0;
+    m_historyItem = new HistoryItem(urlStringRef, titleRef, lastVisitedTime);
+
     if (!CFNumberGetValue(visitCountRef, kCFNumberIntType, &visitedCount)) {
         hr = E_FAIL;
         goto exit;
     }
 
-    if (m_url) {
-        hr = m_sharedIconDatabase->releaseIconForURL(m_url);
-        if (FAILED(hr))
-            goto exit;
-        SysFreeString(m_url);
-    }
-
-    m_url = url;
-    hr = m_sharedIconDatabase->retainIconForURL(m_url);
-    if (FAILED(hr))
-        goto exit;
-    
-    SysFreeString(m_title);
-    m_title = title;
-    m_visitedCount = visitedCount;
-    m_lastVisited = MarshallingHelpers::CFAbsoluteTimeToDATE(lastVisitedTime);
-
+    m_historyItem->setVisitCount(visitedCount);
 exit:
-    if (FAILED(hr)) {
-        SysFreeString(url);
-        SysFreeString(title);
-    }
-
     return hr;
 }
 
@@ -147,25 +126,26 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::dictionaryRepresentation(void** dictio
 {
     CFDictionaryRef* dictionaryRef = (CFDictionaryRef*) dictionary;
     static CFStringRef lastVisitedFormat = CFSTR("%.1lf");
-    CFStringRef lastVisitedStringRef = CFStringCreateWithFormat(0, 0, lastVisitedFormat, MarshallingHelpers::DATEToCFAbsoluteTime(m_lastVisited));
+    CFStringRef lastVisitedStringRef = CFStringCreateWithFormat(0, 0, lastVisitedFormat, m_historyItem->lastVisitedTime());
     if (!lastVisitedStringRef)
         return E_FAIL;
 
     int keyCount = 0;
     CFStringRef keys[4];
     CFTypeRef values[4];
-    if (m_url) {
+    if (!m_historyItem->urlString().isEmpty()) {
         keys[keyCount]     = urlKey;
-        values[keyCount++] = MarshallingHelpers::BSTRToCFStringRef(m_url);
+        values[keyCount++] = m_historyItem->urlString().createCFString();
     }
     keys[keyCount]         = lastVisitedDateKey;
     values[keyCount++]     = lastVisitedStringRef;
-    if (m_title) {
+    if (!m_historyItem->title().isEmpty()) {
         keys[keyCount]     = titleKey;
-        values[keyCount++] = MarshallingHelpers::BSTRToCFStringRef(m_title);
+        values[keyCount++] = m_historyItem->title().createCFString();
     }
     keys[keyCount]   = visitCountKey;
-    values[keyCount++] = CFNumberCreate(0, kCFNumberIntType, &m_visitedCount);
+    int visitCount = m_historyItem->visitCount();
+    values[keyCount++] = CFNumberCreate(0, kCFNumberIntType, &visitCount);
     *dictionaryRef = CFDictionaryCreate(0, (const void**)keys, (const void**)values, keyCount, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
     
     CFRelease(lastVisitedStringRef);
@@ -174,19 +154,19 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::dictionaryRepresentation(void** dictio
 
 HRESULT STDMETHODCALLTYPE WebHistoryItem::hasURLString(BOOL *hasURL)
 {
-    *hasURL = (m_url && m_url[0]) ? TRUE : FALSE;
+    *hasURL = m_historyItem->urlString().isEmpty() ? TRUE : FALSE;
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebHistoryItem::visitCount(int *count)
 {
-    *count = m_visitedCount;
+    *count = m_historyItem->visitCount();
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebHistoryItem::setVisitCount(int count)
 {
-    m_visitedCount = count;
+    m_historyItem->setVisitCount(count);
     return S_OK;
 }
 
@@ -210,42 +190,35 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::mergeAutoCompleteHints(IWebHistoryItem
 
     otherItemPriv->Release();
 
-    m_visitedCount = otherVisitCount;
+    m_historyItem->setVisitCount(otherVisitCount);
 
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebHistoryItem::setLastVisitedTimeInterval(DATE time)
 {
-    m_lastVisited = time;
-    m_visitedCount++;
+    m_historyItem->setLastVisitedTime(MarshallingHelpers::DATEToCFAbsoluteTime(time));
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebHistoryItem::setTitle(BSTR title)
 {
-    if (m_title)
-        SysFreeString(m_title);
-    m_title = SysAllocString(title);
-    if (title && !m_title)
-        return E_OUTOFMEMORY;
+    m_historyItem->setTitle(String(title, SysStringLen(title)));
 
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebHistoryItem::RSSFeedReferrer(BSTR* url)
 {
-    *url = SysAllocString(m_RSSFeedReferrer);
+    BString str(m_historyItem->rssFeedReferrer());
+    *url = str.release();
+
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebHistoryItem::setRSSFeedReferrer(BSTR url)
 {
-    if (m_RSSFeedReferrer)
-        SysFreeString(m_RSSFeedReferrer);
-    m_RSSFeedReferrer = SysAllocString(url);
-    if (url && !m_RSSFeedReferrer)
-        return E_OUTOFMEMORY;
+    m_historyItem->setRSSFeedReferrer(String(url, SysStringLen(url)));
 
     return S_OK;
 }
@@ -302,18 +275,8 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::initWithURLString(
     /* [in] */ BSTR title,
     /* [in] */ DATE lastVisited)
 {
-    if (m_url) {
-        if (FAILED(m_sharedIconDatabase->releaseIconForURL(m_url)))
-            LOG_ERROR("Failed to release icon");
-        SysFreeString(m_url);
-    }
+    m_historyItem = new HistoryItem(String(urlString, SysStringLen(urlString)), String(title, SysStringLen(title)), MarshallingHelpers::DATEToCFAbsoluteTime(lastVisited));
 
-    if (FAILED(m_sharedIconDatabase->retainIconForURL(urlString)))
-        LOG_ERROR("Failed to retain icon");
-    
-    m_url = SysAllocString(urlString);
-    m_title = SysAllocString(title);
-    m_lastVisited = lastVisited;
     return S_OK;
 }
 
@@ -327,21 +290,25 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::originalURLString(
 HRESULT STDMETHODCALLTYPE WebHistoryItem::URLString( 
     /* [retval][out] */ BSTR* url)
 {
-    *url = SysAllocString(m_url);
+    BString str = m_historyItem->urlString();
+
+    *url = str.release();
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebHistoryItem::title( 
     /* [retval][out] */ BSTR* pageTitle)
 {
-    *pageTitle = SysAllocString(m_title);
+    BString str(m_historyItem->title());
+    *pageTitle = str.release();
+
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebHistoryItem::lastVisitedTimeInterval( 
     /* [retval][out] */ DATE* lastVisited)
 {
-    *lastVisited = m_lastVisited;
+    *lastVisited = MarshallingHelpers::CFAbsoluteTimeToDATE(m_historyItem->lastVisitedTime());
     return S_OK;
 }
 

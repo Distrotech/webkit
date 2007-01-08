@@ -31,6 +31,12 @@
 #include "IWebIconDatabase.h"
 
 #include <CoreFoundation/CoreFoundation.h>
+#include <WTF/PassRefPtr.h>
+#include <WTF/RefPtr.h>
+
+namespace WebCore {
+    class HistoryItem;
+}
 
 //-----------------------------------------------------------------------------
 
@@ -38,8 +44,9 @@ class WebHistoryItem : public IWebHistoryItem, IWebHistoryItemPrivate
 {
 public:
     static WebHistoryItem* createInstance();
+    static WebHistoryItem* createInstance(PassRefPtr<WebCore::HistoryItem>);
 protected:
-    WebHistoryItem();
+    WebHistoryItem(PassRefPtr<WebCore::HistoryItem>);
     ~WebHistoryItem();
 
 public:
@@ -93,13 +100,8 @@ public:
 
 protected:
     ULONG m_refCount;
-    BSTR m_url;
-    BSTR m_title;
-    BSTR m_RSSFeedReferrer;
-    DATE m_lastVisited;
-    int m_visitedCount;
 
-    static IWebIconDatabase* m_sharedIconDatabase;
+    RefPtr<WebCore::HistoryItem> m_historyItem;
 };
 
 #endif
