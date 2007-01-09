@@ -1,3 +1,9 @@
+2007-01-09  Anders Carlsson  <acarlsson@apple.com>
+
+        Build fix.
+        
+        * platform/win/TextBoundariesWin.cpp:
+
 2007-01-08  Anders Carlsson  <acarlsson@apple.com>
 
         Remove FrameLoader functions that have been implemented.

@@ -26,6 +26,8 @@
 #include "config.h"
 #include "TextBoundaries.h"
 
+#include <unicode/ubrk.h>
+
 #include "StringImpl.h"
 #include "TextBreakIterator.h"
 
