@@ -189,9 +189,6 @@ void WebCore::setFocusRingColorChangeFunction(void (*)()) { LOG_NOIMPL(); }
 
 void Frame::setNeedsReapplyStyles() { LOG_NOIMPL(); }
 
-KURL FrameLoader::historyURL(int) { LOG_NOIMPL(); return KURL(); }
-bool FrameLoader::canGoBackOrForward(int) const { LOG_NOIMPL(); return false; }
-int FrameLoader::getHistoryLength() { LOG_NOIMPL(); return 0; }
 String FrameLoader::referrer() const { return String(); }
 
 void ResourceLoader::cancel() { STOP_NOIMPL(); }

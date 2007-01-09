@@ -1,5 +1,11 @@
 2007-01-08  Anders Carlsson  <acarlsson@apple.com>
 
+        Remove FrameLoader functions that have been implemented.
+        
+        * platform/win/TemporaryLinkStubs.cpp:
+
+2007-01-08  Anders Carlsson  <acarlsson@apple.com>
+
         Build fix.
         
         * WebCore.vcproj/WebCore.vcproj:
