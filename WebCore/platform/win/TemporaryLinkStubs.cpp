@@ -191,7 +191,6 @@ void Frame::setNeedsReapplyStyles() { LOG_NOIMPL(); }
 
 String FrameLoader::referrer() const { return String(); }
 
-void ResourceLoader::cancel() { STOP_NOIMPL(); }
 
 String FrameLoader::overrideMediaType()const { LOG_NOIMPL(); return String(); }
 void FrameLoader::didChangeTitle(DocumentLoader*) { LOG_NOIMPL(); }
@@ -201,6 +200,7 @@ bool EventHandler::lastEventIsMouseUp() const { return false; }
 
 bool ResourceHandle::loadsBlocked() { return false; }
 void ResourceHandle::loadResourceSynchronously(const ResourceRequest&, ResourceError&, ResourceResponse&, Vector<char>&) { }
+void ResourceHandle::setDefersLoading(bool) { }
 
 // CRITFIXME: See if any of the following are actually implemented in OpenSource and copy the impls to internal
 const KURL DocumentLoader::unreachableURL() const { LOG_NOIMPL(); static KURL k; return k; }
@@ -208,10 +208,4 @@ bool DocumentLoader::getResponseRefreshAndModifiedHeaders(String&, String&) cons
 bool ResourceHandle::willLoadFromCache(ResourceRequest&) { LOG_NOIMPL(); return false; }
 float WebCore::userIdleTime() { LOG_NOIMPL(); return 0.0; }
 void PageCache::close() { LOG_NOIMPL(); }
-
-PassRefPtr<MainResourceLoader> MainResourceLoader::create(Frame*) { STOP_NOIMPL(); return 0; }
-void ResourceLoader::cancel(const ResourceError&) { STOP_NOIMPL(); }
-bool ResourceLoader::load(const ResourceRequest&) { STOP_NOIMPL(); return false; }
-void ResourceLoader::releaseResources() { STOP_NOIMPL(); }
-void ResourceLoader::addData(const char*, int, bool allAtOnce) { STOP_NOIMPL(); }
 

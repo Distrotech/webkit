@@ -1,3 +1,10 @@
+2007-01-10  Anders Carlsson  <acarlsson@apple.com>
+
+        Build fix.
+        
+        * platform/win/TemporaryLinkStubs.cpp:
+        (ResourceHandle::setDefersLoading):
+
 2007-01-09  Steve Falkenburg  <sfalken@apple.com>
 
         B&I build fix
