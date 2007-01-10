@@ -67,8 +67,6 @@ public:
     virtual void textWillBeDeletedInTextField(Element* input) = 0;
     virtual void textDidChangeInTextArea(Element*) = 0;
 
-    virtual void didFirstLayout() = 0;
-
     virtual const String& userAgentForURL(const KURL&) = 0;
     virtual const KURL& originalRequestURL() = 0;
     virtual void runJavaScriptAlert(const WebCore::String&) = 0;

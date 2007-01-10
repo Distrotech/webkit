@@ -1,5 +1,13 @@
 2007-01-10  Anders Carlsson  <acarlsson@apple.com>
 
+        Build fix.
+        
+        * WebFrame.cpp:
+        (WebFrame::dispatchDidFirstLayout):
+        * WebFrame.h:
+
+2007-01-10  Anders Carlsson  <acarlsson@apple.com>
+
         Reviewed by Darin.
 
         Add WebDocumentLoader. Implement some of the FrameLoaderClient methods.

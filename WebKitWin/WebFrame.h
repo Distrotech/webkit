@@ -176,7 +176,6 @@ public:
     virtual bool doTextFieldCommandFromEvent(WebCore::Element*, const WebCore::PlatformKeyboardEvent*);
     virtual void textWillBeDeletedInTextField(WebCore::Element* input);
     virtual void textDidChangeInTextArea(WebCore::Element*);
-    virtual void didFirstLayout();
     virtual const WebCore::String& userAgentForURL(const WebCore::KURL&);
     virtual const WebCore::KURL& originalRequestURL();
     virtual void runJavaScriptAlert(const WebCore::String&);

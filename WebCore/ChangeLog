@@ -1,5 +1,12 @@
 2007-01-10  Anders Carlsson  <acarlsson@apple.com>
 
+        Another build fix.
+        
+        * bridge/win/FrameWin.h:
+        * loader/win/FrameLoaderWin.cpp:
+
+2007-01-10  Anders Carlsson  <acarlsson@apple.com>
+
         Build fix.
         
         * platform/win/TemporaryLinkStubs.cpp:

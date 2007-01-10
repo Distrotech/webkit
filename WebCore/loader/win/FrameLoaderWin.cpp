@@ -111,12 +111,6 @@ KURL FrameLoader::originalRequestURL() const
     return KURL();
 }
 
-void FrameLoader::didFirstLayout()
-{
-    if (FrameWinClient* client = Win(m_frame)->client())
-        client->didFirstLayout();
-}
-
 enum WebCore::ObjectContentType FrameLoader::objectContentType(const KURL& url, const String& mimeTypeIn)
 {
     String mimeType = mimeTypeIn;

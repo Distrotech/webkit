@@ -1512,16 +1512,6 @@ void WebFrame::textDidChangeInTextArea(Element* e)
     }
 }
 
-void WebFrame::didFirstLayout()
-{
-    IWebFrameLoadDelegatePrivate* frameLoadDelegatePriv;
-    if (SUCCEEDED(d->webView->frameLoadDelegatePrivate(&frameLoadDelegatePriv)) && frameLoadDelegatePriv) {
-        frameLoadDelegatePriv->didFirstLayoutInFrame(d->webView, this);
-        frameLoadDelegatePriv->Release();
-    }
-    m_firstLayoutDone = true;
-}
-
 void WebFrame::dispatchDidHandleOnloadEvents()
 {
     IWebFrameLoadDelegatePrivate* frameLoadDelegatePriv;
@@ -1800,7 +1790,10 @@ void WebFrame::dispatchDidFinishLoad()
 
 void WebFrame::dispatchDidFirstLayout()
 {
-    LOG_NOIMPL();
+    COMPtr<IWebFrameLoadDelegatePrivate> frameLoadDelegatePriv;
+    if (SUCCEEDED(d->webView->frameLoadDelegatePrivate(&frameLoadDelegatePriv)))
+        frameLoadDelegatePriv->didFirstLayoutInFrame(d->webView, this);
+    m_firstLayoutDone = true;
 }
 
 void WebFrame::dispatchShow()
