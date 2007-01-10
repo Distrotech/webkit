@@ -53,8 +53,8 @@ extern WebLocalizableStringsBundle LOCALIZABLE_STRINGS_BUNDLE(FRAMEWORK_NAME);
 
 #define UI_STRING(string, comment) WebLocalizedString(&LOCALIZABLE_STRINGS_BUNDLE(FRAMEWORK_NAME), L##string)
 #define UI_STRING_KEY(string, key, comment) WebLocalizedString(&LOCALIZABLE_STRINGS_BUNDLE(FRAMEWORK_NAME), L##key)
-#define LPCTSTR_UI_STRING(string, comment) WebLocalizedLPCTSTRString(&LOCALIZABLE_STRINGS_BUNDLE(FRAMEWORK_NAME), L##string)
-#define LPCTSTR_UI_STRING_KEY(string, key, comment) WebLocalizedLPCTSTRString(&LOCALIZABLE_STRINGS_BUNDLE(FRAMEWORK_NAME), L##key)
+#define LPCTSTR_UI_STRING(string, comment) WebLocalizedLPCTSTR(&LOCALIZABLE_STRINGS_BUNDLE(FRAMEWORK_NAME), L##string)
+#define LPCTSTR_UI_STRING_KEY(string, key, comment) WebLocalizedLPCTSTR(&LOCALIZABLE_STRINGS_BUNDLE(FRAMEWORK_NAME), L##key)
 
 #else
 

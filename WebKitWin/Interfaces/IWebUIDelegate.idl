@@ -50,6 +50,7 @@ cpp_quote(" */")
 
 import "oaidl.idl";
 import "ocidl.idl";
+import "IWebUndoTarget.idl";
 import "IWebURLRequest.idl";
 import "IWebFrame.idl";
 
@@ -602,4 +603,52 @@ interface IWebUIDelegate : IUnknown
     */
     HRESULT takeFocus([in] IWebView* sender, [in] BOOL forward);
 
+    /// Undo related UI delegate methods --------------------------------------------------------------------------------
+
+    /*!
+        @method registerUndoWithTarget:
+        @abstract Registers an undo operation of a IWebUndoTarget on the undo/redo stack.
+        @param target The target that will be called back when the action is undone
+        @param actionName The name of the action - this will be passed back to the target when we need to undo the operation
+        @param actionArg An object that target used to save undo information
+    */
+    HRESULT registerUndoWithTarget([in] IWebUndoTarget* target, [in] BSTR actionName, [in] IUnknown* actionArg);
+
+    /*!
+        @method removeAllActionsWithTarget:
+        @abstract remove all the undo operations that are registered for the passed in target on the undo/redo stack.
+        @param target 
+    */
+    HRESULT removeAllActionsWithTarget([in] IWebUndoTarget* target);
+
+    /*!
+        @method setActionTitle:
+        @abstract Sets the name of the action for the current group of undo operations
+        @param actionName Name of the action
+    */
+    HRESULT setActionTitle([in] BSTR actionTitle);
+
+    /*!
+        @method undo:
+        @abstract Undo the last group of operations
+    */
+    HRESULT undo();
+
+    /*!
+        @method redo:
+        @abstract Redo the last group of operations
+    */
+    HRESULT redo();
+
+    /*!
+        @method canUndo:
+        @abstract Returns whether there's anything on the undo stack to be undone
+    */
+    HRESULT canUndo([out, retval] BOOL* result);
+
+    /*!
+        @method canRedo:
+        @abstract Returns whether there's anything on the redo stack to be redone
+    */
+    HRESULT canRedo([out, retval] BOOL* result);
 }

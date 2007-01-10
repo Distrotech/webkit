@@ -34,7 +34,7 @@
 
 class WebView;
 class WebNotification;
-class WebUndoManager;
+class WebEditorUndoTarget;
 
 namespace WebCore {
 
@@ -47,6 +47,7 @@ class Node;
 class WebEditorClient : public WebCore::EditorClient {
 public:
     WebEditorClient(WebView*);
+    ~WebEditorClient();
 
     virtual void pageDestroyed();
 
@@ -92,7 +93,7 @@ public:
 
 private:
     WebView* m_webView;
-    OwnPtr<WebUndoManager> m_undoManager;
+    WebEditorUndoTarget* m_undoTarget;
 };
 
 #endif // WebEditorClient_H

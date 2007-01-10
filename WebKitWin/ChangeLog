@@ -1,3 +1,52 @@
+2007-01-09  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Steve.
+
+        <rdar://4602355> Undo/Redo
+        - Added new undo methods in the IWebUIDelegate.
+        - Removed the internal WebUndoManager in WebEditorClient.
+        Instead, we'll call methods on the ui delegate to register
+        undo operations, execute undo/redo, etc.
+        
+        * English.lproj/Localizable.strings:
+        Added localized strings for all the edit command actions.
+        * Interfaces/IWebUIDelegate.idl:
+        Added undo delegate callbacks.
+        * Interfaces/IWebUndoTarget.idl: Added.
+        Added a IWebUndoTarget interface that targets of undo
+        operations need to implement.
+        * WebEditorClient.cpp:
+        Added WebEditorUndoTarget class that implements IWebUndoTarget.
+        (WebEditorUndoTarget::WebEditorUndoTarget):
+        (WebEditorUndoTarget::QueryInterface):
+        (WebEditorUndoTarget::AddRef):
+        (WebEditorUndoTarget::Release):
+        (WebEditorUndoTarget::invoke):
+        (WebEditorClient::WebEditorClient):
+        (WebEditorClient::~WebEditorClient):
+        WebEditorUndoCommand implements IWebUndoCommand and wraps an
+        EditCommand in it.  
+        (WebEditorUndoCommand::WebEditorUndoCommand):
+        (WebEditorUndoCommand::execute):
+        (WebEditorUndoCommand::QueryInterface):
+        (WebEditorUndoCommand::AddRef):
+        (WebEditorUndoCommand::Release):
+        (undoNameForEditAction):
+        The undo operations in WebEditorClient now calls through to the
+        undo methods in IWebUIDelegate rather than keeping an internal
+        undo/redo stack.
+        (WebEditorClient::registerCommandForUndo):
+        (WebEditorClient::registerCommandForRedo):
+        (WebEditorClient::clearUndoRedoOperations):
+        (WebEditorClient::canUndo):
+        (WebEditorClient::canRedo):
+        (WebEditorClient::undo):
+        (WebEditorClient::redo):
+        * WebEditorClient.h:
+        * WebKit.vcproj/Interfaces.vcproj:  added IWebUndoTarget.idl
+        * WebKit.vcproj/WebKitGUID.vcproj:  added IWebUndoTarget_i.c
+        * WebLocalizableStrings.h:
+
 2007-01-09  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Darin.

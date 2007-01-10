@@ -352,6 +352,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\Interfaces\IWebUndoTarget.idl"
+			>
+		</File>
+		<File
 			RelativePath="..\Interfaces\IWebURLAuthenticationChallenge.idl"
 			>
 		</File>

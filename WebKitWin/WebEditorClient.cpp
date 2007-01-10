@@ -28,7 +28,9 @@
 #include "WebEditorClient.h"
 
 #include "IWebEditingDelegate.h"
+#include "IWebUndoTarget.h"
 #include "IWebURLResponse.h"
+#include "WebLocalizableStrings.h"
 #include "WebView.h"
 #pragma warning(push, 0)
 #include <WebCore/BString.h>
@@ -40,83 +42,94 @@
 
 using namespace WebCore;
 
-class WebUndoCommand {
+// {09A11D2B-FAFB-4ca0-A6F7-791EE8932C88}
+static const GUID IID_IWebUndoCommand = 
+{ 0x9a11d2b, 0xfafb, 0x4ca0, { 0xa6, 0xf7, 0x79, 0x1e, 0xe8, 0x93, 0x2c, 0x88 } };
+
+class IWebUndoCommand : public IUnknown {
 public:
     virtual void execute() = 0;
 };
 
-class WebUndoManager {
+// WebEditorUndoTarget -------------------------------------------------------------
+
+class WebEditorUndoTarget : public IWebUndoTarget
+{
 public:
-    WebUndoManager() 
-        : m_inUndo(false)
-        , m_inRedo(false) {}
+    WebEditorUndoTarget();
 
-    ~WebUndoManager() 
-    {
-        clearCommands();
-    }
+    // IUnknown
+    virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject);
+    virtual ULONG STDMETHODCALLTYPE AddRef(void);
+    virtual ULONG STDMETHODCALLTYPE Release(void);
 
-    void clearCommands()
-    {
-        deleteAllValues(m_undoStack);
-        m_undoStack.resize(0);
-
-        deleteAllValues(m_redoStack);
-        m_redoStack.resize(0);
-    }
-
-    void registerCommand(WebUndoCommand* command) 
-    {
-        if (!m_inUndo && !m_inRedo)
-            m_redoStack.clear();
-
-        if (m_inUndo) {
-            m_redoStack.append(command);
-        } else {
-            m_undoStack.append(command);
-        }
-    }
-
-    void undo() 
-    {
-        m_inUndo = true;
-        undoOrRedo(m_undoStack);
-        m_inUndo = false;
-    }
-
-    void redo()
-    {
-        m_inRedo = true;
-        undoOrRedo(m_redoStack);
-        m_inRedo = false;
-    }
-
-    bool canUndo() { return !m_undoStack.isEmpty(); }
-    bool canRedo() { return !m_redoStack.isEmpty(); }
+    // IWebUndoTarget
+    virtual HRESULT STDMETHODCALLTYPE invoke( 
+        /* [in] */ BSTR actionName,
+        /* [in] */ IUnknown *obj);
 
 private:
-    void undoOrRedo(Vector<WebUndoCommand*>& stack)
-    {
-        ASSERT(!stack.isEmpty());
-
-        OwnPtr<WebUndoCommand> command(stack[static_cast<int>(stack.size()) - 1]);
-        stack.removeLast();
-
-        command->execute();
-    }
-
-    bool m_inUndo;
-    bool m_inRedo;
-
-    Vector<WebUndoCommand*> m_undoStack;
-    Vector<WebUndoCommand*> m_redoStack;
-
+    ULONG m_refCount;
 };
+
+WebEditorUndoTarget::WebEditorUndoTarget()
+: m_refCount(1)
+{
+}
+
+HRESULT STDMETHODCALLTYPE WebEditorUndoTarget::QueryInterface(REFIID riid, void** ppvObject)
+{
+    *ppvObject = 0;
+    if (IsEqualGUID(riid, IID_IUnknown))
+        *ppvObject = static_cast<IWebUndoTarget*>(this);
+    else if (IsEqualGUID(riid, IID_IWebUndoTarget))
+        *ppvObject = static_cast<IWebUndoTarget*>(this);
+    else
+        return E_NOINTERFACE;
+
+    AddRef();
+    return S_OK;
+}
+
+ULONG STDMETHODCALLTYPE WebEditorUndoTarget::AddRef(void)
+{
+    return ++m_refCount;
+}
+
+ULONG STDMETHODCALLTYPE WebEditorUndoTarget::Release(void)
+{
+    ULONG newRef = --m_refCount;
+    if (!newRef)
+        delete(this);
+
+    return newRef;
+}
+
+HRESULT STDMETHODCALLTYPE WebEditorUndoTarget::invoke( 
+    /* [in] */ BSTR /*actionName*/,
+    /* [in] */ IUnknown *obj)
+{
+    IWebUndoCommand* undoCommand = 0;
+    if (SUCCEEDED(obj->QueryInterface(IID_IWebUndoCommand, (void**)&undoCommand))) {
+        undoCommand->execute();
+        undoCommand->Release();
+    }
+    return S_OK;
+}
+
+// WebEditorClient ------------------------------------------------------------------
 
 WebEditorClient::WebEditorClient(WebView* webView)
     : m_webView(webView)
-    , m_undoManager(new WebUndoManager)
+    , m_undoTarget(0)
 {
+    m_undoTarget = new WebEditorUndoTarget();
+}
+
+WebEditorClient::~WebEditorClient()
+{
+    if (m_undoTarget)
+        m_undoTarget->Release();
 }
 
 void WebEditorClient::pageDestroyed()
@@ -238,68 +251,195 @@ void WebEditorClient::webViewDidChangeTypingStyle(WebNotification* /*notificatio
 void WebEditorClient::webViewDidChangeSelection(WebNotification* /*notification*/)
 {  LOG_NOIMPL(); }
 
-//NSUndoManager* WebEditorClient::undoManagerForWebView(WebView *webView)
-//{  LOG_NOIMPL(); return NULL; }
-
 bool WebEditorClient::shouldShowDeleteInterface(HTMLElement* /*element*/)
 { LOG_NOIMPL(); return false; }
 
 bool WebEditorClient::smartInsertDeleteEnabled(void)
 { LOG_NOIMPL(); return false; }
 
-class WebEditorUndoCommand : public WebUndoCommand 
+class WebEditorUndoCommand : public IWebUndoCommand
 {
 public:
-    WebEditorUndoCommand(PassRefPtr<EditCommand> editCommand, bool isUndo)
-        : m_editCommand(editCommand)
-        , m_isUndo(isUndo) { }
+    WebEditorUndoCommand(PassRefPtr<EditCommand> editCommand, bool isUndo);
+    void execute();
 
-    void execute()
-    {
-        if (m_isUndo)
-            m_editCommand->unapply();
-        else
-            m_editCommand->reapply();
-    }
+    // IUnknown
+    virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject);
+    virtual ULONG STDMETHODCALLTYPE AddRef(void);
+    virtual ULONG STDMETHODCALLTYPE Release(void);
 
 private:
+    ULONG m_refCount;
     RefPtr<EditCommand> m_editCommand;
     bool m_isUndo;
 };
 
+WebEditorUndoCommand::WebEditorUndoCommand(PassRefPtr<EditCommand> editCommand, bool isUndo)
+    : m_editCommand(editCommand)
+    , m_isUndo(isUndo) 
+    , m_refCount(1)
+{ 
+}
+
+void WebEditorUndoCommand::execute()
+{
+    if (m_isUndo)
+        m_editCommand->unapply();
+    else
+        m_editCommand->reapply();
+}
+
+HRESULT STDMETHODCALLTYPE WebEditorUndoCommand::QueryInterface(REFIID riid, void** ppvObject)
+{
+    *ppvObject = 0;
+    if (IsEqualGUID(riid, IID_IUnknown))
+        *ppvObject = static_cast<IWebUndoCommand*>(this);
+    else if (IsEqualGUID(riid, IID_IWebUndoCommand))
+        *ppvObject = static_cast<IWebUndoCommand*>(this);
+    else
+        return E_NOINTERFACE;
+
+    AddRef();
+    return S_OK;
+}
+
+ULONG STDMETHODCALLTYPE WebEditorUndoCommand::AddRef(void)
+{
+    return ++m_refCount;
+}
+
+ULONG STDMETHODCALLTYPE WebEditorUndoCommand::Release(void)
+{
+    ULONG newRef = --m_refCount;
+    if (!newRef)
+        delete(this);
+
+    return newRef;
+}
+
+static LPCTSTR undoNameForEditAction(EditAction editAction)
+{
+    switch (editAction) {
+        case EditActionUnspecified: return 0;
+        case EditActionSetColor: return LPCTSTR_UI_STRING_KEY("Set Color", "Set Color (Undo action name)", "Undo action name");
+        case EditActionSetBackgroundColor: return LPCTSTR_UI_STRING_KEY("Set Background Color", "Set Background Color (Undo action name)", "Undo action name");
+        case EditActionTurnOffKerning: return LPCTSTR_UI_STRING_KEY("Turn Off Kerning", "Turn Off Kerning (Undo action name)", "Undo action name");
+        case EditActionTightenKerning: return LPCTSTR_UI_STRING_KEY("Tighten Kerning", "Tighten Kerning (Undo action name)", "Undo action name");
+        case EditActionLoosenKerning: return LPCTSTR_UI_STRING_KEY("Loosen Kerning", "Loosen Kerning (Undo action name)", "Undo action name");
+        case EditActionUseStandardKerning: return LPCTSTR_UI_STRING_KEY("Use Standard Kerning", "Use Standard Kerning (Undo action name)", "Undo action name");
+        case EditActionTurnOffLigatures: return LPCTSTR_UI_STRING_KEY("Turn Off Ligatures", "Turn Off Ligatures (Undo action name)", "Undo action name");
+        case EditActionUseStandardLigatures: return LPCTSTR_UI_STRING_KEY("Use Standard Ligatures", "Use Standard Ligatures (Undo action name)", "Undo action name");
+        case EditActionUseAllLigatures: return LPCTSTR_UI_STRING_KEY("Use All Ligatures", "Use All Ligatures (Undo action name)", "Undo action name");
+        case EditActionRaiseBaseline: return LPCTSTR_UI_STRING_KEY("Raise Baseline", "Raise Baseline (Undo action name)", "Undo action name");
+        case EditActionLowerBaseline: return LPCTSTR_UI_STRING_KEY("Lower Baseline", "Lower Baseline (Undo action name)", "Undo action name");
+        case EditActionSetTraditionalCharacterShape: return LPCTSTR_UI_STRING_KEY("Set Traditional Character Shape", "Set Traditional Character Shape (Undo action name)", "Undo action name");
+        case EditActionSetFont: return LPCTSTR_UI_STRING_KEY("Set Font", "Set Font (Undo action name)", "Undo action name");
+        case EditActionChangeAttributes: return LPCTSTR_UI_STRING_KEY("Change Attributes", "Change Attributes (Undo action name)", "Undo action name");
+        case EditActionAlignLeft: return LPCTSTR_UI_STRING_KEY("Align Left", "Align Left (Undo action name)", "Undo action name");
+        case EditActionAlignRight: return LPCTSTR_UI_STRING_KEY("Align Right", "Align Right (Undo action name)", "Undo action name");
+        case EditActionCenter: return LPCTSTR_UI_STRING_KEY("Center", "Center (Undo action name)", "Undo action name");
+        case EditActionJustify: return LPCTSTR_UI_STRING_KEY("Justify", "Justify (Undo action name)", "Undo action name");
+        case EditActionSetWritingDirection: return LPCTSTR_UI_STRING_KEY("Set Writing Direction", "Set Writing Direction (Undo action name)", "Undo action name");
+        case EditActionSubscript: return LPCTSTR_UI_STRING_KEY("Subscript", "Subscript (Undo action name)", "Undo action name");
+        case EditActionSuperscript: return LPCTSTR_UI_STRING_KEY("Superscript", "Superscript (Undo action name)", "Undo action name");
+        case EditActionUnderline: return LPCTSTR_UI_STRING_KEY("Underline", "Underline (Undo action name)", "Undo action name");
+        case EditActionOutline: return LPCTSTR_UI_STRING_KEY("Outline", "Outline (Undo action name)", "Undo action name");
+        case EditActionUnscript: return LPCTSTR_UI_STRING_KEY("Unscript", "Unscript (Undo action name)", "Undo action name");
+        case EditActionDrag: return LPCTSTR_UI_STRING_KEY("Drag", "Drag (Undo action name)", "Undo action name");
+        case EditActionCut: return LPCTSTR_UI_STRING_KEY("Cut", "Cut (Undo action name)", "Undo action name");
+        case EditActionPaste: return LPCTSTR_UI_STRING_KEY("Paste", "Paste (Undo action name)", "Undo action name");
+        case EditActionPasteFont: return LPCTSTR_UI_STRING_KEY("Paste Font", "Paste Font (Undo action name)", "Undo action name");
+        case EditActionPasteRuler: return LPCTSTR_UI_STRING_KEY("Paste Ruler", "Paste Ruler (Undo action name)", "Undo action name");
+        case EditActionTyping: return LPCTSTR_UI_STRING_KEY("Typing", "Typing (Undo action name)", "Undo action name");
+        case EditActionCreateLink: return LPCTSTR_UI_STRING_KEY("Create Link", "Create Link (Undo action name)", "Undo action name");
+        case EditActionUnlink: return LPCTSTR_UI_STRING_KEY("Unlink", "Unlink (Undo action name)", "Undo action name");
+        case EditActionInsertList: return LPCTSTR_UI_STRING_KEY("Insert List", "Insert List (Undo action name)", "Undo action name");
+        case EditActionFormatBlock: return LPCTSTR_UI_STRING_KEY("Formatting", "Format Block (Undo action name)", "Undo action name");
+        case EditActionIndent: return LPCTSTR_UI_STRING_KEY("Indent", "Indent (Undo action name)", "Undo action name");
+        case EditActionOutdent: return LPCTSTR_UI_STRING_KEY("Outdent", "Outdent (Undo action name)", "Undo action name");
+    }
+    return 0;
+}
+
 void WebEditorClient::registerCommandForUndo(PassRefPtr<EditCommand> command)
 {
-    m_undoManager->registerCommand(new WebEditorUndoCommand(command, true));
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
+        LPCTSTR actionName = undoNameForEditAction(command->editingAction());
+        WebEditorUndoCommand* undoCommand = new WebEditorUndoCommand(command, true);
+        if (!undoCommand)
+            return;
+        uiDelegate->registerUndoWithTarget(m_undoTarget, 0, undoCommand);
+        undoCommand->Release(); // the undo manager owns the reference
+        BSTR actionNameBSTR = SysAllocString(actionName);
+        if (actionNameBSTR) {
+            uiDelegate->setActionTitle(actionNameBSTR);
+            SysFreeString(actionNameBSTR);
+        }
+        uiDelegate->Release();
+    }
 }
 
 void WebEditorClient::registerCommandForRedo(PassRefPtr<EditCommand> command)
 {
-    m_undoManager->registerCommand(new WebEditorUndoCommand(command, false));
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
+        WebEditorUndoCommand* undoCommand = new WebEditorUndoCommand(command, false);
+        if (!undoCommand)
+            return;
+        uiDelegate->registerUndoWithTarget(m_undoTarget, 0, undoCommand);
+        undoCommand->Release(); // the undo manager owns the reference
+        uiDelegate->Release();
+    }
 }
 
 void WebEditorClient::clearUndoRedoOperations()
 {
-    m_undoManager->clearCommands();
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
+        uiDelegate->removeAllActionsWithTarget(m_undoTarget);
+        uiDelegate->Release();
+    }
 }
 
 bool WebEditorClient::canUndo() const
 {
-    return m_undoManager->canUndo();
+    BOOL result = FALSE;
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
+        uiDelegate->canUndo(&result);
+        uiDelegate->Release();
+    }
+    return !!result;
 }
 
 bool WebEditorClient::canRedo() const
 {
-    return m_undoManager->canRedo();
+    BOOL result = FALSE;
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
+        uiDelegate->canRedo(&result);
+        uiDelegate->Release();
+    }
+    return !!result;
 }
 
 void WebEditorClient::undo()
 {
-    return m_undoManager->undo();
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
+        uiDelegate->undo();
+        uiDelegate->Release();
+    }
 }
 
 void WebEditorClient::redo()
 {
-    return m_undoManager->redo();
+    IWebUIDelegate* uiDelegate = 0;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
+        uiDelegate->redo();
+        uiDelegate->Release();
+    }
 }
 
 bool WebEditorClient::selectWordBeforeMenuEvent()
