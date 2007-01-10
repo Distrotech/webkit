@@ -27,6 +27,7 @@
 #include "WebKitDLL.h"
 #include "WebFrame.h"
 
+#include "COMPtr.h"
 #include "DOMCoreClasses.h"
 #include "IWebHistory.h"
 #include "IWebHistoryItemPrivate.h"
@@ -1743,19 +1744,23 @@ void WebFrame::dispatchDidCancelClientRedirect()
     LOG_NOIMPL();
 }
 
-void WebFrame::dispatchWillPerformClientRedirect(const KURL&, double /*interval*/, double /*fireDate*/)
+void WebFrame::dispatchWillPerformClientRedirect(const KURL& /*url*/, double /*delay*/, double /*fireDate*/)
 {
     LOG_NOIMPL();
 }
 
 void WebFrame::dispatchDidChangeLocationWithinPage()
 {
-    LOG_NOIMPL();
+    COMPtr<IWebFrameLoadDelegate> frameLoadDelegate;
+    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)))
+        frameLoadDelegate->didChangeLocationWithinPageForFrame(d->webView, this);
 }
 
 void WebFrame::dispatchWillClose()
 {
-    LOG_NOIMPL();
+    COMPtr<IWebFrameLoadDelegate> frameLoadDelegate;
+    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)))
+        frameLoadDelegate->willCloseFrame(d->webView, this);
 }
 
 void WebFrame::dispatchDidReceiveIcon()
@@ -1765,22 +1770,32 @@ void WebFrame::dispatchDidReceiveIcon()
 
 void WebFrame::dispatchDidStartProvisionalLoad()
 {
-    LOG_NOIMPL();
+    COMPtr<IWebFrameLoadDelegate> frameLoadDelegate;
+    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)))
+        frameLoadDelegate->didStartProvisionalLoadForFrame(d->webView, this);
 }
 
-void WebFrame::dispatchDidReceiveTitle(const String& /*title*/)
+void WebFrame::dispatchDidReceiveTitle(const String& title)
 {
-    LOG_NOIMPL();
+    COMPtr<IWebFrameLoadDelegate> frameLoadDelegate;
+    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
+        BString titleStr(title);
+        frameLoadDelegate->didReceiveTitle(d->webView, titleStr, this);
+    }
 }
 
 void WebFrame::dispatchDidCommitLoad()
 {
-    LOG_NOIMPL();
+    COMPtr<IWebFrameLoadDelegate> frameLoadDelegate;
+    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) 
+        frameLoadDelegate->didCommitLoadForFrame(d->webView, this);
 }
 
 void WebFrame::dispatchDidFinishLoad()
 {
-    LOG_NOIMPL();
+    COMPtr<IWebFrameLoadDelegate> frameLoadDelegate;
+    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) 
+        frameLoadDelegate->didFinishLoadForFrame(d->webView, this);
 }
 
 void WebFrame::dispatchDidFirstLayout()
@@ -1949,14 +1964,42 @@ void WebFrame::setDocumentViewFromPageCache(PageCache*)
     LOG_NOIMPL();
 }
 
-void WebFrame::updateGlobalHistoryForStandardLoad(const KURL&)
+void WebFrame::updateGlobalHistoryForStandardLoad(const KURL& url)
 {
-    LOG_NOIMPL();
+    BString urlBStr((LPCOLESTR)url.url().unicode(), url.url().length());
+     
+    COMPtr<WebHistory> history;
+    history.adoptRef(webHistory());
+
+    if (!history)
+        return;
+
+    history->addItemForURL(urlBStr, 0);                 
 }
 
-void WebFrame::updateGlobalHistoryForReload(const KURL&)
+void WebFrame::updateGlobalHistoryForReload(const KURL& url)
 {
-    LOG_NOIMPL();
+    BString urlBStr((LPCOLESTR)url.url().unicode(), url.url().length());
+
+    COMPtr<WebHistory> history;
+    history.adoptRef(webHistory());
+
+    if (!history)
+        return;
+
+    COMPtr<IWebHistoryItem> item;
+    if (SUCCEEDED(history->itemForURL(urlBStr, &item))) {
+        COMPtr<IWebHistoryItemPrivate> itemPrivate;
+        if (SUCCEEDED(item->QueryInterface(IID_IWebHistoryItemPrivate, (void**)&itemPrivate))) {
+            SYSTEMTIME currentTime;
+            GetSystemTime(&currentTime);
+            DATE visitedTime = 0;
+            SystemTimeToVariantTime(&currentTime, &visitedTime);
+
+            // FIXME - bumping the last visited time doesn't mark the history as changed
+            itemPrivate->setLastVisitedTimeInterval(visitedTime);
+        }
+    }
 }
 
 bool WebFrame::shouldGoToHistoryItem(HistoryItem*) const
@@ -2035,19 +2078,25 @@ void WebFrame::committedLoad(DocumentLoader*, const char*, int)
     LOG_NOIMPL();
 }
 
-void WebFrame::dispatchDecidePolicyForMIMEType(FramePolicyFunction, const String&, const ResourceRequest&)
+void WebFrame::dispatchDecidePolicyForMIMEType(FramePolicyFunction function, const String&, const ResourceRequest&)
 {
     LOG_NOIMPL();
+
+    (d->frame->loader()->*function)(PolicyUse);
 }
 
-void WebFrame::dispatchDecidePolicyForNewWindowAction(FramePolicyFunction, const NavigationAction&, const ResourceRequest&, const String&)
+void WebFrame::dispatchDecidePolicyForNewWindowAction(FramePolicyFunction function, const NavigationAction&, const ResourceRequest&, const String&)
 {
     LOG_NOIMPL();
+
+    (d->frame->loader()->*function)(PolicyUse);
 }
 
-void WebFrame::dispatchDecidePolicyForNavigationAction(FramePolicyFunction, const NavigationAction&, const ResourceRequest&)
+void WebFrame::dispatchDecidePolicyForNavigationAction(FramePolicyFunction function, const NavigationAction&, const ResourceRequest&)
 {
     LOG_NOIMPL();
+
+    (d->frame->loader()->*function)(PolicyUse);
 }
 
 void WebFrame::dispatchUnableToImplementPolicy(const ResourceError&)
@@ -2099,12 +2148,18 @@ bool WebFrame::dispatchDidLoadResourceFromMemoryCache(DocumentLoader*, const Res
 
 void WebFrame::dispatchDidFailProvisionalLoad(const ResourceError&)
 {
-    LOG_NOIMPL();
+    COMPtr<IWebFrameLoadDelegate> frameLoadDelegate;
+    // FIXME: Set the IWebError correctly
+    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) 
+        frameLoadDelegate->didFailProvisionalLoadWithError(d->webView, 0, this);
 }
 
 void WebFrame::dispatchDidFailLoad(const ResourceError&)
 {
-    LOG_NOIMPL();
+    COMPtr<IWebFrameLoadDelegate> frameLoadDelegate;
+    // FIXME: Set the IWebError correctly
+    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)))
+        frameLoadDelegate->didFailLoadWithError(d->webView, 0, this);
 }
 
 Frame* WebFrame::dispatchCreatePage()

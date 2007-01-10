@@ -1,5 +1,39 @@
 2007-01-10  Anders Carlsson  <acarlsson@apple.com>
 
+        Reviewed by Darin.
+
+        Add WebDocumentLoader. Implement some of the FrameLoaderClient methods.
+        Add a resourceRequest() getter to WebMutableURLRequest.
+        
+        * WebDocumentLoader.cpp: Added.
+        (WebDocumentLoader::WebDocumentLoader):
+        (WebDocumentLoader::setDataSource):
+        (WebDocumentLoader::dataSource):
+        (WebDocumentLoader::attachToFrame):
+        (WebDocumentLoader::detachFromFrame):
+        * WebDocumentLoader.h: Added.
+        * WebFrame.cpp:
+        (WebFrame::dispatchWillPerformClientRedirect):
+        (WebFrame::dispatchDidChangeLocationWithinPage):
+        (WebFrame::dispatchWillClose):
+        (WebFrame::dispatchDidStartProvisionalLoad):
+        (WebFrame::dispatchDidReceiveTitle):
+        (WebFrame::dispatchDidCommitLoad):
+        (WebFrame::dispatchDidFinishLoad):
+        (WebFrame::updateGlobalHistoryForStandardLoad):
+        (WebFrame::updateGlobalHistoryForReload):
+        (WebFrame::dispatchDecidePolicyForMIMEType):
+        (WebFrame::dispatchDecidePolicyForNewWindowAction):
+        (WebFrame::dispatchDecidePolicyForNavigationAction):
+        (WebFrame::dispatchDidFailProvisionalLoad):
+        (WebFrame::dispatchDidFailLoad):
+        * WebKit.vcproj/WebKit.vcproj:
+        * WebMutableURLRequest.cpp:
+        (WebMutableURLRequest::resourceRequest):
+        * WebMutableURLRequest.h:
+
+2007-01-10  Anders Carlsson  <acarlsson@apple.com>
+
         Reviewed by Brady.
 
         Make WebBackForwardList wrap a WebCore::BackForwardList. Add wrapper map to WebHistoryItem.

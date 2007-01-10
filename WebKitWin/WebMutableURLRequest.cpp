@@ -305,3 +305,8 @@ const HTTPHeaderMap& WebMutableURLRequest::httpHeaderFields() const
 {
     return m_request.httpHeaderFields();
 }
+
+const ResourceRequest& WebMutableURLRequest::resourceRequest() const
+{
+    return m_request;
+}
