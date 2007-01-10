@@ -30,16 +30,22 @@
 
 #include "WebHistoryItem.h"
 
-#include <WTF/Vector.h>
+#include <WTF/PassRefPtr.h>
+#include <WTF/RefPtr.h>
+
+namespace WebCore {
+    class BackForwardList;
+}
 
 class WebBackForwardList : public IWebBackForwardList
 {
 public:
     static WebBackForwardList* createInstance();
+    static WebBackForwardList* createInstance(PassRefPtr<WebCore::BackForwardList>);
 protected:
-    WebBackForwardList();
+    WebBackForwardList(PassRefPtr<WebCore::BackForwardList>);
     ~WebBackForwardList();
-    void clearPageCache();
+    static void setDefaultPageCacheSizeIfNecessary();
 
 public:
     // IUnknown
@@ -107,10 +113,7 @@ public:
 
 protected:
     ULONG m_refCount;
-    Vector<WebHistoryItem*> m_list;
-    int m_position;
-    unsigned int m_maximumSize;
-    UINT m_pageCacheSize;
+    RefPtr<WebCore::BackForwardList> m_backForwardList;
 };
 
 #endif

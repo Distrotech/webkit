@@ -1,3 +1,44 @@
+2007-01-10  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Brady.
+
+        Make WebBackForwardList wrap a WebCore::BackForwardList. Add wrapper map to WebHistoryItem.
+
+        * WebBackForwardList.cpp:
+        (backForwardListWrappers):
+        (WebBackForwardList::WebBackForwardList):
+        (WebBackForwardList::~WebBackForwardList):
+        (WebBackForwardList::createInstance):
+        (WebBackForwardList::addItem):
+        (WebBackForwardList::goBack):
+        (WebBackForwardList::goForward):
+        (WebBackForwardList::goToItem):
+        (WebBackForwardList::backItem):
+        (WebBackForwardList::currentItem):
+        (WebBackForwardList::forwardItem):
+        (WebBackForwardList::backListWithLimit):
+        (WebBackForwardList::forwardListWithLimit):
+        (WebBackForwardList::capacity):
+        (WebBackForwardList::setCapacity):
+        (WebBackForwardList::backListCount):
+        (WebBackForwardList::forwardListCount):
+        (WebBackForwardList::containsItem):
+        (WebBackForwardList::itemAtIndex):
+        (WebBackForwardList::setPageCacheSize):
+        (WebBackForwardList::pageCacheSize):
+        (WebBackForwardList::setDefaultPageCacheSizeIfNecessary):
+        * WebBackForwardList.h:
+        * WebHistoryItem.cpp:
+        (historyItemWrappers):
+        (WebHistoryItem::WebHistoryItem):
+        (WebHistoryItem::~WebHistoryItem):
+        (WebHistoryItem::createInstance):
+        (WebHistoryItem::initFromDictionaryRepresentation):
+        (WebHistoryItem::QueryInterface):
+        (WebHistoryItem::initWithURLString):
+        (WebHistoryItem::historyItem):
+        * WebHistoryItem.h:
+
 2007-01-09  Ada Chan  <adachan@apple.com>
 
         Reviewed by Steve.

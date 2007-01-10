@@ -28,8 +28,7 @@
 #include "WebHistoryItem.h"
 
 #include "MarshallingHelpers.h"
-#include "WebIconDatabase.h"
-#include "logging.h"
+#include "WebKit.h"
 
 #pragma warning(push, 0)
 #include <WebCore/BString.h>
@@ -40,35 +39,48 @@ using namespace WebCore;
 
 // WebHistoryItem ----------------------------------------------------------------
 
+static HashMap<HistoryItem*, WebHistoryItem*>& historyItemWrappers()
+{
+    static HashMap<HistoryItem*, WebHistoryItem*> staticHistoryItemWrappers;
+    return staticHistoryItemWrappers;
+}
+
 WebHistoryItem::WebHistoryItem(PassRefPtr<HistoryItem> historyItem)
 : m_refCount(0)
 , m_historyItem(historyItem)
 {
+    ASSERT(!historyItemWrappers().contains(m_historyItem.get()));
+    historyItemWrappers().set(m_historyItem.get(), this);
+
     gClassCount++;
 }
 
 WebHistoryItem::~WebHistoryItem()
 {
+    ASSERT(historyItemWrappers().contains(m_historyItem.get()));
+    historyItemWrappers().remove(m_historyItem.get());
+
     gClassCount--;
 }
 
 WebHistoryItem* WebHistoryItem::createInstance()
 {
-    WebHistoryItem* instance = new WebHistoryItem(0);
+    WebHistoryItem* instance = new WebHistoryItem(new HistoryItem);
     instance->AddRef();
     return instance;
 }
 
 WebHistoryItem* WebHistoryItem::createInstance(PassRefPtr<HistoryItem> historyItem)
 {
-    WebHistoryItem* instance = new WebHistoryItem(historyItem);
+    WebHistoryItem* instance;
+
+    instance = historyItemWrappers().get(historyItem.get());
+
+    if (!instance)
+        instance = new WebHistoryItem(historyItem);
+
     instance->AddRef();
     return instance;
-}
-
-void WebHistoryItem::releaseAllPendingPageCaches()
-{
-    // FIXME - TODO
 }
 
 // IWebHistoryItemPrivate -----------------------------------------------------
@@ -110,7 +122,9 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::initFromDictionaryRepresentation(void*
         goto exit;
     }
 
+    historyItemWrappers().remove(m_historyItem.get());
     m_historyItem = new HistoryItem(urlStringRef, titleRef, lastVisitedTime);
+    historyItemWrappers().set(m_historyItem.get(), this);
 
     if (!CFNumberGetValue(visitCountRef, kCFNumberIntType, &visitedCount)) {
         hr = E_FAIL;
@@ -241,7 +255,9 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::setHasPageCache(BOOL /*hasCache*/)
 HRESULT STDMETHODCALLTYPE WebHistoryItem::QueryInterface(REFIID riid, void** ppvObject)
 {
     *ppvObject = 0;
-    if (IsEqualGUID(riid, IID_IUnknown))
+    if (IsEqualGUID(riid, CLSID_WebHistoryItem))
+        *ppvObject = this;
+    else if (IsEqualGUID(riid, IID_IUnknown))
         *ppvObject = static_cast<IWebHistoryItem*>(this);
     else if (IsEqualGUID(riid, IID_IWebHistoryItem))
         *ppvObject = static_cast<IWebHistoryItem*>(this);
@@ -275,7 +291,9 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::initWithURLString(
     /* [in] */ BSTR title,
     /* [in] */ DATE lastVisited)
 {
+    historyItemWrappers().remove(m_historyItem.get());
     m_historyItem = new HistoryItem(String(urlString, SysStringLen(urlString)), String(title, SysStringLen(title)), MarshallingHelpers::DATEToCFAbsoluteTime(lastVisited));
+    historyItemWrappers().set(m_historyItem.get(), this);
 
     return S_OK;
 }
@@ -331,4 +349,10 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::icon(
 {
     ASSERT_NOT_REACHED();
     return E_NOTIMPL;
+}
+
+// WebHistoryItem -------------------------------------------------------------
+HistoryItem* WebHistoryItem::historyItem() const
+{
+    return m_historyItem.get();
 }

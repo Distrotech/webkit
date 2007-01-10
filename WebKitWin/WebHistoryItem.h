@@ -96,8 +96,8 @@ public:
     virtual HRESULT STDMETHODCALLTYPE hasPageCache(BOOL *hasCache);
     virtual HRESULT STDMETHODCALLTYPE setHasPageCache(BOOL hasCache);
 
-    static void releaseAllPendingPageCaches();
-
+    // WebHistoryItem
+    WebCore::HistoryItem* historyItem() const;
 protected:
     ULONG m_refCount;
 

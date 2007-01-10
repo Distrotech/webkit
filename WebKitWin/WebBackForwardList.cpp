@@ -26,36 +26,64 @@
 #include "config.h"
 #include "WebKitDLL.h"
 #include "WebBackForwardList.h"
+
+#include "COMPtr.h"
 #include "WebFrame.h"
+#include "WebKit.h"
 #include "WebPreferences.h"
 
+#include <WebCore/BackForwardList.h>
+#include <WebCore/HistoryItem.h>
+
 using std::min;
+using namespace WebCore;
 
 const UINT computeDefaultPageCacheSize = UINT_MAX;
 
 // WebBackForwardList ----------------------------------------------------------------
 
-WebBackForwardList::WebBackForwardList()
-: m_refCount(0)
-, m_position(-1)
-, m_maximumSize(100) // typically set by browser app
-, m_pageCacheSize(computeDefaultPageCacheSize)
+static HashMap<BackForwardList*, WebBackForwardList*>& backForwardListWrappers()
 {
+    static HashMap<BackForwardList*, WebBackForwardList*> staticBackForwardListWrappers;
+    return staticBackForwardListWrappers;
+}
+
+WebBackForwardList::WebBackForwardList(PassRefPtr<BackForwardList> backForwardList)
+    : m_refCount(0)
+    , m_backForwardList(backForwardList)
+{
+    ASSERT(!backForwardListWrappers().contains(m_backForwardList.get()));
+    backForwardListWrappers().set(m_backForwardList.get(), this);
+
     gClassCount++;
 }
 
 WebBackForwardList::~WebBackForwardList()
 {
-    Vector<WebHistoryItem*>::iterator end = m_list.end();
-    for (Vector<WebHistoryItem*>::iterator it = m_list.begin(); it != end; ++it)
-        (*it)->Release();
+    ASSERT(m_backForwardList->closed());
+
+    ASSERT(backForwardListWrappers().contains(m_backForwardList.get()));
+    backForwardListWrappers().remove(m_backForwardList.get());
 
     gClassCount--;
 }
 
 WebBackForwardList* WebBackForwardList::createInstance()
 {
-    WebBackForwardList* instance = new WebBackForwardList();
+    WebBackForwardList* instance = new WebBackForwardList(new BackForwardList);
+    instance->AddRef();
+    return instance;
+}
+
+WebBackForwardList* WebBackForwardList::createInstance(PassRefPtr<BackForwardList> backForwardList)
+{
+    WebBackForwardList* instance;
+
+    instance = backForwardListWrappers().get(backForwardList.get());
+
+    if (!instance)
+        instance = new WebBackForwardList(backForwardList);
+
     instance->AddRef();
     return instance;
 }
@@ -95,101 +123,82 @@ ULONG STDMETHODCALLTYPE WebBackForwardList::Release(void)
 HRESULT STDMETHODCALLTYPE WebBackForwardList::addItem( 
     /* [in] */ IWebHistoryItem* item)
 {
-    if (!m_maximumSize)
-        return S_FALSE;
-
-    if (!item)
+    COMPtr<WebHistoryItem> webHistoryItem;
+ 
+    if (!item || FAILED(item->QueryInterface(CLSID_WebHistoryItem, (void**)&webHistoryItem)))
         return E_FAIL;
-
-    // Toss anything in the forward list
-    unsigned int end = (unsigned int) m_list.size();
-    unsigned int clearItem = m_position + 1;
-    if (clearItem < end) {
-        Vector<WebHistoryItem*>::iterator it = &m_list.at(clearItem);
-        for (unsigned int i=clearItem; i<end; i++) {
-            (*it)->Release();
-            m_list.remove(clearItem);
-        }
-    }
-
-    // Toss the first item if the list is getting too big, as long as we're not using it
-    if (m_list.size() == m_maximumSize && m_position != 0) {
-        m_list.remove(0);
-        m_position--;
-    }
-
-    m_position++;
-    m_list.append(static_cast<WebHistoryItem*>(item));
-    item->AddRef();
+ 
+    m_backForwardList->addItem(webHistoryItem->historyItem());
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebBackForwardList::goBack( void)
 {
-    if (m_position < 1)
-        return E_FAIL;
-
-    m_position--;
-
+    m_backForwardList->goBack();
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebBackForwardList::goForward( void)
 {
-    if (m_position >= (int)m_list.size()-1)
-        return E_FAIL;
-
-    m_position++;
-
+    m_backForwardList->goForward();
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebBackForwardList::goToItem( 
     /* [in] */ IWebHistoryItem* item)
 {
-    Vector<WebHistoryItem*>::iterator end = m_list.end();
-    int newPosition = 0;
-    for (Vector<WebHistoryItem*>::iterator it = m_list.begin(); it != end; ++it, ++newPosition) {
-        if (item == *it) {
-            m_position = newPosition;
-            return S_OK;
-        }
-    }
+    COMPtr<WebHistoryItem> webHistoryItem;
+ 
+    if (!item || FAILED(item->QueryInterface(&webHistoryItem)))
+        return E_FAIL;
 
-    return E_FAIL;
+    m_backForwardList->goToItem(webHistoryItem->historyItem());
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebBackForwardList::backItem( 
     /* [retval][out] */ IWebHistoryItem** item)
 {
-    *item = 0;
-    if (m_position > 0) {
-        *item = m_list[m_position-1];
-        (*item)->AddRef();
-    }
-    return *item ? S_OK : E_FAIL;
+    if (!item)
+        return E_POINTER;
+
+    HistoryItem* historyItem = m_backForwardList->backItem();
+
+    if (!historyItem)
+        return E_FAIL;
+
+    *item = WebHistoryItem::createInstance(historyItem);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebBackForwardList::currentItem( 
     /* [retval][out] */ IWebHistoryItem** item)
 {
-    *item = 0;
-    if (m_list.size() > 0) {
-        *item = m_list[m_position];
-        (*item)->AddRef();
-    }
-    return *item ? S_OK : E_FAIL;
+    if (!item)
+        return E_POINTER;
+
+    HistoryItem* historyItem = m_backForwardList->currentItem();
+
+    if (!historyItem)
+        return E_FAIL;
+
+    *item = WebHistoryItem::createInstance(historyItem);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebBackForwardList::forwardItem( 
     /* [retval][out] */ IWebHistoryItem** item)
 {
-    *item = 0;
-    if (m_position < (int)m_list.size()-1) {
-        *item = m_list[m_position+1];
-        (*item)->AddRef();
-    }
-    return *item ? S_OK : E_FAIL;
+    if (!item)
+        return E_POINTER;
+
+    HistoryItem* historyItem = m_backForwardList->forwardItem();
+
+    if (!historyItem)
+        return E_FAIL;
+
+    *item = WebHistoryItem::createInstance(historyItem);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebBackForwardList::backListWithLimit( 
@@ -197,21 +206,15 @@ HRESULT STDMETHODCALLTYPE WebBackForwardList::backListWithLimit(
     /* [out] */ int* listCount,
     /* [retval][out] */ IWebHistoryItem** list)
 {
-    *listCount = 0;
-    if (limit <= 0)
-        return E_FAIL;
-    
-    *listCount = min(limit, m_position);
-    if (list && *listCount > 0) {
-        int i = 0;
-        Vector<WebHistoryItem*>::iterator end = &m_list[m_position - *listCount];
-        for (Vector<WebHistoryItem*>::iterator it = &m_list[m_position-1]; ; it--, i++) {
-            list[i] = *it;
-            (*it)->AddRef();
-            if (it == end)
-                break;
-        }
-    }
+    HistoryItemVector historyItemVector;
+    m_backForwardList->backListWithLimit(limit, historyItemVector);
+
+    *listCount = static_cast<int>(historyItemVector.size());
+
+    if (list)
+        for (unsigned i = 0; i < historyItemVector.size(); i++)
+            list[i] = WebHistoryItem::createInstance(historyItemVector[i].get());
+
     return S_OK;
 }
 
@@ -220,28 +223,22 @@ HRESULT STDMETHODCALLTYPE WebBackForwardList::forwardListWithLimit(
     /* [out] */ int* listCount,
     /* [retval][out] */ IWebHistoryItem** list)
 {
-    *listCount = 0;
-    if (limit <= 0)
-        return E_FAIL;
+    HistoryItemVector historyItemVector;
+    m_backForwardList->forwardListWithLimit(limit, historyItemVector);
 
-    *listCount = min(limit, ((int)m_list.size() - m_position - 1));
-    if (list && *listCount > 0) {
-        int i = 0;
-        Vector<WebHistoryItem*>::iterator end = &m_list[m_position + *listCount];
-        for (Vector<WebHistoryItem*>::iterator it = &m_list[m_position + 1]; ; it++, i++) {
-            list[i] = *it;
-            (*it)->AddRef();
-            if (it == end)
-                break;
-        }
-    }
+    *listCount = static_cast<int>(historyItemVector.size());
+
+    if (list)
+        for (unsigned i = 0; i < historyItemVector.size(); i++)
+            list[i] = WebHistoryItem::createInstance(historyItemVector[i].get());
+
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebBackForwardList::capacity( 
     /* [retval][out] */ int* result)
 {
-    *result = (int)m_maximumSize;
+    *result = (int)m_backForwardList->capacity();
     return S_OK;
 }
 
@@ -251,39 +248,21 @@ HRESULT STDMETHODCALLTYPE WebBackForwardList::setCapacity(
     if (size < 0)
         return E_FAIL;
     
-    m_maximumSize = size;
-
-    if (size == 0)
-        m_position = 0;
-    else if (m_position >= size)
-        m_position = size-1;
-
-    unsigned int uSize = (unsigned int) size;
-    unsigned int end = (unsigned int) m_list.size();
-    if (uSize < end) {
-        Vector<WebHistoryItem*>::iterator it = &m_list.at(size);
-        for (unsigned int i=uSize; i<end; i++) {
-            (*it)->Release();
-            m_list.remove(size);
-        }
-    }
-
+    m_backForwardList->setCapacity(size);
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebBackForwardList::backListCount( 
     /* [retval][out] */ int* count)
 {
-    *count = m_position;
+    *count = m_backForwardList->backListCount();
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebBackForwardList::forwardListCount( 
-    /* [retval][out] */ int* sizecount)
+    /* [retval][out] */ int* count)
 {
-    int listSize = (int) m_list.size();
-
-    *sizecount = (listSize > 0) ? (listSize-m_position-1) : 0;
+    *count = m_backForwardList->forwardListCount();
     return S_OK;
 }
 
@@ -291,14 +270,12 @@ HRESULT STDMETHODCALLTYPE WebBackForwardList::containsItem(
     /* [in] */ IWebHistoryItem* item,
     /* [retval][out] */ BOOL* result)
 {
-    *result = FALSE;
-    Vector<WebHistoryItem*>::iterator end = m_list.end();
-    for (Vector<WebHistoryItem*>::iterator it = m_list.begin(); it != end; ++it) {
-        if (item == *it) {
-            *result = TRUE;
-            break;
-        }
-    }
+    COMPtr<WebHistoryItem> webHistoryItem;
+
+    if (!item || FAILED(item->QueryInterface(&webHistoryItem)))
+        return E_FAIL;
+
+    *result = m_backForwardList->containsItem(webHistoryItem->historyItem());
     return S_OK;
 }
 
@@ -306,66 +283,54 @@ HRESULT STDMETHODCALLTYPE WebBackForwardList::itemAtIndex(
     /* [in] */ int index,
     /* [retval][out] */ IWebHistoryItem** item)
 {
-    *item = 0;
-    if (index < 0 || index > (int)m_list.size())
+    if (!item)
+        return E_POINTER;
+
+    HistoryItem* historyItem = m_backForwardList->itemAtIndex(index);
+
+    if (!historyItem)
         return E_FAIL;
-
-    *item = m_list.at(index);
-    (*item)->AddRef();
+ 
+    *item = WebHistoryItem::createInstance(historyItem);
     return S_OK;
-}
-
-void WebBackForwardList::clearPageCache()
-{
-    WebHistoryItem* currentItem = (m_list.size() > 0) ? m_list[m_position] : 0;
-
-    Vector<WebHistoryItem*>::iterator end = m_list.end();
-    for (Vector<WebHistoryItem*>::iterator it = m_list.begin(); it != end; ++it) {
-        // Don't clear the current item.  Objects are still in use.
-        if (currentItem != *it) {
-            IWebHistoryItemPrivate* priv;
-            if (SUCCEEDED((*it)->QueryInterface(IID_IWebHistoryItemPrivate, (void**) &priv))) {
-                priv->setHasPageCache(FALSE);
-                priv->Release();
-            }
-        }
-    }
-
-    WebHistoryItem::releaseAllPendingPageCaches();
 }
 
 HRESULT STDMETHODCALLTYPE WebBackForwardList::setPageCacheSize( 
     /* [in] */ UINT size)
 {
-    m_pageCacheSize = size;
-    if (!size)
-        clearPageCache();
+    m_backForwardList->setPageCacheSize(size);
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebBackForwardList::pageCacheSize( 
     /* [retval][out] */ UINT* size)
 {
-    if (m_pageCacheSize == computeDefaultPageCacheSize) {
-        UINT cacheSize;
-        WebPreferences* prefs = WebPreferences::createInstance();
-        IWebPreferences* standardPrefs = 0;
-        if (!prefs || FAILED(prefs->standardPreferences(&standardPrefs)) || FAILED(standardPrefs->pageCacheSize(&cacheSize)))
-            cacheSize = 3;  // 3 is the default value for WebKitPageCacheSizePreferenceKey
-        if (prefs)
-            prefs->Release();
-        if (standardPrefs)
-            standardPrefs->Release();
-        unsigned long long memSize = WebSystemMainMemory();
-        
-        // On Windows the reported memory is a bit smaller, so we use 1000 instead of 1024 as a fudge factor.
-        if (memSize >= 1024 * 1024 * 1000 /*1024*/)
-            m_pageCacheSize = cacheSize;
-        else if (memSize >= 512 * 1024 * 1000 /*1024*/)
-            m_pageCacheSize = cacheSize - 1;
-        else
-            m_pageCacheSize = cacheSize - 2;
-    }
-    *size = m_pageCacheSize;
+    setDefaultPageCacheSizeIfNecessary();
+
+    *size = m_backForwardList->pageCacheSize();
     return S_OK;
+}
+
+void WebBackForwardList::setDefaultPageCacheSizeIfNecessary()
+{
+    static bool initialized = false;
+    if (initialized)
+        return;
+
+    UINT cacheSize;
+    WebPreferences* prefs = WebPreferences::createInstance();
+    COMPtr<IWebPreferences> standardPrefs;
+    if (!prefs || FAILED(prefs->standardPreferences(&standardPrefs)) || FAILED(standardPrefs->pageCacheSize(&cacheSize)))
+        cacheSize = 3;  // 3 is the default value for WebKitPageCacheSizePreferenceKey
+    if (prefs)
+        prefs->Release();
+    unsigned long long memSize = WebSystemMainMemory();
+
+    // On Windows the reported memory is a bit smaller, so we use 1000 instead of 1024 as a fudge factor.
+    if (memSize >= 1024 * 1024 * 1000 /*1024*/)
+        BackForwardList::setDefaultPageCacheSize(cacheSize);
+    else if (memSize >= 512 * 1024 * 1000 /*1024*/)
+        BackForwardList::setDefaultPageCacheSize(cacheSize - 1);
+    else
+        BackForwardList::setDefaultPageCacheSize(cacheSize - 2);
 }
