@@ -1955,6 +1955,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\page\FocusDirection.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\page\Frame.cpp"
 				>
 			</File>
@@ -2336,6 +2340,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\Base64.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\CharacterNames.h"
 				>
 			</File>
 			<File
@@ -5086,6 +5094,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\dom\Text.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\dom\Tokenizer.h"
 				>
 			</File>
 			<File

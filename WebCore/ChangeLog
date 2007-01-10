@@ -1,3 +1,9 @@
+2007-01-09  Steve Falkenburg  <sfalken@apple.com>
+
+        B&I build fix
+
+        * WebCore.vcproj/WebCore.vcproj:
+
 2007-01-09  Anders Carlsson  <acarlsson@apple.com>
 
         Build fix.
