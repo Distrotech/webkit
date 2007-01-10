@@ -1,3 +1,22 @@
+2007-01-09  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Lou.
+        
+        <rdar://4906546> Win2K: crash when entering new URL in address field
+
+        Win2K compatibility fix.  SafeArrayCreateVector doesn't work correctly on older systems (Win2K, etc.)        
+        
+        Some references to people stumbling across this bug (apologies for not being able to find a Microsoft support article):        
+        http://discuss.develop.com/archives/wa.exe?A2=ind0104a&L=dotnet&D=0&T=0&P=69575
+        http://www.eggheadcafe.com/ng/microsoft.public.platformsdk.com_ole/Jul2005/post22989606.asp
+        http://www.pcreview.co.uk/forums/thread-1470025.php
+
+        * MarshallingHelpers.cpp:
+        (MarshallingHelpers::stringArrayToSafeArray):
+        (MarshallingHelpers::intArrayToSafeArray):
+        (MarshallingHelpers::intRectToSafeArray):
+        (MarshallingHelpers::iunknownArrayToSafeArray):
+
 2007-01-08  Lou Amadio  <lamadio@apple.com>
 
         Reviewed by ggaren

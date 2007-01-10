@@ -133,7 +133,7 @@ DATE MarshallingHelpers::CFAbsoluteTimeToDATE(CFAbsoluteTime absoluteTime)
 SAFEARRAY* MarshallingHelpers::stringArrayToSafeArray(CFArrayRef inArray)
 {
     CFIndex size = CFArrayGetCount(inArray);
-    SAFEARRAY* sa = ::SafeArrayCreateVector(VT_BSTR, 0, (ULONG) size);
+    SAFEARRAY* sa = ::SafeArrayCreateVectorEx(VT_BSTR, 0, (ULONG) size, 0);
     long count = 0;
     for (CFIndex i=0; i<size; i++) {
         CFStringRef item = (CFStringRef) CFArrayGetValueAtIndex(inArray, i);
@@ -149,7 +149,7 @@ SAFEARRAY* MarshallingHelpers::stringArrayToSafeArray(CFArrayRef inArray)
 SAFEARRAY* MarshallingHelpers::intArrayToSafeArray(CFArrayRef inArray)
 {
     CFIndex size = CFArrayGetCount(inArray);
-    SAFEARRAY* sa = ::SafeArrayCreateVector(VT_I4, 0, (ULONG) size);
+    SAFEARRAY* sa = ::SafeArrayCreateVectorEx(VT_I4, 0, (ULONG) size, 0);
     long count = 0;
     for (CFIndex i=0; i<size; i++) {
         CFNumberRef item = (CFNumberRef) CFArrayGetValueAtIndex(inArray, i);
@@ -162,7 +162,7 @@ SAFEARRAY* MarshallingHelpers::intArrayToSafeArray(CFArrayRef inArray)
 
 SAFEARRAY* MarshallingHelpers::intRectToSafeArray(const WebCore::IntRect& rect)
 {
-    SAFEARRAY* sa = ::SafeArrayCreateVector(VT_I4, 0, 4);
+    SAFEARRAY* sa = ::SafeArrayCreateVectorEx(VT_I4, 0, 4, 0);
     long count = 0;
     int value;
 
@@ -189,7 +189,7 @@ SAFEARRAY* MarshallingHelpers::intRectToSafeArray(const WebCore::IntRect& rect)
 SAFEARRAY* MarshallingHelpers::iunknownArrayToSafeArray(CFArrayRef inArray)
 {
     CFIndex size = CFArrayGetCount(inArray);
-    SAFEARRAY* sa = ::SafeArrayCreateVector(VT_UNKNOWN, 0, (ULONG) size);
+    SAFEARRAY* sa = ::SafeArrayCreateVectorEx(VT_UNKNOWN, 0, (ULONG) size, (LPVOID)&IID_IUnknown);
     long count = 0;
     for (CFIndex i=0; i<size; i++) {
         IUnknown* item = (IUnknown*) CFArrayGetValueAtIndex(inArray, i);
