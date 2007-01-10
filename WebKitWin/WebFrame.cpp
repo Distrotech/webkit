@@ -342,6 +342,7 @@ WebFrame::WebFrame()
 , m_provisionalDataSource(0)
 , m_quickRedirectComing(false)
 , m_continueFormSubmit(false)
+, m_buffer(new SharedBuffer)
 , m_textEncoding(0)
 , m_firstLayoutDone(false)
 {
@@ -1117,7 +1118,7 @@ void WebFrame::didReceiveResponse(ResourceHandle*, const ResourceResponse& respo
         frameLoadDelegate->Release();
     }
 
-    m_buffer.clear();
+    m_buffer->clear();
 
     WebURLResponse* webResponse = WebURLResponse::createInstance(response);
 
@@ -1151,9 +1152,7 @@ void WebFrame::didReceiveData(ResourceHandle*, const char* data, int length, int
 
     // save off the data as it is received (matching Mac WebLoader)
     // FIXME - CFNetwork Integration - we need to share this with the CFNetwork in-memory cache!
-    size_t oldSize = m_buffer.size();
-    m_buffer.resize(oldSize + length);
-    memcpy(m_buffer.data() + oldSize, data, length);
+    m_buffer->append(data, length);
 }
 
 void WebFrame::didFinishLoading(ResourceHandle* handle)

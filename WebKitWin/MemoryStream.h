@@ -28,15 +28,18 @@
 
 #include <objidl.h>
 
-#include <WTF/Vector.h>
+#include "COMPtr.h"
+#include <WebCore/SharedBuffer.h>
+#include <WTF/PassRefPtr.h>
+#include <WTF/RefPtr.h>
 
 class MemoryStream : public IStream
 {
 public:
-    static MemoryStream* MemoryStream::createInstance(IUnknown* bufferOwner, const Vector<char>* buffer);
+    static MemoryStream* MemoryStream::createInstance(IUnknown* bufferOwner, PassRefPtr<WebCore::SharedBuffer> buffer);
 
 protected:
-    MemoryStream(IUnknown* bufferOwner, const Vector<char>* buffer);
+    MemoryStream(IUnknown* bufferOwner, PassRefPtr<WebCore::SharedBuffer> buffer);
     ~MemoryStream();
 public:
 
@@ -95,8 +98,8 @@ public:
 
 protected:
     ULONG m_refCount;
-    IUnknown* m_bufferOwner;
-    const Vector<char>* m_buffer;
+    COMPtr<IUnknown> m_bufferOwner;
+    RefPtr<WebCore::SharedBuffer> m_buffer;
     size_t m_pos;
 };
 

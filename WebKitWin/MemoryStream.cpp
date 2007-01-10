@@ -28,30 +28,25 @@
 #include "MemoryStream.h"
 
 using std::min;
+using namespace WebCore;
 
 // MemoryStream ---------------------------------------------------------------
 
-MemoryStream::MemoryStream(IUnknown* bufferOwner, const Vector<char>* buffer)
+MemoryStream::MemoryStream(IUnknown* bufferOwner, PassRefPtr<SharedBuffer> buffer)
 : m_refCount(0)
 , m_bufferOwner(bufferOwner)
 , m_buffer(buffer)
 , m_pos(0)
 {
-    if (m_bufferOwner)
-        m_bufferOwner->AddRef();
-
     gClassCount++;
 }
 
 MemoryStream::~MemoryStream()
 {
-    if (m_bufferOwner)
-        m_bufferOwner->Release();
-
     gClassCount--;
 }
 
-MemoryStream* MemoryStream::createInstance(IUnknown* bufferOwner, const Vector<char>* buffer)
+MemoryStream* MemoryStream::createInstance(IUnknown* bufferOwner, PassRefPtr<SharedBuffer> buffer)
 {
     MemoryStream* instance = new MemoryStream(bufferOwner, buffer);
     instance->AddRef();
@@ -259,6 +254,6 @@ HRESULT STDMETHODCALLTYPE MemoryStream::Stat(
 HRESULT STDMETHODCALLTYPE MemoryStream::Clone( 
     /* [out] */ IStream** ppstm)
 {
-    *ppstm = MemoryStream::createInstance(m_bufferOwner, m_buffer);
+    *ppstm = MemoryStream::createInstance(m_bufferOwner.get(), m_buffer);
     return (*ppstm) ? S_OK : E_OUTOFMEMORY;
 }

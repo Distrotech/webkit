@@ -241,6 +241,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\COMPtr.h"
+				>
+			</File>
+			<File
 				RelativePath="..\DOMCoreClasses.h"
 				>
 			</File>

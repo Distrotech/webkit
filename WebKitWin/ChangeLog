@@ -1,3 +1,36 @@
+2007-01-09  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Darin.
+
+        Add COMPtr. Make MemoryStream backed by a SharedBuffer. Use SharedBuffer in
+        WebFrame.
+        
+        * COMPtr.h: Added.
+        (COMPtr::COMPtr):
+        (COMPtr::~COMPtr):
+        (COMPtr::get):
+        (COMPtr::operator*):
+        (COMPtr::operator->):
+        (COMPtr::operator&):
+        (COMPtr::operator!):
+        (COMPtr::operator UnspecifiedBoolType):
+        (::copyTo):
+        (::adopt):
+        (::operator):
+        * MemoryStream.cpp:
+        (MemoryStream::MemoryStream):
+        (MemoryStream::~MemoryStream):
+        (MemoryStream::createInstance):
+        (MemoryStream::Clone):
+        * MemoryStream.h:
+        * WebFrame.cpp:
+        (WebFrame::WebFrame):
+        (WebFrame::didReceiveResponse):
+        (WebFrame::didReceiveData):
+        * WebFrame.h:
+        (WebFrame::data):
+        * WebKit.vcproj/WebKit.vcproj:
+
 2007-01-09  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Lou.
