@@ -31,6 +31,10 @@
 
 #pragma warning(push, 0)
 #include <WebCore/ContextMenu.h>
+#include <WebCore/FrameLoader.h>
+#include <WebCore/FrameLoadRequest.h>
+#include <WebCore/Page.h>
+#include <WebCore/ResourceRequest.h>
 #include <WebCore/NotImplemented.h>
 #pragma warning(pop)
 
@@ -86,6 +90,22 @@ void WebContextMenuClient::downloadURL(const KURL&)
 void WebContextMenuClient::copyImageToClipboard(const HitTestResult&)
 {
     LOG_NOIMPL();
+}
+
+void WebContextMenuClient::searchWithGoogle(const Frame* frame)
+{
+    String searchString = frame->selectedText();
+    searchString.stripWhiteSpace();
+    DeprecatedString encoded = KURL::encode_string(searchString.deprecatedString());
+    encoded.replace(DeprecatedString("%20"), DeprecatedString("+"));
+    
+    String url("http://www.google.com/search?client=safari&q=");
+    url.append(String(encoded));
+    url.append("&ie=UTF-8&oe=UTF-8");
+
+    ResourceRequest request = ResourceRequest(url);
+    if (Page* page = frame->page())
+        page->mainFrame()->loader()->urlSelected(FrameLoadRequest(request), 0);
 }
 
 void WebContextMenuClient::lookUpInDictionary(Frame*)
