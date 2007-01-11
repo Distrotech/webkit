@@ -33,17 +33,18 @@
 #include "WebDataSource.h"
 
 #pragma warning(push, 0)
-#include <WebCore/ResourceHandleClient.h>
 #include <WebCore/FrameLoaderClient.h>
 #include <WebCore/FrameWin.h>
 #include <WebCore/KURL.h>
 #include <WebCore/PlatformString.h>
+#include <WebCore/ResourceHandleClient.h>
 #pragma warning(pop)
 
 #include <WTF/RefPtr.h>
 #include <WTF/HashMap.h>
 
 namespace WebCore {
+    class AuthenticationChallenge;
     class DocumentLoader;
     class Element;
     class Frame;
@@ -280,6 +281,8 @@ public:
     virtual void incrementProgress(id identifier, const char*, int);
     virtual void completeProgress(id identifier);
     virtual void startDownload(const WebCore::ResourceRequest&);
+    virtual void dispatchDidReceiveAuthenticationChallenge(WebCore::DocumentLoader*, id identifier, const WebCore::AuthenticationChallenge&);
+    virtual void dispatchDidCancelAuthenticationChallenge(WebCore::DocumentLoader*, id identifier, const WebCore::AuthenticationChallenge&);
 
     // WebFrame
     void initWithWebFrameView(IWebFrameView*, IWebView*, WebCore::Page*, WebCore::HTMLFrameOwnerElement*);

@@ -43,6 +43,7 @@
 #include "WebHistoryItem.h"
 #include "WebURLResponse.h"
 #pragma warning( push, 0 )
+#include <WebCore/AuthenticationChallenge.h>
 #include <WebCore/BString.h>
 #include <WebCore/Cache.h>
 #include <WebCore/Document.h>
@@ -2177,6 +2178,16 @@ void WebFrame::completeProgress(id)
 }
 
 void WebFrame::startDownload(const ResourceRequest&)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchDidReceiveAuthenticationChallenge(DocumentLoader*, id, const AuthenticationChallenge&)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchDidCancelAuthenticationChallenge(DocumentLoader*, id, const AuthenticationChallenge&)
 {
     LOG_NOIMPL();
 }

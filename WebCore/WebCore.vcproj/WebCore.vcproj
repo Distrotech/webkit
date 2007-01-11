@@ -3488,7 +3488,23 @@
 				Name="network"
 				>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\AuthenticationChallenge.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\AuthenticationChallenge.h"
+					>
+				</File>
+				<File
 					RelativePath="..\platform\network\win\CookieJarWin.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\Credential.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\Credential.h"
 					>
 				</File>
 				<File
@@ -3509,6 +3525,14 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\HTTPParsers.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\ProtectionSpace.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\network\ProtectionSpace.h"
 					>
 				</File>
 				<File

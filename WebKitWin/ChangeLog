@@ -1,3 +1,14 @@
+2007-01-11  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by NOBODY.
+        
+        Make it build again after my OpenSource http auth checkin
+
+        * WebFrame.cpp:
+        (WebFrame::dispatchDidReceiveAuthenticationChallenge):
+        (WebFrame::dispatchDidCancelAuthenticationChallenge):
+        * WebFrame.h:
+
 2007-01-10  Anders Carlsson  <acarlsson@apple.com>
 
         Another build fix.
