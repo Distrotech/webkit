@@ -83,21 +83,8 @@ FrameWin::~FrameWin()
     loader()->cancelAndClear();
 }
 
-// Set or unset the printing mode in the view.  We only toy with this if we're printing.
-void FrameWin::setupRootForPrinting(bool onOrOff)
-{
-    if (document() && document()->printing()) {
-        RenderView *root = static_cast<RenderView *>(document()->renderer());
-        if (root) {
-            root->setPrintingMode(onOrOff);
-        }
-    }
-}
-
 Vector<IntRect> FrameWin::computePageRects(const IntRect& printRect, float userScaleFactor)
 {
-    setupRootForPrinting(true);
-    
     Vector<IntRect> pages;
 
     if (!document() || !view()|| !document()->renderer()) return pages;
@@ -141,8 +128,6 @@ Vector<IntRect> FrameWin::computePageRects(const IntRect& printRect, float userS
         IntRect pageRect(x, y, wide, high);
         pages.append(pageRect);
     }
-    
-    setupRootForPrinting (false);
     
     return pages;
 }

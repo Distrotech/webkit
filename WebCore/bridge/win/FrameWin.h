@@ -105,7 +105,6 @@ public:
 
     virtual String mimeTypeForFileName(const String&) const;
 
-    virtual void setupRootForPrinting(bool onOrOff);
     virtual Vector<IntRect> computePageRects(const IntRect& printRect, float userScaleFactor);
 
     virtual KJS::Bindings::Instance* getEmbedInstanceForWidget(Widget*);
