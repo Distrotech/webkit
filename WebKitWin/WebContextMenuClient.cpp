@@ -108,7 +108,7 @@ void WebContextMenuClient::searchWithGoogle(const Frame* frame)
         page->mainFrame()->loader()->urlSelected(FrameLoadRequest(request), 0);
 }
 
-void WebContextMenuClient::lookUpInDictionary(Frame*)
+void WebContextMenuClient::lookUpInDictionary(const Frame*)
 {
     LOG_NOIMPL();
 }
