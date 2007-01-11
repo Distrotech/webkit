@@ -4,6 +4,7 @@
         
         * WebContextMenuClient.cpp:
         (WebContextMenuClient::lookUpInDictionary):
+        * WebContextMenuClient.h:
 
 2007-01-10  Beth Dakin  <bdakin@apple.com>
 
