@@ -2279,7 +2279,7 @@ HRESULT STDMETHODCALLTYPE WebView::canMakeTextSmaller(
     *result = canShrinkMore ? TRUE : FALSE;
     return S_OK;
 }
-    
+
 HRESULT STDMETHODCALLTYPE WebView::makeTextSmaller( 
         /* [in] */ IUnknown* /*sender*/)
 {
@@ -2288,6 +2288,37 @@ HRESULT STDMETHODCALLTYPE WebView::makeTextSmaller(
     if (!canShrinkMore)
         return E_FAIL;
     return setTextSizeMultiplier(newScale);
+}
+
+HRESULT STDMETHODCALLTYPE WebView::canMakeTextStandardSize( 
+    /* [retval][out] */ BOOL* result)
+{
+    bool notAlreadyStandard = m_textSizeMultiplier != 1.0f;
+    *result = notAlreadyStandard ? TRUE : FALSE;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebView::makeTextStandardSize( 
+    /* [in] */ IUnknown* /*sender*/)
+{
+    bool notAlreadyStandard = m_textSizeMultiplier != 1.0f;
+    if (notAlreadyStandard)
+        return setTextSizeMultiplier(1.0f);
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebView::toggleContinuousSpellChecking( 
+    /* [in] */ IUnknown* /*sender*/)
+{
+    ASSERT_NOT_REACHED();
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE WebView::toggleSmartInsertDelete( 
+    /* [in] */ IUnknown* /*sender*/)
+{
+    ASSERT_NOT_REACHED();
+    return E_NOTIMPL;
 }
 
 // IWebViewCSS -----------------------------------------------------------------

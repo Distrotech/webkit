@@ -1,3 +1,15 @@
+2007-01-11  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Lou.
+
+        Implement "Make Text Normal Size".
+
+        * WebView.cpp:
+        (WebView::canMakeTextStandardSize): Added
+        (WebView::makeTextStandardSize): Added
+        (WebView::toggleContinuousSpellChecking): Added
+        (WebView::toggleSmartInsertDelete): Added
+
 2007-01-11  Brady Eidson  <beidson@apple.com>
 
         Reviewed by NOBODY.

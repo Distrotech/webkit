@@ -318,6 +318,18 @@ public:
     virtual HRESULT STDMETHODCALLTYPE makeTextSmaller( 
         /* [in] */ IUnknown *sender);
 
+    virtual HRESULT STDMETHODCALLTYPE canMakeTextStandardSize( 
+        /* [retval][out] */ BOOL *result);
+    
+    virtual HRESULT STDMETHODCALLTYPE makeTextStandardSize( 
+        /* [in] */ IUnknown *sender);
+    
+    virtual HRESULT STDMETHODCALLTYPE toggleContinuousSpellChecking( 
+        /* [in] */ IUnknown *sender);
+    
+    virtual HRESULT STDMETHODCALLTYPE toggleSmartInsertDelete( 
+        /* [in] */ IUnknown *sender);
+
     // IWebViewCSS
 
     virtual HRESULT STDMETHODCALLTYPE computedStyleForElement( 

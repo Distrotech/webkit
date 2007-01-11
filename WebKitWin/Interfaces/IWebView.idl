@@ -784,6 +784,26 @@ interface IWebIBActions : IUnknown
         - (IBAction)makeTextSmaller:(id)sender;
     */
     HRESULT makeTextSmaller([in] IUnknown* sender);
+
+    /*
+        - (BOOL)canMakeTextStandardSize;
+    */
+    HRESULT canMakeTextStandardSize([out, retval] BOOL* result);
+
+    /*
+        - (IBAction)makeTextStandardSize:(id)sender;
+    */
+    HRESULT makeTextStandardSize([in] IUnknown* sender);
+
+    /*
+        - (IBAction)toggleContinuousSpellChecking:(id)sender;
+    */
+    HRESULT toggleContinuousSpellChecking([in] IUnknown* sender);
+
+    /*
+        - (IBAction)toggleSmartInsertDelete:(id)sender;
+    */
+    HRESULT toggleSmartInsertDelete([in] IUnknown* sender);
 }
 
 /*
