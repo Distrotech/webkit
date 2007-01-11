@@ -204,7 +204,7 @@ void ResourceHandle::setDefersLoading(bool) { }
 
 // CRITFIXME: See if any of the following are actually implemented in OpenSource and copy the impls to internal
 const KURL DocumentLoader::unreachableURL() const { LOG_NOIMPL(); static KURL k; return k; }
-bool DocumentLoader::getResponseRefreshAndModifiedHeaders(String&, String&) const { LOG_NOIMPL(); return false; }
+bool DocumentLoader::getResponseModifiedHeader(String&) const { LOG_NOIMPL(); return false; }
 bool ResourceHandle::willLoadFromCache(ResourceRequest&) { LOG_NOIMPL(); return false; }
 float WebCore::userIdleTime() { LOG_NOIMPL(); return 0.0; }
 void PageCache::close() { LOG_NOIMPL(); }

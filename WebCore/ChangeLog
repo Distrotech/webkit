@@ -1,5 +1,12 @@
 2007-01-10  Anders Carlsson  <acarlsson@apple.com>
 
+        Yet another build fix.
+        
+        * platform/win/TemporaryLinkStubs.cpp:
+        (DocumentLoader::getResponseModifiedHeader):
+
+2007-01-10  Anders Carlsson  <acarlsson@apple.com>
+
         Another build fix.
         
         * bridge/win/FrameWin.h:
