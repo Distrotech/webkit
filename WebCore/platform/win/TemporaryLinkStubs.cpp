@@ -49,7 +49,6 @@
 #include "IntPoint.h"
 #include "KURL.h"
 #include "Language.h"
-#include "LoaderFunctions.h"
 #include "LocalizedStrings.h"
 #include "MainResourceLoader.h"
 #include "NavigationAction.h"
@@ -172,9 +171,6 @@ Vector<String> Editor::guessesForMisspelledSelection() { LOG_NOIMPL(); return Ve
 Vector<String> Editor::guessesForUngrammaticalSelection() { LOG_NOIMPL(); return Vector<String>(); }
 void Editor::markMisspellingsAfterTypingToPosition(WebCore::VisiblePosition const&) { LOG_NOIMPL(); }
 void Editor::advanceToNextMisspelling(bool) { LOG_NOIMPL(); }
-    
-bool CheckIfReloading(WebCore::DocLoader*) { LOG_NOIMPL(); return false; }
-void CheckCacheObjectStatus(DocLoader*, CachedResource*) { LOG_NOIMPL(); }
 
 }
 

@@ -2159,10 +2159,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\loader\LoaderFunctions.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\loader\MainResourceLoader.cpp"
 				>
 			</File>
