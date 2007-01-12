@@ -52,16 +52,16 @@ void WebContextMenuClient::contextMenuDestroyed()
 
 HMENU WebContextMenuClient::getCustomMenuFromDefaultItems(ContextMenu* menu)
 {
-    IWebUIDelegate* uiDelegate = 0;
+    COMPtr<IWebUIDelegate> uiDelegate;
     if (FAILED(m_webView->uiDelegate(&uiDelegate)))
         return 0;
 
     ASSERT(uiDelegate);
 
     HMENU newMenu = 0;
-    WebElementPropertyBag propertyBag(menu->hitTestResult());
-    uiDelegate->contextMenuItemsForElement(m_webView, &propertyBag, menu->platformDescription(), &newMenu);
-    uiDelegate->Release();
+    COMPtr<WebElementPropertyBag> propertyBag;
+    propertyBag.adoptRef(WebElementPropertyBag::createInstance(menu->hitTestResult()));
+    uiDelegate->contextMenuItemsForElement(m_webView, propertyBag.get(), menu->platformDescription(), &newMenu);
 
     return newMenu;
 }
@@ -70,16 +70,16 @@ void WebContextMenuClient::contextMenuItemSelected(ContextMenuItem* item, const 
 {
     ASSERT(item->type() == ActionType);
 
-    IWebUIDelegate* uiDelegate = 0;
+    COMPtr<IWebUIDelegate> uiDelegate;
     if (FAILED(m_webView->uiDelegate(&uiDelegate)))
         return;
 
     ASSERT(uiDelegate);
 
-    WebElementPropertyBag propertyBag(parentMenu->hitTestResult());
+    COMPtr<WebElementPropertyBag> propertyBag;
+    propertyBag.adoptRef(WebElementPropertyBag::createInstance(parentMenu->hitTestResult()));
             
-    uiDelegate->contextMenuItemSelected(m_webView, item->releasePlatformDescription(), &propertyBag);
-    uiDelegate->Release();
+    uiDelegate->contextMenuItemSelected(m_webView, item->releasePlatformDescription(), propertyBag.get());
 }
 
 void WebContextMenuClient::downloadURL(const KURL&)

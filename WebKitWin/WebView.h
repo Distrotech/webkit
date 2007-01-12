@@ -26,6 +26,7 @@
 #ifndef WebView_H
 #define WebView_H
 
+#include "COMPtr.h"
 #include "IWebNotificationObserver.h"
 #include "IWebUIDelegatePrivate.h"
 #include "IWebView.h"
@@ -597,13 +598,13 @@ protected:
     SIZE m_backingStoreSize;
     HRGN m_backingStoreDirtyRegion;
 
-    IWebFrameLoadDelegate* m_frameLoadDelegate;
-    IWebFrameLoadDelegatePrivate* m_frameLoadDelegatePrivate;
-    IWebUIDelegate* m_uiDelegate;
-    IWebUIDelegatePrivate* m_uiDelegatePrivate;
-    IWebFormDelegate* m_formDelegate;
+    COMPtr<IWebFrameLoadDelegate> m_frameLoadDelegate;
+    COMPtr<IWebFrameLoadDelegatePrivate> m_frameLoadDelegatePrivate;
+    COMPtr<IWebUIDelegate> m_uiDelegate;
+    COMPtr<IWebUIDelegatePrivate> m_uiDelegatePrivate;
+    COMPtr<IWebFormDelegate> m_formDelegate;
     IWebBackForwardList* m_backForwardList;
-    IWebPreferences* m_preferences;
+    COMPtr<IWebPreferences> m_preferences;
     bool m_userAgentOverridden;
     WebCore::String m_userAgentCustom;
     WebCore::String m_userAgentStandard;

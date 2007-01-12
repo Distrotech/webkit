@@ -95,13 +95,7 @@ WebView::WebView()
 , m_mainFrame(0)
 , m_backingStoreBitmap(0)
 , m_backingStoreDirtyRegion(0)
-, m_frameLoadDelegate(0)
-, m_frameLoadDelegatePrivate(0)
-, m_uiDelegate(0)
-, m_uiDelegatePrivate(0)
-, m_formDelegate(0)
 , m_backForwardList(0)
-, m_preferences(0)
 , m_userAgentOverridden(false)
 , m_textSizeMultiplier(1)
 , m_mouseActivated(false)
@@ -119,19 +113,7 @@ WebView::~WebView()
 
     if (m_backForwardList)
         m_backForwardList->Release();
-    if (m_frameLoadDelegate)
-        m_frameLoadDelegate->Release();
-    if (m_frameLoadDelegatePrivate)
-        m_frameLoadDelegatePrivate->Release();
-    if (m_uiDelegate)
-        m_uiDelegate->Release();
-    if (m_uiDelegatePrivate)
-        m_uiDelegatePrivate->Release();
-    if (m_formDelegate)
-        m_formDelegate->Release();
-    if (m_preferences)
-        m_preferences->Release();
-
+    
     delete m_page;
 
     deleteBackingStore();
@@ -379,16 +361,14 @@ void WebView::paint(HDC dc, LPARAM options)
     ::DeleteDC(bitmapDC);
 
     // Paint the gripper.
-    IWebUIDelegate* ui;
+    COMPtr<IWebUIDelegate> ui;
     if (SUCCEEDED(uiDelegate(&ui))) {
-        IWebUIDelegatePrivate* uiPrivate;
+        COMPtr<IWebUIDelegatePrivate> uiPrivate;
         if (SUCCEEDED(ui->QueryInterface(IID_IWebUIDelegatePrivate, (void**)&uiPrivate))) {
             RECT r;
             if (SUCCEEDED(uiPrivate->webViewResizerRect(this, &r)))
                 uiPrivate->webViewDrawResizer(this, hdc, (frameView->resizerOverlapsContent() ? true : false), &r);
-            uiPrivate->Release();
         }
-        ui->Release();
     }
 
     if (!dc)
@@ -439,11 +419,9 @@ void WebView::frameRect(RECT* rect)
 
 void WebView::closeWindow()
 {
-    IWebUIDelegate* ui;
-    if (SUCCEEDED(uiDelegate(&ui))) {
+    COMPtr<IWebUIDelegate> ui;
+    if (SUCCEEDED(uiDelegate(&ui)))
         ui->webViewClose(this);
-        ui->Release();
-    }
 }
 
 Vector<WebCore::IntRect> WebView::computePageRects(HDC printDC)
@@ -671,12 +649,10 @@ bool WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
         handled = capturingTarget->handleMouseMoveEvent(mouseEvent);
 
         if (m_uiDelegate) {
-            IPropertyBag* props;
+            COMPtr<IPropertyBag> props;
             POINT contentsPoint = m_page->mainFrame()->view()->windowToContents(mouseEvent.pos());
-            if (SUCCEEDED(elementAtPoint(&contentsPoint, &props))) {
-                m_uiDelegate->mouseDidMoveOverElement((IWebView*)this, props, (UINT)wParam);
-                props->Release();
-            }
+            if (SUCCEEDED(elementAtPoint(&contentsPoint, &props)))
+                m_uiDelegate->mouseDidMoveOverElement((IWebView*)this, props.get(), (UINT)wParam);
         }
     }
     setMouseActivated(false);
@@ -925,14 +901,12 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 
     switch (message) {
         case WM_PAINT: {
-            IWebDataSource* dataSource = 0;
+            COMPtr<IWebDataSource> dataSource;
             mainFrameImpl->dataSource(&dataSource);
             if (!dataSource || mainFrameImpl->impl()->view()->didFirstLayout())
                 webView->paint(0, 0);
             else
                 ValidateRect(hWnd, 0);
-            if (dataSource)
-                dataSource->Release();
             break;
         }
         case WM_PRINTCLIENT:
@@ -1412,11 +1386,10 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     // or from the standard preferences, depending on whether this method was called from initWithCoder:
     // or initWithFrame, respectively.
     //[self _updateWebCoreSettingsFromPreferences: [self preferences]];
-    IWebPreferences* prefs;
+    COMPtr<IWebPreferences> prefs;
     if (FAILED(preferences(&prefs)))
         return hr;
-    hr = updateWebCoreSettingsFromPreferences(prefs);
-    prefs->Release();
+    hr = updateWebCoreSettingsFromPreferences(prefs.get());
     if (FAILED(hr))
         return hr;
 
@@ -1461,16 +1434,11 @@ HRESULT STDMETHODCALLTYPE WebView::close()
 HRESULT STDMETHODCALLTYPE WebView::setUIDelegate( 
     /* [in] */ IWebUIDelegate* d)
 {
-    if (m_uiDelegate)
-        m_uiDelegate->Release();
     m_uiDelegate = d;
-    if (d)
-        d->AddRef();
 
-    if (m_uiDelegatePrivate) {
-        m_uiDelegatePrivate->Release();
+    if (m_uiDelegatePrivate)
         m_uiDelegatePrivate = 0;
-    }
+
     if (d) {
         if (FAILED(d->QueryInterface(IID_IWebUIDelegatePrivate, (void**)&m_uiDelegatePrivate)))
             m_uiDelegatePrivate = 0;
@@ -1485,9 +1453,7 @@ HRESULT STDMETHODCALLTYPE WebView::uiDelegate(
     if (!m_uiDelegate)
         return E_FAIL;
 
-    m_uiDelegate->AddRef();
-    *d = m_uiDelegate;
-    return S_OK;
+    return m_uiDelegate.copyRefTo(d);
 }
 
 HRESULT STDMETHODCALLTYPE WebView::setResourceLoadDelegate( 
@@ -1521,22 +1487,14 @@ HRESULT STDMETHODCALLTYPE WebView::downloadDelegate(
 HRESULT STDMETHODCALLTYPE WebView::setFrameLoadDelegate( 
     /* [in] */ IWebFrameLoadDelegate* d)
 {
-    if (m_frameLoadDelegate)
-        m_frameLoadDelegate->Release();
     m_frameLoadDelegate = d;
-    if (d)
-        d->AddRef();
-
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::frameLoadDelegate( 
     /* [out][retval] */ IWebFrameLoadDelegate** d)
 {
-    if (m_frameLoadDelegate)
-        m_frameLoadDelegate->AddRef();
-    *d = m_frameLoadDelegate;
-    return S_OK;
+    return m_frameLoadDelegate.copyRefTo(d);
 }
 
 HRESULT STDMETHODCALLTYPE WebView::setPolicyDelegate( 
@@ -1834,8 +1792,7 @@ HRESULT STDMETHODCALLTYPE WebView::preferences(
         instance->Release();
     }
 
-    m_preferences->AddRef();
-    *prefs = m_preferences;
+    m_preferences.copyRefTo(prefs);
     return hr;
 }
 
@@ -2060,7 +2017,7 @@ HRESULT STDMETHODCALLTYPE WebView::elementAtPoint(
     HitTestResult result = HitTestResult(webCorePoint);
     if (frame->renderer())
         result = frame->eventHandler()->hitTestResultAtPoint(webCorePoint, false);
-    *elementDictionary = new WebElementPropertyBag(result);
+    *elementDictionary = WebElementPropertyBag::createInstance(result);
     return S_OK;
 }
     
@@ -2752,43 +2709,27 @@ HRESULT STDMETHODCALLTYPE WebView::viewWindow(
 HRESULT STDMETHODCALLTYPE WebView::setFormDelegate( 
     /* [in] */ IWebFormDelegate *formDelegate)
 {
-    if (m_formDelegate)
-        m_formDelegate->Release();
     m_formDelegate = formDelegate;
-    if (formDelegate)
-        formDelegate->AddRef();
-
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::formDelegate( 
     /* [retval][out] */ IWebFormDelegate **formDelegate)
 {
-    if (m_formDelegate)
-        m_formDelegate->AddRef();
-    *formDelegate = m_formDelegate;
-    return S_OK;
+    return m_formDelegate.copyRefTo(formDelegate);
 }
 
 HRESULT STDMETHODCALLTYPE WebView::setFrameLoadDelegatePrivate( 
     /* [in] */ IWebFrameLoadDelegatePrivate* d)
 {
-    if (m_frameLoadDelegatePrivate)
-        m_frameLoadDelegatePrivate->Release();
     m_frameLoadDelegatePrivate = d;
-    if (d)
-        d->AddRef();
-
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::frameLoadDelegatePrivate( 
     /* [out][retval] */ IWebFrameLoadDelegatePrivate** d)
 {
-    if (m_frameLoadDelegatePrivate)
-        m_frameLoadDelegatePrivate->AddRef();
-    *d = m_frameLoadDelegatePrivate;
-    return S_OK;
+    return m_frameLoadDelegatePrivate.copyRefTo(d);
 }
 
 HRESULT STDMETHODCALLTYPE WebView::scrollOffset( 

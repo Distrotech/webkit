@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,25 +23,30 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef WebElementPropertyBag_H
-#define WebElementPropertyBag_H
+#ifndef WebFramePolicyListener_h
+#define WebFramePolicyListener_h
 
-#include "ocidl.h"
+#include "IWebView.h"
+#include "IWebFormDelegate.h"
+#include "IWebPolicyDelegate.h"
 
-#include <WTF/OwnPtr.h>
+#include <WTF/PassRefPtr.h>
+#include <WTF/RefPtr.h>
+
+#pragma warning(push, 0)
+#include <WebCore/FrameLoaderTypes.h>
+#pragma warning(pop)
 
 namespace WebCore {
-    class HitTestResult;
+    class Frame;
 }
 
-class WebElementPropertyBag : public IPropertyBag
-{
+class WebFramePolicyListener : public IWebPolicyDecisionListener, public IWebFormSubmissionListener {
 public:
-    static WebElementPropertyBag* createInstance(const WebCore::HitTestResult&);
-
+    static WebFramePolicyListener* createInstance(PassRefPtr<WebCore::Frame>);
 protected:
-    WebElementPropertyBag(const WebCore::HitTestResult&);
-    ~WebElementPropertyBag();
+    WebFramePolicyListener(PassRefPtr<WebCore::Frame>);
+    ~WebFramePolicyListener();
 
 public:
     // IUnknown
@@ -49,19 +54,20 @@ public:
     virtual ULONG STDMETHODCALLTYPE AddRef(void);
     virtual ULONG STDMETHODCALLTYPE Release(void);
 
-    // IPropertyBag
-    virtual /* [local] */ HRESULT STDMETHODCALLTYPE Read( 
-        /* [in] */ LPCOLESTR pszPropName,
-        /* [out][in] */ VARIANT *pVar,
-        /* [in] */ IErrorLog *pErrorLog);
-        
-    virtual HRESULT STDMETHODCALLTYPE Write( 
-        /* [in] */ LPCOLESTR pszPropName,
-        /* [in] */ VARIANT *pVar);
+    // IWebPolicyDecisionListener
+    virtual HRESULT STDMETHODCALLTYPE use(void);
+    virtual HRESULT STDMETHODCALLTYPE download(void);
+    virtual HRESULT STDMETHODCALLTYPE ignore(void);
 
+    // IWebFormSubmissionListener
+    virtual HRESULT STDMETHODCALLTYPE continueSubmit(void);
+
+    // WebFramePolicyListener
+    void receivedPolicyDecision(WebCore::PolicyAction);
+    void invalidate();
 private:
-    OwnPtr<WebCore::HitTestResult> m_result;
     ULONG m_refCount;
+    RefPtr<WebCore::Frame> m_frame;
 };
 
-#endif // WebElementPropertyBag_H
+#endif

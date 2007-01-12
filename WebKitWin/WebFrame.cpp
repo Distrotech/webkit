@@ -2192,3 +2192,7 @@ void WebFrame::dispatchDidCancelAuthenticationChallenge(DocumentLoader*, id, con
     LOG_NOIMPL();
 }
 
+void WebFrame::receivedPolicyDecision(WebCore::PolicyAction)
+{
+    LOG_NOIMPL();
+}

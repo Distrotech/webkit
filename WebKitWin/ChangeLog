@@ -1,3 +1,64 @@
+2007-01-12  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Geoff.
+
+        More loader preparations.
+                
+        * WebContextMenuClient.cpp:
+        (WebContextMenuClient::getCustomMenuFromDefaultItems):
+        (WebContextMenuClient::contextMenuItemSelected):
+        Use ::createInstance to create the element property bags.
+        
+        * WebElementPropertyBag.cpp:
+        (WebElementPropertyBag::WebElementPropertyBag):
+        (WebElementPropertyBag::~WebElementPropertyBag):
+        (WebElementPropertyBag::createInstance):
+        (convertStringToVariant):
+        * WebElementPropertyBag.h:
+        Fix ownership issues so WebElementPropertyBag can one day be a value in another property bag.
+        
+        * WebFramePolicyListener.cpp: Added.
+        (WebFramePolicyListener::WebFramePolicyListener):
+        (WebFramePolicyListener::~WebFramePolicyListener):
+        (WebFramePolicyListener::createInstance):
+        (WebFramePolicyListener::QueryInterface):
+        (WebFramePolicyListener::AddRef):
+        (WebFramePolicyListener::Release):
+        (WebFramePolicyListener::use):
+        (WebFramePolicyListener::download):
+        (WebFramePolicyListener::ignore):
+        (WebFramePolicyListener::continueSubmit):
+        (WebFramePolicyListener::receivedPolicyDecision):
+        (WebFramePolicyListener::invalidate):
+        * WebFramePolicyListener.h: Added.
+        Add policy listener implementation.
+        
+        * WebFrame.cpp:
+        (WebFrame::receivedPolicyDecision):
+        * WebFrame.h:
+        Add stub to be used by the policy listener.
+
+        * WebView.cpp:
+        (WebView::WebView):
+        (WebView::~WebView):
+        (WebView::paint):
+        (WebView::closeWindow):
+        (WebView::handleMouseEvent):
+        (WebViewWndProc):
+        (WebView::initWithFrame):
+        (WebView::setUIDelegate):
+        (WebView::uiDelegate):
+        (WebView::setFrameLoadDelegate):
+        (WebView::frameLoadDelegate):
+        (WebView::preferences):
+        (WebView::elementAtPoint):
+        (WebView::setFormDelegate):
+        (WebView::formDelegate):
+        (WebView::setFrameLoadDelegatePrivate):
+        (WebView::frameLoadDelegatePrivate):
+        * WebView.h:
+        Cleanup, use COMPtr in a couple of places.
+        
 2007-01-11  Steve Falkenburg  <sfalken@apple.com>
 
         B&I build change - copy WebKit.resources to dstroot for installer

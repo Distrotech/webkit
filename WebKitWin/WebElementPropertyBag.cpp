@@ -42,15 +42,20 @@ using namespace WebCore;
 
 // WebElementPropertyBag -----------------------------------------------
 WebElementPropertyBag::WebElementPropertyBag(const HitTestResult& result)
+    : m_result(new HitTestResult(result))
 {
-    m_result = new HitTestResult(result);
-    AddRef();
 }
 
 WebElementPropertyBag::~WebElementPropertyBag()
 {
-    Release();
-    delete m_result;
+}
+
+WebElementPropertyBag* WebElementPropertyBag::createInstance(const HitTestResult& result)
+{
+    WebElementPropertyBag* instance = new WebElementPropertyBag(result); 
+    instance->AddRef();
+
+    return instance;
 }
 
 // IUnknown -------------------------------------------------------------------
@@ -88,7 +93,7 @@ static bool isEqual(LPCWSTR s1, LPCWSTR s2)
     return !wcscmp(s1, s2);
 }
 
-HRESULT convertStringToVariant(VARIANT* pVar, const String& string)
+static HRESULT convertStringToVariant(VARIANT* pVar, const String& string)
 {
     V_VT(pVar) = VT_BSTR;
     V_BSTR(pVar) = SysAllocStringLen(string.characters(), string.length());
@@ -97,6 +102,7 @@ HRESULT convertStringToVariant(VARIANT* pVar, const String& string)
 
     return S_OK;
 }
+
 
 HRESULT STDMETHODCALLTYPE WebElementPropertyBag::Read(LPCOLESTR pszPropName, VARIANT *pVar, IErrorLog * /*pErrorLog*/)
 {

@@ -309,6 +309,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\WebFramePolicyListener.h"
+				>
+			</File>
+			<File
 				RelativePath="..\WebHistory.h"
 				>
 			</File>
@@ -430,6 +434,10 @@
 			</File>
 			<File
 				RelativePath="..\WebFrame.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\WebFramePolicyListener.cpp"
 				>
 			</File>
 			<File

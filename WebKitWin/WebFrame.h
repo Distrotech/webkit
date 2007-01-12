@@ -311,6 +311,8 @@ public:
     IWebBackForwardList* backForwardList();
     WebHistory* webHistory();
 
+    void receivedPolicyDecision(WebCore::PolicyAction);
+
 protected:
     unsigned int getObjectCacheSize();
 
