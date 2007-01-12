@@ -39,6 +39,11 @@ using std::min;
 
 namespace WebCore {
 
+CFURLResponseRef ResourceResponse::cfURLResponse() const
+{  
+    return m_cfResponse.get();
+}
+
 void ResourceResponse::doUpdateResourceResponse()
 {
     if (!m_cfResponse.get())

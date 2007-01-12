@@ -1,3 +1,9 @@
+2007-01-11  Anders Carlsson  <acarlsson@apple.com>
+
+        * platform/network/cf/ResourceResponseCFNet.cpp:
+        (WebCore::ResourceResponse::cfURLResponse):
+        Add getter that I forgot to commit.
+        
 2007-01-11  Brady Eidson  <beidson@apple.com>
 
         Reviewed by NOBODY.
