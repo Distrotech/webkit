@@ -34,8 +34,11 @@
 #include "IWebFrameLoadDelegatePrivate.h"
 #include "IWebFormDelegate.h"
 #include "IWebUIDelegatePrivate.h"
+#include "WebDocumentLoader.h"
 #include "WebMutableURLRequest.h"
 #include "WebEditorClient.h"
+#include "WebFramePolicyListener.h"
+
 #include "WebHistory.h"
 #include "WebKit.h"
 #include "WebView.h"
@@ -80,6 +83,11 @@ using namespace WebCore;
 using namespace HTMLNames;
 
 #define FLASH_REDRAW 0
+
+// {A3676398-4485-4a9d-87DC-CB5A40E6351D}
+const GUID IID_WebFrame = 
+{ 0xa3676398, 0x4485, 0x4a9d, { 0x87, 0xdc, 0xcb, 0x5a, 0x40, 0xe6, 0x35, 0x1d } };
+
 
 //-----------------------------------------------------------------------------
 // Helpers to convert from WebCore to WebKit type
@@ -325,13 +333,15 @@ static HTMLInputElement* inputElementFromDOMElement(IDOMElement* element)
 
 class WebFrame::WebFramePrivate {
 public:
-    WebFramePrivate() :frame(0), frameView(0), webView(0), needsLayout(false) { }
+    WebFramePrivate() :frame(0), frameView(0), webView(0), needsLayout(false), m_policyFunction(0) { }
     ~WebFramePrivate() { }
 
     Frame* frame;
     FrameView* frameView;
     WebView* webView;
     bool needsLayout;
+    FramePolicyFunction m_policyFunction;
+    COMPtr<WebFramePolicyListener> m_policyListener;
 };
 
 // WebFrame ----------------------------------------------------------------
@@ -339,14 +349,7 @@ public:
 WebFrame::WebFrame()
 : m_refCount(0)
 , d(new WebFrame::WebFramePrivate)
-, m_dataSource(0)
-, m_dataSourcePrivate(0)
-, m_provisionalDataSource(0)
 , m_quickRedirectComing(false)
-, m_continueFormSubmit(false)
-, m_buffer(new SharedBuffer)
-, m_textEncoding(0)
-, m_firstLayoutDone(false)
 {
     gClassCount++;
 }
@@ -354,7 +357,6 @@ WebFrame::WebFrame()
 WebFrame::~WebFrame()
 {
     delete d;
-    SysFreeString(m_textEncoding);
     gClassCount--;
 }
 
@@ -370,14 +372,14 @@ WebFrame* WebFrame::createInstance()
 HRESULT STDMETHODCALLTYPE WebFrame::QueryInterface(REFIID riid, void** ppvObject)
 {
     *ppvObject = 0;
-    if (IsEqualGUID(riid, IID_IUnknown))
+    if (IsEqualGUID(riid, IID_WebFrame))
+        *ppvObject = this;
+    else if (IsEqualGUID(riid, IID_IUnknown))
         *ppvObject = static_cast<IWebFrame*>(this);
     else if (IsEqualGUID(riid, IID_IWebFrame))
         *ppvObject = static_cast<IWebFrame*>(this);
     else if (IsEqualGUID(riid, IID_IWebFramePrivate))
         *ppvObject = static_cast<IWebFramePrivate*>(this);
-    else if (IsEqualGUID(riid, IID_IWebFormSubmissionListener))
-        *ppvObject = static_cast<IWebFormSubmissionListener*>(this);
     else
         return E_NOINTERFACE;
 
@@ -443,27 +445,14 @@ HRESULT STDMETHODCALLTYPE WebFrame::frameElement(
 HRESULT STDMETHODCALLTYPE WebFrame::loadRequest( 
     /* [in] */ IWebURLRequest* request)
 {
-    HRESULT hr = S_OK;
+    COMPtr<WebMutableURLRequest> requestImpl;
 
-    if (m_provisionalDataSource) {
-        m_provisionalDataSource->Release();
-        m_provisionalDataSource = 0;
-        // FIXME - cancel the outstanding request?
-    }
-
-    m_provisionalDataSource = WebDataSource::createInstance(this);
-    BSTR encoding = 0;
-    if (SUCCEEDED(d->webView->customTextEncodingName(&encoding)) && encoding) {
-        hr = m_provisionalDataSource->setOverrideEncoding(encoding);
-        if (FAILED(hr))
-            goto exit;
-    }
-
-    hr = m_provisionalDataSource->initWithRequest(request);
-
-exit:
-    SysFreeString(encoding);
-    return hr;
+    HRESULT hr = request->QueryInterface(CLSID_WebMutableURLRequest, (void**)&requestImpl);
+    if (FAILED(hr))
+        return hr;
+ 
+    d->frame->loader()->load(requestImpl->resourceRequest());
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::loadData( 
@@ -485,10 +474,12 @@ HRESULT STDMETHODCALLTYPE WebFrame::loadData(
     if (url) {
         DeprecatedString urlString((DeprecatedChar*)url, SysStringLen(url));
         m_originalRequestURL = KURL(urlString);
+        d->frame->loader()->didOpenURL(m_originalRequestURL);
         d->frame->loader()->begin(m_originalRequestURL);
-    }
-    else
+    } else {
+        d->frame->loader()->didOpenURL("about:blank");
         d->frame->loader()->begin();
+    }
 
     STATSTG stat;
     if (SUCCEEDED(data->Stat(&stat, STATFLAG_NONAME))) {
@@ -539,12 +530,21 @@ HRESULT STDMETHODCALLTYPE WebFrame::loadArchive(
     return E_NOTIMPL;
 }
 
+static inline WebDataSource *getWebDataSource(DocumentLoader* loader)
+{
+    return loader ? static_cast<WebDocumentLoader*>(loader)->dataSource() : 0;
+}
+
 HRESULT STDMETHODCALLTYPE WebFrame::dataSource( 
     /* [retval][out] */ IWebDataSource** source)
 {
-    if (m_dataSource)
-        m_dataSource->AddRef();
-    *source = m_dataSource;
+    FrameLoader* frameLoader = d->frame->loader();
+    WebDataSource* webDataSource = frameLoader ? getWebDataSource(frameLoader->documentLoader()) : 0;
+
+    *source = webDataSource;
+
+    if (webDataSource)
+        webDataSource->AddRef(); 
 
     return S_OK;
 }
@@ -552,23 +552,26 @@ HRESULT STDMETHODCALLTYPE WebFrame::dataSource(
 HRESULT STDMETHODCALLTYPE WebFrame::provisionalDataSource( 
     /* [retval][out] */ IWebDataSource** source)
 {
-    if (m_provisionalDataSource)
-        m_provisionalDataSource->AddRef();
-    *source = m_provisionalDataSource;
+    FrameLoader* frameLoader = d->frame->loader();
+    WebDataSource* webDataSource = frameLoader ? getWebDataSource(frameLoader->provisionalDocumentLoader()) : 0;
+
+    *source = webDataSource;
+
+    if (webDataSource)
+        webDataSource->AddRef(); 
 
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::stopLoading( void)
 {
-    d->frame->loader()->stopLoading(false);
-    return E_NOTIMPL;
+    d->frame->loader()->stopAllLoaders();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::reload( void)
 {
-    if (!d->frame->loader()->url().url().startsWith("javascript:", false))
-        d->frame->loader()->scheduleLocationChange(d->frame->loader()->url().url(), d->frame->loader()->outgoingReferrer(), true/*lock history*/, true/*userGesture*/);
+    d->frame->loader()->reload();
     return S_OK;
 }
 
@@ -617,25 +620,17 @@ HRESULT STDMETHODCALLTYPE WebFrame::renderTreeAsExternalRepresentation(
 HRESULT STDMETHODCALLTYPE WebFrame::firstLayoutDone(
     /* [retval][out] */ BOOL* result)
 {
-    *result = m_firstLayoutDone;
+    *result = d->frame->loader()->firstLayoutDone();
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::loadType( 
     /* [retval][out] */ WebFrameLoadType* type)
 {
-    *type = m_loadType;
+    *type = (WebFrameLoadType)d->frame->loader()->loadType();
     return S_OK;
 }
 
-
-// IWebFormSubmissionListener ---------------------------------------------
-
-HRESULT STDMETHODCALLTYPE WebFrame::continueSubmit(void)
-{
-    m_continueFormSubmit = true;
-    return S_OK;
-}
 
 // WebFrame ---------------------------------------------------------------
 
@@ -689,100 +684,9 @@ Frame* WebFrame::impl()
     return d->frame;
 }
 
-HRESULT WebFrame::loadDataSource(WebDataSource* dataSource)
-{
-    HRESULT hr = S_OK;
-    BSTR url = 0;
-    BSTR method = 0;
-    m_firstLayoutDone = false;
-
-    IWebMutableURLRequest* request;
-    hr = dataSource->request(&request);
-    if (SUCCEEDED(hr)) {
-        HRESULT hr = request->URL(&url);
-        if (SUCCEEDED(hr)) {
-            hr = request->HTTPMethod(&method);
-            if (SUCCEEDED(hr)) {
-                ResourceRequest resourceRequest;
-                resourceRequest.setURL(DeprecatedString((DeprecatedChar*)url, SysStringLen(url)));
-                resourceRequest.setHTTPMethod(String(method, SysStringLen(method)));
-
-                m_originalRequestURL = resourceRequest.url();
-                RefPtr<FormData> formData;
-                if (wcscmp(method, TEXT("GET"))) {
-                    WebMutableURLRequest* requestImpl;
-                    if (SUCCEEDED(request->QueryInterface(CLSID_WebMutableURLRequest, (void**)&requestImpl))) {
-                        formData = requestImpl->formData();
-                        resourceRequest.addHTTPHeaderFields(requestImpl->httpHeaderFields());
-
-                        requestImpl->Release();
-                    }
-                }
-                
-                resourceRequest.setHTTPBody(formData.release());
-
-                if (!d->frame->document())
-                    d->frame->loader()->begin(); // FIXME - the frame should do this for us
-                m_loader = ResourceHandle::create(resourceRequest, this, d->frame, false);
-                IWebFrameLoadDelegate* frameLoadDelegate;
-                if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)) && frameLoadDelegate) {
-                    frameLoadDelegate->didStartProvisionalLoadForFrame(d->webView, this);
-                    frameLoadDelegate->Release();
-                }
-            }
-        }
-        request->Release();
-    }
-
-    SysFreeString(url);
-    SysFreeString(method);
-
-    return hr;
-}
-
 void WebFrame::stopMainResourceLoad()
 {
-    // FIXME: Frames should be able to cancel all loads, not just the main resource
-    // load. This is temporary glue code that should be replaced by a real loader inside
-    // WebCore.
-    m_loader = 0;
-}
-
-bool WebFrame::loading()
-{
-    return !!m_provisionalDataSource;
-}
-
-HRESULT WebFrame::goToItem(IWebHistoryItem* item, WebFrameLoadType withLoadType)
-{
-    HRESULT hr = S_OK;
-    IWebBackForwardList* list = backForwardList();
-    if (list) {
-        list->goToItem(item);
-        list->Release();
-        hr = loadItem(item, withLoadType);
-    }
-    return hr;
-}
-
-HRESULT WebFrame::loadItem(IWebHistoryItem* item, WebFrameLoadType withLoadType)
-{
-    m_loadType = withLoadType;
-
-    BSTR urlBStr;
-    HRESULT hr = item->URLString(&urlBStr);
-    if (FAILED(hr))
-        return hr;
-
-    IWebMutableURLRequest* request = WebMutableURLRequest::createInstance();
-    hr = request->initWithURL(urlBStr, WebURLRequestUseProtocolCachePolicy, 0);
-    if (SUCCEEDED(hr))
-        loadRequest(request);
-
-    SysFreeString(urlBStr);
-    request->Release();
-
-    return hr;
+    // FIXME: Remove this function
 }
 
 unsigned long long WebSystemMainMemory()
@@ -947,11 +851,13 @@ HRESULT WebFrame::canProvideDocumentSource(bool* result)
     HRESULT hr = S_OK;
     *result = false;
 
-    if (!m_dataSource)
-        return E_FAIL;
+    COMPtr<IWebDataSource> dataSource;
+    hr = WebFrame::dataSource(&dataSource);
+    if (FAILED(hr))
+        return hr;
 
-    IWebURLResponse* urlResponse;
-    hr = m_dataSource->response(&urlResponse);
+    COMPtr<IWebURLResponse> urlResponse;
+    hr = dataSource->response(&urlResponse);
     if (SUCCEEDED(hr) && urlResponse) {
         BSTR mimeTypeBStr;
         if (SUCCEEDED(urlResponse->MIMEType(&mimeTypeBStr))) {
@@ -959,260 +865,9 @@ HRESULT WebFrame::canProvideDocumentSource(bool* result)
             *result = (!WebCore::DOMImplementation::isTextMIMEType(mimeType) && !Image::supportsType(mimeType) && !PlugInInfoStore::supportsMIMEType(mimeType));
             SysFreeString(mimeTypeBStr);
         }
-        urlResponse->Release();
     }
     return hr;
 }
-
-HRESULT WebFrame::reloadAllowingStaleDataWithOverrideEncoding(BSTR encoding)
-{
-    HRESULT hr = S_OK;
-    IWebMutableURLRequest* dsRequest = 0;
-    WebMutableURLRequest* request = 0;
-    WebDataSource* newDataSource = 0;
-    BSTR unreachableURL = 0;
-
-    if (!m_dataSource)
-        goto exit;
-
-    hr = m_dataSource->request(&dsRequest);
-    if (FAILED(hr))
-        return hr;
-    request = WebMutableURLRequest::createInstance(dsRequest);
-    if (!request) {
-        hr = E_OUTOFMEMORY;
-        goto exit;
-    }
-
-    // FIXME - from Mac code
-    //if (SUCCEEDED(m_dataSource->unreachableURL(&unreachableURL)) && unreachableURL) {
-    //    if (FAILED(request->setURL(unreachableURL)))
-    //        goto exit;
-    //}
-
-    if (FAILED(request->setCachePolicy(WebURLRequestReturnCacheDataElseLoad)))
-        goto exit;
-
-    newDataSource = WebDataSource::createInstance(this);
-    if (FAILED(newDataSource->setOverrideEncoding(encoding)))
-        goto exit;
-
-    m_loadType = WebFrameLoadTypeReloadAllowingStaleData;
-
-    if (m_provisionalDataSource) {
-        m_provisionalDataSource->Release();
-        m_provisionalDataSource = 0;
-        // FIXME - cancel the outstanding request?
-    }
-    m_provisionalDataSource = newDataSource;
-
-    if (FAILED(newDataSource->initWithRequest(request)))
-        goto exit;
-
-    request->Release();
-    request = 0;
-
-    // hold the ref for storage in m_provisionalDataSource
-    newDataSource = 0;
-
-exit:
-    if (dsRequest)
-        dsRequest->Release();
-    if (request)
-        request->Release();
-    SysFreeString(unreachableURL);
-    return hr;
-}
-
-// ResourceHandleClient
-
-void WebFrame::willSendRequest(ResourceHandle*, const ResourceRequest& request, const ResourceResponse&)
-{
-    if (m_provisionalDataSource) {
-        IWebFrameLoadDelegate* frameLoadDelegate;
-        if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)) && frameLoadDelegate) {
-            IWebMutableURLRequest* mutableRequest;
-            if (SUCCEEDED(m_provisionalDataSource->request(&mutableRequest))) {
-                DeprecatedString urlStr = request.url().url();
-                BString urlBStr((LPCOLESTR)urlStr.unicode(), urlStr.length());
-                mutableRequest->setURL(urlBStr);
-                frameLoadDelegate->didReceiveServerRedirectForProvisionalLoadForFrame(d->webView, this);
-                mutableRequest->Release();
-            }
-            frameLoadDelegate->Release();
-        }
-    }
-}
-
-void WebFrame::didReceiveResponse(ResourceHandle*, const ResourceResponse& response)
-{
-    if (m_provisionalDataSource) {
-        m_dataSource = m_provisionalDataSource;
-        if (m_dataSourcePrivate)
-            m_dataSourcePrivate->Release();
-        m_dataSource->QueryInterface(IID_IWebDataSourcePrivate, (void**)&m_dataSourcePrivate);
-        m_provisionalDataSource = 0;
-
-        IWebFrameLoadDelegate* frameLoadDelegate;
-        if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)) && frameLoadDelegate) {
-            frameLoadDelegate->didCommitLoadForFrame(d->webView, this);
-            frameLoadDelegate->Release();
-        }
-    }
-
-    d->frame->loader()->didOpenURL(response.url());
-    d->frame->loader()->begin(response.url());
-
-    IWebFrameLoadDelegate* frameLoadDelegate;
-    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)) && frameLoadDelegate) {
-        IWebPreferences* preferences;
-        BOOL privateBrowsingEnabled = FALSE;
-        if (SUCCEEDED(d->webView->preferences(&preferences)))
-            preferences->privateBrowsingEnabled(&privateBrowsingEnabled);
-
-        BString urlBStr(response.url().url());
-        SYSTEMTIME currentTime;
-        GetSystemTime(&currentTime);
-        DATE visitedTime = 0;
-        SystemTimeToVariantTime(&currentTime, &visitedTime);
-
-        if (m_loadType != WebFrameLoadTypeBack && m_loadType != WebFrameLoadTypeForward && m_loadType != WebFrameLoadTypeIndexedBackForward &&
-            m_loadType != WebFrameLoadTypeReload && m_loadType != WebFrameLoadTypeReloadAllowingStaleData && m_loadType != WebFrameLoadTypeInternal &&
-            !m_quickRedirectComing) {
-            IWebHistoryItem* item;
-            item = WebHistoryItem::createInstance();
-            if (SUCCEEDED(item->initWithURLString(urlBStr, 0, visitedTime))) {
-                
-                // add this site to the back/forward list
-                IWebBackForwardList* list = backForwardList();
-                if (list) {
-                    list->addItem(item);
-                    list->Release();
-                }
-                
-                // add this site to the history if private browsing is disabled
-                if (!privateBrowsingEnabled) {
-                    WebHistory* history = webHistory();
-                    if (history) {
-                        history->addItemForURL(urlBStr, 0);
-                        history->Release();
-                    }
-                }
-            }
-        } else {
-            if (!privateBrowsingEnabled) {
-                WebHistory* history = webHistory();
-                if (history) {
-                    IWebHistoryItem* item;
-                    if (SUCCEEDED(history->itemForURL(urlBStr, &item))) {
-                        IWebHistoryItemPrivate* itemPrivate;
-                        if (SUCCEEDED(item->QueryInterface(IID_IWebHistoryItemPrivate, (void**)&itemPrivate))) {
-                            itemPrivate->setLastVisitedTimeInterval(visitedTime);
-                            // FIXME - bumping the last visited time doesn't mark the history as changed
-                            itemPrivate->Release();
-                        }
-                        item->Release();
-                    }
-                    history->Release();
-                }
-            }
-        }
-        frameLoadDelegate->Release();
-    }
-
-    m_buffer->clear();
-
-    WebURLResponse* webResponse = WebURLResponse::createInstance(response);
-
-    m_dataSource->setResponse(webResponse);
-    
-    if (m_textEncoding) {
-        SysFreeString(m_textEncoding);
-        m_textEncoding = 0;
-    }
-    webResponse->textEncodingName(&m_textEncoding);
-
-    BSTR mimeType;
-    if (SUCCEEDED(webResponse->MIMEType(&mimeType))) {
-        d->frame->loader()->setResponseMIMEType(String(mimeType, SysStringLen(mimeType)));
-        SysFreeString(mimeType);
-    }
-
-    webResponse->Release();
-}
-
-void WebFrame::didReceiveData(ResourceHandle*, const char* data, int length, int)
-{
-    // Set the encoding. This only needs to be done once, but it's harmless to do it again later.
-    BSTR encoding = 0;
-    m_dataSourcePrivate->overrideEncoding(&encoding);
-    bool userChosen = !!encoding;
-    d->frame->loader()->setEncoding(WebCore::String(encoding ? encoding : m_textEncoding), userChosen);
-    SysFreeString(encoding);
-
-    d->frame->loader()->write(data, length);
-
-    // save off the data as it is received (matching Mac WebLoader)
-    // FIXME - CFNetwork Integration - we need to share this with the CFNetwork in-memory cache!
-    m_buffer->append(data, length);
-}
-
-void WebFrame::didFinishLoading(ResourceHandle* handle)
-{
-    if (m_provisionalDataSource) {
-        m_dataSource = m_provisionalDataSource;
-        m_provisionalDataSource = 0;
-    }
-    if (m_dataSourcePrivate) {
-        m_dataSourcePrivate->Release();
-        m_dataSourcePrivate = 0;
-    }
-    m_dataSource->QueryInterface(IID_IWebDataSourcePrivate, (void**)&m_dataSourcePrivate);
-
-    d->frame->loader()->end();
-
-    IWebFrameLoadDelegate* frameLoadDelegate;
-    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)) && frameLoadDelegate) {
-        frameLoadDelegate->didFinishLoadForFrame(d->webView, this);
-        frameLoadDelegate->Release();
-    }
-
-    m_quickRedirectComing = false;
-    m_loadType = WebFrameLoadTypeStandard;
-
-    // FIXME: It seems we can have more than one main ResourceHandle per-frame. Ideally,
-    // we'd keep track of all of them. However, this is all expected to change as the loader
-    // in WebCore becomes more full-featured, so we'll just do the bare minimum for now.
-    if (handle == m_loader)
-        m_loader = 0;
-}
-
-void WebFrame::didFail(ResourceHandle* handle, const ResourceError&)
-{
-    if (m_provisionalDataSource) {
-        m_provisionalDataSource->Release();
-        m_provisionalDataSource = 0;
-    }
-
-    d->frame->loader()->end();
-
-    IWebFrameLoadDelegate* frameLoadDelegate;
-    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)) && frameLoadDelegate) {
-        // FIXME: turn ResourceError into IWebError
-        frameLoadDelegate->didFailLoadWithError(d->webView, 0/*FIXME*/, this);
-        frameLoadDelegate->Release();
-    }
-
-    m_quickRedirectComing = false;
-    m_loadType = WebFrameLoadTypeStandard;
-
-    // FIXME: It seems we can have more than one main ResourceHandle per-frame. Ideally,
-    // we'd keep track of all of them. However, this is all expected to change as the loader
-    // in WebCore becomes more full-featured, so we'll just do the bare minimum for now.
-    if (handle == m_loader)
-        m_loader = 0;
-}
-
 
 // FrameWinClient
 
@@ -1259,7 +914,6 @@ Frame* WebFrame::createFrame(const KURL& URL, const String& name, HTMLFrameOwner
 
     SysFreeString(method);
 
-    webFrame->m_loadType = WebFrameLoadTypeInternal;
     webFrame->loadRequest(request);
 
     return frame;
@@ -1315,85 +969,15 @@ exit:
     request->Release();
 }
 
-void WebFrame::submitForm(const FrameLoadRequest& frameLoadRequest, Element* form, HashMap<String, String>& formValues)
+void WebFrame::submitForm(const FrameLoadRequest&, Element*, HashMap<String, String>&)
 {
-    // FIXME: This is a dumb implementation, doesn't handle subframes, etc.
-
-    m_quickRedirectComing = false;
-    m_loadType = WebFrameLoadTypeStandard;
-    DeprecatedString urlStr = frameLoadRequest.resourceRequest().url().url();
-    BString urlBStr((LPCOLESTR)urlStr.unicode(), urlStr.length());
-    BString methodBStr(frameLoadRequest.resourceRequest().httpMethod());
-    WebMutableURLRequest* request = WebMutableURLRequest::createInstance();
-    if (SUCCEEDED(request->initWithURL(urlBStr, WebURLRequestUseProtocolCachePolicy, 0))) {
-        request->setHTTPMethod(methodBStr);
-        request->setFormData(frameLoadRequest.resourceRequest().httpBody());
-        request->addHTTPHeaderFields(frameLoadRequest.resourceRequest().httpHeaderFields());
-
-        m_continueFormSubmit = true;
-        IWebFormDelegate* formDelegate;
-        if (SUCCEEDED(d->webView->formDelegate(&formDelegate)) && formDelegate) {
-            IDOMElement* ele = DOMElement::createInstance(form);
-            FormValuesPropertyBag formValuesPropBag(&formValues);
-            m_continueFormSubmit = false;
-            formDelegate->willSubmitForm(this, this, ele, &formValuesPropBag, this);
-            formDelegate->Release();
-            if (ele)
-                ele->Release();
-        }
-
-        if (m_continueFormSubmit)
-            loadRequest(request);
-    }
-    request->Release();
+    // FIXME: Get rid of this
+    ASSERT_NOT_REACHED();
 }
 
-void WebFrame::setTitle(const String& title)
+void WebFrame::setTitle(const String&)
 {
-    BString titleBStr(title);
-
-    IWebFrameLoadDelegate* frameLoadDelegate;
-    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)) && frameLoadDelegate) {
-        frameLoadDelegate->didReceiveTitle(d->webView, titleBStr, this);
-        frameLoadDelegate->Release();
-    }
-
-    BOOL privateBrowsingEnabled = FALSE;
-    IWebPreferences* preferences;
-    if (SUCCEEDED(d->webView->preferences(&preferences)))
-        preferences->privateBrowsingEnabled(&privateBrowsingEnabled);
-    if (!privateBrowsingEnabled) {
-        // update title in global history
-        WebHistory* history = webHistory();
-        if (history) {
-            IWebHistoryItem* item;
-            DeprecatedString urlStr = d->frame->loader()->url().url();
-            BString urlBStr = BString((LPCOLESTR)urlStr.unicode(), urlStr.length());
-            if (SUCCEEDED(history->itemForURL(urlBStr, &item))) {
-                IWebHistoryItemPrivate* itemPrivate;
-                if (SUCCEEDED(item->QueryInterface(IID_IWebHistoryItemPrivate, (void**)&itemPrivate))) {
-                    itemPrivate->setTitle(titleBStr);
-                    itemPrivate->Release();
-                }
-                item->Release();
-            }
-            history->Release();
-        }
-    }
-    // update title in back/forward list
-    IWebBackForwardList* list = backForwardList();
-    if (list) {
-        IWebHistoryItem* item;
-        if (SUCCEEDED(list->currentItem(&item))) {
-            IWebHistoryItemPrivate* itemPrivate;
-            if (SUCCEEDED(item->QueryInterface(IID_IWebHistoryItemPrivate, (void**)&itemPrivate))) {
-                itemPrivate->setTitle(titleBStr);
-                itemPrivate->Release();
-            }
-            item->Release();
-        }
-        list->Release();
-    }
+    ASSERT_NOT_REACHED();
 }
 
 void WebFrame::setStatusText(const String& statusText)
@@ -1529,6 +1113,8 @@ const String& WebFrame::userAgentForURL(const KURL& url)
 
 const KURL& WebFrame::originalRequestURL()
 {
+    // FIXME: This should go away
+    ASSERT_NOT_REACHED();
     return m_originalRequestURL;
 }
 
@@ -1659,14 +1245,12 @@ WebHistory* WebFrame::webHistory()
 
 bool WebFrame::hasWebView() const
 {
-    LOG_NOIMPL();
-    return true;
+    return !!d->webView;
 }
 
 bool WebFrame::hasFrameView() const
 {
-    STOP_NOIMPL();
-    return true;
+    return !!d->frameView;
 }
 
 bool WebFrame::privateBrowsingEnabled() const
@@ -1727,7 +1311,9 @@ void WebFrame::loadedFromPageCache()
 
 void WebFrame::dispatchDidReceiveServerRedirectForProvisionalLoad()
 {
-    LOG_NOIMPL();
+    COMPtr<IWebFrameLoadDelegate> frameLoadDelegate;
+    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)))
+        frameLoadDelegate->didReceiveServerRedirectForProvisionalLoadForFrame(d->webView, this);
 }
 
 void WebFrame::dispatchDidCancelClientRedirect()
@@ -1769,10 +1355,8 @@ void WebFrame::dispatchDidStartProvisionalLoad()
 void WebFrame::dispatchDidReceiveTitle(const String& title)
 {
     COMPtr<IWebFrameLoadDelegate> frameLoadDelegate;
-    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
-        BString titleStr(title);
-        frameLoadDelegate->didReceiveTitle(d->webView, titleStr, this);
-    }
+    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)))
+        frameLoadDelegate->didReceiveTitle(d->webView, BString(title), this);
 }
 
 void WebFrame::dispatchDidCommitLoad()
@@ -1794,22 +1378,43 @@ void WebFrame::dispatchDidFirstLayout()
     COMPtr<IWebFrameLoadDelegatePrivate> frameLoadDelegatePriv;
     if (SUCCEEDED(d->webView->frameLoadDelegatePrivate(&frameLoadDelegatePriv)))
         frameLoadDelegatePriv->didFirstLayoutInFrame(d->webView, this);
-    m_firstLayoutDone = true;
 }
 
 void WebFrame::dispatchShow()
 {
-    LOG_NOIMPL();
+    COMPtr<IWebUIDelegate> ui;
+
+    if (SUCCEEDED(d->webView->uiDelegate(&ui)))
+        ui->webViewShow(d->webView);
 }
 
 void WebFrame::cancelPolicyCheck()
 {
-    LOG_NOIMPL();
+    if (d->m_policyListener) {
+        d->m_policyListener->invalidate();
+        d->m_policyListener = 0;
+    }
+
+    d->m_policyFunction = 0;
 }
 
-void WebFrame::dispatchWillSubmitForm(FramePolicyFunction, PassRefPtr<FormState>)
+void WebFrame::dispatchWillSubmitForm(FramePolicyFunction function, PassRefPtr<FormState> formState)
 {
-    LOG_NOIMPL();
+    COMPtr<IWebFormDelegate> formDelegate;
+
+    if (FAILED(d->webView->formDelegate(&formDelegate))) {
+        (d->frame->loader()->*function)(PolicyUse);
+        return;
+    }
+
+    COMPtr<IDOMElement> formElement;
+    formElement.adoptRef(DOMElement::createInstance(formState->form()));
+
+    // FIXME: The FormValuesPropertyBag constructor should take a const pointer
+    FormValuesPropertyBag formValuesPropBag(const_cast<HashMap<String, String>*>(&formState->values()));
+
+    COMPtr<WebFrame> sourceFrame(kit(formState->sourceFrame()));
+    formDelegate->willSubmitForm(this, sourceFrame.get(), formElement.get(), &formValuesPropBag, setUpPolicyListener(function));
 }
 
 void WebFrame::dispatchDidLoadMainResource(DocumentLoader*)
@@ -1852,9 +1457,12 @@ void WebFrame::didChangeTitle(DocumentLoader*)
     LOG_NOIMPL();
 }
 
-void WebFrame::finishedLoading(DocumentLoader*)
+void WebFrame::finishedLoading(DocumentLoader* loader)
 {
-    LOG_NOIMPL();
+    // Telling the frame we received some data and passing 0 as the data is our
+    // way to get work done that is noramlly done when the first bit of data is
+    // received, even for the case of a documenbt with no data (like about:blank)
+    committedLoad(loader, 0, 0);
 }
 
 void WebFrame::finalSetupForReplace(DocumentLoader*)
@@ -1886,18 +1494,18 @@ void WebFrame::clearArchivedResources()
 bool WebFrame::canHandleRequest(const ResourceRequest&) const
 {
     LOG_NOIMPL();
-    return false;
+    return true;
 }
 
 bool WebFrame::canShowMIMEType(const String& /*MIMEType*/) const
 {
-    STOP_NOIMPL();
-    return false;
+    LOG_NOIMPL();
+    return true;
 }
 
 bool WebFrame::representationExistsForURLScheme(const String& /*URLScheme*/) const
 {
-    STOP_NOIMPL();
+    LOG_NOIMPL();
     return false;
 }
 
@@ -1943,9 +1551,24 @@ void WebFrame::prepareForDataSourceReplacement()
     LOG_NOIMPL();
 }
 
-void WebFrame::setTitle(const String& /*title*/, const KURL&)
+void WebFrame::setTitle(const String& title, const KURL& url)
 {
-    LOG_NOIMPL();
+    BOOL privateBrowsingEnabled = FALSE;
+    COMPtr<IWebPreferences> preferences;
+    if (SUCCEEDED(d->webView->preferences(&preferences)))
+        preferences->privateBrowsingEnabled(&privateBrowsingEnabled);
+    if (!privateBrowsingEnabled) {
+        // update title in global history
+        WebHistory* history = webHistory();
+        if (history) {
+            COMPtr<IWebHistoryItem> item;
+            if (SUCCEEDED(history->itemForURL(BString(url.url()), &item))) {
+                COMPtr<IWebHistoryItemPrivate> itemPrivate;
+                if (SUCCEEDED(item->QueryInterface(IID_IWebHistoryItemPrivate, (void**)&itemPrivate)))
+                    itemPrivate->setTitle(BString(title));
+            }
+        }
+    }
 }
 
 String WebFrame::userAgent()
@@ -1960,15 +1583,13 @@ void WebFrame::setDocumentViewFromPageCache(PageCache*)
 
 void WebFrame::updateGlobalHistoryForStandardLoad(const KURL& url)
 {
-    BString urlBStr((LPCOLESTR)url.url().unicode(), url.url().length());
-     
     COMPtr<WebHistory> history;
     history.adoptRef(webHistory());
 
     if (!history)
         return;
 
-    history->addItemForURL(urlBStr, 0);                 
+    history->addItemForURL(BString(url.url()), 0);                 
 }
 
 void WebFrame::updateGlobalHistoryForReload(const KURL& url)
@@ -1999,7 +1620,7 @@ void WebFrame::updateGlobalHistoryForReload(const KURL& url)
 bool WebFrame::shouldGoToHistoryItem(HistoryItem*) const
 {
     LOG_NOIMPL();
-    return false;
+    return true;
 }
 
 void WebFrame::saveScrollPositionAndViewStateToItem(HistoryItem*)
@@ -2020,9 +1641,12 @@ bool WebFrame::canCachePage() const
 
 PassRefPtr<DocumentLoader> WebFrame::createDocumentLoader(const ResourceRequest& request)
 {
-    // FIXME: This should create a subclass of DocumentLoader that contains the data source
-    RefPtr<DocumentLoader> loader = new DocumentLoader(request);
+    RefPtr<WebDocumentLoader> loader = new WebDocumentLoader(request);
+ 
+    COMPtr<WebDataSource> dataSource;
+    dataSource.adoptRef(WebDataSource::createInstance(loader.get()));
 
+    loader->setDataSource(dataSource.get());
     return loader.release();
 }
 
@@ -2067,15 +1691,52 @@ bool WebFrame::shouldFallBack(const ResourceError&)
     return false;
 }
 
-void WebFrame::committedLoad(DocumentLoader*, const char*, int)
+void WebFrame::receivedData(const char* data, int length, const String& textEncoding)
 {
-    LOG_NOIMPL();
+    // Set the encoding. This only needs to be done once, but it's harmless to do it again later.
+    String encoding = d->frame->loader()->documentLoader()->overrideEncoding();
+    bool userChosen = !encoding.isNull();
+    if (encoding.isNull())
+        encoding = textEncoding;
+    d->frame->loader()->setEncoding(encoding, userChosen);
+
+    d->frame->loader()->addData(data, length);
+}
+
+WebFramePolicyListener* WebFrame::setUpPolicyListener(WebCore::FramePolicyFunction function)
+{
+    ASSERT(!d->m_policyListener);
+    ASSERT(!d->m_policyFunction);
+
+    d->m_policyListener.adoptRef(WebFramePolicyListener::createInstance(d->frame));
+    d->m_policyFunction = function;
+
+    return d->m_policyListener.get();
+}
+
+void WebFrame::receivedPolicyDecision(PolicyAction action)
+{
+    ASSERT(d->m_policyListener);
+    ASSERT(d->m_policyFunction);
+
+    FramePolicyFunction function = d->m_policyFunction;
+
+    d->m_policyListener = 0;
+    d->m_policyFunction = 0;
+
+    (d->frame->loader()->*function)(action);
+}
+
+void WebFrame::committedLoad(DocumentLoader* loader, const char* data, int length)
+{
+    // FIXME: This should probably go through the data source.
+    const String& textEncoding = loader->response().textEncodingName();
+
+    receivedData(data, length, textEncoding);
 }
 
 void WebFrame::dispatchDecidePolicyForMIMEType(FramePolicyFunction function, const String&, const ResourceRequest&)
 {
-    LOG_NOIMPL();
-
     (d->frame->loader()->*function)(PolicyUse);
 }
 
@@ -2158,7 +1819,22 @@ void WebFrame::dispatchDidFailLoad(const ResourceError&)
 
 Frame* WebFrame::dispatchCreatePage()
 {
-    LOG_NOIMPL();
+    COMPtr<IWebUIDelegate> ui;
+
+    if (SUCCEEDED(d->webView->uiDelegate(&ui))) {
+        COMPtr<IWebView> newWebView;
+
+        if (SUCCEEDED(ui->createWebViewWithRequest(d->webView, 0, &newWebView))) {
+            COMPtr<IWebFrame> mainFrame;
+
+            if (SUCCEEDED(newWebView->mainFrame(&mainFrame))) {
+                COMPtr<WebFrame> mainFrameImpl;
+
+                if (SUCCEEDED(mainFrame->QueryInterface(IID_WebFrame, (void**)&mainFrameImpl)))
+                    return mainFrameImpl->impl();
+            }
+        }
+    }
     return 0;
 }
 
@@ -2188,11 +1864,6 @@ void WebFrame::dispatchDidReceiveAuthenticationChallenge(DocumentLoader*, id, co
 }
 
 void WebFrame::dispatchDidCancelAuthenticationChallenge(DocumentLoader*, id, const AuthenticationChallenge&)
-{
-    LOG_NOIMPL();
-}
-
-void WebFrame::receivedPolicyDecision(WebCore::PolicyAction)
 {
     LOG_NOIMPL();
 }

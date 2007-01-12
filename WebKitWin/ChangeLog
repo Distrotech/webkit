@@ -1,5 +1,92 @@
 2007-01-12  Anders Carlsson  <acarlsson@apple.com>
 
+        Reviewed by Darin.
+
+        Move WebKitWin over to the new WebCore loader. There are still some leftover functions 
+        from FrameWinClient that aren't used and should be removed.
+        
+        * WebDataSource.cpp:
+        (WebDataSource::WebDataSource):
+        (WebDataSource::~WebDataSource):
+        (WebDataSource::createInstance):
+        (WebDataSource::documentLoader):
+        (WebDataSource::overrideEncoding):
+        (WebDataSource::setOverrideEncoding):
+        (WebDataSource::QueryInterface):
+        (WebDataSource::initWithRequest):
+        (WebDataSource::data):
+        (WebDataSource::representation):
+        (WebDataSource::webFrame):
+        (WebDataSource::initialRequest):
+        (WebDataSource::request):
+        (WebDataSource::response):
+        (WebDataSource::textEncodingName):
+        (WebDataSource::isLoading):
+        (WebDataSource::unreachableURL):
+        * WebDataSource.h:
+        * WebFrame.cpp:
+        (WebFrame::WebFramePrivate::m_policyFunction):
+        (WebFrame::WebFrame):
+        (WebFrame::~WebFrame):
+        (WebFrame::QueryInterface):
+        (WebFrame::loadRequest):
+        (WebFrame::loadData):
+        (getWebDataSource):
+        (WebFrame::dataSource):
+        (WebFrame::provisionalDataSource):
+        (WebFrame::stopLoading):
+        (WebFrame::reload):
+        (WebFrame::firstLayoutDone):
+        (WebFrame::loadType):
+        (WebFrame::stopMainResourceLoad):
+        (WebFrame::canProvideDocumentSource):
+        (WebFrame::createFrame):
+        (WebFrame::submitForm):
+        (WebFrame::setTitle):
+        (WebFrame::originalRequestURL):
+        (WebFrame::hasWebView):
+        (WebFrame::hasFrameView):
+        (WebFrame::dispatchDidReceiveServerRedirectForProvisionalLoad):
+        (WebFrame::dispatchDidReceiveTitle):
+        (WebFrame::dispatchDidFirstLayout):
+        (WebFrame::dispatchShow):
+        (WebFrame::cancelPolicyCheck):
+        (WebFrame::dispatchWillSubmitForm):
+        (WebFrame::finishedLoading):
+        (WebFrame::canHandleRequest):
+        (WebFrame::canShowMIMEType):
+        (WebFrame::representationExistsForURLScheme):
+        (WebFrame::updateGlobalHistoryForStandardLoad):
+        (WebFrame::shouldGoToHistoryItem):
+        (WebFrame::createDocumentLoader):
+        (WebFrame::receivedData):
+        (WebFrame::setUpPolicyListener):
+        (WebFrame::receivedPolicyDecision):
+        (WebFrame::committedLoad):
+        (WebFrame::dispatchDecidePolicyForMIMEType):
+        (WebFrame::dispatchCreatePage):
+        (WebFrame::dispatchDidCancelAuthenticationChallenge):
+        * WebFrame.h:
+        * WebView.cpp:
+        (WebView::WebView):
+        (WebView::~WebView):
+        (WebViewWndProc):
+        (WebView::close):
+        (WebView::frameLoadDelegate):
+        (WebView::backForwardList):
+        (WebView::setMaintainsBackForwardList):
+        (WebView::goBack):
+        (WebView::goForward):
+        (WebView::goToBackForwardItem):
+        (WebView::setCustomTextEncodingName):
+        (WebView::customTextEncodingName):
+        (WebView::canGoBack):
+        (WebView::canGoForward):
+        (WebView::frameLoadDelegatePrivate):
+        * WebView.h:
+
+2007-01-12  Anders Carlsson  <acarlsson@apple.com>
+
         Reviewed by Geoff.
 
         More loader preparations.

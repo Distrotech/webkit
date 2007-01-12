@@ -58,18 +58,21 @@ namespace WebCore {
 typedef const struct OpaqueJSContext* JSContextRef;
 typedef struct OpaqueJSValue* JSObjectRef;
 
+class WebFrame;
 class WebView;
 class WebHistory;
+class WebFramePolicyListener;
+
 interface IWebHistoryItemPrivate;
 
 unsigned long long WebSystemMainMemory();
 WebFrame* kit(WebCore::Frame* frame);
 
+extern const GUID IID_WebFrame;
+
 class WebFrame : public IWebFrame, IWebFramePrivate
-    , public WebCore::ResourceHandleClient
     , public WebCore::FrameWinClient
     , public WebCore::FrameLoaderClient
-    , public IWebFormSubmissionListener
 {
 public:
     static WebFrame* createInstance();
@@ -150,16 +153,6 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE loadType( 
         /* [retval][out] */ WebFrameLoadType* type);
-
-    // IWebFormSubmissionListener
-    virtual HRESULT STDMETHODCALLTYPE continueSubmit( void);
-
-    // ResourceHandleClient
-    virtual void willSendRequest(WebCore::ResourceHandle*, const WebCore::ResourceRequest&, const WebCore::ResourceResponse& redirectResponse);
-    virtual void didReceiveResponse(WebCore::ResourceHandle*, const WebCore::ResourceResponse&);
-    virtual void didReceiveData(WebCore::ResourceHandle*, const char*, int, int);
-    virtual void didFinishLoading(WebCore::ResourceHandle*);
-    virtual void didFail(WebCore::ResourceHandle*, const WebCore::ResourceError&);
 
     // FrameWinClient
     virtual void ref();
@@ -289,11 +282,9 @@ public:
     void layoutIfNeeded();
     void setNeedsLayout();
     WebCore::Frame* impl();
-    HRESULT loadDataSource(WebDataSource* dataSource);
-    bool loading();
-    HRESULT goToItem(IWebHistoryItem* item, WebFrameLoadType withLoadType);
-    HRESULT loadItem(IWebHistoryItem* item, WebFrameLoadType withLoadType);
     void invalidate();
+    void receivedData(const char*, int, const WebCore::String&);
+
     // WebFrame (matching WebCoreFrameBridge)
     void setTextSizeMultiplier(float multiplier);
     void inViewSourceMode(BOOL *flag);
@@ -306,31 +297,21 @@ public:
     HRESULT searchForLabelsBeforeElement(const BSTR* labels, int cLabels, IDOMElement* beforeElement, BSTR* result);
     HRESULT matchLabelsAgainstElement(const BSTR* labels, int cLabels, IDOMElement* againstElement, BSTR* result);
     HRESULT canProvideDocumentSource(bool* result);
-    WebCore::SharedBuffer* data() { return m_buffer.get(); }
-    HRESULT reloadAllowingStaleDataWithOverrideEncoding(BSTR encoding);
     IWebBackForwardList* backForwardList();
     WebHistory* webHistory();
 
+    WebFramePolicyListener* setUpPolicyListener(WebCore::FramePolicyFunction function);
     void receivedPolicyDecision(WebCore::PolicyAction);
 
 protected:
     unsigned int getObjectCacheSize();
 
 protected:
+    ULONG               m_refCount;
     class WebFramePrivate;
     WebFramePrivate*    d;
-    ULONG               m_refCount;
-    WebDataSource*      m_dataSource;
-    IWebDataSourcePrivate* m_dataSourcePrivate;
-    WebDataSource*      m_provisionalDataSource;
-    WebFrameLoadType    m_loadType;
     bool                m_quickRedirectComing;
-    bool                m_continueFormSubmit;
-    RefPtr<WebCore::SharedBuffer> m_buffer;
-    BSTR                m_textEncoding;
-    RefPtr<WebCore::ResourceHandle> m_loader;
     WebCore::KURL       m_originalRequestURL;
-    bool                m_firstLayoutDone;
 };
 
 #endif

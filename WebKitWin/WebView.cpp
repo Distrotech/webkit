@@ -28,6 +28,7 @@
 #include "WebView.h"
 
 #include "IWebNotification.h"
+#include "WebDocumentLoader.h"
 #include "WebEditorClient.h"
 #include "WebElementPropertyBag.h"
 #include "WebFrame.h"
@@ -95,12 +96,11 @@ WebView::WebView()
 , m_mainFrame(0)
 , m_backingStoreBitmap(0)
 , m_backingStoreDirtyRegion(0)
-, m_backForwardList(0)
+, m_useBackForwardList(true)
 , m_userAgentOverridden(false)
 , m_textSizeMultiplier(1)
 , m_mouseActivated(false)
 {
-    m_backForwardList = WebBackForwardList::createInstance();
     m_backingStoreSize.cx = m_backingStoreSize.cy = 0;
 
     gClassCount++;
@@ -111,9 +111,6 @@ WebView::~WebView()
     IWebNotificationCenter* notifyCenter = WebNotificationCenter::defaultCenterInternal();
     notifyCenter->removeObserver(this, WebPreferences::webPreferencesChangedNotification(), 0);
 
-    if (m_backForwardList)
-        m_backForwardList->Release();
-    
     delete m_page;
 
     deleteBackingStore();
@@ -954,7 +951,7 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                 mainFrameImpl->setNeedsLayout();
                 mainFrameImpl->impl()->view()->resize(LOWORD(lParam), HIWORD(lParam));
 
-                if (!mainFrameImpl->loading())
+                if (!mainFrameImpl->impl()->loader()->isLoading())
                     mainFrameImpl->impl()->sendResizeEvent();
             }
             break;
@@ -1032,13 +1029,6 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
         lResult = DefWindowProc(hWnd, message, wParam, lParam);
     
     return lResult;
-}
-
-
-HRESULT WebView::goToItem(IWebHistoryItem* item, WebFrameLoadType withLoadType)
-{
-    m_mainFrame->stopLoading();
-    return m_mainFrame->goToItem(item, withLoadType);
 }
 
 HRESULT WebView::updateWebCoreSettingsFromPreferences(IWebPreferences* preferences)
@@ -1418,11 +1408,6 @@ HRESULT STDMETHODCALLTYPE WebView::close()
     if (Frame* frame = m_page->mainFrame())
         frame->loader()->detachFromParent();
 
-    if (m_backForwardList) {
-        m_backForwardList->Release();
-        m_backForwardList = 0;
-    }
-
     delete m_page;
     m_page = 0;
 
@@ -1494,6 +1479,9 @@ HRESULT STDMETHODCALLTYPE WebView::setFrameLoadDelegate(
 HRESULT STDMETHODCALLTYPE WebView::frameLoadDelegate( 
     /* [out][retval] */ IWebFrameLoadDelegate** d)
 {
+    if (!m_frameLoadDelegate)
+        return E_FAIL;
+
     return m_frameLoadDelegate.copyRefTo(d);
 }
 
@@ -1525,12 +1513,10 @@ HRESULT STDMETHODCALLTYPE WebView::mainFrame(
 HRESULT STDMETHODCALLTYPE WebView::backForwardList( 
     /* [out][retval] */ IWebBackForwardList** list)
 {
-    *list = 0;
-    if (!m_backForwardList)
+    if (!m_useBackForwardList)
         return E_FAIL;
-
-    m_backForwardList->AddRef();
-    *list = m_backForwardList;
+ 
+    *list = WebBackForwardList::createInstance(m_page->backForwardList());
 
     return S_OK;
 }
@@ -1538,52 +1524,22 @@ HRESULT STDMETHODCALLTYPE WebView::backForwardList(
 HRESULT STDMETHODCALLTYPE WebView::setMaintainsBackForwardList( 
     /* [in] */ BOOL flag)
 {
-    if (flag && !m_backForwardList)
-        m_backForwardList = WebBackForwardList::createInstance();
-    else if (!flag && m_backForwardList) {
-        m_backForwardList->Release();
-        m_backForwardList = 0;
-    }
-
+    m_useBackForwardList = !!flag;
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::goBack( 
     /* [retval][out] */ BOOL* succeeded)
 {
-    HRESULT hr = S_OK;
-
-    *succeeded = FALSE;
-
-    if (!m_backForwardList)
-        return E_FAIL;
-
-    IWebHistoryItem* item;
-    hr = m_backForwardList->backItem(&item);
-    if (SUCCEEDED(hr) && item) {
-        hr = goToBackForwardItem(item, succeeded);
-        item->Release();
-    }
-    return hr;
+    *succeeded = m_page->goBack();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::goForward( 
     /* [retval][out] */ BOOL* succeeded)
 {
-    HRESULT hr = S_OK;
-
-    *succeeded = FALSE;
-
-    if (!m_backForwardList)
-        return E_FAIL;
-
-    IWebHistoryItem* item;
-    hr = m_backForwardList->forwardItem(&item);
-    if (SUCCEEDED(hr) && item) {
-        hr = goToBackForwardItem(item, succeeded);
-        item->Release();
-    }
-    return hr;
+    *succeeded = m_page->goForward();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::goToBackForwardItem( 
@@ -1592,11 +1548,15 @@ HRESULT STDMETHODCALLTYPE WebView::goToBackForwardItem(
 {
     *succeeded = FALSE;
 
-    HRESULT hr = goToItem(item, WebFrameLoadTypeIndexedBackForward);
-    if (SUCCEEDED(hr))
-        *succeeded = TRUE;
+    COMPtr<WebHistoryItem> webHistoryItem;
+    HRESULT hr = item->QueryInterface(CLSID_WebHistoryItem, (void**)&webHistoryItem);
+    if (FAILED(hr))
+        return hr;
 
-    return hr;
+    m_page->goToItem(webHistoryItem->historyItem(), FrameLoadTypeIndexedBackForward);
+    *succeeded = TRUE;
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::setTextSizeMultiplier( 
@@ -1684,57 +1644,49 @@ HRESULT STDMETHODCALLTYPE WebView::setCustomTextEncodingName(
     HRESULT hr;
     BSTR oldEncoding;
     hr = customTextEncodingName(&oldEncoding);
-    if (SUCCEEDED(hr)) {
-        m_overrideEncoding = String(encodingName, SysStringLen(encodingName));
-        if (oldEncoding != encodingName && (!oldEncoding || !encodingName || _tcscmp(oldEncoding, encodingName)))
-            hr = m_mainFrame->reloadAllowingStaleDataWithOverrideEncoding(encodingName);
-        SysFreeString(oldEncoding);
+    if (FAILED(hr))
+        return hr;
+
+    if (oldEncoding != encodingName && (!oldEncoding || !encodingName || _tcscmp(oldEncoding, encodingName))) {
+        if (m_mainFrame->impl()->loader())
+            m_mainFrame->impl()->loader()->reloadAllowingStaleData(String(encodingName, SysStringLen(encodingName)));
     }
 
-    return hr;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::customTextEncodingName( 
     /* [retval][out] */ BSTR* encodingName)
 {
     HRESULT hr = S_OK;
-    IWebDataSource *dataSource = 0;
-    IWebDataSourcePrivate *dataSourcePrivate = 0;
+    COMPtr<IWebDataSource> dataSource;
+    COMPtr<WebDataSource> dataSourceImpl;
     *encodingName = 0;
 
-    if (!m_mainFrame) {
-        hr = E_FAIL;
-        goto exit;
-    }
+    if (!m_mainFrame)
+        return E_FAIL;
 
     if (FAILED(m_mainFrame->provisionalDataSource(&dataSource)) || !dataSource) {
         hr = m_mainFrame->dataSource(&dataSource);
         if (FAILED(hr) || !dataSource)
-            goto exit;
+            return hr;
     }
 
-    hr = dataSource->QueryInterface(IID_IWebDataSourcePrivate, (void**)&dataSourcePrivate);
+    hr = dataSource->QueryInterface(IID_WebDataSource, (void**)&dataSourceImpl);
     if (FAILED(hr))
-        goto exit;
+        return hr;
 
-    hr = dataSourcePrivate->overrideEncoding(encodingName);
+    BString str = dataSourceImpl->documentLoader()->overrideEncoding();
     if (FAILED(hr))
-        goto exit;
+        return hr;
 
     if (!*encodingName)
         *encodingName = SysAllocStringLen(m_overrideEncoding.characters(), m_overrideEncoding.length());
 
-    if (!*encodingName && m_overrideEncoding.length()) {
-        hr = E_OUTOFMEMORY;
-        goto exit;
-    }
+    if (!*encodingName && m_overrideEncoding.length())
+        return E_OUTOFMEMORY;
 
-exit:
-    if (dataSourcePrivate)
-        dataSourcePrivate->Release();
-    if (dataSource)
-        dataSource->Release();
-    return hr;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::setMediaStyle( 
@@ -2150,21 +2102,7 @@ HRESULT STDMETHODCALLTYPE WebView::canGoBack(
         /* [in] */ IUnknown* /*sender*/,
         /* [retval][out] */ BOOL* result)
 {
-    *result = FALSE;
-
-    if (!m_backForwardList)
-        return E_FAIL;
-
-    IWebHistoryItem* item;
-    HRESULT hr = m_backForwardList->backItem(&item);
-    if (FAILED(hr))
-        return hr;
-
-    if (item) {
-        *result = TRUE;
-        item->Release();
-    }
-
+    *result = !!m_page->backForwardList()->backItem();
     return S_OK;
 }
     
@@ -2179,21 +2117,7 @@ HRESULT STDMETHODCALLTYPE WebView::canGoForward(
         /* [in] */ IUnknown* /*sender*/,
         /* [retval][out] */ BOOL* result)
 {
-    *result = FALSE;
-
-    if (!m_backForwardList)
-        return E_FAIL;
-
-    IWebHistoryItem* item;
-    HRESULT hr = m_backForwardList->forwardItem(&item);
-    if (FAILED(hr))
-        return hr;
-
-    if (item) {
-        *result = TRUE;
-        item->Release();
-    }
-
+    *result = !!m_page->backForwardList()->forwardItem();
     return S_OK;
 }
     
@@ -2729,6 +2653,9 @@ HRESULT STDMETHODCALLTYPE WebView::setFrameLoadDelegatePrivate(
 HRESULT STDMETHODCALLTYPE WebView::frameLoadDelegatePrivate( 
     /* [out][retval] */ IWebFrameLoadDelegatePrivate** d)
 {
+    if (!m_frameLoadDelegatePrivate)
+        return E_FAIL;
+        
     return m_frameLoadDelegatePrivate.copyRefTo(d);
 }
 

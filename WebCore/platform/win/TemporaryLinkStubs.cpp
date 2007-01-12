@@ -91,7 +91,7 @@ void WebCore::findSentenceBoundary(UChar const*,int,int,int*,int*) { LOG_NOIMPL(
 
 void FrameWin::focusWindow() { LOG_NOIMPL(); }
 void FrameWin::unfocusWindow() { LOG_NOIMPL(); }
-KJS::Bindings::Instance* FrameWin::getAppletInstanceForWidget(Widget*) { STOP_NOIMPL(); return 0; }
+KJS::Bindings::Instance* FrameWin::getAppletInstanceForWidget(Widget*) { LOG_NOIMPL(); return 0; }
 bool FrameWin::canPaste() const { LOG_NOIMPL(); return false; }
 bool FrameWin::shouldInterruptJavaScript() { LOG_NOIMPL(); return false; }
 void FrameWin::print() { LOG_NOIMPL(); }
@@ -185,12 +185,8 @@ void WebCore::setFocusRingColorChangeFunction(void (*)()) { LOG_NOIMPL(); }
 
 void Frame::setNeedsReapplyStyles() { LOG_NOIMPL(); }
 
-String FrameLoader::referrer() const { return String(); }
-
 
 String FrameLoader::overrideMediaType()const { LOG_NOIMPL(); return String(); }
-void FrameLoader::didChangeTitle(DocumentLoader*) { LOG_NOIMPL(); }
-void FrameLoader::checkLoadCompleteForThisFrame() { LOG_NOIMPL(); }
 
 bool EventHandler::lastEventIsMouseUp() const { return false; }
 

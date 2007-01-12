@@ -1,3 +1,24 @@
+2007-01-12  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Darin.
+
+        WARNING: NO TEST CASES ADDED OR CHANGED
+
+        * loader/win/FrameLoaderWin.cpp:
+        (WebCore::FrameLoader::didChangeTitle):
+        Copied here from FrameLoaderMac.mm
+        
+        * platform/network/cf/ResourceHandleCFNet.cpp:
+        (WebCore::ResourceHandle::start):
+        Removed setting referrer and user-agend and added a check for null page.
+        
+        (WebCore::ResourceHandle::cancel):
+        Don't call didFail.
+        
+        * platform/win/TemporaryLinkStubs.cpp:
+        (FrameWin::getAppletInstanceForWidget):
+        Use LOG_NOIMPL here.
+
 2007-01-11  Anders Carlsson  <acarlsson@apple.com>
 
         * platform/network/cf/ResourceResponseCFNet.cpp:

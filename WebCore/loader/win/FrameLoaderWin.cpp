@@ -30,9 +30,11 @@
 #include "FrameLoader.h"
 
 #include "Chrome.h"
+#include "DocumentLoader.h"
 #include "Element.h"
 #include "FormData.h"
 #include "FrameLoadRequest.h"
+#include "FrameLoaderClient.h"
 #include "FrameTree.h"
 #include "FrameView.h"
 #include "FrameWin.h"
@@ -52,66 +54,22 @@ namespace WebCore {
 
 using namespace HTMLNames;
 
-void FrameLoader::submitForm(const FrameLoadRequest& request, Event* event)
+void FrameLoader::didChangeTitle(DocumentLoader* loader)
 {
-    // FIXME: We'd like to remove this altogether and fix the multiple form submission issue another way.
-    // We do not want to submit more than one form from the same page,
-    // nor do we want to submit a single form more than once.
-    // This flag prevents these from happening; not sure how other browsers prevent this.
-    // The flag is reset in each time we start handle a new mouse or key down event, and
-    // also in setView since this part may get reused for a page from the back/forward cache.
-    // The form multi-submit logic here is only needed when we are submitting a form that affects this frame.
-    // FIXME: Frame targeting is only one of the ways the submission could end up doing something other
-    // than replacing this frame's content, so this check is flawed. On the other hand, the check is hardly
-    // needed any more now that we reset m_submittedFormURL on each mouse or key down event.
-    Frame* target = m_frame->tree()->find(request.frameName());
+    m_client->didChangeTitle(loader);
 
-    if (!target) {
-        // this means that target == _blank, so open a new window.
-        Page* page = m_frame->page();
-        if (!page)
-            return;
-
-        Page* newPage = page->chrome()->createWindow(request);
-        if (!newPage)
-            return;
-
-        target = newPage->mainFrame();
+    // The title doesn't get communicated to the WebView until we are committed.
+    if (loader->isCommitted()) {
+        // FIXME: This needs a Windows equivalent of canonicalURL
+        // Must update the entries in the back-forward list too.
+        // This must go through the WebFrame because it has the right notion of the current b/f item.
+        m_client->setTitle(loader->title(), loader->urlForHistory());
+        m_client->setMainFrameDocumentReady(true); // update observers with new DOMDocument
+        m_client->dispatchDidReceiveTitle(loader->title());
     }
-
-#ifdef MULTIPLE_FORM_SUBMISSION_PROTECTION
-    if (m_frame->tree()->isDescendantOf(target)) {
-        if (m_submittedFormURL == request.resourceRequest().url())
-            return;
-        m_submittedFormURL = request.resourceRequest().url();
-    }
-#endif
-
-    if (FrameWinClient* client = Win(target)->client())
-        client->submitForm(request,
-            m_formAboutToBeSubmitted.get(),
-            m_formValuesAboutToBeSubmitted);
-
-    clearRecordedFormValues();
 }
 
-void FrameLoader::urlSelected(const FrameLoadRequest& request, Event* event)
-{
-    Frame* targetFrame = m_frame->tree()->find(request.frameName());
-    bool newWindow = !targetFrame;
-    Frame* frame = targetFrame ? targetFrame : m_frame;
-    if (FrameWinClient* client = Win(frame)->client())
-        client->openURL(request.resourceRequest().url().url(), event, newWindow, request.lockHistory());
-}
-
-KURL FrameLoader::originalRequestURL() const
-{
-    if (FrameWinClient* client = Win(m_frame)->client())
-        return client->originalRequestURL();
-    return KURL();
-}
-
-enum WebCore::ObjectContentType FrameLoader::objectContentType(const KURL& url, const String& mimeTypeIn)
+enum ObjectContentType FrameLoader::objectContentType(const KURL& url, const String& mimeTypeIn)
 {
     String mimeType = mimeTypeIn;
     if (mimeType.isEmpty()) {
@@ -178,12 +136,6 @@ Widget* FrameLoader::createJavaAppletWidget(const IntSize&, Element* element, co
 
     return PluginDatabaseWin::installedPlugins()->
         createPluginView(Win(m_frame), element, KURL(), paramNames, paramValues, "application/x-java-applet");
-}
-
-void FrameLoader::setTitle(const String& title)
-{
-    if (FrameWinClient* client = Win(m_frame)->client())
-        client->setTitle(title);
 }
 
 void FrameLoader::partClearedInBegin()

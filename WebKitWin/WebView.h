@@ -563,7 +563,6 @@ public:
     bool execCommand(WPARAM wParam, LPARAM lParam);
     bool keyDown(WPARAM, LPARAM);
     bool keyUp(WPARAM, LPARAM);
-    HRESULT goToItem(IWebHistoryItem* item, WebFrameLoadType withLoadType);
     HRESULT updateWebCoreSettingsFromPreferences(IWebPreferences* preferences);
     bool inResizer(LPARAM lParam);
     void paint(HDC, LPARAM);
@@ -603,9 +602,9 @@ protected:
     COMPtr<IWebUIDelegate> m_uiDelegate;
     COMPtr<IWebUIDelegatePrivate> m_uiDelegatePrivate;
     COMPtr<IWebFormDelegate> m_formDelegate;
-    IWebBackForwardList* m_backForwardList;
     COMPtr<IWebPreferences> m_preferences;
     bool m_userAgentOverridden;
+    bool m_useBackForwardList;
     WebCore::String m_userAgentCustom;
     WebCore::String m_userAgentStandard;
     float m_textSizeMultiplier;

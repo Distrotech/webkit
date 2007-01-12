@@ -27,16 +27,19 @@
 #define WebDataSource_H
 
 #include "IWebDataSource.h"
+#include "COMPtr.h"
 
-class WebFrame;
+class WebDocumentLoader;
 class WebMutableURLRequest;
+
+extern const GUID IID_WebDataSource;
 
 class WebDataSource : public IWebDataSource, public IWebDataSourcePrivate
 {
 public:
-    static WebDataSource* createInstance(WebFrame* frame);
+    static WebDataSource* createInstance(WebDocumentLoader*);
 protected:
-    WebDataSource();
+    WebDataSource(WebDocumentLoader*);
     ~WebDataSource();
 
 public:
@@ -105,16 +108,11 @@ public:
         /* [in] */ BSTR encoding);
 
     // WebDataSource
-    HRESULT setResponse(IWebURLResponse* response);
-
+    WebDocumentLoader* documentLoader() const;
 protected:
     ULONG m_refCount;
-    IWebMutableURLRequest* m_initialRequest;
-    IWebMutableURLRequest* m_request;
-    IWebURLResponse* m_response;
-    IWebDocumentRepresentation* m_representation;
-    WebFrame* m_frame;
-    BSTR m_overrideEncoding;
+    WebDocumentLoader* m_loader;
+    COMPtr<IWebDocumentRepresentation> m_representation;
 };
 
 #endif

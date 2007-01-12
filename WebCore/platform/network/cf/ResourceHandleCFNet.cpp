@@ -197,10 +197,10 @@ void runLoaderThread(void *unused)
 
 bool ResourceHandle::start(Frame* frame)
 {
-    d->m_request.setHTTPUserAgent(frame->loader()->userAgent());
-    String referrer = frame->loader()->referrer();
-    if (!referrer.isEmpty() && referrer.find("file:", 0, false) != 0)
-        d->m_request.setHTTPReferrer(referrer);
+    // If we are no longer attached to a Page, this must be an attempted load from an
+    // onUnload handler, so let's just block it.
+    if (!frame->page())
+        return false;
 
     CFURLRequestRef request = d->m_request.cfURLRequest();
 
@@ -232,9 +232,6 @@ void ResourceHandle::cancel()
         CFRelease(d->m_connection);
         d->m_connection = 0;
     }
-
-    // FIXME: need real cancel error
-    d->m_client->didFail(this, ResourceError());
 }
 
 PassRefPtr<SharedBuffer> ResourceHandle::bufferedData()
