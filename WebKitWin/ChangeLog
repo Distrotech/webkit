@@ -1,5 +1,11 @@
 2007-01-11  Steve Falkenburg  <sfalken@apple.com>
 
+        B&I build change - copy WebKit.resources to dstroot for installer
+
+        * WebKit.vcproj/WebKit.make:
+
+2007-01-11  Steve Falkenburg  <sfalken@apple.com>
+
         Reviewed by Lou.
 
         Implement "Make Text Normal Size".
