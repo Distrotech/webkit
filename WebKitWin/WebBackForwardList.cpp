@@ -97,6 +97,8 @@ HRESULT STDMETHODCALLTYPE WebBackForwardList::QueryInterface(REFIID riid, void**
         *ppvObject = static_cast<IWebBackForwardList*>(this);
     else if (IsEqualGUID(riid, IID_IWebBackForwardList))
         *ppvObject = static_cast<IWebBackForwardList*>(this);
+    else if (IsEqualGUID(riid, IID_IWebBackForwardListPrivate))
+        *ppvObject = static_cast<IWebBackForwardListPrivate*>(this);
     else
         return E_NOINTERFACE;
 
@@ -333,4 +335,18 @@ void WebBackForwardList::setDefaultPageCacheSizeIfNecessary()
         BackForwardList::setDefaultPageCacheSize(cacheSize - 1);
     else
         BackForwardList::setDefaultPageCacheSize(cacheSize - 2);
+}
+
+// IWebBackForwardListPrivate --------------------------------------------------------
+
+HRESULT STDMETHODCALLTYPE WebBackForwardList::removeItem( 
+    /* [in] */ IWebHistoryItem* item)
+{
+    COMPtr<WebHistoryItem> webHistoryItem;
+ 
+    if (!item || FAILED(item->QueryInterface(CLSID_WebHistoryItem, (void**)&webHistoryItem)))
+        return E_FAIL;
+ 
+    m_backForwardList->removeItem(webHistoryItem->historyItem());
+    return S_OK;
 }

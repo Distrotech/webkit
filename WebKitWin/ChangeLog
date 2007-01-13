@@ -1,3 +1,21 @@
+2007-01-12  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Steve.
+        
+        <rdar://4602355> More Undo/Redo
+        - Added IWebBackForwardListPrivate which contains the removeItem method, used in undo/redo of closing tabs.
+        - Fixed a null dereference I ran into in WebFrame::dispatchDidFirstLayout.
+
+        * Interfaces/IWebBackForwardListPrivate.idl: Added.
+        * WebBackForwardList.cpp:
+        (WebBackForwardList::QueryInterface):
+        (WebBackForwardList::removeItem):
+        * WebBackForwardList.h:
+        * WebFrame.cpp:
+        (WebFrame::dispatchDidFirstLayout):
+        * WebKit.vcproj/Interfaces.vcproj:
+        * WebKit.vcproj/WebKitGUID.vcproj:
+
 2007-01-12  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Darin.

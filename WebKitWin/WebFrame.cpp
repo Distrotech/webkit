@@ -1376,7 +1376,7 @@ void WebFrame::dispatchDidFinishLoad()
 void WebFrame::dispatchDidFirstLayout()
 {
     COMPtr<IWebFrameLoadDelegatePrivate> frameLoadDelegatePriv;
-    if (SUCCEEDED(d->webView->frameLoadDelegatePrivate(&frameLoadDelegatePriv)))
+    if (SUCCEEDED(d->webView->frameLoadDelegatePrivate(&frameLoadDelegatePriv)) && frameLoadDelegatePriv)
         frameLoadDelegatePriv->didFirstLayoutInFrame(d->webView, this);
 }
 

@@ -27,6 +27,7 @@
 #define WebBackForwardList_H
 
 #include "IWebBackForwardList.h"
+#include "IWebBackForwardListPrivate.h"
 
 #include "WebHistoryItem.h"
 
@@ -37,7 +38,7 @@ namespace WebCore {
     class BackForwardList;
 }
 
-class WebBackForwardList : public IWebBackForwardList
+class WebBackForwardList : public IWebBackForwardList, IWebBackForwardListPrivate
 {
 public:
     static WebBackForwardList* createInstance();
@@ -108,6 +109,10 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE pageCacheSize( 
         /* [retval][out] */ UINT *size);
+
+    // IWebBackForwardListPrivate
+    virtual HRESULT STDMETHODCALLTYPE removeItem( 
+        /* [in] */ IWebHistoryItem* item);
 
     // WebBackForwardList
 
