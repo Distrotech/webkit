@@ -261,21 +261,23 @@ public:
     virtual void dispatchUnableToImplementPolicy(const WebCore::ResourceError&);
     virtual bool willUseArchive(WebCore::ResourceLoader*, const WebCore::ResourceRequest&, const WebCore::KURL& originalURL) const;
     virtual void download(WebCore::ResourceHandle*, const WebCore::ResourceRequest&, const WebCore::ResourceResponse&);
-    virtual void dispatchWillSendRequest(WebCore::DocumentLoader*, id identifier, WebCore::ResourceRequest&, const WebCore::ResourceResponse& redirectResponse);
-    virtual void dispatchDidReceiveResponse(WebCore::DocumentLoader*, id identifier, const WebCore::ResourceResponse&);
-    virtual void dispatchDidReceiveContentLength(WebCore::DocumentLoader*, id identifier, int lengthReceived);
-    virtual void dispatchDidFinishLoading(WebCore::DocumentLoader*, id identifier);
-    virtual void dispatchDidFailLoading(WebCore::DocumentLoader*, id identifier, const WebCore::ResourceError&);
+
+    virtual void assignIdentifierToInitialRequest(unsigned long identifier, WebCore::DocumentLoader*, const WebCore::ResourceRequest&);
+    virtual void dispatchWillSendRequest(WebCore::DocumentLoader*, unsigned long identifier, WebCore::ResourceRequest&, const WebCore::ResourceResponse& redirectResponse);
+    virtual void dispatchDidReceiveResponse(WebCore::DocumentLoader*, unsigned long identifier, const WebCore::ResourceResponse&);
+    virtual void dispatchDidReceiveContentLength(WebCore::DocumentLoader*, unsigned long identifier, int lengthReceived);
+    virtual void dispatchDidFinishLoading(WebCore::DocumentLoader*, unsigned long identifier);
+    virtual void dispatchDidFailLoading(WebCore::DocumentLoader*, unsigned long identifier, const WebCore::ResourceError&);
     virtual bool dispatchDidLoadResourceFromMemoryCache(WebCore::DocumentLoader*, const WebCore::ResourceRequest&, const WebCore::ResourceResponse&, int length);
     virtual void dispatchDidFailProvisionalLoad(const WebCore::ResourceError&);
     virtual void dispatchDidFailLoad(const WebCore::ResourceError&);
     virtual WebCore::Frame* dispatchCreatePage();
-    virtual void incrementProgress(id identifier, const WebCore::ResourceResponse&);
-    virtual void incrementProgress(id identifier, const char*, int);
-    virtual void completeProgress(id identifier);
+    virtual void incrementProgress(unsigned long identifier, const WebCore::ResourceResponse&);
+    virtual void incrementProgress(unsigned long identifier, const char*, int);
+    virtual void completeProgress(unsigned long identifier);
     virtual void startDownload(const WebCore::ResourceRequest&);
-    virtual void dispatchDidReceiveAuthenticationChallenge(WebCore::DocumentLoader*, id identifier, const WebCore::AuthenticationChallenge&);
-    virtual void dispatchDidCancelAuthenticationChallenge(WebCore::DocumentLoader*, id identifier, const WebCore::AuthenticationChallenge&);
+    virtual void dispatchDidReceiveAuthenticationChallenge(WebCore::DocumentLoader*, unsigned long identifier, const WebCore::AuthenticationChallenge&);
+    virtual void dispatchDidCancelAuthenticationChallenge(WebCore::DocumentLoader*, unsigned long identifier, const WebCore::AuthenticationChallenge&);
 
     // WebFrame
     void initWithWebFrameView(IWebFrameView*, IWebView*, WebCore::Page*, WebCore::HTMLFrameOwnerElement*);

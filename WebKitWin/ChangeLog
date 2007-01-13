@@ -1,3 +1,20 @@
+2007-01-12  Anders Carlsson  <acarlsson@apple.com>
+
+        Build fixes.
+        
+        * WebFrame.cpp:
+        (WebFrame::assignIdentifierToInitialRequest):
+        (WebFrame::dispatchWillSendRequest):
+        (WebFrame::dispatchDidReceiveResponse):
+        (WebFrame::dispatchDidReceiveContentLength):
+        (WebFrame::dispatchDidFinishLoading):
+        (WebFrame::dispatchDidFailLoading):
+        (WebFrame::incrementProgress):
+        (WebFrame::completeProgress):
+        (WebFrame::dispatchDidReceiveAuthenticationChallenge):
+        (WebFrame::dispatchDidCancelAuthenticationChallenge):
+        * WebFrame.h:
+
 2007-01-12  Ada Chan  <adachan@apple.com>
 
         Reviewed by Steve.

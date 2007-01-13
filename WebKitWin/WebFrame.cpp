@@ -1770,27 +1770,32 @@ bool WebFrame::willUseArchive(ResourceLoader*, const ResourceRequest&, const KUR
     return false;
 }
 
-void WebFrame::dispatchWillSendRequest(DocumentLoader*, id, ResourceRequest&, const ResourceResponse&)
+void WebFrame::assignIdentifierToInitialRequest(unsigned long, DocumentLoader*, const ResourceRequest&)
 {
     LOG_NOIMPL();
 }
 
-void WebFrame::dispatchDidReceiveResponse(DocumentLoader*, id, const ResourceResponse&)
+void WebFrame::dispatchWillSendRequest(DocumentLoader*, unsigned long, ResourceRequest&, const ResourceResponse&)
 {
     LOG_NOIMPL();
 }
 
-void WebFrame::dispatchDidReceiveContentLength(DocumentLoader*, id, int)
+void WebFrame::dispatchDidReceiveResponse(DocumentLoader*, unsigned long, const ResourceResponse&)
 {
     LOG_NOIMPL();
 }
 
-void WebFrame::dispatchDidFinishLoading(DocumentLoader*, id)
+void WebFrame::dispatchDidReceiveContentLength(DocumentLoader*, unsigned long, int)
 {
     LOG_NOIMPL();
 }
 
-void WebFrame::dispatchDidFailLoading(DocumentLoader*, id, const ResourceError&)
+void WebFrame::dispatchDidFinishLoading(DocumentLoader*, unsigned long)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::dispatchDidFailLoading(DocumentLoader*, unsigned long, const ResourceError&)
 {
     LOG_NOIMPL();
 }
@@ -1838,17 +1843,17 @@ Frame* WebFrame::dispatchCreatePage()
     return 0;
 }
 
-void WebFrame::incrementProgress(id, const ResourceResponse&)
+void WebFrame::incrementProgress(unsigned long, const ResourceResponse&)
 {
     LOG_NOIMPL();
 }
 
-void WebFrame::incrementProgress(id, const char*, int)
+void WebFrame::incrementProgress(unsigned long, const char*, int)
 {
     LOG_NOIMPL();
 }
 
-void WebFrame::completeProgress(id)
+void WebFrame::completeProgress(unsigned long)
 {
     LOG_NOIMPL();
 }
@@ -1858,12 +1863,12 @@ void WebFrame::startDownload(const ResourceRequest&)
     LOG_NOIMPL();
 }
 
-void WebFrame::dispatchDidReceiveAuthenticationChallenge(DocumentLoader*, id, const AuthenticationChallenge&)
+void WebFrame::dispatchDidReceiveAuthenticationChallenge(DocumentLoader*, unsigned long, const AuthenticationChallenge&)
 {
     LOG_NOIMPL();
 }
 
-void WebFrame::dispatchDidCancelAuthenticationChallenge(DocumentLoader*, id, const AuthenticationChallenge&)
+void WebFrame::dispatchDidCancelAuthenticationChallenge(DocumentLoader*, unsigned long, const AuthenticationChallenge&)
 {
     LOG_NOIMPL();
 }
