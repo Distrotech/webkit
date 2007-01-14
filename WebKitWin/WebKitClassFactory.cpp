@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -34,6 +34,7 @@
 #include "WebHistoryItem.h"
 #include "WebIconDatabase.h"
 #include "WebKit.h"
+#include "WebKitStatistics.h"
 #include "WebMutableURLRequest.h"
 #include "WebNotificationCenter.h"
 #include "WebPreferences.h"
@@ -111,6 +112,8 @@ HRESULT STDMETHODCALLTYPE WebKitClassFactory::CreateInstance(IUnknown* pUnkOuter
         unknown = static_cast<IWebCache*>(WebCache::createInstance());
     else if (IsEqualGUID(m_targetClass, CLSID_WebPreferences))
         unknown = static_cast<IWebPreferences*>(WebPreferences::createInstance());
+    else if (IsEqualGUID(m_targetClass, CLSID_WebKitStatistics))
+        unknown = static_cast<IWebKitStatistics*>(WebKitStatistics::createInstance());
     else
         return CLASS_E_CLASSNOTAVAILABLE;
 

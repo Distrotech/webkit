@@ -79,6 +79,7 @@ import "IWebNotificationCenter.idl";
 import "IWebNotificationObserver.idl";
 import "IWebHistory.idl";
 import "IWebCache.idl";
+import "IWebKitStatistics.idl";
 
 [
 #if __ARCHIVE_BUILD__
@@ -195,5 +196,16 @@ library WebKit
 #endif
     coclass WebPreferences {
         interface IWebPreferences;
+    }
+
+#if __ARCHIVE_BUILD__
+    [uuid(87689DC6-5F8C-4194-90D5-CE6083837AB5)]
+#elif __BUILDBOT__
+    [uuid(E93AA8D7-F362-4a4a-A95D-325906BEB5F0)]
+#else
+    [uuid(203ACEB1-3056-4bc8-946A-07B2294924EC)]
+#endif
+    coclass WebKitStatistics {
+        interface IWebKitStatistics;
     }
 }

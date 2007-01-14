@@ -308,6 +308,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\Interfaces\IWebKitStatistics.idl"
+			>
+		</File>
+		<File
 			RelativePath="..\Interfaces\IWebMutableURLRequest.idl"
 			>
 		</File>

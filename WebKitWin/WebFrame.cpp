@@ -41,6 +41,7 @@
 
 #include "WebHistory.h"
 #include "WebKit.h"
+#include "WebKitStatisticsPrivate.h"
 #include "WebView.h"
 #include "WebDataSource.h"
 #include "WebHistoryItem.h"
@@ -351,12 +352,14 @@ WebFrame::WebFrame()
 , d(new WebFrame::WebFramePrivate)
 , m_quickRedirectComing(false)
 {
+    WebFrameCount++;
     gClassCount++;
 }
 
 WebFrame::~WebFrame()
 {
     delete d;
+    WebFrameCount--;
     gClassCount--;
 }
 

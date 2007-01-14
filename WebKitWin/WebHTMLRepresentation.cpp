@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,6 +29,7 @@
 
 #include "DOMCore.h"
 #include "WebFrame.h"
+#include "WebKitStatisticsPrivate.h"
 #pragma warning(push, 0)
 #include <WebCore/HTMLInputElement.h>
 #pragma warning(pop)
@@ -41,6 +42,7 @@ WebHTMLRepresentation::WebHTMLRepresentation()
 : m_refCount(0)
 , m_frame(0)
 {
+    WebHTMLRepresentationCount++;
     gClassCount++;
 }
 
@@ -51,6 +53,7 @@ WebHTMLRepresentation::~WebHTMLRepresentation()
         m_frame = 0;
     }
 
+    WebHTMLRepresentationCount--;
     gClassCount--;
 }
 

@@ -1,3 +1,48 @@
+2007-01-14  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Steve.
+
+        Fix: <rdar://4831292> Implement WebKitStatistics
+
+        * Interfaces/IWebKitStatistics.idl: Added.
+        * Interfaces/WebKit.idl: Added WebKitStatistics declaration.
+        * WebKit.vcproj/Interfaces.vcproj: Added new files.
+        * WebKit.vcproj/WebKit.vcproj: Ditto.
+        * WebKit.vcproj/WebKitGUID.vcproj: Ditto.
+        * WebKitClassFactory.cpp: Updated to include WebKitStatistics.
+        (WebKitClassFactory::CreateInstance):
+        * WebKitDLL.cpp: Ditto.
+        (DllGetClassObject):
+        * WebKitStatistics.cpp: Added.
+        (WebKitStatistics::WebKitStatistics):
+        (WebKitStatistics::~WebKitStatistics):
+        (WebKitStatistics::createInstance):
+        (WebKitStatistics::QueryInterface):
+        (WebKitStatistics::AddRef):
+        (WebKitStatistics::Release):
+        (WebKitStatistics::webViewCount):
+        (WebKitStatistics::frameCount):
+        (WebKitStatistics::dataSourceCount):
+        (WebKitStatistics::viewCount):
+        (WebKitStatistics::HTMLRepresentationCount):
+        * WebKitStatistics.h: Added.
+        * WebKitStatisticsPrivate.h: Added.
+
+        Added object counting:
+
+        * WebDataSource.cpp:
+        (WebDataSource::WebDataSource):
+        (WebDataSource::~WebDataSource):
+        * WebFrame.cpp:
+        (WebFrame::WebFrame):
+        (WebFrame::~WebFrame):
+        * WebHTMLRepresentation.cpp:
+        (WebHTMLRepresentation::WebHTMLRepresentation):
+        (WebHTMLRepresentation::~WebHTMLRepresentation):
+        * WebView.cpp:
+        (WebView::WebView): Initialize m_page member.
+        (WebView::~WebView):
+
 2007-01-12  Anders Carlsson  <acarlsson@apple.com>
 
         Build fixes.

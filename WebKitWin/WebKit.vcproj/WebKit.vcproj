@@ -223,6 +223,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\WebKitStatistics.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\WebLocalizableStrings.cpp"
 				>
 			</File>
@@ -334,6 +338,14 @@
 			</File>
 			<File
 				RelativePath="..\WebKitDLL.h"
+				>
+			</File>
+			<File
+				RelativePath="..\WebKitStatistics.h"
+				>
+			</File>
+			<File
+				RelativePath="..\WebKitStatisticsPrivate.h"
 				>
 			</File>
 			<File

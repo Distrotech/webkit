@@ -274,6 +274,10 @@
 			>
 		</File>
 		<File
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebKitStatistics_i.c"
+			>
+		</File>
+		<File
 			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebMutableURLRequest_i.c"
 			>
 		</File>
