@@ -67,7 +67,7 @@ interface IWebError : IUnknown
     /*
         - (int)code
     */
-    HRESULT code_([out, retval] int* result);
+    HRESULT code([out, retval] int* result);
 
     /*
         - (NSString *)domain

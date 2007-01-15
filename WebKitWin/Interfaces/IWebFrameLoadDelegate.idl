@@ -200,7 +200,7 @@ interface IWebFrameLoadDelegate : IUnknown
         redirect is pending.
         - (void)webView:(WebView *)sender willPerformClientRedirectToURL:(NSURL *)URL delay:(NSTimeInterval)seconds fireDate:(NSDate *)date forFrame:(WebFrame *)frame;
     */
-    HRESULT willPerformClientRedirectToURL([in] IWebView* webView, [in] BSTR url, UINT delaySeconds, [in] UINT fireDate, [in] IWebFrame* frame);
+    HRESULT willPerformClientRedirectToURL([in] IWebView* webView, [in] BSTR url, [in] double delaySeconds, [in] DATE fireDate, [in] IWebFrame* frame);
 
     /*!
         @method webView:didCancelClientRedirectForFrame:

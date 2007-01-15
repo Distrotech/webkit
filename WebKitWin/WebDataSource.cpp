@@ -207,10 +207,10 @@ HRESULT STDMETHODCALLTYPE WebDataSource::isLoading(
 }
 
 HRESULT STDMETHODCALLTYPE WebDataSource::pageTitle( 
-    /* [retval][out] */ BSTR* /*title*/)
+    /* [retval][out] */ BSTR* title)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    *title = BString(m_loader->title()).release();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebDataSource::unreachableURL( 

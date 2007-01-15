@@ -608,9 +608,9 @@ protected:
     COMPtr<IWebUIDelegate> m_uiDelegate;
     COMPtr<IWebUIDelegatePrivate> m_uiDelegatePrivate;
     COMPtr<IWebFormDelegate> m_formDelegate;
+    COMPtr<IWebPolicyDelegate> m_policyDelegate;
     COMPtr<IWebPreferences> m_preferences;
     COMPtr<IWebResourceLoadDelegate> m_resourceLoadDelegate;
-    COMPtr<IWebPolicyDelegate> m_policyDelegate;
     bool m_userAgentOverridden;
     bool m_useBackForwardList;
     WebCore::String m_userAgentCustom;

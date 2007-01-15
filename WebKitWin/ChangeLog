@@ -1,6 +1,35 @@
 2007-01-15  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.
+
+        Loader related improvements.
+        
+        * Interfaces/IWebFrameLoadDelegate.idl:
+        Change method signature to match what we have on Mac more closely.
+        
+        * WebDataSource.cpp:
+        (WebDataSource::pageTitle):
+        Implement.
+        
+        * WebError.cpp: Added.
+        * WebError.h: Added.
+        Add (currently stubbed out) IWebError implementation.
+        
+        * WebFrame.cpp:
+        (WebFrame::dispatchDidCancelClientRedirect):
+        (WebFrame::dispatchWillPerformClientRedirect):
+        (WebFrame::dispatchDidReceiveIcon):
+        (WebFrame::dispatchUnableToImplementPolicy):
+        (WebFrame::dispatchDidFailProvisionalLoad):
+        (WebFrame::dispatchDidFailLoad):
+        Implement these.
+        
+        * WebKit.vcproj/WebKit.vcproj:
+        Add WebError.h and WebError.cpp
+        
+2007-01-15  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
         
         * WebFrame.cpp:
         (WebFrame::postProgressStartedNotification):

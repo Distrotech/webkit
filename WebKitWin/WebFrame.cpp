@@ -34,7 +34,9 @@
 #include "IWebFrameLoadDelegatePrivate.h"
 #include "IWebFormDelegate.h"
 #include "IWebUIDelegatePrivate.h"
+#include "MarshallingHelpers.h"
 #include "WebDocumentLoader.h"
+#include "WebError.h"
 #include "WebMutableURLRequest.h"
 #include "WebEditorClient.h"
 #include "WebFramePolicyListener.h"
@@ -1321,12 +1323,16 @@ void WebFrame::dispatchDidReceiveServerRedirectForProvisionalLoad()
 
 void WebFrame::dispatchDidCancelClientRedirect()
 {
-    LOG_NOIMPL();
+    COMPtr<IWebFrameLoadDelegate> frameLoadDelegate;
+    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)))
+        frameLoadDelegate->didCancelClientRedirectForFrame(d->webView, this);
 }
 
-void WebFrame::dispatchWillPerformClientRedirect(const KURL& /*url*/, double /*delay*/, double /*fireDate*/)
+void WebFrame::dispatchWillPerformClientRedirect(const KURL& url, double delay, double fireDate)
 {
-    LOG_NOIMPL();
+    COMPtr<IWebFrameLoadDelegate> frameLoadDelegate;
+    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)))
+        frameLoadDelegate->willPerformClientRedirectToURL(d->webView, BString(url.url()), delay, MarshallingHelpers::CFAbsoluteTimeToDATE(fireDate), this);
 }
 
 void WebFrame::dispatchDidChangeLocationWithinPage()
@@ -1345,7 +1351,10 @@ void WebFrame::dispatchWillClose()
 
 void WebFrame::dispatchDidReceiveIcon()
 {
-    LOG_NOIMPL();
+    COMPtr<IWebFrameLoadDelegate> frameLoadDelegate;
+    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)))
+        // FIXME: Pass in the right HBITMAP. 
+        frameLoadDelegate->didReceiveIcon(d->webView, 0, this);
 }
 
 void WebFrame::dispatchDidStartProvisionalLoad()
@@ -1757,9 +1766,14 @@ void WebFrame::dispatchDecidePolicyForNavigationAction(FramePolicyFunction funct
     (d->frame->loader()->*function)(PolicyUse);
 }
 
-void WebFrame::dispatchUnableToImplementPolicy(const ResourceError&)
+void WebFrame::dispatchUnableToImplementPolicy(const ResourceError& error)
 {
-    LOG_NOIMPL();
+    COMPtr<IWebPolicyDelegate> policyDelegate;
+    if (SUCCEEDED(d->webView->policyDelegate(&policyDelegate))) {
+        COMPtr<IWebError> webError;
+        webError.adoptRef(WebError::createInstance(error));
+        policyDelegate->unableToImplementPolicyWithError(d->webView, webError.get(), this);
+    }
 }
 
 void WebFrame::download(ResourceHandle*, const ResourceRequest&, const ResourceResponse&)
@@ -1830,20 +1844,24 @@ bool WebFrame::dispatchDidLoadResourceFromMemoryCache(DocumentLoader*, const Res
     return false;
 }
 
-void WebFrame::dispatchDidFailProvisionalLoad(const ResourceError&)
+void WebFrame::dispatchDidFailProvisionalLoad(const ResourceError& error)
 {
     COMPtr<IWebFrameLoadDelegate> frameLoadDelegate;
-    // FIXME: Set the IWebError correctly
-    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) 
-        frameLoadDelegate->didFailProvisionalLoadWithError(d->webView, 0, this);
+    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
+        COMPtr<IWebError> webError;
+        webError.adoptRef(WebError::createInstance(error));
+        frameLoadDelegate->didFailProvisionalLoadWithError(d->webView, webError.get(), this);
+    }
 }
 
-void WebFrame::dispatchDidFailLoad(const ResourceError&)
+void WebFrame::dispatchDidFailLoad(const ResourceError& error)
 {
     COMPtr<IWebFrameLoadDelegate> frameLoadDelegate;
-    // FIXME: Set the IWebError correctly
-    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate)))
-        frameLoadDelegate->didFailLoadWithError(d->webView, 0, this);
+    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
+        COMPtr<IWebError> webError;
+        webError.adoptRef(WebError::createInstance(error));
+        frameLoadDelegate->didFailLoadWithError(d->webView, webError.get(), this);
+    }
 }
 
 Frame* WebFrame::dispatchCreatePage()

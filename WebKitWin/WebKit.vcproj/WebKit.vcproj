@@ -309,6 +309,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\WebError.h"
+				>
+			</File>
+			<File
 				RelativePath="..\WebFrame.h"
 				>
 			</File>
@@ -442,6 +446,10 @@
 			</File>
 			<File
 				RelativePath="..\WebElementPropertyBag.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\WebError.cpp"
 				>
 			</File>
 			<File
