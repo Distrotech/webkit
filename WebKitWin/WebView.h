@@ -254,6 +254,12 @@ public:
         /* [in] */ int cWithPasteboardTypes,
         /* [in] */ IDataObject *pasteboard);
     
+    virtual HRESULT STDMETHODCALLTYPE selectedText(
+        /* [out, retval] */ BSTR* str);
+
+    virtual HRESULT STDMETHODCALLTYPE centerSelectionInVisibleArea(
+        /* [in] */ IUnknown* sender);
+
     virtual HRESULT STDMETHODCALLTYPE moveDragCaretToPoint( 
         /* [in] */ LPPOINT point);
     

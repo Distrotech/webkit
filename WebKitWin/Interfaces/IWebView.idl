@@ -652,6 +652,19 @@ interface IWebView : IUnknown
     HRESULT writeElement([in] IPropertyBag* elementDictionary, [in, size_is(cWithPasteboardTypes)] BSTR* withPasteboardTypes, [in] int cWithPasteboardTypes, [in] IDataObject* pasteboard);
 
     /*!
+        @method selectedText
+        @abstract Returns the selection as a string
+    */
+    HRESULT selectedText([out, retval] BSTR* text);
+
+    /*!
+        @method centerSelectionInVisibleArea
+        @abstract Centers the selected text in the WebView
+        - (void)centerSelectionInVisibleArea:(id)sender;
+    */
+    HRESULT centerSelectionInVisibleArea([in] IUnknown* sender);
+
+    /*!
         @method moveDragCaretToPoint:
         @param point A point in the coordinates of the WebView
         @discussion This method moves the caret that shows where something being dragged will be dropped. It may cause the WebView to scroll

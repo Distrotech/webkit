@@ -1,3 +1,15 @@
+2007-01-14  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Lou.
+
+        Fixed: <rdar://problem/4888908> Find: "Use selection to find" and "Jump to selection" are not implemented
+
+        * Interfaces/IWebView.idl:
+        * WebView.cpp:
+        (WebView::selectedText):
+        (WebView::centerSelectionInVisibleArea):
+        * WebView.h:
+
 2007-01-14  Adam Roben  <aroben@apple.com>
 
         Reviewed by Steve.

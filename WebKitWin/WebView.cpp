@@ -2013,6 +2013,24 @@ HRESULT STDMETHODCALLTYPE WebView::writeElement(
     return E_NOTIMPL;
 }
     
+HRESULT STDMETHODCALLTYPE WebView::selectedText(
+        /* [out, retval] */ BSTR* text)
+{
+    String frameSelectedText = m_mainFrame->impl()->selectedText();
+    *text = SysAllocStringLen(frameSelectedText.characters(), frameSelectedText.length());
+    if (!*text && frameSelectedText.length())
+        return E_OUTOFMEMORY;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebView::centerSelectionInVisibleArea(
+        /* [in] */ IUnknown* /* sender */)
+{
+    m_mainFrame->impl()->revealSelection(RenderLayer::gAlignCenterAlways);
+    return S_OK;
+}
+
+
 HRESULT STDMETHODCALLTYPE WebView::moveDragCaretToPoint( 
         /* [in] */ LPPOINT /*point*/)
 {
