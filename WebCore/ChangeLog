@@ -1,8 +1,13 @@
+2007-01-15  Anders Carlsson  <acarlsson@apple.com>
+
+        Build fix.
+        
+        * WebCore.vcproj/WebCore.vcproj:
+        Add ProgressTracker.[cpp|h]
+
 2007-01-12  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Darin.
-
-        WARNING: NO TEST CASES ADDED OR CHANGED
 
         * loader/win/FrameLoaderWin.cpp:
         (WebCore::FrameLoader::didChangeTitle):
