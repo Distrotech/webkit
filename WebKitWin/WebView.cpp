@@ -60,6 +60,7 @@
 #include <WebCore/PlatformKeyboardEvent.h>
 #include <WebCore/PlatformMouseEvent.h>
 #include <WebCore/PlatformWheelEvent.h>
+#include <WebCore/ProgressTracker.h>
 #include <WebCore/ResourceHandleClient.h>
 #include <WebCore/SelectionController.h>
 #include <WebCore/Settings.h>
@@ -1954,10 +1955,10 @@ HRESULT STDMETHODCALLTYPE WebView::groupName(
 }
     
 HRESULT STDMETHODCALLTYPE WebView::estimatedProgress( 
-        /* [retval][out] */ double* /*estimatedProgress*/)
+        /* [retval][out] */ double* estimatedProgress)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    *estimatedProgress = m_page->progress()->estimatedProgress();
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::isLoading( 

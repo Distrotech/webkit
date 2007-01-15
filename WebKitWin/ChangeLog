@@ -1,6 +1,21 @@
 2007-01-15  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.
+        
+        * WebFrame.cpp:
+        (WebFrame::postProgressStartedNotification):
+        (WebFrame::postProgressEstimateChangedNotification):
+        (WebFrame::postProgressFinishedNotification):
+        * WebFrame.h:
+        Post the correct notifications.
+        
+        * WebView.cpp:
+        (WebView::estimatedProgress):
+        Ask the progress tracker for the estimated progress.
+
+2007-01-15  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
 
         * Interfaces/IWebView.idl:
         Add progress notifications.

@@ -279,6 +279,10 @@ public:
     virtual void dispatchDidReceiveAuthenticationChallenge(WebCore::DocumentLoader*, unsigned long identifier, const WebCore::AuthenticationChallenge&);
     virtual void dispatchDidCancelAuthenticationChallenge(WebCore::DocumentLoader*, unsigned long identifier, const WebCore::AuthenticationChallenge&);
 
+    virtual void postProgressStartedNotification();
+    virtual void postProgressEstimateChangedNotification();
+    virtual void postProgressFinishedNotification();
+
     // WebFrame
     void initWithWebFrameView(IWebFrameView*, IWebView*, WebCore::Page*, WebCore::HTMLFrameOwnerElement*);
     void layoutIfNeeded();
