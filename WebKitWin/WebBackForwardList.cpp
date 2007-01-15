@@ -68,13 +68,6 @@ WebBackForwardList::~WebBackForwardList()
     gClassCount--;
 }
 
-WebBackForwardList* WebBackForwardList::createInstance()
-{
-    WebBackForwardList* instance = new WebBackForwardList(new BackForwardList);
-    instance->AddRef();
-    return instance;
-}
-
 WebBackForwardList* WebBackForwardList::createInstance(PassRefPtr<BackForwardList> backForwardList)
 {
     WebBackForwardList* instance;

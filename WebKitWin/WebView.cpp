@@ -1446,17 +1446,19 @@ HRESULT STDMETHODCALLTYPE WebView::uiDelegate(
 }
 
 HRESULT STDMETHODCALLTYPE WebView::setResourceLoadDelegate( 
-    /* [in] */ IWebResourceLoadDelegate* /*d*/)
+    /* [in] */ IWebResourceLoadDelegate* d)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    m_resourceLoadDelegate = d;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::resourceLoadDelegate( 
-    /* [out][retval] */ IWebResourceLoadDelegate** /*d*/)
+    /* [out][retval] */ IWebResourceLoadDelegate** d)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!m_resourceLoadDelegate)
+        return E_FAIL;
+
+    return m_resourceLoadDelegate.copyRefTo(d);
 }
 
 HRESULT STDMETHODCALLTYPE WebView::setDownloadDelegate( 
@@ -1490,17 +1492,18 @@ HRESULT STDMETHODCALLTYPE WebView::frameLoadDelegate(
 }
 
 HRESULT STDMETHODCALLTYPE WebView::setPolicyDelegate( 
-    /* [in] */ IWebPolicyDelegate* /*d*/)
+    /* [in] */ IWebPolicyDelegate* d)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    m_policyDelegate = d;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::policyDelegate( 
-    /* [out][retval] */ IWebPolicyDelegate** /*d*/)
+    /* [out][retval] */ IWebPolicyDelegate** d)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!m_policyDelegate)
+        return E_FAIL;
+    return m_policyDelegate.copyRefTo(d);
 }
 
 HRESULT STDMETHODCALLTYPE WebView::mainFrame( 

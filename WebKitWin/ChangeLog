@@ -1,3 +1,32 @@
+2007-01-15  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        Call resource load delegate methods.
+        
+        * Interfaces/IWebResourceLoadDelegate.idl:
+        Use unsigned long instead of UINT.
+        
+        * WebBackForwardList.cpp:
+        * WebBackForwardList.h:
+        Get rid of the createInstance method that takes no arguments.
+
+        * WebFrame.cpp:
+        (WebFrame::assignIdentifierToInitialRequest):
+        (WebFrame::dispatchDidReceiveResponse):
+        (WebFrame::dispatchDidReceiveContentLength):
+        (WebFrame::dispatchDidFinishLoading):
+        (WebFrame::dispatchDidFailLoading):
+        Call the right resource load delegate methods.
+        
+        * WebView.cpp:
+        (WebView::setResourceLoadDelegate):
+        (WebView::resourceLoadDelegate):
+        (WebView::setPolicyDelegate):
+        (WebView::policyDelegate):
+        * WebView.h:
+        Add getters and setters for the resource load delegate and the policy delegate.
+
 2007-01-14  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by Lou.

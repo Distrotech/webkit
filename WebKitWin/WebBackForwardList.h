@@ -41,7 +41,6 @@ namespace WebCore {
 class WebBackForwardList : public IWebBackForwardList, IWebBackForwardListPrivate
 {
 public:
-    static WebBackForwardList* createInstance();
     static WebBackForwardList* createInstance(PassRefPtr<WebCore::BackForwardList>);
 protected:
     WebBackForwardList(PassRefPtr<WebCore::BackForwardList>);

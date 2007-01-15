@@ -1773,9 +1773,15 @@ bool WebFrame::willUseArchive(ResourceLoader*, const ResourceRequest&, const KUR
     return false;
 }
 
-void WebFrame::assignIdentifierToInitialRequest(unsigned long, DocumentLoader*, const ResourceRequest&)
+void WebFrame::assignIdentifierToInitialRequest(unsigned long identifier, DocumentLoader* loader, const ResourceRequest& request)
 {
-    LOG_NOIMPL();
+    COMPtr<IWebResourceLoadDelegate> resourceLoadDelegate;
+    if (SUCCEEDED(d->webView->resourceLoadDelegate(&resourceLoadDelegate))) {
+        COMPtr<IWebURLRequest> webURLRequest;
+        webURLRequest.adoptRef(WebMutableURLRequest::createInstance(request));
+
+        resourceLoadDelegate->identifierForInitialRequest(d->webView, webURLRequest.get(), getWebDataSource(loader), identifier);
+    }
 }
 
 void WebFrame::dispatchWillSendRequest(DocumentLoader*, unsigned long, ResourceRequest&, const ResourceResponse&)
@@ -1783,24 +1789,39 @@ void WebFrame::dispatchWillSendRequest(DocumentLoader*, unsigned long, ResourceR
     LOG_NOIMPL();
 }
 
-void WebFrame::dispatchDidReceiveResponse(DocumentLoader*, unsigned long, const ResourceResponse&)
+void WebFrame::dispatchDidReceiveResponse(DocumentLoader* loader, unsigned long identifier, const ResourceResponse& response)
 {
-    LOG_NOIMPL();
+    COMPtr<IWebResourceLoadDelegate> resourceLoadDelegate;
+    if (SUCCEEDED(d->webView->resourceLoadDelegate(&resourceLoadDelegate))) {
+        COMPtr<IWebURLResponse> webURLResponse;
+        webURLResponse.adoptRef(WebURLResponse::createInstance(response));
+
+        resourceLoadDelegate->didReceiveResponse(d->webView, identifier, webURLResponse.get(), getWebDataSource(loader));
+    }
 }
 
-void WebFrame::dispatchDidReceiveContentLength(DocumentLoader*, unsigned long, int)
+void WebFrame::dispatchDidReceiveContentLength(DocumentLoader* loader, unsigned long identifier, int length)
 {
-    LOG_NOIMPL();
+    COMPtr<IWebResourceLoadDelegate> resourceLoadDelegate;
+    if (SUCCEEDED(d->webView->resourceLoadDelegate(&resourceLoadDelegate)))
+        resourceLoadDelegate->didReceiveContentLength(d->webView, identifier, length, getWebDataSource(loader));
 }
 
-void WebFrame::dispatchDidFinishLoading(DocumentLoader*, unsigned long)
+void WebFrame::dispatchDidFinishLoading(DocumentLoader* loader, unsigned long identifier)
 {
-    LOG_NOIMPL();
+    COMPtr<IWebResourceLoadDelegate> resourceLoadDelegate;
+    if (SUCCEEDED(d->webView->resourceLoadDelegate(&resourceLoadDelegate)))
+        resourceLoadDelegate->didFinishLoadingFromDataSource(d->webView, identifier, getWebDataSource(loader));
 }
 
-void WebFrame::dispatchDidFailLoading(DocumentLoader*, unsigned long, const ResourceError&)
+void WebFrame::dispatchDidFailLoading(DocumentLoader* loader, unsigned long identifier, const ResourceError&)
 {
-    LOG_NOIMPL();
+    COMPtr<IWebResourceLoadDelegate> resourceLoadDelegate;
+    if (SUCCEEDED(d->webView->resourceLoadDelegate(&resourceLoadDelegate))) {
+        COMPtr<IWebError> webError;
+        // FIXME: Assign error
+        resourceLoadDelegate->didFailLoadingWithError(d->webView, identifier, webError.get(), getWebDataSource(loader));
+    }
 }
 
 bool WebFrame::dispatchDidLoadResourceFromMemoryCache(DocumentLoader*, const ResourceRequest&, const ResourceResponse&, int)
