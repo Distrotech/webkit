@@ -51,6 +51,10 @@ cpp_quote(" */")
 cpp_quote("/* identifiers for commands that can be called by the webview's frame */")
 cpp_quote("enum WebViewCmd { Cut = 100, Copy, Paste, ForwardDelete, SelectAll, Undo, Redo };")
 
+cpp_quote("#define WebViewProgressStartedNotification TEXT(\"WebProgressStartedNotification\")")
+cpp_quote("#define WebViewProgressEstimateChangedNotification TEXT(\"WebProgressEstimateChangedNotification\")")
+cpp_quote("#define WebViewProgressFinishedNotification TEXT(\"WebProgressFinishedNotification\")")
+
 import "oaidl.idl";
 import "ocidl.idl";
 import "IWebUIDelegate.idl";

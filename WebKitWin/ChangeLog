@@ -2,6 +2,13 @@
 
         Reviewed by Adam.
 
+        * Interfaces/IWebView.idl:
+        Add progress notifications.
+
+2007-01-15  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
         Call resource load delegate methods.
         
         * Interfaces/IWebResourceLoadDelegate.idl:
