@@ -591,7 +591,93 @@ bool WebView::handleContextMenuEvent(WPARAM wParam, LPARAM lParam)
     lParam = MAKELPARAM(coords.x, coords.y);
 
     PlatformMouseEvent mouseEvent(m_viewWindow, WM_RBUTTONUP, wParam, lParam);
-    return m_page->mainFrame()->eventHandler()->sendContextMenuEvent(mouseEvent);
+    bool handledEvent = m_page->mainFrame()->eventHandler()->sendContextMenuEvent(mouseEvent);
+    if (!handledEvent)
+        return false;
+
+    // Show the menu
+    ContextMenu* coreMenu = m_page->contextMenuController()->contextMenu();
+    if (!coreMenu)
+        return false;
+
+    Node* node = coreMenu->hitTestResult().innerNonSharedNode();
+    if (!node)
+        return false;
+
+    Frame* frame = node->document()->frame();
+    if (!frame)
+        return false;
+
+    FrameView* view = frame->view();
+    if (!view)
+        return false;
+
+    POINT point(view->contentsToWindow(coreMenu->hitTestResult().point()));
+
+    // Translate the point to screen coordinates
+    if (!::ClientToScreen(view->containingWindow(), &point))
+        return false;
+
+    BOOL hasCustomMenus = false;
+    if (m_uiDelegate)
+        m_uiDelegate->hasCustomMenuImplementation(&hasCustomMenus);
+
+    if (hasCustomMenus)
+        m_uiDelegate->trackCustomPopupMenu((IWebView*)this, coreMenu->platformDescription(), &point);
+    else {
+        // Surprisingly, TPM_RIGHTBUTTON means that items are selectable with either the right OR left mouse button
+        UINT flags = TPM_RIGHTBUTTON | TPM_TOPALIGN | TPM_VERPOSANIMATION | TPM_HORIZONTAL
+            | TPM_LEFTALIGN | TPM_HORPOSANIMATION;
+        ::TrackPopupMenuEx(coreMenu->platformDescription(), flags, point.x, point.y, view->containingWindow(), 0);
+    }
+
+    return true;
+}
+
+bool WebView::onMeasureItem(WPARAM /*wParam*/, LPARAM lParam)
+{
+    if (!m_uiDelegate)
+        return false;
+
+    BOOL hasCustomMenus = false;
+    m_uiDelegate->hasCustomMenuImplementation(&hasCustomMenus);
+    if (!hasCustomMenus)
+        return false;
+
+    m_uiDelegate->measureCustomMenuItem((IWebView*)this, (void*)lParam);
+    return true;
+}
+
+bool WebView::onDrawItem(WPARAM /*wParam*/, LPARAM lParam)
+{
+    if (!m_uiDelegate)
+        return false;
+
+    BOOL hasCustomMenus = false;
+    m_uiDelegate->hasCustomMenuImplementation(&hasCustomMenus);
+    if (!hasCustomMenus)
+        return false;
+
+    m_uiDelegate->drawCustomMenuItem((IWebView*)this, (void*)lParam);
+    return true;
+}
+
+bool WebView::onUninitMenuPopup(WPARAM wParam, LPARAM /*lParam*/)
+{
+    if (!m_uiDelegate)
+        return false;
+
+    HMENU menu = (HMENU)wParam;
+    if (!menu)
+        return false;
+
+    BOOL hasCustomMenus = false;
+    m_uiDelegate->hasCustomMenuImplementation(&hasCustomMenus);
+    if (!hasCustomMenus)
+        return false;
+
+    m_uiDelegate->cleanUpCustomMenuDrawingData((IWebView*)this, menu);
+    return true;
 }
 
 void WebView::performContextMenuAction(WPARAM wParam, LPARAM /*lParam*/)
@@ -1025,6 +1111,15 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             break;
         case WM_CONTEXTMENU:
             handled = webView->handleContextMenuEvent(wParam, lParam);
+            break;
+        case WM_MEASUREITEM:
+            handled = webView->onMeasureItem(wParam, lParam);
+            break;
+        case WM_DRAWITEM:
+            handled = webView->onDrawItem(wParam, lParam);
+            break;
+        case WM_UNINITMENUPOPUP:
+            handled = webView->onUninitMenuPopup(wParam, lParam);
             break;
         case WM_XP_THEMECHANGED:
             if (mainFrameImpl) {

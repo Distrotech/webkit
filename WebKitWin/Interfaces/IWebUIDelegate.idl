@@ -587,6 +587,45 @@ interface IWebUIDelegate : IUnknown
     */
     HRESULT contextMenuItemSelected([in] IWebView* sender, [in] void* item, [in] IPropertyBag* element);
 
+    /*
+        @method hasCustomMenuImplementation:
+        @abstract Returns whether the application uses the following functions to create a custom menu impementation.
+    */
+    HRESULT hasCustomMenuImplementation([out, retval] BOOL* hasCustomMenus);
+    
+    /*
+        @method webView:trackCutsomPopupMenu
+        @abstract Adds custom draw data to the menu items and calls a custom trackPopupMenu.
+        @param sender The WebView sending the delegate method.
+        @param menu The menu that we want to pop up.
+        @param point The point associated with the context menu event in the coordinates of the WebView
+    */
+    HRESULT trackCustomPopupMenu([in] IWebView* sender, [in] HMENU menu, [in] LPPOINT point);
+
+    /*
+        @method webView:measureCustomMenuItem
+        @abstract This is called when the WM_MEASUREITEM command is received to measure the custom menu items
+        @param sender The WebView sending the delegate method.
+        @param measureItem The LPMEASUREITEMSTRUCT associated with the item.
+    */
+    HRESULT measureCustomMenuItem([in] IWebView* sender, [in] void* measureItem);
+
+    /*
+        @method webView:drawCustomMenuItem
+        @abstract This is called when the WM_DRAWITEM command is received to draw the custom menu item
+        @param sender The WebView sending the delegate method.
+        @param drawItem The LPDRAWITEMSTRUCT associated with the item.
+    */
+    HRESULT drawCustomMenuItem([in] IWebView* sender, [in] void* drawItem);
+
+    /*
+        @method webView:cleanUpCustomMenuDrawingData
+        @abstract Clean up any custom data added to the menu items
+        @param sender The WebView sending the delegate method.
+        @param menu The cutsom menu to clean up.
+    */
+    HRESULT cleanUpCustomMenuDrawingData([in] IWebView* sender, [in] HMENU menu);
+
     /*!
         @method webView:canTakeFocus:
         @abstract Informs whether focus can be transferred out of the WebView in the specified direction

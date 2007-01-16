@@ -122,41 +122,4 @@ HMENU ContextMenu::platformDescription() const
     return m_platformDescription;
 }
 
-void ContextMenu::show()
-{
-    if (!m_platformDescription)
-        return;
-
-    Node* node = m_hitTestResult.innerNonSharedNode();
-    if (!node)
-        return;
-
-    Frame* frame = node->document()->frame();
-    if (!frame)
-        return;
-
-    FrameView* view = frame->view();
-    if (!view)
-        return;
-
-    POINT point(view->contentsToWindow(m_hitTestResult.point()));
-
-    // Translate the point to screen coordinates
-    if (!::ClientToScreen(view->containingWindow(), &point))
-        return;
-
-    // Surprisingly, TPM_RIGHTBUTTON means that items are selectable with either the right OR left mouse button
-    UINT flags = TPM_RIGHTBUTTON | TPM_TOPALIGN | TPM_VERPOSANIMATION | TPM_HORIZONTAL;
-    if (::GetSystemMetrics(SM_MENUDROPALIGNMENT))
-        flags |= TPM_RIGHTALIGN | TPM_HORNEGANIMATION;
-    else
-        flags |= TPM_LEFTALIGN | TPM_HORPOSANIMATION;
-
-    ::TrackPopupMenuEx(m_platformDescription, flags, point.x, point.y, view->containingWindow(), 0);
-}
-
-void ContextMenu::hide()
-{
-}
-
 }

@@ -104,19 +104,11 @@ LPMENUITEMINFO ContextMenuItem::releasePlatformDescription()
 ContextMenuItemType ContextMenuItem::type() const
 {
     ContextMenuItemType type = ActionType;
-   
-    switch (m_platformDescription->fType) {
-        case MFT_STRING:
-            if (m_platformDescription->hSubMenu)
-                type = SubmenuType;
-            break;
-        case MFT_SEPARATOR:
-            type = SeparatorType;
-            break;
-        default:
-            ASSERT_NOT_REACHED();
-            break;
-    }
+
+    if ((m_platformDescription->fType & MFT_STRING) && m_platformDescription->hSubMenu)
+        type = SubmenuType;
+    else if (m_platformDescription->fType & MFT_SEPARATOR)
+        type = SeparatorType;
 
     return type;
 }

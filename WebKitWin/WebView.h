@@ -564,6 +564,9 @@ public:
     bool handleMouseEvent(UINT, WPARAM, LPARAM);
     void setMouseActivated(bool flag) { m_mouseActivated = flag; }
     bool handleContextMenuEvent(WPARAM, LPARAM);
+    bool onMeasureItem(WPARAM, LPARAM);
+    bool onDrawItem(WPARAM, LPARAM);
+    bool onUninitMenuPopup(WPARAM, LPARAM);
     void performContextMenuAction(WPARAM, LPARAM);
     bool mouseWheel(WPARAM, LPARAM);
     bool execCommand(WPARAM wParam, LPARAM lParam);
