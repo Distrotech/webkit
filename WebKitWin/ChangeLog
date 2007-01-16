@@ -1,6 +1,15 @@
 2007-01-15  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.
+        
+        Fix: <rdar://problem/4925504> ASSERT when finished running iBench HTML Load Speed
+
+        * WebFrame.cpp:
+        (WebFrame::cancelledError): Return a pseudo-CFNet cancelled error instead of a null ResourceError.
+
+2007-01-15  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
 
         <rdar://problem/4889203>
         Implement WebFrame::canHandleRequest.

@@ -1666,10 +1666,11 @@ void WebFrame::setMainDocumentError(DocumentLoader*, const ResourceError&)
     LOG_NOIMPL();
 }
 
-ResourceError WebFrame::cancelledError(const ResourceRequest&)
+ResourceError WebFrame::cancelledError(const ResourceRequest& request)
 {
-    LOG_NOIMPL();
-    return ResourceError();
+    // FIXME: Need ChickenCat to include CFNetwork/CFURLError.h to get these values
+    // Alternatively, we could create our own error domain/codes.
+    return ResourceError("NSURLErrorDomain", -999, request.url().url(), String());
 }
 
 ResourceError WebFrame::cannotShowURLError(const ResourceRequest&)
