@@ -588,6 +588,7 @@ public:
     WebFrame* topLevelFrame() { return m_mainFrame; }
     const WebCore::String& userAgentForKURL(const WebCore::KURL& url);
 
+    static bool canHandleRequest(const WebCore::ResourceRequest&);
 private:
     bool handleEditingKeyboardEvent(WebCore::FrameWin*, const WebCore::PlatformKeyboardEvent&);
 

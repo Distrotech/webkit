@@ -160,10 +160,11 @@ HRESULT STDMETHODCALLTYPE WebDataSource::representation(
 }
 
 HRESULT STDMETHODCALLTYPE WebDataSource::webFrame( 
-    /* [retval][out] */ IWebFrame** /*frame*/)
+    /* [retval][out] */ IWebFrame** frame)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    *frame = static_cast<WebFrame*>(m_loader->frameLoader()->client());
+    (*frame)->AddRef();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebDataSource::initialRequest( 

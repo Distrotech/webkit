@@ -67,6 +67,7 @@
 #include <WebCore/TypingCommand.h>
 #pragma warning(pop)
 #include <JavaScriptCore/value.h>
+#include <CFNetwork/CFURLProtocolPriv.h>
 #include <atldef.h>
 #include <tchar.h>
 #include <windowsx.h>
@@ -424,6 +425,15 @@ void WebView::closeWindow()
     COMPtr<IWebUIDelegate> ui;
     if (SUCCEEDED(uiDelegate(&ui)))
         ui->webViewClose(this);
+}
+
+bool WebView::canHandleRequest(const WebCore::ResourceRequest& request)
+{
+    if (CFURLProtocolCanHandleRequest(request.cfURLRequest()))
+        return true;
+
+    // FIXME: Mac WebKit calls _representationExistsForURLScheme here
+    return false;
 }
 
 Vector<WebCore::IntRect> WebView::computePageRects(HDC printDC)

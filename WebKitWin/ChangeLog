@@ -2,6 +2,24 @@
 
         Reviewed by Adam.
 
+        <rdar://problem/4889203>
+        Implement WebFrame::canHandleRequest.
+        
+        * WebDataSource.cpp:
+        (WebDataSource::webFrame):
+        Implement webFrame accessor.
+        
+        * WebFrame.cpp:
+        (WebFrame::canHandleRequest):
+        * WebView.cpp:
+        (WebView::canHandleRequest):
+        * WebView.h:
+        Implement canHandleRequest.
+
+2007-01-15  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
         Loader related improvements.
         
         * Interfaces/IWebFrameLoadDelegate.idl:
