@@ -30,10 +30,13 @@
 #include "ResourceHandleClient.h"
 #include "ResourceHandleInternal.h"
 
+#include "AuthenticationCF.h"
+#include "AuthenticationChallenge.h"
 #include "DocLoader.h"
 #include "Frame.h"
 #include "FrameLoader.h"
 #include "Logging.h"
+#include "NotImplemented.h"
 #include "ResourceError.h"
 #include "ResourceResponse.h"
 
@@ -122,9 +125,11 @@ CFCachedURLResponseRef willCacheResponse(CFURLConnectionRef conn, CFCachedURLRes
 
 void didReceiveChallenge(CFURLConnectionRef conn, CFURLAuthChallengeRef challenge, const void* clientInfo)
 {
-    ResourceHandle* job = (ResourceHandle*)clientInfo;
+    ResourceHandle* handle = (ResourceHandle*)clientInfo;
+    ASSERT(handle);
+    LOG(Network, "CFNet - didReceiveChallenge(conn=%p, handle=%p (%s)", conn, handle, handle->url().url().ascii());
 
-    // Do nothing right now
+    handle->didReceiveAuthenticationChallenge(AuthenticationChallenge(challenge, handle));
 }
 
 void addHeadersFromHashMap(CFMutableURLRequestRef request, const HTTPHeaderMap& requestHeaders) 
@@ -243,6 +248,39 @@ PassRefPtr<SharedBuffer> ResourceHandle::bufferedData()
 bool ResourceHandle::supportsBufferedData()
 {
     return false;
+}
+
+void ResourceHandle::didReceiveAuthenticationChallenge(const AuthenticationChallenge& challenge)
+{
+    LOG(Network, "CFNet - didReceiveAuthenticationChallenge()");
+    ASSERT(!d->m_currentCFChallenge);
+    ASSERT(d->m_currentWebChallenge.isNull());
+    // Since CFURLConnection networking relies on keeping a reference to the original CFURLAuthChallengeRef,
+    // we make sure that is actually present
+    ASSERT(challenge.cfURLAuthChallengeRef());
+        
+    d->m_currentCFChallenge = challenge.cfURLAuthChallengeRef();
+    d->m_currentWebChallenge = AuthenticationChallenge(d->m_currentCFChallenge, this);
+    
+    client()->didReceiveAuthenticationChallenge(this, d->m_currentWebChallenge);
+}
+
+void ResourceHandle::receivedCredential(const AuthenticationChallenge&, const Credential&)
+{
+    LOG_NOIMPL();
+    LOG(Network, "CFNet - receivedCredential()");
+}
+
+void ResourceHandle::receivedRequestToContinueWithoutCredential(const AuthenticationChallenge&)
+{
+    LOG_NOIMPL();
+    LOG(Network, "CFNet - receivedRequestToContinueWithoutCredential()");
+}
+
+void ResourceHandle::receivedCancellation(const AuthenticationChallenge&)
+{
+    LOG_NOIMPL();
+    LOG(Network, "CFNet - receivedCancellation()");
 }
 
 } // namespace WebCore

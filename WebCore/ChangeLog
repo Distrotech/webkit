@@ -1,3 +1,27 @@
+2007-01-15  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Adam
+
+        Hook up AuthenticationChallenge to CF network.  
+        Call up through appropriate client methods through to WebFrame (FrameLoaderClient) at
+        which point my upcoming implementation for the IWebURL<auth> classes will be used
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/network/cf/AuthenticationCF.cpp: Added.
+        (WebCore::AuthenticationChallenge::AuthenticationChallenge):
+        (WebCore::createCF):
+        (WebCore::core):
+        * platform/network/cf/AuthenticationCF.h: Added.
+        * platform/network/cf/ResourceErrorCF.cpp: Added.
+        (WebCore::ResourceError::ResourceError):
+        (WebCore::ResourceError::operator CFStreamError):
+        * platform/network/cf/ResourceHandleCFNet.cpp:
+        (WebCore::didReceiveChallenge):
+        (WebCore::ResourceHandle::didReceiveAuthenticationChallenge):
+        (WebCore::ResourceHandle::receivedCredential):
+        (WebCore::ResourceHandle::receivedRequestToContinueWithoutCredential):
+        (WebCore::ResourceHandle::receivedCancellation):
+
 2007-01-15  Anders Carlsson  <acarlsson@apple.com>
 
         Build fix.

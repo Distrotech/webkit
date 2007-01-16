@@ -3595,11 +3595,23 @@
 					Name="cf"
 					>
 					<File
+						RelativePath="..\platform\network\cf\AuthenticationCF.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\platform\network\cf\AuthenticationCF.h"
+						>
+					</File>
+					<File
 						RelativePath="..\platform\network\cf\FormDataStreamCFNet.cpp"
 						>
 					</File>
 					<File
 						RelativePath="..\platform\network\cf\FormDataStreamCFNet.h"
+						>
+					</File>
+					<File
+						RelativePath="..\platform\network\cf\ResourceErrorCF.cpp"
 						>
 					</File>
 					<File
