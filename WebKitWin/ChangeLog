@@ -1,3 +1,14 @@
+2007-01-16  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Lou.
+
+        Change version numbering scheme for files from the form 3.0.521.32
+        to the form 3.521.32.11.
+        
+        This will fix our upgrade installer logic.
+
+        * WebKit.vcproj/WebKit.rc:
+
 2007-01-15  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.

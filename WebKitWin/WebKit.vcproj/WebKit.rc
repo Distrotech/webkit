@@ -59,8 +59,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION __VERSION_MAJOR__,__VERSION_MINOR__,__BUILD_NUMBER_MAJOR__,__BUILD_NUMBER_MINOR__
- PRODUCTVERSION __VERSION_MAJOR__,__VERSION_MINOR__,__BUILD_NUMBER_MAJOR__,__BUILD_NUMBER_MINOR__
+ FILEVERSION __VERSION_MAJOR__,__BUILD_NUMBER_MAJOR__,__BUILD_NUMBER_MINOR__,__BUILD_NUMBER_VARIANT__
+ PRODUCTVERSION __VERSION_MAJOR__,__VERSION_MINOR__,0,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -77,9 +77,9 @@ BEGIN
         BEGIN
             VALUE "FileDescription", "WebKit Dynamic Link Library"
             VALUE "FileVersion", __VERSION_TEXT__
-            VALUE "CompanyName", "Apple Computer, Inc."
+            VALUE "CompanyName", "Apple Inc."
             VALUE "InternalName", "WebKit"
-            VALUE "LegalCopyright", "Copyright Apple Computer, Inc. 2006"
+            VALUE "LegalCopyright", "Copyright Apple Inc. 2006, 2007"
             VALUE "OriginalFilename", "WebKit.dll"
             VALUE "ProductName", " WebKit"
             VALUE "ProductVersion", __BUILD_NUMBER_SHORT__
