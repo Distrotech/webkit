@@ -47,6 +47,7 @@
 #include "WebView.h"
 #include "WebDataSource.h"
 #include "WebHistoryItem.h"
+#include "WebURLAuthenticationChallenge.h"
 #include "WebURLResponse.h"
 #pragma warning( push, 0 )
 #include <WebCore/AuthenticationChallenge.h>
@@ -1926,12 +1927,30 @@ void WebFrame::startDownload(const ResourceRequest&)
     LOG_NOIMPL();
 }
 
-void WebFrame::dispatchDidReceiveAuthenticationChallenge(DocumentLoader*, unsigned long, const AuthenticationChallenge&)
+void WebFrame::dispatchDidReceiveAuthenticationChallenge(DocumentLoader* loader, unsigned long identifier, const AuthenticationChallenge& challenge)
 {
-    LOG_NOIMPL();
+    ASSERT(challenge.sourceHandle());
+
+    COMPtr<IWebResourceLoadDelegate> resourceLoadDelegate;
+    if (SUCCEEDED(d->webView->resourceLoadDelegate(&resourceLoadDelegate))) {
+        COMPtr<IWebURLAuthenticationChallenge> webChallenge = WebURLAuthenticationChallenge::createInstance(challenge);
+
+        if (SUCCEEDED(resourceLoadDelegate->didReceiveAuthenticationChallenge(d->webView, identifier, webChallenge.get(), getWebDataSource(loader))))
+            return;
+    }
+
+    // If the ResourceLoadDelegate doesn't exist or fails to handle the call, we tell the ResourceHandle
+    // to continue without credential - this is the best approximation of Mac behavior
+    challenge.sourceHandle()->receivedRequestToContinueWithoutCredential(challenge);
 }
 
-void WebFrame::dispatchDidCancelAuthenticationChallenge(DocumentLoader*, unsigned long, const AuthenticationChallenge&)
+void WebFrame::dispatchDidCancelAuthenticationChallenge(DocumentLoader* loader, unsigned long identifier, const AuthenticationChallenge& challenge)
 {
-    LOG_NOIMPL();
+    COMPtr<IWebResourceLoadDelegate> resourceLoadDelegate;
+    if (SUCCEEDED(d->webView->resourceLoadDelegate(&resourceLoadDelegate))) {
+        COMPtr<IWebURLAuthenticationChallenge> webChallenge = WebURLAuthenticationChallenge::createInstance(challenge);
+
+        if (SUCCEEDED(resourceLoadDelegate->didCancelAuthenticationChallenge(d->webView, identifier, webChallenge.get(), getWebDataSource(loader))))
+            return;
+    }
 }

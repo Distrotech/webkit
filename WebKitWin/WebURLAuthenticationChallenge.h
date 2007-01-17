@@ -35,7 +35,7 @@
 // {FD3B2381-0BB6-4b59-AF09-0E599C8901CF}
 DEFINE_GUID(IID_WebURLAuthenticationChallenge, 0xfd3b2381, 0xbb6, 0x4b59, 0xaf, 0x9, 0xe, 0x59, 0x9c, 0x89, 0x1, 0xcf);
 
-class WebURLAuthenticationChallenge : IWebURLAuthenticationChallenge
+class WebURLAuthenticationChallenge : public IWebURLAuthenticationChallenge
 {
 public:
     static WebURLAuthenticationChallenge* createInstance();

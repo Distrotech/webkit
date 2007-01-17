@@ -265,22 +265,41 @@ void ResourceHandle::didReceiveAuthenticationChallenge(const AuthenticationChall
     client()->didReceiveAuthenticationChallenge(this, d->m_currentWebChallenge);
 }
 
-void ResourceHandle::receivedCredential(const AuthenticationChallenge&, const Credential&)
+void ResourceHandle::receivedCredential(const AuthenticationChallenge& challenge, const Credential& credential)
 {
-    LOG_NOIMPL();
     LOG(Network, "CFNet - receivedCredential()");
+    ASSERT(!challenge.isNull());
+    ASSERT(challenge.cfURLAuthChallengeRef());
+    if (challenge != d->m_currentWebChallenge)
+        return;
+
+    CFURLCredentialRef cfCredential = createCF(credential);
+    CFURLConnectionUseCredential(d->m_connection, cfCredential, challenge.cfURLAuthChallengeRef());
+    CFRelease(cfCredential);
+
+    clearAuthentication();
 }
 
-void ResourceHandle::receivedRequestToContinueWithoutCredential(const AuthenticationChallenge&)
+void ResourceHandle::receivedRequestToContinueWithoutCredential(const AuthenticationChallenge& challenge)
 {
-    LOG_NOIMPL();
     LOG(Network, "CFNet - receivedRequestToContinueWithoutCredential()");
+    ASSERT(!challenge.isNull());
+    ASSERT(challenge.cfURLAuthChallengeRef());
+    if (challenge != d->m_currentWebChallenge)
+        return;
+
+    CFURLConnectionUseCredential(d->m_connection, 0, challenge.cfURLAuthChallengeRef());
+
+    clearAuthentication();
 }
 
-void ResourceHandle::receivedCancellation(const AuthenticationChallenge&)
+void ResourceHandle::receivedCancellation(const AuthenticationChallenge& challenge)
 {
-    LOG_NOIMPL();
     LOG(Network, "CFNet - receivedCancellation()");
+    if (challenge != d->m_currentWebChallenge)
+        return;
+
+    client()->receivedCancellation(this, challenge);
 }
 
 } // namespace WebCore

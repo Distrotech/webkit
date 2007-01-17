@@ -1,3 +1,17 @@
+2007-01-17  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Maciej
+
+        Final hookup of HTTP Auth plumbing - have the ResourceHandle actually call into
+        CFNetwork for HTTP Auth.
+        
+        Also, deal with svn:eol-style issues on another batch of files that didn't have it set
+
+        * platform/network/cf/ResourceHandleCFNet.cpp:
+        (WebCore::ResourceHandle::receivedCredential):  Call into CFNetwork
+        (WebCore::ResourceHandle::receivedRequestToContinueWithoutCredential):  Ditto
+        (WebCore::ResourceHandle::receivedCancellation):  Copy Mac behavior by calling cancel on the handle
+
 2007-01-16  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Anders

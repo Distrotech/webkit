@@ -1,5 +1,18 @@
 2007-01-17  Brady Eidson  <beidson@apple.com>
 
+        Reviewed by Maciej
+
+        Final hookup of HTTP Auth plumbing
+        
+        * WebFrame.cpp:
+        (WebFrame::dispatchDidReceiveAuthenticationChallenge): Call to the ResourceLoadDelegate so the app 
+          can handle the Auth request.  Fail gracefully if the delegate doesn't exist or fails
+        (WebFrame::dispatchDidCancelAuthenticationChallenge):  Call to the Delegate so the app can cancel
+          an in-progress challenge
+        * WebURLAuthenticationChallenge.h:
+
+2007-01-17  Brady Eidson  <beidson@apple.com>
+
         Reviewed by Steve Falkenburg
 
         Next round of plumbing for HTTP Auth, or as I like to call it:
