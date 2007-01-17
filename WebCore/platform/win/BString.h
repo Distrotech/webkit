@@ -50,6 +50,13 @@ namespace WebCore {
         BSTR m_bstr;
     };
 
+    bool operator ==(const BString&, const BString&);
+    bool operator !=(const BString&, const BString&);
+    bool operator ==(const BString&, BSTR);
+    bool operator !=(const BString&, BSTR);
+    bool operator ==(BSTR, const BString&);
+    bool operator !=(BSTR, const BString&);
+
 }
 
 #endif

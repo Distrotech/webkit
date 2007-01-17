@@ -27,6 +27,7 @@
 #include "BString.h"
 
 #include "PlatformString.h"
+#include <tchar.h>
 #include <windows.h>
 
 namespace WebCore {
@@ -75,6 +76,42 @@ BString& BString::operator=(const BString& other)
             m_bstr = SysAllocString(m_bstr);
     }
     return *this;
+}
+
+bool operator ==(const BString& a, const BString& b)
+{
+    if (SysStringLen((BSTR)a) != SysStringLen((BSTR)b))
+        return false;
+    return !_tcscmp((BSTR)a, (BSTR)b);
+}
+
+bool operator !=(const BString& a, const BString& b)
+{
+    return !(a==b);
+}
+
+bool operator ==(const BString& a, BSTR b)
+{
+    if (SysStringLen((BSTR)a) != SysStringLen(b))
+        return false;
+    return !_tcscmp((BSTR)a, b);
+}
+
+bool operator !=(const BString& a, BSTR b)
+{
+    return !(a==b);
+}
+
+bool operator ==(BSTR a, const BString& b)
+{
+    if (SysStringLen(a) != SysStringLen((BSTR)b))
+        return false;
+    return !_tcscmp(a, (BSTR)b);
+}
+
+bool operator !=(BSTR a, const BString& b)
+{
+    return !(a==b);
 }
 
 }
