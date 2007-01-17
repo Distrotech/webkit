@@ -1,5 +1,16 @@
 2007-01-16  Brady Eidson  <beidson@apple.com>
 
+        Reviewed by Anders
+
+        Futher improvements/bug fixes to BString
+
+        * platform/win/BString.cpp:
+        (WebCore::BString::BString):
+        (WebCore::BString::operator=):
+        * platform/win/BString.h:
+
+2007-01-16  Brady Eidson  <beidson@apple.com>
+
         Reviewed by Ada, Adam, and Anders oh my!
 
         Add handle ==/!= operators to BString

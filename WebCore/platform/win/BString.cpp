@@ -53,6 +53,14 @@ BString::BString(const String& s)
         m_bstr = SysAllocStringLen(s.characters(), s.length());
 }
 
+BString::BString(BSTR bstr)
+{
+    if (!bstr)
+        m_bstr = 0;
+    else
+        m_bstr = SysAllocStringLen(bstr, SysStringLen(bstr));
+}
+
 BString::~BString()
 {
     SysFreeString(m_bstr);
@@ -63,7 +71,7 @@ BString::BString(const BString& other)
     if (!other.m_bstr)
         m_bstr = 0;
     else
-        m_bstr = SysAllocString(m_bstr);
+        m_bstr = SysAllocStringLen(other.m_bstr, SysStringLen(other.m_bstr));
 }
 
 BString& BString::operator=(const BString& other)
@@ -73,7 +81,7 @@ BString& BString::operator=(const BString& other)
         if (!other.m_bstr)
             m_bstr = 0;
         else
-            m_bstr = SysAllocString(m_bstr);
+            m_bstr = SysAllocStringLen(other.m_bstr, SysStringLen(other.m_bstr));
     }
     return *this;
 }

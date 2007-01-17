@@ -37,6 +37,7 @@ namespace WebCore {
         BString();
         BString(const wchar_t*, size_t length);
         BString(const String&);
+        BString(BSTR);
         ~BString();
 
         BString(const BString&);
