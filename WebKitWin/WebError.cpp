@@ -25,6 +25,7 @@
 
 #include "config.h"
 #include "WebKitDLL.h"
+#include <initguid.h>
 #include "WebError.h"
 
 using namespace WebCore;
@@ -57,6 +58,8 @@ HRESULT STDMETHODCALLTYPE WebError::QueryInterface(REFIID riid, void** ppvObject
     *ppvObject = 0;
     if (IsEqualGUID(riid, IID_IUnknown))
         *ppvObject = static_cast<IUnknown*>(this);
+    else if (IsEqualGUID(riid, IID_WebError))
+        *ppvObject = static_cast<WebError*>(this);
     else if (IsEqualGUID(riid, IID_IWebError))
         *ppvObject = static_cast<IWebError*>(this);
     else
@@ -157,4 +160,9 @@ HRESULT STDMETHODCALLTYPE WebError::userInfo(
 {
     ASSERT_NOT_REACHED();
     return E_NOTIMPL;
+}
+
+const ResourceError& WebError::resourceError() const
+{
+    return m_error;
 }

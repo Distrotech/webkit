@@ -32,6 +32,9 @@
 #include <WebCore/ResourceError.h>
 #pragma warning(pop)
 
+// {CC671729-C184-4149-8CFA-4C1A2ABC4399}
+DEFINE_GUID(IID_WebError, 0xcc671729, 0xc184, 0x4149, 0x8c, 0xfa, 0x4c, 0x1a, 0x2a, 0xbc, 0x43, 0x99);
+
 class WebError : public IWebError {
 public:
     static WebError* createInstance(const WebCore::ResourceError&);
@@ -81,6 +84,8 @@ public:
     virtual HRESULT STDMETHODCALLTYPE userInfo( 
         /* [retval][out] */ IPropertyBag **result);
         
+    const WebCore::ResourceError& resourceError() const;
+
 private:
     ULONG m_refCount;
     WebCore::ResourceError m_error;

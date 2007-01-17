@@ -381,6 +381,22 @@
 				>
 			</File>
 			<File
+				RelativePath="..\WebURLAuthenticationChallenge.h"
+				>
+			</File>
+			<File
+				RelativePath="..\WebURLAuthenticationChallengeSender.h"
+				>
+			</File>
+			<File
+				RelativePath="..\WebURLCredential.h"
+				>
+			</File>
+			<File
+				RelativePath="..\WebURLProtectionSpace.h"
+				>
+			</File>
+			<File
 				RelativePath="..\WebURLResponse.h"
 				>
 			</File>
@@ -494,6 +510,22 @@
 			</File>
 			<File
 				RelativePath="..\WebScriptObject.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\WebURLAuthenticationChallenge.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\WebURLAuthenticationChallengeSender.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\WebURLCredential.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\WebURLProtectionSpace.cpp"
 				>
 			</File>
 			<File

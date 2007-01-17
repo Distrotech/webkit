@@ -25,6 +25,7 @@
 
 #include "config.h"
 #include "WebKitDLL.h"
+#include <initguid.h>
 #include "WebURLResponse.h"
 
 #include "MarshallingHelpers.h"
@@ -68,7 +69,9 @@ HRESULT STDMETHODCALLTYPE WebURLResponse::QueryInterface(REFIID riid, void** ppv
 {
     *ppvObject = 0;
     if (IsEqualGUID(riid, IID_IUnknown))
-        *ppvObject = static_cast<IWebURLResponse*>(this);
+        *ppvObject = static_cast<IUnknown*>(this);
+    else if (IsEqualGUID(riid, IID_WebURLResponse))
+        *ppvObject = static_cast<WebURLResponse*>(this);
     else if (IsEqualGUID(riid, IID_IWebURLResponse))
         *ppvObject = static_cast<IWebURLResponse*>(this);
     else
@@ -251,3 +254,9 @@ HRESULT WebURLResponse::suggestedFileExtension(BSTR *result)
 
     return HRESULT_FROM_WIN32(err);
 }
+
+const ResourceResponse& WebURLResponse::resourceResponse() const
+{
+    return m_response;
+}
+

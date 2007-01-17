@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,62 +23,58 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef WebURLResponse_H
-#define WebURLResponse_H
+#ifndef WebURLCredential_h
+#define WebURLCredential_h
 
-#include "IWebURLResponse.h"
+#include "IWebURLAuthenticationChallenge.h"
 
 #pragma warning(push, 0)
-#include <WebCore/ResourceResponse.h>
+#include <WebCore/Credential.h>
 #pragma warning(pop)
 
-// {4E309D61-8458-49ed-A629-464E64D85505}
-DEFINE_GUID(IID_WebURLResponse, 0x4e309d61, 0x8458, 0x49ed, 0xa6, 0x29, 0x46, 0x4e, 0x64, 0xd8, 0x55, 0x5);
+// {ACD70E50-F799-4a36-AE91-E6D8EB9E265F}
+DEFINE_GUID(IID_WebURLCredential, 0xacd70e50, 0xf799, 0x4a36, 0xae, 0x91, 0xe6, 0xd8, 0xeb, 0x9e, 0x26, 0x5f);
 
-class WebURLResponse : public IWebURLResponse
+class WebURLCredential : public IWebURLCredential
 {
 public:
-    static WebURLResponse* createInstance(const WebCore::ResourceResponse& response);
-protected:
-    WebURLResponse();
-    ~WebURLResponse();
-
+    static WebURLCredential* createInstance();
+    static WebURLCredential* createInstance(const WebCore::Credential&);
+private:
+    WebURLCredential(const WebCore::Credential&);
+    ~WebURLCredential();
 public:
     // IUnknown
     virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject);
     virtual ULONG STDMETHODCALLTYPE AddRef(void);
     virtual ULONG STDMETHODCALLTYPE Release(void);
 
-    // IWebURLRequest
-    virtual HRESULT STDMETHODCALLTYPE expectedContentLength( 
-        /* [retval][out] */ long long *result);
-    
-    virtual HRESULT STDMETHODCALLTYPE initWithURL( 
-        /* [in] */ BSTR url,
-        /* [in] */ BSTR mimeType,
-        /* [in] */ int expectedContentLength,
-        /* [in] */ BSTR textEncodingName);
-    
-    virtual HRESULT STDMETHODCALLTYPE MIMEType( 
-        /* [retval][out] */ BSTR *result);
-    
-    virtual HRESULT STDMETHODCALLTYPE suggestedFilename( 
-        /* [retval][out] */ BSTR *result);
-    
-    virtual HRESULT STDMETHODCALLTYPE textEncodingName( 
-        /* [retval][out] */ BSTR *result);
-    
-    virtual HRESULT STDMETHODCALLTYPE URL( 
-        /* [retval][out] */ BSTR *result);
+    // IWebURLCredential
+    virtual HRESULT STDMETHODCALLTYPE hasPassword(
+        /* [out, retval] */ BOOL* result);
 
-    const WebCore::ResourceResponse& resourceResponse() const;
+    virtual HRESULT STDMETHODCALLTYPE initWithuser(
+        /* [in] */ BSTR user, 
+        /* [in] */ BSTR password, 
+        /* [in] */ WebURLCredentialPersistence persistence);
 
-protected:
-    HRESULT suggestedFileExtension(BSTR* result);
+    virtual HRESULT STDMETHODCALLTYPE password(
+        /* [out, retval] */ BSTR* password);
+
+    virtual HRESULT STDMETHODCALLTYPE persistence(
+        /* [out, retval] */ WebURLCredentialPersistence* result);
+
+    virtual HRESULT STDMETHODCALLTYPE user(
+        /* [out, retval] */ BSTR* result);
+
+    // WebURLCredential
+    const WebCore::Credential& credential() const;
 
 protected:
     ULONG m_refCount;
-    WebCore::ResourceResponse m_response;
+
+    WebCore::Credential m_credential;
 };
+
 
 #endif

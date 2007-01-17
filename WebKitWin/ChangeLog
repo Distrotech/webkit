@@ -1,3 +1,96 @@
+2007-01-17  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Steve Falkenburg
+
+        Next round of plumbing for HTTP Auth, or as I like to call it:
+        "Implementing platform dependent wrappers for my platform independent 
+         wrappers which wrap platform dependent objects"
+        
+        *sigh*
+        
+        Also, not included in this ChangeLog, I changed the eol property to
+        native on a handful of WebKitWin files who didn't have it set yet
+        
+        * Interfaces/IWebURLAuthenticationChallenge.idl: Added some string constants, nuked an unneeded 
+          initializer from IWebCredential
+          
+        * WebError.cpp: Added QueryInterface for new GUID
+        (WebError::resourceError): Added accessor to WebCore backer
+        * WebError.h: Added GUID
+        
+        * WebKit.vcproj/WebKit.vcproj:
+        
+        * WebURLAuthenticationChallenge.cpp: Added.
+        (WebURLAuthenticationChallenge::WebURLAuthenticationChallenge):
+        (WebURLAuthenticationChallenge::~WebURLAuthenticationChallenge):
+        (WebURLAuthenticationChallenge::createInstance):
+        (WebURLAuthenticationChallenge::QueryInterface):
+        (WebURLAuthenticationChallenge::AddRef):
+        (WebURLAuthenticationChallenge::Release):
+        (WebURLAuthenticationChallenge::initWithProtectionSpace):
+        (WebURLAuthenticationChallenge::initWithAuthenticationChallenge):
+        (WebURLAuthenticationChallenge::error):
+        (WebURLAuthenticationChallenge::failureResponse):
+        (WebURLAuthenticationChallenge::previousFailureCount):
+        (WebURLAuthenticationChallenge::proposedCredential):
+        (WebURLAuthenticationChallenge::protectionSpace):
+        (WebURLAuthenticationChallenge::sender):
+        (WebURLAuthenticationChallenge::authenticationChallenge):
+        * WebURLAuthenticationChallenge.h: Added.
+        
+        * WebURLAuthenticationChallengeSender.cpp: Added.
+        (WebURLAuthenticationChallengeSender::WebURLAuthenticationChallengeSender):
+        (WebURLAuthenticationChallengeSender::~WebURLAuthenticationChallengeSender):
+        (WebURLAuthenticationChallengeSender::createInstance):
+        (WebURLAuthenticationChallengeSender::QueryInterface):
+        (WebURLAuthenticationChallengeSender::AddRef):
+        (WebURLAuthenticationChallengeSender::Release):
+        (WebURLAuthenticationChallengeSender::cancelAuthenticationChallenge):
+        (WebURLAuthenticationChallengeSender::continueWithoutCredentialForAuthenticationChallenge):
+        (WebURLAuthenticationChallengeSender::useCredential):
+        (WebURLAuthenticationChallengeSender::resourceHandle):
+        * WebURLAuthenticationChallengeSender.h: Added.
+        
+        * WebURLCredential.cpp: Added.
+        (WebURLCredential::WebURLCredential):
+        (WebURLCredential::~WebURLCredential):
+        (WebURLCredential::createInstance):
+        (WebURLCredential::QueryInterface):
+        (WebURLCredential::AddRef):
+        (WebURLCredential::Release):
+        (WebURLCredential::hasPassword):
+        (WebURLCredential::initWithuser):
+        (WebURLCredential::password):
+        (WebURLCredential::persistence):
+        (WebURLCredential::user):
+        (WebURLCredential::credential):
+        * WebURLCredential.h: Added.
+        
+        * WebURLProtectionSpace.cpp: Added.
+        (WebURLProtectionSpace::WebURLProtectionSpace):
+        (WebURLProtectionSpace::~WebURLProtectionSpace):
+        (WebURLProtectionSpace::createInstance):
+        (WebURLProtectionSpace::QueryInterface):
+        (WebURLProtectionSpace::AddRef):
+        (WebURLProtectionSpace::Release):
+        (WebURLProtectionSpace::authenticationMethod):
+        (WebURLProtectionSpace::host):
+        (coreScheme): Helper for the init methods
+        (WebURLProtectionSpace::initWithHost):
+        (WebURLProtectionSpace::initWithProxyHost):
+        (WebURLProtectionSpace::isProxy):
+        (WebURLProtectionSpace::port):
+        (WebURLProtectionSpace::protocol):
+        (WebURLProtectionSpace::proxyType):
+        (WebURLProtectionSpace::realm):
+        (WebURLProtectionSpace::receivesCredentialSecurely):
+        (WebURLProtectionSpace::protectionSpace):
+        * WebURLProtectionSpace.h: Added.
+        
+        * WebURLResponse.cpp:  Added QueryInterface for new GUID
+        (WebURLResponse::resourceResponse): Added accessor to WebCore backer
+        * WebURLResponse.h:  Added GUID
+
 2007-01-16  Alice Liu  <alice.liu@apple.com>
 
         Added stubs to keep the boomer build from failing.
