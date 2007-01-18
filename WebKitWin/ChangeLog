@@ -2,7 +2,7 @@
 
         Reviewed by Lou and Adam.
 
-        Dispatch all the right delegate methods.
+        Call all policy, frame load and resource load delegate methods.
         
         * Interfaces/IWebPolicyDelegate.idl:
         Add some definitions needed.
