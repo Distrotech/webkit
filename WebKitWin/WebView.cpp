@@ -1923,7 +1923,7 @@ HRESULT STDMETHODCALLTYPE WebView::searchFor(
     WebCore::Frame* frame = m_page->focusController()->focusedOrMainFrame();
     WebCore::Frame* startFrame = frame;
     do {
-        *found = frame->findString(search, !!forward, !!caseFlag, false);
+        *found = frame->findString(search, !!forward, !!caseFlag, false, true);
         if (*found) {
             if (frame != startFrame)
                 startFrame->selectionController()->clear();
@@ -1936,7 +1936,7 @@ HRESULT STDMETHODCALLTYPE WebView::searchFor(
     // Search contents of startFrame, on the other side of the selection that we did earlier.
     // We cheat a bit and just research with wrap on
     if (wrapFlag && !startFrame->selectionController()->isNone()) {
-        *found = startFrame->findString(search, !!forward, !!caseFlag, true);
+        *found = startFrame->findString(search, !!forward, !!caseFlag, true, true);
         frame->view()->setFocus();
     }
 

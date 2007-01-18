@@ -1,3 +1,11 @@
+2007-01-18  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by John Sullivan
+
+        * WebView.cpp:
+        (WebView::searchFor):
+        Build fix.
+
 2007-01-17  Alice Liu  <alice.liu@apple.com>
 
         Added stubs to keep the boomer build from failing.
