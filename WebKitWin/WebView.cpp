@@ -199,6 +199,14 @@ void WebView::addToDirtyRegion(HRGN newRegion)
 
 void WebView::scrollBackingStore(FrameView* frameView, int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect)
 {
+    // If there's no backing store we don't need to update it
+    if (!m_backingStoreBitmap) {
+        if (m_uiDelegatePrivate)
+            m_uiDelegatePrivate->webViewScrolled(this);
+
+        return;
+    }
+
     // Make a region to hold the invalidated scroll area.
     HRGN updateRegion = ::CreateRectRgn(0, 0, 0, 0);
 

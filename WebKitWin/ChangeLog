@@ -1,5 +1,13 @@
 2007-01-18  Anders Carlsson  <acarlsson@apple.com>
 
+        Reviewed by Adam.
+
+        * WebView.cpp:
+        (WebView::scrollBackingStore):
+        Only try to scroll the backing store if it actually exists.
+
+2007-01-18  Anders Carlsson  <acarlsson@apple.com>
+
         Reviewed by Lou and Adam.
 
         Call all policy, frame load and resource load delegate methods.
