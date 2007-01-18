@@ -1,3 +1,17 @@
+2007-01-18  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Brady.
+
+        Fix ownership handling of CFRequestRef. A ResourceRequest holds on to its CFRequestRef 
+        and doesn't ref it when returning it. Also, implement willCacheResponse.
+        
+        * platform/network/cf/ResourceHandleCFNet.cpp:
+        (WebCore::willSendRequest):
+        (WebCore::willCacheResponse):
+        (WebCore::ResourceHandle::start):
+        * platform/network/cf/ResourceRequestCFNet.cpp:
+        (WebCore::ResourceRequest::doUpdatePlatformRequest):
+
 2007-01-17  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Maciej

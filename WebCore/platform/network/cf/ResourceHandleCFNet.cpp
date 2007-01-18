@@ -60,7 +60,13 @@ CFURLRequestRef willSendRequest(CFURLConnectionRef conn, CFURLRequestRef cfReque
     if (ResourceHandleClient* client = handle->client()) {
         ResourceRequest request(cfRequest);
         client->willSendRequest(handle, request, cfRedirectResponse);
-        return request.cfURLRequest();
+
+        cfRequest = request.cfURLRequest();
+
+        // FIXME: This causes us to leak the request because CFNetwork never releases it.
+        // See <rdar://problem/4938383>
+        CFRetain(cfRequest);
+        return cfRequest;
     }
 
     return cfRequest;
@@ -119,7 +125,23 @@ void didFail(CFURLConnectionRef conn, CFStreamError error, const void* clientInf
 
 CFCachedURLResponseRef willCacheResponse(CFURLConnectionRef conn, CFCachedURLResponseRef cachedResponse, const void* clientInfo) 
 {
-    ResourceHandle* job = (ResourceHandle*)clientInfo;
+    ResourceHandle* handle = (ResourceHandle*)clientInfo;
+
+    CacheStoragePolicy policy = static_cast<CacheStoragePolicy>(CFCachedURLResponseGetStoragePolicy(cachedResponse));
+
+    handle->client()->willCacheResponse(handle, policy);
+
+    if (static_cast<CFURLCacheStoragePolicy>(policy) != CFCachedURLResponseGetStoragePolicy(cachedResponse))
+        cachedResponse = CFCachedURLResponseCreateWithUserInfo(kCFAllocatorDefault, 
+                                                               CFCachedURLResponseGetWrappedResponse(cachedResponse),
+                                                               CFCachedURLResponseGetReceiverData(cachedResponse),
+                                                               CFCachedURLResponseGetUserInfo(cachedResponse), 
+                                                               static_cast<CFURLCacheStoragePolicy>(policy));
+
+    // FIXME: This causes us to leak the request because CFNetwork never releases it.
+    // See <rdar://problem/4938383>
+    CFRetain(cachedResponse);
+
     return cachedResponse;
 }
 
@@ -211,7 +233,6 @@ bool ResourceHandle::start(Frame* frame)
 
     CFURLConnectionClient client = {0, this, 0, 0, 0, willSendRequest, didReceiveResponse, didReceiveData, NULL, didFinishLoading, didFail, willCacheResponse, didReceiveChallenge};
     d->m_connection = CFURLConnectionCreate(0, request, &client);
-    CFRelease(request);
 
     if (!loaderRL) {
         _beginthread(runLoaderThread, 0, 0);
