@@ -35,6 +35,7 @@
 #include "IWebFormDelegate.h"
 #include "IWebUIDelegatePrivate.h"
 #include "MarshallingHelpers.h"
+#include "WebActionPropertyBag.h"
 #include "WebDocumentLoader.h"
 #include "WebError.h"
 #include "WebMutableURLRequest.h"
@@ -1427,7 +1428,11 @@ void WebFrame::dispatchWillSubmitForm(FramePolicyFunction function, PassRefPtr<F
     FormValuesPropertyBag formValuesPropBag(const_cast<HashMap<String, String>*>(&formState->values()));
 
     COMPtr<WebFrame> sourceFrame(kit(formState->sourceFrame()));
-    formDelegate->willSubmitForm(this, sourceFrame.get(), formElement.get(), &formValuesPropBag, setUpPolicyListener(function));
+    if (SUCCEEDED(formDelegate->willSubmitForm(this, sourceFrame.get(), formElement.get(), &formValuesPropBag, setUpPolicyListener(function))))
+        return;
+
+    // FIXME: Add a sane default implementation
+    (d->frame->loader()->*function)(PolicyUse);
 }
 
 void WebFrame::dispatchDidLoadMainResource(DocumentLoader*)
@@ -1441,16 +1446,6 @@ void WebFrame::revertToProvisionalState(DocumentLoader*)
 }
 
 void WebFrame::clearUnarchivingState(DocumentLoader*)
-{
-    LOG_NOIMPL();
-}
-    
-void WebFrame::progressStarted()
-{
-    LOG_NOIMPL();
-}
-
-void WebFrame::progressCompleted()
 {
     LOG_NOIMPL();
 }
@@ -1748,22 +1743,51 @@ void WebFrame::committedLoad(DocumentLoader* loader, const char* data, int lengt
     receivedData(data, length, textEncoding);
 }
 
-void WebFrame::dispatchDecidePolicyForMIMEType(FramePolicyFunction function, const String&, const ResourceRequest&)
+void WebFrame::dispatchDecidePolicyForMIMEType(FramePolicyFunction function, const String& mimeType, const ResourceRequest& request)
 {
+    COMPtr<IWebPolicyDelegate> policyDelegate;
+    if (SUCCEEDED(d->webView->policyDelegate(&policyDelegate))) {
+        COMPtr<IWebURLRequest> urlRequest;
+        urlRequest.adoptRef(WebMutableURLRequest::createInstance(request));
+        if (SUCCEEDED(policyDelegate->decidePolicyForMIMEType(d->webView, BString(mimeType), urlRequest.get(), this, setUpPolicyListener(function))))
+            return;
+    }
+
+    // FIXME: Add a sane default implementation
     (d->frame->loader()->*function)(PolicyUse);
 }
 
-void WebFrame::dispatchDecidePolicyForNewWindowAction(FramePolicyFunction function, const NavigationAction&, const ResourceRequest&, const String&)
+void WebFrame::dispatchDecidePolicyForNewWindowAction(FramePolicyFunction function, const NavigationAction& action, const ResourceRequest& request, const String& frameName)
 {
-    LOG_NOIMPL();
+    COMPtr<IWebPolicyDelegate> policyDelegate;
+    if (SUCCEEDED(d->webView->policyDelegate(&policyDelegate))) {
+        COMPtr<IWebURLRequest> urlRequest;
+        urlRequest.adoptRef(WebMutableURLRequest::createInstance(request));
+        COMPtr<WebActionPropertyBag> actionInformation;
+        actionInformation.adoptRef(WebActionPropertyBag::createInstance(action, d->frame));
 
+        if (SUCCEEDED(policyDelegate->decidePolicyForNewWindowAction(d->webView, actionInformation.get(), urlRequest.get(), BString(frameName), setUpPolicyListener(function))))
+            return;
+    }
+
+    // FIXME: Add a sane default implementation
     (d->frame->loader()->*function)(PolicyUse);
 }
 
-void WebFrame::dispatchDecidePolicyForNavigationAction(FramePolicyFunction function, const NavigationAction&, const ResourceRequest&)
+void WebFrame::dispatchDecidePolicyForNavigationAction(FramePolicyFunction function, const NavigationAction& action, const ResourceRequest& request)
 {
-    LOG_NOIMPL();
+    COMPtr<IWebPolicyDelegate> policyDelegate;
+    if (SUCCEEDED(d->webView->policyDelegate(&policyDelegate))) {
+        COMPtr<IWebURLRequest> urlRequest;
+        urlRequest.adoptRef(WebMutableURLRequest::createInstance(request));
+        COMPtr<WebActionPropertyBag> actionInformation;
+        actionInformation.adoptRef(WebActionPropertyBag::createInstance(action, d->frame));
 
+        if (SUCCEEDED(policyDelegate->decidePolicyForNavigationAction(d->webView, actionInformation.get(), urlRequest.get(), this, setUpPolicyListener(function))))
+            return;
+    }
+
+    // FIXME: Add a sane default implementation
     (d->frame->loader()->*function)(PolicyUse);
 }
 
@@ -1799,9 +1823,28 @@ void WebFrame::assignIdentifierToInitialRequest(unsigned long identifier, Docume
     }
 }
 
-void WebFrame::dispatchWillSendRequest(DocumentLoader*, unsigned long, ResourceRequest&, const ResourceResponse&)
+void WebFrame::dispatchWillSendRequest(DocumentLoader* loader, unsigned long identifier, ResourceRequest& request, const ResourceResponse& redirectResponse)
 {
-    LOG_NOIMPL();
+    COMPtr<IWebResourceLoadDelegate> resourceLoadDelegate;
+    if (SUCCEEDED(d->webView->resourceLoadDelegate(&resourceLoadDelegate))) {
+        COMPtr<IWebURLRequest> webURLRequest;
+        webURLRequest.adoptRef(WebMutableURLRequest::createInstance(request));
+        COMPtr<IWebURLResponse> webURLRedirectResponse;
+        webURLRedirectResponse.adoptRef(WebURLResponse::createInstance(redirectResponse));
+        COMPtr<IWebURLRequest> newWebURLRequest;
+
+        if (FAILED(resourceLoadDelegate->willSendRequest(d->webView, identifier, webURLRequest.get(), webURLRedirectResponse.get(), getWebDataSource(loader), &newWebURLRequest)))
+            return;
+
+        if (webURLRequest == newWebURLRequest)
+            return;
+
+        COMPtr<WebMutableURLRequest> newWebURLRequestImpl;
+        if (FAILED(newWebURLRequest->QueryInterface(CLSID_WebMutableURLRequest, (void**)&newWebURLRequestImpl)))
+            return;
+
+        request = newWebURLRequestImpl->resourceRequest();
+    }
 }
 
 void WebFrame::dispatchDidReceiveResponse(DocumentLoader* loader, unsigned long identifier, const ResourceResponse& response)
@@ -1829,12 +1872,12 @@ void WebFrame::dispatchDidFinishLoading(DocumentLoader* loader, unsigned long id
         resourceLoadDelegate->didFinishLoadingFromDataSource(d->webView, identifier, getWebDataSource(loader));
 }
 
-void WebFrame::dispatchDidFailLoading(DocumentLoader* loader, unsigned long identifier, const ResourceError&)
+void WebFrame::dispatchDidFailLoading(DocumentLoader* loader, unsigned long identifier, const ResourceError& error)
 {
     COMPtr<IWebResourceLoadDelegate> resourceLoadDelegate;
     if (SUCCEEDED(d->webView->resourceLoadDelegate(&resourceLoadDelegate))) {
         COMPtr<IWebError> webError;
-        // FIXME: Assign error
+        webError.adoptRef(WebError::createInstance(error));
         resourceLoadDelegate->didFailLoadingWithError(d->webView, identifier, webError.get(), getWebDataSource(loader));
     }
 }

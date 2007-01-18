@@ -277,6 +277,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\WebActionPropertyBag.h"
+				>
+			</File>
+			<File
 				RelativePath="..\WebBackForwardList.h"
 				>
 			</File>
@@ -430,6 +434,10 @@
 			</File>
 			<File
 				RelativePath="..\MemoryStream.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\WebActionPropertyBag.cpp"
 				>
 			</File>
 			<File

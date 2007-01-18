@@ -1,5 +1,46 @@
 2007-01-18  Anders Carlsson  <acarlsson@apple.com>
 
+        Reviewed by Lou and Adam.
+
+        Dispatch all the right delegate methods.
+        
+        * Interfaces/IWebPolicyDelegate.idl:
+        Add some definitions needed.
+        
+        * WebActionPropertyBag.cpp: Added.
+        (WebActionPropertyBag::WebActionPropertyBag):
+        (WebActionPropertyBag::~WebActionPropertyBag):
+        (WebActionPropertyBag::createInstance):
+        (WebActionPropertyBag::QueryInterface):
+        (WebActionPropertyBag::AddRef):
+        (WebActionPropertyBag::Release):
+        (isEqual):
+        (findMouseEvent):
+        (WebActionPropertyBag::Read):
+        (WebActionPropertyBag::Write):
+        * WebActionPropertyBag.h: Added.
+        New class which wraps a NavigationAction in a property bag.
+        
+        * WebFrame.cpp:
+        (WebFrame::dispatchWillSubmitForm):
+        (WebFrame::clearUnarchivingState):
+        (WebFrame::dispatchDecidePolicyForMIMEType):
+        (WebFrame::dispatchDecidePolicyForNewWindowAction):
+        (WebFrame::dispatchDecidePolicyForNavigationAction):
+        (WebFrame::dispatchWillSendRequest):
+        (WebFrame::dispatchDidFailLoading):
+        * WebFrame.h:
+        Dispatch correct delegate methods.
+        
+        * WebKit.vcproj/WebKit.vcproj:
+        Add WebActionPropertyBag files.
+        
+        * WebURLResponse.cpp:
+        (WebURLResponse::createInstance):
+        Return 0 for null responses.
+        
+2007-01-18  Anders Carlsson  <acarlsson@apple.com>
+
         Reviewed by John Sullivan
 
         * WebView.cpp:

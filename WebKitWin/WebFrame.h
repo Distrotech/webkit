@@ -215,8 +215,6 @@ public:
     virtual void dispatchDidLoadMainResource(WebCore::DocumentLoader*);
     virtual void revertToProvisionalState(WebCore::DocumentLoader*);
     virtual void clearUnarchivingState(WebCore::DocumentLoader*);
-    virtual void progressStarted();
-    virtual void progressCompleted();
     virtual void setMainFrameDocumentReady(bool);
     virtual void willChangeTitle(WebCore::DocumentLoader*);
     virtual void didChangeTitle(WebCore::DocumentLoader*);

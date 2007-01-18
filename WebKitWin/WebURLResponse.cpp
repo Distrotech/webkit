@@ -56,6 +56,9 @@ WebURLResponse::~WebURLResponse()
 
 WebURLResponse* WebURLResponse::createInstance(const ResourceResponse& response)
 {
+    if (response.isNull())
+        return 0;
+
     WebURLResponse* instance = new WebURLResponse();
     instance->AddRef();
     instance->m_response = response;
