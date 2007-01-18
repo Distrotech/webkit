@@ -197,6 +197,11 @@ void WebEditorClient::didWriteSelectionToPasteboard()
     LOG_NOIMPL();
 }
 
+void WebEditorClient::didSetSelectionTypesForPasteboard()
+{
+    LOG_NOIMPL();
+}
+
 bool WebEditorClient::shouldDeleteRange(Range* /*range*/)
 {
     LOG_NOIMPL(); 

@@ -1,3 +1,11 @@
+2007-01-17  Alice Liu  <alice.liu@apple.com>
+
+        Added stubs to keep the boomer build from failing.
+
+        * WebEditorClient.cpp:
+        (WebEditorClient::didSetSelectionTypesForPasteboard):
+        * WebEditorClient.h:
+ 
 2007-01-17  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Maciej
