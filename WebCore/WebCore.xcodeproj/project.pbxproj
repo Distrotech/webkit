@@ -3228,7 +3228,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXPORTED_SYMBOLS_FILE = "$(DERIVED_FILES_DIR)/WebCore-combined.exp";
-				FRAMEWORK_SEARCH_PATHS = /System/Library/Frameworks/WebKit.framework/Frameworks;
+				FRAMEWORK_SEARCH_PATHS = /System/Library/PrivateFrameworks/WebKitDashboardSupport.framework/Frameworks/WebKit.framework/Versions/A/Frameworks;
 				GCC_ENABLE_CPP_EXCEPTIONS = YES;
 				GCC_ENABLE_CPP_RTTI = YES;
 				GCC_ENABLE_OBJC_GC = YES;
@@ -3253,7 +3253,7 @@
 					/usr/include/libxml2,
 				);
 				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = /System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks;
+				INSTALL_PATH = /System/Library/PrivateFrameworks/WebKitDashboardSupport.framework/Frameworks/WebKit.framework/Versions/A/Frameworks;
 				LIBRARY_SEARCH_PATHS = "'$(DERIVED_FILE_DIR)'";
 				MACOSX_DEPLOYMENT_TARGET = 10.3;
 				OTHER_LDFLAGS = (
@@ -3287,7 +3287,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXPORTED_SYMBOLS_FILE = WebCore.exp;
-				FRAMEWORK_SEARCH_PATHS = /System/Library/Frameworks/WebKit.framework/Frameworks;
+				FRAMEWORK_SEARCH_PATHS = /System/Library/PrivateFrameworks/WebKitDashboardSupport.framework/Frameworks/WebKit.framework/Versions/A/Frameworks;
 				GCC_ENABLE_CPP_EXCEPTIONS = YES;
 				GCC_ENABLE_CPP_RTTI = YES;
 				GCC_ENABLE_OBJC_GC = YES;
@@ -3312,7 +3312,7 @@
 					/usr/include/libxml2,
 				);
 				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = /System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks;
+				INSTALL_PATH = /System/Library/PrivateFrameworks/WebKitDashboardSupport.framework/Frameworks/WebKit.framework/Versions/A/Frameworks;
 				LIBRARY_SEARCH_PATHS = "'$(DERIVED_FILE_DIR)'";
 				MACOSX_DEPLOYMENT_TARGET = 10.3;
 				OTHER_LDFLAGS = (
@@ -3346,7 +3346,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXPORTED_SYMBOLS_FILE = WebCore.exp;
-				FRAMEWORK_SEARCH_PATHS = /System/Library/Frameworks/WebKit.framework/Frameworks;
+				FRAMEWORK_SEARCH_PATHS = /System/Library/PrivateFrameworks/WebKitDashboardSupport.framework/Frameworks/WebKit.framework/Versions/A/Frameworks;
 				GCC_ENABLE_CPP_EXCEPTIONS = YES;
 				GCC_ENABLE_CPP_RTTI = YES;
 				GCC_ENABLE_OBJC_GC = YES;
@@ -3371,7 +3371,7 @@
 					/usr/include/libxml2,
 				);
 				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = /System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks;
+				INSTALL_PATH = /System/Library/PrivateFrameworks/WebKitDashboardSupport.framework/Frameworks/WebKit.framework/Versions/A/Frameworks;
 				LIBRARY_SEARCH_PATHS = "'$(DERIVED_FILE_DIR)'";
 				MACOSX_DEPLOYMENT_TARGET = 10.3;
 				OTHER_LDFLAGS = (
@@ -3400,12 +3400,12 @@
 		B51B64B308B693000076106C /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CREATE_HASH_TABLE = "$(NEXT_ROOT)/System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks/JavaScriptCore.framework/PrivateHeaders/create_hash_table";
+				CREATE_HASH_TABLE = "$(NEXT_ROOT)/System/Library/PrivateFrameworks/WebKitDashboardSupport.framework/Frameworks/WebKit.framework/Versions/A/Frameworks/JavaScriptCore.framework/PrivateHeaders/create_hash_table";
 				DEBUG_DEFINES = NDEBUG;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXPORTED_SYMBOLS_FILE = WebCore.exp;
-				FRAMEWORK_SEARCH_PATHS = /System/Library/Frameworks/WebKit.framework/Frameworks;
+				FRAMEWORK_SEARCH_PATHS = /System/Library/PrivateFrameworks/WebKitDashboardSupport.framework/Frameworks/WebKit.framework/Versions/A/Frameworks;
 				GCC_ENABLE_CPP_EXCEPTIONS = YES;
 				GCC_ENABLE_CPP_RTTI = YES;
 				GCC_ENABLE_OBJC_GC = YES;
@@ -3430,7 +3430,7 @@
 					/usr/include/libxml2,
 				);
 				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = /System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks;
+				INSTALL_PATH = /System/Library/PrivateFrameworks/WebKitDashboardSupport.framework/Frameworks/WebKit.framework/Versions/A/Frameworks;
 				LIBRARY_SEARCH_PATHS = "'$(DERIVED_FILE_DIR)'";
 				OTHER_LDFLAGS = (
 					"$(STYLE_LDFLAGS)",

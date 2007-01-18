@@ -12,9 +12,6 @@
 			buildConfigurationList = 149C276C08902AFE008A9EFC /* Build configuration list for PBXAggregateTarget "All" */;
 			buildPhases = (
 			);
-			buildSettings = {
-				PRODUCT_NAME = All;
-			};
 			dependencies = (
 				932F5BE70822A1C700736975 /* PBXTargetDependency */,
 				932F5BE90822A1C700736975 /* PBXTargetDependency */,
@@ -196,43 +193,6 @@
 			script = "bison -d -p kjsyy \"$INPUT_FILE_PATH\" -o \"$DERIVED_FILE_DIR/$INPUT_FILE_BASE.cpp\"\ncat \"$DERIVED_FILE_DIR/$INPUT_FILE_BASE.cpp.h\" \"$DERIVED_FILE_DIR/$INPUT_FILE_BASE.hpp\" > \"$DERIVED_FILE_DIR/$INPUT_FILE_BASE.h\" 2> /dev/null || echo -n";
 		};
 /* End PBXBuildRule section */
-
-/* Begin PBXBuildStyle section */
-		014CEA440018CDF011CA2923 /* Development */ = {
-			isa = PBXBuildStyle;
-			buildSettings = {
-				DEBUG_DEFINES = "";
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				MACOSX_DEPLOYMENT_TARGET = 10.3;
-				PREBINDING = NO;
-				SECTORDER_FLAGS = "";
-				STYLE_LDFLAGS = "";
-			};
-			name = Development;
-		};
-		014CEA450018CDF011CA2923 /* Deployment */ = {
-			isa = PBXBuildStyle;
-			buildSettings = {
-				MACOSX_DEPLOYMENT_TARGET = 10.3;
-				PREBINDING = NO;
-				SECTORDER_FLAGS = "";
-				STYLE_LDFLAGS = "";
-			};
-			name = Deployment;
-		};
-		F58C8A1D025BD408018635CA /* OptimizedWithSymbols */ = {
-			isa = PBXBuildStyle;
-			buildSettings = {
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.3;
-				PREBINDING = NO;
-				SECTORDER_FLAGS = "";
-				STYLE_LDFLAGS = "";
-			};
-			name = OptimizedWithSymbols;
-		};
-/* End PBXBuildStyle section */
 
 /* Begin PBXContainerItemProxy section */
 		932F5BE60822A1C700736975 /* PBXContainerItemProxy */ = {
@@ -800,56 +760,6 @@
 			buildRules = (
 				937C34BA0868E21B006F4B22 /* PBXBuildRule */,
 			);
-			buildSettings = {
-				DEBUG_DEFINES = NDEBUG;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				GCC_ENABLE_CPP_EXCEPTIONS = NO;
-				GCC_ENABLE_CPP_RTTI = NO;
-				GCC_ENABLE_OBJC_GC = YES;
-				GCC_FAST_OBJC_DISPATCH = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_OPTIMIZATION_LEVEL = s;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = JavaScriptCorePrefix.h;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"$(DEBUG_DEFINES)",
-					APPLE_CHANGES,
-					HAVE_CONFIG_H,
-				);
-				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
-				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
-				HEADER_SEARCH_PATHS = icu;
-				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = /System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks;
-				OTHER_LDFLAGS = (
-					"$(STYLE_LDFLAGS)",
-					"-sub_library",
-					libobjc,
-				);
-				PRODUCT_NAME = JavaScriptCore;
-				SECTORDER_FLAGS = (
-					"-sectorder",
-					__TEXT,
-					__text,
-					/AppleInternal/OrderFiles/JavaScriptCore.order,
-				);
-				STYLE_LDFLAGS = "-umbrella WebKit -allowable_client JavaScriptGlue";
-				WARNING_CFLAGS = (
-					"-Wall",
-					"-W",
-					"-Wcast-align",
-					"-Wchar-subscripts",
-					"-Wformat-security",
-					"-Wmissing-format-attribute",
-					"-Wpointer-arith",
-					"-Wwrite-strings",
-					"-Wno-format-y2k",
-					"-Wno-unused-parameter",
-					"-Wno-long-double",
-				);
-			};
 			dependencies = (
 				93396B9D082450C500AB803D /* PBXTargetDependency */,
 			);
@@ -868,25 +778,6 @@
 			);
 			buildRules = (
 			);
-			buildSettings = {
-				GCC_ENABLE_CPP_EXCEPTIONS = NO;
-				GCC_ENABLE_CPP_RTTI = NO;
-				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
-				PRODUCT_NAME = testkjs;
-				WARNING_CFLAGS = (
-					"-Wall",
-					"-W",
-					"-Wcast-align",
-					"-Wchar-subscripts",
-					"-Wformat-security",
-					"-Wmissing-format-attribute",
-					"-Wpointer-arith",
-					"-Wwrite-strings",
-					"-Wno-format-y2k",
-					"-Wno-unused-parameter",
-					"-Wno-long-double",
-				);
-			};
 			dependencies = (
 			);
 			name = testkjs;
@@ -904,9 +795,6 @@
 			);
 			buildRules = (
 			);
-			buildSettings = {
-				PRODUCT_NAME = dftables;
-			};
 			dependencies = (
 			);
 			name = dftables;
@@ -920,13 +808,6 @@
 		0867D690FE84028FC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = 149C277108902AFE008A9EFC /* Build configuration list for PBXProject "JavaScriptCore" */;
-			buildSettings = {
-			};
-			buildStyles = (
-				014CEA440018CDF011CA2923 /* Development */,
-				014CEA450018CDF011CA2923 /* Deployment */,
-				F58C8A1D025BD408018635CA /* OptimizedWithSymbols */,
-			);
 			hasScannedForEncodings = 1;
 			mainGroup = 0867D691FE84028FC02AAC07 /* JavaScriptCore */;
 			productRefGroup = 034768DFFF38A50411DB9C8B /* Products */;
@@ -1249,7 +1130,7 @@
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				HEADER_SEARCH_PATHS = icu;
 				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = /System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks;
+				INSTALL_PATH = /System/Library/PrivateFrameworks/WebKitDashboardSupport.framework/Frameworks/WebKit.framework/Versions/A/Frameworks;
 				MACOSX_DEPLOYMENT_TARGET = 10.3;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = (
@@ -1305,7 +1186,7 @@
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				HEADER_SEARCH_PATHS = icu;
 				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = /System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks;
+				INSTALL_PATH = /System/Library/PrivateFrameworks/WebKitDashboardSupport.framework/Frameworks/WebKit.framework/Versions/A/Frameworks;
 				MACOSX_DEPLOYMENT_TARGET = 10.3;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = (
@@ -1364,7 +1245,7 @@
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				HEADER_SEARCH_PATHS = icu;
 				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = /System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks;
+				INSTALL_PATH = /System/Library/PrivateFrameworks/WebKitDashboardSupport.framework/Frameworks/WebKit.framework/Versions/A/Frameworks;
 				MACOSX_DEPLOYMENT_TARGET = 10.3;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = (
@@ -1423,7 +1304,7 @@
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				HEADER_SEARCH_PATHS = icu;
 				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = /System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks;
+				INSTALL_PATH = /System/Library/PrivateFrameworks/WebKitDashboardSupport.framework/Frameworks/WebKit.framework/Versions/A/Frameworks;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = (
 					"$(STYLE_LDFLAGS)",
