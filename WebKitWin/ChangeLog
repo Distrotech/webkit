@@ -2,6 +2,24 @@
 
         Reviewed by Adam.
 
+        * WebChromeClient.cpp:
+        (WebChromeClient::runJavaScriptAlert):
+        (WebChromeClient::runJavaScriptConfirm):
+        (WebChromeClient::runJavaScriptPrompt):
+        (WebChromeClient::setStatusbarText):
+        * WebChromeClient.h:
+        Add new ChromeClient methods.
+        
+        * WebFrame.cpp:
+        (WebFrame::userAgent):
+        (WebFrame::updateGlobalHistoryForReload):
+        * WebFrame.h:
+        Remove unused FrameWinClient functions.
+
+2007-01-18  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
         * WebView.cpp:
         (WebView::scrollBackingStore):
         Only try to scroll the backing store if it actually exists.

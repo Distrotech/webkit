@@ -691,11 +691,6 @@ Frame* WebFrame::impl()
     return d->frame;
 }
 
-void WebFrame::stopMainResourceLoad()
-{
-    // FIXME: Remove this function
-}
-
 unsigned long long WebSystemMainMemory()
 {
     MEMORYSTATUSEX statex;
@@ -976,28 +971,6 @@ exit:
     request->Release();
 }
 
-void WebFrame::submitForm(const FrameLoadRequest&, Element*, HashMap<String, String>&)
-{
-    // FIXME: Get rid of this
-    ASSERT_NOT_REACHED();
-}
-
-void WebFrame::setTitle(const String&)
-{
-    ASSERT_NOT_REACHED();
-}
-
-void WebFrame::setStatusText(const String& statusText)
-{
-    IWebUIDelegate* uiDelegate;
-    if (SUCCEEDED(d->webView->uiDelegate(&uiDelegate)) && uiDelegate) {
-        BSTR statusBStr = SysAllocStringLen(statusText.characters(), statusText.length());
-        uiDelegate->setStatusText(d->webView, statusBStr);
-        SysFreeString(statusBStr);
-        uiDelegate->Release();
-    }
-}
-
 void WebFrame::textFieldDidBeginEditing(Element* e)
 {
     IWebFormDelegate* formDelegate;
@@ -1113,63 +1086,6 @@ void WebFrame::dispatchDidHandleOnloadEvents()
     }
 }
 
-const String& WebFrame::userAgentForURL(const KURL& url)
-{
-    return d->webView->userAgentForKURL(url);
-}
-
-const KURL& WebFrame::originalRequestURL()
-{
-    // FIXME: This should go away
-    ASSERT_NOT_REACHED();
-    return m_originalRequestURL;
-}
-
-void WebFrame::runJavaScriptAlert(const String& message)
-{
-    IWebUIDelegate* ui;
-    if (SUCCEEDED(d->webView->uiDelegate(&ui)) && ui) {
-        BSTR messageBSTR = SysAllocStringLen(message.characters(), message.length());
-        ui->runJavaScriptAlertPanelWithMessage(d->webView, messageBSTR);
-        SysFreeString(messageBSTR);
-        ui->Release();
-    }
-}
-
-bool WebFrame::runJavaScriptConfirm(const String& message)
-{
-    BOOL result = false;
-    IWebUIDelegate* ui;
-    if (SUCCEEDED(d->webView->uiDelegate(&ui)) && ui) {
-        BSTR messageBSTR = SysAllocStringLen(message.characters(), message.length());
-        ui->runJavaScriptConfirmPanelWithMessage(d->webView, messageBSTR, &result);
-        SysFreeString(messageBSTR);
-        ui->Release();
-    }
-    return !!result;
-}
-
-bool WebFrame::runJavaScriptPrompt(const String& message, const String& defaultValue, String& result)
-{
-    bool succeeded = false;
-    IWebUIDelegate* ui;
-    if (SUCCEEDED(d->webView->uiDelegate(&ui)) && ui) {
-        BSTR messageBSTR = SysAllocStringLen(message.characters(), message.length());
-        BSTR defaultValueBSTR = SysAllocStringLen(defaultValue.characters(), defaultValue.length());
-        BSTR resultBSTR = 0;
-        if (SUCCEEDED(ui->runJavaScriptTextInputPanelWithPrompt(d->webView, messageBSTR, defaultValueBSTR, &resultBSTR))) {
-            succeeded = !!resultBSTR;
-            if (succeeded)
-                result = String(resultBSTR, SysStringLen(resultBSTR));
-        }
-        SysFreeString(messageBSTR);
-        SysFreeString(defaultValueBSTR);
-        SysFreeString(resultBSTR);
-        ui->Release();
-    }
-    return succeeded;
-}
-
 bool WebFrame::tabsToLinks() const
 {
     BOOL enabled = FALSE;
@@ -1220,18 +1136,6 @@ void WebFrame::windowScriptObjectAvailable(JSContextRef context, JSObjectRef win
         frameLoadDelegate->windowScriptObjectAvailable(d->webView, context, windowObject);
         frameLoadDelegate->Release();
     }
-}
-
-IWebBackForwardList* WebFrame::backForwardList()
-{
-    if (this != d->webView->topLevelFrame())
-        return 0; // FIXME - need to maintain back/forward for subframes
-    
-    IWebBackForwardList* backForwardList;
-    if (FAILED(d->webView->backForwardList(&backForwardList)))
-        return 0;
-
-    return backForwardList;
 }
 
 WebHistory* WebFrame::webHistory()
@@ -1580,7 +1484,7 @@ void WebFrame::setTitle(const String& title, const KURL& url)
 
 String WebFrame::userAgent()
 {
-    return userAgentForURL(KURL());
+    return d->webView->userAgentForKURL(KURL());
 }
 
 void WebFrame::setDocumentViewFromPageCache(PageCache*)
@@ -1601,7 +1505,7 @@ void WebFrame::updateGlobalHistoryForStandardLoad(const KURL& url)
 
 void WebFrame::updateGlobalHistoryForReload(const KURL& url)
 {
-    BString urlBStr((LPCOLESTR)url.url().unicode(), url.url().length());
+    BString urlBStr(url.url());
 
     COMPtr<WebHistory> history;
     history.adoptRef(webHistory());
@@ -1948,21 +1852,6 @@ void WebFrame::postProgressFinishedNotification()
     static BSTR progressFinishedName = SysAllocString(WebViewProgressFinishedNotification);
     IWebNotificationCenter* notifyCenter = WebNotificationCenter::defaultCenterInternal();
     notifyCenter->postNotificationName(progressFinishedName, static_cast<IWebView*>(d->webView), 0);
-}
-
-void WebFrame::incrementProgress(unsigned long, const ResourceResponse&)
-{
-    LOG_NOIMPL();
-}
-
-void WebFrame::incrementProgress(unsigned long, const char*, int)
-{
-    LOG_NOIMPL();
-}
-
-void WebFrame::completeProgress(unsigned long)
-{
-    LOG_NOIMPL();
 }
 
 void WebFrame::startDownload(const ResourceRequest&)

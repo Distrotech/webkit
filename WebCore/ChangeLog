@@ -1,3 +1,15 @@
+2007-01-18  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        Remove some unused FrameWin functions.
+        
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::~FrameWin):
+        * bridge/win/FrameWin.h:
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::status):
+
 2007-01-18  Adam Roben  <aroben@apple.com>
 
         Build fix.

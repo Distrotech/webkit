@@ -77,9 +77,6 @@ FrameWin::~FrameWin()
 {
     setView(0);
     loader()->clearRecordedFormValues();
-    if (m_client)
-        m_client->stopMainResourceLoad();
-
     loader()->cancelAndClear();
 }
 
@@ -132,31 +129,6 @@ Vector<IntRect> FrameWin::computePageRects(const IntRect& printRect, float userS
     return pages;
 }
 
-void FrameWin::runJavaScriptAlert(String const& message)
-{
-    String text = message;
-    text.replace('\\', backslashAsCurrencySymbol());
-    m_client->runJavaScriptAlert(text);
-}
-
-bool FrameWin::runJavaScriptConfirm(String const& message)
-{
-    String text = message;
-    text.replace('\\', backslashAsCurrencySymbol());
-    return m_client->runJavaScriptConfirm(text);
-}
-
-bool FrameWin::runJavaScriptPrompt(String const& message, String const& defaultValue, String& result)
-{
-    String modifiedMessage = message;
-    modifiedMessage.replace('\\', backslashAsCurrencySymbol());
-    String modifiedDefaultValue = defaultValue;
-    modifiedDefaultValue.replace('\\', backslashAsCurrencySymbol());
-    bool succeeded = m_client->runJavaScriptPrompt(modifiedMessage, modifiedDefaultValue, result);
-    result.replace(backslashAsCurrencySymbol(), '\\');
-    return succeeded;
-}
-
 // FIXME: This needs to be unified with the keyEvent method on FrameMac
 bool FrameWin::keyEvent(const PlatformKeyboardEvent& keyEvent)
 {
@@ -195,15 +167,6 @@ bool FrameWin::keyEvent(const PlatformKeyboardEvent& keyEvent)
     }
 
     return result;
-}
-
-void FrameWin::setStatusBarText(const String& status)
-{
-    String text = status;
-    text.replace('\\', backslashAsCurrencySymbol());
-
-    if (m_client)
-        m_client->setStatusText(text);
 }
 
 void FrameWin::textFieldDidBeginEditing(Element* e)

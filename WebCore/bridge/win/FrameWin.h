@@ -55,23 +55,13 @@ public:
 
     virtual Frame* createFrame(const KURL&, const String& name, HTMLFrameOwnerElement*, const String& referrer) = 0;
     virtual void openURL(const String& URL, const Event* triggeringEvent, bool newWindow, bool lockHistory) = 0;
-    virtual void stopMainResourceLoad() = 0;
-    virtual void submitForm(const FrameLoadRequest&, Element* form, HashMap<String, String>& formValues) = 0;
-    virtual void setTitle(const String& title) = 0;
-    virtual void setStatusText(const String& statusText) = 0;
-
+    
     virtual void textFieldDidBeginEditing(Element*) = 0;
     virtual void textFieldDidEndEditing(Element*) = 0;
     virtual void textDidChangeInTextField(Element*) = 0;
     virtual bool doTextFieldCommandFromEvent(Element*, const PlatformKeyboardEvent*) = 0;
     virtual void textWillBeDeletedInTextField(Element* input) = 0;
     virtual void textDidChangeInTextArea(Element*) = 0;
-
-    virtual const String& userAgentForURL(const KURL&) = 0;
-    virtual const KURL& originalRequestURL() = 0;
-    virtual void runJavaScriptAlert(const WebCore::String&) = 0;
-    virtual bool runJavaScriptConfirm(const WebCore::String&) = 0;
-    virtual bool runJavaScriptPrompt(const WebCore::String& message, const WebCore::String& defaultValue, WebCore::String& result) = 0;
 
     virtual bool tabsToLinks() const = 0;
 
@@ -91,14 +81,9 @@ public:
 
     FrameWinClient* client() { return m_client.get(); }
 
-    virtual void setStatusBarText(const String&);
-
     virtual void focusWindow();
     virtual void unfocusWindow();
     
-    virtual void runJavaScriptAlert(const String& message);
-    virtual bool runJavaScriptConfirm(const String& message);
-    virtual bool runJavaScriptPrompt(const String& message, const String& defaultValue, String& result);
     virtual bool shouldInterruptJavaScript();
     
     virtual Range* markedTextRange() const;

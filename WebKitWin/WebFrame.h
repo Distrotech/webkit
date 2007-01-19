@@ -159,22 +159,13 @@ public:
     virtual void deref();
 
     virtual WebCore::Frame* createFrame(const WebCore::KURL&, const WebCore::String& name, WebCore::HTMLFrameOwnerElement*, const WebCore::String& referrer);
-    virtual void stopMainResourceLoad();
     virtual void openURL(const WebCore::String& URL, const WebCore::Event* triggeringEvent, bool newWindow, bool lockHistory);
-    virtual void submitForm(const WebCore::FrameLoadRequest&, WebCore::Element* form, HashMap<WebCore::String, WebCore::String>& formValues);
-    virtual void setTitle(const WebCore::String& title);
-    virtual void setStatusText(const WebCore::String& title);
     virtual void textFieldDidBeginEditing(WebCore::Element*);
     virtual void textFieldDidEndEditing(WebCore::Element*);
     virtual void textDidChangeInTextField(WebCore::Element*);
     virtual bool doTextFieldCommandFromEvent(WebCore::Element*, const WebCore::PlatformKeyboardEvent*);
     virtual void textWillBeDeletedInTextField(WebCore::Element* input);
     virtual void textDidChangeInTextArea(WebCore::Element*);
-    virtual const WebCore::String& userAgentForURL(const WebCore::KURL&);
-    virtual const WebCore::KURL& originalRequestURL();
-    virtual void runJavaScriptAlert(const WebCore::String&);
-    virtual bool runJavaScriptConfirm(const WebCore::String&);
-    virtual bool runJavaScriptPrompt(const WebCore::String& message, const WebCore::String& defaultValue, WebCore::String& result);
     virtual bool tabsToLinks() const;
     virtual WebCore::IntRect windowResizerRect() const;
     virtual void addToDirtyRegion(const WebCore::IntRect&);
@@ -270,9 +261,6 @@ public:
     virtual void dispatchDidFailProvisionalLoad(const WebCore::ResourceError&);
     virtual void dispatchDidFailLoad(const WebCore::ResourceError&);
     virtual WebCore::Frame* dispatchCreatePage();
-    virtual void incrementProgress(unsigned long identifier, const WebCore::ResourceResponse&);
-    virtual void incrementProgress(unsigned long identifier, const char*, int);
-    virtual void completeProgress(unsigned long identifier);
     virtual void startDownload(const WebCore::ResourceRequest&);
     virtual void dispatchDidReceiveAuthenticationChallenge(WebCore::DocumentLoader*, unsigned long identifier, const WebCore::AuthenticationChallenge&);
     virtual void dispatchDidCancelAuthenticationChallenge(WebCore::DocumentLoader*, unsigned long identifier, const WebCore::AuthenticationChallenge&);
@@ -301,7 +289,6 @@ public:
     HRESULT searchForLabelsBeforeElement(const BSTR* labels, int cLabels, IDOMElement* beforeElement, BSTR* result);
     HRESULT matchLabelsAgainstElement(const BSTR* labels, int cLabels, IDOMElement* againstElement, BSTR* result);
     HRESULT canProvideDocumentSource(bool* result);
-    IWebBackForwardList* backForwardList();
     WebHistory* webHistory();
 
     WebFramePolicyListener* setUpPolicyListener(WebCore::FramePolicyFunction function);

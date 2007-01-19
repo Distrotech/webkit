@@ -929,7 +929,8 @@ void PluginViewWin::status(const char* message)
 {
     String s = DeprecatedString::fromLatin1(message);
 
-    m_parentFrame->setStatusBarText(s);
+    if (Page* page = m_parentFrame->page())
+        page->chrome()->setStatusbarText(m_parentFrame, s);
 }
 
 NPError PluginViewWin::getValue(NPNVariable variable, void* value)

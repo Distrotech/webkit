@@ -323,3 +323,47 @@ void WebChromeClient::closeWindowSoon()
     m_webView->closeWindow();
 }
 
+void WebChromeClient::runJavaScriptAlert(Frame*, const String& message)
+{
+    COMPtr<IWebUIDelegate> ui;
+    if (SUCCEEDED(m_webView->uiDelegate(&ui)))
+        ui->runJavaScriptAlertPanelWithMessage(m_webView, BString(message));
+}
+
+bool WebChromeClient::runJavaScriptConfirm(Frame*, const String& message)
+{
+    BOOL result = FALSE;
+    COMPtr<IWebUIDelegate> ui;
+    if (SUCCEEDED(m_webView->uiDelegate(&ui)))
+        ui->runJavaScriptConfirmPanelWithMessage(m_webView, BString(message), &result);
+    return !!result;
+}
+
+bool WebChromeClient::runJavaScriptPrompt(Frame*, const String& message, const String& defaultValue, String& result)
+{
+    bool succeeded = false;
+    COMPtr<IWebUIDelegate> ui;
+    if (FAILED(m_webView->uiDelegate(&ui)))
+        return false;
+
+    BSTR resultBSTR = 0;
+    if (FAILED(ui->runJavaScriptTextInputPanelWithPrompt(m_webView, BString(message), BString(defaultValue), &resultBSTR)))
+        return false;
+
+    if (resultBSTR) {
+        result = String(resultBSTR, SysStringLen(resultBSTR));
+        SysFreeString(resultBSTR);
+        return true;
+    }
+
+    return false;
+}
+
+void WebChromeClient::setStatusbarText(const String& statusText)
+{
+    COMPtr<IWebUIDelegate> uiDelegate;
+    if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
+        uiDelegate->setStatusText(m_webView, BString(statusText));
+}
+
+}
