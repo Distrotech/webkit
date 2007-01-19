@@ -1,3 +1,11 @@
+2007-01-19  Anders Carlsson  <acarlsson@apple.com>
+
+        Build fix.
+        
+        * platform/win/ContextMenuItemWin.cpp:
+        (WebCore::ContextMenuItem::enabled):
+        Use correct class name.
+
 2007-01-18  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.

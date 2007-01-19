@@ -187,7 +187,7 @@ void ContextMenuItem::setEnabled(bool enabled)
     }
 }
 
-bool ContextMenu::enabled() const
+bool ContextMenuItem::enabled() const
 {
     return m_platformDescription->fState & MFS_ENABLED;
 }
