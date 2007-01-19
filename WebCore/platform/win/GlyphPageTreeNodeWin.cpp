@@ -27,14 +27,13 @@
  */
 
 #include "config.h"
-#include "GlyphMap.h"
 #include "FontData.h"
 #include <windows.h>
 
 namespace WebCore
 {
 
-bool GlyphMap::fillPage(GlyphPage* page, UChar* buffer, unsigned bufferLength, const FontData* fontData)
+bool GlyphPage::fill(UChar* buffer, unsigned bufferLength, const FontData* fontData)
 {
     // bufferLength will be greater than the glyph page size if the buffer has Unicode supplementary characters.
     // GetGlyphIndices doesn't support this so ScriptGetCMap should be used instead. It seems that supporting this
@@ -51,10 +50,11 @@ bool GlyphMap::fillPage(GlyphPage* page, UChar* buffer, unsigned bufferLength, c
     WORD localGlyphBuffer[GlyphPage::size];
     GetGlyphIndices(dc, buffer, bufferLength, localGlyphBuffer, 0);
     for (unsigned i = 0; i < GlyphPage::size; i++)
-        page->setGlyphDataForIndex(i, localGlyphBuffer[i], fontData);
+        setGlyphDataForIndex(i, localGlyphBuffer[i], fontData);
     RestoreDC(dc, -1);
     ReleaseDC(0, dc);
     return true;
 }
 
 }
+

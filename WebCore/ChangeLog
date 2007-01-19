@@ -1,5 +1,14 @@
 2007-01-18  Anders Carlsson  <acarlsson@apple.com>
 
+        Build fix.
+        
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/win/GlyphMapWin.cpp: Removed.
+        * platform/win/GlyphPageTreeNodeWin.cpp: Added.
+        (WebCore::GlyphPage::fill):
+
+2007-01-18  Anders Carlsson  <acarlsson@apple.com>
+
         Reviewed by Brady.
 
         Fix ownership handling of CFRequestRef. A ResourceRequest holds on to its CFRequestRef 
