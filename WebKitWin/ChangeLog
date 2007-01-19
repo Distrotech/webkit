@@ -1,3 +1,10 @@
+2007-01-19  Anders Carlsson  <acarlsson@apple.com>
+
+        The obligatory build fix.
+        
+        * WebChromeClient.cpp:
+        (WebChromeClient::runJavaScriptPrompt):
+
 2007-01-18  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.

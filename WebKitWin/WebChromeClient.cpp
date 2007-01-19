@@ -341,7 +341,6 @@ bool WebChromeClient::runJavaScriptConfirm(Frame*, const String& message)
 
 bool WebChromeClient::runJavaScriptPrompt(Frame*, const String& message, const String& defaultValue, String& result)
 {
-    bool succeeded = false;
     COMPtr<IWebUIDelegate> ui;
     if (FAILED(m_webView->uiDelegate(&ui)))
         return false;
