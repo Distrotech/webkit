@@ -1,3 +1,11 @@
+2007-01-19  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Ada
+
+        Much more realistic WebDownload interface that delegates will actually have to implement
+        
+        * Interfaces/IWebDownload.idl:
+
 2007-01-18  Ada Chan  <adachan@apple.com>
 
         Reviewed by Steve.
