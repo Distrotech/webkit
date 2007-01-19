@@ -27,6 +27,7 @@
 #define WebURLResponse_H
 
 #include "IWebURLResponse.h"
+#include "IWebHTTPURLResponse.h"
 
 #pragma warning(push, 0)
 #include <WebCore/ResourceResponse.h>
@@ -35,7 +36,7 @@
 // {4E309D61-8458-49ed-A629-464E64D85505}
 DEFINE_GUID(IID_WebURLResponse, 0x4e309d61, 0x8458, 0x49ed, 0xa6, 0x29, 0x46, 0x4e, 0x64, 0xd8, 0x55, 0x5);
 
-class WebURLResponse : public IWebURLResponse
+class WebURLResponse : public IWebHTTPURLResponse
 {
 public:
     static WebURLResponse* createInstance(const WebCore::ResourceResponse& response);
@@ -49,7 +50,7 @@ public:
     virtual ULONG STDMETHODCALLTYPE AddRef(void);
     virtual ULONG STDMETHODCALLTYPE Release(void);
 
-    // IWebURLRequest
+    // IWebURLResponse
     virtual HRESULT STDMETHODCALLTYPE expectedContentLength( 
         /* [retval][out] */ long long *result);
     
@@ -70,6 +71,17 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE URL( 
         /* [retval][out] */ BSTR *result);
+
+    // IWebHTTPURLResponse
+    virtual HRESULT STDMETHODCALLTYPE allHeaderFields( 
+        /* [retval][out] */ IPropertyBag **headerFields);
+    
+    virtual HRESULT STDMETHODCALLTYPE localizedStringForStatusCode( 
+        /* [in] */ int statusCode,
+        /* [retval][out] */ BSTR *statusString);
+    
+    virtual HRESULT STDMETHODCALLTYPE statusCode( 
+        /* [retval][out] */ int *statusCode);
 
     const WebCore::ResourceResponse& resourceResponse() const;
 

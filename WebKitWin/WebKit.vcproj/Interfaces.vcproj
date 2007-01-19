@@ -264,6 +264,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\Interfaces\IWebErrorPrivate.idl"
+			>
+		</File>
+		<File
 			RelativePath="..\Interfaces\IWebFormDelegate.idl"
 			>
 		</File>
@@ -301,6 +305,10 @@
 		</File>
 		<File
 			RelativePath="..\Interfaces\IWebHTMLRepresentation.idl"
+			>
+		</File>
+		<File
+			RelativePath="..\Interfaces\IWebHTTPURLResponse.idl"
 			>
 		</File>
 		<File

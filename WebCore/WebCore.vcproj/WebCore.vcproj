@@ -1023,19 +1023,19 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\WebKitBuild\obj\WebCore\DerivedSources\JSSVGElementInstance.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSSVGElementInstance.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\WebKitBuild\obj\WebCore\DerivedSources\JSSVGElementInstance.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSSVGElementInstance.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\WebKitBuild\obj\WebCore\DerivedSources\JSSVGElementInstanceList.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSSVGElementInstanceList.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\WebKitBuild\obj\WebCore\DerivedSources\JSSVGElementInstanceList.h"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSSVGElementInstanceList.h"
 				>
 			</File>
 			<File

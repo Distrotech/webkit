@@ -127,7 +127,7 @@ interface IWebResourceLoadDelegate : IUnknown
         automatically by prompting with a sheet on the window that the WebView is associated with.
         - (void)webView:(WebView *)sender resource:(id)identifier didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge fromDataSource:(WebDataSource *)dataSource;
     */
-    HRESULT didReceiveAuthenticationChallenge([in] IWebView* webView,  [in] unsigned long identifer,[in] IWebURLAuthenticationChallenge* challenge, [in] IWebDataSource* dataSource);
+    HRESULT didReceiveAuthenticationChallenge([in] IWebView* webView,  [in] unsigned long identifier,[in] IWebURLAuthenticationChallenge* challenge, [in] IWebDataSource* dataSource);
 
     /*!
         @method webView:resource:didCancelAuthenticationChallenge:fromDataSource:
@@ -135,7 +135,7 @@ interface IWebResourceLoadDelegate : IUnknown
         @param challenge The NSURLAuthenticationChallenge for which to cancel authentication
         - (void)webView:(WebView *)sender resource:(id)identifier didCancelAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge fromDataSource:(WebDataSource *)dataSource;
     */
-    HRESULT didCancelAuthenticationChallenge([in] IWebView* webView, [in] unsigned long identifer, [in] IWebURLAuthenticationChallenge* challenge, [in] IWebDataSource* dataSource);
+    HRESULT didCancelAuthenticationChallenge([in] IWebView* webView, [in] unsigned long identifier, [in] IWebURLAuthenticationChallenge* challenge, [in] IWebDataSource* dataSource);
 
     /*!
         @method webView:resource:didReceiveResponse:fromDataSource:
@@ -151,7 +151,7 @@ interface IWebResourceLoadDelegate : IUnknown
         and should check the new response for the expected content length.
         - (void)webView:(WebView *)sender resource:(id)identifier didReceiveResponse:(NSURLResponse *)response fromDataSource:(WebDataSource *)dataSource;
     */
-    HRESULT didReceiveResponse([in] IWebView* webView, [in] unsigned long identifer, [in] IWebURLResponse* response, [in] IWebDataSource* dataSource);
+    HRESULT didReceiveResponse([in] IWebView* webView, [in] unsigned long identifier, [in] IWebURLResponse* response, [in] IWebDataSource* dataSource);
 
     /*!
         @method webView:resource:didReceiveContentLength:fromDataSource:
@@ -163,7 +163,7 @@ interface IWebResourceLoadDelegate : IUnknown
         @param dataSource The dataSource that initiated the load.
         - (void)webView:(WebView *)sender resource:(id)identifier didReceiveContentLength:(WebNSInt)length fromDataSource:(WebDataSource *)dataSource;
     */
-    HRESULT didReceiveContentLength([in] IWebView* webView, [in] unsigned long identifer, [in] UINT length, [in] IWebDataSource* dataSource);
+    HRESULT didReceiveContentLength([in] IWebView* webView, [in] unsigned long identifier, [in] UINT length, [in] IWebDataSource* dataSource);
 
     /*!
         @method webView:resource:didFinishLoadingFromDataSource:
@@ -174,7 +174,7 @@ interface IWebResourceLoadDelegate : IUnknown
         @param dataSource The dataSource that initiated the load.
         - (void)webView:(WebView *)sender resource:(id)identifier didFinishLoadingFromDataSource:(WebDataSource *)dataSource;
     */
-    HRESULT didFinishLoadingFromDataSource([in] IWebView* webView, [in] unsigned long identifer, [in] IWebDataSource* dataSource);
+    HRESULT didFinishLoadingFromDataSource([in] IWebView* webView, [in] unsigned long identifier, [in] IWebDataSource* dataSource);
 
     /*!
         @method webView:resource:didFailLoadingWithError:fromDataSource:
@@ -186,7 +186,7 @@ interface IWebResourceLoadDelegate : IUnknown
         @param dataSource The dataSource that initiated the load.
         - (void)webView:(WebView *)sender resource:(id)identifier didFailLoadingWithError:(NSError *)error fromDataSource:(WebDataSource *)dataSource;
     */
-    HRESULT didFailLoadingWithError([in] IWebView* webView, [in] unsigned long identifer, [in] IWebError* error, [in] IWebDataSource* dataSource);
+    HRESULT didFailLoadingWithError([in] IWebView* webView, [in] unsigned long identifier, [in] IWebError* error, [in] IWebDataSource* dataSource);
 
     /*!
         @method webView:plugInFailedWithError:dataSource:

@@ -77,6 +77,8 @@ HRESULT STDMETHODCALLTYPE WebURLResponse::QueryInterface(REFIID riid, void** ppv
         *ppvObject = static_cast<WebURLResponse*>(this);
     else if (IsEqualGUID(riid, IID_IWebURLResponse))
         *ppvObject = static_cast<IWebURLResponse*>(this);
+    else if (IsEqualGUID(riid, IID_IWebHTTPURLResponse))
+        *ppvObject = static_cast<IWebHTTPURLResponse*>(this);
     else
         return E_NOINTERFACE;
 
@@ -204,6 +206,33 @@ HRESULT STDMETHODCALLTYPE WebURLResponse::URL(
     if (!m_response.url().isEmpty() && !*result)
         return E_OUTOFMEMORY;
 
+    return S_OK;
+}
+
+// IWebHTTPURLResponse --------------------------------------------------------
+
+HRESULT STDMETHODCALLTYPE WebURLResponse::allHeaderFields( 
+    /* [retval][out] */ IPropertyBag** headerFields)
+{
+    if (headerFields)
+        *headerFields = 0;
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE WebURLResponse::localizedStringForStatusCode( 
+    /* [in] */ int /*statusCode*/,
+    /* [retval][out] */ BSTR* statusString)
+{
+    if (statusString)
+        *statusString = 0;
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE WebURLResponse::statusCode( 
+    /* [retval][out] */ int* statusCode)
+{
+    if (statusCode)
+        *statusCode = m_response.httpStatusCode();
     return S_OK;
 }
 

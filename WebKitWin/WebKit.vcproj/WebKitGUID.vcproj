@@ -270,6 +270,10 @@
 			>
 		</File>
 		<File
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebHTTPURLResponse_i.c"
+			>
+		</File>
+		<File
 			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebIconDatabase_i.c"
 			>
 		</File>

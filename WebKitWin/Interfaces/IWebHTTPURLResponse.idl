@@ -24,7 +24,7 @@
  */
 
 cpp_quote("/*")
-cpp_quote(" * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.")
+cpp_quote(" * Copyright (C) 2007 Apple Inc.  All rights reserved.")
 cpp_quote(" *")
 cpp_quote(" * Redistribution and use in source and binary forms, with or without")
 cpp_quote(" * modification, are permitted provided that the following conditions")
@@ -48,67 +48,19 @@ cpp_quote(" * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
 cpp_quote(" * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. ")
 cpp_quote(" */")
 
-cpp_quote("#define WebURLErrorCancelled -999")
-cpp_quote("#define WebKitErrorDomain TEXT(\"WebKitErrorDomain\")")
-
 import "oaidl.idl";
 import "ocidl.idl";
+import "IWebURLResponse.idl";
 
 [
     local,
     object,
-    uuid(89E3B189-0B60-4d6b-A87A-3F1172CB5538),
+    uuid(56B54483-FA29-4ce5-96FA-2D9B81D57162),
     pointer_default(unique)
 ]
-interface IWebError : IUnknown
+interface IWebHTTPURLResponse : IWebURLResponse
 {
-    /*
-        + (id)errorWithDomain:(NSString *)domain code:(int)code userInfo:(NSDictionary *)dict
-    */
-    HRESULT errorWithDomain([in] BSTR domain, [in] int code, [in] IPropertyBag* dict);
-
-    /*
-        - (int)code
-    */
-    HRESULT code([out, retval] int* result);
-
-    /*
-        - (NSString *)domain
-    */
-    HRESULT domain([out, retval] BSTR* result);
-
-    /*
-        - (id)initWithDomain:(NSString *)domain code:(int)code userInfo:(NSDictionary *)dict
-    */
-    HRESULT initWithDomain([in] BSTR domain, [in] int code, [in] IPropertyBag* dict);
-
-    /*
-        - (NSString *)localizedDescription
-    */
-    HRESULT localizedDescription([out, retval] BSTR* result);
-
-    /*
-        - (NSString *)localizedFailureReason
-    */
-    HRESULT localizedFailureReason([out, retval] BSTR* result);
-
-    /*
-        - (NSArray *)localizedRecoveryOptions
-    */
-    HRESULT localizedRecoveryOptions([out] int* cOptions, [out, retval] BSTR** options);
-
-    /*
-        - (NSString *)localizedRecoverySuggestion
-    */
-    HRESULT localizedRecoverySuggestion([out, retval] BSTR* result);
-    
-    /*
-        - (id)recoverAttempter
-    */
-    HRESULT recoverAttempter([out, retval] IUnknown** result);
-
-    /*
-        - (NSDictionary *)userInfo
-    */
-    HRESULT userInfo([out, retval] IPropertyBag** result);
+    HRESULT allHeaderFields([out, retval] IPropertyBag** headerFields);
+    HRESULT localizedStringForStatusCode([in] int statusCode, [out, retval] BSTR* statusString);
+    HRESULT statusCode([out, retval] int* statusCode);
 }

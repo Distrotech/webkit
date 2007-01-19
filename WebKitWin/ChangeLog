@@ -1,3 +1,27 @@
+2007-01-18  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Steve.
+        
+        <rdar://4601522> Activity Window
+        - Added some NSURL equivalent constants in IWebURLResponse.idl and IWebError.idl
+        - Added IWebErrorPrivate.idl which contains some private error codes
+        - Added IWebHTTPURLResponse interface which extends IWebURLResponse.  It has the
+        same API as NSHTTPURLResponse.
+
+        * Interfaces/IWebError.idl:
+        * Interfaces/IWebErrorPrivate.idl: Added.
+        * Interfaces/IWebHTTPURLResponse.idl: Added.
+        * Interfaces/IWebResourceLoadDelegate.idl: fixed a typo in parameter name
+        * Interfaces/IWebURLResponse.idl: added WebURLResponseUnknownLength
+        * WebKit.vcproj/Interfaces.vcproj: for adding IWebErrorPrivate.idl and IWebHTTPURLResponse.idl
+        * WebKit.vcproj/WebKitGUID.vcproj: for the new IID_IWebHTTPURLResponse
+        * WebURLResponse.cpp:
+        (WebURLResponse::QueryInterface): also returns the new IWebHTTPURLResponse interface
+        (WebURLResponse::allHeaderFields): Added stub for IWebHTTPURLResponse::allHeaderFields.
+        (WebURLResponse::localizedStringForStatusCode): Added stub for IWebHTTPURLResponse::localizedStringforStatusCode
+        (WebURLResponse::statusCode): Implemented IWebHTTPURLResponse::statusCode.
+        * WebURLResponse.h:
+
 2007-01-19  Anders Carlsson  <acarlsson@apple.com>
 
         The obligatory build fix.
