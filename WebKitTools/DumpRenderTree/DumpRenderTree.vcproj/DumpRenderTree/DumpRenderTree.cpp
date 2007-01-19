@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005, 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2005, 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -25,6 +25,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 #include <WebKit/IWebURLResponse.h>
 #include <WebKit/IWebViewPrivate.h>
 #include <WebKit/WebKit.h>
@@ -35,16 +36,47 @@
 
 const LPCWSTR kDumpRenderTreeClassName = L"DumpRenderTreeWindow";
 
+static bool dumpTree = true;
+static bool printSeparators;
+static bool leakChecking = false;
+static bool timedOut = false;
+
+bool dumpAsText = false;
+bool waitToDump = false;
+bool readyToDump = false;
+
 IWebFrame* frame;
 HWND hostWindow;
 
+static const unsigned timeoutValue = 7000;
+static const unsigned timeoutId = 10;
+
 const unsigned maxViewWidth = 800;
 const unsigned maxViewHeight = 600;
+
+static LRESULT CALLBACK DumpRenderTreeWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch (msg) {
+        case WM_TIMER:
+            // The test ran long enough to time out
+            timedOut = true;
+            PostQuitMessage(0);
+            return 0;
+            break;
+        default:
+            return DefWindowProc(hWnd, msg, wParam, lParam);
+    }
+}
+
+extern "C" BOOL InitializeCoreGraphics();
 
 static void initialize(HINSTANCE hInstance)
 {
     // Init COM
     CoInitialize(NULL);
+
+    // Initialize CG
+    InitializeCoreGraphics();
 
     // Register a host window
     WNDCLASSEX wcex;
@@ -52,7 +84,7 @@ static void initialize(HINSTANCE hInstance)
     wcex.cbSize = sizeof(WNDCLASSEX);
 
     wcex.style         = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc   = DefWindowProc;
+    wcex.lpfnWndProc   = DumpRenderTreeWndProc;
     wcex.cbClsExtra    = 0;
     wcex.cbWndExtra    = 0;
     wcex.hInstance     = hInstance;
@@ -66,14 +98,9 @@ static void initialize(HINSTANCE hInstance)
     RegisterClassEx(&wcex);
 
     hostWindow = CreateWindow(kDumpRenderTreeClassName, TEXT("DumpRenderTree"), WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, maxViewWidth, CW_USEDEFAULT, maxViewHeight, 0, 0, hInstance, NULL);
+      CW_USEDEFAULT, CW_USEDEFAULT, maxViewWidth, maxViewHeight, 0, 0, hInstance, NULL);
 
 }
-
-static bool dumpTree = true;
-bool dumpAsText = false;
-bool waitToDump = false;
-static bool printSeparators;
 
 #include <stdio.h>
 
@@ -125,7 +152,7 @@ fail:
 
 static void runTest(const char* pathOrURL)
 {
-    CStringT<char, StrTraitATL<char> > urlString;
+    CString urlString;
     BSTR urlBStr;
     static BSTR methodBStr = 0;
  
@@ -139,6 +166,14 @@ static void runTest(const char* pathOrURL)
         urlString += pathOrURL;
     }
 
+    waitToDump = false;
+    readyToDump = false;
+    dumpAsText = false;
+    timedOut = false;
+
+    // Set the test timeout timer
+    SetTimer(hostWindow, timeoutId, timeoutValue, 0);
+
     urlBStr = urlString.AllocSysString();
     IWebMutableURLRequest* request;
     HRESULT hr = CoCreateInstance(CLSID_WebMutableURLRequest, 0, CLSCTX_ALL, IID_IWebMutableURLRequest, (void**)&request);
@@ -146,7 +181,7 @@ static void runTest(const char* pathOrURL)
         goto exit;
 
     request->initWithURL(urlBStr, WebURLRequestUseProtocolCachePolicy, 0);
-    SysFreeString(methodBStr);
+    SysFreeString(urlBStr);
 
     request->setHTTPMethod(methodBStr);
     frame->loadRequest(request);
@@ -157,13 +192,29 @@ static void runTest(const char* pathOrURL)
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
+    KillTimer(hostWindow, timeoutId);
 
+    if (timedOut) {
+        fprintf(stderr, "ERROR: Timed out running %s\n", pathOrURL);
+        printf("ERROR: Timed out loading page\n");
+
+        if (printSeparators)
+            puts("#EOF");
+    }
 exit:
     return;
 }
 
+static void initializePreferences(IWebPreferences* preferences)
+{
+    preferences->setJavaEnabled(FALSE);
+    preferences->setPlugInsEnabled(FALSE);
+}
+
 int main(int argc, char* argv[])
 {
+    leakChecking = false;
+
     initialize(GetModuleHandle(NULL));
 
     // FIXME: options
@@ -193,6 +244,7 @@ int main(int argc, char* argv[])
     if (FAILED(hr))
         goto exit;
     viewPrivate->viewWindow(&viewHwnd);
+    viewPrivate->Release();
 
     MoveWindow(viewHwnd, 0, 0, maxViewWidth, maxViewHeight, false);
 
@@ -201,12 +253,13 @@ int main(int argc, char* argv[])
     waitDelegate->Release();
 
     webView->setUIDelegate(waitDelegate);
-    waitDelegate->Release();
 
     IWebPreferences* preferences;
     hr = webView->preferences(&preferences);
     if (FAILED(hr))
         goto exit;
+
+    initializePreferences(preferences);
 
     IWebIconDatabase* iconDatabase;
     IWebIconDatabase* tmpIconDatabase;
@@ -217,6 +270,10 @@ int main(int argc, char* argv[])
     hr = webView->mainFrame(&frame);
     if (FAILED(hr))
         goto exit;
+
+    _CrtMemState entryToMainMemCheckpoint;
+    if (leakChecking)
+        _CrtMemCheckpoint(&entryToMainMemCheckpoint);
 
     if (argc == 2 && strcmp(argv[1], "-") == 0) {
         char filenameBuffer[2048];
@@ -234,12 +291,21 @@ int main(int argc, char* argv[])
         }
     } else {
         printSeparators = argc > 2;
-        for (int i = 1; i != argc; i++) 
+        for (int i = 1; i != argc; i++)
             runTest(argv[i]);
     }
 
+    webView->close();
+
     webView->Release();
     iconDatabase->Release();
+
+    if (leakChecking) {
+        // dump leaks to stderr
+        _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
+        _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
+        _CrtMemDumpAllObjectsSince(&entryToMainMemCheckpoint);
+    }
 
     return 0;
 exit:

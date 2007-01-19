@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005, 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2005, 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -25,6 +25,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <wtf/Platform.h>
 #include <stdio.h>
 #include "WaitUntilDoneDelegate.h"
 #include <WebKit/IWebFramePrivate.h>
@@ -61,6 +63,14 @@ ULONG STDMETHODCALLTYPE WaitUntilDoneDelegate::Release(void)
     return newRef;
 }
 
+HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::hasCustomMenuImplementation( 
+        /* [retval][out] */ BOOL *hasCustomMenus)
+{
+    *hasCustomMenus = FALSE;
+
+    return S_OK;
+}
+
 HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::didStartProvisionalLoadForFrame( 
         /* [in] */ IWebView* webView,
         /* [in] */ IWebFrame* /*frame*/) 
@@ -77,14 +87,21 @@ HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::didReceiveTitle(
 }
 
 
-
 HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::didFinishLoadForFrame( 
         /* [in] */ IWebView* webView,
         /* [in] */ IWebFrame* frame)
 {
-    if (!waitToDump)
-        dump();
+    IWebFrame* mainFrame;
+    webView->mainFrame(&mainFrame);
 
+    if (mainFrame == frame) {
+        if (waitToDump)
+            readyToDump = true;
+        else
+            dump();
+    }
+
+    mainFrame->Release();
     return S_OK;
 }
 

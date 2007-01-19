@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(WebKitOutputDir)\Include&quot;;&quot;$(WebKitOutputDir)\Include\JavaScriptCore&quot;;&quot;$(WebKitSDKDir)\Include&quot;"
+				AdditionalIncludeDirectories="&quot;$(WebKitOutputDir)\Include&quot;;&quot;$(WebKitOutputDir)\Include\WebCore\ForwardingHeaders&quot;;&quot;$(WebKitOutputDir)\Include\JavaScriptCore&quot;;&quot;$(WebKitSDKDir)\Include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_SCL_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="WebKitGUID$(ConfigSuffix).lib WebKit$(ConfigSuffix).lib"
+				AdditionalDependencies="WebKitGUID$(ConfigSuffix).lib WebKit$(ConfigSuffix).lib CoreGraphics$(ConfigSuffix).lib"
 				OutputFile="$(OutDir)\$(ProjectName)$(ConfigSuffix).exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(WebKitOutputDir)\lib&quot;;&quot;$(WebKitSDKDir)\lib&quot;;&quot;$(WebKitOutputDir)\bin&quot;"

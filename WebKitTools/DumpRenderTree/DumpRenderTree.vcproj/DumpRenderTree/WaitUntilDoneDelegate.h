@@ -85,8 +85,8 @@ public:
     virtual HRESULT STDMETHODCALLTYPE willPerformClientRedirectToURL( 
         /* [in] */ IWebView *webView,
         /* [in] */ BSTR url,
-        UINT delaySeconds,
-        /* [in] */ UINT fireDate,
+        /* [in] */ double delaySeconds,
+        /* [in] */ DATE fireDate,
         /* [in] */ IWebFrame *frame) { return S_OK; } 
 
     virtual HRESULT STDMETHODCALLTYPE didCancelClientRedirectForFrame( 
@@ -165,7 +165,7 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE webViewFrame( 
         /* [in] */ IWebView *sender,
-        /* [retval][out] */ RECT **frame) { return S_OK; }
+        /* [retval][out] */ RECT *frame) { return S_OK; }
 
     virtual HRESULT STDMETHODCALLTYPE setContentRect( 
         /* [in] */ IWebView *sender,
@@ -173,7 +173,7 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE webViewContentRect( 
         /* [in] */ IWebView *sender,
-        /* [retval][out] */ RECT **contentRect) { return S_OK; }
+        /* [retval][out] */ RECT *contentRect) { return S_OK; }
 
     virtual HRESULT STDMETHODCALLTYPE runJavaScriptAlertPanelWithMessage( 
         /* [in] */ IWebView *sender,
@@ -189,6 +189,12 @@ public:
         /* [in] */ BSTR message,
         /* [in] */ BSTR defaultText,
         /* [retval][out] */ BSTR *result) { return S_OK; }
+
+    virtual HRESULT STDMETHODCALLTYPE runBeforeUnloadConfirmPanelWithMessage( 
+        /* [in] */ IWebView *sender,
+        /* [in] */ BSTR message,
+        /* [in] */ IWebFrame *initiatedByFrame,
+        /* [retval][out] */ BOOL *result) { return S_OK; } 
 
     virtual HRESULT STDMETHODCALLTYPE runOpenPanelForFileButtonWithResultListener( 
         /* [in] */ IWebView *sender,
@@ -235,6 +241,61 @@ public:
         /* [in] */ WebDragSourceAction action,
         /* [in] */ LPPOINT point,
         /* [in] */ IDataObject *pasteboard) { return S_OK; }
+
+    virtual HRESULT STDMETHODCALLTYPE contextMenuItemSelected( 
+        /* [in] */ IWebView *sender,
+        /* [in] */ void *item,
+        /* [in] */ IPropertyBag *element) { return S_OK; } 
+        
+    virtual HRESULT STDMETHODCALLTYPE hasCustomMenuImplementation( 
+        /* [retval][out] */ BOOL *hasCustomMenus);
+    
+    virtual HRESULT STDMETHODCALLTYPE trackCustomPopupMenu( 
+        /* [in] */ IWebView *sender,
+        /* [in] */ HMENU menu,
+        /* [in] */ LPPOINT point){ return S_OK; }
+       
+    virtual HRESULT STDMETHODCALLTYPE measureCustomMenuItem( 
+        /* [in] */ IWebView *sender,
+        /* [in] */ void *measureItem) { return S_OK; }
+        
+    virtual HRESULT STDMETHODCALLTYPE drawCustomMenuItem( 
+        /* [in] */ IWebView *sender,
+        /* [in] */ void *drawItem) { return S_OK; }
+        
+    virtual HRESULT STDMETHODCALLTYPE cleanUpCustomMenuDrawingData( 
+        /* [in] */ IWebView *sender,
+        /* [in] */ HMENU menu) { return S_OK; }
+
+    virtual HRESULT STDMETHODCALLTYPE canTakeFocus( 
+        /* [in] */ IWebView *sender,
+        /* [in] */ BOOL forward,
+        /* [out] */ BOOL *result) { return S_OK; }
+        
+    virtual HRESULT STDMETHODCALLTYPE takeFocus( 
+        /* [in] */ IWebView *sender,
+        /* [in] */ BOOL forward) { return S_OK; }
+    
+    virtual HRESULT STDMETHODCALLTYPE registerUndoWithTarget( 
+        /* [in] */ IWebUndoTarget *target,
+        /* [in] */ BSTR actionName,
+        /* [in] */ IUnknown *actionArg) { return S_OK; }
+    
+    virtual HRESULT STDMETHODCALLTYPE removeAllActionsWithTarget( 
+        /* [in] */ IWebUndoTarget *target) { return S_OK; }
+    
+    virtual HRESULT STDMETHODCALLTYPE setActionTitle( 
+        /* [in] */ BSTR actionTitle) { return S_OK; }
+    
+    virtual HRESULT STDMETHODCALLTYPE undo( void) { return S_OK; }
+    
+    virtual HRESULT STDMETHODCALLTYPE redo( void) { return S_OK; }
+    
+    virtual HRESULT STDMETHODCALLTYPE canUndo( 
+        /* [retval][out] */ BOOL *result) { return S_OK; }
+    
+    virtual HRESULT STDMETHODCALLTYPE canRedo( 
+        /* [retval][out] */ BOOL *result) { return S_OK; }
 
 protected:
     ULONG                   m_refCount;
