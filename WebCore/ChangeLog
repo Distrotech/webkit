@@ -1,6 +1,13 @@
 2007-01-19  Anders Carlsson  <acarlsson@apple.com>
 
         Build fix.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        Add SVG files.
+
+2007-01-19  Anders Carlsson  <acarlsson@apple.com>
+
+        Build fix.
         
         * platform/win/ContextMenuItemWin.cpp:
         (WebCore::ContextMenuItem::enabled):

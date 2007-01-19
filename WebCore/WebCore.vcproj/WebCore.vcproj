@@ -1023,6 +1023,22 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\..\WebKitBuild\obj\WebCore\DerivedSources\JSSVGElementInstance.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\..\WebKitBuild\obj\WebCore\DerivedSources\JSSVGElementInstance.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\..\WebKitBuild\obj\WebCore\DerivedSources\JSSVGElementInstanceList.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\..\WebKitBuild\obj\WebCore\DerivedSources\JSSVGElementInstanceList.h"
+				>
+			</File>
+			<File
 				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSSVGEllipseElement.cpp"
 				>
 			</File>
@@ -6644,6 +6660,22 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGElementInstance.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGElementInstance.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGElementInstanceList.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGElementInstanceList.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGEllipseElement.cpp"
 					>
 				</File>
@@ -6981,6 +7013,14 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGMetadataElement.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGMPathElement.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGMPathElement.h"
 					>
 				</File>
 				<File
