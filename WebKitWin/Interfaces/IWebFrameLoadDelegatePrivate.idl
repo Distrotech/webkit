@@ -62,6 +62,9 @@ import "IWebView.idl";
 ]
 interface IWebFrameLoadDelegatePrivate : IUnknown
 {
+    //- (void)webView:(WebView *)sender didFinishDocumentLoadForFrame:(WebFrame *)frame;
+    HRESULT didFinishDocumentLoadForFrame([in] IWebView* sender, [in] IWebFrame* frame);
+
     //- (void)webView:(WebView *)sender didFirstLayoutInFrame:(WebFrame *)frame;
     HRESULT didFirstLayoutInFrame([in] IWebView* sender, [in] IWebFrame* frame);
 

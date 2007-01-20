@@ -1,3 +1,14 @@
+2007-01-19  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Lou.
+        
+        Added mechanism for new callbacks, to try to avoid breaking the Windows build.
+
+        * Interfaces/IWebFrameLoadDelegatePrivate.idl:
+        * WebFrame.cpp:
+        (WebFrame::dispatchDidFinishDocumentLoad):
+        * WebFrame.h:
+
 2007-01-19  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Ada

@@ -198,6 +198,7 @@ public:
     virtual void dispatchDidStartProvisionalLoad();
     virtual void dispatchDidReceiveTitle(const WebCore::String& title);
     virtual void dispatchDidCommitLoad();
+    virtual void dispatchDidFinishDocumentLoad();
     virtual void dispatchDidFinishLoad();
     virtual void dispatchDidFirstLayout();
     virtual void dispatchShow();
