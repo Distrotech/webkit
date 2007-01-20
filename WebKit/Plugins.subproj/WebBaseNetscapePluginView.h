@@ -1,6 +1,6 @@
 /*
         WebBaseNetscapePluginView.h
-	Copyright 2002, Apple, Inc. All rights reserved.
+    Copyright 2002, Apple, Inc. All rights reserved.
 */
 
 #import <Cocoa/Cocoa.h>
@@ -36,7 +36,8 @@
     BOOL suspendKeyUpEvents;
     BOOL hasFocus;
     BOOL currentEventIsUserGesture;
-
+    BOOL isTransparent;
+    
     int32 specifiedHeight;
     int32 specifiedWidth;
             

@@ -302,6 +302,23 @@
 		DD9CC6C609FECEC600F1FCA3 /* WebPluginPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = DD9CC6C509FECEC600F1FCA3 /* WebPluginPrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 /* End PBXBuildFile section */
 
+/* Begin PBXBuildStyle section */
+		0A4EC8CC0B61B19D005921FA /* Development */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = Development;
+		};
+		0A4EC8CD0B61B19D005921FA /* Deployment */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+			};
+			name = Deployment;
+		};
+/* End PBXBuildStyle section */
+
 /* Begin PBXFileReference section */
 		2568C72C0174912D0ECA149E /* WebKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WebKit.h; sourceTree = "<group>"; };
 		2D36FD5E03F78F9E00A80166 /* WebFormDelegatePrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WebFormDelegatePrivate.h; sourceTree = "<group>"; };
@@ -1352,6 +1369,12 @@
 		0867D690FE84028FC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = 149C283208902B0F008A9EFC /* Build configuration list for PBXProject "WebKit" */;
+			buildSettings = {
+			};
+			buildStyles = (
+				0A4EC8CC0B61B19D005921FA /* Development */,
+				0A4EC8CD0B61B19D005921FA /* Deployment */,
+			);
 			hasScannedForEncodings = 1;
 			knownRegions = (
 				English,
