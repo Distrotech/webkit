@@ -352,6 +352,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\Interfaces\IWebResourceLoadDelegatePrivate.idl"
+			>
+		</File>
+		<File
 			RelativePath="..\Interfaces\IWebScriptObject.idl"
 			>
 		</File>

@@ -1,3 +1,17 @@
+2007-01-19  Ada Chan  <adachan@apple.com>
+
+        Fixed build.
+
+        Reviewed by Anders.
+        Added IWebResourceLoadDelegatePrivate which has one method: didLoadResourceFromMemoryCache.
+
+        * ChangeLog:
+        * Interfaces/IWebResourceLoadDelegatePrivate.idl: Added.
+        * WebFrame.cpp:
+        (WebFrame::dispatchDidFinishDocumentLoad):
+        * WebKit.vcproj/Interfaces.vcproj:
+        * WebKit.vcproj/WebKitGUID.vcproj:
+
 2007-01-19  John Sullivan  <sullivan@apple.com>
 
         Reviewed by Lou.

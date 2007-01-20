@@ -1286,9 +1286,9 @@ void WebFrame::dispatchDidCommitLoad()
 
 void WebFrame::dispatchDidFinishDocumentLoad()
 {
-    COMPtr<IWebFrameLoadDelegate> frameLoadDelegate;
-    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) 
-        frameLoadDelegate->didFinishDocumentLoadForFrame(d->webView, this);
+    COMPtr<IWebFrameLoadDelegatePrivate> frameLoadDelegatePriv;
+    if (SUCCEEDED(d->webView->frameLoadDelegatePrivate(&frameLoadDelegatePriv)) && frameLoadDelegatePriv)
+        frameLoadDelegatePriv->didFinishDocumentLoadForFrame(d->webView, this);
 }
 
 void WebFrame::dispatchDidFinishLoad()
