@@ -20,6 +20,8 @@
  *
  */
 
+#ifdef USE_SAFARI_THEME
+
 #ifndef RenderThemeSafari_h
 #define RenderThemeSafari_h
 
@@ -164,3 +166,5 @@ private:
 } // namespace WebCore
 
 #endif // RenderThemeSafari_h
+
+#endif // defined(USE_SAFARI_THEME)

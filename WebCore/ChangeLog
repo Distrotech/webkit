@@ -1,3 +1,11 @@
+2007-01-22  Adam Roben  <aroben@apple.com>
+
+        Build fix.
+
+        * rendering/RenderThemeSafari.cpp:
+        (WebCore::theme):
+        * rendering/RenderThemeSafari.h:
+
 2007-01-21  Adam Roben  <aroben@apple.com>
 
         Reviewed by Maciej.

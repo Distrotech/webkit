@@ -19,6 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef USE_SAFARI_THEME
+
 #include "config.h"
 #include "RenderThemeSafari.h"
 
@@ -50,13 +52,11 @@ enum {
     leftPadding
 };
 
-#ifdef USE_SAFARI_THEME
 RenderTheme* theme()
 {
     static RenderThemeSafari safariTheme;
     return &safariTheme;
 }
-#endif
 
 #ifdef NDEBUG
 #define THEMEDLL L"SafariTheme.dll"
@@ -1108,3 +1108,5 @@ bool RenderThemeSafari::paintSearchFieldResultsButton(RenderObject* o, const Ren
 }
 
 } // namespace WebCore
+
+#endif // defined(USE_SAFARI_THEME)
