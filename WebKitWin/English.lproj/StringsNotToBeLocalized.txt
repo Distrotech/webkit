@@ -1,3 +1,7 @@
+"%20"
+"+"
+"http://www.google.com/search?client=safari&q="
+"&ie=UTF-8&oe=UTF-8"
 WebCache.cpp
 WebFrame.cpp
 WebHistory.cpp

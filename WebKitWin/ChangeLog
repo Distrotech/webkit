@@ -1,3 +1,9 @@
+2007-01-22  Steve Falkenburg  <sfalken@apple.com>
+
+        Updated strings not to be localized, added native line endings svn flag.
+
+        * English.lproj/StringsNotToBeLocalized.txt:
+
 2007-01-22  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Brady.
