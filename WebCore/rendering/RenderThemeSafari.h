@@ -136,14 +136,14 @@ private:
 */
     // Helpers for adjusting appearance and for painting
     const IntSize* checkboxSizes() const;
-    const int* checkboxMargins() const;
+    const int* checkboxMargins(NSControlSize) const;
 
     const IntSize* radioSizes() const;
     const int* radioMargins() const;
 
     void setButtonPaddingFromControlSize(RenderStyle*, NSControlSize) const;
     const IntSize* buttonSizes() const;
-    const int* buttonMargins() const;
+    const int* buttonMargins(NSControlSize) const;
 
     void setPopupPaddingFromControlSize(RenderStyle*, NSControlSize) const;
     const IntSize* popupButtonSizes() const;

@@ -64,8 +64,8 @@ RenderTheme* theme()
 #define THEMEDLL L"SafariTheme_debug.dll"
 #endif
 
-typedef void (WINAPI*paintThemeButtonPtr)(CGContextRef context, const RECT& rect, bool pressed, bool isDefault, float crossFade);
-typedef void (WINAPI*paintThemeTextFieldPtr)(CGContextRef context, const RECT& frame, BOOL enabled);
+typedef void (WINAPI*paintThemeButtonPtr)(CGContextRef context, const CGRect& rect, bool pressed, bool isDefault, float crossFade);
+typedef void (WINAPI*paintThemeTextFieldPtr)(CGContextRef context, const CGRect& frame, BOOL enabled);
 
 static paintThemeTextFieldPtr paintThemeTextField;
 static paintThemeButtonPtr paintThemeButton;
@@ -109,9 +109,15 @@ Color RenderThemeSafari::activeListBoxSelectionBackgroundColor() const
     return Color(56, 117, 215);
 }
 
+static float systemFontSizeForControlSize(NSControlSize controlSize)
+{
+    static float sizes[] = { 13.0f, 11.0f, 9.0f };
+    
+    return sizes[controlSize];
+}
+
 void RenderThemeSafari::systemFont(int propId, FontDescription& fontDescription) const
 {
-    /*
     static FontDescription systemFont;
     static FontDescription smallSystemFont;
     static FontDescription menuFont;
@@ -121,17 +127,17 @@ void RenderThemeSafari::systemFont(int propId, FontDescription& fontDescription)
     static FontDescription controlFont;
 
     FontDescription* cachedDesc;
-    NSFont* font = nil;
+    float fontSize = 0;
     switch (propId) {
-        case CSS_VAL_SMALL_CAPTION:
+        /*case CSS_VAL_SMALL_CAPTION:
             cachedDesc = &smallSystemFont;
             if (!smallSystemFont.isAbsoluteSize())
-                font = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
+                fontSize = systemFontSizeForControlSize(NSSmallControlSize);
             break;
         case CSS_VAL_MENU:
             cachedDesc = &menuFont;
             if (!menuFont.isAbsoluteSize())
-                font = [NSFont menuFontOfSize:[NSFont systemFontSize]];
+                fontSize = systemFontSizeForControlSize(NSSmallControlSize);
             break;
         case CSS_VAL_STATUS_BAR:
             cachedDesc = &labelFont;
@@ -143,12 +149,12 @@ void RenderThemeSafari::systemFont(int propId, FontDescription& fontDescription)
             if (!miniControlFont.isAbsoluteSize())
                 font = [NSFont systemFontOfSize:[NSFont systemFontSizeForControlSize:NSMiniControlSize]];
             break;
-        case CSS_VAL__WEBKIT_SMALL_CONTROL:
+        */case CSS_VAL__WEBKIT_SMALL_CONTROL:
             cachedDesc = &smallControlFont;
             if (!smallControlFont.isAbsoluteSize())
-                font = [NSFont systemFontOfSize:[NSFont systemFontSizeForControlSize:NSSmallControlSize]];
+                fontSize = systemFontSizeForControlSize(NSSmallControlSize);
             break;
-        case CSS_VAL__WEBKIT_CONTROL:
+        /*case CSS_VAL__WEBKIT_CONTROL:
             cachedDesc = &controlFont;
             if (!controlFont.isAbsoluteSize())
                 font = [NSFont systemFontOfSize:[NSFont systemFontSizeForControlSize:NSRegularControlSize]];
@@ -157,19 +163,18 @@ void RenderThemeSafari::systemFont(int propId, FontDescription& fontDescription)
             cachedDesc = &systemFont;
             if (!systemFont.isAbsoluteSize())
                 font = [NSFont systemFontOfSize:[NSFont systemFontSize]];
-    }
+    */}
 
-    if (font) {
+    if (fontSize) {
         cachedDesc->setIsAbsoluteSize(true);
         cachedDesc->setGenericFamily(FontDescription::NoFamily);
-        cachedDesc->firstFamily().setFamily([font familyName]);
-        cachedDesc->setSpecifiedSize([font pointSize]);
-        NSFontTraitMask traits = [[NSFontManager sharedFontManager] traitsOfFont:font];
-        cachedDesc->setBold(traits & NSBoldFontMask);
-        cachedDesc->setItalic(traits & NSItalicFontMask);
+        // FIXME: Should be "Lucida Grande"
+        cachedDesc->firstFamily().setFamily("Lucida Sans Unicode");
+        cachedDesc->setSpecifiedSize(fontSize);
+        cachedDesc->setBold(false);
+        cachedDesc->setItalic(false);
     }
     fontDescription = *cachedDesc;
-    */
 }
 
 bool RenderThemeSafari::isControlStyled(const RenderStyle* style, const BorderData& border,
@@ -182,14 +187,13 @@ bool RenderThemeSafari::isControlStyled(const RenderStyle* style, const BorderDa
 
 void RenderThemeSafari::adjustRepaintRect(const RenderObject* o, IntRect& r)
 {
+    NSControlSize controlSize = controlSizeForFont(o->style());
+
     switch (o->style()->appearance()) {
         case CheckboxAppearance: {
-            // Since we query the prototype cell, we need to update its state to match.
-//            setCheckboxCellState(o, r);
-
             // We inflate the rect as needed to account for padding included in the cell to accommodate the checkbox
             // shadow" and the check.  We don't consider this part of the bounds of the control in WebKit.
-            //r = inflateRect(r, checkboxSizes()[[checkbox controlSize]], checkboxMargins());
+            r = inflateRect(r, checkboxSizes()[controlSize], checkboxMargins(controlSize));
             break;
         }
         case RadioAppearance: {
@@ -209,7 +213,7 @@ void RenderThemeSafari::adjustRepaintRect(const RenderObject* o, IntRect& r)
             // We inflate the rect as needed to account for padding included in the cell to accommodate the checkbox
             // shadow" and the check.  We don't consider this part of the bounds of the control in WebKit.
             //if ([button bezelStyle] == NSRoundedBezelStyle)
-            //    r = inflateRect(r, buttonSizes()[[button controlSize]], buttonMargins());
+                r = inflateRect(r, buttonSizes()[controlSize], buttonMargins(controlSize));
             break;
         }
         case MenulistAppearance: {
@@ -349,18 +353,18 @@ void RenderThemeSafari::setSizeFromFont(RenderStyle* style, const IntSize* sizes
 
 void RenderThemeSafari::setFontFromControlSize(CSSStyleSelector* selector, RenderStyle* style, NSControlSize controlSize) const
 {
- /*   FontDescription fontDescription;
+    FontDescription fontDescription;
     fontDescription.setIsAbsoluteSize(true);
     fontDescription.setGenericFamily(FontDescription::SerifFamily);
 
-    NSFont* font = [NSFont systemFontOfSize:[NSFont systemFontSizeForControlSize:controlSize]];
-    fontDescription.firstFamily().setFamily([font familyName]);
-    fontDescription.setComputedSize([font pointSize]);
-    fontDescription.setSpecifiedSize([font pointSize]);
+    float fontSize = systemFontSizeForControlSize(controlSize);
+    // FIXME: Should be "Lucida Grande"
+    fontDescription.firstFamily().setFamily("Lucida Sans Unicode");
+    fontDescription.setComputedSize(fontSize);
+    fontDescription.setSpecifiedSize(fontSize);
 
     if (style->setFontDescription(fontDescription))
         style->font().update();
-*/
 }
 
 NSControlSize RenderThemeSafari::controlSizeForSystemFont(RenderStyle* style) const
@@ -393,7 +397,7 @@ const IntSize* RenderThemeSafari::checkboxSizes() const
     return sizes;
 }
 
-const int* RenderThemeSafari::checkboxMargins() const
+const int* RenderThemeSafari::checkboxMargins(NSControlSize controlSize) const
 {
     static const int margins[3][4] =
     {
@@ -401,7 +405,7 @@ const int* RenderThemeSafari::checkboxMargins() const
         { 4, 3, 3, 3 },
         { 4, 3, 3, 3 },
     };
-    return margins[0]; //FIXME: controlSize
+    return margins[controlSize];
 }
 
 void RenderThemeSafari::setCheckboxSize(RenderStyle* style) const
@@ -519,7 +523,7 @@ const IntSize* RenderThemeSafari::buttonSizes() const
     return sizes;
 }
 
-const int* RenderThemeSafari::buttonMargins() const
+const int* RenderThemeSafari::buttonMargins(NSControlSize controlSize) const
 {
     static const int margins[3][4] =
     {
@@ -527,7 +531,7 @@ const int* RenderThemeSafari::buttonMargins() const
         { 4, 5, 6, 5 },
         { 0, 1, 1, 1 },
     };
-    return margins[0]; //FIXME: controlSize
+    return margins[controlSize];
 }
 
 void RenderThemeSafari::setButtonSize(RenderStyle* style) const
@@ -542,12 +546,10 @@ void RenderThemeSafari::setButtonSize(RenderStyle* style) const
 
 bool RenderThemeSafari::paintButton(RenderObject* o, const RenderObject::PaintInfo& paintInfo, const IntRect& r)
 {
-//    LocalCurrentGraphicsContext localContext(paintInfo.context);
-
-
     // We inflate the rect as needed to account for padding included in the cell to accommodate the button
     // shadow.  We don't consider this part of the bounds of the control in WebKit.
-    IntSize size = buttonSizes()[0]; //FIXME: controlSize
+    NSControlSize controlSize = controlSizeForFont(o->style());
+    IntSize size = buttonSizes()[controlSize];
     size.setWidth(r.width());
     IntRect inflatedRect = r;
     //if ([button bezelStyle] == NSRoundedBezelStyle) {
@@ -558,15 +560,19 @@ bool RenderThemeSafari::paintButton(RenderObject* o, const RenderObject::PaintIn
         }
 
         // Now inflate it to account for the shadow.
-        inflatedRect = inflateRect(inflatedRect, size, buttonMargins());
+        inflatedRect = inflateRect(inflatedRect, size, buttonMargins(controlSizeForFont(o->style())));
     //}
+    paintInfo.context->save();
     paintThemeButton(paintInfo.context->platformContext(), inflatedRect, false, false, 0);
+    paintInfo.context->restore();
     return false;
 }
 
 bool RenderThemeSafari::paintTextField(RenderObject* o, const RenderObject::PaintInfo& paintInfo, const IntRect& r)
 {
+    paintInfo.context->save();
     paintThemeTextField(paintInfo.context->platformContext(), r, true);
+    paintInfo.context->restore();
     return false;
 }
 

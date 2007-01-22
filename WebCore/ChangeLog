@@ -1,3 +1,18 @@
+2007-01-21  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Maciej.
+
+        * rendering/RenderThemeSafari.cpp: Updated declarations of SafariTheme calls.
+        (WebCore::systemFontSizeForControlSize): Added.
+        (WebCore::RenderThemeSafari::systemFont): Made it work in the small-control case.
+        (WebCore::RenderThemeSafari::adjustRepaintRect): Made it work for buttons and checkboxes.
+        (WebCore::RenderThemeSafari::setFontFromControlSize): Fixed to work on Windows.
+        (WebCore::RenderThemeSafari::checkboxMargins): Added controlSize parameter.
+        (WebCore::RenderThemeSafari::buttonMargins): Ditto.
+        (WebCore::RenderThemeSafari::paintButton): Fixed FIXME, added save/restore calls.
+        (WebCore::RenderThemeSafari::paintTextField): Added save/restore calls.
+        * rendering/RenderThemeSafari.h: Updated declarations.
+
 2007-01-21  Adele Peterson  <adele@apple.com>
 
         Reviewed by Adam. 
