@@ -32,9 +32,6 @@
 #include <WebCore/ResourceError.h>
 #pragma warning(pop)
 
-// {CC671729-C184-4149-8CFA-4C1A2ABC4399}
-DEFINE_GUID(IID_WebError, 0xcc671729, 0xc184, 0x4149, 0x8c, 0xfa, 0x4c, 0x1a, 0x2a, 0xbc, 0x43, 0x99);
-
 class WebError : public IWebError {
 public:
     static WebError* createInstance(const WebCore::ResourceError&);
@@ -49,21 +46,16 @@ public:
     virtual ULONG STDMETHODCALLTYPE Release(void);
 
     // IWebError
-    virtual HRESULT STDMETHODCALLTYPE errorWithDomain( 
+    virtual HRESULT STDMETHODCALLTYPE init( 
         /* [in] */ BSTR domain,
         /* [in] */ int code,
-        /* [in] */ IPropertyBag *dict);
-        
+        /* [in] */ BSTR url);
+
     virtual HRESULT STDMETHODCALLTYPE code( 
         /* [retval][out] */ int *result);
         
     virtual HRESULT STDMETHODCALLTYPE domain( 
         /* [retval][out] */ BSTR *result);
-        
-    virtual HRESULT STDMETHODCALLTYPE initWithDomain( 
-        /* [in] */ BSTR domain,
-        /* [in] */ int code,
-        /* [in] */ IPropertyBag *dict);
         
     virtual HRESULT STDMETHODCALLTYPE localizedDescription( 
         /* [retval][out] */ BSTR *result);

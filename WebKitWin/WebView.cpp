@@ -37,6 +37,7 @@
 #include "WebContextMenuClient.h"
 #include "WebKit.h"
 #include "WebKitStatisticsPrivate.h"
+#include "WebMutableURLRequest.h"
 #include "WebNotificationCenter.h"
 #include "WebPreferences.h"
 #pragma warning( push, 0 )
@@ -437,6 +438,10 @@ void WebView::closeWindow()
 
 bool WebView::canHandleRequest(const WebCore::ResourceRequest& request)
 {
+    // On the mac there's an about url protocol implementation but CFNetwork doesn't have that.
+    if (equalIgnoringCase(String(request.url().protocol()), "about"))
+        return true;
+
     if (CFURLProtocolCanHandleRequest(request.cfURLRequest()))
         return true;
 
@@ -1522,6 +1527,7 @@ HRESULT STDMETHODCALLTYPE WebView::close()
     setFrameLoadDelegatePrivate(0);
     setUIDelegate(0);
     setFormDelegate(0);
+    setPolicyDelegate(0);
 
     if (Frame* frame = m_page->mainFrame())
         frame->loader()->detachFromParent();
@@ -2804,6 +2810,20 @@ HRESULT STDMETHODCALLTYPE WebView::scrollOffset(
     IntSize offsetIntSize = m_page->mainFrame()->view()->scrollOffset();
     offset->x = offsetIntSize.width();
     offset->y = offsetIntSize.height();
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebView::canHandleRequest( 
+    IWebURLRequest *request,
+    BOOL *result)
+{
+    COMPtr<WebMutableURLRequest> requestImpl;
+
+    HRESULT hr = request->QueryInterface(CLSID_WebMutableURLRequest, (void**)&requestImpl);
+    if (FAILED(hr))
+        return hr;
+
+    *result = !!canHandleRequest(requestImpl->resourceRequest());
     return S_OK;
 }
 

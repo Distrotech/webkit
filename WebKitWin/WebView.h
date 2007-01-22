@@ -559,6 +559,10 @@ public:
     virtual HRESULT STDMETHODCALLTYPE selectionImageRect(
         RECT* rc);
 
+    virtual HRESULT STDMETHODCALLTYPE canHandleRequest( 
+        IWebURLRequest *request,
+        BOOL *result);
+
     // WebView
     WebCore::Page* page();
     bool handleMouseEvent(UINT, WPARAM, LPARAM);

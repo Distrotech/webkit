@@ -98,4 +98,6 @@ interface IWebViewPrivate : IUnknown
     HRESULT rectsForTextMatches([out]IEnumTextMatches** pmatches);
     HRESULT selectionImageRect([in, out] RECT* rc);
     HRESULT generateSelectionImage(BOOL forceWhiteText, [out,retval] HBITMAP* image);
+
+    HRESULT canHandleRequest([in] IWebURLRequest* request, [out, retval] BOOL* result);
 }

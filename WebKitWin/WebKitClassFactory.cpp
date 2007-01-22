@@ -29,6 +29,7 @@
 
 #include "CFDictionaryPropertyBag.h"
 #include "WebCache.h"
+#include "WebError.h"
 #include "WebFrame.h"
 #include "WebHistory.h"
 #include "WebHistoryItem.h"
@@ -114,6 +115,8 @@ HRESULT STDMETHODCALLTYPE WebKitClassFactory::CreateInstance(IUnknown* pUnkOuter
         unknown = static_cast<IWebPreferences*>(WebPreferences::createInstance());
     else if (IsEqualGUID(m_targetClass, CLSID_WebKitStatistics))
         unknown = static_cast<IWebKitStatistics*>(WebKitStatistics::createInstance());
+    else if (IsEqualGUID(m_targetClass, CLSID_WebError))
+        unknown = static_cast<IWebError*>(WebError::createInstance(ResourceError()));
     else
         return CLASS_E_CLASSNOTAVAILABLE;
 

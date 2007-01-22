@@ -50,6 +50,7 @@ cpp_quote(" */")
 
 cpp_quote("#define WebURLErrorCancelled -999")
 cpp_quote("#define WebKitErrorDomain TEXT(\"WebKitErrorDomain\")")
+cpp_quote("#define WebKitErrorCannotShowURL 101")
 
 import "oaidl.idl";
 import "ocidl.idl";
@@ -62,10 +63,7 @@ import "ocidl.idl";
 ]
 interface IWebError : IUnknown
 {
-    /*
-        + (id)errorWithDomain:(NSString *)domain code:(int)code userInfo:(NSDictionary *)dict
-    */
-    HRESULT errorWithDomain([in] BSTR domain, [in] int code, [in] IPropertyBag* dict);
+    HRESULT init([in] BSTR domain, [in] int code, [in] BSTR url);
 
     /*
         - (int)code
@@ -76,11 +74,6 @@ interface IWebError : IUnknown
         - (NSString *)domain
     */
     HRESULT domain([out, retval] BSTR* result);
-
-    /*
-        - (id)initWithDomain:(NSString *)domain code:(int)code userInfo:(NSDictionary *)dict
-    */
-    HRESULT initWithDomain([in] BSTR domain, [in] int code, [in] IPropertyBag* dict);
 
     /*
         - (NSString *)localizedDescription

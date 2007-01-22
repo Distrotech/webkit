@@ -25,8 +25,8 @@
 
 #include "config.h"
 #include "WebKitDLL.h"
-#include <initguid.h>
 #include "WebError.h"
+#include "WebKit.h"
 
 using namespace WebCore;
 
@@ -58,7 +58,7 @@ HRESULT STDMETHODCALLTYPE WebError::QueryInterface(REFIID riid, void** ppvObject
     *ppvObject = 0;
     if (IsEqualGUID(riid, IID_IUnknown))
         *ppvObject = static_cast<IUnknown*>(this);
-    else if (IsEqualGUID(riid, IID_WebError))
+    else if (IsEqualGUID(riid, CLSID_WebError))
         *ppvObject = static_cast<WebError*>(this);
     else if (IsEqualGUID(riid, IID_IWebError))
         *ppvObject = static_cast<IWebError*>(this);
@@ -85,16 +85,15 @@ ULONG STDMETHODCALLTYPE WebError::Release(void)
 
 // IWebError ------------------------------------------------------------------
 
-HRESULT STDMETHODCALLTYPE WebError::errorWithDomain( 
-    /* [in] */ BSTR /*domain*/,
-    /* [in] */ int /*code*/,
-    /* [in] */ IPropertyBag* /*dict*/)
+HRESULT STDMETHODCALLTYPE WebError::init( 
+    /* [in] */ BSTR domain,
+    /* [in] */ int code,
+    /* [in] */ BSTR url)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    m_error = ResourceError(String(domain, SysStringLen(domain)), code, String(url, SysStringLen(url)), String());
+    return S_OK;
 }
-
-        
+  
 HRESULT STDMETHODCALLTYPE WebError::code( 
     /* [retval][out] */ int* result)
 {
@@ -108,16 +107,7 @@ HRESULT STDMETHODCALLTYPE WebError::domain(
     ASSERT_NOT_REACHED();
     return E_NOTIMPL;
 }
-        
-HRESULT STDMETHODCALLTYPE WebError::initWithDomain( 
-    /* [in] */ BSTR /*domain*/,
-    /* [in] */ int /*code*/,
-    /* [in] */ IPropertyBag* /*dict*/)
-{
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
-}
-        
+               
 HRESULT STDMETHODCALLTYPE WebError::localizedDescription( 
     /* [retval][out] */ BSTR* /*result*/)
 {

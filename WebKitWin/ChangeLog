@@ -1,3 +1,33 @@
+2007-01-22  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Brady.
+
+        * Interfaces/IWebError.idl:
+        Clean up the IWebError interface.
+        
+        * Interfaces/WebKit.idl:
+        * WebKitClassFactory.cpp:
+        (WebKitClassFactory::CreateInstance):
+        Make it possible for clients to create WebErrors.
+        
+        * WebError.cpp:
+        (WebError::QueryInterface):
+        (WebError::init):
+        * WebError.h:
+        * WebURLAuthenticationChallenge.cpp:
+        (WebURLAuthenticationChallenge::initWithProtectionSpace):
+        Get rid of IID_WebError and use CLSID_WebError instad.
+        
+        * WebView.cpp:
+        (WebView::canHandleRequest):
+        Return true for "about" URLs.
+        
+        (WebView::canHandleRequest):
+        Add private COM method.
+        
+        (WebView::close):
+        Reset the policy delegate.
+
 2007-01-19  Ada Chan  <adachan@apple.com>
 
         Fixed build.

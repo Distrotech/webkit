@@ -33,6 +33,7 @@
 #include "WebURLCredential.h"
 #include "WebURLProtectionSpace.h"
 #include "WebURLResponse.h"
+#include "WebKit.h"
 
 #pragma warning(push, 0)
 #include <WebCore/BString.h>
@@ -126,7 +127,7 @@ HRESULT STDMETHODCALLTYPE WebURLAuthenticationChallenge::initWithProtectionSpace
         return E_FAIL;
 
     COMPtr<WebError> webError;
-    if (!failureResponse || FAILED(error->QueryInterface(IID_WebError, (void**)&webError)))
+    if (!failureResponse || FAILED(error->QueryInterface(CLSID_WebError, (void**)&webError)))
         return E_FAIL;
     
     COMPtr<WebURLAuthenticationChallengeSender> webSender;
