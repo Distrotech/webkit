@@ -2,6 +2,20 @@
 
         Reviewed by Maciej.
 
+        Implemented drawing button states and control sizes.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * rendering/RenderThemeSafari.cpp:
+        (WebCore::RenderThemeSafari::determineState): Added.
+        (WebCore::RenderThemeSafari::systemFont): Implemented rest of font sizes.
+        (WebCore::RenderThemeSafari::paintButton): Updated for SafariTheme changes.
+        (WebCore::RenderThemeSafari::paintTextField): Ditto.
+        * rendering/RenderThemeSafari.h: Added declaration.
+
+2007-01-21  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Maciej.
+
         * rendering/RenderThemeSafari.cpp: Updated declarations of SafariTheme calls.
         (WebCore::systemFontSizeForControlSize): Added.
         (WebCore::RenderThemeSafari::systemFont): Made it work in the small-control case.

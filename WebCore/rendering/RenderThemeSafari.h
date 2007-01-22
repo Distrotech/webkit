@@ -25,18 +25,13 @@
 
 #include "RenderTheme.h"
 
+#include <SafariTheme/SafariTheme.h>
+
 #if PLATFORM(WIN)
 typedef void* HANDLE;
 typedef struct HINSTANCE__* HINSTANCE;
 typedef HINSTANCE HMODULE;
 #endif
-
-enum {
-    NSRegularControlSize,
-    NSSmallControlSize,
-    NSMiniControlSize
-};
-typedef int NSControlSize;
 
 namespace WebCore {
 
@@ -156,6 +151,8 @@ private:
     const IntSize* cancelButtonSizes() const;
     const IntSize* resultsButtonSizes() const;
     void setSearchFieldSize(RenderStyle*) const;
+
+    ThemeControlState determineState(RenderObject*) const;
     
 private:
     HMODULE m_themeDLL;

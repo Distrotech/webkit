@@ -64,11 +64,18 @@ RenderTheme* theme()
 #define THEMEDLL L"SafariTheme_debug.dll"
 #endif
 
-typedef void (WINAPI*paintThemeButtonPtr)(CGContextRef context, const CGRect& rect, bool pressed, bool isDefault, float crossFade);
-typedef void (WINAPI*paintThemeTextFieldPtr)(CGContextRef context, const CGRect& frame, BOOL enabled);
-
 static paintThemeTextFieldPtr paintThemeTextField;
 static paintThemeButtonPtr paintThemeButton;
+
+ThemeControlState RenderThemeSafari::determineState(RenderObject* o) const
+{
+    ThemeControlState result = NormalState;
+    if (!isEnabled(o) || isReadOnlyControl(o))
+        result = DisabledState;
+    else if (isPressed(o))
+        result = ActiveState;
+    return result;
+}
 
 RenderThemeSafari::RenderThemeSafari()
     : m_themeDLL(0)
@@ -129,7 +136,7 @@ void RenderThemeSafari::systemFont(int propId, FontDescription& fontDescription)
     FontDescription* cachedDesc;
     float fontSize = 0;
     switch (propId) {
-        /*case CSS_VAL_SMALL_CAPTION:
+        case CSS_VAL_SMALL_CAPTION:
             cachedDesc = &smallSystemFont;
             if (!smallSystemFont.isAbsoluteSize())
                 fontSize = systemFontSizeForControlSize(NSSmallControlSize);
@@ -142,28 +149,28 @@ void RenderThemeSafari::systemFont(int propId, FontDescription& fontDescription)
         case CSS_VAL_STATUS_BAR:
             cachedDesc = &labelFont;
             if (!labelFont.isAbsoluteSize())
-                font = [NSFont labelFontOfSize:[NSFont labelFontSize]];
+                fontSize = 10.0f;
             break;
         case CSS_VAL__WEBKIT_MINI_CONTROL:
             cachedDesc = &miniControlFont;
             if (!miniControlFont.isAbsoluteSize())
-                font = [NSFont systemFontOfSize:[NSFont systemFontSizeForControlSize:NSMiniControlSize]];
+                fontSize = systemFontSizeForControlSize(NSMiniControlSize);
             break;
-        */case CSS_VAL__WEBKIT_SMALL_CONTROL:
+        case CSS_VAL__WEBKIT_SMALL_CONTROL:
             cachedDesc = &smallControlFont;
             if (!smallControlFont.isAbsoluteSize())
                 fontSize = systemFontSizeForControlSize(NSSmallControlSize);
             break;
-        /*case CSS_VAL__WEBKIT_CONTROL:
+        case CSS_VAL__WEBKIT_CONTROL:
             cachedDesc = &controlFont;
             if (!controlFont.isAbsoluteSize())
-                font = [NSFont systemFontOfSize:[NSFont systemFontSizeForControlSize:NSRegularControlSize]];
+                fontSize = systemFontSizeForControlSize(NSRegularControlSize);
             break;
         default:
             cachedDesc = &systemFont;
             if (!systemFont.isAbsoluteSize())
-                font = [NSFont systemFontOfSize:[NSFont systemFontSize]];
-    */}
+                fontSize = 13.0f;
+    }
 
     if (fontSize) {
         cachedDesc->setIsAbsoluteSize(true);
@@ -560,10 +567,10 @@ bool RenderThemeSafari::paintButton(RenderObject* o, const RenderObject::PaintIn
         }
 
         // Now inflate it to account for the shadow.
-        inflatedRect = inflateRect(inflatedRect, size, buttonMargins(controlSizeForFont(o->style())));
+        inflatedRect = inflateRect(inflatedRect, size, buttonMargins(controlSize));
     //}
     paintInfo.context->save();
-    paintThemeButton(paintInfo.context->platformContext(), inflatedRect, false, false, 0);
+    paintThemeButton(paintInfo.context->platformContext(), inflatedRect, controlSize, determineState(o));
     paintInfo.context->restore();
     return false;
 }
@@ -571,7 +578,7 @@ bool RenderThemeSafari::paintButton(RenderObject* o, const RenderObject::PaintIn
 bool RenderThemeSafari::paintTextField(RenderObject* o, const RenderObject::PaintInfo& paintInfo, const IntRect& r)
 {
     paintInfo.context->save();
-    paintThemeTextField(paintInfo.context->platformContext(), r, true);
+    paintThemeTextField(paintInfo.context->platformContext(), r, determineState(o));
     paintInfo.context->restore();
     return false;
 }
