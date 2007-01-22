@@ -1,5 +1,16 @@
 2007-01-22  Anders Carlsson  <acarlsson@apple.com>
 
+        Reviewed by Adam.
+
+        <rdar://problem/4903230>
+        Boomer crashes at Flickr website when "View as slideshow" is clicked.
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::bindingInstance):
+        Return null if m_plugin is null (which it can be if the plugin failed to load).
+
+2007-01-22  Anders Carlsson  <acarlsson@apple.com>
+
         Build fix.
         
         * WebCore.vcproj/WebCore.vcproj:

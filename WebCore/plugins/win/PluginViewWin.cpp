@@ -1024,7 +1024,7 @@ void PluginViewWin::forceRedraw()
 KJS::Bindings::Instance* PluginViewWin::bindingInstance()
 {
     NPObject* object = 0;
-    if (!m_plugin->pluginFuncs()->getvalue)
+    if (!m_plugin || !m_plugin->pluginFuncs()->getvalue)
         return 0;
     NPError error = m_plugin->pluginFuncs()->getvalue(m_instance, NPPVpluginScriptableNPObject, &object);
 
