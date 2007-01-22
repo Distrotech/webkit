@@ -19,10 +19,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifdef USE_SAFARI_THEME
-
 #include "config.h"
 #include "RenderThemeSafari.h"
+
+#ifdef USE_SAFARI_THEME
 
 #include "CSSValueKeywords.h"
 #include "Document.h"

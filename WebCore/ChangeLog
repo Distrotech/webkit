@@ -1,5 +1,12 @@
 2007-01-22  Adam Roben  <aroben@apple.com>
 
+        Moved ifdefs to match Darin's suggestion.
+
+        * rendering/RenderThemeSafari.cpp:
+        * rendering/RenderThemeSafari.h:
+
+2007-01-22  Adam Roben  <aroben@apple.com>
+
         Build fix.
 
         * rendering/RenderThemeSafari.cpp:
