@@ -1,3 +1,84 @@
+2007-01-21  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Adam. 
+
+        Adding RenderThemeSafari.
+ 
+        * WebCore.vcproj/WebCore.vcproj:
+        * rendering/RenderThemeSafari.cpp: Added.
+        (WebCore::):
+        (WebCore::theme):
+        (WebCore::RenderThemeSafari::RenderThemeSafari):
+        (WebCore::RenderThemeSafari::~RenderThemeSafari):
+        (WebCore::RenderThemeSafari::platformActiveSelectionBackgroundColor):
+        (WebCore::RenderThemeSafari::platformInactiveSelectionBackgroundColor):
+        (WebCore::RenderThemeSafari::activeListBoxSelectionBackgroundColor):
+        (WebCore::RenderThemeSafari::systemFont):
+        (WebCore::RenderThemeSafari::isControlStyled):
+        (WebCore::RenderThemeSafari::adjustRepaintRect):
+        (WebCore::RenderThemeSafari::inflateRect):
+        (WebCore::RenderThemeSafari::baselinePosition):
+        (WebCore::RenderThemeSafari::controlSupportsTints):
+        (WebCore::RenderThemeSafari::controlSizeForFont):
+        (WebCore::RenderThemeSafari::sizeForFont):
+        (WebCore::RenderThemeSafari::sizeForSystemFont):
+        (WebCore::RenderThemeSafari::setSizeFromFont):
+        (WebCore::RenderThemeSafari::setFontFromControlSize):
+        (WebCore::RenderThemeSafari::controlSizeForSystemFont):
+        (WebCore::RenderThemeSafari::paintCheckbox):
+        (WebCore::RenderThemeSafari::checkboxSizes):
+        (WebCore::RenderThemeSafari::checkboxMargins):
+        (WebCore::RenderThemeSafari::setCheckboxSize):
+        (WebCore::RenderThemeSafari::paintRadio):
+        (WebCore::RenderThemeSafari::radioSizes):
+        (WebCore::RenderThemeSafari::radioMargins):
+        (WebCore::RenderThemeSafari::setRadioSize):
+        (WebCore::RenderThemeSafari::setButtonPaddingFromControlSize):
+        (WebCore::RenderThemeSafari::adjustButtonStyle):
+        (WebCore::RenderThemeSafari::buttonSizes):
+        (WebCore::RenderThemeSafari::buttonMargins):
+        (WebCore::RenderThemeSafari::setButtonSize):
+        (WebCore::RenderThemeSafari::paintButton):
+        (WebCore::RenderThemeSafari::paintTextField):
+        (WebCore::RenderThemeSafari::adjustTextFieldStyle):
+        (WebCore::RenderThemeSafari::paintTextArea):
+        (WebCore::RenderThemeSafari::adjustTextAreaStyle):
+        (WebCore::RenderThemeSafari::popupButtonMargins):
+        (WebCore::RenderThemeSafari::popupButtonSizes):
+        (WebCore::RenderThemeSafari::popupButtonPadding):
+        (WebCore::RenderThemeSafari::setPopupPaddingFromControlSize):
+        (WebCore::RenderThemeSafari::paintMenuList):
+        (WebCore::TopGradientInterpolate):
+        (WebCore::BottomGradientInterpolate):
+        (WebCore::MainGradientInterpolate):
+        (WebCore::TrackGradientInterpolate):
+        (WebCore::RenderThemeSafari::paintMenuListButtonGradients):
+        (WebCore::RenderThemeSafari::paintMenuListButton):
+        (WebCore::RenderThemeSafari::adjustMenuListStyle):
+        (WebCore::RenderThemeSafari::adjustMenuListButtonStyle):
+        (WebCore::RenderThemeSafari::menuListSizes):
+        (WebCore::RenderThemeSafari::minimumMenuListSize):
+        (WebCore::RenderThemeSafari::paintSliderTrack):
+        (WebCore::RenderThemeSafari::paintSliderThumb):
+        (WebCore::RenderThemeSafari::adjustSliderThumbSize):
+        (WebCore::RenderThemeSafari::paintSearchField):
+        (WebCore::RenderThemeSafari::searchFieldSizes):
+        (WebCore::RenderThemeSafari::setSearchFieldSize):
+        (WebCore::RenderThemeSafari::adjustSearchFieldStyle):
+        (WebCore::RenderThemeSafari::paintSearchFieldCancelButton):
+        (WebCore::RenderThemeSafari::cancelButtonSizes):
+        (WebCore::RenderThemeSafari::adjustSearchFieldCancelButtonStyle):
+        (WebCore::RenderThemeSafari::resultsButtonSizes):
+        (WebCore::RenderThemeSafari::adjustSearchFieldDecorationStyle):
+        (WebCore::RenderThemeSafari::paintSearchFieldDecoration):
+        (WebCore::RenderThemeSafari::adjustSearchFieldResultsDecorationStyle):
+        (WebCore::RenderThemeSafari::paintSearchFieldResultsDecoration):
+        (WebCore::RenderThemeSafari::adjustSearchFieldResultsButtonStyle):
+        (WebCore::RenderThemeSafari::paintSearchFieldResultsButton):
+        * rendering/RenderThemeSafari.h: Added.
+        (WebCore::RenderThemeSafari::supportsControlTints):
+        * rendering/RenderThemeWin.cpp:
+
 2007-01-21  Adam Roben  <aroben@apple.com>
 
         Build fix.

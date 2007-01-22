@@ -4505,6 +4505,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\rendering\RenderThemeSafari.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\rendering\RenderThemeSafari.h"
+				>
+			</File>
+			<File
 				RelativePath="..\rendering\RenderThemeWin.cpp"
 				>
 			</File>
