@@ -41,7 +41,9 @@
 #error No loader framework defined
 #endif
 
-#define WEB_REASON_NONE -1
+// We use -2 here because some plugins like to return -1 to indicate error
+// and this way we won't clash with them.
+static const int WebReasonNone = -2;
 
 using std::max;
 using std::min;
@@ -88,7 +90,11 @@ void PluginStreamWin::start()
 void PluginStreamWin::stop()
 {
     m_streamState = StreamStopped;
-    m_loader = 0;
+
+    if (m_loader) {
+        m_loader->stopLoading();
+        m_loader = 0;
+    }
 }
 
 void PluginStreamWin::startStream()
@@ -114,16 +120,13 @@ void PluginStreamWin::startStream()
 
     m_transferMode = NP_NORMAL;
     m_offset = 0;
-    m_reason = WEB_REASON_NONE;
+    m_reason = WebReasonNone;
 
     NPError npErr = m_pluginFuncs->newstream(m_instance, (NPMIMEType)(const char*)mimeTypeStr, &m_stream, false, &m_transferMode);
     m_streamState = StreamStarted;
 
-    if (npErr != NPERR_NO_ERROR) {
-        LOG_NPERROR(npErr);
-        stop();
-        return;
-    }
+    if (npErr != NPERR_NO_ERROR)
+        cancelAndDestroyStream(npErr);
 }
 
 void PluginStreamWin::cancelAndDestroyStream(NPReason reason)
@@ -152,7 +155,7 @@ void PluginStreamWin::destroyStream()
     if (m_streamState == StreamStopped)
         return;
 
-    ASSERT (m_reason != WEB_REASON_NONE);
+    ASSERT (m_reason != WebReasonNone);
     ASSERT (!m_deliveryData || m_deliveryData->size() == 0);
 
     if (m_stream.ndata != 0) {
@@ -231,7 +234,7 @@ void PluginStreamWin::deliverData()
             m_deliveryData->resize(remainingBytes);
         } else {
             m_deliveryData->resize(0);
-            if (m_reason != WEB_REASON_NONE)
+            if (m_reason != WebReasonNone)
                 destroyStream();
         }
     } 

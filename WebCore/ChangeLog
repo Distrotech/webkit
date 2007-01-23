@@ -1,3 +1,23 @@
+2007-01-23  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Darin.
+
+        <rdar://problem/4919754>
+        Boomer freezes after attempt to play video.
+        
+        * plugins/win/PluginStreamWin.cpp:
+        Change WebReasonNone to -2, some plugins return -1 to indicate error.
+        
+        (WebCore::PluginStreamWin::stop):
+        Just don't clear the loader, stop loading as well.
+        
+        (WebCore::PluginStreamWin::startStream):
+        Destroy the stream if newstream returns an error.
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::performRequest):
+        If the call to toString throws an exception, clear it.
+
 2007-01-23  Steve Falkenburg  <sfalken@apple.com>
 
         Fix release build.

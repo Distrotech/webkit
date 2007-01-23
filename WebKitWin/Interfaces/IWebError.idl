@@ -49,8 +49,11 @@ cpp_quote(" * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAG
 cpp_quote(" */")
 
 cpp_quote("#define WebURLErrorCancelled -999")
-cpp_quote("#define WebKitErrorDomain TEXT(\"WebKitErrorDomain\")")
+
 cpp_quote("#define WebKitErrorCannotShowURL 101")
+cpp_quote("#define WebKitErrorPluginWillHandleLoad 204")
+
+cpp_quote("#define WebKitErrorDomain TEXT(\"WebKitErrorDomain\")")
 
 import "oaidl.idl";
 import "ocidl.idl";

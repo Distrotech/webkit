@@ -1,3 +1,20 @@
+2007-01-23  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Darin.
+
+        <rdar://problem/4919754>
+        Boomer freezes after attempt to play video.
+        
+        * Interfaces/IWebError.idl:
+        Add error code.
+        
+        * WebFrame.cpp:
+        (WebFrame::redirectDataToPlugin):
+        Cancel loading the main resource.
+        
+        (WebFrame::windowObjectCleared):
+        Use toRef.
+
 2007-01-23  Alice Liu  <alice.liu@apple.com>
 
         Reviewed Maciej.

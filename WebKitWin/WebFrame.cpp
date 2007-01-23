@@ -88,6 +88,7 @@
 #include <WebCore/kjs_binding.h>
 #include <WebCore/kjs_proxy.h>
 #include <WebCore/kjs_window.h>
+#include <JavaScriptCore/APICast.h>
 #include <wtf/MathExtras.h>
 #pragma warning(pop)
 
@@ -1932,7 +1933,14 @@ Widget* WebFrame::createPlugin(Element* element, const KURL& url, const Vector<S
 
 void WebFrame::redirectDataToPlugin(Widget* /*pluginWidget*/)
 {
-    LOG_NOIMPL();
+    // FIXME: Don't hardcode the error domain
+    ResourceError error("WebKitErrorDomain", WebKitErrorPluginWillHandleLoad, String(), String());
+
+    // FIXME: We should really redirect the data coming in to the plugin instead of
+    // cancelling the load and letting the plugin start another one.
+    // Ideally, this function shouldn't be necessary, see <rdar://problem/4852889>
+
+    d->frame->loader()->cancelMainResourceLoad(error);
 }
     
 Widget* WebFrame::createJavaAppletWidget(const IntSize&, Element* element, const KURL& /*baseURL*/, const Vector<String>& paramNames, const Vector<String>& paramValues)
@@ -1978,8 +1986,9 @@ void WebFrame::windowObjectCleared() const
 
     COMPtr<IWebFrameLoadDelegate> frameLoadDelegate;
     if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
-        JSContextRef context = reinterpret_cast<JSContextRef>(d->frame->scriptProxy()->interpreter()->globalExec());
-        JSObjectRef windowObject = reinterpret_cast<JSObjectRef>(KJS::Window::retrieve(d->frame));
+        JSContextRef context = toRef(d->frame->scriptProxy()->interpreter()->globalExec());
+        JSObjectRef windowObject = toRef(KJS::Window::retrieve(d->frame)->getObject());
+        ASSERT(windowObject);
 
         frameLoadDelegate->windowScriptObjectAvailable(d->webView, context, windowObject);
     }

@@ -55,6 +55,7 @@
 #include <kjs/JSLock.h>
 #include <kjs/value.h>
 
+using KJS::ExecState;
 using KJS::Interpreter;
 using KJS::JSLock;
 using KJS::JSObject;
@@ -527,7 +528,10 @@ void PluginViewWin::performRequest(PluginRequestWin* request)
             String resultString;
             if (result) {
                 JSLock lock;
-                resultString = result->toString(m_parentFrame->scriptProxy()->interpreter()->globalExec());
+                ExecState* exec = m_parentFrame->scriptProxy()->interpreter()->globalExec();
+                resultString = result->toString(exec);
+
+                exec->clearException();
             }
 
             if (resultString.isEmpty())
