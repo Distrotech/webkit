@@ -71,16 +71,23 @@
 #include <WebCore/HTMLInputElement.h>
 #include <WebCore/HTMLNames.h>
 #include <WebCore/KeyboardEvent.h>
+#include <WebCore/MimeTypeRegistry.h>
 #include <WebCore/MouseRelatedEvent.h>
 #include <WebCore/NotImplemented.h>
 #include <WebCore/Page.h>
 #include <WebCore/PlatformKeyboardEvent.h>
 #include <WebCore/PlugInInfoStore.h>
+#include <WebCore/PluginDatabaseWin.h>
+#include <WebCore/PluginViewWin.h>
 #include <WebCore/ResourceHandle.h>
 #include <WebCore/ResourceHandleWin.h>
 #include <WebCore/ResourceRequest.h>
 #include <WebCore/RenderFrame.h>
 #include <WebCore/RenderTreeAsText.h>
+#include <WebCore/Settings.h>
+#include <WebCore/kjs_binding.h>
+#include <WebCore/kjs_proxy.h>
+#include <WebCore/kjs_window.h>
 #include <wtf/MathExtras.h>
 #pragma warning(pop)
 
@@ -1891,5 +1898,89 @@ void WebFrame::dispatchDidCancelAuthenticationChallenge(DocumentLoader* loader, 
 
         if (SUCCEEDED(resourceLoadDelegate->didCancelAuthenticationChallenge(d->webView, identifier, webChallenge.get(), getWebDataSource(loader))))
             return;
+    }
+}
+
+Frame* WebFrame::createFrame(const KURL& url, const String& name, HTMLFrameOwnerElement* ownerElement,
+                            const String& referrer, bool /*allowsScrolling*/, int /*marginWidth*/, int /*marginHeight*/)
+{
+    Frame* result = createFrame(url, name, ownerElement, referrer);
+    if (!result)
+        return 0;
+
+    // Propagate the marginwidth/height and scrolling modes to the view.
+    if (ownerElement->hasTagName(frameTag) || ownerElement->hasTagName(iframeTag)) {
+        HTMLFrameElement* frameElt = static_cast<HTMLFrameElement*>(ownerElement);
+        if (frameElt->scrollingMode() == ScrollbarAlwaysOff)
+            result->view()->setScrollbarsMode(ScrollbarAlwaysOff);
+        int marginWidth = frameElt->getMarginWidth();
+        int marginHeight = frameElt->getMarginHeight();
+        if (marginWidth != -1)
+            result->view()->setMarginWidth(marginWidth);
+        if (marginHeight != -1)
+            result->view()->setMarginHeight(marginHeight);
+    }
+
+    return result;
+}
+
+Widget* WebFrame::createPlugin(Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType, bool /*loadManually*/)
+{
+    return PluginDatabaseWin::installedPlugins()->
+        createPluginView(Win(d->frame), element, url, paramNames, paramValues, mimeType);
+}
+
+void WebFrame::redirectDataToPlugin(Widget* /*pluginWidget*/)
+{
+    LOG_NOIMPL();
+}
+    
+Widget* WebFrame::createJavaAppletWidget(const IntSize&, Element* element, const KURL& /*baseURL*/, const Vector<String>& paramNames, const Vector<String>& paramValues)
+{
+    return PluginDatabaseWin::installedPlugins()->
+        createPluginView(Win(d->frame), element, KURL(), paramNames, paramValues, "application/x-java-applet");
+}
+
+ObjectContentType WebFrame::objectContentType(const KURL& url, const String& mimeTypeIn)
+{
+    String mimeType = mimeTypeIn;
+    if (mimeType.isEmpty()) {
+        mimeType = MimeTypeRegistry::getMIMETypeForExtension(url.path().mid(url.path().findRev('.')+1));
+        if(mimeType.isEmpty())
+            return WebCore::ObjectContentNone;
+    }
+
+    if (mimeType.isEmpty())
+        return ObjectContentFrame; // Go ahead and hope that we can display the content.
+
+    if (MimeTypeRegistry::isSupportedImageMIMEType(mimeType))
+        return WebCore::ObjectContentFrame;
+
+    if (PluginDatabaseWin::installedPlugins()->isMIMETypeRegistered(mimeType))
+        return WebCore::ObjectContentPlugin;
+
+    if (MimeTypeRegistry::isSupportedNonImageMIMEType(mimeType))
+        return WebCore::ObjectContentFrame;
+
+    return (ObjectContentType)0;
+}
+
+String WebFrame::overrideMediaType() const
+{
+    LOG_NOIMPL();
+    return String();
+}
+
+void WebFrame::windowObjectCleared() const
+{
+    if (!d->frame->settings()->isJavaScriptEnabled())
+        return;
+
+    COMPtr<IWebFrameLoadDelegate> frameLoadDelegate;
+    if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
+        JSContextRef context = reinterpret_cast<JSContextRef>(d->frame->scriptProxy()->interpreter()->globalExec());
+        JSObjectRef windowObject = reinterpret_cast<JSObjectRef>(KJS::Window::retrieve(d->frame));
+
+        frameLoadDelegate->windowScriptObjectAvailable(d->webView, context, windowObject);
     }
 }

@@ -1,3 +1,18 @@
+2007-01-23  Anders Carlsson  <acarlsson@apple.com>
+
+        Build fixes.
+        
+        * WebFrame.cpp:
+        (WebFrame::createFrame):
+        (WebFrame::createPlugin):
+        (WebFrame::redirectDataToPlugin):
+        (WebFrame::createJavaAppletWidget):
+        (WebFrame::objectContentType):
+        (WebFrame::overrideMediaType):
+        (WebFrame::windowObjectCleared):
+        * WebFrame.h:
+        Move functions here from WebFrameLoaderWin in WebCore.
+
 2007-01-23  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Adam.

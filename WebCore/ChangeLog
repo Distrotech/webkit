@@ -1,3 +1,13 @@
+2007-01-23  Anders Carlsson  <acarlsson@apple.com>
+
+        Build fixes.
+        
+        * WebCore.vcproj/WebCore.vcproj:
+        Copy plugin and JS headers.
+        
+        * loader/win/FrameLoaderWin.cpp:
+        Move functions to WebKitWin.
+
 2007-01-23  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Adam.
