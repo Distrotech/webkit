@@ -19,7 +19,8 @@
 
         Reviewed Maciej.
 
-        fixed <rdar://4923536> pressing shift-backspace inserts a bad character        
+        fixed <rdar://4923535> pressing shift-backspace inserts a bad character        
+        fixed <rdar://4923536> shift-pageup/shift-pagedown do nothing in textareas
 
         * WebView.cpp:
         added to keyEntries an entry for the commands accounting for modifiers
