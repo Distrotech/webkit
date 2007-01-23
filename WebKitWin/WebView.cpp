@@ -843,7 +843,9 @@ static const KeyEntry keyEntries[] = {
     { VK_END,    CtrlKey | ShiftKey, "MoveToEndOfDocumentAndModifySelection"       },
 
     { VK_BACK,   0,                  "BackwardDelete"                              },
+    { VK_BACK,   ShiftKey,           "BackwardDelete"                              },
     { VK_DELETE, 0,                  "ForwardDelete"                               },
+    { VK_DELETE, ShiftKey,           "ForwardDelete"                               },
     
     { 'B',       CtrlKey,            "ToggleBold"                                  },
     { 'I',       CtrlKey,            "ToggleItalic"                                },

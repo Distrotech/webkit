@@ -1,3 +1,12 @@
+2007-01-23  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed Maciej.
+
+        fixed <rdar://4923536> pressing shift-backspace inserts a bad character        
+
+        * WebView.cpp:
+        added to keyEntries an entry for the commands accounting for modifiers
+
 2007-01-23  Adele Peterson  <adele@apple.com>
 
         Reviewed by Darin.
