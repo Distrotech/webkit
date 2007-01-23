@@ -49,6 +49,7 @@ class WebView
     , public IWebViewUndoableEditing
     , public IWebViewEditingActions
     , public IWebNotificationObserver
+    , public IDropTarget
 {
 public:
     static WebView* createInstance();
@@ -558,6 +559,17 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE selectionImageRect(
         RECT* rc);
+    
+    virtual HRESULT STDMETHODCALLTYPE DragEnter(
+        IDataObject* pDataObject, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect);
+
+    virtual HRESULT STDMETHODCALLTYPE DragOver(
+        DWORD grfKeyState, POINTL pt, DWORD* pdwEffect);
+    
+    virtual HRESULT STDMETHODCALLTYPE DragLeave();
+    
+    virtual HRESULT STDMETHODCALLTYPE Drop(
+        IDataObject* pDataObject, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect);
 
     virtual HRESULT STDMETHODCALLTYPE canHandleRequest( 
         IWebURLRequest *request,
@@ -627,6 +639,9 @@ protected:
     WebCore::String m_overrideEncoding;
     WebCore::String m_applicationName;
     bool m_mouseActivated;
+    //WebCore dragging logic needs to be able to inspect the drag data
+    //this is updated in DragEnter/Leave/Drop
+    COMPtr<IDataObject> m_dragData;
 };
 
 #endif

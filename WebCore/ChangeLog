@@ -1,3 +1,55 @@
+2007-01-23  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Adam.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * page/win/DragControllerWin.cpp: Added.
+        (WebCore::DragController::dragOperation):
+        (WebCore::DragController::isCopyKeyDown):
+          Platform specific implementation
+
+        * platform/win/ClipboardWin.cpp:
+        (WebCore::ClipboardWin::ClipboardWin):
+        (WebCore::ClipboardWin::isForDragging):
+        * platform/win/ClipboardWin.h:
+          Migrated common Clipboard functionality from ClipboardMac/Win -> Clipboard
+
+        * platform/win/DragDataWin.cpp: Added.
+        (WebCore::DragData::createClipboard):
+        (WebCore::urlWFormat):
+        (WebCore::urlFormat):
+        (WebCore::filenameWFormat):
+        (WebCore::filenameFormat):
+        (WebCore::plainTextFormat):
+        (WebCore::plainTextWFormat):
+        (WebCore::DragData::containsURL):
+        (WebCore::extractURL):
+        (WebCore::DragData::asURL):
+        (WebCore::DragData::containsPlainText):
+        (WebCore::DragData::asPlainText):
+        (WebCore::texthtmlFormat):
+        (WebCore::htmlFormat):
+        (WebCore::containsHTML):
+        (WebCore::fragmentFromHTML):
+        (WebCore::containsFilenames):
+        (WebCore::fragmentFromFilenames):
+        (WebCore::DragData::containsColor):
+        (WebCore::DragData::canSmartReplace):
+        (WebCore::DragData::containsCompatibleContent):
+        (WebCore::DragData::asFragment):
+        (WebCore::DragData::asColor):
+          Implementation of DragData accesor methods, and helper functions
+
+        * platform/win/EditorWin.cpp:
+        (WebCore::Editor::newGeneralClipboard):
+          Updated for new ClipboardWin constructor
+
+        * platform/win/PasteboardWin.cpp:
+        (WebCore::fragmentFromCF_HTML):
+        (WebCore::Pasteboard::documentFragment):
+          Pulled out CF_HTML parsing to a seperate function so logic 
+          can be shared with DragDataWin
+
 2007-01-22  Adam Roben  <aroben@apple.com>
 
         Reviewed by Adele.

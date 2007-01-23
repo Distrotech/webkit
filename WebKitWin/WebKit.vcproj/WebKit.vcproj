@@ -305,6 +305,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\WebDragClient.h"
+				>
+			</File>
+			<File
 				RelativePath="..\WebEditorClient.h"
 				>
 			</File>
@@ -462,6 +466,10 @@
 			</File>
 			<File
 				RelativePath="..\WebDocumentLoader.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\WebDragClient.cpp"
 				>
 			</File>
 			<File

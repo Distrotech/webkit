@@ -1959,6 +1959,26 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\page\DragActions.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\page\DragClient.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\page\DragController.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\page\DragController.h"
+				>
+			</File>
+			<File
+				RelativePath="..\page\win\DragControllerWin.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\page\EventHandler.cpp"
 				>
 			</File>
@@ -2459,6 +2479,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\DragData.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\DragData.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\FileChooser.cpp"
 				>
 			</File>
@@ -2819,6 +2847,10 @@
 				</File>
 				<File
 					RelativePath="..\platform\win\CursorWin.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\win\DragDataWin.cpp"
 					>
 				</File>
 				<File
@@ -4822,6 +4854,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\dom\ChildNodeList.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\dom\Clipboard.cpp"
 				>
 			</File>
 			<File

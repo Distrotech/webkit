@@ -303,6 +303,32 @@ String Pasteboard::plainText(Frame* frame)
     return String();
 }
 
+//Convert a String containing CF_HTML formatted text to a DocumentFragment
+//This is non-static so it can be used in DragDataWin.cpp as well
+DocumentFragment* fragmentFromCF_HTML(Document* doc, const String& cf_html)
+{        
+    // obtain baseURL if present
+    String srcURLStr("sourceURL:");
+    String srcURL;
+    unsigned lineStart = cf_html.find(srcURLStr, 0, false);
+    if (lineStart != -1) {
+        unsigned srcEnd = cf_html.find("\n", lineStart, false);
+        unsigned srcStart = lineStart+srcURLStr.length();
+        srcURL = cf_html.substring(srcStart, srcEnd-srcStart).stripWhiteSpace();
+    }
+
+    // find the markup between "<!--StartFragment -->" and "<!--EndFragment -->", accounting for browser quirks
+    unsigned markupStart = cf_html.find("<html", 0, false);
+    unsigned tagStart = cf_html.find("startfragment", markupStart, false);
+    unsigned fragmentStart = cf_html.find('>', tagStart) + 1;
+    unsigned tagEnd = cf_html.find("endfragment", fragmentStart, false);
+    unsigned fragmentEnd = cf_html.reverseFind('<', tagEnd);
+    String markup = cf_html.substring(fragmentStart, fragmentEnd - fragmentStart).stripWhiteSpace();
+
+    return createFragmentFromMarkup(doc, markup, srcURL).releaseRef();
+}
+
+
 PassRefPtr<DocumentFragment> Pasteboard::documentFragment(Frame* frame, PassRefPtr<Range> context, bool allowPlainText, bool& chosePlainText)
 {
     chosePlainText = false;
@@ -316,27 +342,9 @@ PassRefPtr<DocumentFragment> Pasteboard::documentFragment(Frame* frame, PassRefP
             ::GlobalUnlock(cbData);
             ::CloseClipboard();
 
-            // obtain baseURL if present
-            String srcURLStr("sourceURL:");
-            String srcURL;
-            unsigned lineStart = cf_html.find(srcURLStr, 0, false);
-            if (lineStart != -1) {
-                unsigned srcEnd = cf_html.find("\n", lineStart, false);
-                unsigned srcStart = lineStart+srcURLStr.length();
-                srcURL = cf_html.substring(srcStart, srcEnd-srcStart).stripWhiteSpace();
-            }
-
-            // find the markup between "<!--StartFragment -->" and "<!--EndFragment -->", accounting for browser quirks
-            unsigned markupStart = cf_html.find("<html", 0, false);
-            unsigned tagStart = cf_html.find("startfragment", markupStart, false);
-            unsigned fragmentStart = cf_html.find('>', tagStart) + 1;
-            unsigned tagEnd = cf_html.find("endfragment", fragmentStart, false);
-            unsigned fragmentEnd = cf_html.reverseFind('<', tagEnd);
-            String markup = cf_html.substring(fragmentStart, fragmentEnd - fragmentStart).stripWhiteSpace();
-
-            RefPtr<DocumentFragment> fragment = createFragmentFromMarkup(frame->document(), markup, srcURL);
+            DocumentFragment* fragment = fragmentFromCF_HTML(frame->document(), cf_html);
             if (fragment)
-                return fragment.release();
+                return fragment;
         } else 
             ::CloseClipboard();
     }

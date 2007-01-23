@@ -30,6 +30,8 @@
 
 #include "IntPoint.h"
 
+#include <objidl.h>
+
 namespace WebCore {
 
     class CachedImage;
@@ -38,15 +40,11 @@ namespace WebCore {
     // State available during IE's events for drag and drop and copy/paste
     class ClipboardWin : public Clipboard {
     public:
+        ClipboardWin(bool isForDragging, IDataObject* dataObject, ClipboardAccessPolicy policy);
         ~ClipboardWin() { }
 
         // Is this operation a drag-drop or a copy-paste?
         bool isForDragging() const;
-
-        String dropEffect() const;
-        void setDropEffect(const String&);
-        String effectAllowed() const;
-        void setEffectAllowed(const String&);
     
         void clearData(const String& type);
         void clearAllData();
@@ -62,12 +60,12 @@ namespace WebCore {
         Node* dragImageElement();
         void setDragImageElement(Node*, const IntPoint&);
 
-        void setAccessPolicy(ClipboardAccessPolicy);
-
     private:
         IntPoint m_dragLoc;
         CachedImage* m_dragImage;
         RefPtr<Node> m_dragImageElement;
+        bool m_isForDragging;
+        IDataObject* m_dataObject;
     };
 
 } // namespace WebCore

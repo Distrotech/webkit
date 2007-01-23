@@ -35,6 +35,7 @@
 #include "WebBackForwardList.h"
 #include "WebChromeClient.h"
 #include "WebContextMenuClient.h"
+#include "WebDragClient.h"
 #include "WebKit.h"
 #include "WebKitStatisticsPrivate.h"
 #include "WebMutableURLRequest.h"
@@ -47,6 +48,8 @@
 #include <WebCore/ContextMenuController.h>
 #include <WebCore/CString.h>
 #include <WebCore/Document.h>
+#include <WebCore/DragController.h>
+#include <WebCore/DragData.h>
 #include <WebCore/Editor.h>
 #include <WebCore/EventHandler.h>
 #include <WebCore/FocusController.h>
@@ -105,6 +108,7 @@ WebView::WebView()
 , m_userAgentOverridden(false)
 , m_textSizeMultiplier(1)
 , m_mouseActivated(false)
+, m_dragData(0)
 {
     m_backingStoreSize.cx = m_backingStoreSize.cy = 0;
 
@@ -1482,9 +1486,11 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     m_viewWindow = CreateWindowEx(0, kWebViewWindowClassName, 0, WS_CHILD | WS_CLIPCHILDREN,
         0, 0, 0, 0, m_hostWindow, 0, gInstance, 0);
 
+    ::RegisterDragDrop(m_viewWindow, this);
+
     m_groupName = String(groupName, SysStringLen(groupName));
 
-    m_page = new Page(new WebChromeClient(this), new WebContextMenuClient(this), new WebEditorClient(this));
+    m_page = new Page(new WebChromeClient(this), new WebContextMenuClient(this), new WebEditorClient(this), new WebDragClient(this));
 
     WebFrame* webFrame = WebFrame::createInstance();
     webFrame->initWithWebFrameView(0 /*FIXME*/, this, m_page, 0);
@@ -1521,6 +1527,8 @@ HRESULT STDMETHODCALLTYPE WebView::close()
 {
     IWebNotificationCenter* notifyCenter = WebNotificationCenter::defaultCenterInternal();
     notifyCenter->removeObserver(this, WebPreferences::webPreferencesChangedNotification(), 0);
+    
+    ::RevokeDragDrop(m_viewWindow);
 
     setHostWindow(0);
     setFrameLoadDelegate(0);
@@ -2810,6 +2818,81 @@ HRESULT STDMETHODCALLTYPE WebView::scrollOffset(
     IntSize offsetIntSize = m_page->mainFrame()->view()->scrollOffset();
     offset->x = offsetIntSize.width();
     offset->y = offsetIntSize.height();
+    return S_OK;
+}
+
+static DWORD dragOperationToDragCursor(DragOperation op) {
+    DWORD res = DROPEFFECT_NONE;
+    if (op & DragOperationCopy) 
+        res = DROPEFFECT_COPY;
+    else if (op & DragOperationLink) 
+        res = DROPEFFECT_LINK;
+    else if (op & DragOperationMove) 
+        res = DROPEFFECT_MOVE;
+    else if (op & DragOperationGeneric) 
+        res = DROPEFFECT_MOVE; //This appears to be the Firefox behaviour
+    return res;
+}
+
+static DragOperation keyStateToDragOperation(DWORD) {
+    //FIXME: This is currently very simple, it may need to actually
+    //work out an appropriate DragOperation in future -- however this
+    //behaviour appears to match FireFox
+    return (DragOperation)(DragOperationCopy | DragOperationLink);
+}
+
+HRESULT STDMETHODCALLTYPE WebView::DragEnter(
+        IDataObject* pDataObject, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
+{
+    m_dragData = 0;
+
+    POINTL localpt = pt;
+    ::ScreenToClient(m_viewWindow, (LPPOINT)&localpt);
+    DragData data(pDataObject, IntPoint(localpt.x, localpt.y), 
+        IntPoint(pt.x, pt.y), keyStateToDragOperation(grfKeyState));
+    *pdwEffect = dragOperationToDragCursor(m_page->dragController()->dragEntered(&data));
+
+    m_dragData = pDataObject;
+
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebView::DragOver(
+        DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
+{
+    if (m_dragData) {
+        POINTL localpt = pt;
+        ::ScreenToClient(m_viewWindow, (LPPOINT)&localpt);
+        DragData data(m_dragData.get(), IntPoint(localpt.x, localpt.y), 
+            IntPoint(pt.x, pt.y), keyStateToDragOperation(grfKeyState));
+        *pdwEffect = dragOperationToDragCursor(m_page->dragController()->dragUpdated(&data));
+    } else
+        *pdwEffect = DROPEFFECT_NONE;
+
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebView::DragLeave()
+{
+    if (m_dragData) {
+        DragData data(m_dragData.get(), IntPoint(), IntPoint(), 
+            DragOperationNone);
+        m_page->dragController()->dragExited(&data);
+        m_dragData = 0;
+    }
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebView::Drop(
+        IDataObject* pDataObject, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
+{
+    m_dragData = 0;
+    *pdwEffect = DROPEFFECT_NONE;
+    POINTL localpt = pt;
+    ::ScreenToClient(m_viewWindow, (LPPOINT)&localpt);
+    DragData data(pDataObject, IntPoint(localpt.x, localpt.y), 
+        IntPoint(pt.x, pt.y), keyStateToDragOperation(grfKeyState));
+    m_page->dragController()->performDrag(&data);
     return S_OK;
 }
 

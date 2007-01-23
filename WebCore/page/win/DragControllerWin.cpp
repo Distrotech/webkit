@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
+ * Copyright (C) 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,63 +24,27 @@
  */
 
 #include "config.h"
-#include "ClipboardWin.h"
+#include "DragController.h"
 
 #include "DragData.h"
-#include "EventHandler.h"
-#include "Frame.h"
-#include "FrameLoader.h"
-#include "FrameView.h"
-#include "Page.h"
-#include "PlatformMouseEvent.h"
-#include "StringHash.h"
+#include "windows.h" 
+#include "SelectionController.h"
 #include <wtf/RefPtr.h>
 
 namespace WebCore {
 
-ClipboardWin::ClipboardWin(bool isForDragging, IDataObject* dataObject, ClipboardAccessPolicy policy)
-    : Clipboard(policy)
-    , m_dragImage(0)
-    , m_isForDragging(isForDragging)
-    , m_dataObject(dataObject)
+DragOperation DragController::dragOperation(DragData* dragData)
 {
+    //FIXME: to match the macos behaviour we should return DragOperationNone
+    //if we are a modal window, we are the drag source, or the window is an attached sheet
+    //If this can be determined from within WebCore operationForDrag can be pulled into 
+    //WebCore itself
+    ASSERT(dragData);
+    return dragData->containsURL() && !m_didInitiateDrag ? DragOperationCopy : DragOperationNone;
 }
 
-
-bool ClipboardWin::isForDragging() const
-{ 
-    return m_isForDragging; 
+bool DragController::isCopyKeyDown() {
+    return ::GetAsyncKeyState(VK_CONTROL);
 }
-
-void ClipboardWin::clearData(const String& type)
-{}
-
-void ClipboardWin::clearAllData()
-{}
-
-String ClipboardWin::getData(const String& type, bool& success) const
-{ return String(); }
-
-bool ClipboardWin::setData(const String& type, const String& data)
-{ return false; }
-
-// extensions beyond IE's API
-HashSet<String> ClipboardWin::types() const
-{ HashSet<String> results; return results; }
-
-IntPoint ClipboardWin::dragLocation() const
-{ return m_dragLoc; }
-
-CachedImage* ClipboardWin::dragImage() const
-{ return m_dragImage; }
-
-void ClipboardWin::setDragImage(CachedImage*, const IntPoint&)
-{}
-
-Node* ClipboardWin::dragImageElement()
-{ return m_dragImageElement.get(); }
-
-void ClipboardWin::setDragImageElement(Node*, const IntPoint&)
-{}
-
-} // namespace WebCore
+    
+}

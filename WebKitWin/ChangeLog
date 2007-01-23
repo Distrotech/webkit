@@ -1,3 +1,34 @@
+2007-01-23  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Adam.
+
+        Attaching the DragController logic to the WebView
+
+        * Interfaces/IWebUIDelegate.idl:
+          Fixed a couple of function definitions to use IDataObject instead of IDropSource
+
+        * WebDragClient.cpp: Added.
+        (WebDragClient::WebDragClient):
+        (WebDragClient::actionMaskForDrag):
+        (WebDragClient::willPerformDragDestinationAction):
+        * WebDragClient.h: Added.
+          DragClient implementation.
+
+        * WebKit.vcproj/WebKit.vcproj:
+        * WebView.cpp:
+        (WebView::WebView):
+        (WebView::initWithFrame):
+        (dragOperationToDragCursor):
+        (keyStateToDragOperation):
+        (WebView::DragEnter):
+        (WebView::DragOver):
+        (WebView::DragLeave):
+        (WebView::Drop):
+          Set up and register WebView as an IDropTarget, and pass off 
+          drag events to the DragController
+        * WebView.h:
+          Ditto
+
 2007-01-22  Adam Roben  <aroben@apple.com>
 
         Reviewed by Anders, Brady, and Steve.

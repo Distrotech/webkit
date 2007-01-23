@@ -32,7 +32,8 @@ namespace WebCore {
 
 PassRefPtr<Clipboard> Editor::newGeneralClipboard(ClipboardAccessPolicy policy)
 {
-    RefPtr<ClipboardWin> clipboard = new ClipboardWin();
+    //FIXME: May need an IDataObject here to act as a backing object for dragging
+    RefPtr<ClipboardWin> clipboard = new ClipboardWin(false, 0, policy);
     return clipboard.release();
 }
 

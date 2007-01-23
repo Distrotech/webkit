@@ -539,7 +539,7 @@ interface IWebUIDelegate : IUnknown
         WebDragDestinationActionNone to not accept the drag.
         - (unsigned)webView:(WebView *)webView dragDestinationActionMaskForDraggingInfo:(id <NSDraggingInfo>)draggingInfo;
     */
-    HRESULT dragDestinationActionMaskForDraggingInfo([in] IWebView* webView, [in] IDropSource* draggingInfo, [out, retval] WebDragDestinationAction* action);
+    HRESULT dragDestinationActionMaskForDraggingInfo([in] IWebView* webView, [in] IDataObject* draggingInfo, [out, retval] WebDragDestinationAction* action);
 
     /*!
         @method webView:willPerformDragDestinationAction:forDraggingInfo:
@@ -551,7 +551,7 @@ interface IWebUIDelegate : IUnknown
         This method informs the UI delegate of the drag destination action that WebView will perform.
         - (void)webView:(WebView *)webView willPerformDragDestinationAction:(WebDragDestinationAction)action forDraggingInfo:(id <NSDraggingInfo>)draggingInfo;
     */
-    HRESULT willPerformDragDestinationAction([in] IWebView* webView, [in] IDropSource* draggingInfo);
+    HRESULT willPerformDragDestinationAction([in] IWebView* webView, [in] WebDragDestinationAction action, [in] IDataObject* draggingInfo);
 
     /*!
         @method webView:dragSourceActionMaskForPoint:
