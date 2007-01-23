@@ -237,6 +237,20 @@ void PluginStreamWin::deliverData()
     } 
 }
 
+void PluginStreamWin::sendJavaScriptStream(const KURL& requestURL, const CString& resultString)
+{
+    didReceiveResponse(0, ResourceResponse(requestURL, "text/plain", resultString.length(), "", ""));
+
+    if (m_streamState == StreamStopped)
+        return;
+
+    didReceiveData(0, resultString, resultString.length());
+    if (m_streamState == StreamStopped)
+        return;
+
+    didFinishLoading(0);
+}
+
 void PluginStreamWin::didReceiveResponse(SubresourceLoader* loader, const ResourceResponse& response)
 {
     ASSERT(loader == m_loader);

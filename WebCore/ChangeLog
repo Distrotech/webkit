@@ -1,3 +1,31 @@
+2007-01-22  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+        
+        <rdar://problem/4771115>
+        Windows Media Player plugin crashes.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        Formatting changes.
+        
+        * plugins/win/PluginDatabaseWin.cpp:
+        (WebCore::PluginDatabaseWin::defaultPluginPaths):
+        Add Windows Media Player path.
+        
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::PluginStreamWin::sendJavaScriptStream):
+        * plugins/win/PluginStreamWin.h:
+        New function which sends a JavaScript result stream and handles any errors that the
+        plug-in returns.
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::setFrameGeometry):
+        Always call NPP_SetWindow, some plugins (like WMP) relies on it.
+        
+        (WebCore::PluginViewWin::performRequest):
+        If a plug-in requests a javascript: URL that doesn't evaluate to a string, call toString on it.
+        The Windows Media Player plugin calls javascript:document.location and expects to get the location back.
+
 2007-01-23  Darin Adler  <darin@apple.com>
 
         - internal part of fix for http://bugs.webkit.org/show_bug.cgi?id=12273

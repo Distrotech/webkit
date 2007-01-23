@@ -62,6 +62,7 @@ namespace WebCore {
         virtual void didFail(SubresourceLoader*, const ResourceError&);
         virtual void didFinishLoading(SubresourceLoader*);
 
+        void sendJavaScriptStream(const KURL& requestURL, const CString& resultString);
     private:
         void deliverData();
         void cancelAndDestroyStream(NPReason);

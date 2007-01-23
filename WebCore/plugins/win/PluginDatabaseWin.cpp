@@ -331,7 +331,7 @@ Vector<String> PluginDatabaseWin::defaultPluginPaths()
     addMozillaPluginPaths(paths);
 
     // The WMP plugin segfaults for some reason so it's disabled for now
-    // addWindowsMediaPlayerPluginPath(paths);
+    addWindowsMediaPlayerPluginPath(paths);
 
     // FIXME: We should get other plugin directories, for example Flash etc. 
 

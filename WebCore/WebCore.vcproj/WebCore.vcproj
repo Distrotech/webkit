@@ -678,20 +678,20 @@
 				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLQuoteElement.h"
 				>
 			</File>
-      <File
-        RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLSelectElement.cpp"
-				>
-      </File>
-      <File
-				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLSelectElement.h"
-				>
-      </File>
-      <File
+			<File
 				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLScriptElement.cpp"
 				>
 			</File>
 			<File
 				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLScriptElement.h"
+				>
+			</File>
+			<File
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLSelectElement.cpp"
+				>
+			</File>
+			<File
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLSelectElement.h"
 				>
 			</File>
 			<File

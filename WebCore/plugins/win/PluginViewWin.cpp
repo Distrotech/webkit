@@ -184,10 +184,10 @@ IntRect PluginViewWin::windowClipRect() const
 
 void PluginViewWin::setFrameGeometry(const IntRect& rect)
 {
+    setNPWindowRect(rect);
+
     if (rect == frameGeometry())
         return;
-
-    setNPWindowRect(rect);
 
     Widget::setFrameGeometry(rect);
 
@@ -525,9 +525,9 @@ void PluginViewWin::performRequest(PluginRequestWin* request)
         } else {
             JSValue* result = m_parentFrame->loader()->executeScript(0, jsString.deprecatedString(), true);
             String resultString;
-            if (result && result->isString()) {
+            if (result) {
                 JSLock lock;
-                resultString = result->getString();
+                resultString = result->toString(m_parentFrame->scriptProxy()->interpreter()->globalExec());
             }
 
             if (resultString.isEmpty())
@@ -535,9 +535,7 @@ void PluginViewWin::performRequest(PluginRequestWin* request)
 
             CString cstr = resultString.utf8();
             PluginStreamWin* stream = new PluginStreamWin(this, m_parentFrame, request->frameLoadRequest().resourceRequest(), request->sendNotification(), request->notifyData());
-            stream->didReceiveResponse(0, ResourceResponse(requestURL, "text/plain", cstr.length(), "", ""));
-            stream->didReceiveData(0, cstr, cstr.length());
-            stream->didFinishLoading(0);
+            stream->sendJavaScriptStream(requestURL, cstr);
         }
     } else {
         // FIXME: <rdar://problem/4807453> if the load request has post data it needs to be sent by the frame.
