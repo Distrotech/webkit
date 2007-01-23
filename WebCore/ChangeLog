@@ -1,3 +1,16 @@
+2007-01-23  Darin Adler  <darin@apple.com>
+
+        - internal part of fix for http://bugs.webkit.org/show_bug.cgi?id=12273
+          REGRESSION: File input value invisible after removing and re-appending
+
+        * WebCore.vcproj/WebCore.vcproj: Added FileChooser.cpp.
+
+        * platform/win/FileChooserWin.cpp: Removed many now-unneeded functions.
+        (WebCore::FileChooser::FileChooser): Updated for changed parameters and members.
+        (WebCore::FileChooser::openFileChooser): Changed to take document parmaeter and
+        find the FrameView from that instead of the upload control.
+        (WebCore::FileChooser::basenameForWidth): Added ignored Font parameter.
+
 2007-01-22  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.

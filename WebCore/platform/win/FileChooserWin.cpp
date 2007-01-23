@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,10 +26,10 @@
 #include "config.h"
 #include "FileChooser.h"
 
+#include "Document.h"
 #include "FrameView.h"
 #include "Icon.h"
 #include "LocalizedStrings.h"
-#include "RenderFileUploadControl.h"
 #include "RenderObject.h"
 #include "RenderThemeWin.h"
 #include "RenderView.h"
@@ -39,15 +39,10 @@
 
 namespace WebCore {
 
-PassRefPtr<FileChooser> FileChooser::create(Document* document, RenderFileUploadControl* uploadControl)
-{
-    return new FileChooser(document, uploadControl);
-}
-
-FileChooser::FileChooser(Document* document, RenderFileUploadControl* uploadControl)
-    : m_document(document)
-    , m_uploadControl(uploadControl)
-    , m_icon(0)
+FileChooser::FileChooser(FileChooserClient* client, const String& filename)
+    : m_client(client)
+    , m_filename(filename)
+    , m_icon(chooseIcon(filename))
 {
 }
 
@@ -55,8 +50,12 @@ FileChooser::~FileChooser()
 {
 }
 
-void FileChooser::openFileChooser()
+void FileChooser::openFileChooser(Document* document)
 {
+    FrameView* view = document->view();
+    if (!view)
+        return;
+
     TCHAR fileBuf[_MAX_PATH];
     OPENFILENAME ofn;
 
@@ -66,7 +65,7 @@ void FileChooser::openFileChooser()
     fileBuf[0] = '\0';
 
     ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = uploadControl()->view()->frameView()->containingWindow();
+    ofn.hwndOwner = view->containingWindow();
     ofn.lpstrFilter = _T("All Files\0*.*\0\0");
     ofn.lpstrFile = fileBuf;
     ofn.nMaxFile = sizeof(fileBuf);
@@ -81,7 +80,7 @@ void FileChooser::openFileChooser()
         chooseFile(String(fileBuf));
 }
 
-String FileChooser::basenameForWidth(int width) const
+String FileChooser::basenameForWidth(const Font&, int width) const
 {
     if (width <= 0)
         return String();
@@ -93,27 +92,6 @@ String FileChooser::basenameForWidth(int width) const
     String tmpFilename = m_filename;
     LPTSTR basename = PathFindFileName(tmpFilename.charactersWithNullTermination());
     return String(basename);
-}
-
-void FileChooser::disconnectUploadControl()
-{
-    m_uploadControl = 0;
-}
-
-void FileChooser::chooseFile(const String& filename)
-{
-    if (filename == m_filename)
-        return;
-
-    m_filename = filename;
-
-    if (!m_filename.length())
-        m_icon = 0;
-    else
-        m_icon = Icon::newIconForFile(m_filename);
-
-    if (uploadControl())
-        uploadControl()->valueChanged();
 }
 
 }
