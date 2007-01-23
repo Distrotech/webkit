@@ -64,8 +64,7 @@ RenderTheme* theme()
 #define THEMEDLL L"SafariTheme_debug.dll"
 #endif
 
-static paintThemeTextFieldPtr paintThemeTextField;
-static paintThemeButtonPtr paintThemeButton;
+static paintThemePartPtr paintThemePart;
 
 ThemeControlState RenderThemeSafari::determineState(RenderObject* o) const
 {
@@ -84,8 +83,7 @@ RenderThemeSafari::RenderThemeSafari()
 {
     m_themeDLL = ::LoadLibrary(THEMEDLL);
     if (m_themeDLL) {
-        paintThemeButton = (paintThemeButtonPtr)GetProcAddress(m_themeDLL, "paintButton");
-        paintThemeTextField = (paintThemeTextFieldPtr)GetProcAddress(m_themeDLL, "paintTextField");
+        paintThemePart = (paintThemePartPtr)GetProcAddress(m_themeDLL, "paintThemePart");
     }
 }
 
@@ -569,17 +567,13 @@ bool RenderThemeSafari::paintButton(RenderObject* o, const RenderObject::PaintIn
         // Now inflate it to account for the shadow.
         inflatedRect = inflateRect(inflatedRect, size, buttonMargins(controlSize));
     //}
-    paintInfo.context->save();
-    paintThemeButton(paintInfo.context->platformContext(), inflatedRect, controlSize, determineState(o));
-    paintInfo.context->restore();
+    paintThemePart(PushButtonPart, paintInfo.context->platformContext(), inflatedRect, controlSize, determineState(o));
     return false;
 }
 
 bool RenderThemeSafari::paintTextField(RenderObject* o, const RenderObject::PaintInfo& paintInfo, const IntRect& r)
 {
-    paintInfo.context->save();
-    paintThemeTextField(paintInfo.context->platformContext(), r, determineState(o));
-    paintInfo.context->restore();
+    paintThemePart(TextFieldPart, paintInfo.context->platformContext(), r, (NSControlSize)0, determineState(o));
     return false;
 }
 
@@ -992,10 +986,19 @@ void RenderThemeSafari::adjustSliderThumbSize(RenderObject* o) const
     }
 }
 
+static NSControlSize controlSizeFromRect(const IntRect& rect, const IntSize sizes[])
+{
+    if (sizes[NSRegularControlSize].height() == rect.height())
+        return NSRegularControlSize;
+    else if (sizes[NSMiniControlSize].height() == rect.height())
+        return NSMiniControlSize;
+    
+    return NSSmallControlSize;
+}
+
 bool RenderThemeSafari::paintSearchField(RenderObject* o, const RenderObject::PaintInfo& paintInfo, const IntRect& r)
 {
-//    LocalCurrentGraphicsContext localContext(paintInfo.context);
-
+    paintThemePart(SearchFieldPart, paintInfo.context->platformContext(), r, controlSizeFromRect(r, searchFieldSizes()), determineState(o));
     return false;
 }
 
@@ -1012,7 +1015,7 @@ void RenderThemeSafari::setSearchFieldSize(RenderStyle* style) const
         return;
     
     // Use the font size to determine the intrinsic width of the control.
-//    setSizeFromFont(style, searchFieldSizes());
+    setSizeFromFont(style, searchFieldSizes());
 }
 
 void RenderThemeSafari::adjustSearchFieldStyle(CSSStyleSelector* selector, RenderStyle* style, Element* e) const
@@ -1046,6 +1049,14 @@ void RenderThemeSafari::adjustSearchFieldStyle(CSSStyleSelector* selector, Rende
 
 bool RenderThemeSafari::paintSearchFieldCancelButton(RenderObject* o, const RenderObject::PaintInfo& paintInfo, const IntRect& r)
 {
+    Node* input = o->node()->shadowAncestorNode();
+    ASSERT(input);
+    RenderObject* renderer = input->renderer();
+    ASSERT(renderer);
+
+    IntRect searchRect = renderer->absoluteBoundingBoxRect();
+
+    paintThemePart(SearchFieldCancelButtonPart, paintInfo.context->platformContext(), searchRect, controlSizeFromRect(searchRect, searchFieldSizes()), determineState(o));
     return false;
 }
 
@@ -1057,7 +1068,7 @@ const IntSize* RenderThemeSafari::cancelButtonSizes() const
 
 void RenderThemeSafari::adjustSearchFieldCancelButtonStyle(CSSStyleSelector* selector, RenderStyle* style, Element* e) const
 {
-    IntSize size; // = sizeForSystemFont(style, cancelButtonSizes());
+    IntSize size = sizeForSystemFont(style, cancelButtonSizes());
     style->setWidth(Length(size.width(), Fixed));
     style->setHeight(Length(size.height(), Fixed));
 }
@@ -1071,7 +1082,7 @@ const IntSize* RenderThemeSafari::resultsButtonSizes() const
 const int emptyResultsOffset = 9;
 void RenderThemeSafari::adjustSearchFieldDecorationStyle(CSSStyleSelector* selector, RenderStyle* style, Element* e) const
 {
-    IntSize size; // = sizeForSystemFont(style, resultsButtonSizes());
+    IntSize size = sizeForSystemFont(style, resultsButtonSizes());
     style->setWidth(Length(size.width() - emptyResultsOffset, Fixed));
     style->setHeight(Length(size.height(), Fixed));
 }
@@ -1083,27 +1094,42 @@ bool RenderThemeSafari::paintSearchFieldDecoration(RenderObject* o, const Render
 
 void RenderThemeSafari::adjustSearchFieldResultsDecorationStyle(CSSStyleSelector* selector, RenderStyle* style, Element* e) const
 {
-    IntSize size; // = sizeForSystemFont(style, resultsButtonSizes());
+    IntSize size = sizeForSystemFont(style, resultsButtonSizes());
     style->setWidth(Length(size.width(), Fixed));
     style->setHeight(Length(size.height(), Fixed));
 }
 
 bool RenderThemeSafari::paintSearchFieldResultsDecoration(RenderObject* o, const RenderObject::PaintInfo& paintInfo, const IntRect& r)
 {
+    Node* input = o->node()->shadowAncestorNode();
+    ASSERT(input);
+    RenderObject* renderer = input->renderer();
+    ASSERT(renderer);
+
+    IntRect searchRect = renderer->absoluteBoundingBoxRect();
+
+    paintThemePart(SearchFieldResultsDecorationPart, paintInfo.context->platformContext(), searchRect, controlSizeFromRect(searchRect, resultsButtonSizes()), determineState(o));
     return false;
 }
 
 const int resultsArrowWidth = 5;
 void RenderThemeSafari::adjustSearchFieldResultsButtonStyle(CSSStyleSelector* selector, RenderStyle* style, Element* e) const
 {
-    IntSize size; // = sizeForSystemFont(style, resultsButtonSizes());
+    IntSize size = sizeForSystemFont(style, resultsButtonSizes());
     style->setWidth(Length(size.width() + resultsArrowWidth, Fixed));
     style->setHeight(Length(size.height(), Fixed));
 }
 
 bool RenderThemeSafari::paintSearchFieldResultsButton(RenderObject* o, const RenderObject::PaintInfo& paintInfo, const IntRect& r)
 {
+    Node* input = o->node()->shadowAncestorNode();
+    ASSERT(input);
+    RenderObject* renderer = input->renderer();
+    ASSERT(renderer);
 
+    IntRect searchRect = renderer->absoluteBoundingBoxRect();
+
+    paintThemePart(SearchFieldResultsButtonPart, paintInfo.context->platformContext(), searchRect, controlSizeFromRect(searchRect, resultsButtonSizes()), determineState(o));
     return false;
 }
 

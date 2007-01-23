@@ -1,3 +1,24 @@
+2007-01-22  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Adele.
+
+        Implemented search field painting, and did some cleanup.
+
+        * rendering/RenderThemeSafari.cpp:
+        (WebCore::RenderThemeSafari::RenderThemeSafari): Updated for changes to SafariTheme.
+        (WebCore::RenderThemeSafari::paintButton): Ditto.
+        (WebCore::RenderThemeSafari::paintTextField): Ditto.
+        (WebCore::controlSizeFromRect): New helper function.
+        (WebCore::RenderThemeSafari::paintSearchField): Implemented.
+        (WebCore::RenderThemeSafari::paintSearchFieldCancelButton): Ditto.
+        (WebCore::RenderThemeSafari::paintSearchFieldResultsDecoration): Ditto.
+        (WebCore::RenderThemeSafari::paintSearchFieldResultsButton): Ditto.
+        (WebCore::RenderThemeSafari::setSearchFieldSize): Uncommented setSizeFromFont call.
+        (WebCore::RenderThemeSafari::adjustSearchFieldCancelButtonStyle): Ditto.
+        (WebCore::RenderThemeSafari::adjustSearchFieldDecorationStyle): Ditto.
+        (WebCore::RenderThemeSafari::adjustSearchFieldResultsDecorationStyle): Ditto.
+        (WebCore::RenderThemeSafari::adjustSearchFieldResultsButtonStyle): Ditto.
+
 2007-01-22  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.
