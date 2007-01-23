@@ -32,9 +32,6 @@
 #include <WebCore/Credential.h>
 #pragma warning(pop)
 
-// {ACD70E50-F799-4a36-AE91-E6D8EB9E265F}
-DEFINE_GUID(IID_WebURLCredential, 0xacd70e50, 0xf799, 0x4a36, 0xae, 0x91, 0xe6, 0xd8, 0xeb, 0x9e, 0x26, 0x5f);
-
 class WebURLCredential : public IWebURLCredential
 {
 public:
@@ -53,7 +50,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE hasPassword(
         /* [out, retval] */ BOOL* result);
 
-    virtual HRESULT STDMETHODCALLTYPE initWithuser(
+    virtual HRESULT STDMETHODCALLTYPE initWithUser(
         /* [in] */ BSTR user, 
         /* [in] */ BSTR password, 
         /* [in] */ WebURLCredentialPersistence persistence);

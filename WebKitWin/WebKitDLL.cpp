@@ -64,7 +64,8 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
     if (!IsEqualGUID(rclsid, CLSID_WebView) && !IsEqualGUID(rclsid, CLSID_WebIconDatabase) && !IsEqualGUID(rclsid, CLSID_WebMutableURLRequest) && 
         !IsEqualGUID(rclsid, CLSID_WebNotificationCenter) && !IsEqualGUID(rclsid, CLSID_WebIconDatabase) && !IsEqualGUID(rclsid, CLSID_WebHistory) && 
         !IsEqualGUID(rclsid, CLSID_CFDictionaryPropertyBag) && !IsEqualGUID(rclsid, CLSID_WebHistoryItem) && !IsEqualGUID(rclsid, CLSID_WebCache) &&
-        !IsEqualGUID(rclsid, CLSID_WebPreferences) && !IsEqualGUID(rclsid, CLSID_WebKitStatistics))
+        !IsEqualGUID(rclsid, CLSID_WebPreferences) && !IsEqualGUID(rclsid, CLSID_WebKitStatistics) && !IsEqualGUID(rclsid, CLSID_WebError) &&
+        !IsEqualGUID(rclsid, CLSID_WebURLCredential))
     return E_FAIL;
 
     if (!IsEqualGUID(riid, IID_IUnknown) && !IsEqualGUID(riid, IID_IClassFactory))
@@ -97,7 +98,9 @@ static CLSID gRegCLSIDs[] = {
     CLSID_WebHistoryItem,
     CLSID_WebCache,
     CLSID_WebPreferences,
-    CLSID_WebKitStatistics
+    CLSID_WebKitStatistics,
+    CLSID_WebError,
+    CLSID_WebURLCredential
 };
 
 static const int gSlotsPerEntry = 7;
@@ -182,7 +185,23 @@ static LPCTSTR gRegTable[][3] = {
 { TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebKitStatistics.3") },
 { TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebKitStatistics") },
 { TEXT("WebKit.WebKitStatistics.3"),                                                        0,                      TEXT("WebKitStatistics") },
-{ TEXT("WebKit.WebKitStatistics.3\\CLSID"),                                                 0,                      TEXT("{########-####-####-####-############}") }
+{ TEXT("WebKit.WebKitStatistics.3\\CLSID"),                                                 0,                      TEXT("{########-####-####-####-############}") },
+
+{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebError") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebError.3") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebError") },
+{ TEXT("WebKit.WebError.3"),                                                                0,                      TEXT("WebError") },
+{ TEXT("WebKit.WebError.3\\CLSID"),                                                         0,                      TEXT("{########-####-####-####-############}") },
+
+{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebURLCredential") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebURLCredential.3") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebURLCredential") },
+{ TEXT("WebKit.WebURLCredential.3"),                                                        0,                      TEXT("WebURLCredential") },
+{ TEXT("WebKit.WebURLCredential.3\\CLSID"),                                                 0,                      TEXT("{########-####-####-####-############}") }
 };
 
 static void substituteGUID(LPTSTR str, const UUID* guid)

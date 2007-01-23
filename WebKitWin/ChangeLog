@@ -1,3 +1,30 @@
+2007-01-22  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Anders, Brady, and Steve.
+
+        WebKit part of <rdar://problem/4601321> HTTP Authentication Alerts
+
+        Made WebURLCredential use a registered CLSID so the app can get instantiate it:
+
+        * Interfaces/IWebURLAuthenticationChallenge.idl: Changed method name.
+        * Interfaces/WebKit.idl: Added GUIDs for WebURLCredential.
+        * WebKitClassFactory.cpp:
+        (WebKitClassFactory::CreateInstance): Added case for WebURLCredential.
+        * WebKitDLL.cpp: Added WebURLCredential and WebError (it was omitted
+        from r11821).
+        (DllGetClassObject):
+        * WebURLAuthenticationChallenge.cpp:
+        (WebURLAuthenticationChallenge::initWithProtectionSpace): Changed to
+        use CLSID, and return the failing HRESULT.
+        (WebURLAuthenticationChallenge::initWithAuthenticationChallenge):
+        Changed to return the failing HRESULT.
+        * WebURLAuthenticationChallengeSender.cpp:
+        (WebURLAuthenticationChallengeSender::useCredential): Ditto.
+        * WebURLCredential.cpp: Removed IID definition.
+        (WebURLCredential::QueryInterface): Switched to use CLSID.
+        (WebURLCredential::initWithUser): Updated method name.
+        * WebURLCredential.h: Ditto.
+
 2007-01-22  Steve Falkenburg  <sfalken@apple.com>
 
         Updated strings not to be localized, added native line endings svn flag.

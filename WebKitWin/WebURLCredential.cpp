@@ -25,9 +25,9 @@
 
 #include "config.h"
 #include "WebKitDLL.h"
-#include <initguid.h>
 #include "WebURLCredential.h"
 
+#include "WebKit.h"
 #pragma warning(push, 0)
 #include <WebCore/BString.h>
 #pragma warning(pop)
@@ -69,7 +69,7 @@ HRESULT STDMETHODCALLTYPE WebURLCredential::QueryInterface(REFIID riid, void** p
     *ppvObject = 0;
     if (IsEqualGUID(riid, IID_IUnknown))
         *ppvObject = static_cast<IUnknown*>(this);
-    else if (IsEqualGUID(riid, IID_WebURLCredential))
+    else if (IsEqualGUID(riid, CLSID_WebURLCredential))
         *ppvObject = static_cast<WebURLCredential*>(this);
     else if (IsEqualGUID(riid, IID_IWebURLCredential))
         *ppvObject = static_cast<IWebURLCredential*>(this);
@@ -102,7 +102,7 @@ HRESULT STDMETHODCALLTYPE WebURLCredential::hasPassword(
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE WebURLCredential::initWithuser(
+HRESULT STDMETHODCALLTYPE WebURLCredential::initWithUser(
         /* [in] */ BSTR user, 
         /* [in] */ BSTR password, 
         /* [in] */ WebURLCredentialPersistence persistence)

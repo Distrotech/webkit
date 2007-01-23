@@ -220,5 +220,14 @@ library WebKit
         interface IWebError;
     }
 
-
+#if __ARCHIVE_BUILD__
+    [uuid(BCF988AF-9A2F-403f-A1D8-BD815C46401D)]
+#elif __BUILDBOT__
+    [uuid(7433F53B-7FE9-484a-9432-72909457A646)]
+#else
+    [uuid(3DB9B7BD-6B58-47f2-9992-AF88CD75793B)]
+#endif
+    coclass WebURLCredential {
+        interface IWebURLCredential;
+    }
 }

@@ -25,10 +25,12 @@
 
 #include "config.h"
 #include "WebKitDLL.h"
+#include <initguid.h>
 #include "WebURLAuthenticationChallenge.h"
 
 #include "COMPtr.h"
 #include "WebError.h"
+#include "WebKit.h"
 #include "WebURLAuthenticationChallengeSender.h"
 #include "WebURLCredential.h"
 #include "WebURLProtectionSpace.h"
@@ -114,25 +116,34 @@ HRESULT STDMETHODCALLTYPE WebURLAuthenticationChallenge::initWithProtectionSpace
 {
     LOG_ERROR("Calling the ala carte init for WebURLAuthenticationChallenge - is this really what you want to do?");
 
+    if (!space || !proposedCredential || !failureResponse || !sender)
+        return E_POINTER;
+
+    HRESULT hr = S_OK;
     COMPtr<WebURLProtectionSpace> webSpace;
-    if (!space || FAILED(space->QueryInterface(IID_WebURLProtectionSpace, (void**)&webSpace)))
-        return E_FAIL;
+    hr = space->QueryInterface(IID_WebURLProtectionSpace, (void**)&webSpace);
+    if (FAILED(hr))
+        return hr;
 
     COMPtr<WebURLCredential> webCredential;
-    if (!proposedCredential || FAILED(proposedCredential->QueryInterface(IID_WebURLCredential, (void**)&webCredential)))
-        return E_FAIL;
+    hr = proposedCredential->QueryInterface(CLSID_WebURLCredential, (void**)&webCredential);
+    if (FAILED(hr))
+        return hr;
 
     COMPtr<WebURLResponse> webResponse;
-    if (!failureResponse || FAILED(failureResponse->QueryInterface(IID_WebURLResponse, (void**)&webResponse)))
-        return E_FAIL;
+    hr = failureResponse->QueryInterface(IID_WebURLResponse, (void**)&webResponse);
+    if (FAILED(hr))
+        return hr;
 
     COMPtr<WebError> webError;
-    if (!failureResponse || FAILED(error->QueryInterface(CLSID_WebError, (void**)&webError)))
-        return E_FAIL;
+    hr = error->QueryInterface(CLSID_WebError, (void**)&webError);
+    if (FAILED(hr))
+        return hr;
     
     COMPtr<WebURLAuthenticationChallengeSender> webSender;
-    if (!sender || FAILED(sender->QueryInterface(IID_WebURLAuthenticationChallengeSender, (void**)&webSender)))
-        return E_FAIL;
+    hr = sender->QueryInterface(IID_WebURLAuthenticationChallengeSender, (void**)&webSender);
+    if (FAILED(hr))
+        return hr;
 
     // FIXME: After we change AuthenticationChallenge to use "ResourceHandle" as the abstract "Sender" or "Source of this Auth Challenge", then we'll
     // construct the AuthenticationChallenge with that as obtained from the webSender
@@ -146,13 +157,20 @@ HRESULT STDMETHODCALLTYPE WebURLAuthenticationChallenge::initWithAuthenticationC
     /* [in] */ IWebURLAuthenticationChallenge* challenge, 
     /* [in] */ IWebURLAuthenticationChallengeSender* sender)
 {
+    if (!challenge || !sender)
+        return E_POINTER;
+
+    HRESULT hr = S_OK;
+
     COMPtr<WebURLAuthenticationChallenge> webChallenge;
-    if (!challenge || FAILED(challenge->QueryInterface(IID_WebURLAuthenticationChallenge, (void**)&webChallenge)))
-        return E_FAIL;
+    hr = challenge->QueryInterface(IID_WebURLAuthenticationChallenge, (void**)&webChallenge);
+    if (FAILED(hr))
+        return hr;
 
     COMPtr<WebURLAuthenticationChallengeSender> webSender;
-    if (!sender || FAILED(sender->QueryInterface(IID_WebURLAuthenticationChallengeSender, (void**)&webSender)))
-        return E_FAIL;
+    hr = sender->QueryInterface(IID_WebURLAuthenticationChallengeSender, (void**)&webSender);
+    if (FAILED(hr))
+        return hr;
 
     m_authenticationChallenge = AuthenticationChallenge(webChallenge->authenticationChallenge().cfURLAuthChallengeRef(), webSender->resourceHandle());
 

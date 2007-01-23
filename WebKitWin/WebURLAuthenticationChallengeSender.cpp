@@ -29,6 +29,7 @@
 #include "WebURLAuthenticationChallengeSender.h"
 
 #include "COMPtr.h"
+#include "WebKit.h"
 #include "WebURLAuthenticationChallenge.h"
 #include "WebURLCredential.h"
 
@@ -125,7 +126,7 @@ HRESULT STDMETHODCALLTYPE WebURLAuthenticationChallengeSender::useCredential(
         return E_FAIL;
     
     COMPtr<WebURLCredential> webCredential;
-    if (!credential || FAILED(credential->QueryInterface(IID_WebURLCredential, (void**)&webCredential)))
+    if (!credential || FAILED(credential->QueryInterface(CLSID_WebURLCredential, (void**)&webCredential)))
         return E_FAIL;
 
     m_handle->receivedCredential(webChallenge->authenticationChallenge(), webCredential->credential());
