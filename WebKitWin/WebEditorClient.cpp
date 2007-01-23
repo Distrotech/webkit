@@ -452,6 +452,11 @@ void WebEditorClient::redo()
     }
 }
 
+void WebEditorClient::handleKeyPress(EventTargetNode*, KeyboardEvent*)
+{
+    // If the platform needs to intercept the event, this is where it should do that.
+}
+
 bool WebEditorClient::selectWordBeforeMenuEvent()
 {
     return false;

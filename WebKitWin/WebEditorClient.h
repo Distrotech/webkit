@@ -36,14 +36,6 @@ class WebView;
 class WebNotification;
 class WebEditorUndoTarget;
 
-namespace WebCore {
-
-class CSSStyleDeclaration;
-class HTMLElement;
-class Node;
-
-}
-
 class WebEditorClient : public WebCore::EditorClient {
 public:
     WebEditorClient(WebView*);
@@ -92,6 +84,8 @@ public:
     
     void undo();
     void redo();
+
+    void handleKeyPress(WebCore::EventTargetNode*, WebCore::KeyboardEvent*);
 
 private:
     WebView* m_webView;

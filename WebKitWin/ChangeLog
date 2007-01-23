@@ -1,3 +1,13 @@
+2007-01-23  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Darin.
+   
+        Reorganized some event handling code for keyPress events to
+        prepare for another fix.
+        
+        * WebEditorClient.cpp: (WebEditorClient::handleKeyPress): Added.
+        * WebEditorClient.h: Removed unnecessary forward declarations.
+
 2007-01-23  Anders Carlsson  <acarlsson@apple.com>
 
         Build fixes.
