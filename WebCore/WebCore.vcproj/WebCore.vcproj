@@ -2932,6 +2932,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\platform\win\PlatformScrollBarSafari.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\platform\win\PlatformScrollBarWin.cpp"
 					>
 				</File>

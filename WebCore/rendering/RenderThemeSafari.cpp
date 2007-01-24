@@ -58,12 +58,6 @@ RenderTheme* theme()
     return &safariTheme;
 }
 
-#ifdef NDEBUG
-#define THEMEDLL L"SafariTheme.dll"
-#else
-#define THEMEDLL L"SafariTheme_debug.dll"
-#endif
-
 static paintThemePartPtr paintThemePart;
 
 ThemeControlState RenderThemeSafari::determineState(RenderObject* o) const
@@ -81,7 +75,7 @@ RenderThemeSafari::RenderThemeSafari()
     , sliderHorizontalCellIsPressed(false)
     , sliderVerticalCellIsPressed(false)
 {
-    m_themeDLL = ::LoadLibrary(THEMEDLL);
+    m_themeDLL = ::LoadLibrary(SAFARITHEMEDLL);
     if (m_themeDLL) {
         paintThemePart = (paintThemePartPtr)GetProcAddress(m_themeDLL, "paintThemePart");
     }

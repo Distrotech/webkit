@@ -1,3 +1,27 @@
+2007-01-24  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Adele.
+
+        Added PlatformScrollBarSafari for Aqua scroll bars.
+
+        * WebCore.vcproj/WebCore.vcproj: Added new file to project.
+        * platform/win/PlatformScrollBarSafari.cpp: Added. Copied from PlatformScrollBarWin.cpp.
+        (WebCore::PlatformScrollbar::PlatformScrollbar):
+        (WebCore::PlatformScrollbar::paint):
+        (WebCore::PlatformScrollbar::backButtonRect):
+        (WebCore::PlatformScrollbar::forwardButtonRect):
+        (WebCore::PlatformScrollbar::trackRect):
+        (WebCore::PlatformScrollbar::thumbLength):
+        (WebCore::PlatformScrollbar::paintButton):
+        (WebCore::PlatformScrollbar::paintTrack):
+        (WebCore::PlatformScrollbar::paintThumb):
+        (WebCore::PlatformScrollbar::paintGripper):
+        (WebCore::PlatformScrollbar::gripperRect):
+        (WebCore::PlatformScrollbar::themeChanged):
+        * platform/win/PlatformScrollBarWin.cpp: Added #ifndef USE_SAFARI_THEME.
+        * rendering/RenderThemeSafari.cpp: Updated for SafariTheme.h changes.
+        (WebCore::RenderThemeSafari::RenderThemeSafari):
+
 2007-01-23  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Steve
