@@ -1,3 +1,23 @@
+2007-01-23  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Brady.
+
+        Fixed <rdar://4949278> cut/copy/paste not working in subframes
+
+        * WebView.cpp:
+        (WebView::cutEnabled):
+        (WebView::copyEnabled):
+        (WebView::pasteEnabled):
+        (WebView::deleteEnabled):
+        (WebView::editingEnabled):
+        (WebView::deleteSelection):
+        (WebView::copy):
+        (WebView::cut):
+        (WebView::paste):
+        (WebView::copyURL):
+        (WebView::delete_):
+        get the focusedOrMainFrame() instead of mainFrame()
+
 2007-01-23  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Darin.

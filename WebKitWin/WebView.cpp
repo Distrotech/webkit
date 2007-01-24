@@ -2504,35 +2504,38 @@ HRESULT STDMETHODCALLTYPE WebView::hasSelectedRange(
 HRESULT STDMETHODCALLTYPE WebView::cutEnabled( 
         /* [retval][out] */ BOOL* enabled)
 {
-    *enabled = m_page->mainFrame()->editor()->canCut() || m_page->mainFrame()->editor()->canDHTMLCut();
+    Editor* editor = m_page->focusController()->focusedOrMainFrame()->editor();
+    *enabled = editor->canCut() || editor->canDHTMLCut();
     return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::copyEnabled( 
         /* [retval][out] */ BOOL* enabled)
 {
-    *enabled = m_page->mainFrame()->editor()->canCopy() || m_page->mainFrame()->editor()->canDHTMLCopy();
+    Editor* editor = m_page->focusController()->focusedOrMainFrame()->editor();
+    *enabled = editor->canCopy() || editor->canDHTMLCopy();
     return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::pasteEnabled( 
         /* [retval][out] */ BOOL* enabled)
 {
-    *enabled = m_page->mainFrame()->editor()->canPaste() || m_page->mainFrame()->editor()->canDHTMLPaste();
+    Editor* editor = m_page->focusController()->focusedOrMainFrame()->editor();
+    *enabled = editor->canPaste() || editor->canDHTMLPaste();
     return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::deleteEnabled( 
         /* [retval][out] */ BOOL* enabled)
 {
-    *enabled = m_page->mainFrame()->editor()->canDelete();
+    *enabled = m_page->focusController()->focusedOrMainFrame()->editor()->canDelete();
     return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::editingEnabled( 
         /* [retval][out] */ BOOL* enabled)
 {
-    *enabled = m_page->mainFrame()->editor()->canEdit();
+    *enabled = m_page->focusController()->focusedOrMainFrame()->editor()->canEdit();
     return S_OK;
 }
 
@@ -2568,7 +2571,7 @@ HRESULT STDMETHODCALLTYPE WebView::replaceSelectionWithArchive(
     
 HRESULT STDMETHODCALLTYPE WebView::deleteSelection( void)
 {
-    m_page->mainFrame()->editor()->deleteSelectionWithSmartDelete();
+    m_page->focusController()->focusedOrMainFrame()->editor()->deleteSelectionWithSmartDelete();
     return S_OK;
 }
     
@@ -2584,21 +2587,21 @@ HRESULT STDMETHODCALLTYPE WebView::applyStyle(
 HRESULT STDMETHODCALLTYPE WebView::copy( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    m_page->mainFrame()->editor()->execCommand("Copy");
+    m_page->focusController()->focusedOrMainFrame()->editor()->execCommand("Copy");
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::cut( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    m_page->mainFrame()->editor()->execCommand("Cut");
+    m_page->focusController()->focusedOrMainFrame()->editor()->execCommand("Cut");
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::paste( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    m_page->mainFrame()->editor()->execCommand("Paste");
+    m_page->focusController()->focusedOrMainFrame()->editor()->execCommand("Paste");
     return S_OK;
 }
 
@@ -2606,7 +2609,7 @@ HRESULT STDMETHODCALLTYPE WebView::copyURL(
         /* [in] */ BSTR url)
 {
     String temp(url, SysStringLen(url));
-    m_page->mainFrame()->editor()->copyURL(KURL(temp.deprecatedString()), "");
+    m_page->focusController()->focusedOrMainFrame()->editor()->copyURL(KURL(temp.deprecatedString()), "");
     return S_OK;
 }
 
@@ -2628,7 +2631,7 @@ HRESULT STDMETHODCALLTYPE WebView::pasteFont(
 HRESULT STDMETHODCALLTYPE WebView::delete_( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    m_page->mainFrame()->editor()->execCommand("Delete");
+    m_page->focusController()->focusedOrMainFrame()->editor()->execCommand("Delete");
     return S_OK;
 }
     
