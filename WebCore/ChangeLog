@@ -1,3 +1,23 @@
+2007-01-23  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Steve
+
+        Initial hookup of Download support
+
+        * platform/network/cf/ResourceErrorCF.cpp:
+        (WebCore::ResourceError::ResourceError):
+        (WebCore::ResourceError::operator CFStreamError):
+        
+        * platform/network/cf/ResourceHandleCFNet.cpp:
+        (WebCore::ResourceHandle::loaderRunLoop): Accessor so downloads can run on the same 
+          runloop as connections
+        (WebCore::ResourceHandle::start):
+        (WebCore::ResourceHandle::connection):
+
+        * platform/win/BString.cpp:
+        (WebCore::BString::BString): Ability to create BString from a CFStringRef
+        * platform/win/BString.h:
+
 2007-01-23  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Darin.

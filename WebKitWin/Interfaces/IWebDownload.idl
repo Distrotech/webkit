@@ -52,13 +52,13 @@ cpp_quote(" */")
 
 import "oaidl.idl";
 import "ocidl.idl";
+import "IWebError.idl";
+import "IWebMutableURLRequest.idl";
+import "IWebURLAuthenticationChallenge.idl";
+import "IWebURLResponse.idl";
+import "IWebURLRequest.idl";
 
 interface IWebDownloadDelegate;
-interface IWebError;
-interface IWebURLAuthenticationChallenge;
-interface IWebURLResponse;
-interface IWebURLRequest;
-
 /*!
     @class WebDownload
     @discussion A WebDownload works just like an NSURLDownload, with
@@ -157,7 +157,7 @@ interface IWebDownloadDelegate : IUnknown
 
     HRESULT willResumeWithResponse([in] IWebDownload* download, [in] IWebURLResponse* response, [in] long long fromByte);
 
-    HRESULT willSendRequest([in] IWebDownload* download, [in] IWebURLRequest* request, [in] IWebURLResponse* redirectResponse);
+    HRESULT willSendRequest([in] IWebDownload* download, [in] IWebMutableURLRequest* request, [in] IWebURLResponse* redirectResponse, [out] IWebMutableURLRequest** finalRequest);
 
     HRESULT didBegin([in] IWebDownload* download);
 

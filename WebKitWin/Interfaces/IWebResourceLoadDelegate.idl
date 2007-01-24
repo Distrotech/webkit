@@ -50,9 +50,9 @@ cpp_quote(" */")
 
 import "oaidl.idl";
 import "ocidl.idl";
+import "IWebURLAuthenticationChallenge.idl";
 import "IWebDataSource.idl";
 import "IWebURLResponse.idl";
-import "IWebURLAuthenticationChallenge.idl";
 import "IWebError.idl";
 
 interface IWebView;

@@ -1,3 +1,116 @@
+2007-01-23  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Steve
+
+        Initial hookup of Downloads
+        
+        - The default download delegate will let downloads operate for testing
+          and for when clients forget to set their our download delegates.  
+          It saves files to the desktop, and doesn't do anything else fancy
+        * DefaultDownloadDelegate.cpp: Added.
+        (DefaultDownloadDelegate::DefaultDownloadDelegate):
+        (DefaultDownloadDelegate::~DefaultDownloadDelegate):
+        (DefaultDownloadDelegate::sharedInstance):
+        (DefaultDownloadDelegate::createInstance):
+        (DefaultDownloadDelegate::QueryInterface):
+        (DefaultDownloadDelegate::AddRef):
+        (DefaultDownloadDelegate::Release):
+        (DefaultDownloadDelegate::decideDestinationWithSuggestedFilename):
+        (DefaultDownloadDelegate::didCancelAuthenticationChallenge):
+        (DefaultDownloadDelegate::didCreateDestination):
+        (DefaultDownloadDelegate::didFailWithError):
+        (DefaultDownloadDelegate::didReceiveAuthenticationChallenge):
+        (DefaultDownloadDelegate::didReceiveDataOfLength):
+        (DefaultDownloadDelegate::didReceiveResponse):
+        (DefaultDownloadDelegate::shouldDecodeSourceDataOfMIMEType):
+        (DefaultDownloadDelegate::willResumeWithResponse):
+        (DefaultDownloadDelegate::willSendRequest):
+        (DefaultDownloadDelegate::didBegin):
+        (DefaultDownloadDelegate::didFinish):
+        * DefaultDownloadDelegate.h: Added.
+        
+        - Had to do some weird reordering of interface includes to make things compile...
+          Ada watched through this one and was as bewildered as I by the compile errors, 
+          but settled on the "do what makes it happy" philosophy
+        * Interfaces/IWebDataSource.idl:
+        * Interfaces/IWebDownload.idl:
+        * Interfaces/IWebResourceLoadDelegate.idl:
+               
+        * Interfaces/WebKit.idl:  Added WebDownload CLSID
+
+        * WebContextMenuClient.cpp:
+        (WebContextMenuClient::downloadURL):  Actually download a file!
+
+        * WebDownload.cpp: Added. Incomplete yet functional implementation of the 
+          IWebDownload interface
+        (WebDownload::WebDownload):
+        (WebDownload::~WebDownload):
+        (WebDownload::createInstance):
+        (WebDownload::QueryInterface):
+        (WebDownload::AddRef):
+        (WebDownload::Release):
+        (WebDownload::initWithRequest):
+        (WebDownload::initWithResumeData):
+        (WebDownload::canResumeDownloadDecodedWithEncodingMIMEType):
+        (WebDownload::cancel):
+        (WebDownload::deletesFileUponFailure):
+        (WebDownload::request):
+        (WebDownload::resumeData):
+        (WebDownload::setDeletesFileUponFailure):
+        (WebDownload::setDestination):
+        
+        - WebDownload acts as its own WebURLAuthenticationChallengeSender 
+        (WebDownload::cancelAuthenticationChallenge):
+        (WebDownload::continueWithoutCredentialForAuthenticationChallenge):
+        (WebDownload::useCredential):
+        
+        - CFURLDownload callbacks
+        (WebDownload::didStart):
+        (WebDownload::willSendRequest):
+        (WebDownload::didReceiveAuthenticationChallenge):
+        (WebDownload::didReceiveResponse):
+        (WebDownload::willResumeWithResponse):
+        (WebDownload::didReceiveData):
+        (WebDownload::shouldDecodeDataOfMIMEType):
+        (WebDownload::decideDestinationWithSuggestedObjectName):
+        (WebDownload::didCreateDestination):
+        (WebDownload::didFinish):
+        (WebDownload::didFail):
+        
+        - The following are all the raw C-function callbacks for CFURLDownload
+        (didStartCallback):
+        (willSendRequestCallback):
+        (didReceiveAuthenticationChallengeCallback):
+        (didReceiveResponseCallback):
+        (willResumeWithResponseCallback):
+        (didReceiveDataCallback):
+        (shouldDecodeDataOfMIMETypeCallback):
+        (decideDestinationWithSuggestedObjectNameCallback):
+        (didCreateDestinationCallback):
+        (didFinishCallback):
+        (didFailCallback):
+        * WebDownload.h: Added.
+        
+        * WebFrame.cpp:
+        (WebFrame::dispatchDecidePolicyForMIMEType):  Temporary and minimal Policy decision that actually results in a download
+        (WebFrame::download):  Actually download... in theory.  Blocked on CFNetwork for now
+        
+        - More CLSID voodoo
+        * WebKit.vcproj/WebKit.vcproj:
+        * WebKitClassFactory.cpp:
+        (WebKitClassFactory::CreateInstance):
+        * WebKitDLL.cpp:
+        (DllGetClassObject):
+        
+        * WebKitLogging.cpp: Added. I needed these for downloads, and just kept the default channels from WebKitMac
+        (initializeLogChannel):
+        (WebKitInitializeLoggingChannelsIfNecessary):
+        * WebKitLogging.h: Added.
+        
+        * WebView.cpp:
+        (WebView::downloadDelegate):  Change ASSERT_NOT_REACHED() to LOG_NOIMPL() to not stop the app
+
+
 2007-01-23  Steve Falkenburg  <sfalken@apple.com>
 
         Copy new CGPThreads DLL (build fix for new SDK).

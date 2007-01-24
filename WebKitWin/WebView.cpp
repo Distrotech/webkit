@@ -60,6 +60,7 @@
 #include <WebCore/GraphicsContext.h>
 #include <WebCore/HitTestResult.h>
 #include <WebCore/IntRect.h>
+#include <WebCore/NotImplemented.h>
 #include <WebCore/Page.h>
 #include <WebCore/PlatformKeyboardEvent.h>
 #include <WebCore/PlatformMouseEvent.h>
@@ -1603,7 +1604,7 @@ HRESULT STDMETHODCALLTYPE WebView::setDownloadDelegate(
 HRESULT STDMETHODCALLTYPE WebView::downloadDelegate( 
     /* [out][retval] */ IWebDownloadDelegate** /*d*/)
 {
-    ASSERT_NOT_REACHED();
+    LOG_NOIMPL();
     return E_NOTIMPL;
 }
 

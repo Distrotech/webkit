@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2004, 2006 Apple Computer, Inc.  All rights reserved.
  *
@@ -222,6 +223,18 @@ void runLoaderThread(void *unused)
     CFRunLoopRun();
 }
 
+CFRunLoopRef ResourceHandle::loaderRunLoop()
+{
+    if (!loaderRL) {
+        _beginthread(runLoaderThread, 0, 0);
+        while (loaderRL == 0) {
+            // FIXME: sleep 10? that can't be right...
+            Sleep(10);
+        }
+    }
+    return loaderRL;
+}
+
 bool ResourceHandle::start(Frame* frame)
 {
     // If we are no longer attached to a Page, this must be an attempted load from an
@@ -234,16 +247,8 @@ bool ResourceHandle::start(Frame* frame)
     CFURLConnectionClient client = {0, this, 0, 0, 0, willSendRequest, didReceiveResponse, didReceiveData, NULL, didFinishLoading, didFail, willCacheResponse, didReceiveChallenge};
     d->m_connection = CFURLConnectionCreate(0, request, &client);
 
-    if (!loaderRL) {
-        _beginthread(runLoaderThread, 0, 0);
-        while (loaderRL == 0) {
-            // FIXME: sleep 10? that can't be right...
-            Sleep(10);
-        }
-    }
-
     CFURLConnectionScheduleWithCurrentMessageQueue(d->m_connection);
-    CFURLConnectionScheduleDownloadWithRunLoop(d->m_connection, loaderRL, kCFRunLoopDefaultMode);
+    CFURLConnectionScheduleDownloadWithRunLoop(d->m_connection, loaderRunLoop(), kCFRunLoopDefaultMode);
     CFURLConnectionStart(d->m_connection);
 
     LOG(Network, "CFNet - Starting URL %s (handle=%p, conn=%p)", d->m_request.url().url().ascii(), this, d->m_connection);
@@ -321,6 +326,11 @@ void ResourceHandle::receivedCancellation(const AuthenticationChallenge& challen
         return;
 
     client()->receivedCancellation(this, challenge);
+}
+
+CFURLConnectionRef ResourceHandle::connection() const
+{
+    return d->m_connection;
 }
 
 } // namespace WebCore

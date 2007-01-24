@@ -249,6 +249,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\DefaultDownloadDelegate.h"
+				>
+			</File>
+			<File
 				RelativePath="..\DOMCoreClasses.h"
 				>
 			</File>
@@ -305,6 +309,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\WebDownload.h"
+				>
+			</File>
+			<File
 				RelativePath="..\WebDragClient.h"
 				>
 			</File>
@@ -350,6 +358,10 @@
 			</File>
 			<File
 				RelativePath="..\WebKitDLL.h"
+				>
+			</File>
+			<File
+				RelativePath="..\WebKitLogging.h"
 				>
 			</File>
 			<File
@@ -421,6 +433,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\DefaultDownloadDelegate.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\DOMCoreClasses.cpp"
 				>
 			</File>
@@ -469,6 +485,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\WebDownload.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\WebDragClient.cpp"
 				>
 			</File>
@@ -506,6 +526,10 @@
 			</File>
 			<File
 				RelativePath="..\WebIconDatabase.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\WebKitLogging.cpp"
 				>
 			</File>
 			<File

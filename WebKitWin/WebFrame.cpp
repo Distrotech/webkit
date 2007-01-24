@@ -37,6 +37,7 @@
 #include "MarshallingHelpers.h"
 #include "WebActionPropertyBag.h"
 #include "WebDocumentLoader.h"
+#include "WebDownload.h"
 #include "WebError.h"
 #include "WebMutableURLRequest.h"
 #include "WebEditorClient.h"
@@ -1672,8 +1673,12 @@ void WebFrame::dispatchDecidePolicyForMIMEType(FramePolicyFunction function, con
             return;
     }
 
-    // FIXME: Add a sane default implementation
-    (d->frame->loader()->*function)(PolicyUse);
+    // FIXME: This is a stopgap default implementation to tide us over until
+    // <rdar://4911042/> is taken care of
+    if (MimeTypeRegistry::isSupportedNonImageMIMEType(mimeType))
+        (d->frame->loader()->*function)(PolicyUse);
+    else
+        (d->frame->loader()->*function)(PolicyDownload);
 }
 
 void WebFrame::dispatchDecidePolicyForNewWindowAction(FramePolicyFunction function, const NavigationAction& action, const ResourceRequest& request, const String& frameName)
@@ -1720,9 +1725,23 @@ void WebFrame::dispatchUnableToImplementPolicy(const ResourceError& error)
     }
 }
 
-void WebFrame::download(ResourceHandle*, const ResourceRequest&, const ResourceResponse&)
+void WebFrame::download(ResourceHandle* handle, const ResourceRequest& request, const ResourceResponse& response)
 {
-    LOG_NOIMPL();
+    COMPtr<IWebDownloadDelegate> downloadDelegate;
+    COMPtr<IWebView> webView;
+    if (SUCCEEDED(this->webView(&webView))) {
+        if (FAILED(webView->downloadDelegate(&downloadDelegate))) {
+            // If the WebView doesn't successfully provide a download delegate we'll pass a null one
+            // into the WebDownload - which may or may not decide to use a DefaultDownloadDelegate
+            LOG_ERROR("Failed to get downloadDelegate from WebView");
+            downloadDelegate = 0;
+        }
+    }
+
+    // Its the delegate's job to ref the WebDownload to keep it alive - otherwise it will be destroyed
+    // when this method returns
+    COMPtr<WebDownload> download;
+    download.adoptRef(WebDownload::createInstance(handle, request, response, downloadDelegate.get()));
 }
 
 bool WebFrame::willUseArchive(ResourceLoader*, const ResourceRequest&, const KURL&) const

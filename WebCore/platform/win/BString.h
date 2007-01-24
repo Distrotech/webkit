@@ -26,6 +26,10 @@
 #ifndef BString_h
 #define BString_h
 
+#if PLATFORM(CF)
+typedef const struct __CFString * CFStringRef;
+#endif
+
 typedef wchar_t* BSTR;
 
 namespace WebCore {
@@ -38,7 +42,12 @@ namespace WebCore {
         BString(const wchar_t*, size_t length);
         BString(const String&);
         BString(BSTR);
+#if PLATFORM(CF)
+        BString(CFStringRef);
+#endif
         ~BString();
+
+        void adoptBSTR(BSTR);
 
         BString(const BString&);
         BString& operator=(const BString&);

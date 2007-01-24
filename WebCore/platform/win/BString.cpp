@@ -30,6 +30,10 @@
 #include <tchar.h>
 #include <windows.h>
 
+#if PLATFORM(CF)
+#include <CoreFoundation/CoreFoundation.h>
+#endif
+
 namespace WebCore {
 
 BString::BString()
@@ -61,6 +65,26 @@ BString::BString(BSTR bstr)
         m_bstr = SysAllocStringLen(bstr, SysStringLen(bstr));
 }
 
+#if PLATFORM(CF)
+BString::BString(CFStringRef cfstr)
+    : m_bstr(0)
+{
+    if (!cfstr)
+        return;
+
+    const UniChar* uniChars = CFStringGetCharactersPtr(cfstr);
+    if (uniChars) {
+        m_bstr = SysAllocStringLen((LPCTSTR)uniChars, CFStringGetLength(cfstr));
+        return;
+    }
+
+    CFIndex length = CFStringGetLength(cfstr);
+    m_bstr = SysAllocStringLen(0, length);
+    CFStringGetCharacters(cfstr, CFRangeMake(0, length), (UniChar*)m_bstr);
+    m_bstr[length] = 0;
+}
+#endif
+
 BString::~BString()
 {
     SysFreeString(m_bstr);
@@ -72,6 +96,13 @@ BString::BString(const BString& other)
         m_bstr = 0;
     else
         m_bstr = SysAllocStringLen(other.m_bstr, SysStringLen(other.m_bstr));
+}
+
+void BString::adoptBSTR(BSTR bstr)
+{
+    if (m_bstr)
+        SysFreeString(m_bstr);
+    m_bstr = bstr;
 }
 
 BString& BString::operator=(const BString& other)

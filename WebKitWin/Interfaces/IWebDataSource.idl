@@ -50,12 +50,13 @@ cpp_quote(" */")
 
 import "oaidl.idl";
 import "ocidl.idl";
+import "IWebMutableURLRequest.idl";
 import "IWebURLResponse.idl";
 import "IWebResource.idl";
 import "IWebArchive.idl";
 import "IWebDocument.idl";
 import "IWebFrame.idl";
-import "IWebMutableURLRequest.idl";
+
 
 interface IWebMutableURLRequest;
 interface IWebURLConnection;

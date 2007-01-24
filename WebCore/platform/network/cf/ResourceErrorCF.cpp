@@ -26,6 +26,8 @@
 #include "config.h"
 #include "ResourceError.h"
 
+#include <CoreFoundation/CFError.h>
+
 namespace WebCore {
 
 #if USE(CFNETWORK)
@@ -47,6 +49,20 @@ ResourceError::ResourceError(CFStreamError error)
     }
 }
 
+ResourceError::ResourceError(CFErrorRef error)
+    : m_errorCode(CFErrorGetCode(error))
+    , m_isNull(false)
+{
+    CFStringRef domain = CFErrorGetDomain(error);
+
+    if (domain == kCFErrorDomainMach || domain == kCFErrorDomainCocoa)
+        m_domain ="NSCustomErrorDomain";
+    else if (domain == kCFErrorDomainPOSIX)
+        m_domain = "NSPOSIXErrorDomain";
+    else if (domain == kCFErrorDomainOSStatus)
+        m_domain = "NSOSStatusErrorDomain";    
+}
+
 ResourceError::operator CFStreamError() const
 {
     CFStreamError result;
@@ -63,7 +79,6 @@ ResourceError::operator CFStreamError() const
 
     return result;
 }
-
 #endif
 };
 

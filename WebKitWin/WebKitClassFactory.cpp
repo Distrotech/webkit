@@ -29,6 +29,7 @@
 
 #include "CFDictionaryPropertyBag.h"
 #include "WebCache.h"
+#include "WebDownload.h"
 #include "WebError.h"
 #include "WebFrame.h"
 #include "WebHistory.h"
@@ -120,6 +121,8 @@ HRESULT STDMETHODCALLTYPE WebKitClassFactory::CreateInstance(IUnknown* pUnkOuter
         unknown = static_cast<IWebError*>(WebError::createInstance(ResourceError()));
     else if (IsEqualGUID(m_targetClass, CLSID_WebURLCredential))
         unknown = static_cast<IWebURLCredential*>(WebURLCredential::createInstance());
+    else if (IsEqualGUID(m_targetClass, CLSID_WebDownload))
+        unknown = static_cast<IWebDownload*>(WebDownload::createInstance());
     else
         return CLASS_E_CLASSNOTAVAILABLE;
 
