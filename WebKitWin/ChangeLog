@@ -1,3 +1,25 @@
+2007-01-24  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Brady.
+        
+        More hookup of Downloads.
+        
+        - Implemented WebDownload::request().
+        - Implemented accessors for download delegate in webview.
+
+        * Interfaces/IWebDownload.idl:
+        * Interfaces/IWebError.idl:
+        * WebDownload.cpp:
+        (WebDownload::WebDownload):
+        (WebDownload::initWithRequest):
+        (WebDownload::request):
+        (WebDownload::willSendRequest):
+        * WebDownload.h:
+        * WebView.cpp:
+        (WebView::setDownloadDelegate):
+        (WebView::downloadDelegate):
+        * WebView.h:
+
 2007-01-23  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Steve

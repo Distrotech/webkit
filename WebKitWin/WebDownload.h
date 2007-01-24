@@ -77,7 +77,7 @@ public:
         /* [out, retval] */ BOOL* result);
 
     virtual HRESULT STDMETHODCALLTYPE request(
-        /* [out, retval] */ IWebURLRequest* request);
+        /* [out, retval] */ IWebURLRequest** request);
 
     virtual HRESULT STDMETHODCALLTYPE resumeData(
         /* [out, retval] */ IStream** stream);
@@ -117,6 +117,7 @@ protected:
     ULONG m_refCount;
 
     WebCore::RetainPtr<CFURLDownloadRef> m_download;
+    COMPtr<IWebMutableURLRequest> m_request;
     COMPtr<IWebDownloadDelegate> m_delegate;
 };
 

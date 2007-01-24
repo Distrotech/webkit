@@ -1595,17 +1595,19 @@ HRESULT STDMETHODCALLTYPE WebView::resourceLoadDelegate(
 }
 
 HRESULT STDMETHODCALLTYPE WebView::setDownloadDelegate( 
-    /* [in] */ IWebDownloadDelegate* /*d*/)
+    /* [in] */ IWebDownloadDelegate* d)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    m_downloadDelegate = d;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::downloadDelegate( 
-    /* [out][retval] */ IWebDownloadDelegate** /*d*/)
+    /* [out][retval] */ IWebDownloadDelegate** d)
 {
-    LOG_NOIMPL();
-    return E_NOTIMPL;
+    if (!m_downloadDelegate)
+        return E_FAIL;
+
+    return m_downloadDelegate.copyRefTo(d);
 }
 
 HRESULT STDMETHODCALLTYPE WebView::setFrameLoadDelegate( 

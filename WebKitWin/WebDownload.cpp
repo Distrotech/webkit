@@ -83,6 +83,7 @@ WebDownload::WebDownload(ResourceHandle* handle, const ResourceRequest& request,
         decideDestinationWithSuggestedObjectNameCallback, didCreateDestinationCallback, didFinishCallback, didFailCallback};
 
     m_download = CFURLDownloadCreateWithLoadingConnection(0, connection, request.cfURLRequest(), response.cfURLResponse(), 0, &client);
+    m_request.adoptRef(WebMutableURLRequest::createInstance(request));
     
     // FIXME: Rework this once CFNetwork implements CFURLDownloadCreateWithLoadingConnection
     if (!m_download) {
@@ -115,6 +116,7 @@ WebDownload::WebDownload(const KURL& url, IWebDownloadDelegate* delegate)
                                   didReceiveResponseCallback, willResumeWithResponseCallback, didReceiveDataCallback, shouldDecodeDataOfMIMETypeCallback, 
                                   decideDestinationWithSuggestedObjectNameCallback, didCreateDestinationCallback, didFinishCallback, didFailCallback};
     m_download = CFURLDownloadCreate(0, cfRequest, &client);
+    m_request.adoptRef(WebMutableURLRequest::createInstance(request));
 
     CFURLDownloadScheduleWithCurrentMessageQueue(m_download.get());
     CFURLDownloadScheduleDownloadWithRunLoop(m_download.get(), ResourceHandle::loaderRunLoop(), kCFRunLoopDefaultMode);
@@ -210,6 +212,7 @@ HRESULT STDMETHODCALLTYPE WebDownload::initWithRequest(
                                   didReceiveResponseCallback, willResumeWithResponseCallback, didReceiveDataCallback, shouldDecodeDataOfMIMETypeCallback, 
                                   decideDestinationWithSuggestedObjectNameCallback, didCreateDestinationCallback, didFinishCallback, didFailCallback};
     m_download = CFURLDownloadCreate(0, cfRequest, &client);
+    m_request.adoptRef(WebMutableURLRequest::createInstance(webRequest.get()));
 
     CFURLDownloadScheduleWithCurrentMessageQueue(m_download.get());
     CFURLDownloadScheduleDownloadWithRunLoop(m_download.get(), ResourceHandle::loaderRunLoop(), kCFRunLoopDefaultMode);
@@ -254,10 +257,13 @@ HRESULT STDMETHODCALLTYPE WebDownload::deletesFileUponFailure(
 }
 
 HRESULT STDMETHODCALLTYPE WebDownload::request(
-        /* [out, retval] */ IWebURLRequest*)
+        /* [out, retval] */ IWebURLRequest** request)
 {
-    LOG_NOIMPL();
-    return E_FAIL;
+    if (request) {
+        *request = m_request.get();
+        (*request)->AddRef();
+    }
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebDownload::resumeData(
@@ -337,6 +343,7 @@ CFURLRequestRef WebDownload::willSendRequest(CFURLRequestRef request, CFURLRespo
         return 0;
 
     COMPtr<WebMutableURLRequest> finalWebRequest = WebMutableURLRequest::createInstance(finalRequest.get());
+    m_request = finalWebRequest.get();
     return finalWebRequest->resourceRequest().cfURLRequest();
 }
 

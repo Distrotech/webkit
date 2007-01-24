@@ -105,7 +105,7 @@ interface IWebDownload : IUnknown
     /*
         - (NSURLRequest *)request
     */
-    HRESULT request([out, retval] IWebURLRequest* request);
+    HRESULT request([out, retval] IWebURLRequest** request);
 
     /*
         - (NSData *)resumeData

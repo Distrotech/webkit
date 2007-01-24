@@ -631,6 +631,7 @@ protected:
     COMPtr<IWebPolicyDelegate> m_policyDelegate;
     COMPtr<IWebPreferences> m_preferences;
     COMPtr<IWebResourceLoadDelegate> m_resourceLoadDelegate;
+    COMPtr<IWebDownloadDelegate> m_downloadDelegate;
     bool m_userAgentOverridden;
     bool m_useBackForwardList;
     WebCore::String m_userAgentCustom;
