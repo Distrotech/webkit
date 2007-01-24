@@ -261,7 +261,8 @@ HRESULT STDMETHODCALLTYPE WebDownload::request(
 {
     if (request) {
         *request = m_request.get();
-        (*request)->AddRef();
+        if (*request)
+            (*request)->AddRef();
     }
     return S_OK;
 }

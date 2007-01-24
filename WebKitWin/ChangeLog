@@ -1,5 +1,12 @@
 2007-01-24  Ada Chan  <adachan@apple.com>
 
+        Forgot a null check.
+
+        * WebDownload.cpp:
+        (WebDownload::request):
+
+2007-01-24  Ada Chan  <adachan@apple.com>
+
         Reviewed by Brady.
         
         More hookup of Downloads.
