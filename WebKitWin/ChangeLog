@@ -1,3 +1,9 @@
+2007-01-23  Steve Falkenburg  <sfalken@apple.com>
+
+        Copy new CGPThreads DLL (build fix for new SDK).
+
+        * WebKit.vcproj/WebKit.vcproj:
+
 2007-01-23  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by Brady.
