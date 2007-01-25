@@ -7751,7 +7751,11 @@
 					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\kjs\string_object.h"
 					>
 				</File>
-				<File
+        <File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\kjs\ustring.h"
+					>
+        </File>
+        <File
 					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\kjs\value.h"
 					>
 				</File>
