@@ -133,6 +133,7 @@ WebDownload::WebDownload(const KURL& url, IWebDownloadDelegate* delegate)
 WebDownload::~WebDownload()
 {
     LOG(Download, "WebDownload - Destroying download (%p)", this);
+    cancel();
     gClassCount--;
 }
 
@@ -246,8 +247,10 @@ HRESULT STDMETHODCALLTYPE WebDownload::canResumeDownloadDecodedWithEncodingMIMET
 
 HRESULT STDMETHODCALLTYPE WebDownload::cancel()
 {
-    LOG_NOIMPL();
-    return E_FAIL;
+    LOG(Download, "WebDownload - Cancelling download (%p)", this);
+    CFURLDownloadCancel(m_download.get());
+    m_download = 0;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebDownload::deletesFileUponFailure(

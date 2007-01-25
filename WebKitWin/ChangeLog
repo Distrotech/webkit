@@ -1,3 +1,13 @@
+2007-01-24  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Steve
+
+        Added cancelling downloads and do it in the destructor
+        
+        * WebDownload.cpp:
+        (WebDownload::~WebDownload):
+        (WebDownload::cancel):
+
 2007-01-24  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Maciej Stachowiak, Steve Falkenberg, Adam Roben.
