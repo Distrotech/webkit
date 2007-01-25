@@ -47,9 +47,9 @@ public:
     static WebDownload* createInstance(WebCore::ResourceHandle*, const WebCore::ResourceRequest&, const WebCore::ResourceResponse&, IWebDownloadDelegate*);
     static WebDownload* createInstance();
 private:
-    WebDownload(WebCore::ResourceHandle*, const WebCore::ResourceRequest&, const WebCore::ResourceResponse&, IWebDownloadDelegate*);
-    WebDownload(const WebCore::KURL&, IWebDownloadDelegate*);
     WebDownload();
+    void init(WebCore::ResourceHandle*, const WebCore::ResourceRequest&, const WebCore::ResourceResponse&, IWebDownloadDelegate*);
+    void init(const WebCore::KURL&, IWebDownloadDelegate*);
     ~WebDownload();
 public:
     // IUnknown

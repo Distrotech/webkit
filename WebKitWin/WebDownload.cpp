@@ -67,11 +67,9 @@ WebDownload::WebDownload()
     gClassCount++;
 }
 
-WebDownload::WebDownload(ResourceHandle* handle, const ResourceRequest& request, const ResourceResponse& response, IWebDownloadDelegate* delegate)
-    : m_refCount(0)
-    , m_delegate(delegate ? delegate : DefaultDownloadDelegate::sharedInstance())
+void WebDownload::init(ResourceHandle* handle, const ResourceRequest& request, const ResourceResponse& response, IWebDownloadDelegate* delegate)
 {
-    gClassCount++;
+    m_delegate = delegate ? delegate : DefaultDownloadDelegate::sharedInstance();
     LOG_ERROR("Delegate is %p", m_delegate.get());
     CFURLConnectionRef connection = handle->connection();
     if (!connection) {
@@ -103,11 +101,9 @@ WebDownload::WebDownload(ResourceHandle* handle, const ResourceRequest& request,
     LOG(Download, "WebDownload - Started download from existing connection (%s)", request.url().url().ascii());
 }
 
-WebDownload::WebDownload(const KURL& url, IWebDownloadDelegate* delegate)
-    : m_refCount(0)
-    , m_delegate(delegate ? delegate : DefaultDownloadDelegate::sharedInstance())
+void WebDownload::init(const KURL& url, IWebDownloadDelegate* delegate)
 {
-    gClassCount++;
+    m_delegate = delegate ? delegate : DefaultDownloadDelegate::sharedInstance();
     LOG_ERROR("Delegate is %p", m_delegate.get());
 
     ResourceRequest request(url);
@@ -146,15 +142,17 @@ WebDownload* WebDownload::createInstance()
 
 WebDownload* WebDownload::createInstance(ResourceHandle* handle, const ResourceRequest& request, const ResourceResponse& response, IWebDownloadDelegate* delegate)
 {
-    WebDownload* instance = new WebDownload(handle, request, response, delegate);
+    WebDownload* instance = new WebDownload();
     instance->AddRef();
+    instance->init(handle, request, response, delegate);
     return instance;
 }
 
 WebDownload* WebDownload::createInstance(const KURL& url, IWebDownloadDelegate* delegate)
 {
-    WebDownload* instance = new WebDownload(url, delegate);
+    WebDownload* instance = new WebDownload();
     instance->AddRef();
+    instance->init(url, delegate);
     return instance;
 }
 

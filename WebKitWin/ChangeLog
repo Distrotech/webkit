@@ -1,3 +1,16 @@
+2007-01-25  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Maciej.
+        
+        Added init methods instead of doing all the initialization in the constructor.
+        There was a lifetime issue with passing the WebDownload to delegate calls when
+        its ref count is still 0.
+
+        * WebDownload.cpp:
+        (WebDownload::init):
+        (WebDownload::createInstance):
+        * WebDownload.h:
+
 2007-01-24  Adele Peterson  <adele@apple.com>
 
         Reviewed by Brady and Oliver.
