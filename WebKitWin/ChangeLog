@@ -1,3 +1,15 @@
+2007-01-24  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Ada
+        
+        Added debug-only instrumentation to help track CFNetwork performance and hangs
+
+        * WebDownload.cpp:
+        (WebDownload::didStart):
+        (WebDownload::didReceiveData):
+        (WebDownload::didFinish):
+        * WebDownload.h:
+
 2007-01-24  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Lou.

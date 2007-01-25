@@ -41,6 +41,7 @@
 #include <WebCore/ResourceHandle.h>
 #include <WebCore/ResourceRequest.h>
 #include <WebCore/ResourceResponse.h>
+#include <WebCore/SystemTime.h>
 #pragma warning(pop)
 
 using namespace WebCore;
@@ -323,10 +324,14 @@ HRESULT STDMETHODCALLTYPE WebDownload::useCredential(
     return E_FAIL;
 }
 
-
 // CFURLDownload Callbacks -------------------------------------------------------------------
 void WebDownload::didStart()
 {
+#ifndef NDEBUG
+    m_startTime = m_dataTime = currentTime();
+    m_received = 0;
+    LOG(Download, "DOWNLOAD - Started %p at %.3f seconds", this, m_startTime);
+#endif
     if (FAILED(m_delegate->didBegin(this)))
         LOG_ERROR("DownloadDelegate->didBegin failed");
 }
@@ -369,6 +374,13 @@ void WebDownload::willResumeWithResponse(CFURLResponseRef response, UInt64 fromB
 
 void WebDownload::didReceiveData(CFIndex length)
 {
+#ifndef NDEBUG
+    m_received += length;
+    double current = currentTime();
+    if (current - m_dataTime > 2.0)
+        LOG(Download, "DOWNLOAD - %p hanged for %.3f seconds - Received %i bytes for a total of %i", this, current - m_dataTime, length, m_received);
+    m_dataTime = current;
+#endif
     if (FAILED(m_delegate->didReceiveDataOfLength(this, length)))
         LOG_ERROR("DownloadDelegate->didReceiveData failed");
 }
@@ -397,6 +409,9 @@ void WebDownload::didCreateDestination(CFURLRef destination)
 
 void WebDownload::didFinish()
 {
+#ifndef NDEBUG
+    LOG(Download, "DOWNLOAD - Finished %p after %i bytes and %.3f seconds", this, m_received, currentTime() - m_startTime);
+#endif
     if (FAILED(m_delegate->didFinish(this)))
         LOG_ERROR("DownloadDelegate->didFinish failed");
 }

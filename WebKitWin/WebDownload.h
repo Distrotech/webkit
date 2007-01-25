@@ -119,6 +119,12 @@ protected:
     WebCore::RetainPtr<CFURLDownloadRef> m_download;
     COMPtr<IWebMutableURLRequest> m_request;
     COMPtr<IWebDownloadDelegate> m_delegate;
+
+#ifndef NDEBUG
+    double m_startTime;
+    double m_dataTime;
+    int m_received;
+#endif
 };
 
 
