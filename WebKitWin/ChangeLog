@@ -1,3 +1,19 @@
+2007-01-25  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Anders.
+
+        Part of <rdar://problem/4855618> HTML-based load failure pages.
+
+        * Interfaces/IWebError.idl: Added failingURL method declaration.
+        * WebError.cpp:
+        (WebError::failingURL): Implemented.
+        * WebError.h: Updated for interface changes.
+        * WebFrame.cpp:
+        (WebFrame::loadHTMLString): New protected helper method called by
+        IWebFrame::loadHTMLString and IWebFrame::loadAlternateHTMLString.
+        (WebFrame::loadAlternateHTMLString): Calls loadHTMLString.
+        * WebFrame.h: Added new declaration.
+
 2007-01-25  Ada Chan  <adachan@apple.com>
 
         Reviewed by Maciej.

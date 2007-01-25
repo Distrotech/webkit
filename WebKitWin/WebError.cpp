@@ -28,6 +28,10 @@
 #include "WebError.h"
 #include "WebKit.h"
 
+#pragma warning(push, 0)
+#include <WebCore/BString.h>
+#pragma warning(pop)
+
 using namespace WebCore;
 
 // WebError ---------------------------------------------------------------------
@@ -150,6 +154,16 @@ HRESULT STDMETHODCALLTYPE WebError::userInfo(
 {
     ASSERT_NOT_REACHED();
     return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE WebError::failingURL( 
+    /* [retval][out] */ BSTR* result)
+{
+    if (!result)
+        return E_POINTER;
+
+    *result = BString(m_error.failingURL()).release();
+    return S_OK;
 }
 
 const ResourceError& WebError::resourceError() const

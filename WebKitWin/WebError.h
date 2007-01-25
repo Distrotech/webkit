@@ -75,7 +75,10 @@ public:
         
     virtual HRESULT STDMETHODCALLTYPE userInfo( 
         /* [retval][out] */ IPropertyBag **result);
-        
+
+    virtual HRESULT STDMETHODCALLTYPE failingURL( 
+        /* [retval][out] */ BSTR *result);
+
     const WebCore::ResourceError& resourceError() const;
 
 private:

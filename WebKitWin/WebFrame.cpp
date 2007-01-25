@@ -527,32 +527,43 @@ HRESULT STDMETHODCALLTYPE WebFrame::loadData(
     return S_OK;
 }
 
+void WebFrame::loadHTMLString(BSTR string, BSTR baseURL, BSTR /*unreachableURL*/)
+{
+
+    // FIXME: We should really be using loadData for this, but that has to wait until
+    // <rdar://problem/4910106> is fixed.
+    DeprecatedString baseURLString((DeprecatedChar*)baseURL, SysStringLen(baseURL));
+
+    if (baseURL) {
+        m_originalRequestURL = KURL(baseURLString);
+        d->frame->loader()->didOpenURL(m_originalRequestURL);
+        d->frame->loader()->begin(m_originalRequestURL);
+    } else {
+        d->frame->loader()->didOpenURL("about:blank");
+        d->frame->loader()->begin();
+    }
+
+    String htmlString((UChar*)string, SysStringLen(string));
+
+    d->frame->loader()->write(htmlString);
+    d->frame->loader()->end();
+}
+
 HRESULT STDMETHODCALLTYPE WebFrame::loadHTMLString( 
     /* [in] */ BSTR string,
     /* [in] */ BSTR baseURL)
 {
-    DeprecatedString htmlString((DeprecatedChar*)string, SysStringLen(string));
-
-    if (baseURL) {
-        DeprecatedString baseURLString((DeprecatedChar*)baseURL, SysStringLen(baseURL));
-        m_originalRequestURL = KURL(baseURLString);
-        d->frame->loader()->begin(m_originalRequestURL);
-    }
-    else
-        d->frame->loader()->begin();
-    d->frame->loader()->write(htmlString);
-    d->frame->loader()->end();
-
+    loadHTMLString(string, baseURL, 0);
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::loadAlternateHTMLString( 
-    /* [in] */ BSTR /*str*/,
-    /* [in] */ BSTR /*baseURL*/,
-    /* [in] */ BSTR /*unreachableURL*/)
+    /* [in] */ BSTR str,
+    /* [in] */ BSTR baseURL,
+    /* [in] */ BSTR unreachableURL)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    loadHTMLString(str, baseURL, unreachableURL);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::loadArchive( 

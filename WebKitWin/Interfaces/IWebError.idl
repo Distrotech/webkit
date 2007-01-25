@@ -109,4 +109,6 @@ interface IWebError : IUnknown
         - (NSDictionary *)userInfo
     */
     HRESULT userInfo([out, retval] IPropertyBag** result);
+
+    HRESULT failingURL([out, retval] BSTR* result);
 }
