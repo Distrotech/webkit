@@ -1,3 +1,25 @@
+2007-01-24  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Lou.
+
+        Checkpoint of <rdar://problem/4712469> Address Book forms autofill.
+        
+        The three necessary methods have been added to FrameWin, matching
+        similar methods in FrameMac.  Note that the methods are *not* defined
+        in Frame.
+        
+        I'd appreciate any alternative implementations that share code
+        between Windows and Mac.  Due to the way the Mac version caches
+        arrays of labels, I didn't write a common implementation for this
+        initial code.
+
+        * bridge/win/FrameWin.cpp:
+        (WebCore::regExpForLabels): Ported from FrameMac.mm
+        (WebCore::FrameWin::searchForLabelsAboveCell): Ported from FrameMac.mm
+        (WebCore::FrameWin::searchForLabelsBeforeElement): Ported from FrameMac.mm
+        (WebCore::FrameWin::matchLabelsAgainstElement): Ported from FrameMac.mm
+        * bridge/win/FrameWin.h: Added autofill methods
+
 2007-01-24  Adam Roben  <aroben@apple.com>
 
         Reviewed by Adele.

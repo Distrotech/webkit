@@ -28,13 +28,17 @@
 #include "DOMHTMLClasses.h"
 
 #pragma warning(push, 0)
+#include <WebCore/Document.h>
 #include <WebCore/Element.h>
+#include <WebCore/FrameView.h>
 #include <WebCore/HTMLFormElement.h>
 #include <WebCore/HTMLInputElement.h>
 #include <WebCore/HTMLNames.h>
 #include <WebCore/HTMLOptionElement.h>
 #include <WebCore/HTMLSelectElement.h>
 #include <WebCore/HTMLTextAreaElement.h>
+#include <WebCore/IntRect.h>
+#include <WebCore/RenderObject.h>
 #pragma warning(pop)
 
 using namespace WebCore;
@@ -964,10 +968,11 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setName(
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::readOnly( 
-        /* [retval][out] */ BOOL* /*result*/)
+        /* [retval][out] */ BOOL* result)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
+    *result = inputElement->readOnly() ? TRUE : FALSE;
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setReadOnly( 
@@ -1122,10 +1127,21 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::isTextField(
 }
 
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::rectOnScreen( 
-    /* [retval][out] */ LPRECT /*rect*/)
+    /* [retval][out] */ LPRECT rect)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    rect->left = rect->top = rect->right = rect->bottom = 0;
+    RenderObject* renderer = m_element->renderer();
+    FrameView* view = m_element->document()->view();
+    if (!renderer || !view)
+        return E_FAIL;
+
+    IntRect coreRect = renderer->absoluteBoundingBoxRect();
+    coreRect.setLocation(view->contentsToWindow(coreRect.location()));
+    rect->left = coreRect.x();
+    rect->top = coreRect.y();
+    rect->right = coreRect.right();
+    rect->bottom = coreRect.bottom();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::replaceCharactersInRange( 

@@ -1,3 +1,23 @@
+2007-01-24  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Lou.
+
+        Checkpoint of <rdar://problem/4712469> Address Book forms autofill.
+        
+        Call through to the Frame to do autofill, after marshalling parameters to core types.
+
+        * DOMHTMLClasses.cpp:
+        (DOMHTMLInputElement::readOnly): Implemented
+        (DOMHTMLInputElement::rectOnScreen): Implemented
+        * WebFrame.cpp:
+        (elementFromDOMElement): Added
+        (WebFrame::currentForm): Added
+        (WebFrame::searchForLabelsBeforeElement): Added
+        (WebFrame::matchLabelsAgainstElement): Added
+        * WebFrame.h:
+        * WebHTMLRepresentation.cpp:
+        (WebHTMLRepresentation::currentForm): Implemented
+
 2007-01-24  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Maciej.

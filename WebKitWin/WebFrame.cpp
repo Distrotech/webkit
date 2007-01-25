@@ -309,6 +309,22 @@ HRESULT STDMETHODCALLTYPE FormValuesPropertyBag::LoadObject(
 
 //-----------------------------------------------------------------------------
 
+static Element *elementFromDOMElement(IDOMElement *element)
+{
+    if (!element)
+        return 0;
+
+    COMPtr<IDOMElementPrivate> elePriv;
+    HRESULT hr = element->QueryInterface(IID_IDOMElementPrivate, (void**) &elePriv);
+    if (SUCCEEDED(hr)) {
+        Element* ele;
+        hr = elePriv->coreElement((void**)&ele);
+        if (SUCCEEDED(hr))
+            return ele;
+    }
+    return 0;
+}
+
 static HTMLFormElement *formElementFromDOMElement(IDOMElement *element)
 {
     if (!element)
@@ -794,6 +810,17 @@ HRESULT WebFrame::formForElement(IDOMElement* element, IDOMElement** form)
     return S_OK;
 }
 
+HRESULT WebFrame::currentForm(IDOMElement** form)
+{
+    *form = 0;
+    HTMLFormElement* formElement = d->frame->currentForm();
+    if (!formElement)
+        return E_FAIL;
+
+    *form = DOMElement::createInstance(formElement);
+    return S_OK;
+}
+
 HRESULT WebFrame::elementDoesAutoComplete(IDOMElement *element, bool *result)
 {
     *result = false;
@@ -845,16 +872,58 @@ HRESULT WebFrame::elementIsPassword(IDOMElement *element, bool *result)
     return S_OK;
 }
 
-HRESULT WebFrame::searchForLabelsBeforeElement(const BSTR* /*labels*/, int /*cLabels*/, IDOMElement* /*beforeElement*/, BSTR* /*result*/)
+HRESULT WebFrame::searchForLabelsBeforeElement(const BSTR* labels, int cLabels, IDOMElement* beforeElement, BSTR* result)
 {
-    // FIXME
-    return E_NOTIMPL;
+    *result = 0;
+    if (!cLabels)
+        return S_OK;
+    if (cLabels < 1)
+        return E_INVALIDARG;
+
+    FrameWin* frameWin = Win(d->frame);
+    if (!frameWin)
+        return E_FAIL;
+
+    Vector<String> labelStrings(cLabels);
+    for (int i=0; i<cLabels; i++)
+        labelStrings[i] = String(labels[i], SysStringLen(labels[i]));
+    Element *coreElement = elementFromDOMElement(beforeElement);
+    if (!coreElement)
+        return E_FAIL;
+
+    String label = frameWin->searchForLabelsBeforeElement(labelStrings, coreElement);
+    
+    *result = SysAllocStringLen(label.characters(), label.length());
+    if (label.length() && !*result)
+        return E_OUTOFMEMORY;
+    return S_OK;
 }
 
-HRESULT WebFrame::matchLabelsAgainstElement(const BSTR* /*labels*/, int /*cLabels*/, IDOMElement* /*againstElement*/, BSTR* /*result*/)
+HRESULT WebFrame::matchLabelsAgainstElement(const BSTR* labels, int cLabels, IDOMElement* againstElement, BSTR* result)
 {
-    // FIXME
-    return E_NOTIMPL;
+    *result = 0;
+    if (!cLabels)
+        return S_OK;
+    if (cLabels < 1)
+        return E_INVALIDARG;
+
+    FrameWin* frameWin = Win(d->frame);
+    if (!frameWin)
+        return E_FAIL;
+
+    Vector<String> labelStrings(cLabels);
+    for (int i=0; i<cLabels; i++)
+        labelStrings[i] = String(labels[i], SysStringLen(labels[i]));
+    Element *coreElement = elementFromDOMElement(againstElement);
+    if (!coreElement)
+        return E_FAIL;
+
+    String label = frameWin->matchLabelsAgainstElement(labelStrings, coreElement);
+    
+    *result = SysAllocStringLen(label.characters(), label.length());
+    if (label.length() && !*result)
+        return E_OUTOFMEMORY;
+    return S_OK;
 }
 
 HRESULT WebFrame::canProvideDocumentSource(bool* result)

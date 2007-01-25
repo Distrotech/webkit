@@ -38,13 +38,16 @@
 #include "FrameView.h"
 #include "HTMLIFrameElement.h"
 #include "HTMLNames.h"
+#include "HTMLTableCellElement.h"
 #include "NP_jsobject.h"
 #include "Page.h"
 #include "PlatformKeyboardEvent.h"
 #include "Plugin.h"
 #include "PluginDatabaseWin.h"
 #include "PluginViewWin.h"
+#include "RegularExpression.h"
 #include "RenderFrame.h"
+#include "RenderTableCell.h"
 #include "RenderView.h"
 #include "ResourceHandle.h"
 #include "TextResourceDecoder.h"
@@ -342,6 +345,159 @@ HBITMAP FrameWin::imageFromSelection(bool forceWhiteText)
     d->m_paintRestriction = PaintRestrictionNone;
 
     return hbmp;
+}
+
+// Either get cached regexp or build one that matches any of the labels.
+// The regexp we build is of the form:  (STR1|STR2|STRN)
+static RegularExpression *regExpForLabels(const Vector<String>& labels)
+{
+    // REVIEW- version of this call in FrameMac.mm caches based on the NSArray ptrs being
+    // the same across calls.  We can't do that.
+
+    static RegularExpression wordRegExp = RegularExpression("\\w");
+    RegularExpression *result;
+    DeprecatedString pattern("(");
+    unsigned int numLabels = labels.size();
+    unsigned int i;
+    for (i = 0; i < numLabels; i++) {
+        DeprecatedString label = labels[i].deprecatedString();
+
+        bool startsWithWordChar = false;
+        bool endsWithWordChar = false;
+        if (label.length() != 0) {
+            startsWithWordChar = wordRegExp.search(label.at(0)) >= 0;
+            endsWithWordChar = wordRegExp.search(label.at(label.length() - 1)) >= 0;
+        }
+        
+        if (i != 0)
+            pattern.append("|");
+        // Search for word boundaries only if label starts/ends with "word characters".
+        // If we always searched for word boundaries, this wouldn't work for languages
+        // such as Japanese.
+        if (startsWithWordChar) {
+            pattern.append("\\b");
+        }
+        pattern.append(label);
+        if (endsWithWordChar) {
+            pattern.append("\\b");
+        }
+    }
+    pattern.append(")");
+    return new RegularExpression(pattern, false);
+}
+
+String FrameWin::searchForLabelsAboveCell(RegularExpression* regExp, HTMLTableCellElement* cell)
+{
+    RenderTableCell* cellRenderer = static_cast<RenderTableCell*>(cell->renderer());
+
+    if (cellRenderer && cellRenderer->isTableCell()) {
+        RenderTableCell* cellAboveRenderer = cellRenderer->table()->cellAbove(cellRenderer);
+
+        if (cellAboveRenderer) {
+            HTMLTableCellElement *aboveCell =
+                static_cast<HTMLTableCellElement*>(cellAboveRenderer->element());
+
+            if (aboveCell) {
+                // search within the above cell we found for a match
+                for (Node *n = aboveCell->firstChild(); n; n = n->traverseNextNode(aboveCell)) {
+                    if (n->isTextNode() && n->renderer() && n->renderer()->style()->visibility() == VISIBLE) {
+                        // For each text chunk, run the regexp
+                        DeprecatedString nodeString = n->nodeValue().deprecatedString();
+                        int pos = regExp->searchRev(nodeString);
+                        if (pos >= 0)
+                            return nodeString.mid(pos, regExp->matchedLength());
+                    }
+                }
+            }
+        }
+    }
+    // Any reason in practice to search all cells in that are above cell?
+    return String();
+}
+
+String FrameWin::searchForLabelsBeforeElement(const Vector<String>& labels, Element* element)
+{
+    RegularExpression *regExp = regExpForLabels(labels);
+    // We stop searching after we've seen this many chars
+    const unsigned int charsSearchedThreshold = 500;
+    // This is the absolute max we search.  We allow a little more slop than
+    // charsSearchedThreshold, to make it more likely that we'll search whole nodes.
+    const unsigned int maxCharsSearched = 600;
+    // If the starting element is within a table, the cell that contains it
+    HTMLTableCellElement *startingTableCell = 0;
+    bool searchedCellAbove = false;
+
+    // walk backwards in the node tree, until another element, or form, or end of tree
+    int unsigned lengthSearched = 0;
+    Node *n;
+    for (n = element->traversePreviousNode();
+         n && lengthSearched < charsSearchedThreshold;
+         n = n->traversePreviousNode())
+    {
+        if (n->hasTagName(formTag)
+            || (n->isHTMLElement()
+                && static_cast<HTMLElement*>(n)->isGenericFormElement()))
+        {
+            // We hit another form element or the start of the form - bail out
+            break;
+        } else if (n->hasTagName(tdTag) && !startingTableCell) {
+            startingTableCell = static_cast<HTMLTableCellElement*>(n);
+        } else if (n->hasTagName(trTag) && startingTableCell) {
+            String result = searchForLabelsAboveCell(regExp, startingTableCell);
+            if (!result.isEmpty())
+                return result;
+            searchedCellAbove = true;
+        } else if (n->isTextNode() && n->renderer() && n->renderer()->style()->visibility() == VISIBLE) {
+            // For each text chunk, run the regexp
+            DeprecatedString nodeString = n->nodeValue().deprecatedString();
+            // add 100 for slop, to make it more likely that we'll search whole nodes
+            if (lengthSearched + nodeString.length() > maxCharsSearched)
+                nodeString = nodeString.right(charsSearchedThreshold - lengthSearched);
+            int pos = regExp->searchRev(nodeString);
+            if (pos >= 0)
+                return nodeString.mid(pos, regExp->matchedLength());
+            else
+                lengthSearched += nodeString.length();
+        }
+    }
+
+    // If we started in a cell, but bailed because we found the start of the form or the
+    // previous element, we still might need to search the row above us for a label.
+    if (startingTableCell && !searchedCellAbove) {
+         return searchForLabelsAboveCell(regExp, startingTableCell);
+    }
+    return String();
+}
+
+String FrameWin::matchLabelsAgainstElement(const Vector<String>& labels, Element* element)
+{
+    DeprecatedString name = element->getAttribute(nameAttr).deprecatedString();
+    // Make numbers and _'s in field names behave like word boundaries, e.g., "address2"
+    name.replace(RegularExpression("[[:digit:]]"), " ");
+    name.replace('_', ' ');
+    
+    RegularExpression *regExp = regExpForLabels(labels);
+    // Use the largest match we can find in the whole name string
+    int pos;
+    int length;
+    int bestPos = -1;
+    int bestLength = -1;
+    int start = 0;
+    do {
+        pos = regExp->search(name, start);
+        if (pos != -1) {
+            length = regExp->matchedLength();
+            if (length >= bestLength) {
+                bestPos = pos;
+                bestLength = length;
+            }
+            start = pos+1;
+        }
+    } while (pos != -1);
+
+    if (bestPos != -1)
+        return name.mid(bestPos, bestLength);
+    return String();
 }
 
 } // namespace WebCore

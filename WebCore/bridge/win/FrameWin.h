@@ -47,6 +47,7 @@ namespace KJS {
 namespace WebCore {
 
 class FormData;
+class HTMLTableCellElement;
 
 class FrameWinClient {
 public:
@@ -129,6 +130,10 @@ public:
 
     HBITMAP imageFromSelection(bool forceWhiteText);
     HBITMAP imageFromRect(IntRect rect);
+
+    String searchForLabelsAboveCell(RegularExpression*, HTMLTableCellElement*);
+    String searchForLabelsBeforeElement(const Vector<String>& labels, Element*);
+    String matchLabelsAgainstElement(const Vector<String>& labels, Element*);
 
 private:
     virtual void cleanupPluginObjects();

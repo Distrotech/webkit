@@ -177,10 +177,12 @@ HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::formForElement(
 }
     
 HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::currentForm( 
-        /* [retval][out] */ IDOMElement** /*form*/)
+        /* [retval][out] */ IDOMElement** form)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!m_frame)
+        return E_FAIL;
+
+    return m_frame->currentForm(form);
 }
     
 HRESULT STDMETHODCALLTYPE WebHTMLRepresentation::controlsInForm( 
