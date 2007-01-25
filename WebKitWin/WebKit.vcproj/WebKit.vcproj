@@ -601,6 +601,18 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="JSStringRefCF Hack"
+			>
+			<File
+				RelativePath="$(WebKitOutputDir)\include\JavaScriptCore\JavaScriptCore\JSStringRefCF.cpp"
+				>
+			</File>
+			<File
+				RelativePath="$(WebKitOutputDir)\include\JavaScriptCore\JavaScriptCore\JSStringRefCF.h"
+				>
+			</File>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

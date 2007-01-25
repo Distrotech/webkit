@@ -1,3 +1,15 @@
+2007-01-24  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak, Steve Falkenberg, Adam Roben.
+        
+        Fixed 4946729 -- CFNetwork needs some JS API symbols.
+        
+        Added hack to compile JSStringRefCF symbols with WebKit, to avoid having to fork
+        the JavaScriptCore project into the internal repository.
+
+        * WebKit.vcproj/WebKit.def: Export the symbols.
+        * WebKit.vcproj/WebKit.vcproj:
+
 2007-01-24  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Ada
