@@ -132,46 +132,6 @@ Vector<IntRect> FrameWin::computePageRects(const IntRect& printRect, float userS
     return pages;
 }
 
-// FIXME: This needs to be unified with the keyEvent method on FrameMac
-bool FrameWin::keyEvent(const PlatformKeyboardEvent& keyEvent)
-{
-    bool result;
-    // Check for cases where we are too early for events -- possible unmatched key up
-    // from pressing return in the location bar.
-    Document *doc = document();
-    if (!doc)
-        return false;
-    Node *node = doc->focusedNode();
-    if (!node) {
-        if (doc->isHTMLDocument())
-            node = doc->body();
-        else
-            node = doc->documentElement();
-        if (!node)
-            return false;
-    }
-    
-#ifdef MULTIPLE_FORM_SUBMISSION_PROTECTION
-    if (!keyEvent.isKeyUp())
-        loader()->resetMultipleFormSubmissionProtection();
-#endif
-
-    result = !EventTargetNodeCast(node)->dispatchKeyEvent(keyEvent);
-
-    // We want to send both a down and a press for the initial key event. (This is the behavior of other browsers)
-    // To get the rest of WebCore to do this, we send a second KeyPress with "is repeat" set to true,
-    // which causes it to send a press to the DOM.
-    // We should do this a better way.
-    if (!keyEvent.isKeyUp() && !keyEvent.isAutoRepeat()) {
-        PlatformKeyboardEvent keyPressedEvent(keyEvent);
-        keyPressedEvent.setIsAutoRepeat(true);
-        if (!EventTargetNodeCast(node)->dispatchKeyEvent(keyPressedEvent))
-            result = true;
-    }
-
-    return result;
-}
-
 void FrameWin::textFieldDidBeginEditing(Element* e)
 {
     if (m_client)

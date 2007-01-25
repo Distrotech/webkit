@@ -804,9 +804,9 @@ bool WebView::execCommand(WPARAM wParam, LPARAM /*lParam*/)
 bool WebView::keyUp(WPARAM wParam, LPARAM lParam)
 {
     PlatformKeyboardEvent keyEvent(m_viewWindow, wParam, lParam);
-    FrameWin* frame = static_cast<FrameWin*>(m_page->focusController()->focusedOrMainFrame());
+    Frame* frame = m_page->focusController()->focusedOrMainFrame();
 
-    return frame->keyEvent(keyEvent);
+    return frame->eventHandler()->keyEvent(keyEvent);
 }
 
 static const unsigned CtrlKey = 1 << 0;
@@ -911,7 +911,7 @@ bool WebView::keyDown(WPARAM wParam, LPARAM lParam)
     PlatformKeyboardEvent keyEvent(m_viewWindow, wParam, lParam);
     FrameWin* frame = static_cast<FrameWin*>(m_page->focusController()->focusedOrMainFrame());
 
-    if (frame->keyEvent(keyEvent))
+    if (frame->eventHandler()->keyEvent(keyEvent))
         return true;
 
     if (frame->selectionController()->isContentEditable())

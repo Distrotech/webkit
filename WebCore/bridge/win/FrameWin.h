@@ -109,8 +109,6 @@ public:
     virtual bool canPaste() const;
     virtual void print();
 
-    bool keyEvent(const PlatformKeyboardEvent&);
-
     virtual void textFieldDidBeginEditing(Element*);
     virtual void textFieldDidEndEditing(Element*);
     virtual void textDidChangeInTextField(Element*);

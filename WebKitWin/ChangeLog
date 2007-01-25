@@ -1,3 +1,14 @@
+2007-01-24  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Brady and Oliver.
+
+        Moved keyEvent method from FrameWin to EventHandler and updated
+        call sites.  Now this method is shared with the mac.
+
+        * WebView.cpp:
+        (WebView::keyUp):
+        (WebView::keyDown):
+
 2007-01-24  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Steve

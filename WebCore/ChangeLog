@@ -1,3 +1,13 @@
+2007-01-24  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Brady and Oliver.
+
+        Moved keyEvent method from FrameWin to EventHandler and updated
+        call sites.  Now this method is shared with the mac.
+
+        * bridge/win/FrameWin.cpp:
+        * bridge/win/FrameWin.h:
+
 2007-01-24  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Lou.
