@@ -1093,7 +1093,11 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             FocusController* focusController = webView->page()->focusController();
             if (Frame* frame = focusController->focusedFrame()) {
                 frame->setIsActive(true);
-                frame->setWindowHasFocus(true);
+
+                // If the previously focused window is a child of ours (for example a plugin), don't send any
+                // focus events.
+                if (!IsChild(hWnd, reinterpret_cast<HWND>(wParam)))
+                    frame->setWindowHasFocus(true);
             } else
                 focusController->setFocusedFrame(webView->page()->mainFrame());
             break;
@@ -1107,7 +1111,10 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             if (GetAncestor(hWnd, GA_ROOT) != GetFocus()) {
                 if (Frame* frame = focusController->focusedFrame()) {
                     frame->setIsActive(false);
-                    frame->setWindowHasFocus(false);
+
+                    // If we're losing focus to a child of ours, don't send blur events.
+                    if (!IsChild(hWnd, reinterpret_cast<HWND>(wParam)))
+                        frame->setWindowHasFocus(false);
                 }
             } else
                 focusController->setFocusedFrame(0);

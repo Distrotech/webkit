@@ -1,3 +1,11 @@
+2007-01-24  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Maciej.
+
+        * WebView.cpp:
+        (WebViewWndProc):
+        Don't send focus/blur events when the previous/newly focused window is a child of ours.
+
 2007-01-24  Ada Chan  <adachan@apple.com>
 
         Forgot a null check.
@@ -138,7 +146,6 @@
         
         * WebView.cpp:
         (WebView::downloadDelegate):  Change ASSERT_NOT_REACHED() to LOG_NOIMPL() to not stop the app
-
 
 2007-01-23  Steve Falkenburg  <sfalken@apple.com>
 
