@@ -27,6 +27,13 @@
 
         Reviewed by Steve and Darin.
 
+        Fix <rdar://problem/4940645> Implement WebError::domain
+
+        Also added some error codes.
+
+        * WebError.cpp:
+        (WebError::domain): Implemented.
+        (WebError::localizedDescription): Added a stub implementation.
         * WebFrame.cpp:
         (WebFrame::redirectDataToPlugin): Corrected uses of WebKitError* constants.
         * Interfaces/IWebError.idl:
