@@ -1,3 +1,13 @@
+2007-01-25  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Fixed DragDataWin behaviour so that it will provide plain text
+        for a file dropped on the window.
+
+        * platform/win/DragDataWin.cpp:
+        (WebCore::DragData::asPlainText):
+
 2007-01-25  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Adam

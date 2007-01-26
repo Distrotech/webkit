@@ -189,6 +189,10 @@ String DragData::asPlainText() const
         text = String(data);
         GlobalUnlock(store.hGlobal);      
         ReleaseStgMedium(&store);
+    } else {
+        //If a file is dropped on the window, it does not provide either of the 
+        //plain text formats, so here we try to forcibly get a url.
+        text = asURL();
     }
     return text;
 }
