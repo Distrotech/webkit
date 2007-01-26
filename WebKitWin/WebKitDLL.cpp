@@ -133,6 +133,14 @@ static LPCTSTR gRegTable[][3] = {
 { TEXT("WebKit.WebMutableURLRequest.3"),                                                    0,                      TEXT("WebMutableURLRequest") },
 { TEXT("WebKit.WebMutableURLRequest.3\\CLSID"),                                             0,                      TEXT("{########-####-####-####-############}") },
 
+{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebURLRequest") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebURLRequest.3") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebURLRequest") },
+{ TEXT("WebKit.WebURLRequest.3"),                                                           0,                      TEXT("WebURLRequest") },
+{ TEXT("WebKit.WebURLRequest.3\\CLSID"),                                                    0,                      TEXT("{########-####-####-####-############}") },
+
 { TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebNotificationCenter") },
 { TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
 { TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },

@@ -1,6 +1,13 @@
 2007-01-26  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.
+        
+        * WebKitDLL.cpp:
+        Add WebURLRequest entries to the big array.
+
+2007-01-26  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
 
         <rdar://problem/4923845>
         Implement IWebURLRequest.
