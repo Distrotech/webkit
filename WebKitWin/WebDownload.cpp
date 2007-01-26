@@ -246,7 +246,8 @@ HRESULT STDMETHODCALLTYPE WebDownload::canResumeDownloadDecodedWithEncodingMIMET
 HRESULT STDMETHODCALLTYPE WebDownload::cancel()
 {
     LOG(Download, "WebDownload - Cancelling download (%p)", this);
-    CFURLDownloadCancel(m_download.get());
+    if (m_download)
+        CFURLDownloadCancel(m_download.get());
     m_download = 0;
     return S_OK;
 }

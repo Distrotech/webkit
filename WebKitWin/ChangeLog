@@ -1,3 +1,13 @@
+2007-01-25  Ada Chan  <adachan@apple.com>
+
+        WebDownload.cpp reviewed by Brady.
+        WebFrame.cpp reviewed by Anders.
+
+        * WebDownload.cpp:
+        (WebDownload::cancel): added null check
+        * WebFrame.cpp:
+        (WebFrame::dispatchDecidePolicyForMIMEType): fixed bug that we treated loading image urls as downloads.
+
 2007-01-25  Adam Roben  <aroben@apple.com>
 
         Reviewed by Steve and Darin.

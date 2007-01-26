@@ -1756,7 +1756,7 @@ void WebFrame::dispatchDecidePolicyForMIMEType(FramePolicyFunction function, con
 
     // FIXME: This is a stopgap default implementation to tide us over until
     // <rdar://4911042/> is taken care of
-    if (MimeTypeRegistry::isSupportedNonImageMIMEType(mimeType))
+    if (MimeTypeRegistry::isSupportedNonImageMIMEType(mimeType) || MimeTypeRegistry::isSupportedImageMIMEType(mimeType))
         (d->frame->loader()->*function)(PolicyUse);
     else
         (d->frame->loader()->*function)(PolicyDownload);
