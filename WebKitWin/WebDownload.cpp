@@ -230,6 +230,8 @@ HRESULT STDMETHODCALLTYPE WebDownload::canResumeDownloadDecodedWithEncodingMIMET
 HRESULT STDMETHODCALLTYPE WebDownload::start()
 {
     LOG(Download, "WebDownload - Starting download (%p)", this);
+    if (!m_download)
+        return E_FAIL;
 
     CFURLDownloadStart(m_download.get());
     // FIXME: 4950477 - CFURLDownload neglects to make the didStart() client call upon starting the download.
@@ -242,8 +244,10 @@ HRESULT STDMETHODCALLTYPE WebDownload::start()
 HRESULT STDMETHODCALLTYPE WebDownload::cancel()
 {
     LOG(Download, "WebDownload - Cancelling download (%p)", this);
-    if (m_download)
-        CFURLDownloadCancel(m_download.get());
+    if (!m_download)
+        return E_FAIL;
+
+    CFURLDownloadCancel(m_download.get());
     m_download = 0;
     return S_OK;
 }
@@ -251,6 +255,8 @@ HRESULT STDMETHODCALLTYPE WebDownload::cancel()
 HRESULT STDMETHODCALLTYPE WebDownload::deletesFileUponFailure(
         /* [out, retval] */ BOOL* result)
 {
+    if (!m_download)
+        return E_FAIL;
     *result = CFURLDownloadDeletesUponFailure(m_download.get());
     return S_OK;
 }
@@ -276,6 +282,8 @@ HRESULT STDMETHODCALLTYPE WebDownload::resumeData(
 HRESULT STDMETHODCALLTYPE WebDownload::setDeletesFileUponFailure(
         /* [in] */ BOOL deletesFileUponFailure)
 {
+    if (!m_download)
+        return E_FAIL;
     CFURLDownloadSetDeletesUponFailure(m_download.get(), !!deletesFileUponFailure);
     return S_OK;
 }
@@ -284,6 +292,8 @@ HRESULT STDMETHODCALLTYPE WebDownload::setDestination(
         /* [in] */ BSTR path, 
         /* [in] */ BOOL allowOverwrite)
 {
+    if (!m_download)
+        return E_FAIL;
     CFStringRef cfPath = MarshallingHelpers::BSTRToCFStringRef(path);
     CFURLRef pathURL = CFURLCreateWithFileSystemPath(0, cfPath, kCFURLWindowsPathStyle, false);
     CFURLDownloadSetDestination(m_download.get(), pathURL, !!allowOverwrite);

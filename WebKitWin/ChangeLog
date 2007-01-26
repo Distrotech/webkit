@@ -1,3 +1,16 @@
+2007-01-26  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Anders
+
+        Took one of Adam's comments to heart, allow ::start() and others to E_FAIL
+        
+        * WebDownload.cpp:
+        (WebDownload::start): NULL check m_download
+        (WebDownload::cancel):  Ditto
+        (WebDownload::deletesFileUponFailure):  Yup
+        (WebDownload::setDeletesFileUponFailure):  Uh huh!
+        (WebDownload::setDestination):  Ooo, ooo - me too!
+
 2007-01-25  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Adam
