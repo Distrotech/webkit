@@ -41,10 +41,10 @@
 #include <wtf/Assertions.h>
 #include <wtf/HashMap.h>
 
-#ifdef USE_NEW_CFSTREAM_CALLBACKS
-typedef CFReadStreamCallBacks WCReadStreamCallBacks;
-#else
+#ifdef USE_OLD_CFSTREAM_CALLBACKS
 typedef CFReadStreamCallBacksV1 WCReadStreamCallBacks;
+#else
+typedef CFReadStreamCallBacks WCReadStreamCallBacks;
 #endif
 
 namespace WebCore {
