@@ -123,6 +123,8 @@ HRESULT STDMETHODCALLTYPE WebKitClassFactory::CreateInstance(IUnknown* pUnkOuter
         unknown = static_cast<IWebURLCredential*>(WebURLCredential::createInstance());
     else if (IsEqualGUID(m_targetClass, CLSID_WebDownload))
         unknown = static_cast<IWebDownload*>(WebDownload::createInstance());
+    else if (IsEqualGUID(m_targetClass, CLSID_WebURLRequest))
+        unknown = static_cast<IWebURLRequest*>(WebMutableURLRequest::createImmutableInstance());
     else
         return CLASS_E_CLASSNOTAVAILABLE;
 

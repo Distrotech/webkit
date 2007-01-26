@@ -1,3 +1,22 @@
+2007-01-26  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://problem/4923845>
+        Implement IWebURLRequest.
+        
+        * Interfaces/WebKit.idl:
+        * WebKitClassFactory.cpp:
+        (WebKitClassFactory::CreateInstance):
+        * WebKitDLL.cpp:
+        (DllGetClassObject):
+        * WebMutableURLRequest.cpp:
+        (WebMutableURLRequest::WebMutableURLRequest):
+        (WebMutableURLRequest::createInstance):
+        (WebMutableURLRequest::createImmutableInstance):
+        (WebMutableURLRequest::QueryInterface):
+        * WebMutableURLRequest.h:
+
 2007-01-26  Steve Falkenburg  <sfalken@apple.com>
 
         B&I build fix

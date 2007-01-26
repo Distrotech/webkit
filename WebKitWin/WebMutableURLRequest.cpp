@@ -40,22 +40,23 @@ using namespace WebCore;
 
 // IWebURLRequest ----------------------------------------------------------------
 
-WebMutableURLRequest::WebMutableURLRequest()
+WebMutableURLRequest::WebMutableURLRequest(bool isMutable)
     : m_refCount(0)
+    , m_isMutable(isMutable)
 {
     gClassCount++;
 }
 
 WebMutableURLRequest* WebMutableURLRequest::createInstance()
 {
-    WebMutableURLRequest* instance = new WebMutableURLRequest();
+    WebMutableURLRequest* instance = new WebMutableURLRequest(true);
     instance->AddRef();
     return instance;
 }
 
 WebMutableURLRequest* WebMutableURLRequest::createInstance(IWebMutableURLRequest* req)
 {
-    WebMutableURLRequest* instance = new WebMutableURLRequest();
+    WebMutableURLRequest* instance = new WebMutableURLRequest(true);
     instance->AddRef();
     instance->m_request = static_cast<WebMutableURLRequest*>(req)->m_request;
     return instance;
@@ -63,7 +64,22 @@ WebMutableURLRequest* WebMutableURLRequest::createInstance(IWebMutableURLRequest
 
 WebMutableURLRequest* WebMutableURLRequest::createInstance(const ResourceRequest& request)
 {
-    WebMutableURLRequest* instance = new WebMutableURLRequest();
+    WebMutableURLRequest* instance = new WebMutableURLRequest(true);
+    instance->AddRef();
+    instance->m_request = request;
+    return instance;
+}
+
+WebMutableURLRequest* WebMutableURLRequest::createImmutableInstance()
+{
+    WebMutableURLRequest* instance = new WebMutableURLRequest(false);
+    instance->AddRef();
+    return instance;
+}
+
+WebMutableURLRequest* WebMutableURLRequest::createImmutableInstance(const ResourceRequest& request)
+{
+    WebMutableURLRequest* instance = new WebMutableURLRequest(false);
     instance->AddRef();
     instance->m_request = request;
     return instance;
@@ -83,7 +99,7 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::QueryInterface(REFIID riid, void
         *ppvObject = this;
     else if (IsEqualGUID(riid, IID_IUnknown))
         *ppvObject = static_cast<IWebURLRequest*>(this);
-    else if (IsEqualGUID(riid, IID_IWebMutableURLRequest))
+    else if (IsEqualGUID(riid, IID_IWebMutableURLRequest) && m_isMutable)
         *ppvObject = static_cast<IWebMutableURLRequest*>(this);
     else if (IsEqualGUID(riid, IID_IWebURLRequest))
         *ppvObject = static_cast<IWebURLRequest*>(this);

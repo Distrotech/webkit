@@ -65,7 +65,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
         !IsEqualGUID(rclsid, CLSID_WebNotificationCenter) && !IsEqualGUID(rclsid, CLSID_WebIconDatabase) && !IsEqualGUID(rclsid, CLSID_WebHistory) && 
         !IsEqualGUID(rclsid, CLSID_CFDictionaryPropertyBag) && !IsEqualGUID(rclsid, CLSID_WebHistoryItem) && !IsEqualGUID(rclsid, CLSID_WebCache) &&
         !IsEqualGUID(rclsid, CLSID_WebPreferences) && !IsEqualGUID(rclsid, CLSID_WebKitStatistics) && !IsEqualGUID(rclsid, CLSID_WebError) &&
-        !IsEqualGUID(rclsid, CLSID_WebURLCredential) && !IsEqualGUID(rclsid, CLSID_WebDownload))
+        !IsEqualGUID(rclsid, CLSID_WebURLCredential) && !IsEqualGUID(rclsid, CLSID_WebDownload) && !IsEqualGUID(rclsid, CLSID_WebURLRequest))
     return E_FAIL;
 
     if (!IsEqualGUID(riid, IID_IUnknown) && !IsEqualGUID(riid, IID_IClassFactory))
@@ -92,6 +92,7 @@ static CLSID gRegCLSIDs[] = {
     CLSID_WebView,
     CLSID_WebIconDatabase,
     CLSID_WebMutableURLRequest,
+    CLSID_WebURLRequest,
     CLSID_WebNotificationCenter,
     CLSID_WebHistory,
     CLSID_CFDictionaryPropertyBag,

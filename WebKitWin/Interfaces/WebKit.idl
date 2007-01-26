@@ -241,4 +241,15 @@ library WebKit
     coclass WebDownload {
         interface IWebDownload;
     }
+
+#if __ARCHIVE_BUILD
+    [uuid(20B9702D-B41F-449b-84FE-3E32DB5D775F)]
+#elif __BUILDBOT__
+    [uuid(2FB5499A-BB5D-4469-8517-789FEC8FD9BA)]
+#else
+    [uuid(1554B5BE-0E10-47bb-BF91-E4A049F00D2F)]
+#endif
+    coclass WebURLRequest {
+        interface IWebURLRequest;
+    }
 }

@@ -52,8 +52,11 @@ public:
     static WebMutableURLRequest* createInstance();
     static WebMutableURLRequest* createInstance(IWebMutableURLRequest* req);
     static WebMutableURLRequest* createInstance(const WebCore::ResourceRequest&);
+
+    static WebMutableURLRequest* createImmutableInstance();
+    static WebMutableURLRequest* createImmutableInstance(const WebCore::ResourceRequest&);
 protected:
-    WebMutableURLRequest();
+    WebMutableURLRequest(bool isMutable);
     ~WebMutableURLRequest();
 
 public:
@@ -150,6 +153,7 @@ public:
     const WebCore::ResourceRequest& resourceRequest() const;
 protected:
     ULONG m_refCount;
+    bool m_isMutable;
     WebCore::ResourceRequest m_request;
 };
 
