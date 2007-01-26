@@ -4609,6 +4609,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\SVGInlineTextBox.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\SVGInlineTextBox.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\SVGRenderTreeAsText.cpp"
 				>
 			</File>
@@ -7751,11 +7759,11 @@
 					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\kjs\string_object.h"
 					>
 				</File>
-        <File
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\kjs\ustring.h"
 					>
-        </File>
-        <File
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\kjs\value.h"
 					>
 				</File>

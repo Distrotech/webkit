@@ -1,3 +1,9 @@
+2007-01-26  Oliver Hunt <oliver@apple.com>
+
+        Build fix -- adding SVGInlineTextBox.{cpp,h} to project
+
+        * WebCore.vcproj/WebCore.vcproj:
+
 2007-01-25  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.
