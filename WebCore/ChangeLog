@@ -1,3 +1,16 @@
+2007-01-25  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Adam
+
+        -Setup for new CFNetwork API for those using their ToT and their next submission
+        -Setup for new CoreFoundation API for those using their ToT and their next submission
+
+        * platform/network/cf/FormDataStreamCFNet.cpp:
+        (WebCore::setHTTPBody): New callback format - will need to define USE_NEW_CFSTREAM_CALLBACKS 
+          to switch to the new API
+        * platform/network/cf/ResourceHandleCFNet.cpp:
+        (WebCore::didFail):  This automagically works :)
+
 2007-01-25  Adele Peterson  <adele@apple.com>
 
         Reviewed by Adam. 

@@ -103,6 +103,16 @@ void didFinishLoading(CFURLConnectionRef conn, const void* clientInfo)
     handle->client()->didFinishLoading(handle);
 }
 
+#ifdef ERRORS_AS_CFERRORS
+void didFail(CFURLConnectionRef conn, CFErrorRef error, const void* clientInfo) 
+{
+    ResourceHandle* handle = (ResourceHandle*)clientInfo;
+
+    LOG(Network, "CFNet - didFail(conn=%p, handle=%p, error = %p) (%s)", conn, handle, error, handle->url().url().ascii());
+
+    handle->client()->didFail(handle, ResourceError(error));
+}
+#else
 void didFail(CFURLConnectionRef conn, CFStreamError error, const void* clientInfo) 
 {
     ResourceHandle* handle = (ResourceHandle*)clientInfo;
@@ -123,7 +133,7 @@ void didFail(CFURLConnectionRef conn, CFStreamError error, const void* clientInf
     // get a CFErrorRef out of an NSURLConnection, only a CFStreamError
     handle->client()->didFail(handle, ResourceError(domain, error.error, String(), String()));
 }
-
+#endif
 CFCachedURLResponseRef willCacheResponse(CFURLConnectionRef conn, CFCachedURLResponseRef cachedResponse, const void* clientInfo) 
 {
     ResourceHandle* handle = (ResourceHandle*)clientInfo;

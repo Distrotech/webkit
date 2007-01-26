@@ -41,6 +41,11 @@
 #include <wtf/Assertions.h>
 #include <wtf/HashMap.h>
 
+#ifdef USE_NEW_CFSTREAM_CALLBACKS
+typedef CFReadStreamCallBacks WCReadStreamCallBacks;
+#else
+typedef CFReadStreamCallBacksV1 WCReadStreamCallBacks;
+#endif
 
 namespace WebCore {
 
@@ -350,10 +355,10 @@ void setHTTPBody(CFMutableURLRequestRef request, PassRefPtr<FormData> formData)
         CFRelease(lengthStr);
     }
 
-    static CFReadStreamCallBacks formDataStreamCallbacks = 
+    static WCReadStreamCallBacks formDataStreamCallbacks = 
         { 1, formCreate, formFinalize, 0, formOpen, 0, formRead, 0, formCanRead, formClose, 0, 0, 0, formSchedule, formUnschedule };
 
-    CFReadStreamRef stream = CFReadStreamCreate(0, &formDataStreamCallbacks, formData.releaseRef());
+    CFReadStreamRef stream = CFReadStreamCreate(0, (CFReadStreamCallBacks *)&formDataStreamCallbacks, formData.releaseRef());
     CFURLRequestSetHTTPRequestBodyStream(request, stream);
     CFRelease(stream);
 }
