@@ -125,12 +125,7 @@ private:
     IntSize sizeForFont(RenderStyle*, const IntSize* sizes) const;
     IntSize sizeForSystemFont(RenderStyle*, const IntSize* sizes) const;
     void setFontFromControlSize(CSSStyleSelector*, RenderStyle*, NSControlSize) const;
-/*
-    void updateCheckedState(NSCell*, const RenderObject*);
-    void updateEnabledState(NSCell*, const RenderObject*);
-    void updateFocusedState(NSCell*, const RenderObject*);
-    void updatePressedState(NSCell*, const RenderObject*);
-*/
+
     // Helpers for adjusting appearance and for painting
     const IntSize* checkboxSizes() const;
     const int* checkboxMargins(NSControlSize) const;
@@ -158,9 +153,6 @@ private:
     
 private:
     HMODULE m_themeDLL;
-
-    bool sliderHorizontalCellIsPressed;
-    bool sliderVerticalCellIsPressed;
 };
 
 } // namespace WebCore

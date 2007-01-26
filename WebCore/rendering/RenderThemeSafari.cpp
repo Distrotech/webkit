@@ -72,8 +72,6 @@ ThemeControlState RenderThemeSafari::determineState(RenderObject* o) const
 
 RenderThemeSafari::RenderThemeSafari()
     : m_themeDLL(0)
-    , sliderHorizontalCellIsPressed(false)
-    , sliderVerticalCellIsPressed(false)
 {
     m_themeDLL = ::LoadLibrary(SAFARITHEMEDLL);
     if (m_themeDLL) {
@@ -242,49 +240,7 @@ IntRect RenderThemeSafari::inflateRect(const IntRect& r, const IntSize& size, co
     }
     return result;
 }
-/*
-void RenderThemeSafari::updateCheckedState(NSCell* cell, const RenderObject* o)
-{
-    bool oldIndeterminate = [cell state] == NSMixedState;
-    bool indeterminate = isIndeterminate(o);
-    bool checked = isChecked(o);
 
-    if (oldIndeterminate != indeterminate) {
-        [cell setState:indeterminate ? NSMixedState : (checked ? NSOnState : NSOffState)];
-        return;
-    }
-
-    bool oldChecked = [cell state] == NSOnState;
-    if (checked != oldChecked)
-        [cell setState:checked ? NSOnState : NSOffState];
-}
-
-void RenderThemeSafari::updateEnabledState(NSCell* cell, const RenderObject* o)
-{
-    bool oldEnabled = [cell isEnabled];
-    bool enabled = isEnabled(o);
-    if (enabled != oldEnabled)
-        [cell setEnabled:enabled];
-}
-
-void RenderThemeSafari::updateFocusedState(NSCell* cell, const RenderObject* o)
-{
-    // FIXME: Need to add a key window test here, or the element will look
-    // focused even when in the background.
-    bool oldFocused = [cell showsFirstResponder];
-    bool focused = (o->element() && o->document()->focusedNode() == o->element()) && (o->style()->outlineStyleIsAuto());
-    if (focused != oldFocused)
-        [cell setShowsFirstResponder:focused];
-}
-
-void RenderThemeSafari::updatePressedState(NSCell* cell, const RenderObject* o)
-{
-    bool oldPressed = [cell isHighlighted];
-    bool pressed = (o->element() && o->element()->active());
-    if (pressed != oldPressed)
-        [cell setHighlighted:pressed];
-}
-*/
 short RenderThemeSafari::baselinePosition(const RenderObject* o) const
 {
     if (o->style()->appearance() == CheckboxAppearance || o->style()->appearance() == RadioAppearance)
@@ -881,7 +837,6 @@ bool RenderThemeSafari::paintSliderTrack(RenderObject* o, const RenderObject::Pa
         bounds.setX(r.x() + r.width() / 2 - trackWidth / 2);
     }
 
-//    LocalCurrentGraphicsContext localContext(paintInfo.context);
     CGContextRef context = paintInfo.context->platformContext();
     CGColorSpaceRef cspace = CGColorSpaceCreateDeviceRGB();
 
@@ -912,59 +867,10 @@ const float verticalSliderHeightPadding = 0.1f;
 
 bool RenderThemeSafari::paintSliderThumb(RenderObject* o, const RenderObject::PaintInfo& paintInfo, const IntRect& r)
 {
-/*    NSSliderCell* sliderThumbCell;
-    if (o->style()->appearance() == SliderThumbVerticalAppearance)
-        sliderThumbCell = sliderThumbVerticalCell;
-    else
-        sliderThumbCell = sliderThumbHorizontalCell;
-
-    LocalCurrentGraphicsContext localContext(paintInfo.context);
-
-    // Determine the width and height needed for the control and prepare the cell for painting.
-    if (!sliderThumbCell) {
-        sliderThumbCell = HardRetainWithNSRelease([[NSSliderCell alloc] init]);
-        [sliderThumbCell setTitle:nil];
-        [sliderThumbCell setSliderType:NSLinearSlider];
-        if (o->style()->appearance() == SliderThumbVerticalAppearance)
-            sliderVerticalCellIsPressed = false;
-        else
-            sliderHorizontalCellIsPressed = false;
-    }
-    [sliderThumbCell setControlSize:NSSmallControlSize];
-
-    // Update the various states we respond to.
-    updateEnabledState(sliderThumbCell, o->parent());
-    updateFocusedState(sliderThumbCell, o->parent());
-*/
-    // Update the pressed state using the NSCell tracking methods, since that's how NSSliderCell keeps track of it.
-    bool oldPressed;
-    if (o->style()->appearance() == SliderThumbVerticalAppearance)
-        oldPressed = sliderVerticalCellIsPressed;
-    else
-        oldPressed = sliderHorizontalCellIsPressed;
-
     bool pressed = static_cast<RenderSlider*>(o->parent())->inDragMode();
+    ThemeControlState state = pressed ? ActiveState : determineState(o->parent());
 
-    if (o->style()->appearance() == SliderThumbVerticalAppearance)
-        sliderVerticalCellIsPressed = pressed;
-    else
-        sliderHorizontalCellIsPressed = pressed;
-/*
-    if (pressed != oldPressed) {
-        if (pressed)
-            [sliderThumbCell startTrackingAt:NSPoint() inView:nil];
-        else
-            [sliderThumbCell stopTracking:NSPoint() at:NSPoint() inView:nil mouseIsUp:YES];
-    }
-*/
-    FloatRect bounds = r;
-    // Make the height of the vertical slider slightly larger so NSSliderCell will draw a vertical slider.
-    if (o->style()->appearance() == SliderThumbVerticalAppearance)
-        bounds.setHeight(bounds.height() + verticalSliderHeightPadding);
-
-//    [sliderThumbCell drawWithFrame:NSRect(bounds) inView:o->view()->frameView()->getDocumentView()];
-//    [sliderThumbCell setControlView:nil];
-
+    paintThemePart(SliderThumbPart, paintInfo.context->platformContext(), r, (NSControlSize)0, state);
     return false;
 }
 

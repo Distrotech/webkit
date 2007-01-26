@@ -1,3 +1,16 @@
+2007-01-25  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Adam. 
+
+        Added support for slider.
+
+        * rendering/RenderThemeSafari.cpp:
+        (WebCore::RenderThemeSafari::RenderThemeSafari):
+        (WebCore::RenderThemeSafari::inflateRect):
+        (WebCore::RenderThemeSafari::paintSliderTrack):
+        (WebCore::RenderThemeSafari::paintSliderThumb):
+        * rendering/RenderThemeSafari.h:
+
 2007-01-25  Steve Falkenburg  <sfalken@apple.com>
 
         B&I build fix
