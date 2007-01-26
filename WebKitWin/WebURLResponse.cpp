@@ -77,7 +77,7 @@ HRESULT STDMETHODCALLTYPE WebURLResponse::QueryInterface(REFIID riid, void** ppv
         *ppvObject = static_cast<WebURLResponse*>(this);
     else if (IsEqualGUID(riid, IID_IWebURLResponse))
         *ppvObject = static_cast<IWebURLResponse*>(this);
-    else if (IsEqualGUID(riid, IID_IWebHTTPURLResponse))
+    else if (m_response.isHTTP() && IsEqualGUID(riid, IID_IWebHTTPURLResponse))
         *ppvObject = static_cast<IWebHTTPURLResponse*>(this);
     else
         return E_NOINTERFACE;
@@ -214,6 +214,7 @@ HRESULT STDMETHODCALLTYPE WebURLResponse::URL(
 HRESULT STDMETHODCALLTYPE WebURLResponse::allHeaderFields( 
     /* [retval][out] */ IPropertyBag** headerFields)
 {
+    ASSERT(m_response.isHTTP());
     if (headerFields)
         *headerFields = 0;
     return E_NOTIMPL;
@@ -223,6 +224,7 @@ HRESULT STDMETHODCALLTYPE WebURLResponse::localizedStringForStatusCode(
     /* [in] */ int /*statusCode*/,
     /* [retval][out] */ BSTR* statusString)
 {
+    ASSERT(m_response.isHTTP());
     if (statusString)
         *statusString = 0;
     return E_NOTIMPL;
@@ -231,6 +233,7 @@ HRESULT STDMETHODCALLTYPE WebURLResponse::localizedStringForStatusCode(
 HRESULT STDMETHODCALLTYPE WebURLResponse::statusCode( 
     /* [retval][out] */ int* statusCode)
 {
+    ASSERT(m_response.isHTTP());
     if (statusCode)
         *statusCode = m_response.httpStatusCode();
     return S_OK;

@@ -60,6 +60,7 @@
 #include <WebCore/GraphicsContext.h>
 #include <WebCore/HitTestResult.h>
 #include <WebCore/IntRect.h>
+#include <WebCore/MimeTypeRegistry.h>
 #include <WebCore/NotImplemented.h>
 #include <WebCore/Page.h>
 #include <WebCore/PlatformKeyboardEvent.h>
@@ -1436,11 +1437,18 @@ ULONG STDMETHODCALLTYPE WebView::Release(void)
 // IWebView --------------------------------------------------------------------
 
 HRESULT STDMETHODCALLTYPE WebView::canShowMIMEType( 
-    /* [in] */ BSTR /*mimeType*/,
-    /* [retval][out] */ BOOL* /*canShow*/)
+    /* [in] */ BSTR mimeType,
+    /* [retval][out] */ BOOL* canShow)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    String mimeTypeStr(mimeType, SysStringLen(mimeType));
+
+    if (!canShow)
+        return E_POINTER;
+
+    *canShow = MimeTypeRegistry::isSupportedImageMIMEType(mimeTypeStr) ||
+        MimeTypeRegistry::isSupportedNonImageMIMEType(mimeTypeStr);
+    
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::canShowMIMETypeAsHTML( 
