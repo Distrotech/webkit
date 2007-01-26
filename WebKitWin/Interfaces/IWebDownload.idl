@@ -88,6 +88,11 @@ interface IWebDownload : IUnknown
     HRESULT cancel();
 
     /*
+        - (void)start
+    */
+    HRESULT start();
+
+    /*
         - (BOOL)deletesFileUponFailure
     */
     HRESULT deletesFileUponFailure([out, retval] BOOL* result);

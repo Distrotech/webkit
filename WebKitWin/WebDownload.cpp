@@ -82,6 +82,9 @@ void WebDownload::init(ResourceHandle* handle, const ResourceRequest& request, c
         decideDestinationWithSuggestedObjectNameCallback, didCreateDestinationCallback, didFinishCallback, didFailCallback};
 
     m_download = CFURLDownloadCreateWithLoadingConnection(0, connection, request.cfURLRequest(), response.cfURLResponse(), 0, &client);
+    // FIXME: Do we need to call start() on downloads with loading connections, or can we assume they are already going?
+    // Check NSURLDownload code!
+
     m_request.adoptRef(WebMutableURLRequest::createInstance(request));
     
     // FIXME: Rework this once CFNetwork implements CFURLDownloadCreateWithLoadingConnection
@@ -89,16 +92,7 @@ void WebDownload::init(ResourceHandle* handle, const ResourceRequest& request, c
         LOG_ERROR("Downloading from an existing connection is currently unimplemented in CFNetwork.  This WebDownload will likely leak");
         return;
     }
-
-    CFURLDownloadScheduleWithCurrentMessageQueue(m_download.get());
-    CFURLDownloadScheduleDownloadWithRunLoop(m_download.get(), ResourceHandle::loaderRunLoop(), kCFRunLoopDefaultMode);
-    CFURLDownloadStart(m_download.get());
-    
-    // FIXME: 4950477 - CFURLDownload neglects to make the didStart() client call upon starting the download.
-    // This is a somewhat critical call, so we'll fake it for now!
-    didStart();
-
-    LOG(Download, "WebDownload - Started download from existing connection (%s)", request.url().url().ascii());
+    LOG(Download, "WebDownload - Created WebDownload %p from existing connection (%s)", this, request.url().url().ascii());
 }
 
 void WebDownload::init(const KURL& url, IWebDownloadDelegate* delegate)
@@ -117,13 +111,8 @@ void WebDownload::init(const KURL& url, IWebDownloadDelegate* delegate)
 
     CFURLDownloadScheduleWithCurrentMessageQueue(m_download.get());
     CFURLDownloadScheduleDownloadWithRunLoop(m_download.get(), ResourceHandle::loaderRunLoop(), kCFRunLoopDefaultMode);
-    CFURLDownloadStart(m_download.get());
 
-    // FIXME: 4950477 - CFURLDownload neglects to make the didStart() client call upon starting the download.
-    // This is a somewhat critical call, so we'll fake it for now!
-    didStart();
-
-    LOG(Download, "WebDownload - Started download of url %s", url.url().ascii());
+    LOG(Download, "WebDownload - Initialized download of url %s in WebDownload %p", url.url().ascii(), this);
 }
 
 WebDownload::~WebDownload()
@@ -216,11 +205,6 @@ HRESULT STDMETHODCALLTYPE WebDownload::initWithRequest(
 
     CFURLDownloadScheduleWithCurrentMessageQueue(m_download.get());
     CFURLDownloadScheduleDownloadWithRunLoop(m_download.get(), ResourceHandle::loaderRunLoop(), kCFRunLoopDefaultMode);
-    CFURLDownloadStart(m_download.get());
-    
-    // FIXME: 4950477 - CFURLDownload neglects to make the didStart() client call upon starting the download.
-    // This is a somewhat critical call, so we'll fake it for now!
-    didStart();
 
     LOG(Download, "WebDownload - initWithRequest complete, started download of url %s", webRequest->resourceRequest().url().url().ascii());
     return S_OK;
@@ -241,6 +225,18 @@ HRESULT STDMETHODCALLTYPE WebDownload::canResumeDownloadDecodedWithEncodingMIMET
 {
     LOG_NOIMPL();
     return E_FAIL;
+}
+
+HRESULT STDMETHODCALLTYPE WebDownload::start()
+{
+    LOG(Download, "WebDownload - Starting download (%p)", this);
+
+    CFURLDownloadStart(m_download.get());
+    // FIXME: 4950477 - CFURLDownload neglects to make the didStart() client call upon starting the download.
+    // This is a somewhat critical call, so we'll fake it for now!
+    didStart();
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebDownload::cancel()

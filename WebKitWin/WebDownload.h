@@ -71,6 +71,8 @@ public:
         /* [in] */ BSTR mimeType, 
         /* [out, retval] */ BOOL* result);
 
+    virtual HRESULT STDMETHODCALLTYPE start();
+
     virtual HRESULT STDMETHODCALLTYPE cancel();
 
     virtual HRESULT STDMETHODCALLTYPE deletesFileUponFailure(

@@ -97,6 +97,7 @@ void WebContextMenuClient::downloadURL(const KURL& url)
     // when this method returns
     COMPtr<WebDownload> download;
     download.adoptRef(WebDownload::createInstance(url, downloadDelegate.get()));
+    download->start();
 }
 
 void WebContextMenuClient::copyImageToClipboard(const HitTestResult&)
