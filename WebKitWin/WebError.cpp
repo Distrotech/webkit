@@ -106,17 +106,24 @@ HRESULT STDMETHODCALLTYPE WebError::code(
 }
         
 HRESULT STDMETHODCALLTYPE WebError::domain( 
-    /* [retval][out] */ BSTR* /*result*/)
+    /* [retval][out] */ BSTR* result)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!result)
+        return E_POINTER;
+
+    *result = BString(m_error.domain()).release();
+    return S_OK;
 }
                
 HRESULT STDMETHODCALLTYPE WebError::localizedDescription( 
-    /* [retval][out] */ BSTR* /*result*/)
+    /* [retval][out] */ BSTR* result)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!result)
+        return E_POINTER;
+
+    // FIXME: Implement this!
+    *result = BString("WebError::localizedDescription NOT IMPLEMENTED").release();
+    return S_OK;
 }
 
         
@@ -163,6 +170,17 @@ HRESULT STDMETHODCALLTYPE WebError::failingURL(
         return E_POINTER;
 
     *result = BString(m_error.failingURL()).release();
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebError::isPolicyChangeError( 
+    /* [retval][out] */ BOOL *result)
+{
+    if (!result)
+        return E_POINTER;
+
+    *result = m_error.domain() == WebKitErrorDomain
+        && m_error.errorCode() == WebKitErrorFrameLoadInterruptedByPolicyChange;
     return S_OK;
 }
 

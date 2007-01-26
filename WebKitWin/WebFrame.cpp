@@ -29,6 +29,7 @@
 
 #include "COMPtr.h"
 #include "DOMCoreClasses.h"
+#include "IWebErrorPrivate.h"
 #include "IWebHistory.h"
 #include "IWebHistoryItemPrivate.h"
 #include "IWebFrameLoadDelegatePrivate.h"
@@ -2033,7 +2034,7 @@ Widget* WebFrame::createPlugin(Element* element, const KURL& url, const Vector<S
 void WebFrame::redirectDataToPlugin(Widget* /*pluginWidget*/)
 {
     // FIXME: Don't hardcode the error domain
-    ResourceError error("WebKitErrorDomain", WebKitErrorPluginWillHandleLoad, String(), String());
+    ResourceError error(String(WebKitErrorDomain), WebKitErrorPlugInWillHandleLoad, String(), String());
 
     // FIXME: We should really redirect the data coming in to the plugin instead of
     // cancelling the load and letting the plugin start another one.

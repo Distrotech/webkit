@@ -1,5 +1,20 @@
 2007-01-25  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Steve and Darin.
+
+        * WebFrame.cpp:
+        (WebFrame::redirectDataToPlugin): Corrected uses of WebKitError* constants.
+        * Interfaces/IWebError.idl:
+            - Updated copyright.
+            - Changed WebURLErrorDomain to "NSURLErrorDomain" to match what CFNet gives us.
+            - Added all NSURLError* values as WebURLError*.
+            - Added all WebKitError* values.
+            - Added a POSIX error used by WebBrowser/SafariWin.
+            - Added failingURL declaration.
+        * Interfaces/IWebErrorPrivate.idl: Updated copyright.
+
+2007-01-25  Adam Roben  <aroben@apple.com>
+
         Reviewed by Anders.
 
         Part of <rdar://problem/4855618> HTML-based load failure pages.

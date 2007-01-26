@@ -79,6 +79,9 @@ public:
     virtual HRESULT STDMETHODCALLTYPE failingURL( 
         /* [retval][out] */ BSTR *result);
 
+    virtual HRESULT STDMETHODCALLTYPE isPolicyChangeError( 
+        /* [retval][out] */ BOOL *result);
+
     const WebCore::ResourceError& resourceError() const;
 
 private:
