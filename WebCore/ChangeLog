@@ -1,3 +1,16 @@
+2007-01-26  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by Darin.
+
+        Due to <rdar://problem/4956565> REGRESSION: After scrolling frame, 
+        hovering over link in this frame doesn't change cursor to pointing 
+        hand
+
+        lastEventIsMouseUp() is a Mac-only issue. This patch makes it Mac-
+        only code, so we can remove the temporary link stub for it.
+
+        * platform/win/TemporaryLinkStubs.cpp:
+
 2007-01-26  Oliver Hunt <oliver@apple.com>
 
         Build fix -- adding SVGInlineTextBox.{cpp,h} to project

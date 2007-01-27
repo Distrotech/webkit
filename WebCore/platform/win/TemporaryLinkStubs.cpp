@@ -188,8 +188,6 @@ void Frame::setNeedsReapplyStyles() { LOG_NOIMPL(); }
 
 String FrameLoader::overrideMediaType()const { LOG_NOIMPL(); return String(); }
 
-bool EventHandler::lastEventIsMouseUp() const { return false; }
-
 bool ResourceHandle::loadsBlocked() { return false; }
 void ResourceHandle::loadResourceSynchronously(const ResourceRequest&, ResourceError&, ResourceResponse&, Vector<char>&) { }
 void ResourceHandle::setDefersLoading(bool) { }
