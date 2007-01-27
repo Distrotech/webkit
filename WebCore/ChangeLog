@@ -1,3 +1,13 @@
+2007-01-26  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Oliver.
+
+        Fix frequent failed assertions when painting scroll bars.
+
+        * platform/win/PlatformScrollBarSafari.cpp:
+        (WebCore::PlatformScrollbar::paint): Check that painting is enabled
+        before painting.
+
 2007-01-26  Oliver Hunt <oliver@apple.com>
 
         Build fix.

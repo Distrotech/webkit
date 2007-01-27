@@ -160,6 +160,9 @@ void PlatformScrollbar::setEnabled(bool enabled)
 
 void PlatformScrollbar::paint(GraphicsContext* graphicsContext, const IntRect& damageRect)
 {
+    if (graphicsContext->paintingDisabled())
+        return;
+
     // Don't paint anything if the scrollbar doesn't intersect the damage rect.
     if (!frameGeometry().intersects(damageRect))
         return;
