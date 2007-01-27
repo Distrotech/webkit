@@ -127,6 +127,12 @@ WebView::~WebView()
 
     deleteBackingStore();
 
+    // <rdar://4958382> m_viewWindow will be destroyed when m_hostWindow is destroyed, but if
+    // setHostWindow was never called we will leak our HWND. If we still have a valid HWND at
+    // this point, we should just destroy it ourselves.
+    if (::IsWindow(m_viewWindow))
+        ::DestroyWindow(m_viewWindow);
+
     WebViewCount--;
     gClassCount--;
 }
@@ -1018,6 +1024,8 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
     if (!mainFrameImpl)
         return DefWindowProc(hWnd, message, wParam, lParam);
 
+    ASSERT(webView);
+
     bool handled = true;
 
     switch (message) {
@@ -1034,7 +1042,7 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             webView->paint((HDC)wParam, lParam);
             break;
         case WM_DESTROY:
-            // Do nothing?
+            webView->revokeDragDrop();
             break;
         case WM_MOUSEMOVE:
             if (webView->inResizer(lParam))
@@ -1506,7 +1514,9 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     m_viewWindow = CreateWindowEx(0, kWebViewWindowClassName, 0, WS_CHILD | WS_CLIPCHILDREN,
         0, 0, 0, 0, m_hostWindow, 0, gInstance, 0);
 
-    ::RegisterDragDrop(m_viewWindow, this);
+    hr = registerDragDrop();
+    if (FAILED(hr))
+        return hr;
 
     m_groupName = String(groupName, SysStringLen(groupName));
 
@@ -1547,8 +1557,6 @@ HRESULT STDMETHODCALLTYPE WebView::close()
 {
     IWebNotificationCenter* notifyCenter = WebNotificationCenter::defaultCenterInternal();
     notifyCenter->removeObserver(this, WebPreferences::webPreferencesChangedNotification(), 0);
-    
-    ::RevokeDragDrop(m_viewWindow);
 
     setHostWindow(0);
     setFrameLoadDelegate(0);
@@ -2933,6 +2941,18 @@ HRESULT STDMETHODCALLTYPE WebView::canHandleRequest(
 
     *result = !!canHandleRequest(requestImpl->resourceRequest());
     return S_OK;
+}
+
+HRESULT WebView::registerDragDrop()
+{
+    ASSERT(::IsWindow(m_viewWindow));
+    return ::RegisterDragDrop(m_viewWindow, this);
+}
+
+HRESULT WebView::revokeDragDrop()
+{
+    ASSERT(::IsWindow(m_viewWindow));
+    return ::RevokeDragDrop(m_viewWindow);
 }
 
 class EnumTextMatches : public IEnumTextMatches

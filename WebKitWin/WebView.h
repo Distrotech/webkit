@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -602,6 +602,9 @@ public:
     Vector<WebCore::IntRect> computePageRects(HDC printDC);
     void frameRect(RECT* rect);
     void closeWindow();
+
+    HRESULT registerDragDrop();
+    HRESULT revokeDragDrop();
 
     // Convenient to be able to violate the rules of COM here for easy movement to the frame.
     WebFrame* topLevelFrame() { return m_mainFrame; }

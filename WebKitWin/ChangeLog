@@ -1,3 +1,26 @@
+2007-01-26  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Oliver.
+
+        Engine side of fix for <rdar://problem/4958371> Boomer leaks WebViews
+
+        The problem was that we were calling RevokeDragDrop after our view
+        window had been destroyed, RevokeDragDrop wouldn't call Release on us.
+
+        Fix <rdar://problem/4958382> WebViews leak their HWND if no host window is set
+
+        * WebView.cpp:
+        (WebView::~WebView): Call DestroyWindow if our view window hasn't been
+        destroyed yet.
+        (WebViewWndProc): Added an ASSERT, and added call to revokeDragDrop
+        when handling WM_DESTROY.
+        (WebView::initWithFrame): Call our own registerDragDrop.
+        (WebView::close): Removed call to RevokeDragDrop. At this point our
+        window has been destroyed, so it's too late to do this.
+        (WebView::registerDragDrop): Added.
+        (WebView::revokeDragDrop): Added.
+        * WebView.h: Added declarations.
+
 2007-01-26  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.
