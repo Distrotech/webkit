@@ -121,8 +121,7 @@ HRESULT STDMETHODCALLTYPE WebError::localizedDescription(
     if (!result)
         return E_POINTER;
 
-    // FIXME: Implement this!
-    *result = BString("WebError::localizedDescription NOT IMPLEMENTED").release();
+    *result = BString(m_error.localizedDescription()).release();
     return S_OK;
 }
 
