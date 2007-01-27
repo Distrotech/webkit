@@ -6580,6 +6580,14 @@
 				Name="svg"
 				>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\ColorDistance.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\ColorDistance.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGAElement.cpp"
 					>
 				</File>
@@ -7441,6 +7449,14 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGTransformable.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGTransformDistance.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGTransformDistance.h"
 					>
 				</File>
 				<File

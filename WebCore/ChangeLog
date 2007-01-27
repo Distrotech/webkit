@@ -1,3 +1,9 @@
+2007-01-26  Oliver Hunt <oliver@apple.com>
+
+        Build fix.
+
+        * WebCore.vcproj/WebCore.vcproj:
+
 2007-01-26  Beth Dakin  <bdakin@apple.com>
 
         Reviewed by Darin.
