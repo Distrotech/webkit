@@ -1,3 +1,9 @@
+2007-01-26  Steve Falkenburg  <sfalken@apple.com>
+
+        B&I build fix
+
+        * WebKit.vcproj/WebKit.vcproj:
+
 2007-01-26  Adam Roben  <aroben@apple.com>
 
         Reviewed by Oliver.
