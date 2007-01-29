@@ -1647,9 +1647,9 @@ bool WebFrame::canCachePage() const
     return false;
 }
 
-PassRefPtr<DocumentLoader> WebFrame::createDocumentLoader(const ResourceRequest& request)
+PassRefPtr<DocumentLoader> WebFrame::createDocumentLoader(const ResourceRequest& request, const SubstituteData& substituteData)
 {
-    RefPtr<WebDocumentLoader> loader = new WebDocumentLoader(request);
+    RefPtr<WebDocumentLoader> loader = new WebDocumentLoader(request, substituteData);
  
     COMPtr<WebDataSource> dataSource;
     dataSource.adoptRef(WebDataSource::createInstance(loader.get()));

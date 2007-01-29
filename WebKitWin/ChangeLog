@@ -1,3 +1,19 @@
+2007-01-29  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Mark.
+        
+        <rdar://problem/4910106> Need to support loadData and loadHTMLString
+        
+        I added the underlying support, but did not turn on the new cross-platform versions yet as I've
+        not had sufficient time to test.
+
+        * WebDocumentLoader.cpp:
+        (WebDocumentLoader::WebDocumentLoader):
+        * WebDocumentLoader.h:
+        * WebFrame.cpp:
+        (WebFrame::createDocumentLoader):
+        * WebFrame.h:
+
 2007-01-27  Adam Roben  <aroben@apple.com>
 
         Reviewed by Oliver.

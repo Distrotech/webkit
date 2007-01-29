@@ -29,8 +29,8 @@
 
 using namespace WebCore;
 
-WebDocumentLoader::WebDocumentLoader(const ResourceRequest& request)
-    : DocumentLoader(request)
+WebDocumentLoader::WebDocumentLoader(const ResourceRequest& request, const SubstituteData& substituteData)
+    : DocumentLoader(request, substituteData)
     , m_detachedDataSource(0)
 {
 }
