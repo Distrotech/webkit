@@ -63,6 +63,7 @@
 #endif
 
 using std::min;
+using namespace KJS::Bindings;
 
 namespace WebCore {
 
@@ -170,9 +171,11 @@ void FrameWin::textDidChangeInTextArea(Element* e)
         m_client->textDidChangeInTextArea(e);
 }
 
-void FrameWin::addPluginRootObject(KJS::Bindings::RootObject* root)
-{
-    m_rootObjects.append(root);
+PassRefPtr<RootObject> FrameWin::createRootObject(void* nativeHandle, PassRefPtr<KJS::Interpreter> interpreter) 
+{ 
+    RefPtr<RootObject> rootObject = RootObject::create(nativeHandle, interpreter); 
+    m_rootObjects.append(rootObject); 
+    return rootObject.release(); 
 }
 
 void FrameWin::cleanupPluginObjects()
@@ -182,7 +185,7 @@ void FrameWin::cleanupPluginObjects()
 
     unsigned count = m_rootObjects.size();
     for (unsigned i = 0; i < count; i++)
-        m_rootObjects[i]->destroy();
+        m_rootObjects[i]->invalidate();
     m_rootObjects.clear();
 
     m_bindingRoot = 0;
@@ -201,10 +204,9 @@ KJS::Bindings::RootObject* FrameWin::bindingRootObject()
     ASSERT(settings()->isJavaScriptEnabled());
     if (!m_bindingRoot) {
         KJS::JSLock lock;
-        m_bindingRoot = new KJS::Bindings::RootObject(0, scriptProxy()->interpreter()); // The root gets deleted by JavaScriptCore
-        addPluginRootObject(m_bindingRoot);
+        m_bindingRoot = KJS::Bindings::RootObject::create(0, scriptProxy()->interpreter()); // The root gets deleted by JavaScriptCore
     }
-    return m_bindingRoot;
+    return m_bindingRoot.get();
 }
 
 NPObject* FrameWin::windowScriptNPObject()

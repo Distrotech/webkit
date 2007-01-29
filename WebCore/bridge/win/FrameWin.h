@@ -42,6 +42,7 @@ namespace KJS {
     namespace Bindings {
         class RootObject;
     }
+    class Interpreter;
 }
 
 namespace WebCore {
@@ -116,7 +117,7 @@ public:
     virtual void textWillBeDeletedInTextField(Element* input);
     virtual void textDidChangeInTextArea(Element*);
 
-    void addPluginRootObject(KJS::Bindings::RootObject* root);
+    PassRefPtr<KJS::Bindings::RootObject> createRootObject(void* nativeHandle, PassRefPtr<KJS::Interpreter>); 
     KJS::Bindings::RootObject* bindingRootObject();
     NPObject* windowScriptNPObject();
 
@@ -138,9 +139,9 @@ private:
     
     RefPtr<FrameWinClient> m_client;
 
-    KJS::Bindings::RootObject* m_bindingRoot; // The root object used for objects
+    RefPtr<KJS::Bindings::RootObject> m_bindingRoot; // The root object used for objects
                                               // bound outside the context of a plugin.
-    Vector<KJS::Bindings::RootObject*> m_rootObjects;
+    Vector<RefPtr<KJS::Bindings::RootObject>> m_rootObjects;
     NPObject* m_windowScriptNPObject;
 };
 

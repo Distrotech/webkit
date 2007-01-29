@@ -1,3 +1,15 @@
+2007-01-29  Steve Falkenburg  <sfalken@apple.com>
+
+        Fix build break from RootObject ownership change.
+
+        * bridge/win/FrameWin.cpp:
+        (WebCore::FrameWin::createRootObject): Added
+        (WebCore::FrameWin::cleanupPluginObjects): change destroy to invalidate
+        (WebCore::FrameWin::bindingRootObject): change new RootObject to RootObject::create
+        * bridge/win/FrameWin.h: 
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::bindingInstance): change new RootObject to FrameWin::createRootObject.
+
 2007-01-26  Adam Roben  <aroben@apple.com>
 
         Reviewed by Oliver.
