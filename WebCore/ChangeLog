@@ -1,3 +1,9 @@
+2007-01-29  Maciej Stachowiak  <mjs@apple.com>
+        
+        - fix build
+
+        * platform/win/TemporaryLinkStubs.cpp:
+
 2007-01-29  Steve Falkenburg  <sfalken@apple.com>
 
         Fix build break from RootObject ownership change.

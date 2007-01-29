@@ -1,5 +1,11 @@
 2007-01-29  Maciej Stachowiak  <mjs@apple.com>
 
+        - fix build
+
+        * WebFrame.h:
+
+2007-01-29  Maciej Stachowiak  <mjs@apple.com>
+
         Reviewed by Mark.
         
         <rdar://problem/4910106> Need to support loadData and loadHTMLString
