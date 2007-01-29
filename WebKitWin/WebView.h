@@ -40,6 +40,8 @@ class WebBackForwardList;
 
 WebCore::Page* core(IWebView*);
 
+interface IDropTargetHelper;
+
 class WebView 
     : public IWebView
     , public IWebViewPrivate
@@ -643,9 +645,10 @@ protected:
     WebCore::String m_overrideEncoding;
     WebCore::String m_applicationName;
     bool m_mouseActivated;
-    //WebCore dragging logic needs to be able to inspect the drag data
-    //this is updated in DragEnter/Leave/Drop
+    // WebCore dragging logic needs to be able to inspect the drag data
+    // this is updated in DragEnter/Leave/Drop
     COMPtr<IDataObject> m_dragData;
+    COMPtr<IDropTargetHelper> m_dropTargetHelper;
 };
 
 #endif

@@ -77,6 +77,7 @@
 #include <atldef.h>
 #include <tchar.h>
 #include <windowsx.h>
+#include <ShlObj.h>
 
 extern "C" {
     CGAffineTransform CGContextGetBaseCTM(CGContextRef c);
@@ -113,6 +114,8 @@ WebView::WebView()
 , m_dragData(0)
 {
     m_backingStoreSize.cx = m_backingStoreSize.cy = 0;
+
+    CoCreateInstance(CLSID_DragDropHelper, 0, CLSCTX_INPROC_SERVER, IID_IDropTargetHelper,(void**)&m_dropTargetHelper);
 
     WebViewCount++;
     gClassCount++;
@@ -2879,6 +2882,9 @@ HRESULT STDMETHODCALLTYPE WebView::DragEnter(
 {
     m_dragData = 0;
 
+    if (m_dropTargetHelper)
+        m_dropTargetHelper->DragEnter(m_viewWindow, pDataObject, (POINT*)&pt, *pdwEffect);
+
     POINTL localpt = pt;
     ::ScreenToClient(m_viewWindow, (LPPOINT)&localpt);
     DragData data(pDataObject, IntPoint(localpt.x, localpt.y), 
@@ -2893,6 +2899,9 @@ HRESULT STDMETHODCALLTYPE WebView::DragEnter(
 HRESULT STDMETHODCALLTYPE WebView::DragOver(
         DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
 {
+    if (m_dropTargetHelper)
+        m_dropTargetHelper->DragOver((POINT*)&pt, *pdwEffect);
+
     if (m_dragData) {
         POINTL localpt = pt;
         ::ScreenToClient(m_viewWindow, (LPPOINT)&localpt);
@@ -2907,6 +2916,9 @@ HRESULT STDMETHODCALLTYPE WebView::DragOver(
 
 HRESULT STDMETHODCALLTYPE WebView::DragLeave()
 {
+    if (m_dropTargetHelper)
+        m_dropTargetHelper->DragLeave();
+
     if (m_dragData) {
         DragData data(m_dragData.get(), IntPoint(), IntPoint(), 
             DragOperationNone);
@@ -2919,6 +2931,9 @@ HRESULT STDMETHODCALLTYPE WebView::DragLeave()
 HRESULT STDMETHODCALLTYPE WebView::Drop(
         IDataObject* pDataObject, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
 {
+    if (m_dropTargetHelper)
+        m_dropTargetHelper->Drop(pDataObject, (POINT*)&pt, *pdwEffect);
+
     m_dragData = 0;
     *pdwEffect = DROPEFFECT_NONE;
     POINTL localpt = pt;

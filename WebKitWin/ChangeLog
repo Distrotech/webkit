@@ -1,3 +1,20 @@
+2007-01-29  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Oliver.
+
+        <rdar://problem/4892067>
+        DnD a font file in Boomer locks it up.
+
+        Create a drop target helper so we get snazzy drag images.
+
+        * WebView.cpp:
+        (WebView::WebView):
+        (WebView::DragEnter):
+        (WebView::DragOver):
+        (WebView::DragLeave):
+        (WebView::Drop):
+        * WebView.h:
+
 2007-01-29  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Adam.
