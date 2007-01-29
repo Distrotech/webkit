@@ -1,3 +1,13 @@
+2007-01-29  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Adam.
+
+        Basic implementation of new dragclient method
+
+        * WebDragClient.cpp:
+        (WebDragClient::dragSourceActionMaskForPoint):
+        * WebDragClient.h:
+
 2007-01-29  Maciej Stachowiak  <mjs@apple.com>
 
         - fix build

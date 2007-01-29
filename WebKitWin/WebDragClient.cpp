@@ -28,6 +28,8 @@
 
 #include "WebView.h"
 #include <WebCore/DragData.h>
+#include <WebCore/FrameView.h>
+#include <WebCore/Page.h>
 
 WebDragClient::WebDragClient(WebView* webView)
     : m_webView(webView) 
@@ -55,6 +57,17 @@ void WebDragClient::willPerformDragDestinationAction(WebCore::DragDestinationAct
     if (SUCCEEDED(m_webView->uiDelegate(&delegateRef)))
         delegateRef->willPerformDragDestinationAction(m_webView, (WebDragDestinationAction)action, dragData->platformData());
 }
+
+WebCore::DragSourceAction WebDragClient::dragSourceActionMaskForPoint(const WebCore::IntPoint& windowPoint)
+{
+   COMPtr<IWebUIDelegate> delegateRef = 0;
+   WebDragSourceAction action = WebDragSourceActionAny;
+   POINT localpt = core(m_webView)->mainFrame()->view()->windowToContents(windowPoint);
+   if (SUCCEEDED(m_webView->uiDelegate(&delegateRef)))
+       delegateRef->dragSourceActionMaskForPoint(m_webView, &localpt, &action);
+   return (WebCore::DragSourceAction)action;
+}
+
 
 void WebDragClient::dragControllerDestroyed()
 {
