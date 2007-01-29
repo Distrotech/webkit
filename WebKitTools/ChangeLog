@@ -1,3 +1,11 @@
+2007-01-29  Anders Carlsson  <acarlsson@apple.com>
+
+        Build fix.
+        
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.h:
+        (WaitUntilDoneDelegate::dragDestinationActionMaskForDraggingInfo):
+        (WaitUntilDoneDelegate::willPerformDragDestinationAction):
+
 2007-01-18  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.

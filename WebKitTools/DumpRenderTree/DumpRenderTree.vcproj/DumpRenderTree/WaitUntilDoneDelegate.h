@@ -224,12 +224,13 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE dragDestinationActionMaskForDraggingInfo( 
         /* [in] */ IWebView *webView,
-        /* [in] */ IDropSource *draggingInfo,
+        /* [in] */ IDataObject *draggingInfo,
         /* [retval][out] */ WebDragDestinationAction *action) { return S_OK; }
 
     virtual HRESULT STDMETHODCALLTYPE willPerformDragDestinationAction( 
         /* [in] */ IWebView *webView,
-        /* [in] */ IDropSource *draggingInfo) { return S_OK; }
+        /* [in] */ WebDragDestinationAction action,
+        /* [in] */ IDataObject *draggingInfo) { return S_OK; }
 
     virtual HRESULT STDMETHODCALLTYPE dragSourceActionMaskForPoint( 
         /* [in] */ IWebView *webView,
