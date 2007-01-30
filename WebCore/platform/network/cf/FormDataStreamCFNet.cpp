@@ -41,7 +41,7 @@
 #include <wtf/Assertions.h>
 #include <wtf/HashMap.h>
 
-#ifdef USE_OLD_CFSTREAM_CALLBACKS
+#ifdef USE_V1_CFSTREAM_CALLBACKS
 typedef CFReadStreamCallBacksV1 WCReadStreamCallBacks;
 #else
 typedef CFReadStreamCallBacks WCReadStreamCallBacks;

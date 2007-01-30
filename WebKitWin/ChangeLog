@@ -1,3 +1,11 @@
+2007-01-29  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Oliver
+
+        * WebDownload.cpp:
+        (WebDownload::init): Use RetainPtr.adopt(), and create the CFURLDownload after we store the request
+        (WebDownload::initWithRequest): Ditto
+
 2007-01-29  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Adam & Steve.

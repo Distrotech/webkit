@@ -1,5 +1,24 @@
 2007-01-29  Brady Eidson  <beidson@apple.com>
 
+        Reviewed by Oliver
+
+        All the downloads plumbing for if you have ToT CFNetwork + my changes
+        (or after they submit with my changes)
+
+        * platform/network/cf/FormDataStreamCFNet.cpp: Reword the #ifdef for CFNetwork ToT for clarity
+        * platform/network/cf/ResourceHandleCFNet.cpp:
+        (WebCore::didFail): Use a RetainPtr .get()
+        (WebCore::ResourceHandleInternal::~ResourceHandleInternal): Only cancel the connection if we hold the last ref
+        (WebCore::ResourceHandle::start): Use a RetainPtr - adopt and .get()
+        (WebCore::ResourceHandle::cancel): Use a RetainPtr .get()
+        (WebCore::ResourceHandle::receivedCredential):Use a RetainPtr .get()
+        (WebCore::ResourceHandle::receivedRequestToContinueWithoutCredential): Use a RetainPtr .get()
+        (WebCore::ResourceHandle::connection): Use a RetainPtr .get()
+        * platform/network/cf/ResourceRequestCFNet.cpp:
+        (WebCore::ResourceRequest::doUpdatePlatformRequest): Prevent a crash if a null
+
+2007-01-29  Brady Eidson  <beidson@apple.com>
+
         Reviewed by Geoff
 
         Change LOG_NOTIMPL() to use a LOG() and its logging channel instead of LOG_ERROR()

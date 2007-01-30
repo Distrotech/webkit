@@ -81,17 +81,9 @@ void WebDownload::init(ResourceHandle* handle, const ResourceRequest& request, c
         didReceiveResponseCallback, willResumeWithResponseCallback, didReceiveDataCallback, shouldDecodeDataOfMIMETypeCallback,
         decideDestinationWithSuggestedObjectNameCallback, didCreateDestinationCallback, didFinishCallback, didFailCallback};
 
-    m_download = CFURLDownloadCreateWithLoadingConnection(0, connection, request.cfURLRequest(), response.cfURLResponse(), 0, &client);
-    // FIXME: Do we need to call start() on downloads with loading connections, or can we assume they are already going?
-    // Check NSURLDownload code!
-
     m_request.adoptRef(WebMutableURLRequest::createInstance(request));
-    
-    // FIXME: Rework this once CFNetwork implements CFURLDownloadCreateWithLoadingConnection
-    if (!m_download) {
-        LOG_ERROR("Downloading from an existing connection is currently unimplemented in CFNetwork.  This WebDownload will likely leak");
-        return;
-    }
+    m_download.adopt(CFURLDownloadCreateWithLoadingConnection(0, connection, request.cfURLRequest(), response.cfURLResponse(), 0, &client));
+
     LOG(Download, "WebDownload - Created WebDownload %p from existing connection (%s)", this, request.url().url().ascii());
 }
 
@@ -106,8 +98,8 @@ void WebDownload::init(const KURL& url, IWebDownloadDelegate* delegate)
     CFURLDownloadClient client = {0, this, 0, 0, 0, didStartCallback, willSendRequestCallback, didReceiveAuthenticationChallengeCallback, 
                                   didReceiveResponseCallback, willResumeWithResponseCallback, didReceiveDataCallback, shouldDecodeDataOfMIMETypeCallback, 
                                   decideDestinationWithSuggestedObjectNameCallback, didCreateDestinationCallback, didFinishCallback, didFailCallback};
-    m_download = CFURLDownloadCreate(0, cfRequest, &client);
     m_request.adoptRef(WebMutableURLRequest::createInstance(request));
+    m_download.adopt(CFURLDownloadCreate(0, cfRequest, &client));
 
     CFURLDownloadScheduleWithCurrentMessageQueue(m_download.get());
     CFURLDownloadScheduleDownloadWithRunLoop(m_download.get(), ResourceHandle::loaderRunLoop(), kCFRunLoopDefaultMode);
@@ -200,8 +192,8 @@ HRESULT STDMETHODCALLTYPE WebDownload::initWithRequest(
     CFURLDownloadClient client = {0, this, 0, 0, 0, didStartCallback, willSendRequestCallback, didReceiveAuthenticationChallengeCallback, 
                                   didReceiveResponseCallback, willResumeWithResponseCallback, didReceiveDataCallback, shouldDecodeDataOfMIMETypeCallback, 
                                   decideDestinationWithSuggestedObjectNameCallback, didCreateDestinationCallback, didFinishCallback, didFailCallback};
-    m_download = CFURLDownloadCreate(0, cfRequest, &client);
     m_request.adoptRef(WebMutableURLRequest::createInstance(webRequest.get()));
+    m_download.adopt(CFURLDownloadCreate(0, cfRequest, &client));
 
     CFURLDownloadScheduleWithCurrentMessageQueue(m_download.get());
     CFURLDownloadScheduleDownloadWithRunLoop(m_download.get(), ResourceHandle::loaderRunLoop(), kCFRunLoopDefaultMode);

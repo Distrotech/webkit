@@ -64,7 +64,8 @@ void ResourceRequest::doUpdatePlatformRequest()
     CFMutableURLRequestRef cfRequest = CFURLRequestCreateMutable(0, url, (CFURLRequestCachePolicy)cachePolicy(), timeoutInterval(), mainDocumentURL);
 
     CFRelease(url);
-    CFRelease(mainDocumentURL);
+    if (mainDocumentURL)
+        CFRelease(mainDocumentURL);
 
     CFStringRef requestMethod = httpMethod().createCFString();
     CFURLRequestSetHTTPRequestMethod(cfRequest, requestMethod);
