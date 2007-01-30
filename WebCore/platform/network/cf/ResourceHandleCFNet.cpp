@@ -103,6 +103,8 @@ void didFinishLoading(CFURLConnectionRef conn, const void* clientInfo)
     handle->client()->didFinishLoading(handle);
 }
 
+// To use version 1 callbacks and compile with ToT CFNetwork, the following should
+// be defined from ToT CFNetwork headers
 #ifdef ERRORS_AS_CFERRORS
 void didFail(CFURLConnectionRef conn, CFErrorRef error, const void* clientInfo) 
 {
@@ -116,7 +118,7 @@ void didFail(CFURLConnectionRef conn, CFErrorRef error, const void* clientInfo)
 void didFail(CFURLConnectionRef conn, CFStreamError error, const void* clientInfo) 
 {
     ResourceHandle* handle = (ResourceHandle*)clientInfo;
-
+ 
     LOG(Network, "CFNet - didFail(conn=%p, handle=%p, error = {%d, %d}) (%s)", conn, handle, error.domain, error.error, handle->url().url().ascii());
 
     String domain;
@@ -134,6 +136,7 @@ void didFail(CFURLConnectionRef conn, CFStreamError error, const void* clientInf
     handle->client()->didFail(handle, ResourceError(domain, error.error, String(), String()));
 }
 #endif
+
 CFCachedURLResponseRef willCacheResponse(CFURLConnectionRef conn, CFCachedURLResponseRef cachedResponse, const void* clientInfo) 
 {
     ResourceHandle* handle = (ResourceHandle*)clientInfo;
@@ -185,9 +188,13 @@ ResourceHandleInternal::~ResourceHandleInternal()
     if (m_connection) {
         LOG(Network, "CFNet - Cancelling connection %p (%s)", m_connection, m_request.url().url().ascii());
 
-        CFURLConnectionCancel(m_connection);
-        CFRelease(m_connection);
-        m_connection = 0;
+        // The CFURLConnection deallocator doesn't send a "didCancel" callback as we would like in the case where this
+        // connection loses its last reference and gets destroyed.  Therefore, if we hold the last ref, we will call 
+        // CFURLConnectionCancel on it manually
+        // You might think this should never be the case, but when a connection turns into a download and needs to stay live,
+        // this sure does happen! :)
+        if (CFGetRetainCount(m_connection.get()) == 1)
+            CFURLConnectionCancel(m_connection.get());
     }
 }
 
@@ -254,12 +261,18 @@ bool ResourceHandle::start(Frame* frame)
 
     CFURLRequestRef request = d->m_request.cfURLRequest();
 
-    CFURLConnectionClient client = {0, this, 0, 0, 0, willSendRequest, didReceiveResponse, didReceiveData, NULL, didFinishLoading, didFail, willCacheResponse, didReceiveChallenge};
-    d->m_connection = CFURLConnectionCreate(0, request, &client);
+#ifdef ERRORS_AS_CFERRORS
+    int clientVersion = 1;
+#else
+    int clientVersion = 0;
+#endif
+    CFURLConnectionClient client = {clientVersion, this, 0, 0, 0, willSendRequest, didReceiveResponse, didReceiveData, NULL, didFinishLoading, didFail, willCacheResponse, didReceiveChallenge};
 
-    CFURLConnectionScheduleWithCurrentMessageQueue(d->m_connection);
-    CFURLConnectionScheduleDownloadWithRunLoop(d->m_connection, loaderRunLoop(), kCFRunLoopDefaultMode);
-    CFURLConnectionStart(d->m_connection);
+    d->m_connection.adopt(CFURLConnectionCreate(0, request, &client));
+
+    CFURLConnectionScheduleWithCurrentMessageQueue(d->m_connection.get());
+    CFURLConnectionScheduleDownloadWithRunLoop(d->m_connection.get(), loaderRunLoop(), kCFRunLoopDefaultMode);
+    CFURLConnectionStart(d->m_connection.get());
 
     LOG(Network, "CFNet - Starting URL %s (handle=%p, conn=%p)", d->m_request.url().url().ascii(), this, d->m_connection);
 
@@ -269,8 +282,7 @@ bool ResourceHandle::start(Frame* frame)
 void ResourceHandle::cancel()
 {
     if (d->m_connection) {
-        CFURLConnectionCancel(d->m_connection);
-        CFRelease(d->m_connection);
+        CFURLConnectionCancel(d->m_connection.get());
         d->m_connection = 0;
     }
 }
@@ -310,7 +322,7 @@ void ResourceHandle::receivedCredential(const AuthenticationChallenge& challenge
         return;
 
     CFURLCredentialRef cfCredential = createCF(credential);
-    CFURLConnectionUseCredential(d->m_connection, cfCredential, challenge.cfURLAuthChallengeRef());
+    CFURLConnectionUseCredential(d->m_connection.get(), cfCredential, challenge.cfURLAuthChallengeRef());
     CFRelease(cfCredential);
 
     clearAuthentication();
@@ -324,7 +336,7 @@ void ResourceHandle::receivedRequestToContinueWithoutCredential(const Authentica
     if (challenge != d->m_currentWebChallenge)
         return;
 
-    CFURLConnectionUseCredential(d->m_connection, 0, challenge.cfURLAuthChallengeRef());
+    CFURLConnectionUseCredential(d->m_connection.get(), 0, challenge.cfURLAuthChallengeRef());
 
     clearAuthentication();
 }
@@ -340,7 +352,7 @@ void ResourceHandle::receivedCancellation(const AuthenticationChallenge& challen
 
 CFURLConnectionRef ResourceHandle::connection() const
 {
-    return d->m_connection;
+    return d->m_connection.get();
 }
 
 } // namespace WebCore
