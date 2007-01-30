@@ -2271,6 +2271,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\loader\SubstituteData.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\loader\TextDocument.cpp"
 				>
 			</File>
