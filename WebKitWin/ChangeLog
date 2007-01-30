@@ -1,3 +1,16 @@
+2007-01-29  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Adam & Steve.
+        
+        - hook up new cross-platform data-loading code
+        - fixed <rdar://4910106> - Need to support loadData and loadHTMLString
+
+        * WebFrame.cpp:
+        (WebFrame::loadData): add a SharedBuffer overload, and implement
+        IStream* version using that.
+        (WebFrame::loadHTMLString): implement using loadData
+        * WebFrame.h: prototype new method
+
 2007-01-29  Adele Peterson  <adele@apple.com>
 
         Reviewed by Darin. 

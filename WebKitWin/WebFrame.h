@@ -311,6 +311,7 @@ public:
 protected:
     unsigned int getObjectCacheSize();
     void loadHTMLString(BSTR string, BSTR baseURL, BSTR unreachableURL);
+    void loadData(PassRefPtr<WebCore::SharedBuffer>, BSTR mimeType, BSTR textEncodingName, BSTR baseURL, BSTR failingURL);
 
 protected:
     ULONG               m_refCount;

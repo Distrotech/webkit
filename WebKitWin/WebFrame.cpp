@@ -488,66 +488,52 @@ HRESULT STDMETHODCALLTYPE WebFrame::loadRequest(
     return S_OK;
 }
 
+void WebFrame::loadData(PassRefPtr<WebCore::SharedBuffer> data, BSTR mimeType, BSTR textEncodingName, BSTR baseURL, BSTR failingURL)
+{
+    String mimeTypeString(mimeType, SysStringLen(mimeType));
+    if (!mimeType)
+        mimeTypeString = "text/html";
+
+    String encodingString(textEncodingName, SysStringLen(textEncodingName));
+    KURL baseKURL = DeprecatedString((DeprecatedChar*)baseURL, SysStringLen(baseURL));
+    KURL failingKURL = DeprecatedString((DeprecatedChar*)failingURL, SysStringLen(failingURL));
+
+    ResourceRequest request(baseKURL);
+    SubstituteData substituteData(data, mimeTypeString, encodingString, failingKURL);
+
+    d->frame->loader()->load(request, substituteData);
+}
+
+
 HRESULT STDMETHODCALLTYPE WebFrame::loadData( 
     /* [in] */ IStream* data,
     /* [in] */ BSTR mimeType,
     /* [in] */ BSTR textEncodingName,
     /* [in] */ BSTR url)
 {
-    if (mimeType) {
-        String mimeTypeString(mimeType, SysStringLen(mimeType));
-        d->frame->loader()->setResponseMIMEType(mimeTypeString);
-    }
-
-    if (textEncodingName) {
-        String encodingString(textEncodingName, SysStringLen(textEncodingName));
-        d->frame->loader()->setEncoding(encodingString, false);
-    }
-
-    if (url) {
-        DeprecatedString urlString((DeprecatedChar*)url, SysStringLen(url));
-        m_originalRequestURL = KURL(urlString);
-        d->frame->loader()->didOpenURL(m_originalRequestURL);
-        d->frame->loader()->begin(m_originalRequestURL);
-    } else {
-        d->frame->loader()->didOpenURL("about:blank");
-        d->frame->loader()->begin();
-    }
+    RefPtr<SharedBuffer> sharedBuffer = new SharedBuffer();
 
     STATSTG stat;
     if (SUCCEEDED(data->Stat(&stat, STATFLAG_NONAME))) {
         if (!stat.cbSize.HighPart && stat.cbSize.LowPart) {
             Vector<char> dataBuffer(stat.cbSize.LowPart);
             ULONG read;
+            // FIXME: this does a needless copy, would be better to read right into the SharedBuffer
+            // or adopt the Vector or something.
             if (SUCCEEDED(data->Read(dataBuffer.data(), (ULONG)dataBuffer.size(), &read)))
-                d->frame->loader()->write(dataBuffer.data(), read);
+                sharedBuffer->append(dataBuffer.data(), (int)dataBuffer.size());
         }
     }
 
-    d->frame->loader()->end();
+    loadData(sharedBuffer, mimeType, textEncodingName, url, 0);
     return S_OK;
 }
 
-void WebFrame::loadHTMLString(BSTR string, BSTR baseURL, BSTR /*unreachableURL*/)
+void WebFrame::loadHTMLString(BSTR string, BSTR baseURL, BSTR unreachableURL)
 {
-
-    // FIXME: We should really be using loadData for this, but that has to wait until
-    // <rdar://problem/4910106> is fixed.
-    DeprecatedString baseURLString((DeprecatedChar*)baseURL, SysStringLen(baseURL));
-
-    if (baseURL) {
-        m_originalRequestURL = KURL(baseURLString);
-        d->frame->loader()->didOpenURL(m_originalRequestURL);
-        d->frame->loader()->begin(m_originalRequestURL);
-    } else {
-        d->frame->loader()->didOpenURL("about:blank");
-        d->frame->loader()->begin();
-    }
-
-    String htmlString((UChar*)string, SysStringLen(string));
-
-    d->frame->loader()->write(htmlString);
-    d->frame->loader()->end();
+    RefPtr<SharedBuffer> sharedBuffer = new SharedBuffer(reinterpret_cast<char*>(string), sizeof(UChar) * SysStringLen(string));
+    BString utf16Encoding(TEXT("utf-16"), 6);
+    loadData(sharedBuffer.release(), 0, utf16Encoding, baseURL, unreachableURL);
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::loadHTMLString( 
