@@ -1,3 +1,11 @@
+2007-01-29  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Darin. 
+
+        * WebEditorClient.cpp:
+        (WebEditorClient::handleKeyPress): Removed EventTargetNode paramenter. 
+        * WebEditorClient.h:
+
 2007-01-29  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Oliver.

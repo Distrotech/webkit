@@ -452,7 +452,7 @@ void WebEditorClient::redo()
     }
 }
 
-void WebEditorClient::handleKeyPress(EventTargetNode*, KeyboardEvent*)
+void WebEditorClient::handleKeyPress(KeyboardEvent*)
 {
     // If the platform needs to intercept the event, this is where it should do that.
 }

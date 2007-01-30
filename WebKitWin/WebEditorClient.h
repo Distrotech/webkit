@@ -85,7 +85,7 @@ public:
     void undo();
     void redo();
 
-    void handleKeyPress(WebCore::EventTargetNode*, WebCore::KeyboardEvent*);
+    void handleKeyPress(WebCore::KeyboardEvent*);
 
 private:
     WebView* m_webView;
