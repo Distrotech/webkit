@@ -26,12 +26,13 @@
 #ifndef NOT_IMPLEMENTED_H__
 #define NOT_IMPLEMENTED_H__
 
+#include "logging.h"
 #include <wtf/Assertions.h>
 
 #define LOG_NOIMPL() do { \
         static bool havePrinted = false; \
         if (!havePrinted) { \
-            LOG_ERROR("%s is not implemented", __FUNCTION__); \
+            WTFLog(__FILE__, __LINE__, WTF_PRETTY_FUNCTION, &LogNotYetImplemented, "%s is not implemented", __FUNCTION__); \
             havePrinted = true; \
         } \
     } while (0)

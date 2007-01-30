@@ -1,3 +1,12 @@
+2007-01-29  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Geoff
+
+        Change LOG_NOTIMPL() to use a LOG() and its logging channel instead of LOG_ERROR()
+        so you can actually turn it off.
+        
+        * platform/win/NotImplemented.h:
+
 2007-01-29  Maciej Stachowiak  <mjs@apple.com>
         
         - fix build
