@@ -41,6 +41,14 @@ BString::BString()
 {
 }
 
+BString::BString(const wchar_t* characters)
+{
+    if (!characters)
+        m_bstr = 0;
+    else
+        m_bstr = SysAllocString(characters);
+}
+
 BString::BString(const wchar_t* characters, size_t length)
 {
     if (!characters)
@@ -55,14 +63,6 @@ BString::BString(const String& s)
         m_bstr = 0;
     else
         m_bstr = SysAllocStringLen(s.characters(), s.length());
-}
-
-BString::BString(BSTR bstr)
-{
-    if (!bstr)
-        m_bstr = 0;
-    else
-        m_bstr = SysAllocStringLen(bstr, SysStringLen(bstr));
 }
 
 #if PLATFORM(CF)
@@ -95,7 +95,7 @@ BString::BString(const BString& other)
     if (!other.m_bstr)
         m_bstr = 0;
     else
-        m_bstr = SysAllocStringLen(other.m_bstr, SysStringLen(other.m_bstr));
+        m_bstr = SysAllocString(other.m_bstr);
 }
 
 void BString::adoptBSTR(BSTR bstr)
@@ -112,7 +112,7 @@ BString& BString::operator=(const BString& other)
         if (!other.m_bstr)
             m_bstr = 0;
         else
-            m_bstr = SysAllocStringLen(other.m_bstr, SysStringLen(other.m_bstr));
+            m_bstr = SysAllocString(other.m_bstr);
     }
     return *this;
 }
@@ -120,6 +120,10 @@ BString& BString::operator=(const BString& other)
 bool operator ==(const BString& a, const BString& b)
 {
     if (SysStringLen((BSTR)a) != SysStringLen((BSTR)b))
+        return false;
+    if (!(BSTR)a && !(BSTR)b)
+        return true;
+    if (!(BSTR)a || !(BSTR)b)
         return false;
     return !_tcscmp((BSTR)a, (BSTR)b);
 }
@@ -133,6 +137,10 @@ bool operator ==(const BString& a, BSTR b)
 {
     if (SysStringLen((BSTR)a) != SysStringLen(b))
         return false;
+    if (!(BSTR)a && !b)
+        return true;
+    if (!(BSTR)a || !b)
+        return false;
     return !_tcscmp((BSTR)a, b);
 }
 
@@ -144,6 +152,10 @@ bool operator !=(const BString& a, BSTR b)
 bool operator ==(BSTR a, const BString& b)
 {
     if (SysStringLen(a) != SysStringLen((BSTR)b))
+        return false;
+    if (!a && !(BSTR)b)
+        return true;
+    if (!a || !(BSTR)b)
         return false;
     return !_tcscmp(a, (BSTR)b);
 }

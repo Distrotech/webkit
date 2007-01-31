@@ -1,3 +1,14 @@
+2007-01-31  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Ada.
+
+        Fix BString bugs.
+
+        * platform/win/BString.cpp:
+        (WebCore::BString::BString): Call SysAllocString instead of SysAllocStringLen
+        (WebCore::BString::operator=): Add proper null checks
+        (WebCore::operator ==): Add proper null checks
+
 2007-01-30  Anders Carlsson  <acarlsson@apple.com>
 
         Build fix.

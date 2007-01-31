@@ -39,9 +39,9 @@ namespace WebCore {
     class BString {
     public:
         BString();
+        BString(const wchar_t*);
         BString(const wchar_t*, size_t length);
         BString(const String&);
-        BString(BSTR);
 #if PLATFORM(CF)
         BString(CFStringRef);
 #endif
