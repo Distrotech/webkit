@@ -1,3 +1,15 @@
+2007-01-31  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Ada.
+        
+        Fixes to BSTR handling required for username/password autofill.
+
+        * WebURLProtectionSpace.cpp:
+        (WebURLProtectionSpace::authenticationMethod): Return BSTRs instead of bare LPCTSTRs
+        (coreScheme): Compare against BSTRs
+        (WebURLProtectionSpace::initWithHost): Compare against BSTRs
+        (WebURLProtectionSpace::protocol): Return BSTRs instead of bare LPCTSTRs
+
 2007-01-30  Brady Eidson  <beidson@apple.com>
 
         Patch by Anders

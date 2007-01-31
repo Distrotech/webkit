@@ -101,16 +101,16 @@ HRESULT STDMETHODCALLTYPE WebURLProtectionSpace::authenticationMethod(
 {
     switch (m_protectionSpace.authenticationScheme()) {
     case ProtectionSpaceAuthenticationSchemeDefault:
-        *result = WebURLAuthenticationMethodDefault;
+        *result = SysAllocString(WebURLAuthenticationMethodDefault);
         break;
     case ProtectionSpaceAuthenticationSchemeHTTPBasic:
-        *result = WebURLAuthenticationMethodHTTPBasic;
+        *result = SysAllocString(WebURLAuthenticationMethodHTTPBasic);
         break;
     case ProtectionSpaceAuthenticationSchemeHTTPDigest:
-        *result = WebURLAuthenticationMethodHTTPDigest;
+        *result = SysAllocString(WebURLAuthenticationMethodHTTPDigest);
         break;
     case ProtectionSpaceAuthenticationSchemeHTMLForm:
-        *result = WebURLAuthenticationMethodHTMLForm;
+        *result = SysAllocString(WebURLAuthenticationMethodHTMLForm);
         break;
     default:
         ASSERT_NOT_REACHED();
@@ -130,13 +130,13 @@ HRESULT STDMETHODCALLTYPE WebURLProtectionSpace::host(
 static ProtectionSpaceAuthenticationScheme coreScheme(BSTR authenticationMethod)
 {
     ProtectionSpaceAuthenticationScheme scheme = ProtectionSpaceAuthenticationSchemeDefault;
-    if (BString(authenticationMethod) == WebURLAuthenticationMethodDefault)
+    if (BString(authenticationMethod) == BString(WebURLAuthenticationMethodDefault))
         scheme = ProtectionSpaceAuthenticationSchemeDefault;
-    else if (BString(authenticationMethod) == WebURLAuthenticationMethodHTTPBasic)
+    else if (BString(authenticationMethod) == BString(WebURLAuthenticationMethodHTTPBasic))
         scheme = ProtectionSpaceAuthenticationSchemeHTTPBasic;
-    else if (BString(authenticationMethod) == WebURLAuthenticationMethodHTTPDigest)
+    else if (BString(authenticationMethod) == BString(WebURLAuthenticationMethodHTTPDigest))
         scheme = ProtectionSpaceAuthenticationSchemeHTTPDigest;
-    else if (BString(authenticationMethod) == WebURLAuthenticationMethodHTMLForm)
+    else if (BString(authenticationMethod) == BString(WebURLAuthenticationMethodHTMLForm))
         scheme = ProtectionSpaceAuthenticationSchemeHTMLForm;
     else
         ASSERT_NOT_REACHED();
@@ -151,13 +151,13 @@ HRESULT STDMETHODCALLTYPE WebURLProtectionSpace::initWithHost(
     /* [in] */ BSTR authenticationMethod)
 {
     ProtectionSpaceServerType serverType = ProtectionSpaceProxyHTTP;
-    if (BString(protocol) == WebURLProtectionSpaceServerHTTP)
+    if (BString(protocol) == BString(WebURLProtectionSpaceServerHTTP))
         serverType = ProtectionSpaceServerHTTP;
-    else if (BString(protocol) == WebURLProtectionSpaceServerHTTPS)
+    else if (BString(protocol) == BString(WebURLProtectionSpaceServerHTTPS))
         serverType = ProtectionSpaceServerHTTPS;
-    else if (BString(protocol) == WebURLProtectionSpaceServerFTP)
+    else if (BString(protocol) == BString(WebURLProtectionSpaceServerFTP))
         serverType = ProtectionSpaceServerFTP;
-    else if (BString(protocol) == WebURLProtectionSpaceServerFTPS)
+    else if (BString(protocol) == BString(WebURLProtectionSpaceServerFTPS))
         serverType = ProtectionSpaceServerFTPS;
     else
         ASSERT_NOT_REACHED();
@@ -212,16 +212,16 @@ HRESULT STDMETHODCALLTYPE WebURLProtectionSpace::protocol(
 {
     switch (m_protectionSpace.serverType()) {
     case ProtectionSpaceServerHTTP:
-        *result = WebURLProtectionSpaceServerHTTP;
+        *result = SysAllocString(WebURLProtectionSpaceServerHTTP);
         break;
     case ProtectionSpaceServerHTTPS:
-        *result = WebURLProtectionSpaceServerHTTPS;
+        *result = SysAllocString(WebURLProtectionSpaceServerHTTPS);
         break;
     case ProtectionSpaceServerFTP:
-        *result = WebURLProtectionSpaceServerFTP;
+        *result = SysAllocString(WebURLProtectionSpaceServerFTP);
         break;
     case ProtectionSpaceServerFTPS:
-        *result = WebURLProtectionSpaceServerFTPS;
+        *result = SysAllocString(WebURLProtectionSpaceServerFTPS);
         break;
     default:
         ASSERT_NOT_REACHED();
