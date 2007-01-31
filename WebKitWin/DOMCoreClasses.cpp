@@ -867,6 +867,9 @@ HRESULT DOMElement::coreElement(void **element)
 BOOL STDMETHODCALLTYPE DOMElement::isEqual( 
     /* [in] */ IDOMElement* other)
 {
+    if (!other)
+        return FALSE;
+
     IDOMElementPrivate* otherPriv;
     HRESULT hr = other->QueryInterface(IID_IDOMElementPrivate, (void**) &otherPriv);
     if (FAILED(hr))
@@ -879,6 +882,20 @@ BOOL STDMETHODCALLTYPE DOMElement::isEqual(
         return FALSE;
 
     return (otherCoreEle == (void*)m_element) ? TRUE : FALSE;
+}
+
+HRESULT STDMETHODCALLTYPE DOMElement::isFocused( 
+    /* [retval][out] */ BOOL *result)
+{
+    if (!m_element)
+        return E_FAIL;
+
+    if (m_element->document()->focusedNode() == m_element)
+        *result = TRUE;
+    else
+        *result = FALSE;
+
+    return S_OK;
 }
 
 // IDOMElementCSSInlineStyle --------------------------------------------------

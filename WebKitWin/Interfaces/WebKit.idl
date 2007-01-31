@@ -252,4 +252,15 @@ library WebKit
     coclass WebURLRequest {
         interface IWebURLRequest;
     }
+
+#if __ARCHIVE_BUILD
+    [uuid(41EFBA9A-63E4-4c49-A012-CCC48694D7A5)]
+#elif __BUILDBOT__
+    [uuid(F366A6E8-E43C-4fd4-AAB0-8E6E79C73E6E)]
+#else
+    [uuid(029488E7-8A99-4389-8F6E-B851373FA818)]
+#endif
+    coclass WebURLProtectionSpace {
+        interface IWebURLProtectionSpace;
+    }
 }

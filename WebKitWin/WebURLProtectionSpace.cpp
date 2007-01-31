@@ -24,8 +24,8 @@
  */
 
 #include "config.h"
+#include "WebKit.h"
 #include "WebKitDLL.h"
-#include <initguid.h>
 #include "WebURLProtectionSpace.h"
 
 #pragma warning(push, 0)
@@ -69,7 +69,7 @@ HRESULT STDMETHODCALLTYPE WebURLProtectionSpace::QueryInterface(REFIID riid, voi
     *ppvObject = 0;
     if (IsEqualGUID(riid, IID_IUnknown))
         *ppvObject = static_cast<IUnknown*>(this);
-    else if (IsEqualGUID(riid, IID_WebURLProtectionSpace))
+    else if (IsEqualGUID(riid, CLSID_WebURLProtectionSpace))
         *ppvObject = static_cast<WebURLProtectionSpace*>(this);
     else if (IsEqualGUID(riid, IID_IWebURLProtectionSpace))
         *ppvObject = static_cast<IWebURLProtectionSpace*>(this);

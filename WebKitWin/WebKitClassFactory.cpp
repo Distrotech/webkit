@@ -41,6 +41,7 @@
 #include "WebNotificationCenter.h"
 #include "WebPreferences.h"
 #include "WebURLCredential.h"
+#include "WebURLProtectionSpace.h"
 #include "WebView.h"
 
 // WebKitClassFactory ---------------------------------------------------------
@@ -125,6 +126,8 @@ HRESULT STDMETHODCALLTYPE WebKitClassFactory::CreateInstance(IUnknown* pUnkOuter
         unknown = static_cast<IWebDownload*>(WebDownload::createInstance());
     else if (IsEqualGUID(m_targetClass, CLSID_WebURLRequest))
         unknown = static_cast<IWebURLRequest*>(WebMutableURLRequest::createImmutableInstance());
+    else if (IsEqualGUID(m_targetClass, CLSID_WebURLProtectionSpace))
+        unknown = static_cast<IWebURLProtectionSpace*>(WebURLProtectionSpace::createInstance());
     else
         return CLASS_E_CLASSNOTAVAILABLE;
 

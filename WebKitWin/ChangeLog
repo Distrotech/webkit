@@ -1,3 +1,34 @@
+2007-01-30  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Lou.
+
+        Checkpoint of <rdar://problem/4712459> Account/Password forms autofill
+
+        Implemented dependencies in WebKit for account/password autofill.
+
+        * DOMCoreClasses.cpp:
+        (DOMElement::isEqual): Fixed crash if other ele is 0
+        (DOMElement::isFocused):  Added
+        * DOMCoreClasses.h:
+        * DOMHTMLClasses.cpp:
+        (DOMHTMLCollection::DOMHTMLCollection): Added
+        (DOMHTMLCollection::createInstance): Added
+        (DOMHTMLCollection::length): Implemented
+        (DOMHTMLCollection::item): Implemented
+        (DOMHTMLDocument::forms): Implemented
+        * DOMHTMLClasses.h:
+        * Interfaces/DOMPrivate.idl: Added isFocused
+        * Interfaces/WebKit.idl: Added WebURLProtectionSpace
+        * WebKitClassFactory.cpp:
+        (WebKitClassFactory::CreateInstance): Added CLSID_WebURLProtectionSpace
+        * WebKitDLL.cpp:
+        (DllGetClassObject): Added CLSID_WebURLProtectionSpace
+        * WebURLAuthenticationChallenge.cpp:
+        (WebURLAuthenticationChallenge::initWithProtectionSpace): Use CLSID_WebURLProtectionSpace instead of IID_WebURLProtectionSpace
+        * WebURLProtectionSpace.cpp:
+        (WebURLProtectionSpace::QueryInterface): Use CLSID_WebURLProtectionSpace instead of IID_WebURLProtectionSpace
+        * WebURLProtectionSpace.h:
+
 2007-01-29  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Oliver
@@ -646,7 +677,6 @@
         Reviewed by Anders.
         Added IWebResourceLoadDelegatePrivate which has one method: didLoadResourceFromMemoryCache.
 
-        * ChangeLog:
         * Interfaces/IWebResourceLoadDelegatePrivate.idl: Added.
         * WebFrame.cpp:
         (WebFrame::dispatchDidFinishDocumentLoad):

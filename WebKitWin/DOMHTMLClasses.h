@@ -31,9 +31,20 @@
 #include "DOMCoreClasses.h"
 #include "WebScriptObject.h"
 
+#include <WTF/RefPtr.h>
+
+namespace WebCore {
+    class HTMLCollection;
+}
+
 class DOMHTMLCollection : public DOMObject, public IDOMHTMLCollection
 {
+protected:
+    DOMHTMLCollection(WebCore::HTMLCollection* c);
+
 public:
+    static IDOMHTMLCollection* createInstance(WebCore::HTMLCollection*);
+
     // IUnknown
     virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject);
     virtual ULONG STDMETHODCALLTYPE AddRef(void) { return DOMObject::AddRef(); }
@@ -82,6 +93,9 @@ public:
     virtual HRESULT STDMETHODCALLTYPE namedItem( 
         /* [in] */ BSTR name,
         /* [retval][out] */ IDOMNode **node);
+
+protected:
+    RefPtr<WebCore::HTMLCollection> m_collection;
 };
 
 class DOMHTMLOptionsCollection : public DOMObject, public IDOMHTMLOptionsCollection

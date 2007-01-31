@@ -748,6 +748,9 @@ public:
     virtual BOOL STDMETHODCALLTYPE isEqual( 
         /* [in] */ IDOMElement* other);
 
+    virtual HRESULT STDMETHODCALLTYPE isFocused( 
+        /* [retval][out] */ BOOL *result);
+
     // IDOMElementCSSInlineStyle
     virtual HRESULT STDMETHODCALLTYPE style( 
         /* [retval][out] */ IDOMCSSStyleDeclaration **result);

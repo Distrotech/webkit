@@ -62,6 +62,7 @@ interface IDOMElementPrivate : IUnknown
 {
     HRESULT coreElement(void** element);
     BOOL isEqual([in] IDOMElement* other);
+    HRESULT isFocused([out, retval] BOOL* result);
 }
 
 /*

@@ -32,9 +32,6 @@
 #include <WebCore/ProtectionSpace.h>
 #pragma warning(pop)
 
-// {042B162F-13E2-4b7f-B212-10890BA0AE3F}
-DEFINE_GUID(IID_WebURLProtectionSpace, 0x42b162f, 0x13e2, 0x4b7f, 0xb2, 0x12, 0x10, 0x89, 0xb, 0xa0, 0xae, 0x3f);
-
 class WebURLProtectionSpace : public IWebURLProtectionSpace
 {
 public:

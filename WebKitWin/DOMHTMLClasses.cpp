@@ -31,6 +31,7 @@
 #include <WebCore/Document.h>
 #include <WebCore/Element.h>
 #include <WebCore/FrameView.h>
+#include <WebCore/HTMLDocument.h>
 #include <WebCore/HTMLFormElement.h>
 #include <WebCore/HTMLInputElement.h>
 #include <WebCore/HTMLNames.h>
@@ -43,6 +44,28 @@
 
 using namespace WebCore;
 using namespace HTMLNames;
+
+// DOMHTMLCollection
+
+DOMHTMLCollection::DOMHTMLCollection(WebCore::HTMLCollection* c)
+: m_collection(c)
+{
+}
+
+IDOMHTMLCollection* DOMHTMLCollection::createInstance(WebCore::HTMLCollection* c)
+{
+    if (!c)
+        return 0;
+
+    IDOMHTMLCollection* htmlCollection = 0;
+    DOMHTMLCollection* newCollection = new DOMHTMLCollection(c);
+    if (FAILED(newCollection->QueryInterface(IID_IDOMHTMLCollection, (void**)&htmlCollection))) {
+        delete newCollection;
+        return 0;
+    }
+
+    return htmlCollection;
+}
 
 // DOMHTMLCollection - IUnknown -----------------------------------------------
 
@@ -61,18 +84,26 @@ HRESULT STDMETHODCALLTYPE DOMHTMLCollection::QueryInterface(REFIID riid, void** 
 // DOMHTMLCollection ----------------------------------------------------------
 
 HRESULT STDMETHODCALLTYPE DOMHTMLCollection::length( 
-    /* [retval][out] */ UINT* /*result*/)
+    /* [retval][out] */ UINT* result)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    *result = 0;
+    if (!m_collection)
+        return E_POINTER;
+
+    *result = m_collection->length();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE DOMHTMLCollection::item( 
-    /* [in] */ UINT /*index*/,
-    /* [retval][out] */ IDOMNode** /*node*/)
+    /* [in] */ UINT index,
+    /* [retval][out] */ IDOMNode** node)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    *node = 0;
+    if (!m_collection)
+        return E_POINTER;
+
+    *node = DOMNode::createInstance(m_collection->item(index));
+    return *node ? S_OK : E_FAIL;
 }
 
 HRESULT STDMETHODCALLTYPE DOMHTMLCollection::namedItem( 
@@ -216,10 +247,15 @@ HRESULT STDMETHODCALLTYPE DOMHTMLDocument::links(
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLDocument::forms( 
-        /* [retval][out] */ IDOMHTMLCollection** /*collection*/)
+        /* [retval][out] */ IDOMHTMLCollection** collection)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    *collection = 0;
+    if (!m_document || !m_document->isHTMLDocument())
+        return E_FAIL;
+
+    HTMLDocument* htmlDoc = static_cast<HTMLDocument*>(m_document);
+    *collection = DOMHTMLCollection::createInstance(htmlDoc->forms().get());
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLDocument::anchors( 

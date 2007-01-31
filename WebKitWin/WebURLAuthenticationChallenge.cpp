@@ -121,7 +121,7 @@ HRESULT STDMETHODCALLTYPE WebURLAuthenticationChallenge::initWithProtectionSpace
 
     HRESULT hr = S_OK;
     COMPtr<WebURLProtectionSpace> webSpace;
-    hr = space->QueryInterface(IID_WebURLProtectionSpace, (void**)&webSpace);
+    hr = space->QueryInterface(CLSID_WebURLProtectionSpace, (void**)&webSpace);
     if (FAILED(hr))
         return hr;
 
