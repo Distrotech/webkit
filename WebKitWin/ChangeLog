@@ -1,3 +1,14 @@
+2007-01-30  Brady Eidson  <beidson@apple.com>
+
+        Patch by Anders
+        Reviewed and landed by Brady
+
+        Fixes <rdar://problem/4889160>
+        If there's no backing store bitmap, don't try to update it!
+        
+        * WebView.cpp:
+        (WebView::updateBackingStore):
+
 2007-01-30  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Lou.

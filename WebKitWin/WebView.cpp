@@ -266,7 +266,7 @@ void WebView::updateBackingStore(FrameView* frameView, HDC dc, bool backingStore
         ::SelectObject(bitmapDC, m_backingStoreBitmap);
     }
 
-    if (m_backingStoreDirtyRegion || backingStoreCompletelyDirty) {
+    if (m_backingStoreBitmap && (m_backingStoreDirtyRegion || backingStoreCompletelyDirty)) {
         // This emulates the Mac smarts for painting rects intelligently.  This is
         // very important for us, since we double buffer based off dirty rects.
         bool useRegionBox = true;
