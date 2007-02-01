@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -93,6 +93,14 @@
 #include <JavaScriptCore/APICast.h>
 #include <wtf/MathExtras.h>
 #pragma warning(pop)
+
+#include <CoreGraphics/CoreGraphics.h>
+
+// CG SPI used for printing
+extern "C" {
+    CGAffineTransform CGContextGetBaseCTM(CGContextRef c); 
+    void CGContextSetBaseCTM(CGContextRef c, CGAffineTransform m); 
+}
 
 using namespace WebCore;
 using namespace HTMLNames;
@@ -2078,4 +2086,107 @@ void WebFrame::windowObjectCleared() const
 
         frameLoadDelegate->windowScriptObjectAvailable(d->webView, context, windowObject);
     }
+}
+
+Vector<WebCore::IntRect> WebFrame::computePageRects(HDC printDC)
+{
+    Vector<IntRect> pages;
+
+    if (!printDC)
+        return pages;
+
+    IntRect printerRect = IntRect(0, 0, 
+                      GetDeviceCaps(printDC, PHYSICALWIDTH)  - 2 * GetDeviceCaps(printDC, PHYSICALOFFSETX),
+                      GetDeviceCaps(printDC, PHYSICALHEIGHT) - 2 * GetDeviceCaps(printDC, PHYSICALOFFSETY) );
+
+    FrameWin* frame = Win(d->frame);
+    frame->document()->setPrinting(true);
+    pages = frame->computePageRects(printerRect, 1.0);
+    frame->document()->setPrinting(false);
+
+    return pages;
+}
+
+HRESULT STDMETHODCALLTYPE WebFrame::getPrintedPageCount( 
+    /* [in] */ HDC printDC,
+    /* [retval][out] */ UINT *pageCount)
+{
+    if (!pageCount || !printDC) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *pageCount = 0;
+
+    FrameWin* frame = Win(d->frame);
+    if (!frame->document())
+        return E_FAIL;
+
+    Vector<IntRect> pages = computePageRects(printDC);
+    *pageCount = (UINT) pages.size();
+    
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebFrame::spoolPages( 
+    /* [in] */ HDC printDC,
+    /* [in] */ UINT startPage,
+    /* [in] */ UINT endPage,
+    /* [retval][out] */ void* ctx)
+{
+    if (!printDC || !ctx) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    PlatformGraphicsContext* pctx = (PlatformGraphicsContext*)ctx;
+
+    FrameWin* frame = Win(d->frame);
+    if (!frame->document())
+        return E_FAIL;
+
+    Vector<IntRect> pages = computePageRects(printDC);
+
+    if (pages.size() == 0 || startPage > pages.size())
+        return E_FAIL;
+
+    if (startPage > 0)
+        startPage--;
+
+    if (endPage == 0)
+        endPage = (UINT)pages.size();
+
+    frame->document()->setPrinting(true);
+
+    WebCore::GraphicsContext spoolCtx(pctx);
+
+    for (UINT ii = startPage; ii < endPage; ii++) {
+        IntRect pageRect = pages[ii];
+
+        CGContextSaveGState(pctx);
+
+        CGRect mediaBox = CGRectMake(CGFloat(0),
+                                     CGFloat(0),
+                                     CGFloat(pageRect.width()),
+                                     CGFloat(pageRect.height()));
+
+        CGContextBeginPage(pctx, &mediaBox);
+
+        CGFloat scale = (float)mediaBox.size.width/ (float)pageRect.width();
+        CGAffineTransform ctm = CGContextGetBaseCTM(pctx);
+        ctm = CGAffineTransformScale(ctm, -scale, -scale);
+        ctm = CGAffineTransformTranslate(ctm, CGFloat(-pageRect.x()), CGFloat(-pageRect.y()));
+        CGContextScaleCTM(pctx, scale, scale);
+        CGContextTranslateCTM(pctx, CGFloat(-pageRect.x()), CGFloat(-pageRect.y()));
+        CGContextSetBaseCTM(pctx, ctm);
+
+        frame->paint(&spoolCtx, pageRect);
+
+        CGContextEndPage(pctx);
+        CGContextRestoreGState(pctx);
+    }
+
+    frame->document()->setPrinting(false);
+ 
+    return S_OK;
 }

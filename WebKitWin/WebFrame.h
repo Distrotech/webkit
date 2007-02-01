@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -153,6 +153,16 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE loadType( 
         /* [retval][out] */ WebFrameLoadType* type);
+
+    virtual HRESULT STDMETHODCALLTYPE getPrintedPageCount( 
+        /* [in] */ HDC printDC,
+        /* [retval][out] */ UINT *pageCount);
+    
+    virtual HRESULT STDMETHODCALLTYPE spoolPages( 
+        /* [in] */ HDC printDC,
+        /* [in] */ UINT startPage,
+        /* [in] */ UINT endPage,
+        /* [retval][out] */ void* ctx);
 
     // FrameWinClient
     virtual void ref();
@@ -312,6 +322,7 @@ protected:
     unsigned int getObjectCacheSize();
     void loadHTMLString(BSTR string, BSTR baseURL, BSTR unreachableURL);
     void loadData(PassRefPtr<WebCore::SharedBuffer>, BSTR mimeType, BSTR textEncodingName, BSTR baseURL, BSTR failingURL);
+    Vector<WebCore::IntRect> computePageRects(HDC printDC);
 
 protected:
     ULONG               m_refCount;

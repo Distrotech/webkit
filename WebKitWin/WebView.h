@@ -538,16 +538,6 @@ public:
     virtual HRESULT STDMETHODCALLTYPE scrollOffset( 
         /* [retval][out] */ LPPOINT offset);
 
-    virtual HRESULT STDMETHODCALLTYPE getPrintedPageCount( 
-        /* [in] */ HDC printDC,
-        /* [retval][out] */ UINT *pageCount);
-    
-    virtual HRESULT STDMETHODCALLTYPE spoolPages( 
-    /* [in] */ HDC printDC,
-    /* [in] */ UINT startPage,
-    /* [in] */ UINT endPage,
-    /* [retval][out] */ void* ctx);
-
     virtual HRESULT STDMETHODCALLTYPE markAllMatchesForText(
         BSTR search, BOOL caseSensitive, BOOL highlight, UINT limit, UINT* matches);
 
@@ -601,7 +591,6 @@ public:
     void scrollBackingStore(WebCore::FrameView*, int dx, int dy, const WebCore::IntRect& scrollViewRect, const WebCore::IntRect& clipRect);
     void updateBackingStore(WebCore::FrameView*, HDC, bool backingStoreCompletelyDirty);
     void deleteBackingStore();
-    Vector<WebCore::IntRect> computePageRects(HDC printDC);
     void frameRect(RECT* rect);
     void closeWindow();
 

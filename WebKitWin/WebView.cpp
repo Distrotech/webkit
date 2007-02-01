@@ -79,12 +79,6 @@
 #include <windowsx.h>
 #include <ShlObj.h>
 
-extern "C" {
-    CGAffineTransform CGContextGetBaseCTM(CGContextRef c);
-    void CGContextSetBaseCTM(CGContextRef c, CGAffineTransform m);
-    void CGContextSetCTM(CGContextRef c, CGAffineTransform transform);
-};
-
 using namespace WebCore;
 using std::min;
 
@@ -462,105 +456,6 @@ bool WebView::canHandleRequest(const WebCore::ResourceRequest& request)
 
     // FIXME: Mac WebKit calls _representationExistsForURLScheme here
     return false;
-}
-
-Vector<WebCore::IntRect> WebView::computePageRects(HDC printDC)
-{
-    Vector<IntRect> pages;
-
-    if (!printDC)
-        return pages;
-
-    IntRect printerRect = IntRect(0, 0, 
-                      GetDeviceCaps(printDC, PHYSICALWIDTH)  - 2 * GetDeviceCaps(printDC, PHYSICALOFFSETX),
-                      GetDeviceCaps(printDC, PHYSICALHEIGHT) - 2 * GetDeviceCaps(printDC, PHYSICALOFFSETY) );
-
-    FrameWin* frame = static_cast<FrameWin*>(m_page->focusController()->focusedOrMainFrame());
-    frame->document()->setPrinting(true);
-    pages = frame->computePageRects(printerRect, 1.0);
-    frame->document()->setPrinting(false);
-
-    return pages;
-}
-
-HRESULT STDMETHODCALLTYPE WebView::getPrintedPageCount( 
-    /* [in] */ HDC printDC,
-    /* [retval][out] */ UINT *pageCount)
-{
-    *pageCount = 0;
-    if (!printDC)
-        return E_POINTER;
-
-    FrameWin* frame = static_cast<FrameWin*>(m_page->focusController()->focusedOrMainFrame());
-    if (!frame || !frame->document())
-        return E_FAIL;
-
-    Vector<IntRect> pages = computePageRects(printDC);
-    *pageCount = (UINT) pages.size();
-    
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE WebView::spoolPages( 
-    /* [in] */ HDC printDC,
-    /* [in] */ UINT startPage,
-    /* [in] */ UINT endPage,
-    /* [retval][out] */ void* ctx)
-{
-    if (!printDC || !ctx)
-        return E_POINTER;
-
-    PlatformGraphicsContext* pctx = (PlatformGraphicsContext*)ctx;
-
-    FrameWin* frame = static_cast<FrameWin*>(m_page->focusController()->focusedOrMainFrame());
-    if (!frame || !frame->document())
-        return E_FAIL;
-
-    Vector<IntRect> pages = computePageRects(printDC);
-
-    if (pages.size() == 0 || startPage > pages.size())
-        return E_FAIL;
-
-    if (startPage > 0)
-        startPage--;
-
-    if (endPage == 0)
-        endPage = (UINT)pages.size();
-
-    frame->document()->setPrinting(true);
-
-    WebCore::GraphicsContext spoolCtx = GraphicsContext (pctx);
-
-    for (UINT ii = startPage; ii < endPage; ii++)
-    {
-        IntRect pageRect = pages[ii];
-
-        CGContextSaveGState(pctx);
-
-        CGRect mediaBox = CGRectMake(CGFloat(0),
-                                     CGFloat(0),
-                                     CGFloat(pageRect.width()),
-                                     CGFloat(pageRect.height()));
-
-        CGContextBeginPage(pctx, &mediaBox);
-
-        CGFloat scale = (float)mediaBox.size.width/ (float)pageRect.width();
-        CGAffineTransform ctm = CGContextGetBaseCTM(pctx);
-        ctm = CGAffineTransformScale(ctm, -scale, -scale);
-        ctm = CGAffineTransformTranslate(ctm, CGFloat(-pageRect.x()), CGFloat(-pageRect.y()));
-        CGContextScaleCTM(pctx, scale, scale);
-        CGContextTranslateCTM(pctx, CGFloat(-pageRect.x()), CGFloat(-pageRect.y()));
-        CGContextSetBaseCTM(pctx, ctm);
-
-        frame->paint(&spoolCtx, pageRect);
-
-        CGContextEndPage(pctx);
-        CGContextRestoreGState(pctx);
-    }
-
-    frame->document()->setPrinting(false);
- 
-    return S_OK;
 }
 
 Page* WebView::page()
