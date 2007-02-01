@@ -43,23 +43,6 @@
 
 namespace WebCore {
 
-struct EventHandlerDragState {
-    RefPtr<Node> m_dragSrc; // element that may be a drag source, for the current mouse gesture
-    bool m_dragSrcIsLink;
-    bool m_dragSrcIsImage;
-    bool m_dragSrcInSelection;
-    bool m_dragSrcMayBeDHTML;
-    bool m_dragSrcMayBeUA; // Are DHTML and/or the UserAgent allowed to drag out?
-    bool m_dragSrcIsDHTML;
-    RefPtr<ClipboardWin> m_dragClipboard; // used on only the source side of dragging
-};
-
-static EventHandlerDragState& dragState()
-{
-    static EventHandlerDragState state;
-    return state;
-}
-
 bool EventHandler::passMousePressEventToSubframe(MouseEventWithHitTestResults& mev, Frame* subframe)
 {
     if (m_frame->view()->capturingMouse())
@@ -104,32 +87,20 @@ bool EventHandler::tabsToLinks(KeyboardEvent*) const
         return client->tabsToLinks();
     return true;
 }
-bool EventHandler::dragHysteresisExceeded(const FloatPoint& floatDragViewportLocation) const
-{
-    IntPoint dragViewportLocation((int)floatDragViewportLocation.x(), (int)floatDragViewportLocation.y());
-    return dragHysteresisExceeded(dragViewportLocation);
-}
-
-bool EventHandler::dragHysteresisExceeded(const IntPoint& dragViewportLocation) const
-{
-    IntPoint dragLocation = m_frame->view()->windowToContents(dragViewportLocation);
-    IntSize delta = dragLocation - m_mouseDownPos;
-    
-    float threshold = GeneralDragHysteresis;
-    if (dragState().m_dragSrcIsImage)
-        threshold = ImageDragHysteresis;
-    else if (dragState().m_dragSrcIsLink)
-        threshold = LinkDragHysteresis;
-    else if (dragState().m_dragSrcInSelection)
-        threshold = TextDragHysteresis;
-
-    return fabsf(delta.width()) >= threshold || fabsf(delta.height()) >= threshold;
-}
 
 bool EventHandler::handleDrag(const MouseEventWithHitTestResults& event)
 {
-    if (event.event().button() == LeftButton) {
-        // Careful that the drag starting logic stays in sync with eventMayStartDrag()
+    if (event.event().button() == LeftButton && event.event().eventType() == MouseEventMoved) {
+        // Careful that the drag starting logic stays in sync with eventMayStartDrag()  
+    
+        if (m_mouseDownMayStartDrag && !dragState().m_dragSrc) {
+            bool tempFlag1, tempFlag2;
+            allowDHTMLDrag(tempFlag1, tempFlag2);
+            dragState().m_dragSrcMayBeDHTML = tempFlag1;
+            dragState().m_dragSrcMayBeUA = tempFlag2;
+            if (!dragState().m_dragSrcMayBeDHTML && !dragState().m_dragSrcMayBeUA)
+                m_mouseDownMayStartDrag = false;     // no element is draggable
+        }
             
         if (m_mouseDownMayStartDrag && !dragState().m_dragSrc) {
             // try to find an element that wants to be dragged
@@ -173,7 +144,10 @@ bool EventHandler::handleDrag(const MouseEventWithHitTestResults& event)
                 // Once we're past the hysteresis point, we don't want to treat this gesture as a click
                 invalidateClick();
                 LOG_NOIMPL();
-           }
+            }
+
+            // FIXME: currently don't handle the drag so we don't correctly clear the drag state :(
+            dragState().m_dragSrc = false;
 
             // No more default handling (like selection), whether we're past the hysteresis bounds or not
             return true;
@@ -193,12 +167,6 @@ bool EventHandler::handleDrag(const MouseEventWithHitTestResults& event)
 }
 
 bool EventHandler::handleMouseUp(const MouseEventWithHitTestResults&)
-{
-    LOG_NOIMPL();
-    return false;
-}
-
-bool EventHandler::shouldDragAutoNode(Node*, const IntPoint&) const
 {
     LOG_NOIMPL();
     return false;

@@ -48,6 +48,32 @@ static IntPoint globalPositionForEvent(HWND hWnd, LPARAM lParam)
     return point;
 }
 
+static MouseEventType messageToEventType(UINT message)
+{
+    switch (message) {
+        case WM_LBUTTONDBLCLK:
+        case WM_RBUTTONDBLCLK:
+        case WM_MBUTTONDBLCLK:
+            //MSDN docs say double click is sent on mouse down
+        case WM_LBUTTONDOWN:
+        case WM_RBUTTONDOWN:
+        case WM_MBUTTONDOWN:
+            return MouseEventPressed;
+
+        case WM_LBUTTONUP:
+        case WM_RBUTTONUP:
+        case WM_MBUTTONUP:
+            return MouseEventReleased;
+
+        case WM_MOUSEMOVE:
+            return MouseEventMoved;
+
+        default:
+            ASSERT_NOT_REACHED();
+            //Move is relatively harmless
+            return MouseEventMoved;
+    }
+}
 PlatformMouseEvent::PlatformMouseEvent(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, bool activatedWebView)
     : m_position(positionForEvent(hWnd, lParam))
     , m_globalPosition(globalPositionForEvent(hWnd, lParam))
@@ -57,6 +83,7 @@ PlatformMouseEvent::PlatformMouseEvent(HWND hWnd, UINT message, WPARAM wParam, L
     , m_altKey(GetKeyState(VK_MENU) & HIGH_BIT_MASK_SHORT)
     , m_metaKey(m_altKey) // FIXME: We'll have to test other browsers
     , m_activatedWebView(activatedWebView)
+    , m_eventType(messageToEventType(message))
 {
     m_timestamp = ::GetTickCount()*0.001; // GetTickCount returns milliseconds
 

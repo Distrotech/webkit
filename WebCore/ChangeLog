@@ -1,3 +1,19 @@
+2007-01-31  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Adam.
+
+        Updating event handler logic to make use of methods migrated from 
+        WebKit to WebCore
+
+        * page/win/EventHandlerWin.cpp:
+        (WebCore::EventHandler::handleDrag):   
+          Updating handleDrag to use methods that we've migrated to WebCore
+        * platform/win/PlatformMouseEventWin.cpp:
+        (WebCore::messageToEventType):                        
+        (WebCore::PlatformMouseEvent::PlatformMouseEvent):   
+          provide the type of mouse event
+          
+
 2007-01-31  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Ada.
