@@ -58,18 +58,14 @@ CFURLRequestRef willSendRequest(CFURLConnectionRef conn, CFURLRequestRef cfReque
 
     LOG(Network, "CFNet - willSendRequest(conn=%p, handle=%p) (%s)", conn, handle, handle->url().url().ascii());
 
-    if (ResourceHandleClient* client = handle->client()) {
-        ResourceRequest request(cfRequest);
-        client->willSendRequest(handle, request, cfRedirectResponse);
+    ResourceRequest request(cfRequest);
+    handle->client()->willSendRequest(handle, request, cfRedirectResponse);
 
-        cfRequest = request.cfURLRequest();
+    cfRequest = request.cfURLRequest();
 
-        // FIXME: This causes us to leak the request because CFNetwork never releases it.
-        // See <rdar://problem/4938383>
-        CFRetain(cfRequest);
-        return cfRequest;
-    }
-
+    // FIXME: This causes us to leak the request because CFNetwork never releases it.
+    // See <rdar://problem/4938383>
+    CFRetain(cfRequest);
     return cfRequest;
 }
 
@@ -79,8 +75,7 @@ void didReceiveResponse(CFURLConnectionRef conn, CFURLResponseRef cfResponse, co
 
     LOG(Network, "CFNet - didReceiveResponse(conn=%p, handle=%p) (%s)", conn, handle, handle->url().url().ascii());
 
-    if (ResourceHandleClient* client = handle->client())
-        client->didReceiveResponse(handle, cfResponse);
+    handle->client()->didReceiveResponse(handle, cfResponse);
 }
 
 void didReceiveData(CFURLConnectionRef conn, CFDataRef data, CFIndex originalLength, const void* clientInfo) 
