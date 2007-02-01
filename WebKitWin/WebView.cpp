@@ -66,6 +66,7 @@
 #include <WebCore/PlatformKeyboardEvent.h>
 #include <WebCore/PlatformMouseEvent.h>
 #include <WebCore/PlatformWheelEvent.h>
+#include <WebCore/PlugInInfoStore.h>
 #include <WebCore/ProgressTracker.h>
 #include <WebCore/ResourceHandleClient.h>
 #include <WebCore/SelectionController.h>
@@ -1352,7 +1353,8 @@ HRESULT STDMETHODCALLTYPE WebView::canShowMIMEType(
         return E_POINTER;
 
     *canShow = MimeTypeRegistry::isSupportedImageMIMEType(mimeTypeStr) ||
-        MimeTypeRegistry::isSupportedNonImageMIMEType(mimeTypeStr);
+        MimeTypeRegistry::isSupportedNonImageMIMEType(mimeTypeStr) ||
+        PlugInInfoStore::supportsMIMEType(mimeTypeStr);
     
     return S_OK;
 }
