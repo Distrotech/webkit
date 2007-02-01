@@ -2237,10 +2237,11 @@ HRESULT STDMETHODCALLTYPE WebView::mainFrameURL(
 }
     
 HRESULT STDMETHODCALLTYPE WebView::mainFrameDocument( 
-        /* [retval][out] */ IDOMDocument** /*document*/)
+        /* [retval][out] */ IDOMDocument** document)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!m_mainFrame)
+        return E_FAIL;
+    return m_mainFrame->DOMDocument(document);
 }
     
 HRESULT STDMETHODCALLTYPE WebView::mainFrameTitle( 

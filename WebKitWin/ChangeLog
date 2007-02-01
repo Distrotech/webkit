@@ -1,3 +1,12 @@
+2007-01-31  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Anders.
+        
+        Implement WebView::mainFrameDocument.
+
+        * WebView.cpp:
+        (WebView::mainFrameDocument):
+
 2007-01-31  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Ada.
