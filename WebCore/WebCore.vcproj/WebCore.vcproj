@@ -7672,6 +7672,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\ListHashSet.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\MathExtras.h"
 					>
 				</File>
