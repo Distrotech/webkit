@@ -1415,7 +1415,7 @@ void WebFrame::dispatchWillSubmitForm(FramePolicyFunction function, PassRefPtr<F
     FormValuesPropertyBag formValuesPropBag(const_cast<HashMap<String, String>*>(&formState->values()));
 
     COMPtr<WebFrame> sourceFrame(kit(formState->sourceFrame()));
-    if (SUCCEEDED(formDelegate->willSubmitForm(this, sourceFrame.get(), formElement.get(), &formValuesPropBag, setUpPolicyListener(function))))
+    if (SUCCEEDED(formDelegate->willSubmitForm(this, sourceFrame.get(), formElement.get(), &formValuesPropBag, setUpPolicyListener(function).get())))
         return;
 
     // FIXME: Add a sane default implementation
@@ -1698,7 +1698,7 @@ void WebFrame::receivedData(const char* data, int length, const String& textEnco
     d->frame->loader()->addData(data, length);
 }
 
-WebFramePolicyListener* WebFrame::setUpPolicyListener(WebCore::FramePolicyFunction function)
+COMPtr<WebFramePolicyListener> WebFrame::setUpPolicyListener(WebCore::FramePolicyFunction function)
 {
     ASSERT(!d->m_policyListener);
     ASSERT(!d->m_policyFunction);
@@ -1706,7 +1706,7 @@ WebFramePolicyListener* WebFrame::setUpPolicyListener(WebCore::FramePolicyFuncti
     d->m_policyListener.adoptRef(WebFramePolicyListener::createInstance(d->frame));
     d->m_policyFunction = function;
 
-    return d->m_policyListener.get();
+    return d->m_policyListener;
 }
 
 void WebFrame::receivedPolicyDecision(PolicyAction action)
@@ -1736,7 +1736,7 @@ void WebFrame::dispatchDecidePolicyForMIMEType(FramePolicyFunction function, con
     if (SUCCEEDED(d->webView->policyDelegate(&policyDelegate))) {
         COMPtr<IWebURLRequest> urlRequest;
         urlRequest.adoptRef(WebMutableURLRequest::createInstance(request));
-        if (SUCCEEDED(policyDelegate->decidePolicyForMIMEType(d->webView, BString(mimeType), urlRequest.get(), this, setUpPolicyListener(function))))
+        if (SUCCEEDED(policyDelegate->decidePolicyForMIMEType(d->webView, BString(mimeType), urlRequest.get(), this, setUpPolicyListener(function).get())))
             return;
     }
 
@@ -1757,7 +1757,7 @@ void WebFrame::dispatchDecidePolicyForNewWindowAction(FramePolicyFunction functi
         COMPtr<WebActionPropertyBag> actionInformation;
         actionInformation.adoptRef(WebActionPropertyBag::createInstance(action, d->frame));
 
-        if (SUCCEEDED(policyDelegate->decidePolicyForNewWindowAction(d->webView, actionInformation.get(), urlRequest.get(), BString(frameName), setUpPolicyListener(function))))
+        if (SUCCEEDED(policyDelegate->decidePolicyForNewWindowAction(d->webView, actionInformation.get(), urlRequest.get(), BString(frameName), setUpPolicyListener(function).get())))
             return;
     }
 
@@ -1774,7 +1774,7 @@ void WebFrame::dispatchDecidePolicyForNavigationAction(FramePolicyFunction funct
         COMPtr<WebActionPropertyBag> actionInformation;
         actionInformation.adoptRef(WebActionPropertyBag::createInstance(action, d->frame));
 
-        if (SUCCEEDED(policyDelegate->decidePolicyForNavigationAction(d->webView, actionInformation.get(), urlRequest.get(), this, setUpPolicyListener(function))))
+        if (SUCCEEDED(policyDelegate->decidePolicyForNavigationAction(d->webView, actionInformation.get(), urlRequest.get(), this, setUpPolicyListener(function).get())))
             return;
     }
 

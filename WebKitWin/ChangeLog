@@ -1,5 +1,22 @@
 2007-01-31  Ada Chan  <adachan@apple.com>
 
+        Reviewed by Adam.
+        
+        Adam and I found a missing retain on WebFrame::setUpPolicyListener().  The mac
+        code returns a RefPtr which retains it, but we are returning the raw pointer.
+        Changed the code to return a COMPtr.  Without this change, loading bogus urls
+        will crash.
+
+        * WebFrame.cpp:
+        (WebFrame::dispatchWillSubmitForm):
+        (WebFrame::setUpPolicyListener):
+        (WebFrame::dispatchDecidePolicyForMIMEType):
+        (WebFrame::dispatchDecidePolicyForNewWindowAction):
+        (WebFrame::dispatchDecidePolicyForNavigationAction):
+        * WebFrame.h:
+
+2007-01-31  Ada Chan  <adachan@apple.com>
+
         Reviewed by Anders.
         
         Implement WebView::mainFrameDocument.

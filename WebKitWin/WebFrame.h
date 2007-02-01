@@ -305,7 +305,7 @@ public:
     HRESULT canProvideDocumentSource(bool* result);
     WebHistory* webHistory();
 
-    WebFramePolicyListener* setUpPolicyListener(WebCore::FramePolicyFunction function);
+    COMPtr<WebFramePolicyListener> setUpPolicyListener(WebCore::FramePolicyFunction function);
     void receivedPolicyDecision(WebCore::PolicyAction);
 
 protected:
