@@ -175,8 +175,7 @@ void RenderThemeSafari::systemFont(int propId, FontDescription& fontDescription)
     if (fontSize) {
         cachedDesc->setIsAbsoluteSize(true);
         cachedDesc->setGenericFamily(FontDescription::NoFamily);
-        // FIXME: Should be "Lucida Grande"
-        cachedDesc->firstFamily().setFamily("Lucida Sans Unicode");
+        cachedDesc->firstFamily().setFamily("Lucida Grande");
         cachedDesc->setSpecifiedSize(fontSize);
         cachedDesc->setBold(false);
         cachedDesc->setItalic(false);
@@ -204,19 +203,13 @@ void RenderThemeSafari::adjustRepaintRect(const RenderObject* o, IntRect& r)
             break;
         }
         case RadioAppearance: {
-            // Since we query the prototype cell, we need to update its state to match.
-//            setRadioCellState(o, r);
-
             // We inflate the rect as needed to account for padding included in the cell to accommodate the checkbox
             // shadow" and the check.  We don't consider this part of the bounds of the control in WebKit.
-            //r = inflateRect(r, radioSizes()[[radio controlSize]], radioMargins());
+            r = inflateRect(r, radioSizes()[controlSize], radioMargins());
             break;
         }
         case PushButtonAppearance:
         case ButtonAppearance: {
-            // Since we query the prototype cell, we need to update its state to match.
-//            setButtonCellState(o, r);
-
             // We inflate the rect as needed to account for padding included in the cell to accommodate the checkbox
             // shadow" and the check.  We don't consider this part of the bounds of the control in WebKit.
             //if ([button bezelStyle] == NSRoundedBezelStyle)
@@ -322,8 +315,7 @@ void RenderThemeSafari::setFontFromControlSize(CSSStyleSelector* selector, Rende
     fontDescription.setGenericFamily(FontDescription::SerifFamily);
 
     float fontSize = systemFontSizeForControlSize(controlSize);
-    // FIXME: Should be "Lucida Grande"
-    fontDescription.firstFamily().setFamily("Lucida Sans Unicode");
+    fontDescription.firstFamily().setFamily("Lucida Grande");
     fontDescription.setComputedSize(fontSize);
     fontDescription.setSpecifiedSize(fontSize);
 
@@ -333,14 +325,12 @@ void RenderThemeSafari::setFontFromControlSize(CSSStyleSelector* selector, Rende
 
 NSControlSize RenderThemeSafari::controlSizeForSystemFont(RenderStyle* style) const
 {
- /*   int fontSize = style->fontSize();
-    if (fontSize >= [NSFont systemFontSizeForControlSize:NSRegularControlSize])
+    int fontSize = style->fontSize();
+    if (fontSize >= 13)
         return NSRegularControlSize;
-    if (fontSize >= [NSFont systemFontSizeForControlSize:NSSmallControlSize])
+    if (fontSize >= 11)
         return NSSmallControlSize;
     return NSMiniControlSize;
- */
-    return NSSmallControlSize;
 }
 
 bool RenderThemeSafari::paintCheckbox(RenderObject* o, const RenderObject::PaintInfo&, const IntRect& r)
@@ -829,8 +819,7 @@ const IntSize* RenderThemeSafari::menuListSizes() const
 
 int RenderThemeSafari::minimumMenuListSize(RenderStyle* style) const
 {
-//    return sizeForSystemFont(style, menuListSizes()).width();
-    return 0;
+    return sizeForSystemFont(style, menuListSizes()).width();
 }
 
 const int trackWidth = 5;
