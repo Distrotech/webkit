@@ -1,3 +1,28 @@
+2007-02-01  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Steve, Geoff.
+        
+        <rdar://4969341> Regression: crash: when Resetting Safari
+        <rdar://4953390> Closing my two open boomer windows produced a crash
+        Fixed crash when closing second window and doing the close 
+        all safari window option in Reset Safari.
+
+        * WebFrame.cpp:
+        WebFramePrivate has a pointer to frameView but does not hold a reference
+        to it.  The frame holds a ref to the frameView anyway, so it's safest to get
+        the frameView through the frame.  The crash happened because frame already has
+        cleared out its frameView but WebFrame was still accessing the old stale frameView
+        through that data member in WebFramePrivate.
+        (WebFrame::WebFramePrivate::m_policyFunction):
+        (WebFrame::WebFramePrivate::frameView):
+        (WebFrame::initWithWebFrameView):
+        (WebFrame::layoutIfNeeded):
+        (WebFrame::hasFrameView):
+        * WebView.cpp:
+        (WebView::paintIntoBackingStore): bail if frameView is null.
+        (WebView::setHostWindow): don't set the view window's parent to 0.
+        It'll end up creating a standalone window.
+
 2007-02-01  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.

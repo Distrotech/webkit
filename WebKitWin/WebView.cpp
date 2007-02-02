@@ -399,6 +399,9 @@ void WebView::paint(HDC dc, LPARAM options)
 
 void WebView::paintIntoBackingStore(FrameView* frameView, HDC bitmapDC, LPRECT dirtyRect)
 {
+    if (!frameView)
+        return;
+
 #if FLASH_BACKING_STORE_REDRAW
     HDC dc = ::GetDC(m_viewWindow);
     HBRUSH yellowBrush = CreateSolidBrush(RGB(255, 255, 0));
@@ -1830,7 +1833,7 @@ HRESULT STDMETHODCALLTYPE WebView::preferencesIdentifier(
 HRESULT STDMETHODCALLTYPE WebView::setHostWindow( 
     /* [in] */ HWND window)
 {
-    if (m_viewWindow)
+    if (m_viewWindow && window)
         SetParent(m_viewWindow, window);
 
     m_hostWindow = window;

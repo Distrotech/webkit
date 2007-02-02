@@ -372,11 +372,11 @@ static HTMLInputElement* inputElementFromDOMElement(IDOMElement* element)
 
 class WebFrame::WebFramePrivate {
 public:
-    WebFramePrivate() :frame(0), frameView(0), webView(0), needsLayout(false), m_policyFunction(0) { }
+    WebFramePrivate() :frame(0), webView(0), needsLayout(false), m_policyFunction(0) { }
     ~WebFramePrivate() { }
+    FrameView* frameView() { return frame ? frame->view() : 0; }
 
     Frame* frame;
-    FrameView* frameView;
     WebView* webView;
     bool needsLayout;
     FramePolicyFunction m_policyFunction;
@@ -686,7 +686,6 @@ void WebFrame::initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, 
     d->frame = frame;
 
     FrameView* frameView = new FrameView(frame);
-    d->frameView = frameView;
 
     frame->setSettings(core(webView)->settings());
     frame->setView(frameView);
@@ -706,10 +705,11 @@ void WebFrame::initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, 
 void WebFrame::layoutIfNeeded()
 {
     if (d->needsLayout) {
-        d->frameView->layout();
+        if (d->frameView())
+            d->frameView()->layout();
         d->needsLayout = false;
-    } else if (d->frameView->layoutPending())
-        d->frameView->layout();
+    } else if (d->frameView() && d->frameView()->layoutPending())
+        d->frameView()->layout();
 }
 
 void WebFrame::setNeedsLayout()
@@ -1245,7 +1245,7 @@ bool WebFrame::hasWebView() const
 
 bool WebFrame::hasFrameView() const
 {
-    return !!d->frameView;
+    return !!d->frameView();
 }
 
 bool WebFrame::privateBrowsingEnabled() const
