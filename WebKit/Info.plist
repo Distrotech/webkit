@@ -9,7 +9,7 @@
 	<key>CFBundleGetInfoString</key>
 	<string>419, Copyright 2005 Apple Computer, Inc.</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.apple.WebKit</string>
+	<string>com.apple.WebKitForDashboard</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
