@@ -1,5 +1,14 @@
 2007-02-01  Ada Chan  <adachan@apple.com>
 
+        Reviewed by Anders.
+        
+        Forgot to assign document to 0 in case of failure in WebView::mainFrameDocument().
+
+        * WebView.cpp:
+        (WebView::mainFrameDocument):
+
+2007-02-01  Ada Chan  <adachan@apple.com>
+
         Reviewed by Steve, Geoff.
         
         <rdar://4969341> Regression: crash: when Resetting Safari

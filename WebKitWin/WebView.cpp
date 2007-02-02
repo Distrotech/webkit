@@ -2139,6 +2139,8 @@ HRESULT STDMETHODCALLTYPE WebView::mainFrameURL(
 HRESULT STDMETHODCALLTYPE WebView::mainFrameDocument( 
         /* [retval][out] */ IDOMDocument** document)
 {
+    if (document)
+        *document = 0;
     if (!m_mainFrame)
         return E_FAIL;
     return m_mainFrame->DOMDocument(document);
