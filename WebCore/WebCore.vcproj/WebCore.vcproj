@@ -4445,6 +4445,22 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderSVGGradientStop.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderSVGGradientStop.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderSVGHiddenContainer.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderSVGHiddenContainer.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderSVGImage.cpp"
 				>
 			</File>
