@@ -1,3 +1,21 @@
+2007-02-02  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Maciej.
+
+        Implemented menulist drawing.
+
+        * rendering/RenderThemeSafari.cpp:
+        (WebCore::controlSizeFromRect):
+            Moved to top of file.
+        (WebCore::RenderThemeSafari::adjustRepaintRect):
+            Uncommented menulist case.
+        (WebCore::RenderThemeSafari::popupButtonMargins):
+            Added controlSize parameter, made margins match AppKit artwork.
+        (WebCore::RenderThemeSafari::paintMenuList):
+            Implemented.
+        * rendering/RenderThemeSafari.h:
+            Updated decalartion.
+
 2007-02-01  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Brady.

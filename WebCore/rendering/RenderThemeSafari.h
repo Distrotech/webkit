@@ -139,7 +139,7 @@ private:
 
     void setPopupPaddingFromControlSize(RenderStyle*, NSControlSize) const;
     const IntSize* popupButtonSizes() const;
-    const int* popupButtonMargins() const;
+    const int* popupButtonMargins(NSControlSize) const;
     const int* popupButtonPadding(NSControlSize) const;
     void paintMenuListButtonGradients(RenderObject*, const RenderObject::PaintInfo&, const IntRect&);
     const IntSize* menuListSizes() const;

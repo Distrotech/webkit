@@ -70,6 +70,16 @@ ThemeControlState RenderThemeSafari::determineState(RenderObject* o) const
     return result;
 }
 
+static NSControlSize controlSizeFromRect(const IntRect& rect, const IntSize sizes[])
+{
+    if (sizes[NSRegularControlSize].height() == rect.height())
+        return NSRegularControlSize;
+    else if (sizes[NSMiniControlSize].height() == rect.height())
+        return NSMiniControlSize;
+    
+    return NSSmallControlSize;
+}
+
 RenderThemeSafari::RenderThemeSafari()
     : m_themeDLL(0)
 {
@@ -214,8 +224,7 @@ void RenderThemeSafari::adjustRepaintRect(const RenderObject* o, IntRect& r)
             break;
         }
         case MenulistAppearance: {
-//            setPopupButtonCellState(o, r);
-            //r = inflateRect(r, popupButtonSizes()[[popupButton controlSize]], popupButtonMargins());
+            r = inflateRect(r, popupButtonSizes()[controlSize], popupButtonMargins(controlSize));
             break;
         }
         default:
@@ -541,15 +550,15 @@ void RenderThemeSafari::adjustTextAreaStyle(CSSStyleSelector*, RenderStyle*, Ele
 {
 }
 
-const int* RenderThemeSafari::popupButtonMargins() const
+const int* RenderThemeSafari::popupButtonMargins(NSControlSize size) const
 {
     static const int margins[3][4] =
     {
-        { 0, 3, 1, 3 },
-        { 0, 3, 2, 3 },
+        { 2, 3, 3, 3 },
+        { 1, 3, 3, 3 },
         { 0, 1, 0, 1 }
     };
-    return margins[0]; //FIXME: controlSize
+    return margins[size];
 }
 
 const IntSize* RenderThemeSafari::popupButtonSizes() const
@@ -577,15 +586,17 @@ void RenderThemeSafari::setPopupPaddingFromControlSize(RenderStyle* style, NSCon
     style->setPaddingBottom(Length(popupButtonPadding(size)[bottomPadding], Fixed));
 }
 
-bool RenderThemeSafari::paintMenuList(RenderObject* o, const RenderObject::PaintInfo&, const IntRect& r)
+bool RenderThemeSafari::paintMenuList(RenderObject* o, const RenderObject::PaintInfo& info, const IntRect& r)
 {
-
+    NSControlSize controlSize = controlSizeFromRect(r, popupButtonSizes());
     IntRect inflatedRect = r;
-    IntSize size = popupButtonSizes()[0]; // FIXME: controlSize
+    IntSize size = popupButtonSizes()[controlSize];
     size.setWidth(r.width());
 
     // Now inflate it to account for the shadow.
-    inflatedRect = inflateRect(inflatedRect, size, popupButtonMargins());
+    inflatedRect = inflateRect(inflatedRect, size, popupButtonMargins(controlSize));
+
+    paintThemePart(MenuListPart, info.context->platformContext(), inflatedRect, controlSize, determineState(o));
 
     return false;
 }
@@ -883,16 +894,6 @@ void RenderThemeSafari::adjustSliderThumbSize(RenderObject* o) const
         o->style()->setWidth(Length(sliderThumbWidth, Fixed));
         o->style()->setHeight(Length(sliderThumbHeight, Fixed));
     }
-}
-
-static NSControlSize controlSizeFromRect(const IntRect& rect, const IntSize sizes[])
-{
-    if (sizes[NSRegularControlSize].height() == rect.height())
-        return NSRegularControlSize;
-    else if (sizes[NSMiniControlSize].height() == rect.height())
-        return NSMiniControlSize;
-    
-    return NSSmallControlSize;
 }
 
 bool RenderThemeSafari::paintSearchField(RenderObject* o, const RenderObject::PaintInfo& paintInfo, const IntRect& r)
