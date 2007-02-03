@@ -1,3 +1,15 @@
+2007-02-02  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Maciej.
+
+        Fixed <rdar://4956286> Find: Deleting all text in the Find banner search field should clear the page's selection
+
+        * Interfaces/IWebView.idl:
+        * WebView.cpp:
+        (WebView::clearSelection):
+        * WebView.h:
+            Added a clearSelection function to webview so the findbanner can call it. 
+
 2007-02-02  Adam Roben  <aroben@apple.com>
 
         Reviewed by Anders.

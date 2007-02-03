@@ -2513,6 +2513,12 @@ HRESULT STDMETHODCALLTYPE WebView::deleteSelection( void)
     m_page->focusController()->focusedOrMainFrame()->editor()->deleteSelectionWithSmartDelete();
     return S_OK;
 }
+
+HRESULT STDMETHODCALLTYPE WebView::clearSelection( void)
+{
+    m_page->focusController()->focusedOrMainFrame()->selectionController()->clear();
+    return S_OK;
+}
     
 HRESULT STDMETHODCALLTYPE WebView::applyStyle( 
         /* [in] */ IDOMCSSStyleDeclaration* /*style*/)

@@ -436,6 +436,8 @@ public:
         /* [in] */ IWebArchive *archive);
     
     virtual HRESULT STDMETHODCALLTYPE deleteSelection( void);
+
+    virtual HRESULT STDMETHODCALLTYPE clearSelection(void);
     
     virtual HRESULT STDMETHODCALLTYPE applyStyle( 
         /* [in] */ IDOMCSSStyleDeclaration *style);
