@@ -1414,8 +1414,15 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
         return E_FAIL;
 
     registerWebViewWindowClass();
+
+    if (!::IsWindow(m_hostWindow)) {
+        ASSERT_NOT_REACHED();
+        return E_FAIL;
+    }
+
     m_viewWindow = CreateWindowEx(0, kWebViewWindowClassName, 0, WS_CHILD | WS_CLIPCHILDREN,
         0, 0, 0, 0, m_hostWindow, 0, gInstance, 0);
+    ASSERT(::IsWindow(m_viewWindow));
 
     hr = registerDragDrop();
     if (FAILED(hr))
