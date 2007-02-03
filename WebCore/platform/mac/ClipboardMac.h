@@ -70,6 +70,8 @@ public:
 
     // Methods for getting info in Cocoa's type system
     NSImage *dragNSImage(NSPoint&); // loc converted from dragLoc, based on whole image size
+
+    void setDragHasStarted() { m_dragStarted = true; }
     
 private:
     void setDragImage(CachedImage*, Node*, const IntPoint&);
@@ -80,6 +82,7 @@ private:
     CachedImage* m_dragImage;
     RefPtr<Node> m_dragImageElement;
     int m_changeCount;
+    bool m_dragStarted;
     FrameMac* m_frame; // used on the source side to generate dragging images
 };
 

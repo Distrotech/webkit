@@ -30,16 +30,6 @@
         (-[WebDataSource subresources]): Check for being uncommitted and return emtpy result.
         (-[WebDataSource subresourceForURL:]): ditto
 
-2007-01-31  Oliver Hunt  <oliver@apple.com>
-
-        Reviewed by Adam.     
-
-        Migrating methods to WebCore
-
-        * WebCoreSupport/WebFrameBridge.mm:
-        * WebView/WebHTMLView.mm:
-        * WebView/WebHTMLViewPrivate.h:
-
 2007-01-31  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Maciej.
@@ -265,7 +255,6 @@
         (-[WebView undoManager]):
         * WebView/WebViewPrivate.h:
 
->>>>>>> .r19243
 2007-01-29  Ada Chan  <adachan@apple.com>
 
         Reviewed by Brady.

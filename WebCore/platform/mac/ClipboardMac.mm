@@ -41,6 +41,7 @@ ClipboardMac::ClipboardMac(bool forDragging, NSPasteboard *pasteboard, Clipboard
     , m_pasteboard(pasteboard)
     , m_forDragging(forDragging)
     , m_dragImage(0)
+    , m_dragStarted(false)
     , m_frame(frame)
 {
     m_changeCount = [m_pasteboard.get() changeCount];
@@ -296,7 +297,7 @@ void ClipboardMac::setDragImage(CachedImage* image, Node *node, const IntPoint &
         m_dragLoc = loc;
         m_dragImageElement = node;
         
-        if (dragStarted() && m_changeCount == [m_pasteboard.get() changeCount]) {
+        if (m_dragStarted && m_changeCount == [m_pasteboard.get() changeCount]) {
             NSPoint cocoaLoc;
             NSImage* cocoaImage = dragNSImage(cocoaLoc);
             if (cocoaImage) {

@@ -71,7 +71,6 @@
 #import "RetainPtr.h"
 #import "Screen.h"
 #import "SelectionController.h"
-#import "SystemTime.h"
 #import "TextEncoding.h"
 #import "TextIterator.h"
 #import "TypingCommand.h"
@@ -1325,7 +1324,7 @@ static HTMLFormElement *formElementFromDOMElement(DOMElement *element)
     if (m_frame) {
         // FIXME: Fake modifier keys here.
         PlatformMouseEvent event(IntPoint(windowLoc), globalPoint(windowLoc, [self window]),
-            LeftButton, MouseEventMoved, 0, false, false, false, false, currentTime());
+            LeftButton, 0, false, false, false, false);
         m_frame->eventHandler()->dragSourceMovedTo(event);
     }
 }
@@ -1335,7 +1334,7 @@ static HTMLFormElement *formElementFromDOMElement(DOMElement *element)
     if (m_frame) {
         // FIXME: Fake modifier keys here.
         PlatformMouseEvent event(IntPoint(windowLoc), globalPoint(windowLoc, [self window]),
-            LeftButton, MouseEventMoved, 0, false, false, false, false, currentTime());
+            LeftButton, 0, false, false, false, false);
         m_frame->eventHandler()->dragSourceEndedAt(event, operation);
     }
 }

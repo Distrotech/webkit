@@ -55,6 +55,22 @@ namespace WebCore {
 
 using namespace EventNames;
 
+struct EventHandlerDragState {
+    RefPtr<Node> m_dragSrc; // element that may be a drag source, for the current mouse gesture
+    bool m_dragSrcIsLink;
+    bool m_dragSrcIsImage;
+    bool m_dragSrcInSelection;
+    bool m_dragSrcMayBeDHTML;
+    bool m_dragSrcMayBeUA; // Are DHTML and/or the UserAgent allowed to drag out?
+    bool m_dragSrcIsDHTML;
+    RefPtr<ClipboardMac> m_dragClipboard; // used on only the source side of dragging
+};
+
+static EventHandlerDragState& dragState()
+{
+    static EventHandlerDragState state;
+    return state;
+}
 
 static NSEvent *currentEvent;
 
@@ -125,6 +141,12 @@ bool EventHandler::tabsToAllControls(KeyboardEvent* event) const
         return !handlingOptionTab;
     
     return handlingOptionTab;
+}
+
+void EventHandler::freeClipboard()
+{
+    if (dragState().m_dragClipboard)
+        dragState().m_dragClipboard->setAccessPolicy(ClipboardNumb);
 }
 
 bool EventHandler::keyEvent(NSEvent *event)
@@ -318,15 +340,53 @@ NSView *EventHandler::mouseDownViewIfStillGood()
     return mouseDownView;
 }
 
-bool EventHandler::eventActivatedView(const PlatformMouseEvent& event) const
+bool EventHandler::eventMayStartDrag(NSEvent *event) const
 {
-    return m_activationEventNumber == event.eventNumber();
-}
+    // This is a pre-flight check of whether the event might lead to a drag being started.  Be careful
+    // that its logic needs to stay in sync with handleMouseMoveEvent() and the way we setMouseDownMayStartDrag
+    // in handleMousePressEvent
     
+    if ([event type] != NSLeftMouseDown || [event clickCount] != 1) {
+        return false;
+    }
+    
+    bool DHTMLFlag, UAFlag;
+    allowDHTMLDrag(DHTMLFlag, UAFlag);
+    if (!DHTMLFlag && !UAFlag) {
+        return false;
+    }
+
+    NSPoint loc = [event locationInWindow];
+    HitTestRequest request(true, false);
+    IntPoint mouseDownPos = m_frame->view()->windowToContents(IntPoint(loc));
+    HitTestResult result(mouseDownPos);
+    m_frame->renderer()->layer()->hitTest(request, result);
+    bool srcIsDHTML;
+    return result.innerNode() && result.innerNode()->renderer()->draggableNode(DHTMLFlag, UAFlag, mouseDownPos.x(), mouseDownPos.y(), srcIsDHTML);
+}
+
+bool EventHandler::dragHysteresisExceeded(const FloatPoint& floatDragViewportLocation) const
+{
+    IntPoint dragViewportLocation((int)floatDragViewportLocation.x(), (int)floatDragViewportLocation.y());
+    IntPoint dragLocation = m_frame->view()->windowToContents(dragViewportLocation);
+    IntSize delta = dragLocation - m_mouseDownPos;
+    
+    float threshold = GeneralDragHysteresis;
+    if (dragState().m_dragSrcIsImage)
+        threshold = ImageDragHysteresis;
+    else if (dragState().m_dragSrcIsLink)
+        threshold = LinkDragHysteresis;
+    else if (dragState().m_dragSrcInSelection)
+        threshold = TextDragHysteresis;
+
+    return fabsf(delta.width()) >= threshold || fabsf(delta.height()) >= threshold;
+}
+
 bool EventHandler::handleDrag(const MouseEventWithHitTestResults& event)
 {
     BEGIN_BLOCK_OBJC_EXCEPTIONS;
-    if (event.event().button() == LeftButton && event.event().eventType() == MouseEventMoved) {
+
+    if ([currentEvent type] == NSLeftMouseDragged) {
         NSView *view = mouseDownViewIfStillGood();
 
         if (view) {
@@ -375,10 +435,10 @@ bool EventHandler::handleDrag(const MouseEventWithHitTestResults& event)
         
         // For drags starting in the selection, the user must wait between the mousedown and mousedrag,
         // or else we bail on the dragging stuff and allow selection to occur
-        if (m_mouseDownMayStartDrag && dragState().m_dragSrcInSelection && event.event().timestamp() - m_mouseDownTimestamp < TextDragDelay) {
+        if (m_mouseDownMayStartDrag && dragState().m_dragSrcInSelection && [currentEvent timestamp] - m_mouseDownTimestamp < TextDragDelay) {
             m_mouseDownMayStartDrag = false;
             // ...but if this was the first click in the window, we don't even want to start selection
-            if (eventActivatedView(event.event()))
+            if (m_activationEventNumber == [currentEvent eventNumber])
                 m_mouseDownMayStartSelect = false;
         }
 
@@ -386,7 +446,7 @@ bool EventHandler::handleDrag(const MouseEventWithHitTestResults& event)
             // We are starting a text/image/url drag, so the cursor should be an arrow
             m_frame->view()->setCursor(pointerCursor());
             
-            if (dragHysteresisExceeded(event.event().pos())) {
+            if (dragHysteresisExceeded([currentEvent locationInWindow])) {
                 
                 // Once we're past the hysteresis point, we don't want to treat this gesture as a click
                 invalidateClick();
@@ -429,7 +489,7 @@ bool EventHandler::handleDrag(const MouseEventWithHitTestResults& event)
                         wcWrotePasteboard = types && [types count] > 0;
 
                         if (dragState().m_dragSrcMayBeDHTML)
-                            dragImage = static_cast<ClipboardMac*>(dragState().m_dragClipboard.get())->dragNSImage(dragLoc);
+                            dragImage = dragState().m_dragClipboard->dragNSImage(dragLoc);
                         
                         // Yuck, dragSourceMovedTo() can be called as a result of kicking off the drag with
                         // dragImage!  Because of that dumb reentrancy, we may think we've not started the
@@ -494,7 +554,7 @@ bool EventHandler::handleMouseUp(const MouseEventWithHitTestResults& event)
     // the mouse down and drag events to see if we might start a drag.  For other first clicks
     // in a window, we just don't acceptFirstMouse, and the whole down-drag-up sequence gets
     // ignored upstream of this layer.
-    if (eventActivatedView(event.event()))
+    if (m_activationEventNumber == [currentEvent eventNumber])
         return true;
 
     return false;
@@ -596,6 +656,13 @@ void EventHandler::mouseDown(NSEvent *event)
     NSEvent *oldCurrentEvent = currentEvent;
     currentEvent = HardRetain(event);
     m_mouseDown = PlatformMouseEvent(event);
+    NSPoint loc = [event locationInWindow];
+    m_mouseDownPos = m_frame->view()->windowToContents(IntPoint(loc));
+    m_mouseDownTimestamp = [event timestamp];
+
+    m_mouseDownMayStartDrag = false;
+    m_mouseDownMayStartSelect = false;
+    m_mouseDownMayStartAutoscroll = false;
     
     handleMousePressEvent(event);
     
@@ -738,6 +805,18 @@ void EventHandler::mouseMoved(NSEvent *event)
     currentEvent = oldCurrentEvent;
 
     END_BLOCK_OBJC_EXCEPTIONS;
+}
+
+// Called as we walk up the element chain for nodes with CSS property -webkit-user-drag == auto
+bool EventHandler::shouldDragAutoNode(Node* node, const IntPoint& point) const
+{
+    // We assume that WebKit only cares about dragging things that can be leaf nodes (text, images, urls).
+    // This saves a bunch of expensive calls (creating WC and WK element dicts) as we walk farther up
+    // the node hierarchy, and we also don't have to cook up a way to ask WK about non-leaf nodes
+    // (since right now WK just hit-tests using a cached lastMouseDown).
+    if (node->hasChildNodes() || !m_frame->view())
+        return false;
+    return [Mac(m_frame)->bridge() mayStartDragAtEventLocation:m_frame->view()->contentsToWindow(point)];
 }
 
 KeyboardUIMode EventHandler::keyboardUIMode() const

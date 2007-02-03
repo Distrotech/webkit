@@ -375,12 +375,8 @@ bool EventTargetNode::dispatchMouseEvent(const PlatformMouseEvent& event, const 
     IntPoint contentsPos;
     if (FrameView* view = document()->view())
         contentsPos = view->windowToContents(event.pos());
-
-    short button = event.button();
-
-    ASSERT(event.eventType() == MouseEventMoved || button != NoButton);
     
-    return dispatchMouseEvent(eventType, button == NoButton ? 0 : button , detail,
+    return dispatchMouseEvent(eventType, event.button(), detail,
         contentsPos.x(), contentsPos.y(), event.globalX(), event.globalY(),
         event.ctrlKey(), event.altKey(), event.shiftKey(), event.metaKey(),
         false, relatedTarget);
