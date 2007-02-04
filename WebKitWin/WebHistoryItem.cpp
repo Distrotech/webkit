@@ -168,7 +168,7 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::dictionaryRepresentation(void** dictio
 
 HRESULT STDMETHODCALLTYPE WebHistoryItem::hasURLString(BOOL *hasURL)
 {
-    *hasURL = m_historyItem->urlString().isEmpty() ? TRUE : FALSE;
+    *hasURL = m_historyItem->urlString().isEmpty() ? FALSE : TRUE;
     return S_OK;
 }
 
