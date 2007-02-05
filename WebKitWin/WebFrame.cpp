@@ -68,6 +68,7 @@
 #include <WebCore/FrameView.h>
 #include <WebCore/FrameWin.h>
 #include <WebCore/GraphicsContext.h>
+#include <WebCore/HistoryItem.h>
 #include <WebCore/HTMLFormElement.h>
 #include <WebCore/HTMLGenericFormElement.h>
 #include <WebCore/HTMLInputElement.h>
@@ -1522,7 +1523,7 @@ String WebFrame::generatedMIMETypeForURLScheme(const String& /*URLScheme*/) cons
 
 void WebFrame::frameLoadCompleted()
 {
-    LOG_NOIMPL();
+    d->frame->loader()->setPreviousHistoryItem(0);
 }
 
 void WebFrame::restoreScrollPositionAndViewState()
