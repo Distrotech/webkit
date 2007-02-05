@@ -1,3 +1,17 @@
+2007-02-04  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Steve.
+
+        Fix some memory leaks.  This fixes WebFrame leak as well. 
+        Can be considered a partial fix for <rdar://4974495> Boomer leaks while running HTML iBench
+
+        * WebActionPropertyBag.cpp:
+        (WebActionPropertyBag::WebActionPropertyBag):
+        * WebDataSource.cpp:
+        (WebDataSource::representation):
+        * WebURLResponse.cpp:
+        (:m_refCount):
+
 2007-02-04  Adam Roben  <aroben@apple.com>
 
         Reviewed by Steve.

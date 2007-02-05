@@ -45,6 +45,7 @@ using namespace WebCore;
 // IWebURLResponse ----------------------------------------------------------------
 
 WebURLResponse::WebURLResponse()
+    :m_refCount(0)
 {
     gClassCount++;
 }

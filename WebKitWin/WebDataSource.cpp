@@ -154,6 +154,7 @@ HRESULT STDMETHODCALLTYPE WebDataSource::representation(
     if (!m_representation) {
         WebHTMLRepresentation* htmlRep = WebHTMLRepresentation::createInstance(static_cast<WebFrame*>(m_loader->frameLoader()->client()));
         hr = htmlRep->QueryInterface(IID_IWebDocumentRepresentation, (void**) &m_representation);
+        htmlRep->Release();
     }
 
     return m_representation.copyRefTo(rep);
