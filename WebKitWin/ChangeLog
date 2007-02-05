@@ -1,5 +1,20 @@
 2007-02-04  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Steve.
+
+        Fix <rdar://problem/4972498> REGRESSION: Crash while closing View Source window
+
+        * WebView.cpp:
+        (WebView::WebView): Initialize new member.
+        (WebViewWndProc): Set flag when we receive WM_DESTROY, and don't handle
+        WM_SIZE if that flag is true.
+        (WebView::mainFrame): Added argument check.
+        * WebView.h:
+        (WebView::setIsBeingDestroyed): Added.
+        (WebView::isBeingDestroyed): Added.
+
+2007-02-04  Adam Roben  <aroben@apple.com>
+
         Reviewed by Hyatt.
 
         Fix <rdar://problem/4968183> Cross-window frame targeting doesn't work

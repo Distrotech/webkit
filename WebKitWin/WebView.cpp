@@ -107,6 +107,7 @@ WebView::WebView()
 , m_textSizeMultiplier(1)
 , m_mouseActivated(false)
 , m_dragData(0)
+, m_isBeingDestroyed(false)
 {
     m_backingStoreSize.cx = m_backingStoreSize.cy = 0;
 
@@ -944,6 +945,7 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             webView->paint((HDC)wParam, lParam);
             break;
         case WM_DESTROY:
+            webView->setIsBeingDestroyed();
             webView->revokeDragDrop();
             break;
         case WM_MOUSEMOVE:
@@ -981,6 +983,10 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             }
             break;
         case WM_SIZE:
+            if (webView->isBeingDestroyed())
+                // If someone has sent us this message while we're being destroyed, we should bail out so we don't crash.
+                break;
+
             if (lParam != 0) {
                 mainFrameImpl->setNeedsLayout();
                 mainFrameImpl->impl()->view()->resize(LOWORD(lParam), HIWORD(lParam));
@@ -1580,6 +1586,11 @@ HRESULT STDMETHODCALLTYPE WebView::policyDelegate(
 HRESULT STDMETHODCALLTYPE WebView::mainFrame( 
     /* [out][retval] */ IWebFrame** frame)
 {
+    if (!frame) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
     *frame = m_mainFrame;
     if (!m_mainFrame)
         return E_FAIL;

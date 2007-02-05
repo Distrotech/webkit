@@ -604,6 +604,10 @@ public:
     const WebCore::String& userAgentForKURL(const WebCore::KURL& url);
 
     static bool canHandleRequest(const WebCore::ResourceRequest&);
+
+    void setIsBeingDestroyed() { m_isBeingDestroyed = true; }
+    bool isBeingDestroyed() const { return m_isBeingDestroyed; }
+
 private:
     bool handleEditingKeyboardEvent(WebCore::FrameWin*, const WebCore::PlatformKeyboardEvent&);
 
@@ -640,6 +644,8 @@ protected:
     // this is updated in DragEnter/Leave/Drop
     COMPtr<IDataObject> m_dragData;
     COMPtr<IDropTargetHelper> m_dropTargetHelper;
+
+    bool m_isBeingDestroyed;
 };
 
 #endif
