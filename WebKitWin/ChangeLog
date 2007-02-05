@@ -1,3 +1,15 @@
+2007-02-04  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Hyatt.
+
+        Fix <rdar://problem/4968183> Cross-window frame targeting doesn't work
+
+        * Interfaces/IWebView.idl: Pass RECT by value.
+        * WebView.cpp:
+        (WebView::initWithFrame): Uses the passed-in RECT for the frame, and
+        sets the frame/group names.
+        * WebView.h: Updated declaration.
+
 2007-02-03  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Adam.

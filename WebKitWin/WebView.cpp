@@ -1404,8 +1404,8 @@ HRESULT STDMETHODCALLTYPE WebView::URLTitleFromPasteboard(
 }
 
 HRESULT STDMETHODCALLTYPE WebView::initWithFrame( 
-    /* [in] */ RECT* /* frame */,
-    /* [in] */ BSTR /*frameName*/,
+    /* [in] */ RECT frame,
+    /* [in] */ BSTR frameName,
     /* [in] */ BSTR groupName)
 {
     HRESULT hr = S_OK;
@@ -1421,7 +1421,7 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     }
 
     m_viewWindow = CreateWindowEx(0, kWebViewWindowClassName, 0, WS_CHILD | WS_CLIPCHILDREN,
-        0, 0, 0, 0, m_hostWindow, 0, gInstance, 0);
+        frame.left, frame.top, frame.right - frame.left, frame.bottom - frame.top, m_hostWindow, 0, gInstance, 0);
     ASSERT(::IsWindow(m_viewWindow));
 
     hr = registerDragDrop();
@@ -1436,6 +1436,9 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     webFrame->initWithWebFrameView(0 /*FIXME*/, this, m_page, 0);
     m_mainFrame = webFrame;
     webFrame->Release(); // The WebFrame is owned by the Frame, so release our reference to it.
+
+    m_page->mainFrame()->tree()->setName(String(frameName, SysStringLen(frameName)));
+    m_page->setGroupName(m_groupName);
 
     #pragma warning(suppress: 4244)
     SetWindowLongPtr(m_viewWindow, 0, (LONG_PTR)this);

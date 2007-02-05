@@ -92,7 +92,7 @@ public:
         /* [retval][out] */ BSTR *urlTitle);
     
     virtual HRESULT STDMETHODCALLTYPE initWithFrame( 
-        /* [in] */ RECT *frame,
+        /* [in] */ RECT frame,
         /* [in] */ BSTR frameName,
         /* [in] */ BSTR groupName);
     
