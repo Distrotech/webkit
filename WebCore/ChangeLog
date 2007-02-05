@@ -1,3 +1,14 @@
+2007-02-04  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Adam.           
+
+        Removed unimplemented EventHandler::handleMouseUp, 
+        as a platform independent version is available now.
+
+        * page/win/EventHandlerWin.cpp:
+        (WebCore::EventHandler::eventActivatedView): 
+          Now we use this method, it needs to be implemented
+
 2007-02-02  Steve Falkenburg  <sfalken@apple.com>
 
         Fix build.

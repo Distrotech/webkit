@@ -88,6 +88,11 @@ bool EventHandler::tabsToLinks(KeyboardEvent*) const
     return true;
 }
 
+bool EventHandler::eventActivatedView(const PlatformMouseEvent& event) const
+{
+    return event.activatedWebView();
+}
+
 bool EventHandler::handleDrag(const MouseEventWithHitTestResults& event)
 {
     if (event.event().button() == LeftButton && event.event().eventType() == MouseEventMoved) {
@@ -163,12 +168,6 @@ bool EventHandler::handleDrag(const MouseEventWithHitTestResults& event)
         // doesn't look like a drag.
         m_mousePressed = false;
     }
-    return false;
-}
-
-bool EventHandler::handleMouseUp(const MouseEventWithHitTestResults&)
-{
-    LOG_NOIMPL();
     return false;
 }
 
