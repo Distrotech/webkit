@@ -26,10 +26,12 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <CoreFoundation/CoreFoundation.h>
 #include <WebKit/IWebURLResponse.h>
 #include <WebKit/IWebViewPrivate.h>
 #include <WebKit/WebKit.h>
 #include <WebKit/IWebFramePrivate.h>
+#include <windows.h>
 #include "atlstr.h"
 
 #include "WaitUntilDoneDelegate.h"
@@ -73,7 +75,7 @@ extern "C" BOOL InitializeCoreGraphics();
 static void initialize(HINSTANCE hInstance)
 {
     // Init COM
-    CoInitialize(NULL);
+    OleInitialize(0);
 
     // Initialize CG
     InitializeCoreGraphics();
@@ -152,19 +154,30 @@ fail:
 
 static void runTest(const char* pathOrURL)
 {
-    CString urlString;
     BSTR urlBStr;
     static BSTR methodBStr = 0;
  
     if (!methodBStr)
         methodBStr = SysAllocString(TEXT("GET"));
 
-    if (strncmp(pathOrURL, "http://", 7) == 0) {
-        urlString = pathOrURL;
-    } else {
-        urlString = "file:///";
-        urlString += pathOrURL;
-    }
+    CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, pathOrURL, kCFStringEncodingWindowsLatin1);
+    CFURLRef url = CFURLCreateWithString(kCFAllocatorDefault, str, 0);
+
+    if (!url)
+        url = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, str, kCFURLWindowsPathStyle, false);
+
+    CFRelease(str);
+
+    str = CFURLGetString(url);
+
+    CFIndex length = CFStringGetLength(str);
+    UniChar* buffer = new UniChar[length];
+
+    CFStringGetCharacters(str, CFRangeMake(0, length), buffer);
+    urlBStr = SysAllocStringLen((OLECHAR*)buffer, length);
+    delete[] buffer;
+
+    CFRelease(url);
 
     waitToDump = false;
     readyToDump = false;
@@ -174,7 +187,6 @@ static void runTest(const char* pathOrURL)
     // Set the test timeout timer
     SetTimer(hostWindow, timeoutId, timeoutValue, 0);
 
-    urlBStr = urlString.AllocSysString();
     IWebMutableURLRequest* request;
     HRESULT hr = CoCreateInstance(CLSID_WebMutableURLRequest, 0, CLSCTX_ALL, IID_IWebMutableURLRequest, (void**)&request);
     if (FAILED(hr))
@@ -207,6 +219,7 @@ exit:
 
 static void initializePreferences(IWebPreferences* preferences)
 {
+    preferences->setAutosaves(FALSE);
     preferences->setJavaEnabled(FALSE);
     preferences->setPlugInsEnabled(FALSE);
 }
@@ -234,7 +247,7 @@ int main(int argc, char* argv[])
     clientRect.right = maxViewWidth;
     clientRect.bottom = maxViewHeight;
 
-    hr = webView->initWithFrame(&clientRect, 0, 0);
+    hr = webView->initWithFrame(clientRect, 0, 0);
     if (FAILED(hr))
         goto exit;
 

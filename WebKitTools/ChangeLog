@@ -1,5 +1,23 @@
 2007-01-29  Anders Carlsson  <acarlsson@apple.com>
 
+        Reviewed by Darin and Geoff.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (initialize):
+        Call OleInitialize.
+        
+        (runTest):
+        Use CF for creating the URLs passed in.
+        
+        (initializePreferences):
+        Don't autosave the preferences.
+        
+        (main):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.vcproj:
+        Link with CF.
+
+2007-01-29  Anders Carlsson  <acarlsson@apple.com>
+
         Build fix.
         
         * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.h:

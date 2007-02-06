@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="WebKitGUID$(ConfigSuffix).lib WebKit$(ConfigSuffix).lib CoreGraphics$(ConfigSuffix).lib"
+				AdditionalDependencies="WebKitGUID$(ConfigSuffix).lib WebKit$(ConfigSuffix).lib CoreGraphics$(ConfigSuffix).lib CoreFoundation$(ConfigSuffix).lib"
 				OutputFile="$(OutDir)\$(ProjectName)$(ConfigSuffix).exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(WebKitOutputDir)\lib&quot;;&quot;$(WebKitSDKDir)\lib&quot;;&quot;$(WebKitOutputDir)\bin&quot;"
