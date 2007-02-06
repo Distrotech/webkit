@@ -1,3 +1,12 @@
+2007-02-06  Adam Roben  <aroben@apple.com>
+
+        Rubberstamped by Brady.
+
+        Updated for log channel rename.
+
+        * platform/win/GDIObjectCounter.cpp:
+        (WebCore::GDIObjectCounter::~GDIObjectCounter):
+
 2007-02-06  Adele Peterson  <adele@apple.com>
 
         Reviewed by Adam.

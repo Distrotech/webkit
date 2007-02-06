@@ -61,7 +61,7 @@ GDIObjectCounter::~GDIObjectCounter()
     m_endCount = currentGDIObjectsInUse();
     int leaked = m_endCount - m_startCount;
     if (leaked != 0)
-        LOG(Resources, "%s: leaked %d GDI object%s!", m_identifier.latin1().data(), leaked, leaked == 1 ? "" : "s");
+        LOG(PlatformLeaks, "%s: leaked %d GDI object%s!", m_identifier.latin1().data(), leaked, leaked == 1 ? "" : "s");
 }
 
 unsigned GDIObjectCounter::currentGDIObjectsInUse()
