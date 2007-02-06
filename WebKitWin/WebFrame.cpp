@@ -67,6 +67,7 @@
 #include <WebCore/FrameTree.h>
 #include <WebCore/FrameView.h>
 #include <WebCore/FrameWin.h>
+#include <WebCore/GDIObjectCounter.h>
 #include <WebCore/GraphicsContext.h>
 #include <WebCore/HistoryItem.h>
 #include <WebCore/HTMLFormElement.h>
@@ -705,6 +706,8 @@ void WebFrame::initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, 
 
 void WebFrame::layoutIfNeeded()
 {
+    LOCAL_GDI_COUNTER(0, __FUNCTION__);
+
     if (d->needsLayout) {
         if (d->frameView())
             d->frameView()->layout();

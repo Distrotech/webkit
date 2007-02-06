@@ -2886,6 +2886,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\platform\win\GDIObjectCounter.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\win\GDIObjectCounter.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\platform\win\GlyphPageTreeNodeWin.cpp"
 					>
 				</File>

@@ -1,3 +1,19 @@
+2007-02-06  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Ada and Oliver.
+        
+        Add some GDI object logging to help catch leaks.
+
+        * WebFrame.cpp:
+        (WebFrame::layoutIfNeeded):
+        * WebView.cpp:
+        (WebView::addToDirtyRegion):
+        (WebView::scrollBackingStore):
+        (WebView::updateBackingStore):
+        (WebView::paint):
+        (WebView::paintIntoBackingStore):
+        (WebView::paintIntoWindow):
+
 2007-02-05  Brady Eidson  <beidson@apple.com>
 
         Rubberstamped by Adam

@@ -57,6 +57,7 @@
 #include <WebCore/FrameTree.h>
 #include <WebCore/FrameView.h>
 #include <WebCore/FrameWin.h>
+#include <WebCore/GDIObjectCounter.h>
 #include <WebCore/GraphicsContext.h>
 #include <WebCore/HitTestResult.h>
 #include <WebCore/IntRect.h>
@@ -199,6 +200,8 @@ void WebView::addToDirtyRegion(const IntRect& dirtyRect)
 
 void WebView::addToDirtyRegion(HRGN newRegion)
 {
+    LOCAL_GDI_COUNTER(0, __FUNCTION__);
+
     if (m_backingStoreDirtyRegion) {
         HRGN combinedRegion = ::CreateRectRgn(0,0,0,0);
         ::CombineRgn(combinedRegion, m_backingStoreDirtyRegion, newRegion, RGN_OR);
@@ -211,6 +214,8 @@ void WebView::addToDirtyRegion(HRGN newRegion)
 
 void WebView::scrollBackingStore(FrameView* frameView, int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect)
 {
+    LOCAL_GDI_COUNTER(0, __FUNCTION__);
+
     // If there's no backing store we don't need to update it
     if (!m_backingStoreBitmap) {
         if (m_uiDelegatePrivate)
@@ -254,6 +259,8 @@ void WebView::scrollBackingStore(FrameView* frameView, int dx, int dy, const Int
 
 void WebView::updateBackingStore(FrameView* frameView, HDC dc, bool backingStoreCompletelyDirty)
 {
+    LOCAL_GDI_COUNTER(0, __FUNCTION__);
+
     HDC windowDC = 0;
     HDC bitmapDC = dc;
     if (!dc) {
@@ -315,6 +322,8 @@ void WebView::updateBackingStore(FrameView* frameView, HDC dc, bool backingStore
 
 void WebView::paint(HDC dc, LPARAM options)
 {
+    LOCAL_GDI_COUNTER(0, __FUNCTION__);
+
     // Do a layout first so that everything we render is always current.
     m_mainFrame->layoutIfNeeded();
 
@@ -350,6 +359,8 @@ void WebView::paint(HDC dc, LPARAM options)
     // Apply the same heuristic for this update region too.
     bool useWindowDirtyRect = true;
     if (region && regionType == COMPLEXREGION) {
+        LOCAL_GDI_COUNTER(1, __FUNCTION__" (COMPLEXREGION)");
+
         const int cRectThreshold = 10;
         const float cWastedSpaceThreshold = 0.75f;
         DWORD regionDataSize = GetRegionData(region, sizeof(RGNDATA), NULL);
@@ -389,8 +400,10 @@ void WebView::paint(HDC dc, LPARAM options)
         COMPtr<IWebUIDelegatePrivate> uiPrivate;
         if (SUCCEEDED(ui->QueryInterface(IID_IWebUIDelegatePrivate, (void**)&uiPrivate))) {
             RECT r;
-            if (SUCCEEDED(uiPrivate->webViewResizerRect(this, &r)))
+            if (SUCCEEDED(uiPrivate->webViewResizerRect(this, &r))) {
+                LOCAL_GDI_COUNTER(2, __FUNCTION__" webViewDrawResizer delegate call");
                 uiPrivate->webViewDrawResizer(this, hdc, (frameView->resizerOverlapsContent() ? true : false), &r);
+            }
         }
     }
 
@@ -402,6 +415,8 @@ void WebView::paintIntoBackingStore(FrameView* frameView, HDC bitmapDC, LPRECT d
 {
     if (!frameView)
         return;
+
+    LOCAL_GDI_COUNTER(0, __FUNCTION__);
 
 #if FLASH_BACKING_STORE_REDRAW
     HDC dc = ::GetDC(m_viewWindow);
@@ -424,6 +439,7 @@ void WebView::paintIntoBackingStore(FrameView* frameView, HDC bitmapDC, LPRECT d
 
 void WebView::paintIntoWindow(HDC bitmapDC, HDC windowDC, LPRECT dirtyRect)
 {
+    LOCAL_GDI_COUNTER(0, __FUNCTION__);
 #if FLASH_WINDOW_REDRAW
     HBRUSH greenBrush = CreateSolidBrush(RGB(0, 255, 0));
     FillRect(windowDC, dirtyRect, greenBrush);
