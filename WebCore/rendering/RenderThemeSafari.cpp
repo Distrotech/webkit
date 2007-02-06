@@ -38,6 +38,8 @@
 
 namespace WebCore {
 
+using namespace SafariTheme;
+
 enum {
     topMargin,
     rightMargin,
@@ -62,11 +64,15 @@ static paintThemePartPtr paintThemePart;
 
 ThemeControlState RenderThemeSafari::determineState(RenderObject* o) const
 {
-    ThemeControlState result = NormalState;
-    if (!isEnabled(o) || isReadOnlyControl(o))
-        result = DisabledState;
-    else if (isPressed(o))
-        result = ActiveState;
+    ThemeControlState result = 0;
+    if (isEnabled(o) && !isReadOnlyControl(o))
+        result |= SafariTheme::EnabledState;
+    if (isPressed(o))
+        result |= SafariTheme::PressedState;
+    if (isChecked(o))
+        result |= SafariTheme::CheckedState;
+    if (isIndeterminate(o))
+        result |= SafariTheme::IndeterminateCheckedState;
     return result;
 }
 
@@ -98,6 +104,11 @@ RenderThemeSafari::~RenderThemeSafari()
     // anyway (and we could crash if uxtheme has done cleanup already)
 
     ::FreeLibrary(m_themeDLL);
+}
+
+Color RenderThemeSafari::platformActiveSelectionForegroundColor() const
+{
+    return Color::black;
 }
 
 Color RenderThemeSafari::platformActiveSelectionBackgroundColor() const
@@ -205,7 +216,7 @@ void RenderThemeSafari::adjustRepaintRect(const RenderObject* o, IntRect& r)
         case RadioAppearance: {
             // We inflate the rect as needed to account for padding included in the cell to accommodate the checkbox
             // shadow" and the check.  We don't consider this part of the bounds of the control in WebKit.
-            r = inflateRect(r, radioSizes()[controlSize], radioMargins());
+            r = inflateRect(r, radioSizes()[controlSize], radioMargins(controlSize));
             break;
         }
         case PushButtonAppearance:
@@ -333,14 +344,12 @@ NSControlSize RenderThemeSafari::controlSizeForSystemFont(RenderStyle* style) co
     return NSMiniControlSize;
 }
 
-bool RenderThemeSafari::paintCheckbox(RenderObject* o, const RenderObject::PaintInfo&, const IntRect& r)
+bool RenderThemeSafari::paintCheckbox(RenderObject* o, const RenderObject::PaintInfo& paintInfo, const IntRect& r)
 {
-    // We inflate the rect as needed to account for padding included in the cell to accommodate the checkbox
-    // shadow" and the check.  We don't consider this part of the bounds of the control in WebKit.
-/*    IntRect inflatedRect = inflateRect(r, checkboxSizes()[[checkbox controlSize]], checkboxMargins());
-    [checkbox drawWithFrame:NSRect(inflatedRect) inView:o->view()->frameView()->getDocumentView()];
-    [checkbox setControlView:nil];
-*/
+    NSControlSize controlSize = controlSizeForFont(o->style());
+
+    IntRect inflatedRect = inflateRect(r, checkboxSizes()[controlSize], checkboxMargins(controlSize));  
+    paintThemePart(CheckboxPart, paintInfo.context->platformContext(), inflatedRect, controlSize, determineState(o));
 
     return false;
 }
@@ -355,9 +364,9 @@ const int* RenderThemeSafari::checkboxMargins(NSControlSize controlSize) const
 {
     static const int margins[3][4] =
     {
-        { 3, 4, 4, 2 },
-        { 4, 3, 3, 3 },
-        { 4, 3, 3, 3 },
+        { 2, 2, 2, 2 },
+        { 2, 2, 2, 1 },
+        { 1, 0, 0, 0 },
     };
     return margins[controlSize];
 }
@@ -372,16 +381,12 @@ void RenderThemeSafari::setCheckboxSize(RenderStyle* style) const
     setSizeFromFont(style, checkboxSizes());
 }
 
-bool RenderThemeSafari::paintRadio(RenderObject* o, const RenderObject::PaintInfo&, const IntRect& r)
+bool RenderThemeSafari::paintRadio(RenderObject* o, const RenderObject::PaintInfo& paintInfo, const IntRect& r)
 {
-    // Determine the width and height needed for the control and prepare the cell for painting.
-//    setRadioCellState(o, r);
-
-    // We inflate the rect as needed to account for padding included in the cell to accommodate the checkbox
-    // shadow" and the check.  We don't consider this part of the bounds of the control in WebKit.
-    /*IntRect inflatedRect = inflateRect(r, radioSizes()[[radio controlSize]], radioMargins());
-    [radio drawWithFrame:NSRect(inflatedRect) inView:o->view()->frameView()->getDocumentView()];
-    [radio setControlView:nil];*/
+    NSControlSize controlSize = controlSizeForFont(o->style());
+ 
+    IntRect inflatedRect = inflateRect(r, radioSizes()[controlSize], radioMargins(controlSize));    
+    paintThemePart(RadioButtonPart, paintInfo.context->platformContext(), inflatedRect, controlSize, determineState(o));
 
     return false;
 }
@@ -392,15 +397,15 @@ const IntSize* RenderThemeSafari::radioSizes() const
     return sizes;
 }
 
-const int* RenderThemeSafari::radioMargins() const
+const int* RenderThemeSafari::radioMargins(NSControlSize controlSize) const
 {
     static const int margins[3][4] =
     {
-        { 2, 2, 4, 2 },
-        { 3, 2, 3, 2 },
-        { 1, 0, 2, 0 },
-    };
-    return margins[0]; //FIXME: controlSize
+        { 1, 2, 2, 2 },
+        { 0, 1, 2, 1 },
+        { 0, 0, 1, 0 },
+     };
+    return margins[controlSize];
 }
 
 void RenderThemeSafari::setRadioSize(RenderStyle* style) const
@@ -778,8 +783,9 @@ void RenderThemeSafari::adjustMenuListStyle(CSSStyleSelector* selector, RenderSt
     // White-space is locked to pre
     style->setWhiteSpace(PRE);
 
-    // Set the foreground color to black when we have the aqua look
-    style->setColor(Color::black);
+    // Set the foreground color to black or gray when we have the aqua look.
+    // Cast to RGB32 is to work around a compiler bug.
+    style->setColor(e->isEnabled() ? static_cast<RGBA32>(Color::black) : Color::darkGray);
 
     // Set the button's vertical size.
     setButtonSize(style);
@@ -868,7 +874,10 @@ const float verticalSliderHeightPadding = 0.1f;
 bool RenderThemeSafari::paintSliderThumb(RenderObject* o, const RenderObject::PaintInfo& paintInfo, const IntRect& r)
 {
     bool pressed = static_cast<RenderSlider*>(o->parent())->inDragMode();
-    ThemeControlState state = pressed ? ActiveState : determineState(o->parent());
+    ThemeControlState state = determineState(o->parent());
+    state &= ~SafariTheme::PressedState;
+    if (pressed)
+        state |= SafariTheme::PressedState;
 
     paintThemePart(SliderThumbPart, paintInfo.context->platformContext(), r, (NSControlSize)0, state);
     return false;

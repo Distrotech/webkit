@@ -37,6 +37,8 @@ typedef HINSTANCE HMODULE;
 
 namespace WebCore {
 
+using namespace SafariTheme;
+
 class RenderStyle;
 
 class RenderThemeSafari : public RenderTheme {
@@ -60,6 +62,7 @@ public:
     virtual bool isControlStyled(const RenderStyle*, const BorderData&,
                                  const BackgroundLayer&, const Color& backgroundColor) const;
 
+    virtual Color platformActiveSelectionForegroundColor() const;
     virtual Color platformActiveSelectionBackgroundColor() const;
     virtual Color platformInactiveSelectionBackgroundColor() const;
     virtual Color activeListBoxSelectionBackgroundColor() const;
@@ -131,7 +134,7 @@ private:
     const int* checkboxMargins(NSControlSize) const;
 
     const IntSize* radioSizes() const;
-    const int* radioMargins() const;
+    const int* radioMargins(NSControlSize) const;
 
     void setButtonPaddingFromControlSize(RenderStyle*, NSControlSize) const;
     const IntSize* buttonSizes() const;

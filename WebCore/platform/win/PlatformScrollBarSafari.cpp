@@ -45,6 +45,8 @@ using namespace std;
 
 namespace WebCore {
 
+using namespace SafariTheme;
+
 // FIXME: We should get these numbers from SafariTheme
 static unsigned cHorizontalWidth = 15;
 static unsigned cHorizontalHeight = 15;
@@ -285,19 +287,17 @@ void PlatformScrollbar::paintButton(GraphicsContext* context, const IntRect& rec
         return;
 
     ThemePart part;
-    ThemeControlState state;
+    ThemeControlState state = 0;
     if (m_orientation == HorizontalScrollbar)
         part = start ? ScrollLeftArrowPart : ScrollRightArrowPart;
     else
         part = start ? ScrollUpArrowPart : ScrollDownArrowPart;
 
-    if (!isEnabled())
-        state = DisabledState;
-    else if ((m_pressedPart == BackButtonPart && start) ||
-             (m_pressedPart == ForwardButtonPart && !start))
-        state = ActiveState;
-    else
-        state = NormalState;
+    if (isEnabled())
+        state |= EnabledState;
+    if ((m_pressedPart == BackButtonPart && start) ||
+        (m_pressedPart == ForwardButtonPart && !start))
+        state |= PressedState;
 
     paintThemePart(part, context->platformContext(), rect, NSRegularControlSize, state);
 }
@@ -308,7 +308,9 @@ void PlatformScrollbar::paintTrack(GraphicsContext* context, const IntRect& rect
         return;
 
     ThemePart part = m_orientation == HorizontalScrollbar ? HScrollTrackPart : VScrollTrackPart;
-    ThemeControlState state = isEnabled() ? NormalState : DisabledState;
+    ThemeControlState state = 0;
+    if (isEnabled())
+        state |= EnabledState;
 
     paintThemePart(part, context->platformContext(), rect, NSRegularControlSize, state);
 }
@@ -319,7 +321,9 @@ void PlatformScrollbar::paintThumb(GraphicsContext* context, const IntRect& rect
         return;
 
     ThemePart part = m_orientation == HorizontalScrollbar ? HScrollThumbPart : VScrollThumbPart;
-    ThemeControlState state = isEnabled() ? NormalState : DisabledState;
+    ThemeControlState state = 0;
+    if (isEnabled())
+        state |= EnabledState;
 
     paintThemePart(part, context->platformContext(), rect, NSRegularControlSize, state);
 }
