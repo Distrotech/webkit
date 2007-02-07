@@ -761,6 +761,8 @@ static const KeyEntry keyEntries[] = {
     { VK_DOWN,   0,                  "MoveDown"                                    },
     { VK_DOWN,   ShiftKey,           "MoveDownAndModifySelection"                  },
     { VK_NEXT,   ShiftKey,           "MoveDownAndModifySelection"                  },
+    { VK_PRIOR,  0,                  "MoveUpByPageAndModifyCaret"                  },
+    { VK_NEXT,   0,                  "MoveDownByPageAndModifyCaret"                },
     { VK_HOME,   0,                  "MoveToBeginningOfLine"                       },
     { VK_HOME,   ShiftKey,           "MoveToBeginningOfLineAndModifySelection"     },
     { VK_HOME,   CtrlKey,            "MoveToBeginningOfDocument"                   },
@@ -888,7 +890,7 @@ bool WebView::keyDown(WPARAM wParam, LPARAM lParam)
             return true;
     }
 
-    m_page->focusController()->focusedOrMainFrame()->view()->scroll(direction, granularity);
+    frame->view()->scroll(direction, granularity);
 
     return true;
 }
