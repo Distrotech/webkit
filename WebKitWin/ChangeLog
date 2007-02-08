@@ -2,6 +2,49 @@
 
         Reviewed by Adam.
 
+        <rdar://problem/4972772>
+        Implement IWebResource::Data.
+        
+        <rdar://problem/4972777>
+        Implement IWebDataSource::subresourceForURL.
+        
+        * MemoryStream.cpp:
+        (MemoryStream::MemoryStream):
+        (MemoryStream::createInstance):
+        (MemoryStream::Clone):
+        * MemoryStream.h:
+        Remove notion of buffer owner, it's not needed now that the buffer itself is reference counted.
+        
+        * WebDataSource.cpp:
+        (WebDataSource::subresourceForURL):
+        Implement this.
+                
+        * WebKit.vcproj/WebKit.vcproj:
+        Add WebResource.cpp and WebResource.h
+        
+        * WebResource.cpp: Added.
+        (WebResource::WebResource):
+        (WebResource::~WebResource):
+        (WebResource::createInstance):
+        (WebResource::QueryInterface):
+        (WebResource::AddRef):
+        (WebResource::Release):
+        (WebResource::initWithData):
+        (WebResource::data):
+        (WebResource::URL):
+        (WebResource::MIMEType):
+        (WebResource::textEncodingName):
+        (WebResource::frameName):
+        * WebResource.h: Added.
+        
+        * WebView.cpp:
+        (WebView::formDelegate):
+        Return E_FAIL if there's no form delegate.
+
+2007-02-08  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
         Add shouldInterruptJavaScript to the API.
         
         * Interfaces/IWebUIDelegatePrivate.idl:

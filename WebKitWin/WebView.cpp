@@ -2777,6 +2777,9 @@ HRESULT STDMETHODCALLTYPE WebView::setFormDelegate(
 HRESULT STDMETHODCALLTYPE WebView::formDelegate( 
     /* [retval][out] */ IWebFormDelegate **formDelegate)
 {
+    if (!m_formDelegate)
+        return E_FAIL;
+
     return m_formDelegate.copyRefTo(formDelegate);
 }
 

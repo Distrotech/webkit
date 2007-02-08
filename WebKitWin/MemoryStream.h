@@ -36,10 +36,10 @@
 class MemoryStream : public IStream
 {
 public:
-    static MemoryStream* MemoryStream::createInstance(IUnknown* bufferOwner, PassRefPtr<WebCore::SharedBuffer> buffer);
+    static MemoryStream* MemoryStream::createInstance(PassRefPtr<WebCore::SharedBuffer> buffer);
 
 protected:
-    MemoryStream(IUnknown* bufferOwner, PassRefPtr<WebCore::SharedBuffer> buffer);
+    MemoryStream(PassRefPtr<WebCore::SharedBuffer> buffer);
     ~MemoryStream();
 public:
 
@@ -98,7 +98,6 @@ public:
 
 protected:
     ULONG m_refCount;
-    COMPtr<IUnknown> m_bufferOwner;
     RefPtr<WebCore::SharedBuffer> m_buffer;
     size_t m_pos;
 };

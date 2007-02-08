@@ -35,10 +35,13 @@
 #include "WebHTMLRepresentation.h"
 #include "WebKitStatisticsPrivate.h"
 #include "WebMutableURLRequest.h"
+#include "WebResource.h"
 #include "WebURLResponse.h"
 
-#pragma warning( push, 0 )
+#pragma warning(push, 0)
 #include <WebCore/BString.h>
+#include <WebCore/DocLoader.h>
+#include <WebCore/Document.h>
 #include <WebCore/FrameLoader.h>
 #include <WebCore/KURL.h>
 #pragma warning(pop)
@@ -143,7 +146,7 @@ HRESULT STDMETHODCALLTYPE WebDataSource::data(
     if (!m_loader)
         return E_FAIL;
 
-    *stream = MemoryStream::createInstance(0, m_loader->mainResourceData());
+    *stream = MemoryStream::createInstance(m_loader->mainResourceData());
     return S_OK;
 }
 
@@ -248,11 +251,28 @@ HRESULT STDMETHODCALLTYPE WebDataSource::subresources(
 }
 
 HRESULT STDMETHODCALLTYPE WebDataSource::subresourceForURL( 
-    /* [in] */ BSTR /*url*/,
-    /* [retval][out] */ IWebResource** /*resource*/)
+    /* [in] */ BSTR url,
+    /* [retval][out] */ IWebResource** resource)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!resource) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *resource = 0;
+
+    Document *doc = m_loader->frameLoader()->frame()->document();
+
+    if (!doc)
+        return E_FAIL;
+
+    CachedResource *cachedResource = doc->docLoader()->cachedResource(String(url));
+
+    if (!cachedResource)
+        return E_FAIL;
+
+    *resource = WebResource::createInstance(cachedResource->allData(), cachedResource->response());
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebDataSource::addSubresource( 

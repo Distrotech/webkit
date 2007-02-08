@@ -397,6 +397,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\WebResource.h"
+				>
+			</File>
+			<File
 				RelativePath="..\WebScriptObject.h"
 				>
 			</File>
@@ -546,6 +550,10 @@
 			</File>
 			<File
 				RelativePath="..\WebPreferences.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\WebResource.cpp"
 				>
 			</File>
 			<File

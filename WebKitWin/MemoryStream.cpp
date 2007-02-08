@@ -32,9 +32,8 @@ using namespace WebCore;
 
 // MemoryStream ---------------------------------------------------------------
 
-MemoryStream::MemoryStream(IUnknown* bufferOwner, PassRefPtr<SharedBuffer> buffer)
+MemoryStream::MemoryStream(PassRefPtr<SharedBuffer> buffer)
 : m_refCount(0)
-, m_bufferOwner(bufferOwner)
 , m_buffer(buffer)
 , m_pos(0)
 {
@@ -46,9 +45,9 @@ MemoryStream::~MemoryStream()
     gClassCount--;
 }
 
-MemoryStream* MemoryStream::createInstance(IUnknown* bufferOwner, PassRefPtr<SharedBuffer> buffer)
+MemoryStream* MemoryStream::createInstance(PassRefPtr<SharedBuffer> buffer)
 {
-    MemoryStream* instance = new MemoryStream(bufferOwner, buffer);
+    MemoryStream* instance = new MemoryStream(buffer);
     instance->AddRef();
     return instance;
 }
@@ -254,6 +253,6 @@ HRESULT STDMETHODCALLTYPE MemoryStream::Stat(
 HRESULT STDMETHODCALLTYPE MemoryStream::Clone( 
     /* [out] */ IStream** ppstm)
 {
-    *ppstm = MemoryStream::createInstance(m_bufferOwner.get(), m_buffer);
+    *ppstm = MemoryStream::createInstance(m_buffer);
     return (*ppstm) ? S_OK : E_OUTOFMEMORY;
 }
