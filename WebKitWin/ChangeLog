@@ -1,3 +1,14 @@
+2007-02-08  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        Add shouldInterruptJavaScript to the API.
+        
+        * Interfaces/IWebUIDelegatePrivate.idl:
+        * WebChromeClient.cpp:
+        (WebChromeClient::addMessageToConsole):
+        (WebChromeClient::shouldInterruptJavaScript):
+
 2007-02-07  Anders Carlsson  <acarlsson@apple.com>
 
         * WebChromeClient.cpp:
