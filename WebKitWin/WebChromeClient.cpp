@@ -363,6 +363,10 @@ void WebChromeClient::setStatusbarText(const String& statusText)
     COMPtr<IWebUIDelegate> uiDelegate;
     if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
         uiDelegate->setStatusText(m_webView, BString(statusText));
+    }
 }
 
+bool WebChromeClient::shouldInterruptJavaScript()
+{
+    return false;
 }
