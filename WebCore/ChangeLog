@@ -1,3 +1,12 @@
+2007-02-07  Brady Eidson  <beidson@apple.com>
+
+        RS = Adam
+        
+        Touch these files to force it to recompile...
+
+        * platform/win/PlatformScrollBarSafari.cpp:
+        * rendering/RenderThemeWin.cpp:
+
 2007-02-07  Adam Roben  <aroben@apple.com>
 
         Rubberstamped by Maciej.

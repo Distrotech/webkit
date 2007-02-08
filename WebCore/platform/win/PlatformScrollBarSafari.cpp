@@ -25,7 +25,7 @@
 
 #include "config.h"
 
-#ifdef USE_SAFARI_THEME
+#ifdef USE_SAFARI_THEME 
 
 #include "PlatformScrollBar.h"
 
