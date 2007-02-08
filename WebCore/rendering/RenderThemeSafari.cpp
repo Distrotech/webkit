@@ -894,7 +894,7 @@ bool RenderThemeSafari::paintSearchField(RenderObject* o, const RenderObject::Pa
 
 const IntSize* RenderThemeSafari::searchFieldSizes() const
 {
-    static const IntSize sizes[3] = { IntSize(0, 22), IntSize(0, 19), IntSize(0, 17) };
+    static const IntSize sizes[3] = { IntSize(0, 22), IntSize(0, 19), IntSize(0, 15) };
     return sizes;
 }
 

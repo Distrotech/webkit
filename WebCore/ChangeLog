@@ -1,3 +1,12 @@
+2007-02-07  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Maciej.
+
+        Fix mini search field painting.
+
+        * rendering/RenderThemeSafari.cpp:
+        (WebCore::RenderThemeSafari::searchFieldSizes): Use the right height.
+
 2007-02-07  Adele Peterson  <adele@apple.com>
 
         Reviewed by Adam.
