@@ -121,7 +121,17 @@ FontPlatformData* FontCache::createFontPlatformData(const FontDescription& fontD
     winfont.lfQuality = 5; // Force cleartype.
     winfont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
     winfont.lfItalic = fontDescription.italic();
-    winfont.lfWeight = fontDescription.bold() ? 700 : 400; // FIXME: Support weights for real.
+
+    // FIXME: Support weights for real.  Do our own enumeration of the available weights.
+    // We can't rely on Windows here, since we need to follow the CSS2 algorithm for how to fill in
+    // gaps in the weight list.
+    // FIXME: Hardcoding Lucida Grande for now.  It uses different weights than typical Win32 fonts
+    // (500/600 instead of 400/700).
+    static AtomicString lucidaStr("Lucida Grande");
+    if (equalIgnoringCase(family, lucidaStr))
+        winfont.lfWeight = fontDescription.bold() ? 600 : 500;
+    else
+        winfont.lfWeight = fontDescription.bold() ? 700 : 400;
     int len = min(family.length(), (unsigned int)LF_FACESIZE - 1);
     memcpy(winfont.lfFaceName, family.characters(), len * sizeof(WORD));
     winfont.lfFaceName[len] = '\0';
@@ -133,12 +143,12 @@ FontPlatformData* FontCache::createFontPlatformData(const FontDescription& fontD
     SaveDC(dc);
     SelectObject(dc, hfont);
     WCHAR name[LF_FACESIZE];
-    unsigned resultLength = GetTextFace(dc, LF_FACESIZE, name);
-    if (resultLength > 0)
-        resultLength--; // ignore the null terminator
+    GetTextFace(dc, LF_FACESIZE, name);
     RestoreDC(dc, -1);
     ReleaseDC(0, dc);
-    if (!equalIgnoringCase(family, String(name, resultLength))) {
+
+    // FIXME: This check will do the wrong thing if the font name is > LF_FACWE
+    if (_wcsicmp(winfont.lfFaceName, name)) {
         DeleteObject(hfont);
         return 0;
     }

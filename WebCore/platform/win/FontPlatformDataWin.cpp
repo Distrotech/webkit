@@ -37,7 +37,10 @@ static int CALLBACK enumStylesCallback(const LOGFONT* logFont, const TEXTMETRIC*
 {
     int *style = reinterpret_cast<int*>(lParam);
 
-    if (logFont->lfWeight >= 700) {
+    // FIXME: In order to accommodate Lucida we go ahead and consider a weight of 600 to be bold.
+    // This does mean we'll consider demibold and semibold fonts on windows to also be bold.  This
+    // is rare enough that it seems like an ok hack for now.
+    if (logFont->lfWeight >= 600) {
         if (logFont->lfItalic)
             *style |= BoldOblique;
         else
