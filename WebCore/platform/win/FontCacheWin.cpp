@@ -147,7 +147,6 @@ FontPlatformData* FontCache::createFontPlatformData(const FontDescription& fontD
     RestoreDC(dc, -1);
     ReleaseDC(0, dc);
 
-    // FIXME: This check will do the wrong thing if the font name is > LF_FACWE
     if (_wcsicmp(winfont.lfFaceName, name)) {
         DeleteObject(hfont);
         return 0;
