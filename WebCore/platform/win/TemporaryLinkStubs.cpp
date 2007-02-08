@@ -189,7 +189,6 @@ void Frame::setNeedsReapplyStyles() { LOG_NOIMPL(); }
 String FrameLoader::overrideMediaType()const { LOG_NOIMPL(); return String(); }
 
 bool ResourceHandle::loadsBlocked() { return false; }
-void ResourceHandle::loadResourceSynchronously(const ResourceRequest&, ResourceError&, ResourceResponse&, Vector<char>&) { }
 void ResourceHandle::setDefersLoading(bool) { }
 
 // CRITFIXME: See if any of the following are actually implemented in OpenSource and copy the impls to internal

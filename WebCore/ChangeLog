@@ -1,5 +1,11 @@
 2007-02-08  Anders Carlsson  <acarlsson@apple.com>
 
+        Remove unused stub.
+        
+        * platform/win/TemporaryLinkStubs.cpp:
+
+2007-02-08  Anders Carlsson  <acarlsson@apple.com>
+
         Reviewed by Brady.
 
         <rdar://problem/4888871>
