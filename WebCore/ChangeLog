@@ -1,3 +1,10 @@
+2007-02-07  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Adele.
+
+        * rendering/RenderThemeSafari.cpp:
+        (WebCore::RenderThemeSafari::determineState): Pass focus information down to SafariTheme.
+
 2007-02-06  Adam Roben  <aroben@apple.com>
 
         Rubberstamped by Brady.

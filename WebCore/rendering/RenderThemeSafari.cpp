@@ -73,6 +73,8 @@ ThemeControlState RenderThemeSafari::determineState(RenderObject* o) const
         result |= SafariTheme::CheckedState;
     if (isIndeterminate(o))
         result |= SafariTheme::IndeterminateCheckedState;
+    if (isFocused(o))
+        result |= SafariTheme::FocusedState;
     return result;
 }
 
