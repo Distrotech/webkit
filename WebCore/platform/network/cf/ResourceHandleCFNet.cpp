@@ -26,7 +26,6 @@
 
 #include "config.h"
 
-#if USE(CFNETWORK)
 #include "ResourceHandle.h"
 #include "ResourceHandleClient.h"
 #include "ResourceHandleInternal.h"
@@ -350,6 +349,26 @@ CFURLConnectionRef ResourceHandle::connection() const
     return d->m_connection.get();
 }
 
-} // namespace WebCore
+void ResourceHandle::loadResourceSynchronously(const ResourceRequest& request, ResourceError& error, ResourceResponse& response, Vector<char>& vector)
+{
+    ASSERT(!request.isEmpty());
+    CFURLResponseRef cfResponse = 0;
+    CFErrorRef cfError = 0;
+    CFDataRef data = CFURLConnectionSendSynchronousRequest(request.cfURLRequest(), &cfResponse, &cfError, request.timeoutInterval());
 
-#endif // USE(CFNETWORK)
+    response = cfResponse;
+    if (cfResponse)
+        CFRelease(cfResponse);
+
+    error = cfError;
+    if (cfError)
+        CFRelease(cfError);
+
+    if (data) {
+        ASSERT(vector.isEmpty());
+        vector.append(CFDataGetBytePtr(data), CFDataGetLength(data));
+        CFRelease(data);
+    }
+}
+
+} // namespace WebCore
