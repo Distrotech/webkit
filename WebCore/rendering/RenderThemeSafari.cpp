@@ -599,9 +599,8 @@ bool RenderThemeSafari::paintMenuList(RenderObject* o, const RenderObject::Paint
 }
 
 const float baseFontSize = 11.0f;
-const float baseArrowHeight = 4.0f;
-const float baseArrowWidth = 5.0f;
-const float baseSpaceBetweenArrows = 2.0f;
+const float baseArrowHeight = 5.0f;
+const float baseArrowWidth = 7.0f;
 const int arrowPaddingLeft = 6;
 const int arrowPaddingRight = 6;
 const int paddingBeforeSeparator = 4;
@@ -734,26 +733,17 @@ bool RenderThemeSafari::paintMenuListButton(RenderObject* o, const RenderObject:
     float arrowHeight = baseArrowHeight * fontScale;
     float arrowWidth = baseArrowWidth * fontScale;
     float leftEdge = bounds.right() - arrowPaddingRight - arrowWidth;
-    float spaceBetweenArrows = baseSpaceBetweenArrows * fontScale;
 
     paintInfo.context->setFillColor(o->style()->color());
     paintInfo.context->setStrokeColor(o->style()->color());
 
-    FloatPoint arrow1[3];
-    arrow1[0] = FloatPoint(leftEdge, centerY - spaceBetweenArrows / 2.0f);
-    arrow1[1] = FloatPoint(leftEdge + arrowWidth, centerY - spaceBetweenArrows / 2.0f);
-    arrow1[2] = FloatPoint(leftEdge + arrowWidth / 2.0f, centerY - spaceBetweenArrows / 2.0f - arrowHeight);
+    FloatPoint arrow[3];
+    arrow[0] = FloatPoint(leftEdge, centerY - arrowHeight / 2.0f);
+    arrow[1] = FloatPoint(leftEdge + arrowWidth, centerY - arrowHeight / 2.0f);
+    arrow[2] = FloatPoint(leftEdge + arrowWidth / 2.0f, centerY + arrowHeight / 2.0f);
 
-    // Draw the top arrow
-    paintInfo.context->drawConvexPolygon(3, arrow1, true);
-
-    FloatPoint arrow2[3];
-    arrow2[0] = FloatPoint(leftEdge, centerY + spaceBetweenArrows / 2.0f);
-    arrow2[1] = FloatPoint(leftEdge + arrowWidth, centerY + spaceBetweenArrows / 2.0f);
-    arrow2[2] = FloatPoint(leftEdge + arrowWidth / 2.0f, centerY + spaceBetweenArrows / 2.0f + arrowHeight);
-
-    // Draw the bottom arrow
-    paintInfo.context->drawConvexPolygon(3, arrow2, true);
+    // Draw the arrow
+    paintInfo.context->drawConvexPolygon(3, arrow, true);
 
     Color leftSeparatorColor(0, 0, 0, 40);
     Color rightSeparatorColor(255, 255, 255, 40);
