@@ -1783,6 +1783,14 @@
 				>
 			</File>
 			<File
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSTextEvent.cpp"
+				>
+			</File>
+			<File
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSTextEvent.h"
+				>
+			</File>
+			<File
 				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSTreeWalker.cpp"
 				>
 			</File>
@@ -4093,23 +4101,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\CounterListItem.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\CounterNode.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\CounterNode.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\CounterResetNode.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\CounterResetNode.h"
 				>
 			</File>
 			<File
@@ -5254,6 +5250,14 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\dom\Text.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\dom\TextEvent.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\dom\TextEvent.h"
 				>
 			</File>
 			<File
