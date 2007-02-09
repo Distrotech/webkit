@@ -102,9 +102,36 @@ void PlatformScrollbar::updateThumbProportion()
     invalidateTrack();
 }
 
+static IntRect trackRepaintRect(const IntRect& trackRect, ScrollbarOrientation orientation)
+{
+    IntRect paintRect(trackRect);
+    if (orientation == HorizontalScrollbar)
+        paintRect.inflateX(cButtonLength);
+    else
+        paintRect.inflateY(cButtonLength);
+
+    return paintRect;
+}
+
+static IntRect buttonRepaintRect(const IntRect& buttonRect, ScrollbarOrientation orientation, bool start)
+{
+    IntRect paintRect(buttonRect);
+    if (orientation == HorizontalScrollbar) {
+        paintRect.setWidth(cRealButtonLength);
+        if (!start)
+            paintRect.setX(buttonRect.x() - (cRealButtonLength - buttonRect.width()));
+    } else {
+        paintRect.setHeight(cRealButtonLength);
+        if (!start)
+            paintRect.setY(buttonRect.y() - (cRealButtonLength - buttonRect.height()));
+    }
+
+    return paintRect;
+}
+
 void PlatformScrollbar::invalidateTrack()
 {
-    IntRect rect = trackRect();
+    IntRect rect = trackRepaintRect(trackRect(), m_orientation);
     rect.move(-x(), -y());
     invalidateRect(rect);
 }
@@ -117,10 +144,10 @@ void PlatformScrollbar::invalidatePart(ScrollbarPart part)
     IntRect result;    
     switch (part) {
         case BackButtonPart:
-            result = backButtonRect();
+            result = buttonRepaintRect(backButtonRect(), m_orientation, true);
             break;
         case ForwardButtonPart:
-            result = forwardButtonRect();
+            result = buttonRepaintRect(forwardButtonRect(), m_orientation, false);
             break;
         default: {
             IntRect beforeThumbRect, thumbRect, afterThumbRect;
@@ -169,27 +196,17 @@ void PlatformScrollbar::paint(GraphicsContext* graphicsContext, const IntRect& d
     if (!frameGeometry().intersects(damageRect))
         return;
 
-    // A Windows scrollbar consists of six components:
-    // An arrow button, a track piece, a thumb, a gripper inside the thumb, another track piece, and another arrow button.
-    // Paint each piece if it intersects the damage rect.
-    
-    // (1) The first arrow button
+    IntRect track = trackRect();
+    paintTrack(graphicsContext, track, true, damageRect);
+
     paintButton(graphicsContext, backButtonRect(), true, damageRect);
-
-    IntRect rect;
-    if (damageRect.intersects(rect = trackRect())) {
-        paintTrack(graphicsContext, rect, true, damageRect);
-        if (isEnabled()) {
-            IntRect startTrackRect, thumbRect, endTrackRect;
-            splitTrack(rect, startTrackRect, thumbRect, endTrackRect);
-
-            // (3) The thumb
-            paintThumb(graphicsContext, thumbRect, damageRect);
-        }
-    }
-
-    // (5) The second arrow button
     paintButton(graphicsContext, forwardButtonRect(), false, damageRect);
+
+    if (damageRect.intersects(track) && isEnabled()) {
+        IntRect startTrackRect, thumbRect, endTrackRect;
+        splitTrack(track, startTrackRect, thumbRect, endTrackRect);
+        paintThumb(graphicsContext, thumbRect, damageRect);
+    }
 }
 
 IntRect PlatformScrollbar::backButtonRect() const
@@ -283,7 +300,9 @@ int PlatformScrollbar::trackLength() const
 
 void PlatformScrollbar::paintButton(GraphicsContext* context, const IntRect& rect, bool start, const IntRect& damageRect) const
 {
-    if (!damageRect.intersects(rect))
+    IntRect paintRect = buttonRepaintRect(rect, m_orientation, start);
+    
+    if (!damageRect.intersects(paintRect))
         return;
 
     ThemePart part;
@@ -295,16 +314,18 @@ void PlatformScrollbar::paintButton(GraphicsContext* context, const IntRect& rec
 
     if (isEnabled())
         state |= EnabledState;
-    if ((m_pressedPart == BackButtonPart && start) ||
-        (m_pressedPart == ForwardButtonPart && !start))
+    if ((m_pressedPart == BackButtonPart && start)
+        || (m_pressedPart == ForwardButtonPart && !start))
         state |= PressedState;
 
-    paintThemePart(part, context->platformContext(), rect, NSRegularControlSize, state);
+    paintThemePart(part, context->platformContext(), paintRect, NSRegularControlSize, state);
 }
 
 void PlatformScrollbar::paintTrack(GraphicsContext* context, const IntRect& rect, bool start, const IntRect& damageRect) const
 {
-    if (!damageRect.intersects(rect))
+    IntRect paintRect = trackRepaintRect(rect, m_orientation);
+    
+    if (!damageRect.intersects(paintRect))
         return;
 
     ThemePart part = m_orientation == HorizontalScrollbar ? HScrollTrackPart : VScrollTrackPart;
@@ -312,7 +333,7 @@ void PlatformScrollbar::paintTrack(GraphicsContext* context, const IntRect& rect
     if (isEnabled())
         state |= EnabledState;
 
-    paintThemePart(part, context->platformContext(), rect, NSRegularControlSize, state);
+    paintThemePart(part, context->platformContext(), paintRect, NSRegularControlSize, state);
 }
 
 void PlatformScrollbar::paintThumb(GraphicsContext* context, const IntRect& rect, const IntRect& damageRect) const
