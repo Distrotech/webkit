@@ -89,8 +89,6 @@ String WebCore::searchableIndexIntroduction() { LOG_NOIMPL(); return String(); }
 int WebCore::findNextSentenceFromIndex(UChar const*,int,int,bool) { LOG_NOIMPL(); return 0; }
 void WebCore::findSentenceBoundary(UChar const*,int,int,int*,int*) { LOG_NOIMPL(); }
 
-void FrameWin::focusWindow() { LOG_NOIMPL(); }
-void FrameWin::unfocusWindow() { LOG_NOIMPL(); }
 KJS::Bindings::Instance* FrameWin::getAppletInstanceForWidget(Widget*) { LOG_NOIMPL(); return 0; }
 bool FrameWin::canPaste() const { LOG_NOIMPL(); return false; }
 bool FrameWin::shouldInterruptJavaScript() { LOG_NOIMPL(); return false; }

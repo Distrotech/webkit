@@ -82,9 +82,6 @@ public:
     ~FrameWin();
 
     FrameWinClient* client() { return m_client.get(); }
-
-    virtual void focusWindow();
-    virtual void unfocusWindow();
     
     virtual bool shouldInterruptJavaScript();
     

@@ -1,3 +1,15 @@
+2007-02-08  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Brady.
+
+        Fix for http://bugs.webkit.org/show_bug.cgi?id=12599
+        <rdar://problem/4973507> REGRESSION: When replying in Gmail, the caret disappears when you start to type (12599)
+
+        This also fixes a bug where when you called window.focus() on a background window, it did not come to the front.
+
+        * bridge/win/FrameWin.h: Removed focusWindow() and unfocusWindow() stubs since there are now implementations in the base class.
+        * platform/win/TemporaryLinkStubs.cpp:
+
 2007-02-08  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Geoff.
