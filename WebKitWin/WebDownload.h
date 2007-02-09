@@ -32,6 +32,7 @@
 #include "RetainPtr.h"
 
 #include <CFNetwork/CFURLDownloadPriv.h>
+#include <WebCore/PlatformString.h>
 
 namespace WebCore {
     class KURL;
@@ -62,10 +63,9 @@ public:
         /* [in] */ IWebURLRequest* request, 
         /* [in] */ IWebDownloadDelegate* delegate);
 
-    virtual HRESULT STDMETHODCALLTYPE initWithResumeData(
-        /* [in] */ IStream* resumeData, 
-        /* [in] */ IWebDownloadDelegate* delegate, 
-        /* [in] */ BSTR path);
+    virtual HRESULT STDMETHODCALLTYPE initToResumeWithBundle(
+        /* [in] */ BSTR bundlePath, 
+        /* [in] */ IWebDownloadDelegate* delegate);
 
     virtual HRESULT STDMETHODCALLTYPE canResumeDownloadDecodedWithEncodingMIMEType(
         /* [in] */ BSTR mimeType, 
@@ -75,14 +75,17 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE cancel();
 
+    virtual HRESULT STDMETHODCALLTYPE cancelForResume();
+
     virtual HRESULT STDMETHODCALLTYPE deletesFileUponFailure(
         /* [out, retval] */ BOOL* result);
 
+    virtual HRESULT STDMETHODCALLTYPE bundlePathForTargetPath(
+        /* [in] */ BSTR target, 
+        /* [out, retval] */ BSTR* bundle);
+
     virtual HRESULT STDMETHODCALLTYPE request(
         /* [out, retval] */ IWebURLRequest** request);
-
-    virtual HRESULT STDMETHODCALLTYPE resumeData(
-        /* [out, retval] */ IStream** stream);
 
     virtual HRESULT STDMETHODCALLTYPE setDeletesFileUponFailure(
         /* [in] */ BOOL deletesFileUponFailure);
@@ -118,6 +121,8 @@ public:
 protected:
     ULONG m_refCount;
 
+    WebCore::String m_destination;
+    WebCore::String m_bundlePath;
     WebCore::RetainPtr<CFURLDownloadRef> m_download;
     COMPtr<IWebMutableURLRequest> m_request;
     COMPtr<IWebDownloadDelegate> m_delegate;

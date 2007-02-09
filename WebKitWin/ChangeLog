@@ -1,3 +1,30 @@
+2007-02-07  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Steve, Ada, Darin, and Adam
+        
+        <rdar://problem/4964763> - Download resume support
+        
+        Note I did my work with a ToT CFNetwork.  
+        This will compile on stock CFNetwork, but will not function until they submit resume support.
+        
+        * Interfaces/IWebDownload.idl:  Reworked the API a bit
+        
+        * MarshallingHelpers.cpp:
+        (MarshallingHelpers::PathStringToFileCFURLRef):
+        (MarshallingHelpers::FileCFURLRefToPathString):
+        * MarshallingHelpers.h:
+
+        * WebDownload.cpp:
+        (WebDownload::initToResumeWithBundle): The app needs simply to pass in a bundle path to resume it
+        (WebDownload::cancelForResume): Cancel the download, writing out the resume data
+        (WebDownload::bundlePathForTargetPath): Helper for the app
+        (WebDownload::setDestination): Cache the destination inside the WebDownload
+        (WebDownload::didCreateDestination): Hide the bundle distinction from the app
+        (WebDownload::didFinish): Hide the bundle distinction from the app
+        (createResumeDataFromBundle): Extract the resume data from the bundle
+        (appendResumeDataToBundle): Add the resume data to the bundle
+        * WebDownload.h:
+
 2007-02-08  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.

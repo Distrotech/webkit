@@ -50,6 +50,21 @@ BSTR MarshallingHelpers::KURLToBSTR(const KURL& url)
     return SysAllocStringLen(urlString.characters(), urlString.length());
 }
 
+CFURLRef MarshallingHelpers::PathStringToFileCFURLRef(const String& string)
+{
+    CFStringRef cfPath = CFStringCreateWithCharactersNoCopy(0, (const UniChar*)string.characters(), string.length(), kCFAllocatorNull);
+    CFURLRef pathURL = CFURLCreateWithFileSystemPath(0, cfPath, kCFURLWindowsPathStyle, false);
+    CFRelease(cfPath);
+    return pathURL;
+}
+
+String MarshallingHelpers::FileCFURLRefToPathString(CFURLRef fileURL)
+{
+    CFStringRef string = CFURLCopyFileSystemPath(fileURL, kCFURLWindowsPathStyle);
+    String result(string);
+    CFRelease(string);
+    return result;
+}
 
 CFURLRef MarshallingHelpers::BSTRToCFURLRef(BSTR urlStr)
 {

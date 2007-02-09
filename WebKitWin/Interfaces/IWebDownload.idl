@@ -88,6 +88,11 @@ interface IWebDownload : IUnknown
     HRESULT cancel();
 
     /*
+        - (void)cancelForResume();
+    */
+    HRESULT cancelForResume();
+
+    /*
         - (void)start
     */
     HRESULT start();
@@ -105,17 +110,17 @@ interface IWebDownload : IUnknown
     /*
         - (id)initWithResumeData:(NSData *)resumeData delegate:(id)delegate path:(NSString *)path
     */
-    HRESULT initWithResumeData([in] IStream* resumeData, [in] IWebDownloadDelegate* delegate, [in] BSTR path);
+    HRESULT initToResumeWithBundle([in] BSTR bundlePath, [in] IWebDownloadDelegate* delegate);
+
+    /*
+        - (String)bundlePathForTargetPath:(String)targetPath
+    */
+    HRESULT bundlePathForTargetPath([in] BSTR target, [out, retval] BSTR* bundle);
 
     /*
         - (NSURLRequest *)request
     */
     HRESULT request([out, retval] IWebURLRequest** request);
-
-    /*
-        - (NSData *)resumeData
-    */
-    HRESULT resumeData([out, retval] IStream** stream);
 
     /*
         - (void)setDeletesFileUponFailure:(BOOL)deletesFileUponFailure

@@ -34,6 +34,9 @@
 #include "WebMutableURLRequest.h"
 #include "WebURLResponse.h"
 
+#include <sys/stat.h>
+#include <sys/types.h>
+
 #pragma warning(push, 0)
 #include <WebCore/BString.h>
 #include <WebCore/NotImplemented.h>
@@ -58,6 +61,13 @@ static void decideDestinationWithSuggestedObjectNameCallback(CFURLDownloadRef do
 static void didCreateDestinationCallback(CFURLDownloadRef download, CFURLRef path, const void *clientInfo);
 static void didFinishCallback(CFURLDownloadRef download, const void *clientInfo);
 static void didFailCallback(CFURLDownloadRef download, CFErrorRef error, const void *clientInfo);
+
+// Download Bundle file utilities ----------------------------------------------------------------
+static const String BundleExtension(".download");
+static UInt32 BundleMagicNumber = 0xDECAF4EE;
+
+static CFDataRef createResumeDataFromBundle(const String& bundlePath);
+static HRESULT appendResumeDataToBundle(CFDataRef resumeData, const String& bundlePath);
 
 // WebDownload ----------------------------------------------------------------
 
@@ -202,11 +212,16 @@ HRESULT STDMETHODCALLTYPE WebDownload::initWithRequest(
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE WebDownload::initWithResumeData(
-        /* [in] */ IStream*, 
-        /* [in] */ IWebDownloadDelegate*, 
-        /* [in] */ BSTR)
+HRESULT STDMETHODCALLTYPE WebDownload::initToResumeWithBundle(
+        /* [in] */ BSTR bundlePath, 
+        /* [in] */ IWebDownloadDelegate*)
 {
+    // I have to call createResumeDataFromBundle() to keep this compiling,
+    // so even though its really a noimpl() situation, we'll fake it here
+    CFDataRef resumeData = createResumeDataFromBundle(String(bundlePath, SysStringLen(bundlePath)));
+    if (resumeData)
+        CFRelease(resumeData);
+
     LOG_NOIMPL();
     return E_FAIL;
 }
@@ -244,12 +259,61 @@ HRESULT STDMETHODCALLTYPE WebDownload::cancel()
     return S_OK;
 }
 
+HRESULT STDMETHODCALLTYPE WebDownload::cancelForResume()
+{
+    LOG(Download, "WebDownload - Cancelling download (%p), writing resume information to file if possible", this);
+    ASSERT(m_download);
+    if (!m_download)
+        return E_FAIL;
+
+    HRESULT hr = S_OK;
+    RetainPtr<CFDataRef> resumeData;
+    if (m_destination.isEmpty())
+        goto exit;
+
+    CFURLDownloadSetDeletesUponFailure(m_download.get(), false);
+    CFURLDownloadCancel(m_download.get());
+
+    resumeData = CFURLDownloadCopyResumeData(m_download.get());
+    if (!resumeData) {
+        LOG(Download, "WebDownload - Unable to create resume data for download (%p)", this);
+        goto exit;
+    }
+
+    appendResumeDataToBundle(resumeData.get(), m_bundlePath);
+   
+exit:
+    m_download = 0;
+    return hr;
+}
+
 HRESULT STDMETHODCALLTYPE WebDownload::deletesFileUponFailure(
         /* [out, retval] */ BOOL* result)
 {
     if (!m_download)
         return E_FAIL;
     *result = CFURLDownloadDeletesUponFailure(m_download.get());
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebDownload::bundlePathForTargetPath(
+        /* [in] */ BSTR targetPath, 
+        /* [out, retval] */ BSTR* bundlePath)
+{
+    if (!targetPath)
+        return E_INVALIDARG;
+
+    String bundle(targetPath, SysStringLen(targetPath));
+    if (bundle.isEmpty())
+        return E_INVALIDARG;
+
+    if (bundle[bundle.length()-1] == '/')
+        bundle.truncate(1);
+
+    bundle += BundleExtension;
+    *bundlePath = SysAllocStringLen(bundle.characters(), bundle.length());
+    if (!*bundlePath)
+        return E_FAIL;
     return S_OK;
 }
 
@@ -262,13 +326,6 @@ HRESULT STDMETHODCALLTYPE WebDownload::request(
             (*request)->AddRef();
     }
     return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE WebDownload::resumeData(
-        /* [out, retval] */ IStream**)
-{
-    LOG_NOIMPL();
-    return E_FAIL;
 }
 
 HRESULT STDMETHODCALLTYPE WebDownload::setDeletesFileUponFailure(
@@ -286,15 +343,16 @@ HRESULT STDMETHODCALLTYPE WebDownload::setDestination(
 {
     if (!m_download)
         return E_FAIL;
-    CFStringRef cfPath = MarshallingHelpers::BSTRToCFStringRef(path);
-    CFURLRef pathURL = CFURLCreateWithFileSystemPath(0, cfPath, kCFURLWindowsPathStyle, false);
+
+    m_destination = String(path, SysStringLen(path));
+    m_bundlePath = m_destination + BundleExtension;
+
+    CFURLRef pathURL = MarshallingHelpers::PathStringToFileCFURLRef(m_bundlePath);
     CFURLDownloadSetDestination(m_download.get(), pathURL, !!allowOverwrite);
     CFRelease(pathURL);
-    CFRelease(cfPath);
 
 #ifndef NDEBUG
-    String str(path, SysStringLen(path));
-    LOG(Download, "WebDownload - Set destination to %s", str.ascii().data());
+    LOG(Download, "WebDownload - Set destination to %s", m_bundlePath.ascii().data());
 #endif
 
     return S_OK;
@@ -403,7 +461,20 @@ void WebDownload::decideDestinationWithSuggestedObjectName(CFStringRef name)
 
 void WebDownload::didCreateDestination(CFURLRef destination)
 {
-    if (FAILED(m_delegate->didCreateDestination(this, BString(CFURLGetString(destination)))))
+    // The concept of the ".download bundle" is internal to the WebDownload, so therefore
+    // we try to mask the delegate from its existence as much as possible by telling it the final
+    // destination was created, when in reality the bundle was created
+
+    String createdDestination = MarshallingHelpers::FileCFURLRefToPathString(destination);
+
+    // At this point in receiving CFURLDownload callbacks, we should definitely have the bundle path stored locally
+    // and it should match with the file that CFURLDownload created
+    ASSERT(createdDestination == m_bundlePath);
+    // And we should also always have the final-destination stored
+    ASSERT(!m_destination.isEmpty());
+
+    BString path(m_destination);
+    if (FAILED(m_delegate->didCreateDestination(this, path)))
         LOG_ERROR("DownloadDelegate->didCreateDestination failed");
 }
 
@@ -412,6 +483,36 @@ void WebDownload::didFinish()
 #ifndef NDEBUG
     LOG(Download, "DOWNLOAD - Finished %p after %i bytes and %.3f seconds", this, m_received, currentTime() - m_startTime);
 #endif
+
+    ASSERT(!m_bundlePath.isEmpty() && !m_destination.isEmpty());
+    
+    // We try to rename the bundle to the final file name.  If that fails, we give the delegate one more chance to chose
+    // the final file name, then we just leave it
+    if (!MoveFileEx(m_bundlePath.charactersWithNullTermination(), m_destination.charactersWithNullTermination(), 0)) {
+        LOG_ERROR("Failed to move bundle %s to %s on completion\nError - %i", m_bundlePath.ascii().data(), m_destination.ascii().data(), GetLastError());
+        
+        bool reportBundlePathAsFinalPath = true;
+
+        BString destinationBSTR(m_destination.characters(), m_destination.length());
+        if (FAILED(m_delegate->decideDestinationWithSuggestedFilename(this, destinationBSTR)))
+            LOG_ERROR("delegate->decideDestinationWithSuggestedFilename() failed");
+
+        // The call to m_delegate->decideDestinationWithSuggestedFilename() should have changed our destination, so we'll try the move
+        // one last time.
+        if (!m_destination.isEmpty())
+            if (MoveFileEx(m_bundlePath.charactersWithNullTermination(), m_destination.charactersWithNullTermination(), 0))
+                reportBundlePathAsFinalPath = false;
+
+        // We either need to tell the delegate our final filename is the bundle filename, or is the file name they just told us to use
+        if (reportBundlePathAsFinalPath) {
+            BString bundleBSTR(m_bundlePath);
+            m_delegate->didCreateDestination(this, bundleBSTR);
+        } else {
+            BString destinationBSTR = BString(m_destination);
+            m_delegate->didCreateDestination(this, destinationBSTR);
+        }
+    }
+
     if (FAILED(m_delegate->didFinish(this)))
         LOG_ERROR("DownloadDelegate->didFinish failed");
 }
@@ -423,7 +524,7 @@ void WebDownload::didFail(CFErrorRef error)
         LOG_ERROR("DownloadDelegate->didFailWithError failed");
 }
 
-
+// CFURLDownload Callbacks ----------------------------------------------------------------
 void didStartCallback(CFURLDownloadRef, const void *clientInfo)
 { ((WebDownload*)clientInfo)->didStart(); }
 
@@ -457,3 +558,141 @@ void didFinishCallback(CFURLDownloadRef, const void *clientInfo)
 void didFailCallback(CFURLDownloadRef, CFErrorRef error, const void *clientInfo)
 { ((WebDownload*)clientInfo)->didFail(error); }
 
+// Download Bundle file utilities ----------------------------------------------------------------
+
+static CFDataRef createResumeDataFromBundle(const String& bundlePath)
+{
+    if (bundlePath.isEmpty()) {
+        LOG_ERROR("Cannot create resume data from empty download bundle path");
+        return 0;
+    }
+    
+    // Open a handle to the bundle file
+    String nullifiedPath = bundlePath;
+    FILE* bundle = 0;
+    if (_wfopen_s(&bundle, nullifiedPath.charactersWithNullTermination(), TEXT("rb")) || !bundle) {
+        LOG_ERROR("Failed to open file %s to get resume data", bundlePath.ascii().data());
+        return 0;
+    }
+
+    CFDataRef result = 0;
+    Vector<UInt8> footerBuffer;
+    
+    // Stat the file to get its size
+    struct _stat64 fileStat;
+    if (_fstat64(_fileno(bundle), &fileStat))
+        goto exit;
+    
+    // Check for the bundle magic number at the end of the file
+    fpos_t footerMagicNumberPosition = fileStat.st_size - 4;
+    ASSERT(footerMagicNumberPosition >= 0);
+    if (footerMagicNumberPosition < 0)
+        goto exit;
+    if (fsetpos(bundle, &footerMagicNumberPosition))
+        goto exit;
+
+    UInt32 footerMagicNumber = 0;
+    if (fread(&footerMagicNumber, 4, 1, bundle) != 1) {
+        LOG_ERROR("Failed to read footer magic number from the bundle - errno(%i)", errno);  
+        goto exit;
+    }
+
+    if (footerMagicNumber != BundleMagicNumber) {
+        LOG_ERROR("Footer's magic number does not match 0x%X - errno(%i)", BundleMagicNumber, errno);  
+        goto exit;
+    }
+
+    // Now we're *reasonably* sure this is a .download bundle we actually wrote. 
+    // Get the length of the resume data
+    fpos_t footerLengthPosition = fileStat.st_size - 8;
+    ASSERT(footerLengthPosition >= 0);
+    if (footerLengthPosition < 0)
+        goto exit;
+
+    if (fsetpos(bundle, &footerLengthPosition))
+        goto exit;
+
+    UInt32 footerLength = 0;
+    if (fread(&footerLength, 4, 1, bundle) != 1) {
+        LOG_ERROR("Failed to read ResumeData length from the bundle - errno(%i)", errno);  
+        goto exit;
+    }
+
+    // Make sure theres enough bytes to read in for the resume data, and perform the read
+    fpos_t footerStartPosition = fileStat.st_size - 8 - footerLength;
+    ASSERT(footerStartPosition >= 0);
+    if (footerStartPosition < 0)
+        goto exit;
+    if (fsetpos(bundle, &footerStartPosition))
+        goto exit;
+
+    footerBuffer.resize(footerLength);
+    if (fread(footerBuffer.data(), 1, footerLength, bundle) != footerLength) {
+        LOG_ERROR("Failed to read ResumeData from the bundle - errno(%i)", errno);  
+        goto exit;
+    }
+
+    // Finally, make the resume data.  Now, it is possible by some twist of fate the bundle magic number
+    // was naturally at the end of the file and its not actually a valid bundle.  That, or someone engineered
+    // it that way to try to attack us.  In that cause, this CFData will successfully create but when we 
+    // actually try to start the CFURLDownload using this bogus data, it will fail and we will handle that gracefully
+    result = CFDataCreate(0, footerBuffer.data(), footerLength);
+
+    // FIXME: At this point the file will be in the state we left it in - file data + footer.
+    // CFURLDownload may expect/require/demand that it be in the state IT left it in - file data ONLY
+    // If we have to muck with the file, we have to do so here
+exit:
+    fclose(bundle);
+    return result;
+}
+
+static HRESULT appendResumeDataToBundle(CFDataRef resumeData, const String& bundlePath)
+{
+    if (!resumeData) {
+        LOG_ERROR("Invalid resume data to write to bundle path");
+        return E_FAIL;
+    }
+    if (bundlePath.isEmpty()) {
+        LOG_ERROR("Cannot write resume data to empty download bundle path");
+        return E_FAIL;
+    }
+
+    String nullifiedPath = bundlePath;
+    FILE* bundle = 0;
+    if (_wfopen_s(&bundle, nullifiedPath.charactersWithNullTermination(), TEXT("ab")) || !bundle) {
+        LOG_ERROR("Failed to open file %s to append resume data", bundlePath.ascii().data());
+        return E_FAIL;
+    }
+
+    HRESULT hr = E_FAIL;
+
+    const UInt8* resumeBytes = CFDataGetBytePtr(resumeData);
+    ASSERT(resumeBytes);
+    if (!resumeBytes)
+        goto exit;
+
+    UInt32 resumeLength = CFDataGetLength(resumeData);
+    ASSERT(resumeLength > 0);
+    if (resumeLength < 1)
+        goto exit;
+
+    if (fwrite(resumeBytes, 1, resumeLength, bundle) != resumeLength) {
+        LOG_ERROR("Failed to write resume data to the bundle - errno(%i)", errno);
+        goto exit;
+    }
+
+    if (fwrite(&resumeLength, 4, 1, bundle) != 1) {
+        LOG_ERROR("Failed to write footer length to the bundle - errno(%i)", errno);
+        goto exit;
+    }
+
+    if (fwrite(&BundleMagicNumber, 4, 1, bundle) != 1) {
+        LOG_ERROR("Failed to write footer magic number to the bundle - errno(%i)", errno);
+        goto exit;
+    }
+    
+    hr = S_OK;
+exit:
+    fclose(bundle);
+    return hr;
+}
