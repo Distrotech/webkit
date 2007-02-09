@@ -95,6 +95,8 @@ namespace WebCore {
         void invalidateRegion(NPRegion);
         void forceRedraw();
 
+        void disconnectStream(PluginStreamWin*);
+
         // Widget functions
         virtual void setFrameGeometry(const IntRect&);
         virtual void geometryChanged() const;
@@ -149,7 +151,7 @@ namespace WebCore {
         NPP_t m_instanceStruct;
         NPWindow m_npWindow;
 
-        HashSet<PluginStreamWin*> m_streams;
+        HashSet<RefPtr<PluginStreamWin> > m_streams;
         Vector<PluginRequestWin*> m_requests;
 
         int m_quirks;

@@ -34,6 +34,7 @@
 #include "KURL.h"
 #include "npfunctions.h"
 #include "PlatformString.h"
+#include "Shared.h"
 #include "SubresourceLoaderClient.h"
 #include "ResourceRequest.h"
 #include "ResourceResponse.h"
@@ -46,11 +47,11 @@ namespace WebCore {
 
     enum PluginStreamState { StreamBeforeStarted, StreamStarted, StreamStopped };
 
-    class PluginStreamWin : SubresourceLoaderClient {
+    class PluginStreamWin : public Shared<PluginStreamWin>, private SubresourceLoaderClient{
     public:
         PluginStreamWin(PluginViewWin*, Frame*, const ResourceRequest&, bool sendNotification, void* notifyData);
         ~PluginStreamWin();
-
+        
         void start();
         void stop();
 
@@ -63,6 +64,7 @@ namespace WebCore {
         virtual void didFinishLoading(SubresourceLoader*);
 
         void sendJavaScriptStream(const KURL& requestURL, const CString& resultString);
+
     private:
         void deliverData();
         void cancelAndDestroyStream(NPReason);

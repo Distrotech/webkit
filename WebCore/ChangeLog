@@ -1,3 +1,26 @@
+2007-02-08  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Geoff.
+
+        <rdar://problem/4955068>
+        PluginViewWin leaks memory.
+        
+        Make streams ref-counted. Remove streams from the hash set once they're done loading.
+        
+        Don't try to paint if painting is disabled.
+        
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::PluginStreamWin::PluginStreamWin):
+        (WebCore::PluginStreamWin::cancelAndDestroyStream):
+        (WebCore::PluginStreamWin::destroyStream):
+        * plugins/win/PluginStreamWin.h:
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::paint):
+        (WebCore::PluginViewWin::stop):
+        (WebCore::PluginViewWin::~PluginViewWin):
+        (WebCore::PluginViewWin::disconnectStream):
+        * plugins/win/PluginViewWin.h:
+
 2007-02-08  Adam Roben  <aroben@apple.com>
 
         Reviewed by Adele.

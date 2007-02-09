@@ -63,6 +63,8 @@ PluginStreamWin::PluginStreamWin(PluginViewWin* pluginView, Frame* frame, const 
     , m_pluginFuncs(pluginView->plugin()->pluginFuncs())
     , m_instance(pluginView->instance())
 {
+    ASSERT(m_pluginView);
+
     m_stream.url = 0;
     m_stream.ndata = 0;
     m_stream.pdata = 0;
@@ -131,8 +133,8 @@ void PluginStreamWin::startStream()
 
 void PluginStreamWin::cancelAndDestroyStream(NPReason reason)
 {
-    destroyStream(reason);
     stop();
+    destroyStream(reason);
 }
 
 void PluginStreamWin::destroyStream(NPReason reason)
@@ -147,7 +149,6 @@ void PluginStreamWin::destroyStream(NPReason reason)
         return;
     }
     destroyStream();
-    ASSERT(m_stream.ndata == 0);
 }
 
 void PluginStreamWin::destroyStream()
@@ -177,6 +178,11 @@ void PluginStreamWin::destroyStream()
         m_pluginFuncs->urlnotify(m_instance, m_resourceRequest.url().url().utf8(), m_reason, m_notifyData);
 
     m_streamState = StreamStopped;
+
+    // disconnectStream can cause us to be deleted.
+    RefPtr<PluginStreamWin> protect(this);
+    m_pluginView->disconnectStream(this);
+
     m_pluginView = 0;
 }
 

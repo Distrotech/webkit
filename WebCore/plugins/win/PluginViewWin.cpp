@@ -263,7 +263,7 @@ void PluginViewWin::paint(GraphicsContext* context, const IntRect& rect)
         return;
     }
 
-    if (m_isWindowed)
+    if (m_isWindowed || context->paintingDisabled())
         return;
 
     HDC hdc = context->getWindowsContext();
@@ -457,9 +457,14 @@ void PluginViewWin::stop()
     if (!m_isStarted)
         return;
 
-    HashSet<PluginStreamWin*>::iterator end = m_streams.end();
-    for (HashSet<PluginStreamWin*>::iterator it = m_streams.begin(); it != end; ++it)
+    HashSet<RefPtr<PluginStreamWin> > streams = m_streams;
+    HashSet<RefPtr<PluginStreamWin> >::iterator end = streams.end();
+    for (HashSet<RefPtr<PluginStreamWin> >::iterator it = streams.begin(); it != end; ++it) {
         (*it)->stop();
+        disconnectStream((*it).get());
+    }
+
+    ASSERT(m_streams.isEmpty());
 
     m_isStarted = false;
 
@@ -1046,13 +1051,19 @@ PluginViewWin::~PluginViewWin()
     stop();
 
     deleteAllValues(m_requests);
-    deleteAllValues(m_streams);
 
     freeStringArray(m_paramNames, m_paramCount);
     freeStringArray(m_paramValues, m_paramCount);
 
     if (m_window)
         DestroyWindow(m_window);
+}
+
+void PluginViewWin::disconnectStream(PluginStreamWin* stream)
+{
+    ASSERT(m_streams.contains(stream));
+
+    m_streams.remove(stream);
 }
 
 void PluginViewWin::determineQuirks(const String& mimeType)
