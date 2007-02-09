@@ -98,7 +98,7 @@ typedef enum WebMenuItemTag {
     WebMenuItemPDFNextPage,
     WebMenuItemPDFPreviousPage,
     // FIXME: Review these names before release!
-    WebMenuItemTagOpenLink = 1000,
+    WebMenuItemTagOpenLink = 2000,
     WebMenuItemTagIgnoreGrammar,
     WebtMenuItemTagSpellingMenu,
     WebMenuItemTagShowSpellingPanel,
