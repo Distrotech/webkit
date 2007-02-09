@@ -543,7 +543,8 @@ void PluginViewWin::performRequest(PluginRequestWin* request)
                 return;
 
             CString cstr = resultString.utf8();
-            PluginStreamWin* stream = new PluginStreamWin(this, m_parentFrame, request->frameLoadRequest().resourceRequest(), request->sendNotification(), request->notifyData());
+            RefPtr<PluginStreamWin> stream = new PluginStreamWin(this, m_parentFrame, request->frameLoadRequest().resourceRequest(), request->sendNotification(), request->notifyData());
+            m_streams.add(stream);
             stream->sendJavaScriptStream(requestURL, cstr);
         }
     } else {
