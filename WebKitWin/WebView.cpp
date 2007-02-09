@@ -1921,7 +1921,7 @@ HRESULT STDMETHODCALLTYPE WebView::searchFor(
         if (*found) {
             if (frame != startFrame)
                 startFrame->selectionController()->clear();
-            frame->view()->setFocus();
+            m_page->focusController()->setFocusedFrame(frame);
             return S_OK;
         }
         frame = incrementFrame(frame, !!forward, !!wrapFlag);
@@ -1931,7 +1931,7 @@ HRESULT STDMETHODCALLTYPE WebView::searchFor(
     // We cheat a bit and just research with wrap on
     if (wrapFlag && !startFrame->selectionController()->isNone()) {
         *found = startFrame->findString(search, !!forward, !!caseFlag, true, true);
-        frame->view()->setFocus();
+        m_page->focusController()->setFocusedFrame(frame);
     }
 
     return S_OK;

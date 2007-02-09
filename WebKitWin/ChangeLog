@@ -1,3 +1,14 @@
+2007-02-08  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Adam.
+
+        Fixed <rdar://4920436> Find: Regression: Find banner does not select in orange on pages with frame
+
+        * WebView.cpp:
+        (WebView::searchFor):
+        Ever since 11396, the widget no longer handles frame focus changes.
+        This is now the page's focus controller responsibility
+
 2007-02-07  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Steve, Ada, Darin, and Adam
