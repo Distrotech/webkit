@@ -130,6 +130,9 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE mainFrame( 
         /* [out][retval] */ IWebFrame **frame);
+
+    virtual HRESULT STDMETHODCALLTYPE focusedFrame( 
+        /* [out][retval] */ IWebFrame **frame);
     
     virtual HRESULT STDMETHODCALLTYPE backForwardList( 
         /* [out][retval] */ IWebBackForwardList **list);

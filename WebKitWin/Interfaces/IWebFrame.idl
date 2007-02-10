@@ -228,4 +228,8 @@ interface IWebFrame : IUnknown
         - (NSArray *)childFrames;
     */
     HRESULT childFrames([out] int* frameCount, [out, retval] IWebFrame*** frames);
+
+
+  /* This is a DOMElement on mac, but maybe should be a DOMHTMLFrameElement? */
+    HRESULT currentForm([out, retval] IDOMElement** frameElement);
 }

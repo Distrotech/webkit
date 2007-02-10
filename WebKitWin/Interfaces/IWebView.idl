@@ -340,6 +340,12 @@ interface IWebView : IUnknown
     HRESULT mainFrame([retval, out] IWebFrame** frame);
 
     /*!
+        @method focusedFrame
+    @abstract Return the frame that has the current focus.  
+    */
+    HRESULT focusedFrame([retval, out] IWebFrame** frame);
+
+    /*!
         @method backForwardList
         @result The backforward list for this webView.
         - (WebBackForwardList *)backForwardList;

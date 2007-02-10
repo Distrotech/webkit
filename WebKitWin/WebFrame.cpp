@@ -485,6 +485,23 @@ HRESULT STDMETHODCALLTYPE WebFrame::frameElement(
     return E_NOTIMPL;
 }
 
+HRESULT STDMETHODCALLTYPE WebFrame::currentForm( 
+        /* [retval][out] */ IDOMElement **currentForm)
+{
+    if (!currentForm) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *currentForm = 0;
+    HTMLFormElement *formElement = d->frame->currentForm();
+    if (!formElement)
+        return E_FAIL;
+
+    *currentForm = DOMElement::createInstance(formElement);
+    return S_OK;
+}
+
 HRESULT STDMETHODCALLTYPE WebFrame::loadRequest( 
     /* [in] */ IWebURLRequest* request)
 {
@@ -813,17 +830,6 @@ HRESULT WebFrame::formForElement(IDOMElement* element, IDOMElement** form)
         return E_FAIL;
 
     HTMLFormElement *formElement = inputElement->form();
-    if (!formElement)
-        return E_FAIL;
-
-    *form = DOMElement::createInstance(formElement);
-    return S_OK;
-}
-
-HRESULT WebFrame::currentForm(IDOMElement** form)
-{
-    *form = 0;
-    HTMLFormElement* formElement = d->frame->currentForm();
     if (!formElement)
         return E_FAIL;
 

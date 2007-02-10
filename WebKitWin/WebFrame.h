@@ -144,6 +144,9 @@ public:
         /* [out] */ int *frameCount,
         /* [retval][out] */ IWebFrame ***frames);
 
+    virtual HRESULT STDMETHODCALLTYPE currentForm( 
+        /* [retval][out] */ IDOMElement **formElement);
+
     // IWebFramePrivate
     virtual HRESULT STDMETHODCALLTYPE renderTreeAsExternalRepresentation(
         /* [retval][out] */ BSTR *result);
@@ -306,7 +309,6 @@ public:
     void setInViewSourceMode(BOOL flag);
     HRESULT elementWithName(BSTR name, IDOMElement* form, IDOMElement** element);
     HRESULT formForElement(IDOMElement* element, IDOMElement** form);
-    HRESULT currentForm(IDOMElement** form);
     HRESULT elementDoesAutoComplete(IDOMElement* element, bool* result);
     HRESULT controlsInForm(IDOMElement* form, IDOMElement** controls, int* cControls);
     HRESULT elementIsPassword(IDOMElement* element, bool* result);

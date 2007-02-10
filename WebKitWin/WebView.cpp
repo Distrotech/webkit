@@ -1617,6 +1617,25 @@ HRESULT STDMETHODCALLTYPE WebView::mainFrame(
     return S_OK;
 }
 
+HRESULT STDMETHODCALLTYPE WebView::focusedFrame( 
+    /* [out][retval] */ IWebFrame** frame)
+{
+    if (!frame) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *frame = 0;
+    Frame* f = m_page->focusController()->focusedFrame();
+    if (!f)
+        return E_FAIL;
+
+    WebFrame* webFrame = kit(f);
+    if (!webFrame)
+        return E_FAIL;
+
+    return webFrame->QueryInterface(IID_IWebFrame, (void**) frame);
+}
 HRESULT STDMETHODCALLTYPE WebView::backForwardList( 
     /* [out][retval] */ IWebBackForwardList** list)
 {

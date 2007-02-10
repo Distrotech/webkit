@@ -1,3 +1,20 @@
+2007-02-09  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Adam, Steve.
+        
+        - fixed <rdar://problem/4976975> Need WEbKit API to revtrieve current or first frame and form from a WebView
+
+        * Interfaces/IWebFrame.idl: added currentForm
+        * Interfaces/IWebView.idl: added focusedFrame
+        * WebFrame.cpp:
+        (WebFrame::currentForm): Get the "current" form for a frame,
+        as determined by WebCore::Frame
+        * WebFrame.h:
+        * WebView.cpp:
+        (WebView::focusedFrame): Get the currently focused frame
+        (via FocusController).
+        * WebView.h:
+
 2007-02-09  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by Brady and Adam.
