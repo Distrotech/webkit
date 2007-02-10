@@ -469,7 +469,9 @@ void ScrollView::updateScrollbars(const IntSize& desiredOffset)
         m_data->m_hBar->setValue(scroll.width());
         if (m_data->m_scrollbarsSuppressed)
             m_data->m_hBar->setSuppressInvalidation(false); 
-    }
+    } else if (scroll.width()) 
+        m_data->m_scrollOffset.setWidth(scroll.width());
+
     if (m_data->m_vBar) {
         int clientHeight = visibleHeight();
         m_data->m_vBar->setEnabled(contentsHeight() > clientHeight);
@@ -496,7 +498,8 @@ void ScrollView::updateScrollbars(const IntSize& desiredOffset)
         m_data->m_vBar->setValue(scroll.height());
         if (m_data->m_scrollbarsSuppressed)
             m_data->m_vBar->setSuppressInvalidation(false);
-    }
+    } else if (scroll.height()) 
+        m_data->m_scrollOffset.setHeight(scroll.height());
 
     if (oldHasVertical != (m_data->m_vBar != 0) || oldHasHorizontal != (m_data->m_hBar != 0))
         geometryChanged();

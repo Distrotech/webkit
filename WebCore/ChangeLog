@@ -1,3 +1,14 @@
+2007-02-09  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Brady and Adam.
+
+        Fixed <rdar://4986194> Typing in content editable body does not automatically scroll to reveal cursor
+
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::updateScrollbars):
+        The scrollview's scrolloffset wasn't getting set in cases where there were no scrollbars
+        You can have a scrolloffset even if you don't have scrollbars
+
 2007-02-09  Darin Adler  <darin@apple.com>
 
         Reviewed by Adele.

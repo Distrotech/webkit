@@ -996,8 +996,8 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             if (!handledByKeydown) {
                 // FIXME: We need to use WM_UNICHAR to support supplementary characters.
                 UChar c = (UChar)wParam;
-                TypingCommand::insertText(webView->page()->focusController()->focusedOrMainFrame()->document(), String(&c, 1), false);
-                webView->page()->focusController()->focusedOrMainFrame()->revealSelection(RenderLayer::gAlignToEdgeIfNeeded); 
+                if (Frame* frame = webView->page()->focusController()->focusedFrame())
+                    frame->editor()->insertText(String(&c, 1), false);
             }
             break;
         case WM_SIZE:
