@@ -982,37 +982,65 @@ void WebFrame::frameLoaderDestroyed()
     this->Release();
 }
 
-Frame* WebFrame::createFrame(const KURL& URL, const String& name, HTMLFrameOwnerElement* ownerElement, const String& /* referrer */)
+Frame* WebFrame::createFrame(const KURL& URL, const String& name, HTMLFrameOwnerElement* ownerElement, const String& referrer)
 {
-    WebFrame* webFrame = WebFrame::createInstance();
+    COMPtr<WebFrame> webFrame;
+    webFrame.adoptRef(WebFrame::createInstance());
+
     webFrame->initWithWebFrameView(0, d->webView, d->frame->page(), ownerElement);
 
     Frame* frame = webFrame->impl();
     d->frame->tree()->appendChild(frame);
     frame->deref(); // Frames are created with a refcount of 1. Release this ref, since we've assigned it to d->frame.
-    webFrame->Release(); // The same goes for webFrame, which is owned by frame.
-
     frame->tree()->setName(name);
 
-    WebMutableURLRequest* request = WebMutableURLRequest::createInstance();
-    String urlString = String(URL.url());
-    BString urlBStr(urlString);
-    BSTR method = SysAllocString(L"GET");
+    loadURLIntoChild(URL, referrer, webFrame.get());
 
-    HRESULT hr;
-    hr = request->initWithURL(urlBStr, WebURLRequestUseProtocolCachePolicy, 0);
-    if (FAILED(hr))
-        return frame;
-
-    hr = request->setHTTPMethod(method);
-    if (FAILED(hr))
-        return frame;
-
-    SysFreeString(method);
-
-    webFrame->loadRequest(request);
+    // The frame's onload handler may have removed it from the document.
+    if (!frame->tree()->parent())
+        return 0;
 
     return frame;
+}
+
+void WebFrame::loadURLIntoChild(const KURL& originalURL, const String& referrer, WebFrame* childFrame)
+{
+    ASSERT(childFrame);
+
+    HistoryItem* parentItem = d->frame->loader()->currentHistoryItem();
+    FrameLoadType loadType = d->frame->loader()->loadType();
+    FrameLoadType childLoadType = FrameLoadTypeInternal;
+
+    KURL url = originalURL;
+
+    // If we're moving in the backforward list, we might want to replace the content
+    // of this child frame with whatever was there at that point.
+    // Reload will maintain the frame contents, LoadSame will not.
+    if (parentItem && parentItem->children().size() &&
+        (isBackForwardLoadType(loadType)
+         || loadType == FrameLoadTypeReload
+         || loadType == FrameLoadTypeReloadAllowingStaleData))
+    {
+        if (HistoryItem* childItem = parentItem->childItemWithName(childFrame->impl()->tree()->name())) {
+            // Use the original URL to ensure we get all the side-effects, such as
+            // onLoad handlers, of any redirects that happened. An example of where
+            // this is needed is Radar 3213556.
+            url = childItem->originalURLString().deprecatedString();
+            // These behaviors implied by these loadTypes should apply to the child frames
+            childLoadType = loadType;
+
+            if (isBackForwardLoadType(loadType))
+                // For back/forward, remember this item so we can traverse any child items as child frames load
+                childFrame->impl()->loader()->setProvisionalHistoryItem(childItem);
+            else
+                // For reload, just reinstall the current item, since a new child frame was created but we won't be creating a new BF item
+                childFrame->impl()->loader()->setCurrentHistoryItem(childItem);
+        }
+    }
+
+    // FIXME: Handle loading WebArchives here
+
+    childFrame->impl()->loader()->load(url, referrer, childLoadType, String(), 0, 0, HashMap<String, String>());
 }
 
 void WebFrame::openURL(const String& URL, const Event* triggeringEvent, bool newWindow, bool lockHistory)

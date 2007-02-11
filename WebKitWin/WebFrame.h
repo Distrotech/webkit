@@ -324,6 +324,7 @@ protected:
     unsigned int getObjectCacheSize();
     void loadHTMLString(BSTR string, BSTR baseURL, BSTR unreachableURL);
     void loadData(PassRefPtr<WebCore::SharedBuffer>, BSTR mimeType, BSTR textEncodingName, BSTR baseURL, BSTR failingURL);
+    void loadURLIntoChild(const WebCore::KURL&, const WebCore::String& referrer, WebFrame* childFrame);
     Vector<WebCore::IntRect> computePageRects(HDC printDC);
 
 protected:
