@@ -509,7 +509,7 @@ bool RenderThemeSafari::paintButton(RenderObject* o, const RenderObject::PaintIn
 {
     // We inflate the rect as needed to account for padding included in the cell to accommodate the button
     // shadow.  We don't consider this part of the bounds of the control in WebKit.
-    NSControlSize controlSize = controlSizeForFont(o->style());
+    NSControlSize controlSize = controlSizeFromRect(r, buttonSizes());
     IntSize size = buttonSizes()[controlSize];
     size.setWidth(r.width());
     IntRect inflatedRect = r;
