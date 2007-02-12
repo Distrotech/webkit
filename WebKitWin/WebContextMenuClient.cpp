@@ -62,7 +62,9 @@ HMENU WebContextMenuClient::getCustomMenuFromDefaultItems(ContextMenu* menu)
     HMENU newMenu = 0;
     COMPtr<WebElementPropertyBag> propertyBag;
     propertyBag.adoptRef(WebElementPropertyBag::createInstance(menu->hitTestResult()));
-    uiDelegate->contextMenuItemsForElement(m_webView, propertyBag.get(), menu->platformDescription(), &newMenu);
+    // FIXME: We need to decide whether to do the default before calling this delegate method
+    if (FAILED(uiDelegate->contextMenuItemsForElement(m_webView, propertyBag.get(), menu->platformDescription(), &newMenu)))
+        return menu->platformDescription();
 
     return newMenu;
 }

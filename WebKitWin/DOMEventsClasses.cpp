@@ -25,6 +25,7 @@
 
 #include "config.h"
 #include "WebKitDLL.h"
+#include <initguid.h>
 #include "DOMEventsClasses.h"
 
 #pragma warning( push, 0 )
@@ -56,22 +57,17 @@ HRESULT STDMETHODCALLTYPE DOMEventListener::handleEvent(
 
 // DOMEvent -------------------------------------------------------------------
 
-DOMEvent::DOMEvent(WebCore::Event* e)
+DOMEvent::DOMEvent(PassRefPtr<WebCore::Event> e)
 : m_event(0)
 {
-    if (e)
-        e->ref();
-
     m_event = e;
 }
 
 DOMEvent::~DOMEvent()
 {
-    if (m_event)
-        m_event->deref();
 }
 
-IDOMEvent* DOMEvent::createInstance(WebCore::Event* e)
+IDOMEvent* DOMEvent::createInstance(PassRefPtr<WebCore::Event> e)
 {
     if (!e)
         return 0;
@@ -79,8 +75,28 @@ IDOMEvent* DOMEvent::createInstance(WebCore::Event* e)
     HRESULT hr;
     IDOMEvent* domEvent = 0;
 
-    DOMEvent* newEvent = new DOMEvent(e);
-    hr = newEvent->QueryInterface(IID_IDOMEvent, (void**)&domEvent);
+    if (e->isKeyboardEvent()) {
+        DOMKeyboardEvent* newEvent = new DOMKeyboardEvent(e);
+        hr = newEvent->QueryInterface(IID_IDOMKeyboardEvent, (void**)&domEvent);
+    } else if (e->isMouseEvent()) {
+        DOMMouseEvent* newEvent = new DOMMouseEvent(e);
+        hr = newEvent->QueryInterface(IID_IDOMMouseEvent, (void**)&domEvent);
+    } else if (e->isMutationEvent()) {
+        DOMMutationEvent* newEvent = new DOMMutationEvent(e);
+        hr = newEvent->QueryInterface(IID_IDOMMutationEvent, (void**)&domEvent);
+    } else if (e->isOverflowEvent()) {
+        DOMOverflowEvent* newEvent = new DOMOverflowEvent(e);
+        hr = newEvent->QueryInterface(IID_IDOMOverflowEvent, (void**)&domEvent);
+    } else if (e->isWheelEvent()) {
+        DOMWheelEvent* newEvent = new DOMWheelEvent(e);
+        hr = newEvent->QueryInterface(IID_IDOMWheelEvent, (void**)&domEvent);
+    } else if (e->isUIEvent()) {
+        DOMUIEvent* newEvent = new DOMUIEvent(e);
+        hr = newEvent->QueryInterface(IID_IDOMUIEvent, (void**)&domEvent);
+    } else {
+        DOMEvent* newEvent = new DOMEvent(e);
+        hr = newEvent->QueryInterface(IID_IDOMEvent, (void**)&domEvent);
+    }
 
     if (FAILED(hr))
         return 0;
@@ -91,7 +107,9 @@ IDOMEvent* DOMEvent::createInstance(WebCore::Event* e)
 HRESULT STDMETHODCALLTYPE DOMEvent::QueryInterface(const IID &riid, void** ppvObject)
 {
     *ppvObject = 0;
-    if (IsEqualGUID(riid, IID_IDOMEvent))
+    if (IsEqualGUID(riid, IID_DOMEvent))
+        *ppvObject = this;
+    else if (IsEqualGUID(riid, IID_IDOMEvent))
         *ppvObject = static_cast<IDOMEvent*>(this);
     else
         return DOMObject::QueryInterface(riid, ppvObject);
@@ -160,43 +178,6 @@ HRESULT STDMETHODCALLTYPE DOMEvent::initEvent(
     return E_NOTIMPL;
 }
 
-// DOMEventTarget -------------------------------------------------------------
-
-HRESULT STDMETHODCALLTYPE DOMEventTarget::QueryInterface(REFIID riid, void** ppvObject)
-{
-    *ppvObject = 0;
-    if (IsEqualGUID(riid, IID_IDOMEventTarget))
-        *ppvObject = static_cast<IDOMEventTarget*>(this);
-    else
-        return DOMObject::QueryInterface(riid, ppvObject);
-
-    AddRef();
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE addEventListener( 
-    /* [in] */ BSTR /*type*/,
-    /* [in] */ IDOMEventListener* /*listener*/,
-    /* [in] */ BOOL /*useCapture*/)
-{
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE removeEventListener( 
-    /* [in] */ BSTR /*type*/,
-    /* [in] */ IDOMEventListener* /*listener*/,
-    /* [in] */ BOOL /*useCapture*/)
-{
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE dispatchEvent( 
-    /* [in] */ IDOMEvent* /*event*/,
-    /* [retval][out] */ BOOL* /*result*/)
-{
-    return E_NOTIMPL;
-}
-
 // DOMUIEvent -----------------------------------------------------------------
 
 HRESULT STDMETHODCALLTYPE DOMUIEvent::QueryInterface(REFIID riid, void** ppvObject)
@@ -212,7 +193,7 @@ HRESULT STDMETHODCALLTYPE DOMUIEvent::QueryInterface(REFIID riid, void** ppvObje
 }
 
 HRESULT STDMETHODCALLTYPE DOMUIEvent::view( 
-    /* [retval][out] */ IDOMWindow* /*result*/)
+    /* [retval][out] */ IDOMWindow** /*result*/)
 {
     return E_NOTIMPL;
 }
@@ -307,7 +288,7 @@ HRESULT STDMETHODCALLTYPE DOMKeyboardEvent::ctrlKey(
     *result = FALSE;
     if (!m_event || !m_event->isKeyboardEvent())
         return E_FAIL;
-    WebCore::KeyboardEvent* keyEvent = static_cast<WebCore::KeyboardEvent*>(m_event);
+    WebCore::KeyboardEvent* keyEvent = static_cast<WebCore::KeyboardEvent*>(m_event.get());
 
     *result = keyEvent->ctrlKey() ? TRUE : FALSE;
     return S_OK;
@@ -319,7 +300,7 @@ HRESULT STDMETHODCALLTYPE DOMKeyboardEvent::shiftKey(
     *result = FALSE;
     if (!m_event || !m_event->isKeyboardEvent())
         return E_FAIL;
-    WebCore::KeyboardEvent* keyEvent = static_cast<WebCore::KeyboardEvent*>(m_event);
+    WebCore::KeyboardEvent* keyEvent = static_cast<WebCore::KeyboardEvent*>(m_event.get());
 
     *result = keyEvent->shiftKey() ? TRUE : FALSE;
     return S_OK;
@@ -331,7 +312,7 @@ HRESULT STDMETHODCALLTYPE DOMKeyboardEvent::altKey(
     *result = FALSE;
     if (!m_event || !m_event->isKeyboardEvent())
         return E_FAIL;
-    WebCore::KeyboardEvent* keyEvent = static_cast<WebCore::KeyboardEvent*>(m_event);
+    WebCore::KeyboardEvent* keyEvent = static_cast<WebCore::KeyboardEvent*>(m_event.get());
 
     *result = keyEvent->altKey() ? TRUE : FALSE;
     return S_OK;
@@ -343,7 +324,7 @@ HRESULT STDMETHODCALLTYPE DOMKeyboardEvent::metaKey(
     *result = FALSE;
     if (!m_event || !m_event->isKeyboardEvent())
         return E_FAIL;
-    WebCore::KeyboardEvent* keyEvent = static_cast<WebCore::KeyboardEvent*>(m_event);
+    WebCore::KeyboardEvent* keyEvent = static_cast<WebCore::KeyboardEvent*>(m_event.get());
 
     *result = keyEvent->metaKey() ? TRUE : FALSE;
     return S_OK;
@@ -355,7 +336,7 @@ HRESULT STDMETHODCALLTYPE DOMKeyboardEvent::altGraphKey(
     *result = FALSE;
     if (!m_event || !m_event->isKeyboardEvent())
         return E_FAIL;
-    WebCore::KeyboardEvent* keyEvent = static_cast<WebCore::KeyboardEvent*>(m_event);
+    WebCore::KeyboardEvent* keyEvent = static_cast<WebCore::KeyboardEvent*>(m_event.get());
 
     *result = keyEvent->altGraphKey() ? TRUE : FALSE;
     return S_OK;
@@ -428,7 +409,7 @@ HRESULT STDMETHODCALLTYPE DOMMouseEvent::ctrlKey(
     *result = FALSE;
     if (!m_event || !m_event->isMouseEvent())
         return E_FAIL;
-    WebCore::MouseEvent* mouseEvent = static_cast<WebCore::MouseEvent*>(m_event);
+    WebCore::MouseEvent* mouseEvent = static_cast<WebCore::MouseEvent*>(m_event.get());
 
     *result = mouseEvent->ctrlKey() ? TRUE : FALSE;
     return S_OK;
@@ -440,7 +421,7 @@ HRESULT STDMETHODCALLTYPE DOMMouseEvent::shiftKey(
     *result = FALSE;
     if (!m_event || !m_event->isMouseEvent())
         return E_FAIL;
-    WebCore::MouseEvent* mouseEvent = static_cast<WebCore::MouseEvent*>(m_event);
+    WebCore::MouseEvent* mouseEvent = static_cast<WebCore::MouseEvent*>(m_event.get());
 
     *result = mouseEvent->shiftKey() ? TRUE : FALSE;
     return S_OK;
@@ -452,7 +433,7 @@ HRESULT STDMETHODCALLTYPE DOMMouseEvent::altKey(
     *result = FALSE;
     if (!m_event || !m_event->isMouseEvent())
         return E_FAIL;
-    WebCore::MouseEvent* mouseEvent = static_cast<WebCore::MouseEvent*>(m_event);
+    WebCore::MouseEvent* mouseEvent = static_cast<WebCore::MouseEvent*>(m_event.get());
 
     *result = mouseEvent->altKey() ? TRUE : FALSE;
     return S_OK;
@@ -464,7 +445,7 @@ HRESULT STDMETHODCALLTYPE DOMMouseEvent::metaKey(
     *result = FALSE;
     if (!m_event || !m_event->isMouseEvent())
         return E_FAIL;
-    WebCore::MouseEvent* mouseEvent = static_cast<WebCore::MouseEvent*>(m_event);
+    WebCore::MouseEvent* mouseEvent = static_cast<WebCore::MouseEvent*>(m_event.get());
 
     *result = mouseEvent->metaKey() ? TRUE : FALSE;
     return S_OK;

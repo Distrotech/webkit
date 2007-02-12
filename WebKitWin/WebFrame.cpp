@@ -1173,7 +1173,7 @@ void WebFrame::textWillBeDeletedInTextField(Element* e)
             IDOMHTMLInputElement* domInputElement;
             if (SUCCEEDED(domElement->QueryInterface(IID_IDOMHTMLInputElement, (void**)&domInputElement))) {
                 BOOL result;
-                formDelegate->doCommandBySelector(domInputElement, 0 /*FIXME*/, this, &result);
+                formDelegate->doCommandBySelector(domInputElement, VK_BACK /*REVIEW*/, this, &result);
                 domInputElement->Release();
             }
             domElement->Release();

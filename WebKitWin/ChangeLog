@@ -1,3 +1,68 @@
+2007-02-12  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Steve.
+        
+        Also, checked in a fix in WebContextMenuClient that Adam made on my machine, reviewed by me.
+
+        <rdar://4952715> Events not being passed from WebCore/WebKit up through IWebForm::doCommandBySelector
+        Inform form delegate about delete key press.
+        
+        DOM event fixes:
+        - Removed DOMEventTarget class.
+        - IDOMEventTarget no longer extends IDOMObject
+        - DOMNode now implements IDOMEventTarget
+        - DOMEvent::CoCreateInstance creates the correct subclasses
+        of DOMEvents based on the type of event
+        - Added IDOMDocumentEvent interface, which DOMDocument implements.
+        - Fixed the out parameter in IDOMUIEvent::view to be IDOMWindow**
+        
+        Implemented DOMHTMLDocument::body and DOMHTMLElement::setInnerText.
+
+        * DOMCoreClasses.cpp:
+        (DOMNode::addEventListener): added as DOMNode now needs to implement IDOMEventTarget
+        (DOMNode::removeEventListener): ditto above
+        (DOMNode::dispatchEvent): ditto above
+        (DOMDocument::QueryInterface): DOMDocument now also implements IDOMDocumentEvent
+        (DOMDocument::createEvent): added as DOMDocument implements IDOMDocumentEvent
+        (DOMElement::focus): implemented
+        * DOMCoreClasses.h:
+        * DOMEventsClasses.cpp:
+        (DOMEvent::DOMEvent): The data member m_event is now a RefPtr, and the WebCore::Event is now
+        passed into the constructor via a PassRefPtr.
+        (DOMEvent::~DOMEvent): No longer need to deref m_event since we are using a RefPtr.
+        (DOMEvent::createInstance): instantiate the correct DOMEvent subclass based on event type.
+        (DOMEvent::QueryInterface): be able to QI IID_DOMEvent, which returns back the DOMEvent type.
+        (DOMUIEvent::view): fixed the API
+        (DOMKeyboardEvent::ctrlKey): call .get() on RefPtr
+        (DOMKeyboardEvent::shiftKey): ditto above
+        (DOMKeyboardEvent::altKey): ditto above
+        (DOMKeyboardEvent::metaKey): ditto above
+        (DOMKeyboardEvent::altGraphKey): ditto above
+        (DOMMouseEvent::ctrlKey): ditto above
+        (DOMMouseEvent::shiftKey): ditto above
+        (DOMMouseEvent::altKey): ditto above
+        (DOMMouseEvent::metaKey): ditto above
+        * DOMEventsClasses.h:
+        (DOMEvent::coreEvent): Added an API to get the WebCore::Event out of a DOMEvent.  Used in DOMNode::dispatchEvent.
+        (DOMUIEvent::DOMUIEvent): made public so it can be called in DOMEvent::createInstance
+        (DOMKeyboardEvent::DOMKeyboardEvent): ditto above
+        (DOMKeyboardEvent::view): fixed API
+        (DOMMouseEvent::DOMMouseEvent): made public so it can be called in DOMEvent::createInstance
+        (DOMMouseEvent::view): fixed API
+        (DOMMutationEvent::DOMMutationEvent): made public so it can be called in DOMEvent::createInstance
+        (DOMOverflowEvent::DOMOverflowEvent): made public so it can be called in DOMEvent::createInstance
+        (DOMWheelEvent::DOMWheelEvent): made public so it can be called in DOMEvent::createInstance
+        (DOMWheelEvent::view): fixed API
+        * DOMHTMLClasses.cpp:
+        (DOMHTMLDocument::body):
+        (DOMHTMLElement::setInnerText):
+        * Interfaces/DOMEvents.idl: IDOMEventTarget no longer extends IDOMObject.  Added IDOMDocumentEvent.
+        * WebContextMenuClient.cpp:
+        (WebContextMenuClient::getCustomMenuFromDefaultItems): check for error from calling contextMenuItemsForElement.
+        * WebFrame.cpp:
+        (WebFrame::textWillBeDeletedInTextField): call form delegate callback doCommandBySelector with VK_BACK 
+        when deleting text.
+
 2007-02-11  Adam Roben  <aroben@apple.com>
 
         Fixing line endings.

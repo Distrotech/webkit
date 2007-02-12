@@ -26,6 +26,7 @@
 #include "config.h"
 #include "WebKitDLL.h"
 #include "DOMHTMLClasses.h"
+#include "COMPtr.h"
 
 #pragma warning(push, 0)
 #include <WebCore/Document.h>
@@ -212,10 +213,17 @@ HRESULT STDMETHODCALLTYPE DOMHTMLDocument::URL(
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLDocument::body( 
-        /* [retval][out] */ IDOMHTMLElement** /*bodyElement*/)
+        /* [retval][out] */ IDOMHTMLElement** bodyElement)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    *bodyElement = 0;
+    if (!m_document || !m_document->isHTMLDocument())
+        return E_FAIL;
+
+    HTMLDocument* htmlDoc = static_cast<HTMLDocument*>(m_document);
+    COMPtr<IDOMElement> domEle = DOMHTMLElement::createInstance(htmlDoc->body());
+    if (domEle)
+        return domEle->QueryInterface(IID_IDOMHTMLElement, (void**) bodyElement);
+    return E_FAIL;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLDocument::setBody( 
@@ -430,10 +438,13 @@ HRESULT STDMETHODCALLTYPE DOMHTMLElement::innerText(
 }
         
 HRESULT STDMETHODCALLTYPE DOMHTMLElement::setInnerText( 
-        /* [in] */ BSTR /*text*/)
+        /* [in] */ BSTR text)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    HTMLElement* htmlEle = static_cast<HTMLElement*>(m_element);
+    WebCore::String textString(text, SysStringLen(text));
+    WebCore::ExceptionCode ec = 0;
+    htmlEle->setInnerText(textString, ec);
+    return S_OK;
 }
 
 // DOMHTMLFormElement - IUnknown ----------------------------------------------

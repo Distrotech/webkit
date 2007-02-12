@@ -39,9 +39,9 @@
 #include "HTMLIFrameElement.h"
 #include "HTMLNames.h"
 #include "HTMLTableCellElement.h"
+#include "KeyboardEvent.h"
 #include "NP_jsobject.h"
 #include "Page.h"
-#include "PlatformKeyboardEvent.h"
 #include "Plugin.h"
 #include "PluginDatabaseWin.h"
 #include "PluginViewWin.h"
@@ -151,10 +151,10 @@ void FrameWin::textDidChangeInTextField(Element* e)
         m_client->textDidChangeInTextField(e);
 }
 
-bool FrameWin::doTextFieldCommandFromEvent(Element* e, const PlatformKeyboardEvent* pke)
+bool FrameWin::doTextFieldCommandFromEvent(Element* e, KeyboardEvent* ke)
 {
     if (m_client)
-        return m_client->doTextFieldCommandFromEvent(e, pke);
+        return m_client->doTextFieldCommandFromEvent(e, ke ? ke->keyEvent() : 0);
 
     return false;
 }

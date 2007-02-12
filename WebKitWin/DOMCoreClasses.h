@@ -28,6 +28,7 @@
 
 #include "DOMCore.h"
 #include "DOMCSS.h"
+#include "DOMEvents.h"
 #include "DOMExtensions.h"
 #include "DOMPrivate.h"
 #include "WebScriptObject.h"
@@ -81,7 +82,7 @@ public:
         /* [in] */ BSTR description) { return WebScriptObject::setException(description); }
 };
 
-class DOMNode : public DOMObject, public IDOMNode
+class DOMNode : public DOMObject, public IDOMNode, public IDOMEventTarget
 {
 protected:
     DOMNode(WebCore::Node* n);
@@ -226,6 +227,21 @@ public:
     virtual HRESULT STDMETHODCALLTYPE setTextContent( 
         /* [in] */ BSTR text);
 
+    // IDOMEventTarget
+    virtual HRESULT STDMETHODCALLTYPE addEventListener( 
+        /* [in] */ BSTR type,
+        /* [in] */ IDOMEventListener *listener,
+        /* [in] */ BOOL useCapture);
+    
+    virtual HRESULT STDMETHODCALLTYPE removeEventListener( 
+        /* [in] */ BSTR type,
+        /* [in] */ IDOMEventListener *listener,
+        /* [in] */ BOOL useCapture);
+    
+    virtual HRESULT STDMETHODCALLTYPE dispatchEvent( 
+        /* [in] */ IDOMEvent *evt,
+        /* [retval][out] */ BOOL *result);
+
 protected:
     WebCore::Node* m_node;
 };
@@ -289,7 +305,7 @@ protected:
     WebCore::NodeList* m_nodeList;
 };
 
-class DOMDocument : public DOMNode, public IDOMDocument, public IDOMViewCSS
+class DOMDocument : public DOMNode, public IDOMDocument, public IDOMViewCSS, public IDOMDocumentEvent
 {
 protected:
     DOMDocument(WebCore::Document* d);
@@ -509,6 +525,11 @@ public:
         /* [in] */ IDOMElement *elt,
         /* [in] */ BSTR pseudoElt,
         /* [retval][out] */ IDOMCSSStyleDeclaration **result);
+
+    // IDOMDocumentEvent
+    virtual HRESULT STDMETHODCALLTYPE createEvent( 
+        /* [in] */ BSTR eventType,
+        /* [retval][out] */ IDOMEvent **result);
 
     // DOMDocument
     WebCore::Document* document() { return m_document; }

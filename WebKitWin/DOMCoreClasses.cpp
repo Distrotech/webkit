@@ -27,7 +27,9 @@
 #include "WebKitDLL.h"
 #include "DOMCoreClasses.h"
 
+#include "COMPtr.h"
 #include "DOMCSSClasses.h"
+#include "DOMEventsClasses.h"
 #include "DOMHTMLClasses.h"
 #pragma warning(push, 0)
 #include <WebCore/DOMWindow.h>
@@ -294,6 +296,49 @@ HRESULT STDMETHODCALLTYPE DOMNode::setTextContent(
     return E_NOTIMPL;
 }
 
+// DOMNode - IDOMEventTarget --------------------------------------------------
+
+HRESULT STDMETHODCALLTYPE DOMNode::addEventListener( 
+    /* [in] */ BSTR /*type*/,
+    /* [in] */ IDOMEventListener* /*listener*/,
+    /* [in] */ BOOL /*useCapture*/)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE DOMNode::removeEventListener( 
+    /* [in] */ BSTR /*type*/,
+    /* [in] */ IDOMEventListener* /*listener*/,
+    /* [in] */ BOOL /*useCapture*/)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE DOMNode::dispatchEvent( 
+    /* [in] */ IDOMEvent* evt,
+    /* [retval][out] */ BOOL* result)
+{
+    if (!m_node || !evt)
+        return E_FAIL;
+
+#if 0   // FIXME - raise dom exceptions
+    if (![self _node]->isEventTargetNode())
+        WebCore::raiseDOMException(DOM_NOT_SUPPORTED_ERR);
+#endif
+
+    COMPtr<DOMEvent> domEvent;
+    HRESULT hr = evt->QueryInterface(IID_DOMEvent, (void**) &domEvent);
+    if (FAILED(hr))
+        return hr;
+
+    WebCore::ExceptionCode ec = 0;
+    *result = WebCore::EventTargetNodeCast(m_node)->dispatchEvent(domEvent->coreEvent(), ec) ? TRUE : FALSE;
+#if 0   // FIXME - raise dom exceptions
+    WebCore::raiseOnDOMError(ec);
+#endif
+    return S_OK;
+}
+
 // DOMNode - DOMNode ----------------------------------------------------------
 
 DOMNode::DOMNode(WebCore::Node* n)
@@ -436,6 +481,8 @@ HRESULT STDMETHODCALLTYPE DOMDocument::QueryInterface(REFIID riid, void** ppvObj
         *ppvObject = static_cast<IDOMDocument*>(this);
     else if (IsEqualGUID(riid, IID_IDOMViewCSS))
         *ppvObject = static_cast<IDOMViewCSS*>(this);
+    else if (IsEqualGUID(riid, IID_IDOMDocumentEvent))
+        *ppvObject = static_cast<IDOMDocumentEvent*>(this);
     else
         return DOMNode::QueryInterface(riid, ppvObject);
 
@@ -615,6 +662,18 @@ HRESULT STDMETHODCALLTYPE DOMDocument::getComputedStyle(
         return E_FAIL;
     
     *result = DOMCSSStyleDeclaration::createInstance(dv->getComputedStyle(element, pseudoEltString.impl()).get());
+    return S_OK;
+}
+
+// DOMDocument - IDOMDocumentEvent --------------------------------------------
+
+HRESULT STDMETHODCALLTYPE DOMDocument::createEvent( 
+    /* [in] */ BSTR eventType,
+    /* [retval][out] */ IDOMEvent **result)
+{
+    String eventTypeString(eventType, SysStringLen(eventType));
+    WebCore::ExceptionCode ec = 0;
+    *result = DOMEvent::createInstance(m_document->createEvent(eventTypeString, ec));
     return S_OK;
 }
 
@@ -844,8 +903,10 @@ HRESULT STDMETHODCALLTYPE DOMElement::hasAttributeNS(
 
 HRESULT STDMETHODCALLTYPE DOMElement::focus( void)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!m_element)
+        return E_FAIL;
+    m_element->focus();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE DOMElement::blur( void)

@@ -147,7 +147,7 @@ interface IDOMEvent : IDOMObject
     uuid(c7cf7d84-d755-40bc-b664-84bc79eff709),
     pointer_default(unique)
 ]
-interface IDOMEventTarget : IDOMObject
+interface IDOMEventTarget : IUnknown
 {
     //void               addEventListener(in DOMString type, 
     //                                    in EventListener listener, 
@@ -161,6 +161,19 @@ interface IDOMEventTarget : IDOMObject
 
     //boolean            dispatchEvent(in Event event)
     HRESULT dispatchEvent([in] IDOMEvent* event, [out, retval] BOOL* result);
+}
+
+[
+    local,
+    object,
+    uuid(55AAF192-68CD-409f-A551-89710DC7240A),
+    pointer_default(unique)
+]
+interface IDOMDocumentEvent : IUnknown
+{
+    //Event              createEvent(in DOMString eventType)
+    //    raises(DOMException);
+    HRESULT createEvent([in] BSTR eventType, [out, retval] IDOMEvent** result);
 }
 
 [
@@ -379,7 +392,7 @@ interface IDOMOverflowEvent : IDOMEvent
 interface IDOMUIEvent : IDOMEvent
 {
     //readonly attribute DOMWindow            view;
-    HRESULT view([out, retval] IDOMWindow* result);
+    HRESULT view([out, retval] IDOMWindow** result);
 
     //readonly attribute long                 detail;
     HRESULT detail([out, retval] long* result);

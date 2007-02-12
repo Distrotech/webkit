@@ -29,6 +29,12 @@
 #include "DOMEvents.h"
 #include "DOMCoreClasses.h"
 
+#include <wtf/PassRefPtr.h>
+#include <wtf/RefPtr.h>
+
+// {AC3D1BC3-4976-4431-8A19-4812C5EFE39C}
+DEFINE_GUID(IID_DOMEvent, 0xac3d1bc3, 0x4976, 0x4431, 0x8a, 0x19, 0x48, 0x12, 0xc5, 0xef, 0xe3, 0x9c);
+
 namespace WebCore {
     class Event;
 }
@@ -83,9 +89,9 @@ public:
 class DOMEvent : public DOMObject, public IDOMEvent
 {
 public:
-    static IDOMEvent* createInstance(WebCore::Event* e);
+    static IDOMEvent* createInstance(PassRefPtr<WebCore::Event> e);
 protected:
-    DOMEvent(WebCore::Event* e);
+    DOMEvent(PassRefPtr<WebCore::Event> e);
     ~DOMEvent();
 
 public:
@@ -157,72 +163,18 @@ public:
         /* [in] */ BOOL canBubbleArg,
         /* [in] */ BOOL cancelableArg);
 
+    // DOMEvent methods
+    WebCore::Event* coreEvent() { return m_event.get(); }
+
 protected:
-    WebCore::Event* m_event;
-};
-
-class DOMEventTarget : public DOMObject, public IDOMEventTarget
-{
-public:
-    // IUnknown
-    virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject);
-    virtual ULONG STDMETHODCALLTYPE AddRef(void) { return DOMObject::AddRef(); }
-    virtual ULONG STDMETHODCALLTYPE Release(void) { return DOMObject::Release(); }
-
-    // IWebScriptObject
-    virtual HRESULT STDMETHODCALLTYPE throwException( 
-        /* [in] */ BSTR exceptionMessage,
-        /* [retval][out] */ BOOL* result) { return DOMObject::throwException(exceptionMessage, result); }
-    
-    virtual HRESULT STDMETHODCALLTYPE callWebScriptMethod( 
-        /* [in] */ BSTR name,
-        /* [size_is][in] */ const VARIANT args[  ],
-        /* [in] */ int cArgs,
-        /* [retval][out] */ VARIANT* result) { return DOMObject::callWebScriptMethod(name, args, cArgs, result); }
-    
-    virtual HRESULT STDMETHODCALLTYPE evaluateWebScript( 
-        /* [in] */ BSTR script,
-        /* [retval][out] */ VARIANT* result) { return DOMObject::evaluateWebScript(script, result); }
-    
-    virtual HRESULT STDMETHODCALLTYPE removeWebScriptKey( 
-        /* [in] */ BSTR name) { return DOMObject::removeWebScriptKey(name); }
-    
-    virtual HRESULT STDMETHODCALLTYPE stringRepresentation( 
-        /* [retval][out] */ BSTR* stringRepresentation) { return DOMObject::stringRepresentation(stringRepresentation); }
-    
-    virtual HRESULT STDMETHODCALLTYPE webScriptValueAtIndex( 
-        /* [in] */ unsigned int index,
-        /* [retval][out] */ VARIANT* result) { return DOMObject::webScriptValueAtIndex(index, result); }
-    
-    virtual HRESULT STDMETHODCALLTYPE setWebScriptValueAtIndex( 
-        /* [in] */ unsigned int index,
-        /* [in] */ VARIANT val) { return DOMObject::setWebScriptValueAtIndex(index, val); }
-    
-    virtual HRESULT STDMETHODCALLTYPE setException( 
-        /* [in] */ BSTR description) { return DOMObject::setException(description); }
-
-    // IDOMEventTarget
-    virtual HRESULT STDMETHODCALLTYPE addEventListener( 
-        /* [in] */ BSTR type,
-        /* [in] */ IDOMEventListener* listener,
-        /* [in] */ BOOL useCapture);
-    
-    virtual HRESULT STDMETHODCALLTYPE removeEventListener( 
-        /* [in] */ BSTR type,
-        /* [in] */ IDOMEventListener* listener,
-        /* [in] */ BOOL useCapture);
-    
-    virtual HRESULT STDMETHODCALLTYPE dispatchEvent( 
-        /* [in] */ IDOMEvent* event,
-        /* [retval][out] */ BOOL* result);
+    RefPtr<WebCore::Event> m_event;
 };
 
 class DOMUIEvent : public DOMEvent, public IDOMUIEvent
 {
-protected:
-    DOMUIEvent(WebCore::Event* e) : DOMEvent(e) {}
-
 public:
+    DOMUIEvent(PassRefPtr<WebCore::Event> e) : DOMEvent(e) {}
+
     // IUnknown
     virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject);
     virtual ULONG STDMETHODCALLTYPE AddRef(void) { return DOMEvent::AddRef(); }
@@ -293,7 +245,7 @@ public:
 
     // IDOMUIEvent
     virtual HRESULT STDMETHODCALLTYPE view( 
-        /* [retval][out] */ IDOMWindow* result);
+        /* [retval][out] */ IDOMWindow** result);
     
     virtual HRESULT STDMETHODCALLTYPE detail( 
         /* [retval][out] */ long* result);
@@ -329,10 +281,9 @@ public:
 
 class DOMKeyboardEvent : public DOMUIEvent, public IDOMKeyboardEvent
 {
-protected:
-    DOMKeyboardEvent(WebCore::Event* e) : DOMUIEvent(e) { }
-
 public:
+    DOMKeyboardEvent(PassRefPtr<WebCore::Event> e) : DOMUIEvent(e) { }
+
     // IUnknown
     virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject);
     virtual ULONG STDMETHODCALLTYPE AddRef(void) { return DOMUIEvent::AddRef(); }
@@ -403,7 +354,7 @@ public:
 
     // IDOMUIEvent
     virtual HRESULT STDMETHODCALLTYPE view( 
-        /* [retval][out] */ IDOMWindow* result) { return DOMUIEvent::view(result); }
+        /* [retval][out] */ IDOMWindow** result) { return DOMUIEvent::view(result); }
     
     virtual HRESULT STDMETHODCALLTYPE detail( 
         /* [retval][out] */ long* result) { return DOMUIEvent::detail(result); }
@@ -478,10 +429,9 @@ public:
 
 class DOMMouseEvent : public DOMUIEvent, public IDOMMouseEvent
 {
-protected:
-    DOMMouseEvent(WebCore::Event* e) : DOMUIEvent(e) { }
-
 public:
+    DOMMouseEvent(PassRefPtr<WebCore::Event> e) : DOMUIEvent(e) { }
+
     // IUnknown
     virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject);
     virtual ULONG STDMETHODCALLTYPE AddRef(void) { return DOMUIEvent::AddRef(); }
@@ -552,7 +502,7 @@ public:
 
     // IDOMUIEvent
     virtual HRESULT STDMETHODCALLTYPE view( 
-        /* [retval][out] */ IDOMWindow* result) { return DOMUIEvent::view(result); }
+        /* [retval][out] */ IDOMWindow** result) { return DOMUIEvent::view(result); }
     
     virtual HRESULT STDMETHODCALLTYPE detail( 
         /* [retval][out] */ long* result) { return DOMUIEvent::detail(result); }
@@ -654,10 +604,9 @@ public:
 
 class DOMMutationEvent : public DOMEvent, public IDOMMutationEvent
 {
-protected:
-    DOMMutationEvent(WebCore::Event* e) : DOMEvent(e) { }
-
 public:
+    DOMMutationEvent(PassRefPtr<WebCore::Event> e) : DOMEvent(e) { }
+
     // IUnknown
     virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject);
     virtual ULONG STDMETHODCALLTYPE AddRef(void) { return DOMEvent::AddRef(); }
@@ -755,10 +704,9 @@ public:
 
 class DOMOverflowEvent : public DOMEvent, public IDOMOverflowEvent
 {
-protected:
-    DOMOverflowEvent(WebCore::Event* e) : DOMEvent(e) { }
-
 public:
+    DOMOverflowEvent(PassRefPtr<WebCore::Event> e) : DOMEvent(e) { }
+
     // IUnknown
     virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject);
     virtual ULONG STDMETHODCALLTYPE AddRef(void) { return DOMEvent::AddRef(); }
@@ -840,10 +788,9 @@ public:
 
 class DOMWheelEvent : public DOMUIEvent, public IDOMWheelEvent
 {
-protected:
-    DOMWheelEvent(WebCore::Event* e) : DOMUIEvent(e) { }
-
 public:
+    DOMWheelEvent(PassRefPtr<WebCore::Event> e) : DOMUIEvent(e) { }
+
     // IUnknown
     virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject);
     virtual ULONG STDMETHODCALLTYPE AddRef(void) { return DOMUIEvent::AddRef(); }
@@ -914,7 +861,7 @@ public:
 
     // IDOMUIEvent
     virtual HRESULT STDMETHODCALLTYPE view( 
-        /* [retval][out] */ IDOMWindow* result) { return DOMUIEvent::view(result); }
+        /* [retval][out] */ IDOMWindow** result) { return DOMUIEvent::view(result); }
     
     virtual HRESULT STDMETHODCALLTYPE detail( 
         /* [retval][out] */ long* result) { return DOMUIEvent::detail(result); }

@@ -110,7 +110,7 @@ public:
     virtual void textFieldDidBeginEditing(Element*);
     virtual void textFieldDidEndEditing(Element*);
     virtual void textDidChangeInTextField(Element*);
-    virtual bool doTextFieldCommandFromEvent(Element*, const PlatformKeyboardEvent*);
+    virtual bool doTextFieldCommandFromEvent(Element*, KeyboardEvent* ke);
     virtual void textWillBeDeletedInTextField(Element* input);
     virtual void textDidChangeInTextArea(Element*);
 
