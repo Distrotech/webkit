@@ -1,3 +1,9 @@
+2007-02-13  Adam Roben  <aroben@apple.com>
+
+        Build fix.
+
+        * WebCore.vcproj/WebCore.vcproj: Remove SVGDOMImplementation.(cpp|h)
+
 2007-02-12  Ada Chan  <adachan@apple.com>
 
         Reviewed by Steve.

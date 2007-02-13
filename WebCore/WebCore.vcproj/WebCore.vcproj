@@ -6776,14 +6776,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGDOMImplementation.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGDOMImplementation.h"
-					>
-				</File>
-				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\ksvg2\svg\SVGElement.cpp"
 					>
 				</File>
