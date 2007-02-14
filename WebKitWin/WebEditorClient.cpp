@@ -34,13 +34,18 @@
 #include "WebView.h"
 #pragma warning(push, 0)
 #include <WebCore/BString.h>
+#include <WebCore/Document.h>
 #include <WebCore/EditCommand.h>
 #include <WebCore/HTMLElement.h>
+#include <WebCore/HTMLInputElement.h>
+#include <WebCore/HTMLNames.h>
+#include <WebCore/KeyboardEvent.h>
 #include <WebCore/NotImplemented.h>
 #include <WebCore/Range.h>
 #pragma warning(pop)
 
 using namespace WebCore;
+using namespace HTMLNames;
 
 // {09A11D2B-FAFB-4ca0-A6F7-791EE8932C88}
 static const GUID IID_IWebUndoCommand = 
@@ -452,8 +457,21 @@ void WebEditorClient::redo()
     }
 }
 
-void WebEditorClient::handleKeyPress(KeyboardEvent*)
+void WebEditorClient::handleKeyPress(KeyboardEvent* evt)
 {
+    // Dispatch tab keypresses here, since they don't make it through to our standard
+    // key event processing that calls over to WebFrame::doTextFieldCommandFromEvent.
+    if (evt->keyCode() == VK_TAB) {
+        ASSERT(evt->target());
+        Node* node = evt->target()->toNode();
+        ASSERT(node);
+        Frame* frame = node->document()->frame();
+        if (frame && node->hasTagName(inputTag)) {
+            HTMLInputElement* element = static_cast<HTMLInputElement*>(node);
+            frame->doTextFieldCommandFromEvent(element, evt);
+        }
+    }
+
     // If the platform needs to intercept the event, this is where it should do that.
 }
 
