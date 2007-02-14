@@ -97,9 +97,6 @@ void didFinishLoading(CFURLConnectionRef conn, const void* clientInfo)
     handle->client()->didFinishLoading(handle);
 }
 
-// To use version 1 callbacks and compile with ToT CFNetwork, the following should
-// be defined from ToT CFNetwork headers
-#ifdef ERRORS_AS_CFERRORS
 void didFail(CFURLConnectionRef conn, CFErrorRef error, const void* clientInfo) 
 {
     ResourceHandle* handle = (ResourceHandle*)clientInfo;
@@ -108,28 +105,6 @@ void didFail(CFURLConnectionRef conn, CFErrorRef error, const void* clientInfo)
 
     handle->client()->didFail(handle, ResourceError(error));
 }
-#else
-void didFail(CFURLConnectionRef conn, CFStreamError error, const void* clientInfo) 
-{
-    ResourceHandle* handle = (ResourceHandle*)clientInfo;
- 
-    LOG(Network, "CFNet - didFail(conn=%p, handle=%p, error = {%d, %d}) (%s)", conn, handle, error.domain, error.error, handle->url().url().ascii());
-
-    String domain;
-    switch(error.domain) {
-    case kCFStreamErrorDomainPOSIX:
-        domain = "NSPOSIXErrorDomain";
-        break;
-    case kCFStreamErrorDomainMacOSStatus:
-        domain = "NSOSStatusErrorDomain";
-        break;
-    }
-
-    // FIXME: we'd really like to include a failing URL and a localized description but you can't
-    // get a CFErrorRef out of an NSURLConnection, only a CFStreamError
-    handle->client()->didFail(handle, ResourceError(domain, error.error, String(), String()));
-}
-#endif
 
 CFCachedURLResponseRef willCacheResponse(CFURLConnectionRef conn, CFCachedURLResponseRef cachedResponse, const void* clientInfo) 
 {
@@ -255,12 +230,9 @@ bool ResourceHandle::start(Frame* frame)
 
     CFURLRequestRef request = d->m_request.cfURLRequest();
 
-#ifdef ERRORS_AS_CFERRORS
-    int clientVersion = 1;
-#else
-    int clientVersion = 0;
-#endif
-    CFURLConnectionClient client = {clientVersion, this, 0, 0, 0, willSendRequest, didReceiveResponse, didReceiveData, NULL, didFinishLoading, didFail, willCacheResponse, didReceiveChallenge};
+    // CFURLConnection Callback API currently at version 1
+    const int CFURLConnectionClientVersion = 1;
+    CFURLConnectionClient client = {CFURLConnectionClientVersion, this, 0, 0, 0, willSendRequest, didReceiveResponse, didReceiveData, NULL, didFinishLoading, didFail, willCacheResponse, didReceiveChallenge};
 
     d->m_connection.adopt(CFURLConnectionCreate(0, request, &client));
 
