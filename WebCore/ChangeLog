@@ -1,3 +1,14 @@
+2007-02-15  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://problem/4987529>
+        Regression: first clicks don't work at flash-based Nokia.com
+
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::handleMouseEvent):
+        Don't set buttons for mouse move. Also, ignore unknown mouse events.
+
 2007-02-13  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Adam

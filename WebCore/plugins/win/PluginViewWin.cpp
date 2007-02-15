@@ -346,16 +346,10 @@ void PluginViewWin::handleMouseEvent(MouseEvent* event)
     if (event->shiftKey())
         npEvent.wParam |= MK_SHIFT;
 
-    if (event->type() == mousemoveEvent) {
+    if (event->type() == mousemoveEvent)
+        // FIXME: We should find a way to get the button number here and put it in npEvent.wParam.
         npEvent.event = WM_MOUSEMOVE;
-        
-        if (event->button() == 0)
-            npEvent.wParam |= MK_LBUTTON;
-        else if (event->button() == 1)
-            npEvent.wParam |= MK_MBUTTON;
-        else if (event->button() == 2)
-            npEvent.wParam |= MK_RBUTTON;
-    } else if (event->type() == mousedownEvent) {
+    else if (event->type() == mousedownEvent) {
         switch (event->button()) {
             case 0:
                 npEvent.event = WM_LBUTTONDOWN;
@@ -382,7 +376,8 @@ void PluginViewWin::handleMouseEvent(MouseEvent* event)
                 npEvent.event = WM_RBUTTONUP;
                 break;
         }
-    }
+    } else 
+        return;
 
     if (!m_plugin->pluginFuncs()->event(m_instance, &npEvent))
         event->setDefaultHandled();
