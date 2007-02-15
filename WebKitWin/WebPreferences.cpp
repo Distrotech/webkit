@@ -37,6 +37,8 @@
 #include <shlobj.h>
 #include <shfolder.h>
 #include <tchar.h>
+#include <CoreGraphics/CoreGraphics.h>
+#include <WebKitSystemInterface/WebKitSystemInterface.h>
 
 // WebPreferences ----------------------------------------------------------------
 
@@ -1051,6 +1053,7 @@ HRESULT STDMETHODCALLTYPE WebPreferences::setFontSmoothing(
     /* [in] */ FontSmoothingType smoothingType)
 {
     setIntegerValue(CFSTR(WebKitFontSmothingTypePreferenceKey), smoothingType);
+    wkSetFontSmoothingLevel((int)smoothingType);
     return S_OK;
 }
 

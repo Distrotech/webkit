@@ -1006,6 +1006,7 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                 break;
 
             if (lParam != 0) {
+                webView->deleteBackingStore();
                 mainFrameImpl->setNeedsLayout();
                 mainFrameImpl->impl()->view()->resize(LOWORD(lParam), HIWORD(lParam));
 

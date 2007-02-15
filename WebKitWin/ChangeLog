@@ -1,3 +1,15 @@
+2007-02-15  Lou Amadio  <lamadio@apple.com>
+
+        Reviewed by Steve.
+
+        <rdar://problem/4945799> CGText: should use correct mechanism to set font smoothing style
+        
+        * WebKit.vcproj/WebKit.vcproj:
+        * WebPreferences.cpp:
+        (WebPreferences::setFontSmoothing):
+        * WebView.cpp:
+        (WebViewWndProc):
+
 2007-02-13  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Adam.

@@ -33,6 +33,7 @@
 #include "IntRect.h"
 #include "NotImplemented.h"
 #include <ApplicationServices/ApplicationServices.h>
+#include <WebKitSystemInterface/WebKitSystemInterface.h>
 
 namespace WebCore {
 
@@ -41,11 +42,9 @@ const int syntheticObliqueAngle = 14;
 void Font::drawGlyphs(GraphicsContext* graphicsContext, const FontData* font, const GlyphBuffer& glyphBuffer, 
                       int from, int numGlyphs, const FloatPoint& point) const
 {
-    // FIXME: Need to override antialiasing defaults to force antialiasing to be on.
     CGContextRef cgContext = graphicsContext->platformContext();
 
-    //bool originalShouldUseFontSmoothing = wkCGContextGetShouldSmoothFonts(cgContext);
-    //CGContextSetShouldSmoothFonts(cgContext, WebCoreShouldUseFontSmoothing());
+    uint32_t oldFontSmoothingStyle = wkSetFontSmoothingStyle(cgContext);
 
     const FontPlatformData& platformData = font->platformData();
     //NSFont* drawFont;
@@ -87,7 +86,7 @@ void Font::drawGlyphs(GraphicsContext* graphicsContext, const FontData* font, co
         CGContextShowGlyphsWithAdvances(cgContext, glyphBuffer.glyphs(from), glyphBuffer.advances(from), numGlyphs);
     }
 
-    //CGContextSetShouldSmoothFonts(cgContext, originalShouldUseFontSmoothing);
+    wkRestoreFontSmoothingStyle(cgContext, oldFontSmoothingStyle);
 }
 
 FloatRect Font::selectionRectForComplexText(const TextRun& run, const TextStyle& style, const IntPoint& point, int h) const
