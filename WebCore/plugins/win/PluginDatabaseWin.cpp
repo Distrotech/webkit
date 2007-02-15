@@ -321,6 +321,20 @@ static inline void addPluginPath(Vector<String>& paths)
     paths.append(pluginsPath);
 }
 
+static inline void addFlashPluginPath(Vector<String>& paths)
+{
+    WCHAR systemDirectoryStr[MAX_PATH];
+
+    if (GetSystemDirectory(systemDirectoryStr, _countof(systemDirectoryStr)) == 0)
+        return;
+
+    WCHAR flashDirectoryStr[MAX_PATH];
+
+    PathCombine(flashDirectoryStr, systemDirectoryStr, TEXT("macromed\\Flash"));
+
+    paths.append(flashDirectoryStr);
+}
+
 Vector<String> PluginDatabaseWin::defaultPluginPaths()
 {
     Vector<String> paths;
@@ -329,11 +343,8 @@ Vector<String> PluginDatabaseWin::defaultPluginPaths()
     addQuickTimePluginPath(paths);
     addAdobeAcrobatPluginPath(paths);
     addMozillaPluginPaths(paths);
-
-    // The WMP plugin segfaults for some reason so it's disabled for now
     addWindowsMediaPlayerPluginPath(paths);
-
-    // FIXME: We should get other plugin directories, for example Flash etc. 
+    addFlashPluginPath(paths);
 
     return paths;
 }

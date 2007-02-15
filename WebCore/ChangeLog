@@ -1,3 +1,13 @@
+2007-02-15  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        Add the default Flash plugin location to the list of plugin paths.
+
+        * plugins/win/PluginDatabaseWin.cpp:
+        (WebCore::addFlashPluginPath):
+        (WebCore::PluginDatabaseWin::defaultPluginPaths):
+
 2007-02-15  Lou Amadio  <lamadio@apple.com>
 
         Reviewed by Steve.
