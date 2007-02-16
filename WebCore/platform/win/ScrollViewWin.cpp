@@ -74,6 +74,8 @@ public:
     virtual void valueChanged(Scrollbar*);
     virtual IntRect windowClipRect() const;
 
+    void scrollBackingStore(const IntSize& scrollDelta);
+
     ScrollView* m_view;
     IntSize m_scrollOffset;
     IntSize m_contentsSize;
@@ -119,10 +121,12 @@ void ScrollView::ScrollViewPrivate::valueChanged(Scrollbar* bar)
 {
     // Figure out if we really moved.
     IntSize newOffset = m_scrollOffset;
-    if (bar == m_hBar)
-        newOffset.setWidth(bar->value());
-    else if (bar == m_vBar)
-        newOffset.setHeight(bar->value());
+    if (bar) {
+        if (bar == m_hBar)
+            newOffset.setWidth(bar->value());
+        else if (bar == m_vBar)
+            newOffset.setHeight(bar->value());
+    }
     IntSize scrollDelta = newOffset - m_scrollOffset;
     if (scrollDelta == IntSize())
         return;
@@ -131,6 +135,11 @@ void ScrollView::ScrollViewPrivate::valueChanged(Scrollbar* bar)
     if (m_scrollbarsSuppressed)
         return;
 
+    scrollBackingStore(scrollDelta);
+}
+
+void ScrollView::ScrollViewPrivate::scrollBackingStore(const IntSize& scrollDelta)
+{
     // Since scrolling is double buffered, we will be blitting the scroll view's intersection
     // with the clip rect every time to keep it smooth.
     HWND containingWindowHandle = m_view->containingWindow();
@@ -469,8 +478,7 @@ void ScrollView::updateScrollbars(const IntSize& desiredOffset)
         m_data->m_hBar->setValue(scroll.width());
         if (m_data->m_scrollbarsSuppressed)
             m_data->m_hBar->setSuppressInvalidation(false); 
-    } else if (scroll.width()) 
-        m_data->m_scrollOffset.setWidth(scroll.width());
+    } 
 
     if (m_data->m_vBar) {
         int clientHeight = visibleHeight();
@@ -498,11 +506,20 @@ void ScrollView::updateScrollbars(const IntSize& desiredOffset)
         m_data->m_vBar->setValue(scroll.height());
         if (m_data->m_scrollbarsSuppressed)
             m_data->m_vBar->setSuppressInvalidation(false);
-    } else if (scroll.height()) 
-        m_data->m_scrollOffset.setHeight(scroll.height());
+    }
 
     if (oldHasVertical != (m_data->m_vBar != 0) || oldHasHorizontal != (m_data->m_hBar != 0))
         geometryChanged();
+
+    // See if our offset has changed in a situation where we might not have scrollbars.
+    // This can happen when editing a body with overflow:hidden and scrolling to reveal selection.
+    // It can also happen when maximizing a window that has scrollbars (but the new maximized result
+    // does not).
+    IntSize scrollDelta = scroll - m_data->m_scrollOffset;
+    if (scrollDelta != IntSize()) {
+       m_data->m_scrollOffset = scroll;
+       m_data->scrollBackingStore(scrollDelta);
+    }
 
     m_data->m_inUpdateScrollbars = false;
 }
