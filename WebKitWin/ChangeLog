@@ -1,3 +1,24 @@
+2007-02-15  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Anders.
+
+        Fix <rdar://problem/4968731> Printing scales frames to page width
+        instead of doing a layout at that width
+
+        * Interfaces/IWebFramePrivate.idl: Added setInPrintingMode method.
+        * WebFrame.cpp:
+        (WebFrame::WebFrame): Initialize new member.
+        (printerRect): New helper function.
+        (WebFrame::setPrinting): Ported from WebHTMLView.
+        (WebFrame::setInPrintingMode): Implemented.
+        (WebFrame::computePageRects): Changed to store the page rects.
+        (WebFrame::getPrintedPageCount): Added an ASSERT and updated for change to computePageRects.
+        (WebFrame::spoolPages): Use the stored page rects, and set mediaBox's
+        size using the print rect instead of the page rect so we will scale the
+        pages to the full width of the print DC.
+        (WebFrame::forceLayoutWithPageWidthRange): Ported from WebFrameBridge.
+        * WebFrame.h: Updated declarations.
+
 2007-02-15  Lou Amadio  <lamadio@apple.com>
 
         Reviewed by Steve.

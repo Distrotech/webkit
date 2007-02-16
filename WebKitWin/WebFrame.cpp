@@ -109,6 +109,21 @@ using namespace HTMLNames;
 
 #define FLASH_REDRAW 0
 
+
+// By imaging to a width a little wider than the available pixels,
+// thin pages will be scaled down a little, matching the way they
+// print in IE and Camino. This lets them use fewer sheets than they
+// would otherwise, which is presumably why other browsers do this.
+// Wide pages will be scaled down more than this.
+const float PrintingMinimumShrinkFactor = 1.25f;
+
+// This number determines how small we are willing to reduce the page content
+// in order to accommodate the widest line. If the page would have to be
+// reduced smaller to make the widest line fit, we just clip instead (this
+// behavior matches MacIE and Mozilla, at least)
+const float PrintingMaximumShrinkFactor = 2.0f;
+
+
 // {A3676398-4485-4a9d-87DC-CB5A40E6351D}
 const GUID IID_WebFrame = 
 { 0xa3676398, 0x4485, 0x4a9d, { 0x87, 0xdc, 0xcb, 0x5a, 0x40, 0xe6, 0x35, 0x1d } };
@@ -391,6 +406,7 @@ WebFrame::WebFrame()
 : m_refCount(0)
 , d(new WebFrame::WebFramePrivate)
 , m_quickRedirectComing(false)
+, m_inPrintingMode(false)
 {
     WebFrameCount++;
     gClassCount++;
@@ -2129,23 +2145,71 @@ void WebFrame::windowObjectCleared() const
     }
 }
 
-Vector<WebCore::IntRect> WebFrame::computePageRects(HDC printDC)
+static IntRect printerRect(HDC printDC)
 {
-    Vector<IntRect> pages;
+    return IntRect(0, 0, 
+                   GetDeviceCaps(printDC, PHYSICALWIDTH)  - 2 * GetDeviceCaps(printDC, PHYSICALOFFSETX),
+                   GetDeviceCaps(printDC, PHYSICALHEIGHT) - 2 * GetDeviceCaps(printDC, PHYSICALOFFSETY));
+}
+
+void WebFrame::setPrinting(bool printing, float minPageWidth, float maxPageWidth, bool adjustViewSize)
+{
+    ASSERT(d->frame->document());
+
+    d->frame->document()->setPrinting(printing);
+
+    forceLayoutWithPageWidthRange(minPageWidth, maxPageWidth, adjustViewSize);
+}
+
+HRESULT STDMETHODCALLTYPE WebFrame::setInPrintingMode( 
+    /* [in] */ BOOL value,
+    /* [in] */ HDC printDC)
+{
+    if (m_inPrintingMode == !!value)
+        return S_OK;
+
+    m_inPrintingMode = !!value;
+
+    // If we are a frameset just print with the layout we have onscreen, otherwise relayout
+    // according to the paper size
+    float minLayoutWidth = 0.0f;
+    float maxLayoutWidth = 0.0f;
+    if (m_inPrintingMode && !d->frame->isFrameSet()) {
+        if (!printDC) {
+            ASSERT_NOT_REACHED();
+            return E_POINTER;
+        }
+
+        const int desiredHorizontalPixelsPerInch = 72;
+        int paperHorizontalPixelsPerInch = ::GetDeviceCaps(printDC, LOGPIXELSX);
+        int paperWidth = printerRect(printDC).width() * desiredHorizontalPixelsPerInch / paperHorizontalPixelsPerInch;
+        minLayoutWidth = paperWidth * PrintingMinimumShrinkFactor;
+        maxLayoutWidth = paperWidth * PrintingMaximumShrinkFactor;
+    }
+
+    setPrinting(m_inPrintingMode, minLayoutWidth, maxLayoutWidth, true);
+
+    if (!m_inPrintingMode)
+        m_pageRects.clear();
+
+    return S_OK;
+}
+
+const Vector<WebCore::IntRect>& WebFrame::computePageRects(HDC printDC)
+{
+    ASSERT(m_inPrintingMode);
+    ASSERT(d->frame->document());
+
+    if (m_pageRects.size())
+        return m_pageRects;
 
     if (!printDC)
-        return pages;
-
-    IntRect printerRect = IntRect(0, 0, 
-                      GetDeviceCaps(printDC, PHYSICALWIDTH)  - 2 * GetDeviceCaps(printDC, PHYSICALOFFSETX),
-                      GetDeviceCaps(printDC, PHYSICALHEIGHT) - 2 * GetDeviceCaps(printDC, PHYSICALOFFSETY) );
+        return m_pageRects;
 
     FrameWin* frame = Win(d->frame);
-    frame->document()->setPrinting(true);
-    pages = frame->computePageRects(printerRect, 1.0);
-    frame->document()->setPrinting(false);
-
-    return pages;
+    m_pageRects = frame->computePageRects(printerRect(printDC), 1.0);
+    
+    return m_pageRects;
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::getPrintedPageCount( 
@@ -2157,13 +2221,18 @@ HRESULT STDMETHODCALLTYPE WebFrame::getPrintedPageCount(
         return E_POINTER;
     }
 
+    if (!m_inPrintingMode) {
+        ASSERT_NOT_REACHED();
+        return E_FAIL;
+    }
+
     *pageCount = 0;
 
     FrameWin* frame = Win(d->frame);
     if (!frame->document())
         return E_FAIL;
 
-    Vector<IntRect> pages = computePageRects(printDC);
+    const Vector<IntRect>& pages = computePageRects(printDC);
     *pageCount = (UINT) pages.size();
     
     return S_OK;
@@ -2180,36 +2249,40 @@ HRESULT STDMETHODCALLTYPE WebFrame::spoolPages(
         return E_POINTER;
     }
 
+    if (!m_inPrintingMode) {
+        ASSERT_NOT_REACHED();
+        return E_FAIL;
+    }
+
     PlatformGraphicsContext* pctx = (PlatformGraphicsContext*)ctx;
 
     FrameWin* frame = Win(d->frame);
     if (!frame->document())
         return E_FAIL;
 
-    Vector<IntRect> pages = computePageRects(printDC);
-
-    if (pages.size() == 0 || startPage > pages.size())
+    if (m_pageRects.size() == 0 || startPage > m_pageRects.size()) {
+        ASSERT_NOT_REACHED();
         return E_FAIL;
+    }
 
     if (startPage > 0)
         startPage--;
 
     if (endPage == 0)
-        endPage = (UINT)pages.size();
+        endPage = (UINT)m_pageRects.size();
 
-    frame->document()->setPrinting(true);
-
-    WebCore::GraphicsContext spoolCtx(pctx);
+    GraphicsContext spoolCtx(pctx);
 
     for (UINT ii = startPage; ii < endPage; ii++) {
-        IntRect pageRect = pages[ii];
+        IntRect pageRect = m_pageRects[ii];
 
         CGContextSaveGState(pctx);
 
+        IntRect printRect = printerRect(printDC);
         CGRect mediaBox = CGRectMake(CGFloat(0),
                                      CGFloat(0),
-                                     CGFloat(pageRect.width()),
-                                     CGFloat(pageRect.height()));
+                                     CGFloat(printRect.width()),
+                                     CGFloat(printRect.height()));
 
         CGContextBeginPage(pctx, &mediaBox);
 
@@ -2226,8 +2299,13 @@ HRESULT STDMETHODCALLTYPE WebFrame::spoolPages(
         CGContextEndPage(pctx);
         CGContextRestoreGState(pctx);
     }
-
-    frame->document()->setPrinting(false);
  
     return S_OK;
+}
+
+void WebFrame::forceLayoutWithPageWidthRange(float minPageWidth, float maxPageWidth, bool adjustViewSize)
+{
+    d->frame->forceLayoutWithPageWidthRange(minPageWidth, maxPageWidth);
+    if (adjustViewSize)
+        d->frame->view()->adjustViewSize();
 }

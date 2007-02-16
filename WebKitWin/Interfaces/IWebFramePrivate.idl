@@ -76,6 +76,7 @@ interface IWebFramePrivate : IUnknown
     HRESULT firstLayoutDone([out, retval] BOOL* result);
     HRESULT loadType([out, retval] WebFrameLoadType* type);
 
+    HRESULT setInPrintingMode([in] BOOL value, [in] HDC printDC);
     HRESULT getPrintedPageCount([in] HDC printDC, [out, retval] UINT* pageCount);
     HRESULT spoolPages([in] HDC printDC, [in] UINT startPage, [in] UINT endPage, [out, retval] void* ctx);
 }

@@ -157,6 +157,10 @@ public:
     virtual HRESULT STDMETHODCALLTYPE loadType( 
         /* [retval][out] */ WebFrameLoadType* type);
 
+    virtual HRESULT STDMETHODCALLTYPE setInPrintingMode( 
+        /* [in] */ BOOL value,
+        /* [in] */ HDC printDC);
+        
     virtual HRESULT STDMETHODCALLTYPE getPrintedPageCount( 
         /* [in] */ HDC printDC,
         /* [retval][out] */ UINT *pageCount);
@@ -325,7 +329,9 @@ protected:
     void loadHTMLString(BSTR string, BSTR baseURL, BSTR unreachableURL);
     void loadData(PassRefPtr<WebCore::SharedBuffer>, BSTR mimeType, BSTR textEncodingName, BSTR baseURL, BSTR failingURL);
     void loadURLIntoChild(const WebCore::KURL&, const WebCore::String& referrer, WebFrame* childFrame);
-    Vector<WebCore::IntRect> computePageRects(HDC printDC);
+    const Vector<WebCore::IntRect>& computePageRects(HDC printDC);
+    void setPrinting(bool printing, float minPageWidth, float maxPageWidth, bool adjustViewSize);
+    void forceLayoutWithPageWidthRange(float minPageWidth, float maxPageWidth, bool adjustViewSize);
 
 protected:
     ULONG               m_refCount;
@@ -333,6 +339,8 @@ protected:
     WebFramePrivate*    d;
     bool                m_quickRedirectComing;
     WebCore::KURL       m_originalRequestURL;
+    bool                m_inPrintingMode;
+    Vector<WebCore::IntRect> m_pageRects;
 };
 
 #endif
