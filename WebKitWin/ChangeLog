@@ -1,3 +1,14 @@
+2007-02-15  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam.
+        
+        <rdar://problem/5001181> Crash: autofilling empty page
+        
+        Return an error from WebFrame::DOMDocument if there's no document
+
+        * WebFrame.cpp:
+        (WebFrame::DOMDocument): null document now maps to E_FAIL
+
 2007-02-15  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Adam

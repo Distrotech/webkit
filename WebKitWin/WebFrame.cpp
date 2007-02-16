@@ -490,6 +490,10 @@ HRESULT STDMETHODCALLTYPE WebFrame::frameView(
 HRESULT STDMETHODCALLTYPE WebFrame::DOMDocument( 
     /* [retval][out] */ IDOMDocument** document)
 {
+    *document = 0;
+    Document* doc = d->frame->document();
+    if (!doc)
+        return E_FAIL;
     *document = DOMDocument::createInstance(d->frame->document());
     return S_OK;
 }
