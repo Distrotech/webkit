@@ -1,4 +1,13 @@
-2007-02-15  Dave Hyatt
+2007-02-16  Adam Roben  <aroben@apple.com>
+
+        Rubberstamped by Anders.
+
+        * platform/win/PlatformScrollBarSafari.cpp:
+        (WebCore::PlatformScrollbar::paint): Don't draw the arrows when we're disabled.
+
+2007-02-15  Dave Hyatt  <hyatt@apple.com>
+
+        Reviewed by Adam.
 
         Fix for 4804657 and 4952931, scroll view gets confused and ends up at a bad scroll
         offset.

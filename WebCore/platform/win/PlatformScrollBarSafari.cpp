@@ -199,8 +199,10 @@ void PlatformScrollbar::paint(GraphicsContext* graphicsContext, const IntRect& d
     IntRect track = trackRect();
     paintTrack(graphicsContext, track, true, damageRect);
 
-    paintButton(graphicsContext, backButtonRect(), true, damageRect);
-    paintButton(graphicsContext, forwardButtonRect(), false, damageRect);
+    if (isEnabled()) {
+        paintButton(graphicsContext, backButtonRect(), true, damageRect);
+        paintButton(graphicsContext, forwardButtonRect(), false, damageRect);
+    }
 
     if (damageRect.intersects(track) && isEnabled()) {
         IntRect startTrackRect, thumbRect, endTrackRect;
