@@ -225,7 +225,7 @@ void RenderThemeSafari::adjustRepaintRect(const RenderObject* o, IntRect& r)
         case ButtonAppearance: {
             // We inflate the rect as needed to account for padding included in the cell to accommodate the checkbox
             // shadow" and the check.  We don't consider this part of the bounds of the control in WebKit.
-            //if ([button bezelStyle] == NSRoundedBezelStyle)
+            if (r.height() <= buttonSizes()[NSRegularControlSize].height())
                 r = inflateRect(r, buttonSizes()[controlSize], buttonMargins(controlSize));
             break;
         }
@@ -509,11 +509,18 @@ bool RenderThemeSafari::paintButton(RenderObject* o, const RenderObject::PaintIn
 {
     // We inflate the rect as needed to account for padding included in the cell to accommodate the button
     // shadow.  We don't consider this part of the bounds of the control in WebKit.
+
     NSControlSize controlSize = controlSizeFromRect(r, buttonSizes());
-    IntSize size = buttonSizes()[controlSize];
-    size.setWidth(r.width());
     IntRect inflatedRect = r;
-    //if ([button bezelStyle] == NSRoundedBezelStyle) {
+
+    ThemePart part;
+    if (r.height() <= buttonSizes()[NSRegularControlSize].height()) {
+        // Push button
+        part = PushButtonPart;
+
+        IntSize size = buttonSizes()[controlSize];
+        size.setWidth(r.width());
+
         // Center the button within the available space.
         if (inflatedRect.height() > size.height()) {
             inflatedRect.setY(inflatedRect.y() + (inflatedRect.height() - size.height()) / 2);
@@ -522,8 +529,10 @@ bool RenderThemeSafari::paintButton(RenderObject* o, const RenderObject::PaintIn
 
         // Now inflate it to account for the shadow.
         inflatedRect = inflateRect(inflatedRect, size, buttonMargins(controlSize));
-    //}
-    paintThemePart(PushButtonPart, paintInfo.context->platformContext(), inflatedRect, controlSize, determineState(o));
+    } else
+        part = SquareButtonPart;
+
+    paintThemePart(part, paintInfo.context->platformContext(), inflatedRect, controlSize, determineState(o));
     return false;
 }
 
