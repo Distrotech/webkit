@@ -92,7 +92,7 @@ void WebDownload::init(ResourceHandle* handle, const ResourceRequest& request, c
         decideDestinationWithSuggestedObjectNameCallback, didCreateDestinationCallback, didFinishCallback, didFailCallback};
 
     m_request.adoptRef(WebMutableURLRequest::createInstance(request));
-    m_download.adopt(CFURLDownloadCreateWithLoadingConnection(0, connection, request.cfURLRequest(), response.cfURLResponse(), 0, &client));
+    m_download.adoptCF(CFURLDownloadCreateWithLoadingConnection(0, connection, request.cfURLRequest(), response.cfURLResponse(), 0, &client));
 
     LOG(Download, "WebDownload - Created WebDownload %p from existing connection (%s)", this, request.url().url().ascii());
 }
@@ -109,7 +109,7 @@ void WebDownload::init(const KURL& url, IWebDownloadDelegate* delegate)
                                   didReceiveResponseCallback, willResumeWithResponseCallback, didReceiveDataCallback, shouldDecodeDataOfMIMETypeCallback, 
                                   decideDestinationWithSuggestedObjectNameCallback, didCreateDestinationCallback, didFinishCallback, didFailCallback};
     m_request.adoptRef(WebMutableURLRequest::createInstance(request));
-    m_download.adopt(CFURLDownloadCreate(0, cfRequest, &client));
+    m_download.adoptCF(CFURLDownloadCreate(0, cfRequest, &client));
 
     CFURLDownloadScheduleWithCurrentMessageQueue(m_download.get());
     CFURLDownloadScheduleDownloadWithRunLoop(m_download.get(), ResourceHandle::loaderRunLoop(), kCFRunLoopDefaultMode);
@@ -203,7 +203,7 @@ HRESULT STDMETHODCALLTYPE WebDownload::initWithRequest(
                                   didReceiveResponseCallback, willResumeWithResponseCallback, didReceiveDataCallback, shouldDecodeDataOfMIMETypeCallback, 
                                   decideDestinationWithSuggestedObjectNameCallback, didCreateDestinationCallback, didFinishCallback, didFailCallback};
     m_request.adoptRef(WebMutableURLRequest::createInstance(webRequest.get()));
-    m_download.adopt(CFURLDownloadCreate(0, cfRequest, &client));
+    m_download.adoptCF(CFURLDownloadCreate(0, cfRequest, &client));
 
     CFURLDownloadScheduleWithCurrentMessageQueue(m_download.get());
     CFURLDownloadScheduleDownloadWithRunLoop(m_download.get(), ResourceHandle::loaderRunLoop(), kCFRunLoopDefaultMode);
