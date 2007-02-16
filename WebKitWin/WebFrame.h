@@ -238,7 +238,7 @@ public:
     virtual bool representationExistsForURLScheme(const WebCore::String& URLScheme) const;
     virtual WebCore::String generatedMIMETypeForURLScheme(const WebCore::String& URLScheme) const;
     virtual void frameLoadCompleted();
-    virtual void restoreScrollPositionAndViewState();
+    virtual void restoreViewState();
     virtual void provisionalLoadStarted();
     virtual bool shouldTreatURLAsSameAsCurrent(const WebCore::KURL&) const;
     virtual void addHistoryItemForFragmentScroll();
@@ -250,7 +250,7 @@ public:
     virtual void updateGlobalHistoryForStandardLoad(const WebCore::KURL &);
     virtual void updateGlobalHistoryForReload(const WebCore::KURL &);
     virtual bool shouldGoToHistoryItem(WebCore::HistoryItem *) const;
-    virtual void saveScrollPositionAndViewStateToItem(WebCore::HistoryItem *);
+    virtual void saveViewStateToItem(WebCore::HistoryItem *);
     virtual void saveDocumentViewToPageCache(WebCore::PageCache *);
     virtual bool canCachePage(void) const;
     virtual PassRefPtr<WebCore::DocumentLoader> createDocumentLoader(const WebCore::ResourceRequest&, const WebCore::SubstituteData&);

@@ -1579,8 +1579,9 @@ void WebFrame::frameLoadCompleted()
     d->frame->loader()->setPreviousHistoryItem(0);
 }
 
-void WebFrame::restoreScrollPositionAndViewState()
+void WebFrame::restoreViewState()
 {
+    // FIXME: Need to restore view state for page caching
     LOG_NOIMPL();
 }
 
@@ -1682,8 +1683,9 @@ bool WebFrame::shouldGoToHistoryItem(HistoryItem*) const
     return true;
 }
 
-void WebFrame::saveScrollPositionAndViewStateToItem(HistoryItem*)
+void WebFrame::saveViewStateToItem(HistoryItem*)
 {
+    // FIXME: Need to save view state for page caching
     LOG_NOIMPL();
 }
 

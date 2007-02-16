@@ -1,3 +1,14 @@
+2007-02-15  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Adam
+
+        <rdar://4778394> - Save scroll position in the back/forward list
+        
+        * WebFrame.cpp:
+        (WebFrame::restoreViewState):  Renamed, as scroll position was pushed to WebCore
+        (WebFrame::saveViewStateToItem):  Ditto
+        * WebFrame.h:
+
 2007-02-15  Adam Roben  <aroben@apple.com>
 
         Reviewed by Anders.
