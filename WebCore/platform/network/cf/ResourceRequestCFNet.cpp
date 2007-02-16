@@ -75,7 +75,7 @@ void ResourceRequest::doUpdatePlatformRequest()
     WebCore::setHTTPBody(cfRequest, httpBody());
     CFURLRequestSetShouldHandleHTTPCookies(cfRequest, allowHTTPCookies());
 
-    m_cfRequest.adopt(cfRequest);
+    m_cfRequest.adoptCF(cfRequest);
 }
 
 void ResourceRequest::doUpdateResourceRequest()

@@ -234,7 +234,7 @@ bool ResourceHandle::start(Frame* frame)
     const int CFURLConnectionClientVersion = 1;
     CFURLConnectionClient client = {CFURLConnectionClientVersion, this, 0, 0, 0, willSendRequest, didReceiveResponse, didReceiveData, NULL, didFinishLoading, didFail, willCacheResponse, didReceiveChallenge};
 
-    d->m_connection.adopt(CFURLConnectionCreate(0, request, &client));
+    d->m_connection.adoptCF(CFURLConnectionCreate(0, request, &client));
 
     CFURLConnectionScheduleWithCurrentMessageQueue(d->m_connection.get());
     CFURLConnectionScheduleDownloadWithRunLoop(d->m_connection.get(), loaderRunLoop(), kCFRunLoopDefaultMode);
