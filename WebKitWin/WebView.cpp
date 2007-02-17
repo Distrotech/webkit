@@ -823,10 +823,7 @@ bool WebView::handleEditingKeyboardEvent(FrameWin* frame, const PlatformKeyboard
         case VK_ESCAPE:
             break;
         case VK_RETURN:
-            if (frame->selectionController()->isContentRichlyEditable())
-                TypingCommand::insertParagraphSeparator(frame->document());
-            else
-                TypingCommand::insertLineBreak(frame->document());
+            frame->editor()->insertParagraphSeparator();
             break;
         default:
             return false;
