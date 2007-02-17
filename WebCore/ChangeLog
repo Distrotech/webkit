@@ -1,3 +1,26 @@
+2007-02-16  Dave Hyatt <hyatt@apple.com>
+
+        Fix for Radar bug #4981074, RSS Scrollbar overlaps window resizer.  Teach all scrollbars how to
+        avoid the window resizer.
+        
+        Reviewed by aroben
+
+        * platform/win/PlatformScrollBar.h:
+        * platform/win/PlatformScrollBarSafari.cpp:
+        (WebCore::PlatformScrollbar::PlatformScrollbar):
+        (WebCore::PlatformScrollbar::setRect):
+        (WebCore::PlatformScrollbar::setParent):
+        * platform/win/PlatformScrollBarWin.cpp:
+        (WebCore::PlatformScrollbar::PlatformScrollbar):
+        (WebCore::PlatformScrollbar::setRect):
+        (WebCore::PlatformScrollbar::setParent):
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::ScrollViewPrivate::ScrollViewPrivate):
+        (WebCore::ScrollView::updateScrollbars):
+        (WebCore::ScrollView::resizerOverlapsContent):
+        (WebCore::ScrollView::adjustOverlappingScrollbarCount):
+        (WebCore::ScrollView::setParent):
+
 2007-02-16  Adam Roben  <aroben@apple.com>
 
         Rubberstamped by Anders.

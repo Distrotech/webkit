@@ -56,7 +56,7 @@ public:
         , m_hasStaticBackground(false)
         , m_scrollbarsSuppressed(false)
         , m_inUpdateScrollbars(false)
-        , m_resizerOverlapsContent(false)
+        , m_scrollbarsAvoidingResizer(0)
         , m_vScrollbarMode(ScrollbarAuto)
         , m_hScrollbarMode(ScrollbarAuto)
     {
@@ -82,7 +82,7 @@ public:
     bool m_hasStaticBackground;
     bool m_scrollbarsSuppressed;
     bool m_inUpdateScrollbars;
-    bool m_resizerOverlapsContent;
+    int m_scrollbarsAvoidingResizer;
     ScrollbarMode m_vScrollbarMode;
     ScrollbarMode m_hScrollbarMode;
     RefPtr<PlatformScrollbar> m_vBar;
@@ -439,19 +439,7 @@ void ScrollView::updateScrollbars(const IntSize& desiredOffset)
     IntSize maxScrollPosition(contentsWidth() - visibleWidth(), contentsHeight() - visibleHeight());
     IntSize scroll = desiredOffset.shrunkTo(maxScrollPosition);
     scroll.clampNegativeToZero();
-
-    bool resizerOverlapsContent = !(m_data->m_hBar || m_data->m_vBar);
-    bool resizerNeedsInvalidation = (resizerOverlapsContent != m_data->m_resizerOverlapsContent);
-    m_data->m_resizerOverlapsContent = resizerOverlapsContent;
-
-    IntRect resizerRect;
-    if (!resizerOverlapsContent || resizerNeedsInvalidation) {
-        resizerRect = windowResizerRect();
-        resizerRect.setLocation(convertFromContainingWindow(resizerRect.location()));
-        if (resizerNeedsInvalidation)
-            invalidateRect(resizerRect);
-    }
-
+ 
     if (m_data->m_hBar) {
         int clientWidth = visibleWidth();
         m_data->m_hBar->setEnabled(contentsWidth() > clientWidth);
@@ -462,11 +450,6 @@ void ScrollView::updateScrollbars(const IntSize& desiredOffset)
                                    height() - m_data->m_hBar->height(),
                                    width() - (m_data->m_vBar ? m_data->m_vBar->width() : 0),
                                    m_data->m_hBar->height());
-        if (hBarRect.intersects(resizerRect)) {
-            int overlap = hBarRect.right() - resizerRect.x();
-            if (overlap > 0 && resizerRect.right() >= hBarRect.right())
-                hBarRect.setWidth(hBarRect.width() - overlap);
-        }
         m_data->m_hBar->setRect(hBarRect);
         if (!m_data->m_scrollbarsSuppressed && oldRect != m_data->m_hBar->frameGeometry())
             m_data->m_hBar->invalidate();
@@ -490,11 +473,6 @@ void ScrollView::updateScrollbars(const IntSize& desiredOffset)
                                    0,
                                    m_data->m_vBar->width(),
                                    height() - (m_data->m_hBar ? m_data->m_hBar->height() : 0));
-        if (vBarRect.intersects(resizerRect)) {
-            int overlap = vBarRect.bottom() - resizerRect.y();
-            if (overlap > 0 && resizerRect.bottom() >= vBarRect.bottom())
-                vBarRect.setHeight(vBarRect.height() - overlap);
-        }
         m_data->m_vBar->setRect(vBarRect);
         if (!m_data->m_scrollbarsSuppressed && oldRect != m_data->m_vBar->frameGeometry())
             m_data->m_vBar->invalidate();
@@ -648,7 +626,30 @@ IntRect ScrollView::windowResizerRect()
 
 bool ScrollView::resizerOverlapsContent() const
 {
-    return m_data->m_resizerOverlapsContent;
+    return !m_data->m_scrollbarsAvoidingResizer;
+}
+
+void ScrollView::adjustOverlappingScrollbarCount(int overlapDelta)
+{
+    int oldCount = m_data->m_scrollbarsAvoidingResizer;
+    m_data->m_scrollbarsAvoidingResizer += overlapDelta;
+    if (parent() && parent()->isFrameView())
+        static_cast<FrameView*>(parent())->adjustOverlappingScrollbarCount(overlapDelta);
+    else {
+        // If we went from n to 0 or from 0 to n and we're the outermost view,
+        // we need to invalidate the windowResizerRect(), since it will now need to paint
+        // differently.
+        if (oldCount > 0 && m_data->m_scrollbarsAvoidingResizer == 0 ||
+            oldCount == 0 && m_data->m_scrollbarsAvoidingResizer > 0)
+            invalidateRect(windowResizerRect());
+    }
+}
+
+void ScrollView::setParent(ScrollView* parentView)
+{
+    if (!parentView && m_data->m_scrollbarsAvoidingResizer && parent() && parent()->isFrameView())
+        static_cast<FrameView*>(parent())->adjustOverlappingScrollbarCount(false);
+    Widget::setParent(parentView);
 }
 
 void ScrollView::addToDirtyRegion(const IntRect& containingWindowRect)

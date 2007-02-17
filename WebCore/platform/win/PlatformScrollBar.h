@@ -44,6 +44,8 @@ public:
 
     virtual bool isWidget() const { return true; }
 
+    virtual void setParent(ScrollView*);
+
     virtual int width() const;
     virtual int height() const;
     virtual void setRect(const IntRect&);
@@ -101,6 +103,7 @@ private:
     ScrollbarPart m_pressedPart;
     int m_pressedPos;
     Timer<PlatformScrollbar> m_scrollTimer;
+    bool m_overlapsResizer;
 };
 
 }
