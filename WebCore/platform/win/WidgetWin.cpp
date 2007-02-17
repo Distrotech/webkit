@@ -33,7 +33,7 @@
 #include "FrameWin.h"
 #include "IntRect.h"
 #include "Font.h"
-#include "ScrollView.h"
+#include "FrameView.h"
 #include "WidgetClient.h"
 #include <winsock2.h>
 #include <windows.h>
@@ -216,6 +216,13 @@ void Widget::invalidateRect(const IntRect& r)
 {
     if (data->suppressInvalidation)
         return;
+
+    if (!parent()) {
+        ::InvalidateRect(containingWindow(), &RECT(r), false);
+        if (isFrameView())
+            static_cast<FrameView*>(this)->addToDirtyRegion(r);
+        return;
+    }
 
     // Get the root widget.
     ScrollView* outermostView = parent();

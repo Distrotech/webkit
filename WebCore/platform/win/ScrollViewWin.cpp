@@ -350,6 +350,25 @@ void ScrollView::suppressScrollbars(bool suppressed, bool repaintOnSuppress)
             m_data->m_hBar->invalidate();
         if (m_data->m_vBar)
             m_data->m_vBar->invalidate();
+
+        // Invalidate the scroll corner too on unsuppress.
+        IntRect hCorner;
+        if (m_data->m_hBar && width() - m_data->m_hBar->width() > 0) {
+            hCorner = IntRect(m_data->m_hBar->width(),
+                              height() - m_data->m_hBar->height(),
+                              width() - m_data->m_hBar->width(),
+                              m_data->m_hBar->height());
+            invalidateRect(hCorner);
+        }
+
+        if (m_data->m_vBar && height() - m_data->m_vBar->height() > 0) {
+            IntRect vCorner(width() - m_data->m_vBar->width(),
+                            m_data->m_vBar->height(),
+                            m_data->m_vBar->width(),
+                            height() - m_data->m_vBar->height());
+            if (vCorner != hCorner)
+                invalidateRect(vCorner);
+        }
     }
 }
 
@@ -569,15 +588,25 @@ void ScrollView::paint(GraphicsContext* context, const IntRect& rect)
             m_data->m_hBar->paint(context, scrollViewDirtyRect);
         if (m_data->m_vBar)
             m_data->m_vBar->paint(context, scrollViewDirtyRect);
-        
-        if (m_data->m_hBar && m_data->m_vBar) {
-            // Fill the scroll corner box with white.
-            IntRect scrollCornerRect(width() - m_data->m_vBar->width(),
-                                     height() - m_data->m_hBar->height(),
-                                     m_data->m_vBar->width(),
-                                     m_data->m_hBar->height());
-            if (scrollCornerRect.intersects(scrollViewDirtyRect))
-                context->fillRect(scrollCornerRect, Color::white);
+
+        // Fill the scroll corner with white.
+        IntRect hCorner;
+        if (m_data->m_hBar && width() - m_data->m_hBar->width() > 0) {
+            hCorner = IntRect(m_data->m_hBar->width(),
+                              height() - m_data->m_hBar->height(),
+                              width() - m_data->m_hBar->width(),
+                              m_data->m_hBar->height());
+            if (hCorner.intersects(scrollViewDirtyRect))
+                context->fillRect(hCorner, Color::white);
+        }
+
+        if (m_data->m_vBar && height() - m_data->m_vBar->height() > 0) {
+            IntRect vCorner(width() - m_data->m_vBar->width(),
+                            m_data->m_vBar->height(),
+                            m_data->m_vBar->width(),
+                            height() - m_data->m_vBar->height());
+            if (vCorner != hCorner && vCorner.intersects(scrollViewDirtyRect))
+                context->fillRect(vCorner, Color::white);
         }
 
         context->restore();
@@ -635,7 +664,7 @@ void ScrollView::adjustOverlappingScrollbarCount(int overlapDelta)
     m_data->m_scrollbarsAvoidingResizer += overlapDelta;
     if (parent() && parent()->isFrameView())
         static_cast<FrameView*>(parent())->adjustOverlappingScrollbarCount(overlapDelta);
-    else {
+    else if (!m_data->m_scrollbarsSuppressed) {
         // If we went from n to 0 or from 0 to n and we're the outermost view,
         // we need to invalidate the windowResizerRect(), since it will now need to paint
         // differently.

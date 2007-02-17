@@ -1,3 +1,18 @@
+2007-02-17  Dave Hyatt <hyatt@apple.com>
+
+        Change how resizers are invalidated to fix Radar bug #4976772.
+        
+        Reviewed by olliej
+
+        * platform/win/GraphicsContextWin.cpp:
+        (WebCore::GraphicsContext::GraphicsContext):
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::suppressScrollbars):
+        (WebCore::ScrollView::paint):
+        (WebCore::ScrollView::adjustOverlappingScrollbarCount):
+        * platform/win/WidgetWin.cpp:
+        (WebCore::Widget::invalidateRect):
+
 2007-02-16  Dave Hyatt <hyatt@apple.com>
 
         Fix for Radar bug #4981074, RSS Scrollbar overlaps window resizer.  Teach all scrollbars how to
