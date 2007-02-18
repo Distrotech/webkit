@@ -1,3 +1,13 @@
+2007-02-17  David Hyatt  <hyatt@apple.com>
+
+        Part of the OpenSource fix to make sure the fill color starts off as transparent.  Make sure our CG context
+        has its state properly in sync with the CGContext.
+
+        Reviewed by aroben
+
+        * platform/win/GraphicsContextWin.cpp:
+        (WebCore::GraphicsContext::GraphicsContext):
+
 2007-02-17  Adam Roben  <aroben@apple.com>
 
         Build fix.

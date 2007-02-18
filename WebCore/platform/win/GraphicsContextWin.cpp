@@ -71,10 +71,11 @@ GraphicsContext::GraphicsContext(HDC hdc)
     CGContextRelease(m_data->m_cgContext);
     m_data->m_hdc = hdc;
     setPaintingDisabled(!m_data->m_cgContext);
-    
-    // FIXME: Work around a bug in CoreGraphics on Win32.  The fill color defaults to black
-    // rather than transparent.
-    setFillColor(Color::transparent);
+    if (m_data->m_cgContext) {
+        // Make sure the context starts in sync with our state.
+        setPlatformFillColor(fillColor());
+        setPlatformStrokeColor(strokeColor());
+    }
 }
 
 HDC GraphicsContext::getWindowsContext(bool supportAlphaBlend, const IntRect* dstRect)
