@@ -315,4 +315,9 @@ const Cursor& noneCursor()
     return pointerCursor();
 }
 
+const Cursor& notAllowedCursor()
+{
+    return pointerCursor();
+}
+
 }

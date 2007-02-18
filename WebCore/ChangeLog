@@ -1,3 +1,10 @@
+2007-02-17  Adam Roben  <aroben@apple.com>
+
+        Build fix.
+
+        * platform/win/CursorWin.cpp:
+        (WebCore::notAllowedCursor):
+
 2007-02-17  Dave Hyatt <hyatt@apple.com>
 
         Change how resizers are invalidated to fix Radar bug #4976772.
