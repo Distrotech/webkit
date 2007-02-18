@@ -24,35 +24,40 @@
  */
 
 #include "config.h"
-#include "DragController.h"
+#include "DragImage.h"
 
-#include "DragData.h"
-#include "windows.h" 
-#include "SelectionController.h"
-#include <wtf/RefPtr.h>
+#include "CachedImage.h"
+#include "Image.h"
 
 namespace WebCore {
 
-const int DragController::LinkDragBorderInset = 2;
-const IntSize DragController::MaxDragImageSize(400, 400);
-const int DragController::MaxOriginalImageArea = 1500 * 1500;
-const int DragController::DragIconRightInset = 7;
-const int DragController::DragIconBottomInset = 3;
-
-const float DragController::DragImageAlpha = 0.75f;
-
-DragOperation DragController::dragOperation(DragData* dragData)
+IntSize dragImageSize(DragImageRef)
 {
-    //FIXME: to match the macos behaviour we should return DragOperationNone
-    //if we are a modal window, we are the drag source, or the window is an attached sheet
-    //If this can be determined from within WebCore operationForDrag can be pulled into 
-    //WebCore itself
-    ASSERT(dragData);
-    return dragData->containsURL() && !m_didInitiateDrag ? DragOperationCopy : DragOperationNone;
+    return IntSize(0, 0);
 }
 
-bool DragController::isCopyKeyDown() {
-    return ::GetAsyncKeyState(VK_CONTROL);
+void deleteDragImage(DragImageRef)
+{
+}
+
+DragImageRef scaleDragImage(DragImageRef image, float)
+{
+    return image;
+}
+    
+DragImageRef dissolveDragImageToFraction(DragImageRef image, float)
+{
+    return image;
+}
+        
+DragImageRef createDragImageFromImage(Image*)
+{
+    return 0;
+}
+    
+DragImageRef createDragImageIconForCachedImage(CachedImage*)
+{
+    return 0;     
 }
     
 }

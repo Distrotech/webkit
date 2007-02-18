@@ -1,3 +1,45 @@
+2007-02-18  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Adam.
+
+        Updated to include stubs for drag and drop methods
+        Added DragImage[Win].cpp to project file
+        Now uses platform independent EventHandler::handleDrag
+
+        * WebCore.vcproj/WebCore.vcproj:
+
+        * bridge/win/FrameWin.cpp:
+        (WebCore::Frame::dragImageForSelection):
+          Just wrap the platform specific selectionImage method
+
+        * page/win/DragControllerWin.cpp:
+          Defining constants for drag images -- basically copied the Mac definitions
+
+        * page/win/EventHandlerWin.cpp:
+        (WebCore::EventHandler::createDraggingClipboard):
+          Basic implementation -- needs to create an IDataObject to be useful
+          but ClipboardWin is basically unimplemented anyway so not yet a problem
+
+        * platform/win/ClipboardWin.cpp:
+        (WebCore::ClipboardWin::createDragImage):
+        (WebCore::ClipboardWin::declareAndWriteDragImage):
+        (WebCore::ClipboardWin::writeURL):
+        (WebCore::ClipboardWin::writeRange):
+        (WebCore::ClipboardWin::hasData):
+          Stubs
+
+        * platform/win/ClipboardWin.h:
+          Updated interface
+
+        * platform/win/DragImageWin.cpp: Added.
+        (WebCore::dragImageSize):
+        (WebCore::deleteDragImage):
+        (WebCore::scaleDragImage):
+        (WebCore::dissolveDragImageToFraction):
+        (WebCore::createDragImageFromImage):
+        (WebCore::createDragImageIconForCachedImage):
+          Stubs
+
 2007-02-17  Adam Roben  <aroben@apple.com>
 
         * WebCore.vcproj/WebCore.vcproj: Removed bogus single-file

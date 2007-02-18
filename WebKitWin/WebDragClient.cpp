@@ -68,6 +68,18 @@ WebCore::DragSourceAction WebDragClient::dragSourceActionMaskForPoint(const WebC
    return (WebCore::DragSourceAction)action;
 }
 
+void WebDragClient::willPerformDragSourceAction(WebCore::DragSourceAction, const WebCore::IntPoint&, WebCore::Clipboard*)
+{
+}
+
+void WebDragClient::startDrag(WebCore::DragImageRef, const WebCore::IntPoint&, const WebCore::IntPoint&, WebCore::Clipboard*, WebCore::Frame*, bool)
+{
+}
+
+WebCore::DragImageRef WebDragClient::createDragImageForLink(WebCore::KURL&, const WebCore::String&, WebCore::Frame*)
+{
+    return 0;
+}
 
 void WebDragClient::dragControllerDestroyed()
 {

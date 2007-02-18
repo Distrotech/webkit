@@ -83,4 +83,26 @@ Node* ClipboardWin::dragImageElement()
 void ClipboardWin::setDragImageElement(Node*, const IntPoint&)
 {}
 
+DragImageRef ClipboardWin::createDragImage(IntPoint&) const
+{
+    return 0;
+}
+
+void ClipboardWin::declareAndWriteDragImage(Element*, const KURL&, const String&, Frame*)
+{
+}
+
+void ClipboardWin::writeURL(const KURL&, const String&, Frame*)
+{
+}
+
+void ClipboardWin::writeRange(Range*, Frame*)
+{
+}
+
+bool ClipboardWin::hasData()
+{
+    return false;
+}
+
 } // namespace WebCore

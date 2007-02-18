@@ -2499,6 +2499,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\DragImage.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\DragImage.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\FileChooser.cpp"
 				>
 			</File>
@@ -2863,6 +2871,10 @@
 				</File>
 				<File
 					RelativePath="..\platform\win\DragDataWin.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\win\DragImageWin.cpp"
 					>
 				</File>
 				<File

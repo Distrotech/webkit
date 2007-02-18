@@ -93,82 +93,9 @@ bool EventHandler::eventActivatedView(const PlatformMouseEvent& event) const
     return event.activatedWebView();
 }
 
-bool EventHandler::handleDrag(const MouseEventWithHitTestResults& event)
+Clipboard* EventHandler::createDraggingClipboard() const
 {
-    if (event.event().button() == LeftButton && event.event().eventType() == MouseEventMoved) {
-        // Careful that the drag starting logic stays in sync with eventMayStartDrag()  
-    
-        if (m_mouseDownMayStartDrag && !dragState().m_dragSrc) {
-            bool tempFlag1, tempFlag2;
-            allowDHTMLDrag(tempFlag1, tempFlag2);
-            dragState().m_dragSrcMayBeDHTML = tempFlag1;
-            dragState().m_dragSrcMayBeUA = tempFlag2;
-            if (!dragState().m_dragSrcMayBeDHTML && !dragState().m_dragSrcMayBeUA)
-                m_mouseDownMayStartDrag = false;     // no element is draggable
-        }
-            
-        if (m_mouseDownMayStartDrag && !dragState().m_dragSrc) {
-            // try to find an element that wants to be dragged
-            HitTestRequest request(true, false);
-            HitTestResult result(m_mouseDownPos);
-            m_frame->renderer()->layer()->hitTest(request, result);
-            Node* node = result.innerNode();
-            dragState().m_dragSrc = (node && node->renderer())
-                ? node->renderer()->draggableNode(dragState().m_dragSrcMayBeDHTML, dragState().m_dragSrcMayBeUA,
-                    m_mouseDownPos.x(), m_mouseDownPos.y(), dragState().m_dragSrcIsDHTML)
-                : 0;
-            if (!dragState().m_dragSrc) {
-                m_mouseDownMayStartDrag = false;     // no element is draggable
-            } else {
-                // remember some facts about this source, while we have a HitTestResult handy
-                node = result.URLElement();
-                dragState().m_dragSrcIsLink = node && node->isLink();
-
-                node = result.innerNonSharedNode();
-                dragState().m_dragSrcIsImage = node && node->renderer() && node->renderer()->isImage();
-                
-                dragState().m_dragSrcInSelection = m_frame->selectionController()->contains(m_mouseDownPos);
-            }                
-        }
-        
-        // For drags starting in the selection, the user must wait between the mousedown and mousedrag,
-        // or else we bail on the dragging stuff and allow selection to occur
-        if (m_mouseDownMayStartDrag && dragState().m_dragSrcInSelection && event.event().timestamp() - m_mouseDownTimestamp < TextDragDelay) {
-            m_mouseDownMayStartDrag = false;
-            // ...but if this was the first click in the window, we don't even want to start selection
-            if (event.event().activatedWebView())
-                m_mouseDownMayStartSelect = false;
-        }
-
-        if (m_mouseDownMayStartDrag) {
-            // We are starting a text/image/url drag, so the cursor should be an arrow
-            m_frame->view()->setCursor(pointerCursor());
-            
-            if (dragHysteresisExceeded(event.event().pos())) {
-                
-                // Once we're past the hysteresis point, we don't want to treat this gesture as a click
-                invalidateClick();
-                LOG_NOIMPL();
-            }
-
-            // FIXME: currently don't handle the drag so we don't correctly clear the drag state :(
-            dragState().m_dragSrc = false;
-
-            // No more default handling (like selection), whether we're past the hysteresis bounds or not
-            return true;
-        }
-
-        if (!mouseDownMayStartSelect() && !m_mouseDownMayStartAutoscroll)
-            return true;
-            
-    } else {
-        // If we allowed the other side of the bridge to handle a drag
-        // last time, then m_mousePressed might still be set. So we
-        // clear it now to make sure the next move after a drag
-        // doesn't look like a drag.
-        m_mousePressed = false;
-    }
-    return false;
+    return new ClipboardWin(true, 0, ClipboardWritable);
 }
 
 void EventHandler::focusDocumentView()

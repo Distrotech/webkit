@@ -1,3 +1,15 @@
+2007-02-18  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Adam.
+
+        Stubs to keep the build going
+
+        * WebDragClient.cpp:
+        (WebDragClient::willPerformDragSourceAction):
+        (WebDragClient::startDrag):
+        (WebDragClient::createDragImageForLink):
+        * WebDragClient.h:
+
 2007-02-17  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Adam.

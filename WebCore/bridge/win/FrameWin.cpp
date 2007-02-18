@@ -462,4 +462,13 @@ String FrameWin::matchLabelsAgainstElement(const Vector<String>& labels, Element
     return String();
 }
 
+
+DragImageRef Frame::dragImageForSelection()
+{    
+    if (selectionController()->isRange()) {
+        return static_cast<FrameWin*>(this)->imageFromSelection(false);
+    }
+    return 0;
+}
+
 } // namespace WebCore
