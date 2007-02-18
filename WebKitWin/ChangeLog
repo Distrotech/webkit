@@ -1,3 +1,17 @@
+2007-02-17  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://problem/4918821> Find: clicking on the webview does not hide findoverlay
+        <rdar://problem/4956428> Find: Showing/hiding the Find banner should not push the page contents down when possible
+
+        * Interfaces/IWebViewPrivate.idl: Added scrollBy, visibleContentRect
+        * WebView.cpp:
+        (WebView::scrollOffset): Add null check
+        (WebView::scrollBy): Added so we can scroll a webview easily (matches scroll position getter here)
+        (WebView::visibleContentRect):  Added so we can size find overlay appropriately (not including scroll bars)
+        * WebView.h: Added scrollBy, visibleContentRect
+
 2007-02-17  Adele Peterson  <adele@apple.com>
 
         Reviewed by Hyatt.

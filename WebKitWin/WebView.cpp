@@ -2819,9 +2819,33 @@ HRESULT STDMETHODCALLTYPE WebView::frameLoadDelegatePrivate(
 HRESULT STDMETHODCALLTYPE WebView::scrollOffset( 
     /* [retval][out] */ LPPOINT offset)
 {
+    if (!offset)
+        return E_POINTER;
     IntSize offsetIntSize = m_page->mainFrame()->view()->scrollOffset();
     offset->x = offsetIntSize.width();
     offset->y = offsetIntSize.height();
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebView::scrollBy( 
+    /* [in] */ LPPOINT offset)
+{
+    if (!offset)
+        return E_POINTER;
+    m_page->mainFrame()->view()->scrollBy(offset->x, offset->y);
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebView::visibleContentRect( 
+    /* [retval][out] */ LPRECT rect)
+{
+    if (!rect)
+        return E_POINTER;
+    FloatRect visibleContent = m_page->mainFrame()->view()->visibleContentRect();
+    rect->left = (LONG) visibleContent.x();
+    rect->top = (LONG) visibleContent.y();
+    rect->right = (LONG) visibleContent.right();
+    rect->bottom = (LONG) visibleContent.bottom();
     return S_OK;
 }
 

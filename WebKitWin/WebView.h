@@ -543,6 +543,12 @@ public:
     virtual HRESULT STDMETHODCALLTYPE scrollOffset( 
         /* [retval][out] */ LPPOINT offset);
 
+    virtual HRESULT STDMETHODCALLTYPE scrollBy( 
+        /* [in] */ LPPOINT offset);
+
+    virtual HRESULT STDMETHODCALLTYPE visibleContentRect( 
+        /* [retval][out] */ LPRECT rect);
+
     virtual HRESULT STDMETHODCALLTYPE markAllMatchesForText(
         BSTR search, BOOL caseSensitive, BOOL highlight, UINT limit, UINT* matches);
 

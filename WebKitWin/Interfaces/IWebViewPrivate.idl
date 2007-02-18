@@ -88,6 +88,8 @@ interface IWebViewPrivate : IUnknown
     HRESULT frameLoadDelegatePrivate([out, retval] IWebFrameLoadDelegatePrivate** frameLoadDelegatePrivate);
 
     HRESULT scrollOffset([out, retval] LPPOINT offset);
+    HRESULT scrollBy([in] LPPOINT offset);
+    HRESULT visibleContentRect([out, retval] LPRECT rect);
     
     // Support for displaying multiple text matches.
     HRESULT markAllMatchesForText([in] BSTR search, [in] BOOL caseSensitive, [in] BOOL highlight, [in] UINT limit, [out] UINT* matches);
