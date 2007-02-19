@@ -67,4 +67,6 @@ interface IWebUIDelegatePrivate : IUnknown
     HRESULT webViewScrolled([in] IWebView* sender);
     HRESULT webViewAddMessageToConsole([in] IWebView* sender, [in] BSTR message, [in] int lineNumber, [in] BSTR url, [in] BOOL isError);
     HRESULT webViewShouldInterruptJavaScript([in] IWebView* sender, [out, retval] BOOL* result);
+    HRESULT webViewReceivedFocus([in] IWebView* sender);
+    HRESULT webViewLostFocus([in] IWebView* sender, [in] HWND loseFocusTo);
 }

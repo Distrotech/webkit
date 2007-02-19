@@ -1,3 +1,23 @@
+2007-02-18  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Adam.
+        
+        Move app text controls to use webview
+
+        * DOMCoreClasses.cpp:
+        (DOMNode::parentNode): implemented
+        (DOMElement::blur): implemented
+        * Interfaces/IWebUIDelegatePrivate.idl: added API for focus/blur notifications
+        * WebKit.vcproj/WebKit.def: added DrawTextAtPoint
+        * WebKit.vcproj/WebKit.vcproj: added WebKitGraphics.h/cpp
+        * WebKit.vcproj/WebKit_debug.def: added DrawTextAtPoint
+        * WebKitGraphics.cpp: Added.
+        (DrawTextAtPoint): calls WebCoreDrawTextAtPoint to render text
+        * WebKitGraphics.h: Added.
+        * WebView.cpp:
+        (WebViewWndProc): notify setfocus and killfocus through IWebUIDelegatePrivate delegate.
+        (WebView::unmarkAllTextMatches): added null check
+
 2007-02-18  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Adam.

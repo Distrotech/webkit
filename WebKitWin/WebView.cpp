@@ -1019,6 +1019,11 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                 webView->deleteBackingStore();
             break;
         case WM_SETFOCUS: {
+            COMPtr<IWebUIDelegate> uiDelegate;
+            COMPtr<IWebUIDelegatePrivate> uiDelegatePrivate;
+            if (SUCCEEDED(webView->uiDelegate(&uiDelegate)) && uiDelegate &&
+                SUCCEEDED(uiDelegate->QueryInterface(IID_IWebUIDelegatePrivate, (void**) &uiDelegatePrivate)) && uiDelegatePrivate)
+                uiDelegatePrivate->webViewReceivedFocus(webView);
             // It's ok to just always do setWindowHasFocus, since we won't fire the focus event on the DOM
             // window unless the value changes.  It's also ok to do setIsActive inside focus,
             // because Windows has no concept of having to update control tints (e.g., graphite vs. aqua)
@@ -1036,6 +1041,11 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             break;
         }
         case WM_KILLFOCUS: {
+            COMPtr<IWebUIDelegate> uiDelegate;
+            COMPtr<IWebUIDelegatePrivate> uiDelegatePrivate;
+            if (SUCCEEDED(webView->uiDelegate(&uiDelegate)) && uiDelegate &&
+                SUCCEEDED(uiDelegate->QueryInterface(IID_IWebUIDelegatePrivate, (void**) &uiDelegatePrivate)) && uiDelegatePrivate)
+                uiDelegatePrivate->webViewLostFocus(webView, reinterpret_cast<HWND>(wParam));
             // However here we have to be careful.  If we are losing focus because of a deactivate,
             // then we need to remember our focused target for restoration later.  
             // If we are losing focus to another part of our window, then we are no longer focused for real
@@ -1987,7 +1997,8 @@ HRESULT STDMETHODCALLTYPE WebView::unmarkAllTextMatches()
 
     WebCore::Frame* frame = m_page->mainFrame();
     do {
-        frame->document()->removeMarkers(DocumentMarker::TextMatch);
+        if (Document* document = frame->document())
+            document->removeMarkers(DocumentMarker::TextMatch);
         frame = incrementFrame(frame, true, false);
     } while (frame);
 

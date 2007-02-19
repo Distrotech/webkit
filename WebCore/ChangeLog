@@ -1,3 +1,15 @@
+2007-02-18  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Adam.
+
+        Move app text controls to use WebView.
+        - added a method to let us render text using WebKit.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/win/WebCoreTextRenderer.cpp: Added.
+        (WebCore::WebCoreDrawTextAtPoint):
+        * platform/win/WebCoreTextRenderer.h: Added.
+
 2007-02-18  Adam Roben  <aroben@apple.com>
 
         Rubberstamped by Hyatt.

@@ -3006,6 +3006,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\platform\win\WebCoreTextRenderer.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\win\WebCoreTextRenderer.h"
+					>
+				</File>
+				<File
 					RelativePath="..\platform\win\WheelEventWin.cpp"
 					>
 				</File>

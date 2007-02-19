@@ -112,10 +112,13 @@ HRESULT STDMETHODCALLTYPE DOMNode::nodeType(
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::parentNode( 
-    /* [retval][out] */ IDOMNode** /*result*/)
+    /* [retval][out] */ IDOMNode** result)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    *result = 0;
+    if (!m_node || !m_node->parentNode())
+        return E_FAIL;
+    *result = DOMNode::createInstance(m_node->parentNode());
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::childNodes( 
@@ -911,8 +914,10 @@ HRESULT STDMETHODCALLTYPE DOMElement::focus( void)
 
 HRESULT STDMETHODCALLTYPE DOMElement::blur( void)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!m_element)
+        return E_FAIL;
+    m_element->blur();
+    return S_OK;
 }
 
 // IDOMElementPrivate ---------------------------------------------------------
