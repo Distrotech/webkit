@@ -50,9 +50,13 @@ ResourceError::ResourceError(CFStreamError error)
 }
 
 ResourceError::ResourceError(CFErrorRef error)
-    : m_errorCode(CFErrorGetCode(error))
-    , m_isNull(false)
+    : m_errorCode(0)
+    , m_isNull(!error)
 {
+    if (!error)
+        return;
+
+    m_errorCode = CFErrorGetCode(error);
     CFStringRef domain = CFErrorGetDomain(error);
 
     if (domain == kCFErrorDomainMach || domain == kCFErrorDomainCocoa)

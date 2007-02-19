@@ -1,3 +1,14 @@
+2007-02-19  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://problem/5008424>
+        Regression: Crash loading mp3.com
+        
+        * platform/network/cf/ResourceErrorCF.cpp:
+        (WebCore::ResourceError::ResourceError):
+        Handle null resource errrors.
+
 2007-02-19  Adam Roben  <aroben@apple.com>
 
         Build fix.
