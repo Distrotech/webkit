@@ -392,7 +392,7 @@ void PlatformScrollbar::paintThumb(GraphicsContext* context, const IntRect& rect
 ScrollbarPart PlatformScrollbar::hitTest(const PlatformMouseEvent& evt)
 {
     ScrollbarPart result = NoPart;
-    if (!isEnabled() || !parent())
+    if (!isEnabled())
         return result;
 
     IntPoint mousePosition = convertFromContainingWindow(evt.pos());
@@ -540,8 +540,8 @@ void PlatformScrollbar::stopTimerIfNeeded()
 
 void PlatformScrollbar::autoscrollPressedPart(double delay)
 {
-    // Don't do anything for the thumb.
-    if (m_pressedPart == ThumbPart)
+    // Don't do anything for the thumb or if nothing was pressed.
+    if (m_pressedPart == ThumbPart || m_pressedPart == NoPart)
         return;
 
     // Handle the track.

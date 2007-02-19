@@ -1,3 +1,39 @@
+2007-02-18  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Hyatt.
+
+        Fix <rdar://problem/5006872> <select> popups need Aqua scroll bars
+
+        PopupMenuWin now uses a PlatformScrollbar.
+
+        * platform/win/PlatformScrollBarSafari.cpp:
+        (WebCore::PlatformScrollbar::hitTest): Allow hit testing even when we
+        don't have a parent widget.
+        (WebCore::PlatformScrollbar::autoscrollPressedPart): Don't autoscroll
+        if nothing is pressed.
+        * platform/win/PopupMenuWin.cpp: m_scrollOffset is now measured in menu
+        items, not in pixels.
+        (WebCore::PopupMenu::PopupMenu): Initialize new member.
+        (WebCore::PopupMenu::show): Make popups partially transparent, don't
+        use Windows' built-in scroll bars, and create a PlatformScrollbar if
+        needed.
+        (WebCore::PopupMenu::calculatePositionAndSize): Get the scroll bar's
+        width from PlatformScrollbar instead of from Windows.
+        (WebCore::PopupMenu::visibleItems): Added.
+        (WebCore::PopupMenu::listIndexAtPoint): Definition moved here from header.
+        (WebCore::PopupMenu::invalidateItem): Update for m_scrollOffset change,
+        and shrink the damage rect to not invalidate the scroll bar unnecessarily.
+        (WebCore::PopupMenu::scrollToRevealSelection): Updated to use PlatformScrollbar.
+        (WebCore::PopupMenu::updateFromElement): Changed bool to BOOL.
+        (WebCore::PopupMenu::paint): Updated for m_scrollOffset change, and
+        paint the scroll bar at the end.
+        (WebCore::PopupMenu::valueChanged): Added. Code comes from the old scrollTo method.
+        (WebCore::PopupMenu::windowClipRect): Added.
+        (WebCore::PopupWndProc):
+            - Set up the scroll bar in WM_SIZE
+            - Send mouse events to the scroll bar when appropriate
+            - Get rid of handling of WM_VSCROLL events (we shouldn't receive these anymore)
+
 2007-02-18  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Adam.
