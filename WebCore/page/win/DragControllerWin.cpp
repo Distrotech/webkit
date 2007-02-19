@@ -34,7 +34,6 @@
 namespace WebCore {
 
 const int DragController::LinkDragBorderInset = 2;
-const IntSize DragController::MaxDragImageSize(400, 400);
 const int DragController::MaxOriginalImageArea = 1500 * 1500;
 const int DragController::DragIconRightInset = 7;
 const int DragController::DragIconBottomInset = 3;
@@ -55,4 +54,11 @@ bool DragController::isCopyKeyDown() {
     return ::GetAsyncKeyState(VK_CONTROL);
 }
     
+const IntSize& DragController::maxDragImageSize()
+{
+    static const IntSize maxDragImageSize(400, 400);
+    
+    return maxDragImageSize;
+}
+
 }
