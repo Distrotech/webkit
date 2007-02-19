@@ -114,7 +114,7 @@ void PopupMenu::show(const IntRect& r, FrameView* v, int index)
     if (!m_scrollBar)
         if (visibleItems() < client()->listSize()) {
             // We need a scroll bar
-            m_scrollBar = new PlatformScrollbar(this, VerticalScrollbar, RegularScrollbar);
+            m_scrollBar = new PlatformScrollbar(this, VerticalScrollbar, SmallScrollbar);
             m_scrollBar->setContainingWindow(m_popup);
         }
 
@@ -180,7 +180,7 @@ void PopupMenu::calculatePositionAndSize(const IntRect& r, FrameView* v)
 
     if (naturalHeight > maxPopupHeight)
         // We need room for a scrollbar
-        popupWidth += PlatformScrollbar::verticalScrollbarWidth();
+        popupWidth += PlatformScrollbar::verticalScrollbarWidth(SmallScrollbar);
 
     // Add padding to align the popup text with the <select> text
     // Note: We can't add paddingRight() in LTR or paddingLeft() in RTL because those values include the width

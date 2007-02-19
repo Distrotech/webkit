@@ -60,8 +60,8 @@ public:
     virtual IntRect windowClipRect() const;
 
     static void themeChanged();
-    static int horizontalScrollbarHeight();
-    static int verticalScrollbarWidth();
+    static int horizontalScrollbarHeight(ScrollbarControlSize size = RegularScrollbar);
+    static int verticalScrollbarWidth(ScrollbarControlSize size = RegularScrollbar);
 
     void autoscrollTimerFired(Timer<PlatformScrollbar>*);
 
