@@ -2058,8 +2058,7 @@ const Vector<WebCore::IntRect>& WebFrame::computePageRects(HDC printDC)
     if (!printDC)
         return m_pageRects;
 
-    Frame* frame = d->frame;
-    m_pageRects = frame->computePageRects(printerRect(printDC), 1.0);
+    m_pageRects = computePageRectsForFrame(d->frame, printerRect(printDC), 1.0);
     
     return m_pageRects;
 }

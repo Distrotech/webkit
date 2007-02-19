@@ -80,13 +80,15 @@ KJS::Bindings::Instance* Frame::createScriptInstanceForWidget(Widget* widget)
 }
 
 
-Vector<IntRect> Frame::computePageRects(const IntRect& printRect, float userScaleFactor)
+Vector<IntRect> computePageRectsForFrame(Frame* frame, const IntRect& printRect, float userScaleFactor)
 {
+    ASSERT(frame);
+
     Vector<IntRect> pages;
 
-    if (!document() || !view()|| !document()->renderer()) return pages;
+    if (!frame->document() || !frame->view()|| !frame->document()->renderer()) return pages;
  
-    RenderView* root = static_cast<RenderView *>(document()->renderer());
+    RenderView* root = static_cast<RenderView *>(frame->document()->renderer());
 
     if (!root) {
         LOG_ERROR("document to be printed has no renderer");
@@ -115,7 +117,7 @@ Vector<IntRect> Frame::computePageRects(const IntRect& printRect, float userScal
     
     for (float i = 0; i < docHeight; i += currPageHeight) {
         float proposedBottom = min(docHeight, i + pageHeight);
-        adjustPageHeight(&proposedBottom, i, proposedBottom, i);
+        frame->adjustPageHeight(&proposedBottom, i, proposedBottom, i);
         currPageHeight = max(1.0f, proposedBottom - i);
        
         int x = 0;
