@@ -1,5 +1,84 @@
 2007-02-19  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Darin.
+
+        Fix <rdar://problem/5007566> Crash in WebFrame::dataSource on dni.ru
+
+        The fix for the bug was to zero out WebFrame's Frame pointer in
+        WebFrame::frameLoaderDestroyed, and then to null-check or ASSERT
+        non-null as appropriate. All IWebFrame methods that depend on the Frame
+        pointer will return E_FAIL if it is null, and everywhere within
+        WebFrame that wasn't null-checking before will now explicitly ASSERT.
+
+        I also changed all uses of d->frame and WebFrame::impl() to use the
+        core() function for consistency, and so that there is only one code
+        path for getting from a WebFrame to a Frame.
+
+        Additional more specific comments below.
+
+        * WebChromeClient.cpp:
+        (WebChromeClient::scrollBackingStore):
+        (WebChromeClient::updateBackingStore):
+        * WebFrame.cpp:
+        (kit): Null-check the frame parameter.
+        (core): Added two overloads of this.
+        (WebFrame::DOMDocument): Added argument checking.
+        (WebFrame::currentForm):
+        (WebFrame::loadRequest):
+        (WebFrame::loadData):
+        (WebFrame::dataSource): Added argument checking, and return E_FAIL if the dataSource is null.
+        (WebFrame::provisionalDataSource): Ditto.
+        (WebFrame::stopLoading):
+        (WebFrame::reload):
+        (WebFrame::parentFrame):
+        (WebFrame::renderTreeAsExternalRepresentation): Added argument checking.
+        (WebFrame::firstLayoutDone): Ditto.
+        (WebFrame::loadType): Ditto.
+        (WebFrame::invalidate):
+        (WebFrame::setTextSizeMultiplier):
+        (WebFrame::inViewSourceMode): Added argument checking, and changed to return an HRESULT.
+        (WebFrame::setInViewSourceMode): Changed to return an HRESULT.
+        (WebFrame::searchForLabelsBeforeElement): Added argument checking.
+        (WebFrame::matchLabelsAgainstElement): Ditto.
+        (WebFrame::frameLoaderDestroyed): Zero out the Frame pointer because the Frame is being destroyed.
+        (WebFrame::createFrame):
+        (WebFrame::loadURLIntoChild): Added some assertions.
+        (WebFrame::dispatchWillSubmitForm):
+        (WebFrame::frameLoadCompleted):
+        (WebFrame::receivedData):
+        (WebFrame::setUpPolicyListener):
+        (WebFrame::receivedPolicyDecision):
+        (WebFrame::dispatchDecidePolicyForMIMEType):
+        (WebFrame::dispatchDecidePolicyForNewWindowAction):
+        (WebFrame::dispatchDecidePolicyForNavigationAction):
+        (WebFrame::dispatchCreatePage):
+        (WebFrame::createPlugin):
+        (WebFrame::redirectDataToPlugin):
+        (WebFrame::createJavaAppletWidget):
+        (WebFrame::windowObjectCleared):
+        (WebFrame::setPrinting):
+        (WebFrame::setInPrintingMode):
+        (WebFrame::computePageRects):
+        (WebFrame::getPrintedPageCount): Zero out the out parameter before proceeding.
+        (WebFrame::spoolPages):
+        (WebFrame::forceLayoutWithPageWidthRange):
+        * WebFrame.h:
+        * WebView.cpp:
+        (WebView::paint): Silently fail on a null Frame, because this method could be called at any time.
+        (WebView::mouseWheel): Ditto.
+        (WebViewWndProc): Ditto.
+        (WebView::inViewSourceMode): Return whatever WebFrame::setInViewSourceMode returns.
+        (WebView::setInViewSourceMode): Ditto.
+        (WebView::setCustomTextEncodingName): Replaced check for a null
+        FrameLoader with a check for a null Frame, which is equivalent but, as
+        a bonus, won't crash.
+        (WebView::stringByEvaluatingJavaScriptFromString):
+        (WebView::elementAtPoint): Added argument checking.
+        (WebView::selectedText): Ditto.
+        (WebView::centerSelectionInVisibleArea):
+
+2007-02-19  Adam Roben  <aroben@apple.com>
+
         Build fix.
 
         * WebFrame.cpp:

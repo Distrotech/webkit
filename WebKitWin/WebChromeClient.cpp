@@ -26,6 +26,7 @@
 #include "config.h"
 #include "WebChromeClient.h"
 
+#include "WebFrame.h"
 #include "WebMutableURLRequest.h"
 #include "WebView.h"
 #pragma warning(push, 0)
@@ -412,11 +413,15 @@ void WebChromeClient::addToDirtyRegion(const IntRect& dirtyRect)
 
 void WebChromeClient::scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect)
 {
-    m_webView->scrollBackingStore(m_webView->topLevelFrame()->impl()->view(), dx, dy, scrollViewRect, clipRect);
+    ASSERT(core(m_webView->topLevelFrame()));
+
+    m_webView->scrollBackingStore(core(m_webView->topLevelFrame())->view(), dx, dy, scrollViewRect, clipRect);
 }
 
 void WebChromeClient::updateBackingStore()
 {
-    m_webView->updateBackingStore(m_webView->topLevelFrame()->impl()->view(), 0, false);
+    ASSERT(core(m_webView->topLevelFrame()));
+
+    m_webView->updateBackingStore(core(m_webView->topLevelFrame())->view(), 0, false);
 }
 

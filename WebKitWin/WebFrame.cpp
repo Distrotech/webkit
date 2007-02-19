@@ -133,10 +133,28 @@ const GUID IID_WebFrame =
 // Helpers to convert from WebCore to WebKit type
 WebFrame* kit(Frame* frame)
 {
+    if (!frame)
+        return 0;
+
     FrameLoaderClient* frameLoaderClient = frame->loader()->client();
     if (frameLoaderClient)
         return static_cast<WebFrame*>(frameLoaderClient);  // eek, is there a better way than static cast?
     return 0;
+}
+
+Frame* core(WebFrame* webFrame)
+{
+    if (!webFrame)
+        return 0;
+    return webFrame->impl();
+}
+
+// This function is not in WebFrame.h because we don't want to advertise the ability to get a non-const Frame from a const WebFrame
+Frame* core(const WebFrame* webFrame)
+{
+    if (!webFrame)
+        return 0;
+    return const_cast<WebFrame*>(webFrame)->impl();
 }
 
 //-----------------------------------------------------------------------------
@@ -485,14 +503,20 @@ HRESULT STDMETHODCALLTYPE WebFrame::frameView(
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::DOMDocument( 
-    /* [retval][out] */ IDOMDocument** document)
+    /* [retval][out] */ IDOMDocument** result)
 {
-    *document = 0;
-    Document* doc = d->frame->document();
-    if (!doc)
-        return E_FAIL;
-    *document = DOMDocument::createInstance(d->frame->document());
-    return S_OK;
+    if (!result) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *result = 0;
+
+    if (Frame* coreFrame = core(this))
+        if (Document* document = coreFrame->document())
+            *result = DOMDocument::createInstance(document);
+
+    return *result ? S_OK : E_FAIL;
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::frameElement( 
@@ -511,12 +535,12 @@ HRESULT STDMETHODCALLTYPE WebFrame::currentForm(
     }
 
     *currentForm = 0;
-    HTMLFormElement *formElement = d->frame->currentForm();
-    if (!formElement)
-        return E_FAIL;
 
-    *currentForm = DOMElement::createInstance(formElement);
-    return S_OK;
+    if (Frame* coreFrame = core(this))
+        if (HTMLFormElement* formElement = coreFrame->currentForm())
+            *currentForm = DOMElement::createInstance(formElement);
+
+    return *currentForm ? S_OK : E_FAIL;
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::loadRequest( 
@@ -528,7 +552,11 @@ HRESULT STDMETHODCALLTYPE WebFrame::loadRequest(
     if (FAILED(hr))
         return hr;
  
-    d->frame->loader()->load(requestImpl->resourceRequest());
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
+        return E_FAIL;
+
+    coreFrame->loader()->load(requestImpl->resourceRequest());
     return S_OK;
 }
 
@@ -545,7 +573,9 @@ void WebFrame::loadData(PassRefPtr<WebCore::SharedBuffer> data, BSTR mimeType, B
     ResourceRequest request(baseKURL);
     SubstituteData substituteData(data, mimeTypeString, encodingString, failingKURL);
 
-    d->frame->loader()->load(request, substituteData);
+    // This method is only called from IWebFrame methods, so don't ASSERT that the Frame pointer isn't null.
+    if (Frame* coreFrame = core(this))
+        coreFrame->loader()->load(request, substituteData);
 }
 
 
@@ -612,40 +642,65 @@ static inline WebDataSource *getWebDataSource(DocumentLoader* loader)
 HRESULT STDMETHODCALLTYPE WebFrame::dataSource( 
     /* [retval][out] */ IWebDataSource** source)
 {
-    FrameLoader* frameLoader = d->frame->loader();
-    WebDataSource* webDataSource = frameLoader ? getWebDataSource(frameLoader->documentLoader()) : 0;
+    if (!source) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *source = 0;
+
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
+        return E_FAIL;
+
+    WebDataSource* webDataSource = getWebDataSource(coreFrame->loader()->documentLoader());
 
     *source = webDataSource;
 
     if (webDataSource)
         webDataSource->AddRef(); 
 
-    return S_OK;
+    return *source ? S_OK : E_FAIL;
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::provisionalDataSource( 
     /* [retval][out] */ IWebDataSource** source)
 {
-    FrameLoader* frameLoader = d->frame->loader();
-    WebDataSource* webDataSource = frameLoader ? getWebDataSource(frameLoader->provisionalDocumentLoader()) : 0;
+    if (!source) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *source = 0;
+
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
+        return E_FAIL;
+
+    WebDataSource* webDataSource = getWebDataSource(coreFrame->loader()->provisionalDocumentLoader());
 
     *source = webDataSource;
 
     if (webDataSource)
         webDataSource->AddRef(); 
 
-    return S_OK;
+    return *source ? S_OK : E_FAIL;
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::stopLoading( void)
 {
-    d->frame->loader()->stopAllLoaders();
+    if (Frame* coreFrame = core(this))
+        coreFrame->loader()->stopAllLoaders();
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::reload( void)
 {
-    d->frame->loader()->reload();
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
+        return E_FAIL;
+
+    coreFrame->loader()->reload();
     return S_OK;
 }
 
@@ -662,12 +717,10 @@ HRESULT STDMETHODCALLTYPE WebFrame::parentFrame(
 {
     HRESULT hr = S_OK;
     *frame = 0;
-    Frame* coreFrame = impl();
-    if (coreFrame) {
-        WebFrame* webFrame = kit(coreFrame->tree()->parent());
-        if (webFrame)
+    if (Frame* coreFrame = core(this))
+        if (WebFrame* webFrame = kit(coreFrame->tree()->parent()))
             hr = webFrame->QueryInterface(IID_IWebFrame, (void**) frame);
-    }
+
     return hr;
 }
 
@@ -684,7 +737,18 @@ HRESULT STDMETHODCALLTYPE WebFrame::childFrames(
 HRESULT STDMETHODCALLTYPE WebFrame::renderTreeAsExternalRepresentation(
     /* [retval][out] */ BSTR *result)
 {
-    DeprecatedString representation = externalRepresentation(d->frame->renderer());
+    if (!result) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *result = 0;
+
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
+        return E_FAIL;
+
+    DeprecatedString representation = externalRepresentation(coreFrame->renderer());
 
     *result = SysAllocStringLen((LPCOLESTR)representation.unicode(), representation.length());
 
@@ -694,14 +758,36 @@ HRESULT STDMETHODCALLTYPE WebFrame::renderTreeAsExternalRepresentation(
 HRESULT STDMETHODCALLTYPE WebFrame::firstLayoutDone(
     /* [retval][out] */ BOOL* result)
 {
-    *result = d->frame->loader()->firstLayoutDone();
+    if (!result) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *result = 0;
+
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
+        return E_FAIL;
+
+    *result = coreFrame->loader()->firstLayoutDone();
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::loadType( 
     /* [retval][out] */ WebFrameLoadType* type)
 {
-    *type = (WebFrameLoadType)d->frame->loader()->loadType();
+    if (!type) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *type = (WebFrameLoadType)0;
+
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
+        return E_FAIL;
+
+    *type = (WebFrameLoadType)coreFrame->loader()->loadType();
     return S_OK;
 }
 
@@ -792,28 +878,50 @@ unsigned int WebFrame::getObjectCacheSize()
 
 void WebFrame::invalidate()
 {
-    Document* doc = d->frame->document();
-    if (doc)
-        doc->recalcStyle(Node::Force);
+    Frame* coreFrame = core(this);
+    ASSERT(coreFrame);
+
+    if (Document* document = coreFrame->document())
+        document->recalcStyle(Node::Force);
 }
 
 void WebFrame::setTextSizeMultiplier(float multiplier)
 {
     int newZoomFactor = (int)round(multiplier * 100);
-    if (d->frame->zoomFactor() == newZoomFactor)
+    Frame* coreFrame = core(this);
+    ASSERT(coreFrame);
+
+    if (coreFrame->zoomFactor() == newZoomFactor)
         return;
 
-    d->frame->setZoomFactor(newZoomFactor);
+    coreFrame->setZoomFactor(newZoomFactor);
 }
 
-void WebFrame::inViewSourceMode(BOOL *flag)
+HRESULT WebFrame::inViewSourceMode(BOOL* flag)
 {
-    *flag = d->frame->inViewSourceMode() ? TRUE : FALSE;
+    if (!flag) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *flag = FALSE;
+
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
+        return E_FAIL;
+
+    *flag = coreFrame->inViewSourceMode() ? TRUE : FALSE;
+    return S_OK;
 }
 
-void WebFrame::setInViewSourceMode(BOOL flag)
+HRESULT WebFrame::setInViewSourceMode(BOOL flag)
 {
-    d->frame->setInViewSourceMode(!!flag);
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
+        return E_FAIL;
+
+    coreFrame->setInViewSourceMode(!!flag);
+    return S_OK;
 }
 
 HRESULT WebFrame::elementWithName(BSTR name, IDOMElement* form, IDOMElement** element)
@@ -907,13 +1015,20 @@ HRESULT WebFrame::elementIsPassword(IDOMElement *element, bool *result)
 
 HRESULT WebFrame::searchForLabelsBeforeElement(const BSTR* labels, int cLabels, IDOMElement* beforeElement, BSTR* result)
 {
+    if (!result) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
     *result = 0;
+
     if (!cLabels)
         return S_OK;
     if (cLabels < 1)
         return E_INVALIDARG;
 
-    if (!d->frame)
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
         return E_FAIL;
 
     Vector<String> labelStrings(cLabels);
@@ -923,7 +1038,7 @@ HRESULT WebFrame::searchForLabelsBeforeElement(const BSTR* labels, int cLabels, 
     if (!coreElement)
         return E_FAIL;
 
-    String label = d->frame->searchForLabelsBeforeElement(labelStrings, coreElement);
+    String label = coreFrame->searchForLabelsBeforeElement(labelStrings, coreElement);
     
     *result = SysAllocStringLen(label.characters(), label.length());
     if (label.length() && !*result)
@@ -933,13 +1048,20 @@ HRESULT WebFrame::searchForLabelsBeforeElement(const BSTR* labels, int cLabels, 
 
 HRESULT WebFrame::matchLabelsAgainstElement(const BSTR* labels, int cLabels, IDOMElement* againstElement, BSTR* result)
 {
+    if (!result) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
     *result = 0;
+
     if (!cLabels)
         return S_OK;
     if (cLabels < 1)
         return E_INVALIDARG;
 
-    if (!d->frame)
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
         return E_FAIL;
 
     Vector<String> labelStrings(cLabels);
@@ -949,7 +1071,7 @@ HRESULT WebFrame::matchLabelsAgainstElement(const BSTR* labels, int cLabels, IDO
     if (!coreElement)
         return E_FAIL;
 
-    String label = d->frame->matchLabelsAgainstElement(labelStrings, coreElement);
+    String label = coreFrame->matchLabelsAgainstElement(labelStrings, coreElement);
     
     *result = SysAllocStringLen(label.characters(), label.length());
     if (label.length() && !*result)
@@ -994,36 +1116,49 @@ void WebFrame::deref()
 
 void WebFrame::frameLoaderDestroyed()
 {
+    // The FrameLoader going away is equivalent to the Frame going away,
+    // so we now need to clear our frame pointer.
+    d->frame = 0;
+
     this->Release();
 }
 
 Frame* WebFrame::createFrame(const KURL& URL, const String& name, HTMLFrameOwnerElement* ownerElement, const String& referrer)
 {
+    Frame* coreFrame = core(this);
+    ASSERT(coreFrame);
+
     COMPtr<WebFrame> webFrame;
     webFrame.adoptRef(WebFrame::createInstance());
 
-    webFrame->initWithWebFrameView(0, d->webView, d->frame->page(), ownerElement);
+    webFrame->initWithWebFrameView(0, d->webView, coreFrame->page(), ownerElement);
 
-    Frame* frame = webFrame->impl();
-    d->frame->tree()->appendChild(frame);
-    frame->deref(); // Frames are created with a refcount of 1. Release this ref, since we've assigned it to d->frame.
-    frame->tree()->setName(name);
+    Frame* childFrame = core(webFrame.get());
+    ASSERT(childFrame);
+
+    coreFrame->tree()->appendChild(childFrame);
+    childFrame->deref(); // Frames are created with a refcount of 1. Release this ref, since we've assigned it to d->frame.
+    childFrame->tree()->setName(name);
 
     loadURLIntoChild(URL, referrer, webFrame.get());
 
     // The frame's onload handler may have removed it from the document.
-    if (!frame->tree()->parent())
+    if (!childFrame->tree()->parent())
         return 0;
 
-    return frame;
+    return childFrame;
 }
 
 void WebFrame::loadURLIntoChild(const KURL& originalURL, const String& referrer, WebFrame* childFrame)
 {
     ASSERT(childFrame);
+    ASSERT(core(childFrame));
 
-    HistoryItem* parentItem = d->frame->loader()->currentHistoryItem();
-    FrameLoadType loadType = d->frame->loader()->loadType();
+    Frame* coreFrame = core(this);
+    ASSERT(coreFrame);
+
+    HistoryItem* parentItem = coreFrame->loader()->currentHistoryItem();
+    FrameLoadType loadType = coreFrame->loader()->loadType();
     FrameLoadType childLoadType = FrameLoadTypeInternal;
 
     KURL url = originalURL;
@@ -1036,7 +1171,7 @@ void WebFrame::loadURLIntoChild(const KURL& originalURL, const String& referrer,
          || loadType == FrameLoadTypeReload
          || loadType == FrameLoadTypeReloadAllowingStaleData))
     {
-        if (HistoryItem* childItem = parentItem->childItemWithName(childFrame->impl()->tree()->name())) {
+        if (HistoryItem* childItem = parentItem->childItemWithName(core(childFrame)->tree()->name())) {
             // Use the original URL to ensure we get all the side-effects, such as
             // onLoad handlers, of any redirects that happened. An example of where
             // this is needed is Radar 3213556.
@@ -1046,16 +1181,16 @@ void WebFrame::loadURLIntoChild(const KURL& originalURL, const String& referrer,
 
             if (isBackForwardLoadType(loadType))
                 // For back/forward, remember this item so we can traverse any child items as child frames load
-                childFrame->impl()->loader()->setProvisionalHistoryItem(childItem);
+                core(childFrame)->loader()->setProvisionalHistoryItem(childItem);
             else
                 // For reload, just reinstall the current item, since a new child frame was created but we won't be creating a new BF item
-                childFrame->impl()->loader()->setCurrentHistoryItem(childItem);
+                core(childFrame)->loader()->setCurrentHistoryItem(childItem);
         }
     }
 
     // FIXME: Handle loading WebArchives here
 
-    childFrame->impl()->loader()->load(url, referrer, childLoadType, String(), 0, 0, HashMap<String, String>());
+    core(childFrame)->loader()->load(url, referrer, childLoadType, String(), 0, 0, HashMap<String, String>());
 }
 
 void WebFrame::openURL(const String& URL, const Event* triggeringEvent, bool newWindow, bool lockHistory)
@@ -1316,10 +1451,13 @@ void WebFrame::cancelPolicyCheck()
 
 void WebFrame::dispatchWillSubmitForm(FramePolicyFunction function, PassRefPtr<FormState> formState)
 {
+    Frame* coreFrame = core(this);
+    ASSERT(coreFrame);
+
     COMPtr<IWebFormDelegate> formDelegate;
 
     if (FAILED(d->webView->formDelegate(&formDelegate))) {
-        (d->frame->loader()->*function)(PolicyUse);
+        (coreFrame->loader()->*function)(PolicyUse);
         return;
     }
 
@@ -1334,7 +1472,7 @@ void WebFrame::dispatchWillSubmitForm(FramePolicyFunction function, PassRefPtr<F
         return;
 
     // FIXME: Add a sane default implementation
-    (d->frame->loader()->*function)(PolicyUse);
+    (coreFrame->loader()->*function)(PolicyUse);
 }
 
 void WebFrame::dispatchDidLoadMainResource(DocumentLoader*)
@@ -1426,7 +1564,8 @@ String WebFrame::generatedMIMETypeForURLScheme(const String& /*URLScheme*/) cons
 
 void WebFrame::frameLoadCompleted()
 {
-    d->frame->loader()->setPreviousHistoryItem(0);
+    if (Frame* coreFrame = core(this))
+        coreFrame->loader()->setPreviousHistoryItem(0);
 }
 
 void WebFrame::restoreViewState()
@@ -1605,14 +1744,18 @@ bool WebFrame::shouldFallBack(const ResourceError&)
 
 void WebFrame::receivedData(const char* data, int length, const String& textEncoding)
 {
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
+        return;
+
     // Set the encoding. This only needs to be done once, but it's harmless to do it again later.
-    String encoding = d->frame->loader()->documentLoader()->overrideEncoding();
+    String encoding = coreFrame->loader()->documentLoader()->overrideEncoding();
     bool userChosen = !encoding.isNull();
     if (encoding.isNull())
         encoding = textEncoding;
-    d->frame->loader()->setEncoding(encoding, userChosen);
+    coreFrame->loader()->setEncoding(encoding, userChosen);
 
-    d->frame->loader()->addData(data, length);
+    coreFrame->loader()->addData(data, length);
 }
 
 COMPtr<WebFramePolicyListener> WebFrame::setUpPolicyListener(WebCore::FramePolicyFunction function)
@@ -1620,7 +1763,10 @@ COMPtr<WebFramePolicyListener> WebFrame::setUpPolicyListener(WebCore::FramePolic
     ASSERT(!d->m_policyListener);
     ASSERT(!d->m_policyFunction);
 
-    d->m_policyListener.adoptRef(WebFramePolicyListener::createInstance(d->frame));
+    Frame* coreFrame = core(this);
+    ASSERT(coreFrame);
+
+    d->m_policyListener.adoptRef(WebFramePolicyListener::createInstance(coreFrame));
     d->m_policyFunction = function;
 
     return d->m_policyListener;
@@ -1636,7 +1782,10 @@ void WebFrame::receivedPolicyDecision(PolicyAction action)
     d->m_policyListener = 0;
     d->m_policyFunction = 0;
 
-    (d->frame->loader()->*function)(action);
+    Frame* coreFrame = core(this);
+    ASSERT(coreFrame);
+
+    (coreFrame->loader()->*function)(action);
 }
 
 void WebFrame::committedLoad(DocumentLoader* loader, const char* data, int length)
@@ -1657,46 +1806,55 @@ void WebFrame::dispatchDecidePolicyForMIMEType(FramePolicyFunction function, con
             return;
     }
 
+    Frame* coreFrame = core(this);
+    ASSERT(coreFrame);
+
     // FIXME: This is a stopgap default implementation to tide us over until
     // <rdar://4911042/> is taken care of
     if (MimeTypeRegistry::isSupportedNonImageMIMEType(mimeType) || MimeTypeRegistry::isSupportedImageMIMEType(mimeType))
-        (d->frame->loader()->*function)(PolicyUse);
+        (coreFrame->loader()->*function)(PolicyUse);
     else
-        (d->frame->loader()->*function)(PolicyDownload);
+        (coreFrame->loader()->*function)(PolicyDownload);
 }
 
 void WebFrame::dispatchDecidePolicyForNewWindowAction(FramePolicyFunction function, const NavigationAction& action, const ResourceRequest& request, const String& frameName)
 {
+    Frame* coreFrame = core(this);
+    ASSERT(coreFrame);
+
     COMPtr<IWebPolicyDelegate> policyDelegate;
     if (SUCCEEDED(d->webView->policyDelegate(&policyDelegate))) {
         COMPtr<IWebURLRequest> urlRequest;
         urlRequest.adoptRef(WebMutableURLRequest::createInstance(request));
         COMPtr<WebActionPropertyBag> actionInformation;
-        actionInformation.adoptRef(WebActionPropertyBag::createInstance(action, d->frame));
+        actionInformation.adoptRef(WebActionPropertyBag::createInstance(action, coreFrame));
 
         if (SUCCEEDED(policyDelegate->decidePolicyForNewWindowAction(d->webView, actionInformation.get(), urlRequest.get(), BString(frameName), setUpPolicyListener(function).get())))
             return;
     }
 
     // FIXME: Add a sane default implementation
-    (d->frame->loader()->*function)(PolicyUse);
+    (coreFrame->loader()->*function)(PolicyUse);
 }
 
 void WebFrame::dispatchDecidePolicyForNavigationAction(FramePolicyFunction function, const NavigationAction& action, const ResourceRequest& request)
 {
+    Frame* coreFrame = core(this);
+    ASSERT(coreFrame);
+
     COMPtr<IWebPolicyDelegate> policyDelegate;
     if (SUCCEEDED(d->webView->policyDelegate(&policyDelegate))) {
         COMPtr<IWebURLRequest> urlRequest;
         urlRequest.adoptRef(WebMutableURLRequest::createInstance(request));
         COMPtr<WebActionPropertyBag> actionInformation;
-        actionInformation.adoptRef(WebActionPropertyBag::createInstance(action, d->frame));
+        actionInformation.adoptRef(WebActionPropertyBag::createInstance(action, coreFrame));
 
         if (SUCCEEDED(policyDelegate->decidePolicyForNavigationAction(d->webView, actionInformation.get(), urlRequest.get(), this, setUpPolicyListener(function).get())))
             return;
     }
 
     // FIXME: Add a sane default implementation
-    (d->frame->loader()->*function)(PolicyUse);
+    (coreFrame->loader()->*function)(PolicyUse);
 }
 
 void WebFrame::dispatchUnableToImplementPolicy(const ResourceError& error)
@@ -1844,7 +2002,7 @@ Frame* WebFrame::dispatchCreatePage()
                 COMPtr<WebFrame> mainFrameImpl;
 
                 if (SUCCEEDED(mainFrame->QueryInterface(IID_WebFrame, (void**)&mainFrameImpl)))
-                    return mainFrameImpl->impl();
+                    return core(mainFrameImpl.get());
             }
         }
     }
@@ -1931,7 +2089,7 @@ Frame* WebFrame::createFrame(const KURL& url, const String& name, HTMLFrameOwner
 Widget* WebFrame::createPlugin(Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType, bool /*loadManually*/)
 {
     return PluginDatabaseWin::installedPlugins()->
-        createPluginView(d->frame, element, url, paramNames, paramValues, mimeType);
+        createPluginView(core(this), element, url, paramNames, paramValues, mimeType);
 }
 
 void WebFrame::redirectDataToPlugin(Widget* /*pluginWidget*/)
@@ -1943,13 +2101,14 @@ void WebFrame::redirectDataToPlugin(Widget* /*pluginWidget*/)
     // cancelling the load and letting the plugin start another one.
     // Ideally, this function shouldn't be necessary, see <rdar://problem/4852889>
 
-    d->frame->loader()->cancelMainResourceLoad(error);
+    ASSERT(core(this));
+    core(this)->loader()->cancelMainResourceLoad(error);
 }
     
 Widget* WebFrame::createJavaAppletWidget(const IntSize&, Element* element, const KURL& /*baseURL*/, const Vector<String>& paramNames, const Vector<String>& paramValues)
 {
     return PluginDatabaseWin::installedPlugins()->
-        createPluginView(d->frame, element, KURL(), paramNames, paramValues, "application/x-java-applet");
+        createPluginView(core(this), element, KURL(), paramNames, paramValues, "application/x-java-applet");
 }
 
 ObjectContentType WebFrame::objectContentType(const KURL& url, const String& mimeTypeIn)
@@ -1984,13 +2143,16 @@ String WebFrame::overrideMediaType() const
 
 void WebFrame::windowObjectCleared() const
 {
-    if (!d->frame->settings()->isJavaScriptEnabled())
+    Frame* coreFrame = core(this);
+    ASSERT(coreFrame);
+
+    if (!coreFrame->settings()->isJavaScriptEnabled())
         return;
 
     COMPtr<IWebFrameLoadDelegate> frameLoadDelegate;
     if (SUCCEEDED(d->webView->frameLoadDelegate(&frameLoadDelegate))) {
-        JSContextRef context = toRef(d->frame->scriptProxy()->interpreter()->globalExec());
-        JSObjectRef windowObject = toRef(KJS::Window::retrieve(d->frame)->getObject());
+        JSContextRef context = toRef(coreFrame->scriptProxy()->interpreter()->globalExec());
+        JSObjectRef windowObject = toRef(KJS::Window::retrieve(coreFrame)->getObject());
         ASSERT(windowObject);
 
         frameLoadDelegate->windowScriptObjectAvailable(d->webView, context, windowObject);
@@ -2006,9 +2168,12 @@ static IntRect printerRect(HDC printDC)
 
 void WebFrame::setPrinting(bool printing, float minPageWidth, float maxPageWidth, bool adjustViewSize)
 {
-    ASSERT(d->frame->document());
+    Frame* coreFrame = core(this);
+    ASSERT(coreFrame);
 
-    d->frame->document()->setPrinting(printing);
+    ASSERT(coreFrame->document());
+
+    coreFrame->document()->setPrinting(printing);
 
     forceLayoutWithPageWidthRange(minPageWidth, maxPageWidth, adjustViewSize);
 }
@@ -2020,13 +2185,17 @@ HRESULT STDMETHODCALLTYPE WebFrame::setInPrintingMode(
     if (m_inPrintingMode == !!value)
         return S_OK;
 
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
+        return E_FAIL;
+
     m_inPrintingMode = !!value;
 
     // If we are a frameset just print with the layout we have onscreen, otherwise relayout
     // according to the paper size
     float minLayoutWidth = 0.0f;
     float maxLayoutWidth = 0.0f;
-    if (m_inPrintingMode && !d->frame->isFrameSet()) {
+    if (m_inPrintingMode && !coreFrame->isFrameSet()) {
         if (!printDC) {
             ASSERT_NOT_REACHED();
             return E_POINTER;
@@ -2050,7 +2219,10 @@ HRESULT STDMETHODCALLTYPE WebFrame::setInPrintingMode(
 const Vector<WebCore::IntRect>& WebFrame::computePageRects(HDC printDC)
 {
     ASSERT(m_inPrintingMode);
-    ASSERT(d->frame->document());
+    
+    Frame* coreFrame = core(this);
+    ASSERT(coreFrame);
+    ASSERT(coreFrame->document());
 
     if (m_pageRects.size())
         return m_pageRects;
@@ -2058,7 +2230,7 @@ const Vector<WebCore::IntRect>& WebFrame::computePageRects(HDC printDC)
     if (!printDC)
         return m_pageRects;
 
-    m_pageRects = computePageRectsForFrame(d->frame, printerRect(printDC), 1.0);
+    m_pageRects = computePageRectsForFrame(coreFrame, printerRect(printDC), 1.0);
     
     return m_pageRects;
 }
@@ -2072,14 +2244,15 @@ HRESULT STDMETHODCALLTYPE WebFrame::getPrintedPageCount(
         return E_POINTER;
     }
 
+    *pageCount = 0;
+
     if (!m_inPrintingMode) {
         ASSERT_NOT_REACHED();
         return E_FAIL;
     }
 
-    *pageCount = 0;
-
-    if (!d->frame->document())
+    Frame* coreFrame = core(this);
+    if (!coreFrame || !coreFrame->document())
         return E_FAIL;
 
     const Vector<IntRect>& pages = computePageRects(printDC);
@@ -2104,10 +2277,11 @@ HRESULT STDMETHODCALLTYPE WebFrame::spoolPages(
         return E_FAIL;
     }
 
-    PlatformGraphicsContext* pctx = (PlatformGraphicsContext*)ctx;
-
-    if (!d->frame->document())
+    Frame* coreFrame = core(this);
+    if (!coreFrame || !coreFrame->document())
         return E_FAIL;
+
+    PlatformGraphicsContext* pctx = (PlatformGraphicsContext*)ctx;
 
     if (m_pageRects.size() == 0 || startPage > m_pageRects.size()) {
         ASSERT_NOT_REACHED();
@@ -2143,7 +2317,7 @@ HRESULT STDMETHODCALLTYPE WebFrame::spoolPages(
         CGContextTranslateCTM(pctx, CGFloat(-pageRect.x()), CGFloat(-pageRect.y()));
         CGContextSetBaseCTM(pctx, ctm);
 
-        d->frame->paint(&spoolCtx, pageRect);
+        coreFrame->paint(&spoolCtx, pageRect);
 
         CGContextEndPage(pctx);
         CGContextRestoreGState(pctx);
@@ -2154,7 +2328,10 @@ HRESULT STDMETHODCALLTYPE WebFrame::spoolPages(
 
 void WebFrame::forceLayoutWithPageWidthRange(float minPageWidth, float maxPageWidth, bool adjustViewSize)
 {
-    d->frame->forceLayoutWithPageWidthRange(minPageWidth, maxPageWidth);
+    Frame* coreFrame = core(this);
+    ASSERT(coreFrame);
+
+    coreFrame->forceLayoutWithPageWidthRange(minPageWidth, maxPageWidth);
     if (adjustViewSize)
-        d->frame->view()->adjustViewSize();
+        coreFrame->view()->adjustViewSize();
 }

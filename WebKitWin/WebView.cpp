@@ -327,7 +327,10 @@ void WebView::paint(HDC dc, LPARAM options)
     // Do a layout first so that everything we render is always current.
     m_mainFrame->layoutIfNeeded();
 
-    FrameView* frameView = m_mainFrame->impl()->view();
+    Frame* coreFrame = core(m_mainFrame);
+    if (!coreFrame)
+        return;
+    FrameView* frameView = coreFrame->view();
 
     RECT rcPaint;
     HDC hdc;
@@ -704,7 +707,11 @@ bool WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
 bool WebView::mouseWheel(WPARAM wParam, LPARAM lParam)
 {
     PlatformWheelEvent wheelEvent(m_viewWindow, wParam, lParam);
-    return m_mainFrame->impl()->eventHandler()->handleWheelEvent(wheelEvent);
+    Frame* coreFrame = core(m_mainFrame);
+    if (!coreFrame)
+        return false;
+
+    return coreFrame->eventHandler()->handleWheelEvent(wheelEvent);
 }
 
 bool WebView::execCommand(WPARAM wParam, LPARAM /*lParam*/)
@@ -950,7 +957,8 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
         case WM_PAINT: {
             COMPtr<IWebDataSource> dataSource;
             mainFrameImpl->dataSource(&dataSource);
-            if (!dataSource || mainFrameImpl->impl()->view()->didFirstLayout())
+            Frame* coreFrame = core(mainFrameImpl);
+            if (!dataSource || coreFrame && coreFrame->view()->didFirstLayout())
                 webView->paint(0, 0);
             else
                 ValidateRect(hWnd, 0);
@@ -976,12 +984,14 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
         case WM_LBUTTONUP:
         case WM_MBUTTONUP:
         case WM_RBUTTONUP:
-            if (mainFrameImpl->impl()->view()->didFirstLayout())
-                handled = webView->handleMouseEvent(message, wParam, lParam);
+            if (Frame* coreFrame = core(mainFrameImpl))
+                if (coreFrame->view()->didFirstLayout())
+                    handled = webView->handleMouseEvent(message, wParam, lParam);
             break;
         case WM_MOUSEWHEEL:
-            if (mainFrameImpl->impl()->view()->didFirstLayout())
-                handled = webView->mouseWheel(wParam, lParam);
+            if (Frame* coreFrame = core(mainFrameImpl))
+                if (coreFrame->view()->didFirstLayout())
+                    handled = webView->mouseWheel(wParam, lParam);
             break;
         case WM_KEYDOWN:
             handled = handledByKeydown = webView->keyDown(wParam, lParam);
@@ -1005,10 +1015,12 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             if (lParam != 0) {
                 webView->deleteBackingStore();
                 mainFrameImpl->setNeedsLayout();
-                mainFrameImpl->impl()->view()->resize(LOWORD(lParam), HIWORD(lParam));
+                if (Frame* coreFrame = core(mainFrameImpl)) {
+                    coreFrame->view()->resize(LOWORD(lParam), HIWORD(lParam));
 
-                if (!mainFrameImpl->impl()->loader()->isLoading())
-                    mainFrameImpl->impl()->sendResizeEvent();
+                    if (!coreFrame->loader()->isLoading())
+                        coreFrame->sendResizeEvent();
+                }
             }
             break;
         case WM_SHOWWINDOW:
@@ -1094,9 +1106,9 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             handled = webView->onUninitMenuPopup(wParam, lParam);
             break;
         case WM_XP_THEMECHANGED:
-            if (mainFrameImpl) {
+            if (Frame* coreFrame = core(mainFrameImpl)) {
                 webView->deleteBackingStore();
-                mainFrameImpl->impl()->view()->themeChanged();
+                coreFrame->view()->themeChanged();
             }
             break;
         case WM_MOUSEACTIVATE:
@@ -1782,8 +1794,8 @@ HRESULT STDMETHODCALLTYPE WebView::setCustomTextEncodingName(
         return hr;
 
     if (oldEncoding != encodingName && (!oldEncoding || !encodingName || _tcscmp(oldEncoding, encodingName))) {
-        if (m_mainFrame->impl()->loader())
-            m_mainFrame->impl()->loader()->reloadAllowingStaleData(String(encodingName, SysStringLen(encodingName)));
+        if (Frame* coreFrame = core(m_mainFrame))
+            coreFrame->loader()->reloadAllowingStaleData(String(encodingName, SysStringLen(encodingName)));
     }
 
     return S_OK;
@@ -1841,8 +1853,19 @@ HRESULT STDMETHODCALLTYPE WebView::stringByEvaluatingJavaScriptFromString(
     /* [in] */ BSTR script, // assumes input does not have "JavaScript" at the begining.
     /* [retval][out] */ BSTR* result)
 {
-    m_mainFrame->impl()->loader()->createEmptyDocument();
-    KJS::JSValue* scriptExecutionResult = m_mainFrame->impl()->loader()->executeScript(0, WebCore::String(script), true);
+    if (!result) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *result = 0;
+
+    Frame* coreFrame = core(m_mainFrame);
+    if (!coreFrame)
+        return E_FAIL;
+
+    coreFrame->loader()->createEmptyDocument();
+    KJS::JSValue* scriptExecutionResult = coreFrame->loader()->executeScript(0, WebCore::String(script), true);
     if(!scriptExecutionResult)
         return E_FAIL;
     else if (scriptExecutionResult->isString())
@@ -2099,7 +2122,17 @@ HRESULT STDMETHODCALLTYPE WebView::elementAtPoint(
         /* [in] */ LPPOINT point,
         /* [retval][out] */ IPropertyBag** elementDictionary)
 {
-    Frame* frame = m_mainFrame->impl();
+    if (!elementDictionary) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *elementDictionary = 0;
+
+    Frame* frame = core(m_mainFrame);
+    if (!frame)
+        return E_FAIL;
+
     IntPoint webCorePoint = IntPoint(point->x, point->y);
     HitTestResult result = HitTestResult(webCorePoint);
     if (frame->renderer())
@@ -2147,7 +2180,18 @@ HRESULT STDMETHODCALLTYPE WebView::writeElement(
 HRESULT STDMETHODCALLTYPE WebView::selectedText(
         /* [out, retval] */ BSTR* text)
 {
-    String frameSelectedText = m_mainFrame->impl()->selectedText();
+    if (!text) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *text = 0;
+
+    Frame* coreFrame = core(m_mainFrame);
+    if (!coreFrame)
+        return E_FAIL;
+
+    String frameSelectedText = coreFrame->selectedText();
     *text = SysAllocStringLen(frameSelectedText.characters(), frameSelectedText.length());
     if (!*text && frameSelectedText.length())
         return E_OUTOFMEMORY;
@@ -2157,7 +2201,11 @@ HRESULT STDMETHODCALLTYPE WebView::selectedText(
 HRESULT STDMETHODCALLTYPE WebView::centerSelectionInVisibleArea(
         /* [in] */ IUnknown* /* sender */)
 {
-    m_mainFrame->impl()->revealSelection(RenderLayer::gAlignCenterAlways);
+    Frame* coreFrame = core(m_mainFrame);
+    if (!coreFrame)
+        return E_FAIL;
+
+    coreFrame->revealSelection(RenderLayer::gAlignCenterAlways);
     return S_OK;
 }
 
@@ -2774,8 +2822,7 @@ HRESULT STDMETHODCALLTYPE WebView::setInViewSourceMode(
     if (!m_mainFrame)
         return E_FAIL;
 
-    m_mainFrame->setInViewSourceMode(flag);
-    return S_OK;
+    return m_mainFrame->setInViewSourceMode(flag);
 }
     
 HRESULT STDMETHODCALLTYPE WebView::inViewSourceMode( 
@@ -2784,8 +2831,7 @@ HRESULT STDMETHODCALLTYPE WebView::inViewSourceMode(
     if (!m_mainFrame)
         return E_FAIL;
 
-    m_mainFrame->inViewSourceMode(flag);
-    return S_OK;
+    return m_mainFrame->inViewSourceMode(flag);
 }
 
 HRESULT STDMETHODCALLTYPE WebView::viewWindow( 

@@ -66,7 +66,8 @@ class WebFramePolicyListener;
 interface IWebHistoryItemPrivate;
 
 unsigned long long WebSystemMainMemory();
-WebFrame* kit(WebCore::Frame* frame);
+WebFrame* kit(WebCore::Frame*);
+WebCore::Frame* core(WebFrame*);
 
 extern const GUID IID_WebFrame;
 
@@ -297,8 +298,8 @@ public:
 
     // WebFrame (matching WebCoreFrameBridge)
     void setTextSizeMultiplier(float multiplier);
-    void inViewSourceMode(BOOL *flag);
-    void setInViewSourceMode(BOOL flag);
+    HRESULT inViewSourceMode(BOOL *flag);
+    HRESULT setInViewSourceMode(BOOL flag);
     HRESULT elementWithName(BSTR name, IDOMElement* form, IDOMElement** element);
     HRESULT formForElement(IDOMElement* element, IDOMElement** form);
     HRESULT elementDoesAutoComplete(IDOMElement* element, bool* result);
