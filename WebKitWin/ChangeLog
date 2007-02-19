@@ -1,3 +1,44 @@
+2007-02-18  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+
+        - Adapt for Lars's patch to clean up Frame
+
+        * WebChromeClient.cpp:
+        (WebChromeClient::tabsToLinks):
+        (WebChromeClient::windowResizerRect):
+        (WebChromeClient::addToDirtyRegion):
+        (WebChromeClient::scrollBackingStore):
+        (WebChromeClient::updateBackingStore):
+        * WebChromeClient.h:
+        * WebEditorClient.cpp:
+        (WebEditorClient::shouldChangeSelectedRange):
+        (WebEditorClient::textFieldDidBeginEditing):
+        (WebEditorClient::textFieldDidEndEditing):
+        (WebEditorClient::textDidChangeInTextField):
+        (WebEditorClient::doTextFieldCommandFromEvent):
+        (WebEditorClient::textWillBeDeletedInTextField):
+        (WebEditorClient::textDidChangeInTextArea):
+        * WebEditorClient.h:
+        * WebElementPropertyBag.cpp:
+        (WebElementPropertyBag::Read):
+        * WebFrame.cpp:
+        (kit):
+        (WebFrame::initWithWebFrameView):
+        (WebFrame::searchForLabelsBeforeElement):
+        (WebFrame::matchLabelsAgainstElement):
+        (WebFrame::createPlugin):
+        (WebFrame::createJavaAppletWidget):
+        (WebFrame::computePageRects):
+        (WebFrame::getPrintedPageCount):
+        (WebFrame::spoolPages):
+        * WebFrame.h:
+        * WebView.cpp:
+        (WebView::handleEditingKeyboardEvent):
+        (WebView::keyDown):
+        (WebView::generateSelectionImage):
+        * WebView.h:
+
 2007-02-18  Ada Chan  <adachan@apple.com>
 
         Reviewed by Adam.

@@ -133,12 +133,9 @@ const GUID IID_WebFrame =
 // Helpers to convert from WebCore to WebKit type
 WebFrame* kit(Frame* frame)
 {
-    if (frame) {
-        FrameWin* frameWin = Win(frame);
-        FrameWinClient* frameWinClient = frameWin->client();
-        if (frameWinClient)
-            return static_cast<WebFrame*>(frameWinClient);  // eek, is there a better way than static cast?
-    }
+    FrameLoaderClient* frameLoaderClient = frame->loader()->client();
+    if (frameLoaderClient)
+        return static_cast<WebFrame*>(frameLoaderClient);  // eek, is there a better way than static cast?
     return 0;
 }
 
@@ -721,7 +718,7 @@ void WebFrame::initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, 
     d->webView->viewWindow(&viewWindow);
 
     this->AddRef(); // We release this ref in frameLoaderDestroyed()
-    Frame* frame = new FrameWin(page, ownerElement, this, this);
+    Frame* frame = new Frame(page, ownerElement, this);
     d->frame = frame;
 
     FrameView* frameView = new FrameView(frame);
@@ -916,8 +913,7 @@ HRESULT WebFrame::searchForLabelsBeforeElement(const BSTR* labels, int cLabels, 
     if (cLabels < 1)
         return E_INVALIDARG;
 
-    FrameWin* frameWin = Win(d->frame);
-    if (!frameWin)
+    if (!d->frame)
         return E_FAIL;
 
     Vector<String> labelStrings(cLabels);
@@ -927,7 +923,7 @@ HRESULT WebFrame::searchForLabelsBeforeElement(const BSTR* labels, int cLabels, 
     if (!coreElement)
         return E_FAIL;
 
-    String label = frameWin->searchForLabelsBeforeElement(labelStrings, coreElement);
+    String label = d->frame->searchForLabelsBeforeElement(labelStrings, coreElement);
     
     *result = SysAllocStringLen(label.characters(), label.length());
     if (label.length() && !*result)
@@ -943,8 +939,7 @@ HRESULT WebFrame::matchLabelsAgainstElement(const BSTR* labels, int cLabels, IDO
     if (cLabels < 1)
         return E_INVALIDARG;
 
-    FrameWin* frameWin = Win(d->frame);
-    if (!frameWin)
+    if (!d->frame)
         return E_FAIL;
 
     Vector<String> labelStrings(cLabels);
@@ -954,7 +949,7 @@ HRESULT WebFrame::matchLabelsAgainstElement(const BSTR* labels, int cLabels, IDO
     if (!coreElement)
         return E_FAIL;
 
-    String label = frameWin->matchLabelsAgainstElement(labelStrings, coreElement);
+    String label = d->frame->matchLabelsAgainstElement(labelStrings, coreElement);
     
     *result = SysAllocStringLen(label.characters(), label.length());
     if (label.length() && !*result)
@@ -1113,112 +1108,6 @@ exit:
     request->Release();
 }
 
-void WebFrame::textFieldDidBeginEditing(Element* e)
-{
-    IWebFormDelegate* formDelegate;
-    if (SUCCEEDED(d->webView->formDelegate(&formDelegate)) && formDelegate) {
-        IDOMElement* domElement = DOMElement::createInstance(e);
-        if (domElement) {
-            IDOMHTMLInputElement* domInputElement;
-            if (SUCCEEDED(domElement->QueryInterface(IID_IDOMHTMLInputElement, (void**)&domInputElement))) {
-                formDelegate->textFieldDidBeginEditing(domInputElement, this);
-                domInputElement->Release();
-            }
-            domElement->Release();
-        }
-        formDelegate->Release();
-    }
-}
-
-void WebFrame::textFieldDidEndEditing(Element* e)
-{
-    IWebFormDelegate* formDelegate;
-    if (SUCCEEDED(d->webView->formDelegate(&formDelegate)) && formDelegate) {
-        IDOMElement* domElement = DOMElement::createInstance(e);
-        if (domElement) {
-            IDOMHTMLInputElement* domInputElement;
-            if (SUCCEEDED(domElement->QueryInterface(IID_IDOMHTMLInputElement, (void**)&domInputElement))) {
-                formDelegate->textFieldDidEndEditing(domInputElement, this);
-                domInputElement->Release();
-            }
-            domElement->Release();
-        }
-        formDelegate->Release();
-    }
-}
-
-void WebFrame::textDidChangeInTextField(Element* e)
-{
-    IWebFormDelegate* formDelegate;
-    if (SUCCEEDED(d->webView->formDelegate(&formDelegate)) && formDelegate) {
-        IDOMElement* domElement = DOMElement::createInstance(e);
-        if (domElement) {
-            IDOMHTMLInputElement* domInputElement;
-            if (SUCCEEDED(domElement->QueryInterface(IID_IDOMHTMLInputElement, (void**)&domInputElement))) {
-                formDelegate->textDidChangeInTextField(domInputElement, this);
-                domInputElement->Release();
-            }
-            domElement->Release();
-        }
-        formDelegate->Release();
-    }
-}
-
-bool WebFrame::doTextFieldCommandFromEvent(Element* e, const PlatformKeyboardEvent* pke)
-{
-    BOOL result = FALSE;
-    IWebFormDelegate* formDelegate;
-    if (SUCCEEDED(d->webView->formDelegate(&formDelegate)) && formDelegate) {
-        IDOMElement* domElement = DOMElement::createInstance(e);
-        if (domElement) {
-            IDOMHTMLInputElement* domInputElement;
-            if (SUCCEEDED(domElement->QueryInterface(IID_IDOMHTMLInputElement, (void**)&domInputElement))) {
-                formDelegate->doCommandBySelector(domInputElement, pke->WindowsKeyCode(), this, &result);
-                domInputElement->Release();
-            }
-            domElement->Release();
-        }
-        formDelegate->Release();
-    }
-    return !!result;
-}
-
-void WebFrame::textWillBeDeletedInTextField(Element* e)
-{
-    // We're using the deleteBackward selector for all deletion operations since the autofill code treats all deletions the same way.
-    IWebFormDelegate* formDelegate;
-    if (SUCCEEDED(d->webView->formDelegate(&formDelegate)) && formDelegate) {
-        IDOMElement* domElement = DOMElement::createInstance(e);
-        if (domElement) {
-            IDOMHTMLInputElement* domInputElement;
-            if (SUCCEEDED(domElement->QueryInterface(IID_IDOMHTMLInputElement, (void**)&domInputElement))) {
-                BOOL result;
-                formDelegate->doCommandBySelector(domInputElement, VK_BACK /*REVIEW*/, this, &result);
-                domInputElement->Release();
-            }
-            domElement->Release();
-        }
-        formDelegate->Release();
-    }
-}
-
-void WebFrame::textDidChangeInTextArea(Element* e)
-{
-    IWebFormDelegate* formDelegate;
-    if (SUCCEEDED(d->webView->formDelegate(&formDelegate)) && formDelegate) {
-        IDOMElement* domElement = DOMElement::createInstance(e);
-        if (domElement) {
-            IDOMHTMLTextAreaElement* domTextAreaElement;
-            if (SUCCEEDED(domElement->QueryInterface(IID_IDOMHTMLTextAreaElement, (void**)&domTextAreaElement))) {
-                formDelegate->textDidChangeInTextArea(domTextAreaElement, this);
-                domTextAreaElement->Release();
-            }
-            domElement->Release();
-        }
-        formDelegate->Release();
-    }
-}
-
 void WebFrame::dispatchDidHandleOnloadEvents()
 {
     IWebFrameLoadDelegatePrivate* frameLoadDelegatePriv;
@@ -1226,49 +1115,6 @@ void WebFrame::dispatchDidHandleOnloadEvents()
         frameLoadDelegatePriv->didHandleOnloadEventsForFrame(d->webView, this);
         frameLoadDelegatePriv->Release();
     }
-}
-
-bool WebFrame::tabsToLinks() const
-{
-    BOOL enabled = FALSE;
-    IWebPreferences* preferences;
-    if (SUCCEEDED(d->webView->preferences(&preferences)))
-        preferences->tabsToLinks(&enabled);
-
-    return !!enabled;
-}
-
-IntRect WebFrame::windowResizerRect() const
-{
-    IntRect intRect;
-
-    IWebUIDelegate* ui;
-    if (SUCCEEDED(d->webView->uiDelegate(&ui)) && ui) {
-        IWebUIDelegatePrivate* uiPrivate;
-        if (SUCCEEDED(ui->QueryInterface(IID_IWebUIDelegatePrivate, (void**)&uiPrivate))) {
-            RECT r;
-            if (SUCCEEDED(uiPrivate->webViewResizerRect(d->webView, &r)))
-                intRect = IntRect(r.left, r.top, r.right-r.left, r.bottom-r.top);
-            uiPrivate->Release();
-        }
-        ui->Release();
-    }
-    return intRect;
-}
-
-void WebFrame::addToDirtyRegion(const IntRect& dirtyRect)
-{
-    d->webView->addToDirtyRegion(dirtyRect);
-}
-
-void WebFrame::scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect)
-{
-    d->webView->scrollBackingStore(d->webView->topLevelFrame()->impl()->view(), dx, dy, scrollViewRect, clipRect);
-}
-
-void WebFrame::updateBackingStore()
-{
-    d->webView->updateBackingStore(d->webView->topLevelFrame()->impl()->view(), 0, false);
 }
 
 void WebFrame::windowScriptObjectAvailable(JSContextRef context, JSObjectRef windowObject)
@@ -2085,7 +1931,7 @@ Frame* WebFrame::createFrame(const KURL& url, const String& name, HTMLFrameOwner
 Widget* WebFrame::createPlugin(Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType, bool /*loadManually*/)
 {
     return PluginDatabaseWin::installedPlugins()->
-        createPluginView(Win(d->frame), element, url, paramNames, paramValues, mimeType);
+        createPluginView(d->frame, element, url, paramNames, paramValues, mimeType);
 }
 
 void WebFrame::redirectDataToPlugin(Widget* /*pluginWidget*/)
@@ -2103,7 +1949,7 @@ void WebFrame::redirectDataToPlugin(Widget* /*pluginWidget*/)
 Widget* WebFrame::createJavaAppletWidget(const IntSize&, Element* element, const KURL& /*baseURL*/, const Vector<String>& paramNames, const Vector<String>& paramValues)
 {
     return PluginDatabaseWin::installedPlugins()->
-        createPluginView(Win(d->frame), element, KURL(), paramNames, paramValues, "application/x-java-applet");
+        createPluginView(d->frame, element, KURL(), paramNames, paramValues, "application/x-java-applet");
 }
 
 ObjectContentType WebFrame::objectContentType(const KURL& url, const String& mimeTypeIn)
@@ -2212,7 +2058,7 @@ const Vector<WebCore::IntRect>& WebFrame::computePageRects(HDC printDC)
     if (!printDC)
         return m_pageRects;
 
-    FrameWin* frame = Win(d->frame);
+    Frame* frame = d->frame;
     m_pageRects = frame->computePageRects(printerRect(printDC), 1.0);
     
     return m_pageRects;
@@ -2234,8 +2080,7 @@ HRESULT STDMETHODCALLTYPE WebFrame::getPrintedPageCount(
 
     *pageCount = 0;
 
-    FrameWin* frame = Win(d->frame);
-    if (!frame->document())
+    if (!d->frame->document())
         return E_FAIL;
 
     const Vector<IntRect>& pages = computePageRects(printDC);
@@ -2262,8 +2107,7 @@ HRESULT STDMETHODCALLTYPE WebFrame::spoolPages(
 
     PlatformGraphicsContext* pctx = (PlatformGraphicsContext*)ctx;
 
-    FrameWin* frame = Win(d->frame);
-    if (!frame->document())
+    if (!d->frame->document())
         return E_FAIL;
 
     if (m_pageRects.size() == 0 || startPage > m_pageRects.size()) {
@@ -2300,7 +2144,7 @@ HRESULT STDMETHODCALLTYPE WebFrame::spoolPages(
         CGContextTranslateCTM(pctx, CGFloat(-pageRect.x()), CGFloat(-pageRect.y()));
         CGContextSetBaseCTM(pctx, ctm);
 
-        frame->paint(&spoolCtx, pageRect);
+        d->frame->paint(&spoolCtx, pageRect);
 
         CGContextEndPage(pctx);
         CGContextRestoreGState(pctx);

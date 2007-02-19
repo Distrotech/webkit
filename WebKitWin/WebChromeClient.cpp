@@ -376,3 +376,47 @@ bool WebChromeClient::shouldInterruptJavaScript()
     }
     return false;
 }
+
+bool WebChromeClient::tabsToLinks() const
+{
+    BOOL enabled = FALSE;
+    IWebPreferences* preferences;
+    if (SUCCEEDED(m_webView->preferences(&preferences)))
+        preferences->tabsToLinks(&enabled);
+
+    return !!enabled;
+}
+
+IntRect WebChromeClient::windowResizerRect() const
+{
+    IntRect intRect;
+
+    IWebUIDelegate* ui;
+    if (SUCCEEDED(m_webView->uiDelegate(&ui)) && ui) {
+        IWebUIDelegatePrivate* uiPrivate;
+        if (SUCCEEDED(ui->QueryInterface(IID_IWebUIDelegatePrivate, (void**)&uiPrivate))) {
+            RECT r;
+            if (SUCCEEDED(uiPrivate->webViewResizerRect(m_webView, &r)))
+                intRect = IntRect(r.left, r.top, r.right-r.left, r.bottom-r.top);
+            uiPrivate->Release();
+        }
+        ui->Release();
+    }
+    return intRect;
+}
+
+void WebChromeClient::addToDirtyRegion(const IntRect& dirtyRect)
+{
+    m_webView->addToDirtyRegion(dirtyRect);
+}
+
+void WebChromeClient::scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect)
+{
+    m_webView->scrollBackingStore(m_webView->topLevelFrame()->impl()->view(), dx, dy, scrollViewRect, clipRect);
+}
+
+void WebChromeClient::updateBackingStore()
+{
+    m_webView->updateBackingStore(m_webView->topLevelFrame()->impl()->view(), 0, false);
+}
+

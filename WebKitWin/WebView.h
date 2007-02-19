@@ -618,7 +618,7 @@ public:
     bool isBeingDestroyed() const { return m_isBeingDestroyed; }
 
 private:
-    bool handleEditingKeyboardEvent(WebCore::FrameWin*, const WebCore::PlatformKeyboardEvent&);
+    bool handleEditingKeyboardEvent(WebCore::Frame*, const WebCore::PlatformKeyboardEvent&);
 
 protected:
     ULONG m_refCount;

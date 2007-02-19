@@ -32,8 +32,9 @@
 #include "WebFrame.h"
 #pragma warning(push, 0)
 #include <WebCore/Document.h>
-#include <WebCore/FrameWin.h>
+#include <WebCore/Frame.h>
 #include <WebCore/HitTestResult.h>
+#include <WebCore/FrameLoader.h>
 #include <WebCore/Image.h>
 #include <WebCore/KURL.h>
 #pragma warning(pop)
@@ -124,8 +125,8 @@ HRESULT STDMETHODCALLTYPE WebElementPropertyBag::Read(LPCOLESTR pszPropName, VAR
         if (!(m_result->innerNonSharedNode() && m_result->innerNonSharedNode()->document()
            && m_result->innerNonSharedNode()->document()->frame()))
             return E_FAIL;
-        FrameWin* frameWin = Win(m_result->innerNonSharedNode()->document()->frame());
-        WebFrame* webFrame = static_cast<WebFrame*>(frameWin->client());
+        Frame* coreFrame = m_result->innerNonSharedNode()->document()->frame();
+        WebFrame* webFrame = static_cast<WebFrame*>(coreFrame->loader()->client());
         IWebFrame* iWebFrame;
         if (FAILED(webFrame->QueryInterface(IID_IWebFrame, (void**)&iWebFrame)))
             return E_FAIL;
@@ -158,10 +159,9 @@ HRESULT STDMETHODCALLTYPE WebElementPropertyBag::Read(LPCOLESTR pszPropName, VAR
     else if (isEqual(WebElementLinkURLKey, key))
         return convertStringToVariant(pVar, m_result->absoluteLinkURL().url());
     else if (isEqual(WebElementLinkTargetFrameKey, key)) {
-        FrameWin* frameWin = Win(m_result->targetFrame());
-        if (!frameWin)
+        if (!m_result->targetFrame())
             return E_FAIL;
-        WebFrame* webFrame = static_cast<WebFrame*>(frameWin->client());
+        WebFrame* webFrame = kit(m_result->targetFrame());
         IWebFrame* iWebFrame;
         if (FAILED(webFrame->QueryInterface(IID_IWebFrame, (void**)&iWebFrame)))
             return E_FAIL;

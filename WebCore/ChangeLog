@@ -1,3 +1,35 @@
+2007-02-18  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+
+        - Adapt for Lars's patch to clean up Frame
+
+        * bridge/win/FrameWin.cpp:
+        (WebCore::Frame::cleanupPlatformScriptObjects):
+        (WebCore::Frame::createScriptInstanceForWidget):
+        (WebCore::Frame::computePageRects):
+        (WebCore::drawRectIntoContext):
+        (WebCore::imageFromSelection):
+        (WebCore::Frame::isCharacterSmartReplaceExempt):
+        * bridge/win/FrameWin.h:
+        * page/win/EventHandlerWin.cpp:
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::windowResizerRect):
+        (WebCore::ScrollView::addToDirtyRegion):
+        (WebCore::ScrollView::scrollBackingStore):
+        (WebCore::ScrollView::updateBackingStore):
+        * platform/win/TemporaryLinkStubs.cpp:
+        (Frame::print):
+        (Frame::issueTransposeCommand):
+        (WebCore::Frame::respondToChangedSelection):
+        * plugins/win/PluginDatabaseWin.cpp:
+        (WebCore::PluginDatabaseWin::createPluginView):
+        * plugins/win/PluginDatabaseWin.h:
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::createNullPluginView):
+        (WebCore::PluginViewWin::PluginViewWin):
+        * plugins/win/PluginViewWin.h:
+
 2007-02-18  Ada Chan  <adachan@apple.com>
 
         Reviewed by Adam.

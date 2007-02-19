@@ -31,7 +31,7 @@
 #include "FloatPoint.h"
 #include "FocusController.h"
 #include "FrameView.h"
-#include "FrameWin.h"
+#include "Frame.h"
 #include "HitTestRequest.h"
 #include "HitTestResult.h"
 #include "MouseEventWithHitTestResults.h"
@@ -78,13 +78,6 @@ bool EventHandler::passMousePressEventToScrollbar(MouseEventWithHitTestResults& 
 
 bool EventHandler::tabsToAllControls(KeyboardEvent*) const
 {
-    return true;
-}
-
-bool EventHandler::tabsToLinks(KeyboardEvent*) const
-{
-    if (FrameWinClient* client = Win(m_frame)->client())
-        return client->tabsToLinks();
     return true;
 }
 

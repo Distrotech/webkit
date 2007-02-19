@@ -27,14 +27,17 @@
 #include "config.h"
 #include "ScrollView.h"
 
+#include "Chrome.h"
+#include "ChromeClient.h"
 #include "FloatRect.h"
 
-#include "FrameWin.h" // FIXME: These three includes suck, but scrollview should eventually merge into FrameView anyway.
+#include "Frame.h"
 #include "FrameView.h"
 #include "RenderTheme.h" 
 
 #include "GraphicsContext.h"
 #include "IntRect.h"
+#include "Page.h"
 #include "PlatformScrollBar.h"
 #include "PlatformMouseEvent.h"
 #include "PlatformWheelEvent.h"
@@ -650,7 +653,7 @@ void ScrollView::scroll(ScrollDirection direction, ScrollGranularity granularity
 
 IntRect ScrollView::windowResizerRect()
 {
-    return Win(static_cast<FrameView*>(this)->frame())->windowResizerRect();
+    return static_cast<const FrameView*>(this)->frame()->page()->chrome()->windowResizerRect();
 }
 
 bool ScrollView::resizerOverlapsContent() const
@@ -683,19 +686,17 @@ void ScrollView::setParent(ScrollView* parentView)
 
 void ScrollView::addToDirtyRegion(const IntRect& containingWindowRect)
 {
-    Win(static_cast<FrameView*>(this)->frame())->addToDirtyRegion(containingWindowRect);
+    return static_cast<const FrameView*>(this)->frame()->page()->chrome()->addToDirtyRegion(containingWindowRect);
 }
 
 void ScrollView::scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect)
 {
-    // Scroll the backing store.
-    Win(static_cast<FrameView*>(this)->frame())->scrollBackingStore(dx, dy, scrollViewRect, clipRect);
+    return static_cast<const FrameView*>(this)->frame()->page()->chrome()->scrollBackingStore(dx, dy, scrollViewRect, clipRect);
 }
 
 void ScrollView::updateBackingStore()
 {
-    // Update the backing store.
-    Win(static_cast<FrameView*>(this)->frame())->updateBackingStore();
+   return static_cast<const FrameView*>(this)->frame()->page()->chrome()->updateBackingStore();
 }
 
 } // namespace WebCore

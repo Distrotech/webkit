@@ -71,7 +71,6 @@ WebFrame* kit(WebCore::Frame* frame);
 extern const GUID IID_WebFrame;
 
 class WebFrame : public IWebFrame, IWebFramePrivate
-    , public WebCore::FrameWinClient
     , public WebCore::FrameLoaderClient
 {
 public:
@@ -177,17 +176,6 @@ public:
 
     virtual WebCore::Frame* createFrame(const WebCore::KURL&, const WebCore::String& name, WebCore::HTMLFrameOwnerElement*, const WebCore::String& referrer);
     virtual void openURL(const WebCore::String& URL, const WebCore::Event* triggeringEvent, bool newWindow, bool lockHistory);
-    virtual void textFieldDidBeginEditing(WebCore::Element*);
-    virtual void textFieldDidEndEditing(WebCore::Element*);
-    virtual void textDidChangeInTextField(WebCore::Element*);
-    virtual bool doTextFieldCommandFromEvent(WebCore::Element*, const WebCore::PlatformKeyboardEvent*);
-    virtual void textWillBeDeletedInTextField(WebCore::Element* input);
-    virtual void textDidChangeInTextArea(WebCore::Element*);
-    virtual bool tabsToLinks() const;
-    virtual WebCore::IntRect windowResizerRect() const;
-    virtual void addToDirtyRegion(const WebCore::IntRect&);
-    virtual void scrollBackingStore(int dx, int dy, const WebCore::IntRect& scrollViewRect, const WebCore::IntRect& clipRect);
-    virtual void updateBackingStore();
     virtual void windowScriptObjectAvailable(JSContextRef context, JSObjectRef windowObject);
     
     // FrameLoaderClient

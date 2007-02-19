@@ -81,6 +81,12 @@ public:
     virtual bool runJavaScriptPrompt(WebCore::Frame*, const WebCore::String& message, const WebCore::String& defaultValue, WebCore::String& result);
     virtual void setStatusbarText(const WebCore::String&);
     virtual bool shouldInterruptJavaScript();
+
+    virtual bool tabsToLinks() const;
+    virtual WebCore::IntRect windowResizerRect() const;
+    virtual void addToDirtyRegion(const WebCore::IntRect&);
+    virtual void scrollBackingStore(int dx, int dy, const WebCore::IntRect& scrollViewRect, const WebCore::IntRect& clipRect);
+    virtual void updateBackingStore();
 private:
     WebView* m_webView;
 };

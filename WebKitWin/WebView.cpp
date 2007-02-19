@@ -805,7 +805,7 @@ const char* editCommandForKey(const PlatformKeyboardEvent& keyEvent)
 }
 
 
-bool WebView::handleEditingKeyboardEvent(FrameWin* frame, const PlatformKeyboardEvent& keyEvent)
+bool WebView::handleEditingKeyboardEvent(Frame* frame, const PlatformKeyboardEvent& keyEvent)
 {
     const char* editCommand = editCommandForKey(keyEvent);
 
@@ -834,7 +834,7 @@ bool WebView::handleEditingKeyboardEvent(FrameWin* frame, const PlatformKeyboard
 bool WebView::keyDown(WPARAM wParam, LPARAM lParam)
 {
     PlatformKeyboardEvent keyEvent(m_viewWindow, wParam, lParam);
-    FrameWin* frame = static_cast<FrameWin*>(m_page->focusController()->focusedOrMainFrame());
+    Frame* frame = m_page->focusController()->focusedOrMainFrame();
 
     if (frame->eventHandler()->keyEvent(keyEvent))
         return true;
@@ -2034,7 +2034,7 @@ HRESULT STDMETHODCALLTYPE WebView::generateSelectionImage(BOOL forceWhiteText, H
     WebCore::Frame* frame = m_page->focusController()->focusedOrMainFrame();
 
     if (frame)
-        *image = Win(frame)->imageFromSelection(forceWhiteText?TRUE:FALSE);
+        *image = imageFromSelection(frame, forceWhiteText ? TRUE : FALSE);
 
     return S_OK;
 }

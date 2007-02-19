@@ -50,8 +50,8 @@ namespace KJS {
 
 namespace WebCore {
     class Element;
+    class Frame;
     struct FrameLoadRequest;
-    class FrameWin;
     class KeyboardEvent;
     class MouseEvent;
     class KURL;
@@ -67,8 +67,8 @@ namespace WebCore {
     friend static LRESULT CALLBACK PluginViewWndProc(HWND, UINT, WPARAM, LPARAM);
 
     public:
-        PluginViewWin(FrameWin* parentFrame, PluginPackageWin* plugin, Element*, const KURL&, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType);
-        static PluginViewWin* createNullPluginView(FrameWin* parentFrame, Element*);
+        PluginViewWin(Frame* parentFrame, PluginPackageWin* plugin, Element*, const KURL&, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType);
+        static PluginViewWin* createNullPluginView(Frame* parentFrame, Element*);
         virtual ~PluginViewWin();
 
         PluginPackageWin* plugin() const { return m_plugin.get(); }
@@ -114,7 +114,7 @@ namespace WebCore {
 
         virtual void handleEvent(Event*);
     private:
-        PluginViewWin(FrameWin* parentFrame, Element*);
+        PluginViewWin(Frame* parentFrame, Element*);
         bool start();
         void stop();
         static void setCurrentPluginView(PluginViewWin*);
@@ -122,7 +122,7 @@ namespace WebCore {
         NPError handlePost(const char* url, const char* target, uint32 len, const char* buf, bool file, void* notifyData, bool sendNotification, bool allowHeaders);
         RefPtr<PluginPackageWin> m_plugin;
         Element* m_element;
-        FrameWin* m_parentFrame;
+        Frame* m_parentFrame;
         bool m_isStarted;
         KURL m_url;
         KURL m_baseURL;

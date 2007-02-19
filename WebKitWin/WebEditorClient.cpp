@@ -32,6 +32,7 @@
 #include "IWebURLResponse.h"
 #include "WebLocalizableStrings.h"
 #include "WebView.h"
+#include "DOMCoreClasses.h"
 #pragma warning(push, 0)
 #include <WebCore/BString.h>
 #include <WebCore/Document.h>
@@ -40,6 +41,7 @@
 #include <WebCore/HTMLInputElement.h>
 #include <WebCore/HTMLNames.h>
 #include <WebCore/KeyboardEvent.h>
+#include <WebCore/PlatformKeyboardEvent.h>
 #include <WebCore/NotImplemented.h>
 #include <WebCore/Range.h>
 #pragma warning(pop)
@@ -271,6 +273,115 @@ bool WebEditorClient::shouldShowDeleteInterface(HTMLElement* /*element*/)
 
 bool WebEditorClient::smartInsertDeleteEnabled(void)
 { LOG_NOIMPL(); return false; }
+
+bool WebEditorClient::shouldChangeSelectedRange(WebCore::Range*, WebCore::Range*, WebCore::EAffinity, bool)
+{ LOG_NOIMPL(); return true; }
+
+void WebEditorClient::textFieldDidBeginEditing(Element* e)
+{
+    IWebFormDelegate* formDelegate;
+    if (SUCCEEDED(m_webView->formDelegate(&formDelegate)) && formDelegate) {
+        IDOMElement* domElement = DOMElement::createInstance(e);
+        if (domElement) {
+            IDOMHTMLInputElement* domInputElement;
+            if (SUCCEEDED(domElement->QueryInterface(IID_IDOMHTMLInputElement, (void**)&domInputElement))) {
+                formDelegate->textFieldDidBeginEditing(domInputElement, kit(e->document()->frame()));
+                domInputElement->Release();
+            }
+            domElement->Release();
+        }
+        formDelegate->Release();
+    }
+}
+
+void WebEditorClient::textFieldDidEndEditing(Element* e)
+{
+    IWebFormDelegate* formDelegate;
+    if (SUCCEEDED(m_webView->formDelegate(&formDelegate)) && formDelegate) {
+        IDOMElement* domElement = DOMElement::createInstance(e);
+        if (domElement) {
+            IDOMHTMLInputElement* domInputElement;
+            if (SUCCEEDED(domElement->QueryInterface(IID_IDOMHTMLInputElement, (void**)&domInputElement))) {
+                formDelegate->textFieldDidEndEditing(domInputElement, kit(e->document()->frame()));
+                domInputElement->Release();
+            }
+            domElement->Release();
+        }
+        formDelegate->Release();
+    }
+}
+
+void WebEditorClient::textDidChangeInTextField(Element* e)
+{
+    IWebFormDelegate* formDelegate;
+    if (SUCCEEDED(m_webView->formDelegate(&formDelegate)) && formDelegate) {
+        IDOMElement* domElement = DOMElement::createInstance(e);
+        if (domElement) {
+            IDOMHTMLInputElement* domInputElement;
+            if (SUCCEEDED(domElement->QueryInterface(IID_IDOMHTMLInputElement, (void**)&domInputElement))) {
+                formDelegate->textDidChangeInTextField(domInputElement, kit(e->document()->frame()));
+                domInputElement->Release();
+            }
+            domElement->Release();
+        }
+        formDelegate->Release();
+    }
+}
+
+bool WebEditorClient::doTextFieldCommandFromEvent(Element* e, KeyboardEvent* ke)
+{
+    BOOL result = FALSE;
+    IWebFormDelegate* formDelegate;
+    if (SUCCEEDED(m_webView->formDelegate(&formDelegate)) && formDelegate) {
+        IDOMElement* domElement = DOMElement::createInstance(e);
+        if (domElement) {
+            IDOMHTMLInputElement* domInputElement;
+            if (SUCCEEDED(domElement->QueryInterface(IID_IDOMHTMLInputElement, (void**)&domInputElement))) {
+                formDelegate->doCommandBySelector(domInputElement, ke->keyEvent()->WindowsKeyCode(), kit(e->document()->frame()), &result);
+                domInputElement->Release();
+            }
+            domElement->Release();
+        }
+        formDelegate->Release();
+    }
+    return !!result;
+}
+
+void WebEditorClient::textWillBeDeletedInTextField(Element* e)
+{
+    // We're using the deleteBackward selector for all deletion operations since the autofill code treats all deletions the same way.
+    IWebFormDelegate* formDelegate;
+    if (SUCCEEDED(m_webView->formDelegate(&formDelegate)) && formDelegate) {
+        IDOMElement* domElement = DOMElement::createInstance(e);
+        if (domElement) {
+            IDOMHTMLInputElement* domInputElement;
+            if (SUCCEEDED(domElement->QueryInterface(IID_IDOMHTMLInputElement, (void**)&domInputElement))) {
+                BOOL result;
+                formDelegate->doCommandBySelector(domInputElement, VK_BACK /*REVIEW*/, kit(e->document()->frame()), &result);
+                domInputElement->Release();
+            }
+            domElement->Release();
+        }
+        formDelegate->Release();
+    }
+}
+
+void WebEditorClient::textDidChangeInTextArea(Element* e)
+{
+    IWebFormDelegate* formDelegate;
+    if (SUCCEEDED(m_webView->formDelegate(&formDelegate)) && formDelegate) {
+        IDOMElement* domElement = DOMElement::createInstance(e);
+        if (domElement) {
+            IDOMHTMLTextAreaElement* domTextAreaElement;
+            if (SUCCEEDED(domElement->QueryInterface(IID_IDOMHTMLTextAreaElement, (void**)&domTextAreaElement))) {
+                formDelegate->textDidChangeInTextArea(domTextAreaElement, kit(e->document()->frame()));
+                domTextAreaElement->Release();
+            }
+            domElement->Release();
+        }
+        formDelegate->Release();
+    }
+}
 
 class WebEditorUndoCommand : public IWebUndoCommand
 {

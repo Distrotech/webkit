@@ -27,123 +27,13 @@
 #define FrameWin_H
 
 #include "Frame.h"
-#include <wtf/HashMap.h>
-#include <wtf/RefPtr.h>
-
-typedef const struct OpaqueJSContext* JSContextRef;
-typedef struct OpaqueJSValue* JSObjectRef;
-
-class NPObject;
 
 // Forward declared so we don't need wingdi.h.
 typedef struct HBITMAP__* HBITMAP;
 
-namespace KJS {
-    namespace Bindings {
-        class RootObject;
-    }
-    class Interpreter;
-}
-
 namespace WebCore {
 
-class FormData;
-class HTMLTableCellElement;
-
-class FrameWinClient {
-public:
-    virtual void ref() = 0;
-    virtual void deref() = 0;
-
-    virtual Frame* createFrame(const KURL&, const String& name, HTMLFrameOwnerElement*, const String& referrer) = 0;
-    virtual void openURL(const String& URL, const Event* triggeringEvent, bool newWindow, bool lockHistory) = 0;
-    
-    virtual void textFieldDidBeginEditing(Element*) = 0;
-    virtual void textFieldDidEndEditing(Element*) = 0;
-    virtual void textDidChangeInTextField(Element*) = 0;
-    virtual bool doTextFieldCommandFromEvent(Element*, const PlatformKeyboardEvent*) = 0;
-    virtual void textWillBeDeletedInTextField(Element* input) = 0;
-    virtual void textDidChangeInTextArea(Element*) = 0;
-
-    virtual bool tabsToLinks() const = 0;
-
-    // FIXME: These four methods should really be on a PageClient.  Many others probably should be too.
-    virtual IntRect windowResizerRect() const = 0;
-    virtual void addToDirtyRegion(const IntRect&) = 0;
-    virtual void scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect) = 0;
-    virtual void updateBackingStore() = 0;
-
-    virtual void windowScriptObjectAvailable(JSContextRef context, JSObjectRef windowObject) = 0;
-};
-
-class FrameWin : public Frame {
-public:
-    FrameWin(Page*, HTMLFrameOwnerElement*, FrameWinClient*, FrameLoaderClient*);
-    ~FrameWin();
-
-    FrameWinClient* client() { return m_client.get(); }
-    
-    virtual bool shouldInterruptJavaScript();
-    
-    virtual Range* markedTextRange() const;
-
-    virtual String mimeTypeForFileName(const String&) const;
-
-    virtual Vector<IntRect> computePageRects(const IntRect& printRect, float userScaleFactor);
-
-    virtual KJS::Bindings::Instance* getEmbedInstanceForWidget(Widget*);
-    virtual KJS::Bindings::Instance* getObjectInstanceForWidget(Widget*);
-    virtual KJS::Bindings::Instance* getAppletInstanceForWidget(Widget*);
-    
-    virtual void issueCutCommand();
-    virtual void issueCopyCommand();
-    virtual void issuePasteCommand();
-    virtual void issuePasteAndMatchStyleCommand();
-    virtual void issueTransposeCommand();
-    virtual void respondToChangedSelection(const Selection& oldSelection, bool closeTyping);
-    virtual void respondToChangedContents(const Selection &endingSelection);
-    virtual bool shouldChangeSelection(const Selection& oldSelection, const Selection& newSelection, EAffinity affinity, bool stillSelecting) const;
-
-    virtual bool canPaste() const;
-    virtual void print();
-
-    virtual void textFieldDidBeginEditing(Element*);
-    virtual void textFieldDidEndEditing(Element*);
-    virtual void textDidChangeInTextField(Element*);
-    virtual bool doTextFieldCommandFromEvent(Element*, KeyboardEvent* ke);
-    virtual void textWillBeDeletedInTextField(Element* input);
-    virtual void textDidChangeInTextArea(Element*);
-
-    PassRefPtr<KJS::Bindings::RootObject> createRootObject(void* nativeHandle, PassRefPtr<KJS::Interpreter>); 
-    KJS::Bindings::RootObject* bindingRootObject();
-    NPObject* windowScriptNPObject();
-
-    IntRect windowResizerRect() const;
-    
-    void addToDirtyRegion(const IntRect&);
-    void scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect);
-    void updateBackingStore();
-
-    HBITMAP imageFromSelection(bool forceWhiteText);
-    HBITMAP imageFromRect(IntRect rect);
-
-    String searchForLabelsAboveCell(RegularExpression*, HTMLTableCellElement*);
-    String searchForLabelsBeforeElement(const Vector<String>& labels, Element*);
-    String matchLabelsAgainstElement(const Vector<String>& labels, Element*);
-
-private:
-    virtual void cleanupPluginObjects();
-    
-    RefPtr<FrameWinClient> m_client;
-
-    RefPtr<KJS::Bindings::RootObject> m_bindingRoot; // The root object used for objects
-                                              // bound outside the context of a plugin.
-    Vector<RefPtr<KJS::Bindings::RootObject>> m_rootObjects;
-    NPObject* m_windowScriptNPObject;
-};
-
-inline FrameWin* Win(Frame* frame) { return static_cast<FrameWin*>(frame); }
-inline const FrameWin* Win(const Frame* frame) { return static_cast<const FrameWin*>(frame); }
+    HBITMAP imageFromSelection(Frame* frame, bool forceWhiteText);
 
 }
 

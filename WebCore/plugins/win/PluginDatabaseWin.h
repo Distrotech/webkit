@@ -35,7 +35,7 @@
 
 namespace WebCore {
     class Element;
-    class FrameWin;
+    class Frame;
     class KURL;
     class PluginPackageWin;
     class PluginViewWin;
@@ -45,7 +45,7 @@ namespace WebCore {
     class PluginDatabaseWin {
     public:
         static PluginDatabaseWin* installedPlugins();
-        PluginViewWin* createPluginView(FrameWin* parentFrame, Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType);
+        PluginViewWin* createPluginView(Frame* parentFrame, Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType);
 
         void refresh();
         Vector<PluginPackageWin*> plugins() const;

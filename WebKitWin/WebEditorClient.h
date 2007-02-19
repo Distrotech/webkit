@@ -83,7 +83,15 @@ public:
     bool canRedo() const;
     
     void undo();
-    void redo();
+    void redo();    
+    
+    virtual bool shouldChangeSelectedRange(WebCore::Range* fromRange, WebCore::Range* toRange, WebCore::EAffinity, bool stillSelecting);
+    virtual void textFieldDidBeginEditing(WebCore::Element*);
+    virtual void textFieldDidEndEditing(WebCore::Element*);
+    virtual void textDidChangeInTextField(WebCore::Element*);
+    virtual bool doTextFieldCommandFromEvent(WebCore::Element*, WebCore::KeyboardEvent*);
+    virtual void textWillBeDeletedInTextField(WebCore::Element* input);
+    virtual void textDidChangeInTextArea(WebCore::Element*);
 
     void handleKeyPress(WebCore::KeyboardEvent*);
 

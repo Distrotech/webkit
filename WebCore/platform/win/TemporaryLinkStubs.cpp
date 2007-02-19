@@ -89,16 +89,8 @@ String WebCore::searchableIndexIntroduction() { LOG_NOIMPL(); return String(); }
 int WebCore::findNextSentenceFromIndex(UChar const*,int,int,bool) { LOG_NOIMPL(); return 0; }
 void WebCore::findSentenceBoundary(UChar const*,int,int,int*,int*) { LOG_NOIMPL(); }
 
-KJS::Bindings::Instance* FrameWin::getAppletInstanceForWidget(Widget*) { LOG_NOIMPL(); return 0; }
-bool FrameWin::canPaste() const { LOG_NOIMPL(); return false; }
-bool FrameWin::shouldInterruptJavaScript() { LOG_NOIMPL(); return false; }
-void FrameWin::print() { LOG_NOIMPL(); }
-void FrameWin::issueCutCommand() { LOG_NOIMPL(); }
-void FrameWin::issueCopyCommand() { LOG_NOIMPL(); }
-void FrameWin::issuePasteCommand() { LOG_NOIMPL(); }
-void FrameWin::issuePasteAndMatchStyleCommand() { LOG_NOIMPL(); }
-void FrameWin::issueTransposeCommand() { LOG_NOIMPL(); }
-String FrameWin::mimeTypeForFileName(String const&) const { LOG_NOIMPL(); return String(); }
+void Frame::print() { LOG_NOIMPL(); }
+void Frame::issueTransposeCommand() { LOG_NOIMPL(); }
 
 void GraphicsContextPlatformPrivate::clip(const Path&) { LOG_NOIMPL(); }
 
@@ -156,10 +148,7 @@ namespace WebCore {
 
 void FrameView::updateBorder() { LOG_NOIMPL(); }
 
-Range* FrameWin::markedTextRange() const { LOG_NOIMPL(); return 0; }
-bool FrameWin::shouldChangeSelection(Selection const&,Selection const&,WebCore::EAffinity,bool) const { LOG_NOIMPL(); return true; }
-void FrameWin::respondToChangedSelection(WebCore::Selection const&,bool) { LOG_NOIMPL(); }
-void FrameWin::respondToChangedContents(const Selection &endingSelection) { LOG_NOIMPL(); }
+void Frame::respondToChangedSelection(WebCore::Selection const&,bool) { LOG_NOIMPL(); }
 
 void Editor::ignoreSpelling() { LOG_NOIMPL(); }
 void Editor::learnSpelling() { LOG_NOIMPL(); }

@@ -28,7 +28,7 @@
 
 #include "PluginPackageWin.h"
 #include "PluginViewWin.h"
-#include "FrameWin.h"
+#include "Frame.h"
 #include <windows.h>
 #include <shlwapi.h>
 
@@ -386,7 +386,7 @@ PluginPackageWin* PluginDatabaseWin::pluginForExtension(const String& extension)
     return 0;
 }
 
-PluginViewWin* PluginDatabaseWin::createPluginView(FrameWin* parentFrame, Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType)
+PluginViewWin* PluginDatabaseWin::createPluginView(Frame* parentFrame, Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType)
 {
     PluginPackageWin* plugin = 0;
     

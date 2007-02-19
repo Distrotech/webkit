@@ -32,7 +32,7 @@
 #include "FrameLoader.h"
 #include "FrameLoadRequest.h"
 #include "FrameTree.h"
-#include "FrameWin.h"
+#include "Frame.h"
 #include "FrameView.h"
 #include "GraphicsContext.h"
 #include "Image.h"
@@ -1069,12 +1069,12 @@ void PluginViewWin::determineQuirks(const String& mimeType)
         m_quirks |= PluginQuirkWantsMozillaUserAgent;
 }
 
-PluginViewWin* PluginViewWin::createNullPluginView(FrameWin* parentFrame, Element* element)
+PluginViewWin* PluginViewWin::createNullPluginView(Frame* parentFrame, Element* element)
 {
     return new PluginViewWin(parentFrame, element);
 }
 
-PluginViewWin::PluginViewWin(FrameWin* parentFrame, Element* element)
+PluginViewWin::PluginViewWin(Frame* parentFrame, Element* element)
     : m_parentFrame(parentFrame)
     , m_plugin(0)
     , m_element(element)
@@ -1091,7 +1091,7 @@ PluginViewWin::PluginViewWin(FrameWin* parentFrame, Element* element)
 {
 }
 
-PluginViewWin::PluginViewWin(FrameWin* parentFrame, PluginPackageWin* plugin, Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType)
+PluginViewWin::PluginViewWin(Frame* parentFrame, PluginPackageWin* plugin, Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType)
     : m_parentFrame(parentFrame)
     , m_plugin(plugin)
     , m_element(element)
