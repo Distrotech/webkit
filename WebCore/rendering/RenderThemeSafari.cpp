@@ -108,11 +108,6 @@ RenderThemeSafari::~RenderThemeSafari()
     ::FreeLibrary(m_themeDLL);
 }
 
-Color RenderThemeSafari::platformActiveSelectionForegroundColor() const
-{
-    return Color::black;
-}
-
 Color RenderThemeSafari::platformActiveSelectionBackgroundColor() const
 {
     return Color(181, 213, 255);

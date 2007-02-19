@@ -1,5 +1,17 @@
 2007-02-18  Adam Roben  <aroben@apple.com>
 
+        Rubberstamped by Hyatt.
+
+        Fix <rdar://problem/5006918> All selected text is black, even if it is
+        some other color when not selected
+
+        * platform/win/PopupMenuWin.cpp:
+        (WebCore::PopupMenu::paint): Use the listbox colors for selected items.
+        * rendering/RenderThemeSafari.cpp: Removed platformActiveSelectionForegroundColor.
+        * rendering/RenderThemeSafari.h: Ditto.
+
+2007-02-18  Adam Roben  <aroben@apple.com>
+
         Reviewed by Hyatt.
 
         Fix <rdar://problem/5006872> <select> popups need Aqua scroll bars

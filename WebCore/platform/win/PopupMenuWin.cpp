@@ -458,8 +458,8 @@ void PopupMenu::paint(const IntRect& damageRect, HDC hdc)
 
         Color optionBackgroundColor, optionTextColor;
         if (client()->itemIsSelected(index)) {
-            optionBackgroundColor = theme()->platformActiveSelectionBackgroundColor();
-            optionTextColor = theme()->platformActiveSelectionForegroundColor();
+            optionBackgroundColor = theme()->activeListBoxSelectionBackgroundColor();
+            optionTextColor = theme()->activeListBoxSelectionForegroundColor();
         } else {
             optionBackgroundColor = client()->itemStyle(index)->backgroundColor();
             optionTextColor = client()->itemStyle(index)->color();

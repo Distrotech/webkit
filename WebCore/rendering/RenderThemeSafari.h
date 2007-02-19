@@ -62,7 +62,6 @@ public:
     virtual bool isControlStyled(const RenderStyle*, const BorderData&,
                                  const BackgroundLayer&, const Color& backgroundColor) const;
 
-    virtual Color platformActiveSelectionForegroundColor() const;
     virtual Color platformActiveSelectionBackgroundColor() const;
     virtual Color platformInactiveSelectionBackgroundColor() const;
     virtual Color activeListBoxSelectionBackgroundColor() const;
