@@ -883,7 +883,7 @@ void Element::focus()
     updateFocusAppearance();
 }
 
-void Element::updateFocusAppearance()
+void Element::updateFocusAppearance(bool restorePreviousSelection)
 {
     if (this == rootEditableElement()) { 
         Frame* frame = document()->frame();
