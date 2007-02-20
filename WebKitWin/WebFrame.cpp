@@ -2102,7 +2102,7 @@ void WebFrame::redirectDataToPlugin(Widget* /*pluginWidget*/)
     // Ideally, this function shouldn't be necessary, see <rdar://problem/4852889>
 
     ASSERT(core(this));
-    core(this)->loader()->cancelMainResourceLoad(error);
+    core(this)->loader()->documentLoader()->cancelMainResourceLoad(error);
 }
     
 Widget* WebFrame::createJavaAppletWidget(const IntSize&, Element* element, const KURL& /*baseURL*/, const Vector<String>& paramNames, const Vector<String>& paramValues)
