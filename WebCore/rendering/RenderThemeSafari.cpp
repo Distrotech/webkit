@@ -32,8 +32,8 @@
 #include "HTMLInputElement.h"
 #include "RenderSlider.h"
 #include "RenderView.h"
+#include "RetainPtr.h"
 #include "cssstyleselector.h"
-
 #include <CoreGraphics/CoreGraphics.h>
 
 namespace WebCore {
@@ -661,36 +661,31 @@ void RenderThemeSafari::paintMenuListButtonGradients(RenderObject* o, const Rend
 
     int radius = o->style()->borderTopLeftRadius().width();
 
-    CGColorSpaceRef cspace = CGColorSpaceCreateDeviceRGB();
+    RetainPtr<CGColorSpaceRef> cspace(AdoptCF, CGColorSpaceCreateDeviceRGB());
 
     FloatRect topGradient(r.x(), r.y(), r.width(), r.height() / 2.0f);
     struct CGFunctionCallbacks topCallbacks = { 0, TopGradientInterpolate, NULL };
-    CGFunctionRef topFunction = CGFunctionCreate(NULL, 1, NULL, 4, NULL, &topCallbacks);
-    CGShadingRef topShading = CGShadingCreateAxial(cspace, CGPointMake(topGradient.x(), topGradient.y()),
-                                                   CGPointMake(topGradient.x(), topGradient.bottom()), topFunction, false, false);
+    RetainPtr<CGFunctionRef> topFunction(AdoptCF, CGFunctionCreate(NULL, 1, NULL, 4, NULL, &topCallbacks));
+    RetainPtr<CGShadingRef> topShading(AdoptCF, CGShadingCreateAxial(cspace.get(), CGPointMake(topGradient.x(), topGradient.y()), CGPointMake(topGradient.x(), topGradient.bottom()), topFunction.get(), false, false));
 
     FloatRect bottomGradient(r.x() + radius, r.y() + r.height() / 2.0f, r.width() - 2.0f * radius, r.height() / 2.0f);
     struct CGFunctionCallbacks bottomCallbacks = { 0, BottomGradientInterpolate, NULL };
-    CGFunctionRef bottomFunction = CGFunctionCreate(NULL, 1, NULL, 4, NULL, &bottomCallbacks);
-    CGShadingRef bottomShading = CGShadingCreateAxial(cspace, CGPointMake(bottomGradient.x(),  bottomGradient.y()),
-                                                      CGPointMake(bottomGradient.x(), bottomGradient.bottom()), bottomFunction, false, false);
+    RetainPtr<CGFunctionRef> bottomFunction(AdoptCF, CGFunctionCreate(NULL, 1, NULL, 4, NULL, &bottomCallbacks));
+    RetainPtr<CGShadingRef> bottomShading(AdoptCF, CGShadingCreateAxial(cspace.get(), CGPointMake(bottomGradient.x(),  bottomGradient.y()), CGPointMake(bottomGradient.x(), bottomGradient.bottom()), bottomFunction.get(), false, false));
 
     struct CGFunctionCallbacks mainCallbacks = { 0, MainGradientInterpolate, NULL };
-    CGFunctionRef mainFunction = CGFunctionCreate(NULL, 1, NULL, 4, NULL, &mainCallbacks);
-    CGShadingRef mainShading = CGShadingCreateAxial(cspace, CGPointMake(r.x(),  r.y()),
-                                                    CGPointMake(r.x(), r.bottom()), mainFunction, false, false);
+    RetainPtr<CGFunctionRef> mainFunction(AdoptCF, CGFunctionCreate(NULL, 1, NULL, 4, NULL, &mainCallbacks));
+    RetainPtr<CGShadingRef> mainShading(AdoptCF, CGShadingCreateAxial(cspace.get(), CGPointMake(r.x(),  r.y()), CGPointMake(r.x(), r.bottom()), mainFunction.get(), false, false));
 
-    CGShadingRef leftShading = CGShadingCreateAxial(cspace, CGPointMake(r.x(),  r.y()),
-                                                    CGPointMake(r.x() + radius, r.y()), mainFunction, false, false);
+    RetainPtr<CGShadingRef> leftShading(AdoptCF, CGShadingCreateAxial(cspace.get(), CGPointMake(r.x(),  r.y()), CGPointMake(r.x() + radius, r.y()), mainFunction.get(), false, false));
 
-    CGShadingRef rightShading = CGShadingCreateAxial(cspace, CGPointMake(r.right(),  r.y()),
-                                                     CGPointMake(r.right() - radius, r.y()), mainFunction, false, false );
+    RetainPtr<CGShadingRef> rightShading(AdoptCF, CGShadingCreateAxial(cspace.get(), CGPointMake(r.right(),  r.y()), CGPointMake(r.right() - radius, r.y()), mainFunction.get(), false, false));
     paintInfo.context->save();
     CGContextClipToRect(context, r);
     paintInfo.context->addRoundedRectClip(r,
         o->style()->borderTopLeftRadius(), o->style()->borderTopRightRadius(),
         o->style()->borderBottomLeftRadius(), o->style()->borderBottomRightRadius());
-    CGContextDrawShading(context, mainShading);
+    CGContextDrawShading(context, mainShading.get());
     paintInfo.context->restore();
 
     paintInfo.context->save();
@@ -698,7 +693,7 @@ void RenderThemeSafari::paintMenuListButtonGradients(RenderObject* o, const Rend
     paintInfo.context->addRoundedRectClip(enclosingIntRect(topGradient),
         o->style()->borderTopLeftRadius(), o->style()->borderTopRightRadius(),
         IntSize(), IntSize());
-    CGContextDrawShading(context, topShading);
+    CGContextDrawShading(context, topShading.get());
     paintInfo.context->restore();
 
     paintInfo.context->save();
@@ -706,7 +701,7 @@ void RenderThemeSafari::paintMenuListButtonGradients(RenderObject* o, const Rend
     paintInfo.context->addRoundedRectClip(enclosingIntRect(bottomGradient),
         IntSize(), IntSize(),
         o->style()->borderBottomLeftRadius(), o->style()->borderBottomRightRadius());
-    CGContextDrawShading(context, bottomShading);
+    CGContextDrawShading(context, bottomShading.get());
     paintInfo.context->restore();
 
     paintInfo.context->save();
@@ -714,8 +709,8 @@ void RenderThemeSafari::paintMenuListButtonGradients(RenderObject* o, const Rend
     paintInfo.context->addRoundedRectClip(r,
         o->style()->borderTopLeftRadius(), o->style()->borderTopRightRadius(),
         o->style()->borderBottomLeftRadius(), o->style()->borderBottomRightRadius());
-    CGContextDrawShading(context, leftShading);
-    CGContextDrawShading(context, rightShading);
+    CGContextDrawShading(context, leftShading.get());
+    CGContextDrawShading(context, rightShading.get());
     paintInfo.context->restore();
 
     paintInfo.context->restore();
@@ -840,26 +835,24 @@ bool RenderThemeSafari::paintSliderTrack(RenderObject* o, const RenderObject::Pa
     }
 
     CGContextRef context = paintInfo.context->platformContext();
-    CGColorSpaceRef cspace = CGColorSpaceCreateDeviceRGB();
+    RetainPtr<CGColorSpaceRef> cspace(AdoptCF, CGColorSpaceCreateDeviceRGB());
 
     paintInfo.context->save();
     CGContextClipToRect(context, bounds);
 
     struct CGFunctionCallbacks mainCallbacks = { 0, TrackGradientInterpolate, NULL };
-    CGFunctionRef mainFunction = CGFunctionCreate(NULL, 1, NULL, 4, NULL, &mainCallbacks);
-    CGShadingRef mainShading;
+    RetainPtr<CGFunctionRef> mainFunction(AdoptCF, CGFunctionCreate(NULL, 1, NULL, 4, NULL, &mainCallbacks));
+    RetainPtr<CGShadingRef> mainShading;
     if (o->style()->appearance() == SliderVerticalAppearance)
-        mainShading = CGShadingCreateAxial(cspace, CGPointMake(bounds.x(),  bounds.bottom()),
-                                                   CGPointMake(bounds.right(), bounds.bottom()), mainFunction, false, false);
+        mainShading.adoptCF(CGShadingCreateAxial(cspace.get(), CGPointMake(bounds.x(),  bounds.bottom()), CGPointMake(bounds.right(), bounds.bottom()), mainFunction.get(), false, false));
     else
-        mainShading = CGShadingCreateAxial(cspace, CGPointMake(bounds.x(),  bounds.y()),
-                                                   CGPointMake(bounds.x(), bounds.bottom()), mainFunction, false, false);
+        mainShading.adoptCF(CGShadingCreateAxial(cspace.get(), CGPointMake(bounds.x(),  bounds.y()), CGPointMake(bounds.x(), bounds.bottom()), mainFunction.get(), false, false));
 
     IntSize radius(trackRadius, trackRadius);
     paintInfo.context->addRoundedRectClip(bounds,
         radius, radius,
         radius, radius);
-    CGContextDrawShading(context, mainShading);
+    CGContextDrawShading(context, mainShading.get());
     paintInfo.context->restore();
     
     return false;
