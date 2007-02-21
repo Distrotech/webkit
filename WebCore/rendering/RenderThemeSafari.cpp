@@ -597,7 +597,7 @@ bool RenderThemeSafari::paintMenuList(RenderObject* o, const RenderObject::Paint
     // Now inflate it to account for the shadow.
     inflatedRect = inflateRect(inflatedRect, size, popupButtonMargins(controlSize));
 
-    paintThemePart(MenuListPart, info.context->platformContext(), inflatedRect, controlSize, determineState(o));
+    paintThemePart(DropDownButtonPart, info.context->platformContext(), inflatedRect, controlSize, determineState(o));
 
     return false;
 }
