@@ -6453,6 +6453,10 @@
 					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSHTMLSelectElementCustom.cpp"
 					>
 				</File>
+                                <File
+                                        RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSHTMLSelectElementCustom.h"
+                                        >
+                                </File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSNodeIteratorCustom.cpp"
 					>
