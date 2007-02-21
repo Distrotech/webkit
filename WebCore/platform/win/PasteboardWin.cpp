@@ -230,7 +230,7 @@ void Pasteboard::writeSelection(Range* selectedRange, bool canSmartCopyOrDelete,
     }
 }
 
-void Pasteboard::writeURL(const KURL& url, const String& titleStr, Frame* frame)
+void Pasteboard::writeURL(const KURL& url, const String& titleStr, Frame* frame, bool isImage)
 {
     ASSERT(!url.isEmpty());
 
@@ -266,6 +266,11 @@ void Pasteboard::writeURL(const KURL& url, const String& titleStr, Frame* frame)
             ::GlobalFree(cbData);
         ::CloseClipboard();
     }
+}
+
+void Pasteboard::writeImage(const HitTestResult&)
+{
+    LOG_NOIMPL();
 }
 
 bool Pasteboard::canSmartReplace()

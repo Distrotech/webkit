@@ -102,11 +102,6 @@ void WebContextMenuClient::downloadURL(const KURL& url)
     download->start();
 }
 
-void WebContextMenuClient::copyImageToClipboard(const HitTestResult&)
-{
-    LOG_NOIMPL();
-}
-
 void WebContextMenuClient::searchWithGoogle(const Frame* frame)
 {
     String searchString = frame->selectedText();
