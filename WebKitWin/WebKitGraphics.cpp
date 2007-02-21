@@ -29,15 +29,16 @@
 
 #include "WebKit.h"
 #pragma warning(push, 0)
-#include <WebCore/WebCoreTextRenderer.h>
+#include <WebCore/GraphicsContext.h>
 #include <WebCore/PlatformString.h>
+#include <WebCore/WebCoreTextRenderer.h>
 #pragma warning(pop)
 
 using namespace WebCore;
 
-void DrawTextAtPoint(LPCTSTR text, int length, HDC dc, RECT clipRect, LPCTSTR fontFamily, int familyLength, int size, bool bold, bool italic, CGColorRef color)
+void DrawTextAtPoint(LPCTSTR text, int length, HDC dc, RECT clipRect, bool bottomAligned, LPCTSTR fontFamily, int familyLength, int size, bool bold, bool italic, CGColorRef color, bool centerTruncate)
 {
     String textString(text, length);
     String fontFamilyString(fontFamily, familyLength);
-    WebCoreDrawTextAtPoint(textString, dc, clipRect, fontFamilyString, size, bold, italic, color);
+    WebCoreDrawTextAtPoint(textString, dc, clipRect, bottomAligned, fontFamilyString, size, bold, italic, color, centerTruncate);
 }

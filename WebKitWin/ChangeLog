@@ -1,3 +1,14 @@
+2007-02-20  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Darin and Anders.
+
+        Fix <rdar://problem/5003318> App: Status bar text is more difficult to
+        read than Mac OS X Safari
+
+        * WebKitGraphics.cpp:
+        (DrawTextAtPoint): Added bottomAlign and centerTruncate parameters.
+        * WebKitGraphics.h: Ditto.
+
 2007-02-20  Darin Adler  <darin@apple.com>
 
         Reviewed by Anders.

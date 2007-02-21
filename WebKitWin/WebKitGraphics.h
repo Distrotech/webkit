@@ -26,14 +26,9 @@
 #ifndef WebKitGraphics_h
 #define WebKitGraphics_h
 
-#pragma warning(push, 0)
-#include <WebCore/WebCoreTextRenderer.h>
-#pragma warning(pop)
+typedef struct CGColor* CGColorRef;
+typedef struct CGContext *CGContextRef;
 
-extern "C" {
-
-void DrawTextAtPoint(LPCTSTR text, int length, HDC dc, RECT clipRect, LPCTSTR fontfamily, int fontFamilyLength, int size, bool bold, bool italic, CGColorRef color);
-
-}
+void DrawTextAtPoint(LPCTSTR text, int length, HDC, RECT clipRect, bool bottomAligned, LPCTSTR fontfamily, int fontFamilyLength, int size, bool bold, bool italic, CGColorRef, bool centerTruncate);
 
 #endif

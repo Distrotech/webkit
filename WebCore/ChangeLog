@@ -1,3 +1,18 @@
+2007-02-20  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Darin and Anders.
+
+        Fix <rdar://problem/5003318> App: Status bar text is more difficult to
+        read than Mac OS X Safari
+
+        * WebCore.vcproj/WebCore.vcproj: Added new files.
+        * platform/win/FileChooserWin.cpp:
+        (WebCore::FileChooser::openFileChooser):
+        (WebCore::FileChooser::basenameForWidth): Added truncation.
+        * platform/win/WebCoreTextRenderer.cpp:
+        (WebCore::WebCoreDrawTextAtPoint): Added bottomAlign and centerTruncate parameters.
+        * platform/win/WebCoreTextRenderer.h: Ditto.
+
 2007-02-20  Alice Liu  <alice.liu@apple.com>
 
         Build fix

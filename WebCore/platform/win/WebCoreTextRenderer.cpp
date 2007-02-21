@@ -28,13 +28,14 @@
 #include "Font.h"
 #include "FontDescription.h"
 #include "GraphicsContext.h"
+#include "StringTruncator.h"
 #include "TextStyle.h"
 
 #include <CoreGraphics/CoreGraphics.h>
 
 namespace WebCore {
 
-void WebCoreDrawTextAtPoint(const String& text, HDC dc, RECT clipRect, const String& fontFamily, int size, bool bold, bool italic, CGColorRef color)
+void WebCoreDrawTextAtPoint(const String& text, HDC dc, RECT clipRect, bool bottomAligned, const String& fontFamily, int size, bool bold, bool italic, CGColorRef color, bool centerTruncate)
 {
     GraphicsContext graphicsContext(dc);
 
@@ -51,14 +52,19 @@ void WebCoreDrawTextAtPoint(const String& text, HDC dc, RECT clipRect, const Str
     Font renderer(f, 0, 0);
     renderer.update();
 
-    TextRun run(text.characters(), text.length());
+    // FIXME: We should split string truncation out into a separate function that WebKit can call
+    String string = centerTruncate
+        ? StringTruncator::centerTruncate(text, clipRect.right - clipRect.left, renderer)
+        : text;
+
+    TextRun run(string.characters(), string.length());
     TextStyle style;
     ASSERT(CGColorGetNumberOfComponents(color) == 4);
     const CGFloat* components = CGColorGetComponents(color);
     graphicsContext.save();
     graphicsContext.setFillColor(makeRGBA((int)(components[0] * 255), (int)(components[1] * 255), (int)(components[2] * 255), (int)(components[3] * 255)));
     graphicsContext.clip(IntRect(clipRect.left, clipRect.top, clipRect.right-clipRect.left, clipRect.bottom-clipRect.top));
-    renderer.drawText(&graphicsContext, run, style, FloatPoint(clipRect.left, clipRect.top+renderer.ascent()));
+    renderer.drawText(&graphicsContext, run, style, FloatPoint(clipRect.left, bottomAligned ? clipRect.bottom - renderer.descent() : clipRect.top + renderer.ascent()));
     graphicsContext.restore();
 }
 

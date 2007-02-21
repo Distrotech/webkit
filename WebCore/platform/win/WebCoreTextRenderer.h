@@ -31,6 +31,6 @@ namespace WebCore {
 
     class String;
 
-    void WebCoreDrawTextAtPoint(const String& text, HDC dc, RECT clipRect, const String& fontFamily, int size, bool bold, bool italic, CGColorRef color);
+    void WebCoreDrawTextAtPoint(const String& text, HDC, RECT clipRect, bool bottomAligned, const String& fontFamily, int size, bool bold, bool italic, CGColorRef, bool centerTruncate);
 
 }

@@ -33,7 +33,8 @@
 #include "RenderObject.h"
 #include "RenderThemeWin.h"
 #include "RenderView.h"
-#include "Shlwapi.h"
+#include "StringTruncator.h"
+#include <shlwapi.h>
 #include <tchar.h>
 #include <windows.h>
 
@@ -56,7 +57,7 @@ void FileChooser::openFileChooser(Document* document)
     if (!view)
         return;
 
-    TCHAR fileBuf[_MAX_PATH];
+    TCHAR fileBuf[MAX_PATH];
     OPENFILENAME ofn;
 
     memset(&ofn, 0, sizeof(ofn));
@@ -80,18 +81,21 @@ void FileChooser::openFileChooser(Document* document)
         chooseFile(String(fileBuf));
 }
 
-String FileChooser::basenameForWidth(const Font&, int width) const
+String FileChooser::basenameForWidth(const Font& font, int width) const
 {
     if (width <= 0)
         return String();
 
-    // FIXME: Need to actually truncate the string to width here.
+    String string;
     if (m_filename.isEmpty())
-        return fileButtonNoFileSelectedLabel();
+        string = fileButtonNoFileSelectedLabel();
+    else {
+        String tmpFilename = m_filename;
+        LPTSTR basename = PathFindFileName(tmpFilename.charactersWithNullTermination());
+        string = String(basename);
+    }
 
-    String tmpFilename = m_filename;
-    LPTSTR basename = PathFindFileName(tmpFilename.charactersWithNullTermination());
-    return String(basename);
+    return StringTruncator::centerTruncate(string, width, font);
 }
 
 }
