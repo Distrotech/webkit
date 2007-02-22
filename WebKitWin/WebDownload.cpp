@@ -255,7 +255,7 @@ HRESULT STDMETHODCALLTYPE WebDownload::initToResumeWithBundle(
     // Attempt to remove the ".download" extension from the bundle for the final file destination
     // Failing that, we clear m_destination and will ask the delegate later once the download starts
     if (m_bundlePath.endsWith(BundleExtension, false)) {
-        m_destination = m_bundlePath;
+        m_destination = m_bundlePath.copy();
         m_destination.truncate(m_destination.length() - BundleExtension.length());
     } else
         m_destination = String();
