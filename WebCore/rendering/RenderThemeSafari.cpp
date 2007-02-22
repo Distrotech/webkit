@@ -934,7 +934,7 @@ void RenderThemeSafari::adjustSearchFieldStyle(CSSStyleSelector* selector, Rende
     setFontFromControlSize(selector, style, controlSize);
 }
 
-bool RenderThemeSafari::paintSearchFieldCancelButton(RenderObject* o, const RenderObject::PaintInfo& paintInfo, const IntRect& r)
+bool RenderThemeSafari::paintSearchFieldCancelButton(RenderObject* o, const RenderObject::PaintInfo& paintInfo, const IntRect&)
 {
     Node* input = o->node()->shadowAncestorNode();
     ASSERT(input);
@@ -974,7 +974,7 @@ void RenderThemeSafari::adjustSearchFieldDecorationStyle(CSSStyleSelector* selec
     style->setHeight(Length(size.height(), Fixed));
 }
 
-bool RenderThemeSafari::paintSearchFieldDecoration(RenderObject* o, const RenderObject::PaintInfo& paintInfo, const IntRect& r)
+bool RenderThemeSafari::paintSearchFieldDecoration(RenderObject*, const RenderObject::PaintInfo&, const IntRect&)
 {
     return false;
 }
@@ -986,7 +986,7 @@ void RenderThemeSafari::adjustSearchFieldResultsDecorationStyle(CSSStyleSelector
     style->setHeight(Length(size.height(), Fixed));
 }
 
-bool RenderThemeSafari::paintSearchFieldResultsDecoration(RenderObject* o, const RenderObject::PaintInfo& paintInfo, const IntRect& r)
+bool RenderThemeSafari::paintSearchFieldResultsDecoration(RenderObject* o, const RenderObject::PaintInfo& paintInfo, const IntRect&)
 {
     Node* input = o->node()->shadowAncestorNode();
     ASSERT(input);
@@ -995,7 +995,7 @@ bool RenderThemeSafari::paintSearchFieldResultsDecoration(RenderObject* o, const
 
     IntRect searchRect = renderer->absoluteBoundingBoxRect();
 
-    paintThemePart(SearchFieldResultsDecorationPart, paintInfo.context->platformContext(), searchRect, controlSizeFromRect(searchRect, resultsButtonSizes()), determineState(o));
+    paintThemePart(SearchFieldResultsDecorationPart, paintInfo.context->platformContext(), searchRect, controlSizeFromRect(searchRect, searchFieldSizes()), determineState(o));
     return false;
 }
 
@@ -1007,7 +1007,7 @@ void RenderThemeSafari::adjustSearchFieldResultsButtonStyle(CSSStyleSelector* se
     style->setHeight(Length(size.height(), Fixed));
 }
 
-bool RenderThemeSafari::paintSearchFieldResultsButton(RenderObject* o, const RenderObject::PaintInfo& paintInfo, const IntRect& r)
+bool RenderThemeSafari::paintSearchFieldResultsButton(RenderObject* o, const RenderObject::PaintInfo& paintInfo, const IntRect&)
 {
     Node* input = o->node()->shadowAncestorNode();
     ASSERT(input);
@@ -1016,7 +1016,7 @@ bool RenderThemeSafari::paintSearchFieldResultsButton(RenderObject* o, const Ren
 
     IntRect searchRect = renderer->absoluteBoundingBoxRect();
 
-    paintThemePart(SearchFieldResultsButtonPart, paintInfo.context->platformContext(), searchRect, controlSizeFromRect(searchRect, resultsButtonSizes()), determineState(o));
+    paintThemePart(SearchFieldResultsButtonPart, paintInfo.context->platformContext(), searchRect, controlSizeFromRect(searchRect, searchFieldSizes()), determineState(o));
     return false;
 }
 

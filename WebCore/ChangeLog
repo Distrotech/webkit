@@ -1,3 +1,17 @@
+2007-02-22  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Adele.
+
+        Make sure we always paint the right size search results icon.
+
+        * rendering/RenderThemeSafari.cpp:
+        (WebCore::RenderThemeSafari::paintSearchFieldCancelButton): Removed unused parameter.
+        (WebCore::RenderThemeSafari::paintSearchFieldDecoration): Ditto.
+        (WebCore::RenderThemeSafari::paintSearchFieldResultsDecoration): Base
+        the control size off of the search field rect to ensure that the icon
+        and the control are the same size.
+        (WebCore::RenderThemeSafari::paintSearchFieldResultsButton): Ditto.
+
 2007-02-21  Adam Roben  <aroben@apple.com>
 
         Reviewed by Adele.
