@@ -1,3 +1,139 @@
+2007-02-22  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Ada, Lou, and Steve.
+
+        Last of the major Drag and drop implementation 
+        patches for windows:
+        * Adds support for DOM Clipboard during drag operations
+        * Un-statics and refactors a few Pasteboard and DragData functions
+          to allow them to share implementation with ClipboardWin and other 
+          drag logic
+        * Moves COMPtr.h from WebKit to WebCore
+        * Adds WCDataObject, which is basically a direct copy of
+          SDataObject from the app, with a few modifications to support
+          DOM clipboard functionality.  Also includes a few suggestions
+          from Ada and Steve, mostly involving memory management :D
+        
+        This resolves 
+        <rdar://problem/4821407> Cannot drag link to bookmarks bar to create new link
+        <rdar://problem/4869496> User Interaction Essentials: Drag
+
+        * WebCore.vcproj/WebCore.vcproj:
+          Adding new files
+          
+        * page/win/DragControllerWin.cpp:
+        (WebCore::DragController::maxDragImageSize):
+          Maximum size of drag image to allow sharp edges
+          is 208x208
+          
+        * page/win/EventHandlerWin.cpp:
+        (WebCore::EventHandler::createDraggingClipboard):
+          Properly implemented now
+          
+        * platform/win/ClipboardWin.cpp:
+        (WebCore::):
+        (WebCore::clipboardTypeFromMIMEType):
+        (WebCore::ClipboardWin::ClipboardWin):
+        (WebCore::ClipboardWin::~ClipboardWin):
+        (WebCore::writeURL):
+          Helper function to write a url to a WCDataObject
+        (WebCore::ClipboardWin::clearData):
+        (WebCore::ClipboardWin::clearAllData):
+        (WebCore::ClipboardWin::getData):
+        (WebCore::ClipboardWin::setData):
+        (WebCore::addMimeTypesForFormat):
+          Helper function for ClipboardWin::types
+        (WebCore::ClipboardWin::types):
+        (WebCore::ClipboardWin::setDragImage):
+        (WebCore::ClipboardWin::setDragImageElement):
+          General setters, match behaviour of WebKit/Mac
+        (WebCore::ClipboardWin::createDragImage):
+          Creates a drag image for a DOM specified Image is specified
+          can't currently generate an image for an arbitrary element
+        (WebCore::imageToMarkup):
+          Wraps a url in an img tag
+        (WebCore::ClipboardWin::declareAndWriteDragImage):
+        (WebCore::ClipboardWin::writeURL):
+        (WebCore::ClipboardWin::writeRange):
+        (WebCore::ClipboardWin::hasData):
+          Implement Clipboard required by DragController.
+          Provides read/write DOM Clipboard implementation for dragging,
+          read only when accessing system clipboard.
+          
+        * platform/win/ClipboardWin.h:
+        (WebCore::ClipboardWin::dataObject):
+          Provide an accessor for the dataObject
+          
+        * platform/win/DragDataWin.cpp:
+        (WebCore::urlWFormat):
+        (WebCore::urlFormat):
+        (WebCore::plainTextFormat):
+        (WebCore::plainTextWFormat):
+        (WebCore::texthtmlFormat):
+        (WebCore::htmlFormat):
+        (WebCore::getURL):
+        (WebCore::DragData::asURL):
+        (WebCore::getPlainText):
+        (WebCore::DragData::asPlainText):
+        (WebCore::DragData::asFragment):
+          Refactoring and removing of a few static modifiers to allow sharing with Clipboard
+          
+        * platform/win/DragImageWin.cpp:
+        (WebCore::dragImageSize):
+        (WebCore::deleteDragImage):
+        (WebCore::allocImage):
+        (WebCore::createCgContextFromBitmap):
+        (WebCore::scaleDragImage):
+        (WebCore::dissolveDragImageToFraction):
+        (WebCore::createDragImageFromImage):
+        (WebCore::createDragImageIconForCachedImage):
+          Implement DragImage functions
+          
+        * platform/win/EditorWin.cpp:
+        (WebCore::Editor::newGeneralClipboard):
+          Creating a Clipboard that wraps the system clipboard
+          
+        * platform/win/PasteboardWin.cpp:
+        (WebCore::createGlobalData):
+        (WebCore::markupToCF_HTML):
+        (WebCore::urlToMarkup):
+        (WebCore::replaceNBSP):
+          removing 'static'
+          
+        * platform/win/WCDataObject.cpp: Added.
+        (WebCore::WCEnumFormatEtc::WCEnumFormatEtc):
+        (WebCore::WCEnumFormatEtc::QueryInterface):
+        (WebCore::WCEnumFormatEtc::AddRef):
+        (WebCore::WCEnumFormatEtc::Release):
+        (WebCore::WCEnumFormatEtc::Next):
+        (WebCore::WCEnumFormatEtc::Skip):
+        (WebCore::WCEnumFormatEtc::Reset):
+        (WebCore::WCEnumFormatEtc::Clone):
+        (WebCore::WCDataObject::createInstance):
+        (WebCore::WCDataObject::WCDataObject):
+        (WebCore::WCDataObject::~WCDataObject):
+        (WebCore::WCDataObject::QueryInterface):
+        (WebCore::WCDataObject::AddRef):
+        (WebCore::WCDataObject::Release):
+        (WebCore::WCDataObject::GetData):
+        (WebCore::WCDataObject::GetDataHere):
+        (WebCore::WCDataObject::QueryGetData):
+        (WebCore::WCDataObject::GetCanonicalFormatEtc):
+        (WebCore::WCDataObject::SetData):
+        (WebCore::WCDataObject::CopyMedium):
+        (WebCore::WCDataObject::EnumFormatEtc):
+        (WebCore::WCDataObject::DAdvise):
+        (WebCore::WCDataObject::DUnadvise):
+        (WebCore::WCDataObject::EnumDAdvise):
+        (WebCore::WCDataObject::clearData):
+          Copied from SDataObject in the App createInstance and clearData
+          are the only new functions.  clearData removes any entries in the
+          object with a specified CLIPFORMAT.
+          Have also made a few error and memory handling changes suggested
+          by Steve and Ada
+        * platform/win/WCDataObject.h: Added.
+          Header for the above
+
 2007-02-22  Adam Roben  <aroben@apple.com>
 
         Reviewed by Adele.

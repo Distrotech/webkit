@@ -28,13 +28,17 @@
 
 #include "ClipboardWin.h"
 
+#include <windows.h>
+
 namespace WebCore {
 
 PassRefPtr<Clipboard> Editor::newGeneralClipboard(ClipboardAccessPolicy policy)
 {
-    //FIXME: May need an IDataObject here to act as a backing object for dragging
-    RefPtr<ClipboardWin> clipboard = new ClipboardWin(false, 0, policy);
-    return clipboard.release();
+    COMPtr<IDataObject> clipboardData;
+    if (!SUCCEEDED(OleGetClipboard(&clipboardData)))
+        clipboardData = 0;
+
+    return new ClipboardWin(false, clipboardData, policy);
 }
 
 } // namespace WebCore

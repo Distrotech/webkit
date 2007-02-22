@@ -28,7 +28,14 @@
 
 typedef struct CGColor* CGColorRef;
 typedef struct CGContext *CGContextRef;
+namespace WebCore {
+    class Color;
+    class Font;
+    class GraphicsContext;
+    class IntPoint;
+    class TextRun;
+}
 
 void DrawTextAtPoint(LPCTSTR text, int length, HDC, RECT clipRect, bool bottomAligned, LPCTSTR fontfamily, int fontFamilyLength, int size, bool bold, bool italic, CGColorRef, bool centerTruncate);
-
+void DrawDoubledTextAtPoint(WebCore::GraphicsContext& context, const WebCore::TextRun& run, const WebCore::IntPoint& textPos, const WebCore::Color& topColor, const WebCore::Color& bottomColor, const WebCore::Font&);
 #endif

@@ -23,28 +23,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef Clipboard_Win_h
-#define Clipboard_Win_h
+#ifndef ClipboardWin_h
+#define ClipboardWin_h
 
 #include "Clipboard.h"
 
+#include "CachedResourceClient.h"
 #include "IntPoint.h"
+#include "COMPtr.h"
 
-#include <objidl.h>
+struct IDataObject;
 
 namespace WebCore {
 
     class CachedImage;
     class IntPoint;
+    class WCDataObject;
 
     // State available during IE's events for drag and drop and copy/paste
-    class ClipboardWin : public Clipboard {
+    class ClipboardWin : public Clipboard, public CachedResourceClient {
     public:
-        ClipboardWin(bool isForDragging, IDataObject* dataObject, ClipboardAccessPolicy policy);
-        ~ClipboardWin() { }
-
-        // Is this operation a drag-drop or a copy-paste?
-        bool isForDragging() const;
+        ClipboardWin(bool isForDragging, COMPtr<IDataObject> dataObject, ClipboardAccessPolicy policy);
+        ClipboardWin(bool isForDragging, COMPtr<WCDataObject> dataObject, ClipboardAccessPolicy policy);
+        ~ClipboardWin();
     
         void clearData(const String& type);
         void clearAllData();
@@ -54,10 +55,7 @@ namespace WebCore {
         // extensions beyond IE's API
         HashSet<String> types() const;
     
-        IntPoint dragLocation() const ;
-        CachedImage* dragImage() const;
         void setDragImage(CachedImage*, const IntPoint&);
-        Node* dragImageElement();
         void setDragImageElement(Node*, const IntPoint&);
 
         virtual DragImageRef createDragImage(IntPoint& dragLoc) const;
@@ -67,14 +65,15 @@ namespace WebCore {
 
         virtual bool hasData();
 
+        COMPtr<IDataObject> dataObject() { return m_dataObject; }
     private:
-        IntPoint m_dragLoc;
-        CachedImage* m_dragImage;
-        RefPtr<Node> m_dragImageElement;
-        bool m_isForDragging;
-        IDataObject* m_dataObject;
+        void resetFromClipboard();
+        void setDragImage(CachedImage*, Node*, const IntPoint&);
+        COMPtr<IDataObject> m_dataObject;
+        COMPtr<WCDataObject> m_writableDataObject;
+        Frame* m_frame;
     };
 
 } // namespace WebCore
 
-#endif // Clipboard_Win_h
+#endif // ClipboardWin_h

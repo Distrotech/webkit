@@ -28,35 +28,150 @@
 
 #include "CachedImage.h"
 #include "Image.h"
+#include "RetainPtr.h"
+
+#include <CoreGraphics/CoreGraphics.h>
+
+#include <windows.h>
 
 namespace WebCore {
 
-IntSize dragImageSize(DragImageRef)
+IntSize dragImageSize(DragImageRef image)
 {
-    return IntSize(0, 0);
+    if (!image)
+        return IntSize();
+    BITMAP b;
+    GetObject(image, sizeof(BITMAP), &b);
+    return IntSize(b.bmWidth, b.bmHeight);
 }
 
-void deleteDragImage(DragImageRef)
+void deleteDragImage(DragImageRef image)
 {
+    if (image)
+        ::DeleteObject(image);
 }
 
-DragImageRef scaleDragImage(DragImageRef image, float)
+HBITMAP allocImage(HDC dc, IntSize size, CGContextRef *targetRef)
 {
-    return image;
+    HBITMAP hbmp;
+    BITMAPINFO bmpInfo = {0};
+    bmpInfo.bmiHeader.biSize = sizeof(BITMAPINFO);
+    bmpInfo.bmiHeader.biWidth = size.width();
+    bmpInfo.bmiHeader.biHeight = size.height();
+    bmpInfo.bmiHeader.biPlanes = 1;
+    bmpInfo.bmiHeader.biBitCount = 32;
+    bmpInfo.bmiHeader.biCompression = BI_RGB;
+    LPVOID bits;
+    hbmp = CreateDIBSection(dc, &bmpInfo, DIB_RGB_COLORS, &bits, 0, 0);
+
+    if (!targetRef)
+        return hbmp;
+
+    CGColorSpaceRef deviceRGB = CGColorSpaceCreateDeviceRGB();
+    CGContextRef bitmapContext = CGBitmapContextCreate(bits, bmpInfo.bmiHeader.biWidth, bmpInfo.bmiHeader.biHeight, 8,
+                                                       bmpInfo.bmiHeader.biWidth * 4, deviceRGB, 
+                                                       kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst);
+    CGColorSpaceRelease(deviceRGB);
+    if (!bitmapContext) {
+        DeleteObject(hbmp);
+        return 0;
+    }
+
+    *targetRef = bitmapContext;
+    return hbmp;
+}
+
+static CGContextRef createCgContextFromBitmap(HBITMAP bitmap)
+{
+    BITMAP info;
+    GetObject(bitmap, sizeof(info), &info);
+    ASSERT(info.bmBitsPixel == 32);
+
+    CGColorSpaceRef deviceRGB = CGColorSpaceCreateDeviceRGB();
+    CGContextRef bitmapContext = CGBitmapContextCreate(info.bmBits, info.bmWidth, info.bmHeight, 8,
+                                                       info.bmWidthBytes, deviceRGB, kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst);
+    CGColorSpaceRelease(deviceRGB);
+    return bitmapContext;
+}
+
+DragImageRef scaleDragImage(DragImageRef image, float scale)
+{
+    // FIXME: due to the way drag images are done on windows we need 
+    // to preprocess the alpha channel <rdar://problem/5015946>
+
+    if (!image)
+        return 0;
+    CGContextRef targetContext;
+    CGContextRef srcContext;
+    CGImageRef srcImage;
+    IntSize srcSize = dragImageSize(image);
+    IntSize dstSize((int)(srcSize.width() * scale), (int)(srcSize.height() * scale));
+    HBITMAP hbmp = 0;
+    HDC dc = GetDC(0);
+    HDC dstDC = CreateCompatibleDC(dc);
+    if (!dstDC)
+        goto exit;
+
+    hbmp = allocImage(dstDC, dstSize, &targetContext);
+    if (!hbmp)
+        goto exit;
+
+    srcContext = createCgContextFromBitmap(image);
+    srcImage = CGBitmapContextCreateImage(srcContext);
+    CGRect rect;
+    rect.origin.x = 0;
+    rect.origin.y = 0;
+    rect.size = dstSize;
+    CGContextDrawImage(targetContext, rect, srcImage);
+    CGImageRelease(srcImage);
+    CGContextRelease(srcContext);
+    CGContextRelease(targetContext);
+    ::DeleteObject(image);
+    image = 0;
+
+exit:
+    if (!hbmp)
+        hbmp = image;
+    if (dstDC)
+        DeleteDC(dstDC);
+    ReleaseDC(0, dc);
+    return hbmp;
 }
     
 DragImageRef dissolveDragImageToFraction(DragImageRef image, float)
 {
+    //We don't do this on windows as the dragimage is blended by the OS
     return image;
 }
         
-DragImageRef createDragImageFromImage(Image*)
-{
-    return 0;
+DragImageRef createDragImageFromImage(Image* img)
+{    
+    HBITMAP hbmp = 0;
+    HDC dc = GetDC(0);
+    HDC workingDC = CreateCompatibleDC(dc);
+    if (!workingDC)
+        goto exit;
+
+    hbmp = allocImage(workingDC, img->size(), 0);
+
+    if (!hbmp)
+        goto exit;
+
+    if (!img->getHBITMAP(hbmp)) {
+        ::DeleteObject(hbmp);
+        hbmp = 0;
+    }
+
+exit:
+    if (workingDC);
+        DeleteDC(workingDC);
+    ReleaseDC(0, dc);
+    return hbmp;
 }
     
 DragImageRef createDragImageIconForCachedImage(CachedImage*)
 {
+    //FIXME: Provide icon for image type <rdar://problem/5015949>
     return 0;     
 }
     

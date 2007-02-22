@@ -249,10 +249,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\COMPtr.h"
-				>
-			</File>
-			<File
 				RelativePath="..\DefaultDownloadDelegate.h"
 				>
 			</File>
@@ -318,6 +314,10 @@
 			</File>
 			<File
 				RelativePath="..\WebDragClient.h"
+				>
+			</File>
+			<File
+				RelativePath="..\WebDropSource.h"
 				>
 			</File>
 			<File
@@ -502,6 +502,10 @@
 			</File>
 			<File
 				RelativePath="..\WebDragClient.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\WebDropSource.cpp"
 				>
 			</File>
 			<File

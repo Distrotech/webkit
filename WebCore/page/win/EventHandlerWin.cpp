@@ -39,6 +39,7 @@
 #include "PlatformScrollbar.h"
 #include "PlatformWheelEvent.h"
 #include "SelectionController.h"
+#include "WCDataObject.h"
 #include "NotImplemented.h"
 
 namespace WebCore {
@@ -88,7 +89,9 @@ bool EventHandler::eventActivatedView(const PlatformMouseEvent& event) const
 
 Clipboard* EventHandler::createDraggingClipboard() const
 {
-    return new ClipboardWin(true, 0, ClipboardWritable);
+    COMPtr<WCDataObject> dataObject;
+    WCDataObject::createInstance(&dataObject);
+    return new ClipboardWin(true, dataObject, ClipboardWritable);
 }
 
 void EventHandler::focusDocumentView()

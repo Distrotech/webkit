@@ -42,3 +42,16 @@ void DrawTextAtPoint(LPCTSTR text, int length, HDC dc, RECT clipRect, bool botto
     String fontFamilyString(fontFamily, familyLength);
     WebCoreDrawTextAtPoint(textString, dc, clipRect, bottomAligned, fontFamilyString, size, bold, italic, color, centerTruncate);
 }
+
+
+void DrawDoubledTextAtPoint(GraphicsContext& context, const TextRun& run, const IntPoint &pos, const Color& topColor, const Color& bottomColor, const Font& font)
+{
+    IntPoint textPos = pos;
+    context.setFont(font);
+    context.setFillColor(bottomColor);
+    context.drawText(run, textPos);
+    textPos.setY(textPos.y() - 1);
+    context.setFillColor(topColor);
+    context.drawText(run, textPos);
+}
+

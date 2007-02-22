@@ -2866,6 +2866,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\platform\win\COMPtr.h"
+					>
+				</File>
+				<File
 					RelativePath="..\platform\win\ContextMenuItemWin.cpp"
 					>
 				</File>
@@ -2995,6 +2999,14 @@
 				</File>
 				<File
 					RelativePath="..\platform\win\TextBoundariesWin.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\win\WCDataObject.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\win\WCDataObject.h"
 					>
 				</File>
 				<File
@@ -6453,10 +6465,10 @@
 					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSHTMLSelectElementCustom.cpp"
 					>
 				</File>
-                                <File
-                                        RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSHTMLSelectElementCustom.h"
-                                        >
-                                </File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSHTMLSelectElementCustom.h"
+					>
+				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSNodeIteratorCustom.cpp"
 					>

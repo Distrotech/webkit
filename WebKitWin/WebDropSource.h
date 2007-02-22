@@ -23,42 +23,31 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "config.h"
-#include "DragController.h"
 
-#include "DragData.h"
-#include "windows.h" 
-#include "SelectionController.h"
-#include <wtf/RefPtr.h>
+#ifndef WebDropSource_h
+#define WebDropSource_h
 
-namespace WebCore {
+#include "COMPtr.h"
+#include <objidl.h>
 
-const int DragController::LinkDragBorderInset = 2;
-const int DragController::MaxOriginalImageArea = 1500 * 1500;
-const int DragController::DragIconRightInset = 7;
-const int DragController::DragIconBottomInset = 3;
+class WebView;
 
-const float DragController::DragImageAlpha = 0.75f;
-
-DragOperation DragController::dragOperation(DragData* dragData)
+class WebDropSource : public IDropSource
 {
-    //FIXME: to match the macos behaviour we should return DragOperationNone
-    //if we are a modal window, we are the drag source, or the window is an attached sheet
-    //If this can be determined from within WebCore operationForDrag can be pulled into 
-    //WebCore itself
-    ASSERT(dragData);
-    return dragData->containsURL() && !m_didInitiateDrag ? DragOperationCopy : DragOperationNone;
-}
+public:
+    virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject);        
+    virtual ULONG STDMETHODCALLTYPE AddRef(void);
+    virtual ULONG STDMETHODCALLTYPE Release(void);
+    virtual HRESULT STDMETHODCALLTYPE QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState);
+    virtual HRESULT STDMETHODCALLTYPE GiveFeedback(DWORD dwEffect);
 
-bool DragController::isCopyKeyDown() {
-    return ::GetAsyncKeyState(VK_CONTROL);
-}
-    
-const IntSize& DragController::maxDragImageSize()
-{
-    static const IntSize maxDragImageSize(200, 200);
-    
-    return maxDragImageSize;
-}
+    static HRESULT createInstance(WebView* webView, IDropSource** result);
+private:
+    WebDropSource(WebView* webView);
+    long m_ref;
+    bool m_dropped;
+    COMPtr<WebView> m_webView;
 
-}
+};
+
+#endif //!WebDropSource_h

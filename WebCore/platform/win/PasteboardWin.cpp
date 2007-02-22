@@ -72,7 +72,7 @@ static LRESULT CALLBACK PasteboardOwnerWndProc(HWND hWnd, UINT message, WPARAM w
     return lresult;
 }
 
-static HGLOBAL createGlobalData(const KURL& url, const String& title)
+HGLOBAL createGlobalData(const KURL& url, const String& title)
 {
     String mutableURL(url.url());
     String mutableTitle(title);
@@ -87,7 +87,7 @@ static HGLOBAL createGlobalData(const KURL& url, const String& title)
     return cbData;
 }
 
-static HGLOBAL createGlobalData(String str)
+HGLOBAL createGlobalData(String str)
 {   
     SIZE_T size = (str.length() + 1) * sizeof(UChar);
     HGLOBAL cbData = ::GlobalAlloc(GPTR, size);
@@ -99,7 +99,7 @@ static HGLOBAL createGlobalData(String str)
     return cbData;
 }
 
-static HGLOBAL createGlobalData(CString str)
+HGLOBAL createGlobalData(CString str)
 {
     SIZE_T size = (str.length() + 1) * sizeof(char);
     HGLOBAL cbData = ::GlobalAlloc(GPTR, size);
@@ -112,7 +112,7 @@ static HGLOBAL createGlobalData(CString str)
 }
 
 // Documentation for the CF_HTML format is available at http://msdn.microsoft.com/workshop/networking/clipboard/htmlclipboard.asp
-static DeprecatedCString markupToCF_HTML(const String& markup, const String& srcURL)
+DeprecatedCString markupToCF_HTML(const String& markup, const String& srcURL)
 {
     if (!markup.length())
         return DeprecatedCString();
@@ -159,7 +159,7 @@ static DeprecatedCString markupToCF_HTML(const String& markup, const String& src
     return cf_html;
 }
 
-static String urlToMarkup(const KURL& url, const String& title)
+String urlToMarkup(const KURL& url, const String& title)
 {
     String markup("<a href=\"");
     markup.append(url.url());
@@ -169,7 +169,7 @@ static String urlToMarkup(const KURL& url, const String& title)
     return markup;
 }
 
-static void replaceNBSP(String& str)
+void replaceNBSP(String& str)
 {
     const unsigned short NonBreakingSpaceCharacter = 0xA0;
     str.replace(NonBreakingSpaceCharacter, " ");

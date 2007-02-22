@@ -42,14 +42,14 @@ Clipboard* DragData::createClipboard(ClipboardAccessPolicy policy) const
     return new ClipboardWin(true, m_platformDragData, policy);
 }
 
-static FORMATETC* urlWFormat()
+FORMATETC* urlWFormat()
 {
     static UINT cf = RegisterClipboardFormat(L"UniformResourceLocatorW");
     static FORMATETC urlFormat = {cf, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
     return &urlFormat;
 }
 
-static FORMATETC* urlFormat()
+FORMATETC* urlFormat()
 {
     static UINT cf = RegisterClipboardFormat(L"UniformResourceLocator");
     static FORMATETC urlFormat = {cf, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
@@ -70,20 +70,20 @@ static FORMATETC* filenameFormat()
     return &urlFormat;
 }
 
-static FORMATETC* plainTextFormat()
+FORMATETC* plainTextFormat()
 {
     static FORMATETC textFormat = {CF_TEXT, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
     return &textFormat;
 }
 
-static FORMATETC* plainTextWFormat()
+FORMATETC* plainTextWFormat()
 {
     static FORMATETC textFormat = {CF_UNICODETEXT, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
     return &textFormat;
 }
 
 //Firefox text/html
-static FORMATETC* texthtmlFormat() 
+FORMATETC* texthtmlFormat() 
 {
     static UINT cf = RegisterClipboardFormat(L"text/html");
     static FORMATETC texthtmlFormat = {cf, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
@@ -91,7 +91,7 @@ static FORMATETC* texthtmlFormat()
 }
 
 //MSIE HTML Format
-static FORMATETC* htmlFormat() 
+FORMATETC* htmlFormat() 
 {
     static UINT cf = RegisterClipboardFormat(L"HTML Format");
     static FORMATETC htmlFormat = {cf, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
@@ -119,23 +119,26 @@ static String extractURL(const String &inURL, String* title)
     return url;
 }
 
-String DragData::asURL(String* title) const
+String getURL(IDataObject* dataObject, bool& success, String* title = 0)
 {
     STGMEDIUM store;
     String url;
-    if (SUCCEEDED(m_platformDragData->GetData(urlWFormat(), &store))) {
+    success = false;
+    if (SUCCEEDED(dataObject->GetData(urlWFormat(), &store))) {
         //URL using unicode
         UChar* data = (UChar*)GlobalLock(store.hGlobal);
         url = extractURL(String(data), title);
         GlobalUnlock(store.hGlobal);      
         ReleaseStgMedium(&store);
-    } else if (SUCCEEDED(m_platformDragData->GetData(urlFormat(), &store))) {
+        success = true;
+    } else if (SUCCEEDED(dataObject->GetData(urlFormat(), &store))) {
         //URL using ascii
         char* data = (char*)GlobalLock(store.hGlobal);
         url = extractURL(String(data), title);
         GlobalUnlock(store.hGlobal);      
         ReleaseStgMedium(&store);
-    } else if (SUCCEEDED(m_platformDragData->GetData(filenameWFormat(), &store))) {
+        success = true;
+    } else if (SUCCEEDED(dataObject->GetData(filenameWFormat(), &store))) {
         //file using unicode
         wchar_t* data = (wchar_t*)GlobalLock(store.hGlobal);        
         if (data && data[0] && (PathFileExists(data) || PathIsUNC(data))) {
@@ -149,7 +152,8 @@ String DragData::asURL(String* title) const
         }
         GlobalUnlock(store.hGlobal);      
         ReleaseStgMedium(&store);
-    } else if (SUCCEEDED(m_platformDragData->GetData(filenameFormat(), &store))) {
+        success = true;
+    } else if (SUCCEEDED(dataObject->GetData(filenameFormat(), &store))) {
         //filename using ascii
         char* data = (char*)GlobalLock(store.hGlobal);       
         if (data && data[0] && (PathFileExistsA(data) || PathIsUNCA(data))) {
@@ -163,8 +167,15 @@ String DragData::asURL(String* title) const
         }
         GlobalUnlock(store.hGlobal);      
         ReleaseStgMedium(&store);
+        success = true;
     }
     return url;
+}
+
+String DragData::asURL(String* title) const
+{
+    bool success;
+    return getURL(m_platformDragData, success, title);
 }
 
 bool DragData::containsPlainText() const
@@ -173,28 +184,38 @@ bool DragData::containsPlainText() const
         || SUCCEEDED(m_platformDragData->QueryGetData(plainTextFormat()));
 }
 
-String DragData::asPlainText() const
+String getPlainText(IDataObject* dataObject, bool& success)
 {
     STGMEDIUM store;
     String text;
-    if (SUCCEEDED(m_platformDragData->GetData(plainTextWFormat(), &store))) {
+    success = false;
+    if (SUCCEEDED(dataObject->GetData(plainTextWFormat(), &store))) {
         //unicode text
         UChar* data = (UChar*)GlobalLock(store.hGlobal);
         text = String(data);
         GlobalUnlock(store.hGlobal);      
         ReleaseStgMedium(&store);
-    } else if (SUCCEEDED(m_platformDragData->GetData(plainTextFormat(), &store))) {
+        success = true;
+    } else if (SUCCEEDED(dataObject->GetData(plainTextFormat(), &store))) {
         //ascii text
         char* data = (char*)GlobalLock(store.hGlobal);
         text = String(data);
         GlobalUnlock(store.hGlobal);      
         ReleaseStgMedium(&store);
+        success = true;
     } else {
         //If a file is dropped on the window, it does not provide either of the 
         //plain text formats, so here we try to forcibly get a url.
-        text = asURL();
+        text = getURL(dataObject, success);
+        success = true;
     }
     return text;
+}
+
+String DragData::asPlainText() const
+{
+    bool success;
+    return getPlainText(m_platformDragData, success);
 }
 
 static bool containsHTML(IDataObject* data)
@@ -277,11 +298,11 @@ PassRefPtr<DocumentFragment> DragData::asFragment(Document* doc) const
      */
         
      if (containsFilenames(m_platformDragData))
-         if (DocumentFragment* fragment = fragmentFromFilenames(doc, m_platformDragData).get())
+         if (PassRefPtr<DocumentFragment> fragment = fragmentFromFilenames(doc, m_platformDragData))
              return fragment;
 
      if (containsHTML(m_platformDragData))
-         if (DocumentFragment* fragment = fragmentFromHTML(doc, m_platformDragData).get())
+         if (PassRefPtr<DocumentFragment> fragment = fragmentFromHTML(doc, m_platformDragData))
              return fragment;
 
      return 0;

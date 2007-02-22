@@ -1,3 +1,59 @@
+2007-02-22  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Ada, Lou, and Steve.
+
+        Last of the major changes for drag and drop
+        - Move COMPtr.h to WebCore
+        - Added WebDragSource, a modified version of SDataSource from the App
+          that can notify a WebView's eventhandler of drag events
+        - Implement the last bits of the DragClient
+        - As part of drag client added code to draw the "doubled" text used by
+          drag links.  May be useful for other parts of WebKit/App
+        
+        * COMPtr.h: Removed.
+          Moving to WebCore
+        * WebDragClient.cpp:
+        (WebDragClient::actionMaskForDrag):
+        (WebDragClient::willPerformDragDestinationAction):
+        (WebDragClient::dragSourceActionMaskForPoint):
+        (WebDragClient::willPerformDragSourceAction):
+          Removing WebCore:: as i'm now using the WebCore namespace
+        (WebDragClient::startDrag):
+          Implemented client method
+        (allocImage):
+        (dragLabelFont):
+          Helper functions for generating the link dragging image
+        (WebDragClient::createDragImageForLink):
+          Implemented client method
+          
+        * WebDropSource.cpp: Added.
+        (WebDropSource::createInstance):
+        (WebDropSource::WebDropSource):
+        (WebDropSource::QueryInterface):
+        (WebDropSource::AddRef):
+        (WebDropSource::Release):
+        (generateMouseEvent):
+          Generates a mouse event for the EventHandler
+        (WebDropSource::QueryContinueDrag):
+        (WebDropSource::GiveFeedback):
+          Copied from SDataObject in the App.  Minor changes per suggestions
+          from Ada and Steve (error codes, potential leaks)
+          Also includes logic to notify the source WebView of drag events (moving 
+          and drag end)
+          
+        * WebDropSource.h: Added.
+          Header for the above
+          
+        * WebKit.vcproj/WebKit.vcproj:
+          Removing COMPtr.h, and adding WebDropSource.{h,cpp}
+          
+        * WebKitGraphics.cpp:
+        (DrawDoubledTextAtPoint):
+          Utility function for drawing double text, as used by link dragging image
+          
+        * WebKitGraphics.h:
+          Defining the above function
+
 2007-02-21  Brady Eidson  <beidson@apple.com>
 
         Reviewed by the build-fix fairies
