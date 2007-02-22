@@ -1,3 +1,19 @@
+2007-02-21  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Adam
+
+        <rdar://problem/4964763> - Hookup resume downloads on the engine side
+        
+        NOTE: Resume downloads are broken in the current ChickenCat - this functionality requires 
+        a custom ToT CFNetwork as of CFNetwork r3372, or will require CFNetwork 172 or later
+        
+        * WebDownload.cpp:
+        (WebDownload::initWithRequest): Changed some logging, plugged some potential leaks
+        (WebDownload::initToResumeWithBundle): Added a real implementation - this now works!
+        (WebDownload::didFinish): Added some logging and fixed up some lifetime issues
+        (extractResumeDataFromBundle): Renamed to imply the modification of the file.  Truncate
+          the resume data from the file once it is extracted
+
 2007-02-20  Beth Dakin  <bdakin@apple.com>
 
         Reviewed by Maciej.

@@ -34,6 +34,7 @@
 #include "WebMutableURLRequest.h"
 #include "WebURLResponse.h"
 
+#include <io.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -64,9 +65,9 @@ static void didFailCallback(CFURLDownloadRef download, CFErrorRef error, const v
 
 // Download Bundle file utilities ----------------------------------------------------------------
 static const String BundleExtension(".download");
-static UInt32 BundleMagicNumber = 0xDECAF4EE;
+static UInt32 BundleMagicNumber = 0xDECAF4EA;
 
-static CFDataRef createResumeDataFromBundle(const String& bundlePath);
+static CFDataRef extractResumeDataFromBundle(const String& bundlePath);
 static HRESULT appendResumeDataToBundle(CFDataRef resumeData, const String& bundlePath);
 
 // WebDownload ----------------------------------------------------------------
@@ -193,17 +194,25 @@ HRESULT STDMETHODCALLTYPE WebDownload::initWithRequest(
         return E_FAIL;
     }
 
-    // FIXME: Leave the DefaultDownloadDelegate in, or not?
-    m_delegate = delegate ? delegate : DefaultDownloadDelegate::sharedInstance();
-    LOG_ERROR("Delegate is %p", m_delegate.get());
+    if (!delegate)
+        return E_FAIL;
+    m_delegate = delegate;
+    LOG(Download, "Delegate is %p", m_delegate.get());
 
-    CFURLRequestRef cfRequest = webRequest->resourceRequest().cfURLRequest();
+    RetainPtr<CFURLRequestRef> cfRequest = webRequest->resourceRequest().cfURLRequest();
 
     CFURLDownloadClient client = {0, this, 0, 0, 0, didStartCallback, willSendRequestCallback, didReceiveAuthenticationChallengeCallback, 
                                   didReceiveResponseCallback, willResumeWithResponseCallback, didReceiveDataCallback, shouldDecodeDataOfMIMETypeCallback, 
                                   decideDestinationWithSuggestedObjectNameCallback, didCreateDestinationCallback, didFinishCallback, didFailCallback};
     m_request.adoptRef(WebMutableURLRequest::createInstance(webRequest.get()));
-    m_download.adoptCF(CFURLDownloadCreate(0, cfRequest, &client));
+    m_download.adoptCF(CFURLDownloadCreate(0, cfRequest.get(), &client));
+
+    // If for some reason the download failed to create, 
+    // we have particular cleanup to do
+    if (!m_download) {
+        m_request = 0;    
+        return E_FAIL;
+    }
 
     CFURLDownloadScheduleWithCurrentMessageQueue(m_download.get());
     CFURLDownloadScheduleDownloadWithRunLoop(m_download.get(), ResourceHandle::loaderRunLoop(), kCFRunLoopDefaultMode);
@@ -214,16 +223,48 @@ HRESULT STDMETHODCALLTYPE WebDownload::initWithRequest(
 
 HRESULT STDMETHODCALLTYPE WebDownload::initToResumeWithBundle(
         /* [in] */ BSTR bundlePath, 
-        /* [in] */ IWebDownloadDelegate*)
+        /* [in] */ IWebDownloadDelegate* delegate)
 {
-    // I have to call createResumeDataFromBundle() to keep this compiling,
-    // so even though its really a noimpl() situation, we'll fake it here
-    CFDataRef resumeData = createResumeDataFromBundle(String(bundlePath, SysStringLen(bundlePath)));
-    if (resumeData)
-        CFRelease(resumeData);
+    LOG(Download, "Attempting resume of download bundle %s", String(bundlePath, SysStringLen(bundlePath)).ascii().data());
 
-    LOG_NOIMPL();
-    return E_FAIL;
+    RetainPtr<CFDataRef> resumeData(AdoptCF, extractResumeDataFromBundle(String(bundlePath, SysStringLen(bundlePath))));
+    
+    if (!resumeData)
+        return E_FAIL;
+
+    if (!delegate)
+        return E_FAIL;
+    m_delegate = delegate;
+    LOG(Download, "Delegate is %p", m_delegate.get());
+
+    CFURLDownloadClient client = {0, this, 0, 0, 0, didStartCallback, willSendRequestCallback, didReceiveAuthenticationChallengeCallback, 
+                                  didReceiveResponseCallback, willResumeWithResponseCallback, didReceiveDataCallback, shouldDecodeDataOfMIMETypeCallback, 
+                                  decideDestinationWithSuggestedObjectNameCallback, didCreateDestinationCallback, didFinishCallback, didFailCallback};
+    
+    RetainPtr<CFURLRef> pathURL(AdoptCF, MarshallingHelpers::PathStringToFileCFURLRef(String(bundlePath, SysStringLen(bundlePath))));
+    ASSERT(pathURL);
+
+    m_download.adoptCF(CFURLDownloadCreateWithResumeData(0, resumeData.get(), pathURL.get(), &client));
+
+    if (!m_download) {
+        LOG(Download, "Failed to create CFURLDownloadRef for resume");    
+        return E_FAIL;
+    }
+    
+    m_bundlePath = String(bundlePath, SysStringLen(bundlePath));
+    // Attempt to remove the ".download" extension from the bundle for the final file destination
+    // Failing that, we clear m_destination and will ask the delegate later once the download starts
+    if (m_bundlePath.endsWith(BundleExtension, false)) {
+        m_destination = m_bundlePath;
+        m_destination.truncate(m_destination.length() - BundleExtension.length());
+    } else
+        m_destination = String();
+    
+    CFURLDownloadScheduleWithCurrentMessageQueue(m_download.get());
+    CFURLDownloadScheduleDownloadWithRunLoop(m_download.get(), ResourceHandle::loaderRunLoop(), kCFRunLoopDefaultMode);
+
+    LOG(Download, "WebDownload - initWithRequest complete, resumed download of bundle %s", String(bundlePath, SysStringLen(bundlePath)).ascii().data());
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebDownload::canResumeDownloadDecodedWithEncodingMIMEType(
@@ -485,7 +526,8 @@ void WebDownload::didFinish()
 #endif
 
     ASSERT(!m_bundlePath.isEmpty() && !m_destination.isEmpty());
-    
+    LOG(Download, "WebDownload - Moving file from bundle %s to destination %s", m_bundlePath.ascii().data(), m_destination.ascii().data());
+
     // We try to rename the bundle to the final file name.  If that fails, we give the delegate one more chance to chose
     // the final file name, then we just leave it
     if (!MoveFileEx(m_bundlePath.charactersWithNullTermination(), m_destination.charactersWithNullTermination(), 0)) {
@@ -513,8 +555,12 @@ void WebDownload::didFinish()
         }
     }
 
+    // It's extremely likely the call to delegate->didFinish() will deref this, so lets not let that cause our destruction just yet
+    COMPtr<WebDownload> protect = this;
     if (FAILED(m_delegate->didFinish(this)))
         LOG_ERROR("DownloadDelegate->didFinish failed");
+
+    m_download = 0;
 }
 
 void WebDownload::didFail(CFErrorRef error)
@@ -560,7 +606,7 @@ void didFailCallback(CFURLDownloadRef, CFErrorRef error, const void *clientInfo)
 
 // Download Bundle file utilities ----------------------------------------------------------------
 
-static CFDataRef createResumeDataFromBundle(const String& bundlePath)
+static CFDataRef extractResumeDataFromBundle(const String& bundlePath)
 {
     if (bundlePath.isEmpty()) {
         LOG_ERROR("Cannot create resume data from empty download bundle path");
@@ -570,7 +616,7 @@ static CFDataRef createResumeDataFromBundle(const String& bundlePath)
     // Open a handle to the bundle file
     String nullifiedPath = bundlePath;
     FILE* bundle = 0;
-    if (_wfopen_s(&bundle, nullifiedPath.charactersWithNullTermination(), TEXT("rb")) || !bundle) {
+    if (_wfopen_s(&bundle, nullifiedPath.charactersWithNullTermination(), TEXT("r+b")) || !bundle) {
         LOG_ERROR("Failed to open file %s to get resume data", bundlePath.ascii().data());
         return 0;
     }
@@ -632,15 +678,20 @@ static CFDataRef createResumeDataFromBundle(const String& bundlePath)
         goto exit;
     }
 
+    // CFURLDownload will seek to the appropriate place in the file (before our footer) and start overwriting from there
+    // However, say we were within a few hundred bytes of the end of a download when it was paused -
+    // The additional footer extended the length of the file beyond its final length, and there will be junk data leftover
+    // at the end.  Therefore, now that we've retrieved the footer data, we need to truncate it.
+    if (errno_t resizeError = _chsize_s(_fileno(bundle), footerStartPosition)) {
+        LOG_ERROR("Failed to truncate the resume footer off the end of the file - errno(%i)", resizeError);
+        goto exit;
+    }
+
     // Finally, make the resume data.  Now, it is possible by some twist of fate the bundle magic number
     // was naturally at the end of the file and its not actually a valid bundle.  That, or someone engineered
     // it that way to try to attack us.  In that cause, this CFData will successfully create but when we 
     // actually try to start the CFURLDownload using this bogus data, it will fail and we will handle that gracefully
     result = CFDataCreate(0, footerBuffer.data(), footerLength);
-
-    // FIXME: At this point the file will be in the state we left it in - file data + footer.
-    // CFURLDownload may expect/require/demand that it be in the state IT left it in - file data ONLY
-    // If we have to muck with the file, we have to do so here
 exit:
     fclose(bundle);
     return result;
