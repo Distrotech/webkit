@@ -244,7 +244,13 @@ HRESULT STDMETHODCALLTYPE WebDownload::initToResumeWithBundle(
     RetainPtr<CFURLRef> pathURL(AdoptCF, MarshallingHelpers::PathStringToFileCFURLRef(String(bundlePath, SysStringLen(bundlePath))));
     ASSERT(pathURL);
 
+#ifdef CFNETWORK_FULL_RESUME_SUPPORT
     m_download.adoptCF(CFURLDownloadCreateWithResumeData(0, resumeData.get(), pathURL.get(), &client));
+#else
+    m_download.adoptCF(CFURLDownloadCreateWithResumeData(0, resumeData.get(), &client));
+    if (m_download)
+        CFURLDownloadSetDestination(m_download.get(), pathURL.get(), false);
+#endif
 
     if (!m_download) {
         LOG(Download, "Failed to create CFURLDownloadRef for resume");    

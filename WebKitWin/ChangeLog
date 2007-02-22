@@ -1,5 +1,13 @@
 2007-02-21  Brady Eidson  <beidson@apple.com>
 
+        Reviewed by the build-fix fairies
+
+        * WebDownload.cpp:
+        (WebDownload::initToResumeWithBundle): Conditionally use CFURLDownload API for the resume case.
+         I totally made up the flag
+
+2007-02-21  Brady Eidson  <beidson@apple.com>
+
         Reviewed by Anders' rubberstamp
         
         * WebDownload.cpp:
