@@ -1,5 +1,17 @@
 2007-02-22  Oliver Hunt  <oliver@apple.com>
 
+        rs = adam
+        
+        Replacing radar numbers from previous patch with one
+        the isn't fictitious <rdar://problem/5018591>
+
+        * platform/win/CursorWin.cpp:
+        (WebCore::columnResizeCursor):
+        (WebCore::rowResizeCursor):
+        (WebCore::verticalTextCursor):
+
+2007-02-22  Oliver Hunt  <oliver@apple.com>
+
         Reviewed by Ada.
 
         Implemented a couple more cursor methods
