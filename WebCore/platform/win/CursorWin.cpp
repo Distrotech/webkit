@@ -257,14 +257,14 @@ const Cursor& northWestSouthEastResizeCursor()
 
 const Cursor& columnResizeCursor()
 {
-    // FIXME: Windows does not have a standard column resize cursor
+    // FIXME: Windows does not have a standard column resize cursor <rdar://problem/5018452>
     static Cursor c = LoadCursor(0, IDC_SIZEWE);
     return c;
 }
 
 const Cursor& rowResizeCursor()
 {
-    // FIXME: Windows does not have a standard row resize cursor
+    // FIXME: Windows does not have a standard row resize cursor <rdar://problem/5018452>
     static Cursor c = LoadCursor(0, IDC_SIZENS);
     return c;
 }
@@ -277,6 +277,7 @@ const Cursor& moveCursor()
 
 const Cursor& verticalTextCursor()
 {
+    //FIXME: Windows doesn't have a standard vertical text cursor <rdar://problem/5018452>
     return pointerCursor();
 }
 
@@ -297,12 +298,14 @@ const Cursor& aliasCursor()
 
 const Cursor& progressCursor()
 {
-    return pointerCursor();
+    static Cursor c = LoadCursor(0, IDC_APPSTARTING);
+    return c;
 }
 
 const Cursor& noDropCursor()
 {
-    return pointerCursor();
+    static Cursor c = LoadCursor(0, IDC_NO);
+    return c;
 }
 
 const Cursor& copyCursor()
@@ -317,7 +320,8 @@ const Cursor& noneCursor()
 
 const Cursor& notAllowedCursor()
 {
-    return pointerCursor();
+    static Cursor c = LoadCursor(0, IDC_NO);
+    return c;
 }
 
 }

@@ -1,5 +1,21 @@
 2007-02-22  Oliver Hunt  <oliver@apple.com>
 
+        Reviewed by Ada.
+
+        Implemented a couple more cursor methods
+
+        * platform/win/CursorWin.cpp:
+        (WebCore::columnResizeCursor):
+        (WebCore::rowResizeCursor):
+        (WebCore::verticalTextCursor):
+          Added radar bug reference <rdar://problem/5018452>
+        (WebCore::progressCursor):
+        (WebCore::noDropCursor):
+        (WebCore::notAllowedCursor):
+          Making them return the correct cursor
+
+2007-02-22  Oliver Hunt  <oliver@apple.com>
+
         Reviewed by Anders.
 
         Removing accessive COMPtr use from ClipboardWin constructors
