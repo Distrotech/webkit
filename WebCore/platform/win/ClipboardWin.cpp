@@ -85,16 +85,16 @@ static ClipboardDataType clipboardTypeFromMIMEType(const String& type)
     return ClipboardDataTypeNone;
 }
 
-ClipboardWin::ClipboardWin(bool isForDragging, COMPtr<IDataObject> dataObject, ClipboardAccessPolicy policy)
+ClipboardWin::ClipboardWin(bool isForDragging, IDataObject* dataObject, ClipboardAccessPolicy policy)
     : Clipboard(policy, isForDragging)
     , m_dataObject(dataObject)
     , m_writableDataObject(0)
 {
 }
 
-ClipboardWin::ClipboardWin(bool isForDragging, COMPtr<WCDataObject> dataObject, ClipboardAccessPolicy policy)
+ClipboardWin::ClipboardWin(bool isForDragging, WCDataObject* dataObject, ClipboardAccessPolicy policy)
     : Clipboard(policy, isForDragging)
-    , m_dataObject(dataObject.get())
+    , m_dataObject(dataObject)
     , m_writableDataObject(dataObject)
 {
 }
@@ -103,10 +103,13 @@ ClipboardWin::~ClipboardWin()
 {
 }
 
-static void writeURL(WCDataObject *data, const KURL& url, String title, bool withPlainText, bool withHTML)
+static bool writeURL(WCDataObject *data, const KURL& url, String title, bool withPlainText, bool withHTML)
 {
     ASSERT(data);
     ASSERT(!url.isEmpty());
+    
+    if (!url.isValid())
+        return false;
 
     if (title.isEmpty()) {
         title = url.lastPathComponent();
@@ -118,20 +121,29 @@ static void writeURL(WCDataObject *data, const KURL& url, String title, bool wit
     medium.tymed = TYMED_HGLOBAL;
 
     medium.hGlobal = createGlobalData(url, title);
+    bool success = false;
     if (medium.hGlobal && FAILED(data->SetData(urlWFormat(), &medium, TRUE)))
         ::GlobalFree(medium.hGlobal);
+    else
+        success = true;
 
     if (withHTML) {
         medium.hGlobal = createGlobalData(markupToCF_HTML(urlToMarkup(url, title), ""));
         if (medium.hGlobal && FAILED(data->SetData(htmlFormat(), &medium, TRUE)))
             ::GlobalFree(medium.hGlobal);
+        else
+            success = true;
     }
 
     if (withPlainText) {
         medium.hGlobal = createGlobalData(url.url());
         if (medium.hGlobal && FAILED(data->SetData(plainTextWFormat(), &medium, TRUE)))
             ::GlobalFree(medium.hGlobal);
+        else
+            success = true;
     }
+
+    return success;
 }
 
 void ClipboardWin::clearData(const String& type)
@@ -168,8 +180,8 @@ void ClipboardWin::clearAllData()
 
 String ClipboardWin::getData(const String& type, bool& success) const
 {     
+    success = false;
     if (policy() != ClipboardReadable || !m_dataObject) {
-        success = false;
         return "";
     }
 
@@ -179,7 +191,6 @@ String ClipboardWin::getData(const String& type, bool& success) const
     else if (dataType == ClipboardDataTypeURL) 
         return getURL(m_dataObject.get(), success);
     
-    success = false;
     return "";
 }
 
@@ -191,12 +202,13 @@ bool ClipboardWin::setData(const String &type, const String &data)
         return false;
 
     ClipboardDataType winType = clipboardTypeFromMIMEType(type);
-    if (winType == ClipboardDataTypeNone)
-        return false;
 
-    if (winType == ClipboardDataTypeURL)
-        WebCore::writeURL(m_writableDataObject.get(), data.deprecatedString(), String(), false, true);
-    else if ( winType == ClipboardDataTypeText) {
+    if (winType == ClipboardDataTypeURL) {
+        KURL url = data.deprecatedString();
+        if (!url.isValid())
+            return false;
+        return WebCore::writeURL(m_writableDataObject.get(), url, String(), false, true);
+    } else if ( winType == ClipboardDataTypeText) {
         STGMEDIUM medium = {0};
         medium.tymed = TYMED_HGLOBAL;
         medium.hGlobal = createGlobalData(data);
@@ -207,8 +219,9 @@ bool ClipboardWin::setData(const String &type, const String &data)
             ::GlobalFree(medium.hGlobal);
             return false;
         }
+        return true;
     }
-    return true;
+    return false;
 }
 
 static void addMimeTypesForFormat(HashSet<String>& results, FORMATETC& format)

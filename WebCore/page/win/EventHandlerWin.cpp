@@ -91,7 +91,7 @@ Clipboard* EventHandler::createDraggingClipboard() const
 {
     COMPtr<WCDataObject> dataObject;
     WCDataObject::createInstance(&dataObject);
-    return new ClipboardWin(true, dataObject, ClipboardWritable);
+    return new ClipboardWin(true, dataObject.get(), ClipboardWritable);
 }
 
 void EventHandler::focusDocumentView()

@@ -43,8 +43,8 @@ namespace WebCore {
     // State available during IE's events for drag and drop and copy/paste
     class ClipboardWin : public Clipboard, public CachedResourceClient {
     public:
-        ClipboardWin(bool isForDragging, COMPtr<IDataObject> dataObject, ClipboardAccessPolicy policy);
-        ClipboardWin(bool isForDragging, COMPtr<WCDataObject> dataObject, ClipboardAccessPolicy policy);
+        ClipboardWin(bool isForDragging, IDataObject* dataObject, ClipboardAccessPolicy policy);
+        ClipboardWin(bool isForDragging, WCDataObject* dataObject, ClipboardAccessPolicy policy);
         ~ClipboardWin();
     
         void clearData(const String& type);

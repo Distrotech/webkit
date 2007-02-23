@@ -38,7 +38,7 @@ PassRefPtr<Clipboard> Editor::newGeneralClipboard(ClipboardAccessPolicy policy)
     if (!SUCCEEDED(OleGetClipboard(&clipboardData)))
         clipboardData = 0;
 
-    return new ClipboardWin(false, clipboardData, policy);
+    return new ClipboardWin(false, clipboardData.get(), policy);
 }
 
 } // namespace WebCore

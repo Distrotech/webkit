@@ -1,5 +1,29 @@
 2007-02-22  Oliver Hunt  <oliver@apple.com>
 
+        Reviewed by Anders.
+
+        Removing accessive COMPtr use from ClipboardWin constructors
+        Adding data verification to ClipoardWin::SetData
+        Small amount code tidying, and allowing for failure when writing an URL
+
+        * page/win/EventHandlerWin.cpp:
+        (WebCore::EventHandler::createDraggingClipboard):
+          Updated for new ClipboardWin constructor
+        * platform/win/ClipboardWin.cpp:
+        (WebCore::ClipboardWin::ClipboardWin):
+        (WebCore::writeURL):
+        (WebCore::ClipboardWin::getData):
+          Tidying code, and allowing failure
+        (WebCore::ClipboardWin::setData):
+          Verifying that we're writing a valid url
+                    
+        * platform/win/ClipboardWin.h:
+        * platform/win/EditorWin.cpp:
+        (WebCore::Editor::newGeneralClipboard):
+          Updated for new ClipboardWin constructor
+
+2007-02-22  Oliver Hunt  <oliver@apple.com>
+
         Reviewed by Ada, Lou, and Steve.
 
         Last of the major Drag and drop implementation 
