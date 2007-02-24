@@ -1,0 +1,7 @@
+# GlyphPage::setGlyphDataForIndex
+fast/css/case-transform.html
+
+# Calling document.cookie crashes - <rdar://problem/4993339>
+dom/html/level2/html/HTMLDocument12.html
+fast/dom/everything-to-string.html
+fast/dom/Window/window-properties.html

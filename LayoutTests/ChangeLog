@@ -1,0 +1,12 @@
+2007-02-23  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by NOBODY (OOPS!).
+
+        <rdar://problem/4516049>
+        Basic infrastructure: Get regression tests going.
+        
+        Add ChangeLog and list of tests to be skipped.
+        
+        * ChangeLog: Added.
+        * Skipped: Added.
+
