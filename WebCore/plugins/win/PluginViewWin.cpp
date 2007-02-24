@@ -60,6 +60,7 @@ using KJS::Interpreter;
 using KJS::JSLock;
 using KJS::JSObject;
 using KJS::JSValue;
+using KJS::UString;
 using KJS::Window;
 
 using std::min;
@@ -513,42 +514,58 @@ static void freeStringArray(char** stringArray, int length)
     fastFree(stringArray);
 }
 
+static bool getString(KJSProxy* proxy, JSValue* result, String& string)
+{
+    if (!proxy || !result || result->isUndefined())
+        return false;
+    JSLock lock;
+
+    ExecState* exec = proxy->interpreter()->globalExec();
+    UString ustring = result->toString(exec);
+    exec->clearException();
+    
+    string = ustring;
+    return true;
+}
+
 void PluginViewWin::performRequest(PluginRequestWin* request)
 {
     KURL requestURL = request->frameLoadRequest().resourceRequest().url();
     String jsString = scriptStringIfJavaScriptURL(requestURL);
 
-    if (!jsString.isNull()) {
-        if (!request->frameLoadRequest().frameName().isNull()) {
-            // FIXME: If the result is a string, we probably want to put that string into the frame.
-            if (request->sendNotification())
-                m_plugin->pluginFuncs()->urlnotify(m_instance, requestURL.url().utf8(), NPRES_DONE, request->notifyData());
-        } else {
-            JSValue* result = m_parentFrame->loader()->executeScript(0, jsString.deprecatedString(), true);
-            String resultString;
-            if (result) {
-                JSLock lock;
-                ExecState* exec = m_parentFrame->scriptProxy()->interpreter()->globalExec();
-                resultString = result->toString(exec);
-
-                exec->clearException();
-            }
-
-            if (resultString.isEmpty())
-                return;
-
-            CString cstr = resultString.utf8();
-            RefPtr<PluginStreamWin> stream = new PluginStreamWin(this, m_parentFrame, request->frameLoadRequest().resourceRequest(), request->sendNotification(), request->notifyData());
-            m_streams.add(stream);
-            stream->sendJavaScriptStream(requestURL, cstr);
-        }
-    } else {
+    if (jsString.isNull()) {
         // FIXME: <rdar://problem/4807453> if the load request has post data it needs to be sent by the frame.
         m_parentFrame->loader()->urlSelected(request->frameLoadRequest(), 0);
 
         // FIXME: <rdar://problem/4807469> This should be sent when the document has finished loading
         if (request->sendNotification())
             m_plugin->pluginFuncs()->urlnotify(m_instance, requestURL.url().utf8(), NPRES_DONE, request->notifyData());
+        return;
+    }
+
+    // Targeted JavaScript requests are only allowed on the frame that contains the JavaScript plugin
+    // and this has been made sure in ::load.
+    ASSERT(request->frameLoadRequest().frameName().isEmpty() || m_parentFrame->tree()->find(request->frameLoadRequest().frameName()) == m_parentFrame);
+
+    JSValue* result = m_parentFrame->loader()->executeScript(0, jsString.deprecatedString(), true);
+    String resultString;
+
+    if (!getString(m_parentFrame->scriptProxy(), result, resultString))
+        return;
+
+    if (!request->frameLoadRequest().frameName().isNull()) {
+        // calling FrameLoader::begin() here will cause the plugin to be deleted so we must make sure to not access any 
+        // member variables after the call.
+        RefPtr<Frame> frame(m_parentFrame);
+
+        frame->loader()->begin();
+        frame->loader()->write(resultString);
+        frame->loader()->end();
+    } else {
+        CString cstr = resultString.utf8();
+        RefPtr<PluginStreamWin> stream = new PluginStreamWin(this, m_parentFrame, request->frameLoadRequest().resourceRequest(), request->sendNotification(), request->notifyData());
+        m_streams.add(stream);
+        stream->sendJavaScriptStream(requestURL, cstr);
     }
 }
 
@@ -559,11 +576,13 @@ void PluginViewWin::requestTimerFired(Timer<PluginViewWin>* timer)
 
     PluginRequestWin* request = m_requests[0];
     m_requests.remove(0);
-
-    performRequest(request);
-
+    
+    // Schedule a new request before calling performRequest since the call to
+    // performRequest can cause the plugin view to be deleted.
     if (m_requests.size() > 0)
         m_requestTimer.startOneShot(0);
+
+    performRequest(request);
 }
 
 void PluginViewWin::scheduleRequest(PluginRequestWin* request)

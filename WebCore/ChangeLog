@@ -1,3 +1,18 @@
+2007-02-23  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://problem/4761543>
+        nike.com doesn't finish loading if Flash plugin is installed.
+        
+        If a plugin requests a JavaScript URL with a non null frame target, execute the JavaScript expression. If the result 
+        is not "undefined", replace the contents of the frame with the result converted to a string.
+
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::getString):
+        (WebCore::PluginViewWin::performRequest):
+        (WebCore::PluginViewWin::requestTimerFired):
+
 2007-02-22  Oliver Hunt  <oliver@apple.com>
 
         rs = adam
