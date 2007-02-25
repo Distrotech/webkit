@@ -1,3 +1,10 @@
+2007-02-24  Steve Falkenburg  <sfalken@apple.com>
+
+        Pre-emptive build fix.
+        Removed CGPThreads DLL copy
+
+        * WebKit.vcproj/WebKit.vcproj:
+
 2007-02-22  Adele Peterson  <adele@apple.com>
 
         Updating this file to match WebCore.
