@@ -27,7 +27,7 @@
 
 
 #include "config.h"
-#ifdef SVG_SUPPORT
+#if ENABLE(SVG)
 #include "NotImplemented.h"
 #include "SVGResourceFilter.h"
 
@@ -59,4 +59,4 @@ SVGFilterEffect* SVGResourceFilter::createFilterEffect(const SVGFilterEffectType
 
 }
 
-#endif // SVG_SUPPORT
+#endif // ENABLE(SVG)

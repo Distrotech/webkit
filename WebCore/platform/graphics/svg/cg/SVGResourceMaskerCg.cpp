@@ -26,7 +26,7 @@
 
 #include "config.h"
 
-#ifdef SVG_SUPPORT
+#if ENABLE(SVG)
 #include "SVGResourceMasker.h"
 #include "NotImplemented.h"
 
@@ -39,4 +39,4 @@ void SVGResourceMasker::applyMask(GraphicsContext*, const FloatRect&) const
 
 } // namespace WebCore
 
-#endif // SVG_SUPPORT
+#endif // ENABLE(SVG)
