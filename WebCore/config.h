@@ -20,8 +20,6 @@
 
 #include <wtf/Platform.h>
 
-#define XSLT_SUPPORT 1
-
 #if __APPLE__
 #define HAVE_FUNC_USLEEP 1
 #endif /* __APPLE__ */

@@ -1,5 +1,12 @@
 2007-02-26  Adam Roben  <aroben@apple.com>
 
+        Build fix.
+
+        * config.h: Remove redundant #define.
+        * WebCore.vcproj/WebCore.vcproj: Update to new macros.
+
+2007-02-26  Adam Roben  <aroben@apple.com>
+
         Rubberstamped by Ada.
 
         * platform/graphics/svg/cg/SVGResourceFilterCg.cpp: Make #if match the header file.
