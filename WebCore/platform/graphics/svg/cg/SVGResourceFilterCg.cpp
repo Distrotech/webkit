@@ -27,7 +27,7 @@
 
 
 #include "config.h"
-#if ENABLE(SVG)
+#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
 #include "NotImplemented.h"
 #include "SVGResourceFilter.h"
 
@@ -59,4 +59,4 @@ SVGFilterEffect* SVGResourceFilter::createFilterEffect(const SVGFilterEffectType
 
 }
 
-#endif // ENABLE(SVG)
+#endif // ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
