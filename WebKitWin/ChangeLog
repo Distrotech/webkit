@@ -1,3 +1,14 @@
+2007-02-27  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Steve and Anders.
+
+        <rdar://4983106> Stop/reload button never changes back to reload when a click on a link spawns a download
+
+        * WebError.cpp:
+        (WebError::isPolicyChangeError): fixed string comparison
+        * WebFrame.cpp:
+        (WebFrame::interruptForPolicyChangeError): implemented the method
+
 2007-02-26  Adam Roben  <aroben@apple.com>
 
         Reviewed by Adele.

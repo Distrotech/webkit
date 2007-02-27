@@ -178,7 +178,7 @@ HRESULT STDMETHODCALLTYPE WebError::isPolicyChangeError(
     if (!result)
         return E_POINTER;
 
-    *result = m_error.domain() == WebKitErrorDomain
+    *result = m_error.domain() == String(WebKitErrorDomain)
         && m_error.errorCode() == WebKitErrorFrameLoadInterruptedByPolicyChange;
     return S_OK;
 }

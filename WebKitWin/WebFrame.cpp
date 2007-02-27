@@ -45,6 +45,7 @@
 #include "WebFramePolicyListener.h"
 #include "WebHistory.h"
 #include "WebKit.h"
+#include "WebKitErrors.h"
 #include "WebKitStatisticsPrivate.h"
 #include "WebNotificationCenter.h"
 #include "WebView.h"
@@ -1718,10 +1719,9 @@ ResourceError WebFrame::cannotShowURLError(const ResourceRequest&)
     return ResourceError();
 }
 
-ResourceError WebFrame::interruptForPolicyChangeError(const ResourceRequest&)
+ResourceError WebFrame::interruptForPolicyChangeError(const ResourceRequest& request)
 {
-    LOG_NOIMPL();
-    return ResourceError();
+    return ResourceError("WebKitErrorDomain", WebKitErrorFrameLoadInterruptedByPolicyChange, request.url().url(), String());
 }
 
 ResourceError WebFrame::cannotShowMIMETypeError(const ResourceResponse&)
