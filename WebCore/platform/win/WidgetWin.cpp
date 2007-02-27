@@ -134,13 +134,14 @@ void Widget::setFont(const Font& font)
     data->font = font;
 }
 
+HCURSOR lastSetCursor = 0;
+
 void Widget::setCursor(const Cursor& cursor)
 {
-    // SetCursor only works until the next event is received.
-    // However, we call this method on every mouse-moved,
-    // so this should work well enough for our purposes.
-    if (HCURSOR c = cursor.impl())
+    if (HCURSOR c = cursor.impl()) {
+        lastSetCursor = c;
         SetCursor(c);
+    }
 }
 
 IntPoint Widget::convertToContainingWindow(const IntPoint& point) const

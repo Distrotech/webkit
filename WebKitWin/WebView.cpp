@@ -946,6 +946,10 @@ static ATOM registerWebViewWindowClass()
     return RegisterClassEx(&wcex);
 }
 
+namespace WebCore {
+    extern HCURSOR lastSetCursor;
+}
+
 static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static bool handledByKeydown = false;
@@ -1121,6 +1125,12 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
         case WM_MOUSEACTIVATE:
             webView->setMouseActivated(true);
             break;
+        case WM_SETCURSOR:
+            if (lastSetCursor) {
+                SetCursor(lastSetCursor);
+                break;
+            }
+            __fallthrough;
         default:
             handled = false;
             break;
