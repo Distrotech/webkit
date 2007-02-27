@@ -1,3 +1,12 @@
+2007-02-27  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by Adam.
+
+        Make msimg32.lib available to the engine so that we can use 
+        AlphaBlend.
+
+        * WebKit.vcproj/WebKit.vcproj:
+
 2007-02-27  U-ADACHAN01\Ada Chan,S-1-5-21-790525478-515967899-682003330-1004  <adachan@apple.com>
 
         Reviewed by NOBODY (OOPS!).

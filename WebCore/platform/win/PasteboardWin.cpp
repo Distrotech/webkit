@@ -32,6 +32,8 @@
 #include "Document.h"
 #include "Element.h"
 #include "Frame.h"
+#include "HitTestResult.h"
+#include "Image.h"
 #include "KURL.h"
 #include "NotImplemented.h"
 #include "Page.h"
@@ -268,9 +270,48 @@ void Pasteboard::writeURL(const KURL& url, const String& titleStr, Frame* frame,
     }
 }
 
-void Pasteboard::writeImage(const HitTestResult&)
+void Pasteboard::writeImage(const HitTestResult& result)
 {
-    LOG_NOIMPL();
+    Image* image = result.image();
+    ASSERT(image);
+
+    clear();
+
+    HDC dc = GetDC(0);
+    HDC compatibleDC = CreateCompatibleDC(0);
+    HDC sourceDC = CreateCompatibleDC(0);
+    HBITMAP resultBitmap = CreateCompatibleBitmap(dc, image->width(), image->height());
+    HBITMAP oldBitmap = (HBITMAP)SelectObject(compatibleDC, resultBitmap);
+
+    BITMAPINFO bmInfo = {0};
+    bmInfo.bmiHeader.biSize = sizeof(BITMAPINFO);
+    bmInfo.bmiHeader.biWidth = image->width();
+    bmInfo.bmiHeader.biHeight = image->height();
+    bmInfo.bmiHeader.biPlanes = 1;
+    bmInfo.bmiHeader.biBitCount = 32;
+    bmInfo.bmiHeader.biCompression = BI_RGB;
+    HBITMAP coreBitmap = CreateDIBSection(dc, &bmInfo, DIB_RGB_COLORS, 0, 0, 0);
+    HBITMAP oldSource = (HBITMAP)SelectObject(sourceDC, coreBitmap);
+    image->getHBITMAP(coreBitmap);
+
+    BLENDFUNCTION bf = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
+    AlphaBlend(compatibleDC, 0, 0, image->width(), image->height(),
+        sourceDC, 0, 0, image->width(), image->height(), bf);
+
+    SelectObject(compatibleDC, oldBitmap);
+    SelectObject(sourceDC, oldSource);
+
+    DeleteObject(oldBitmap);
+    DeleteObject(oldSource);
+    DeleteObject(coreBitmap);
+    ReleaseDC(0, dc);
+    DeleteDC(compatibleDC);
+    DeleteDC(sourceDC);
+
+    if (::OpenClipboard(m_owner)) {
+        ::SetClipboardData(CF_BITMAP, resultBitmap);
+        ::CloseClipboard();
+    }
 }
 
 bool Pasteboard::canSmartReplace()
