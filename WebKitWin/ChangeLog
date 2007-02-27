@@ -7,9 +7,9 @@
 
         * WebKit.vcproj/WebKit.vcproj:
 
-2007-02-27  U-ADACHAN01\Ada Chan,S-1-5-21-790525478-515967899-682003330-1004  <adachan@apple.com>
+2007-02-27  Ada Chan  <adachan@apple.com>
 
-        Reviewed by NOBODY (OOPS!).
+        Fixed build.
 
         * WebFrame.cpp:
 
