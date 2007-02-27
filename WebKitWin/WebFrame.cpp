@@ -29,6 +29,7 @@
 
 #include "COMPtr.h"
 #include "DOMCoreClasses.h"
+#include "IWebError.h"
 #include "IWebErrorPrivate.h"
 #include "IWebHistory.h"
 #include "IWebHistoryItemPrivate.h"
@@ -45,7 +46,6 @@
 #include "WebFramePolicyListener.h"
 #include "WebHistory.h"
 #include "WebKit.h"
-#include "WebKitErrors.h"
 #include "WebKitStatisticsPrivate.h"
 #include "WebNotificationCenter.h"
 #include "WebView.h"
