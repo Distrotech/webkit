@@ -27,6 +27,7 @@
 #include "DragImage.h"
 
 #include "CachedImage.h"
+#include "GraphicsContext.h"
 #include "Image.h"
 #include "RetainPtr.h"
 
@@ -149,18 +150,32 @@ DragImageRef createDragImageFromImage(Image* img)
     HBITMAP hbmp = 0;
     HDC dc = GetDC(0);
     HDC workingDC = CreateCompatibleDC(dc);
+    CGContextRef drawContext = 0;
     if (!workingDC)
         goto exit;
 
-    hbmp = allocImage(workingDC, img->size(), 0);
+    hbmp = allocImage(workingDC, img->size(), &drawContext);
 
     if (!hbmp)
         goto exit;
 
-    if (!img->getHBITMAP(hbmp)) {
+    if (!drawContext) {
         ::DeleteObject(hbmp);
         hbmp = 0;
     }
+
+    CGImageRef srcImage = img->getCGImageRef();
+    CGRect rect;
+    rect.size = img->size();
+    rect.origin.x = 0;
+    rect.origin.y = -rect.size.height;
+    static const CGFloat white [] = {1.0, 1.0, 1.0, 1.0};
+    CGContextScaleCTM(drawContext, 1, -1);
+    CGContextSetFillColor(drawContext, white);
+    CGContextFillRect(drawContext, rect);
+    CGContextSetBlendMode(drawContext, kCGBlendModeNormal);
+    CGContextDrawImage(drawContext, rect, srcImage);
+    CGContextRelease(drawContext);
 
 exit:
     if (workingDC);
