@@ -338,7 +338,7 @@ void GraphicsContext::drawFocusRing(const Color& color)
     CGContextRestoreGState(context);
 }
 
-#ifdef SVG_SUPPORT
+#if ENABLE(SVG)
 GraphicsContext* contextForImage(SVGResourceImage*)
 {
     // FIXME: This should go in GraphicsContextCG.cpp

@@ -1,3 +1,11 @@
+2007-02-26  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Adele.
+
+        Stop bizarre crashes from happening on startup.
+
+        * WebKit.vcproj/WebKit.vcproj: Use new ENABLE_* macros instead of *_SUPPORT.
+
 2007-02-24  Steve Falkenburg  <sfalken@apple.com>
 
         Pre-emptive build fix.
