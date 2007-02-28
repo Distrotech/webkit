@@ -143,6 +143,17 @@ String WebCore::contextMenuItemTagShowSpellingPanel(bool show)
 {
     return show ? "Show Spelling and Grammar" : "Hide Spelling and Grammar";
 }
+// Search menu strings
+String WebCore::searchMenuNoRecentSearchesText() { return "No recent searches"; }
+String WebCore::searchMenuRecentSearchesText() { return "Recent Searches"; }
+String WebCore::searchMenuClearRecentSearchesText() { return "Clear Recent Searches"; }
+
+// Accessibility strings
+String WebCore::AXWebAreaText() { return "web area"; }
+String WebCore::AXLinkText() { return "link"; }
+String WebCore::AXListMarkerText() { return "list marker"; }
+String WebCore::AXImageMapText() { return "image map"; }
+String WebCore::AXHeadingText() { return "heading"; }
 
 namespace WebCore {
 
