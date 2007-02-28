@@ -64,7 +64,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
     if (!IsEqualGUID(rclsid, CLSID_WebView) && !IsEqualGUID(rclsid, CLSID_WebIconDatabase) && !IsEqualGUID(rclsid, CLSID_WebMutableURLRequest) && 
         !IsEqualGUID(rclsid, CLSID_WebNotificationCenter) && !IsEqualGUID(rclsid, CLSID_WebIconDatabase) && !IsEqualGUID(rclsid, CLSID_WebHistory) && 
         !IsEqualGUID(rclsid, CLSID_CFDictionaryPropertyBag) && !IsEqualGUID(rclsid, CLSID_WebHistoryItem) && !IsEqualGUID(rclsid, CLSID_WebCache) &&
-        !IsEqualGUID(rclsid, CLSID_WebPreferences) && !IsEqualGUID(rclsid, CLSID_WebKitStatistics) && !IsEqualGUID(rclsid, CLSID_WebError) &&
+        !IsEqualGUID(rclsid, CLSID_WebPreferences) && !IsEqualGUID(rclsid, CLSID_WebScrollBar) && !IsEqualGUID(rclsid, CLSID_WebKitStatistics) && !IsEqualGUID(rclsid, CLSID_WebError) &&
         !IsEqualGUID(rclsid, CLSID_WebURLCredential) && !IsEqualGUID(rclsid, CLSID_WebDownload) && !IsEqualGUID(rclsid, CLSID_WebURLRequest) &&
         !IsEqualGUID(rclsid, CLSID_WebURLProtectionSpace))
     return E_FAIL;
@@ -100,6 +100,7 @@ static CLSID gRegCLSIDs[] = {
     CLSID_WebHistoryItem,
     CLSID_WebCache,
     CLSID_WebPreferences,
+    CLSID_WebScrollBar,
     CLSID_WebKitStatistics,
     CLSID_WebError,
     CLSID_WebURLCredential,
@@ -190,6 +191,14 @@ static LPCTSTR gRegTable[][3] = {
 { TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebPreferences") },
 { TEXT("WebKit.WebPreferences.3"),                                                          0,                      TEXT("WebPreferences") },
 { TEXT("WebKit.WebPreferences.3\\CLSID"),                                                   0,                      TEXT("{########-####-####-####-############}") },
+
+{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebScrollBar") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebScrollBar.3") },
+{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebScrollBar") },
+{ TEXT("WebKit.WebScrollBar.3"),                                                            0,                      TEXT("WebScrollBar") },
+{ TEXT("WebKit.WebScrollBar.3\\CLSID"),                                                     0,                      TEXT("{########-####-####-####-############}") },
 
 { TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebKitStatistics") },
 { TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },

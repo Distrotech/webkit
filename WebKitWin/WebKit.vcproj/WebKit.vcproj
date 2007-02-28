@@ -413,6 +413,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\WebScrollBar.h"
+				>
+			</File>
+			<File
 				RelativePath="..\WebURLAuthenticationChallenge.h"
 				>
 			</File>
@@ -570,6 +574,10 @@
 			</File>
 			<File
 				RelativePath="..\WebScriptObject.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\WebScrollBar.cpp"
 				>
 			</File>
 			<File

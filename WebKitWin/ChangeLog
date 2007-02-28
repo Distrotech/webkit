@@ -1,3 +1,49 @@
+2007-02-27  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Steve and Adam.
+        
+        WebKitWin changes to get the aqua scrollbar into the app.
+
+        * Interfaces/IWebScrollBarDelegatePrivate.idl: Added.
+        COM interface for the WebKit scrollbar
+        * Interfaces/IWebScrollBarPrivate.idl: Added.
+        COM interface that allows the WebKit scrollbar to update the client.
+        * Interfaces/WebKit.idl:
+        * WebKit.vcproj/Interfaces.vcproj:
+        * WebKit.vcproj/WebKit.vcproj:
+        * WebKit.vcproj/WebKitGUID.vcproj:
+        * WebKitClassFactory.cpp:
+        (WebKitClassFactory::CreateInstance):
+        Added changes needed to create the WebKitScrollBar through COM
+        * WebKitDLL.cpp:
+        (DllGetClassObject):
+        * WebScrollBar.cpp: Added.
+        WebKitScrollBar wraps the WebCore's PlatformScrollbar.  This allows the app to
+        make its own scroll bar that's the same aqua scrollbar in the engine.
+        (WebScrollBar::WebScrollBar):
+        (WebScrollBar::~WebScrollBar):
+        (WebScrollBar::createInstance):
+        (WebScrollBar::QueryInterface):
+        (WebScrollBar::AddRef):
+        (WebScrollBar::Release):
+        (WebScrollBar::init): instantiate PlatformScrollbar.
+        (WebScrollBar::setEnabled): call through to PlatformScrollbar
+        (WebScrollBar::setSteps): ditto
+        (WebScrollBar::setProportion): ditto
+        (WebScrollBar::setRect): ditto
+        (WebScrollBar::setValue): ditto
+        (WebScrollBar::value): ditto
+        (WebScrollBar::capturingMouse): ditto
+        (WebScrollBar::paint): ditto
+        (WebScrollBar::frameGeometry): ditto
+        (WebScrollBar::width): ditto
+        (WebScrollBar::height): ditto
+        (WebScrollBar::handleMouseEvent): ditto
+        (WebScrollBar::scroll): ditto
+        (WebScrollBar::valueChanged): call valueChanged on the delegate
+        (WebScrollBar::windowClipRect): get the rect from the scrollbar's containing window
+        * WebScrollBar.h: Added.
+
 2007-02-27  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by Steve, Adam, Maciej, and their mothers.

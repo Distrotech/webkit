@@ -36,6 +36,7 @@
 #include "WebHistoryItem.h"
 #include "WebIconDatabase.h"
 #include "WebKit.h"
+#include "WebScrollBar.h"
 #include "WebKitStatistics.h"
 #include "WebMutableURLRequest.h"
 #include "WebNotificationCenter.h"
@@ -116,6 +117,8 @@ HRESULT STDMETHODCALLTYPE WebKitClassFactory::CreateInstance(IUnknown* pUnkOuter
         unknown = static_cast<IWebCache*>(WebCache::createInstance());
     else if (IsEqualGUID(m_targetClass, CLSID_WebPreferences))
         unknown = static_cast<IWebPreferences*>(WebPreferences::createInstance());
+    else if (IsEqualGUID(m_targetClass, CLSID_WebScrollBar))
+        unknown = static_cast<IWebScrollBarPrivate*>(WebScrollBar::createInstance());
     else if (IsEqualGUID(m_targetClass, CLSID_WebKitStatistics))
         unknown = static_cast<IWebKitStatistics*>(WebKitStatistics::createInstance());
     else if (IsEqualGUID(m_targetClass, CLSID_WebError))

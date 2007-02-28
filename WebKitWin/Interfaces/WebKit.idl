@@ -80,6 +80,7 @@ import "IWebNotificationObserver.idl";
 import "IWebHistory.idl";
 import "IWebCache.idl";
 import "IWebKitStatistics.idl";
+import "IWebScrollBarPrivate.idl";
 
 [
 #if __ARCHIVE_BUILD__
@@ -262,5 +263,16 @@ library WebKit
 #endif
     coclass WebURLProtectionSpace {
         interface IWebURLProtectionSpace;
+    }
+
+#if __ARCHIVE_BUILD__
+    [uuid(0F34FB95-301F-4ea1-943E-B5E6E6D94121)]
+#elif __BUILDBOT__
+    [uuid(24A53AD5-AA9F-44e6-AA22-2C7C250B661A)]
+#else
+    [uuid(FEB403DC-2CA5-4267-9941-EF01A709F793)]
+#endif
+    coclass WebScrollBar {
+        interface IWebScrollBarPrivate;
     }
 }

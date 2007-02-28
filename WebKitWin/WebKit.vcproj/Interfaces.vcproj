@@ -360,6 +360,14 @@
 			>
 		</File>
 		<File
+			RelativePath="..\Interfaces\IWebScrollBarDelegatePrivate.idl"
+			>
+		</File>
+		<File
+			RelativePath="..\Interfaces\IWebScrollBarPrivate.idl"
+			>
+		</File>
+		<File
 			RelativePath="..\Interfaces\IWebUIDelegate.idl"
 			>
 		</File>
