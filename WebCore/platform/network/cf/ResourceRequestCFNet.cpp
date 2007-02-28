@@ -58,18 +58,13 @@ static inline void addHeadersFromHashMap(CFMutableURLRequestRef request, const H
 
 void ResourceRequest::doUpdatePlatformRequest()
 {
-    CFURLRef url = ResourceRequest::url().createCFURL();
-    CFURLRef mainDocumentURL = ResourceRequest::mainDocumentURL().createCFURL();
+    RetainPtr<CFURLRef> url(AdoptCF, ResourceRequest::url().createCFURL());
+    RetainPtr<CFURLRef> mainDocumentURL(AdoptCF, ResourceRequest::mainDocumentURL().createCFURL());
 
-    CFMutableURLRequestRef cfRequest = CFURLRequestCreateMutable(0, url, (CFURLRequestCachePolicy)cachePolicy(), timeoutInterval(), mainDocumentURL);
+    CFMutableURLRequestRef cfRequest = CFURLRequestCreateMutable(0, url.get(), (CFURLRequestCachePolicy)cachePolicy(), timeoutInterval(), mainDocumentURL.get());
 
-    CFRelease(url);
-    if (mainDocumentURL)
-        CFRelease(mainDocumentURL);
-
-    CFStringRef requestMethod = httpMethod().createCFString();
-    CFURLRequestSetHTTPRequestMethod(cfRequest, requestMethod);
-    CFRelease(requestMethod);
+    RetainPtr<CFStringRef> requestMethod(AdoptCF, httpMethod().createCFString());
+    CFURLRequestSetHTTPRequestMethod(cfRequest, requestMethod.get());
 
     addHeadersFromHashMap(cfRequest, httpHeaderFields());
     WebCore::setHTTPBody(cfRequest, httpBody());
