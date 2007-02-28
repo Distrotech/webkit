@@ -1096,7 +1096,7 @@ HRESULT WebFrame::canProvideDocumentSource(bool* result)
         BSTR mimeTypeBStr;
         if (SUCCEEDED(urlResponse->MIMEType(&mimeTypeBStr))) {
             String mimeType(mimeTypeBStr, SysStringLen(mimeTypeBStr));
-            *result = (!WebCore::DOMImplementation::isTextMIMEType(mimeType) && !Image::supportsType(mimeType) && !PlugInInfoStore::supportsMIMEType(mimeType));
+            *result = mimeType == "text/html" || WebCore::DOMImplementation::isXMLMIMEType(mimeType);
             SysFreeString(mimeTypeBStr);
         }
     }

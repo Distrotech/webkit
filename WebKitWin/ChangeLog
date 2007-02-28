@@ -1,3 +1,20 @@
+2007-02-27  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Anders.
+
+        Fix <rdar://problem/5004615> View source menu option is always disabled
+        when Netscape 8 is installed
+
+        The bug was caused by Netscape's npTrident.dll plugin, which registers
+        itself as a handler for text/html and text/xml.
+
+        * WebFrame.cpp:
+        (WebFrame::canProvideDocumentSource): Explicitly allow viewing the
+        source of HTML and XML documents, rather than disallowing text, image,
+        and plugin documents. Plugins can register themselves as handlers for
+        HTML and XML MIME types, but we still want to display source in those
+        cases.
+
 2007-02-27  Beth Dakin  <bdakin@apple.com>
 
         Reviewed by Adam.
