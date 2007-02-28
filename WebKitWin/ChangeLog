@@ -1,3 +1,18 @@
+2007-02-27  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Steve, Adam, Maciej, and their mothers.
+
+        This is a general leaks fix but helps the effort towards fixing
+        <rdar://4974495> Boomer leaks while running HTML iBench
+        However, this fix doens't close that bug. 
+
+        * WebFrame.cpp:
+        (WebFrame::setTitle):
+            fix a leak of WebHistory
+        * WebHistory.cpp:
+        (_WebCoreHistoryProvider::containsItemForURLUnicode):
+            fix a leak of WebHistory
+
 2007-02-27  Adam Roben  <aroben@apple.com>
 
         Reviewed by Anders.

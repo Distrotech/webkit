@@ -1101,8 +1101,10 @@ bool _WebCoreHistoryProvider::containsItemForURLUnicode(const UChar* unicode, un
     }
 
     if (!m_historyPrivate) {
-        HRESULT hr = m_history->QueryInterface(IID_IWebHistoryPrivate, (void**)&m_historyPrivate);
-        if (!SUCCEEDED(hr)) {
+        if (SUCCEEDED(m_history->QueryInterface(IID_IWebHistoryPrivate, (void**)&m_historyPrivate))) {
+            // don't hold a ref - we're owned by IWebHistory/IWebHistoryPrivate
+            m_historyPrivate->Release();
+        } else {
             if (strBuffer != staticStrBuffer)
                 free(strBuffer);
             m_historyPrivate = 0;

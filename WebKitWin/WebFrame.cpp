@@ -1609,7 +1609,8 @@ void WebFrame::setTitle(const String& title, const KURL& url)
         preferences->privateBrowsingEnabled(&privateBrowsingEnabled);
     if (!privateBrowsingEnabled) {
         // update title in global history
-        WebHistory* history = webHistory();
+        COMPtr<WebHistory> history;
+        history.adoptRef(webHistory());
         if (history) {
             COMPtr<IWebHistoryItem> item;
             if (SUCCEEDED(history->itemForURL(BString(url.url()), &item))) {
