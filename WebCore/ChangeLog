@@ -1,3 +1,19 @@
+2007-02-28  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Anders.
+
+        Clean up WebCoreTextRenderer. WebCoreDrawTextAtPoint now just draws
+        text at a point. It doesn't center truncate, clip, or modify alignment.
+
+        No layout test possible.
+
+        * platform/win/WebCoreTextRenderer.cpp:
+        (WebCore::WebCoreDrawTextAtPoint): Use only WebCore types, and don't
+        center truncate or modify alignment.
+        (WebCore::WebCoreDrawDoubledTextAtPoint): Moved from WebKitGraphics.cpp.
+        (WebCore::WebCoreTextFloatWidth): Added.
+        * platform/win/WebCoreTextRenderer.h: Updated/added declarations.
+
 2007-02-28  Adele Peterson  <adele@apple.com>
 
         Reviewed by Adam.

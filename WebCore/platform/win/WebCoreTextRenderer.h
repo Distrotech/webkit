@@ -23,14 +23,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-typedef struct HDC__* HDC;
-typedef struct CGColor *CGColorRef;
-typedef struct tagRECT RECT;
-
 namespace WebCore {
 
+    class Color;
+    class Font;
+    class GraphicsContext;
+    class IntPoint;
     class String;
 
-    void WebCoreDrawTextAtPoint(const String& text, HDC, RECT clipRect, bool bottomAligned, const String& fontFamily, int size, bool bold, bool italic, CGColorRef, bool centerTruncate);
+    void WebCoreDrawTextAtPoint(GraphicsContext&, const String&, const IntPoint&, const Font&, const Color&);
+    void WebCoreDrawDoubledTextAtPoint(GraphicsContext&, const String&, const IntPoint&, const Font&, const Color& topColor, const Color& bottomColor);
+    float WebCoreTextFloatWidth(const String&, const Font&);
 
-}
+} // namespace WebCore

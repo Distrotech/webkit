@@ -42,6 +42,7 @@
 #include <WebCore/GraphicsContext.h>
 #include <WebCore/Page.h>
 #include <WebCore/StringTruncator.h>
+#include <WebCore/WebCoreTextRenderer.h>
 #pragma warning(pop) 
 
 namespace WebCore {
@@ -234,21 +235,17 @@ DragImageRef WebDragClient::createDragImageForLink(KURL& url, const String& inLa
     static const Color topColor(0, 0, 0, 255); //original alpha = 0.75
     static const Color bottomColor(255, 255, 255, 127); //original alpha = 0.5
     if (drawURLString) {
-        if (clipURLString) {
+        if (clipURLString)
             urlString = StringTruncator::rightTruncate(urlString, imageSize.width() - (DRAG_LABEL_BORDER_X * 2.0f), urlFont);
-            urlRun = TextRun(urlString.impl());        
-        }
         IntPoint textPos(DRAG_LABEL_BORDER_X, imageSize.height() - (DRAG_LABEL_BORDER_Y_OFFSET + urlFont.descent()));
-        DrawDoubledTextAtPoint(context, urlRun, textPos, topColor, bottomColor, urlFont);
+        WebCoreDrawDoubledTextAtPoint(context, urlString, textPos, urlFont, topColor, bottomColor);
     }
     
-    if (clipLabelString) {
+    if (clipLabelString)
         label = StringTruncator::rightTruncate(label, imageSize.width() - (DRAG_LABEL_BORDER_X * 2.0f), labelFont);
-        labelRun = TextRun(label.impl());        
-    }
 
     IntPoint textPos(DRAG_LABEL_BORDER_X, DRAG_LABEL_BORDER_Y + labelFont.pixelSize());
-    DrawDoubledTextAtPoint(context, labelRun, textPos, topColor, bottomColor, labelFont);
+    WebCoreDrawDoubledTextAtPoint(context, label, textPos, labelFont, topColor, bottomColor);
 
     CGContextRelease(contextRef);
     DeleteDC(workingDC);

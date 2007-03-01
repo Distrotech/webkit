@@ -27,15 +27,26 @@
 #define WebKitGraphics_h
 
 typedef struct CGColor* CGColorRef;
-typedef struct CGContext *CGContextRef;
-namespace WebCore {
-    class Color;
-    class Font;
-    class GraphicsContext;
-    class IntPoint;
-    class TextRun;
-}
+typedef struct CGContext* CGContextRef;
+typedef struct tagPOINT POINT;
 
-void DrawTextAtPoint(LPCTSTR text, int length, HDC, RECT clipRect, bool bottomAligned, LPCTSTR fontfamily, int fontFamilyLength, int size, bool bold, bool italic, CGColorRef, bool centerTruncate);
-void DrawDoubledTextAtPoint(WebCore::GraphicsContext& context, const WebCore::TextRun& run, const WebCore::IntPoint& textPos, const WebCore::Color& topColor, const WebCore::Color& bottomColor, const WebCore::Font&);
-#endif
+typedef wchar_t WCHAR;
+typedef __nullterminated const WCHAR* LPCWSTR;
+typedef LPCWSTR LPCTSTR;
+
+struct WebFontDescription {
+    LPCTSTR family;
+    unsigned familyLength;
+    float size;
+    bool bold;
+    bool italic;
+};
+
+void DrawTextAtPoint(CGContextRef, LPCTSTR text, int length, POINT, const WebFontDescription&, CGColorRef);
+float TextFloatWidth(LPCTSTR text, int length, const WebFontDescription&);
+void FontMetrics(const WebFontDescription&, int* ascent, int* descent);
+
+// buffer must be large enough to hold all of "text", including its null terminator.
+void CenterTruncateStringToWidth(LPCTSTR text, int length, const WebFontDescription&, float width, WCHAR* buffer);
+
+#endif // !defined(WebKitGraphics_h)

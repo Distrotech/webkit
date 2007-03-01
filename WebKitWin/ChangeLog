@@ -1,3 +1,23 @@
+2007-02-28  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Anders.
+
+        Made WebKitGraphics more flexible.
+
+        * WebDragClient.cpp:
+        (WebDragClient::createDragImageForLink): Updated for changes to
+        WebKitGraphics/WebCoreTextRenderer.
+        * WebKit.vcproj/WebKit.def: Added new exported methods.
+        * WebKit.vcproj/WebKit_debug.def: Ditto.
+        * WebKitGraphics.cpp:
+        (makeFont): Added.
+        (DrawTextAtPoint): Simplified arguments, changed to take a
+        CGContextRef, and updated for WebCoreTextRenderer changes.
+        (TextFloatWidth): Added.
+        (FontMetrics): Added.
+        (CenterTruncateStringToWidth): Added.
+        * WebKitGraphics.h: Updated declarations.
+
 2007-02-28  Steve Falkenburg  <sfalken@apple.com>
 
         Fix build (for new SDK) / Break build (for old SDK)

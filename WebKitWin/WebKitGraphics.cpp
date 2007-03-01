@@ -24,34 +24,80 @@
  */
 
 #include "config.h"
-#include "WebKitDLL.h"
 #include "WebKitGraphics.h"
 
 #include "WebKit.h"
+#include "WebKitDLL.h"
+
 #pragma warning(push, 0)
+#include <WebCore/Font.h>
+#include <WebCore/FontDescription.h>
 #include <WebCore/GraphicsContext.h>
 #include <WebCore/PlatformString.h>
+#include <WebCore/StringTruncator.h>
 #include <WebCore/WebCoreTextRenderer.h>
+
+#include <CoreGraphics/CoreGraphics.h>
 #pragma warning(pop)
+
+#include <windows.h>
 
 using namespace WebCore;
 
-void DrawTextAtPoint(LPCTSTR text, int length, HDC dc, RECT clipRect, bool bottomAligned, LPCTSTR fontFamily, int familyLength, int size, bool bold, bool italic, CGColorRef color, bool centerTruncate)
+static Font makeFont(const WebFontDescription& description)
 {
-    String textString(text, length);
-    String fontFamilyString(fontFamily, familyLength);
-    WebCoreDrawTextAtPoint(textString, dc, clipRect, bottomAligned, fontFamilyString, size, bold, italic, color, centerTruncate);
+    String fontFamilyString(description.family, description.familyLength);
+
+    FontDescription f;
+    FontFamily family;
+    family.setFamily(fontFamilyString);
+    f.setFamily(family);
+    f.setSpecifiedSize(description.size);
+    f.setComputedSize(description.size);
+    f.setItalic(description.italic);
+    f.setBold(description.bold);
+    f.setIsAbsoluteSize(true);
+
+    Font font(f, 0, 0);
+    font.update();
+
+    return font;
 }
 
-
-void DrawDoubledTextAtPoint(GraphicsContext& context, const TextRun& run, const IntPoint &pos, const Color& topColor, const Color& bottomColor, const Font& font)
+void DrawTextAtPoint(CGContextRef cgContext, LPCTSTR text, int length, POINT point, const WebFontDescription& description, CGColorRef color)
 {
-    IntPoint textPos = pos;
-    context.setFont(font);
-    context.setFillColor(bottomColor);
-    context.drawText(run, textPos);
-    textPos.setY(textPos.y() - 1);
-    context.setFillColor(topColor);
-    context.drawText(run, textPos);
+    GraphicsContext context(cgContext);
+
+    const CGFloat* components = CGColorGetComponents(color);
+    Color textColor((int)(components[0] * 255), (int)(components[1] * 255), (int)(components[2] * 255), (int)(components[3] * 255));
+
+    WebCoreDrawTextAtPoint(context, String(text, length), point, makeFont(description), textColor);
 }
 
+float TextFloatWidth(LPCTSTR text, int length, const WebFontDescription& description)
+{
+    return WebCoreTextFloatWidth(String(text, length), makeFont(description));
+}
+
+void FontMetrics(const WebFontDescription& description, int* ascent, int* descent)
+{
+    if (!ascent && !descent)
+        return;
+
+    Font font(makeFont(description));
+
+    if (ascent)
+        *ascent = font.ascent();
+
+    if (descent)
+        *descent = font.descent();
+}
+
+void CenterTruncateStringToWidth(LPCTSTR text, int length, const WebFontDescription& description, float width, WCHAR* buffer)
+{
+    ASSERT(buffer);
+
+    String result = StringTruncator::centerTruncate(String(text, length), width, makeFont(description));
+    memcpy(buffer, result.characters(), result.length() * sizeof(UChar));
+    buffer[result.length()] = '\0';
+}

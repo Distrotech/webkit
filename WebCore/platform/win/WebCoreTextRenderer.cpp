@@ -31,41 +31,43 @@
 #include "StringTruncator.h"
 #include "TextStyle.h"
 
-#include <CoreGraphics/CoreGraphics.h>
-
 namespace WebCore {
 
-void WebCoreDrawTextAtPoint(const String& text, HDC dc, RECT clipRect, bool bottomAligned, const String& fontFamily, int size, bool bold, bool italic, CGColorRef color, bool centerTruncate)
+void WebCoreDrawTextAtPoint(GraphicsContext& context, const String& text, const IntPoint& point, const Font& font, const Color& color)
 {
-    GraphicsContext graphicsContext(dc);
+    context.save();
 
-    FontDescription f;
-    FontFamily family;
-    family.setFamily(fontFamily);
-    f.setFamily(family);
-    f.setSpecifiedSize(size);
-    f.setComputedSize(size);
-    f.setItalic(italic);
-    f.setBold(bold);
-    f.setIsAbsoluteSize(true);
-
-    Font renderer(f, 0, 0);
-    renderer.update();
-
-    // FIXME: We should split string truncation out into a separate function that WebKit can call
-    String string = centerTruncate
-        ? StringTruncator::centerTruncate(text, clipRect.right - clipRect.left, renderer)
-        : text;
-
-    TextRun run(string.characters(), string.length());
+    TextRun run(text.characters(), text.length());
     TextStyle style;
-    ASSERT(CGColorGetNumberOfComponents(color) == 4);
-    const CGFloat* components = CGColorGetComponents(color);
-    graphicsContext.save();
-    graphicsContext.setFillColor(makeRGBA((int)(components[0] * 255), (int)(components[1] * 255), (int)(components[2] * 255), (int)(components[3] * 255)));
-    graphicsContext.clip(IntRect(clipRect.left, clipRect.top, clipRect.right-clipRect.left, clipRect.bottom-clipRect.top));
-    renderer.drawText(&graphicsContext, run, style, FloatPoint(clipRect.left, bottomAligned ? clipRect.bottom - renderer.descent() : clipRect.top + renderer.ascent()));
-    graphicsContext.restore();
+
+    context.setFillColor(color);
+    font.drawText(&context, run, style, point);
+
+    context.restore();
 }
 
+void WebCoreDrawDoubledTextAtPoint(GraphicsContext& context, const String& text, const IntPoint& point, const Font& font, const Color& topColor, const Color& bottomColor)
+{
+    context.save();
+
+    IntPoint textPos = point;
+    TextRun run(text.characters(), text.length());
+    TextStyle style;
+
+    context.setFillColor(bottomColor);
+    font.drawText(&context, run, style, textPos);
+
+    textPos.move(0, -1);
+
+    context.setFillColor(topColor);
+    font.drawText(&context, run, style, textPos);
+
+    context.restore();
 }
+
+float WebCoreTextFloatWidth(const String& text, const Font& font)
+{
+    return StringTruncator::width(text, font);
+}
+
+} // namespace WebCore
