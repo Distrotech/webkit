@@ -11,7 +11,7 @@ extern "C" {
 #if defined(XP_WIN)
 #define EXPORTED_CALLBACK(_type, _name) _type (_stdcall * _name)
 #else
-#define EXPORTED_CALLBACK(_type, _name) _type (* name)
+#define EXPORTED_CALLBACK(_type, _name) _type (* _name)
 #endif
 
 typedef NPError (*NPN_GetURLNotifyProcPtr)(NPP instance, const char* URL, const char* window, void* notifyData);
