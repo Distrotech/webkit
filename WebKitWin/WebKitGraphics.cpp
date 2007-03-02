@@ -64,14 +64,14 @@ static Font makeFont(const WebFontDescription& description)
     return font;
 }
 
-void DrawTextAtPoint(CGContextRef cgContext, LPCTSTR text, int length, POINT point, const WebFontDescription& description, CGColorRef color)
+void DrawTextAtPoint(CGContextRef cgContext, LPCTSTR text, int length, POINT point, const WebFontDescription& description, CGColorRef color, int underlinedIndex)
 {
     GraphicsContext context(cgContext);
 
     const CGFloat* components = CGColorGetComponents(color);
     Color textColor((int)(components[0] * 255), (int)(components[1] * 255), (int)(components[2] * 255), (int)(components[3] * 255));
 
-    WebCoreDrawTextAtPoint(context, String(text, length), point, makeFont(description), textColor);
+    WebCoreDrawTextAtPoint(context, String(text, length), point, makeFont(description), textColor, underlinedIndex);
 }
 
 float TextFloatWidth(LPCTSTR text, int length, const WebFontDescription& description)

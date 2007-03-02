@@ -1,3 +1,14 @@
+2007-03-02  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Anders.
+
+        Added optional underlining of a single character to WebKitGraphics.
+
+        * WebKitGraphics.cpp:
+        (DrawTextAtPoint): Passed optional underlinedIndex parameter to
+        WebCoreTextRenderer.
+        * WebKitGraphics.h: Added optional underlinedIndex parameter.
+
 2007-03-01  Adam Roben  <aroben@apple.com>
 
         Reviewed by Kevin M.

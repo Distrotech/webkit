@@ -33,34 +33,53 @@
 
 namespace WebCore {
 
-void WebCoreDrawTextAtPoint(GraphicsContext& context, const String& text, const IntPoint& point, const Font& font, const Color& color)
+static void doDrawTextAtPoint(GraphicsContext& context, const String& text, const IntPoint& point, const Font& font, const Color& color, int underlinedIndex)
 {
-    context.save();
-
     TextRun run(text.characters(), text.length());
     TextStyle style;
 
     context.setFillColor(color);
     font.drawText(&context, run, style, point);
 
+    if (underlinedIndex >= 0) {
+        ASSERT(underlinedIndex < text.length());
+
+        int beforeWidth;
+        if (underlinedIndex > 0) {
+            TextRun beforeRun(text.impl(), 0, text.length(), 0, underlinedIndex);
+            beforeWidth = font.width(beforeRun, style);
+        } else
+            beforeWidth = 0;
+
+        TextRun underlinedRun(text.impl(), 0, text.length(), underlinedIndex, underlinedIndex + 1);
+        int underlinedWidth = font.width(underlinedRun, style);
+
+        IntPoint underlinePoint(point);
+        underlinePoint.move(beforeWidth, 1);
+
+        context.setStrokeColor(color);
+        context.drawLineForText(underlinePoint, underlinedWidth, false);
+    }
+}
+
+void WebCoreDrawTextAtPoint(GraphicsContext& context, const String& text, const IntPoint& point, const Font& font, const Color& color, int underlinedIndex)
+{
+    context.save();
+
+    doDrawTextAtPoint(context, text, point, font, color, underlinedIndex);
+
     context.restore();
 }
 
-void WebCoreDrawDoubledTextAtPoint(GraphicsContext& context, const String& text, const IntPoint& point, const Font& font, const Color& topColor, const Color& bottomColor)
+void WebCoreDrawDoubledTextAtPoint(GraphicsContext& context, const String& text, const IntPoint& point, const Font& font, const Color& topColor, const Color& bottomColor, int underlinedIndex)
 {
     context.save();
 
     IntPoint textPos = point;
-    TextRun run(text.characters(), text.length());
-    TextStyle style;
 
-    context.setFillColor(bottomColor);
-    font.drawText(&context, run, style, textPos);
-
+    doDrawTextAtPoint(context, text, point, font, bottomColor, underlinedIndex);
     textPos.move(0, -1);
-
-    context.setFillColor(topColor);
-    font.drawText(&context, run, style, textPos);
+    doDrawTextAtPoint(context, text, point, font, topColor, underlinedIndex);
 
     context.restore();
 }
