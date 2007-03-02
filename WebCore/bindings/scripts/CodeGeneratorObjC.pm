@@ -978,6 +978,7 @@ sub GenerateImplementation
     push(@implContentHeader, "\n#import \"config.h\"\n");
     push(@implContentHeader, "\n#import \"logging.h\"\n");
     push(@implContentHeader, "\n#ifdef ${conditional}_SUPPORT\n\n") if $conditional;
+    push(@implContentHeader, "\n#import \"ThreadCheck.h\"\n");
     push(@implContentHeader, "#import \"$classHeaderName.h\"\n\n");
     push(@implContentHeader, "#import <wtf/GetPtr.h>\n\n");
 
