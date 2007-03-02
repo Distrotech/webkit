@@ -91,3 +91,5 @@ EXPORTS
         FontMetrics
         TextFloatWidth
         CenterTruncateStringToWidth
+        RightTruncateStringToWidth
+        

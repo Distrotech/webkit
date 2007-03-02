@@ -101,3 +101,12 @@ void CenterTruncateStringToWidth(LPCTSTR text, int length, const WebFontDescript
     memcpy(buffer, result.characters(), result.length() * sizeof(UChar));
     buffer[result.length()] = '\0';
 }
+
+void RightTruncateStringToWidth(LPCTSTR text, int length, const WebFontDescription& description, float width, WCHAR* buffer)
+{
+    ASSERT(buffer);
+
+    String result = StringTruncator::rightTruncate(String(text, length), width, makeFont(description));
+    memcpy(buffer, result.characters(), result.length() * sizeof(UChar));
+    buffer[result.length()] = '\0';
+}

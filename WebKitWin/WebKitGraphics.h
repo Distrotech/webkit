@@ -48,5 +48,6 @@ void FontMetrics(const WebFontDescription&, int* ascent, int* descent);
 
 // buffer must be large enough to hold all of "text", including its null terminator.
 void CenterTruncateStringToWidth(LPCTSTR text, int length, const WebFontDescription&, float width, WCHAR* buffer);
+void RightTruncateStringToWidth(LPCTSTR text, int length, const WebFontDescription&, float width, WCHAR* buffer);
 
 #endif // !defined(WebKitGraphics_h)

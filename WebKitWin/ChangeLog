@@ -1,3 +1,15 @@
+2007-03-01  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Kevin M.
+
+        Add support for right-truncation to WebKitGraphics.
+
+        * WebKit.vcproj/WebKit.def: Added new export.
+        * WebKit.vcproj/WebKit_debug.def: Ditto.
+        * WebKitGraphics.cpp:
+        (RightTruncateStringToWidth): Added.
+        * WebKitGraphics.h: Added declaration.
+
 2007-02-28  Adam Roben  <aroben@apple.com>
 
         Reviewed by Anders.
