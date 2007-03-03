@@ -619,6 +619,15 @@ interface IWebUIDelegate : IUnknown
     HRESULT drawCustomMenuItem([in] IWebView* sender, [in] void* drawItem);
 
     /*
+        @method webView:addCustomMenuDrawingData
+        @abstract Add custom data to the menu that the delegate can use when asked to draw.
+        @param sender The WebView sending the delegate method.
+        @param menu The cutsom menu to clean up.
+        @discussion This method is called for submenus as well.
+    */
+    HRESULT addCustomMenuDrawingData([in] IWebView* sender, [in] HMENU menu);
+
+    /*
         @method webView:cleanUpCustomMenuDrawingData
         @abstract Clean up any custom data added to the menu items
         @param sender The WebView sending the delegate method.

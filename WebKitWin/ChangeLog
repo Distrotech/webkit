@@ -1,5 +1,19 @@
 2007-03-02  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Beth.
+
+        Make submenus draw using the UIDelegate.
+
+        * Interfaces/IWebUIDelegate.idl: Added new delegate method to add
+        custom drawing data for menus.
+        * WebView.cpp:
+        (WebView::onInitMenuPopup): Added. Calls new delegate method.
+        (WebViewWndProc): Added handler for WM_INITMENUPOPUP, which is called
+        for all submenus.
+        * WebView.h: Added declaration.
+
+2007-03-02  Adam Roben  <aroben@apple.com>
+
         Reviewed by Anders.
 
         Added optional underlining of a single character to WebKitGraphics.

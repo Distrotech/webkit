@@ -616,6 +616,24 @@ bool WebView::onDrawItem(WPARAM /*wParam*/, LPARAM lParam)
     return true;
 }
 
+bool WebView::onInitMenuPopup(WPARAM wParam, LPARAM /*lParam*/)
+{
+    if (!m_uiDelegate)
+        return false;
+
+    HMENU menu = (HMENU)wParam;
+    if (!menu)
+        return false;
+
+    BOOL hasCustomMenus = false;
+    m_uiDelegate->hasCustomMenuImplementation(&hasCustomMenus);
+    if (!hasCustomMenus)
+        return false;
+
+    m_uiDelegate->addCustomMenuDrawingData((IWebView*)this, menu);
+    return true;
+}
+
 bool WebView::onUninitMenuPopup(WPARAM wParam, LPARAM /*lParam*/)
 {
     if (!m_uiDelegate)
@@ -1106,6 +1124,9 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             break;
         case WM_CONTEXTMENU:
             handled = webView->handleContextMenuEvent(wParam, lParam);
+            break;
+        case WM_INITMENUPOPUP:
+            handled = webView->onInitMenuPopup(wParam, lParam);
             break;
         case WM_MEASUREITEM:
             handled = webView->onMeasureItem(wParam, lParam);

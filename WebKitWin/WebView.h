@@ -585,6 +585,7 @@ public:
     bool handleContextMenuEvent(WPARAM, LPARAM);
     bool onMeasureItem(WPARAM, LPARAM);
     bool onDrawItem(WPARAM, LPARAM);
+    bool onInitMenuPopup(WPARAM, LPARAM);
     bool onUninitMenuPopup(WPARAM, LPARAM);
     void performContextMenuAction(WPARAM, LPARAM);
     bool mouseWheel(WPARAM, LPARAM);
