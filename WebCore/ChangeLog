@@ -1,3 +1,10 @@
+2007-03-05  Steve Falkenburg  <sfalken@apple.com>
+
+        Fix build
+
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::PluginStreamWin::stop): Call cancel() instead of stopLoading(), since the latter was removed.
+
 2007-03-02  Adam Roben  <aroben@apple.com>
 
         Reviewed by Anders.

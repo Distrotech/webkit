@@ -94,7 +94,7 @@ void PluginStreamWin::stop()
     m_streamState = StreamStopped;
 
     if (m_loader) {
-        m_loader->stopLoading();
+        m_loader->cancel();
         m_loader = 0;
     }
 }
