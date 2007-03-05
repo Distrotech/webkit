@@ -1,3 +1,13 @@
+2007-03-04  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Steve.
+
+        Added line spacing querying to FontMetrics to support line wrapping.
+
+        * WebKitGraphics.cpp:
+        (FontMetrics): Return the line spacing.
+        * WebKitGraphics.h: Added lineSpacing parameter.
+
 2007-03-02  Adam Roben  <aroben@apple.com>
 
         Reviewed by Beth.

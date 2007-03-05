@@ -44,7 +44,7 @@ struct WebFontDescription {
 
 void DrawTextAtPoint(CGContextRef, LPCTSTR text, int length, POINT, const WebFontDescription&, CGColorRef, int underlinedIndex = -1);
 float TextFloatWidth(LPCTSTR text, int length, const WebFontDescription&);
-void FontMetrics(const WebFontDescription&, int* ascent, int* descent);
+void FontMetrics(const WebFontDescription&, int* ascent, int* descent, int* lineSpacing);
 
 // buffer must be large enough to hold all of "text", including its null terminator.
 void CenterTruncateStringToWidth(LPCTSTR text, int length, const WebFontDescription&, float width, WCHAR* buffer);

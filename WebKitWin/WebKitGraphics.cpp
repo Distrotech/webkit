@@ -79,9 +79,9 @@ float TextFloatWidth(LPCTSTR text, int length, const WebFontDescription& descrip
     return WebCoreTextFloatWidth(String(text, length), makeFont(description));
 }
 
-void FontMetrics(const WebFontDescription& description, int* ascent, int* descent)
+void FontMetrics(const WebFontDescription& description, int* ascent, int* descent, int* lineSpacing)
 {
-    if (!ascent && !descent)
+    if (!ascent && !descent && !lineSpacing)
         return;
 
     Font font(makeFont(description));
@@ -91,6 +91,9 @@ void FontMetrics(const WebFontDescription& description, int* ascent, int* descen
 
     if (descent)
         *descent = font.descent();
+
+    if (lineSpacing)
+        *lineSpacing = font.lineSpacing();
 }
 
 void CenterTruncateStringToWidth(LPCTSTR text, int length, const WebFontDescription& description, float width, WCHAR* buffer)
