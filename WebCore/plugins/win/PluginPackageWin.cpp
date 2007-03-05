@@ -165,6 +165,7 @@ bool PluginPackageWin::load()
         goto abort;
   
     memset(&m_pluginFuncs, 0, sizeof(m_pluginFuncs));
+    m_pluginFuncs.size = sizeof(m_pluginFuncs);
 
     npErr = NP_GetEntryPoints(&m_pluginFuncs);
     LOG_NPERROR(npErr);

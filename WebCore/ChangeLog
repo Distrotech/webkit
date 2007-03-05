@@ -1,3 +1,14 @@
+2007-03-05  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://problem/4987743>
+        Regression: java content is represented as broken images on pages
+        
+        * plugins/win/PluginPackageWin.cpp:
+        (WebCore::PluginPackageWin::load):
+        Make sure to set the size of the NPPluginFuncs struct correctly.
+
 2007-03-05  Steve Falkenburg  <sfalken@apple.com>
 
         Fix build
