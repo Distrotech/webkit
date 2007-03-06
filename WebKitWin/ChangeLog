@@ -1,3 +1,12 @@
+2007-03-06  Steve Falkenburg  <sfalken@apple.com>
+
+        Rubber-stamped by Adam.
+        
+        Fix disney.com more.  Disney redirects to disney.go.com.
+
+        * WebView.cpp:
+        (WebView::userAgentForKURL): Added disney.go.com
+
 2007-03-06  Adam Roben  <aroben@apple.com>
 
         Reviewed by Anders.

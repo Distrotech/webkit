@@ -1378,11 +1378,13 @@ const String& WebView::userAgentForKURL(const KURL& url)
     static const DeprecatedString uaCustomHosts[] = {
         "yahoo.com",                        // <rdar://problem/5041782> http://www.yahoo.com thinks Boomer is an unsupported browser
         "disney.com",                       // <rdar://problem/5041779> http://www.disney.com thinks Boomer is an unsupported browser
+        "disney.go.com",                    // <rdar://problem/5041779> http://www.disney.com thinks Boomer is an unsupported browser
         "mail.google.com",                  // <rdar://problem/4769824> gmail puts Boomer in "simple html" mode
         "ax.phobos.apple.com.edgesuite.net" // <rdar://problem/5041780> iTunes links don't work with Boomer (useragent issue) works if UA is Firefox
     };
     static const String uaCustomValues[] = {
         "Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en) AppleWebKit/418.9.1 (KHTML, like Gecko) Safari/419.3",
+        "Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en) AppleWebKit/522 (KHTML, like Gecko) Safari/521.32.1",
         "Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en) AppleWebKit/522 (KHTML, like Gecko) Safari/521.32.1",
         "Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en) AppleWebKit/522 (KHTML, like Gecko) Safari/521.32.1",
         "Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en) AppleWebKit/522 (KHTML, like Gecko) Safari/521.32.1"
