@@ -133,8 +133,10 @@ void PluginStreamWin::startStream()
 
 void PluginStreamWin::cancelAndDestroyStream(NPReason reason)
 {
-    stop();
+    RefPtr<PluginStreamWin> protect(this);
+
     destroyStream(reason);
+    stop();
 }
 
 void PluginStreamWin::destroyStream(NPReason reason)

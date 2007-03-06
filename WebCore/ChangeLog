@@ -2,6 +2,18 @@
 
         Reviewed by Adam.
 
+        <rdar://problem/5041348>
+        Can't watch videos at cnn.com
+        
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::PluginStreamWin::cancelAndDestroyStream):
+        Change this function back to call call stop() after destroyStream(). Also, make sure to
+        protect the stream since destroyStream can eventually, well, destroy it.
+
+2007-03-05  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
         <rdar://problem/4987743>
         Regression: java content is represented as broken images on pages
         
