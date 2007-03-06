@@ -943,7 +943,7 @@ const char* PluginViewWin::userAgent()
         return MozillaUserAgent;
 
     if (m_userAgent.isNull())
-        m_userAgent = m_parentFrame->loader()->userAgent().utf8();
+        m_userAgent = m_parentFrame->loader()->userAgent(m_url).utf8();
     return m_userAgent;
 }
 

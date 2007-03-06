@@ -234,7 +234,7 @@ public:
     virtual void didFinishLoad();
     virtual void prepareForDataSourceReplacement();
     virtual void setTitle(const WebCore::String& title, const WebCore::KURL&);
-    virtual WebCore::String userAgent();
+    virtual WebCore::String userAgent(const WebCore::KURL&);
     virtual void setDocumentViewFromPageCache(WebCore::PageCache *);
     virtual void updateGlobalHistoryForStandardLoad(const WebCore::KURL &);
     virtual void updateGlobalHistoryForReload(const WebCore::KURL &);

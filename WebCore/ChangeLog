@@ -1,3 +1,10 @@
+2007-03-06  Anders Carlsson  <acarlsson@apple.com>
+
+        Build fix.
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::userAgent):
+
 2007-03-05  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.

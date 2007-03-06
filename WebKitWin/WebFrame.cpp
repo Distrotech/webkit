@@ -1622,9 +1622,9 @@ void WebFrame::setTitle(const String& title, const KURL& url)
     }
 }
 
-String WebFrame::userAgent()
+String WebFrame::userAgent(const KURL& url)
 {
-    return d->webView->userAgentForKURL(KURL());
+    return d->webView->userAgentForKURL(url);
 }
 
 void WebFrame::setDocumentViewFromPageCache(PageCache*)

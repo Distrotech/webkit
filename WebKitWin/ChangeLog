@@ -1,3 +1,13 @@
+2007-03-06  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+        
+        Pass the user agent on.
+        
+        * WebFrame.cpp:
+        (WebFrame::userAgent):
+        * WebFrame.h:
+
 2007-03-04  Adam Roben  <aroben@apple.com>
 
         Reviewed by Steve.
