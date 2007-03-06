@@ -1370,10 +1370,28 @@ exit:
     return versionStr;
 }
 
-const String& WebView::userAgentForKURL(const KURL& /*url*/)
+const String& WebView::userAgentForKURL(const KURL& url)
 {
     if (m_userAgentOverridden)
         return m_userAgentCustom;
+
+    static const DeprecatedString uaCustomHosts[] = {
+        "yahoo.com",                        // <rdar://problem/5041782> http://www.yahoo.com thinks Boomer is an unsupported browser
+        "disney.com",                       // <rdar://problem/5041779> http://www.disney.com thinks Boomer is an unsupported browser
+        "mail.google.com",                  // <rdar://problem/4769824> gmail puts Boomer in "simple html" mode
+        "ax.phobos.apple.com.edgesuite.net" // <rdar://problem/5041780> iTunes links don't work with Boomer (useragent issue) works if UA is Firefox
+    };
+    static const String uaCustomValues[] = {
+        "Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en) AppleWebKit/418.9.1 (KHTML, like Gecko) Safari/419.3",
+        "Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en) AppleWebKit/522 (KHTML, like Gecko) Safari/521.32.1",
+        "Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en) AppleWebKit/522 (KHTML, like Gecko) Safari/521.32.1",
+        "Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en) AppleWebKit/522 (KHTML, like Gecko) Safari/521.32.1"
+    };
+
+    for (int i = 0; i < ARRAYSIZE(uaCustomHosts); i++) {
+        if (url.host().endsWith(uaCustomHosts[i]))
+            return uaCustomValues[i];
+    }
 
     if (!m_userAgentStandard.length())
         m_userAgentStandard = String::format("Mozilla/5.0 (Windows; U; %s; %s) AppleWebKit/%s (KHTML, like Gecko)%s%s", osVersion().latin1().data(), language().latin1().data(), webKitVersion().latin1().data(), (m_applicationName.length() ? " " : ""), m_applicationName.latin1().data());

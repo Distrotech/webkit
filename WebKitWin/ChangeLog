@@ -1,3 +1,19 @@
+2007-03-06  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam.
+        
+        Allow custom user agents per site.
+        
+        This fixes:
+        
+        http://www.disney.com
+        http://www.yahoo.com
+        http://mail.google.com
+        iTunes store links (w/ latest unsubmitted CFNetwork from our root share)
+
+        * WebView.cpp:
+        (WebView::userAgentForKURL): Check URL host against a list of known offenders, return them what they're looking for.
+
 2007-03-06  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.
