@@ -100,7 +100,7 @@ void CenterTruncateStringToWidth(LPCTSTR text, int length, const WebFontDescript
 {
     ASSERT(buffer);
 
-    String result = StringTruncator::centerTruncate(String(text, length), width, makeFont(description));
+    String result = StringTruncator::centerTruncate(String(text, length), width, makeFont(description), false);
     memcpy(buffer, result.characters(), result.length() * sizeof(UChar));
     buffer[result.length()] = '\0';
 }
@@ -109,7 +109,7 @@ void RightTruncateStringToWidth(LPCTSTR text, int length, const WebFontDescripti
 {
     ASSERT(buffer);
 
-    String result = StringTruncator::rightTruncate(String(text, length), width, makeFont(description));
+    String result = StringTruncator::rightTruncate(String(text, length), width, makeFont(description), false);
     memcpy(buffer, result.characters(), result.length() * sizeof(UChar));
     buffer[result.length()] = '\0';
 }

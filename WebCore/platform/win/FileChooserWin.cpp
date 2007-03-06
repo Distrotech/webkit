@@ -95,7 +95,7 @@ String FileChooser::basenameForWidth(const Font& font, int width) const
         string = String(basename);
     }
 
-    return StringTruncator::centerTruncate(string, width, font);
+    return StringTruncator::centerTruncate(string, width, font, false);
 }
 
 }
