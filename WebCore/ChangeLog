@@ -1,5 +1,11 @@
 2007-03-06  Adam Roben  <aroben@apple.com>
 
+        It works better if you use valid C++ syntax.
+
+        * platform/win/TemporaryLinkStubs.cpp:
+
+2007-03-06  Adam Roben  <aroben@apple.com>
+
         Build fix.
 
         * platform/win/TemporaryLinkStubs.cpp: Added missing stubs.

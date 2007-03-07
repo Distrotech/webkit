@@ -197,4 +197,4 @@ float WebCore::userIdleTime() { LOG_NOIMPL(); return 0.0; }
 void PageCache::close() { LOG_NOIMPL(); }
 
 Vector<String> supportedKeySizes() { LOG_NOIMPL(); return Vector<String>(); }
-String signedPublicKeyAndChallengeString(unsigned, const String&, const KURL&) { LOG_NOIMPL(); return String();
+String signedPublicKeyAndChallengeString(unsigned, const String&, const KURL&) { LOG_NOIMPL(); return String(); }
