@@ -196,5 +196,5 @@ bool ResourceHandle::willLoadFromCache(ResourceRequest&) { LOG_NOIMPL(); return 
 float WebCore::userIdleTime() { LOG_NOIMPL(); return 0.0; }
 void PageCache::close() { LOG_NOIMPL(); }
 
-Vector<String> supportedKeySizes() { LOG_NOIMPL(); return Vector<String>(); }
-String signedPublicKeyAndChallengeString(unsigned, const String&, const KURL&) { LOG_NOIMPL(); return String(); }
+Vector<String> WebCore::supportedKeySizes() { LOG_NOIMPL(); return Vector<String>(); }
+String WebCore::signedPublicKeyAndChallengeString(unsigned, const String&, const KURL&) { LOG_NOIMPL(); return String(); }

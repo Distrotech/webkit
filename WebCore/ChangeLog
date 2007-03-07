@@ -1,5 +1,13 @@
 2007-03-06  Adam Roben  <aroben@apple.com>
 
+        Fixing the build while semi-blind is fun.
+
+        * platform/win/TemporaryLinkStubs.cpp:
+        (WebCore::supportedKeySizes): Need a namespace.
+        (WebCore::signedPublicKeyAndChallengeString): Ditto.
+
+2007-03-06  Adam Roben  <aroben@apple.com>
+
         It works better if you use valid C++ syntax.
 
         * platform/win/TemporaryLinkStubs.cpp:
