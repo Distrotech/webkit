@@ -568,7 +568,7 @@ void WebEditorClient::redo()
     }
 }
 
-void WebEditorClient::handleKeyPress(KeyboardEvent* evt)
+void WebEditorClient::handleKeypress(KeyboardEvent* evt)
 {
     // Dispatch tab keypresses here, since they don't make it through to our standard
     // key event processing that calls over to WebFrame::doTextFieldCommandFromEvent.
@@ -584,6 +584,10 @@ void WebEditorClient::handleKeyPress(KeyboardEvent* evt)
     }
 
     // If the platform needs to intercept the event, this is where it should do that.
+}
+
+void WebEditorClient::handleInputMethodKeypress(KeyboardEvent* evt)
+{
 }
 
 bool WebEditorClient::selectWordBeforeMenuEvent()

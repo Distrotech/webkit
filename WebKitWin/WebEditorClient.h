@@ -93,7 +93,8 @@ public:
     virtual void textWillBeDeletedInTextField(WebCore::Element* input);
     virtual void textDidChangeInTextArea(WebCore::Element*);
 
-    void handleKeyPress(WebCore::KeyboardEvent*);
+    void handleKeypress(WebCore::KeyboardEvent*);
+    void handleInputMethodKeypress(WebCore::KeyboardEvent*);
 
 private:
     WebView* m_webView;
