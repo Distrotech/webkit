@@ -1,3 +1,11 @@
+2007-03-06  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        * WebFrame.cpp:
+        (WebFrame::makeDocumentView):
+        Call resetMultipleFormSubmissionProtection() so that submitting the same form from separate loads works.
+
 2007-03-06  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Adam

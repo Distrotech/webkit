@@ -1299,7 +1299,9 @@ bool WebFrame::privateBrowsingEnabled() const
 
 void WebFrame::makeDocumentView()
 {
-    LOG_NOIMPL();
+    // On the mac, this is done in Frame::setView, but since we don't have separate 
+    // frame views, we'll just do it here instead.
+    d->frame->loader()->resetMultipleFormSubmissionProtection();
 }
 
 void WebFrame::makeRepresentation(DocumentLoader*)
