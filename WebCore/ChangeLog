@@ -1,5 +1,11 @@
 2007-03-06  Adam Roben  <aroben@apple.com>
 
+        Build fix.
+
+        * platform/win/TemporaryLinkStubs.cpp: Added missing stubs.
+
+2007-03-06  Adam Roben  <aroben@apple.com>
+
         Reviewed by Anders.
 
         Always keep rounding hacks on.

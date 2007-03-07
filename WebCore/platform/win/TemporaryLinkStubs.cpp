@@ -67,6 +67,7 @@
 #include "ResourceRequest.h"
 #include "Screen.h"
 #include "ScrollBar.h"
+#include "SSLKeyGenerator.h"
 #include "SubresourceLoader.h"
 #include "SystemTime.h"
 #include "TextBoundaries.h"
@@ -195,3 +196,5 @@ bool ResourceHandle::willLoadFromCache(ResourceRequest&) { LOG_NOIMPL(); return 
 float WebCore::userIdleTime() { LOG_NOIMPL(); return 0.0; }
 void PageCache::close() { LOG_NOIMPL(); }
 
+Vector<String> supportedKeySizes() { LOG_NOIMPL(); return Vector<String>(); }
+String signedPublicKeyAndChallengeString(unsigned, const String&, const KURL&) { LOG_NOIMPL(); return String();
