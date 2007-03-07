@@ -93,9 +93,15 @@ void WebDownload::init(ResourceHandle* handle, const ResourceRequest& request, c
         decideDestinationWithSuggestedObjectNameCallback, didCreateDestinationCallback, didFinishCallback, didFailCallback};
 
     m_request.adoptRef(WebMutableURLRequest::createInstance(request));
-    m_download.adoptCF(CFURLDownloadCreateWithLoadingConnection(0, connection, request.cfURLRequest(), response.cfURLResponse(), 0, &client));
+    m_download.adoptCF(CFURLDownloadCreateAndStartWithLoadingConnection(0, connection, request.cfURLRequest(), response.cfURLResponse(), &client));
 
-    LOG(Download, "WebDownload - Created WebDownload %p from existing connection (%s)", this, request.url().url().ascii());
+    // It is possible for CFURLDownloadCreateAndStartWithLoadingConnection() to fail if the passed in CFURLConnection is not in a "downloadable state"
+    // However, we should never hit that case
+    if (!m_download) {
+        ASSERT_NOT_REACHED();
+        LOG_ERROR("WebDownload - Failed to create WebDownload from existing connection (%s)", request.url().url().ascii());
+    } else
+        LOG(Download, "WebDownload - Created WebDownload %p from existing connection (%s)", this, request.url().url().ascii());
 }
 
 void WebDownload::init(const KURL& url, IWebDownloadDelegate* delegate)
