@@ -586,7 +586,7 @@ void WebEditorClient::handleKeypress(KeyboardEvent* evt)
     // If the platform needs to intercept the event, this is where it should do that.
 }
 
-void WebEditorClient::handleInputMethodKeypress(KeyboardEvent* evt)
+void WebEditorClient::handleInputMethodKeypress(KeyboardEvent*)
 {
 }
 

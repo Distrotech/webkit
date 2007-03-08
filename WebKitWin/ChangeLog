@@ -1,5 +1,11 @@
 2007-03-07  Adele Peterson  <adele@apple.com>
 
+        Build fix.
+
+        * WebEditorClient.cpp: (WebEditorClient::handleInputMethodKeypress):
+
+2007-03-07  Adele Peterson  <adele@apple.com>
+
         Reviewed by Darin.
 
         WebKitWin part of fix for:
