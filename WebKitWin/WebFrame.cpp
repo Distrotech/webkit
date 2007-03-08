@@ -1715,7 +1715,7 @@ ResourceError WebFrame::cancelledError(const ResourceRequest& request)
 {
     // FIXME: Need ChickenCat to include CFNetwork/CFURLError.h to get these values
     // Alternatively, we could create our own error domain/codes.
-    return ResourceError("NSURLErrorDomain", -999, request.url().url(), String());
+    return ResourceError(String(WebURLErrorDomain), -999, request.url().url(), String());
 }
 
 ResourceError WebFrame::cannotShowURLError(const ResourceRequest&)
@@ -1726,7 +1726,7 @@ ResourceError WebFrame::cannotShowURLError(const ResourceRequest&)
 
 ResourceError WebFrame::interruptForPolicyChangeError(const ResourceRequest& request)
 {
-    return ResourceError("WebKitErrorDomain", WebKitErrorFrameLoadInterruptedByPolicyChange, request.url().url(), String());
+    return ResourceError(String(WebKitErrorDomain), WebKitErrorFrameLoadInterruptedByPolicyChange, request.url().url(), String());
 }
 
 ResourceError WebFrame::cannotShowMIMETypeError(const ResourceResponse&)

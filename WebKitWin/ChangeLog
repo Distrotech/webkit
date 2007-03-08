@@ -2,6 +2,14 @@
 
         Rubberstamped by Anders.
 
+        * WebFrame.cpp:
+        (WebFrame::cancelledError): Use the WebURLErrorDomain constant.
+        (WebFrame::interruptForPolicyChangeError): Use the WebKitErrorDomain constant.
+
+2007-03-07  Adam Roben  <aroben@apple.com>
+
+        Rubberstamped by Anders.
+
         Switch the definition of WebURLErrorDomain to "CFURLErrorDomain" so
         that we will send the right errors once <rdar://problem/5034136> is
         fixed.
