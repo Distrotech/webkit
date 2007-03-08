@@ -1,3 +1,13 @@
+2007-03-07  Adam Roben  <aroben@apple.com>
+
+        Rubberstamped by Anders.
+
+        Switch the definition of WebURLErrorDomain to "CFURLErrorDomain" so
+        that we will send the right errors once <rdar://problem/5034136> is
+        fixed.
+
+        * Interfaces/IWebError.idl: Changed definition.
+
 2007-03-07  Adele Peterson  <adele@apple.com>
 
         Build fix.

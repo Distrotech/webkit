@@ -48,7 +48,7 @@ cpp_quote(" * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
 cpp_quote(" * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. ")
 cpp_quote(" */")
 
-cpp_quote("#define WebURLErrorDomain TEXT(\"NSURLErrorDomain\")")
+cpp_quote("#define WebURLErrorDomain TEXT(\"CFURLErrorDomain\")")
 /*!
     @enum NSURL-related Error Codes
     @abstract Constants used by NSError to indicate errors in the WebFoundation domain
