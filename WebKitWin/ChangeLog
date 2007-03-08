@@ -1,5 +1,12 @@
 2007-03-08  Anders Carlsson <acarlsson@apple.com>
 
+        Build fix.
+        
+        * WebView.cpp:
+        (WebView::isLoading):
+
+2007-03-08  Anders Carlsson <acarlsson@apple.com>
+
         Reviewed by Adam.
 
         Implement WebView::isLoading.

@@ -2187,7 +2187,7 @@ HRESULT STDMETHODCALLTYPE WebView::isLoading(
         return S_OK;
 
     if (SUCCEEDED(m_mainFrame->provisionalDataSource(&provisionalDataSource)))
-        provisionalDataSource->isLoading(&isLoading);
+        provisionalDataSource->isLoading(isLoading);
     return S_OK;
 }
     
