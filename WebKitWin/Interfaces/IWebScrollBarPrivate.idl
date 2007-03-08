@@ -111,6 +111,10 @@ interface IWebScrollBarPrivate : IUnknown
 
     HRESULT height([out, retval] int* h);
 
+    HRESULT requestedWidth([out, retval] int* w);
+
+    HRESULT requestedHeight([out, retval] int* h);
+
     HRESULT handleMouseEvent([in] HWND window, [in] UINT msg, [in] WPARAM wParam, [in] LPARAM lParam);
 
     HRESULT scroll([in] WebScrollDirection direction, [in] WebScrollGranularity granularity, [in] float multiplier);

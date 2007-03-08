@@ -202,6 +202,27 @@ HRESULT STDMETHODCALLTYPE WebScrollBar::height(
     return S_OK;
 }
 
+HRESULT STDMETHODCALLTYPE WebScrollBar::requestedWidth( 
+    /* [retval][out] */ int* w)
+{
+    if (!w)
+        return E_FAIL;
+
+    *w = m_scrollBar->orientation() == VerticalScrollbar ? PlatformScrollbar::verticalScrollbarWidth(m_scrollBar->controlSize()) : -1;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebScrollBar::requestedHeight( 
+    /* [retval][out] */ int* h)
+{
+    if (!h)
+        return E_FAIL;
+
+    *h = m_scrollBar->orientation() == HorizontalScrollbar ? PlatformScrollbar::horizontalScrollbarHeight(m_scrollBar->controlSize()) : -1;
+    return S_OK;
+}
+
+
 HRESULT STDMETHODCALLTYPE WebScrollBar::handleMouseEvent( 
     HWND window,
     UINT msg,

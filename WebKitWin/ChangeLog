@@ -1,5 +1,17 @@
 2007-03-07  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Oliver.
+
+        Added requestedWidth and requestedHeight methods to WebScrollBar.
+
+        * Interfaces/IWebScrollBarPrivate.idl: Added new declarations.
+        * WebScrollBar.cpp:
+        (WebScrollBar::requestedWidth): Implemented.
+        (WebScrollBar::requestedHeight): Implemented.
+        * WebScrollBar.h: Added method declarations.
+
+2007-03-07  Adam Roben  <aroben@apple.com>
+
         Rubberstamped by Anders.
 
         * WebFrame.cpp:

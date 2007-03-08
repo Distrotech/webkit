@@ -100,6 +100,12 @@ public:
     virtual HRESULT STDMETHODCALLTYPE height( 
         /* [retval][out] */ int* h);
     
+    virtual HRESULT STDMETHODCALLTYPE requestedWidth( 
+        /* [retval][out] */ int* w);
+    
+    virtual HRESULT STDMETHODCALLTYPE requestedHeight( 
+        /* [retval][out] */ int* h);
+
     virtual HRESULT STDMETHODCALLTYPE handleMouseEvent( 
         /* [in] */ HWND window,
         /* [in] */ UINT msg,
