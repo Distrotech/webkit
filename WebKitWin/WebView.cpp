@@ -2170,10 +2170,25 @@ HRESULT STDMETHODCALLTYPE WebView::estimatedProgress(
 }
     
 HRESULT STDMETHODCALLTYPE WebView::isLoading( 
-        /* [retval][out] */ BOOL* /*isLoading*/)
+        /* [retval][out] */ BOOL* isLoading)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    COMPtr<IWebDataSource> dataSource;
+    COMPtr<IWebDataSource> provisionalDataSource;
+
+    if (!isLoading)
+        return E_POINTER;
+
+    *isLoading = FALSE;
+
+    if (SUCCEEDED(m_mainFrame->dataSource(&dataSource)))
+        dataSource->isLoading(isLoading);
+
+    if (*isLoading)
+        return S_OK;
+
+    if (SUCCEEDED(m_mainFrame->provisionalDataSource(&provisionalDataSource)))
+        provisionalDataSource->isLoading(&isLoading);
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::elementAtPoint( 
