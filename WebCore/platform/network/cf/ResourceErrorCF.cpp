@@ -26,12 +26,19 @@
 #include "config.h"
 #include "ResourceError.h"
 
+#if USE(CFNETWORK)
+
+// FIXME: Once <rdar://problem/5050881> is fixed we can remove this extern "C"
+
+extern "C" {
+#include <CFNetwork/CFNetworkErrors.h>
+}
+
 #include <CoreFoundation/CFError.h>
 
 namespace WebCore {
 
-#if USE(CFNETWORK)
-
+// FIXME: Once <rdar://problem/5050841> is fixed we can remove this constructor.
 ResourceError::ResourceError(CFStreamError error)
     : m_errorCode(error.error)
     , m_isNull(false)
@@ -61,10 +68,12 @@ ResourceError::ResourceError(CFErrorRef error)
 
     if (domain == kCFErrorDomainMach || domain == kCFErrorDomainCocoa)
         m_domain ="NSCustomErrorDomain";
+    else if (domain == kCFErrorDomainCFNetwork)
+        m_domain = "CFURLErrorDomain";
     else if (domain == kCFErrorDomainPOSIX)
         m_domain = "NSPOSIXErrorDomain";
     else if (domain == kCFErrorDomainOSStatus)
-        m_domain = "NSOSStatusErrorDomain";    
+        m_domain = "NSOSStatusErrorDomain";
 }
 
 ResourceError::operator CFStreamError() const
@@ -83,6 +92,7 @@ ResourceError::operator CFStreamError() const
 
     return result;
 }
-#endif
-};
 
+} // namespace WebCore
+
+#endif // USE(CFNETWORK)

@@ -1,3 +1,16 @@
+2007-03-08  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Steve.
+        
+        Fix <rdar://problem/4969070> Failed error pages show "unknown error"
+        rather than specific error
+
+        Make ResourceError aware of kCFErrorDomainCFNetwork.
+
+        * platform/network/cf/ResourceErrorCF.cpp:
+        (WebCore::ResourceError::ResourceError): Added case for
+        kCFErrorDomainCFNetwork.
+
 2007-03-06  Adam Roben  <aroben@apple.com>
 
         Fixing the build while semi-blind is fun.
