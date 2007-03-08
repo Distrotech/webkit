@@ -1,5 +1,21 @@
 2007-03-07  Adam Roben  <aroben@apple.com>
 
+        Rubberstamped by Anders.
+
+        Return E_POINTER for null parameters.
+
+        * WebScrollBar.cpp:
+        (WebScrollBar::value):
+        (WebScrollBar::capturingMouse):
+        (WebScrollBar::frameGeometry):
+        (WebScrollBar::width):
+        (WebScrollBar::height):
+        (WebScrollBar::requestedWidth):
+        (WebScrollBar::requestedHeight):
+        (WebScrollBar::windowClipRect):
+
+2007-03-07  Adam Roben  <aroben@apple.com>
+
         Reviewed by Oliver.
 
         Added requestedWidth and requestedHeight methods to WebScrollBar.

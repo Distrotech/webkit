@@ -147,7 +147,7 @@ HRESULT STDMETHODCALLTYPE WebScrollBar::value(
     /* [retval][out] */ int* value)
 {
     if (!value)
-        return E_FAIL;
+        return E_POINTER;
     *value = m_scrollBar->value();
     return S_OK;
 }
@@ -156,7 +156,7 @@ HRESULT STDMETHODCALLTYPE WebScrollBar::capturingMouse(
     /* [retval][out] */ BOOL* result)
 {
     if (!result)
-        return E_FAIL;
+        return E_POINTER;
     *result = m_scrollBar->capturingMouse() ? TRUE : FALSE;
     return S_OK;
 }
@@ -175,7 +175,7 @@ HRESULT STDMETHODCALLTYPE WebScrollBar::frameGeometry(
     /* [retval][out] */ RECT* bounds)
 {
     if (!bounds)
-        return E_FAIL;
+        return E_POINTER;
     IntRect rect = m_scrollBar->frameGeometry();
     bounds->left = rect.x();
     bounds->right = rect.right();
@@ -188,7 +188,7 @@ HRESULT STDMETHODCALLTYPE WebScrollBar::width(
     /* [retval][out] */ int* w)
 {
     if (!w)
-        return E_FAIL;
+        return E_POINTER;
     *w = m_scrollBar->width();
     return S_OK;
 }
@@ -197,7 +197,7 @@ HRESULT STDMETHODCALLTYPE WebScrollBar::height(
     /* [retval][out] */ int* h)
 {
     if (!h)
-        return E_FAIL;
+        return E_POINTER;
     *h = m_scrollBar->height();
     return S_OK;
 }
@@ -206,7 +206,7 @@ HRESULT STDMETHODCALLTYPE WebScrollBar::requestedWidth(
     /* [retval][out] */ int* w)
 {
     if (!w)
-        return E_FAIL;
+        return E_POINTER;
 
     *w = m_scrollBar->orientation() == VerticalScrollbar ? PlatformScrollbar::verticalScrollbarWidth(m_scrollBar->controlSize()) : -1;
     return S_OK;
@@ -216,7 +216,7 @@ HRESULT STDMETHODCALLTYPE WebScrollBar::requestedHeight(
     /* [retval][out] */ int* h)
 {
     if (!h)
-        return E_FAIL;
+        return E_POINTER;
 
     *h = m_scrollBar->orientation() == HorizontalScrollbar ? PlatformScrollbar::horizontalScrollbarHeight(m_scrollBar->controlSize()) : -1;
     return S_OK;
@@ -273,4 +273,3 @@ IntRect WebScrollBar::windowClipRect() const
     ::GetClientRect(sbContainingWindow, &clientRect);
     return IntRect(clientRect.left, clientRect.top, clientRect.right-clientRect.left, clientRect.bottom-clientRect.top);
 }
-
