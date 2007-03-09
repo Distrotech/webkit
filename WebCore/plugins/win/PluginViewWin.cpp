@@ -534,7 +534,6 @@ void PluginViewWin::performRequest(PluginRequestWin* request)
     String jsString = scriptStringIfJavaScriptURL(requestURL);
 
     if (jsString.isNull()) {
-        // FIXME: <rdar://problem/4807453> if the load request has post data it needs to be sent by the frame.
         m_parentFrame->loader()->urlSelected(request->frameLoadRequest(), 0);
 
         // FIXME: <rdar://problem/4807469> This should be sent when the document has finished loading
@@ -546,7 +545,8 @@ void PluginViewWin::performRequest(PluginRequestWin* request)
     // Targeted JavaScript requests are only allowed on the frame that contains the JavaScript plugin
     // and this has been made sure in ::load.
     ASSERT(request->frameLoadRequest().frameName().isEmpty() || m_parentFrame->tree()->find(request->frameLoadRequest().frameName()) == m_parentFrame);
-    //Copy m_parentFrame as it appears to be possible for a script to cause the pluginview to be destroyed
+    
+    // Executing a script can cause the plugin view to be destroyed, so we keep a reference to the parent frame.
     RefPtr<Frame> parentFrame =  m_parentFrame;
     JSValue* result = m_parentFrame->loader()->executeScript(0, jsString.deprecatedString(), true);
     String resultString;

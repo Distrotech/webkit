@@ -1,3 +1,9 @@
+2007-03-09  Anders Carlsson  <acarlsson@apple.com>
+
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::performRequest):
+        Fixup comments and remove an obsolete FIXME.
+
 2007-03-09  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Steve.
