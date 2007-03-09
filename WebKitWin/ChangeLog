@@ -1,3 +1,11 @@
+2007-03-09  Adam Roben  <aroben@apple.com>
+
+        Rubberstamped by Steve.
+
+        B&I build fix.
+
+        * WebKit.vcproj/WebKit.vcproj: Removed all references to iconv.
+
 2007-03-08  Anders Carlsson <acarlsson@apple.com>
 
         Build fix.
