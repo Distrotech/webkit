@@ -56,6 +56,12 @@ FORMATETC* urlFormat()
     return &urlFormat;
 }
 
+FORMATETC* cfHDropFormat()
+{
+    static FORMATETC urlFormat = {CF_HDROP, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
+    return &urlFormat;
+}
+
 static FORMATETC* filenameWFormat()
 {
     static UINT cf = RegisterClipboardFormat(L"FileNameW");
@@ -119,12 +125,54 @@ static String extractURL(const String &inURL, String* title)
     return url;
 }
 
+bool getWebLocData(IDataObject* dataObject, String& url, String* title) 
+{
+    bool succeeded = false;
+    WCHAR filename[MAX_PATH];
+    WCHAR urlBuffer[INTERNET_MAX_URL_LENGTH];
+
+    STGMEDIUM medium;
+    if (FAILED(dataObject->GetData(cfHDropFormat(), &medium)))
+        return false;
+
+    HDROP hdrop = (HDROP)GlobalLock(medium.hGlobal);
+   
+    if (!hdrop)
+        return false;
+
+    if (!DragQueryFileW(hdrop, 0, filename, ARRAYSIZE(filename)))
+        goto exit;
+
+    if (_wcsicmp(PathFindExtensionW(filename), L".url"))
+        goto exit;    
+    
+    if (!GetPrivateProfileStringW(L"InternetShortcut", L"url", 0, urlBuffer, ARRAYSIZE(urlBuffer), filename))
+        goto exit;
+    
+    if (title) {
+        PathRemoveExtension(filename);
+        *title = String((UChar*)filename);
+    }
+    
+    url = String((UChar*)urlBuffer);
+    succeeded = true;
+
+exit:
+    // Free up memory.
+    DragFinish(hdrop);
+    GlobalUnlock(medium.hGlobal);
+    return succeeded;
+}
+
 String getURL(IDataObject* dataObject, bool& success, String* title = 0)
 {
     STGMEDIUM store;
     String url;
     success = false;
-    if (SUCCEEDED(dataObject->GetData(urlWFormat(), &store))) {
+    if (getWebLocData(dataObject, url, title)) {
+        success = true;
+        return url;
+    } else if (SUCCEEDED(dataObject->GetData(urlWFormat(), &store))) {
         //URL using unicode
         UChar* data = (UChar*)GlobalLock(store.hGlobal);
         url = extractURL(String(data), title);

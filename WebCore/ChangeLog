@@ -1,3 +1,19 @@
+2007-03-08  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Steve.
+
+        Allow webloc files to be dropped onto the webview
+        
+        <rdar://problem/4883564> Regression: cannot open webloc file by dnd to Boomer's window
+
+        * platform/win/DragDataWin.cpp:
+        (WebCore::cfHDropFormat):
+           Clipboard format for HDROP, non-static as i will need it elsewhere in the future 
+        (WebCore::getWebLocData):
+           Extract a url from a webloc file
+        (WebCore::getURL):
+           Call getWebLocData
+
 2007-03-08  Steve Falkenburg  <sfalken@apple.com>
 
         Fix B&I build more
