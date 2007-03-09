@@ -1,3 +1,9 @@
+2007-03-08  Steve Falkenburg  <sfalken@apple.com>
+
+        B&I build fix
+
+        * WebCore.vcproj/WebCore.vcproj:
+
 2007-03-08  Adam Roben  <aroben@apple.com>
 
         Reviewed by Steve.
