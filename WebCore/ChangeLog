@@ -1,5 +1,11 @@
 2007-03-08  Steve Falkenburg  <sfalken@apple.com>
 
+        Fix B&I build more
+
+        * WebCore.vcproj/WebCore.vcproj:
+
+2007-03-08  Steve Falkenburg  <sfalken@apple.com>
+
         B&I build fix
 
         * WebCore.vcproj/WebCore.vcproj:

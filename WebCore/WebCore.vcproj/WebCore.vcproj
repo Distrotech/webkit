@@ -3158,6 +3158,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\ImageObserver.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\platform\graphics\ImageSource.h"
 					>
 				</File>
