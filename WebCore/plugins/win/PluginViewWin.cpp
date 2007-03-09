@@ -546,24 +546,21 @@ void PluginViewWin::performRequest(PluginRequestWin* request)
     // Targeted JavaScript requests are only allowed on the frame that contains the JavaScript plugin
     // and this has been made sure in ::load.
     ASSERT(request->frameLoadRequest().frameName().isEmpty() || m_parentFrame->tree()->find(request->frameLoadRequest().frameName()) == m_parentFrame);
-
+    //Copy m_parentFrame as it appears to be possible for a script to cause the pluginview to be destroyed
+    RefPtr<Frame> parentFrame =  m_parentFrame;
     JSValue* result = m_parentFrame->loader()->executeScript(0, jsString.deprecatedString(), true);
     String resultString;
 
-    if (!getString(m_parentFrame->scriptProxy(), result, resultString))
+    if (!getString(parentFrame->scriptProxy(), result, resultString))
         return;
 
     if (!request->frameLoadRequest().frameName().isNull()) {
-        // calling FrameLoader::begin() here will cause the plugin to be deleted so we must make sure to not access any 
-        // member variables after the call.
-        RefPtr<Frame> frame(m_parentFrame);
-
-        frame->loader()->begin();
-        frame->loader()->write(resultString);
-        frame->loader()->end();
+        parentFrame->loader()->begin();
+        parentFrame->loader()->write(resultString);
+        parentFrame->loader()->end();
     } else {
         CString cstr = resultString.utf8();
-        RefPtr<PluginStreamWin> stream = new PluginStreamWin(this, m_parentFrame, request->frameLoadRequest().resourceRequest(), request->sendNotification(), request->notifyData());
+        RefPtr<PluginStreamWin> stream = new PluginStreamWin(this, parentFrame.get(), request->frameLoadRequest().resourceRequest(), request->sendNotification(), request->notifyData());
         m_streams.add(stream);
         stream->sendJavaScriptStream(requestURL, cstr);
     }

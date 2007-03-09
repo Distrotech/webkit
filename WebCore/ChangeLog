@@ -1,3 +1,13 @@
+2007-03-09  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by NOBODY (OOPS!).
+
+        Executing a script for a plugin can cause cause this to be deleted
+        so we take a reference to our parent prior to executing the script
+
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::performRequest):
+
 2007-03-08  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Steve.
