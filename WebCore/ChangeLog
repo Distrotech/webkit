@@ -1,3 +1,12 @@
+2007-03-09  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by John.
+
+        Fix the doubled text in the image used to drag a link
+
+        * platform/win/WebCoreTextRenderer.cpp:
+        (WebCore::WebCoreDrawDoubledTextAtPoint):
+
 2007-03-09  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.

@@ -77,9 +77,9 @@ void WebCoreDrawDoubledTextAtPoint(GraphicsContext& context, const String& text,
 
     IntPoint textPos = point;
 
-    doDrawTextAtPoint(context, text, point, font, bottomColor, underlinedIndex);
+    doDrawTextAtPoint(context, text, textPos, font, bottomColor, underlinedIndex);
     textPos.move(0, -1);
-    doDrawTextAtPoint(context, text, point, font, topColor, underlinedIndex);
+    doDrawTextAtPoint(context, text, textPos, font, topColor, underlinedIndex);
 
     context.restore();
 }
