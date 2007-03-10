@@ -1,3 +1,11 @@
+2007-03-09  Anders Carlsson <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        * WebURLResponse.cpp:
+        (WebURLResponse::suggestedFilename):
+        Get the suggested filename from the ResourceResponse object.
+
 2007-03-09  Adam Roben  <aroben@apple.com>
 
         Rubberstamped by Steve.

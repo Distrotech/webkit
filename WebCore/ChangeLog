@@ -1,5 +1,24 @@
 2007-03-09  Anders Carlsson  <acarlsson@apple.com>
 
+        Reviewed by Adam.
+
+        Implement setting the suggested filename for a response.
+        
+        * platform/network/cf/ResourceResponseCFNet.cpp:
+        (WebCore::filenameFromHTTPContentDisposition):
+        (WebCore::filenameHasSaneExtension):
+        (WebCore::suggestedFilenameForResponse):
+        (WebCore::ResourceResponse::doUpdateResourceResponse):
+        * platform/win/MimeTypeRegistryWin.cpp:
+        (WebCore::getMIMETypeForUTI):
+        
+        (WebCore::mimeTypeForExtension):
+        Fix two bugs in this function.
+        
+        (WebCore::MimeTypeRegistry::getPreferredExtensionForMIMEType):
+
+2007-03-09  Anders Carlsson  <acarlsson@apple.com>
+
         * plugins/win/PluginViewWin.cpp:
         (WebCore::PluginViewWin::performRequest):
         Fixup comments and remove an obsolete FIXME.

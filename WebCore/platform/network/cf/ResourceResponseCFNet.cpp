@@ -27,8 +27,10 @@
 #include "config.h"
 #include "ResourceResponseCFNet.h"
 
+#include "MimeTypeRegistry.h"
 #include "ResourceResponse.h"
 #include <CFNetwork/CFURLResponsePriv.h>
+
 
 using std::min;
 
@@ -44,6 +46,91 @@ CFURLResponseRef ResourceResponse::cfURLResponse() const
     return m_cfResponse.get();
 }
 
+// FIXME: Move this to HTTPParsers.h
+static inline String filenameFromHTTPContentDisposition(const String& value)
+{
+    Vector<String> keyValuePairs = value.split(';');
+
+    unsigned length = keyValuePairs.size();
+    for (unsigned i = 0; i < length; i++) {
+        int valueStartPos = keyValuePairs[i].find('=');
+        if (valueStartPos < 0)
+            continue;
+
+        String key = keyValuePairs[i].left(valueStartPos).stripWhiteSpace();
+
+        if (key.isEmpty() || key != "filename")
+            continue;
+        
+        String value = keyValuePairs[i].substring(valueStartPos + 1).stripWhiteSpace();
+
+        // Remove quotes if there are any
+        if (value[0] == '\"')
+            value = value.substring(1, value.length() - 2);
+
+        return value;
+    }
+
+    return String();
+}
+
+static inline bool filenameHasSaneExtension(const String& filename)
+{
+    int dot = filename.find('.');
+
+    // The dot can't be the first or last character in the filename.
+    return dot > 0 && dot < filename.length() - 1;
+}
+
+static inline String suggestedFilenameForResponse(const ResourceResponse& response, const HTTPHeaderMap& headers)
+{
+    CFURLResponseRef cfURLResponse = response.cfURLResponse();
+    ASSERT(cfURLResponse);
+
+    CFURLRef url = CFURLResponseGetURL(cfURLResponse);
+    bool shouldAddExtension = false;
+    String filename;
+
+    // First, try the Content-Disposition header.
+    String contentDisposition = headers.get("Content-Disposition");
+    if (!contentDisposition.isNull()) {
+        filename = filenameFromHTTPContentDisposition(contentDisposition);
+        if (!filename.isNull())
+            shouldAddExtension = !filenameHasSaneExtension(filename);
+    }
+
+    // Second, try the last path component of the URL
+    if (filename.isNull()) {
+        RetainPtr<CFStringRef> lastPathComponent(AdoptCF, CFURLCopyLastPathComponent(url));
+        if (CFStringGetLength(lastPathComponent.get()) && !CFEqual(lastPathComponent.get(), CFSTR("/"))) {
+            filename = lastPathComponent.get();
+            shouldAddExtension = !filenameHasSaneExtension(filename);
+        }
+    }
+
+    // Finally, try the host name
+    if (filename.isNull()) {
+        RetainPtr<CFStringRef> hostname(AdoptCF, CFURLCopyHostName(url));
+        if (CFStringGetLength(hostname.get())) {
+            filename = hostname.get();
+            shouldAddExtension = true;
+        }
+    }
+
+    // FIXME: We should return a localized "unknown" string here to match NSURLResponse.
+    if (filename.isNull())
+        return String();
+
+    if (shouldAddExtension) {
+        String extension = MimeTypeRegistry::getPreferredExtensionForMIMEType(headers.get("Content-Type"));
+
+        if (!extension.isNull())
+            filename += "." + extension;
+    }
+
+    return filename;
+}
+
 void ResourceResponse::doUpdateResourceResponse()
 {
     if (!m_cfResponse.get())
@@ -55,8 +142,6 @@ void ResourceResponse::doUpdateResourceResponse()
     m_mimeType = CFURLResponseGetMIMEType(m_cfResponse.get());
     m_expectedContentLength = CFURLResponseGetExpectedContentLength(m_cfResponse.get());
     m_textEncodingName = CFURLResponseGetTextEncodingName(m_cfResponse.get());
-
-    m_suggestedFilename = "";
 
     CFAbsoluteTime expiration = CFURLResponseGetExpirationTime(m_cfResponse.get());
     m_expirationDate = min((time_t)(expiration + kCFAbsoluteTimeIntervalSince1970), MAX_TIME_T);
@@ -85,6 +170,8 @@ void ResourceResponse::doUpdateResourceResponse()
             m_httpHeaderFields.set((CFStringRef)keys[i], (CFStringRef)values[i]);
     } else
         m_httpStatusCode = 0;
+
+    m_suggestedFilename = suggestedFilenameForResponse(m_cfResponse.get(), m_httpHeaderFields);
 }
 
 }

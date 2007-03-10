@@ -34,7 +34,7 @@ namespace WebCore
 String getMIMETypeForUTI(const String & uti)
 {
     String mimeType;
-    //FIXME: This is an ugly hack: public.type -> image/type mimetype
+    // FIXME: This is an ugly hack: public.type -> image/type mimetype
     if (int dotLocation = uti.reverseFind('.')) {
         mimeType = String("image/")+uti.substring(dotLocation + 1);
     }
@@ -50,12 +50,35 @@ static String mimeTypeForExtension(const String& extension)
 
     HRESULT result = SHGetValue(HKEY_CLASSES_ROOT, ext.charactersWithNullTermination(), L"Content Type", &keyType, (LPVOID)contentTypeStr, &contentTypeStrLen);
 
-    if (ERROR_SUCCESS && keyType == REG_SZ) 
-        return String(contentTypeStr, sizeof(contentTypeStrLen) / sizeof(WCHAR) - 1);
+    if (result == ERROR_SUCCESS && keyType == REG_SZ) 
+        return String(contentTypeStr, contentTypeStrLen / sizeof(contentTypeStr[0]) - 1);
 
     return String();
 }
+   
+String MimeTypeRegistry::getPreferredExtensionForMIMEType(const String& type)
+{
+    String mimeType;
     
+    int semiColonPos = type.find(';');
+    if (semiColonPos < 0)
+        mimeType = type;
+    else
+        mimeType = type.substring(0, semiColonPos);
+
+    String path = "MIME\\Database\\Content Type\\" + type;
+    WCHAR extStr[MAX_PATH];
+    DWORD extStrLen = sizeof(extStr);
+    DWORD keyType;
+
+    HRESULT result = SHGetValueW(HKEY_CLASSES_ROOT, path.charactersWithNullTermination(), L"Extension", &keyType, (LPVOID)extStr, &extStrLen);
+
+    if (result == ERROR_SUCCESS && keyType == REG_SZ) 
+        return String(extStr + 1, extStrLen / sizeof(extStr[0]) - 2);
+
+    return String();
+}
+
 String MimeTypeRegistry::getMIMETypeForExtension(const String &ext)
 {
     static HashMap<String, String> mimetypeMap;

@@ -134,51 +134,17 @@ HRESULT STDMETHODCALLTYPE WebURLResponse::MIMEType(
 HRESULT STDMETHODCALLTYPE WebURLResponse::suggestedFilename( 
     /* [retval][out] */ BSTR* result)
 {
+    if (!result) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *result = 0;
+
     if (m_response.url().isEmpty())
         return E_FAIL;
 
-    // FIXME: this logic should be at the network layer
-    BString url(m_response.url().url());
-    TCHAR path[MAX_PATH];
-    *path = 0;
-    DWORD pathLength = ARRAYSIZE(path);
-    if (FAILED(PathCreateFromUrl(url, path, &pathLength, 0))) {
-        TCHAR* lastSlash = 0;
-        TCHAR* walkURL;
-        for (walkURL = url; *walkURL; walkURL++) {
-            if (*walkURL == TEXT('/'))
-                lastSlash = walkURL;
-            else if (*walkURL == TEXT('#') || *walkURL == TEXT('?'))
-                break;
-        }
-        TCHAR* fileNameStart = lastSlash;
-        if (fileNameStart)
-            fileNameStart++;
-        else
-            fileNameStart = url;
-
-        if (*lastSlash)
-            lastSlash++;
-        if (_tcsncpy_s(path, sizeof(path)/sizeof(path[0]), fileNameStart, (size_t)(walkURL-fileNameStart)))
-            return E_OUTOFMEMORY;
-    }
-
-    if (PathCleanupSpec(0, path) < 0)
-        return E_FAIL;
-
-    if (!*path)
-        _tcscpy(path, TEXT("*")); // caller will substitute page title in this case
-
-    BSTR extension;
-    if (SUCCEEDED(suggestedFileExtension(&extension))) {
-        PathRenameExtension(path, extension);
-        SysFreeString(extension);
-    }
-
-    *result = SysAllocString(path);
-    if (!result)
-        return E_OUTOFMEMORY;
-
+    *result = BString(m_response.suggestedFilename()).release();
     return S_OK;
 }
 
