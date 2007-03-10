@@ -1,3 +1,66 @@
+2007-03-09  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        Fix build and do some general cleanup.
+        
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.h:
+        (WaitUntilDoneDelegate::didReceiveServerRedirectForProvisionalLoadForFrame):
+        (WaitUntilDoneDelegate::didFailProvisionalLoadWithError):
+        (WaitUntilDoneDelegate::didCommitLoadForFrame):
+        (WaitUntilDoneDelegate::didReceiveIcon):
+        (WaitUntilDoneDelegate::didFailLoadWithError):
+        (WaitUntilDoneDelegate::didChangeLocationWithinPageForFrame):
+        (WaitUntilDoneDelegate::willPerformClientRedirectToURL):
+        (WaitUntilDoneDelegate::didCancelClientRedirectForFrame):
+        (WaitUntilDoneDelegate::willCloseFrame):
+        (WaitUntilDoneDelegate::createWebViewWithRequest):
+        (WaitUntilDoneDelegate::webViewShow):
+        (WaitUntilDoneDelegate::webViewClose):
+        (WaitUntilDoneDelegate::webViewFocus):
+        (WaitUntilDoneDelegate::webViewUnfocus):
+        (WaitUntilDoneDelegate::webViewFirstResponder):
+        (WaitUntilDoneDelegate::makeFirstResponder):
+        (WaitUntilDoneDelegate::setStatusText):
+        (WaitUntilDoneDelegate::webViewStatusText):
+        (WaitUntilDoneDelegate::webViewAreToolbarsVisible):
+        (WaitUntilDoneDelegate::setToolbarsVisible):
+        (WaitUntilDoneDelegate::webViewIsStatusBarVisible):
+        (WaitUntilDoneDelegate::setStatusBarVisible):
+        (WaitUntilDoneDelegate::webViewIsResizable):
+        (WaitUntilDoneDelegate::setResizable):
+        (WaitUntilDoneDelegate::setFrame):
+        (WaitUntilDoneDelegate::webViewFrame):
+        (WaitUntilDoneDelegate::setContentRect):
+        (WaitUntilDoneDelegate::webViewContentRect):
+        (WaitUntilDoneDelegate::runJavaScriptConfirmPanelWithMessage):
+        (WaitUntilDoneDelegate::runJavaScriptTextInputPanelWithPrompt):
+        (WaitUntilDoneDelegate::runBeforeUnloadConfirmPanelWithMessage):
+        (WaitUntilDoneDelegate::runOpenPanelForFileButtonWithResultListener):
+        (WaitUntilDoneDelegate::mouseDidMoveOverElement):
+        (WaitUntilDoneDelegate::contextMenuItemsForElement):
+        (WaitUntilDoneDelegate::validateUserInterfaceItem):
+        (WaitUntilDoneDelegate::shouldPerformAction):
+        (WaitUntilDoneDelegate::dragDestinationActionMaskForDraggingInfo):
+        (WaitUntilDoneDelegate::willPerformDragDestinationAction):
+        (WaitUntilDoneDelegate::dragSourceActionMaskForPoint):
+        (WaitUntilDoneDelegate::willPerformDragSourceAction):
+        (WaitUntilDoneDelegate::contextMenuItemSelected):
+        (WaitUntilDoneDelegate::trackCustomPopupMenu):
+        (WaitUntilDoneDelegate::measureCustomMenuItem):
+        (WaitUntilDoneDelegate::drawCustomMenuItem):
+        (WaitUntilDoneDelegate::cleanUpCustomMenuDrawingData):
+        (WaitUntilDoneDelegate::canTakeFocus):
+        (WaitUntilDoneDelegate::takeFocus):
+        (WaitUntilDoneDelegate::registerUndoWithTarget):
+        (WaitUntilDoneDelegate::removeAllActionsWithTarget):
+        (WaitUntilDoneDelegate::setActionTitle):
+        (WaitUntilDoneDelegate::undo):
+        (WaitUntilDoneDelegate::redo):
+        (WaitUntilDoneDelegate::canUndo):
+        (WaitUntilDoneDelegate::canRedo):
+        (WaitUntilDoneDelegate::addCustomMenuDrawingData):
+
 2007-01-29  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Darin and Geoff.
