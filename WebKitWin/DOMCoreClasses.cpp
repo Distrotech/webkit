@@ -32,8 +32,9 @@
 #include "DOMEventsClasses.h"
 #include "DOMHTMLClasses.h"
 #pragma warning(push, 0)
+#include <WebCore/BString.h>
 #include <WebCore/DOMWindow.h>
-#include <WebCore/document.h>
+#include <WebCore/Document.h>
 #include <WebCore/Element.h>
 #include <WebCore/HTMLFormElement.h>
 #include <WebCore/HTMLInputElement.h>
@@ -286,10 +287,14 @@ HRESULT STDMETHODCALLTYPE DOMNode::isEqualNode(
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::textContent( 
-    /* [retval][out] */ BSTR* /*result*/)
+    /* [retval][out] */ BSTR* result)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!result)
+        return E_POINTER;
+
+    *result = BString(m_node->textContent()).release();
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::setTextContent( 
