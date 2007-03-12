@@ -61,6 +61,7 @@
 #include <WebCore/GraphicsContext.h>
 #include <WebCore/HitTestResult.h>
 #include <WebCore/IntRect.h>
+#include <WebCore/KeyboardEvent.h>
 #include <WebCore/MimeTypeRegistry.h>
 #include <WebCore/NotImplemented.h>
 #include <WebCore/Page.h>
@@ -108,6 +109,7 @@ WebView::WebView()
 , m_textSizeMultiplier(1)
 , m_mouseActivated(false)
 , m_dragData(0)
+, m_currentCharacterCode(0)
 , m_isBeingDestroyed(false)
 {
     m_backingStoreSize.cx = m_backingStoreSize.cy = 0;
@@ -759,10 +761,16 @@ bool WebView::execCommand(WPARAM wParam, LPARAM /*lParam*/)
     return handled;
 }
 
-bool WebView::keyUp(WPARAM wParam, LPARAM lParam)
+bool WebView::keyUp(WPARAM virtualKeyCode, LPARAM keyData)
 {
-    PlatformKeyboardEvent keyEvent(m_viewWindow, wParam, lParam);
+    // Don't send key events for shift, ctrl, and capslock keys when they're by themselves
+    if (virtualKeyCode == VK_SHIFT || virtualKeyCode == VK_CONTROL || virtualKeyCode == VK_CAPITAL) {
+        return false;
+    }
+
+    PlatformKeyboardEvent keyEvent(m_viewWindow, virtualKeyCode, keyData, m_currentCharacterCode);
     Frame* frame = m_page->focusController()->focusedOrMainFrame();
+    m_currentCharacterCode = 0;
 
     return frame->eventHandler()->keyEvent(keyEvent);
 }
@@ -837,8 +845,13 @@ const char* editCommandForKey(const PlatformKeyboardEvent& keyEvent)
 }
 
 
-bool WebView::handleEditingKeyboardEvent(Frame* frame, const PlatformKeyboardEvent& keyEvent)
+bool WebView::handleEditingKeyboardEvent(Frame* frame, KeyboardEvent* evt)
 {
+    if (!evt->keyEvent())
+        return false;
+
+    PlatformKeyboardEvent keyEvent = *(evt->keyEvent());
+
     const char* editCommand = editCommandForKey(keyEvent);
 
     if (editCommand) {
@@ -846,33 +859,44 @@ bool WebView::handleEditingKeyboardEvent(Frame* frame, const PlatformKeyboardEve
         return true;
     }
 
-    // We don't want unhandled commands sent to the char handler
-    if (keyEvent.ctrlKey())
+    String text = keyEvent.text();
+    bool isLineBreak = false;
+    bool isBackTab = false;
+    if (keyEvent.WindowsKeyCode() == VK_RETURN) {
+        text = String("\n");
+        isLineBreak = true;
+    } else if (keyEvent.WindowsKeyCode() == VK_TAB) {
+        text = String("\t");
+        if (keyEvent.shiftKey())
+            isBackTab = true;
+    }
+    if (frame->eventHandler()->handleTextInputEvent(text, evt, isLineBreak, isBackTab))
         return true;
 
-    switch (keyEvent.WindowsKeyCode()) {
-        // Say we handle this so it won't get passed to the char handler.
-        case VK_ESCAPE:
-            break;
-        case VK_RETURN:
-            frame->editor()->insertParagraphSeparator();
-            break;
-        default:
-            return false;
-    }
-    return true;
+    return false;
 }
 
-bool WebView::keyDown(WPARAM wParam, LPARAM lParam)
+bool WebView::keyDown(WPARAM virtualKeyCode, LPARAM keyData)
 {
-    PlatformKeyboardEvent keyEvent(m_viewWindow, wParam, lParam);
+    MSG msg;
+    // If the next message is a WM_CHAR message, then take it out of the queue, and use
+    // the message parameters to get the character code to construct the PlatformKeyboardEvent.
+    if (::PeekMessage(&msg, m_viewWindow, WM_CHAR, WM_CHAR, PM_REMOVE)) 
+        m_currentCharacterCode = (UChar)msg.wParam;
+
+    // FIXME: We need to check WM_UNICHAR to support supplementary characters.
+    // FIXME: We may need to handle other messages for international text.
+
+    // Don't send key events for shift, ctrl, and capslock keys when they're by themselves
+    if (virtualKeyCode == VK_SHIFT || virtualKeyCode == VK_CONTROL || virtualKeyCode == VK_CAPITAL) {
+        return false;
+    }
+
+    PlatformKeyboardEvent keyEvent(m_viewWindow, virtualKeyCode, keyData, m_currentCharacterCode);
     Frame* frame = m_page->focusController()->focusedOrMainFrame();
 
     if (frame->eventHandler()->keyEvent(keyEvent))
         return true;
-
-    if (frame->selectionController()->isContentEditable())
-        return handleEditingKeyboardEvent(frame, keyEvent);
 
     // Need to scroll the page if the arrow keys, space(shift), pgup/dn, or home/end are hit.
     ScrollDirection direction;
@@ -970,7 +994,6 @@ namespace WebCore {
 
 static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    static bool handledByKeydown = false;
     LRESULT lResult = 0;
     LONG_PTR longPtr = GetWindowLongPtr(hWnd, 0);
     WebView* webView = reinterpret_cast<WebView*>(longPtr);
@@ -1023,18 +1046,10 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                     handled = webView->mouseWheel(wParam, lParam);
             break;
         case WM_KEYDOWN:
-            handled = handledByKeydown = webView->keyDown(wParam, lParam);
+            handled = webView->keyDown(wParam, lParam);
             break;
         case WM_KEYUP:
             handled = webView->keyUp(wParam, lParam);
-            break;
-        case WM_CHAR: 
-            if (!handledByKeydown) {
-                // FIXME: We need to use WM_UNICHAR to support supplementary characters.
-                UChar c = (UChar)wParam;
-                if (Frame* frame = webView->page()->focusController()->focusedFrame())
-                    frame->editor()->insertText(String(&c, 1), false);
-            }
             break;
         case WM_SIZE:
             if (webView->isBeingDestroyed())

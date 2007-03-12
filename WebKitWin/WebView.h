@@ -618,8 +618,7 @@ public:
     void setIsBeingDestroyed() { m_isBeingDestroyed = true; }
     bool isBeingDestroyed() const { return m_isBeingDestroyed; }
 
-private:
-    bool handleEditingKeyboardEvent(WebCore::Frame*, const WebCore::PlatformKeyboardEvent&);
+    bool handleEditingKeyboardEvent(WebCore::Frame*, WebCore::KeyboardEvent*);
 
 protected:
     ULONG m_refCount;
@@ -654,6 +653,7 @@ protected:
     // this is updated in DragEnter/Leave/Drop
     COMPtr<IDataObject> m_dragData;
     COMPtr<IDropTargetHelper> m_dropTargetHelper;
+    UChar m_currentCharacterCode;
 
     bool m_isBeingDestroyed;
 };

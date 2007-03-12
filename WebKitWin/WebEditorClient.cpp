@@ -575,20 +575,13 @@ void WebEditorClient::redo()
 
 void WebEditorClient::handleKeypress(KeyboardEvent* evt)
 {
-    // Dispatch tab keypresses here, since they don't make it through to our standard
-    // key event processing that calls over to WebFrame::doTextFieldCommandFromEvent.
-    if (evt->keyCode() == VK_TAB) {
-        ASSERT(evt->target());
-        Node* node = evt->target()->toNode();
-        ASSERT(node);
-        Frame* frame = node->document()->frame();
-        if (frame && node->hasTagName(inputTag)) {
-            HTMLInputElement* element = static_cast<HTMLInputElement*>(node);
-            frame->doTextFieldCommandFromEvent(element, evt);
-        }
-    }
+    ASSERT(evt->target());
+    Node* node = evt->target()->toNode();
+    ASSERT(node);
+    Frame* frame = node->document()->frame();
 
-    // If the platform needs to intercept the event, this is where it should do that.
+    if (m_webView->handleEditingKeyboardEvent(frame, evt))
+        evt->setDefaultHandled();
 }
 
 void WebEditorClient::handleInputMethodKeypress(KeyboardEvent*)

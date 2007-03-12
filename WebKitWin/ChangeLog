@@ -1,3 +1,24 @@
+2007-03-12  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Oliver.
+
+        WebKit part of fix for <rdar://problem/5044790> preventing default of keypress event doesn't work (affects .mac)
+
+        Removed special handling of the WM_CHAR message.  All this work is now done by WM_KEYDOWN, which will dispatch the keydown event, 
+        which causes the keypress event to be dispatched, which calls WebEditorClient::handleKeyPress to do all the hard work.
+        
+        * WebEditorClient.cpp: (WebEditorClient::handleKeypress): Removed special call to doTextFieldCommandFromEvent since this will now 
+        happen during normal key event processing. Call handleEditingKeyboardEvent.  Now editing actions can be prevented from the keypress event handler.
+        * WebView.cpp:
+        (WebView::WebView): Added m_currentCharacterCode, so we can reuse the computed code from keyDown for keyUp events.
+        (WebView::keyUp): Renamed arguments.  Don't dispatch event for shift, ctrl, or capslock keys. Use m_currentCharacterCode when constructing the PlatformKeyboardEvent.
+        (WebView::handleEditingKeyboardEvent): Now takes a KeyboardEvent instead of a PlatformKeyboardEvent.  If no editCommand is created
+         from the event, then call handleTextInputEvent.
+        (WebView::keyDown): Peek at the next message in the message loop.  If its a WM_CHAR, then get the character code and remove that message from the queue.
+         Renamed arguments.  Don't dispatch event for shift, ctrl, or capslock keys. Set m_currentCharacterCode and use it when constructing the PlatformKeyboardEvent.
+        (WebViewWndProc):  Removed handling of WM_CHAR, since this is now done from WM_KEYDOWN by dispatching the keydown event, which will eventually call handleKeyPress.
+        * WebView.h: Made handleEditingKeyboardEvent public so it can be accessed from WebEditorClient.
+
 2007-03-11  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Adele.

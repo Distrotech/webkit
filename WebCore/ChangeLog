@@ -1,6 +1,17 @@
 2007-03-12  Adele Peterson  <adele@apple.com>
 
         Reviewed by Oliver.
+        
+        WebCore part of fix for <rdar://problem/5044790> preventing default of keypress event doesn't work (affects .mac)
+
+        * platform/win/KeyEventWin.cpp:
+        (WebCore::singleCharacterString): Added inline keyword.   
+        (WebCore::PlatformKeyboardEvent::PlatformKeyboardEvent):
+        Renamed arguments to be more meaningful.  Added characterCode argument to be used when constructing m_text.
+
+2007-03-12  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Oliver.
 
         Forking KeyEventWin.cpp from revision 20118.
 
