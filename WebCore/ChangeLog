@@ -1,5 +1,16 @@
 2007-03-12  Anders Carlsson  <acarlsson@apple.com>
 
+        Reviewed by Darin.
+
+        <rdar://problem/5054694>
+        Repro crash when viewing fast/dom/HTMLObjectElement/object-as-frame.html
+        
+        * bridge/win/FrameWin.cpp:
+        (WebCore::Frame::createScriptInstanceForWidget):
+        Return 0 for frame views.
+
+2007-03-12  Anders Carlsson  <acarlsson@apple.com>
+
         Reviewed by Adam.
 
         <rdar://problem/5054713>
