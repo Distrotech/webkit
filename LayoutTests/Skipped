@@ -1,7 +1,26 @@
-# GlyphPage::setGlyphDataForIndex
-fast/css/case-transform.html
+# Infinite recursion in JSValue::mark <rdar://problem/4928697>
+fast/js/toString-stack-overflow.html
 
-# Calling document.cookie crashes - <rdar://problem/4993339>
+# CFNet cookies crash <rdar://problem/4993339>
 dom/html/level2/html/HTMLDocument12.html
 fast/dom/everything-to-string.html
 fast/dom/Window/window-properties.html
+fast/dom/prototypes.html
+fast/dom/onerror-img.html
+
+# ASSERT in ClipboardWin::setData <rdar://problem/5015941>
+editing/execCommand/copy-without-selection.html
+
+# Crash in plugin code <rdar://problem/5054694>
+fast/dom/HTMLObjectElement/object-as-frame.html
+fast/events/iframe-object-onload.html
+
+# ASSERT in Cache::adjustSize <rdar://problem/5054698>
+fast/dynamic/012.html
+
+# Crash in suggestedFilenameForResponse (null lastPathComponent)
+fast/encoding/pseudo-xml.html
+fast/encoding/percent-escaping.html
+
+# Crash in RenderLayer::scrollRectToVisible <rdar://problem/5054703>
+fast/layers/removed-by-scroll-handler.html
