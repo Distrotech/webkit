@@ -2934,7 +2934,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\platform\win\KeyEventWin.cpp"
+					RelativePath="..\platform\win\KeyEventWin.cpp"
 					>
 				</File>
 				<File
