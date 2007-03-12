@@ -194,6 +194,11 @@ void WebEditorClient::respondToChangedContents()
     LOG_NOIMPL();
 }
 
+void WebEditorClient::respondToChangedSelection()
+{
+    LOG_NOIMPL();
+}
+
 void WebEditorClient::didEndEditing()
 {
     LOG_NOIMPL();

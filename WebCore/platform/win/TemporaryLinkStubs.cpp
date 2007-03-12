@@ -160,14 +160,13 @@ namespace WebCore {
 
 void FrameView::updateBorder() { LOG_NOIMPL(); }
 
-void Frame::respondToChangedSelection(WebCore::Selection const&,bool) { LOG_NOIMPL(); }
-
 void Editor::ignoreSpelling() { LOG_NOIMPL(); }
 void Editor::learnSpelling() { LOG_NOIMPL(); }
 bool Editor::isSelectionMisspelled() { LOG_NOIMPL(); return false; }
 bool Editor::isSelectionUngrammatical() { LOG_NOIMPL(); return false; }
 Vector<String> Editor::guessesForMisspelledSelection() { LOG_NOIMPL(); return Vector<String>(); }
 Vector<String> Editor::guessesForUngrammaticalSelection() { LOG_NOIMPL(); return Vector<String>(); }
+void Editor::markMisspellings(WebCore::Selection const&) { LOG_NOIMPL(); }
 void Editor::markMisspellingsAfterTypingToPosition(WebCore::VisiblePosition const&) { LOG_NOIMPL(); }
 void Editor::advanceToNextMisspelling(bool) { LOG_NOIMPL(); }
 

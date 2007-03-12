@@ -62,6 +62,7 @@ public:
     virtual void didSetSelectionTypesForPasteboard();
 
     virtual void respondToChangedContents();
+    virtual void respondToChangedSelection();
 
     bool shouldShowDeleteInterface(WebCore::HTMLElement*);
     bool shouldDeleteRange(WebCore::Range*);
