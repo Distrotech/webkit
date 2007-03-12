@@ -296,9 +296,11 @@ void PluginViewWin::paint(GraphicsContext* context, const IntRect& rect)
     npEvent.event = WM_WINDOWPOSCHANGED;
     npEvent.lParam = reinterpret_cast<uint32>(&windowpos);
     npEvent.wParam = 0;
-    if (m_plugin->pluginFuncs()->event)
-        m_plugin->pluginFuncs()->event(m_instance, &npEvent);
 
+    if (m_plugin->pluginFuncs()->event) {
+        KJS::JSLock::DropAllLocks dropAllLocks;
+        m_plugin->pluginFuncs()->event(m_instance, &npEvent);
+    }
 
     setNPWindowRect(frameGeometry());
 
@@ -309,8 +311,10 @@ void PluginViewWin::paint(GraphicsContext* context, const IntRect& rect)
     // ignores it so we just pass null.
     npEvent.lParam = 0;
 
-    if (m_plugin->pluginFuncs()->event)
+    if (m_plugin->pluginFuncs()->event) {
+        KJS::JSLock::DropAllLocks dropAllLocks;
         m_plugin->pluginFuncs()->event(m_instance, &npEvent);
+    }
 
     context->releaseWindowsContext(hdc);
 }
@@ -329,6 +333,7 @@ void PluginViewWin::handleKeyboardEvent(KeyboardEvent* event)
         npEvent.lParam = 0x8000;
     }
 
+    KJS::JSLock::DropAllLocks;
     if (!m_plugin->pluginFuncs()->event(m_instance, &npEvent))
         event->setDefaultHandled();
 }
@@ -380,6 +385,7 @@ void PluginViewWin::handleMouseEvent(MouseEvent* event)
     } else 
         return;
 
+    KJS::JSLock::DropAllLocks;
     if (!m_plugin->pluginFuncs()->event(m_instance, &npEvent))
         event->setDefaultHandled();
 }
@@ -416,8 +422,10 @@ void PluginViewWin::setNPWindowRect(const IntRect& rect)
     m_npWindow.clipRect.right = rect.width();
     m_npWindow.clipRect.bottom = rect.height();
 
-    if (m_plugin->pluginFuncs()->setwindow)
+    if (m_plugin->pluginFuncs()->setwindow) {
+        KJS::JSLock::DropAllLocks dropAllLocks;
         m_plugin->pluginFuncs()->setwindow(m_instance, &m_npWindow);
+    }
 }
 
 bool PluginViewWin::start()
@@ -428,11 +436,15 @@ bool PluginViewWin::start()
     ASSERT(m_plugin);
     ASSERT(m_plugin->pluginFuncs()->newp);
 
+    NPError npErr;
     PluginViewWin::setCurrentPluginView(this);
-    NPError npErr = m_plugin->pluginFuncs()->newp((NPMIMEType)(const char*)m_mimeType, m_instance, m_mode, m_paramCount, m_paramNames, m_paramValues, NULL);
-    LOG_NPERROR(npErr);
+    {
+        KJS::JSLock::DropAllLocks dropAllLocks;
+        npErr = m_plugin->pluginFuncs()->newp((NPMIMEType)(const char*)m_mimeType, m_instance, m_mode, m_paramCount, m_paramNames, m_paramValues, NULL);
+        LOG_NPERROR(npErr);
+    }
     PluginViewWin::setCurrentPluginView(0);
-        
+
     if (npErr != NPERR_NO_ERROR)
         return false;
 
@@ -463,6 +475,8 @@ void PluginViewWin::stop()
     ASSERT(m_streams.isEmpty());
 
     m_isStarted = false;
+
+    KJS::JSLock::DropAllLocks;
 
     // Clear the window
     m_npWindow.window = 0;
@@ -537,8 +551,11 @@ void PluginViewWin::performRequest(PluginRequestWin* request)
         m_parentFrame->loader()->urlSelected(request->frameLoadRequest(), 0);
 
         // FIXME: <rdar://problem/4807469> This should be sent when the document has finished loading
-        if (request->sendNotification())
+        if (request->sendNotification()) {
+            KJS::JSLock::DropAllLocks dropAllLocks;
             m_plugin->pluginFuncs()->urlnotify(m_instance, requestURL.url().utf8(), NPRES_DONE, request->notifyData());
+        }
+
         return;
     }
 
@@ -1043,11 +1060,17 @@ void PluginViewWin::forceRedraw()
 KJS::Bindings::Instance* PluginViewWin::bindingInstance()
 {
     NPObject* object = 0;
+
     if (!m_plugin || !m_plugin->pluginFuncs()->getvalue)
         return 0;
-    NPError error = m_plugin->pluginFuncs()->getvalue(m_instance, NPPVpluginScriptableNPObject, &object);
 
-    if (error != NPERR_NO_ERROR || !object)
+    NPError npErr;
+    {
+        KJS::JSLock::DropAllLocks dropAllLocks;
+        npErr = m_plugin->pluginFuncs()->getvalue(m_instance, NPPVpluginScriptableNPObject, &object);
+    }
+
+    if (npErr != NPERR_NO_ERROR || !object)
         return 0;
 
     RefPtr<KJS::Bindings::RootObject> root = m_parentFrame->createRootObject(this, m_parentFrame->scriptProxy()->interpreter());
