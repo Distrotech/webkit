@@ -2,7 +2,7 @@
 
         Reviewed by Oliver.
 
-        Forking KeyEventWin.cpp.
+        Forking KeyEventWin.cpp from revision 20118.
 
         * WebCore.vcproj/WebCore.vcproj:
         * platform/win/KeyEventWin.cpp: Added.
