@@ -1,3 +1,15 @@
+2007-03-12  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://problem/5054713>
+        Crash in suggestedFilenameForResponse in two fast/encoding tests.
+        
+        Add null checks.
+        
+        * platform/network/cf/ResourceResponseCFNet.cpp:
+        (WebCore::suggestedFilenameForResponse):
+
 2007-03-12  Adele Peterson  <adele@apple.com>
 
         Reviewed by Oliver.

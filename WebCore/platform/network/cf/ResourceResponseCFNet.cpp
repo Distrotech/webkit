@@ -84,6 +84,8 @@ static inline bool filenameHasSaneExtension(const String& filename)
 
 static inline String suggestedFilenameForResponse(const ResourceResponse& response, const HTTPHeaderMap& headers)
 {
+    // FIXME: When <rdar://problem/5053765> is fixed we can get rid of this function.
+
     CFURLResponseRef cfURLResponse = response.cfURLResponse();
     ASSERT(cfURLResponse);
 
@@ -102,7 +104,8 @@ static inline String suggestedFilenameForResponse(const ResourceResponse& respon
     // Second, try the last path component of the URL
     if (filename.isNull()) {
         RetainPtr<CFStringRef> lastPathComponent(AdoptCF, CFURLCopyLastPathComponent(url));
-        if (CFStringGetLength(lastPathComponent.get()) && !CFEqual(lastPathComponent.get(), CFSTR("/"))) {
+
+        if (lastPathComponent && CFStringGetLength(lastPathComponent.get()) && !CFEqual(lastPathComponent.get(), CFSTR("/"))) {
             filename = lastPathComponent.get();
             shouldAddExtension = !filenameHasSaneExtension(filename);
         }
@@ -111,7 +114,7 @@ static inline String suggestedFilenameForResponse(const ResourceResponse& respon
     // Finally, try the host name
     if (filename.isNull()) {
         RetainPtr<CFStringRef> hostname(AdoptCF, CFURLCopyHostName(url));
-        if (CFStringGetLength(hostname.get())) {
+        if (hostname && CFStringGetLength(hostname.get())) {
             filename = hostname.get();
             shouldAddExtension = true;
         }
