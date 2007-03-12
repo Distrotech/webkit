@@ -1,6 +1,14 @@
 2007-03-12  Adele Peterson  <adele@apple.com>
 
         Reviewed by Oliver.
+
+        Fix for <rdar://problem/5053618> Disable "recent searches" search field menu.
+
+        * platform/win/SearchPopupMenuWin.cpp: (WebCore::SearchPopupMenu::enabled):
+
+2007-03-12  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Oliver.
         
         WebCore part of fix for <rdar://problem/5044790> preventing default of keypress event doesn't work (affects .mac)
 

@@ -21,6 +21,7 @@
 #include "SearchPopupMenu.h"
 
 #include "AtomicString.h"
+#include "NotImplemented.h"
 
 namespace WebCore {
 
@@ -34,16 +35,20 @@ static String autosaveKey(const String& name)
     return String();
 }
 
+bool SearchPopupMenu::enabled()
+{
+    // FIXME: <rdar://problem/5057218> Reenable "recent searches" search field menu when menu is fully implemented
+    return false;
+}
+
 void SearchPopupMenu::saveRecentSearches(const AtomicString& name, const Vector<String>& searchItems)
 {
-    // FIXME: Implement this.
-    return;
+    LOG_NOIMPL();
 }
 
 void SearchPopupMenu::loadRecentSearches(const AtomicString& name, Vector<String>& searchItems)
 {
-    // FIXME: Implement this.
-    return;
+    LOG_NOIMPL();
 }
 
 }
