@@ -1,3 +1,16 @@
+2007-03-12  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Darin.
+
+        Get DRT to size the WebView correctly, and added font family prefs.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (initialize): Make the DRT window an off-screen tool window so it isn't
+        visible to the user despite having been "shown".
+        (initializePreferences): Set font preferences.
+        (main): Initially size the WebView to 0x0, then do a SetWindowPos to
+        the desired size (this is what Boomer does).
+
 2007-03-09  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.

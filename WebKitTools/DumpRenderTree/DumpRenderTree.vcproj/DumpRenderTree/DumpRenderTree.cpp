@@ -99,9 +99,8 @@ static void initialize(HINSTANCE hInstance)
 
     RegisterClassEx(&wcex);
 
-    hostWindow = CreateWindow(kDumpRenderTreeClassName, TEXT("DumpRenderTree"), WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, CW_USEDEFAULT, maxViewWidth, maxViewHeight, 0, 0, hInstance, NULL);
-
+    hostWindow = CreateWindowEx(WS_EX_TOOLWINDOW, kDumpRenderTreeClassName, TEXT("DumpRenderTree"), WS_POPUP,
+      -maxViewWidth, -maxViewHeight, maxViewWidth, maxViewHeight, 0, 0, hInstance, NULL);
 }
 
 #include <stdio.h>
@@ -219,6 +218,33 @@ exit:
 
 static void initializePreferences(IWebPreferences* preferences)
 {
+#ifdef USE_MAC_FONTS
+    BSTR standardFamily = SysAllocString(L"Times");
+    BSTR fixedFamily = SysAllocString(L"Courier");
+    BSTR sansSerifFamily = SysAllocString(L"Helvetica");
+    BSTR cursiveFamily = SysAllocString(L"Apple Chancery");
+    BSTR fantasyFamily = SysAllocString(L"Papyrus");
+#else
+    BSTR standardFamily = SysAllocString(L"Times New Roman");
+    BSTR fixedFamily = SysAllocString(L"Courier New");
+    BSTR sansSerifFamily = SysAllocString(L"Arial");
+    BSTR cursiveFamily = SysAllocString(L"Comic Sans MS"); // Not actually cursive, but it's what IE and Firefox use.
+    BSTR fantasyFamily = SysAllocString(L"Times New Roman");
+#endif
+
+    preferences->setStandardFontFamily(standardFamily);
+    preferences->setFixedFontFamily(fixedFamily);
+    preferences->setSerifFontFamily(standardFamily);
+    preferences->setSansSerifFontFamily(sansSerifFamily);
+    preferences->setCursiveFontFamily(cursiveFamily);
+    preferences->setFantasyFontFamily(fantasyFamily);
+
+    SysFreeString(standardFamily);
+    SysFreeString(fixedFamily);
+    SysFreeString(sansSerifFamily);
+    SysFreeString(cursiveFamily);
+    SysFreeString(fantasyFamily);
+
     preferences->setAutosaves(FALSE);
     preferences->setJavaEnabled(FALSE);
     preferences->setPlugInsEnabled(FALSE);
@@ -242,11 +268,7 @@ int main(int argc, char* argv[])
         goto exit;
 
     RECT clientRect;
-    clientRect.left = 0;
-    clientRect.top = 0;
-    clientRect.right = maxViewWidth;
-    clientRect.bottom = maxViewHeight;
-
+    clientRect.bottom = clientRect.left = clientRect.top = clientRect.right = 0;
     hr = webView->initWithFrame(clientRect, 0, 0);
     if (FAILED(hr))
         goto exit;
@@ -259,7 +281,8 @@ int main(int argc, char* argv[])
     viewPrivate->viewWindow(&viewHwnd);
     viewPrivate->Release();
 
-    MoveWindow(viewHwnd, 0, 0, maxViewWidth, maxViewHeight, false);
+    SetWindowPos(viewHwnd, 0, 0, 0, maxViewWidth, maxViewHeight, 0);
+    ShowWindow(hostWindow, SW_SHOW);
 
     WaitUntilDoneDelegate* waitDelegate = new WaitUntilDoneDelegate();
     webView->setFrameLoadDelegate(waitDelegate);
