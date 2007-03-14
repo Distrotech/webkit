@@ -84,53 +84,23 @@ static inline bool filenameHasSaneExtension(const String& filename)
 
 static inline String suggestedFilenameForResponse(const ResourceResponse& response, const HTTPHeaderMap& headers)
 {
-    // FIXME: When <rdar://problem/5053765> is fixed we can get rid of this function.
-
+    // FIXME: When <rdar://problem/5053780> is fixed we can get rid of this function.
     CFURLResponseRef cfURLResponse = response.cfURLResponse();
     ASSERT(cfURLResponse);
 
-    CFURLRef url = CFURLResponseGetURL(cfURLResponse);
-    bool shouldAddExtension = false;
     String filename;
 
     // First, try the Content-Disposition header.
     String contentDisposition = headers.get("Content-Disposition");
-    if (!contentDisposition.isNull()) {
+    if (!contentDisposition.isNull())
         filename = filenameFromHTTPContentDisposition(contentDisposition);
-        if (!filename.isNull())
-            shouldAddExtension = !filenameHasSaneExtension(filename);
-    }
 
-    // Second, try the last path component of the URL
     if (filename.isNull()) {
-        RetainPtr<CFStringRef> lastPathComponent(AdoptCF, CFURLCopyLastPathComponent(url));
+        RetainPtr<CFStringRef> suggestedFilename(AdoptCF, CFURLResponseCopySuggestedFilename(cfURLResponse));
 
-        if (lastPathComponent && CFStringGetLength(lastPathComponent.get()) && !CFEqual(lastPathComponent.get(), CFSTR("/"))) {
-            filename = lastPathComponent.get();
-            shouldAddExtension = !filenameHasSaneExtension(filename);
-        }
+        filename = suggestedFilename.get();
     }
-
-    // Finally, try the host name
-    if (filename.isNull()) {
-        RetainPtr<CFStringRef> hostname(AdoptCF, CFURLCopyHostName(url));
-        if (hostname && CFStringGetLength(hostname.get())) {
-            filename = hostname.get();
-            shouldAddExtension = true;
-        }
-    }
-
-    // FIXME: We should return a localized "unknown" string here to match NSURLResponse.
-    if (filename.isNull())
-        return String();
-
-    if (shouldAddExtension) {
-        String extension = MimeTypeRegistry::getPreferredExtensionForMIMEType(headers.get("Content-Type"));
-
-        if (!extension.isNull())
-            filename += "." + extension;
-    }
-
+    
     return filename;
 }
 
