@@ -25,11 +25,12 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <WebKit/IWebURLResponse.h>
-#include <WebKit/WebKit.h>
 
 #ifndef WaitUntilDoneDelegate_h
 #define WaitUntilDoneDelegate_h
+
+#include <WebKit/IWebFrameLoadDelegate.h>
+#include <WebKit/IWebUIDelegate.h>
 
 class WaitUntilDoneDelegate : public IWebUIDelegate, public IWebFrameLoadDelegate
 {

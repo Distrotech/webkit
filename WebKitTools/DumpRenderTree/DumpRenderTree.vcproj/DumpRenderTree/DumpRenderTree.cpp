@@ -26,15 +26,19 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "DumpRenderTree.h"
+
+#include <atlstr.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <WebKit/IWebURLResponse.h>
 #include <WebKit/IWebViewPrivate.h>
 #include <WebKit/WebKit.h>
 #include <WebKit/IWebFramePrivate.h>
 #include <windows.h>
-#include "atlstr.h"
 
 #include "WaitUntilDoneDelegate.h"
+
+#define USE_MAC_FONTS
 
 const LPCWSTR kDumpRenderTreeClassName = L"DumpRenderTreeWindow";
 
@@ -72,8 +76,40 @@ static LRESULT CALLBACK DumpRenderTreeWndProc(HWND hWnd, UINT msg, WPARAM wParam
 
 extern "C" BOOL InitializeCoreGraphics();
 
-static void initialize(HINSTANCE hInstance)
+static void initialize(HMODULE hModule)
 {
+    static LPCTSTR fontsToInstall[] = {
+        _T("AHEM____.TTF"),
+        _T("Apple Chancery.ttf"),
+        _T("Arial Bold Italic.ttf"),
+        _T("Arial Bold.ttf"),
+        _T("Arial Italic.ttf"),
+        _T("Arial.ttf"),
+        _T("Courier Bold.ttf"),
+        _T("Courier.ttf"),
+        _T("Helvetica Bold.ttf"),
+        _T("Helvetica.ttf"),
+        _T("Lucida Grande.ttf"),
+        _T("Lucida Grande Bold.ttf"),
+        _T("Monaco.ttf"),
+        _T("Papyrus.ttf"),
+        _T("Times Bold Italic.ttf"),
+        _T("Times Bold.ttf"),
+        _T("Times Italic.ttf"),
+        _T("Times Roman.ttf")
+    };
+
+    CString exePath;
+    GetModuleFileName(hModule, exePath.GetBuffer(MAX_PATH), MAX_PATH);
+    exePath.ReleaseBuffer();
+    int lastSlash = exePath.ReverseFind('\\');
+    if (lastSlash != -1 && lastSlash + 1< exePath.GetLength())
+        exePath = exePath.Left(lastSlash + 1);
+    exePath += _T("DumpRenderTree.resources\\");
+
+    for (int i = 0; i < ARRAYSIZE(fontsToInstall); ++i)
+        AddFontResourceEx(exePath + fontsToInstall[i], FR_PRIVATE, 0);
+
     // Init COM
     OleInitialize(0);
 
@@ -89,7 +125,7 @@ static void initialize(HINSTANCE hInstance)
     wcex.lpfnWndProc   = DumpRenderTreeWndProc;
     wcex.cbClsExtra    = 0;
     wcex.cbWndExtra    = 0;
-    wcex.hInstance     = hInstance;
+    wcex.hInstance     = hModule;
     wcex.hIcon         = 0;
     wcex.hCursor       = LoadCursor(NULL, IDC_ARROW);
     wcex.hbrBackground = 0;
@@ -100,7 +136,7 @@ static void initialize(HINSTANCE hInstance)
     RegisterClassEx(&wcex);
 
     hostWindow = CreateWindowEx(WS_EX_TOOLWINDOW, kDumpRenderTreeClassName, TEXT("DumpRenderTree"), WS_POPUP,
-      -maxViewWidth, -maxViewHeight, maxViewWidth, maxViewHeight, 0, 0, hInstance, NULL);
+      -maxViewWidth, -maxViewHeight, maxViewWidth, maxViewHeight, 0, 0, hModule, NULL);
 }
 
 #include <stdio.h>
@@ -138,7 +174,9 @@ void dump()
         if (!resultString)
             printf("ERROR: nil result from %s", dumpAsText ? "IDOMElement::innerText" : "IFrameViewPrivate::renderTreeAsExternalRepresentation");
         else {
-            _putws(resultString);
+            wprintf(L"%s", resultString);
+            if (dumpAsText)
+                printf("\n");
             SysFreeString(resultString);
         }
     }

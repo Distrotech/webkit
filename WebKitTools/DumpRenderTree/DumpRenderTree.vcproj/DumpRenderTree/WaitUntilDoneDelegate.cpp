@@ -26,14 +26,15 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <wtf/Platform.h>
-#include <stdio.h>
-#include "WaitUntilDoneDelegate.h"
-#include <WebKit/IWebFramePrivate.h>
-#include <JavaScriptCore/JavaScriptCore.h>
-
 #include "DumpRenderTree.h"
+#include "WaitUntilDoneDelegate.h"
+
+#include <wtf/Platform.h>
 #include "LayoutTestController.h"
+#include <JavaScriptCore/JavaScriptCore.h>
+#include <stdio.h>
+#include <WebKit/IWebFramePrivate.h>
+
 
 HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::QueryInterface(REFIID riid, void** ppvObject)
 {

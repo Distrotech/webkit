@@ -1,3 +1,42 @@
+2007-03-14  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Anders.
+
+        Use Mac fonts when running regression tests to match Mac's metrics.
+
+        This makes many layout tests pass when run against results generated on the Mac.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        Turned on Mac fonts.
+        (initialize): Install our Mac fonts into GDI programmatically at runtime.
+        (dump): Match Mac's handling of newlines when printing.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.h:
+        Added WINVER define to get access to AddFontResourceEx.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.vcproj:
+        Added post-build step to copy fonts to WebKitOutputDir/DumpRenderThree.resources.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.cpp:
+        * Re-ordered #includes.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.h:
+        Moved #includes within header guard.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/AHEM____.TTF: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Apple Chancery.ttf: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Arial Bold.ttf: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Arial Bold Italic.ttf: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Arial Italic.ttf: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Arial.ttf: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Courier Bold.ttf: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Courier.ttf: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Helvetica Bold.ttf: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Helvetica.ttf: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Lucida Grande Bold.ttf: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Lucida Grande.ttf: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Monaco.ttf: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Papyrus.ttf: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Times Bold Italic.ttf: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Times Bold.ttf: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Times Italic.ttf: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Times Roman.ttf: Added.
+
 2007-03-12  Adam Roben  <aroben@apple.com>
 
         Reviewed by Darin.

@@ -29,6 +29,9 @@
 #ifndef DumpRenderTree_h
 #define DumpRenderTree_h
 
+#define WINVER          0x0500
+#define _WIN32_WINNT    0x0500
+
 extern bool dumpAsText;
 extern bool waitToDump;     // TRUE if waitUntilDone() has been called, but notifyDone() has not yet been called
 extern bool readyToDump;
