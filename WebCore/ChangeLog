@@ -1,3 +1,14 @@
+2007-03-13  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Anders.
+
+        * platform/win/FontDataWin.cpp:
+        (WebCore::scaleEmToUnits): Ported from FontDataMac.
+        (WebCore::FontData::platformInit): Use CG for metrics, and apply Mac's
+        line-height hack for Times, Helvetica, and Courier.
+        (WebCore::FontData::platformWidthForGlyph): Call wkGetGlyphAdvances to
+        use some CG SPI to match Mac.
+
 2007-03-12  Darin Adler  <darin@apple.com>
 
         * WebCore.vcproj/WebCore.vcproj: Added new JavaScript wrapper derived source files.

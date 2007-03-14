@@ -38,9 +38,12 @@
 #include <unicode/unorm.h>
 #include <ApplicationServices/ApplicationServices.h>
 #include <mlang.h>
+#include <tchar.h>
+#include <WebKitSystemInterface/WebKitSystemInterface.h>
 
-namespace WebCore
-{
+namespace WebCore {
+
+static inline float scaleEmToUnits(float x, unsigned unitsPerEm) { return x / (float)unitsPerEm; }
 
 void FontData::platformInit()
 {    
@@ -48,19 +51,39 @@ void FontData::platformInit()
 
     m_syntheticBoldOffset = m_font.syntheticBold() ? 1.0f : 0.f;
 
+    CGFontRef font = m_font.cgFont();
+    int iAscent = CGFontGetAscent(font);
+    int iDescent = CGFontGetDescent(font);
+    int iLineGap = CGFontGetLeading(font);
+    unsigned unitsPerEm = CGFontGetUnitsPerEm(font);
+    float pointSize = m_font.size();
+    float fAscent = scaleEmToUnits(iAscent, unitsPerEm) * pointSize;
+    float fDescent = -scaleEmToUnits(iDescent, unitsPerEm) * pointSize;
+    float fLineGap = scaleEmToUnits(iLineGap, unitsPerEm) * pointSize;
+
     HDC dc = GetDC(0);
     SaveDC(dc);
 
     SelectObject(dc, m_font.hfont());
 
-    // FIXME: Need a CG code path for fetching metrics.  This is done using WebKitSystemInterface on Mac,
-    // so CG does have a private method for this.
-    TEXTMETRIC tm;
-    GetTextMetrics(dc, &tm);
-    m_ascent = lroundf(tm.tmAscent);
-    m_descent = lroundf(tm.tmDescent);
+    int faceLength = GetTextFace(dc, 0, 0);
+    Vector<TCHAR> faceName(faceLength);
+    GetTextFace(dc, faceLength, faceName.data());
+
+    m_isSystemFont = !_tcscmp(faceName.data(), _T("Lucida Grande"));
+    
+    // We need to adjust Times, Helvetica, and Courier to closely match the
+    // vertical metrics of their Microsoft counterparts that are the de facto
+    // web standard. The AppKit adjustment of 20% is too big and is
+    // incorrectly added to line spacing, so we use a 15% adjustment instead
+    // and add it to the ascent.
+    if (!_tcscmp(faceName.data(), _T("Times")) || !_tcscmp(faceName.data(), _T("Helvetica")) || !_tcscmp(faceName.data(), _T("Courier")))
+        fAscent += floorf(((fAscent + fDescent) * 0.15f) + 0.5f);
+
+    m_ascent = lroundf(fAscent);
+    m_descent = lroundf(fDescent);
     m_xHeight = m_ascent * 0.56f;  // Best guess for xHeight for non-Truetype fonts.
-    m_lineGap = lroundf(tm.tmExternalLeading);
+    m_lineGap = lroundf(fLineGap);
     m_lineSpacing = m_ascent + m_descent + m_lineGap;
 
     OUTLINETEXTMETRIC otm;
@@ -150,10 +173,12 @@ float FontData::platformWidthForGlyph(Glyph glyph) const
 {
     CGFontRef font = m_font.cgFont();
     float pointSize = m_font.size();
-    int advance = 0;
-    float unitsPerEm = (float)CGFontGetUnitsPerEm(font);
-    CGFontGetGlyphAdvances(font, &glyph, 1, &advance);
-    return advance*pointSize/unitsPerEm + m_syntheticBoldOffset;
+    CGSize advance;
+    CGAffineTransform m = CGAffineTransformMakeScale(pointSize, pointSize);
+    // FIXME: Need to add real support for printer fonts.
+    bool isPrinterFont = false;
+    wkGetGlyphAdvances(font, m, m_isSystemFont, isPrinterFont, glyph, advance);
+    return advance.width + m_syntheticBoldOffset;
 }
 
 }
