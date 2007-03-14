@@ -43,7 +43,9 @@
 
 namespace WebCore {
 
-static inline float scaleEmToUnits(float x, unsigned unitsPerEm) { return x / (float)unitsPerEm; }
+using std::max;
+
+static inline float scaleEmToUnits(float x, unsigned unitsPerEm) { return unitsPerEm ? x / (float)unitsPerEm : x; }
 
 void FontData::platformInit()
 {    
@@ -82,20 +84,25 @@ void FontData::platformInit()
 
     m_ascent = lroundf(fAscent);
     m_descent = lroundf(fDescent);
-    m_xHeight = m_ascent * 0.56f;  // Best guess for xHeight for non-Truetype fonts.
     m_lineGap = lroundf(fLineGap);
     m_lineSpacing = m_ascent + m_descent + m_lineGap;
 
-    OUTLINETEXTMETRIC otm;
-    if (GetOutlineTextMetrics(dc, sizeof(otm), &otm) > 0) {
-        // This is a TrueType font.  We might be able to get an accurate xHeight.
-        GLYPHMETRICS gm;
-        MAT2 mat = { 1, 0, 0, 1 }; // The identity matrix.
-        DWORD len = GetGlyphOutlineW(dc, 'x', GGO_METRICS, &gm, 0, 0, &mat);
-        if (len != GDI_ERROR && gm.gmptGlyphOrigin.y > 0)
-            m_xHeight = gm.gmptGlyphOrigin.y;
+    // Measure the actual character "x", because AppKit synthesizes X height rather than getting it from the font.
+    // Unfortunately, NSFont will round this for us so we don't quite get the right value.
+    Glyph xGlyph = GlyphPageTreeNode::getRootChild(this, 0)->page()->glyphDataForCharacter('x').glyph;
+    if (xGlyph) {
+        CGRect xBox;
+        CGFontGetGlyphBBoxes(font, &xGlyph, 1, &xBox);
+        // Use the maximum of either width or height because "x" is nearly square
+        // and web pages that foolishly use this metric for width will be laid out
+        // poorly if we return an accurate height. Classic case is Times 13 point,
+        // which has an "x" that is 7x6 pixels.
+        m_xHeight = scaleEmToUnits(max(CGRectGetMaxX(xBox), CGRectGetMaxY(xBox)), unitsPerEm) * pointSize;
+    } else {
+        int iXHeight = CGFontGetXHeight(font);
+        m_xHeight = scaleEmToUnits(iXHeight, unitsPerEm) * pointSize;
     }
-    
+
     RestoreDC(dc, -1);
     ReleaseDC(0, dc);
 }

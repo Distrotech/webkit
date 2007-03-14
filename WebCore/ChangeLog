@@ -1,3 +1,13 @@
+2007-03-14  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Hyatt.
+
+        Use CG to get xHeight.
+
+        * platform/win/FontDataWin.cpp:
+        (WebCore::scaleEmToUnits): Made robust against divide-by-zero errors.
+        (WebCore::FontData::platformInit): Ported Mac code to get xHeight using CG.
+
 2007-03-14  Anders Carlsson  <acarlsson@apple.com>
 
         Build fixes.
