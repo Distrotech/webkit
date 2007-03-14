@@ -1,3 +1,15 @@
+2007-03-14  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by NOBODY (OOPS!).
+
+        <rdar://problem/5050470> Reproducible crash doing find on page at cnn.com
+        
+        Add frame->document() null checks in cases where frame could be a
+        sub-frame that hasn't started loading yet.
+
+        * WebView.cpp:
+        (WebView::rectsForTextMatches): Add null check
+
 2007-03-14  Adele Peterson  <adele@apple.com>
 
         Reviewed by Darin.

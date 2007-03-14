@@ -2106,14 +2106,16 @@ HRESULT STDMETHODCALLTYPE WebView::rectsForTextMatches(
     Vector<IntRect> allRects;
     WebCore::Frame* frame = m_page->mainFrame();
     do {
-        Vector<IntRect> frameRects = frame->document()->renderedRectsForMarkers(DocumentMarker::TextMatch);
-        IntPoint frameOffset(-frame->view()->scrollOffset().width(), -frame->view()->scrollOffset().height());
-        frameOffset = frame->view()->convertToContainingWindow(frameOffset);
+        if (Document* document = frame->document()) {
+            Vector<IntRect> frameRects = document->renderedRectsForMarkers(DocumentMarker::TextMatch);
+            IntPoint frameOffset(-frame->view()->scrollOffset().width(), -frame->view()->scrollOffset().height());
+            frameOffset = frame->view()->convertToContainingWindow(frameOffset);
 
-        Vector<IntRect>::iterator end = frameRects.end();
-        for (Vector<IntRect>::iterator it = frameRects.begin(); it < end; it++) {
-            it->move(frameOffset.x(), frameOffset.y());
-            allRects.append(*it);
+            Vector<IntRect>::iterator end = frameRects.end();
+            for (Vector<IntRect>::iterator it = frameRects.begin(); it < end; it++) {
+                it->move(frameOffset.x(), frameOffset.y());
+                allRects.append(*it);
+            }
         }
         frame = incrementFrame(frame, true, false);
     } while (frame);
