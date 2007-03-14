@@ -618,7 +618,8 @@ public:
     void setIsBeingDestroyed() { m_isBeingDestroyed = true; }
     bool isBeingDestroyed() const { return m_isBeingDestroyed; }
 
-    bool handleEditingKeyboardEvent(WebCore::Frame*, WebCore::KeyboardEvent*);
+    const char* interpretKeyEvent(const WebCore::KeyboardEvent*);
+    bool handleEditingKeyboardEvent(WebCore::KeyboardEvent*);
 
 protected:
     ULONG m_refCount;

@@ -120,7 +120,7 @@ interface IWebViewEditingDelegate : IUnknown
     /*
         - (BOOL)webView:(WebView *)webView doCommandBySelector:(SEL)selector;
     */
-    HRESULT doCommandBySelector([in] IWebView* webView, [in] UINT selector, [out, retval] BOOL* result);
+    HRESULT doPlatformCommand([in] IWebView* webView, [in] BSTR command, [out, retval] BOOL* result);
 
     /*
         - (void)webViewDidBeginEditing:(NSNotification *)notification;

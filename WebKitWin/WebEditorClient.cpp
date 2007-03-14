@@ -264,9 +264,6 @@ bool WebEditorClient::shouldApplyStyle(CSSStyleDeclaration* /*style*/, Range* /*
 bool WebEditorClient::shouldChangeTypingStyle(CSSStyleDeclaration* /*currentStyle*/, CSSStyleDeclaration* /*toProposedStyle*/)
 { LOG_NOIMPL(); return false; }
 
-//bool WebEditorClient::doCommandBySelector(SEL selector)
-//{ LOG_NOIMPL(); return false; }
-
 void WebEditorClient::webViewDidChangeTypingStyle(WebNotification* /*notification*/)
 {  LOG_NOIMPL(); }
 
@@ -342,7 +339,9 @@ bool WebEditorClient::doTextFieldCommandFromEvent(Element* e, KeyboardEvent* ke)
         if (domElement) {
             IDOMHTMLInputElement* domInputElement;
             if (SUCCEEDED(domElement->QueryInterface(IID_IDOMHTMLInputElement, (void**)&domInputElement))) {
-                formDelegate->doCommandBySelector(domInputElement, ke->keyEvent()->WindowsKeyCode(), kit(e->document()->frame()), &result);
+                String command = m_webView->interpretKeyEvent(ke);
+                if (!command.isEmpty())
+                    formDelegate->doPlatformCommand(domInputElement, BString(command), kit(e->document()->frame()), &result);
                 domInputElement->Release();
             }
             domElement->Release();
@@ -354,7 +353,7 @@ bool WebEditorClient::doTextFieldCommandFromEvent(Element* e, KeyboardEvent* ke)
 
 void WebEditorClient::textWillBeDeletedInTextField(Element* e)
 {
-    // We're using the deleteBackward selector for all deletion operations since the autofill code treats all deletions the same way.
+    // We're using the deleteBackward command for all deletion operations since the autofill code treats all deletions the same way.
     IWebFormDelegate* formDelegate;
     if (SUCCEEDED(m_webView->formDelegate(&formDelegate)) && formDelegate) {
         IDOMElement* domElement = DOMElement::createInstance(e);
@@ -362,7 +361,7 @@ void WebEditorClient::textWillBeDeletedInTextField(Element* e)
             IDOMHTMLInputElement* domInputElement;
             if (SUCCEEDED(domElement->QueryInterface(IID_IDOMHTMLInputElement, (void**)&domInputElement))) {
                 BOOL result;
-                formDelegate->doCommandBySelector(domInputElement, VK_BACK /*REVIEW*/, kit(e->document()->frame()), &result);
+                formDelegate->doPlatformCommand(domInputElement, BString("BackwardDelete"), kit(e->document()->frame()), &result);
                 domInputElement->Release();
             }
             domElement->Release();
@@ -575,12 +574,7 @@ void WebEditorClient::redo()
 
 void WebEditorClient::handleKeypress(KeyboardEvent* evt)
 {
-    ASSERT(evt->target());
-    Node* node = evt->target()->toNode();
-    ASSERT(node);
-    Frame* frame = node->document()->frame();
-
-    if (m_webView->handleEditingKeyboardEvent(frame, evt))
+    if (m_webView->handleEditingKeyboardEvent(evt))
         evt->setDefaultHandled();
 }
 

@@ -820,10 +820,20 @@ static const KeyEntry keyEntries[] = {
     
     { 'B',       CtrlKey,            "ToggleBold"                                  },
     { 'I',       CtrlKey,            "ToggleItalic"                                },
+
+    { VK_ESCAPE, 0,                  "Cancel"                                      },
+    { VK_OEM_PERIOD, CtrlKey,        "Cancel"                                      },
+    { VK_TAB,    0,                  "InsertTab"                                   },
+    { VK_TAB,    ShiftKey,           "InsertBacktab"                               },
+    { VK_RETURN, 0,                  "InsertNewline"                               },
 };
 
-const char* editCommandForKey(const PlatformKeyboardEvent& keyEvent)
+const char* WebView::interpretKeyEvent(const KeyboardEvent* evt)
 {
+    const PlatformKeyboardEvent* keyEvent = evt->keyEvent();
+    if (!keyEvent)
+        return "";
+
     static HashMap<int, const char*>* commandsMap = 0;
 
     if (!commandsMap) {
@@ -834,44 +844,32 @@ const char* editCommandForKey(const PlatformKeyboardEvent& keyEvent)
     }
 
     unsigned modifiers = 0;
-    if (keyEvent.shiftKey())
+    if (keyEvent->shiftKey())
         modifiers |= ShiftKey;
-    if (keyEvent.altKey())
+    if (keyEvent->altKey())
         modifiers |= AltKey;
-    if (keyEvent.ctrlKey())
+    if (keyEvent->ctrlKey())
         modifiers |= CtrlKey;
 
-    return commandsMap->get(modifiers << 16 | keyEvent.WindowsKeyCode());
+    return commandsMap->get(modifiers << 16 | keyEvent->WindowsKeyCode());
 }
 
-
-bool WebView::handleEditingKeyboardEvent(Frame* frame, KeyboardEvent* evt)
+bool WebView::handleEditingKeyboardEvent(KeyboardEvent* evt)
 {
-    if (!evt->keyEvent())
-        return false;
+    String command(interpretKeyEvent(evt));
 
-    PlatformKeyboardEvent keyEvent = *(evt->keyEvent());
+    Node* node = evt->target()->toNode();
+    ASSERT(node);
+    Frame* frame = node->document()->frame();
+    ASSERT(frame);
 
-    const char* editCommand = editCommandForKey(keyEvent);
+    if (!command.isEmpty())
+        if (frame->editor()->execCommand(command, evt))
+            return true;
 
-    if (editCommand) {
-        frame->editor()->execCommand(editCommand);
-        return true;
-    }
-
-    String text = keyEvent.text();
-    bool isLineBreak = false;
-    bool isBackTab = false;
-    if (keyEvent.WindowsKeyCode() == VK_RETURN) {
-        text = String("\n");
-        isLineBreak = true;
-    } else if (keyEvent.WindowsKeyCode() == VK_TAB) {
-        text = String("\t");
-        if (keyEvent.shiftKey())
-            isBackTab = true;
-    }
-    if (frame->eventHandler()->handleTextInputEvent(text, evt, isLineBreak, isBackTab))
-        return true;
+    if (evt->keyEvent())
+        if (frame->editor()->insertText(evt->keyEvent()->text(), evt))
+            return true;
 
     return false;
 }

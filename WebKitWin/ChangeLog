@@ -1,3 +1,22 @@
+2007-03-14  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Darin.
+
+        WebKit part of fix for <rdar://problem/5057371> REGRESSION: Shift-selection stopped working in text fields
+
+        This fixes doCommandBySelector to take a command string instead of a key code.
+
+        * Interfaces/IWebEditingDelegate.idl: Changed parameter to BSTR.
+        * Interfaces/IWebFormDelegate.idl: ditto.
+        * WebEditorClient.cpp:
+        (WebEditorClient::doTextFieldCommandFromEvent): Calls doCommandBySelector with a BString that it gets from interpretKeyEvent instead of a key code.
+        (WebEditorClient::textWillBeDeletedInTextField): Calls doCommandBySelector with a BString to represent the BackwardDelete command.
+        (WebEditorClient::handleKeypress): Calls handleEditingKeyboardEvent with just the KeyboardEvent.
+        * WebView.cpp: Added commands that will be used by doCommandBySelector to the table (Cancel, InsertTab, InsertBacktab, InsertNewline).
+        (WebView::interpretKeyEvent): Added. Returns a command string for a KeyboardEvent. Removed static editCommandForKey.
+        (WebView::handleEditingKeyboardEvent): Call Editor methods instead of calling handleTextInputEvent directly.
+        * WebView.h:
+
 2007-03-14  Administrator  <acarlsson@apple.com>
 
         Build fixes.

@@ -103,7 +103,7 @@ interface IWebFormDelegate : IUnknown
     HRESULT textDidChangeInTextArea([in] IDOMHTMLTextAreaElement* element, [in] IWebFrame* frame);
 
     //- (BOOL)textField:(DOMHTMLInputElement *)element doCommandBySelector:(SEL)commandSelector inFrame:(WebFrame *)frame;
-    HRESULT doCommandBySelector([in] IDOMHTMLInputElement* element, int commandSelector, [in] IWebFrame* frame, [out, retval] BOOL* result);
+    HRESULT doPlatformCommand([in] IDOMHTMLInputElement* element, [in] BSTR command, [in] IWebFrame* frame, [out, retval] BOOL* result);
 
     //- (BOOL)textField:(DOMHTMLInputElement *)element shouldHandleEvent:(NSEvent *)event inFrame:(WebFrame *)frame;
     HRESULT shouldHandleEvent([in] IDOMHTMLInputElement* element, [in] void* event, [in] IWebFrame* frame, [out, retval] BOOL* result);
