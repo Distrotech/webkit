@@ -33,8 +33,10 @@
 #include <windows.h>
 #include "PlatformString.h"
 #include "MimeTypeRegistry.h"
+#include "SharedBuffer.h"
+
 // This function loads resources from WebKit
-Vector<char> loadResourceIntoArray(const char*);
+PassRefPtr<WebCore::SharedBuffer> loadResourceIntoBuffer(const char*);
 
 namespace WebCore {
 
@@ -48,11 +50,9 @@ void BitmapImage::invalidatePlatformData()
 
 Image* Image::loadPlatformResource(const char *name)
 {
-    Vector<char> arr = loadResourceIntoArray(name);
+    RefPtr<SharedBuffer> buffer = loadResourceIntoBuffer(name);
     BitmapImage* img = new BitmapImage;
-    CFDataRef data = CFDataCreate(0, reinterpret_cast<const UInt8*>(arr.data()), arr.size());
-    img->setNativeData(data, true);
-    CFRelease(data);
+    img->setData(buffer.release(), true);
     return img;
 }
 

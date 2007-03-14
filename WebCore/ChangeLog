@@ -1,3 +1,11 @@
+2007-03-14  Anders Carlsson  <acarlsson@apple.com>
+
+        Build fixes.
+        
+        * platform/graphics/win/ImageWin.cpp:
+        (WebCore::Image::loadPlatformResource):
+        * platform/win/EditorWin.cpp:
+
 2007-03-13  Adam Roben  <aroben@apple.com>
 
         Reviewed by Anders.

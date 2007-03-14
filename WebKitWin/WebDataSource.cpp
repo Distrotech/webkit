@@ -271,7 +271,7 @@ HRESULT STDMETHODCALLTYPE WebDataSource::subresourceForURL(
     if (!cachedResource)
         return E_FAIL;
 
-    *resource = WebResource::createInstance(cachedResource->allData(), cachedResource->response());
+    *resource = WebResource::createInstance(cachedResource->data(), cachedResource->response());
     return S_OK;
 }
 

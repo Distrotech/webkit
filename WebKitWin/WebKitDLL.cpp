@@ -32,6 +32,7 @@
 #include "resource.h"
 #pragma warning( push, 0 )
 #include <WebCore/Page.h>
+#include <WebCore/SharedBuffer.h>
 #include <WebCore/Widget.h>
 #include <wtf/Vector.h>
 #pragma warning(pop)
@@ -347,7 +348,7 @@ STDAPI DllRegisterServer(void)
 }
 
 //FIXME: We should consider moving this to a new file for cross-project functionality
-Vector<char> loadResourceIntoArray(const char* name)
+PassRefPtr<WebCore::SharedBuffer> loadResourceIntoBuffer(const char* name)
 {
     int idr;
     // temporary hack to get resource id
@@ -360,20 +361,18 @@ Vector<char> loadResourceIntoArray(const char* name)
     else if (!strcmp(name, "nullPlugin"))
         idr = IDR_NULL_PLUGIN;
     else
-        return Vector<char>();
+        return 0;
 
     HRSRC resInfo = FindResource(gInstance, MAKEINTRESOURCE(idr), L"PNG");
     if (!resInfo)
-        return Vector<char>();
+        return 0;
     HANDLE res = LoadResource(gInstance, resInfo);
     if (!res)
-        return Vector<char>();
+        return 0;
     void* resource = LockResource(res);
     if (!resource)
-        return Vector<char>();
+        return 0;
     int size = SizeofResource(gInstance, resInfo);
 
-    Vector<char> arr(size);
-    memcpy(arr.data(), resource, size);
-    return arr;
+    return new WebCore::SharedBuffer(reinterpret_cast<const char*>(resource), size);
 }
