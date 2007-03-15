@@ -1,3 +1,15 @@
+2007-03-15  Adam Roben  <aroben@apple.com>
+
+        Rubberstamped by Hyatt.
+
+        * platform/win/FontDataWin.cpp:
+        (WebCore::FontData::platformInit): Move the code to get the font face
+        to the top of the function for easier debugging.
+        * platform/win/FontPlatformDataWin.cpp:
+        (WebCore::FontPlatformData::FontPlatformData): ASSERT that we got a
+        valid CGFontRef back from CG, as CG and GDI should agree on the fonts
+        installed.
+
 2007-03-14  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.

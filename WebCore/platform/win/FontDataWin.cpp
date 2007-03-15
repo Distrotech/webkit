@@ -49,6 +49,15 @@ static inline float scaleEmToUnits(float x, unsigned unitsPerEm) { return unitsP
 
 void FontData::platformInit()
 {    
+    HDC dc = GetDC(0);
+    SaveDC(dc);
+
+    SelectObject(dc, m_font.hfont());
+
+    int faceLength = GetTextFace(dc, 0, 0);
+    Vector<TCHAR> faceName(faceLength);
+    GetTextFace(dc, faceLength, faceName.data());
+
     m_isMLangFont = false;
 
     m_syntheticBoldOffset = m_font.syntheticBold() ? 1.0f : 0.f;
@@ -62,15 +71,6 @@ void FontData::platformInit()
     float fAscent = scaleEmToUnits(iAscent, unitsPerEm) * pointSize;
     float fDescent = -scaleEmToUnits(iDescent, unitsPerEm) * pointSize;
     float fLineGap = scaleEmToUnits(iLineGap, unitsPerEm) * pointSize;
-
-    HDC dc = GetDC(0);
-    SaveDC(dc);
-
-    SelectObject(dc, m_font.hfont());
-
-    int faceLength = GetTextFace(dc, 0, 0);
-    Vector<TCHAR> faceName(faceLength);
-    GetTextFace(dc, faceLength, faceName.data());
 
     m_isSystemFont = !_tcscmp(faceName.data(), _T("Lucida Grande"));
     

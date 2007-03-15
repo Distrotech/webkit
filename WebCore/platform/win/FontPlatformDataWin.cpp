@@ -105,6 +105,7 @@ FontPlatformData::FontPlatformData(HFONT font, int size, bool bold, bool oblique
 
         CFStringRef cfName = CFStringCreateWithCharacters(NULL, (const UniChar*)faceName, wcslen(faceName));
         m_cgFont = CGFontCreateWithFontName(cfName);
+        ASSERT(m_cgFont);
         CFRelease(cfName);
         
         free(metrics);
