@@ -1,3 +1,11 @@
+2007-03-14  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Ada.
+
+        Allow empty commands to be sent by doTextFieldCommandFromEvent.  Our autocomplete code relies on this.
+
+        * WebEditorClient.cpp: (WebEditorClient::doTextFieldCommandFromEvent):
+
 2007-03-14  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by NOBODY (OOPS!).
