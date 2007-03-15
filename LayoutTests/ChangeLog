@@ -1,5 +1,11 @@
 2007-03-15  Adam Roben  <aroben@apple.com>
 
+        Rubberstamped by Adele.
+
+        * Skipped: Turn off AppleScript tests.
+
+2007-03-15  Adam Roben  <aroben@apple.com>
+
         Rubberstamped by Anders.
 
         * Skipped: Added editing, http, and webarchive directories since they

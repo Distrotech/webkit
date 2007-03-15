@@ -7,6 +7,9 @@ http
 # No support for WebArchives in WebKitWin <rdar://problem/5066490>
 webarchive
 
+# AppleScript on Windows? That's crazy talk!
+fast/AppleScript
+
 # Infinite recursion in JSValue::mark <rdar://problem/4928697>
 fast/js/toString-stack-overflow.html
 
