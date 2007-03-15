@@ -1,5 +1,9 @@
 2007-03-14  Adam Roben  <aroben@apple.com>
 
+        Fixed line-endings and svn properties on DRT files.
+
+2007-03-14  Adam Roben  <aroben@apple.com>
+
         Reviewed by Anders.
 
         Make DRT on Windows behave more like DRT on Mac with respect to
