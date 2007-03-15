@@ -74,8 +74,13 @@ HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::hasCustomMenuImplementation(
 
 HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::didStartProvisionalLoadForFrame( 
         /* [in] */ IWebView* webView,
-        /* [in] */ IWebFrame* /*frame*/) 
-{ 
+        /* [in] */ IWebFrame* frame) 
+{
+    // Make sure we only set this once per test.  If it gets cleared, and then set again, we might
+    // end up doing two dumps for one test.
+    if (!topLoadingFrame && !done)
+        topLoadingFrame = frame;
+
     return S_OK; 
 }
 
@@ -87,24 +92,34 @@ HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::didReceiveTitle(
     return S_OK;
 }
 
+void WaitUntilDoneDelegate::locationChangeDone(IWebError*, IWebFrame* frame)
+{
+    if (frame != topLoadingFrame)
+        return;
+
+    topLoadingFrame = 0;
+
+    if (!waitToDump)
+        dump();
+}
 
 HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::didFinishLoadForFrame( 
         /* [in] */ IWebView* webView,
         /* [in] */ IWebFrame* frame)
 {
-    IWebFrame* mainFrame;
-    webView->mainFrame(&mainFrame);
-
-    if (mainFrame == frame) {
-        if (waitToDump)
-            readyToDump = true;
-        else
-            dump();
-    }
-
-    mainFrame->Release();
+    locationChangeDone(0, frame);
     return S_OK;
 }
+
+HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::didFailLoadWithError( 
+    /* [in] */ IWebView* webView,
+    /* [in] */ IWebError* error,
+    /* [in] */ IWebFrame* forFrame)
+{
+    locationChangeDone(error, forFrame);
+    return S_OK;
+}
+
 
 HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::runJavaScriptAlertPanelWithMessage( 
         /* [in] */ IWebView* /*sender*/,

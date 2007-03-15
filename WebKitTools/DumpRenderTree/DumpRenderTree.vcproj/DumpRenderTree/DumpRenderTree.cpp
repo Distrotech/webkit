@@ -47,9 +47,15 @@ static bool printSeparators;
 static bool leakChecking = false;
 static bool timedOut = false;
 
+bool done;
+// This is the topmost frame that is loading, during a given load, or nil when no load is 
+// in progress.  Usually this is the same as the main frame, but not always.  In the case
+// where a frameset is loaded, and then new content is loaded into one of the child frames,
+// that child frame is the "topmost frame that is loading".
+IWebFrame* topLoadingFrame;     // !nil iff a load is in progress
+
 bool dumpAsText = false;
 bool waitToDump = false;
-bool readyToDump = false;
 
 IWebFrame* frame;
 HWND hostWindow;
@@ -186,6 +192,7 @@ void dump()
 fail:
     // This will exit from our message loop
     PostQuitMessage(0);
+    done = true;
     return;
 }
 
@@ -217,9 +224,9 @@ static void runTest(const char* pathOrURL)
     CFRelease(url);
 
     waitToDump = false;
-    readyToDump = false;
     dumpAsText = false;
     timedOut = false;
+    topLoadingFrame = 0;
 
     // Set the test timeout timer
     SetTimer(hostWindow, timeoutId, timeoutValue, 0);

@@ -77,7 +77,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE didFailLoadWithError( 
         /* [in] */ IWebView *webView,
         /* [in] */ IWebError *error,
-        /* [in] */ IWebFrame *forFrame) { return E_NOTIMPL; }
+        /* [in] */ IWebFrame *forFrame);
 
     virtual HRESULT STDMETHODCALLTYPE didChangeLocationWithinPageForFrame( 
         /* [in] */ IWebView *webView,
@@ -305,6 +305,9 @@ public:
 
 
 protected:
+
+    void locationChangeDone(IWebError*, IWebFrame*);
+
     ULONG                   m_refCount;
 };
 

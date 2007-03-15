@@ -32,9 +32,12 @@
 #define WINVER          0x0500
 #define _WIN32_WINNT    0x0500
 
+struct IWebFrame;
+
 extern bool dumpAsText;
 extern bool waitToDump;     // TRUE if waitUntilDone() has been called, but notifyDone() has not yet been called
-extern bool readyToDump;
+extern bool done;
+extern IWebFrame* topLoadingFrame;
 
 void dump();
 

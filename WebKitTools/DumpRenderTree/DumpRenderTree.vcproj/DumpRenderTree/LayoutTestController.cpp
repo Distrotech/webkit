@@ -45,7 +45,7 @@ static JSValueRef waitUntilDoneCallback(JSContextRef context, JSObjectRef functi
 
 static JSValueRef notifyDoneCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
 {
-    if (waitToDump && readyToDump)
+    if (waitToDump && !topLoadingFrame)
         dump();
     waitToDump = false;
 

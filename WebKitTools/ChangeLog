@@ -2,6 +2,29 @@
 
         Reviewed by Anders.
 
+        Make DRT on Windows behave more like DRT on Mac with respect to
+        waitUntilDone()/waitUntilDone().
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        Added "done" and "topLoadingFrame" globals to match Mac, removed readyToDump.
+        (dump): Set done to true.
+        (runTest): Removed readyToDump, initialized topLoadingFrame.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.h:
+        Added extern declarations for globals.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/LayoutTestController.cpp:
+        (notifyDoneCallback): Changed condition to match Mac.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.cpp:
+        (WaitUntilDoneDelegate::didStartProvisionalLoadForFrame): Set topLoadingFrame.
+        (WaitUntilDoneDelegate::locationChangeDone): Ported from Mac.
+        (WaitUntilDoneDelegate::didFinishLoadForFrame): Call locationChangeDone.
+        (WaitUntilDoneDelegate::didFailLoadWithError): Ditto.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.h:
+        Moved implementation of didFailLoadWithError to .cpp file.
+
+2007-03-14  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Anders.
+
         Use Mac fonts when running regression tests to match Mac's metrics.
 
         This makes many layout tests pass when run against results generated on the Mac.
