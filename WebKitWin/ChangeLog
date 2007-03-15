@@ -1,3 +1,9 @@
+2007-03-15  Adam Roben  <aroben@apple.com>
+
+        Rubberstamped by Brady.
+
+        * WebKitLogging.cpp: Turn of Download logging by default.
+
 2007-03-14  Ada Chan  <adachan@apple.com>
 
         Reviewed by Lou.
