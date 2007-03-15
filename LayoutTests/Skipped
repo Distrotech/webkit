@@ -1,3 +1,12 @@
+# No editing callbacks in DRT yet <rdar://problem/5066482>
+editing
+
+# No Apache configuration on cygwin yet <rdar://problem/5066290>
+http
+
+# No support for WebArchives in WebKitWin <rdar://problem/5066490>
+webarchive
+
 # Infinite recursion in JSValue::mark <rdar://problem/4928697>
 fast/js/toString-stack-overflow.html
 
@@ -10,17 +19,6 @@ fast/dom/onerror-img.html
 
 # ASSERT in ClipboardWin::setData <rdar://problem/5015941>
 editing/execCommand/copy-without-selection.html
-
-# Crash in plugin code <rdar://problem/5054694>
-fast/dom/HTMLObjectElement/object-as-frame.html
-fast/events/iframe-object-onload.html
-
-# ASSERT in Cache::adjustSize <rdar://problem/5054698>
-fast/dynamic/012.html
-
-# Crash in suggestedFilenameForResponse (null lastPathComponent)
-fast/encoding/pseudo-xml.html
-fast/encoding/percent-escaping.html
 
 # Crash in RenderLayer::scrollRectToVisible <rdar://problem/5054703>
 fast/layers/removed-by-scroll-handler.html

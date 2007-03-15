@@ -1,3 +1,11 @@
+2007-03-15  Adam Roben  <aroben@apple.com>
+
+        Rubberstamped by Anders.
+
+        * Skipped: Added editing, http, and webarchive directories since they
+        all rely on unimplemented parts of DRT, boomer-run-webkit-tests, and
+        WebKit, respectively. Also re-enabled tests that no longer crash.
+
 2007-03-12  Adam Roben  <aroben@apple.com>
 
         Rubberstamped by Anders.
