@@ -223,10 +223,11 @@ static void runTest(const char* pathOrURL)
 
     CFRelease(url);
 
+    done = false;
+    topLoadingFrame = 0;
     waitToDump = false;
     dumpAsText = false;
     timedOut = false;
-    topLoadingFrame = 0;
 
     // Set the test timeout timer
     SetTimer(hostWindow, timeoutId, timeoutValue, 0);

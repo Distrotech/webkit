@@ -1,5 +1,12 @@
 2007-03-14  Adam Roben  <aroben@apple.com>
 
+        Rubberstamped by Anders.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (runTest): Initialize done to false just like Mac does.
+
+2007-03-14  Adam Roben  <aroben@apple.com>
+
         Fixed line-endings and svn properties on DRT files.
 
 2007-03-14  Adam Roben  <aroben@apple.com>
