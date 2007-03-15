@@ -1,3 +1,16 @@
+2007-03-15  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Ada.
+
+        First part of a two-step dance to rename AHEM____.TTF to AHEM____.ttf.
+
+        First, rename AHEM____.TTF to renameMe.ttf.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (initialize):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/AHEM____.TTF: Removed.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/renameMe.ttf: Added.
+
 2007-03-14  Adam Roben  <aroben@apple.com>
 
         Rubberstamped by Anders.
