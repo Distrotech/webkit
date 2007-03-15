@@ -578,6 +578,8 @@ public:
         IWebURLRequest *request,
         BOOL *result);
 
+    virtual HRESULT STDMETHODCALLTYPE clearFocusNode();
+
     // WebView
     WebCore::Page* page();
     bool handleMouseEvent(UINT, WPARAM, LPARAM);

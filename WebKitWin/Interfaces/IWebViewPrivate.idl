@@ -99,4 +99,6 @@ interface IWebViewPrivate : IUnknown
     HRESULT generateSelectionImage(BOOL forceWhiteText, [out,retval] HBITMAP* image);
 
     HRESULT canHandleRequest([in] IWebURLRequest* request, [out, retval] BOOL* result);
+
+    HRESULT clearFocusNode();
 }

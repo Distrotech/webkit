@@ -3095,6 +3095,13 @@ HRESULT STDMETHODCALLTYPE WebView::canHandleRequest(
     return S_OK;
 }
 
+HRESULT STDMETHODCALLTYPE WebView::clearFocusNode()
+{
+    if (m_page && m_page->focusController())
+        m_page->focusController()->setFocusedNode(0);
+    return S_OK;
+}
+
 HRESULT WebView::registerDragDrop()
 {
     ASSERT(::IsWindow(m_viewWindow));

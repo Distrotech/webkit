@@ -1,3 +1,15 @@
+2007-03-14  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Lou.
+
+        Added a method in IWebViewPrivate to clear the current focus node.  This is called in the app
+        when focus has been transferred to the address field or search field.
+
+        * Interfaces/IWebViewPrivate.idl:
+        * WebView.cpp:
+        (WebView::clearFocusNode):
+        * WebView.h:
+
 2007-03-14  Adele Peterson  <adele@apple.com>
 
         Reviewed by Ada.
