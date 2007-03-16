@@ -85,7 +85,7 @@ extern "C" BOOL InitializeCoreGraphics();
 static void initialize(HMODULE hModule)
 {
     static LPCTSTR fontsToInstall[] = {
-        _T("renameMe.ttf"),
+        _T("AHEM____.ttf"),
         _T("Apple Chancery.ttf"),
         _T("Arial Bold Italic.ttf"),
         _T("Arial Bold.ttf"),

@@ -2,6 +2,21 @@
 
         Reviewed by Ada.
 
+        Second part of two-step dance to rename AHEM____.TTF to AHEM____.ttf.
+
+        This is to work around <rdar://problem/5063416>.
+
+        Also made all the ttf files in DumpRenderTree/Resources executable again to appease Windows.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (initialize):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/AHEM____.ttf: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/renameMe.ttf: Removed.
+
+2007-03-15  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Ada.
+
         First part of a two-step dance to rename AHEM____.TTF to AHEM____.ttf.
 
         First, rename AHEM____.TTF to renameMe.ttf.
