@@ -1,3 +1,15 @@
+2007-03-16  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Lou.
+
+        Fix for <rdar://problem/5065040> cannot mousedown + drag in a <select> menu
+
+        * platform/win/PopupMenuWin.cpp:
+        (WebCore::PopupMenu::show): Set the capture when the popup window comes up.
+        (WebCore::PopupWndProc): Release the capture only when the mouse is not down, and the mouse moves outside the popup window, 
+         or if you mouse up inside the window, and you're about to hide the popup.  The mouse will get recaptured if you mouse down
+         again in the window.
+
 2007-03-15  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Oliver

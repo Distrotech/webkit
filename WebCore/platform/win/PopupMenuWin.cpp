@@ -140,6 +140,7 @@ void PopupMenu::show(const IntRect& r, FrameView* v, int index)
         }
     } else
         ::ShowWindow(m_popup, SW_SHOWNORMAL);
+    ::SetCapture(m_popup);
 }
 
 void PopupMenu::hide()
@@ -704,6 +705,15 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 
                 if (shouldHotTrack || wParam & MK_LBUTTON)
                     popup->setFocusedIndex(popup->listIndexAtPoint(mousePoint), true);
+
+                // Release capture if the left button isn't down, and the mousePoint is outside the popup window.
+                // This way, the WebView will get future mouse events in the rest of the window.
+                RECT bounds;
+                GetClientRect(popup->popupHandle(), &bounds);
+                if (!(wParam & MK_LBUTTON) && !::PtInRect(&bounds, mousePoint)) {
+                    ::ReleaseCapture();
+                    break;
+                }
             }
             break;
         case WM_LBUTTONDOWN:
@@ -726,9 +736,9 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             break;
         case WM_LBUTTONUP:
             if (popup) {
-                ::ReleaseCapture();
                 IntPoint mousePoint(MAKEPOINTS(lParam));
                 if (popup->scrollBar()) {
+                    ::ReleaseCapture();
                     IntRect scrollBarRect = popup->scrollBar()->frameGeometry();
                     if (popup->scrollBar()->capturingMouse() || scrollBarRect.contains(mousePoint)) {
                         popup->scrollBar()->setCapturingMouse(false);
@@ -741,8 +751,11 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                         break;
                     }
                 }
-
-                if (popup->client()) {
+                // Only release capture and hide the popup if the mouse is inside the popup window.
+                RECT bounds;
+                GetClientRect(popup->popupHandle(), &bounds);
+                if (popup->client() && ::PtInRect(&bounds, mousePoint)) {
+                    ::ReleaseCapture();
                     popup->client()->hidePopup();
                     int index = popup->focusedIndex();
                     if (index >= 0)
