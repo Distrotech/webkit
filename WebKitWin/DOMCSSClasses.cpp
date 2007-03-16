@@ -99,9 +99,6 @@ HRESULT STDMETHODCALLTYPE DOMCSSStyleDeclaration::getPropertyValue(
     /* [in] */ BSTR propertyName,
     /* [retval][out] */ BSTR* result)
 {
-    if (!propertyName)
-        return E_POINTER;
-
     WebCore::String propertyNameString(propertyName);
     WebCore::String value = m_style->getPropertyValue(propertyNameString);
     *result = SysAllocStringLen(value.characters(), value.length());
@@ -135,12 +132,16 @@ HRESULT STDMETHODCALLTYPE DOMCSSStyleDeclaration::getPropertyPriority(
 }
 
 HRESULT STDMETHODCALLTYPE DOMCSSStyleDeclaration::setProperty( 
-    /* [in] */ BSTR /*propertyName*/,
-    /* [in] */ BSTR /*value*/,
-    /* [in] */ BSTR /*priority*/)
+    /* [in] */ BSTR propertyName,
+    /* [in] */ BSTR value,
+    /* [in] */ BSTR priority)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    WebCore::String propertyNameString(propertyName);
+    WebCore::String valueString(value);
+    WebCore::String priorityString(priority);
+    WebCore::ExceptionCode code;
+    m_style->setProperty(propertyNameString, valueString, priorityString, code);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE DOMCSSStyleDeclaration::length( 

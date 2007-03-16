@@ -1,3 +1,14 @@
+2007-03-16  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Steve.
+        
+        Implemented a couple of DOM methods so we can set the font-size of an element directly in the app.
+
+        * DOMCSSClasses.cpp:
+        (DOMCSSStyleDeclaration::setProperty):
+        * DOMCoreClasses.cpp:
+        (DOMElement::style):
+
 2007-03-15  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by Ada.

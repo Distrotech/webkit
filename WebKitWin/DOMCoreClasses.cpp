@@ -972,11 +972,19 @@ HRESULT STDMETHODCALLTYPE DOMElement::isFocused(
 // IDOMElementCSSInlineStyle --------------------------------------------------
 
 HRESULT STDMETHODCALLTYPE DOMElement::style( 
-    /* [retval][out] */ IDOMCSSStyleDeclaration** /*result*/)
+    /* [retval][out] */ IDOMCSSStyleDeclaration** result)
 {
-    // FIXME
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!result)
+        return E_POINTER;
+    if (!m_element)
+        return E_FAIL;
+
+    WebCore::CSSStyleDeclaration* style = m_element->style();
+    if (!style)
+        return E_FAIL;
+
+    *result = DOMCSSStyleDeclaration::createInstance(style);
+    return S_OK;
 }
 
 // IDOMElementExtensions ------------------------------------------------------
