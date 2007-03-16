@@ -1748,10 +1748,9 @@ ResourceError WebFrame::fileDoesNotExistError(const ResourceResponse&)
     return ResourceError();
 }
 
-bool WebFrame::shouldFallBack(const ResourceError&)
+bool WebFrame::shouldFallBack(const ResourceError& error)
 {
-    LOG_NOIMPL();
-    return false;
+    return error.errorCode() != WebURLErrorCancelled;
 }
 
 void WebFrame::receivedData(const char* data, int length, const String& textEncoding)

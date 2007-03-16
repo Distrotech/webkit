@@ -1,3 +1,13 @@
+2007-03-16  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam and Dave Hyatt.
+
+        Fix acid2 test.
+        
+        * WebFrame.cpp:
+        (WebFrame::shouldFallBack):
+        Implement this function.
+
 2007-03-16  Ada Chan  <adachan@apple.com>
 
         Reviewed by Steve.
