@@ -1,3 +1,13 @@
+2007-03-15  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Ada.
+
+        Fixing some leaks
+
+        * WebFrame.cpp:
+        (WebFrame::dispatchDidReceiveAuthenticationChallenge):
+        (WebFrame::dispatchDidCancelAuthenticationChallenge):
+
 2007-03-15  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Oliver

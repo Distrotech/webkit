@@ -2053,7 +2053,8 @@ void WebFrame::dispatchDidReceiveAuthenticationChallenge(DocumentLoader* loader,
 
     COMPtr<IWebResourceLoadDelegate> resourceLoadDelegate;
     if (SUCCEEDED(d->webView->resourceLoadDelegate(&resourceLoadDelegate))) {
-        COMPtr<IWebURLAuthenticationChallenge> webChallenge = WebURLAuthenticationChallenge::createInstance(challenge);
+        COMPtr<IWebURLAuthenticationChallenge> webChallenge;
+        webChallenge.adoptRef(WebURLAuthenticationChallenge::createInstance(challenge));
 
         if (SUCCEEDED(resourceLoadDelegate->didReceiveAuthenticationChallenge(d->webView, identifier, webChallenge.get(), getWebDataSource(loader))))
             return;
@@ -2068,7 +2069,8 @@ void WebFrame::dispatchDidCancelAuthenticationChallenge(DocumentLoader* loader, 
 {
     COMPtr<IWebResourceLoadDelegate> resourceLoadDelegate;
     if (SUCCEEDED(d->webView->resourceLoadDelegate(&resourceLoadDelegate))) {
-        COMPtr<IWebURLAuthenticationChallenge> webChallenge = WebURLAuthenticationChallenge::createInstance(challenge);
+        COMPtr<IWebURLAuthenticationChallenge> webChallenge;
+        webChallenge.adoptRef(WebURLAuthenticationChallenge::createInstance(challenge));
 
         if (SUCCEEDED(resourceLoadDelegate->didCancelAuthenticationChallenge(d->webView, identifier, webChallenge.get(), getWebDataSource(loader))))
             return;
