@@ -2,6 +2,9 @@
 
         Reviewed by Adam and Dave Hyatt.
 
+        <rdar://problem/5069226>
+        Boomer fails Acid2.
+        
         Fix acid2 test.
         
         * WebFrame.cpp:
