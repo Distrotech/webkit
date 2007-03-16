@@ -245,6 +245,7 @@ public:
     virtual PassRefPtr<WebCore::DocumentLoader> createDocumentLoader(const WebCore::ResourceRequest&, const WebCore::SubstituteData&);
     virtual void setMainDocumentError(WebCore::DocumentLoader*, const WebCore::ResourceError&);
     virtual WebCore::ResourceError cancelledError(const WebCore::ResourceRequest&);
+    virtual WebCore::ResourceError blockedError(const WebCore::ResourceRequest&);
     virtual WebCore::ResourceError cannotShowURLError(const WebCore::ResourceRequest&);
     virtual WebCore::ResourceError interruptForPolicyChangeError(const WebCore::ResourceRequest&);
     virtual WebCore::ResourceError cannotShowMIMETypeError(const WebCore::ResourceResponse&);

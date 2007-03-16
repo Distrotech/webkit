@@ -1,3 +1,17 @@
+2007-03-15  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Maciej
+
+        <rdar://problem/4429701>
+        Implements a port blocking black list that matches Firefox's
+        
+        * Interfaces/IWebError.idl: Add the custom error code for blocked error
+
+        * WebFrame.cpp:
+        (WebFrame::blockedError): FrameLoaderClient fill-in + a Fixme
+        (WebFrame::interruptForPolicyChangeError): Add a Fixme for localization
+        * WebFrame.h:
+
 2007-03-15  Adam Roben  <aroben@apple.com>
 
         Rubberstamped by Brady.

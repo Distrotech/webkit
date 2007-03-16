@@ -1718,6 +1718,12 @@ ResourceError WebFrame::cancelledError(const ResourceRequest& request)
     return ResourceError(String(WebURLErrorDomain), -999, request.url().url(), String());
 }
 
+ResourceError WebFrame::blockedError(const ResourceRequest& request)
+{
+    // FIXME: Need to implement the String descriptions for errors in the WebKitErrorDomain and have them localized
+    return ResourceError(String(WebKitErrorDomain), WebKitErrorCannotUseRestrictedPort, request.url().url(), String());
+}
+
 ResourceError WebFrame::cannotShowURLError(const ResourceRequest&)
 {
     LOG_NOIMPL();
@@ -1726,6 +1732,7 @@ ResourceError WebFrame::cannotShowURLError(const ResourceRequest&)
 
 ResourceError WebFrame::interruptForPolicyChangeError(const ResourceRequest& request)
 {
+    // FIXME: Need to implement the String descriptions for errors in the WebKitErrorDomain and have them localized
     return ResourceError(String(WebKitErrorDomain), WebKitErrorFrameLoadInterruptedByPolicyChange, request.url().url(), String());
 }
 

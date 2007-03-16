@@ -107,6 +107,7 @@ enum {
     WebKitErrorCannotShowMIMEType =                             100,
     WebKitErrorCannotShowURL =                                  101,
     WebKitErrorFrameLoadInterruptedByPolicyChange =             102,
+    WebKitErrorCannotUseRestrictedPort =                        103,
 };
 
 /*!
