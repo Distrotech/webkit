@@ -232,7 +232,7 @@ void Pasteboard::writeSelection(Range* selectedRange, bool canSmartCopyOrDelete,
     }
 }
 
-void Pasteboard::writeURL(const KURL& url, const String& titleStr, Frame* frame, bool isImage)
+void Pasteboard::writeURL(const KURL& url, const String& titleStr, Frame* frame)
 {
     ASSERT(!url.isEmpty());
 
