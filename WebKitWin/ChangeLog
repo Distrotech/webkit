@@ -1,3 +1,14 @@
+2007-03-15  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Oliver
+
+        CFNetwork related cleanup that was a work around for previous deficiencies in CFURLDownload
+        This might fix some of the random crashers we see on stress testing if they end up 
+        downloading links.
+
+        * WebDownload.cpp:
+        (WebDownload::init): Release the connection from the handle so it no longer refers to it
+        
 2007-03-15  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Geoff and Steve.

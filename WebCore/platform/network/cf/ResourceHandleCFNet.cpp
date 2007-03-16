@@ -156,14 +156,7 @@ ResourceHandleInternal::~ResourceHandleInternal()
 {
     if (m_connection) {
         LOG(Network, "CFNet - Cancelling connection %p (%s)", m_connection, m_request.url().url().ascii());
-
-        // The CFURLConnection deallocator doesn't send a "didCancel" callback as we would like in the case where this
-        // connection loses its last reference and gets destroyed.  Therefore, if we hold the last ref, we will call 
-        // CFURLConnectionCancel on it manually
-        // You might think this should never be the case, but when a connection turns into a download and needs to stay live,
-        // this sure does happen! :)
-        if (CFGetRetainCount(m_connection.get()) == 1)
-            CFURLConnectionCancel(m_connection.get());
+        CFURLConnectionCancel(m_connection.get());
     }
 }
 
@@ -319,6 +312,12 @@ void ResourceHandle::receivedCancellation(const AuthenticationChallenge& challen
 CFURLConnectionRef ResourceHandle::connection() const
 {
     return d->m_connection.get();
+}
+
+CFURLConnectionRef ResourceHandle::releaseConnectionForDownload()
+{
+    LOG(Network, "CFNet - Job %p releasing connection %p for download", this, d->m_connection.get());
+    return d->m_connection.releaseRef();
 }
 
 void ResourceHandle::loadResourceSynchronously(const ResourceRequest& request, ResourceError& error, ResourceResponse& response, Vector<char>& vector)
