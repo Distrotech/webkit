@@ -1,5 +1,21 @@
 2007-03-15  Brady Eidson  <beidson@apple.com>
 
+        Reviewed by Alice
+        
+        Due to OpenSource r20178, all of the sudden we were trying to handle page caching on Windows
+        even though it is not hooked up yet.  The resulted in very particular cases ending up calling 
+        clear() in FrameLoader::provisionalLoadStarted().  One such particular case was if a page *would*
+        be "cachable" (no frames, no passwords, etc etc), and you start a download from that page.
+        
+        The fix for now is to manually set the pageCacheSize to 0 whenever we create new pages on Windows.
+        This prevents the "Should I cache this page?" checking from getting far enough to clear the document.
+        It so happens this involves exactly one line.
+        
+        * WebView.cpp:
+        (WebView::initWithFrame): Set page cache size to zero on new pages, and add a fixme to remove later
+
+2007-03-15  Brady Eidson  <beidson@apple.com>
+
         Reviewed by Maciej
 
         <rdar://problem/4429701>

@@ -1546,6 +1546,9 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     m_groupName = String(groupName, SysStringLen(groupName));
 
     m_page = new Page(new WebChromeClient(this), new WebContextMenuClient(this), new WebEditorClient(this), new WebDragClient(this));
+    // FIXME: 4931464 - When we do cache pages on Windows this needs to be removed so the "should I cache this page?" check
+    // in FrameLoader::provisionalLoadStarted() doesn't always fail
+    m_page->backForwardList()->setPageCacheSize(0);
 
     WebFrame* webFrame = WebFrame::createInstance();
     webFrame->initWithWebFrameView(0 /*FIXME*/, this, m_page, 0);
