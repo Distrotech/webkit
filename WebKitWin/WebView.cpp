@@ -418,9 +418,6 @@ void WebView::paint(HDC dc, LPARAM options)
 
 void WebView::paintIntoBackingStore(FrameView* frameView, HDC bitmapDC, LPRECT dirtyRect)
 {
-    if (!frameView)
-        return;
-
     LOCAL_GDI_COUNTER(0, __FUNCTION__);
 
 #if FLASH_BACKING_STORE_REDRAW
@@ -435,11 +432,13 @@ void WebView::paintIntoBackingStore(FrameView* frameView, HDC bitmapDC, LPRECT d
 #endif
 
     FillRect(bitmapDC, dirtyRect, (HBRUSH)GetStockObject(WHITE_BRUSH));
-    GraphicsContext gc(bitmapDC);
-    gc.save();
-    gc.clip(IntRect(*dirtyRect));
-    frameView->paint(&gc, IntRect(*dirtyRect));
-    gc.restore();
+    if (frameView && frameView->frame() && frameView->frame()->renderer()) {
+        GraphicsContext gc(bitmapDC);
+        gc.save();
+        gc.clip(IntRect(*dirtyRect));
+        frameView->paint(&gc, IntRect(*dirtyRect));
+        gc.restore();
+    }
 }
 
 void WebView::paintIntoWindow(HDC bitmapDC, HDC windowDC, LPRECT dirtyRect)

@@ -1,3 +1,16 @@
+2007-03-16  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Dave Hyatt.
+        
+        Fixed "called Frame::paint with nil renderer" console messages.
+        You can now launch and exit the app without seeing any
+        error messages!
+
+        * WebView.cpp:
+        (WebView::paintIntoBackingStore): Only tell the FrameView to
+        paint if it has a renderer. This isn't an issue on the Mac
+        because we don't create a FrameView until you load a page.
+
 2007-03-16  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.
