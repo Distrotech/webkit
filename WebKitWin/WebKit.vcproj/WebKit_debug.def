@@ -92,4 +92,8 @@ EXPORTS
         TextFloatWidth
         CenterTruncateStringToWidth
         RightTruncateStringToWidth
-        
+        ?fastMalloc@WTF@@YAPAXI@Z
+        ?fastFree@WTF@@YAXPAX@Z
+        ?fastCalloc@WTF@@YAPAXII@Z
+        WTFReportAssertionFailure
+        WTFReportError

@@ -1,3 +1,14 @@
+2007-03-15  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Geoff and Steve.
+        
+        - fixed <rdar://problem/5029776> iBench JavaScript test slower than Opera
+        - fixes to use FastMalloc on Windows
+
+        * WebKit.vcproj/WebKit.def: Add exports of WTF symbols.
+        * WebKit.vcproj/WebKit_debug.def: ditto
+        * WebKit.vcproj/WebKit.vcproj: Link pthreads, now needed by WTF.
+
 2007-03-15  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Alice

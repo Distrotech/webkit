@@ -1,3 +1,12 @@
+2007-03-15  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Geoff and Steve.
+        
+        - fixed <rdar://problem/5029776> iBench JavaScript test slower than Opera
+        - fixes to use FastMalloc on Windows
+
+        * config.h: Don't force USE_SYSTEM_MALLOC
+
 2007-03-15  Adam Roben  <aroben@apple.com>
 
         Rubberstamped by Hyatt.
