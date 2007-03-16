@@ -246,6 +246,10 @@ void WebPreferences::initialize()
     key = CFSTR(WebKitFontSmothingTypePreferenceKey);
     if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
         CFDictionaryAddValue(m_standardUserDefaults, key,                               CFSTR("2"));
+
+    key = CFSTR(WebKitCookieStorageAcceptPolicyPreferenceKey);
+    if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
+        CFDictionaryAddValue(m_standardUserDefaults, key,                               CFSTR("2"));
 }
 
 const void* WebPreferences::valueForKey(CFStringRef key)
@@ -1082,3 +1086,21 @@ HRESULT STDMETHODCALLTYPE WebPreferences::setEditableLinkBehavior(
     setIntegerValue(CFSTR(WebKitEditableLinkBehaviorPreferenceKey), behavior);
     return S_OK;
 }
+
+HRESULT STDMETHODCALLTYPE WebPreferences::cookieStorageAcceptPolicy( 
+        /* [retval][out] */ WebKitCookieStorageAcceptPolicy *acceptPolicy )
+{
+    if (!acceptPolicy)
+        return E_POINTER;
+
+    *acceptPolicy = (WebKitCookieStorageAcceptPolicy)integerValueForKey(CFSTR(WebKitCookieStorageAcceptPolicyPreferenceKey));
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebPreferences::setCookieStorageAcceptPolicy( 
+        /* [in] */ WebKitCookieStorageAcceptPolicy acceptPolicy)
+{
+    setIntegerValue(CFSTR(WebKitCookieStorageAcceptPolicyPreferenceKey), acceptPolicy);
+    return S_OK;
+}
+

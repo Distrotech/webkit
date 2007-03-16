@@ -1,5 +1,19 @@
 2007-03-16  Anders Carlsson  <acarlsson@apple.com>
 
+        Reviewed by Adam.
+
+        Add setters and getters for cookie storage accept policy.
+        
+        * Interfaces/IWebPreferences.idl:
+        * WebPreferenceKeysPrivate.h:
+        * WebPreferences.cpp:
+        (WebPreferences::initialize):
+        (WebPreferences::cookieStorageAcceptPolicy):
+        (WebPreferences::setCookieStorageAcceptPolicy):
+        * WebPreferences.h:
+
+2007-03-16  Anders Carlsson  <acarlsson@apple.com>
+
         Reviewed by Adam and Dave Hyatt.
 
         <rdar://problem/5069226>

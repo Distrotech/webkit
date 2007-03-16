@@ -234,6 +234,12 @@ public:
     virtual HRESULT STDMETHODCALLTYPE setEditableLinkBehavior( 
         /* [in] */ WebKitEditableLinkBehavior behavior);
 
+    virtual HRESULT STDMETHODCALLTYPE cookieStorageAcceptPolicy( 
+        /* [retval][out] */ WebKitCookieStorageAcceptPolicy *acceptPolicy);
+        
+    virtual HRESULT STDMETHODCALLTYPE setCookieStorageAcceptPolicy( 
+        /* [in] */ WebKitCookieStorageAcceptPolicy acceptPolicy);
+
     // WebPreferences
     static BSTR webPreferencesChangedNotification();
 

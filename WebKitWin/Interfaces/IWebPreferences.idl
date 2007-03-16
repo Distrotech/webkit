@@ -68,6 +68,12 @@ typedef enum WebKitEditableLinkBehavior {
     WebKitEditableLinkNeverLive
 } WebKitEditableLinkBehavior;
 
+typedef enum WebKitCookieStorageAcceptPolicy {
+    WebKitCookieStorageAcceptPolicyAlways = 0,
+    WebKitCookieStorageAcceptPolicyNever,
+    WebKitCookieStorageAcceptPolicyOnlyFromMainDocumentDomain
+} WebKitCookieStorageAcceptPolicy;
+
 /*!
     @class WebPreferences
 
@@ -484,4 +490,6 @@ interface IWebPreferences : IUnknown
     */
     HRESULT setEditableLinkBehavior([in] WebKitEditableLinkBehavior behavior);
 
+    HRESULT cookieStorageAcceptPolicy([out, retval] WebKitCookieStorageAcceptPolicy* acceptPolicy);
+    HRESULT setCookieStorageAcceptPolicy([in] WebKitCookieStorageAcceptPolicy acceptPolicy);
 }
