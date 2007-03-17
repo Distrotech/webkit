@@ -81,7 +81,7 @@ WebDownload::WebDownload()
 void WebDownload::init(ResourceHandle* handle, const ResourceRequest& request, const ResourceResponse& response, IWebDownloadDelegate* delegate)
 {
     m_delegate = delegate ? delegate : DefaultDownloadDelegate::sharedInstance();
-    CFURLConnectionRef connection = handle->releaseConnectionForDownload();
+    CFURLConnectionRef connection = handle->connection();
     if (!connection) {
         LOG_ERROR("WebDownload::WebDownload(ResourceHandle*,...) called with an inactive ResourceHandle");    
         return;
@@ -105,6 +105,7 @@ void WebDownload::init(ResourceHandle* handle, const ResourceRequest& request, c
     // The CFURLDownload either starts successfully and retains the CFURLConnection, 
     // or it fails to creating and we have a now-useless connection with a dangling ref. 
     // Either way, we need to release the connection to balance out ref counts
+    handle->releaseConnectionForDownload();
     CFRelease(connection);
 }
 
