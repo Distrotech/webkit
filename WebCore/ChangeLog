@@ -1,3 +1,20 @@
+2007-03-17  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Hyatt.
+
+        Fix for <rdar://problem/4960391> REGRESSION (r18922): onChange never fired after selecting an item from a menulist
+
+        * platform/win/PopupMenuWin.cpp:
+        (WebCore::PopupMenu::PopupMenu): Initialize m_focusedIndex to 0.  Instead of using the client to track the focused index, we'll
+         keep track of it internally.  Our old behavior was trying to match Firefox by updating the selected index as you focus items, but that
+         doesn't seem necessary if the selection never gets committed.
+        (WebCore::PopupMenu::show): Initialize the focused index to the client's selected index.
+        (WebCore::PopupMenu::setFocusedIndex): Remove the fireOnChange argument.  Remove the call to valueChanged.
+        (WebCore::PopupMenu::focusedIndex): Return m_focusedIndex instead of getting this from the client.
+        (WebCore::PopupMenu::down): Use the focusedIndex.
+        (WebCore::PopupMenu::up): ditto.
+        (WebCore::PopupMenu::paint): Paint a selected appearance for the item with the focused index.
+
 2007-03-16  Adele Peterson  <adele@apple.com>
 
         Reviewed by Lou.

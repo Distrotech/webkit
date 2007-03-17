@@ -69,6 +69,7 @@ PopupMenu::PopupMenu(PopupMenuClient* client)
     , m_itemHeight(0)
     , m_scrollOffset(0)
     , m_wheelDelta(0)
+    , m_focusedIndex(0)
 {
 }
 
@@ -141,6 +142,12 @@ void PopupMenu::show(const IntRect& r, FrameView* v, int index)
     } else
         ::ShowWindow(m_popup, SW_SHOWNORMAL);
     ::SetCapture(m_popup);
+
+    if (client()) {
+        int index = client()->selectedIndex();
+        if (index >= 0)
+            setFocusedIndex(index);
+    }
 }
 
 void PopupMenu::hide()
@@ -236,7 +243,7 @@ void PopupMenu::calculatePositionAndSize(const IntRect& r, FrameView* v)
     return;
 }
 
-bool PopupMenu::setFocusedIndex(int i, bool hotTracking, bool fireOnChange)
+bool PopupMenu::setFocusedIndex(int i, bool hotTracking)
 {
     if (i < 0 || i >= client()->listSize() || i == focusedIndex())
         return false;
@@ -247,11 +254,10 @@ bool PopupMenu::setFocusedIndex(int i, bool hotTracking, bool fireOnChange)
     invalidateItem(focusedIndex());
     invalidateItem(i);
 
+    m_focusedIndex = i;
+
     if (!hotTracking)
         client()->setTextFromItem(i);
-    
-    if (!hotTracking || client()->valueShouldChangeOnHotTrack())
-        client()->valueChanged(i, fireOnChange);
 
     if (!scrollToRevealSelection())
         ::UpdateWindow(m_popup);
@@ -271,10 +277,7 @@ int PopupMenu::listIndexAtPoint(const IntPoint& point) const
 
 int PopupMenu::focusedIndex() const
 {
-    if (!client())
-        return 0;
-
-    return client()->selectedIndex();
+    return m_focusedIndex;
 }
 
 void PopupMenu::focusFirst()
@@ -313,7 +316,7 @@ bool PopupMenu::down(unsigned lines)
     size_t size = client()->listSize();
 
     int lastSelectableIndex, selectedListIndex;
-    lastSelectableIndex = selectedListIndex = client()->selectedIndex();
+    lastSelectableIndex = selectedListIndex = focusedIndex();
     for (int i = selectedListIndex + 1; i >= 0 && i < size; ++i)
         if (client()->itemIsEnabled(i)) {
             lastSelectableIndex = i;
@@ -332,7 +335,7 @@ bool PopupMenu::up(unsigned lines)
     size_t size = client()->listSize();
 
     int lastSelectableIndex, selectedListIndex;
-    lastSelectableIndex = selectedListIndex = client()->selectedIndex();
+    lastSelectableIndex = selectedListIndex = focusedIndex();
     for (int i = selectedListIndex - 1; i >= 0 && i < size; --i)
         if (client()->itemIsEnabled(i)) {
             lastSelectableIndex = i;
@@ -460,7 +463,7 @@ void PopupMenu::paint(const IntRect& damageRect, HDC hdc)
         int index = y / m_itemHeight;
 
         Color optionBackgroundColor, optionTextColor;
-        if (client()->itemIsSelected(index)) {
+        if (index == focusedIndex()) {
             optionBackgroundColor = theme()->activeListBoxSelectionBackgroundColor();
             optionTextColor = theme()->activeListBoxSelectionForegroundColor();
         } else {
