@@ -212,11 +212,16 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::URL(
 }
 
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::valueForHTTPHeaderField( 
-    /* [in] */ BSTR /*field*/,
-    /* [retval][out] */ BSTR* /*result*/)
+    /* [in] */ BSTR field,
+    /* [retval][out] */ BSTR* result)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!result) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *result = BString(m_request.httpHeaderField(String(field, SysStringLen(field)))).release();
+    return S_OK;
 }
 
 // IWebMutableURLRequest --------------------------------------------------------
