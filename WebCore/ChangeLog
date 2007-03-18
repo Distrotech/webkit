@@ -1,3 +1,16 @@
+2007-03-17  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Brady.
+
+        Fix fast/dom/isindex-002.html.
+
+        Add default strings to our two remaining unimplemented localizable
+        strings in WebCore.
+
+        * platform/win/TemporaryLinkStubs.cpp:
+        (WebCore::searchableIndexIntroduction): Added English string from Mac.
+        (WebCore::inputElementAltText): Ditto.
+
 2007-03-17  Adele Peterson  <adele@apple.com>
 
         Reviewed by Hyatt.

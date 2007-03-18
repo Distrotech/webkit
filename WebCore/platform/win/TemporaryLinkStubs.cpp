@@ -85,7 +85,6 @@ GraphicsContext* Widget::lockDrawingFocus() { STOP_NOIMPL(); return 0; }
 void Widget::unlockDrawingFocus(GraphicsContext*) { STOP_NOIMPL(); }
 
 PlatformMouseEvent::PlatformMouseEvent(const CurrentEventTag&) { LOG_NOIMPL(); }
-String WebCore::searchableIndexIntroduction() { LOG_NOIMPL(); return String(); }
 
 int WebCore::findNextSentenceFromIndex(UChar const*,int,int,bool) { LOG_NOIMPL(); return 0; }
 void WebCore::findSentenceBoundary(UChar const*,int,int,int*,int*) { LOG_NOIMPL(); }
@@ -100,8 +99,9 @@ void GraphicsContextPlatformPrivate::clip(const Path&) { LOG_NOIMPL(); }
 /********************************************************/
 bool AXObjectCache::gAccessibilityEnabled = false;
 
+String WebCore::searchableIndexIntroduction() { return "This is a searchable index. Enter search keywords: "; }
 String WebCore::submitButtonDefaultLabel() { return "Submit"; }
-String WebCore::inputElementAltText() { LOG_NOIMPL(); return DeprecatedString(); }
+String WebCore::inputElementAltText() { return "Submit"; }
 String WebCore::resetButtonDefaultLabel() { return "Reset"; }
 String WebCore::fileButtonChooseFileLabel() { return "Browse..."; }
 String WebCore::fileButtonNoFileSelectedLabel() { return "no file selected"; }
