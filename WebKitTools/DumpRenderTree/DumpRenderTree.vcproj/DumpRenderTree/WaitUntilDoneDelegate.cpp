@@ -40,7 +40,11 @@ HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::QueryInterface(REFIID riid, voi
 {
     *ppvObject = 0;
     if (IsEqualGUID(riid, IID_IUnknown))
-        *ppvObject = static_cast<IWebFrameLoadDelegate*>(this);
+        *ppvObject = static_cast<IWebUIDelegate*>(this);
+    else if (IsEqualGUID(riid, IID_IWebUIDelegate))
+        *ppvObject = static_cast<IWebUIDelegate*>(this);
+    else if (IsEqualGUID(riid, IID_IWebUIDelegatePrivate))
+        *ppvObject = static_cast<IWebUIDelegatePrivate*>(this);
     else if (IsEqualGUID(riid, IID_IWebFrameLoadDelegate))
         *ppvObject = static_cast<IWebFrameLoadDelegate*>(this);
     else
@@ -140,6 +144,18 @@ HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::windowScriptObjectAvailable(
     JSValueRef theController = makeLayoutTestController(context);
     JSObjectSetProperty(context, windowObject, layoutTestControllerStr, theController, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete, 0);
     JSStringRelease(layoutTestControllerStr);
+
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::webViewAddMessageToConsole( 
+    /* [in] */ IWebView* sender,
+    /* [in] */ BSTR message,
+    /* [in] */ int lineNumber,
+    /* [in] */ BSTR url,
+    /* [in] */ BOOL isError)
+{
+    wprintf(L"CONSOLE MESSAGE: line %d: %s\n", lineNumber, message ? message : L"");
 
     return S_OK;
 }

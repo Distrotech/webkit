@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005, 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2005, 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,8 +31,9 @@
 
 #include <WebKit/IWebFrameLoadDelegate.h>
 #include <WebKit/IWebUIDelegate.h>
+#include <WebKit/IWebUIDelegatePrivate.h>
 
-class WaitUntilDoneDelegate : public IWebUIDelegate, public IWebFrameLoadDelegate
+class WaitUntilDoneDelegate : public IWebUIDelegate, IWebUIDelegatePrivate, public IWebFrameLoadDelegate
 {
 public:
     WaitUntilDoneDelegate() : m_refCount(1) { }
@@ -303,8 +304,39 @@ public:
         /* [in] */ IWebView *sender,
         /* [in] */ HMENU menu) { return E_NOTIMPL; }
 
-
 protected:
+    // IWebUIDelegatePrivate
+
+    virtual HRESULT STDMETHODCALLTYPE webViewResizerRect( 
+        /* [in] */ IWebView *sender,
+        /* [retval][out] */ RECT *rect) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE webViewDrawResizer( 
+        /* [in] */ IWebView *sender,
+        /* [in] */ HDC dc,
+        /* [in] */ BOOL overlapsContent,
+        /* [in] */ RECT *rect) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE webViewScrolled( 
+        /* [in] */ IWebView *sender) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE webViewAddMessageToConsole( 
+        /* [in] */ IWebView *sender,
+        /* [in] */ BSTR message,
+        /* [in] */ int lineNumber,
+        /* [in] */ BSTR url,
+        /* [in] */ BOOL isError);
+    
+    virtual HRESULT STDMETHODCALLTYPE webViewShouldInterruptJavaScript( 
+        /* [in] */ IWebView *sender,
+        /* [retval][out] */ BOOL *result) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE webViewReceivedFocus( 
+        /* [in] */ IWebView *sender) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE webViewLostFocus( 
+        /* [in] */ IWebView *sender,
+        /* [in] */ HWND loseFocusTo) { return E_NOTIMPL; }
 
     void locationChangeDone(IWebError*, IWebFrame*);
 

@@ -1,3 +1,15 @@
+2007-03-17  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Hyatt.
+
+        Implemented console message dumping.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.cpp:
+        (WaitUntilDoneDelegate::QueryInterface): Added cases for IWebUIDelegate[Private]
+        (WaitUntilDoneDelegate::webViewAddMessageToConsole): Implemented.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.h:
+        Now inherits from IWebUIDelegatePrivate
+
 2007-03-15  Adam Roben  <aroben@apple.com>
 
         Reviewed by Ada.
