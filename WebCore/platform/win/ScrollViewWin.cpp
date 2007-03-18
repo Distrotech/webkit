@@ -206,6 +206,11 @@ void ScrollView::updateContents(const IntRect& rect, bool now)
         ::UpdateWindow(containingWindowHandle);
 }
 
+void ScrollView::update()
+{
+    ::UpdateWindow(containingWindow());
+}
+
 int ScrollView::visibleWidth() const
 {
     return width() - (m_data->m_vBar ? m_data->m_vBar->width() : 0);

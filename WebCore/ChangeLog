@@ -1,3 +1,13 @@
+2007-03-17  David Hyatt  <hyatt@apple.com>
+
+        The internal side of the patch that ensures Boomer paints twice on ibench.  Don't let the timer beat out
+        that first paint.
+
+        Reviewed by aroben
+
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::update):
+
 2007-03-17  Adam Roben  <aroben@apple.com>
 
         Reviewed by Brady.
