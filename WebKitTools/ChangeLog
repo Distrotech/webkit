@@ -1,3 +1,27 @@
+2007-03-19  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Hyatt.
+
+        Implemented some more layoutTestController methods:
+        - display
+        - testRepaint
+        - repaintSweepHorizontally
+
+        The last two don't have any effect yet because we don't support pixel
+        tests yet (<rdar://problem/5071708>).
+
+        This gets all but one test in fast/repaint passing, and fixes various
+        other tests that use these methods as well.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (runTest): Initialize new globals.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.h:
+        Added extern declarations.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/LayoutTestController.cpp:
+        (displayCallback): Implemented.
+        (testRepaintCallback): Implemented.
+        (repaintSweepHorizontallyCallback): Implemented.
+
 2007-03-18  Adam Roben  <aroben@apple.com>
 
         Reviewed by Hyatt.

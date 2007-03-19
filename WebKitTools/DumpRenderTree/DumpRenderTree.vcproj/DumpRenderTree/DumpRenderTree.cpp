@@ -58,6 +58,8 @@ IWebFrame* topLoadingFrame;     // !nil iff a load is in progress
 bool dumpAsText = false;
 bool waitToDump = false;
 bool shouldDumpEditingCallbacks = false;
+bool testRepaint = false;
+bool repaintSweepHorizontally = false;
 
 IWebFrame* frame;
 HWND webViewWindow;
@@ -231,6 +233,8 @@ static void runTest(const char* pathOrURL)
     waitToDump = false;
     dumpAsText = false;
     shouldDumpEditingCallbacks = false;
+    testRepaint = false;
+    repaintSweepHorizontally = false;
     timedOut = false;
 
     // Set the test timeout timer
