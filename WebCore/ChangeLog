@@ -1,3 +1,25 @@
+2007-03-18  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+
+        Fixed <rdar://problem/5061807> STRESS (2): Crash in PlatformScrollbar::setRect
+
+        No test case because I can't seem to get the Windows DRT to cooperate. I'll try again tomorrow.
+
+        The problem was that the FrameView would try to reset the document's scrollbars after having 
+        been removed from the page, so its page pointer would be NULL. Added NULL checks.
+
+        This situation ultimately results from the FrameView's non-trivial destructor, which
+        creates a fragile dependency on tear-down timing. It looks like the timing on Windows
+        is slightly different from the timing on Mac. I didn't see any obvious resulting bugs,
+        though, so the NULL checks should be sufficient for now.
+
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::windowResizerRect):
+        (WebCore::ScrollView::addToDirtyRegion):
+        (WebCore::ScrollView::scrollBackingStore):
+        (WebCore::ScrollView::updateBackingStore):
+
 2007-03-17  David Hyatt  <hyatt@apple.com>
 
         The internal side of the patch that ensures Boomer paints twice on ibench.  Don't let the timer beat out

@@ -658,7 +658,12 @@ void ScrollView::scroll(ScrollDirection direction, ScrollGranularity granularity
 
 IntRect ScrollView::windowResizerRect()
 {
-    return static_cast<const FrameView*>(this)->frame()->page()->chrome()->windowResizerRect();
+    ASSERT(isFrameView());
+    const FrameView* frameView = static_cast<const FrameView*>(this);
+    Page* page = frameView->frame() ? frameView->frame()->page() : 0;
+    if (!page)
+        return IntRect();
+    return page->chrome()->windowResizerRect();
 }
 
 bool ScrollView::resizerOverlapsContent() const
@@ -691,17 +696,32 @@ void ScrollView::setParent(ScrollView* parentView)
 
 void ScrollView::addToDirtyRegion(const IntRect& containingWindowRect)
 {
-    return static_cast<const FrameView*>(this)->frame()->page()->chrome()->addToDirtyRegion(containingWindowRect);
+    ASSERT(isFrameView());
+    const FrameView* frameView = static_cast<const FrameView*>(this);
+    Page* page = frameView->frame() ? frameView->frame()->page() : 0;
+    if (!page)
+        return;
+    page->chrome()->addToDirtyRegion(containingWindowRect);
 }
 
 void ScrollView::scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect)
 {
-    return static_cast<const FrameView*>(this)->frame()->page()->chrome()->scrollBackingStore(dx, dy, scrollViewRect, clipRect);
+    ASSERT(isFrameView());
+    const FrameView* frameView = static_cast<const FrameView*>(this);
+    Page* page = frameView->frame() ? frameView->frame()->page() : 0;
+    if (!page)
+        return;
+    page->chrome()->scrollBackingStore(dx, dy, scrollViewRect, clipRect);
 }
 
 void ScrollView::updateBackingStore()
 {
-   return static_cast<const FrameView*>(this)->frame()->page()->chrome()->updateBackingStore();
+    ASSERT(isFrameView());
+    const FrameView* frameView = static_cast<const FrameView*>(this);
+    Page* page = frameView->frame() ? frameView->frame()->page() : 0;
+    if (!page)
+        return;
+    page->chrome()->updateBackingStore();
 }
 
 } // namespace WebCore
