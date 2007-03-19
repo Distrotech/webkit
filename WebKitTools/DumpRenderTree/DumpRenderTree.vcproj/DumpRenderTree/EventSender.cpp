@@ -90,6 +90,14 @@ static MSG makeMsg(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     return result;
 }
 
+static LRESULT dispatchMessage(const MSG* msg)
+{
+    ASSERT(msg);
+
+    ::TranslateMessage(msg);
+    return ::DispatchMessage(msg);
+}
+
 static JSValueRef mouseDownCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
 {
     IWebFramePrivate* framePrivate = 0;
@@ -100,7 +108,7 @@ static JSValueRef mouseDownCallback(JSContextRef context, JSObjectRef function, 
 
     down = true;
     MSG msg = makeMsg(webViewWindow, WM_LBUTTONDOWN, 0, MAKELPARAM(lastMousePosition.x, lastMousePosition.y));
-    ::DispatchMessage(&msg);
+    dispatchMessage(&msg);
 
     return JSValueMakeUndefined(context);
 }
@@ -121,7 +129,7 @@ static void doMouseUp(MSG msg)
         framePrivate->Release();
     }
 
-    ::DispatchMessage(&msg);
+    dispatchMessage(&msg);
     down = false;
 
     if (draggingInfo) {
@@ -168,11 +176,11 @@ static JSValueRef mouseClickCallback(JSContextRef context, JSObjectRef function,
     }
 
     MSG downMsg = makeMsg(webViewWindow, WM_LBUTTONDOWN, 0, MAKELPARAM(lastMousePosition.x, lastMousePosition.y));
-    ::DispatchMessage(&downMsg);
+    dispatchMessage(&downMsg);
     down = true;
     
     MSG upMsg = makeMsg(webViewWindow, WM_LBUTTONUP, 0, MAKELPARAM(lastMousePosition.x, lastMousePosition.y));
-    ::DispatchMessage(&upMsg);
+    dispatchMessage(&upMsg);
     down = false;
 
     return JSValueMakeUndefined(context);
@@ -186,7 +194,7 @@ static void doMouseMove(MSG msg)
         framePrivate->Release();
     }
 
-    ::DispatchMessage(&msg);
+    dispatchMessage(&msg);
 
     if (down && draggingInfo) {
         POINT screenPoint = msg.pt;
@@ -303,7 +311,7 @@ static JSValueRef keyDownCallback(JSContextRef context, JSObjectRef function, JS
     JSStringRef character = JSValueToStringCopy(context, arguments[0], exception);
     ASSERT(!exception || !*exception);
     MSG msg = makeMsg(webViewWindow, WM_KEYDOWN, JSStringIsEqual(character, tabString) ? VK_TAB : toupper(JSStringGetCharactersPtr(character)[0]), 0);
-    ::DispatchMessage(&msg);
+    dispatchMessage(&msg);
     JSStringRelease(character);
     
     if (argumentCount > 1)

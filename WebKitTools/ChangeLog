@@ -1,5 +1,20 @@
 2007-03-19  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Adele.
+
+        Fix eventSender.keyDown() to create WM_CHAR messages as well, since these
+        are needed by WebCore.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/EventSender.cpp:
+        (dispatchMessage): Added.
+        (mouseDownCallback): Call dispatchMessage instead of DispatchMessage.
+        (doMouseUp): Ditto.
+        (mouseClickCallback): Ditto.
+        (doMouseMove): Ditto.
+        (keyDownCallback): Ditto.
+
+2007-03-19  Adam Roben  <aroben@apple.com>
+
         Reviewed by Hyatt.
 
         Implemented some more layoutTestController methods:
