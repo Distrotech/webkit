@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
+ * Copyright (C) 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,22 +26,37 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DumpRenderTree_h
-#define DumpRenderTree_h
+#ifndef DraggingInfo_h
+#define DraggingInfo_h
 
-#define WINVER          0x0500
-#define _WIN32_WINNT    0x0500
+#include <objidl.h>
 
-struct IWebFrame;
-typedef struct HWND__* HWND;
+class DraggingInfo {
+public:
+    DraggingInfo(IDataObject* object, IDropSource* source)
+        : m_object(object)
+        , m_source(source)
+    {
+        m_object->AddRef();
+        m_source->AddRef();
+    }
 
-extern bool dumpAsText;
-extern bool waitToDump;     // TRUE if waitUntilDone() has been called, but notifyDone() has not yet been called
-extern bool done;
-extern IWebFrame* topLoadingFrame;
-extern IWebFrame* frame;
-extern HWND webViewWindow;
+    ~DraggingInfo()
+    {
+        if (m_object)
+            m_object->Release();
+        m_object = 0;
+        if (m_source)
+            m_source->Release();
+        m_source = 0;
+    }
 
-void dump();
+    IDataObject* dataObject() const { return m_object; }
+    IDropSource* dropSource() const { return m_source; }
 
-#endif
+private:
+    IDataObject* m_object;
+    IDropSource* m_source;
+};
+
+#endif // !defined(DraggingInfo_h)

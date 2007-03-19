@@ -58,7 +58,8 @@ bool dumpAsText = false;
 bool waitToDump = false;
 
 IWebFrame* frame;
-HWND hostWindow;
+HWND webViewWindow;
+static HWND hostWindow;
 
 static const unsigned timeoutValue = 7000;
 static const unsigned timeoutId = 10;
@@ -320,14 +321,13 @@ int main(int argc, char* argv[])
         goto exit;
 
     IWebViewPrivate* viewPrivate;
-    HWND viewHwnd;
     hr = webView->QueryInterface(IID_IWebViewPrivate, (void**)&viewPrivate);
     if (FAILED(hr))
         goto exit;
-    viewPrivate->viewWindow(&viewHwnd);
+    viewPrivate->viewWindow(&webViewWindow);
     viewPrivate->Release();
 
-    SetWindowPos(viewHwnd, 0, 0, 0, maxViewWidth, maxViewHeight, 0);
+    SetWindowPos(webViewWindow, 0, 0, 0, maxViewWidth, maxViewHeight, 0);
     ShowWindow(hostWindow, SW_SHOW);
 
     WaitUntilDoneDelegate* waitDelegate = new WaitUntilDoneDelegate();

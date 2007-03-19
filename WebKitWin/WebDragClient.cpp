@@ -117,7 +117,6 @@ void WebDragClient::startDrag(DragImageRef image, const IntPoint& imageOrigin, c
     COMPtr<IDragSourceHelper> helper;
     COMPtr<IDataObject> dataObject;
     COMPtr<WebView> viewProtector = m_webView;
-    DWORD effect;
     COMPtr<IDropSource> source;
     if (FAILED(WebDropSource::createInstance(m_webView, &source)))
         return;
@@ -142,8 +141,19 @@ void WebDragClient::startDrag(DragImageRef image, const IntPoint& imageOrigin, c
                 helper->InitializeFromBitmap(&sdi, dataObject.get());
             }
         }
+
         //FIXME: Ensure correct drag ops are available <rdar://problem/5015957>
-        DoDragDrop(dataObject.get(), source.get(), DROPEFFECT_COPY | DROPEFFECT_LINK | DROPEFFECT_MOVE, &effect);
+        DWORD okEffect = DROPEFFECT_COPY | DROPEFFECT_LINK | DROPEFFECT_MOVE;
+        DWORD effect;
+        COMPtr<IWebUIDelegate> ui;
+        if (SUCCEEDED(m_webView->uiDelegate(&ui))) {
+            COMPtr<IWebUIDelegatePrivate> uiPrivate;
+            if (SUCCEEDED(ui->QueryInterface(IID_IWebUIDelegatePrivate, (void**)&uiPrivate)))
+                if (SUCCEEDED(uiPrivate->doDragDrop(m_webView, dataObject.get(), source.get(), okEffect, &effect)))
+                    return;
+        }
+
+        DoDragDrop(dataObject.get(), source.get(), okEffect, &effect);
     }
 }
 

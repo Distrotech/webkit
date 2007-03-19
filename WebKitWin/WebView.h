@@ -51,7 +51,6 @@ class WebView
     , public IWebViewUndoableEditing
     , public IWebViewEditingActions
     , public IWebNotificationObserver
-    , public IDropTarget
 {
 public:
     static WebView* createInstance();

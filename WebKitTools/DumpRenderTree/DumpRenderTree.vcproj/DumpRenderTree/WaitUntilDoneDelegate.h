@@ -338,6 +338,13 @@ protected:
         /* [in] */ IWebView *sender,
         /* [in] */ HWND loseFocusTo) { return E_NOTIMPL; }
 
+    virtual HRESULT STDMETHODCALLTYPE doDragDrop( 
+        /* [in] */ IWebView *sender,
+        /* [in] */ IDataObject *dataObject,
+        /* [in] */ IDropSource *dropSource,
+        /* [in] */ DWORD okEffect,
+        /* [retval][out] */ DWORD *performedEffect);
+
     void locationChangeDone(IWebError*, IWebFrame*);
 
     ULONG                   m_refCount;

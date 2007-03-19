@@ -1,3 +1,23 @@
+2007-03-18  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Geoff.
+
+        Added IWebFramePrivate::layout to support eventSender in DRT.
+
+        Made IWebView inherit from IDropTarget to match Mac, and added
+        IWebUIDelegatePrivate::doDragDrop to support drag-and-drop in DRT.
+
+        * Interfaces/IWebFramePrivate.idl: Added layout().
+        * Interfaces/IWebUIDelegatePrivate.idl: Added doDragDrop().
+        * Interfaces/IWebView.idl: Added inheritance from IDropTarget.
+        * WebDragClient.cpp:
+        (WebDragClient::startDrag): Call the UI delegate if possible,
+        otherwise fallback to OLE's DoDragDrop.
+        * WebFrame.cpp:
+        (WebFrame::layout): Implemented.
+        * WebFrame.h:
+        * WebView.h:
+
 2007-03-17  Adam Roben  <aroben@apple.com>
 
         Reviewed by Brady.

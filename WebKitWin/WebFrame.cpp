@@ -756,6 +756,20 @@ HRESULT STDMETHODCALLTYPE WebFrame::renderTreeAsExternalRepresentation(
     return S_OK;
 }
 
+HRESULT STDMETHODCALLTYPE WebFrame::layout()
+{
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
+        return E_FAIL;
+
+    FrameView* view = coreFrame->view();
+    if (!view)
+        return E_FAIL;
+
+    view->layout();
+    return S_OK;
+}
+
 HRESULT STDMETHODCALLTYPE WebFrame::firstLayoutDone(
     /* [retval][out] */ BOOL* result)
 {

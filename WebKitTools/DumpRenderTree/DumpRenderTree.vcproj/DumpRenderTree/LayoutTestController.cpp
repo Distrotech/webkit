@@ -26,10 +26,11 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <wtf/Platform.h>
-#include "LayoutTestController.h"
 #include "DumpRenderTree.h"
-#include <stdio.h>
+#include "LayoutTestController.h"
+
+#include <wtf/Platform.h>
+#include <JavaScriptCore/JavaScriptCore.h>
 
 static JSValueRef dumpAsTextCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
 {

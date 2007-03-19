@@ -29,8 +29,11 @@
 #include "DumpRenderTree.h"
 #include "WaitUntilDoneDelegate.h"
 
-#include <wtf/Platform.h>
+#include "DraggingInfo.h"
+#include "EventSender.h"
 #include "LayoutTestController.h"
+
+#include <wtf/Platform.h>
 #include <JavaScriptCore/JavaScriptCore.h>
 #include <stdio.h>
 #include <WebKit/IWebFramePrivate.h>
@@ -141,9 +144,14 @@ HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::windowScriptObjectAvailable(
         /* [in] */ JSObjectRef windowObject)
 {
     JSStringRef layoutTestControllerStr = JSStringCreateWithUTF8CString("layoutTestController");
-    JSValueRef theController = makeLayoutTestController(context);
-    JSObjectSetProperty(context, windowObject, layoutTestControllerStr, theController, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete, 0);
+    JSValueRef layoutTestController = makeLayoutTestController(context);
+    JSObjectSetProperty(context, windowObject, layoutTestControllerStr, layoutTestController, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete, 0);
     JSStringRelease(layoutTestControllerStr);
+
+    JSStringRef eventSenderStr = JSStringCreateWithUTF8CString("eventSender");
+    JSValueRef eventSender = makeEventSender(context);
+    JSObjectSetProperty(context, windowObject, eventSenderStr, eventSender, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete, 0);
+    JSStringRelease(eventSenderStr);
 
     return S_OK;
 }
@@ -156,6 +164,25 @@ HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::webViewAddMessageToConsole(
     /* [in] */ BOOL isError)
 {
     wprintf(L"CONSOLE MESSAGE: line %d: %s\n", lineNumber, message ? message : L"");
+
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::doDragDrop( 
+    /* [in] */ IWebView* sender,
+    /* [in] */ IDataObject* object,
+    /* [in] */ IDropSource* source,
+    /* [in] */ DWORD okEffect,
+    /* [retval][out] */ DWORD* performedEffect)
+{
+    if (!performedEffect)
+        return E_POINTER;
+
+    *performedEffect = 0;
+
+    draggingInfo = new DraggingInfo(object, source);
+
+    replaySavedEvents();
 
     return S_OK;
 }

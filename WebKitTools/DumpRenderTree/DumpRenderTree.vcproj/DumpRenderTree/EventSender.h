@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
+ * Copyright (C) 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,22 +26,17 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DumpRenderTree_h
-#define DumpRenderTree_h
+#ifndef EventSender_h
+#define EventSender_h
 
-#define WINVER          0x0500
-#define _WIN32_WINNT    0x0500
+class DraggingInfo;
 
-struct IWebFrame;
-typedef struct HWND__* HWND;
+typedef const struct OpaqueJSContext* JSContextRef;
+typedef struct OpaqueJSValue* JSObjectRef;
 
-extern bool dumpAsText;
-extern bool waitToDump;     // TRUE if waitUntilDone() has been called, but notifyDone() has not yet been called
-extern bool done;
-extern IWebFrame* topLoadingFrame;
-extern IWebFrame* frame;
-extern HWND webViewWindow;
+JSObjectRef makeEventSender(JSContextRef context);
+void replaySavedEvents();
 
-void dump();
+extern DraggingInfo* draggingInfo;
 
 #endif

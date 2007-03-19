@@ -172,7 +172,7 @@ interface IEnumTextMatches : IUnknown
     uuid(174BBEFD-058E-49c7-91DF-6F110AA4AC28),
     pointer_default(unique)
 ]
-interface IWebView : IUnknown
+interface IWebView : IDropTarget
 {
     /*!
         @method canShowMIMEType:

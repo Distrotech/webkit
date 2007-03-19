@@ -1,3 +1,50 @@
+2007-03-18  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Geoff.
+
+        Added a basic implementation of eventSender. It supports mouse and key
+        events.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DraggingInfo.h: Added.
+        (DraggingInfo::DraggingInfo):
+        (DraggingInfo::~DraggingInfo):
+        (DraggingInfo::dataObject):
+        (DraggingInfo::dropSource):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (main): Made the WebView's HWND a global so that EventSender can
+        access it.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.h:
+        Added extern declarations.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.vcproj:
+        Added new files to project.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/EventSender.cpp: Added.
+        (getDragModeCallback):
+        (setDragModeCallback):
+        (leapForwardCallback):
+        (currentEventTime):
+        (makeMsg):
+        (mouseDownCallback):
+        (pointl):
+        (doMouseUp):
+        (mouseUpCallback):
+        (mouseClickCallback):
+        (doMouseMove):
+        (mouseMoveToCallback):
+        (replaySavedEvents):
+        (keyDownCallback):
+        (getClass):
+        (makeEventSender):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/EventSender.h: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/LayoutTestController.cpp:
+        Re-ordered #includes.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/LayoutTestController.h:
+        Changed #include to forward declarations.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.cpp:
+        (WaitUntilDoneDelegate::windowScriptObjectAvailable): Make the
+        eventSender available.
+        (WaitUntilDoneDelegate::doDragDrop): Implemented.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.h:
+
 2007-03-17  Adam Roben  <aroben@apple.com>
 
         Reviewed by Hyatt.

@@ -151,6 +151,8 @@ public:
     virtual HRESULT STDMETHODCALLTYPE renderTreeAsExternalRepresentation(
         /* [retval][out] */ BSTR *result);
 
+    virtual HRESULT STDMETHODCALLTYPE layout();
+
     virtual HRESULT STDMETHODCALLTYPE firstLayoutDone(
         /* [retval][out] */ BOOL* result);
 

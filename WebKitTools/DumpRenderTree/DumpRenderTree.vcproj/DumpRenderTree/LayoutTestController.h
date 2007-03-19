@@ -29,7 +29,8 @@
 #ifndef LayoutTestController_h
 #define LayoutTestController_h
 
-#include <JavaScriptCore/JavaScriptCore.h>
+typedef const struct OpaqueJSContext* JSContextRef;
+typedef struct OpaqueJSValue* JSObjectRef;
 
 JSObjectRef makeLayoutTestController(JSContextRef context);
 
