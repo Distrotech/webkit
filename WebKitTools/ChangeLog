@@ -1,5 +1,12 @@
 2007-03-19  Adam Roben  <aroben@apple.com>
 
+        Release build fix.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.vcproj:
+        Set the include path for release to the same as for debug.
+
+2007-03-19  Adam Roben  <aroben@apple.com>
+
         Reviewed by Adele.
 
         Fix eventSender.keyDown() to create WM_CHAR messages as well, since these

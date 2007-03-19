@@ -122,7 +122,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..\..\..\..\WebCore\platform\cairo\cairo\src&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\DerivedSources\WebCore&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\loader&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\css&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\platform&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\bridge\win&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\page&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\bridge&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\platform\win&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\html&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\rendering&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\editing&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\dom&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\xml&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\kwq&quot;;&quot;$(ProjectDir)\..\..\..\..\iconv&quot;;&quot;$(ProjectDir)\..\..\..\..\libxml2&quot;;&quot;$(ProjectDir)\..\..\..\..\icu\include&quot;;&quot;$(ProjectDir)\..\..\..\..\JavaScriptCore&quot;;&quot;$(ProjectDir)\..\..\..\..\JavaScriptCore\os-win32&quot;;&quot;$(ProjectDir)\..\..\..\..\JavaScriptCore\wtf&quot;;&quot;$(ProjectDir)\..\..\..\..\WebCore\ForwardingHeaders&quot;"
+				AdditionalIncludeDirectories="&quot;$(WebKitOutputDir)\Include&quot;;&quot;$(WebKitOutputDir)\Include\WebCore\ForwardingHeaders&quot;;&quot;$(WebKitOutputDir)\Include\JavaScriptCore&quot;;&quot;$(WebKitSDKDir)\Include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_SCL_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_DEPRECATE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
