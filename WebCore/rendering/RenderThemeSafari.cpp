@@ -152,7 +152,7 @@ void RenderThemeSafari::systemFont(int propId, FontDescription& fontDescription)
         case CSS_VAL_MENU:
             cachedDesc = &menuFont;
             if (!menuFont.isAbsoluteSize())
-                fontSize = systemFontSizeForControlSize(NSSmallControlSize);
+                fontSize = systemFontSizeForControlSize(NSRegularControlSize);
             break;
         case CSS_VAL_STATUS_BAR:
             cachedDesc = &labelFont;
