@@ -199,6 +199,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\EditingDelegate.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\EditingDelegate.h"
+				>
+			</File>
+			<File
 				RelativePath=".\EventSender.cpp"
 				>
 			</File>

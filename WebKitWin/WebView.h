@@ -396,10 +396,10 @@ public:
         /* [retval][out] */ IWebUndoManager **manager);
     
     virtual HRESULT STDMETHODCALLTYPE setEditingDelegate( 
-        /* [in] */ IWebViewEditingDelegate *d);
+        /* [in] */ IWebEditingDelegate *d);
     
     virtual HRESULT STDMETHODCALLTYPE editingDelegate( 
-        /* [retval][out] */ IWebViewEditingDelegate **d);
+        /* [retval][out] */ IWebEditingDelegate **d);
     
     virtual HRESULT STDMETHODCALLTYPE styleDeclarationWithText( 
         /* [in] */ BSTR text,
@@ -634,6 +634,7 @@ protected:
     SIZE m_backingStoreSize;
     HRGN m_backingStoreDirtyRegion;
 
+    COMPtr<IWebEditingDelegate> m_editingDelegate;
     COMPtr<IWebFrameLoadDelegate> m_frameLoadDelegate;
     COMPtr<IWebFrameLoadDelegatePrivate> m_frameLoadDelegatePrivate;
     COMPtr<IWebUIDelegate> m_uiDelegate;

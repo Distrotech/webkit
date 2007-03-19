@@ -2610,17 +2610,26 @@ HRESULT STDMETHODCALLTYPE WebView::undoManager(
 }
     
 HRESULT STDMETHODCALLTYPE WebView::setEditingDelegate( 
-        /* [in] */ IWebViewEditingDelegate* /*d*/)
+        /* [in] */ IWebEditingDelegate* d)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    m_editingDelegate = d;
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::editingDelegate( 
-        /* [retval][out] */ IWebViewEditingDelegate** /*d*/)
+        /* [retval][out] */ IWebEditingDelegate** d)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!d) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *d = m_editingDelegate.get();
+    if (!*d)
+        return E_FAIL;
+
+    (*d)->AddRef();
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::styleDeclarationWithText( 

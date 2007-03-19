@@ -36,6 +36,7 @@
 #include <WebKit/IWebFramePrivate.h>
 #include <windows.h>
 
+#include "EditingDelegate.h"
 #include "WaitUntilDoneDelegate.h"
 
 #define USE_MAC_FONTS
@@ -56,6 +57,7 @@ IWebFrame* topLoadingFrame;     // !nil iff a load is in progress
 
 bool dumpAsText = false;
 bool waitToDump = false;
+bool shouldDumpEditingCallbacks = false;
 
 IWebFrame* frame;
 HWND webViewWindow;
@@ -228,6 +230,7 @@ static void runTest(const char* pathOrURL)
     topLoadingFrame = 0;
     waitToDump = false;
     dumpAsText = false;
+    shouldDumpEditingCallbacks = false;
     timedOut = false;
 
     // Set the test timeout timer
@@ -335,6 +338,16 @@ int main(int argc, char* argv[])
     waitDelegate->Release();
 
     webView->setUIDelegate(waitDelegate);
+
+    IWebViewEditing* viewEditing;
+    hr = webView->QueryInterface(IID_IWebViewEditing, (void**)&viewEditing);
+    if (FAILED(hr))
+        goto exit;
+
+    EditingDelegate* editingDelegate = new EditingDelegate;
+    viewEditing->setEditingDelegate(editingDelegate);
+    editingDelegate->Release();
+    viewEditing->Release();
 
     IWebPreferences* preferences;
     hr = webView->preferences(&preferences);

@@ -1,5 +1,49 @@
 2007-03-18  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Hyatt.
+
+        Fix DRT part of <rdar://problem/5066482> DumpRenderTree on Windows
+        doesn't dump editing callbacks
+
+        However, we still don't dump anything because of
+        <rdar://problem/5071598>.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (runTest): Initialize shouldDumpEditingCallbacks.
+        (main): Set the WebView's editing delegate.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.h:
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.vcproj:
+        Added EditingDelegate.(cpp|h) to the project.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/EditingDelegate.cpp: Added.
+        (EditingDelegate::EditingDelegate):
+        (EditingDelegate::QueryInterface):
+        (EditingDelegate::AddRef):
+        (EditingDelegate::Release):
+        (dumpPath):
+        (dump):
+        (EditingDelegate::shouldBeginEditingInDOMRange):
+        (EditingDelegate::shouldEndEditingInDOMRange):
+        (EditingDelegate::shouldInsertNode):
+        (EditingDelegate::shouldInsertText):
+        (EditingDelegate::shouldDeleteDOMRange):
+        (EditingDelegate::shouldChangeSelectedDOMRange):
+        (EditingDelegate::shouldApplyStyle):
+        (EditingDelegate::shouldChangeTypingStyle):
+        (EditingDelegate::doPlatformCommand):
+        (EditingDelegate::webViewDidBeginEditing):
+        (EditingDelegate::webViewDidChange):
+        (EditingDelegate::webViewDidEndEditing):
+        (EditingDelegate::webViewDidChangeTypingStyle):
+        (EditingDelegate::webViewDidChangeSelection):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/EditingDelegate.h: Added.
+        (EditingDelegate::setAcceptsEditing):
+        (EditingDelegate::undoManagerForWebView):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/LayoutTestController.cpp:
+        (dumpEditingCallbacksCallback): Ported from Mac.
+        (setAcceptsEditingCallback): Ditto.
+
+2007-03-18  Adam Roben  <aroben@apple.com>
+
         Reviewed by Geoff.
 
         Added a basic implementation of eventSender. It supports mouse and key

@@ -1,5 +1,20 @@
 2007-03-18  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Hyatt.
+
+        Implemented getting/setting of the editing delegate (we don't actually
+        use it for anything yet, though. See <rdar://problem/5071598>).
+
+        * Interfaces/IWebEditingDelegate.idl: Renamed IWebViewEditingDelegate
+        to IWebEditingDelegate to match our other delegates.
+        * Interfaces/IWebView.idl: Updated for rename.
+        * WebView.cpp:
+        (WebView::setEditingDelegate): Implemented.
+        (WebView::editingDelegate): Ditto.
+        * WebView.h: Updated for rename.
+
+2007-03-18  Adam Roben  <aroben@apple.com>
+
         Reviewed by Geoff.
 
         Added IWebFramePrivate::layout to support eventSender in DRT.

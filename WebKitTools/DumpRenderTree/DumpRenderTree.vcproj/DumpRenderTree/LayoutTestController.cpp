@@ -29,6 +29,8 @@
 #include "DumpRenderTree.h"
 #include "LayoutTestController.h"
 
+#include "EditingDelegate.h"
+
 #include <wtf/Platform.h>
 #include <JavaScriptCore/JavaScriptCore.h>
 
@@ -53,10 +55,44 @@ static JSValueRef notifyDoneCallback(JSContextRef context, JSObjectRef function,
     return JSValueMakeUndefined(context);
 }
 
+static JSValueRef dumpEditingCallbacksCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+{
+    shouldDumpEditingCallbacks = true;
+
+    return JSValueMakeUndefined(context);
+}
+
+static JSValueRef setAcceptsEditingCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+{
+    if (argumentCount < 1)
+        return JSValueMakeUndefined(context);
+
+    bool acceptsEditing = JSValueToBoolean(context, arguments[0]);
+
+    IWebView* webView;
+    if (SUCCEEDED(frame->webView(&webView))) {
+        IWebViewEditing* viewEditing;
+        if (SUCCEEDED(webView->QueryInterface(IID_IWebViewEditing, (void**)&viewEditing))) {
+            IWebEditingDelegate* delegate;
+            if (SUCCEEDED(viewEditing->editingDelegate(&delegate))) {
+                EditingDelegate* editingDelegate = (EditingDelegate*)delegate;
+                editingDelegate->setAcceptsEditing(acceptsEditing);
+                delegate->Release();
+            }
+            viewEditing->Release();
+        }
+        webView->Release();
+    }
+
+    return JSValueMakeUndefined(context);
+}
+
 static JSStaticFunction staticFunctions[] = {
     { "dumpAsText", dumpAsTextCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { "waitUntilDone", waitUntilDoneCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { "notifyDone", notifyDoneCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
+    { "dumpEditingCallbacks", dumpEditingCallbacksCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
+    { "setAcceptsEditing", setAcceptsEditingCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { 0, 0, 0 }
 };
 

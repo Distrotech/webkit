@@ -930,12 +930,12 @@ interface IWebViewEditing : IUnknown
     /*
         - (void)setEditingDelegate:(id)delegate;
     */
-    HRESULT setEditingDelegate([in] IWebViewEditingDelegate* d);
+    HRESULT setEditingDelegate([in] IWebEditingDelegate* d);
 
     /*
         - (id)editingDelegate;
     */
-    HRESULT editingDelegate([out, retval] IWebViewEditingDelegate** d);
+    HRESULT editingDelegate([out, retval] IWebEditingDelegate** d);
 
     /*
         - (DOMCSSStyleDeclaration *)styleDeclarationWithText:(NSString *)text;
