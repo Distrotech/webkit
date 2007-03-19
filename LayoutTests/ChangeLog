@@ -1,3 +1,11 @@
+2007-03-19  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Maciej.
+
+        Skip tests with international text due to <rdar://problems/4516194>.
+
+        * Skipped:
+
 2007-03-18  Adam Roben  <aroben@apple.com>
 
         Rubberstamped by Maciej.
