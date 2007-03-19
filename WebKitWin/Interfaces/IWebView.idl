@@ -89,12 +89,12 @@ interface IWebScriptObject;
 interface IWebUIDelegate;
 interface IWebResourceLoadDelegate;
 interface IWebDownloadDelegate;
+interface IWebEditingDelegate;
 interface IWebFrameLoadDelegate;
 interface IWebPolicyDelegate;
 interface IWebDocumentView;
 interface IWebDocumentRepresentation;
 interface IWebUndoManager;
-interface IWebViewEditingDelegate;
 
 /* These are the keys for the WebElementPropertyBag */
 const BSTR WebElementDOMNodeKey = L"WebElementDOMNodeKey";
