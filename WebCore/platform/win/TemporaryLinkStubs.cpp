@@ -103,7 +103,7 @@ String WebCore::searchableIndexIntroduction() { return "This is a searchable ind
 String WebCore::submitButtonDefaultLabel() { return "Submit"; }
 String WebCore::inputElementAltText() { return "Submit"; }
 String WebCore::resetButtonDefaultLabel() { return "Reset"; }
-String WebCore::fileButtonChooseFileLabel() { return "Browse..."; }
+String WebCore::fileButtonChooseFileLabel() { return "Choose File"; }
 String WebCore::fileButtonNoFileSelectedLabel() { return "no file selected"; }
 String WebCore::defaultLanguage() { return "en"; }
 String WebCore::contextMenuItemTagOpenLinkInNewWindow() { return "Open Link in New Window"; }

@@ -1,3 +1,12 @@
+2007-03-18  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Hyatt.
+
+        Changed the file upload button to say "Choose File" to match Mac.
+
+        * platform/win/TemporaryLinkStubs.cpp:
+        (WebCore::fileButtonChooseFileLabel):
+
 2007-03-18  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.
