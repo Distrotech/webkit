@@ -211,6 +211,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\WebJavaScriptCollector.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\WebKit.def"
 				>
 			</File>
@@ -354,6 +358,10 @@
 			</File>
 			<File
 				RelativePath="..\WebIconDatabase.h"
+				>
+			</File>
+			<File
+				RelativePath="..\WebJavaScriptCollector.h"
 				>
 			</File>
 			<File

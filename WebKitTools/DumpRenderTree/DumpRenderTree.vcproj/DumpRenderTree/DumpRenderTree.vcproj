@@ -215,6 +215,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\GCController.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\GCController.h"
+				>
+			</File>
+			<File
 				RelativePath=".\LayoutTestController.cpp"
 				>
 			</File>

@@ -278,11 +278,7 @@
 			>
 		</File>
 		<File
-			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebScrollBarPrivate_i.c"
-			>
-		</File>
-		<File
-			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebScrollBarDelegatePrivate_i.c"
+			RelativePath="..\..\..\..\..\Build_WebKit\obj\WebKit\Interfaces\IWebJavaScriptCollector_i.c"
 			>
 		</File>
 		<File
@@ -327,6 +323,14 @@
 		</File>
 		<File
 			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebScriptObject_i.c"
+			>
+		</File>
+		<File
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebScrollBarDelegatePrivate_i.c"
+			>
+		</File>
+		<File
+			RelativePath="$(WebKitOutputDir)\obj\WebKit\Interfaces\IWebScrollBarPrivate_i.c"
 			>
 		</File>
 		<File

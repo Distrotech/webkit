@@ -1,5 +1,33 @@
 2007-03-19  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Anders and Darin.
+
+        Added WebJavaScriptCollector for <rdar://problems/5071653>.
+
+        * Interfaces/IWebJavaScriptCollector.idl: Added.
+        * Interfaces/WebKit.idl:
+        * WebJavaScriptCollector.cpp: Added.
+        (WebJavaScriptCollector::WebJavaScriptCollector):
+        (WebJavaScriptCollector::~WebJavaScriptCollector):
+        (WebJavaScriptCollector::createInstance):
+        (WebJavaScriptCollector::QueryInterface):
+        (WebJavaScriptCollector::AddRef):
+        (WebJavaScriptCollector::Release):
+        (WebJavaScriptCollector::collect):
+        (WebJavaScriptCollector::collectOnAlternateThread):
+        (WebJavaScriptCollector::objectCount):
+        * WebJavaScriptCollector.h: Added.
+        * WebKit.vcproj/Interfaces.vcproj: Added IWebJavaScriptCollector.idl.
+        * WebKit.vcproj/WebKit.vcproj: Added WebJavaScriptCollector.(cpp|h).
+        * WebKit.vcproj/WebKitGUID.vcproj: Added IWebJavaScriptCollector_i.c.
+        * WebKitClassFactory.cpp:
+        (WebKitClassFactory::CreateInstance): Added cases for
+        WebJavaScriptCollector.
+        * WebKitDLL.cpp:
+        (DllGetClassObject): Ditto.
+
+2007-03-19  Adam Roben  <aroben@apple.com>
+
         Build fix.
 
         * Interfaces/IWebView.idl:

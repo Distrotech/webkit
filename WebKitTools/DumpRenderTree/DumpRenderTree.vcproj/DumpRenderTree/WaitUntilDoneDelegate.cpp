@@ -31,6 +31,7 @@
 
 #include "DraggingInfo.h"
 #include "EventSender.h"
+#include "GCController.h"
 #include "LayoutTestController.h"
 
 #include <wtf/Platform.h>
@@ -152,6 +153,11 @@ HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::windowScriptObjectAvailable(
     JSValueRef eventSender = makeEventSender(context);
     JSObjectSetProperty(context, windowObject, eventSenderStr, eventSender, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete, 0);
     JSStringRelease(eventSenderStr);
+
+    JSStringRef gcControllerStr = JSStringCreateWithUTF8CString("GCController");
+    JSValueRef gcController = makeGCController(context);
+    JSObjectSetProperty(context, windowObject, gcControllerStr, gcController, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete, 0);
+    JSStringRelease(gcControllerStr);
 
     return S_OK;
 }

@@ -316,6 +316,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\Interfaces\IWebJavaScriptCollector.idl"
+			>
+		</File>
+		<File
 			RelativePath="..\Interfaces\IWebKitStatistics.idl"
 			>
 		</File>

@@ -35,6 +35,7 @@
 #include "WebHistory.h"
 #include "WebHistoryItem.h"
 #include "WebIconDatabase.h"
+#include "WebJavaScriptCollector.h"
 #include "WebKit.h"
 #include "WebScrollBar.h"
 #include "WebKitStatistics.h"
@@ -115,6 +116,8 @@ HRESULT STDMETHODCALLTYPE WebKitClassFactory::CreateInstance(IUnknown* pUnkOuter
         unknown = static_cast<IWebHistoryItem*>(WebHistoryItem::createInstance());
     else if (IsEqualGUID(m_targetClass, CLSID_WebCache))
         unknown = static_cast<IWebCache*>(WebCache::createInstance());
+    else if (IsEqualGUID(m_targetClass, CLSID_WebJavaScriptCollector))
+        unknown = static_cast<IWebJavaScriptCollector*>(WebJavaScriptCollector::createInstance());
     else if (IsEqualGUID(m_targetClass, CLSID_WebPreferences))
         unknown = static_cast<IWebPreferences*>(WebPreferences::createInstance());
     else if (IsEqualGUID(m_targetClass, CLSID_WebScrollBar))

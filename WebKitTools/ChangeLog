@@ -1,5 +1,25 @@
 2007-03-19  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Anders and Darin.
+
+        Fix <rdar://problem/5071653> DumpRenderTree needs to be able to
+        trigger GC on a separate thread
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.vcproj:
+        Added GCController.(cpp|h) to the project.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/GCController.cpp: Added.
+        (collectCallback):
+        (collectOnAlternateThreadCallback):
+        (getJSObjectCountCallback):
+        (getClass):
+        (makeGCController):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/GCController.h: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.cpp:
+        (WaitUntilDoneDelegate::windowScriptObjectAvailable): Add the
+        GCController to the window object.
+
+2007-03-19  Adam Roben  <aroben@apple.com>
+
         Release build fix.
 
         * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.vcproj:

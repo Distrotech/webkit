@@ -79,6 +79,7 @@ import "IWebNotificationCenter.idl";
 import "IWebNotificationObserver.idl";
 import "IWebHistory.idl";
 import "IWebCache.idl";
+import "IWebJavaScriptCollector.idl";
 import "IWebKitStatistics.idl";
 import "IWebScrollBarPrivate.idl";
 
@@ -186,6 +187,17 @@ library WebKit
 #endif
     coclass WebCache {
         interface IWebCache;
+    }
+
+#if __ARCHIVE_BUILD__
+    [uuid(5D911A44-4316-4a02-A2B5-BAE7036357B9)]
+#elif __BUILDBOT__
+    [uuid(1820D883-42FE-4b78-88C8-5456BB19D224)]
+#else
+    [uuid(65EF7441-AB9C-47e0-9513-0BAB1F2166FF)]
+#endif
+    coclass WebJavaScriptCollector {
+        interface IWebJavaScriptCollector;
     }
 
 #if __ARCHIVE_BUILD__
