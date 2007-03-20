@@ -1,3 +1,10 @@
+2007-03-20  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Ada.
+
+        * Skipped: Added more international text tests, plus those that use
+        textInputController.
+
 2007-03-19  Adam Roben  <aroben@apple.com>
 
         Reviewed by Ada.

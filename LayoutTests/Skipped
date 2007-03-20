@@ -29,6 +29,13 @@ plugins/root-object-premature-delete-crash.html
 plugins/throw-on-dealloc.html
 plugins/undefined-property-crash.html
 
+# No textInputController <rdar://problem/5074430>
+fast/dom/character-index-for-point.html
+fast/forms/attributed-strings.html
+fast/text/attributed-substring-from-range-001.html
+fast/text/attributed-substring-from-range.html
+fast/text/justified-text-rect.html
+
 # Infinite recursion in JSValue::mark <rdar://problem/4928697>
 fast/js/toString-stack-overflow.html
 
@@ -83,6 +90,9 @@ css2.1/t090501-c414-flt-ln-01-d-g.html
 css2.1/t090501-c5525-flt-l-00-b-g.html
 css2.1/t090501-c5525-flt-r-00-b-g.html
 css2.1/t100304-c43-rpl-bbx-01-d-g.html
+fast/block/positioning/047.html
+fast/css/beforeSelectorOnCodeElement.html
+fast/css/rtl-ordering.html
 fast/encoding/denormalised-voiced-japanese-chars.html
 fast/encoding/invalid-UTF-8.html
 fast/text/atsui-kerning-and-ligatures.html
