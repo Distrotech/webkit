@@ -52,9 +52,6 @@ editing/execCommand/copy-without-selection.html
 # Crash in RenderLayer::scrollRectToVisible <rdar://problem/5054703>
 fast/layers/removed-by-scroll-handler.html
 
-# Crash in Widget::parent <rdar://problem/5071389>
-fast/events/mouseover-mouseout2.html
-
 # Crash in _CFHTTPCookieStorageCreateFromFile <rdar://problem/5071479>
 security/block-test.html
 
