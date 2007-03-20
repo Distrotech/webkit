@@ -1,5 +1,11 @@
 2007-03-19  Adam Roben  <aroben@apple.com>
 
+        Build fix.
+
+        * WebKit.vcproj/WebKitGUID.vcproj:
+
+2007-03-19  Adam Roben  <aroben@apple.com>
+
         Reviewed by Anders and Darin.
 
         Added WebJavaScriptCollector for <rdar://problems/5071653>.
