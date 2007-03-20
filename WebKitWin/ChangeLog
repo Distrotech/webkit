@@ -1,3 +1,11 @@
+2007-03-20  Dave Hyatt  <hyatt@apple.com>
+
+        Land advanced text code path (turned off).
+       
+        Reviewed by aroben
+
+        * WebKit.vcproj/WebKit.vcproj:
+
 2007-03-20  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.
