@@ -309,7 +309,11 @@ static JSValueRef keyDownCallback(JSContextRef context, JSObjectRef function, JS
 
     JSStringRef character = JSValueToStringCopy(context, arguments[0], exception);
     ASSERT(!exception || !*exception);
-    MSG msg = makeMsg(webViewWindow, WM_KEYDOWN, toupper(JSStringGetCharactersPtr(character)[0]), 0);
+    int virtualKeyCode = toupper(JSStringGetCharactersPtr(character)[0]);
+    if (virtualKeyCode == '\n')
+        virtualKeyCode = VK_RETURN;
+
+    MSG msg = makeMsg(webViewWindow, WM_KEYDOWN, virtualKeyCode, 0);
     dispatchMessage(&msg);
     JSStringRelease(character);
     
