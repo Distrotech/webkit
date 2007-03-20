@@ -1,5 +1,14 @@
 2007-03-19  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Ada.
+
+        Made DRT output UTF8 strings.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (dump): Convert to UTF8 before printing.
+
+2007-03-19  Adam Roben  <aroben@apple.com>
+
         Reviewed by Geoff.
 
         Added support for --threaded.

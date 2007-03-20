@@ -64,6 +64,8 @@ css2.1/t090501-c414-flt-ln-01-d-g.html
 css2.1/t090501-c5525-flt-l-00-b-g.html
 css2.1/t090501-c5525-flt-r-00-b-g.html
 css2.1/t100304-c43-rpl-bbx-01-d-g.html
+fast/encoding/denormalised-voiced-japanese-chars.html
+fast/encoding/invalid-UTF-8.html
 fast/text/atsui-kerning-and-ligatures.html
 fast/text/atsui-multiple-renderers.html
 fast/text/atsui-partial-selection.html

@@ -189,7 +189,13 @@ void dump()
         if (!resultString)
             printf("ERROR: nil result from %s", dumpAsText ? "IDOMElement::innerText" : "IFrameViewPrivate::renderTreeAsExternalRepresentation");
         else {
-            wprintf(L"%s", resultString);
+            unsigned stringLength = SysStringLen(resultString);
+            int bufferSize = ::WideCharToMultiByte(CP_UTF8, 0, resultString, stringLength, 0, 0, 0, 0);
+            char* buffer = (char*)malloc(bufferSize + 1);
+            int result = ::WideCharToMultiByte(CP_UTF8, 0, resultString, stringLength, buffer, bufferSize + 1, 0, 0);
+            buffer[bufferSize] = '\0';
+            printf("%s", buffer);
+            free(buffer);
             if (dumpAsText)
                 printf("\n");
             SysFreeString(resultString);
