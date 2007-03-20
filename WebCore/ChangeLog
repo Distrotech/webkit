@@ -1,3 +1,44 @@
+2007-03-20  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://problem/4921198>
+        Cookie acceptance policy not settable
+
+        * platform/network/cf/ResourceHandleCFNet.cpp:
+        
+        (WebCore::willSendRequest):
+        (WebCore::willCacheResponse):
+        Remove FIXMEs.
+        
+        (WebCore::makeFinalRequest):
+        New function that makes a final CFURLRequest depending on cookie policy and whether any
+        invalid SSL certificates should be ignored.
+        
+        (WebCore::ResourceHandle::start):
+        (WebCore::ResourceHandle::loadResourceSynchronously):
+        Use makeFinalRequest.
+        
+        (WebCore::ResourceHandle::cookieStorageAcceptPolicy):
+        (WebCore::ResourceHandle::setCookieStorageAcceptPolicy):
+        (WebCore::ResourceHandle::cookieStorage):
+        (WebCore::ResourceHandle::setCookieStorage):
+        (WebCore::ResourceHandle::setHostAllowsAnyHTTPSCertificate):
+        New functions for setting cookie policy, the deafult cookie storage and whether invalid
+        SSL certificates should result in an error.
+        
+        * platform/network/cf/ResourceRequestCFNet.cpp:
+        (WebCore::ResourceRequest::doUpdatePlatformRequest):
+        Set cookie storage, cookie policy and SSL properties.
+
+        * platform/network/win/CookieJarWin.cpp:
+        (WebCore::setCookies):
+        (WebCore::cookies):
+        Use same functions as the mac (sorta).
+        
+        (WebCore::cookiesEnabled):
+        Implement this.
+
 2007-03-19  Adam Roben  <aroben@apple.com>
 
         Reviewed by Anders and Darin.

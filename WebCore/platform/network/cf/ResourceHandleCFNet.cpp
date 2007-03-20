@@ -51,6 +51,16 @@
 
 namespace WebCore {
 
+static CFHTTPCookieStorageAcceptPolicy defaultAcceptPolicy = CFHTTPCookieStorageAcceptPolicyOnlyFromMainDocumentDomain;
+static CFHTTPCookieStorageRef defaultStorage;
+
+static HashSet<String>& allowsAnyHTTPSCertificateHosts()
+{
+    static HashSet<String> hosts;
+
+    return hosts;
+}
+
 CFURLRequestRef willSendRequest(CFURLConnectionRef conn, CFURLRequestRef cfRequest, CFURLResponseRef cfRedirectResponse, const void* clientInfo)
 {
     ResourceHandle* handle = (ResourceHandle*)clientInfo;
@@ -62,8 +72,6 @@ CFURLRequestRef willSendRequest(CFURLConnectionRef conn, CFURLRequestRef cfReque
 
     cfRequest = request.cfURLRequest();
 
-    // FIXME: This causes us to leak the request because CFNetwork never releases it.
-    // See <rdar://problem/4938383>
     CFRetain(cfRequest);
     return cfRequest;
 }
@@ -120,9 +128,6 @@ CFCachedURLResponseRef willCacheResponse(CFURLConnectionRef conn, CFCachedURLRes
                                                                CFCachedURLResponseGetReceiverData(cachedResponse),
                                                                CFCachedURLResponseGetUserInfo(cachedResponse), 
                                                                static_cast<CFURLCacheStoragePolicy>(policy));
-
-    // FIXME: This causes us to leak the request because CFNetwork never releases it.
-    // See <rdar://problem/4938383>
     CFRetain(cachedResponse);
 
     return cachedResponse;
@@ -214,6 +219,25 @@ CFRunLoopRef ResourceHandle::loaderRunLoop()
     return loaderRL;
 }
 
+static CFURLRequestRef makeFinalRequest(const ResourceRequest& request)
+{
+    CFMutableURLRequestRef newRequest = CFURLRequestCreateMutableCopy(kCFAllocatorDefault, request.cfURLRequest());
+    
+    if (allowsAnyHTTPSCertificateHosts().contains(request.url().host().lower())) {
+        CFTypeRef keys[] = { kCFStreamSSLAllowsAnyRoot, kCFStreamSSLAllowsExpiredRoots };  
+        CFTypeRef values[] = { kCFBooleanTrue, kCFBooleanTrue };
+        static CFDictionaryRef sslProps = CFDictionaryCreate(kCFAllocatorDefault, keys, vals, sizeof(keys) / sizeof(keys[0]), &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+        CFURLRequestSetSSLProperties(newRequest, sslProps);
+    }
+
+#ifdef CFNETWORK_HAS_NEW_COOKIE_FUNCTIONS
+    CFURLRequestSetHTTPCookieStorage(newRequest, defaultStorage);
+    CFURLRequestSetHTTPCookieStorageAcceptPolicy(newRequest, defaultAcceptPolicy);
+#endif
+
+    return newRequest;
+}
+
 bool ResourceHandle::start(Frame* frame)
 {
     // If we are no longer attached to a Page, this must be an attempted load from an
@@ -221,13 +245,13 @@ bool ResourceHandle::start(Frame* frame)
     if (!frame->page())
         return false;
 
-    CFURLRequestRef request = d->m_request.cfURLRequest();
+    RetainPtr<CFURLRequestRef> request(AdoptCF, makeFinalRequest(d->m_request));
 
     // CFURLConnection Callback API currently at version 1
     const int CFURLConnectionClientVersion = 1;
     CFURLConnectionClient client = {CFURLConnectionClientVersion, this, 0, 0, 0, willSendRequest, didReceiveResponse, didReceiveData, NULL, didFinishLoading, didFail, willCacheResponse, didReceiveChallenge};
 
-    d->m_connection.adoptCF(CFURLConnectionCreate(0, request, &client));
+    d->m_connection.adoptCF(CFURLConnectionCreate(0, request.get(), &client));
 
     CFURLConnectionScheduleWithCurrentMessageQueue(d->m_connection.get());
     CFURLConnectionScheduleDownloadWithRunLoop(d->m_connection.get(), loaderRunLoop(), kCFRunLoopDefaultMode);
@@ -325,7 +349,9 @@ void ResourceHandle::loadResourceSynchronously(const ResourceRequest& request, R
     ASSERT(!request.isEmpty());
     CFURLResponseRef cfResponse = 0;
     CFErrorRef cfError = 0;
-    CFDataRef data = CFURLConnectionSendSynchronousRequest(request.cfURLRequest(), &cfResponse, &cfError, request.timeoutInterval());
+    RetainPtr<CFURLRequestRef> cfRequest(AdoptCF, makeFinalRequest(request));
+
+    CFDataRef data = CFURLConnectionSendSynchronousRequest(cfRequest.get(), &cfResponse, &cfError, request.timeoutInterval());
 
     response = cfResponse;
     if (cfResponse)
@@ -340,6 +366,39 @@ void ResourceHandle::loadResourceSynchronously(const ResourceRequest& request, R
         vector.append(CFDataGetBytePtr(data), CFDataGetLength(data));
         CFRelease(data);
     }
+}
+
+CFHTTPCookieStorageAcceptPolicy ResourceHandle::cookieStorageAcceptPolicy()
+{
+    return defaultAcceptPolicy;
+}
+
+void ResourceHandle::setCookieStorageAcceptPolicy(CFHTTPCookieStorageAcceptPolicy acceptPolicy)
+{
+    defaultAcceptPolicy = acceptPolicy;
+    if (defaultStorage)
+        CFHTTPCookieStorageSetCookieAcceptPolicy(defaultStorage, defaultAcceptPolicy);
+}
+
+CFHTTPCookieStorageRef ResourceHandle::cookieStorage()
+{
+    return defaultStorage;
+}
+
+void ResourceHandle::setCookieStorage(CFHTTPCookieStorageRef storage)
+{
+    if (storage)
+        CFRetain(storage);
+    if (defaultStorage)
+        CFRelease(defaultStorage);
+    defaultStorage = storage;
+    if (defaultStorage)
+        CFHTTPCookieStorageSetCookieAcceptPolicy(defaultStorage, defaultAcceptPolicy);
+}
+
+void ResourceHandle::setHostAllowsAnyHTTPSCertificate(const String& host)
+{
+    allowsAnyHTTPSCertificateHosts().add(host.lower());
 }
 
 } // namespace WebCore

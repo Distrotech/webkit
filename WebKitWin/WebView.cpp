@@ -70,6 +70,7 @@
 #include <WebCore/PlatformWheelEvent.h>
 #include <WebCore/PlugInInfoStore.h>
 #include <WebCore/ProgressTracker.h>
+#include <WebCore/ResourceHandle.h>
 #include <WebCore/ResourceHandleClient.h>
 #include <WebCore/SelectionController.h>
 #include <WebCore/Settings.h>
@@ -1305,6 +1306,13 @@ HRESULT WebView::updateWebCoreSettingsFromPreferences(IWebPreferences* preferenc
         return hr;
     settings->setEditableLinkBehavior((EditableLinkBehavior)behavior);
 
+    WebKitCookieStorageAcceptPolicy acceptPolicy;
+    hr = preferences->cookieStorageAcceptPolicy(&acceptPolicy);
+    if (FAILED(hr))
+        return hr;
+
+    ResourceHandle::setCookieStorageAcceptPolicy(acceptPolicy);
+
     m_mainFrame->invalidate(); // FIXME
 
     return S_OK;
@@ -1571,6 +1579,10 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     hr = updateWebCoreSettingsFromPreferences(prefs.get());
     if (FAILED(hr))
         return hr;
+
+    // Use default cookie storage
+    RetainPtr<CFHTTPCookieStorageRef> cookies(AdoptCF, CFHTTPCookieStorageCreateFromFile(kCFAllocatorDefault, 0, 0));
+    ResourceHandle::setCookieStorage(cookies.get());
 
     // Register to receive notifications whenever preference values change.
     //[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_preferencesChangedNotification:)

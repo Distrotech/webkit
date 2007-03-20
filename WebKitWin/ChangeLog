@@ -1,3 +1,17 @@
+2007-03-20  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://problem/4921198>
+        Cookie acceptance policy not settable
+        
+        * WebView.cpp:
+        (WebView::updateWebCoreSettingsFromPreferences):
+        Update the cookie storage accept policy.
+        
+        (WebView::initWithFrame):
+        Initialize the cookie storage.
+
 2007-03-19  Adam Roben  <aroben@apple.com>
 
         Build fix.

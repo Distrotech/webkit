@@ -27,6 +27,7 @@
 #include "KURL.h"
 #include "PlatformString.h"
 #include "DeprecatedString.h"
+#include "ResourceHandle.h"
 #include <windows.h>
 #if USE(CFNETWORK)
 #include <CoreFoundation/CoreFoundation.h>
@@ -47,30 +48,21 @@ namespace WebCore
 void setCookies(const KURL& url, const KURL& policyURL, const String& value)
 {
 #if USE(CFNETWORK)
-    CFURLRef urlCF = url.createCFURL();
-    CFURLRef policyUrlCF = policyURL.createCFURL();
+    RetainPtr<CFURLRef> urlCF(AdoptCF, url.createCFURL());
+    RetainPtr<CFURLRef> policyURLCF(AdoptCF, policyURL.createCFURL());
 
     // <http://bugzilla.opendarwin.org/show_bug.cgi?id=6531>, <rdar://4409034>
     // cookiesWithResponseHeaderFields doesn't parse cookies without a value
     String cookieString = value.contains('=') ? value : value + "=";
 
-    CFStringRef cookiesCF = cookieString.createCFString();
-    CFDictionaryRef headerCF =  CFDictionaryCreate(kCFAllocatorDefault, (const void**)&s_setCookieKeyCF, 
-        (const void**)&cookiesCF, 1, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    RetainPtr<CFStringRef> cookieStringCF(AdoptCF, cookieString.createCFString());
+    RetainPtr<CFDictionaryRef> headerFieldsCF(AdoptCF, CFDictionaryCreate(kCFAllocatorDefault, (const void**)&s_setCookieKeyCF, 
+        (const void**)&cookieStringCF, 1, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
 
+    RetainPtr<CFArrayRef> cookiesCF(AdoptCF, CFHTTPCookieCreateWithResponseHeaderFields(kCFAllocatorDefault,
+        headerFieldsCF.get(), urlCF.get()));
 
-    // Create default store. Don't use CFHTTPCookieStorageGetBaseStorage (it is nyi)
-    CFHTTPCookieStorageRef cfCookieStoreCF = CFHTTPCookieStorageCreateFromFile(0, 0, 0);
-
-    _CFHTTPCookieStorageSetCookiesWithResponseHeaderFields(cfCookieStoreCF, urlCF, headerCF,
-        policyUrlCF, CFHTTPCookieStorageAcceptPolicyAlways);
-
-    CFRelease(headerCF);
-    CFRelease(cookiesCF);
-    CFRelease(policyUrlCF);
-    CFRelease(urlCF);
-
-    CFRelease(cfCookieStoreCF);
+    CFHTTPCookieStorageSetCookies(ResourceHandle::cookieStorage(), cookiesCF.get(), urlCF.get(), policyURLCF.get());
 #else
     // FIXME: Deal with the policy URL.
     DeprecatedString str = url.url();
@@ -85,20 +77,14 @@ String cookies(const KURL& url)
 {
 #if USE(CFNETWORK)
     String cookieString;
-    CFURLRef urlCF = url.createCFURL();
-    // Create default store. Don't use CFHTTPCookieStorageGetBaseStorage (it is nyi)
-    CFHTTPCookieStorageRef cfCookieStoreCF = CFHTTPCookieStorageCreateFromFile(0, 0, 0);
+    RetainPtr<CFURLRef> urlCF(AdoptCF, url.createCFURL());
 
-    CFArrayRef cookiesCF = CFHTTPCookieStorageCopyCookiesForURL(cfCookieStoreCF, urlCF, FALSE);
-    CFDictionaryRef headerCF = CFHTTPCookieCopyRequestHeaderFields(kCFAllocatorDefault, cookiesCF);
-    CFStringRef valueCF = (CFStringRef)CFDictionaryGetValue(headerCF, s_cookieCF);
-    cookieString = String(valueCF); // No need to release valueCF, released by headerCF
-    CFRelease(cookiesCF);
-    CFRelease(headerCF);
-    CFRelease(urlCF);
-    CFRelease(cfCookieStoreCF);
+    bool secure = equalIgnoringCase(url.protocol(), "https");
 
-    return cookieString;
+    RetainPtr<CFArrayRef> cookiesCF(AdoptCF, CFHTTPCookieStorageCopyCookiesForURL(ResourceHandle::cookieStorage(), urlCF.get(), secure));
+    RetainPtr<CFDictionaryRef> headerCF(AdoptCF, CFHTTPCookieCopyRequestHeaderFields(kCFAllocatorDefault, cookiesCF.get()));
+
+    return (CFStringRef)CFDictionaryGetValue(headerCF.get(), s_cookieCF);
 #else
     DeprecatedString str = url.url();
     str.append((UChar)'\0');
@@ -118,8 +104,8 @@ String cookies(const KURL& url)
 
 bool cookiesEnabled()
 {
-    // FIXME: For now just assume cookies are always on.
-    return true;
+    return ResourceHandle::cookieStorageAcceptPolicy() == CFHTTPCookieStorageAcceptPolicyOnlyFromMainDocumentDomain ||
+        ResourceHandle::cookieStorageAcceptPolicy() == CFHTTPCookieStorageAcceptPolicyAlways;
 }
 
 }
