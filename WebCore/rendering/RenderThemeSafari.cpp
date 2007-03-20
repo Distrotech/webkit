@@ -605,8 +605,8 @@ bool RenderThemeSafari::paintMenuList(RenderObject* o, const RenderObject::Paint
 const float baseFontSize = 11.0f;
 const float baseArrowHeight = 5.0f;
 const float baseArrowWidth = 7.0f;
-const int arrowPaddingLeft = 6;
-const int arrowPaddingRight = 6;
+const int arrowPaddingLeft = 5;
+const int arrowPaddingRight = 5;
 const int paddingBeforeSeparator = 4;
 const int baseBorderRadius = 5;
 const int styledPopupPaddingLeft = 8;

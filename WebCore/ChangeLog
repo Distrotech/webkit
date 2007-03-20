@@ -1,5 +1,15 @@
 2007-03-20  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Oliver.
+
+        Made the metrics of styled selects match those on the Mac to get
+        fast/forms/001.html passing.
+
+        * rendering/RenderThemeSafari.cpp: Use 2px less padding for the
+        select's arrow since the arrow is 2px wider than on the Mac.
+
+2007-03-20  Adam Roben  <aroben@apple.com>
+
         Build fix.
 
         * platform/network/cf/ResourceHandleCFNet.cpp:
