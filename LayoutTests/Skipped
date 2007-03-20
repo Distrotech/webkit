@@ -124,3 +124,16 @@ fast/text/international/bidi-override.html
 fast/text/international/rtl-caret.html
 fast/text/international/thai-line-breaks.html
 fast/text/international/wrap-CJK-001.html
+
+# Arial has different metrics on Windows <rdar://problem/5075790>
+css1/basic/contextual_selectors.html
+css1/font_properties/font.html
+css1/pseudo/multiple_pseudo_elements.html
+css2.1/t1508-c527-font-00-b.html
+css2.1/t1508-c527-font-04-b.html
+css2.1/t1508-c527-font-05-b.html
+css2.1/t1508-c527-font-07-b.html
+css2.1/t1508-c527-font-08-b.html
+css2.1/t1508-c527-font-10-c.html
+css2.1/t051201-c23-first-line-00-b.html
+fast/css/font_property_normal.html

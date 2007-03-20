@@ -1,3 +1,11 @@
+2007-03-20  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Adele.
+
+        Added some tests that fail due to font metric differences.
+
+        * Skipped:
+
 2007-03-20  Beth Dakin  <bdakin@apple.com>
 
         Reviewed by Adam.
