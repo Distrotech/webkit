@@ -1,5 +1,14 @@
 2007-03-20  Adam Roben  <aroben@apple.com>
 
+        Rubberstamped by Anders.
+
+        Workaround a CFNetwork crash that affects DRT.
+
+        * WebView.cpp:
+        (WebView::initWithFrame): Commented out cookie storage initialization.
+
+2007-03-20  Adam Roben  <aroben@apple.com>
+
         Build fix.
 
         * WebView.cpp: Added missing #include.
