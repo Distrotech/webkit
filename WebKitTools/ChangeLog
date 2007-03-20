@@ -1,5 +1,28 @@
 2007-03-19  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Geoff.
+
+        Added support for --threaded.
+
+        Note that this always crashes right now due to
+        <rdar://problem/5051141> JavaScriptCore is not thread-safe,
+        but that's why we need this feature!
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (initialize): Changed NULL to 0.
+        (runTest): Ditto.
+        (pthread_equal): Added.
+        (javaScriptThreads): Ported from Mac.
+        (runJavaScriptThread): Ditto.
+        (startJavaScriptThreads): Ditto.
+        (stopJavaScriptThreads): Ditto.
+        (main): Parse --threaded argument and start/stop threads if needed.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.vcproj:
+        Link against pthreadVC2.lib, and added include/pthreads to the include
+        path.
+
+2007-03-19  Adam Roben  <aroben@apple.com>
+
         Reviewed by Anders and Darin.
 
         Fix <rdar://problem/5071653> DumpRenderTree needs to be able to

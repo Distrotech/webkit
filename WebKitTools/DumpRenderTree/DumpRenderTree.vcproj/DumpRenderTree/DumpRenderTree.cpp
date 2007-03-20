@@ -30,6 +30,9 @@
 
 #include <atlstr.h>
 #include <CoreFoundation/CoreFoundation.h>
+#include <JavaScriptCore/JavaScriptCore.h>
+#include <math.h>
+#include <pthread.h>
 #include <WebKit/IWebURLResponse.h>
 #include <WebKit/IWebViewPrivate.h>
 #include <WebKit/WebKit.h>
@@ -47,6 +50,7 @@ static bool dumpTree = true;
 static bool printSeparators;
 static bool leakChecking = false;
 static bool timedOut = false;
+static bool threaded = false;
 
 bool done;
 // This is the topmost frame that is loading, during a given load, or nil when no load is 
@@ -138,7 +142,7 @@ static void initialize(HMODULE hModule)
     wcex.cbWndExtra    = 0;
     wcex.hInstance     = hModule;
     wcex.hIcon         = 0;
-    wcex.hCursor       = LoadCursor(NULL, IDC_ARROW);
+    wcex.hCursor       = LoadCursor(0, IDC_ARROW);
     wcex.hbrBackground = 0;
     wcex.lpszMenuName  = 0;
     wcex.lpszClassName = kDumpRenderTreeClassName;
@@ -147,7 +151,7 @@ static void initialize(HMODULE hModule)
     RegisterClassEx(&wcex);
 
     hostWindow = CreateWindowEx(WS_EX_TOOLWINDOW, kDumpRenderTreeClassName, TEXT("DumpRenderTree"), WS_POPUP,
-      -maxViewWidth, -maxViewHeight, maxViewWidth, maxViewHeight, 0, 0, hModule, NULL);
+      -maxViewWidth, -maxViewHeight, maxViewWidth, maxViewHeight, 0, 0, hModule, 0);
 }
 
 #include <stdio.h>
@@ -253,7 +257,7 @@ static void runTest(const char* pathOrURL)
     request->Release();
 
     MSG msg;
-    while (GetMessage(&msg, NULL, 0, 0)) {
+    while (GetMessage(&msg, 0, 0, 0)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
@@ -304,11 +308,115 @@ static void initializePreferences(IWebPreferences* preferences)
     preferences->setPlugInsEnabled(FALSE);
 }
 
+static Boolean pthreadEqualCallback(const void* value1, const void* value2)
+{
+    return (Boolean)pthread_equal(*(pthread_t*)value1, *(pthread_t*)value2);
+}
+
+static CFDictionaryKeyCallBacks pthreadKeyCallbacks = { 0, 0, 0, 0, pthreadEqualCallback, 0 };
+
+static pthread_mutex_t javaScriptThreadsMutex = PTHREAD_MUTEX_INITIALIZER;
+static bool javaScriptThreadsShouldTerminate;
+
+static const int javaScriptThreadsCount = 4;
+static CFMutableDictionaryRef javaScriptThreads()
+{
+    assert(pthread_mutex_trylock(&javaScriptThreadsMutex) == EBUSY);
+    static CFMutableDictionaryRef staticJavaScriptThreads;
+    if (!staticJavaScriptThreads)
+        staticJavaScriptThreads = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &pthreadKeyCallbacks, 0);
+    return staticJavaScriptThreads;
+}
+
+// Loops forever, running a script and randomly respawning, until 
+// javaScriptThreadsShouldTerminate becomes true.
+void* runJavaScriptThread(void* arg)
+{
+    const char* const script =
+    " \
+    var array = []; \
+    for (var i = 0; i < 10; i++) { \
+        array.push(String(i)); \
+    } \
+    ";
+
+    while (true) {
+        JSGlobalContextRef ctx = JSGlobalContextCreate(0);
+        JSStringRef scriptRef = JSStringCreateWithUTF8CString(script);
+
+        JSValueRef exception = 0;
+        JSEvaluateScript(ctx, scriptRef, 0, 0, 0, &exception);
+        assert(!exception);
+        
+        JSGlobalContextRelease(ctx);
+        JSStringRelease(scriptRef);
+        
+        JSGarbageCollect(ctx);
+
+        pthread_mutex_lock(&javaScriptThreadsMutex);
+
+        // Check for cancellation.
+        if (javaScriptThreadsShouldTerminate) {
+            pthread_mutex_unlock(&javaScriptThreadsMutex);
+            return 0;
+        }
+
+        // Respawn probabilistically.
+        if (rand() % 5 == 0) {
+            pthread_t* pthread = (pthread_t*)malloc(sizeof(pthread_t));
+            pthread_create(pthread, 0, &runJavaScriptThread, 0);
+            pthread_detach(*pthread);
+
+            pthread_t self = pthread_self();
+            CFDictionaryRemoveValue(javaScriptThreads(), &self);
+            CFDictionaryAddValue(javaScriptThreads(), pthread, 0);
+
+            pthread_mutex_unlock(&javaScriptThreadsMutex);
+            return 0;
+        }
+
+        pthread_mutex_unlock(&javaScriptThreadsMutex);
+    }
+}
+
+static void startJavaScriptThreads(void)
+{
+    pthread_mutex_lock(&javaScriptThreadsMutex);
+
+    for (int i = 0; i < javaScriptThreadsCount; i++) {
+        pthread_t* pthread = (pthread_t*)malloc(sizeof(pthread_t));
+        pthread_create(pthread, 0, &runJavaScriptThread, 0);
+        pthread_detach(*pthread);
+        CFDictionaryAddValue(javaScriptThreads(), pthread, 0);
+    }
+
+    pthread_mutex_unlock(&javaScriptThreadsMutex);
+}
+
+static void stopJavaScriptThreads(void)
+{
+    pthread_mutex_lock(&javaScriptThreadsMutex);
+
+    javaScriptThreadsShouldTerminate = true;
+
+    pthread_t* pthreads[javaScriptThreadsCount] = {0};
+    assert(CFDictionaryGetCount(javaScriptThreads()) == javaScriptThreadsCount);
+    CFDictionaryGetKeysAndValues(javaScriptThreads(), (const void**)pthreads, 0);
+
+    pthread_mutex_unlock(&javaScriptThreadsMutex);
+
+    for (int i = 0; i < javaScriptThreadsCount; i++) {
+        pthread_t* pthread = pthreads[i];
+        pthread_join(*pthread, 0);
+        free(pthread);
+    }
+}
+
 int main(int argc, char* argv[])
 {
     leakChecking = false;
 
-    initialize(GetModuleHandle(NULL));
+    initialize(GetModuleHandle(0));
 
     // FIXME: options
 
@@ -374,6 +482,15 @@ int main(int argc, char* argv[])
     if (leakChecking)
         _CrtMemCheckpoint(&entryToMainMemCheckpoint);
 
+    for (int i = 0; i < argc; ++i)
+        if (!stricmp(argv[i], "--threaded")) {
+            threaded = true;
+            break;
+        }
+
+    if (threaded)
+        startJavaScriptThreads();
+
     if (argc == 2 && strcmp(argv[1], "-") == 0) {
         char filenameBuffer[2048];
         printSeparators = true;
@@ -394,6 +511,9 @@ int main(int argc, char* argv[])
             runTest(argv[i]);
     }
 
+    if (threaded)
+        stopJavaScriptThreads();
+    
     webView->close();
 
     webView->Release();

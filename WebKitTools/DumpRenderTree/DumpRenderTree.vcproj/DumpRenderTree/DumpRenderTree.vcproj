@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(WebKitOutputDir)\Include&quot;;&quot;$(WebKitOutputDir)\Include\WebCore\ForwardingHeaders&quot;;&quot;$(WebKitOutputDir)\Include\JavaScriptCore&quot;;&quot;$(WebKitSDKDir)\Include&quot;"
+				AdditionalIncludeDirectories="&quot;$(WebKitOutputDir)\Include&quot;;&quot;$(WebKitOutputDir)\Include\WebCore\ForwardingHeaders&quot;;&quot;$(WebKitOutputDir)\Include\JavaScriptCore&quot;;&quot;$(WebKitSDKDir)\Include&quot;;&quot;$(WebKitSDKDir)\include\pthreads&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_SCL_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="WebKitGUID$(ConfigSuffix).lib WebKit$(ConfigSuffix).lib CoreGraphics$(ConfigSuffix).lib CoreFoundation$(ConfigSuffix).lib"
+				AdditionalDependencies="WebKitGUID$(ConfigSuffix).lib WebKit$(ConfigSuffix).lib CoreGraphics$(ConfigSuffix).lib CoreFoundation$(ConfigSuffix).lib pthreadVC2$(ConfigSuffix).lib"
 				OutputFile="$(OutDir)\$(ProjectName)$(ConfigSuffix).exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(WebKitOutputDir)\lib&quot;;&quot;$(WebKitSDKDir)\lib&quot;;&quot;$(WebKitOutputDir)\bin&quot;"
@@ -122,7 +122,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(WebKitOutputDir)\Include&quot;;&quot;$(WebKitOutputDir)\Include\WebCore\ForwardingHeaders&quot;;&quot;$(WebKitOutputDir)\Include\JavaScriptCore&quot;;&quot;$(WebKitSDKDir)\Include&quot;"
+				AdditionalIncludeDirectories="&quot;$(WebKitOutputDir)\Include&quot;;&quot;$(WebKitOutputDir)\Include\WebCore\ForwardingHeaders&quot;;&quot;$(WebKitOutputDir)\Include\JavaScriptCore&quot;;&quot;$(WebKitSDKDir)\Include&quot;;&quot;$(WebKitSDKDir)\include\pthreads&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_SCL_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_DEPRECATE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -142,7 +142,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="&quot;$(WebKitOutputDir)\WebCore.intermediate\$(ConfigurationName)\WebCore.intermediate\WebCore.lib&quot;&#x0D;&#x0A;&quot;$(WebKitOutputDir)\lib\JavaScriptCore.lib&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\..\..\..\..\iconv\lib\iconv.lib&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\..\..\..\..\libxml\lib\libxml2.lib&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\..\..\..\..\libxslt\lib\libxslt.lib&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\..\..\..\..\icu\lib\icuuc.lib&quot;"
-				AdditionalDependencies="WebKitGUID$(ConfigSuffix).lib"
+				AdditionalDependencies="WebKitGUID$(ConfigSuffix).lib WebKit$(ConfigSuffix).lib CoreGraphics$(ConfigSuffix).lib CoreFoundation$(ConfigSuffix).lib pthreadVC2$(ConfigSuffix).lib"
 				OutputFile="$(OutDir)\$(ProjectName)$(ConfigSuffix).exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
