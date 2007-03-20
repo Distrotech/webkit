@@ -1,3 +1,15 @@
+2007-03-20  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Oliver.
+
+        Implemented [set]TabKeyCyclesThroughElements.
+
+        * Interfaces/IWebViewPrivate.idl: Added new declarations.
+        * WebView.cpp:
+        (WebView::setTabKeyCyclesThroughElements): Implemented.
+        (WebView::tabKeyCyclesThroughElements): Implemented.
+        * WebView.h: Updated.
+
 2007-03-20  Dave Hyatt  <hyatt@apple.com>
 
         Land advanced text code path (turned off).

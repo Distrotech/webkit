@@ -101,4 +101,7 @@ interface IWebViewPrivate : IUnknown
     HRESULT canHandleRequest([in] IWebURLRequest* request, [out, retval] BOOL* result);
 
     HRESULT clearFocusNode();
+
+    HRESULT setTabKeyCyclesThroughElements([in] BOOL cycles);
+    HRESULT tabKeyCyclesThroughElements([out, retval] BOOL* result);
 }

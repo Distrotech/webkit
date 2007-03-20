@@ -2,6 +2,18 @@
 
         Reviewed by Oliver.
 
+        Implemented layoutTestController.setTabKeyCyclesThroughElements() to
+        fix fast/events/keypress-insert-tab.html.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/EventSender.cpp:
+        (keyDownCallback): Removed unnecessary string comparison.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/LayoutTestController.cpp:
+        (setTabKeyCyclesThroughElementsCallback): Implemented.
+
+2007-03-20  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Oliver.
+
         Implemented layoutTestController.clearBackForwardList() to fix
         fast/dom/location-hash.html.
 

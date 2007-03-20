@@ -3125,6 +3125,28 @@ HRESULT STDMETHODCALLTYPE WebView::clearFocusNode()
     return S_OK;
 }
 
+HRESULT STDMETHODCALLTYPE WebView::setTabKeyCyclesThroughElements( 
+    /* [in] */ BOOL cycles)
+{
+    if (m_page)
+        m_page->setTabKeyCyclesThroughElements(!!cycles);
+
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebView::tabKeyCyclesThroughElements( 
+    /* [retval][out] */ BOOL* result)
+{
+    if (!result) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *result = m_page && m_page->tabKeyCyclesThroughElements() ? TRUE : FALSE;
+    return S_OK;
+}
+
+
 HRESULT WebView::registerDragDrop()
 {
     ASSERT(::IsWindow(m_viewWindow));

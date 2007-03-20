@@ -270,7 +270,6 @@ static JSValueRef keyDownCallback(JSContextRef context, JSObjectRef function, JS
     static JSStringRef shiftKey = JSStringCreateWithUTF8CString("shiftKey");
     static JSStringRef altKey = JSStringCreateWithUTF8CString("altKey");
     static JSStringRef metaKey = JSStringCreateWithUTF8CString("metaKey");
-    static JSStringRef tabString = JSStringCreateWithUTF8CString("\t");
     static JSStringRef lengthProperty = JSStringCreateWithUTF8CString("length");
 
     IWebFramePrivate* framePrivate = 0;
@@ -310,7 +309,7 @@ static JSValueRef keyDownCallback(JSContextRef context, JSObjectRef function, JS
 
     JSStringRef character = JSValueToStringCopy(context, arguments[0], exception);
     ASSERT(!exception || !*exception);
-    MSG msg = makeMsg(webViewWindow, WM_KEYDOWN, JSStringIsEqual(character, tabString) ? VK_TAB : toupper(JSStringGetCharactersPtr(character)[0]), 0);
+    MSG msg = makeMsg(webViewWindow, WM_KEYDOWN, toupper(JSStringGetCharactersPtr(character)[0]), 0);
     dispatchMessage(&msg);
     JSStringRelease(character);
     

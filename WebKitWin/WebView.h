@@ -579,6 +579,12 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE clearFocusNode();
 
+    virtual HRESULT STDMETHODCALLTYPE setTabKeyCyclesThroughElements( 
+        /* [in] */ BOOL cycles);
+    
+    virtual HRESULT STDMETHODCALLTYPE tabKeyCyclesThroughElements( 
+        /* [retval][out] */ BOOL *result);
+
     // WebView
     WebCore::Page* page();
     bool handleMouseEvent(UINT, WPARAM, LPARAM);

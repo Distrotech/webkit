@@ -64,7 +64,6 @@ FontPlatformData::FontPlatformData(HFONT font, int size, bool bold, bool oblique
     SelectObject(hdc, font);
     UINT bufferSize = GetOutlineTextMetrics(hdc, 0, NULL);
 
-    // Bitmap fonts are turned off for CG in FontCacheWin::createFontPlatformData
     ASSERT_WITH_MESSAGE(bufferSize != 0, "Bitmap fonts not supported with CoreGraphics.");
 
     if (bufferSize != 0)

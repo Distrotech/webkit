@@ -31,9 +31,10 @@
 
 #include "EditingDelegate.h"
 
+#include <atlcomcli.h>
 #include <wtf/Platform.h>
 #include <JavaScriptCore/JavaScriptCore.h>
-#include <atlcomcli.h>
+#include <WebKit/IWebViewPrivate.h>
 
 static JSValueRef dumpAsTextCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
 {
@@ -140,6 +141,22 @@ static JSValueRef clearBackForwardListCallback(JSContextRef context, JSObjectRef
     return undefined;
 }
 
+static JSValueRef setTabKeyCyclesThroughElementsCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+{
+    bool shouldCycle = false;
+    if (argumentCount > 0)
+        shouldCycle = JSValueToBoolean(context, arguments[0]);
+
+    CComPtr<IWebView> webView;
+    if (FAILED(frame->webView(&webView)))
+        return JSValueMakeUndefined(context);
+
+    CComQIPtr<IWebViewPrivate> viewPrivate(webView);
+    viewPrivate->setTabKeyCyclesThroughElements(shouldCycle ? TRUE : FALSE);
+
+    return JSValueMakeUndefined(context);
+}
+
 static JSStaticFunction staticFunctions[] = {
     { "dumpAsText", dumpAsTextCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { "waitUntilDone", waitUntilDoneCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
@@ -150,6 +167,7 @@ static JSStaticFunction staticFunctions[] = {
     { "testRepaint", testRepaintCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { "repaintSweepHorizontally", repaintSweepHorizontallyCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { "clearBackForwardList", clearBackForwardListCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
+    { "setTabKeyCyclesThroughElements", setTabKeyCyclesThroughElementsCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { 0, 0, 0 }
 };
 
