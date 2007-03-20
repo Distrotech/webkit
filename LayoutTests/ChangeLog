@@ -1,3 +1,12 @@
+2007-03-20  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by Adam.
+
+        Re-enabling fast/layers/removed-by-scroll-handler.html because 
+        5072678 is fixed.
+
+        * Skipped:
+
 2007-03-20  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Adam.

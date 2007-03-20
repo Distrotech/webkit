@@ -49,9 +49,6 @@ fast/dom/onerror-img.html
 # ASSERT in ClipboardWin::setData <rdar://problem/5015941>
 editing/execCommand/copy-without-selection.html
 
-# Crash in RenderLayer::scrollRectToVisible <rdar://problem/5054703>
-fast/layers/removed-by-scroll-handler.html
-
 # Crash in _CFHTTPCookieStorageCreateFromFile <rdar://problem/5071479>
 security/block-test.html
 
