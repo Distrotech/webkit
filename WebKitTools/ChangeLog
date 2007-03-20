@@ -1,3 +1,16 @@
+2007-03-20  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Oliver.
+
+        Remove Arial fonts because of <rdar://problem/5074441>.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (initialize): Don't install Arial.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Arial Bold Italic.ttf: Removed.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Arial Bold.ttf: Removed.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Arial Italic.ttf: Removed.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Arial.ttf: Removed.
+
 2007-03-19  Adam Roben  <aroben@apple.com>
 
         Reviewed by Ada.

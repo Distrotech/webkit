@@ -96,10 +96,6 @@ static void initialize(HMODULE hModule)
     static LPCTSTR fontsToInstall[] = {
         _T("AHEM____.ttf"),
         _T("Apple Chancery.ttf"),
-        _T("Arial Bold Italic.ttf"),
-        _T("Arial Bold.ttf"),
-        _T("Arial Italic.ttf"),
-        _T("Arial.ttf"),
         _T("Courier Bold.ttf"),
         _T("Courier.ttf"),
         _T("Helvetica Bold.ttf"),
