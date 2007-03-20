@@ -145,6 +145,7 @@
 				AdditionalDependencies="WebKitGUID$(ConfigSuffix).lib WebKit$(ConfigSuffix).lib CoreGraphics$(ConfigSuffix).lib CoreFoundation$(ConfigSuffix).lib pthreadVC2$(ConfigSuffix).lib"
 				OutputFile="$(OutDir)\$(ProjectName)$(ConfigSuffix).exe"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="&quot;$(WebKitOutputDir)\lib&quot;;&quot;$(WebKitSDKDir)\lib&quot;;&quot;$(WebKitOutputDir)\bin&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
