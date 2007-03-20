@@ -1,5 +1,11 @@
 2007-03-20  Adam Roben  <aroben@apple.com>
 
+        Build fix.
+
+        * WebCore.vcproj/WebCore.vcproj: Added XPathNodeSet.(cpp|h).
+
+2007-03-20  Adam Roben  <aroben@apple.com>
+
         Reviewed by Oliver.
 
         Made the metrics of styled selects match those on the Mac to get

@@ -4795,6 +4795,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathNodeSet.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathNodeSet.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\xml\XPathNSResolver.cpp"
 				>
 			</File>
