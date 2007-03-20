@@ -1,5 +1,16 @@
 2007-03-20  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Ada.
+
+        Added null-checks for ResourceHandle::cookieStorage() before passing it
+        into CFNetwork functions, which are not null-safe.
+
+        * platform/network/win/CookieJarWin.cpp:
+        (WebCore::setCookies):
+        (WebCore::cookies):
+
+2007-03-20  Adam Roben  <aroben@apple.com>
+
         Build fix.
 
         * WebCore.vcproj/WebCore.vcproj: Added XPathNodeSet.(cpp|h).

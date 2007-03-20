@@ -48,6 +48,9 @@ namespace WebCore
 void setCookies(const KURL& url, const KURL& policyURL, const String& value)
 {
 #if USE(CFNETWORK)
+    if (!ResourceHandle::cookieStorage())
+        return;
+
     RetainPtr<CFURLRef> urlCF(AdoptCF, url.createCFURL());
     RetainPtr<CFURLRef> policyURLCF(AdoptCF, policyURL.createCFURL());
 
@@ -76,6 +79,9 @@ void setCookies(const KURL& url, const KURL& policyURL, const String& value)
 String cookies(const KURL& url)
 {
 #if USE(CFNETWORK)
+    if (!ResourceHandle::cookieStorage())
+        return String();
+
     String cookieString;
     RetainPtr<CFURLRef> urlCF(AdoptCF, url.createCFURL());
 
