@@ -10,6 +10,25 @@ webarchive
 # AppleScript on Windows? That's crazy talk!
 fast/AppleScript
 
+# Obj-C QuickTime plugin on Windows? That's unpossible!
+plugins/pluginDocumentView-deallocated-dataSource.html
+
+# No built-in plugin in DRT <rdar://problem/5074411>
+plugins/bindings-test.html
+plugins/get-empty-url.html
+plugins/get-url-with-blank-target.html
+plugins/geturl-replace-query.html
+plugins/inner-html-display-none.html
+plugins/invoke.html
+plugins/jsobjc-dom-wrappers.html
+plugins/jsobjc-simple.html
+plugins/mouse-events.html
+plugins/netscape-dom-access.html
+plugins/plugin-javascript-access.html
+plugins/root-object-premature-delete-crash.html
+plugins/throw-on-dealloc.html
+plugins/undefined-property-crash.html
+
 # Infinite recursion in JSValue::mark <rdar://problem/4928697>
 fast/js/toString-stack-overflow.html
 

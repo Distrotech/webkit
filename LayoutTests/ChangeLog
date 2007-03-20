@@ -2,6 +2,13 @@
 
         Reviewed by Ada.
 
+        * Skipped: Added tests that relay on DRT's built-in plugin, or on the
+        QuickTime WebKit plugin.
+
+2007-03-19  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Ada.
+
         * Skipped: Added some more international text tests.
 
 2007-03-19  Adam Roben  <aroben@apple.com>
