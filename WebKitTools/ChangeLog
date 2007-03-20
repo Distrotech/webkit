@@ -2,6 +2,16 @@
 
         Reviewed by Oliver.
 
+        Implemented layoutTestController.clearBackForwardList() to fix
+        fast/dom/location-hash.html.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/LayoutTestController.cpp:
+        (clearBackForwardListCallback): Implemented.
+
+2007-03-20  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Oliver.
+
         Remove Arial fonts because of <rdar://problem/5074441>.
 
         * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:

@@ -33,6 +33,7 @@
 
 #include <wtf/Platform.h>
 #include <JavaScriptCore/JavaScriptCore.h>
+#include <atlcomcli.h>
 
 static JSValueRef dumpAsTextCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
 {
@@ -109,6 +110,36 @@ static JSValueRef repaintSweepHorizontallyCallback(JSContextRef context, JSObjec
     return JSValueMakeUndefined(context);
 }
 
+static JSValueRef clearBackForwardListCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+{
+    JSValueRef undefined = JSValueMakeUndefined(context);
+
+    CComPtr<IWebView> webView;
+    if (FAILED(frame->webView(&webView)))
+        return undefined;
+
+    CComPtr<IWebBackForwardList> backForwardList;
+    if (FAILED(webView->backForwardList(&backForwardList)))
+        return undefined;
+
+    CComPtr<IWebHistoryItem> item;
+    if (FAILED(backForwardList->currentItem(&item)))
+        return undefined;
+
+    // We clear the history by setting the back/forward list's capacity to 0
+    // then restoring it back and adding back the current item.
+    int capacity;
+    if (FAILED(backForwardList->capacity(&capacity)))
+        return undefined;
+
+    backForwardList->setCapacity(0);
+    backForwardList->setCapacity(capacity);
+    backForwardList->addItem(item);
+    backForwardList->goToItem(item);
+
+    return undefined;
+}
+
 static JSStaticFunction staticFunctions[] = {
     { "dumpAsText", dumpAsTextCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { "waitUntilDone", waitUntilDoneCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
@@ -118,6 +149,7 @@ static JSStaticFunction staticFunctions[] = {
     { "display", displayCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { "testRepaint", testRepaintCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { "repaintSweepHorizontally", repaintSweepHorizontallyCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
+    { "clearBackForwardList", clearBackForwardListCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { 0, 0, 0 }
 };
 
