@@ -43,6 +43,7 @@
 #include "WebPreferences.h"
 #pragma warning( push, 0 )
 #include <CoreGraphics/CGContext.h>
+#include <CFNetwork/CFHTTPCookiesPriv.h>
 #include <WebCore/BString.h>
 #include <WebCore/CommandByName.h>
 #include <WebCore/ContextMenuController.h>
