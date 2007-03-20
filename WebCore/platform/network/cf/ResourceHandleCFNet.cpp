@@ -226,7 +226,7 @@ static CFURLRequestRef makeFinalRequest(const ResourceRequest& request)
     if (allowsAnyHTTPSCertificateHosts().contains(request.url().host().lower())) {
         CFTypeRef keys[] = { kCFStreamSSLAllowsAnyRoot, kCFStreamSSLAllowsExpiredRoots };  
         CFTypeRef values[] = { kCFBooleanTrue, kCFBooleanTrue };
-        static CFDictionaryRef sslProps = CFDictionaryCreate(kCFAllocatorDefault, keys, vals, sizeof(keys) / sizeof(keys[0]), &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+        static CFDictionaryRef sslProps = CFDictionaryCreate(kCFAllocatorDefault, keys, values, sizeof(keys) / sizeof(keys[0]), &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
         CFURLRequestSetSSLProperties(newRequest, sslProps);
     }
 

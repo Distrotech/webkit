@@ -1,3 +1,10 @@
+2007-03-20  Adam Roben  <aroben@apple.com>
+
+        Build fix.
+
+        * platform/network/cf/ResourceHandleCFNet.cpp:
+        (WebCore::makeFinalRequest): Fix typo.
+
 2007-03-20  Dave Hyatt  <hyatt@apple.com>
 
         Land advanced text code path (turned off).
