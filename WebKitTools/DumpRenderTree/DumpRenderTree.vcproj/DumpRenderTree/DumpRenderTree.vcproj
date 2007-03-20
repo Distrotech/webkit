@@ -141,7 +141,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="&quot;$(WebKitOutputDir)\WebCore.intermediate\$(ConfigurationName)\WebCore.intermediate\WebCore.lib&quot;&#x0D;&#x0A;&quot;$(WebKitOutputDir)\lib\JavaScriptCore.lib&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\..\..\..\..\iconv\lib\iconv.lib&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\..\..\..\..\libxml\lib\libxml2.lib&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\..\..\..\..\libxslt\lib\libxslt.lib&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\..\..\..\..\icu\lib\icuuc.lib&quot;"
 				AdditionalDependencies="WebKitGUID$(ConfigSuffix).lib WebKit$(ConfigSuffix).lib CoreGraphics$(ConfigSuffix).lib CoreFoundation$(ConfigSuffix).lib pthreadVC2$(ConfigSuffix).lib"
 				OutputFile="$(OutDir)\$(ProjectName)$(ConfigSuffix).exe"
 				LinkIncremental="1"

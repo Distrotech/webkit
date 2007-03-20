@@ -1,3 +1,10 @@
+2007-03-20  Adam Roben  <aroben@apple.com>
+
+        Release build fix.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.vcproj:
+        Removed bogus extra linker options.
+
 2007-03-20  Adele Peterson  <adele@apple.com>
 
         Reviewed by Adam.
