@@ -143,6 +143,8 @@ public:
         /* [in] */ BSTR value,
         /* [in] */ BSTR field);
 
+    virtual HRESULT STDMETHODCALLTYPE setAllowsAnyHTTPSCertificate(void);
+
     // WebMutableURLRequest
     void setFormData(const PassRefPtr<WebCore::FormData> data);
     const PassRefPtr<WebCore::FormData> formData() const;

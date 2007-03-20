@@ -34,6 +34,7 @@
 #include <WebCore/BString.h>
 #include <WebCore/CString.h>
 #include <WebCore/FormData.h>
+#include <WebCore/ResourceHandle.h>
 #pragma warning(pop)
 
 using namespace WebCore;
@@ -303,6 +304,13 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setValue(
 {
     ASSERT_NOT_REACHED();
     return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE WebMutableURLRequest::setAllowsAnyHTTPSCertificate(void)
+{
+    ResourceHandle::setHostAllowsAnyHTTPSCertificate(m_request.url().host());
+
+    return S_OK;
 }
 
 // IWebMutableURLRequest ----------------------------------------------------

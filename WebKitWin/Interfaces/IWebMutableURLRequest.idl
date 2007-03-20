@@ -116,4 +116,6 @@ interface IWebMutableURLRequest : IWebURLRequest
         - (void)setValue:(NSString *)value forHTTPHeaderField:(NSString *)field
     */
     HRESULT setValue([in] BSTR value, [in] BSTR field);
+
+    HRESULT setAllowsAnyHTTPSCertificate();
 }

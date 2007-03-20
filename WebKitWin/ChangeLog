@@ -1,3 +1,18 @@
+2007-03-20  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://problem/5050512>
+        Need invalid/expired certificate alerts
+        
+        Add setAllowsAnyHTTPSCertificate method to IWebMutableURLRequest and have it 
+        call down to WebCore.
+        
+        * Interfaces/IWebMutableURLRequest.idl:
+        * WebMutableURLRequest.cpp:
+        (WebMutableURLRequest::setAllowsAnyHTTPSCertificate):
+        * WebMutableURLRequest.h:
+
 2007-03-20  Adam Roben  <aroben@apple.com>
 
         Rubberstamped by Anders.
