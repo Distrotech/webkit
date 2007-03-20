@@ -106,7 +106,7 @@ FontPlatformData* FontCache::createFontPlatformData(const FontDescription& fontD
     LOGFONT winfont;
 
     // The size here looks unusual.  The negative number is intentional.  The logical size constant is 32.
-    winfont.lfHeight = -fontDescription.computedPixelSize();
+    winfont.lfHeight = -fontDescription.computedPixelSize() * 32;
     winfont.lfWidth = 0;
     winfont.lfEscapement = 0;
     winfont.lfOrientation = 0;

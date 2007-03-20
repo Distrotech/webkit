@@ -105,6 +105,9 @@ void FontData::platformInit()
 
     RestoreDC(dc, -1);
     ReleaseDC(0, dc);
+
+    m_scriptCache = 0;
+    m_scriptFontProperties = 0;
 }
 
 void FontData::platformDestroy()
@@ -121,6 +124,9 @@ void FontData::platformDestroy()
 
     // We don't hash this on Win32, so it's effectively owned by us.
     delete m_smallCapsFontData;
+
+    ScriptFreeCache(&m_scriptCache);
+    delete m_scriptFontProperties;
 }
 
 FontData* FontData::smallCapsFontData(const FontDescription& fontDescription) const
@@ -129,7 +135,7 @@ FontData* FontData::smallCapsFontData(const FontDescription& fontDescription) co
         LOGFONT winfont;
         GetObject(m_font.hfont(), sizeof(LOGFONT), &winfont);
         int smallCapsHeight = lroundf(0.70f * fontDescription.computedSize());
-        winfont.lfHeight = -smallCapsHeight;
+        winfont.lfHeight = -smallCapsHeight * 32;
         HFONT hfont = CreateFontIndirect(&winfont);
         m_smallCapsFontData = new FontData(FontPlatformData(hfont, smallCapsHeight, fontDescription.bold(), fontDescription.italic()));
     }
@@ -186,6 +192,25 @@ float FontData::platformWidthForGlyph(Glyph glyph) const
     bool isPrinterFont = false;
     wkGetGlyphAdvances(font, m, m_isSystemFont, isPrinterFont, glyph, advance);
     return advance.width + m_syntheticBoldOffset;
+}
+
+SCRIPT_FONTPROPERTIES* FontData::scriptFontProperties() const
+{
+    if (!m_scriptFontProperties) {
+        m_scriptFontProperties = new SCRIPT_FONTPROPERTIES;
+        memset(m_scriptFontProperties, 0, sizeof(SCRIPT_FONTPROPERTIES));
+        m_scriptFontProperties->cBytes = sizeof(SCRIPT_FONTPROPERTIES);
+        HRESULT result = ScriptGetFontProperties(0, scriptCache(), m_scriptFontProperties);
+        if (result == E_PENDING) {
+            HDC dc = GetDC(0);
+            SaveDC(dc);
+            SelectObject(dc, m_font.hfont());
+            ScriptGetFontProperties(dc, scriptCache(), m_scriptFontProperties);
+            RestoreDC(dc, -1);
+            ReleaseDC(0, dc);
+        }
+    }
+    return m_scriptFontProperties;
 }
 
 }

@@ -1,3 +1,30 @@
+2007-03-20  Dave Hyatt  <hyatt@apple.com>
+
+        Land advanced text code path (turned off).
+       
+        Reviewed by aroben
+        
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/win/FontCacheWin.cpp:
+        (WebCore::FontCache::createFontPlatformData):
+        * platform/win/FontDataWin.cpp:
+        (WebCore::FontData::platformInit):
+        (WebCore::FontData::platformDestroy):
+        (WebCore::FontData::smallCapsFontData):
+        (WebCore::FontData::scriptFontProperties):
+        * platform/win/FontWin.cpp:
+        (WebCore::Font::drawComplexText):
+        (WebCore::Font::floatWidthForComplexText):
+        (WebCore::Font::offsetForPositionForComplexText):
+        * platform/win/UniscribeController.cpp: Added.
+        (WebCore::UniscribeController::UniscribeController):
+        (WebCore::UniscribeController::resetControlAndState):
+        (WebCore::UniscribeController::shapeAndPlaceItem):
+        (WebCore::UniscribeController::shape):
+        * platform/win/UniscribeController.h: Added.
+        (WebCore::UniscribeController::width):
+        (WebCore::UniscribeController::glyphBuffer):
+
 2007-03-20  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.

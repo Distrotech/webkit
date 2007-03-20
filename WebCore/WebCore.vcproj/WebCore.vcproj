@@ -3026,6 +3026,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\platform\win\UniscribeController.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\win\UniscribeController.h"
+					>
+				</File>
+				<File
 					RelativePath="..\platform\win\WCDataObject.cpp"
 					>
 				</File>

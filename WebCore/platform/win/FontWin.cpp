@@ -32,6 +32,7 @@
 #include "GraphicsContext.h"
 #include "IntRect.h"
 #include "NotImplemented.h"
+#include "UniscribeController.h"
 #include <ApplicationServices/ApplicationServices.h>
 #include <WebKitSystemInterface/WebKitSystemInterface.h>
 
@@ -95,20 +96,30 @@ FloatRect Font::selectionRectForComplexText(const TextRun& run, const TextStyle&
     return FloatRect();
 }
 
-void Font::drawComplexText(GraphicsContext* graphicsContext, const TextRun& run, const TextStyle& style, const FloatPoint& point) const
+void Font::drawComplexText(GraphicsContext* context, const TextRun& run, const TextStyle& style, const FloatPoint& point) const
 {
-    LOG_NOIMPL();
+    // Constructing the controller itemizes and shapes the run.
+    UniscribeController controller(this, run, style, context);
+
+    // FIXME: Handle from/to values set in the run so that selection works.
+    if (controller.glyphBuffer().isEmpty())
+        return;
+    drawGlyphBuffer(context, controller.glyphBuffer(), run, style, point);
 }
 
 float Font::floatWidthForComplexText(const TextRun& run, const TextStyle& style) const
 {
-    LOG_NOIMPL();
-    return 0;
+    // Copied from the Mac code, although not sure why this would ever happen.
+    if (run.from() == run.to())
+        return 0;
+
+    // Constructing the controller itemizes and shapes the run.
+    UniscribeController controller(this, run, style);
+    return controller.width();
 }
 
 int Font::offsetForPositionForComplexText(const TextRun& run, const TextStyle& style, int x, bool includePartialGlyphs) const
 {
-    LOG_NOIMPL();
     return 0;
 }
 
