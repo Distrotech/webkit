@@ -65,6 +65,9 @@ private:
 
     float m_width;
     GlyphBuffer m_glyphBuffer;
+
+    float m_padding;
+    float m_padPerSpace;
 };
 
 }

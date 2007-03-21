@@ -1,3 +1,29 @@
+2007-03-21  Dave Hyatt  <hyatt@apple.com>
+
+        Fix numerous bugs in RTL support.  Only use a directional override if the run
+        tells us to.  Uniscribe will give incorrect results when measuring RTL runs as LTR if the
+        directional override is set.  Switch from logical order for glyphs to visual order
+        instead.  This is more similar to ATSUI (less similar to the fast code path, which always uses
+        logical ordering for glyph generation).  Using visual ordering forces a lot of games to be played
+        (have to walk the script items in backwards order for RTL for example), but Uniscribe does not combine
+        glyphs properly if visual ordering is not used.
+        
+        Add support for justification, letter-spacing, word-spacing and rounding hacks.  The CG vs. ATSUI layout
+        test now passes with identical results to the Mac.  The ATSUI spacing features layout test now
+        generates correct results (although they are different from the Mac because we fall back to Arial for
+        Hebrew instead of Lucida Grande).
+
+        Reviewed by NOBODY (OOPS!).
+
+        WARNING: NO TEST CASES ADDED OR CHANGED
+
+        * platform/win/UniscribeController.cpp:
+        (WebCore::UniscribeController::UniscribeController):
+        (WebCore::UniscribeController::resetControlAndState):
+        (WebCore::UniscribeController::shapeAndPlaceItem):
+        (WebCore::UniscribeController::shape):
+        * platform/win/UniscribeController.h:
+
 2007-03-20  Adam Roben  <aroben@apple.com>
 
         Reviewed by Ada.
