@@ -1,6 +1,3 @@
-# No editing callbacks in DRT yet <rdar://problem/5066482>
-editing
-
 # No Apache configuration on cygwin yet <rdar://problem/5066290>
 http
 
@@ -57,6 +54,10 @@ security/block-test.html
 
 # This test uses Mac-specific key codes <rdar://problem/5076426>
 fast/events/arrow-navigation.html
+
+# Crash in Node::nextSibling <rdar://problem/5078739>
+editing/pasteboard/paste-line-endings-002.html
+editing/pasteboard/paste-line-endings-004.html
 
 # No advanced text <rdar://problems/4516194>
 css1/text_properties/text-transCapitalize.html

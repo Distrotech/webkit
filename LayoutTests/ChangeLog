@@ -1,3 +1,11 @@
+2007-03-21  Adam Roben  <aroben@apple.com>
+
+        Reviewed by David Kilzer (yay!).
+
+        Re-enable the editing tests, except for two crashers.
+
+        * Skipped:
+
 2007-03-20  Adam Roben  <aroben@apple.com>
 
         Rubberstamped by Adele.
