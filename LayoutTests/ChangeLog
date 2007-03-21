@@ -1,5 +1,13 @@
 2007-03-20  Adam Roben  <aroben@apple.com>
 
+        Rubberstamped by Adele.
+
+        Roll out r12355 now that OpenSource r20348 has been rolled out.
+
+        * Skipped: Also removed a crash that was caused by 20348.
+
+2007-03-20  Adam Roben  <aroben@apple.com>
+
         Rubberstamped by Beth.
 
         * Skipped: Added the real crasher (arrow-navigation.html just fails,
