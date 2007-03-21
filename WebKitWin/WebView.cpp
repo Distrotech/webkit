@@ -551,7 +551,7 @@ bool WebView::handleContextMenuEvent(WPARAM wParam, LPARAM lParam)
     m_page->contextMenuController()->clearContextMenu();
 
     PlatformMouseEvent mouseEvent(m_viewWindow, WM_RBUTTONUP, wParam, lParam);
-    bool handledEvent = m_page->mainFrame()->eventHandler()->sendContextMenuEvent(mouseEvent);
+    bool handledEvent = m_page->focusController()->focusedOrMainFrame()->eventHandler()->sendContextMenuEvent(mouseEvent);
     if (!handledEvent)
         return false;
 

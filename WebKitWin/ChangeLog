@@ -1,3 +1,15 @@
+2007-03-21  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://problem/5074274> right-clicking in certain iframes ends up 
+        left-clicking, and context menu appears far away
+
+        * WebView.cpp:
+        (WebView::handleContextMenuEvent): We were always calling 
+        sendContextMenuEvent() on the main frame!! Instead, call it on the 
+        focused or main frame.
+
 2007-03-21  Adele Peterson  <adele@apple.com>
 
         Reviewed by Adam.
