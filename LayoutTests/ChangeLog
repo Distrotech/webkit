@@ -1,5 +1,12 @@
 2007-03-20  Adam Roben  <aroben@apple.com>
 
+        Rubberstamped by Beth.
+
+        * Skipped: Added the real crasher (arrow-navigation.html just fails,
+        doesn't crash).
+
+2007-03-20  Adam Roben  <aroben@apple.com>
+
         Reviewed by Beth.
 
         * Skipped: Added another crasher.

@@ -52,6 +52,9 @@ editing/execCommand/copy-without-selection.html
 # Crash in _CFHTTPCookieStorageCreateFromFile <rdar://problem/5071479>
 security/block-test.html
 
+# Crash in HTMLTextFieldInnerTextElement::defaultEventHandler <rdar://problem/5076644>
+fast/events/autoscroll.html
+
 # This test uses Mac-specific key codes <rdar://problem/5076426>
 fast/events/arrow-navigation.html
 
