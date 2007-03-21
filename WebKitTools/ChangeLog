@@ -1,3 +1,17 @@
+<<<<<<< .mine
+2007-03-20  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Geoff and Adam.
+        
+        - fixed some bugs in --threaded fond in the course of testing.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (runJavaScriptThread): Be smarter about thread dictionary.
+        (startJavaScriptThreads): Ditto.
+        (stopJavaScriptThreads): Ditto.
+        (main): Account for --threaded command-line argument better.
+
+=======
 2007-03-20  Adam Roben  <aroben@apple.com>
 
         Reviewed by Hyatt.
@@ -62,6 +76,7 @@
         * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Arial Italic.ttf: Removed.
         * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Arial.ttf: Removed.
 
+>>>>>>> .r12869
 2007-03-19  Adam Roben  <aroben@apple.com>
 
         Reviewed by Ada.

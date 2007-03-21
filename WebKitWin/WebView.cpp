@@ -77,6 +77,7 @@
 #include <WebCore/Settings.h>
 #include <WebCore/TypingCommand.h>
 #pragma warning(pop)
+#include <JavaScriptCore/collector.h>
 #include <JavaScriptCore/value.h>
 #include <CFNetwork/CFURLProtocolPriv.h>
 #include <atldef.h>
@@ -114,6 +115,8 @@ WebView::WebView()
 , m_currentCharacterCode(0)
 , m_isBeingDestroyed(false)
 {
+    KJS::Collector::registerAsMainThread();
+
     m_backingStoreSize.cx = m_backingStoreSize.cy = 0;
 
     CoCreateInstance(CLSID_DragDropHelper, 0, CLSCTX_INPROC_SERVER, IID_IDropTargetHelper,(void**)&m_dropTargetHelper);

@@ -69,7 +69,7 @@ IWebFrame* frame;
 HWND webViewWindow;
 static HWND hostWindow;
 
-static const unsigned timeoutValue = 7000;
+static const unsigned timeoutValue = 60000;
 static const unsigned timeoutId = 10;
 
 const unsigned maxViewWidth = 800;
@@ -375,13 +375,13 @@ void* runJavaScriptThread(void* arg)
 
         // Respawn probabilistically.
         if (rand() % 5 == 0) {
-            pthread_t* pthread = (pthread_t*)malloc(sizeof(pthread_t));
-            pthread_create(pthread, 0, &runJavaScriptThread, 0);
-            pthread_detach(*pthread);
+            pthread_t pthread;
+            pthread_create(&pthread, 0, &runJavaScriptThread, 0);
+            pthread_detach(pthread);
 
             pthread_t self = pthread_self();
-            CFDictionaryRemoveValue(javaScriptThreads(), &self);
-            CFDictionaryAddValue(javaScriptThreads(), pthread, 0);
+            CFDictionaryRemoveValue(javaScriptThreads(), self.p);
+            CFDictionaryAddValue(javaScriptThreads(), pthread.p, 0);
 
             pthread_mutex_unlock(&javaScriptThreadsMutex);
             return 0;
@@ -396,10 +396,10 @@ static void startJavaScriptThreads(void)
     pthread_mutex_lock(&javaScriptThreadsMutex);
 
     for (int i = 0; i < javaScriptThreadsCount; i++) {
-        pthread_t* pthread = (pthread_t*)malloc(sizeof(pthread_t));
-        pthread_create(pthread, 0, &runJavaScriptThread, 0);
-        pthread_detach(*pthread);
-        CFDictionaryAddValue(javaScriptThreads(), pthread, 0);
+        pthread_t pthread;
+        pthread_create(&pthread, 0, &runJavaScriptThread, 0);
+        pthread_detach(pthread);
+        CFDictionaryAddValue(javaScriptThreads(), pthread.p, 0);
     }
 
     pthread_mutex_unlock(&javaScriptThreadsMutex);
@@ -412,7 +412,8 @@ static void stopJavaScriptThreads(void)
     javaScriptThreadsShouldTerminate = true;
 
     pthread_t* pthreads[javaScriptThreadsCount] = {0};
-    assert(CFDictionaryGetCount(javaScriptThreads()) == javaScriptThreadsCount);
+    int threadDictCount = CFDictionaryGetCount(javaScriptThreads());
+    assert(threadDictCount == javaScriptThreadsCount);
     CFDictionaryGetKeysAndValues(javaScriptThreads(), (const void**)pthreads, 0);
 
     pthread_mutex_unlock(&javaScriptThreadsMutex);
@@ -496,6 +497,8 @@ int main(int argc, char* argv[])
 
     for (int i = 0; i < argc; ++i)
         if (!stricmp(argv[i], "--threaded")) {
+            argv[i] = argv[argc - 1];
+            argc--;
             threaded = true;
             break;
         }
