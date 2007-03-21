@@ -74,18 +74,14 @@ static CString dumpPath(IDOMNode* node)
 
     CString result;
 
-    BSTR name = 0;
-    HRESULT hr = node->nodeName(&name);
-    result.Format(TEXT("%s"), name ? name : TEXT(""));
-    SysFreeString(name);
-    if (FAILED(hr))
+    CComBSTR name = 0;
+    if (FAILED(node->nodeName(&name)))
         return result;
+    result.Format(TEXT("%s"), name ? name : TEXT(""));
 
-    IDOMNode* parent;
-    if (SUCCEEDED(node->parentNode(&parent))) {
+    CComPtr<IDOMNode> parent;
+    if (SUCCEEDED(node->parentNode(&parent)))
         result += TEXT(" > ") + dumpPath(parent);
-        parent->Release();
-    }
 
     return result;
 }
@@ -104,19 +100,15 @@ static CString dump(IDOMRange* range)
     if (FAILED(range->endOffset(&endOffset)))
         return result;
 
-    IDOMNode* startContainer;
+    CComPtr<IDOMNode> startContainer;
     if (FAILED(range->startContainer(&startContainer)))
         return result;
-    CString startContainerPath(dumpPath(startContainer));
-    startContainer->Release();
 
-    IDOMNode* endContainer;
+    CComPtr<IDOMNode> endContainer;
     if (FAILED(range->endContainer(&endContainer)))
         return result;
-    CString endContainerPath(dumpPath(endContainer));
-    endContainer->Release();
 
-    result.Format(TEXT("range from %ld of %s to %ld of %s"), startOffset, startContainerPath, endOffset, endContainerPath);
+    result.Format(TEXT("range from %ld of %s to %ld of %s"), startOffset, dumpPath(startContainer), endOffset, dumpPath(endContainer));
     return result;
 }
 
@@ -300,10 +292,9 @@ HRESULT STDMETHODCALLTYPE EditingDelegate::webViewDidBeginEditing(
     /* [in] */ IWebNotification* notification)
 {
     if (shouldDumpEditingCallbacks && !done) {
-        BSTR name = 0;
+        CComBSTR name;
         notification->name(&name);
         _tprintf(TEXT("EDITING DELEGATE: webViewDidBeginEditing:%s\n"), name ? name : TEXT(""));
-        SysFreeString(name);
     }
     return S_OK;
 }
@@ -312,10 +303,9 @@ HRESULT STDMETHODCALLTYPE EditingDelegate::webViewDidChange(
     /* [in] */ IWebNotification *notification)
 {
     if (shouldDumpEditingCallbacks && !done) {
-        BSTR name = 0;
+        CComBSTR name;
         notification->name(&name);
         _tprintf(TEXT("EDITING DELEGATE: webViewDidBeginEditing:%s\n"), name ? name : TEXT(""));
-        SysFreeString(name);
     }
     return S_OK;
 }
@@ -324,10 +314,9 @@ HRESULT STDMETHODCALLTYPE EditingDelegate::webViewDidEndEditing(
     /* [in] */ IWebNotification *notification)
 {
     if (shouldDumpEditingCallbacks && !done) {
-        BSTR name = 0;
+        CComBSTR name;
         notification->name(&name);
         _tprintf(TEXT("EDITING DELEGATE: webViewDidEndEditing:%s\n"), name ? name : TEXT(""));
-        SysFreeString(name);
     }
     return S_OK;
 }
@@ -336,10 +325,9 @@ HRESULT STDMETHODCALLTYPE EditingDelegate::webViewDidChangeTypingStyle(
     /* [in] */ IWebNotification *notification)
 {
     if (shouldDumpEditingCallbacks && !done) {
-        BSTR name = 0;
+        CComBSTR name;
         notification->name(&name);
         _tprintf(TEXT("EDITING DELEGATE: webViewDidChangeTypingStyle:%s\n"), name ? name : TEXT(""));
-        SysFreeString(name);
     }
     return S_OK;
 }
@@ -348,10 +336,9 @@ HRESULT STDMETHODCALLTYPE EditingDelegate::webViewDidChangeSelection(
     /* [in] */ IWebNotification *notification)
 {
     if (shouldDumpEditingCallbacks && !done) {
-        BSTR name = 0;
+        CComBSTR name;
         notification->name(&name);
         _tprintf(TEXT("EDITING DELEGATE: webViewDidChangeSelection:%s\n"), name ? name : TEXT(""));
-        SysFreeString(name);
     }
     return S_OK;
 }

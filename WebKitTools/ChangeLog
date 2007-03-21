@@ -1,3 +1,33 @@
+2007-03-20  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Brady.
+
+        Always use CCom* smart pointers when possible to avoid memory management issues.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (initialize): Changed _T() to TEXT().
+        (dump):
+        (runTest):
+        (initializePreferences):
+        (main):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/EditingDelegate.cpp:
+        (dumpPath):
+        (dump):
+        (EditingDelegate::webViewDidBeginEditing):
+        (EditingDelegate::webViewDidChange):
+        (EditingDelegate::webViewDidEndEditing):
+        (EditingDelegate::webViewDidChangeTypingStyle):
+        (EditingDelegate::webViewDidChangeSelection):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/EventSender.cpp:
+        (mouseDownCallback):
+        (doMouseUp):
+        (mouseClickCallback):
+        (doMouseMove):
+        (keyDownCallback):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/LayoutTestController.cpp:
+        (setAcceptsEditingCallback):
+        (setTabKeyCyclesThroughElementsCallback):
+
 2007-03-20  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Geoff and Adam.

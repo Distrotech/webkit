@@ -71,22 +71,24 @@ static JSValueRef setAcceptsEditingCallback(JSContextRef context, JSObjectRef fu
 
     bool acceptsEditing = JSValueToBoolean(context, arguments[0]);
 
-    IWebView* webView;
-    if (SUCCEEDED(frame->webView(&webView))) {
-        IWebViewEditing* viewEditing;
-        if (SUCCEEDED(webView->QueryInterface(IID_IWebViewEditing, (void**)&viewEditing))) {
-            IWebEditingDelegate* delegate;
-            if (SUCCEEDED(viewEditing->editingDelegate(&delegate))) {
-                EditingDelegate* editingDelegate = (EditingDelegate*)delegate;
-                editingDelegate->setAcceptsEditing(acceptsEditing);
-                delegate->Release();
-            }
-            viewEditing->Release();
-        }
-        webView->Release();
-    }
+    JSValueRef undefined = JSValueMakeUndefined(context);
 
-    return JSValueMakeUndefined(context);
+    CComPtr<IWebView> webView;
+    if (FAILED(frame->webView(&webView)))
+        return undefined;
+
+    CComQIPtr<IWebViewEditing> viewEditing(webView);
+    if (!viewEditing)
+        return undefined;
+
+    CComPtr<IWebEditingDelegate> delegate;
+    if (FAILED(viewEditing->editingDelegate(&delegate)))
+        return undefined;
+
+    EditingDelegate* editingDelegate = (EditingDelegate*)(IWebEditingDelegate*)delegate;
+    editingDelegate->setAcceptsEditing(acceptsEditing);
+
+    return undefined;
 }
 
 static JSValueRef displayCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
@@ -147,14 +149,19 @@ static JSValueRef setTabKeyCyclesThroughElementsCallback(JSContextRef context, J
     if (argumentCount > 0)
         shouldCycle = JSValueToBoolean(context, arguments[0]);
 
+    JSValueRef undefined = JSValueMakeUndefined(context);
+
     CComPtr<IWebView> webView;
     if (FAILED(frame->webView(&webView)))
-        return JSValueMakeUndefined(context);
+        return undefined;
 
     CComQIPtr<IWebViewPrivate> viewPrivate(webView);
+    if (!viewPrivate)
+        return undefined;
+
     viewPrivate->setTabKeyCyclesThroughElements(shouldCycle ? TRUE : FALSE);
 
-    return JSValueMakeUndefined(context);
+    return undefined;
 }
 
 static JSStaticFunction staticFunctions[] = {

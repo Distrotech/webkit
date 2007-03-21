@@ -31,6 +31,7 @@
 
 #include "DraggingInfo.h"
 
+#include <atlcomcli.h>
 #include <wtf/Platform.h>
 #include <JavaScriptCore/JavaScriptCore.h>
 #include <JavaScriptCore/Assertions.h>
@@ -100,11 +101,9 @@ static LRESULT dispatchMessage(const MSG* msg)
 
 static JSValueRef mouseDownCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
 {
-    IWebFramePrivate* framePrivate = 0;
-    if (SUCCEEDED(frame->QueryInterface(IID_IWebFramePrivate, (void**)&framePrivate))) {
+    CComQIPtr<IWebFramePrivate> framePrivate(frame);
+    if (framePrivate)
         framePrivate->layout();
-        framePrivate->Release();
-    }
 
     down = true;
     MSG msg = makeMsg(webViewWindow, WM_LBUTTONDOWN, 0, MAKELPARAM(lastMousePosition.x, lastMousePosition.y));
@@ -123,17 +122,15 @@ static inline POINTL pointl(const POINT& point)
 
 static void doMouseUp(MSG msg)
 {
-    IWebFramePrivate* framePrivate = 0;
-    if (SUCCEEDED(frame->QueryInterface(IID_IWebFramePrivate, (void**)&framePrivate))) {
+    CComQIPtr<IWebFramePrivate> framePrivate(frame);
+    if (framePrivate)
         framePrivate->layout();
-        framePrivate->Release();
-    }
 
     dispatchMessage(&msg);
     down = false;
 
     if (draggingInfo) {
-        IWebView* webView;
+        CComPtr<IWebView> webView;
         if (SUCCEEDED(frame->webView(&webView))) {
             POINT screenPoint = msg.pt;
             ::ClientToScreen(webViewWindow, &screenPoint);
@@ -148,8 +145,6 @@ static void doMouseUp(MSG msg)
 
             delete draggingInfo;
             draggingInfo = 0;
-
-            webView->Release();
         }
     }
 }
@@ -169,11 +164,9 @@ static JSValueRef mouseUpCallback(JSContextRef context, JSObjectRef function, JS
 
 static JSValueRef mouseClickCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
 {
-    IWebFramePrivate* framePrivate = 0;
-    if (SUCCEEDED(frame->QueryInterface(IID_IWebFramePrivate, (void**)&framePrivate))) {
+    CComQIPtr<IWebFramePrivate> framePrivate(frame);
+    if (framePrivate)
         framePrivate->layout();
-        framePrivate->Release();
-    }
 
     MSG downMsg = makeMsg(webViewWindow, WM_LBUTTONDOWN, 0, MAKELPARAM(lastMousePosition.x, lastMousePosition.y));
     dispatchMessage(&downMsg);
@@ -188,11 +181,9 @@ static JSValueRef mouseClickCallback(JSContextRef context, JSObjectRef function,
 
 static void doMouseMove(MSG msg)
 {
-    IWebFramePrivate* framePrivate = 0;
-    if (SUCCEEDED(frame->QueryInterface(IID_IWebFramePrivate, (void**)&framePrivate))) {
+    CComQIPtr<IWebFramePrivate> framePrivate(frame);
+    if (framePrivate)
         framePrivate->layout();
-        framePrivate->Release();
-    }
 
     dispatchMessage(&msg);
 
@@ -272,11 +263,9 @@ static JSValueRef keyDownCallback(JSContextRef context, JSObjectRef function, JS
     static JSStringRef metaKey = JSStringCreateWithUTF8CString("metaKey");
     static JSStringRef lengthProperty = JSStringCreateWithUTF8CString("length");
 
-    IWebFramePrivate* framePrivate = 0;
-    if (SUCCEEDED(frame->QueryInterface(IID_IWebFramePrivate, (void**)&framePrivate))) {
+    CComQIPtr<IWebFramePrivate> framePrivate(frame);
+    if (framePrivate)
         framePrivate->layout();
-        framePrivate->Release();
-    }
 
     BYTE keyState[256];
     if (argumentCount > 1) {

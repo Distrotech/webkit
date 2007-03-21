@@ -28,6 +28,7 @@
 
 #include "DumpRenderTree.h"
 
+#include <atlcomcli.h>
 #include <atlstr.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <JavaScriptCore/JavaScriptCore.h>
@@ -94,30 +95,30 @@ extern "C" BOOL InitializeCoreGraphics();
 static void initialize(HMODULE hModule)
 {
     static LPCTSTR fontsToInstall[] = {
-        _T("AHEM____.ttf"),
-        _T("Apple Chancery.ttf"),
-        _T("Courier Bold.ttf"),
-        _T("Courier.ttf"),
-        _T("Helvetica Bold.ttf"),
-        _T("Helvetica.ttf"),
-        _T("Helvetica Neue Bold Italic.ttf"),
-        _T("Helvetica Neue Bold.ttf"),
-        _T("Helvetica Neue Condensed Black.ttf"),
-        _T("Helvetica Neue Condensed Bold.ttf"),
-        _T("Helvetica Neue Italic.ttf"),
-        _T("Helvetica Neue Light Italic.ttf"),
-        _T("Helvetica Neue Light.ttf"),
-        _T("Helvetica Neue UltraLight Italic.ttf"),
-        _T("Helvetica Neue UltraLight.ttf"),
-        _T("Helvetica Neue.ttf"),
-        _T("Lucida Grande.ttf"),
-        _T("Lucida Grande Bold.ttf"),
-        _T("Monaco.ttf"),
-        _T("Papyrus.ttf"),
-        _T("Times Bold Italic.ttf"),
-        _T("Times Bold.ttf"),
-        _T("Times Italic.ttf"),
-        _T("Times Roman.ttf")
+        TEXT("AHEM____.ttf"),
+        TEXT("Apple Chancery.ttf"),
+        TEXT("Courier Bold.ttf"),
+        TEXT("Courier.ttf"),
+        TEXT("Helvetica Bold.ttf"),
+        TEXT("Helvetica.ttf"),
+        TEXT("Helvetica Neue Bold Italic.ttf"),
+        TEXT("Helvetica Neue Bold.ttf"),
+        TEXT("Helvetica Neue Condensed Black.ttf"),
+        TEXT("Helvetica Neue Condensed Bold.ttf"),
+        TEXT("Helvetica Neue Italic.ttf"),
+        TEXT("Helvetica Neue Light Italic.ttf"),
+        TEXT("Helvetica Neue Light.ttf"),
+        TEXT("Helvetica Neue UltraLight Italic.ttf"),
+        TEXT("Helvetica Neue UltraLight.ttf"),
+        TEXT("Helvetica Neue.ttf"),
+        TEXT("Lucida Grande.ttf"),
+        TEXT("Lucida Grande Bold.ttf"),
+        TEXT("Monaco.ttf"),
+        TEXT("Papyrus.ttf"),
+        TEXT("Times Bold Italic.ttf"),
+        TEXT("Times Bold.ttf"),
+        TEXT("Times Italic.ttf"),
+        TEXT("Times Roman.ttf")
     };
 
     CString exePath;
@@ -126,7 +127,7 @@ static void initialize(HMODULE hModule)
     int lastSlash = exePath.ReverseFind('\\');
     if (lastSlash != -1 && lastSlash + 1< exePath.GetLength())
         exePath = exePath.Left(lastSlash + 1);
-    exePath += _T("DumpRenderTree.resources\\");
+    exePath += TEXT("DumpRenderTree.resources\\");
 
     for (int i = 0; i < ARRAYSIZE(fontsToInstall); ++i)
         AddFontResourceEx(exePath + fontsToInstall[i], FR_PRIVATE, 0);
@@ -164,32 +165,26 @@ static void initialize(HMODULE hModule)
 
 void dump()
 {
-    BSTR resultString = 0;
+    CComBSTR resultString;
 
     if (dumpTree) {
         if (dumpAsText) {
-            IDOMDocument* document;
+            CComPtr<IDOMDocument> document;
             frame->DOMDocument(&document);
 
-            IDOMElement* documentElement;
+            CComPtr<IDOMElement> documentElement;
             document->documentElement(&documentElement);
 
-            IDOMHTMLElement* htmlElement;
-            HRESULT hr = documentElement->QueryInterface(IID_IDOMHTMLElement, (void**)&htmlElement);
-            if (SUCCEEDED(hr)) {
+            CComQIPtr<IDOMHTMLElement> htmlElement(documentElement);
+            if (htmlElement)
                 htmlElement->innerText(&resultString);
-                htmlElement->Release();
-            } else
+            else
                 documentElement->textContent(&resultString);
-            documentElement->Release();
-            document->Release();
         } else {
-            IWebFramePrivate* framePrivate;
-            HRESULT hr = frame->QueryInterface(IID_IWebFramePrivate, (void**)&framePrivate);
-            if (FAILED(hr))
+            CComQIPtr<IWebFramePrivate> framePrivate(frame);
+            if (!framePrivate)
                 goto fail;
             framePrivate->renderTreeAsExternalRepresentation(&resultString);
-            framePrivate->Release();
         }
         
         if (!resultString)
@@ -204,7 +199,6 @@ void dump()
             free(buffer);
             if (dumpAsText)
                 printf("\n");
-            SysFreeString(resultString);
         }
     }
 
@@ -219,12 +213,10 @@ fail:
 
 static void runTest(const char* pathOrURL)
 {
-    BSTR urlBStr;
-    static BSTR methodBStr = 0;
- 
-    if (!methodBStr)
-        methodBStr = SysAllocString(TEXT("GET"));
+    static CComBSTR methodBStr(TEXT("GET"));
 
+    CComBSTR urlBStr;
+ 
     CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, pathOrURL, kCFStringEncodingWindowsLatin1);
     CFURLRef url = CFURLCreateWithString(kCFAllocatorDefault, str, 0);
 
@@ -256,17 +248,15 @@ static void runTest(const char* pathOrURL)
     // Set the test timeout timer
     SetTimer(hostWindow, timeoutId, timeoutValue, 0);
 
-    IWebMutableURLRequest* request;
-    HRESULT hr = CoCreateInstance(CLSID_WebMutableURLRequest, 0, CLSCTX_ALL, IID_IWebMutableURLRequest, (void**)&request);
+    CComPtr<IWebMutableURLRequest> request;
+    HRESULT hr = request.CoCreateInstance(CLSID_WebMutableURLRequest);
     if (FAILED(hr))
         goto exit;
 
     request->initWithURL(urlBStr, WebURLRequestUseProtocolCachePolicy, 0);
-    SysFreeString(urlBStr);
 
     request->setHTTPMethod(methodBStr);
     frame->loadRequest(request);
-    request->Release();
 
     MSG msg;
     while (GetMessage(&msg, 0, 0, 0)) {
@@ -289,17 +279,17 @@ exit:
 static void initializePreferences(IWebPreferences* preferences)
 {
 #ifdef USE_MAC_FONTS
-    BSTR standardFamily = SysAllocString(L"Times");
-    BSTR fixedFamily = SysAllocString(L"Courier");
-    BSTR sansSerifFamily = SysAllocString(L"Helvetica");
-    BSTR cursiveFamily = SysAllocString(L"Apple Chancery");
-    BSTR fantasyFamily = SysAllocString(L"Papyrus");
+    CComBSTR standardFamily("Times");
+    CComBSTR fixedFamily("Courier");
+    CComBSTR sansSerifFamily("Helvetica");
+    CComBSTR cursiveFamily("Apple Chancery");
+    CComBSTR fantasyFamily("Papyrus");
 #else
-    BSTR standardFamily = SysAllocString(L"Times New Roman");
-    BSTR fixedFamily = SysAllocString(L"Courier New");
-    BSTR sansSerifFamily = SysAllocString(L"Arial");
-    BSTR cursiveFamily = SysAllocString(L"Comic Sans MS"); // Not actually cursive, but it's what IE and Firefox use.
-    BSTR fantasyFamily = SysAllocString(L"Times New Roman");
+    CComBSTR standardFamily("Times New Roman");
+    CComBSTR fixedFamily("Courier New");
+    CComBSTR sansSerifFamily("Arial");
+    CComBSTR cursiveFamily("Comic Sans MS"); // Not actually cursive, but it's what IE and Firefox use.
+    CComBSTR fantasyFamily("Times New Roman");
 #endif
 
     preferences->setStandardFontFamily(standardFamily);
@@ -308,12 +298,6 @@ static void initializePreferences(IWebPreferences* preferences)
     preferences->setSansSerifFontFamily(sansSerifFamily);
     preferences->setCursiveFontFamily(cursiveFamily);
     preferences->setFantasyFontFamily(fantasyFamily);
-
-    SysFreeString(standardFamily);
-    SysFreeString(fixedFamily);
-    SysFreeString(sansSerifFamily);
-    SysFreeString(cursiveFamily);
-    SysFreeString(fantasyFamily);
 
     preferences->setAutosaves(FALSE);
     preferences->setJavaEnabled(FALSE);
@@ -433,63 +417,61 @@ int main(int argc, char* argv[])
 
     // FIXME: options
 
-    IWebView* webView;
-    HRESULT hr = CoCreateInstance(CLSID_WebView, 0, CLSCTX_ALL, IID_IWebView, (void**)&webView);
-    if (FAILED(hr))
-        goto exit;
+    CComPtr<IWebView> webView;
+    if (FAILED(webView.CoCreateInstance(CLSID_WebView)))
+        return -1;
 
-    hr = webView->setHostWindow(hostWindow);
-    if (FAILED(hr))
-        goto exit;
+    if (FAILED(webView->setHostWindow(hostWindow)))
+        return -1;
 
     RECT clientRect;
     clientRect.bottom = clientRect.left = clientRect.top = clientRect.right = 0;
-    hr = webView->initWithFrame(clientRect, 0, 0);
-    if (FAILED(hr))
-        goto exit;
+    if (FAILED(webView->initWithFrame(clientRect, 0, 0)))
+        return -1;
 
-    IWebViewPrivate* viewPrivate;
-    hr = webView->QueryInterface(IID_IWebViewPrivate, (void**)&viewPrivate);
-    if (FAILED(hr))
-        goto exit;
-    viewPrivate->viewWindow(&webViewWindow);
-    viewPrivate->Release();
+    CComQIPtr<IWebViewPrivate> viewPrivate(webView);
+    if (!viewPrivate)
+        return -1;
+
+    if (FAILED(viewPrivate->viewWindow(&webViewWindow)))
+        return -1;
 
     SetWindowPos(webViewWindow, 0, 0, 0, maxViewWidth, maxViewHeight, 0);
     ShowWindow(hostWindow, SW_SHOW);
 
-    WaitUntilDoneDelegate* waitDelegate = new WaitUntilDoneDelegate();
-    webView->setFrameLoadDelegate(waitDelegate);
-    waitDelegate->Release();
+    CComPtr<WaitUntilDoneDelegate> waitDelegate;
+    waitDelegate.Attach(new WaitUntilDoneDelegate);
+    if (FAILED(webView->setFrameLoadDelegate(waitDelegate)))
+        return -1;
 
-    webView->setUIDelegate(waitDelegate);
+    if (FAILED(webView->setUIDelegate(waitDelegate)))
+        return -1;
 
-    IWebViewEditing* viewEditing;
-    hr = webView->QueryInterface(IID_IWebViewEditing, (void**)&viewEditing);
-    if (FAILED(hr))
-        goto exit;
+    CComQIPtr<IWebViewEditing> viewEditing(webView);
+    if (!viewEditing)
+        return -1;
 
-    EditingDelegate* editingDelegate = new EditingDelegate;
-    viewEditing->setEditingDelegate(editingDelegate);
-    editingDelegate->Release();
-    viewEditing->Release();
+    CComPtr<EditingDelegate> editingDelegate;
+    editingDelegate.Attach(new EditingDelegate);
 
-    IWebPreferences* preferences;
-    hr = webView->preferences(&preferences);
-    if (FAILED(hr))
-        goto exit;
+    if (FAILED(viewEditing->setEditingDelegate(editingDelegate)))
+        return -1;
+
+    CComPtr<IWebPreferences> preferences;
+    if (FAILED(webView->preferences(&preferences)))
+        return -1;
 
     initializePreferences(preferences);
 
-    IWebIconDatabase* iconDatabase;
-    IWebIconDatabase* tmpIconDatabase;
-    CoCreateInstance(CLSID_WebIconDatabase, 0, CLSCTX_ALL, IID_IWebIconDatabase, (void**)&tmpIconDatabase);
-
-    tmpIconDatabase->sharedIconDatabase(&iconDatabase);
+    CComPtr<IWebIconDatabase> iconDatabase;
+    CComPtr<IWebIconDatabase> tmpIconDatabase;
+    if (FAILED(tmpIconDatabase.CoCreateInstance(CLSID_WebIconDatabase)))
+        return -1;
+    if (FAILED(tmpIconDatabase->sharedIconDatabase(&iconDatabase)))
+        return -1;
         
-    hr = webView->mainFrame(&frame);
-    if (FAILED(hr))
-        goto exit;
+    if (FAILED(webView->mainFrame(&frame)))
+        return -1;
 
     _CrtMemState entryToMainMemCheckpoint;
     if (leakChecking)
@@ -529,10 +511,8 @@ int main(int argc, char* argv[])
     if (threaded)
         stopJavaScriptThreads();
     
+    frame->Release();
     webView->close();
-
-    webView->Release();
-    iconDatabase->Release();
 
     if (leakChecking) {
         // dump leaks to stderr
@@ -542,6 +522,4 @@ int main(int argc, char* argv[])
     }
 
     return 0;
-exit:
-    return -1;
 }
