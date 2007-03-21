@@ -91,6 +91,9 @@ interface IWebViewPrivate : IUnknown
     HRESULT scrollBy([in] LPPOINT offset);
     HRESULT visibleContentRect([out, retval] LPRECT rect);
     
+    // SPI for DumpRenderTree
+    HRESULT updateActiveState();
+
     // Support for displaying multiple text matches.
     HRESULT markAllMatchesForText([in] BSTR search, [in] BOOL caseSensitive, [in] BOOL highlight, [in] UINT limit, [out] UINT* matches);
     HRESULT unmarkAllTextMatches();

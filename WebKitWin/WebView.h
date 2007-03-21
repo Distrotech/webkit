@@ -548,6 +548,8 @@ public:
     virtual HRESULT STDMETHODCALLTYPE visibleContentRect( 
         /* [retval][out] */ LPRECT rect);
 
+    virtual HRESULT STDMETHODCALLTYPE updateActiveState(void);
+
     virtual HRESULT STDMETHODCALLTYPE markAllMatchesForText(
         BSTR search, BOOL caseSensitive, BOOL highlight, UINT limit, UINT* matches);
 

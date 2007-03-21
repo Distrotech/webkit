@@ -1082,6 +1082,8 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             if (SUCCEEDED(webView->uiDelegate(&uiDelegate)) && uiDelegate &&
                 SUCCEEDED(uiDelegate->QueryInterface(IID_IWebUIDelegatePrivate, (void**) &uiDelegatePrivate)) && uiDelegatePrivate)
                 uiDelegatePrivate->webViewReceivedFocus(webView);
+            // FIXME: Merge this logic with updateActiveState, and switch this over to use updateActiveState
+
             // It's ok to just always do setWindowHasFocus, since we won't fire the focus event on the DOM
             // window unless the value changes.  It's also ok to do setIsActive inside focus,
             // because Windows has no concept of having to update control tints (e.g., graphite vs. aqua)
@@ -1104,6 +1106,8 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             if (SUCCEEDED(webView->uiDelegate(&uiDelegate)) && uiDelegate &&
                 SUCCEEDED(uiDelegate->QueryInterface(IID_IWebUIDelegatePrivate, (void**) &uiDelegatePrivate)) && uiDelegatePrivate)
                 uiDelegatePrivate->webViewLostFocus(webView, reinterpret_cast<HWND>(wParam));
+            // FIXME: Merge this logic with updateActiveState, and switch this over to use updateActiveState
+
             // However here we have to be careful.  If we are losing focus because of a deactivate,
             // then we need to remember our focused target for restoration later.  
             // If we are losing focus to another part of our window, then we are no longer focused for real
@@ -2076,6 +2080,25 @@ HRESULT STDMETHODCALLTYPE WebView::searchFor(
         *found = startFrame->findString(search, !!forward, !!caseFlag, true, true);
         m_page->focusController()->setFocusedFrame(frame);
     }
+
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebView::updateActiveState()
+{
+    Frame* frame = m_page->mainFrame();
+
+    HWND window = ::GetAncestor(m_viewWindow, GA_ROOT);
+    HWND activeWindow = ::GetActiveWindow();
+    bool windowIsKey = window == activeWindow;
+    activeWindow = ::GetAncestor(activeWindow, GA_ROOTOWNER);
+
+    bool windowOrSheetIsKey = windowIsKey || (window == activeWindow);
+
+    frame->setIsActive(windowIsKey);            
+
+    Frame* focusedFrame = m_page->focusController()->focusedOrMainFrame();
+    frame->setWindowHasFocus(frame == focusedFrame && windowOrSheetIsKey);
 
     return S_OK;
 }

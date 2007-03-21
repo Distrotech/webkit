@@ -36,9 +36,11 @@
 
 #include <wtf/Platform.h>
 #include <JavaScriptCore/JavaScriptCore.h>
-#include <stdio.h>
 #include <WebKit/IWebFramePrivate.h>
+#include <WebKit/IWebViewPrivate.h>
 
+#include <atlcomcli.h>
+#include <stdio.h>
 
 HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::QueryInterface(REFIID riid, void** ppvObject)
 {
@@ -90,6 +92,15 @@ HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::didStartProvisionalLoadForFrame
         topLoadingFrame = frame;
 
     return S_OK; 
+}
+
+HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::didCommitLoadForFrame( 
+    /* [in] */ IWebView *webView,
+    /* [in] */ IWebFrame *frame)
+{
+    CComQIPtr<IWebViewPrivate> webViewPrivate(webView);
+    webViewPrivate->updateActiveState();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::didReceiveTitle( 

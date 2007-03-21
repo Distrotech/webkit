@@ -1,3 +1,14 @@
+2007-03-21  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Adam.
+        
+        Fix for <rdar://problem/5076213> fast/forms/input-text-enter.html fails
+        
+        Call updateActiveState on the WebView in didCommitLoadForFrame.  This is required so that nodes can be properly focused in the document.
+        
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.cpp: (WaitUntilDoneDelegate::didCommitLoadForFrame):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.h:
+
 2007-03-20  Adam Roben  <aroben@apple.com>
 
         Reviewed by Brady.

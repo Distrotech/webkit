@@ -59,7 +59,7 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE didCommitLoadForFrame( 
         /* [in] */ IWebView *webView,
-        /* [in] */ IWebFrame *frame) { return E_NOTIMPL; } 
+        /* [in] */ IWebFrame *frame);
 
     virtual HRESULT STDMETHODCALLTYPE didReceiveTitle( 
         /* [in] */ IWebView *webView,

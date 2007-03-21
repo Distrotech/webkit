@@ -1,3 +1,17 @@
+2007-03-21  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Adam.
+        
+        Fix for <rdar://problem/5076213> fast/forms/input-text-enter.html fails
+        
+        Added updateActiveState SPI for DumpRenderTree.
+
+        * Interfaces/IWebViewPrivate.idl:
+        * WebView.cpp:
+        (WebViewWndProc): Added comments where we do similar work when the webview gets and loses focus.  We should merge this logic into updateActiveState eventually.
+        (WebView::updateActiveState):
+        * WebView.h:
+
 2007-03-19  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Geoff and Adam.
