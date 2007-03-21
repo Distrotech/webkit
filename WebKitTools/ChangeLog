@@ -1,5 +1,12 @@
 2007-03-20  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Hyatt.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (initialize): Install Helevetica Neue.
+
+2007-03-20  Adam Roben  <aroben@apple.com>
+
         Release build fix.
 
         * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.vcproj:
