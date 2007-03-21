@@ -13,9 +13,7 @@
         generates correct results (although they are different from the Mac because we fall back to Arial for
         Hebrew instead of Lucida Grande).
 
-        Reviewed by NOBODY (OOPS!).
-
-        WARNING: NO TEST CASES ADDED OR CHANGED
+        Reviewed by oliver
 
         * platform/win/UniscribeController.cpp:
         (WebCore::UniscribeController::UniscribeController):
