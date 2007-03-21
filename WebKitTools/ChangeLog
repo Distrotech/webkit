@@ -1,4 +1,3 @@
-<<<<<<< .mine
 2007-03-20  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Geoff and Adam.
@@ -11,7 +10,6 @@
         (stopJavaScriptThreads): Ditto.
         (main): Account for --threaded command-line argument better.
 
-=======
 2007-03-20  Adam Roben  <aroben@apple.com>
 
         Reviewed by Hyatt.
@@ -76,7 +74,6 @@
         * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Arial Italic.ttf: Removed.
         * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/Resources/Arial.ttf: Removed.
 
->>>>>>> .r12869
 2007-03-19  Adam Roben  <aroben@apple.com>
 
         Reviewed by Ada.
