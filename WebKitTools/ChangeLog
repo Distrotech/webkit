@@ -1,3 +1,11 @@
+2007-03-22  Adam Roben  <aroben@apple.com>
+
+        Rubberstamped by Geoff.
+
+        Removed eventSender.mouseClick now that it isn't used.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/EventSender.cpp:
+
 2007-03-21  Adam Roben  <aroben@apple.com>
 
         Reviewed by Hyatt.

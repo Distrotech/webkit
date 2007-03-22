@@ -162,23 +162,6 @@ static JSValueRef mouseUpCallback(JSContextRef context, JSObjectRef function, JS
     return JSValueMakeUndefined(context);
 }
 
-static JSValueRef mouseClickCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
-{
-    CComQIPtr<IWebFramePrivate> framePrivate(frame);
-    if (framePrivate)
-        framePrivate->layout();
-
-    MSG downMsg = makeMsg(webViewWindow, WM_LBUTTONDOWN, 0, MAKELPARAM(lastMousePosition.x, lastMousePosition.y));
-    dispatchMessage(&downMsg);
-    down = true;
-    
-    MSG upMsg = makeMsg(webViewWindow, WM_LBUTTONUP, 0, MAKELPARAM(lastMousePosition.x, lastMousePosition.y));
-    dispatchMessage(&upMsg);
-    down = false;
-
-    return JSValueMakeUndefined(context);
-}
-
 static void doMouseMove(MSG msg)
 {
     CComQIPtr<IWebFramePrivate> framePrivate(frame);
@@ -315,7 +298,6 @@ static JSValueRef keyDownCallback(JSContextRef context, JSObjectRef function, JS
 static JSStaticFunction staticFunctions[] = {
     { "mouseDown", mouseDownCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { "mouseUp", mouseUpCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
-    { "mouseClick", mouseClickCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { "mouseMoveTo", mouseMoveToCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { "leapForward", leapForwardCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { "keyDown", keyDownCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
