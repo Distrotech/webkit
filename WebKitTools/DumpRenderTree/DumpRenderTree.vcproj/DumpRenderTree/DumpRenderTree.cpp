@@ -195,6 +195,12 @@ void dump()
             }
             ::SetWindowPos(webViewWindow, 0, 0, 0, width, height, SWP_NOMOVE);
 
+            bool isSVGTest = isSVGW3CTest || strstr(currentTest, ".svg");
+            if (isSVGTest) {
+                ::InvalidateRect(webViewWindow, 0, TRUE);
+                ::SendMessage(webViewWindow, WM_PAINT, 0, 0);
+            }
+
             CComQIPtr<IWebFramePrivate> framePrivate(frame);
             if (!framePrivate)
                 goto fail;

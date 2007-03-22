@@ -1,5 +1,14 @@
 2007-03-21  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Hyatt.
+
+        Force SVG tests to paint to match the Mac results.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (dump): Force a paint if we're running an SVG test.
+
+2007-03-21  Adam Roben  <aroben@apple.com>
+
         Reviewed by Oliver.
 
         Make W3C SVG tests render at the correct dimensions.
