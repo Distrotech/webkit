@@ -1,3 +1,11 @@
+2007-03-22  Dave Hyatt  <hyatt@apple.com>
+
+        Fix for mouse wheel issues.  Only return success from passWheelEventToSubframe is the event was
+        actually accepted.
+        
+        * page/win/EventHandlerWin.cpp:
+        (WebCore::EventHandler::passWheelEventToSubframe):
+
 2007-03-21  Dave Hyatt  <hyatt@apple.com>
 
         Fix numerous bugs in RTL support.  Only use a directional override if the run
