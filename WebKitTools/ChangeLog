@@ -1,5 +1,20 @@
 2007-03-22  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Adele.
+
+        Implemented layoutTestController.dumpTitleChanges.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (runTest): Initialize new global.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.h:
+        Added extern declaration.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/LayoutTestController.cpp:
+        (dumpTitleChangesCallback): Implemented.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.cpp:
+        (WaitUntilDoneDelegate::didReceiveTitle): Implemented.
+
+2007-03-22  Adam Roben  <aroben@apple.com>
+
         Rubberstamped by Geoff.
 
         Removed eventSender.mouseClick now that it isn't used.

@@ -108,6 +108,8 @@ HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::didReceiveTitle(
         /* [in] */ BSTR title,
         /* [in] */ IWebFrame *frame)
 {
+    if (shouldDumpTitleChanges)
+        printf("TITLE CHANGED: %S\n", title ? title : L"");
     return S_OK;
 }
 

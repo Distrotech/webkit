@@ -39,6 +39,7 @@ extern bool dumpAsText;
 extern bool waitToDump;     // TRUE if waitUntilDone() has been called, but notifyDone() has not yet been called
 extern bool done;
 extern bool shouldDumpEditingCallbacks;
+extern bool shouldDumpTitleChanges;
 extern bool testRepaint;
 extern bool repaintSweepHorizontally;
 extern IWebFrame* topLoadingFrame;

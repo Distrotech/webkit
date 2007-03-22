@@ -65,6 +65,7 @@ IWebFrame* topLoadingFrame;     // !nil iff a load is in progress
 bool dumpAsText = false;
 bool waitToDump = false;
 bool shouldDumpEditingCallbacks = false;
+bool shouldDumpTitleChanges = false;
 bool testRepaint = false;
 bool repaintSweepHorizontally = false;
 
@@ -263,6 +264,7 @@ static void runTest(const char* pathOrURL)
     waitToDump = false;
     dumpAsText = false;
     shouldDumpEditingCallbacks = false;
+    shouldDumpTitleChanges = false;
     testRepaint = false;
     repaintSweepHorizontally = false;
     timedOut = false;
