@@ -293,8 +293,7 @@ public:
 
     // WebFrame
     void initWithWebFrameView(IWebFrameView*, IWebView*, WebCore::Page*, WebCore::HTMLFrameOwnerElement*);
-    void layoutIfNeeded();
-    void setNeedsLayout();
+    void layoutIfNeededRecursive(WebCore::FrameView* frameView);
     WebCore::Frame* impl();
     void invalidate();
     void receivedData(const char*, int, const WebCore::String&);

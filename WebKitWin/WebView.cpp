@@ -277,6 +277,9 @@ void WebView::updateBackingStore(FrameView* frameView, HDC dc, bool backingStore
     }
 
     if (m_backingStoreBitmap && (m_backingStoreDirtyRegion || backingStoreCompletelyDirty)) {
+        // Do a layout first so that everything we render to the backing store is always current.
+        m_mainFrame->layoutIfNeededRecursive(0);
+
         // This emulates the Mac smarts for painting rects intelligently.  This is
         // very important for us, since we double buffer based off dirty rects.
         bool useRegionBox = true;
@@ -330,9 +333,6 @@ void WebView::updateBackingStore(FrameView* frameView, HDC dc, bool backingStore
 void WebView::paint(HDC dc, LPARAM options)
 {
     LOCAL_GDI_COUNTER(0, __FUNCTION__);
-
-    // Do a layout first so that everything we render is always current.
-    m_mainFrame->layoutIfNeeded();
 
     Frame* coreFrame = core(m_mainFrame);
     if (!coreFrame)
@@ -1062,7 +1062,6 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 
             if (lParam != 0) {
                 webView->deleteBackingStore();
-                mainFrameImpl->setNeedsLayout();
                 if (Frame* coreFrame = core(mainFrameImpl)) {
                     coreFrame->view()->resize(LOWORD(lParam), HIWORD(lParam));
 

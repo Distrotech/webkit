@@ -405,13 +405,12 @@ static HTMLInputElement* inputElementFromDOMElement(IDOMElement* element)
 
 class WebFrame::WebFramePrivate {
 public:
-    WebFramePrivate() :frame(0), webView(0), needsLayout(false), m_policyFunction(0) { }
+    WebFramePrivate() :frame(0), webView(0), m_policyFunction(0) { }
     ~WebFramePrivate() { }
     FrameView* frameView() { return frame ? frame->view() : 0; }
 
     Frame* frame;
     WebView* webView;
-    bool needsLayout;
     FramePolicyFunction m_policyFunction;
     COMPtr<WebFramePolicyListener> m_policyListener;
 };
@@ -839,21 +838,34 @@ void WebFrame::initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, 
     }
 }
 
-void WebFrame::layoutIfNeeded()
+void WebFrame::layoutIfNeededRecursive(FrameView* frameView)
 {
     LOCAL_GDI_COUNTER(0, __FUNCTION__);
 
-    if (d->needsLayout) {
-        if (d->frameView())
-            d->frameView()->layout();
-        d->needsLayout = false;
-    } else if (d->frameView() && d->frameView()->layoutPending())
-        d->frameView()->layout();
-}
+    // We have to crawl our entire tree looking for any FrameViews that need
+    // layout and make sure they are up to date.
+    // Mac actually tests for intersection with the dirty region and tries not to
+    // update layout for frames that are outside the dirty region.  Not only does this seem
+    // pointless (since those frames will have set a zero timer to layout anyway), but
+    // it is also incorrect, since if two frames overlap, the first could be excluded from the dirty
+    // region but then become included later by the second frame adding rects to the dirty region
+    // when it lays out.
+    if (!frameView) {
+        frameView = d->frameView();
+        if (!frameView)
+            return;
+    }
 
-void WebFrame::setNeedsLayout()
-{
-    d->needsLayout = true;
+    // Layout if we need to.
+    if (frameView->needsLayout())
+        frameView->layout();
+
+    // Now lay out any children that need to.
+    HashSet<Widget*>* children = frameView->children();
+    HashSet<Widget*>::iterator end = children->end();
+    for (HashSet<Widget*>::iterator current = children->begin(); current != end; ++current)
+        if ((*current)->isFrameView())
+            layoutIfNeededRecursive(static_cast<FrameView*>(*current));
 }
 
 Frame* WebFrame::impl()

@@ -1,3 +1,16 @@
+2007-03-22  U-ISABELLA\David Hyatt,S-1-5-21-1085031214-1417001333-725345543-1003  <set EMAIL_ADDRESS environment variable>
+
+        Reviewed by NOBODY (OOPS!).
+
+        * WebFrame.cpp:
+        (WebFrame::WebFramePrivate::m_policyFunction):
+        (WebFrame::layoutIfNeededRecursive):
+        * WebFrame.h:
+        * WebView.cpp:
+        (WebView::updateBackingStore):
+        (WebView::paint):
+        (WebViewWndProc):
+
 2007-03-22  Ada Chan  <adachan@apple.com>
 
         Reviewed by Hyatt and Alice.
