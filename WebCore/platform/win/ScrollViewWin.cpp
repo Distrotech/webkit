@@ -91,7 +91,7 @@ public:
     RefPtr<PlatformScrollbar> m_vBar;
     RefPtr<PlatformScrollbar> m_hBar;
     HRGN m_dirtyRegion;
-    HashSet<const Widget*> m_children;
+    HashSet<Widget*> m_children;
 };
 
 void ScrollView::ScrollViewPrivate::setHasHorizontalScrollbar(bool hasBar)
@@ -250,9 +250,11 @@ void ScrollView::setFrameGeometry(const IntRect& newGeometry)
     if (newGeometry == oldGeometry)
         return;
 
-    if (newGeometry.width() != oldGeometry.width() || newGeometry.height() != oldGeometry.height())
+    if (newGeometry.width() != oldGeometry.width() || newGeometry.height() != oldGeometry.height()) {
+        static_cast<FrameView*>(this)->setNeedsLayout();
         updateScrollbars(m_data->m_scrollOffset);
-    
+    }
+
     geometryChanged();
 }
 
@@ -641,10 +643,15 @@ void ScrollView::wheelEvent(PlatformWheelEvent& e)
     scrollBy(-e.deltaX() * LINE_STEP, -e.deltaY() * LINE_STEP);
 }
 
+HashSet<Widget*>* ScrollView::children()
+{
+    return &(m_data->m_children);
+}
+
 void ScrollView::geometryChanged() const
 {
-    HashSet<const Widget*>::const_iterator end = m_data->m_children.end();
-    for (HashSet<const Widget*>::const_iterator current = m_data->m_children.begin(); current != end; ++current)
+    HashSet<Widget*>::const_iterator end = m_data->m_children.end();
+    for (HashSet<Widget*>::const_iterator current = m_data->m_children.begin(); current != end; ++current)
         (*current)->geometryChanged();
 }
 

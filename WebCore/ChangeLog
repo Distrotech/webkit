@@ -1,5 +1,17 @@
 2007-03-22  Dave Hyatt  <hyatt@apple.com>
 
+        Fix for crasher in layout caused by paints that happen without layout being current.  Change to be
+        more like the Mac and crawl the frame tree up front ensuring everyone is up to date before painting.
+
+        Reviewed by olliej
+
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::setFrameGeometry):
+        (WebCore::ScrollView::children):
+        (WebCore::ScrollView::geometryChanged):
+
+2007-03-22  Dave Hyatt  <hyatt@apple.com>
+
         Fix for mouse wheel issues.  Only return success from passWheelEventToSubframe is the event was
         actually accepted.
         
