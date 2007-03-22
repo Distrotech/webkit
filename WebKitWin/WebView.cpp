@@ -700,11 +700,13 @@ bool WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
             // Reset the click count.
             globalClickCount = 1;
         globalPrevMouseDownTime = messageTime;
+        globalPrevButton = mouseEvent.button();
+        globalPrevPoint = mouseEvent.pos();
         
         mouseEvent.setClickCount(globalClickCount);
         handled = m_page->mainFrame()->eventHandler()->handleMousePressEvent(mouseEvent);
     } else if (message == WM_LBUTTONDBLCLK || message == WM_MBUTTONDBLCLK || message == WM_RBUTTONDBLCLK) {
-        globalClickCount = 2;
+        globalClickCount++;
         mouseEvent.setClickCount(globalClickCount);
         handled = m_page->mainFrame()->eventHandler()->handleMousePressEvent(mouseEvent);
     } else if (message == WM_LBUTTONUP || message == WM_MBUTTONUP || message == WM_RBUTTONUP) {

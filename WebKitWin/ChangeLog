@@ -1,3 +1,15 @@
+2007-03-22  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Hyatt and Alice.
+        
+        Changed the mouse event processing in the WebView wndproc so we actually
+        allow a mouse event with click count > 3, which matches the mac safari behavior.
+        
+        Set globalPrevButton and globalPrevPoint also in mouse down.
+
+        * WebView.cpp:
+        (WebView::handleMouseEvent):
+
 2007-03-21  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Adam.
