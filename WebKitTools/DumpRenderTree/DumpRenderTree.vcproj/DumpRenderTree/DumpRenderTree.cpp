@@ -53,6 +53,8 @@ static bool leakChecking = false;
 static bool timedOut = false;
 static bool threaded = false;
 
+static const char* currentTest;
+
 bool done;
 // This is the topmost frame that is loading, during a given load, or nil when no load is 
 // in progress.  Usually this is the same as the main frame, but not always.  In the case
@@ -181,6 +183,18 @@ void dump()
             else
                 documentElement->textContent(&resultString);
         } else {
+            bool isSVGW3CTest = strstr(currentTest, "svg\\W3C-SVG-1.1");
+            unsigned width;
+            unsigned height;
+            if (isSVGW3CTest) {
+                width = 480;
+                height = 360;
+            } else {
+                width = maxViewWidth;
+                height = maxViewHeight;
+            }
+            ::SetWindowPos(webViewWindow, 0, 0, 0, width, height, SWP_NOMOVE);
+
             CComQIPtr<IWebFramePrivate> framePrivate(frame);
             if (!framePrivate)
                 goto fail;
@@ -235,6 +249,8 @@ static void runTest(const char* pathOrURL)
     delete[] buffer;
 
     CFRelease(url);
+
+    currentTest = pathOrURL;
 
     done = false;
     topLoadingFrame = 0;

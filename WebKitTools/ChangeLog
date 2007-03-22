@@ -1,3 +1,13 @@
+2007-03-21  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Oliver.
+
+        Make W3C SVG tests render at the correct dimensions.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (dump): Resize the WebView if we're running a W3C SVG test.
+        (runTest): Save the current test filename.
+
 2007-03-21  Adele Peterson  <adele@apple.com>
 
         Reviewed by Adam.
