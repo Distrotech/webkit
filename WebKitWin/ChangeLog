@@ -1,3 +1,11 @@
+2007-03-21  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        * WebView.cpp:
+        (WebView::initWithFrame):
+        Remove #ifdef now that DRT no longer crashes.
+
 2007-03-21  Beth Dakin  <bdakin@apple.com>
 
         Reviewed by Adam.

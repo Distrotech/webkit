@@ -1588,13 +1588,9 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     if (FAILED(hr))
         return hr;
 
-#ifdef RADAR_5071479_IS_FIXED
-    // FIXME: <rdar://problem/5071479> The call to CFHTTPCookieStorageCreateFromFile crashes DRT on startup.
-
     // Use default cookie storage
     RetainPtr<CFHTTPCookieStorageRef> cookies(AdoptCF, CFHTTPCookieStorageCreateFromFile(kCFAllocatorDefault, 0, 0));
     ResourceHandle::setCookieStorage(cookies.get());
-#endif
 
     // Register to receive notifications whenever preference values change.
     //[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_preferencesChangedNotification:)
