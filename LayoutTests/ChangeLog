@@ -1,5 +1,11 @@
 2007-03-21  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Oliver.
+
+        * Skipped: Added an SVG test that causes a debug ASSERT in the C Runtime.
+
+2007-03-21  Adam Roben  <aroben@apple.com>
+
         Reviewed by David Kilzer (yay!).
 
         Re-enable the editing tests, except for two crashers.
