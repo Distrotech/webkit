@@ -128,4 +128,6 @@ interface IWebURLRequest : IUnknown
         -(NSString *)valueForHTTPHeaderField:(NSString *)field
     */
     HRESULT valueForHTTPHeaderField([in] BSTR field, [out, retval] BSTR* result);
+
+    HRESULT isEmpty([out, retval] BOOL* result);
 }

@@ -1,3 +1,15 @@
+2007-03-22  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Anders.
+
+        Fix for <rdar://problem/5071358> window.open won't work with empty urls (24fun test)
+
+        * Interfaces/IWebURLRequest.idl:
+        * WebMutableURLRequest.cpp: (WebMutableURLRequest::isEmpty): Added. Checks whether the ResourceRequest is empty.  On the mac,
+          NSURLRequests created from empty ResourceRequests are nil.  We may want to consider that in the future, but there were too
+          many places in the app that expected the IWebURLRequest to be non-null.
+        * WebMutableURLRequest.h:
+
 2007-03-22  Dave Hyatt  <hyatt@apple.com>
 
         Fix for crasher in layout caused by paints that happen without layout being current.  Change to be

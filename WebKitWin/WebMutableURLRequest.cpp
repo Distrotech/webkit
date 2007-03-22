@@ -225,6 +225,13 @@ HRESULT STDMETHODCALLTYPE WebMutableURLRequest::valueForHTTPHeaderField(
     return S_OK;
 }
 
+HRESULT STDMETHODCALLTYPE WebMutableURLRequest::isEmpty(
+    /* [retval][out] */ BOOL* result)
+{
+    *result = m_request.isEmpty();
+    return S_OK;
+}
+
 // IWebMutableURLRequest --------------------------------------------------------
 
 HRESULT STDMETHODCALLTYPE WebMutableURLRequest::addValue( 

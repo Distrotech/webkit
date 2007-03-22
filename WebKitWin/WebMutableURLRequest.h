@@ -107,6 +107,9 @@ public:
         /* [in] */ BSTR field,
         /* [retval][out] */ BSTR *result);
 
+    virtual HRESULT STDMETHODCALLTYPE isEmpty(
+    /* [retval][out] */ BOOL* result);
+
     // WebMutableURLRequest
     virtual HRESULT STDMETHODCALLTYPE addValue( 
         /* [in] */ BSTR value,
