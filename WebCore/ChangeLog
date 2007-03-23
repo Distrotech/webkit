@@ -1,3 +1,13 @@
+2007-03-22  Beth Dakin  <bdakin@apple.com>
+
+        Fix by Hyatt, reviewed and committed by me.
+
+        Fix for <rdar://problem/5082360> Incomplete frame paint when 
+        shrinking window @ google.com
+
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::setFrameGeometry): Wrong order!
+
 2007-03-22  Dave Hyatt  <hyatt@apple.com>
 
         Fix for crasher in layout caused by paints that happen without layout being current.  Change to be

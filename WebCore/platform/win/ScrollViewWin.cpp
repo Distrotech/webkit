@@ -251,8 +251,8 @@ void ScrollView::setFrameGeometry(const IntRect& newGeometry)
         return;
 
     if (newGeometry.width() != oldGeometry.width() || newGeometry.height() != oldGeometry.height()) {
-        static_cast<FrameView*>(this)->setNeedsLayout();
         updateScrollbars(m_data->m_scrollOffset);
+        static_cast<FrameView*>(this)->setNeedsLayout();
     }
 
     geometryChanged();
