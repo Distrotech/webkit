@@ -1,3 +1,16 @@
+2007-03-22  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Adam Roben.
+        
+        Fixed <rdar://problem/5082985> Select menus are too see-through
+
+        Upped alpha value from 90 to 95. Menus will still seem a little
+        more see-through than on the mac, since their backgrounds are
+        white, not grey, but white matches other Windows browsers.
+        
+        * ChangeLog:
+        * platform/win/PopupMenuWin.cpp:
+
 2007-03-22  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Maciej.

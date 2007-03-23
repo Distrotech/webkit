@@ -49,7 +49,7 @@ static const int defaultAnimationDuration = 200;
 // Maximum height of a popup window
 static const int maxPopupHeight = 320;
 
-static const int popupWindowAlphaPercent = 90;
+static const int popupWindowAlphaPercent = 95;
 
 const int optionSpacingMiddle = 1;
 const int popupWindowBorderWidth = 1;
