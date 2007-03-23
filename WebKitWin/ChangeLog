@@ -1,3 +1,14 @@
+2007-03-23  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by Hyatt.
+
+        Fix for <rdar://problem/5083914> Cursor is wrong for all context 
+        menus
+
+        * WebView.cpp:
+        (WebView::handleContextMenuEvent): Set the cursor to the pointer 
+        cursor.
+
 2007-03-23  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by Adam.

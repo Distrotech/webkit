@@ -48,6 +48,7 @@
 #include <WebCore/CommandByName.h>
 #include <WebCore/ContextMenuController.h>
 #include <WebCore/CString.h>
+#include <WebCore/Cursor.h>
 #include <WebCore/Document.h>
 #include <WebCore/DragController.h>
 #include <WebCore/DragData.h>
@@ -555,8 +556,10 @@ bool WebView::handleContextMenuEvent(WPARAM wParam, LPARAM lParam)
     // not run.
     m_page->contextMenuController()->clearContextMenu();
 
+    Frame* focusedFrame = m_page->focusController()->focusedOrMainFrame();
+    focusedFrame->view()->setCursor(pointerCursor());
     PlatformMouseEvent mouseEvent(m_viewWindow, WM_RBUTTONUP, wParam, lParam);
-    bool handledEvent = m_page->focusController()->focusedOrMainFrame()->eventHandler()->sendContextMenuEvent(mouseEvent);
+    bool handledEvent = focusedFrame->eventHandler()->sendContextMenuEvent(mouseEvent);
     if (!handledEvent)
         return false;
 
