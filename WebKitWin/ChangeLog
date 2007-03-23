@@ -1,3 +1,12 @@
+2007-03-23  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam.
+        
+        <rdar://problem/5083645> Spoofed UA for gmail doesn't work - should be removed
+
+        * WebView.cpp:
+        (WebView::userAgentForKURL): Remove gmail spoof
+
 2007-03-22  Dave Hyatt  <hyatt@apple.com>
 
         Fix for <rdar://problem/5083072>.
