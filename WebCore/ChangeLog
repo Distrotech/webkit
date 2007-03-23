@@ -1,3 +1,15 @@
+2007-03-23  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Maciej.
+
+        Fix for <rdar://problem/5083928> In editable webviews, caps lock key is ignored
+
+        * platform/win/KeyEventWin.cpp: (WebCore::PlatformKeyboardEvent::PlatformKeyboardEvent):
+        Removed code to store lowercase characters in m_text.  Now that we use the character code
+        to create m_text this is already taken care of.  This does mean that m_unmodifiedText is
+        not right.  This is used for accesskeys, which don't work yet, so that is covered in rdar://5085596.
+        This also fixes line endings in this file.
+
 2007-03-22  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Adam Roben.

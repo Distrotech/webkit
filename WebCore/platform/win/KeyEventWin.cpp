@@ -149,8 +149,6 @@ PlatformKeyboardEvent::PlatformKeyboardEvent(HWND, WPARAM virtualKeyCode, LPARAM
     , m_altKey(keyData & ALT_KEY_DOWN_MASK)
     , m_metaKey(keyData & ALT_KEY_DOWN_MASK) // FIXME: Is this right?
 {
-    if (!m_shiftKey)
-        m_text = String(singleCharacterString(tolower(characterCode)));
 }
 
 }
