@@ -186,6 +186,9 @@ IntRect PluginViewWin::windowClipRect() const
 
 void PluginViewWin::setFrameGeometry(const IntRect& rect)
 {
+    if (m_element->document()->printing())
+        return;
+
     setNPWindowRect(rect);
 
     if (rect == frameGeometry())

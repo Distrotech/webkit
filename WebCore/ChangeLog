@@ -1,3 +1,15 @@
+2007-03-22  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Maciej.
+
+        <rdar://problem/5081539>
+        QT content is dupped on a page, if page is being previewed or printed.
+        
+        Don't update the frame geometry if the document is in printing mode.
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::setFrameGeometry):
+
 2007-03-22  Beth Dakin  <bdakin@apple.com>
 
         Fix by Hyatt, reviewed and committed by me.
