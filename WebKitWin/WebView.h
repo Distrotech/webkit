@@ -630,6 +630,8 @@ public:
     const char* interpretKeyEvent(const WebCore::KeyboardEvent*);
     bool handleEditingKeyboardEvent(WebCore::KeyboardEvent*);
 
+    bool isPainting() const { return m_paintCount > 0; }
+
 protected:
     ULONG m_refCount;
     WebCore::String m_groupName;
@@ -667,6 +669,7 @@ protected:
     UChar m_currentCharacterCode;
 
     bool m_isBeingDestroyed;
+    unsigned m_paintCount;
 };
 
 #endif

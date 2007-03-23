@@ -114,6 +114,7 @@ WebView::WebView()
 , m_dragData(0)
 , m_currentCharacterCode(0)
 , m_isBeingDestroyed(false)
+, m_paintCount(0)
 {
     KJS::Collector::registerAsMainThread();
 
@@ -339,6 +340,8 @@ void WebView::paint(HDC dc, LPARAM options)
         return;
     FrameView* frameView = coreFrame->view();
 
+    m_paintCount++;
+
     RECT rcPaint;
     HDC hdc;
     HRGN region = 0;
@@ -419,6 +422,8 @@ void WebView::paint(HDC dc, LPARAM options)
 
     if (!dc)
         EndPaint(m_viewWindow, &ps);
+
+    m_paintCount--;
 }
 
 void WebView::paintIntoBackingStore(FrameView* frameView, HDC bitmapDC, LPRECT dirtyRect)
@@ -1014,7 +1019,7 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             COMPtr<IWebDataSource> dataSource;
             mainFrameImpl->dataSource(&dataSource);
             Frame* coreFrame = core(mainFrameImpl);
-            if (!dataSource || coreFrame && coreFrame->view()->didFirstLayout())
+            if (!webView->isPainting() && (!dataSource || coreFrame && coreFrame->view()->didFirstLayout()))
                 webView->paint(0, 0);
             else
                 ValidateRect(hWnd, 0);

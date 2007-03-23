@@ -1,3 +1,20 @@
+2007-03-22  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Maciej.
+
+        <rdar://problem/5082270>
+        Crash in windows media player at MTV.COM
+        
+        Ignore any WM_PAINT events we get while painting.
+        
+        * WebView.cpp:
+        (WebView::WebView):
+        (WebView::updateBackingStore):
+        (WebView::paint):
+        (WebViewWndProc):
+        * WebView.h:
+        (WebView::isPainting):
+
 2007-03-22  Adele Peterson  <adele@apple.com>
 
         Reviewed by Anders.
