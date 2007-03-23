@@ -29,7 +29,9 @@
 #include "DumpRenderTree.h"
 
 #include <atlcomcli.h>
+#include <atlsafe.h>
 #include <atlstr.h>
+#include <atltypes.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <JavaScriptCore/JavaScriptCore.h>
 #include <math.h>
@@ -66,6 +68,7 @@ bool dumpAsText = false;
 bool waitToDump = false;
 bool shouldDumpEditingCallbacks = false;
 bool shouldDumpTitleChanges = false;
+bool shouldDumpChildFrameScrollPositions = false;
 bool testRepaint = false;
 bool repaintSweepHorizontally = false;
 
@@ -166,6 +169,47 @@ static void initialize(HMODULE hModule)
 
 #include <stdio.h>
 
+void dumpFrameScrollPosition(IWebFrame* frame)
+{
+    if (!frame)
+        return;
+
+    CComQIPtr<IWebFramePrivate> framePrivate = frame;
+    if (!framePrivate)
+        return;
+
+    CSize scrollPosition;
+    if (FAILED(framePrivate->scrollOffset(&scrollPosition)))
+        return;
+
+    if (abs(scrollPosition.cx) > 0.00000001 || abs(scrollPosition.cy) > 0.00000001) {
+        CComPtr<IWebFrame> parent;
+        if (FAILED(frame->parentFrame(&parent)))
+            return;
+        if (parent) {
+            CComBSTR name;
+            if (FAILED(frame->name(&name)))
+                return;
+            printf("frame '%S' ", name ? name : L"");
+        }
+        printf("scrolled to %.f,%.f\n", (double)scrollPosition.cx, (double)scrollPosition.cy);
+    }
+
+    if (shouldDumpChildFrameScrollPositions) {
+        unsigned kidsCount;
+        SAFEARRAY* arrPtr;
+        if (FAILED(frame->childFrames(&kidsCount, &arrPtr)))
+            return;
+
+        if (arrPtr) {
+            CComSafeArray<IUnknown*> kids;
+            kids.Attach(arrPtr);
+            for (unsigned i = 0; i < kidsCount; ++i)
+                dumpFrameScrollPosition(CComQIPtr<IWebFrame>(kids.GetAt(i)));
+        }
+    }
+}
+
 void dump()
 {
     CComBSTR resultString;
@@ -220,6 +264,8 @@ void dump()
             free(buffer);
             if (dumpAsText)
                 printf("\n");
+            else
+                dumpFrameScrollPosition(frame);
         }
     }
 
@@ -265,6 +311,7 @@ static void runTest(const char* pathOrURL)
     dumpAsText = false;
     shouldDumpEditingCallbacks = false;
     shouldDumpTitleChanges = false;
+    shouldDumpChildFrameScrollPositions = false;
     testRepaint = false;
     repaintSweepHorizontally = false;
     timedOut = false;

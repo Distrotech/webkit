@@ -141,8 +141,8 @@ public:
         /* [retval][out] */ IWebFrame **frame);
     
     virtual HRESULT STDMETHODCALLTYPE childFrames( 
-        /* [out] */ int *frameCount,
-        /* [retval][out] */ IWebFrame ***frames);
+        /* [out] */ unsigned* frameCount,
+        /* [retval][out] */ SAFEARRAY** frames);
 
     virtual HRESULT STDMETHODCALLTYPE currentForm( 
         /* [retval][out] */ IDOMElement **formElement);
@@ -150,6 +150,9 @@ public:
     // IWebFramePrivate
     virtual HRESULT STDMETHODCALLTYPE renderTreeAsExternalRepresentation(
         /* [retval][out] */ BSTR *result);
+
+    virtual HRESULT STDMETHODCALLTYPE scrollOffset(
+        /* [retval][out] */ SIZE* offset);
 
     virtual HRESULT STDMETHODCALLTYPE layout();
 

@@ -478,10 +478,21 @@ ULONG STDMETHODCALLTYPE WebFrame::Release(void)
 // IWebFrame -------------------------------------------------------------------
 
 HRESULT STDMETHODCALLTYPE WebFrame::name( 
-    /* [retval][out] */ BSTR* /*frameName*/)
+    /* [retval][out] */ BSTR* frameName)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!frameName) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *frameName = 0;
+
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
+        return E_FAIL;
+
+    *frameName = BString(coreFrame->tree()->name()).release();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::webView( 
@@ -725,11 +736,63 @@ HRESULT STDMETHODCALLTYPE WebFrame::parentFrame(
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::childFrames( 
-    /* [out] */ int* /*frameCount*/,
-    /* [retval][out] */ IWebFrame*** /*frames*/)
+    /* [out] */ unsigned* frameCount,
+    /* [retval][out] */ SAFEARRAY** frames)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!frameCount || !frames) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *frameCount = 0;
+    *frames = 0;
+    
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
+        return E_FAIL;
+
+    unsigned childCount = coreFrame->tree()->childCount();
+    if (!childCount)
+        return S_OK;
+
+    SAFEARRAY* children = SafeArrayCreateVector(VT_UNKNOWN, 0, childCount);
+    if (!children)
+        return E_OUTOFMEMORY;
+
+    unsigned i = 0;
+    for (Frame* child = coreFrame->tree()->firstChild(); child; child = child->tree()->nextSibling()) {
+        ASSERT(i < childCount);
+
+        WebFrame* webFrame = kit(child);
+        if (!webFrame) {
+            SafeArrayDestroy(children);
+            return E_FAIL;
+        }
+
+        COMPtr<IUnknown> unknown;
+        HRESULT hr = webFrame->QueryInterface(IID_IUnknown, (void**)&unknown);
+        if (FAILED(hr)) {
+            SafeArrayDestroy(children);
+            return hr;
+        }
+
+        VARIANT var;
+        V_VT(&var) = VT_UNKNOWN;
+        V_UNKNOWN(&var) = unknown.get();
+
+        LONG longI = i;
+        hr = SafeArrayPutElement(children, &longI, unknown.get());
+        if (FAILED(hr)) {
+            SafeArrayDestroy(children);
+            return hr;
+        }
+
+        ++i;
+    }
+
+    *frameCount = childCount;
+    *frames = children;
+    return S_OK;
 }
 
 // IWebFramePrivaete ------------------------------------------------------
@@ -752,6 +815,26 @@ HRESULT STDMETHODCALLTYPE WebFrame::renderTreeAsExternalRepresentation(
 
     *result = SysAllocStringLen((LPCOLESTR)representation.unicode(), representation.length());
 
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebFrame::scrollOffset(
+        /* [retval][out] */ SIZE* offset)
+{
+    if (!offset) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
+        return E_FAIL;
+
+    FrameView* view = coreFrame->view();
+    if (!view)
+        return E_FAIL;
+
+    *offset = view->scrollOffset();
     return S_OK;
 }
 

@@ -1,3 +1,18 @@
+2007-03-23  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Oliver.
+
+        Implemented dumping of frame scroll positions.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (dumpFrameScrollPosition): Ported from Mac.
+        (dump): Added call to dumpFrameScrollPosition.
+        (runTest): Initialize new global.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.h:
+        Added extern declaration.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/LayoutTestController.cpp:
+        (dumpChildFrameScrollPositionsCallback): Implemented.
+
 2007-03-22  Adam Roben  <aroben@apple.com>
 
         Reviewed by Adele.

@@ -2,6 +2,21 @@
 
         Reviewed by Oliver.
 
+        Implemented some WebFrame methods to support dumping frame scroll
+        offsets in DRT.
+
+        * Interfaces/IWebFrame.idl: Changed signature of IWebFrame::childFrames.
+        * Interfaces/IWebFramePrivate.idl: Added scrollOffset declaration.
+        * WebFrame.cpp:
+        (WebFrame::name): Implemented.
+        (WebFrame::childFrames): Implemented.
+        (WebFrame::scrollOffset): Implemented.
+        * WebFrame.h: Updated/added declarations.
+
+2007-03-23  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Oliver.
+
         WebKit part of fix for <rdar://problem/4990740>.
 
         Added IWebDataSourcePrivate::mainDocumentError.

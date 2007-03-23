@@ -227,7 +227,7 @@ interface IWebFrame : IUnknown
         @result Returns an array of WebFrame.
         - (NSArray *)childFrames;
     */
-    HRESULT childFrames([out] int* frameCount, [out, retval] IWebFrame*** frames);
+    HRESULT childFrames([out] unsigned* frameCount, [out, retval] SAFEARRAY** frames);
 
 
   /* This is a DOMElement on mac, but maybe should be a DOMHTMLFrameElement? */

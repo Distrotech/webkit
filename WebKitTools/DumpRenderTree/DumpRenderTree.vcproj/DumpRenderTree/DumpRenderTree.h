@@ -40,6 +40,7 @@ extern bool waitToDump;     // TRUE if waitUntilDone() has been called, but noti
 extern bool done;
 extern bool shouldDumpEditingCallbacks;
 extern bool shouldDumpTitleChanges;
+extern bool shouldDumpChildFrameScrollPositions;
 extern bool testRepaint;
 extern bool repaintSweepHorizontally;
 extern IWebFrame* topLoadingFrame;
