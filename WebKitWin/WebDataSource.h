@@ -107,6 +107,9 @@ public:
     virtual HRESULT STDMETHODCALLTYPE setOverrideEncoding( 
         /* [in] */ BSTR encoding);
 
+    virtual HRESULT STDMETHODCALLTYPE mainDocumentError(
+        /* [retval][out] */ IWebError** error);
+
     // WebDataSource
     WebDocumentLoader* documentLoader() const;
 protected:

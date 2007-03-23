@@ -1,3 +1,17 @@
+2007-03-23  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Oliver.
+
+        WebKit part of fix for <rdar://problem/4990740>.
+
+        Added IWebDataSourcePrivate::mainDocumentError.
+
+        * Interfaces/IWebDataSource.idl: Added method declaration and updated
+        copyrights.
+        * WebDataSource.cpp:
+        (WebDataSource::mainDocumentError): Implemented.
+        * WebDataSource.h: Added declaration.
+
 2007-03-23  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Adam.

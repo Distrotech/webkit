@@ -30,6 +30,7 @@
 #include "IWebMutableURLRequest.h"
 #include "MemoryStream.h"
 #include "WebDocumentLoader.h"
+#include "WebError.h"
 #include "WebFrame.h"
 #include "WebKit.h"
 #include "WebHTMLRepresentation.h"
@@ -94,6 +95,26 @@ HRESULT STDMETHODCALLTYPE WebDataSource::setOverrideEncoding(
 {
     ASSERT_NOT_REACHED();
     return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE WebDataSource::mainDocumentError(
+        /* [retval][out] */ IWebError** error)
+{
+    if (!error) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *error = 0;
+
+    if (!m_loader)
+        return E_FAIL;
+
+    if (m_loader->mainDocumentError().isNull())
+        return S_OK;
+
+    *error = WebError::createInstance(m_loader->mainDocumentError());
+    return S_OK;
 }
 
 // IUnknown -------------------------------------------------------------------
