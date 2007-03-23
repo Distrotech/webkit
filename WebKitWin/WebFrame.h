@@ -322,7 +322,6 @@ protected:
     void loadURLIntoChild(const WebCore::KURL&, const WebCore::String& referrer, WebFrame* childFrame);
     const Vector<WebCore::IntRect>& computePageRects(HDC printDC);
     void setPrinting(bool printing, float minPageWidth, float maxPageWidth, bool adjustViewSize);
-    void forceLayoutWithPageWidthRange(float minPageWidth, float maxPageWidth, bool adjustViewSize);
 
 protected:
     ULONG               m_refCount;

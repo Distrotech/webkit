@@ -2209,12 +2209,7 @@ void WebFrame::setPrinting(bool printing, float minPageWidth, float maxPageWidth
 {
     Frame* coreFrame = core(this);
     ASSERT(coreFrame);
-
-    ASSERT(coreFrame->document());
-
-    coreFrame->document()->setPrinting(printing);
-
-    forceLayoutWithPageWidthRange(minPageWidth, maxPageWidth, adjustViewSize);
+    coreFrame->setPrinting(printing, minPageWidth, maxPageWidth, adjustViewSize);
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::setInPrintingMode( 
@@ -2363,14 +2358,4 @@ HRESULT STDMETHODCALLTYPE WebFrame::spoolPages(
     }
  
     return S_OK;
-}
-
-void WebFrame::forceLayoutWithPageWidthRange(float minPageWidth, float maxPageWidth, bool adjustViewSize)
-{
-    Frame* coreFrame = core(this);
-    ASSERT(coreFrame);
-
-    coreFrame->forceLayoutWithPageWidthRange(minPageWidth, maxPageWidth);
-    if (adjustViewSize)
-        coreFrame->view()->adjustViewSize();
 }

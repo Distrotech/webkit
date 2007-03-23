@@ -1,3 +1,15 @@
+2007-03-22  Dave Hyatt  <hyatt@apple.com>
+
+        Fix for <rdar://problem/5083072>.
+
+        Reviewed by aroben
+  
+        * ChangeLog:
+        * WebFrame.cpp:
+        (WebFrame::setPrinting):
+        (WebFrame::spoolPages):
+        * WebFrame.h:
+
 2007-03-22  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Maciej.
