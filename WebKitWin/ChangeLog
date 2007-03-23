@@ -1,3 +1,13 @@
+2007-03-23  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by NOBODY (OOPS!).
+
+        Fixed <rdar://5084888> need to add flickr to spoof list in Boomer WebKit
+
+        * WebView.cpp:
+        (WebView::userAgentForKURL):
+        added flickr spoof
+
 2007-03-23  Adam Roben  <aroben@apple.com>
 
         Reviewed by Oliver.
