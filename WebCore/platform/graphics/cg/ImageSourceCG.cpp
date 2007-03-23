@@ -78,8 +78,8 @@ void ImageSource::setData(SharedBuffer* data, bool allDataReceived)
         m_decoder = CGImageSourceCreateIncremental(NULL);
 #if PLATFORM(MAC)
     // On Mac the NSData inside the SharedBuffer can be secretly appended to without the SharedBuffer's knowledge.  We use SharedBuffer's ability
-    // to wrap itself in an NSData to get around this, ensuring that ImageIO is really looking at the SharedBuffer.
-    CFDataRef cfData = (CFDataRef)data->createNSData();
+    // to wrap itself inside CFData to get around this, ensuring that ImageIO is really looking at the SharedBuffer.
+    CFDataRef cfData = data->createCFData();
 #else
     // If no NSData is available, then we know SharedBuffer will always just be a vector.  That means no secret changes can occur to it behind the
     // scenes.  We use CFDataCreateWithBytesNoCopy in that case.
@@ -155,15 +155,6 @@ size_t ImageSource::frameCount() const
 CGImageRef ImageSource::createFrameAtIndex(size_t index)
 {
     return CGImageSourceCreateImageAtIndex(m_decoder, index, imageSourceOptions());
-}
-
-void ImageSource::destroyFrameAtIndex(size_t index)
-{
-    // FIXME: Image I/O has no API for flushing frames from its internal cache.  The best we can do is tell it to create
-    // a new image with NULL options.  This will cause the cache/no-cache flags to mismatch, and it will then drop
-    // its reference to the old decoded image.
-    CGImageRef image = CGImageSourceCreateImageAtIndex(m_decoder, index, NULL);
-    CGImageRelease(image);
 }
 
 bool ImageSource::frameIsCompleteAtIndex(size_t index)

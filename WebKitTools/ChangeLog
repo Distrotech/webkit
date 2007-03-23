@@ -1,3 +1,23 @@
+2007-03-22  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Geoff.
+
+        Removed eventSender.mouseClick because it was only useful for AppKit
+        controls, which we don't use anymore.
+
+        * DumpRenderTree/EventSendingController.m:
+        (+[EventSendingController isSelectorExcludedFromWebScript:]): Removed
+        mouseClick.
+
+2007-03-22  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Ada.
+
+        Make eventSender.mouseClick actually send a mouse up event.
+
+        * DumpRenderTree/EventSendingController.m:
+        (-[EventSendingController mouseClick]):
+
 2007-03-19  David Hyatt  <hyatt@apple.com>
 
         Update the minimum font size pref to match the actual default setting in Safari.  It should have been 1

@@ -1,3 +1,255 @@
+2007-03-22  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by kevin
+
+        <rdar://problem/5081257> 
+        REGRESSION: New Mail signatures start out empty
+
+        * editing/VisiblePosition.cpp:
+        (WebCore::VisiblePosition::canonicalPosition): Allow
+        descent from positions inside the document into an 
+        editable body.
+
+2007-03-22  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Adele and John
+
+        <rdar://5043528> - Prepare for new API
+        
+        * platform/network/ResourceHandle.cpp:
+        (WebCore::ResourceHandle::clearAuthentication): Clear CF type
+
+2007-03-22  Beth Dakin  <bdakin@apple.com>
+
+        Patch by Hyatt, reviewed and committed by me.
+
+        Does not reproduce consistently, so a layout test does not seem 
+        possible.
+
+        Fix for <rdar://problem/5082421> Constantly hitting ASSERT(!
+        needsLayout()) in RenderView::paint()
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::layoutPending): It is not enough to ask if the 
+        layout timer is active. There may be times that we don't have a 
+        body yet so we cannot schedule layout yet, but the root still needs 
+        layout.  
+
+2007-03-22  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Darin
+        
+        Followup for recent fix to 5079700, found by assertion added to Safari.
+
+        * page/mac/FrameMac.mm:
+        (WebCore::Frame::searchForLabelsBeforeElement):
+        Fixed another place in this method where an empty NSString was being returned instead of nil.
+        Cleaned up the style a little too.
+
+2007-03-22  David Hyatt  <hyatt@apple.com>
+
+        Remove unnecessary destroyFrameAtIndex call.  Now that we throw away
+        the image source, it is no longer needed.
+
+        Reviewed by beth
+
+        * platform/graphics/BitmapImage.cpp:
+        (WebCore::BitmapImage::destroyDecodedData):
+
+2007-03-22  David Harrison  <harrison@apple.com>
+
+        Reviewed by Geoff, Darin.
+
+        <rdar://problem/5077892> In RapidWeaver 3.5.1, a crash occurs when attempting to load Safari Bookmarks in iMedia Browser
+        
+        * platform/mac/ThreadCheck.mm:
+        (WebCore::_WebCoreThreadViolationCheck):
+        Change default on Tiger to NSLog rather than raise an exception.
+
+2007-03-22  Darin Adler  <darin@apple.com>
+
+        Reviewed by Brady.
+
+        - use binary_search instead of hash table; slightly better performance and
+          less memory use
+
+        * platform/network/ResourceHandle.cpp: (WebCore::ResourceHandle::portAllowed):
+        Use binary_search.
+
+2007-03-22  Darin Adler  <darin@apple.com>
+
+        Reviewed by Adele.
+
+        - fix <rdar://problem/5074630> detachChildren call should move from WebKit to WebCore
+
+        * loader/FrameLoader.cpp: (WebCore::FrameLoader::setDocumentLoader):
+        Add a call to detachChildren() after the call to prepareForDataSourceReplacement().
+        There was no reason for this crucial loading step to be left to the client.
+
+2007-03-22  David Hyatt  <hyatt@apple.com>
+
+        Minor refactoring and cleanup of the bridge calls that want to control layout settings on the RenderView.
+        Have the bridge talk through the FrameView instead of just asking for the RenderView directly.
+
+        Add an assert to help catch situations where the RenderView needs layout at paint time, since this is a known
+        catastrophic scenario that will (much of the time) result in a crash in RenderTableSection::paint.
+
+        Reviewed by aroben
+
+        * page/FrameView.cpp:
+        (WebCore::FrameView::adjustViewSize):
+        (WebCore::FrameView::needsLayout):
+        (WebCore::FrameView::setNeedsLayout):
+        * page/FrameView.h:
+        * page/mac/WebCoreFrameBridge.mm:
+        (-[WebCoreFrameBridge needsLayout]):
+        (-[WebCoreFrameBridge setNeedsLayout]):
+        * rendering/RenderView.cpp:
+        (WebCore::RenderView::paint):
+
+2007-03-21  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Beth Dakin.
+        
+        Re-worked the fix in r20375. 'M' and 'm' are not the only commands that
+        accept "extra" coordinates -- virtually all commands accept them.
+
+        * ksvg2/svg/SVGParserUtilities.cpp:
+        (WebCore::SVGPathParser::parseSVG):
+
+2007-03-21  David Harrison  <harrison@apple.com>
+
+        Reviewed by hyatt.
+
+        <rdar://problem/5072460> CrashTracer: [USER] 1 crashes in Xcode at com.apple.ImageIO.framework: getBandProcPNG + 168
+
+        An NSData object was being alloc/init'd, then returned callers who cast the pointer as a
+        CFDataRef, including calling CFRelease on it. The problem is that under garbage collection, the NS
+        retain count is ignored (it's always 0), but the CFRetain and CFRelease are not ignored. This
+        caused the object to be over-released. The solution that works in both GC and non-GC is to "transfer"
+        the initial NS retain count to the CF retain count, using HardRetainWithNSRelease.
+        
+        The creator of the NSData was SharedBuffer::createNSData. The callers were PDFDocumentImage::dataChanged()
+        and ImageSource::setData(). This particular crash involved the ImageSource::setData() case.
+
+        * platform/SharedBuffer.h:
+        Declare createCFData().
+        
+        * platform/graphics/cg/ImageSourceCG.cpp:
+        (WebCore::ImageSource::setData):
+        Call createCFData instead of createNSData.
+        
+        * platform/graphics/cg/PDFDocumentImage.cpp:
+        (WebCore::PDFDocumentImage::dataChanged):
+        Call createCFData instead of createNSData.
+        
+       * platform/mac/SharedBufferMac.mm:
+        (WebCore::SharedBuffer::createCFData):
+        Implement createCFData(). Use HardRetainWithNSRelease for gc safety.
+        
+2007-03-21  Mitz Pettel  <mitz@webkit.org>
+
+        Reviewed by Darin.
+
+        - fix http://bugs.webkit.org/show_bug.cgi?id=13145
+          Regression: Scrollbar not resizing after display none
+
+        Test: fast/dynamic/view-overflow.html
+
+        * rendering/RenderView.cpp:
+        (WebCore::RenderView::layout): Reset overflowHeight() and overflowWidth()
+        before calling docHeight() and docWidth(), since the former act as a lower
+        bound for the latter.
+
+2007-03-21  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Beth Dakin.
+        
+        A little cleanup based work I've been doing on the SVG parsers.
+
+        * ksvg2/svg/SVGParserUtilities.h:
+        (WebCore::skipString):
+        * ksvg2/svg/SVGPreserveAspectRatio.cpp: Moved checkString into
+        SVGParserUtilities.h, so it could be with all its friends. Renamed 
+        "checkString" to "skipString" to match the rest of the code and to be 
+        clear about which functions move the buffer pointer.
+        (WebCore::SVGPreserveAspectRatio::parsePreserveAspectRatio):
+        * ksvg2/svg/SVGTransformable.cpp:
+        (WebCore::SVGTransformable::parseTransformAttribute): Changed gotos into 
+        returns. Removed unnecessary magic number.
+
+2007-03-21  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Beth Dakin.
+        
+        Fixed <rdar://problem/5078471> SVG rgb color parser runs past end of 
+        buffer when running fuzzing test
+
+        * ksvg2/svg/SVGColor.cpp:
+        (WebCore::parseNumberOrPercent): Check for past the end condition.
+        (WebCore::SVGColor::colorFromRGBColorString): Reversed "read past end
+        of buffer, then check if you're past the end" logic.
+
+2007-03-21  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Beth Dakin.
+        
+        Fixed <rdar://problem/5079410> SVG path parser hangs, exhausts memory when 
+        running fuzzer test
+
+        * ksvg2/svg/SVGParserUtilities.cpp:
+        (WebCore::SVGPathParser::parseSVG): Don't assume that extra digits are
+        always preceded by an 'M' or an 'm'.
+
+2007-03-21  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Adam
+        
+        - fixed <rdar://problem/5079700> REGRESSION (r19702): Name/password aren't autofilled 
+          or saved for .Mac homepage login
+
+        * page/mac/FrameMac.mm:
+        (WebCore::Frame::searchForLabelsBeforeElement):
+        don't count empty strings as valid results
+
+2007-03-21  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by darin
+
+        * editing/markup.cpp:
+        (WebCore::styleFromMatchedRulesAndInlineDecl): 
+        Release the RefPtr to avoid increasing/decreasing
+        the refcount unnecessarily.
+        (WebCore::propertyMissingOrEqualToNone): Added and used
+        instead of converting values to strings.
+        (WebCore::elementHasTextDecorationProperty): 
+        (WebCore::createMarkup):
+
+2007-03-21  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by oliver
+
+        <rdar://problem/5075944> 
+        REGRESSION: Partially selected underlined content pastes as plain text
+        
+        We stopped adding markup for all the ancestors
+        of lastClosed up to the commonAncestorBlock
+        because it was adding a lot of unnecessary markup.
+        This caused us to lose underlining when copying a 
+        partially selected underlined element (even though 
+        we put all styles that the copied markup inherits 
+        into a style span, because the text-decoration 
+        isn't inheritable).
+
+        * editing/markup.cpp:
+        (WebCore::styleFromMatchedRulesAndInlineDecl): Moved
+        code here.
+        (WebCore::elementHasTextDecorationProperty): Added.
+        (WebCore::createMarkup): If the copied markup has a
+        text-decoration because some common ancestor has
+        a text-decoration property set, include that ancestor
+        and all its descendants in the copied markup.
+
 2007-03-21  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Antti.

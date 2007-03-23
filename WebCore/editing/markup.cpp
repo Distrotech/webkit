@@ -32,6 +32,7 @@
 #include "CSSRule.h"
 #include "CSSRuleList.h"
 #include "CSSStyleRule.h"
+#include "CSSValueKeywords.h"
 #include "cssstyleselector.h"
 #include "Comment.h"
 #include "DeleteButtonController.h"
@@ -316,6 +317,38 @@ static bool needInterchangeNewlineAfter(const VisiblePosition& v)
     return isEndOfParagraph(v) && isStartOfParagraph(next) && !next.deepEquivalent().upstream().node()->hasTagName(brTag);
 }
 
+static PassRefPtr<CSSMutableStyleDeclaration> styleFromMatchedRulesAndInlineDecl(Node* node)
+{
+    if (!node->isHTMLElement())
+        return 0;
+    
+    HTMLElement* element = static_cast<HTMLElement*>(node);
+    RefPtr<CSSMutableStyleDeclaration> style = styleFromMatchedRulesForElement(element);
+    RefPtr<CSSMutableStyleDeclaration> inlineStyleDecl = element->getInlineStyleDecl();
+    style->merge(inlineStyleDecl.get());
+    return style.release();
+}
+
+static bool propertyMissingOrEqualToNone(CSSMutableStyleDeclaration* style, int propertyID)
+{
+    if (!style)
+        return false;
+    RefPtr<CSSValue> value = style->getPropertyCSSValue(propertyID);
+    if (!value)
+        return true;
+    if (!value->isPrimitiveValue())
+        return false;
+    return static_cast<CSSPrimitiveValue*>(value.get())->getIdent() == CSS_VAL_NONE;
+}
+
+bool elementHasTextDecorationProperty(Node* node)
+{
+    RefPtr<CSSMutableStyleDeclaration> style = styleFromMatchedRulesAndInlineDecl(node);
+    if (!style)
+        return false;
+    return !propertyMissingOrEqualToNone(style.get(), CSS_PROP_TEXT_DECORATION);
+}
+
 // FIXME: Shouldn't we omit style info when annotate == DoNotAnnotateForInterchange? 
 // FIXME: At least, annotation and style info should probably not be included in range.markupString()
 DeprecatedString createMarkup(const Range *range, Vector<Node*>* nodes, EAnnotateForInterchange annotate, bool includeInlineSpecialAncestors)
@@ -446,9 +479,16 @@ DeprecatedString createMarkup(const Range *range, Vector<Node*>* nodes, EAnnotat
             specialCommonAncestor = commonAncestorBlock;
     }
     
+    Node* checkAncestor = specialCommonAncestor ? specialCommonAncestor : commonAncestor;
+    RefPtr<CSSMutableStyleDeclaration> checkAncestorStyle = computedStyle(checkAncestor)->copyInheritableProperties();
+    if (!propertyMissingOrEqualToNone(checkAncestorStyle.get(), CSS_PROP__WEBKIT_TEXT_DECORATIONS_IN_EFFECT))
+        specialCommonAncestor = elementHasTextDecorationProperty(checkAncestor) ? checkAncestor : enclosingNodeOfType(checkAncestor, &elementHasTextDecorationProperty);
+        
     if (Node *enclosingAnchor = enclosingNodeWithTag(specialCommonAncestor ? specialCommonAncestor : commonAncestor, aTag))
-        if (annotate || includeInlineSpecialAncestors && !isBlock(enclosingAnchor))
-            specialCommonAncestor = enclosingAnchor;
+        specialCommonAncestor = enclosingAnchor;
+        
+    if (!annotate && includeInlineSpecialAncestors && isBlock(specialCommonAncestor))
+        specialCommonAncestor = 0;
     
     Node* body = enclosingNodeWithTag(commonAncestor, bodyTag);
     // FIXME: Only include markup for a fully selected root (and ancestors of lastClosed up to that root) if
@@ -464,13 +504,7 @@ DeprecatedString createMarkup(const Range *range, Vector<Node*>* nodes, EAnnotat
             if (!annotate && includeInlineSpecialAncestors && isBlock(ancestor))
                 continue;
             if (ancestor == fullySelectedRoot) {
-                // From a fully selected root we want:
-                // The non-inheritble styles from its matched rules (author only).
-                RefPtr<CSSMutableStyleDeclaration> style = styleFromMatchedRulesForElement(static_cast<Element*>(fullySelectedRoot));
-                
-                // The non-inheritble styles from its inline style declaration.
-                RefPtr<CSSMutableStyleDeclaration> inlineStyleDecl = static_cast<HTMLElement*>(fullySelectedRoot)->getInlineStyleDecl();
-                style->merge(inlineStyleDecl.get());
+                RefPtr<CSSMutableStyleDeclaration> style = styleFromMatchedRulesAndInlineDecl(fullySelectedRoot);
                 
                 // Bring the background attribute over, but not as an attribute because a background attribute on a div
                 // appears to have no effect.

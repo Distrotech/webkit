@@ -1,3 +1,152 @@
+2007-03-22  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by kevin
+        
+        <rdar://problem/5081257> 
+        REGRESSION: New Mail signatures start out empty
+        
+        * editing/selection/5081257-1-expected.checksum: Added.
+        * editing/selection/5081257-1-expected.png: Added.
+        * editing/selection/5081257-1-expected.txt: Added.
+        * editing/selection/5081257-1.html: Added.
+        * editing/selection/5081257-2-expected.checksum: Added.
+        * editing/selection/5081257-2-expected.png: Added.
+        * editing/selection/5081257-2-expected.txt: Added.
+        * editing/selection/5081257-2.html: Added.
+
+2007-03-22  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Geoff.
+
+        Replaced all calls to eventSender.mouseClick with paired calls to
+        mouseDown/mouseUp.
+
+        * fast/events/click-count.html:
+        * fast/events/event-sender-mouse-click-expected.txt: Removed.
+        * fast/events/event-sender-mouse-click.html: Removed.
+        * fast/events/frame-click-focus.html:
+        * fast/events/objc-event-api.html:
+        * fast/forms/focus-selection-input.html:
+        * fast/forms/focus-selection-textarea.html:
+
+2007-03-22  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Ada.
+
+        Added a new test to make sure that eventSender.mouseClick works
+        correctly.
+
+        * fast/events/click-count-expected.txt: Added.
+        * fast/events/click-count.html: Added.
+
+        Updated results for some tests that depended on the broken version of
+        eventSender.mouseClick.
+
+        * fast/events/objc-event-api-expected.txt:
+        * fast/forms/focus-selection-input-expected.txt:
+        * fast/forms/focus-selection-textarea-expected.txt:
+
+2007-03-21  Mitz Pettel  <mitz@webkit.org>
+
+        Reviewed by Darin.
+
+        - test for http://bugs.webkit.org/show_bug.cgi?id=13145
+          Regression: Scrollbar not resizing after display none
+
+        * fast/dynamic/view-overflow-expected.checksum: Added.
+        * fast/dynamic/view-overflow-expected.png: Added.
+        * fast/dynamic/view-overflow-expected.txt: Added.
+        * fast/dynamic/view-overflow.html: Added.
+
+2007-03-21  Geoffrey Garen  <ggaren@apple.com>
+
+        Fixed bad version of results that I check in accidentally.
+
+        * svg/dom/string-list-parser-expected.txt:
+
+2007-03-21  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Beth Dakin.
+        
+        Added fuzz tester for the SVG rgb color parser.
+
+        * svg/dom/rgb-color-parser-expected.txt: Added.
+        * svg/dom/rgb-color-parser.html: Added.
+
+2007-03-21  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Beth Dakin.
+        
+        Added fuzz tester for the path parser.
+
+        * svg/dom/path-parser-expected.txt: Added.
+        * svg/dom/path-parser.html: Added.
+
+2007-03-21  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Beth Dakin.
+        
+        Added fuzz tester for the string list parser.
+
+        * svg/dom/string-list-parser-expected.txt: Added.
+        * svg/dom/string-list-parser.html: Added.
+
+2007-03-21  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Beth Dakin.
+        
+        Added fuzz tester for the length list parser.
+
+        * svg/dom/length-list-parser-expected.txt: Added.
+        * svg/dom/length-list-parser.html: Added.
+
+2007-03-21  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Beth Dakin.
+        
+        Factored randomizing functions into their own file, in preparation for future
+        tests that rely on them.
+        
+        * svg/dom/resources/scripted-random.js: Added.
+        * svg/dom/transform-parser.html: Factored out scripted-random.js, added
+        a small string that increases the normal-seemingness of the last test.
+
+2007-03-21  Timothy Hatcher  <timothy@apple.com>
+
+        New results after rolling out r19828 in r20352.
+
+        * fast/overflow/scrollRevealButton-expected.checksum:
+        * fast/overflow/scrollRevealButton-expected.png:
+        * fast/overflow/scrollRevealButton-expected.txt:
+
+2007-03-21  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by oliver
+        
+        <rdar://problem/5075944> 
+        REGRESSION: Partially selected underlined content pastes as plain text
+
+        Tests for the bug:
+        * editing/pasteboard/5075944-expected.checksum: Added.
+        * editing/pasteboard/5075944-expected.png: Added.
+        * editing/pasteboard/5075944-expected.txt: Added.
+        * editing/pasteboard/5075944.html: Added.
+        Tests that the element that has the text-decoration
+        and all its descendants down to the common ancestor
+        are included in the copied markup (instead of the
+        text-decoration property being treated as though it
+        were inheritable and placed on the style span wrapper):
+        * editing/pasteboard/5075944-2-expected.checksum: Added.
+        * editing/pasteboard/5075944-2-expected.png: Added.
+        * editing/pasteboard/5075944-2-expected.txt: Added.
+        * editing/pasteboard/5075944-2.html: Added.
+        Tests that moveParagraphs gets underlining right (it doesn't
+        use annotation):
+        * editing/pasteboard/5075944-3-expected.checksum: Added.
+        * editing/pasteboard/5075944-3-expected.png: Added.
+        * editing/pasteboard/5075944-3-expected.txt: Added.
+        * editing/pasteboard/5075944-3.html: Added.
+
 2007-03-21  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Antti.

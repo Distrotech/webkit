@@ -421,8 +421,9 @@ bool SVGPathParser::parseSVG(const String& s, bool process)
         if (ptr >= end)
             return true;
 
-        if (*ptr == '+' || *ptr == '-' || (*ptr >= '0' && *ptr <= '9')) {
-            // there are still coords in this command
+        // Check for remaining coordinates in the current command.
+        if ((*ptr == '+' || *ptr == '-' || (*ptr >= '0' && *ptr <= '9')) &&
+            (command != 'z' && command !='a' && command != 'A')) {
             if (command == 'M')
                 command = 'L';
             else if (command == 'm')
