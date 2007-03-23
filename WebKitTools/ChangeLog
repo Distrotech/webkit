@@ -2,7 +2,7 @@
 
         Reviewed by Oliver.
 
-        Implemented dumping of frame scroll positions.
+        Fix <rdar://problem/5085170> DumpRenderTree doesn't print frame scroll offsets
 
         * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
         (dumpFrameScrollPosition): Ported from Mac.

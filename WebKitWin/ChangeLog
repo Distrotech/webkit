@@ -12,6 +12,9 @@
 
         Reviewed by Oliver.
 
+        WebKit part of <rdar://problem/5085170> DumpRenderTree doesn't print
+        frame scroll offsets
+
         Implemented some WebFrame methods to support dumping frame scroll
         offsets in DRT.
 
