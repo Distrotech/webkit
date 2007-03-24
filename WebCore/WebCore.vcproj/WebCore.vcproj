@@ -7822,6 +7822,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\RetainPtr.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\ForwardingHeaders\wtf\StringExtras.h"
 					>
 				</File>
