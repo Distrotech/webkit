@@ -107,4 +107,6 @@ interface IWebViewPrivate : IUnknown
 
     HRESULT setTabKeyCyclesThroughElements([in] BOOL cycles);
     HRESULT tabKeyCyclesThroughElements([out, retval] BOOL* result);
+
+    HRESULT setAllowSiteSpecificHacks([in] BOOL allows);
 }

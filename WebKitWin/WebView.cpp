@@ -100,6 +100,8 @@ HRESULT createMatchEnumerator(Vector<IntRect>* rects, IEnumTextMatches** matches
 
 // WebView ----------------------------------------------------------------
 
+bool WebView::s_allowSiteSpecificHacks = false;
+
 WebView::WebView()
 : m_refCount(0)
 , m_hostWindow(0)
@@ -1427,10 +1429,11 @@ const String& WebView::userAgentForKURL(const KURL& url)
         "Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en) AppleWebKit/522 (KHTML, like Gecko) Safari/521.32.1"
     };
 
-    for (int i = 0; i < ARRAYSIZE(uaCustomHosts); i++) {
-        if (url.host().endsWith(uaCustomHosts[i]))
-            return uaCustomValues[i];
-    }
+    if (allowSiteSpecificHacks())
+        for (int i = 0; i < ARRAYSIZE(uaCustomHosts); i++) {
+            if (url.host().endsWith(uaCustomHosts[i]))
+                return uaCustomValues[i];
+        }
 
     if (!m_userAgentStandard.length())
         m_userAgentStandard = String::format("Mozilla/5.0 (Windows; U; %s; %s) AppleWebKit/%s (KHTML, like Gecko)%s%s", osVersion().latin1().data(), language().latin1().data(), webKitVersion().latin1().data(), (m_applicationName.length() ? " " : ""), m_applicationName.latin1().data());
@@ -3182,6 +3185,12 @@ HRESULT STDMETHODCALLTYPE WebView::tabKeyCyclesThroughElements(
     return S_OK;
 }
 
+HRESULT STDMETHODCALLTYPE WebView::setAllowSiteSpecificHacks(
+    /* [in] */ BOOL allow)
+{
+    s_allowSiteSpecificHacks = !!allow;
+    return S_OK;
+}
 
 HRESULT WebView::registerDragDrop()
 {

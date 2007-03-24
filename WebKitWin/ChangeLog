@@ -1,3 +1,20 @@
+2007-03-23  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Darin.
+
+        WebKit part of <rdar://problem/5084881> Add a "turn of site-specific
+        hacks" menu item to the Debug menu
+
+        Added new IWebPrivate::setAllowSiteSpecificHacks SPI.
+
+        * Interfaces/IWebViewPrivate.idl: Added declaration.
+        * WebView.cpp:
+        (WebView::userAgentForKURL): Only give a site-specific UA if
+        site-specific hacks are turned on.
+        (WebView::setAllowSiteSpecificHacks): Added.
+        * WebView.h:
+        (WebView::allowSiteSpecificHacks): Added.
+
 2007-03-23  Beth Dakin  <bdakin@apple.com>
 
         Reviewed by Hyatt.

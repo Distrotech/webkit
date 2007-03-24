@@ -587,6 +587,9 @@ public:
     virtual HRESULT STDMETHODCALLTYPE tabKeyCyclesThroughElements( 
         /* [retval][out] */ BOOL *result);
 
+    virtual HRESULT STDMETHODCALLTYPE setAllowSiteSpecificHacks(
+        /* [in] */ BOOL allows);
+
     // WebView
     WebCore::Page* page();
     bool handleMouseEvent(UINT, WPARAM, LPARAM);
@@ -633,6 +636,8 @@ public:
     bool isPainting() const { return m_paintCount > 0; }
 
 protected:
+    static bool allowSiteSpecificHacks() { return s_allowSiteSpecificHacks; }
+
     ULONG m_refCount;
     WebCore::String m_groupName;
     HWND m_hostWindow;
@@ -670,6 +675,8 @@ protected:
 
     bool m_isBeingDestroyed;
     unsigned m_paintCount;
+
+    static bool s_allowSiteSpecificHacks;
 };
 
 #endif
