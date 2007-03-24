@@ -373,8 +373,6 @@ exit:
         CFReadStreamClose(stream);
         CFRelease(stream);
     }
-    if (fileVersionObject)
-        CFRelease(fileVersionObject);
     if (historyList)
         CFRelease(historyList);
 

@@ -1,3 +1,13 @@
+2007-03-23  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Adam
+        
+        <rdar://5086194> - WebHistory overreleases a CFNumber
+        
+        * WebHistory.cpp:
+        (WebHistory::loadHistoryGutsFromURL): Don't CFRelease what we didn't 
+          legitimately get a ref for!
+
 2007-03-23  Adam Roben  <aroben@apple.com>
 
         Reviewed by Darin.
