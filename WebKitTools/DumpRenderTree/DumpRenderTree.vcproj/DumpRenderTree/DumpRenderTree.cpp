@@ -46,6 +46,8 @@
 
 #include "EditingDelegate.h"
 #include "WaitUntilDoneDelegate.h"
+#include "WorkQueueItem.h"
+#include "WorkQueue.h"
 
 #define USE_MAC_FONTS
 
@@ -349,6 +351,16 @@ static void dumpBackForwardList(IWebFrame* frame)
 
 void dump()
 {
+    CComPtr<IWebDataSource> dataSource;
+    if (SUCCEEDED(frame->dataSource(&dataSource))) {
+        CComPtr<IWebURLResponse> response;
+        if (SUCCEEDED(dataSource->response(&response))) {
+            CComBSTR mimeType;
+            if (SUCCEEDED(response->MIMEType(&mimeType)))
+                dumpAsText |= mimeType == L"text/plain";
+        }
+    }
+
     CComBSTR resultString;
 
     if (dumpTree) {
@@ -463,6 +475,9 @@ static void runTest(const char* pathOrURL)
         if (SUCCEEDED(webView->backForwardList(&bfList)))
             bfList->currentItem(&prevTestBFItem);
     }
+
+    WorkQueue::shared()->clear();
+    WorkQueue::shared()->setFrozen(false);
 
     // Set the test timeout timer
     SetTimer(hostWindow, timeoutId, timeoutValue, 0);

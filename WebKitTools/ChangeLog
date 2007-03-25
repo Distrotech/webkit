@@ -1,3 +1,52 @@
+2007-03-25  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Oliver.
+
+        Fix <rdar://problem/5086934> DumpRenderTree doesn't support
+        layoutTestController.queueLoad
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (dump): Ported Mac code to check the MIME type before dumping.
+        (runTest): Clear the work queue before each test.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.vcproj:
+        Added new files.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/LayoutTestController.cpp:
+        (notifyDoneCallback): Only dump if the work queue is empty.
+        (jsValueToCString): Added.
+        (queueLoadCallback): Added.
+        (queueReloadCallback): Added.
+        (queueScriptCallback): Added.
+        (queueBackNavigationCallback): Added.
+        (queueForwardNavigationCallback): Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.cpp:
+        (WaitUntilDoneDelegate::processWork): Added.
+        (processWorkTimer): Added.
+        (WaitUntilDoneDelegate::locationChangeDone): Changed to match Mac.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.h:
+        Added declaration.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WorkQueue.cpp: Added.
+        (WorkQueue::shared):
+        (WorkQueue::WorkQueue):
+        (WorkQueue::queue):
+        (WorkQueue::dequeue):
+        (WorkQueue::count):
+        (WorkQueue::clear):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WorkQueue.h: Added.
+        (WorkQueue::setFrozen):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WorkQueueItem.cpp: Added.
+        (LoadItem::invoke):
+        (ReloadItem::invoke):
+        (ScriptItem::invoke):
+        (BackForwardItem::invoke):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WorkQueueItem.h: Added.
+        (LoadItem::LoadItem):
+        (LoadItem::url):
+        (LoadItem::target):
+        (ScriptItem::ScriptItem):
+        (ScriptItem::script):
+        (BackItem::BackItem):
+        (ForwardItem::ForwardItem):
+
 2007-03-24  Adam Roben  <aroben@apple.com>
 
         Reviewed by Oliver.

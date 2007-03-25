@@ -1,5 +1,17 @@
 2007-03-25  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Oliver.
+
+        WebKit part of <rdar://problem/5086934> DumpRenderTree doesn't support
+        layoutTestController.queueLoad
+
+        * WebFrame.cpp:
+        (WebFrame::findFrameNamed): Implemented.
+        * WebHistoryItem.cpp:
+        (WebHistoryItem::children): Don't increment i twice per loop!
+
+2007-03-25  Adam Roben  <aroben@apple.com>
+
         Build fix.
 
         * WebDownload.h: Include RetainPtr from WTF.

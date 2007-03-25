@@ -38,6 +38,8 @@ class WaitUntilDoneDelegate : public IWebUIDelegate, IWebUIDelegatePrivate, publ
 public:
     WaitUntilDoneDelegate() : m_refCount(1) { }
 
+    void processWork();
+
     // IUnknown
     virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject);
     virtual ULONG STDMETHODCALLTYPE AddRef(void);

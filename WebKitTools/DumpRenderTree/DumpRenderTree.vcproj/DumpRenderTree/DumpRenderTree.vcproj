@@ -238,7 +238,23 @@
 				RelativePath=".\WaitUntilDoneDelegate.h"
 				>
 			</File>
+			<File
+				RelativePath=".\WorkQueue.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\WorkQueueItem.cpp"
+				>
+			</File>
 		</Filter>
+		<File
+			RelativePath=".\WorkQueue.h"
+			>
+		</File>
+		<File
+			RelativePath=".\WorkQueueItem.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

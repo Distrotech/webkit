@@ -30,9 +30,12 @@
 #include "LayoutTestController.h"
 
 #include "EditingDelegate.h"
+#include "WorkQueue.h"
+#include "WorkQueueItem.h"
 
 #include <atlcomcli.h>
 #include <wtf/Platform.h>
+#include <JavaScriptCore/Assertions.h>
 #include <JavaScriptCore/JavaScriptCore.h>
 #include <WebKit/IWebViewPrivate.h>
 
@@ -50,7 +53,7 @@ static JSValueRef waitUntilDoneCallback(JSContextRef context, JSObjectRef functi
 
 static JSValueRef notifyDoneCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
 {
-    if (waitToDump && !topLoadingFrame)
+    if (waitToDump && !topLoadingFrame && !WorkQueue::shared()->count())
         dump();
     waitToDump = false;
 
@@ -182,6 +185,112 @@ static JSValueRef dumpBackForwardListCallback(JSContextRef context, JSObjectRef 
     return JSValueMakeUndefined(context);
 }
 
+static CString jsValueToCString(JSContextRef context, JSValueRef value, JSValueRef* exception)
+{
+    JSStringRef jsStr = JSValueToStringCopy(context, value, exception);
+    ASSERT(!exception || !*exception);
+
+    CStringA string;
+    LPSTR buffer = string.GetBuffer(1024);
+    JSStringGetUTF8CString(jsStr, buffer, 1024);
+    string.ReleaseBuffer();
+
+    JSStringRelease(jsStr);
+
+    return CString(string);
+}
+
+static JSValueRef queueLoadCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+{
+    JSValueRef undefined = JSValueMakeUndefined(context);
+
+    if (argumentCount < 1)
+        return undefined;
+
+    CString url = jsValueToCString(context, arguments[0], exception);
+    ASSERT(!exception || !*exception);
+
+    CString target;
+    if (argumentCount >= 2) {
+        target = jsValueToCString(context, arguments[1], exception);
+        ASSERT(!exception || !*exception);
+    }
+
+    CComPtr<IWebDataSource> dataSource;
+    if (FAILED(frame->dataSource(&dataSource)))
+        return undefined;
+
+    CComPtr<IWebURLResponse> response;
+    if (FAILED(dataSource->response(&response)))
+        return undefined;
+
+    CComBSTR responseURLBSTR;
+    if (FAILED(response->URL(&responseURLBSTR)))
+        return undefined;
+
+    // FIXME: We should do real relative URL resolution here
+    CString responseURL(responseURLBSTR);
+    int lastSlash = responseURL.ReverseFind('/');
+    if (lastSlash != -1)
+        responseURL = responseURL.Mid(0, lastSlash);
+
+    WorkQueue::shared()->queue(new LoadItem(CString(responseURL) + TEXT("/") + url, target));
+
+    return undefined;
+}
+
+static JSValueRef queueReloadCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+{
+    WorkQueue::shared()->queue(new ReloadItem);
+
+    return JSValueMakeUndefined(context);
+}
+
+static JSValueRef queueScriptCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+{
+    JSValueRef undefined = JSValueMakeUndefined(context);
+
+    if (argumentCount < 1)
+        return undefined;
+
+    CString script = jsValueToCString(context, arguments[0], exception);
+    ASSERT(!exception || !*exception);
+
+    WorkQueue::shared()->queue(new ScriptItem(script));
+
+    return undefined;
+}
+
+static JSValueRef queueBackNavigationCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+{
+    JSValueRef undefined = JSValueMakeUndefined(context);
+
+    if (argumentCount < 1)
+        return undefined;
+
+    int howFarBack = JSValueToNumber(context, arguments[0], exception);
+    ASSERT(!exception || !*exception);
+
+    WorkQueue::shared()->queue(new BackItem(howFarBack));
+
+    return undefined;
+}
+
+static JSValueRef queueForwardNavigationCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+{
+    JSValueRef undefined = JSValueMakeUndefined(context);
+
+    if (argumentCount < 1)
+        return undefined;
+
+    int howFarForward = JSValueToNumber(context, arguments[0], exception);
+    ASSERT(!exception || !*exception);
+
+    WorkQueue::shared()->queue(new ForwardItem(howFarForward));
+
+    return undefined;
+}
+
 static JSStaticFunction staticFunctions[] = {
     { "dumpAsText", dumpAsTextCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { "waitUntilDone", waitUntilDoneCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
@@ -196,6 +305,11 @@ static JSStaticFunction staticFunctions[] = {
     { "dumpTitleChanges", dumpTitleChangesCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { "dumpChildFrameScrollPositions", dumpChildFrameScrollPositionsCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { "dumpBackForwardList", dumpBackForwardListCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
+    { "queueLoad", queueLoadCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
+    { "queueReload", queueReloadCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
+    { "queueScript", queueScriptCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
+    { "queueBackNavigation", queueBackNavigationCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
+    { "queueForwardNavigation", queueForwardNavigationCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { 0, 0, 0 }
 };
 

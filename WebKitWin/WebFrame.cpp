@@ -716,11 +716,29 @@ HRESULT STDMETHODCALLTYPE WebFrame::reload( void)
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::findFrameNamed( 
-    /* [in] */ BSTR /*name*/,
-    /* [retval][out] */ IWebFrame** /*frame*/)
+    /* [in] */ BSTR name,
+    /* [retval][out] */ IWebFrame** frame)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!frame) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *frame = 0;
+
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
+        return E_FAIL;
+
+    Frame* foundFrame = coreFrame->tree()->find(AtomicString(name, SysStringLen(name)));
+    if (!foundFrame)
+        return S_OK;
+
+    WebFrame* foundWebFrame = kit(foundFrame);
+    if (!foundWebFrame)
+        return E_FAIL;
+
+    return foundWebFrame->QueryInterface(IID_IWebFrame, (void**)frame);
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::parentFrame( 

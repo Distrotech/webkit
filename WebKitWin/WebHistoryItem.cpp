@@ -312,8 +312,6 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::children(unsigned* outChildCount, SAFE
             SafeArrayDestroy(children);
             return hr;
         }
-
-        ++i;
     }
 
     *outChildCount = static_cast<unsigned>(childCount);

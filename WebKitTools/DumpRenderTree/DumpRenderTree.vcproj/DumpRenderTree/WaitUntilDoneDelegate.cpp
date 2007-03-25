@@ -33,14 +33,19 @@
 #include "EventSender.h"
 #include "GCController.h"
 #include "LayoutTestController.h"
+#include "WorkQueueItem.h"
+#include "WorkQueue.h"
 
 #include <wtf/Platform.h>
+#include <JavaScriptCore/Assertions.h>
 #include <JavaScriptCore/JavaScriptCore.h>
 #include <WebKit/IWebFramePrivate.h>
 #include <WebKit/IWebViewPrivate.h>
 
 #include <atlcomcli.h>
 #include <stdio.h>
+
+static WaitUntilDoneDelegate* g_delegateWaitingOnTimer;
 
 HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::QueryInterface(REFIID riid, void** ppvObject)
 {
@@ -113,15 +118,47 @@ HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::didReceiveTitle(
     return S_OK;
 }
 
+void WaitUntilDoneDelegate::processWork()
+{
+    // quit doing work once a load is in progress
+    while (!topLoadingFrame && WorkQueue::shared()->count()) {
+        WorkQueueItem* item = WorkQueue::shared()->dequeue();
+        ASSERT(item);
+        item->invoke();
+    }
+
+    // if we didn't start a new load, then we finished all the commands, so we're ready to dump state
+    if (!topLoadingFrame && !waitToDump)
+        dump();
+}
+
+static void CALLBACK processWorkTimer(HWND, UINT, UINT_PTR id, DWORD)
+{
+    ::KillTimer(0, id);
+    WaitUntilDoneDelegate* d = g_delegateWaitingOnTimer;
+    g_delegateWaitingOnTimer = 0;
+    d->processWork();
+}
+
 void WaitUntilDoneDelegate::locationChangeDone(IWebError*, IWebFrame* frame)
 {
     if (frame != topLoadingFrame)
         return;
 
     topLoadingFrame = 0;
+    WorkQueue::shared()->setFrozen(true);
 
-    if (!waitToDump)
-        dump();
+    if (waitToDump)
+        return;
+
+    if (WorkQueue::shared()->count()) {
+        ASSERT(!g_delegateWaitingOnTimer);
+        g_delegateWaitingOnTimer = this;
+        ::SetTimer(0, 0, 0, processWorkTimer);
+        return;
+    }
+
+    dump();
 }
 
 HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::didFinishLoadForFrame( 
