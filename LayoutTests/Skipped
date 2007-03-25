@@ -1,6 +1,3 @@
-# No Apache configuration on cygwin yet <rdar://problem/5066290>
-http
-
 # No support for WebArchives in WebKitWin <rdar://problem/5066490>
 webarchive
 

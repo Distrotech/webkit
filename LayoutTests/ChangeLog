@@ -1,5 +1,16 @@
 2007-03-25  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Anders.
+
+        Fix <rdar://problem/5066290> boomer-run-webkit-tests doesn't support
+        http tests
+
+        * Skipped: Removed http tests from the skipped list.
+        * http/conf/cygwin-httpd.conf: Added.
+        * http/conf/libphp4.dll: Added.
+
+2007-03-25  Adam Roben  <aroben@apple.com>
+
         Reviewed by Oliver.
 
         * Skipped: Added two more crashers for when we enable http tests.
