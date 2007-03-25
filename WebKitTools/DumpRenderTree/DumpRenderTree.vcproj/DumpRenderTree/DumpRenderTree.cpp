@@ -36,10 +36,12 @@
 #include <JavaScriptCore/JavaScriptCore.h>
 #include <math.h>
 #include <pthread.h>
+#include <WebKit/IWebFramePrivate.h>
+#include <WebKit/IWebHistoryItem.h>
+#include <WebKit/IWebHistoryItemPrivate.h>
 #include <WebKit/IWebURLResponse.h>
 #include <WebKit/IWebViewPrivate.h>
 #include <WebKit/WebKit.h>
-#include <WebKit/IWebFramePrivate.h>
 #include <windows.h>
 
 #include "EditingDelegate.h"
@@ -63,12 +65,14 @@ bool done;
 // where a frameset is loaded, and then new content is loaded into one of the child frames,
 // that child frame is the "topmost frame that is loading".
 IWebFrame* topLoadingFrame;     // !nil iff a load is in progress
+static CComPtr<IWebHistoryItem> prevTestBFItem;  // current b/f item at the end of the previous test
 
 bool dumpAsText = false;
 bool waitToDump = false;
 bool shouldDumpEditingCallbacks = false;
 bool shouldDumpTitleChanges = false;
 bool shouldDumpChildFrameScrollPositions = false;
+bool shouldDumpBackForwardList = false;
 bool testRepaint = false;
 bool repaintSweepHorizontally = false;
 
@@ -210,6 +214,139 @@ void dumpFrameScrollPosition(IWebFrame* frame)
     }
 }
 
+static int compareHistoryItems(const void* item1, const void* item2)
+{
+    CComQIPtr<IWebHistoryItemPrivate> itemA = *(IUnknown**)item1;
+    if (!itemA)
+        return 0;
+
+    CComQIPtr<IWebHistoryItemPrivate> itemB = *(IUnknown**)item2;
+    if (!itemB)
+        return 0;
+
+    CComBSTR targetA;
+    if (FAILED(itemA->target(&targetA)))
+        return 0;
+
+    CComBSTR targetB;
+    if (FAILED(itemB->target(&targetB)))
+        return 0;
+
+    return CString(targetA).CompareNoCase(CString(targetB));
+}
+
+static void dumpHistoryItem(IWebHistoryItem* item, int indent, bool current)
+{
+    assert(item);
+
+    int start = 0;
+    if (current) {
+        printf("curr->");
+        start = 6;
+    }
+    for (int i = start; i < indent; i++)
+        putchar(' ');
+
+    CComBSTR url;
+    if (FAILED(item->URLString(&url)))
+        return;
+    printf("%S", url ? url : L"");
+
+    CComQIPtr<IWebHistoryItemPrivate> itemPrivate = item;
+    if (!itemPrivate)
+        return;
+
+    CComBSTR target;
+    if (FAILED(itemPrivate->target(&target)))
+        return;
+    if (target.Length())
+        printf(" (in frame \"%S\")", target);
+    BOOL isTargetItem = FALSE;
+    if (FAILED(itemPrivate->isTargetItem(&isTargetItem)))
+        return;
+    if (isTargetItem)
+        printf("  **nav target**");
+    putchar('\n');
+
+    unsigned kidsCount;
+    SAFEARRAY* arrPtr;
+    if (FAILED(itemPrivate->children(&kidsCount, &arrPtr)) || !kidsCount)
+        return;
+
+    CComSafeArray<IUnknown*> kids;
+    kids.Attach(arrPtr);
+
+    IUnknown** kidsArray = new IUnknown*[kids.GetCount()];
+    for (unsigned i = 0; i < kidsCount; ++i)
+        kidsArray[i] = kids.GetAt(i);
+
+    // must sort to eliminate arbitrary result ordering which defeats reproducible testing
+    qsort(kidsArray, kidsCount, sizeof(kidsArray[0]), compareHistoryItems);
+
+    for (unsigned i = 0; i < kidsCount; ++i)
+        dumpHistoryItem(CComQIPtr<IWebHistoryItem>(kidsArray[i]), indent + 4, false);
+
+    delete [] kidsArray;
+}
+
+static void dumpBackForwardList(IWebFrame* frame)
+{
+    assert(frame);
+
+    printf("\n============== Back Forward List ==============\n");
+    CComPtr<IWebView> webView;
+    if (FAILED(frame->webView(&webView)))
+        return;
+
+    CComPtr<IWebBackForwardList> bfList;
+    if (FAILED(webView->backForwardList(&bfList)))
+        return;
+
+    // Print out all items in the list after prevTestBFItem, which was from the previous test
+    // Gather items from the end of the list, the print them out from oldest to newest
+    CComSafeArray<IUnknown*> itemsToPrint;
+    itemsToPrint.Create();
+
+    int forwardListCount;
+    if (FAILED(bfList->forwardListCount(&forwardListCount)))
+        return;
+
+    for (int i = forwardListCount; i > 0; --i) {
+        CComPtr<IWebHistoryItem> item;
+        if (FAILED(bfList->itemAtIndex(i, &item)))
+            return;
+        // something is wrong if the item from the last test is in the forward part of the b/f list
+        assert(item != prevTestBFItem);
+        itemsToPrint.Add(CComQIPtr<IUnknown, &IID_IUnknown>(item));
+    }
+    
+    CComPtr<IWebHistoryItem> currentItem;
+    if (FAILED(bfList->currentItem(&currentItem)))
+        return;
+
+    assert(currentItem != prevTestBFItem);
+    itemsToPrint.Add(CComQIPtr<IUnknown, &IID_IUnknown>(currentItem));
+    int currentItemIndex = itemsToPrint.GetCount() - 1;
+
+    int backListCount;
+    if (FAILED(bfList->backListCount(&backListCount)))
+        return;
+
+    for (int i = -1; i >= -backListCount; --i) {
+        CComPtr<IWebHistoryItem> item;
+        if (FAILED(bfList->itemAtIndex(i, &item)))
+            return;
+        if (item == prevTestBFItem)
+            break;
+        itemsToPrint.Add(CComQIPtr<IUnknown, &IID_IUnknown>(item));
+    }
+
+    for (int i = itemsToPrint.GetCount() - 1; i >= 0; --i)
+        dumpHistoryItem(CComQIPtr<IWebHistoryItem>(itemsToPrint[i]), 8, i == currentItemIndex);
+
+    printf("===============================================\n");
+}
+
 void dump()
 {
     CComBSTR resultString;
@@ -267,6 +404,8 @@ void dump()
             else
                 dumpFrameScrollPosition(frame);
         }
+        if (shouldDumpBackForwardList)
+            dumpBackForwardList(frame);
     }
 
     if (printSeparators)
@@ -312,9 +451,18 @@ static void runTest(const char* pathOrURL)
     shouldDumpEditingCallbacks = false;
     shouldDumpTitleChanges = false;
     shouldDumpChildFrameScrollPositions = false;
+    shouldDumpBackForwardList = false;
     testRepaint = false;
     repaintSweepHorizontally = false;
     timedOut = false;
+
+    prevTestBFItem.Release();
+    CComPtr<IWebView> webView;
+    if (SUCCEEDED(frame->webView(&webView))) {
+        CComPtr<IWebBackForwardList> bfList;
+        if (SUCCEEDED(webView->backForwardList(&bfList)))
+            bfList->currentItem(&prevTestBFItem);
+    }
 
     // Set the test timeout timer
     SetTimer(hostWindow, timeoutId, timeoutValue, 0);

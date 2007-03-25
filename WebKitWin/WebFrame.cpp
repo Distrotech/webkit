@@ -776,10 +776,6 @@ HRESULT STDMETHODCALLTYPE WebFrame::childFrames(
             return hr;
         }
 
-        VARIANT var;
-        V_VT(&var) = VT_UNKNOWN;
-        V_UNKNOWN(&var) = unknown.get();
-
         LONG longI = i;
         hr = SafeArrayPutElement(children, &longI, unknown.get());
         if (FAILED(hr)) {

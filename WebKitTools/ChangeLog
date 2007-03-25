@@ -1,3 +1,24 @@
+2007-03-24  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Oliver.
+
+        Fix <rdar://problem/5086932> DumpRenderTree doesn't support
+        layoutTestController.dumpBackForwardList
+
+        Unfortunately the ported code is mostly untested due to
+        <rdar://problem/5086934>.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (compareHistoryItems): Ported from Mac.
+        (dumpHistoryItem): Ditto.
+        (dumpBackForwardList): Ditto.
+        (dump): Dump the back-forward list if requested.
+        (runTest): Initialize new globals.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.h:
+        Added extern declaration.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/LayoutTestController.cpp:
+        (dumpBackForwardListCallback): Implemented.
+
 2007-03-23  Adam Roben  <aroben@apple.com>
 
         Reviewed by Oliver.

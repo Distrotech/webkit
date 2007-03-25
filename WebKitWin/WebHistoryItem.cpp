@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,6 +27,7 @@
 #include "WebKitDLL.h"
 #include "WebHistoryItem.h"
 
+#include "COMPtr.h"
 #include "MarshallingHelpers.h"
 #include "WebKit.h"
 
@@ -248,6 +249,77 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::setHasPageCache(BOOL /*hasCache*/)
 {
     // FIXME - TODO
     return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE WebHistoryItem::target(BSTR* target)
+{
+    if (!target) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *target = BString(m_historyItem->target()).release();
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebHistoryItem::isTargetItem(BOOL* result)
+{
+    if (!result) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *result = m_historyItem->isTargetItem() ? TRUE : FALSE;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebHistoryItem::children(unsigned* outChildCount, SAFEARRAY** outChildren)
+{
+    if (!outChildCount || !outChildren) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *outChildCount = 0;
+    *outChildren = 0;
+
+    const HistoryItemVector& coreChildren = m_historyItem->children();
+    if (coreChildren.isEmpty())
+        return S_OK;
+    size_t childCount = coreChildren.size();
+
+    SAFEARRAY* children = SafeArrayCreateVector(VT_UNKNOWN, 0, static_cast<ULONG>(childCount));
+    if (!children)
+        return E_OUTOFMEMORY;
+
+    for (unsigned i = 0; i < childCount; ++i) {
+        WebHistoryItem* item = WebHistoryItem::createInstance(coreChildren[i]);
+        if (!item) {
+            SafeArrayDestroy(children);
+            return E_OUTOFMEMORY;
+        }
+
+        COMPtr<IUnknown> unknown;
+        HRESULT hr = item->QueryInterface(IID_IUnknown, (void**)&unknown);
+        if (FAILED(hr)) {
+            SafeArrayDestroy(children);
+            return hr;
+        }
+
+        LONG longI = i;
+        hr = SafeArrayPutElement(children, &longI, unknown.get());
+        if (FAILED(hr)) {
+            SafeArrayDestroy(children);
+            return hr;
+        }
+
+        ++i;
+    }
+
+    *outChildCount = static_cast<unsigned>(childCount);
+    *outChildren = children;
+    return S_OK;
+
 }
 
 // IUnknown -------------------------------------------------------------------

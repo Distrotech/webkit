@@ -41,6 +41,7 @@ extern bool done;
 extern bool shouldDumpEditingCallbacks;
 extern bool shouldDumpTitleChanges;
 extern bool shouldDumpChildFrameScrollPositions;
+extern bool shouldDumpBackForwardList;
 extern bool testRepaint;
 extern bool repaintSweepHorizontally;
 extern IWebFrame* topLoadingFrame;
