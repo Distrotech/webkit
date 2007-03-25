@@ -403,9 +403,6 @@ PluginViewWin* PluginDatabaseWin::createPluginView(Frame* parentFrame, Element* 
         // corresponding to the extension.
     }
 
-    if (!plugin || !plugin->load())
-        return PluginViewWin::createNullPluginView(parentFrame, element);
-
     return new PluginViewWin(parentFrame, plugin, element, url, paramNames, paramValues, mimeType);
 }
 

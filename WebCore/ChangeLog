@@ -1,3 +1,29 @@
+2007-03-24  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Maciej.
+
+        Fix <rdar://problem/5076610> Crash in PluginViewWin::updateWindow when
+        loading a PDF page for the first time after installing Acrobat Reader
+
+        Don't call PluginPackageWin::load() until the PluginViewWin has been
+        inserted into the Widget tree. load() can result in arbitrary code
+        execution (in this case, a EULA window appears which takes focus from
+        the WebView, causing Frame::setIsActive(false) to be called), and we
+        don't want to be in a transitional state when that happens.
+
+        * plugins/win/PluginDatabaseWin.cpp:
+        (WebCore::PluginDatabaseWin::createPluginView): Call PluginViewWin's
+        one and only constructor.
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::setParent): Call init() after inserting
+        ourselves into the Widget tree.
+        (WebCore::PluginViewWin::PluginViewWin): Defer all real work until
+        init() is called.
+        (WebCore::PluginViewWin::init): Added. Calls m_plugin->load(), then
+        does the rest of the work that was once done by the constructor.
+        * plugins/win/PluginViewWin.h: Removed createNullPlugin and simplified
+        constructor, added setParent override and new init method.
+
 2007-03-24  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Adam

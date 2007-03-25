@@ -68,7 +68,6 @@ namespace WebCore {
 
     public:
         PluginViewWin(Frame* parentFrame, PluginPackageWin* plugin, Element*, const KURL&, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType);
-        static PluginViewWin* createNullPluginView(Frame* parentFrame, Element*);
         virtual ~PluginViewWin();
 
         PluginPackageWin* plugin() const { return m_plugin.get(); }
@@ -113,8 +112,11 @@ namespace WebCore {
         virtual IntRect windowClipRect() const;
 
         virtual void handleEvent(Event*);
+
+        virtual void setParent(ScrollView*);
+
     private:
-        PluginViewWin(Frame* parentFrame, Element*);
+        void init();
         bool start();
         void stop();
         static void setCurrentPluginView(PluginViewWin*);
@@ -157,6 +159,8 @@ namespace WebCore {
         int m_quirks;
         bool m_isWindowed;
         bool m_isTransparent;
+        bool m_isVisible;
+        bool m_haveInitialized;
 
         HWND m_window; // for windowed plug-ins
         mutable IntRect m_clipRect; // The clip rect to apply to a windowed plug-in

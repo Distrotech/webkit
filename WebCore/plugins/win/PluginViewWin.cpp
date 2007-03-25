@@ -226,6 +226,8 @@ void PluginViewWin::clearFocus()
 
 void PluginViewWin::show()
 {
+    m_isVisible = true;
+
     if (HWND window = m_window)
         ShowWindow(window, SW_SHOWNA);
 
@@ -234,6 +236,8 @@ void PluginViewWin::show()
 
 void PluginViewWin::hide()
 {
+    m_isVisible = false;
+
     if (HWND window = m_window)
         ShowWindow(window, SW_HIDE);
 
@@ -402,6 +406,12 @@ void PluginViewWin::handleEvent(Event* event)
         handleMouseEvent(static_cast<MouseEvent*>(event));
     else if (event->isKeyboardEvent())
         handleKeyboardEvent(static_cast<KeyboardEvent*>(event));
+}
+
+void PluginViewWin::setParent(ScrollView* parent)
+{
+    Widget::setParent(parent);
+    init();
 }
 
 void PluginViewWin::setNPWindowRect(const IntRect& rect)
@@ -1111,28 +1121,6 @@ void PluginViewWin::determineQuirks(const String& mimeType)
         m_quirks |= PluginQuirkWantsMozillaUserAgent;
 }
 
-PluginViewWin* PluginViewWin::createNullPluginView(Frame* parentFrame, Element* element)
-{
-    return new PluginViewWin(parentFrame, element);
-}
-
-PluginViewWin::PluginViewWin(Frame* parentFrame, Element* element)
-    : m_parentFrame(parentFrame)
-    , m_plugin(0)
-    , m_element(element)
-    , m_isStarted(false)
-    , m_requestTimer(this, &PluginViewWin::requestTimerFired)
-    , m_window(0)
-    , m_paramCount(0)
-    , m_paramNames(0)
-    , m_paramValues(0)
-    , m_mode(0)
-    , m_quirks(0)
-    , m_isWindowed(false)
-    , m_isTransparent(false)
-{
-}
-
 PluginViewWin::PluginViewWin(Frame* parentFrame, PluginPackageWin* plugin, Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType)
     : m_parentFrame(parentFrame)
     , m_plugin(plugin)
@@ -1145,7 +1133,12 @@ PluginViewWin::PluginViewWin(Frame* parentFrame, PluginPackageWin* plugin, Eleme
     , m_quirks(0)
     , m_isWindowed(true)
     , m_isTransparent(false)
+    , m_isVisible(false)
+    , m_haveInitialized(false)
 {
+    if (!m_plugin)
+        return;
+
     m_instance = &m_instanceStruct;
     m_instance->ndata = this;
 
@@ -1158,6 +1151,21 @@ PluginViewWin::PluginViewWin(Frame* parentFrame, PluginPackageWin* plugin, Eleme
     m_mode = element->document()->isPluginDocument() ? NP_FULL : NP_EMBED;
 
     determineQuirks(mimeType);
+}
+
+void PluginViewWin::init()
+{
+    if (m_haveInitialized)
+        return;
+    m_haveInitialized = true;
+
+    if (!m_plugin)
+        return;
+
+    if (!m_plugin->load()) {
+        m_plugin = 0;
+        return;
+    }
 
     if (!start())
         return;
@@ -1165,7 +1173,11 @@ PluginViewWin::PluginViewWin(Frame* parentFrame, PluginPackageWin* plugin, Eleme
     if (m_isWindowed) {
         registerPluginView();
 
-        m_window = CreateWindowEx(0, kWebPluginViewWindowClassName, 0, WS_CHILD, 
+        DWORD flags = WS_CHILD;
+        if (m_isVisible)
+            flags |= WS_VISIBLE;
+
+        m_window = CreateWindowEx(0, kWebPluginViewWindowClassName, 0, flags,
                                   0, 0, 0, 0, m_parentFrame->view()->containingWindow(), 0, Page::instanceHandle(), 0);
 
         SetProp(m_window, kWebPluginViewProperty, this);
