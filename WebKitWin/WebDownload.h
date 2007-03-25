@@ -123,7 +123,7 @@ protected:
 
     WebCore::String m_destination;
     WebCore::String m_bundlePath;
-    WebCore::RetainPtr<CFURLDownloadRef> m_download;
+    RetainPtr<CFURLDownloadRef> m_download;
     COMPtr<IWebMutableURLRequest> m_request;
     COMPtr<IWebDownloadDelegate> m_delegate;
 

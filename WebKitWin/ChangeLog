@@ -1,3 +1,9 @@
+2007-03-24  Steve Falkenburg  <sfalken@apple.com>
+
+        Build fix.
+
+        * WebDownload.h: Remove WebCore namespace
+
 2007-03-24  Adam Roben  <aroben@apple.com>
 
         Reviewed by Oliver.
