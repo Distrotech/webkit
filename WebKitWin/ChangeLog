@@ -1,3 +1,9 @@
+2007-03-25  Adam Roben  <aroben@apple.com>
+
+        Build fix.
+
+        * WebDownload.h: Include RetainPtr from WTF.
+
 2007-03-24  Steve Falkenburg  <sfalken@apple.com>
 
         Build fix.

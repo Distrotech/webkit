@@ -29,10 +29,10 @@
 #include "COMPtr.h"
 #include "IWebDownload.h"
 #include "IWebURLAuthenticationChallenge.h"
-#include "RetainPtr.h"
 
 #include <CFNetwork/CFURLDownloadPriv.h>
 #include <WebCore/PlatformString.h>
+#include <wtf/RetainPtr.h>
 
 namespace WebCore {
     class KURL;
