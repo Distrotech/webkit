@@ -1,3 +1,17 @@
+2007-03-26  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Adam.
+
+        Fix for <rdar://problem/5088844> Popup menu is not positioned correctly on a yahoo comics page
+        
+        Fixes test: fast/forms/control-restrict-line-height.html
+        
+        This change was made in RenderThemeMac a while ago, and will fix the line height for aqua popup buttons, 
+        buttons and search fields.
+        
+        * rendering/RenderThemeSafari.cpp: WebCore::RenderThemeSafari::setFontFromControlSize):
+          Don't honor line-height for controls that have restricted font size.
+          
 2007-03-25  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Oliver

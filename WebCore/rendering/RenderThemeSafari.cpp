@@ -327,6 +327,9 @@ void RenderThemeSafari::setFontFromControlSize(CSSStyleSelector* selector, Rende
     fontDescription.setComputedSize(fontSize);
     fontDescription.setSpecifiedSize(fontSize);
 
+    // Reset line height
+    style->setLineHeight(RenderStyle::initialLineHeight());
+
     if (style->setFontDescription(fontDescription))
         style->font().update();
 }
