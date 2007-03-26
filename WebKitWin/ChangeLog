@@ -1,3 +1,13 @@
+2007-03-26  Beth Dakin  <bdakin@apple.com>
+
+        Rubber-stamped by Brady.
+
+        Build fix for release build.
+
+        * WebHistory.cpp:
+        (releaseUserInfo): Do not store userInfo->Release() in a local 
+        variable since it is only used for an ASSERT.
+
 2007-03-26  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Lou.
