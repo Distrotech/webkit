@@ -1,3 +1,12 @@
+2007-03-26  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Lou.
+        
+        <rdar://problem/5088764> Move the "Icon.db" file under "Local Settings"
+
+        * WebIconDatabase.cpp:
+        (userIconDatabasePath): Move icon database to non-roaming location
+
 2007-03-25  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Oliver

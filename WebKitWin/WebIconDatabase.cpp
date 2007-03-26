@@ -59,9 +59,9 @@ WebIconDatabase::~WebIconDatabase()
 // path should use the WebPreferences system before it falls back to some reasonable default
 HRESULT userIconDatabasePath(String& path)
 {
-    // get the path to the user's Application Data folder (Example: C:\Documents and Settings\{username}\Application Data\)
+    // get the path to the user's non-roaming application data folder (Example: C:\Documents and Settings\{username}\Local Settings\Application Data\)
     TCHAR appDataPath[MAX_PATH];
-    HRESULT hr = SHGetFolderPath(0, CSIDL_APPDATA | CSIDL_FLAG_CREATE, 0, 0, appDataPath);
+    HRESULT hr = SHGetFolderPath(0, CSIDL_LOCAL_APPDATA | CSIDL_FLAG_CREATE, 0, 0, appDataPath);
     if (FAILED(hr))
         goto exit;
 
