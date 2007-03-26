@@ -28,7 +28,9 @@
 
 #include "IWebHistory.h"
 
+#include "COMPtr.h"
 #include <CoreFoundation/CoreFoundation.h>
+#include <wtf/RetainPtr.h>
 
 //-----------------------------------------------------------------------------
 
@@ -150,10 +152,10 @@ protected:
 
 protected:
     ULONG m_refCount;
-    CFMutableDictionaryRef m_entriesByURL;
-    CFMutableArrayRef m_datesWithEntries;
-    CFMutableArrayRef m_entriesByDate;
-    WebPreferences* m_preferences;
+    RetainPtr<CFMutableDictionaryRef> m_entriesByURL;
+    RetainPtr<CFMutableArrayRef> m_datesWithEntries;
+    RetainPtr<CFMutableArrayRef> m_entriesByDate;
+    COMPtr<WebPreferences> m_preferences;
     static IWebHistory* m_optionalSharedHistory;
 };
 

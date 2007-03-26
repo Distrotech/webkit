@@ -36,6 +36,8 @@
 #include <WebCore/HistoryItem.h>
 #pragma warning(pop)
 
+#include <wtf/RetainPtr.h>
+
 using namespace WebCore;
 
 // WebHistoryItem ----------------------------------------------------------------
@@ -141,29 +143,36 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::dictionaryRepresentation(void** dictio
 {
     CFDictionaryRef* dictionaryRef = (CFDictionaryRef*) dictionary;
     static CFStringRef lastVisitedFormat = CFSTR("%.1lf");
-    CFStringRef lastVisitedStringRef = CFStringCreateWithFormat(0, 0, lastVisitedFormat, m_historyItem->lastVisitedTime());
+    CFStringRef lastVisitedStringRef =
+        CFStringCreateWithFormat(0, 0, lastVisitedFormat, m_historyItem->lastVisitedTime());
     if (!lastVisitedStringRef)
         return E_FAIL;
 
     int keyCount = 0;
-    CFStringRef keys[4];
+    CFTypeRef keys[4];
     CFTypeRef values[4];
     if (!m_historyItem->urlString().isEmpty()) {
-        keys[keyCount]     = urlKey;
+        keys[keyCount] = urlKey;
         values[keyCount++] = m_historyItem->urlString().createCFString();
     }
-    keys[keyCount]         = lastVisitedDateKey;
-    values[keyCount++]     = lastVisitedStringRef;
+
+    keys[keyCount] = lastVisitedDateKey;
+    values[keyCount++] = lastVisitedStringRef;
+    
     if (!m_historyItem->title().isEmpty()) {
-        keys[keyCount]     = titleKey;
+        keys[keyCount] = titleKey;
         values[keyCount++] = m_historyItem->title().createCFString();
     }
+    
     keys[keyCount]   = visitCountKey;
     int visitCount = m_historyItem->visitCount();
     values[keyCount++] = CFNumberCreate(0, kCFNumberIntType, &visitCount);
-    *dictionaryRef = CFDictionaryCreate(0, (const void**)keys, (const void**)values, keyCount, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
     
-    CFRelease(lastVisitedStringRef);
+    *dictionaryRef = CFDictionaryCreate(0, keys, values, keyCount, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    
+    for (int i = 0; i < keyCount; ++i)
+        CFRelease(values[i]);
+
     return S_OK;
 }
 
@@ -200,10 +209,9 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::mergeAutoCompleteHints(IWebHistoryItem
 
     int otherVisitCount;
     hr = otherItemPriv->visitCount(&otherVisitCount);
+    otherItemPriv->Release();
     if (FAILED(hr))
         return hr;
-
-    otherItemPriv->Release();
 
     m_historyItem->setVisitCount(otherVisitCount);
 

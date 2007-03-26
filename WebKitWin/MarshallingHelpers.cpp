@@ -38,6 +38,7 @@ using namespace WebCore;
 static const double secondsPerDay = 60 * 60 * 24;
 
 CFArrayCallBacks MarshallingHelpers::kIUnknownArrayCallBacks = {0, IUnknownRetainCallback, IUnknownReleaseCallback, 0, 0};
+CFDictionaryValueCallBacks MarshallingHelpers::kIUnknownDictionaryValueCallBacks = {0, IUnknownRetainCallback, IUnknownReleaseCallback, 0, 0};
 
 KURL MarshallingHelpers::BSTRToKURL(BSTR urlStr)
 {

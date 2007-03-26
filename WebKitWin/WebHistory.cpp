@@ -68,23 +68,22 @@ static bool areEqualOrClose(double d1, double d2)
 
 static CFDictionaryPropertyBag* createUserInfoFromArray(BSTR notificationStr, CFArrayRef arrayItem)
 {
-    CFMutableDictionaryRef dictionary = CFDictionaryCreateMutable(0, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-    // CFDictionary will release reference to this CFString
-    CFStringRef key = MarshallingHelpers::BSTRToCFStringRef(notificationStr);
-    CFDictionaryAddValue(dictionary, (const void*) key, (const void*) arrayItem);
-    CFRelease(key);
+    RetainPtr<CFMutableDictionaryRef> dictionary(AdoptCF, 
+        CFDictionaryCreateMutable(0, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
+
+    RetainPtr<CFStringRef> key(AdoptCF, MarshallingHelpers::BSTRToCFStringRef(notificationStr));
+    CFDictionaryAddValue(dictionary.get(), key.get(), arrayItem);
+
     CFDictionaryPropertyBag* result = CFDictionaryPropertyBag::createInstance();
-    result->setDictionary(dictionary);
-    CFRelease(dictionary);
+    result->setDictionary(dictionary.get());
     return result;
 }
 
 static CFDictionaryPropertyBag* createUserInfoFromHistoryItem(BSTR notificationStr, IWebHistoryItem* item)
 {
     // reference counting of item added to the array is managed by the CFArray value callbacks
-    CFArrayRef itemList = CFArrayCreate(0, (const void**) &item, 1, &MarshallingHelpers::kIUnknownArrayCallBacks);
-    CFDictionaryPropertyBag* info = createUserInfoFromArray(notificationStr, itemList);
-    CFRelease(itemList);
+    RetainPtr<CFArrayRef> itemList(AdoptCF, CFArrayCreate(0, (const void**) &item, 1, &MarshallingHelpers::kIUnknownArrayCallBacks));
+    CFDictionaryPropertyBag* info = createUserInfoFromArray(notificationStr, itemList.get());
     return info;
 }
 
@@ -92,7 +91,8 @@ static void releaseUserInfo(CFDictionaryPropertyBag* userInfo)
 {
     // free the dictionary
     userInfo->setDictionary(0);
-    ASSERT(userInfo->Release() == 0);   // make sure no one else holds a reference to the userInfo.
+    int result = userInfo->Release();
+    ASSERT(result == 0);   // make sure no one else holds a reference to the userInfo.
 }
 
 // WebHistory -----------------------------------------------------------------
@@ -101,36 +101,23 @@ IWebHistory* WebHistory::m_optionalSharedHistory = 0;
 
 WebHistory::WebHistory()
 : m_refCount(0)
-, m_entriesByURL(0)
-, m_datesWithEntries(0)
-, m_entriesByDate(0)
 , m_preferences(0)
 {
     gClassCount++;
 
-    m_entriesByURL = CFDictionaryCreateMutable(0, 0, &kCFTypeDictionaryKeyCallBacks, 0);
-    m_datesWithEntries = CFArrayCreateMutable(0, 0, &kCFTypeArrayCallBacks);
-    m_entriesByDate = CFArrayCreateMutable(0, 0, &kCFTypeArrayCallBacks);
+    m_entriesByURL.adoptCF(CFDictionaryCreateMutable(0, 0, &kCFTypeDictionaryKeyCallBacks, &MarshallingHelpers::kIUnknownDictionaryValueCallBacks));
+    m_datesWithEntries.adoptCF(CFArrayCreateMutable(0, 0, &kCFTypeArrayCallBacks));
+    m_entriesByDate.adoptCF(CFArrayCreateMutable(0, 0, &kCFTypeArrayCallBacks));
 
-    WebPreferences* tempPrefs = WebPreferences::createInstance();
+    COMPtr<WebPreferences> tempPrefs(AdoptCOM, WebPreferences::createInstance());
     IWebPreferences* standardPrefs;
     tempPrefs->standardPreferences(&standardPrefs);
-    m_preferences = static_cast<WebPreferences*>(standardPrefs); // should be safe, since there's no setter for standardPrefs
-    tempPrefs->Release();
+    m_preferences.adoptRef(static_cast<WebPreferences*>(standardPrefs)); // should be safe, since there's no setter for standardPrefs
 }
 
 WebHistory::~WebHistory()
 {
     gClassCount--;
-
-    if (m_entriesByURL)
-        CFRelease(m_entriesByURL);
-    if (m_datesWithEntries)
-        CFRelease(m_datesWithEntries);
-    if (m_entriesByDate)
-        CFRelease(m_entriesByDate);
-    if (m_preferences)
-        m_preferences->Release();
 }
 
 WebHistory* WebHistory::createInstance()
@@ -235,10 +222,12 @@ HRESULT STDMETHODCALLTYPE WebHistory::loadFromURL(
     /* [retval][out] */ BOOL* succeeded)
 {
     HRESULT hr = S_OK;
-    CFMutableArrayRef discardedItems = CFArrayCreateMutable(0, 0, 0);
-    CFURLRef urlRef = MarshallingHelpers::BSTRToCFURLRef(url);
+    RetainPtr<CFMutableArrayRef> discardedItems(AdoptCF, 
+        CFArrayCreateMutable(0, 0, &MarshallingHelpers::kIUnknownArrayCallBacks));
 
-    hr = loadHistoryGutsFromURL(urlRef, discardedItems, error);
+    RetainPtr<CFURLRef> urlRef(AdoptCF, MarshallingHelpers::BSTRToCFURLRef(url));
+
+    hr = loadHistoryGutsFromURL(urlRef.get(), discardedItems.get(), error);
     if (FAILED(hr))
         goto exit;
 
@@ -246,8 +235,8 @@ HRESULT STDMETHODCALLTYPE WebHistory::loadFromURL(
     if (FAILED(hr))
         goto exit;
 
-    if (CFArrayGetCount(discardedItems) > 0) {
-        CFDictionaryPropertyBag* userInfo = createUserInfoFromArray(getNotificationString(kWebHistoryItemsDiscardedWhileLoadingNotification), discardedItems);
+    if (CFArrayGetCount(discardedItems.get()) > 0) {
+        CFDictionaryPropertyBag* userInfo = createUserInfoFromArray(getNotificationString(kWebHistoryItemsDiscardedWhileLoadingNotification), discardedItems.get());
         hr = postNotification(kWebHistoryItemsDiscardedWhileLoadingNotification, userInfo);
         releaseUserInfo(userInfo);
         if (FAILED(hr))
@@ -255,94 +244,79 @@ HRESULT STDMETHODCALLTYPE WebHistory::loadFromURL(
     }
 
 exit:
-    if (urlRef)
-        CFRelease(urlRef);
-    if (discardedItems) {
-        CFIndex count = CFArrayGetCount(discardedItems);
-        for (CFIndex i=0; i<count; i++) {
-            IWebHistoryItem* item = (IWebHistoryItem*) CFArrayGetValueAtIndex(discardedItems, i);
-            item->Release(); // release ref held by discarded items list (added in loadHistoryGutsFromURL)
-        }
-        CFRelease(discardedItems);
-    }
-
     if (succeeded)
         *succeeded = SUCCEEDED(hr);
     return hr;
 }
 
-HRESULT WebHistory::loadHistoryGutsFromURL(CFURLRef url, CFMutableArrayRef discardedItems, IWebError** /*error*/) //FIXME
+CFDictionaryRef createHistoryListFromStream(CFReadStreamRef stream, CFPropertyListFormat format)
 {
-    CFPropertyListFormat format = kCFPropertyListBinaryFormat_v1_0 | kCFPropertyListXMLFormat_v1_0;
-    CFReadStreamRef stream = 0;
-    CFDictionaryRef historyList = 0;
-    CFArrayRef datesArray = 0;
-    CFNumberRef fileVersionObject = 0;
-    HRESULT hr = S_OK;
-    int numberOfItemsLoaded = 0;
-
-    stream = CFReadStreamCreateWithFile(0, url);
-    if (!stream) {
-        hr = E_FAIL;
-        goto exit;
-    }
-
-    if (!CFReadStreamOpen(stream)) {
-        hr = E_FAIL;
-        goto exit;
-    }
-
     __try // FIXME- <rdar://4754295> Prevent crash when reading corrupt plists for the seed.  Real fix is to figure out why CF$UID plist entries get written out by CF occasionally.
     {
-        historyList = (CFDictionaryRef) CFPropertyListCreateFromStream(0, stream, 0, kCFPropertyListImmutable, &format, 0);
+        return (CFDictionaryRef)CFPropertyListCreateFromStream(0, stream, 0, kCFPropertyListImmutable, &format, 0);
     }
     __except(1) // FIXME- <rdar://4754295> Prevent crash when reading corrupt plists for the seed.  Real fix is to figure out why CF$UID plist entries get written out by CF occasionally.
     {
-        historyList = 0;
+        return 0;
     }
-    if (!historyList) {
-        hr = E_FAIL;
-        goto exit;
-    }
+}
 
-    fileVersionObject = (CFNumberRef) CFDictionaryGetValue(historyList, FileVersionKey);
+HRESULT WebHistory::loadHistoryGutsFromURL(CFURLRef url, CFMutableArrayRef discardedItems, IWebError** /*error*/) //FIXME
+{
+    CFPropertyListFormat format = kCFPropertyListBinaryFormat_v1_0 | kCFPropertyListXMLFormat_v1_0;
+    HRESULT hr = S_OK;
+    int numberOfItemsLoaded = 0;
+
+    RetainPtr<CFReadStreamRef> stream(AdoptCF, CFReadStreamCreateWithFile(0, url));
+    if (!stream) 
+        return E_FAIL;
+
+    if (!CFReadStreamOpen(stream.get())) 
+        return E_FAIL;
+
+    RetainPtr<CFDictionaryRef> historyList(AdoptCF, createHistoryListFromStream(stream.get(), format));
+    CFReadStreamClose(stream.get());
+
+    if (!historyList) 
+        return E_FAIL;
+
+    CFNumberRef fileVersionObject = (CFNumberRef)CFDictionaryGetValue(historyList.get(), FileVersionKey);
     int fileVersion;
-    if (!CFNumberGetValue(fileVersionObject, kCFNumberIntType, &fileVersion)) {
-        hr = E_FAIL;
-        goto exit;
-    }
-    if (fileVersion > currentFileVersion) {
-        hr = E_FAIL;
-        goto exit;
-    }
+    if (!CFNumberGetValue(fileVersionObject, kCFNumberIntType, &fileVersion)) 
+        return E_FAIL;
+
+    if (fileVersion > currentFileVersion) 
+        return E_FAIL;
     
-    datesArray = (CFArrayRef) CFDictionaryGetValue(historyList, DatesArrayKey);
+    CFArrayRef datesArray = (CFArrayRef)CFDictionaryGetValue(historyList.get(), DatesArrayKey);
 
     int itemCountLimit;
     hr = historyItemLimit(&itemCountLimit);
     if (FAILED(hr))
-        goto exit;
+        return hr;
 
     CFAbsoluteTime limitDate;
     hr = ageLimitDate(&limitDate);
     if (FAILED(hr))
-        goto exit;
+        return hr;
 
     bool ageLimitPassed = false;
     bool itemLimitPassed = false;
 
     CFIndex itemCount = CFArrayGetCount(datesArray);
-    for (CFIndex i=0; i<itemCount; i++) {
-        CFDictionaryRef itemAsDictionary = (CFDictionaryRef) CFArrayGetValueAtIndex(datesArray, i);
-        WebHistoryItem* item = WebHistoryItem::createInstance();
+    for (CFIndex i = 0; i < itemCount; ++i) {
+        CFDictionaryRef itemAsDictionary = (CFDictionaryRef)CFArrayGetValueAtIndex(datesArray, i);
+        COMPtr<WebHistoryItem> item(AdoptCOM, WebHistoryItem::createInstance());
         hr = item->initFromDictionaryRepresentation((void*)itemAsDictionary);
         if (FAILED(hr))
-            goto exit;
+            return hr;
+
         // item without URL is useless; data on disk must have been bad; ignore
         BOOL hasURL;
         hr = item->hasURLString(&hasURL);
         if (FAILED(hr))
-            goto exit;
+            return hr;
+        
         if (hasURL) {
             // Test against date limit. Since the items are ordered newest to oldest, we can stop comparing
             // once we've found the first item that's too old.
@@ -350,32 +324,20 @@ HRESULT WebHistory::loadHistoryGutsFromURL(CFURLRef url, CFMutableArrayRef disca
                 DATE lastVisitedTime;
                 hr = item->lastVisitedTimeInterval(&lastVisitedTime);
                 if (FAILED(hr))
-                    goto exit;
+                    return hr;
                 if (timeToDate(MarshallingHelpers::DATEToCFAbsoluteTime(lastVisitedTime)) <= limitDate)
                     ageLimitPassed = true;
             }
-            if (ageLimitPassed || itemLimitPassed) {
-                CFArrayAppendValue(discardedItems, item);
-                item->AddRef(); // discardedItems array holds a ref to each item
-            }
+            if (ageLimitPassed || itemLimitPassed)
+                CFArrayAppendValue(discardedItems, item.get());
             else {
-                addItem(item); // ref is added inside addItem
+                addItem(item.get()); // ref is added inside addItem
                 ++numberOfItemsLoaded;
                 if (numberOfItemsLoaded == itemCountLimit)
                     itemLimitPassed = true;
             }
         }
-        item->Release(); // release ref from createInstance (if needed, ref will have been added by either discardedItems or addItem above)
     }
-
-exit:
-    if (stream) {
-        CFReadStreamClose(stream);
-        CFRelease(stream);
-    }
-    if (historyList)
-        CFRelease(historyList);
-
     return hr;
 }
 
@@ -385,17 +347,14 @@ HRESULT STDMETHODCALLTYPE WebHistory::saveToURL(
     /* [retval][out] */ BOOL* succeeded)
 {
     HRESULT hr = S_OK;
-    CFURLRef urlRef = MarshallingHelpers::BSTRToCFURLRef(url);
+    RetainPtr<CFURLRef> urlRef(AdoptCF, MarshallingHelpers::BSTRToCFURLRef(url));
 
-    hr = saveHistoryGuts(urlRef, error);
+    hr = saveHistoryGuts(urlRef.get(), error);
 
     if (succeeded)
         *succeeded = SUCCEEDED(hr);
-    if (SUCCEEDED(hr)) {
+    if (SUCCEEDED(hr))
         hr = postNotification(kWebHistorySavedNotification);
-    }
-    if (urlRef)
-        CFRelease(urlRef);
 
     return hr;
 }
@@ -404,55 +363,42 @@ HRESULT WebHistory::saveHistoryGuts(CFURLRef url, IWebError** error)
 {
     HRESULT hr = S_OK;
 
-    CFWriteStreamRef stream = 0;
-    CFDictionaryRef dictionary = 0;
-    CFMutableArrayRef entries = 0;
-
     // FIXME:  Correctly report error when new API is ready.
     if (error)
         *error = 0;
 
-    stream = CFWriteStreamCreateWithFile(kCFAllocatorDefault, url);
-    if (!stream) {
-        hr = E_FAIL;
-        goto exit;
-    }
+    RetainPtr<CFWriteStreamRef> stream(AdoptCF, CFWriteStreamCreateWithFile(kCFAllocatorDefault, url));
+    if (!stream) 
+        return E_FAIL;
 
-    if (!CFWriteStreamOpen(stream)) {
-        hr = E_FAIL;
-        goto exit;
-    }
-
-    hr = datesArray(&entries);
+    CFMutableArrayRef rawEntries;
+    hr = datesArray(&rawEntries);
     if (FAILED(hr))
-        goto exit;
+        return hr;
+    RetainPtr<CFMutableArrayRef> entries(AdoptCF, rawEntries);
 
     // create the outer dictionary
-    int version = currentFileVersion;
-    CFStringRef keys[2];
+    CFTypeRef keys[2];
     CFTypeRef values[2];
     keys[0]   = DatesArrayKey;
-    values[0] = entries;
+    values[0] = entries.get();
     keys[1]   = FileVersionKey;
-    values[1] = CFNumberCreate(0, kCFNumberIntType, &version);
-    dictionary = CFDictionaryCreate(0, (const void**)keys, (const void**)values, sizeof(keys)/sizeof(keys[0]), &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 
-    if (!CFPropertyListWriteToStream(dictionary, stream, kCFPropertyListXMLFormat_v1_0, 0)) {
+    int version = currentFileVersion;
+    RetainPtr<CFNumberRef> versionCF(AdoptCF, CFNumberCreate(0, kCFNumberIntType, &version));
+    values[1] = versionCF.get();
+
+    RetainPtr<CFDictionaryRef> dictionary(AdoptCF, 
+        CFDictionaryCreate(0, keys, values, 2, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
+
+    if (!CFWriteStreamOpen(stream.get())) 
+        return E_FAIL;
+
+    if (!CFPropertyListWriteToStream(dictionary.get(), stream.get(), kCFPropertyListXMLFormat_v1_0, 0))
         hr = E_FAIL;
-        goto exit;
-    }
+ 
+    CFWriteStreamClose(stream.get());
 
-exit:
-    if (dictionary) {
-        CFRelease(dictionary);
-        entries = 0;
-    }
-    if (entries)
-        CFRelease(entries);
-    if (stream) {
-        CFWriteStreamClose(stream);
-        CFRelease(stream);
-    }
     return hr;
 }
 
@@ -460,37 +406,34 @@ HRESULT WebHistory::datesArray(CFMutableArrayRef* datesArray)
 {
     HRESULT hr = S_OK;
 
-    *datesArray = CFArrayCreateMutable(0, 0, &kCFTypeArrayCallBacks);
+    RetainPtr<CFMutableArrayRef> result(AdoptCF, CFArrayCreateMutable(0, 0, &kCFTypeArrayCallBacks));
     
     // for each date with entries
-    int dateCount = CFArrayGetCount(m_entriesByDate);
-    for (int i=0; i<dateCount; i++) {
-
+    int dateCount = CFArrayGetCount(m_entriesByDate.get());
+    for (int i = 0; i < dateCount; ++i) {
         // get the entries for that date
-        CFArrayRef entries = (CFArrayRef) CFArrayGetValueAtIndex(m_entriesByDate, i);
+        CFArrayRef entries = (CFArrayRef)CFArrayGetValueAtIndex(m_entriesByDate.get(), i);
         int entriesCount = CFArrayGetCount(entries);
-        for (int j=entriesCount-1; j>=0; j--) {
+        for (int j = entriesCount - 1; j >= 0; --j) {
             IWebHistoryItem* item = (IWebHistoryItem*) CFArrayGetValueAtIndex(entries, j);
             IWebHistoryItemPrivate* webHistoryItem;
             hr = item->QueryInterface(IID_IWebHistoryItemPrivate, (void**)&webHistoryItem);
             if (FAILED(hr))
-                goto exit;
-            item->Release();
+                return E_FAIL;
+            
             CFDictionaryRef itemDict;
             hr = webHistoryItem->dictionaryRepresentation((void**)&itemDict);
-            if (FAILED(hr)) {
-                hr = E_FAIL;
-                goto exit;
-            }
-            CFArrayAppendValue(*datesArray, itemDict);
+            webHistoryItem->Release();
+            if (FAILED(hr))
+                return E_FAIL;
+
+            CFArrayAppendValue(result.get(), itemDict);
+            CFRelease(itemDict);
         }
     }
 
-exit:
-    if (FAILED(hr)) {
-        CFRelease(*datesArray);
-        *datesArray = 0;
-    }
+    if (SUCCEEDED(hr))
+        *datesArray = result.releaseRef();
     return hr;
 }
 
@@ -505,7 +448,7 @@ HRESULT STDMETHODCALLTYPE WebHistory::addItems(
     // faster (fewer compares) by inserting them from oldest to newest.
 
     HRESULT hr;
-    for (int i=itemCount-1; i>=0; i--) {
+    for (int i = itemCount - 1; i >= 0; --i) {
         hr = addItem(items[i]);
         if (FAILED(hr))
             return hr;
@@ -519,7 +462,7 @@ HRESULT STDMETHODCALLTYPE WebHistory::removeItems(
     /* [in] */ IWebHistoryItem** items)
 {
     HRESULT hr;
-    for (int i=0; i<itemCount; i++) {
+    for (int i = 0; i < itemCount; ++i) {
         hr = removeItem(items[i]);
         if (FAILED(hr))
             return hr;
@@ -528,19 +471,11 @@ HRESULT STDMETHODCALLTYPE WebHistory::removeItems(
     return S_OK;
 }
 
-static void dictReleaseApplier(const void* /*key*/, const void* value, void* /*context*/)
-{
-    IWebHistoryItem* item = (IWebHistoryItem*) value;
-    item->Release();
-}
-
 HRESULT STDMETHODCALLTYPE WebHistory::removeAllItems( void)
 {
-    CFArrayRemoveAllValues(m_entriesByDate);
-    CFArrayRemoveAllValues(m_datesWithEntries);
-
-    CFDictionaryRemoveAllValues(m_entriesByURL);
-    CFDictionaryApplyFunction(m_entriesByURL, dictReleaseApplier, 0);
+    CFArrayRemoveAllValues(m_entriesByDate.get());
+    CFArrayRemoveAllValues(m_datesWithEntries.get());
+    CFDictionaryRemoveAllValues(m_entriesByURL.get());
 
     return postNotification(kWebHistoryAllItemsRemovedNotification);
 }
@@ -549,7 +484,7 @@ HRESULT STDMETHODCALLTYPE WebHistory::orderedLastVisitedDays(
     /* [out][in] */ int* count,
     /* [in] */ DATE* calendarDates)
 {
-    int dateCount = CFArrayGetCount(m_datesWithEntries);
+    int dateCount = CFArrayGetCount(m_datesWithEntries.get());
     if (!calendarDates) {
         *count = dateCount;
         return S_OK;
@@ -561,8 +496,8 @@ HRESULT STDMETHODCALLTYPE WebHistory::orderedLastVisitedDays(
     }
 
     *count = dateCount;
-    for (int i=0; i<dateCount; i++) {
-        CFNumberRef absoluteTimeNumberRef = (CFNumberRef) CFArrayGetValueAtIndex(m_datesWithEntries, i);
+    for (int i = 0; i < dateCount; i++) {
+        CFNumberRef absoluteTimeNumberRef = (CFNumberRef)CFArrayGetValueAtIndex(m_datesWithEntries.get(), i);
         CFAbsoluteTime absoluteTime;
         if (!CFNumberGetValue(absoluteTimeNumberRef, kCFNumberDoubleType, &absoluteTime))
             return E_FAIL;
@@ -583,7 +518,7 @@ HRESULT STDMETHODCALLTYPE WebHistory::orderedItemsLastVisitedOnDay(
         return 0;
     }
 
-    CFArrayRef entries = (CFArrayRef) CFArrayGetValueAtIndex(m_entriesByDate, index);
+    CFArrayRef entries = (CFArrayRef)CFArrayGetValueAtIndex(m_entriesByDate.get(), index);
     if (!entries) {
         *count = 0;
         return 0;
@@ -602,8 +537,8 @@ HRESULT STDMETHODCALLTYPE WebHistory::orderedItemsLastVisitedOnDay(
     }
 
     *count = newCount;
-    for (int i=0; i<newCount; i++) {
-        IWebHistoryItem* item = (IWebHistoryItem*) CFArrayGetValueAtIndex(entries, i);
+    for (int i = 0; i < newCount; i++) {
+        IWebHistoryItem* item = (IWebHistoryItem*)CFArrayGetValueAtIndex(entries, i);
         if (!item)
             return E_FAIL;
         item->AddRef();
@@ -649,36 +584,29 @@ HRESULT WebHistory::removeItem(IWebHistoryItem* entry)
 {
     HRESULT hr = S_OK;
     BSTR urlBStr = 0;
-    CFStringRef urlString = 0;
 
     hr = entry->URLString(&urlBStr);
     if (FAILED(hr))
-        goto exit;
+        return hr;
 
-    urlString = MarshallingHelpers::BSTRToCFStringRef(urlBStr);
+    RetainPtr<CFStringRef> urlString(AdoptCF, MarshallingHelpers::BSTRToCFStringRef(urlBStr));
+    SysFreeString(urlBStr);
 
     // If this exact object isn't stored, then make no change.
     // FIXME: Is this the right behavior if this entry isn't present, but another entry for the same URL is?
     // Maybe need to change the API to make something like removeEntryForURLString public instead.
-    IWebHistoryItem *matchingEntry = (IWebHistoryItem*) CFDictionaryGetValue(m_entriesByURL, urlString);
-    if (matchingEntry != entry) {
-        hr = E_FAIL;
-        goto exit;
-    }
-    hr = removeItemForURLString(urlString);
+    IWebHistoryItem *matchingEntry = (IWebHistoryItem*)CFDictionaryGetValue(m_entriesByURL.get(), urlString.get());
+    if (matchingEntry != entry)
+        return E_FAIL;
+
+    hr = removeItemForURLString(urlString.get());
     if (FAILED(hr))
-        goto exit;
+        return hr;
 
-    if (SUCCEEDED(hr)) {
-        CFDictionaryPropertyBag* userInfo = createUserInfoFromHistoryItem(getNotificationString(kWebHistoryItemsRemovedNotification), entry);
-        hr = postNotification(kWebHistoryItemsRemovedNotification, userInfo);
-        releaseUserInfo(userInfo);
-    }
-
-exit:
-    SysFreeString(urlBStr);
-    if (urlString)
-        CFRelease(urlString);
+    CFDictionaryPropertyBag* userInfo = createUserInfoFromHistoryItem(
+        getNotificationString(kWebHistoryItemsRemovedNotification), entry);
+    hr = postNotification(kWebHistoryItemsRemovedNotification, userInfo);
+    releaseUserInfo(userInfo);
 
     return hr;
 }
@@ -686,90 +614,69 @@ exit:
 HRESULT WebHistory::addItem(IWebHistoryItem* entry)
 {
     HRESULT hr = S_OK;
-    BSTR urlBStr = 0;
-    CFStringRef urlString = 0;
 
     if (!entry)
         return E_FAIL;
 
+    BSTR urlBStr = 0;
     hr = entry->URLString(&urlBStr);
     if (FAILED(hr))
-        goto exit;
+        return hr;
 
-    urlString = MarshallingHelpers::BSTRToCFStringRef(urlBStr);
+    RetainPtr<CFStringRef> urlString(AdoptCF, MarshallingHelpers::BSTRToCFStringRef(urlBStr));
+    SysFreeString(urlBStr);
 
-    IWebHistoryItem *oldEntry = (IWebHistoryItem*) CFDictionaryGetValue(m_entriesByURL, urlString);
+    COMPtr<IWebHistoryItem> oldEntry((IWebHistoryItem*) CFDictionaryGetValue(
+        m_entriesByURL.get(), urlString.get()));
+    
     if (oldEntry) {
-        // The last reference to oldEntry might be this dictionary, so we hold onto a reference
-        // until we're done with oldEntry.
-        oldEntry->AddRef();
-
-        removeItemForURLString(urlString);
+        removeItemForURLString(urlString.get());
 
         // If we already have an item with this URL, we need to merge info that drives the
         // URL autocomplete heuristics from that item into the new one.
         IWebHistoryItemPrivate* entryPriv;
         hr = entry->QueryInterface(IID_IWebHistoryItemPrivate, (void**)&entryPriv);
         if (SUCCEEDED(hr)) {
-            entryPriv->mergeAutoCompleteHints(oldEntry);
+            entryPriv->mergeAutoCompleteHints(oldEntry.get());
             entryPriv->Release();
         }
-
-        oldEntry->Release();
     }
 
     hr = addItemToDateCaches(entry);
     if (FAILED(hr))
-        goto exit;
+        return hr;
 
-    CFDictionarySetValue(m_entriesByURL, urlString, entry);
-    entry->AddRef(); // hold a ref to the item while it is in the history (released in removeItemForURLString)
+    CFDictionarySetValue(m_entriesByURL.get(), urlString.get(), entry);
 
-    if (SUCCEEDED(hr)) {
-        CFDictionaryPropertyBag* userInfo = createUserInfoFromHistoryItem(getNotificationString(kWebHistoryItemsAddedNotification), entry);
-        hr = postNotification(kWebHistoryItemsAddedNotification, userInfo);
-        releaseUserInfo(userInfo);
-    }
+    CFDictionaryPropertyBag* userInfo = createUserInfoFromHistoryItem(
+        getNotificationString(kWebHistoryItemsAddedNotification), entry);
+    hr = postNotification(kWebHistoryItemsAddedNotification, userInfo);
+    releaseUserInfo(userInfo);
 
-exit:
-    SysFreeString(urlBStr);
-    if (urlString)
-        CFRelease(urlString);
     return hr;
 }
 
 HRESULT WebHistory::addItemForURL(BSTR url, BSTR title)
 {
-    HRESULT hr = S_OK;
-
-    WebHistoryItem* item = WebHistoryItem::createInstance();
-    if (!item) {
-        hr = E_FAIL;
-        goto exit;
-    }
+    COMPtr<WebHistoryItem> item(AdoptCOM, WebHistoryItem::createInstance());
+    if (!item)
+        return E_FAIL;
 
     SYSTEMTIME currentTime;
     GetSystemTime(&currentTime);
     DATE lastVisited;
     if (!SystemTimeToVariantTime(&currentTime, &lastVisited))
-        goto exit;
+        return E_FAIL;
 
-    hr = item->initWithURLString(url, title, lastVisited);
+    HRESULT hr = item->initWithURLString(url, title, lastVisited);
     if (FAILED(hr))
-        goto exit;
+        return hr;
 
-    hr = addItem(item);
+    hr = addItem(item.get());
     if (FAILED(hr))
-        goto exit;
+        return hr;
 
-    hr = item->setLastVisitedTimeInterval(lastVisited); // also increments visitedCount
-    if (FAILED(hr))
-        goto exit;
-
-exit:
-    if (item)
-        item->Release();
-    return hr;
+    return item->setLastVisitedTimeInterval(lastVisited); // also increments visitedCount
 }
 
 HRESULT WebHistory::itemForURLString(
@@ -780,7 +687,7 @@ HRESULT WebHistory::itemForURLString(
         return E_FAIL;
     *item = 0;
 
-    IWebHistoryItem* foundItem = (IWebHistoryItem*) CFDictionaryGetValue(m_entriesByURL, urlString);
+    IWebHistoryItem* foundItem = (IWebHistoryItem*) CFDictionaryGetValue(m_entriesByURL.get(), urlString);
     if (!foundItem)
         return E_FAIL;
 
@@ -793,10 +700,8 @@ HRESULT STDMETHODCALLTYPE WebHistory::itemForURL(
     /* [in] */ BSTR url,
     /* [retval][out] */ IWebHistoryItem** item)
 {
-    CFStringRef urlString = MarshallingHelpers::BSTRToCFStringRef(url);
-    HRESULT hr = itemForURLString(urlString, item);
-    CFRelease(urlString);
-    return hr;
+    RetainPtr<CFStringRef> urlString(AdoptCF, MarshallingHelpers::BSTRToCFStringRef(url));
+    return itemForURLString(urlString.get(), item);
 }
 
 HRESULT WebHistory::containsItemForURLString(
@@ -804,26 +709,26 @@ HRESULT WebHistory::containsItemForURLString(
     /* [retval][out] */ BOOL* contains)
 {
     IWebHistoryItem* item = 0;
-    HRESULT hr = itemForURLString((CFStringRef)urlCFString, &item);
-    *contains = SUCCEEDED(hr);
+    HRESULT hr;
+    if (SUCCEEDED(hr = itemForURLString((CFStringRef)urlCFString, &item))) {
+        *contains = TRUE;
+        // itemForURLString refs the returned item, so we need to balance that 
+        item->Release();
+    } else
+        *contains = FALSE;
+
     return hr;
 }
 
 HRESULT WebHistory::removeItemForURLString(CFStringRef urlString)
 {
-    HRESULT hr = S_OK;
+    IWebHistoryItem* entry = (IWebHistoryItem*) CFDictionaryGetValue(m_entriesByURL.get(), urlString);
+    if (!entry) 
+        return E_FAIL;
 
-    IWebHistoryItem* entry = (IWebHistoryItem*) CFDictionaryGetValue(m_entriesByURL, urlString);
-    if (!entry) {
-        hr = E_FAIL;
-        goto exit;
-    }
+    HRESULT hr = removeItemFromDateCaches(entry);
+    CFDictionaryRemoveValue(m_entriesByURL.get(), urlString);
 
-    CFDictionaryRemoveValue(m_entriesByURL, urlString);
-    hr = removeItemFromDateCaches(entry);
-    entry->Release(); // release the ref held by the history (added in addItem)
-
-exit:
     return hr;
 }
 
@@ -841,11 +746,12 @@ HRESULT WebHistory::addItemToDateCaches(IWebHistoryItem* entry)
         hr = insertItem(entry, dateIndex);
     } else {
         // no other entries exist for this date
-        CFNumberRef lastVisitedDateRef = CFNumberCreate(0, kCFNumberDoubleType, &lastVisitedDate);
-        CFArrayInsertValueAtIndex(m_datesWithEntries, dateIndex, lastVisitedDateRef);
-        CFMutableArrayRef entryArray = CFArrayCreateMutable(0, 0, 0);
-        CFArrayAppendValue(entryArray, entry);
-        CFArrayInsertValueAtIndex(m_entriesByDate, dateIndex, entryArray);
+        RetainPtr<CFNumberRef> lastVisitedDateRef(AdoptCF, CFNumberCreate(0, kCFNumberDoubleType, &lastVisitedDate));
+        CFArrayInsertValueAtIndex(m_datesWithEntries.get(), dateIndex, lastVisitedDateRef.get());
+        RetainPtr<CFMutableArrayRef> entryArray(AdoptCF, 
+            CFArrayCreateMutable(0, 0, &MarshallingHelpers::kIUnknownArrayCallBacks));
+        CFArrayAppendValue(entryArray.get(), entry);
+        CFArrayInsertValueAtIndex(m_entriesByDate.get(), dateIndex, entryArray.get());
     }
 
     return hr;
@@ -863,17 +769,17 @@ HRESULT WebHistory::removeItemFromDateCaches(IWebHistoryItem* entry)
     if (!findIndex(&dateIndex, lastVisitedDate))
         return E_FAIL;
 
-    CFMutableArrayRef entriesForDate = (CFMutableArrayRef) CFArrayGetValueAtIndex(m_entriesByDate, dateIndex);
+    CFMutableArrayRef entriesForDate = (CFMutableArrayRef) CFArrayGetValueAtIndex(m_entriesByDate.get(), dateIndex);
     CFIndex count = CFArrayGetCount(entriesForDate);
-    for (int i=count-1; i>=0; i--) {
+    for (int i = count - 1; i >= 0; --i) {
         if ((IWebHistoryItem*)CFArrayGetValueAtIndex(entriesForDate, i) == entry)
             CFArrayRemoveValueAtIndex(entriesForDate, i);
     }
 
     // remove this date entirely if there are no other entries on it
     if (CFArrayGetCount(entriesForDate) == 0) {
-        CFArrayRemoveValueAtIndex(m_entriesByDate, dateIndex);
-        CFArrayRemoveValueAtIndex(m_datesWithEntries, dateIndex);
+        CFArrayRemoveValueAtIndex(m_entriesByDate.get(), dateIndex);
+        CFArrayRemoveValueAtIndex(m_datesWithEntries.get(), dateIndex);
     }
 
     return hr;
@@ -886,9 +792,9 @@ bool WebHistory::findIndex(int* index, CFAbsoluteTime forDay)
     CFAbsoluteTime forDayInDays = timeToDate(forDay);
 
     //FIXME: just does linear search through days; inefficient if many days
-    int count = CFArrayGetCount(m_datesWithEntries);
+    int count = CFArrayGetCount(m_datesWithEntries.get());
     for (*index = 0; *index < count; ++*index) {
-        CFNumberRef entryTimeNumberRef = (CFNumberRef) CFArrayGetValueAtIndex(m_datesWithEntries, *index);
+        CFNumberRef entryTimeNumberRef = (CFNumberRef) CFArrayGetValueAtIndex(m_datesWithEntries.get(), *index);
         CFAbsoluteTime entryTime;
         CFNumberGetValue(entryTimeNumberRef, kCFNumberDoubleType, &entryTime);
         CFAbsoluteTime entryInDays = timeToDate(entryTime);
@@ -906,13 +812,13 @@ HRESULT WebHistory::insertItem(IWebHistoryItem* entry, int dateIndex)
 
     if (!entry)
         return E_FAIL;
-    if (dateIndex < 0 || dateIndex >= CFArrayGetCount(m_entriesByDate))
+    if (dateIndex < 0 || dateIndex >= CFArrayGetCount(m_entriesByDate.get()))
         return E_FAIL;
 
     //FIXME: just does linear search through entries; inefficient if many entries for this date
     DATE entryTime;
     entry->lastVisitedTimeInterval(&entryTime);
-    CFMutableArrayRef entriesForDate = (CFMutableArrayRef) CFArrayGetValueAtIndex(m_entriesByDate, dateIndex);
+    CFMutableArrayRef entriesForDate = (CFMutableArrayRef) CFArrayGetValueAtIndex(m_entriesByDate.get(), dateIndex);
     int count = CFArrayGetCount(entriesForDate);
     // optimized for inserting oldest to youngest
     int index;
@@ -955,6 +861,7 @@ HRESULT WebHistory::ageLimitDate(CFAbsoluteTime* time)
     HRESULT hr = historyAgeInDaysLimit(&historyLimitDays);
     if (FAILED(hr))
         return hr;
+    historyLimitDays += 30;
     ageLimit.days = -historyLimitDays;
     *time = CFAbsoluteTimeAddGregorianUnits(currentDate, CFTimeZoneCopySystem(), ageLimit);
     return S_OK;

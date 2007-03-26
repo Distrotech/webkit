@@ -58,6 +58,7 @@ public:
     static const void* IUnknownRetainCallback(CFAllocatorRef, const void*);
     static void IUnknownReleaseCallback(CFAllocatorRef, const void*);
     static CFArrayCallBacks kIUnknownArrayCallBacks;
+    static CFDictionaryValueCallBacks kIUnknownDictionaryValueCallBacks;
 
 private:
     static CFAbsoluteTime MarshallingHelpers::windowsEpochAbsoluteTime();

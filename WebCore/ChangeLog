@@ -1,3 +1,12 @@
+2007-03-25  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Oliver
+
+        <rdar://problem/5086888> - WebHistory(Item) Leak
+
+        * platform/win/COMPtr.h:
+        (COMPtr::COMPtr): An an adoptRef constructor
+
 2007-03-24  Adam Roben  <aroben@apple.com>
 
         Reviewed by Maciej.

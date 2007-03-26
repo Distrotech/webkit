@@ -1,3 +1,54 @@
+2007-03-25  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Oliver
+        
+        <rdar://problem/5086888> - WebHistory(Item) Leak
+        
+        This is a pretty thourough touchup up style and correctness that
+        plugs at least 1 definite leak and many potential leaks with
+        extensive use of RetainPtr and COMPtr.
+        
+        This should result in no change in behavior
+
+        * MarshallingHelpers.cpp: Add kIUnknownDictionaryValueCallBacks
+        * MarshallingHelpers.h: Ditto
+        
+        * WebHistory.cpp:
+        (createUserInfoFromArray):
+        (createUserInfoFromHistoryItem):
+        (releaseUserInfo):
+        (WebHistory::WebHistory):
+        (WebHistory::~WebHistory):
+        (WebHistory::loadFromURL):
+        (createHistoryListFromStream): Split of the Structured Exception
+          Handling to a seperate function to cooperate with C++
+        (WebHistory::loadHistoryGutsFromURL):
+        (WebHistory::saveToURL):
+        (WebHistory::saveHistoryGuts):
+        (WebHistory::datesArray):
+        (WebHistory::addItems):
+        (WebHistory::removeItems):
+        (WebHistory::removeAllItems):
+        (WebHistory::orderedLastVisitedDays):
+        (WebHistory::orderedItemsLastVisitedOnDay):
+        (WebHistory::removeItem):
+        (WebHistory::addItem):
+        (WebHistory::addItemForURL):
+        (WebHistory::itemForURLString):
+        (WebHistory::itemForURL):
+        (WebHistory::containsItemForURLString):
+        (WebHistory::removeItemForURLString):
+        (WebHistory::addItemToDateCaches):
+        (WebHistory::removeItemFromDateCaches):
+        (WebHistory::findIndex):
+        (WebHistory::insertItem):
+        (WebHistory::ageLimitDate):
+        * WebHistory.h:
+        
+        * WebHistoryItem.cpp:
+        (WebHistoryItem::dictionaryRepresentation):
+        (WebHistoryItem::mergeAutoCompleteHints):
+
 2007-03-25  Adam Roben  <aroben@apple.com>
 
         Reviewed by Oliver.

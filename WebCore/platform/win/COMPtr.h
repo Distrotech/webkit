@@ -30,10 +30,13 @@
 
 typedef long HRESULT;
 
+enum AdoptCOMTag { AdoptCOM };
+
 template <typename T> class COMPtr {
 public:
     COMPtr() : m_ptr(0) { }
     COMPtr(T* ptr) : m_ptr(ptr) { if (m_ptr) m_ptr->AddRef(); }
+    COMPtr(AdoptCOMTag, T* ptr) : m_ptr(ptr) { }
     COMPtr(const COMPtr& o) : m_ptr(o.m_ptr) { if (T* ptr = m_ptr) ptr->AddRef(); }
 
     ~COMPtr() { if (m_ptr) m_ptr->Release(); }
