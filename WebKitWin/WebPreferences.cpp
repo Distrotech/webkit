@@ -29,16 +29,20 @@
 
 #include "WebNotificationCenter.h"
 #include "WebPreferenceKeysPrivate.h"
+
 #pragma warning( push, 0 )
 #include <WebCore/Font.h>
-#include <wtf/Vector.h>
 #pragma warning( pop )
+
 #include <CoreFoundation/CoreFoundation.h>
+#include <CoreGraphics/CoreGraphics.h>
 #include <shlobj.h>
 #include <shfolder.h>
 #include <tchar.h>
-#include <CoreGraphics/CoreGraphics.h>
 #include <WebKitSystemInterface/WebKitSystemInterface.h>
+#include <wtf/OwnPtr.h>
+#include <wtf/RetainPtr.h>
+#include <wtf/Vector.h>
 
 // WebPreferences ----------------------------------------------------------------
 
@@ -263,7 +267,7 @@ const void* WebPreferences::valueForKey(CFStringRef key)
 
 BSTR WebPreferences::stringValueForKey(CFStringRef key)
 {
-    CFStringRef str = (CFStringRef) valueForKey(key);
+    CFStringRef str = (CFStringRef)valueForKey(key);
     
     if (!str || (CFGetTypeID(str) != CFStringGetTypeID()))
         return 0;
@@ -288,7 +292,7 @@ BSTR WebPreferences::stringValueForKey(CFStringRef key)
 
 int WebPreferences::integerValueForKey(CFStringRef key)
 {
-    CFTypeRef cfVal = (CFStringRef) valueForKey(key);
+    CFTypeRef cfVal = (CFStringRef)valueForKey(key);
     if (!cfVal)
         return 0;
 
@@ -315,7 +319,7 @@ BOOL WebPreferences::boolValueForKey(CFStringRef key)
 
 float WebPreferences::floatValueForKey(CFStringRef key)
 {
-    CFTypeRef cfVal = (CFStringRef) valueForKey(key);
+    CFTypeRef cfVal = (CFStringRef)valueForKey(key);
     if (!cfVal)
         return 0.0;
 
@@ -342,13 +346,13 @@ void WebPreferences::setStringValue(CFStringRef key, LPCTSTR value)
         return;
     SysFreeString(val);
     
-    CFStringRef valueRef = CFStringCreateWithCharactersNoCopy(0, (UniChar*)_wcsdup(value), (CFIndex)_tcslen(value), kCFAllocatorMalloc);
-    CFDictionarySetValue(m_privatePrefs, key, valueRef);
+    RetainPtr<CFStringRef> valueRef(AdoptCF,
+        CFStringCreateWithCharactersNoCopy(0, (UniChar*)_wcsdup(value), (CFIndex)_tcslen(value), kCFAllocatorMalloc));
+    CFDictionarySetValue(m_privatePrefs, key, valueRef.get());
     if (m_autoSaves) {
-        CFDictionarySetValue(m_standardUserDefaults, key, valueRef);
+        CFDictionarySetValue(m_standardUserDefaults, key, valueRef.get());
         save();
     }
-    CFRelease(valueRef);
 
     postPreferencesChangesNotification();
 }
@@ -364,13 +368,12 @@ void WebPreferences::setIntegerValue(CFStringRef key, int value)
     if (integerValueForKey(key) == value)
         return;
 
-    CFNumberRef valueRef = CFNumberCreate(0, kCFNumberSInt32Type, &value);
-    CFDictionarySetValue(m_privatePrefs, key, valueRef);
+    RetainPtr<CFNumberRef> valueRef(AdoptCF, CFNumberCreate(0, kCFNumberSInt32Type, &value));
+    CFDictionarySetValue(m_privatePrefs, key, valueRef.get());
     if (m_autoSaves) {
-        CFDictionarySetValue(m_standardUserDefaults, key, valueRef);
+        CFDictionarySetValue(m_standardUserDefaults, key, valueRef.get());
         save();
     }
-    CFRelease(valueRef);
 
     postPreferencesChangesNotification();
 }
@@ -391,98 +394,66 @@ void WebPreferences::setBoolValue(CFStringRef key, BOOL value)
 
 void WebPreferences::save()
 {
-    CFWriteStreamRef stream = 0;
-    CFDataRef dataRef = 0;
     TCHAR appDataPath[MAX_PATH];
+    if (FAILED(preferencesPath(appDataPath, MAX_PATH)))
+        return;
 
-    HRESULT hr = preferencesPath(appDataPath, sizeof(appDataPath)/sizeof(appDataPath[0]));
-    if (FAILED(hr))
-        goto exit;
-
-    stream = CFWriteStreamCreateWithAllocatedBuffers(kCFAllocatorDefault, kCFAllocatorDefault);
+    RetainPtr<CFWriteStreamRef> stream(AdoptCF,
+        CFWriteStreamCreateWithAllocatedBuffers(kCFAllocatorDefault, kCFAllocatorDefault)); 
     if (!stream)
-        goto exit;
+        return;
 
-    if (!CFWriteStreamOpen(stream))
-        goto exit;
+    if (!CFWriteStreamOpen(stream.get()))
+        return;
 
-    if (!CFPropertyListWriteToStream(m_standardUserDefaults, stream, kCFPropertyListXMLFormat_v1_0, 0))
-        goto exit;
-
-    CFWriteStreamClose(stream);
-    dataRef = (CFDataRef) CFWriteStreamCopyProperty(stream, kCFStreamPropertyDataWritten);
-    if (!dataRef)
-        goto exit;
-
-    void* bytes = (void*) CFDataGetBytePtr(dataRef);
-    size_t length = CFDataGetLength(dataRef);
-    safeCreateFileWithData(appDataPath, bytes, length);
-
-exit:
-    if (dataRef)
-        CFRelease(dataRef);
-    if (stream) {
-        CFWriteStreamClose(stream);
-        CFRelease(stream);
+    if (!CFPropertyListWriteToStream(m_standardUserDefaults, stream.get(), kCFPropertyListXMLFormat_v1_0, 0)) {
+        CFWriteStreamClose(stream.get());
+        return;
     }
+    CFWriteStreamClose(stream.get());
+
+    RetainPtr<CFDataRef> dataRef(AdoptCF,
+        (CFDataRef)CFWriteStreamCopyProperty(stream.get(), kCFStreamPropertyDataWritten));
+    if (!dataRef)
+        return;
+
+    void* bytes = (void*)CFDataGetBytePtr(dataRef.get());
+    size_t length = CFDataGetLength(dataRef.get());
+    safeCreateFileWithData(appDataPath, bytes, length);
 }
 
 void WebPreferences::load()
 {
     TCHAR appDataPath[MAX_PATH];
-    CFURLRef urlRef = 0;
+    RetainPtr<CFURLRef> urlRef;
     CFPropertyListFormat format = kCFPropertyListBinaryFormat_v1_0 | kCFPropertyListXMLFormat_v1_0;
-    CFReadStreamRef stream = 0;
-    Vector<UInt8>* utf8Path = 0;
+    RetainPtr<CFReadStreamRef> stream;
+    OwnPtr<Vector<UInt8> > utf8Path;
 
-    HRESULT hr = preferencesPath(appDataPath, sizeof(appDataPath)/sizeof(appDataPath[0]));
-    if (FAILED(hr))
+    if (FAILED(preferencesPath(appDataPath, MAX_PATH)))
         goto exit;
 
     DWORD appDataPathLength = (DWORD) _tcslen(appDataPath)+1;
     int result = WideCharToMultiByte(CP_UTF8, 0, appDataPath, appDataPathLength, 0, 0, 0, 0);
-    utf8Path = new Vector<UInt8>(result);
-    result = WideCharToMultiByte(CP_UTF8, 0, appDataPath, appDataPathLength, (LPSTR)utf8Path->data(), result, 0, 0);
-    if (!result) {
-        hr = E_FAIL;
+    utf8Path.set(new Vector<UInt8>(result));
+    if (!WideCharToMultiByte(CP_UTF8, 0, appDataPath, appDataPathLength, (LPSTR)utf8Path->data(), result, 0, 0))
         goto exit;
-    }
 
-    urlRef = CFURLCreateFromFileSystemRepresentation(0, *utf8Path, result-1, false);
-    if (!urlRef) {
-        hr = E_FAIL;
+    urlRef.adoptCF(CFURLCreateFromFileSystemRepresentation(0, *utf8Path, result-1, false));
+    if (!urlRef)
         goto exit;
-    }
 
-    stream = CFReadStreamCreateWithFile(0, urlRef);
-    if (!stream) {
-        hr = E_FAIL;
+    stream.adoptCF(CFReadStreamCreateWithFile(0, urlRef.get()));
+    if (!stream) 
         goto exit;
-    }
 
-    if (!CFReadStreamOpen(stream)) {
-        hr = E_FAIL;
+    if (!CFReadStreamOpen(stream.get()))
         goto exit;
-    }
 
-    m_standardUserDefaults = (CFMutableDictionaryRef) CFPropertyListCreateFromStream(0, stream, 0, kCFPropertyListMutableContainersAndLeaves, &format, 0);
+    m_standardUserDefaults = (CFMutableDictionaryRef)CFPropertyListCreateFromStream(0, stream.get(), 0, kCFPropertyListMutableContainersAndLeaves, &format, 0);
+    CFReadStreamClose(stream.get());
 
 exit:
-    delete utf8Path;
-
-    if (stream) {
-        CFReadStreamClose(stream);
-        CFRelease(stream);
-    }
-    if (urlRef)
-        CFRelease(urlRef);
-
-    if (FAILED(hr)) {
-        if (m_standardUserDefaults)
-            CFRelease(m_standardUserDefaults);
-        m_standardUserDefaults = 0;
-    }
-
     initialize();
 }
 

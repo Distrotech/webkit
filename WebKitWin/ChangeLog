@@ -2,6 +2,22 @@
 
         Reviewed by Ada
 
+        This one didn't actually have any leaks, but I just felt like doing the
+        same style cleanup as the others :)
+        
+        * WebPreferences.cpp:
+        (WebPreferences::stringValueForKey):
+        (WebPreferences::integerValueForKey):
+        (WebPreferences::floatValueForKey):
+        (WebPreferences::setStringValue):
+        (WebPreferences::setIntegerValue):
+        (WebPreferences::save):
+        (WebPreferences::load):
+
+2007-03-26  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Ada
+
         <rdar://5090412> - Plug CFNumberRef leaks in WebCache
         
         * WebCache.cpp:
