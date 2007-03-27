@@ -166,7 +166,7 @@ void PluginViewWin::updateWindow() const
         ::SetWindowRgn(m_window, rgn, false);
 
         RECT rect = m_clipRect;
-        ::InvalidateRect(m_window, &rect, false);
+        ::InvalidateRect(m_window, &rect, true);
         ::UpdateWindow(m_window);
     }
 }

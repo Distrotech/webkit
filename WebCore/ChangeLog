@@ -1,3 +1,22 @@
+2007-03-27  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Anders Carlsson.
+
+        Fixed <rdar://problem/5085076> WebView stops painting after 
+        loading stand-alone netflix movie preview in WMP format
+        
+        The stand-alone WMP plug-in seems to do all its drawing in
+        the WM_ERASEBKGN phase, not the WM_PAINT phase, so our
+        InvalidateRect call for plug-in windows needs to specify 
+        'true' for whether the background region should be erased.
+        
+        A smart plug-in that wants to avoid background draws can
+        still do so by just returning 1 in response to WM_ERASEBKGN,
+        or by setting its background brush to NULL.
+
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::updateWindow):
+
 2007-03-27  Anders Carlsson  <acarlsson@apple.com>
 
         Reviewed by Maciej.
