@@ -70,9 +70,12 @@ const FontData* FontCache::getFontDataForCharacters(const Font& font, const UCha
 
     FontData* fontData = 0;
     HDC hdc = GetDC(0);
-    DWORD fontCodePages;
-    langFontLink->GetFontCodePages(hdc, font.primaryFont()->m_font.hfont(), &fontCodePages);
+    HFONT primaryFont = font.primaryFont()->m_font.hfont();
+    HGDIOBJ oldFont = SelectObject(hdc, primaryFont);
 
+    DWORD fontCodePages;
+    langFontLink->GetFontCodePages(hdc, primaryFont, &fontCodePages);
+   
     DWORD actualCodePages;
     long cchActual;
     langFontLink->GetStrCodePages(characters, length, fontCodePages, &actualCodePages, &cchActual);
@@ -84,6 +87,7 @@ const FontData* FontCache::getFontDataForCharacters(const Font& font, const UCha
         }
     }
 
+    SelectObject(hdc, oldFont);
     ReleaseDC(0, hdc);
     return fontData;
 }

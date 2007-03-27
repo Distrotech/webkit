@@ -1,3 +1,15 @@
+2007-03-27  Dave Hyatt  <hyatt@apple.com>
+
+        Fix for 5090964, arabic text is all jumbled in list boxes and popup menus (and in the
+        Boomer app too).  The fallback font was not the right size because the font you're mapping
+        from had to be selected into the HDC first.
+       
+        Reviewed by ggaren
+
+        * ChangeLog:
+        * platform/win/FontCacheWin.cpp:
+        (WebCore::FontCache::getFontDataForCharacters):
+
 2007-03-27  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Anders Carlsson.
