@@ -1,3 +1,12 @@
+2007-03-26  Antti Koivisto  <antti@apple.com>
+
+        Reviewed by Darin.
+        
+        Initialize new m_isContinuous field in WheelEvent
+
+        * platform/win/WheelEventWin.cpp:
+        (WebCore::PlatformWheelEvent::PlatformWheelEvent):
+
 2007-03-27  Dave Hyatt  <hyatt@apple.com>
 
         Enable complex text.  Selection and small-caps support are now enabled with this patch.
