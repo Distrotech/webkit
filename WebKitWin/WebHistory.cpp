@@ -91,7 +91,9 @@ static void releaseUserInfo(CFDictionaryPropertyBag* userInfo)
 {
     // free the dictionary
     userInfo->setDictionary(0);
-    ASSERT(userInfo->Release() == 0);   // make sure no one else holds a reference to the userInfo.
+    int result = userInfo->Release();
+    (void)result;
+    ASSERT(result == 0);   // make sure no one else holds a reference to the userInfo.
 }
 
 // WebHistory -----------------------------------------------------------------

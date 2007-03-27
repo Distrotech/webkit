@@ -1,5 +1,14 @@
 2007-03-26  Beth Dakin  <bdakin@apple.com>
 
+        Reviewed by Geoff.
+
+        Fix build without breaking anything.
+
+        * WebHistory.cpp:
+        (releaseUserInfo): Added silly void statement for now.
+
+2007-03-26  Beth Dakin  <bdakin@apple.com>
+
         Rubber-stamped by Brady.
 
         Build fix for release build.
