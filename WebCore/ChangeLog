@@ -1,3 +1,23 @@
+2007-03-27  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Maciej.
+
+        <rdar://problem/5091459>
+        Crash when destroying "null plugin"
+        
+        <rdar://problem/5056845>
+        Invoking itunes page has missing plugin icon on it
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::paintMissingPluginIcon):
+        Clip before painting.
+        
+        (WebCore::freeStringArray):
+        Add null-check.
+        
+        (WebCore::PluginViewWin::PluginViewWin):
+        Initialize plugin names and values.
+        
 2007-03-27  Dave Hyatt  <hyatt@apple.com>
 
         Add support for glyph offsets to the GlyphBuffer.

@@ -260,7 +260,10 @@ void PluginViewWin::paintMissingPluginIcon(GraphicsContext* context, const IntRe
     if (!rect.intersects(imageRect))
         return;
 
+    context->save();
+    context->clip(windowClipRect());
     context->drawImage(nullPluginImage, imageRect.location());
+    context->restore();
 }
 
 void PluginViewWin::paint(GraphicsContext* context, const IntRect& rect)
@@ -535,6 +538,9 @@ static char** createUTF8StringArray(const Vector<String>& vector)
 
 static void freeStringArray(char** stringArray, int length)
 {
+    if (!stringArray)
+        return;
+
     for (unsigned i = 0; i < length; i++)
         fastFree(stringArray[i]);
 
@@ -1129,6 +1135,8 @@ PluginViewWin::PluginViewWin(Frame* parentFrame, PluginPackageWin* plugin, Eleme
     , m_url(url)
     , m_baseURL(m_parentFrame->loader()->completeURL(m_parentFrame->document()->baseURL()))
     , m_requestTimer(this, &PluginViewWin::requestTimerFired)
+    , m_paramNames(0)
+    , m_paramValues(0)
     , m_window(0)
     , m_quirks(0)
     , m_isWindowed(true)
