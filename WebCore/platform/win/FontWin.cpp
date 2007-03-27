@@ -67,17 +67,20 @@ void Font::drawGlyphs(GraphicsContext* graphicsContext, const FontData* font, co
     CGContextSetFont(cgContext, platformData.cgFont());
 
     CGAffineTransform matrix = CGAffineTransformIdentity;
-    //memcpy(&matrix, [drawFont matrix], sizeof(matrix));
-    //if ([gContext isFlipped]) {
-    {
-        matrix.b = -matrix.b;
-        matrix.d = -matrix.d;
-    }
+    matrix.b = -matrix.b;
+    matrix.d = -matrix.d;
+
     if (platformData.syntheticOblique())
     {
         static float skew = -tanf(syntheticObliqueAngle * acosf(0) / 90);
         matrix = CGAffineTransformConcat(matrix, CGAffineTransformMake(1, 0, skew, 1, 0, 0));
     }
+
+    // Uniscribe gives us offsets to help refine the positioning of combining glyphs.
+    FloatSize translation = glyphBuffer.offsetAt(from);
+    if (translation.width() || translation.height())
+        CGAffineTransformTranslate(matrix, translation.width(), translation.height());
+    
     CGContextSetTextMatrix(cgContext, matrix);
 
     //wkSetCGFontRenderingMode(cgContext, drawFont);

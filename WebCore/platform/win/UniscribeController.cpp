@@ -334,12 +334,17 @@ bool UniscribeController::shapeAndPlaceItem(const UChar* cp, unsigned i, bool sm
     for (k = 0; k < glyphs.size(); k++) {
         Glyph glyph = glyphs[k];
         float advance = advances[k] / 32.0f;
+        float offsetX = offsets[k].du / 32.0f;
+        float offsetY = offsets[k].dv / 32.0f;
 
         // Match AppKit's rules for the integer vs. non-integer rendering modes.
         float roundedAdvance = roundf(advance);
-        if (!m_font.isPrinterFont() && !fontData->isSystemFont())
+        if (!m_font.isPrinterFont() && !fontData->isSystemFont()) {
             advance = roundedAdvance;
-        
+            offsetX = roundf(offsetX);
+            offsetY = roundf(offsetY);
+        }
+       
         // We special case spaces in two ways when applying word rounding.
         // First, we round spaces to an adjusted width in all fonts.
         // Second, in fixed-pitch fonts we ensure that all glyphs that
@@ -400,7 +405,7 @@ bool UniscribeController::shapeAndPlaceItem(const UChar* cp, unsigned i, bool sm
         // as well, so that when the time comes to draw those glyphs, we can apply the appropriate
         // translation.
         if (glyphBuffer)
-            glyphBuffer->add(glyph, fontData, advance);
+            glyphBuffer->add(glyph, fontData, advance, &FloatSize(offsetX, offsetY));
 
         // Mutate the glyph array to contain our altered advances.
         if (m_computingOffsetPosition)

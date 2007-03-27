@@ -1,3 +1,14 @@
+2007-03-27  Dave Hyatt  <hyatt@apple.com>
+
+        Add support for glyph offsets to the GlyphBuffer.
+       
+        Reviewed by olliej
+
+        * platform/win/FontWin.cpp:
+        (WebCore::Font::drawGlyphs):
+        * platform/win/UniscribeController.cpp:
+        (WebCore::UniscribeController::shapeAndPlaceItem):
+
 2007-03-26  Antti Koivisto  <antti@apple.com>
 
         Reviewed by Darin.
