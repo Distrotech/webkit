@@ -102,28 +102,35 @@ HRESULT STDMETHODCALLTYPE WebCache::statistics(
     static CFStringRef stylesheetsKey = CFSTR("style sheets");
     static CFStringRef scriptsKey = CFSTR("scripts");
 
-    CFMutableDictionaryRef dictionary = CFDictionaryCreateMutable(0, 0, 0, &kCFTypeDictionaryValueCallBacks);   // REVIEW: don't need to release reference to CFStringRef keys
-    int num = stat.images.count;
-    CFDictionaryAddValue(dictionary, (const void*) imagesKey, (const void*) CFNumberCreate(0, kCFNumberIntType, &num));
-    num = stat.cssStyleSheets.count;
-    CFDictionaryAddValue(dictionary, (const void*) stylesheetsKey, (const void*) CFNumberCreate(0, kCFNumberIntType, &num));
-    num = stat.scripts.count;
-    CFDictionaryAddValue(dictionary, (const void*) scriptsKey, (const void*) CFNumberCreate(0, kCFNumberIntType, &num));
+    RetainPtr<CFMutableDictionaryRef> dictionary(AdoptCF,
+        CFDictionaryCreateMutable(0, 0, 0, &kCFTypeDictionaryValueCallBacks));
+
+    RetainPtr<CFNumberRef> value(AdoptCF, CFNumberCreate(0, kCFNumberIntType, &stat.images.count));
+    CFDictionaryAddValue(dictionary.get(), imagesKey, value.get());
+    
+    value.adoptCF(CFNumberCreate(0, kCFNumberIntType, &stat.cssStyleSheets.count));
+    CFDictionaryAddValue(dictionary.get(), stylesheetsKey, value.get());
+    
+    value.adoptCF(CFNumberCreate(0, kCFNumberIntType, &stat.scripts.count));
+    CFDictionaryAddValue(dictionary.get(), scriptsKey, value.get());
+
     CFDictionaryPropertyBag* propBag = CFDictionaryPropertyBag::createInstance();
-    propBag->setDictionary(dictionary);
-    CFRelease(dictionary);
+    propBag->setDictionary(dictionary.get());
     s[0] = propBag;
 
-    dictionary = CFDictionaryCreateMutable(0, 0, 0, &kCFTypeDictionaryValueCallBacks);   // REVIEW: don't need to release reference to CFStringRef keys
-    num = stat.images.size;
-    CFDictionaryAddValue(dictionary, (const void*) imagesKey, (const void*) CFNumberCreate(0, kCFNumberIntType, &num));
-    num = stat.cssStyleSheets.size;
-    CFDictionaryAddValue(dictionary, (const void*) stylesheetsKey, (const void*) CFNumberCreate(0, kCFNumberIntType, &num));
-    num = stat.scripts.size;
-    CFDictionaryAddValue(dictionary, (const void*) scriptsKey, (const void*) CFNumberCreate(0, kCFNumberIntType, &num));
+    dictionary.adoptCF(CFDictionaryCreateMutable(0, 0, 0, &kCFTypeDictionaryValueCallBacks));
+
+    value.adoptCF(CFNumberCreate(0, kCFNumberIntType, &stat.images.size));
+    CFDictionaryAddValue(dictionary.get(), imagesKey, value.get());
+    
+    value.adoptCF(CFNumberCreate(0, kCFNumberIntType, &stat.cssStyleSheets.size));
+    CFDictionaryAddValue(dictionary.get(), stylesheetsKey, value.get());
+    
+    value.adoptCF(CFNumberCreate(0, kCFNumberIntType, &stat.scripts.size));
+    CFDictionaryAddValue(dictionary.get(), scriptsKey, value.get());
+
     propBag = CFDictionaryPropertyBag::createInstance();
-    propBag->setDictionary(dictionary);
-    CFRelease(dictionary);
+    propBag->setDictionary(dictionary.get());
     s[1] = propBag;
 
     return S_OK;

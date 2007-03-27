@@ -1,3 +1,12 @@
+2007-03-26  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Ada
+
+        <rdar://5090412> - Plug CFNumberRef leaks in WebCache
+        
+        * WebCache.cpp:
+        (WebCache::statistics):
+
 2007-03-26  Beth Dakin  <bdakin@apple.com>
 
         Reviewed by Geoff.
