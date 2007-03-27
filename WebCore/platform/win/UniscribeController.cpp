@@ -39,13 +39,17 @@ namespace WebCore {
 // that does stuff in that method instead of doing everything in the constructor.  Have advance()
 // take the GlyphBuffer as an arg so that we don't have to populate the glyph buffer when
 // measuring.
-UniscribeController::UniscribeController(const Font* font, const TextRun& run, const TextStyle& style, 
-                                         GraphicsContext* graphicsContext)
+UniscribeController::UniscribeController(const Font* font, const TextRun& run, const TextStyle& style)
 : m_font(*font)
 , m_run(run)
 , m_style(style)
-, m_context(graphicsContext)
-, m_width(0)
+, m_end(style.rtl() ? run.length() : run.to())
+, m_currentCharacter(run.from())
+, m_runWidthSoFar(0)
+, m_computingOffsetPosition(false)
+, m_includePartialGlyphs(false)
+, m_offsetX(0)
+, m_offsetPosition(run.from())
 {
     m_padding = m_style.padding();
     if (!m_padding)
@@ -62,32 +66,139 @@ UniscribeController::UniscribeController(const Font* font, const TextRun& run, c
             m_padPerSpace = ceilf(m_style.padding() / numSpaces);
     }
 
+    // Calculate the width up to the starting position of the run.  This is
+    // necessary to ensure that our rounding hacks are always consistently
+    // applied.
+    if (run.from() == 0)
+        m_widthToStart = 0;
+    else {
+        TextRun completeRun(run);
+        completeRun.makeComplete();
+        UniscribeController beforeContent(font, completeRun, style);
+        beforeContent.advance(run.from());
+        m_widthToStart = beforeContent.runWidthSoFar();
+    }
+
     // Null out our uniscribe structs
     resetControlAndState();
+}
 
+float UniscribeController::floatWidth(float* startPosition, GlyphBuffer* glyphBuffer)
+{
+    advance(m_run.to(), glyphBuffer);
+    float runWidth = m_runWidthSoFar;
+    if (startPosition) {
+        if (m_style.ltr())
+            *startPosition = m_widthToStart;
+        else {
+            advance(m_run.length());
+            *startPosition = m_runWidthSoFar - runWidth;
+        }
+    }
+    return runWidth;
+}
+
+int UniscribeController::offsetForPosition(int x, bool includePartialGlyphs)
+{
+    m_computingOffsetPosition = true;
+    m_includePartialGlyphs = includePartialGlyphs;
+    m_offsetX = m_style.ltr() ? (x - m_widthToStart) : x;
+    m_offsetPosition = m_run.from();
+    advance(m_run.to());
+    if (m_computingOffsetPosition) {
+        // The point is to the left or to the right of the entire run.
+        if (m_offsetX >= m_widthToStart + m_runWidthSoFar && m_style.ltr() || m_offsetX < 0 && m_style.rtl())
+            m_offsetPosition = m_end;
+    }
+    m_computingOffsetPosition = false;
+    return m_offsetPosition;
+}
+
+void UniscribeController::advance(unsigned offset, GlyphBuffer* glyphBuffer)
+{
     // FIXME: We really want to be using a newer version of Uniscribe that supports the new OpenType
     // functions.  Those functions would allow us to turn off kerning and ligatures.  Without being able
     // to do that, we will have buggy line breaking and metrics when simple and complex text are close
     // together (the complex code path will narrow the text because of kerning and ligatures and then
     // when bidi processing splits into multiple runs, the simple portions will get wider and cause us to
     // spill off the edge of a line).
+    if (offset > m_end)
+        offset = m_end;
 
-    // Now itemize the string.
+    // Itemize the string.
+    const UChar* cp = m_run.data(m_currentCharacter);
+    int length = offset - m_currentCharacter;
+    if (length <= 0)
+        return;
+
+    // We break up itemization of the string if small caps is involved.
+    // Adjust the characters to account for small caps if it is set.
+    if (m_font.isSmallCaps()) {
+        // FIXME: It's inconsistent that we use logical order when itemizing, since this
+        // does not match normal RTL.
+        Vector<UChar> smallCapsBuffer(length);
+        memcpy(smallCapsBuffer.data(), cp, length * sizeof(UChar));
+        bool isSmallCaps = false;
+        unsigned indexOfCaseShift = m_style.rtl() ? length - 1 : 0;
+        const UChar* curr = m_style.rtl() ? cp + length  - 1: cp;
+        const UChar* end = m_style.rtl() ? cp - 1: cp + length;
+        while (curr != end) {
+            int index = curr - cp;
+            UChar c = smallCapsBuffer[index];
+            UChar newC;
+            curr = m_style.rtl() ? curr - 1 : curr + 1;
+            if (U_GET_GC_MASK(c) & U_GC_M_MASK)
+                continue;
+            if (!u_isUUppercase(c) && (newC = u_toupper(c)) != c) {
+                smallCapsBuffer[index] = newC;
+                if (!isSmallCaps) {
+                    isSmallCaps = true;
+                    int itemStart = m_style.rtl() ? index : indexOfCaseShift;
+                    int itemLength = m_style.rtl() ? indexOfCaseShift - index : index - indexOfCaseShift;
+                    itemizeShapeAndPlace(smallCapsBuffer.data() + itemStart, itemLength, false, glyphBuffer);
+                    indexOfCaseShift = index;
+                }
+            } else if (isSmallCaps) {
+                isSmallCaps = false;
+                int itemStart = m_style.rtl() ? index : indexOfCaseShift;
+                int itemLength = m_style.rtl() ? indexOfCaseShift - index : index - indexOfCaseShift;
+                itemizeShapeAndPlace(smallCapsBuffer.data() + itemStart, itemLength, true, glyphBuffer);
+                indexOfCaseShift = index;
+            }
+        }
+        
+        int itemLength = m_style.rtl() ? indexOfCaseShift + 1 : length - indexOfCaseShift;
+        if (itemLength) {
+            int itemStart = m_style.rtl() ? 0 : indexOfCaseShift;
+            itemizeShapeAndPlace(smallCapsBuffer.data() + itemStart, itemLength, isSmallCaps, glyphBuffer);
+        }
+    } else
+        itemizeShapeAndPlace(cp, length, false, glyphBuffer);
+}
+
+void UniscribeController::itemizeShapeAndPlace(const UChar* cp, unsigned length, bool smallCaps, GlyphBuffer* glyphBuffer)
+{
     m_items.resize(6);
     int numItems = 0;
-    while (ScriptItemize(run.characters(), run.length(), m_items.size() - 1, &m_control, &m_state, m_items.data(), &numItems) == E_OUTOFMEMORY) {
+    while (ScriptItemize(cp, length, m_items.size() - 1, &m_control, &m_state, m_items.data(), &numItems) == E_OUTOFMEMORY) {
         m_items.resize(m_items.size() * 2);
         resetControlAndState();
     }
     m_items.resize(numItems + 1);
 
     if (m_style.rtl()) {
-        for (int i = m_items.size() - 2; i >= 0; i--)
-            shapeAndPlaceItem(i);
+        for (int i = m_items.size() - 2; i >= 0; i--) {
+            if (!shapeAndPlaceItem(cp, i, smallCaps, glyphBuffer))
+                return;
+        }
     } else {
-        for (unsigned i = 0; i < m_items.size() - 1; i++)
-            shapeAndPlaceItem(i);  
+        for (unsigned i = 0; i < m_items.size() - 1; i++) {
+            if (!shapeAndPlaceItem(cp, i, smallCaps, glyphBuffer))
+                return;
+        }
     }
+
+    m_currentCharacter += length;
 }
 
 void UniscribeController::resetControlAndState()
@@ -102,22 +213,24 @@ void UniscribeController::resetControlAndState()
     m_state.fOverrideDirection = m_style.directionalOverride();
 }
 
-void UniscribeController::shapeAndPlaceItem(unsigned i)
+bool UniscribeController::shapeAndPlaceItem(const UChar* cp, unsigned i, bool smallCaps, GlyphBuffer* glyphBuffer)
 {
     // Determine the string for this item.
-    const UChar* str = m_run.characters() + m_items[i].iCharPos;
+    const UChar* str = cp + m_items[i].iCharPos;
     unsigned len = m_items[i+1].iCharPos - m_items[i].iCharPos;
     SCRIPT_ITEM item = m_items[i];
 
     // Get our current FontData that we are using.
     unsigned dataIndex = 0;
     const FontData* fontData = m_font.fontDataAt(dataIndex);
+    if (smallCaps)
+        fontData = fontData->smallCapsFontData(m_font.fontDescription());
 
     // Set up buffers to hold the results of shaping the item.
     Vector<WORD> glyphs;
     Vector<WORD> clusters;
     Vector<SCRIPT_VISATTR> visualAttributes;
-    clusters.resize(len + 1);
+    clusters.resize(len);
      
     // Shape the item.  This will provide us with glyphs for the item.  We will
     // attempt to shape using the first available FontData.  If the shaping produces a result with missing
@@ -147,11 +260,13 @@ void UniscribeController::shapeAndPlaceItem(unsigned i)
             fontData = m_font.fontDataForCharacters(str, len);
             lastResortFontTried = true;
         }
+        if (smallCaps)
+            fontData = fontData->smallCapsFontData(m_font.fontDescription());
     }
 
     // Just give up.  We were unable to shape.
     if (!fontData)
-        return;
+        return true;
 
     // We now have a collection of glyphs.
     // FIXME: Use the cluster and visual attr information to do letter-spacing, word-spacing
@@ -178,7 +293,7 @@ void UniscribeController::shapeAndPlaceItem(unsigned i)
     }
     
     if (FAILED(placeResult) || glyphs.isEmpty())
-        return;
+        return true;
 
     // Convert all chars that should be treated as spaces to use the space glyph.
     // We also create a map that allows us to quickly go from space glyphs or rounding
@@ -200,20 +315,22 @@ void UniscribeController::shapeAndPlaceItem(unsigned i)
             // array.
             glyphs[clusters[k]] = fontData->m_spaceGlyph;
             advances[clusters[k]] = logicalSpaceWidth;
-            spaceCharacters[clusters[k]] = k + m_items[i].iCharPos;
+            spaceCharacters[clusters[k]] = m_currentCharacter + k + m_items[i].iCharPos;
         }
 
         if (Font::isRoundingHackCharacter(ch))
-            roundingHackCharacters[clusters[k]] = k + m_items[i].iCharPos;
+            roundingHackCharacters[clusters[k]] = m_currentCharacter + k + m_items[i].iCharPos;
 
-        if (k + m_items[i].iCharPos < m_run.length() &&
+        if (k + m_currentCharacter + m_items[i].iCharPos < m_run.length() &&
             Font::isRoundingHackCharacter(*(str + k + 1)))
-            roundingHackWordBoundaries[clusters[k]] = k + m_items[i].iCharPos;
+            roundingHackWordBoundaries[clusters[k]] = m_currentCharacter + k + m_items[i].iCharPos;
     }
 
     // Populate our glyph buffer with this information.
     bool hasExtraSpacing = m_font.letterSpacing() || m_font.wordSpacing() || m_padding;
     
+    float leftEdge = m_runWidthSoFar;
+
     for (k = 0; k < glyphs.size(); k++) {
         Glyph glyph = glyphs[k];
         float advance = advances[k] / 32.0f;
@@ -254,7 +371,7 @@ void UniscribeController::shapeAndPlaceItem(unsigned i)
 
                 // Account for word-spacing.
                 int characterIndex = spaceCharacters[k];
-                if (characterIndex > 0 && !Font::treatAsSpace(m_run.characters()[characterIndex-1]) && m_font.wordSpacing())
+                if (characterIndex > 0 && !Font::treatAsSpace(*m_run.data(characterIndex-1)) && m_font.wordSpacing())
                     advance += m_font.wordSpacing();
             }
         }
@@ -270,20 +387,44 @@ void UniscribeController::shapeAndPlaceItem(unsigned i)
 
         // Check to see if the next character is a "rounding hack character", if so, adjust the
         // width so that the total run width will be on an integer boundary.
-        bool lastGlyph = (k == glyphs.size() - 1) && (m_style.rtl() ? i == 0 : i == m_items.size() - 2); // FIXME: This won't always be correct once we support m_run.to().
+        bool lastGlyph = (k == glyphs.size() - 1) && (m_style.rtl() ? i == 0 : i == m_items.size() - 2) && (m_currentCharacter + len >= m_end);
         if ((m_style.applyWordRounding() && roundingHackWordBoundaries[k] != -1) ||
             (m_style.applyRunRounding() && lastGlyph)) { 
-            float totalWidth = m_width + advance;
+            float totalWidth = m_runWidthSoFar + advance;
             advance += ceilf(totalWidth) - totalWidth;
         }
 
-        m_width += advance;
+        m_runWidthSoFar += advance;
 
         // FIXME: We need to take the GOFFSETS for combining glyphs and store them in the glyph buffer
         // as well, so that when the time comes to draw those glyphs, we can apply the appropriate
         // translation.
-        m_glyphBuffer.add(glyph, fontData, advance);
+        if (glyphBuffer)
+            glyphBuffer->add(glyph, fontData, advance);
+
+        // Mutate the glyph array to contain our altered advances.
+        if (m_computingOffsetPosition)
+            advances[k] = advance;
     }
+
+    while (m_computingOffsetPosition && m_offsetX >= leftEdge && m_offsetX < m_runWidthSoFar) {
+        // The position is somewhere inside this run.
+        int trailing = 0;
+        ScriptXtoCP(m_offsetX - leftEdge, clusters.size(), glyphs.size(), clusters.data(), visualAttributes.data(),
+                    advances.data(), &item.a, &m_offsetPosition, &trailing);
+        if (trailing && m_includePartialGlyphs && m_offsetPosition < len - 1) {
+            m_offsetPosition += m_currentCharacter + m_items[i].iCharPos;
+            m_offsetX += m_style.rtl() ? -trailing : trailing;
+        } else {
+            m_computingOffsetPosition = false;
+            m_offsetPosition += m_currentCharacter + m_items[i].iCharPos;
+            if (trailing && m_includePartialGlyphs)
+               m_offsetPosition++;
+            return false;
+        }
+    }
+
+    return true;
 }
 
 bool UniscribeController::shape(const UChar* str, int len, SCRIPT_ITEM item, const FontData* fontData,

@@ -96,8 +96,6 @@ WebPreferences* WebPreferences::getInstanceForIdentifier(BSTR identifier)
 
 void WebPreferences::initialize()
 {
-    WebCore::Font::setCodePath(WebCore::Font::Simple);
-
     if (!m_standardUserDefaults)
         m_standardUserDefaults = CFDictionaryCreateMutable(0, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 

@@ -32,9 +32,11 @@
 #include "GraphicsContext.h"
 #include "IntRect.h"
 #include "NotImplemented.h"
+#include "TextStyle.h"
 #include "UniscribeController.h"
 #include <ApplicationServices/ApplicationServices.h>
 #include <WebKitSystemInterface/WebKitSystemInterface.h>
+#include <wtf/MathExtras.h>
 
 namespace WebCore {
 
@@ -92,35 +94,56 @@ void Font::drawGlyphs(GraphicsContext* graphicsContext, const FontData* font, co
 
 FloatRect Font::selectionRectForComplexText(const TextRun& run, const TextStyle& style, const IntPoint& point, int h) const
 {
-    LOG_NOIMPL();
-    return FloatRect();
+    TextRun completeRun(run);
+    completeRun.makeComplete();
+
+    UniscribeController it(this, completeRun, style);
+    it.advance(run.from());
+    float beforeWidth = it.runWidthSoFar();
+    it.advance(run.to());
+    float afterWidth = it.runWidthSoFar();
+
+    // Using roundf() rather than ceilf() for the right edge as a compromise to ensure correct caret positioning
+    if (style.rtl()) {
+        it.advance(run.length());
+        float totalWidth = it.runWidthSoFar();
+        return FloatRect(point.x() + floorf(totalWidth - afterWidth), point.y(), roundf(totalWidth - beforeWidth) - floorf(totalWidth - afterWidth), h);
+    } 
+    
+    return FloatRect(point.x() + floorf(beforeWidth), point.y(), roundf(afterWidth) - floorf(beforeWidth), h);
 }
 
 void Font::drawComplexText(GraphicsContext* context, const TextRun& run, const TextStyle& style, const FloatPoint& point) const
 {
-    // Constructing the controller itemizes and shapes the run.
-    UniscribeController controller(this, run, style, context);
+    // This glyph buffer holds our glyphs + advances + font data for each glyph.
+    GlyphBuffer glyphBuffer;
 
-    // FIXME: Handle from/to values set in the run so that selection works.
-    if (controller.glyphBuffer().isEmpty())
+    UniscribeController controller(this, run, style);
+    
+    // Our measuring code will generate glyphs and advances for us.
+    float startX;
+    controller.floatWidth(&startX, &glyphBuffer);
+   
+    // Bail if we got no glyphs.
+    if (glyphBuffer.isEmpty())
         return;
-    drawGlyphBuffer(context, controller.glyphBuffer(), run, style, point);
+
+    // Draw the glyph buffer now at the starting point returned in startX.
+    startX += point.x();
+    FloatPoint startPoint(startX, point.y());
+    drawGlyphBuffer(context, glyphBuffer, run, style, startPoint);
 }
 
 float Font::floatWidthForComplexText(const TextRun& run, const TextStyle& style) const
 {
-    // Copied from the Mac code, although not sure why this would ever happen.
-    if (run.from() == run.to())
-        return 0;
-
-    // Constructing the controller itemizes and shapes the run.
-    UniscribeController controller(this, run, style);
-    return controller.width();
+    UniscribeController it(this, run, style);
+    return it.floatWidth();
 }
 
 int Font::offsetForPositionForComplexText(const TextRun& run, const TextStyle& style, int x, bool includePartialGlyphs) const
 {
-    return 0;
+    UniscribeController controller(this, run, style);
+    return controller.offsetForPosition(x, includePartialGlyphs);
 }
 
 }

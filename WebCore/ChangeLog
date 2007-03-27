@@ -1,3 +1,24 @@
+2007-03-27  Dave Hyatt  <hyatt@apple.com>
+
+        Enable complex text.  Selection and small-caps support are now enabled with this patch.
+        
+        Reviewed by aroben
+
+        * platform/win/FontWin.cpp:
+        (WebCore::Font::selectionRectForComplexText):
+        (WebCore::Font::drawComplexText):
+        (WebCore::Font::floatWidthForComplexText):
+        (WebCore::Font::offsetForPositionForComplexText):
+        * platform/win/UniscribeController.cpp:
+        (WebCore::UniscribeController::UniscribeController):
+        (WebCore::UniscribeController::floatWidth):
+        (WebCore::UniscribeController::offsetForPosition):
+        (WebCore::UniscribeController::advance):
+        (WebCore::UniscribeController::itemizeShapeAndPlace):
+        (WebCore::UniscribeController::shapeAndPlaceItem):
+        * platform/win/UniscribeController.h:
+        (WebCore::UniscribeController::runWidthSoFar):
+
 2007-03-26  Adele Peterson  <adele@apple.com>
 
         Reviewed by Adam.

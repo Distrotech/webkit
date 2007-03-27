@@ -38,18 +38,24 @@ namespace WebCore {
 
 class UniscribeController {
 public:
-    UniscribeController(const Font*, const TextRun&, const TextStyle&, GraphicsContext* = 0);
+    UniscribeController(const Font*, const TextRun&, const TextStyle&);
 
-    // Returns the width for the supplied run.
-    float width() const { return m_width; }
+    float floatWidth(float* startPosition = 0, GlyphBuffer* = 0);
 
-    // Returns a buffer of glyphs for rendering.
-    const GlyphBuffer& glyphBuffer() const { return m_glyphBuffer; }
+    // Advance and measure/place up to the specified character.
+    void advance(unsigned to, GlyphBuffer* = 0);
 
-private:
+    // Compute the character offset for a given x coordinate.
+    int offsetForPosition(int x, bool includePartialGlyphs);
+
+    // Returns the width of everything we've consumed so far.
+    float runWidthSoFar() const { return m_runWidthSoFar; }
+
+private:    
     void resetControlAndState();
-    void shapeAndPlaceItem(unsigned index);
 
+    void itemizeShapeAndPlace(const UChar*, unsigned length, bool smallCaps, GlyphBuffer* glyphBuffer);
+    bool shapeAndPlaceItem(const UChar*, unsigned index, bool smallCaps, GlyphBuffer*);
     bool shape(const UChar* str, int len, SCRIPT_ITEM item, const FontData* fontData,
                Vector<WORD>& glyphs, Vector<WORD>& clusters,
                Vector<SCRIPT_VISATTR>& visualAttributes);
@@ -57,17 +63,23 @@ private:
     const Font& m_font;
     const TextRun& m_run;
     const TextStyle& m_style;
-    GraphicsContext* m_context;
 
     SCRIPT_CONTROL m_control;
     SCRIPT_STATE m_state;
     Vector<SCRIPT_ITEM> m_items;
+ 
+    unsigned m_currentCharacter;
+    int m_end;
 
-    float m_width;
-    GlyphBuffer m_glyphBuffer;
-
+    float m_runWidthSoFar;
+    float m_widthToStart;
     float m_padding;
     float m_padPerSpace;
+
+    bool m_computingOffsetPosition;
+    bool m_includePartialGlyphs;
+    float m_offsetX;
+    int m_offsetPosition;
 };
 
 }
