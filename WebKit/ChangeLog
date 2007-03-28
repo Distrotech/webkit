@@ -1,3 +1,13 @@
+2007-03-28  Timothy Hatcher  <timothy@apple.com>
+
+        <rdar://problem/5093473> incomplete render of menu (assertion failing in -[WebBaseNetscapePluginView saveAndSetNewPortStateForUpdate:]) (13026)
+
+        Rolling out r20042, and these build fixes that followed: r20050, r20058, r20064 and r20077.
+
+        * Plugins/WebBaseNetscapePluginView.mm:
+        (-[WebBaseNetscapePluginView saveAndSetNewPortStateForUpdate:]):
+        (-[WebBaseNetscapePluginView restorePortState:]):
+
 2007-03-24  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Adam
