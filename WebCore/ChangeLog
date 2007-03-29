@@ -1,3 +1,12 @@
+2007-03-29  Dave Hyatt  <hyatt@apple.com>
+
+        Enable CG's local font cache.  rdar://problem/5070005
+       
+        Reviewed by aroben
+
+        * platform/win/FontCacheWin.cpp:
+        (WebCore::FontCache::platformInit):
+
 2007-03-28  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Darin.

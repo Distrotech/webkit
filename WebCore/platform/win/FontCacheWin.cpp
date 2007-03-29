@@ -33,6 +33,8 @@
 #include "Font.h"
 #include <windows.h>
 #include <mlang.h>
+#include <ApplicationServices/ApplicationServices.h>
+#include <WebKitSystemInterface/WebKitSystemInterface.h>
 
 using std::min;
 
@@ -41,7 +43,7 @@ namespace WebCore
 
 void FontCache::platformInit()
 {
-    // Not needed on Windows.
+    wkSetUpFontCache(1536 * 1024 * 4); // This size matches Mac.
 }
 
 IMLangFontLink2* FontCache::getFontLinkInterface()
