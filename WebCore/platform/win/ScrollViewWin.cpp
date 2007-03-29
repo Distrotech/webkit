@@ -226,6 +226,12 @@ FloatRect ScrollView::visibleContentRect() const
     return FloatRect(contentsX(), contentsY(), visibleWidth(), visibleHeight());
 }
 
+FloatRect ScrollView::visibleContentRectConsideringExternalScrollers() const
+{
+    // external scrollers not supported for now
+    return visibleContentRect();
+}
+
 void ScrollView::setContentsPos(int newX, int newY)
 {
     int dx = newX - contentsX();
@@ -330,9 +336,9 @@ void ScrollView::scrollBy(int dx, int dy)
     updateScrollbars(newScrollOffset);
 }
 
-void ScrollView::scrollPointRecursively(int x, int y)
+void ScrollView::scrollRectIntoViewRecursively(const IntRect& r)
 {
-    IntPoint p(max(0, x), max(0, y));
+    IntPoint p(max(0, r.x()), max(0, r.y()));
     ScrollView* view = this;
     ScrollView* oldView = view;
     while (view) {

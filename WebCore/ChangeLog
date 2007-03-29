@@ -1,3 +1,14 @@
+2007-03-28  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+
+        - updates for <rdar://problem/4820817> Autoscroll is broken in Mail.app (message jumps around when trying to select text)
+
+
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::visibleContentRectConsideringExternalScrollers):
+        (WebCore::ScrollView::scrollRectIntoViewRecursively):
+
 2007-03-27  Dave Hyatt  <hyatt@apple.com>
 
         Fix for 5090964, arabic text is all jumbled in list boxes and popup menus (and in the
