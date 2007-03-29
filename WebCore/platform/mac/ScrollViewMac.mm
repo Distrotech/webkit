@@ -79,17 +79,28 @@ int ScrollView::visibleHeight() const
 
 FloatRect ScrollView::visibleContentRect() const
 {
-    NSScrollView *view = (NSScrollView *)getView();
-    
+    NSScrollView *view = (NSScrollView *)getView(); 
+      
+    BEGIN_BLOCK_OBJC_EXCEPTIONS; 
+    if ([view isKindOfClass:[NSScrollView class]]) 
+        return [view documentVisibleRect]; 
+    else 
+        return [view visibleRect]; 
+    END_BLOCK_OBJC_EXCEPTIONS; 
+
+    return FloatRect();
+}
+
+FloatRect ScrollView::visibleContentRectConsideringExternalScrollers() const
+{
     BEGIN_BLOCK_OBJC_EXCEPTIONS;
-    if ([view isKindOfClass:[NSScrollView class]])
-        return [view documentVisibleRect];
-    else
-        return [view visibleRect];
+    if (NSView *docView = getDocumentView())
+        return [docView visibleRect];
     END_BLOCK_OBJC_EXCEPTIONS;
 
     return FloatRect();
 }
+
 
 int ScrollView::contentsWidth() const
 {
@@ -165,11 +176,9 @@ void ScrollView::scrollBy(int dx, int dy)
     setContentsPos(contentsX() + dx, contentsY() + dy);
 }
 
-void ScrollView::scrollPointRecursively(int x, int y)
+void ScrollView::scrollRectIntoViewRecursively(const IntRect& r)
 { 
-    x = (x < 0) ? 0 : x;
-    y = (y < 0) ? 0 : y;
-    NSPoint p = NSMakePoint(x,y);
+    NSRect rect = r;
 
     BEGIN_BLOCK_OBJC_EXCEPTIONS;
     NSView *docView;
@@ -183,8 +192,7 @@ void ScrollView::scrollPointRecursively(int x, int y)
         if ([view isKindOfClass:[NSClipView class]]) {
             NSClipView *clipView = (NSClipView *)view;
             NSView *documentView = [clipView documentView];
-            NSPoint viewPoint = [clipView constrainScrollPoint:[documentView convertPoint:p fromView:originalView]];
-            [documentView scrollPoint:viewPoint];
+            [documentView scrollRectToVisible:[documentView convertRect:rect fromView:originalView]];
         }
 
         view = [view superview];

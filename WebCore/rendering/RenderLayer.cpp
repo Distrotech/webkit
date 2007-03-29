@@ -752,26 +752,29 @@ void RenderLayer::scrollRectToVisible(const IntRect &rect, const ScrollAlignment
         if (m_object->parent())
             parentLayer = m_object->parent()->enclosingLayer();
     } else {
-        FrameView* view = m_object->document()->view();
-        if (view) {
-            IntRect viewRect = enclosingIntRect(view->visibleContentRect());
-            IntRect r = getRectToExpose(viewRect, rect, alignX, alignY);
-            
-            xOffset = r.x();
-            yOffset = r.y();
-            // Adjust offsets if they're outside of the allowable range.
-            xOffset = max(0, min(view->contentsWidth(), xOffset));
-            yOffset = max(0, min(view->contentsHeight(), yOffset));
-
+        FrameView* frameView = m_object->document()->view();
+        if (frameView) {
             if (m_object->document() && m_object->document()->ownerElement() && m_object->document()->ownerElement()->renderer()) {
-                view->setContentsPos(xOffset, yOffset);
+                IntRect viewRect = enclosingIntRect(frameView->visibleContentRect());
+                IntRect r = getRectToExpose(viewRect, rect, alignX, alignY);
+                
+                xOffset = r.x();
+                yOffset = r.y();
+                // Adjust offsets if they're outside of the allowable range.
+                xOffset = max(0, min(frameView->contentsWidth(), xOffset));
+                yOffset = max(0, min(frameView->contentsHeight(), yOffset));
+
+                frameView->setContentsPos(xOffset, yOffset);
                 parentLayer = m_object->document()->ownerElement()->renderer()->enclosingLayer();
-                newRect.setX(rect.x() - view->contentsX() + view->x());
-                newRect.setY(rect.y() - view->contentsY() + view->y());
+                newRect.setX(rect.x() - frameView->contentsX() + frameView->x());
+                newRect.setY(rect.y() - frameView->contentsY() + frameView->y());
             } else {
+                IntRect viewRect = enclosingIntRect(frameView->visibleContentRectConsideringExternalScrollers());
+                IntRect r = getRectToExpose(viewRect, rect, alignX, alignY);
+                
                 // If this is the outermost view that RenderLayer needs to scroll, then we should scroll the view recursively
                 // Other apps, like Mail, rely on this feature.
-                view->scrollPointRecursively(xOffset, yOffset);
+                frameView->scrollRectIntoViewRecursively(r);
             }
         }
     }
