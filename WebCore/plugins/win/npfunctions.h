@@ -9,7 +9,7 @@ extern "C" {
 #endif
 
 #if defined(XP_WIN)
-#define EXPORTED_CALLBACK(_type, _name) _type (_stdcall * _name)
+#define EXPORTED_CALLBACK(_type, _name) _type (__stdcall * _name)
 #else
 #define EXPORTED_CALLBACK(_type, _name) _type (* _name)
 #endif
@@ -35,13 +35,15 @@ typedef NPError (*NPN_GetURLProcPtr)(NPP instance, const char* URL, const char* 
 typedef NPError (*NPN_PostURLProcPtr)(NPP instance, const char* URL, const char* window, uint32 len, const char* buf, NPBool file);
 typedef void* (*NPN_GetJavaEnvProcPtr)(void);
 typedef void* (*NPN_GetJavaPeerProcPtr)(NPP instance);
+typedef void (*NPN_PushPopupsEnabledStateProcPtr)(NPP instance, NPBool enabled);
+typedef void (*NPN_PopPopupsEnabledStateProcPtr)(NPP instance);
 
 typedef void (*NPN_ReleaseVariantValueProcPtr) (NPVariant *variant);
 
 typedef NPIdentifier (*NPN_GetStringIdentifierProcPtr) (const NPUTF8 *name);
 typedef void (*NPN_GetStringIdentifiersProcPtr) (const NPUTF8 **names, int32_t nameCount, NPIdentifier *identifiers);
 typedef NPIdentifier (*NPN_GetIntIdentifierProcPtr) (int32_t intid);
-typedef NPIdentifier (*NPN_IntFromIdentifierProcPtr) (NPIdentifier identifier);
+typedef int32_t (*NPN_IntFromIdentifierProcPtr) (NPIdentifier identifier);
 typedef bool (*NPN_IdentifierIsStringProcPtr) (NPIdentifier identifier);
 typedef NPUTF8 *(*NPN_UTF8FromIdentifierProcPtr) (NPIdentifier identifier);
 
@@ -57,13 +59,14 @@ typedef bool (*NPN_HasPropertyProcPtr) (NPP, NPObject *npobj, NPIdentifier prope
 typedef bool (*NPN_HasMethodProcPtr) (NPP npp, NPObject *npobj, NPIdentifier methodName);
 typedef bool (*NPN_RemovePropertyProcPtr) (NPP npp, NPObject *obj, NPIdentifier propertyName);
 typedef void (*NPN_SetExceptionProcPtr) (NPObject *obj, const NPUTF8 *message);
+typedef bool (*NPN_EnumerateProcPtr) (NPP npp, NPObject *npobj, NPIdentifier **identifier, uint32_t *count);
 
 typedef NPError (*NPP_NewProcPtr)(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc, char* argn[], char* argv[], NPSavedData* saved);
 typedef NPError (*NPP_DestroyProcPtr)(NPP instance, NPSavedData** save);
 typedef NPError (*NPP_SetWindowProcPtr)(NPP instance, NPWindow* window);
 typedef NPError (*NPP_NewStreamProcPtr)(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16* stype);
 typedef NPError (*NPP_DestroyStreamProcPtr)(NPP instance, NPStream* stream, NPReason reason);
-typedef void    (*NPP_StreamAsFileProcPtr)(NPP instance, NPStream* stream, const char* fname);
+typedef void (*NPP_StreamAsFileProcPtr)(NPP instance, NPStream* stream, const char* fname);
 typedef int32 (*NPP_WriteReadyProcPtr)(NPP instance, NPStream* stream);
 typedef int32 (*NPP_WriteProcPtr)(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buffer);
 typedef void (*NPP_PrintProcPtr)(NPP instance, NPPrint* platformPrint);
@@ -121,6 +124,9 @@ typedef struct _NPNetscapeFuncs {
     NPN_HasMethodProcPtr hasmethod;
     NPN_ReleaseVariantValueProcPtr releasevariantvalue;
     NPN_SetExceptionProcPtr setexception;
+    NPN_PushPopupsEnabledStateProcPtr pushpopupsenabledstate;
+    NPN_PopPopupsEnabledStateProcPtr poppopupsenabledstate;
+    NPN_EnumerateProcPtr enumerate;
 } NPNetscapeFuncs;
 
 typedef struct _NPPluginFuncs {

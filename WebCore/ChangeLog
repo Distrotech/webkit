@@ -1,3 +1,30 @@
+2007-03-30  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Geoff.
+
+        * plugins/win/PluginDatabaseWin.cpp:
+        (WebCore::PluginDatabaseWin::addExtraPluginPath):
+        * plugins/win/PluginDatabaseWin.h:
+        New function for adding an extra plugin path, to be used by DRT.
+        
+        * plugins/win/PluginPackageWin.cpp:
+        (WebCore::PluginPackageWin::load):
+        Set the current directory tho the plugin directory while loading the plugin. Add new NPN callbacks.
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::invalidateRect):
+        (WebCore::PluginViewWin::invalidateRegion):
+        (WebCore::PluginViewWin::forceRedraw):
+        Don't do anything if the plugin is windowed.
+        
+        * plugins/win/npapi.cpp:
+        (NPN_PushPopupsEnabledState):
+        (NPN_PopPopupsEnabledState):
+        Add stubs.
+        
+        * plugins/win/npfunctions.h:
+        Add new methods and merge some fixes from the open source version.
+
 2007-03-29  Dave Hyatt  <hyatt@apple.com>
 
         Enable CG's local font cache.  rdar://problem/5070005

@@ -590,6 +590,9 @@ public:
     virtual HRESULT STDMETHODCALLTYPE setAllowSiteSpecificHacks(
         /* [in] */ BOOL allows);
 
+    virtual HRESULT STDMETHODCALLTYPE addAdditionalPluginPath( 
+        /* [in] */ BSTR path);    
+
     // WebView
     WebCore::Page* page();
     bool handleMouseEvent(UINT, WPARAM, LPARAM);

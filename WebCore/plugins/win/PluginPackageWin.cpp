@@ -145,8 +145,24 @@ bool PluginPackageWin::load()
     if (m_isLoaded)
         return true;
 
+    WCHAR currentPath[MAX_PATH];
+
+    if (!::GetCurrentDirectoryW(MAX_PATH, currentPath))
+        return false;
+
+    String path = m_path.substring(0, m_path.reverseFind('\\'));
+
+    if (!::SetCurrentDirectoryW(path.charactersWithNullTermination()))
+        return false;
+
     // Load the library
-    m_module = LoadLibraryW(m_path.charactersWithNullTermination());
+    m_module = ::LoadLibraryW(m_path.charactersWithNullTermination());
+
+    if (!::SetCurrentDirectoryW(currentPath)) {
+        if (m_module)
+            ::FreeLibrary(m_module);
+        return false;
+    }
 
     if (!m_module)
         return false;
@@ -195,6 +211,8 @@ bool PluginPackageWin::load()
     m_browserFuncs.forceredraw = NPN_ForceRedraw;
     m_browserFuncs.getJavaEnv = NPN_GetJavaEnv;
     m_browserFuncs.getJavaPeer = NPN_GetJavaPeer;
+    m_browserFuncs.pushpopupsenabledstate = NPN_PushPopupsEnabledState;
+    m_browserFuncs.poppopupsenabledstate = NPN_PopPopupsEnabledState;
 
     m_browserFuncs.releasevariantvalue = _NPN_ReleaseVariantValue;
     m_browserFuncs.getstringidentifier = _NPN_GetStringIdentifier;
@@ -214,6 +232,7 @@ bool PluginPackageWin::load()
     m_browserFuncs.hasproperty = _NPN_HasMethod;
     m_browserFuncs.hasmethod = _NPN_HasProperty;
     m_browserFuncs.setexception = _NPN_SetException;
+    m_browserFuncs.evaluate = _NPN_Evaluate;
 
     npErr = NP_Initialize(&m_browserFuncs);
     LOG_NPERROR(npErr);

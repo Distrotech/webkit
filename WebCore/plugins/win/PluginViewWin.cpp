@@ -1049,6 +1049,9 @@ NPError PluginViewWin::setValue(NPPVariable variable, void* value)
 
 void PluginViewWin::invalidateRect(NPRect* rect)
 {
+    if (!m_isWindowed)
+        return;
+
     if (!rect) {
         invalidate();
         return;
@@ -1061,6 +1064,9 @@ void PluginViewWin::invalidateRect(NPRect* rect)
 
 void PluginViewWin::invalidateRegion(NPRegion region)
 {
+    if (!m_isWindowed)
+        return;
+
     RECT r;
 
     if (GetRgnBox(region, &r) == 0) {
@@ -1073,6 +1079,9 @@ void PluginViewWin::invalidateRegion(NPRegion region)
 
 void PluginViewWin::forceRedraw()
 {
+    if (!m_isWindowed)
+        return;
+
     ::UpdateWindow(containingWindow());
 }
 

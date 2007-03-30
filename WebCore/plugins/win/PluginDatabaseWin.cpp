@@ -47,6 +47,12 @@ PluginDatabaseWin* PluginDatabaseWin::installedPlugins()
     return plugins;
 }
 
+void PluginDatabaseWin::addExtraPluginPath(const String& path)
+{
+    m_pluginPaths.append(path);
+    refresh();
+}
+
 void PluginDatabaseWin::refresh()
 {   
     PluginSet newPlugins;

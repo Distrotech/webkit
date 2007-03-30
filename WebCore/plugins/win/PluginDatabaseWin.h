@@ -50,6 +50,7 @@ namespace WebCore {
         void refresh();
         Vector<PluginPackageWin*> plugins() const;
         bool isMIMETypeRegistered(const String& mimeType) const;
+        void addExtraPluginPath(const String&);
     private:
         void setPluginPaths(const Vector<String>& paths) { m_pluginPaths = paths; }
         PluginSet getPluginsInPaths() const;

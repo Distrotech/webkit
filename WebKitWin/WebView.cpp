@@ -70,6 +70,7 @@
 #include <WebCore/PlatformKeyboardEvent.h>
 #include <WebCore/PlatformMouseEvent.h>
 #include <WebCore/PlatformWheelEvent.h>
+#include <WebCore/PluginDatabaseWin.h>
 #include <WebCore/PlugInInfoStore.h>
 #include <WebCore/ProgressTracker.h>
 #include <WebCore/ResourceHandle.h>
@@ -87,6 +88,7 @@
 #include <ShlObj.h>
 
 using namespace WebCore;
+using KJS::JSLock;
 using std::min;
 
 const LPCWSTR kWebViewWindowClassName = L"WebViewWindowClass";
@@ -1973,8 +1975,10 @@ HRESULT STDMETHODCALLTYPE WebView::stringByEvaluatingJavaScriptFromString(
     KJS::JSValue* scriptExecutionResult = coreFrame->loader()->executeScript(0, WebCore::String(script), true);
     if(!scriptExecutionResult)
         return E_FAIL;
-    else if (scriptExecutionResult->isString())
+    else if (scriptExecutionResult->isString()) {
+        JSLock lock;
         *result = BString(String(scriptExecutionResult->getString()));
+    }
 
     return S_OK;
 }
@@ -3189,6 +3193,13 @@ HRESULT STDMETHODCALLTYPE WebView::setAllowSiteSpecificHacks(
     /* [in] */ BOOL allow)
 {
     s_allowSiteSpecificHacks = !!allow;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebView::addAdditionalPluginPath( 
+        /* [in] */ BSTR path)
+{
+    PluginDatabaseWin::installedPlugins()->addExtraPluginPath(String(path, SysStringLen(path)));
     return S_OK;
 }
 

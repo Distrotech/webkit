@@ -158,3 +158,13 @@ void* NPN_GetJavaPeer(NPP instance)
     // Unsupported
     return 0;
 }
+
+void
+NPN_PushPopupsEnabledState(NPP instance, NPBool enabled)
+{
+}
+
+void
+NPN_PopPopupsEnabledState(NPP instance)
+{
+}

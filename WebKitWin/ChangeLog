@@ -1,3 +1,21 @@
+2007-03-30  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Geoff.
+
+        * Interfaces/IWebViewPrivate.idl:
+        Add addAdditionalPluginPath method.
+        
+        * WebKit.vcproj/WebKit.vcproj:
+        Copy NP includes so they can be included by the test plugin.
+        
+        * WebView.cpp:
+        (WebView::stringByEvaluatingJavaScriptFromString):
+        Hold JSLock while we call JSValue::getString().
+        
+        (WebView::addAdditionalPluginPath):
+        * WebView.h:
+        Implement addAdditionalPluginPath.
+
 2007-03-27  Dave Hyatt  <hyatt@apple.com>
 
         Enable complex text.  Selection and small-caps support are now enabled with this patch.
