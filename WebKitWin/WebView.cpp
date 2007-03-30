@@ -835,6 +835,8 @@ static const KeyEntry keyEntries[] = {
     { VK_BACK,   ShiftKey,           "BackwardDelete"                              },
     { VK_DELETE, 0,                  "ForwardDelete"                               },
     { VK_DELETE, ShiftKey,           "ForwardDelete"                               },
+    { VK_BACK,   CtrlKey,            "DeleteWordBackward"                          },
+    { VK_DELETE, CtrlKey,            "DeleteWordForward"                           },
     
     { 'B',       CtrlKey,            "ToggleBold"                                  },
     { 'I',       CtrlKey,            "ToggleItalic"                                },

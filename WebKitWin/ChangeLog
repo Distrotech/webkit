@@ -1,3 +1,11 @@
+2007-03-30  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Beth.
+
+        Fix <rdar://problem/5079824> editing/deleting/delete-by-word-001 is failing
+
+        * WebView.cpp: Add DeleteWordForward and DeleteWordBackward to key command table.
+
 2007-03-30  Anders Carlsson  <andersca@apple.com>
 
         Reviewed by Adele.

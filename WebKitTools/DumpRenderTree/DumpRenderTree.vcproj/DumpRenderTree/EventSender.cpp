@@ -249,7 +249,17 @@ static JSValueRef keyDownCallback(JSContextRef context, JSObjectRef function, JS
     CComQIPtr<IWebFramePrivate> framePrivate(frame);
     if (framePrivate)
         framePrivate->layout();
+    
+    JSStringRef character = JSValueToStringCopy(context, arguments[0], exception);
+    ASSERT(!exception || !*exception);
+    int charCode = JSStringGetCharactersPtr(character)[0];
+    int virtualKeyCode = toupper(LOBYTE(VkKeyScan(charCode)));
 
+    // Hack to map option-delete to ctrl-delete
+    bool convertOptionToCtrl = false;
+    if (virtualKeyCode == VK_DELETE || virtualKeyCode == VK_BACK)
+        convertOptionToCtrl = true;
+    
     BYTE keyState[256];
     if (argumentCount > 1) {
         ::GetKeyboardState(keyState);
@@ -267,9 +277,12 @@ static JSValueRef keyDownCallback(JSContextRef context, JSObjectRef function, JS
                     newKeyState[VK_CONTROL] = 0x80;
                 else if (JSStringIsEqual(string, shiftKey))
                     newKeyState[VK_SHIFT] = 0x80;
-                else if (JSStringIsEqual(string, altKey))
-                    newKeyState[VK_MENU] = 0x80;
-                else if (JSStringIsEqual(string, metaKey))
+                else if (JSStringIsEqual(string, altKey)) {
+                    if (convertOptionToCtrl)
+                        newKeyState[VK_CONTROL] = 0x80;
+                    else
+                        newKeyState[VK_MENU] = 0x80;
+                } else if (JSStringIsEqual(string, metaKey))
                     newKeyState[VK_MENU] = 0x80;
 
                 JSStringRelease(string);
@@ -278,12 +291,6 @@ static JSValueRef keyDownCallback(JSContextRef context, JSObjectRef function, JS
 
         ::SetKeyboardState(newKeyState);
     }
-
-    JSStringRef character = JSValueToStringCopy(context, arguments[0], exception);
-    ASSERT(!exception || !*exception);
-    int virtualKeyCode = toupper(JSStringGetCharactersPtr(character)[0]);
-    if (virtualKeyCode == '\n')
-        virtualKeyCode = VK_RETURN;
 
     MSG msg = makeMsg(webViewWindow, WM_KEYDOWN, virtualKeyCode, 0);
     dispatchMessage(&msg);
