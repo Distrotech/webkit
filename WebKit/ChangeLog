@@ -1,3 +1,14 @@
+2007-03-27  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Tim
+        
+        - fixed <rdar://problem/5092556> Default UA spoofing is always off until explicitly toggled
+
+        * WebView/WebView.mm:
+        (-[WebView _commonInitializationWithFrameName:groupName:]):
+        initialize the cached value of _private->useSiteSpecificSpoofing here; formerly it would not
+        be initialized correctly in the common case of WebViews that use [WebPreferences standardPreferences]
+
 2007-03-28  Timothy Hatcher  <timothy@apple.com>
 
         <rdar://problem/5093473> incomplete render of menu (assertion failing in -[WebBaseNetscapePluginView saveAndSetNewPortStateForUpdate:]) (13026)
