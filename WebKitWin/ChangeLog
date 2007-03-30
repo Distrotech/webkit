@@ -1,5 +1,16 @@
 2007-03-30  Anders Carlsson  <andersca@apple.com>
 
+        Reviewed by Adele.
+
+        <rdar://problem/5101970> 
+        Crash when submitting form, running under App Verifier
+        
+        * WebActionPropertyBag.cpp:
+        (findMouseEvent):
+        Return the right event.
+
+2007-03-30  Anders Carlsson  <andersca@apple.com>
+
         Reviewed by Geoff.
 
         * Interfaces/IWebViewPrivate.idl:

@@ -100,7 +100,7 @@ static const MouseEvent* findMouseEvent(const Event* event)
 {
     for (const Event* e = event; e; e = e->underlyingEvent())
         if (e->isMouseEvent())
-            return static_cast<const MouseEvent*>(event);
+            return static_cast<const MouseEvent*>(e);
     return 0;
 }
 
