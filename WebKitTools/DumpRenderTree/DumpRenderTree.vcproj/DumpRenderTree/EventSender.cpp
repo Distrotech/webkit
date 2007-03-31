@@ -254,8 +254,10 @@ static JSValueRef keyDownCallback(JSContextRef context, JSObjectRef function, JS
     ASSERT(!exception || !*exception);
     int charCode = JSStringGetCharactersPtr(character)[0];
     int virtualKeyCode = toupper(LOBYTE(VkKeyScan(charCode)));
+    JSStringRelease(character);
 
     // Hack to map option-delete to ctrl-delete
+    // Remove this when we fix <rdar://problem/5102974> layout tests need a way to decide how to choose the appropriate modifier keys
     bool convertOptionToCtrl = false;
     if (virtualKeyCode == VK_DELETE || virtualKeyCode == VK_BACK)
         convertOptionToCtrl = true;
@@ -294,7 +296,6 @@ static JSValueRef keyDownCallback(JSContextRef context, JSObjectRef function, JS
 
     MSG msg = makeMsg(webViewWindow, WM_KEYDOWN, virtualKeyCode, 0);
     dispatchMessage(&msg);
-    JSStringRelease(character);
     
     if (argumentCount > 1)
         ::SetKeyboardState(keyState);
