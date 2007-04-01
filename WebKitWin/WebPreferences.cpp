@@ -461,13 +461,25 @@ HRESULT WebPreferences::preferencesPath(LPTSTR path, size_t cchPath)
     HRESULT hr = FAILED(SHGetFolderPath(0, CSIDL_APPDATA | CSIDL_FLAG_CREATE, 0, 0, path));
     if (FAILED(hr))
         return hr;
-    if (_tcscat_s(path, cchPath, TEXT("\\Apple Computer\\WebKit")))
+
+    if (_tcscat_s(path, cchPath, TEXT("\\Apple Computer\\")))
         return E_FAIL;
+
+    WebCore::String appName = "WebKit";
+    CFBundleRef bundle = CFBundleGetMainBundle();
+    if (bundle) {
+        CFStringRef bundleExecutable = (CFStringRef)CFBundleGetValueForInfoDictionaryKey(bundle, kCFBundleExecutableKey);
+        if (bundleExecutable)
+            appName = bundleExecutable;
+    }
+    if (_tcscat_s(path, cchPath, appName.charactersWithNullTermination()))
+        return E_FAIL;
+
     int err = SHCreateDirectoryEx(0, path, 0);
     if (err != ERROR_SUCCESS && err != ERROR_ALREADY_EXISTS)
         return E_FAIL;
 
-    if (_tcscat_s(path, cchPath, TEXT("\\Preferences.plist")))
+    if (_tcscat_s(path, cchPath, TEXT("\\WebKitPreferences.plist")))
         return E_FAIL;
 
     return S_OK;

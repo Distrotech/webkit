@@ -1,3 +1,15 @@
+2007-03-31  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Hyatt.
+
+        <rdar://problem/5091159> Boomer has no bundle identifier - is the bundle correctly formed?
+        <rdar://problem/5088764> Move the "Icon.db" file under "Local Settings"
+
+        * WebIconDatabase.cpp:
+        (userIconDatabasePath): Prefer to store Icon.db file keyed off of bundle executable name
+        * WebPreferences.cpp:
+        (WebPreferences::preferencesPath): Prefer to store WebKit Preferences keyed off of bundle executable name
+
 2007-03-30  Adele Peterson  <adele@apple.com>
 
         Reviewed by Beth.

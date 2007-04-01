@@ -63,20 +63,27 @@ HRESULT userIconDatabasePath(String& path)
     TCHAR appDataPath[MAX_PATH];
     HRESULT hr = SHGetFolderPath(0, CSIDL_LOCAL_APPDATA | CSIDL_FLAG_CREATE, 0, 0, appDataPath);
     if (FAILED(hr))
-        goto exit;
+        return hr;
 
     // make the Apple Computer and WebKit subfolder
-    path = String(appDataPath) + "\\Apple Computer\\WebKit";
+    path = String(appDataPath) + "\\Apple Computer\\";
+
+    WebCore::String appName = "WebKit";
+    CFBundleRef bundle = CFBundleGetMainBundle();
+    if (bundle) {
+        CFStringRef bundleExecutable = (CFStringRef)CFBundleGetValueForInfoDictionaryKey(bundle, kCFBundleExecutableKey);
+        if (bundleExecutable)
+            appName = bundleExecutable;
+    }
+    path += appName;
+
     if (!CreateDirectory(path.charactersWithNullTermination(), 0)) {
         DWORD err = GetLastError();
-        if (err != ERROR_ALREADY_EXISTS) {
-            hr = HRESULT_FROM_WIN32(err);
-            goto exit;
-        }
+        if (err != ERROR_ALREADY_EXISTS)
+            return (HRESULT_FROM_WIN32(err));
     }
 
-exit:
-    return hr;
+    return S_OK;
 }
 
 void WebIconDatabase::init()
