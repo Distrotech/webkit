@@ -132,7 +132,6 @@ void Font::drawComplexText(GraphicsContext* context, const TextRun& run, const T
     
     float afterWidth = controller.runWidthSoFar();
 
-    // Using roundf() rather than ceilf() for the right edge as a compromise to ensure correct caret positioning
     if (style.rtl()) {
         controller.advance(run.length());
         startX += controller.runWidthSoFar() - afterWidth;
