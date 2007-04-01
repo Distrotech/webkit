@@ -1,3 +1,20 @@
+2007-03-31  Dave Hyatt  <hyatt@apple.com>
+
+        Internal side of 13234.   Open source side was reviewed by
+        Mitz.  Layout of justified text was broken when dragged or
+        when a ::selection style was in effect.
+
+        * platform/win/FontWin.cpp:
+        (WebCore::Font::selectionRectForComplexText):
+        (WebCore::Font::drawComplexText):
+        (WebCore::Font::floatWidthForComplexText):
+        * platform/win/UniscribeController.cpp:
+        (WebCore::UniscribeController::UniscribeController):
+        (WebCore::UniscribeController::offsetForPosition):
+        * platform/win/UniscribeController.h:
+        * platform/win/WebCoreTextRenderer.cpp:
+        (WebCore::doDrawTextAtPoint):
+
 2007-03-30  Anders Carlsson  <andersca@apple.com>
 
         Reviewed by Geoff.

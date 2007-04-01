@@ -40,8 +40,6 @@ class UniscribeController {
 public:
     UniscribeController(const Font*, const TextRun&, const TextStyle&);
 
-    float floatWidth(float* startPosition = 0, GlyphBuffer* = 0);
-
     // Advance and measure/place up to the specified character.
     void advance(unsigned to, GlyphBuffer* = 0);
 
@@ -72,7 +70,6 @@ private:
     int m_end;
 
     float m_runWidthSoFar;
-    float m_widthToStart;
     float m_padding;
     float m_padPerSpace;
 

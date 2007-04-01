@@ -46,12 +46,12 @@ static void doDrawTextAtPoint(GraphicsContext& context, const String& text, cons
 
         int beforeWidth;
         if (underlinedIndex > 0) {
-            TextRun beforeRun(text.impl(), 0, text.length(), 0, underlinedIndex);
+            TextRun beforeRun(text.characters(), underlinedIndex);
             beforeWidth = font.width(beforeRun, style);
         } else
             beforeWidth = 0;
 
-        TextRun underlinedRun(text.impl(), 0, text.length(), underlinedIndex, underlinedIndex + 1);
+        TextRun underlinedRun(text.characters() + underlinedIndex, 1);
         int underlinedWidth = font.width(underlinedRun, style);
 
         IntPoint underlinePoint(point);

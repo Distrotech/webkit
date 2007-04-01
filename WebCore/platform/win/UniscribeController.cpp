@@ -43,13 +43,13 @@ UniscribeController::UniscribeController(const Font* font, const TextRun& run, c
 : m_font(*font)
 , m_run(run)
 , m_style(style)
-, m_end(style.rtl() ? run.length() : run.to())
-, m_currentCharacter(run.from())
+, m_end(run.length())
+, m_currentCharacter(0)
 , m_runWidthSoFar(0)
 , m_computingOffsetPosition(false)
 , m_includePartialGlyphs(false)
 , m_offsetX(0)
-, m_offsetPosition(run.from())
+, m_offsetPosition(0)
 {
     m_padding = m_style.padding();
     if (!m_padding)
@@ -66,48 +66,20 @@ UniscribeController::UniscribeController(const Font* font, const TextRun& run, c
             m_padPerSpace = ceilf(m_style.padding() / numSpaces);
     }
 
-    // Calculate the width up to the starting position of the run.  This is
-    // necessary to ensure that our rounding hacks are always consistently
-    // applied.
-    if (run.from() == 0)
-        m_widthToStart = 0;
-    else {
-        TextRun completeRun(run);
-        completeRun.makeComplete();
-        UniscribeController beforeContent(font, completeRun, style);
-        beforeContent.advance(run.from());
-        m_widthToStart = beforeContent.runWidthSoFar();
-    }
-
     // Null out our uniscribe structs
     resetControlAndState();
-}
-
-float UniscribeController::floatWidth(float* startPosition, GlyphBuffer* glyphBuffer)
-{
-    advance(m_run.to(), glyphBuffer);
-    float runWidth = m_runWidthSoFar;
-    if (startPosition) {
-        if (m_style.ltr())
-            *startPosition = m_widthToStart;
-        else {
-            advance(m_run.length());
-            *startPosition = m_runWidthSoFar - runWidth;
-        }
-    }
-    return runWidth;
 }
 
 int UniscribeController::offsetForPosition(int x, bool includePartialGlyphs)
 {
     m_computingOffsetPosition = true;
     m_includePartialGlyphs = includePartialGlyphs;
-    m_offsetX = m_style.ltr() ? (x - m_widthToStart) : x;
-    m_offsetPosition = m_run.from();
-    advance(m_run.to());
+    m_offsetX = x;
+    m_offsetPosition = 0;
+    advance(m_run.length());
     if (m_computingOffsetPosition) {
         // The point is to the left or to the right of the entire run.
-        if (m_offsetX >= m_widthToStart + m_runWidthSoFar && m_style.ltr() || m_offsetX < 0 && m_style.rtl())
+        if (m_offsetX >= m_runWidthSoFar && m_style.ltr() || m_offsetX < 0 && m_style.rtl())
             m_offsetPosition = m_end;
     }
     m_computingOffsetPosition = false;

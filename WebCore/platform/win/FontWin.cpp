@@ -95,15 +95,13 @@ void Font::drawGlyphs(GraphicsContext* graphicsContext, const FontData* font, co
     wkRestoreFontSmoothingStyle(cgContext, oldFontSmoothingStyle);
 }
 
-FloatRect Font::selectionRectForComplexText(const TextRun& run, const TextStyle& style, const IntPoint& point, int h) const
+FloatRect Font::selectionRectForComplexText(const TextRun& run, const TextStyle& style, const IntPoint& point, int h,
+                                            int from, int to) const
 {
-    TextRun completeRun(run);
-    completeRun.makeComplete();
-
-    UniscribeController it(this, completeRun, style);
-    it.advance(run.from());
+    UniscribeController it(this, run, style);
+    it.advance(from);
     float beforeWidth = it.runWidthSoFar();
-    it.advance(run.to());
+    it.advance(to);
     float afterWidth = it.runWidthSoFar();
 
     // Using roundf() rather than ceilf() for the right edge as a compromise to ensure correct caret positioning
@@ -116,31 +114,41 @@ FloatRect Font::selectionRectForComplexText(const TextRun& run, const TextStyle&
     return FloatRect(point.x() + floorf(beforeWidth), point.y(), roundf(afterWidth) - floorf(beforeWidth), h);
 }
 
-void Font::drawComplexText(GraphicsContext* context, const TextRun& run, const TextStyle& style, const FloatPoint& point) const
+void Font::drawComplexText(GraphicsContext* context, const TextRun& run, const TextStyle& style, const FloatPoint& point,
+                           int from, int to) const
 {
     // This glyph buffer holds our glyphs + advances + font data for each glyph.
     GlyphBuffer glyphBuffer;
 
+    float startX = point.x();
     UniscribeController controller(this, run, style);
+    controller.advance(from);
+    float beforeWidth = controller.runWidthSoFar();
+    controller.advance(to, &glyphBuffer);
     
-    // Our measuring code will generate glyphs and advances for us.
-    float startX;
-    controller.floatWidth(&startX, &glyphBuffer);
-   
-    // Bail if we got no glyphs.
+    // We couldn't generate any glyphs for the run.  Give up.
     if (glyphBuffer.isEmpty())
         return;
+    
+    float afterWidth = controller.runWidthSoFar();
+
+    // Using roundf() rather than ceilf() for the right edge as a compromise to ensure correct caret positioning
+    if (style.rtl()) {
+        controller.advance(run.length());
+        startX += controller.runWidthSoFar() - afterWidth;
+    } else
+        startX += beforeWidth;
 
     // Draw the glyph buffer now at the starting point returned in startX.
-    startX += point.x();
     FloatPoint startPoint(startX, point.y());
     drawGlyphBuffer(context, glyphBuffer, run, style, startPoint);
 }
 
 float Font::floatWidthForComplexText(const TextRun& run, const TextStyle& style) const
 {
-    UniscribeController it(this, run, style);
-    return it.floatWidth();
+    UniscribeController controller(this, run, style);
+    controller.advance(run.length());
+    return controller.runWidthSoFar();
 }
 
 int Font::offsetForPositionForComplexText(const TextRun& run, const TextStyle& style, int x, bool includePartialGlyphs) const
