@@ -1,5 +1,10 @@
 2007-04-02  Anders Carlsson  <andersca@apple.com>
 
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree.sln:
+        Add TestNetscapeObject project.
+
+2007-04-02  Anders Carlsson  <andersca@apple.com>
+
         Reviewed by Adam.
 
         Add netscape test plugin VC project. Make DumpRenderTree look for the test plugin.
