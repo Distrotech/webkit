@@ -1,3 +1,14 @@
+2007-04-02  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        Fix logic in windowless paint functions.
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::invalidateRect):
+        (WebCore::PluginViewWin::invalidateRegion):
+        (WebCore::PluginViewWin::forceRedraw):
+
 2007-03-31  Dave Hyatt  <hyatt@apple.com>
 
         Internal side of 13234.   Open source side was reviewed by
