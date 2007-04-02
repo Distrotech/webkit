@@ -64,10 +64,10 @@ namespace WebCore {
         virtual void didFinishLoading(SubresourceLoader*);
 
         void sendJavaScriptStream(const KURL& requestURL, const CString& resultString);
+        void cancelAndDestroyStream(NPReason);
 
     private:
         void deliverData();
-        void cancelAndDestroyStream(NPReason);
         void destroyStream(NPReason);
         void destroyStream();
 

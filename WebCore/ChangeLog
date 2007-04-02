@@ -1,5 +1,20 @@
 2007-04-02  Anders Carlsson  <andersca@apple.com>
 
+        Reviewed by Darin.
+
+        <rdar://problem/5095582>
+        PluginViewWin doesn't implement NPN_DestroyStream.
+
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::PluginStreamWin::startStream):
+        Handle the case where NPN_DestroyStream is called from the newstream handler.
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::destroyStream):
+        Implement this.
+
+2007-04-02  Anders Carlsson  <andersca@apple.com>
+
         Reviewed by Dave Hyatt.
 
         <rdar://problem/5097225> 

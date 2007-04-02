@@ -124,7 +124,15 @@ void PluginStreamWin::startStream()
     m_offset = 0;
     m_reason = WebReasonNone;
 
+    // Protect the stream if destroystream is called from within the newstream handler
+    RefPtr<PluginStreamWin> protect(this);
+
     NPError npErr = m_pluginFuncs->newstream(m_instance, (NPMIMEType)(const char*)mimeTypeStr, &m_stream, false, &m_transferMode);
+    
+    // If the stream was destroyed in the call to newstream we return
+    if (m_reason != WebReasonNone)
+        return;
+        
     m_streamState = StreamStarted;
 
     if (npErr != NPERR_NO_ERROR)

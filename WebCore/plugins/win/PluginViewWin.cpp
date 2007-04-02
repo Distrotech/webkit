@@ -975,9 +975,13 @@ int32 PluginViewWin::write(NPStream* stream, int32 len, void* buffer)
 
 NPError PluginViewWin::destroyStream(NPStream* stream, NPReason reason)
 {
-    LOG_NOIMPL();
-    // Unsupported
-    return NPERR_GENERIC_ERROR;
+    PluginStreamWin* browserStream = static_cast<PluginStreamWin*>(stream->ndata);
+
+    if (!stream || !m_streams.contains(browserStream))
+        return NPERR_INVALID_INSTANCE_ERROR;
+
+    browserStream->cancelAndDestroyStream(reason);
+    return NPERR_NO_ERROR;
 }
 
 const char* PluginViewWin::userAgent()
