@@ -145,6 +145,8 @@ NSString* WKPathFromFont(NSFont *font);
 
 BOOL WKCGContextIsBitmapContext(CGContextRef context);
 
+BOOL WKAppVersionCheckLessThan(NSString *, int, double);
+
 #ifdef __cplusplus
 }
 #endif
