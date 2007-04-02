@@ -1,6 +1,6 @@
 2007-04-02  Anders Carlsson  <andersca@apple.com>
 
-        Reviewed by NOBODY (OOPS!).
+        Reviewed by Adam.
 
         Add netscape test plugin VC project. Make DumpRenderTree look for the test plugin.
         
