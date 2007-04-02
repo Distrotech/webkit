@@ -25,27 +25,23 @@
  
  IN NO EVENT SHALL APPLE BE LIABLE FOR ANY SPECIAL, INDIRECT, INCIDENTAL OR CONSEQUENTIAL 
  DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS 
-          OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) ARISING IN ANY WAY OUT OF THE USE, 
+ OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) ARISING IN ANY WAY OUT OF THE USE, 
  REPRODUCTION, MODIFICATION AND/OR DISTRIBUTION OF THE APPLE SOFTWARE, HOWEVER CAUSED AND 
  WHETHER UNDER THEORY OF CONTRACT, TORT (INCLUDING NEGLIGENCE), STRICT LIABILITY OR 
  OTHERWISE, EVEN IF APPLE HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import "PluginObject.h"
+#include "PluginObject.h"
 
-// Mach-o entry points
-NPError NP_Initialize(NPNetscapeFuncs *browserFuncs);
-NPError NP_GetEntryPoints(NPPluginFuncs *pluginFuncs);
-void NP_Shutdown(void);
-
-// Mach-o entry points
-NPError NP_Initialize(NPNetscapeFuncs *browserFuncs)
+extern "C"
+NPError __stdcall NP_Initialize(NPNetscapeFuncs* browserFuncs)
 {
     browser = browserFuncs;
     return NPERR_NO_ERROR;
 }
 
-NPError NP_GetEntryPoints(NPPluginFuncs *pluginFuncs)
+extern "C" 
+NPError __stdcall NP_GetEntryPoints(NPPluginFuncs* pluginFuncs)
 {
     pluginFuncs->version = 11;
     pluginFuncs->size = sizeof(pluginFuncs);
@@ -66,22 +62,41 @@ NPError NP_GetEntryPoints(NPPluginFuncs *pluginFuncs)
     return NPERR_NO_ERROR;
 }
 
-void NP_Shutdown(void)
+
+extern "C"
+NPError __stdcall NP_Shutdown()
 {
+    return NPERR_NO_ERROR;
 }
+
 
 NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc, char *argn[], char *argv[], NPSavedData *saved)
 {
-    if (browser->version >= 14)
-        instance->pdata = browser->createobject(instance, getPluginClass());
+    if (browser->version >= 14) {
+        PluginObject* obj = (PluginObject*)browser->createobject(instance, getPluginClass());
+    
+        obj->onStreamLoad = NULL;
+        
+        for (int16 i = 0; i < argc; i++) {
+            if (_stricmp(argn[i], "onstreamload") == 0 && !obj->onStreamLoad)
+                obj->onStreamLoad = _strdup(argv[i]);
+        }
+        
+        instance->pdata = obj;
+    }
+    
     return NPERR_NO_ERROR;
 }
 
 NPError NPP_Destroy(NPP instance, NPSavedData **save)
 {
-    PluginObject *obj = instance->pdata;
-    if (obj)
+    PluginObject *obj = (PluginObject*)instance->pdata;
+    if (obj) {
+        if (obj->onStreamLoad)
+            free(obj->onStreamLoad);
+        
         browser->releaseobject(&obj->header);
+    }
     return NPERR_NO_ERROR;
 }
 
@@ -92,10 +107,23 @@ NPError NPP_SetWindow(NPP instance, NPWindow *window)
 
 NPError NPP_NewStream(NPP instance, NPMIMEType type, NPStream *stream, NPBool seekable, uint16 *stype)
 {
-    PluginObject* obj = instance->pdata;
+    PluginObject* obj = (PluginObject*)instance->pdata;
     obj->stream = stream;
     *stype = NP_ASFILEONLY;
 
+    if (obj->onStreamLoad) {
+        NPObject *windowScriptObject;
+        browser->getvalue(obj->npp, NPNVWindowNPObject, &windowScriptObject);
+                
+        NPString script;
+        script.UTF8Characters = obj->onStreamLoad;
+        script.UTF8Length = strlen(obj->onStreamLoad);
+        
+        NPVariant browserResult;
+        browser->evaluate(obj->npp, windowScriptObject, &script, &browserResult);
+        browser->releasevariantvalue(&browserResult);
+    }
+    
     return NPERR_NO_ERROR;
 }
 
@@ -124,78 +152,17 @@ void NPP_Print(NPP instance, NPPrint *platformPrint)
 
 int16 NPP_HandleEvent(NPP instance, void *event)
 {
-    PluginObject *obj = instance->pdata;
+    PluginObject *obj = (PluginObject*)instance->pdata;
     if (!obj->eventLogging)
         return 0;
     
-    EventRecord *evt = event;
-    Point pt = { evt->where.v, evt->where.h };
-    switch (evt->what) {
-        case nullEvent:
-            // these are delivered non-deterministically, don't log.
-            break;
-        case mouseDown:
-            GlobalToLocal(&pt);
-            printf("PLUGIN: mouseDown at (%d, %d)\n", pt.h, pt.v);
-            break;
-        case mouseUp:
-            GlobalToLocal(&pt);
-            printf("PLUGIN: mouseUp at (%d, %d)\n", pt.h, pt.v);
-            break;
-        case keyDown:
-            printf("PLUGIN: keyDown '%c'\n", (char)(evt->message & 0xFF));
-            break;
-        case keyUp:
-            printf("PLUGIN: keyUp '%c'\n", (char)(evt->message & 0xFF));
-            break;
-        case autoKey:
-            printf("PLUGIN: autoKey '%c'\n", (char)(evt->message & 0xFF));
-            break;
-        case updateEvt:
-            printf("PLUGIN: updateEvt\n");
-            break;
-        case diskEvt:
-            printf("PLUGIN: diskEvt\n");
-            break;
-        case activateEvt:
-            printf("PLUGIN: activateEvt\n");
-            break;
-        case osEvt:
-            printf("PLUGIN: osEvt - ");
-            switch ((evt->message & 0xFF000000) >> 24) {
-                case suspendResumeMessage:
-                    printf("%s\n", (evt->message & 0x1) ? "resume" : "suspend");
-                    break;
-                case mouseMovedMessage:
-                    printf("mouseMoved\n");
-                    break;
-                default:
-                    printf("%08lX\n", evt->message);
-            }
-            break;
-        case kHighLevelEvent:
-            printf("PLUGIN: kHighLevelEvent\n");
-            break;
-        // NPAPI events
-        case getFocusEvent:
-            printf("PLUGIN: getFocusEvent\n");
-            break;
-        case loseFocusEvent:
-            printf("PLUGIN: loseFocusEvent\n");
-            break;
-        case adjustCursorEvent:
-            printf("PLUGIN: adjustCursorEvent\n");
-            break;
-        default:
-            printf("PLUGIN: event %d\n", evt->what);
-    }
-    
+    // FIXME: Implement this
     return 0;
 }
 
 void NPP_URLNotify(NPP instance, const char *url, NPReason reason, void *notifyData)
 {
-    PluginObject *obj = instance->pdata;
+    PluginObject *obj = (PluginObject*)instance->pdata;
         
     handleCallback(obj, url, reason, notifyData);
 }
@@ -204,7 +171,7 @@ NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value)
 {
     if (variable == NPPVpluginScriptableNPObject) {
         void **v = (void **)value;
-        PluginObject *obj = instance->pdata;
+        PluginObject *obj = (PluginObject*)instance->pdata;
         // Return value is expected to be retained
         browser->retainobject((NPObject *)obj);
         *v = obj;

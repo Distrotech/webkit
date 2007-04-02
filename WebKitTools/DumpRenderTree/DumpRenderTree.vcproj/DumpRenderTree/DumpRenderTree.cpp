@@ -104,7 +104,7 @@ static LRESULT CALLBACK DumpRenderTreeWndProc(HWND hWnd, UINT msg, WPARAM wParam
 
 extern "C" BOOL InitializeCoreGraphics();
 
-static void initialize(HMODULE hModule)
+static CString initialize(HMODULE hModule)
 {
     static LPCTSTR fontsToInstall[] = {
         TEXT("AHEM____.ttf"),
@@ -139,10 +139,11 @@ static void initialize(HMODULE hModule)
     int lastSlash = exePath.ReverseFind('\\');
     if (lastSlash != -1 && lastSlash + 1< exePath.GetLength())
         exePath = exePath.Left(lastSlash + 1);
-    exePath += TEXT("DumpRenderTree.resources\\");
+    
+    CString resourcesPath = exePath + TEXT("DumpRenderTree.resources\\");
 
     for (int i = 0; i < ARRAYSIZE(fontsToInstall); ++i)
-        AddFontResourceEx(exePath + fontsToInstall[i], FR_PRIVATE, 0);
+        AddFontResourceEx(resourcesPath + fontsToInstall[i], FR_PRIVATE, 0);
 
     // Init COM
     OleInitialize(0);
@@ -171,6 +172,8 @@ static void initialize(HMODULE hModule)
 
     hostWindow = CreateWindowEx(WS_EX_TOOLWINDOW, kDumpRenderTreeClassName, TEXT("DumpRenderTree"), WS_POPUP,
       -maxViewWidth, -maxViewHeight, maxViewWidth, maxViewHeight, 0, 0, hModule, 0);
+
+    return exePath;
 }
 
 #include <stdio.h>
@@ -535,7 +538,7 @@ static void initializePreferences(IWebPreferences* preferences)
 
     preferences->setAutosaves(FALSE);
     preferences->setJavaEnabled(FALSE);
-    preferences->setPlugInsEnabled(FALSE);
+    preferences->setPlugInsEnabled(TRUE);
 }
 
 static Boolean pthreadEqualCallback(const void* value1, const void* value2)
@@ -647,7 +650,7 @@ int main(int argc, char* argv[])
 {
     leakChecking = false;
 
-    initialize(GetModuleHandle(0));
+    CString exePath = initialize(GetModuleHandle(0));
 
     // FIXME: options
 
@@ -665,6 +668,10 @@ int main(int argc, char* argv[])
 
     CComQIPtr<IWebViewPrivate> viewPrivate(webView);
     if (!viewPrivate)
+        return -1;
+
+    CComBSTR pluginPath = exePath + "testnetscapeplugin";
+    if (FAILED(viewPrivate->addAdditionalPluginPath(pluginPath)))
         return -1;
 
     if (FAILED(viewPrivate->viewWindow(&webViewWindow)))

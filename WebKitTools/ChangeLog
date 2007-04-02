@@ -1,3 +1,22 @@
+2007-04-02  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by NOBODY (OOPS!).
+
+        Add netscape test plugin VC project. Make DumpRenderTree look for the test plugin.
+        
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (initialize):
+        (initializePreferences):
+        (main):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.vcproj:
+        * DumpRenderTree/DumpRenderTree.vcproj/TestNetscapePlugin/TestNetscapePlugin.def: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/TestNetscapePlugin/TestNetscapePlugin.rc: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/TestNetscapePlugin/TestNetscapePlugin.vcproj: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/TestNetscapePlugin/resource.h: Added.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/TestNetscapePlugin/main.c:
+        Merge changes from the Open Source tree.        
+
 2007-03-31  Adele Peterson  <adele@apple.com>
 
         Reviewed by Adam.

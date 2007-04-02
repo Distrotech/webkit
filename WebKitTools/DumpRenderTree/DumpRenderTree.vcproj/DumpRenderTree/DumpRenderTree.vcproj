@@ -182,22 +182,8 @@
 	</References>
 	<Files>
 		<Filter
-			Name="Source Files"
-			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
+			Name="Delegates"
 			>
-			<File
-				RelativePath=".\DraggingInfo.h"
-				>
-			</File>
-			<File
-				RelativePath=".\DumpRenderTree.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\DumpRenderTree.h"
-				>
-			</File>
 			<File
 				RelativePath=".\EditingDelegate.cpp"
 				>
@@ -206,6 +192,18 @@
 				RelativePath=".\EditingDelegate.h"
 				>
 			</File>
+			<File
+				RelativePath=".\WaitUntilDoneDelegate.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\WaitUntilDoneDelegate.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Controllers"
+			>
 			<File
 				RelativePath=".\EventSender.cpp"
 				>
@@ -230,25 +228,29 @@
 				RelativePath=".\LayoutTestController.h"
 				>
 			</File>
-			<File
-				RelativePath=".\WaitUntilDoneDelegate.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\WaitUntilDoneDelegate.h"
-				>
-			</File>
-			<File
-				RelativePath=".\WorkQueue.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\WorkQueueItem.cpp"
-				>
-			</File>
 		</Filter>
 		<File
+			RelativePath=".\DraggingInfo.h"
+			>
+		</File>
+		<File
+			RelativePath=".\DumpRenderTree.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\DumpRenderTree.h"
+			>
+		</File>
+		<File
+			RelativePath=".\WorkQueue.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\WorkQueue.h"
+			>
+		</File>
+		<File
+			RelativePath=".\WorkQueueItem.cpp"
 			>
 		</File>
 		<File
