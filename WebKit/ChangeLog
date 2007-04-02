@@ -1,3 +1,28 @@
+2007-03-28  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Brady.
+
+        Update to last fix.
+
+        * Misc/WebKitVersionChecks.h: Added WEBKIT_FIRST_VERSION_WITHOUT_VITALSOURCE_QUIRK.
+        * WebView/WebView.mm: (-[WebView stringByEvaluatingJavaScriptFromString:]):
+        Added check to only use the VitalSource workaround if the app is not linked on or after
+        the defined WEBKIT_FIRST_VERSION_WITHOUT_VITALSOURCE_QUIRK version number.
+
+2007-03-28  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Kevin M.
+
+        WebKit part of fix for <rdar://problem/5095515> VitalSource Bookshelf should not pass return statements into stringByEvaluatingJavaScriptFromString
+
+        Added an app specific workaround for VitalSource Bookshelf that strips "return" from the beginning of their script strings.  We used to allow this
+        but now we throw a JavaScript exception for return statements that aren't in functions.
+
+        Filed this evangelism bug so we can notify VitalSource of the problem:
+        <rdar://problem/5095515> VitalSource Bookshelf should not pass return statements into stringByEvaluatingJavaScriptFromString
+
+        * WebView/WebView.mm: (-[WebView stringByEvaluatingJavaScriptFromString:]):
+
 2007-03-27  John Sullivan  <sullivan@apple.com>
 
         Reviewed by Tim
