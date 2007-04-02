@@ -135,9 +135,17 @@ void Widget::setFont(const Font& font)
 }
 
 HCURSOR lastSetCursor = 0;
+bool ignoreNextSetCursor = false;
 
 void Widget::setCursor(const Cursor& cursor)
 {
+    // This is set by PluginViewWin so it can ignore set setCursor call made by
+    // EventHandler.cpp.
+    if (ignoreNextSetCursor) {
+        ignoreNextSetCursor = false;
+        return;
+    }
+
     if (HCURSOR c = cursor.impl()) {
         lastSetCursor = c;
         SetCursor(c);

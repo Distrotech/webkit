@@ -1,5 +1,20 @@
 2007-04-02  Anders Carlsson  <andersca@apple.com>
 
+        Reviewed by Dave Hyatt.
+
+        <rdar://problem/5097225> 
+        Mouse cursors don't work with windowless plugins
+        
+        * platform/win/WidgetWin.cpp:
+        (WebCore::Widget::setCursor):
+        Add an "ignoreNextSetCursor" boolean and don't call SetCursor if it's true.
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::handleMouseEvent):
+        Store away the current cursor and make sure that it won't be reset.
+
+2007-04-02  Anders Carlsson  <andersca@apple.com>
+
         Reviewed by Adam.
 
         Fix logic in windowless paint functions.

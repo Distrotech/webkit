@@ -348,6 +348,9 @@ void PluginViewWin::handleKeyboardEvent(KeyboardEvent* event)
         event->setDefaultHandled();
 }
 
+extern HCURSOR lastSetCursor;
+extern bool ignoreNextSetCursor;
+
 void PluginViewWin::handleMouseEvent(MouseEvent* event)
 {
     NPEvent npEvent;
@@ -395,9 +398,16 @@ void PluginViewWin::handleMouseEvent(MouseEvent* event)
     } else 
         return;
 
+    HCURSOR currentCursor = ::GetCursor();
+
     KJS::JSLock::DropAllLocks;
     if (!m_plugin->pluginFuncs()->event(m_instance, &npEvent))
         event->setDefaultHandled();
+
+    // Currently, Widget::setCursor is always called after this function in EventHandler.cpp
+    // and since we don't want that we set ignoreNextSetCursor to true here to prevent that.
+    ignoreNextSetCursor = true;     
+    lastSetCursor = ::GetCursor();
 }
 
 void PluginViewWin::handleEvent(Event* event)
