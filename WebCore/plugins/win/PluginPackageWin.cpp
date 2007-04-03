@@ -232,7 +232,7 @@ bool PluginPackageWin::load()
     m_browserFuncs.hasproperty = _NPN_HasMethod;
     m_browserFuncs.hasmethod = _NPN_HasProperty;
     m_browserFuncs.setexception = _NPN_SetException;
-    m_browserFuncs.evaluate = _NPN_Evaluate;
+    m_browserFuncs.enumerate = _NPN_Enumerate;
 
     npErr = NP_Initialize(&m_browserFuncs);
     LOG_NPERROR(npErr);

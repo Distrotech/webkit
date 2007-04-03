@@ -367,10 +367,14 @@ void PluginStreamWin::didFinishLoading(SubresourceLoader* loader)
         }
 
         DWORD written;
-        bool retval = WriteFile(tempFile, m_completeDeliveryData->data(), m_completeDeliveryData->size(), &written, 0);
+        size_t dataSize = m_completeDeliveryData ? m_completeDeliveryData->size() : 0;
+        bool retval = true;
+
+        if (dataSize)
+            retval = WriteFile(tempFile, m_completeDeliveryData->data(), m_completeDeliveryData->size(), &written, 0);
         CloseHandle(tempFile);
 
-        if (!retval || written != m_completeDeliveryData->size()) {
+        if (!retval || written != dataSize) {
             LOG_PLUGIN_NET_ERROR();
             destroyStream(NPRES_NETWORK_ERR);
             return;

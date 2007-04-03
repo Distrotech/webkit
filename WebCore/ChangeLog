@@ -1,5 +1,19 @@
 2007-04-02  Anders Carlsson  <andersca@apple.com>
 
+        Reviewed by Adam.
+
+        Fix crashes seen when running the plugin layout tests.
+        
+        * plugins/win/PluginPackageWin.cpp:
+        (WebCore::PluginPackageWin::load):
+        Fill in the enumerate pointer, not the evaluate pointer (it's already been filled in).
+        
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::PluginStreamWin::didFinishLoading):
+        Handle the case where there was no plugin stream data at all.
+
+2007-04-02  Anders Carlsson  <andersca@apple.com>
+
         Reviewed by Darin.
 
         Check that NPStream pointers passed to NPN_DestroyStream are valid.
