@@ -127,17 +127,17 @@ void ResourceResponse::doUpdateResourceResponse()
         m_httpStatusCode = CFHTTPMessageGetResponseStatusCode(httpResponse);
 
         RetainPtr<CFStringRef> statusLine(AdoptCF, CFHTTPMessageCopyResponseStatusLine(httpResponse));
-        String statusText(statusLine);
+        String statusText(statusLine.get());
         int spacePos = statusText.find(" ");
         if (spacePos != -1)
             statusText = statusText.substring(spacePos + 1);
         m_httpStatusText = statusText;
 
         RetainPtr<CFDictionaryRef> headers(AdoptCF, CFHTTPMessageCopyAllHeaderFields(httpResponse));
-        CFIndex headerCount = CFDictionaryGetCount(headers);
+        CFIndex headerCount = CFDictionaryGetCount(headers.get());
         Vector<const void*, 128> keys(headerCount);
         Vector<const void*, 128> values(headerCount);
-        CFDictionaryGetKeysAndValues(headers, keys.data(), values.data());
+        CFDictionaryGetKeysAndValues(headers.get(), keys.data(), values.data());
         for (int i = 0; i < headerCount; ++i)
             m_httpHeaderFields.set((CFStringRef)keys[i], (CFStringRef)values[i]);
     } else

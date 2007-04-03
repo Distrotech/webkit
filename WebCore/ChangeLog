@@ -1,3 +1,11 @@
+2007-04-03  Oliver Hunt  <oliver@apple.com>
+
+        Buildfix
+
+        * platform/network/cf/ResourceResponseCFNet.cpp:
+        (WebCore::ResourceResponse::doUpdateResourceResponse):
+           Adding .get() calls
+
 2007-04-03  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Alice.
