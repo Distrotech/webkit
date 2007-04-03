@@ -30,7 +30,7 @@
 #include "MimeTypeRegistry.h"
 #include "ResourceResponse.h"
 #include <CFNetwork/CFURLResponsePriv.h>
-
+#include <wtf/RetainPtr.h>
 
 using std::min;
 
@@ -126,15 +126,14 @@ void ResourceResponse::doUpdateResourceResponse()
     if (httpResponse) {
         m_httpStatusCode = CFHTTPMessageGetResponseStatusCode(httpResponse);
 
-        CFStringRef statusLine = CFHTTPMessageCopyResponseStatusLine(httpResponse);
+        RetainPtr<CFStringRef> statusLine(AdoptCF, CFHTTPMessageCopyResponseStatusLine(httpResponse));
         String statusText(statusLine);
-        CFRelease(statusLine);
         int spacePos = statusText.find(" ");
         if (spacePos != -1)
             statusText = statusText.substring(spacePos + 1);
         m_httpStatusText = statusText;
 
-        CFDictionaryRef headers = CFHTTPMessageCopyAllHeaderFields(httpResponse);
+        RetainPtr<CFDictionaryRef> headers(AdoptCF, CFHTTPMessageCopyAllHeaderFields(httpResponse));
         CFIndex headerCount = CFDictionaryGetCount(headers);
         Vector<const void*, 128> keys(headerCount);
         Vector<const void*, 128> values(headerCount);

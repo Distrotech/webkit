@@ -1,3 +1,13 @@
+2007-04-03  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Alice.
+
+        - fixed <rdar://problem/5107069> WebCore leaks a copy of the CFHTTPMessage CFDictionary (from CFHTTPMessageCopyAllHeaderFields)
+
+        * platform/network/cf/ResourceResponseCFNet.cpp:
+        (WebCore::ResourceResponse::doUpdateResourceResponse): Use RetainPtr (once to avoid a leak and once
+        just as style cleanup).
+
 2007-04-02  Anders Carlsson  <andersca@apple.com>
 
         Reviewed by Adam.
