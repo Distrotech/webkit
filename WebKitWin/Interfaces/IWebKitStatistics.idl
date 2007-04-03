@@ -64,4 +64,5 @@ interface IWebKitStatistics : IUnknown
     HRESULT dataSourceCount([out, retval] int* count);
     HRESULT viewCount([out, retval] int* count);
     HRESULT HTMLRepresentationCount([out, retval] int* count);
+    HRESULT comClassCount([out, retval] int* classCount);
 }

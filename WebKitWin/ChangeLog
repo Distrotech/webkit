@@ -1,3 +1,14 @@
+2007-04-02  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Darin.
+        
+        Expose COM class counter
+
+        * Interfaces/IWebKitStatistics.idl: Added comClassCount
+        * WebKitStatistics.cpp:
+        (WebKitStatistics::comClassCount): Added
+        * WebKitStatistics.h:
+
 2007-03-31  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Hyatt.

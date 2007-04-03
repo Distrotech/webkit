@@ -60,6 +60,9 @@ public:
     virtual HRESULT STDMETHODCALLTYPE HTMLRepresentationCount( 
         /* [retval][out] */ int *count);
 
+    virtual HRESULT STDMETHODCALLTYPE comClassCount( 
+        /* [retval][out] */ int *classCount);
+
 protected:
     ULONG m_refCount;
 };

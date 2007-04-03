@@ -124,3 +124,10 @@ HRESULT STDMETHODCALLTYPE WebKitStatistics::HTMLRepresentationCount(
     *count = WebHTMLRepresentationCount;
     return S_OK;
 }
+
+HRESULT STDMETHODCALLTYPE WebKitStatistics::comClassCount( 
+    /* [retval][out] */ int *classCount)
+{
+    *classCount = gClassCount;
+    return S_OK;
+}
