@@ -2,6 +2,21 @@
 
         Reviewed by Darin.
 
+        Check that NPStream pointers passed to NPN_DestroyStream are valid.
+        
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::streams):
+        (WebCore::PluginStreamWin::PluginStreamWin):
+        (WebCore::PluginStreamWin::~PluginStreamWin):
+        (WebCore::PluginStreamWin::ownerForStream):
+        * plugins/win/PluginStreamWin.h:
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::destroyStream):
+
+2007-04-02  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Darin.
+
         <rdar://problem/5095582>
         PluginViewWin doesn't implement NPN_DestroyStream.
 

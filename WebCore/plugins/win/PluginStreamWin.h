@@ -66,6 +66,7 @@ namespace WebCore {
         void sendJavaScriptStream(const KURL& requestURL, const CString& resultString);
         void cancelAndDestroyStream(NPReason);
 
+        static NPP ownerForStream(NPStream*);
     private:
         void deliverData();
         void destroyStream(NPReason);

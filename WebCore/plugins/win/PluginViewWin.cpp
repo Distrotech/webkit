@@ -977,7 +977,7 @@ NPError PluginViewWin::destroyStream(NPStream* stream, NPReason reason)
 {
     PluginStreamWin* browserStream = static_cast<PluginStreamWin*>(stream->ndata);
 
-    if (!stream || !m_streams.contains(browserStream))
+    if (!stream || PluginStreamWin::ownerForStream(stream) != m_instance)
         return NPERR_INVALID_INSTANCE_ERROR;
 
     browserStream->cancelAndDestroyStream(reason);

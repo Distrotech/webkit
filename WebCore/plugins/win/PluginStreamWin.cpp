@@ -50,6 +50,13 @@ using std::min;
 
 namespace WebCore {
 
+typedef HashMap<NPStream*, NPP> StreamMap;
+static StreamMap& streams()
+{
+    static StreamMap staticStreams;
+    return staticStreams;
+}
+
 PluginStreamWin::PluginStreamWin(PluginViewWin* pluginView, Frame* frame, const ResourceRequest& resourceRequest, bool sendNotification, void* notifyData)
     : m_resourceRequest(resourceRequest)
     , m_frame(frame)
@@ -71,6 +78,8 @@ PluginStreamWin::PluginStreamWin(PluginViewWin* pluginView, Frame* frame, const 
     m_stream.end = 0;
     m_stream.notifyData = 0;
     m_stream.lastmodified = 0;
+
+    streams().add(&m_stream, m_instance);
 }
 
 PluginStreamWin::~PluginStreamWin()
@@ -82,6 +91,8 @@ PluginStreamWin::~PluginStreamWin()
     delete m_completeDeliveryData;
 
     free((char*)m_stream.url);
+
+    streams().remove(&m_stream);
 }
 
 void PluginStreamWin::start()
@@ -137,6 +148,11 @@ void PluginStreamWin::startStream()
 
     if (npErr != NPERR_NO_ERROR)
         cancelAndDestroyStream(npErr);
+}
+
+NPP PluginStreamWin::ownerForStream(NPStream* stream)
+{
+    return streams().get(stream);
 }
 
 void PluginStreamWin::cancelAndDestroyStream(NPReason reason)
