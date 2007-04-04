@@ -44,7 +44,6 @@ DocLoader::DocLoader(Frame *frame, Document* doc)
 : m_cache(cache())
 {
     m_cachePolicy = CachePolicyVerify;
-    m_expireDate = 0;
     m_autoLoadImages = true;
     m_frame = frame;
     m_doc = doc;
@@ -56,11 +55,6 @@ DocLoader::DocLoader(Frame *frame, Document* doc)
 DocLoader::~DocLoader()
 {
     m_cache->removeDocLoader(this);
-}
-
-void DocLoader::setExpireDate(time_t _expireDate)
-{
-    m_expireDate = _expireDate;
 }
 
 void DocLoader::checkForReload(const KURL& fullURL)
@@ -131,7 +125,7 @@ CachedResource* DocLoader::requestResource(CachedResource::Type type, const Stri
 
     checkForReload(fullURL);
 
-    CachedResource* resource = cache()->requestResource(this, type, fullURL, m_expireDate, charset, skipCanLoadCheck);
+    CachedResource* resource = cache()->requestResource(this, type, fullURL, charset, skipCanLoadCheck);
     if (resource) {
         m_docResources.set(resource->url(), resource);
         checkCacheObjectStatus(resource);

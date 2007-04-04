@@ -37,16 +37,15 @@
 
 namespace WebCore {
 
-CachedResource::CachedResource(const String& URL, Type type, CachePolicy cachePolicy, unsigned size)
+CachedResource::CachedResource(const String& URL, Type type, CachePolicy cachePolicy)
 {
     m_url = URL;
     m_type = type;
     m_status = Pending;
-    m_encodedSize = size;
+    m_encodedSize = 0;
     m_inCache = false;
     m_cachePolicy = cachePolicy;
     m_request = 0;
-    m_expireDateChanged = false;
     m_accessCount = 0;
     m_nextInLRUList = 0;
     m_prevInLRUList = 0;
@@ -70,9 +69,6 @@ CachedResource::~CachedResource()
 void CachedResource::finish()
 {
     m_status = Cached;
-    KURL url(m_url.deprecatedString());
-    if (m_expireDateChanged && url.protocol().startsWith("http"))
-        m_expireDateChanged = false;
 }
 
 bool CachedResource::isExpired() const
