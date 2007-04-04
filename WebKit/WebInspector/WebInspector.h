@@ -52,6 +52,4 @@
 
 - (void)setSearchQuery:(NSString *)query;
 - (NSString *)searchQuery;
-
-- (NSArray *)searchResults;
 @end

@@ -26,7 +26,8 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-var Inspector = null;
+var Inspector;
+var ignoreWhitespace = true;
 var showUserAgentStyles = true;
 
 // Property values to omit in the computed style list.
@@ -187,6 +188,296 @@ var noPaddingDisplayType = {
     "table-row-group": "no",
 };
 
+Element.prototype.removeStyleClass = function(className) 
+{
+    if (this.hasStyleClass(className))
+        this.className = this.className.replace(className, "");
+}
+
+Element.prototype.addStyleClass = function(className) 
+{
+    if (!this.hasStyleClass(className))
+        this.className += (this.className.length ? " " + className : className);
+}
+
+Element.prototype.hasStyleClass = function(className) 
+{
+    return this.className.indexOf(className) != -1;
+}
+
+Node.prototype.firstParentWithClass = function(className) 
+{
+    var node = this.parentNode;
+    while (node) {
+        if (node.isSameNode(document)) 
+            return null;
+        if (node.nodeType == Node.ELEMENT_NODE && node.hasStyleClass(className))
+            return node;
+        node = node.parentNode;
+    }
+
+    return null;
+}
+
+Element.prototype.query = function(query) 
+{
+    return document.evaluate(query, this, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+}
+
+Element.prototype.removeChildren = function()
+{
+    while (this.firstChild) 
+        this.removeChild(this.firstChild);        
+}
+
+Element.prototype.firstChildSkippingWhitespace = firstChildSkippingWhitespace;
+Element.prototype.lastChildSkippingWhitespace = lastChildSkippingWhitespace;
+
+Node.prototype.isWhitespace = isNodeWhitespace;
+Node.prototype.displayName = nodeDisplayName;
+Node.prototype.contentPreview = nodeContentPreview;
+Node.prototype.isAncestor = isAncestorNode;
+Node.prototype.isDescendant = isDescendantNode;
+Node.prototype.firstCommonAncestor = firstCommonNodeAncestor;
+Node.prototype.nextSiblingSkippingWhitespace = nextSiblingSkippingWhitespace;
+Node.prototype.previousSiblingSkippingWhitespace = previousSiblingSkippingWhitespace;
+Node.prototype.traverseNextNode = traverseNextNode;
+Node.prototype.traversePreviousNode = traversePreviousNode;
+
+String.prototype.escapeHTML = function()
+{
+    return this.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+String.prototype.collapseWhitespace = function()
+{
+    return this.replace(/[\s\xA0]+/g, " ");
+}
+
+String.prototype.trimWhitespace = function()
+{
+    return this.replace(/^[\s\xA0]+|[\s\xA0]+$/g, "");
+}
+
+function isNodeWhitespace()
+{
+    if (!this || this.nodeType != Node.TEXT_NODE)
+        return false;
+    if (!this.nodeValue.length)
+        return true;
+    return /^[\s\xA0]+$/.exec(this.nodeValue);
+}
+
+function nodeDisplayName()
+{
+    if (!this)
+        return "";
+
+    switch (this.nodeType) {
+        case Node.DOCUMENT_NODE:
+            return "Document";
+
+        case Node.ELEMENT_NODE:
+            var name = "<" + this.nodeName.toLowerCase();
+
+            if (this.hasAttributes()) {
+                var value = this.getAttribute("id");
+                if (value)
+                    name += " id=\"" + value + "" + value + "\"";
+                value = this.getAttribute("class");
+                if (value)
+                    name += " class=\"" + value + "\"";
+                if (this.nodeName.toLowerCase() == "a") {
+                    value = this.getAttribute("name");
+                    if (value)
+                        name += " name=\"" + value + "\"";
+                    value = this.getAttribute("href");
+                    if (value)
+                        name += " href=\"" + value + "\"";
+                } else if (this.nodeName.toLowerCase() == "img") {
+                    value = this.getAttribute("src");
+                    if (value)
+                        name += " src=\"" + value + "\"";
+                } else if (this.nodeName.toLowerCase() == "iframe") {
+                    value = this.getAttribute("src");
+                    if (value)
+                        name += " src=\"" + value + "\"";
+                } else if (this.nodeName.toLowerCase() == "input") {
+                    value = this.getAttribute("name");
+                    if (value)
+                        name += " name=\"" + value + "\"";
+                    value = this.getAttribute("type");
+                    if (value)
+                        name += " type=\"" + value + "\"";
+                } else if (this.nodeName.toLowerCase() == "form") {
+                    value = this.getAttribute("action");
+                    if (value)
+                        name += " action=\"" + value + "\"";
+                }
+            }
+
+            return name + ">";
+
+        case Node.TEXT_NODE:
+            if (isNodeWhitespace.call(this))
+                return "(whitespace)";
+            return "\"" + this.nodeValue + "\"";
+
+        case Node.COMMENT_NODE:
+            return "<!--" + this.nodeValue + "-->";
+    }
+
+    return this.nodeName.toLowerCase().collapseWhitespace();
+}
+
+function nodeContentPreview()
+{
+    if (!this || !this.hasChildNodes || !this.hasChildNodes())
+        return "";
+
+    var limit = 0;
+    var preview = "";
+
+    // always skip whitespace here
+    var currentNode = traverseNextNode.call(this, true, this);
+    while (currentNode) {
+        if (currentNode.nodeType == Node.TEXT_NODE)
+            preview += currentNode.nodeValue.escapeHTML();
+        else
+            preview += nodeDisplayName.call(currentNode).escapeHTML();
+
+        currentNode = traverseNextNode.call(currentNode, true, this);
+
+        if (++limit > 4) {
+            preview += "&#x2026;"; // ellipsis
+            break;
+        }
+    }
+
+    return preview.collapseWhitespace();
+}
+
+function isAncestorNode(ancestor)
+{
+    if (!this || !ancestor)
+        return false;
+
+    var currentNode = ancestor.parentNode;
+    while (currentNode) {
+        if (this.isSameNode(currentNode))
+            return true;
+        currentNode = currentNode.parentNode;
+    }
+
+    return false;
+}
+
+function isDescendantNode(descendant)
+{
+    return isAncestorNode.call(descendant, this);
+}
+
+function firstCommonNodeAncestor(node)
+{
+    if (!this || !node)
+        return;
+
+    var node1 = this.parentNode;
+    var node2 = node.parentNode;
+
+    if ((!node1 || !node2) || !node1.isSameNode(node2))
+        return null;
+
+    while (node1 && node2) {
+        if (!node1.parentNode || !node2.parentNode)
+            break;
+        if (!node1.isSameNode(node2))
+            break;
+
+        node1 = node1.parentNode;
+        node2 = node2.parentNode;
+    }
+
+    return node1;
+}
+
+function nextSiblingSkippingWhitespace()
+{
+    if (!this)
+        return;
+    var node = this.nextSibling;
+    while (node && node.nodeType == Node.TEXT_NODE && isNodeWhitespace.call(node))
+        node = node.nextSibling;
+    return node;
+}
+
+function previousSiblingSkippingWhitespace()
+{
+    if (!this)
+        return;
+    var node = this.previousSibling;
+    while (node && node.nodeType == Node.TEXT_NODE && isNodeWhitespace.call(node))
+        node = node.previousSibling;
+    return node;
+}
+
+function firstChildSkippingWhitespace()
+{
+    if (!this)
+        return;
+    var node = this.firstChild;
+    while (node && node.nodeType == Node.TEXT_NODE && isNodeWhitespace.call(node))
+        node = nextSiblingSkippingWhitespace.call(node);
+    return node;
+}
+
+function lastChildSkippingWhitespace()
+{
+    if (!this)
+        return;
+    var node = this.lastChild;
+    while (node && node.nodeType == Node.TEXT_NODE && isNodeWhitespace.call(node))
+        node = previousSiblingSkippingWhitespace.call(node);
+    return node;
+}
+
+function traverseNextNode(skipWhitespace, stayWithin)
+{
+    if (!this)
+        return;
+
+    var node = skipWhitespace ? firstChildSkippingWhitespace.call(this) : this.firstChild;
+    if (node)
+        return node;
+
+    if (stayWithin && this.isSameNode(stayWithin))
+        return null;
+
+    node = skipWhitespace ? nextSiblingSkippingWhitespace.call(this) : this.nextSibling;
+    if (node)
+        return node;
+
+    node = this;
+    while (node && !(skipWhitespace ? nextSiblingSkippingWhitespace.call(node) : node.nextSibling) && (!stayWithin || !node.parentNode || !node.parentNode.isSameNode(stayWithin)))
+        node = node.parentNode;
+    if (!node)
+        return null;
+
+    return skipWhitespace ? nextSiblingSkippingWhitespace.call(node) : node.nextSibling;
+}
+
+function traversePreviousNode(skipWhitespace)
+{
+    if (!this)
+        return;
+    var node = skipWhitespace ? previousSiblingSkippingWhitespace.call(this) : this.previousSibling;
+    while (node && (skipWhitespace ? lastChildSkippingWhitespace.call(node) : node.lastChild) )
+        node = skipWhitespace ? lastChildSkippingWhitespace.call(node) : node.lastChild;
+    if (node)
+        return node;
+    return this.parentNode;
+}
+
 function setUpScrollbar(id)
 {
     var bar = new AppleVerticalScrollbar(document.getElementById(id));
@@ -203,7 +494,8 @@ function setUpScrollbar(id)
 
 function loaded()
 {
-    treeScrollbar = setUpScrollbar("treeScrollbar");
+    treeOutlineScrollArea = new AppleScrollArea(document.getElementById("treeOutlineScrollView"),
+        setUpScrollbar("treeOutlineScrollbar"));
 
     nodeContentsScrollArea = new AppleScrollArea(document.getElementById("nodeContentsScrollview"),
         setUpScrollbar("nodeContentsScrollbar"));
@@ -217,30 +509,6 @@ function loaded()
 
     jsPropertiesScrollArea = new AppleScrollArea(document.getElementById("jsPropertiesScrollview"),
         setUpScrollbar("jsPropertiesScrollbar"));
-
-    treeScrollbar._getViewToContentRatio = function() {
-        var contentHeight = Inspector.treeViewScrollHeight();
-        var height = document.getElementById("treeScrollArea").offsetHeight;
-        if (contentHeight > height)
-            return height / contentHeight;
-        return 1.0;
-    }
-
-    treeScrollbar._computeTrackOffset = function() { return Inspector.treeViewOffsetTop(); }
-    treeScrollbar._getContentLength = function() { return Inspector.treeViewScrollHeight(); }
-    treeScrollbar._getViewLength = function() { return document.getElementById("treeScrollArea").offsetHeight; }
-    treeScrollbar._canScroll = function() { return true; }
-
-    treeScrollbar.scrollTo = function(pos) {
-        Inspector.treeViewScrollTo(pos);
-        this.verticalHasScrolled();
-    }
-
-    treeScrollbar.verticalHasScrolled = function() {
-        var new_thumb_pos = this._thumbPositionForContentPosition(Inspector.treeViewOffsetTop());
-        this._thumbStart = new_thumb_pos;
-        this._thumb.style.top = new_thumb_pos + "px";
-    }
 
     // much better AppleScrollArea reveal
     AppleScrollArea.prototype.reveal = function(node) {
@@ -289,14 +557,47 @@ function loaded()
         }
     }
 
-    window.addEventListener("resize", refreshScrollbars, false);
+    window.addEventListener("resize", refreshScrollbars, true);
+    document.addEventListener("click", changeFocus, true);
+    document.addEventListener("keypress", documentKeypress, true);
+
+    currentFocusElement = document.getElementById("tree");
 
     toggleNoSelection(false);
     switchPane("node");
 }
 
+var currentFocusElement;
+
+function changeFocus(event)
+{
+    var nextFocusElement = event.target.firstParentWithClass("focusable");
+    if (!nextFocusElement || (currentFocusElement && currentFocusElement.isSameNode(nextFocusElement)))
+        return;
+
+    if (currentFocusElement) {
+        currentFocusElement.removeStyleClass("focused");
+        currentFocusElement.addStyleClass("blured");
+    }
+
+    currentFocusElement = nextFocusElement;
+
+    if (currentFocusElement) {
+        currentFocusElement.addStyleClass("focused");
+        currentFocusElement.removeStyleClass("blured");
+    }
+}
+
+function documentKeypress(event)
+{
+    if (!currentFocusElement || !currentFocusElement.id || !currentFocusElement.id.length)
+        return;
+    eval(currentFocusElement.id + "Keypress(event)");
+}
+
 function refreshScrollbars()
 {
+    treeOutlineScrollArea.refresh();
     elementAttributesScrollArea.refresh();
     jsPropertiesScrollArea.refresh();
     nodeContentsScrollArea.refresh();
@@ -329,13 +630,15 @@ function performSearch(query)
 
 function resultsWithXpathQuery(query)
 {
-    var nodeList = null;
+    var nodeList;
+
     try {
         var focusedNode = Inspector.focusedDOMNode();
         nodeList = focusedNode.document.evaluate(query, focusedNode.document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
     } catch(err) {
         // ignore any exceptions. the query might be malformed, but we allow that 
     }
+
     return nodeList;
 }
 
@@ -405,6 +708,314 @@ function nodeTypeName(node)
     return "(unknown)";
 }
 
+function treeOutlineNodeClicked(event)
+{
+    var element = event.currentTarget;
+    if (event.offsetX > 20) {
+        element.select();
+    } else if (element.expandable()) {
+        if (element.expanded()) {
+            element.collapse();
+        } else {
+            element.expand();
+        }
+    }
+}
+
+function treeOutlineNodeDoubleClicked(event)
+{
+    var element = event.currentTarget;
+    if (element.representedElement && element.expandable()) {
+        element.expand();
+        Inspector.setRootDOMNode(element.representedElement);
+    }
+}
+
+function revealedOutlineItem()
+{
+    if (this.parentNode && this.parentNode.treeRoot)
+        return true;
+
+    if (!this.parentNode)
+        return false;
+
+    var currentListItem = this.parentNode.parentListElement;
+    while (currentListItem) {
+        if (!currentListItem.expanded())
+            return false;
+        if (!currentListItem.parentNode)
+            return false;
+        if (currentListItem.parentNode.treeRoot)
+            return true;
+        currentListItem = currentListItem.parentNode.parentListElement;
+    }
+
+    return true;
+}
+
+function expandedOutlineItem()
+{
+    return this.hasStyleClass("expanded");
+}
+
+function collapseOutlineItem()
+{
+    this.removeStyleClass("expanded");
+    if (this.childrenListElement)
+        this.childrenListElement.removeStyleClass("expanded");
+    treeOutlineScrollArea.refresh();
+}
+
+function expandableOutlineItem()
+{
+    return this.hasStyleClass("parent");
+}
+
+function expandOutlineItem()
+{
+    if (!this.childrenListElement || (this.childrenListElement && this.childrenListElement.ignoredWhitespace != ignoreWhitespace)) {
+        var ol = document.createElement("ol");
+        ol.className = "children";
+
+        ol.ignoredWhitespace = ignoreWhitespace;
+        ol.parentListElement = this;
+        this.childrenListElement = ol;
+
+        var child = this.representedElement.firstChild;
+        while (child) {
+            if (!ignoreWhitespace || (!isNodeWhitespace.call(child) && ignoreWhitespace))
+                appendOutlineElement(ol, outlineElementForNode(child));
+            child = child.nextSibling;
+        }
+
+        this.parentNode.insertBefore(ol, this.nextSibling);
+    }
+
+    this.addStyleClass("expanded");
+    this.childrenListElement.addStyleClass("expanded");
+
+    treeOutlineScrollArea.refresh();
+}
+
+function revealOutlineItem()
+{
+    if (this.parentNode && this.parentNode.treeRoot) {
+        treeOutlineScrollArea.reveal(this);
+        return;
+    }
+
+    var foundRoot = false;
+    var ancestors = [];
+    var currentNode = this.representedElement.parentNode;
+    while (currentNode) {
+        ancestors.unshift(currentNode);
+
+        var outlineElement = outlineElementForNode(currentNode, true);
+        if (outlineElement && outlineElement.parentNode && outlineElement.parentNode.treeRoot) {
+            foundRoot = true;
+            break;
+        }
+
+        currentNode = currentNode.parentNode;
+    }
+
+    if (!foundRoot)
+        return;
+
+    for (var i = 0; i < ancestors.length; i++)
+        outlineElementForNode(ancestors[i]).expand();
+
+    treeOutlineScrollArea.reveal(this);
+}
+
+var currentSelectedOutlineItem;
+
+function selectOutlineItem()
+{
+    if (currentSelectedOutlineItem)
+        currentSelectedOutlineItem.removeStyleClass("selected");
+    this.addStyleClass("selected");
+    currentSelectedOutlineItem = this;
+    Inspector.setFocusedDOMNode(this.representedElement);
+}
+
+function outlineElementForNode(node, dontCreate)
+{
+    if (node.__webInspectorTreeListItem || dontCreate)
+        return node.__webInspectorTreeListItem;
+
+    var content = nodeDisplayName.call(node).escapeHTML();
+    var li = document.createElement("li");
+
+    if (node.hasChildNodes && node.hasChildNodes()) {
+        li.className = "parent";
+        content += " <span class=\"content\">" + nodeContentPreview.call(node) + "</span>";
+    }
+
+    li.innerHTML = content;
+    li.addEventListener("click", treeOutlineNodeClicked, false);
+    li.addEventListener("dblclick", treeOutlineNodeDoubleClicked, false);
+    li.representedElement = node;
+    node.__webInspectorTreeListItem = li;
+
+    li.expanded = expandedOutlineItem;
+    li.expandable = expandableOutlineItem;
+    li.collapse = collapseOutlineItem;
+    li.expand = expandOutlineItem;
+    li.reveal = revealOutlineItem;
+    li.revealed = revealedOutlineItem;
+    li.select = selectOutlineItem;
+
+    return li;
+}
+
+function appendOutlineElement(list, item)
+{
+    if (item.parentNode && item.parentNode.isSameNode(list))
+        return;
+
+    if (item.parentNode && !item.parentNode.isSameNode(list) && item.parentNode.parentListElement) {
+        var parentListItem = item.parentNode.parentListElement;
+
+        if (item.parentNode.parentNode && !item.parentNode.parentNode.treeRoot)
+            item.parentNode.parentNode.removeChild(item.parentNode);
+        item.parentNode.removeChildren();
+
+        delete parentListItem.childrenListElement;
+        parentListItem.collapse();
+    }
+
+    list.appendChild(item);
+    if (item.childrenListElement)
+        list.insertBefore(item.childrenListElement, item.nextSibling);
+}
+
+function updateTreeOutline()
+{
+    var rootNode = Inspector.rootDOMNode();
+    var treeOutline = document.getElementById("treeOutline");
+
+    treeOutline.treeRoot = true;
+    treeOutline.innerText = ""; // clear the existing tree
+
+    if (!rootNode)
+        return;
+
+    appendOutlineElement(treeOutline, outlineElementForNode(rootNode));
+
+    var focusedNode = Inspector.focusedDOMNode();
+    var outlineElement = outlineElementForNode(focusedNode);
+    outlineElement.reveal();
+    outlineElement.select();
+
+    var rootPopup = document.getElementById("treePopup");
+    rootPopup.innerHTML = ""; // reset the popup
+
+    var currentNode = rootNode;
+    while (currentNode) {
+        var option = document.createElement("option");
+        option.textContent = nodeDisplayName.call(currentNode);
+        rootPopup.appendChild(option);
+        currentNode = currentNode.parentNode;
+    }
+}
+
+function treeKeypress(event)
+{
+    if (event.metaKey)
+        return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    var nextFocusedNode;
+    var focusedNode = Inspector.focusedDOMNode();
+
+    if (event.keyCode == 63232) {
+        // up arrow key
+        nextFocusedNode = traversePreviousNode.call(focusedNode, ignoreWhitespace);
+        while (nextFocusedNode) {
+            var outlineElement = outlineElementForNode(nextFocusedNode, true);
+            if (outlineElement && outlineElement.revealed())
+                break;
+            nextFocusedNode = traversePreviousNode.call(nextFocusedNode, ignoreWhitespace);
+        }
+    } else if (event.keyCode == 63233) {
+        // down arrow key
+        nextFocusedNode = traverseNextNode.call(focusedNode, ignoreWhitespace);
+        while (nextFocusedNode) {
+            var outlineElement = outlineElementForNode(nextFocusedNode, true);
+            if (outlineElement && outlineElement.revealed())
+                break;
+            nextFocusedNode = traverseNextNode.call(nextFocusedNode, ignoreWhitespace);
+        }
+    } else if (event.keyCode == 63234) {
+        // left arrow key
+        var focusedOutlineElement = outlineElementForNode(focusedNode, true);
+        if (focusedOutlineElement) {
+            if (focusedOutlineElement.expanded())
+                focusedOutlineElement.collapse();
+            else if (focusedOutlineElement.parentNode && !focusedOutlineElement.parentNode.treeRoot)
+                nextFocusedNode = focusedOutlineElement.parentNode.parentListElement.representedElement;
+        }
+    } else if (event.keyCode == 63235) {
+        // right arrow key
+        var focusedOutlineElement = outlineElementForNode(focusedNode, true);
+        if (focusedOutlineElement && focusedOutlineElement.expandable())
+            focusedOutlineElement.expand();
+    }
+
+    if (nextFocusedNode) {
+        var outlineElement = outlineElementForNode(nextFocusedNode, true);
+        if (outlineElement && outlineElement.revealed()) {
+            outlineElement.reveal();
+            outlineElement.select();
+        }
+    }
+}
+
+function traverseTreeBackward(event)
+{
+    var node;
+    var focusedNode = Inspector.focusedDOMNode();
+
+    // traverse backward, holding the opton key will traverse only to the previous sibling
+    if (event.altKey)
+        node = ignoreWhitespace ? previousSiblingSkippingWhitespace.call(focusedNode) : focusedNode.previousSibling;
+    else
+        node = traversePreviousNode.call(focusedNode, ignoreWhitespace);
+
+    if (node) {
+        var root = Inspector.rootDOMNode();
+        if (!root.isSameNode(node) && !isAncestorNode.call(root, node))
+            Inspector.setRootDOMNode(firstCommonNodeAncestor.call(Inspector.focusedDOMNode(), node));
+        var outlineElement = outlineElementForNode(node);
+        outlineElement.reveal();
+        outlineElement.select();
+    }
+}
+
+function traverseTreeForward(event)
+{
+    var node;
+    var focusedNode = Inspector.focusedDOMNode();
+
+    // traverse forward, holding the opton key will traverse only to the next sibling
+    if (event.altKey)
+        node = ignoreWhitespace ? nextSiblingSkippingWhitespace.call(focusedNode) : focusedNode.nextSibling;
+    else
+        node = traverseNextNode.call(focusedNode, ignoreWhitespace);
+
+    if (node) {
+        var root = Inspector.rootDOMNode();
+        if (!root.isSameNode(node) && !isAncestorNode.call(root, node))
+            Inspector.setRootDOMNode(firstCommonNodeAncestor.call(Inspector.focusedDOMNode(), node));
+        var outlineElement = outlineElementForNode(node);
+        outlineElement.reveal();
+        outlineElement.select();
+    }
+}
+
 function updatePanes()
 {
     for (var i = 0; i < tabNames.length; i++)
@@ -420,12 +1031,12 @@ function updateElementAttributes()
     var focusedNode = Inspector.focusedDOMNode();
     var attributesList = document.getElementById("elementAttributesList")
 
-    attributesList.innerHTML = "";
+    attributesList.innerText = "";
 
     if (!focusedNode.attributes.length)
         attributesList.innerHTML = "<span class=\"disabled\">(none)</span>";
 
-    for (i = 0; i < focusedNode.attributes.length; i++) {
+    for (var i = 0; i < focusedNode.attributes.length; i++) {
         var attr = focusedNode.attributes[i];
         var li = document.createElement("li");
 
@@ -498,9 +1109,9 @@ function updateNodePane()
     refreshScrollbars();
 }
 
-var styleRules = null;
+var styleRules = [];
 var selectedStyleRuleIndex = 0;
-var styleProperties = null;
+var styleProperties = [];
 var expandedStyleShorthands = [];
 
 function updateStylePane()
@@ -511,8 +1122,8 @@ function updateStylePane()
     var rulesArea = document.getElementById("styleRulesScrollview");
     var propertiesArea = document.getElementById("stylePropertiesTree");
 
-    rulesArea.innerHTML = "";
-    propertiesArea.innerHTML = "";
+    rulesArea.innerText = "";
+    propertiesArea.innerText = "";
     styleRules = [];
     styleProperties = [];
 
@@ -577,7 +1188,7 @@ function updateStylePane()
             var row = document.createElement("div");
             row.className = "row";
             if (i == selectedStyleRuleIndex)
-                row.className += " focused";
+                row.className += " selected";
             if (styleRules[i].isComputedStyle)
                 row.className += " computedStyle";
 
@@ -591,7 +1202,7 @@ function updateStylePane()
             cell = document.createElement("div");
             cell.className = "cell stylesheet";
             var sheet;
-            if (styleRules[i].subtitle != null)
+            if (styleRules[i].subtitle)
                 sheet = styleRules[i].subtitle;
             else if (styleRules[i].parentStyleSheet && styleRules[i].parentStyleSheet.href)
                 sheet = styleRules[i].parentStyleSheet.href;
@@ -604,7 +1215,7 @@ function updateStylePane()
             row.appendChild(cell);
 
             row.styleRuleIndex = i;
-            row.addEventListener("click", styleRuleSelect, true);
+            row.addEventListener("click", styleRuleSelect, false);
 
             var style = styleRules[i].style;
             var styleShorthandLookup = [];
@@ -711,7 +1322,7 @@ function styleRuleSelect(event)
     }
 
     row = event.currentTarget;
-    row.className = "row focused";
+    row.className = "row selected";
 
     selectedStyleRuleIndex = row.styleRuleIndex;
     updateStyleProperties();
@@ -753,7 +1364,7 @@ function updateStyleProperties()
 {
     var focusedNode = Inspector.focusedDOMNode();
     var propertiesTree = document.getElementById("stylePropertiesTree");
-    propertiesTree.innerHTML = "";
+    propertiesTree.innerText = "";
 
     if (selectedStyleRuleIndex >= styleProperties.length) {
         stylePropertiesScrollArea.refresh();
@@ -816,17 +1427,23 @@ function updateStyleProperties()
 function toggleStyleShorthand(event)
 {
     var li = event.currentTarget.parentNode;
-    if (li.className.indexOf("expanded") != -1) {
-        li.className = li.className.replace(/ expanded/, "");
+    if (li.hasStyleClass("expanded")) {
+        li.removeStyleClass("expanded");
         li.nextSibling.style.display = "none";
         expandedStyleShorthands[li.shorthand] = false;
     } else {
-        li.className += " expanded";
+        li.addStyleClass("expanded");
         li.nextSibling.style.removeProperty("display");
         expandedStyleShorthands[li.shorthand] = true;
     }
 
     stylePropertiesScrollArea.refresh();
+}
+
+function toggleIgnoreWhitespace()
+{
+    ignoreWhitespace = !ignoreWhitespace;
+    updateTreeOutline();
 }
 
 function toggleShowUserAgentStyles()
@@ -850,7 +1467,7 @@ function selectMappedStyleRule(attrName)
     while (row) {
         if (row.nodeName == "DIV") {
             if (row.styleRuleIndex == selectedStyleRuleIndex)
-                row.className = "row focused";
+                row.className = "row selected";
             else
                 row.className = "row";
         }
@@ -924,7 +1541,7 @@ function updatePropertiesPane()
 
     var focusedNode = Inspector.focusedDOMNode();
     var list = document.getElementById("jsPropertiesList");
-    list.innerHTML = "";
+    list.innerText = "";
 
     for (var name in focusedNode) {
         var li = document.createElement("li");

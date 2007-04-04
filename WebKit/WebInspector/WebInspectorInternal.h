@@ -35,7 +35,6 @@
 @class WebView;
 @class WebFrame;
 @class DOMHTMLDocument;
-@class NSOutlineView;
 @class WebNodeHighlight;
 
 @interface WebInspectorPrivate : NSObject
@@ -47,59 +46,25 @@
     DOMNode *rootNode;
     DOMNode *focusedNode;
     NSString *searchQuery;
-    NSMutableSet *nodeCache;
-    NSMutableArray *searchResults;
-    NSScrollView *treeScrollView;
-    NSOutlineView *treeOutlineView;
     WebNodeHighlight *currentHighlight;
-    NSImage *rightArrowImage;
-    NSImage *downArrowImage;
-    BOOL ignoreWhitespace;
-    BOOL showUserAgentStyles;
+#ifndef NDEBUG
+    NSMutableDictionary *debugFileMap;
+#endif
     BOOL webViewLoaded;
-    BOOL searchResultsVisible;
     BOOL preventHighlight;
-    BOOL preventRevealOnFocus;
-    BOOL preventSelectionRefocus;
     BOOL isSharedInspector;
 }
 @end
 
 @interface WebInspector (WebInspectorPrivate)
 - (void)_highlightNode:(DOMNode *)node;
-- (void)_revealAndSelectNodeInTree:(DOMNode *)node;
 - (void)_update;
 - (void)_updateRoot;
 - (void)_updateSystemColors;
 - (void)_updateTreeScrollbar;
-- (void)_updateTraversalButtons;
-- (void)_refreshSearch;
 - (void)_webFrameDetached:(WebFrame *)frame;
 @end
 
 @interface DOMNode (DOMNodeInspectorAdditions)
-- (NSString *)_contentPreview;
-
 - (BOOL)_isAncestorOfNode:(DOMNode *)node;
-- (BOOL)_isDescendantOfNode:(DOMNode *)node;
-
-- (BOOL)_isWhitespace;
-
-- (unsigned long)_lengthOfChildNodesIgnoringWhitespace;
-- (DOMNode *)_childNodeAtIndexIgnoringWhitespace:(unsigned long)nodeIndex;
-
-- (DOMNode *)_nextSiblingSkippingWhitespace;
-- (DOMNode *)_previousSiblingSkippingWhitespace;
-
-- (DOMNode *)_firstChildSkippingWhitespace;
-- (DOMNode *)_lastChildSkippingWhitespace;
-
-- (DOMNode *)_firstAncestorCommonWithNode:(DOMNode *)node;
-
-- (DOMNode *)_traverseNextNodeStayingWithin:(DOMNode *)stayWithin;
-- (DOMNode *)_traverseNextNodeSkippingWhitespaceStayingWithin:(DOMNode *)stayWithin;
-- (DOMNode *)_traversePreviousNode;
-- (DOMNode *)_traversePreviousNodeSkippingWhitespace;
-
-- (NSString *)_displayName;
 @end
