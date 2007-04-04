@@ -1,3 +1,7 @@
+2007-04-04  Adam Roben  <aroben@apple.com>
+
+        * Skipped: Re-enable some tests that no longer crash.
+
 2007-03-25  Adam Roben  <aroben@apple.com>
 
         Reviewed by Anders.

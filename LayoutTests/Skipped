@@ -59,10 +59,6 @@ editing/pasteboard/paste-line-endings-004.html
 # Debug C Runtime assertion <rdar://problem/5079945>
 svg/custom/mask-excessive-malloc.svg
 
-# Crash in CFStringGetLength <rdar://problem/5087120>
-http/tests/misc/acid2-pixel.html
-http/tests/misc/acid2.html
-
 # No advanced text <rdar://problems/4516194>
 css1/text_properties/text-transCapitalize.html
 css2.1/t0805-c5518-brdr-t-01-e.html
