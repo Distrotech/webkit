@@ -67,7 +67,7 @@ public:
         Cached       // regular case
     };
 
-    CachedResource(const String& URL, Type type);
+    CachedResource(const String& URL, Type type, CachePolicy cachePolicy, unsigned encodedSize = 0);
     virtual ~CachedResource();
 
     virtual void setEncoding(const String&) { }
