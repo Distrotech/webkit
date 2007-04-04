@@ -1,3 +1,10 @@
+2007-04-04  Adam Roben  <aroben@apple.com>
+
+        Release build fix for TestNetscapePlugin.
+
+        * WebKit.vcproj/WebKit.vcproj: Make the Release post-build step the
+        same as the Debug one so that the npapi headers get copied.
+
 2007-04-03  Adam Roben  <aroben@apple.com>
 
         Reviewed by Anders.
