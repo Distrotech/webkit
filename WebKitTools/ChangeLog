@@ -1,5 +1,15 @@
 2007-04-03  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Anders.
+
+        DRT part of fix for <rdar://problem/5103999> All dom/svg tests are
+        failing due to extra/missing newlines
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (dump): Call IDOMElementPrivate::innerText to match Mac DRT.
+
+2007-04-03  Adam Roben  <aroben@apple.com>
+
         Rubberstamped by Adele.
 
         Make all layout tests paint to match Mac DRT. This fixes many tests in

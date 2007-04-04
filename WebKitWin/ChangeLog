@@ -1,3 +1,15 @@
+2007-04-03  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Anders.
+
+        WebKit part of fix for <rdar://problem/5103999> All dom/svg tests are
+        failing due to extra/missing newlines
+
+        * DOMCoreClasses.cpp:
+        (DOMElement::innerText): Added.
+        * DOMCoreClasses.h: Added declaration.
+        * Interfaces/DOMPrivate.idl: Ditto.
+
 2007-04-02  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Darin.

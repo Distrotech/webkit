@@ -969,6 +969,23 @@ HRESULT STDMETHODCALLTYPE DOMElement::isFocused(
     return S_OK;
 }
 
+HRESULT STDMETHODCALLTYPE DOMElement::innerText(
+    /* [retval][out] */ BSTR* result)
+{
+    if (!result) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    if (!m_element) {
+        ASSERT_NOT_REACHED();
+        return E_FAIL;
+    }
+
+    *result = BString(m_element->innerText()).release();
+    return S_OK;
+}
+
 // IDOMElementCSSInlineStyle --------------------------------------------------
 
 HRESULT STDMETHODCALLTYPE DOMElement::style( 

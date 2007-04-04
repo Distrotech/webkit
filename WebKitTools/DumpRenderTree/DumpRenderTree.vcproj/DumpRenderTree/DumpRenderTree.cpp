@@ -36,6 +36,7 @@
 #include <JavaScriptCore/JavaScriptCore.h>
 #include <math.h>
 #include <pthread.h>
+#include <WebKit/DOMPrivate.h>
 #include <WebKit/IWebFramePrivate.h>
 #include <WebKit/IWebHistoryItem.h>
 #include <WebKit/IWebHistoryItemPrivate.h>
@@ -377,11 +378,8 @@ void dump()
             CComPtr<IDOMElement> documentElement;
             document->documentElement(&documentElement);
 
-            CComQIPtr<IDOMHTMLElement> htmlElement(documentElement);
-            if (htmlElement)
-                htmlElement->innerText(&resultString);
-            else
-                documentElement->textContent(&resultString);
+            if (CComQIPtr<IDOMElementPrivate> docPrivate = documentElement)
+                docPrivate->innerText(&resultString);
         } else {
             bool isSVGW3CTest = strstr(currentTest, "svg\\W3C-SVG-1.1");
             unsigned width;

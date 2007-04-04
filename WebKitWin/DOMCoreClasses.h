@@ -772,6 +772,9 @@ public:
     virtual HRESULT STDMETHODCALLTYPE isFocused( 
         /* [retval][out] */ BOOL *result);
 
+    virtual HRESULT STDMETHODCALLTYPE innerText(
+        /* [retval][out] */ BSTR* result);
+
     // IDOMElementCSSInlineStyle
     virtual HRESULT STDMETHODCALLTYPE style( 
         /* [retval][out] */ IDOMCSSStyleDeclaration **result);
