@@ -49,13 +49,6 @@ DocLoader::DocLoader(Frame *frame, Document* doc)
     , m_loadInProgress(false)
     , m_allowStaleResources(false)
 {
-    m_cachePolicy = CachePolicyVerify;
-    m_expireDate = 0;
-    m_autoLoadImages = true;
-    m_frame = frame;
-    m_doc = doc;
-    m_loadInProgress = false;
-
     m_cache->addDocLoader(this);
 }
 
