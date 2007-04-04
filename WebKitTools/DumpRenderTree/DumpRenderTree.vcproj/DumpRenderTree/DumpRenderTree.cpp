@@ -368,6 +368,9 @@ void dump()
 
     if (dumpTree) {
         if (dumpAsText) {
+            ::InvalidateRect(webViewWindow, 0, TRUE);
+            ::SendMessage(webViewWindow, WM_PAINT, 0, 0);
+
             CComPtr<IDOMDocument> document;
             frame->DOMDocument(&document);
 
@@ -390,13 +393,10 @@ void dump()
                 width = maxViewWidth;
                 height = maxViewHeight;
             }
-            ::SetWindowPos(webViewWindow, 0, 0, 0, width, height, SWP_NOMOVE);
 
-            bool isSVGTest = isSVGW3CTest || strstr(currentTest, ".svg");
-            if (isSVGTest) {
-                ::InvalidateRect(webViewWindow, 0, TRUE);
-                ::SendMessage(webViewWindow, WM_PAINT, 0, 0);
-            }
+            ::SetWindowPos(webViewWindow, 0, 0, 0, width, height, SWP_NOMOVE);
+            ::InvalidateRect(webViewWindow, 0, TRUE);
+            ::SendMessage(webViewWindow, WM_PAINT, 0, 0);
 
             CComQIPtr<IWebFramePrivate> framePrivate(frame);
             if (!framePrivate)

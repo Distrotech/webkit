@@ -1,3 +1,13 @@
+2007-04-03  Adam Roben  <aroben@apple.com>
+
+        Rubberstamped by Adele.
+
+        Make all layout tests paint to match Mac DRT. This fixes many tests in
+        svg/hixie.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (dump): Always force a paint.
+
 2007-04-02  Anders Carlsson  <andersca@apple.com>
 
         * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree.sln:
