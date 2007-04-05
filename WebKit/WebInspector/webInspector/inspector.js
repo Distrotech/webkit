@@ -510,53 +510,6 @@ function loaded()
     jsPropertiesScrollArea = new AppleScrollArea(document.getElementById("jsPropertiesScrollview"),
         setUpScrollbar("jsPropertiesScrollbar"));
 
-    // much better AppleScrollArea reveal
-    AppleScrollArea.prototype.reveal = function(node) {
-        var offsetY = 0;
-        var obj = node;
-        do {
-            offsetY += obj.offsetTop;
-            obj = obj.offsetParent;
-        } while (obj && obj != this.content);
-
-        var offsetX = 0;
-        obj = node;
-        do {
-            offsetX += obj.offsetLeft;
-            obj = obj.offsetParent;
-        } while (obj && obj != this.content);
-
-        var top = this.content.scrollTop;
-        var height = this.viewHeight;
-        if ((top + height) < (offsetY + node.clientHeight)) 
-            this.verticalScrollTo(offsetY - height + node.clientHeight);
-        else if (top > offsetY)
-            this.verticalScrollTo(offsetY);
-
-        var left = this.content.scrollLeft;
-        var width = this.viewWidth;
-        if ((left + width) < (offsetX + node.clientWidth)) 
-            this.horizontalScrollTo(offsetX - width + node.clientWidth);
-        else if (left > offsetX)
-            this.horizontalScrollTo(offsetX);
-    }
-
-    // Change the standard show/hide to include the entire scrollbar.
-    // This lets the content reflow to use the additional space when the scrollbar is hidden.
-    AppleScrollbar.prototype.hide = function() {
-        this._track.style.display = "none";
-        this.scrollbar.style.display = "none";
-        this.hidden = true;
-    }
-    AppleScrollbar.prototype.show = function() {
-        this._track.style.display = "block";
-        this.scrollbar.style.removeProperty("display");
-        if (this.hidden) {
-            this.hidden = false;
-            this.refresh();
-        }
-    }
-
     window.addEventListener("resize", refreshScrollbars, true);
     document.addEventListener("click", changeFocus, true);
     document.addEventListener("keypress", documentKeypress, true);
@@ -1563,11 +1516,4 @@ function updatePropertiesPane()
     }
 
     jsPropertiesScrollArea.refresh();
-}
-
-// This is a workaround for rdar://4901491 - Dashboard AppleClasses try to set a NaN value and break the scrollbar.
-AppleVerticalScrollbar.prototype._setObjectLength = function(object, length)
-{
-    if (!isNaN(length))
-        object.style.height = length + "px";
 }

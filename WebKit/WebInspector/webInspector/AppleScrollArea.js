@@ -213,22 +213,31 @@ AppleScrollArea.prototype.reveal = function(element)
 {
 	var offsetY = 0;
 	var obj = element;
-	do
-	{
+	do {
 		offsetY += obj.offsetTop;
 		obj = obj.offsetParent;
 	} while (obj && obj != this.content);
-	
+
 	var offsetX = 0;
 	obj = element;
-	do
-	{
+	do {
 		offsetX += obj.offsetLeft;
 		obj = obj.offsetParent;
 	} while (obj && obj != this.content);
-	
-	this.verticalScrollTo(offsetY);
-	this.horizontalScrollTo(offsetX);
+
+	var top = this.content.scrollTop;
+	var height = this.viewHeight;
+	if ((top + height) < (offsetY + element.clientHeight)) 
+		this.verticalScrollTo(offsetY - height + element.clientHeight);
+	else if (top > offsetY)
+		this.verticalScrollTo(offsetY);
+
+	var left = this.content.scrollLeft;
+	var width = this.viewWidth;
+	if ((left + width) < (offsetX + element.clientWidth)) 
+		this.horizontalScrollTo(offsetX - width + element.clientWidth);
+	else if (left > offsetX)
+		this.horizontalScrollTo(offsetX);
 }
 
 

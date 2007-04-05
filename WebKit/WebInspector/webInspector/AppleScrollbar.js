@@ -361,13 +361,16 @@ AppleScrollbar.prototype.setAutohide = function(autohide)
 AppleScrollbar.prototype.hide = function()
 {
 	this._track.style.display = "none";
+	this.scrollbar.style.display = "none";
 	this.hidden = true;
 }
 
 AppleScrollbar.prototype.show = function()
 {
 	this._track.style.display = "block";
+	this.scrollbar.style.removeProperty("display");
 	this.hidden = false;
+	this.refresh();
 }
 
 AppleScrollbar.prototype.setSize = function(size)
@@ -560,7 +563,10 @@ AppleVerticalScrollbar.prototype._setObjectSize = function(object, size)
 { object.style.width = size + "px"; }
 
 AppleVerticalScrollbar.prototype._setObjectLength = function(object, length)
-{ object.style.height = length + "px"; }
+{
+	if (!isNaN(length))
+		object.style.height = length + "px";
+}
 
 AppleVerticalScrollbar.prototype._setObjectStart = function(object, start)
 { object.style.top = start + "px"; }
@@ -709,7 +715,10 @@ AppleHorizontalScrollbar.prototype._setObjectSize = function(object, size)
 { object.style.height = size + "px"; }
 
 AppleHorizontalScrollbar.prototype._setObjectLength = function(object, length)
-{ object.style.width = length + "px"; }
+{
+	if (!isNaN(length))
+		object.style.height = length + "px";
+}
 
 AppleHorizontalScrollbar.prototype._setObjectStart = function(object, start)
 { object.style.left = start + "px"; }
