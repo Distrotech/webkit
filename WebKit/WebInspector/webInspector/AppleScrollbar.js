@@ -369,8 +369,10 @@ AppleScrollbar.prototype.show = function()
 {
 	this._track.style.display = "block";
 	this.scrollbar.style.removeProperty("display");
-	this.hidden = false;
-	this.refresh();
+	if (this.hidden) {
+		this.hidden = false;
+		this.refresh();
+	}
 }
 
 AppleScrollbar.prototype.setSize = function(size)
