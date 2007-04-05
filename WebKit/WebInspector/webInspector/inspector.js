@@ -867,10 +867,20 @@ function updateTreeOutline()
     var currentNode = rootNode;
     while (currentNode) {
         var option = document.createElement("option");
+        option.representedNode = currentNode;
         option.textContent = nodeDisplayName.call(currentNode);
-        rootPopup.appendChild(option);
+        if (currentNode.isSameNode(rootNode))
+            option.selected = true;
+        rootPopup.insertBefore(option, rootPopup.firstChild);
         currentNode = currentNode.parentNode;
     }
+}
+
+function selectNewRoot(event)
+{
+    var rootPopup = document.getElementById("treePopup");
+    var option = rootPopup.options[rootPopup.selectedIndex];
+    Inspector.setRootDOMNode(option.representedNode);
 }
 
 function treeKeypress(event)
