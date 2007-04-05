@@ -30,11 +30,11 @@
 
 #import <Foundation/NSObject.h>
 #import <WebKit/WebInspector.h>
-#import <WebKit/DOMCore.h>
+#import <WebKit/DOMNode.h>
 
+@class DOMHTMLDocument;
 @class WebView;
 @class WebFrame;
-@class DOMHTMLDocument;
 @class WebNodeHighlight;
 
 @interface WebInspectorPrivate : NSObject
@@ -61,8 +61,6 @@
 - (void)_update;
 - (void)_updateRoot;
 - (void)_updateSystemColors;
-- (void)_updateTreeScrollbar;
-- (void)_webFrameDetached:(WebFrame *)frame;
 @end
 
 @interface DOMNode (DOMNodeInspectorAdditions)

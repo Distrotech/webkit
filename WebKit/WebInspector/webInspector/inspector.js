@@ -513,6 +513,7 @@ function loaded()
     window.addEventListener("resize", refreshScrollbars, true);
     document.addEventListener("click", changeFocus, true);
     document.addEventListener("keypress", documentKeypress, true);
+    document.getElementById("splitter").addEventListener("mousedown", topAreaResizeDragStart, true);
 
     currentFocusElement = document.getElementById("tree");
 
@@ -851,6 +852,8 @@ function updateTreeOutline()
     treeOutline.treeRoot = true;
     treeOutline.innerText = ""; // clear the existing tree
 
+    treeOutlineScrollArea.refresh();
+
     if (!rootNode)
         return;
 
@@ -983,6 +986,7 @@ function updatePanes()
 {
     for (var i = 0; i < tabNames.length; i++)
         paneUpdateState[tabNames[i]] = false;
+    toggleNoSelection((Inspector.focusedDOMNode() ? false : true));
     if (noSelection)
         return;
     eval("update" + currentPane.charAt(0).toUpperCase() + currentPane.substr(1) + "Pane()");    
@@ -1526,4 +1530,58 @@ function updatePropertiesPane()
     }
 
     jsPropertiesScrollArea.refresh();
+}
+
+function dividerDragStart(element, dividerDrag, dividerDragEnd, event, cursor) 
+{
+    element.dragging = true;
+    element.dragLastY = event.clientY + window.scrollY;
+    element.dragLastX = event.clientX + window.scrollX;
+    document.addEventListener("mousemove", dividerDrag, true);
+    document.addEventListener("mouseup", dividerDragEnd, true);
+    document.body.style.cursor = cursor;
+    event.preventDefault();
+}
+
+function dividerDragEnd(element, dividerDrag, dividerDragEnd, event) 
+{
+    element.dragging = false;
+    document.removeEventListener("mousemove", dividerDrag, true);
+    document.removeEventListener("mouseup", dividerDragEnd, true);
+    document.body.style.removeProperty("cursor");
+}
+
+function topAreaResizeDragStart(event) 
+{
+    dividerDragStart(document.getElementById("splitter"), topAreaResizeDrag, topAreaResizeDragEnd, event, "row-resize");
+}
+
+function topAreaResizeDrag(event) 
+{
+    var element = document.getElementById("splitter");
+    if (element.dragging == true) {
+        var y = event.clientY + window.scrollY;
+        var delta = element.dragLastY - y;
+        element.dragLastY = y;
+
+        var top = document.getElementById("top");
+        top.style.height = (top.clientHeight - delta) + "px";
+
+        var splitter = document.getElementById("splitter");
+        splitter.style.top = (splitter.offsetTop - delta) + "px";
+
+        var bottom = document.getElementById("bottom");
+        bottom.style.top = (bottom.offsetTop - delta) + "px";
+
+        window.resizeBy(0, (delta * -1));
+
+        treeOutlineScrollArea.refresh();
+
+        event.preventDefault();
+    }
+}
+
+function topAreaResizeDragEnd(event) 
+{
+    dividerDragEnd(document.getElementById("splitter"), topAreaResizeDrag, topAreaResizeDragEnd, event);
 }

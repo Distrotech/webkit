@@ -337,64 +337,6 @@
     NSEvent *event = [NSEvent mouseEventWithType:NSLeftMouseUp location:[currentEvent locationInWindow] modifierFlags:[currentEvent modifierFlags] timestamp:[currentEvent timestamp] windowNumber:[[currentEvent window] windowNumber] context:[currentEvent context] eventNumber:[currentEvent eventNumber] clickCount:[currentEvent clickCount] pressure:[currentEvent pressure]];
     [[[[_private->webView mainFrame] frameView] documentView] mouseUp:event];
 }
-
-- (void)resizeTopArea
-{
-    NSWindow *window = [self window];
-    NSEvent *event = [window currentEvent];
-    NSPoint lastLocation = [window convertBaseToScreen:[event locationInWindow]];
-    NSRect lastFrame = [window frame];
-    NSSize minSize = [window minSize];
-    NSSize maxSize = [window maxSize];
-    BOOL mouseUpOccurred = NO;
-
-    DOMHTMLElement *topArea = (DOMHTMLElement *)[_private->domDocument getElementById:@"top"];
-    DOMHTMLElement *splitter = (DOMHTMLElement *)[_private->domDocument getElementById:@"splitter"];
-    DOMHTMLElement *bottomArea = (DOMHTMLElement *)[_private->domDocument getElementById:@"bottom"];
-
-    while (!mouseUpOccurred) {
-        // set mouseUp flag here, but process location of event before exiting from loop, leave mouseUp in queue
-        event = [window nextEventMatchingMask:(NSLeftMouseDraggedMask | NSLeftMouseUpMask) untilDate:[NSDate distantFuture] inMode:NSEventTrackingRunLoopMode dequeue:YES];
-
-        if ([event type] == NSLeftMouseUp)
-            mouseUpOccurred = YES;
-
-        NSPoint newLocation = [window convertBaseToScreen:[event locationInWindow]];
-        if (NSEqualPoints(newLocation, lastLocation))
-            continue;
-
-        NSRect proposedRect = lastFrame;
-        long delta = newLocation.y - lastLocation.y;
-        proposedRect.size.height -= delta;
-        proposedRect.origin.y += delta;
-
-        if (proposedRect.size.height < minSize.height) {
-            proposedRect.origin.y -= minSize.height - proposedRect.size.height;
-            proposedRect.size.height = minSize.height;
-        } else if (proposedRect.size.height > maxSize.height) {
-            proposedRect.origin.y -= maxSize.height - proposedRect.size.height;
-            proposedRect.size.height = maxSize.height;
-        }
-
-        NSString *newValue = [NSString stringWithFormat:@"%dpx", [topArea clientHeight] - delta];
-        [[topArea style] setProperty:@"height" value:newValue priority:@""];
-
-        newValue = [NSString stringWithFormat:@"%dpx", [splitter offsetTop] - delta];
-        [[splitter style] setProperty:@"top" value:newValue priority:@""];
-
-        newValue = [NSString stringWithFormat:@"%dpx", [bottomArea offsetTop] - delta];
-        [[bottomArea style] setProperty:@"top" value:newValue priority:@""];
-
-        [window setFrame:proposedRect display:YES];
-        lastLocation = newLocation;
-        lastFrame = proposedRect;
-
-        [self _updateTreeScrollbar];
-    }
-
-    // post the mouse up event back to the queue so the WebView can get it
-    [window postEvent:event atStart:YES];
-}
 @end
 
 #pragma mark -
@@ -453,27 +395,14 @@
 
 - (void)_update
 {
-    if (_private->webViewLoaded) {
-        if ([self focusedDOMNode]) {
-            [[_private->webView windowScriptObject] callWebScriptMethod:@"toggleNoSelection" withArguments:[NSArray arrayWithObject:[NSNumber numberWithBool:NO]]];
-            [[_private->webView windowScriptObject] callWebScriptMethod:@"updatePanes" withArguments:nil];
-        } else
-            [[_private->webView windowScriptObject] callWebScriptMethod:@"toggleNoSelection" withArguments:[NSArray arrayWithObject:[NSNumber numberWithBool:YES]]];
-    }
+    if (_private->webViewLoaded)
+        [[_private->webView windowScriptObject] callWebScriptMethod:@"updatePanes" withArguments:nil];
 }
 
 - (void)_updateRoot
 {
-    if (!_private->webViewLoaded)
-        return;
-
-    [[_private->webView windowScriptObject] callWebScriptMethod:@"updateTreeOutline" withArguments:nil];
-}
-
-- (void)_updateTreeScrollbar
-{
     if (_private->webViewLoaded)
-        [[_private->webView windowScriptObject] evaluateWebScript:@"treeOutlineScrollArea.refresh()"];
+        [[_private->webView windowScriptObject] callWebScriptMethod:@"updateTreeOutline" withArguments:nil];
 }
 
 - (void)_updateSystemColors
