@@ -138,8 +138,7 @@
 
         [window setContentView:_private->webView];
 
-//        NSString *path = [[NSBundle bundleForClass:[self class]] pathForResource:@"inspector" ofType:@"html" inDirectory:@"webInspector"];
-        NSString *path = @"/Users/timothy/Work/Safari-TOT/OpenSource/WebKit/WebInspector/webInspector/inspector.html";
+        NSString *path = [[NSBundle bundleForClass:[self class]] pathForResource:@"inspector" ofType:@"html" inDirectory:@"webInspector"];
         [[_private->webView mainFrame] loadRequest:[[[NSURLRequest alloc] initWithURL:[NSURL fileURLWithPath:path]] autorelease]];
 
         [self setWindow:window];
