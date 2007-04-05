@@ -58,8 +58,8 @@ namespace WebCore {
 
 #define MIN_DRAG_LABEL_WIDTH_BEFORE_CLIP        120
 
-// Observation says max size is 208x208
-#define MAX_DRAG_LABEL_WIDTH                    208
+// Observation says max size is 200x200
+#define MAX_DRAG_LABEL_WIDTH                    200
 #define MAX_DRAG_LABEL_STRING_WIDTH             (MAX_DRAG_LABEL_WIDTH - 2 * DRAG_LABEL_BORDER_X)
 
 #define DRAG_LINK_LABEL_FONT_SIZE   11
@@ -202,14 +202,14 @@ DragImageRef WebDragClient::createDragImageForLink(KURL& url, const String& inLa
                       labelSize.height() + DRAG_LABEL_BORDER_Y * 2);
 
     if (drawURLString) {
-        urlStringSize.setWidth(urlFont.width(urlRun)); //[urlString _web_widthWithFont: urlFont];
+        urlStringSize.setWidth(urlFont.width(urlRun));
         urlStringSize.setHeight(urlFont.ascent() + urlFont.descent()); 
         imageSize.setHeight(imageSize.height() + urlStringSize.height());
         if (urlStringSize.width() > MAX_DRAG_LABEL_STRING_WIDTH) {
-            imageSize.setWidth(MAX_DRAG_LABEL_STRING_WIDTH);
+            imageSize.setWidth(MAX_DRAG_LABEL_WIDTH);
             clipURLString = true;
         } else {
-            imageSize.setWidth(std::max(labelSize.width() + DRAG_LABEL_BORDER_X * 2, urlStringSize.width() + DRAG_LABEL_BORDER_X * 2));
+            imageSize.setWidth(std::max(labelSize.width(), urlStringSize.width()) + DRAG_LABEL_BORDER_X * 2);
         }
     }
 

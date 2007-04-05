@@ -1,3 +1,18 @@
+2007-04-04  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Ada.
+        
+        Fix <rdar://problem/5111027> Dragging a link on page
+        shows URL thumbnail as nearly-transparent instead 
+        semi-transparent
+
+        Error in createDragImageForLink led me to get wrong 
+        maximum drag image size, now logic and maximum drag 
+        image size corrected.
+
+        * WebDragClient.cpp:
+        (WebDragClient::createDragImageForLink):
+
 2007-04-04  Adam Roben  <aroben@apple.com>
 
         Release build fix for TestNetscapePlugin.
