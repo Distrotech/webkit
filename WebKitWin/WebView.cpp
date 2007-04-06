@@ -702,7 +702,6 @@ bool WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
 
         // Always start capturing events when the mouse goes down in our HWND.
         ::SetCapture(m_viewWindow);
-        m_page->mainFrame()->view()->setCapturingMouse(true);
 
         if (((messageTime - globalPrevMouseDownTime) < (LONG)::GetDoubleClickTime()) && 
             insideThreshold &&
@@ -726,17 +725,13 @@ bool WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
         globalPrevButton = mouseEvent.button();
         globalPrevPoint = mouseEvent.pos();
         mouseEvent.setClickCount(globalClickCount);
-        Widget* capturingTarget = m_page->mainFrame()->view()->capturingTarget();
-        ASSERT(capturingTarget);
-        handled = capturingTarget->handleMouseReleaseEvent(mouseEvent);
-        capturingTarget->setCapturingMouse(false);
+        m_page->mainFrame()->view()->handleMouseReleaseEvent(mouseEvent);
         ::ReleaseCapture();
     } else if (message == WM_MOUSEMOVE) {
         if (!insideThreshold)
             globalClickCount = 0;
         mouseEvent.setClickCount(globalClickCount);
-        Widget* capturingTarget = m_page->mainFrame()->view()->capturingTarget();
-        handled = capturingTarget->handleMouseMoveEvent(mouseEvent);
+        handled = m_page->mainFrame()->view()->handleMouseMoveEvent(mouseEvent);
 
         if (m_uiDelegate) {
             COMPtr<IPropertyBag> props;

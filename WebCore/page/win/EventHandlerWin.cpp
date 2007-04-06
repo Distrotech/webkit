@@ -46,8 +46,6 @@ namespace WebCore {
 
 bool EventHandler::passMousePressEventToSubframe(MouseEventWithHitTestResults& mev, Frame* subframe)
 {
-    if (m_frame->view()->capturingMouse())
-        subframe->view()->setCapturingMouse(true);
     subframe->eventHandler()->handleMousePressEvent(mev.event());
     return true;
 }

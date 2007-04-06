@@ -250,38 +250,6 @@ void Widget::invalidateRect(const IntRect& r)
     outermostView->addToDirtyRegion(windowRect);
 }
 
-bool Widget::capturingMouse() const
-{
-    // This is true only if we are at the end of the capturing chain, i.e., if we are the capturingTarget.
-    return data->capturingChild == this;
-}
-
-void Widget::setCapturingMouse(bool capturingMouse)
-{
-    data->capturingChild = capturingMouse ? this : 0;
-    if (parent())
-        parent()->setCapturingChild(capturingMouse ? this : 0);
-}
-
-Widget* Widget::capturingTarget()
-{
-    if (!capturingChild() || capturingChild() == this)
-        return this;
-    return capturingChild()->capturingTarget(); 
-}
-
-Widget* Widget::capturingChild()
-{
-    return data->capturingChild;
-}
-
-void Widget::setCapturingChild(Widget* w)
-{
-    data->capturingChild = w;
-    if (parent())
-        parent()->setCapturingChild(w ? this : 0);
-}
-
 void Widget::setFocus()
 {
 }

@@ -152,15 +152,6 @@ HRESULT STDMETHODCALLTYPE WebScrollBar::value(
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE WebScrollBar::capturingMouse( 
-    /* [retval][out] */ BOOL* result)
-{
-    if (!result)
-        return E_POINTER;
-    *result = m_scrollBar->capturingMouse() ? TRUE : FALSE;
-    return S_OK;
-}
-
 HRESULT STDMETHODCALLTYPE WebScrollBar::paint( 
     /* [in] */ HDC dc,
     /* [in] */ RECT damageRect)

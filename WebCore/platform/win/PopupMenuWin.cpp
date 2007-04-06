@@ -70,6 +70,7 @@ PopupMenu::PopupMenu(PopupMenuClient* client)
     , m_scrollOffset(0)
     , m_wheelDelta(0)
     , m_focusedIndex(0)
+    , m_scrollbarCapturingMouse(false)
 {
 }
 
@@ -694,7 +695,7 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 IntPoint mousePoint(MAKEPOINTS(lParam));
                 if (popup->scrollBar()) {
                     IntRect scrollBarRect = popup->scrollBar()->frameGeometry();
-                    if (popup->scrollBar()->capturingMouse() || scrollBarRect.contains(mousePoint)) {
+                    if (popup->scrollbarCapturingMouse() || scrollBarRect.contains(mousePoint)) {
                         // Put the point into coordinates relative to the scroll bar
                         mousePoint.move(-scrollBarRect.x(), -scrollBarRect.y());
                         PlatformMouseEvent event(hWnd, message, wParam, MAKELPARAM(mousePoint.x(), mousePoint.y()));
@@ -725,11 +726,12 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 IntPoint mousePoint(MAKEPOINTS(lParam));
                 if (popup->scrollBar()) {
                     IntRect scrollBarRect = popup->scrollBar()->frameGeometry();
-                    if (popup->scrollBar()->capturingMouse() || scrollBarRect.contains(mousePoint)) {
+                    if (scrollBarRect.contains(mousePoint)) {
                         // Put the point into coordinates relative to the scroll bar
                         mousePoint.move(-scrollBarRect.x(), -scrollBarRect.y());
                         PlatformMouseEvent event(hWnd, message, wParam, MAKELPARAM(mousePoint.x(), mousePoint.y()));
                         popup->scrollBar()->handleMousePressEvent(event);
+                        popup->setScrollbarCapturingMouse(true);
                         break;
                     }
                 }
@@ -743,8 +745,8 @@ static LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 if (popup->scrollBar()) {
                     ::ReleaseCapture();
                     IntRect scrollBarRect = popup->scrollBar()->frameGeometry();
-                    if (popup->scrollBar()->capturingMouse() || scrollBarRect.contains(mousePoint)) {
-                        popup->scrollBar()->setCapturingMouse(false);
+                    if (popup->scrollbarCapturingMouse() || scrollBarRect.contains(mousePoint)) {
+                        popup->setScrollbarCapturingMouse(false);
                         // Put the point into coordinates relative to the scroll bar
                         mousePoint.move(-scrollBarRect.x(), -scrollBarRect.y());
                         PlatformMouseEvent event(hWnd, message, wParam, MAKELPARAM(mousePoint.x(), mousePoint.y()));

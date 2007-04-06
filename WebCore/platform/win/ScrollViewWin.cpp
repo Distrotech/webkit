@@ -555,14 +555,7 @@ void ScrollView::addChild(Widget* child)
 }
 
 void ScrollView::removeChild(Widget* child)
-{ 
-    if (child == capturingChild()) {
-        // If our child (or one of its descendants is capturing mouse events but suddenly goes away,
-        // we become the new capturer.
-        setCapturingChild(0);
-        setCapturingMouse(true);
-    }
-
+{
     child->setParent(0);
     m_data->m_children.remove(child);
 }

@@ -101,8 +101,6 @@ interface IWebScrollBarPrivate : IUnknown
 
     HRESULT value([out, retval] int* value);
 
-    HRESULT capturingMouse([out, retval] BOOL* result);
-
     HRESULT paint([in] HDC dc, [in] RECT damageRect);
 
     HRESULT frameGeometry([out, retval] RECT* bounds);

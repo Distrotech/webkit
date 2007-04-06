@@ -1,3 +1,20 @@
+2007-04-06  Dave Hyatt  <hyatt@apple.com>
+
+        Internal side of fix for bug 13274.
+
+        Reviewed by olliej
+
+        * page/win/EventHandlerWin.cpp:
+        (WebCore::EventHandler::passMousePressEventToSubframe):
+        * platform/win/PlatformScrollBarSafari.cpp:
+        (WebCore::PlatformScrollbar::handleMousePressEvent):
+        * platform/win/PopupMenuWin.cpp:
+        (WebCore::PopupMenu::PopupMenu):
+        (WebCore::PopupWndProc):
+        * platform/win/ScrollViewWin.cpp:
+        (WebCore::ScrollView::removeChild):
+        * platform/win/WidgetWin.cpp:
+
 2007-04-07  Mark Rowe  <mrowe@apple.com>
 
         Internal build fox after opensource r20753.

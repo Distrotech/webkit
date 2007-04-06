@@ -83,10 +83,7 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE value( 
         /* [retval][out] */ int* value);
-
-    virtual HRESULT STDMETHODCALLTYPE capturingMouse( 
-        /* [retval][out] */ BOOL* result);
-    
+   
     virtual HRESULT STDMETHODCALLTYPE paint( 
         /* [in] */ HDC dc,
         /* [in] */ RECT damageRect);

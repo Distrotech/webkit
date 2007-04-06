@@ -484,12 +484,10 @@ bool PlatformScrollbar::handleMouseOutEvent(const PlatformMouseEvent& evt)
 
 bool PlatformScrollbar::handleMousePressEvent(const PlatformMouseEvent& evt)
 {
-    setCapturingMouse(true);
     m_pressedPart = hitTest(evt);
     m_pressedPos = (m_orientation == HorizontalScrollbar ? convertFromContainingWindow(evt.pos()).x() : convertFromContainingWindow(evt.pos()).y());
     invalidatePart(m_pressedPart);
     autoscrollPressedPart(cInitialTimerDelay);
-
     return true;
 }
 
