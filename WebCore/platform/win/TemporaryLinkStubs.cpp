@@ -84,8 +84,6 @@ void Widget::disableFlushDrawing() { STOP_NOIMPL(); }
 GraphicsContext* Widget::lockDrawingFocus() { STOP_NOIMPL(); return 0; }
 void Widget::unlockDrawingFocus(GraphicsContext*) { STOP_NOIMPL(); }
 
-PlatformMouseEvent::PlatformMouseEvent(const CurrentEventTag&) { LOG_NOIMPL(); }
-
 int WebCore::findNextSentenceFromIndex(UChar const*,int,int,bool) { LOG_NOIMPL(); return 0; }
 void WebCore::findSentenceBoundary(UChar const*,int,int,int*,int*) { LOG_NOIMPL(); }
 

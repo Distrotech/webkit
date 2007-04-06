@@ -31,8 +31,6 @@
 
 namespace WebCore {
 
-const PlatformMouseEvent::CurrentEventTag PlatformMouseEvent::currentEvent = {};
-
 #define HIGH_BIT_MASK_SHORT 0x8000
 
 static IntPoint positionForEvent(HWND hWnd, LPARAM lParam)
