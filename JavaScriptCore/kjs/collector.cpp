@@ -37,14 +37,19 @@
 #if PLATFORM(DARWIN)
 
 #include <mach/mach_port.h>
+#include <mach/mach_init.h>
 #include <mach/task.h>
 #include <mach/thread_act.h>
+#include <mach/vm_map.h>
 
 #elif PLATFORM(WIN_OS)
 
 #include <windows.h>
 
 #elif PLATFORM(UNIX)
+
+#include <stdlib.h>
+#include <sys/mman.h>
 
 #if HAVE(PTHREAD_NP_H)
 #include <pthread_np.h>
@@ -59,14 +64,13 @@ using std::max;
 namespace KJS {
 
 
-
 // tunable parameters
 
 template<bool is32Bit, bool is64Bit> struct CellSize;
 template<> struct CellSize<true, false> { static const size_t m_value = 48; }; // 32-bit
 template<> struct CellSize<false, true> { static const size_t m_value = 80; }; // 64-bit
 
-const size_t BLOCK_SIZE = (8 * 4096);
+const size_t BLOCK_SIZE = (16 * 4096); // 64k
 const size_t SPARE_EMPTY_BLOCKS = 2;
 const size_t MIN_ARRAY_SIZE = 14;
 const size_t GROWTH_FACTOR = 2;
@@ -74,6 +78,8 @@ const size_t LOW_WATER_FACTOR = 4;
 const size_t ALLOCATIONS_PER_COLLECTION = 1000;
 
 // derived constants
+const size_t PTR_IN_BLOCK_MASK = (BLOCK_SIZE - 1);
+const size_t BLOCK_MASK = (~PTR_IN_BLOCK_MASK);
 const size_t MINIMUM_CELL_SIZE = CellSize<sizeof(void*) == sizeof(uint32_t), sizeof(void*) == sizeof(uint64_t)>::m_value;
 const size_t CELL_ARRAY_LENGTH = (MINIMUM_CELL_SIZE / sizeof(double)) + (MINIMUM_CELL_SIZE % sizeof(double) != 0 ? 1 : 0);
 const size_t CELL_SIZE = CELL_ARRAY_LENGTH * sizeof(double);
@@ -134,6 +140,58 @@ public:
 bool GCLock::isLocked = false;
 #endif
 
+static CollectorBlock* allocateBlock()
+{
+#if PLATFORM(DARWIN)    
+    vm_address_t ptr = 0;
+    vm_map(current_task(), &ptr, BLOCK_SIZE, PTR_IN_BLOCK_MASK, VM_FLAGS_ANYWHERE, MEMORY_OBJECT_NULL, 0, FALSE, VM_PROT_DEFAULT, VM_PROT_DEFAULT, VM_INHERIT_DEFAULT);
+#elif PLATFORM(WIN)
+     // windows virtual address granularity is naturally 64k
+    LPVOID ptr = VirtualAlloc(NULL lpAddress, BLOCK_SIZE, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+#elif HAVE(POSIX_MEMALIGN)
+    void* ptr;
+    posix_memalign(ptr, BLOCK_SIZE, BLOCK_SIZE);
+#else
+    static size_t pagesize = getpagesize();
+    
+    size_t extra = 0;
+    if (BLOCK_SIZE > pagesize) {
+        extra = BLOCK_SIZE - pagesize;
+    }
+
+    void* result = mmap(NULL, BLOCK_SIZE + extra, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+
+    uintptr_t ptr = reinterpret_cast<uintptr_t>(result);
+    size_t adjust = 0;
+    if ((ptr & PTR_IN_BLOCK_MASK) != 0)
+        adjust = BLOCK_SIZE - (ptr & PTR_IN_BLOCK_MASK);
+
+    if (adjust > 0)
+        munmap(reinterpret_cast<void*>(ptr), adjust);
+
+    if (adjust < extra)
+        munmap(reinterpret_cast<void*>(ptr + adjust + BLOCK_SIZE), extra - adjust);
+
+    ptr += adjust;
+    memset(reinterpret_cast<void*>(ptr), 0, BLOCK_SIZE);
+#endif
+
+    return reinterpret_cast<CollectorBlock*>(ptr);
+}
+
+static void freeBlock(CollectorBlock* block)
+{
+#if PLATFORM(DARWIN)    
+    vm_deallocate(current_task(), reinterpret_cast<vm_address_t>(block), BLOCK_SIZE);
+#elif PLATFORM(WIN)
+    VirtualFree(block, BLOCK_SIZE, MEM_RELEASE);
+#elif HAVE(POSIX_MEMALIGN)
+    free(block);
+#else
+    munmap(block, BLOCK_SIZE);
+#endif
+}
+
 void* Collector::allocate(size_t s)
 {
   ASSERT(JSLock::lockCount() > 0);
@@ -183,7 +241,7 @@ allocateNewBlock:
       heap.blocks = static_cast<CollectorBlock **>(fastRealloc(heap.blocks, numBlocks * sizeof(CollectorBlock *)));
     }
 
-    targetBlock = static_cast<CollectorBlock *>(fastCalloc(1, sizeof(CollectorBlock)));
+    targetBlock = allocateBlock();
     targetBlock->freeList = targetBlock->cells;
     targetBlockUsedCells = 0;
     heap.blocks[usedBlocks] = targetBlock;
@@ -788,7 +846,7 @@ bool Collector::collect()
       emptyBlocks++;
       if (emptyBlocks > SPARE_EMPTY_BLOCKS) {
 #if !DEBUG_COLLECTOR
-        fastFree(curBlock);
+        freeBlock(curBlock);
 #endif
         // swap with the last block so we compact as we go
         heap.blocks[block] = heap.blocks[heap.usedBlocks - 1];

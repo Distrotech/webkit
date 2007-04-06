@@ -1,3 +1,15 @@
+2007-04-06  Maciej Stachowiak  <mjs@apple.com>
+
+        Not reviewed, experimental change.
+        
+        - change blocks to 64k in size, and use various platform-specific calls to allocate at 64k-aligned addresses
+
+        * kjs/collector.cpp:
+        (KJS::allocateBlock):
+        (KJS::freeBlock):
+        (KJS::Collector::allocate):
+        (KJS::Collector::collect):
+
 2007-04-05  Maciej Stachowiak  <mjs@apple.com>
 
         Not reviewed, experimental change.
