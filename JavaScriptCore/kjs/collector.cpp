@@ -67,8 +67,8 @@ namespace KJS {
 // tunable parameters
 
 template<bool is32Bit, bool is64Bit> struct CellSize;
-template<> struct CellSize<true, false> { static const size_t m_value = 48; }; // 32-bit
-template<> struct CellSize<false, true> { static const size_t m_value = 80; }; // 64-bit
+template<> struct CellSize<true, false> { static const size_t m_value = 40; }; // 32-bit
+template<> struct CellSize<false, true> { static const size_t m_value = 64; }; // 64-bit
 
 const size_t BLOCK_SIZE = (16 * 4096); // 64k
 const size_t SPARE_EMPTY_BLOCKS = 2;
