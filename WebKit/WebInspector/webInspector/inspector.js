@@ -865,6 +865,18 @@ function updateTreeOutline()
     outlineElement.select();
 
     var rootPopup = document.getElementById("treePopup");
+    
+    var resetPopup = true;
+    for (var i = 0; i < rootPopup.options.length; ++i) {
+        if (rootPopup.options[i].representedNode == rootNode) {
+            rootPopup.options[i].selected = true;
+            resetPopup = false;
+            break;
+        }
+    }
+    if (!resetPopup)
+        return;
+    
     rootPopup.innerHTML = ""; // reset the popup
 
     var currentNode = rootNode;

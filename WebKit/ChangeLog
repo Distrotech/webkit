@@ -1,3 +1,15 @@
+2007-04-05  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Tim.
+
+        When navigating to a parent node via the inspector's popup menu, don't
+        blow away all the children in the list so that it's easy to get back
+        to them later.
+
+        * WebInspector/webInspector/inspector.js:
+        (function updateTreeOutline): Don't reset the popup if we're
+        navigating to a node already in the popup.
+
 2007-04-03  Anders Carlsson  <andersca@apple.com>
 
         Reviewed by Darin.
