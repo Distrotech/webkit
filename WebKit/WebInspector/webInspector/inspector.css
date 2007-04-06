@@ -42,7 +42,7 @@ a:link {
     color: inherit;
 }
 
-button {
+button, select, input {
     -webkit-dashboard-region: dashboard-region(control rectangle);
 }
 
