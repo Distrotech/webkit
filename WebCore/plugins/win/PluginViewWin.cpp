@@ -42,6 +42,7 @@
 #include "MouseEvent.h"
 #include "NotImplemented.h"
 #include "Page.h"
+#include "PlatformMouseEvent.h"
 #include "PluginPackageWin.h"
 #include "kjs_binding.h"
 #include "kjs_proxy.h"
@@ -365,9 +366,21 @@ void PluginViewWin::handleMouseEvent(MouseEvent* event)
     if (event->shiftKey())
         npEvent.wParam |= MK_SHIFT;
 
-    if (event->type() == mousemoveEvent)
-        // FIXME: We should find a way to get the button number here and put it in npEvent.wParam.
+    if (event->type() == mousemoveEvent) {
         npEvent.event = WM_MOUSEMOVE;
+        if (event->buttonDown())
+            switch (event->button()) {
+                case LeftButton:
+                    npEvent.wParam |= MK_LBUTTON;
+                    break;
+                case MiddleButton:
+                    npEvent.wParam |= MK_MBUTTON;
+                    break;
+                case RightButton:
+                    npEvent.wParam |= MK_RBUTTON;
+                break;
+            }
+    }
     else if (event->type() == mousedownEvent) {
         switch (event->button()) {
             case 0:

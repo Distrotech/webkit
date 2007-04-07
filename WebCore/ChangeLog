@@ -1,3 +1,21 @@
+2007-04-06  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Adam.
+
+        Fix for rdar://problem/5097227 Can't drag Flash-based 
+        scrollbar on mtv.com
+        
+        The problem was when creating a mouse move event for the 
+        plugin we weren't passing on the mouse button state.  
+        
+        The opensource side of this patch adds logic that allows 
+        us to distinguish between a MouseEvent with NoButton and
+        a MouseEvent with LeftButton, so we can then provide the 
+        correct information to the plugin.
+
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::handleMouseEvent):
+
 2007-04-06  Dave Hyatt  <hyatt@apple.com>
 
         Internal side of fix for bug 13274.
