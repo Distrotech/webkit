@@ -1,0 +1,31 @@
+<?php
+$title = "Getting the Code";
+include("../header.inc");
+?>
+<h2>Getting WebKit</h2>
+<p>To download a pre-built bundle containing the latest WebKit visit <a href="http://nightly.webkit.org/">WebKit Nightly Builds</a>.</p>
+
+<h2>Getting the Code</h2>
+<p>To download the WebKit source tree:</p>
+<ol>
+<li><p>Install a Subversion Client</p>
+<p>Subversion (svn) is the source code management tool used by the WebKit Open Source Project. A <a href="http://homepage.mac.com/hiirem/svkbuilds.html">Subversion 1.4 client for Mac OS X 10.4</a> is available.</p>
+<li><p>Open Terminal</p>
+<p>Terminal resides in /Applications/Utilities. The Finder Go menu provides a quick way to navigate there.</p>
+<li><p>Type this command to check out the WebKit source tree:</p>
+<p class="code">svn checkout http://svn.webkit.org/repository/webkit/trunk WebKit</p>
+</li>
+</ol>
+<p>Once the checkout has finished, the next step is
+<a href="build.html">building WebKit</a>.</p>
+
+<h2>Keeping up to Date</h2>
+<p>Type this command to update your source tree:</p>
+<p class="code">WebKit/WebKitTools/Scripts/update-webkit</p>
+<hr>
+<p>It's handy to put <tt>WebKit/WebKitTools/Scripts</tt> in your shell path so you can type commands like <tt>update-webkit</tt> without specifying a full path.</p>
+<h2>Browsing the code</h2>
+<p>It is also possible to browse the SVN repository online at <a href="http://trac.webkit.org/projects/webkit/browser">http://trac.webkit.org/project/webkit/browser</a>.
+<?php
+include("../footer.inc");
+?>

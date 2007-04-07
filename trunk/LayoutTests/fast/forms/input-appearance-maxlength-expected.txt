@@ -1,0 +1,5 @@
+This test changes the value of the text field by simulating typing, and then gets the value. 
+
+
+Test 1 Passed. Maxlength works for default value. Test 2 Passed. Maxlength works for inserted text.
+

@@ -1,0 +1,65 @@
+layer at (0,0) size 800x600
+  RenderView at (0,0) size 800x600
+layer at (0,0) size 800x600
+  RenderBlock {HTML} at (0,0) size 800x600
+    RenderBody {BODY} at (8,8) size 784x584 [bgcolor=#CCCCCC]
+      RenderBlock {P} at (0,0) size 784x16
+        RenderText {#text} at (0,0) size 352x16
+          text run at (0,0) width 352: "The style declarations which apply to the text below are:"
+      RenderBlock {PRE} at (0,30) size 784x80
+        RenderText {#text} at (0,0) size 252x80
+          text run at (0,0) width 112: ".zero { background: yellow }"
+          text run at (112,0) width 0: " "
+          text run at (0,16) width 252: ".one { margin-left: 25%; margin-right: 25%; background: white }"
+          text run at (252,16) width 0: " "
+          text run at (0,32) width 248: ".two { margin-left: 50%; margin-right: 0%; background: white }"
+          text run at (248,32) width 0: " "
+          text run at (0,48) width 104: ".three {margin-left: 25%;}"
+          text run at (104,48) width 0: " "
+          text run at (0,64) width 0: " "
+      RenderBlock {HR} at (0,124) size 784x2 [border: (1px inset #000000)]
+      RenderBlock {DIV} at (0,140) size 784x94 [bgcolor=#FFFF00]
+        RenderBlock {DIV} at (196,0) size 392x32 [bgcolor=#FFFFFF]
+          RenderBlock {P} at (0,0) size 392x32
+            RenderText {#text} at (0,0) size 391x32
+              text run at (0,0) width 391: "This paragraph should be centered within its yellow containing"
+              text run at (0,16) width 354: "block and its width should be half of the containing block."
+        RenderBlock {DIV} at (392,46) size 392x48 [bgcolor=#FFFFFF]
+          RenderBlock {P} at (0,0) size 392x48
+            RenderText {#text} at (0,0) size 384x48
+              text run at (0,0) width 344: "This paragraph should be right-aligned within its yellow"
+              text run at (0,16) width 384: "containing block and its width should be half of the containing"
+              text run at (0,32) width 35: "block."
+      RenderBlock {P} at (196,248) size 588x32
+        RenderText {#text} at (0,0) size 544x32
+          text run at (0,0) width 544: "This paragraph should have a left margin of 25% the width of its parent element, which"
+          text run at (0,16) width 356: "should require some extra text in order to test effectively."
+      RenderTable {TABLE} at (0,294) size 784x190 [border: (1px outset #808080)]
+        RenderTableSection {TBODY} at (1,1) size 782x188
+          RenderTableRow {TR} at (0,0) size 782x24
+            RenderTableCell {TD} at (0,0) size 782x24 [bgcolor=#C0C0C0] [border: (1px inset #808080)] [r=0 c=0 rs=1 cs=2]
+              RenderInline {STRONG} at (0,0) size 157x16
+                RenderText {#text} at (4,4) size 157x16
+                  text run at (4,4) width 157: "TABLE Testing Section"
+          RenderTableRow {TR} at (0,24) size 782x164
+            RenderTableCell {TD} at (0,94) size 12x24 [bgcolor=#C0C0C0] [border: (1px inset #808080)] [r=1 c=0 rs=1 cs=1]
+              RenderText {#text} at (4,4) size 4x16
+                text run at (4,4) width 4: " "
+            RenderTableCell {TD} at (12,24) size 770x164 [border: (1px inset #808080)] [r=1 c=1 rs=1 cs=1]
+              RenderBlock {DIV} at (4,4) size 762x110 [bgcolor=#FFFF00]
+                RenderBlock {DIV} at (190,0) size 382x48 [bgcolor=#FFFFFF]
+                  RenderBlock {P} at (0,0) size 382x48
+                    RenderText {#text} at (0,0) size 322x48
+                      text run at (0,0) width 322: "This paragraph should be centered within its yellow"
+                      text run at (0,16) width 315: "containing block and its width should be half of the"
+                      text run at (0,32) width 104: "containing block."
+                RenderBlock {DIV} at (381,62) size 381x48 [bgcolor=#FFFFFF]
+                  RenderBlock {P} at (0,0) size 381x48
+                    RenderText {#text} at (0,0) size 344x48
+                      text run at (0,0) width 344: "This paragraph should be right-aligned within its yellow"
+                      text run at (0,16) width 315: "containing block and its width should be half of the"
+                      text run at (0,32) width 104: "containing block."
+              RenderBlock {P} at (194,128) size 572x32
+                RenderText {#text} at (0,0) size 544x32
+                  text run at (0,0) width 544: "This paragraph should have a left margin of 25% the width of its parent element, which"
+                  text run at (0,16) width 356: "should require some extra text in order to test effectively."
