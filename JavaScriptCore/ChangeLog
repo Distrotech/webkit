@@ -1,6 +1,28 @@
 2007-04-08  Maciej Stachowiak  <mjs@apple.com>
 
         Not reviewed, experimental change.
+
+        - shrink RegexpObjectImp by 4 bytes
+        
+        Somewhat inexplicably, this seems to be a .33% speedup on JS iBench.
+        
+        * kjs/regexp_object.cpp:
+        (KJS::RegExpObjectImpPrivate::RegExpObjectImpPrivate):
+        (RegExpObjectImp::RegExpObjectImp):
+        (RegExpObjectImp::performMatch):
+        (RegExpObjectImp::arrayOfMatches):
+        (RegExpObjectImp::getBackref):
+        (RegExpObjectImp::getLastMatch):
+        (RegExpObjectImp::getLastParen):
+        (RegExpObjectImp::getLeftContext):
+        (RegExpObjectImp::getRightContext):
+        (RegExpObjectImp::getValueProperty):
+        (RegExpObjectImp::putValueProperty):
+        * kjs/regexp_object.h:
+
+2007-04-08  Maciej Stachowiak  <mjs@apple.com>
+
+        Not reviewed, experimental change.
         
         - shrink ArrayInstance objects by 4 bytes
         
