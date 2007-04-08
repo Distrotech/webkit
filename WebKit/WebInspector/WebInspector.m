@@ -516,7 +516,7 @@
 - (void)webView:(WebView *)view exceptionWasRaised:(WebScriptCallFrame *)frame sourceId:(int)sid line:(int)lineno forWebFrame:(WebFrame *)webFrame
 {
     NSURL *url = [_private->debugFileMap objectForKey:[NSNumber numberWithInt:sid]];
-    NSLog(@"JS exception: %@ line %d", url, lineno);
+    NSLog(@"JS exception: %@ on %@ line %d", [[frame exception] valueForKey:@"message"], url, lineno);
 
     NSMutableArray *stack = [[NSMutableArray alloc] init];
     WebScriptCallFrame *currentFrame = frame;
