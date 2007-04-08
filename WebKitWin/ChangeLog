@@ -1,3 +1,70 @@
+2007-04-07  Adam Roben  <aroben@apple.com>
+
+        Forked most of the WebInspector directory from
+        r20780 of branches/WebInspectorRefresh/WebKit/WebInspector.
+
+        * WebInspector/WebInspector.h: Added.
+        * WebInspector/WebInspector.m: Added.
+        (+[WebInspector sharedWebInspector]):
+        (-[WebInspector init]):
+        (-[WebInspector initWithWebFrame:]):
+        (-[WebInspector dealloc]):
+        (-[WebInspector window]):
+        (-[WebInspector windowWillClose:]):
+        (-[WebInspector showWindow:]):
+        (-[WebInspector setWebFrame:]):
+        (-[WebInspector webFrame]):
+        (-[WebInspector setRootDOMNode:]):
+        (-[WebInspector rootDOMNode]):
+        (-[WebInspector setFocusedDOMNode:]):
+        (-[WebInspector focusedDOMNode]):
+        (-[WebInspector setSearchQuery:]):
+        (-[WebInspector searchQuery]):
+        (-[WebInspector showOptionsMenu]):
+        (-[WebInspector _toggleIgnoreWhitespace:]):
+        (-[WebInspector _toggleShowUserAgentStyles:]):
+        (-[WebInspector _highlightNode:]):
+        (-[WebInspector _nodeHighlightExpired:]):
+        (-[WebInspector _update]):
+        (-[WebInspector _updateRoot]):
+        (-[WebInspector _updateSystemColors]):
+        (-[WebInspector _applicationWillResignActive]):
+        (-[WebInspector _applicationDidBecomeActive]):
+        (-[WebInspector _webFrameDetached:]):
+        (+[WebInspector isSelectorExcludedFromWebScript:]):
+        (+[WebInspector webScriptNameForSelector:]):
+        (+[WebInspector isKeyExcludedFromWebScript:]):
+        (-[WebInspector inspectedWebViewProgressFinished:]):
+        (-[WebInspector webView:didFinishLoadForFrame:]):
+        (-[WebInspector webView:runJavaScriptAlertPanelWithMessage:initiatedByFrame:]):
+        (-[WebInspector webView:didParseSource:baseLineNumber:fromURL:sourceId:forWebFrame:]):
+        (-[WebInspector webView:exceptionWasRaised:sourceId:line:forWebFrame:]):
+        (-[WebInspectorPrivate dealloc]):
+        (-[DOMNode _isAncestorOfNode:]):
+        * WebInspector/webInspector/AppleScrollArea.js: Added.
+        * WebInspector/webInspector/AppleScrollbar.js: Added.
+        * WebInspector/webInspector/Images/button.png: Added.
+        * WebInspector/webInspector/Images/buttonDivider.png: Added.
+        * WebInspector/webInspector/Images/buttonPressed.png: Added.
+        * WebInspector/webInspector/Images/close.png: Added.
+        * WebInspector/webInspector/Images/closePressed.png: Added.
+        * WebInspector/webInspector/Images/downTriangle.png: Added.
+        * WebInspector/webInspector/Images/menu.png: Added.
+        * WebInspector/webInspector/Images/menuPressed.png: Added.
+        * WebInspector/webInspector/Images/popup.png: Added.
+        * WebInspector/webInspector/Images/popupPressed.png: Added.
+        * WebInspector/webInspector/Images/rightTriangle.png: Added.
+        * WebInspector/webInspector/Images/scrollThumbBottom.png: Added.
+        * WebInspector/webInspector/Images/scrollThumbMiddle.png: Added.
+        * WebInspector/webInspector/Images/scrollThumbTop.png: Added.
+        * WebInspector/webInspector/Images/scrollTrackBottom.png: Added.
+        * WebInspector/webInspector/Images/scrollTrackMiddle.png: Added.
+        * WebInspector/webInspector/Images/scrollTrackTop.png: Added.
+        * WebInspector/webInspector/Images/upTriangle.png: Added.
+        * WebInspector/webInspector/inspector.css: Added.
+        * WebInspector/webInspector/inspector.html: Added.
+        * WebInspector/webInspector/inspector.js: Added.
+
 2007-04-06  Dave Hyatt  <hyatt@apple.com>
 
         Internal side of fix for bug 13274.
