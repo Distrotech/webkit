@@ -173,7 +173,7 @@ namespace KJS {
   private:
     static PropertySlot::GetValueFunc getArgumentsGetter();
     static JSValue* argumentsGetter(ExecState*, JSObject*, const Identifier&, const PropertySlot& slot);
-    void createArgumentsObject(ExecState*) const;
+    void createArgumentsObject(ExecState*);
     
     FunctionImp* _function;
     List _arguments;

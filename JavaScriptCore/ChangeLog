@@ -1,6 +1,16 @@
 2007-04-08  Maciej Stachowiak  <mjs@apple.com>
 
         Not reviewed, experimental change.
+
+        - fix build issue with last change
+        
+        * kjs/function.h:
+        * kjs/function.cpp:
+        (KJS::ActivationImp::createArgumentsObject):
+
+2007-04-08  Maciej Stachowiak  <mjs@apple.com>
+
+        Not reviewed, experimental change.
         
         - discard the arguments List for an ActivationImp when the corresponding Context is destroyed (1.7% speedup)
 

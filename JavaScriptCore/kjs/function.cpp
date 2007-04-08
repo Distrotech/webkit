@@ -574,12 +574,11 @@ void ActivationImp::mark()
     JSObject::mark();
 }
 
-void ActivationImp::createArgumentsObject(ExecState* exec) const
+void ActivationImp::createArgumentsObject(ExecState* exec)
 {
   _argumentsObject = new Arguments(exec, _function, _arguments, const_cast<ActivationImp*>(this));
   // The arguments list is only needed to create the arguments object, so discard it now
-  if (activation)
-    activation->_arguments.reset();
+  _arguments.reset();
 }
 
 // ------------------------------ GlobalFunc -----------------------------------
