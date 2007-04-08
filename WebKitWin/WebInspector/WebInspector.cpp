@@ -799,7 +799,7 @@ HRESULT STDMETHODCALLTYPE WebInspector::didFinishLoadForFrame(
     updateRoot();
     updateSystemColors();
 
-    if (searchQuery() && searchQuery()->length())
+    if (!searchQuery().isEmpty())
         setSearchQuery(searchQuery());
 
     highlightNode(focusedDOMNode());
