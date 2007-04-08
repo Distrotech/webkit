@@ -1,6 +1,24 @@
 2007-04-08  Maciej Stachowiak  <mjs@apple.com>
 
         Not reviewed, experimental change.
+        
+        - shrink ArrayInstance objects by 4 bytes
+        
+        I did this by storing the capacity before the beginning of the storage array. It turns out
+        it is rarely needed and is by definition 0 when the storage array is null.
+
+        * kjs/array_instance.h:
+        (KJS::ArrayInstance::capacity):
+        * kjs/array_object.cpp:
+        (allocateStorage):
+        (reallocateStorage):
+        (ArrayInstance::ArrayInstance):
+        (ArrayInstance::~ArrayInstance):
+        (ArrayInstance::resizeStorage):
+
+2007-04-08  Maciej Stachowiak  <mjs@apple.com>
+
+        Not reviewed, experimental change.
 
         - fix build issue with last change
         
