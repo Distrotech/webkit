@@ -509,9 +509,8 @@ const ClassInfo ActivationImp::info = {"Activation", 0, 0, 0};
 
 // ECMA 10.1.6
 ActivationImp::ActivationImp(FunctionImp* function, const List& arguments)
-    : _function(function), _arguments(true), _argumentsObject(0)
+    : _function(function), _arguments(arguments), _argumentsObject(0)
 {
-  _arguments.copyFrom(arguments);
   // FIXME: Do we need to support enumerating the arguments property?
 }
 
@@ -570,7 +569,6 @@ void ActivationImp::mark()
 {
     if (_function && !_function->marked()) 
         _function->mark();
-    _arguments.mark();
     if (_argumentsObject && !_argumentsObject->marked())
         _argumentsObject->mark();
     JSObject::mark();
@@ -579,6 +577,9 @@ void ActivationImp::mark()
 void ActivationImp::createArgumentsObject(ExecState* exec) const
 {
   _argumentsObject = new Arguments(exec, _function, _arguments, const_cast<ActivationImp*>(this));
+  // The arguments list is only needed to create the arguments object, so discard it now
+  if (activation)
+    activation->_arguments.reset();
 }
 
 // ------------------------------ GlobalFunc -----------------------------------

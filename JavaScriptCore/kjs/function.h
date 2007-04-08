@@ -178,6 +178,8 @@ namespace KJS {
     FunctionImp* _function;
     List _arguments;
     mutable Arguments* _argumentsObject;
+
+    friend class Context;
   };
 
   class GlobalFuncImp : public InternalFunctionImp {

@@ -84,6 +84,14 @@ Context::Context(JSObject* glob, Interpreter* interpreter, JSObject* thisV,
 Context::~Context()
 {
     m_interpreter->setContext(m_callingContext);
+
+    // The arguments list is only needed to potentially create the  arguments object, 
+    // which isn't accessible from nested scopes so we can discard the list as soon 
+    // as the function is done running.
+    // This prevents lists of Lists from building up, waiting to be garbage collected
+    ActivationImp* activation = static_cast<ActivationImp*>(m_activation);
+    if (activation)
+      activation->_arguments.reset();
 }
 
 void Context::mark()
