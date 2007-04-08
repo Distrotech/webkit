@@ -2456,3 +2456,13 @@ HRESULT STDMETHODCALLTYPE WebFrame::spoolPages(
  
     return S_OK;
 }
+
+void WebFrame::addInspector(WebInspector*)
+{
+    LOG_NOIMPL();
+}
+
+void WebFrame::removeInspector(WebInspector*)
+{
+    LOG_NOIMPL();
+}

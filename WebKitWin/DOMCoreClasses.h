@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -33,8 +33,10 @@
 #include "DOMPrivate.h"
 #include "WebScriptObject.h"
 
-namespace WebCore
-{
+// {79A193A5-D783-4c73-9AD9-D10678B943DE}
+DEFINE_GUID(IID_DOMNode, 0x79a193a5, 0xd783, 0x4c73, 0x9a, 0xd9, 0xd1, 0x6, 0x78, 0xb9, 0x43, 0xde);
+
+namespace WebCore {
     class Element;
     class Document;
     class Node;
@@ -241,6 +243,9 @@ public:
     virtual HRESULT STDMETHODCALLTYPE dispatchEvent( 
         /* [in] */ IDOMEvent *evt,
         /* [retval][out] */ BOOL *result);
+
+    // DOMNode
+    WebCore::Node* node() const { return m_node; }
 
 protected:
     WebCore::Node* m_node;

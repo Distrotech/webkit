@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,30 +26,335 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import <AppKit/NSWindowController.h>
+#ifndef WebInspector_h
+#define WebInspector_h
 
-@class WebFrame;
-@class WebInspectorPrivate;
-@class DOMNode;
+#include "IWebFrameLoadDelegate.h"
+#include "IWebNotificationObserver.h"
+#include "IWebUIDelegate.h"
 
-@interface WebInspector : NSWindowController
-{
-@private
-    WebInspectorPrivate *_private;
+#include <wtf/OwnPtr.h>
+
+class WebFrame;
+class WebInspectorPrivate;
+
+interface IDOMNode;
+
+namespace WebCore {
+    class String;
 }
-+ (WebInspector *)sharedWebInspector;
 
-- (id)initWithWebFrame:(WebFrame *)webFrame;
+class WebInspector : IWebFrameLoadDelegate, IWebUIDelegate, IWebNotificationObserver {
+public:
+    static WebInspector* sharedWebInspector();
 
-- (void)setWebFrame:(WebFrame *)webFrame;
-- (WebFrame *)webFrame;
+    void setWebFrame(WebFrame*);
+    WebFrame* webFrame() const;
 
-- (void)setRootDOMNode:(DOMNode *)node;
-- (DOMNode *)rootDOMNode;
+    void setRootDOMNode(IDOMNode*);
+    IDOMNode* rootDOMNode() const;
 
-- (void)setFocusedDOMNode:(DOMNode *)node;
-- (DOMNode *)focusedDOMNode;
+    void setFocusedDOMNode(IDOMNode*);
+    IDOMNode* focusedDOMNode() const;
 
-- (void)setSearchQuery:(NSString *)query;
-- (NSString *)searchQuery;
-@end
+    void setSearchQuery(const WebCore::String&);
+    const WebCore::String& searchQuery() const;
+
+    void showOptionsMenu();
+
+    void show();
+
+    // IUnknown
+    virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject);
+    virtual ULONG STDMETHODCALLTYPE AddRef(void);
+    virtual ULONG STDMETHODCALLTYPE Release(void);
+
+    // IWebFrameLoadDelegate
+    virtual HRESULT STDMETHODCALLTYPE didStartProvisionalLoadForFrame( 
+        /* [in] */ IWebView*,
+        /* [in] */ IWebFrame*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE didReceiveServerRedirectForProvisionalLoadForFrame( 
+        /* [in] */ IWebView*,
+        /* [in] */ IWebFrame*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE didFailProvisionalLoadWithError( 
+        /* [in] */ IWebView*,
+        /* [in] */ IWebError*,
+        /* [in] */ IWebFrame*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE didCommitLoadForFrame( 
+        /* [in] */ IWebView*,
+        /* [in] */ IWebFrame*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE didReceiveTitle( 
+        /* [in] */ IWebView*,
+        /* [in] */ BSTR,
+        /* [in] */ IWebFrame*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE didReceiveIcon( 
+        /* [in] */ IWebView*,
+        /* [in] */ HBITMAP,
+        /* [in] */ IWebFrame*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE didFinishLoadForFrame( 
+        /* [in] */ IWebView*,
+        /* [in] */ IWebFrame*);
+    
+    virtual HRESULT STDMETHODCALLTYPE didFailLoadWithError( 
+        /* [in] */ IWebView*,
+        /* [in] */ IWebError*,
+        /* [in] */ IWebFrame*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE didChangeLocationWithinPageForFrame( 
+        /* [in] */ IWebView*,
+        /* [in] */ IWebFrame*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE willPerformClientRedirectToURL( 
+        /* [in] */ IWebView*,
+        /* [in] */ BSTR,
+        /* [in] */ double /*delaySeconds*/,
+        /* [in] */ DATE,
+        /* [in] */ IWebFrame*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE didCancelClientRedirectForFrame( 
+        /* [in] */ IWebView*,
+        /* [in] */ IWebFrame*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE willCloseFrame( 
+        /* [in] */ IWebView*,
+        /* [in] */ IWebFrame*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE windowScriptObjectAvailable( 
+        /* [in] */ IWebView*,
+        /* [in] */ JSContextRef,
+        /* [in] */ JSObjectRef);
+
+    // IWebUIDelegate
+    virtual HRESULT STDMETHODCALLTYPE createWebViewWithRequest( 
+        /* [in] */ IWebView*,
+        /* [in] */ IWebURLRequest*,
+        /* [retval][out] */ IWebView**) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE webViewShow( 
+        /* [in] */ IWebView*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE webViewClose( 
+        /* [in] */ IWebView*);
+    
+    virtual HRESULT STDMETHODCALLTYPE webViewFocus( 
+        /* [in] */ IWebView*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE webViewUnfocus( 
+        /* [in] */ IWebView*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE webViewFirstResponder( 
+        /* [in] */ IWebView*,
+        /* [retval][out] */ HWND*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE makeFirstResponder( 
+        /* [in] */ IWebView*,
+        /* [in] */ HWND) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE setStatusText( 
+        /* [in] */ IWebView*,
+        /* [in] */ BSTR) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE webViewStatusText( 
+        /* [in] */ IWebView*,
+        /* [retval][out] */ BSTR*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE webViewAreToolbarsVisible( 
+        /* [in] */ IWebView*,
+        /* [retval][out] */ BOOL*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE setToolbarsVisible( 
+        /* [in] */ IWebView*,
+        /* [in] */ BOOL) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE webViewIsStatusBarVisible( 
+        /* [in] */ IWebView*,
+        /* [retval][out] */ BOOL*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE setStatusBarVisible( 
+        /* [in] */ IWebView*,
+        /* [in] */ BOOL) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE webViewIsResizable( 
+        /* [in] */ IWebView*,
+        /* [retval][out] */ BOOL*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE setResizable( 
+        /* [in] */ IWebView*,
+        /* [in] */ BOOL) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE setFrame( 
+        /* [in] */ IWebView*,
+        /* [in] */ RECT*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE webViewFrame( 
+        /* [in] */ IWebView*,
+        /* [retval][out] */ RECT*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE setContentRect( 
+        /* [in] */ IWebView*,
+        /* [in] */ RECT*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE webViewContentRect( 
+        /* [in] */ IWebView*,
+        /* [retval][out] */ RECT*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE runJavaScriptAlertPanelWithMessage( 
+        /* [in] */ IWebView*,
+        /* [in] */ BSTR);
+    
+    virtual HRESULT STDMETHODCALLTYPE runJavaScriptConfirmPanelWithMessage( 
+        /* [in] */ IWebView*,
+        /* [in] */ BSTR,
+        /* [retval][out] */ BOOL*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE runJavaScriptTextInputPanelWithPrompt( 
+        /* [in] */ IWebView*,
+        /* [in] */ BSTR /*message*/,
+        /* [in] */ BSTR /*defaultText*/,
+        /* [retval][out] */ BSTR*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE runBeforeUnloadConfirmPanelWithMessage( 
+        /* [in] */ IWebView*,
+        /* [in] */ BSTR /*message*/,
+        /* [in] */ IWebFrame*  /*initiatedByFrame*/,
+        /* [retval][out] */ BOOL*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE runOpenPanelForFileButtonWithResultListener( 
+        /* [in] */ IWebView*,
+        /* [in] */ IWebOpenPanelResultListener*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE mouseDidMoveOverElement( 
+        /* [in] */ IWebView*,
+        /* [in] */ IPropertyBag*,
+        /* [in] */ UINT /*modifierFlags*/) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE contextMenuItemsForElement( 
+        /* [in] */ IWebView*,
+        /* [in] */ IPropertyBag*,
+        /* [in] */ HMENU,
+        /* [retval][out] */ HMENU*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE validateUserInterfaceItem( 
+        /* [in] */ IWebView*,
+        /* [in] */ UINT,
+        /* [in] */ BOOL /*defaultValidation*/,
+        /* [retval][out] */ BOOL*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE shouldPerformAction( 
+        /* [in] */ IWebView*,
+        /* [in] */ UINT /*itemCommandID*/,
+        /* [in] */ UINT /*sender*/) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE dragDestinationActionMaskForDraggingInfo( 
+        /* [in] */ IWebView*,
+        /* [in] */ IDataObject*,
+        /* [retval][out] */ WebDragDestinationAction*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE willPerformDragDestinationAction( 
+        /* [in] */ IWebView*,
+        /* [in] */ WebDragDestinationAction,
+        /* [in] */ IDataObject*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE dragSourceActionMaskForPoint( 
+        /* [in] */ IWebView*,
+        /* [in] */ LPPOINT,
+        /* [retval][out] */ WebDragSourceAction*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE willPerformDragSourceAction( 
+        /* [in] */ IWebView*,
+        /* [in] */ WebDragSourceAction,
+        /* [in] */ LPPOINT,
+        /* [in] */ IDataObject*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE contextMenuItemSelected( 
+        /* [in] */ IWebView*,
+        /* [in] */ void*  /*item*/,
+        /* [in] */ IPropertyBag*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE hasCustomMenuImplementation( 
+        /* [retval][out] */ BOOL*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE trackCustomPopupMenu( 
+        /* [in] */ IWebView*,
+        /* [in] */ HMENU,
+        /* [in] */ LPPOINT) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE measureCustomMenuItem( 
+        /* [in] */ IWebView*,
+        /* [in] */ void*  /*measureItem*/) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE drawCustomMenuItem( 
+        /* [in] */ IWebView*,
+        /* [in] */ void*  /*drawItem*/) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE addCustomMenuDrawingData( 
+        /* [in] */ IWebView*,
+        /* [in] */ HMENU) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE cleanUpCustomMenuDrawingData( 
+        /* [in] */ IWebView*,
+        /* [in] */ HMENU) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE canTakeFocus( 
+        /* [in] */ IWebView*,
+        /* [in] */ BOOL /*forward*/,
+        /* [out] */ BOOL*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE takeFocus( 
+        /* [in] */ IWebView*,
+        /* [in] */ BOOL /*forward*/) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE registerUndoWithTarget( 
+        /* [in] */ IWebUndoTarget*,
+        /* [in] */ BSTR /*actionName*/,
+        /* [in] */ IUnknown*  /*actionArg*/) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE removeAllActionsWithTarget( 
+        /* [in] */ IWebUndoTarget*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE setActionTitle( 
+        /* [in] */ BSTR) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE undo( void) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE redo( void) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE canUndo( 
+        /* [retval][out] */ BOOL*) { return E_NOTIMPL; }
+    
+    virtual HRESULT STDMETHODCALLTYPE canRedo( 
+        /* [retval][out] */ BOOL*) { return E_NOTIMPL; }
+
+    // IWebNotificationObserver
+    virtual HRESULT STDMETHODCALLTYPE onNotify(IWebNotification*);
+
+private:
+    LRESULT onCreate(WPARAM, LPARAM);
+    LRESULT onDestroy(WPARAM, LPARAM);
+    LRESULT onSize(WPARAM, LPARAM);
+    LRESULT onActivateApp(WPARAM, LPARAM);
+
+    void inspectedWebViewProgressFinished(IWebNotification*);
+    void webFrameDetached(WebFrame*);
+    void highlightNode(IDOMNode*);
+    void update();
+    void updateRoot();
+    void updateSystemColors();
+
+    // FIXME: Right now we only support the sharedWebInspector, so the constructor/destructor need to be private.
+    // Eventually we should support multiple inspectors, and at that point these may need to become public.
+    WebInspector();
+    ~WebInspector();
+
+    OwnPtr<WebInspectorPrivate> m_private;
+
+    friend static LRESULT CALLBACK WebInspectorWndProc(HWND, UINT, WPARAM, LPARAM);
+};
+
+#endif // !defined(WebInspector_h)

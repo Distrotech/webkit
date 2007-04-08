@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -46,6 +46,10 @@
 #include <WebCore/RenderObject.h>
 #pragma warning(pop)
 
+#include <initguid.h>
+// {79A193A5-D783-4c73-9AD9-D10678B943DE}
+DEFINE_GUID(IID_DOMNode, 0x79a193a5, 0xd783, 0x4c73, 0x9a, 0xd9, 0xd1, 0x6, 0x78, 0xb9, 0x43, 0xde);
+
 using namespace WebCore;
 using namespace HTMLNames;
 
@@ -70,6 +74,8 @@ HRESULT STDMETHODCALLTYPE DOMNode::QueryInterface(REFIID riid, void** ppvObject)
     *ppvObject = 0;
     if (IsEqualGUID(riid, IID_IDOMNode))
         *ppvObject = static_cast<IDOMNode*>(this);
+    else if (IsEqualGUID(riid, IID_DOMNode))
+        *ppvObject = static_cast<DOMNode*>(this);
     else
         return DOMObject::QueryInterface(riid, ppvObject);
 
@@ -271,11 +277,26 @@ HRESULT STDMETHODCALLTYPE DOMNode::hasAttributes(
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::isSameNode( 
-    /* [in] */ IDOMNode* /*other*/,
-    /* [retval][out] */ BOOL* /*result*/)
+    /* [in] */ IDOMNode* other,
+    /* [retval][out] */ BOOL* result)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!result) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    *result = FALSE;
+
+    if (!other)
+        return E_POINTER;
+
+    COMPtr<DOMNode> domOther;
+    HRESULT hr = other->QueryInterface(IID_DOMNode, (void**)&domOther);
+    if (FAILED(hr))
+        return hr;
+
+    *result = m_node->isSameNode(domOther->node()) ? TRUE : FALSE;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE DOMNode::isEqualNode( 

@@ -28,6 +28,7 @@
 
 #include "WebDownload.h"
 #include "WebElementPropertyBag.h"
+#include "WebLocalizableStrings.h"
 #include "WebView.h"
 
 #pragma warning(push, 0)
@@ -38,6 +39,8 @@
 #include <WebCore/ResourceRequest.h>
 #include <WebCore/NotImplemented.h>
 #pragma warning(pop)
+
+#include <tchar.h>
 
 using namespace WebCore;
 
@@ -64,7 +67,25 @@ HMENU WebContextMenuClient::getCustomMenuFromDefaultItems(ContextMenu* menu)
     propertyBag.adoptRef(WebElementPropertyBag::createInstance(menu->hitTestResult()));
     // FIXME: We need to decide whether to do the default before calling this delegate method
     if (FAILED(uiDelegate->contextMenuItemsForElement(m_webView, propertyBag.get(), menu->platformDescription(), &newMenu)))
-        return menu->platformDescription();
+        newMenu = menu->platformDescription();
+
+    // FIXME: Only do this if m_webView->developerExtrasEnabled()
+    if (::GetMenuItemCount(newMenu) > 0) {
+        MENUITEMINFO separator = {0};
+        separator.cbSize = sizeof(separator);
+        separator.fMask = MIIM_FTYPE;
+        separator.fType = MFT_SEPARATOR;
+        ::InsertMenuItem(newMenu, (UINT)-1, TRUE, &separator);
+    }
+
+    MENUITEMINFO info = {0};
+    info.cbSize = sizeof(info);
+    info.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_ID;
+    info.fType = MFT_STRING;
+    info.dwTypeData = _tcsdup(LPCTSTR_UI_STRING("Inspect Element", "Inspect Element context menu item"));
+    info.wID = WebMenuItemTagInspectElement;
+
+    ::InsertMenuItem(newMenu, (UINT)-1, TRUE, &info);
 
     return newMenu;
 }

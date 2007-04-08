@@ -603,6 +603,7 @@ public:
     bool onInitMenuPopup(WPARAM, LPARAM);
     bool onUninitMenuPopup(WPARAM, LPARAM);
     void performContextMenuAction(WPARAM, LPARAM);
+    void inspectElement(const WebCore::HitTestResult&);
     bool mouseWheel(WPARAM, LPARAM);
     bool execCommand(WPARAM wParam, LPARAM lParam);
     bool keyDown(WPARAM, LPARAM);

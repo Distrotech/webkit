@@ -1,5 +1,39 @@
 2007-04-07  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Oliver.
+
+        <rdar://problem/4769828> Web Inspector
+
+        * WebInspector/WebInspector.cpp: Renamed from WebInspector.m. Ported
+        Mac code. Some parts are left commented out to aid later
+        implementation.
+        * WebInspector/WebInspector.h: Ditto.
+
+        * DOMCoreClasses.cpp: Added IID_DOMNode.
+        (DOMNode::QueryInterface): Added case for IID_DOMNode.
+        (DOMNode::isSameNode): Implemented.
+        * DOMCoreClasses.h: Added IID_DOMNode.
+        (DOMNode::node): Added.
+        * English.lproj/Localizable.strings: Updated for "Inspect Element".
+        * WebContextMenuClient.cpp:
+        (WebContextMenuClient::getCustomMenuFromDefaultItems): Add the "Inspect
+        Element" item.
+        * WebFrame.cpp:
+        (WebFrame::addInspector): Stubbed out.
+        (WebFrame::removeInspector): Ditto.
+        * WebFrame.h: Added declarations.
+        * WebKit.resources/Info.plist: Added. This was needed so that the
+        WebKit bundle would have a bundle identifier.
+        * WebKit.vcproj/WebKit.vcproj: Added new files to project, and modified
+        the post-build step to copy Info.plist and everything in
+        WebInspector/webInspector to WebKit.resources.
+        * WebView.cpp:
+        (WebView::performContextMenuAction): Added case for the Inspect Element item.
+        (WebView::inspectElement): Added.
+        * WebView.h: Added declaration.
+
+2007-04-07  Adam Roben  <aroben@apple.com>
+
         Forked most of the WebInspector directory from
         r20780 of branches/WebInspectorRefresh/WebKit/WebInspector.
 

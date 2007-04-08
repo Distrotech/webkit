@@ -59,9 +59,10 @@ typedef const struct OpaqueJSContext* JSContextRef;
 typedef struct OpaqueJSValue* JSObjectRef;
 
 class WebFrame;
-class WebView;
-class WebHistory;
 class WebFramePolicyListener;
+class WebHistory;
+class WebInspector;
+class WebView;
 
 interface IWebHistoryItemPrivate;
 
@@ -300,6 +301,8 @@ public:
     WebCore::Frame* impl();
     void invalidate();
     void receivedData(const char*, int, const WebCore::String&);
+    void addInspector(WebInspector*);
+    void removeInspector(WebInspector*);
 
     // WebFrame (matching WebCoreFrameBridge)
     void setTextSizeMultiplier(float multiplier);

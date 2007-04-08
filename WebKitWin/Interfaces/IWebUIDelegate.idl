@@ -120,6 +120,8 @@ typedef enum WebMenuItemTag {
     WebMenuItemTagDefaultDirection,
     WebMenuItemTagLeftToRight,
     WebMenuItemTagRightToLeft,
+    // WebMenuItemTagInspectElement is only known to WebKit
+    WebMenuItemTagInspectElement=9999,
     WebMenuItemBaseApplicationTag=10000
 } WebMenuItemTag;
 

@@ -27,6 +27,7 @@
 #include "WebKitDLL.h"
 #include "WebView.h"
 
+#include "DOMCoreClasses.h"
 #include "IWebNotification.h"
 #include "WebDocumentLoader.h"
 #include "WebEditorClient.h"
@@ -36,6 +37,7 @@
 #include "WebChromeClient.h"
 #include "WebContextMenuClient.h"
 #include "WebDragClient.h"
+#include "WebInspector/WebInspector.h"
 #include "WebKit.h"
 #include "WebKitStatisticsPrivate.h"
 #include "WebMutableURLRequest.h"
@@ -674,9 +676,46 @@ void WebView::performContextMenuAction(WPARAM wParam, LPARAM /*lParam*/)
 {
     ContextMenu* menu = m_page->contextMenuController()->contextMenu();
     ASSERT(menu);
+    if (wParam == WebMenuItemTagInspectElement) {
+        inspectElement(menu->hitTestResult());
+        return;
+    }
     ContextMenuItem* item = menu->itemWithAction((ContextMenuAction)wParam);
     m_page->contextMenuController()->contextMenuItemSelected(item);
     delete item;
+}
+
+void WebView::inspectElement(const HitTestResult& hitTestResult)
+{
+    Node* node = hitTestResult.innerNonSharedNode();
+    if (!node)
+        return;
+
+    WebFrame* frame = kit(node->document()->frame());
+    if (!frame)
+        return;
+
+    if (node->nodeType() != Node::ELEMENT_NODE || node->nodeType() != Node::DOCUMENT_NODE)
+        node = node->parentNode();
+
+    COMPtr<IDOMNode> domNode;
+    domNode.adoptRef(DOMNode::createInstance(node));
+
+    WebInspector* inspector = WebInspector::sharedWebInspector();
+    inspector->setWebFrame(frame);
+    inspector->setFocusedDOMNode(domNode.get());
+
+    if (node)
+        node = node->parentNode();
+    if (node)
+        node = node->parentNode();
+    if (node) {
+        COMPtr<IDOMNode> domNode;
+        domNode.adoptRef(DOMNode::createInstance(node));
+        inspector->setRootDOMNode(domNode.get());
+    }
+
+    inspector->show();
 }
 
 bool WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
