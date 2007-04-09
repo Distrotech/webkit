@@ -1,3 +1,13 @@
+2007-04-08  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Oliver.
+
+        Stubbed out Frame::dashboardRegionsChanged now that it's not
+        Mac-specific.
+
+        * bridge/win/FrameWin.cpp:
+        (WebCore::Frame::dashboardRegionsChanged):
+
 2007-04-06  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Adam.
