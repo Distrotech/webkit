@@ -318,7 +318,7 @@ function nodeDisplayName()
             if (this.hasAttributes()) {
                 var value = this.getAttribute("id");
                 if (value)
-                    name += " id=\"" + value + "" + value + "\"";
+                    name += " id=\"" + value + "\"";
                 value = this.getAttribute("class");
                 if (value)
                     name += " class=\"" + value + "\"";
