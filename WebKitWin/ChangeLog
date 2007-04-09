@@ -1,5 +1,12 @@
 2007-04-09  Adam Roben  <aroben@apple.com>
 
+        Fixed copyrights.
+
+        * WebInspector/WebInspector.cpp:
+        * WebInspector/WebInspector.h:
+
+2007-04-09  Adam Roben  <aroben@apple.com>
+
         Reviewed by Oliver.
 
         Fix two Web Inspector bugs:
