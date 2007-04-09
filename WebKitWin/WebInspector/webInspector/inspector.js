@@ -647,36 +647,19 @@ function refreshSearch()
         toggleNoSelection(true);
 
         var count = 0;
-        if (searchQuery.indexOf("/") == 0) {
-            // search document by Xpath query
-            try {
-                var rootNodeDocument = Inspector.rootDOMNode().ownerDocument;
-                var nodeList = rootNodeDocument.evaluate(searchQuery, rootNodeDocument, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
-                for (var i = 0; i < nodeList.snapshotLength; ++i) {
-                    searchResults.push(nodeList.snapshotItem(i));
-                    count++;
-                }
-            } catch(err) {
-                // ignore any exceptions. the query might be malformed, but we allow that 
+        var xpathQuery = searchQuery;
+        if (searchQuery.indexOf("/") == -1)
+            xpathQuery = "//" + searchQuery + " | " + "//*[contains(@*,'" + searchQuery.escapeCharacters("'") + "')]" + " | " + "//text()[contains(.,'" + searchQuery.escapeCharacters("'") + "')]";
+
+        try {
+            var rootNodeDocument = Inspector.rootDOMNode().ownerDocument;
+            var nodeList = rootNodeDocument.evaluate(xpathQuery, rootNodeDocument, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
+            for (var i = 0; i < nodeList.snapshotLength; ++i) {
+                searchResults.push(nodeList.snapshotItem(i));
+                count++;
             }
-        } else {
-            // search document nodes by node name, node value, id and class name
-            var node = Inspector.rootDOMNode().ownerDocument;
-            while ((node = traverseNextNode.call(node, true))) {
-                var matched = false;
-                if (node.nodeName.hasSubstring(searchQuery, true))
-                    matched = true;
-                else if (node.nodeType == Node.TEXT_NODE && node.nodeValue.hasSubstring(searchQuery, true))
-                    matched = true;
-                else if (node.nodeType == Node.ELEMENT_NODE && node.id.hasSubstring(searchQuery, true))
-                    matched = true;
-                else if (node.nodeType == Node.ELEMENT_NODE && node.className.hasSubstring(searchQuery, true))
-                    matched = true;
-                if (matched) {
-                    searchResults.push(node);
-                    count++;
-                }
-            }
+        } catch(err) {
+            // ignore any exceptions. the query might be malformed, but we allow that 
         }
 
         for (var i = 0; i < searchResults.length; ++i) {
