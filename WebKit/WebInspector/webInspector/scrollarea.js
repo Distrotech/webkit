@@ -44,11 +44,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /*
- * AppleScrollArea Constructor
+ * ScrollArea Constructor
  * content is the element containing the display to be scrolled.
  * Any additional arguments will be added as scrollbars using this.addScrollbar.
  */
-function AppleScrollArea(content)
+function ScrollArea(content)
 {
 	/* Objects */
 	this.content = content;
@@ -99,14 +99,14 @@ function AppleScrollArea(content)
 	}
 }
 
-AppleScrollArea.prototype.addScrollbar = function(scrollbar)
+ScrollArea.prototype.addScrollbar = function(scrollbar)
 {
 	scrollbar.setScrollArea(this);
 	this._scrollbars.push(scrollbar);
 	scrollbar.refresh();
 }
 
-AppleScrollArea.prototype.removeScrollbar = function(scrollbar)
+ScrollArea.prototype.removeScrollbar = function(scrollbar)
 {
 	var scrollbars = this._scrollbars;
 	var c = scrollbars.length;
@@ -120,7 +120,7 @@ AppleScrollArea.prototype.removeScrollbar = function(scrollbar)
 	}
 }
 
-AppleScrollArea.prototype.remove = function()
+ScrollArea.prototype.remove = function()
 {
 	this.content.removeEventListener("mousewheel", this._mousewheelScrollHandler, true);
 	
@@ -137,7 +137,7 @@ AppleScrollArea.prototype.remove = function()
  * Refresh the current scrollbar position and size.
  * This should be called whenever the content element changes.
  */
-AppleScrollArea.prototype.refresh = function()
+ScrollArea.prototype.refresh = function()
 {	
 	// get the current actual view height. Float because we divide.
 	var style = document.defaultView.getComputedStyle(this.content, '');
@@ -188,7 +188,7 @@ AppleScrollArea.prototype.refresh = function()
  * Tell the scrollarea that it is in focus. It will capture keyPressed events
  * and if they are arrow keys scroll accordingly.
  */
-AppleScrollArea.prototype.focus = function()
+ScrollArea.prototype.focus = function()
 {
 	document.addEventListener("keypress", this._keyPressedHandler, true);
 }
@@ -198,7 +198,7 @@ AppleScrollArea.prototype.focus = function()
  * Tell the scrollarea that it is no longer in focus. It will cease capturing
  * keypress events.
  */
-AppleScrollArea.prototype.blur = function()
+ScrollArea.prototype.blur = function()
 {
 	document.removeEventListener("keypress", this._keyPressedHandler, true);
 }
@@ -209,7 +209,7 @@ AppleScrollArea.prototype.blur = function()
  * Pass in an Element which is contained within the content element.
  * The content will then be scrolled to reveal that element.
  */
-AppleScrollArea.prototype.reveal = function(element)
+ScrollArea.prototype.reveal = function(element)
 {
 	var offsetY = 0;
 	var obj = element;
@@ -241,7 +241,7 @@ AppleScrollArea.prototype.reveal = function(element)
 }
 
 
-AppleScrollArea.prototype.verticalScrollTo = function(new_content_top)
+ScrollArea.prototype.verticalScrollTo = function(new_content_top)
 {
 	if (!this.scrollsVertically)
 		return;
@@ -267,7 +267,7 @@ AppleScrollArea.prototype.verticalScrollTo = function(new_content_top)
 	}
 }
 
-AppleScrollArea.prototype.horizontalScrollTo = function(new_content_left)
+ScrollArea.prototype.horizontalScrollTo = function(new_content_left)
 {
 	if (!this.scrollsHorizontally)
 		return;
@@ -296,7 +296,7 @@ AppleScrollArea.prototype.horizontalScrollTo = function(new_content_left)
 /*********************
  * Keypressed events
  */
-AppleScrollArea.prototype.keyPressed = function(event)
+ScrollArea.prototype.keyPressed = function(event)
 {
 	var handled = true;
 	
@@ -345,7 +345,7 @@ AppleScrollArea.prototype.keyPressed = function(event)
 /*********************
  * Scrollwheel events
  */
-AppleScrollArea.prototype.mousewheelScroll = function(event)
+ScrollArea.prototype.mousewheelScroll = function(event)
 {
 	var deltaScroll = event.wheelDelta / 120 * this.singlepressScrollPixels;
 	this.verticalScrollTo(this.content.scrollTop - deltaScroll);

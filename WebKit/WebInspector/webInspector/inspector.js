@@ -515,7 +515,7 @@ function traversePreviousNode(skipWhitespace)
 
 function setUpScrollbar(id)
 {
-    var bar = new AppleVerticalScrollbar(document.getElementById(id));
+    var bar = new VerticalScrollbar(document.getElementById(id));
 
     bar.setTrackStart("Images/scrollTrackTop.png", 18);
     bar.setTrackMiddle("Images/scrollTrackMiddle.png");
@@ -529,20 +529,20 @@ function setUpScrollbar(id)
 
 function loaded()
 {
-    treeOutlineScrollArea = new AppleScrollArea(document.getElementById("treeOutlineScrollView"),
+    treeOutlineScrollArea = new ScrollArea(document.getElementById("treeOutlineScrollView"),
         setUpScrollbar("treeOutlineScrollbar"));
 
-    nodeContentsScrollArea = new AppleScrollArea(document.getElementById("nodeContentsScrollview"),
+    nodeContentsScrollArea = new ScrollArea(document.getElementById("nodeContentsScrollview"),
         setUpScrollbar("nodeContentsScrollbar"));
-    elementAttributesScrollArea = new AppleScrollArea(document.getElementById("elementAttributesScrollview"),
+    elementAttributesScrollArea = new ScrollArea(document.getElementById("elementAttributesScrollview"),
         setUpScrollbar("elementAttributesScrollbar"));
     
-    styleRulesScrollArea = new AppleScrollArea(document.getElementById("styleRulesScrollview"),
+    styleRulesScrollArea = new ScrollArea(document.getElementById("styleRulesScrollview"),
         setUpScrollbar("styleRulesScrollbar"));
-    stylePropertiesScrollArea = new AppleScrollArea(document.getElementById("stylePropertiesScrollview"),
+    stylePropertiesScrollArea = new ScrollArea(document.getElementById("stylePropertiesScrollview"),
         setUpScrollbar("stylePropertiesScrollbar"));
 
-    jsPropertiesScrollArea = new AppleScrollArea(document.getElementById("jsPropertiesScrollview"),
+    jsPropertiesScrollArea = new ScrollArea(document.getElementById("jsPropertiesScrollview"),
         setUpScrollbar("jsPropertiesScrollbar"));
 
     window.addEventListener("resize", refreshScrollbars, true);

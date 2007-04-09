@@ -293,7 +293,7 @@ select[disabled] {
     height: 16px;
     z-index: 10;
     -webkit-dashboard-region: dashboard-region(resize rectangle);
-    background-image: url( file:///System/Library/WidgetResources/resize.png );
+    background-image: url( Images/resize.png );
     background-repeat: no-repeat;
 }
 
