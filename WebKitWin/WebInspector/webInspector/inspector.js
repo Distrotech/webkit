@@ -650,7 +650,7 @@ function refreshSearch()
         var xpathQuery = searchQuery;
         if (searchQuery.indexOf("/") == -1) {
             var escapedQuery = searchQuery.escapeCharacters("'");
-            xpathQuery = "//*[contains(name(),'" + escapedQuery + "') or contains(@*,'" + escapedQuery + "')] | //text()[contains(.,'" + escapedQuery + "')]";
+            xpathQuery = "//*[contains(name(),'" + escapedQuery + "') or contains(@*,'" + escapedQuery + "')] | //text()[contains(.,'" + escapedQuery + "')] | //comment()[contains(.,'" + escapedQuery + "')]";
         }
 
         try {
