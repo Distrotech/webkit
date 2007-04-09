@@ -546,7 +546,7 @@ function loaded()
         setUpScrollbar("jsPropertiesScrollbar"));
 
     window.addEventListener("resize", refreshScrollbars, true);
-    document.addEventListener("click", changeFocus, true);
+    document.addEventListener("mousedown", changeFocus, true);
     document.addEventListener("focus", changeFocus, true);
     document.addEventListener("keypress", documentKeypress, true);
     document.getElementById("splitter").addEventListener("mousedown", topAreaResizeDragStart, true);
@@ -750,12 +750,17 @@ function nodeTypeName(node)
     return "(unknown)";
 }
 
-function treeOutlineNodeClicked(event)
+function treeOutlineNodeSelect(event)
 {
     var element = event.currentTarget;
-    if (event.offsetX > 20) {
+    if (event.offsetX > 20 || !element.expandable())
         element.select();
-    } else if (element.expandable()) {
+}
+
+function treeOutlineNodeToggle(event)
+{
+    var element = event.currentTarget;
+    if (event.offsetX <= 20 && element.expandable()) {
         if (element.expanded()) {
             element.collapse();
         } else {
@@ -898,7 +903,8 @@ function outlineElementForNode(node, dontCreate)
     }
 
     li.innerHTML = content;
-    li.addEventListener("click", treeOutlineNodeClicked, false);
+    li.addEventListener("mousedown", treeOutlineNodeSelect, false);
+    li.addEventListener("click", treeOutlineNodeToggle, false);
     li.addEventListener("dblclick", treeOutlineNodeDoubleClicked, false);
     li.representedElement = node;
     node.__webInspectorTreeListItem = li;
@@ -1288,7 +1294,7 @@ function updateStylePane()
             row.appendChild(cell);
 
             row.styleRuleIndex = i;
-            row.addEventListener("click", styleRuleSelect, false);
+            row.addEventListener("mousedown", styleRuleSelect, false);
 
             var style = styleRules[i].style;
             var styleShorthandLookup = [];

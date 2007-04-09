@@ -1,3 +1,14 @@
+2007-04-09  Timothy Hatcher  <timothy@apple.com>
+
+        Merge in r20810.
+
+        <rdar://problem/5121757> WebInspector focuses elements on mouse up instead of mouse down
+
+        Make selecting a tree node happen on mousedown to match the NSOutlineView behavior.
+        Also makes selecting rows in the style pane happen on mousedown for consistency.
+
+        * WebInspector/webInspector/inspector.js:
+
 2007-04-09  Adam Roben  <aroben@apple.com>
 
         Fixed copyrights.
