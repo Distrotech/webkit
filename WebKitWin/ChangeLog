@@ -1,3 +1,9 @@
+2007-04-09  Adam Roben  <aroben@apple.com>
+
+        * WebInspector/WebInspector.cpp:
+        (WebInspector::WebInspector): Removed two fixed FIXMEs and some
+        commented-out code.
+
 2007-04-08  Adam Roben  <aroben@apple.com>
 
         When does "merge" != "merge"? When you make the change yourself

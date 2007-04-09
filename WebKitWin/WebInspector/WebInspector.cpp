@@ -127,29 +127,8 @@ WebInspector::WebInspector()
     ::SetWindowLongPtr(m_private->hWnd, 0, reinterpret_cast<LONG_PTR>(this));
     ::SetLayeredWindowAttributes(m_private->hWnd, 0, (255 * 95) / 100, LWA_ALPHA);
 
-    // FIXME: Set a minimum window size of 280x450 to match Mac
     // FIXME: Add a shadow around the window
-    // FIXME: Make the window resizable
-#if 0
-    NSWindow *window = [super window];
-    if (!window) {
-        NSPanel *window = [[WebInspectorPanel alloc] initWithContentRect:NSMakeRect(60.0f, 200.0f, 350.0f, 550.0f)\
-            styleMask:(NSBorderlessWindowMask | NSUtilityWindowMask) backing:NSBackingStoreBuffered defer:YES];
-        [window setBackgroundColor:[NSColor clearColor]];
-        [window setOpaque:NO];
-        [window setHasShadow:YES];
-        [window _setContentHasShadow:NO];
-        [window setWorksWhenModal:YES];
-        [window setAcceptsMouseMovedEvents:YES];
-        [window setIgnoresMouseEvents:NO];
-        [window setFloatingPanel:YES];
-        [window setReleasedWhenClosed:YES];
-        [window setMovableByWindowBackground:YES];
-        [window setHidesOnDeactivate:NO];
-        [window setDelegate:self];
-        [window setMinSize:NSMakeSize(280.0f, 450.0f)];
-#endif
-        
+
     m_private->webView.adoptRef(WebView::createInstance());
     if (FAILED(m_private->webView->setHostWindow(m_private->hWnd)))
         return;
