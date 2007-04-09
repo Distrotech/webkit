@@ -1,5 +1,12 @@
 2007-04-08  Adam Roben  <aroben@apple.com>
 
+        When does "merge" != "merge"? When you make the change yourself
+        pre-emptively and make a typo.
+
+        * WebInspector/webInspector/inspector.js:
+
+2007-04-08  Adam Roben  <aroben@apple.com>
+
         Merge in r20800.
 
         * WebInspector/webInspector/inspector.js:

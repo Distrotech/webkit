@@ -1003,7 +1003,7 @@ function treeKeypress(event)
     var nextFocusedNode;
     var focusedNode = Inspector.focusedDOMNode();
 
-    if (event.keyIdentifer == "Up") {
+    if (event.keyIdentifier == "Up") {
         // up arrow key
         nextFocusedNode = traversePreviousNode.call(focusedNode, ignoreWhitespace);
         while (nextFocusedNode) {
