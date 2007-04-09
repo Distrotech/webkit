@@ -244,6 +244,41 @@ Node.prototype.previousSiblingSkippingWhitespace = previousSiblingSkippingWhites
 Node.prototype.traverseNextNode = traverseNextNode;
 Node.prototype.traversePreviousNode = traversePreviousNode;
 
+String.prototype.hasSubstring = function(string, caseInsensitive)
+{
+    if (!caseInsensitive)
+        return (this.indexOf(string) != -1 ? true : false);
+    return this.match(new RegExp(string.escapeForRegExp(), "i"));
+}
+
+String.prototype.escapeCharacters = function(chars)
+{
+    var foundChar = false;
+    for (var i = 0; i < chars.length; ++i) {
+        if (this.indexOf(chars.charAt(i)) != -1) {
+            foundChar = true;
+            break;
+        }
+    }
+
+    if (!foundChar)
+        return this;
+
+    var result = "";
+    for (var i = 0; i < this.length; ++i) {
+        if (chars.indexOf(this.charAt(i)) != -1)
+            result += "\\";
+        result += this.charAt(i);
+    }
+
+    return result;
+}
+
+String.prototype.escapeForRegExp = function()
+{
+    return this.escapeCharacters("^[]{}()\\.$*+?|");
+}
+
 String.prototype.escapeHTML = function()
 {
     return this.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -265,7 +300,7 @@ function isNodeWhitespace()
         return false;
     if (!this.nodeValue.length)
         return true;
-    return /^[\s\xA0]+$/.exec(this.nodeValue);
+    return this.nodeValue.match(/^[\s\xA0]+$/);
 }
 
 function nodeDisplayName()
@@ -512,6 +547,7 @@ function loaded()
 
     window.addEventListener("resize", refreshScrollbars, true);
     document.addEventListener("click", changeFocus, true);
+    document.addEventListener("focus", changeFocus, true);
     document.addEventListener("keypress", documentKeypress, true);
     document.getElementById("splitter").addEventListener("mousedown", topAreaResizeDragStart, true);
 
@@ -525,7 +561,18 @@ var currentFocusElement;
 
 function changeFocus(event)
 {
-    var nextFocusElement = event.target.firstParentWithClass("focusable");
+    var nextFocusElement;
+
+    var current = event.target;
+    while(current) {
+        if (current.nodeName == "INPUT")
+            nextFocusElement = current;
+        current = current.parentNode;
+    }
+
+    if (!nextFocusElement)
+        nextFocusElement = event.target.firstParentWithClass("focusable");
+
     if (!nextFocusElement || (currentFocusElement && currentFocusElement.isSameNode(nextFocusElement)))
         return;
 
@@ -546,7 +593,8 @@ function documentKeypress(event)
 {
     if (!currentFocusElement || !currentFocusElement.id || !currentFocusElement.id.length)
         return;
-    eval(currentFocusElement.id + "Keypress(event)");
+    if (window[currentFocusElement.id + "Keypress"])
+        eval(currentFocusElement.id + "Keypress(event)");
 }
 
 function refreshScrollbars()
@@ -560,6 +608,8 @@ function refreshScrollbars()
 }
 
 var searchActive = false;
+var searchQuery = "";
+var searchResults = [];
 
 function performSearch(query)
 {
@@ -579,21 +629,74 @@ function performSearch(query)
         searchActive = false;
     }
 
-    Inspector.searchPerformed(query);
+    searchQuery = query;
+    refreshSearch();
 }
 
-function resultsWithXpathQuery(query)
+function refreshSearch()
 {
-    var nodeList;
+    searchResults = [];
 
-    try {
-        var focusedNode = Inspector.focusedDOMNode();
-        nodeList = focusedNode.document.evaluate(query, focusedNode.document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
-    } catch(err) {
-        // ignore any exceptions. the query might be malformed, but we allow that 
+    if (searchActive) {
+        // perform the search
+        var treeOutline = document.getElementById("treeOutline");
+
+        treeOutline.innerText = ""; // clear the existing tree
+
+        treeOutlineScrollArea.refresh();
+        toggleNoSelection(true);
+
+        var count = 0;
+        if (searchQuery.indexOf("/") == 0) {
+            // search document by Xpath query
+            try {
+                var rootNodeDocument = Inspector.rootDOMNode().ownerDocument;
+                var nodeList = rootNodeDocument.evaluate(searchQuery, rootNodeDocument, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
+                for (var i = 0; i < nodeList.snapshotLength; ++i) {
+                    searchResults.push(nodeList.snapshotItem(i));
+                    count++;
+                }
+            } catch(err) {
+                // ignore any exceptions. the query might be malformed, but we allow that 
+            }
+        } else {
+            // search document nodes by node name, node value, id and class name
+            var node = Inspector.rootDOMNode().ownerDocument;
+            while ((node = traverseNextNode.call(node, true))) {
+                var matched = false;
+                if (node.nodeName.hasSubstring(searchQuery, true))
+                    matched = true;
+                else if (node.nodeType == Node.TEXT_NODE && node.nodeValue.hasSubstring(searchQuery, true))
+                    matched = true;
+                else if (node.nodeType == Node.ELEMENT_NODE && node.id.hasSubstring(searchQuery, true))
+                    matched = true;
+                else if (node.nodeType == Node.ELEMENT_NODE && node.className.hasSubstring(searchQuery, true))
+                    matched = true;
+                if (matched) {
+                    searchResults.push(node);
+                    count++;
+                }
+            }
+        }
+
+        for (var i = 0; i < searchResults.length; ++i) {
+            var outlineElement = outlineElementForNode(searchResults[i]);
+            appendOutlineElement(treeOutline, outlineElement);
+            if (outlineElement.expandable())
+                outlineElement.collapse();
+            if (i == 0)
+                outlineElement.select();
+        }
+
+        var searchCountElement = document.getElementById("searchCount");
+        if (count == 1)
+            searchCountElement.textContent = "1 node";
+        else
+            searchCountElement.textContent = count + " nodes";
+    } else {
+        // switch back to the DOM tree and reveal the focused node
+        updateTreeOutline();
     }
-
-    return nodeList;
 }
 
 var tabNames = ["node","metrics","style","properties"];
@@ -605,7 +708,7 @@ function toggleNoSelection(state)
 {
     noSelection = state;
     if (noSelection) {
-        for (var i = 0; i < tabNames.length; i++)
+        for (var i = 0; i < tabNames.length; ++i)
             document.getElementById(tabNames[i] + "Pane").style.display = "none";
         document.getElementById("noSelection").style.removeProperty("display");
     } else {
@@ -617,7 +720,7 @@ function toggleNoSelection(state)
 function switchPane(pane)
 {
     currentPane = pane;
-    for (var i = 0; i < tabNames.length; i++) {
+    for (var i = 0; i < tabNames.length; ++i) {
         var paneElement = document.getElementById(tabNames[i] + "Pane");
         var button = document.getElementById(tabNames[i] + "Button");
         if (!button.originalClassName)
@@ -678,6 +781,9 @@ function treeOutlineNodeClicked(event)
 
 function treeOutlineNodeDoubleClicked(event)
 {
+    if (searchActive)
+        return;
+
     var element = event.currentTarget;
     if (element.representedElement && element.expandable()) {
         element.expand();
@@ -776,7 +882,7 @@ function revealOutlineItem()
     if (!foundRoot)
         return;
 
-    for (var i = 0; i < ancestors.length; i++)
+    for (var i = 0; i < ancestors.length; ++i)
         outlineElementForNode(ancestors[i]).expand();
 
     treeOutlineScrollArea.reveal(this);
@@ -846,6 +952,9 @@ function appendOutlineElement(list, item)
 
 function updateTreeOutline()
 {
+    if (searchActive)
+        return;
+
     var rootNode = Inspector.rootDOMNode();
     var treeOutline = document.getElementById("treeOutline");
 
@@ -996,7 +1105,7 @@ function traverseTreeForward(event)
 
 function updatePanes()
 {
-    for (var i = 0; i < tabNames.length; i++)
+    for (var i = 0; i < tabNames.length; ++i)
         paneUpdateState[tabNames[i]] = false;
     toggleNoSelection((Inspector.focusedDOMNode() ? false : true));
     if (noSelection)
@@ -1015,7 +1124,7 @@ function updateElementAttributes()
     if (!focusedNode.attributes.length)
         attributesList.innerHTML = "<span class=\"disabled\">(none)</span>";
 
-    for (var i = 0; i < focusedNode.attributes.length; i++) {
+    for (var i = 0; i < focusedNode.attributes.length; ++i) {
         var attr = focusedNode.attributes[i];
         var li = document.createElement("li");
 
@@ -1125,7 +1234,7 @@ function updateStylePane()
         }
 
         var focusedNodeName = focusedNode.nodeName.toLowerCase();
-        for (var i = 0; i < focusedNode.attributes.length; i++) {
+        for (var i = 0; i < focusedNode.attributes.length; ++i) {
             var attr = focusedNode.attributes[i];
             if (attr.style) {
                 var attrStyle = {
@@ -1143,7 +1252,7 @@ function updateStylePane()
 
         var matchedStyleRules = focusedNode.ownerDocument.defaultView.getMatchedCSSRules(focusedNode, "", !showUserAgentStyles);
         if (matchedStyleRules) {
-            for (var i = 0; i < matchedStyleRules.length; i++) {
+            for (var i = 0; i < matchedStyleRules.length; ++i) {
                 styleRules.push(matchedStyleRules[i]);
             }
         }
@@ -1198,7 +1307,7 @@ function updateStylePane()
 
             var style = styleRules[i].style;
             var styleShorthandLookup = [];
-            for (var j = 0; j < style.length; j++) {
+            for (var j = 0; j < style.length; ++j) {
                 var prop = null;
                 var name = style[j];
                 var shorthand = style.getPropertyShorthand(name);
@@ -1255,13 +1364,13 @@ function updateStylePane()
         if (priorityUsed) {
             // walk the properties again and account for !important
             var priorityCount = [];
-            for (var i = 0; i < styleRules.length; i++) {
+            for (var i = 0; i < styleRules.length; ++i) {
                 if (styleRules[i].isComputedStyle)
                     continue;
                 var style = styleRules[i].style;
-                for (var j = 0; j < styleProperties[i].length; j++) {
+                for (var j = 0; j < styleProperties[i].length; ++j) {
                     var prop = styleProperties[i][j];
-                    for (var k = 0; k < prop.subProperties.length; k++) {
+                    for (var k = 0; k < prop.subProperties.length; ++k) {
                         var name = prop.subProperties[k];
                         if (style.getPropertyPriority(name).length) {
                             if (!priorityCount[name]) {
@@ -1330,7 +1439,7 @@ function populateStyleListItem(li, prop, name)
 
     var colors = value.match(/(rgb\([0-9]+, [0-9]+, [0-9]+\))|(rgba\([0-9]+, [0-9]+, [0-9]+, [0-9]+\))/g);
     if (colors) {
-        for (var k = 0; k < colors.length; k++) {
+        for (var k = 0; k < colors.length; ++k) {
             var swatch = document.createElement("span");
             swatch.className = "colorSwatch";
             swatch.style.backgroundColor = colors[k];
@@ -1352,7 +1461,7 @@ function updateStyleProperties()
 
     var properties = styleProperties[selectedStyleRuleIndex];
     var omitTypicalValues = styleRules[selectedStyleRuleIndex].isComputedStyle;
-    for (var i = 0; i < properties.length; i++) {
+    for (var i = 0; i < properties.length; ++i) {
         var prop = properties[i];
         var name = prop.name;
         if (omitTypicalValues && typicalStylePropertyValue[name] == prop.style.getPropertyValue(name))
@@ -1378,7 +1487,7 @@ function updateStyleProperties()
             if (!expandedStyleShorthands[name])
                 subTree.style.display = "none";
 
-            for (var j = 0; j < prop.subProperties.length; j++) {
+            for (var j = 0; j < prop.subProperties.length; ++j) {
                 var name = prop.subProperties[j];
                 var li = document.createElement("li");
                 if (prop.style.isPropertyImplicit(name) || prop.style.getPropertyValue(name) == "initial")
@@ -1436,7 +1545,7 @@ function selectMappedStyleRule(attrName)
     if (!paneUpdateState["style"])
         updateStylePane();
 
-    for (var i = 0; i < styleRules.length; i++)
+    for (var i = 0; i < styleRules.length; ++i)
         if (styleRules[i].attrName == attrName)
             break;
 
