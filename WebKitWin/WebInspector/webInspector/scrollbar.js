@@ -43,7 +43,7 @@ APPLE SOFTWARE, HOWEVER CAUSED AND WHETHER UNDER THEORY OF CONTRACT, TORT
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-function AppleScrollbar(scrollbar)
+function Scrollbar(scrollbar)
 {
 }
 
@@ -53,7 +53,7 @@ function AppleScrollbar(scrollbar)
  * pre: this.scrollbar
  * post: this._thumb, this._track + event handlers
  */
-AppleScrollbar.prototype._init = function()
+Scrollbar.prototype._init = function()
 {
 	var style = null;
 	var element = null;
@@ -127,13 +127,13 @@ AppleScrollbar.prototype._init = function()
 	// ScrollArea will fire a refresh for us
 }
 
-AppleScrollbar.prototype.remove = function()
+Scrollbar.prototype.remove = function()
 {
 	this.scrollbar.removeChild(this._track);
 }
 
 // Capture events that we don't handle but also don't want getting through
-AppleScrollbar.prototype._captureEvent = function(event)
+Scrollbar.prototype._captureEvent = function(event)
 {
 	event.stopPropagation();
 	event.preventDefault();
@@ -142,7 +142,7 @@ AppleScrollbar.prototype._captureEvent = function(event)
 /*********************
  * Thumb scroll events
  */
-AppleScrollbar.prototype._mousedownThumb = function(event)
+Scrollbar.prototype._mousedownThumb = function(event)
 {
 	// temporary event listeners
 	document.addEventListener("mousemove", this._mousemoveThumbHandler, true);
@@ -158,7 +158,7 @@ AppleScrollbar.prototype._mousedownThumb = function(event)
 	event.preventDefault();
 }
 
-AppleScrollbar.prototype._mousemoveThumb = function(event)
+Scrollbar.prototype._mousemoveThumb = function(event)
 {
 	var delta = this._getMousePosition(event) - this._thumbStart_temp;
 	
@@ -169,7 +169,7 @@ AppleScrollbar.prototype._mousemoveThumb = function(event)
 	event.preventDefault();
 }
 
-AppleScrollbar.prototype._mouseupThumb = function(event)
+Scrollbar.prototype._mouseupThumb = function(event)
 {
 	// remove temporary event handlers
 	document.removeEventListener("mousemove", this._mousemoveThumbHandler, true);
@@ -188,7 +188,7 @@ AppleScrollbar.prototype._mouseupThumb = function(event)
 /*********************
  * Track scroll events
  */
-AppleScrollbar.prototype._mousedownTrack = function(event)
+Scrollbar.prototype._mousedownTrack = function(event)
 {
 	this._track_mouse_temp = this._getMousePosition(event) - this._trackOffset;
 	
@@ -215,7 +215,7 @@ AppleScrollbar.prototype._mousedownTrack = function(event)
 	event.preventDefault();
 }
 
-AppleScrollbar.prototype._trackScrollDelay = function(self)
+Scrollbar.prototype._trackScrollDelay = function(self)
 {
 	if (!self._track_scrolling) return;
 	
@@ -225,7 +225,7 @@ AppleScrollbar.prototype._trackScrollDelay = function(self)
 	self._track_timer = setInterval(self._trackScrollOnePage, 150, self);
 }
 
-AppleScrollbar.prototype._mousemoveTrack = function(event)
+Scrollbar.prototype._mousemoveTrack = function(event)
 {
 	this._track_mouse_temp = this._getMousePosition(event) - this._trackOffset;
 	
@@ -233,7 +233,7 @@ AppleScrollbar.prototype._mousemoveTrack = function(event)
 	event.preventDefault();
 }
 
-AppleScrollbar.prototype._mouseoverTrack = function(event)
+Scrollbar.prototype._mouseoverTrack = function(event)
 {
 	this._track_mouse_temp = this._getMousePosition(event) - this._trackOffset;
 	this._track_scrolling = true;
@@ -242,7 +242,7 @@ AppleScrollbar.prototype._mouseoverTrack = function(event)
 	event.preventDefault();
 }
 
-AppleScrollbar.prototype._mouseoutTrack = function(event)
+Scrollbar.prototype._mouseoutTrack = function(event)
 {
 	this._track_scrolling = false;
 	
@@ -250,7 +250,7 @@ AppleScrollbar.prototype._mouseoutTrack = function(event)
 	event.preventDefault();
 }
 
-AppleScrollbar.prototype._mouseupTrack = function(event)
+Scrollbar.prototype._mouseupTrack = function(event)
 {
 	clearInterval(this._track_timer);
 	
@@ -269,7 +269,7 @@ AppleScrollbar.prototype._mouseupTrack = function(event)
 	event.preventDefault();
 }
 
-AppleScrollbar.prototype._trackScrollOnePage = function(self)
+Scrollbar.prototype._trackScrollOnePage = function(self)
 {
 	// this is called from setInterval, so we need a ptr to this
 	
@@ -285,9 +285,9 @@ AppleScrollbar.prototype._trackScrollOnePage = function(self)
 
 /*
  * setScrollArea(scrollarea)
- * Sets the AppleScrollArea this scrollbar is using.
+ * Sets the ScrollArea this scrollbar is using.
  */
-AppleScrollbar.prototype.setScrollArea = function(scrollarea)
+Scrollbar.prototype.setScrollArea = function(scrollarea)
 {
 	// if we already have a scrollarea, remove the mousewheel handler
 	if (this.scrollarea)
@@ -305,7 +305,7 @@ AppleScrollbar.prototype.setScrollArea = function(scrollarea)
  * refresh()
  * Refresh the scrollbar size and thumb position
  */
-AppleScrollbar.prototype.refresh = function()
+Scrollbar.prototype.refresh = function()
 {
 	this._trackOffset = this._computeTrackOffset();
 	this._trackLength = this._computeTrackLength();
@@ -343,7 +343,7 @@ AppleScrollbar.prototype.refresh = function()
 	this.horizontalHasScrolled();
 }
 
-AppleScrollbar.prototype.setAutohide = function(autohide)
+Scrollbar.prototype.setAutohide = function(autohide)
 {
 	this.autohide = autohide;
 	
@@ -358,14 +358,14 @@ AppleScrollbar.prototype.setAutohide = function(autohide)
 	}
 }
 
-AppleScrollbar.prototype.hide = function()
+Scrollbar.prototype.hide = function()
 {
 	this._track.style.display = "none";
 	this.scrollbar.style.display = "none";
 	this.hidden = true;
 }
 
-AppleScrollbar.prototype.show = function()
+Scrollbar.prototype.show = function()
 {
 	this._track.style.display = "block";
 	this.scrollbar.style.removeProperty("display");
@@ -375,7 +375,7 @@ AppleScrollbar.prototype.show = function()
 	}
 }
 
-AppleScrollbar.prototype.setSize = function(size)
+Scrollbar.prototype.setSize = function(size)
 {
 	this.size = size;
 	
@@ -384,7 +384,7 @@ AppleScrollbar.prototype.setSize = function(size)
 	this._setObjectSize(this._thumb.children[1], size);
 }
 
-AppleScrollbar.prototype.setTrackStart = function(imgpath, length)
+Scrollbar.prototype.setTrackStart = function(imgpath, length)
 {
 	this.trackStartPath = imgpath;
 	this.trackStartLength = length;
@@ -396,14 +396,14 @@ AppleScrollbar.prototype.setTrackStart = function(imgpath, length)
 	this._setObjectStart(this._track.children[1], length);
 }
 
-AppleScrollbar.prototype.setTrackMiddle = function(imgpath)
+Scrollbar.prototype.setTrackMiddle = function(imgpath)
 {
 	this.trackMiddlePath = imgpath;
 
 	this._track.children[1].style.background = "url(" + imgpath + ") " + this._repeatType + " top left";
 }
 
-AppleScrollbar.prototype.setTrackEnd = function(imgpath, length)
+Scrollbar.prototype.setTrackEnd = function(imgpath, length)
 {
 	this.trackEndPath = imgpath;
 	this.trackEndLength = length;
@@ -415,7 +415,7 @@ AppleScrollbar.prototype.setTrackEnd = function(imgpath, length)
 	this._setObjectEnd(this._track.children[1], length);
 }
 
-AppleScrollbar.prototype.setThumbStart = function(imgpath, length)
+Scrollbar.prototype.setThumbStart = function(imgpath, length)
 {
 	this.thumbStartPath = imgpath;
 	this.thumbStartLength = length;
@@ -427,14 +427,14 @@ AppleScrollbar.prototype.setThumbStart = function(imgpath, length)
 	this._setObjectStart(this._thumb.children[1], length);
 }
 
-AppleScrollbar.prototype.setThumbMiddle = function(imgpath)
+Scrollbar.prototype.setThumbMiddle = function(imgpath)
 {
 	this.thumbMiddlePath = imgpath;
 	
 	this._thumb.children[1].style.background = "url(" + imgpath + ") " + this._repeatType + " top left";
 }
 
-AppleScrollbar.prototype.setThumbEnd = function(imgpath, length)
+Scrollbar.prototype.setThumbEnd = function(imgpath, length)
 {
 	this.thumbEndPath = imgpath;
 	this.thumbEndLength = length;
@@ -446,7 +446,7 @@ AppleScrollbar.prototype.setThumbEnd = function(imgpath, length)
 	this._setObjectEnd(this._thumb.children[1], length);
 }
 
-AppleScrollbar.prototype._contentPositionForThumbPosition = function(thumb_pos)
+Scrollbar.prototype._contentPositionForThumbPosition = function(thumb_pos)
 {
 	// if we're currently displaying all content, we don't want it outside the view
 	if (this._getViewToContentRatio() >= 1.0)
@@ -459,7 +459,7 @@ AppleScrollbar.prototype._contentPositionForThumbPosition = function(thumb_pos)
 	}
 }
 
-AppleScrollbar.prototype._thumbPositionForContentPosition = function(page_pos)
+Scrollbar.prototype._thumbPositionForContentPosition = function(page_pos)
 {
 	// if we're currently displaying all content, we don't want it outside the view
 	if (this._getViewToContentRatio() >= 1.0)
@@ -475,7 +475,7 @@ AppleScrollbar.prototype._thumbPositionForContentPosition = function(page_pos)
 	}
 }
 
-AppleScrollbar.prototype.scrollByThumbDelta = function(deltaScroll)
+Scrollbar.prototype.scrollByThumbDelta = function(deltaScroll)
 {
 	if (deltaScroll == 0)
 		return;
@@ -485,13 +485,13 @@ AppleScrollbar.prototype.scrollByThumbDelta = function(deltaScroll)
 
 
 /*******************************************************************************
- * AppleVerticalScrollbar
- * Implementation of AppleScrollbar
+ * VerticalScrollbar
+ * Implementation of Scrollbar
  *
  *
  */
 
-function AppleVerticalScrollbar(scrollbar)
+function VerticalScrollbar(scrollbar)
 {
 	/* Objects */
 	this.scrollarea = null;
@@ -548,35 +548,35 @@ function AppleVerticalScrollbar(scrollbar)
 	this._init();
 }
 
-// Inherit from AppleScrollbar
-AppleVerticalScrollbar.prototype = new AppleScrollbar(null);
+// Inherit from Scrollbar
+VerticalScrollbar.prototype = new Scrollbar(null);
 
 
 /*********************
  * Orientation-specific functions.
  * These helper functions return vertical values.
  */
-AppleVerticalScrollbar.prototype.scrollTo = function(pos)
+VerticalScrollbar.prototype.scrollTo = function(pos)
 {
 	this.scrollarea.verticalScrollTo(pos);
 }
 
-AppleVerticalScrollbar.prototype._setObjectSize = function(object, size)
+VerticalScrollbar.prototype._setObjectSize = function(object, size)
 { object.style.width = size + "px"; }
 
-AppleVerticalScrollbar.prototype._setObjectLength = function(object, length)
+VerticalScrollbar.prototype._setObjectLength = function(object, length)
 {
 	if (!isNaN(length))
 		object.style.height = length + "px";
 }
 
-AppleVerticalScrollbar.prototype._setObjectStart = function(object, start)
+VerticalScrollbar.prototype._setObjectStart = function(object, start)
 { object.style.top = start + "px"; }
 
-AppleVerticalScrollbar.prototype._setObjectEnd = function(object, end)
+VerticalScrollbar.prototype._setObjectEnd = function(object, end)
 { object.style.bottom = end + "px"; }
 
-AppleVerticalScrollbar.prototype._getMousePosition = function(event)
+VerticalScrollbar.prototype._getMousePosition = function(event)
 {
 	if (event != undefined)
 		return event.y;
@@ -584,12 +584,12 @@ AppleVerticalScrollbar.prototype._getMousePosition = function(event)
 		return 0;
 }
 	
-AppleVerticalScrollbar.prototype._getThumbStartPos = function()
+VerticalScrollbar.prototype._getThumbStartPos = function()
 {
 	return parseInt(document.defaultView.getComputedStyle(this._thumb, '').getPropertyValue("top"), 10);
 }
 
-AppleVerticalScrollbar.prototype._computeTrackOffset = function()
+VerticalScrollbar.prototype._computeTrackOffset = function()
 {
 	// get the absolute top of the track
 	var obj = this.scrollbar;
@@ -603,47 +603,47 @@ AppleVerticalScrollbar.prototype._computeTrackOffset = function()
 	return curtop;
 }
 
-AppleVerticalScrollbar.prototype._computeTrackLength = function()
+VerticalScrollbar.prototype._computeTrackLength = function()
 {
 	// get the current actual track height
 	var style = document.defaultView.getComputedStyle(this.scrollbar, '');
 	return style ? parseInt(style.getPropertyValue("height"), 10) : 0;
 }
 
-AppleVerticalScrollbar.prototype._getViewToContentRatio = function()
+VerticalScrollbar.prototype._getViewToContentRatio = function()
 { return this.scrollarea.viewToContentHeightRatio; }
 
-AppleVerticalScrollbar.prototype._getContentLength = function()
+VerticalScrollbar.prototype._getContentLength = function()
 { return this.scrollarea.content.scrollHeight; }
 
-AppleVerticalScrollbar.prototype._getViewLength = function()
+VerticalScrollbar.prototype._getViewLength = function()
 { return this.scrollarea.viewHeight; }
 
-AppleVerticalScrollbar.prototype._canScroll = function()
+VerticalScrollbar.prototype._canScroll = function()
 { return this.scrollarea.scrollsVertically; }
 
 
-AppleVerticalScrollbar.prototype.verticalHasScrolled = function()
+VerticalScrollbar.prototype.verticalHasScrolled = function()
 {
 	var new_thumb_pos = this._thumbPositionForContentPosition(this.scrollarea.content.scrollTop);
 	this._thumbStart = new_thumb_pos;
 	this._thumb.style.top = new_thumb_pos + "px";
 }
 
-AppleVerticalScrollbar.prototype.horizontalHasScrolled = function()
+VerticalScrollbar.prototype.horizontalHasScrolled = function()
 {
 }
 
 
 
 /*******************************************************************************
-* AppleHorizontalScrollbar
-* Implementation of AppleScrollbar
+* HorizontalScrollbar
+* Implementation of Scrollbar
 *
 *
 */
 
-function AppleHorizontalScrollbar(scrollbar)
+function HorizontalScrollbar(scrollbar)
 {
 	/* Objects */
 	this.scrollarea = null;
@@ -700,35 +700,35 @@ function AppleHorizontalScrollbar(scrollbar)
 	this._init();
 }
 
-// Inherit from AppleScrollbar
-AppleHorizontalScrollbar.prototype = new AppleScrollbar(null);
+// Inherit from Scrollbar
+HorizontalScrollbar.prototype = new Scrollbar(null);
 
 
 /*********************
 * Orientation-specific functions.
 * These helper functions return vertical values.
 */
-AppleHorizontalScrollbar.prototype.scrollTo = function(pos)
+HorizontalScrollbar.prototype.scrollTo = function(pos)
 {
 	this.scrollarea.horizontalScrollTo(pos);
 }
 
-AppleHorizontalScrollbar.prototype._setObjectSize = function(object, size)
+HorizontalScrollbar.prototype._setObjectSize = function(object, size)
 { object.style.height = size + "px"; }
 
-AppleHorizontalScrollbar.prototype._setObjectLength = function(object, length)
+HorizontalScrollbar.prototype._setObjectLength = function(object, length)
 {
 	if (!isNaN(length))
 		object.style.height = length + "px";
 }
 
-AppleHorizontalScrollbar.prototype._setObjectStart = function(object, start)
+HorizontalScrollbar.prototype._setObjectStart = function(object, start)
 { object.style.left = start + "px"; }
 
-AppleHorizontalScrollbar.prototype._setObjectEnd = function(object, end)
+HorizontalScrollbar.prototype._setObjectEnd = function(object, end)
 { object.style.right = end + "px"; }
 
-AppleHorizontalScrollbar.prototype._getMousePosition = function(event)
+HorizontalScrollbar.prototype._getMousePosition = function(event)
 {
 	if (event != undefined)
 		return event.x;
@@ -736,12 +736,12 @@ AppleHorizontalScrollbar.prototype._getMousePosition = function(event)
 		return 0;
 }
 
-AppleHorizontalScrollbar.prototype._getThumbStartPos = function()
+HorizontalScrollbar.prototype._getThumbStartPos = function()
 {
 	return parseInt(document.defaultView.getComputedStyle(this._thumb, '').getPropertyValue("left"), 10);
 }
 
-AppleHorizontalScrollbar.prototype._computeTrackOffset = function()
+HorizontalScrollbar.prototype._computeTrackOffset = function()
 {
 	// get the absolute top of the track
 	var obj = this.scrollbar;
@@ -755,31 +755,31 @@ AppleHorizontalScrollbar.prototype._computeTrackOffset = function()
 	return curtop;
 }
 
-AppleHorizontalScrollbar.prototype._computeTrackLength = function()
+HorizontalScrollbar.prototype._computeTrackLength = function()
 {
 	// get the current actual track height
 	var style = document.defaultView.getComputedStyle(this.scrollbar, '');
 	return style ? parseInt(style.getPropertyValue("width"), 10) : 0;
 }
 
-AppleHorizontalScrollbar.prototype._getViewToContentRatio = function()
+HorizontalScrollbar.prototype._getViewToContentRatio = function()
 { return this.scrollarea.viewToContentWidthRatio; }
 
-AppleHorizontalScrollbar.prototype._getContentLength = function()
+HorizontalScrollbar.prototype._getContentLength = function()
 { return this.scrollarea.content.scrollWidth; }
 
-AppleHorizontalScrollbar.prototype._getViewLength = function()
+HorizontalScrollbar.prototype._getViewLength = function()
 { return this.scrollarea.viewWidth; }
 
-AppleHorizontalScrollbar.prototype._canScroll = function()
+HorizontalScrollbar.prototype._canScroll = function()
 { return this.scrollarea.scrollsHorizontally; }
 
 
-AppleHorizontalScrollbar.prototype.verticalHasScrolled = function()
+HorizontalScrollbar.prototype.verticalHasScrolled = function()
 {
 }
 
-AppleHorizontalScrollbar.prototype.horizontalHasScrolled = function()
+HorizontalScrollbar.prototype.horizontalHasScrolled = function()
 {
 	var new_thumb_pos = this._thumbPositionForContentPosition(this.scrollarea.content.scrollLeft);
 	this._thumbStart = new_thumb_pos;

@@ -1,5 +1,18 @@
 2007-04-08  Adam Roben  <aroben@apple.com>
 
+        Merge in r20793.
+
+        * WebInspector/webInspector/AppleScrollArea.js: Removed.
+        * WebInspector/webInspector/AppleScrollbar.js: Removed.
+        * WebInspector/webInspector/Images/resize.png: Added.
+        * WebInspector/webInspector/inspector.css:
+        * WebInspector/webInspector/inspector.html:
+        * WebInspector/webInspector/inspector.js:
+        * WebInspector/webInspector/scrollarea.js: Added.
+        * WebInspector/webInspector/scrollbar.js: Added.
+
+2007-04-08  Adam Roben  <aroben@apple.com>
+
         Merge in r20792.
 
         * WebInspector/webInspector/inspector.js:
