@@ -35,6 +35,7 @@
 #import "WebNodeHighlight.h"
 #import "WebPreferences.h"
 #import "WebScriptDebugDelegate.h"
+#import "WebTypesInternal.h"
 #import "WebView.h"
 #import "WebViewPrivate.h"
 

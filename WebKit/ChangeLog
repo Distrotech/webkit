@@ -1,3 +1,9 @@
+2007-04-09  Mark Rowe  <mrowe@apple.com>
+
+        Build fix.
+
+        * WebInspector/WebInspector.m:
+
 2007-04-05  Adam Roben  <aroben@apple.com>
 
         Reviewed by Tim.
