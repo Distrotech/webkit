@@ -1003,7 +1003,7 @@ function treeKeypress(event)
     var nextFocusedNode;
     var focusedNode = Inspector.focusedDOMNode();
 
-    if (event.keyCode == 63232) {
+    if (event.keyIdentifier == "Up") {
         // up arrow key
         nextFocusedNode = traversePreviousNode.call(focusedNode, ignoreWhitespace);
         while (nextFocusedNode) {
@@ -1012,7 +1012,7 @@ function treeKeypress(event)
                 break;
             nextFocusedNode = traversePreviousNode.call(nextFocusedNode, ignoreWhitespace);
         }
-    } else if (event.keyCode == 63233) {
+    } else if (event.keyIdentifier == "Down") {
         // down arrow key
         nextFocusedNode = traverseNextNode.call(focusedNode, ignoreWhitespace);
         while (nextFocusedNode) {
@@ -1021,7 +1021,7 @@ function treeKeypress(event)
                 break;
             nextFocusedNode = traverseNextNode.call(nextFocusedNode, ignoreWhitespace);
         }
-    } else if (event.keyCode == 63234) {
+    } else if (event.keyIdentifier == "Left") {
         // left arrow key
         var focusedOutlineElement = outlineElementForNode(focusedNode, true);
         if (focusedOutlineElement) {
@@ -1030,7 +1030,7 @@ function treeKeypress(event)
             else if (focusedOutlineElement.parentNode && !focusedOutlineElement.parentNode.treeRoot)
                 nextFocusedNode = focusedOutlineElement.parentNode.parentListElement.representedElement;
         }
-    } else if (event.keyCode == 63235) {
+    } else if (event.keyIdentifier == "Right") {
         // right arrow key
         var focusedOutlineElement = outlineElementForNode(focusedNode, true);
         if (focusedOutlineElement && focusedOutlineElement.expandable())
