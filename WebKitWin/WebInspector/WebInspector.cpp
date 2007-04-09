@@ -44,15 +44,25 @@
 #include <JavaScriptCore/APICast.h>
 #include <JavaScriptCore/JavaScriptCore.h>
 #include <WebCore/BString.h>
+#include <WebCore/Document.h>
+#include <WebCore/Page.h>
 #include <WebCore/kjs_dom.h>
 #pragma warning(pop)
 
+#include <windowsx.h>
+#include <wtf/Vector.h>
 #include <wtf/RetainPtr.h>
 
 using namespace WebCore;
 
+static const int inspectorMinWidth = 280;
+static const int inspectorMinHeight = 450;
+
+static const LRESULT kNotHandledResult = -1;
+
 static LPCTSTR kWebInspectorWindowClassName = TEXT("WebInspectorWindowClass");
 static ATOM registerWindowClass();
+static LPCTSTR kWebInspectorPointerProp = TEXT("WebInspectorPointer");
 
 class WebInspectorPrivate {
 public:
@@ -61,6 +71,9 @@ public:
         , webViewLoaded(false)
         , preventHighlight(false)
         , isSharedInspector(false)
+        , isResizing(false)
+        , isDragging(false)
+        , originalWebViewWndProc(0)
     {
     }
 
@@ -78,6 +91,14 @@ public:
     bool webViewLoaded;
     bool preventHighlight;
     bool isSharedInspector;
+
+    bool isResizing;
+    bool isDragging;
+    IntRect windowRectAtButtonDown;
+    // This is in client coordinates while moving the window, and screen coordinates while resizing.
+    IntPoint buttonDownPoint;
+
+    WNDPROC originalWebViewWndProc;
 };
 
 WebInspector* WebInspector::sharedWebInspector()
@@ -149,13 +170,14 @@ WebInspector::WebInspector()
         return;
 #endif
 
-    COMPtr<IWebViewPrivate> viewPrivate;
-    if (FAILED(m_private->webView->QueryInterface(IID_IWebViewPrivate, (void**)&viewPrivate)))
+    HWND viewWindow;
+    if (FAILED(m_private->webView->viewWindow(&viewWindow)))
         return;
 
-    HWND viewWindow;
-    if (FAILED(viewPrivate->viewWindow(&viewWindow)))
-        return;
+    ::SetProp(viewWindow, kWebInspectorPointerProp, (HANDLE)this);
+
+#pragma warning(disable: 4244 4312)
+    m_private->originalWebViewWndProc = (WNDPROC)::SetWindowLongPtr(viewWindow, GWLP_WNDPROC, (LONG_PTR)SubclassedWebViewWndProc);
 
     IntRect frame(IntPoint(60, 200), IntSize(350, 550));
     ::SetWindowPos(m_private->hWnd, HWND_TOPMOST, frame.x(), frame.y(), frame.width(), frame.height(), 0);
@@ -262,6 +284,12 @@ void WebInspector::show()
 
 LRESULT WebInspector::onDestroy(WPARAM, LPARAM)
 {
+    HWND viewWindow;
+    if (SUCCEEDED(m_private->webView->viewWindow(&viewWindow))) {
+        ::SetWindowLongPtr(viewWindow, GWLP_WNDPROC, (LONG_PTR)m_private->originalWebViewWndProc);
+        ::RemoveProp(viewWindow, kWebInspectorPointerProp);
+    }
+
     m_private->webView->close();
     delete this;
 
@@ -285,6 +313,104 @@ LRESULT WebInspector::onSize(WPARAM, LPARAM)
         return 0;
 
     ::SetWindowPos(viewWindow, 0, clientRect.left, clientRect.top, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top, SWP_NOZORDER);
+    return 0;
+}
+
+LRESULT WebInspector::handleMessageSentToWebView(UINT message, WPARAM wParam, LPARAM lParam)
+{
+    switch (message) {
+        case WM_LBUTTONDOWN:
+            return onLButtonDown(wParam, lParam);
+        case WM_LBUTTONUP:
+            return onLButtonUp(wParam, lParam);
+        case WM_MOUSEMOVE:
+            return onMouseMove(wParam, lParam);
+    }
+
+    return kNotHandledResult;
+}
+
+LRESULT WebInspector::onLButtonDown(WPARAM, LPARAM lParam)
+{
+    ASSERT(!m_private->isResizing && !m_private->isDragging);
+
+    IntPoint point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+    POINT screenPoint = point;
+    ::ClientToScreen(m_private->hWnd, &screenPoint);
+
+    Document* document = m_private->webView->page()->mainFrame()->document();
+    if (!document)
+        return kNotHandledResult;
+
+    const Vector<DashboardRegionValue>& regions = document->dashboardRegions();
+    const size_t regionsCount = regions.size();
+
+    for (unsigned i = 0; i < regionsCount; ++i) {
+        if (regions[i].clip.contains(point)) {
+            if (regions[i].label == "resize") {
+                ::SetCapture(m_private->hWnd);
+                m_private->isResizing = true;
+                m_private->buttonDownPoint = screenPoint;
+                RECT windowRect;
+                ::GetWindowRect(m_private->hWnd, &windowRect);
+                m_private->windowRectAtButtonDown = windowRect;
+                return 0;
+            }
+            if (regions[i].label == "control")
+                return kNotHandledResult;
+        }
+    }
+
+    // The click wasn't in any controls or in the resizer, so we must be dragging the window
+    ::SetCapture(m_private->hWnd);
+    m_private->isDragging = true;
+    m_private->buttonDownPoint = point;
+    return 0;
+}
+
+LRESULT WebInspector::onLButtonUp(WPARAM, LPARAM)
+{
+    if (!m_private->isResizing && !m_private->isDragging)
+        return kNotHandledResult;
+
+    ::ReleaseCapture();
+
+    m_private->isResizing = false;
+    m_private->isDragging = false;
+
+    return 0;
+}
+
+LRESULT WebInspector::onMouseMove(WPARAM, LPARAM lParam)
+{
+    if (!m_private->isResizing && !m_private->isDragging)
+        return kNotHandledResult;
+
+    POINT pt;
+    pt.x = GET_X_LPARAM(lParam);
+    pt.y = GET_Y_LPARAM(lParam);
+    if (m_private->isResizing)
+        ::ClientToScreen(m_private->hWnd, &pt);
+    IntPoint point(pt);
+
+    if (point == m_private->buttonDownPoint)
+        return 0;
+    
+    IntSize delta(point.x() - m_private->buttonDownPoint.x(), point.y() - m_private->buttonDownPoint.y());
+
+    RECT rect;
+    ::GetWindowRect(m_private->hWnd, &rect);
+    IntRect windowRect(rect);
+
+    if (m_private->isResizing) {
+        IntSize newSize = m_private->windowRectAtButtonDown.size() + delta;
+        newSize.setWidth(max(newSize.width(), inspectorMinWidth));
+        newSize.setHeight(max(newSize.height(), inspectorMinHeight));
+        windowRect.setSize(newSize);
+    } else
+        windowRect.move(delta);
+
+    ::SetWindowPos(m_private->hWnd, 0, windowRect.x(), windowRect.y(), windowRect.width(), windowRect.height(), SWP_NOZORDER);
     return 0;
 }
 
@@ -920,7 +1046,26 @@ LRESULT CALLBACK WebInspectorWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             return inspector->onDestroy(wParam, lParam);
         case WM_ACTIVATEAPP:
             return inspector->onActivateApp(wParam, lParam);
+        case WM_LBUTTONDOWN:
+            return inspector->onLButtonDown(wParam, lParam);
+        case WM_LBUTTONUP:
+            return inspector->onLButtonUp(wParam, lParam);
+        case WM_MOUSEMOVE:
+            return inspector->onMouseMove(wParam, lParam);
     }
 
     return ::DefWindowProc(hWnd, message, wParam, lParam);
+}
+
+LRESULT CALLBACK SubclassedWebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    WebInspector* inspector = reinterpret_cast<WebInspector*>(::GetProp(hWnd, kWebInspectorPointerProp));
+    // We subclass the WebView after calling SetProp, so GetProp should never fail here.
+    ASSERT(inspector);
+
+    LRESULT lResult = inspector->handleMessageSentToWebView(message, wParam, lParam);
+    if (lResult != kNotHandledResult)
+        return lResult;
+
+    return ::CallWindowProc(inspector->m_private->originalWebViewWndProc, hWnd, message, wParam, lParam);
 }

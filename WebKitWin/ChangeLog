@@ -1,5 +1,25 @@
 2007-04-08  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Anders.
+
+        <rdar://problem/5119804> Web Inspector isn't resizable
+        <rdar://problem/5119805> Can't move Web Inspector
+
+        * WebInspector/WebInspector.cpp:
+        (WebInspectorPrivate::WebInspectorPrivate):
+        (WebInspector::WebInspector): Subclass the WebView so we can intercept
+        its messages.
+        (WebInspector::onDestroy): Undo the subclassing.
+        (WebInspector::handleMessageSentToWebView): Added.
+        (WebInspector::onLButtonDown): Added.
+        (WebInspector::onLButtonUp): Added.
+        (WebInspector::onMouseMove): Added.
+        (WebInspectorWndProc): Added cases for mouse messages.
+        (SubclassedWebViewWndProc): Added.
+        * WebInspector/WebInspector.h:
+
+2007-04-08  Adam Roben  <aroben@apple.com>
+
         Merge in r20793.
 
         * WebInspector/webInspector/AppleScrollArea.js: Removed.

@@ -335,10 +335,14 @@ public:
     virtual HRESULT STDMETHODCALLTYPE onNotify(IWebNotification*);
 
 private:
-    LRESULT onCreate(WPARAM, LPARAM);
     LRESULT onDestroy(WPARAM, LPARAM);
     LRESULT onSize(WPARAM, LPARAM);
     LRESULT onActivateApp(WPARAM, LPARAM);
+    LRESULT onLButtonDown(WPARAM, LPARAM);
+    LRESULT onLButtonUp(WPARAM, LPARAM);
+    LRESULT onMouseMove(WPARAM, LPARAM);
+    LRESULT handleMessageSentToWebView(UINT message, WPARAM, LPARAM);
+    
 
     void inspectedWebViewProgressFinished(IWebNotification*);
     void webFrameDetached(WebFrame*);
@@ -355,6 +359,7 @@ private:
     OwnPtr<WebInspectorPrivate> m_private;
 
     friend static LRESULT CALLBACK WebInspectorWndProc(HWND, UINT, WPARAM, LPARAM);
+    friend static LRESULT CALLBACK SubclassedWebViewWndProc(HWND, UINT, WPARAM, LPARAM);
 };
 
 #endif // !defined(WebInspector_h)
