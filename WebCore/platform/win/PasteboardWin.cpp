@@ -314,6 +314,11 @@ void Pasteboard::writeImage(const HitTestResult& result)
     }
 }
 
+void Pasteboard::writeImage(Node*, const KURL&)
+{
+    LOG_NOIMPL();
+}
+
 bool Pasteboard::canSmartReplace()
 { 
     // WebSmartPastePboardType is unavailable

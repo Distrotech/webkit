@@ -1,3 +1,10 @@
+2007-04-09  Adam Roben  <aroben@apple.com>
+
+        Build fix.
+
+        * platform/win/PasteboardWin.cpp:
+        (WebCore::Pasteboard::writeImage):
+
 2007-04-08  Adam Roben  <aroben@apple.com>
 
         Reviewed by Oliver.
