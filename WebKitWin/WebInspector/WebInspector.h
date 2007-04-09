@@ -190,11 +190,11 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE setFrame( 
         /* [in] */ IWebView*,
-        /* [in] */ RECT*) { return E_NOTIMPL; }
+        /* [in] */ RECT*);
     
     virtual HRESULT STDMETHODCALLTYPE webViewFrame( 
         /* [in] */ IWebView*,
-        /* [retval][out] */ RECT*) { return E_NOTIMPL; }
+        /* [retval][out] */ RECT*);
     
     virtual HRESULT STDMETHODCALLTYPE setContentRect( 
         /* [in] */ IWebView*,

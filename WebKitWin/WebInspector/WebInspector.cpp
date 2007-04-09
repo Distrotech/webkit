@@ -259,6 +259,12 @@ void WebInspector::show()
     updateSystemColors();
 
     ::SetWindowPos(m_private->hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW);
+
+    HWND viewWindow;
+    if (FAILED(m_private->webView->viewWindow(&viewWindow)))
+        return;
+
+    ::SetFocus(viewWindow);
 }
 
 LRESULT WebInspector::onDestroy(WPARAM, LPARAM)
@@ -391,6 +397,32 @@ LRESULT WebInspector::onMouseMove(WPARAM, LPARAM lParam)
 
     ::SetWindowPos(m_private->hWnd, 0, windowRect.x(), windowRect.y(), windowRect.width(), windowRect.height(), SWP_NOZORDER);
     return 0;
+}
+
+HRESULT STDMETHODCALLTYPE WebInspector::setFrame( 
+    /* [in] */ IWebView*,
+    /* [in] */ RECT* lpRect)
+{
+    if (!lpRect) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    ::SetWindowPos(m_private->hWnd, 0, lpRect->left, lpRect->top, lpRect->right - lpRect->left, lpRect->bottom - lpRect->top, SWP_NOZORDER);
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebInspector::webViewFrame( 
+    /* [in] */ IWebView*,
+    /* [in] */ RECT* lpRect)
+{
+    if (!lpRect) {
+        ASSERT_NOT_REACHED();
+        return E_POINTER;
+    }
+
+    ::GetWindowRect(m_private->hWnd, lpRect);
+    return S_OK;
 }
 
 void WebInspector::setWebFrame(WebFrame* webFrame)

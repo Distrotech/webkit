@@ -1,5 +1,19 @@
 2007-04-09  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Oliver.
+
+        Fix two Web Inspector bugs:
+        - The WebView wasn't focused when the inspector first appeared.
+        - Resizing the upper pane did not resize the whole window.
+
+        * WebInspector/WebInspector.cpp:
+        (WebInspector::show): Focus the WebView.
+        (WebInspector::setFrame): Implemented.
+        (WebInspector::webViewFrame): Implemented.
+        * WebInspector/WebInspector.h:
+
+2007-04-09  Adam Roben  <aroben@apple.com>
+
         * WebInspector/WebInspector.cpp:
         (WebInspector::WebInspector): Removed two fixed FIXMEs and some
         commented-out code.
