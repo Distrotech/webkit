@@ -648,12 +648,14 @@ function refreshSearch()
 
         var count = 0;
         var xpathQuery = searchQuery;
-        if (searchQuery.indexOf("/") == -1)
-            xpathQuery = "//" + searchQuery + " | " + "//*[contains(@*,'" + searchQuery.escapeCharacters("'") + "')]" + " | " + "//text()[contains(.,'" + searchQuery.escapeCharacters("'") + "')]";
+        if (searchQuery.indexOf("/") == -1) {
+            var escapedQuery = searchQuery.escapeCharacters("'");
+            xpathQuery = "//*[contains(name(),'" + escapedQuery + "') or contains(@*,'" + escapedQuery + "')] | //text()[contains(.,'" + escapedQuery + "')]";
+        }
 
         try {
-            var rootNodeDocument = Inspector.rootDOMNode().ownerDocument;
-            var nodeList = rootNodeDocument.evaluate(xpathQuery, rootNodeDocument, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
+            var focusedNodeDocument = Inspector.focusedDOMNode().ownerDocument;
+            var nodeList = focusedNodeDocument.evaluate(xpathQuery, focusedNodeDocument, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
             for (var i = 0; i < nodeList.snapshotLength; ++i) {
                 searchResults.push(nodeList.snapshotItem(i));
                 count++;
