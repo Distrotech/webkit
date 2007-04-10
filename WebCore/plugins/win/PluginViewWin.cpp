@@ -94,7 +94,7 @@ static String scriptStringIfJavaScriptURL(const KURL& url)
         return String();
 
     // This returns an unescaped string
-    return url.path();
+    return KURL::decode_string(url.url().mid(11));
 }
 
 PluginViewWin* PluginViewWin::s_currentPluginView = 0;

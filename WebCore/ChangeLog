@@ -1,3 +1,18 @@
+2007-04-10  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://problem/5056988>
+        Can not open player on http://radioalice.com
+
+        Fix scriptStringIfJavaScriptURL to not use the path of the URL. This would ignore any characters past 
+        a '?' character because that would be parsed as the query part of the URL.
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::scriptStringIfJavaScriptURL):
+        Make this be more like the mac, chopping off the first 12 characters ("javascript:") 
+        and then decoding the remaining characters.
+
 2007-04-10  Anders Carlsson  <acarlsson@apple.com>
 
         * plugins/win/PluginViewWin.cpp:
