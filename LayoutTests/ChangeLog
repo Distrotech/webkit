@@ -1,3 +1,10 @@
+2007-04-10  Kevin McCullough  <kmccullough@apple.com>
+
+        * Skipped: Re-enabled some tests that no longer crash and added other
+        failures, for which radars will be filed, so that the build bot will
+        be green, and will be usefull in identifying new breakages.  Currently
+        it is not.
+
 2007-04-04  Adam Roben  <aroben@apple.com>
 
         * Skipped: Re-enable some tests that no longer crash.
