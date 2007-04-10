@@ -27,6 +27,7 @@
 #include "WebKitDLL.h"
 #include "WebFrame.h"
 
+#include "CFDictionaryPropertyBag.h"
 #include "COMPtr.h"
 #include "DOMCoreClasses.h"
 #include "IWebError.h"
@@ -2224,8 +2225,65 @@ Frame* WebFrame::createFrame(const KURL& url, const String& name, HTMLFrameOwner
 
 Widget* WebFrame::createPlugin(Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType, bool /*loadManually*/)
 {
-    return PluginDatabaseWin::installedPlugins()->
-        createPluginView(core(this), element, url, paramNames, paramValues, mimeType);
+    PluginViewWin* pluginView = PluginDatabaseWin::installedPlugins()->createPluginView(core(this), element, url, paramNames, paramValues, mimeType);
+
+    if (pluginView->status() == PluginStatusLoadedSuccessfully)
+        return pluginView;
+
+    COMPtr<IWebResourceLoadDelegate> resourceLoadDelegate;
+
+    if (FAILED(d->webView->resourceLoadDelegate(&resourceLoadDelegate)))
+        return pluginView;
+
+    RetainPtr<CFMutableDictionaryRef> userInfo(AdoptCF, CFDictionaryCreateMutable(0, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
+
+    unsigned size = (unsigned)paramNames.size();
+    for (unsigned i = 0; i < size; i++) {
+        if (paramNames[i] == "pluginspage") {
+            static CFStringRef key = MarshallingHelpers::LPCOLESTRToCFStringRef(WebKitErrorPlugInPageURLStringKey);
+            RetainPtr<CFStringRef> str(AdoptCF, paramValues[i].createCFString());
+            CFDictionarySetValue(userInfo.get(), key, str.get());
+            break;
+        }
+    }
+
+    if (!mimeType.isNull()) {
+        static CFStringRef key = MarshallingHelpers::LPCOLESTRToCFStringRef(WebKitErrorMIMETypeKey);
+
+        RetainPtr<CFStringRef> str(AdoptCF, mimeType.createCFString());
+        CFDictionarySetValue(userInfo.get(), key, str.get());
+    }
+
+    String pluginName;
+    if (pluginView->plugin())
+        pluginName = pluginView->plugin()->name();
+    if (!pluginName.isNull()) {
+        static CFStringRef key = MarshallingHelpers::LPCOLESTRToCFStringRef(WebKitErrorPlugInNameKey);
+        RetainPtr<CFStringRef> str(AdoptCF, mimeType.createCFString());
+        CFDictionarySetValue(userInfo.get(), key, str.get());
+    }
+
+    COMPtr<CFDictionaryPropertyBag> userInfoBag(AdoptCOM, CFDictionaryPropertyBag::createInstance());
+    userInfoBag->setDictionary(userInfo.get());
+ 
+    int errorCode = 0;
+    switch (pluginView->status()) {
+        case PluginStatusCanNotFindPlugin:
+            errorCode = WebKitErrorCannotFindPlugIn;
+            break;
+        case PluginStatusCanNotLoadPlugin:
+            errorCode = WebKitErrorCannotLoadPlugIn;
+            break;
+        default:
+            ASSERT_NOT_REACHED();
+    }
+
+    ResourceError resourceError(String(WebKitErrorDomain), errorCode, url.url(), String());
+    COMPtr<IWebError> error(AdoptCOM, WebError::createInstance(resourceError, userInfoBag.get()));
+     
+    resourceLoadDelegate->plugInFailedWithError(d->webView, error.get(), getWebDataSource(d->frame->loader()->documentLoader()));
+
+    return pluginView;
 }
 
 void WebFrame::redirectDataToPlugin(Widget* /*pluginWidget*/)

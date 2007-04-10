@@ -1180,8 +1180,10 @@ PluginViewWin::PluginViewWin(Frame* parentFrame, PluginPackageWin* plugin, Eleme
     , m_isVisible(false)
     , m_haveInitialized(false)
 {
-    if (!m_plugin)
+    if (!m_plugin) {
+        m_status = PluginStatusCanNotFindPlugin;
         return;
+    }
 
     m_instance = &m_instanceStruct;
     m_instance->ndata = this;
@@ -1203,16 +1205,21 @@ void PluginViewWin::init()
         return;
     m_haveInitialized = true;
 
-    if (!m_plugin)
-        return;
-
-    if (!m_plugin->load()) {
-        m_plugin = 0;
+    if (!m_plugin) {
+        ASSERT(m_status == PluginStatusCanNotFindPlugin);
         return;
     }
 
-    if (!start())
+    if (!m_plugin->load()) {
+        m_plugin = 0;
+        m_status = PluginStatusCanNotLoadPlugin;
         return;
+    }
+
+    if (!start()) {
+        m_status = PluginStatusCanNotLoadPlugin;
+        return;
+    }
 
     if (m_isWindowed) {
         registerPluginView();
@@ -1232,6 +1239,8 @@ void PluginViewWin::init()
         m_npWindow.type = NPWindowTypeDrawable;
         m_npWindow.window = 0;
     }
+
+    m_status = PluginStatusLoadedSuccessfully;
 }
 
 } // namespace WebCore

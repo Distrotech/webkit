@@ -1,3 +1,20 @@
+2007-04-09  Anders Carlsson  <acarlsson@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://problem/5062624>
+        No prompt to install QT for pages with uninstalled QT plug-in.
+        
+        Add a status() accessor to PluginViewWin. This can be used by WebKit to find out if the plug-in
+        loaded successfully or not.
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::PluginViewWin):
+        (WebCore::PluginViewWin::init):
+        * plugins/win/PluginViewWin.h:
+        (WebCore::):
+        (WebCore::PluginViewWin::status):
+
 2007-04-09  Brady Eidson  <beidson@apple.com>
 
         Build fix

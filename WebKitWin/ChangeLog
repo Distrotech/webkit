@@ -1,3 +1,36 @@
+2007-04-09  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://problem/5062624>
+        No prompt to install QT for pages with uninstalled QT plug-in.
+        
+        * CFDictionaryPropertyBag.cpp:
+        (CFDictionaryPropertyBag::Read):
+        (CFDictionaryPropertyBag::Write):
+        Use LPCOLESTRToCFStringRef here since the property names aren't BSTRs.
+        
+        * Interfaces/IWebError.idl:
+        Add user info keys.
+        
+        * MarshallingHelpers.cpp:
+        (MarshallingHelpers::LPCOLESTRToCFStringRef):
+        * MarshallingHelpers.h:
+        New function.
+        
+        * WebError.cpp:
+        (WebError::WebError):
+        (WebError::createInstance):
+        Take a property bag.
+        
+        (WebError::userInfo):
+        Return the property bag.
+        
+        * WebFrame.cpp:
+        (WebFrame::createPlugin):
+        If the plug-in wasn't found or failed to load, create a WebError with the right user info and
+        call IWebResourceLoadDelegate::plugInFailedWithError.
+
 2007-04-09  Brady Eidson  <beidson@apple.com>
 
         Build Fix

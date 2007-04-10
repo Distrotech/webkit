@@ -84,6 +84,11 @@ CFStringRef MarshallingHelpers::BSTRToCFStringRef(BSTR str)
     return CFStringCreateWithCharacters(0, (const UniChar*)(str ? str : TEXT("")), SysStringLen(str));
 }
 
+CFStringRef MarshallingHelpers::LPCOLESTRToCFStringRef(LPCOLESTR str)
+{
+    return CFStringCreateWithCharacters(0, (const UniChar*)(str ? str : TEXT("")), (CFIndex)(str ? wcslen(str) : 0));
+}
+
 BSTR MarshallingHelpers::CFStringRefToBSTR(CFStringRef str)
 {
     if (!str)

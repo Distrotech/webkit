@@ -123,6 +123,10 @@ enum {
     WebKitErrorJavaUnavailable =                                202,
 };
 
+cpp_quote("#define WebKitErrorMIMETypeKey TEXT(\"WebKitErrorMIMETypeKey\")")
+cpp_quote("#define WebKitErrorPlugInNameKey TEXT(\"WebKitErrorPlugInNameKey\")")
+cpp_quote("#define WebKitErrorPlugInPageURLStringKey TEXT(\"WebKitErrorPlugInPageURLStringKey\")")
+
 cpp_quote("#define WebPOSIXErrorDomain TEXT(\"NSPOSIXErrorDomain\")")
 cpp_quote("#define WebPOSIXErrorECONNRESET 54")
 

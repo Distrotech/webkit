@@ -36,9 +36,10 @@ using namespace WebCore;
 
 // WebError ---------------------------------------------------------------------
 
-WebError::WebError(const ResourceError& error)
+WebError::WebError(const ResourceError& error, IPropertyBag* userInfo)
     : m_refCount(0)
     , m_error(error)
+    , m_userInfo(userInfo)
 {
     gClassCount++;
 }
@@ -48,9 +49,9 @@ WebError::~WebError()
     gClassCount--;
 }
 
-WebError* WebError::createInstance(const ResourceError& error)
+WebError* WebError::createInstance(const ResourceError& error, IPropertyBag* userInfo)
 {
-    WebError* instance = new WebError(error);
+    WebError* instance = new WebError(error, userInfo);
     instance->AddRef();
     return instance;
 }
@@ -156,10 +157,16 @@ HRESULT STDMETHODCALLTYPE WebError::recoverAttempter(
 }
         
 HRESULT STDMETHODCALLTYPE WebError::userInfo( 
-    /* [retval][out] */ IPropertyBag** /*result*/)
+    /* [retval][out] */ IPropertyBag** result)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!result)
+        return E_POINTER;
+    *result = 0;
+
+    if (!m_userInfo)
+        return E_FAIL;
+
+    return m_userInfo.copyRefTo(result);
 }
 
 HRESULT STDMETHODCALLTYPE WebError::failingURL( 

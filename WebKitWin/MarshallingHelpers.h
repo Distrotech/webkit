@@ -43,6 +43,7 @@ public:
     static WebCore::String FileCFURLRefToPathString(CFURLRef fileURL);
     static CFURLRef BSTRToCFURLRef(BSTR);
     static CFStringRef BSTRToCFStringRef(BSTR);
+    static CFStringRef LPCOLESTRToCFStringRef(LPCOLESTR);
     static BSTR CFStringRefToBSTR(CFStringRef);
     static int CFNumberRefToInt(CFNumberRef);
     static CFNumberRef intToCFNumberRef(int);

@@ -63,6 +63,12 @@ namespace WebCore {
         PluginQuirkWantsMozillaUserAgent = 1 << 0,
     };
 
+    enum PluginStatus {
+        PluginStatusCanNotFindPlugin,
+        PluginStatusCanNotLoadPlugin,
+        PluginStatusLoadedSuccessfully
+    };
+
     class PluginViewWin : public Widget {
     friend static LRESULT CALLBACK PluginViewWndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -77,6 +83,8 @@ namespace WebCore {
         static PluginViewWin* currentPluginView();
 
         KJS::Bindings::Instance* bindingInstance();
+
+        PluginStatus status() const { return m_status; }
 
         // NPN functions
         NPError getURLNotify(const char* url, const char* target, void* notifyData);
@@ -128,7 +136,8 @@ namespace WebCore {
         bool m_isStarted;
         KURL m_url;
         KURL m_baseURL;
-
+        PluginStatus m_status;
+        
         void performRequest(PluginRequestWin*);
         void scheduleRequest(PluginRequestWin*);
         void requestTimerFired(Timer<PluginViewWin>*);

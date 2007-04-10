@@ -29,14 +29,15 @@
 #include "IWebError.h"
 
 #pragma warning(push, 0)
+#include <WebCore/COMPtr.h>
 #include <WebCore/ResourceError.h>
 #pragma warning(pop)
 
 class WebError : public IWebError {
 public:
-    static WebError* createInstance(const WebCore::ResourceError&);
+    static WebError* createInstance(const WebCore::ResourceError&, IPropertyBag* userInfo = 0);
 protected:
-    WebError(const WebCore::ResourceError&);
+    WebError(const WebCore::ResourceError&, IPropertyBag* userInfo);
     ~WebError();
 
 public:
@@ -86,6 +87,7 @@ public:
 
 private:
     ULONG m_refCount;
+    COMPtr<IPropertyBag> m_userInfo;
     WebCore::ResourceError m_error;
 };
 

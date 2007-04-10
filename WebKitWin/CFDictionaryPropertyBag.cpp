@@ -154,7 +154,7 @@ HRESULT STDMETHODCALLTYPE CFDictionaryPropertyBag::Read(LPCOLESTR pszPropName, V
         return E_POINTER;
     if (m_dictionary) {
         void* value;
-        CFStringRef key = MarshallingHelpers::BSTRToCFStringRef((BSTR)pszPropName);
+        CFStringRef key = MarshallingHelpers::LPCOLESTRToCFStringRef(pszPropName);
         HRESULT hr = E_FAIL;
         if (CFDictionaryGetValueIfPresent(m_dictionary, key, (const void**) &value)) {
             if (ConvertCFTypeToVariant(pVar, value))
@@ -176,7 +176,7 @@ HRESULT STDMETHODCALLTYPE CFDictionaryPropertyBag::Write(LPCOLESTR pszPropName, 
     }
     void* cfObj;
     if (ConvertVariantToCFType(pVar, &cfObj)) {
-        CFStringRef key = MarshallingHelpers::BSTRToCFStringRef((BSTR)pszPropName);
+        CFStringRef key = MarshallingHelpers::LPCOLESTRToCFStringRef(pszPropName);
         CFDictionaryAddValue(m_dictionary, key, cfObj);
         // CFDictionaryAddValue should automatically retain the CF objects passed in, so release them here
         CFRelease(key);
