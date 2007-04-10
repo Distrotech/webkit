@@ -1170,6 +1170,7 @@ PluginViewWin::PluginViewWin(Frame* parentFrame, PluginPackageWin* plugin, Eleme
     , m_isStarted(false)
     , m_url(url)
     , m_baseURL(m_parentFrame->loader()->completeURL(m_parentFrame->document()->baseURL()))
+    , m_status(PluginStatusLoadedSuccessfully)
     , m_requestTimer(this, &PluginViewWin::requestTimerFired)
     , m_paramNames(0)
     , m_paramValues(0)
