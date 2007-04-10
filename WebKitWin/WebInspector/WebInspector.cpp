@@ -47,8 +47,10 @@
 #include <WebCore/Document.h>
 #include <WebCore/Page.h>
 #include <WebCore/kjs_dom.h>
+#include <WebCore/kjs_proxy.h>
 #pragma warning(pop)
 
+#include <tchar.h>
 #include <windowsx.h>
 #include <wtf/Vector.h>
 #include <wtf/RetainPtr.h>
@@ -57,12 +59,18 @@ using namespace WebCore;
 
 static const int inspectorMinWidth = 280;
 static const int inspectorMinHeight = 450;
+static const IntSize optionsMenuOffset(-8, 9);
 
 static const LRESULT kNotHandledResult = -1;
 
 static LPCTSTR kWebInspectorWindowClassName = TEXT("WebInspectorWindowClass");
 static ATOM registerWindowClass();
 static LPCTSTR kWebInspectorPointerProp = TEXT("WebInspectorPointer");
+
+enum OptionsMenuIdentifier {
+    IgnoreWhitespaceIdentifier,
+    ShowUserAgentStylesIdentifier
+};
 
 class WebInspectorPrivate {
 public:
@@ -580,60 +588,97 @@ const String& WebInspector::searchQuery() const
     return m_private->searchQuery;
 }
 
+static KJS::ScriptInterpreter* interpreterForFrame(Frame* frame)
+{
+    ASSERT(frame);
+    return frame->scriptProxy()->interpreter();
+}
+
 void WebInspector::showOptionsMenu()
 {
-    // FIXME: <rdar://problem/5119803> Web Inspector has no options menu
-#if 0
-    NSMenu *menu = [[NSMenu alloc] init];
-    [menu setAutoenablesItems:NO];
+    bool ignoreWhitespace;
+    bool showUserAgentStyles;
 
-    NSMenuItem *item = [[NSMenuItem alloc] init];
-    [item setTitle:@"Ignore Whitespace"];
-    [item setTarget:self];
-    [item setAction:@selector(_toggleIgnoreWhitespace:)];
+    {
+        KJS::JSLock lock;
 
-    id value = [[_private->webView windowScriptObject] valueForKey:@"ignoreWhitespace"];
-    [item setState:( value && [value isKindOfClass:[NSNumber class]] && [value boolValue] ? NSOnState : NSOffState )];
+        KJS::ScriptInterpreter* interpreter = interpreterForFrame(m_private->webView->page()->mainFrame());
+        KJS::JSObject* windowObject = interpreter->globalObject();
+        KJS::ExecState* globalExec = interpreter->globalExec();
 
-    [menu addItem:item];
-    [item release];
+        KJS::JSValue* ignoreWhitespaceValue = windowObject->get(globalExec, KJS::Identifier("ignoreWhitespace"));
+        ASSERT(ignoreWhitespaceValue->isBoolean());
+        ignoreWhitespace = ignoreWhitespaceValue->getBoolean();
 
-    item = [[NSMenuItem alloc] init];
-    [item setTitle:@"Show User Agent Styles"];
-    [item setTarget:self];
-    [item setAction:@selector(_toggleShowUserAgentStyles:)];
+        KJS::JSValue* showUserAgentStylesValue = windowObject->get(globalExec, KJS::Identifier("showUserAgentStyles"));
+        ASSERT(ignoreWhitespaceValue->isBoolean());
+        showUserAgentStyles = showUserAgentStylesValue->getBoolean();
+    }
 
-    value = [[_private->webView windowScriptObject] valueForKey:@"showUserAgentStyles"];
-    [item setState:( value && [value isKindOfClass:[NSNumber class]] && [value boolValue] ? NSOnState : NSOffState )];
+    HMENU popupMenu = ::CreatePopupMenu();
+    if (!popupMenu)
+        return;
 
-    [menu addItem:item];
-    [item release];
+    MENUITEMINFO info = {0};
+    info.cbSize = sizeof(info);
+    info.fMask = MIIM_FTYPE | MIIM_ID | MIIM_STRING | MIIM_STATE;
+    info.fType = MFT_STRING;
 
-    [NSMenu popUpContextMenu:menu withEvent:[[self window] currentEvent] forView:_private->webView];
-    [menu release];
+    info.dwTypeData = _tcsdup(TEXT("Ignore Whitespace"));
+    info.fState = ignoreWhitespace ? MFS_CHECKED : MFS_UNCHECKED;
+    info.wID = IgnoreWhitespaceIdentifier;
 
-    // hack to force a layout and balance mouse events
-    NSEvent *currentEvent = [[self window] currentEvent];
-    NSEvent *event = [NSEvent mouseEventWithType:NSLeftMouseUp location:[currentEvent locationInWindow] modifierFlags:[currentEvent modifierFlags] timestamp:[currentEvent timestamp] windowNumber:[[currentEvent window] windowNumber] context:[currentEvent context] eventNumber:[currentEvent eventNumber] clickCount:[currentEvent clickCount] pressure:[currentEvent pressure]];
-    [[[[_private->webView mainFrame] frameView] documentView] mouseUp:event];
-#endif
+    ::InsertMenuItem(popupMenu, (UINT)-1, true, &info);
+
+    info.dwTypeData = _tcsdup(TEXT("Show User Agent Styles"));
+    info.fState = showUserAgentStyles ? MFS_CHECKED : MFS_UNCHECKED;
+    info.wID = ShowUserAgentStylesIdentifier;
+
+    ::InsertMenuItem(popupMenu, (UINT)-1, true, &info);
+
+    RECT windowRect;
+    ::GetWindowRect(m_private->hWnd, &windowRect);
+
+    // The Mac inspector shows the menu at the location of the mouse click. That's not terribly easy to get
+    // to here, so we just show it to the right of the arrow in the button.
+    ::TrackPopupMenu(popupMenu, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NOANIMATION, windowRect.right + optionsMenuOffset.width(), windowRect.top + optionsMenuOffset.height(), 0, m_private->hWnd, 0);
 }
 
-// FIXME: <rdar://problem/5119803> Web Inspector has no options menu
-#if 0
-@implementation WebInspector (WebInspectorPrivate)
-- (IBAction)_toggleIgnoreWhitespace:(id)sender
+LRESULT WebInspector::onCommand(WPARAM wParam, LPARAM)
 {
-    if (_private->webViewLoaded)
-        [[_private->webView windowScriptObject] callWebScriptMethod:@"toggleIgnoreWhitespace" withArguments:nil];
+    switch (LOWORD(wParam)) {
+        case IgnoreWhitespaceIdentifier:
+            toggleIgnoreWhitespace();
+            break;
+        case ShowUserAgentStylesIdentifier:
+            toggleShowUserAgentStyles();
+            break;
+    }
+
+    return 0;
 }
 
-- (IBAction)_toggleShowUserAgentStyles:(id)sender
+void WebInspector::toggleIgnoreWhitespace()
 {
-    if (_private->webViewLoaded)
-        [[_private->webView windowScriptObject] callWebScriptMethod:@"toggleShowUserAgentStyles" withArguments:nil];
+    if (!m_private->webViewLoaded)
+        return;
+
+    // FIXME: We should use callWebScriptMethod instead of stringByEvaluatingJavaScriptFromString
+    BSTR result;
+    m_private->webView->stringByEvaluatingJavaScriptFromString(BString("toggleIgnoreWhitespace()"), &result);
+    ::SysFreeString(result);
 }
-#endif
+
+void WebInspector::toggleShowUserAgentStyles()
+{
+    if (!m_private->webViewLoaded)
+        return;
+
+    // FIXME: We should use callWebScriptMethod instead of stringByEvaluatingJavaScriptFromString
+    BSTR result;
+    m_private->webView->stringByEvaluatingJavaScriptFromString(BString("toggleShowUserAgentStyles()"), &result);
+    ::SysFreeString(result);
+}
 
 void WebInspector::highlightNode(IDOMNode*)
 {
@@ -1063,6 +1108,8 @@ LRESULT CALLBACK WebInspectorWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             return inspector->onLButtonUp(wParam, lParam);
         case WM_MOUSEMOVE:
             return inspector->onMouseMove(wParam, lParam);
+        case WM_COMMAND:
+            return inspector->onCommand(wParam, lParam);
     }
 
     return ::DefWindowProc(hWnd, message, wParam, lParam);

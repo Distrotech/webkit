@@ -338,6 +338,7 @@ private:
     LRESULT onDestroy(WPARAM, LPARAM);
     LRESULT onSize(WPARAM, LPARAM);
     LRESULT onActivateApp(WPARAM, LPARAM);
+    LRESULT onCommand(WPARAM, LPARAM);
     LRESULT onLButtonDown(WPARAM, LPARAM);
     LRESULT onLButtonUp(WPARAM, LPARAM);
     LRESULT onMouseMove(WPARAM, LPARAM);
@@ -350,6 +351,8 @@ private:
     void update();
     void updateRoot();
     void updateSystemColors();
+    void toggleIgnoreWhitespace();
+    void toggleShowUserAgentStyles();
 
     // FIXME: Right now we only support the sharedWebInspector, so the constructor/destructor need to be private.
     // Eventually we should support multiple inspectors, and at that point these may need to become public.

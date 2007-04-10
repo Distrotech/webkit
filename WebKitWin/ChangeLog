@@ -1,3 +1,18 @@
+2007-04-10  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Anders.
+
+        Fix <rdar://problem/5119803> Web Inspector has no options menu
+
+        * WebInspector/WebInspector.cpp:
+        (interpreterForFrame): Added.
+        (WebInspector::showOptionsMenu): Implemented.
+        (WebInspector::onCommand): Added.
+        (WebInspector::toggleIgnoreWhitespace): Implemented.
+        (WebInspector::toggleShowUserAgentStyles): Implemented.
+        (WebInspectorWndProc): Added case for WM_COMMAND.
+        * WebInspector/WebInspector.h:
+
 2007-04-09  Anders Carlsson  <andersca@apple.com>
 
         Reviewed by Adam.
