@@ -1,3 +1,10 @@
+2007-04-09  Brady Eidson  <beidson@apple.com>
+
+        Build Fix
+
+        * WebContextMenuClient.cpp:
+        (WebContextMenuClient::searchWithGoogle): userGesture is true
+
 2007-04-09  Timothy Hatcher  <timothy@apple.com>
 
         Merge in r20810.
