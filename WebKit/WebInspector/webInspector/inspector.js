@@ -242,7 +242,7 @@ function changeFocus(event)
 
     var current = event.target;
     while(current) {
-        if (current.nodeName == "INPUT")
+        if (current.nodeName.toLowerCase() === "input")
             nextFocusElement = current;
         current = current.parentNode;
     }
@@ -322,7 +322,7 @@ function refreshSearch()
 
         var count = 0;
         var xpathQuery = searchQuery;
-        if (searchQuery.indexOf("/") == -1) {
+        if (searchQuery.indexOf("/") === -1) {
             var escapedQuery = searchQuery.escapeCharacters("'");
             xpathQuery = "//*[contains(name(),'" + escapedQuery + "') or contains(@*,'" + escapedQuery + "')] | //text()[contains(.,'" + escapedQuery + "')] | //comment()[contains(.,'" + escapedQuery + "')]";
         }
@@ -341,12 +341,12 @@ function refreshSearch()
         for (var i = 0; i < searchResults.length; ++i) {
             var item = new DOMNodeTreeElement(searchResults[i]);
             treeOutline.appendChild(item);
-            if (i == 0)
+            if (!i)
                 item.select();
         }
 
         var searchCountElement = document.getElementById("searchCount");
-        if (count == 1)
+        if (count === 1)
             searchCountElement.textContent = "1 node";
         else
             searchCountElement.textContent = count + " nodes";
@@ -377,12 +377,13 @@ function toggleNoSelection(state)
 function switchPane(pane)
 {
     currentPane = pane;
+
     for (var i = 0; i < tabNames.length; ++i) {
         var paneElement = document.getElementById(tabNames[i] + "Pane");
         var button = document.getElementById(tabNames[i] + "Button");
         if (!button.originalClassName)
             button.originalClassName = button.className;
-        if (pane == tabNames[i]) {
+        if (pane === tabNames[i]) {
             if (!noSelection)
                 paneElement.style.removeProperty("display");
             button.className = button.originalClassName + " selected";
@@ -396,7 +397,9 @@ function switchPane(pane)
         return;
 
     if (!paneUpdateState[pane]) {
-        eval("update" + pane.charAt(0).toUpperCase() + pane.substr(1) + "Pane()");
+        var functionName = "update" + pane.charAt(0).toUpperCase() + pane.substr(1) + "Pane";
+        if (window[functionName])
+            eval(functionName + "()");
         paneUpdateState[pane] = true;
     } else {
         refreshScrollbars();
@@ -476,7 +479,7 @@ function updateTreeOutline()
 
     var resetPopup = true;
     for (var i = 0; i < rootPopup.options.length; ++i) {
-        if (rootPopup.options[i].representedNode == rootNode) {
+        if (rootPopup.options[i].representedNode.isSameNode(rootNode)) {
             rootPopup.options[i].selected = true;
             resetPopup = false;
             break;
@@ -485,8 +488,8 @@ function updateTreeOutline()
 
     if (!resetPopup)
         return;
-    
-    rootPopup.innerHTML = ""; // reset the popup
+
+    rootPopup.removeChildren();
 
     var currentNode = rootNode;
     while (currentNode) {
@@ -556,10 +559,14 @@ function updatePanes()
 {
     for (var i = 0; i < tabNames.length; ++i)
         paneUpdateState[tabNames[i]] = false;
-    toggleNoSelection((Inspector.focusedDOMNode() ? false : true));
+
+    toggleNoSelection(!Inspector.focusedDOMNode());
     if (noSelection)
         return;
-    eval("update" + currentPane.charAt(0).toUpperCase() + currentPane.substr(1) + "Pane()");    
+
+    var functionName = "update" + currentPane.charAt(0).toUpperCase() + currentPane.substr(1) + "Pane";
+    if (window[functionName])
+        eval(functionName + "()");    
     paneUpdateState[currentPane] = true;
 }
 
@@ -568,7 +575,7 @@ function updateElementAttributes()
     var focusedNode = Inspector.focusedDOMNode();
     var attributesList = document.getElementById("elementAttributesList")
 
-    attributesList.innerText = "";
+    attributesList.removeChildren();
 
     if (!focusedNode.attributes.length)
         attributesList.innerHTML = "<span class=\"disabled\">(none)</span>";
@@ -583,7 +590,7 @@ function updateElementAttributes()
             span.title = attr.namespaceURI;
         span.textContent = attr.name;
         li.appendChild(span);
-        
+
         span = document.createElement("span");
         span.className = "relation";
         span.textContent = "=";
@@ -614,14 +621,14 @@ function updateNodePane()
         return;
     var focusedNode = Inspector.focusedDOMNode();
 
-    if (focusedNode.nodeType == Node.TEXT_NODE || focusedNode.nodeType == Node.COMMENT_NODE) {
+    if (focusedNode.nodeType === Node.TEXT_NODE || focusedNode.nodeType === Node.COMMENT_NODE) {
         document.getElementById("nodeNamespaceRow").style.display = "none";
         document.getElementById("elementAttributes").style.display = "none";
         document.getElementById("nodeContents").style.removeProperty("display");
 
         document.getElementById("nodeContentsScrollview").textContent = focusedNode.nodeValue;
         nodeContentsScrollArea.refresh();
-    } else if (focusedNode.nodeType == Node.ELEMENT_NODE) {
+    } else if (focusedNode.nodeType === Node.ELEMENT_NODE) {
         document.getElementById("elementAttributes").style.removeProperty("display");
         document.getElementById("nodeContents").style.display = "none";
 
@@ -634,7 +641,7 @@ function updateNodePane()
         } else {
             document.getElementById("nodeNamespaceRow").style.display = "none";
         }
-    } else if (focusedNode.nodeType == Node.DOCUMENT_NODE) {
+    } else if (focusedNode.nodeType === Node.DOCUMENT_NODE) {
         document.getElementById("nodeNamespaceRow").style.display = "none";
         document.getElementById("elementAttributes").style.display = "none";
         document.getElementById("nodeContents").style.display = "none";
@@ -654,17 +661,17 @@ var expandedStyleShorthands = [];
 function updateStylePane()
 {
     var focusedNode = Inspector.focusedDOMNode();
-    if (focusedNode.nodeType == Node.TEXT_NODE && focusedNode.parentNode && focusedNode.parentNode.nodeType == Node.ELEMENT_NODE)
+    if (focusedNode.nodeType === Node.TEXT_NODE && focusedNode.parentNode && focusedNode.parentNode.nodeType === Node.ELEMENT_NODE)
         focusedNode = focusedNode.parentNode;
     var rulesArea = document.getElementById("styleRulesScrollview");
     var propertiesArea = document.getElementById("stylePropertiesTree");
 
-    rulesArea.innerText = "";
-    propertiesArea.innerText = "";
+    rulesArea.removeChildren();
+    propertiesArea.removeChildren();
     styleRules = [];
     styleProperties = [];
 
-    if (focusedNode.nodeType == Node.ELEMENT_NODE) {
+    if (focusedNode.nodeType === Node.ELEMENT_NODE) {
         document.getElementById("styleRules").style.removeProperty("display");
         document.getElementById("styleProperties").style.removeProperty("display");
         document.getElementById("noStyle").style.display = "none";
@@ -724,7 +731,7 @@ function updateStylePane()
 
             var row = document.createElement("div");
             row.className = "row";
-            if (i == selectedStyleRuleIndex)
+            if (i === selectedStyleRuleIndex)
                 row.className += " selected";
             if (styleRules[i].isComputedStyle)
                 row.className += " computedStyle";
@@ -853,7 +860,7 @@ function styleRuleSelect(event)
 {
     var row = document.getElementById("styleRulesScrollview").firstChild;
     while (row) {
-        if (row.nodeName == "DIV")
+        if (row.nodeName.toLowerCase() === "div")
             row.className = "row";
         row = row.nextSibling;
     }
@@ -901,7 +908,7 @@ function updateStyleProperties()
 {
     var focusedNode = Inspector.focusedDOMNode();
     var propertiesTree = document.getElementById("stylePropertiesTree");
-    propertiesTree.innerText = "";
+    propertiesTree.removeChildren();
 
     if (selectedStyleRuleIndex >= styleProperties.length) {
         stylePropertiesScrollArea.refresh();
@@ -913,6 +920,7 @@ function updateStyleProperties()
     for (var i = 0; i < properties.length; ++i) {
         var prop = properties[i];
         var name = prop.name;
+
         if (omitTypicalValues && typicalStylePropertyValue[name] == prop.style.getPropertyValue(name))
             continue;
 
@@ -954,7 +962,7 @@ function updateStyleProperties()
             propertiesTree.appendChild(subTree);
         }
 
-        if (prop.unusedProperties[name] || overloadCount == prop.subProperties.length)
+        if (prop.unusedProperties[name] || overloadCount === prop.subProperties.length)
             mainli.className += " overloaded";
     }
 
@@ -994,20 +1002,22 @@ function selectMappedStyleRule(attrName)
     if (!paneUpdateState["style"])
         updateStylePane();
 
+    var attrName = attrName.toLowerCase();
     for (var i = 0; i < styleRules.length; ++i)
-        if (styleRules[i].attrName == attrName)
+        if (styleRules[i].attrName.toLowerCase() === attrName)
             break;
 
     selectedStyleRuleIndex = i;
 
     var row = document.getElementById("styleRulesScrollview").firstChild;
     while (row) {
-        if (row.nodeName == "DIV") {
-            if (row.styleRuleIndex == selectedStyleRuleIndex)
+        if (row.nodeName.toLowerCase() === "div") {
+            if (row.styleRuleIndex === selectedStyleRuleIndex)
                 row.className = "row selected";
             else
                 row.className = "row";
         }
+
         row = row.nextSibling;
     }
 
@@ -1039,9 +1049,9 @@ function updateMetricsPane()
 {
     var style;
     var focusedNode = Inspector.focusedDOMNode();
-    if (focusedNode.nodeType == Node.ELEMENT_NODE)
+    if (focusedNode.nodeType === Node.ELEMENT_NODE)
         style = focusedNode.ownerDocument.defaultView.getComputedStyle(focusedNode);
-    if (!style || style.length == 0) {
+    if (!style || !style.length) {
         document.getElementById("noMetrics").style.removeProperty("display");
         document.getElementById("marginBoxTable").style.display = "none";
         return;
@@ -1059,12 +1069,12 @@ function updateMetricsPane()
         + style.getPropertyValue("height").replace(/px$/, "");
     document.getElementById("content").textContent = size;
 
-    if (noMarginDisplayType[style.display] == "no")
+    if (noMarginDisplayType[style.display] === "no")
         document.getElementById("marginBoxTable").setAttribute("hide", "yes");
     else
         document.getElementById("marginBoxTable").removeAttribute("hide");
 
-    if (noPaddingDisplayType[style.display] == "no")
+    if (noPaddingDisplayType[style.display] === "no")
         document.getElementById("paddingBoxTable").setAttribute("hide", "yes");
     else
         document.getElementById("paddingBoxTable").removeAttribute("hide");
@@ -1078,7 +1088,7 @@ function updatePropertiesPane()
 
     var focusedNode = Inspector.focusedDOMNode();
     var list = document.getElementById("jsPropertiesList");
-    list.innerText = "";
+    list.removeChildren();
 
     for (var name in focusedNode) {
         var li = document.createElement("li");
@@ -1129,7 +1139,7 @@ function topAreaResizeDragStart(event)
 function topAreaResizeDrag(event) 
 {
     var element = document.getElementById("splitter");
-    if (element.dragging == true) {
+    if (element.dragging) {
         var y = event.clientY + window.scrollY;
         var delta = element.dragLastY - y;
         element.dragLastY = y;

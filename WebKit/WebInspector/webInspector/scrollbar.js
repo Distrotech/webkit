@@ -477,7 +477,7 @@ Scrollbar.prototype._thumbPositionForContentPosition = function(page_pos)
 
 Scrollbar.prototype.scrollByThumbDelta = function(deltaScroll)
 {
-	if (deltaScroll == 0)
+	if (!deltaScroll)
 		return;
 	
 	this.scrollTo(this._contentPositionForThumbPosition(this._thumbStart + deltaScroll));
@@ -578,7 +578,7 @@ VerticalScrollbar.prototype._setObjectEnd = function(object, end)
 
 VerticalScrollbar.prototype._getMousePosition = function(event)
 {
-	if (event != undefined)
+	if (event)
 		return event.y;
 	else
 		return 0;
@@ -730,7 +730,7 @@ HorizontalScrollbar.prototype._setObjectEnd = function(object, end)
 
 HorizontalScrollbar.prototype._getMousePosition = function(event)
 {
-	if (event != undefined)
+	if (event)
 		return event.x;
 	else
 		return 0;

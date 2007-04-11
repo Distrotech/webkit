@@ -40,7 +40,7 @@ Element.prototype.addStyleClass = function(className)
 
 Element.prototype.hasStyleClass = function(className) 
 {
-    return this.className.indexOf(className) != -1;
+    return this.className.indexOf(className) !== -1;
 }
 
 Node.prototype.firstParentWithClass = function(className) 
@@ -49,7 +49,7 @@ Node.prototype.firstParentWithClass = function(className)
     while (node) {
         if (node.isSameNode(document)) 
             return null;
-        if (node.nodeType == Node.ELEMENT_NODE && node.hasStyleClass(className))
+        if (node.nodeType === Node.ELEMENT_NODE && node.hasStyleClass(className))
             return node;
         node = node.parentNode;
     }
@@ -86,7 +86,7 @@ Node.prototype.traversePreviousNode = traversePreviousNode;
 String.prototype.hasSubstring = function(string, caseInsensitive)
 {
     if (!caseInsensitive)
-        return (this.indexOf(string) != -1 ? true : false);
+        return this.indexOf(string) !== -1;
     return this.match(new RegExp(string.escapeForRegExp(), "i"));
 }
 
@@ -94,7 +94,7 @@ String.prototype.escapeCharacters = function(chars)
 {
     var foundChar = false;
     for (var i = 0; i < chars.length; ++i) {
-        if (this.indexOf(chars.charAt(i)) != -1) {
+        if (this.indexOf(chars.charAt(i)) !== -1) {
             foundChar = true;
             break;
         }
@@ -105,7 +105,7 @@ String.prototype.escapeCharacters = function(chars)
 
     var result = "";
     for (var i = 0; i < this.length; ++i) {
-        if (chars.indexOf(this.charAt(i)) != -1)
+        if (chars.indexOf(this.charAt(i)) !== -1)
             result += "\\";
         result += this.charAt(i);
     }
@@ -135,7 +135,7 @@ String.prototype.trimWhitespace = function()
 
 function isNodeWhitespace()
 {
-    if (!this || this.nodeType != Node.TEXT_NODE)
+    if (!this || this.nodeType !== Node.TEXT_NODE)
         return false;
     if (!this.nodeValue.length)
         return true;
@@ -184,29 +184,29 @@ function nodeDisplayName()
                 value = this.getAttribute("class");
                 if (value)
                     name += " class=\"" + value + "\"";
-                if (this.nodeName.toLowerCase() == "a") {
+                if (this.nodeName.toLowerCase() === "a") {
                     value = this.getAttribute("name");
                     if (value)
                         name += " name=\"" + value + "\"";
                     value = this.getAttribute("href");
                     if (value)
                         name += " href=\"" + value + "\"";
-                } else if (this.nodeName.toLowerCase() == "img") {
+                } else if (this.nodeName.toLowerCase() === "img") {
                     value = this.getAttribute("src");
                     if (value)
                         name += " src=\"" + value + "\"";
-                } else if (this.nodeName.toLowerCase() == "iframe") {
+                } else if (this.nodeName.toLowerCase() === "iframe") {
                     value = this.getAttribute("src");
                     if (value)
                         name += " src=\"" + value + "\"";
-                } else if (this.nodeName.toLowerCase() == "input") {
+                } else if (this.nodeName.toLowerCase() === "input") {
                     value = this.getAttribute("name");
                     if (value)
                         name += " name=\"" + value + "\"";
                     value = this.getAttribute("type");
                     if (value)
                         name += " type=\"" + value + "\"";
-                } else if (this.nodeName.toLowerCase() == "form") {
+                } else if (this.nodeName.toLowerCase() === "form") {
                     value = this.getAttribute("action");
                     if (value)
                         name += " action=\"" + value + "\"";
@@ -238,7 +238,7 @@ function nodeContentPreview()
     // always skip whitespace here
     var currentNode = traverseNextNode.call(this, true, this);
     while (currentNode) {
-        if (currentNode.nodeType == Node.TEXT_NODE)
+        if (currentNode.nodeType === Node.TEXT_NODE)
             preview += currentNode.nodeValue.escapeHTML();
         else
             preview += nodeDisplayName.call(currentNode).escapeHTML();
@@ -303,7 +303,7 @@ function nextSiblingSkippingWhitespace()
     if (!this)
         return;
     var node = this.nextSibling;
-    while (node && node.nodeType == Node.TEXT_NODE && isNodeWhitespace.call(node))
+    while (node && node.nodeType === Node.TEXT_NODE && isNodeWhitespace.call(node))
         node = node.nextSibling;
     return node;
 }
@@ -313,7 +313,7 @@ function previousSiblingSkippingWhitespace()
     if (!this)
         return;
     var node = this.previousSibling;
-    while (node && node.nodeType == Node.TEXT_NODE && isNodeWhitespace.call(node))
+    while (node && node.nodeType === Node.TEXT_NODE && isNodeWhitespace.call(node))
         node = node.previousSibling;
     return node;
 }
@@ -323,7 +323,7 @@ function firstChildSkippingWhitespace()
     if (!this)
         return;
     var node = this.firstChild;
-    while (node && node.nodeType == Node.TEXT_NODE && isNodeWhitespace.call(node))
+    while (node && node.nodeType === Node.TEXT_NODE && isNodeWhitespace.call(node))
         node = nextSiblingSkippingWhitespace.call(node);
     return node;
 }
@@ -333,7 +333,7 @@ function lastChildSkippingWhitespace()
     if (!this)
         return;
     var node = this.lastChild;
-    while (node && node.nodeType == Node.TEXT_NODE && isNodeWhitespace.call(node))
+    while (node && node.nodeType === Node.TEXT_NODE && isNodeWhitespace.call(node))
         node = previousSiblingSkippingWhitespace.call(node);
     return node;
 }
