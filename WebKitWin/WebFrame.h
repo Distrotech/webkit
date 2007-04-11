@@ -199,7 +199,7 @@ public:
     virtual void detachedFromParent2();
     virtual void detachedFromParent3();
     virtual void detachedFromParent4();
-    virtual void loadedFromPageCache();
+    virtual void loadedFromCachedPage();
     virtual void dispatchDidHandleOnloadEvents();
     virtual void dispatchDidReceiveServerRedirectForProvisionalLoad();
     virtual void dispatchDidCancelClientRedirect();
@@ -241,12 +241,12 @@ public:
     virtual void prepareForDataSourceReplacement();
     virtual void setTitle(const WebCore::String& title, const WebCore::KURL&);
     virtual WebCore::String userAgent(const WebCore::KURL&);
-    virtual void setDocumentViewFromPageCache(WebCore::PageCache *);
+    virtual void setDocumentViewFromCachedPage(WebCore::CachedPage *);
     virtual void updateGlobalHistoryForStandardLoad(const WebCore::KURL &);
     virtual void updateGlobalHistoryForReload(const WebCore::KURL &);
     virtual bool shouldGoToHistoryItem(WebCore::HistoryItem *) const;
     virtual void saveViewStateToItem(WebCore::HistoryItem *);
-    virtual void saveDocumentViewToPageCache(WebCore::PageCache *);
+    virtual void saveDocumentViewToCachedPage(WebCore::CachedPage *);
     virtual bool canCachePage(void) const;
     virtual PassRefPtr<WebCore::DocumentLoader> createDocumentLoader(const WebCore::ResourceRequest&, const WebCore::SubstituteData&);
     virtual void setMainDocumentError(WebCore::DocumentLoader*, const WebCore::ResourceError&);

@@ -2083,14 +2083,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\page\PageState.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\page\PageState.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\page\Plugin.h"
 				>
 			</File>
@@ -7951,6 +7943,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\history\CachedPage.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\history\CachedPage.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\history\HistoryItem.cpp"
 				>
 			</File>
@@ -7964,14 +7964,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\history\HistoryItemTimer.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\history\PageCache.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\history\PageCache.h"
 				>
 			</File>
 		</Filter>

@@ -1470,7 +1470,7 @@ void WebFrame::detachedFromParent4()
     LOG_NOIMPL();
 }
 
-void WebFrame::loadedFromPageCache()
+void WebFrame::loadedFromCachedPage()
 {
     LOG_NOIMPL();
 }
@@ -1755,7 +1755,7 @@ String WebFrame::userAgent(const KURL& url)
     return d->webView->userAgentForKURL(url);
 }
 
-void WebFrame::setDocumentViewFromPageCache(PageCache*)
+void WebFrame::setDocumentViewFromCachedPage(CachedPage*)
 {
     LOG_NOIMPL();
 }
@@ -1808,7 +1808,7 @@ void WebFrame::saveViewStateToItem(HistoryItem*)
     LOG_NOIMPL();
 }
 
-void WebFrame::saveDocumentViewToPageCache(PageCache*)
+void WebFrame::saveDocumentViewToCachedPage(CachedPage*)
 {
     LOG_NOIMPL();
 }

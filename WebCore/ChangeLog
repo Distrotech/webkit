@@ -1,3 +1,15 @@
+2007-04-10  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin
+
+        <rdar://problem/4887095> - PageCache and PageState should be combined
+
+        Changed a TemporaryLinkStub and updated the project file
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/win/TemporaryLinkStubs.cpp:
+        (CachedPage::close):
+
 2007-04-10  John Sullivan  <sullivan@apple.com>
 
         * platform/win/TemporaryLinkStubs.cpp:

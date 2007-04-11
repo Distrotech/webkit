@@ -1,3 +1,17 @@
+2007-04-10  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin
+
+        <rdar://problem/4887095> - PageCache and PageState should be combined
+
+        Basically updated client methods for the new names and signatures 
+
+        * WebFrame.cpp:
+        (WebFrame::loadedFromCachedPage):
+        (WebFrame::setDocumentViewFromCachedPage):
+        (WebFrame::saveDocumentViewToCachedPage):
+        * WebFrame.h:
+
 2007-04-10  Adam Roben  <aroben@apple.com>
 
         Reviewed by Anders.

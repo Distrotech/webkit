@@ -28,6 +28,7 @@
 #define WIN32_COMPILE_HACK
 
 #include "AXObjectCache.h"
+#include "CachedPage.h"
 #include "CachedResource.h"
 #include "CookieJar.h"
 #include "DocumentLoader.h"
@@ -55,7 +56,6 @@
 #include "Node.h"
 #include "NotImplemented.h"
 #include "Page.h"
-#include "PageCache.h"
 #include "Path.h"
 #include "PlatformMouseEvent.h"
 #include "PlugInInfoStore.h"
@@ -192,7 +192,7 @@ void ResourceHandle::setDefersLoading(bool) { }
 bool DocumentLoader::getResponseModifiedHeader(String&) const { LOG_NOIMPL(); return false; }
 bool ResourceHandle::willLoadFromCache(ResourceRequest&) { LOG_NOIMPL(); return false; }
 float WebCore::userIdleTime() { LOG_NOIMPL(); return 0.0; }
-void PageCache::close() { LOG_NOIMPL(); }
+void CachedPage::close() { LOG_NOIMPL(); }
 
 Vector<String> WebCore::supportedKeySizes() { LOG_NOIMPL(); return Vector<String>(); }
 String WebCore::signedPublicKeyAndChallengeString(unsigned, const String&, const KURL&) { LOG_NOIMPL(); return String(); }
