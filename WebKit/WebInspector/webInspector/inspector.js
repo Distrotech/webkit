@@ -435,6 +435,13 @@ function treeElementSelected(element)
         treeOutlineScrollArea.reveal(element._listItemNode);
     if (element.representedObject)
         Inspector.setFocusedDOMNode(element.representedObject);
+
+    // update the disabled state of the traverse buttons
+    var traverseUp = document.getElementById("traverseUp");
+    traverseUp.disabled = !treeOutline.selectedTreeElement.traversePreviousTreeElement(false);
+
+    var traverseDown = document.getElementById("traverseDown");
+    traverseDown.disabled = !treeOutline.selectedTreeElement.traverseNextTreeElement(false);
 }
 
 function treeElementDoubleClicked(element)
