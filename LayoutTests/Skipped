@@ -1,5 +1,3 @@
-# FIXED: # Crash in RenderLayer::scrollRectToVisible <rdar://problem/5054703>
-
 # Crash in Release but not Debug
 editing/deleting/5115601.html
 fast/canvas/drawImage-with-invalid-args.html
@@ -163,6 +161,7 @@ editing/pasteboard/5027857.html
 editing/pasteboard/5028447.html
 editing/pasteboard/block-wrappers-necessary.html
 editing/pasteboard/copy-paste-bidi.html
+editing/pasteboard/copy-standalone-image.html
 editing/pasteboard/drag-drop-dead-frame.html
 editing/pasteboard/drag-drop-modifies-page.html
 editing/pasteboard/drag-image-to-contenteditable-in-iframe.html
@@ -219,6 +218,7 @@ editing/selection/caret-and-focus-ring.html
 editing/selection/caret-rtl-2.html
 editing/selection/caret-rtl.html
 editing/selection/designmode-no-caret.html
+editing/selection/drag-to-contenteditable-iframe.html
 editing/selection/editable-links.html
 editing/selection/extend-by-sentence-001.html
 editing/selection/image-before-linebreak.html
@@ -242,9 +242,11 @@ fast/css/rtl-ordering.html
 fast/css/text-security.html
 fast/dom/object-embed-plugin-scripting.html
 fast/dom/wrapper-classes.html
+fast/dom/Window/setting-properties-on-closed-window.html
 fast/dom/Window/window-onFocus.html
 fast/dom/Window/window-properties.html
 fast/dom/Window/window-screen-properties.html
+fast/encoding/char-encoding.html
 fast/encoding/charset-x-nextstep.html
 fast/encoding/denormalised-voiced-japanese-chars.html
 fast/encoding/invalid-UTF-8.html
@@ -326,6 +328,7 @@ fast/xpath/4XPath/Core/test_numeric_expr.html
 fast/xpath/4XPath/Core/test_parser.html
 fast/xsl/xslt-text.xml
 http/tests/incremental/slow-utf8-css.pl
+http/tests/incremental/slow-utf8-text.pl
 http/tests/local/file-url-sent-as-referer.html
 http/tests/misc/redirect-to-about-blank.html
 http/tests/misc/window-dot-stop.html
@@ -338,7 +341,6 @@ http/tests/xmlhttprequest/abort-should-cancel-load.html
 http/tests/xmlhttprequest/basic-auth.html
 http/tests/xmlhttprequest/cache-override.html
 http/tests/xmlhttprequest/response-encoding.html
-
 svg/W3C-SVG-1.1/animate-elem-03-t.svg
 svg/W3C-SVG-1.1/animate-elem-24-t.svg
 svg/W3C-SVG-1.1/animate-elem-36-t.svg
