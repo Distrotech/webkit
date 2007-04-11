@@ -6,11 +6,6 @@ fast/canvas/drawImage-with-invalid-args.html
 css1/basic/contextual_selectors.html
 css1/font_properties/font.html
 css1/pseudo/multiple_pseudo_elements.html
-
-# No advanced text <rdar://problems/4516194>
-css1/text_properties/text-transCapitalize.html
-
-# Arial has different metrics on Windows <rdar://problem/5075790>
 css2.1/t1508-c527-font-00-b.html
 css2.1/t1508-c527-font-04-b.html
 css2.1/t1508-c527-font-05-b.html
@@ -18,8 +13,82 @@ css2.1/t1508-c527-font-07-b.html
 css2.1/t1508-c527-font-08-b.html
 css2.1/t1508-c527-font-10-c.html
 css2.1/t051201-c23-first-line-00-b.html
+svg/W3C-SVG-1.1/animate-elem-03-t.svg
+svg/W3C-SVG-1.1/animate-elem-24-t.svg
+svg/W3C-SVG-1.1/animate-elem-36-t.svg
+svg/W3C-SVG-1.1/animate-elem-40-t.svg
+svg/W3C-SVG-1.1/coords-viewattr-01-b.svg
+svg/W3C-SVG-1.1/fonts-desc-02-t.svg
+svg/W3C-SVG-1.1/fonts-elem-01-t.svg
+svg/W3C-SVG-1.1/fonts-elem-02-t.svg
+svg/W3C-SVG-1.1/fonts-elem-03-b.svg
+svg/W3C-SVG-1.1/fonts-elem-04-b.svg
+svg/W3C-SVG-1.1/fonts-elem-05-t.svg
+svg/W3C-SVG-1.1/fonts-elem-06-t.svg
+svg/W3C-SVG-1.1/fonts-elem-07-b.svg
+svg/W3C-SVG-1.1/fonts-glyph-02-t.svg
+svg/W3C-SVG-1.1/fonts-glyph-03-t.svg
+svg/W3C-SVG-1.1/fonts-glyph-04-t.svg
+svg/W3C-SVG-1.1/fonts-kern-01-t.svg
+svg/W3C-SVG-1.1/interact-cursor-01-f.svg
+svg/W3C-SVG-1.1/masking-mask-01-b.svg
+svg/W3C-SVG-1.1/metadata-example-01-b.svg
+svg/W3C-SVG-1.1/pservers-grad-08-b.svg
+svg/W3C-SVG-1.1/render-elems-06-t.svg
+svg/W3C-SVG-1.1/render-elems-07-t.svg
+svg/W3C-SVG-1.1/render-elems-08-t.svg
+svg/W3C-SVG-1.1/render-groups-01-b.svg
+svg/W3C-SVG-1.1/render-groups-03-t.svg
+svg/W3C-SVG-1.1/text-altglyph-01-b.svg
+svg/W3C-SVG-1.1/text-fonts-01-t.svg
+svg/W3C-SVG-1.1/text-intro-05-t.svg
+svg/W3C-SVG-1.1/text-text-04-t.svg
+svg/W3C-SVG-1.1/text-text-05-t.svg
+svg/W3C-SVG-1.1/text-text-06-t.svg
+svg/W3C-SVG-1.1/text-tselect-02-f.svg
+svg/carto.net/button.svg
+svg/carto.net/colourpicker.svg
+svg/carto.net/combobox.svg
+svg/carto.net/selectionlist.svg
+svg/carto.net/slider.svg
+svg/carto.net/textbox.svg
+svg/carto.net/window.svg
+svg/custom/circular-marker-reference-1.svg
+svg/custom/circular-marker-reference-3.svg
+svg/custom/circular-marker-reference-4.svg
+svg/custom/coords-relative-units-transforms.svg
+svg/custom/marker-changes.svg
+svg/custom/marker-viewBox-changes.svg
+svg/custom/scrolling-embedded-svg-file-image-repaint-problem.html
+
+# ASSERT in ClipboardWin::setData <rdar://problem/5015941>
+editing/execCommand/copy-without-selection.html
+
+# Crash in Node::nextSibling <rdar://problem/5078739>
+editing/pasteboard/paste-line-endings-002.html
+editing/pasteboard/paste-line-endings-004.html
+
+# AppleScript on Windows? That's crazy talk!
+fast/AppleScript
+
+# CFNet cookies crash <rdar://problem/4993339>
+fast/dom/Window/window-properties.html
+
+# No textInputController <rdar://problem/5074430>
+fast/dom/character-index-for-point.html
+fast/forms/attributed-strings.html
+fast/text/attributed-substring-from-range-001.html
+fast/text/attributed-substring-from-range.html
+fast/text/justified-text-rect.html
+
+# This test uses Mac-specific key codes <rdar://problem/5076426>
+fast/events/arrow-navigation.html
+
+# Infinite recursion in JSValue::mark <rdar://problem/4928697>
+fast/js/toString-stack-overflow.html
 
 # No advanced text <rdar://problems/4516194>
+css1/text_properties/text-transCapitalize.html
 css2.1/t0805-c5518-brdr-t-01-e.html
 css2.1/t0805-c5519-brdr-r-00-a.html
 css2.1/t0805-c5519-brdr-r-01-e.html
@@ -50,34 +119,6 @@ css2.1/t090501-c414-flt-ln-01-d-g.html
 css2.1/t090501-c5525-flt-l-00-b-g.html
 css2.1/t090501-c5525-flt-r-00-b-g.html
 css2.1/t100304-c43-rpl-bbx-01-d-g.html
-
-# ASSERT in ClipboardWin::setData <rdar://problem/5015941>
-editing/execCommand/copy-without-selection.html
-
-# Crash in Node::nextSibling <rdar://problem/5078739>
-editing/pasteboard/paste-line-endings-002.html
-editing/pasteboard/paste-line-endings-004.html
-
-# AppleScript on Windows? That's crazy talk!
-fast/AppleScript
-
-# CFNet cookies crash <rdar://problem/4993339>
-fast/dom/Window/window-properties.html
-
-# No textInputController <rdar://problem/5074430>
-fast/dom/character-index-for-point.html
-fast/forms/attributed-strings.html
-fast/text/attributed-substring-from-range-001.html
-fast/text/attributed-substring-from-range.html
-fast/text/justified-text-rect.html
-
-# This test uses Mac-specific key codes <rdar://problem/5076426>
-fast/events/arrow-navigation.html
-
-# Infinite recursion in JSValue::mark <rdar://problem/4928697>
-fast/js/toString-stack-overflow.html
-
-# No advanced text <rdar://problems/4516194>
 fast/text/atsui-multiple-renderers.html
 fast/text/atsui-pointtooffset-calls-cg.html
 fast/text/atsui-spacing-features.html
@@ -244,7 +285,6 @@ fast/dom/object-embed-plugin-scripting.html
 fast/dom/wrapper-classes.html
 fast/dom/Window/setting-properties-on-closed-window.html
 fast/dom/Window/window-onFocus.html
-fast/dom/Window/window-properties.html
 fast/dom/Window/window-screen-properties.html
 fast/encoding/char-encoding.html
 fast/encoding/charset-x-nextstep.html
@@ -293,35 +333,8 @@ fast/loader/local-image-from-local.html
 fast/table/absolute-table-at-bottom.html
 fast/table/frame-and-rules.html
 fast/table/giantCellspacing.html
-fast/text/atsui-multiple-renderers.html
-fast/text/atsui-pointtooffset-calls-cg.html
-fast/text/atsui-spacing-features.html
-fast/text/cg-fallback-bolding.html
-fast/text/cg-vs-atsui.html
 fast/text/font-initial.html
-fast/text/in-rendered-text-rtl.html
-fast/text/monospace-width-cache.html
 fast/text/textIteratorNilRenderer.html
-fast/text/international/001.html
-fast/text/international/002.html
-fast/text/international/003.html
-fast/text/international/bidi-AN-after-L.html
-fast/text/international/bidi-CS-after-AN.html
-fast/text/international/bidi-L2-run-reordering.html
-fast/text/international/bidi-LDB-2-CSS.html
-fast/text/international/bidi-LDB-2-HTML.html
-fast/text/international/bidi-LDB-2-formatting-characters.html
-fast/text/international/bidi-european-terminators.html
-fast/text/international/bidi-fallback-font-weight.html
-fast/text/international/bidi-ignored-for-first-child-inline.html
-fast/text/international/bidi-innertext.html
-fast/text/international/bidi-listbox-atsui.html
-fast/text/international/bidi-listbox.html
-fast/text/international/bidi-neutral-directionality-paragraph-start.html
-fast/text/international/bidi-override.html
-fast/text/international/rtl-caret.html
-fast/text/international/thai-line-breaks.html
-fast/text/international/wrap-CJK-001.html
 fast/xpath/nan-to-boolean.html
 fast/xpath/4XPath/Core/test_core_functions.html
 fast/xpath/4XPath/Core/test_numeric_expr.html
@@ -341,57 +354,10 @@ http/tests/xmlhttprequest/abort-should-cancel-load.html
 http/tests/xmlhttprequest/basic-auth.html
 http/tests/xmlhttprequest/cache-override.html
 http/tests/xmlhttprequest/response-encoding.html
-svg/W3C-SVG-1.1/animate-elem-03-t.svg
-svg/W3C-SVG-1.1/animate-elem-24-t.svg
-svg/W3C-SVG-1.1/animate-elem-36-t.svg
-svg/W3C-SVG-1.1/animate-elem-40-t.svg
-svg/W3C-SVG-1.1/coords-viewattr-01-b.svg
-svg/W3C-SVG-1.1/fonts-desc-02-t.svg
-svg/W3C-SVG-1.1/fonts-elem-01-t.svg
-svg/W3C-SVG-1.1/fonts-elem-02-t.svg
-svg/W3C-SVG-1.1/fonts-elem-03-b.svg
-svg/W3C-SVG-1.1/fonts-elem-04-b.svg
-svg/W3C-SVG-1.1/fonts-elem-05-t.svg
-svg/W3C-SVG-1.1/fonts-elem-06-t.svg
-svg/W3C-SVG-1.1/fonts-elem-07-b.svg
-svg/W3C-SVG-1.1/fonts-glyph-02-t.svg
-svg/W3C-SVG-1.1/fonts-glyph-03-t.svg
-svg/W3C-SVG-1.1/fonts-glyph-04-t.svg
-svg/W3C-SVG-1.1/fonts-kern-01-t.svg
-svg/W3C-SVG-1.1/interact-cursor-01-f.svg
-svg/W3C-SVG-1.1/masking-mask-01-b.svg
-svg/W3C-SVG-1.1/metadata-example-01-b.svg
-svg/W3C-SVG-1.1/pservers-grad-08-b.svg
-svg/W3C-SVG-1.1/render-elems-06-t.svg
-svg/W3C-SVG-1.1/render-elems-07-t.svg
-svg/W3C-SVG-1.1/render-elems-08-t.svg
-svg/W3C-SVG-1.1/render-groups-01-b.svg
-svg/W3C-SVG-1.1/render-groups-03-t.svg
-svg/W3C-SVG-1.1/text-altglyph-01-b.svg
-svg/W3C-SVG-1.1/text-fonts-01-t.svg
-svg/W3C-SVG-1.1/text-intro-05-t.svg
-svg/W3C-SVG-1.1/text-text-04-t.svg
-svg/W3C-SVG-1.1/text-text-05-t.svg
-svg/W3C-SVG-1.1/text-text-06-t.svg
-svg/W3C-SVG-1.1/text-tselect-02-f.svg
-svg/carto.net/button.svg
-svg/carto.net/colourpicker.svg
-svg/carto.net/combobox.svg
-svg/carto.net/selectionlist.svg
-svg/carto.net/slider.svg
-svg/carto.net/textbox.svg
-svg/carto.net/window.svg
-svg/custom/circular-marker-reference-1.svg
-svg/custom/circular-marker-reference-3.svg
-svg/custom/circular-marker-reference-4.svg
-svg/custom/coords-relative-units-transforms.svg
-svg/custom/marker-changes.svg
-svg/custom/marker-viewBox-changes.svg
 svg/custom/path-bad-data.svg
 svg/custom/pointer-events-image.svg
 svg/custom/pointer-events-path.svg
 svg/custom/pointer-events-text.svg
-svg/custom/scrolling-embedded-svg-file-image-repaint-problem.html
 svg/custom/text-hit-test.svg
 svg/custom/text-repaint-including-stroke.svg
 svg/custom/use-elementInstance-event-target.svg
@@ -408,3 +374,4 @@ tables/mozilla/bugs/bug23151.html
 tables/mozilla/bugs/bug113424.html
 tables/mozilla/core/bloomberg.html
 tables/mozilla_expected_failures/bugs/bug11331.html
+
