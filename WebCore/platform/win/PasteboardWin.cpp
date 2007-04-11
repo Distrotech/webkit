@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -38,6 +38,7 @@
 #include "NotImplemented.h"
 #include "Page.h"
 #include "Range.h"
+#include "RenderImage.h"
 #include "TextEncoding.h"
 #include "markup.h"
 
@@ -270,9 +271,13 @@ void Pasteboard::writeURL(const KURL& url, const String& titleStr, Frame* frame)
     }
 }
 
-void Pasteboard::writeImage(const HitTestResult& result)
+void Pasteboard::writeImage(Node* node, const KURL&, const String&)
 {
-    Image* image = result.image();
+    ASSERT(node && node->renderer() && node->renderer()->isImage());
+    RenderImage* renderer = static_cast<RenderImage*>(node->renderer());
+    CachedImage* cachedImage = static_cast<CachedImage*>(renderer->cachedImage());
+    ASSERT(cachedImage);
+    Image* image = cachedImage->image();
     ASSERT(image);
 
     clear();
@@ -312,11 +317,6 @@ void Pasteboard::writeImage(const HitTestResult& result)
         ::SetClipboardData(CF_BITMAP, resultBitmap);
         ::CloseClipboard();
     }
-}
-
-void Pasteboard::writeImage(Node*, const KURL&)
-{
-    LOG_NOIMPL();
 }
 
 bool Pasteboard::canSmartReplace()
