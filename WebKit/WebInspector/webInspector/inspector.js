@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -532,6 +532,8 @@ function loaded()
     treeOutlineScrollArea = new ScrollArea(document.getElementById("treeOutlineScrollView"),
         setUpScrollbar("treeOutlineScrollbar"));
 
+    treeOutline = new TreeOutline(document.getElementById("treeOutline"));
+
     nodeContentsScrollArea = new ScrollArea(document.getElementById("nodeContentsScrollview"),
         setUpScrollbar("nodeContentsScrollbar"));
     elementAttributesScrollArea = new ScrollArea(document.getElementById("elementAttributesScrollview"),
@@ -639,10 +641,7 @@ function refreshSearch()
 
     if (searchActive) {
         // perform the search
-        var treeOutline = document.getElementById("treeOutline");
-
-        treeOutline.innerText = ""; // clear the existing tree
-
+        treeOutline.removeChildren();
         treeOutlineScrollArea.refresh();
         toggleNoSelection(true);
 
@@ -665,12 +664,10 @@ function refreshSearch()
         }
 
         for (var i = 0; i < searchResults.length; ++i) {
-            var outlineElement = outlineElementForNode(searchResults[i]);
-            appendOutlineElement(treeOutline, outlineElement);
-            if (outlineElement.expandable())
-                outlineElement.collapse();
+            var item = new DOMNodeTreeElement(searchResults[i]);
+            treeOutline.appendChild(item);
             if (i == 0)
-                outlineElement.select();
+                item.select();
         }
 
         var searchCountElement = document.getElementById("searchCount");
@@ -750,195 +747,56 @@ function nodeTypeName(node)
     return "(unknown)";
 }
 
-function treeOutlineNodeSelect(event)
+function treeElementPopulate(element)
 {
-    var element = event.currentTarget;
-    if (event.offsetX > 20 || !element.expandable())
-        element.select();
-}
-
-function treeOutlineNodeToggle(event)
-{
-    var element = event.currentTarget;
-    if (event.offsetX <= 20 && element.expandable()) {
-        if (element.expanded()) {
-            element.collapse();
-        } else {
-            element.expand();
-        }
-    }
-}
-
-function treeOutlineNodeDoubleClicked(event)
-{
-    if (searchActive)
+    if (element.children.length)
         return;
 
-    var element = event.currentTarget;
-    if (element.representedElement && element.expandable()) {
-        element.expand();
-        Inspector.setRootDOMNode(element.representedElement);
+    var node = element.representedObject.firstChild;
+    while (node) {
+        var item = new DOMNodeTreeElement(node);
+        element.appendChild(item);
+        node = ignoreWhitespace ? nextSiblingSkippingWhitespace.call(node) : node.nextSibling;
     }
 }
 
-function revealedOutlineItem()
+function treeElementExpanded(element)
 {
-    if (this.parentNode && this.parentNode.treeRoot)
-        return true;
-
-    if (!this.parentNode)
-        return false;
-
-    var currentListItem = this.parentNode.parentListElement;
-    while (currentListItem) {
-        if (!currentListItem.expanded())
-            return false;
-        if (!currentListItem.parentNode)
-            return false;
-        if (currentListItem.parentNode.treeRoot)
-            return true;
-        currentListItem = currentListItem.parentNode.parentListElement;
-    }
-
-    return true;
-}
-
-function expandedOutlineItem()
-{
-    return this.hasStyleClass("expanded");
-}
-
-function collapseOutlineItem()
-{
-    this.removeStyleClass("expanded");
-    if (this.childrenListElement)
-        this.childrenListElement.removeStyleClass("expanded");
     treeOutlineScrollArea.refresh();
 }
 
-function expandableOutlineItem()
+function treeElementCollapsed(element)
 {
-    return this.hasStyleClass("parent");
-}
-
-function expandOutlineItem()
-{
-    if (!this.childrenListElement || (this.childrenListElement && this.childrenListElement.ignoredWhitespace != ignoreWhitespace)) {
-        var ol = document.createElement("ol");
-        ol.className = "children";
-
-        ol.ignoredWhitespace = ignoreWhitespace;
-        ol.parentListElement = this;
-        this.childrenListElement = ol;
-
-        var child = this.representedElement.firstChild;
-        while (child) {
-            if (!ignoreWhitespace || (!isNodeWhitespace.call(child) && ignoreWhitespace))
-                appendOutlineElement(ol, outlineElementForNode(child));
-            child = child.nextSibling;
-        }
-
-        this.parentNode.insertBefore(ol, this.nextSibling);
-    }
-
-    this.addStyleClass("expanded");
-    this.childrenListElement.addStyleClass("expanded");
-
     treeOutlineScrollArea.refresh();
 }
 
-function revealOutlineItem()
+function treeElementSelected(element)
 {
-    if (this.parentNode && this.parentNode.treeRoot) {
-        treeOutlineScrollArea.reveal(this);
-        return;
-    }
-
-    var foundRoot = false;
-    var ancestors = [];
-    var currentNode = this.representedElement.parentNode;
-    while (currentNode) {
-        ancestors.unshift(currentNode);
-
-        var outlineElement = outlineElementForNode(currentNode, true);
-        if (outlineElement && outlineElement.parentNode && outlineElement.parentNode.treeRoot) {
-            foundRoot = true;
-            break;
-        }
-
-        currentNode = currentNode.parentNode;
-    }
-
-    if (!foundRoot)
-        return;
-
-    for (var i = 0; i < ancestors.length; ++i)
-        outlineElementForNode(ancestors[i]).expand();
-
-    treeOutlineScrollArea.reveal(this);
+    if (element._listItemNode)
+        treeOutlineScrollArea.reveal(element._listItemNode);
+    if (element.representedObject)
+        Inspector.setFocusedDOMNode(element.representedObject);
 }
 
-var currentSelectedOutlineItem;
-
-function selectOutlineItem()
+function treeElementDoubleClicked(element)
 {
-    if (currentSelectedOutlineItem)
-        currentSelectedOutlineItem.removeStyleClass("selected");
-    this.addStyleClass("selected");
-    currentSelectedOutlineItem = this;
-    Inspector.setFocusedDOMNode(this.representedElement);
+    if (element.hasChildren && element.representedObject)
+        Inspector.setRootDOMNode(element.representedObject);
 }
 
-function outlineElementForNode(node, dontCreate)
+function DOMNodeTreeElement(node)
 {
-    if (node.__webInspectorTreeListItem || dontCreate)
-        return node.__webInspectorTreeListItem;
+    var title = nodeDisplayName.call(node).escapeHTML();
+    if (node.hasChildNodes())
+        title += " <span class=\"content\">" + nodeContentPreview.call(node) + "</span>";
 
-    var content = nodeDisplayName.call(node).escapeHTML();
-    var li = document.createElement("li");
-
-    if (node.hasChildNodes && node.hasChildNodes()) {
-        li.className = "parent";
-        content += " <span class=\"content\">" + nodeContentPreview.call(node) + "</span>";
-    }
-
-    li.innerHTML = content;
-    li.addEventListener("mousedown", treeOutlineNodeSelect, false);
-    li.addEventListener("click", treeOutlineNodeToggle, false);
-    li.addEventListener("dblclick", treeOutlineNodeDoubleClicked, false);
-    li.representedElement = node;
-    node.__webInspectorTreeListItem = li;
-
-    li.expanded = expandedOutlineItem;
-    li.expandable = expandableOutlineItem;
-    li.collapse = collapseOutlineItem;
-    li.expand = expandOutlineItem;
-    li.reveal = revealOutlineItem;
-    li.revealed = revealedOutlineItem;
-    li.select = selectOutlineItem;
-
-    return li;
-}
-
-function appendOutlineElement(list, item)
-{
-    if (item.parentNode && item.parentNode.isSameNode(list))
-        return;
-
-    if (item.parentNode && !item.parentNode.isSameNode(list) && item.parentNode.parentListElement) {
-        var parentListItem = item.parentNode.parentListElement;
-
-        if (item.parentNode.parentNode && !item.parentNode.parentNode.treeRoot)
-            item.parentNode.parentNode.removeChild(item.parentNode);
-        item.parentNode.removeChildren();
-
-        delete parentListItem.childrenListElement;
-        parentListItem.collapse();
-    }
-
-    list.appendChild(item);
-    if (item.childrenListElement)
-        list.insertBefore(item.childrenListElement, item.nextSibling);
+    var item = new TreeElement(title, node, node.hasChildNodes());
+    item.onpopulate = treeElementPopulate;
+    item.onexpand = treeElementExpanded;
+    item.oncollapse = treeElementCollapsed;
+    item.onselect = treeElementSelected;
+    item.ondblclick = treeElementDoubleClicked;
+    return item;
 }
 
 function updateTreeOutline()
@@ -947,25 +805,19 @@ function updateTreeOutline()
         return;
 
     var rootNode = Inspector.rootDOMNode();
-    var treeOutline = document.getElementById("treeOutline");
 
-    treeOutline.treeRoot = true;
-    treeOutline.innerText = ""; // clear the existing tree
-
+    treeOutline.removeChildren();
     treeOutlineScrollArea.refresh();
 
     if (!rootNode)
         return;
 
-    appendOutlineElement(treeOutline, outlineElementForNode(rootNode));
-
-    var focusedNode = Inspector.focusedDOMNode();
-    var outlineElement = outlineElementForNode(focusedNode);
-    outlineElement.reveal();
-    outlineElement.select();
+    var item = new DOMNodeTreeElement(rootNode);
+    treeOutline.appendChild(item);
+    item.expand();
 
     var rootPopup = document.getElementById("treePopup");
-    
+
     var resetPopup = true;
     for (var i = 0; i < rootPopup.options.length; ++i) {
         if (rootPopup.options[i].representedNode == rootNode) {
@@ -974,6 +826,7 @@ function updateTreeOutline()
             break;
         }
     }
+
     if (!resetPopup)
         return;
     
@@ -1000,97 +853,46 @@ function selectNewRoot(event)
 
 function treeKeypress(event)
 {
-    if (event.metaKey)
-        return;
-
-    event.preventDefault();
-    event.stopPropagation();
-
-    var nextFocusedNode;
-    var focusedNode = Inspector.focusedDOMNode();
-
-    if (event.keyIdentifier == "Up") {
-        // up arrow key
-        nextFocusedNode = traversePreviousNode.call(focusedNode, ignoreWhitespace);
-        while (nextFocusedNode) {
-            var outlineElement = outlineElementForNode(nextFocusedNode, true);
-            if (outlineElement && outlineElement.revealed())
-                break;
-            nextFocusedNode = traversePreviousNode.call(nextFocusedNode, ignoreWhitespace);
-        }
-    } else if (event.keyIdentifier == "Down") {
-        // down arrow key
-        nextFocusedNode = traverseNextNode.call(focusedNode, ignoreWhitespace);
-        while (nextFocusedNode) {
-            var outlineElement = outlineElementForNode(nextFocusedNode, true);
-            if (outlineElement && outlineElement.revealed())
-                break;
-            nextFocusedNode = traverseNextNode.call(nextFocusedNode, ignoreWhitespace);
-        }
-    } else if (event.keyIdentifier == "Left") {
-        // left arrow key
-        var focusedOutlineElement = outlineElementForNode(focusedNode, true);
-        if (focusedOutlineElement) {
-            if (focusedOutlineElement.expanded())
-                focusedOutlineElement.collapse();
-            else if (focusedOutlineElement.parentNode && !focusedOutlineElement.parentNode.treeRoot)
-                nextFocusedNode = focusedOutlineElement.parentNode.parentListElement.representedElement;
-        }
-    } else if (event.keyIdentifier == "Right") {
-        // right arrow key
-        var focusedOutlineElement = outlineElementForNode(focusedNode, true);
-        if (focusedOutlineElement && focusedOutlineElement.expandable())
-            focusedOutlineElement.expand();
-    }
-
-    if (nextFocusedNode) {
-        var outlineElement = outlineElementForNode(nextFocusedNode, true);
-        if (outlineElement && outlineElement.revealed()) {
-            outlineElement.reveal();
-            outlineElement.select();
-        }
-    }
+    treeOutline.handleKeyEvent(event);
 }
 
 function traverseTreeBackward(event)
 {
-    var node;
+    var item;
     var focusedNode = Inspector.focusedDOMNode();
 
     // traverse backward, holding the opton key will traverse only to the previous sibling
     if (event.altKey)
-        node = ignoreWhitespace ? previousSiblingSkippingWhitespace.call(focusedNode) : focusedNode.previousSibling;
+        item = treeOutline.selectedTreeElement.previousSibling;
     else
-        node = traversePreviousNode.call(focusedNode, ignoreWhitespace);
+        item = treeOutline.selectedTreeElement.traversePreviousTreeElement(false);
 
-    if (node) {
+    if (item) {
         var root = Inspector.rootDOMNode();
-        if (!root.isSameNode(node) && !isAncestorNode.call(root, node))
-            Inspector.setRootDOMNode(firstCommonNodeAncestor.call(Inspector.focusedDOMNode(), node));
-        var outlineElement = outlineElementForNode(node);
-        outlineElement.reveal();
-        outlineElement.select();
+        if (!root.isSameNode(item.representedObject) && !isAncestorNode.call(root, item.representedObject))
+            Inspector.setRootDOMNode(firstCommonNodeAncestor.call(focusedNode, item.representedObject));
+        item.reveal();
+        item.select();
     }
 }
 
 function traverseTreeForward(event)
 {
-    var node;
+    var item;
     var focusedNode = Inspector.focusedDOMNode();
 
     // traverse forward, holding the opton key will traverse only to the next sibling
     if (event.altKey)
-        node = ignoreWhitespace ? nextSiblingSkippingWhitespace.call(focusedNode) : focusedNode.nextSibling;
+        item = treeOutline.selectedTreeElement.nextSibling;
     else
-        node = traverseNextNode.call(focusedNode, ignoreWhitespace);
+        item = treeOutline.selectedTreeElement.traverseNextTreeElement(false);
 
-    if (node) {
+    if (item) {
         var root = Inspector.rootDOMNode();
-        if (!root.isSameNode(node) && !isAncestorNode.call(root, node))
-            Inspector.setRootDOMNode(firstCommonNodeAncestor.call(Inspector.focusedDOMNode(), node));
-        var outlineElement = outlineElementForNode(node);
-        outlineElement.reveal();
-        outlineElement.select();
+        if (!root.isSameNode(item.representedObject) && !isAncestorNode.call(root, item.representedObject))
+            Inspector.setRootDOMNode(firstCommonNodeAncestor.call(focusedNode, item.representedObject));
+        item.reveal();
+        item.select();
     }
 }
 
