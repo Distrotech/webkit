@@ -411,7 +411,7 @@ function treeElementPopulate(element)
     if (element.children.length)
         return;
 
-    var node = element.representedObject.firstChild;
+    var node = (ignoreWhitespace ? firstChildSkippingWhitespace.call(element.representedObject) : element.representedObject.firstChild);
     while (node) {
         var item = new DOMNodeTreeElement(node);
         element.appendChild(item);
@@ -453,15 +453,55 @@ function treeElementDoubleClicked(element)
 function DOMNodeTreeElement(node)
 {
     var title = nodeDisplayName.call(node).escapeHTML();
-    if (node.hasChildNodes())
+    var hasChildren = (ignoreWhitespace ? (firstChildSkippingWhitespace.call(node) ? true : false) : node.hasChildNodes());
+
+    if (hasChildren)
         title += " <span class=\"content\">" + nodeContentPreview.call(node) + "</span>";
 
-    var item = new TreeElement(title, node, node.hasChildNodes());
+    var item = new TreeElement(title, node, hasChildren);
     item.onpopulate = treeElementPopulate;
     item.onexpand = treeElementExpanded;
     item.oncollapse = treeElementCollapsed;
     item.onselect = treeElementSelected;
     item.ondblclick = treeElementDoubleClicked;
+    return item;
+}
+
+function revealNodeInTreeOutline(node)
+{
+    var item = treeOutline.findTreeElement(node);
+    if (item) {
+        item.reveal();
+        return item;
+    }
+
+    var found = false;
+    for (var i = 0; i < treeOutline.children.length; ++i) {
+        item = treeOutline.children[i];
+        if (item.representedObject.isSameNode(node) || isAncestorNode.call(item.representedObject, node)) {
+            found = true;
+            break;
+        }
+    }
+
+    if (!found)
+        return null;
+
+    var ancestors = []; 
+    var currentNode = node; 
+    while (currentNode) { 
+        ancestors.unshift(currentNode); 
+        if (currentNode.isSameNode(item.representedObject))
+            break;
+        currentNode = currentNode.parentNode; 
+    }
+
+    for (var i = 0; i < ancestors.length; ++i) {
+        item = treeOutline.findTreeElement(ancestors[i]);
+        if (!ancestors[i].isSameNode(node))
+            item.expand();
+    }
+
     return item;
 }
 
@@ -481,6 +521,9 @@ function updateTreeOutline()
     var item = new DOMNodeTreeElement(rootNode);
     treeOutline.appendChild(item);
     item.expand();
+
+    item = revealNodeInTreeOutline(Inspector.focusedDOMNode());
+    item.select();
 
     var rootPopup = document.getElementById("treePopup");
 
