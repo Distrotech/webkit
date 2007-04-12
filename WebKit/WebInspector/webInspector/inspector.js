@@ -511,6 +511,7 @@ function updateTreeOutline()
         return;
 
     var rootNode = Inspector.rootDOMNode();
+    var item = treeOutline.findTreeElement(rootNode);
 
     treeOutline.removeChildren();
     treeOutlineScrollArea.refresh();
@@ -518,7 +519,8 @@ function updateTreeOutline()
     if (!rootNode)
         return;
 
-    var item = new DOMNodeTreeElement(rootNode);
+    if (!item)
+        item = new DOMNodeTreeElement(rootNode);
     treeOutline.appendChild(item);
     item.expand();
 
