@@ -1,3 +1,12 @@
+2007-04-12  Mark Rowe  <mrowe@apple.com>
+
+        Not reviewed.  Internal counterpart to open-source r20856.
+
+        * WebChromeClient.cpp:
+        (WebChromeClient::createWindow):
+        (WebChromeClient::createModalDialog):
+        * WebChromeClient.h:
+
 2007-04-11  Ada Chan  <adachan@apple.com>
 
         Reviewed by Steve.

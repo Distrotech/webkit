@@ -129,7 +129,7 @@ void WebChromeClient::takeFocus(FocusDirection direction)
     }
 }
 
-Page* WebChromeClient::createWindow(const FrameLoadRequest& frameLoadRequest)
+Page* WebChromeClient::createWindow(Frame*, const FrameLoadRequest& frameLoadRequest)
 {
     Page* page = 0;
     IWebMutableURLRequest* request = WebMutableURLRequest::createInstance(frameLoadRequest.resourceRequest());
@@ -149,7 +149,7 @@ Page* WebChromeClient::createWindow(const FrameLoadRequest& frameLoadRequest)
     return page;
 }
 
-Page* WebChromeClient::createModalDialog(const FrameLoadRequest&)
+Page* WebChromeClient::createModalDialog(Frame*, const FrameLoadRequest&)
 {
     Page* page = 0;
     IWebUIDelegate* uiDelegate = 0;
