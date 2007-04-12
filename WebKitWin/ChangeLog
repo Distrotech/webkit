@@ -1,3 +1,15 @@
+2007-04-11  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Steve.
+        
+        Implemented WebHistoryItem::originalURLString().  Added parameter checks to other methods.
+
+        * WebHistoryItem.cpp:
+        (WebHistoryItem::originalURLString):
+        (WebHistoryItem::URLString):
+        (WebHistoryItem::title):
+        (WebHistoryItem::lastVisitedTimeInterval):
+
 2007-04-10  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Darin

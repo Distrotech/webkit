@@ -377,17 +377,23 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::initWithURLString(
 }
 
 HRESULT STDMETHODCALLTYPE WebHistoryItem::originalURLString( 
-    /* [retval][out] */ BSTR* /*url*/)
+    /* [retval][out] */ BSTR* url)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!url)
+        return E_POINTER;
+
+    BString str = m_historyItem->originalURLString();
+    *url = str.release();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebHistoryItem::URLString( 
     /* [retval][out] */ BSTR* url)
 {
-    BString str = m_historyItem->urlString();
+    if (!url)
+        return E_POINTER;
 
+    BString str = m_historyItem->urlString();
     *url = str.release();
     return S_OK;
 }
@@ -395,15 +401,20 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::URLString(
 HRESULT STDMETHODCALLTYPE WebHistoryItem::title( 
     /* [retval][out] */ BSTR* pageTitle)
 {
+    if (!pageTitle)
+        return E_POINTER;
+
     BString str(m_historyItem->title());
     *pageTitle = str.release();
-
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebHistoryItem::lastVisitedTimeInterval( 
     /* [retval][out] */ DATE* lastVisited)
 {
+    if (!lastVisited)
+        return E_POINTER;
+
     *lastVisited = MarshallingHelpers::CFAbsoluteTimeToDATE(m_historyItem->lastVisitedTime());
     return S_OK;
 }
