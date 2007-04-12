@@ -1,6 +1,3 @@
-# Crash in Release but not Debug
-editing/deleting/5115601.html
-fast/canvas/drawImage-with-invalid-args.html
 
 # Layout tests that depend on certain fonts don't match Mac results <rdar://problem/5075790>
 css1/basic/contextual_selectors.html
@@ -71,11 +68,12 @@ svg/custom/coords-relative-units-transforms.svg
 svg/custom/marker-changes.svg
 svg/custom/marker-viewBox-changes.svg
 svg/custom/scrolling-embedded-svg-file-image-repaint-problem.html
-tables/mozilla/bugs/bug10633.html
-tables/mozilla/bugs/bug113424.html
 tables/mozilla/core/bloomberg.html
-tables/mozilla_expected_failures/bugs/bug11331.html
+tables/mozilla/bugs/bug8381.html
+tables/mozilla/bugs/bug10633.html
 tables/mozilla/bugs/bug23151.html
+tables/mozilla/bugs/bug113424.html
+tables/mozilla_expected_failures/bugs/bug11331.html
 
 # No advanced text <rdar://problems/4516194>
 css1/text_properties/text-transCapitalize.html
@@ -140,6 +138,15 @@ fast/text/international/wrap-CJK-001.html
 # ASSERT in ClipboardWin::setData <rdar://problem/5015941>
 editing/execCommand/copy-without-selection.html
 
+# DRT is not fully implemented in boomer <rdar://problem/5128261>
+editing/pasteboard/emacs-cntl-y-001.html
+fast/dom/Window/setting-properties-on-closed-window.html
+fast/events/objc-event-api.html
+http/tests/misc/window-dot-stop.html
+http/tests/security/local-user-CSS-from-remote.html
+http/tests/xmlhttprequest/abort-should-cancel-load.html
+svg/custom/use-events-crash.svg
+
 # Crash in Node::nextSibling <rdar://problem/5078739>
 editing/pasteboard/paste-line-endings-002.html
 editing/pasteboard/paste-line-endings-004.html
@@ -160,23 +167,33 @@ fast/text/justified-text-rect.html
 # This test uses Mac-specific key codes <rdar://problem/5076426>
 fast/events/arrow-navigation.html
 
+# Selection seems to fail for some LayoutTests <rdar://problem/5130762>
+fast/forms/tabbing-input-iframe.html
+fast/forms/textfield-drag-into-disabled.html
+fast/inline/dirtyLinesForInline.html
+fast/text/textIteratorNilRenderer.html
+svg/custom/pointer-events-image.svg
+svg/custom/pointer-events-path.svg
+svg/custom/pointer-events-text.svg
+svg/custom/text-hit-test.svg
+
 # Infinite recursion in JSValue::mark <rdar://problem/4928697>
 fast/js/toString-stack-overflow.html
 
-# sylinks arn't working correctly. <rdar://problem/5128536>
+# Number LayoutTest fails on boomer <rdar://problem/5130681>
+fast/js/kde/Number.html
+
+# Symlinks arn't working correctly. <rdar://problem/5128536>
 fast/loader/local-CSS-from-local.html
 fast/loader/local-JavaScript-from-local.html
 fast/loader/local-iFrame-source-from-local.html
 fast/loader/local-image-from-local.html
 
-# DRT is not fully implemented in boomer <rdar://problem/5128261>
-editing/pasteboard/emacs-cntl-y-001.html
-fast/dom/Window/setting-properties-on-closed-window.html
-fast/events/objc-event-api.html
-http/tests/misc/window-dot-stop.html
-http/tests/security/local-user-CSS-from-remote.html
-http/tests/xmlhttprequest/abort-should-cancel-load.html
-svg/custom/use-events-crash.svg
+# XPath fails LayoutTests on boomer <rdar://problem/5130630>
+fast/xpath/nan-to-boolean.html
+fast/xpath/4XPath/Core/test_core_functions.html
+fast/xpath/4XPath/Core/test_numeric_expr.html
+fast/xpath/4XPath/Core/test_parser.html
 
 # Console messages are not being printed out for failed canLoad checks <rdar://problem/5128314>
 http/tests/security/local-CSS-from-remote.html
@@ -331,6 +348,14 @@ editing/pasteboard/smart-paste-005.html
 editing/pasteboard/smart-paste-007.html
 editing/pasteboard/smart-paste-008.html
 
+# text run, caret
+fast/forms/input-paste-undo.html
+
+# Caret
+editing/pasteboard/paste-4035648-fix.html
+editing/pasteboard/paste-text-014.html
+editing/pasteboard/select-element-1.html
+
 # Text
 editing/pasteboard/subframe-dragndrop-1.html
 editing/selection/caret-rtl-2.html
@@ -338,6 +363,14 @@ editing/selection/caret-rtl.html
 
 # Caret, RenderBlock
 editing/pasteboard/undoable-fragment-removes.html
+
+################################################################################
+######################### All of above may be related ##########################
+################################################################################
+
+# Crash in Release but not Debug
+editing/deleting/5115601.html
+fast/canvas/drawImage-with-invalid-args.html
 
 # Selection, console message
 editing/selection/4402375.html
@@ -463,21 +496,11 @@ fast/html/keygen.html
 
 fast/html/tab-order.html
 
-# Rounding issues?
-fast/js/kde/Number.html
-
 # Random sizing issues (Renderblock, RenderTableCells)
 fast/dom/Window/window-onFocus.html
 fast/forms/searchfield-heights.html
 fast/table/frame-and-rules.html
 fast/table/giantCellspacing.html
-
-fast/xpath/nan-to-boolean.html
-
-# Weird type failures
-fast/xpath/4XPath/Core/test_core_functions.html
-fast/xpath/4XPath/Core/test_numeric_expr.html
-fast/xpath/4XPath/Core/test_parser.html
 
 # Timed out Loading Page (check if missing DRT functionality)
 editing/selection/4975120.html
@@ -492,21 +515,5 @@ http/tests/xmlhttprequest/basic-auth.html
 
 http/tests/navigation/anchor-frames.html
 
-http/tests/xmlhttprequest/cache-override.html
-http/tests/xmlhttprequest/response-encoding.html
-
-# Caret
-editing/pasteboard/paste-4035648-fix.html
-editing/pasteboard/paste-text-014.html
-editing/pasteboard/select-element-1.html
-fast/forms/input-paste-undo.html
-fast/forms/tabbing-input-iframe.html
-fast/forms/textfield-drag-into-disabled.html
-fast/inline/dirtyLinesForInline.html
-fast/text/textIteratorNilRenderer.html
-svg/custom/pointer-events-image.svg
-svg/custom/pointer-events-path.svg
-svg/custom/pointer-events-text.svg
-svg/custom/text-hit-test.svg
-
-tables/mozilla/bugs/bug8381.html
+#http/tests/xmlhttprequest/cache-override.html
+#http/tests/xmlhttprequest/response-encoding.html
