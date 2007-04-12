@@ -1,5 +1,13 @@
 2007-04-11  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Tim.
+
+        Moved the Skipped file into win/Skipped in anticipation of the opensource merge.
+
+        * Skipped: Removed.
+
+2007-04-11  Adam Roben  <aroben@apple.com>
+
         * Skipped: Consolidated some failures that have the same underlying
         cause, and removed some tests that were duplicated in this file.
 

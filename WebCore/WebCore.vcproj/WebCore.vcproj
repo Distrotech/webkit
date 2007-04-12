@@ -5406,10 +5406,6 @@
 				Name="win"
 				>
 				<File
-					RelativePath="..\bridge\win\FrameViewWin.cpp"
-					>
-				</File>
-				<File
 					RelativePath="..\bridge\win\FrameWin.cpp"
 					>
 				</File>

@@ -1,5 +1,14 @@
 2007-04-11  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Tim.
+
+        Get rid of FrameViewWin.cpp, since it's empty.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * bridge/win/FrameViewWin.cpp: Removed.
+
+2007-04-11  Adam Roben  <aroben@apple.com>
+
         Reviewed by Anders.
 
         Update for changes to Pasteboard.
