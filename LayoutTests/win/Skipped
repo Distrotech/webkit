@@ -2,7 +2,7 @@
 editing/deleting/5115601.html
 fast/canvas/drawImage-with-invalid-args.html
 
-# Arial has different metrics on Windows <rdar://problem/5075790>
+# Layout tests that depend on certain fonts don't match Mac results <rdar://problem/5075790>
 css1/basic/contextual_selectors.html
 css1/font_properties/font.html
 css1/pseudo/multiple_pseudo_elements.html
@@ -13,6 +13,17 @@ css2.1/t1508-c527-font-07-b.html
 css2.1/t1508-c527-font-08-b.html
 css2.1/t1508-c527-font-10-c.html
 css2.1/t051201-c23-first-line-00-b.html
+editing/execCommand/paste-1.html
+editing/execCommand/paste-2.html
+fast/css/text-security.html
+fast/events/standalone-image-drag-to-editable.html
+fast/forms/select-visual-hebrew.html
+fast/forms/visual-hebrew-text-field.html
+fast/lists/drag-into-marker.html
+fast/lists/w3-list-styles.html
+fast/table/absolute-table-at-bottom.html
+fast/text/font-initial.html
+fast/xsl/xslt-text.xml
 svg/W3C-SVG-1.1/animate-elem-03-t.svg
 svg/W3C-SVG-1.1/animate-elem-24-t.svg
 svg/W3C-SVG-1.1/animate-elem-36-t.svg
@@ -60,32 +71,11 @@ svg/custom/coords-relative-units-transforms.svg
 svg/custom/marker-changes.svg
 svg/custom/marker-viewBox-changes.svg
 svg/custom/scrolling-embedded-svg-file-image-repaint-problem.html
-
-# ASSERT in ClipboardWin::setData <rdar://problem/5015941>
-editing/execCommand/copy-without-selection.html
-
-# Crash in Node::nextSibling <rdar://problem/5078739>
-editing/pasteboard/paste-line-endings-002.html
-editing/pasteboard/paste-line-endings-004.html
-
-# AppleScript on Windows? That's crazy talk!
-fast/AppleScript
-
-# CFNet cookies crash <rdar://problem/4993339>
-fast/dom/Window/window-properties.html
-
-# No textInputController <rdar://problem/5074430>
-fast/dom/character-index-for-point.html
-fast/forms/attributed-strings.html
-fast/text/attributed-substring-from-range-001.html
-fast/text/attributed-substring-from-range.html
-fast/text/justified-text-rect.html
-
-# This test uses Mac-specific key codes <rdar://problem/5076426>
-fast/events/arrow-navigation.html
-
-# Infinite recursion in JSValue::mark <rdar://problem/4928697>
-fast/js/toString-stack-overflow.html
+tables/mozilla/bugs/bug10633.html
+tables/mozilla/bugs/bug113424.html
+tables/mozilla/core/bloomberg.html
+tables/mozilla_expected_failures/bugs/bug11331.html
+tables/mozilla/bugs/bug23151.html
 
 # No advanced text <rdar://problems/4516194>
 css1/text_properties/text-transCapitalize.html
@@ -147,6 +137,54 @@ fast/text/international/rtl-caret.html
 fast/text/international/thai-line-breaks.html
 fast/text/international/wrap-CJK-001.html
 
+# ASSERT in ClipboardWin::setData <rdar://problem/5015941>
+editing/execCommand/copy-without-selection.html
+
+# Crash in Node::nextSibling <rdar://problem/5078739>
+editing/pasteboard/paste-line-endings-002.html
+editing/pasteboard/paste-line-endings-004.html
+
+# AppleScript on Windows? That's crazy talk!
+fast/AppleScript
+
+# CFNet cookies crash <rdar://problem/4993339>
+fast/dom/Window/window-properties.html
+
+# No textInputController <rdar://problem/5074430>
+fast/dom/character-index-for-point.html
+fast/forms/attributed-strings.html
+fast/text/attributed-substring-from-range-001.html
+fast/text/attributed-substring-from-range.html
+fast/text/justified-text-rect.html
+
+# This test uses Mac-specific key codes <rdar://problem/5076426>
+fast/events/arrow-navigation.html
+
+# Infinite recursion in JSValue::mark <rdar://problem/4928697>
+fast/js/toString-stack-overflow.html
+
+# sylinks arn't working correctly. <rdar://problem/5128536>
+fast/loader/local-CSS-from-local.html
+fast/loader/local-JavaScript-from-local.html
+fast/loader/local-iFrame-source-from-local.html
+fast/loader/local-image-from-local.html
+
+# DRT is not fully implemented in boomer <rdar://problem/5128261>
+editing/pasteboard/emacs-cntl-y-001.html
+fast/dom/Window/setting-properties-on-closed-window.html
+fast/events/objc-event-api.html
+http/tests/misc/window-dot-stop.html
+http/tests/security/local-user-CSS-from-remote.html
+http/tests/xmlhttprequest/abort-should-cancel-load.html
+svg/custom/use-events-crash.svg
+
+# Console messages are not being printed out for failed canLoad checks <rdar://problem/5128314>
+http/tests/security/local-CSS-from-remote.html
+http/tests/security/local-JavaScript-from-remote.html
+
+# Local image loaded remotely in boomer. <rdar://problem/5128339>
+http/tests/security/local-image-from-remote.html
+
 # Obj-C QuickTime plugin on Windows? That's unpossible!
 plugins/pluginDocumentView-deallocated-dataSource.html
 
@@ -171,51 +209,98 @@ security/block-test.html
 # Debug C Runtime assertion <rdar://problem/5079945>
 svg/custom/mask-excessive-malloc.svg
 
+# SVG is painting on Windows when it appears not to be doing so on X. <rdar://problem/5128229>
+svg/custom/text-repaint-including-stroke.svg
+svg/custom/use-elementInstance-event-target.svg
+
+# String::Number prints floating point numbers differently on Win than X. <rdar://problem/5127993>
+svg/custom/path-bad-data.svg
+svg/dom/length-list-parser.html
+svg/hixie/links/001.xml
+svg/hixie/perf/001.xml
+svg/hixie/perf/002.xml
+svg/hixie/perf/007.xml
+svg/hixie/viewbox/preserveAspectRatio/001.xml
+
 # No support for WebArchives in WebKitWin <rdar://problem/5066490>
 webarchive
 
-# No bug filed about yet
-editing/deleting/delete-and-undo.html
+################################################################################
+####################### No bugs filed about the below yet#######################
+################################################################################
+
 editing/deleting/delete-by-word-001.html
-editing/deleting/delete-by-word-002.html
-editing/deleting/delete-to-end-of-paragraph.html
+
+# Text, caret, selection
 editing/deleting/smart-delete-003.html
 editing/deleting/smart-delete-004.html
+
 editing/execCommand/4641880-1.html
 editing/execCommand/4641880-2.html
+
+# Text, caret
+editing/deleting/delete-and-undo.html
+editing/deleting/delete-by-word-002.html
 editing/execCommand/nsresponder-indent.html
 editing/execCommand/nsresponder-outdent.html
-editing/execCommand/paste-1.html
-editing/execCommand/paste-2.html
+editing/pasteboard/4944770-2.html
+editing/pasteboard/5028447.html
+editing/pasteboard/block-wrappers-necessary.html
+editing/pasteboard/copy-paste-bidi.html
+editing/pasteboard/emacs-ctrl-a-k-y.html
+
+# Exception Undefined
 editing/input/firstrectforcharacterrange-plain.html
 editing/input/firstrectforcharacterrange-styled.html
 editing/input/range-for-empty-document.html
 editing/input/text-input-controller.html
 editing/input/wrapped-line-char-rect.html
+
+# Text, RenderText, caret
+editing/deleting/delete-to-end-of-paragraph.html
 editing/inserting/insert-3907422-fix.html
+
 editing/pasteboard/4076267-2.html
-editing/pasteboard/4242293-1.html
+
+# Text, renderText, selection
 editing/pasteboard/4861080.html
-editing/pasteboard/4944770-2.html
+
+# Text, renderText
 editing/pasteboard/4947130.html
-editing/pasteboard/5027857.html
-editing/pasteboard/5028447.html
-editing/pasteboard/block-wrappers-necessary.html
-editing/pasteboard/copy-paste-bidi.html
-editing/pasteboard/copy-standalone-image.html
+
+# Selection
 editing/pasteboard/drag-drop-dead-frame.html
-editing/pasteboard/drag-drop-modifies-page.html
+editing/pasteboard/drop-text-without-selection.html
+editing/selection/selection-background.html
+fast/forms/focus-selection-input.html
+
+# Image, selection
 editing/pasteboard/drag-image-to-contenteditable-in-iframe.html
 editing/pasteboard/drag-selected-image-to-contenteditable.html
+
+# Text, renderBlock, selection
+editing/pasteboard/drag-drop-modifies-page.html
 editing/pasteboard/drop-link.html
-editing/pasteboard/drop-text-without-selection.html
-editing/pasteboard/emacs-cntl-y-001.html
-editing/pasteboard/emacs-ctrl-a-k-y.html
+
+# BR, caret
+editing/pasteboard/paste-4039777-fix.html
+
+# Spacing
+editing/pasteboard/paste-table-002.html
+
+# Caret, RenderBlock
+editing/pasteboard/copy-standalone-image.html
+editing/pasteboard/paste-table-003.html
+editing/pasteboard/paste-text-009.html
+editing/pasteboard/paste-text-012.html
+editing/pasteboard/paste-text-013.html
+
+# Text, caret, RenderBlock
+editing/pasteboard/4242293-1.html
+editing/pasteboard/5027857.html
 editing/pasteboard/emacs-ctrl-k-y-001.html
 editing/pasteboard/input-field-1.html
-editing/pasteboard/paste-4035648-fix.html
 editing/pasteboard/paste-4038267-fix.html
-editing/pasteboard/paste-4039777-fix.html
 editing/pasteboard/paste-RTFD.html
 editing/pasteboard/paste-TIFF.html
 editing/pasteboard/paste-line-endings-003.html
@@ -228,21 +313,16 @@ editing/pasteboard/paste-list-001.html
 editing/pasteboard/paste-pre-001.html
 editing/pasteboard/paste-pre-002.html
 editing/pasteboard/paste-table-001.html
-editing/pasteboard/paste-table-002.html
-editing/pasteboard/paste-table-003.html
 editing/pasteboard/paste-text-004.html
 editing/pasteboard/paste-text-005.html
 editing/pasteboard/paste-text-006.html
 editing/pasteboard/paste-text-007.html
-editing/pasteboard/paste-text-009.html
-editing/pasteboard/paste-text-012.html
-editing/pasteboard/paste-text-013.html
-editing/pasteboard/paste-text-014.html
 editing/pasteboard/paste-text-015.html
 editing/pasteboard/paste-text-016.html
 editing/pasteboard/paste-text-017.html
+
+# Text, caret
 editing/pasteboard/paste-unrendered-select.html
-editing/pasteboard/select-element-1.html
 editing/pasteboard/smart-paste-001.html
 editing/pasteboard/smart-paste-002.html
 editing/pasteboard/smart-paste-003.html
@@ -250,128 +330,183 @@ editing/pasteboard/smart-paste-004.html
 editing/pasteboard/smart-paste-005.html
 editing/pasteboard/smart-paste-007.html
 editing/pasteboard/smart-paste-008.html
+
+# Text
 editing/pasteboard/subframe-dragndrop-1.html
-editing/pasteboard/undoable-fragment-removes.html
-editing/selection/4402375.html
-editing/selection/4947387.html
-editing/selection/4975120.html
-editing/selection/caret-and-focus-ring.html
 editing/selection/caret-rtl-2.html
 editing/selection/caret-rtl.html
-editing/selection/designmode-no-caret.html
+
+# Caret, RenderBlock
+editing/pasteboard/undoable-fragment-removes.html
+
+# Selection, console message
+editing/selection/4402375.html
+
+# Caret, console message
+editing/selection/4947387.html
+
+# Caret and DRT functionality
+editing/selection/caret-and-focus-ring.html
+
+# Selection, RenderImage
 editing/selection/drag-to-contenteditable-iframe.html
+
+# Missing Text
 editing/selection/editable-links.html
+
+# Test failed
+editing/selection/move-begin-end.html
+
+# Console Message
+editing/selection/selection-actions.html
+
+# Editing Delegate, selection
 editing/selection/extend-by-sentence-001.html
 editing/selection/image-before-linebreak.html
-editing/selection/move-begin-end.html
+
+# Editing Delegate, carat, selection
 editing/selection/replaced-boundaries-1.html
 editing/selection/replaced-boundaries-2.html
 editing/selection/replaced-boundaries-3.html
+
+# Console message
 editing/selection/select-line.html
-editing/selection/selection-actions.html
-editing/selection/selection-background.html
+
+# Editing Delegate, carat and font!
 editing/style/5091898.html
 editing/style/non-inheritable-styles.html
 editing/style/style-boundary-005.html
 editing/undo/undo-misspellings.html
 editing/undo/undo-typing-001.html
+
 fast/block/positioning/047.html
 fast/css/beforeSelectorOnCodeElement.html
 fast/css/computed-style.html
 fast/css/font_property_normal.html
 fast/css/rtl-ordering.html
-fast/css/text-security.html
+
+# plugins and <embed>
 fast/dom/object-embed-plugin-scripting.html
+
+# TypeError exception
 fast/dom/wrapper-classes.html
-fast/dom/Window/setting-properties-on-closed-window.html
-fast/dom/Window/window-onFocus.html
+
+# pixel color
 fast/dom/Window/window-screen-properties.html
-fast/encoding/char-encoding.html
+
+# Encoding
 fast/encoding/charset-x-nextstep.html
+
 fast/encoding/denormalised-voiced-japanese-chars.html
 fast/encoding/invalid-UTF-8.html
+
+# render text input
 fast/events/5056619.html
+
+# on drag alert
 fast/events/drag-in-frames.html
+
+# focus
 fast/events/frame-tab-focus.html
+
+# keydown and text
 fast/events/keydown-1.html
+
+# missing a mouseout
 fast/events/mouseout-dead-node.html
-fast/events/objc-event-api.html
-fast/events/objc-keyboard-event-creation.html
+
+# on drag enter
 fast/events/ondragenter.html
+
+# option-tab
 fast/events/option-tab.html
-fast/events/standalone-image-drag-to-editable.html
+
+# drag and drop?
 fast/forms/drag-into-textarea.html
+
+# keypress event
+fast/events/objc-keyboard-event-creation.html
 fast/forms/focus2.html
+
+# content editable and focus
 fast/forms/focus-control-to-page.html
-fast/forms/focus-selection-input.html
-fast/forms/input-paste-undo.html
+
+# onChange firing
 fast/forms/listbox-onchange.html
+
+# Test genuinely fails
 fast/forms/listbox-selection.html
+
+# queryCommandEnabled was false
 fast/forms/plaintext-mode-1.html
-fast/forms/searchfield-heights.html
+
+# Focus and Click events failing
 fast/forms/select-accesskey.html
+
+# Test Failed
 fast/forms/select-type-ahead-non-latin.html
-fast/forms/select-visual-hebrew.html
-fast/forms/tabbing-input-iframe.html
-fast/forms/textfield-drag-into-disabled.html
-fast/forms/visual-hebrew-text-field.html
+
+# Layers missing
 fast/frames/001.html
-fast/frames/frame-navigation.html
+
+# Renderview coordinates are negative
 fast/frames/frame-src-attribute.html
+
+# Lowercase results not uppercase
 fast/frames/iframe-window-focus.html
+
+# Color is wrong
 fast/history/clicked-link-is-visited.html
+
+# Weird text replaced by color
 fast/html/keygen.html
+
 fast/html/tab-order.html
-fast/inline/dirtyLinesForInline.html
+
+# Rounding issues?
 fast/js/kde/Number.html
-fast/lists/drag-into-marker.html
-fast/lists/w3-list-styles.html
-fast/loader/local-CSS-from-local.html
-fast/loader/local-JavaScript-from-local.html
-fast/loader/local-iFrame-source-from-local.html
-fast/loader/local-image-from-local.html
-fast/table/absolute-table-at-bottom.html
+
+# Random sizing issues (Renderblock, RenderTableCells)
+fast/dom/Window/window-onFocus.html
+fast/forms/searchfield-heights.html
 fast/table/frame-and-rules.html
 fast/table/giantCellspacing.html
-fast/text/font-initial.html
-fast/text/textIteratorNilRenderer.html
+
 fast/xpath/nan-to-boolean.html
+
+# Weird type failures
 fast/xpath/4XPath/Core/test_core_functions.html
 fast/xpath/4XPath/Core/test_numeric_expr.html
 fast/xpath/4XPath/Core/test_parser.html
-fast/xsl/xslt-text.xml
+
+# Timed out Loading Page (check if missing DRT functionality)
+editing/selection/4975120.html
+editing/selection/designmode-no-caret.html
+fast/encoding/char-encoding.html
+fast/frames/frame-navigation.html
 http/tests/incremental/slow-utf8-css.pl
 http/tests/incremental/slow-utf8-text.pl
 http/tests/local/file-url-sent-as-referer.html
 http/tests/misc/redirect-to-about-blank.html
-http/tests/misc/window-dot-stop.html
-http/tests/navigation/anchor-frames.html
-http/tests/security/local-CSS-from-remote.html
-http/tests/security/local-JavaScript-from-remote.html
-http/tests/security/local-image-from-remote.html
-http/tests/security/local-user-CSS-from-remote.html
-http/tests/xmlhttprequest/abort-should-cancel-load.html
 http/tests/xmlhttprequest/basic-auth.html
+
+http/tests/navigation/anchor-frames.html
+
 http/tests/xmlhttprequest/cache-override.html
 http/tests/xmlhttprequest/response-encoding.html
-svg/custom/path-bad-data.svg
+
+# Caret
+editing/pasteboard/paste-4035648-fix.html
+editing/pasteboard/paste-text-014.html
+editing/pasteboard/select-element-1.html
+fast/forms/input-paste-undo.html
+fast/forms/tabbing-input-iframe.html
+fast/forms/textfield-drag-into-disabled.html
+fast/inline/dirtyLinesForInline.html
+fast/text/textIteratorNilRenderer.html
 svg/custom/pointer-events-image.svg
 svg/custom/pointer-events-path.svg
 svg/custom/pointer-events-text.svg
 svg/custom/text-hit-test.svg
-svg/custom/text-repaint-including-stroke.svg
-svg/custom/use-elementInstance-event-target.svg
-svg/custom/use-events-crash.svg
-svg/dom/length-list-parser.html
-svg/hixie/links/001.xml
-svg/hixie/perf/001.xml
-svg/hixie/perf/002.xml
-svg/hixie/perf/007.xml
-svg/hixie/viewbox/preserveAspectRatio/001.xml
-tables/mozilla/bugs/bug8381.html
-tables/mozilla/bugs/bug10633.html
-tables/mozilla/bugs/bug23151.html
-tables/mozilla/bugs/bug113424.html
-tables/mozilla/core/bloomberg.html
-tables/mozilla_expected_failures/bugs/bug11331.html
 
+tables/mozilla/bugs/bug8381.html

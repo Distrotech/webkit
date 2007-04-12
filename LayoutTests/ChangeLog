@@ -1,3 +1,8 @@
+2007-04-11  Kevin McCullough  <kmccullough@apple.com>
+
+        * win/Skipped: Organized the Skipped.  Failed tests are either filed under existing
+        bugs, filed under new bugs, or are grouped by failure but do not have a bug yet.
+
 2007-04-11  Adam Roben  <aroben@apple.com>
 
         Reviewed by Tim.
