@@ -1,3 +1,20 @@
+2007-04-12  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Steve.
+
+        <rdar://problem/5131565> Need to be able to use debug WebKit with
+        release Safari.
+
+        Added a new configuration to WebCore.vcproj called Debug_Internal to be
+        used by Apple internal builds, and renamed $(ConfigSuffix) to
+        $(WebKitConfigSuffix). Debug_Internal is identical to Debug except for
+        the property sheet it uses.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * WebCore.vcproj/debug.vsprops:
+        * WebCore.vcproj/debug_internal.vsprops: Added.
+        * WebCore.vcproj/release.vsprops:
+
 2007-04-11  Adam Roben  <aroben@apple.com>
 
         Reviewed by Tim.

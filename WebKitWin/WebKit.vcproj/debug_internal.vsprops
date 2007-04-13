@@ -2,10 +2,15 @@
 <VisualStudioPropertySheet
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="debug"
+	Name="debug_internal"
 	>
 	<UserMacro
 		Name="WebKitConfigSuffix"
+		Value="_debug"
+		PerformEnvironmentSet="true"
+	/>
+	<UserMacro
+		Name="LibraryConfigSuffix"
 		Value="_debug"
 		PerformEnvironmentSet="true"
 	/>

@@ -1,3 +1,28 @@
+2007-04-12  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Steve.
+
+        <rdar://problem/5131565> Need to be able to use debug WebKit with
+        release Safari.
+
+        Added a new configuration to WebKit.vcproj called Debug_Internal to be
+        used by Apple internal builds. The Debug configuration is now meant to
+        be used by opensource builds, and will always link against release
+        versions of CF, CFNet, CG, etc. Debug_Internal is identical to Debug
+        except for the property sheet it uses, and the Debug configuration
+        doesn't register WebKit_debug.dll when finished.
+
+        We now have two macros, $(WebKitConfigSuffix) and
+        $(LibraryConfigSuffix). WebKitConfigSuffix is used for WebKit projects,
+        and is "_debug" for both Debug and Debug_Internal. LibraryConfigSuffix
+        is used for external projects, and is "" for Debug and "_debug" for
+        Debug_Internal.
+
+        * WebKit.vcproj/WebKit.vcproj:
+        * WebKit.vcproj/debug.vsprops:
+        * WebKit.vcproj/debug_internal.vsprops: Added.
+        * WebKit.vcproj/release.vsprops:
+
 2007-04-12  John Sullivan  <sullivan@apple.com>
 
         Reviewed by Anders
