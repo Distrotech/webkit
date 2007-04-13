@@ -2437,18 +2437,6 @@
 					>
 				</File>
 			</Filter>
-			<Filter
-				Name="win"
-				>
-				<File
-					RelativePath="..\loader\win\FrameLoaderWin.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\loader\win\ResourceLoaderWin.cpp"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="platform"
