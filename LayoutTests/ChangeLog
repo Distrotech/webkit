@@ -1,5 +1,9 @@
 2007-04-13  Kevin McCullough  <kmccullough@apple.com>
 
+        * win/Skipped: Re-enabled the tests that are actual failures.
+
+2007-04-13  Kevin McCullough  <kmccullough@apple.com>
+
         * win/Skipped: Commented out some that may not be actually failing.
 
 2007-04-12  Adam Roben  <aroben@apple.com>

@@ -177,6 +177,18 @@ svg/custom/pointer-events-path.svg
 svg/custom/pointer-events-text.svg
 svg/custom/text-hit-test.svg
 
+# fast/frames/001.html is failing on boomer <rdar://problem/5133885>
+fast/frames/001.html
+
+# fast/frames/iframe-window-focus.html out is lowercase <rdar://problem/5133828>
+fast/frames/iframe-window-focus.html
+
+# keepWebHistory is not implemented in DRT in boomer <rdar://problem/5133816>
+fast/history/clicked-link-is-visited.html
+
+# fast/html/keygen.html is failing on boomer <rdar://problem/5133799>
+fast/html/keygen.html
+
 # Infinite recursion in JSValue::mark <rdar://problem/4928697>
 fast/js/toString-stack-overflow.html
 
@@ -272,20 +284,17 @@ editing/pasteboard/4242293-1.html
 # dispatchEvent doesn't seem to be working <rdar://problems/5103985>
 fast/html/tab-order.html
 
+
 ################################################################################
 ####################### No bugs filed about the below yet#######################
 ################################################################################
 
-#editing/execCommand/4641880-1.html
-#editing/execCommand/4641880-2.html
-#editing/pasteboard/4076267-2.html
-#fast/encoding/denormalised-voiced-japanese-chars.html
-#fast/encoding/invalid-UTF-8.html
-#fast/block/positioning/047.html
-#fast/css/beforeSelectorOnCodeElement.html
-#fast/css/computed-style.html
-#fast/css/font_property_normal.html
-#fast/css/rtl-ordering.html
+fast/encoding/denormalised-voiced-japanese-chars.html
+fast/encoding/invalid-UTF-8.html
+fast/block/positioning/047.html
+fast/css/beforeSelectorOnCodeElement.html
+fast/css/font_property_normal.html
+fast/css/rtl-ordering.html
 
 # Text, caret
 editing/pasteboard/4944770-2.html
@@ -478,20 +487,8 @@ fast/forms/select-accesskey.html
 # Test Failed
 fast/forms/select-type-ahead-non-latin.html
 
-# Layers missing
-fast/frames/001.html
-
 # Renderview coordinates are negative
 fast/frames/frame-src-attribute.html
-
-# Lowercase results not uppercase
-fast/frames/iframe-window-focus.html
-
-# Color is wrong
-fast/history/clicked-link-is-visited.html
-
-# Weird text replaced by color
-fast/html/keygen.html
 
 # Random sizing issues (Renderblock, RenderTableCells)
 fast/dom/Window/window-onFocus.html
