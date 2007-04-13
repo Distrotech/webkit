@@ -1,3 +1,10 @@
+2007-04-13  Anders Carlsson  <andersca@apple.com>
+
+        Fix build.
+        
+        * DumpRenderTree/DumpRenderTree.vcproj/TestNetscapePlugin/TestNetscapePlugin.vcproj:
+        #define snprintf to be _snprintf and dd two defines to disable warnings for strdup and _snprintf.
+
 2007-04-03  Adam Roben  <aroben@apple.com>
 
         Reviewed by Anders.
