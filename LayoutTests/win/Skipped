@@ -1,3 +1,8 @@
+# AppleScript on Windows? That's crazy talk!
+fast/AppleScript
+
+# Obj-C QuickTime plugin on Windows? That's unpossible!
+plugins/pluginDocumentView-deallocated-dataSource.html
 
 # Layout tests that depend on certain fonts don't match Mac results <rdar://problem/5075790>
 css1/basic/contextual_selectors.html
@@ -10,8 +15,6 @@ css2.1/t1508-c527-font-07-b.html
 css2.1/t1508-c527-font-08-b.html
 css2.1/t1508-c527-font-10-c.html
 css2.1/t051201-c23-first-line-00-b.html
-editing/execCommand/paste-1.html
-editing/execCommand/paste-2.html
 fast/css/text-security.html
 fast/events/standalone-image-drag-to-editable.html
 fast/forms/select-visual-hebrew.html
@@ -151,9 +154,6 @@ svg/custom/use-events-crash.svg
 editing/pasteboard/paste-line-endings-002.html
 editing/pasteboard/paste-line-endings-004.html
 
-# AppleScript on Windows? That's crazy talk!
-fast/AppleScript
-
 # CFNet cookies crash <rdar://problem/4993339>
 fast/dom/Window/window-properties.html
 
@@ -202,9 +202,6 @@ http/tests/security/local-JavaScript-from-remote.html
 # Local image loaded remotely in boomer. <rdar://problem/5128339>
 http/tests/security/local-image-from-remote.html
 
-# Obj-C QuickTime plugin on Windows? That's unpossible!
-plugins/pluginDocumentView-deallocated-dataSource.html
-
 # No built-in plugin in DRT <rdar://problem/5074411>
 plugins/bindings-test.html
 plugins/call-as-function-test.html
@@ -242,36 +239,49 @@ svg/hixie/viewbox/preserveAspectRatio/001.xml
 # No support for WebArchives in WebKitWin <rdar://problem/5066490>
 webarchive
 
-################################################################################
-####################### No bugs filed about the below yet#######################
-################################################################################
-
-editing/deleting/delete-by-word-001.html
-
-# Text, caret, selection
-editing/deleting/smart-delete-003.html
-editing/deleting/smart-delete-004.html
-
-editing/execCommand/4641880-1.html
-editing/execCommand/4641880-2.html
-
-# Text, caret
+# DRT doesn't support undo/redo <rdar://problem/5131975>
 editing/deleting/delete-and-undo.html
 editing/deleting/delete-by-word-002.html
+editing/undo/undo-typing-001.html
+
+# DRT doesn't implement textInputController <rdar://problem/
+editing/deleting/delete-to-end-of-paragraph.html
+editing/deleting/smart-delete-003.html
+editing/deleting/smart-delete-004.html
 editing/execCommand/nsresponder-indent.html
 editing/execCommand/nsresponder-outdent.html
-editing/pasteboard/4944770-2.html
-editing/pasteboard/5028447.html
-editing/pasteboard/block-wrappers-necessary.html
-editing/pasteboard/copy-paste-bidi.html
-editing/pasteboard/emacs-ctrl-a-k-y.html
-
-# Exception Undefined
 editing/input/firstrectforcharacterrange-plain.html
 editing/input/firstrectforcharacterrange-styled.html
 editing/input/range-for-empty-document.html
 editing/input/text-input-controller.html
 editing/input/wrapped-line-char-rect.html
+editing/selection/4947387.html
+editing/selection/select-line.html
+editing/selection/selection-actions.html
+
+# Something is wrong with selection.modify or execCommand("Paste") <rdar://problem/5132016>
+editing/execCommand/paste-1.html
+editing/execCommand/paste-2.html
+
+# Missing two containing divs on the pasted content <rdar://problem/5132021>
+editing/inserting/insert-3907422-fix.html
+
+# "bar" is ending up outside the two divs <rdar://problem/5132035>
+editing/pasteboard/4242293-1.html
+
+################################################################################
+####################### No bugs filed about the below yet#######################
+################################################################################
+
+editing/execCommand/4641880-1.html
+editing/execCommand/4641880-2.html
+
+# Text, caret
+editing/pasteboard/4944770-2.html
+editing/pasteboard/5028447.html
+editing/pasteboard/block-wrappers-necessary.html
+editing/pasteboard/copy-paste-bidi.html
+editing/pasteboard/emacs-ctrl-a-k-y.html
 
 # Text, RenderText, caret
 editing/deleting/delete-to-end-of-paragraph.html
@@ -313,7 +323,6 @@ editing/pasteboard/paste-text-012.html
 editing/pasteboard/paste-text-013.html
 
 # Text, caret, RenderBlock
-editing/pasteboard/4242293-1.html
 editing/pasteboard/5027857.html
 editing/pasteboard/emacs-ctrl-k-y-001.html
 editing/pasteboard/input-field-1.html
@@ -375,9 +384,6 @@ fast/canvas/drawImage-with-invalid-args.html
 # Selection, console message
 editing/selection/4402375.html
 
-# Caret, console message
-editing/selection/4947387.html
-
 # Caret and DRT functionality
 editing/selection/caret-and-focus-ring.html
 
@@ -390,9 +396,6 @@ editing/selection/editable-links.html
 # Test failed
 editing/selection/move-begin-end.html
 
-# Console Message
-editing/selection/selection-actions.html
-
 # Editing Delegate, selection
 editing/selection/extend-by-sentence-001.html
 editing/selection/image-before-linebreak.html
@@ -402,15 +405,11 @@ editing/selection/replaced-boundaries-1.html
 editing/selection/replaced-boundaries-2.html
 editing/selection/replaced-boundaries-3.html
 
-# Console message
-editing/selection/select-line.html
-
 # Editing Delegate, carat and font!
 editing/style/5091898.html
 editing/style/non-inheritable-styles.html
 editing/style/style-boundary-005.html
 editing/undo/undo-misspellings.html
-editing/undo/undo-typing-001.html
 
 fast/block/positioning/047.html
 fast/css/beforeSelectorOnCodeElement.html
@@ -514,6 +513,3 @@ http/tests/misc/redirect-to-about-blank.html
 http/tests/xmlhttprequest/basic-auth.html
 
 http/tests/navigation/anchor-frames.html
-
-#http/tests/xmlhttprequest/cache-override.html
-#http/tests/xmlhttprequest/response-encoding.html
