@@ -1,3 +1,11 @@
+2007-04-13  TImothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Dave Harrison.
+
+        <rdar://problem/5132727> Soho Mail build fails because of renamed SPI
+
+        * WebView/WebUIDelegatePrivate.h: define WebMenuItemTagSearchInGoogle as OldWebMenuItemTagSearchWeb
+
 2007-03-29  Beth Dakin  <bdakin@apple.com>
 
         Reviewed by Brady.
