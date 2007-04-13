@@ -1,5 +1,11 @@
 2007-04-13  Anders Carlsson  <andersca@apple.com>
 
+        Fix the release build too!
+
+        * DumpRenderTree/DumpRenderTree.vcproj/TestNetscapePlugin/TestNetscapePlugin.vcproj:
+
+2007-04-13  Anders Carlsson  <andersca@apple.com>
+
         Fix build.
         
         * DumpRenderTree/DumpRenderTree.vcproj/TestNetscapePlugin/TestNetscapePlugin.vcproj:
