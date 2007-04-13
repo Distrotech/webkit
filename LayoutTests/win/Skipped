@@ -269,6 +269,9 @@ editing/inserting/insert-3907422-fix.html
 # "bar" is ending up outside the two divs <rdar://problem/5132035>
 editing/pasteboard/4242293-1.html
 
+# dispatchEvent doesn't seem to be working <rdar://problems/5103985>
+fast/html/tab-order.html
+
 ################################################################################
 ####################### No bugs filed about the below yet#######################
 ################################################################################
@@ -492,8 +495,6 @@ fast/history/clicked-link-is-visited.html
 
 # Weird text replaced by color
 fast/html/keygen.html
-
-fast/html/tab-order.html
 
 # Random sizing issues (Renderblock, RenderTableCells)
 fast/dom/Window/window-onFocus.html

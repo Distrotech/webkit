@@ -1,5 +1,9 @@
 2007-04-12  Adam Roben  <aroben@apple.com>
 
+        * win/Skipped: Added a pre-existing radar reference.
+
+2007-04-12  Adam Roben  <aroben@apple.com>
+
         * win/Skipped: Filed some more bugs.
 
 2007-04-12  Kevin McCullough  <kmccullough@apple.com>
