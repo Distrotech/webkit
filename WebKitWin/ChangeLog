@@ -1,5 +1,18 @@
 2007-04-12  Adam Roben  <aroben@apple.com>
 
+        Rubberstamped by Steve.
+
+        Copied WebKit.sln to WebKit.submit.sln, and added missing projects to
+        WebKit.sln so that opensource contributors can use it to build a
+        working WebKit.
+
+        * WebKit.vcproj/WebKit.make: Changed to use WebKit.submit.sln.
+        * WebKit.vcproj/WebKit.sln: Added JavaScriptCore, WebCore,
+        DumpRenderTree projects.
+        * WebKit.vcproj/WebKit.submit.sln: Added.
+
+2007-04-12  Adam Roben  <aroben@apple.com>
+
         Reviewed by Steve.
 
         <rdar://problem/5131565> Need to be able to use debug WebKit with
