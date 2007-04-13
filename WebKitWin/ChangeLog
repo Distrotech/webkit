@@ -1,3 +1,15 @@
+2007-04-12  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Geoff, Adam.
+        
+        Changes required for search history content.
+
+        * Interfaces/IWebFramePrivate.idl:
+        * WebFrame.cpp:
+        (WebFrame::isFrameSet): Added
+        (WebFrame::string): Added
+        * WebFrame.h:
+
 2007-04-12  Adam Roben  <aroben@apple.com>
 
         Rubberstamped by Steve.

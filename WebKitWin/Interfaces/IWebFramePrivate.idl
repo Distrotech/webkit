@@ -83,4 +83,7 @@ interface IWebFramePrivate : IUnknown
     HRESULT setInPrintingMode([in] BOOL value, [in] HDC printDC);
     HRESULT getPrintedPageCount([in] HDC printDC, [out, retval] UINT* pageCount);
     HRESULT spoolPages([in] HDC printDC, [in] UINT startPage, [in] UINT endPage, [out, retval] void* ctx);
+
+    HRESULT isFrameSet([out, retval] BOOL* result);
+    HRESULT string([out, retval] BSTR* result);
 }

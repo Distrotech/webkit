@@ -91,6 +91,7 @@
 #include <WebCore/RenderFrame.h>
 #include <WebCore/RenderTreeAsText.h>
 #include <WebCore/Settings.h>
+#include <WebCore/TextIterator.h>
 #include <WebCore/kjs_binding.h>
 #include <WebCore/kjs_proxy.h>
 #include <WebCore/kjs_window.h>
@@ -2523,4 +2524,32 @@ void WebFrame::addInspector(WebInspector*)
 void WebFrame::removeInspector(WebInspector*)
 {
     LOG_NOIMPL();
+}
+
+HRESULT STDMETHODCALLTYPE WebFrame::isFrameSet( 
+    /* [retval][out] */ BOOL* result)
+{
+    *result = FALSE;
+
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
+        return E_FAIL;
+
+    *result = coreFrame->isFrameSet() ? TRUE : FALSE;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebFrame::string( 
+    /* [retval][out] */ BSTR *result)
+{
+    *result = 0;
+
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
+        return E_FAIL;
+
+    RefPtr<Range> allRange(rangeOfContents(coreFrame->document()));
+    DeprecatedString allString = plainText(allRange.get());
+    *result = BString(allString).release();
+    return S_OK;
 }

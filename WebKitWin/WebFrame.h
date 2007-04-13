@@ -177,6 +177,12 @@ public:
         /* [in] */ UINT endPage,
         /* [retval][out] */ void* ctx);
 
+    virtual HRESULT STDMETHODCALLTYPE isFrameSet( 
+        /* [retval][out] */ BOOL* result);
+
+    virtual HRESULT STDMETHODCALLTYPE string( 
+        /* [retval][out] */ BSTR* result);
+
     // FrameWinClient
     virtual void ref();
     virtual void deref();
