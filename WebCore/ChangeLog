@@ -1,5 +1,11 @@
 2007-04-12  Adam Roben  <aroben@apple.com>
 
+        Didn't mean to commit this.
+
+        * WebCore.vcproj/WebCore.vcproj:
+
+2007-04-12  Adam Roben  <aroben@apple.com>
+
         Reviewed by Steve.
 
         <rdar://problem/5131565> Need to be able to use debug WebKit with
