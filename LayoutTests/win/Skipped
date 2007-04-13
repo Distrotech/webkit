@@ -276,8 +276,16 @@ fast/html/tab-order.html
 ####################### No bugs filed about the below yet#######################
 ################################################################################
 
-editing/execCommand/4641880-1.html
-editing/execCommand/4641880-2.html
+#editing/execCommand/4641880-1.html
+#editing/execCommand/4641880-2.html
+#editing/pasteboard/4076267-2.html
+#fast/encoding/denormalised-voiced-japanese-chars.html
+#fast/encoding/invalid-UTF-8.html
+#fast/block/positioning/047.html
+#fast/css/beforeSelectorOnCodeElement.html
+#fast/css/computed-style.html
+#fast/css/font_property_normal.html
+#fast/css/rtl-ordering.html
 
 # Text, caret
 editing/pasteboard/4944770-2.html
@@ -289,8 +297,6 @@ editing/pasteboard/emacs-ctrl-a-k-y.html
 # Text, RenderText, caret
 editing/deleting/delete-to-end-of-paragraph.html
 editing/inserting/insert-3907422-fix.html
-
-editing/pasteboard/4076267-2.html
 
 # Text, renderText, selection
 editing/pasteboard/4861080.html
@@ -414,12 +420,6 @@ editing/style/non-inheritable-styles.html
 editing/style/style-boundary-005.html
 editing/undo/undo-misspellings.html
 
-fast/block/positioning/047.html
-fast/css/beforeSelectorOnCodeElement.html
-fast/css/computed-style.html
-fast/css/font_property_normal.html
-fast/css/rtl-ordering.html
-
 # plugins and <embed>
 fast/dom/object-embed-plugin-scripting.html
 
@@ -431,9 +431,6 @@ fast/dom/Window/window-screen-properties.html
 
 # Encoding
 fast/encoding/charset-x-nextstep.html
-
-fast/encoding/denormalised-voiced-japanese-chars.html
-fast/encoding/invalid-UTF-8.html
 
 # render text input
 fast/events/5056619.html
@@ -513,4 +510,5 @@ http/tests/local/file-url-sent-as-referer.html
 http/tests/misc/redirect-to-about-blank.html
 http/tests/xmlhttprequest/basic-auth.html
 
+# Scrolling
 http/tests/navigation/anchor-frames.html
