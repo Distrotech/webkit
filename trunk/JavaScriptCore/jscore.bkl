@@ -34,10 +34,27 @@ JavaScriptCore Bakefile project file.
 
     <include file="../Bakefiles/presets.bkl"/>
     <include file="JavaScriptCoreSources.bkl"/>
+    <include file="WTFSources.bkl"/>
 
     <set var="BUILDDIR">obj-$(FORMAT)</set>
 
-    <template id="jscore_base" template="icu">
+    <template id="jscore_base" template="icu,pthreads">
+        <!-- <objects-depend>dftables</objects-depend> -->
+        <!-- <pre-build-target>DerivedSources</pre-build-target> -->
+        <warnings>default</warnings>
+        <cxx-rtti>off</cxx-rtti>
+        <cxx-exceptions>off</cxx-exceptions>
+        <debug-info>on</debug-info>
+        <sources>
+            $(JSCORE_SOURCES_BINDINGS)
+            $(JSCORE_SOURCES_KJS)
+            $(JSCORE_SOURCES_PCRE)
+            $(WTF_SOURCES)
+        </sources>
+        <if cond="PLATFORM_WIN32=='1'">
+            $(JSCORE_SOURCES_WIN)
+        </if>
+        <install-to>$(BUILDDIR)</install-to>
         <pic>on</pic>
         <threading>multi</threading>
         <dirname>$(SRCDIR)</dirname>
@@ -78,6 +95,15 @@ JavaScriptCore Bakefile project file.
         </if>
 
     </template>
+    
+    <!--
+    <exe id="testkjs" template="icu">
+        <library>jscore</library>
+        <include>$(SRCDIR)</include>
+        <dirname>$(SRCDIR)</dirname>
+        <sources>$(SRCDIR)/kjs/testkjs.cpp</sources>
+    </exe>
+    -->
 
     <exe id="dftables">
         <dirname>$(SRCDIR)</dirname>
@@ -91,21 +117,6 @@ JavaScriptCore Bakefile project file.
     </action>
 
     <lib id="jscore" template="jscore_base">
-        <objects-depend>dftables</objects-depend>
-        <pre-build-target>DerivedSources</pre-build-target>
-        <warnings>default</warnings>
-        <cxx-rtti>off</cxx-rtti>
-        <cxx-exceptions>off</cxx-exceptions>
-        <debug-info>on</debug-info>
-        <sources>
-            $(JSCORE_SOURCES_BINDINGS)
-            $(JSCORE_SOURCES_KJS)
-            $(JSCORE_SOURCES_PCRE)
-            $(JSCORE_SOURCES_WTF)
-        </sources>
-        <if cond="PLATFORM_WIN32=='1'">
-            $(JSCORE_SOURCES_WIN)
-        </if>
-        <install-to>$(BUILDDIR)</install-to>
+
     </lib>
 </makefile>

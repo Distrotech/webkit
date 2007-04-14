@@ -421,7 +421,11 @@ static double getDSTOffsetSimple(double localTimeSeconds)
 
     tm localTM;
 #if PLATFORM(WIN_OS)
+    #if COMPILER(MSVC7)
+    localTM = *localtime(&localTime);
+    #else
     localtime_s(&localTM, &localTime);
+    #endif
 #else
     localtime_r(&localTime, &localTM);
 #endif

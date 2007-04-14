@@ -76,7 +76,10 @@
 #define WTF_PLATFORM_KDE 1
 #endif
 
-#elif PLATFORM(DARWIN)
+#elif defined(BUILDING_WX__)
+#define WTF_PLATFORM_WX 1
+#define WTF_USE_WXGC 0
+#elif PLATFORM(DARWIN) 
 #define WTF_PLATFORM_MAC 1
 #elif PLATFORM(WIN_OS)
 #define WTF_PLATFORM_WIN 1
@@ -89,11 +92,13 @@
 
 /* PLATFORM(CG) */
 /* PLATFORM(CAIRO) */
+#if !PLATFORM(WX)
 #if PLATFORM(MAC)
 #define WTF_PLATFORM_CG 1
 #define WTF_PLATFORM_CI 1
 #elif !PLATFORM(QT)
 #define WTF_PLATFORM_CAIRO 1
+#endif
 #endif
 
 
@@ -152,6 +157,12 @@
 /* COMPILER(MSVC) */
 #if defined(_MSC_VER)
 #define WTF_COMPILER_MSVC 1
+#if _MSC_VER >= 1400
+#define WTF_COMPILER_MSVC8 1
+#else
+/* assumes everything else is like MSVC7 */
+#define WTF_COMPILER_MSVC7 1
+#endif
 #endif
 
 /* COMPILER(GCC) */
@@ -189,11 +200,11 @@
 #define WTF_PLATFORM_CF 1
 #endif
 
-#if PLATFORM(WIN)
+#if PLATFORM(WIN) && !PLATFORM(WX)
 #define WTF_USE_WININET 1
 #endif
 
-#if PLATFORM(GDK)
+#if PLATFORM(GDK) || PLATFORM(WX)
 #define WTF_USE_CURL 1
 #endif
 

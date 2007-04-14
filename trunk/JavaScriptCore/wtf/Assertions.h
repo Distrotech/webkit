@@ -115,6 +115,20 @@ void WTFLog(const char *file, int line, const char *function, WTFLogChannel *cha
 #undef ASSERT
 #endif
 
+#if COMPILER(MSVC7)
+/* Just ignore them all for now, just to get something compiling.  Will
+ * eventually need something to compensate for the lack of variadic macros in
+ * MSVC7.. */
+#define ASSERT(assertion) ((void)0)
+#define ASSERT_WITH_MESSAGE(args) ((void)0)
+#define ASSERT_NOT_REACHED() ((void)0)
+#define ASSERT_ARG(argName, assertion) ((void)0)
+#define FATAL(args) ((void)0)
+#define LOG_ERROR(args) ((void)0)
+#define LOG(args) ((void)0)
+#else
+
+
 #if ASSERT_DISABLED
 
 #define ASSERT(assertion) ((void)0)
@@ -159,11 +173,6 @@ while (0)
 
 #endif
 
-/* COMPILE_ASSERT */
-#ifndef COMPILE_ASSERT
-#define COMPILE_ASSERT(exp, name) typedef int dummy##name [(exp) ? 1 : -1];
-#endif
-
 /* FATAL */
 
 #if FATAL_DISABLED
@@ -192,5 +201,13 @@ while (0)
 #define JOIN_LOG_CHANNEL_WITH_PREFIX(prefix, channel) JOIN_LOG_CHANNEL_WITH_PREFIX_LEVEL_2(prefix, channel)
 #define JOIN_LOG_CHANNEL_WITH_PREFIX_LEVEL_2(prefix, channel) prefix ## channel
 #endif
+
+#endif /* COMPILER(MSVC7) */
+
+/* COMPILE_ASSERT */
+#ifndef COMPILE_ASSERT
+#define COMPILE_ASSERT(exp, name) typedef int dummy##name [(exp) ? 1 : -1];
+#endif
+
 
 #endif // WTF_Assertions_h
