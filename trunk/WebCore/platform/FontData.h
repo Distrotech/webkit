@@ -83,6 +83,10 @@ public:
     }
 #endif
 
+#if PLATFORM(WX)
+    wxFont* getWxFont() const { return m_font.font(); }
+#endif
+
 #if PLATFORM(WIN)
     bool isSystemFont() const { return m_isSystemFont; }
     void setIsMLangFont() { m_isMLangFont = true; }

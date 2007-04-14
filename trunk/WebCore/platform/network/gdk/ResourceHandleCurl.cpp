@@ -29,9 +29,15 @@
 #include "ResourceHandle.h"
 
 #include "DocLoader.h"
+#if PLATFORM(GDK)
 #include "NotImplementedGdk.h"
+#endif
 #include "ResourceHandleInternal.h"
 #include "ResourceHandleManager.h"
+
+#if !PLATFORM(GDK)
+#define notImplementedGdk() do { fprintf(stderr, "FIXME: UNIMPLEMENTED %s %s:%d\n", WTF_PRETTY_FUNCTION, __FILE__, __LINE__); } while(0)
+#endif
 
 namespace WebCore {
 

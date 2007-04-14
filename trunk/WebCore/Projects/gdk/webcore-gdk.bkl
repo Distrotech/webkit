@@ -33,7 +33,7 @@
         <!-- FIXME: create a debug option and set these accordingly -->
         <!-- check for undefined symbols for debugging reasons -->
 
-        <pre-build-target>.DerivedSources</pre-build-target>
+        <!-- <pre-build-target>.DerivedSources</pre-build-target> -->
         <dirname>.</dirname>
         <pic>on</pic>
         <threading>multi</threading>
@@ -77,7 +77,7 @@
             platform/network/gdk/ResourceHandleCurl.cpp
             platform/network/gdk/ResourceHandleManager.cpp
 
-            $(WEBCORE_SOURCES_PLATFORM_CAIRO)
+            $(WEBCORE_SOURCES_CAIRO)
         </sources>
 
         <clean-files>

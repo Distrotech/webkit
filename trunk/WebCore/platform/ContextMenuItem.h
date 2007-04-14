@@ -30,7 +30,9 @@
 #include "PlatformString.h"
 #include <wtf/OwnPtr.h>
 
-#if PLATFORM(MAC)
+#if PLATFORM(WX)
+class wxMenuItem;
+#elif PLATFORM(MAC)
 #include <wtf/RetainPtr.h>
 
 #ifdef __OBJC__
@@ -48,7 +50,9 @@ namespace WebCore {
 
     class ContextMenu;
 
-#if PLATFORM(MAC)
+#if PLATFORM(WX)
+    typedef wxMenuItem* PlatformMenuItemDescription;
+#elif PLATFORM(MAC)
     typedef NSMenuItem* PlatformMenuItemDescription;
 #elif PLATFORM(WIN)
     typedef LPMENUITEMINFO PlatformMenuItemDescription;

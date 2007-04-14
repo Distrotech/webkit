@@ -161,6 +161,7 @@ public:
 
     friend class FrameLoader;
     friend class FramePrivate;
+    friend class FrameWx;
 
     DragImageRef dragImageForSelection();
     

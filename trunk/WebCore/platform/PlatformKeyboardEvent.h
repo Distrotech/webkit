@@ -52,6 +52,10 @@ typedef union _GdkEvent GdkEvent;
 class QKeyEvent;
 #endif
 
+#if PLATFORM(WX)
+class wxKeyEvent;
+#endif
+
 namespace WebCore {
 
     class PlatformKeyboardEvent {
@@ -71,7 +75,6 @@ namespace WebCore {
 
 #if PLATFORM(MAC)
         PlatformKeyboardEvent(NSEvent*, bool forceAutoRepeat = false);
-        NSEvent* macEvent() const { return m_macEvent.get(); }
 #endif
 
 #if PLATFORM(WIN)
@@ -86,6 +89,10 @@ namespace WebCore {
         PlatformKeyboardEvent(QKeyEvent*, bool isKeyUp);
 #endif
 
+#if PLATFORM(WX)
+        PlatformKeyboardEvent(wxKeyEvent&);
+#endif
+
     private:
         String m_text;
         String m_unmodifiedText;
@@ -98,10 +105,6 @@ namespace WebCore {
         bool m_ctrlKey;
         bool m_altKey;
         bool m_metaKey;
-
-#if PLATFORM(MAC)
-        RetainPtr<NSEvent> m_macEvent;
-#endif
     };
 
 } // namespace WebCore

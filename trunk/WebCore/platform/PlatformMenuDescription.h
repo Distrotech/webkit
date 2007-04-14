@@ -26,7 +26,9 @@
 #ifndef PlatformMenuDescription_h
 #define PlatformMenuDescription_h
 
-#if PLATFORM(MAC)
+#if PLATFORM(WX)
+class wxMenu;
+#elif PLATFORM(MAC)
 #ifdef __OBJC__
 @class NSMutableArray;
 #else
@@ -42,7 +44,9 @@ typedef struct _GtkMenu GtkMenu;
 
 namespace WebCore {
 
-#if PLATFORM(MAC)
+#if PLATFORM(WX)
+    typedef wxMenu* PlatformMenuDescription;
+#elif PLATFORM(MAC)
     typedef NSMutableArray* PlatformMenuDescription;
 #elif PLATFORM(WIN)
     typedef HMENU PlatformMenuDescription;

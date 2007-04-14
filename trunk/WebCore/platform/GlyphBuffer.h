@@ -35,6 +35,9 @@
 #include <ApplicationServices/ApplicationServices.h>
 #elif PLATFORM(CAIRO)
 #include <cairo.h>
+#include "FloatSize.h"
+#elif PLATFORM(WX)
+#include "FloatSize.h"
 #endif
 
 #include <wtf/Vector.h>
@@ -49,6 +52,9 @@ typedef Glyph GlyphBufferGlyph;
 typedef CGSize GlyphBufferAdvance;
 #elif PLATFORM(CAIRO)
 typedef cairo_glyph_t GlyphBufferGlyph;
+typedef FloatSize GlyphBufferAdvance;
+#elif PLATFORM(WX)
+typedef Glyph GlyphBufferGlyph;
 typedef FloatSize GlyphBufferAdvance;
 #elif PLATFORM(QT)
 typedef unsigned short GlyphBufferGlyph;
@@ -100,7 +106,7 @@ public:
 
     Glyph glyphAt(int index) const
     {
-#if PLATFORM(CG) || PLATFORM(QT)
+#if PLATFORM(CG) || PLATFORM(QT) || PLATFORM(WX)
         return m_glyphs[index];
 #elif PLATFORM(CAIRO)
         return m_glyphs[index].index;
@@ -111,7 +117,7 @@ public:
     {
 #if PLATFORM(CG)
         return m_advances[index].width;
-#elif PLATFORM(CAIRO) || PLATFORM(QT)
+#elif PLATFORM(CAIRO) || PLATFORM(QT) || PLATFORM(WX)
         return m_advances[index].width();
 #endif
     }
@@ -139,7 +145,7 @@ public:
         cairoGlyph.index = glyph;
         m_glyphs.append(cairoGlyph);
         m_advances.append(FloatSize(width, 0));
-#elif PLATFORM(QT)
+#elif PLATFORM(QT) || PLATFORM(WX)
         m_glyphs.append(glyph);
         m_advances.append(FloatSize(width, 0));
 #endif

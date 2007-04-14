@@ -139,7 +139,7 @@ static void addToTextEncodingNameMap(const char* alias, const char* name)
 {
     ASSERT(strlen(alias) <= maxEncodingNameLength);
     const char* atomicName = textEncodingNameMap->get(name);
-    ASSERT(alias == name || atomicName);
+    ASSERT(!strcmp(alias, name) || atomicName);
     if (!atomicName)
         atomicName = name;
     checkExistingName(alias, atomicName);

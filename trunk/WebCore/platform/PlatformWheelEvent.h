@@ -46,6 +46,11 @@ typedef long LPARAM;
 typedef union _GdkEvent GdkEvent;
 #endif
 
+#if PLATFORM(WX)
+class wxMouseEvent;
+class wxPoint;
+#endif
+
 #if PLATFORM(QT)
 class QWheelEvent;
 #endif
@@ -85,6 +90,10 @@ namespace WebCore {
 #if PLATFORM(GDK)
         PlatformWheelEvent(GdkEvent*);
 #endif
+#if PLATFORM(WX)
+        PlatformWheelEvent(const wxMouseEvent&, const wxPoint&);
+#endif
+
 #if PLATFORM(QT)
         PlatformWheelEvent(QWheelEvent*);
 #endif

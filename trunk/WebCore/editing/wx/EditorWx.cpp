@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2007 Kevin Ollivier <kevino@theolliviers.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -22,25 +22,23 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
- 
+
 #include "config.h"
-#include "ICOImageDecoder.h"
 
-#if PLATFORM(CAIRO) || PLATFORM(QT) || PLATFORM(WX)
+#include "Editor.h"
+#include "ClipboardWx.h"
 
-namespace WebCore
-{
+namespace WebCore {
 
-bool ICOImageDecoder::isSizeAvailable() const
-{
-    return false;
+PassRefPtr<Clipboard> Editor::newGeneralClipboard(ClipboardAccessPolicy policy) 
+{ 
+    return new ClipboardWx(policy, true);
 }
- 
-RGBA32Buffer* ICOImageDecoder::frameBufferAtIndex(size_t index)
+
+void Editor::markMisspellings(const Selection& selection)
 {
-    return 0;
-}
 
 }
 
-#endif // PLATFORM(CAIRO)
+}
+

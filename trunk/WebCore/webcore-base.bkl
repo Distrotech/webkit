@@ -1,4 +1,4 @@
-<?xml version="1.0" ?>
+﻿<?xml version="1.0" ?>
 <!--
 Copyright (C) 2005, 2006 Apple Computer, Inc.  All rights reserved.
 
@@ -45,17 +45,18 @@ Base settings shared by all Bakefile-based ports.
         $(WEBCORE_SOURCES_HTML)
         $(WEBCORE_SOURCES_ICO)
         $(WEBCORE_SOURCES_ICON)
-        $(WEBCORE_SOURCES_JPEG)
         $(WEBCORE_SOURCES_JS)
         $(WEBCORE_SOURCES_LOADER)
         $(WEBCORE_SOURCES_PAGE)
         $(WEBCORE_SOURCES_HISTORY)
         $(WEBCORE_SOURCES_PLATFORM)
-        $(WEBCORE_SOURCES_PNG)
         $(WEBCORE_SOURCES_RENDERING)
         $(WEBCORE_SOURCES_XBM)
         $(WEBCORE_SOURCES_XML)
         $(WEBCORE_SOURCES_ZLIB)
+        <!-- $(WEBCORE_SOURCES_GRAPHICS) -->
+        $(WEBCORE_SOURCES_PNG)
+        $(WEBCORE_SOURCES_JPEG)
     </set>
 
     <set var="BUILDDIR">obj-$(FORMAT)</set>
@@ -69,7 +70,7 @@ Base settings shared by all Bakefile-based ports.
         </sources>
     </template>
 
-    <template id="webcore_base" template="xml2,iconv,xslt,icu,jscore,curl">
+    <template id="webcore_base" template="xml2,iconv,xslt,icu,jscore,curl,sqlite3">
         <include>$(SRCDIR)</include>
         <include>$(SRCDIR)/bindings/js</include>
         <include>$(SRCDIR)/bridge</include>
@@ -80,6 +81,10 @@ Base settings shared by all Bakefile-based ports.
         <include>$(SRCDIR)/ForwardingHeaders/kjs</include>
         <include>$(SRCDIR)/history</include>
         <include>$(SRCDIR)/html</include>
+        <include>$(SRCDIR)/ForwardingHeaders/wtf</include>
+        <include>$(SRCDIR)/ForwardingHeaders/kjs</include>
+        <include>$(SRCDIR)/ForwardingHeaders/bindings</include>
+        <include>$(SRCDIR)/ForwardingHeaders/pcre</include>
         <include>$(SRCDIR)/include</include>
         <include>$(SRCDIR)/loader</include>
         <include>$(SRCDIR)/loader/gdk</include>

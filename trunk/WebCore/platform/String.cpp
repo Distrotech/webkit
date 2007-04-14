@@ -299,8 +299,11 @@ String String::format(const char *format, ...)
     buffer.resize(len + 1);
     
     // Now do the formatting again, guaranteed to fit.
+#if PLATFORM(WIN_OS) && COMPILER(MSVC7)
+    _vsnprintf(buffer.data(), buffer.size(), format, args);
+#else
     vsnprintf(buffer.data(), buffer.size(), format, args);
-
+#endif
     va_end(args);
     
     return new StringImpl(buffer.data(), len);

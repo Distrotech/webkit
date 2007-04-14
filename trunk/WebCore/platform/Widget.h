@@ -48,6 +48,10 @@ typedef struct _GdkDrawable GdkDrawable;
 class QWidget;
 #endif
 
+#if PLATFORM(WX)
+class wxScrolledWindow;
+#endif
+
 namespace WebCore {
 
     class Cursor;
@@ -162,6 +166,12 @@ namespace WebCore {
 
         void addToSuperview(NSView* superview);
         void removeFromSuperview();
+#endif
+
+#if PLATFORM(WX)
+        Widget(wxScrolledWindow*);
+        wxScrolledWindow* nativeWindow() const;
+        void setNativeWindow(wxScrolledWindow*);
 #endif
 
         // To be deleted.

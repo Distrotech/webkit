@@ -845,7 +845,11 @@ void XMLTokenizer::error(ErrorType type, const char* message, va_list args)
 
 #if PLATFORM(WIN_OS)
     char m[1024];
+#if COMPILER(MSVC7)
+    _vsnprintf(m, sizeof(m) - 1, message, args);
+#else
     vsnprintf(m, sizeof(m) - 1, message, args);
+#endif
 #else
     char* m;
     vasprintf(&m, message, args);

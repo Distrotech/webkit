@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -22,25 +22,46 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
- 
-#include "config.h"
-#include "ICOImageDecoder.h"
 
-#if PLATFORM(CAIRO) || PLATFORM(QT) || PLATFORM(WX)
+#include "config.h"
+#include "DragController.h"
+
+#include "DragData.h"
+#include "Frame.h"
+#include "FrameView.h"
+#include "Page.h"
 
 namespace WebCore
 {
 
-bool ICOImageDecoder::isSizeAvailable() const
+// FIXME: These values are straight out of DragControllerMac, so probably have 
+// little correlation with wx standards...
+const int DragController::LinkDragBorderInset = 2;
+const int DragController::MaxOriginalImageArea = 1500 * 1500;
+const int DragController::DragIconRightInset = 7;
+const int DragController::DragIconBottomInset = 3;
+
+const float DragController::DragImageAlpha = 0.75f;
+
+bool DragController::isCopyKeyDown()
 {
     return false;
 }
- 
-RGBA32Buffer* ICOImageDecoder::frameBufferAtIndex(size_t index)
+    
+DragOperation DragController::dragOperation(DragData* dragData)
 {
-    return 0;
+    //FIXME: This logic is incomplete
+    if (dragData->containsURL())
+        return DragOperationCopy;
+        
+    return DragOperationNone;
+} 
+
+const IntSize& DragController::maxDragImageSize()
+{
+    static const IntSize maxDragImageSize(400, 400);
+    
+    return maxDragImageSize;
 }
 
 }
-
-#endif // PLATFORM(CAIRO)

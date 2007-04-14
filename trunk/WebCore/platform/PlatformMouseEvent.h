@@ -56,6 +56,10 @@ typedef union _GdkEvent GdkEvent;
 class QMouseEvent;
 #endif
 
+#if PLATFORM(WX)
+class wxMouseEvent;
+#endif
+
 namespace WebCore {
     
     // These button numbers match the ones used in the DOM API, 0 through 2, except for NoButton which isn't specified.
@@ -120,6 +124,11 @@ namespace WebCore {
 #if PLATFORM(QT)
         PlatformMouseEvent(QMouseEvent*, int clickCount);
 #endif
+
+#if PLATFORM(WX)
+        PlatformMouseEvent(wxMouseEvent&, wxPoint& globalPoint);
+#endif
+
 
     private:
         IntPoint m_position;

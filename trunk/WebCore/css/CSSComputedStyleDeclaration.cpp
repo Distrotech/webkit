@@ -20,6 +20,7 @@
  */
 
 #include "config.h"
+#include "AtomicString.h"
 #include "CSSComputedStyleDeclaration.h"
 
 #include "CSSMutableStyleDeclaration.h"

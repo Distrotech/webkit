@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006 Kevin Ollivier.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -22,25 +22,22 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
- 
-#include "config.h"
-#include "ICOImageDecoder.h"
 
-#if PLATFORM(CAIRO) || PLATFORM(QT) || PLATFORM(WX)
+#include "Color.h"
 
-namespace WebCore
-{
+#include <wx/defs.h>
+#include <wx/colour.h>
 
-bool ICOImageDecoder::isSizeAvailable() const
+namespace WebCore {
+
+Color::Color(const wxColour& color)
 {
-    return false;
-}
- 
-RGBA32Buffer* ICOImageDecoder::frameBufferAtIndex(size_t index)
-{
-    return 0;
+    Color(color.Red(), color.Green(), color.Blue(), color.Alpha());
 }
 
+Color::operator wxColour() const
+{
+    return wxColour(red(), green(), blue(), alpha());
 }
 
-#endif // PLATFORM(CAIRO)
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006 Kevin Ollivier <kevino@theolliviers.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -22,25 +22,22 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
- 
-#include "config.h"
-#include "ICOImageDecoder.h"
 
-#if PLATFORM(CAIRO) || PLATFORM(QT) || PLATFORM(WX)
+#include "IntRect.h"
 
-namespace WebCore
-{
+#include <wx/defs.h>
+#include <wx/gdicmn.h>
 
-bool ICOImageDecoder::isSizeAvailable() const
+namespace WebCore {
+
+IntRect::IntRect(const wxRect& r)
+    : m_location(IntPoint(r.x, r.y)), m_size(IntSize(r.width, r.height))
 {
-    return false;
-}
- 
-RGBA32Buffer* ICOImageDecoder::frameBufferAtIndex(size_t index)
-{
-    return 0;
 }
 
+IntRect::operator wxRect() const
+{
+    return wxRect(x(), y(), width(), height());
 }
 
-#endif // PLATFORM(CAIRO)
+}

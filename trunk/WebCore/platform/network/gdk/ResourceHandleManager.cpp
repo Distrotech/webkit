@@ -29,9 +29,21 @@
 #include "ResourceHandleManager.h"
 
 #include "CString.h"
+#if PLATFORM(GDK)
 #include "NotImplementedGdk.h"
+#endif
 #include "ResourceHandle.h"
 #include "ResourceHandleInternal.h"
+
+#include <stdio.h>
+
+#if COMPILER(MSVC)
+#define __PRETTY_FUNCTION__ __FUNCTION__
+#endif
+
+#if !PLATFORM(GDK)
+#define notImplementedGdk() do { fprintf(stderr, "FIXME: UNIMPLEMENTED %s %s:%d\n", __PRETTY_FUNCTION__, __FILE__, __LINE__); } while(0)
+#endif
 
 namespace WebCore {
 
@@ -68,6 +80,7 @@ static size_t writeCallback(void* ptr, size_t size, size_t nmemb, void* obj)
     ResourceHandle* job = static_cast<ResourceHandle*>(obj);
     ResourceHandleInternal* d = job->getInternal();
     int totalSize = size * nmemb;
+
     if (d->client())
         d->client()->didReceiveData(job, static_cast<char*>(ptr), totalSize, 0);
     return totalSize;
@@ -99,12 +112,12 @@ void ResourceHandleManager::downloadTimerCallback(Timer<ResourceHandleManager>* 
 
     int rc = ::select(maxfd + 1, &fdread, &fdwrite, &fdexcep, &timeout);
 
-    if (-1 == rc) {
-#ifndef NDEBUG
-        printf("bad: select() returned -1\n");
-#endif
-        return;
-    }
+//    if (-1 == rc) {
+//#ifndef NDEBUG
+//        printf("bad: select() returned -1\n");
+//#endif
+//        return;
+//    }
 
     int runningHandles = 0;
     CURLMcode curlCode = CURLM_CALL_MULTI_PERFORM;

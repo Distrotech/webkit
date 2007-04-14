@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <!-- 
-Copyright (C) 2005, 2006 Apple Computer, Inc.  All rights reserved.
+Copyright (C) 2007 Kevin Ollivier <kevino@theolliviers.com>
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
@@ -32,19 +32,114 @@ wxWebCore port Bakefile project file.
 
 
 <makefile>
+    <!-- eventually we should make these options -->
+    <set var="WX_UNICODE">1</set>
+    <set var="WX_DEBUG">1</set>
+    <set var="WX_SHARED">1</set>
+
+    <include file="presets/wx.bkl"/>
     <include file="../../webcore-base.bkl"/>
-    <!-- <include file="presets/wx.bkl"/> -->
     
-    <action id="DerivedSources" msvs-type="prebuild">
+    <action id="DerivedSources">
         <is-phony/>
         <command>cd $(SRCDIR);bash move-js-headers.sh; bash make-generated-sources.sh platform/wx/wx-encodings.txt;cd Projects/wx</command>
     </action>
       
-    <lib id="webcore-wx" template="webcore_base">
-        <pre-build-target>DerivedSources</pre-build-target>
+    <template id="webcore-wx" template="webcore_base,curl,gtk,pthreads">
+        <cxx-rtti>off</cxx-rtti>
+        <cxx-exceptions>off</cxx-exceptions>
+        <pic>on</pic>
+        <threading>multi</threading>
+        <debug-info>on</debug-info>
+
+        <define>BUILDING_WX__=1</define>
+		<define>WTF_USE_ICU_UNICODE=1</define>
+        
+        <if cond="PLATFORM_WIN32=='0'">
+            <ldlibs>`$(WX_CONFIG) --libs`</ldlibs>
+        </if>
+        
         <dirname>.</dirname>
-        <!-- platform/wx sources go here when they exist! -->
+        <include>$(SRCDIR)/platform/wx</include>
+        <include>$(SRCDIR)/platform/wx/wxcode</include>
+        <include>$(SRCDIR)/bridge/wx</include>
+        <include>$(SRCDIR)/page/wx</include>
+        
+	    <sources>
+	           editing/wx/EditorWx.cpp
+
+	           page/wx/DragControllerWx.cpp
+	           page/wx/EventHandlerWx.cpp
+	           
+			   platform/graphics/wx/AffineTransformWx.cpp
+	           platform/graphics/wx/ColorWx.cpp
+	           platform/graphics/wx/FloatRectWx.cpp
+	           platform/graphics/wx/GraphicsContextWx.cpp
+		       platform/graphics/wx/ImageBufferWx.cpp
+	           platform/graphics/wx/ImageSourceWx.cpp
+	           platform/graphics/wx/ImageWx.cpp
+	           platform/graphics/wx/IntPointWx.cpp
+	           platform/graphics/wx/IntRectWx.cpp
+	           platform/graphics/wx/PathWx.cpp
+	           platform/graphics/wx/PenWx.cpp
+		        
+	           platform/wx/TemporaryLinkStubs.cpp
+	           platform/wx/ClipboardWx.cpp
+	           platform/wx/CursorWx.cpp
+	           platform/wx/DragDataWx.cpp
+	           platform/wx/DragImageWx.cpp
+	           platform/wx/FontCacheWx.cpp
+	           platform/wx/FontDataWx.cpp
+	           platform/wx/FontPlatformDataWx.cpp
+	           platform/wx/FontWx.cpp	          
+	           platform/wx/GlyphMapWx.cpp
+	           platform/wx/KeyboardEventWx.cpp
+	           platform/wx/MimeTypeRegistryWx.cpp
+	           platform/wx/MouseEventWx.cpp
+	           platform/wx/MouseWheelEventWx.cpp
+	           platform/wx/PasteboardWx.cpp
+	           platform/wx/RenderThemeWx.cpp
+	           platform/wx/ScreenWx.cpp
+	           platform/wx/ScrollViewWx.cpp
+	           platform/wx/SharedTimerWx.cpp
+	           platform/wx/SoundWx.cpp
+	           platform/wx/StringWx.cpp
+	           platform/wx/SystemTimeWx.cpp
+	           platform/wx/WidgetWx.cpp
+
+	           <!-- extensions that hopefully will make it to wx -->
+	           platform/wx/wxcode/fontprops.cpp
+	           
+	           <!-- files from other ports we currently rely on -->
+	           platform/network/gdk/ResourceHandleCurl.cpp
+		       platform/network/gdk/ResourceHandleManager.cpp
+	                      
+	    </sources>
+    </template>
+
+    <!-- FIXME: until the duplicate png, tiff, etc. library symbols problems
+         are addressed, we have to build dll on *nix. On Win, however, we have
+         to use static builds because the symbols are not exported with _dllexport.
+         Therefore, I'm defining the targets based on platform.
+    -->
+    <lib id="wx-webcore-static" template="webcore-wx,wx-lib">
+        <libname>webcore-wx</libname>
+        <if cond="PLATFORM_WIN32=='1'">
+            <define>WXUSINGDLL=1</define>
+	</if>
     </lib>
 
+<!--
+    <dll id="wx-webcore-dynamic" cond="not FORMAT in ['msvc', 'msvs2005prj']" template="webcore-wx,wx">
+        <dllname>webcore-wx</dllname>
+        <libname>webcore-wx</libname>
+
+        <if cond="PLATFORM_WIN32=='1'">
+            <wx-lib>core</wx-lib>
+            <wx-lib>base</wx-lib>
+            <define>WXUSINGDLL=1</define>
+        </if>
+    </dll>
+-->
 </makefile>
 

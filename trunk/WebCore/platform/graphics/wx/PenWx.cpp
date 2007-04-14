@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2007 Kevin Ollivier <kevino@theolliviers.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -22,25 +22,57 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
+
+#include "Pen.h"
+
+#include <wx/defs.h>
+#include <wx/pen.h>
+#include <wx/colour.h>
  
-#include "config.h"
-#include "ICOImageDecoder.h"
+namespace WebCore {
 
-#if PLATFORM(CAIRO) || PLATFORM(QT) || PLATFORM(WX)
-
-namespace WebCore
+// Pen style conversion functions
+static int penStyleToWxPenStyle(int p)
 {
-
-bool ICOImageDecoder::isSizeAvailable() const
-{
-    return false;
-}
- 
-RGBA32Buffer* ICOImageDecoder::frameBufferAtIndex(size_t index)
-{
-    return 0;
-}
-
+    if (p == Pen::SolidLine)
+        return wxSOLID;
+    else if (p == Pen::DotLine)
+        return wxDOT;
+    else if (p == Pen::DashLine)
+        return wxLONG_DASH;
+    else if (p == Pen::NoPen)
+        return wxTRANSPARENT;
+    
+    return wxSOLID;
 }
 
-#endif // PLATFORM(CAIRO)
+static Pen::PenStyle wxPenStyleToPenStyle(int p)
+{
+    if (p == wxSOLID)
+        return Pen::SolidLine;
+    else if (p == wxDOT)
+        return Pen::DotLine;
+    else if (p == wxLONG_DASH || p == wxSHORT_DASH || p == wxDOT_DASH || p == wxUSER_DASH)
+        return Pen::DashLine;
+    else if (p == wxTRANSPARENT)
+        return Pen::NoPen; 
+    
+    return Pen::SolidLine;
+}
+
+Pen::Pen(const wxPen& p)
+{
+
+wxColour color = p.GetColour();
+setColor(Color(color.Red(), color.Green(), color.Blue()));
+setWidth(p.GetWidth());
+setStyle(wxPenStyleToPenStyle(p.GetStyle()));
+
+}
+
+Pen::operator wxPen() const
+{
+    return wxPen(wxColour(m_color.red(), m_color.blue(), m_color.green()), width(), penStyleToWxPenStyle(style()));
+}
+
+}

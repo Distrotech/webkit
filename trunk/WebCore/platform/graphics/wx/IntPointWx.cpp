@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006 Kevin Ollivier <kevino@theolliviers.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -22,25 +22,23 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
- 
-#include "config.h"
-#include "ICOImageDecoder.h"
 
-#if PLATFORM(CAIRO) || PLATFORM(QT) || PLATFORM(WX)
+#include "IntPoint.h"
 
-namespace WebCore
-{
+#include <wx/defs.h>
+#include <wx/gdicmn.h>
 
-bool ICOImageDecoder::isSizeAvailable() const
+namespace WebCore {
+
+IntPoint::IntPoint(const wxPoint& p)
+    : m_x(p.x)
+    , m_y(p.y)
 {
-    return false;
-}
- 
-RGBA32Buffer* ICOImageDecoder::frameBufferAtIndex(size_t index)
-{
-    return 0;
 }
 
+IntPoint::operator wxPoint() const
+{
+    return wxPoint(m_x, m_y);
 }
 
-#endif // PLATFORM(CAIRO)
+}

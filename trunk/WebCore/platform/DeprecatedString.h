@@ -56,6 +56,10 @@ class NSString;
 class QString;
 #endif
 
+#if PLATFORM(WX)
+class wxString;
+#endif
+
 namespace KJS {
     class Identifier;
     class UString;
@@ -431,6 +435,10 @@ public:
     operator NSString*() const { return getNSString(); }
 #endif
 
+#endif
+
+#if PLATFORM(WX)
+    operator wxString() const;
 #endif
 
 #if PLATFORM(SYMBIAN)

@@ -45,12 +45,18 @@ class NSCursor;
 #endif
 #endif
 
+#if PLATFORM(WX)
+class wxCursor;
+#endif
+
 namespace WebCore {
 
     class Image;
     class IntPoint;
 
-#if PLATFORM(WIN)
+#if PLATFORM(WX)
+    typedef wxCursor* PlatformCursor;
+#elif PLATFORM(WIN)
     typedef HCURSOR PlatformCursor;
 #elif PLATFORM(MAC)
     typedef NSCursor* PlatformCursor;

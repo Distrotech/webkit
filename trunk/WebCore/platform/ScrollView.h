@@ -105,7 +105,7 @@ namespace WebCore {
         NSView* getDocumentView() const;
 #endif
 
-#if PLATFORM(WIN)
+#if PLATFORM(WIN) && !PLATFORM(WX)
         ScrollView();
         ~ScrollView();
 
@@ -165,6 +165,16 @@ namespace WebCore {
         bool m_allowsScrolling;
         int  m_width;
         int  m_height;
+#endif
+
+#if PLATFORM(WX)
+        ScrollView();
+        ~ScrollView();
+    private:
+        void updateScrollBars();
+        IntSize maximumScroll() const;
+        class ScrollViewPrivate;
+        ScrollViewPrivate* m_data;
 #endif
     };
 

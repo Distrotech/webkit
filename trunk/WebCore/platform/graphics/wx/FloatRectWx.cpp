@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006 Kevin Ollivier.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -22,25 +22,24 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
- 
-#include "config.h"
-#include "ICOImageDecoder.h"
 
-#if PLATFORM(CAIRO) || PLATFORM(QT) || PLATFORM(WX)
+#include "FloatRect.h"
 
-namespace WebCore
-{
+#include <wx/defs.h>
+#include <wx/graphics.h>
 
-bool ICOImageDecoder::isSizeAvailable() const
+namespace WebCore {
+
+#if USE(WXGC)
+FloatRect::FloatRect(const wxRect2DDouble& r)
+    : m_location(FloatPoint(r.m_x, r.m_y)), m_size(FloatSize(r.m_width, r.m_height))
 {
-    return false;
-}
- 
-RGBA32Buffer* ICOImageDecoder::frameBufferAtIndex(size_t index)
-{
-    return 0;
 }
 
+FloatRect::operator wxRect2DDouble() const
+{
+    return wxRect2DDouble(x(), y(), width(), height());
 }
+#endif
 
-#endif // PLATFORM(CAIRO)
+}
