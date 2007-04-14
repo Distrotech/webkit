@@ -103,13 +103,19 @@ class MSVS8Filter:
         if filter.attributes.has_key("Name"):
             self.name = filter.attributes["Name"].value
             self.varname = self.prefix + "SOURCES_" + self.name.upper()
+        else:
+            self.name = self.prefix
+            self.varname = self.prefix + "SOURCES"
 
         for node in filter.childNodes:
             if node.nodeName == "File" and node.attributes.has_key("RelativePath"):
                 filename = node.attributes["RelativePath"].value.replace("$", "$(DOLLAR)")
                 filename = filename.replace("\\", "/")
                 filename = "\t\t" + filename.replace("../../", "")
-                if os.path.splitext(filename)[1] in [".c", ".cpp"]:
+                if filename.find("grammarWrapper.cpp") != -1:
+                    filename = "DerivedSources/JavaScriptCore/grammar.cpp"
+                if os.path.splitext(filename)[1] in [".c", ".cpp"] \
+                        and filename.find("RenderThemeWin.cpp") == -1:
                     self.files.append(filename)
 
     def asBkl(self, doc):
@@ -145,8 +151,14 @@ class MSVS8Project:
 
         if filename.find("JavaScriptCore") != -1:
             self.prefix = "JSCORE_"
+            
+        if filename.find("WTF") != -1:
+            self.prefix = "WTF_"
 
         files = doc.getElementsByTagName("Filter")
+        if not files:
+            files = doc.getElementsByTagName("Files")
+            
         for node in files:
             files = MSVS8Filter()
             files.prefix = self.prefix
@@ -169,12 +181,16 @@ class MSVS8Project:
 jsdir = os.path.join(WebKitRoot, "JavaScriptCore")
 wcdir = os.path.join(WebKitRoot, "WebCore")
 
-files = { jsdir: os.path.join(jsdir, "JavaScriptCore.vcproj", "JavaScriptCore", "JavaScriptCore.vcproj"),
-          wcdir: os.path.join(wcdir, "WebCore.vcproj", "WebCore", "WebCore.vcproj")
+files = { jsdir: 
+            [os.path.join(jsdir, "JavaScriptCore.vcproj", "JavaScriptCore", "JavaScriptCore.vcproj"),
+            os.path.join(jsdir, "JavaScriptCore.vcproj", "WTF", "WTF.vcproj")],
+          wcdir: [os.path.join(wcdir, "WebCore.vcproj", "WebCore", "WebCore.vcproj")]
         }
 
 for adir in files:
-    project = MSVS8Project()
-    project.loadFromXML(files[adir])
-    outputfile = os.path.join(adir, os.path.splitext(os.path.basename(files[adir]))[0] + "Sources.bkl")
-    project.saveAsBkl(outputfile)
+    counter = 0
+    for afile in files[adir]:
+        project = MSVS8Project()
+        project.loadFromXML(afile)
+        outputfile = os.path.join(adir, os.path.splitext(os.path.basename(afile))[0] + "Sources.bkl")
+        project.saveAsBkl(outputfile)

@@ -34,14 +34,88 @@ and WebCore. Include this file to use these settings.
 
 
 <makefile>
-
+    <if cond="not isdefined('WEBKIT_ROOT')">
+        <option name="WEBKIT_ROOT" category="path">
+            <default-value>$(DOLLAR)(WEBKIT_ROOT)</default-value>
+            <description>
+                The root directory containing WebKit sources
+            </description>
+        </option>
+    </if>
+    
     <template id="jscore">
-        <include>$(SRCDIR)/../JavaScriptCore</include>
-        <if cond="FORMAT=='gnu'">
-            <ldflags>$(SRCDIR)/../JavaScriptCore/libjscore.a</ldflags>
+        <include>$(WEBKIT_ROOT)/JavaScriptCore</include>
+        <if cond="FORMAT in ['msvc', 'msvs2005prj']">
+            <!-- MSVC chokes on #import, so don't use ForwardingHeaders... -->
+            <include>$(WEBKIT_ROOT)/JavaScriptCore/os-win32</include><!-- stdint.h is here -->
         </if>
+        
+        <if cond="FORMAT=='gnu'">
+            <ldflags>$(WEBKIT_ROOT)/JavaScriptCore/libjscore.a</ldflags>
+        </if>
+		<if cond="FORMAT in ['msvc','msvs2005prj']">
+			<sys-lib>jscore</sys-lib>
+			<lib-path>$(WEBKIT_ROOT)/JavaScriptCore</lib-path>
+		</if>
     </template>
 
+    <template id="webcore">
+        <define>APPLE_CHANGES=1</define>
+        <!-- this GC version requires Mach's thread suspend/resume: -->
+        <if cond="PLATFORM_MACOSX=='1'">
+            <define>USE_CONSERVATIVE_GC=0</define>
+        </if>
+        
+        <if cond="PLATFORM_MACOSX=='1'">
+            <define>USE_CONSERVATIVE_GC=1</define>
+        </if> 
+
+        <define>KHTML_XSLT=1</define>
+
+        <if cond="FORMAT=='gnu'">
+            <!-- FIXME: we need proper configure checks -->
+            <define>HAVE_FUNC_ISNAN</define>
+        </if>
+
+        <if cond="PLATFORM_WIN32=='1'">
+            <include>$(WEBKIT_ROOT)/os-win32</include>
+            <define>HAVE_SYS_TIMEB_H=1</define>
+            <define>HAVE_FLOAT_H=1</define>
+            <define>HAVE_FUNC__FINITE=1</define>
+        </if>
+    
+        <include>$(WEBKIT_ROOT)/WebCore/.</include>
+        <include>$(WEBKIT_ROOT)/WebCore/include</include>
+        <include>$(WEBKIT_ROOT)/WebCore/DerivedSources/WebCore</include>
+        <include>$(WEBKIT_ROOT)/WebCore/bindings/js</include>
+        <include>$(WEBKIT_ROOT)/WebCore/bridge</include>
+        <include>$(WEBKIT_ROOT)/WebCore/editing</include>
+        <include>$(WEBKIT_ROOT)/WebCore/history</include>
+        <include>$(WEBKIT_ROOT)/WebCore/html</include>
+        <include>$(WEBKIT_ROOT)/WebCore/css</include>
+        <include>$(WEBKIT_ROOT)/WebCore/dom</include>
+        <include>$(WEBKIT_ROOT)/WebCore/kwq</include>
+        <include>$(WEBKIT_ROOT)/WebCore/loader</include>
+        <include>$(WEBKIT_ROOT)/WebCore/page</include>
+        <include>$(WEBKIT_ROOT)/WebCore/platform</include>
+        <include>$(WEBKIT_ROOT)/WebCore/platform/graphics</include>
+        <include>$(WEBKIT_ROOT)/WebCore/platform/image-decoders</include>
+        <include>$(WEBKIT_ROOT)/WebCore/platform/image-decoders/gif</include>
+        <include>$(WEBKIT_ROOT)/WebCore/platform/image-decoders/jpeg</include>
+        <include>$(WEBKIT_ROOT)/WebCore/platform/image-decoders/png</include>
+        <include>$(WEBKIT_ROOT)/WebCore/platform/image-decoders/zlib</include>
+        <include>$(WEBKIT_ROOT)/WebCore/platform/network</include>
+        <include>$(WEBKIT_ROOT)/WebCore/rendering</include>
+        <include>$(WEBKIT_ROOT)/WebCore/xml</include>
+        
+        <if cond="FORMAT=='gnu'">
+            <ldflags>$(WEBKIT_ROOT)/WebCore/Projects/wx/libwebcore-wx.a</ldflags>
+        </if>
+		<if cond="FORMAT in ['msvc','msvs2005prj']">
+			<sys-lib>webcore-wx</sys-lib>
+			<lib-path>$(WEBKIT_ROOT)/WebCore/Projects/wx</lib-path>
+		</if>
+    </template>
 
     <option name="SQLITE3_LIBS">
         <default-value>$(os.popen("pkg-config --libs sqlite3").read())</default-value>
@@ -52,6 +126,7 @@ and WebCore. Include this file to use these settings.
     </option>
 
     <template id="sqlite3">
+        <sys-lib>sqlite3</sys-lib>
         <ldflags>$(SQLITE3_LIBS)</ldflags>
         <cxxflags>$(SQLITE3_CFLAGS)</cxxflags>
     </template>
@@ -90,8 +165,15 @@ and WebCore. Include this file to use these settings.
     </option>
 
     <template id="curl">
-        <ldflags>$(CURL_LIBS)</ldflags>
-        <cxxflags>$(CURL_CFLAGS)</cxxflags>
+	<if cond="FORMAT not in ['msvc', 'msvc2005prj']">
+        	<ldflags>$(CURL_LIBS)</ldflags>
+        	<cxxflags>$(CURL_CFLAGS)</cxxflags>
+	</if>
+	<if cond="FORMAT in ['msvc', 'msvs2005prj']">
+		<include>$(WEBKIT_ROOT)/libcurl/include</include>
+		<sys-lib>libcurl</sys-lib>
+		<lib-path>$(WEBKIT_ROOT)/libcurl</lib-path>
+	</if>
     </template>
 
 
@@ -144,7 +226,9 @@ and WebCore. Include this file to use these settings.
         </if>
 
         <if cond="PLATFORM_WIN32=='1'">
-            <include>$(SRCDIR)/../libxml/include</include>
+            <include>$(WEBKIT_ROOT)/libxml/include</include>
+	    <lib-path>$(WEBKIT_ROOT)/libxml/lib</lib-path>
+	    <sys-lib>libxml2_a</sys-lib>
         </if>
     </template>
 
@@ -158,15 +242,17 @@ and WebCore. Include this file to use these settings.
     </option>
 
     <!-- XSLT library settings -->
-    <template id="xslt">
+    <template id="xslt" template="xml2">
         <if cond="FORMAT=='gnu'">
             <ldflags>$(XSLT_LIBS)</ldflags>
             <cxxflags>$(XSLT_CFLAGS)</cxxflags>
         </if>
 
         <if cond="PLATFORM_WIN32=='1'">
-            <include>$(SRCDIR)/../libxslt/include</include>
-            <include>$(SRCDIR)/../libxml/include</include>
+            <include>$(WEBKIT_ROOT)/libxslt/include</include>
+	    <sys-lib>libxslt_a</sys-lib>
+	    <lib-path>$(WEBKIT_ROOT)/libxslt/lib</lib-path>
+
         </if>
     </template>
 
@@ -176,7 +262,7 @@ and WebCore. Include this file to use these settings.
     </option>
 
     <option name="ICU_CFLAGS">
-        <default-value>$(os.popen("icu-config --cxxflags").read())</default-value>
+        <default-value>$(os.popen("icu-config --cppflags").read())</default-value>
     </option>
 
     <!-- IBM ICU settings -->
@@ -187,7 +273,10 @@ and WebCore. Include this file to use these settings.
         </if>
 
         <if cond="PLATFORM_WIN32=='1'">
-            <include>$(SRCDIR)/../icu/include</include>
+            <include>$(WEBKIT_ROOT)/icu/include</include>
+	    <sys-lib>icuuc</sys-lib>
+	    <sys-lib>icuin</sys-lib>
+	    <lib-path>$(WEBKIT_ROOT)/icu/lib</lib-path>
         </if>
     </template>
 
@@ -195,6 +284,17 @@ and WebCore. Include this file to use these settings.
     <template id="iconv">
         <if cond="PLATFORM_WIN32=='1'">
             <include>$(SRCDIR)/../iconv/include</include>
+	    <sys-lib>iconv_a</sys-lib>
+	    <lib-path>$(WEBKIT_ROOT)/iconv/lib</lib-path>
+        </if>
+    </template>
+
+
+    <template id="pthreads">
+        <if cond="PLATFORM_WIN32=='1'">
+            <include>$(SRCDIR)/../pthreads/include</include> 
+        <sys-lib>pthreadVC2</sys-lib>
+	    <lib-path>$(WEBKIT_ROOT)/pthreads/lib</lib-path>
         </if>
     </template>
     

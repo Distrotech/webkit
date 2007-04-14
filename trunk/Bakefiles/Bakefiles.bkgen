@@ -1,4 +1,4 @@
-<?xml version="1.0" ?>
+﻿<?xml version="1.0" ?>
 <!-- 
 Copyright (C) 2005, 2006 Apple Computer, Inc.  All rights reserved.
 
@@ -33,29 +33,31 @@ Build configuration script for Bakefile.
 
     <input>
         ../JavaScriptCore/jscore.bkl
-        ../WebCore/Projects/wx/webcore-wx.bkl
+        ../WebKit/wx/wxwebkit.bkl
         ../WebCore/Projects/gdk/webcore-gdk.bkl
+        ../WebCore/Projects/wx/webcore-wx.bkl
+	    ../WebKitTools/wxTest/webkittest.bkl
     </input>
 
     <!-- List of output formats to generate: -->
     <add-formats>
-        gnu <!-- xcode2,msvc,msvs2005 -->
+        gnu,msvs2005prj,msvc
     </add-formats>
 
     <!-- webcore gdk is Unix-only for now, right? -->
     <del-formats files="../WebCore/Projects/gdk/webcore-gdk.bkl">
-        msvs2005,msvc
+        msvs2005prj,msvc
     </del-formats>
 
     <!-- JSCore settings -->
     <add-flags files="../JavaScriptCore/jscore.bkl" formats="gnu">
         -o../JavaScriptCore/GNUmakefile
     </add-flags>
-    <add-flags files="../JavaScriptCore/jscore.bkl" formats="msvs2005">
+    <add-flags files="../JavaScriptCore/jscore.bkl" formats="msvs2005prj">
         -o../JavaScriptCore/JavaScriptCore.sln
     </add-flags>
     <add-flags files="../JavaScriptCore/jscore.bkl" formats="msvc">
-        -o../JavaScriptCore/bkl-makefile.vc
+        -o../JavaScriptCore/makefile.vc
     </add-flags>
     <!-- testing XCode backend
     <add-flags files="jscore.bkl" formats="xcode2">
@@ -67,11 +69,21 @@ Build configuration script for Bakefile.
     <add-flags files="../WebCore/Projects/wx/webcore-wx.bkl" formats="gnu">
         -o../WebCore/Projects/wx/GNUmakefile
     </add-flags>
-    <add-flags files="../WebCore/Projects/wx/webcore-wx.bkl" formats="msvs2005">
-        -o../WebCore/Projects/wx/wxWebCore.sln
+    <add-flags files="../WebCore/Projects/wx/webcore-wx.bkl" formats="msvs2005prj">
+        -o../WebCore/Projects/wx/webcore-wx.sln
     </add-flags>
     <add-flags files="../WebCore/Projects/wx/webcore-wx.bkl" formats="msvc">
         -o../WebCore/Projects/wx/makefile.vc
+    </add-flags>
+    
+    <add-flags files="../WebKit/wx/wxwebkit.bkl" formats="gnu">
+        -o../WebKit/wx/GNUmakefile
+    </add-flags>
+    <add-flags files="../WebKit/wx/wxwebkit" formats="msvs2005prj">
+        -o../WebKit/wx/wxWebKit.sln
+    </add-flags>
+    <add-flags files="../WebKit/wx/wxwebkit" formats="msvc">
+        -o../WebKit/wx/makefile.vc
     </add-flags>
     <!-- testing XCode backend 
     <add-flags files="webcore-wx.bkl" formats="xcode2">
