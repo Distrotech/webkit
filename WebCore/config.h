@@ -20,14 +20,12 @@
 
 #include <wtf/Platform.h>
 
+#define MOBILE 0
+
 #if __APPLE__
 #define HAVE_FUNC_USLEEP 1
 #endif /* __APPLE__ */
 
-// If we don't define these, they get defined in windef.h. 
-// We want to use std::min and std::max
-#define max max
-#define min min
 
 #if PLATFORM(WIN_OS)
 
@@ -39,13 +37,19 @@
 #define WINVER 0x0500
 #endif
 
-// FIXME: Should probably just dump this eventually, but it's needed for now.
-// We get this from some system place on OS X; probably better not to use it
-// in WebCore code.
-#include <assert.h>
+// If we don't define these, they get defined in windef.h. 
+// We want to use std::min and std::max
+#define max max
+#define min min
+
+#define _WINSOCKAPI_ // Prevent inclusion of winsock.h in windows.h
 
 #endif /* PLATFORM(WIN_OS) */
 
+#if !PLATFORM(SYMBIAN)
+#define IMPORT_C
+#define EXPORT_C
+#endif
 
 #ifdef __cplusplus
 
@@ -61,9 +65,6 @@
 #define AVOID_STATIC_CONSTRUCTORS 1
 #endif
 
-// Special tweaks for the internal tree
-#define WTF_PLATFORM_CF 1
-
 #if PLATFORM(WIN)
 #define WTF_USE_JAVASCRIPTCORE_BINDINGS 1
 #define WTF_USE_NPOBJECT 1
@@ -71,6 +72,31 @@
 #undef WTF_PLATFORM_CAIRO
 #define WTF_USE_CFNETWORK 1
 #undef WTF_USE_WININET
+#define WTF_PLATFORM_CF 1
+#endif
+
+#if PLATFORM(MAC)
+#define WTF_USE_JAVASCRIPTCORE_BINDINGS 1
+#define WTF_USE_NPOBJECT 1
+#endif
+
+#if PLATFORM(SYMBIAN)
+#define WTF_USE_JAVASCRIPTCORE_BINDINGS 1
+#define WTF_USE_NPOBJECT 1
+#undef WIN32
+#undef _WIN32
+#undef AVOID_STATIC_CONSTRUCTORS
+#define USE_SYSTEM_MALLOC 1
+#define U_HAVE_INT8_T 0
+#define U_HAVE_INT16_T 0
+#define U_HAVE_INT32_T 0
+#define U_HAVE_INT64_T 0
+#define U_HAVE_INTTYPES_H 0
+
+#include <stdio.h>
+#include <snprintf.h>
+#include <limits.h>
+#include <wtf/MathExtras.h>
 #endif
 
 #if PLATFORM(CG)
@@ -83,5 +109,3 @@ typedef float CGFloat;
 #define CGFLOAT_DEFINED 1
 #endif
 #endif /* PLATFORM(CG) */
-
-#define _WINSOCKAPI_ // Prevent inclusion of winsock.h in windows.h

@@ -63,7 +63,7 @@ Cursor::Cursor(Image* img, const IntPoint& hotspot)
     HDC workingDC = CreateCompatibleDC(dc);
     if (doAlpha) {
         hCursor = CreateDIBSection(dc, (BITMAPINFO *)&cursorImage, DIB_RGB_COLORS, 0, 0, 0);
-        assert(hCursor);
+        ASSERT(hCursor);
 
         img->getHBITMAP(hCursor); 
         HBITMAP hOldBitmap = (HBITMAP)SelectObject(workingDC, hCursor);
@@ -90,7 +90,7 @@ Cursor::Cursor(Image* img, const IntPoint& hotspot)
         HDC andMaskDC = CreateCompatibleDC(dc);
         HDC xorMaskDC = CreateCompatibleDC(dc);
         hCursor = CreateDIBSection(dc, &cursorImage, DIB_RGB_COLORS, 0, 0, 0);
-        assert(hCursor);
+        ASSERT(hCursor);
         img->getHBITMAP(hCursor); 
         BITMAP cursor;
         GetObject(hCursor, sizeof(BITMAP), &cursor);

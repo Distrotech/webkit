@@ -1,5 +1,18 @@
 2007-04-13  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Tim.
+
+        Sync our config.h with the OpenSource version so we can merge ours in
+        later.
+
+        * config.h: Added #defines from the OpenSource version, moved
+        Windows-specific defines inside #if PLATFORM(WIN[_OS]), and got rid
+        of assert.h
+        * platform/win/CursorWin.cpp:
+        (WebCore::Cursor::Cursor): Use ASSERT instead of assert.
+
+2007-04-13  Adam Roben  <aroben@apple.com>
+
         Rubberstamped by Tim.
 
         Removed the loader/win directory since it only contains empty files.
