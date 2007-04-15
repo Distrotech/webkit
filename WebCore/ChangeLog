@@ -1,3 +1,9 @@
+2007-04-14  Adam Roben  <aroben@apple.com>
+
+        Small correctness fix that is needed for building OpenSource.
+
+        * platform/win/PopupMenuWin.cpp: Use RenderTheme instead of RenderThemeWin.
+
 2007-04-13  Adam Roben  <aroben@apple.com>
 
         Reviewed by Tim.

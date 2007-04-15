@@ -31,7 +31,7 @@
 #include "Page.h"
 #include "PlatformMouseEvent.h"
 #include "PlatformScrollBar.h"
-#include "RenderThemeWin.h"
+#include "RenderTheme.h"
 #include "RenderView.h"
 #include "Screen.h"
 #include "TextStyle.h"
