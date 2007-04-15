@@ -68,7 +68,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(OutDir)\$(ProjectName)$(ConfigSuffix).lib"
+				OutputFile="$(OutDir)\$(ProjectName)$(WebKitConfigSuffix).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -138,7 +138,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(OutDir)\$(ProjectName)$(ConfigSuffix).lib"
+				OutputFile="$(OutDir)\$(ProjectName)$(WebKitConfigSuffix).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
