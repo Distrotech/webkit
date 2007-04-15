@@ -1,3 +1,15 @@
+2007-04-14  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Steve.
+
+        Added a Debug_Internal configuration to DRT to match WebKit/WebCore.
+        Debug now compiles against release CoreGraphics.lib and pthreadVC2.lib.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.vcproj:
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/debug.vsprops:
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/debug_internal.vsprops: Added.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/release.vsprops:
+
 2007-04-13  Anders Carlsson  <andersca@apple.com>
 
         Fix the release build too!
