@@ -1,0 +1,162 @@
+#!/bin/bash
+
+set -o errexit
+#set -o xtrace
+
+#----------------------------------------------------------------------
+# Set up the environment
+
+WK_ROOT=`pwd`/../..
+WK_ROOTDIR=$WK_ROOT
+# TODO: check that we are running from the root of the source tree...
+
+
+if [ $OSTYPE == cygwin ]; then
+    EXE=.exe
+    WK_ROOTDIR=`cygpath -m $WK_ROOT`
+    if [ -z $WXWIN ]; then
+        echo "Error, you must set WXWIN to your wxWidgets root directory."
+	exit 1
+    fi
+    if [ -z $BAKEFILE_PATHS ]; then
+	export BAKEFILE_PATHS=$WXWIN/build/bakefiles/wxpresets
+    fi
+else
+    WX_PREFIX=`wx-config --prefix`
+    if [ ! -d "$WX_PREFIX" ]; then
+        echo "Make sure wx-config is on your PATH and points to a valid wxWidgets installation."
+	exit 1
+    fi
+    if [ -z $BAKEFILE_PATHS ]; then
+        export BAKEFILE_PATHS=$WX_PREFIX/share/bakefile
+    fi
+fi
+
+# after all that, make sure that BAKEFILE_PATHS was either set
+# previously, or by the code above
+if [ -z $BAKEFILE_PATHS ]; then
+    echo "Error, you must set BAKEFILE_PATHS to the directory containing wxpresets."
+    exit 1
+fi
+
+#----------------------------------------------------------------------
+# process command line args
+
+do_bake=0
+do_prep=0
+do_extras=0
+do_build=0
+do_clean=0
+other_args=
+
+for flag in $*; do
+    case $flag in
+	bake)   do_bake=1                                      ;;
+	prep)   do_prep=1                                      ;;
+	build)  do_build=1                                     ;;
+	extras) do_extras=1                                    ;;
+	all)    do_extras=1; do_bake=1; do_prep=1; do_build=1  ;;
+	clean)  other_args=clean; do_clean=1                   ;;
+	*)      other_args='$other_args "$flag"'               ;;
+    esac
+done
+
+#----------------------------------------------------------------------
+
+# if no arguments were passed, do a full build.
+if [ $do_bake == 0 -a $do_prep == 0 -a $do_build == 0 -a $do_extras == 0 -a $do_clean == 0 ]; then
+    do_extras=1; do_bake=1; do_prep=1; do_build=1
+fi
+
+function do_make {
+    dir=$1
+    olddir=$PWD
+    shift
+    if [ $OSTYPE == cygwin ]; then
+        cd $dir
+        nmake -f makefile.vc $@
+        cd $olddir
+    else
+        make -C $dir $@
+    fi
+}
+
+olddir=$PWD
+
+if [ $do_clean == 1 ]; then
+    rm -rf $WK_ROOT/JavaScriptCore/DerivedSources
+    rm -rf $WK_ROOT/WebCore/DerivedSources
+    rm -rf $WK_ROOT/WebCore/include/JavaScriptCore
+else
+
+    if [ $do_extras == 1 ]; then
+        cd $WK_ROOT/WebKitTools/Scripts
+        if [ $OSTYPE == cygwin ]; then
+            ./install-win-extras
+        else
+            ./install-unix-extras
+        fi
+    fi
+
+    if [ $do_bake == 1 ]; then
+        # bakefile stuff
+        cd $WK_ROOT/Bakefiles
+        # These days, the GDK port is more up-to-date than the Win port.
+        #python update-file-lists.py
+        bakefile_gen
+    
+        cd $WK_ROOT/WebKitTools/wxBrowser
+        bakefile -f gnu browser.bkl
+        bakefile -f msvc browser.bkl
+        bakefile -f msvs2005prj browser.bkl
+    
+        # we need to do this because Bakefile doesn't know which
+        # platform it's running on with GNU format, and so it defaults
+        # to the standard Unix file endings and linker args.
+        if [ "${OSTYPE:0:6}" = "darwin" ]; then
+            sed "s/libwebcore-wx.so/libwebcore-wx.dylib/" < $WK_ROOT/WebCore/Projects/wx/GNUmakefile > temp
+            mv temp $WK_ROOT/WebCore/Projects/wx/GNUmakefile
+    
+            sed "s/\-shared/\-dynamiclib/" < $WK_ROOT/WebCore/Projects/wx/GNUmakefile > temp
+            mv temp $WK_ROOT/WebCore/Projects/wx/GNUmakefile
+            
+            sed "s/libwxwebkit.so/libwxwebkit.dylib/" < $WK_ROOT/WebKit/wx/GNUmakefile > temp
+            mv temp $WK_ROOT/WebKit/wx/GNUmakefile
+            
+            sed "s/\-shared/\-dynamiclib/" < $WK_ROOT/WebKit/wx/GNUmakefile > temp
+            mv temp $WK_ROOT/WebKit/wx/GNUmakefile
+        fi
+    fi
+
+    if [ $do_prep == 1 ]; then
+        # Other preparation steps
+        cd $WK_ROOT/JavaScriptCore
+        mkdir -p obj-gnu
+        mkdir -p obj-msvc
+        do_make . dftables$EXE
+        ./make-generated-sources.sh
+    
+        cd $WK_ROOT/WebCore
+        ./move-js-headers.sh
+        ./make-generated-sources.sh platform/wx/wx-encodings.txt
+    fi
+fi
+
+
+if [ $do_build == 1 -o $do_clean == 1 ]; then
+    # Build steps
+    do_make $WK_ROOT/JavaScriptCore      CXXFLAGS="-DBUILDING_WX__=1" WEBKIT_ROOT=$WK_ROOTDIR $other_args 
+    do_make $WK_ROOT/WebCore/Projects/wx CXXFLAGS="-DBUILDING_WX__=1" WEBKIT_ROOT=$WK_ROOTDIR $other_args
+    do_make $WK_ROOT/WebKit/wx CXXFLAGS="-DBUILDING_WX__=1" WEBKIT_ROOT=$WK_ROOTDIR $other_args 
+    do_make $WK_ROOT/WebKitTools/wxBrowser  CXXFLAGS="-DBUILDING_WX__=1" WEBKIT_ROOT=$WK_ROOTDIR $other_args 
+
+    if [ "${OSTYPE:0:6}" = "darwin" ]; then
+        cd  $WK_ROOT/WebKitTools/wxBrowser
+        mkdir -p wxBrowser.app/Contents/MacOS
+        mkdir -p wxBrowser.app/Contents/Frameworks
+        cp wxBrowser wxBrowser.app/Contents/MacOS
+        install_name_tool -change libwxwebkit.dylib @executable_path/../Frameworks/libwxwebkit.dylib wxBrowser.app/Contents/MacOS/wxBrowser
+        cp $WK_ROOT/WebKit/wx/*.dylib wxBrowser.app/Contents/Frameworks
+    fi
+fi
+cd $olddir

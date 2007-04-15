@@ -40,6 +40,7 @@ my $svgExperimentalSupport = 0;
 my $xpathSupport = 1;
 my $xsltSupport = 1;
 my $colorSupport = 1; # Default: colorize make output
+my $wxBuild = 0;
 
 our @cmakeBuild;
 
@@ -48,7 +49,13 @@ GetOptions('svg!' => \$svgSupport,
            'xpath!' => \$xpathSupport,
            'xslt!' => \$xsltSupport,
            'color!' => \$colorSupport,
-           'cmake!' => \@cmakeBuild);
+           'cmake!' => \@cmakeBuild,
+           'wx!' => \$wxBuild);
+           
+if ($wxBuild){
+    system "./build-wxwebkit";
+    exit 0;
+}
 
 checkRequiredSystemConfig();
 setConfiguration();

@@ -96,6 +96,35 @@ if (! -e "zlib-1.2.3.win32.zip") {
 }
 `chmod 755 ../zlib/bin/*.dll`;
 
+
+my $CURLFILE="libcurl-7.15.1-msvc-win32-ssl-0.9.8a-zlib-1.2.3.zip";
+my $CURLURL="http://my.guardpuppy.com/" . $CURLFILE;
+if (! -e $CURLFILE) {
+    print "Downloading " . $CURLFILE . "...\n\n";
+    `rm -rf libcurl*`;
+    `curl -O $CURLURL`;
+    print "\nInstalling " . $CURLFILE . "...\n";
+    `unzip $CURLFILE -d libcurl`;
+    `rm -rf ../libcurl`;
+    `cp -rp libcurl ../libcurl`;
+    if ( -e "../libcurl/libcurl_imp.lib") {
+	`mv ../libcurl/libcurl_imp.lib ../libcurl/libcurl.lib`;
+    }
+}
+`chmod 755 ../libcurl/*.dll`;
+
+if (! -e "pthreads-w32-2-8-0-release.exe") {
+    print "Downloading pthreads-w32-2-8-0-release.exe...\n\n";
+    `rm -rf pthreads*`;
+    `curl -O ftp://sourceware.org/pub/pthreads-win32/pthreads-w32-2-8-0-release.exe`;
+    print "\nInstalling pthreads-w32-2-8-0-release.exe...\n";
+    `unzip pthreads-w32-2-8-0-release.exe`;
+    `rm -rf ../pthreads`;
+    `cp -rp Pre-built.2 ../pthreads`;
+}
+`chmod 755 ../pthreads/lib/*.dll`;
+
+
 my $PROGRAMFILES = $ENV{"PROGRAMFILES"};
 my $unixProgramFiles = `cygpath -u "$PROGRAMFILES"`;
 chomp $unixProgramFiles;

@@ -39,6 +39,11 @@ DEPS_PREFIX=/usr/local
 mkdir -p $DL_DIR
 mkdir -p $DEPS_PREFIX
 
+SHLIB_EXT=so
+if [ "${OSTYPE:0:6}" = "darwin" ]; then
+    SHLIB_EXT=dylib
+fi
+
 ICU_VERSION="3.4.1"
 ICU_TARBALL="icu-$ICU_VERSION.tgz"
 ICU_URL="ftp://ftp.software.ibm.com/software/globalization/icu/$ICU_VERSION/$ICU_TARBALL"
@@ -90,7 +95,7 @@ if [ `which gperf >/dev/null 2>&1` ]; then
 fi
 
 # TODO: What would be a good way to test for this?
-if [ ! -f $DEPS_PREFIX/lib/libiconv.dylib ]; then
+if [ ! -f $DEPS_PREFIX/lib/libiconv.$SHLIB_EXT ]; then
   $DL_CMD -o $DL_DIR/$ICONV_TARBALL $ICONV_URL
 
   tar xzvf $DL_DIR/$ICONV_TARBALL

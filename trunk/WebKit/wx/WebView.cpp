@@ -1,0 +1,544 @@
+/*
+ * Copyright (C) 2007 Kevin Ollivier  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY APPLE COMPUTER, INC. ``AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL APPLE COMPUTER, INC. OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ */
+ 
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+    #include "wx/wx.h"
+#endif
+
+#include "config.h"
+#include "Frame.h"
+#include "Document.h"
+#include "FrameLoader.h"
+#include "FrameView.h"
+#include "Editor.h"
+#include "Page.h"
+#include "GraphicsContext.h"
+#include "HTMLFrameOwnerElement.h"
+#include "ChromeClientWx.h"
+#include "ContextMenuClientWx.h"
+#include "DragClientWx.h"
+#include "EditorClientWx.h"
+#include "FrameLoaderClientWx.h"
+#include "DeprecatedString.h"
+#include "PlatformMouseEvent.h"
+#include "PlatformKeyboardEvent.h"
+#include "PlatformWheelEvent.h"
+#include "PlatformString.h"
+#include "EventHandler.h"
+#include "Settings.h"
+#include "RenderObject.h"
+
+#include "kjs_proxy.h"
+//#include "value.h"
+
+#include "WebView.h"
+#include "WebViewPrivate.h"
+
+#include <wx/defs.h>
+#include <wx/dcbuffer.h>
+
+// Match Safari's min/max zoom sizes by default
+#define MinimumTextSizeMultiplier       0.5f
+#define MaximumTextSizeMultiplier       3.0f
+#define TextSizeMultiplierRatio         1.2f
+
+
+#if defined(_MSC_VER) && _MSC_VER < 1400
+int rint(double val)
+{
+    return (int)(val < 0 ? val - 0.5 : val + 0.5);
+}
+#endif
+
+// ----------------------------------------------------------------------------
+// wxWebView Events
+// ----------------------------------------------------------------------------
+
+IMPLEMENT_DYNAMIC_CLASS( wxWebViewStateChangedEvent, wxCommandEvent )
+
+DEFINE_EVENT_TYPE( wxEVT_WEBVIEW_STATE_CHANGED )
+
+wxWebViewStateChangedEvent::wxWebViewStateChangedEvent( wxWindow* win )
+{
+    SetEventType( wxEVT_WEBVIEW_STATE_CHANGED);
+    SetEventObject( win );
+    SetId(win->GetId());
+}
+
+IMPLEMENT_DYNAMIC_CLASS( wxWebViewBeforeLoadEvent, wxCommandEvent )
+
+DEFINE_EVENT_TYPE( wxEVT_WEBVIEW_BEFORE_LOAD )
+
+wxWebViewBeforeLoadEvent::wxWebViewBeforeLoadEvent( wxWindow* win )
+{
+    m_cancelled = false;
+    SetEventType( wxEVT_WEBVIEW_BEFORE_LOAD);
+    SetEventObject( win );
+    SetId(win->GetId());
+}
+
+IMPLEMENT_DYNAMIC_CLASS( wxWebViewNewWindowEvent, wxCommandEvent )
+
+DEFINE_EVENT_TYPE( wxEVT_WEBVIEW_NEW_WINDOW )
+
+wxWebViewNewWindowEvent::wxWebViewNewWindowEvent( wxWindow* win )
+{
+    SetEventType( wxEVT_WEBVIEW_NEW_WINDOW);
+    SetEventObject( win );
+    SetId(win->GetId());
+}
+
+IMPLEMENT_DYNAMIC_CLASS( wxWebViewRightClickEvent, wxCommandEvent )
+
+DEFINE_EVENT_TYPE( wxEVT_WEBVIEW_RIGHT_CLICK )
+
+wxWebViewRightClickEvent::wxWebViewRightClickEvent( wxWindow* win )
+{
+    SetEventType( wxEVT_WEBVIEW_RIGHT_CLICK);
+    SetEventObject( win );
+    SetId(win->GetId());
+}
+
+//---------------------------------------------------------
+// DOM Element info data type
+//---------------------------------------------------------
+
+wxWebViewDOMElementInfo::wxWebViewDOMElementInfo() 
+{
+    m_domElement = NULL;
+    m_isSelected = false;
+    m_text = wxEmptyString;
+    m_imageSrc = wxEmptyString;
+    m_link = wxEmptyString;
+}
+
+BEGIN_EVENT_TABLE(wxWebView, wxScrolledWindow)
+    EVT_PAINT(wxWebView::OnPaint)
+    EVT_SIZE(wxWebView::OnSize)
+    EVT_MOUSE_EVENTS(wxWebView::OnMouseEvents)
+    EVT_KEY_DOWN(wxWebView::OnKeyEvents)
+    EVT_KEY_UP(wxWebView::OnKeyEvents)
+    EVT_CHAR(wxWebView::OnKeyEvents)
+    EVT_SET_FOCUS(wxWebView::OnSetFocus)
+    EVT_KILL_FOCUS(wxWebView::OnKillFocus)
+    EVT_ACTIVATE(wxWebView::OnActivate)
+END_EVENT_TABLE()
+
+wxWebView::wxWebView(wxWindow* parent, int id, const wxPoint& position, 
+                    const wxSize& size, WebViewFrameData* data)
+{
+    m_textMagnifier = 1.0;
+    m_isEditable = false;
+    m_isInitialized = false;
+
+    if (!wxScrolledWindow::Create(parent, id, position, size))
+        return;
+    
+    // this helps reduce flicker on platforms like MSW
+    SetBackgroundStyle(wxBG_STYLE_CUSTOM);
+
+    m_impl = new WebViewPrivate();
+    
+    WebCore::HTMLFrameOwnerElement* parentFrame = 0;
+    WebCore::Page* page = 0;
+    wxWebView* parentWebView = dynamic_cast<wxWebView*>(parent);
+    
+    if ( parentWebView )
+    {
+        parentFrame = data->ownerElement;
+        page = parentWebView->m_impl->frame->page();
+    }
+    else
+    {
+        WebCore::EditorClientWx* editorClient = new WebCore::EditorClientWx();
+        page = new WebCore::Page(new ChromeClientWx(), new ContextMenuClientWx(), editorClient, new DragClientWx());
+        editorClient->setPage(page);
+    }
+    
+    WebCore::FrameLoaderClientWx* loaderClient = new WebCore::FrameLoaderClientWx();
+    
+    m_impl->frame = new WebCore::Frame(page, parentFrame, loaderClient);
+    m_impl->frameView = new WebCore::FrameView(m_impl->frame.get());
+    m_impl->frameView->deref();
+    m_impl->frame->setView(m_impl->frameView.get());
+    
+    m_impl->frameView->setNativeWindow(this);
+    loaderClient->setFrame(m_impl->frame.get());
+        
+    // Default settings - we should have wxWebViewSettings class for this
+    // eventually
+    WebCore::Settings* settings = page->settings();
+    settings->setLoadsImagesAutomatically(true);
+    settings->setDefaultFixedFontSize(13);
+    settings->setDefaultFontSize(16);
+    settings->setSerifFontFamily("Times New Roman");
+    settings->setFixedFontFamily("Courier New");
+    settings->setSansSerifFontFamily("Arial");
+    settings->setStandardFontFamily("Times New Roman");
+    settings->setJavaScriptEnabled(true);
+
+    m_isInitialized = true;
+}
+
+wxWebView::~wxWebView()
+{
+    if (m_impl->frame && m_impl->frame->loader())
+        m_impl->frame->loader()->detachFromParent();
+
+    // FIXME: This keeps us from leaking frames, but we still
+    // leak Nodes and JSNodes.
+    
+    // This test determines whether or not the frame is a subframe
+    // or the main (top level) frame. If it's the main frame, then
+    // delete its page to keep leaks from occurring
+    if (!m_impl->frame->ownerElement())
+        delete m_impl->frame->page();
+    
+    if (m_impl->frame)
+        m_impl->frame->deref();
+
+    delete m_impl;
+}
+
+void wxWebView::Stop()
+{
+    if (m_impl->frame && m_impl->frame->loader())
+        m_impl->frame->loader()->stop();
+}
+
+void wxWebView::Reload()
+{
+    if (m_impl->frame && m_impl->frame->loader())
+        m_impl->frame->loader()->reload();
+}
+
+wxString wxWebView::GetPageSource()
+{
+    if (m_impl->frame)
+    {
+        WebCore::Document* doc = m_impl->frame->document();
+        wxString source = doc->toString();
+
+        if (doc)
+            return source;
+    }
+    return wxEmptyString;
+}
+
+void wxWebView::SetPageSource(const wxString& source, const wxString& baseUrl)
+{
+    if (m_impl->frame && m_impl->frame->loader())
+    {
+        WebCore::FrameLoader* loader = m_impl->frame->loader();
+        loader->begin(WebCore::KURL((const char*)baseUrl.mb_str(wxConvUTF8)));
+        loader->write(source); //(const char*)source.mb_str(wxConvUTF8), source.Length());
+        loader->end();
+    }
+}
+
+wxString wxWebView::RunScript(const wxString& javascript)
+{
+    if (m_impl->frame)
+    {
+        WebCore::KJSProxy* proxy = m_impl->frame->scriptProxy();
+        //if (proxy && proxy->haveInterpreter())
+        //    KJS::JSValue* result = proxy->interpreter()->evaluate(UString(), 0, );
+        
+    }
+    return wxEmptyString;
+}
+
+void wxWebView::LoadURL(wxString url)
+{
+    if (m_impl->frame && m_impl->frame->loader())
+    {
+        WebCore::KURL kurl = WebCore::KURL((const char*)url.mb_str(wxConvUTF8));
+        m_impl->frame->loader()->load(kurl);
+    }
+}
+
+bool wxWebView::GoBack()
+{
+    if (m_impl->frame && m_impl->frame->page())
+    {
+        return m_impl->frame->page()->goBack();
+    }
+}
+
+bool wxWebView::GoForward()
+{
+    if (m_impl->frame && m_impl->frame->page())
+        return m_impl->frame->page()->goForward();
+}
+
+bool wxWebView::CanIncreaseTextSize()
+{
+    if (m_impl->frame)
+    {
+        if (m_textMagnifier*TextSizeMultiplierRatio <= MaximumTextSizeMultiplier)
+            return true;
+    }
+    return false;
+}
+
+void wxWebView::IncreaseTextSize()
+{
+    if (CanIncreaseTextSize())
+    {
+        m_textMagnifier = m_textMagnifier*TextSizeMultiplierRatio;
+        m_impl->frame->setZoomFactor((int)rint(m_textMagnifier*100));
+    }
+}
+
+bool wxWebView::CanDecreaseTextSize()
+{
+    if (m_impl->frame)
+    {
+        if (m_textMagnifier/TextSizeMultiplierRatio >= MinimumTextSizeMultiplier)
+            return true;
+    }
+    return false;
+}
+
+void wxWebView::DecreaseTextSize()
+{        
+    if (CanDecreaseTextSize())
+    {
+        m_textMagnifier = m_textMagnifier/TextSizeMultiplierRatio;
+        m_impl->frame->setZoomFactor( (int)rint(m_textMagnifier*100));
+    }
+}
+
+void wxWebView::MakeEditable(bool enable)
+{
+    m_isEditable = enable;
+}
+
+
+/* 
+ * Event forwarding functions to send events down to WebCore.
+ */
+
+void wxWebView::OnPaint(wxPaintEvent& event)
+{
+// FIXME: We should use buffered drawing under Win/Linux to avoid flicker and such.
+#if 0 //ndef __WXMAC__
+    wxBufferedPaintDC dc(this, wxBUFFER_CLIENT_AREA);
+#else
+    wxPaintDC dc(this);
+    DoPrepareDC(dc);
+#endif
+    if (IsShown() && m_impl->frame && m_impl->frame->document())
+    {
+#if USE(WXGC)
+        wxGraphicsContext* gcdc;
+        gcdc = wxGraphicsContext::Create(dc);
+#endif
+
+        if (dc.IsOk())
+        {
+            wxRect paintRect = GetRect();
+            int x = 0;
+            int y = 0;
+            GetViewStart(&x, &y);
+            int unitX = 1;
+            int unitY = 1;
+            GetScrollPixelsPerUnit(&unitX, &unitY);
+            paintRect.Offset(x * unitX, y * unitY);
+
+#if USE(WXGC)
+            gcdc->Translate( -(x * unitX), -(y * unitY));
+            WebCore::GraphicsContext* gc = new WebCore::GraphicsContext(gcdc);
+#else
+            WebCore::GraphicsContext* gc = new WebCore::GraphicsContext(&dc);
+#endif
+            if (gc && !m_impl->frameView->needsLayout())
+                m_impl->frame->paint(gc, paintRect);
+        }
+    }
+    //event.Skip();
+}
+
+void wxWebView::OnSize(wxSizeEvent& event)
+{
+    // FIXME: Even with the below test, on Win
+    // I get m_impl->frame vars in an undefined state
+    if (m_isInitialized && m_impl->frame && m_impl->frameView) {
+        WebCore::RenderObject *renderer = m_impl->frame->renderer();
+        if (renderer)
+            renderer->setNeedsLayout(true);
+        m_impl->frameView->scheduleRelayout();
+    }
+    event.Skip();
+
+}
+
+void wxWebView::OnMouseEvents(wxMouseEvent& event)
+{
+    event.Skip();
+    
+    if (!m_impl->frame  && m_impl->frameView)
+        return; 
+        
+    wxPoint globalPoint = ClientToScreen(event.GetPosition());
+
+    wxEventType type = event.GetEventType();
+    
+    if (type == wxEVT_MOUSEWHEEL)
+    {
+        WebCore::PlatformWheelEvent wkEvent(event, globalPoint);
+        m_impl->frame->eventHandler()->handleWheelEvent(wkEvent);
+        return;
+    }
+    
+    WebCore::PlatformMouseEvent wkEvent(event, globalPoint);
+
+    if (type == wxEVT_LEFT_DOWN || type == wxEVT_MIDDLE_DOWN || type == wxEVT_RIGHT_DOWN)
+        m_impl->frame->eventHandler()->handleMousePressEvent(wkEvent);
+    
+    else if (type == wxEVT_LEFT_UP || type == wxEVT_MIDDLE_UP || type == wxEVT_RIGHT_UP || 
+                type == wxEVT_LEFT_DCLICK || type == wxEVT_MIDDLE_DCLICK || type == wxEVT_RIGHT_DCLICK)
+        m_impl->frame->eventHandler()->handleMouseReleaseEvent(wkEvent);
+
+    else if (type == wxEVT_MOTION)
+        m_impl->frame->eventHandler()->handleMouseMoveEvent(wkEvent);
+}
+
+bool wxWebView::CanCopy()
+{
+    if (m_impl->frame && m_impl->frameView)
+    {
+        return (m_impl->frame->editor()->canCopy() || m_impl->frame->editor()->canDHTMLCopy());
+    }
+    return false;
+}
+
+void wxWebView::Copy()
+{
+    if (CanCopy())
+    {
+        m_impl->frame->editor()->copy();
+    }
+}
+
+bool wxWebView::CanCut()
+{
+    if (m_impl->frame && m_impl->frameView)
+    {
+        return (m_impl->frame->editor()->canCut() || m_impl->frame->editor()->canDHTMLCut());
+    }
+    return false;
+}
+
+void wxWebView::Cut()
+{
+    if (CanCut())
+    {
+        m_impl->frame->editor()->cut();
+    }
+}
+
+bool wxWebView::CanPaste()
+{
+    if (m_impl->frame && m_impl->frameView)
+    {
+        return (m_impl->frame->editor()->canPaste() || m_impl->frame->editor()->canDHTMLPaste());
+    }
+    return false;
+}
+
+void wxWebView::Paste()
+{
+    if (CanPaste())
+    {
+        m_impl->frame->editor()->paste();
+    }
+}
+
+void wxWebView::OnKeyEvents(wxKeyEvent& event)
+{
+    if (m_impl->frame && m_impl->frameView)
+    {
+        // WebCore doesn't handle these events itself, so we need to do
+        // it and not send the event down or else CTRL+C will erase the text
+        // and replace it with c.
+        if (event.CmdDown() && event.GetKeyCode() == (int)'C')
+        {
+            Copy();
+        }
+        else if (event.CmdDown() && event.GetKeyCode() == (int)'X')
+        {
+            Cut();
+        }
+        else if (event.CmdDown() && event.GetKeyCode() == (int)'V')
+        {
+            Paste();
+        }
+        else
+        {
+            WebCore::PlatformKeyboardEvent wkEvent(event);
+            if (event.GetEventType() == wxEVT_CHAR)
+            {
+                // FIXME: This doesn't ever seem to get triggered.
+                if (m_impl->frame->eventHandler()->handleTextInputEvent(wxString(event.GetUnicodeKey())))
+                    return;
+            }
+            else
+            {
+                if (m_impl->frame->eventHandler()->keyEvent(wkEvent))
+                    return;
+            }
+        }
+    }
+    event.Skip();
+}
+
+void wxWebView::OnSetFocus(wxFocusEvent& event)
+{
+    if (m_impl->frame)
+    {
+        m_impl->frame->setWindowHasFocus(true);
+    }
+    event.Skip();
+}
+
+void wxWebView::OnKillFocus(wxFocusEvent& event)
+{
+    if (m_impl->frame)
+    {
+        m_impl->frame->setWindowHasFocus(false);
+    }
+    event.Skip();
+}
+
+void wxWebView::OnActivate(wxActivateEvent& event)
+{
+    if (m_impl->frame)
+    {
+        m_impl->frame->setIsActive(event.GetActive());
+    }
+    event.Skip();
+}

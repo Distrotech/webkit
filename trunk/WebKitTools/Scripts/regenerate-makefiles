@@ -44,10 +44,9 @@ DEPS_PREFIX=/usr/local
 mkdir -p $DL_DIR
 mkdir -p $DEPS_PREFIX
 
-BKL_VERSION="0.2.0"
-BKL_TARBALL="bakefile-$BKL_VERSION-msvs2005.tar.gz"
-BKL_URL="http://kevino.theolliviers.com/$BKL_TARBALL"
-#BKL_URL="http://mesh.dl.sourceforge.net/sourceforge/bakefile/$BKL_TARBALL"
+BKL_VERSION="0.2.2"
+BKL_TARBALL="bakefile-$BKL_VERSION.tar.gz"
+BKL_URL="http://wxwebkit.wxcommunity.com/$BKL_TARBALL"
 
 BKFILE=`which bakefile`
 
