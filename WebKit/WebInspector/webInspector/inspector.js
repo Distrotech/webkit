@@ -27,6 +27,8 @@
  */
 
 var Inspector;
+var rootDOMNode = null;
+var focusedDOMNode = null;
 var ignoreWhitespace = true;
 var showUserAgentStyles = true;
 
@@ -328,7 +330,7 @@ function refreshSearch()
         }
 
         try {
-            var focusedNodeDocument = Inspector.focusedDOMNode().ownerDocument;
+            var focusedNodeDocument = focusedDOMNode.ownerDocument;
             var nodeList = focusedNodeDocument.evaluate(xpathQuery, focusedNodeDocument, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
             for (var i = 0; i < nodeList.snapshotLength; ++i) {
                 searchResults.push(nodeList.snapshotItem(i));
@@ -341,6 +343,7 @@ function refreshSearch()
         for (var i = 0; i < searchResults.length; ++i) {
             var item = new DOMNodeTreeElement(searchResults[i]);
             treeOutline.appendChild(item);
+            item.collapse();
             if (!i)
                 item.select();
         }
@@ -440,21 +443,26 @@ function treeElementRevealed(element)
 
 function treeElementSelected(element)
 {
-    if (element.representedObject)
-        Inspector.setFocusedDOMNode(element.representedObject);
+    updateFocusedNode(element.representedObject);
 
     // update the disabled state of the traverse buttons
     var traverseUp = document.getElementById("traverseUp");
-    traverseUp.disabled = !treeOutline.selectedTreeElement.traversePreviousTreeElement(false);
+    if (searchActive)
+        traverseUp.disabled = !treeOutline.selectedTreeElement.traversePreviousTreeElement(false);
+    else
+        traverseUp.disabled = (!element.representedObject.previousSibling && !element.representedObject.parentNode);
 
     var traverseDown = document.getElementById("traverseDown");
-    traverseDown.disabled = !treeOutline.selectedTreeElement.traverseNextTreeElement(false);
+    if (searchActive)
+        traverseDown.disabled = !treeOutline.selectedTreeElement.traverseNextTreeElement(false);
+    else
+        traverseDown.disabled = (!traverseNextNode.call(element.representedObject, ignoreWhitespace));
 }
 
 function treeElementDoubleClicked(element)
 {
-    if (element.hasChildren && element.representedObject)
-        Inspector.setRootDOMNode(element.representedObject);
+    if (element.hasChildren)
+        updateRootNode(element.representedObject);
 }
 
 function DOMNodeTreeElement(node)
@@ -515,13 +523,42 @@ function revealNodeInTreeOutline(node)
     return item;
 }
 
+function updateRootNode(node)
+{
+    if (!node || !rootDOMNode || !rootDOMNode.isSameNode(node)) {
+        rootDOMNode = node;
+        updateTreeOutline();
+    }
+}
+
+function updateFocusedNode(node)
+{
+    if (!node || !focusedDOMNode || !focusedDOMNode.isSameNode(node)) {
+        focusedDOMNode = node;
+
+        updatePanes();
+
+        if (focusedDOMNode) {
+//            if (!rootDOMNode.isSameNode(node) && !isAncestorNode.call(rootDOMNode, node))
+//                updateRootNode(firstCommonNodeAncestor.call(focusedDOMNode, node));
+
+            var item = treeOutline.findTreeElement(focusedDOMNode);
+            if (!item)
+                item = revealNodeInTreeOutline(focusedDOMNode);
+            if (item)
+                item.select();
+
+            Inspector.highlightDOMNode(focusedDOMNode);
+        }
+    }
+}
+
 function updateTreeOutline(dontRevealSelectedItem)
 {
     if (searchActive)
         return;
 
-    var rootNode = Inspector.rootDOMNode();
-    var item = treeOutline.findTreeElement(rootNode);
+    var item = treeOutline.findTreeElement(rootDOMNode);
 
     if (item && item.whitespaceIgnored !== ignoreWhitespace)
         item = null;
@@ -530,20 +567,20 @@ function updateTreeOutline(dontRevealSelectedItem)
 
     treeOutline.removeChildrenRecursive();
 
-    if (!rootNode) {
+    if (!rootDOMNode) {
         treeOutlineScrollArea.refresh();
         return;
     }
 
     if (!item)
-        item = new DOMNodeTreeElement(rootNode);
+        item = new DOMNodeTreeElement(rootDOMNode);
     treeOutline.appendChild(item);
     item.expand();
 
     if (dontRevealSelectedItem)
-        item = treeOutline.findTreeElement(Inspector.focusedDOMNode());
+        item = treeOutline.findTreeElement(focusedDOMNode);
     else
-        item = revealNodeInTreeOutline(Inspector.focusedDOMNode());
+        item = revealNodeInTreeOutline(focusedDOMNode);
 
     if (item)
         item.select();
@@ -554,7 +591,7 @@ function updateTreeOutline(dontRevealSelectedItem)
 
     var resetPopup = true;
     for (var i = 0; i < rootPopup.options.length; ++i) {
-        if (rootPopup.options[i].representedNode.isSameNode(rootNode)) {
+        if (rootPopup.options[i].representedNode.isSameNode(rootDOMNode)) {
             rootPopup.options[i].selected = true;
             resetPopup = false;
             break;
@@ -566,12 +603,12 @@ function updateTreeOutline(dontRevealSelectedItem)
 
     rootPopup.removeChildren();
 
-    var currentNode = rootNode;
+    var currentNode = rootDOMNode;
     while (currentNode) {
         var option = document.createElement("option");
         option.representedNode = currentNode;
         option.textContent = nodeDisplayName.call(currentNode);
-        if (currentNode.isSameNode(rootNode))
+        if (currentNode.isSameNode(rootDOMNode))
             option.selected = true;
         rootPopup.insertBefore(option, rootPopup.firstChild);
         currentNode = currentNode.parentNode;
@@ -582,7 +619,7 @@ function selectNewRoot(event)
 {
     var rootPopup = document.getElementById("treePopup");
     var option = rootPopup.options[rootPopup.selectedIndex];
-    Inspector.setRootDOMNode(option.representedNode);
+    updateRootNode(option.representedNode);
 }
 
 function treeKeypress(event)
@@ -593,7 +630,6 @@ function treeKeypress(event)
 function traverseTreeBackward(event)
 {
     var item;
-    var focusedNode = Inspector.focusedDOMNode();
 
     // traverse backward, holding the opton key will traverse only to the previous sibling
     if (event.altKey)
@@ -602,9 +638,6 @@ function traverseTreeBackward(event)
         item = treeOutline.selectedTreeElement.traversePreviousTreeElement(false);
 
     if (item) {
-        var root = Inspector.rootDOMNode();
-        if (!root.isSameNode(item.representedObject) && !isAncestorNode.call(root, item.representedObject))
-            Inspector.setRootDOMNode(firstCommonNodeAncestor.call(focusedNode, item.representedObject));
         item.reveal();
         item.select();
     }
@@ -613,7 +646,6 @@ function traverseTreeBackward(event)
 function traverseTreeForward(event)
 {
     var item;
-    var focusedNode = Inspector.focusedDOMNode();
 
     // traverse forward, holding the opton key will traverse only to the next sibling
     if (event.altKey)
@@ -622,9 +654,6 @@ function traverseTreeForward(event)
         item = treeOutline.selectedTreeElement.traverseNextTreeElement(false);
 
     if (item) {
-        var root = Inspector.rootDOMNode();
-        if (!root.isSameNode(item.representedObject) && !isAncestorNode.call(root, item.representedObject))
-            Inspector.setRootDOMNode(firstCommonNodeAncestor.call(focusedNode, item.representedObject));
         item.reveal();
         item.select();
     }
@@ -635,7 +664,7 @@ function updatePanes()
     for (var i = 0; i < tabNames.length; ++i)
         paneUpdateState[tabNames[i]] = false;
 
-    toggleNoSelection(!Inspector.focusedDOMNode());
+    toggleNoSelection(!focusedDOMNode);
     if (noSelection)
         return;
 
@@ -647,16 +676,15 @@ function updatePanes()
 
 function updateElementAttributes()
 {
-    var focusedNode = Inspector.focusedDOMNode();
     var attributesList = document.getElementById("elementAttributesList")
 
     attributesList.removeChildren();
 
-    if (!focusedNode.attributes.length)
+    if (!focusedDOMNode.attributes.length)
         attributesList.innerHTML = "<span class=\"disabled\">(none)</span>";
 
-    for (var i = 0; i < focusedNode.attributes.length; ++i) {
-        var attr = focusedNode.attributes[i];
+    for (var i = 0; i < focusedDOMNode.attributes.length; ++i) {
+        var attr = focusedDOMNode.attributes[i];
         var li = document.createElement("li");
 
         var span = document.createElement("span");
@@ -692,38 +720,37 @@ function updateElementAttributes()
 
 function updateNodePane()
 {
-    if (!Inspector)
+    if (!focusedDOMNode)
         return;
-    var focusedNode = Inspector.focusedDOMNode();
 
-    if (focusedNode.nodeType === Node.TEXT_NODE || focusedNode.nodeType === Node.COMMENT_NODE) {
+    if (focusedDOMNode.nodeType === Node.TEXT_NODE || focusedDOMNode.nodeType === Node.COMMENT_NODE) {
         document.getElementById("nodeNamespaceRow").style.display = "none";
         document.getElementById("elementAttributes").style.display = "none";
         document.getElementById("nodeContents").style.removeProperty("display");
 
-        document.getElementById("nodeContentsScrollview").textContent = focusedNode.nodeValue;
+        document.getElementById("nodeContentsScrollview").textContent = focusedDOMNode.nodeValue;
         nodeContentsScrollArea.refresh();
-    } else if (focusedNode.nodeType === Node.ELEMENT_NODE) {
+    } else if (focusedDOMNode.nodeType === Node.ELEMENT_NODE) {
         document.getElementById("elementAttributes").style.removeProperty("display");
         document.getElementById("nodeContents").style.display = "none";
 
         updateElementAttributes();
-        
-        if (focusedNode.namespaceURI.length > 0) {
-            document.getElementById("nodeNamespace").textContent = focusedNode.namespaceURI;
-            document.getElementById("nodeNamespace").title = focusedNode.namespaceURI;
+
+        if (focusedDOMNode.namespaceURI.length > 0) {
+            document.getElementById("nodeNamespace").textContent = focusedDOMNode.namespaceURI;
+            document.getElementById("nodeNamespace").title = focusedDOMNode.namespaceURI;
             document.getElementById("nodeNamespaceRow").style.removeProperty("display");
         } else {
             document.getElementById("nodeNamespaceRow").style.display = "none";
         }
-    } else if (focusedNode.nodeType === Node.DOCUMENT_NODE) {
+    } else if (focusedDOMNode.nodeType === Node.DOCUMENT_NODE) {
         document.getElementById("nodeNamespaceRow").style.display = "none";
         document.getElementById("elementAttributes").style.display = "none";
         document.getElementById("nodeContents").style.display = "none";
     }
 
-    document.getElementById("nodeType").textContent = nodeTypeName.call(focusedNode);
-    document.getElementById("nodeName").textContent = focusedNode.nodeName;
+    document.getElementById("nodeType").textContent = nodeTypeName.call(focusedDOMNode);
+    document.getElementById("nodeName").textContent = focusedDOMNode.nodeName;
 
     refreshScrollbars();
 }
@@ -735,9 +762,9 @@ var expandedStyleShorthands = [];
 
 function updateStylePane()
 {
-    var focusedNode = Inspector.focusedDOMNode();
-    if (focusedNode.nodeType === Node.TEXT_NODE && focusedNode.parentNode && focusedNode.parentNode.nodeType === Node.ELEMENT_NODE)
-        focusedNode = focusedNode.parentNode;
+    var styleNode = focusedDOMNode;
+    if (styleNode.nodeType === Node.TEXT_NODE && styleNode.parentNode && styleNode.parentNode.nodeType === Node.ELEMENT_NODE)
+        styleNode = styleNode.parentNode;
     var rulesArea = document.getElementById("styleRulesScrollview");
     var propertiesArea = document.getElementById("stylePropertiesTree");
 
@@ -746,14 +773,14 @@ function updateStylePane()
     styleRules = [];
     styleProperties = [];
 
-    if (focusedNode.nodeType === Node.ELEMENT_NODE) {
+    if (styleNode.nodeType === Node.ELEMENT_NODE) {
         document.getElementById("styleRules").style.removeProperty("display");
         document.getElementById("styleProperties").style.removeProperty("display");
         document.getElementById("noStyle").style.display = "none";
 
         var propertyCount = [];
 
-        var computedStyle = focusedNode.ownerDocument.defaultView.getComputedStyle(focusedNode);
+        var computedStyle = styleNode.ownerDocument.defaultView.getComputedStyle(styleNode);
         if (computedStyle && computedStyle.length) {
             var computedObj = {
                 isComputedStyle: true,
@@ -764,16 +791,16 @@ function updateStylePane()
             styleRules.push(computedObj);
         }
 
-        var focusedNodeName = focusedNode.nodeName.toLowerCase();
-        for (var i = 0; i < focusedNode.attributes.length; ++i) {
-            var attr = focusedNode.attributes[i];
+        var styleNodeName = styleNode.nodeName.toLowerCase();
+        for (var i = 0; i < styleNode.attributes.length; ++i) {
+            var attr = styleNode.attributes[i];
             if (attr.style) {
                 var attrStyle = {
                     attrName: attr.name,
                     style: attr.style,
                     subtitle: "element\u2019s \u201C" + attr.name + "\u201D attribute",
                 };
-                attrStyle.selectorText = focusedNodeName + "[" + attr.name;
+                attrStyle.selectorText = styleNodeName + "[" + attr.name;
                 if (attr.value.length)
                     attrStyle.selectorText += "=" + attr.value;
                 attrStyle.selectorText += "]";
@@ -781,17 +808,17 @@ function updateStylePane()
             }
         }
 
-        var matchedStyleRules = focusedNode.ownerDocument.defaultView.getMatchedCSSRules(focusedNode, "", !showUserAgentStyles);
+        var matchedStyleRules = styleNode.ownerDocument.defaultView.getMatchedCSSRules(styleNode, "", !showUserAgentStyles);
         if (matchedStyleRules) {
             for (var i = 0; i < matchedStyleRules.length; ++i) {
                 styleRules.push(matchedStyleRules[i]);
             }
         }
 
-        if (focusedNode.style.length) {
+        if (styleNode.style.length) {
             var inlineStyle = {
                 selectorText: "Inline Style Attribute",
-                style: focusedNode.style,
+                style: styleNode.style,
                 subtitle: "element\u2019s \u201Cstyle\u201D attribute",
             };
             styleRules.push(inlineStyle);
@@ -922,7 +949,7 @@ function updateStylePane()
         updateStyleProperties();
     } else {
         var noStyle = document.getElementById("noStyle");
-        noStyle.textContent = "Can't style " + nodeTypeName.call(focusedNode) + " nodes.";
+        noStyle.textContent = "Can't style " + nodeTypeName.call(styleNode) + " nodes.";
         document.getElementById("styleRules").style.display = "none";
         document.getElementById("styleProperties").style.display = "none";
         noStyle.style.removeProperty("display");
@@ -981,7 +1008,6 @@ function populateStyleListItem(li, prop, name)
 
 function updateStyleProperties()
 {
-    var focusedNode = Inspector.focusedDOMNode();
     var propertiesTree = document.getElementById("stylePropertiesTree");
     propertiesTree.removeChildren();
 
@@ -1123,9 +1149,8 @@ function setBoxMetrics(style, box, suffix)
 function updateMetricsPane()
 {
     var style;
-    var focusedNode = Inspector.focusedDOMNode();
-    if (focusedNode.nodeType === Node.ELEMENT_NODE)
-        style = focusedNode.ownerDocument.defaultView.getComputedStyle(focusedNode);
+    if (focusedDOMNode.nodeType === Node.ELEMENT_NODE)
+        style = focusedDOMNode.ownerDocument.defaultView.getComputedStyle(focusedDOMNode);
     if (!style || !style.length) {
         document.getElementById("noMetrics").style.removeProperty("display");
         document.getElementById("marginBoxTable").style.display = "none";
@@ -1161,11 +1186,10 @@ function updatePropertiesPane()
     // and separate items for each item in the prototype chain. For now, we implement
     // only the "all properties" part, and only for enumerable properties.
 
-    var focusedNode = Inspector.focusedDOMNode();
     var list = document.getElementById("jsPropertiesList");
     list.removeChildren();
 
-    for (var name in focusedNode) {
+    for (var name in focusedDOMNode) {
         var li = document.createElement("li");
 
         var span = document.createElement("span");
@@ -1173,7 +1197,7 @@ function updatePropertiesPane()
         span.textContent = name + ": ";
         li.appendChild(span);
 
-        var value = focusedNode[name];
+        var value = focusedDOMNode[name];
 
         span = document.createElement("span");
         span.className = "value";

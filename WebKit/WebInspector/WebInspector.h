@@ -49,7 +49,4 @@
 
 - (void)setFocusedDOMNode:(DOMNode *)node;
 - (DOMNode *)focusedDOMNode;
-
-- (void)setSearchQuery:(NSString *)query;
-- (NSString *)searchQuery;
 @end

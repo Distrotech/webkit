@@ -54,10 +54,13 @@
 {
     static WebInspector *_sharedWebInspector = nil;
     if (!_sharedWebInspector) {
-        _sharedWebInspector = [[[self alloc] init] autorelease];
-        CFRetain(_sharedWebInspector);
+        _sharedWebInspector = [[self alloc] init];
+        CFRetain(_sharedWebInspector); // hard retain for GC
+        [_sharedWebInspector release];
+
         _sharedWebInspector->_private->isSharedInspector = YES;
     }
+
     return _sharedWebInspector;
 }
 
@@ -71,6 +74,43 @@
     [self setWindowFrameAutosaveName:@"Web Inspector"];
 
     _private = [[WebInspectorPrivate alloc] init];
+
+    // Keep preferences separate from the rest of the client, making sure we are using expected preference values.
+    // One reason this is good is that it keeps the inspector out of history via "private browsing".
+
+    WebPreferences *preferences = [[WebPreferences alloc] init];
+    [preferences setAutosaves:NO];
+    [preferences setPrivateBrowsingEnabled:YES];
+    [preferences setLoadsImagesAutomatically:YES];
+    [preferences setJavaScriptEnabled:YES];
+    [preferences setAllowsAnimatedImages:YES];
+    [preferences setLoadsImagesAutomatically:YES];
+    [preferences setPlugInsEnabled:NO];
+    [preferences setJavaEnabled:NO];
+    [preferences setUserStyleSheetEnabled:NO];
+    [preferences setTabsToLinks:NO];
+    [preferences setMinimumFontSize:0];
+    [preferences setMinimumLogicalFontSize:9];
+
+    _private->webView = [[WebView alloc] initWithFrame:NSZeroRect frameName:nil groupName:nil];
+    [_private->webView setPreferences:preferences];
+    [_private->webView setFrameLoadDelegate:self];
+    [_private->webView setUIDelegate:self];
+#ifndef NDEBUG
+    [_private->webView setScriptDebugDelegate:self];
+#endif
+    [_private->webView setDrawsBackground:NO];
+    [_private->webView setProhibitsMainFrameScrolling:YES];
+    [_private->webView _setDashboardBehavior:WebDashboardBehaviorAlwaysSendMouseEventsToAllWindows to:YES];
+    [_private->webView _setDashboardBehavior:WebDashboardBehaviorAlwaysAcceptsFirstMouse to:YES];
+
+    [preferences release];
+
+    NSString *path = [[NSBundle bundleForClass:[self class]] pathForResource:@"inspector" ofType:@"html" inDirectory:@"webInspector"];
+    [[_private->webView mainFrame] loadRequest:[[[NSURLRequest alloc] initWithURL:[NSURL fileURLWithPath:path]] autorelease]];
+
+    while (!_private->webViewLoaded)
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
 
     return self;
 }
@@ -95,7 +135,7 @@
 {
     NSWindow *window = [super window];
     if (!window) {
-        NSPanel *window = [[WebInspectorPanel alloc] initWithContentRect:NSMakeRect(60.0f, 200.0f, 350.0f, 550.0f)\
+        NSPanel *window = [[WebInspectorPanel alloc] initWithContentRect:NSMakeRect(60.0f, 200.0f, 350.0f, 550.0f)
             styleMask:(NSBorderlessWindowMask | NSUtilityWindowMask) backing:NSBackingStoreBuffered defer:YES];
         [window setBackgroundColor:[NSColor clearColor]];
         [window setOpaque:NO];
@@ -111,36 +151,8 @@
         [window setDelegate:self];
         [window setMinSize:NSMakeSize(280.0f, 450.0f)];
 
-        // Keep preferences separate from the rest of the client, making sure we are using expected preference values.
-        // One reason this is good is that it keeps the inspector out of history via "private browsing".
-        WebPreferences *preferences = [[WebPreferences alloc] init];
-        [preferences setPrivateBrowsingEnabled:YES];
-        [preferences setLoadsImagesAutomatically:YES];
-        [preferences setPlugInsEnabled:YES];
-        [preferences setJavaScriptEnabled:YES];
-        [preferences setUserStyleSheetEnabled:NO];
-        [preferences setTabsToLinks:NO];
-        [preferences setMinimumFontSize:0];
-        [preferences setMinimumLogicalFontSize:9];
-
-        _private->webView = [[WebView alloc] initWithFrame:[[window contentView] frame] frameName:nil groupName:nil];
-        [_private->webView setPreferences:preferences];
-        [_private->webView setFrameLoadDelegate:self];
-        [_private->webView setUIDelegate:self];
-#ifndef NDEBUG
-        [_private->webView setScriptDebugDelegate:self];
-#endif
-        [_private->webView setDrawsBackground:NO];
-        [_private->webView setProhibitsMainFrameScrolling:YES];
-        [_private->webView _setDashboardBehavior:WebDashboardBehaviorAlwaysSendMouseEventsToAllWindows to:YES];
-        [_private->webView _setDashboardBehavior:WebDashboardBehaviorAlwaysAcceptsFirstMouse to:YES];
-
-        [preferences release];
-
+        [_private->webView setFrame:[[window contentView] frame]];
         [window setContentView:_private->webView];
-
-        NSString *path = [[NSBundle bundleForClass:[self class]] pathForResource:@"inspector" ofType:@"html" inDirectory:@"webInspector"];
-        [[_private->webView mainFrame] loadRequest:[[[NSURLRequest alloc] initWithURL:[NSURL fileURLWithPath:path]] autorelease]];
 
         [self setWindow:window];
         return window;
@@ -156,6 +168,9 @@
     [[NSNotificationCenter defaultCenter] removeObserver:self name:WebNodeHighlightExpiredNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:NSViewFrameDidChangeNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:NSSystemColorsDidChangeNotification object:nil];
+
+    [self setRootDOMNode:nil];
+    [self setFocusedDOMNode:nil];
     [self setWebFrame:nil];
 
     if (!_private->isSharedInspector)
@@ -169,9 +184,6 @@
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_applicationWillResignActive) name:NSApplicationWillResignActiveNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_applicationDidBecomeActive) name:NSApplicationDidBecomeActiveNotification object:nil];
 
-    [self _update];
-    [self _updateSystemColors];
-
     [super showWindow:sender];
 }
 
@@ -179,21 +191,21 @@
 
 - (void)setWebFrame:(WebFrame *)webFrame
 {
-    if ([webFrame isEqual:_private->webFrame])
+    if ([webFrame isEqual:_private->inspectedWebFrame])
         return;
 
-    if (_private->webFrame) {
-        [[NSNotificationCenter defaultCenter] removeObserver:self name:WebViewProgressFinishedNotification object:[_private->webFrame webView]];
-        [_private->webFrame _removeInspector:self];
+    if (_private->inspectedWebFrame) {
+        [[NSNotificationCenter defaultCenter] removeObserver:self name:WebViewProgressFinishedNotification object:[_private->inspectedWebFrame webView]];
+        [_private->inspectedWebFrame _removeInspector:self];
     }
 
-    [webFrame retain];
-    [_private->webFrame release];
-    _private->webFrame = webFrame;
+    id oldFrame = _private->inspectedWebFrame;
+    _private->inspectedWebFrame = [webFrame retain];
+    [oldFrame release];
 
-    if (_private->webFrame) {
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(inspectedWebViewProgressFinished:) name:WebViewProgressFinishedNotification object:[_private->webFrame webView]];
-        [_private->webFrame _addInspector:self];
+    if (_private->inspectedWebFrame) {
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(inspectedWebViewProgressFinished:) name:WebViewProgressFinishedNotification object:[_private->inspectedWebFrame webView]];
+        [_private->inspectedWebFrame _addInspector:self];
     }
 
     _private->preventHighlight = YES;
@@ -203,100 +215,39 @@
 
 - (WebFrame *)webFrame
 {
-    return _private->webFrame;
+    return _private->inspectedWebFrame;
 }
 
 #pragma mark -
 
 - (void)setRootDOMNode:(DOMNode *)node
 {
-    if ([node isSameNode:_private->rootNode])
+    if ([node isSameNode:[self rootDOMNode]])
         return;
 
-    [node retain];
-    [_private->rootNode release];
-    _private->rootNode = node;
-
-    [self _updateRoot];
+    NSArray *args = [NSArray arrayWithObject:(node ? (id)node : (id)[NSNull null])];
+    [[_private->webView windowScriptObject] callWebScriptMethod:@"updateRootNode" withArguments:args];
 }
 
 - (DOMNode *)rootDOMNode
 {
-    return _private->rootNode;
+    return [[_private->webView windowScriptObject] valueForKey:@"rootDOMNode"];
 }
 
 #pragma mark -
 
 - (void)setFocusedDOMNode:(DOMNode *)node
 {
-    if ([node isSameNode:_private->focusedNode])
+    if ([node isSameNode:[self focusedDOMNode]])
         return;
 
-    [[NSRunLoop currentRunLoop] cancelPerformSelector:@selector(_highlightNode:) target:self argument:_private->focusedNode];
-
-    [node retain];
-    [_private->focusedNode release];
-    _private->focusedNode = node;
-
-    DOMNode *root = _private->rootNode;
-    if (!root || (![root isSameNode:node] && ![root _isAncestorOfNode:node]))
-        [self setRootDOMNode:node];
-
-    if (!_private->webViewLoaded)
-        return;
-
-    [self _update];
-
-    if (!_private->preventHighlight) {
-        NSRect bounds = [node boundingBox];
-        if (!NSIsEmptyRect(bounds)) {
-            NSRect visible = [[[_private->webFrame frameView] documentView] visibleRect];
-            BOOL needsScroll = !NSContainsRect(visible, bounds) && !NSContainsRect(bounds, visible);
-
-            // only scroll if the bounds isn't in the visible rect and dosen't contain the visible rect
-            if (needsScroll) {
-                // scroll to the parent element if we aren't focused on an element
-                DOMElement *element = (DOMElement *)_private->focusedNode;
-                if (![element isKindOfClass:[DOMElement class]])
-                    element = (DOMElement *)[element parentNode];
-
-                if ([element isKindOfClass:[DOMElement class]])
-                    [element scrollIntoViewIfNeeded:YES];
-
-                // give time for the scroll to happen
-                [self performSelector:@selector(_highlightNode:) withObject:node afterDelay:0.25];
-            } else
-                [self _highlightNode:node];
-        } else
-            [_private->currentHighlight expire];
-    }
+    NSArray *args = [NSArray arrayWithObject:(node ? (id)node : (id)[NSNull null])];
+    [[_private->webView windowScriptObject] callWebScriptMethod:@"updateFocusedNode" withArguments:args];
 }
 
 - (DOMNode *)focusedDOMNode
 {
-    return _private->focusedNode;
-}
-
-#pragma mark -
-
-- (void)setSearchQuery:(NSString *)query
-{
-    if (_private->webViewLoaded) {
-        if (!query)
-            query = @"";
-        [[_private->webView windowScriptObject] callWebScriptMethod:@"performSearch" withArguments:[NSArray arrayWithObject:query]];
-        DOMHTMLInputElement *search = (DOMHTMLInputElement *)[_private->domDocument getElementById:@"search"];
-        [search setValue:query];
-    } else {
-        [query retain];
-        [_private->searchQuery release];
-        _private->searchQuery = query;
-    }
-}
-
-- (NSString *)searchQuery
-{
-    return _private->searchQuery;
+    return [[_private->webView windowScriptObject] valueForKey:@"focusedDOMNode"];
 }
 @end
 
@@ -338,6 +289,33 @@
     NSEvent *event = [NSEvent mouseEventWithType:NSLeftMouseUp location:[currentEvent locationInWindow] modifierFlags:[currentEvent modifierFlags] timestamp:[currentEvent timestamp] windowNumber:[[currentEvent window] windowNumber] context:[currentEvent context] eventNumber:[currentEvent eventNumber] clickCount:[currentEvent clickCount] pressure:[currentEvent pressure]];
     [[[[_private->webView mainFrame] frameView] documentView] mouseUp:event];
 }
+
+- (void)highlightDOMNode:(DOMNode *)node
+{
+    if (!_private->preventHighlight) {
+        NSRect bounds = [node boundingBox];
+        if (!NSIsEmptyRect(bounds)) {
+            NSRect visible = [[[_private->inspectedWebFrame frameView] documentView] visibleRect];
+            BOOL needsScroll = !NSContainsRect(visible, bounds) && !NSContainsRect(bounds, visible);
+
+            // only scroll if the bounds isn't in the visible rect and dosen't contain the visible rect
+            if (needsScroll) {
+                // scroll to the parent element if we aren't focused on an element
+                DOMElement *element = (DOMElement *)node;
+                if (![element isKindOfClass:[DOMElement class]])
+                    element = (DOMElement *)[element parentNode];
+
+                if ([element isKindOfClass:[DOMElement class]])
+                    [element scrollIntoViewIfNeeded:YES];
+
+                // give time for the scroll to happen
+                [self performSelector:@selector(_highlightNode:) withObject:node afterDelay:0.25];
+            } else
+                [self _highlightNode:node];
+        } else
+            [_private->currentHighlight expire];
+    }
+}
 @end
 
 #pragma mark -
@@ -345,30 +323,31 @@
 @implementation WebInspector (WebInspectorPrivate)
 - (IBAction)_toggleIgnoreWhitespace:(id)sender
 {
-    if (_private->webViewLoaded)
-        [[_private->webView windowScriptObject] callWebScriptMethod:@"toggleIgnoreWhitespace" withArguments:nil];
+    [[_private->webView windowScriptObject] callWebScriptMethod:@"toggleIgnoreWhitespace" withArguments:nil];
 }
 
 - (IBAction)_toggleShowUserAgentStyles:(id)sender
 {
-    if (_private->webViewLoaded)
-        [[_private->webView windowScriptObject] callWebScriptMethod:@"toggleShowUserAgentStyles" withArguments:nil];
+    [[_private->webView windowScriptObject] callWebScriptMethod:@"toggleShowUserAgentStyles" withArguments:nil];
 }
 
 - (void)_highlightNode:(DOMNode *)node
 {
+    if (![[self focusedDOMNode] isSameNode:node])
+        return;
+
     if (_private->currentHighlight) {
         [_private->currentHighlight expire];
         [_private->currentHighlight release];
         _private->currentHighlight = nil;
     }
 
-    NSView *view = [[_private->webFrame frameView] documentView];
+    NSView *view = [[_private->inspectedWebFrame frameView] documentView];
     NSRect bounds = NSIntersectionRect([node boundingBox], [view visibleRect]);
     if (!NSIsEmptyRect(bounds)) {
         NSArray *rects = nil;
         if ([node isKindOfClass:[DOMElement class]]) {
-            DOMCSSStyleDeclaration *style = [_private->domDocument getComputedStyle:(DOMElement *)node pseudoElement:@""];
+            DOMCSSStyleDeclaration *style = [[node ownerDocument] getComputedStyle:(DOMElement *)node pseudoElement:@""];
             if ([[style getPropertyValue:@"display"] isEqualToString:@"inline"])
                 rects = [node lineBoxRects];
         } else if ([node isKindOfClass:[DOMText class]]
@@ -394,36 +373,22 @@
     }
 }
 
-- (void)_update
-{
-    if (_private->webViewLoaded)
-        [[_private->webView windowScriptObject] callWebScriptMethod:@"updatePanes" withArguments:nil];
-}
-
-- (void)_updateRoot
-{
-    if (_private->webViewLoaded)
-        [[_private->webView windowScriptObject] callWebScriptMethod:@"updateTreeOutline" withArguments:nil];
-}
-
 - (void)_updateSystemColors
 {
-    if (!_private->webViewLoaded)
-        return;
-
     CGFloat red = 0.0f, green = 0.0f, blue = 0.0f;
     NSColor *color = [[NSColor alternateSelectedControlColor] colorUsingColorSpaceName:NSDeviceRGBColorSpace];
     [color getRed:&red green:&green blue:&blue alpha:NULL];
 
     NSString *colorText = [NSString stringWithFormat:@"rgba(%d,%d,%d,0.4) !important", (int)(red * 255), (int)(green * 255), (int)(blue * 255)];
     NSString *styleText = [NSString stringWithFormat:@".focused .selected { background-color: %1$@ } .blured .selected { border-color: %1$@ }", colorText];
-    DOMElement *style = [_private->domDocument getElementById:@"systemColors"];
+    DOMDocument *document = [[_private->webView mainFrame] DOMDocument];
+    DOMElement *style = [document getElementById:@"systemColors"];
     if (!style) {
-        style = [_private->domDocument createElement:@"style"];
-        [[[_private->domDocument getElementsByTagName:@"head"] item:0] appendChild:style];
+        style = [document createElement:@"style"];
+        [style setAttribute:@"id" value:@"systemColors"];
+        [[[document getElementsByTagName:@"head"] item:0] appendChild:style];
     }
 
-    [style setAttribute:@"id" value:@"systemColors"];
     [style setTextContent:styleText];
 }
 
@@ -439,10 +404,9 @@
 
 - (void)_webFrameDetached:(WebFrame *)frame
 {
+    [self setRootDOMNode:nil];
     [self setFocusedDOMNode:nil];
     [self setWebFrame:nil];
-    [self _update];
-    [self _updateRoot];
 }
 
 #pragma mark -
@@ -469,45 +433,40 @@
 
 - (void)inspectedWebViewProgressFinished:(NSNotification *)notification
 {
-    if ([notification object] == [[self webFrame] webView]) {
+    if ([notification object] == [[self webFrame] webView])
         [self setFocusedDOMNode:[[self webFrame] DOMDocument]];
-        [self _update];
-        [self _updateRoot];
-        [self _highlightNode:[self focusedDOMNode]];
-    }
 }
 
 #pragma mark -
+
+- (void)webView:(WebView *)sender windowScriptObjectAvailable:(WebScriptObject *)windowScriptObject
+{
+    // note: this is the Inspector's own WebView, not the one being inspected
+    [[sender windowScriptObject] setValue:self forKey:@"Inspector"];
+}
 
 - (void)webView:(WebView *)sender didFinishLoadForFrame:(WebFrame *)frame
 {
     // note: this is the Inspector's own WebView, not the one being inspected
     _private->webViewLoaded = YES;
-    [[sender windowScriptObject] setValue:self forKey:@"Inspector"];
-
-    [_private->domDocument release];
-    _private->domDocument = (DOMHTMLDocument *)[[[sender mainFrame] DOMDocument] retain];
 
     [[self window] invalidateShadow];
 
-    [self _update];
-    [self _updateRoot];
     [self _updateSystemColors];
-
-    if ([[self searchQuery] length])
-        [self setSearchQuery:[self searchQuery]];
-
-    [self _highlightNode:[self focusedDOMNode]];
 }
 
 - (void)webView:(WebView *)sender runJavaScriptAlertPanelWithMessage:(NSString *)message initiatedByFrame:(WebFrame *)frame
 {
+    // note: this is the Inspector's own WebView, not the one being inspected
+#ifndef NDEBUG
     NSLog(@"%@", message);
+#endif
 }
 
 #ifndef NDEBUG
 - (void)webView:(WebView *)view didParseSource:(NSString *)source baseLineNumber:(unsigned)baseLine fromURL:(NSURL *)url sourceId:(int)sid forWebFrame:(WebFrame *)webFrame
 {
+    // note: this is the Inspector's own WebView, not the one being inspected
     if (!_private->debugFileMap)
         _private->debugFileMap = [[NSMutableDictionary alloc] init];
     if (url)
@@ -516,6 +475,7 @@
 
 - (void)webView:(WebView *)view exceptionWasRaised:(WebScriptCallFrame *)frame sourceId:(int)sid line:(int)lineno forWebFrame:(WebFrame *)webFrame
 {
+    // note: this is the Inspector's own WebView, not the one being inspected
     NSURL *url = [_private->debugFileMap objectForKey:[NSNumber numberWithInt:sid]];
     NSLog(@"JS exception: %@ on %@ line %d", [[frame exception] valueForKey:@"message"], url, lineno);
 
@@ -543,30 +503,11 @@
 - (void)dealloc
 {
     [webView release];
-    [domDocument release];
-    [webFrame release];
-    [rootNode release];
-    [focusedNode release];
-    [searchQuery release];
+    [inspectedWebFrame release];
     [currentHighlight release];
 #ifndef NDEBUG
     [debugFileMap release];
 #endif
     [super dealloc];
-}
-@end
-
-#pragma mark -
-
-@implementation DOMNode (DOMNodeInspectorAdditions)
-- (BOOL)_isAncestorOfNode:(DOMNode *)node
-{
-    DOMNode *currentNode = [node parentNode];
-    while (currentNode) {
-        if ([self isSameNode:currentNode])
-            return YES;
-        currentNode = [currentNode parentNode];
-    }
-    return NO;
 }
 @end

@@ -41,11 +41,7 @@
 {
 @public
     WebView *webView;
-    DOMHTMLDocument *domDocument;
-    WebFrame *webFrame;
-    DOMNode *rootNode;
-    DOMNode *focusedNode;
-    NSString *searchQuery;
+    WebFrame *inspectedWebFrame;
     WebNodeHighlight *currentHighlight;
 #ifndef NDEBUG
     NSMutableDictionary *debugFileMap;
@@ -58,11 +54,5 @@
 
 @interface WebInspector (WebInspectorPrivate)
 - (void)_highlightNode:(DOMNode *)node;
-- (void)_update;
-- (void)_updateRoot;
 - (void)_updateSystemColors;
-@end
-
-@interface DOMNode (DOMNodeInspectorAdditions)
-- (BOOL)_isAncestorOfNode:(DOMNode *)node;
 @end
