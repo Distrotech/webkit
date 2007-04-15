@@ -222,9 +222,6 @@
 
 - (void)setRootDOMNode:(DOMNode *)node
 {
-    if ([node isSameNode:[self rootDOMNode]])
-        return;
-
     NSArray *args = [NSArray arrayWithObject:(node ? (id)node : (id)[NSNull null])];
     [[_private->webView windowScriptObject] callWebScriptMethod:@"updateRootNode" withArguments:args];
 }
@@ -238,9 +235,6 @@
 
 - (void)setFocusedDOMNode:(DOMNode *)node
 {
-    if ([node isSameNode:[self focusedDOMNode]])
-        return;
-
     NSArray *args = [NSArray arrayWithObject:(node ? (id)node : (id)[NSNull null])];
     [[_private->webView windowScriptObject] callWebScriptMethod:@"updateFocusedNode" withArguments:args];
 }
