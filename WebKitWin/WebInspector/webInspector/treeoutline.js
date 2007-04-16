@@ -180,7 +180,6 @@ TreeOutline.prototype.removeChild = function(child)
 
     this._forgetTreeElement(child);
     child._detach();
-    child.removeChildren();
 }
 
 TreeOutline.prototype.removeChildren = function()
@@ -189,7 +188,6 @@ TreeOutline.prototype.removeChildren = function()
         var child = this.children[i];
         this._forgetTreeElement(child);
         child._detach();
-        child.removeChildren();
     }
 
     this.children = [];
@@ -260,7 +258,6 @@ TreeElement.prototype.removeChild = function(child)
 
     this.treeOutline._forgetTreeElement(child);
     child._detach();
-    child.removeChildren();
 }
 
 TreeElement.prototype._attach = function()
@@ -306,7 +303,6 @@ TreeElement.prototype.removeChildren = function()
         var child = this.children[i];
         this.treeOutline._forgetTreeElement(child);
         child._detach();
-        child.removeChildren();
     }
 
     this.children = [];
