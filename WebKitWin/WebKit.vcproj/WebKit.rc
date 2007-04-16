@@ -3,55 +3,12 @@
 #include "resource.h"
 #include "autoversion.h"
 
-#define APSTUDIO_READONLY_SYMBOLS
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 2 resource.
-//
-#include "afxres.h"
-
-/////////////////////////////////////////////////////////////////////////////
-#undef APSTUDIO_READONLY_SYMBOLS
-
-/////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-#pragma code_page(1252)
-#endif //_WIN32
-
 /////////////////////////////////////////////////////////////////////////////
 //
 // TYPELIB
 //
 
 IDR_WEBKIT              TYPELIB                 "WebKit.tlb"
-
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-1 TEXTINCLUDE 
-BEGIN
-    "resource.h\0"
-END
-
-3 TEXTINCLUDE 
-BEGIN
-    "\r\n"
-END
-
-2 TEXTINCLUDE 
-BEGIN
-    "#include ""afxres.h""\r\n"
-END
-
-#endif    // APSTUDIO_INVOKED
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -103,18 +60,3 @@ IDR_URL_ICON                     PNG                     "urlIcon.png"
 IDR_NULL_PLUGIN                  PNG                     "nullplugin.png"
 IDR_DELETE_BUTTON                PNG                     "deleteButton.png"
 IDR_DELETE_BUTTON_PRESSED        PNG                     "deleteButtonPressed.png"
-#endif    // English (U.S.) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-

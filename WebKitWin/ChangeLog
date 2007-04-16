@@ -1,3 +1,15 @@
+2007-04-16  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam.
+        
+        Visual Studio Express compatibility for WebKit build (except for DRT)
+
+        * WebDragClient.cpp: Removed unused header (atlsafe.h)
+        * WebKit.vcproj/WebKit.rc: Removed afxres.h and related code
+        * WebKit.vcproj/WebKit.sln: Don't use a sln folder - they aren't supported by express
+        * WebKit.vcproj/WebKit.vcproj: Add explicit lib references for Windows system libs (VS express doesn't include these)
+        * WebView.cpp: Removed unused header (atldef.h)
+
 2007-04-16  Adam Roben  <aroben@apple.com>
 
         Merge in r20872.

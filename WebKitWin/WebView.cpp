@@ -84,7 +84,6 @@
 #include <JavaScriptCore/collector.h>
 #include <JavaScriptCore/value.h>
 #include <CFNetwork/CFURLProtocolPriv.h>
-#include <atldef.h>
 #include <tchar.h>
 #include <windowsx.h>
 #include <ShlObj.h>

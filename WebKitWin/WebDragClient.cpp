@@ -29,7 +29,6 @@
 #include "WebKitGraphics.h"
 #include "WebView.h"
 
-#include <atlsafe.h>
 #include <shlobj.h>
 #include <CoreGraphics/CoreGraphics.h>
 
