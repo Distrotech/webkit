@@ -1,3 +1,11 @@
+2007-04-16  Adam Roben  <aroben@apple.com>
+
+        Merge in r20840.
+
+        * WebInspector/webInspector/inspector.html:
+        * WebInspector/webInspector/inspector.js:
+        * WebInspector/webInspector/treeoutline.js: Added.
+
 2007-04-14  Adam Roben  <aroben@apple.com>
 
         * WebKit.vcproj/WebKitGUID.vcproj: Need to use WebKitConfigSuffix
