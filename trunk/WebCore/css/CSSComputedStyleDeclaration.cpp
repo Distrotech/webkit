@@ -168,10 +168,7 @@ static const int computedProperties[] = {
     CSS_PROP__WEBKIT_USER_DRAG,
     CSS_PROP__WEBKIT_USER_MODIFY,
     CSS_PROP__WEBKIT_USER_SELECT,
-
-#if PLATFORM(MAC)
     CSS_PROP__WEBKIT_DASHBOARD_REGION,
-#endif
 };
 
 const unsigned numComputedProperties = sizeof(computedProperties) / sizeof(computedProperties[0]);
@@ -246,11 +243,11 @@ static PassRefPtr<CSSValue> valueForTextAlign(ETextAlign align)
             return new CSSPrimitiveValue(CSS_VAL_CENTER);
         case JUSTIFY:
             return new CSSPrimitiveValue(CSS_VAL_JUSTIFY);
-        case KHTML_LEFT:
+        case WEBKIT_LEFT:
             return new CSSPrimitiveValue(CSS_VAL__WEBKIT_LEFT);
-        case KHTML_RIGHT:
+        case WEBKIT_RIGHT:
             return new CSSPrimitiveValue(CSS_VAL__WEBKIT_RIGHT);
-        case KHTML_CENTER:
+        case WEBKIT_CENTER:
             return new CSSPrimitiveValue(CSS_VAL__WEBKIT_CENTER);
     }
     ASSERT_NOT_REACHED();
@@ -1470,7 +1467,6 @@ PassRefPtr<CSSValue> CSSComputedStyleDeclaration::getPropertyCSSValue(int proper
                 return new CSSPrimitiveValue(CSS_VAL_CONTENT_BOX);
             return new CSSPrimitiveValue(CSS_VAL_BORDER_BOX);
         case CSS_PROP__WEBKIT_DASHBOARD_REGION:
-#if PLATFORM(MAC)
         {
             const Vector<StyleDashboardRegion>& regions = style->dashboardRegions();
             unsigned count = regions.size();
@@ -1500,9 +1496,6 @@ PassRefPtr<CSSValue> CSSComputedStyleDeclaration::getPropertyCSSValue(int proper
             }
             return new CSSPrimitiveValue(firstRegion.release());
         }
-#else
-            break;
-#endif
         case CSS_PROP__WEBKIT_APPEARANCE:
             return valueForAppearance(style->appearance());
         case CSS_PROP__WEBKIT_FONT_SIZE_DELTA:

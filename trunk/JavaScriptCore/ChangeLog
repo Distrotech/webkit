@@ -1,3 +1,48 @@
+2007-04-12  Deneb Meketa  <dmeketa@adobe.com>
+
+        Reviewed by Darin Adler.
+
+        http://bugs.webkit.org/show_bug.cgi?id=13029
+        rdar://problem/4994849
+        Bug 13029: Permit NPAPI plug-ins to see HTTP response headers.
+        This doesn't actually change JavaScriptCore, but that's where npapi.h is.
+
+        * bindings/npapi.h:
+        Add headers member to NPStream struct.  Also increase NP_VERSION_MINOR to 18.
+        Increasing to >= 17 allows plug-ins to safely detect whether to look for
+        NPStream::headers.  Increasing from 17 to 18 reflects presence of NPObject
+        enumeration, which was added in a prior patch, and which has been agreed to
+        constitute version 18 by the plugin-futures list.  Also add other missing
+        bits of npapi.h to catch up from 14 to 18.  This includes features that are
+        not implemented in WebKit, but those are safely stubbed.
+
+2007-04-10  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Mark Rowe.
+        
+        Fixed last check-in to print in release builds, too.
+
+        * kjs/collector.cpp:
+        (KJS::getPlatformThreadRegisters):
+
+2007-04-10  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by John Sullivan, Darin Adler.
+        
+        Fixed <rdar://problem/5121899> JavaScript garbage collection leads to 
+        later crash under Rosetta (should abort or leak instead?)
+        
+        Log an error message and crash if the kernel reports failure during GC.
+        We decided to do this instead of just leaking because we don't want people
+        to get the mistaken impression that running in Rosetta is a supported
+        configurtion.
+        
+        The CRASH macro will also hook into CrashReporter, which will tell us if 
+        many (any?) users run into this issue.
+
+        * kjs/collector.cpp:
+        (KJS::getPlatformThreadRegisters):
+
 2007-04-06  Krzysztof Kowalczyk  <kkowalczyk@gmail.com>
 
         Reviewed by darin.

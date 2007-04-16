@@ -98,7 +98,7 @@ void ChromeClientWx::takeFocus(WebCore::FocusDirection)
 }
 
 
-WebCore::Page* ChromeClientWx::createWindow(const WebCore::FrameLoadRequest& request)
+WebCore::Page* ChromeClientWx::createWindow(WebCore::Frame*, const WebCore::FrameLoadRequest& request)
 {
     WebCore::Page* myPage = 0;
     wxWebFrame* newFrame = new wxWebFrame(wxTheApp->GetAppName());
@@ -116,7 +116,7 @@ WebCore::Page* ChromeClientWx::createWindow(const WebCore::FrameLoadRequest& req
     return myPage;
 }
 
-WebCore::Page* ChromeClientWx::createModalDialog(const WebCore::FrameLoadRequest&)
+WebCore::Page* ChromeClientWx::createModalDialog(WebCore::Frame*, const WebCore::FrameLoadRequest&)
 {
     notImplemented();
     return 0;

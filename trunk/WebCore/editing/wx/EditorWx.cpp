@@ -40,5 +40,11 @@ void Editor::markMisspellings(const Selection& selection)
 
 }
 
+void WebCore::Editor::markBadGrammar(WebCore::Selection const&)
+{
+
 }
+
+}
+
 

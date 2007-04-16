@@ -51,6 +51,7 @@ namespace KJS {
 namespace WebCore {
 
     class AuthenticationChallenge;
+    class CachedPage;
     class Document;
     class DocumentLoader;
     class Element;
@@ -66,8 +67,6 @@ namespace WebCore {
     class NavigationAction;
     class Node;
     class Page;
-    class PageCache;
-    class PageState;
     class RenderPart;
     class ResourceError;
     class ResourceLoader;
@@ -264,8 +263,8 @@ namespace WebCore {
         void setDefersLoading(bool);
 
         void changeLocation(const String& URL, const String& referrer, bool lockHistory = true, bool userGesture = false);
-        void urlSelected(const ResourceRequest&, const String& target, Event*, bool lockHistory = false);
-        void urlSelected(const FrameLoadRequest&, Event*);
+        void urlSelected(const ResourceRequest&, const String& target, Event*, bool lockHistory, bool userGesture);
+        void urlSelected(const FrameLoadRequest&, Event*, bool userGesture);
       
         bool requestFrame(HTMLFrameOwnerElement*, const String& URL, const AtomicString& frameName);
         Frame* loadSubframe(HTMLFrameOwnerElement*, const KURL& URL, const String& name, const String& referrer);
@@ -287,7 +286,7 @@ namespace WebCore {
         String baseTarget() const;
         KURL dataURLBaseFromRequest(const ResourceRequest& request) const;
 
-        void scheduleRedirection(double delay, const String& URL, bool lockHistory = true);
+        void scheduleRedirection(double delay, const String& URL);
 
         void scheduleLocationChange(const String& URL, const String& referrer, bool lockHistory = true, bool userGesture = false);
         void scheduleRefresh(bool userGesture = false);
@@ -394,7 +393,7 @@ namespace WebCore {
         bool shouldGoToHistoryItem(HistoryItem*) const;
         bool shouldTreatURLAsSameAsCurrent(const KURL&) const;
 
-        void commitProvisionalLoad(PassRefPtr<PageCache>);
+        void commitProvisionalLoad(PassRefPtr<CachedPage>);
 
         void goToItem(HistoryItem*, FrameLoadType);
         void saveDocumentAndScrollState();
@@ -426,10 +425,11 @@ namespace WebCore {
         void loadItem(HistoryItem*, FrameLoadType);
         bool urlsMatchItem(HistoryItem*) const;
         void purgePageCache();
-        void invalidateCurrentItemPageCache();
+        void invalidateCurrentItemCachedPage();
         void recursiveGoToItem(HistoryItem*, HistoryItem*, FrameLoadType);
         bool childFramesMatchItem(HistoryItem*) const;
 
+        void addHistoryForCurrentLocation();
         void updateHistoryForBackForwardNavigation();
         void updateHistoryForReload();
         void updateHistoryForStandardLoad();
@@ -451,8 +451,8 @@ namespace WebCore {
         bool loadPlugin(RenderPart*, const KURL&, const String& mimeType,
         const Vector<String>& paramNames, const Vector<String>& paramValues, bool useFallback);
         
-        bool loadProvisionalItemFromPageCache();
-        bool createPageCache(HistoryItem*);
+        bool loadProvisionalItemFromCachedPage();
+        bool cachePageToHistoryItem(HistoryItem*);
 
         void emitLoadEvent();
 
@@ -472,7 +472,7 @@ namespace WebCore {
         void clearProvisionalLoad();
         void markLoadComplete();
         void commitProvisionalLoad();
-        void transitionToCommitted(PassRefPtr<PageCache>);
+        void transitionToCommitted(PassRefPtr<CachedPage>);
         void frameLoadCompleted();
 
         void mainReceivedError(const ResourceError&, bool isComplete);
@@ -510,7 +510,7 @@ namespace WebCore {
         void setState(FrameState);
 
         void closeOldDataSources();
-        void open(PageState&);
+        void open(CachedPage&);
         void opened();
         void updateHistoryAfterClientRedirect();
 

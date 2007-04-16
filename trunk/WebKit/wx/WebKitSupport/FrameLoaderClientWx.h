@@ -63,8 +63,6 @@ namespace WebCore {
         virtual void resetBackForwardList();
 
         virtual bool provisionalItemIsTarget() const;
-        virtual bool loadProvisionalItemFromPageCache();
-        virtual void invalidateCurrentItemPageCache();
 
         virtual bool privateBrowsingEnabled() const;
 
@@ -95,7 +93,7 @@ namespace WebCore {
         virtual void detachedFromParent3();
         virtual void detachedFromParent4();
 
-        virtual void loadedFromPageCache();
+        virtual void loadedFromCachedPage();
 
         virtual void frameLoaderDestroyed();
         virtual bool canHandleRequest(const WebCore::ResourceRequest&) const;
@@ -120,8 +118,6 @@ namespace WebCore {
         virtual void dispatchWillSubmitForm(FramePolicyFunction, PassRefPtr<FormState>);
 
         virtual void dispatchDidLoadMainResource(DocumentLoader*);
-        virtual void clearLoadingFromPageCache(DocumentLoader*);
-        virtual bool isLoadingFromPageCache(DocumentLoader*);
         virtual void revertToProvisionalState(DocumentLoader*);
         virtual void clearUnarchivingState(DocumentLoader*);
 
@@ -159,12 +155,12 @@ namespace WebCore {
         virtual String userAgent(const KURL&);
 
 
-        virtual void setDocumentViewFromPageCache(WebCore::PageCache*);
+        virtual void setDocumentViewFromCachedPage(WebCore::CachedPage*);
         virtual void updateGlobalHistoryForStandardLoad(const WebCore::KURL&);
         virtual void updateGlobalHistoryForReload(const WebCore::KURL&);
         virtual bool shouldGoToHistoryItem(WebCore::HistoryItem*) const;
         virtual void saveScrollPositionAndViewStateToItem(WebCore::HistoryItem*);
-        virtual void saveDocumentViewToPageCache(WebCore::PageCache*);
+        virtual void saveDocumentViewToCachedPage(WebCore::CachedPage*);
         virtual bool canCachePage() const;
         
         virtual void setMainDocumentError(WebCore::DocumentLoader*, const WebCore::ResourceError&);

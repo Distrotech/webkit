@@ -30,6 +30,10 @@
 #include <wtf/HashSet.h>
 #include <wtf/Noncopyable.h>
 
+#if PLATFORM(MAC)
+#include <wtf/RetainPtr.h>
+#endif
+
 // FIXME: This class is too high-level to be in the platform directory, since it
 // uses the DOM and makes calls to Editor. It should either be divested of its
 // knowledge of the frame and editor or moved into the editing directory.
@@ -60,6 +64,7 @@ class DocumentFragment;
 class Frame;
 class HitTestResult;
 class KURL;
+class Node;
 class Range;
 class String;
     
@@ -74,7 +79,7 @@ public:
     static Pasteboard* generalPasteboard();
     void writeSelection(Range*, bool canSmartCopyOrDelete, Frame*);
     void writeURL(const KURL&, const String&, Frame* = 0);
-    void writeImage(const HitTestResult&);
+    void writeImage(Node*, const KURL&, const String& title);
 #if PLATFORM(MAC)
     void writeFileWrapperAsRTFDAttachment(NSFileWrapper*);
 #endif
@@ -89,7 +94,7 @@ private:
 
 #if PLATFORM(MAC)
     Pasteboard(NSPasteboard *);
-    NSPasteboard *m_pasteboard;
+    RetainPtr<NSPasteboard> m_pasteboard;
 #endif
 
 #if PLATFORM(WIN)

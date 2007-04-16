@@ -152,8 +152,33 @@ bool Editor::canCut() const
     return canCopy() && canDelete();
 }
 
+static Node* imageNodeFromImageDocument(Document* document)
+{
+    if (!document)
+        return 0;
+    
+    if (!document->isImageDocument())
+        return 0;
+    
+    HTMLElement* body = document->body();
+    if (!body)
+        return 0;
+    
+    Node* node = body->firstChild();
+    if (!node)
+        return 0;
+    
+    if (!node->hasTagName(imgTag))
+        return 0;
+    
+    return node;
+}
+
 bool Editor::canCopy() const
 {
+    if (imageNodeFromImageDocument(m_frame->document()))
+        return true;
+        
     SelectionController* selectionController = m_frame->selectionController();
     return selectionController->isRange() && !selectionController->isInPasswordField();
 }
@@ -1414,7 +1439,13 @@ void Editor::copy()
         systemBeep();
         return;
     }
-    Pasteboard::generalPasteboard()->writeSelection(selectedRange().get(), canSmartCopyOrDelete(), m_frame);
+    
+    Document* document = m_frame->document();
+    if (Node* node = imageNodeFromImageDocument(document))
+        Pasteboard::generalPasteboard()->writeImage(node, document->URL(), document->title());
+    else
+        Pasteboard::generalPasteboard()->writeSelection(selectedRange().get(), canSmartCopyOrDelete(), m_frame);
+    
     didWriteSelectionToPasteboard();
 }
 
@@ -1465,7 +1496,11 @@ void Editor::copyURL(const KURL& url, const String& title)
 
 void Editor::copyImage(const HitTestResult& result)
 {
-    Pasteboard::generalPasteboard()->writeImage(result);
+    KURL url = result.absoluteLinkURL();
+    if (url.isEmpty())
+        url = result.absoluteImageURL();
+
+    Pasteboard::generalPasteboard()->writeImage(result.innerNonSharedNode(), url, result.altDisplayString());
 }
 
 bool Editor::isContinuousSpellCheckingEnabled()

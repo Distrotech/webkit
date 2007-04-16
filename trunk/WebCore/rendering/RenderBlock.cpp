@@ -1005,7 +1005,7 @@ void RenderBlock::determineHorizontalPosition(RenderObject* child)
         // to shift over as necessary to dodge any floats that might get in the way.
         if (child->avoidsFloats()) {
             int leftOff = leftOffset(m_height);
-            if (style()->textAlign() != KHTML_CENTER && child->style()->marginLeft().type() != Auto) {
+            if (style()->textAlign() != WEBKIT_CENTER && child->style()->marginLeft().type() != Auto) {
                 if (child->marginLeft() < 0)
                     leftOff += child->marginLeft();
                 chPos = max(chPos, leftOff); // Let the float sit in the child's margin if it can fit.
@@ -1027,7 +1027,7 @@ void RenderBlock::determineHorizontalPosition(RenderObject* child)
         int chPos = xPos - (child->width() + child->marginRight());
         if (child->avoidsFloats()) {
             int rightOff = rightOffset(m_height);
-            if (style()->textAlign() != KHTML_CENTER && child->style()->marginRight().type() != Auto) {
+            if (style()->textAlign() != WEBKIT_CENTER && child->style()->marginRight().type() != Auto) {
                 if (child->marginRight() < 0)
                     rightOff -= child->marginRight();
                 chPos = min(chPos, rightOff - child->width()); // Let the float sit in the child's margin if it can fit.
@@ -2847,11 +2847,11 @@ VisiblePosition RenderBlock::positionForCoordinates(int x, int y)
     if (isTable())
         return RenderFlow::positionForCoordinates(x, y); 
 
-    int top = borderTop() + paddingTop();
-    int bottom = top + contentHeight() + borderTopExtra() + borderBottomExtra();
+    int top = borderTop();
+    int bottom = top + borderTopExtra() + paddingTop() + contentHeight() + paddingBottom() + borderBottomExtra();
 
-    int left = borderLeft() + paddingLeft();
-    int right = left + contentWidth();
+    int left = borderLeft();
+    int right = left + paddingLeft() + contentWidth() + paddingRight();
 
     Node* n = element();
     

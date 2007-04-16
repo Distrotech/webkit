@@ -28,19 +28,7 @@
 
 #import <WebKit/WebPreferences.h>
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4
-
-// NOTE: #importing Quartz/Quartz.h causes an ambiguous signature conflict anywhere the method "count" is used.
-// To avoid this, we #import just this specific header. For this to work, the project's Framework Search Paths
-// has been modified to include /System/Library/Frameworks/Quartz.framework/Frameworks. Clients that include 
-// this file may have to do this same trick.
-#import <PDFKit/PDFView.h>
-
-#else
-
 #import <Quartz/Quartz.h>
-
-#endif
 
 // WebKitEditableLinkBehavior needs to match the EditableLinkBehavior enum in WebCore
 typedef enum {
@@ -82,6 +70,10 @@ typedef enum {
 // For debugging purposes, can be removed when no longer needed
 - (BOOL)_usePDFPreviewView;
 - (void)_setUsePDFPreviewView:(BOOL)newValue;
+
+// WARNING: Allowing paste through the DOM API opens a security hole. We only use it for testing purposes.
+- (BOOL)isDOMPasteAllowed;
+- (void)setDOMPasteAllowed:(BOOL)DOMPasteAllowed;
 
 // Other private methods
 - (size_t)_pageCacheSize;

@@ -107,6 +107,7 @@ NSMutableSet *disallowedURLs = 0;
 BOOL waitToDump;     // TRUE if waitUntilDone() has been called, but notifyDone() has not yet been called
 BOOL canOpenWindows;
 BOOL closeWebViews;
+BOOL closeRemainingWindowsWhenComplete = YES;
 
 static void runTest(const char *pathOrURL);
 static NSString *md5HashStringForBitmap(CGImageRef bitmap);
@@ -166,7 +167,7 @@ static BOOL workQueueFrozen;
 const unsigned maxViewHeight = 600;
 const unsigned maxViewWidth = 800;
 
-static CFMutableSetRef allWindowsRef;
+static CFMutableArrayRef allWindowsRef;
 
 static pthread_mutex_t javaScriptThreadsMutex = PTHREAD_MUTEX_INITIALIZER;
 static BOOL javaScriptThreadsShouldTerminate;
@@ -440,7 +441,8 @@ void dumpRenderTree(int argc, const char *argv[])
     [preferences setJavaScriptCanOpenWindowsAutomatically:YES];
     [preferences setEditableLinkBehavior:WebKitEditableLinkOnlyLiveWithShiftKey];
     [preferences setTabsToLinks:NO];
-
+    [preferences setDOMPasteAllowed:YES];
+    
     int option;
     while ((option = getopt_long(argc, (char * const *)argv, "", options, NULL)) != -1)
         switch (option) {
@@ -703,6 +705,39 @@ static NSString *serializeWebArchiveToXML(WebArchive *webArchive)
     return [[[NSMutableString alloc] initWithData:xmlData encoding:NSUTF8StringEncoding] autorelease];
 }
 
+static void dumpBackForwardListForWebView(WebView *view)
+{
+    printf("\n============== Back Forward List ==============\n");
+    WebBackForwardList *bfList = [view backForwardList];
+
+    // Print out all items in the list after prevTestBFItem, which was from the previous test
+    // Gather items from the end of the list, the print them out from oldest to newest
+    NSMutableArray *itemsToPrint = [[NSMutableArray alloc] init];
+    for (int i = [bfList forwardListCount]; i > 0; i--) {
+        WebHistoryItem *item = [bfList itemAtIndex:i];
+        // something is wrong if the item from the last test is in the forward part of the b/f list
+        assert(item != prevTestBFItem);
+        [itemsToPrint addObject:item];
+    }
+            
+    assert([bfList currentItem] != prevTestBFItem);
+    [itemsToPrint addObject:[bfList currentItem]];
+    int currentItemIndex = [itemsToPrint count] - 1;
+
+    for (int i = -1; i >= -[bfList backListCount]; i--) {
+        WebHistoryItem *item = [bfList itemAtIndex:i];
+        if (item == prevTestBFItem)
+            break;
+        [itemsToPrint addObject:item];
+    }
+
+    for (int i = [itemsToPrint count]-1; i >= 0; i--) {
+        dumpHistoryItem([itemsToPrint objectAtIndex:i], 8, i == currentItemIndex);
+    }
+    [itemsToPrint release];
+    printf("===============================================\n");
+}
+
 static void dump(void)
 {
     if (dumpTree) {
@@ -745,35 +780,12 @@ static void dump(void)
         }
 
         if (dumpBackForwardList) {
-            printf("\n============== Back Forward List ==============\n");
-            WebBackForwardList *bfList = [[frame webView] backForwardList];
-
-            // Print out all items in the list after prevTestBFItem, which was from the previous test
-            // Gather items from the end of the list, the print them out from oldest to newest
-            NSMutableArray *itemsToPrint = [[NSMutableArray alloc] init];
-            for (int i = [bfList forwardListCount]; i > 0; i--) {
-                WebHistoryItem *item = [bfList itemAtIndex:i];
-                // something is wrong if the item from the last test is in the forward part of the b/f list
-                assert(item != prevTestBFItem);
-                [itemsToPrint addObject:item];
+            unsigned count = [(NSArray *)allWindowsRef count];
+            for (unsigned i = 0; i < count; i++) {
+                NSWindow *window = [(NSArray *)allWindowsRef objectAtIndex:i];
+                WebView *webView = [[[window contentView] subviews] objectAtIndex:0];
+                dumpBackForwardListForWebView(webView);
             }
-            
-            assert([bfList currentItem] != prevTestBFItem);
-            [itemsToPrint addObject:[bfList currentItem]];
-            int currentItemIndex = [itemsToPrint count] - 1;
-
-            for (int i = -1; i >= -[bfList backListCount]; i--) {
-                WebHistoryItem *item = [bfList itemAtIndex:i];
-                if (item == prevTestBFItem)
-                    break;
-                [itemsToPrint addObject:item];
-            }
-
-            for (int i = [itemsToPrint count]-1; i >= 0; i--) {
-                dumpHistoryItem([itemsToPrint objectAtIndex:i], 8, i == currentItemIndex);
-            }
-            [itemsToPrint release];
-            printf("===============================================\n");
         }
 
         if (printSeparators)
@@ -1029,7 +1041,8 @@ static void dump(void)
             || aSelector == @selector(objCClassNameOf:)
             || aSelector == @selector(addDisallowedURL:)    
             || aSelector == @selector(setCanOpenWindows)
-            || aSelector == @selector(setCallCloseOnWebViews:))
+            || aSelector == @selector(setCallCloseOnWebViews:)
+            || aSelector == @selector(setCloseRemainingWindowsWhenComplete:))
         return NO;
     return YES;
 }
@@ -1064,6 +1077,8 @@ static void dump(void)
         return @"addDisallowedURL";
     if (aSelector == @selector(setCallCloseOnWebViews:))
         return @"setCallCloseOnWebViews";
+    if (aSelector == @selector(setCloseRemainingWindowsWhenComplete:))
+        return @"setCloseRemainingWindowsWhenComplete";
 
     return nil;
 }
@@ -1081,6 +1096,11 @@ static void dump(void)
     [backForwardList addItem:item];
     [backForwardList goToItem:item];
     [item release];
+}
+
+- (void)setCloseRemainingWindowsWhenComplete:(BOOL)closeWindows
+{
+    closeRemainingWindowsWhenComplete = closeWindows;
 }
 
 - (void)keepWebHistory
@@ -1400,11 +1420,31 @@ static void runTest(const char *pathOrURL)
     }
     pool = [[NSAutoreleasePool alloc] init];
     [[frame webView] setSelectedDOMRange:nil affinity:NSSelectionAffinityDownstream];
+    
+    if (closeRemainingWindowsWhenComplete) {
+        NSArray* array = [(NSArray *)allWindowsRef copy];
+        
+        unsigned count = [array count];
+        for (unsigned i = 0; i < count; i++) {
+            NSWindow *window = [array objectAtIndex:i];
+
+            // Don't try to close the main window
+            if (window == [[frame webView] window])
+                continue;
+            
+            WebView *webView = [[[window contentView] subviews] objectAtIndex:0];
+
+            [webView close];
+            [window close];
+        }
+        [array release];
+    }
+    
     [pool release];
     
     // We should only have our main window left when we're done
-    assert(CFSetGetCount(allWindowsRef) == 1);
-    assert(CFSetContainsValue(allWindowsRef, [[frame webView] window]));
+    assert(CFArrayGetCount(allWindowsRef) == 1);
+    assert(CFArrayGetValueAtIndex(allWindowsRef, 0) == [[frame webView] window]);
     
     if (_shouldIgnoreWebCoreNodeLeaks)
         [WebCoreStatistics stopIgnoringWebCoreNodeLeaks];
@@ -1603,13 +1643,12 @@ static void displayWebView()
 
 @end
 
-static CFSetCallBacks NonRetainingSetCallbacks = {
+static CFArrayCallBacks NonRetainingArrayCallbacks = {
     0,
     NULL,
     NULL,
     CFCopyDescription,
-    CFEqual,
-    CFHash
+    CFEqual
 };
 
 @implementation DumpRenderTreeWindow
@@ -1617,18 +1656,20 @@ static CFSetCallBacks NonRetainingSetCallbacks = {
 - (id)initWithContentRect:(NSRect)contentRect styleMask:(unsigned int)styleMask backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation
 {
     if (!allWindowsRef)
-        allWindowsRef = CFSetCreateMutable(NULL, 0, &NonRetainingSetCallbacks);
+        allWindowsRef = CFArrayCreateMutable(NULL, 0, &NonRetainingArrayCallbacks);
 
-    CFSetSetValue(allWindowsRef, self);
+    CFArrayAppendValue(allWindowsRef, self);
             
     return [super initWithContentRect:contentRect styleMask:styleMask backing:bufferingType defer:deferCreation];
 }
 
 - (void)dealloc
 {
-    assert(CFSetContainsValue(allWindowsRef, self));
-    
-    CFSetRemoveValue(allWindowsRef, self);
+    CFRange arrayRange = CFRangeMake(0, CFArrayGetCount(allWindowsRef));
+    CFIndex i = CFArrayGetFirstIndexOfValue(allWindowsRef, arrayRange, self);
+    assert(i != -1);
+
+    CFArrayRemoveValueAtIndex(allWindowsRef, i);
     [super dealloc];
 }
 

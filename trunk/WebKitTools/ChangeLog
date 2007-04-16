@@ -1,3 +1,81 @@
+2007-04-13  Adam Roben  <aroben@apple.com>
+
+        Rubberstamped by Anders.
+
+        * DumpRenderTree/TestNetscapePlugIn.subproj/PluginObject.c: #include
+        stdio.h so that snprintf is defined.
+
+2007-04-13  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Anders
+
+        Add the ability to dump the back/forward history of all windows open at the end of a test
+
+        * DumpRenderTree/DumpRenderTree.m:
+        (dumpBackForwardListForWebView): Dump B/F list for the given WebView
+        (dump): Call dumpBackForwardListForWebView for each WebView open after the test
+
+2007-04-13  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Brady.
+
+        By default, close any windows that have been opened during a test. This can be overridden by
+        calling setCloseRemainingWindowsWhenComplete(false).
+        
+        Change the windows set to an array so we can gurantee the enumeration order.
+        
+        * DumpRenderTree/DumpRenderTree.m:
+        (+[LayoutTestController isSelectorExcludedFromWebScript:]):
+        (+[LayoutTestController webScriptNameForSelector:]):
+        (-[LayoutTestController setCloseRemainingWindowsWhenComplete:]):
+        (runTest):
+        (-[DumpRenderTreeWindow initWithContentRect:styleMask:backing:defer:]):
+        (-[DumpRenderTreeWindow dealloc]):
+
+2007-04-13  Geoffrey Garen  <ggaren@apple.com>
+
+        Build fix.
+
+        * DumpRenderTree/TestNetscapePlugIn.subproj/PluginObject.c:
+        (handleCallback): Explicitly cast the void* returned by malloc.
+
+2007-04-12  Deneb Meketa  <dmeketa@adobe.com>
+
+        Reviewed by Darin Adler.
+
+        http://bugs.webkit.org/show_bug.cgi?id=13029
+        rdar://problem/4994849
+        Bug 13029: Permit NPAPI plug-ins to see HTTP response headers.
+        Changes in WebKitTools are only for the NPAPI test plugin.
+
+        * DumpRenderTree/TestNetscapePlugIn.subproj/PluginObject.c: main test logic.
+        (pluginInvoke): support null window argument for NPStream creation.
+        (pluginAllocate): initialization.
+        (pluginDeallocate): cleanup.
+        (handleCallback): add second JS callback arg: header dump.
+        (notifyStream): added; hook from NPP_NewStream to record headers.
+        * DumpRenderTree/TestNetscapePlugIn.subproj/PluginObject.h: declarations.
+        * DumpRenderTree/TestNetscapePlugIn.subproj/main.c: call new header hook.
+        (NPP_NewStream): call new header hook.
+
+2007-04-09  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        Fixed fast/forms/textarea-paste-newline.html.
+        
+        This failure was pretty funny. run-webkit-tests kills and respawns
+        DumpRenderTree once every 1000 runs. Adding a few tests caused 
+        textarea-paste-newline.html to run right at the beginning of DumpRenderTree's 
+        lifetime, before any render tree dumps had occurred. However, WebCore 
+        used a render tree dump as the hook that set a global flag to allow 
+        pasting through the DOM API, so running before any render tree dumps had 
+        occurred caused this test to fail.
+
+        * DumpRenderTree/DumpRenderTree.m:
+        (dumpRenderTree): Explicitly tell WebKit to allow pasting through the DOM
+        API, instead of hoping it will read the tea leaves.
+
 2007-04-07  Mark Rowe  <mrowe@apple.com>
 
         Not reviewed.  Update to match some configuration changes that have been active on build.webkit.org.

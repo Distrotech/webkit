@@ -1,3 +1,272 @@
+2007-04-13  David Kilzer  <ddkilzer@webkit.org>
+
+        Patch and review by hyatt.  Testing and landing by ddkilzer.
+
+        <rdar://problem/5078866>
+        tables don't inherit text-align (in strict mode; they're not supposed to in quirks mode)
+
+        Test tables/mozilla_expected_failures/bugs/bug11384s.html progressed after this fix, so
+        it was moved to tables/mozilla/bugs/bug11384s.html.
+
+        * fast/css/table-text-align-quirk-expected.checksum: Added.
+        * fast/css/table-text-align-quirk-expected.png: Added.
+        * fast/css/table-text-align-quirk-expected.txt: Added.
+        * fast/css/table-text-align-quirk.html: Added.
+        * fast/css/table-text-align-strict-expected.checksum: Added.
+        * fast/css/table-text-align-strict-expected.png: Added.
+        * fast/css/table-text-align-strict-expected.txt: Added.
+        * fast/css/table-text-align-strict.html: Added.
+        * fast/table/border-collapsing/rtl-border-collapsing.html: Replaced "text-align: -khtml-center"
+        style with "text-align: center" style.
+        * tables/mozilla/bugs/bug11384s-expected.checksum: Added.
+        * tables/mozilla/bugs/bug11384s-expected.png: Added.
+        * tables/mozilla/bugs/bug11384s-expected.txt: Added.
+        * tables/mozilla/bugs/bug11384s.html: Added.
+        * tables/mozilla_expected_failures/bugs/bug11384s-expected.checksum: Removed.
+        * tables/mozilla_expected_failures/bugs/bug11384s-expected.png: Removed.
+        * tables/mozilla_expected_failures/bugs/bug11384s-expected.txt: Removed.
+        * tables/mozilla_expected_failures/bugs/bug11384s.html: Removed.
+
+2007-04-13  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by a sanity check
+
+        My layout test *has* to be http, since dumping history in DRT with hard coded file paths
+        will never match up to expected results across machines.
+
+        Lame
+
+        * history/new-window-redirect-history-expected.txt: Removed.
+        * history/new-window-redirect-history.html: Removed.
+        * history/resources/redirect-1.html: Removed.
+        * history/resources/redirect-2.html: Removed.
+        * http/tests/navigation/new-window-redirect-history-expected.txt: Added.
+        * http/tests/navigation/new-window-redirect-history.html: Added.
+        * http/tests/navigation/resources/redirect-1.html: Added.
+        * http/tests/navigation/resources/redirect-2.html: Added.
+
+2007-04-12  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Geoose
+
+        <rdar://problem/4664154> and http://bugs.webkit.org/show_bug.cgi?id=3546
+
+        Layout test that covers opening an empty new window, then starting to navigate around in it
+
+        * history/new-window-redirect-history-expected.txt: Added.
+        * history/new-window-redirect-history.html: Added.
+        * history/resources/redirect-1.html: Added.
+        * history/resources/redirect-2.html: Added.
+
+2007-04-13  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Brady.
+
+        * plugins/open-and-close-window-with-plugin.html:
+        Manage open windows manually for this test.
+
+2007-04-12  Deneb Meketa  <dmeketa@adobe.com>
+
+        Reviewed by Darin Adler.
+
+        http://bugs.webkit.org/show_bug.cgi?id=13029
+        rdar://problem/4994849
+        Bug 13029: Permit NPAPI plug-ins to see HTTP response headers.
+
+        * http/tests/plugins/npapi-response-headers-expected.txt: Added.
+        * http/tests/plugins/npapi-response-headers.html: Added.
+        * http/tests/plugins/resources/load-me-1.txt: Added.
+        * http/tests/plugins/resources/load-me-2.txt: Added.
+
+2007-04-12  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by darin
+        
+        <rdar://problem/5131716> 
+        Clicking just before a ToDo doesn't put the caret before the ToDo
+        
+        * editing/selection/5131716-1-expected.checksum: Added.
+        * editing/selection/5131716-1-expected.png: Added.
+        * editing/selection/5131716-1-expected.txt: Added.
+        * editing/selection/5131716-1.html: Added.
+        * editing/selection/5131716-2-expected.checksum: Added.
+        * editing/selection/5131716-2-expected.png: Added.
+        * editing/selection/5131716-2-expected.txt: Added.
+        * editing/selection/5131716-2.html: Added.
+        * editing/selection/5131716-3-expected.checksum: Added.
+        * editing/selection/5131716-3-expected.png: Added.
+        * editing/selection/5131716-3-expected.txt: Added.
+        * editing/selection/5131716-3.html: Added.
+        * editing/selection/5131716-4-expected.checksum: Added.
+        * editing/selection/5131716-4-expected.png: Added.
+        * editing/selection/5131716-4-expected.txt: Added.
+        * editing/selection/5131716-4.html: Added.
+
+2007-04-11  Mitz Pettel  <mitz@webkit.org>
+
+        Reviewed by Dave Hyatt.
+
+        - test and updated results for http://bugs.webkit.org/show_bug.cgi?id=11362
+          Native popup with size="1" wraps options
+
+        * fast/forms/menulist-option-wrap-expected.checksum: Added.
+        * fast/forms/menulist-option-wrap-expected.png: Added.
+        * fast/forms/menulist-option-wrap-expected.txt: Added.
+        * fast/forms/menulist-option-wrap.html: Added.
+        * fast/forms/select-empty-option-height-expected.checksum:
+        * fast/forms/select-empty-option-height-expected.png:
+
+2007-04-11  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by harrison
+        
+        <rdar://problem/5126166> 
+        Deleting selection starting at before ToDo checkbox to end of line, inserts a BR in the subsequent ToDo
+
+        * editing/deleting/5126166-expected.checksum: Added.
+        * editing/deleting/5126166-expected.png: Added.
+        * editing/deleting/5126166-expected.txt: Added.
+        * editing/deleting/5126166.html: Added.
+
+2007-04-10  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by harrison
+        
+        <rdar://problem/4932260> 
+        Invalid attributed string for attachment range obtained via AXPreviousWordStartTextMarkerForTextMarker
+
+        Forgot to check these in in my previous checkin:
+        * editing/pasteboard/drag-image-to-contenteditable-in-iframe-expected.checksum: Added.
+        * editing/pasteboard/drag-image-to-contenteditable-in-iframe-expected.png: Added.
+        
+        Tests for a bug where replaced elements would act
+        as sentence boundaries:
+        * editing/selection/4932260-1-expected.checksum: Added.
+        * editing/selection/4932260-1-expected.png: Added.
+        * editing/selection/4932260-1-expected.txt: Added.
+        * editing/selection/4932260-1.html: Added.
+        
+        Tests to see that replaced elements do not act as word
+        boundaries when moving forward through the document:
+        * editing/selection/4932260-2-expected.checksum: Added.
+        * editing/selection/4932260-2-expected.png: Added.
+        * editing/selection/4932260-2-expected.txt: Added.
+        * editing/selection/4932260-2.html: Added.
+        
+        Ditto but tests moving backward:
+        * editing/selection/4932260-3-expected.checksum: Added.
+        * editing/selection/4932260-3-expected.png: Added.
+        * editing/selection/4932260-3-expected.txt: Added.
+        * editing/selection/4932260-3.html: Added.
+        
+        No way to test accessibility APIs atm, and had trouble
+        making a test for selection creation with double-click 
+        and drag.
+
+2007-04-10  Antti Koivisto  <antti@apple.com>
+
+        Reviewed by Hyatt.
+        
+        Layout test for <rdar://5057686>
+        Flex box layout example hangs in WebCore::RenderFlexibleBox::allowedChildFlex
+
+        * fast/flexbox/flex-hang-expected.checksum: Added.
+        * fast/flexbox/flex-hang-expected.png: Added.
+        * fast/flexbox/flex-hang-expected.txt: Added.
+        * fast/flexbox/flex-hang.html: Added.
+
+2007-04-09  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin
+
+        Layout test for the fix for <rdar://4921797> and http://bugs.webkit.org/show_bug.cgi?id=12005
+
+        * http/tests/navigation/multiple-back-forward-entries-expected.txt: Added.
+        * http/tests/navigation/multiple-back-forward-entries.html: Added.
+        * http/tests/navigation/resources/slow-resource.pl: Added.
+
+2007-04-09  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by ggaren
+        
+        These were never checked in:
+        * editing/pasteboard/drag-image-to-contenteditable-in-iframe-expected.checksum: Added.
+        * editing/pasteboard/drag-image-to-contenteditable-in-iframe-expected.png: Added.
+        
+        New results were never checked in after some selection 
+        gap filling fixes: 
+        * editing/style/remove-underline-across-paragraph-expected.checksum:
+        * editing/style/remove-underline-across-paragraph-expected.png:
+        * editing/style/remove-underline-across-paragraph-in-bold-expected.checksum:
+        * editing/style/remove-underline-across-paragraph-in-bold-expected.png:
+        * editing/style/style-3690704-fix-expected.checksum:
+        * editing/style/style-3690704-fix-expected.png:
+        * editing/style/table-selection-expected.checksum:
+        * editing/style/table-selection-expected.png:
+        * editing/undo/4063751-expected.checksum:
+        * editing/undo/4063751-expected.png:                
+        * editing/style/apple-style-editable-mix-expected.checksum:
+        * editing/style/apple-style-editable-mix-expected.png:
+        * editing/inserting/paragraph-separator-in-table-1-expected.checksum:
+        * editing/inserting/paragraph-separator-in-table-1-expected.png:
+        * editing/inserting/paragraph-separator-in-table-2-expected.checksum:
+        * editing/inserting/paragraph-separator-in-table-2-expected.png:
+        
+        Checking in incorrect results and adding a FIXME that references the
+        bug that this test demonstrates:
+        * editing/style/smoosh-styles-003-expected.checksum:
+        * editing/style/smoosh-styles-003-expected.png:
+        * editing/style/smoosh-styles-003-expected.txt:
+        * editing/style/smoosh-styles-003.html:
+        
+        Misspelling marker correctly removed:
+        * editing/deleting/delete-to-select-table-expected.checksum:
+        * editing/deleting/delete-to-select-table-expected.png:
+        
+        Horizontal rules and parts of table borders were made very slightly 
+        darker, and these results were never updated:
+        * editing/inserting/4278698-expected.checksum:
+        * editing/inserting/4278698-expected.png:
+        * editing/unsupported-content/table-type-after-expected.checksum:
+        * editing/unsupported-content/table-type-after-expected.png:
+        * editing/unsupported-content/table-type-before-expected.checksum:
+        * editing/unsupported-content/table-type-before-expected.png:
+        * editing/deleting/table-cells-expected.checksum:
+        * editing/deleting/table-cells-expected.png:
+        
+2007-04-09  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Mitz.
+
+        http://bugs.webkit.org/show_bug.cgi?id=13313
+        Many pixel tests started failing in the range (r20794, r20801]
+
+        * plugins/resources/open-and-close-window-with-plugin.html:
+        Try to fix the ASSERT on the build bot by scheduling a timeout that schedules a timeout.
+
+2007-04-09  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Darin.
+        
+        <rdar://problem/5120801> 
+        http://bugs.webkit.org/show_bug.cgi?id=13247
+        Closing a page during slow cloning causes crash in setJSStatusBarText (13247)
+        
+        * fast/dom/Window/setting-properties-on-closed-window-expected.txt: Added.
+        * fast/dom/Window/setting-properties-on-closed-window.html: Added.
+
+2007-04-09  Andrew Wellington  <proton@wiretapped.net>
+
+        Reviewed by Justin Garcia.
+        
+        Layout test for http://bugs.webkit.org/show_bug.cgi?id=12959
+        "REGRESSION: Edit -> Copy not enabled on standalone images"
+
+        * editing/pasteboard/copy-standalone-image-expected.checksum: Added.
+        * editing/pasteboard/copy-standalone-image-expected.png: Added.
+        * editing/pasteboard/copy-standalone-image-expected.txt: Added.
+        * editing/pasteboard/copy-standalone-image.html: Added.
+
 2007-04-06  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Beth Dakin.

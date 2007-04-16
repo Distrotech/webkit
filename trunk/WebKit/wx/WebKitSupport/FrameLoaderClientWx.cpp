@@ -132,19 +132,6 @@ bool FrameLoaderClientWx::provisionalItemIsTarget() const
 }
 
 
-bool FrameLoaderClientWx::loadProvisionalItemFromPageCache()
-{
-    notImplemented();
-    return false;
-}
-
-
-void FrameLoaderClientWx::invalidateCurrentItemPageCache()
-{
-    notImplemented();
-}
-
-
 bool FrameLoaderClientWx::privateBrowsingEnabled() const
 {
     notImplemented();
@@ -270,7 +257,7 @@ void FrameLoaderClientWx::detachedFromParent4()
 }
 
 
-void FrameLoaderClientWx::loadedFromPageCache()
+void FrameLoaderClientWx::loadedFromCachedPage()
 {
     notImplemented();
 }
@@ -394,19 +381,6 @@ void FrameLoaderClientWx::dispatchWillSubmitForm(FramePolicyFunction function,
 void FrameLoaderClientWx::dispatchDidLoadMainResource(DocumentLoader*)
 {
     notImplemented();
-}
-
-
-void FrameLoaderClientWx::clearLoadingFromPageCache(DocumentLoader*)
-{
-    notImplemented();
-}
-
-
-bool FrameLoaderClientWx::isLoadingFromPageCache(DocumentLoader*)
-{
-    notImplemented();
-    return false;
 }
 
 
@@ -618,7 +592,7 @@ void FrameLoaderClientWx::partClearedInBegin()
     notImplemented();
 }
 
-void FrameLoaderClientWx::setDocumentViewFromPageCache(WebCore::PageCache*)
+void FrameLoaderClientWx::setDocumentViewFromCachedPage(WebCore::CachedPage*)
 {
     notImplemented();
 }
@@ -644,7 +618,7 @@ void FrameLoaderClientWx::saveScrollPositionAndViewStateToItem(WebCore::HistoryI
     notImplemented();
 }
 
-void FrameLoaderClientWx::saveDocumentViewToPageCache(WebCore::PageCache*)
+void FrameLoaderClientWx::saveDocumentViewToCachedPage(WebCore::CachedPage*)
 {
     notImplemented();
 }

@@ -1,3 +1,216 @@
+2007-04-13  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Adam.
+
+        Due to rdar://problem/5133910 -- WebArchives should not be constructed 
+        using resource from the cache -- We may try to create a potentially 
+        incorrect WebArchive when dragging an image multiple times.
+
+        This patch retains the assertion for invalid behaviour, but adds a
+        branch to make sure we don't try to do anything with the WebArchive
+        in release builds.
+
+        * Misc/WebNSPasteboardExtras.mm:
+        (-[NSPasteboard _web_writeImage:element:URL:title:archive:types:]):
+
+2007-04-13  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Dave Harrison.
+
+        <rdar://problem/5132727> Soho Mail build fails because of renamed SPI
+
+        * WebView/WebUIDelegatePrivate.h: define WebMenuItemTagSearchInGoogle as OldWebMenuItemTagSearchWeb
+
+2007-04-13  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Oliver.
+
+        <rdar://problem/5130686> Using WebPreferencesPrivate.h requires modifying framework search path
+
+        * WebView/WebPreferencesPrivate.h: Remove unneeded #ifdef.
+
+2007-04-12  Deneb Meketa  <dmeketa@adobe.com>
+
+        Reviewed by Darin Adler.
+
+        http://bugs.webkit.org/show_bug.cgi?id=13029
+        rdar://problem/4994849
+        Bug 13029: Permit NPAPI plug-ins to see HTTP response headers.
+
+        * Plugins/WebBaseNetscapePluginStream.h: declarations.
+        * Plugins/WebBaseNetscapePluginStream.mm: main implementation.
+        (-[WebBaseNetscapePluginStream dealloc]): cleanup.
+        (-[WebBaseNetscapePluginStream finalize]): cleanup.
+        (-[WebBaseNetscapePluginStream startStreamResponseURL:expectedContentLength:lastModifiedDate:MIMEType:headers:]):
+        Pass headers along.
+        (-[WebBaseNetscapePluginStream startStreamWithResponse:]):
+        Main work is here.  Extract headers from NSHTTPURLResponse object into a byte sequence.
+        See comments here about how it would be nice to have low-level access to the HTTP response.
+        (-[WebBaseNetscapePluginStream _destroyStream]): cleanup.
+        * Plugins/WebBaseNetscapePluginView.mm:
+        (-[WebBaseNetscapePluginView evaluateJavaScriptPluginRequest:]):
+        Conform to new startStream params.  Not applicable here, pass nil.
+
+2007-04-12  Brady Eidson  <beidson@apple.com>
+
+        Build fix for case sensitive file systems
+
+        * Misc/WebNSPasteboardExtras.mm:
+        * WebCoreSupport/WebPasteboardHelper.mm:
+
+2007-04-11  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Anders
+
+        - WebKit part of fix for:
+        <rdar://problem/5128697> REGRESSION: At least one PDF context menu item isn't appearing on Leopard
+
+        * Misc/WebNSArrayExtras.h: Added.
+        * Misc/WebNSArrayExtras.m: Added.
+        (-[NSMutableArray _webkit_removeUselessMenuItemSeparators]):
+        New file, includes this method to strip leading, trailing, and duplicate separators from arrays
+        of NSMenuItems (copied from Safari)
+
+        * WebView/WebUIDelegatePrivate.h:
+        new MenuItemTag enum values for new PDFKit context menu items
+
+        * WebKit.xcodeproj/project.pbxproj:
+        updated for new files
+
+        * WebView/WebPDFView.mm:
+        (-[WebPDFView _anyPDFTagsFoundInMenu:]):
+        check for new PDFKit context menu items
+        (-[WebPDFView _menuItemsFromPDFKitForEvent:]):
+        associate new PDFKit context menu item selectors with the new tags; skip certain selectors that
+        correspond to menu items that WebKit already includes; remove useless menu item separators when
+        we're done, since we might have removed arbitrarily-placed menu items
+
+2007-04-11  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Adding RetainPtr to the many global obj-c pointers we use in
+        C/C++ methods.  This is necessary to prevent GC from collecting
+        globals we want to keep around.
+
+        We use RetainPtr in obj-c++ and c++ files, and CFRetain/Release in pure
+        obj-c.
+
+        This fixes <rdar://problem/5058731> -- Crash in 
+        WebCore::DragData::containsCompatibleContent due to early release 
+        of types array
+
+        * Misc/WebLocalizableStrings.m:
+        (WebLocalizedString):
+        * Misc/WebNSPasteboardExtras.mm:
+        (+[NSPasteboard _web_writableTypesForURL]):
+        (_writableTypesForImageWithoutArchive):
+        (_writableTypesForImageWithArchive):
+        * Misc/WebNSURLExtras.m:
+        (applyHostNameFunctionToMailToURLString):
+        (applyHostNameFunctionToURLString):
+        * Misc/WebStringTruncator.m:
+        (defaultMenuFont):
+        (fontFromNSFont):
+        * WebCoreSupport/WebPasteboardHelper.mm:
+        (WebPasteboardHelper::insertablePasteboardTypes):
+
+2007-04-11  MorganL  <morganl.webkit@yahoo.com>
+
+        Reviewed by Maciej.
+
+        Add a Frame pointer to ChromeClient methods:
+        http://bugs.webkit.org/show_bug.cgi?id=13127
+
+        * COM/ChromeClientWin.cpp:
+        (ChromeClientWin::createWindow):
+        (ChromeClientWin::createModalDialog):
+        * COM/ChromeClientWin.h:
+        * WebCoreSupport/WebChromeClient.h:
+        * WebCoreSupport/WebChromeClient.mm:
+        (WebChromeClient::createWindow):
+        (WebChromeClient::createModalDialog):
+
+2007-04-10  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin
+
+        <rdar://problem/4887095> - PageCache and PageState should be combined
+
+        WebKit side of the change to reflect the new object name of CachedPage and new Client method names
+
+        * History/WebHistoryItem.mm:
+        (-[WebHistoryItem setAlwaysAttemptToUsePageCache:]):
+        (+[WebHistoryItem _releaseAllPendingPageCaches]):
+        (-[WebWindowWatcher windowWillClose:]):
+
+        * WebCoreSupport/WebFrameLoaderClient.h:
+        * WebCoreSupport/WebFrameLoaderClient.mm:
+        (WebFrameLoaderClient::setDocumentViewFromCachedPage):
+        (WebFrameLoaderClient::loadedFromCachedPage):
+        (WebFrameLoaderClient::saveDocumentViewToCachedPage):
+
+2007-04-09  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        Support for fixing fast/forms/textarea-paste-newline.html.
+        
+        Added SPI for specifying whether a WebView should allow pasting through the 
+        DOM API.
+
+        * ChangeLog:
+        * WebKit.xcodeproj/project.pbxproj:
+        * WebView/WebPreferenceKeysPrivate.h:
+        * WebView/WebPreferences.m:
+        (+[WebPreferences standardPreferences]):
+        (-[WebPreferences isDOMPasteAllowed]):
+        (-[WebPreferences setDOMPasteAllowed:]):
+        * WebView/WebPreferencesPrivate.h:
+        * WebView/WebView.mm:
+        (-[WebView _updateWebCoreSettingsFromPreferences:]):
+
+2007-04-09  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by John.
+
+        <rdar://problem/5081860>
+        REGRESSION: Select All for standalone image has no visible effect but does change state
+        
+        <rdar://problem/5081840>
+        REGRESSION: context menu in white space beyond standalone image is different after Select All
+        
+        Have validateUserInterface emulate the old behavior for full-frame images and plugins, which is:
+        
+        - For full-frame plugins, always return false.
+        - For images, only return true if the selector is copy: and the image has finished loading.
+        
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView validateUserInterfaceItem:]):
+
+2007-04-09  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Darin.
+
+        <rdar://problem/5026893>
+        REGRESSION: "Mail Contents of this Page" for standalone image in Safari results in a broken image in Mail
+        
+        * WebView/WebFrame.mm:
+        (-[WebFrame DOMDocument]):
+        We can't check for _isHTMLDocument here since image and plugin documents inherit from HTMLDocument. Instead,
+        check for those two document types explicitly.
+        
+2007-04-09  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Geoff, Ada and John.
+
+        <rdar://problem/4600978> Would like a way to test whether a WebView is displaying a standalone image
+
+        * WebView/WebFrame.mm:
+        (-[WebFrame _isDisplayingStandaloneImage]):
+        * WebView/WebFramePrivate.h:
+        Add _isDisplayingStandaloneImage SPI.
+
 2007-04-06  Timothy Hatcher  <timothy@apple.com>
 
         Reviewed by Mark Rowe.

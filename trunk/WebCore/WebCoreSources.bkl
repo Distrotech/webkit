@@ -107,7 +107,7 @@
         history/BackForwardList.cpp
         history/HistoryItem.cpp
         history/HistoryItemTimer.cpp
-        history/PageCache.cpp
+        history/CachedPage.cpp
     </set>
 
     <set append="1" var="WEBCORE_SOURCES_PAGE">
@@ -122,7 +122,6 @@
         page/FrameView.cpp
         page/MouseEventWithHitTestResults.cpp
         page/Page.cpp
-        page/PageState.cpp
         page/Settings.cpp
     </set>
 

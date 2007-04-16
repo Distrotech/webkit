@@ -1,3 +1,713 @@
+2007-04-13  David Kilzer  <ddkilzer@webkit.org>
+
+        Patch and review by hyatt.  Testing and landing by ddkilzer.
+
+        <rdar://problem/5078866>
+        tables don't inherit text-align (in strict mode; they're not supposed to in quirks mode)
+
+        Test: fast/css/table-text-align-quirk.html
+              fast/css/table-text-align-strict.html
+
+        Previous commit (r20731) removed the wrong property from WebCore/css/html4.css.  However,
+        when the correct property was removed, it caused tables to inherit alignment properties
+        from tags like <center> and <div align="center">.  This is fixed in
+        WebCore::CSSStyleSelector::adjustRenderStyle() by special-casing tables to reset the
+        text-align property.
+
+        * css/CSSComputedStyleDeclaration.cpp:
+        (WebCore::valueForTextAlign): Renamed KHTML_CENTER, KHTML_LEFT and KHTML_RIGHT to
+        WEBKIT_CENTER, WEBKIT_LEFT and WEBKIT_RIGHT.
+        * css/cssparser.cpp:
+        (WebCore::CSSParser::parseValue): Ditto.
+        * css/cssstyleselector.cpp:
+        (WebCore::CSSStyleSelector::adjustRenderStyle): Tables should not support -webkit-center,
+        -webkit-left or -webkit-right values for text-align, so reset them back to auto.
+        * css/html4.css: Removed "text-align: -webkit-auto;" property from tables selector.  It
+        was previously added to css/quirks.css in r20731.
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::determineHorizontalPosition): Renamed KHTML_* to WEBKIT_*.
+        * rendering/RenderBox.cpp:
+        (WebCore::RenderBox::calcHorizontalMargins): Ditto.
+        * rendering/RenderFlow.cpp:
+        (WebCore::RenderFlow::caretRect): Ditto.
+        * rendering/RenderStyle.h: Ditto.
+        (WebCore::):
+        * rendering/bidi.cpp:
+        (WebCore::RenderBlock::computeHorizontalPositionsForLine): Ditto.
+
+2007-04-12  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Black Sheep
+
+        <rdar://problem/4664154> and http://bugs.webkit.org/show_bug.cgi?id=3546
+
+        When you click on a link that opens in a new window from within gmail, they first create a new window 
+        with an empty URL, then immediately document.write() into the window to schedule a redirect.
+
+        Since the initial page doesn't have a URL associated with it, a history item never gets created.  The 
+        reasonable solution?  To actually create the history item after the redirect (in updateHistoryForInternalLoad)
+
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::addHistoryForCurrentLocation): Updates global and B/F history with a new history item
+        (WebCore::FrameLoader::updateHistoryForStandardLoad): Call addHistoryForCurrentLocation
+        (WebCore::FrameLoader::updateHistoryForInternalLoad): Call addHistoryForCurrentLocation if there is not already
+          a current history item
+        * loader/FrameLoader.h:
+
+2007-04-12  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Adam.
+
+        This fixes <rdar://problem/5060766> -- Frameset with 
+        an empty frame crashes due to null document.  Debug
+        builds hit the frame->document() assertion in 
+        EventHandler::prepareMouseEvent
+
+        This null check seems necessary now, having run through 
+        all the logic on the path to this crash it appears that
+        we can't avoid this null check.  
+
+        * page/EventHandler.cpp:
+        (WebCore::EventHandler::updateDragAndDrop):
+
+2007-04-12  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by darin
+        
+        <rdar://problem/5131716> 
+        Clicking just before a ToDo doesn't put the caret before the ToDo
+        
+        * rendering/RenderBlock.cpp:
+        (WebCore::RenderBlock::positionForCoordinates):
+        Consider clicks inside the blocks padding, instead of
+        incorrectly sending them to the position before the block.
+
+2007-04-12  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Anders
+
+        - WebCore part of fix for:
+        <rdar://problem/5128697> REGRESSION: At least one PDF context menu item isn't appearing on Leopard
+
+        * platform/ContextMenuItem.h:
+        (WebCore::):
+        add two PDF-related context menu items to enum to keep it in sync with WebKit
+
+        * platform/ContextMenu.cpp:
+        (WebCore::ContextMenu::checkOrEnableIfNeeded):
+        add the new context menu items to the do-nothing case of a big switch statement
+
+2007-04-12  Simon Hausmann  <hausmann@kde.org>
+
+        Reviewed by Zack.
+
+        Fixed drawing of justified text in the Qt port.
+
+        * platform/qt/FontQt.cpp:
+        (Font::drawGlyphs):
+
+2007-04-11  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Adding RetainPtr to the many global obj-c pointers we use in
+        C/C++ methods.  This is necessary to prevent GC from collecting
+        globals we want to keep around.
+
+        We use RetainPtr in obj-c++ and c++ files, and CFRetain/Release in pure
+        obj-c.
+
+        Also made the Pasteboard::m_pasteboard a RetainPtr although it
+        shouldn't be necessary as the only NSPasteboard instances that 
+        should ever be inserted are the system clipboard and dragging 
+        pasteboard.  Neither of which should ever be collected.
+
+        * page/mac/WebCoreFrameBridge.mm:
+        (_getPreSmartSet):
+        (_getPostSmartSet):
+        * platform/Pasteboard.h:
+        * platform/graphics/mac/ColorMac.mm:
+        (WebCore::nsColor):
+        * platform/graphics/mac/GraphicsContextMac.mm:
+        (WebCore::GraphicsContext::drawLineForMisspellingOrBadGrammar):
+        * platform/mac/FontDataMac.mm:
+        (WebCore::webFallbackFontFamily):
+        * platform/mac/PasteboardMac.mm:
+        (WebCore::writableTypesForURL):
+        (WebCore::writableTypesForImage):
+        (WebCore::Pasteboard::clear):
+        (WebCore::Pasteboard::writeSelection):
+        (WebCore::Pasteboard::writeURL):
+        (WebCore::Pasteboard::writeFileWrapperAsRTFDAttachment):
+        (WebCore::Pasteboard::writeImage):
+        (WebCore::Pasteboard::canSmartReplace):
+        (WebCore::Pasteboard::plainText):
+        (WebCore::Pasteboard::documentFragment):
+
+2007-04-11  Mitz Pettel  <mitz@webkit.org>
+
+        Reviewed by Dave Hyatt.
+
+        - fix http://bugs.webkit.org/show_bug.cgi?id=11362
+          Native popup with size="1" wraps options
+
+        Test: fast/forms/menulist-option-wrap.html
+
+        * css/html4.css: Added white-space declaration for select[size="0"] and
+        select[size="1"]. Added border-radius declaration for select.
+
+2007-04-11  MorganL  <morganl.webkit@yahoo.com>
+
+        Reviewed by Maciej.
+
+        Add a Frame pointer to ChromeClient methods:
+        http://bugs.webkit.org/show_bug.cgi?id=13127
+
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::createWindow):
+        * page/Chrome.cpp:
+        (WebCore::Chrome::createWindow):
+        (WebCore::Chrome::createModalDialog):
+        * page/Chrome.h:
+        * page/ChromeClient.h:
+        * page/ContextMenuController.cpp:
+        (WebCore::openNewWindow):
+        * platform/graphics/svg/SVGImageEmptyClients.h:
+        (WebCore::SVGEmptyChromeClient::createWindow):
+        (WebCore::SVGEmptyChromeClient::createModalDialog):
+
+2007-04-11  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Ada
+
+        <rdar://problem/5080987> - Crash in DocumentLoader::frameLoader() const
+
+        This was free nil checking lost during the ObjC -> C++ conversion
+
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::checkLoadCompleteForThisFrame): Null check the DocumentLoader
+
+2007-04-11  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by harrison
+
+        <rdar://problem/5126166> 
+        Deleting selection starting at before ToDo checkbox to end of line, inserts a BR in the subsequent ToDo
+        
+        If a selection ends in a table cell, we shouldn't perform
+        a merge after deleting that selection.  We have code in
+        place to prevent those merges, but it failed here.
+        
+        It fails because the end of the selection was [tableCell, 0],
+        (normally not a valid VisiblePosition, but valid here
+        because the table cell is empty).  We prevent the merge
+        if the node of the position at the end of the selection 
+        has an enclosingTableCell.  Even though [tableCell, 0] has 
+        an enclosing table cell, the node tableCell doesn't, so 
+        the check fails.
+        
+        Fixed this by changing enclosingTableCell to take in
+        a position, instead of a node.  The other enclosing element
+        getters should be changed in this way as well.
+
+        * editing/DeleteSelectionCommand.cpp:
+        (WebCore::DeleteSelectionCommand::initializePositionData):
+        Call the new enclosingTableCell.
+        * editing/ReplaceSelectionCommand.cpp:
+        (WebCore::ReplaceSelectionCommand::shouldMerge): Ditto.
+        * editing/htmlediting.cpp:
+        (WebCore::enclosingTableCell): Take in a position instead
+        of a node.
+        * editing/htmlediting.h:
+
+2007-04-12  Mark Rowe  <mrowe@apple.com>
+
+        Qt build fix.
+
+        * WebCore.pro:
+        * editing/qt/EditorQt.cpp:
+        (WebCore::Editor::markBadGrammar):
+        * history/qt/CachedPageQt.cpp: Added.
+        (WebCore::CachedPage::close):
+        * history/qt/PageCacheQt.cpp: Removed.
+
+2007-04-11  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Antti
+
+        <rdar://problem/5125648> and http://bugs.webkit.org/show_bug.cgi?id=13326
+
+        Crash opening a link in a new window from Gmail
+
+        Problem here is that the currentHistoryItem in the new window is null.  This *shouldn't* be the case, 
+        and is the cause of a very long standing bug - 
+        http://bugs.webkit.org/show_bug.cgi?id=3546 - Can't go back to first page in new window opened from gmail
+
+        For now, adding a null check prevents this crash and restores the original, long standing regression
+ 
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::updateHistoryForInternalLoad): NULL check
+
+2007-04-11  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Anders.
+
+        Made image document copying more cross-platform.
+
+        All layout tests pass.
+
+        * editing/Editor.cpp:
+        (WebCore::imageNodeFromImageDocument): Added.
+        (WebCore::Editor::canCopy): Called imageNodeFromImageDocument.
+        (WebCore::Editor::copy): Ditto.
+        (WebCore::Editor::copyImage): Updated for changes to Pasteboard.
+        * platform/Pasteboard.h: Made writeImage more general, which allowed
+        getting rid of its second incarnation.
+        * platform/gdk/TemporaryLinkStubs.cpp:
+        * platform/mac/PasteboardMac.mm:
+        (WebCore::Pasteboard::writeImage): Collapsed logic from the two
+        writeImage methods into one.
+        (Pasteboard::writeImage): Updated for Pasteboard changes.
+        * platform/qt/PasteboardQt.cpp:
+        (WebCore::Pasteboard::writeImage): Ditto.
+
+2007-04-11  Darin Adler  <darin@apple.com>
+
+        * css/CSSValueKeywords.in: Fix a comment.
+
+2007-04-09  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by harrison
+        
+        <rdar://problem/4932260> 
+        Invalid attributed string for attachment range obtained via AXPreviousWordStartTextMarkerForTextMarker
+        
+        By default, text iterators don't emit anything for replaced 
+        elements.  Boundary finding code works around this but has 
+        bugs: replaced elements act as sentence boundaries and the 
+        above bug, where previousBoundary moves past the start of a 
+        word if there is a replaced element just before it. This 
+        patch fixes these issues by treating replaced elements as 
+        punctuation for boundary finding.
+
+        * editing/TextIterator.cpp:
+        (WebCore::SimplifiedBackwardsTextIterator::SimplifiedBackwardsTextIterator):
+        Set m_pastStartNode, the node after (in a reverse pre-order traversal) the 
+        last one that should be processed.
+        (WebCore::SimplifiedBackwardsTextIterator::advance):
+        Stop at m_pastStartNode.
+        Iterate over nodes in reverse pre-order (TextIterator traverses in 
+        pre-orer). This makes knowing when to emit characters after nodes vs. when
+        to emit characters before nodes easier.
+        Remove the special case for entering a new block, emitting characters 
+        after nodes can now be handled generally, in handleNonTextNode(), because
+        of the way we traverse.
+        Set m_handledChildren to false every iteration since we now do traverse in 
+        reverse pre-order.
+        (WebCore::SimplifiedBackwardsTextIterator::handleReplacedElement):
+        Emit a comma for replaced elements.  We only use this kind of iterator 
+        for finding boundaries, so we can do this unconditionally.
+        (WebCore::SimplifiedBackwardsTextIterator::handleNonTextNode):
+        Don't use emitNewline, instead specify where the newline should be positioned.
+        A node is handled before its children, so characters emitted here should 
+        be positioned after the node, not before it.
+        (WebCore::SimplifiedBackwardsTextIterator::exitNode): 
+        Don't use emitNewline, instead specify where the newline should be positioned.
+        (WebCore::CharacterIterator::CharacterIterator): 
+        Create a TextIterator that emits content for replaced elements, if requested.
+        * editing/TextIterator.h:
+        * editing/visible_units.cpp:
+        (WebCore::previousBoundary): 
+        Removed replaced element handling code.
+        If the start of the chunk that contained the boundary was in a non-text
+        node, then the boundary is not necessarily in that node.  Particularly
+        because it is only the end of the chunk that is guaranteed to be a valid
+        position in those cases.  We must iterate backwards by character from 
+        the end of the chunk to find the boundary.
+        (WebCore::nextBoundary): Removed replaced element handling code.
+
+2007-04-10  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin
+
+        <rdar://problem/4887095> - PageCache and PageState should be combined
+
+        These two objects are a relic of when the PageCache was split between WebCore and WebKit
+        It just makes good sense to combine them now, and the new object is more appropriately
+        called "CachedPage"
+
+        This patch is vast in scope, but simple in depth - anywhere a PageCache or PageState object 
+        was used has been adjusted to use a CachedPage object instead.  The most notable change is
+        that HistoryItem - which always used to have a PageCache object which may or may not have 
+        had a PageState - now may or may not have a CachedPage.  This actually simplifies the 
+        HistoryItem code a bit while making the role of CachedPage much more clear.
+
+        * WebCore.exp:
+        * WebCore.xcodeproj/project.pbxproj:
+
+        * history/BackForwardList.cpp:
+        (WebCore::BackForwardList::addItem):
+        (WebCore::BackForwardList::setCapacity):
+        (WebCore::BackForwardList::setPageCacheSize):
+        (WebCore::BackForwardList::clearPageCache):
+        (WebCore::BackForwardList::close):
+
+        * history/PageCache.cpp: Removed.
+        * history/PageCache.h: Removed.
+        * page/PageState.cpp: Removed.
+        * page/PageState.h: Removed.
+        * history/CachedPage.cpp: Added.
+        (WebCore::CachedPage::create):
+        (WebCore::CachedPage::CachedPage):
+        (WebCore::CachedPage::~CachedPage):
+        (WebCore::CachedPage::restore):
+        (WebCore::CachedPage::clear):
+        (WebCore::CachedPage::setDocumentLoader):
+        (WebCore::CachedPage::documentLoader):
+        (WebCore::CachedPage::setTimeStamp):
+        (WebCore::CachedPage::setTimeStampToNow):
+        (WebCore::CachedPage::timeStamp):
+        * history/CachedPage.h: Added.
+        (WebCore::CachedPage::document):
+        (WebCore::CachedPage::mousePressNode):
+        (WebCore::CachedPage::URL):
+
+        * history/HistoryItem.cpp:
+        (WebCore::HistoryItem::HistoryItem):
+        (WebCore::HistoryItem::setCachedPage):
+        (WebCore::HistoryItem::setURL):
+        (WebCore::HistoryItem::alwaysAttemptToUseCachedPage):
+        (WebCore::HistoryItem::setAlwaysAttemptToUseCachedPage):
+        (WebCore::HistoryItem::cachedPage):
+        (WebCore::cachedPagesPendingRelease):
+        (WebCore::HistoryItem::releaseCachedPagesOrReschedule):
+        (WebCore::HistoryItem::releaseAllPendingCachedPages):
+        (WebCore::HistoryItem::scheduleCachedPageForRelease):
+        * history/HistoryItem.h:
+        * history/mac/HistoryItemMac.mm:
+
+        * history/HistoryItemTimer.cpp:
+        (WebCore::HistoryItemTimer::HistoryItemTimer):
+        (WebCore::HistoryItemTimer::callReleaseCachedPagesOrReschedule):
+        * history/HistoryItemTimer.h:
+
+        * history/mac/PageCacheMac.mm: Removed.
+        * history/mac/CachedPageMac.mm: Added.
+        (WebCore::CachedPage::close):
+        (WebCore::CachedPage::setDocumentView):
+        (WebCore::CachedPage::documentView):
+
+        * loader/DocumentLoader.cpp:
+        (WebCore::DocumentLoader::DocumentLoader):
+        (WebCore::DocumentLoader::loadFromCachedPage):
+        (WebCore::DocumentLoader::setLoadingFromCachedPage):
+        (WebCore::DocumentLoader::isLoadingFromCachedPage):
+        * loader/DocumentLoader.h:
+
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::provisionalLoadStarted):
+        (WebCore::FrameLoader::commitProvisionalLoad):
+        (WebCore::FrameLoader::transitionToCommitted):
+        (WebCore::FrameLoader::open):
+        (WebCore::FrameLoader::startLoading):
+        (WebCore::FrameLoader::receivedMainResourceError):
+        (WebCore::FrameLoader::opened):
+        (WebCore::FrameLoader::continueLoadAfterNavigationPolicy):
+        (WebCore::FrameLoader::loadProvisionalItemFromCachedPage):
+        (WebCore::FrameLoader::cachePageToHistoryItem):
+        (WebCore::FrameLoader::createHistoryItem):
+        (WebCore::FrameLoader::purgePageCache):
+        (WebCore::FrameLoader::invalidateCurrentItemCachedPage):
+        (WebCore::FrameLoader::loadItem):
+        (WebCore::FrameLoader::updateHistoryForStandardLoad):
+        (WebCore::FrameLoader::updateHistoryForClientRedirect):
+        (WebCore::FrameLoader::updateHistoryForBackForwardNavigation):
+        (WebCore::FrameLoader::updateHistoryForReload):
+        (WebCore::FrameLoader::updateHistoryForInternalLoad):
+        (WebCore::FrameLoader::updateHistoryForCommit):
+        * loader/FrameLoader.h:
+        * loader/FrameLoaderClient.h:
+
+        * page/mac/WebCoreFrameBridge.h: Got rid of unused WebCorePageCacheStateKey
+        * page/mac/WebCoreFrameBridge.mm: Ditto
+
+        * platform/graphics/svg/SVGImage.cpp:
+        * platform/graphics/svg/SVGImageEmptyClients.h: Update to reflect the new names
+        (WebCore::SVGEmptyFrameLoaderClient::loadProvisionalItemFromCachedPage):
+        (WebCore::SVGEmptyFrameLoaderClient::invalidateCurrentItemCachedPage):
+        (WebCore::SVGEmptyFrameLoaderClient::loadedFromCachedPage):
+        (WebCore::SVGEmptyFrameLoaderClient::clearLoadingFromCachedPage):
+        (WebCore::SVGEmptyFrameLoaderClient::isLoadingFromCachedPage):
+        (WebCore::SVGEmptyFrameLoaderClient::setDocumentViewFromCachedPage):
+        (WebCore::SVGEmptyFrameLoaderClient::saveDocumentViewToCachedPage):
+
+2007-04-10  Antti Koivisto  <antti@apple.com>
+
+        Reviewed by Hyatt.
+
+        Fix <rdar://5057686> 
+        Flex box layout example hangs in WebCore::RenderFlexibleBox::allowedChildFlex
+        
+        Forcibly distribute remaining pixels if the algorithm is not advancing.
+
+        * rendering/RenderFlexibleBox.cpp:
+        (WebCore::RenderFlexibleBox::layoutHorizontalBox):
+        (WebCore::RenderFlexibleBox::layoutVerticalBox):
+
+2007-04-11  Mark Rowe  <mrowe@apple.com>
+
+        Build fix.
+
+        * bridge/mac/WebCoreAXObject.mm:
+        (-[WebCoreAXObject accessibilityDescription]):
+
+2007-04-10  Patti Hoa <patti@apple.com>
+
+        Reviewed by Justin Garcia.
+
+        <rdar://problem/5122276> Allow focused frame to fire off notification
+        Improve accessibility support for Mail WebView embedded Notes.
+
+        * bridge/mac/AXObjectCacheMac.mm:
+        (WebCore::AXObjectCache::postNotification):
+        The focused document with the selection change should fire the selection changed notification, not the top level document
+        * bridge/mac/WebCoreAXObject.mm:
+        (-[WebCoreAXObject accessibilityDescription]):
+        Allow the name attribute of the html body to be used as the accessibility description
+
+2007-04-09  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        Support for fixing fast/forms/textarea-paste-newline.html.
+        
+        Changed clients to use new preference specifying whether a Page should 
+        allow pasting through the DOM API, instead of a global flag.
+
+        Removed old behavior of always allowing DOM paste in debug builds. In 
+        light of the new preference-based API, that behavior makes no sense anymore. 
+        Instead, developers who want to test paste inside Safari can set the 
+        preference for themselves.
+
+        * WebCore.exp:
+        * editing/CommandByName.cpp: Removed crazy hack to keep an identically 
+        named but invalid copy of the global "pate allowed" flag in this file.
+        (WebCore::Frame::enabledPaste):
+        * editing/JSEditor.cpp: Removed "always allow" behavior for debug builds.
+        (WebCore::JSEditor::queryCommandSupported):
+        * editing/JSEditor.h:
+        * page/Settings.cpp:
+        (WebCore::Settings::setDOMPasteAllowed):
+        * page/Settings.h:
+        (WebCore::Settings::isDOMPasteAllowed):
+        * rendering/RenderTreeAsText.cpp:
+        (WebCore::externalRepresentation): Removed crazy hack to allow DOM paste
+        after this function has been called.
+
+2007-04-10  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Tim Hatcher
+
+        - fixed <rdar://problem/4859132> Grammar must always be checked in entire-sentence chunks, 
+          and shouldn't show markers for current sentence
+
+        * editing/Editor.h:
+        add markBadGrammar, now distinct from markMisspellings
+
+        * editing/mac/EditorMac.mm:
+        (WebCore::Editor::markMisspellingsAfterTypingToPosition):
+        call markMisspellings on one word, and markBadGrammar on entire sentence
+        (WebCore::markMisspellingsOrBadGrammar):
+        new static function, extracted from markMisspellings
+        (WebCore::Editor::markMisspellings):
+        now calls extracted function
+        (WebCore::Editor::markBadGrammar):
+        new method, calls extracted function
+
+        * page/Frame.cpp:
+        (WebCore::Frame::respondToChangedSelection):
+        update grammar markers for entire new and old sentences
+
+2007-04-09  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by John.
+
+        * WebCore.exp:
+        Add __ZNK7WebCore11FrameLoader10isCompleteEv.
+        
+2007-04-09  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin
+
+        Fixes <rdar://4921797> and http://bugs.webkit.org/show_bug.cgi?id=12005
+
+        The original regression was to claim that more loads were the result of a "user gesture" than really
+        were.  A lot of the ways a frame load could be kicked off didn't properly set up this flag, and it 
+        wasn't properly propagated and respected where it should've been.
+
+        This patch cleans much of that up.  One loose end is the "treatAsUserGesture" flag which is a stop
+        gap measure to keep "slow redirects" working to create a new history item.  In the future, we need
+        to cleanup the meaning and use of "userGesture" and "lockHistory."  This includes integrating them 
+        in to FrameLoadRequest and being very clear of what their meaning actually is at different stages of
+        the Frame load process.
+
+        * dom/Document.cpp:
+        (WebCore::Document::processHttpEquiv): Pass only the delay for the redirect
+
+        * html/HTMLAnchorElement.cpp:
+        (WebCore::HTMLAnchorElement::defaultEventHandler): Pass "lockHistory" false, "userGesture" true
+
+        * ksvg2/svg/SVGAElement.cpp:
+        (WebCore::SVGAElement::defaultEventHandler): Pass "lockHistory" false, "userGesture" true
+
+        * loader/FrameLoader.cpp:
+        (WebCore::ScheduledRedirection::ScheduledRedirection): Figure "lockHistory" and "userGesture" from the 
+          delay here, instead of at 3 other different sites that call this method
+        (WebCore::FrameLoader::changeLocation): Set userGesture correctly
+        (WebCore::FrameLoader::urlSelected): Propagate userGesture down
+        (WebCore::FrameLoader::requestFrame): 
+        (WebCore::FrameLoader::receivedFirstData):
+        (WebCore::FrameLoader::scheduleRedirection): Pass only the delay here
+        (WebCore::FrameLoader::redirectionTimerFired): Set userGesture correctly
+        (WebCore::FrameLoader::load):
+        (WebCore::FrameLoader::updateHistoryForInternalLoad): Insteading of asserting we aren't a redirect,
+          handle the case where we *are* a redirect by updating the previous history item
+        * loader/FrameLoader.h:
+
+2007-04-09  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Darin.
+
+        <rdar://problem/5120801> 
+        http://bugs.webkit.org/show_bug.cgi?id=13247
+        Closing a page during slow cloning causes crash in setJSStatusBarText (13247)
+
+        * bindings/js/kjs_window.cpp:
+        (KJS::Window::put):
+        Return early if m_frame is null. A closed window only has one property, "closed" 
+        so no properties should be settable in that case.
+
+2007-04-09  Andrew Wellington  <proton@wiretapped.net>
+
+        Reviewed by Justin Garcia.
+        
+        Fix for http://bugs.webkit.org/show_bug.cgi?id=12959
+        "REGRESSION: Edit -> Copy not enabled on standalone images"
+
+        * dom/Document.h: Add support for determining if a document is an image
+        (WebCore::Document::isImageDocument):
+        * editing/Editor.cpp:
+        (WebCore::Editor::canCopy): Image documents are copyable
+        (WebCore::Editor::copy): If copying an image document, call appropriate pasteboard methods
+        * loader/ImageDocument.h:
+        (WebCore::ImageDocument::isImageDocument): Override to return true for image documents
+        * platform/Pasteboard.h: Add new writeImage function to pasteboard
+        * platform/mac/PasteboardMac.mm:
+        (WebCore::Pasteboard::writeImage): Add writeImage implementation that takes Node and URL
+        * platform/qt/PasteboardQt.cpp:
+        (WebCore::Pasteboard::writeImage): Stub for Qt implementation of pasteboard
+
+2007-04-08  Oliver Hunt  <oliver@apple.com>
+
+        rs=Adam.
+
+        Add ASSERT(selectedRange) to previous change
+
+        * platform/mac/PasteboardMac.mm:
+        (WebCore::Pasteboard::writeSelection):
+
+2007-04-08  Oliver Hunt  <oliver@apple.com>
+
+        rs=Adam.
+
+        Fix minor error when writing selection to pasteboard.
+        This shouldn't have an effect as selectedRange should be the
+        selected range from source frame, however this is safer.
+
+        * platform/mac/PasteboardMac.mm:
+        (WebCore::Pasteboard::writeSelection):
+
+2007-04-08  David Hyatt  <hyatt@apple.com>
+
+        Fix mouseover/out failing layout tests.
+
+        Reviewed by aroben
+
+        * page/EventHandler.cpp:
+        (WebCore::EventHandler::handleMouseMoveEvent):
+        (WebCore::EventHandler::updateMouseEventTargetNode):
+        (WebCore::EventHandler::dispatchMouseEvent):
+        * page/EventHandler.h:
+
+2007-04-08  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Adam.
+
+        Fix for <rdar://problem/5113621> REGRESSION: Dragging PDF as image does not give any feedback
+
+        If we fail when attempting to create a drag image for a dragged
+        image, we fall back to the appropriate icon.
+
+        * page/DragController.cpp:
+        (WebCore::DragController::doImageDrag):
+
+2007-04-08  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Oliver.
+
+        Bestowed the gift of -webkit-dashboard-region upon all platforms, since
+        there's nothing Mac-specific about it other than the name. This also
+        allowed me to get rid of FrameViewMac.mm.
+
+        Removed a lot of #if PLATFORM(MAC):
+
+        * css/CSSComputedStyleDeclaration.cpp:
+        (WebCore::):
+        (WebCore::CSSComputedStyleDeclaration::getPropertyCSSValue):
+        * css/CSSPrimitiveValue.cpp:
+        (WebCore::CSSPrimitiveValue::CSSPrimitiveValue):
+        (WebCore::CSSPrimitiveValue::cleanup):
+        (WebCore::CSSPrimitiveValue::cssText):
+        * css/CSSPrimitiveValue.h:
+        (WebCore::CSSPrimitiveValue::getDashboardRegionValue):
+        (WebCore::CSSPrimitiveValue::):
+        * css/cssparser.cpp:
+        (WebCore::CSSParser::parseValue):
+        (WebCore::CSSParser::parseDashboardRegions):
+        * css/cssparser.h:
+        * css/cssstyleselector.cpp:
+        (WebCore::CSSStyleSelector::applyProperty):
+        * dom/Document.cpp:
+        (WebCore::Document::Document):
+        * dom/Document.h:
+        * page/Frame.cpp:
+        (WebCore::Frame::paint):
+        * page/Frame.h:
+        * page/FrameView.cpp:
+        (WebCore::FrameView::layout):
+        (WebCore::FrameView::updateDashboardRegions): Moved from FrameViewMac.mm.
+        * page/FrameView.h:
+        * page/qt/FrameQt.cpp:
+        (WebCore::Frame::dashboardRegionsChanged): Stubbed out.
+        * platform/gdk/FrameGdk.cpp:
+        (WebCore::Frame::dashboardRegionsChanged): Ditto.
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::scrollToOffset):
+        (WebCore::RenderLayer::setHasHorizontalScrollbar):
+        (WebCore::RenderLayer::setHasVerticalScrollbar):
+        (WebCore::RenderLayer::updateScrollInfoAfterLayout):
+        * rendering/RenderObject.cpp:
+        (WebCore::RenderObject::setStyle):
+
+        * WebCore.xcodeproj/project.pbxproj: Removed FrameViewMac.mm.
+        * bridge/mac/FrameViewMac.mm: Removed.
+
+2007-04-08  Mark Rowe  <mrowe@apple.com>
+
+        Qt build fix.
+
+        * platform/qt/TemporaryLinkStubs.cpp:
+
 2007-04-06  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Beth Dakin.
