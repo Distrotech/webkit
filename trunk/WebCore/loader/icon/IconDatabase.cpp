@@ -34,7 +34,7 @@
 #include "SQLTransaction.h"
 #include "SystemTime.h"
 
-#if PLATFORM(WIN)
+#if COMPILER(MSVC)
 #include <windows.h>
 #include <winbase.h>
 #include <shlobj.h>
@@ -97,9 +97,9 @@ IconDatabase::IconDatabase()
 
 bool makeAllDirectories(const String& path)
 {
-#if PLATFORM(WIN)
+#if COMPILER(MSVC)
     String fullPath = path;
-    if (!SHCreateDirectoryEx(0, fullPath.charactersWithNullTermination(), 0)) {
+    if (!SHCreateDirectoryExW(0, fullPath.charactersWithNullTermination(), 0)) {
         DWORD error = GetLastError();
         if (error != ERROR_FILE_EXISTS && error != ERROR_ALREADY_EXISTS) {
             LOG_ERROR("Failed to create path %s", path.ascii().data());
@@ -143,7 +143,7 @@ bool IconDatabase::open(const String& databasePath)
     
     // First we'll formulate the full path for the database file
     String dbFilename;
-#if PLATFORM(WIN)
+#if COMPILER(MSVC)
     if (databasePath[databasePath.length()] == '\\')
         dbFilename = databasePath + defaultDatabaseFilename();
     else

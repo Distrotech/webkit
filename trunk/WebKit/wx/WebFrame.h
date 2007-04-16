@@ -35,7 +35,7 @@
 
 #include <wx/srchctrl.h>
 
-class wxWebFrame : public wxFrame
+class WXEXPORT wxWebFrame : public wxFrame
 {
 public:
     // ctor(s)

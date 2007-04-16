@@ -113,6 +113,33 @@ if (! -e $CURLFILE) {
 }
 `chmod 755 ../libcurl/*.dll`;
 
+my $SQLITE3FILE="sqlitedll-3_3_15.zip";
+my $SQLITE3URL="http://www.sqlite.org/";
+if (! -e $SQLITE3FILE) {
+    print "Downloading " . $SQLITE3FILE . "...\n\n";
+    `rm -rf sqlite3*`;
+    my $SQLDLLFILE=$SQLITE3URL . $SQLITE3FILE;
+    `curl -O $SQLDLLFILE`;
+    `unzip $SQLITE3FILE -d sqlite3`;
+}
+
+# the header is only in the source distro, so get it from there
+my $SQLITE3SOURCEFILE="sqlite-source-3_3_15.zip";
+if (! -e $SQLITE3SOURCEFILE) {
+    print "Downloading " . $SQLITE3FILE . "...\n\n";
+    my $SQLSOURCEFILE=$SQLITE3URL . $SQLITE3SOURCEFILE;
+    `curl -O $SQLSOURCEFILE`;
+    print "\nInstalling " . $SQLITE3SOURCEFILE . "...\n";
+    `unzip $SQLITE3SOURCEFILE -d sqlite3`;
+    chdir "sqlite3";
+    `lib /def:sqlite3.def`;
+    chdir "..";
+    `rm -rf ../sqlite3`;
+    `cp -rp sqlite3 ../sqlite3`;
+}
+
+`chmod 755 ../sqlite3/*.dll`;
+
 if (! -e "pthreads-w32-2-8-0-release.exe") {
     print "Downloading pthreads-w32-2-8-0-release.exe...\n\n";
     `rm -rf pthreads*`;

@@ -36,7 +36,7 @@
 class WebViewPrivate;
 class WebViewFrameData;
 
-class wxWebView : public wxScrolledWindow
+class WXEXPORT wxWebView : public wxScrolledWindow
 {
 public:
     // ctor(s)
