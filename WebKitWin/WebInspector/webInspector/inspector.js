@@ -316,7 +316,7 @@ function refreshSearch()
 
     if (searchActive) {
         // perform the search
-        treeOutline.removeChildren();
+        treeOutline.removeChildrenRecursive();
         treeOutlineScrollArea.refresh();
         toggleNoSelection(true);
 
@@ -408,8 +408,11 @@ function switchPane(pane)
 
 function treeElementPopulate(element)
 {
-    if (element.children.length)
+    if (element.children.length || element.whitespaceIgnored !== ignoreWhitespace)
         return;
+
+    element.removeChildren();
+    element.whitespaceIgnored = ignoreWhitespace;
 
     var node = (ignoreWhitespace ? firstChildSkippingWhitespace.call(element.representedObject) : element.representedObject.firstChild);
     while (node) {
@@ -429,10 +432,14 @@ function treeElementCollapsed(element)
     treeOutlineScrollArea.refresh();
 }
 
-function treeElementSelected(element)
+function treeElementRevealed(element)
 {
     if (element._listItemNode)
         treeOutlineScrollArea.reveal(element._listItemNode);
+}
+
+function treeElementSelected(element)
+{
     if (element.representedObject)
         Inspector.setFocusedDOMNode(element.representedObject);
 
@@ -455,7 +462,7 @@ function DOMNodeTreeElement(node)
     var title = nodeDisplayName.call(node).escapeHTML();
     var hasChildren = (ignoreWhitespace ? (firstChildSkippingWhitespace.call(node) ? true : false) : node.hasChildNodes());
 
-    if (hasChildren)
+    if (hasChildren) 
         title += " <span class=\"content\">" + nodeContentPreview.call(node) + "</span>";
 
     var item = new TreeElement(title, node, hasChildren);
@@ -463,7 +470,10 @@ function DOMNodeTreeElement(node)
     item.onexpand = treeElementExpanded;
     item.oncollapse = treeElementCollapsed;
     item.onselect = treeElementSelected;
+    item.onreveal = treeElementRevealed;
     item.ondblclick = treeElementDoubleClicked;
+    if (hasChildren) 
+        item.whitespaceIgnored = ignoreWhitespace;
     return item;
 }
 
@@ -505,7 +515,7 @@ function revealNodeInTreeOutline(node)
     return item;
 }
 
-function updateTreeOutline()
+function updateTreeOutline(dontRevealSelectedItem)
 {
     if (searchActive)
         return;
@@ -513,19 +523,32 @@ function updateTreeOutline()
     var rootNode = Inspector.rootDOMNode();
     var item = treeOutline.findTreeElement(rootNode);
 
-    treeOutline.removeChildren();
-    treeOutlineScrollArea.refresh();
+    if (item && item.whitespaceIgnored !== ignoreWhitespace)
+        item = null;
+    if (item && item.parent)
+        item.parent.removeChild(item);
 
-    if (!rootNode)
+    treeOutline.removeChildrenRecursive();
+
+    if (!rootNode) {
+        treeOutlineScrollArea.refresh();
         return;
+    }
 
     if (!item)
         item = new DOMNodeTreeElement(rootNode);
     treeOutline.appendChild(item);
     item.expand();
 
-    item = revealNodeInTreeOutline(Inspector.focusedDOMNode());
-    item.select();
+    if (dontRevealSelectedItem)
+        item = treeOutline.findTreeElement(Inspector.focusedDOMNode());
+    else
+        item = revealNodeInTreeOutline(Inspector.focusedDOMNode());
+
+    if (item)
+        item.select();
+
+    treeOutlineScrollArea.refresh();
 
     var rootPopup = document.getElementById("treePopup");
 
@@ -1040,7 +1063,7 @@ function toggleStyleShorthand(event)
 function toggleIgnoreWhitespace()
 {
     ignoreWhitespace = !ignoreWhitespace;
-    updateTreeOutline();
+    updateTreeOutline(true);
 }
 
 function toggleShowUserAgentStyles()

@@ -1,5 +1,12 @@
 2007-04-16  Adam Roben  <aroben@apple.com>
 
+        Merge in r20872.
+
+        * WebInspector/webInspector/inspector.js:
+        * WebInspector/webInspector/treeoutline.js:
+
+2007-04-16  Adam Roben  <aroben@apple.com>
+
         Merge in r20861.
 
         * WebInspector/webInspector/inspector.js:
