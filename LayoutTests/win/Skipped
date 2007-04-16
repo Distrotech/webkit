@@ -289,9 +289,6 @@ plugins/root-object-premature-delete-crash.html
 plugins/throw-on-dealloc.html
 plugins/undefined-property-crash.html
 
-# Crash in _CFHTTPCookieStorageCreateFromFile <rdar://problem/5071479>
-security/block-test.html
-
 # Debug C Runtime assertion <rdar://problem/5079945>
 svg/custom/mask-excessive-malloc.svg
 
