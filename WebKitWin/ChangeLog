@@ -1,5 +1,14 @@
 2007-04-16  Adam Roben  <aroben@apple.com>
 
+        Merge in r20843.
+
+        * WebInspector/webInspector/inspector.js:
+        * WebInspector/webInspector/scrollarea.js:
+        * WebInspector/webInspector/scrollbar.js:
+        * WebInspector/webInspector/utilities.js:
+
+2007-04-16  Adam Roben  <aroben@apple.com>
+
         Merge in r20842.
 
         * WebInspector/webInspector/inspector.html:

@@ -112,7 +112,7 @@ ScrollArea.prototype.removeScrollbar = function(scrollbar)
 	var c = scrollbars.length;
 	for (var i = 0; i < c; ++i)
 	{
-		if (scrollbars[i] == scrollbar)
+		if (scrollbars[i] === scrollbar)
 		{
 			scrollbars.splice(i, 1);
 			break;
@@ -216,14 +216,14 @@ ScrollArea.prototype.reveal = function(element)
 	do {
 		offsetY += obj.offsetTop;
 		obj = obj.offsetParent;
-	} while (obj && obj != this.content);
+	} while (obj && obj !== this.content);
 
 	var offsetX = 0;
 	obj = element;
 	do {
 		offsetX += obj.offsetLeft;
 		obj = obj.offsetParent;
-	} while (obj && obj != this.content);
+	} while (obj && obj !== this.content);
 
 	var top = this.content.scrollTop;
 	var height = this.viewHeight;
