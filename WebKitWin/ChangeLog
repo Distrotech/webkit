@@ -1,5 +1,13 @@
 2007-04-16  Adam Roben  <aroben@apple.com>
 
+        Merge in r20842.
+
+        * WebInspector/webInspector/inspector.html:
+        * WebInspector/webInspector/inspector.js:
+        * WebInspector/webInspector/utilities.js: Added.
+
+2007-04-16  Adam Roben  <aroben@apple.com>
+
         Merge in r20840.
 
         * WebInspector/webInspector/inspector.html:
