@@ -188,10 +188,6 @@ http/tests/security/local-user-CSS-from-remote.html
 http/tests/xmlhttprequest/abort-should-cancel-load.html
 svg/custom/use-events-crash.svg
 
-# Crash in Node::nextSibling <rdar://problem/5078739>
-editing/pasteboard/paste-line-endings-002.html
-editing/pasteboard/paste-line-endings-004.html
-
 # CFNet cookies crash <rdar://problem/4993339>
 fast/dom/Window/window-properties.html
 
