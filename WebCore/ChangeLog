@@ -1,3 +1,13 @@
+2007-04-16  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Adele.
+
+        Fix <rdar://problem/5002577> Focus ring SPI in GraphicsContextWin.cpp
+        needs to move to WebKitSystemInterface
+
+        * platform/win/GraphicsContextWin.cpp:
+        (WebCore::GraphicsContext::drawFocusRing): Use wkDrawFocusRing.
+
 2007-04-14  Adam Roben  <aroben@apple.com>
 
         * WebCore.vcproj/WebCore.submit.sln: Use the Debug_Internal

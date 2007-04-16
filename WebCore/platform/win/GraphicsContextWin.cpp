@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2003, 2004, 2005, 2006, 2007 Apple Computer, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,12 +29,10 @@
 #include "AffineTransform.h"
 #include "NotImplemented.h"
 #include "Path.h"
+#include <WebKitSystemInterface/WebKitSystemInterface.h>
 #include <wtf/MathExtras.h>
 
 #include "GraphicsContextPlatformPrivate.h"
-
-// This is SPI, so don't put this in OpenSource!
-CG_EXTERN void CGContextSetFocusRingWithColor(CGContextRef context, CGFloat blur, CGColorRef color, const CGRect *clipRect, CFDictionaryRef options);
 
 using namespace std;
 
@@ -324,12 +322,7 @@ void GraphicsContext::drawFocusRing(const Color& color)
     CGContextBeginPath(context);
     CGContextAddPath(context, focusRingPath);
 
-    // FIXME: We clear the fill color here to avoid getting a black fill when drawing the focus ring.
-    // Find out from CG if this is their bug.
-    CGContextSetRGBFillColor(context, 0, 0, 0, 0);
-
-    CGContextSetFocusRingWithColor(context, radius, colorRef, 0, (CFDictionaryRef)0);
-    CGContextFillPath(context);
+    wkDrawFocusRing(context, colorRef, radius);
 
     CGColorRelease(colorRef);
 
