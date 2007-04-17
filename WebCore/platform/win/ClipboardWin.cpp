@@ -251,7 +251,7 @@ static HRESULT writeFileToDataObject(IDataObject* dataObject, HGLOBAL fileDescri
     // Contents
     fe = fileContentFormatZero();
     medium.hGlobal = fileContent;
-   // hr = dataObject->SetData(fe, &medium, TRUE);
+    hr = dataObject->SetData(fe, &medium, TRUE);
 
 exit:
     if (FAILED(hr)) {

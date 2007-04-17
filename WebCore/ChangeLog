@@ -1,4 +1,12 @@
-2007-04-16  Oliver Hunt  <oliver@apple.com>
+2007-04-17  Oliver Hunt  <oliver@apple.com>
+
+        Whoops, had code commented out from manual failure test.
+        Also fixed date of previous changelog entry
+
+        * platform/win/ClipboardWin.cpp:
+        (WebCore::writeFileToDataObject):
+
+2007-04-17  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Ada.
 
