@@ -1,3 +1,36 @@
+2007-04-16  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Ada.
+
+        Partial fix for <rdar://problem/5035948> -- Dragging image 
+        or link from boomer doesn't create webloc or image file.
+        
+        Add all the ground work to set up FileDescriptors and FileContent
+        for allowing files to be created from drag and drop actions,
+        and hook up logic for links to create WebLoc data for drag and drop.
+
+        * platform/win/ClipboardWin.cpp:
+        (WebCore::fileDescriptorFormat):
+        (WebCore::fileContentFormat):
+          Clipboard formats 
+          
+        (WebCore::pathRemoveBadFSCharacters):
+        (WebCore::filesystemPathFromUrlOrTitle):
+          Helper functions for create filenames
+          
+        (WebCore::createGlobalDataForURLContent):
+          Create the WebLoc content
+          
+        (WebCore::createGlobalDataForUrlFileDescriptor):
+          Create a file descriptor for the WebLoc data
+          
+        (WebCore::writeFileToDataObject):
+          Basic helper function to push generated file info
+          into the target DataObject
+          
+        (WebCore::ClipboardWin::writeURL):
+          Now puts WebLoc file onto the Clipboard
+
 2007-04-16  Adam Roben  <aroben@apple.com>
 
         Reviewed by Adele.
