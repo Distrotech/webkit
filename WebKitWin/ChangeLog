@@ -1,5 +1,11 @@
 2007-04-16  Adam Roben  <aroben@apple.com>
 
+        Rubberstamped by Steve.
+
+        * WebKit.vcproj/WebKit.sln: Removed the Debug_Internal configuration.
+
+2007-04-16  Adam Roben  <aroben@apple.com>
+
         Reviewed by Steve.
 
         Removed the pre-link build step, and removed registration of WebKit.dll
