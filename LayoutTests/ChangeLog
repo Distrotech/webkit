@@ -1,5 +1,9 @@
 2007-04-16  Adam Roben  <aroben@apple.com>
 
+        * win/Skipped: Fixed a path.
+
+2007-04-16  Adam Roben  <aroben@apple.com>
+
         * win/Skipped: Removed a fixed test.
 
 2007-04-16  Kevin McCullough  <kmccullough@apple.com>

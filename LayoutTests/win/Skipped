@@ -297,7 +297,7 @@ fast/xpath/4XPath/Core/test_numeric_expr.html
 fast/xpath/4XPath/Core/test_parser.html
 
 # DRT doesn't support tests with multiple windows <rdar://problem/5133670>
-history/new-window-redirect-history.html
+http/tests/navigation/new-window-redirect-history.html
 
 # http/tests/navigation/anchor-frames.html fails on boomer <rdar://problem/5134014>
 http/tests/navigation/anchor-frames.html
