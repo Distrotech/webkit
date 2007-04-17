@@ -188,15 +188,27 @@ http/tests/security/local-user-CSS-from-remote.html
 http/tests/xmlhttprequest/abort-should-cancel-load.html
 svg/custom/use-events-crash.svg
 
-# CFNet cookies crash <rdar://problem/4993339>
-fast/dom/Window/window-properties.html
-
 # No textInputController <rdar://problem/5074430>
 fast/dom/character-index-for-point.html
 fast/forms/attributed-strings.html
 fast/text/attributed-substring-from-range-001.html
 fast/text/attributed-substring-from-range.html
 fast/text/justified-text-rect.html
+
+# CFNet cookies crash <rdar://problem/4993339>
+fast/dom/Window/window-properties.html
+
+# Pixel depth and color depth different on boomer <rdar://problem/5137719>
+fast/dom/Window/window-screen-properties.html
+
+# Layout Tests fail in boomer because of not objCWrapperClass. <rdar://problem/5137769>
+fast/dom/wrapper-classes.html
+
+# EventSender.leapForward does not work in DumpRenderTree on boomer <rdar://problem/5080491>
+fast/events/5056619.html
+
+# fast/events/mouseout-dead-node.html fails on boomer <rdar://problem/5137284>
+fast/events/mouseout-dead-node.html
 
 # fast/forms/drag-into-textarea.html fails on boomer <rdar://problem/5134395>
 fast/forms/drag-into-textarea.html
@@ -215,6 +227,7 @@ fast/forms/select-type-ahead-non-latin.html
 
 # Selection seems to fail for some LayoutTests <rdar://problem/5130762>
 editing/selection/4402375.html
+editing/selection/move-begin-end.html
 fast/forms/listbox-onchange.html
 fast/forms/tabbing-input-iframe.html
 fast/forms/textfield-drag-into-disabled.html
@@ -224,6 +237,31 @@ svg/custom/pointer-events-image.svg
 svg/custom/pointer-events-path.svg
 svg/custom/pointer-events-text.svg
 svg/custom/text-hit-test.svg
+
+# editing/selection/editable-links.html fails on boomer <rdar://problem/5137972>
+editing/selection/drag-to-contenteditable-iframe.html
+editing/selection/editable-links.html
+
+# Some LayoutTests use the QuickTime plugin which is not installed on the boomer build bots <rdar://problem/5138561>
+fast/dom/object-embed-plugin-scripting.html
+
+# fast/events/drag-in-frames.html fails on boomer <rdar://problem/5137413>
+fast/events/drag-in-frames.html
+
+# Emacs bindings are used in LayoutTests which fail on boomer. <rdar://problem/5137352>
+fast/events/keydown-1.html
+
+# fireKeyboardEventsToElement is not implemented in DRT <rdar://problem/5137198>
+fast/events/objc-keyboard-event-creation.html
+
+# The eqqivalent of option-tab doesn not exist in Boomer <rdar://problem/5137230>
+fast/events/frame-tab-focus.html
+fast/events/option-tab.html
+fast/forms/focus2.html
+
+# window.eventSender doesn't appear to be working. <rdar://problem/5137154>
+fast/events/ondragenter.html
+fast/forms/focus-control-to-page.html
 
 # fast/frames/001.html is failing on boomer <rdar://problem/5133885>
 fast/frames/001.html
@@ -266,6 +304,9 @@ history/new-window-redirect-history.html
 
 # http/tests/navigation/anchor-frames.html fails on boomer <rdar://problem/5134014>
 http/tests/navigation/anchor-frames.html
+
+# DRT doesn't support tests with multiple windows <rdar://problem/5133670>
+http/tests/navigation/new-window-redirect-history.html
 
 # Console messages are not being printed out for failed canLoad checks <rdar://problem/5128314>
 http/tests/security/local-CSS-from-remote.html
@@ -447,92 +488,5 @@ fast/table/giantCellspacing.html
 # Caret and DRT functionality
 editing/selection/caret-and-focus-ring.html
 
-# Selection, RenderImage
-editing/selection/drag-to-contenteditable-iframe.html
-
-# Missing Text
-editing/selection/editable-links.html
-
-# Test failed
-editing/selection/move-begin-end.html
-
-# plugins and <embed>
-fast/dom/object-embed-plugin-scripting.html
-
-# TypeError exception
-fast/dom/wrapper-classes.html
-
-# pixel color
-fast/dom/Window/window-screen-properties.html
-
-# Encoding
+# Check to make sure you have the right encoding
 fast/encoding/charset-x-nextstep.html
-
-# render text input
-fast/events/5056619.html
-
-# on drag alert
-fast/events/drag-in-frames.html
-
-# focus
-fast/events/frame-tab-focus.html
-
-# keydown and text
-fast/events/keydown-1.html
-
-# missing a mouseout
-fast/events/mouseout-dead-node.html
-
-# on drag enter
-fast/events/ondragenter.html
-
-# option-tab
-fast/events/option-tab.html
-
-# keypress event
-fast/events/objc-keyboard-event-creation.html
-fast/forms/focus2.html
-
-# This looks correct to me.  Why is it different on X?
-fast/forms/focus-control-to-page.html
-
-# onChange firing
-fast/forms/listbox-onchange.html
-
-# Test genuinely fails
-fast/forms/listbox-selection.html
-
-# queryCommandEnabled was false
-fast/forms/plaintext-mode-1.html
-
-# Focus and Click events failing
-fast/forms/select-accesskey.html
-
-# Test Failed
-fast/forms/select-type-ahead-non-latin.html
-
-# Renderview coordinates are negative
-fast/frames/frame-src-attribute.html
-
-# Random sizing issues (Renderblock, RenderTableCells)
-fast/dom/Window/window-onFocus.html
-fast/forms/searchfield-heights.html
-fast/table/frame-and-rules.html
-fast/table/giantCellspacing.html
-
-# Timed out Loading Page (check if missing DRT functionality)
-editing/selection/4975120.html
-editing/selection/designmode-no-caret.html
-fast/encoding/char-encoding.html
-fast/frames/frame-navigation.html
-http/tests/incremental/slow-utf8-css.pl
-http/tests/incremental/slow-utf8-text.pl
-http/tests/local/file-url-sent-as-referer.html
-http/tests/misc/redirect-to-about-blank.html
-http/tests/xmlhttprequest/basic-auth.html
-
-# Scrolling
-http/tests/navigation/anchor-frames.html
-
-# DRT doesn't support tests with multiple windows <rdar://problem/5133670>
-http/tests/navigation/new-window-redirect-history.html
