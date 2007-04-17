@@ -1,5 +1,14 @@
 2007-04-16  Adam Roben  <aroben@apple.com>
 
+        Reviewed by Steve.
+
+        Removed the pre-link build step, and removed registration of WebKit.dll
+        from the post-build step.
+
+        * WebKit.vcproj/WebKit.vcproj:
+
+2007-04-16  Adam Roben  <aroben@apple.com>
+
         * WebKit.vcproj/WebKit.sln: Added WTF to the solution.
 
 2007-04-16  Steve Falkenburg  <sfalken@apple.com>
