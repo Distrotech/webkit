@@ -1,3 +1,7 @@
+2007-04-16  Adam Roben  <aroben@apple.com>
+
+        * WebKit.vcproj/WebKit.sln: Added WTF to the solution.
+
 2007-04-16  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Adam.
