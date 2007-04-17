@@ -195,9 +195,6 @@ fast/text/attributed-substring-from-range-001.html
 fast/text/attributed-substring-from-range.html
 fast/text/justified-text-rect.html
 
-# CFNet cookies crash <rdar://problem/4993339>
-fast/dom/Window/window-properties.html
-
 # Pixel depth and color depth different on boomer <rdar://problem/5137719>
 fast/dom/Window/window-screen-properties.html
 
