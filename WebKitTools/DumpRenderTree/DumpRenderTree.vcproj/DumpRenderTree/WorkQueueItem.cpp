@@ -29,7 +29,7 @@
 #include "DumpRenderTree.h"
 #include "WorkQueueItem.h"
 
-#include <atlcomcli.h>
+#include <WebCore/COMPtr.h>
 #include <WebKit/IWebFrame.h>
 #include <WebKit/IWebURLRequest.h>
 #include <WebKit/IWebView.h>
@@ -37,35 +37,36 @@
 
 void LoadItem::invoke() const
 {
-    CComPtr<IWebFrame> targetFrame;
+    COMPtr<IWebFrame> targetFrame;
     if (m_target.IsEmpty())
         targetFrame = frame;
     else if (FAILED(frame->findFrameNamed(CComBSTR(m_target), &targetFrame)))
         return;
 
-    CComPtr<IWebURLRequest> request;
-    if (FAILED(request.CoCreateInstance(CLSID_WebURLRequest)))
+    COMPtr<IWebURLRequest> request;
+    if (FAILED(CoCreateInstance(CLSID_WebURLRequest, 0, CLSCTX_ALL, IID_IWebURLRequest, (void**)&request)))
         return;
 
     if (FAILED(request->initWithURL(CComBSTR(m_url), WebURLRequestUseProtocolCachePolicy, 60)))
         return;
 
-    targetFrame->loadRequest(request);
+    targetFrame->loadRequest(request.get());
 }
 
 void ReloadItem::invoke() const
 {
-    CComPtr<IWebView> webView;
+    COMPtr<IWebView> webView;
     if (FAILED(frame->webView(&webView)))
         return;
 
-    if (CComQIPtr<IWebIBActions> webActions = webView)
+    COMPtr<IWebIBActions> webActions;
+    if (SUCCEEDED(webView->QueryInterface(&webActions)))
         webActions->reload(0);
 }
 
 void ScriptItem::invoke() const
 {
-    CComPtr<IWebView> webView;
+    COMPtr<IWebView> webView;
     if (FAILED(frame->webView(&webView)))
         return;
 
@@ -75,7 +76,7 @@ void ScriptItem::invoke() const
 
 void BackForwardItem::invoke() const
 {
-    CComPtr<IWebView> webView;
+    COMPtr<IWebView> webView;
     if (FAILED(frame->webView(&webView)))
         return;
 
@@ -90,13 +91,13 @@ void BackForwardItem::invoke() const
         return;
     }
     
-    CComPtr<IWebBackForwardList> bfList;
+    COMPtr<IWebBackForwardList> bfList;
     if (FAILED(webView->backForwardList(&bfList)))
         return;
 
-    CComPtr<IWebHistoryItem> item;
+    COMPtr<IWebHistoryItem> item;
     if (FAILED(bfList->itemAtIndex(m_howFar, &item)))
         return;
 
-    webView->goToBackForwardItem(item, &result);
+    webView->goToBackForwardItem(item.get(), &result);
 }

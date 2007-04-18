@@ -30,6 +30,7 @@
 #include "EditingDelegate.h"
 
 #include <atlstr.h>
+#include <WebCore/COMPtr.h>
 #include <wtf/Platform.h>
 #include <JavaScriptCore/Assertions.h>
 
@@ -79,9 +80,9 @@ static CString dumpPath(IDOMNode* node)
         return result;
     result.Format(TEXT("%s"), name ? name : TEXT(""));
 
-    CComPtr<IDOMNode> parent;
+    COMPtr<IDOMNode> parent;
     if (SUCCEEDED(node->parentNode(&parent)))
-        result += TEXT(" > ") + dumpPath(parent);
+        result += TEXT(" > ") + dumpPath(parent.get());
 
     return result;
 }
@@ -100,15 +101,15 @@ static CString dump(IDOMRange* range)
     if (FAILED(range->endOffset(&endOffset)))
         return result;
 
-    CComPtr<IDOMNode> startContainer;
+    COMPtr<IDOMNode> startContainer;
     if (FAILED(range->startContainer(&startContainer)))
         return result;
 
-    CComPtr<IDOMNode> endContainer;
+    COMPtr<IDOMNode> endContainer;
     if (FAILED(range->endContainer(&endContainer)))
         return result;
 
-    result.Format(TEXT("range from %ld of %s to %ld of %s"), startOffset, dumpPath(startContainer), endOffset, dumpPath(endContainer));
+    result.Format(TEXT("range from %ld of %s to %ld of %s"), startOffset, dumpPath(startContainer.get()), endOffset, dumpPath(endContainer.get()));
     return result;
 }
 

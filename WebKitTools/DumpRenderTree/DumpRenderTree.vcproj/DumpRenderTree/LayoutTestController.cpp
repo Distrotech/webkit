@@ -33,7 +33,8 @@
 #include "WorkQueue.h"
 #include "WorkQueueItem.h"
 
-#include <atlcomcli.h>
+#include <atlstr.h>
+#include <WebCore/COMPtr.h>
 #include <wtf/Platform.h>
 #include <JavaScriptCore/Assertions.h>
 #include <JavaScriptCore/JavaScriptCore.h>
@@ -76,19 +77,19 @@ static JSValueRef setAcceptsEditingCallback(JSContextRef context, JSObjectRef fu
 
     JSValueRef undefined = JSValueMakeUndefined(context);
 
-    CComPtr<IWebView> webView;
+    COMPtr<IWebView> webView;
     if (FAILED(frame->webView(&webView)))
         return undefined;
 
-    CComQIPtr<IWebViewEditing> viewEditing(webView);
-    if (!viewEditing)
+    COMPtr<IWebViewEditing> viewEditing;
+    if (FAILED(webView->QueryInterface(&viewEditing)))
         return undefined;
 
-    CComPtr<IWebEditingDelegate> delegate;
+    COMPtr<IWebEditingDelegate> delegate;
     if (FAILED(viewEditing->editingDelegate(&delegate)))
         return undefined;
 
-    EditingDelegate* editingDelegate = (EditingDelegate*)(IWebEditingDelegate*)delegate;
+    EditingDelegate* editingDelegate = (EditingDelegate*)(IWebEditingDelegate*)delegate.get();
     editingDelegate->setAcceptsEditing(acceptsEditing);
 
     return undefined;
@@ -120,15 +121,15 @@ static JSValueRef clearBackForwardListCallback(JSContextRef context, JSObjectRef
 {
     JSValueRef undefined = JSValueMakeUndefined(context);
 
-    CComPtr<IWebView> webView;
+    COMPtr<IWebView> webView;
     if (FAILED(frame->webView(&webView)))
         return undefined;
 
-    CComPtr<IWebBackForwardList> backForwardList;
+    COMPtr<IWebBackForwardList> backForwardList;
     if (FAILED(webView->backForwardList(&backForwardList)))
         return undefined;
 
-    CComPtr<IWebHistoryItem> item;
+    COMPtr<IWebHistoryItem> item;
     if (FAILED(backForwardList->currentItem(&item)))
         return undefined;
 
@@ -140,8 +141,8 @@ static JSValueRef clearBackForwardListCallback(JSContextRef context, JSObjectRef
 
     backForwardList->setCapacity(0);
     backForwardList->setCapacity(capacity);
-    backForwardList->addItem(item);
-    backForwardList->goToItem(item);
+    backForwardList->addItem(item.get());
+    backForwardList->goToItem(item.get());
 
     return undefined;
 }
@@ -154,12 +155,12 @@ static JSValueRef setTabKeyCyclesThroughElementsCallback(JSContextRef context, J
 
     JSValueRef undefined = JSValueMakeUndefined(context);
 
-    CComPtr<IWebView> webView;
+    COMPtr<IWebView> webView;
     if (FAILED(frame->webView(&webView)))
         return undefined;
 
-    CComQIPtr<IWebViewPrivate> viewPrivate(webView);
-    if (!viewPrivate)
+    COMPtr<IWebViewPrivate> viewPrivate;
+    if (FAILED(webView->QueryInterface(&viewPrivate)))
         return undefined;
 
     viewPrivate->setTabKeyCyclesThroughElements(shouldCycle ? TRUE : FALSE);
@@ -216,11 +217,11 @@ static JSValueRef queueLoadCallback(JSContextRef context, JSObjectRef function, 
         ASSERT(!exception || !*exception);
     }
 
-    CComPtr<IWebDataSource> dataSource;
+    COMPtr<IWebDataSource> dataSource;
     if (FAILED(frame->dataSource(&dataSource)))
         return undefined;
 
-    CComPtr<IWebURLResponse> response;
+    COMPtr<IWebURLResponse> response;
     if (FAILED(dataSource->response(&response)))
         return undefined;
 

@@ -36,13 +36,13 @@
 #include "WorkQueueItem.h"
 #include "WorkQueue.h"
 
+#include <WebCore/COMPtr.h>
 #include <wtf/Platform.h>
 #include <JavaScriptCore/Assertions.h>
 #include <JavaScriptCore/JavaScriptCore.h>
 #include <WebKit/IWebFramePrivate.h>
 #include <WebKit/IWebViewPrivate.h>
 
-#include <atlcomcli.h>
 #include <stdio.h>
 
 static WaitUntilDoneDelegate* g_delegateWaitingOnTimer;
@@ -103,7 +103,10 @@ HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::didCommitLoadForFrame(
     /* [in] */ IWebView *webView,
     /* [in] */ IWebFrame *frame)
 {
-    CComQIPtr<IWebViewPrivate> webViewPrivate(webView);
+    COMPtr<IWebViewPrivate> webViewPrivate;
+    HRESULT hr = webView->QueryInterface(&webViewPrivate);
+    if (FAILED(hr))
+        return hr;
     webViewPrivate->updateActiveState();
     return S_OK;
 }

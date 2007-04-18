@@ -28,10 +28,9 @@
 
 #include "DumpRenderTree.h"
 
-#include <atlcomcli.h>
 #include <atlsafe.h>
 #include <atlstr.h>
-#include <atltypes.h>
+#include <WebCore/COMPtr.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <JavaScriptCore/JavaScriptCore.h>
 #include <math.h>
@@ -68,7 +67,7 @@ bool done;
 // where a frameset is loaded, and then new content is loaded into one of the child frames,
 // that child frame is the "topmost frame that is loading".
 IWebFrame* topLoadingFrame;     // !nil iff a load is in progress
-static CComPtr<IWebHistoryItem> prevTestBFItem;  // current b/f item at the end of the previous test
+static COMPtr<IWebHistoryItem> prevTestBFItem;  // current b/f item at the end of the previous test
 
 bool dumpAsText = false;
 bool waitToDump = false;
@@ -184,16 +183,16 @@ void dumpFrameScrollPosition(IWebFrame* frame)
     if (!frame)
         return;
 
-    CComQIPtr<IWebFramePrivate> framePrivate = frame;
-    if (!framePrivate)
+    COMPtr<IWebFramePrivate> framePrivate;
+    if (FAILED(frame->QueryInterface(&framePrivate)))
         return;
 
-    CSize scrollPosition;
+    SIZE scrollPosition;
     if (FAILED(framePrivate->scrollOffset(&scrollPosition)))
         return;
 
     if (abs(scrollPosition.cx) > 0.00000001 || abs(scrollPosition.cy) > 0.00000001) {
-        CComPtr<IWebFrame> parent;
+        COMPtr<IWebFrame> parent;
         if (FAILED(frame->parentFrame(&parent)))
             return;
         if (parent) {
@@ -214,20 +213,23 @@ void dumpFrameScrollPosition(IWebFrame* frame)
         if (arrPtr) {
             CComSafeArray<IUnknown*> kids;
             kids.Attach(arrPtr);
-            for (unsigned i = 0; i < kidsCount; ++i)
-                dumpFrameScrollPosition(CComQIPtr<IWebFrame>(kids.GetAt(i)));
+            for (unsigned i = 0; i < kidsCount; ++i) {
+                COMPtr<IWebFrame> framePtr;
+                kids.GetAt(i)->QueryInterface(&framePtr);
+                dumpFrameScrollPosition(framePtr.get());
+            }
         }
     }
 }
 
 static int compareHistoryItems(const void* item1, const void* item2)
 {
-    CComQIPtr<IWebHistoryItemPrivate> itemA = *(IUnknown**)item1;
-    if (!itemA)
+    COMPtr<IWebHistoryItemPrivate> itemA;
+    if (FAILED((*(IUnknown**)item1)->QueryInterface(&itemA)))
         return 0;
 
-    CComQIPtr<IWebHistoryItemPrivate> itemB = *(IUnknown**)item2;
-    if (!itemB)
+    COMPtr<IWebHistoryItemPrivate> itemB;
+    if (FAILED((*(IUnknown**)item2)->QueryInterface(&itemB)))
         return 0;
 
     CComBSTR targetA;
@@ -258,8 +260,8 @@ static void dumpHistoryItem(IWebHistoryItem* item, int indent, bool current)
         return;
     printf("%S", url ? url : L"");
 
-    CComQIPtr<IWebHistoryItemPrivate> itemPrivate = item;
-    if (!itemPrivate)
+    COMPtr<IWebHistoryItemPrivate> itemPrivate;
+    if (FAILED(item->QueryInterface(&itemPrivate)))
         return;
 
     CComBSTR target;
@@ -289,8 +291,11 @@ static void dumpHistoryItem(IWebHistoryItem* item, int indent, bool current)
     // must sort to eliminate arbitrary result ordering which defeats reproducible testing
     qsort(kidsArray, kidsCount, sizeof(kidsArray[0]), compareHistoryItems);
 
-    for (unsigned i = 0; i < kidsCount; ++i)
-        dumpHistoryItem(CComQIPtr<IWebHistoryItem>(kidsArray[i]), indent + 4, false);
+    for (unsigned i = 0; i < kidsCount; ++i) {
+        COMPtr<IWebHistoryItem> item;
+        kidsArray[i]->QueryInterface(&item);
+        dumpHistoryItem(item.get(), indent + 4, false);
+    }
 
     delete [] kidsArray;
 }
@@ -300,11 +305,11 @@ static void dumpBackForwardList(IWebFrame* frame)
     assert(frame);
 
     printf("\n============== Back Forward List ==============\n");
-    CComPtr<IWebView> webView;
+    COMPtr<IWebView> webView;
     if (FAILED(frame->webView(&webView)))
         return;
 
-    CComPtr<IWebBackForwardList> bfList;
+    COMPtr<IWebBackForwardList> bfList;
     if (FAILED(webView->backForwardList(&bfList)))
         return;
 
@@ -318,20 +323,24 @@ static void dumpBackForwardList(IWebFrame* frame)
         return;
 
     for (int i = forwardListCount; i > 0; --i) {
-        CComPtr<IWebHistoryItem> item;
+        COMPtr<IWebHistoryItem> item;
         if (FAILED(bfList->itemAtIndex(i, &item)))
             return;
         // something is wrong if the item from the last test is in the forward part of the b/f list
         assert(item != prevTestBFItem);
-        itemsToPrint.Add(CComQIPtr<IUnknown, &IID_IUnknown>(item));
+        COMPtr<IUnknown> itemUnknown;
+        item->QueryInterface(&itemUnknown);
+        itemsToPrint.Add(itemUnknown.get());
     }
     
-    CComPtr<IWebHistoryItem> currentItem;
+    COMPtr<IWebHistoryItem> currentItem;
     if (FAILED(bfList->currentItem(&currentItem)))
         return;
 
     assert(currentItem != prevTestBFItem);
-    itemsToPrint.Add(CComQIPtr<IUnknown, &IID_IUnknown>(currentItem));
+    COMPtr<IUnknown> currentItemUnknown;
+    currentItem->QueryInterface(&currentItemUnknown);
+    itemsToPrint.Add(currentItemUnknown.get());
     int currentItemIndex = itemsToPrint.GetCount() - 1;
 
     int backListCount;
@@ -339,25 +348,30 @@ static void dumpBackForwardList(IWebFrame* frame)
         return;
 
     for (int i = -1; i >= -backListCount; --i) {
-        CComPtr<IWebHistoryItem> item;
+        COMPtr<IWebHistoryItem> item;
         if (FAILED(bfList->itemAtIndex(i, &item)))
             return;
         if (item == prevTestBFItem)
             break;
-        itemsToPrint.Add(CComQIPtr<IUnknown, &IID_IUnknown>(item));
+        COMPtr<IUnknown> itemUnknown;
+        item->QueryInterface(&itemUnknown);
+        itemsToPrint.Add(itemUnknown.get());
     }
 
-    for (int i = itemsToPrint.GetCount() - 1; i >= 0; --i)
-        dumpHistoryItem(CComQIPtr<IWebHistoryItem>(itemsToPrint[i]), 8, i == currentItemIndex);
+    for (int i = itemsToPrint.GetCount() - 1; i >= 0; --i) {
+        COMPtr<IWebHistoryItem> historyItemToPrint;
+        itemsToPrint[i]->QueryInterface(&historyItemToPrint);
+        dumpHistoryItem(historyItemToPrint.get(), 8, i == currentItemIndex);
+    }
 
     printf("===============================================\n");
 }
 
 void dump()
 {
-    CComPtr<IWebDataSource> dataSource;
+    COMPtr<IWebDataSource> dataSource;
     if (SUCCEEDED(frame->dataSource(&dataSource))) {
-        CComPtr<IWebURLResponse> response;
+        COMPtr<IWebURLResponse> response;
         if (SUCCEEDED(dataSource->response(&response))) {
             CComBSTR mimeType;
             if (SUCCEEDED(response->MIMEType(&mimeType)))
@@ -372,13 +386,14 @@ void dump()
             ::InvalidateRect(webViewWindow, 0, TRUE);
             ::SendMessage(webViewWindow, WM_PAINT, 0, 0);
 
-            CComPtr<IDOMDocument> document;
+            COMPtr<IDOMDocument> document;
             frame->DOMDocument(&document);
 
-            CComPtr<IDOMElement> documentElement;
+            COMPtr<IDOMElement> documentElement;
             document->documentElement(&documentElement);
 
-            if (CComQIPtr<IDOMElementPrivate> docPrivate = documentElement)
+            COMPtr<IDOMElementPrivate> docPrivate;
+            if (SUCCEEDED(documentElement->QueryInterface(&docPrivate)))
                 docPrivate->innerText(&resultString);
         } else {
             bool isSVGW3CTest = strstr(currentTest, "svg\\W3C-SVG-1.1");
@@ -396,8 +411,8 @@ void dump()
             ::InvalidateRect(webViewWindow, 0, TRUE);
             ::SendMessage(webViewWindow, WM_PAINT, 0, 0);
 
-            CComQIPtr<IWebFramePrivate> framePrivate(frame);
-            if (!framePrivate)
+            COMPtr<IWebFramePrivate> framePrivate;
+            if (FAILED(frame->QueryInterface(&framePrivate)))
                 goto fail;
             framePrivate->renderTreeAsExternalRepresentation(&resultString);
         }
@@ -469,10 +484,10 @@ static void runTest(const char* pathOrURL)
     repaintSweepHorizontally = false;
     timedOut = false;
 
-    prevTestBFItem.Release();
-    CComPtr<IWebView> webView;
+    prevTestBFItem = 0;
+    COMPtr<IWebView> webView;
     if (SUCCEEDED(frame->webView(&webView))) {
-        CComPtr<IWebBackForwardList> bfList;
+        COMPtr<IWebBackForwardList> bfList;
         if (SUCCEEDED(webView->backForwardList(&bfList)))
             bfList->currentItem(&prevTestBFItem);
     }
@@ -483,15 +498,15 @@ static void runTest(const char* pathOrURL)
     // Set the test timeout timer
     SetTimer(hostWindow, timeoutId, timeoutValue, 0);
 
-    CComPtr<IWebMutableURLRequest> request;
-    HRESULT hr = request.CoCreateInstance(CLSID_WebMutableURLRequest);
+    COMPtr<IWebMutableURLRequest> request;
+    HRESULT hr = CoCreateInstance(CLSID_WebMutableURLRequest, 0, CLSCTX_ALL, IID_IWebMutableURLRequest, (void**)&request);
     if (FAILED(hr))
         goto exit;
 
     request->initWithURL(urlBStr, WebURLRequestUseProtocolCachePolicy, 0);
 
     request->setHTTPMethod(methodBStr);
-    frame->loadRequest(request);
+    frame->loadRequest(request.get());
 
     MSG msg;
     while (GetMessage(&msg, 0, 0, 0)) {
@@ -652,8 +667,8 @@ int main(int argc, char* argv[])
 
     // FIXME: options
 
-    CComPtr<IWebView> webView;
-    if (FAILED(webView.CoCreateInstance(CLSID_WebView)))
+    COMPtr<IWebView> webView;
+    if (FAILED(CoCreateInstance(CLSID_WebView, 0, CLSCTX_ALL, IID_IWebView, (void**)&webView)))
         return -1;
 
     if (FAILED(webView->setHostWindow(hostWindow)))
@@ -664,8 +679,8 @@ int main(int argc, char* argv[])
     if (FAILED(webView->initWithFrame(clientRect, 0, 0)))
         return -1;
 
-    CComQIPtr<IWebViewPrivate> viewPrivate(webView);
-    if (!viewPrivate)
+    COMPtr<IWebViewPrivate> viewPrivate;
+    if (FAILED(webView->QueryInterface(&viewPrivate)))
         return -1;
 
     CComBSTR pluginPath = exePath + "testnetscapeplugin";
@@ -678,33 +693,33 @@ int main(int argc, char* argv[])
     SetWindowPos(webViewWindow, 0, 0, 0, maxViewWidth, maxViewHeight, 0);
     ShowWindow(hostWindow, SW_SHOW);
 
-    CComPtr<WaitUntilDoneDelegate> waitDelegate;
-    waitDelegate.Attach(new WaitUntilDoneDelegate);
-    if (FAILED(webView->setFrameLoadDelegate(waitDelegate)))
+    COMPtr<WaitUntilDoneDelegate> waitDelegate;
+    waitDelegate.adoptRef(new WaitUntilDoneDelegate);
+    if (FAILED(webView->setFrameLoadDelegate(waitDelegate.get())))
         return -1;
 
-    if (FAILED(webView->setUIDelegate(waitDelegate)))
+    if (FAILED(webView->setUIDelegate(waitDelegate.get())))
         return -1;
 
-    CComQIPtr<IWebViewEditing> viewEditing(webView);
-    if (!viewEditing)
+    COMPtr<IWebViewEditing> viewEditing;
+    if (FAILED(webView->QueryInterface(&viewEditing)))
         return -1;
 
-    CComPtr<EditingDelegate> editingDelegate;
-    editingDelegate.Attach(new EditingDelegate);
+    COMPtr<EditingDelegate> editingDelegate;
+    editingDelegate.adoptRef(new EditingDelegate);
 
-    if (FAILED(viewEditing->setEditingDelegate(editingDelegate)))
+    if (FAILED(viewEditing->setEditingDelegate(editingDelegate.get())))
         return -1;
 
-    CComPtr<IWebPreferences> preferences;
+    COMPtr<IWebPreferences> preferences;
     if (FAILED(webView->preferences(&preferences)))
         return -1;
 
-    initializePreferences(preferences);
+    initializePreferences(preferences.get());
 
-    CComPtr<IWebIconDatabase> iconDatabase;
-    CComPtr<IWebIconDatabase> tmpIconDatabase;
-    if (FAILED(tmpIconDatabase.CoCreateInstance(CLSID_WebIconDatabase)))
+    COMPtr<IWebIconDatabase> iconDatabase;
+    COMPtr<IWebIconDatabase> tmpIconDatabase;
+    if (FAILED(CoCreateInstance(CLSID_WebIconDatabase, 0, CLSCTX_ALL, IID_IWebIconDatabase, (void**)&tmpIconDatabase)))
         return -1;
     if (FAILED(tmpIconDatabase->sharedIconDatabase(&iconDatabase)))
         return -1;

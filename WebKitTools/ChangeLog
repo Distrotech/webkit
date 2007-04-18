@@ -1,3 +1,45 @@
+2007-04-16  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam.
+        
+        Eliminate some ATL use in our future open source tree.
+        
+        ATL headers are not included in any free download, so we'll need to
+        remove all use of ATL from our open source for compatibility with
+        Visual Studio Express.
+        
+        Replace CComPtr and CComQIPtr with COMPtr.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (dumpFrameScrollPosition):
+        (compareHistoryItems):
+        (dumpHistoryItem):
+        (dumpBackForwardList):
+        (dump):
+        (runTest):
+        (main):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/EditingDelegate.cpp:
+        (dumpPath):
+        (dump):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/EventSender.cpp:
+        (mouseDownCallback):
+        (doMouseUp):
+        (doMouseMove):
+        (keyDownCallback):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/LayoutTestController.cpp:
+        (setAcceptsEditingCallback):
+        (clearBackForwardListCallback):
+        (setTabKeyCyclesThroughElementsCallback):
+        (queueLoadCallback):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.cpp:
+        (WaitUntilDoneDelegate::didCommitLoadForFrame):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WorkQueueItem.cpp:
+        (LoadItem::invoke):
+        (ReloadItem::invoke):
+        (ScriptItem::invoke):
+        (BackForwardItem::invoke):
+        * DumpRenderTree/DumpRenderTree.vcproj/TestNetscapePlugin/TestNetscapePlugin.rc: Remove atlmfc header include
+
 2007-04-14  Adam Roben  <aroben@apple.com>
 
         Reviewed by Steve.

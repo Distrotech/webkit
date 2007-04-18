@@ -31,7 +31,7 @@
 
 #include "DraggingInfo.h"
 
-#include <atlcomcli.h>
+#include <WebCore/COMPtr.h>
 #include <wtf/Platform.h>
 #include <JavaScriptCore/JavaScriptCore.h>
 #include <JavaScriptCore/Assertions.h>
@@ -101,8 +101,8 @@ static LRESULT dispatchMessage(const MSG* msg)
 
 static JSValueRef mouseDownCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
 {
-    CComQIPtr<IWebFramePrivate> framePrivate(frame);
-    if (framePrivate)
+    COMPtr<IWebFramePrivate> framePrivate;
+    if (SUCCEEDED(frame->QueryInterface(&framePrivate)))
         framePrivate->layout();
 
     down = true;
@@ -122,15 +122,15 @@ static inline POINTL pointl(const POINT& point)
 
 static void doMouseUp(MSG msg)
 {
-    CComQIPtr<IWebFramePrivate> framePrivate(frame);
-    if (framePrivate)
+    COMPtr<IWebFramePrivate> framePrivate;
+    if (SUCCEEDED(frame->QueryInterface(&framePrivate)))
         framePrivate->layout();
 
     dispatchMessage(&msg);
     down = false;
 
     if (draggingInfo) {
-        CComPtr<IWebView> webView;
+        COMPtr<IWebView> webView;
         if (SUCCEEDED(frame->webView(&webView))) {
             POINT screenPoint = msg.pt;
             ::ClientToScreen(webViewWindow, &screenPoint);
@@ -164,8 +164,8 @@ static JSValueRef mouseUpCallback(JSContextRef context, JSObjectRef function, JS
 
 static void doMouseMove(MSG msg)
 {
-    CComQIPtr<IWebFramePrivate> framePrivate(frame);
-    if (framePrivate)
+    COMPtr<IWebFramePrivate> framePrivate;
+    if (SUCCEEDED(frame->QueryInterface(&framePrivate)))
         framePrivate->layout();
 
     dispatchMessage(&msg);
@@ -246,8 +246,8 @@ static JSValueRef keyDownCallback(JSContextRef context, JSObjectRef function, JS
     static JSStringRef metaKey = JSStringCreateWithUTF8CString("metaKey");
     static JSStringRef lengthProperty = JSStringCreateWithUTF8CString("length");
 
-    CComQIPtr<IWebFramePrivate> framePrivate(frame);
-    if (framePrivate)
+    COMPtr<IWebFramePrivate> framePrivate;
+    if (SUCCEEDED(frame->QueryInterface(&framePrivate)))
         framePrivate->layout();
     
     JSStringRef character = JSValueToStringCopy(context, arguments[0], exception);
