@@ -235,6 +235,9 @@ svg/custom/pointer-events-path.svg
 svg/custom/pointer-events-text.svg
 svg/custom/text-hit-test.svg
 
+# window.layoutTestController.setWindowIsKey is not implemented in DRT in boomer <rdar://problem/5141186>
+editing/selection/caret-and-focus-ring.html
+
 # editing/selection/editable-links.html fails on boomer <rdar://problem/5137972>
 editing/selection/drag-to-contenteditable-iframe.html
 editing/selection/editable-links.html
@@ -457,9 +460,14 @@ http/tests/local/file-url-sent-as-referer.html
 http/tests/misc/redirect-to-about-blank.html
 http/tests/xmlhttprequest/basic-auth.html
 
+# used to be crashers but are now failures.
+editing/pasteboard/paste-line-endings-002
+editing/pasteboard/paste-line-endings-004
+security/block-test
+
 # Crash in Release but not Debug
-editing/deleting/5115601.html
-fast/canvas/drawImage-with-invalid-args.html
+# editing/deleting/5115601.html
+# fast/canvas/drawImage-with-invalid-args.html
 
 # Editing Delegate, selection
 editing/selection/extend-by-sentence-001.html
@@ -481,9 +489,3 @@ fast/dom/Window/window-onFocus.html
 fast/forms/searchfield-heights.html
 fast/table/frame-and-rules.html
 fast/table/giantCellspacing.html
-
-# Caret and DRT functionality
-editing/selection/caret-and-focus-ring.html
-
-# Check to make sure you have the right encoding
-fast/encoding/charset-x-nextstep.html
