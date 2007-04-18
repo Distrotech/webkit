@@ -27,6 +27,7 @@
 #include "WebKitDLL.h"
 
 #include "IWebURLResponse.h"
+#include "ProgIDMacros.h"
 #include "WebKit.h"
 #include "WebKitClassFactory.h"
 #include "resource.h"
@@ -110,145 +111,41 @@ static CLSID gRegCLSIDs[] = {
     CLSID_WebURLProtectionSpace
 };
 
+#if __BUILDBOT__
+#define PROGID(className) PRODUCTION_PROGID(className)
+#else
+#define PROGID(className) OPENSOURCE_PROGID(className)
+#endif
+
+//key                                                                                       value name              value }
+#define KEYS_FOR_CLASS(cls) \
+{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT(cls) }, \
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 }, \
+{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") }, \
+{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      PROGID(cls) }, \
+{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      PROGID(cls) }, \
+{ PROGID(cls),                                                                              0,                      TEXT(cls) }, \
+{ PROGID(cls)TEXT("\\CLSID"),                                                               0,                      TEXT("{########-####-####-####-############}") }
+
 static const int gSlotsPerEntry = 7;
 static LPCTSTR gRegTable[][3] = {
-//key                                                                                       value name              value }
-
-{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebView") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebView.3") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebView") },
-{ TEXT("WebKit.WebView.3"),                                                                 0,                      TEXT("WebView") },
-{ TEXT("WebKit.WebView.3\\CLSID"),                                                          0,                      TEXT("{########-####-####-####-############}") },
-
-{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebIconDatabase") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebIconDatabase.3") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebIconDatabase") },
-{ TEXT("WebKit.WebIconDatabase.3"),                                                         0,                      TEXT("WebIconDatabase") },
-{ TEXT("WebKit.WebIconDatabase.3\\CLSID"),                                                  0,                      TEXT("{########-####-####-####-############}") },
-
-{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebMutableURLRequest") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebMutableURLRequest.3") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebMutableURLRequest") },
-{ TEXT("WebKit.WebMutableURLRequest.3"),                                                    0,                      TEXT("WebMutableURLRequest") },
-{ TEXT("WebKit.WebMutableURLRequest.3\\CLSID"),                                             0,                      TEXT("{########-####-####-####-############}") },
-
-{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebURLRequest") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebURLRequest.3") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebURLRequest") },
-{ TEXT("WebKit.WebURLRequest.3"),                                                           0,                      TEXT("WebURLRequest") },
-{ TEXT("WebKit.WebURLRequest.3\\CLSID"),                                                    0,                      TEXT("{########-####-####-####-############}") },
-
-{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebNotificationCenter") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebNotificationCenter.3") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebNotificationCenter") },
-{ TEXT("WebKit.WebNotificationCenter.3"),                                                   0,                      TEXT("WebNotificationCenter") },
-{ TEXT("WebKit.WebNotificationCenter.3\\CLSID"),                                            0,                      TEXT("{########-####-####-####-############}") },
-
-{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebHistory") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebHistory.3") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebHistory") },
-{ TEXT("WebKit.WebHistory.3"),                                                              0,                      TEXT("WebHistory") },
-{ TEXT("WebKit.WebHistory.3\\CLSID"),                                                       0,                      TEXT("{########-####-####-####-############}") },
-
-{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("CFDictionaryPropertyBag") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.CFDictionaryPropertyBag.3") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.CFDictionaryPropertyBag") },
-{ TEXT("WebKit.CFDictionaryPropertyBag.3"),                                                 0,                      TEXT("CFDictionaryPropertyBag") },
-{ TEXT("WebKit.CFDictionaryPropertyBag.3\\CLSID"),                                          0,                      TEXT("{########-####-####-####-############}") },
-
-{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebHistoryItem") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebHistoryItem.3") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebHistoryItem") },
-{ TEXT("WebKit.WebHistoryItem.3"),                                                          0,                      TEXT("WebHistoryItem") },
-{ TEXT("WebKit.WebHistoryItem.3\\CLSID"),                                                   0,                      TEXT("{########-####-####-####-############}") },
-
-{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebCache") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebCache.3") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebCache") },
-{ TEXT("WebKit.WebCache.3"),                                                                0,                      TEXT("WebCache") },
-{ TEXT("WebKit.WebCache.3\\CLSID"),                                                         0,                      TEXT("{########-####-####-####-############}") },
-
-{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebJavaScriptCollector") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebJavaScriptCollector.3") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebJavaScriptCollector") },
-{ TEXT("WebKit.WebJavaScriptCollector.3"),                                                  0,                      TEXT("WebJavaScriptCollector") },
-{ TEXT("WebKit.WebJavaScriptCollector.3\\CLSID"),                                           0,                      TEXT("{########-####-####-####-############}") },
-
-{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebPreferences") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebPreferences.3") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebPreferences") },
-{ TEXT("WebKit.WebPreferences.3"),                                                          0,                      TEXT("WebPreferences") },
-{ TEXT("WebKit.WebPreferences.3\\CLSID"),                                                   0,                      TEXT("{########-####-####-####-############}") },
-
-{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebScrollBar") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebScrollBar.3") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebScrollBar") },
-{ TEXT("WebKit.WebScrollBar.3"),                                                            0,                      TEXT("WebScrollBar") },
-{ TEXT("WebKit.WebScrollBar.3\\CLSID"),                                                     0,                      TEXT("{########-####-####-####-############}") },
-
-{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebKitStatistics") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebKitStatistics.3") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebKitStatistics") },
-{ TEXT("WebKit.WebKitStatistics.3"),                                                        0,                      TEXT("WebKitStatistics") },
-{ TEXT("WebKit.WebKitStatistics.3\\CLSID"),                                                 0,                      TEXT("{########-####-####-####-############}") },
-
-{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebError") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebError.3") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebError") },
-{ TEXT("WebKit.WebError.3"),                                                                0,                      TEXT("WebError") },
-{ TEXT("WebKit.WebError.3\\CLSID"),                                                         0,                      TEXT("{########-####-####-####-############}") },
-
-{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebURLCredential") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebURLCredential.3") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebURLCredential") },
-{ TEXT("WebKit.WebURLCredential.3"),                                                        0,                      TEXT("WebURLCredential") },
-{ TEXT("WebKit.WebURLCredential.3\\CLSID"),                                                 0,                      TEXT("{########-####-####-####-############}") },
-
-{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebDownload") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebDownload.3") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebDownload") },
-{ TEXT("WebKit.WebDownload.3"),                                                             0,                      TEXT("WebDownload") },
-{ TEXT("WebKit.WebDownload.3\\CLSID"),                                                      0,                      TEXT("{########-####-####-####-############}") },
-
-{ TEXT("CLSID\\{########-####-####-####-############}"),                                    0,                      TEXT("WebURLProtectionSpace") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    0,                      (LPCTSTR)-1 },
-{ TEXT("CLSID\\{########-####-####-####-############}\\InprocServer32"),                    TEXT("ThreadingModel"), TEXT("Apartment") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\ProgID"),                            0,                      TEXT("WebKit.WebURLProtectionSpace.3") },
-{ TEXT("CLSID\\{########-####-####-####-############}\\VersionIndependentProgID"),          0,                      TEXT("WebKit.WebURLProtectionSpace") },
-{ TEXT("WebKit.WebURLProtectionSpace.3"),                                                   0,                      TEXT("WebURLProtectionSpace") },
-{ TEXT("WebKit.WebURLProtectionSpace.3\\CLSID"),                                            0,                      TEXT("{########-####-####-####-############}") }
+    KEYS_FOR_CLASS("WebView"),
+    KEYS_FOR_CLASS("WebIconDatabase"),
+    KEYS_FOR_CLASS("WebMutableURLRequest"),
+    KEYS_FOR_CLASS("WebURLRequest"),
+    KEYS_FOR_CLASS("WebNotificationCenter"),
+    KEYS_FOR_CLASS("WebHistory"),
+    KEYS_FOR_CLASS("CFDictionaryPropertyBag"),
+    KEYS_FOR_CLASS("WebHistoryItem"),
+    KEYS_FOR_CLASS("WebCache"),
+    KEYS_FOR_CLASS("WebJavaScriptCollector"),
+    KEYS_FOR_CLASS("WebPreferences"),
+    KEYS_FOR_CLASS("WebScrollBar"),
+    KEYS_FOR_CLASS("WebKitStatistics"),
+    KEYS_FOR_CLASS("WebError"),
+    KEYS_FOR_CLASS("WebURLCredential"),
+    KEYS_FOR_CLASS("WebDownload"),
+    KEYS_FOR_CLASS("WebURLProtectionSpace")
 };
 
 static void substituteGUID(LPTSTR str, const UUID* guid)

@@ -1,3 +1,15 @@
+2007-04-18  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Steve.
+
+        Use different ProgIDs for production builds.
+
+        * ProgIDMacros.h: Added.
+        * WebKit.vcproj/WebKit.vcproj: Defined the __BUILDBOT__ macro and added
+        a new header which is copied in the post-build step.
+        * WebKitDLL.cpp: Macro-ized the declaration of the registry keys to
+        install.
+
 2007-04-16  Adam Roben  <aroben@apple.com>
 
         Rubberstamped by Steve.
