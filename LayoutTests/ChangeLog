@@ -1,3 +1,8 @@
+2007-04-18  Adam Roben  <aroben@apple.com>
+
+        * win/Skipped: Fixed some file extensions and removed duplicated
+        tests.
+
 2007-04-18  Kevin McCullough  <kmccullough@apple.com>
 
         * win/Skipped: Continued sorting and filing bugs, and added new failures that may be related to the switch to Release on the build bot.  Because file extensions are unknown in the results page, I guessed that these would all be .html and failures I will investigate after the new list is generated.
