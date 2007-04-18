@@ -225,9 +225,10 @@ static JSValueRef queueLoadCallback(JSContextRef context, JSObjectRef function, 
     if (FAILED(dataSource->response(&response)))
         return undefined;
 
-    CComBSTR responseURLBSTR;
+    BSTR responseURLBSTR;
     if (FAILED(response->URL(&responseURLBSTR)))
         return undefined;
+    SysFreeString(responseURLBSTR);
 
     // FIXME: We should do real relative URL resolution here
     CString responseURL(responseURLBSTR);

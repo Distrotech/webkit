@@ -196,10 +196,11 @@ void dumpFrameScrollPosition(IWebFrame* frame)
         if (FAILED(frame->parentFrame(&parent)))
             return;
         if (parent) {
-            CComBSTR name;
+            BSTR name;
             if (FAILED(frame->name(&name)))
                 return;
             printf("frame '%S' ", name ? name : L"");
+            SysFreeString(name);
         }
         printf("scrolled to %.f,%.f\n", (double)scrollPosition.cx, (double)scrollPosition.cy);
     }
@@ -232,15 +233,20 @@ static int compareHistoryItems(const void* item1, const void* item2)
     if (FAILED((*(IUnknown**)item2)->QueryInterface(&itemB)))
         return 0;
 
-    CComBSTR targetA;
+    BSTR targetA;
     if (FAILED(itemA->target(&targetA)))
         return 0;
 
-    CComBSTR targetB;
-    if (FAILED(itemB->target(&targetB)))
+    BSTR targetB;
+    if (FAILED(itemB->target(&targetB))) {
+        SysFreeString(targetA);
         return 0;
+    }
 
-    return CString(targetA).CompareNoCase(CString(targetB));
+    int result = CString(targetA).CompareNoCase(CString(targetB));
+    SysFreeString(targetA);
+    SysFreeString(targetB);
+    return result;
 }
 
 static void dumpHistoryItem(IWebHistoryItem* item, int indent, bool current)
@@ -255,20 +261,22 @@ static void dumpHistoryItem(IWebHistoryItem* item, int indent, bool current)
     for (int i = start; i < indent; i++)
         putchar(' ');
 
-    CComBSTR url;
+    BSTR url;
     if (FAILED(item->URLString(&url)))
         return;
     printf("%S", url ? url : L"");
+    SysFreeString(url);
 
     COMPtr<IWebHistoryItemPrivate> itemPrivate;
     if (FAILED(item->QueryInterface(&itemPrivate)))
         return;
 
-    CComBSTR target;
+    BSTR target;
     if (FAILED(itemPrivate->target(&target)))
         return;
-    if (target.Length())
+    if (SysStringLen(target))
         printf(" (in frame \"%S\")", target);
+    SysFreeString(target);
     BOOL isTargetItem = FALSE;
     if (FAILED(itemPrivate->isTargetItem(&isTargetItem)))
         return;
@@ -373,13 +381,14 @@ void dump()
     if (SUCCEEDED(frame->dataSource(&dataSource))) {
         COMPtr<IWebURLResponse> response;
         if (SUCCEEDED(dataSource->response(&response))) {
-            CComBSTR mimeType;
+            BSTR mimeType;
             if (SUCCEEDED(response->MIMEType(&mimeType)))
-                dumpAsText |= mimeType == L"text/plain";
+                dumpAsText |= !_tcscmp(mimeType, TEXT("text/plain"));
+            SysFreeString(mimeType);
         }
     }
 
-    CComBSTR resultString;
+    BSTR resultString = 0;
 
     if (dumpTree) {
         if (dumpAsText) {
@@ -439,17 +448,17 @@ void dump()
     if (printSeparators)
         puts("#EOF");
 fail:
+    SysFreeString(resultString);
     // This will exit from our message loop
     PostQuitMessage(0);
     done = true;
-    return;
 }
 
 static void runTest(const char* pathOrURL)
 {
-    static CComBSTR methodBStr(TEXT("GET"));
+    static BSTR methodBStr = SysAllocString(TEXT("GET"));
 
-    CComBSTR urlBStr;
+    BSTR urlBStr;
  
     CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, pathOrURL, kCFStringEncodingWindowsLatin1);
     CFURLRef url = CFURLCreateWithString(kCFAllocatorDefault, str, 0);
@@ -523,23 +532,24 @@ static void runTest(const char* pathOrURL)
             puts("#EOF");
     }
 exit:
+    SysFreeString(urlBStr);
     return;
 }
 
 static void initializePreferences(IWebPreferences* preferences)
 {
 #ifdef USE_MAC_FONTS
-    CComBSTR standardFamily("Times");
-    CComBSTR fixedFamily("Courier");
-    CComBSTR sansSerifFamily("Helvetica");
-    CComBSTR cursiveFamily("Apple Chancery");
-    CComBSTR fantasyFamily("Papyrus");
+    BSTR standardFamily = SysAllocString(TEXT("Times"));
+    BSTR fixedFamily = SysAllocString(TEXT("Courier"));
+    BSTR sansSerifFamily = SysAllocString(TEXT("Helvetica"));
+    BSTR cursiveFamily = SysAllocString(TEXT("Apple Chancery"));
+    BSTR fantasyFamily = SysAllocString(TEXT("Papyrus"));
 #else
-    CComBSTR standardFamily("Times New Roman");
-    CComBSTR fixedFamily("Courier New");
-    CComBSTR sansSerifFamily("Arial");
-    CComBSTR cursiveFamily("Comic Sans MS"); // Not actually cursive, but it's what IE and Firefox use.
-    CComBSTR fantasyFamily("Times New Roman");
+    BSTR standardFamily = SysAllocString(TEXT("Times New Roman"));
+    BSTR fixedFamily = SysAllocString(TEXT("Courier New"));
+    BSTR sansSerifFamily = SysAllocString(TEXT("Arial"));
+    BSTR cursiveFamily = SysAllocString(TEXT("Comic Sans MS")); // Not actually cursive, but it's what IE and Firefox use.
+    BSTR fantasyFamily = SysAllocString(TEXT("Times New Roman"));
 #endif
 
     preferences->setStandardFontFamily(standardFamily);
@@ -552,6 +562,12 @@ static void initializePreferences(IWebPreferences* preferences)
     preferences->setAutosaves(FALSE);
     preferences->setJavaEnabled(FALSE);
     preferences->setPlugInsEnabled(TRUE);
+
+    SysFreeString(standardFamily);
+    SysFreeString(fixedFamily);
+    SysFreeString(sansSerifFamily);
+    SysFreeString(cursiveFamily);
+    SysFreeString(fantasyFamily);
 }
 
 static Boolean pthreadEqualCallback(const void* value1, const void* value2)
@@ -683,8 +699,13 @@ int main(int argc, char* argv[])
     if (FAILED(webView->QueryInterface(&viewPrivate)))
         return -1;
 
-    CComBSTR pluginPath = exePath + "testnetscapeplugin";
-    if (FAILED(viewPrivate->addAdditionalPluginPath(pluginPath)))
+    LPCTSTR testNetscapePluginStr = TEXT("testnetscapeplugin");
+    BSTR pluginPath = SysAllocStringLen(0, exePath.GetLength() + _tcslen(testNetscapePluginStr));
+    _tcscpy(pluginPath, (LPCTSTR)exePath);
+    _tcscat(pluginPath, testNetscapePluginStr);
+    bool failed = FAILED(viewPrivate->addAdditionalPluginPath(pluginPath));
+    SysFreeString(pluginPath);
+    if (failed)
         return -1;
 
     if (FAILED(viewPrivate->viewWindow(&webViewWindow)))

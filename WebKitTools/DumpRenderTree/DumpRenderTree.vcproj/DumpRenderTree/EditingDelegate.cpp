@@ -75,10 +75,11 @@ static CString dumpPath(IDOMNode* node)
 
     CString result;
 
-    CComBSTR name = 0;
+    BSTR name;
     if (FAILED(node->nodeName(&name)))
         return result;
     result.Format(TEXT("%s"), name ? name : TEXT(""));
+    SysFreeString(name);
 
     COMPtr<IDOMNode> parent;
     if (SUCCEEDED(node->parentNode(&parent)))
@@ -293,9 +294,10 @@ HRESULT STDMETHODCALLTYPE EditingDelegate::webViewDidBeginEditing(
     /* [in] */ IWebNotification* notification)
 {
     if (shouldDumpEditingCallbacks && !done) {
-        CComBSTR name;
+        BSTR name;
         notification->name(&name);
         _tprintf(TEXT("EDITING DELEGATE: webViewDidBeginEditing:%s\n"), name ? name : TEXT(""));
+        SysFreeString(name);
     }
     return S_OK;
 }
@@ -304,9 +306,10 @@ HRESULT STDMETHODCALLTYPE EditingDelegate::webViewDidChange(
     /* [in] */ IWebNotification *notification)
 {
     if (shouldDumpEditingCallbacks && !done) {
-        CComBSTR name;
+        BSTR name;
         notification->name(&name);
         _tprintf(TEXT("EDITING DELEGATE: webViewDidBeginEditing:%s\n"), name ? name : TEXT(""));
+        SysFreeString(name);
     }
     return S_OK;
 }
@@ -315,9 +318,10 @@ HRESULT STDMETHODCALLTYPE EditingDelegate::webViewDidEndEditing(
     /* [in] */ IWebNotification *notification)
 {
     if (shouldDumpEditingCallbacks && !done) {
-        CComBSTR name;
+        BSTR name;
         notification->name(&name);
         _tprintf(TEXT("EDITING DELEGATE: webViewDidEndEditing:%s\n"), name ? name : TEXT(""));
+        SysFreeString(name);
     }
     return S_OK;
 }
@@ -326,9 +330,10 @@ HRESULT STDMETHODCALLTYPE EditingDelegate::webViewDidChangeTypingStyle(
     /* [in] */ IWebNotification *notification)
 {
     if (shouldDumpEditingCallbacks && !done) {
-        CComBSTR name;
+        BSTR name;
         notification->name(&name);
         _tprintf(TEXT("EDITING DELEGATE: webViewDidChangeTypingStyle:%s\n"), name ? name : TEXT(""));
+        SysFreeString(name);
     }
     return S_OK;
 }
@@ -337,9 +342,10 @@ HRESULT STDMETHODCALLTYPE EditingDelegate::webViewDidChangeSelection(
     /* [in] */ IWebNotification *notification)
 {
     if (shouldDumpEditingCallbacks && !done) {
-        CComBSTR name;
+        BSTR name;
         notification->name(&name);
         _tprintf(TEXT("EDITING DELEGATE: webViewDidChangeSelection:%s\n"), name ? name : TEXT(""));
+        SysFreeString(name);
     }
     return S_OK;
 }

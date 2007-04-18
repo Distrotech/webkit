@@ -1,3 +1,31 @@
+2007-04-17  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Hyatt.
+        
+        Eliminate more ATL use (CComBSTR)
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (dumpFrameScrollPosition):
+        (compareHistoryItems):
+        (dumpHistoryItem):
+        (dump):
+        (runTest):
+        (initializePreferences):
+        (main):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.vcproj:
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/EditingDelegate.cpp:
+        (dumpPath):
+        (EditingDelegate::webViewDidBeginEditing):
+        (EditingDelegate::webViewDidChange):
+        (EditingDelegate::webViewDidEndEditing):
+        (EditingDelegate::webViewDidChangeTypingStyle):
+        (EditingDelegate::webViewDidChangeSelection):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/LayoutTestController.cpp:
+        (queueLoadCallback):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WorkQueueItem.cpp:
+        (LoadItem::invoke):
+        (ScriptItem::invoke):
+
 2007-04-16  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Adam.

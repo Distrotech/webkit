@@ -40,14 +40,22 @@ void LoadItem::invoke() const
     COMPtr<IWebFrame> targetFrame;
     if (m_target.IsEmpty())
         targetFrame = frame;
-    else if (FAILED(frame->findFrameNamed(CComBSTR(m_target), &targetFrame)))
-        return;
+    else {
+        BSTR targetBSTR = SysAllocString(m_target);
+        bool failed = FAILED(frame->findFrameNamed(targetBSTR, &targetFrame));
+        SysFreeString(targetBSTR);
+        if (failed)
+            return;
+    }
 
     COMPtr<IWebURLRequest> request;
     if (FAILED(CoCreateInstance(CLSID_WebURLRequest, 0, CLSCTX_ALL, IID_IWebURLRequest, (void**)&request)))
         return;
 
-    if (FAILED(request->initWithURL(CComBSTR(m_url), WebURLRequestUseProtocolCachePolicy, 60)))
+    BSTR urlBSTR = SysAllocString(m_url);
+    bool failed = FAILED(request->initWithURL(urlBSTR, WebURLRequestUseProtocolCachePolicy, 60));
+    SysFreeString(urlBSTR);
+    if (failed)
         return;
 
     targetFrame->loadRequest(request.get());
@@ -70,8 +78,11 @@ void ScriptItem::invoke() const
     if (FAILED(frame->webView(&webView)))
         return;
 
-    CComBSTR result;
-    webView->stringByEvaluatingJavaScriptFromString(CComBSTR(m_script), &result);
+    BSTR result;
+    BSTR scriptBSTR = SysAllocString(m_script);
+    webView->stringByEvaluatingJavaScriptFromString(scriptBSTR, &result);
+    SysFreeString(result);
+    SysFreeString(scriptBSTR);
 }
 
 void BackForwardItem::invoke() const
