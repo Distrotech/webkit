@@ -47,7 +47,6 @@
 #include <process.h> // for _beginthread()
 
 #include <CFNetwork/CFNetwork.h>
-#include <CFNetwork/CFNetworkPriv.h>
 
 namespace WebCore {
 

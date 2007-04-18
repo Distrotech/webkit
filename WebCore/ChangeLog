@@ -1,3 +1,10 @@
+2007-04-17  Adam Roben  <aroben@apple.com>
+
+        Rubberstamped by Oliver.
+
+        * platform/network/cf/ResourceHandleCFNet.cpp: Removed an unnecessary
+        include.
+
 2007-04-17  Oliver Hunt  <oliver@apple.com>
 
         Whoops, had code commented out from manual failure test.
