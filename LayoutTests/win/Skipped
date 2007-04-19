@@ -548,3 +548,6 @@ fast/dom/Window/window-onFocus.html
 fast/forms/searchfield-heights.html
 fast/table/frame-and-rules.html
 fast/table/giantCellspacing.html
+
+# Crash in CMM8Bit3ChanNoConvEncoder::InnerDoEncode
+fast/css/contentDivWithChildren.html
