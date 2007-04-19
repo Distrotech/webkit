@@ -462,6 +462,7 @@ editing/pasteboard/undoable-fragment-removes.html
 
 # Tests where results did not match expected results:
 
+editing/execCommand/5119244.html
 editing/execCommand/find-after-replace.html
 editing/inserting/insert-3786362-fix.html
 editing/pasteboard/3976872.html

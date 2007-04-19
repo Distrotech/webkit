@@ -1,5 +1,10 @@
 2007-04-18  Adam Roben  <aroben@apple.com>
 
+        * win/Skipped: Added back a test that I shouldn't have removed because
+        it fails.
+
+2007-04-18  Adam Roben  <aroben@apple.com>
+
         * win/Skipped: Commented out a comment and removed a test that passes.
 
 2007-04-18  Adam Roben  <aroben@apple.com>
