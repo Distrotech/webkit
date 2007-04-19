@@ -1,5 +1,9 @@
 2007-04-18  Adam Roben  <aroben@apple.com>
 
+        * win/Skipped: Added back the test that wouldn't die.
+
+2007-04-18  Adam Roben  <aroben@apple.com>
+
         * win/Skipped: Updated.
 
 2007-04-18  Brady Eidson  <beidson@apple.com>
