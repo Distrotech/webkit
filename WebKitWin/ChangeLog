@@ -2,6 +2,18 @@
 
         Reviewed by Steve.
 
+        Make development builds use the same CLSIDs as archive builds, and get
+        rid of the now-unused set of CLSIDs.
+
+        * Interfaces/WebKit.idl: Use the archive build CLSIDs if we're not
+        doing a production build.
+        * WebKit.vcproj/Interfaces.vcproj: Don't define __ARCHIVE_BUILD__
+        because it's not used anymore.
+
+2007-04-18  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Steve.
+
         Use different ProgIDs for production builds.
 
         * ProgIDMacros.h: Added.
