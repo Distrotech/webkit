@@ -47,7 +47,7 @@ Node.prototype.firstParentWithClass = function(className)
 {
     var node = this.parentNode;
     while (node) {
-        if (node.isSameNode(document)) 
+        if (node === document) 
             return null;
         if (node.nodeType === Node.ELEMENT_NODE && node.hasStyleClass(className))
             return node;
@@ -261,7 +261,7 @@ function isAncestorNode(ancestor)
 
     var currentNode = ancestor.parentNode;
     while (currentNode) {
-        if (this.isSameNode(currentNode))
+        if (this === currentNode)
             return true;
         currentNode = currentNode.parentNode;
     }
@@ -282,13 +282,13 @@ function firstCommonNodeAncestor(node)
     var node1 = this.parentNode;
     var node2 = node.parentNode;
 
-    if ((!node1 || !node2) || !node1.isSameNode(node2))
+    if ((!node1 || !node2) || node1 !== node2)
         return null;
 
     while (node1 && node2) {
         if (!node1.parentNode || !node2.parentNode)
             break;
-        if (!node1.isSameNode(node2))
+        if (node1 !== node2)
             break;
 
         node1 = node1.parentNode;
@@ -347,7 +347,7 @@ function traverseNextNode(skipWhitespace, stayWithin)
     if (node)
         return node;
 
-    if (stayWithin && this.isSameNode(stayWithin))
+    if (stayWithin && this === stayWithin)
         return null;
 
     node = skipWhitespace ? nextSiblingSkippingWhitespace.call(this) : this.nextSibling;
@@ -355,7 +355,7 @@ function traverseNextNode(skipWhitespace, stayWithin)
         return node;
 
     node = this;
-    while (node && !(skipWhitespace ? nextSiblingSkippingWhitespace.call(node) : node.nextSibling) && (!stayWithin || !node.parentNode || !node.parentNode.isSameNode(stayWithin)))
+    while (node && !(skipWhitespace ? nextSiblingSkippingWhitespace.call(node) : node.nextSibling) && (!stayWithin || !node.parentNode || node.parentNode !== stayWithin))
         node = node.parentNode;
     if (!node)
         return null;

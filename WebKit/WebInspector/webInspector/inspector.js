@@ -243,7 +243,7 @@ function changeFocus(event)
     var nextFocusElement;
 
     var current = event.target;
-    while(current) {
+    while (current) {
         if (current.nodeName.toLowerCase() === "input")
             nextFocusElement = current;
         current = current.parentNode;
@@ -252,7 +252,7 @@ function changeFocus(event)
     if (!nextFocusElement)
         nextFocusElement = event.target.firstParentWithClass("focusable");
 
-    if (!nextFocusElement || (currentFocusElement && currentFocusElement.isSameNode(nextFocusElement)))
+    if (!nextFocusElement || (currentFocusElement && currentFocusElement === nextFocusElement))
         return;
 
     if (currentFocusElement) {
@@ -456,7 +456,7 @@ function treeElementSelected(element)
     if (searchActive)
         traverseDown.disabled = !treeOutline.selectedTreeElement.traverseNextTreeElement(false);
     else
-        traverseDown.disabled = (!traverseNextNode.call(element.representedObject, ignoreWhitespace));
+        traverseDown.disabled = !traverseNextNode.call(element.representedObject, ignoreWhitespace);
 }
 
 function treeElementDoubleClicked(element)
@@ -496,7 +496,7 @@ function revealNodeInTreeOutline(node)
     var found = false;
     for (var i = 0; i < treeOutline.children.length; ++i) {
         item = treeOutline.children[i];
-        if (item.representedObject.isSameNode(node) || isAncestorNode.call(item.representedObject, node)) {
+        if (item.representedObject === node || isAncestorNode.call(item.representedObject, node)) {
             found = true;
             break;
         }
@@ -509,14 +509,14 @@ function revealNodeInTreeOutline(node)
     var currentNode = node; 
     while (currentNode) { 
         ancestors.unshift(currentNode); 
-        if (currentNode.isSameNode(item.representedObject))
+        if (currentNode === item.representedObject)
             break;
         currentNode = currentNode.parentNode; 
     }
 
     for (var i = 0; i < ancestors.length; ++i) {
         item = treeOutline.findTreeElement(ancestors[i]);
-        if (!ancestors[i].isSameNode(node))
+        if (ancestors[i] !== node)
             item.expand();
     }
 
@@ -525,7 +525,7 @@ function revealNodeInTreeOutline(node)
 
 function updateRootNode(node)
 {
-    if (!node || !rootDOMNode || !rootDOMNode.isSameNode(node)) {
+    if (!node || !rootDOMNode || rootDOMNode !== node) {
         rootDOMNode = node;
         updateTreeOutline();
     }
@@ -533,14 +533,14 @@ function updateRootNode(node)
 
 function updateFocusedNode(node)
 {
-    if (!node || !focusedDOMNode || !focusedDOMNode.isSameNode(node)) {
+    if (!node || !focusedDOMNode || focusedDOMNode !== node) {
         focusedDOMNode = node;
 
         updatePanes();
 
         if (focusedDOMNode) {
-//            if (!rootDOMNode.isSameNode(node) && !isAncestorNode.call(rootDOMNode, node))
-//                updateRootNode(firstCommonNodeAncestor.call(focusedDOMNode, node));
+            if (!rootDOMNode === node && !isAncestorNode.call(rootDOMNode, node))
+                updateRootNode(firstCommonNodeAncestor.call(focusedDOMNode, node));
 
             var item = treeOutline.findTreeElement(focusedDOMNode);
             if (!item)
@@ -591,7 +591,7 @@ function updateTreeOutline(dontRevealSelectedItem)
 
     var resetPopup = true;
     for (var i = 0; i < rootPopup.options.length; ++i) {
-        if (rootPopup.options[i].representedNode.isSameNode(rootDOMNode)) {
+        if (rootPopup.options[i].representedNode === rootDOMNode) {
             rootPopup.options[i].selected = true;
             resetPopup = false;
             break;
@@ -608,7 +608,7 @@ function updateTreeOutline(dontRevealSelectedItem)
         var option = document.createElement("option");
         option.representedNode = currentNode;
         option.textContent = nodeDisplayName.call(currentNode);
-        if (currentNode.isSameNode(rootDOMNode))
+        if (currentNode === rootDOMNode)
             option.selected = true;
         rootPopup.insertBefore(option, rootPopup.firstChild);
         currentNode = currentNode.parentNode;

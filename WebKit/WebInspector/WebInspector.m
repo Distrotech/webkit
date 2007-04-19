@@ -55,9 +55,6 @@
     static WebInspector *_sharedWebInspector = nil;
     if (!_sharedWebInspector) {
         _sharedWebInspector = [[self alloc] init];
-        CFRetain(_sharedWebInspector); // hard retain for GC
-        [_sharedWebInspector release];
-
         _sharedWebInspector->_private->isSharedInspector = YES;
     }
 
@@ -92,7 +89,7 @@
     [preferences setMinimumFontSize:0];
     [preferences setMinimumLogicalFontSize:9];
 
-    _private->webView = [[WebView alloc] initWithFrame:NSZeroRect frameName:nil groupName:nil];
+    _private->webView = [[WebView alloc] init];
     [_private->webView setPreferences:preferences];
     [_private->webView setFrameLoadDelegate:self];
     [_private->webView setUIDelegate:self];
@@ -107,7 +104,9 @@
     [preferences release];
 
     NSString *path = [[NSBundle bundleForClass:[self class]] pathForResource:@"inspector" ofType:@"html" inDirectory:@"webInspector"];
-    [[_private->webView mainFrame] loadRequest:[[[NSURLRequest alloc] initWithURL:[NSURL fileURLWithPath:path]] autorelease]];
+    NSURLRequest *request = [[NSURLRequest alloc] initWithURL:[NSURL fileURLWithPath:path]];
+    [[_private->webView mainFrame] loadRequest:request];
+    [request release];
 
     while (!_private->webViewLoaded)
         [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
@@ -222,8 +221,9 @@
 
 - (void)setRootDOMNode:(DOMNode *)node
 {
-    NSArray *args = [NSArray arrayWithObject:(node ? (id)node : (id)[NSNull null])];
+    NSArray *args = [[NSArray alloc] initWithObjects:(node ? (id)node : (id)[NSNull null]), nil];
     [[_private->webView windowScriptObject] callWebScriptMethod:@"updateRootNode" withArguments:args];
+    [args release];
 }
 
 - (DOMNode *)rootDOMNode
@@ -235,8 +235,9 @@
 
 - (void)setFocusedDOMNode:(DOMNode *)node
 {
-    NSArray *args = [NSArray arrayWithObject:(node ? (id)node : (id)[NSNull null])];
+    NSArray *args = [[NSArray alloc] initWithObjects:(node ? (id)node : (id)[NSNull null]), nil];
     [[_private->webView windowScriptObject] callWebScriptMethod:@"updateFocusedNode" withArguments:args];
+    [args release];
 }
 
 - (DOMNode *)focusedDOMNode
@@ -259,7 +260,7 @@
     [item setAction:@selector(_toggleIgnoreWhitespace:)];
 
     id value = [[_private->webView windowScriptObject] valueForKey:@"ignoreWhitespace"];
-    [item setState:( value && [value isKindOfClass:[NSNumber class]] && [value boolValue] ? NSOnState : NSOffState )];
+    [item setState:(value && [value isKindOfClass:[NSNumber class]] && [value boolValue] ? NSOnState : NSOffState)];
 
     [menu addItem:item];
     [item release];
@@ -270,7 +271,7 @@
     [item setAction:@selector(_toggleShowUserAgentStyles:)];
 
     value = [[_private->webView windowScriptObject] valueForKey:@"showUserAgentStyles"];
-    [item setState:( value && [value isKindOfClass:[NSNumber class]] && [value boolValue] ? NSOnState : NSOffState )];
+    [item setState:(value && [value isKindOfClass:[NSNumber class]] && [value boolValue] ? NSOnState : NSOffState)];
 
     [menu addItem:item];
     [item release];
@@ -295,12 +296,12 @@
             // only scroll if the bounds isn't in the visible rect and dosen't contain the visible rect
             if (needsScroll) {
                 // scroll to the parent element if we aren't focused on an element
-                DOMElement *element = (DOMElement *)node;
-                if (![element isKindOfClass:[DOMElement class]])
+                DOMElement *element;
+                if ([node isKindOfClass:[DOMElement class]])
+                    element = (DOMElement *)node;
+                else
                     element = (DOMElement *)[element parentNode];
-
-                if ([element isKindOfClass:[DOMElement class]])
-                    [element scrollIntoViewIfNeeded:YES];
+                [element scrollIntoViewIfNeeded:YES];
 
                 // give time for the scroll to happen
                 [self performSelector:@selector(_highlightNode:) withObject:node afterDelay:0.25];
@@ -327,9 +328,6 @@
 
 - (void)_highlightNode:(DOMNode *)node
 {
-    if (![[self focusedDOMNode] isSameNode:node])
-        return;
-
     if (_private->currentHighlight) {
         [_private->currentHighlight expire];
         [_private->currentHighlight release];
@@ -337,25 +335,29 @@
     }
 
     NSView *view = [[_private->inspectedWebFrame frameView] documentView];
+    if (![view window])
+        return; // skip the highlight if we have no window (e.g. hidden tab)
+
     NSRect bounds = NSIntersectionRect([node boundingBox], [view visibleRect]);
     if (!NSIsEmptyRect(bounds)) {
         NSArray *rects = nil;
         if ([node isKindOfClass:[DOMElement class]]) {
             DOMCSSStyleDeclaration *style = [[node ownerDocument] getComputedStyle:(DOMElement *)node pseudoElement:@""];
             if ([[style getPropertyValue:@"display"] isEqualToString:@"inline"])
-                rects = [node lineBoxRects];
+                rects = [[node lineBoxRects] retain];
         } else if ([node isKindOfClass:[DOMText class]]
 #if ENABLE(SVG)
                    && ![[node parentNode] isKindOfClass:NSClassFromString(@"DOMSVGElement")]
 #endif
                   )
-            rects = [node lineBoxRects];
+            rects = [[node lineBoxRects] retain];
 
         if (![rects count])
-            rects = [NSArray arrayWithObject:[NSValue valueWithRect:bounds]];
+            rects = [[NSArray alloc] initWithObjects:[NSValue valueWithRect:bounds], nil];
 
-        if ([view window]) // skip the highlight if we have no window (e.g. hidden tab)
-            _private->currentHighlight = [[WebNodeHighlight alloc] initWithBounds:bounds andRects:rects forView:view];
+        _private->currentHighlight = [[WebNodeHighlight alloc] initWithBounds:bounds andRects:rects forView:view];
+
+        [rects release];
     }
 }
 
@@ -373,8 +375,8 @@
     NSColor *color = [[NSColor alternateSelectedControlColor] colorUsingColorSpaceName:NSDeviceRGBColorSpace];
     [color getRed:&red green:&green blue:&blue alpha:NULL];
 
-    NSString *colorText = [NSString stringWithFormat:@"rgba(%d,%d,%d,0.4) !important", (int)(red * 255), (int)(green * 255), (int)(blue * 255)];
-    NSString *styleText = [NSString stringWithFormat:@".focused .selected { background-color: %1$@ } .blured .selected { border-color: %1$@ }", colorText];
+    NSString *colorText = [NSString stringWithFormat:@"rgba(%.0f, %.0f, %.0f, 0.4) !important", (red * 255), (green * 255), (blue * 255)];
+    NSString *styleText = [NSString stringWithFormat:@".focused .selected { background-color: %@ } .blured .selected { border-color: %@ }", colorText, colorText];
     DOMDocument *document = [[_private->webView mainFrame] DOMDocument];
     DOMElement *style = [document getElementById:@"systemColors"];
     if (!style) {

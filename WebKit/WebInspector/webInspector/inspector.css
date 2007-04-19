@@ -127,7 +127,7 @@ button, select, input {
     top: 0;
     left: 0;
     width: 21px;
-    background-image: url( Images/upTriangle.png ), url( Images/buttonDivider.png );
+    background-image: url(Images/upTriangle.png), url(Images/buttonDivider.png);
     background-repeat: no-repeat;
     background-position: 2px 0px, -4px right;
 }
@@ -137,7 +137,7 @@ button, select, input {
     top: 0;
     left: 20px;
     width: 20px;
-    background-image: url( Images/downTriangle.png );
+    background-image: url(Images/downTriangle.png);
     background-repeat: no-repeat;
     background-position: 5px 1px;
 }
@@ -183,7 +183,7 @@ button, select, input {
     left: 5px;
     border: 0;
     background-color: transparent;
-    background-image: url( Images/close.png );
+    background-image: url(Images/close.png);
     background-repeat: no-repeat;
     height: 13px;
     width: 13px;
@@ -194,7 +194,7 @@ button, select, input {
 }
 
 #title button.close:active {
-    background-image: url( Images/closePressed.png );
+    background-image: url(Images/closePressed.png);
 }
 
 #title button.menu {
@@ -203,7 +203,7 @@ button, select, input {
     right: 5px;
     border: 0;
     background-color: transparent;
-    background-image: url( Images/menu.png );
+    background-image: url(Images/menu.png);
     background-repeat: no-repeat;
     height: 13px;
     width: 13px;
@@ -214,7 +214,7 @@ button, select, input {
 }
 
 #title button.menu:active {
-    background-image: url( Images/menuPressed.png );
+    background-image: url(Images/menuPressed.png);
 }
 
 button {
@@ -222,7 +222,7 @@ button {
     border-width: 4px 6px 6px 6px;
     border-color: transparent;
     border-style: solid;
-    -webkit-border-image: url( Images/button.png ) 4 6 6 6;
+    -webkit-border-image: url(Images/button.png) 4 6 6 6;
     box-sizing: border-box;
     line-height: 5px;
     height: 20px;
@@ -233,18 +233,18 @@ button {
 }
 
 button:active, button.selected {
-    -webkit-border-image: url( Images/buttonPressed.png ) 4 6 6 6;
+    -webkit-border-image: url(Images/buttonPressed.png) 4 6 6 6;
     text-shadow: black 1px -1px 3px;
 }
 
 button[disabled] {
-    -webkit-border-image: url( Images/button.png ) 4 6 6 6;
+    -webkit-border-image: url(Images/button.png) 4 6 6 6;
     opacity: 0.5;
 }
 
 button.left {
     border-width: 4px 0 6px 6px;
-    background-image: url( Images/buttonDivider.png );
+    background-image: url(Images/buttonDivider.png);
     background-position: -4px right;
     background-repeat: no-repeat;
 }
@@ -255,7 +255,7 @@ button.right {
 
 button.middle {
     border-width: 4px 0 6px 0;
-    background-image: url( Images/buttonDivider.png );
+    background-image: url(Images/buttonDivider.png);
     background-position: -4px right;
     background-repeat: no-repeat;
 }
@@ -265,7 +265,7 @@ select {
     border-width: 4px 16px 6px 6px;
     border-color: transparent;
     border-style: solid;
-    -webkit-border-image: url( Images/popup.png ) 4 16 6 6;
+    -webkit-border-image: url(Images/popup.png) 4 16 6 6;
     box-sizing: border-box;
     line-height: 5px;
     height: 20px;
@@ -277,11 +277,11 @@ select {
 }
 
 select:active {
-    -webkit-border-image: url( Images/popupPressed.png ) 4 16 6 6;
+    -webkit-border-image: url(Images/popupPressed.png) 4 16 6 6;
 }
 
 select[disabled] {
-    -webkit-border-image: url( Images/popup.png ) 4 16 6 6;
+    -webkit-border-image: url(Images/popup.png) 4 16 6 6;
     opacity: 0.5;
 }
 
@@ -293,7 +293,7 @@ select[disabled] {
     height: 16px;
     z-index: 10;
     -webkit-dashboard-region: dashboard-region(resize rectangle);
-    background-image: url( Images/resize.png );
+    background-image: url(Images/resize.png);
     background-repeat: no-repeat;
 }
 
@@ -380,11 +380,11 @@ button.toggle {
 }
 
 button.toggle.down {
-    background-image: url( Images/downTriangle.png );
+    background-image: url(Images/downTriangle.png);
 }
 
 button.toggle.right {
-    background-image: url( Images/rightTriangle.png );
+    background-image: url(Images/rightTriangle.png);
 }
 
 #noSelection {
@@ -631,7 +631,7 @@ button.toggle.right {
     top: 4px;
     left: 1px;
     float: left;
-    background-image: url( Images/rightTriangle.png );
+    background-image: url(Images/rightTriangle.png);
     width: 8px;
     height: 8px;
     border: 0;
@@ -651,7 +651,7 @@ button.toggle.right {
 }
 
 .treeList li.expanded button {
-    background-image: url( Images/downTriangle.png );
+    background-image: url(Images/downTriangle.png);
 }
 
 .treeList li span {
@@ -825,7 +825,7 @@ ol#treeOutline {
 }
 
 #treeOutline li.parent:before {
-    content: url( Images/rightTriangle.png );
+    content: url(Images/rightTriangle.png);
     width: 8px;
     height: 8px;
     padding-right: 2px;
@@ -835,7 +835,7 @@ ol#treeOutline {
 }
 
 #treeOutline li.parent.expanded:before {
-    content: url( Images/downTriangle.png );
+    content: url(Images/downTriangle.png);
 }
 
 #treeOutline ol.children {
