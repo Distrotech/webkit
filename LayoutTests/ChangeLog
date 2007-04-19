@@ -1,5 +1,9 @@
 2007-04-18  Adam Roben  <aroben@apple.com>
 
+        * win/Skipped: Commented out a comment and removed a test that passes.
+
+2007-04-18  Adam Roben  <aroben@apple.com>
+
         * win/Skipped: Fixed some file extensions and removed duplicated
         tests.
 
