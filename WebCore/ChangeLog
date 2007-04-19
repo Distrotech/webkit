@@ -1,3 +1,41 @@
+2007-04-18  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Allow images to be dragged from page and dropped as files.
+        This is the remainder of the fix for <rdar://problem/5035948> 
+          -- Dragging image or link from boomer doesn't create webloc 
+             or image file.
+
+        * platform/win/ClipboardWin.cpp:
+        (WebCore::filesystemPathFromUrlOrTitle):
+          Make name generation nicer, and better match Firefox
+        
+        (WebCore::createGlobalURLContent):
+          rename function
+        
+        (WebCore::createGlobalImageFileContent):
+          Copies image data into global store
+        
+        (WebCore::createGlobalUrlFileDescriptor):
+          Rename function
+          Updated for parameter change on filesystemPathFromUrlOrTitle
+        
+        (WebCore::createGlobalImageFileDescriptor):
+          Set up file descriptor for image drag
+        
+        (WebCore::getCachedImage):
+          Helper function
+        
+        (WebCore::writeImageToDataObject):
+          Attempts to build and insert data for image->file drag
+        
+        (WebCore::ClipboardWin::declareAndWriteDragImage):
+          Attempts to build and insert data for image->file drag
+        
+        (WebCore::ClipboardWin::writeURL):
+          Add call to imageDataToDataObject
+
 2007-04-17  Adam Roben  <aroben@apple.com>
 
         Rubberstamped by Oliver.

@@ -39,11 +39,14 @@
 #include "FrameView.h"
 #include "HTMLNames.h"
 #include "Image.h"
+#include "MimeTypeRegistry.h"
 #include "Page.h"
 #include "Pasteboard.h"
 #include "PlatformMouseEvent.h"
 #include "PlatformString.h"
 #include "Range.h"
+#include "RenderImage.h"
+#include "ResourceResponse.h"
 #include "StringHash.h"
 #include "WCDataObject.h"
 
@@ -122,11 +125,13 @@ static inline void pathRemoveBadFSCharacters(PWSTR psz, size_t length)
     psz[writeTo] = 0;
 }
 
-static String filesystemPathFromUrlOrTitle(const String& url, const String& title, TCHAR* extension)
+static String filesystemPathFromUrlOrTitle(const String& url, const String& title, TCHAR* extension, bool isLink)
 {
     bool usedURL = false;
     WCHAR fsPathBuffer[MAX_PATH + 1];
+    fsPathBuffer[0] = 0;
     int extensionLen = extension ? lstrlen(extension) : 0;
+
     if (!title.isEmpty()) {
         size_t len = min<size_t>(title.length(), MAX_PATH - extensionLen);
         CopyMemory(fsPathBuffer, title.characters(), len * sizeof(UChar));
@@ -139,18 +144,33 @@ static String filesystemPathFromUrlOrTitle(const String& url, const String& titl
         String nullTermURL = url;
         usedURL = true;
         if (UrlIsFileUrl((LPCWSTR)nullTermURL.charactersWithNullTermination()) 
-            && SUCCEEDED(PathCreateFromUrl((LPCWSTR)nullTermURL.characters(), fsPathBuffer, &len, 0))) {
+            && SUCCEEDED(PathCreateFromUrl((LPCWSTR)nullTermURL.charactersWithNullTermination(), fsPathBuffer, &len, 0))) {
+            // When linking to a file URL we can trivially find the file name
             PWSTR fn = PathFindFileName(fsPathBuffer);
             if (fn && fn != fsPathBuffer)
                 lstrcpyn(fsPathBuffer, fn, lstrlen(fn) + 1);
-        } else 
-            UrlGetPart((LPCWSTR)nullTermURL.characters(), fsPathBuffer, &len, URL_PART_HOSTNAME, 0);
+        } else {
+            // The filename for any content based drag should be the last element of 
+            // the path.  If we can't find it, or we're coming up with the name for a link
+            // we just use the entire url.
+            KURL kurl(url.deprecatedString());
+            String lastComponent;
+            if (!isLink && !(lastComponent = kurl.lastPathComponent()).isEmpty()) {
+                len = min<DWORD>(MAX_PATH, lastComponent.length());
+                CopyMemory(fsPathBuffer, lastComponent.characters(), len * sizeof(UChar));
+            } else {
+                len = min<DWORD>(MAX_PATH, nullTermURL.length());
+                CopyMemory(fsPathBuffer, nullTermURL.characters(), len * sizeof(UChar));
+            }
+            fsPathBuffer[len] = 0;
+            pathRemoveBadFSCharacters(fsPathBuffer, len);
+        }
     }
 
     if (!extension)
         return String((UChar*)fsPathBuffer);
 
-    if (usedURL) {
+    if (!isLink && usedURL) {
         PathRenameExtension(fsPathBuffer, extension);
         return String((UChar*)fsPathBuffer);
     }
@@ -160,7 +180,7 @@ static String filesystemPathFromUrlOrTitle(const String& url, const String& titl
     return result;
 }
 
-static HGLOBAL createGlobalDataForURLContent(const String& url, int estimatedFileSize)
+static HGLOBAL createGlobalURLContent(const String& url, int estimatedFileSize)
 {
     HRESULT hr = S_OK;
     HGLOBAL memObj = 0;
@@ -196,7 +216,23 @@ static HGLOBAL createGlobalDataForURLContent(const String& url, int estimatedFil
     return memObj;
 }
 
-static HGLOBAL createGlobalDataForUrlFileDescriptor(const String& url, const String& title, int& /*out*/ estimatedSize)
+static HGLOBAL createGlobalImageFileContent(SharedBuffer* data)
+{
+    HRESULT hr = S_OK;
+    HGLOBAL memObj = GlobalAlloc(GPTR, data->size());
+    if (!memObj) 
+        return 0;
+
+    char* fileContents = (PSTR)GlobalLock(memObj);
+
+    CopyMemory(fileContents, data->data(), data->size());
+    
+    GlobalUnlock(memObj);
+    
+    return memObj;
+}
+
+static HGLOBAL createGlobalUrlFileDescriptor(const String& url, const String& title, int& /*out*/ estimatedSize)
 {
     HRESULT hr = S_OK;
     HGLOBAL memObj = 0;
@@ -213,7 +249,40 @@ static HGLOBAL createGlobalDataForUrlFileDescriptor(const String& url, const Str
     fileSize += strlen(szShellDotUrlTemplate) - 2;  // -2 is for getting rid of %s in the template string
     fgd->fgd[0].nFileSizeLow = fileSize;
     estimatedSize = fileSize;
-    fsPath = filesystemPathFromUrlOrTitle(url, title, L".URL");
+    fsPath = filesystemPathFromUrlOrTitle(url, title, L".URL", true);
+
+    if (fsPath.length() <= 0) {
+        GlobalUnlock(memObj);
+        GlobalFree(memObj);
+        return 0;
+    }
+
+    int maxSize = min(fsPath.length(), ARRAYSIZE(fgd->fgd[0].cFileName));
+    CopyMemory(fgd->fgd[0].cFileName, (LPCWSTR)fsPath.characters(), maxSize * sizeof(UChar));
+    GlobalUnlock(memObj);
+    
+    return memObj;
+}
+
+
+static HGLOBAL createGlobalImageFileDescriptor(const String& url, const String& title, CachedImage* image)
+{
+    HRESULT hr = S_OK;
+    HGLOBAL memObj = 0;
+    String fsPath;
+    memObj = GlobalAlloc(GPTR, sizeof(FILEGROUPDESCRIPTOR));
+    if (!memObj)
+        return 0;
+
+    FILEGROUPDESCRIPTOR* fgd = (FILEGROUPDESCRIPTOR*)GlobalLock(memObj);
+    memset(fgd, 0, sizeof(FILEGROUPDESCRIPTOR));
+    fgd->cItems = 1;
+    fgd->fgd[0].dwFlags = FD_FILESIZE;
+    fgd->fgd[0].nFileSizeLow = image->image()->data()->size();
+    
+    String extension(".");
+    extension += WebCore::MimeTypeRegistry::getPreferredExtensionForMIMEType(image->response().mimeType());
+    fsPath = filesystemPathFromUrlOrTitle(url, title, extension.length() ? (TCHAR*)extension.charactersWithNullTermination() : 0, false);
 
     if (fsPath.length() <= 0) {
         GlobalUnlock(memObj);
@@ -488,14 +557,58 @@ static String imageToMarkup(const String& url)
     return markup;
 }
 
+static CachedImage* getCachedImage(Element* element)
+{
+    // Attempt to pull CachedImage from element
+    ASSERT(element);
+    RenderObject* renderer = element->renderer();
+    if (!renderer || !renderer->isImage()) 
+        return 0;
+    
+    RenderImage* image = static_cast<RenderImage*>(renderer);
+    if (image->cachedImage() && !image->cachedImage()->errorOccurred())
+        return image->cachedImage();
+
+    return 0;
+}
+
+static void writeImageToDataObject(IDataObject* dataObject, Element* element, const KURL& url)
+{
+    // Shove image data into a DataObject for use as a file
+    CachedImage* cachedImage = getCachedImage(element);
+    if (!cachedImage || !cachedImage->image() || !cachedImage->isLoaded())
+        return;
+
+    SharedBuffer* imageBuffer = cachedImage->image()->data();
+    if (!imageBuffer->size())
+        return;
+
+    HGLOBAL imageFileDescriptor = createGlobalImageFileDescriptor(url.url(), element->getAttribute(altAttr), cachedImage);
+    if (!imageFileDescriptor)
+        return;
+
+    HGLOBAL imageFileContent = createGlobalImageFileContent(imageBuffer);
+    if (!imageFileContent) {
+        GlobalFree(imageFileDescriptor);
+        return;
+    }
+
+    writeFileToDataObject(dataObject, imageFileDescriptor, imageFileContent);
+}
+
 void ClipboardWin::declareAndWriteDragImage(Element* element, const KURL& url, const String& title, Frame* frame)
 {
+    // Order is important here for Explorer's sake
     if (!m_writableDataObject)
          return;
     WebCore::writeURL(m_writableDataObject.get(), url, title, true, false);
+
+    writeImageToDataObject(m_writableDataObject.get(), element, url);
+
     AtomicString imageURL = element->getAttribute(srcAttr);
     if (imageURL.isEmpty()) 
         return;
+
     String fullURL = frame->document()->completeURL(parseURL(imageURL));
     if (fullURL.isEmpty()) 
         return;
@@ -518,10 +631,10 @@ void ClipboardWin::writeURL(const KURL& kurl, const String& titleStr, Frame*)
     int estimatedSize = 0;
     String url = kurl.url();
 
-    HGLOBAL urlFileDescriptor = createGlobalDataForUrlFileDescriptor(url, titleStr, estimatedSize);
+    HGLOBAL urlFileDescriptor = createGlobalUrlFileDescriptor(url, titleStr, estimatedSize);
     if (!urlFileDescriptor)
         return;
-    HGLOBAL urlFileContent = createGlobalDataForURLContent(url, estimatedSize);
+    HGLOBAL urlFileContent = createGlobalURLContent(url, estimatedSize);
     if (!urlFileContent) {
         GlobalFree(urlFileDescriptor);
         return;
