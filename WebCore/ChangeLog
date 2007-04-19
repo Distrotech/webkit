@@ -1,3 +1,13 @@
+2007-04-18  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Oliver.
+
+        Added an equality operator to COMPtr.
+
+        * platform/win/COMPtr.h:
+        (operator==):
+        (operator!=):
+
 2007-04-18  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff.

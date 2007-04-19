@@ -463,9 +463,7 @@ editing/pasteboard/undoable-fragment-removes.html
 ######################### All of above may be related ##########################
 ################################################################################
 
-# Tests where results did not match expected results:
-
-editing/execCommand/5119244.html
+# These tests only fail in Release builds
 editing/execCommand/find-after-replace.html
 editing/inserting/insert-3786362-fix.html
 editing/pasteboard/3976872.html
@@ -508,57 +506,10 @@ editing/style/5065910.html
 editing/style/smoosh-styles-001.html
 editing/style/smoosh-styles-002.html
 editing/style/smoosh-styles-003.html
-fast/dom/Window/window-properties.html
-fast/encoding/char-decoding.html
 fast/forms/input-truncate-newline.html
 fast/forms/plaintext-mode-2.html
 fast/forms/textarea-paste-newline.html
-fast/overflow/scrollRevealButton.html
-http/tests/navigation/anchor-basic.html
-http/tests/navigation/anchor-goback.html
-http/tests/navigation/anchor-subframeload.html
-http/tests/navigation/error404-basic.html
-http/tests/navigation/error404-frames.html
-http/tests/navigation/error404-goback.html
-http/tests/navigation/error404-subframeload.html
-http/tests/navigation/javascriptlink-basic.html
-http/tests/navigation/javascriptlink-frames.html
-http/tests/navigation/javascriptlink-goback.html
-http/tests/navigation/javascriptlink-subframeload.html
-http/tests/navigation/metaredirect-basic.html
-http/tests/navigation/metaredirect-frames.html
-http/tests/navigation/metaredirect-goback.html
-http/tests/navigation/metaredirect-subframeload.html
-http/tests/navigation/post-basic.html
-http/tests/navigation/post-frames.html
-http/tests/navigation/post-goback1.html
-http/tests/navigation/post-goback2.html
-http/tests/navigation/postredirect-basic.html
-http/tests/navigation/postredirect-frames.html
-http/tests/navigation/postredirect-goback1.html
-http/tests/navigation/postredirect-goback2.html
-http/tests/navigation/redirect302-basic.html
-http/tests/navigation/redirect302-frames.html
-http/tests/navigation/redirect302-goback.html
-http/tests/navigation/redirect302-subframeload.html
-http/tests/navigation/relativeanchor-basic.html
-http/tests/navigation/relativeanchor-frames.html
-http/tests/navigation/relativeanchor-goback.html
-http/tests/navigation/slowmetaredirect-basic.html
-http/tests/navigation/slowtimerredirect-basic.html
-http/tests/navigation/success200-basic.html
-http/tests/navigation/success200-frames-loadsame.html
-http/tests/navigation/success200-frames.html
-http/tests/navigation/success200-goback.html
-http/tests/navigation/success200-loadsame.html
-http/tests/navigation/success200-reload.html
-http/tests/navigation/success200-subframeload.html
-http/tests/navigation/timerredirect-basic.html
-http/tests/navigation/timerredirect-frames.html
-http/tests/navigation/timerredirect-goback.html
-http/tests/navigation/timerredirect-subframeload.html
 http/tests/plugins/interrupted-get-url.html
-http/tests/plugins/npapi-response-headers.html
 plugins/destroy-stream-twice.html
 plugins/get-empty-url.html
 plugins/geturl-replace-query.html
@@ -567,12 +518,15 @@ plugins/invoke.html
 plugins/netscape-dom-access.html
 plugins/netscape-enumerate.html
 plugins/netscape-invoke-default.html
-security/block-test.html
 
+# Seems to be a difference btw. WebScriptObject and the JSCore API
+fast/dom/Window/window-properties.html
 
-# Crash in Release but not Debug
-# editing/deleting/5115601.html
-# fast/canvas/drawImage-with-invalid-args.html
+# Is the x-nextstep encoding Mac-specific?
+fast/encoding/char-decoding.html
+
+# Unimplemented part of DRT.
+http/tests/plugins/npapi-response-headers.html
 
 # used to be crashers but are now failures.
 security/block-test.html

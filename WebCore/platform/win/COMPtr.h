@@ -118,4 +118,34 @@ template <typename T> inline COMPtr<T>& COMPtr<T>::operator=(T* optr)
     return *this;
 }
 
+template <typename T, typename U> inline bool operator==(const COMPtr<T>& a, const COMPtr<U>& b)
+{
+    return a.get() == b.get();
+}
+
+template <typename T, typename U> inline bool operator==(const COMPtr<T>& a, U* b)
+{
+    return a.get() == b;
+}
+
+template <typename T, typename U> inline bool operator==(T* a, const COMPtr<U>& b) 
+{
+    return a == b.get();
+}
+
+template <typename T, typename U> inline bool operator!=(const COMPtr<T>& a, const COMPtr<U>& b)
+{
+    return a.get() != b.get();
+}
+
+template <typename T, typename U> inline bool operator!=(const COMPtr<T>& a, U* b)
+{
+    return a.get() != b;
+}
+
+template <typename T, typename U> inline bool operator!=(T* a, const COMPtr<U>& b)
+{
+    return a != b.get();
+}
+
 #endif
