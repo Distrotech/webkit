@@ -1,3 +1,7 @@
+2007-04-18  Brady Eidson  <beidson@apple.com>
+
+        * win/Skipped: Added a new test I added today that is Mac-only SPI
+
 2007-04-18  Adam Roben  <aroben@apple.com>
 
         * win/Skipped: Added back a test that I shouldn't have removed because

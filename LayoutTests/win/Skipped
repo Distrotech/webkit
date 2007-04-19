@@ -4,6 +4,9 @@ fast/AppleScript
 # Obj-C QuickTime plugin on Windows? That's unpossible!
 plugins/pluginDocumentView-deallocated-dataSource.html
 
+# Obj-C Mac only test on Windows?  That's unpossible!
+http/tests/misc/willCacheResponse-delegate-callback.html
+
 # Layout tests that depend on certain fonts don't match Mac results <rdar://problem/5075790>
 css1/basic/contextual_selectors.html
 css1/font_properties/font.html
