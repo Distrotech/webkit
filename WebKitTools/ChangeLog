@@ -1,3 +1,8 @@
+2007-04-18  Adam Roben  <aroben@apple.com>
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree.sln: Added a
+        Debug_Internal configuration.
+
 2007-04-17  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Hyatt.
