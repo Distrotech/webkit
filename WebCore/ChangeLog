@@ -1,5 +1,9 @@
 2007-04-19  Adam Roben  <aroben@apple.com>
 
+        * WebCore.vcproj/WebCore.vcproj: Removed empty filter.
+
+2007-04-19  Adam Roben  <aroben@apple.com>
+
         * WebCore.vcproj/WebCore.vcproj: Removed unused files.
 
 2007-04-18  Adam Roben  <aroben@apple.com>

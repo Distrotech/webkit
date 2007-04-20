@@ -3765,10 +3765,6 @@
 					>
 				</File>
 				<Filter
-					Name="win"
-					>
-				</Filter>
-				<Filter
 					Name="cf"
 					>
 					<File
