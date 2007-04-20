@@ -1,3 +1,10 @@
+2007-04-20  Adam Roben  <aroben@apple.com>
+
+        Explicitly link DRT against some Win32 libs because VC++ Express
+        doesn't link against them by default.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.vcproj:
+
 2007-04-19  Adam Roben  <aroben@apple.com>
 
         Reviewed by Steve.
