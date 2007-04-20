@@ -1,3 +1,18 @@
+2007-04-19  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam.
+        
+        Eliminate more ATL use (CComSafeArray).
+        
+        In one place, we were using SafeArray for something that was better served
+        by WTF::Vector.  I added WTF to the vcproj as part of this patch.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (dumpFrameScrollPosition):
+        (dumpHistoryItem):
+        (dumpBackForwardList):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.vcproj:
+
 2007-04-18  Adam Roben  <aroben@apple.com>
 
         * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree.sln: Added a

@@ -28,7 +28,8 @@
 
 #include "DumpRenderTree.h"
 
-#include <atlsafe.h>
+#include <wtf/Vector.h>
+
 #include <atlstr.h>
 #include <WebCore/COMPtr.h>
 #include <CoreFoundation/CoreFoundation.h>
@@ -212,12 +213,23 @@ void dumpFrameScrollPosition(IWebFrame* frame)
             return;
 
         if (arrPtr) {
-            CComSafeArray<IUnknown*> kids;
-            kids.Attach(arrPtr);
-            for (unsigned i = 0; i < kidsCount; ++i) {
-                COMPtr<IWebFrame> framePtr;
-                kids.GetAt(i)->QueryInterface(&framePtr);
-                dumpFrameScrollPosition(framePtr.get());
+            LONG lowerBound;
+            if (SUCCEEDED(::SafeArrayGetLBound(arrPtr, 1, &lowerBound))) {
+                LONG upperBound;
+                if (SUCCEEDED(::SafeArrayGetUBound(arrPtr, 1, &upperBound))) {
+                    LONG length = upperBound - lowerBound;
+                    IUnknown** safeArrayData;
+                    if (length && SUCCEEDED(::SafeArrayAccessData(arrPtr, (void**)&safeArrayData))) {
+                        for (unsigned i = 0; i < length; ++i) {
+                            COMPtr<IWebFrame> framePtr;
+                            safeArrayData[i]->QueryInterface(IID_IWebFrame, (void**)&framePtr);
+                            dumpFrameScrollPosition(framePtr.get());
+                        }
+                        ::SafeArrayUnaccessData(arrPtr);
+                    }
+                }
+                if (SUCCEEDED(::SafeArrayUnlock(arrPtr)))
+                    ::SafeArrayDestroy(arrPtr);
             }
         }
     }
@@ -289,12 +301,25 @@ static void dumpHistoryItem(IWebHistoryItem* item, int indent, bool current)
     if (FAILED(itemPrivate->children(&kidsCount, &arrPtr)) || !kidsCount)
         return;
 
-    CComSafeArray<IUnknown*> kids;
-    kids.Attach(arrPtr);
+    LONG lowerBound;
+    if (FAILED(::SafeArrayGetLBound(arrPtr, 1, &lowerBound)))
+        goto exit;
 
-    IUnknown** kidsArray = new IUnknown*[kids.GetCount()];
-    for (unsigned i = 0; i < kidsCount; ++i)
-        kidsArray[i] = kids.GetAt(i);
+    LONG upperBound;
+    if (FAILED(::SafeArrayGetUBound(arrPtr, 1, &upperBound)))
+        goto exit;
+
+    LONG length = upperBound - lowerBound;
+    if (!length)
+        goto exit;
+
+    IUnknown** safeArrayData;
+    if (FAILED(::SafeArrayAccessData(arrPtr, (void**)&safeArrayData)))
+        goto exit;
+
+    IUnknown** kidsArray = new IUnknown*[length];
+    memcpy(kidsArray, safeArrayData, length * sizeof(IUnknown*));
+    ::SafeArrayUnaccessData(arrPtr);
 
     // must sort to eliminate arbitrary result ordering which defeats reproducible testing
     qsort(kidsArray, kidsCount, sizeof(kidsArray[0]), compareHistoryItems);
@@ -304,6 +329,10 @@ static void dumpHistoryItem(IWebHistoryItem* item, int indent, bool current)
         kidsArray[i]->QueryInterface(&item);
         dumpHistoryItem(item.get(), indent + 4, false);
     }
+
+exit:
+    if (arrPtr && SUCCEEDED(::SafeArrayUnlock(arrPtr)))
+        ::SafeArrayDestroy(arrPtr);
 
     delete [] kidsArray;
 }
@@ -323,8 +352,8 @@ static void dumpBackForwardList(IWebFrame* frame)
 
     // Print out all items in the list after prevTestBFItem, which was from the previous test
     // Gather items from the end of the list, the print them out from oldest to newest
-    CComSafeArray<IUnknown*> itemsToPrint;
-    itemsToPrint.Create();
+
+    Vector<IUnknown*> itemsToPrint;
 
     int forwardListCount;
     if (FAILED(bfList->forwardListCount(&forwardListCount)))
@@ -338,7 +367,7 @@ static void dumpBackForwardList(IWebFrame* frame)
         assert(item != prevTestBFItem);
         COMPtr<IUnknown> itemUnknown;
         item->QueryInterface(&itemUnknown);
-        itemsToPrint.Add(itemUnknown.get());
+        itemsToPrint.append(itemUnknown.get());
     }
     
     COMPtr<IWebHistoryItem> currentItem;
@@ -348,8 +377,8 @@ static void dumpBackForwardList(IWebFrame* frame)
     assert(currentItem != prevTestBFItem);
     COMPtr<IUnknown> currentItemUnknown;
     currentItem->QueryInterface(&currentItemUnknown);
-    itemsToPrint.Add(currentItemUnknown.get());
-    int currentItemIndex = itemsToPrint.GetCount() - 1;
+    itemsToPrint.append(currentItemUnknown.get());
+    int currentItemIndex = itemsToPrint.size() - 1;
 
     int backListCount;
     if (FAILED(bfList->backListCount(&backListCount)))
@@ -363,10 +392,10 @@ static void dumpBackForwardList(IWebFrame* frame)
             break;
         COMPtr<IUnknown> itemUnknown;
         item->QueryInterface(&itemUnknown);
-        itemsToPrint.Add(itemUnknown.get());
+        itemsToPrint.append(itemUnknown.get());
     }
 
-    for (int i = itemsToPrint.GetCount() - 1; i >= 0; --i) {
+    for (int i = itemsToPrint.size() - 1; i >= 0; --i) {
         COMPtr<IWebHistoryItem> historyItemToPrint;
         itemsToPrint[i]->QueryInterface(&historyItemToPrint);
         dumpHistoryItem(historyItemToPrint.get(), 8, i == currentItemIndex);
