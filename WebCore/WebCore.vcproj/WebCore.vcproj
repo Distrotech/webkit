@@ -3037,10 +3037,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\platform\win\PlatformScrollBarWin.cpp"
-					>
-				</File>
-				<File
 					RelativePath="..\platform\win\PopupMenuWin.cpp"
 					>
 				</File>
@@ -3771,14 +3767,6 @@
 				<Filter
 					Name="win"
 					>
-					<File
-						RelativePath="..\platform\network\win\ResourceHandleWin.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\platform\network\win\ResourceHandleWin.h"
-						>
-					</File>
 				</Filter>
 				<Filter
 					Name="cf"
@@ -4687,14 +4675,6 @@
 			</File>
 			<File
 				RelativePath="..\rendering\RenderThemeSafari.h"
-				>
-			</File>
-			<File
-				RelativePath="..\rendering\RenderThemeWin.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\rendering\RenderThemeWin.h"
 				>
 			</File>
 			<File
