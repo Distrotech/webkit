@@ -33,12 +33,15 @@
 #include "WorkQueue.h"
 #include "WorkQueueItem.h"
 
-#include <atlstr.h>
 #include <WebCore/COMPtr.h>
 #include <wtf/Platform.h>
 #include <JavaScriptCore/Assertions.h>
 #include <JavaScriptCore/JavaScriptCore.h>
 #include <WebKit/IWebViewPrivate.h>
+#include <string>
+
+using std::string;
+using std::wstring;
 
 static JSValueRef dumpAsTextCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
 {
@@ -186,19 +189,21 @@ static JSValueRef dumpBackForwardListCallback(JSContextRef context, JSObjectRef 
     return JSValueMakeUndefined(context);
 }
 
-static CString jsValueToCString(JSContextRef context, JSValueRef value, JSValueRef* exception)
+static wstring jsValueToWString(JSContextRef context, JSValueRef value, JSValueRef* exception)
 {
     JSStringRef jsStr = JSValueToStringCopy(context, value, exception);
     ASSERT(!exception || !*exception);
 
-    CStringA string;
-    LPSTR buffer = string.GetBuffer(1024);
-    JSStringGetUTF8CString(jsStr, buffer, 1024);
-    string.ReleaseBuffer();
+    char buffer[1024];
+    JSStringGetUTF8CString(jsStr, buffer, ARRAYSIZE(buffer));
 
     JSStringRelease(jsStr);
 
-    return CString(string);
+    wchar_t wbuffer[1024];
+    if (!::MultiByteToWideChar(CP_UTF8, 0, buffer, -1, wbuffer, ARRAYSIZE(wbuffer)))
+        return 0;
+
+    return wbuffer;
 }
 
 static JSValueRef queueLoadCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
@@ -208,12 +213,12 @@ static JSValueRef queueLoadCallback(JSContextRef context, JSObjectRef function, 
     if (argumentCount < 1)
         return undefined;
 
-    CString url = jsValueToCString(context, arguments[0], exception);
+    wstring url = jsValueToWString(context, arguments[0], exception);
     ASSERT(!exception || !*exception);
 
-    CString target;
+    wstring target;
     if (argumentCount >= 2) {
-        target = jsValueToCString(context, arguments[1], exception);
+        target = jsValueToWString(context, arguments[1], exception);
         ASSERT(!exception || !*exception);
     }
 
@@ -228,15 +233,15 @@ static JSValueRef queueLoadCallback(JSContextRef context, JSObjectRef function, 
     BSTR responseURLBSTR;
     if (FAILED(response->URL(&responseURLBSTR)))
         return undefined;
+    wstring responseURL(responseURLBSTR, SysStringLen(responseURLBSTR));
     SysFreeString(responseURLBSTR);
 
     // FIXME: We should do real relative URL resolution here
-    CString responseURL(responseURLBSTR);
-    int lastSlash = responseURL.ReverseFind('/');
+    int lastSlash = responseURL.rfind('/');
     if (lastSlash != -1)
-        responseURL = responseURL.Mid(0, lastSlash);
+        responseURL = responseURL.substr(0, lastSlash);
 
-    WorkQueue::shared()->queue(new LoadItem(CString(responseURL) + TEXT("/") + url, target));
+    WorkQueue::shared()->queue(new LoadItem(responseURL + TEXT("/") + url, target));
 
     return undefined;
 }
@@ -255,7 +260,7 @@ static JSValueRef queueScriptCallback(JSContextRef context, JSObjectRef function
     if (argumentCount < 1)
         return undefined;
 
-    CString script = jsValueToCString(context, arguments[0], exception);
+    wstring script = jsValueToWString(context, arguments[0], exception);
     ASSERT(!exception || !*exception);
 
     WorkQueue::shared()->queue(new ScriptItem(script));

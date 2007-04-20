@@ -35,13 +35,15 @@
 #include <WebKit/IWebView.h>
 #include <WebKit/WebKit.h>
 
+using std::wstring;
+
 void LoadItem::invoke() const
 {
     COMPtr<IWebFrame> targetFrame;
-    if (m_target.IsEmpty())
+    if (m_target.empty())
         targetFrame = frame;
     else {
-        BSTR targetBSTR = SysAllocString(m_target);
+        BSTR targetBSTR = SysAllocString(m_target.c_str());
         bool failed = FAILED(frame->findFrameNamed(targetBSTR, &targetFrame));
         SysFreeString(targetBSTR);
         if (failed)
@@ -52,7 +54,7 @@ void LoadItem::invoke() const
     if (FAILED(CoCreateInstance(CLSID_WebURLRequest, 0, CLSCTX_ALL, IID_IWebURLRequest, (void**)&request)))
         return;
 
-    BSTR urlBSTR = SysAllocString(m_url);
+    BSTR urlBSTR = SysAllocString(m_url.c_str());
     bool failed = FAILED(request->initWithURL(urlBSTR, WebURLRequestUseProtocolCachePolicy, 60));
     SysFreeString(urlBSTR);
     if (failed)
@@ -79,7 +81,7 @@ void ScriptItem::invoke() const
         return;
 
     BSTR result;
-    BSTR scriptBSTR = SysAllocString(m_script);
+    BSTR scriptBSTR = SysAllocString(m_script.c_str());
     webView->stringByEvaluatingJavaScriptFromString(scriptBSTR, &result);
     SysFreeString(result);
     SysFreeString(scriptBSTR);

@@ -29,7 +29,7 @@
 #ifndef WorkQueueItem_h
 #define WorkQueueItem_h
 
-#include <atlstr.h>
+#include <string>
 
 class WorkQueueItem {
 public:
@@ -38,20 +38,20 @@ public:
 
 class LoadItem : public WorkQueueItem {
 public:
-    LoadItem(const CString& url, const CString& target)
+    LoadItem(const std::wstring& url, const std::wstring& target)
         : m_url(url)
         , m_target(target)
     {
     }
 
-    const CString& url() const { return m_url; }
-    const CString& target() const { return m_target; }
+    const std::wstring& url() const { return m_url; }
+    const std::wstring& target() const { return m_target; }
 
     virtual void invoke() const;
 
 private:
-    CString m_url;
-    CString m_target;
+    std::wstring m_url;
+    std::wstring m_target;
 };
 
 class ReloadItem : public WorkQueueItem {
@@ -61,17 +61,17 @@ public:
 
 class ScriptItem : public WorkQueueItem {
 public:
-    ScriptItem(const CString& script)
+    ScriptItem(const std::wstring& script)
         : m_script(script)
     {
     }
 
-    const CString& script() const { return m_script; }
+    const std::wstring& script() const { return m_script; }
 
     virtual void invoke() const;
 
 private:
-    CString m_script;
+    std::wstring m_script;
 };
 
 class BackForwardItem : public WorkQueueItem {

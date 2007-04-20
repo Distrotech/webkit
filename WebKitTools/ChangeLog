@@ -1,3 +1,42 @@
+2007-04-19  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Steve.
+
+        Get rid of all uses of ATL CString in DumpRenderTree.
+
+        Also fixed a couple of bugs related to SAFEARRAY usage.
+
+        Unless otherwise noted, changes are simple converting CString usage to
+        std::wstring.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (initialize):
+        (dumpFrameScrollPosition): The bounds of a SAFEARRAY are inclusive, so
+        the length is upper - lower + 1.
+        (compareHistoryItems): The vector we're sorting now holds COMPtrs, so
+        changed to reflect that.
+        (dumpHistoryItem): Use a Vector of COMPtrs to hold the child items, and
+        fixed length calculation.
+        (dumpBackForwardList): Use a Vector of COMPtrs to hold the items so
+        that they are retained properly.
+        (main):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/EditingDelegate.cpp:
+        (dumpPath):
+        (dump):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/LayoutTestController.cpp:
+        (jsValueToWString):
+        (queueLoadCallback):
+        (queueScriptCallback):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WorkQueueItem.cpp:
+        (LoadItem::invoke):
+        (ScriptItem::invoke):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WorkQueueItem.h:
+        (LoadItem::LoadItem):
+        (LoadItem::url):
+        (LoadItem::target):
+        (ScriptItem::ScriptItem):
+        (ScriptItem::script):
+
 2007-04-19  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Adam.

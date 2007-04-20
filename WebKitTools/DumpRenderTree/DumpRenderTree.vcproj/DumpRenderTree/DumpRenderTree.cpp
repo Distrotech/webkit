@@ -30,12 +30,13 @@
 
 #include <wtf/Vector.h>
 
-#include <atlstr.h>
 #include <WebCore/COMPtr.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <JavaScriptCore/JavaScriptCore.h>
 #include <math.h>
 #include <pthread.h>
+#include <string>
+#include <tchar.h>
 #include <WebKit/DOMPrivate.h>
 #include <WebKit/IWebFramePrivate.h>
 #include <WebKit/IWebHistoryItem.h>
@@ -49,6 +50,8 @@
 #include "WaitUntilDoneDelegate.h"
 #include "WorkQueueItem.h"
 #include "WorkQueue.h"
+
+using std::wstring;
 
 #define USE_MAC_FONTS
 
@@ -105,7 +108,7 @@ static LRESULT CALLBACK DumpRenderTreeWndProc(HWND hWnd, UINT msg, WPARAM wParam
 
 extern "C" BOOL InitializeCoreGraphics();
 
-static CString initialize(HMODULE hModule)
+static wstring initialize(HMODULE hModule)
 {
     static LPCTSTR fontsToInstall[] = {
         TEXT("AHEM____.ttf"),
@@ -134,17 +137,17 @@ static CString initialize(HMODULE hModule)
         TEXT("Times Roman.ttf")
     };
 
-    CString exePath;
-    GetModuleFileName(hModule, exePath.GetBuffer(MAX_PATH), MAX_PATH);
-    exePath.ReleaseBuffer();
-    int lastSlash = exePath.ReverseFind('\\');
-    if (lastSlash != -1 && lastSlash + 1< exePath.GetLength())
-        exePath = exePath.Left(lastSlash + 1);
+    TCHAR buffer[MAX_PATH];
+    GetModuleFileName(hModule, buffer, ARRAYSIZE(buffer));
+    wstring exePath(buffer);
+    int lastSlash = exePath.rfind('\\');
+    if (lastSlash != -1 && lastSlash + 1< exePath.length())
+        exePath = exePath.substr(0, lastSlash + 1);
     
-    CString resourcesPath = exePath + TEXT("DumpRenderTree.resources\\");
+    wstring resourcesPath(exePath + TEXT("DumpRenderTree.resources\\"));
 
     for (int i = 0; i < ARRAYSIZE(fontsToInstall); ++i)
-        AddFontResourceEx(resourcesPath + fontsToInstall[i], FR_PRIVATE, 0);
+        AddFontResourceEx(wstring(resourcesPath + fontsToInstall[i]).c_str(), FR_PRIVATE, 0);
 
     // Init COM
     OleInitialize(0);
@@ -217,7 +220,7 @@ void dumpFrameScrollPosition(IWebFrame* frame)
             if (SUCCEEDED(::SafeArrayGetLBound(arrPtr, 1, &lowerBound))) {
                 LONG upperBound;
                 if (SUCCEEDED(::SafeArrayGetUBound(arrPtr, 1, &upperBound))) {
-                    LONG length = upperBound - lowerBound;
+                    LONG length = upperBound - lowerBound + 1;
                     IUnknown** safeArrayData;
                     if (length && SUCCEEDED(::SafeArrayAccessData(arrPtr, (void**)&safeArrayData))) {
                         for (unsigned i = 0; i < length; ++i) {
@@ -238,11 +241,11 @@ void dumpFrameScrollPosition(IWebFrame* frame)
 static int compareHistoryItems(const void* item1, const void* item2)
 {
     COMPtr<IWebHistoryItemPrivate> itemA;
-    if (FAILED((*(IUnknown**)item1)->QueryInterface(&itemA)))
+    if (FAILED((*(COMPtr<IUnknown>*)item1)->QueryInterface(&itemA)))
         return 0;
 
     COMPtr<IWebHistoryItemPrivate> itemB;
-    if (FAILED((*(IUnknown**)item2)->QueryInterface(&itemB)))
+    if (FAILED((*(COMPtr<IUnknown>*)item2)->QueryInterface(&itemB)))
         return 0;
 
     BSTR targetA;
@@ -255,7 +258,7 @@ static int compareHistoryItems(const void* item1, const void* item2)
         return 0;
     }
 
-    int result = CString(targetA).CompareNoCase(CString(targetB));
+    int result = wcsicmp(wstring(targetA, SysStringLen(targetA)).c_str(), wstring(targetB, SysStringLen(targetB)).c_str());
     SysFreeString(targetA);
     SysFreeString(targetB);
     return result;
@@ -301,6 +304,8 @@ static void dumpHistoryItem(IWebHistoryItem* item, int indent, bool current)
     if (FAILED(itemPrivate->children(&kidsCount, &arrPtr)) || !kidsCount)
         return;
 
+    Vector<COMPtr<IUnknown> > kidsVector;
+
     LONG lowerBound;
     if (FAILED(::SafeArrayGetLBound(arrPtr, 1, &lowerBound)))
         goto exit;
@@ -309,32 +314,31 @@ static void dumpHistoryItem(IWebHistoryItem* item, int indent, bool current)
     if (FAILED(::SafeArrayGetUBound(arrPtr, 1, &upperBound)))
         goto exit;
 
-    LONG length = upperBound - lowerBound;
+    LONG length = upperBound - lowerBound + 1;
     if (!length)
         goto exit;
+    ASSERT(length == kidsCount);
 
     IUnknown** safeArrayData;
     if (FAILED(::SafeArrayAccessData(arrPtr, (void**)&safeArrayData)))
         goto exit;
 
-    IUnknown** kidsArray = new IUnknown*[length];
-    memcpy(kidsArray, safeArrayData, length * sizeof(IUnknown*));
+    for (int i = 0; i < length; ++i)
+        kidsVector.append(safeArrayData[i]);
     ::SafeArrayUnaccessData(arrPtr);
 
     // must sort to eliminate arbitrary result ordering which defeats reproducible testing
-    qsort(kidsArray, kidsCount, sizeof(kidsArray[0]), compareHistoryItems);
+    qsort(kidsVector.data(), kidsCount, sizeof(kidsVector[0]), compareHistoryItems);
 
     for (unsigned i = 0; i < kidsCount; ++i) {
         COMPtr<IWebHistoryItem> item;
-        kidsArray[i]->QueryInterface(&item);
+        kidsVector[i]->QueryInterface(&item);
         dumpHistoryItem(item.get(), indent + 4, false);
     }
 
 exit:
     if (arrPtr && SUCCEEDED(::SafeArrayUnlock(arrPtr)))
         ::SafeArrayDestroy(arrPtr);
-
-    delete [] kidsArray;
 }
 
 static void dumpBackForwardList(IWebFrame* frame)
@@ -353,7 +357,7 @@ static void dumpBackForwardList(IWebFrame* frame)
     // Print out all items in the list after prevTestBFItem, which was from the previous test
     // Gather items from the end of the list, the print them out from oldest to newest
 
-    Vector<IUnknown*> itemsToPrint;
+    Vector<COMPtr<IUnknown> > itemsToPrint;
 
     int forwardListCount;
     if (FAILED(bfList->forwardListCount(&forwardListCount)))
@@ -367,7 +371,7 @@ static void dumpBackForwardList(IWebFrame* frame)
         assert(item != prevTestBFItem);
         COMPtr<IUnknown> itemUnknown;
         item->QueryInterface(&itemUnknown);
-        itemsToPrint.append(itemUnknown.get());
+        itemsToPrint.append(itemUnknown);
     }
     
     COMPtr<IWebHistoryItem> currentItem;
@@ -377,7 +381,7 @@ static void dumpBackForwardList(IWebFrame* frame)
     assert(currentItem != prevTestBFItem);
     COMPtr<IUnknown> currentItemUnknown;
     currentItem->QueryInterface(&currentItemUnknown);
-    itemsToPrint.append(currentItemUnknown.get());
+    itemsToPrint.append(currentItemUnknown);
     int currentItemIndex = itemsToPrint.size() - 1;
 
     int backListCount;
@@ -392,7 +396,7 @@ static void dumpBackForwardList(IWebFrame* frame)
             break;
         COMPtr<IUnknown> itemUnknown;
         item->QueryInterface(&itemUnknown);
-        itemsToPrint.append(itemUnknown.get());
+        itemsToPrint.append(itemUnknown);
     }
 
     for (int i = itemsToPrint.size() - 1; i >= 0; --i) {
@@ -708,7 +712,7 @@ int main(int argc, char* argv[])
 {
     leakChecking = false;
 
-    CString exePath = initialize(GetModuleHandle(0));
+    wstring exePath = initialize(GetModuleHandle(0));
 
     // FIXME: options
 
@@ -729,8 +733,8 @@ int main(int argc, char* argv[])
         return -1;
 
     LPCTSTR testNetscapePluginStr = TEXT("testnetscapeplugin");
-    BSTR pluginPath = SysAllocStringLen(0, exePath.GetLength() + _tcslen(testNetscapePluginStr));
-    _tcscpy(pluginPath, (LPCTSTR)exePath);
+    BSTR pluginPath = SysAllocStringLen(0, exePath.length() + _tcslen(testNetscapePluginStr));
+    _tcscpy(pluginPath, exePath.c_str());
     _tcscat(pluginPath, testNetscapePluginStr);
     bool failed = FAILED(viewPrivate->addAdditionalPluginPath(pluginPath));
     SysFreeString(pluginPath);

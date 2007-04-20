@@ -29,10 +29,13 @@
 #include "DumpRenderTree.h"
 #include "EditingDelegate.h"
 
-#include <atlstr.h>
 #include <WebCore/COMPtr.h>
 #include <wtf/Platform.h>
 #include <JavaScriptCore/Assertions.h>
+#include <string>
+#include <tchar.h>
+
+using std::wstring;
 
 EditingDelegate::EditingDelegate()
     : m_refCount(1)
@@ -69,16 +72,16 @@ ULONG STDMETHODCALLTYPE EditingDelegate::Release(void)
     return newRef;
 }
 
-static CString dumpPath(IDOMNode* node)
+static wstring dumpPath(IDOMNode* node)
 {
     ASSERT(node);
 
-    CString result;
+    wstring result;
 
     BSTR name;
     if (FAILED(node->nodeName(&name)))
         return result;
-    result.Format(TEXT("%s"), name ? name : TEXT(""));
+    result.assign(name, SysStringLen(name));
     SysFreeString(name);
 
     COMPtr<IDOMNode> parent;
@@ -88,30 +91,29 @@ static CString dumpPath(IDOMNode* node)
     return result;
 }
 
-static CString dump(IDOMRange* range)
+static wstring dump(IDOMRange* range)
 {
     ASSERT(range);
 
-    CString result;
-
     int startOffset;
     if (FAILED(range->startOffset(&startOffset)))
-        return result;
+        return 0;
 
     int endOffset;
     if (FAILED(range->endOffset(&endOffset)))
-        return result;
+        return 0;
 
     COMPtr<IDOMNode> startContainer;
     if (FAILED(range->startContainer(&startContainer)))
-        return result;
+        return 0;
 
     COMPtr<IDOMNode> endContainer;
     if (FAILED(range->endContainer(&endContainer)))
-        return result;
+        return 0;
 
-    result.Format(TEXT("range from %ld of %s to %ld of %s"), startOffset, dumpPath(startContainer.get()), endOffset, dumpPath(endContainer.get()));
-    return result;
+    wchar_t buffer[1024];
+    _snwprintf(buffer, ARRAYSIZE(buffer), L"range from %ld of %s to %ld of %s", startOffset, dumpPath(startContainer.get()), endOffset, dumpPath(endContainer.get()));
+    return buffer;
 }
 
 HRESULT STDMETHODCALLTYPE EditingDelegate::shouldBeginEditingInDOMRange( 
