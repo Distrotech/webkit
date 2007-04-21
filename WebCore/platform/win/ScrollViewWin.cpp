@@ -139,6 +139,7 @@ void ScrollView::ScrollViewPrivate::valueChanged(Scrollbar* bar)
         return;
 
     scrollBackingStore(scrollDelta);
+    static_cast<FrameView*>(m_view)->frame()->sendScrollEvent();
 }
 
 void ScrollView::ScrollViewPrivate::scrollBackingStore(const IntSize& scrollDelta)
