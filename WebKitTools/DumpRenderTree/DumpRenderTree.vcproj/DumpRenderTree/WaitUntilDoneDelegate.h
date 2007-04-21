@@ -347,6 +347,11 @@ protected:
         /* [in] */ DWORD okEffect,
         /* [retval][out] */ DWORD *performedEffect);
 
+    virtual HRESULT STDMETHODCALLTYPE webViewGetDlgCode( 
+        /* [in] */ IWebView *sender,
+        /* [in] */ UINT keyCode,
+        /* [retval][out] */ LONG_PTR *code);
+
     void locationChangeDone(IWebError*, IWebFrame*);
 
     ULONG                   m_refCount;

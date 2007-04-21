@@ -879,6 +879,10 @@ static const KeyEntry keyEntries[] = {
     { VK_TAB,    0,                  "InsertTab"                                   },
     { VK_TAB,    ShiftKey,           "InsertBacktab"                               },
     { VK_RETURN, 0,                  "InsertNewline"                               },
+
+    { 'C',       CtrlKey,            "Copy"                                        },
+    { 'V',       CtrlKey,            "Paste"                                       },
+    { 'X',       CtrlKey,            "Cut"                                         },
 };
 
 const char* WebView::interpretKeyEvent(const KeyboardEvent* evt)
@@ -1215,6 +1219,23 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
         case WM_MOUSEACTIVATE:
             webView->setMouseActivated(true);
             break;
+        case WM_GETDLGCODE: {
+            COMPtr<IWebUIDelegate> uiDelegate;
+            COMPtr<IWebUIDelegatePrivate> uiDelegatePrivate;
+            LONG_PTR dlgCode = 0;
+            UINT keyCode = 0;
+            if (lParam) {
+                LPMSG lpMsg = (LPMSG)lParam;
+                if (lpMsg->message == WM_KEYDOWN)
+                    keyCode = (UINT) lpMsg->wParam;
+            }
+            if (SUCCEEDED(webView->uiDelegate(&uiDelegate)) && uiDelegate &&
+                SUCCEEDED(uiDelegate->QueryInterface(IID_IWebUIDelegatePrivate, (void**) &uiDelegatePrivate)) && uiDelegatePrivate &&
+                SUCCEEDED(uiDelegatePrivate->webViewGetDlgCode(webView, keyCode, &dlgCode)))
+                return dlgCode;
+            handled = false;
+            break;
+        }
         case WM_SETCURSOR:
             if (lastSetCursor) {
                 SetCursor(lastSetCursor);

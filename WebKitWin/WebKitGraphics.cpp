@@ -30,6 +30,7 @@
 #include "WebKitDLL.h"
 
 #pragma warning(push, 0)
+#include <WebCore/CharacterNames.h>
 #include <WebCore/Font.h>
 #include <WebCore/FontDescription.h>
 #include <WebCore/GraphicsContext.h>
@@ -64,14 +65,17 @@ static Font makeFont(const WebFontDescription& description)
     return font;
 }
 
-void DrawTextAtPoint(CGContextRef cgContext, LPCTSTR text, int length, POINT point, const WebFontDescription& description, CGColorRef color, int underlinedIndex)
+void DrawTextAtPoint(CGContextRef cgContext, LPCTSTR text, int length, POINT point, const WebFontDescription& description, CGColorRef color, int underlinedIndex, bool drawAsPassword)
 {
     GraphicsContext context(cgContext);
 
     const CGFloat* components = CGColorGetComponents(color);
     Color textColor((int)(components[0] * 255), (int)(components[1] * 255), (int)(components[2] * 255), (int)(components[3] * 255));
 
-    WebCoreDrawTextAtPoint(context, String(text, length), point, makeFont(description), textColor, underlinedIndex);
+    String drawString(text, length);
+    if (drawAsPassword)
+        drawString = drawString.impl()->secure(WebCore::bullet);
+    WebCoreDrawTextAtPoint(context, drawString, point, makeFont(description), textColor, underlinedIndex);
 }
 
 float TextFloatWidth(LPCTSTR text, int length, const WebFontDescription& description)

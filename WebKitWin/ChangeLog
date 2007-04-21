@@ -1,3 +1,30 @@
+2007-04-20  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Steve and Oliver.
+        
+        Implemented some DOM methods I need to support password input and textarea in 
+        WebView-based edit fields in the app.
+
+        * DOMCSSClasses.cpp:
+        (DOMCSSStyleDeclaration::setCssText): added implementation
+        * DOMCoreClasses.cpp:
+        (DOMDocument::createElement): ditto
+        * DOMHTMLClasses.cpp:
+        (DOMHTMLInputElement::setType): ditto
+        (DOMHTMLTextAreaElement::value): ditto
+        (DOMHTMLTextAreaElement::setValue): ditto
+        (DOMHTMLTextAreaElement::select): ditto
+        * Interfaces/IWebUIDelegatePrivate.idl: added a new method webViewGetDlgCode() that client
+        can implement if it wants to handle keypresses themselves rather than letting the system 
+        interpret certain keys as dialog box navigation keys.
+        * WebKitGraphics.cpp:
+        (DrawTextAtPoint): handle drawing text as password
+        * WebKitGraphics.h:
+        * WebView.cpp:
+        Added Copy, Cut, and Paste to the keyEntries.
+        (WebViewWndProc): added code to handle WM_GETDLGCODE.  Calls IWebUIDelegatePrivate::webViewGetDlgCode()
+        if available to see if the client wants to handle it.
+
 2007-04-18  Adam Roben  <aroben@apple.com>
 
         Reviewed by Steve.

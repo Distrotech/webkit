@@ -42,7 +42,7 @@ struct WebFontDescription {
     bool italic;
 };
 
-void DrawTextAtPoint(CGContextRef, LPCTSTR text, int length, POINT, const WebFontDescription&, CGColorRef, int underlinedIndex = -1);
+void DrawTextAtPoint(CGContextRef, LPCTSTR text, int length, POINT, const WebFontDescription&, CGColorRef, int underlinedIndex = -1, bool drawAsPassword = false);
 float TextFloatWidth(LPCTSTR text, int length, const WebFontDescription&);
 void FontMetrics(const WebFontDescription&, int* ascent, int* descent, int* lineSpacing);
 

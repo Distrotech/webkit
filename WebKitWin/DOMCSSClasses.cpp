@@ -89,10 +89,13 @@ HRESULT STDMETHODCALLTYPE DOMCSSStyleDeclaration::cssText(
 }
 
 HRESULT STDMETHODCALLTYPE DOMCSSStyleDeclaration::setCssText( 
-    /* [in] */ BSTR /*cssText*/)
+    /* [in] */ BSTR cssText)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    WebCore::String cssTextString(cssText);
+    // FIXME: <rdar://5148045> return DOM exception info
+    WebCore::ExceptionCode ec;
+    m_style->setCssText(cssTextString, ec);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE DOMCSSStyleDeclaration::getPropertyValue( 
@@ -139,6 +142,7 @@ HRESULT STDMETHODCALLTYPE DOMCSSStyleDeclaration::setProperty(
     WebCore::String propertyNameString(propertyName);
     WebCore::String valueString(value);
     WebCore::String priorityString(priority);
+    // FIXME: <rdar://5148045> return DOM exception info
     WebCore::ExceptionCode code;
     m_style->setProperty(propertyNameString, valueString, priorityString, code);
     return S_OK;

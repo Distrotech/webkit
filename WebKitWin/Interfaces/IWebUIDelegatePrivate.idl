@@ -70,4 +70,5 @@ interface IWebUIDelegatePrivate : IUnknown
     HRESULT webViewReceivedFocus([in] IWebView* sender);
     HRESULT webViewLostFocus([in] IWebView* sender, [in] HWND loseFocusTo);
     HRESULT doDragDrop([in] IWebView* sender, [in] IDataObject* dataObject, [in] IDropSource* dropSource, [in] DWORD okEffect, [out, retval] DWORD* performedEffect);
+    HRESULT webViewGetDlgCode([in] IWebView* sender, [in] UINT keyCode, [out, retval] LONG_PTR* code);
 }

@@ -29,6 +29,7 @@
 #include "COMPtr.h"
 
 #pragma warning(push, 0)
+#include <WebCore/BString.h>
 #include <WebCore/Document.h>
 #include <WebCore/Element.h>
 #include <WebCore/FrameView.h>
@@ -432,14 +433,16 @@ HRESULT STDMETHODCALLTYPE DOMHTMLElement::setInnerHTML(
 HRESULT STDMETHODCALLTYPE DOMHTMLElement::innerText( 
         /* [retval][out] */ BSTR* result)
 {
-    String text = static_cast<HTMLElement*>(m_element)->innerText();
-    *result = SysAllocStringLen(text.characters(), text.length());
+    ASSERT(m_element && m_element->isHTMLElement());
+    WebCore::String innerTextString = static_cast<HTMLElement*>(m_element)->innerText();
+    *result = BString(innerTextString.characters(), innerTextString.length()).release();
     return S_OK;
 }
         
 HRESULT STDMETHODCALLTYPE DOMHTMLElement::setInnerText( 
         /* [in] */ BSTR text)
 {
+    ASSERT(m_element && m_element->isHTMLElement());
     HTMLElement* htmlEle = static_cast<HTMLElement*>(m_element);
     WebCore::String textString(text, SysStringLen(text));
     WebCore::ExceptionCode ec = 0;
@@ -974,6 +977,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setChecked(
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::disabled( 
         /* [retval][out] */ BOOL* result)
 {
+    ASSERT(m_element && m_element->hasTagName(inputTag));
     HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
     *result = inputElement->disabled() ? TRUE : FALSE;
     return S_OK;
@@ -1017,6 +1021,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setName(
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::readOnly( 
         /* [retval][out] */ BOOL* result)
 {
+    ASSERT(m_element && m_element->hasTagName(inputTag));
     HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
     *result = inputElement->readOnly() ? TRUE : FALSE;
     return S_OK;
@@ -1079,10 +1084,13 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::type(
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setType( 
-        /* [in] */ BSTR /*type*/)
+        /* [in] */ BSTR type)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    ASSERT(m_element && m_element->hasTagName(inputTag));
+    HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
+    WebCore::String typeString(type, SysStringLen(type));
+    inputElement->setType(typeString);
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::useMap( 
@@ -1102,9 +1110,10 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setUseMap(
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::value( 
         /* [retval][out] */ BSTR* result)
 {
+    ASSERT(m_element && m_element->hasTagName(inputTag));
     HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
     WebCore::String valueString = inputElement->value();
-    *result = SysAllocStringLen(valueString.characters(), valueString.length());
+    *result = BString(valueString.characters(), valueString.length()).release();
     if (valueString.length() && !*result)
         return E_OUTOFMEMORY;
     return S_OK;
@@ -1113,6 +1122,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::value(
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setValue( 
         /* [in] */ BSTR value)
 {
+    ASSERT(m_element && m_element->hasTagName(inputTag));
     HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
     inputElement->setValue(String((UChar*) value, SysStringLen(value)));
     return S_OK;
@@ -1120,6 +1130,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setValue(
     
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::select( void)
 {
+    ASSERT(m_element && m_element->hasTagName(inputTag));
     HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
     inputElement->select();
     return S_OK;
@@ -1134,6 +1145,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::click( void)
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setSelectionStart( 
     /* [in] */ long start)
 {
+    ASSERT(m_element && m_element->hasTagName(inputTag));
     HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
     inputElement->setSelectionStart(start);
     return S_OK;
@@ -1142,6 +1154,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setSelectionStart(
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::selectionStart( 
     /* [retval][out] */ long *start)
 {
+    ASSERT(m_element && m_element->hasTagName(inputTag));
     HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
     *start = inputElement->selectionStart();
     return S_OK;
@@ -1150,6 +1163,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::selectionStart(
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setSelectionEnd( 
     /* [in] */ long end)
 {
+    ASSERT(m_element && m_element->hasTagName(inputTag));
     HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
     inputElement->setSelectionEnd(end);
     return S_OK;
@@ -1158,6 +1172,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setSelectionEnd(
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::selectionEnd( 
     /* [retval][out] */ long *end)
 {
+    ASSERT(m_element && m_element->hasTagName(inputTag));
     HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
     *end = inputElement->selectionEnd();
     return S_OK;
@@ -1168,6 +1183,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::selectionEnd(
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::isTextField(
     /* [retval][out] */ BOOL* result)
 {
+    ASSERT(m_element && m_element->hasTagName(inputTag));
     HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
     *result = inputElement->isTextField() ? TRUE : FALSE;
     return S_OK;
@@ -1205,6 +1221,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::selectedRange(
     /* [out] */ int* start,
     /* [out] */ int* end)
 {
+    ASSERT(m_element && m_element->hasTagName(inputTag));
     HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
     *start = inputElement->selectionStart();
     *end = inputElement->selectionEnd();
@@ -1214,6 +1231,7 @@ HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::selectedRange(
 HRESULT STDMETHODCALLTYPE DOMHTMLInputElement::setAutofilled( 
     /* [in] */ BOOL filled)
 {
+    ASSERT(m_element && m_element->hasTagName(inputTag));
     HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(m_element);
     inputElement->setAutofilled(!!filled);
     return S_OK;
@@ -1362,21 +1380,30 @@ HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::type(
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::value( 
-        /* [retval][out] */ BSTR* /*result*/)
+        /* [retval][out] */ BSTR* result)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    ASSERT(m_element && m_element->hasTagName(textareaTag));
+    HTMLTextAreaElement* textareaElement = static_cast<HTMLTextAreaElement*>(m_element);
+    WebCore::String valueString = textareaElement->value();
+    *result = BString(valueString.characters(), valueString.length()).release();
+    if (valueString.length() && !*result)
+        return E_OUTOFMEMORY;
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::setValue( 
-        /* [in] */ BSTR /*value*/)
+        /* [in] */ BSTR value)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    ASSERT(m_element && m_element->hasTagName(textareaTag));
+    HTMLTextAreaElement* textareaElement = static_cast<HTMLTextAreaElement*>(m_element);
+    textareaElement->setValue(String((UChar*) value, SysStringLen(value)));
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE DOMHTMLTextAreaElement::select( void)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    ASSERT(m_element && m_element->hasTagName(textareaTag));
+    HTMLTextAreaElement* textareaElement = static_cast<HTMLTextAreaElement*>(m_element);
+    textareaElement->select();
+    return S_OK;
 }

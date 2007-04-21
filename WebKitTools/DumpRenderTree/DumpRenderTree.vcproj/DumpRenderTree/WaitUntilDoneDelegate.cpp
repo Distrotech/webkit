@@ -245,3 +245,14 @@ HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::doDragDrop(
 
     return S_OK;
 }
+
+HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::webViewGetDlgCode( 
+    /* [in] */ IWebView* /*sender*/,
+    /* [in] */ UINT /*keyCode*/,
+    /* [retval][out] */ LONG_PTR *code)
+{
+    if (!code)
+        return E_POINTER;
+    *code = 0;
+    return E_NOTIMPL;
+}

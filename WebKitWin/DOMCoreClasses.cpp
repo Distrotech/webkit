@@ -543,11 +543,18 @@ HRESULT STDMETHODCALLTYPE DOMDocument::documentElement(
 }
 
 HRESULT STDMETHODCALLTYPE DOMDocument::createElement( 
-    /* [in] */ BSTR /*tagName*/,
-    /* [retval][out] */ IDOMElement** /*result*/)
+    /* [in] */ BSTR tagName,
+    /* [retval][out] */ IDOMElement** result)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!m_document)
+        return E_FAIL;
+
+    String tagNameString(tagName);
+    ExceptionCode ec;
+    *result = DOMElement::createInstance(m_document->createElement(tagNameString, ec).get());
+    if (!(*result))
+        return E_FAIL;
+    return S_OK;    
 }
 
 HRESULT STDMETHODCALLTYPE DOMDocument::createDocumentFragment( 

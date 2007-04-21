@@ -1,3 +1,13 @@
+2007-04-20  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Steve and Oliver.
+        
+        Added empty implementation of IWebUIDelegatePrivate::webViewGetDlgCode().
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.cpp:
+        (WaitUntilDoneDelegate::webViewGetDlgCode):
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.h:
+
 2007-04-20  Adam Roben  <aroben@apple.com>
 
         * DumpRenderTree/DumpRenderTree.vcproj/TestNetscapePlugin/TestNetscapePlugin.vcproj:
