@@ -39,6 +39,12 @@ WEBKIT_ROOT = $(WEBKIT_ROOT)
 
 ### Variables: ###
 
+TESTKJS_CXXFLAGS = /MD /DWIN32 /I$(WEBKIT_ROOT)\icu\include \
+	/I$(WEBKIT_ROOT)\JavaScriptCore /I$(WEBKIT_ROOT)\JavaScriptCore\os-win32 \
+	/I. $(CPPFLAGS) $(CXXFLAGS)
+TESTKJS_OBJECTS =  \
+	obj-msvc\testkjs_testkjs.obj
+TESTKJS_ODEP =  .\jscore.lib
 DFTABLES_CFLAGS =  /MD /DWIN32 /I.\wtf  $(CPPFLAGS) $(CFLAGS)
 DFTABLES_OBJECTS =  \
 	obj-msvc\dftables_dftables.obj
@@ -138,16 +144,24 @@ obj-msvc:
 
 ### Targets: ###
 
-all: .\dftables.exe .\jscore.lib
+all: .\testkjs.exe .\dftables.exe .\jscore.lib
 
 clean: 
 	-if exist obj-msvc\*.obj del obj-msvc\*.obj
 	-if exist obj-msvc\*.res del obj-msvc\*.res
 	-if exist obj-msvc\*.pch del obj-msvc\*.pch
+	-if exist .\testkjs.exe del .\testkjs.exe
+	-if exist .\testkjs.ilk del .\testkjs.ilk
+	-if exist .\testkjs.pdb del .\testkjs.pdb
 	-if exist .\dftables.exe del .\dftables.exe
 	-if exist .\dftables.ilk del .\dftables.ilk
 	-if exist .\dftables.pdb del .\dftables.pdb
 	-if exist .\jscore.lib del .\jscore.lib
+
+.\testkjs.exe: $(TESTKJS_OBJECTS)
+	link /NOLOGO /OUT:$@ $(LDFLAGS) /LIBPATH:$(WEBKIT_ROOT)\icu\lib /LIBPATH:$(WEBKIT_ROOT)\JavaScriptCore @<<
+	$(TESTKJS_OBJECTS)  icuuc.lib icuin.lib jscore.lib
+<<
 
 .\dftables.exe: $(DFTABLES_OBJECTS)
 	link /NOLOGO /OUT:$@ $(LDFLAGS) @<<
@@ -162,6 +176,9 @@ DerivedSources:
 	link /LIB /NOLOGO /OUT:$@ @<<
 	$(JSCORE_OBJECTS)
 <<
+
+obj-msvc\testkjs_testkjs.obj: .\.\kjs\testkjs.cpp $(TESTKJS_ODEP)
+	$(CXX) /c /nologo /TP /Fo$@ $(TESTKJS_CXXFLAGS) $**
 
 obj-msvc\dftables_dftables.obj: .\.\pcre\dftables.c
 	$(CC) /c /nologo /TC /Fo$@ $(DFTABLES_CFLAGS) $**

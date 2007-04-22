@@ -1,0 +1,4 @@
+#!/bin/sh
+
+export WXWEBKIT=1
+./run-javascriptcore-tests

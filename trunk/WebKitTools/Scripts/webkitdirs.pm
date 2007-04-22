@@ -345,6 +345,11 @@ sub isQt()
     return defined($ENV{'QTDIR'})
 }
 
+sub isWx()
+{
+    return defined($ENV{'WXWEBKIT'})
+}
+
 sub isQtWithQMake()
 {
     our @cmakeBuild;

@@ -60,14 +60,18 @@ chdir("JavaScriptCore");
 #compile TestKJS
 my @options = XcodeOptions();
 my $result;
-if (isOSX()) {
+if (isOSX() and !isWx()) {
     $result = system "xcodebuild", "-project", "JavaScriptCore.xcodeproj", "-target", "testkjs", @options, @xcodeArgs;
-}elsif (isCygwin()) {
+}elsif (isCygwin() and !isWx()) {
     $result = buildVisualStudioProject( "JavaScriptCore" );
 }
 exit WEXITSTATUS($result) if WEXITSTATUS($result);
 
 my $productDir = productDir();
+if (isWx()) {
+    $productDir = $FindBin::Bin . "/../../JavaScriptCore";
+}
+
 chdir "tests/mozilla" or die;
 
 $productDir .= "/JavaScriptCore" if (isQt());

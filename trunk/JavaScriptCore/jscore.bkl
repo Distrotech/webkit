@@ -96,14 +96,15 @@ JavaScriptCore Bakefile project file.
 
     </template>
     
-    <!--
-    <exe id="testkjs" template="icu">
-        <library>jscore</library>
+    <exe id="testkjs" template="icu,jscore">
+        <cxx-rtti>off</cxx-rtti>
+        <cxx-exceptions>off</cxx-exceptions>
+        <debug-info>on</debug-info>
+        <objects-depend>jscore</objects-depend>
         <include>$(SRCDIR)</include>
         <dirname>$(SRCDIR)</dirname>
         <sources>$(SRCDIR)/kjs/testkjs.cpp</sources>
     </exe>
-    -->
 
     <exe id="dftables">
         <dirname>$(SRCDIR)</dirname>
