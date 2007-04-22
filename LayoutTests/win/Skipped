@@ -172,7 +172,6 @@ editing/selection/4947387.html
 editing/selection/select-line.html
 editing/selection/selection-actions.html
 
-
 # ASSERT in ClipboardWin::setData <rdar://problem/5015941>
 editing/execCommand/copy-without-selection.html
 
@@ -187,7 +186,6 @@ editing/inserting/insert-3907422-fix.html
 editing/pasteboard/4242293-1.html
 
 # DRT is not fully implemented in boomer <rdar://problem/5128261>
-editing/pasteboard/emacs-cntl-y-001.html
 fast/dom/Window/setting-properties-on-closed-window.html
 fast/events/objc-event-api.html
 http/tests/misc/window-dot-stop.html
@@ -381,12 +379,17 @@ webarchive
 ####################### No bugs filed about the below yet#######################
 ################################################################################
 
+# emacs key bindings
+editing/input/emacs-ctrl-o.html
+editing/pasteboard/emacs-ctrl-a-k-y.html
+editing/pasteboard/emacs-ctrl-k-y-001.html
+editing/pasteboard/emacs-cntl-y-001.html
+
 # Text, caret
 editing/pasteboard/4944770-2.html
 editing/pasteboard/5028447.html
 editing/pasteboard/block-wrappers-necessary.html
 editing/pasteboard/copy-paste-bidi.html
-editing/pasteboard/emacs-ctrl-a-k-y.html
 
 # Text, RenderText, caret
 editing/deleting/delete-to-end-of-paragraph.html
@@ -414,7 +417,6 @@ editing/pasteboard/paste-text-013.html
 
 # Text, caret, RenderBlock
 editing/pasteboard/5027857.html
-editing/pasteboard/emacs-ctrl-k-y-001.html
 editing/pasteboard/input-field-1.html
 editing/pasteboard/paste-4038267-fix.html
 editing/pasteboard/paste-RTFD.html
