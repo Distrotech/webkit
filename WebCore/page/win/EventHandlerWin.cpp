@@ -62,12 +62,6 @@ bool EventHandler::passMouseReleaseEventToSubframe(MouseEventWithHitTestResults&
     return true;
 }
 
-bool EventHandler::passWheelEventToSubframe(PlatformWheelEvent& wheelEvent, Frame* subframe)
-{
-    subframe->eventHandler()->handleWheelEvent(wheelEvent);
-    return wheelEvent.isAccepted();
-}
-
 bool EventHandler::passMousePressEventToScrollbar(MouseEventWithHitTestResults& mev, PlatformScrollbar* scrollbar)
 {
     if (!scrollbar || !scrollbar->isEnabled())
