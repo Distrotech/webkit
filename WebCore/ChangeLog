@@ -1,3 +1,14 @@
+2007-04-23  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Ada.
+
+        <rdar://problem/5061022>
+        REGRESSION: Acrobat 8 plug-in fails to scroll with trackpad two-finger scroll or mouse wheel (12995)
+        
+        * page/win/EventHandlerWin.cpp:
+        (WebCore::EventHandler::passWheelEventToWidget):
+        Get rid of passWheelEventToSubframe and pass wheel events to all widgets.
+
 2007-04-23  Adam Roben  <aroben@apple.com>
 
         Build fix.
