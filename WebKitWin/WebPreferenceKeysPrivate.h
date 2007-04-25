@@ -85,3 +85,8 @@
 // Windows-specific keys
 #define WebKitFontSmothingTypePreferenceKey "WebKitFontSmoothingType" // default: FontSmoothingTypeMedium (2)
 #define WebKitCookieStorageAcceptPolicyPreferenceKey "WebKitCookieStorageAcceptPolicy" // default: WebKitCookieStorageAcceptPolicyOnlyFromMainDocumentDomain
+
+#define WebContinuousSpellCheckingEnabledPreferenceKey "WebContinuousSpellCheckingEnabled" // default: false
+#define WebGrammarCheckingEnabledPreferenceKey "WebGrammarCheckingEnabled" // default: false
+
+#define AllowContinuousSpellCheckingPreferenceKey "AllowContinuousSpellCheckingPreferenceKey" // default: true

@@ -309,6 +309,8 @@ public:
     void receivedData(const char*, int, const WebCore::String&);
     void addInspector(WebInspector*);
     void removeInspector(WebInspector*);
+    void unmarkAllMisspellings();
+    void unmarkAllBadGrammar();
 
     // WebFrame (matching WebCoreFrameBridge)
     void setTextSizeMultiplier(float multiplier);

@@ -1,3 +1,38 @@
+2007-04-24  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Darin, Oliver.
+
+        Checkpoint:
+        <rdar://problem/4602372> Spelling
+        <rdar://problem/4769763> Spell checking engine support
+        
+        Ported code from EditorMac.mm into EditorWin.cpp.
+        Once this works, I'll move this code into Editor.cpp and remove it
+        form EditorMac.mm.
+
+        * platform/win/EditorWin.cpp:
+        (WebCore::Editor::ignoreSpelling):
+        (WebCore::Editor::learnSpelling):
+        (WebCore::findFirstMisspellingInRange):
+        (WebCore::paragraphAlignedRangeForRange):
+        (WebCore::findFirstGrammarDetailInRange):
+        (WebCore::findFirstBadGrammarInRange):
+        (WebCore::Editor::advanceToNextMisspelling):
+        (WebCore::Editor::isSelectionMisspelled):
+        (WebCore::isRangeUngrammatical):
+        (WebCore::Editor::isSelectionUngrammatical):
+        (WebCore::Editor::guessesForUngrammaticalSelection):
+        (WebCore::Editor::guessesForMisspelledSelection):
+        (WebCore::Editor::showSpellingGuessPanel):
+        (WebCore::Editor::spellingPanelIsShowing):
+        (WebCore::Editor::markMisspellingsAfterTypingToPosition):
+        (WebCore::markAllMisspellingsInRange):
+        (WebCore::markAllBadGrammarInRange):
+        (WebCore::markMisspellingsOrBadGrammar):
+        (WebCore::Editor::markMisspellings):
+        (WebCore::Editor::markBadGrammar):
+        * platform/win/TemporaryLinkStubs.cpp:
+
 2007-04-23  Anders Carlsson  <andersca@apple.com>
 
         Reviewed by Ada.

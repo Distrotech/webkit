@@ -492,4 +492,11 @@ interface IWebPreferences : IUnknown
 
     HRESULT cookieStorageAcceptPolicy([out, retval] WebKitCookieStorageAcceptPolicy* acceptPolicy);
     HRESULT setCookieStorageAcceptPolicy([in] WebKitCookieStorageAcceptPolicy acceptPolicy);
+
+    HRESULT continuousSpellCheckingEnabled([out, retval] BOOL* enabled);
+    HRESULT setContinuousSpellCheckingEnabled([in] BOOL enabled);
+    HRESULT grammarCheckingEnabled([out, retval] BOOL* enabled);
+    HRESULT setGrammarCheckingEnabled([in] BOOL enabled);
+    HRESULT allowContinuousSpellChecking([out, retval] BOOL *allowed);
+    HRESULT setAllowContinuousSpellChecking([in] BOOL allowed);
 }

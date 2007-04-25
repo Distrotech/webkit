@@ -115,6 +115,56 @@ public:
         /* [in] */ IWebView *webView,
         /* [retval][out] */ IWebUndoManager **undoManager) { return E_NOTIMPL; }
 
+        virtual HRESULT STDMETHODCALLTYPE ignoreWordInSpellDocument( 
+            /* [in] */ IWebView *view,
+            /* [in] */ BSTR word) { return E_NOTIMPL; }
+        
+        virtual HRESULT STDMETHODCALLTYPE learnWord( 
+            /* [in] */ BSTR word) { return E_NOTIMPL; }
+        
+        virtual HRESULT STDMETHODCALLTYPE checkSpellingOfString( 
+            /* [in] */ IWebView *view,
+            /* [in] */ LPCTSTR text,
+            /* [in] */ int length,
+            /* [out] */ int *misspellingLocation,
+            /* [out] */ int *misspellingLength) { return E_NOTIMPL; }
+        
+        virtual HRESULT STDMETHODCALLTYPE checkGrammarOfString( 
+            /* [in] */ IWebView *view,
+            /* [in] */ LPCTSTR text,
+            /* [in] */ int length,
+            /* [out] */ IEnumWebGrammarDetails **grammarDetails,
+            /* [out] */ int *badGrammarLocation,
+            /* [out] */ int *badGrammarLength) { return E_NOTIMPL; }
+        
+        virtual HRESULT STDMETHODCALLTYPE udpateSpellingUIWithGrammarString( 
+            /* [in] */ BSTR string,
+            /* [in] */ BSTR *guesses,
+            /* [in] */ int guessesCount) { return E_NOTIMPL; }
+        
+        virtual HRESULT STDMETHODCALLTYPE updateSpellingUIWithMisspelledWord( 
+            /* [in] */ BSTR word) { return E_NOTIMPL; }
+        
+        virtual HRESULT STDMETHODCALLTYPE showSpellingUI( 
+            /* [in] */ BOOL show) { return E_NOTIMPL; }
+        
+        virtual HRESULT STDMETHODCALLTYPE spellingUIIsShowing( 
+            /* [retval][out] */ BOOL *result) { return E_NOTIMPL; }
+        
+        virtual HRESULT STDMETHODCALLTYPE guessesForWord( 
+            /* [in] */ BSTR word,
+            /* [retval][out] */ IEnumSpellingGuesses **guesses) { return E_NOTIMPL; }
+        
+        virtual HRESULT STDMETHODCALLTYPE closeSpellDocument( 
+            /* [in] */ IWebView *view) { return E_NOTIMPL; }
+        
+        virtual HRESULT STDMETHODCALLTYPE sharedSpellCheckerExists( 
+            /* [retval][out] */ BOOL *exists) { return E_NOTIMPL; }
+        
+        virtual HRESULT STDMETHODCALLTYPE preflightChosenSpellServer( void) { return E_NOTIMPL; }
+        
+        virtual HRESULT STDMETHODCALLTYPE updateGrammar( void) { return E_NOTIMPL; }
+
 private:
     bool m_acceptsEditing;
     ULONG m_refCount;

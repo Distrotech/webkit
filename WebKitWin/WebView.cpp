@@ -101,6 +101,9 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 
 HRESULT createMatchEnumerator(Vector<IntRect>* rects, IEnumTextMatches** matches);
 
+static bool continuousSpellCheckingEnabled;
+static bool grammarCheckingEnabled;
+
 // WebView ----------------------------------------------------------------
 
 bool WebView::s_allowSiteSpecificHacks = false;
@@ -121,12 +124,22 @@ WebView::WebView()
 , m_currentCharacterCode(0)
 , m_isBeingDestroyed(false)
 , m_paintCount(0)
+, m_hasSpellCheckerDocumentTag(false)
 {
     KJS::Collector::registerAsMainThread();
 
     m_backingStoreSize.cx = m_backingStoreSize.cy = 0;
 
     CoCreateInstance(CLSID_DragDropHelper, 0, CLSCTX_INPROC_SERVER, IID_IDropTargetHelper,(void**)&m_dropTargetHelper);
+
+    COMPtr<IWebPreferences> prefs;
+    if (SUCCEEDED(preferences(&prefs))) {
+        BOOL enabled;
+        if (SUCCEEDED(prefs->continuousSpellCheckingEnabled(&enabled)))
+            continuousSpellCheckingEnabled = !!enabled;
+        if (SUCCEEDED(prefs->grammarCheckingEnabled(&enabled)))
+            grammarCheckingEnabled = !!enabled;
+    }
 
     WebViewCount++;
     gClassCount++;
@@ -481,6 +494,12 @@ void WebView::frameRect(RECT* rect)
 
 void WebView::closeWindow()
 {
+    if (m_hasSpellCheckerDocumentTag) {
+        if (m_editingDelegate)
+            m_editingDelegate->closeSpellDocument(this);
+        m_hasSpellCheckerDocumentTag = false;
+    }
+
     COMPtr<IWebUIDelegate> ui;
     if (SUCCEEDED(uiDelegate(&ui)))
         ui->webViewClose(this);
@@ -2596,8 +2615,11 @@ HRESULT STDMETHODCALLTYPE WebView::makeTextStandardSize(
 HRESULT STDMETHODCALLTYPE WebView::toggleContinuousSpellChecking( 
     /* [in] */ IUnknown* /*sender*/)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    HRESULT hr;
+    BOOL enabled;
+    if (FAILED(hr = isContinuousSpellCheckingEnabled(&enabled)))
+        return hr;
+    return setContinuousSpellCheckingEnabled(enabled ? FALSE : TRUE);
 }
 
 HRESULT STDMETHODCALLTYPE WebView::toggleSmartInsertDelete( 
@@ -2605,6 +2627,17 @@ HRESULT STDMETHODCALLTYPE WebView::toggleSmartInsertDelete(
 {
     ASSERT_NOT_REACHED();
     return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE WebView::toggleGrammarChecking( 
+    /* [in] */ IUnknown* /*sender*/)
+{
+    BOOL enabled;
+    HRESULT hr = isGrammarCheckingEnabled(&enabled);
+    if (FAILED(hr))
+        return hr;
+
+    return setGrammarCheckingEnabled(enabled ? FALSE : TRUE);
 }
 
 // IWebViewCSS -----------------------------------------------------------------
@@ -2693,26 +2726,86 @@ HRESULT STDMETHODCALLTYPE WebView::smartInsertDeleteEnabled(
 }
     
 HRESULT STDMETHODCALLTYPE WebView::setContinuousSpellCheckingEnabled( 
-        /* [in] */ BOOL /*flag*/)
+        /* [in] */ BOOL flag)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (continuousSpellCheckingEnabled != !!flag) {
+        continuousSpellCheckingEnabled = !!flag;
+        COMPtr<IWebPreferences> prefs;
+        if (SUCCEEDED(preferences(&prefs)))
+            prefs->setContinuousSpellCheckingEnabled(flag);
+    }
+    
+    BOOL spellCheckingEnabled;
+    if (SUCCEEDED(isContinuousSpellCheckingEnabled(&spellCheckingEnabled)) && spellCheckingEnabled)
+        preflightSpellChecker();
+    else
+        m_mainFrame->unmarkAllMisspellings();
+
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::isContinuousSpellCheckingEnabled( 
-        /* [retval][out] */ BOOL* /*enabled*/)
+        /* [retval][out] */ BOOL* enabled)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    *enabled = (continuousSpellCheckingEnabled && continuousCheckingAllowed()) ? TRUE : FALSE;
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::spellCheckerDocumentTag( 
-        /* [retval][out] */ int* /*tag*/)
+        /* [retval][out] */ int* tag)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    // we just use this as a flag to indicate that we've spell checked the document
+    // and need to close the spell checker out when the view closes.
+    *tag = 0;
+    m_hasSpellCheckerDocumentTag = true;
+    return S_OK;
 }
-    
+
+static COMPtr<IWebEditingDelegate> spellingDelegateForTimer;
+
+static void preflightSpellCheckerNow()
+{
+    spellingDelegateForTimer->preflightChosenSpellServer();
+    spellingDelegateForTimer = 0;
+}
+
+static void CALLBACK preflightSpellCheckerTimerCallback(HWND, UINT, UINT_PTR id, DWORD)
+{
+    ::KillTimer(0, id);
+    preflightSpellCheckerNow();
+}
+
+void WebView::preflightSpellChecker()
+{
+    // As AppKit does, we wish to delay tickling the shared spellchecker into existence on application launch.
+    if (!m_editingDelegate)
+        return;
+
+    BOOL exists;
+    if (SUCCEEDED(m_editingDelegate->sharedSpellCheckerExists(&exists)) && exists)
+        preflightSpellCheckerNow();
+    else {
+        spellingDelegateForTimer = m_editingDelegate;
+        ::SetTimer(0, 0, 2000, preflightSpellCheckerTimerCallback);
+    }
+}
+
+bool WebView::continuousCheckingAllowed()
+{
+    static bool allowContinuousSpellChecking = true;
+    static bool readAllowContinuousSpellCheckingDefault = false;
+    if (!readAllowContinuousSpellCheckingDefault) {
+        COMPtr<IWebPreferences> prefs;
+        if (SUCCEEDED(preferences(&prefs))) {
+            BOOL allowed;
+            prefs->allowContinuousSpellChecking(&allowed);
+            allowContinuousSpellChecking = !!allowed;
+        }
+        readAllowContinuousSpellCheckingDefault = true;
+    }
+    return allowContinuousSpellChecking;
+}
+
 HRESULT STDMETHODCALLTYPE WebView::undoManager( 
         /* [retval][out] */ IWebUndoManager** /*manager*/)
 {
@@ -2793,6 +2886,36 @@ HRESULT STDMETHODCALLTYPE WebView::editingEnabled(
         /* [retval][out] */ BOOL* enabled)
 {
     *enabled = m_page->focusController()->focusedOrMainFrame()->editor()->canEdit();
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebView::isGrammarCheckingEnabled( 
+    /* [retval][out] */ BOOL* enabled)
+{
+    *enabled = grammarCheckingEnabled ? TRUE : FALSE;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebView::setGrammarCheckingEnabled( 
+    BOOL enabled)
+{
+    if (grammarCheckingEnabled == !!enabled)
+        return S_OK;
+    
+    grammarCheckingEnabled = !!enabled;
+    COMPtr<IWebPreferences> prefs;
+    if (SUCCEEDED(preferences(&prefs)))
+        prefs->setGrammarCheckingEnabled(enabled);
+    
+    m_editingDelegate->updateGrammar();
+
+    // We call _preflightSpellChecker when turning continuous spell checking on, but we don't need to do that here
+    // because grammar checking only occurs on code paths that already preflight spell checking appropriately.
+    
+    BOOL grammarEnabled;
+    if (SUCCEEDED(isGrammarCheckingEnabled(&grammarEnabled)) && !grammarEnabled)
+        m_mainFrame->unmarkAllBadGrammar();
+
     return S_OK;
 }
 
@@ -2971,15 +3094,33 @@ HRESULT STDMETHODCALLTYPE WebView::alignRight(
 HRESULT STDMETHODCALLTYPE WebView::checkSpelling( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!m_editingDelegate) {
+        LOG_ERROR("No NSSpellChecker");
+        return E_FAIL;
+    }
+    
+    core(m_mainFrame)->editor()->advanceToNextMisspelling();
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::showGuessPanel( 
         /* [in] */ IUnknown* /*sender*/)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!m_editingDelegate) {
+        LOG_ERROR("No NSSpellChecker");
+        return E_FAIL;
+    }
+    
+    // Post-Tiger, this menu item is a show/hide toggle, to match AppKit. Leave Tiger behavior alone
+    // to match rest of OS X.
+    BOOL showing;
+    if (SUCCEEDED(m_editingDelegate->spellingUIIsShowing(&showing)) && showing) {
+        m_editingDelegate->showSpellingUI(FALSE);
+    }
+    
+    core(m_mainFrame)->editor()->advanceToNextMisspelling(true);
+    m_editingDelegate->showSpellingUI(TRUE);
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::performFindPanelAction( 
@@ -3337,8 +3478,6 @@ public:
         return E_NOTIMPL;
     }
 };
-
-
 
 HRESULT createMatchEnumerator(Vector<IntRect>* rects, IEnumTextMatches** matches)
 {

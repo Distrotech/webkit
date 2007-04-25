@@ -2553,3 +2553,27 @@ HRESULT STDMETHODCALLTYPE WebFrame::string(
     *result = BString(allString).release();
     return S_OK;
 }
+
+void WebFrame::unmarkAllMisspellings()
+{
+    Frame* coreFrame = core(this);
+    for (Frame* frame = coreFrame; frame; frame = frame->tree()->traverseNext(coreFrame)) {
+        Document *doc = frame->document();
+        if (!doc)
+            return;
+
+        doc->removeMarkers(DocumentMarker::Spelling);
+    }
+}
+
+void WebFrame::unmarkAllBadGrammar()
+{
+    Frame* coreFrame = core(this);
+    for (Frame* frame = coreFrame; frame; frame = frame->tree()->traverseNext(coreFrame)) {
+        Document *doc = frame->document();
+        if (!doc)
+            return;
+
+        doc->removeMarkers(DocumentMarker::Grammar);
+    }
+}

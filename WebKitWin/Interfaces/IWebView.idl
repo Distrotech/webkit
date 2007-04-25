@@ -827,6 +827,11 @@ interface IWebIBActions : IUnknown
         - (IBAction)toggleSmartInsertDelete:(id)sender;
     */
     HRESULT toggleSmartInsertDelete([in] IUnknown* sender);
+
+    /*
+        - (void)toggleGrammarChecking:(id)sender
+    */
+    HRESULT toggleGrammarChecking([in] IUnknown* sender);
 }
 
 /*
@@ -971,6 +976,16 @@ interface IWebViewEditing : IUnknown
         - (BOOL)editingEnabled;
     */
     HRESULT editingEnabled([out, retval] BOOL* enabled);
+
+    /*
+        - (BOOL)isGrammarCheckingEnabled
+    */
+    HRESULT isGrammarCheckingEnabled([out, retval] BOOL* enabled);
+
+    /*
+        - (void)setGrammarCheckingEnabled:(BOOL)flag
+    */
+    HRESULT setGrammarCheckingEnabled(BOOL enabled);
 }
 
 /*

@@ -240,6 +240,24 @@ public:
     virtual HRESULT STDMETHODCALLTYPE setCookieStorageAcceptPolicy( 
         /* [in] */ WebKitCookieStorageAcceptPolicy acceptPolicy);
 
+    virtual HRESULT STDMETHODCALLTYPE continuousSpellCheckingEnabled( 
+        /* [retval][out] */ BOOL *enabled);
+    
+    virtual HRESULT STDMETHODCALLTYPE setContinuousSpellCheckingEnabled( 
+        /* [in] */ BOOL enabled);
+    
+    virtual HRESULT STDMETHODCALLTYPE grammarCheckingEnabled( 
+        /* [retval][out] */ BOOL *enabled);
+    
+    virtual HRESULT STDMETHODCALLTYPE setGrammarCheckingEnabled( 
+        /* [in] */ BOOL enabled);
+
+    virtual HRESULT STDMETHODCALLTYPE allowContinuousSpellChecking( 
+        /* [retval][out] */ BOOL *enabled);
+    
+    virtual HRESULT STDMETHODCALLTYPE setAllowContinuousSpellChecking( 
+        /* [in] */ BOOL enabled);
+
     // WebPreferences
     static BSTR webPreferencesChangedNotification();
 

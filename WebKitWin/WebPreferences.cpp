@@ -252,6 +252,18 @@ void WebPreferences::initialize()
     key = CFSTR(WebKitCookieStorageAcceptPolicyPreferenceKey);
     if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
         CFDictionaryAddValue(m_standardUserDefaults, key,                               CFSTR("2"));
+
+    key = CFSTR(WebContinuousSpellCheckingEnabledPreferenceKey);
+    if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
+        CFDictionaryAddValue(m_standardUserDefaults, key,                               kCFBooleanFalse);
+
+    key = CFSTR(WebGrammarCheckingEnabledPreferenceKey);
+    if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
+        CFDictionaryAddValue(m_standardUserDefaults, key,                               kCFBooleanFalse);
+
+    key = CFSTR(AllowContinuousSpellCheckingPreferenceKey);
+    if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
+        CFDictionaryAddValue(m_standardUserDefaults, key,                               kCFBooleanTrue);
 }
 
 const void* WebPreferences::valueForKey(CFStringRef key)
@@ -1085,3 +1097,39 @@ HRESULT STDMETHODCALLTYPE WebPreferences::setCookieStorageAcceptPolicy(
     return S_OK;
 }
 
+
+HRESULT WebPreferences::continuousSpellCheckingEnabled(BOOL* enabled)
+{
+    *enabled = boolValueForKey(CFSTR(WebContinuousSpellCheckingEnabledPreferenceKey));
+    return S_OK;
+}
+
+HRESULT WebPreferences::setContinuousSpellCheckingEnabled(BOOL enabled)
+{
+    setBoolValue(CFSTR(WebContinuousSpellCheckingEnabledPreferenceKey), enabled);
+    return S_OK;
+}
+
+HRESULT WebPreferences::grammarCheckingEnabled(BOOL* enabled)
+{
+    *enabled = boolValueForKey(CFSTR(WebGrammarCheckingEnabledPreferenceKey));
+    return S_OK;
+}
+
+HRESULT WebPreferences::setGrammarCheckingEnabled(BOOL enabled)
+{
+    setBoolValue(CFSTR(WebGrammarCheckingEnabledPreferenceKey), enabled);
+    return S_OK;
+}
+
+HRESULT WebPreferences::allowContinuousSpellChecking(BOOL* enabled)
+{
+    *enabled = boolValueForKey(CFSTR(AllowContinuousSpellCheckingPreferenceKey));
+    return S_OK;
+}
+
+HRESULT WebPreferences::setAllowContinuousSpellChecking(BOOL enabled)
+{
+    setBoolValue(CFSTR(AllowContinuousSpellCheckingPreferenceKey), enabled);
+    return S_OK;
+}

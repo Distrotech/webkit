@@ -146,29 +146,42 @@ void WebEditorClient::pageDestroyed()
 
 bool WebEditorClient::isContinuousSpellCheckingEnabled()
 {
-    LOG_NOIMPL();
-    return false;
+    BOOL enabled;
+    if (FAILED(m_webView->isContinuousSpellCheckingEnabled(&enabled)))
+        return false;
+    return !!enabled;
 }
 
 void WebEditorClient::toggleContinuousSpellChecking()
 {
-    LOG_NOIMPL();
+    m_webView->toggleContinuousSpellChecking(0);
 }
 
 bool WebEditorClient::isGrammarCheckingEnabled()
 {
-    LOG_NOIMPL();
-    return false;
+    BOOL enabled;
+    if (FAILED(m_webView->isGrammarCheckingEnabled(&enabled)))
+        return false;
+    return !!enabled;
 }
 
 void WebEditorClient::toggleGrammarChecking()
 {
-    LOG_NOIMPL();
+    m_webView->toggleGrammarChecking(0);
+}
+
+static void initViewSpecificSpelling(IWebViewEditing* viewEditing)
+{
+    // we just use this as a flag to indicate that we've spell checked the document
+    // and need to close the spell checker out when the view closes.
+    int tag;
+    viewEditing->spellCheckerDocumentTag(&tag);
 }
 
 int WebEditorClient::spellCheckerDocumentTag()
 {
-    LOG_NOIMPL();
+    // we don't use the concept of spelling tags
+    STOP_NOIMPL();
     return 0;
 }
 
@@ -592,3 +605,155 @@ bool WebEditorClient::isEditable()
 {
     return false;
 }
+
+void WebEditorClient::ignoreWordInSpellDocument(const String& word)
+{
+    COMPtr<IWebEditingDelegate> ed;
+    if (FAILED(m_webView->editingDelegate(&ed)) || !ed.get())
+        return;
+
+    initViewSpecificSpelling(m_webView);
+    ed->ignoreWordInSpellDocument(m_webView, BString(word));
+}
+
+void WebEditorClient::learnWord(const String& word)
+{
+    COMPtr<IWebEditingDelegate> ed;
+    if (FAILED(m_webView->editingDelegate(&ed)) || !ed.get())
+        return;
+
+    ed->learnWord(BString(word));
+}
+
+void WebEditorClient::checkSpellingOfString(const UChar* text, int length, int* misspellingLocation, int* misspellingLength)
+{
+    *misspellingLocation = -1;
+    *misspellingLength = 0;
+
+    COMPtr<IWebEditingDelegate> ed;
+    if (FAILED(m_webView->editingDelegate(&ed)) || !ed.get())
+        return;
+
+    initViewSpecificSpelling(m_webView);
+    ed->checkSpellingOfString(m_webView, text, length, misspellingLocation, misspellingLength);
+}
+
+void WebEditorClient::checkGrammarOfString(const UChar* text, int length, Vector<GrammarDetail>& details, int* badGrammarLocation, int* badGrammarLength)
+{
+    details.clear();
+    *badGrammarLocation = -1;
+    *badGrammarLength = 0;
+
+    COMPtr<IWebEditingDelegate> ed;
+    if (FAILED(m_webView->editingDelegate(&ed)) || !ed.get())
+        return;
+
+    initViewSpecificSpelling(m_webView);
+    COMPtr<IEnumWebGrammarDetails> enumDetailsObj;
+    if (FAILED(ed->checkGrammarOfString(m_webView, text, length, &enumDetailsObj, badGrammarLocation, badGrammarLength)))
+        return;
+
+    ULONG indDetailObj = 0;
+    while (true) {
+        ULONG fetched;
+        COMPtr<IWebGrammarDetail> detailObj;
+        if (FAILED(enumDetailsObj->Next(indDetailObj++, &detailObj, &fetched)))
+            break;
+
+        GrammarDetail detail;
+        if (FAILED(detailObj->length(&detail.length)))
+            continue;
+        if (FAILED(detailObj->location(&detail.location)))
+            continue;
+        BSTR userDesc;
+        if (FAILED(detailObj->userDescription(&userDesc)))
+            continue;
+        detail.userDescription = String(userDesc, SysStringLen(userDesc));
+        SysFreeString(userDesc);
+
+        COMPtr<IEnumSpellingGuesses> enumGuessesObj;
+        if (FAILED(detailObj->guesses(&enumGuessesObj)))
+            continue;
+        ULONG indGuess = 0;
+        while (true) {
+            BSTR guess;
+            if (FAILED(enumGuessesObj->Next(indGuess++, &guess, &fetched)))
+                break;
+            detail.guesses.append(String(guess, SysStringLen(guess)));
+            SysFreeString(guess);
+        }
+
+        details.append(detail);
+    }
+}
+
+void WebEditorClient::udpateSpellingUIWithGrammarString(const String& string, const Vector<String>& guesses)
+{
+    COMPtr<IWebEditingDelegate> ed;
+    if (FAILED(m_webView->editingDelegate(&ed)) || !ed.get())
+        return;
+
+    Vector<BSTR> guessesBSTRs;
+    for (unsigned i = 0; i < guesses.size(); i++) {
+        BString guess(guesses[i]);
+        guessesBSTRs.append(guess.release());
+    }
+    ed->udpateSpellingUIWithGrammarString(BString(string), guessesBSTRs.data(), (int)guessesBSTRs.size());
+    for (unsigned i = 0; i < guessesBSTRs.size(); i++)
+        SysFreeString(guessesBSTRs[i]);
+}
+
+void WebEditorClient::updateSpellingUIWithMisspelledWord(const String& word)
+{
+    COMPtr<IWebEditingDelegate> ed;
+    if (FAILED(m_webView->editingDelegate(&ed)) || !ed.get())
+        return;
+
+    ed->updateSpellingUIWithMisspelledWord(BString(word));
+}
+
+void WebEditorClient::showSpellingUI(bool show)
+{
+    COMPtr<IWebEditingDelegate> ed;
+    if (FAILED(m_webView->editingDelegate(&ed)) || !ed.get())
+        return;
+    
+    ed->showSpellingUI(show);
+}
+
+bool WebEditorClient::spellingUIIsShowing()
+{
+    COMPtr<IWebEditingDelegate> ed;
+    if (FAILED(m_webView->editingDelegate(&ed)) || !ed.get())
+        return false;
+
+    BOOL showing;
+    if (FAILED(ed->spellingUIIsShowing(&showing)))
+        return false;
+
+    return !!showing;
+}
+
+void WebEditorClient::getGuessesForWord(const String& word, Vector<String>& guesses)
+{
+    guesses.clear();
+
+    COMPtr<IWebEditingDelegate> ed;
+    if (FAILED(m_webView->editingDelegate(&ed)) || !ed.get())
+        return;
+
+    COMPtr<IEnumSpellingGuesses> enumGuessesObj;
+    if (FAILED(ed->guessesForWord(BString(word), &enumGuessesObj)))
+        return;
+
+    ULONG indGuess = 0;
+    while (true) {
+        ULONG fetched;
+        BSTR guess;
+        if (FAILED(enumGuessesObj->Next(indGuess++, &guess, &fetched)))
+            break;
+        guesses.append(String(guess, SysStringLen(guess)));
+        SysFreeString(guess);
+    }
+}
+

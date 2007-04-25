@@ -97,6 +97,16 @@ public:
     void handleKeypress(WebCore::KeyboardEvent*);
     void handleInputMethodKeypress(WebCore::KeyboardEvent*);
 
+    virtual void ignoreWordInSpellDocument(const WebCore::String&);
+    virtual void learnWord(const WebCore::String&);
+    virtual void checkSpellingOfString(const UChar*, int length, int* misspellingLocation, int* misspellingLength);
+    virtual void checkGrammarOfString(const UChar*, int length, Vector<WebCore::GrammarDetail>&, int* badGrammarLocation, int* badGrammarLength);
+    virtual void udpateSpellingUIWithGrammarString(const WebCore::String&, const Vector<WebCore::String>& guesses);
+    virtual void updateSpellingUIWithMisspelledWord(const WebCore::String&);
+    virtual void showSpellingUI(bool show);
+    virtual bool spellingUIIsShowing();
+    virtual void getGuessesForWord(const WebCore::String&, Vector<WebCore::String>& guesses);
+
 private:
     WebView* m_webView;
     WebEditorUndoTarget* m_undoTarget;

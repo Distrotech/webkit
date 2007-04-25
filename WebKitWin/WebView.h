@@ -342,6 +342,9 @@ public:
     virtual HRESULT STDMETHODCALLTYPE toggleSmartInsertDelete( 
         /* [in] */ IUnknown *sender);
 
+    virtual HRESULT STDMETHODCALLTYPE toggleGrammarChecking( 
+        /* [in] */ IUnknown *sender);
+
     // IWebViewCSS
 
     virtual HRESULT STDMETHODCALLTYPE computedStyleForElement( 
@@ -422,6 +425,12 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE editingEnabled( 
         /* [retval][out] */ BOOL *enabled);
+
+    virtual HRESULT STDMETHODCALLTYPE isGrammarCheckingEnabled( 
+        /* [retval][out] */ BOOL *enabled);
+    
+    virtual HRESULT STDMETHODCALLTYPE setGrammarCheckingEnabled( 
+        BOOL enabled);
 
     // IWebViewUndoableEditing
 
@@ -641,6 +650,8 @@ public:
 
 protected:
     static bool allowSiteSpecificHacks() { return s_allowSiteSpecificHacks; }
+    void preflightSpellChecker();
+    bool continuousCheckingAllowed();
 
     ULONG m_refCount;
     WebCore::String m_groupName;
@@ -676,9 +687,9 @@ protected:
     COMPtr<IDataObject> m_dragData;
     COMPtr<IDropTargetHelper> m_dropTargetHelper;
     UChar m_currentCharacterCode;
-
     bool m_isBeingDestroyed;
     unsigned m_paintCount;
+    bool m_hasSpellCheckerDocumentTag;
 
     static bool s_allowSiteSpecificHacks;
 };

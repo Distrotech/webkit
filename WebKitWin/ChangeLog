@@ -1,3 +1,29 @@
+2007-04-24  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Darin, Oliver.
+        
+        Checkpoint:
+        <rdar://problem/4602372> Spelling
+        <rdar://problem/4769763> Spell checking engine support
+
+        * WebEditorClient.cpp:
+        (WebEditorClient::isContinuousSpellCheckingEnabled):
+        (WebEditorClient::toggleContinuousSpellChecking):
+        (WebEditorClient::isGrammarCheckingEnabled):
+        (WebEditorClient::toggleGrammarChecking):
+        (initViewSpecificSpelling):
+        (WebEditorClient::spellCheckerDocumentTag):
+        (WebEditorClient::ignoreWordInSpellDocument):
+        (WebEditorClient::learnWord):
+        (WebEditorClient::checkSpellingOfString):
+        (WebEditorClient::checkGrammarOfString):
+        (WebEditorClient::udpateSpellingUIWithGrammarString):
+        (WebEditorClient::updateSpellingUIWithMisspelledWord):
+        (WebEditorClient::showSpellingUI):
+        (WebEditorClient::spellingUIIsShowing):
+        (WebEditorClient::getGuessesForWord):
+        * WebPreferences.h:
+
 2007-04-20  Ada Chan  <adachan@apple.com>
 
         Reviewed by Steve and Oliver.
