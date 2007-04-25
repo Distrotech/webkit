@@ -137,7 +137,7 @@ public:
             /* [out] */ int *badGrammarLocation,
             /* [out] */ int *badGrammarLength) { return E_NOTIMPL; }
         
-        virtual HRESULT STDMETHODCALLTYPE udpateSpellingUIWithGrammarString( 
+        virtual HRESULT STDMETHODCALLTYPE updateSpellingUIWithGrammarString( 
             /* [in] */ BSTR string,
             /* [in] */ BSTR *guesses,
             /* [in] */ int guessesCount) { return E_NOTIMPL; }

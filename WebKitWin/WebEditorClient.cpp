@@ -687,7 +687,7 @@ void WebEditorClient::checkGrammarOfString(const UChar* text, int length, Vector
     }
 }
 
-void WebEditorClient::udpateSpellingUIWithGrammarString(const String& string, const Vector<String>& guesses)
+void WebEditorClient::updateSpellingUIWithGrammarString(const String& string, const Vector<String>& guesses)
 {
     COMPtr<IWebEditingDelegate> ed;
     if (FAILED(m_webView->editingDelegate(&ed)) || !ed.get())
@@ -698,7 +698,7 @@ void WebEditorClient::udpateSpellingUIWithGrammarString(const String& string, co
         BString guess(guesses[i]);
         guessesBSTRs.append(guess.release());
     }
-    ed->udpateSpellingUIWithGrammarString(BString(string), guessesBSTRs.data(), (int)guessesBSTRs.size());
+    ed->updateSpellingUIWithGrammarString(BString(string), guessesBSTRs.data(), (int)guessesBSTRs.size());
     for (unsigned i = 0; i < guessesBSTRs.size(); i++)
         SysFreeString(guessesBSTRs[i]);
 }

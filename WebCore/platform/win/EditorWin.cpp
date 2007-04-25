@@ -368,7 +368,7 @@ void Editor::advanceToNextMisspelling(bool startBeforeSelection)
         frame()->selectionController()->setSelection(Selection(badGrammarRange.get(), SEL_DEFAULT_AFFINITY));
         frame()->revealSelection();
         
-        client()->udpateSpellingUIWithGrammarString(badGrammarPhrase, grammarDetail.guesses);
+        client()->updateSpellingUIWithGrammarString(badGrammarPhrase, grammarDetail.guesses);
         frame()->document()->addMarker(badGrammarRange.get(), DocumentMarker::Grammar, grammarDetail.userDescription);
 #endif        
     } else if (!misspelledWord.isEmpty()) {
@@ -454,7 +454,7 @@ static bool isRangeUngrammatical(EditorClient* client, Range *range, Vector<Stri
     // This is necessary to make a subsequent call to [NSSpellChecker ignoreWord:inSpellDocumentWithTag:] work
     // correctly; that call behaves differently based on whether the spelling panel is displaying a misspelling
     // or a grammar error.
-    client->udpateSpellingUIWithGrammarString(badGrammarPhrase, guessesVector);
+    client->updateSpellingUIWithGrammarString(badGrammarPhrase, guessesVector);
     
     return true;
 }
