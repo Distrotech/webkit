@@ -1,5 +1,51 @@
 2007-04-26  Mark Rowe  <mrowe@apple.com>
 
+       Merged r10259 and r15845 from TOT to Safari-2-0-branch.
+
+    2006-08-11  Tim Omernick  <timo@apple.com>
+
+            Reviewed by Darin.
+
+            <http://bugzilla.opendarwin.org/show_bug.cgi?id=10111> - Menu flickers over Flash content
+            <rdar://problem/3052546> Plugins don't work with z-index (overlapping elements, etc.)
+
+            * Plugins/WebBaseNetscapePluginView.m:
+            (-[WebBaseNetscapePluginView saveAndSetNewPortStateForUpdate:]):
+            Don't just clip to the dirty region for "transparent" plug-ins -- do it for all plug-ins.  This is a
+            generally useful thing to do, as it prevents the plug-in from drawing over parts of the window that
+            have already been drawn and are not expected to be redrawn in the same update.
+
+    2005-09-13  Tim Omernick  <tomernick@apple.com>
+
+            Reviewed by Justin Garcia, Darin Adler.
+
+        - <rdar://problem/3163393> Safari does not support Windowless mode in Flash
+
+            * Plugins.subproj/WebBaseNetscapePluginView.h:
+        Added 'isTransparent' instance variable.
+
+            * Plugins.subproj/WebBaseNetscapePluginView.m:	
+            (-[WebBaseNetscapePluginView saveAndSetPortStateForUpdate:]):
+        When updating a plugin in "windowless" (transparent) mode, clip drawing to the dirty
+        region of the opaque ancestor.  This means that a partially-transparent plugin, which
+        by definition does not clear its port on redraw, will not overdraw the valid parts
+        of its port.
+            (-[WebBaseNetscapePluginView sendEvent:]):
+        Disabled the "green debug background" for transparent plugins -- since they are not
+        expected to cover their entire port every redraw, this debug code makes no sense.
+            (-[WebBaseNetscapePluginView setVariable:value:]):
+        Implemented -setVariable:value:, which is called from NPN_SetValue() (previously
+        unimplemented).
+        Right now we only handle NPPVpluginTransparentBool; if we choose to handle the other
+        plugin variables, then we may do so here.
+            * Plugins.subproj/WebBaseNetscapePluginViewPrivate.h:
+        Added SPI for -[WebBaseNetscapePluginView setVariable:value].
+            * Plugins.subproj/npapi.m:
+            (NPN_SetValue):
+        Implemented this function so that plugins may set state (such as window mode).
+
+2007-04-26  Mark Rowe  <mrowe@apple.com>
+
         Merge fixes from ToT to Safari-2-0-branch.
 
     2007-04-02  Darin Adler  <darin@apple.com>

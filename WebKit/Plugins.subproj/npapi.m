@@ -1,6 +1,6 @@
 /*
         npapi.m
-	Copyright (c) 2002, Apple, Inc. All rights reserved.
+    Copyright (c) 2002, Apple, Inc. All rights reserved.
 */
 
 #import "npapi.h"
@@ -80,7 +80,7 @@ NPError NPN_NewStream(NPP instance, NPMIMEType type, const char* target, NPStrea
     return [pluginViewForInstance(instance) newStream:type target:target stream:stream];
 }
 
-SInt32	NPN_Write(NPP instance, NPStream* stream, SInt32 len, void* buffer)
+SInt32 NPN_Write(NPP instance, NPStream* stream, SInt32 len, void* buffer)
 {
     return [pluginViewForInstance(instance) write:stream len:len buffer:buffer];
 }
@@ -120,13 +120,12 @@ NPError NPN_GetValue(NPP instance, NPNVariable variable, void *value)
     return [pluginViewForInstance(instance) getVariable:variable value:value];
 }
 
-// Unsupported functions
 NPError NPN_SetValue(NPP instance, NPPVariable variable, void *value)
 {
-    LOG(Plugins, "NPN_SetValue");
-    return NPERR_GENERIC_ERROR;
-}	
+    return [pluginViewForInstance(instance) setVariable:variable value:value];
+}
 
+// Unsupported functions
 void* NPN_GetJavaEnv(void)
 {
     LOG(Plugins, "NPN_GetJavaEnv");

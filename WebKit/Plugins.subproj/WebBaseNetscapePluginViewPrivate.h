@@ -1,6 +1,6 @@
 /*
         WebBaseNetscapePluginView.h
-	Copyright 2002, Apple, Inc. All rights reserved.
+    Copyright 2002, Apple, Inc. All rights reserved.
 */
 
 #import <WebBaseNetscapePluginView.h>
@@ -23,4 +23,5 @@
 - (void)invalidateRegion:(NPRegion)invalidateRegion;
 - (void)forceRedraw;
 - (NPError)getVariable:(NPNVariable)variable value:(void *)value;
+- (NPError)setVariable:(NPPVariable)variable value:(void *)value;
 @end
