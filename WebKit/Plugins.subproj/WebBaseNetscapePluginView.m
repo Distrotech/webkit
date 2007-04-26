@@ -56,6 +56,7 @@ static WebBaseNetscapePluginView *currentPluginView = nil;
 
 typedef struct {
     GrafPtr oldPort;
+    GDHandle oldDevice;
     Point oldOrigin;
     RgnHandle oldClipRegion;
     RgnHandle oldVisibleRegion;
@@ -200,6 +201,49 @@ void ConsoleConnectionChangeNotifyProc(CGSNotificationType type, CGSNotification
     SetPort(oldPort);
 }
 
+
+static UInt32 getQDPixelFormatForBitmapContext(CGContextRef context)
+{ 
+    UInt32 byteOrder = CGBitmapContextGetBitmapInfo(context) & kCGBitmapByteOrderMask;
+    if (byteOrder == kCGBitmapByteOrderDefault)
+        switch (CGBitmapContextGetBitsPerPixel(context)) {
+            case 16:
+                byteOrder = kCGBitmapByteOrder16Host;
+                break;
+            case 32:
+                byteOrder = kCGBitmapByteOrder32Host;
+                break;
+        }
+    switch (byteOrder) {
+        case kCGBitmapByteOrder16Little:
+            return k16LE555PixelFormat;
+        case kCGBitmapByteOrder32Little:
+            return k32BGRAPixelFormat;
+        case kCGBitmapByteOrder16Big:
+            return k16BE555PixelFormat;
+        case kCGBitmapByteOrder32Big:
+            return k32ARGBPixelFormat;
+    }
+    ASSERT_NOT_REACHED();
+    return 0;
+}
+
+static inline void getNPRectFromCGRect(const CGRect* cgr, NPRect* npr)
+{
+    npr->top = (uint16)cgr->origin.y;
+    npr->left = (uint16)cgr->origin.x;
+    npr->bottom = CGRectGetMaxY(*cgr);
+    npr->right = CGRectGetMaxX(*cgr);
+}
+
+static inline void getNPRectFromNSRect(const NSRect* nr, NPRect* npr)
+{
+    npr->top = (uint16)nr->origin.y;
+    npr->left = (uint16)nr->origin.x;
+    npr->bottom = NSMaxY(*nr);
+    npr->right = NSMaxX(*nr);
+}
+
 - (PortState)saveAndSetPortStateForUpdate:(BOOL)forUpdate
 {
     ASSERT([self currentWindow] != nil);
@@ -266,19 +310,15 @@ void ConsoleConnectionChangeNotifyProc(CGSNotificationType type, CGSNotification
 
         window.clipRect.bottom = window.clipRect.top;
         window.clipRect.left = window.clipRect.right;
-    } else {
-        window.clipRect.top = (uint16)visibleRectInWindow.origin.y;
-        window.clipRect.left = (uint16)visibleRectInWindow.origin.x;
-        window.clipRect.bottom = (uint16)(visibleRectInWindow.origin.y + visibleRectInWindow.size.height);
-        window.clipRect.right = (uint16)(visibleRectInWindow.origin.x + visibleRectInWindow.size.width);        
-    }
+    } else
+        getNPRectFromNSRect(&visibleRectInWindow, &window.clipRect);
 
     window.type = NPWindowTypeWindow;
     
     // Save the port state.
     PortState portState;
-    
-    GetPort(&portState.oldPort);    
+
+    GetGWorld(&portState.oldPort, &portState.oldDevice);
 
     portState.oldOrigin.h = portBounds.left;
     portState.oldOrigin.v = portBounds.top;
@@ -292,21 +332,59 @@ void ConsoleConnectionChangeNotifyProc(CGSNotificationType type, CGSNotification
     RgnHandle clipRegion = NewRgn();
     portState.clipRegion = clipRegion;
     
+    CGContextRef currentContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
+    if (currentContext && CGContextGetType(currentContext) == kCGContextTypeBitmap) {
+        // We check CGContextGetType is kCGContextTypeBitmap here, because if we just called CGBitmapContextGetData
+        // on any context, we'd log to the console every time. But even if CGContextGetType is kCGContextTypeBitmap
+        // returns true, it still might not be a context we need to create a GWorld for; for example
+        // transparency layers will return true, but return 0 for CGBitmapContextGetData.
+        void* offscreenData = CGBitmapContextGetData(currentContext);
+        if (offscreenData) {
+            // If the current context is an offscreen bitmap, then create a GWorld for it.
+            Rect offscreenBounds;
+            offscreenBounds.top = 0;
+            offscreenBounds.left = 0;
+            offscreenBounds.right = CGBitmapContextGetWidth(currentContext);
+            offscreenBounds.bottom = CGBitmapContextGetHeight(currentContext);
+            GWorldPtr newOffscreenGWorld;
+            QDErr err = NewGWorldFromPtr(&newOffscreenGWorld,
+                getQDPixelFormatForBitmapContext(currentContext), &offscreenBounds, 0, 0, 0,
+                (char*)offscreenData, CGBitmapContextGetBytesPerRow(currentContext));
+            ASSERT(newOffscreenGWorld && !err);
+            if (!err) {
+                if (offscreenGWorld)
+                    DisposeGWorld(offscreenGWorld);
+                offscreenGWorld = newOffscreenGWorld;
+
+                SetGWorld(offscreenGWorld, NULL);
+
+                port = offscreenGWorld;
+
+                nPort.port = port;
+                boundsInWindow = [self bounds];
+                nPort.portx = (int32)-boundsInWindow.origin.x;
+                nPort.porty = (int32)-boundsInWindow.origin.y;
+                window.x = 0;
+                window.y = 0;
+                window.window = &nPort;
+
+                // Use the clip bounds from the context instead of the bounds we created
+                // from the window above.
+                CGRect clipBoundingBox = CGContextGetClipBoundingBox(currentContext);
+                getNPRectFromCGRect(&clipBoundingBox, &window.clipRect);
+            }
+        }
+    }
     MacSetRectRgn(clipRegion,
         window.clipRect.left + nPort.portx, window.clipRect.top + nPort.porty,
         window.clipRect.right + nPort.portx, window.clipRect.bottom + nPort.porty);
-    
-    portState.forUpdate = forUpdate;
-    
+
     // Switch to the port and set it up.
     SetPort(port);
-
     PenNormal();
     ForeColor(blackColor);
     BackColor(whiteColor);
-    
     SetOrigin(nPort.portx, nPort.porty);
-
     SetPortClipRegion(nPort.port, clipRegion);
 
     if (forUpdate) {
@@ -317,9 +395,13 @@ void ConsoleConnectionChangeNotifyProc(CGSNotificationType type, CGSNotification
 
         // Some plugins do their own BeginUpdate/EndUpdate.
         // For those, we must make sure that the update region contains the area we want to draw.
+        if (port == offscreenGWorld)
+            OffsetRgn(clipRegion, clipBounds.left, clipBounds.top);
         InvalWindowRgn(windowRef, clipRegion);
     }
-    
+
+    portState.forUpdate = forUpdate;
+
     return portState;
 }
 
@@ -331,9 +413,11 @@ void ConsoleConnectionChangeNotifyProc(CGSNotificationType type, CGSNotification
 - (void)restorePortState:(PortState)portState
 {
     ASSERT([self currentWindow]);
-    
+
     WindowRef windowRef = [[self currentWindow] windowRef];
     CGrafPtr port = GetWindowPort(windowRef);
+
+    SetPort(port);
 
     if (portState.forUpdate) {
         ValidWindowRgn(windowRef, portState.clipRegion);
@@ -350,7 +434,7 @@ void ConsoleConnectionChangeNotifyProc(CGSNotificationType type, CGSNotification
     DisposeRgn(portState.oldVisibleRegion);
     DisposeRgn(portState.clipRegion);
 
-    SetPort(portState.oldPort);
+    SetGWorld(portState.oldPort, portState.oldDevice);
 }
 
 - (BOOL)sendEvent:(EventRecord *)event
@@ -1161,6 +1245,9 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
 
 - (void)freeAttributeKeysAndValues
 {
+    if (offscreenGWorld)
+        DisposeGWorld(offscreenGWorld);
+
     unsigned i;
     for (i = 0; i < argsCount; i++) {
         free(cAttributes[i]);
