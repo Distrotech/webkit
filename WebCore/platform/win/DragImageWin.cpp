@@ -95,7 +95,7 @@ static CGContextRef createCgContextFromBitmap(HBITMAP bitmap)
     return bitmapContext;
 }
 
-DragImageRef scaleDragImage(DragImageRef image, float scale)
+DragImageRef scaleDragImage(DragImageRef image, FloatSize scale)
 {
     // FIXME: due to the way drag images are done on windows we need 
     // to preprocess the alpha channel <rdar://problem/5015946>
@@ -106,7 +106,7 @@ DragImageRef scaleDragImage(DragImageRef image, float scale)
     CGContextRef srcContext;
     CGImageRef srcImage;
     IntSize srcSize = dragImageSize(image);
-    IntSize dstSize((int)(srcSize.width() * scale), (int)(srcSize.height() * scale));
+    IntSize dstSize((int)(srcSize.width() * scale.width()), (int)(srcSize.height() * scale.height()));
     HBITMAP hbmp = 0;
     HDC dc = GetDC(0);
     HDC dstDC = CreateCompatibleDC(dc);

@@ -1,3 +1,14 @@
+2007-04-29  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Steve.
+
+        Fix for <rdar://problem/5126393> REGRESSION (r19672-19697): Safari drag image drags at original size (13261)
+ 
+        Prevent build bustage from opensource changes, correct scaling
+
+        * platform/win/DragImageWin.cpp:
+        (WebCore::scaleDragImage):
+
 2007-04-24  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Darin, Oliver.
