@@ -4262,6 +4262,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\LayoutState.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\LayoutState.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\Length.h"
 				>
 			</File>
