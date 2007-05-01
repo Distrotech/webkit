@@ -1,3 +1,17 @@
+2007-03-25  Antti Koivisto  <antti@apple.com>
+
+        Reviewed by Adam.
+
+        Fix <rdar://problem/5049842>
+        Gmail Editor: Dragging message text in the message body results in a crash at WebCore::Frame::eventHandler()
+
+        Null check frame in m_dragTarget, it might be gone already.
+
+        * page/EventHandler.cpp:
+        (WebCore::EventHandler::updateDragAndDrop):
+        (WebCore::EventHandler::cancelDragAndDrop):
+        (WebCore::EventHandler::performDragAndDrop):
+
 2007-03-24  Mark Rowe  <mrowe@apple.com>
 
         Rubber-stamped by Darin.
