@@ -1,3 +1,15 @@
+2007-04-23  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by Adam.
+
+        Fix for <rdar://problem/5155507> REGRESSION: Crash in 
+        RenderLayer::setHasVisibleContent()
+
+        * rendering/RenderContainer.cpp:
+        (WebCore::RenderContainer::appendChildNode): Must null-check 
+        enclosingLayer()
+        (WebCore::RenderContainer::insertChildNode): Same.
+
 2007-03-25  Antti Koivisto  <antti@apple.com>
 
         Reviewed by Adam.
