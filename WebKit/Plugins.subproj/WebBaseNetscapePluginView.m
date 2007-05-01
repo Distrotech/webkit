@@ -381,6 +381,7 @@ static inline void getNPRectFromNSRect(const NSRect* nr, NPRect* npr)
 
     // Clip to dirty region so plug-in does not draw over already-drawn regions of the window that are
     // not going to be redrawn this update.  This forces plug-ins to play nice with z-index ordering.
+    Rect clipBounds;
     if (forUpdate) {
         RgnHandle viewClipRegion = NewRgn();
 
@@ -402,6 +403,10 @@ static inline void getNPRectFromNSRect(const NSRect* nr, NPRect* npr)
                 // Union this dirty rect with the rest of the dirty rects
                 UnionRgn(viewClipRegion, dirtyRectRegion, viewClipRegion);
                 DisposeRgn(dirtyRectRegion);
+                if (port == offscreenGWorld) {
+                    GetRegionBounds(clipRegion, &clipBounds);
+                    OffsetRgn(clipRegion, -clipBounds.left, -clipBounds.top);
+		}
             }
         }
 
