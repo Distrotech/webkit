@@ -1,3 +1,29 @@
+2007-04-30  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Adam.
+
+        Fixed <rdar://5126201> crash closing tab when the two following tabs are empty.
+        Basically this fix involved one thing, which lead to another thing.  First, the crash
+        was fixed by moving the call to webView->close from SearchableWebView::onDestroy to
+        WebViewWndProc when WM_DESTROY message is processed.  We now want only WebKit handling
+        the closure of a WebView, so all calls to WebView::close have been removed, save for
+        the one call in WebViewWndProc.
+
+        * Interfaces/IWebView.idl:
+        removed close() from public interface
+        * WebInspector/WebInspector.cpp:
+        (WebInspector::onDestroy):
+        removed call to close()
+        * WebView.cpp:
+        (WebView::~WebView):
+        move the deleting of m_page down a bit to avoid a crash 
+        (WebView::close):
+        changed from public API to just a public function
+        (WebViewWndProc):
+        webView->close() was moved here from SearchableWebView::onDestroy
+        * WebView.h:
+        changed close() to a public function not exposed in the WebKit interface
+
 2007-04-24  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Darin, Oliver.

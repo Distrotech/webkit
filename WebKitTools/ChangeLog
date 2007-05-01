@@ -1,3 +1,12 @@
+2007-04-30  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Adam.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (main):
+        As a consequence of <rdar://5126201>, removed call to webView->close() and
+        patched leak resulting from that change. 
+
 2007-04-24  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Darin, Oliver.

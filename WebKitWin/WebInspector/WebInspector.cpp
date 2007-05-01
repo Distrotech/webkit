@@ -283,7 +283,6 @@ LRESULT WebInspector::onDestroy(WPARAM, LPARAM)
         ::RemoveProp(viewWindow, kWebInspectorPointerProp);
     }
 
-    m_private->webView->close();
     delete this;
 
     return 0;

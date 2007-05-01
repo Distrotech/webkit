@@ -150,8 +150,6 @@ WebView::~WebView()
     IWebNotificationCenter* notifyCenter = WebNotificationCenter::defaultCenterInternal();
     notifyCenter->removeObserver(this, WebPreferences::webPreferencesChangedNotification(), 0);
 
-    delete m_page;
-
     deleteBackingStore();
 
     // <rdar://4958382> m_viewWindow will be destroyed when m_hostWindow is destroyed, but if
@@ -159,6 +157,8 @@ WebView::~WebView()
     // this point, we should just destroy it ourselves.
     if (::IsWindow(m_viewWindow))
         ::DestroyWindow(m_viewWindow);
+
+    delete m_page;
 
     WebViewCount--;
     gClassCount--;
@@ -169,6 +169,29 @@ WebView* WebView::createInstance()
     WebView* instance = new WebView();
     instance->AddRef();
     return instance;
+}
+
+void WebView::close()
+{
+    IWebNotificationCenter* notifyCenter = WebNotificationCenter::defaultCenterInternal();
+    notifyCenter->removeObserver(this, WebPreferences::webPreferencesChangedNotification(), 0);
+
+    setHostWindow(0);
+    setFrameLoadDelegate(0);
+    setFrameLoadDelegatePrivate(0);
+    setUIDelegate(0);
+    setFormDelegate(0);
+    setPolicyDelegate(0);
+
+    Frame* frame = NULL;
+    frame = m_page->mainFrame();
+    if (frame)
+        frame->loader()->detachFromParent();
+
+    delete m_page;
+    m_page = 0;
+
+    deleteBackingStore();
 }
 
 void WebView::deleteBackingStore()
@@ -1094,6 +1117,7 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             webView->paint((HDC)wParam, lParam);
             break;
         case WM_DESTROY:
+            webView->close();
             webView->setIsBeingDestroyed();
             webView->revokeDragDrop();
             break;
@@ -1692,28 +1716,6 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     return hr;
 }
 
-HRESULT STDMETHODCALLTYPE WebView::close()
-{
-    IWebNotificationCenter* notifyCenter = WebNotificationCenter::defaultCenterInternal();
-    notifyCenter->removeObserver(this, WebPreferences::webPreferencesChangedNotification(), 0);
-
-    setHostWindow(0);
-    setFrameLoadDelegate(0);
-    setFrameLoadDelegatePrivate(0);
-    setUIDelegate(0);
-    setFormDelegate(0);
-    setPolicyDelegate(0);
-
-    if (Frame* frame = m_page->mainFrame())
-        frame->loader()->detachFromParent();
-
-    delete m_page;
-    m_page = 0;
-
-    deleteBackingStore();
-
-    return S_OK;
-}
 
 HRESULT STDMETHODCALLTYPE WebView::setUIDelegate( 
     /* [in] */ IWebUIDelegate* d)

@@ -731,6 +731,7 @@ int main(int argc, char* argv[])
     COMPtr<IWebViewPrivate> viewPrivate;
     if (FAILED(webView->QueryInterface(&viewPrivate)))
         return -1;
+    webView->Release();
 
     LPCTSTR testNetscapePluginStr = TEXT("testnetscapeplugin");
     BSTR pluginPath = SysAllocStringLen(0, exePath.length() + _tcslen(testNetscapePluginStr));
@@ -758,6 +759,7 @@ int main(int argc, char* argv[])
     COMPtr<IWebViewEditing> viewEditing;
     if (FAILED(webView->QueryInterface(&viewEditing)))
         return -1;
+    webView->Release();
 
     COMPtr<EditingDelegate> editingDelegate;
     editingDelegate.adoptRef(new EditingDelegate);
@@ -820,7 +822,6 @@ int main(int argc, char* argv[])
         stopJavaScriptThreads();
     
     frame->Release();
-    webView->close();
 
     if (leakChecking) {
         // dump leaks to stderr
