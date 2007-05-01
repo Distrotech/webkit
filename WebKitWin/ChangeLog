@@ -1,3 +1,13 @@
+2007-05-01  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Oliver.
+        
+        Fix usage errors in COM enumeration.
+
+        * WebEditorClient.cpp:
+        (WebEditorClient::checkGrammarOfString): Call Next correctly.
+        (WebEditorClient::getGuessesForWord): Call Next correctly.
+
 2007-04-30  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by Adam.

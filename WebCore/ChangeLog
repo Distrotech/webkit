@@ -1,3 +1,13 @@
+2007-05-01  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Oliver.
+
+        Fix crash when retrieving title of context menu after it has been selected.
+        Necessary to get spelling corrections code working.
+
+        * platform/win/ContextMenuWin.cpp:
+        (WebCore::ContextMenu::itemWithAction): menu item info fType is a set of flags, MFT_STRING is 0, so we need to or off flags before comparing.
+
 2007-04-29  Adam Roben  <aroben@apple.com>
 
         Build fix after r21183.

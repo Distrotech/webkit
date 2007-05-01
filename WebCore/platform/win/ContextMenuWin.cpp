@@ -93,7 +93,8 @@ ContextMenuItem* ContextMenu::itemWithAction(unsigned action)
         return 0;
     }
 
-    if (info->fType == MFT_STRING) {
+    UINT type = info->fType & ~(MFT_MENUBARBREAK | MFT_MENUBREAK | MFT_OWNERDRAW | MFT_RADIOCHECK | MFT_RIGHTORDER | MFT_RIGHTJUSTIFY);
+    if (type == MFT_STRING) {
         LPTSTR buffer = (LPTSTR)malloc(++info->cch * sizeof(TCHAR));
         if (!buffer) {
             free(info);

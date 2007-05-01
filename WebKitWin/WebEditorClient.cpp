@@ -653,11 +653,10 @@ void WebEditorClient::checkGrammarOfString(const UChar* text, int length, Vector
     if (FAILED(ed->checkGrammarOfString(m_webView, text, length, &enumDetailsObj, badGrammarLocation, badGrammarLength)))
         return;
 
-    ULONG indDetailObj = 0;
     while (true) {
         ULONG fetched;
         COMPtr<IWebGrammarDetail> detailObj;
-        if (FAILED(enumDetailsObj->Next(indDetailObj++, &detailObj, &fetched)))
+        if (enumDetailsObj->Next(1, &detailObj, &fetched) != S_OK)
             break;
 
         GrammarDetail detail;
@@ -674,10 +673,9 @@ void WebEditorClient::checkGrammarOfString(const UChar* text, int length, Vector
         COMPtr<IEnumSpellingGuesses> enumGuessesObj;
         if (FAILED(detailObj->guesses(&enumGuessesObj)))
             continue;
-        ULONG indGuess = 0;
         while (true) {
             BSTR guess;
-            if (FAILED(enumGuessesObj->Next(indGuess++, &guess, &fetched)))
+            if (enumGuessesObj->Next(1, &guess, &fetched) != S_OK)
                 break;
             detail.guesses.append(String(guess, SysStringLen(guess)));
             SysFreeString(guess);
@@ -746,11 +744,10 @@ void WebEditorClient::getGuessesForWord(const String& word, Vector<String>& gues
     if (FAILED(ed->guessesForWord(BString(word), &enumGuessesObj)))
         return;
 
-    ULONG indGuess = 0;
     while (true) {
         ULONG fetched;
         BSTR guess;
-        if (FAILED(enumGuessesObj->Next(indGuess++, &guess, &fetched)))
+        if (enumGuessesObj->Next(1, &guess, &fetched) != S_OK)
             break;
         guesses.append(String(guess, SysStringLen(guess)));
         SysFreeString(guess);
