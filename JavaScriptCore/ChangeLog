@@ -1,15 +1,3 @@
-=== JavaScriptCore-418.4 ===
-
-2007-05-02  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Geoff.
-        
-        - change garbage collection to happen at increments proportional to number of live objects, not always
-        every 1000 allocations
-
-        * kjs/collector.cpp:
-        (KJS::Collector::allocate):
-
 === JavaScriptCore-418.3 ===
 
 2006-05-27  Geoffrey Garen  <ggaren@apple.com>
