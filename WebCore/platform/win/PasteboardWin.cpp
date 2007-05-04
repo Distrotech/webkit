@@ -95,8 +95,8 @@ HGLOBAL createGlobalData(String str)
     SIZE_T size = (str.length() + 1) * sizeof(UChar);
     HGLOBAL cbData = ::GlobalAlloc(GPTR, size);
     if (cbData) {
-        ::GlobalLock(cbData);
-        memcpy(cbData, str.charactersWithNullTermination(), size);
+        void* buffer = ::GlobalLock(cbData);
+        memcpy(buffer, str.charactersWithNullTermination(), size);
         ::GlobalUnlock(cbData);
     }
     return cbData;
@@ -107,8 +107,8 @@ HGLOBAL createGlobalData(CString str)
     SIZE_T size = (str.length() + 1) * sizeof(char);
     HGLOBAL cbData = ::GlobalAlloc(GPTR, size);
     if (cbData) {
-        ::GlobalLock(cbData);
-        memcpy(cbData, str.data(), size);
+        void* buffer = ::GlobalLock(cbData);
+        memcpy(buffer, str.data(), size);
         ::GlobalUnlock(cbData);
     }
     return cbData;

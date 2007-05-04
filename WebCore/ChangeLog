@@ -1,5 +1,14 @@
 2007-05-03  Oliver Hunt  <oliver@apple.com>
 
+        Reviewed by Steve
+
+        Fix misuse of GlobalLock.
+
+        * platform/win/PasteboardWin.cpp:
+        (WebCore::createGlobalData):
+
+2007-05-03  Oliver Hunt  <oliver@apple.com>
+
         Reviewed by Steve.
 
         Add logic to draw underlines for grammar and spelling errors.
