@@ -1,6 +1,6 @@
 /*
-        WebBaseNetscapePluginView.h
-    Copyright 2002, Apple, Inc. All rights reserved.
+  WebBaseNetscapePluginView.h
+  Copyright 2002, Apple, Inc. All rights reserved.
 */
 
 #import <Cocoa/Cocoa.h>
@@ -30,6 +30,8 @@
     NP_Port nPort;
     NP_Port lastSetPort;
     NPP_t instanceStruct;
+
+    GWorldPtr offscreenGWorld;
 
     BOOL isStarted;
     BOOL inSetWindow;
