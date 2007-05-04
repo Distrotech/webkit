@@ -391,7 +391,7 @@ PassRefPtr<DocumentFragment> Pasteboard::documentFragment(Frame* frame, PassRefP
         HANDLE cbData = ::GetClipboardData(HTMLClipboardFormat);
         if (cbData) {
             SIZE_T dataSize = ::GlobalSize(cbData);
-            String cf_html(DeprecatedString::fromUtf8((char*)::GlobalLock(cbData), dataSize));
+            String cf_html(UTF8Encoding().decode((char*)::GlobalLock(cbData), dataSize));
             ::GlobalUnlock(cbData);
             ::CloseClipboard();
 

@@ -1,3 +1,14 @@
+2007-05-04  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Darin.
+
+        changed use of DeprecatedString::fromUTF8 to UTF8Encoding().decode()
+
+        * platform/win/DragDataWin.cpp:
+        (WebCore::fragmentFromHTML):
+        * platform/win/PasteboardWin.cpp:
+        (WebCore::Pasteboard::documentFragment):
+
 2007-05-03  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Ada, Oliver.

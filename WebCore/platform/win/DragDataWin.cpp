@@ -31,6 +31,7 @@
 #include "DocumentFragment.h"
 #include "PlatformString.h"
 #include "Markup.h"
+#include "TextEncoding.h"
 #include <objidl.h>
 #include <shlwapi.h>
 #include <wininet.h>
@@ -286,7 +287,7 @@ static PassRefPtr<DocumentFragment> fragmentFromHTML(Document* doc, IDataObject*
         //MS HTML Format parsing
         char* data = (char*)GlobalLock(store.hGlobal);
         SIZE_T dataSize = ::GlobalSize(store.hGlobal);
-        String cf_html(DeprecatedString::fromUtf8(data, dataSize));         
+        String cf_html(UTF8Encoding().decode(data, dataSize));         
         GlobalUnlock(store.hGlobal);
         ReleaseStgMedium(&store); 
         if (DocumentFragment* fragment = fragmentFromCF_HTML(doc, cf_html))
