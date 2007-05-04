@@ -1,3 +1,16 @@
+2007-05-03  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Ada, Oliver.
+
+        Checkpoint:
+        <rdar://problem/4602372> Spelling
+        <rdar://problem/4769763> Spell checking engine support
+
+        * platform/win/EditorWin.cpp:
+        (WebCore::findFirstBadGrammarInRange): Account for start offset when reporting bad grammar range (fixed my porting mistake).
+        (WebCore::Editor::advanceToNextMisspelling): Include user description with spelling error.
+        (WebCore::isRangeUngrammatical): Include user description with spelling error.
+
 2007-05-03  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by Oliver.

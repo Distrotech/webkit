@@ -218,6 +218,8 @@ static String findFirstBadGrammarInRange(EditorClient* client, Range* searchRang
             ASSERT(badGrammarPhraseLength == 0);
             return String();
         }
+        badGrammarPhraseLocation += startOffset;
+
         
         // Found some bad grammar. Find the earliest detail range that starts in our search range (if any).
         int badGrammarIndex = findFirstGrammarDetailInRange(grammarDetails, badGrammarPhraseLocation, badGrammarPhraseLength, searchRange, searchRangeStartOffset, searchRangeEndOffset, markAll);
@@ -368,7 +370,7 @@ void Editor::advanceToNextMisspelling(bool startBeforeSelection)
         frame()->selectionController()->setSelection(Selection(badGrammarRange.get(), SEL_DEFAULT_AFFINITY));
         frame()->revealSelection();
         
-        client()->updateSpellingUIWithGrammarString(badGrammarPhrase, grammarDetail.guesses);
+        client()->updateSpellingUIWithGrammarString(badGrammarPhrase, grammarDetail.userDescription, grammarDetail.guesses);
         frame()->document()->addMarker(badGrammarRange.get(), DocumentMarker::Grammar, grammarDetail.userDescription);
 #endif        
     } else if (!misspelledWord.isEmpty()) {
@@ -454,7 +456,7 @@ static bool isRangeUngrammatical(EditorClient* client, Range *range, Vector<Stri
     // This is necessary to make a subsequent call to [NSSpellChecker ignoreWord:inSpellDocumentWithTag:] work
     // correctly; that call behaves differently based on whether the spelling panel is displaying a misspelling
     // or a grammar error.
-    client->updateSpellingUIWithGrammarString(badGrammarPhrase, guessesVector);
+    client->updateSpellingUIWithGrammarString(badGrammarPhrase, grammarDetail.userDescription, guessesVector);
     
     return true;
 }

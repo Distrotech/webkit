@@ -139,6 +139,7 @@ public:
         
         virtual HRESULT STDMETHODCALLTYPE updateSpellingUIWithGrammarString( 
             /* [in] */ BSTR string,
+            /* [in] */ BSTR userDescription,
             /* [in] */ BSTR *guesses,
             /* [in] */ int guessesCount) { return E_NOTIMPL; }
         

@@ -2931,10 +2931,13 @@ HRESULT STDMETHODCALLTYPE WebView::replaceSelectionWithNode(
 }
     
 HRESULT STDMETHODCALLTYPE WebView::replaceSelectionWithText( 
-        /* [in] */ BSTR /*text*/)
+        /* [in] */ BSTR text)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    String textString(text, ::SysStringLen(text));
+    Position start = m_page->mainFrame()->selectionController()->selection().start();
+    m_page->focusController()->focusedOrMainFrame()->editor()->insertText(textString, 0);
+    m_page->mainFrame()->selectionController()->setBase(start);
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::replaceSelectionWithMarkupString( 
