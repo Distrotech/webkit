@@ -1,3 +1,15 @@
+2007-05-03  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Oliver.
+
+        Fixed <rdar://5181466> HTML formatted clipboard data is not converted from UTF8 when pasted
+
+        * platform/win/DragDataWin.cpp:
+        (WebCore::fragmentFromHTML):
+        * platform/win/PasteboardWin.cpp:
+        (WebCore::fragmentFromCF_HTML):
+        (WebCore::Pasteboard::documentFragment):
+
 2007-05-03  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Steve

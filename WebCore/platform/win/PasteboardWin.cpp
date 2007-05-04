@@ -365,7 +365,9 @@ DocumentFragment* fragmentFromCF_HTML(Document* doc, const String& cf_html)
     if (lineStart != -1) {
         unsigned srcEnd = cf_html.find("\n", lineStart, false);
         unsigned srcStart = lineStart+srcURLStr.length();
-        srcURL = cf_html.substring(srcStart, srcEnd-srcStart).stripWhiteSpace();
+        String rawSrcURL = cf_html.substring(srcStart, srcEnd-srcStart);
+        replaceNBSP(rawSrcURL);
+        srcURL = rawSrcURL.stripWhiteSpace();
     }
 
     // find the markup between "<!--StartFragment -->" and "<!--EndFragment -->", accounting for browser quirks
@@ -389,7 +391,7 @@ PassRefPtr<DocumentFragment> Pasteboard::documentFragment(Frame* frame, PassRefP
         HANDLE cbData = ::GetClipboardData(HTMLClipboardFormat);
         if (cbData) {
             SIZE_T dataSize = ::GlobalSize(cbData);
-            String cf_html((char*)::GlobalLock(cbData), dataSize);
+            String cf_html(DeprecatedString::fromUtf8((char*)::GlobalLock(cbData), dataSize));
             ::GlobalUnlock(cbData);
             ::CloseClipboard();
 

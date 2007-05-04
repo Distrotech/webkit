@@ -285,8 +285,9 @@ static PassRefPtr<DocumentFragment> fragmentFromHTML(Document* doc, IDataObject*
     if (SUCCEEDED(data->GetData(htmlFormat(), &store))) {
         //MS HTML Format parsing
         char* data = (char*)GlobalLock(store.hGlobal);
-        String cf_html(data);         
-        GlobalUnlock(store.hGlobal);      
+        SIZE_T dataSize = ::GlobalSize(store.hGlobal);
+        String cf_html(DeprecatedString::fromUtf8(data, dataSize));         
+        GlobalUnlock(store.hGlobal);
         ReleaseStgMedium(&store); 
         if (DocumentFragment* fragment = fragmentFromCF_HTML(doc, cf_html))
             return fragment;
