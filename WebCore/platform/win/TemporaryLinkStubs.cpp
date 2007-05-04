@@ -164,8 +164,6 @@ void Widget::setIsSelected(bool) { LOG_NOIMPL(); }
 
 bool ScrollView::inWindow() const { LOG_NOIMPL(); return true; }
 
-void GraphicsContext::drawLineForMisspellingOrBadGrammar(const IntPoint& point, int width, bool grammar) { LOG_NOIMPL(); }
-
 Color WebCore::focusRingColor() { LOG_NOIMPL(); return 0xFF7DADD9; }
 void WebCore::setFocusRingColorChangeFunction(void (*)()) { LOG_NOIMPL(); }
 

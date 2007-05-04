@@ -1,3 +1,21 @@
+2007-05-03  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Steve.
+
+        Add logic to draw underlines for grammar and spelling errors.
+        (rdar://problem/4769832)
+
+        * platform/win/GraphicsContextWin.cpp:
+        (WebCore::spellingPatternColor):
+        (WebCore::grammarPatternColor):
+          Can't define global const with constructor so use function scoped globals instead.
+        (WebCore::setCGStrokeColor):
+          Utility function pulled over from GraphicsContextCG          
+        (WebCore::GraphicsContext::drawLineForMisspellingOrBadGrammar):
+        
+        * platform/win/TemporaryLinkStubs.cpp:
+          Remove old drawLineForMisspellingOrBadGrammar stub
+
 2007-05-01  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Oliver.
