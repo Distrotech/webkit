@@ -1,3 +1,12 @@
+2007-05-04  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Darin.
+
+        Fix crash when using "check spelling while typing".
+
+        * WebCore.vcproj/WebCore.vcproj: Added TextBreakIteratorInternalICUWin.cpp
+        * platform/win/TemporaryLinkStubs.cpp: Removed findSentenceBoundary, findNextSentenceFromIndex.
+
 2007-05-04  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by Darin.

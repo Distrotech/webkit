@@ -70,7 +70,6 @@
 #include "SSLKeyGenerator.h"
 #include "SubresourceLoader.h"
 #include "SystemTime.h"
-#include "TextBoundaries.h"
 #include "Widget.h"
 #include "loader.h"
 #include <stdio.h>
@@ -83,9 +82,6 @@ Widget::FocusPolicy Widget::focusPolicy() const { LOG_NOIMPL(); return NoFocus; 
 void Widget::disableFlushDrawing() { STOP_NOIMPL(); }
 GraphicsContext* Widget::lockDrawingFocus() { STOP_NOIMPL(); return 0; }
 void Widget::unlockDrawingFocus(GraphicsContext*) { STOP_NOIMPL(); }
-
-int WebCore::findNextSentenceFromIndex(UChar const*,int,int,bool) { LOG_NOIMPL(); return 0; }
-void WebCore::findSentenceBoundary(UChar const*,int,int,int*,int*) { LOG_NOIMPL(); }
 
 void Frame::print() { LOG_NOIMPL(); }
 void Frame::issueTransposeCommand() { LOG_NOIMPL(); }

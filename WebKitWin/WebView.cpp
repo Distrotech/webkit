@@ -2784,12 +2784,11 @@ void WebView::preflightSpellChecker()
         return;
 
     BOOL exists;
+    spellingDelegateForTimer = m_editingDelegate;
     if (SUCCEEDED(m_editingDelegate->sharedSpellCheckerExists(&exists)) && exists)
         preflightSpellCheckerNow();
-    else {
-        spellingDelegateForTimer = m_editingDelegate;
+    else
         ::SetTimer(0, 0, 2000, preflightSpellCheckerTimerCallback);
-    }
 }
 
 bool WebView::continuousCheckingAllowed()

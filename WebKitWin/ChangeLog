@@ -1,3 +1,12 @@
+2007-05-04  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Darin.
+        
+        Fix crash when using "check spelling while typing".
+
+        * WebView.cpp:
+        (WebView::preflightSpellChecker): Set delegate static global for use in spell checker init.
+
 2007-05-03  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Ada, Oliver.

@@ -2830,6 +2830,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextBreakIteratorInternalICU.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\TextCodec.cpp"
 				>
 			</File>
@@ -3070,6 +3074,10 @@
 				</File>
 				<File
 					RelativePath="..\platform\win\TextBoundariesWin.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\win\TextBreakIteratorInternalICUWin.cpp"
 					>
 				</File>
 				<File
