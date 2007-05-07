@@ -1,3 +1,12 @@
+2007-05-07  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Darin.
+
+        Fix typo in prefs code.       
+
+        * WebPreferences.cpp:
+        (WebPreferences::preferencesPath): Fix typo in error handling.
+
 2007-05-04  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Darin.

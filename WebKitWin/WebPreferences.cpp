@@ -470,7 +470,7 @@ exit:
 HRESULT WebPreferences::preferencesPath(LPTSTR path, size_t cchPath)
 {
     // get the path to the user's Application Data folder (Example: C:\Documents and Settings\{username}\Application Data\Apple Computer\WebKit)
-    HRESULT hr = FAILED(SHGetFolderPath(0, CSIDL_APPDATA | CSIDL_FLAG_CREATE, 0, 0, path));
+    HRESULT hr = SHGetFolderPath(0, CSIDL_APPDATA | CSIDL_FLAG_CREATE, 0, 0, path);
     if (FAILED(hr))
         return hr;
 
