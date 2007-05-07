@@ -27,6 +27,7 @@
 #include "ClipboardWin.h"
 
 #include "CachedImage.h"
+#include "ClipboardUtilitiesWin.h"
 #include "csshelper.h"
 #include "CString.h"
 #include "DeprecatedString.h"
@@ -40,6 +41,7 @@
 #include "HTMLNames.h"
 #include "Image.h"
 #include "MimeTypeRegistry.h"
+#include "markup.h"
 #include "Page.h"
 #include "Pasteboard.h"
 #include "PlatformMouseEvent.h"
@@ -61,22 +63,6 @@ using namespace HTMLNames;
 
 // format string for 
 static const char szShellDotUrlTemplate[] = "[InternetShortcut]\r\nURL=%s\r\n";
-
-FORMATETC* urlFormat();
-FORMATETC* urlWFormat();
-FORMATETC* plainTextFormat();
-FORMATETC* plainTextWFormat();
-FORMATETC* texthtmlFormat();
-FORMATETC* htmlFormat();
-
-HGLOBAL createGlobalData(String str);
-HGLOBAL createGlobalData(CString str);
-HGLOBAL createGlobalData(const KURL& url, const String& title);
-DeprecatedCString markupToCF_HTML(const String& markup, const String& srcURL);
-String urlToMarkup(const KURL& url, const String& title);
-void replaceNBSP(String& str);
-String getURL(IDataObject* dataObject, bool& success, String* title = 0);
-String getPlainText(IDataObject* dataObject, bool& success);
 
 // We provide the IE clipboard types (URL and Text), and the clipboard types specified in the WHATWG Web Applications 1.0 draft
 // see http://www.whatwg.org/specs/web-apps/current-work/ Section 6.3.5.3
@@ -652,16 +638,16 @@ void ClipboardWin::writeRange(Range* selectedRange, Frame* frame)
     medium.tymed = TYMED_HGLOBAL;
     ExceptionCode ec = 0;
 
-    medium.hGlobal = createGlobalData(markupToCF_HTML(selectedRange->toHTML(), selectedRange->startContainer(ec)->document()->URL()));
+    medium.hGlobal = createGlobalData(markupToCF_HTML(createMarkup(selectedRange, 0, AnnotateForInterchange), selectedRange->startContainer(ec)->document()->URL()));
     if (medium.hGlobal && FAILED(m_writableDataObject->SetData(htmlFormat(), &medium, TRUE)))
         ::GlobalFree(medium.hGlobal);
 
     String str = frame->selectedText();
-    replaceNBSP(str);
+    replaceNewlinesWithWindowsStyleNewlines(str);
+    replaceNBSPWithSpace(str);
     medium.hGlobal = createGlobalData(str);
     if (medium.hGlobal && FAILED(m_writableDataObject->SetData(plainTextWFormat(), &medium, TRUE)))
         ::GlobalFree(medium.hGlobal);
-
 }
 
 bool ClipboardWin::hasData()

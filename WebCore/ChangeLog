@@ -1,3 +1,45 @@
+2007-05-07  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Oliver.
+
+        Fixed <rdar://5087119> Paste fidelity isn't as good as it is on the mac
+        and <rdar://5087118> Plain text copy/paste yields bad line endings on Boomer
+        and re-organized standalone functions in DragDataWin.cpp and PasteboardWin.cpp
+        into ClipboardUtilitiesWin.h/cpp.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/win/ClipboardUtilitiesWin.cpp: Added.
+        (WebCore::cfHDropFormat):
+        (WebCore::getWebLocData):
+        (WebCore::extractURL):
+        (WebCore::texthtmlFormat):
+        (WebCore::createGlobalData):
+        (WebCore::markupToCF_HTML):
+        (WebCore::urlToMarkup):
+        (WebCore::replaceNewlinesWithWindowsStyleNewlines):
+        (WebCore::replaceNBSPWithSpace):
+        (WebCore::urlWFormat):
+        (WebCore::urlFormat):
+        (WebCore::plainTextFormat):
+        (WebCore::plainTextWFormat):
+        (WebCore::filenameWFormat):
+        (WebCore::filenameFormat):
+        (WebCore::htmlFormat):
+        (WebCore::getURL):
+        (WebCore::getPlainText):
+        (WebCore::fragmentFromFilenames):
+        (WebCore::containsFilenames):
+        (WebCore::fragmentFromCF_HTML):
+        (WebCore::fragmentFromHTML):
+        (WebCore::containsHTML):
+        * platform/win/ClipboardUtilitiesWin.h: Added.
+        * platform/win/ClipboardWin.cpp:
+        (WebCore::ClipboardWin::writeRange):
+        * platform/win/DragDataWin.cpp:
+        * platform/win/PasteboardWin.cpp:
+        (WebCore::Pasteboard::writeSelection):
+        (WebCore::Pasteboard::documentFragment):
+
 2007-05-04  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Darin.

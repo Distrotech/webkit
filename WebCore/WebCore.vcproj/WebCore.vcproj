@@ -2937,6 +2937,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\platform\win\ClipboardUtilitiesWin.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\win\ClipboardUtilitiesWin.h"
+					>
+				</File>
+				<File
 					RelativePath="..\platform\win\ClipboardWin.cpp"
 					>
 				</File>

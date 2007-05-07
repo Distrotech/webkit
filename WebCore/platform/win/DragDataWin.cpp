@@ -27,6 +27,7 @@
 #include "DragData.h"
 
 #include "ClipboardWin.h"
+#include "ClipboardUtilitiesWin.h"
 #include "ClipboardAccessPolicy.h"
 #include "DocumentFragment.h"
 #include "PlatformString.h"
@@ -43,182 +44,12 @@ Clipboard* DragData::createClipboard(ClipboardAccessPolicy policy) const
     return new ClipboardWin(true, m_platformDragData, policy);
 }
 
-FORMATETC* urlWFormat()
-{
-    static UINT cf = RegisterClipboardFormat(L"UniformResourceLocatorW");
-    static FORMATETC urlFormat = {cf, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
-    return &urlFormat;
-}
-
-FORMATETC* urlFormat()
-{
-    static UINT cf = RegisterClipboardFormat(L"UniformResourceLocator");
-    static FORMATETC urlFormat = {cf, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
-    return &urlFormat;
-}
-
-FORMATETC* cfHDropFormat()
-{
-    static FORMATETC urlFormat = {CF_HDROP, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
-    return &urlFormat;
-}
-
-static FORMATETC* filenameWFormat()
-{
-    static UINT cf = RegisterClipboardFormat(L"FileNameW");
-    static FORMATETC urlFormat = {cf, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
-    return &urlFormat;
-}
-
-static FORMATETC* filenameFormat()
-{
-    static UINT cf = RegisterClipboardFormat(L"FileName");
-    static FORMATETC urlFormat = {cf, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
-    return &urlFormat;
-}
-
-FORMATETC* plainTextFormat()
-{
-    static FORMATETC textFormat = {CF_TEXT, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
-    return &textFormat;
-}
-
-FORMATETC* plainTextWFormat()
-{
-    static FORMATETC textFormat = {CF_UNICODETEXT, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
-    return &textFormat;
-}
-
-//Firefox text/html
-FORMATETC* texthtmlFormat() 
-{
-    static UINT cf = RegisterClipboardFormat(L"text/html");
-    static FORMATETC texthtmlFormat = {cf, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
-    return &texthtmlFormat;
-}
-
-//MSIE HTML Format
-FORMATETC* htmlFormat() 
-{
-    static UINT cf = RegisterClipboardFormat(L"HTML Format");
-    static FORMATETC htmlFormat = {cf, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
-    return &htmlFormat;
-}
-
 bool DragData::containsURL() const
 {
     return SUCCEEDED(m_platformDragData->QueryGetData(urlWFormat())) 
         || SUCCEEDED(m_platformDragData->QueryGetData(urlFormat()))
         || SUCCEEDED(m_platformDragData->QueryGetData(filenameWFormat())) 
         || SUCCEEDED(m_platformDragData->QueryGetData(filenameFormat()));
-}
-
-static String extractURL(const String &inURL, String* title)
-{
-    String url = inURL;
-    int splitLoc = url.find('\n');
-    if (splitLoc > 0) {
-        if (title)
-            *title = url.substring(splitLoc+1);
-        url.truncate(splitLoc);
-    } else if (title)
-        *title = url;
-    return url;
-}
-
-bool getWebLocData(IDataObject* dataObject, String& url, String* title) 
-{
-    bool succeeded = false;
-    WCHAR filename[MAX_PATH];
-    WCHAR urlBuffer[INTERNET_MAX_URL_LENGTH];
-
-    STGMEDIUM medium;
-    if (FAILED(dataObject->GetData(cfHDropFormat(), &medium)))
-        return false;
-
-    HDROP hdrop = (HDROP)GlobalLock(medium.hGlobal);
-   
-    if (!hdrop)
-        return false;
-
-    if (!DragQueryFileW(hdrop, 0, filename, ARRAYSIZE(filename)))
-        goto exit;
-
-    if (_wcsicmp(PathFindExtensionW(filename), L".url"))
-        goto exit;    
-    
-    if (!GetPrivateProfileStringW(L"InternetShortcut", L"url", 0, urlBuffer, ARRAYSIZE(urlBuffer), filename))
-        goto exit;
-    
-    if (title) {
-        PathRemoveExtension(filename);
-        *title = String((UChar*)filename);
-    }
-    
-    url = String((UChar*)urlBuffer);
-    succeeded = true;
-
-exit:
-    // Free up memory.
-    DragFinish(hdrop);
-    GlobalUnlock(medium.hGlobal);
-    return succeeded;
-}
-
-String getURL(IDataObject* dataObject, bool& success, String* title = 0)
-{
-    STGMEDIUM store;
-    String url;
-    success = false;
-    if (getWebLocData(dataObject, url, title)) {
-        success = true;
-        return url;
-    } else if (SUCCEEDED(dataObject->GetData(urlWFormat(), &store))) {
-        //URL using unicode
-        UChar* data = (UChar*)GlobalLock(store.hGlobal);
-        url = extractURL(String(data), title);
-        GlobalUnlock(store.hGlobal);      
-        ReleaseStgMedium(&store);
-        success = true;
-    } else if (SUCCEEDED(dataObject->GetData(urlFormat(), &store))) {
-        //URL using ascii
-        char* data = (char*)GlobalLock(store.hGlobal);
-        url = extractURL(String(data), title);
-        GlobalUnlock(store.hGlobal);      
-        ReleaseStgMedium(&store);
-        success = true;
-    } else if (SUCCEEDED(dataObject->GetData(filenameWFormat(), &store))) {
-        //file using unicode
-        wchar_t* data = (wchar_t*)GlobalLock(store.hGlobal);        
-        if (data && data[0] && (PathFileExists(data) || PathIsUNC(data))) {
-            wchar_t fileURL[INTERNET_MAX_URL_LENGTH];
-            DWORD fileURLLength = sizeof(fileURL) / sizeof(fileURL[0]);
-            if (SUCCEEDED(::UrlCreateFromPathW(data, fileURL, &fileURLLength, 0))) {
-                url = String((UChar*)fileURL);
-                if (title)
-                    *title = url;
-            }
-        }
-        GlobalUnlock(store.hGlobal);      
-        ReleaseStgMedium(&store);
-        success = true;
-    } else if (SUCCEEDED(dataObject->GetData(filenameFormat(), &store))) {
-        //filename using ascii
-        char* data = (char*)GlobalLock(store.hGlobal);       
-        if (data && data[0] && (PathFileExistsA(data) || PathIsUNCA(data))) {
-            char fileURL[INTERNET_MAX_URL_LENGTH];
-            DWORD fileURLLength = sizeof(fileURL) / sizeof(fileURL[0]);
-            if (SUCCEEDED(::UrlCreateFromPathA(data, fileURL, &fileURLLength, 0))) {
-                url = fileURL;
-                if (title)
-                    *title = url;
-            }
-        }
-        GlobalUnlock(store.hGlobal);      
-        ReleaseStgMedium(&store);
-        success = true;
-    }
-    return url;
 }
 
 String DragData::asURL(String* title) const
@@ -233,88 +64,10 @@ bool DragData::containsPlainText() const
         || SUCCEEDED(m_platformDragData->QueryGetData(plainTextFormat()));
 }
 
-String getPlainText(IDataObject* dataObject, bool& success)
-{
-    STGMEDIUM store;
-    String text;
-    success = false;
-    if (SUCCEEDED(dataObject->GetData(plainTextWFormat(), &store))) {
-        //unicode text
-        UChar* data = (UChar*)GlobalLock(store.hGlobal);
-        text = String(data);
-        GlobalUnlock(store.hGlobal);      
-        ReleaseStgMedium(&store);
-        success = true;
-    } else if (SUCCEEDED(dataObject->GetData(plainTextFormat(), &store))) {
-        //ascii text
-        char* data = (char*)GlobalLock(store.hGlobal);
-        text = String(data);
-        GlobalUnlock(store.hGlobal);      
-        ReleaseStgMedium(&store);
-        success = true;
-    } else {
-        //If a file is dropped on the window, it does not provide either of the 
-        //plain text formats, so here we try to forcibly get a url.
-        text = getURL(dataObject, success);
-        success = true;
-    }
-    return text;
-}
-
 String DragData::asPlainText() const
 {
     bool success;
     return getPlainText(m_platformDragData, success);
-}
-
-static bool containsHTML(IDataObject* data)
-{
-    return SUCCEEDED(data->QueryGetData(texthtmlFormat())) || SUCCEEDED(data->QueryGetData(htmlFormat()));
-}
-
-//fragmentFromCF_HTML is in PasteboardWin.cpp
-DocumentFragment* fragmentFromCF_HTML(Document* doc, const String& cf_html);
-
-static PassRefPtr<DocumentFragment> fragmentFromHTML(Document* doc, IDataObject* data) 
-{
-    if (!doc || !data)
-        return 0;
-
-    STGMEDIUM store;
-    String html;
-    String srcURL;
-    if (SUCCEEDED(data->GetData(htmlFormat(), &store))) {
-        //MS HTML Format parsing
-        char* data = (char*)GlobalLock(store.hGlobal);
-        SIZE_T dataSize = ::GlobalSize(store.hGlobal);
-        String cf_html(UTF8Encoding().decode(data, dataSize));         
-        GlobalUnlock(store.hGlobal);
-        ReleaseStgMedium(&store); 
-        if (DocumentFragment* fragment = fragmentFromCF_HTML(doc, cf_html))
-            return fragment;
-    } 
-    if (SUCCEEDED(data->GetData(texthtmlFormat(), &store))) {
-        //raw html
-        UChar* data = (UChar*)GlobalLock(store.hGlobal);
-        html = String(data);
-        GlobalUnlock(store.hGlobal);      
-        ReleaseStgMedium(&store);
-        return createFragmentFromMarkup(doc, html, srcURL);
-    } 
-
-    return 0;
-}
-
-static bool containsFilenames(const IDataObject*)
-{
-    //FIXME: We'll want to update this once we can produce fragments from files
-    return false;
-}
-
-static PassRefPtr<DocumentFragment> fragmentFromFilenames(Document*, const IDataObject*)
-{
-    //FIXME: We should be able to create fragments from files
-    return 0;
 }
 
 bool DragData::containsColor() const

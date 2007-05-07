@@ -26,6 +26,7 @@
 #include "config.h"
 #include "Pasteboard.h"
 
+#include "ClipboardUtilitiesWin.h"
 #include "CString.h"
 #include "DeprecatedString.h"
 #include "DocumentFragment.h"
@@ -75,109 +76,6 @@ static LRESULT CALLBACK PasteboardOwnerWndProc(HWND hWnd, UINT message, WPARAM w
     return lresult;
 }
 
-HGLOBAL createGlobalData(const KURL& url, const String& title)
-{
-    String mutableURL(url.url());
-    String mutableTitle(title);
-    SIZE_T size = mutableURL.length() + mutableTitle.length() + 2;  // +1 for "\n" and +1 for null terminator
-    HGLOBAL cbData = ::GlobalAlloc(GPTR, size * sizeof(UChar));
-
-    if (cbData) {
-        PWSTR buffer = (PWSTR)::GlobalLock(cbData);
-        swprintf_s(buffer, size, L"%s\n%s", mutableURL.charactersWithNullTermination(), mutableTitle.charactersWithNullTermination());
-        ::GlobalUnlock(cbData);
-    }
-    return cbData;
-}
-
-HGLOBAL createGlobalData(String str)
-{   
-    SIZE_T size = (str.length() + 1) * sizeof(UChar);
-    HGLOBAL cbData = ::GlobalAlloc(GPTR, size);
-    if (cbData) {
-        void* buffer = ::GlobalLock(cbData);
-        memcpy(buffer, str.charactersWithNullTermination(), size);
-        ::GlobalUnlock(cbData);
-    }
-    return cbData;
-}
-
-HGLOBAL createGlobalData(CString str)
-{
-    SIZE_T size = (str.length() + 1) * sizeof(char);
-    HGLOBAL cbData = ::GlobalAlloc(GPTR, size);
-    if (cbData) {
-        void* buffer = ::GlobalLock(cbData);
-        memcpy(buffer, str.data(), size);
-        ::GlobalUnlock(cbData);
-    }
-    return cbData;
-}
-
-// Documentation for the CF_HTML format is available at http://msdn.microsoft.com/workshop/networking/clipboard/htmlclipboard.asp
-DeprecatedCString markupToCF_HTML(const String& markup, const String& srcURL)
-{
-    if (!markup.length())
-        return DeprecatedCString();
-
-    DeprecatedCString cf_html        ("Version:0.9");
-    DeprecatedCString startHTML      ("\nStartHTML:");
-    DeprecatedCString endHTML        ("\nEndHTML:");
-    DeprecatedCString startFragment  ("\nStartFragment:");
-    DeprecatedCString endFragment    ("\nEndFragment:");
-    DeprecatedCString sourceURL      ("\nSourceURL:");
-
-    bool shouldFillSourceURL = !srcURL.isEmpty() && (srcURL != "about:blank");
-    if (shouldFillSourceURL)
-        sourceURL.append(srcURL.utf8());
-
-    DeprecatedCString startMarkup    ("\n<HTML>\n<BODY>\n<!--StartFragment-->\n");
-    DeprecatedCString endMarkup      ("\n<!--EndFragment-->\n</BODY>\n</HTML>");
-
-    // calculate offsets
-    const unsigned UINT_MAXdigits = 10; // number of digits in UINT_MAX in base 10
-    unsigned startHTMLOffset = cf_html.length() + startHTML.length() + endHTML.length() + startFragment.length() + endFragment.length() + (shouldFillSourceURL ? sourceURL.length() : 0) + (4*UINT_MAXdigits);
-    unsigned startFragmentOffset = startHTMLOffset + startMarkup.length();
-    CString markupUTF8 = markup.utf8();
-    unsigned endFragmentOffset = startFragmentOffset + markupUTF8.length();
-    unsigned endHTMLOffset = endFragmentOffset + endMarkup.length();
-
-    // fill in needed data
-    startHTML.append(String::format("%010u", startHTMLOffset).deprecatedString().utf8());
-    endHTML.append(String::format("%010u", endHTMLOffset).deprecatedString().utf8());
-    startFragment.append(String::format("%010u", startFragmentOffset).deprecatedString().utf8());
-    endFragment.append(String::format("%010u", endFragmentOffset).deprecatedString().utf8());
-    startMarkup.append(markupUTF8.data());
-
-    // create full cf_html string from the fragments
-    cf_html.append(startHTML);
-    cf_html.append(endHTML);
-    cf_html.append(startFragment);
-    cf_html.append(endFragment);
-    if (shouldFillSourceURL)
-        cf_html.append(sourceURL);
-    cf_html.append(startMarkup);
-    cf_html.append(endMarkup);
-
-    return cf_html;
-}
-
-String urlToMarkup(const KURL& url, const String& title)
-{
-    String markup("<a href=\"");
-    markup.append(url.url());
-    markup.append("\">");
-    markup.append(title);
-    markup.append("</a>");
-    return markup;
-}
-
-void replaceNBSP(String& str)
-{
-    const unsigned short NonBreakingSpaceCharacter = 0xA0;
-    str.replace(NonBreakingSpaceCharacter, " ");
-}
-
 Pasteboard* Pasteboard::generalPasteboard() 
 {
     static Pasteboard* pasteboard = new Pasteboard;
@@ -216,7 +114,7 @@ void Pasteboard::writeSelection(Range* selectedRange, bool canSmartCopyOrDelete,
     // Put CF_HTML format on the pasteboard 
     if (::OpenClipboard(m_owner)) {
         ExceptionCode ec = 0;
-        HGLOBAL cbData = createGlobalData(markupToCF_HTML(selectedRange->toHTML(), selectedRange->startContainer(ec)->document()->URL()));
+        HGLOBAL cbData = createGlobalData(markupToCF_HTML(createMarkup(selectedRange, 0, AnnotateForInterchange), selectedRange->startContainer(ec)->document()->URL()));
         if (!::SetClipboardData(HTMLClipboardFormat, cbData))
             ::GlobalFree(cbData);
         ::CloseClipboard();
@@ -224,7 +122,8 @@ void Pasteboard::writeSelection(Range* selectedRange, bool canSmartCopyOrDelete,
     
     // Put plain string on the pasteboard. CF_UNICODETEXT covers CF_TEXT as well
     String str = frame->selectedText();
-    replaceNBSP(str);
+    replaceNewlinesWithWindowsStyleNewlines(str);
+    replaceNBSPWithSpace(str);
     if (::OpenClipboard(m_owner)) {
         HGLOBAL cbData = createGlobalData(str);
         if (!::SetClipboardData(CF_UNICODETEXT, cbData))
@@ -354,34 +253,6 @@ String Pasteboard::plainText(Frame* frame)
     return String();
 }
 
-//Convert a String containing CF_HTML formatted text to a DocumentFragment
-//This is non-static so it can be used in DragDataWin.cpp as well
-DocumentFragment* fragmentFromCF_HTML(Document* doc, const String& cf_html)
-{        
-    // obtain baseURL if present
-    String srcURLStr("sourceURL:");
-    String srcURL;
-    unsigned lineStart = cf_html.find(srcURLStr, 0, false);
-    if (lineStart != -1) {
-        unsigned srcEnd = cf_html.find("\n", lineStart, false);
-        unsigned srcStart = lineStart+srcURLStr.length();
-        String rawSrcURL = cf_html.substring(srcStart, srcEnd-srcStart);
-        replaceNBSP(rawSrcURL);
-        srcURL = rawSrcURL.stripWhiteSpace();
-    }
-
-    // find the markup between "<!--StartFragment -->" and "<!--EndFragment -->", accounting for browser quirks
-    unsigned markupStart = cf_html.find("<html", 0, false);
-    unsigned tagStart = cf_html.find("startfragment", markupStart, false);
-    unsigned fragmentStart = cf_html.find('>', tagStart) + 1;
-    unsigned tagEnd = cf_html.find("endfragment", fragmentStart, false);
-    unsigned fragmentEnd = cf_html.reverseFind('<', tagEnd);
-    String markup = cf_html.substring(fragmentStart, fragmentEnd - fragmentStart).stripWhiteSpace();
-
-    return createFragmentFromMarkup(doc, markup, srcURL).releaseRef();
-}
-
-
 PassRefPtr<DocumentFragment> Pasteboard::documentFragment(Frame* frame, PassRefPtr<Range> context, bool allowPlainText, bool& chosePlainText)
 {
     chosePlainText = false;
@@ -395,7 +266,7 @@ PassRefPtr<DocumentFragment> Pasteboard::documentFragment(Frame* frame, PassRefP
             ::GlobalUnlock(cbData);
             ::CloseClipboard();
 
-            DocumentFragment* fragment = fragmentFromCF_HTML(frame->document(), cf_html);
+            PassRefPtr<DocumentFragment> fragment = fragmentFromCF_HTML(frame->document(), cf_html);
             if (fragment)
                 return fragment;
         } else 
