@@ -198,7 +198,7 @@ interface IWebEditingDelegate : IUnknown
     HRESULT learnWord([in] BSTR word);
     HRESULT checkSpellingOfString([in] IWebView* view, [in] LPCTSTR text, [in] int length, [out] int* misspellingLocation, [out] int* misspellingLength);
     HRESULT checkGrammarOfString([in] IWebView* view, [in] LPCTSTR text, [in] int length, [out] IEnumWebGrammarDetails** grammarDetails, [out] int* badGrammarLocation, [out] int* badGrammarLength);
-    HRESULT updateSpellingUIWithGrammarString([in] BSTR string, [in] BSTR userDescription, [in] BSTR* guesses, [in] int guessesCount);
+    HRESULT updateSpellingUIWithGrammarString([in] BSTR string, [in] int location, [in] int length, [in] BSTR userDescription, [in] BSTR* guesses, [in] int guessesCount);
     HRESULT updateSpellingUIWithMisspelledWord([in] BSTR word);
     HRESULT showSpellingUI([in] BOOL show);
     HRESULT spellingUIIsShowing([out, retval] BOOL* result);

@@ -1,3 +1,13 @@
+2007-05-08  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Ada.
+
+        Updated for new editor interface.
+
+        * platform/win/EditorWin.cpp:
+        (WebCore::Editor::advanceToNextMisspelling):
+        (WebCore::isRangeUngrammatical):
+
 2007-05-07  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by Oliver.

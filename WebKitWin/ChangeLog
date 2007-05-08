@@ -1,3 +1,14 @@
+2007-05-08  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Ada.
+        
+        Update editing delegate
+
+        * Interfaces/IWebEditingDelegate.idl:
+        * WebEditorClient.cpp:
+        (WebEditorClient::updateSpellingUIWithGrammarString):
+        * WebEditorClient.h:
+
 2007-05-07  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Darin.
