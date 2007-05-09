@@ -1,3 +1,25 @@
+2007-05-09  Mark Rowe  <mrowe@apple.com>
+
+       Merge fixes from ToT to Safari-2-0-branch.
+
+    2007-05-08  Bruce Q Hammond  <bruceq@apple.com>
+
+        Reviewed by Darin.
+
+        http://bugs.webkit.org/show_bug.cgi?id=13578
+        Bug 13578: When QD plugins draw to an offscreen bitmap the origin is not correct
+
+        Now we have correct handling of the origin when QD plugins draw to
+        offscreen bitmaps.
+        Also the clipping code for this path was doing unnecessary work which
+        caused incorrect results; it has been removed.
+        
+        This change should not affect Safari and in general will only affect
+        plugins (e.g. Flash) drawing to a CGBitmapContext.
+
+        * Plugins/WebBaseNetscapePluginView.mm:
+        (-[WebBaseNetscapePluginView saveAndSetNewPortStateForUpdate:]):
+
 2007-04-26  Mark Rowe  <mrowe@apple.com>
 
         Merge fixes from ToT to Safari-2-0-branch.
