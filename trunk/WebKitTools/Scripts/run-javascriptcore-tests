@@ -68,9 +68,6 @@ if (isOSX() and !isWx()) {
 exit WEXITSTATUS($result) if WEXITSTATUS($result);
 
 my $productDir = productDir();
-if (isWx()) {
-    $productDir = $FindBin::Bin . "/../../JavaScriptCore";
-}
 
 chdir "tests/mozilla" or die;
 

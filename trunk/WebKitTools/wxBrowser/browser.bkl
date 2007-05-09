@@ -10,7 +10,7 @@
     <include file="../../Bakefiles/presets.bkl"/>
     
     <template id="wxwebkit">
-        <lib-path>$(WEBKIT_ROOT)/WebKit/wx</lib-path>
+        <lib-path>$(WEBKITOUTPUTDIR)</lib-path>
         <sys-lib>wxwebkit</sys-lib>    
     </template>
     <exe id="wxBrowser" template="wx,xml2,iconv,xslt,icu,jscore,webcore,wxwebkit,curl,pthreads">

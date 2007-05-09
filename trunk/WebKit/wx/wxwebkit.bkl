@@ -12,7 +12,7 @@
     <dll id="wxwebkit-dynamic" template="wx,webcore,xml2,iconv,xslt,icu,jscore,curl,sqlite3,gtk,pthreads">
         <debug-info>on</debug-info>
         <runtime-libs>dynamic</runtime-libs>
-        
+        <dirname>$(WEBKITOUTPUTDIR)</dirname>
         <dllname>wxwebkit</dllname>
         <libname>wxwebkit</libname>
         

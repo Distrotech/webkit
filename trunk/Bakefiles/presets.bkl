@@ -42,6 +42,14 @@ and WebCore. Include this file to use these settings.
             </description>
         </option>
     </if>
+    <if cond="not isdefined('WEBKITOUTPUTDIR')">
+        <option name="WEBKITOUTPUTDIR" category="path">
+            <default-value>$(DOLLAR)(WEBKITOUTPUTDIR)</default-value>
+            <description>
+                The root directory containing WebKit sources
+            </description>
+        </option>
+    </if>
     
     <template id="jscore">
         <include>$(WEBKIT_ROOT)/JavaScriptCore</include>
@@ -51,11 +59,11 @@ and WebCore. Include this file to use these settings.
         </if>
         
         <if cond="FORMAT=='gnu'">
-            <ldflags>$(WEBKIT_ROOT)/JavaScriptCore/libjscore.a</ldflags>
+            <ldflags>$(WEBKITOUTPUTDIR)/libjscore.a</ldflags>
         </if>
 		<if cond="FORMAT in ['msvc','msvs2005prj']">
 			<sys-lib>jscore</sys-lib>
-			<lib-path>$(WEBKIT_ROOT)/JavaScriptCore</lib-path>
+			<lib-path>$(WEBKITOUTPUTDIR)</lib-path>
 		</if>
     </template>
 
@@ -109,11 +117,11 @@ and WebCore. Include this file to use these settings.
         <include>$(WEBKIT_ROOT)/WebCore/xml</include>
         
         <if cond="FORMAT=='gnu'">
-            <ldflags>$(WEBKIT_ROOT)/WebCore/Projects/wx/libwebcore-wx.a</ldflags>
+            <ldflags>$(WEBKITOUTPUTDIR)/libwebcore-wx.a</ldflags>
         </if>
 		<if cond="FORMAT in ['msvc','msvs2005prj']">
 			<sys-lib>webcore-wx</sys-lib>
-			<lib-path>$(WEBKIT_ROOT)/WebCore/Projects/wx</lib-path>
+			<lib-path>$(WEBKITOUTPUTDIR)</lib-path>
 		</if>
     </template>
 

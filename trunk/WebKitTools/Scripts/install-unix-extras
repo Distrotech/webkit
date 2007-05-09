@@ -61,8 +61,11 @@ ICONV_TARBALL="libiconv-$ICONV_VERSION.tar.gz"
 ICONV_URL="http://ftp.gnu.org/pub/gnu/libiconv/$ICONV_TARBALL"
 
 cd $DL_DIR
+
+ICU_CONFIG=`which icu-config`
+
+if [ ! -f "$ICU_CONFIG" ]; then
 # build ICU
-if [ `which icu-config >/dev/null 2>&1` ]; then
   $DL_CMD -o $DL_DIR/$ICU_TARBALL $ICU_URL
 
   tar xzvf $DL_DIR/$ICU_TARBALL
@@ -79,7 +82,9 @@ if [ `which icu-config >/dev/null 2>&1` ]; then
   rm -rf icu
 fi
 
-if [ `which gperf >/dev/null 2>&1` ]; then
+GPERF=`which gperf`
+
+if [ ! -f "$GPERF" ]; then
   $DL_CMD -o $DL_DIR/$GPERF_TARBALL $GPERF_URL
 
   tar xzvf $DL_DIR/$GPERF_TARBALL

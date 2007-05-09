@@ -51,6 +51,7 @@ wxWebCore port Bakefile project file.
         <pic>on</pic>
         <threading>multi</threading>
         <debug-info>on</debug-info>
+        <dirname>$(WEBKITOUTPUTDIR)</dirname>
 
         <define>BUILDING_WX__=1</define>
 		<define>WTF_USE_ICU_UNICODE=1</define>
@@ -124,6 +125,7 @@ wxWebCore port Bakefile project file.
     -->
     <lib id="wx-webcore-static" template="webcore-wx,wx-lib">
         <libname>webcore-wx</libname>
+        <dirname>$(WEBKITOUTPUTDIR)</dirname>
         <if cond="PLATFORM_WIN32=='1'">
             <define>WXUSINGDLL=1</define>
 	</if>

@@ -8,6 +8,8 @@ set -o errexit
 
 WK_ROOT=`pwd`/../..
 WK_ROOTDIR=$WK_ROOT
+export WXWEBKIT=1
+export WEBKITOUTPUTDIR=`perl -e "use webkitdirs; print baseProductDir()"`
 # TODO: check that we are running from the root of the source tree...
 
 
@@ -24,9 +26,16 @@ if [ $OSTYPE == cygwin ]; then
 else
     WX_PREFIX=`wx-config --prefix`
     if [ ! -d "$WX_PREFIX" ]; then
+        echo "ERROR: Cannot find your wxWidgets installation."
         echo "Make sure wx-config is on your PATH and points to a valid wxWidgets installation."
-	exit 1
+	    exit 1
     fi
+    if [ ! -d "$WX_PREFIX/share/bakefile" ]; then
+        echo "ERROR: wxWidgets installation does not have wxpresets."
+        echo "wx-config is pointing to an installation that does not have Bakefile presets installed. Run `wx-config --version` to ensure your wxWidgets is of version 2.8+."
+	    exit 1
+    fi    
+    
     if [ -z $BAKEFILE_PATHS ]; then
         export BAKEFILE_PATHS=$WX_PREFIX/share/bakefile
     fi
@@ -47,7 +56,8 @@ do_prep=0
 do_extras=0
 do_build=0
 do_clean=0
-other_args=
+make_args=''
+other_args=''
 
 for flag in $*; do
     case $flag in
@@ -57,7 +67,7 @@ for flag in $*; do
 	extras) do_extras=1                                    ;;
 	all)    do_extras=1; do_bake=1; do_prep=1; do_build=1  ;;
 	clean)  other_args=clean; do_clean=1                   ;;
-	*)      other_args='$other_args "$flag"'               ;;
+	*)      export $flag ;; #other_args='$other_args "$flag"'               ;;
     esac
 done
 
@@ -77,7 +87,7 @@ function do_make {
         nmake -f makefile.vc $@
         cd $olddir
     else
-        make -C $dir $@
+        make -C $dir $MAKE_ARGS $@
     fi
 }
 
@@ -87,8 +97,10 @@ if [ $do_clean == 1 ]; then
     rm -rf $WK_ROOT/JavaScriptCore/DerivedSources
     rm -rf $WK_ROOT/WebCore/DerivedSources
     rm -rf $WK_ROOT/WebCore/include/JavaScriptCore
+    rm -rf $WEBKITOUTPUTDIR
 else
 
+    mkdir -p $WEBKITOUTPUTDIR
     if [ $do_extras == 1 ]; then
         cd $WK_ROOT/WebKitTools/Scripts
         if [ $OSTYPE == cygwin ]; then
@@ -156,7 +168,28 @@ if [ $do_build == 1 -o $do_clean == 1 ]; then
         mkdir -p wxBrowser.app/Contents/Frameworks
         cp wxBrowser wxBrowser.app/Contents/MacOS
         install_name_tool -change libwxwebkit.dylib @executable_path/../Frameworks/libwxwebkit.dylib wxBrowser.app/Contents/MacOS/wxBrowser
-        cp $WK_ROOT/WebKit/wx/*.dylib wxBrowser.app/Contents/Frameworks
+        if [ ! -f "$WEBKITOUTPUTDIR/libwxwebkit.dylib" ]; then
+            ln -s $WEBKITOUTPUTDIR/libwxwebkit.dylib wxBrowser.app/Contents/Frameworks
+        fi
     fi
 fi
+
+echo ""
+echo ""
+echo "--- BUILD COMPLETE ---"
+echo ""
+echo "Next steps:"
+echo ""
+echo "-- Add WXWEBKIT=1 to your environment variables. This will let WebKit scripts know you're using the wx build."
+echo ""
+if [ "${OSTYPE:0:5}" = "linux" ]; then
+    echo "-- Add /usr/local/lib and $WEBKITOUTPUTDIR to your LD_LIBRARY_PATH environment variable."
+    echo ""
+fi
+echo "-- Run the 'run-javascriptcore-tests' script to ensure JSCore tests pass."
+echo ""
+echo "-- Run $WEBKITOUTPUTDIR/wxBrowser to test your wxWebKit build."
+echo ""
+echo ""
+
 cd $olddir

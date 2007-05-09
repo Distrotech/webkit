@@ -80,7 +80,7 @@ sub determineBaseProductDir
 {
     return if defined $baseProductDir;
     determineSourceDir();
-    if (isOSX()) {
+    if (!isWx() && isOSX()) {
         open PRODUCT, "defaults read com.apple.Xcode PBXProductDirectory 2> /dev/null |" or die;
         $baseProductDir = <PRODUCT>;
         close PRODUCT;
@@ -141,6 +141,9 @@ sub determineConfigurationProductDir
     determineBaseProductDir();
     if(isCygwin()) {
         $configurationProductDir = "$baseProductDir/bin";
+    }
+    elsif (isWx()){
+        $configurationProductDir = "$baseProductDir";
     } else {
         determineConfiguration();
         $configurationProductDir = "$baseProductDir/$configuration";
