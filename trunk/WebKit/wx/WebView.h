@@ -92,6 +92,7 @@ private:
     float m_textMagnifier;
     bool m_isEditable;
     bool m_isInitialized;
+    bool m_beingDestroyed;
 };
 
 // ----------------------------------------------------------------------------

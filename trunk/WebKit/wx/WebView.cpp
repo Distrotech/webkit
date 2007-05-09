@@ -153,6 +153,7 @@ wxWebView::wxWebView(wxWindow* parent, int id, const wxPoint& position,
     m_textMagnifier = 1.0;
     m_isEditable = false;
     m_isInitialized = false;
+    m_beingDestroyed = false;
 
     if (!wxScrolledWindow::Create(parent, id, position, size))
         return;
@@ -205,20 +206,13 @@ wxWebView::wxWebView(wxWindow* parent, int id, const wxPoint& position,
 
 wxWebView::~wxWebView()
 {
-    if (m_impl->frame && m_impl->frame->loader())
-        m_impl->frame->loader()->detachFromParent();
-
-    // FIXME: This keeps us from leaking frames, but we still
-    // leak Nodes and JSNodes.
+    m_beingDestroyed = true;
     
     // This test determines whether or not the frame is a subframe
     // or the main (top level) frame. If it's the main frame, then
     // delete its page to keep leaks from occurring
     if (!m_impl->frame->ownerElement())
         delete m_impl->frame->page();
-    
-    if (m_impl->frame)
-        m_impl->frame->deref();
 
     delete m_impl;
 }
@@ -344,6 +338,9 @@ void wxWebView::MakeEditable(bool enable)
 
 void wxWebView::OnPaint(wxPaintEvent& event)
 {
+if (m_beingDestroyed)
+    return;
+
 // FIXME: We should use buffered drawing under Win/Linux to avoid flicker and such.
 #if 0 //ndef __WXMAC__
     wxBufferedPaintDC dc(this, wxBUFFER_CLIENT_AREA);
