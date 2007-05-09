@@ -302,11 +302,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\WebJavaScriptCollector.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\WebKit.def"
+				RelativePath="..\WebCoreLocalizedStrings.cpp"
 				>
 			</File>
 			<File
@@ -315,18 +311,6 @@
 			</File>
 			<File
 				RelativePath="..\WebKitDLL.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\WebKitGraphics.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\WebKitStatistics.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\WebLocalizableStrings.cpp"
 				>
 			</File>
 		</Filter>
@@ -652,7 +636,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\WebJavaScriptCollector.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\WebKitLogging.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\WebKitStatistics.cpp"
 				>
 			</File>
 			<File
@@ -753,6 +745,22 @@
 			</File>
 			<File
 				RelativePath="..\WebInspector\WebInspector.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="API"
+			>
+			<File
+				RelativePath=".\WebKit.def"
+				>
+			</File>
+			<File
+				RelativePath="..\WebKitGraphics.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\WebLocalizableStrings.cpp"
 				>
 			</File>
 		</Filter>

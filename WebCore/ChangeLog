@@ -1,5 +1,13 @@
 2007-05-08  Steve Falkenburg  <sfalken@apple.com>
 
+        Reviewed by Darin, Oliver.
+
+        Removed localized string stubs.
+
+        * platform/win/TemporaryLinkStubs.cpp:
+
+2007-05-08  Steve Falkenburg  <sfalken@apple.com>
+
         Reviewed by Ada.
 
         Updated for new editor interface.
