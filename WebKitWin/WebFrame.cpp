@@ -1265,6 +1265,7 @@ Frame* WebFrame::createFrame(const KURL& URL, const String& name, HTMLFrameOwner
     coreFrame->tree()->appendChild(childFrame);
     childFrame->deref(); // Frames are created with a refcount of 1. Release this ref, since we've assigned it to d->frame.
     childFrame->tree()->setName(name);
+    childFrame->init();
 
     loadURLIntoChild(URL, referrer, webFrame.get());
 

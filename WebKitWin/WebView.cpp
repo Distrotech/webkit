@@ -1684,6 +1684,7 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     webFrame->Release(); // The WebFrame is owned by the Frame, so release our reference to it.
 
     m_page->mainFrame()->tree()->setName(String(frameName, SysStringLen(frameName)));
+    m_page->mainFrame()->init();
     m_page->setGroupName(m_groupName);
 
     #pragma warning(suppress: 4244)
@@ -2048,7 +2049,6 @@ HRESULT STDMETHODCALLTYPE WebView::stringByEvaluatingJavaScriptFromString(
     if (!coreFrame)
         return E_FAIL;
 
-    coreFrame->loader()->createEmptyDocument();
     KJS::JSValue* scriptExecutionResult = coreFrame->loader()->executeScript(0, WebCore::String(script), true);
     if(!scriptExecutionResult)
         return E_FAIL;

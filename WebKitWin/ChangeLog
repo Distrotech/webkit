@@ -1,3 +1,22 @@
+2007-05-10  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+
+        - WebKitWin part of fix for:
+        <rdar://problem/5063277> blank screen after login to Citibank Online (accessing document before frame starts loading cancels load)
+        <rdar://problem/5159541> REGRESSION (r20972): Wall Street Journal pages replaced by advertisements (13465)
+
+        The basic approach is to have Frames start out containing an empty document instead of absolutely nothing,
+        so there is no need to initialize them on demand. Various side effects of that cause both of these bugs.
+        
+        However, this caused many regressions so I had to fix the fallout.
+
+        * WebFrame.cpp:
+        (WebFrame::createFrame): init frame
+        * WebView.cpp:
+        (WebView::initWithFrame): init frame
+        (WebView::stringByEvaluatingJavaScriptFromString): don't create empty document
+
 2007-05-08  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Darin, Oliver.
