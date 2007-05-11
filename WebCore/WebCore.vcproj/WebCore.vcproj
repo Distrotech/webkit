@@ -4722,6 +4722,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderWordBreak.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RenderWordBreak.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\rendering\RootInlineBox.cpp"
 				>
 			</File>
