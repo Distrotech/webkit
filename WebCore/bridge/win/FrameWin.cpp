@@ -149,7 +149,7 @@ static void drawRectIntoContext(IntRect rect, FrameView* view, GraphicsContext* 
 HBITMAP imageFromSelection(Frame* frame, bool forceWhiteText)
 {
     frame->setPaintRestriction(forceWhiteText ? PaintRestrictionSelectionOnlyWhiteText : PaintRestrictionSelectionOnly);
-    FloatRect fr = frame->visibleSelectionRect();
+    FloatRect fr = frame->selectionRect();
     IntRect ir((int)fr.x(), (int)fr.y(),(int)fr.width(),(int)fr.height());
 
     void* bits;

@@ -1,3 +1,10 @@
+2007-05-10  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Hyatt.
+
+        * bridge/win/FrameWin.cpp:
+        (WebCore::imageFromSelection): Updated to use selectionRect instead of visibleSelectionRect
+        
 2007-05-08  Steve Falkenburg  <sfalken@apple.com>
 
         Rubber-stamped by Geoff.
