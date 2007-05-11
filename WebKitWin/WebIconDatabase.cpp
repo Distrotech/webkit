@@ -96,7 +96,7 @@ void WebIconDatabase::init()
             enabled = FALSE;
             LOG_ERROR("Unable to get icon database enabled preference");
         }
-    IconDatabase::sharedIconDatabase()->setEnabled(!!enabled);
+    iconDatabase()->setEnabled(!!enabled);
 
     BSTR prefDatabasePath = 0;
     if (FAILED(standardPrefs->iconDatabaseLocation(&prefDatabasePath)))
@@ -110,7 +110,7 @@ void WebIconDatabase::init()
         if (FAILED(userIconDatabasePath(databasePath)))
             LOG_ERROR("Failed to construct default icon database path");
 
-    if (!IconDatabase::sharedIconDatabase()->open(databasePath))
+    if (!iconDatabase()->open(databasePath))
             LOG_ERROR("Failed to open icon database path");
 }
 
@@ -179,7 +179,7 @@ HRESULT STDMETHODCALLTYPE WebIconDatabase::iconForURL(
 {
     IntSize intSize(*size);
 
-    Image* icon = IconDatabase::sharedIconDatabase()->iconForPageURL(String(url, SysStringLen(url)), intSize);
+    Image* icon = iconDatabase()->iconForPageURL(String(url, SysStringLen(url)), intSize);
 
     // Make sure we check for the case of an "empty image"
     if (icon && icon->width()) {
@@ -206,20 +206,20 @@ HRESULT STDMETHODCALLTYPE WebIconDatabase::defaultIconWithSize(
 HRESULT STDMETHODCALLTYPE WebIconDatabase::retainIconForURL(
         /* [in] */ BSTR url)
 {
-    IconDatabase::sharedIconDatabase()->retainIconForPageURL(String(url, SysStringLen(url)));
+    iconDatabase()->retainIconForPageURL(String(url, SysStringLen(url)));
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebIconDatabase::releaseIconForURL(
         /* [in] */ BSTR url)
 {
-    IconDatabase::sharedIconDatabase()->releaseIconForPageURL(String(url, SysStringLen(url)));
+    iconDatabase()->releaseIconForPageURL(String(url, SysStringLen(url)));
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebIconDatabase::removeAllIcons(void)
 {
-    IconDatabase::sharedIconDatabase()->removeAllIcons();
+    iconDatabase()->removeAllIcons();
     return S_OK;
 }
 
