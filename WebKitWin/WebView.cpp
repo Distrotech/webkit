@@ -2274,7 +2274,7 @@ HRESULT STDMETHODCALLTYPE WebView::selectionImageRect(RECT* rc)
     WebCore::Frame* frame = m_page->focusController()->focusedOrMainFrame();
 
     if (frame) {
-        IntRect ir = frame->selectionRect();
+        IntRect ir = enclosingIntRect(frame->selectionRect());
         ir = frame->view()->convertToContainingWindow(ir);
         ir.move(-frame->view()->scrollOffset().width(), -frame->view()->scrollOffset().height());
         rc->left = ir.x();
