@@ -29,6 +29,7 @@
 
 #include "DOMCoreClasses.h"
 #include "IWebNotification.h"
+#include "WebDebugProgram.h"
 #include "WebDocumentLoader.h"
 #include "WebEditorClient.h"
 #include "WebElementPropertyBag.h"
@@ -141,6 +142,7 @@ WebView::WebView()
             grammarCheckingEnabled = !!enabled;
     }
 
+    WebDebugProgram::viewAdded(this);
     WebViewCount++;
     gClassCount++;
 }
@@ -160,6 +162,7 @@ WebView::~WebView()
 
     delete m_page;
 
+    WebDebugProgram::viewRemoved(this);
     WebViewCount--;
     gClassCount--;
 }
@@ -638,7 +641,7 @@ bool WebView::handleContextMenuEvent(WPARAM wParam, LPARAM lParam)
         m_uiDelegate->hasCustomMenuImplementation(&hasCustomMenus);
 
     if (hasCustomMenus)
-        m_uiDelegate->trackCustomPopupMenu((IWebView*)this, coreMenu->platformDescription(), &point);
+        m_uiDelegate->trackCustomPopupMenu((IWebView*)this, (OLE_HANDLE)(ULONG64)coreMenu->platformDescription(), &point);
     else {
         // Surprisingly, TPM_RIGHTBUTTON means that items are selectable with either the right OR left mouse button
         UINT flags = TPM_RIGHTBUTTON | TPM_TOPALIGN | TPM_VERPOSANIMATION | TPM_HORIZONTAL
@@ -691,7 +694,7 @@ bool WebView::onInitMenuPopup(WPARAM wParam, LPARAM /*lParam*/)
     if (!hasCustomMenus)
         return false;
 
-    m_uiDelegate->addCustomMenuDrawingData((IWebView*)this, menu);
+    m_uiDelegate->addCustomMenuDrawingData((IWebView*)this, (OLE_HANDLE)(ULONG64)menu);
     return true;
 }
 
@@ -709,7 +712,7 @@ bool WebView::onUninitMenuPopup(WPARAM wParam, LPARAM /*lParam*/)
     if (!hasCustomMenus)
         return false;
 
-    m_uiDelegate->cleanUpCustomMenuDrawingData((IWebView*)this, menu);
+    m_uiDelegate->cleanUpCustomMenuDrawingData((IWebView*)this, (OLE_HANDLE)(ULONG64)menu);
     return true;
 }
 
@@ -1200,7 +1203,7 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             COMPtr<IWebUIDelegatePrivate> uiDelegatePrivate;
             if (SUCCEEDED(webView->uiDelegate(&uiDelegate)) && uiDelegate &&
                 SUCCEEDED(uiDelegate->QueryInterface(IID_IWebUIDelegatePrivate, (void**) &uiDelegatePrivate)) && uiDelegatePrivate)
-                uiDelegatePrivate->webViewLostFocus(webView, reinterpret_cast<HWND>(wParam));
+                uiDelegatePrivate->webViewLostFocus(webView, (OLE_HANDLE)(ULONG64)wParam);
             // FIXME: Merge this logic with updateActiveState, and switch this over to use updateActiveState
 
             // However here we have to be careful.  If we are losing focus because of a deactivate,
@@ -1566,6 +1569,8 @@ HRESULT STDMETHODCALLTYPE WebView::QueryInterface(REFIID riid, void** ppvObject)
         *ppvObject = static_cast<IWebViewEditingActions*>(this);
     else if (IsEqualGUID(riid, IID_IWebNotificationObserver))
         *ppvObject = static_cast<IWebNotificationObserver*>(this);
+    else if (IsEqualGUID(riid, IID_IDropTarget))
+        *ppvObject = static_cast<IDropTarget*>(this);
     else
         return E_NOINTERFACE;
 
@@ -1615,8 +1620,7 @@ HRESULT STDMETHODCALLTYPE WebView::canShowMIMETypeAsHTML(
 }
 
 HRESULT STDMETHODCALLTYPE WebView::MIMETypesShownAsHTML( 
-    /* [out] */ int* /*count*/,
-    /* [retval][out] */ BSTR** /*mimeTypes*/) 
+    /* [retval][out] */ IEnumVARIANT** /*enumVariant*/)
 {
     ASSERT_NOT_REACHED();
     return E_NOTIMPL;
@@ -2106,8 +2110,9 @@ HRESULT STDMETHODCALLTYPE WebView::preferencesIdentifier(
 }
 
 HRESULT STDMETHODCALLTYPE WebView::setHostWindow( 
-    /* [in] */ HWND window)
+    /* [in] */ OLE_HANDLE oleWindow)
 {
+    HWND window = (HWND)(ULONG64)oleWindow;
     if (m_viewWindow && window)
         SetParent(m_viewWindow, window);
 
@@ -2117,9 +2122,9 @@ HRESULT STDMETHODCALLTYPE WebView::setHostWindow(
 }
 
 HRESULT STDMETHODCALLTYPE WebView::hostWindow( 
-    /* [retval][out] */ HWND* window)
+    /* [retval][out] */ OLE_HANDLE* window)
 {
-    *window = m_hostWindow;
+    *window = (OLE_HANDLE)(ULONG64)m_hostWindow;
     return S_OK;
 }
 
@@ -2257,14 +2262,16 @@ HRESULT STDMETHODCALLTYPE WebView::rectsForTextMatches(
     return createMatchEnumerator(&allRects, pmatches);
 }
 
-HRESULT STDMETHODCALLTYPE WebView::generateSelectionImage(BOOL forceWhiteText, HBITMAP* image)
+HRESULT STDMETHODCALLTYPE WebView::generateSelectionImage(BOOL forceWhiteText, OLE_HANDLE* hBitmap)
 {
-    *image = 0;
+    *hBitmap = 0;
 
     WebCore::Frame* frame = m_page->focusController()->focusedOrMainFrame();
 
-    if (frame)
-        *image = imageFromSelection(frame, forceWhiteText ? TRUE : FALSE);
+    if (frame) {
+        HBITMAP bitmap = imageFromSelection(frame, forceWhiteText ? TRUE : FALSE);
+        *hBitmap = (OLE_HANDLE)(ULONG64)bitmap;
+    }
 
     return S_OK;
 }
@@ -2364,8 +2371,7 @@ HRESULT STDMETHODCALLTYPE WebView::elementAtPoint(
 }
     
 HRESULT STDMETHODCALLTYPE WebView::pasteboardTypesForSelection( 
-        /* [out][in] */ int* /*count*/,
-        /* [retval][out] */ BSTR** /*types*/)
+    /* [retval][out] */ IEnumVARIANT** /*enumVariant*/)
 {
     ASSERT_NOT_REACHED();
     return E_NOTIMPL;
@@ -2381,9 +2387,8 @@ HRESULT STDMETHODCALLTYPE WebView::writeSelectionWithPasteboardTypes(
 }
     
 HRESULT STDMETHODCALLTYPE WebView::pasteboardTypesForElement( 
-        /* [in] */ IPropertyBag* /*elementDictionary*/,
-        /* [out][in] */ int* /*count*/,
-        /* [retval][out] */ BSTR** /*types*/)
+    /* [in] */ IPropertyBag* /*elementDictionary*/,
+    /* [retval][out] */ IEnumVARIANT** /*enumVariant*/)
 {
     ASSERT_NOT_REACHED();
     return E_NOTIMPL;
@@ -2491,7 +2496,7 @@ HRESULT STDMETHODCALLTYPE WebView::mainFrameTitle(
 }
     
 HRESULT STDMETHODCALLTYPE WebView::mainFrameIcon( 
-        /* [retval][out] */ HBITMAP* /*icon*/)
+        /* [retval][out] */ OLE_HANDLE* /*hBitmap*/)
 {
     ASSERT_NOT_REACHED();
     return E_NOTIMPL;
@@ -2598,6 +2603,7 @@ HRESULT STDMETHODCALLTYPE WebView::makeTextSmaller(
 }
 
 HRESULT STDMETHODCALLTYPE WebView::canMakeTextStandardSize( 
+    /* [in] */ IUnknown* /*sender*/,
     /* [retval][out] */ BOOL* result)
 {
     bool notAlreadyStandard = m_textSizeMultiplier != 1.0f;
@@ -3190,9 +3196,9 @@ HRESULT STDMETHODCALLTYPE WebView::inViewSourceMode(
 }
 
 HRESULT STDMETHODCALLTYPE WebView::viewWindow( 
-        /* [retval][out] */ HWND *window)
+        /* [retval][out] */ OLE_HANDLE *window)
 {
-    *window = m_viewWindow;
+    *window = (OLE_HANDLE)(ULONG64)m_viewWindow;
     return S_OK;
 }
 

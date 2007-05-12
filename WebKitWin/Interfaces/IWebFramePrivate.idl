@@ -64,8 +64,8 @@ typedef enum {
 } WebFrameLoadType;
 
 [
-    local,
     object,
+    oleautomation,
     uuid(A1657D07-4881-4475-9D10-76548731D448),
     pointer_default(unique)
 ]
@@ -82,7 +82,7 @@ interface IWebFramePrivate : IUnknown
 
     HRESULT setInPrintingMode([in] BOOL value, [in] HDC printDC);
     HRESULT getPrintedPageCount([in] HDC printDC, [out, retval] UINT* pageCount);
-    HRESULT spoolPages([in] HDC printDC, [in] UINT startPage, [in] UINT endPage, [out, retval] void* ctx);
+    [local] HRESULT spoolPages([in] HDC printDC, [in] UINT startPage, [in] UINT endPage, [out, retval] void* ctx);
 
     HRESULT isFrameSet([out, retval] BOOL* result);
     HRESULT string([out, retval] BSTR* result);

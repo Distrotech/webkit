@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,7 +24,7 @@
  */
 
 cpp_quote("/*")
-cpp_quote(" * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.")
+cpp_quote(" * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.")
 cpp_quote(" *")
 cpp_quote(" * Redistribution and use in source and binary forms, with or without")
 cpp_quote(" * modification, are permitted provided that the following conditions")
@@ -79,8 +79,8 @@ interface IWebView;
 */
 
 [
-    local,
     object,
+    oleautomation,
     uuid(4CD809C2-73A5-44ee-B0D7-D1863DFE9F57),
     pointer_default(unique)
 ]
@@ -153,7 +153,7 @@ interface IWebFrameLoadDelegate : IUnknown
         @param frame The frame for which a page icon has been received
         - (void)webView:(WebView *)sender didReceiveIcon:(NSImage *)image forFrame:(WebFrame *)frame;
     */
-    HRESULT didReceiveIcon([in] IWebView* webView, [in] HBITMAP image, [in] IWebFrame* frame);
+    HRESULT didReceiveIcon([in] IWebView* webView, [in] OLE_HANDLE hBitmap, [in] IWebFrame* frame);
 
     /*!
         @method webView:didFinishLoadForFrame:
@@ -231,5 +231,5 @@ interface IWebFrameLoadDelegate : IUnknown
         @param windowScriptObject The WebScriptObject for the window in the scripting environment.
         - (void)webView:(WebView *)webView windowScriptObjectAvailable:(WebScriptObject *)windowScriptObject;
     */
-    HRESULT windowScriptObjectAvailable([in] IWebView* webView, [in] JSContextRef context, [in] JSObjectRef windowScriptObject);
+    [local] HRESULT windowScriptObjectAvailable([in] IWebView* webView, [in] JSContextRef context, [in] JSObjectRef windowScriptObject);
 }

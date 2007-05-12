@@ -755,59 +755,98 @@ HRESULT STDMETHODCALLTYPE WebFrame::parentFrame(
     return hr;
 }
 
-HRESULT STDMETHODCALLTYPE WebFrame::childFrames( 
-    /* [out] */ unsigned* frameCount,
-    /* [retval][out] */ SAFEARRAY** frames)
+class EnumChildFrames : public IEnumVARIANT
 {
-    if (!frameCount || !frames) {
-        ASSERT_NOT_REACHED();
-        return E_POINTER;
-    }
+public:
+    EnumChildFrames(Frame* f) : m_refCount(1), m_frame(f), m_curChild(f ? f->tree()->firstChild() : 0) { }
 
-    *frameCount = 0;
-    *frames = 0;
-    
-    Frame* coreFrame = core(this);
-    if (!coreFrame)
-        return E_FAIL;
+    virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject)
+    {
+        *ppvObject = 0;
+        if (IsEqualGUID(riid, IID_IUnknown) || IsEqualGUID(riid, IID_IEnumVARIANT))
+            *ppvObject = this;
+        else
+            return E_NOINTERFACE;
 
-    unsigned childCount = coreFrame->tree()->childCount();
-    if (!childCount)
+        AddRef();
         return S_OK;
-
-    SAFEARRAY* children = SafeArrayCreateVector(VT_UNKNOWN, 0, childCount);
-    if (!children)
-        return E_OUTOFMEMORY;
-
-    unsigned i = 0;
-    for (Frame* child = coreFrame->tree()->firstChild(); child; child = child->tree()->nextSibling()) {
-        ASSERT(i < childCount);
-
-        WebFrame* webFrame = kit(child);
-        if (!webFrame) {
-            SafeArrayDestroy(children);
-            return E_FAIL;
-        }
-
-        COMPtr<IUnknown> unknown;
-        HRESULT hr = webFrame->QueryInterface(IID_IUnknown, (void**)&unknown);
-        if (FAILED(hr)) {
-            SafeArrayDestroy(children);
-            return hr;
-        }
-
-        LONG longI = i;
-        hr = SafeArrayPutElement(children, &longI, unknown.get());
-        if (FAILED(hr)) {
-            SafeArrayDestroy(children);
-            return hr;
-        }
-
-        ++i;
     }
 
-    *frameCount = childCount;
-    *frames = children;
+    virtual ULONG STDMETHODCALLTYPE AddRef(void)
+    {
+        return ++m_refCount;
+    }
+
+    virtual ULONG STDMETHODCALLTYPE Release(void)
+    {
+        ULONG newRef = --m_refCount;
+        if (!newRef)
+            delete(this);
+        return newRef;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE Next(ULONG celt, VARIANT *rgVar, ULONG *pCeltFetched)
+    {
+        if (pCeltFetched)
+            *pCeltFetched = 0;
+        if (!rgVar)
+            return E_POINTER;
+        VariantInit(rgVar);
+        if (!celt || celt > 1)
+            return S_FALSE;
+        if (!m_frame || !m_curChild)
+            return S_FALSE;
+
+        WebFrame* webFrame = kit(m_curChild);
+        IUnknown* unknown;
+        HRESULT hr = webFrame->QueryInterface(IID_IUnknown, (void**)&unknown);
+        if (FAILED(hr))
+            return hr;
+
+        V_VT(rgVar) = VT_UNKNOWN;
+        V_UNKNOWN(rgVar) = unknown;
+
+        m_curChild = m_curChild->tree()->nextSibling();
+        if (pCeltFetched)
+            *pCeltFetched = 1;
+        return S_OK;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE Skip(ULONG celt)
+    {
+        if (!m_frame)
+            return S_FALSE;
+        for (unsigned i = 0; i < celt && m_curChild; i++)
+            m_curChild = m_curChild->tree()->nextSibling();
+        return m_curChild ? S_OK : S_FALSE;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE Reset(void)
+    {
+        if (!m_frame)
+            return S_FALSE;
+        m_curChild = m_frame->tree()->firstChild();
+        return S_OK;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE Clone(IEnumVARIANT**)
+    {
+        return E_NOTIMPL;
+    }
+
+private:
+    ULONG m_refCount;
+    Frame* m_frame;
+    Frame* m_curChild;
+};
+
+HRESULT STDMETHODCALLTYPE WebFrame::childFrames( 
+    /* [retval][out] */ IEnumVARIANT **enumFrames)
+{
+    if (!enumFrames)
+        return E_POINTER;
+
+    *enumFrames = new EnumChildFrames(core(this));
     return S_OK;
 }
 
@@ -914,7 +953,7 @@ void WebFrame::initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, 
     d->webView->Release(); // don't hold the extra ref
 
     HWND viewWindow;
-    d->webView->viewWindow(&viewWindow);
+    d->webView->viewWindow((OLE_HANDLE*)&viewWindow);
 
     this->AddRef(); // We release this ref in frameLoaderDestroyed()
     Frame* frame = new Frame(page, ownerElement, this);

@@ -102,7 +102,7 @@ ULONG STDMETHODCALLTYPE DefaultDownloadDelegate::Release()
     return newRef;
 }
 
-HRESULT STDMETHODCALLTYPE DefaultDownloadDelegate::decideDestinationWithSuggestedFilename(IWebDownload* download, BSTR filename)
+HRESULT STDMETHODCALLTYPE DefaultDownloadDelegate::decideDestinationWithSuggestedFilename(IWebDownload *download, BSTR filename)
 {
     LOG(Download, "DefaultDownloadDelegate %p - decideDestinationWithSuggestedFilename %s", download, String(filename, SysStringLen(filename)).ascii().data());
 

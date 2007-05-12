@@ -175,7 +175,7 @@ HRESULT STDMETHODCALLTYPE WebIconDatabase::iconForURL(
         /* [in] */ BSTR url,
         /* [optional][in] */ LPSIZE size,
         /* [optional][in] */ BOOL /*cache*/,
-        /* [retval][out] */ HBITMAP* bitmap)
+        /* [retval][out] */ OLE_HANDLE* bitmap)
 {
     IntSize intSize(*size);
 
@@ -183,8 +183,8 @@ HRESULT STDMETHODCALLTYPE WebIconDatabase::iconForURL(
 
     // Make sure we check for the case of an "empty image"
     if (icon && icon->width()) {
-        *bitmap = getOrCreateSharedBitmap(size);
-        if (!icon->getHBITMAP(*bitmap)) {
+        *bitmap = (OLE_HANDLE)(ULONG64)getOrCreateSharedBitmap(size);
+        if (!icon->getHBITMAP((HBITMAP)(ULONG64)*bitmap)) {
             LOG_ERROR("Failed to draw Image to HBITMAP");
             *bitmap = 0;
             return E_FAIL;
@@ -197,9 +197,9 @@ HRESULT STDMETHODCALLTYPE WebIconDatabase::iconForURL(
 
 HRESULT STDMETHODCALLTYPE WebIconDatabase::defaultIconWithSize(
         /* [in] */ LPSIZE size,
-        /* [retval][out] */ HBITMAP* result)
+        /* [retval][out] */ OLE_HANDLE* result)
 {
-    *result = getOrCreateDefaultIconBitmap(size);
+    *result = (OLE_HANDLE)(ULONG64)getOrCreateDefaultIconBitmap(size);
     return S_OK;
 }
 

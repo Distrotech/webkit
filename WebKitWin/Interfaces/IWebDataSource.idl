@@ -77,8 +77,8 @@ interface IWebDocumentRepresentation;
     WebDataSources are typically related to a view by their containing WebFrame.
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(5221A975-AE09-4a7b-A4DF-E3B1B5F38A21),
     pointer_default(unique)
 ]
@@ -200,7 +200,7 @@ interface IWebDataSource : IUnknown
         @description The returned array only contains subresources that have fully downloaded.
         - (NSArray *)subresources;
     */
-    HRESULT subresources([out] int* resourceCount, [out, retval] IWebResource*** resources);
+    HRESULT subresources([out, retval] IEnumVARIANT** enumResources);
 
     /*!
         method subresourceForURL:
@@ -227,8 +227,8 @@ interface IWebDataSource : IUnknown
 }
 
 [
-    local,
     object,
+    oleautomation,
     uuid(4B80B7D4-98D7-4a80-AF46-2AF84B2F2E8F),
     pointer_default(unique)
 ]

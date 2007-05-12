@@ -771,8 +771,9 @@ public:
     virtual HRESULT STDMETHODCALLTYPE coreElement( 
         void** element);
 
-    virtual BOOL STDMETHODCALLTYPE isEqual( 
-        /* [in] */ IDOMElement* other);
+    virtual HRESULT STDMETHODCALLTYPE isEqual( 
+        /* [in] */ IDOMElement *other,
+        /* [retval][out] */ BOOL *result);
 
     virtual HRESULT STDMETHODCALLTYPE isFocused( 
         /* [retval][out] */ BOOL *result);

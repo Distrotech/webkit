@@ -89,8 +89,7 @@ public:
         /* [retval][out] */ IWebResource **resource);
     
     virtual HRESULT STDMETHODCALLTYPE subresources( 
-        /* [out] */ int *resourceCount,
-        /* [retval][out] */ IWebResource ***resources);
+        /* [retval][out] */ IEnumVARIANT **enumResources);
     
     virtual HRESULT STDMETHODCALLTYPE subresourceForURL( 
         /* [in] */ BSTR url,

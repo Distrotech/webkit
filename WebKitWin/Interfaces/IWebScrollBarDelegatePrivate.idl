@@ -50,12 +50,13 @@ cpp_quote(" */")
 
 import "oaidl.idl";
 import "ocidl.idl";
+import "IWebScrollBarPrivate.idl";
 
 interface IWebScrollBarPrivate;
 
 [
-    local,
     object,
+    oleautomation,
     uuid(2E8D56AF-3BF5-4e17-BDA6-01692ACBE3D5),
     pointer_default(unique)
 ]

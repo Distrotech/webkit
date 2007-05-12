@@ -68,11 +68,11 @@ public:
         /* [in] */ BSTR url,
         /* [optional][in] */ LPSIZE size,
         /* [optional][in] */ BOOL cache,
-        /* [retval][out] */ HBITMAP *image);
+        /* [retval][out] */ OLE_HANDLE *image);
     
     virtual HRESULT STDMETHODCALLTYPE defaultIconWithSize( 
         /* [in] */ LPSIZE size,
-        /* [retval][out] */ HBITMAP *result);
+        /* [retval][out] */ OLE_HANDLE *result);
     
     virtual HRESULT STDMETHODCALLTYPE retainIconForURL( 
         /* [in] */ BSTR url);

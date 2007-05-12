@@ -52,6 +52,7 @@ import "oaidl.idl";
 import "ocidl.idl";
 import "IWebNotification.idl";
 import "DOMCore.idl";
+import "DOMCSS.idl";
 import "DOMRange.idl";
 import "IWebUndoManager.idl";
 import "IWebView.idl";
@@ -68,8 +69,8 @@ typedef enum _WebViewInsertAction {
 } WebViewInsertAction;
 
 [
-    local,
     object,
+    oleautomation,
     uuid(B0F960E7-FB81-447f-A958-E02DA02ADBB7),
     pointer_default(unique)
 ]
@@ -82,8 +83,8 @@ interface IEnumSpellingGuesses : IUnknown
 };
 
 [
-    local,
     object,
+    oleautomation,
     uuid(8B95C1B3-E1B3-4f97-80D6-2240417E3E0C),
     pointer_default(unique)
 ]
@@ -96,8 +97,8 @@ interface IWebGrammarDetail : IUnknown
 }
 
 [
-    local,
     object,
+    oleautomation,
     uuid(FABCC69A-5917-4242-A19A-42E8B62227A7),
     pointer_default(unique)
 ]
@@ -113,8 +114,8 @@ interface IEnumWebGrammarDetails : IUnknown
     @interface NSObject (WebViewEditingDelegate)
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(2C75A1E3-EE9D-45c8-A385-19DE68AC5675),
     pointer_default(unique)
 ]

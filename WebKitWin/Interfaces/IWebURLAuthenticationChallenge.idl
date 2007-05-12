@@ -64,8 +64,8 @@ typedef enum {
 } WebURLCredentialPersistence;
 
 [
-    local,
     object,
+    oleautomation,
     uuid(5382DABA-C3C3-40c5-AA40-04079F11A844),
     pointer_default(unique)
 ]
@@ -113,8 +113,8 @@ interface IWebURLAuthenticationChallenge : IUnknown
 }
 
 [
-    local,
     object,
+    oleautomation,
     uuid(9360D6FB-186C-4ff7-AE57-D1B973DA0D1C),
     pointer_default(unique)
 ]
@@ -150,8 +150,9 @@ cpp_quote("#define WebURLAuthenticationMethodHTTPDigest TEXT(\"WebURLAuthenticat
 cpp_quote("#define WebURLAuthenticationMethodHTMLForm TEXT(\"WebURLAuthenticationMethodHTMLForm\")")
 
 [
-    local,
     object,
+    oleautomation,
+    hidden,
     uuid(71D2622A-3FF2-404b-BD45-C60659C901AF),
     pointer_default(unique)
 ]
@@ -209,8 +210,9 @@ interface IWebURLProtectionSpace : IUnknown
 }
 
 [
-    local,
     object,
+    oleautomation,
+    hidden,
     uuid(A1E9D765-FACE-4189-BBE3-AED7EBF65EBD),
     pointer_default(unique)
 ]

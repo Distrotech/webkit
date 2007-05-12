@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -55,8 +55,8 @@ import "IWebHistoryItem.idl";
 interface IWebHistoryItem;
 
 [
-    local,
     object,
+    oleautomation,
     uuid(0296A841-F6B1-4334-B146-7F9542CF24C3),
     pointer_default(unique)
 ]

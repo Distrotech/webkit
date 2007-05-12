@@ -1,3 +1,194 @@
+2007-05-11  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Darin, Ada.
+
+        WebKit DCOM compatibility.
+        When a WebKit hosting app calls RunAsLocalServer, the class object for CLSID_WebDebugProgram
+        is registered to allow creation across processes.  This is for future compatibility with
+        Drosera.
+
+        Added new exported function: RunAsLocalServer.
+        This exposes WebKit inside the running exe as a LocalServer32 (COM server), which
+        will allow Drosera to connect to it via DCOM.
+
+        We use the DCOM Universal Marshaller from oleaut32.dll, which performs marshalling
+        based on type libraries, so as part of this change, I've done some work on making our
+        interfaces compatible with this marshaller.
+        
+        Updated for compatibility w/ COM automation, and fixed up our type library.        
+        Added type library registration/unregistration code.
+        Marked methods not compatible w/ automation/marshalling as [local].
+        
+        As a side-effect, with these changes, the .NET tlbimp tool can create a .NET interop
+        assembly to theoretically allow WebKit to be invoked from .NET apps.  I haven't
+        tried this.  It could end up being useful to drive API testing.
+        
+        To test, I wrote a small app that calls:
+        ::CoCreateInstance(CLSID_IWebDebugProgram, 0, CLSCTX_LOCAL_SERVER, IID_IUnknown, (void**)&viewUnknown);
+        Using this instantiated class, I'm able to iterate the exisitng webviews and retrieve their
+        source, title, URL, etc.
+        
+        * DOMCoreClasses.cpp:
+        (DOMElement::isEqual):
+        * DOMCoreClasses.h:
+        * DefaultDownloadDelegate.cpp:
+        (DefaultDownloadDelegate::decideDestinationWithSuggestedFilename):
+        * DefaultDownloadDelegate.h:
+        * Interfaces/DOMCSS.idl:
+        * Interfaces/DOMCore.idl:
+        * Interfaces/DOMEvents.idl:
+        * Interfaces/DOMExtensions.idl:
+        * Interfaces/DOMHTML.idl:
+        * Interfaces/DOMPrivate.idl:
+        * Interfaces/DOMRange.idl:
+        * Interfaces/DOMWindow.idl:
+        * Interfaces/IWebArchive.idl:
+        * Interfaces/IWebAttributedString.idl: Removed.
+        * Interfaces/IWebBackForwardList.idl:
+        * Interfaces/IWebBackForwardListPrivate.idl:
+        * Interfaces/IWebCache.idl:
+        * Interfaces/IWebDataSource.idl:
+        * Interfaces/IWebDebugProgram.idl: Added.
+        * Interfaces/IWebDocument.idl:
+        * Interfaces/IWebDownload.idl:
+        * Interfaces/IWebEditingDelegate.idl:
+        * Interfaces/IWebError.idl:
+        * Interfaces/IWebFormDelegate.idl:
+        * Interfaces/IWebFrame.idl:
+        * Interfaces/IWebFrameLoadDelegate.idl:
+        * Interfaces/IWebFrameLoadDelegatePrivate.idl:
+        * Interfaces/IWebFramePrivate.idl:
+        * Interfaces/IWebFrameView.idl:
+        * Interfaces/IWebHTMLRepresentation.idl:
+        * Interfaces/IWebHTTPURLResponse.idl:
+        * Interfaces/IWebHistory.idl:
+        * Interfaces/IWebHistoryItem.idl:
+        * Interfaces/IWebHistoryItemPrivate.idl:
+        * Interfaces/IWebIconDatabase.idl:
+        * Interfaces/IWebJavaScriptCollector.idl:
+        * Interfaces/IWebKitStatistics.idl:
+        * Interfaces/IWebMutableURLRequest.idl:
+        * Interfaces/IWebNotification.idl:
+        * Interfaces/IWebNotificationCenter.idl:
+        * Interfaces/IWebNotificationObserver.idl:
+        * Interfaces/IWebPolicyDelegate.idl:
+        * Interfaces/IWebPreferences.idl:
+        * Interfaces/IWebResource.idl:
+        * Interfaces/IWebResourceLoadDelegate.idl:
+        * Interfaces/IWebResourceLoadDelegatePrivate.idl:
+        * Interfaces/IWebScriptObject.idl:
+        * Interfaces/IWebScrollBarDelegatePrivate.idl:
+        * Interfaces/IWebScrollBarPrivate.idl:
+        * Interfaces/IWebUIDelegate.idl:
+        * Interfaces/IWebUIDelegatePrivate.idl:
+        * Interfaces/IWebURLAuthenticationChallenge.idl:
+        * Interfaces/IWebURLRequest.idl:
+        * Interfaces/IWebURLResponse.idl:
+        * Interfaces/IWebUndoManager.idl:
+        * Interfaces/IWebUndoTarget.idl:
+        * Interfaces/IWebView.idl:
+        * Interfaces/IWebViewPrivate.idl:
+        * Interfaces/WebKit.idl:
+        * WebContextMenuClient.cpp:
+        (WebContextMenuClient::getCustomMenuFromDefaultItems):
+        * WebDataSource.cpp:
+        (WebDataSource::subresources):
+        * WebDataSource.h:
+        * WebDebugProgram.cpp: Added.
+        (EnumViews::EnumViews):
+        (EnumViews::QueryInterface):
+        (EnumViews::AddRef):
+        (EnumViews::Release):
+        (EnumViews::Next):
+        (EnumViews::Skip):
+        (EnumViews::Reset):
+        (EnumViews::Clone):
+        (WebDebugProgram::WebDebugProgram):
+        (WebDebugProgram::~WebDebugProgram):
+        (WebDebugProgram::createInstance):
+        (WebDebugProgram::QueryInterface):
+        (WebDebugProgram::AddRef):
+        (WebDebugProgram::Release):
+        (WebDebugProgram::viewAdded):
+        (WebDebugProgram::viewRemoved):
+        (WebDebugProgram::attach):
+        (WebDebugProgram::detach):
+        (WebDebugProgram::statistics):
+        (WebDebugProgram::webViews):
+        * WebDebugProgram.h: Added.
+        * WebDropSource.cpp:
+        (generateMouseEvent):
+        * WebError.cpp:
+        (WebError::localizedRecoveryOptions):
+        * WebError.h:
+        * WebFrame.cpp:
+        (EnumChildFrames::EnumChildFrames):
+        (EnumChildFrames::QueryInterface):
+        (EnumChildFrames::AddRef):
+        (EnumChildFrames::Release):
+        (EnumChildFrames::Next):
+        (EnumChildFrames::Skip):
+        (EnumChildFrames::Reset):
+        (EnumChildFrames::Clone):
+        (WebFrame::childFrames):
+        (WebFrame::initWithWebFrameView):
+        * WebFrame.h:
+        * WebHistoryItem.cpp:
+        (WebHistoryItem::icon):
+        * WebHistoryItem.h:
+        * WebIconDatabase.cpp:
+        (WebIconDatabase::iconForURL):
+        (WebIconDatabase::defaultIconWithSize):
+        * WebIconDatabase.h:
+        * WebInspector/WebInspector.cpp:
+        (WebInspector::WebInspector):
+        (WebInspector::show):
+        (WebInspector::onDestroy):
+        (WebInspector::onSize):
+        * WebInspector/WebInspector.h:
+        (WebInspector::didReceiveIcon):
+        (WebInspector::webViewFirstResponder):
+        (WebInspector::makeFirstResponder):
+        (WebInspector::contextMenuItemsForElement):
+        (WebInspector::trackCustomPopupMenu):
+        (WebInspector::addCustomMenuDrawingData):
+        (WebInspector::cleanUpCustomMenuDrawingData):
+        * WebKit.vcproj/Interfaces.vcproj:
+        * WebKit.vcproj/WebKit.def:
+        * WebKit.vcproj/WebKit.vcproj:
+        * WebKit.vcproj/WebKitGUID.vcproj:
+        * WebKit.vcproj/WebKit_debug.def:
+        * WebKitClassFactory.cpp:
+        (WebKitClassFactory::CreateInstance):
+        * WebKitDLL.cpp:
+        (DllGetClassObject):
+        (DllUnregisterServer):
+        (DllRegisterServer):
+        (RunAsLocalServer):
+        * WebKitStatistics.cpp:
+        * WebScrollBar.cpp:
+        (WebScrollBar::init):
+        (WebScrollBar::handleMouseEvent):
+        * WebScrollBar.h:
+        * WebView.cpp:
+        (WebView::WebView):
+        (WebView::~WebView):
+        (WebView::handleContextMenuEvent):
+        (WebView::onInitMenuPopup):
+        (WebView::onUninitMenuPopup):
+        (WebViewWndProc):
+        (WebView::QueryInterface):
+        (WebView::MIMETypesShownAsHTML):
+        (WebView::setHostWindow):
+        (WebView::hostWindow):
+        (WebView::generateSelectionImage):
+        (WebView::pasteboardTypesForSelection):
+        (WebView::pasteboardTypesForElement):
+        (WebView::mainFrameIcon):
+        (WebView::canMakeTextStandardSize):
+        (WebView::viewWindow):
+        * WebView.h:
+
 2007-05-11  Adele Peterson  <adele@apple.com>
 
         Build fix.

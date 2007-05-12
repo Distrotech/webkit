@@ -54,8 +54,8 @@ import "IWebFormDelegate.idl";
 import "IWebFrameLoadDelegatePrivate.idl";
 
 [
-    local,
     object,
+    oleautomation,
     uuid(44914369-DEB5-4fcf-A6A3-30C02E73154F),
     pointer_default(unique)
 ]
@@ -75,7 +75,7 @@ interface IWebViewPrivate : IUnknown
       */
     HRESULT inViewSourceMode([out, retval] BOOL* flag);
 
-    HRESULT viewWindow([out, retval] HWND* window);
+    HRESULT viewWindow([out, retval] OLE_HANDLE* window);
 
     // May well become public
     //- (void)_setFormDelegate:(id<WebFormDelegate>)delegate;
@@ -99,7 +99,7 @@ interface IWebViewPrivate : IUnknown
     HRESULT unmarkAllTextMatches();
     HRESULT rectsForTextMatches([out]IEnumTextMatches** pmatches);
     HRESULT selectionImageRect([in, out] RECT* rc);
-    HRESULT generateSelectionImage(BOOL forceWhiteText, [out,retval] HBITMAP* image);
+    HRESULT generateSelectionImage(BOOL forceWhiteText, [out, retval] OLE_HANDLE* hBitmap);
 
     HRESULT canHandleRequest([in] IWebURLRequest* request, [out, retval] BOOL* result);
 

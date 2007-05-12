@@ -89,7 +89,7 @@ ULONG STDMETHODCALLTYPE WebScrollBar::Release(void)
 // IWebScrollBarPrivate ------------------------------------------------------------------
 HRESULT STDMETHODCALLTYPE WebScrollBar::init( 
     /* [in] */ IWebScrollBarDelegatePrivate* delegate,
-    /* [in] */ HWND containingWindow,
+    /* [in] */ OLE_HANDLE containingWindow,
     /* [in] */ WebScrollBarOrientation orientation,
     /* [in] */ WebScrollBarControlSize controlSize)
 {
@@ -101,7 +101,7 @@ HRESULT STDMETHODCALLTYPE WebScrollBar::init(
     m_scrollBar = new PlatformScrollbar(this, webCoreOrientation, webCoreControlSize);
     if (!m_scrollBar)
         return E_FAIL;
-    m_scrollBar->setContainingWindow(containingWindow);
+    m_scrollBar->setContainingWindow((HWND)(ULONG64)containingWindow);
     return S_OK;
 }
 
@@ -215,12 +215,12 @@ HRESULT STDMETHODCALLTYPE WebScrollBar::requestedHeight(
 
 
 HRESULT STDMETHODCALLTYPE WebScrollBar::handleMouseEvent( 
-    HWND window,
+    OLE_HANDLE window,
     UINT msg,
     WPARAM wParam,
     LPARAM lParam)
 {
-    PlatformMouseEvent mouseEvent(window, msg, wParam, lParam);
+    PlatformMouseEvent mouseEvent((HWND)(ULONG64)window, msg, wParam, lParam);
     switch (msg) {
         case WM_LBUTTONDOWN:
             m_scrollBar->handleMousePressEvent(mouseEvent);

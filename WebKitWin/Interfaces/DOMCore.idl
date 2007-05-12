@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,7 +24,7 @@
  */
 
 cpp_quote("/*")
-cpp_quote(" * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.")
+cpp_quote(" * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.")
 cpp_quote(" *")
 cpp_quote(" * Redistribution and use in source and binary forms, with or without")
 cpp_quote(" * modification, are permitted provided that the following conditions")
@@ -52,8 +52,6 @@ import "oaidl.idl";
 import "ocidl.idl";
 import "IWebScriptObject.idl";
 
-cpp_quote("interface IDOMCSSStyleDeclaration;")
-
 interface IWebScriptObject;
 interface IDOMNodeList;
 interface IDOMNamedNodeMap;
@@ -72,8 +70,8 @@ interface IDOMCSSStyleDeclaration;
     @interface DOMObject : WebScriptObject <NSCopying>
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(A27FA225-F34E-425d-88EB-A35BD105A527),
     pointer_default(unique)
 ]
@@ -85,8 +83,8 @@ interface IDOMObject : IWebScriptObject
     @interface DOMImplementation : DOMObject
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(6E48C25D-E542-4d1a-BC73-ACDC21E39C56),
     pointer_default(unique)
 ]
@@ -112,8 +110,8 @@ interface IDOMImplementation : IDOMObject
     @interface DOMNode : DOMObject <DOMEventTarget>
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(3EEA3E20-72DA-4be7-954F-79B5A14AD726),
     pointer_default(unique)
 ]
@@ -269,8 +267,8 @@ interface IDOMNode : IDOMObject
     @interface DOMNodeList : DOMObject
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(10A05A96-CBD9-4493-83AD-FAFB952615CE),
     pointer_default(unique)
 ]
@@ -291,8 +289,8 @@ interface IDOMNodeList : IDOMObject
     @interface DOMNamedNodeMap : DOMObject
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(E6CBF396-C9F9-431b-A8D6-BCB525067E9F),
     pointer_default(unique)
 ]
@@ -343,8 +341,8 @@ interface IDOMNamedNodeMap : IDOMObject
     @interface DOMDocument : IDOMNode
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(A83C2C44-0BAC-45c7-8E17-6A49975D5CCA),
     pointer_default(unique)
 ]
@@ -440,8 +438,8 @@ interface IDOMDocument : IDOMNode
     @interface DOMCharacterData : IDOMNode
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(F4DED047-FE61-461a-BDBD-BB87F79DB713),
     pointer_default(unique)
 ]
@@ -492,8 +490,8 @@ interface IDOMCharacterData : IDOMNode
     @interface DOMAttr : IDOMNode
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(B587E098-8206-4b5a-A7DB-422F218571A0),
     pointer_default(unique)
 ]
@@ -529,8 +527,8 @@ interface IDOMAttr : IDOMNode
     @interface DOMElement : IDOMNode
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(E053A35B-7775-4859-80EA-C35D02D145A2),
     pointer_default(unique)
 ]
@@ -628,28 +626,11 @@ interface IDOMElement : IDOMNode
 }
 
 /*
-    @interface DOMElement (DOMElementCSSInlineStyle)
-*/
-[
-    local,
-    object,
-    uuid(585127E2-D698-44c4-83EC-4D1E6E07E90D),
-    pointer_default(unique)
-]
-interface IDOMElementCSSInlineStyle : IUnknown
-{
-    /*
-        - (DOMCSSStyleDeclaration *)style;
-    */
-    HRESULT style([out, retval] IDOMCSSStyleDeclaration** result);
-}
-
-/*
     @interface DOMElement (DOMElementExtensions)
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(98E481F5-4405-4c2a-BF77-1CE95FE5F992),
     pointer_default(unique)
 ]
@@ -735,8 +716,8 @@ interface IDOMElementExtensions : IUnknown
     @interface DOMText : DOMCharacterData
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(74638F45-1AA0-4db5-958C-82066E00BD2B),
     pointer_default(unique)
 ]
@@ -752,8 +733,8 @@ interface IDOMText : IDOMCharacterData
     @interface DOMComment : DOMCharacterData
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(118002E8-847F-4b1a-968C-B25A6AC7B128),
     pointer_default(unique)
 ]
@@ -765,8 +746,8 @@ interface IDOMComment : IDOMCharacterData
     @interface DOMCDATASection : DOMText
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(31B506C1-45A3-4d72-815A-311B0A897E58),
     pointer_default(unique)
 ]
@@ -778,8 +759,8 @@ interface IDOMCDATASection : IDOMText
     @interface DOMDocumentType : IDOMNode
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(17FCE6EA-4164-4bd4-9DBF-0395FBF37FD3),
     pointer_default(unique)
 ]
@@ -820,8 +801,8 @@ interface IDOMDocumentType : IDOMNode
     @interface DOMEntityReference : IDOMNode
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(0593CE45-15B2-44af-BBD0-5A1654F8240E),
     pointer_default(unique)
 ]
@@ -833,8 +814,8 @@ interface IDOMEntityReference : IDOMNode
     @interface DOMProcessingInstruction : IDOMNode
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(D99D2F48-ABF3-426a-9339-54681E1AFCA9),
     pointer_default(unique)
 ]
@@ -860,8 +841,8 @@ interface IDOMProcessingInstruction : IDOMNode
     @interface DOMDocumentFragment : IDOMNode
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(09D35665-8396-4868-949E-8AA2407A6E10),
     pointer_default(unique)
 ]

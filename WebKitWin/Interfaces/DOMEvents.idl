@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,7 +24,7 @@
  */
 
 cpp_quote("/*")
-cpp_quote(" * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.")
+cpp_quote(" * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.")
 cpp_quote(" *")
 cpp_quote(" * Redistribution and use in source and binary forms, with or without")
 cpp_quote(" * modification, are permitted provided that the following conditions")
@@ -66,8 +66,8 @@ interface IDOMWheelEvent;
 typedef long long DOMTimeStamp;
 
 [
-    local,
     object,
+    oleautomation,
     uuid(7f8a0a96-f864-44fb-87fb-c5f03666e8e6),
     pointer_default(unique)
 ]
@@ -78,8 +78,8 @@ interface IDOMEventListener : IDOMObject
 }
 
 [
-    local,
     object,
+    oleautomation,
     uuid(62343a9e-a779-4e91-818a-14fc178cf4c2),
     pointer_default(unique)
 ]
@@ -142,8 +142,8 @@ interface IDOMEvent : IDOMObject
 }
 
 [
-    local,
     object,
+    oleautomation,
     uuid(c7cf7d84-d755-40bc-b664-84bc79eff709),
     pointer_default(unique)
 ]
@@ -164,8 +164,8 @@ interface IDOMEventTarget : IUnknown
 }
 
 [
-    local,
     object,
+    oleautomation,
     uuid(55AAF192-68CD-409f-A551-89710DC7240A),
     pointer_default(unique)
 ]
@@ -177,8 +177,8 @@ interface IDOMDocumentEvent : IUnknown
 }
 
 [
-    local,
     object,
+    oleautomation,
     uuid(76bc4e46-67df-40d3-89b0-a94dcc2ed507),
     pointer_default(unique)
 ]
@@ -248,8 +248,8 @@ interface IDOMKeyboardEvent : IDOMUIEvent
 }
 
 [
-    local,
     object,
+    oleautomation,
     uuid(bdd97151-5f6a-4ba4-a902-9b008392eb54),
     pointer_default(unique)
 ]
@@ -323,8 +323,8 @@ interface IDOMMouseEvent : IDOMUIEvent
 }
 
 [
-    local,
     object,
+    oleautomation,
     uuid(6345d228-ea67-48ee-93c8-ff6e9c6356e9),
     pointer_default(unique)
 ]
@@ -362,8 +362,8 @@ interface IDOMMutationEvent : IDOMEvent
 }
 
 [
-    local,
     object,
+    oleautomation,
     uuid(6048369e-e444-401b-950d-c9daef9384d2),
     pointer_default(unique)
 ]
@@ -384,8 +384,8 @@ interface IDOMOverflowEvent : IDOMEvent
 }
 
 [
-    local,
     object,
+    oleautomation,
     uuid(b928261d-7c9e-4156-af71-6f698bd97788),
     pointer_default(unique)
 ]
@@ -428,8 +428,8 @@ interface IDOMUIEvent : IDOMEvent
 }
 
 [
-    local,
     object,
+    oleautomation,
     uuid(5404e6d9-a2bb-4c74-8070-ce9d2599bd00),
     pointer_default(unique)
 ]

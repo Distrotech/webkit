@@ -135,8 +135,7 @@ HRESULT STDMETHODCALLTYPE WebError::localizedFailureReason(
 }
         
 HRESULT STDMETHODCALLTYPE WebError::localizedRecoveryOptions( 
-    /* [out] */ int* /*cOptions*/,
-    /* [retval][out] */ BSTR** /*options*/)
+    /* [retval][out] */ IEnumVARIANT** /*result*/)
 {
     ASSERT_NOT_REACHED();
     return E_NOTIMPL;

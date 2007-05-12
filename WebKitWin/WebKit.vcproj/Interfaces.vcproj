@@ -42,7 +42,7 @@
 				AdditionalIncludeDirectories="..\Interfaces"
 				WarningLevel="1"
 				WarnAsError="true"
-				GenerateTypeLibrary="false"
+				GenerateTypeLibrary="true"
 				TypeLibraryName="$(ProjectDir)\WebKit.tlb"
 				OutputDirectory="$(WebKitOutputDir)\obj\WebKit\$(ProjectName)"
 				HeaderFileName="$(OutDir)\$(InputName).h"
@@ -129,7 +129,7 @@
 				AdditionalIncludeDirectories="..\Interfaces"
 				WarningLevel="1"
 				WarnAsError="true"
-				GenerateTypeLibrary="false"
+				GenerateTypeLibrary="true"
 				TypeLibraryName="$(ProjectDir)\WebKit.tlb"
 				OutputDirectory="$(WebKitOutputDir)\obj\WebKit\$(ProjectName)"
 				HeaderFileName="$(OutDir)\$(InputName).h"
@@ -228,10 +228,6 @@
 			>
 		</File>
 		<File
-			RelativePath="..\Interfaces\IWebAttributedString.idl"
-			>
-		</File>
-		<File
 			RelativePath="..\Interfaces\IWebBackForwardList.idl"
 			>
 		</File>
@@ -245,6 +241,10 @@
 		</File>
 		<File
 			RelativePath="..\Interfaces\IWebDataSource.idl"
+			>
+		</File>
+		<File
+			RelativePath="..\Interfaces\IWebDebugProgram.idl"
 			>
 		</File>
 		<File

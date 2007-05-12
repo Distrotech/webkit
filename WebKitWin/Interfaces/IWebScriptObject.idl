@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,7 +24,7 @@
  */
 
 cpp_quote("/*")
-cpp_quote(" * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.")
+cpp_quote(" * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.")
 cpp_quote(" *")
 cpp_quote(" * Redistribution and use in source and binary forms, with or without")
 cpp_quote(" * modification, are permitted provided that the following conditions")
@@ -61,25 +61,25 @@ import "ocidl.idl";
     The following KVC methods are commonly used to access properties of the
     WebScriptObject:
     
-	- (void)setValue:(id)value forKey:(NSString *)key
-	- (id)valueForKey:(NSString *)key
-	
-	As it possible to remove attributes from web script objects the following
-	additional method augments the basic KVC methods:
-	
-	- (void)removeWebScriptKey:(NSString *)name;
-	
-	Also the sparse array access allowed in web script objects doesn't map well to NSArray, so
-	the following methods can be used to access index based properties:
-	
-	- (id)webScriptValueAtIndex:(unsigned int)index;
-	- (void)setWebScriptValueAtIndex:(unsigned int)index value:(id)value;
+    - (void)setValue:(id)value forKey:(NSString *)key
+    - (id)valueForKey:(NSString *)key
+    
+    As it possible to remove attributes from web script objects the following
+    additional method augments the basic KVC methods:
+    
+    - (void)removeWebScriptKey:(NSString *)name;
+    
+    Also the sparse array access allowed in web script objects doesn't map well to NSArray, so
+    the following methods can be used to access index based properties:
+    
+    - (id)webScriptValueAtIndex:(unsigned int)index;
+    - (void)setWebScriptValueAtIndex:(unsigned int)index value:(id)value;
 
     @interface WebScriptObject : NSObject
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(7022340A-649C-43fc-9214-85CA7D3BE3C7),
     pointer_default(unique)
 ]

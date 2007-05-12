@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,7 +24,7 @@
  */
 
 cpp_quote("/*")
-cpp_quote(" * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.")
+cpp_quote(" * Copyright (C) 2007 Apple Inc.  All rights reserved.")
 cpp_quote(" *")
 cpp_quote(" * Redistribution and use in source and binary forms, with or without")
 cpp_quote(" * modification, are permitted provided that the following conditions")
@@ -50,66 +50,18 @@ cpp_quote(" */")
 
 import "oaidl.idl";
 import "ocidl.idl";
-
-typedef struct _WebRange {
-   unsigned int location;
-   unsigned int length;
-} WebRange;
-
-typedef WebRange *WebRangePointer;
+import "IWebKitStatistics.idl";
 
 [
-    local,
     object,
-    uuid(B91A5F8C-5137-41ea-BE2C-AC1417E38C4A),
+    oleautomation,
+    uuid(E24111D6-3668-4c8b-B921-D644524945F8),
     pointer_default(unique)
 ]
-interface IWebAttributedString : IUnknown
+interface IWebDebugProgram : IUnknown
 {
-    /*
-        - (id)attribute:(NSString *)attributeName atIndex:(unsigned int)index effectiveRange:(NSRangePointer)aRange
-        - (id)attribute:(NSString *)attributeName atIndex:(unsigned int)index longestEffectiveRange:(NSRangePointer)aRange inRange:(NSRange)rangeLimit
-    */
-    HRESULT attribute([in] UINT atIndex, [in] WebRangePointer aRange, [in, optional] WebRange rangeLimit, [out, retval] BSTR* result);
-
-    /*
-        - (NSAttributedString *)attributedSubstringFromRange:(NSRange)aRange
-    */
-    HRESULT attributedSubstringFromRange([in] WebRange aRange, [out, retval] IWebAttributedString** result);
-
-    /*
-        - (NSDictionary *)attributesAtIndex:(unsigned)index effectiveRange:(NSRangePointer)aRange
-        - (NSDictionary *)attributesAtIndex:(unsigned)index longestEffectiveRange:(NSRangePointer)aRange inRange:(NSRange)rangeLimit
-    */
-    HRESULT attributesAtIndex([in] UINT index, [in] WebRangePointer aRange, [in, optional] WebRange rangeLimit, [out, retval] IPropertyBag** result);
-
-    /*
-        - (id)initWithAttributedString:(NSAttributedString *)attributedString
-    */
-    HRESULT initWithAttributedString([in] IWebAttributedString* attributedString);
-
-    /*
-        - (id)initWithString:(NSString *)aString
-    */
-    HRESULT initWithString([in] BSTR aString);
-
-    /*
-        - (id)initWithString:(NSString *)aString attributes:(NSDictionary *)attributes
-    */
-    HRESULT initWithString2([in] BSTR aString, [in] IPropertyBag* attributes);
-
-    /*
-        - (BOOL)isEqualToAttributedString:(NSAttributedString *)otherString
-    */
-    HRESULT isEqualToAttributedString([in] IWebAttributedString* otherString, [out, retval] BOOL* result);
-
-    /*
-        - (unsigned)length
-    */
-    HRESULT length([out, retval] UINT* result);
-
-    /*
-        - (NSString *)string
-    */
-    HRESULT string_([out, retval] BSTR* result);
+    HRESULT attach();
+    HRESULT detach();
+    HRESULT statistics([out, retval] IWebKitStatistics** statistics);
+    HRESULT webViews([out, retval] IEnumVARIANT** enumViews);
 }

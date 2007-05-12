@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,7 +24,7 @@
  */
 
 cpp_quote("/*")
-cpp_quote(" * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.")
+cpp_quote(" * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.")
 cpp_quote(" *")
 cpp_quote(" * Redistribution and use in source and binary forms, with or without")
 cpp_quote(" * modification, are permitted provided that the following conditions")
@@ -73,8 +73,8 @@ interface IWebView;
     @interface WebFrame : NSObject
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(B4B22EF7-DD43-4d01-A992-99C4A8B1F845),
     pointer_default(unique)
 ]
@@ -227,7 +227,7 @@ interface IWebFrame : IUnknown
         @result Returns an array of WebFrame.
         - (NSArray *)childFrames;
     */
-    HRESULT childFrames([out] unsigned* frameCount, [out, retval] SAFEARRAY** frames);
+    HRESULT childFrames([out, retval] IEnumVARIANT** enumFrames);
 
 
   /* This is a DOMElement on mac, but maybe should be a DOMHTMLFrameElement? */

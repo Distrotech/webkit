@@ -138,7 +138,7 @@ WebInspector::WebInspector()
     // FIXME: Add a shadow around the window
 
     m_private->webView.adoptRef(WebView::createInstance());
-    if (FAILED(m_private->webView->setHostWindow(m_private->hWnd)))
+    if (FAILED(m_private->webView->setHostWindow((OLE_HANDLE)(ULONG64)m_private->hWnd)))
         return;
 
     if (FAILED(m_private->webView->setFrameLoadDelegate(this)))
@@ -158,7 +158,7 @@ WebInspector::WebInspector()
 #endif
 
     HWND viewWindow;
-    if (FAILED(m_private->webView->viewWindow(&viewWindow)))
+    if (FAILED(m_private->webView->viewWindow((OLE_HANDLE*)&viewWindow)))
         return;
 
     ::SetProp(viewWindow, kWebInspectorPointerProp, (HANDLE)this);
@@ -269,7 +269,7 @@ void WebInspector::show()
     ::SetWindowPos(m_private->hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW);
 
     HWND viewWindow;
-    if (FAILED(m_private->webView->viewWindow(&viewWindow)))
+    if (FAILED(m_private->webView->viewWindow((OLE_HANDLE*)&viewWindow)))
         return;
 
     ::SetFocus(viewWindow);
@@ -278,7 +278,7 @@ void WebInspector::show()
 LRESULT WebInspector::onDestroy(WPARAM, LPARAM)
 {
     HWND viewWindow;
-    if (SUCCEEDED(m_private->webView->viewWindow(&viewWindow))) {
+    if (SUCCEEDED(m_private->webView->viewWindow((OLE_HANDLE*)&viewWindow))) {
         ::SetWindowLongPtr(viewWindow, GWLP_WNDPROC, (LONG_PTR)m_private->originalWebViewWndProc);
         ::RemoveProp(viewWindow, kWebInspectorPointerProp);
     }
@@ -301,7 +301,7 @@ LRESULT WebInspector::onSize(WPARAM, LPARAM)
         return 0;
 
     HWND viewWindow;
-    if (FAILED(viewPrivate->viewWindow(&viewWindow)))
+    if (FAILED(viewPrivate->viewWindow((OLE_HANDLE*)&viewWindow)))
         return 0;
 
     ::SetWindowPos(viewWindow, 0, clientRect.left, clientRect.top, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top, SWP_NOZORDER);

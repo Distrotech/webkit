@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,7 +24,7 @@
  */
 
 cpp_quote("/*")
-cpp_quote(" * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.")
+cpp_quote(" * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.")
 cpp_quote(" *")
 cpp_quote(" * Redistribution and use in source and binary forms, with or without")
 cpp_quote(" * modification, are permitted provided that the following conditions")
@@ -52,8 +52,8 @@ import "oaidl.idl";
 import "ocidl.idl";
 
 [
-    local,
     object,
+    oleautomation,
     uuid(93598207-3E34-49ec-97EC-EFA9A1E16335),
     pointer_default(unique)
 ]
@@ -63,7 +63,7 @@ interface IWebNotification : IUnknown
         + (id)notificationWithName:(NSString *)aName object:(id)anObject
         + (id)notificationWithName:(NSString *)aName object:(id)anObject userInfo:(NSDictionary *)userInfo
     */
-    HRESULT notificationWithName([in] BSTR aName, [in] IUnknown* anObject, [in, optional] IPropertyBag* userInfo);
+    HRESULT notificationWithName([in] BSTR aName, [in] IUnknown* anObject, [in] IPropertyBag* userInfo);
 
     /*
         - (NSString *)name

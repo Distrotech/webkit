@@ -70,7 +70,7 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE didReceiveIcon( 
         /* [in] */ IWebView *webView,
-        /* [in] */ HBITMAP image,
+        /* [in] */ OLE_HANDLE image,
         /* [in] */ IWebFrame *frame) { return E_NOTIMPL; } 
 
     virtual HRESULT STDMETHODCALLTYPE didFinishLoadForFrame( 
@@ -125,11 +125,11 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE webViewFirstResponder( 
         /* [in] */ IWebView *sender,
-        /* [retval][out] */ HWND *responder) { return E_NOTIMPL; }
+        /* [retval][out] */ OLE_HANDLE *responder) { return E_NOTIMPL; }
 
     virtual HRESULT STDMETHODCALLTYPE makeFirstResponder( 
         /* [in] */ IWebView *sender,
-        /* [in] */ HWND responder) { return E_NOTIMPL; }
+        /* [in] */ OLE_HANDLE responder) { return E_NOTIMPL; }
 
     virtual HRESULT STDMETHODCALLTYPE setStatusText( 
         /* [in] */ IWebView *sender,
@@ -212,8 +212,8 @@ public:
     virtual HRESULT STDMETHODCALLTYPE contextMenuItemsForElement( 
         /* [in] */ IWebView *sender,
         /* [in] */ IPropertyBag *element,
-        /* [in] */ HMENU defaultItems,
-        /* [retval][out] */ HMENU *resultMenu) { return E_NOTIMPL; }
+        /* [in] */ OLE_HANDLE defaultItems,
+        /* [retval][out] */ OLE_HANDLE *resultMenu) { return E_NOTIMPL; }
 
     virtual HRESULT STDMETHODCALLTYPE validateUserInterfaceItem( 
         /* [in] */ IWebView *webView,
@@ -257,7 +257,7 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE trackCustomPopupMenu( 
         /* [in] */ IWebView *sender,
-        /* [in] */ HMENU menu,
+        /* [in] */ OLE_HANDLE menu,
         /* [in] */ LPPOINT point) { return E_NOTIMPL; }
        
     virtual HRESULT STDMETHODCALLTYPE measureCustomMenuItem( 
@@ -270,7 +270,7 @@ public:
         
     virtual HRESULT STDMETHODCALLTYPE cleanUpCustomMenuDrawingData( 
         /* [in] */ IWebView *sender,
-        /* [in] */ HMENU menu) { return E_NOTIMPL; }
+        /* [in] */ OLE_HANDLE menu) { return E_NOTIMPL; }
 
     virtual HRESULT STDMETHODCALLTYPE canTakeFocus( 
         /* [in] */ IWebView *sender,
@@ -304,7 +304,7 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE addCustomMenuDrawingData( 
         /* [in] */ IWebView *sender,
-        /* [in] */ HMENU menu) { return E_NOTIMPL; }
+        /* [in] */ OLE_HANDLE menu) { return E_NOTIMPL; }
 
 protected:
     // IWebUIDelegatePrivate
@@ -338,7 +338,7 @@ protected:
     
     virtual HRESULT STDMETHODCALLTYPE webViewLostFocus( 
         /* [in] */ IWebView *sender,
-        /* [in] */ HWND loseFocusTo) { return E_NOTIMPL; }
+        /* [in] */ OLE_HANDLE loseFocusTo) { return E_NOTIMPL; }
 
     virtual HRESULT STDMETHODCALLTYPE doDragDrop( 
         /* [in] */ IWebView *sender,

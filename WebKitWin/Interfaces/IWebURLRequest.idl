@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,7 +24,7 @@
  */
 
 cpp_quote("/*")
-cpp_quote(" * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.")
+cpp_quote(" * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.")
 cpp_quote(" *")
 cpp_quote(" * Redistribution and use in source and binary forms, with or without")
 cpp_quote(" * modification, are permitted provided that the following conditions")
@@ -60,8 +60,9 @@ typedef enum _WebURLRequestCachePolicy
 } WebURLRequestCachePolicy;
 
 [
-    local,
     object,
+    oleautomation,
+    hidden,
     uuid(F4B85F1D-F3B2-493d-B786-0930E804A3BA),
     pointer_default(unique)
 ]
@@ -71,7 +72,7 @@ interface IWebURLRequest : IUnknown
         + (id)requestWithURL:(NSURL *)theURL
         + (id)requestWithURL:(NSURL *)theURL cachePolicy:(NSURLRequestCachePolicy)cachePolicy timeoutInterval:(NSTimeInterval)timeoutInterval
     */
-    HRESULT requestWithURL([in] BSTR theURL, [in, optional] WebURLRequestCachePolicy cachePolicy, [in, optional] double timeoutInterval);
+    HRESULT requestWithURL([in] BSTR theURL, [in] WebURLRequestCachePolicy cachePolicy, [in] double timeoutInterval);
 
     /*
         - (NSDictionary *)allHTTPHeaderFields
@@ -107,7 +108,7 @@ interface IWebURLRequest : IUnknown
         - (id)initWithURL:(NSURL *)theURL
         - (id)initWithURL:(NSURL *)theURL cachePolicy:(NSURLRequestCachePolicy)cachePolicy timeoutInterval:(NSTimeInterval)timeoutInterval
     */
-    HRESULT initWithURL([in] BSTR url, [in, optional] WebURLRequestCachePolicy cachePolicy, [in, optional] double timeoutInterval);
+    HRESULT initWithURL([in] BSTR url, [in] WebURLRequestCachePolicy cachePolicy, [in] double timeoutInterval);
 
     /*
         - (NSURL *)mainDocumentURL

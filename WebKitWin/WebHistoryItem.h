@@ -80,7 +80,7 @@ public:
         /* [in] */ BSTR title);
     
     virtual HRESULT STDMETHODCALLTYPE icon( 
-        /* [out, retval] */ HBITMAP *image);
+        /* [out, retval] */ OLE_HANDLE *hBitmap);
 
     // IWebHistoryItemPrivate
     virtual HRESULT STDMETHODCALLTYPE initFromDictionaryRepresentation(void* dictionary);

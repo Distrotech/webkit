@@ -434,7 +434,7 @@ HRESULT STDMETHODCALLTYPE WebHistoryItem::alternateTitle(
 }
 
 HRESULT STDMETHODCALLTYPE WebHistoryItem::icon( 
-    /* [out, retval] */ HBITMAP* /*image*/)
+    /* [out, retval] */ OLE_HANDLE* /*hBitmap*/)
 {
     ASSERT_NOT_REACHED();
     return E_NOTIMPL;

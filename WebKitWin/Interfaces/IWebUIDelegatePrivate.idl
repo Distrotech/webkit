@@ -55,8 +55,8 @@ import "IWebView.idl";
 interface IWebView;
 
 [
-    local,
     object,
+    oleautomation,
     uuid(176711F1-822F-446b-BE9A-64BB38C562F5),
     pointer_default(unique)
 ]
@@ -68,7 +68,7 @@ interface IWebUIDelegatePrivate : IUnknown
     HRESULT webViewAddMessageToConsole([in] IWebView* sender, [in] BSTR message, [in] int lineNumber, [in] BSTR url, [in] BOOL isError);
     HRESULT webViewShouldInterruptJavaScript([in] IWebView* sender, [out, retval] BOOL* result);
     HRESULT webViewReceivedFocus([in] IWebView* sender);
-    HRESULT webViewLostFocus([in] IWebView* sender, [in] HWND loseFocusTo);
+    HRESULT webViewLostFocus([in] IWebView* sender, [in] OLE_HANDLE loseFocusToHWnd);
     HRESULT doDragDrop([in] IWebView* sender, [in] IDataObject* dataObject, [in] IDropSource* dropSource, [in] DWORD okEffect, [out, retval] DWORD* performedEffect);
     HRESULT webViewGetDlgCode([in] IWebView* sender, [in] UINT keyCode, [out, retval] LONG_PTR* code);
 }

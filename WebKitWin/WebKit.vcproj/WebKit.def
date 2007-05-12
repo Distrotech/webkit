@@ -5,6 +5,7 @@ EXPORTS
         DllCanUnloadNow     PRIVATE
         DllRegisterServer   PRIVATE
         DllUnregisterServer PRIVATE
+        RunAsLocalServer    PRIVATE
 	    JSCheckScriptSyntax
 	    JSClassCreate
 	    JSClassRelease

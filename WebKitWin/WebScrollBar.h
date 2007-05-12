@@ -60,7 +60,7 @@ public:
     // IWebScrollBarPrivate
     virtual HRESULT STDMETHODCALLTYPE init( 
         /* [in] */ IWebScrollBarDelegatePrivate* delegate,
-        /* [in] */ HWND containingWindow,
+        /* [in] */ OLE_HANDLE containingWindow,
         /* [in] */ WebScrollBarOrientation orientation,
         /* [in] */ WebScrollBarControlSize controlSize);
     
@@ -104,7 +104,7 @@ public:
         /* [retval][out] */ int* h);
 
     virtual HRESULT STDMETHODCALLTYPE handleMouseEvent( 
-        /* [in] */ HWND window,
+        /* [in] */ OLE_HANDLE window,
         /* [in] */ UINT msg,
         /* [in] */ WPARAM wParam,
         /* [in] */ LPARAM lParam);

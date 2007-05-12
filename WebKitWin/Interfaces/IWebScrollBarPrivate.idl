@@ -53,6 +53,8 @@ import "ocidl.idl";
 
 import "IWebScrollBarDelegatePrivate.idl";
 
+interface IWebScrollBarDelegatePrivate;
+
 // NOTE: these enums must be kept in sync with the WebCore versions
 typedef enum WebScrollBarOrientation {
     WebHorizontalScrollbar = 0, 
@@ -80,14 +82,15 @@ typedef enum WebScrollGranularity {
 } WebScrollGranularity;
 
 [
-    local,
     object,
+    oleautomation,
+    hidden,
     uuid(6C585B08-2E4F-4594-9B90-0425E3A33FD0),
     pointer_default(unique)
 ]
 interface IWebScrollBarPrivate : IUnknown
 {
-    HRESULT init([in] IWebScrollBarDelegatePrivate* delegate, [in] HWND containingWindow, [in] WebScrollBarOrientation orientation, [in] WebScrollBarControlSize controlSize);
+    HRESULT init([in] IWebScrollBarDelegatePrivate* delegate, [in] OLE_HANDLE containingWindow, [in] WebScrollBarOrientation orientation, [in] WebScrollBarControlSize controlSize);
 
     HRESULT setEnabled([in] BOOL enabled);
 
@@ -113,7 +116,7 @@ interface IWebScrollBarPrivate : IUnknown
 
     HRESULT requestedHeight([out, retval] int* h);
 
-    HRESULT handleMouseEvent([in] HWND window, [in] UINT msg, [in] WPARAM wParam, [in] LPARAM lParam);
+    HRESULT handleMouseEvent([in] OLE_HANDLE hwnd, [in] UINT msg, [in] WPARAM wParam, [in] LPARAM lParam);
 
     HRESULT scroll([in] WebScrollDirection direction, [in] WebScrollGranularity granularity, [in] float multiplier);
 }

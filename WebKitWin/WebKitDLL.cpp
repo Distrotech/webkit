@@ -32,6 +32,7 @@
 #include "WebKitClassFactory.h"
 #include "resource.h"
 #pragma warning( push, 0 )
+#include <WebCore/COMPtr.h>
 #include <WebCore/Page.h>
 #include <WebCore/SharedBuffer.h>
 #include <WebCore/Widget.h>
@@ -43,6 +44,27 @@
 ULONG gLockCount;
 ULONG gClassCount;
 HINSTANCE gInstance;
+
+static CLSID gRegCLSIDs[] = {
+    CLSID_WebView,
+    CLSID_WebIconDatabase,
+    CLSID_WebMutableURLRequest,
+    CLSID_WebURLRequest,
+    CLSID_WebNotificationCenter,
+    CLSID_WebHistory,
+    CLSID_CFDictionaryPropertyBag,
+    CLSID_WebHistoryItem,
+    CLSID_WebCache,
+    CLSID_WebJavaScriptCollector,
+    CLSID_WebPreferences,
+    CLSID_WebScrollBar,
+    CLSID_WebKitStatistics,
+    CLSID_WebError,
+    CLSID_WebURLCredential,
+    CLSID_WebDownload,
+    CLSID_WebURLProtectionSpace,
+    CLSID_WebDebugProgram
+};
 
 STDAPI_(BOOL) DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LPVOID /*lpReserved*/)
 {
@@ -63,13 +85,15 @@ STDAPI_(BOOL) DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LPVOID /*lpRe
 
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
 {
-    if (!IsEqualGUID(rclsid, CLSID_WebView) && !IsEqualGUID(rclsid, CLSID_WebIconDatabase) && !IsEqualGUID(rclsid, CLSID_WebMutableURLRequest) && 
-        !IsEqualGUID(rclsid, CLSID_WebNotificationCenter) && !IsEqualGUID(rclsid, CLSID_WebIconDatabase) && !IsEqualGUID(rclsid, CLSID_WebHistory) && 
-        !IsEqualGUID(rclsid, CLSID_CFDictionaryPropertyBag) && !IsEqualGUID(rclsid, CLSID_WebHistoryItem) && !IsEqualGUID(rclsid, CLSID_WebCache) && !IsEqualGUID(rclsid, CLSID_WebJavaScriptCollector) &&
-        !IsEqualGUID(rclsid, CLSID_WebPreferences) && !IsEqualGUID(rclsid, CLSID_WebScrollBar) && !IsEqualGUID(rclsid, CLSID_WebKitStatistics) && !IsEqualGUID(rclsid, CLSID_WebError) &&
-        !IsEqualGUID(rclsid, CLSID_WebURLCredential) && !IsEqualGUID(rclsid, CLSID_WebDownload) && !IsEqualGUID(rclsid, CLSID_WebURLRequest) &&
-        !IsEqualGUID(rclsid, CLSID_WebURLProtectionSpace))
-    return E_FAIL;
+    bool found = false;
+    for (int i = 0; i < ARRAYSIZE(gRegCLSIDs); i++) {
+        if (IsEqualGUID(rclsid, gRegCLSIDs[i])) {
+            found = true;
+            break;
+        }
+    }
+    if (!found)
+        return E_FAIL;
 
     if (!IsEqualGUID(riid, IID_IUnknown) && !IsEqualGUID(riid, IID_IClassFactory))
         return E_NOINTERFACE;
@@ -90,26 +114,6 @@ STDAPI DllCanUnloadNow(void)
     
     return S_FALSE;
 }
-
-static CLSID gRegCLSIDs[] = {
-    CLSID_WebView,
-    CLSID_WebIconDatabase,
-    CLSID_WebMutableURLRequest,
-    CLSID_WebURLRequest,
-    CLSID_WebNotificationCenter,
-    CLSID_WebHistory,
-    CLSID_CFDictionaryPropertyBag,
-    CLSID_WebHistoryItem,
-    CLSID_WebCache,
-    CLSID_WebJavaScriptCollector,
-    CLSID_WebPreferences,
-    CLSID_WebScrollBar,
-    CLSID_WebKitStatistics,
-    CLSID_WebError,
-    CLSID_WebURLCredential,
-    CLSID_WebDownload,
-    CLSID_WebURLProtectionSpace
-};
 
 #if __BUILDBOT__
 #define PROGID(className) PRODUCTION_PROGID(className)
@@ -145,7 +149,8 @@ static LPCTSTR gRegTable[][3] = {
     KEYS_FOR_CLASS("WebError"),
     KEYS_FOR_CLASS("WebURLCredential"),
     KEYS_FOR_CLASS("WebDownload"),
-    KEYS_FOR_CLASS("WebURLProtectionSpace")
+    KEYS_FOR_CLASS("WebURLProtectionSpace"),
+    KEYS_FOR_CLASS("WebDebugProgram")
 };
 
 static void substituteGUID(LPTSTR str, const UUID* guid)
@@ -176,6 +181,12 @@ STDAPI DllUnregisterServer(void)
     HRESULT hr = S_OK;
     HKEY userClasses;
 
+#if __BUILDBOT__
+    UnRegisterTypeLib(LIBID_WebKit, 3, 0, 0, SYS_WIN32);
+#else
+    UnRegisterTypeLib(LIBID_OpenSourceWebKit, 3, 0, 0, SYS_WIN32);
+#endif
+
     if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("SOFTWARE\\CLASSES"), 0, KEY_WRITE, &userClasses) != ERROR_SUCCESS)
         userClasses = 0;
 
@@ -204,6 +215,9 @@ STDAPI DllRegisterServer(void)
     // look up server's file name
     TCHAR szFileName[MAX_PATH];
     GetModuleFileName(gInstance, szFileName, MAX_PATH);
+
+    COMPtr<ITypeLib> typeLib;
+    LoadTypeLibEx(szFileName, REGKIND_REGISTER, &typeLib);
 
     HKEY userClasses;
     if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("SOFTWARE\\CLASSES"), 0, KEY_WRITE, &userClasses) != ERROR_SUCCESS)
@@ -250,7 +264,17 @@ STDAPI DllRegisterServer(void)
 
     if (userClasses)
         RegCloseKey(userClasses);
+
     return hr;
+}
+
+STDAPI RunAsLocalServer(void)
+{
+    DWORD reg;
+    COMPtr<IUnknown> classFactory;
+    DllGetClassObject(CLSID_WebDebugProgram, IID_IUnknown, (void**)&classFactory);
+    CoRegisterClassObject(CLSID_WebDebugProgram, classFactory.get(), CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE, &reg);
+    return 0;
 }
 
 //FIXME: We should consider moving this to a new file for cross-project functionality

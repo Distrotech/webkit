@@ -52,8 +52,9 @@ import "oaidl.idl";
 import "ocidl.idl";
 
 [
-    local,
     object,
+    oleautomation,
+    hidden,
     uuid(E6A1D169-F44A-4d11-B55B-F0A406F47612),
     pointer_default(unique)
 ]

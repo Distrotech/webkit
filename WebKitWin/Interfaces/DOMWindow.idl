@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,7 +24,7 @@
  */
 
 cpp_quote("/*")
-cpp_quote(" * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.")
+cpp_quote(" * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.")
 cpp_quote(" *")
 cpp_quote(" * Redistribution and use in source and binary forms, with or without")
 cpp_quote(" * modification, are permitted provided that the following conditions")
@@ -53,9 +53,11 @@ import "ocidl.idl";
 import "DOMCore.idl";
 import "DOMCSS.idl";
 
+interface IDOMCSSRuleList;
+
 [
-    local,
     object,
+    oleautomation,
     uuid(19126DDF-E82F-46c0-A2F9-16879D7DADC5),
     pointer_default(unique)
 ]
@@ -63,7 +65,7 @@ interface IDOMWindow : IDOMObject
 {
     // DOM Level 2 AbstractView Interface
     //readonly attribute Document document;
-    HRESULT document([out, retval] IDOMDocument* result);
+    HRESULT document([out, retval] IDOMDocument** result);
 
     // DOM Level 2 Style Interface
     //CSSStyleDeclaration getComputedStyle(in Element element,

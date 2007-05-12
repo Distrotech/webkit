@@ -963,24 +963,28 @@ HRESULT DOMElement::coreElement(void **element)
     return S_OK;
 }
 
-BOOL STDMETHODCALLTYPE DOMElement::isEqual( 
-    /* [in] */ IDOMElement* other)
+HRESULT STDMETHODCALLTYPE DOMElement::isEqual( 
+    /* [in] */ IDOMElement *other,
+    /* [retval][out] */ BOOL *result)
 {
-    if (!other)
-        return FALSE;
+    *result = FALSE;
+
+    if (!other || !result)
+        return E_POINTER;
 
     IDOMElementPrivate* otherPriv;
     HRESULT hr = other->QueryInterface(IID_IDOMElementPrivate, (void**) &otherPriv);
     if (FAILED(hr))
-        return FALSE;
+        return hr;
     
     void* otherCoreEle;
     hr = otherPriv->coreElement(&otherCoreEle);
     otherPriv->Release();
     if (FAILED(hr))
-        return FALSE;
+        return hr;
 
-    return (otherCoreEle == (void*)m_element) ? TRUE : FALSE;
+    *result = (otherCoreEle == (void*)m_element) ? TRUE : FALSE;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE DOMElement::isFocused( 

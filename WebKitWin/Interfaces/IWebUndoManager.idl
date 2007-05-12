@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,7 +24,7 @@
  */
 
 cpp_quote("/*")
-cpp_quote(" * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.")
+cpp_quote(" * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.")
 cpp_quote(" *")
 cpp_quote(" * Redistribution and use in source and binary forms, with or without")
 cpp_quote(" * modification, are permitted provided that the following conditions")
@@ -55,8 +55,8 @@ interface IWebInvocation;
 interface IWebMethodSignature;
 
 [
-    local,
     object,
+    oleautomation,
     uuid(D25D748C-6C1E-478d-9832-FDA26E8F7EE4),
     pointer_default(unique)
 ]
@@ -170,7 +170,7 @@ interface IWebUndoManager : IUnknown
     /*
         - (NSArray *)runLoopModes
     */
-    HRESULT runLoopModes([out] int* cModes, [out, retval] BSTR** modes);
+    HRESULT runLoopModes([out, retval] IEnumVARIANT** enumModes);
 
     /*
         - (void)setActionName:(NSString *)actionName
@@ -219,8 +219,8 @@ interface IWebUndoManager : IUnknown
 }
 
 [
-    local,
     object,
+    oleautomation,
     uuid(67B067BE-4DE6-45c2-AD39-A91DFA84FF4E),
     pointer_default(unique)
 ]
@@ -239,12 +239,12 @@ interface IWebInvocation : IUnknown
     /*
         - (void)getArgument:(void *)buffer atIndex:(int)index
     */
-    HRESULT getArgument([in] void* buffer, [in] int index);
+    [local] HRESULT getArgument([in] void* buffer, [in] int index);
 
     /*
         - (void)getReturnValue:(void *)buffer
     */
-    HRESULT getReturnValue([in] void* buffer);
+    [local] HRESULT getReturnValue([in] void* buffer);
 
     /*
         - (void)invoke
@@ -274,12 +274,12 @@ interface IWebInvocation : IUnknown
     /*
         - (void)setArgument:(void *)buffer atIndex:(int)index
     */
-    HRESULT setArgument([in] void* buffer, [in] int atIndex);
+    [local] HRESULT setArgument([in] void* buffer, [in] int atIndex);
 
     /*
         - (void)setReturnValue:(void *)buffer
     */
-    HRESULT setReturnValue([in] void* buffer);
+    [local] HRESULT setReturnValue([in] void* buffer);
 
     /*
         - (void)setSelector:(SEL)selector
@@ -298,8 +298,8 @@ interface IWebInvocation : IUnknown
 }
 
 [
-    local,
     object,
+    oleautomation,
     uuid(431DD6B2-56BF-4f48-943B-78CCEAC418E4),
     pointer_default(unique)
 ]
@@ -313,7 +313,7 @@ interface IWebMethodSignature : IUnknown
     /*
         - (const char *)getArgumentTypeAtIndex:(unsigned)index
     */
-    HRESULT getArgumentTypeAtIndex([in] UINT index, [out, retval] const char** result);
+    HRESULT getArgumentTypeAtIndex([in] UINT index, [out, retval] BSTR* result);
 
     /*
         - (BOOL)isOneway
@@ -328,7 +328,7 @@ interface IWebMethodSignature : IUnknown
     /*
         - (const char *)methodReturnType
     */
-    HRESULT methodReturnType([out, retval] const char** result);
+    HRESULT methodReturnType([out, retval] BSTR* result);
 
     /*
         - (unsigned)numberOfArguments

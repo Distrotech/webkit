@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,7 +24,7 @@
  */
 
 cpp_quote("/*")
-cpp_quote(" * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.")
+cpp_quote(" * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.")
 cpp_quote(" *")
 cpp_quote(" * Redistribution and use in source and binary forms, with or without")
 cpp_quote(" * modification, are permitted provided that the following conditions")
@@ -55,15 +55,17 @@ import "IWebScriptObject.idl";
 
 interface IDOMObject;
 interface IDOMCSSValue;
+interface IDOMCSSStyleDeclaration;
 interface IDOMCSSStyleSheet;
 interface IDOMCSSRule;
+interface IDOMElement;
 
 /*
     @interface DOMDocument (DOMViewCSS)
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(43EFE238-A4DF-400a-983D-FCE0C0F56BCD),
     pointer_default(unique)
 ]
@@ -79,8 +81,8 @@ interface IDOMViewCSS : IUnknown
     @interface DOMCSSRuleList : DOMObject
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(D45DA43D-5EDB-4315-A097-3ED3FA089193),
     pointer_default(unique)
 ]
@@ -101,8 +103,8 @@ interface IDOMCSSRuleList : IDOMObject
     @interface DOMCSSRule : DOMObject
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(05947A31-9E1C-4c98-8608-6688959D6542),
     pointer_default(unique)
 ]
@@ -138,8 +140,8 @@ interface IDOMCSSRule : IDOMObject
     @interface DOMCSSStyleDeclaration : DOMObject
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(DBBE9A6B-D505-4647-B4AB-40A7CF3EE63E),
     pointer_default(unique)
 ]
@@ -200,8 +202,8 @@ interface IDOMCSSStyleDeclaration : IDOMObject
     @interface DOMCSSValue : DOMObject
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(51D29553-2AF7-4f52-AFE6-3C59196A8BAA),
     pointer_default(unique)
 ]
@@ -227,8 +229,8 @@ interface IDOMCSSValue : IDOMObject
     @interface DOMCSSStyleSheet : DOMStyleSheet
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(14B1C213-1458-48a1-AD8F-54BFE64F9ECF),
     pointer_default(unique)
 ]
@@ -253,4 +255,21 @@ interface IDOMCSSStyleSheet : IDOMObject
         - (void)deleteRule:(unsigned)index;
     */
     HRESULT deleteRule([in] UINT index);
+}
+
+/*
+    @interface DOMElement (DOMElementCSSInlineStyle)
+*/
+[
+    object,
+    oleautomation,
+    uuid(585127E2-D698-44c4-83EC-4D1E6E07E90D),
+    pointer_default(unique)
+]
+interface IDOMElementCSSInlineStyle : IUnknown
+{
+    /*
+        - (DOMCSSStyleDeclaration *)style;
+    */
+    HRESULT style([out, retval] IDOMCSSStyleDeclaration** result);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,7 +24,7 @@
  */
 
 cpp_quote("/*")
-cpp_quote(" * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.")
+cpp_quote(" * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.")
 cpp_quote(" *")
 cpp_quote(" * Redistribution and use in source and binary forms, with or without")
 cpp_quote(" * modification, are permitted provided that the following conditions")
@@ -63,8 +63,8 @@ interface IDOMElement;
     @interface DOMHTMLCollection : DOMObject
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(DD8E4E33-D1D4-48e7-BB23-6DC3D7CCEC42),
     pointer_default(unique)
 ]
@@ -90,8 +90,8 @@ interface IDOMHTMLCollection : IDOMObject
     @interface DOMHTMLOptionsCollection : DOMObject
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(1AD98D99-163C-4c04-B6EE-85A3DD31F5C4),
     pointer_default(unique)
 ]
@@ -122,8 +122,8 @@ interface IDOMHTMLOptionsCollection : IDOMObject
     @interface DOMHTMLDocument : DOMDocument
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(A7DF8485-25B7-4a98-B70C-1E29CAA00597),
     pointer_default(unique)
 ]
@@ -234,8 +234,8 @@ interface IDOMHTMLDocument : IDOMDocument
     @interface DOMHTMLElement : DOMElement
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(EBD5F41D-FF65-41d8-97C9-FCE3A3D4CC3E),
     pointer_default(unique)
 ]
@@ -316,8 +316,8 @@ interface IDOMHTMLElement : IDOMElement
     @interface DOMHTMLFormElement : DOMHTMLElement
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(DF5C0054-DDDB-4888-9198-7A4E4EBF8D69),
     pointer_default(unique)
 ]
@@ -407,8 +407,8 @@ interface IDOMHTMLFormElement : IDOMHTMLElement
     @interface DOMHTMLSelectElement : DOMHTMLElement
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(3825AA04-B38F-4399-95BB-F5410B29594A),
     pointer_default(unique)
 ]
@@ -529,8 +529,8 @@ interface IDOMHTMLSelectElement : IDOMHTMLElement
     @interface DOMHTMLOptionElement : DOMHTMLElement
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(0E1EF5AB-4008-4d83-9135-D4DC1B4603D4),
     pointer_default(unique)
 ]
@@ -606,8 +606,8 @@ interface IDOMHTMLOptionElement : IDOMHTMLElement
     @interface DOMHTMLInputElement : DOMHTMLElement
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(80C40AC5-1755-4894-812F-479269C262A2),
     pointer_default(unique)
 ]
@@ -823,8 +823,8 @@ interface IDOMHTMLInputElement : IDOMElement
     @interface DOMHTMLTextAreaElement : DOMHTMLElement
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(298B02B7-3EB5-4ba4-AD3F-7FA53241AADE),
     pointer_default(unique)
 ]

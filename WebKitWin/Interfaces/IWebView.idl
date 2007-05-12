@@ -97,27 +97,27 @@ interface IWebDocumentRepresentation;
 interface IWebUndoManager;
 
 /* These are the keys for the WebElementPropertyBag */
-const BSTR WebElementDOMNodeKey = L"WebElementDOMNodeKey";
-const BSTR WebElementFrameKey = L"WebElementFrameKey";
-const BSTR WebElementImageAltStringKey = L"WebElementImageAltStringKey";
-const BSTR WebElementImageKey = L"WebElementImageKey";
-const BSTR WebElementImageRectKey = L"WebElementImageRectKey";
-const BSTR WebElementImageURLKey = L"WebElementImageURLKey";
-const BSTR WebElementIsSelectedKey = L"WebElementIsSelectedKey";
-const BSTR WebElementSpellingToolTipKey = L"WebElementSpellingToolTipKey";
-const BSTR WebElementTitleKey = L"WebElementTitleKey";
-const BSTR WebElementLinkURLKey = L"WebElementLinkURLKey";
-const BSTR WebElementLinkTargetFrameKey = L"WebElementLinkTargetFrameKey";
-const BSTR WebElementLinkTitleKey = L"WebElementLinkTitleKey";
-const BSTR WebElementLinkLabelKey = L"WebElementLinkLabelKey";
-const BSTR WebElementIsContentEditableKey = L"WebElementIsContentEditableKey";
+const LPCOLESTR WebElementDOMNodeKey = L"WebElementDOMNodeKey";
+const LPCOLESTR WebElementFrameKey = L"WebElementFrameKey";
+const LPCOLESTR WebElementImageAltStringKey = L"WebElementImageAltStringKey";
+const LPCOLESTR WebElementImageKey = L"WebElementImageKey";
+const LPCOLESTR WebElementImageRectKey = L"WebElementImageRectKey";
+const LPCOLESTR WebElementImageURLKey = L"WebElementImageURLKey";
+const LPCOLESTR WebElementIsSelectedKey = L"WebElementIsSelectedKey";
+const LPCOLESTR WebElementSpellingToolTipKey = L"WebElementSpellingToolTipKey";
+const LPCOLESTR WebElementTitleKey = L"WebElementTitleKey";
+const LPCOLESTR WebElementLinkURLKey = L"WebElementLinkURLKey";
+const LPCOLESTR WebElementLinkTargetFrameKey = L"WebElementLinkTargetFrameKey";
+const LPCOLESTR WebElementLinkTitleKey = L"WebElementLinkTitleKey";
+const LPCOLESTR WebElementLinkLabelKey = L"WebElementLinkLabelKey";
+const LPCOLESTR WebElementIsContentEditableKey = L"WebElementIsContentEditableKey";
 
 /*!
     @class IEnumTextMatches
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(C0CDE63A-5ED1-453f-B937-93B1A61AD3B3),
     pointer_default(unique)
 ]
@@ -128,7 +128,6 @@ interface IEnumTextMatches : IUnknown
     HRESULT Reset(void);
     HRESULT Clone(IEnumTextMatches** ppenum);
 };
-
 
 /*!
     @class WebView
@@ -167,12 +166,13 @@ interface IEnumTextMatches : IUnknown
     @interface WebView : NSView
 */
 [
-    local,
     object,
+    oleautomation,
+    hidden,
     uuid(174BBEFD-058E-49c7-91DF-6F110AA4AC28),
     pointer_default(unique)
 ]
-interface IWebView : IDropTarget
+interface IWebView : IUnknown
 {
     /*!
         @method canShowMIMEType:
@@ -198,7 +198,7 @@ interface IWebView : IDropTarget
         WebKit will attempt to render as HTML.
         + (NSArray *)MIMETypesShownAsHTML;
     */
-    HRESULT MIMETypesShownAsHTML([in, out] int* count, [out, retval] BSTR** mimeTypes);
+    HRESULT MIMETypesShownAsHTML([out, retval] IEnumVARIANT** enumVariant);
 
     /*!
         @method setMIMETypesShownAsHTML:
@@ -547,14 +547,14 @@ interface IWebView : IDropTarget
         not in an actual window.
         - (void)setHostWindow:(NSWindow *)hostWindow;
     */
-    HRESULT setHostWindow([in] HWND window);
+    HRESULT setHostWindow([in] OLE_HANDLE window);
 
     /*!
         @method hostWindow
         @result The host window for the web view.
         - (NSWindow *)hostWindow;
     */
-    HRESULT hostWindow([out, retval] HWND* window);
+    HRESULT hostWindow([out, retval] OLE_HANDLE* window);
 
     /*!
         @method searchFor:direction:caseSensitive:
@@ -630,7 +630,7 @@ interface IWebView : IDropTarget
         @abstract Returns the pasteboard types that WebView can use for the current selection
         - (NSArray *)pasteboardTypesForSelection;
     */
-    HRESULT pasteboardTypesForSelection([in, out] int* count, [out, retval] BSTR** types);
+    HRESULT pasteboardTypesForSelection([out, retval] IEnumVARIANT** enumVariant);
 
     /*!
         @method writeSelectionWithPasteboardTypes:toPasteboard:
@@ -647,7 +647,7 @@ interface IWebView : IDropTarget
         @param element The element
         - (NSArray *)pasteboardTypesForElement:(NSDictionary *)element;
     */
-    HRESULT pasteboardTypesForElement([in] IPropertyBag* elementDictionary, [in, out] int* count, [out, retval] BSTR** types);
+    HRESULT pasteboardTypesForElement([in] IPropertyBag* elementDictionary, [out, retval] IEnumVARIANT** enumVariant);
 
     /*!
         @method writeElement:withPasteboardTypes:toPasteboard:
@@ -737,15 +737,15 @@ interface IWebView : IDropTarget
         @result Returns the main frame's icon if any, otherwise nil.
         - (NSImage *)mainFrameIcon;
     */
-    HRESULT mainFrameIcon([out, retval] HBITMAP* icon);
+    HRESULT mainFrameIcon([out, retval] OLE_HANDLE* hBitmap);
 }
 
 /*
     @interface WebView (WebIBActions) <NSUserInterfaceValidations>
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(8F0E3A30-B924-44f8-990A-1AE61ED6C632),
     pointer_default(unique)
 ]
@@ -809,7 +809,7 @@ interface IWebIBActions : IUnknown
     /*
         - (BOOL)canMakeTextStandardSize;
     */
-    HRESULT canMakeTextStandardSize([out, retval] BOOL* result);
+    HRESULT canMakeTextStandardSize([in] IUnknown* sender, [out, retval] BOOL* result);
 
     /*
         - (IBAction)makeTextStandardSize:(id)sender;
@@ -836,8 +836,8 @@ interface IWebIBActions : IUnknown
     @interface WebView (WebViewCSS)
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(ADF68A8C-336F-405c-A053-3D11A9D5B092),
     pointer_default(unique)
 ]
@@ -853,8 +853,8 @@ interface IWebViewCSS : IUnknown
     @interface WebView (WebViewEditing)
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(07BDAC9A-19A1-4086-864D-BAD9E0F00D5C),
     pointer_default(unique)
 ]
@@ -990,8 +990,8 @@ interface IWebViewEditing : IUnknown
     @interface WebView (WebViewUndoableEditing)
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(639E7121-13C8-4a12-BC18-6E1F3D68F3C3),
     pointer_default(unique)
 ]
@@ -1037,8 +1037,8 @@ interface IWebViewUndoableEditing : IUnknown
     @interface WebView (WebViewEditingActions)
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(7E066C42-8E81-4778-888D-D6CC93E27D4C),
     pointer_default(unique)
 ]

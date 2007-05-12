@@ -134,8 +134,9 @@ import "oaidl.idl";
 import "ocidl.idl";
 
 [
-    local,
     object,
+    oleautomation,
+    hidden,
     uuid(89E3B189-0B60-4d6b-A87A-3F1172CB5538),
     pointer_default(unique)
 ]
@@ -166,7 +167,7 @@ interface IWebError : IUnknown
     /*
         - (NSArray *)localizedRecoveryOptions
     */
-    HRESULT localizedRecoveryOptions([out] int* cOptions, [out, retval] BSTR** options);
+    HRESULT localizedRecoveryOptions([out, retval] IEnumVARIANT** enumOptions);
 
     /*
         - (NSString *)localizedRecoverySuggestion

@@ -65,8 +65,7 @@ public:
         /* [retval][out] */ BSTR *result);
         
     virtual HRESULT STDMETHODCALLTYPE localizedRecoveryOptions( 
-        /* [out] */ int *cOptions,
-        /* [retval][out] */ BSTR **options);
+        /* [retval][out] */ IEnumVARIANT **result);
         
     virtual HRESULT STDMETHODCALLTYPE localizedRecoverySuggestion( 
         /* [retval][out] */ BSTR *result);

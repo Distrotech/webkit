@@ -44,6 +44,7 @@
 #include "WebPreferences.h"
 #include "WebURLCredential.h"
 #include "WebURLProtectionSpace.h"
+#include "WebDebugProgram.h"
 #include "WebView.h"
 
 // WebKitClassFactory ---------------------------------------------------------
@@ -134,6 +135,8 @@ HRESULT STDMETHODCALLTYPE WebKitClassFactory::CreateInstance(IUnknown* pUnkOuter
         unknown = static_cast<IWebURLRequest*>(WebMutableURLRequest::createImmutableInstance());
     else if (IsEqualGUID(m_targetClass, CLSID_WebURLProtectionSpace))
         unknown = static_cast<IWebURLProtectionSpace*>(WebURLProtectionSpace::createInstance());
+    else if (IsEqualGUID(m_targetClass, CLSID_WebDebugProgram))
+        unknown = static_cast<IWebDebugProgram*>(WebDebugProgram::createInstance());
     else
         return CLASS_E_CLASSNOTAVAILABLE;
 

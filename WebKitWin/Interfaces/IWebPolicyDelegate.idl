@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,7 +24,7 @@
  */
 
 cpp_quote("/*")
-cpp_quote(" * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.")
+cpp_quote(" * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.")
 cpp_quote(" *")
 cpp_quote(" * Redistribution and use in source and binary forms, with or without")
 cpp_quote(" * modification, are permitted provided that the following conditions")
@@ -50,6 +50,8 @@ cpp_quote(" */")
 
 import "oaidl.idl";
 import "ocidl.idl";
+import "IWebView.idl";
+import "IWebURLRequest.idl";
 
 interface IWebError;
 interface IWebURLResponse;
@@ -101,8 +103,8 @@ extern NSString *WebActionOriginalURLKey; // NSURL
     @protocol WebPolicyDecisionListener <NSObject>
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(DFCDE523-FD96-4f95-958B-151540FE122A),
     pointer_default(unique)
 ]
@@ -174,8 +176,8 @@ interface IWebPolicyDecisionListener : IUnknown
     @interface NSObject (WebPolicyDelegate)
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(9B0BAE6C-A496-4000-9E22-2E89F0747401),
     pointer_default(unique)
 ]

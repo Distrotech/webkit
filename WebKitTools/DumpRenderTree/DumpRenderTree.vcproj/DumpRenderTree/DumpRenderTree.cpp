@@ -210,30 +210,17 @@ void dumpFrameScrollPosition(IWebFrame* frame)
     }
 
     if (shouldDumpChildFrameScrollPositions) {
-        unsigned kidsCount;
-        SAFEARRAY* arrPtr;
-        if (FAILED(frame->childFrames(&kidsCount, &arrPtr)))
+        COMPtr<IEnumVARIANT> enumKids;
+        if (FAILED(frame->childFrames(&enumKids)))
             return;
-
-        if (arrPtr) {
-            LONG lowerBound;
-            if (SUCCEEDED(::SafeArrayGetLBound(arrPtr, 1, &lowerBound))) {
-                LONG upperBound;
-                if (SUCCEEDED(::SafeArrayGetUBound(arrPtr, 1, &upperBound))) {
-                    LONG length = upperBound - lowerBound + 1;
-                    IUnknown** safeArrayData;
-                    if (length && SUCCEEDED(::SafeArrayAccessData(arrPtr, (void**)&safeArrayData))) {
-                        for (unsigned i = 0; i < length; ++i) {
-                            COMPtr<IWebFrame> framePtr;
-                            safeArrayData[i]->QueryInterface(IID_IWebFrame, (void**)&framePtr);
-                            dumpFrameScrollPosition(framePtr.get());
-                        }
-                        ::SafeArrayUnaccessData(arrPtr);
-                    }
-                }
-                if (SUCCEEDED(::SafeArrayUnlock(arrPtr)))
-                    ::SafeArrayDestroy(arrPtr);
-            }
+        VARIANT var;
+        VariantInit(&var);
+        while (enumKids->Next(1, &var, 0) == S_OK) {
+            ASSERT(V_VT(&var) == VT_UNKNOWN);
+            COMPtr<IWebFrame> framePtr;
+            V_UNKNOWN(&var)->QueryInterface(IID_IWebFrame, (void**)&framePtr);
+            dumpFrameScrollPosition(framePtr.get());
+            VariantClear(&var);
         }
     }
 }
@@ -720,7 +707,7 @@ int main(int argc, char* argv[])
     if (FAILED(CoCreateInstance(CLSID_WebView, 0, CLSCTX_ALL, IID_IWebView, (void**)&webView)))
         return -1;
 
-    if (FAILED(webView->setHostWindow(hostWindow)))
+    if (FAILED(webView->setHostWindow((OLE_HANDLE)(ULONG64)hostWindow)))
         return -1;
 
     RECT clientRect;
@@ -742,7 +729,7 @@ int main(int argc, char* argv[])
     if (failed)
         return -1;
 
-    if (FAILED(viewPrivate->viewWindow(&webViewWindow)))
+    if (FAILED(viewPrivate->viewWindow((OLE_HANDLE*)&webViewWindow)))
         return -1;
 
     SetWindowPos(webViewWindow, 0, 0, 0, maxViewWidth, maxViewHeight, 0);

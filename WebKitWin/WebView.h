@@ -51,6 +51,7 @@ class WebView
     , public IWebViewUndoableEditing
     , public IWebViewEditingActions
     , public IWebNotificationObserver
+    , public IDropTarget
 {
 public:
     static WebView* createInstance();
@@ -75,8 +76,7 @@ public:
         /* [retval][out] */ BOOL *canShow);
     
     virtual HRESULT STDMETHODCALLTYPE MIMETypesShownAsHTML( 
-        /* [out] */ int *count,
-        /* [retval][out] */ BSTR **mimeTypes);
+        /* [retval][out] */ IEnumVARIANT **enumVariant);
     
     virtual HRESULT STDMETHODCALLTYPE setMIMETypesShownAsHTML( 
         /* [size_is][in] */ BSTR *mimeTypes,
@@ -204,10 +204,10 @@ public:
         /* [retval][out] */ BSTR *anIdentifier);
     
     virtual HRESULT STDMETHODCALLTYPE setHostWindow( 
-        /* [in] */ HWND window);
+        /* [in] */ OLE_HANDLE window);
     
     virtual HRESULT STDMETHODCALLTYPE hostWindow( 
-        /* [retval][out] */ HWND *window);
+        /* [retval][out] */ OLE_HANDLE *window);
     
     virtual HRESULT STDMETHODCALLTYPE searchFor( 
         /* [in] */ BSTR str,
@@ -238,8 +238,7 @@ public:
         /* [retval][out] */ IPropertyBag **elementDictionary);
     
     virtual HRESULT STDMETHODCALLTYPE pasteboardTypesForSelection( 
-        /* [out][in] */ int *count,
-        /* [retval][out] */ BSTR **types);
+        /* [retval][out] */ IEnumVARIANT **enumVariant);
     
     virtual HRESULT STDMETHODCALLTYPE writeSelectionWithPasteboardTypes( 
         /* [size_is][in] */ BSTR *types,
@@ -248,8 +247,7 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE pasteboardTypesForElement( 
         /* [in] */ IPropertyBag *elementDictionary,
-        /* [out][in] */ int *count,
-        /* [retval][out] */ BSTR **types);
+        /* [retval][out] */ IEnumVARIANT **enumVariant);
     
     virtual HRESULT STDMETHODCALLTYPE writeElement( 
         /* [in] */ IPropertyBag *elementDictionary,
@@ -287,7 +285,7 @@ public:
         /* [retval][out] */ BSTR *title);
     
     virtual HRESULT STDMETHODCALLTYPE mainFrameIcon( 
-        /* [retval][out] */ HBITMAP *icon);
+        /* [retval][out] */ OLE_HANDLE *hBitmap);
 
     // IWebIBActions
 
@@ -329,6 +327,7 @@ public:
         /* [in] */ IUnknown *sender);
 
     virtual HRESULT STDMETHODCALLTYPE canMakeTextStandardSize( 
+        /* [in] */ IUnknown *sender,
         /* [retval][out] */ BOOL *result);
     
     virtual HRESULT STDMETHODCALLTYPE makeTextStandardSize( 
@@ -532,7 +531,7 @@ public:
         /* [retval][out] */ BOOL* flag);
 
     virtual HRESULT STDMETHODCALLTYPE viewWindow( 
-        /* [retval][out] */ HWND *window);
+        /* [retval][out] */ OLE_HANDLE *window);
 
     virtual HRESULT STDMETHODCALLTYPE setFormDelegate( 
         /* [in] */ IWebFormDelegate *formDelegate);
@@ -566,7 +565,7 @@ public:
         IEnumTextMatches** pmatches);
 
     virtual HRESULT STDMETHODCALLTYPE generateSelectionImage(
-        BOOL forceWhiteText, HBITMAP* image);
+        BOOL forceWhiteText, OLE_HANDLE* hBitmap);
 
     virtual HRESULT STDMETHODCALLTYPE selectionImageRect(
         RECT* rc);

@@ -46,7 +46,7 @@ public:
     virtual ULONG STDMETHODCALLTYPE Release(void);
 
     // IWebDownloadDelegate
-    virtual HRESULT STDMETHODCALLTYPE decideDestinationWithSuggestedFilename(IWebDownload* download,  BSTR filename);
+    virtual HRESULT STDMETHODCALLTYPE decideDestinationWithSuggestedFilename(IWebDownload *download, BSTR filename);
     virtual HRESULT STDMETHODCALLTYPE didCancelAuthenticationChallenge(IWebDownload* download,  IWebURLAuthenticationChallenge* challenge);
     virtual HRESULT STDMETHODCALLTYPE didCreateDestination(IWebDownload* download,  BSTR destination);
     virtual HRESULT STDMETHODCALLTYPE didFailWithError(IWebDownload* download,  IWebError* error);

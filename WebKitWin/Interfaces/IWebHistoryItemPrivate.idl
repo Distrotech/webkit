@@ -53,15 +53,15 @@ import "ocidl.idl";
 import "IWebHistoryItem.idl";
 
 [
-    local,
     object,
+    oleautomation,
     uuid(E9D5DC2C-192F-4795-B0EC-4E770E539D97),
     pointer_default(unique)
 ]
 interface IWebHistoryItemPrivate : IUnknown
 {
-    HRESULT initFromDictionaryRepresentation([in] void* dictionary);
-    HRESULT dictionaryRepresentation([out, retval] void** dictionary);
+    [local] HRESULT initFromDictionaryRepresentation([in] void* dictionary);
+    [local] HRESULT dictionaryRepresentation([out, retval] void** dictionary);
     HRESULT visitCount([out, retval] int *count);
     HRESULT setVisitCount([in] int count);
     HRESULT hasURLString([out, retval] BOOL* hasURL);
@@ -75,5 +75,5 @@ interface IWebHistoryItemPrivate : IUnknown
 
     HRESULT target([out, retval] BSTR* target);
     HRESULT isTargetItem([out, retval] BOOL* result);
-    HRESULT children([out] unsigned* childCount, [out, retval] SAFEARRAY** children);
+    [local] HRESULT children([out] unsigned* childCount, [out, retval] SAFEARRAY** children);
 }

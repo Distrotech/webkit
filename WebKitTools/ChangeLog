@@ -1,3 +1,25 @@
+2007-05-11  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Darin, Ada.
+
+        Updated for COM Automation changes in WebKit.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/DumpRenderTree.cpp:
+        (dumpFrameScrollPosition): Updated for WebKit API changes.
+        (main): Updated for WebKit API changes.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/EventSender.cpp:
+        (doMouseUp): Updated for WebKit API changes.
+        (doMouseMove): Updated for WebKit API changes.
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/WaitUntilDoneDelegate.h:
+        (WaitUntilDoneDelegate::didReceiveIcon): Updated for WebKit API changes.
+        (WaitUntilDoneDelegate::webViewFirstResponder): Updated for WebKit API changes.
+        (WaitUntilDoneDelegate::makeFirstResponder): Updated for WebKit API changes.
+        (WaitUntilDoneDelegate::contextMenuItemsForElement): Updated for WebKit API changes.
+        (WaitUntilDoneDelegate::trackCustomPopupMenu): Updated for WebKit API changes.
+        (WaitUntilDoneDelegate::cleanUpCustomMenuDrawingData): Updated for WebKit API changes.
+        (WaitUntilDoneDelegate::addCustomMenuDrawingData): Updated for WebKit API changes.
+        (WaitUntilDoneDelegate::webViewLostFocus): Updated for WebKit API changes.
+
 2007-05-08  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Ada.

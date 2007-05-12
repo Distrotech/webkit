@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *               2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,7 +25,7 @@
  */
 
 cpp_quote("/*")
-cpp_quote(" * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.")
+cpp_quote(" * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.")
 cpp_quote(" *               2007 Apple Inc.  All rights reserved.")
 cpp_quote(" *")
 cpp_quote(" * Redistribution and use in source and binary forms, with or without")
@@ -70,8 +70,9 @@ interface IWebDownloadDelegate;
 */
 
 [
-    local,
     object,
+    oleautomation,
+    hidden,
     uuid(65EFE83B-A9E4-4516-8F3B-BAA25DA90FFD),
     pointer_default(unique)
 ]
@@ -142,14 +143,14 @@ interface IWebDownload : IUnknown
 */
 
 [
-    local,
     object,
+    oleautomation,
     uuid(16A32AE6-C862-40cd-9225-2CAF823F40F9),
     pointer_default(unique)
 ]
 interface IWebDownloadDelegate : IUnknown
 {
-    HRESULT decideDestinationWithSuggestedFilename([in, out] IWebDownload* download, [in] BSTR filename);
+    HRESULT decideDestinationWithSuggestedFilename([in] IWebDownload* download, [in] BSTR filename);
 
     HRESULT didCancelAuthenticationChallenge([in] IWebDownload* download, [in] IWebURLAuthenticationChallenge* challenge);
 

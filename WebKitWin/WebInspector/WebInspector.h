@@ -94,7 +94,7 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE didReceiveIcon( 
         /* [in] */ IWebView*,
-        /* [in] */ HBITMAP,
+        /* [in] */ OLE_HANDLE,
         /* [in] */ IWebFrame*) { return E_NOTIMPL; }
     
     virtual HRESULT STDMETHODCALLTYPE didFinishLoadForFrame( 
@@ -150,11 +150,11 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE webViewFirstResponder( 
         /* [in] */ IWebView*,
-        /* [retval][out] */ HWND*) { return E_NOTIMPL; }
+        /* [retval][out] */ OLE_HANDLE*) { return E_NOTIMPL; }
     
     virtual HRESULT STDMETHODCALLTYPE makeFirstResponder( 
         /* [in] */ IWebView*,
-        /* [in] */ HWND) { return E_NOTIMPL; }
+        /* [in] */ OLE_HANDLE) { return E_NOTIMPL; }
     
     virtual HRESULT STDMETHODCALLTYPE setStatusText( 
         /* [in] */ IWebView*,
@@ -237,8 +237,8 @@ public:
     virtual HRESULT STDMETHODCALLTYPE contextMenuItemsForElement( 
         /* [in] */ IWebView*,
         /* [in] */ IPropertyBag*,
-        /* [in] */ HMENU,
-        /* [retval][out] */ HMENU*) { return E_NOTIMPL; }
+        /* [in] */ OLE_HANDLE,
+        /* [retval][out] */ OLE_HANDLE*) { return E_NOTIMPL; }
     
     virtual HRESULT STDMETHODCALLTYPE validateUserInterfaceItem( 
         /* [in] */ IWebView*,
@@ -282,7 +282,7 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE trackCustomPopupMenu( 
         /* [in] */ IWebView*,
-        /* [in] */ HMENU,
+        /* [in] */ OLE_HANDLE,
         /* [in] */ LPPOINT) { return E_NOTIMPL; }
     
     virtual HRESULT STDMETHODCALLTYPE measureCustomMenuItem( 
@@ -295,11 +295,11 @@ public:
     
     virtual HRESULT STDMETHODCALLTYPE addCustomMenuDrawingData( 
         /* [in] */ IWebView*,
-        /* [in] */ HMENU) { return E_NOTIMPL; }
+        /* [in] */ OLE_HANDLE) { return E_NOTIMPL; }
     
     virtual HRESULT STDMETHODCALLTYPE cleanUpCustomMenuDrawingData( 
         /* [in] */ IWebView*,
-        /* [in] */ HMENU) { return E_NOTIMPL; }
+        /* [in] */ OLE_HANDLE) { return E_NOTIMPL; }
     
     virtual HRESULT STDMETHODCALLTYPE canTakeFocus( 
         /* [in] */ IWebView*,

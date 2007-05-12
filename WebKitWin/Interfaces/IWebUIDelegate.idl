@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,7 +24,7 @@
  */
 
 cpp_quote("/*")
-cpp_quote(" * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.")
+cpp_quote(" * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.")
 cpp_quote(" *")
 cpp_quote(" * Redistribution and use in source and binary forms, with or without")
 cpp_quote(" * modification, are permitted provided that the following conditions")
@@ -171,8 +171,8 @@ typedef enum WebDragSourceAction {
     @protocol WebOpenPanelResultListener <NSObject>
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(634198C7-9DFC-4aba-9E8C-90AEEA7A4144),
     pointer_default(unique)
 ]
@@ -203,8 +203,8 @@ interface IWebOpenPanelResultListener : IUnknown
     @interface NSObject (WebUIDelegate)
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(2452A889-A74A-4fbc-9617-326A0A953630),
     pointer_default(unique)
 ]
@@ -276,7 +276,7 @@ interface IWebUIDelegate : IUnknown
         real first responder if some control not in the window has focus.
         - (NSResponder *)webViewFirstResponder:(WebView *)sender;
     */
-    HRESULT webViewFirstResponder([in] IWebView* sender, [out, retval] HWND* responder);
+    HRESULT webViewFirstResponder([in] IWebView* sender, [out, retval] OLE_HANDLE* responderHWnd);
 
     /*!
         @method webView:makeFirstResponder:
@@ -290,7 +290,7 @@ interface IWebUIDelegate : IUnknown
         elsewhere, or possibly ignore this call.
         - (void)webView:(WebView *)sender makeFirstResponder:(NSResponder *)responder;
     */
-    HRESULT makeFirstResponder([in] IWebView* sender, [in] HWND responder);
+    HRESULT makeFirstResponder([in] IWebView* sender, [in] OLE_HANDLE responderHWnd);
 
     /*!
         @method webView:setStatusText:
@@ -504,7 +504,7 @@ interface IWebUIDelegate : IUnknown
         @result An array of NSMenuItems to include in the contextual menu.
         - (NSArray *)webView:(WebView *)sender contextMenuItemsForElement:(NSDictionary *)element defaultMenuItems:(NSArray *)defaultMenuItems;
     */
-    HRESULT contextMenuItemsForElement([in] IWebView* sender, [in] IPropertyBag* element, [in] HMENU defaultItems, [out, retval] HMENU* resultMenu);
+    HRESULT contextMenuItemsForElement([in] IWebView* sender, [in] IPropertyBag* element, [in] OLE_HANDLE defaultItemsHMenu, [out, retval] OLE_HANDLE* resultHMenu);
 
     /*!
         @method webView:validateUserInterfaceItem:defaultValidation:
@@ -589,7 +589,7 @@ interface IWebUIDelegate : IUnknown
         @param item The menu item that was selected.
         @param element A dictionary representation of the clicked element.
     */
-    HRESULT contextMenuItemSelected([in] IWebView* sender, [in] void* item, [in] IPropertyBag* element);
+    [local] HRESULT contextMenuItemSelected([in] IWebView* sender, [in] void* item, [in] IPropertyBag* element);
 
     /*
         @method hasCustomMenuImplementation:
@@ -604,7 +604,7 @@ interface IWebUIDelegate : IUnknown
         @param menu The menu that we want to pop up.
         @param point The point associated with the context menu event in the coordinates of the WebView
     */
-    HRESULT trackCustomPopupMenu([in] IWebView* sender, [in] HMENU menu, [in] LPPOINT point);
+    HRESULT trackCustomPopupMenu([in] IWebView* sender, [in] OLE_HANDLE hMenu, [in] LPPOINT point);
 
     /*
         @method webView:measureCustomMenuItem
@@ -612,7 +612,7 @@ interface IWebUIDelegate : IUnknown
         @param sender The WebView sending the delegate method.
         @param measureItem The LPMEASUREITEMSTRUCT associated with the item.
     */
-    HRESULT measureCustomMenuItem([in] IWebView* sender, [in] void* measureItem);
+    [local] HRESULT measureCustomMenuItem([in] IWebView* sender, [in] void* measureItem);
 
     /*
         @method webView:drawCustomMenuItem
@@ -620,7 +620,7 @@ interface IWebUIDelegate : IUnknown
         @param sender The WebView sending the delegate method.
         @param drawItem The LPDRAWITEMSTRUCT associated with the item.
     */
-    HRESULT drawCustomMenuItem([in] IWebView* sender, [in] void* drawItem);
+    [local] HRESULT drawCustomMenuItem([in] IWebView* sender, [in] void* drawItem);
 
     /*
         @method webView:addCustomMenuDrawingData
@@ -629,7 +629,7 @@ interface IWebUIDelegate : IUnknown
         @param menu The cutsom menu to clean up.
         @discussion This method is called for submenus as well.
     */
-    HRESULT addCustomMenuDrawingData([in] IWebView* sender, [in] HMENU menu);
+    HRESULT addCustomMenuDrawingData([in] IWebView* sender, [in] OLE_HANDLE hMenu);
 
     /*
         @method webView:cleanUpCustomMenuDrawingData
@@ -637,7 +637,7 @@ interface IWebUIDelegate : IUnknown
         @param sender The WebView sending the delegate method.
         @param menu The cutsom menu to clean up.
     */
-    HRESULT cleanUpCustomMenuDrawingData([in] IWebView* sender, [in] HMENU menu);
+    HRESULT cleanUpCustomMenuDrawingData([in] IWebView* sender, [in] OLE_HANDLE hMenu);
 
     /*!
         @method webView:canTakeFocus:

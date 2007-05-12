@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,7 +24,7 @@
  */
 
 cpp_quote("/*")
-cpp_quote(" * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.")
+cpp_quote(" * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.")
 cpp_quote(" *")
 cpp_quote(" * Redistribution and use in source and binary forms, with or without")
 cpp_quote(" * modification, are permitted provided that the following conditions")
@@ -62,8 +62,8 @@ interface IWebResource;
     application where one class is needed to represent rich web content. 
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(F07D5252-F66E-4a4d-B9DC-33BD11DCC138),
     pointer_default(unique)
 ]
@@ -101,14 +101,14 @@ interface IWebArchive : IUnknown
         @result The subresource of the archive (can be nil).
         - (NSArray *)subresources;
     */
-    HRESULT subResources([out] int* cSubResources, [out, retval] IWebResource*** subResources);
+    HRESULT subResources([out, retval] IEnumVARIANT** enumResources);
 
     /*!
         @method subframeArchives
         @result The archives representing the subframes of the archive (can be nil).
         - (NSArray *)subframeArchives;
     */
-    HRESULT subframeArchives([out] int* cSubFrameArchives, [out, retval] IWebArchive*** subFrameArch);
+    HRESULT subframeArchives([out, retval] IEnumVARIANT** enumSubframes);
 
     /*!
         @method data

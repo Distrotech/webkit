@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,7 +24,7 @@
  */
 
 cpp_quote("/*")
-cpp_quote(" * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.")
+cpp_quote(" * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.")
 cpp_quote(" *")
 cpp_quote(" * Redistribution and use in source and binary forms, with or without")
 cpp_quote(" * modification, are permitted provided that the following conditions")
@@ -76,8 +76,9 @@ import "ocidl.idl";
     @interface WebIconDatabase : NSObject
 */
 [
-    local,
     object,
+    oleautomation,
+    hidden,
     uuid(E93F2616-2560-47d9-BD4D-6E2F1E1D3174),
     pointer_default(unique)
 ]
@@ -113,14 +114,14 @@ interface IWebIconDatabase : IUnknown
         @param URL
         - (NSString *)iconURLForURL:(NSString *)URL;
     */
-    HRESULT iconForURL([in] BSTR url, [in, optional] LPSIZE size, [in, optional] BOOL cache, [out, retval] HBITMAP* image);
+    HRESULT iconForURL([in] BSTR url, [in] LPSIZE size, [in] BOOL cache, [out, retval] OLE_HANDLE* hBitmap);
 
     /*!
         @method defaultIconWithSize:
         @param size
         - (NSImage *)defaultIconWithSize:(NSSize)size;
     */
-    HRESULT defaultIconWithSize([in] LPSIZE size, [out, retval] HBITMAP* result);
+    HRESULT defaultIconWithSize([in] LPSIZE size, [out, retval] OLE_HANDLE* hBitmap);
 
     /*!
         @method retainIconForURL:

@@ -142,8 +142,7 @@ public:
         /* [retval][out] */ IWebFrame **frame);
     
     virtual HRESULT STDMETHODCALLTYPE childFrames( 
-        /* [out] */ unsigned* frameCount,
-        /* [retval][out] */ SAFEARRAY** frames);
+        /* [retval][out] */ IEnumVARIANT **enumFrames);
 
     virtual HRESULT STDMETHODCALLTYPE currentForm( 
         /* [retval][out] */ IDOMElement **formElement);

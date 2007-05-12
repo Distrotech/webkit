@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,7 +24,7 @@
  */
 
 cpp_quote("/*")
-cpp_quote(" * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.")
+cpp_quote(" * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.")
 cpp_quote(" *")
 cpp_quote(" * Redistribution and use in source and binary forms, with or without")
 cpp_quote(" * modification, are permitted provided that the following conditions")
@@ -50,7 +50,6 @@ cpp_quote(" */")
 
 import "oaidl.idl";
 import "ocidl.idl";
-import "IWebAttributedString.idl";
 import "IWebError.idl";
 import "IWebDataSource.idl";
 import "IWebError.idl";
@@ -65,8 +64,8 @@ interface IWebDataSource;
     @protocol WebDocumentView <NSObject>
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(0A6397A7-90FE-49a0-B9C1-44693DD779F7),
     pointer_default(unique)
 ]
@@ -111,7 +110,7 @@ interface IWebDocumentView : IUnknown
         @abstract Called before the host window is set on the parent web view.
         - (void)viewWillMoveToHostWindow:(NSWindow *)hostWindow;
     */
-    HRESULT viewWillMoveToHostWindow([in] HWND window);
+    HRESULT viewWillMoveToHostWindow([in] OLE_HANDLE hwnd);
 
     /*!
         @method viewDidMoveToHostWindow
@@ -128,8 +127,8 @@ interface IWebDocumentView : IUnknown
     @protocol WebDocumentSearching <NSObject>
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(0213643B-8DF9-4ba4-9534-61D92CB75007),
     pointer_default(unique)
 ]
@@ -155,8 +154,8 @@ interface IWebDocumentSearching : IUnknown
     @protocol WebDocumentText <NSObject>
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(B6282B92-6F31-4948-A3A0-89763C56BBBF),
     pointer_default(unique)
 ]
@@ -174,14 +173,7 @@ interface IWebDocumentText : IUnknown
         @result String that represents the entire document.
         - (NSString *)string;
     */
-    HRESULT string_([out, retval] BSTR* result);
-
-    /*!
-        @method attributedString
-        @result Attributed string that represents the entire document.
-        - (NSAttributedString *)attributedString;
-    */
-    HRESULT attributedString([out, retval] BSTR* result);
+    HRESULT string([out, retval] BSTR* result);
 
     /*!
         @method selectedString
@@ -189,13 +181,6 @@ interface IWebDocumentText : IUnknown
         - (NSString *)selectedString;
     */
     HRESULT selectedString([out, retval] BSTR* result);
-
-    /*!
-        @method selectedAttributedString
-        @result Attributed string that represents the current selection.
-        - (NSAttributedString *)selectedAttributedString;
-    */
-    HRESULT selectedAttributedString([out, retval] IWebAttributedString** result);
 
     /*!
         @method selectAll
@@ -219,8 +204,8 @@ interface IWebDocumentText : IUnknown
     @protocol WebDocumentRepresentation <NSObject>
 */
 [
-    local,
     object,
+    oleautomation,
     uuid(3C9F6251-CFD8-447a-B429-6B6AE627436C),
     pointer_default(unique)
 ]

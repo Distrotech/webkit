@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,7 +24,7 @@
  */
 
 cpp_quote("/*")
-cpp_quote(" * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.")
+cpp_quote(" * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.")
 cpp_quote(" *")
 cpp_quote(" * Redistribution and use in source and binary forms, with or without")
 cpp_quote(" * modification, are permitted provided that the following conditions")
@@ -59,8 +59,9 @@ import "ocidl.idl";
     WebHistoryItems are set by WebKit.  WebHistoryItems are normally never created directly.
 */
 [
-    local,
     object,
+    oleautomation,
+    hidden,
     uuid(1E2970AE-72B7-4500-A7A0-12B0FFEB91FC),
     pointer_default(unique)
 ]
@@ -143,5 +144,5 @@ interface IWebHistoryItem : IUnknown
         @result The icon associated with this item's URL.
         - (NSImage *)icon;
     */
-    HRESULT icon([out, retval] HBITMAP* image);
+    HRESULT icon([out, retval] OLE_HANDLE* hBitmap);
 }

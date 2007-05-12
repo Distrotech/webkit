@@ -131,17 +131,18 @@ static void doMouseUp(MSG msg)
 
     if (draggingInfo) {
         COMPtr<IWebView> webView;
-        if (SUCCEEDED(frame->webView(&webView))) {
+        COMPtr<IDropTarget> webViewDropTarget;
+        if (SUCCEEDED(frame->webView(&webView)) && SUCCEEDED(webView->QueryInterface(IID_IDropTarget, (void**)&webViewDropTarget))) {
             POINT screenPoint = msg.pt;
             ::ClientToScreen(webViewWindow, &screenPoint);
             HRESULT hr = draggingInfo->dropSource()->QueryContinueDrag(0, 0);
             DWORD effect = 0;
-            webView->DragOver(0, pointl(screenPoint), &effect);
+            webViewDropTarget->DragOver(0, pointl(screenPoint), &effect);
             if (hr == DRAGDROP_S_DROP && effect != DROPEFFECT_NONE) {
                 DWORD effect = 0;
-                webView->Drop(draggingInfo->dataObject(), 0, pointl(screenPoint), &effect);
+                webViewDropTarget->Drop(draggingInfo->dataObject(), 0, pointl(screenPoint), &effect);
             } else
-                webView->DragLeave();
+                webViewDropTarget->DragLeave();
 
             delete draggingInfo;
             draggingInfo = 0;
@@ -175,12 +176,13 @@ static void doMouseMove(MSG msg)
         ::ClientToScreen(webViewWindow, &screenPoint);
 
         IWebView* webView;
-        if (SUCCEEDED(frame->webView(&webView))) {
+        COMPtr<IDropTarget> webViewDropTarget;
+        if (SUCCEEDED(frame->webView(&webView)) && SUCCEEDED(webView->QueryInterface(IID_IDropTarget, (void**)&webViewDropTarget))) {
             DWORD effect = 0;
             if (didDragEnter)
-                webView->DragOver(MK_LBUTTON, pointl(screenPoint), &effect);
+                webViewDropTarget->DragOver(MK_LBUTTON, pointl(screenPoint), &effect);
             else {
-                webView->DragEnter(draggingInfo->dataObject(), MK_LBUTTON, pointl(screenPoint), &effect);
+                webViewDropTarget->DragEnter(draggingInfo->dataObject(), MK_LBUTTON, pointl(screenPoint), &effect);
                 didDragEnter = true;
             }
             draggingInfo->dropSource()->GiveFeedback(effect);
