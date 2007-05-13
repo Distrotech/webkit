@@ -36,7 +36,7 @@
 
 namespace WebCore {
 
-// FIXME: This is incomplete.  We should change this to mirror
+// FIXME: This is incomplete. We could change this to mirror
 // more like what Firefox does, and generate these switch statements
 // at build time.
 static String keyIdentifierForWindowsKeyCode(short keyCode)
@@ -126,11 +126,11 @@ static String keyIdentifierForWindowsKeyCode(short keyCode)
             return "Select";
         case VK_UP:
             return "Up";
-        // Standard says that DEL becomes U+00007F.
+        // Standard says that DEL becomes U+007F.
         case VK_DELETE:
-            return "U+00007F";
+            return "U+007F";
         default:
-            return String::format("U+%06X", toupper(keyCode));
+            return String::format("U+%04X", toupper(keyCode));
     }
 }
 
@@ -143,11 +143,11 @@ PlatformKeyboardEvent::PlatformKeyboardEvent(HWND, WPARAM virtualKeyCode, LPARAM
     , m_isKeyUp((keyData & NEW_RELEASE_STATE_MASK))
     , m_autoRepeat((keyData & REPEAT_COUNT_MASK) > 1)
     , m_WindowsKeyCode(virtualKeyCode)
-    , m_isKeypad(false) // FIXME
+    , m_isKeypad(false) // FIXME: Need to implement this.
     , m_shiftKey(GetKeyState(VK_SHIFT) & HIGH_BIT_MASK_SHORT)
     , m_ctrlKey(GetKeyState(VK_CONTROL) & HIGH_BIT_MASK_SHORT)
     , m_altKey(keyData & ALT_KEY_DOWN_MASK)
-    , m_metaKey(keyData & ALT_KEY_DOWN_MASK) // FIXME: Is this right?
+    , m_metaKey(keyData & ALT_KEY_DOWN_MASK) // FIXME: This is not right!
 {
 }
 
