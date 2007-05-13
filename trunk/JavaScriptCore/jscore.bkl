@@ -41,7 +41,7 @@ JavaScriptCore Bakefile project file.
     <template id="jscore_base" template="icu,pthreads">
         <!-- <objects-depend>dftables</objects-depend> -->
         <!-- <pre-build-target>DerivedSources</pre-build-target> -->
-        <dirname>$(WEBKITOUTPUTDIR)</dirname>
+        <dirname>$(WKOUTPUTDIR)</dirname>
         <warnings>default</warnings>
         <cxx-rtti>off</cxx-rtti>
         <cxx-exceptions>off</cxx-exceptions>
@@ -55,7 +55,7 @@ JavaScriptCore Bakefile project file.
         <if cond="PLATFORM_WIN32=='1'">
             $(JSCORE_SOURCES_WIN)
         </if>
-        <install-to>$(WEBKITOUTPUTDIR)</install-to>
+        <install-to>$(WKOUTPUTDIR)</install-to>
         <pic>on</pic>
         <threading>multi</threading>
 
@@ -102,7 +102,7 @@ JavaScriptCore Bakefile project file.
         <debug-info>on</debug-info>
         <objects-depend>jscore</objects-depend>
         <include>$(SRCDIR)</include>
-        <dirname>$(WEBKITOUTPUTDIR)</dirname>
+        <dirname>$(WKOUTPUTDIR)</dirname>
         <sources>$(SRCDIR)/kjs/testkjs.cpp</sources>
     </exe>
 

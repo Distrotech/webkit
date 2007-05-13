@@ -12,7 +12,7 @@
     <dll id="wxwebkit-dynamic" template="wx,webcore,xml2,iconv,xslt,icu,jscore,curl,sqlite3,gtk,pthreads">
         <debug-info>on</debug-info>
         <runtime-libs>dynamic</runtime-libs>
-        <dirname>$(WEBKITOUTPUTDIR)</dirname>
+        <dirname>$(WKOUTPUTDIR)</dirname>
         <dllname>wxwebkit</dllname>
         <libname>wxwebkit</libname>
         
@@ -25,11 +25,11 @@
         
         <set var="BUILDDIR">obj-$(FORMAT)</set>
         
-        <include>$(WEBKIT_ROOT)/WebCore/platform/wx</include>
-        <include>$(WEBKIT_ROOT)/WebCore/bridge/wx</include>
-        <include>$(WEBKIT_ROOT)/WebCore/page/wx</include>
-        <include>$(WEBKIT_ROOT)/WebKit/wx</include>
-        <include>$(WEBKIT_ROOT)/WebKit/wx/WebKitSupport</include>
+        <include>$(WK_ROOT)/WebCore/platform/wx</include>
+        <include>$(WK_ROOT)/WebCore/bridge/wx</include>
+        <include>$(WK_ROOT)/WebCore/page/wx</include>
+        <include>$(WK_ROOT)/WebKit/wx</include>
+        <include>$(WK_ROOT)/WebKit/wx/WebKitSupport</include>
         
         <define>BUILDING_WX__=1</define>
         

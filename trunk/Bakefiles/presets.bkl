@@ -34,16 +34,16 @@ and WebCore. Include this file to use these settings.
 
 
 <makefile>
-    <if cond="not isdefined('WEBKIT_ROOT')">
-        <option name="WEBKIT_ROOT" category="path">
+    <if cond="not isdefined('WK_ROOT')">
+        <option name="WK_ROOT" category="path">
             <default-value>$(DOLLAR)(WEBKIT_ROOT)</default-value>
             <description>
                 The root directory containing WebKit sources
             </description>
         </option>
     </if>
-    <if cond="not isdefined('WEBKITOUTPUTDIR')">
-        <option name="WEBKITOUTPUTDIR" category="path">
+    <if cond="not isdefined('WKOUTPUTDIR')">
+        <option name="WKOUTPUTDIR" category="path">
             <default-value>$(DOLLAR)(WEBKITOUTPUTDIR)</default-value>
             <description>
                 The root directory containing WebKit sources
@@ -52,18 +52,18 @@ and WebCore. Include this file to use these settings.
     </if>
     
     <template id="jscore">
-        <include>$(WEBKIT_ROOT)/JavaScriptCore</include>
+        <include>$(WK_ROOT)/JavaScriptCore</include>
         <if cond="FORMAT in ['msvc', 'msvs2005prj']">
             <!-- MSVC chokes on #import, so don't use ForwardingHeaders... -->
-            <include>$(WEBKIT_ROOT)/JavaScriptCore/os-win32</include><!-- stdint.h is here -->
+            <include>$(WK_ROOT)/JavaScriptCore/os-win32</include><!-- stdint.h is here -->
         </if>
         
         <if cond="FORMAT=='gnu'">
-            <ldflags>$(WEBKITOUTPUTDIR)/libjscore.a</ldflags>
+            <ldflags>$(WKOUTPUTDIR)/libjscore.a</ldflags>
         </if>
 		<if cond="FORMAT in ['msvc','msvs2005prj']">
 			<sys-lib>jscore</sys-lib>
-			<lib-path>$(WEBKITOUTPUTDIR)</lib-path>
+			<lib-path>$(WKOUTPUTDIR)</lib-path>
 		</if>
     </template>
 
@@ -86,42 +86,42 @@ and WebCore. Include this file to use these settings.
         </if>
 
         <if cond="PLATFORM_WIN32=='1'">
-            <include>$(WEBKIT_ROOT)/os-win32</include>
+            <include>$(WK_ROOT)/os-win32</include>
             <define>HAVE_SYS_TIMEB_H=1</define>
             <define>HAVE_FLOAT_H=1</define>
             <define>HAVE_FUNC__FINITE=1</define>
         </if>
     
-        <include>$(WEBKIT_ROOT)/WebCore/.</include>
-        <include>$(WEBKIT_ROOT)/WebCore/include</include>
-        <include>$(WEBKIT_ROOT)/WebCore/DerivedSources/WebCore</include>
-        <include>$(WEBKIT_ROOT)/WebCore/bindings/js</include>
-        <include>$(WEBKIT_ROOT)/WebCore/bridge</include>
-        <include>$(WEBKIT_ROOT)/WebCore/editing</include>
-        <include>$(WEBKIT_ROOT)/WebCore/history</include>
-        <include>$(WEBKIT_ROOT)/WebCore/html</include>
-        <include>$(WEBKIT_ROOT)/WebCore/css</include>
-        <include>$(WEBKIT_ROOT)/WebCore/dom</include>
-        <include>$(WEBKIT_ROOT)/WebCore/kwq</include>
-        <include>$(WEBKIT_ROOT)/WebCore/loader</include>
-        <include>$(WEBKIT_ROOT)/WebCore/page</include>
-        <include>$(WEBKIT_ROOT)/WebCore/platform</include>
-        <include>$(WEBKIT_ROOT)/WebCore/platform/graphics</include>
-        <include>$(WEBKIT_ROOT)/WebCore/platform/image-decoders</include>
-        <include>$(WEBKIT_ROOT)/WebCore/platform/image-decoders/gif</include>
-        <include>$(WEBKIT_ROOT)/WebCore/platform/image-decoders/jpeg</include>
-        <include>$(WEBKIT_ROOT)/WebCore/platform/image-decoders/png</include>
-        <include>$(WEBKIT_ROOT)/WebCore/platform/image-decoders/zlib</include>
-        <include>$(WEBKIT_ROOT)/WebCore/platform/network</include>
-        <include>$(WEBKIT_ROOT)/WebCore/rendering</include>
-        <include>$(WEBKIT_ROOT)/WebCore/xml</include>
+        <include>$(WK_ROOT)/WebCore/.</include>
+        <include>$(WK_ROOT)/WebCore/include</include>
+        <include>$(WK_ROOT)/WebCore/DerivedSources/WebCore</include>
+        <include>$(WK_ROOT)/WebCore/bindings/js</include>
+        <include>$(WK_ROOT)/WebCore/bridge</include>
+        <include>$(WK_ROOT)/WebCore/editing</include>
+        <include>$(WK_ROOT)/WebCore/history</include>
+        <include>$(WK_ROOT)/WebCore/html</include>
+        <include>$(WK_ROOT)/WebCore/css</include>
+        <include>$(WK_ROOT)/WebCore/dom</include>
+        <include>$(WK_ROOT)/WebCore/kwq</include>
+        <include>$(WK_ROOT)/WebCore/loader</include>
+        <include>$(WK_ROOT)/WebCore/page</include>
+        <include>$(WK_ROOT)/WebCore/platform</include>
+        <include>$(WK_ROOT)/WebCore/platform/graphics</include>
+        <include>$(WK_ROOT)/WebCore/platform/image-decoders</include>
+        <include>$(WK_ROOT)/WebCore/platform/image-decoders/gif</include>
+        <include>$(WK_ROOT)/WebCore/platform/image-decoders/jpeg</include>
+        <include>$(WK_ROOT)/WebCore/platform/image-decoders/png</include>
+        <include>$(WK_ROOT)/WebCore/platform/image-decoders/zlib</include>
+        <include>$(WK_ROOT)/WebCore/platform/network</include>
+        <include>$(WK_ROOT)/WebCore/rendering</include>
+        <include>$(WK_ROOT)/WebCore/xml</include>
         
         <if cond="FORMAT=='gnu'">
-            <ldflags>$(WEBKITOUTPUTDIR)/libwebcore-wx.a</ldflags>
+            <ldflags>$(WKOUTPUTDIR)/libwebcore-wx.a</ldflags>
         </if>
 		<if cond="FORMAT in ['msvc','msvs2005prj']">
 			<sys-lib>webcore-wx</sys-lib>
-			<lib-path>$(WEBKITOUTPUTDIR)</lib-path>
+			<lib-path>$(WKOUTPUTDIR)</lib-path>
 		</if>
     </template>
 
@@ -140,8 +140,8 @@ and WebCore. Include this file to use these settings.
             <cxxflags>$(SQLITE3_CFLAGS)</cxxflags>
         </if>
 		<if cond="FORMAT in ['msvc','msvs2005prj']">
-			<include>$(WEBKIT_ROOT)/sqlite3</include>
-			<lib-path>$(WEBKIT_ROOT)/sqlite3</lib-path>
+			<include>$(WK_ROOT)/sqlite3</include>
+			<lib-path>$(WK_ROOT)/sqlite3</lib-path>
 		</if>
     </template>
 
@@ -184,9 +184,9 @@ and WebCore. Include this file to use these settings.
         	<cxxflags>$(CURL_CFLAGS)</cxxflags>
 	</if>
 	<if cond="FORMAT in ['msvc', 'msvs2005prj']">
-		<include>$(WEBKIT_ROOT)/libcurl/include</include>
+		<include>$(WK_ROOT)/libcurl/include</include>
 		<sys-lib>libcurl</sys-lib>
-		<lib-path>$(WEBKIT_ROOT)/libcurl</lib-path>
+		<lib-path>$(WK_ROOT)/libcurl</lib-path>
 	</if>
     </template>
 
@@ -240,8 +240,8 @@ and WebCore. Include this file to use these settings.
         </if>
 
         <if cond="PLATFORM_WIN32=='1'">
-            <include>$(WEBKIT_ROOT)/libxml/include</include>
-	    <lib-path>$(WEBKIT_ROOT)/libxml/lib</lib-path>
+            <include>$(WK_ROOT)/libxml/include</include>
+	    <lib-path>$(WK_ROOT)/libxml/lib</lib-path>
 	    <sys-lib>libxml2_a</sys-lib>
         </if>
     </template>
@@ -263,9 +263,9 @@ and WebCore. Include this file to use these settings.
         </if>
 
         <if cond="PLATFORM_WIN32=='1'">
-            <include>$(WEBKIT_ROOT)/libxslt/include</include>
+            <include>$(WK_ROOT)/libxslt/include</include>
 	    <sys-lib>libxslt_a</sys-lib>
-	    <lib-path>$(WEBKIT_ROOT)/libxslt/lib</lib-path>
+	    <lib-path>$(WK_ROOT)/libxslt/lib</lib-path>
 
         </if>
     </template>
@@ -287,10 +287,10 @@ and WebCore. Include this file to use these settings.
         </if>
 
         <if cond="PLATFORM_WIN32=='1'">
-            <include>$(WEBKIT_ROOT)/icu/include</include>
+            <include>$(WK_ROOT)/icu/include</include>
 	    <sys-lib>icuuc</sys-lib>
 	    <sys-lib>icuin</sys-lib>
-	    <lib-path>$(WEBKIT_ROOT)/icu/lib</lib-path>
+	    <lib-path>$(WK_ROOT)/icu/lib</lib-path>
         </if>
     </template>
 
@@ -299,7 +299,7 @@ and WebCore. Include this file to use these settings.
         <if cond="PLATFORM_WIN32=='1'">
             <include>$(SRCDIR)/../iconv/include</include>
 	    <sys-lib>iconv_a</sys-lib>
-	    <lib-path>$(WEBKIT_ROOT)/iconv/lib</lib-path>
+	    <lib-path>$(WK_ROOT)/iconv/lib</lib-path>
         </if>
     </template>
 
@@ -308,7 +308,7 @@ and WebCore. Include this file to use these settings.
         <if cond="PLATFORM_WIN32=='1'">
             <include>$(SRCDIR)/../pthreads/include</include> 
         <sys-lib>pthreadVC2</sys-lib>
-	    <lib-path>$(WEBKIT_ROOT)/pthreads/lib</lib-path>
+	    <lib-path>$(WK_ROOT)/pthreads/lib</lib-path>
         </if>
     </template>
     

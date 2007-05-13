@@ -10,20 +10,21 @@
     <include file="../../Bakefiles/presets.bkl"/>
     
     <template id="wxwebkit">
-        <lib-path>$(WEBKITOUTPUTDIR)</lib-path>
+        <lib-path>$(WKOUTPUTDIR)</lib-path>
         <sys-lib>wxwebkit</sys-lib>    
     </template>
     <exe id="wxBrowser" template="wx,xml2,iconv,xslt,icu,jscore,webcore,wxwebkit,curl,pthreads">
         <app-type>gui</app-type>
         <debug-info>on</debug-info>
         <runtime-libs>dynamic</runtime-libs>
+        <dirname>$(WKOUTPUTDIR)</dirname>
         <set var="BUILDDIR">obj-$(FORMAT)</set>
         
-        <include>$(WEBKIT_ROOT)/WebCore/platform/wx</include>
-        <include>$(WEBKIT_ROOT)/WebCore/bridge/wx</include>
-        <include>$(WEBKIT_ROOT)/WebCore/page/wx</include>
-        <include>$(WEBKIT_ROOT)/WebKit/wx</include>
-        <include>$(WEBKIT_ROOT)/WebKit/wx/WebKitSupport</include>
+        <include>$(WK_ROOT)/WebCore/platform/wx</include>
+        <include>$(WK_ROOT)/WebCore/bridge/wx</include>
+        <include>$(WK_ROOT)/WebCore/page/wx</include>
+        <include>$(WK_ROOT)/WebKit/wx</include>
+        <include>$(WK_ROOT)/WebKit/wx/WebKitSupport</include>
         
         <define>BUILDING_WX__=1</define>
 	    <if cond="FORMAT in ['msvc', 'msvs2005prj']">
@@ -37,9 +38,9 @@
         <wx-lib>core</wx-lib>
         <wx-lib>base</wx-lib>    
         <!--
-        <lib-path>$(WEBKIT_ROOT)/WebCore/Projects/wx</lib-path>
+        <lib-path>$(WK_ROOT)/WebCore/Projects/wx</lib-path>
         <sys-lib>webcore-wx</sys-lib>
-        <lib-path>$(WEBKIT_ROOT)/WebKit/wx</lib-path>
+        <lib-path>$(WK_ROOT)/WebKit/wx</lib-path>
         <sys-lib>wxwebkit</sys-lib>  
                 -->
     </exe>
