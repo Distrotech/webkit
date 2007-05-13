@@ -58,6 +58,15 @@ String DragData::asURL(String* title) const
     return getURL(m_platformDragData, success, title);
 }
 
+bool DragData::containsFiles() const
+{
+    return false;
+}
+
+void DragData::asFilenames(Vector<String>& result) const
+{
+}
+
 bool DragData::containsPlainText() const
 {
     return SUCCEEDED(m_platformDragData->QueryGetData(plainTextWFormat()))

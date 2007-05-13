@@ -1,3 +1,13 @@
+2007-05-12  Oliver Hunt  <oliver@apple.com>
+
+        rs=hyatt.
+
+        Stubs to prevent build bustage
+
+        * platform/win/DragDataWin.cpp:
+        (WebCore::DragData::containsFiles):
+        (WebCore::DragData::asFilenames):
+
 2007-05-11  Darin Adler  <darin@apple.com>
 
         * WebCore.vcproj/WebCore.vcproj: Added new RenderWordBreak.cpp/h files.
