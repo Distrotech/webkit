@@ -338,9 +338,14 @@ void wxWebView::MakeEditable(bool enable)
 
 void wxWebView::OnPaint(wxPaintEvent& event)
 {
-if (m_beingDestroyed)
-    return;
+    if (m_beingDestroyed || !m_impl->frameView || !m_impl->frame)
+        return;
 
+    // If we need to do a layout, take care of it before painting. 
+    if (m_impl->frameView->needsLayout()) {
+        m_impl->frameView->layout();
+    }
+    
 // FIXME: We should use buffered drawing under Win/Linux to avoid flicker and such.
 #if 0 //ndef __WXMAC__
     wxBufferedPaintDC dc(this, wxBUFFER_CLIENT_AREA);
@@ -372,7 +377,7 @@ if (m_beingDestroyed)
 #else
             WebCore::GraphicsContext* gc = new WebCore::GraphicsContext(&dc);
 #endif
-            if (gc && !m_impl->frameView->needsLayout())
+            if (gc && m_impl->frame->renderer())
                 m_impl->frame->paint(gc, paintRect);
         }
     }
@@ -383,12 +388,14 @@ void wxWebView::OnSize(wxSizeEvent& event)
 {
     // FIXME: Even with the below test, on Win
     // I get m_impl->frame vars in an undefined state
+    
+    // NOTE: this call can be expensive on heavy pages, particularly on Mac,
+    // so we probably should set a timer not put x ms between layouts.
+    
     if (m_isInitialized && m_impl->frame && m_impl->frameView) {
-        WebCore::RenderObject *renderer = m_impl->frame->renderer();
-        if (renderer)
-            renderer->setNeedsLayout(true);
-        m_impl->frameView->scheduleRelayout();
+        m_impl->frameView->layout();
     }
+    
     event.Skip();
 
 }
