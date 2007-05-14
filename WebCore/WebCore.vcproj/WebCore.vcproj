@@ -8022,11 +8022,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\history\HistoryItemTimer.cpp"
+				RelativePath="..\..\..\..\OpenSource\WebCore\history\PageCache.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\OpenSource\WebCore\history\HistoryItemTimer.h"
+				RelativePath="..\..\..\..\OpenSource\WebCore\history\PageCache.h"
 				>
 			</File>
 		</Filter>
