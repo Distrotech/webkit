@@ -96,11 +96,11 @@ JavaScriptCore Bakefile project file.
 
     </template>
     
-    <exe id="testkjs" template="icu,jscore">
+    <exe id="testkjs" template="icu,jscore,pthreads">
         <cxx-rtti>off</cxx-rtti>
         <cxx-exceptions>off</cxx-exceptions>
         <debug-info>on</debug-info>
-        <objects-depend>jscore</objects-depend>
+        <depends>jscore</depends>
         <include>$(SRCDIR)</include>
         <dirname>$(WKOUTPUTDIR)</dirname>
         <sources>$(SRCDIR)/kjs/testkjs.cpp</sources>

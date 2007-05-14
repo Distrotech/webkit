@@ -63,6 +63,7 @@ and WebCore. Include this file to use these settings.
         </if>
 		<if cond="FORMAT in ['msvc','msvs2005prj']">
 			<sys-lib>jscore</sys-lib>
+                        <sys-lib>winmm</sys-lib> <!-- for timeGetTime -->
 			<lib-path>$(WKOUTPUTDIR)</lib-path>
 		</if>
     </template>

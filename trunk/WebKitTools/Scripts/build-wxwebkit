@@ -9,13 +9,19 @@ set -o errexit
 WK_ROOT=`pwd`/../..
 WK_ROOTDIR=$WK_ROOT
 export WXWEBKIT=1
-export WEBKITOUTPUTDIR=`perl -e "use webkitdirs; print baseProductDir()"`
+WEBKITOUTPUTDIR=`perl -e "use webkitdirs; print baseProductDir()"`
+WINDEPS="pthreads/lib/pthreadVC2.dll icu/bin/icuuc34.dll icu/bin/icudt34.dll libcurl/*.dll sqlite3/sqlite3.dll"
+WINDEPS="$WINDEPS $WXWIN/lib/vc_dll/wxmsw28ud_core_vc.dll $WXWIN/lib/vc_dll/wxbase28ud_vc.dll"
 # TODO: check that we are running from the root of the source tree...
 
+# cygpath will bork if the dir doesn't exist...
+mkdir -p $WEBKITOUTPUTDIR
 
 if [ $OSTYPE == cygwin ]; then
     EXE=.exe
-    WK_ROOTDIR=`cygpath -m $WK_ROOT`
+    WK_ROOTDIR=`cygpath -d $WK_ROOT`
+    WEBKITOUTPUTDIR=`cygpath -d $WEBKITOUTPUTDIR`
+    export WEBKITOUTPUTDIR
     if [ -z $WXWIN ]; then
         echo "Error, you must set WXWIN to your wxWidgets root directory."
 	exit 1
@@ -23,7 +29,16 @@ if [ $OSTYPE == cygwin ]; then
     if [ -z $BAKEFILE_PATHS ]; then
 	export BAKEFILE_PATHS=$WXWIN/build/bakefiles/wxpresets
     fi
+    LINKER=`which link`
+    if [ "$LINKER" = "/usr/bin/link" ]; then
+        echo "WARNING: wxWebKit builds using MSVC on Windows, but it looks like"
+        echo "you have the GCC linker on your path. If /usr/bin/link does NOT point"
+        echo "to the MSVC linker, you need to move it or change your path to pick up"
+        echo "Microsoft's link.exe program first."
+    fi
+
 else
+    export WEBKITOUTPUTDIR
     WX_PREFIX=`wx-config --prefix`
     if [ ! -d "$WX_PREFIX" ]; then
         echo "ERROR: Cannot find your wxWidgets installation."
@@ -171,6 +186,12 @@ if [ $do_build == 1 -o $do_clean == 1 ]; then
         if [ ! -f "$WEBKITOUTPUTDIR/libwxwebkit.dylib" ]; then
             ln -s $WEBKITOUTPUTDIR/libwxwebkit.dylib wxBrowser.app/Contents/Frameworks
         fi
+    fi
+
+    if [ "$OSTYPE" = "cygwin" ]; then
+	echo "Copying necessary DLLs to run test and sample applications..."
+        cd $WK_ROOT
+        cp $WINDEPS $WEBKITOUTPUTDIR
     fi
 fi
 
