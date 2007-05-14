@@ -2342,8 +2342,23 @@ void WebFrame::redirectDataToPlugin(Widget* /*pluginWidget*/)
     
 Widget* WebFrame::createJavaAppletWidget(const IntSize&, Element* element, const KURL& /*baseURL*/, const Vector<String>& paramNames, const Vector<String>& paramValues)
 {
-    return PluginDatabaseWin::installedPlugins()->
+    PluginViewWin* pluginView = PluginDatabaseWin::installedPlugins()->
         createPluginView(core(this), element, KURL(), paramNames, paramValues, "application/x-java-applet");
+
+    // Check if the plugin can be loaded successfully
+    if (pluginView->plugin()->load())
+        return pluginView;
+
+    COMPtr<IWebResourceLoadDelegate> resourceLoadDelegate;
+    if (FAILED(d->webView->resourceLoadDelegate(&resourceLoadDelegate)))
+        return pluginView;
+
+    ResourceError resourceError(String(WebKitErrorDomain), WebKitErrorJavaUnavailable, String(), String());
+    COMPtr<IWebError> error(AdoptCOM, WebError::createInstance(resourceError));
+     
+    resourceLoadDelegate->plugInFailedWithError(d->webView, error.get(), getWebDataSource(d->frame->loader()->documentLoader()));
+
+    return pluginView;
 }
 
 ObjectContentType WebFrame::objectContentType(const KURL& url, const String& mimeTypeIn)
