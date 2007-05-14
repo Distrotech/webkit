@@ -1,3 +1,18 @@
+2007-05-14  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Geoff.
+
+        <rdar://problem/5176940> Seed10: MS Silverlight 1.0 beta plug-in is not supported
+        
+        * plugins/win/PluginDatabaseWin.cpp:
+        (WebCore::addPluginsFromRegistry):
+        New function that adds plugins from the registry from HKEY_LOCAL_MACHINE/MozillaPlugins.
+
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::invalidateRect):
+        (WebCore::PluginViewWin::forceRedraw):
+        Make these work with windowed plugins.
+        
 2007-05-13  Darin Adler  <darin@apple.com>
 
         Requested by Hyatt.

@@ -111,6 +111,46 @@ Vector<PluginPackageWin*> PluginDatabaseWin::plugins() const
     return result;
 }
 
+static inline void addPluginsFromRegistry(PluginSet& plugins)
+{
+    HKEY key;
+    HRESULT result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\MozillaPlugins", 0, KEY_ENUMERATE_SUB_KEYS, &key);
+
+    if (result != ERROR_SUCCESS)
+        return;
+
+    wchar_t name[128];
+    FILETIME lastModified;
+
+    // Enumerate subkeys
+    for (int i = 0;; i++) {
+        DWORD nameLen = _countof(name);
+        result = RegEnumKeyExW(key, i, name, &nameLen, 0, 0, 0, &lastModified);
+
+        if (result != ERROR_SUCCESS)
+            break;
+
+        WCHAR pathStr[_MAX_PATH];
+        DWORD pathStrSize = sizeof(pathStr);
+        DWORD type;
+
+        result = SHGetValue(key, name, TEXT("Path"), &type, (LPBYTE)pathStr, &pathStrSize);
+        if (result != ERROR_SUCCESS || type != REG_SZ)
+            continue;
+
+        WIN32_FILE_ATTRIBUTE_DATA attributes;
+        if (GetFileAttributesEx(pathStr, GetFileExInfoStandard, &attributes) == 0)
+            continue;
+
+        PluginPackageWin* package = PluginPackageWin::createPackage(String(pathStr, pathStrSize / sizeof(WCHAR) - 1), attributes.ftLastWriteTime);
+
+        if (package)
+            plugins.add(package);
+    }
+
+    RegCloseKey(key);
+}
+
 PluginSet PluginDatabaseWin::getPluginsInPaths() const
 {
     // FIXME: This should be a case insensitive set.
@@ -150,6 +190,8 @@ PluginSet PluginDatabaseWin::getPluginsInPaths() const
 
         FindClose(hFind);
     }
+
+    addPluginsFromRegistry(plugins);
 
     return plugins;
 }

@@ -1076,9 +1076,6 @@ NPError PluginViewWin::setValue(NPPVariable variable, void* value)
 
 void PluginViewWin::invalidateRect(NPRect* rect)
 {
-    if (m_isWindowed)
-        return;
-
     if (!rect) {
         invalidate();
         return;
@@ -1086,7 +1083,11 @@ void PluginViewWin::invalidateRect(NPRect* rect)
 
     IntRect r(rect->left, rect->top, rect->right - rect->left, rect->bottom - rect->top);
 
-    Widget::invalidateRect(r);
+    if (m_isWindowed) {
+        RECT invalidRect(r);
+        InvalidateRect(m_window, &invalidRect, FALSE);
+    } else
+        Widget::invalidateRect(r);
 }
 
 void PluginViewWin::invalidateRegion(NPRegion region)
@@ -1107,9 +1108,9 @@ void PluginViewWin::invalidateRegion(NPRegion region)
 void PluginViewWin::forceRedraw()
 {
     if (m_isWindowed)
-        return;
-
-    ::UpdateWindow(containingWindow());
+        ::UpdateWindow(m_window);
+    else
+        ::UpdateWindow(containingWindow());
 }
 
 KJS::Bindings::Instance* PluginViewWin::bindingInstance()
