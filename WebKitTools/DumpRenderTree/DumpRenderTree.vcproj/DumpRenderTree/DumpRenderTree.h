@@ -32,6 +32,8 @@
 #define WINVER          0x0500
 #define _WIN32_WINNT    0x0500
 
+#define _WINSOCKAPI_   /* Prevent inclusion of winsock.h in windows.h */
+
 struct IWebFrame;
 typedef struct HWND__* HWND;
 
