@@ -2353,8 +2353,10 @@ Widget* WebFrame::createJavaAppletWidget(const IntSize&, Element* element, const
     if (FAILED(d->webView->resourceLoadDelegate(&resourceLoadDelegate)))
         return pluginView;
 
+    COMPtr<CFDictionaryPropertyBag> userInfoBag(AdoptCOM, CFDictionaryPropertyBag::createInstance());
+
     ResourceError resourceError(String(WebKitErrorDomain), WebKitErrorJavaUnavailable, String(), String());
-    COMPtr<IWebError> error(AdoptCOM, WebError::createInstance(resourceError));
+    COMPtr<IWebError> error(AdoptCOM, WebError::createInstance(resourceError, userInfoBag.get()));
      
     resourceLoadDelegate->plugInFailedWithError(d->webView, error.get(), getWebDataSource(d->frame->loader()->documentLoader()));
 

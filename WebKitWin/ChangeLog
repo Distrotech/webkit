@@ -1,5 +1,14 @@
 2007-05-14  Anders Carlsson  <andersca@apple.com>
 
+        Reviewed by Darin.
+
+        Pass an empty property bag when constructing the WebError, the code in Safari relies on having a user info bag.
+        
+        * WebFrame.cpp:
+        (WebFrame::createJavaAppletWidget):
+
+2007-05-14  Anders Carlsson  <andersca@apple.com>
+
         Reviewed by Antti.
 
         Report an error to the resource load delegate if the Java plugin can't be loaded.
