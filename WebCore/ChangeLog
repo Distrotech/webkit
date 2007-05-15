@@ -2,6 +2,18 @@
 
         Reviewed by Sam.
 
+        Fix for <rdar://problem/5147895> REGRESSION: Content-Disposition: filename is ignored for drag-and-drop.
+
+        If the image does not already have a title, fall back to the 
+        name suggested by Content-Disposition.
+
+        * platform/win/ClipboardWin.cpp:
+        (WebCore::createGlobalImageFileDescriptor):
+
+2007-05-14  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Sam.
+
         Fix for <rdar://problem/5202805> Null dereference in createGlobalData(CString str)
         
         Null terminate manually to prevent us from dereferencing null.

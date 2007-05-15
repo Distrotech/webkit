@@ -268,7 +268,8 @@ static HGLOBAL createGlobalImageFileDescriptor(const String& url, const String& 
     
     String extension(".");
     extension += WebCore::MimeTypeRegistry::getPreferredExtensionForMIMEType(image->response().mimeType());
-    fsPath = filesystemPathFromUrlOrTitle(url, title, extension.length() ? (TCHAR*)extension.charactersWithNullTermination() : 0, false);
+    const String& preferredTitle = title.isEmpty() ? image->response().suggestedFilename() : title;
+    fsPath = filesystemPathFromUrlOrTitle(url, preferredTitle, extension.length() ? (TCHAR*)extension.charactersWithNullTermination() : 0, false);
 
     if (fsPath.length() <= 0) {
         GlobalUnlock(memObj);
