@@ -862,7 +862,6 @@ HRESULT WebHistory::ageLimitDate(CFAbsoluteTime* time)
     HRESULT hr = historyAgeInDaysLimit(&historyLimitDays);
     if (FAILED(hr))
         return hr;
-    historyLimitDays += 30;
     ageLimit.days = -historyLimitDays;
     *time = CFAbsoluteTimeAddGregorianUnits(currentDate, CFTimeZoneCopySystem(), ageLimit);
     return S_OK;
