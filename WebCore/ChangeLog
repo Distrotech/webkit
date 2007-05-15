@@ -1,3 +1,22 @@
+2007-05-14  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Windows side of fix for
+        <rdar://problem/4728842> Can't drag-and-drop files onto <input type="file">
+
+        * platform/win/ClipboardUtilitiesWin.cpp:
+        (WebCore::cfHDropFormat):
+          Need to be able to access externally
+          
+        * platform/win/ClipboardUtilitiesWin.h:
+          Declare cfHDropFormat
+          
+        * platform/win/DragDataWin.cpp:
+        (WebCore::DragData::containsFiles):
+        (WebCore::DragData::asFilenames):
+          Add implementation of containsFiles and asFilenames
+
 2007-05-14  Geoffrey Garen  <ggaren@apple.com>
 
         Build fix.

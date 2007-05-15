@@ -60,11 +60,33 @@ String DragData::asURL(String* title) const
 
 bool DragData::containsFiles() const
 {
-    return false;
+    return SUCCEEDED(m_platformDragData->QueryGetData(cfHDropFormat()));
 }
 
 void DragData::asFilenames(Vector<String>& result) const
 {
+    WCHAR filename[MAX_PATH];
+    
+    STGMEDIUM medium;
+    if (FAILED(m_platformDragData->GetData(cfHDropFormat(), &medium)))
+        return;
+    
+    HDROP hdrop = (HDROP)GlobalLock(medium.hGlobal);
+    
+    if (!hdrop)
+        return;
+
+    const unsigned numFiles = DragQueryFileW(hdrop, 0xFFFFFFFF, 0, 0);
+    for (unsigned i = 0; i < numFiles; i++) {
+        if (!DragQueryFileW(hdrop, 0, filename, ARRAYSIZE(filename)))
+            continue;
+        result.append((UChar*)filename);
+    }
+
+    // Free up memory from drag
+    DragFinish(hdrop);
+
+    GlobalUnlock(medium.hGlobal);
 }
 
 bool DragData::containsPlainText() const

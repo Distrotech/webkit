@@ -37,7 +37,7 @@
 
 namespace WebCore {
 
-static FORMATETC* cfHDropFormat()
+FORMATETC* cfHDropFormat()
 {
     static FORMATETC urlFormat = {CF_HDROP, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
     return &urlFormat;
