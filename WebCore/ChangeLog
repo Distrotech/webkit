@@ -1,5 +1,16 @@
 2007-05-14  Oliver Hunt  <oliver@apple.com>
 
+        Reviewed by Sam.
+
+        Fix for <rdar://problem/5202805> Null dereference in createGlobalData(CString str)
+        
+        Null terminate manually to prevent us from dereferencing null.
+
+        * platform/win/ClipboardUtilitiesWin.cpp:
+        (WebCore::createGlobalData):
+
+2007-05-14  Oliver Hunt  <oliver@apple.com>
+
         Reviewed by Geoff.
 
         Windows side of fix for

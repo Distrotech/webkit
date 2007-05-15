@@ -132,11 +132,12 @@ HGLOBAL createGlobalData(String str)
 
 HGLOBAL createGlobalData(CString str)
 {
-    SIZE_T size = (str.length() + 1) * sizeof(char);
-    HGLOBAL cbData = ::GlobalAlloc(GPTR, size);
+    SIZE_T size = str.length() * sizeof(char);
+    HGLOBAL cbData = ::GlobalAlloc(GPTR, size + 1);
     if (cbData) {
-        void* buffer = ::GlobalLock(cbData);
+        char* buffer = static_cast<char*>(::GlobalLock(cbData));
         memcpy(buffer, str.data(), size);
+        buffer[size] = 0;
         ::GlobalUnlock(cbData);
     }
     return cbData;
