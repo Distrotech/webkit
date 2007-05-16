@@ -1,3 +1,9 @@
+2007-05-16  Kevin McCullough  <kmccullough@apple.com>
+
+        Reviewed by .
+
+        * win/Skipped: Added a new test that requires DRT to be able to handle multiple windows.
+
 2007-04-22  Darin Adler  <darin@apple.com>
 
         * win/Skipped: Added a new test that requires emacs key bindings that we

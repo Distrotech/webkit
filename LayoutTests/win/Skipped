@@ -185,13 +185,13 @@ editing/inserting/insert-3907422-fix.html
 # "bar" is ending up outside the two divs <rdar://problem/5132035>
 editing/pasteboard/4242293-1.html
 
-# DRT is not fully implemented in boomer <rdar://problem/5128261>
-fast/dom/Window/setting-properties-on-closed-window.html
-fast/events/objc-event-api.html
-http/tests/misc/window-dot-stop.html
-http/tests/security/local-user-CSS-from-remote.html
-http/tests/xmlhttprequest/abort-should-cancel-load.html
-svg/custom/use-events-crash.svg
+# EventSender.leapForward does not work in DumpRenderTree on boomer <rdar://problem/5080491>
+editing/pasteboard/drag-drop-dead-frame.html
+editing/pasteboard/drop-link.html
+editing/pasteboard/drop-text-without-selection.html
+editing/selection/selection-background.html
+fast/events/5056619.html
+fast/forms/textfield-drag-into-disabled.html
 
 # editing/pasteboard/drag-selected-image-to-contenteditable.html fails on boomer <rdar://problem/5143967>
 editing/pasteboard/drag-image-to-contenteditable-in-iframe.html
@@ -200,6 +200,17 @@ editing/pasteboard/drag-selected-image-to-contenteditable.html
 # editing/style/non-inheritable-styles.html fails on boomer <rdar://problem/5143690>
 editing/pasteboard/drag-drop-modifies-page.html
 editing/style/non-inheritable-styles.html
+
+# DumpRenderTree doesn't support multiple windows <rdar://problem/5208288>
+fast/dom/open-and-close-by-DOM.html
+
+# DRT is not fully implemented in boomer <rdar://problem/5128261>
+fast/dom/Window/setting-properties-on-closed-window.html
+fast/events/objc-event-api.html
+http/tests/misc/window-dot-stop.html
+http/tests/security/local-user-CSS-from-remote.html
+http/tests/xmlhttprequest/abort-should-cancel-load.html
+svg/custom/use-events-crash.svg
 
 # editing/style/style-boundary-005.html fails on boomer <rdar://problem/5143715>
 editing/style/style-boundary-005.html
@@ -216,14 +227,6 @@ fast/dom/Window/window-screen-properties.html
 
 # Layout Tests fail in boomer because of not objCWrapperClass. <rdar://problem/5137769>
 fast/dom/wrapper-classes.html
-
-# EventSender.leapForward does not work in DumpRenderTree on boomer <rdar://problem/5080491>
-editing/pasteboard/drag-drop-dead-frame.html
-editing/pasteboard/drop-link.html
-editing/pasteboard/drop-text-without-selection.html
-editing/selection/selection-background.html
-fast/events/5056619.html
-fast/forms/textfield-drag-into-disabled.html
 
 # fast/events/mouseout-dead-node.html fails on boomer <rdar://problem/5137284>
 fast/events/mouseout-dead-node.html
@@ -333,6 +336,17 @@ http/tests/navigation/anchor-frames.html
 
 # DRT doesn't support tests with multiple windows <rdar://problem/5133670>
 http/tests/navigation/new-window-redirect-history.html
+
+# TestNetscapePlugin failing on boomer release. <rdar://problem/5149673>
+http/tests/plugins/interrupted-get-url.html
+plugins/destroy-stream-twice.html
+plugins/get-empty-url.html
+plugins/geturl-replace-query.html
+plugins/inner-html-display-none.html
+plugins/invoke.html
+plugins/netscape-dom-access.html
+plugins/netscape-enumerate.html
+plugins/netscape-invoke-default.html
 
 # Console messages are not being printed out for failed canLoad checks <rdar://problem/5128314>
 http/tests/security/local-CSS-from-remote.html
@@ -512,15 +526,6 @@ editing/style/smoosh-styles-003.html
 fast/forms/input-truncate-newline.html
 fast/forms/plaintext-mode-2.html
 fast/forms/textarea-paste-newline.html
-http/tests/plugins/interrupted-get-url.html
-plugins/destroy-stream-twice.html
-plugins/get-empty-url.html
-plugins/geturl-replace-query.html
-plugins/inner-html-display-none.html
-plugins/invoke.html
-plugins/netscape-dom-access.html
-plugins/netscape-enumerate.html
-plugins/netscape-invoke-default.html
 
 # Seems to be a difference btw. WebScriptObject and the JSCore API
 fast/dom/Window/window-properties.html
