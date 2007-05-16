@@ -6357,6 +6357,14 @@
 				RelativePath="..\..\..\..\OpenSource\WebCore\html\HTMLParser.h"
 				>
 			</File>
+<File
+                                RelativePath="..\..\..\..\OpenSource\WebCore\html\HTMLParserErrorCodes.cpp"
+                                >
+                        </File>
+                        <File
+                                RelativePath="..\..\..\..\OpenSource\WebCore\html\HTMLParserErrorCodes.h"
+                                >
+                        </File>
 			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\html\HTMLPlugInElement.cpp"
 				>
