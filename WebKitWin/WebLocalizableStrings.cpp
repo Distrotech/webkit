@@ -92,23 +92,26 @@ void SetWebLocalizedStringMainBundle(CFBundleRef bundle)
 
 CFStringRef WebLocalizedString(WebLocalizableStringsBundle* stringsBundle, const UniChar* key)
 {
+    static CFStringRef notFound = CFSTR("localized string not found");
+
     CFBundleRef bundle;
     if (!stringsBundle) {
         static CFBundleRef mainBundle;
         if (!mainBundle) {
             mainBundle = localizedStringsMainBundle;
-            ASSERT(mainBundle);
+            if (!mainBundle)
+                return notFound;
         }
         bundle = mainBundle;
     } else {
         bundle = stringsBundle->bundle;
         if (!bundle) {
             bundle = createWebKitBundle();
-            ASSERT(bundle);
+            if (!bundle)
+                return notFound;
             stringsBundle->bundle = bundle;
         }
     }
-    static CFStringRef notFound = CFSTR("localized string not found");
     CFStringRef keyString = CFStringCreateWithCharacters(0, key, (CFIndex)wcslen(reinterpret_cast<const wchar_t*>(key)));
     CFStringRef result = CFCopyLocalizedStringWithDefaultValue(keyString, 0, bundle, notFound, 0);
     CFRelease(keyString);

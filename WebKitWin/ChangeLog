@@ -1,5 +1,14 @@
 2007-05-15  Steve Falkenburg  <sfalken@apple.com>
 
+        Reviewed by Darin, Oliver.
+        
+        <rdar://problem/4967360> Need to detect damaged installs, alert the user to reinstall, and exit
+
+        * WebLocalizableStrings.cpp:
+        (WebLocalizedString): Make failure to load a localized string slightly less fatal
+
+2007-05-15  Steve Falkenburg  <sfalken@apple.com>
+
         Reviewed by Darin.
         
         <rdar://problem/4956541> Need to implement preference for how much History is maintained
