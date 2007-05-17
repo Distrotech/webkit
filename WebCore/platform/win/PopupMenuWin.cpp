@@ -453,25 +453,28 @@ void PopupMenu::paint(const IntRect& damageRect, HDC hdc)
     IntRect listRect = damageRect;
     listRect.move(IntSize(0, m_scrollOffset * m_itemHeight));
 
+    RenderStyle* clientStyle = client()->clientStyle();
+
     for (int y = listRect.y(); y < listRect.bottom(); y += m_itemHeight) {
         int index = y / m_itemHeight;
 
         Color optionBackgroundColor, optionTextColor;
+        RenderStyle* itemStyle = client()->itemStyle(index);
         if (index == focusedIndex()) {
             optionBackgroundColor = theme()->activeListBoxSelectionBackgroundColor();
             optionTextColor = theme()->activeListBoxSelectionForegroundColor();
         } else {
-            optionBackgroundColor = client()->itemStyle(index)->backgroundColor();
-            optionTextColor = client()->itemStyle(index)->color();
+            optionBackgroundColor = itemStyle->backgroundColor();
+            optionTextColor = itemStyle->color();
         }
 
         // itemRect is in client coordinates
         IntRect itemRect(0, (index - m_scrollOffset) * m_itemHeight, damageRect.width(), m_itemHeight);
 
         // Draw the background for this menu item
-        if (client()->itemStyle(index)->visibility() != HIDDEN) {
-            if (optionBackgroundColor.hasAlpha() && optionBackgroundColor != client()->clientStyle()->backgroundColor())
-                context.fillRect(itemRect, client()->clientStyle()->backgroundColor());
+        if (itemStyle->visibility() != HIDDEN) {
+            if (optionBackgroundColor.hasAlpha() && optionBackgroundColor != clientStyle->backgroundColor())
+                context.fillRect(itemRect, clientStyle->backgroundColor());
             context.fillRect(itemRect, optionBackgroundColor);
         }
 
@@ -482,19 +485,18 @@ void PopupMenu::paint(const IntRect& damageRect, HDC hdc)
         }
 
         String itemText = client()->itemText(index);
-        RenderStyle* itemStyle = client()->itemStyle(index);
             
         unsigned length = itemText.length();
         const UChar* string = itemText.characters();
         TextStyle textStyle(0, 0, 0, false, true);
         RenderBlock::CharacterBuffer characterBuffer;
 
-        if (itemStyle->direction() == RTL && itemStyle->unicodeBidi() == Override)
+        if (clientStyle->direction() == RTL && clientStyle->unicodeBidi() == Override)
             textStyle.setRTL(true);
-        else if ((itemStyle->direction() == RTL || itemStyle->unicodeBidi() != Override) && !itemStyle->visuallyOrdered()) {
+        else if ((clientStyle->direction() == RTL || clientStyle->unicodeBidi() != Override) && !clientStyle->visuallyOrdered()) {
             // If necessary, reorder characters by running the string through the bidi algorithm
             characterBuffer.append(string, length);
-            RenderBlock::bidiReorderCharacters(client()->clientDocument(), itemStyle, characterBuffer);
+            RenderBlock::bidiReorderCharacters(client()->clientDocument(), clientStyle, characterBuffer);
             string = characterBuffer.data();
         }
         TextRun textRun(string, length);

@@ -1,3 +1,13 @@
+2007-05-17  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Hyatt.
+
+        Follow up to <rdar://problem/5092645> PopupMenuWin needs bidiReorderCharacters logic from RenderListBox
+
+        * platform/win/PopupMenuWin.cpp: (WebCore::PopupMenu::paint):
+          Use the clientStyle to determine how to handle bidi text.  For popup buttons, which we restrict to LTR,
+          we will match the button text.
+
 2007-05-17  Anders Carlsson  <andersca@apple.com>
 
         Reviewed by Darin.
