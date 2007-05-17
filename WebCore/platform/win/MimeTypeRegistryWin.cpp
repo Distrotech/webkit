@@ -81,6 +81,9 @@ String MimeTypeRegistry::getPreferredExtensionForMIMEType(const String& type)
 
 String MimeTypeRegistry::getMIMETypeForExtension(const String &ext)
 {
+    if (ext.isEmpty())
+        return String();
+
     static HashMap<String, String> mimetypeMap;
     if (mimetypeMap.isEmpty()) {
         //fill with initial values

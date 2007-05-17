@@ -1,3 +1,14 @@
+2007-05-17  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by John.
+
+        <rdar://problem/5204016> Repro crash on nytimes.com in MimeTypeRegistry::getMIMETypeForExtension
+        
+        Return null if the extension is null.
+        
+        * platform/win/MimeTypeRegistryWin.cpp:
+        (WebCore::MimeTypeRegistry::getMIMETypeForExtension):
+
 2007-05-16  Adele Peterson  <adele@apple.com>
 
         Reviewed by Hyatt.
