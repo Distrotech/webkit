@@ -1,3 +1,10 @@
+2007-05-17  Anders Carlsson  <andersca@apple.com>
+
+        Fix build.
+        
+        * WebFrame.cpp:
+        (WebFrame::loadURLIntoChild):
+
 2007-05-15  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Darin, Oliver.

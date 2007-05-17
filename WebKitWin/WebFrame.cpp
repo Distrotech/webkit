@@ -1356,7 +1356,7 @@ void WebFrame::loadURLIntoChild(const KURL& originalURL, const String& referrer,
 
     // FIXME: Handle loading WebArchives here
 
-    core(childFrame)->loader()->load(url, referrer, childLoadType, String(), 0, 0, HashMap<String, String>());
+    core(childFrame)->loader()->load(url, referrer, childLoadType, String(), 0, 0);
 }
 
 void WebFrame::openURL(const String& URL, const Event* triggeringEvent, bool newWindow, bool lockHistory)
