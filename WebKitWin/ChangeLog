@@ -1,3 +1,13 @@
+2007-05-17  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Steve.
+        
+        Changed the context menu title "Search in Google" to "Search with Google".
+
+        * English.lproj/Localizable.strings:
+        * WebCoreLocalizedStrings.cpp:
+        (WebCore::contextMenuItemTagSearchWeb):
+
 2007-05-17  Anders Carlsson  <andersca@apple.com>
 
         Fix build.

@@ -53,7 +53,7 @@ String WebCore::contextMenuItemTagPaste() { return String(LPCTSTR_UI_STRING("Pas
 String WebCore::contextMenuItemTagNoGuessesFound() { return String(LPCTSTR_UI_STRING("No Guesses Found", "No Guesses Found context menu item")); }
 String WebCore::contextMenuItemTagIgnoreSpelling() { return String(LPCTSTR_UI_STRING("Ignore Spelling", "Ignore Spelling context menu item")); }
 String WebCore::contextMenuItemTagLearnSpelling() { return String(LPCTSTR_UI_STRING("Learn Spelling", "Learn Spelling context menu item")); }
-String WebCore::contextMenuItemTagSearchWeb() { return String(LPCTSTR_UI_STRING("Search in Google", "Search in Google context menu item")); }
+String WebCore::contextMenuItemTagSearchWeb() { return String(LPCTSTR_UI_STRING("Search with Google", "Search in Google context menu item")); }
 String WebCore::contextMenuItemTagLookUpInDictionary() { return String(LPCTSTR_UI_STRING("Look Up in Dictionary", "Look Up in Dictionary context menu item")); }
 String WebCore::contextMenuItemTagOpenLink() { return String(LPCTSTR_UI_STRING("Open Link", "Open Link context menu item")); }
 String WebCore::contextMenuItemTagIgnoreGrammar() { return String(LPCTSTR_UI_STRING("Ignore Grammar", "Ignore Grammar context menu item")); }
