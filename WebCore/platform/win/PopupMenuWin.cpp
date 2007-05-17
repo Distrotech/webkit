@@ -93,11 +93,7 @@ void PopupMenu::show(const IntRect& r, FrameView* v, int index)
     if (!m_popup) {
         registerPopup();
 
-        DWORD exStyle = WS_EX_LAYERED;
-        if (client()->clientStyle()->direction() == LTR)
-            exStyle |= WS_EX_LTRREADING;
-        else
-            exStyle |= WS_EX_RTLREADING;
+        DWORD exStyle = WS_EX_LAYERED | WS_EX_LTRREADING;
 
         // Even though we already know our size and location at this point, we pass (0,0,0,0) as our size/location here.
         // We need to wait until after the call to ::SetWindowLongPtr to set our size so that in our WM_SIZE handler we can get access to the PopupMenu object
@@ -194,9 +190,9 @@ void PopupMenu::calculatePositionAndSize(const IntRect& r, FrameView* v)
         popupWidth += PlatformScrollbar::verticalScrollbarWidth(SmallScrollbar);
 
     // Add padding to align the popup text with the <select> text
-    // Note: We can't add paddingRight() in LTR or paddingLeft() in RTL because those values include the width
+    // Note: We can't add paddingRight() because that value includes the width
     // of the dropdown button, so we must use our own endOfLinePadding constant.
-    popupWidth += endOfLinePadding + (client()->clientStyle()->direction() == LTR ? client()->clientPaddingLeft() : client()->clientPaddingRight());
+    popupWidth += endOfLinePadding + client()->clientPaddingLeft();
 
     // Leave room for the border
     popupWidth += 2 * popupWindowBorderWidth;
@@ -205,9 +201,8 @@ void PopupMenu::calculatePositionAndSize(const IntRect& r, FrameView* v)
     // The popup should be at least as wide as the control on the page
     popupWidth = max(rScreenCoords.width(), popupWidth);
 
-    // LTR <select>s get a left-aligned popup, RTL <select>s get a right-aligned popup
-    // This will cause the popup's text to always be aligned with the <select>'s text
-    int popupX = client()->clientStyle()->direction() == LTR ? rScreenCoords.x() : rScreenCoords.right() - popupWidth;
+    // Always left-align items in the popup.  This matches popup menus on the mac.
+    int popupX = rScreenCoords.x();
 
     IntRect popupRect(popupX, rScreenCoords.bottom(), popupWidth, popupHeight);
 
@@ -234,12 +229,10 @@ void PopupMenu::calculatePositionAndSize(const IntRect& r, FrameView* v)
     }
 
     // Check that we don't go off the screen horizontally
-    if (client()->clientStyle()->direction() == LTR && popupRect.x() < screen.x()) {
+    if (popupRect.x() < screen.x()) {
         popupRect.setWidth(popupRect.width() - (screen.x() - popupRect.x()));
         popupRect.setX(screen.x());
-    } else if (client()->clientStyle()->direction() == RTL && popupRect.right() > screen.right())
-        popupRect.setWidth(popupRect.width() - (popupRect.right() - screen.right()));
-
+    }
     m_windowRect = popupRect;
     return;
 }
@@ -489,10 +482,23 @@ void PopupMenu::paint(const IntRect& damageRect, HDC hdc)
         }
 
         String itemText = client()->itemText(index);
-        TextRun textRun(itemText.characters(), itemText.length());
-
         RenderStyle* itemStyle = client()->itemStyle(index);
             
+        unsigned length = itemText.length();
+        const UChar* string = itemText.characters();
+        TextStyle textStyle(0, 0, 0, false, true);
+        RenderBlock::CharacterBuffer characterBuffer;
+
+        if (itemStyle->direction() == RTL && itemStyle->unicodeBidi() == Override)
+            textStyle.setRTL(true);
+        else if ((itemStyle->direction() == RTL || itemStyle->unicodeBidi() != Override) && !itemStyle->visuallyOrdered()) {
+            // If necessary, reorder characters by running the string through the bidi algorithm
+            characterBuffer.append(string, length);
+            RenderBlock::bidiReorderCharacters(client()->clientDocument(), itemStyle, characterBuffer);
+            string = characterBuffer.data();
+        }
+        TextRun textRun(string, length);
+
         context.setFillColor(optionTextColor);
         
         Font itemFont = client()->clientStyle()->font();
@@ -506,9 +512,9 @@ void PopupMenu::paint(const IntRect& damageRect, HDC hdc)
         
         // Draw the item text
         if (itemStyle->visibility() != HIDDEN) {
-            int textX = itemStyle->direction() == LTR ? client()->clientPaddingLeft() : itemRect.right() - itemFont.width(textRun) - client()->clientPaddingRight();
+            int textX = client()->clientPaddingLeft();
             int textY = itemRect.y() + itemFont.ascent() + (itemRect.height() - itemFont.height()) / 2;
-            context.drawText(textRun, IntPoint(textX, textY), TextStyle(0, 0, 0, itemStyle->direction() == RTL));
+            context.drawText(textRun, IntPoint(textX, textY), textStyle);
         }
     }
 

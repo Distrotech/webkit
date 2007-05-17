@@ -1,3 +1,16 @@
+2007-05-16  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Hyatt.
+
+        Fix for:
+            <rdar://problem/5092645> PopupMenuWin needs bidiReorderCharacters logic from RenderListBox
+            <rdar://problem/5205654> Select popup menus should always be ltr to match the mac
+
+        * platform/win/PopupMenuWin.cpp:
+        (WebCore::PopupMenu::show): Remove special cases for RTL menus, since we are always going to left align.
+        (WebCore::PopupMenu::calculatePositionAndSize): ditto.
+        (WebCore::PopupMenu::paint): Added call to bidiReorderCharacters.
+
 2007-05-14  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Sam.
