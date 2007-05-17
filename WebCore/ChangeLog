@@ -1,5 +1,16 @@
 2007-05-17  Anders Carlsson  <andersca@apple.com>
 
+        Reviewed by Darin.
+
+        <rdar://problem/5210600> New WMP plugin doesn't show any contents
+
+        Call NPP_SetWindow after the window's size has been updated.
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::setFrameGeometry):
+
+2007-05-17  Anders Carlsson  <andersca@apple.com>
+
         Reviewed by John.
 
         <rdar://problem/5204016> Repro crash on nytimes.com in MimeTypeRegistry::getMIMETypeForExtension

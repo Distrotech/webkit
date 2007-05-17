@@ -190,14 +190,14 @@ void PluginViewWin::setFrameGeometry(const IntRect& rect)
     if (m_element->document()->printing())
         return;
 
-    setNPWindowRect(rect);
-
     if (rect == frameGeometry())
         return;
 
     Widget::setFrameGeometry(rect);
 
     updateWindow();
+
+    setNPWindowRect(rect);
 }
 
 void PluginViewWin::geometryChanged() const
