@@ -32,7 +32,6 @@
 #include "GraphicsContext.h"
 #include "FrameWin.h"
 #include "IntRect.h"
-#include "Font.h"
 #include "FrameView.h"
 #include "WidgetClient.h"
 #include <winsock2.h>
@@ -43,7 +42,6 @@ namespace WebCore {
 class WidgetPrivate
 {
 public:
-    Font font;
     WidgetClient* client;
     ScrollView* parent;
     HWND containingWindow;
@@ -122,16 +120,6 @@ void Widget::show()
 
 void Widget::hide()
 {
-}
-
-const Font& Widget::font() const
-{
-    return data->font;
-}
-
-void Widget::setFont(const Font& font)
-{
-    data->font = font;
 }
 
 HCURSOR lastSetCursor = 0;
@@ -252,15 +240,6 @@ void Widget::invalidateRect(const IntRect& r)
 
 void Widget::setFocus()
 {
-}
-
-void Widget::clearFocus()
-{
-}
-
-bool Widget::hasFocus() const
-{
-    return false;
 }
 
 } // namespace WebCore

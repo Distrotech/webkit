@@ -70,18 +70,11 @@
 #include "SSLKeyGenerator.h"
 #include "SubresourceLoader.h"
 #include "SystemTime.h"
-#include "Widget.h"
 #include "loader.h"
 #include <stdio.h>
 #include <stdlib.h>
 
 using namespace WebCore;
-
-void Widget::enableFlushDrawing() { STOP_NOIMPL(); }
-Widget::FocusPolicy Widget::focusPolicy() const { LOG_NOIMPL(); return NoFocus; }
-void Widget::disableFlushDrawing() { STOP_NOIMPL(); }
-GraphicsContext* Widget::lockDrawingFocus() { STOP_NOIMPL(); return 0; }
-void Widget::unlockDrawingFocus(GraphicsContext*) { STOP_NOIMPL(); }
 
 void Frame::print() { LOG_NOIMPL(); }
 void Frame::issueTransposeCommand() { LOG_NOIMPL(); }

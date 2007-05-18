@@ -207,24 +207,12 @@ void PluginViewWin::geometryChanged() const
     updateWindow();
 }
 
-bool PluginViewWin::hasFocus() const
-{
-    return m_window && m_window == GetFocus();
-}
-
 void PluginViewWin::setFocus()
 {
     if (HWND window = m_window)
         SetFocus(window);
 
     Widget::setFocus();
-}
-
-void PluginViewWin::clearFocus()
-{
-    SetFocus(0);
-
-    Widget::clearFocus();
 }
 
 void PluginViewWin::show()

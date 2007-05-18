@@ -1,3 +1,12 @@
+2007-05-18  Adam Roben  <aroben@apple.com>
+
+        Build fix after r21562.
+
+        * platform/win/TemporaryLinkStubs.cpp:
+        * platform/win/WidgetWin.cpp:
+        * plugins/win/PluginViewWin.cpp:
+        * plugins/win/PluginViewWin.h:
+
 2007-05-18  Anders Carlsson  <andersca@apple.com>
 
         Reviewed by Geoff.
