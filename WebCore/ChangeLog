@@ -1,3 +1,10 @@
+2007-05-18  Adam Roben  <aroben@apple.com>
+
+        Build fix after r21555.
+
+        * page/win/EventHandlerWin.cpp:
+        (WebCore::EventHandler::passMouseMoveEventToSubframe):
+
 2007-05-17  Sam Weinig  <sam@webkit.org>
 
         Reviewed by Adam.

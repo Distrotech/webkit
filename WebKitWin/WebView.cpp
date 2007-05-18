@@ -808,13 +808,13 @@ bool WebView::handleMouseEvent(UINT message, WPARAM wParam, LPARAM lParam)
         globalPrevButton = mouseEvent.button();
         globalPrevPoint = mouseEvent.pos();
         mouseEvent.setClickCount(globalClickCount);
-        m_page->mainFrame()->view()->handleMouseReleaseEvent(mouseEvent);
+        m_page->mainFrame()->eventHandler()->handleMouseReleaseEvent(mouseEvent);
         ::ReleaseCapture();
     } else if (message == WM_MOUSEMOVE) {
         if (!insideThreshold)
             globalClickCount = 0;
         mouseEvent.setClickCount(globalClickCount);
-        handled = m_page->mainFrame()->view()->handleMouseMoveEvent(mouseEvent);
+        handled = m_page->mainFrame()->eventHandler()->handleMouseMoveEvent(mouseEvent);
 
         if (m_uiDelegate) {
             COMPtr<IPropertyBag> props;

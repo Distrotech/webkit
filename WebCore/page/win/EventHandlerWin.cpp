@@ -52,13 +52,13 @@ bool EventHandler::passMousePressEventToSubframe(MouseEventWithHitTestResults& m
 
 bool EventHandler::passMouseMoveEventToSubframe(MouseEventWithHitTestResults& mev, Frame* subframe)
 {
-    subframe->view()->handleMouseMoveEvent(mev.event());
+    subframe->eventHandler()->handleMouseMoveEvent(mev.event());
     return true;
 }
 
 bool EventHandler::passMouseReleaseEventToSubframe(MouseEventWithHitTestResults& mev, Frame* subframe)
 {
-    subframe->view()->handleMouseReleaseEvent(mev.event());
+    subframe->eventHandler()->handleMouseReleaseEvent(mev.event());
     return true;
 }
 
