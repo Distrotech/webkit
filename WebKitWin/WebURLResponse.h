@@ -39,6 +39,7 @@ DEFINE_GUID(IID_WebURLResponse, 0x4e309d61, 0x8458, 0x49ed, 0xa6, 0x29, 0x46, 0x
 class WebURLResponse : public IWebHTTPURLResponse
 {
 public:
+    static WebURLResponse* createInstance();
     static WebURLResponse* createInstance(const WebCore::ResourceResponse& response);
 protected:
     WebURLResponse();

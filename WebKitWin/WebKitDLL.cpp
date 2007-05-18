@@ -63,7 +63,8 @@ static CLSID gRegCLSIDs[] = {
     CLSID_WebURLCredential,
     CLSID_WebDownload,
     CLSID_WebURLProtectionSpace,
-    CLSID_WebDebugProgram
+    CLSID_WebDebugProgram,
+    CLSID_WebURLResponse
 };
 
 STDAPI_(BOOL) DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LPVOID /*lpReserved*/)
@@ -150,7 +151,8 @@ static LPCTSTR gRegTable[][3] = {
     KEYS_FOR_CLASS("WebURLCredential"),
     KEYS_FOR_CLASS("WebDownload"),
     KEYS_FOR_CLASS("WebURLProtectionSpace"),
-    KEYS_FOR_CLASS("WebDebugProgram")
+    KEYS_FOR_CLASS("WebDebugProgram"),
+    KEYS_FOR_CLASS("WebURLResponse")
 };
 
 static void substituteGUID(LPTSTR str, const UUID* guid)

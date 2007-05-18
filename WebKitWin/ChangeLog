@@ -2,6 +2,24 @@
 
         Reviewed by Steve.
         
+        Implemented IWebHTTPURLResponse::localizedStringForStatusCode().
+
+        * English.lproj/Localizable.strings: new http status strings
+        * Interfaces/WebKit.idl: added code to create WebURLResponse instances
+        * WebKitClassFactory.cpp:
+        (WebKitClassFactory::CreateInstance): ditto
+        * WebKitDLL.cpp: ditto
+        * WebURLResponse.cpp:
+        (CFHTTPMessageCopyLocalizedShortDescriptionForStatusCode): return the description
+        text for the given status code
+        (WebURLResponse::createInstance): create a general instance of web url response.
+        (WebURLResponse::localizedStringForStatusCode):
+        * WebURLResponse.h:
+
+2007-05-17  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Steve.
+        
         Changed the context menu title "Search in Google" to "Search with Google".
 
         * English.lproj/Localizable.strings:

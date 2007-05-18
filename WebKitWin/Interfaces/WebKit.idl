@@ -271,4 +271,13 @@ library OpenSourceWebKit
     coclass WebDebugProgram {
         [default] interface IWebDebugProgram;
     }
+
+#if __BUILDBOT__
+    [uuid(AB201196-8DD2-4d45-AEBD-029B6A37AA27)]
+#else
+    [uuid(EA2FCB14-072B-48b5-B9B5-1BBEFBABC7BC)]
+#endif
+    coclass WebURLResponse {
+        [default] interface IWebURLResponse;
+    }
 }
