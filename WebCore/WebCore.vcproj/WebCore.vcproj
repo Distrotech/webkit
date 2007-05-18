@@ -798,6 +798,54 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\..\WebKitBuild\obj\WebCore\DerivedSources\JSHTMLTableCaptionElement.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\..\WebKitBuild\obj\WebCore\DerivedSources\JSHTMLTableCaptionElement.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\..\WebKitBuild\obj\WebCore\DerivedSources\JSHTMLTableCellElement.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\..\WebKitBuild\obj\WebCore\DerivedSources\JSHTMLTableCellElement.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\..\WebKitBuild\obj\WebCore\DerivedSources\JSHTMLTableColElement.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\..\WebKitBuild\obj\WebCore\DerivedSources\JSHTMLTableColElement.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\..\WebKitBuild\obj\WebCore\DerivedSources\JSHTMLTableElement.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\..\WebKitBuild\obj\WebCore\DerivedSources\JSHTMLTableElement.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\..\WebKitBuild\obj\WebCore\DerivedSources\JSHTMLTableRowElement.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\..\WebKitBuild\obj\WebCore\DerivedSources\JSHTMLTableRowElement.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\..\WebKitBuild\obj\WebCore\DerivedSources\JSHTMLTableSectionElement.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\..\WebKitBuild\obj\WebCore\DerivedSources\JSHTMLTableSectionElement.h"
+				>
+			</File>
+			<File
 				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLTextAreaElement.cpp"
 				>
 			</File>
