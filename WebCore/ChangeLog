@@ -1,3 +1,19 @@
+2007-05-18  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Geoff.
+        
+        <rdar://problem/4914940> Some plugins won't redraw correctly when scrolling
+        
+        This patch does two things:
+        
+        1. It comments out the call to set the window's region to an empty region while it's being moved. This was done to prevent
+        the QT plugin from drawing outside its bounds when scrolling it when it's inside an iframe or div with overflow.
+        
+        2. It lets Windows handle its invalid region when moving the window and setting its new window region.
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::updateWindow):
+
 2007-05-18  Adam Roben  <aroben@apple.com>
 
         Build fix after r21555.

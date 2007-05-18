@@ -156,18 +156,20 @@ void PluginViewWin::updateWindow() const
 
         // To prevent flashes while scrolling, we disable drawing during the window
         // update process by clipping the window to the zero rect.
-        rgn = ::CreateRectRgn(0, 0, 0, 0);
-        ::SetWindowRgn(m_window, rgn, false);
+
+        // FIXME: Setting the window region to an empty region causes bad scrolling 
+        // repaint problems with at least the WMP and Java plugins.
+        // <rdar://problem/5211187> Come up with a better way of handling plug-in scrolling
+        // is the bug that tracks the work of fixing this.
+        //rgn = ::CreateRectRgn(0, 0, 0, 0);
+        //::SetWindowRgn(m_window, rgn, false);
 
         if (m_windowRect != oldWindowRect)
-            ::MoveWindow(m_window, m_windowRect.x(), m_windowRect.y(), m_windowRect.width(), m_windowRect.height(), false);
+            ::MoveWindow(m_window, m_windowRect.x(), m_windowRect.y(), m_windowRect.width(), m_windowRect.height(), true);
 
         // Re-enable drawing. (This serves the double purpose of updating the clip rect if it has changed.)
         rgn = ::CreateRectRgn(m_clipRect.x(), m_clipRect.y(), m_clipRect.right(), m_clipRect.bottom());
-        ::SetWindowRgn(m_window, rgn, false);
-
-        RECT rect = m_clipRect;
-        ::InvalidateRect(m_window, &rect, true);
+        ::SetWindowRgn(m_window, rgn, true);
         ::UpdateWindow(m_window);
     }
 }
