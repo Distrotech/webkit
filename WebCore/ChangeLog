@@ -1,3 +1,18 @@
+2007-05-17  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Geoff, Adam.
+
+        Use precompiled headers (via WebCorePrefix.h) to speed up WebCoreWin builds.
+        This improved WebCore debug rebuild time from 40 minutes to 25 for me.
+        
+        A few files needed to be excluded, since they didn't build properly with
+        the prefix file: ColorData.c, CSSGrammar.cpp, HTMLEntityNames.c, XPathGrammar.cpp, XPathParser.cpp.
+
+        * WebCore.vcproj/WebCore.vcproj: Turn on precompiled header, force includes flags.
+        * WebCorePrefix.cpp: Added.
+        * WebCorePrefix.h: Added.
+        * config.h: Modified to be compatible with WebCorePrefix.h.
+
 2007-05-18  Sam Weinig  <sam@webkit.org>
 
         Reviewed by Adam.
