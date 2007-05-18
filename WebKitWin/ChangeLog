@@ -1,3 +1,9 @@
+2007-05-18  Steve Falkenburg  <sfalken@apple.com>
+
+        Build-related fix: stamp version resource properly.
+
+        * WebKit.vcproj/WebKit.rc: Fix version resource
+
 2007-05-18  Adam Roben  <aroben@apple.com>
 
         Build fix after r21555.
