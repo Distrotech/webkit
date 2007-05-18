@@ -879,7 +879,7 @@
 				>
 			</File>
 			<File
-				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)DerivedSources\JSHTMLTableCaptionElement.cpp"
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLTableCaptionElement.cpp"
 				>
 			</File>
 			<File
