@@ -266,6 +266,7 @@ all : \
     DOMSVGTests.h \
     DOMSVGTextContentElement.h \
     DOMSVGTextElement.h \
+    DOMSVGTextPathElement.h \
     DOMSVGTextPositioningElement.h \
     DOMSVGTitleElement.h \
     DOMSVGTransform.h \
@@ -456,6 +457,7 @@ all : \
     JSSVGTSpanElement.h \
     JSSVGTextElement.h \
     JSSVGTextContentElement.h \
+    JSSVGTextPathElement.h \
     JSSVGTextPositioningElement.h \
     JSSVGTitleElement.h \
     JSSVGTransform.h \

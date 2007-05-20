@@ -1743,12 +1743,17 @@ void RenderBlock::layoutInlineChildren(bool relayoutChildren, int& repaintTop, i
                     lineBox = constructLine(start, end);
                     if (lineBox) {
                         lineBox->setEndsWithBreak(previousLineBrokeCleanly);
-                        
+
                         // Now we position all of our text runs horizontally.
                         computeHorizontalPositionsForLine(lineBox, bidi);
-        
+
                         // Now position our text runs vertically.
                         computeVerticalPositionsForLine(lineBox);
+
+#if ENABLE(SVG)
+                        // Special SVG text layout code
+                        lineBox->computePerCharacterLayoutInformation();
+#endif
 
 #if PLATFORM(MAC)
                         // Highlight acts as an overflow inflation.

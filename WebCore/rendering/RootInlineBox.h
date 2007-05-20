@@ -63,6 +63,10 @@ public:
 
     virtual void setVerticalSelectionPositions(int top, int bottom);
 
+#if ENABLE(SVG)
+    virtual void computePerCharacterLayoutInformation() { }
+#endif
+
     RenderObject* lineBreakObj() const { return m_lineBreakObj; }
     BidiStatus lineBreakBidiStatus() const { 
         BidiStatus status;

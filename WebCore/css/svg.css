@@ -50,6 +50,6 @@ text, foreignObject {
     display: block !important
 }
 
-text, tspan {
+text, tspan, textPath {
    white-space: nowrap
 }

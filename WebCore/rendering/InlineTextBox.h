@@ -40,6 +40,10 @@ class MarkedTextUnderline;
 class HitTestResult;
 class Position;
 
+// Helper functions shared by InlineTextBox / SVGRootInlineBox
+void updateGraphicsContext(GraphicsContext* context, const Color& fillColor, const Color& strokeColor, float strokeThickness);
+Color correctedTextColor(Color textColor, Color backgroundColor);
+
 class InlineTextBox : public InlineRunBox {
 public:
     InlineTextBox(RenderObject* obj)
@@ -67,7 +71,7 @@ public:
     virtual int selectionTop();
     virtual int selectionHeight();
 
-    IntRect selectionRect(int absx, int absy, int startPos, int endPos);
+    virtual IntRect selectionRect(int absx, int absy, int startPos, int endPos);
     bool isSelected(int startPos, int endPos) const;
     void selectionStartEnd(int& sPos, int& ePos);
 
@@ -121,8 +125,8 @@ public:
     virtual unsigned caretMaxRenderedOffset() const;
 
     int textPos() const;
-    int offsetForPosition(int x, bool includePartialGlyphs = true) const;
-    int positionForOffset(int offset) const;
+    virtual int offsetForPosition(int x, bool includePartialGlyphs = true) const;
+    virtual int positionForOffset(int offset) const;
 
     bool containsCaretOffset(int offset) const; // false for offset after line break
 
