@@ -110,4 +110,6 @@ interface IWebViewPrivate : IUnknown
 
     HRESULT setAllowSiteSpecificHacks([in] BOOL allows);
     HRESULT addAdditionalPluginPath([in] BSTR path);
+
+    HRESULT loadBackForwardListFromOtherView([in] IWebView* otherView);
 }

@@ -599,6 +599,9 @@ public:
     virtual HRESULT STDMETHODCALLTYPE addAdditionalPluginPath( 
         /* [in] */ BSTR path);    
 
+    virtual HRESULT STDMETHODCALLTYPE loadBackForwardListFromOtherView( 
+        /* [in] */ IWebView *otherView);
+
     // WebView
     WebCore::Page* page();
     bool handleMouseEvent(UINT, WPARAM, LPARAM);

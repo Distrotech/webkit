@@ -64,6 +64,7 @@
 #include <WebCore/FrameWin.h>
 #include <WebCore/GDIObjectCounter.h>
 #include <WebCore/GraphicsContext.h>
+#include <WebCore/HistoryItem.h>
 #include <WebCore/HitTestResult.h>
 #include <WebCore/IntRect.h>
 #include <WebCore/KeyboardEvent.h>
@@ -3407,6 +3408,46 @@ HRESULT STDMETHODCALLTYPE WebView::addAdditionalPluginPath(
         /* [in] */ BSTR path)
 {
     PluginDatabaseWin::installedPlugins()->addExtraPluginPath(String(path, SysStringLen(path)));
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebView::loadBackForwardListFromOtherView( 
+    /* [in] */ IWebView* otherView)
+{
+    if (!m_page)
+        return E_FAIL;
+    
+    // It turns out the right combination of behavior is done with the back/forward load
+    // type.  (See behavior matrix at the top of WebFramePrivate.)  So we copy all the items
+    // in the back forward list, and go to the current one.
+    BackForwardList* backForwardList = m_page->backForwardList();
+    ASSERT(!backForwardList->currentItem()); // destination list should be empty
+
+    COMPtr<WebView> otherWebView;
+    if (FAILED(otherView->QueryInterface(CLSID_WebView, (void**)&otherWebView)))
+        return E_FAIL;
+    BackForwardList* otherBackForwardList = otherWebView->m_page->backForwardList();
+    if (!otherBackForwardList->currentItem())
+        return S_OK; // empty back forward list, bail
+    
+    HistoryItem* newItemToGoTo = 0;
+
+    int lastItemIndex = otherBackForwardList->forwardListCount();
+    for (int i = -otherBackForwardList->backListCount(); i <= lastItemIndex; ++i) {
+        if (!i) {
+            // If this item is showing , save away its current scroll and form state,
+            // since that might have changed since loading and it is normally not saved
+            // until we leave that page.
+            otherWebView->m_page->mainFrame()->loader()->saveDocumentAndScrollState();
+        }
+        RefPtr<HistoryItem> newItem = otherBackForwardList->itemAtIndex(i)->copy();
+        if (!i) 
+            newItemToGoTo = newItem.get();
+        backForwardList->addItem(newItem.release());
+    }
+    
+    ASSERT(newItemToGoTo);
+    m_page->goToItem(newItemToGoTo, FrameLoadTypeIndexedBackForward);
     return S_OK;
 }
 
