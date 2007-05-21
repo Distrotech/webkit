@@ -1,3 +1,11 @@
+2007-05-21  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Adam.
+
+        Build fix.
+
+        * WebCore.vcproj/WebCore.vcproj:
+
 2007-05-17  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Geoff, Adam.
