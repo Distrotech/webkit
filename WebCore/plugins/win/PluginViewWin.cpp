@@ -377,7 +377,7 @@ void PluginViewWin::handleMouseEvent(MouseEvent* event)
                 npEvent.event = WM_LBUTTONDOWN;
 
                 // Focus the plugin
-                m_parentFrame->document()->setFocusedNode(m_element, m_parentFrame);
+                m_parentFrame->document()->setFocusedNode(m_element);
                 break;
             case 1:
                 npEvent.event = WM_MBUTTONDOWN;
