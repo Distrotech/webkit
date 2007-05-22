@@ -3372,7 +3372,7 @@ HRESULT STDMETHODCALLTYPE WebView::canHandleRequest(
 HRESULT STDMETHODCALLTYPE WebView::clearFocusNode()
 {
     if (m_page && m_page->focusController())
-        m_page->focusController()->setFocusedNode(0);
+        m_page->focusController()->setFocusedNode(0, 0);
     return S_OK;
 }
 
