@@ -1,3 +1,16 @@
+2007-05-22  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Ada.
+        
+        Added 3 view-related methods to IWebFramePrivate.
+
+        * Interfaces/IWebFramePrivate.idl: Added 3 new methods
+        * WebFrame.cpp:
+        (WebFrame::hasScrollBars): Added.
+        (WebFrame::contentBounds): Added.
+        (WebFrame::frameBounds): Added.
+        * WebFrame.h:
+
 2007-05-21  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Adam, Ada.

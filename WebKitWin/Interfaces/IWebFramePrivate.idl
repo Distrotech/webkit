@@ -88,4 +88,7 @@ interface IWebFramePrivate : IUnknown
     HRESULT string([out, retval] BSTR* result);
 
     HRESULT size([out, retval] SIZE* size);
+    HRESULT hasScrollBars([out, retval] BOOL* result);
+    HRESULT contentBounds([out, retval] RECT* result);
+    HRESULT frameBounds([out, retval] RECT* result);
 }

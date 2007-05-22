@@ -2629,6 +2629,69 @@ HRESULT STDMETHODCALLTYPE WebFrame::size(
     return S_OK;
 }
 
+HRESULT STDMETHODCALLTYPE WebFrame::hasScrollBars( 
+    /* [retval][out] */ BOOL *result)
+{
+    if (!result)
+        return E_POINTER;
+    *result = FALSE;
+
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
+        return E_FAIL;
+
+    FrameView* view = coreFrame->view();
+    if (!view)
+        return E_FAIL;
+
+    if (view->vScrollbarMode() == ScrollbarAlwaysOn || view->visibleHeight() < view->contentsHeight() ||
+            view->hScrollbarMode() == ScrollbarAlwaysOn || view->visibleWidth() < view->contentsWidth())
+        *result = TRUE;
+
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebFrame::contentBounds( 
+    /* [retval][out] */ RECT *result)
+{
+    if (!result)
+        return E_POINTER;
+    ::SetRectEmpty(result);
+
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
+        return E_FAIL;
+
+    FrameView* view = coreFrame->view();
+    if (!view)
+        return E_FAIL;
+
+    result->bottom = view->contentsHeight();
+    result->right = view->contentsWidth();
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebFrame::frameBounds( 
+    /* [retval][out] */ RECT *result)
+{
+    if (!result)
+        return E_POINTER;
+    ::SetRectEmpty(result);
+
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
+        return E_FAIL;
+
+    FrameView* view = coreFrame->view();
+    if (!view)
+        return E_FAIL;
+
+    FloatRect bounds = view->visibleContentRectConsideringExternalScrollers();
+    result->bottom = (LONG) bounds.height();
+    result->right = (LONG) bounds.width();
+    return S_OK;
+}
+
 void WebFrame::unmarkAllMisspellings()
 {
     Frame* coreFrame = core(this);

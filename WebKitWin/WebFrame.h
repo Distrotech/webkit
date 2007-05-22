@@ -185,6 +185,15 @@ public:
     virtual HRESULT STDMETHODCALLTYPE size( 
         /* [retval][out] */ SIZE *size);
 
+    virtual HRESULT STDMETHODCALLTYPE hasScrollBars( 
+        /* [retval][out] */ BOOL *result);
+    
+    virtual HRESULT STDMETHODCALLTYPE contentBounds( 
+        /* [retval][out] */ RECT *result);
+    
+    virtual HRESULT STDMETHODCALLTYPE frameBounds( 
+        /* [retval][out] */ RECT *result);
+
     // FrameWinClient
     virtual void ref();
     virtual void deref();
