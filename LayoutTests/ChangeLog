@@ -1,3 +1,9 @@
+2007-05-22  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by.
+
+        * win/Skipped: removed fixed tests
+
 2007-05-16  Kevin McCullough  <kmccullough@apple.com>
 
         Reviewed by .
