@@ -2611,6 +2611,24 @@ HRESULT STDMETHODCALLTYPE WebFrame::string(
     return S_OK;
 }
 
+HRESULT STDMETHODCALLTYPE WebFrame::size( 
+    /* [retval][out] */ SIZE *size)
+{
+    if (!size)
+        return E_POINTER;
+    size->cx = size->cy = 0;
+
+    Frame* coreFrame = core(this);
+    if (!coreFrame)
+        return E_FAIL;
+    FrameView* view = coreFrame->view();
+    if (!view)
+        return E_FAIL;
+    size->cx = view->width();
+    size->cy = view->height();
+    return S_OK;
+}
+
 void WebFrame::unmarkAllMisspellings()
 {
     Frame* coreFrame = core(this);

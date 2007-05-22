@@ -86,4 +86,6 @@ interface IWebFramePrivate : IUnknown
 
     HRESULT isFrameSet([out, retval] BOOL* result);
     HRESULT string([out, retval] BSTR* result);
+
+    HRESULT size([out, retval] SIZE* size);
 }

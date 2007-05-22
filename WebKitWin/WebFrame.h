@@ -182,6 +182,9 @@ public:
     virtual HRESULT STDMETHODCALLTYPE string( 
         /* [retval][out] */ BSTR* result);
 
+    virtual HRESULT STDMETHODCALLTYPE size( 
+        /* [retval][out] */ SIZE *size);
+
     // FrameWinClient
     virtual void ref();
     virtual void deref();

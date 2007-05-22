@@ -1,3 +1,14 @@
+2007-05-21  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam, Ada.
+        
+        Added IWebFramePrivate::size().
+
+        * Interfaces/IWebFramePrivate.idl: Added size.
+        * WebFrame.cpp:
+        (WebFrame::size): Added.
+        * WebFrame.h: Added size.
+
 2007-05-21  Ada Chan  <adachan@apple.com>
 
         Reviewed by Steve.
