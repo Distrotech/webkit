@@ -59,7 +59,6 @@ using namespace WebCore;
 using namespace EventNames;
 
 // Redeclarations of PDFKit notifications. We can't use the API since we use a weak link to the framework.
-#define _webkit_PDFKitLaunchNotification @"PDFPreviewLaunchPreview"
 #define _webkit_PDFViewDisplayModeChangedNotification @"PDFViewDisplayModeChanged"
 #define _webkit_PDFViewScaleChangedNotification @"PDFViewScaleChanged"
 
@@ -79,7 +78,6 @@ using namespace EventNames;
 - (NSString *)_path;
 - (PDFView *)_PDFSubview;
 - (BOOL)_pointIsInSelection:(NSPoint)point;
-- (void)_receivedPDFKitLaunchNotification:(NSNotification *)notification;
 - (NSAttributedString *)_scaledAttributedString:(NSAttributedString *)unscaledAttributedString;
 - (NSString *)_temporaryPDFDirectoryPath;
 - (void)_trackFirstResponder;
@@ -432,12 +430,6 @@ static BOOL _PDFSelectionsAreEqual(PDFSelection *selectionA, PDFSelection *selec
                            selector:@selector(_scaleOrDisplayModeChanged:) 
                                name:_webkit_PDFViewDisplayModeChangedNotification
                              object:PDFSubview];
-    
-    if (previewView)
-        [notificationCenter addObserver:self
-                               selector:@selector(_receivedPDFKitLaunchNotification:)
-                                   name:_webkit_PDFKitLaunchNotification
-                                 object:previewView];
 }
 
 - (void)viewWillMoveToWindow:(NSWindow *)window
@@ -458,10 +450,6 @@ static BOOL _PDFSelectionsAreEqual(PDFSelection *selectionA, PDFSelection *selec
     [notificationCenter removeObserver:self
                                   name:_webkit_PDFViewDisplayModeChangedNotification
                                 object:PDFSubview];
-    if (previewView)
-        [notificationCenter removeObserver:self
-                                      name:_webkit_PDFKitLaunchNotification
-                                    object:previewView];
     
     [trackedFirstResponder release];
     trackedFirstResponder = nil;
@@ -908,6 +896,23 @@ static BOOL _PDFSelectionsAreEqual(PDFSelection *selectionA, PDFSelection *selec
     [[dataSource webFrame] _frameLoader]->load(URL, event.get());
 }
 
+- (void)PDFViewOpenPDFInNativeApplication:(PDFView *)sender
+{
+    // Delegate method sent when the user requests opening the PDF file in the system's default app
+    [self _openWithFinder:sender];
+}
+
+- (void)PDFViewSavePDFToDownloadFolder:(PDFView *)sender
+{
+    // Delegate method sent when the user requests downloading the PDF file to disk. The name is
+    // misleading since this gives the user the opportunity to save anywhere, not just to the
+    // Downloads folder.
+    id UIDelegate = [[self _webView] UIDelegate];
+
+    if (UIDelegate && [UIDelegate respondsToSelector:@selector(webView:saveFrameView:)])
+        [UIDelegate webView:[self _webView] saveFrameView:[[dataSource webFrame] frameView]];
+}
+
 @end
 
 @implementation WebPDFView (FileInternal)
@@ -1176,12 +1181,6 @@ static BOOL _PDFSelectionsAreEqual(PDFSelection *selectionA, PDFSelection *selec
     NSRect selectionRect = [PDFSubview convertRect:[[PDFSubview currentSelection] boundsForPage:page] fromPage:page];
     
     return NSPointInRect(point, selectionRect);
-}
-
-- (void)_receivedPDFKitLaunchNotification:(NSNotification *)notification
-{
-    ASSERT([notification object] == previewView);
-    [self _openWithFinder:self];
 }
 
 - (void)_scaleOrDisplayModeChanged:(NSNotification *)notification
