@@ -1,3 +1,21 @@
+2007-05-22  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Oliver.
+        
+        Enabling smartInsertDelete to resolve 
+        <rdar://problem/5082891> editing/deleting/smart-delete-003.html (and 004) fail
+        
+        * Interfaces/IWebView.idl:
+        * WebEditorClient.cpp:
+        (WebEditorClient::smartInsertDeleteEnabled):
+        * WebView.cpp:
+        (WebView::WebView):
+        (WebView::initWithFrame):
+        (WebView::toggleSmartInsertDelete):
+        (WebView::setSmartInsertDeleteEnabled):
+        (WebView::smartInsertDeleteEnabled):
+        * WebView.h:
+
 2007-05-22  Justin Garcia  <justin.garcia@apple.com>
 
         Reviewed by oliver

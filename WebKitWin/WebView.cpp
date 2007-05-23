@@ -127,6 +127,7 @@ WebView::WebView()
 , m_isBeingDestroyed(false)
 , m_paintCount(0)
 , m_hasSpellCheckerDocumentTag(false)
+, m_smartInsertDeleteEnabled(false)
 {
     KJS::Collector::registerAsMainThread();
 
@@ -1719,6 +1720,7 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
         return E_OUTOFMEMORY;
     notifyCenter->addObserver(this, WebPreferences::webPreferencesChangedNotification(), 0);
 
+    setSmartInsertDeleteEnabled(TRUE);
     return hr;
 }
 
@@ -2634,8 +2636,12 @@ HRESULT STDMETHODCALLTYPE WebView::toggleContinuousSpellChecking(
 HRESULT STDMETHODCALLTYPE WebView::toggleSmartInsertDelete( 
     /* [in] */ IUnknown* /*sender*/)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    BOOL enabled = FALSE;
+    HRESULT hr = smartInsertDeleteEnabled(&enabled);
+    if (FAILED(hr))
+        return hr;
+
+    return setSmartInsertDeleteEnabled(enabled ? FALSE : TRUE);
 }
 
 HRESULT STDMETHODCALLTYPE WebView::toggleGrammarChecking( 
@@ -2721,17 +2727,17 @@ HRESULT STDMETHODCALLTYPE WebView::typingStyle(
 }
     
 HRESULT STDMETHODCALLTYPE WebView::setSmartInsertDeleteEnabled( 
-        /* [in] */ BOOL /*flag*/)
+        /* [in] */ BOOL flag)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    m_smartInsertDeleteEnabled = !!flag;
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::smartInsertDeleteEnabled( 
-        /* [in] */ BOOL /*enabled*/)
+        /* [retval][out] */ BOOL* enabled)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    *enabled = m_smartInsertDeleteEnabled ? TRUE : FALSE;
+    return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::setContinuousSpellCheckingEnabled( 

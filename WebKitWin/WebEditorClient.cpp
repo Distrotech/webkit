@@ -287,7 +287,11 @@ bool WebEditorClient::shouldShowDeleteInterface(HTMLElement* /*element*/)
 { LOG_NOIMPL(); return false; }
 
 bool WebEditorClient::smartInsertDeleteEnabled(void)
-{ LOG_NOIMPL(); return false; }
+{ 
+    BOOL enabled = FALSE; 
+    m_webView->smartInsertDeleteEnabled(&enabled);
+    return !!enabled;
+}
 
 bool WebEditorClient::shouldChangeSelectedRange(WebCore::Range*, WebCore::Range*, WebCore::EAffinity, bool)
 { LOG_NOIMPL(); return true; }

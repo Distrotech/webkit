@@ -381,7 +381,7 @@ public:
         /* [in] */ BOOL flag);
     
     virtual HRESULT STDMETHODCALLTYPE smartInsertDeleteEnabled( 
-        /* [in] */ BOOL enabled);
+        /* [in] */ BOOL *enabled);
     
     virtual HRESULT STDMETHODCALLTYPE setContinuousSpellCheckingEnabled( 
         /* [in] */ BOOL flag);
@@ -691,6 +691,7 @@ protected:
     bool m_isBeingDestroyed;
     unsigned m_paintCount;
     bool m_hasSpellCheckerDocumentTag;
+    bool m_smartInsertDeleteEnabled;
 
     static bool s_allowSiteSpecificHacks;
 };

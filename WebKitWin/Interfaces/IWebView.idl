@@ -908,7 +908,7 @@ interface IWebViewEditing : IUnknown
     /*
         - (BOOL)smartInsertDeleteEnabled;
     */
-    HRESULT smartInsertDeleteEnabled([in] BOOL enabled);
+    HRESULT smartInsertDeleteEnabled([out, retval] BOOL* enabled);
 
     /*
         - (void)setContinuousSpellCheckingEnabled:(BOOL)flag;
