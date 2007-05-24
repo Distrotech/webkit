@@ -1,3 +1,11 @@
+2007-05-24  Adele Peterson  <adele@apple.com>
+
+        - fix http://bugs.webkit.org/show_bug.cgi?id=13837
+          Separator in new <select> widget disappears when block element with border is in document.
+
+        * rendering/RenderThemeSafari.cpp: (WebCore::RenderThemeSafari::paintMenuListButton):
+         Added calls to set the stroke style and thickness when painting the arrows and the separator.
+
 2007-05-24  Sam Weinig  <sam@webkit.org>
 
         Build fix.
