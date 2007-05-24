@@ -1,76 +1,76 @@
 layer at (0,0) size 480x360
   RenderView at (0,0) size 480x360
     RenderSVGContainer {svg} at (0.50,0.50) size 479x359
-      RenderSVGText {text} at (10,340) size 480x46
+      RenderSVGText {text} at (10,340) size 264x46 contains 1 chunk(s)
         RenderSVGInlineText {#text} at (0,-36) size 264x46
-          text run at (0,-36) width 264: "$Revision: 1.7 $"
+          chunk 1 text run 1 at (10.00,340.00) startOffset 0 endOffset 16 width 264.00: "$Revision: 1.7 $"
       RenderPath {rect} at (0.50,0.50) size 479x359 [stroke={[type=SOLID] [color=#000000]}] [data="M1.00,1.00L479.00,1.00L479.00,359.00L1.00,359.00"]
-      RenderSVGText {text} at (240,30) size 480x23
-        RenderSVGInlineText {#text} at (-14,-18) size 29x23
-          text run at (-14,-18) width 29: "end"
+      RenderSVGText {text} at (225,30) size 29x23 contains 1 chunk(s)
+        RenderSVGInlineText {#text} at (0,-18) size 29x23
+          chunk 1 (middle anchor) text run 1 at (225.50,30.00) startOffset 0 endOffset 3 width 29.00: "end"
       RenderSVGContainer {g} at (113,58) size 237x212 [transform={m=((1.00,0.00)(0.00,1.00)) t=(100.00,80.00)}]
         RenderSVGContainer {g} at (113,72) size 67x192 [transform={m=((1.00,0.00)(0.00,1.00)) t=(80.00,5.00)}]
-          RenderSVGText {text} at (0,0) size 480x17
-            RenderSVGInlineText {#text} at (-64,-13) size 64x17
-              text run at (-64,-13) width 64: "unspecified"
-          RenderSVGText {text} at (0,25) size 480x17
-            RenderSVGInlineText {#text} at (-32,-13) size 32x17
-              text run at (-32,-13) width 32: "offset"
-          RenderSVGText {text} at (0,50) size 480x17
-            RenderSVGInlineText {#text} at (-58,-13) size 58x17
-              text run at (-58,-13) width 58: "event base"
-          RenderSVGText {text} at (0,75) size 480x17
-            RenderSVGInlineText {#text} at (-53,-13) size 53x17
-              text run at (-53,-13) width 53: "sync base"
-          RenderSVGText {text} at (0,100) size 480x17
-            RenderSVGInlineText {#text} at (-54,-13) size 54x17
-              text run at (-54,-13) width 54: "indefinite"
-          RenderSVGText {text} at (0,125) size 480x17
-            RenderSVGInlineText {#text} at (-44,-13) size 44x17
-              text run at (-44,-13) width 44: "repeat()"
-          RenderSVGText {text} at (0,150) size 480x17
-            RenderSVGInlineText {#text} at (-67,-13) size 67x17
-              text run at (-67,-13) width 67: "accessKey()"
-          RenderSVGText {text} at (0,175) size 480x17
-            RenderSVGInlineText {#text} at (-64,-13) size 64x17
-              text run at (-64,-13) width 64: "wallclock()"
-        RenderSVGContainer {g} at (197,58) size 151x9 [transform={m=((1.00,0.00)(0.00,1.00)) t=(100.00,-15.00)}]
-          RenderSVGText {text} at (0,0) size 480x9
-            RenderSVGInlineText {#text} at (-3,-7) size 7x9
-              text run at (-3,-7) width 7: "0s"
-          RenderSVGText {text} at (12,0) size 480x9
-            RenderSVGInlineText {#text} at (-3,-7) size 7x9
-              text run at (-3,-7) width 7: "1s"
-          RenderSVGText {text} at (24,0) size 480x9
-            RenderSVGInlineText {#text} at (-3,-7) size 7x9
-              text run at (-3,-7) width 7: "2s"
-          RenderSVGText {text} at (36,0) size 480x9
-            RenderSVGInlineText {#text} at (-3,-7) size 7x9
-              text run at (-3,-7) width 7: "3s"
-          RenderSVGText {text} at (48,0) size 480x9
-            RenderSVGInlineText {#text} at (-3,-7) size 7x9
-              text run at (-3,-7) width 7: "4s"
-          RenderSVGText {text} at (60,0) size 480x9
-            RenderSVGInlineText {#text} at (-3,-7) size 7x9
-              text run at (-3,-7) width 7: "5s"
-          RenderSVGText {text} at (72,0) size 480x9
-            RenderSVGInlineText {#text} at (-3,-7) size 7x9
-              text run at (-3,-7) width 7: "6s"
-          RenderSVGText {text} at (84,0) size 480x9
-            RenderSVGInlineText {#text} at (-3,-7) size 7x9
-              text run at (-3,-7) width 7: "7s"
-          RenderSVGText {text} at (96,0) size 480x9
-            RenderSVGInlineText {#text} at (-3,-7) size 7x9
-              text run at (-3,-7) width 7: "8s"
-          RenderSVGText {text} at (120,0) size 480x9
-            RenderSVGInlineText {#text} at (-3,-7) size 7x9
-              text run at (-3,-7) width 7: "0s"
-          RenderSVGText {text} at (132,0) size 480x9
-            RenderSVGInlineText {#text} at (-3,-7) size 7x9
-              text run at (-3,-7) width 7: "1s"
-          RenderSVGText {text} at (144,0) size 480x9
-            RenderSVGInlineText {#text} at (-3,-7) size 7x9
-              text run at (-3,-7) width 7: "2s"
+          RenderSVGText {text} at (-64,0) size 64x17 contains 1 chunk(s)
+            RenderSVGInlineText {#text} at (0,-13) size 64x17
+              chunk 1 (end anchor) text run 1 at (-64.00,0.00) startOffset 0 endOffset 11 width 64.00: "unspecified"
+          RenderSVGText {text} at (-32,25) size 32x17 contains 1 chunk(s)
+            RenderSVGInlineText {#text} at (0,-13) size 32x17
+              chunk 1 (end anchor) text run 1 at (-32.00,25.00) startOffset 0 endOffset 6 width 32.00: "offset"
+          RenderSVGText {text} at (-58,50) size 58x17 contains 1 chunk(s)
+            RenderSVGInlineText {#text} at (0,-13) size 58x17
+              chunk 1 (end anchor) text run 1 at (-58.00,50.00) startOffset 0 endOffset 10 width 58.00: "event base"
+          RenderSVGText {text} at (-53,75) size 53x17 contains 1 chunk(s)
+            RenderSVGInlineText {#text} at (0,-13) size 53x17
+              chunk 1 (end anchor) text run 1 at (-53.00,75.00) startOffset 0 endOffset 9 width 53.00: "sync base"
+          RenderSVGText {text} at (-54,100) size 54x17 contains 1 chunk(s)
+            RenderSVGInlineText {#text} at (0,-13) size 54x17
+              chunk 1 (end anchor) text run 1 at (-54.00,100.00) startOffset 0 endOffset 10 width 54.00: "indefinite"
+          RenderSVGText {text} at (-44,125) size 44x17 contains 1 chunk(s)
+            RenderSVGInlineText {#text} at (0,-13) size 44x17
+              chunk 1 (end anchor) text run 1 at (-44.00,125.00) startOffset 0 endOffset 8 width 44.00: "repeat()"
+          RenderSVGText {text} at (-67,150) size 67x17 contains 1 chunk(s)
+            RenderSVGInlineText {#text} at (0,-13) size 67x17
+              chunk 1 (end anchor) text run 1 at (-67.00,150.00) startOffset 0 endOffset 11 width 67.00: "accessKey()"
+          RenderSVGText {text} at (-64,175) size 64x17 contains 1 chunk(s)
+            RenderSVGInlineText {#text} at (0,-13) size 64x17
+              chunk 1 (end anchor) text run 1 at (-64.00,175.00) startOffset 0 endOffset 11 width 64.00: "wallclock()"
+        RenderSVGContainer {g} at (196,58) size 151x9 [transform={m=((1.00,0.00)(0.00,1.00)) t=(100.00,-15.00)}]
+          RenderSVGText {text} at (-4,0) size 6x9 contains 1 chunk(s)
+            RenderSVGInlineText {#text} at (0,-7) size 7x9
+              chunk 1 (middle anchor) text run 1 at (-3.50,0.00) startOffset 0 endOffset 2 width 7.00: "0s"
+          RenderSVGText {text} at (8,0) size 7x9 contains 1 chunk(s)
+            RenderSVGInlineText {#text} at (0,-7) size 7x9
+              chunk 1 (middle anchor) text run 1 at (8.50,0.00) startOffset 0 endOffset 2 width 7.00: "1s"
+          RenderSVGText {text} at (20,0) size 7x9 contains 1 chunk(s)
+            RenderSVGInlineText {#text} at (0,-7) size 7x9
+              chunk 1 (middle anchor) text run 1 at (20.50,0.00) startOffset 0 endOffset 2 width 7.00: "2s"
+          RenderSVGText {text} at (32,0) size 7x9 contains 1 chunk(s)
+            RenderSVGInlineText {#text} at (0,-7) size 7x9
+              chunk 1 (middle anchor) text run 1 at (32.50,0.00) startOffset 0 endOffset 2 width 7.00: "3s"
+          RenderSVGText {text} at (44,0) size 7x9 contains 1 chunk(s)
+            RenderSVGInlineText {#text} at (0,-7) size 7x9
+              chunk 1 (middle anchor) text run 1 at (44.50,0.00) startOffset 0 endOffset 2 width 7.00: "4s"
+          RenderSVGText {text} at (56,0) size 7x9 contains 1 chunk(s)
+            RenderSVGInlineText {#text} at (0,-7) size 7x9
+              chunk 1 (middle anchor) text run 1 at (56.50,0.00) startOffset 0 endOffset 2 width 7.00: "5s"
+          RenderSVGText {text} at (68,0) size 7x9 contains 1 chunk(s)
+            RenderSVGInlineText {#text} at (0,-7) size 7x9
+              chunk 1 (middle anchor) text run 1 at (68.50,0.00) startOffset 0 endOffset 2 width 7.00: "6s"
+          RenderSVGText {text} at (80,0) size 7x9 contains 1 chunk(s)
+            RenderSVGInlineText {#text} at (0,-7) size 7x9
+              chunk 1 (middle anchor) text run 1 at (80.50,0.00) startOffset 0 endOffset 2 width 7.00: "7s"
+          RenderSVGText {text} at (92,0) size 7x9 contains 1 chunk(s)
+            RenderSVGInlineText {#text} at (0,-7) size 7x9
+              chunk 1 (middle anchor) text run 1 at (92.50,0.00) startOffset 0 endOffset 2 width 7.00: "8s"
+          RenderSVGText {text} at (116,0) size 7x9 contains 1 chunk(s)
+            RenderSVGInlineText {#text} at (0,-7) size 7x9
+              chunk 1 (middle anchor) text run 1 at (116.50,0.00) startOffset 0 endOffset 2 width 7.00: "0s"
+          RenderSVGText {text} at (128,0) size 7x9 contains 1 chunk(s)
+            RenderSVGInlineText {#text} at (0,-7) size 7x9
+              chunk 1 (middle anchor) text run 1 at (128.50,0.00) startOffset 0 endOffset 2 width 7.00: "1s"
+          RenderSVGText {text} at (140,0) size 7x9 contains 1 chunk(s)
+            RenderSVGInlineText {#text} at (0,-7) size 7x9
+              chunk 1 (middle anchor) text run 1 at (140.50,0.00) startOffset 0 endOffset 2 width 7.00: "2s"
         RenderSVGContainer {g} at (194,70) size 156x200 [transform={m=((1.00,0.00)(0.00,8.00)) t=(94.00,-10.00)}]
           RenderPath {rect} at (194,70) size 12x200 [fill={[type=SOLID] [color=#EEEEEE]}] [data="M0.00,0.00L12.00,0.00L12.00,25.00L0.00,25.00"]
           RenderPath {rect} at (206,70) size 12x200 [fill={[type=SOLID] [color=#DDDDDD]}] [data="M12.00,0.00L24.00,0.00L24.00,25.00L12.00,25.00"]
