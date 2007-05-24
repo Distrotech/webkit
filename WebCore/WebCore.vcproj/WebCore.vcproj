@@ -6779,6 +6779,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSHTMLDocumentCustom.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSHTMLElementWrapperFactory.cpp"
 					>
 				</File>
