@@ -679,6 +679,14 @@
 				>
 			</File>
 			<File
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLFrameSetElement.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLFrameSetElement.h"
+				>
+			</File>
+			<File
 				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLHeadElement.cpp"
 				>
 			</File>
@@ -6792,6 +6800,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSHTMLFormElementCustom.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSHTMLFrameSetCustom.cpp"
 					>
 				</File>
 				<File
