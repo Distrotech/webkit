@@ -182,9 +182,6 @@ editing/execCommand/paste-2.html
 # Missing two containing divs on the pasted content <rdar://problem/5132021>
 editing/inserting/insert-3907422-fix.html
 
-# "bar" is ending up outside the two divs <rdar://problem/5132035>
-editing/pasteboard/4242293-1.html
-
 # EventSender.leapForward does not work in DumpRenderTree on boomer <rdar://problem/5080491>
 editing/pasteboard/drag-drop-dead-frame.html
 editing/pasteboard/drop-link.html
@@ -197,9 +194,7 @@ fast/forms/textfield-drag-into-disabled.html
 editing/pasteboard/drag-image-to-contenteditable-in-iframe.html
 editing/pasteboard/drag-selected-image-to-contenteditable.html
 
-# editing/style/non-inheritable-styles.html fails on boomer <rdar://problem/5143690>
 editing/pasteboard/drag-drop-modifies-page.html
-editing/style/non-inheritable-styles.html
 
 # DumpRenderTree doesn't support multiple windows <rdar://problem/5208288>
 fast/dom/open-and-close-by-DOM.html
@@ -407,7 +402,6 @@ editing/pasteboard/copy-paste-bidi.html
 
 # Text, RenderText, caret
 editing/deleting/delete-to-end-of-paragraph.html
-editing/inserting/insert-3907422-fix.html
 
 # Text, renderText, selection
 editing/pasteboard/4861080.html

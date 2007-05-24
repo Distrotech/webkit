@@ -1,3 +1,9 @@
+2007-05-23  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by.
+
+        * win/Skipped: remove fixed tests
+
 2007-05-22  Alice Liu  <alice.liu@apple.com>
 
         Reviewed by.
