@@ -324,4 +324,15 @@ const Cursor& notAllowedCursor()
     return c;
 }
 
+// FIXME: <rdar://problem/5224996> Add zoom in and zoom out cursors
+const Cursor& zoomInCursor()
+{
+    return pointerCursor();
+}
+
+const Cursor& zoomOutCursor()
+{
+    return pointerCursor();
+}
+
 }

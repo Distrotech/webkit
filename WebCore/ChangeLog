@@ -1,3 +1,11 @@
+2007-05-23  Anders Carlsson  <andersca@apple.com>
+
+        Fix build.
+        
+        * platform/win/CursorWin.cpp:
+        (WebCore::zoomInCursor):
+        (WebCore::zoomOutCursor):
+
 2007-05-22  Ada Chan  <adachan@apple.com>
 
         Fix build.
