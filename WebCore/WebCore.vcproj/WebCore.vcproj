@@ -6803,7 +6803,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSHTMLFrameSetCustom.cpp"
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSHTMLFrameSetElementCustom.cpp"
 					>
 				</File>
 				<File
