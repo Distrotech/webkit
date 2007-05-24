@@ -194,6 +194,10 @@ public:
     virtual HRESULT STDMETHODCALLTYPE frameBounds( 
         /* [retval][out] */ RECT *result);
 
+    virtual HRESULT STDMETHODCALLTYPE isDescendantOfFrame( 
+        /* [in] */ IWebFrame *ancestor,
+        /* [retval][out] */ BOOL *result);
+
     // FrameWinClient
     virtual void ref();
     virtual void deref();

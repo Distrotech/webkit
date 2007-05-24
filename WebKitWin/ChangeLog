@@ -1,5 +1,14 @@
 2007-05-23  Steve Falkenburg  <sfalken@apple.com>
 
+        Added IWebFramePrivate::isDescendantOfFrame.
+
+        * Interfaces/IWebFramePrivate.idl:
+        * WebFrame.cpp:
+        (WebFrame::isDescendantOfFrame):
+        * WebFrame.h:
+
+2007-05-23  Steve Falkenburg  <sfalken@apple.com>
+
         Build fix.  Fix continuous rebuilding of Interfaces by turning off Generate Type Library for every IDL except WebKit.idl.
 
         * WebKit.vcproj/Interfaces.vcproj:

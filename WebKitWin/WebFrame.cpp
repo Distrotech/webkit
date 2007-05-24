@@ -2692,6 +2692,23 @@ HRESULT STDMETHODCALLTYPE WebFrame::frameBounds(
     return S_OK;
 }
 
+HRESULT STDMETHODCALLTYPE WebFrame::isDescendantOfFrame( 
+    /* [in] */ IWebFrame *ancestor,
+    /* [retval][out] */ BOOL *result)
+{
+    if (!result)
+        return E_POINTER;
+    *result = FALSE;
+
+    Frame* coreFrame = core(this);
+    COMPtr<WebFrame> ancestorWebFrame;
+    if (!ancestor || FAILED(ancestor->QueryInterface(IID_WebFrame, (void**)&ancestorWebFrame)))
+        return S_OK;
+
+    *result = (coreFrame && coreFrame->tree()->isDescendantOf(core(ancestorWebFrame.get()))) ? TRUE : FALSE;
+    return S_OK;
+}
+
 void WebFrame::unmarkAllMisspellings()
 {
     Frame* coreFrame = core(this);
