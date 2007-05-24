@@ -66,7 +66,7 @@
 #define TextSizeMultiplierRatio         1.2f
 
 
-#if defined(_MSC_VER) && _MSC_VER < 1400
+#if defined(_MSC_VER) // && _MSC_VER < 1400
 int rint(double val)
 {
     return (int)(val < 0 ? val - 0.5 : val + 0.5);
