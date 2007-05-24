@@ -61,11 +61,11 @@ and WebCore. Include this file to use these settings.
         <if cond="FORMAT=='gnu'">
             <ldflags>$(WKOUTPUTDIR)/libjscore.a</ldflags>
         </if>
-		<if cond="FORMAT in ['msvc','msvs2005prj']">
-			<sys-lib>jscore</sys-lib>
+        <if cond="FORMAT in ['msvc','msvs2005prj']">
+            <sys-lib>jscore</sys-lib>
                         <sys-lib>winmm</sys-lib> <!-- for timeGetTime -->
-			<lib-path>$(WKOUTPUTDIR)</lib-path>
-		</if>
+            <lib-path>$(WKOUTPUTDIR)</lib-path>
+        </if>
     </template>
 
     <template id="webcore">
@@ -120,10 +120,10 @@ and WebCore. Include this file to use these settings.
         <if cond="FORMAT=='gnu'">
             <ldflags>$(WKOUTPUTDIR)/libwebcore-wx.a</ldflags>
         </if>
-		<if cond="FORMAT in ['msvc','msvs2005prj']">
-			<sys-lib>webcore-wx</sys-lib>
-			<lib-path>$(WKOUTPUTDIR)</lib-path>
-		</if>
+        <if cond="FORMAT in ['msvc','msvs2005prj']">
+            <sys-lib>webcore-wx</sys-lib>
+            <lib-path>$(WKOUTPUTDIR)</lib-path>
+        </if>
     </template>
 
     <option name="SQLITE3_LIBS">
@@ -136,14 +136,14 @@ and WebCore. Include this file to use these settings.
 
     <template id="sqlite3">
         <sys-lib>sqlite3</sys-lib>
-		<if cond="FORMAT=='gnu'">
+        <if cond="FORMAT=='gnu'">
             <ldflags>$(SQLITE3_LIBS)</ldflags>
             <cxxflags>$(SQLITE3_CFLAGS)</cxxflags>
         </if>
-		<if cond="FORMAT in ['msvc','msvs2005prj']">
-			<include>$(WK_ROOT)/sqlite3</include>
-			<lib-path>$(WK_ROOT)/sqlite3</lib-path>
-		</if>
+        <if cond="FORMAT in ['msvc','msvs2005prj']">
+            <include>$(WK_ROOT)/sqlite3</include>
+            <lib-path>$(WK_ROOT)/sqlite3</lib-path>
+        </if>
     </template>
 
 
@@ -180,15 +180,15 @@ and WebCore. Include this file to use these settings.
     </option>
 
     <template id="curl">
-	<if cond="FORMAT not in ['msvc', 'msvc2005prj']">
-        	<ldflags>$(CURL_LIBS)</ldflags>
-        	<cxxflags>$(CURL_CFLAGS)</cxxflags>
-	</if>
-	<if cond="FORMAT in ['msvc', 'msvs2005prj']">
-		<include>$(WK_ROOT)/libcurl/include</include>
-		<sys-lib>libcurl</sys-lib>
-		<lib-path>$(WK_ROOT)/libcurl</lib-path>
-	</if>
+    <if cond="FORMAT not in ['msvc', 'msvc2005prj']">
+            <ldflags>$(CURL_LIBS)</ldflags>
+            <cxxflags>$(CURL_CFLAGS)</cxxflags>
+    </if>
+    <if cond="FORMAT in ['msvc', 'msvs2005prj']">
+        <include>$(WK_ROOT)/libcurl/include</include>
+        <sys-lib>libcurl</sys-lib>
+        <lib-path>$(WK_ROOT)/libcurl</lib-path>
+    </if>
     </template>
 
 
@@ -242,8 +242,8 @@ and WebCore. Include this file to use these settings.
 
         <if cond="PLATFORM_WIN32=='1'">
             <include>$(WK_ROOT)/libxml/include</include>
-	    <lib-path>$(WK_ROOT)/libxml/lib</lib-path>
-	    <sys-lib>libxml2_a</sys-lib>
+            <lib-path>$(WK_ROOT)/libxml/lib</lib-path>
+            <sys-lib>libxml2_a</sys-lib>
         </if>
     </template>
 
@@ -265,9 +265,8 @@ and WebCore. Include this file to use these settings.
 
         <if cond="PLATFORM_WIN32=='1'">
             <include>$(WK_ROOT)/libxslt/include</include>
-	    <sys-lib>libxslt_a</sys-lib>
-	    <lib-path>$(WK_ROOT)/libxslt/lib</lib-path>
-
+            <sys-lib>libxslt_a</sys-lib>
+            <lib-path>$(WK_ROOT)/libxslt/lib</lib-path>
         </if>
     </template>
 
@@ -289,9 +288,9 @@ and WebCore. Include this file to use these settings.
 
         <if cond="PLATFORM_WIN32=='1'">
             <include>$(WK_ROOT)/icu/include</include>
-	    <sys-lib>icuuc</sys-lib>
-	    <sys-lib>icuin</sys-lib>
-	    <lib-path>$(WK_ROOT)/icu/lib</lib-path>
+            <sys-lib>icuuc</sys-lib>
+            <sys-lib>icuin</sys-lib>
+            <lib-path>$(WK_ROOT)/icu/lib</lib-path>
         </if>
     </template>
 
@@ -299,8 +298,8 @@ and WebCore. Include this file to use these settings.
     <template id="iconv">
         <if cond="PLATFORM_WIN32=='1'">
             <include>$(SRCDIR)/../iconv/include</include>
-	    <sys-lib>iconv_a</sys-lib>
-	    <lib-path>$(WK_ROOT)/iconv/lib</lib-path>
+        <sys-lib>iconv_a</sys-lib>
+        <lib-path>$(WK_ROOT)/iconv/lib</lib-path>
         </if>
     </template>
 
@@ -308,9 +307,9 @@ and WebCore. Include this file to use these settings.
     <template id="pthreads">
         <if cond="PLATFORM_WIN32=='1'">
             <include>$(SRCDIR)/../pthreads/include</include> 
-        <sys-lib>pthreadVC2</sys-lib>
-	    <lib-path>$(WK_ROOT)/pthreads/lib</lib-path>
-        </if>
+            <sys-lib>pthreadVC2</sys-lib>
+            <lib-path>$(WK_ROOT)/pthreads/lib</lib-path>
+            </if>
     </template>
     
 </makefile>
