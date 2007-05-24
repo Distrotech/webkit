@@ -53,9 +53,11 @@ void PluginDatabaseWin::addExtraPluginPath(const String& path)
     refresh();
 }
 
-void PluginDatabaseWin::refresh()
+bool PluginDatabaseWin::refresh()
 {   
     PluginSet newPlugins;
+
+    bool pluginSetChanged = false;
 
     // Create a new set of plugins
     newPlugins = getPluginsInPaths();
@@ -82,11 +84,15 @@ void PluginDatabaseWin::refresh()
         end = newPlugins.end();
         for (PluginSet::const_iterator it = newPlugins.begin(); it != end; ++it)
             m_plugins.add(*it);
+
+        pluginSetChanged = !pluginsToUnload.isEmpty() || !newPlugins.isEmpty();
     } else {
         m_plugins = newPlugins;
         PluginSet::const_iterator end = newPlugins.end();
         for (PluginSet::const_iterator it = newPlugins.begin(); it != end; ++it)
             m_plugins.add(*it);
+
+        pluginSetChanged = !newPlugins.isEmpty();
     }
 
     // Register plug-in MIME types
@@ -98,6 +104,8 @@ void PluginDatabaseWin::refresh()
             m_registeredMIMETypes.add(map_it->first);
         }
     }
+
+    return pluginSetChanged;
 }
 
 Vector<PluginPackageWin*> PluginDatabaseWin::plugins() const
@@ -434,10 +442,10 @@ PluginPackageWin* PluginDatabaseWin::pluginForExtension(const String& extension)
     return 0;
 }
 
-PluginViewWin* PluginDatabaseWin::createPluginView(Frame* parentFrame, Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType)
-{
+PluginPackageWin* PluginDatabaseWin::findPlugin(const KURL& url, const String& mimeType)
+{   
     PluginPackageWin* plugin = 0;
-    
+
     if (!mimeType.isNull())
         plugin = pluginForMIMEType(mimeType);
     
@@ -451,6 +459,17 @@ PluginViewWin* PluginDatabaseWin::createPluginView(Frame* parentFrame, Element* 
         // corresponding to the extension.
     }
 
+    return plugin;
+}
+
+PluginViewWin* PluginDatabaseWin::createPluginView(Frame* parentFrame, Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType)
+{
+    PluginPackageWin* plugin = findPlugin(url, mimeType);
+    
+    // No plugin was found, try refreshing the database and searching again
+    if (!plugin && refresh())
+        plugin = findPlugin(url, mimeType);
+        
     return new PluginViewWin(parentFrame, plugin, element, url, paramNames, paramValues, mimeType);
 }
 

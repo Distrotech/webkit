@@ -1,3 +1,23 @@
+2007-05-24  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://5211882>
+        Need to relaunch Boomer to recognize newly installed QT plug-in
+        
+        <rdar://5061867>
+        After installing Flash, Safari would still not display pages that needed it
+        
+        * plugins/win/PluginDatabaseWin.cpp:
+        (WebCore::PluginDatabaseWin::refresh):
+        Return whether the plugin database changed or not.
+        
+        (WebCore::PluginDatabaseWin::findPlugin):
+        New function that tries to find a plug-in given its url and MIME type.
+        
+        (WebCore::PluginDatabaseWin::createPluginView):
+        If no plugin is found, refresh the database and search for the plugin again if the database changed.
+        
 2007-05-24  Adele Peterson  <adele@apple.com>
 
         - fix http://bugs.webkit.org/show_bug.cgi?id=13837

@@ -47,13 +47,15 @@ namespace WebCore {
         static PluginDatabaseWin* installedPlugins();
         PluginViewWin* createPluginView(Frame* parentFrame, Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType);
 
-        void refresh();
+        bool refresh();
         Vector<PluginPackageWin*> plugins() const;
         bool isMIMETypeRegistered(const String& mimeType) const;
         void addExtraPluginPath(const String&);
     private:
         void setPluginPaths(const Vector<String>& paths) { m_pluginPaths = paths; }
         PluginSet getPluginsInPaths() const;
+
+        PluginPackageWin* findPlugin(const KURL& url, const String& mimeType);
 
         PluginPackageWin* pluginForMIMEType(const String& mimeType);
         PluginPackageWin* pluginForExtension(const String& extension);
