@@ -961,7 +961,6 @@ void WebFrame::initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, 
 
     FrameView* frameView = new FrameView(frame);
 
-    frame->setSettings(core(webView)->settings());
     frame->setView(frameView);
     frameView->deref(); // FrameViews are created with a ref count of 1. Release this ref since we've assigned it to frame.
 
@@ -2398,7 +2397,8 @@ void WebFrame::windowObjectCleared() const
     Frame* coreFrame = core(this);
     ASSERT(coreFrame);
 
-    if (!coreFrame->settings()->isJavaScriptEnabled())
+    Settings* settings = coreFrame->settings();
+    if (!settings || !settings->isJavaScriptEnabled())
         return;
 
     COMPtr<IWebFrameLoadDelegate> frameLoadDelegate;

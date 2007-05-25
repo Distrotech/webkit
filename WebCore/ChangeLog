@@ -1,3 +1,16 @@
+2007-05-24  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Darin Adler.
+
+        Fixed a bug with Settings where a number of different objects held bare 
+        Settings* data members, even though the Page owns the Settings object and 
+        deletes it upon destruction.
+
+        Added NULL checks since the Page can be deleted before the frame/document.
+
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::load):
+
 2007-05-24  Sam Weinig  <sam@webkit.org>
 
         Reviewed by NOBODY (OOPS!).

@@ -652,7 +652,8 @@ NPError PluginViewWin::load(const FrameLoadRequest& frameLoadRequest, bool sendN
     String target = frameLoadRequest.frameName();
     String jsString = scriptStringIfJavaScriptURL(url);
     if (!jsString.isNull()) {
-        if (!m_parentFrame->settings()->isJavaScriptEnabled()) {
+        Settings* settings = m_parentFrame->settings();
+        if (!settings || !settings->isJavaScriptEnabled()) {
             // Return NPERR_GENERIC_ERROR if JS is disabled. This is what Mozilla does.
             return NPERR_GENERIC_ERROR;
         } else if (target.isNull() && m_mode == NP_FULL) {
