@@ -79,23 +79,21 @@ void setSharedTimerFireTime(double fireTime)
         wkTimer = new WebKitTimer();
         
     unsigned int intervalInMS = interval * 1000;
-    if (interval < 0)
+    if (intervalInMS <= 0)
     {
 #ifndef NDEBUG
         // TODO: We may eventually want to assert here, to track 
         // what calls are leading to this condition. It seems to happen
         // mostly with repeating timers.
-        fprintf(stderr, "WARNING: setSharedTimerFireTime: fire time is < 0 ms\n");
+        if (interval < 0)
+            fprintf(stderr, "WARNING: setSharedTimerFireTime: fire time is < 0 ms\n");
 #endif
-        intervalInMS = 0;
+        // Never fire the timer immediately. We need to make sure the calling 
+        // function completes before firing.
+        intervalInMS = 1;
     }
-    
-    fprintf(stderr, "Interval is %d\n", intervalInMS);
 
-    if (intervalInMS == 0)
-        wkTimer->Notify();
-    else
-        wkTimer->Start(intervalInMS+100, wxTIMER_ONE_SHOT);
+    wkTimer->Start(intervalInMS, wxTIMER_ONE_SHOT);
 }
 
 void stopSharedTimer()
