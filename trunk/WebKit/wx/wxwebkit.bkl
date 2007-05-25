@@ -11,6 +11,15 @@
     
     <dll id="wxwebkit-dynamic" template="wx,webcore,xml2,iconv,xslt,icu,jscore,curl,sqlite3,gtk,pthreads">
         <debug-info>on</debug-info>
+        <!-- make sure we relink wxwebkit if either webcore or jscore change -->
+        <if cond="FORMAT=='gnu'">
+            <depends-on-file>$(WKOUTPUTDIR)/libjscore.a</depends-on-file>
+            <depends-on-file>$(WKOUTPUTDIR)/libwebcore-wx.a</depends-on-file>
+        </if>
+        <if cond="FORMAT=='msvc'">
+            <depends-on-file>$(WKOUTPUTDIR)/jscore.lib</depends-on-file>
+            <depends-on-file>$(WKOUTPUTDIR)/webcore-wx.lib</depends-on-file>
+        </if>
         <runtime-libs>dynamic</runtime-libs>
         <dirname>$(WKOUTPUTDIR)</dirname>
         <dllname>wxwebkit</dllname>
