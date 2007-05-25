@@ -1,4 +1,3 @@
-<<<<<<< .mine
 2007-05-24  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Darin Adler.
@@ -9,7 +8,6 @@
         
         Added NULL checks since the Page can be deleted before the frame/document.
 
-=======
 2007-05-23  Steve Falkenburg  <sfalken@apple.com>
 
         Added IWebFramePrivate::isDescendantOfFrame.
@@ -88,7 +86,6 @@
         (WebView::loadBackForwardListFromOtherView):
         * WebView.h:
 
->>>>>>> .r13874
 2007-05-18  Steve Falkenburg  <sfalken@apple.com>
 
         Build-related fix: stamp version resource properly.
