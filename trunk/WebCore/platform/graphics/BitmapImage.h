@@ -117,9 +117,13 @@ public:
 #if PLATFORM(QT)
     virtual QPixmap* getPixmap() const;
 #endif
-    
+
 #if PLATFORM(WIN)
     virtual bool getHBITMAP(HBITMAP);
+#endif
+
+#if PLATFORM(WX)
+    virtual wxBitmap* getWxBitmap() const;
 #endif
 
     virtual NativeImagePtr nativeImageForCurrentFrame() { return frameAtIndex(currentFrame()); }

@@ -118,7 +118,10 @@ void Widget::setFont(const Font& font)
 void Widget::setCursor(const Cursor& cursor)
 {
     if (data->nativeWindow)
-        data->nativeWindow->SetCursor(*cursor.impl());
+    {
+        if (cursor.impl() != 0)
+            data->nativeWindow->SetCursor(*cursor.impl());
+    }
 }
 
 void Widget::show()

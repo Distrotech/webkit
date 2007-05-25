@@ -54,6 +54,10 @@ typedef struct HBITMAP__ *HBITMAP;
 class QPixmap;
 #endif
 
+#if PLATFORM(WX)
+class wxBitmap;
+#endif
+
 namespace WebCore {
 
 class AffineTransform;
@@ -118,6 +122,10 @@ public:
 
 #if PLATFORM(QT)
     virtual QPixmap* getPixmap() const { return 0; }
+#endif
+
+#if PLATFORM(WX)
+    virtual wxBitmap* getWxBitmap() const { return 0; }
 #endif
 
 #if PLATFORM(WIN)
