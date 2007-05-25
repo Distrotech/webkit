@@ -326,7 +326,7 @@ fast/xpath/4XPath/Core/test_parser.html
 # DRT doesn't support tests with multiple windows <rdar://problem/5133670>
 http/tests/navigation/new-window-redirect-history.html
 
-# http/tests/navigation/anchor-frames.html fails on boomer <rdar://problem/5134014>
+# Some LayoutTests fail when not run by themselves <rdar://problem/5224271>
 http/tests/navigation/anchor-frames.html
 
 # DRT doesn't support tests with multiple windows <rdar://problem/5133670>
