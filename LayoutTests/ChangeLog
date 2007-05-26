@@ -1,5 +1,10 @@
 2007-05-25  Adam Roben  <aroben@apple.com>
 
+        * win/Skipped: Removed tests that fail on Mac as well to keep the list
+        Windows-specific.
+
+2007-05-25  Adam Roben  <aroben@apple.com>
+
         * win/Skipped: Finish adding all currently failing tests.
 
 2007-05-25  Adam Roben  <aroben@apple.com>

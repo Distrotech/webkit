@@ -436,12 +436,6 @@ editing/pasteboard/paste-line-endings-008.html
 editing/pasteboard/paste-line-endings-009.html
 editing/pasteboard/paste-line-endings-010.html
 
-# <rdar://problem/5230318> editing/style/table-selection.html is failing
-editing/style/table-selection.html
-
-# Table not deleted <rdar://problem/5230347>
-editing/unsupported-content/table-delete-003.html
-
 # Some text tests are missing a trailing newline <rdar://problem/5230362>
 fast/dom/early-frame-url.html
 fast/dom/title-text-property-2.html
@@ -473,9 +467,6 @@ http/tests/loading/bad-server-subframe.html
 http/tests/loading/basic.html
 http/tests/loading/empty-subframe.html
 http/tests/loading/simple-subframe.html
-
-# <rdar://problem/5230493> http/tests/navigation/relativeanchor-goback.html is failing
-http/tests/navigation/relativeanchor-goback.html
 
 ################################################################################
 ####################### No bugs filed about the below yet#######################
