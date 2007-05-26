@@ -66,7 +66,6 @@ class WebView;
 
 interface IWebHistoryItemPrivate;
 
-unsigned long long WebSystemMainMemory();
 WebFrame* kit(WebCore::Frame*);
 WebCore::Frame* core(WebFrame*);
 
@@ -345,7 +344,6 @@ public:
     void receivedPolicyDecision(WebCore::PolicyAction);
 
 protected:
-    unsigned int getObjectCacheSize();
     void loadHTMLString(BSTR string, BSTR baseURL, BSTR unreachableURL);
     void loadData(PassRefPtr<WebCore::SharedBuffer>, BSTR mimeType, BSTR textEncodingName, BSTR baseURL, BSTR failingURL);
     void loadURLIntoChild(const WebCore::KURL&, const WebCore::String& referrer, WebFrame* childFrame);

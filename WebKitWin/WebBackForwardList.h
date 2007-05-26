@@ -45,7 +45,6 @@ public:
 protected:
     WebBackForwardList(PassRefPtr<WebCore::BackForwardList>);
     ~WebBackForwardList();
-    static void setDefaultPageCacheSizeIfNecessary();
 
 public:
     // IUnknown

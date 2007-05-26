@@ -48,6 +48,7 @@
 #include <CoreGraphics/CGContext.h>
 #include <CFNetwork/CFHTTPCookiesPriv.h>
 #include <WebCore/BString.h>
+#include <WebCore/Cache.h>
 #include <WebCore/CommandByName.h>
 #include <WebCore/ContextMenuController.h>
 #include <WebCore/CString.h>
@@ -71,6 +72,7 @@
 #include <WebCore/MimeTypeRegistry.h>
 #include <WebCore/NotImplemented.h>
 #include <WebCore/Page.h>
+#include <WebCore/PageCache.h>
 #include <WebCore/PlatformKeyboardEvent.h>
 #include <WebCore/PlatformMouseEvent.h>
 #include <WebCore/PlatformWheelEvent.h>
@@ -1065,6 +1067,27 @@ bool WebView::inResizer(LPARAM lParam)
     return !!PtInRect(&r, pt);
 }
 
+void WebView::initializeCacheSizesIfNecessary()
+{
+    static bool didInitialize;
+    if (didInitialize)
+        return;
+
+    COMPtr<IWebPreferences> prefs;
+    if (FAILED(preferences(&prefs)))
+        return;
+
+   UINT pageCacheSize;
+   if (SUCCEEDED(prefs->pageCacheSize(&pageCacheSize)))
+        pageCache()->setCapacity(pageCacheSize);
+
+   UINT objectCacheSize;
+   if (SUCCEEDED(prefs->objectCacheSize(&objectCacheSize)))
+        cache()->setMaximumSize(objectCacheSize);
+
+    didInitialize = true;
+}
+
 static ATOM registerWebViewWindowClass()
 {
     static bool haveRegisteredWindowClass = false;
@@ -1436,6 +1459,11 @@ HRESULT WebView::updateWebCoreSettingsFromPreferences(IWebPreferences* preferenc
     if (FAILED(hr))
         return hr;
 
+    hr = preferences->usesPageCache(&enabled);
+    if (FAILED(hr))
+        return hr;
+    settings->setUsesPageCache(!!enabled);
+
     ResourceHandle::setCookieStorageAcceptPolicy(acceptPolicy);
 
     m_mainFrame->invalidate(); // FIXME
@@ -1682,12 +1710,13 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     m_page = new Page(new WebChromeClient(this), new WebContextMenuClient(this), new WebEditorClient(this), new WebDragClient(this));
     // FIXME: 4931464 - When we do cache pages on Windows this needs to be removed so the "should I cache this page?" check
     // in FrameLoader::provisionalLoadStarted() doesn't always fail
-    m_page->backForwardList()->setPageCacheSize(0);
+    m_page->settings()->setUsesPageCache(false);
 
     WebFrame* webFrame = WebFrame::createInstance();
     webFrame->initWithWebFrameView(0 /*FIXME*/, this, m_page, 0);
     m_mainFrame = webFrame;
     webFrame->Release(); // The WebFrame is owned by the Frame, so release our reference to it.
+
 
     m_page->mainFrame()->tree()->setName(String(frameName, SysStringLen(frameName)));
     m_page->mainFrame()->init();

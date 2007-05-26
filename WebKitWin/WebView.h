@@ -653,6 +653,7 @@ protected:
     static bool allowSiteSpecificHacks() { return s_allowSiteSpecificHacks; }
     void preflightSpellChecker();
     bool continuousCheckingAllowed();
+    void initializeCacheSizesIfNecessary();
 
     ULONG m_refCount;
     WebCore::String m_groupName;

@@ -1,3 +1,27 @@
+2007-05-25  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Darin Adler, Adam Roben.
+
+        Fixed <rdar://problem/5055182> The page cache has no global cap.
+        
+        The main WebKit changes are:
+            1. Gutted IWebBackForwardList::setPageCacheSize and IWebBackForwardList:: 
+            pageCacheSize because they're deprecated on Mac now. I didn't remove
+            them, though, because doing so can cause COM badness.
+            
+            2. Added IWebPreferences::setUsesPageCache IWebPreferences:: 
+            usesPageCache because that's the new Mac API. I added them to the end
+            of IWebPreferences to avoid COM badness.
+            
+            3. Centralized calculation of object cache and page cache sizes inside
+            WebPreferences. 
+            
+            Changed our old behavior of reading a preference and applying a fudge 
+            factor with a new behavior of just using the preference directly. The 
+            old behavior was confusing and often inappropriate. (For example, if 
+            you set a page cache size of 100, a 256MB machine would somewhat 
+            arbitrarily reduce that number to 98.)
+            
 2007-05-24  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Darin Adler.

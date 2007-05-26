@@ -59,6 +59,7 @@
 #define WebKitPrivateBrowsingEnabledPreferenceKey "WebKitPrivateBrowsingEnabled"
 #define WebKitIconDatabaseLocationKey "WebKitIconDatabaseLocation"
 #define WebKitIconDatabaseEnabledPreferenceKey "WebKitIconDatabaseEnabled"
+#define WebKitUsesPageCachePreferenceKey "WebKitUsesPageCachePreferenceKey"
 
 // These are private both because callers should be using the cover methods and because the
 // cover methods themselves are private.

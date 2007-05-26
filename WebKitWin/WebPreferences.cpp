@@ -44,6 +44,15 @@
 #include <wtf/RetainPtr.h>
 #include <wtf/Vector.h>
 
+static unsigned long long WebSystemMainMemory()
+{
+    MEMORYSTATUSEX statex;
+    
+    statex.dwLength = sizeof(statex);
+    GlobalMemoryStatusEx(&statex);
+    return statex.ullTotalPhys;
+}
+
 // WebPreferences ----------------------------------------------------------------
 
 CFMutableDictionaryRef WebPreferences::m_standardUserDefaults = 0;
@@ -99,6 +108,35 @@ void WebPreferences::initialize()
     if (!m_standardUserDefaults)
         m_standardUserDefaults = CFDictionaryCreateMutable(0, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 
+    // As a fudge factor, use 1000 instead of 1024, in case the reported memory doesn't align exactly to a megabyte boundary.
+    unsigned long long memSize = WebSystemMainMemory() / 1024 / 1000;
+
+    // Page cache size (in pages)
+    int pageCacheSize;
+    if (memSize >= 1024)
+        pageCacheSize = 10;
+    else if (memSize >= 512)
+        pageCacheSize = 5;
+    else if (memSize >= 384)
+        pageCacheSize = 4;
+    else if (memSize >= 256)
+        pageCacheSize = 3;
+    else if (memSize >= 128)
+        pageCacheSize = 2;
+    else if (memSize >= 64)
+        pageCacheSize = 1;
+    else
+        pageCacheSize = 0;
+
+    // Object cache size (in bytes)
+    int objectCacheSize;
+    if (memSize >= 2048)
+        objectCacheSize = 128 * 1024 * 1024;
+    else if (memSize >= 1024)
+        objectCacheSize = 64 * 1024 * 1024;
+    else
+        objectCacheSize = 32 * 1024 * 1024;
+
     CFStringRef key = CFSTR(WebKitStandardFontPreferenceKey);
     if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
         CFDictionaryAddValue(m_standardUserDefaults, key,                               CFSTR("Times New Roman"));
@@ -144,12 +182,16 @@ void WebPreferences::initialize()
         CFDictionaryAddValue(m_standardUserDefaults, key,                               CFSTR("ISO-8859-1"));
 
     key = CFSTR(WebKitPageCacheSizePreferenceKey);
+    CFStringRef pageCacheSizeString = CFStringCreateWithFormat(0, 0, CFSTR("%d"), pageCacheSize);
     if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
-        CFDictionaryAddValue(m_standardUserDefaults, key,                               CFSTR("3"));
+        CFDictionaryAddValue(m_standardUserDefaults, key,                               pageCacheSizeString);
+    CFRelease(pageCacheSizeString);
 
     key = CFSTR(WebKitObjectCacheSizePreferenceKey);
+    CFStringRef objectCacheSizeString = CFStringCreateWithFormat(0, 0, CFSTR("%d"), objectCacheSize);
     if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
-        CFDictionaryAddValue(m_standardUserDefaults, key,                               CFSTR("33554432"));
+        CFDictionaryAddValue(m_standardUserDefaults, key,                               objectCacheSizeString);
+    CFRelease(objectCacheSizeString);
 
     key = CFSTR(WebKitUserStyleSheetEnabledPreferenceKey);
     if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
@@ -262,6 +304,10 @@ void WebPreferences::initialize()
         CFDictionaryAddValue(m_standardUserDefaults, key,                               kCFBooleanFalse);
 
     key = CFSTR(AllowContinuousSpellCheckingPreferenceKey);
+    if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
+        CFDictionaryAddValue(m_standardUserDefaults, key,                               kCFBooleanTrue);
+
+    key = CFSTR(WebKitUsesPageCachePreferenceKey);
     if (!CFDictionaryContainsKey(m_standardUserDefaults, key))
         CFDictionaryAddValue(m_standardUserDefaults, key,                               kCFBooleanTrue);
 }
@@ -960,6 +1006,20 @@ HRESULT STDMETHODCALLTYPE WebPreferences::tabsToLinks(
     /* [retval][out] */ BOOL* enabled)
 {
     *enabled = boolValueForKey(CFSTR(WebKitTabToLinksPreferenceKey));
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebPreferences::setUsesPageCache( 
+        /* [in] */ BOOL usesPageCache)
+{
+    setBoolValue(CFSTR(WebKitUsesPageCachePreferenceKey), usesPageCache);
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebPreferences::usesPageCache( 
+    /* [retval][out] */ BOOL* usesPageCache)
+{
+    *usesPageCache = boolValueForKey(CFSTR(WebKitUsesPageCachePreferenceKey));
     return S_OK;
 }
 

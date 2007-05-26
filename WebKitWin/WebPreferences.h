@@ -204,6 +204,12 @@ public:
     virtual HRESULT STDMETHODCALLTYPE setTextAreasAreResizable( 
         /* [in] */ BOOL enabled);
 
+    virtual HRESULT STDMETHODCALLTYPE usesPageCache( 
+        /* [retval][out] */ BOOL *usesPageCache);
+
+    virtual HRESULT STDMETHODCALLTYPE setUsesPageCache( 
+        /* [in] */ BOOL usesPageCache);
+
     virtual HRESULT STDMETHODCALLTYPE pageCacheSize( 
         /* [retval][out] */ unsigned int *limit);
 

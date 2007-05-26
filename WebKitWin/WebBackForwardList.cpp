@@ -38,8 +38,6 @@
 using std::min;
 using namespace WebCore;
 
-const UINT computeDefaultPageCacheSize = UINT_MAX;
-
 // WebBackForwardList ----------------------------------------------------------------
 
 static HashMap<BackForwardList*, WebBackForwardList*>& backForwardListWrappers()
@@ -291,43 +289,18 @@ HRESULT STDMETHODCALLTYPE WebBackForwardList::itemAtIndex(
 }
 
 HRESULT STDMETHODCALLTYPE WebBackForwardList::setPageCacheSize( 
-    /* [in] */ UINT size)
+    /* [in] */ UINT /* size */)
 {
-    m_backForwardList->setPageCacheSize(size);
+    // This function is here for binary compatbility only.
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebBackForwardList::pageCacheSize( 
     /* [retval][out] */ UINT* size)
 {
-    setDefaultPageCacheSizeIfNecessary();
-
-    *size = m_backForwardList->pageCacheSize();
+    // This function is here for binary compatbility only.
+    *size = 0;
     return S_OK;
-}
-
-void WebBackForwardList::setDefaultPageCacheSizeIfNecessary()
-{
-    static bool initialized = false;
-    if (initialized)
-        return;
-
-    UINT cacheSize;
-    WebPreferences* prefs = WebPreferences::createInstance();
-    COMPtr<IWebPreferences> standardPrefs;
-    if (!prefs || FAILED(prefs->standardPreferences(&standardPrefs)) || FAILED(standardPrefs->pageCacheSize(&cacheSize)))
-        cacheSize = 3;  // 3 is the default value for WebKitPageCacheSizePreferenceKey
-    if (prefs)
-        prefs->Release();
-    unsigned long long memSize = WebSystemMainMemory();
-
-    // On Windows the reported memory is a bit smaller, so we use 1000 instead of 1024 as a fudge factor.
-    if (memSize >= 1024 * 1024 * 1000 /*1024*/)
-        BackForwardList::setDefaultPageCacheSize(cacheSize);
-    else if (memSize >= 512 * 1024 * 1000 /*1024*/)
-        BackForwardList::setDefaultPageCacheSize(cacheSize - 1);
-    else
-        BackForwardList::setDefaultPageCacheSize(cacheSize - 2);
 }
 
 // IWebBackForwardListPrivate --------------------------------------------------------

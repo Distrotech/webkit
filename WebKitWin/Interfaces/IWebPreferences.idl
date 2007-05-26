@@ -500,4 +500,14 @@ interface IWebPreferences : IUnknown
     HRESULT setGrammarCheckingEnabled([in] BOOL enabled);
     HRESULT allowContinuousSpellChecking([out, retval] BOOL *allowed);
     HRESULT setAllowContinuousSpellChecking([in] BOOL allowed);
+
+    /*
+        - (BOOL)usesPageCache;
+    */
+    HRESULT usesPageCache([out, retval] BOOL* usesPageCache);
+
+    /*
+        - (void)setUsesPageCache:(BOOL)flag;
+    */
+    HRESULT setUsesPageCache([in] BOOL usesPageCache);
 }
