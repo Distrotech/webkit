@@ -1726,6 +1726,8 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     SetWindowLongPtr(m_viewWindow, 0, (LONG_PTR)this);
     ShowWindow(m_viewWindow, SW_SHOW);
 
+    initializeCacheSizesIfNecessary();
+
     // Update WebCore with preferences.  These values will either come from an archived WebPreferences,
     // or from the standard preferences, depending on whether this method was called from initWithCoder:
     // or initWithFrame, respectively.

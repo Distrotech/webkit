@@ -1,5 +1,9 @@
 2007-05-25  Geoffrey Garen  <ggaren@apple.com>
 
+        Build fix -- forgot to commit a little bit in my last patch.
+
+2007-05-25  Geoffrey Garen  <ggaren@apple.com>
+
         Reviewed by Darin Adler, Adam Roben.
 
         Fixed <rdar://problem/5055182> The page cache has no global cap.

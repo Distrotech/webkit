@@ -965,14 +965,6 @@ void WebFrame::initWithWebFrameView(IWebFrameView* /*view*/, IWebView* webView, 
     frameView->deref(); // FrameViews are created with a ref count of 1. Release this ref since we've assigned it to frame.
 
     frameView->setContainingWindow(viewWindow);
-
-    // FIXME: This is one-time initialization, but it gets the value of the setting from the
-    // current WebView. That's a mismatch and not good!
-    static bool initializedObjectCacheSize = false;
-    if (!initializedObjectCacheSize) {
-        cache()->setMaximumSize(getObjectCacheSize());
-        initializedObjectCacheSize = true;
-    }
 }
 
 void WebFrame::layoutIfNeededRecursive(FrameView* frameView)
@@ -1008,36 +1000,6 @@ void WebFrame::layoutIfNeededRecursive(FrameView* frameView)
 Frame* WebFrame::impl()
 {
     return d->frame;
-}
-
-unsigned long long WebSystemMainMemory()
-{
-    MEMORYSTATUSEX statex;
-    
-    statex.dwLength = sizeof (statex);
-    GlobalMemoryStatusEx (&statex);
-    return statex.ullTotalPhys;
-}
-
-unsigned int WebFrame::getObjectCacheSize()
-{
-    unsigned int cacheSize = 33554432;
-    IWebPreferences* preferences;
-    if (SUCCEEDED(d->webView->preferences(&preferences)))
-        preferences->objectCacheSize(&cacheSize);
-
-    unsigned long long memSize = WebSystemMainMemory();
-    unsigned int multiplier = 1;
-    
-    // 2GB and greater will be 128mb.  1gb and greater will be 64mb.
-    // Otherwise just use 32mb.  On Windows the reported memory is
-    // a bit smaller, so we use 1000 instead of 1024 as a fudge factor.
-    if (memSize >= 2048 * 1024 * 1000 /*1024*/)
-        multiplier = 4;
-    else if (memSize >= 1024 * 1024 * 1000 /*1024*/)
-        multiplier = 2;
-
-    return cacheSize * multiplier;
 }
 
 void WebFrame::invalidate()
