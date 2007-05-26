@@ -12,7 +12,7 @@ fast/dom/wrapper-round-tripping.html
 # No Dashboard compatibility mode on Windows
 http/tests/xmlhttprequest/default-content-type-dashboard.html
 http/tests/xmlhttprequest/svg-created-by-xhr-disallowed-in-dashboard.html
-svg/custom/embedded-svg-disallowed-in-dashboard.html
+svg/custom/embedded-svg-disallowed-in-dashboard.xml
 svg/custom/manually-parsed-embedded-svg-disallowed-in-dashboard.html
 svg/custom/manually-parsed-svg-disallowed-in-dashboard.html
 svg/custom/svg-disallowed-in-dashboard-object.html
@@ -603,8 +603,8 @@ fast/dom/Window/window-properties.html
 # Is the x-nextstep encoding Mac-specific?
 fast/encoding/char-decoding.html
 
-# Unimplemented part of DRT.
-http/tests/plugins/npapi-response-headers.html
+# Unimplemented part of DRT. (This test is currently disabled).
+# http/tests/plugins/npapi-response-headers.html
 
 # used to be crashers but are now failures.
 security/block-test.html

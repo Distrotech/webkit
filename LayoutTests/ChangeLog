@@ -1,5 +1,9 @@
 2007-05-25  Adam Roben  <aroben@apple.com>
 
+        * win/Skipped: Corrected a filename and commented out a disabled test.
+
+2007-05-25  Adam Roben  <aroben@apple.com>
+
         * win/Skipped: Removed tests that fail on Mac as well to keep the list
         Windows-specific.
 
