@@ -1,3 +1,12 @@
+2007-05-25  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Hyatt.
+        
+        Fix rdar://problem/5212399 <object> with PNG src rendered as image document (causes Acid2 to fail)
+
+        * WebFrame.cpp:
+        (WebFrame::objectContentType):
+
 2007-05-25  Geoffrey Garen  <ggaren@apple.com>
 
         Build fix -- forgot to commit a little bit in my last patch.

@@ -2337,7 +2337,7 @@ ObjectContentType WebFrame::objectContentType(const KURL& url, const String& mim
         return ObjectContentFrame; // Go ahead and hope that we can display the content.
 
     if (MimeTypeRegistry::isSupportedImageMIMEType(mimeType))
-        return WebCore::ObjectContentFrame;
+        return WebCore::ObjectContentImage;
 
     if (PluginDatabaseWin::installedPlugins()->isMIMETypeRegistered(mimeType))
         return WebCore::ObjectContentPlugin;
