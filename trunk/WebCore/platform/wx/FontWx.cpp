@@ -65,11 +65,9 @@ void Font::drawGlyphs(GraphicsContext* graphicsContext, const FontData* font, co
         offset += glyphBuffer.advanceAt(from + i);
     }
     
-    // the y point is actually the bottom point of the text, turn it into the top
-    float height = font->ascent() - font->descent();
-    wxCoord ypoint = (wxCoord) (point.y() - height);
-     
-    dc->DrawText(text, (wxCoord)point.x(), ypoint);
+    // wx wants the y point to be top-left corner, while WebCore gives us
+    // the baseline. So subtract the ascent to get top-left corner.
+    dc->DrawText(text, (wxCoord)point.x(), point.y() - font->ascent());
 }
 
 FloatRect Font::selectionRectForComplexText(const TextRun& run, const TextStyle& style, const IntPoint& point, int h, int from, int to) const
