@@ -360,6 +360,7 @@ void EditorClientWx::showSpellingUI(bool show)
 bool EditorClientWx::spellingUIIsShowing() 
 { 
     notImplemented(); 
+    return false;
 }
 
 void EditorClientWx::getGuessesForWord(const String&, Vector<String>& guesses) 
