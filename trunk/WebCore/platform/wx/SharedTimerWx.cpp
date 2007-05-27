@@ -79,7 +79,10 @@ void setSharedTimerFireTime(double fireTime)
         wkTimer = new WebKitTimer();
         
     unsigned int intervalInMS = interval * 1000;
-    if (intervalInMS <= 0)
+    
+    // check for negative intervals, or cases where intervalInMS is 0
+    // due to double to int conversion.
+    if (interval <= 0 || intervalInMS == 0)
     {
 #ifndef NDEBUG
         // TODO: We may eventually want to assert here, to track 
@@ -90,8 +93,10 @@ void setSharedTimerFireTime(double fireTime)
 #endif
         // Never fire the timer immediately. We need to make sure the calling 
         // function completes before firing.
-        intervalInMS = 1;
+        intervalInMS = 10;
     }
+    
+    ASSERT(intervalInMS > 0);
 
     wkTimer->Start(intervalInMS, wxTIMER_ONE_SHOT);
 }
