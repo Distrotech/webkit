@@ -181,8 +181,6 @@ NativeImagePtr ImageSource::createFrameAtIndex(size_t index)
     
     PixelData::Iterator rowStart = p; 
     
-    bool rowAllBlack = true;
-    
     // NB: on Intel, data is in BGRA format, despite the data type
     for (long i = 0; i < buffer->bytes().size()*4; i+=4)
     {
@@ -190,9 +188,6 @@ NativeImagePtr ImageSource::createFrameAtIndex(size_t index)
         p.Green() = bytes[i+1];
         p.Blue() = bytes[i+0];
         p.Alpha() = bytes[i+3];
-
-        if (bytes[i] != 0 || bytes[i+1] != 0 || bytes[i+2] != 0)
-            rowAllBlack = false;
         
         p++;
 
