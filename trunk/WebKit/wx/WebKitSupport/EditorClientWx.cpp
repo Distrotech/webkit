@@ -322,4 +322,49 @@ void EditorClientWx::respondToChangedSelection()
     notImplemented();
 }
 
+void EditorClientWx::ignoreWordInSpellDocument(const String&) 
+{ 
+    notImplemented(); 
+}
+
+void EditorClientWx::learnWord(const String&) 
+{ 
+    notImplemented(); 
+}
+
+void EditorClientWx::checkSpellingOfString(const UChar*, int length, int* misspellingLocation, int* misspellingLength) 
+{ 
+    notImplemented(); 
+}
+
+void EditorClientWx::checkGrammarOfString(const UChar*, int length, Vector<GrammarDetail>&, int* badGrammarLocation, int* badGrammarLength) 
+{ 
+    notImplemented(); 
+}
+
+void EditorClientWx::updateSpellingUIWithGrammarString(const String&, const GrammarDetail& detail) 
+{ 
+    notImplemented(); 
+}
+
+void EditorClientWx::updateSpellingUIWithMisspelledWord(const String&) 
+{ 
+    notImplemented(); 
+}
+
+void EditorClientWx::showSpellingUI(bool show) 
+{ 
+    notImplemented(); 
+}
+
+bool EditorClientWx::spellingUIIsShowing() 
+{ 
+    notImplemented(); 
+}
+
+void EditorClientWx::getGuessesForWord(const String&, Vector<String>& guesses) 
+{ 
+    notImplemented(); 
+}
+
 }

@@ -221,10 +221,15 @@ void RenderFlow::dirtyLinesFromChangedChild(RenderObject* child)
     if (!parent() || (selfNeedsLayout() && !isInlineFlow()) || isTable())
         return;
 
-    // For an empty inline, go ahead and propagate the check up to our parent.
-    if (isInline() && !firstLineBox())
-        return parent()->dirtyLinesFromChangedChild(this);
-    
+    // If we have no first line box, then just bail early.
+    if (!firstLineBox()) {
+        // For an empty inline, go ahead and propagate the check up to our parent, unless the parent
+        // is already dirty.
+        if (isInline() && !parent()->selfNeedsLayout())
+            parent()->dirtyLinesFromChangedChild(this);
+        return;
+    }
+
     // Try to figure out which line box we belong in.  First try to find a previous
     // line box by examining our siblings.  If we didn't find a line box, then use our 
     // parent's first line box.
@@ -251,7 +256,7 @@ void RenderFlow::dirtyLinesFromChangedChild(RenderObject* child)
         if (box)
             break;
     }
-    if (!box && firstLineBox())
+    if (!box)
         box = firstLineBox()->root();
 
     // If we found a line box, then dirty it.
@@ -445,6 +450,12 @@ bool RenderFlow::hitTestLines(const HitTestRequest& request, HitTestResult& resu
 IntRect RenderFlow::absoluteClippedOverflowRect()
 {
     if (isInlineFlow()) {
+        // Only compacts and run-ins are allowed in here during layout.
+        ASSERT(!view() || !view()->layoutState() || isCompact() || isRunIn());
+
+        if (!firstLineBox() && !continuation())
+            return IntRect();
+
         // Find our leftmost position.
         int left = 0;
         int top = firstLineBox() ? firstLineBox()->yPos() : 0;
@@ -463,7 +474,7 @@ IntRect RenderFlow::absoluteClippedOverflowRect()
         RenderBlock* cb = containingBlock();
         for (RenderObject* inlineFlow = this; inlineFlow && inlineFlow->isInlineFlow() && inlineFlow != cb; 
              inlineFlow = inlineFlow->parent()) {
-             if (inlineFlow->style()->position() == RelativePosition && inlineFlow->layer())
+             if (inlineFlow->style()->position() == RelativePosition && inlineFlow->hasLayer())
                 inlineFlow->layer()->relativePositionOffset(left, top);
         }
 
@@ -507,10 +518,10 @@ IntRect RenderFlow::absoluteClippedOverflowRect()
 int RenderFlow::lowestPosition(bool includeOverflowInterior, bool includeSelf) const
 {
     ASSERT(!isInlineFlow());
-    int bottom = includeSelf && m_width > 0 ? m_height : 0;
     if (!includeOverflowInterior && hasOverflowClip())
-        return bottom;
+        return includeSelf && m_width > 0 ? overflowHeight(false) : 0;
 
+    int bottom = includeSelf && m_width > 0 ? m_height : 0;
     if (!hasColumns()) {
         // FIXME: Come up with a way to use the layer tree to avoid visiting all the kids.
         // For now, we have to descend into all the children, since we may have a huge abs div inside
@@ -531,10 +542,10 @@ int RenderFlow::lowestPosition(bool includeOverflowInterior, bool includeSelf) c
 int RenderFlow::rightmostPosition(bool includeOverflowInterior, bool includeSelf) const
 {
     ASSERT(!isInlineFlow());
-    int right = includeSelf && m_height > 0 ? m_width : 0;
     if (!includeOverflowInterior && hasOverflowClip())
-        return right;
+        return includeSelf && m_height > 0 ? overflowWidth(false) : 0;
 
+    int right = includeSelf && m_height > 0 ? m_width : 0;
     if (!hasColumns()) {
         // FIXME: Come up with a way to use the layer tree to avoid visiting all the kids.
         // For now, we have to descend into all the children, since we may have a huge abs div inside
@@ -555,10 +566,10 @@ int RenderFlow::rightmostPosition(bool includeOverflowInterior, bool includeSelf
 int RenderFlow::leftmostPosition(bool includeOverflowInterior, bool includeSelf) const
 {
     ASSERT(!isInlineFlow());
-    int left = includeSelf && m_height > 0 ? 0 : m_width;
     if (!includeOverflowInterior && hasOverflowClip())
-        return left;
+        return includeSelf && m_height > 0 ? overflowLeft(false) : m_width;
 
+    int left = includeSelf && m_height > 0 ? 0 : m_width;
     if (!hasColumns()) {
         // FIXME: Come up with a way to use the layer tree to avoid visiting all the kids.
         // For now, we have to descend into all the children, since we may have a huge abs div inside
@@ -660,8 +671,18 @@ IntRect RenderFlow::caretRect(int offset, EAffinity affinity, int* extraWidthToE
 
 void RenderFlow::addFocusRingRects(GraphicsContext* graphicsContext, int tx, int ty)
 {
-    if (isRenderBlock())
-       graphicsContext->addFocusRingRect(IntRect(tx, ty, width(), height()));
+    if (isRenderBlock()) {
+        // Continuations should include their margins in the outline rect.
+        if (continuation()) {
+            bool nextInlineHasLineBox = continuation()->firstLineBox();
+            bool prevInlineHasLineBox = static_cast<RenderFlow*>(continuation()->element()->renderer())->firstLineBox();
+            int topMargin = prevInlineHasLineBox ? collapsedMarginTop() : 0;
+            int bottomMargin = nextInlineHasLineBox ? collapsedMarginBottom() : 0;
+            graphicsContext->addFocusRingRect(IntRect(tx, ty - topMargin, 
+                                                      width(), height() + topMargin + bottomMargin));
+        } else
+            graphicsContext->addFocusRingRect(IntRect(tx, ty, width(), height()));
+    }
 
     if (!hasOverflowClip() && !hasControlClip()) {
         for (InlineRunBox* curr = firstLineBox(); curr; curr = curr->nextLineBox())
@@ -672,10 +693,16 @@ void RenderFlow::addFocusRingRects(GraphicsContext* graphicsContext, int tx, int
                 curr->addFocusRingRects(graphicsContext, tx + curr->xPos(), ty + curr->yPos());
     }
 
-    if (continuation())
-        continuation()->addFocusRingRects(graphicsContext, 
-                                          tx - containingBlock()->xPos() + continuation()->xPos(),
-                                          ty - containingBlock()->yPos() + continuation()->yPos());
+    if (continuation()) {
+        if (isInline())
+            continuation()->addFocusRingRects(graphicsContext, 
+                                              tx - containingBlock()->xPos() + continuation()->xPos(),
+                                              ty - containingBlock()->yPos() + continuation()->yPos());
+        else
+            continuation()->addFocusRingRects(graphicsContext, 
+                                              tx - xPos() + continuation()->containingBlock()->xPos(),
+                                              ty - yPos() + continuation()->containingBlock()->yPos());
+    }
 }
 
 void RenderFlow::paintOutline(GraphicsContext* graphicsContext, int tx, int ty)

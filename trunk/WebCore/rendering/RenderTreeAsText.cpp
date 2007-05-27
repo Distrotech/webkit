@@ -338,7 +338,7 @@ void write(TextStream& ts, const RenderObject& o, int indent)
     }
 
     for (RenderObject* child = o.firstChild(); child; child = child->nextSibling()) {
-        if (child->layer())
+        if (child->hasLayer())
             continue;
         write(ts, *child, indent + 1);
     }
@@ -485,7 +485,8 @@ DeprecatedString externalRepresentation(RenderObject* o)
 #if ENABLE(SVG)
         writeRenderResources(ts, o->document());
 #endif
-        o->view()->frameView()->layout();
+        if (o->view()->frameView())
+            o->view()->frameView()->layout();
         RenderLayer* l = o->layer();
         if (l) {
             writeLayers(ts, l, l, IntRect(l->xPos(), l->yPos(), l->width(), l->height()));

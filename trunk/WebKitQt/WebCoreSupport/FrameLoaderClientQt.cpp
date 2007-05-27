@@ -37,6 +37,8 @@
 #include "Page.h"
 #include "ProgressTracker.h"
 #include "ResourceRequest.h"
+#include "HistoryItem.h"
+#include "HTMLFormElement.h"
 
 #include "qwebpage.h"
 #include "qwebframe.h"
@@ -77,8 +79,8 @@ void FrameLoaderClientQt::setFrame(QWebFrame* webFrame, Frame* frame)
 
     connect(this, SIGNAL(loadStarted(QWebFrame*)),
             m_webFrame->page(), SIGNAL(loadStarted(QWebFrame *)));
-    connect(this, SIGNAL(loadProgressChanged(double)),
-            m_webFrame->page(), SIGNAL(loadProgressChanged(double)));
+    connect(this, SIGNAL(loadProgressChanged(int)),
+            m_webFrame->page(), SIGNAL(loadProgressChanged(int)));
     connect(this, SIGNAL(loadFinished(QWebFrame*)),
             m_webFrame->page(), SIGNAL(loadFinished(QWebFrame *)));
     connect(this, SIGNAL(titleChanged(const QString&)),
@@ -286,8 +288,7 @@ void FrameLoaderClientQt::loadedFromCachedPage()
 
 void FrameLoaderClientQt::dispatchDidHandleOnloadEvents()
 {
-    if (m_webFrame)
-        emit m_webFrame->loadDone(true);
+    
 }
 
 
@@ -349,6 +350,8 @@ void FrameLoaderClientQt::dispatchDidFinishDocumentLoad()
 
 void FrameLoaderClientQt::dispatchDidFinishLoad()
 {
+    if (m_webFrame)
+        emit m_webFrame->loadDone(true);    
 }
 
 
@@ -421,7 +424,7 @@ void FrameLoaderClientQt::postProgressStartedNotification()
 void FrameLoaderClientQt::postProgressEstimateChangedNotification()
 {
     if (m_webFrame && m_frame->page())
-        emit loadProgressChanged(m_frame->page()->progress()->estimatedProgress());
+        emit loadProgressChanged(m_frame->page()->progress()->estimatedProgress() * 100);
 }
 
 void FrameLoaderClientQt::postProgressFinishedNotification()
@@ -491,9 +494,13 @@ void FrameLoaderClientQt::clearArchivedResources()
 
 bool FrameLoaderClientQt::canShowMIMEType(const String& MIMEType) const
 {
-    // FIXME: This is not good enough in the general case
-    qDebug() << "FrameLoaderClientQt::canShowMIMEType" << MIMEType;
-    return true;
+    if (MimeTypeRegistry::isSupportedImageMIMEType(MIMEType))
+        return true;
+
+    if (MimeTypeRegistry::isSupportedNonImageMIMEType(MIMEType))
+        return true;
+
+    return false;
 }
 
 
@@ -514,7 +521,10 @@ String FrameLoaderClientQt::generatedMIMETypeForURLScheme(const String& URLSchem
 
 void FrameLoaderClientQt::frameLoadCompleted()
 {
-    notImplemented();
+    // Note: Can be called multiple times.
+    // Even if already complete, we might have set a previous item on a frame that
+    // didn't do any data loading on the past transaction. Make sure to clear these out.
+    m_frame->loader()->setPreviousHistoryItem(0);
 }
 
 
@@ -545,7 +555,7 @@ void FrameLoaderClientQt::addHistoryItemForFragmentScroll()
 
 void FrameLoaderClientQt::didFinishLoad()
 {
-    notImplemented();
+//     notImplemented();
 }
 
 
@@ -636,19 +646,16 @@ bool FrameLoaderClientQt::canCachePage() const
     return false;
 }
 
-void FrameLoaderClientQt::setMainDocumentError(WebCore::DocumentLoader* loader, const WebCore::ResourceError&)
+void FrameLoaderClientQt::setMainDocumentError(WebCore::DocumentLoader* loader, const WebCore::ResourceError& error)
 {
     if (m_firstData) {
         loader->frameLoader()->setEncoding(m_response.textEncodingName(), false);
         m_firstData = false;
     }
-    if (m_webFrame)
-        emit m_webFrame->loadDone(false);
 }
 
 void FrameLoaderClientQt::committedLoad(WebCore::DocumentLoader* loader, const char* data, int length)
 {
-    qDebug() << "FrameLoaderClientQt::committedLoad" << length;
     if (!m_frame)
         return;
     FrameLoader *fl = loader->frameLoader();
@@ -721,7 +728,7 @@ void FrameLoaderClientQt::assignIdentifierToInitialRequest(unsigned long identif
 void FrameLoaderClientQt::dispatchWillSendRequest(WebCore::DocumentLoader*, unsigned long, WebCore::ResourceRequest& request, const WebCore::ResourceResponse& response)
 {
     // seems like the Mac code doesn't do anything here by default neither
-    qDebug() << "FrameLoaderClientQt::dispatchWillSendRequest" << request.isNull() << request.url().url();
+    //qDebug() << "FrameLoaderClientQt::dispatchWillSendRequest" << request.isNull() << request.url().url();
 }
 
 void FrameLoaderClientQt::dispatchDidReceiveAuthenticationChallenge(DocumentLoader*, unsigned long, const AuthenticationChallenge&)
@@ -739,12 +746,11 @@ void FrameLoaderClientQt::dispatchDidReceiveResponse(WebCore::DocumentLoader*, u
 
     m_response = response;
     m_firstData = true;
-    qDebug() << "    got response from" << response.url().url();
+    //qDebug() << "    got response from" << response.url().url();
 }
 
 void FrameLoaderClientQt::dispatchDidReceiveContentLength(WebCore::DocumentLoader*, unsigned long, int)
 {
-    notImplemented();
 }
 
 void FrameLoaderClientQt::dispatchDidFinishLoading(WebCore::DocumentLoader* loader, unsigned long)
@@ -768,12 +774,14 @@ bool FrameLoaderClientQt::dispatchDidLoadResourceFromMemoryCache(WebCore::Docume
 
 void FrameLoaderClientQt::dispatchDidFailProvisionalLoad(const WebCore::ResourceError&)
 {
-    notImplemented();
+    if (m_webFrame)
+        emit m_webFrame->loadDone(false);    
 }
 
 void FrameLoaderClientQt::dispatchDidFailLoad(const WebCore::ResourceError&)
 {
-    notImplemented();
+    if (m_webFrame)
+        emit m_webFrame->loadDone(false);    
 }
 
 WebCore::Frame* FrameLoaderClientQt::dispatchCreatePage()
@@ -846,7 +854,7 @@ Frame* FrameLoaderClientQt::createFrame(const KURL& url, const String& name, HTM
     FrameLoadType childLoadType = FrameLoadTypeInternal;
 
     childFrame->loader()->load(frameData.url, frameData.referrer, childLoadType,
-                             String(), 0, 0, WTF::HashMap<String, String>());
+                             String(), 0, 0);
 
     // The frame's onload handler may have removed it from the document.
     if (!childFrame->tree()->parent())

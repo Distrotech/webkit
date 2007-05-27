@@ -29,11 +29,15 @@
 # Simplified build script for Web Kit Open Source Project.
 
 use strict;
+use File::Basename;
+use File::Spec;
 use FindBin;
 use Getopt::Long qw(:config pass_through);
 use lib $FindBin::Bin;
 use webkitdirs;
 use POSIX;
+
+my $originalWorkingDirectory = getcwd();
 
 my $svgSupport = 1;
 my $svgExperimentalSupport = 0;
@@ -42,14 +46,11 @@ my $xsltSupport = 1;
 my $colorSupport = 1; # Default: colorize make output
 my $wxBuild = 0;
 
-our @cmakeBuild;
-
 GetOptions('svg!' => \$svgSupport,
            'svg-experimental!' => \$svgExperimentalSupport,
            'xpath!' => \$xpathSupport,
            'xslt!' => \$xsltSupport,
            'color!' => \$colorSupport,
-           'cmake!' => \@cmakeBuild,
            'wx!' => \$wxBuild);
            
 if ($wxBuild){
@@ -106,16 +107,19 @@ removeLibraryDependingOnSVG("WebCore", $svgSupport);
 for my $dir (@projects) {
     chdir $dir or die;
     my $result = 0;
-    if (isQt()) {
+    if (isGdk()) {
         if ($dir ne "WebKit") {
             chdir ".." or die;
             next;
         }
-        if (isQtWithQMake()) {
-            $result = buildQMakeProject($dir, $colorSupport);
-        } else {
-            $result = buildCMakeProject($dir, $colorSupport);
+
+        $result = buildQMakeGdkProject($dir, $colorSupport);
+    } elsif (isQt()) {
+        if ($dir ne "WebKit") {
+            chdir ".." or die;
+            next;
         }
+        $result = buildQMakeProject($dir, $colorSupport);
     } elsif (isOSX()) {
         $result = system "xcodebuild", "-project", "$dir.xcodeproj", @options, $overrideFeatureDefinesString, @ARGV;
     } elsif (isCygwin()) {
@@ -129,10 +133,12 @@ for my $dir (@projects) {
 }
 
 # Write out congratulations message.
+
+my $runSafariPath = File::Spec->catpath("", File::Spec->abs2rel(dirname($0), $originalWorkingDirectory), "run-safari");
 print "\n";
 print "===========================================================\n";
 print " WebKit is now built. To run Safari with this newly-built\n";
-print " code, use the \"run-safari\" script.\n";
+print " code, use the \"$runSafariPath\" script.\n";
 if ($svgSupport) {
     print "\n NOTE: WebKit has been built with SVG support enabled.\n";
     print " Safari will have SVG viewing capabilities.\n";

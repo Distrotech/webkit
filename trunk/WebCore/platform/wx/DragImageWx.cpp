@@ -28,6 +28,7 @@
 
 #include "CachedImage.h"
 #include "Image.h"
+#include "FloatSize.h"
 
 namespace WebCore {
 
@@ -40,7 +41,7 @@ void deleteDragImage(DragImageRef)
 {
 }
 
-DragImageRef scaleDragImage(DragImageRef image, float)
+DragImageRef scaleDragImage(DragImageRef image, FloatSize)
 {
     return image;
 }

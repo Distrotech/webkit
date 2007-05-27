@@ -11,6 +11,5 @@ HEADERS = DumpRenderTree.h jsobjects.h
 SOURCES = DumpRenderTree.cpp main.cpp jsobjects.cpp
 
 unix:!mac {
-    SOURCES += fontoverload.cpp
     QMAKE_RPATHDIR += $$OUTPUT_DIR/lib
 }

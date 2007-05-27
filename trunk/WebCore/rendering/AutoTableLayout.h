@@ -37,7 +37,7 @@ public:
     AutoTableLayout(RenderTable*);
     ~AutoTableLayout();
 
-    virtual void calcMinMaxWidth(int& minWidth, int& maxWidth);
+    virtual void calcPrefWidths(int& minWidth, int& maxWidth);
     virtual void layout();
 
 protected:
@@ -62,7 +62,8 @@ protected:
             , maxWidth(0)
             , effMinWidth(0)
             , effMaxWidth(0)
-            , calcWidth(0) {}
+            , calcWidth(0)
+            , emptyCellsOnly(true) {}
         Length width;
         Length effWidth;
         int minWidth;
@@ -70,10 +71,11 @@ protected:
         int effMinWidth;
         int effMaxWidth;
         int calcWidth;
+        bool emptyCellsOnly;
     };
 
-    Vector<Layout> m_layoutStruct;
-    Vector<RenderTableCell*> m_spanCells;
+    Vector<Layout, 4> m_layoutStruct;
+    Vector<RenderTableCell*, 4> m_spanCells;
     bool m_hasPercent : 1;
     mutable bool m_percentagesDirty : 1;
     mutable bool m_effWidthDirty : 1;

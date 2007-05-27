@@ -80,6 +80,8 @@ namespace WebCore {
         void ignore() { m_isAccepted = false; }
         
         bool isContinuous() const { return m_isContinuous; }
+        float continuousDeltaX() const { return m_continuousDeltaX; }
+        float continuousDeltaY() const { return m_continuousDeltaY; }
 
 #if PLATFORM(MAC)
         PlatformWheelEvent(NSEvent*);
@@ -109,6 +111,8 @@ namespace WebCore {
         bool m_altKey;
         bool m_metaKey;
         bool m_isContinuous;
+        float m_continuousDeltaX;
+        float m_continuousDeltaY;
     };
 
 } // namespace WebCore

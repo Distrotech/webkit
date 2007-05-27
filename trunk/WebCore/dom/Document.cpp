@@ -1,11 +1,9 @@
-/**
- * This file is part of the DOM implementation for KDE.
- *
+/*
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
  *           (C) 2001 Dirk Mueller (mueller@kde.org)
  *           (C) 2006 Alexey Proskuryakov (ap@webkit.org)
- * Copyright (C) 2004, 2005, 2006 Apple Computer, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -76,6 +74,7 @@
 #include "NodeFilter.h"
 #include "NodeIterator.h"
 #include "OverflowEvent.h"
+#include "Page.h"
 #include "PlatformKeyboardEvent.h"
 #include "ProcessingInstruction.h"
 #include "RegisteredEventListener.h"
@@ -85,6 +84,7 @@
 #include "RenderWidget.h"
 #include "SegmentedString.h"
 #include "SelectionController.h"
+#include "Settings.h"
 #include "StringHash.h"
 #include "StyleSheetList.h"
 #include "SystemTime.h"
@@ -229,19 +229,6 @@ static Widget* widgetForNode(Node* focusedNode)
     return static_cast<RenderWidget*>(renderer)->widget();
 }
 
-static bool relinquishesEditingFocus(Node *node)
-{
-    ASSERT(node);
-    ASSERT(node->isContentEditable());
-
-    Node *root = node->rootEditableElement();
-    Frame* frame = node->document()->frame();
-    if (!frame || !root)
-        return false;
-
-    return frame->editor()->shouldEndEditing(rangeOfContents(root).get());
-}
-
 static bool acceptsEditingFocus(Node *node)
 {
     ASSERT(node);
@@ -255,22 +242,10 @@ static bool acceptsEditingFocus(Node *node)
     return frame->editor()->shouldBeginEditing(rangeOfContents(root).get());
 }
 
-static void clearSelectionIfNeeded(Frame* frame, Node* newFocusedNode)
-{
-    if (!frame)
-        return;
-
-    // Clear the selection when changing the focus node to null or to a node that is not 
-    // contained by the current selection.
-    Node* startContainer = frame->selectionController()->start().node();
-    if (!newFocusedNode || (startContainer && startContainer != newFocusedNode && !(startContainer->isDescendantOf(newFocusedNode)) && startContainer->shadowAncestorNode() != newFocusedNode))
-        frame->selectionController()->clear();
-}
-
 DeprecatedPtrList<Document>*  Document::changedDocuments = 0;
 
 // FrameView might be 0
-Document::Document(DOMImplementation* impl, FrameView *v)
+Document::Document(DOMImplementation* impl, Frame* frame)
     : ContainerNode(0)
     , m_implementation(impl)
     , m_domtree_version(0)
@@ -287,7 +262,6 @@ Document::Document(DOMImplementation* impl, FrameView *v)
     , m_bindingManager(new XBLBindingManager(this))
 #endif
     , m_savedRenderer(0)
-    , m_passwordFields(0)
     , m_secureForms(0)
     , m_designMode(inherit)
     , m_selfOnlyRefCount(0)
@@ -300,17 +274,22 @@ Document::Document(DOMImplementation* impl, FrameView *v)
     , m_createRenderers(true)
     , m_inPageCache(false)
     , m_isAllowedToLoadLocalResources(false)
+    , m_useSecureKeyboardEntryWhenActive(false)
+#if USE(LOW_BANDWIDTH_DISPLAY)
+    , m_inLowBandwidthDisplay(false)
+#endif    
 {
     m_document.resetSkippingRef(this);
 
     m_printing = false;
 
-    m_view = v;
+    m_frame = frame;
     m_renderArena = 0;
 
     m_axObjectCache = 0;
     
-    m_docLoader = new DocLoader(v ? v->frame() : 0, this);
+    // FIXME: DocLoader probably no longer needs the frame argument
+    m_docLoader = new DocLoader(frame, this);
 
     visuallyOrdered = false;
     m_bParsing = false;
@@ -327,8 +306,11 @@ Document::Document(DOMImplementation* impl, FrameView *v)
     m_closeAfterStyleRecalc = false;
     m_usesDescendantRules = false;
     m_usesSiblingRules = false;
+    m_usesFirstLineRules = false;
+    m_usesFirstLetterRules = false;
 
     m_styleSelector = new CSSStyleSelector(this, m_usersheet, m_styleSheets.get(), !inCompatMode());
+    m_didCalculateStyleSelector = false;
     m_pendingStylesheets = 0;
     m_ignorePendingStylesheets = false;
     m_pendingSheetLayout = NoLayoutWithPendingSheets;
@@ -550,7 +532,11 @@ PassRefPtr<Node> Document::importNode(Node* importedNode, bool deep, ExceptionCo
 {
     ec = 0;
     
-    if (!importedNode) {
+    if (!importedNode
+#if ENABLE(SVG)
+        || (importedNode->isSVGElement() && page() && page()->settings()->usesDashboardBackwardCompatibilityMode())
+#endif
+        ) {
         ec = NOT_SUPPORTED_ERR;
         return 0;
     }
@@ -633,7 +619,7 @@ PassRefPtr<Node> Document::adoptNode(PassRefPtr<Node> source, ExceptionCode& ec)
             Attr* attr = static_cast<Attr*>(source.get());
             if (attr->ownerElement())
                 attr->ownerElement()->removeAttributeNode(attr, ec);
-            attr->m_specified = true;
+            attr->m_attrWasSpecifiedOrElementHasRareData = true;
             break;
         }       
         default:
@@ -733,8 +719,8 @@ String Document::inputEncoding() const
 
 String Document::defaultCharset() const
 {
-    if (Frame* f = frame())
-        return f->settings()->defaultTextEncodingName();
+    if (Settings* settings = this->settings())
+        return settings->defaultTextEncodingName();
     return String();
 }
 
@@ -907,18 +893,22 @@ Node::NodeType Document::nodeType() const
 
 FrameView* Document::view() const
 {
-    return m_view;
+    return m_frame ? m_frame->view() : 0;
 }
 
 Frame* Document::frame() const 
 {
-    return m_view ? m_view->frame() : 0; 
+    return m_frame; 
 }
 
 Page* Document::page() const
 {
-    Frame* frame = this->frame();
-    return frame ? frame->page() : 0;    
+    return m_frame ? m_frame->page() : 0;    
+}
+
+Settings* Document::settings() const
+{
+    return m_frame ? m_frame->settings() : 0;
 }
 
 PassRefPtr<Range> Document::createRange()
@@ -989,8 +979,7 @@ void Document::recalcStyle(StyleChange change)
 
         FontDescription fontDescription;
         fontDescription.setUsePrinterFont(printing());
-        if (m_view) {
-            const Settings *settings = m_view->frame()->settings();
+        if (Settings* settings = this->settings()) {
             if (printing() && !settings->shouldPrintBackgrounds())
                 _style->setForceBackgroundsToWhite(true);
             const AtomicString& stdfont = settings->standardFontFamily();
@@ -1018,15 +1007,15 @@ void Document::recalcStyle(StyleChange change)
             oldStyle->deref(m_renderArena);
     }
 
-    for (Node* n = fastFirstChild(); n; n = n->nextSibling())
+    for (Node* n = firstChild(); n; n = n->nextSibling())
         if (change >= Inherit || n->hasChangedChild() || n->changed())
             n->recalcStyle(change);
 
-    if (changed() && m_view)
-        m_view->layout();
+    if (changed() && view())
+        view()->layout();
 
 bail_out:
-    setChanged(false);
+    setChanged(NoStyleChange);
     setHasChangedChild(false);
     setDocumentChanged(false);
     
@@ -1058,12 +1047,16 @@ void Document::updateDocumentsRendering()
 
 void Document::updateLayout()
 {
+    if (Element* oe = ownerElement())
+        oe->document()->updateLayout();
+
     // FIXME: Dave Hyatt's pretty sure we can remove this because layout calls recalcStyle as needed.
     updateRendering();
 
     // Only do a layout if changes have occurred that make it necessary.      
-    if (m_view && renderer() && (m_view->layoutPending() || renderer()->needsLayout()))
-        m_view->layout();
+    FrameView* v = view();
+    if (v && renderer() && (v->layoutPending() || renderer()->needsLayout()))
+        v->layout();
 }
 
 // FIXME: This is a bad idea and needs to be removed eventually.
@@ -1103,7 +1096,7 @@ void Document::attach()
         m_renderArena = new RenderArena();
     
     // Create the rendering tree
-    setRenderer(new (m_renderArena) RenderView(this, m_view));
+    setRenderer(new (m_renderArena) RenderView(this, view()));
 
     recalcStyle(Force);
 
@@ -1143,7 +1136,8 @@ void Document::detach()
     if (render)
         render->destroy();
 
-    m_view = 0;
+    // FIXME: is this needed or desirable?
+    m_frame = 0;
     
     if (m_renderArena) {
         delete m_renderArena;
@@ -1246,20 +1240,12 @@ void Document::updateSelection()
             static_cast<RenderView*>(renderer())->setSelection(startRenderer, startPos.offset(), endRenderer, endPos.offset());
         }
     }
-    
-#if PLATFORM(MAC)
-    // FIXME: We shouldn't post this AX notification here since updateSelection() is called far too often: every time Safari gains
-    // or loses focus, and once for every low level change to the selection during an editing operation.
-    // FIXME: We no longer blow away the selection before starting an editing operation, so the isNotNull checks below are no 
-    // longer a correct way to check for user-level selection changes.
-    if (AXObjectCache::accessibilityEnabled() && selection.start().isNotNull() && selection.end().isNotNull())
-        axObjectCache()->postNotification(selection.start().node()->renderer(), "AXSelectedTextChanged");
-#endif
 }
 
 Tokenizer* Document::createTokenizer()
 {
-    return new XMLTokenizer(this, m_view);
+    // FIXME: this should probably pass the frame instead
+    return new XMLTokenizer(this, view());
 }
 
 void Document::open()
@@ -1932,8 +1918,9 @@ void Document::stylesheetLoaded()
 
 void Document::updateStyleSelector()
 {
-    // Don't bother updating, since we haven't loaded all our style info yet.
-    if (!haveStylesheetsLoaded())
+    // Don't bother updating, since we haven't loaded all our style info yet
+    // and haven't calculated the style selector for the first time.
+    if (!m_didCalculateStyleSelector && !haveStylesheetsLoaded())
         return;
 
     if (didLayoutWithPendingStylesheets() && m_pendingStylesheets <= 0) {
@@ -1956,7 +1943,7 @@ void Document::updateStyleSelector()
 #endif
 
     if (renderer()) {
-        renderer()->setNeedsLayoutAndMinMaxRecalc();
+        renderer()->setNeedsLayoutAndPrefWidthsRecalc();
         if (view())
             view()->scheduleRelayout();
     }
@@ -2084,10 +2071,11 @@ void Document::recalcStyleSelector()
     // Create a new style selector
     delete m_styleSelector;
     String usersheet = m_usersheet;
-    if (m_view && m_view->mediaType() == "print")
+    if (view() && view()->mediaType() == "print")
         usersheet += m_printSheet;
     m_styleSelector = new CSSStyleSelector(this, usersheet, m_styleSheets.get(), !inCompatMode());
     m_styleSelector->setEncodedURL(m_url);
+    m_didCalculateStyleSelector = true;
 }
 
 void Document::setHoverNode(PassRefPtr<Node> newHoverNode)
@@ -2146,14 +2134,10 @@ bool Document::setFocusedNode(PassRefPtr<Node> newFocusedNode)
 
     if (m_focusedNode == newFocusedNode)
         return true;
-
-    if (m_focusedNode && m_focusedNode.get() == m_focusedNode->rootEditableElement() && !relinquishesEditingFocus(m_focusedNode.get()))
-          return false;
         
     bool focusChangeBlocked = false;
     RefPtr<Node> oldFocusedNode = m_focusedNode;
     m_focusedNode = 0;
-    clearSelectionIfNeeded(frame(), newFocusedNode.get());
 
     // Remove focus from the existing focus node (if any)
     if (oldFocusedNode && !oldFocusedNode->m_inDetach) { 
@@ -2178,14 +2162,12 @@ bool Document::setFocusedNode(PassRefPtr<Node> newFocusedNode)
             focusChangeBlocked = true;
             newFocusedNode = 0;
         }
-        clearSelectionIfNeeded(frame(), newFocusedNode.get());
         EventTargetNodeCast(oldFocusedNode.get())->dispatchUIEvent(DOMFocusOutEvent);
         if (m_focusedNode) {
             // handler shifted focus
             focusChangeBlocked = true;
             newFocusedNode = 0;
         }
-        clearSelectionIfNeeded(frame(), newFocusedNode.get());
         if ((oldFocusedNode.get() == this) && oldFocusedNode->hasOneRef())
             return true;
             
@@ -2217,6 +2199,9 @@ bool Document::setFocusedNode(PassRefPtr<Node> newFocusedNode)
             goto SetFocusedNodeDone;
         }
         m_focusedNode->setFocus();
+
+        if (m_focusedNode.get() == m_focusedNode->rootEditableElement())
+            frame()->editor()->didBeginEditing();
 
         // eww, I suck. set the qt focus correctly
         // ### find a better place in the code for this
@@ -2665,8 +2650,8 @@ void Document::setInPageCache(bool flag)
     if (flag) {
         ASSERT(m_savedRenderer == 0);
         m_savedRenderer = renderer();
-        if (m_view)
-            m_view->resetScrollbars();
+        if (FrameView* v = view())
+            v->resetScrollbars();
     } else {
         ASSERT(renderer() == 0 || renderer() == m_savedRenderer);
         ASSERT(m_renderArena);
@@ -2675,20 +2660,21 @@ void Document::setInPageCache(bool flag)
     }
 }
 
-void Document::passwordFieldAdded()
+void Document::registerForDidRestoreFromCacheCallback(Element* e)
 {
-    m_passwordFields++;
+    m_didRestorePageCallbackSet.add(e);
 }
 
-void Document::passwordFieldRemoved()
+void Document::unregisterForDidRestoreFromCacheCallback(Element* e)
 {
-    ASSERT(m_passwordFields > 0);
-    m_passwordFields--;
+    m_didRestorePageCallbackSet.remove(e);
 }
 
-bool Document::hasPasswordField() const
+void Document::didRestoreFromCache()
 {
-    return m_passwordFields > 0;
+    HashSet<Element*>::iterator it = m_didRestorePageCallbackSet.begin();
+    for (; it != m_didRestorePageCallbackSet.end(); ++it) 
+        (*it)->didRestoreFromCache();
 }
 
 void Document::secureFormAdded()
@@ -2783,20 +2769,26 @@ void Document::addMarker(Range *range, DocumentMarker::MarkerType type, String d
     }
 }
 
-void Document::removeMarkers(Range *range, DocumentMarker::MarkerType markerType)
+void Document::removeMarkers(Range* range, DocumentMarker::MarkerType markerType)
 {
-    // Use a TextIterator to visit the potentially multiple nodes the range covers.
-    for (TextIterator markedText(range); !markedText.atEnd(); markedText.advance()) {
-        RefPtr<Range> textPiece = markedText.range();
-        int exception = 0;
-        unsigned startOffset = textPiece->startOffset(exception);
-        unsigned length = textPiece->endOffset(exception) - startOffset + 1;
-        removeMarkers(textPiece->startContainer(exception), startOffset, length, markerType);
+    if (m_markers.isEmpty())
+        return;
+
+    ExceptionCode ec = 0;
+    Node* startContainer = range->startContainer(ec);
+    Node* endContainer = range->endContainer(ec);
+
+    Node* pastEndNode = range->pastEndNode();
+    for (Node* node = range->startNode(); node != pastEndNode; node = node->traverseNextNode()) {
+        int startOffset = node == startContainer ? range->startOffset(ec) : 0;
+        int endOffset = node == endContainer ? range->endOffset(ec) : INT_MAX;
+        int length = endOffset - startOffset;
+        removeMarkers(node, startOffset, length, markerType);
     }
 }
 
-// Markers are stored in order sorted by their location.  They do not overlap each other, as currently
-// required by the drawing code in RenderText.cpp.
+// Markers are stored in order sorted by their location.
+// They do not overlap each other, as currently required by the drawing code in RenderText.cpp.
 
 void Document::addMarker(Node *node, DocumentMarker newMarker) 
 {
@@ -2893,7 +2885,7 @@ void Document::copyMarkers(Node *srcNode, unsigned startOffset, int length, Node
         dstNode->renderer()->repaint();
 }
 
-void Document::removeMarkers(Node *node, unsigned startOffset, int length, DocumentMarker::MarkerType markerType)
+void Document::removeMarkers(Node* node, unsigned startOffset, int length, DocumentMarker::MarkerType markerType)
 {
     if (length <= 0)
         return;
@@ -2906,12 +2898,12 @@ void Document::removeMarkers(Node *node, unsigned startOffset, int length, Docum
     Vector<IntRect>& rects = vectorPair->second;
     ASSERT(markers.size() == rects.size());
     bool docDirty = false;
-    unsigned endOffset = startOffset + length - 1;
+    unsigned endOffset = startOffset + length;
     for (size_t i = 0; i < markers.size();) {
         DocumentMarker marker = markers[i];
 
         // markers are returned in order, so stop if we are now past the specified range
-        if (marker.startOffset > endOffset)
+        if (marker.startOffset >= endOffset)
             break;
         
         // skip marker that is wrong type or before target
@@ -3028,7 +3020,6 @@ Vector<IntRect> Document::renderedRectsForMarkers(DocumentMarker::MarkerType mar
     
     return result;
 }
-
 
 void Document::removeMarkers(Node* node)
 {
@@ -3199,7 +3190,7 @@ void Document::applyXSLTransform(ProcessingInstruction* pi)
     if (!processor->transformToString(this, resultMIMEType, newSource, resultEncoding))
         return;
     // FIXME: If the transform failed we should probably report an error (like Mozilla does).
-    processor->createDocumentFromSource(newSource, resultEncoding, resultMIMEType, this, view());
+    processor->createDocumentFromSource(newSource, resultEncoding, resultMIMEType, this, frame());
 }
 
 #endif
@@ -3343,6 +3334,12 @@ PassRefPtr<HTMLCollection> Document::applets()
 
 PassRefPtr<HTMLCollection> Document::embeds()
 {
+    return new HTMLCollection(this, HTMLCollection::DocEmbeds);
+}
+
+PassRefPtr<HTMLCollection> Document::plugins()
+{
+    // This is an alias for embeds() required for the JS DOM bindings.
     return new HTMLCollection(this, HTMLCollection::DocEmbeds);
 }
 
@@ -3594,6 +3591,20 @@ void Document::setIconURL(const String& iconURL, const String& type)
         m_iconURL = iconURL;
     else if (!type.isEmpty())
         m_iconURL = iconURL;
+}
+
+void Document::setUseSecureKeyboardEntryWhenActive(bool usesSecureKeyboard)
+{
+    if (m_useSecureKeyboardEntryWhenActive == usesSecureKeyboard)
+        return;
+        
+    m_useSecureKeyboardEntryWhenActive = usesSecureKeyboard;
+    m_frame->updateSecureKeyboardEntryIfActive();
+}
+
+bool Document::useSecureKeyboardEntryWhenActive() const
+{
+    return m_useSecureKeyboardEntryWhenActive;
 }
 
 }

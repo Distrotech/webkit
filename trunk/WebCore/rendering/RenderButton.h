@@ -44,12 +44,14 @@ public:
     virtual void setStyle(RenderStyle*);
     virtual void updateFromElement();
 
-    virtual void updatePseudoChild(RenderStyle::PseudoId);
+    virtual void updateBeforeAfterContent(RenderStyle::PseudoId);
 
     virtual bool hasControlClip() const { return true; }
     virtual IntRect controlClipRect(int /*tx*/, int /*ty*/) const;
 
     void setText(const String&);
+    
+    virtual bool canHaveChildren() const;
 
 protected:
     virtual bool hasLineIfEmpty() const { return true; }

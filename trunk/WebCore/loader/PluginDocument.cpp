@@ -30,6 +30,7 @@
 #include "FrameLoaderClient.h"
 #include "Element.h"
 #include "HTMLNames.h"
+#include "Page.h"
 #include "RenderWidget.h"
 #include "SegmentedString.h"
 #include "Settings.h"
@@ -97,7 +98,8 @@ bool PluginTokenizer::writeRawData(const char* data, int len)
         createDocumentStructure();
 
         Frame* frame = m_doc->frame();
-        if (frame->settings()->arePluginsEnabled()) {
+        Settings* settings = frame->settings();
+        if (frame && settings && settings->arePluginsEnabled()) {
             frame->loader()->client()->redirectDataToPlugin(static_cast<RenderWidget*>(m_embedElement->renderer())->widget());
             finish();
         }
@@ -127,8 +129,8 @@ bool PluginTokenizer::isWaitingForScripts() const
     return false;
 }
     
-PluginDocument::PluginDocument(DOMImplementation* _implementation, FrameView* v)
-    : HTMLDocument(_implementation, v)
+PluginDocument::PluginDocument(DOMImplementation* implementation, Frame* frame)
+    : HTMLDocument(implementation, frame)
 {
     setParseMode(Compat);
 }

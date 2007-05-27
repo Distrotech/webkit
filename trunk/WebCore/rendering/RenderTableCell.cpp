@@ -29,6 +29,7 @@
 #include "HTMLNames.h"
 #include "HTMLTableCellElement.h"
 #include "RenderTableCol.h"
+#include "RenderView.h"
 #include "TextStream.h"
 
 using namespace std;
@@ -70,14 +71,14 @@ void RenderTableCell::updateFromElement()
         m_columnSpan = tc->colSpan();
         m_rowSpan = tc->rowSpan();
         if ((oldRSpan != m_rowSpan || oldCSpan != m_columnSpan) && style() && parent()) {
-            setNeedsLayoutAndMinMaxRecalc();
+            setNeedsLayoutAndPrefWidthsRecalc();
             if (section())
                 section()->setNeedsCellRecalc();
         }
     }
 }
 
-Length RenderTableCell::styleOrColWidth()
+Length RenderTableCell::styleOrColWidth() const
 {
     Length w = style()->width();
     if (colSpan() > 1 || !w.isAuto())
@@ -95,15 +96,14 @@ Length RenderTableCell::styleOrColWidth()
     return w;
 }
 
-void RenderTableCell::calcMinMaxWidth()
+void RenderTableCell::calcPrefWidths()
 {
-    // recalcMinMaxWidths works depth first.  However, the child cells rely on the grids up in the
-    // sections to do their calcMinMaxWidths work.  Normally the sections are set up early, as table
-    // cells are added, but relayout can cause the cells to be freed, leaving stale ptrs in the sections'
+    // The child cells rely on the grids up in the sections to do their calcPrefWidths work.  Normally the sections are set up early, as table
+    // cells are added, but relayout can cause the cells to be freed, leaving stale pointers in the sections'
     // grids.  We must refresh those grids before the child cells try to use them.
     table()->recalcSectionsIfNeeded();
 
-    RenderBlock::calcMinMaxWidth();
+    RenderBlock::calcPrefWidths();
     if (element() && style()->autoWrap()) {
         // See if nowrap was set.
         Length w = styleOrColWidth();
@@ -114,8 +114,7 @@ void RenderTableCell::calcMinMaxWidth()
             // to make the minwidth of the cell into the fixed width.  They do this
             // even in strict mode, so do not make this a quirk.  Affected the top
             // of hiptop.com.
-            if (m_minWidth < w.value())
-                m_minWidth = w.value();
+            m_minPrefWidth = max(w.value(), m_minPrefWidth);
     }
 }
 
@@ -177,6 +176,10 @@ IntRect RenderTableCell::absoluteClippedOverflowRect()
         left = max(left, -overflowLeft(false));
         top = max(top, -overflowTop(false) - borderTopExtra());
         IntRect r(-left, -borderTopExtra() - top, left + max(width() + right, overflowWidth(false)), borderTopExtra() + top + max(height() + bottom + borderBottomExtra(), overflowHeight(false)));
+
+        if (RenderView* v = view())
+            r.move(v->layoutDelta());
+
         computeAbsoluteRepaintRect(r);
         return r;
     }
@@ -186,15 +189,20 @@ IntRect RenderTableCell::absoluteClippedOverflowRect()
 void RenderTableCell::computeAbsoluteRepaintRect(IntRect& r, bool fixed)
 {
     r.setY(r.y() + m_topExtra);
-    r.move(-parent()->xPos(), -parent()->yPos()); // Rows are in the same coordinate space, so don't add their offset in.
+    RenderView* v = view();
+    if (!v || !v->layoutState())
+        r.move(-parent()->xPos(), -parent()->yPos()); // Rows are in the same coordinate space, so don't add their offset in.
     RenderBlock::computeAbsoluteRepaintRect(r, fixed);
 }
 
 bool RenderTableCell::absolutePosition(int& xPos, int& yPos, bool fixed) const
 {
     bool result = RenderBlock::absolutePosition(xPos, yPos, fixed);
-    xPos -= parent()->xPos(); // Rows are in the same coordinate space, so don't add their offset in.
-    yPos -= parent()->yPos();
+    RenderView* v = view();
+    if (!v || !v->layoutState()) {
+        xPos -= parent()->xPos(); // Rows are in the same coordinate space, so don't add their offset in.
+        yPos -= parent()->yPos();
+    }
     return result;
 }
 
@@ -321,8 +329,10 @@ CollapsedBorderValue RenderTableCell::collapsedLeftBorder(bool rtl) const
     }
     
     // (5) Our column's left border.
-    RenderTableCol* colElt = tableElt->colElement(col() + (rtl ? colSpan() - 1 : 0));
-    if (colElt) {
+    bool startColEdge;
+    bool endColEdge;
+    RenderTableCol* colElt = tableElt->colElement(col() + (rtl ? colSpan() - 1 : 0), &startColEdge, &endColEdge);
+    if (colElt && (!rtl ? startColEdge : endColEdge)) {
         result = compareBorders(result, CollapsedBorderValue(&colElt->style()->borderLeft(), BCOL));
         if (!result.exists())
             return result;
@@ -330,8 +340,8 @@ CollapsedBorderValue RenderTableCell::collapsedLeftBorder(bool rtl) const
     
     // (6) The right border of the column to the left.
     if (!leftmostColumn) {
-        colElt = tableElt->colElement(col() + (rtl ? colSpan() : -1));
-        if (colElt) {
+        colElt = tableElt->colElement(col() + (rtl ? colSpan() : -1), &startColEdge, &endColEdge);
+        if (colElt && (!rtl ? endColEdge : startColEdge)) {
             result = compareBorders(result, CollapsedBorderValue(&colElt->style()->borderRight(), BCOL));
             if (!result.exists())
                 return result;
@@ -382,8 +392,10 @@ CollapsedBorderValue RenderTableCell::collapsedRightBorder(bool rtl) const
     }
     
     // (5) Our column's right border.
-    RenderTableCol* colElt = tableElt->colElement(col() + (rtl ? 0 : colSpan() - 1));
-    if (colElt) {
+    bool startColEdge;
+    bool endColEdge;
+    RenderTableCol* colElt = tableElt->colElement(col() + (rtl ? 0 : colSpan() - 1), &startColEdge, &endColEdge);
+    if (colElt && (!rtl ? endColEdge : startColEdge)) {
         result = compareBorders(result, CollapsedBorderValue(&colElt->style()->borderRight(), BCOL));
         if (!result.exists())
             return result;
@@ -391,8 +403,8 @@ CollapsedBorderValue RenderTableCell::collapsedRightBorder(bool rtl) const
     
     // (6) The left border of the column to the right.
     if (!rightmostColumn) {
-        colElt = tableElt->colElement(col() + (rtl ? -1 : colSpan()));
-        if (colElt) {
+        colElt = tableElt->colElement(col() + (rtl ? -1 : colSpan()), &startColEdge, &endColEdge);
+        if (colElt && (!rtl ? startColEdge : endColEdge)) {
             result = compareBorders(result, CollapsedBorderValue(&colElt->style()->borderLeft(), BCOL));
             if (!result.exists())
                 return result;
@@ -759,6 +771,9 @@ void RenderTableCell::paintBackgroundsBehindCell(PaintInfo& paintInfo, int tx, i
     if (!backgroundObject)
         return;
 
+    if (style()->visibility() != VISIBLE)
+        return;
+
     RenderTable* tableElt = table();
     if (!tableElt->collapseBorders() && style()->emptyCells() == HIDE && !firstChild())
         return;
@@ -782,7 +797,7 @@ void RenderTableCell::paintBackgroundsBehindCell(PaintInfo& paintInfo, int tx, i
     if (bgLayer->hasImage() || c.isValid()) {
         // We have to clip here because the background would paint
         // on top of the borders otherwise.  This only matters for cells and rows.
-        bool shouldClip = backgroundObject->layer() && (backgroundObject == this || backgroundObject == parent()) && tableElt->collapseBorders();
+        bool shouldClip = backgroundObject->hasLayer() && (backgroundObject == this || backgroundObject == parent()) && tableElt->collapseBorders();
         if (shouldClip) {
             IntRect clipRect(tx + borderLeft(), ty + borderTop(),
                 w - borderLeft() - borderRight(), h - borderTop() - borderBottom());

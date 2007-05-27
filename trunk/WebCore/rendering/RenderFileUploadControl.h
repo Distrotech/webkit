@@ -41,12 +41,14 @@ public:
 
     virtual void setStyle(RenderStyle*);
     virtual void updateFromElement();
-    virtual void calcMinMaxWidth();
+    virtual void calcPrefWidths();
     virtual void paintObject(PaintInfo&, int tx, int ty);
 
     void click();
 
     void valueChanged();
+    
+    void receiveDroppedFile(const String&);
 
 private:
     int maxFilenameWidth() const;

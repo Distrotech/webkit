@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2006 Apple Computer, Inc.
- * Copyright (C) 2006 Samuel Weinig <sam.weinig@gmail.com>
+ * Copyright (C) 2006, 2007 Samuel Weinig <sam@webkit.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -35,7 +35,7 @@ module core {
         Comment            createComment(in DOMString data);
         CDATASection       createCDATASection(in DOMString data)
             raises(DOMException);
-        [OldStyleObjC] ProcessingInstruction createProcessingInstruction(in DOMString target, 
+        [OldStyleObjC] ProcessingInstruction createProcessingInstruction(in DOMString target,
                                                                          in DOMString data)
             raises (DOMException);
         Attr               createAttribute(in DOMString name)
@@ -49,13 +49,13 @@ module core {
         [OldStyleObjC] Node importNode(in Node importedNode,
                                        in boolean deep)
             raises (DOMException);
-        [OldStyleObjC] Element createElementNS(in DOMString namespaceURI,
+        [OldStyleObjC] Element createElementNS(in [ConvertNullToNullString] DOMString namespaceURI,
                                                in DOMString qualifiedName)
             raises (DOMException);
-        [OldStyleObjC] Attr createAttributeNS(in DOMString namespaceURI,
+        [OldStyleObjC] Attr createAttributeNS(in [ConvertNullToNullString] DOMString namespaceURI,
                                               in DOMString qualifiedName)
             raises (DOMException);
-        [OldStyleObjC] NodeList getElementsByTagNameNS(in DOMString namespaceURI,
+        [OldStyleObjC] NodeList getElementsByTagNameNS(in [ConvertNullToNullString] DOMString namespaceURI,
                                                        in DOMString localName);
         Element            getElementById(in DOMString elementId);
 
@@ -64,7 +64,7 @@ module core {
         readonly attribute [ConvertNullStringTo=Null] DOMString inputEncoding;
 
         readonly attribute [ConvertNullStringTo=Null] DOMString xmlEncoding;
-                 attribute [ConvertNullStringTo=Null] DOMString xmlVersion
+                 attribute [ConvertNullStringTo=Null, ConvertNullToNullString] DOMString xmlVersion
                     setter raises (DOMException);
                  attribute boolean xmlStandalone
                     setter raises (DOMException);
@@ -86,15 +86,15 @@ module core {
         // DOM Level 2 Tranversal and Range (DocumentTraversal interface)
 
 #if !defined(LANGUAGE_OBJECTIVE_C)
-        NodeIterator       createNodeIterator(in Node root, 
+        NodeIterator       createNodeIterator(in Node root,
                                               in unsigned long whatToShow,
                                               in NodeFilter filter,
                                               in boolean entityReferenceExpansion)
             raises(DOMException);
-        TreeWalker createTreeWalker(in Node root, 
-                                    in unsigned long whatToShow, 
-                                    in NodeFilter filter, 
-                                    in boolean entityReferenceExpansion)
+        TreeWalker         createTreeWalker(in Node root,
+                                            in unsigned long whatToShow,
+                                            in NodeFilter filter,
+                                            in boolean entityReferenceExpansion)
             raises(DOMException);
 #endif
 
@@ -108,7 +108,7 @@ module core {
 
         // DOM Level 2 Style (DocumentCSS interface)
 
-        [OldStyleObjC] CSSStyleDeclaration getOverrideStyle(in Element element, 
+        [OldStyleObjC] CSSStyleDeclaration getOverrideStyle(in Element element,
                                                             in DOMString pseudoElement);
 
 #ifdef ENABLE_XPATH
@@ -118,7 +118,7 @@ module core {
             raises(DOMException);
         XPathNSResolver    createNSResolver(in Node nodeResolver);
         [OldStyleObjC] XPathResult evaluate(in DOMString expression,
-                                            in Node contextNode, 
+                                            in Node contextNode,
                                             in XPathNSResolver resolver,
                                             in unsigned short type,
                                             in XPathResult inResult)
@@ -127,13 +127,21 @@ module core {
 
         // Common extensions
 
-        boolean execCommand(in DOMString command, 
-                            in [Optional] boolean userInterface, 
-                            in [Optional] DOMString value);
-        boolean queryCommandEnabled(in DOMString command);
-        boolean queryCommandIndeterm(in DOMString command);
-        boolean queryCommandState(in DOMString command);
-        boolean queryCommandSupported(in DOMString command);
+        boolean            execCommand(in DOMString command,
+                                       in boolean userInterface,
+                                       in [ConvertUndefinedOrNullToNullString] DOMString value);
+
+#if defined(LANGUAGE_OBJECTIVE_C)
+        // FIXME: remove the these two versions once [Optional] is implemented for Objective-C.
+        boolean            execCommand(in DOMString command,
+                                       in boolean userInterface);
+        boolean            execCommand(in DOMString command);
+#endif
+
+        boolean            queryCommandEnabled(in DOMString command);
+        boolean            queryCommandIndeterm(in DOMString command);
+        boolean            queryCommandState(in DOMString command);
+        boolean            queryCommandSupported(in DOMString command);
         [ConvertNullStringTo=False] DOMString queryCommandValue(in DOMString command);
 
         // IE extensions
@@ -141,7 +149,7 @@ module core {
 #if !defined(LANGUAGE_OBJECTIVE_C)
         readonly attribute DOMString URL;
 #endif
-                 attribute [ConvertNullStringTo=Undefined] DOMString charset;
+                 attribute [ConvertNullStringTo=Undefined, ConvertNullToNullString] DOMString charset;
         readonly attribute [ConvertNullStringTo=Undefined] DOMString defaultCharset;
         readonly attribute [ConvertNullStringTo=Undefined] DOMString readyState;
 
@@ -154,7 +162,7 @@ module core {
         // WebKit extensions
 
         readonly attribute [ConvertNullStringTo=Null] DOMString preferredStylesheetSet;
-                 attribute [ConvertNullStringTo=Null] DOMString selectedStylesheetSet;
+                 attribute [ConvertNullStringTo=Null, ConvertNullToNullString] DOMString selectedStylesheetSet;
 
 #if !defined(LANGUAGE_JAVASCRIPT)
         CSSStyleDeclaration createCSSStyleDeclaration();

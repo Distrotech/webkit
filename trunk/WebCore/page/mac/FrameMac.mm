@@ -372,7 +372,8 @@ NSImage* Frame::imageFromRect(NSRect rect) const
 NSImage* Frame::selectionImage(bool forceWhiteText) const
 {
     d->m_paintRestriction = forceWhiteText ? PaintRestrictionSelectionOnlyWhiteText : PaintRestrictionSelectionOnly;
-    NSImage* result = imageFromRect(visibleSelectionRect());
+    d->m_doc->updateLayout();
+    NSImage* result = imageFromRect(selectionRect());
     d->m_paintRestriction = PaintRestrictionNone;
     return result;
 }
@@ -506,25 +507,27 @@ void Frame::issueTransposeCommand()
 }
 
 const short enableRomanKeyboardsOnly = -23;
-void Frame::setSecureKeyboardEntry(bool enable)
+void Frame::setUseSecureKeyboardEntry(bool enable)
 {
+    if (enable == IsSecureEventInputEnabled())
+        return;
     if (enable) {
         EnableSecureEventInput();
-// FIXME: KeyScript is deprecated in Leopard, we need a new solution for this <rdar://problem/4727607>
-#if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4
+#ifdef BUILDING_ON_TIGER
         KeyScript(enableRomanKeyboardsOnly);
+#else
+        CFArrayRef inputSources = TISCreateASCIICapableInputSourceList();
+        TSMSetDocumentProperty(TSMGetActiveDocument(), kTSMDocumentEnabledInputSourcesPropertyTag, sizeof(CFArrayRef), &inputSources);
+        CFRelease(inputSources);
 #endif
     } else {
         DisableSecureEventInput();
-#if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4
+#ifdef BUILDING_ON_TIGER
         KeyScript(smKeyEnableKybds);
+#else
+        TSMRemoveDocumentProperty(TSMGetActiveDocument(), kTSMDocumentEnabledInputSourcesPropertyTag);
 #endif
     }
-}
-
-bool Frame::isSecureKeyboardEntry()
-{
-    return IsSecureEventInputEnabled();
 }
 
 static void convertAttributesToUnderlines(Vector<MarkedTextUnderline>& result, const Range* markedTextRange, NSArray* attributes, NSArray* ranges)
@@ -708,14 +711,15 @@ KJS::Bindings::Instance* Frame::createScriptInstanceForWidget(WebCore::Widget* w
 
 WebScriptObject* Frame::windowScriptObject()
 {
-    if (!d->m_settings->isJavaScriptEnabled())
+    Settings* settings = this->settings();
+    if (!settings || !settings->isJavaScriptEnabled())
         return 0;
 
     if (!d->m_windowScriptObject) {
         KJS::JSLock lock;
         KJS::JSObject* win = KJS::Window::retrieveWindow(this);
         KJS::Bindings::RootObject *root = bindingRootObject();
-        d->m_windowScriptObject = HardRetainWithNSRelease([[WebScriptObject alloc] _initWithJSObject:win originRootObject:root rootObject:root]);
+        d->m_windowScriptObject = HardRetain([WebScriptObject scriptObjectForJSObject:toRef(win) originRootObject:0 rootObject:root]);
     }
 
     return d->m_windowScriptObject;
@@ -724,6 +728,13 @@ WebScriptObject* Frame::windowScriptObject()
 void Frame::cleanupPlatformScriptObjects()
 {
     HardRelease(d->m_windowScriptObject);
+    // Explicitly remove m_windowScriptObject from the wrapper caches, otherwise
+    // the next load might end up with a stale, cached m_windowScriptObject.
+    // (This problem is unique to m_windowScriptObject because its JS/DOM counterparts
+    // persist across page loads.)
+    removeDOMWrapper(reinterpret_cast<DOMObjectInternal*>(d->m_domWindow.get()));
+    if (d->m_jscript && d->m_jscript->haveInterpreter())
+        removeJSWrapper(KJS::Window::retrieveWindow(this));
     d->m_windowScriptObject = 0;
 }
 

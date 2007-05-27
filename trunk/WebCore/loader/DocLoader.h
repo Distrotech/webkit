@@ -1,6 +1,4 @@
 /*
-    This file is part of the KDE libraries
-
     Copyright (C) 1998 Lars Knoll (knoll@mpi-hd.mpg.de)
     Copyright (C) 2001 Dirk Mueller <mueller@kde.org>
     Copyright (C) 2004, 2005, 2006 Apple Computer, Inc.
@@ -29,7 +27,6 @@
 
 #include "CachedResource.h"
 #include "CachePolicy.h"
-#include "Settings.h"
 #include "StringHash.h"
 #include <wtf/HashMap.h>
 #include <wtf/HashSet.h>
@@ -86,6 +83,13 @@ public:
     
     void setAllowStaleResources(bool allowStaleResources) { m_allowStaleResources = allowStaleResources; }
 
+#if USE(LOW_BANDWIDTH_DISPLAY)
+    void replaceDocument(Document* doc) { m_doc = doc; }
+#endif
+
+    void incrementRequestCount();
+    void decrementRequestCount();
+    int requestCount();
 private:
     CachedResource* requestResource(CachedResource::Type, const String& url, const String* charset = 0, bool skipCanLoadCheck = false);
 
@@ -98,6 +102,8 @@ private:
     CachePolicy m_cachePolicy;
     Frame* m_frame;
     Document *m_doc;
+    
+    int m_requestCount;
     
     //29 bits left
     bool m_autoLoadImages : 1;

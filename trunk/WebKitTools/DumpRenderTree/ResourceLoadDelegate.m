@@ -70,9 +70,9 @@
     if (![self isFileURL])
         return [self description];
 
-    WebDataSource *dataSource = [frame dataSource];
+    WebDataSource *dataSource = [mainFrame dataSource];
     if (!dataSource)
-        dataSource = [frame provisionalDataSource];
+        dataSource = [mainFrame provisionalDataSource];
     
     NSString *basePath = [[[[dataSource request] URL] path] stringByDeletingLastPathComponent];
     
@@ -161,6 +161,15 @@
 
 - (void)webView: (WebView *)wv plugInFailedWithError:(NSError *)error dataSource:(WebDataSource *)dataSource
 {
+}
+
+-(NSCachedURLResponse *) webView: (WebView *)wv resource:(id)identifier willCacheResponse:(NSCachedURLResponse *)response fromDataSource:(WebDataSource *)dataSource
+{
+    if (shouldDumpResourceLoadCallbacks && !done) {
+        NSString *string = [NSString stringWithFormat:@"%@ - willCacheResponse: called", identifier];
+        printf ("%s\n", [string UTF8String]);
+    }
+    return response;
 }
 
 @end

@@ -43,8 +43,6 @@ class SQLTransaction;
 
 class IconDatabase : Noncopyable {
 public:
-    static IconDatabase* sharedIconDatabase();
-
     bool open(const String& path);
     bool isOpen() { return m_mainDB.isOpen() && m_privateBrowsingDB.isOpen(); }
     void close();
@@ -77,11 +75,15 @@ public:
     void setEnabled(bool enabled);
     bool enabled() const { return m_isEnabled; }
 
+    bool imported();
+    void setImported(bool);
+
     static const String& defaultDatabaseFilename();
     
 private:
     IconDatabase();
     ~IconDatabase();
+    friend IconDatabase* iconDatabase();
 
     // This tries to get the iconID for the IconURL and, if it doesn't exist and createIfNecessary is true,
     // it will create the entry and return the new iconID
@@ -165,6 +167,14 @@ private:
     PassRefPtr<SharedBuffer> imageDataForIconURLQuery(SQLDatabase& db, const String& iconURL);
     SQLStatement* m_imageDataForIconURLStatement;
 
+    // Query - Returns whether or not the "imported" flag is set
+    bool importedQuery(SQLDatabase&);
+    SQLStatement* m_importedStatement;
+    
+    // Query - Sets the "imported" flag
+    void setImportedQuery(SQLDatabase&, bool);
+    SQLStatement* m_setImportedStatement;
+
     void deleteAllPreparedStatements(bool withSync);
 
     SQLDatabase m_mainDB;
@@ -183,6 +193,9 @@ private:
     SQLTransaction* m_initialPruningTransaction;
     SQLStatement* m_preparedPageRetainInsertStatement;
     
+    bool m_imported;
+    mutable bool m_isImportedSet;
+    
     HashMap<String, IconDataCache*> m_iconURLToIconDataCacheMap;
     HashSet<IconDataCache*> m_iconDataCachesPendingUpdate;
     
@@ -198,6 +211,9 @@ private:
     HashSet<String> m_iconURLsPendingDeletion;
 };
 
-} //namespace WebCore
+// Function to obtain the global icon database.
+IconDatabase* iconDatabase();
+
+} // namespace WebCore
 
 #endif

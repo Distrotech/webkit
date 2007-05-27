@@ -97,7 +97,7 @@ static inline bool isKeyboardOptionTab(KeyboardEvent* event)
     return event
     && (event->type() == keydownEvent || event->type() == keypressEvent)
     && event->altKey()
-    && event->keyIdentifier() == "U+000009";    
+    && event->keyIdentifier() == "U+0009";    
 }
 
 bool EventHandler::invertSenseOfTabsToLinks(KeyboardEvent* event) const
@@ -150,16 +150,15 @@ bool EventHandler::keyEvent(NSEvent *event)
 
 void EventHandler::focusDocumentView()
 {
-    BEGIN_BLOCK_OBJC_EXCEPTIONS;
-    if (FrameView* frameView = m_frame->view()) {
-        if (NSView *documentView = frameView->getDocumentView()) {
-            if ([m_frame->bridge() firstResponder] != documentView)
-                [m_frame->bridge() makeFirstResponder:documentView];
-        }
-    }
-    END_BLOCK_OBJC_EXCEPTIONS;
-    if (Page* page = m_frame->page())
-        page->focusController()->setFocusedFrame(m_frame);
+    Page* page = m_frame->page();
+    if (!page)
+        return;
+
+    if (FrameView* frameView = m_frame->view())
+        if (NSView *documentView = frameView->getDocumentView())
+            page->chrome()->focusNSView(documentView);
+    
+    page->focusController()->setFocusedFrame(m_frame);
 }
 
 bool EventHandler::passWidgetMouseDownEventToWidget(const MouseEventWithHitTestResults& event)
@@ -424,7 +423,7 @@ bool EventHandler::passSubframeEventToSubframe(MouseEventWithHitTestResults& eve
     return false;
 }
 
-bool EventHandler::passWheelEventToWidget(Widget* widget)
+bool EventHandler::passWheelEventToWidget(PlatformWheelEvent&, Widget* widget)
 {
     BEGIN_BLOCK_OBJC_EXCEPTIONS;
         
@@ -485,7 +484,7 @@ void EventHandler::mouseDragged(NSEvent *event)
     NSEvent *oldCurrentEvent = currentEvent;
     currentEvent = HardRetain(event);
 
-    v->handleMouseMoveEvent(event);
+    handleMouseMoveEvent(event);
     
     ASSERT(currentEvent == event);
     HardRelease(event);
@@ -599,7 +598,7 @@ void EventHandler::mouseMoved(NSEvent *event)
     NSEvent *oldCurrentEvent = currentEvent;
     currentEvent = HardRetain(event);
     
-    m_frame->view()->handleMouseMoveEvent(event);
+    handleMouseMoveEvent(event);
     
     ASSERT(currentEvent == event);
     HardRelease(event);
@@ -621,11 +620,6 @@ bool EventHandler::passMouseMoveEventToSubframe(MouseEventWithHitTestResults& me
 bool EventHandler::passMouseReleaseEventToSubframe(MouseEventWithHitTestResults& mev, Frame* subframe)
 {
     return passSubframeEventToSubframe(mev, subframe);
-}
-
-bool EventHandler::passWheelEventToSubframe(PlatformWheelEvent&, Frame* subframe)
-{
-    return passWheelEventToWidget(subframe->view());
 }
 
 bool EventHandler::passMousePressEventToScrollbar(MouseEventWithHitTestResults&, PlatformScrollbar* scrollbar)

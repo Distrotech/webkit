@@ -1,11 +1,9 @@
-/**
- * This file is part of the DOM implementation for KDE.
- *
+/*
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
  *           (C) 2001 Peter Kelly (pmk@post.com)
  *           (C) 2001 Dirk Mueller (mueller@kde.org)
- * Copyright (C) 2004, 2005, 2006 Apple Computer, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -49,6 +47,35 @@ namespace WebCore {
 using namespace HTMLNames;
 using namespace XMLNames;
 
+class ElementRareData {
+public:
+    ElementRareData(Element*);
+    IntSize m_minimumSizeForResizing;
+};
+
+typedef HashMap<const Element*, ElementRareData*> ElementRareDataMap;
+
+static ElementRareDataMap& rareDataMap()
+{
+    static ElementRareDataMap* dataMap = new ElementRareDataMap;
+    return *dataMap;
+}
+
+static ElementRareData* rareDataFromMap(const Element* element)
+{
+    return rareDataMap().get(element);
+}
+
+static inline IntSize defaultMinimumSizeForResizing()
+{
+    return IntSize(INT_MAX, INT_MAX);
+}
+
+inline ElementRareData::ElementRareData(Element* element)
+    : m_minimumSizeForResizing(defaultMinimumSizeForResizing())
+{
+}
+
 Element::Element(const QualifiedName& qName, Document *doc)
     : ContainerNode(doc)
     , m_updateFocusAppearanceTimer(this, &Element::updateFocusAppearanceTimerFired)
@@ -61,6 +88,37 @@ Element::~Element()
 {
     if (namedAttrMap)
         namedAttrMap->detachFromElement();
+
+    if (!m_attrWasSpecifiedOrElementHasRareData)
+        ASSERT(!rareDataMap().contains(this));
+    else {
+        ElementRareDataMap& dataMap = rareDataMap();
+        ElementRareDataMap::iterator it = dataMap.find(this);
+        ASSERT(it != dataMap.end());
+        delete it->second;
+        dataMap.remove(it);
+    }
+}
+
+inline ElementRareData* Element::rareData()
+{
+    return m_attrWasSpecifiedOrElementHasRareData ? rareDataFromMap(this) : 0;
+}
+
+inline const ElementRareData* Element::rareData() const
+{
+    return m_attrWasSpecifiedOrElementHasRareData ? rareDataFromMap(this) : 0;
+}
+
+ElementRareData* Element::createRareData()
+{
+    if (m_attrWasSpecifiedOrElementHasRareData)
+        return rareDataMap().get(this);
+    ASSERT(!rareDataMap().contains(this));
+    ElementRareData* data = new ElementRareData(this);
+    rareDataMap().set(this, data);
+    m_attrWasSpecifiedOrElementHasRareData = true;
+    return data;
 }
 
 PassRefPtr<Node> Element::cloneNode(bool deep)
@@ -622,7 +680,7 @@ void Element::recalcStyle(StyleChange change)
             // ### Suboptimal. Style gets calculated again.
             attach();
             // attach recalulates the style for all children. No need to do it twice.
-            setChanged(false);
+            setChanged(NoStyleChange);
             setHasChangedChild(false);
             newStyle->deref(document()->renderArena());
             return;
@@ -645,19 +703,19 @@ void Element::recalcStyle(StyleChange change)
         newStyle->deref(document()->renderArena());
 
         if (change != Force) {
-            if (document()->usesDescendantRules())
+            if (document()->usesDescendantRules() && styleChangeType() == FullStyleChange)
                 change = Force;
             else
                 change = ch;
         }
     }
 
-    for (Node *n = fastFirstChild(); n; n = n->nextSibling()) {
+    for (Node *n = firstChild(); n; n = n->nextSibling()) {
         if (change >= Inherit || n->isTextNode() || n->hasChangedChild() || n->changed())
             n->recalcStyle(change);
     }
 
-    setChanged(false);
+    setChanged(NoStyleChange);
     setHasChangedChild(false);
 }
 
@@ -815,6 +873,12 @@ PassRefPtr<Attr> Element::setAttributeNode(Attr *attr, ExceptionCode& ec)
     return static_pointer_cast<Attr>(attributes(false)->setNamedItem(attr, ec));
 }
 
+PassRefPtr<Attr> Element::setAttributeNodeNS(Attr* attr, ExceptionCode& ec)
+{
+    ASSERT(attr);
+    return static_pointer_cast<Attr>(attributes(false)->setNamedItem(attr, ec));
+}
+
 PassRefPtr<Attr> Element::removeAttributeNode(Attr *attr, ExceptionCode& ec)
 {
     if (!attr || attr->ownerElement() != this) {
@@ -907,7 +971,7 @@ void Element::focus(bool restorePreviousSelection)
         return;
     
     if (Page* page = doc->page())
-        page->focusController()->setFocusedNode(this);
+        page->focusController()->setFocusedNode(this, doc->frame());
 
     if (!isFocusable()) {
         setNeedsFocusAppearanceUpdate(true);
@@ -923,8 +987,6 @@ void Element::updateFocusAppearance(bool restorePreviousSelection)
         Frame* frame = document()->frame();
         if (!frame)
             return;
-        
-        frame->editor()->didBeginEditing();
 
         // FIXME: We should restore the previous selection if there is one.
         Selection newSelection = hasTagName(htmlTag) || hasTagName(bodyTag) ? Selection(Position(this, 0), DOWNSTREAM) : Selection::selectionFromContentsOfNode(this);
@@ -950,8 +1012,12 @@ void Element::blur()
 {
     stopUpdateFocusAppearanceTimer();
     Document* doc = document();
-    if (doc->focusedNode() == this)
-        doc->setFocusedNode(0);
+    if (doc->focusedNode() == this) {
+        if (doc->frame())
+            doc->frame()->page()->focusController()->setFocusedNode(0, doc->frame());
+        else
+            doc->setFocusedNode(0);
+    }
 }
 
 void Element::stopUpdateFocusAppearanceTimer()
@@ -964,12 +1030,13 @@ void Element::stopUpdateFocusAppearanceTimer()
 
 String Element::innerText() const
 {
+    // We need to update layout, since plainText uses line boxes in the render tree.
+    document()->updateLayoutIgnorePendingStylesheets();
+
     if (!renderer())
         return textContent(true);
 
-    // We need to update layout, since plainText uses line boxes in the render tree.
-    document()->updateLayoutIgnorePendingStylesheets();
-    return plainText(rangeOfContents(const_cast<Element *>(this)).get());
+    return plainText(rangeOfContents(const_cast<Element*>(this)).get());
 }
 
 String Element::outerText() const
@@ -985,6 +1052,19 @@ String Element::outerText() const
 String Element::title() const
 {
     return String();
+}
+
+IntSize Element::minimumSizeForResizing() const
+{
+    const ElementRareData* rd = rareData();
+    return rd ? rd->m_minimumSizeForResizing : defaultMinimumSizeForResizing();
+}
+
+void Element::setMinimumSizeForResizing(const IntSize& size)
+{
+    if (size == defaultMinimumSizeForResizing() && !rareData())
+        return;
+    createRareData()->m_minimumSizeForResizing = size;
 }
 
 }

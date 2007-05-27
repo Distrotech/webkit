@@ -82,6 +82,14 @@ void RenderButton::updateFromElement()
     }
 }
 
+bool RenderButton::canHaveChildren() const
+{
+    // Input elements can't have children, but button elements can.  We'll
+    // write the code assuming any other button types that might emerge in the future
+    // can also have children.
+    return !element()->hasTagName(inputTag);
+}
+
 void RenderButton::setText(const String& str)
 {
     if (str.isEmpty()) {
@@ -100,12 +108,12 @@ void RenderButton::setText(const String& str)
     }
 }
 
-void RenderButton::updatePseudoChild(RenderStyle::PseudoId type)
+void RenderButton::updateBeforeAfterContent(RenderStyle::PseudoId type)
 {
     if (m_inner)
-        m_inner->updatePseudoChildForObject(type, this);
+        m_inner->updateBeforeAfterContentForContainer(type, this);
     else
-        updatePseudoChildForObject(type, this);
+        updateBeforeAfterContentForContainer(type, this);
 }
 
 IntRect RenderButton::controlClipRect(int tx, int ty) const

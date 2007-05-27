@@ -27,10 +27,13 @@
 #import "WebScriptObjectPrivate.h"
 
 #import "DOMInternal.h"
+#import "Frame.h"
 #import "WebCoreObjCExtras.h"
+#import "WebCoreFrameBridge.h"
 #import <JavaScriptCore/context.h>
 #import <JavaScriptCore/objc_instance.h>
 #import <JavaScriptCore/runtime_object.h>
+#import <JavaScriptCore/APICast.h>
 
 using namespace KJS;
 using namespace KJS::Bindings;
@@ -38,6 +41,45 @@ using namespace KJS::Bindings;
 #define LOG_EXCEPTION(exec) \
     if (Interpreter::shouldPrintExceptions()) \
         printf("%s:%d:[%d]  JavaScript exception:  %s\n", __FILE__, __LINE__, getpid(), exec->exception()->toObject(exec)->get(exec, exec->propertyNames().message)->toString(exec).ascii());
+
+@interface WebFrame
+- (WebCoreFrameBridge *)_bridge; // implemented in WebKit
+@end
+
+namespace WebCore {
+
+typedef HashMap<JSObject*, NSObject*> JSWrapperMap;
+static JSWrapperMap* JSWrapperCache;
+
+NSObject* getJSWrapper(JSObject* impl)
+{
+    if (!JSWrapperCache)
+        return nil;
+    return JSWrapperCache->get(impl);
+}
+
+void addJSWrapper(NSObject* wrapper, JSObject* impl)
+{
+    if (!JSWrapperCache)
+        JSWrapperCache = new JSWrapperMap;
+    JSWrapperCache->set(impl, wrapper);
+}
+
+void removeJSWrapper(JSObject* impl)
+{
+    if (!JSWrapperCache)
+        return;
+    JSWrapperCache->remove(impl);
+}
+
+id createJSWrapper(KJS::JSObject* object, PassRefPtr<KJS::Bindings::RootObject> origin, PassRefPtr<KJS::Bindings::RootObject> root)
+{
+    if (id wrapper = getJSWrapper(object))
+        return [[wrapper retain] autorelease];
+    return [[[WebScriptObject alloc] _initWithJSObject:object originRootObject:origin rootObject:root] autorelease];
+}
+
+} // namespace WebCore
 
 @implementation WebScriptObjectPrivate
 
@@ -51,6 +93,14 @@ using namespace KJS::Bindings;
     WebCoreObjCFinalizeOnMainThread(self);
 }
 #endif
+
++ (id)scriptObjectForJSObject:(JSObjectRef)jsObject originRootObject:(RootObject*)originRootObject rootObject:(RootObject*)rootObject
+{
+    if (id domWrapper = WebCore::createDOMWrapper(toJS(jsObject), originRootObject, rootObject))
+        return domWrapper;
+    
+    return WebCore::createJSWrapper(toJS(jsObject), originRootObject, rootObject);
+}
 
 static void _didExecute(WebScriptObject *obj)
 {
@@ -71,10 +121,13 @@ static void _didExecute(WebScriptObject *obj)
     ASSERT(!_private->imp);
     ASSERT(!_private->rootObject);
     ASSERT(!_private->originRootObject);
+    ASSERT(imp);
 
     _private->imp = imp;
     _private->rootObject = rootObject.releaseRef();
     _private->originRootObject = originRootObject.releaseRef();
+
+    WebCore::addJSWrapper(self, imp);
 
     if(_private->rootObject)
         _private->rootObject->gcProtect(imp);
@@ -128,6 +181,9 @@ static void _didExecute(WebScriptObject *obj)
 
 - (void)dealloc
 {
+    if (_private->imp)
+        WebCore::removeJSWrapper(_private->imp);
+
     if (_private->rootObject && _private->rootObject->isValid())
         _private->rootObject->gcUnprotect(_private->imp);
 
@@ -144,6 +200,9 @@ static void _didExecute(WebScriptObject *obj)
 
 - (void)finalize
 {
+    if (_private->imp)
+        WebCore::removeJSWrapper(_private->imp);
+
     if (_private->rootObject && _private->rootObject->isValid())
         _private->rootObject->gcUnprotect(_private->imp);
 
@@ -327,7 +386,7 @@ static List listFromNSArray(ExecState *exec, NSArray *array)
 
     id resultObj = [WebScriptObject _convertValueToObjcValue:result originRootObject:[self _originRootObject] rootObject:[self _rootObject]];
     if ([resultObj isKindOfClass:[WebUndefined class]])
-        resultObj = [super valueForKey:key];    // ensure correct not-applicable key behavior
+        resultObj = [super valueForKey:key];    // defaults to throwing an exception
 
     _didExecute(self);
     
@@ -445,6 +504,17 @@ static List listFromNSArray(ExecState *exec, NSArray *array)
         throwError([self _rootObject]->interpreter()->globalExec(), GeneralError, description);
 }
 
+- (JSObjectRef)JSObject
+{
+    if (![self _rootObject])
+        return nil;
+
+    if (![self _isSafeScript])
+        return nil;
+
+    return toRef([self _imp]);
+}
+
 + (id)_convertValueToObjcValue:(JSValue*)value originRootObject:(RootObject*)originRootObject rootObject:(RootObject*)rootObject
 {
     if (value->isObject()) {
@@ -467,10 +537,7 @@ static List listFromNSArray(ExecState *exec, NSArray *array)
             return nil;
         }
 
-        if (id domWrapper = WebCore::createDOMWrapper(object, originRootObject, rootObject))
-            return domWrapper;
-
-        return [[[WebScriptObject alloc] _initWithJSObject:object originRootObject:originRootObject rootObject:rootObject] autorelease];
+        return [WebScriptObject scriptObjectForJSObject:toRef(object) originRootObject:originRootObject rootObject:rootObject];
     }
 
     if (value->isString()) {
@@ -586,3 +653,4 @@ static List listFromNSArray(ExecState *exec, NSArray *array)
 }
 
 @end
+

@@ -42,8 +42,8 @@ public:
 
     virtual void destroy();
 
-    virtual int minWidth() const { return m_minWidth; }
-    virtual int maxWidth() const { return m_maxWidth; }
+    virtual int minPrefWidth() const;
+    virtual int maxPrefWidth() const;
 
     virtual int overrideSize() const;
     virtual int overrideWidth() const;
@@ -98,6 +98,7 @@ public:
 
     virtual IntRect absoluteClippedOverflowRect();
     virtual void computeAbsoluteRepaintRect(IntRect&, bool fixed = false);
+    IntSize offsetForPositionedInContainer(RenderObject*) const;
 
     virtual void repaintDuringLayoutIfMoved(const IntRect&);
 
@@ -110,6 +111,8 @@ public:
     {
         return style()->htmlHacks() && style()->height().isAuto() && !isFloatingOrPositioned() && (isRoot() || isBody());
     }
+
+    virtual IntSize intrinsicSize() const { return IntSize(); }
 
     // Whether or not the element shrinks to its intrinsic width (rather than filling the width
     // of a containing block).  HTML4 buttons, <select>s, <input>s, legends, and floating/compact elements do this.
@@ -182,6 +185,11 @@ private:
     void calcAbsoluteVerticalReplaced();
     void calcAbsoluteHorizontalReplaced();
 
+    // This function calculates the minimum and maximum preferred widths for an object.
+    // These values are used in shrink-to-fit layout systems.
+    // These include tables, positioned objects, floats and flexible boxes.
+    virtual void calcPrefWidths() = 0;
+
 protected:
     // The width/height of the contents + borders + padding.
     int m_width;
@@ -195,15 +203,13 @@ protected:
     int m_marginTop;
     int m_marginBottom;
 
-    // The minimum width the element needs to be able to render
-    // its content without clipping.
-    int m_minWidth;
-    // The maximum width the element can fill horizontally
-    // (the width of the element with line breaking disabled).
-    int m_maxWidth;
+    // The preferred width of the element if it were to break its lines at every possible opportunity.
+    int m_minPrefWidth;
+    
+    // The preferred width of the element if it never breaks any lines at all.
+    int m_maxPrefWidth;
 
-    // A pointer to our layer if we have one.  Currently only positioned elements
-    // and floaters have layers.
+    // A pointer to our layer if we have one.
     RenderLayer* m_layer;
 
     // For inline replaced elements, the inline box that owns us.

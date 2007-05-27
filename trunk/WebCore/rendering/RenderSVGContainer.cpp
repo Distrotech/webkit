@@ -25,15 +25,16 @@
 #if ENABLE(SVG)
 #include "RenderSVGContainer.h"
 
+#include "GraphicsContext.h"
+#include "RenderView.h"
+#include "SVGLength.h"
+#include "SVGMarkerElement.h"
 #include "SVGResourceClipper.h"
 #include "SVGResourceFilter.h"
 #include "SVGResourceMasker.h"
+#include "SVGSVGElement.h"
 #include "SVGStyledElement.h"
 #include "SVGURIReference.h"
-#include "GraphicsContext.h"
-#include "SVGLength.h"
-#include "SVGMarkerElement.h"
-#include "SVGSVGElement.h"
 
 namespace WebCore {
 
@@ -85,19 +86,14 @@ short RenderSVGContainer::baselinePosition(bool b, bool isRootLineBox) const
     return height() + marginTop() + marginBottom();
 }
 
-void RenderSVGContainer::calcMinMaxWidth()
-{
-    ASSERT(!minMaxKnown());
-    m_minWidth = m_maxWidth = 0;
-    setMinMaxKnown();
-}
-
 void RenderSVGContainer::layout()
 {
     ASSERT(needsLayout());
-    ASSERT(minMaxKnown());
 
     calcViewport();
+
+    // Arbitrary affine transforms are incompatible with LayoutState.
+    view()->disableLayoutState();
 
     IntRect oldBounds;
     IntRect oldOutlineBox;
@@ -125,6 +121,7 @@ void RenderSVGContainer::layout()
     if (selfNeedsLayout() && checkForRepaint)
         repaintAfterLayoutIfNeeded(oldBounds, oldOutlineBox);
 
+    view()->enableLayoutState();
     setNeedsLayout(false);
 }
 
@@ -166,8 +163,10 @@ void RenderSVGContainer::paint(PaintInfo& paintInfo, int parentX, int parentY)
         origin.move(m_x, m_y);
         origin.move(borderLeft(), borderTop());
         origin.move(paddingLeft(), paddingTop());
-        if (origin.x() || origin.y())
+        if (origin.x() || origin.y()) {
             paintInfo.context->concatCTM(AffineTransform().translate(origin.x(), origin.y()));
+            paintInfo.rect.move(-origin.x(), -origin.y());
+        }
         parentX = parentY = 0;
     } else {
         // Only the root <svg> element should need any translations using the HTML/CSS system

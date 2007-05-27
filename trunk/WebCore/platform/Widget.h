@@ -42,6 +42,7 @@ typedef struct HWND__* HWND;
 
 #if PLATFORM(GDK)
 typedef struct _GdkDrawable GdkDrawable;
+typedef struct _GtkWidget GtkWidget;
 #endif
 
 #if PLATFORM(QT)
@@ -135,15 +136,13 @@ namespace WebCore {
         bool suppressInvalidation() const;
         void setSuppressInvalidation(bool);
 
-        // These methods will be called on a widget while it is capturing the mouse. 
-        virtual bool handleMouseMoveEvent(const PlatformMouseEvent&) { return false; } 
-        virtual bool handleMouseReleaseEvent(const PlatformMouseEvent&) { return false; }
 #endif
 
 #if PLATFORM(GDK)
-        Widget(GdkDrawable*);
-        virtual void setDrawable(GdkDrawable*);
+        Widget(GtkWidget*);
+        virtual void setGtkWidget(GtkWidget*);
         GdkDrawable* drawable() const;
+        GtkWidget* gtkWidget() const;
 #endif
 
 #if PLATFORM(QT)
@@ -159,13 +158,12 @@ namespace WebCore {
         NSView* getOuterView() const;
         void setView(NSView*);
         
-        void sendConsumedMouseUp();
-        
         static void beforeMouseDown(NSView*, Widget*);
         static void afterMouseDown(NSView*, Widget*);
 
         void addToSuperview(NSView* superview);
         void removeFromSuperview();
+        IntPoint convertToScreenCoordinate(NSView*, const IntPoint&);
 #endif
 
 #if PLATFORM(WX)
@@ -173,18 +171,6 @@ namespace WebCore {
         wxScrolledWindow* nativeWindow() const;
         void setNativeWindow(wxScrolledWindow*);
 #endif
-
-        // To be deleted.
-        enum FocusPolicy { NoFocus, TabFocus, ClickFocus, StrongFocus, WheelFocus };
-        GraphicsContext* lockDrawingFocus();
-        const Font& font() const;
-        virtual FocusPolicy focusPolicy() const;
-        virtual bool hasFocus() const;
-        virtual void clearFocus();
-        virtual void setFont(const Font&);
-        void disableFlushDrawing();
-        void enableFlushDrawing();
-        void unlockDrawingFocus(GraphicsContext*);
 
     private:
         WidgetPrivate* data;

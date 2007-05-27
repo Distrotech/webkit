@@ -102,7 +102,7 @@ public:
     virtual void paint(PaintInfo&, int tx, int ty);
     virtual void paintBoxDecorations(PaintInfo&, int tx, int ty);
     virtual void layout();
-    virtual void calcMinMaxWidth();
+    virtual void calcPrefWidths();
 
     virtual RenderBlock* firstLineBlock() const;
     virtual void updateFirstLetter();
@@ -160,12 +160,18 @@ public:
                (collapseBorders() ? 0 : (paddingLeft() + paddingRight() + (numEffCols() + 1) * hBorderSpacing()));
     }
 
-    RenderTableCol* colElement(int col) const;
+    RenderTableCol* colElement(int col, bool* startEdge = 0, bool* endEdge = 0) const;
 
     bool needsSectionRecalc() const { return m_needsSectionRecalc; }
-    void setNeedsSectionRecalc() { m_needsSectionRecalc = true; }
+    void setNeedsSectionRecalc()
+    {
+        if (documentBeingDestroyed())
+            return;
+        m_needsSectionRecalc = true;
+        setNeedsLayout(true);
+    }
 
-    virtual RenderObject* removeChildNode(RenderObject*);
+    virtual RenderObject* removeChildNode(RenderObject*, bool fullRemove = true);
 
     RenderTableSection* sectionAbove(const RenderTableSection*, bool skipEmptySections = false) const;
     RenderTableSection* sectionBelow(const RenderTableSection*, bool skipEmptySections = false) const;
@@ -181,7 +187,7 @@ public:
 
     virtual IntRect getOverflowClipRect(int tx, int ty);
 
-    void recalcSectionsIfNeeded()
+    void recalcSectionsIfNeeded() const
     {
         if (m_needsSectionRecalc)
             recalcSections();
@@ -192,15 +198,15 @@ public:
 #endif
 
 private:
-    void recalcSections();
+    void recalcSections() const;
 
-    Vector<int> m_columnPos;
-    Vector<ColumnStruct> m_columns;
+    mutable Vector<int> m_columnPos;
+    mutable Vector<ColumnStruct> m_columns;
 
-    RenderBlock* m_caption;
-    RenderTableSection* m_head;
-    RenderTableSection* m_foot;
-    RenderTableSection* m_firstBody;
+    mutable RenderBlock* m_caption;
+    mutable RenderTableSection* m_head;
+    mutable RenderTableSection* m_foot;
+    mutable RenderTableSection* m_firstBody;
 
     TableLayout* m_tableLayout;
 
@@ -209,9 +215,9 @@ private:
     unsigned m_frame : 4; // Frame
     unsigned m_rules : 4; // Rules
 
-    bool m_hasColElements : 1;
+    mutable bool m_hasColElements : 1;
     unsigned m_padding : 22;
-    bool m_needsSectionRecalc : 1;
+    mutable bool m_needsSectionRecalc : 1;
     
     short m_hSpacing;
     short m_vSpacing;

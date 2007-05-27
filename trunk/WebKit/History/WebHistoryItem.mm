@@ -47,6 +47,7 @@
 #import <WebCore/HistoryItem.h>
 #import <WebCore/Image.h>
 #import <WebCore/KURL.h>
+#import <WebCore/PageCache.h>
 #import <WebCore/PlatformString.h>
 #import <WebCore/ThreadCheck.h>
 #import <WebCore/WebCoreObjCExtras.h>
@@ -63,8 +64,7 @@ static NSString *WebDisplayTitleKey = @"displayTitle";
 // Notification strings.
 NSString *WebHistoryItemChangedNotification = @"WebHistoryItemChangedNotification";
 
-using WebCore::HistoryItem;
-using WebCore::HistoryItemVector;
+using namespace WebCore;
 
 static inline WebHistoryItemPrivate* kitPrivate(WebCoreHistoryItem* list) { return (WebHistoryItemPrivate*)list; }
 static inline WebCoreHistoryItem* core(WebHistoryItemPrivate* list) { return (WebCoreHistoryItem*)list; }
@@ -115,7 +115,7 @@ void WKNotifyHistoryItemChanged()
 - (void)finalize
 {
     WebCoreThreadViolationCheck();
-    // FIXME: The WebCore::HistoryItem d'tor is what releases the history item's icon from the icon database
+    // FIXME: ~HistoryItem is what releases the history item's icon from the icon database
     // It's probably not good to release icons from the database only when the object is garbage-collected. 
     // Need to change design so this happens at a predictable time.
     if (_private) {
@@ -240,14 +240,14 @@ void WKNotifyHistoryItemChanged()
 
 @implementation WebHistoryItem (WebInternal)
 
-WebCore::HistoryItem* core(WebHistoryItem *item)
+HistoryItem* core(WebHistoryItem *item)
 {
     if (!item)
         return 0;
     return core(item->_private);
 }
 
-WebHistoryItem *kit(WebCore::HistoryItem* item)
+WebHistoryItem *kit(HistoryItem* item)
 {
     if (!item)
         return nil;
@@ -363,16 +363,6 @@ static WebWindowWatcher *_windowWatcher = nil;
     return core(_private)->scrollPoint();
 }
 
-- (id)_transientPropertyForKey:(NSString *)key
-{
-    return core(_private)->getTransientProperty(key);
-}
-
-- (void)_setTransientProperty:(id)property forKey:(NSString *)key
-{
-    core(_private)->setTransientProperty(key, property);
-}
-
 @end
 
 @implementation WebHistoryItem (WebPrivate)
@@ -461,15 +451,15 @@ static WebWindowWatcher *_windowWatcher = nil;
     return result;
 }
 
-- (void)setAlwaysAttemptToUsePageCache: (BOOL)flag
+- (void)setAlwaysAttemptToUsePageCache:(BOOL)flag
 {
-    core(_private)->setAlwaysAttemptToUseCachedPage(flag);
+    // Safari 2.0 uses this for SnapBack, so we stub it out to avoid a crash.
 }
 
 - (NSURL *)URL
 {
     ASSERT_MAIN_THREAD();
-    WebCore::KURL url = core(_private)->url();
+    KURL url = core(_private)->url();
     return url.isEmpty() ? nil : url.getNSURL();
 }
 
@@ -499,7 +489,17 @@ static WebWindowWatcher *_windowWatcher = nil;
 
 + (void)_releaseAllPendingPageCaches
 {
-    HistoryItem::performPendingReleaseOfCachedPages();
+    pageCache()->releaseAutoreleasedPagesNow();
+}
+
+- (id)_transientPropertyForKey:(NSString *)key
+{
+    return core(_private)->getTransientProperty(key);
+}
+
+- (void)_setTransientProperty:(id)property forKey:(NSString *)key
+{
+    core(_private)->setTransientProperty(key, property);
 }
 
 @end
@@ -510,6 +510,6 @@ static WebWindowWatcher *_windowWatcher = nil;
 @implementation WebWindowWatcher
 -(void)windowWillClose:(NSNotification *)notification
 {
-    WebCoreHistoryItem::performPendingReleaseOfCachedPages();
+    pageCache()->releaseAutoreleasedPagesNow();
 }
 @end

@@ -43,12 +43,27 @@ const size_t ConversionBufferSize = 16384;
     
 static UConverter* cachedConverterICU;
 
+static auto_ptr<TextCodec> newTextCodecICU(const TextEncoding& encoding, const void*)
+{
+    return auto_ptr<TextCodec>(new TextCodecICU(encoding));
+}
+
+void TextCodecICU::registerBaseEncodingNames(EncodingNameRegistrar registrar)
+{
+    registrar("UTF-8", "UTF-8");
+}
+
+void TextCodecICU::registerBaseCodecs(TextCodecRegistrar registrar)
+{
+    registrar("UTF-8", newTextCodecICU, 0);
+}
+
 // FIXME: Registering all the encodings we get from ucnv_getAvailableName
 // includes encodings we don't want or need. For example: UTF16_PlatformEndian,
 // UTF16_OppositeEndian, UTF32_PlatformEndian, UTF32_OppositeEndian, and all
 // the encodings with commas and version numbers.
 
-void TextCodecICU::registerEncodingNames(EncodingNameRegistrar registrar)
+void TextCodecICU::registerExtendedEncodingNames(EncodingNameRegistrar registrar)
 {
     // We register Hebrew with logical ordering using a separate name.
     // Otherwise, this would share the same canonical name as the
@@ -88,6 +103,7 @@ void TextCodecICU::registerEncodingNames(EncodingNameRegistrar registrar)
     // Additional aliases.
     // Perhaps we can get these added to ICU.
     registrar("macroman", "macintosh");
+    registrar("xmacroman", "macintosh");
 
     // Additional aliases that historically were present in the encoding
     // table in WebKit on Macintosh that don't seem to be present in ICU.
@@ -123,12 +139,7 @@ void TextCodecICU::registerEncodingNames(EncodingNameRegistrar registrar)
     registrar("xxbig5", "Big5");
 }
 
-static auto_ptr<TextCodec> newTextCodecICU(const TextEncoding& encoding, const void*)
-{
-    return auto_ptr<TextCodec>(new TextCodecICU(encoding));
-}
-
-void TextCodecICU::registerCodecs(TextCodecRegistrar registrar)
+void TextCodecICU::registerExtendedCodecs(TextCodecRegistrar registrar)
 {
     // See comment above in registerEncodingNames.
     registrar("ISO-8859-8-I", newTextCodecICU, 0);
@@ -172,8 +183,10 @@ void TextCodecICU::createICUConverter() const
 {
     ASSERT(!m_converterICU);
 
+    const char* name = m_encoding.name();
+    m_needsGBKFallbacks = name[0] == 'G' && name[1] == 'B' && name[2] == 'K' && !name[3];
+
     UErrorCode err;
-    m_needsGBKFallbacks = m_encoding == "GBK";
 
     if (cachedConverterICU) {
         err = U_ZERO_ERROR;

@@ -46,12 +46,10 @@ namespace WebCore {
 using namespace HTMLNames;
 
 RenderImage::RenderImage(Node* node)
-    : RenderReplaced(node)
+    : RenderReplaced(node, IntSize(0, 0))
     , m_cachedImage(0)
     , m_isAnonymousImage(false)
 {
-    setIntrinsicWidth(0);
-    setIntrinsicHeight(0);
     updateAltText();
 }
 
@@ -109,18 +107,12 @@ bool RenderImage::setImageSizeForAltText(CachedImage* newImage /* = 0 */)
         imageHeight = max(imageHeight, min(font.height(), maxAltTextHeight));
     }
   
-    bool imageSizeChanged = false;
-  
-    if (imageWidth != intrinsicWidth()) {
-        setIntrinsicWidth(imageWidth);
-        imageSizeChanged = true;
-    }
-    if (imageHeight != intrinsicHeight()) {
-        setIntrinsicHeight(imageHeight);
-        imageSizeChanged = true;
-    }
-  
-    return imageSizeChanged;
+    IntSize imageSize = IntSize(imageWidth, imageHeight);
+    if (imageSize == intrinsicSize())
+        return false;
+
+    setIntrinsicSize(imageSize);
+    return true;
 }
 
 void RenderImage::imageChanged(CachedImage* newImage)
@@ -140,14 +132,12 @@ void RenderImage::imageChanged(CachedImage* newImage)
     if (newImage->errorOccurred())
         imageSizeChanged = setImageSizeForAltText(newImage);
     
-    bool ensureLayout = false;
+    bool shouldRepaint = true;
 
     // Image dimensions have been changed, see what needs to be done
-    if (newImage->imageSize().width() != intrinsicWidth() || newImage->imageSize().height() != intrinsicHeight() || imageSizeChanged) {
-        if (!newImage->errorOccurred()) {
-            setIntrinsicWidth(newImage->imageSize().width());
-            setIntrinsicHeight(newImage->imageSize().height());
-        }
+    if (newImage->imageSize() != intrinsicSize() || imageSizeChanged) {
+        if (!newImage->errorOccurred())
+            setIntrinsicSize(newImage->imageSize());
 
         // In the case of generated image content using :before/:after, we might not be in the
         // render tree yet.  In that case, we don't need to worry about check for layout, since we'll get a
@@ -156,26 +146,26 @@ void RenderImage::imageChanged(CachedImage* newImage)
             // lets see if we need to relayout at all..
             int oldwidth = m_width;
             int oldheight = m_height;
+            if (!prefWidthsDirty())
+                setPrefWidthsDirty(true);
             calcWidth();
             calcHeight();
-    
-            if (imageSizeChanged || m_width != oldwidth || m_height != oldheight)
-                ensureLayout = true;
+
+            if (imageSizeChanged || m_width != oldwidth || m_height != oldheight) {
+                shouldRepaint = false;
+                if (!selfNeedsLayout())
+                    setNeedsLayout(true);
+            }
 
             m_width = oldwidth;
             m_height = oldheight;
         }
     }
 
-    if (ensureLayout) {
-        if (!selfNeedsLayout())
-            setNeedsLayout(true);
-        if (minMaxKnown())
-            setMinMaxKnown(false);
-    } else
+    if (shouldRepaint)
         // FIXME: We always just do a complete repaint, since we always pass in the full image
         // rect at the moment anyway.
-        repaintRectangle(IntRect(borderLeft() + paddingLeft(), borderTop() + paddingTop(), contentWidth(), contentHeight()));
+        repaintRectangle(contentBox());
 }
 
 void RenderImage::resetAnimation()
@@ -227,7 +217,7 @@ void RenderImage::paint(PaintInfo& paintInfo, int tx, int ty)
     if (isPrinting && !view()->printImages())
         return;
 
-    if (!m_cachedImage || image()->isNull() || errorOccurred()) {
+    if (!m_cachedImage || errorOccurred()) {
         if (paintInfo.phase == PaintPhaseSelection)
             return;
 
@@ -280,7 +270,7 @@ void RenderImage::paint(PaintInfo& paintInfo, int tx, int ty)
                     context->drawText(textRun, IntPoint(ax, ay + ascent));
             }
         }
-    } else if (m_cachedImage) {
+    } else if (m_cachedImage && !image()->isNull()) {
 #if PLATFORM(MAC)
         if (style()->highlight() != nullAtom && !paintInfo.context->paintingDisabled())
             paintCustomHighlight(tx - m_x, ty - m_y, style()->highlight(), true);
@@ -303,20 +293,17 @@ void RenderImage::paint(PaintInfo& paintInfo, int tx, int ty)
 void RenderImage::layout()
 {
     ASSERT(needsLayout());
-    ASSERT(minMaxKnown());
 
     IntRect oldBounds;
     IntRect oldOutlineBox;
     bool checkForRepaint = checkForRepaintDuringLayout();
     if (checkForRepaint) {
         oldBounds = absoluteClippedOverflowRect();
-        oldBounds.move(view()->layoutDelta());
         oldOutlineBox = absoluteOutlineBox();
-        oldOutlineBox.move(view()->layoutDelta());
     }
 
     // minimum height
-    m_height = m_cachedImage && m_cachedImage->errorOccurred() ? intrinsicHeight() : 0;
+    m_height = m_cachedImage && m_cachedImage->errorOccurred() ? intrinsicSize().height() : 0;
 
     calcWidth();
     calcHeight();
@@ -419,36 +406,38 @@ int RenderImage::calcReplacedHeight() const
 
 int RenderImage::calcAspectRatioWidth() const
 {
-    if (!intrinsicHeight())
+    IntSize size = intrinsicSize();
+    if (!size.height())
         return 0;
     if (!m_cachedImage || m_cachedImage->errorOccurred())
-        return intrinsicWidth(); // Don't bother scaling.
-    return RenderReplaced::calcReplacedHeight() * intrinsicWidth() / intrinsicHeight();
+        return size.width(); // Don't bother scaling.
+    return RenderReplaced::calcReplacedHeight() * size.width() / size.height();
 }
 
 int RenderImage::calcAspectRatioHeight() const
 {
-    if (!intrinsicWidth())
+    IntSize size = intrinsicSize();
+    if (!size.width())
         return 0;
     if (!m_cachedImage || m_cachedImage->errorOccurred())
-        return intrinsicHeight(); // Don't bother scaling.
-    return RenderReplaced::calcReplacedWidth() * intrinsicHeight() / intrinsicWidth();
+        return size.height(); // Don't bother scaling.
+    return RenderReplaced::calcReplacedWidth() * size.height() / size.width();
 }
 
-void RenderImage::calcMinMaxWidth()
+void RenderImage::calcPrefWidths()
 {
-    ASSERT(!minMaxKnown());
+    ASSERT(prefWidthsDirty());
 
-    m_maxWidth = calcReplacedWidth() + paddingLeft() + paddingRight() + borderLeft() + borderRight();
+    m_maxPrefWidth = calcReplacedWidth() + paddingLeft() + paddingRight() + borderLeft() + borderRight();
 
     if (style()->width().isPercent() || style()->height().isPercent() || 
         style()->maxWidth().isPercent() || style()->maxHeight().isPercent() ||
         style()->minWidth().isPercent() || style()->minHeight().isPercent())
-        m_minWidth = 0;
+        m_minPrefWidth = 0;
     else
-        m_minWidth = m_maxWidth;
+        m_minPrefWidth = m_maxPrefWidth;
 
-    setMinMaxKnown();
+    setPrefWidthsDirty(false);
 }
 
 Image* RenderImage::nullImage()

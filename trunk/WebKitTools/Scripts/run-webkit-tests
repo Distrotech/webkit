@@ -494,6 +494,11 @@ for my $test (@tests) {
         $simplified_actual =~ s/at \(-?[0-9]+,-?[0-9]+\) *//g;
         $simplified_actual =~ s/size -?[0-9]+x-?[0-9]+ *//g;
         $simplified_actual =~ s/text run width -?[0-9]+: //g;
+        $simplified_actual =~ s/text run width -?[0-9]+ [a-zA-Z ]+: //g;
+        $simplified_actual =~ s/RenderButton {BUTTON} .*/RenderButton {BUTTON}/g;
+        $simplified_actual =~ s/RenderImage {INPUT} .*/RenderImage {INPUT}/g;
+        $simplified_actual =~ s/RenderBlock {INPUT} .*/RenderBlock {INPUT}/g;
+        $simplified_actual =~ s/RenderTextControl {INPUT} .*/RenderTextControl {INPUT}/g;
         $simplified_actual =~ s/\([0-9]+px/px/g;
         $simplified_actual =~ s/ *" *\n +" */ /g;
         $simplified_actual =~ s/" +$/"/g;
@@ -505,6 +510,11 @@ for my $test (@tests) {
         $expectedMac =~ s/at \(-?[0-9]+,-?[0-9]+\) *//g;
         $expectedMac =~ s/size -?[0-9]+x-?[0-9]+ *//g;
         $expectedMac =~ s/text run width -?[0-9]+: //g;
+        $expectedMac =~ s/text run width -?[0-9]+ [a-zA-Z ]+: //g;
+        $expectedMac =~ s/RenderButton {BUTTON} .*/RenderButton {BUTTON}/g;
+        $expectedMac =~ s/RenderImage {INPUT} .*/RenderImage {INPUT}/g;
+        $expectedMac =~ s/RenderBlock {INPUT} .*/RenderBlock {INPUT}/g;
+        $expectedMac =~ s/RenderTextControl {INPUT} .*/RenderTextControl {INPUT}/g;
         $expectedMac =~ s/\([0-9]+px/px/g;
         $expectedMac =~ s/ *" *\n +" */ /g;
         $expectedMac =~ s/" +$/"/g;
@@ -670,7 +680,9 @@ printf "\n%0.2fs total testing time\n", (time - $overallStartTime) . "";
 
 closeHTTPD();
 
-system "rm /tmp/LayoutTests";
+# Because multiple instances of this script are running concurrently we cannot 
+# safely delete this symlink.
+# system "rm /tmp/LayoutTests";
 
 # FIXME: Do we really want to check the image-comparison tool for leaks every time?
 if ($shouldCheckLeaks && $pixelTests) {
@@ -962,6 +974,7 @@ sub openDumpTool()
     my $libraryPath = $ENV{'LD_LIBRARY_PATH'};
     my $dbusAddress = $ENV{'DBUS_SESSION_BUS_ADDRESS'};
     my $display = $ENV{'DISPLAY'};
+    my $testfonts = $ENV{'WEBKIT_TESTFONTS'};
 
     my $isQt = isQt();
     local %ENV;
@@ -971,6 +984,7 @@ sub openDumpTool()
         } else {
             $ENV{DISPLAY} = ":1";
         }
+        $ENV{'WEBKIT_TESTFONTS'} = $testfonts;
         $ENV{HOME} = $homeDir;
         if (defined $libraryPath) {
             $ENV{LD_LIBRARY_PATH} = $libraryPath;
@@ -1104,10 +1118,10 @@ sub isTextOnlyTest($)
 {
     my ($actual) = @_;
     my $isText;
-    if ($actual !~ /^layer at/) {
-        $isText = 1;
-    } else {
+    if ($actual =~ /^layer at/ms) {
         $isText = 0;
+    } else {
+        $isText = 1;
     }
     return $isText;
 }

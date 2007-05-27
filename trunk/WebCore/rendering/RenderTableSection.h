@@ -70,7 +70,7 @@ public:
     struct RowStruct {
         Row* row;
         RenderObject* rowRenderer;
-        int baseLine;
+        int baseline;
         Length height;
     };
 
@@ -119,9 +119,9 @@ public:
         table()->setNeedsSectionRecalc();
     }
 
-    int getBaseline(int row) { return m_grid[row].baseLine; }
+    int getBaseline(int row) { return m_grid[row].baseline; }
 
-    virtual RenderObject* removeChildNode(RenderObject*);
+    virtual RenderObject* removeChildNode(RenderObject*, bool fullRemove = true);
 
     virtual bool nodeAtPoint(const HitTestRequest&, HitTestResult&, int x, int y, int tx, int ty, HitTestAction);
 

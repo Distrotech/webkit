@@ -42,6 +42,7 @@
 #import "WebViewInternal.h"
 #import <WebCore/ContextMenu.h>
 #import <WebCore/KURL.h>
+#import <WebKit/DOMPrivate.h>
 
 using namespace WebCore;
 
@@ -59,24 +60,24 @@ void WebContextMenuClient::contextMenuDestroyed()
     delete this;
 }
 
-// FIXME 4950029: This function can be removed when 4950029 is addressed.
 static BOOL isAppleMail(void)
 {
     return [[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.apple.mail"];
 }
 
+static BOOL isPreVersion3Client(void)
+{
+    static BOOL preVersion3Client = !WebKitLinkedOnOrAfter(WEBKIT_FIRST_VERSION_WITH_3_0_CONTEXT_MENU_TAGS);
+    return preVersion3Client;
+}
+
 static void fixMenusToSendToOldClients(NSMutableArray *defaultMenuItems)
 {
-    BOOL preVersion3Client = !WebKitLinkedOnOrAfter(WEBKIT_FIRST_VERSION_WITH_3_0_CONTEXT_MENU_TAGS);
-    BOOL isMail = isAppleMail();
-
-    // FIXME 4950029: The isAppleMail() check is a temporary solution to make Leopard Mail's context menus 
-    // continue working until they've updated their code to expect the new tags. We'll have to coordinate 
-    // a WebKit submission with that Mail submission to start sending the new tags again. At that point, 
-    // this code should be changed to only check preVersion3Client.
-    if (!preVersion3Client && !isMail)
+    BOOL preVersion3Client = isPreVersion3Client();
+    if (!preVersion3Client)
         return;
         
+    BOOL isMail = isAppleMail();
     unsigned defaultItemsCount = [defaultMenuItems count];
     for (unsigned i = 0; i < defaultItemsCount; ++i) {
         NSMenuItem *item = [defaultMenuItems objectAtIndex:i];
@@ -126,13 +127,8 @@ static void fixMenusToSendToOldClients(NSMutableArray *defaultMenuItems)
 
 static void fixMenusReceivedFromOldClients(NSMutableArray *newMenuItems)
 {   
-    BOOL preVersion3Client = !WebKitLinkedOnOrAfter(WEBKIT_FIRST_VERSION_WITH_3_0_CONTEXT_MENU_TAGS);
-    
-    // FIXME 4950029: The isAppleMail() check is a temporary solution to make Leopard Mail's context menus 
-    // continue working until they've updated their code to expect the new tags. We'll have to coordinate 
-    // a WebKit submission with that Mail submission to start sending the new tags again. At that point, 
-    // this code should be changed to only check preVersion3Client.
-    if (!preVersion3Client && !isAppleMail())
+    BOOL preVersion3Client = isPreVersion3Client();
+    if (!preVersion3Client)
         return;
     
     // Restore the modern tags to the menu items whose tags we altered in fixMenusToSendToOldClients. 
@@ -226,8 +222,18 @@ NSMutableArray* WebContextMenuClient::getCustomMenuFromDefaultItems(ContextMenu*
     id delegate = [m_webView UIDelegate];
     if (![delegate respondsToSelector:@selector(webView:contextMenuItemsForElement:defaultMenuItems:)])
         return defaultMenu->platformDescription();
-    
+
     NSDictionary *element = [[[WebElementDictionary alloc] initWithHitTestResult:defaultMenu->hitTestResult()] autorelease];
+
+    BOOL preVersion3Client = isPreVersion3Client();
+    if (preVersion3Client) {
+        DOMNode *node = [element objectForKey:WebElementDOMNodeKey];
+        if ([node isKindOfClass:[DOMHTMLInputElement class]] && [(DOMHTMLInputElement *)node _isTextField])
+            return defaultMenu->platformDescription();
+        if ([node isKindOfClass:[DOMHTMLTextAreaElement class]])
+            return defaultMenu->platformDescription();
+    }
+
     NSMutableArray *defaultMenuItems = defaultMenu->platformDescription();
     
     unsigned defaultItemsCount = [defaultMenuItems count];

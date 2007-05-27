@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2007 Apple Inc.
+ * Copyright (C) 2006, 2007 Apple Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -92,8 +92,9 @@ void RenderFileUploadControl::valueChanged()
     // onChange may destroy this renderer
     RefPtr<FileChooser> fileChooser = m_fileChooser;
 
-    static_cast<HTMLInputElement*>(node())->setValueFromRenderer(m_fileChooser->filename());
-    static_cast<HTMLInputElement*>(node())->onChange();
+    HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(node());
+    inputElement->setValueFromRenderer(fileChooser->filename());
+    inputElement->onChange();
  
     // only repaint if it doesn't seem we have been destroyed
     if (!fileChooser->disconnected())
@@ -107,8 +108,10 @@ void RenderFileUploadControl::click()
 
 void RenderFileUploadControl::updateFromElement()
 {
+    HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(node());
+
     if (!m_button) {
-        m_button = new HTMLFileUploadInnerButtonElement(document(), node());
+        m_button = new HTMLFileUploadInnerButtonElement(document(), inputElement);
         m_button->setInputType("button");
         m_button->setValue(fileButtonChooseFileLabel());
         RenderStyle* buttonStyle = createButtonStyle(style());
@@ -119,9 +122,17 @@ void RenderFileUploadControl::updateFromElement()
         m_button->setAttached();
         m_button->setInDocument(true);
 
-        addChild(m_button->renderer());
+        addChild(renderer);
     }
+
     m_button->setDisabled(!theme()->isEnabled(this));
+
+    // This only supports clearing out the filename, but that's OK because for
+    // security reasons that's the only change the DOM is allowed to make.
+    if (inputElement->value().isEmpty() && !m_fileChooser->filename().isEmpty()) {
+        m_fileChooser->clear();
+        repaint();
+    }
 }
 
 int RenderFileUploadControl::maxFilenameWidth() const
@@ -218,39 +229,46 @@ void RenderFileUploadControl::paintObject(PaintInfo& paintInfo, int tx, int ty)
         paintInfo.context->restore();
 }
 
-void RenderFileUploadControl::calcMinMaxWidth()
+void RenderFileUploadControl::calcPrefWidths()
 {
-    m_minWidth = 0;
-    m_maxWidth = 0;
+    ASSERT(prefWidthsDirty());
+
+    m_minPrefWidth = 0;
+    m_maxPrefWidth = 0;
 
     if (style()->width().isFixed() && style()->width().value() > 0)
-        m_minWidth = m_maxWidth = calcContentBoxWidth(style()->width().value());
+        m_minPrefWidth = m_maxPrefWidth = calcContentBoxWidth(style()->width().value());
     else {
         // Figure out how big the filename space needs to be for a given number of characters
         // (using "0" as the nominal character).
         const UChar ch = '0';
         float charWidth = style()->font().floatWidth(TextRun(&ch, 1), TextStyle(0, 0, 0, false, false, false));
-        m_maxWidth = (int)ceilf(charWidth * defaultWidthNumChars);
+        m_maxPrefWidth = (int)ceilf(charWidth * defaultWidthNumChars);
     }
 
     if (style()->minWidth().isFixed() && style()->minWidth().value() > 0) {
-        m_maxWidth = max(m_maxWidth, calcContentBoxWidth(style()->minWidth().value()));
-        m_minWidth = max(m_minWidth, calcContentBoxWidth(style()->minWidth().value()));
+        m_maxPrefWidth = max(m_maxPrefWidth, calcContentBoxWidth(style()->minWidth().value()));
+        m_minPrefWidth = max(m_minPrefWidth, calcContentBoxWidth(style()->minWidth().value()));
     } else if (style()->width().isPercent() || (style()->width().isAuto() && style()->height().isPercent()))
-        m_minWidth = 0;
+        m_minPrefWidth = 0;
     else
-        m_minWidth = m_maxWidth;
+        m_minPrefWidth = m_maxPrefWidth;
 
     if (style()->maxWidth().isFixed() && style()->maxWidth().value() != undefinedLength) {
-        m_maxWidth = min(m_maxWidth, calcContentBoxWidth(style()->maxWidth().value()));
-        m_minWidth = min(m_minWidth, calcContentBoxWidth(style()->maxWidth().value()));
+        m_maxPrefWidth = min(m_maxPrefWidth, calcContentBoxWidth(style()->maxWidth().value()));
+        m_minPrefWidth = min(m_minPrefWidth, calcContentBoxWidth(style()->maxWidth().value()));
     }
 
     int toAdd = paddingLeft() + paddingRight() + borderLeft() + borderRight();
-    m_minWidth += toAdd;
-    m_maxWidth += toAdd;
+    m_minPrefWidth += toAdd;
+    m_maxPrefWidth += toAdd;
 
-    setMinMaxKnown();
+    setPrefWidthsDirty(false);
+}
+
+void RenderFileUploadControl::receiveDroppedFile(const String& filename)
+{
+    m_fileChooser->chooseFile(filename);
 }
 
 HTMLFileUploadInnerButtonElement::HTMLFileUploadInnerButtonElement(Document* doc, Node* shadowParent)

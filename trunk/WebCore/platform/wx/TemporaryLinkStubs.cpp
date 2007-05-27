@@ -97,15 +97,12 @@ Vector<char> loadResourceIntoArray(const char* resourceName)
 // FrameView functions
 void FrameView::updateBorder() { notImplemented(); }
 
-void Widget::enableFlushDrawing() { notImplemented(); }
-Widget::FocusPolicy Widget::focusPolicy() const { notImplemented(); return NoFocus; }
-void Widget::disableFlushDrawing() { notImplemented(); }
-GraphicsContext* Widget::lockDrawingFocus() { notImplemented(); return 0; }
-void Widget::unlockDrawingFocus(GraphicsContext*) { notImplemented(); }
 void Widget::removeFromParent() { notImplemented(); }
 
-int WebCore::findNextSentenceFromIndex(UChar const*,int,int,bool) { notImplemented(); return 0; }
-void WebCore::findSentenceBoundary(UChar const*,int,int,int*,int*) { notImplemented(); }
+
+int findNextSentenceFromIndex(UChar const*,int,int,bool) { notImplemented(); return 0; }
+void findSentenceBoundary(UChar const*,int,int,int*,int*) { notImplemented(); }
+
 int WebCore::findNextWordFromIndex(UChar const*,int,int,bool) { notImplemented(); return 0; }
 
 void Frame::print() { notImplemented(); }
@@ -116,8 +113,6 @@ void Frame::issueTransposeCommand() { notImplemented(); }
 void Frame::dashboardRegionsChanged() { notImplemented(); }
 DragImageRef Frame::dragImageForSelection() { notImplemented(); return 0; }
 
-void GraphicsContext::addRoundedRectClip(const IntRect& rect, const IntSize& topLeft, const IntSize& topRight,
-    const IntSize& bottomLeft, const IntSize& bottomRight) { notImplemented(); }
 void GraphicsContext::addInnerRoundedRectClip(const IntRect& rect, int thickness) { notImplemented(); }
 
 // cookies (we'll need a place to store these
@@ -258,34 +253,16 @@ String WebCore::searchMenuNoRecentSearchesText() { return String("No recent sear
 String WebCore::searchMenuRecentSearchesText() { return String("Recent searches"); }
 String WebCore::searchMenuClearRecentSearchesText() { return String("Clear recent searches"); }
 
-void Editor::ignoreSpelling() { notImplemented(); }
-void Editor::learnSpelling() { notImplemented(); }
-bool Editor::isSelectionUngrammatical() { notImplemented(); return false; }
-bool Editor::isSelectionMisspelled() { notImplemented(); return false; }
-Vector<String> Editor::guessesForMisspelledSelection() { notImplemented(); return Vector<String>(); }
-Vector<String> Editor::guessesForUngrammaticalSelection() { notImplemented(); return Vector<String>(); }
-void Editor::markMisspellingsAfterTypingToPosition(const VisiblePosition&) { notImplemented(); }
 void Editor::showColorPanel() { notImplemented(); }
 void Editor::showFontPanel() { notImplemented(); }
 void Editor::showStylesPanel() { notImplemented(); }
-void Editor::showSpellingGuessPanel() { notImplemented(); }
-void Editor::advanceToNextMisspelling(bool) { notImplemented(); }
 
 String FrameLoader::overrideMediaType() const { notImplemented(); return String(); }
 
 bool EventHandler::tabsToAllControls(KeyboardEvent* event) const { notImplemented(); return false; }
 bool EventHandler::passSubframeEventToSubframe(MouseEventWithHitTestResults&, Frame* subframe) { notImplemented(); return false; }
 bool EventHandler::passMouseDownEventToWidget(Widget*) { notImplemented(); return false; }
-bool EventHandler::passWheelEventToWidget(Widget*) { notImplemented(); return false; }
-
-// FIXME: All this IconDatabase stuff could go away if much of
-// WebCore/loader/icon was linked in.  Unfortunately that requires SQLite,
-// which isn't currently part of the build.
-//Image* IconDatabase::iconForPageURL(const String&, const IntSize&, bool cache) { notImplemented(); return 0; }
-//Image* IconDatabase::defaultIcon(const IntSize&) { notImplemented(); return 0; }
-//void IconDatabase::retainIconForPageURL(const String&) { notImplemented(); }
-//void IconDatabase::releaseIconForPageURL(const String&) { notImplemented(); }
-//void IconDatabase::setIconDataForIconURL(PassRefPtr<SharedBuffer> data, const String&) { notImplemented(); }
+bool EventHandler::passWheelEventToWidget(PlatformWheelEvent&, Widget*) { notImplemented(); return false; }
 
 void SearchPopupMenu::saveRecentSearches(const AtomicString& name, const Vector<String>& searchItems) { notImplemented(); }
 void SearchPopupMenu::loadRecentSearches(const AtomicString& name, Vector<String>& searchItems) { notImplemented(); }
@@ -296,18 +273,11 @@ bool ResourceHandle::willLoadFromCache(ResourceRequest&) { notImplemented(); ret
 bool ResourceHandle::loadsBlocked() { notImplemented(); return false; }
 void ResourceHandle::loadResourceSynchronously(const ResourceRequest& request, ResourceError& e, ResourceResponse& r, Vector<char>& data) { notImplemented(); }
 
-
-// bool SharedBuffer::hasPlatformData() const { notImplemented(); return false; }
-// const char* SharedBuffer::platformData() const { notImplemented(); return NULL; }
-// unsigned SharedBuffer::platformDataSize() const { notImplemented(); return 0; }
-// void SharedBuffer::maybeTransferPlatformData() { notImplemented(); }
-// void SharedBuffer::clearPlatformData() { notImplemented(); }
-
-//const KURL DocumentLoader::unreachableURL() const { notImplemented(); return KURL(); }
 bool DocumentLoader::getResponseModifiedHeader(WebCore::String&) const { notImplemented(); return false; }
 
 namespace WebCore {
 float userIdleTime() { notImplemented(); return 0; }
 Vector<String> supportedKeySizes() { notImplemented(); return Vector<String>(); }
 String signedPublicKeyAndChallengeString(unsigned keySizeIndex, const String &challengeString, const KURL &url) { return String(); }
+const char* currentTextBreakLocaleID() { notImplemented(); return "en_us"; }
 }

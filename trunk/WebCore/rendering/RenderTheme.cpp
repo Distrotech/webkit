@@ -23,6 +23,7 @@
 #include "RenderTheme.h"
 
 #include "Document.h"
+#include "Frame.h"
 #include "GraphicsContext.h"
 #include "HTMLInputElement.h"
 #include "HTMLNames.h"
@@ -217,18 +218,16 @@ bool RenderTheme::paintDecorations(RenderObject* o, const RenderObject::PaintInf
 
 Color RenderTheme::activeSelectionBackgroundColor() const
 {
-    static Color activeSelectionColor;
-    if (!activeSelectionColor.isValid())
-        activeSelectionColor = platformActiveSelectionBackgroundColor().blendWithWhite();
-    return activeSelectionColor;
+    if (!m_activeSelectionColor.isValid())
+        m_activeSelectionColor = platformActiveSelectionBackgroundColor().blendWithWhite();
+    return m_activeSelectionColor;
 }
 
 Color RenderTheme::inactiveSelectionBackgroundColor() const
 {
-    static Color inactiveSelectionColor;
-    if (!inactiveSelectionColor.isValid())
-        inactiveSelectionColor = platformInactiveSelectionBackgroundColor().blendWithWhite();
-    return inactiveSelectionColor;
+    if (!m_inactiveSelectionColor.isValid())
+        m_inactiveSelectionColor = platformInactiveSelectionBackgroundColor().blendWithWhite();
+    return m_inactiveSelectionColor;
 }
 
 Color RenderTheme::platformActiveSelectionBackgroundColor() const
@@ -354,9 +353,12 @@ bool RenderTheme::isEnabled(const RenderObject* o) const
 
 bool RenderTheme::isFocused(const RenderObject* o) const
 {
-    if (!o->element())
+    Node* node = o->element();
+    if (!node)
         return false;
-    return o->element() == o->element()->document()->focusedNode();
+    Document* document = node->document();
+    Frame* frame = document->frame();
+    return node == document->focusedNode() && frame && frame->isActive();
 }
 
 bool RenderTheme::isPressed(const RenderObject* o) const
@@ -393,6 +395,8 @@ void RenderTheme::adjustCheckboxStyle(CSSStyleSelector* selector, RenderStyle* s
     // border - honored by WinIE, but looks terrible (just paints in the control box and turns off the Windows XP theme)
     // for now, we will not honor it.
     style->resetBorder();
+
+    style->setBoxShadow(0);
 }
 
 void RenderTheme::adjustRadioStyle(CSSStyleSelector* selector, RenderStyle* style, Element* e) const
@@ -408,6 +412,8 @@ void RenderTheme::adjustRadioStyle(CSSStyleSelector* selector, RenderStyle* styl
     // border - honored by WinIE, but looks terrible (just paints in the control box and turns off the Windows XP theme)
     // for now, we will not honor it.
     style->resetBorder();
+
+    style->setBoxShadow(0);
 }
 
 void RenderTheme::adjustButtonStyle(CSSStyleSelector* selector, RenderStyle* style, Element* e) const
@@ -463,6 +469,12 @@ void RenderTheme::adjustSearchFieldResultsDecorationStyle(CSSStyleSelector* sele
 
 void RenderTheme::adjustSearchFieldResultsButtonStyle(CSSStyleSelector* selector, RenderStyle* style, Element* e) const
 {
+}
+
+void RenderTheme::platformColorsDidChange()
+{
+    m_activeSelectionColor = Color();
+    m_inactiveSelectionColor = Color();
 }
 
 } // namespace WebCore

@@ -45,6 +45,7 @@
 #define WebKitUserStyleSheetLocationPreferenceKey @"WebKitUserStyleSheetLocationPreferenceKey"
 #define WebKitShouldPrintBackgroundsPreferenceKey @"WebKitShouldPrintBackgroundsPreferenceKey"
 #define WebKitTextAreasAreResizablePreferenceKey @"WebKitTextAreasAreResizable"
+#define WebKitShrinksStandaloneImagesToFit @"WebKitShrinksStandaloneImagesToFitKey"
 #define WebKitJavaEnabledPreferenceKey @"WebKitJavaEnabled"
 #define WebKitJavaScriptEnabledPreferenceKey @"WebKitJavaScriptEnabled"
 #define WebKitJavaScriptCanOpenWindowsAutomaticallyPreferenceKey @"WebKitJavaScriptCanOpenWindowsAutomatically"
@@ -60,6 +61,7 @@
 #define WebContinuousSpellCheckingEnabled @"WebContinuousSpellCheckingEnabled"
 #define WebGrammarCheckingEnabled @"WebGrammarCheckingEnabled"
 #define WebKitDOMPasteAllowedPreferenceKey @"WebKitDOMPasteAllowedPreferenceKey"
+#define WebKitUsesPageCachePreferenceKey @"WebKitUsesPageCachePreferenceKey"
 
 // These are private both because callers should be using the cover methods and because the
 // cover methods themselves are private.

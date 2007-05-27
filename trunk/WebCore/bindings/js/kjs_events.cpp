@@ -78,6 +78,10 @@ void JSAbstractEventListener::handleEvent(Event* ele, bool isWindowEvent)
         return;
 
     Window* window = windowObj();
+    // Null check as clearWindowObj() can clear this and we still get called back by
+    // xmlhttprequest objects. See http://bugs.webkit.org/show_bug.cgi?id=13275
+    if (!window)
+        return;
     Frame *frame = window->frame();
     if (!frame)
         return;
@@ -135,7 +139,7 @@ void JSAbstractEventListener::handleEvent(Event* ele, bool isWindowEvent)
             if (Interpreter::shouldPrintExceptions())
                 printf("(event handler):%s\n", message.utf8().data());
             if (Page* page = frame->page())
-                page->chrome()->addMessageToConsole(message, lineNumber, sourceURL);
+                page->chrome()->addMessageToConsole(JSMessageSource, ErrorMessageLevel, message, lineNumber, sourceURL);
             exec->clearException();
         } else {
             if (!retval->isUndefinedOrNull() && event->storesResultAsString())
@@ -165,8 +169,8 @@ JSUnprotectedEventListener::JSUnprotectedEventListener(JSObject* _listener, Wind
   , win(_win)
 {
     if (_listener) {
-        Window::UnprotectedListenersMap& listeners = _html
-            ? _win->jsUnprotectedHTMLEventListeners : _win->jsUnprotectedEventListeners;
+        Window::UnprotectedListenersMap& listeners = _html 
+            ? _win->jsUnprotectedHTMLEventListeners() : _win->jsUnprotectedEventListeners();
         listeners.set(_listener, this);
     }
 }
@@ -175,7 +179,7 @@ JSUnprotectedEventListener::~JSUnprotectedEventListener()
 {
     if (listener && win) {
         Window::UnprotectedListenersMap& listeners = isHTMLEventListener()
-            ? win->jsUnprotectedHTMLEventListeners : win->jsUnprotectedEventListeners;
+            ? win->jsUnprotectedHTMLEventListeners() : win->jsUnprotectedEventListeners();
         listeners.remove(listener);
     }
 }
@@ -228,7 +232,7 @@ JSEventListener::JSEventListener(JSObject* _listener, Window* _win, bool _html)
 {
     if (_listener) {
         Window::ListenersMap& listeners = _html
-            ? _win->jsHTMLEventListeners : _win->jsEventListeners;
+            ? _win->jsHTMLEventListeners() : _win->jsEventListeners();
         listeners.set(_listener, this);
     }
 #ifndef NDEBUG
@@ -240,7 +244,7 @@ JSEventListener::~JSEventListener()
 {
     if (listener && win) {
         Window::ListenersMap& listeners = isHTMLEventListener()
-            ? win->jsHTMLEventListeners : win->jsEventListeners;
+            ? win->jsHTMLEventListeners() : win->jsEventListeners();
         listeners.remove(listener);
     }
 #ifndef NDEBUG
@@ -342,7 +346,7 @@ void JSLazyEventListener::parseCode() const
 
     if (listener) {
         Window::ListenersMap& listeners = isHTMLEventListener()
-            ? windowObj()->jsHTMLEventListeners : windowObj()->jsEventListeners;
+            ? windowObj()->jsHTMLEventListeners() : windowObj()->jsEventListeners();
         listeners.set(listener, const_cast<JSLazyEventListener*>(this));
     }
 }

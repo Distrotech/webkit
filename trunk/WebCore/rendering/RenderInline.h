@@ -58,8 +58,6 @@ public:
 
     virtual bool nodeAtPoint(const HitTestRequest&, HitTestResult&, int x, int y, int tx, int ty, HitTestAction);
 
-    virtual void calcMinMaxWidth();
-
     // overrides RenderObject
     virtual bool requiresLayer();
 

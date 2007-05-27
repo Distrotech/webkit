@@ -39,7 +39,6 @@ border-top-style
 border-top-width
 border-width
 bottom
-box-sizing
 caption-side
 clear
 clip
@@ -136,6 +135,7 @@ visibility
 white-space
 widows
 width
+word-break
 word-spacing
 word-wrap
 z-index
@@ -164,6 +164,7 @@ z-index
 -webkit-box-orient
 -webkit-box-pack
 -webkit-box-shadow
+-webkit-box-sizing
 -webkit-column-break-after
 -webkit-column-break-before
 -webkit-column-break-inside

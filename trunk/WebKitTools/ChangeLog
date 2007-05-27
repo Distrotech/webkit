@@ -1,3 +1,605 @@
+2007-05-25  Anders Carlsson  <andersca@apple.com>
+
+        Fix build.
+
+        * DumpRenderTree/DumpRenderTree.m:
+        * DumpRenderTree/FrameLoadDelegate.m:
+
+2007-05-25  Simon Hausmann  <hausmann@kde.org>
+
+        Reviewed by Zack.
+
+        For the keyDown binding use QStringList instead of QList<QString>. The former is a default
+        registered metatype. Also print out critical messages in dumprendertree's qt message handler.
+
+        * DumpRenderTree/DumpRenderTree.qtproj/jsobjects.cpp:
+        * DumpRenderTree/DumpRenderTree.qtproj/jsobjects.h:
+        * DumpRenderTree/DumpRenderTree.qtproj/main.cpp:
+
+2007-05-20  David Kilzer  <ddkilzer@webkit.org>
+
+        Reviewed by Adam Roben.
+
+        - fix http://bugs.webkit.org/show_bug.cgi?id=13565
+          Change svn-create-patch to put LayoutTests in the end
+
+        In addition to reordering test files under the LayoutTests directory so that they
+        appear after source code files, this patch fixes an issue with prepare-ChangeLog
+        if the first argument passed to it is a file name instead of a directory name.
+
+        * Scripts/prepare-ChangeLog:
+        (isGIT()): If first value in @dirs array is a file, use dirname() to get the directory.
+        (isSVN()): Ditto.
+        * Scripts/svn-create-patch:
+        (generateFileList($\%\%\%)): Differentiate test files in the LayoutTests directory from
+        source code files.
+
+2007-05-18  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Oliver.
+
+        Force LC_ALL to C when parsing locale-specific strings in 'svn' output.
+
+        * Scripts/svn-create-patch:
+        * Scripts/webkitdirs.pm:
+
+2007-05-18  Holger Freyther  <zecke@selfish.org>
+
+        Reviewed by Maciej.
+
+        * GdkLauncher/main.cpp: Call setGtkWidget
+        (main):
+
+2007-05-18  Holger Hans Peter Freyther  <zecke@selfish.org>
+
+        Reviewed by Mark Rowe.
+
+        * GdkLauncher/main.cpp:
+        (main): Call Frame::init to catch up with Maciej's changes.
+        * Scripts/run-javascriptcore-tests: Remove --gdk from the command line
+        passed to the helper scripts.
+
+2007-05-16  Brady Eidson  <beidson@apple.com>
+
+        Build fix for some dev configurations
+
+        * DumpRenderTree/DumpRenderTree.m:
+
+2007-05-16  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Justin.
+        
+        - created a new mechanism to log FrameLoadDelegate callbacks in directories named "loading"
+        
+        The reason for doing things in this slightly odd way is to make sure we don't miss the load delegates
+        that happen before the load commits.
+        
+        Basically I moved WaitUntilDoneDelegate into a separate file (FrameLoadDelegate.m) and added
+        optional logging for every FrameLoadDelegate callback, including SPI callbacks.
+
+        * DumpRenderTree/DumpRenderTree.h:
+        * DumpRenderTree/DumpRenderTree.m:
+        (createWebView):
+        (dumpRenderTree):
+        (dump):
+        (+[LayoutTestController isSelectorExcludedFromWebScript:]):
+        (-[LayoutTestController clearBackForwardList]):
+        (-[LayoutTestController setUseDashboardCompatibilityMode:]):
+        (-[LayoutTestController dumpFrameLoadCallbacks]):
+        (-[LayoutTestController setWindowIsKey:]):
+        (-[LayoutTestController setMainFrameIsFirstResponder:]):
+        (-[LayoutTestController _doLoad:target:]):
+        (-[LayoutTestController _doBackOrForwardNavigation:]):
+        (-[LayoutTestController queueReload]):
+        (-[LayoutTestController queueScript:]):
+        (-[LayoutTestController queueLoad:target:]):
+        (-[LayoutTestController setAcceptsEditing:]):
+        (-[LayoutTestController setTabKeyCyclesThroughElements:]):
+        (shouldLogFrameLoadDelegates):
+        (runTest):
+        (displayWebView):
+        (+[DumpRenderTreeEvent mouseLocation]):
+        * DumpRenderTree/DumpRenderTree.xcodeproj/project.pbxproj:
+        * DumpRenderTree/DumpRenderTreeDraggingInfo.m:
+        (-[DumpRenderTreeDraggingInfo draggingDestinationWindow]):
+        * DumpRenderTree/EventSendingController.m:
+        (-[EventSendingController mouseDown]):
+        (-[EventSendingController mouseUp]):
+        (-[EventSendingController mouseMoveToX:Y:]):
+        (-[EventSendingController contextClick]):
+        * DumpRenderTree/FrameLoadDelegate.h: Added.
+        * DumpRenderTree/FrameLoadDelegate.m: Added.
+        (-[WebFrame _drt_descriptionSuitableForTestResult]):
+        (-[FrameLoadDelegate processWork:]):
+        (-[FrameLoadDelegate webView:locationChangeDone:forDataSource:]):
+        (-[FrameLoadDelegate webView:didStartProvisionalLoadForFrame:]):
+        (-[FrameLoadDelegate webView:didCommitLoadForFrame:]):
+        (-[FrameLoadDelegate webView:didFailProvisionalLoadWithError:forFrame:]):
+        (-[FrameLoadDelegate webView:didFinishLoadForFrame:]):
+        (-[FrameLoadDelegate webView:didFailLoadWithError:forFrame:]):
+        (-[FrameLoadDelegate webView:windowScriptObjectAvailable:]):
+        (-[FrameLoadDelegate webView:didClearWindowObject:forFrame:]):
+        (-[FrameLoadDelegate webView:didReceiveTitle:forFrame:]):
+        (-[FrameLoadDelegate webView:didReceiveServerRedirectForProvisionalLoadForFrame:]):
+        (-[FrameLoadDelegate webView:didReceiveIcon:forFrame:]):
+        (-[FrameLoadDelegate webView:didChangeLocationWithinPageForFrame:]):
+        (-[FrameLoadDelegate webView:willPerformClientRedirectToURL:delay:fireDate:forFrame:]):
+        (-[FrameLoadDelegate webView:didCancelClientRedirectForFrame:]):
+        (-[FrameLoadDelegate webView:willCloseFrame:]):
+        (-[FrameLoadDelegate webView:didFirstLayoutInFrame:]):
+        (-[FrameLoadDelegate webView:didFinishDocumentLoadForFrame:]):
+        (-[FrameLoadDelegate webView:didHandleOnloadEventsForFrame:]):
+        * DumpRenderTree/ResourceLoadDelegate.m:
+        (-[NSURL _drt_descriptionSuitableForTestResult]):
+        * DumpRenderTree/UIDelegate.m:
+        (-[UIDelegate webViewFocus:]):
+
+2007-05-16  Kevin McCullough  <kmccullough@apple.com>
+
+        Reviewed by Darin and Geoff.
+
+        - rdar://problem/4981886
+        - Now windows opened by the DOM can be closed by JS.
+
+        * DumpRenderTree/DumpRenderTree.m:
+        (+[LayoutTestController isSelectorExcludedFromWebScript:]):
+        (-[LayoutTestController windowCount]):
+
+2007-05-15  Adam Roben  <aroben@apple.com>
+
+        Reviewed by David Kilzer.
+
+        http://bugs.webkit.org/show_bug.cgi?id=13732
+        prepare-ChangeLog should work with git
+
+        * Scripts/prepare-ChangeLog: Added support for Git.
+
+2007-05-15  Lars Knoll <lars@trolltech.com>
+
+        Reviewed by Zack
+
+        Add the EventSender object to DRT. Currently it implements
+        mouseDown, mouseUp and mouseMoveTo.
+
+        Make run-webkit-tests --strict work somewhat better for form elements.
+
+        * DumpRenderTree/DumpRenderTree.qtproj/DumpRenderTree.cpp:
+        (WebCore::DumpRenderTree::DumpRenderTree):
+        (WebCore::DumpRenderTree::initJSObjects):
+        * DumpRenderTree/DumpRenderTree.qtproj/DumpRenderTree.h:
+        * DumpRenderTree/DumpRenderTree.qtproj/jsobjects.cpp:
+        (HackWebFrame::mousePressEvent):
+        (HackWebFrame::mouseReleaseEvent):
+        (EventSender::EventSender):
+        (EventSender::mouseDown):
+        (EventSender::mouseUp):
+        (EventSender::mouseMoveTo):
+        (EventSender::leapForward):
+        (EventSender::keyDown):
+        (EventSender::frameUnderMouse):
+        * DumpRenderTree/DumpRenderTree.qtproj/jsobjects.h:
+        * Scripts/run-webkit-tests:
+
+2007-05-12  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Hyatt.
+        
+        Add new api to DRT to allow us to test a file being dragged 
+        onto <input type="file">
+
+        * DumpRenderTree/DumpRenderTree.h:
+        * DumpRenderTree/DumpRenderTree.m:
+        (+[LayoutTestController isSelectorExcludedFromWebScript:]):
+        (-[LayoutTestController addFileToPasteboardOnDrag]):
+        (runTest):
+        * DumpRenderTree/UIDelegate.m:
+        (-[UIDelegate webView:dragImage:at:offset:event:pasteboard:source:slideBack:forView:]):
+
+2007-05-11  Holger Hans Peter Freyther  <zecke@selfish.org>
+
+        Reviewed by Maciej.
+
+        Bug 13656: [gdk] Resize the drawing area of the GdkLauncher
+        http://bugs.webkit.org/show_bug.cgi?id=13656
+
+        * GdkLauncher/main.cpp: Handle resizing the drawing area
+        (frameResizeCallback):
+        (main):
+
+2007-05-11  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Darin Adler.
+
+        Updated test now that +[WebScriptObject scriptObjectForJSObject:frame:] 
+        is gone.
+
+        * DumpRenderTree/DumpRenderTree.m:
+        (-[WaitUntilDoneDelegate webView:didClearWindowObject:forFrame:]):
+        (+[LayoutTestController isSelectorExcludedFromWebScript:]):
+        (+[LayoutTestController webScriptNameForSelector:]):
+        (-[LayoutTestController testWrapperRoundTripping:]):
+
+2007-05-08  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
+        - don't clear events whenever an EventSendingController goes away, only do it at predictable times, 
+        since destroying a subframe can make one go away
+        
+        (Discovered while fixing:
+        
+        <rdar://problem/5063277> blank screen after login to Citibank Online (accessing document before frame starts loading cancels load)
+        <rdar://problem/5159541> REGRESSION (r20972): Wall Street Journal pages replaced by advertisements (13465)
+
+        * DumpRenderTree/DumpRenderTree.m:
+        (runTest): explicitly clear saved events after every page load
+        * DumpRenderTree/EventSendingController.h:
+        * DumpRenderTree/EventSendingController.m:
+        (-[EventSendingController dealloc]): don't clear saved events here...
+        (+[EventSendingController clearSavedEvents]): do it here
+        * Scripts/check-for-global-initializers:
+
+2007-05-10  Mark Rowe  <mrowe@apple.com>
+
+        Build fix for DumpRenderTree. Enable Objective-C exceptions in Release configuration.
+
+        * DumpRenderTree/DumpRenderTree.xcodeproj/project.pbxproj:
+
+2007-05-09  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        Added support for testing ObjC/JS type bridging.
+        
+        Added ASSERT that -JSObject returns nil when the underlying JSObject
+        is no longer GC protected.
+
+        * DumpRenderTree/DumpRenderTree.m:
+        (returnThisCallback):
+        (returnThisClass):
+        (-[WaitUntilDoneDelegate webView:didClearWindowObject:forFrame:]):
+        (+[LayoutTestController isSelectorExcludedFromWebScript:]):
+        (+[LayoutTestController webScriptNameForSelector:]):
+        (-[LayoutTestController accessStoredWebScriptObject]):
+        (-[LayoutTestController testWrapperRoundTripping]):
+        (-[LayoutTestController objCClassNameOf:]):
+        (-[LayoutTestController objCObjectOfClass:]):
+        * DumpRenderTree/DumpRenderTree.xcodeproj/project.pbxproj:
+
+2007-05-10  Lars Knoll <lars@trolltech.com>
+
+        Reviewed by Simon
+
+        Move setting of the DPI value a few lines up. Should fix
+        the last two remaining failures in the layout tests.
+
+        * DumpRenderTree/DumpRenderTree.qtproj/main.cpp:
+        (main):
+
+2007-05-09  Holger Freyther <zecke@selfish.org>
+
+        Reviewed by Mark Rowe.
+
+        * GdkLauncher/main.cpp: Always include config.h.
+
+2007-05-08  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Darin Adler.
+        
+        Added support for testing ObjC object identity.
+        
+        Added ASSERT to verify that you can round-trip the object passed to you
+        in -didClearWindowObject:forFrame:.
+
+        * DumpRenderTree/DumpRenderTree.m:
+        (-[WaitUntilDoneDelegate webView:didClearWindowObject:forFrame:]):
+        (+[LayoutTestController isSelectorExcludedFromWebScript:]):
+        (+[LayoutTestController webScriptNameForSelector:]):
+        (-[LayoutTestController accessStoredWebScriptObject]):
+        (-[LayoutTestController objCIdentityIsEqual::]):
+
+2007-05-07  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        Added tests for new APIs: -[WebFrame windowObject], -[WebFrame globalContext], 
+        and - (void)webView:(WebView *)webView didClearWindowObject:(WebScriptObject *)windowObject 
+        forFrame:(WebFrame *)frame, in the form of ASSERTs.
+        
+        * DumpRenderTree/DumpRenderTree.m:
+        (runJavaScriptThread): Fixed quote mismatch that prepare-changelog likes
+        to complain about.
+
+        (-[WaitUntilDoneDelegate webView:windowScriptObjectAvailable:]):
+        (-[WaitUntilDoneDelegate webView:didClearWindowObject:forFrame:]):
+        * DumpRenderTree/DumpRenderTree.xcodeproj/project.pbxproj:
+
+2007-05-08  Lars Knoll <lars@trolltech.com>
+
+        Reviewed by Zack.
+
+        Dump JavaScript console messages as well. Also requires a slight
+        change in run-webkit-tests, so we still correctly differentiate
+        between text only and rendertree tests.
+
+        * DumpRenderTree/DumpRenderTree.qtproj/DumpRenderTree.cpp:
+        (WebCore::WebPage::WebPage):
+        (WebCore::WebPage::javaScriptConsoleMessage):
+        (WebCore::DumpRenderTree::DumpRenderTree):
+        (WebCore::DumpRenderTree::dump):
+        * Scripts/run-webkit-tests:
+
+2007-05-08  Lars Knoll <lars@trolltech.com>
+
+        Reviewed by Zack
+
+        Specify what the serif, sans-serif and monospace aliases
+        should map to and explicitly select the Gui style of
+        DRT to be plastique.
+
+        Fixes most of the test failures still seen on the build bot.
+
+        * DumpRenderTree/DumpRenderTree.qtproj/fonts.conf:
+        * DumpRenderTree/DumpRenderTree.qtproj/main.cpp:
+        (main):
+
+2007-05-07  Lars Knoll <lars@trolltech.com>
+
+        Reviewed by Zack
+
+        Fix the default font to 9pt Sans Serif.
+
+        * DumpRenderTree/DumpRenderTree.qtproj/main.cpp:
+        (main):
+
+2007-05-04  Lars Knoll <lars@trolltech.com>
+
+        Reviewed by Zack
+
+        Revert on line of the last commit. We still want to keep the RPATH
+        support in the pro file.
+
+        * DumpRenderTree/DumpRenderTree.qtproj/DumpRenderTree.pro:
+
+2007-05-04  Lars Knoll <lars@trolltech.com>
+
+        Reviewed by Zack
+
+        Remove the old bitmap fonts I tried using to get reliable results from
+        DumpRenderTree on X11. Instead we now use the URW Type1 fonts from 
+        ghostscript. I've added a mirror to simply check them out at 
+        svn://labs.trolltech.com/svn/webkit/testfonts.
+
+        Fixed DumpRenderTree to make sure these fonts are the only ones we use
+        on X11 and added a fonts.conf file to get a well defined fontconfig
+        configuration.
+
+        Made sure run-webkit-tests forwards the WEBKIT_TESTFONTS environment variable
+        I use to find the fonts to DumpRenderTree.
+
+        * DumpRenderTree/DumpRenderTree.qtproj/DumpRenderTree.pro:
+        * DumpRenderTree/DumpRenderTree.qtproj/fontoverload.cpp: Removed.
+        * DumpRenderTree/DumpRenderTree.qtproj/fonts/COPYING: Removed.
+        * DumpRenderTree/DumpRenderTree.qtproj/fonts/CourierBold.ttf: Removed.
+        * DumpRenderTree/DumpRenderTree.qtproj/fonts/CourierBoldOblique.ttf: Removed.
+        * DumpRenderTree/DumpRenderTree.qtproj/fonts/CourierMedium.ttf: Removed.
+        * DumpRenderTree/DumpRenderTree.qtproj/fonts/CourierMediumOblique.ttf: Removed.
+        * DumpRenderTree/DumpRenderTree.qtproj/fonts/HelveticaBold.ttf: Removed.
+        * DumpRenderTree/DumpRenderTree.qtproj/fonts/HelveticaBoldOblique.ttf: Removed.
+        * DumpRenderTree/DumpRenderTree.qtproj/fonts/HelveticaMedium.ttf: Removed.
+        * DumpRenderTree/DumpRenderTree.qtproj/fonts/HelveticaMediumOblique.ttf: Removed.
+        * DumpRenderTree/DumpRenderTree.qtproj/fonts/SymbolMedium.ttf: Removed.
+        * DumpRenderTree/DumpRenderTree.qtproj/fonts/TimesBold.ttf: Removed.
+        * DumpRenderTree/DumpRenderTree.qtproj/fonts/TimesBoldItalic.ttf: Removed.
+        * DumpRenderTree/DumpRenderTree.qtproj/fonts/TimesMedium.ttf: Removed.
+        * DumpRenderTree/DumpRenderTree.qtproj/fonts/TimesMediumItalic.ttf: Removed.
+        * DumpRenderTree/DumpRenderTree.qtproj/fonts.conf: Added.
+        * DumpRenderTree/DumpRenderTree.qtproj/main.cpp:
+        (main):
+        * Scripts/run-webkit-tests:
+
+2007-05-03  Holger Freyther <freyther@kde.org>
+
+        Reviewed by Zack, landed by Simon.
+        This is bugzilla bug 13499.
+
+        * GdkLauncher/GdkLauncher.pro: Build the GdkLauncher using qmake
+        * GdkLauncher/main.cpp: We don't have a config.h with the qmake build
+        * Scripts/build-webkit: Add --gdk for the Gdk port
+        * Scripts/webkitdirs.pm: Add helper methods for the Gdk port
+
+2007-05-03  Geoffrey Garen  <ggaren@apple.com>
+
+        Build fix: Add AllInOneFile.o to the ignore list, since it includes files
+        in the ignore list.
+        
+        * Scripts/check-for-global-initializers:
+
+2007-05-02  Holger Freyther <freyther@kde.org>
+
+        Reviewed by Mark Rowe.
+
+        * Scripts/build-webkit: Remove the CMake call.
+        * Scripts/webkitdirs.pm: Remove isQtWithQMake as QMake is now the only
+        buildsystem for the Qt port.
+
+2007-04-27  Kevin McCullough  <kmccullough@apple.com>
+
+        - Removed debugging statements and took out the removal of the deletion
+          of the symlink.  This is because multiple instances of run-webkit-tests
+          can be running at the same time.
+        * Scripts/run-webkit-tests:
+
+2007-04-27  Adam Roben <aroben@apple.com>
+
+        Reviewed by Maciej.
+
+        Cleaned up prepare-ChangeLog
+        
+        * Scripts/prepare-ChangeLog: No code changes, but style now matches
+        the prevalent style of our perl scripts.
+
+2007-04-27  Nazar Kulyk  <schamane@myeburg.net>
+
+        Reviewed by Mark Rowe.
+
+        Basic auto-correction of user-entered URLs.
+
+        * GdkLauncher/main.cpp:
+        (autocorrectURL):
+        (goToURLBarText):
+        (main):
+
+2007-04-28  Mark Rowe  <mrowe@apple.com>
+
+        Rubber-stamped by Anders.
+
+        Rename some methods and variables to match the style guidelines.
+
+        * GdkLauncher/main.cpp:
+        (stringIsEmpty):
+        (stringIsEqual):
+        (goToURLBarText):
+        (goButtonClickedCallback):
+        (urlBarEnterCallback):
+        (frameResizeCallback):
+        (frameDestroyCallback):
+        (menuMainBackCallback):
+        (menuMainForwardCallback):
+        (menuMainQuitCallback):
+        (main):
+
+2007-04-27  Holger Freyther <freyther@kde.org>
+
+        Reviewed by Maciej.
+
+        Remove unmaintained CMake build system.
+
+        * DumpRenderTree/DumpRenderTree.qtproj/CMakeLists.txt: Removed.
+        * Scripts/build-webkit: Remove references to CMake.
+        * Scripts/webkitdirs.pm: Remove references to CMake.
+
+2007-04-26  Alp Toker  <alp@atoker.com>
+
+        Reviewed by Mark Rowe.
+
+        * GdkLauncher/main.cpp:
+        (main): Avoid use of deprecated API.
+
+2007-04-26  Kevin McCullough  <kmccullough@apple.com>
+
+        - Changed debugging statements for more information.
+
+        * Scripts/run-webkit-tests:
+
+2007-04-26  Kevin McCullough  <kmccullough@apple.com>
+
+        - Adding debugging statements to see why these tests fail.  These will be removed.
+
+        * Scripts/run-webkit-tests:
+
+2007-04-25  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Mitz.
+
+        Add a setUseDashboardCompatibilityMode method to LayoutTestController which is used to toggle
+        the dashboard compatibility mode.
+        
+        * DumpRenderTree/DumpRenderTree.m:
+        (+[LayoutTestController isSelectorExcludedFromWebScript:]):
+        (+[LayoutTestController webScriptNameForSelector:]):
+        (-[LayoutTestController setUseDashboardCompatibilityMode:]):
+        (runTest):
+        * DumpRenderTree/DumpRenderTree.xcodeproj/project.pbxproj:
+
+2007-04-24  Timothy Hatcher  <timothy@apple.com>
+
+        Setting the valid architectures to 32-bit only, so these projects
+        will ignore requests to build them 64-bit. Once they can be built 64-bit,
+        the valid architectures can be updated.
+
+        * Drosera/Drosera.xcodeproj/project.pbxproj:
+        * DumpRenderTree/DumpRenderTree.xcodeproj/project.pbxproj:
+
+2007-04-23  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Mark Rowe and David Kilzer.
+
+        * Scripts/build-webkit: Print the path to the run-safari script when
+        finished building so that users can copy-and-paste the command to
+        execute it.
+
+2007-04-23  Darin Adler  <darin@apple.com>
+
+        Reviewed by Hyatt.
+
+        - rename box-sizing to -webkit-box-sizing
+
+        * Drosera/console.css: Here.
+        * Drosera/debugger.css: And here.
+        * Drosera/viewer.css: And here.
+
+2007-04-21  Mitz Pettel  <mitz@webkit.org>
+
+        Reviewed by Darin.
+
+        - http://bugs.webkit.org/show_bug.cgi?id=13350
+          Build Ahem into DumpRenderTree
+
+        * DumpRenderTree/DumpRenderTree.m:
+        (activateAhemFont): Added. Activates the copy of Ahem included in the
+        DumpRenderTree binary.
+        (dumpRenderTree): Replaced the check that Ahem is available with a call
+        to activateAhemFont().
+        * DumpRenderTree/DumpRenderTree.xcodeproj/project.pbxproj:
+          Added linker options to include Ahem in the data section of the
+          DumpRenderTree binary.
+
+2007-04-20  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Darin.
+
+        http://bugs.webkit.org/show_bug.cgi?id=13421
+        Bug 13421: prepare-ChangeLog should use svn-create-patch when spewing diffs
+
+        * Scripts/prepare-ChangeLog: Use svn-create-patch instead of svn diff.
+
+2007-04-18  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Tim
+
+        <rdar://problem/5008925>
+        Expose the NSURLConnection delegate willCacheResponse API to WebResourceLoadDelegate
+
+        * DumpRenderTree/ResourceLoadDelegate.m:
+        (-[ResourceLoadDelegate webView:resource:willCacheResponse:fromDataSource:]): 
+          Add the willCacheResponse delegate call
+
+2007-04-18  Adam Roben  <aroben@apple.com>
+
+        Reviewed by David Kilzer.
+
+        * Scripts/webkitdirs.pm:
+        (sub setConfiguration): Added an optional argument to set the
+        configuration instead of parsing it from ARGV.
+
+2007-04-17  Adam Roben  <aroben@apple.com>
+
+        * Scripts/find-included-framework-headers: Search Obj-C and Obj-C++
+        files as well.
+
+2007-04-17  Adam Roben  <aroben@apple.com>
+
+        Added a simple shell script to find all the headers from a specified
+        framework or frameworks that are included by files beneath the working
+        directory.
+
+        * Scripts/find-included-framework-headers: Added.
+
+2007-04-16  Timothy Hatcher  <timothy@apple.com>
+
+        * Drosera/debugger.css: hide the borders for iframes
+
 2007-04-13  Adam Roben  <aroben@apple.com>
 
         Rubberstamped by Anders.

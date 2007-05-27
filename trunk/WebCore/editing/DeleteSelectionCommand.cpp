@@ -406,12 +406,7 @@ void DeleteSelectionCommand::handleGeneralDelete()
                 // need to delete whole node
                 // we can get here if this is the last node in the block
                 // remove an ancestor of m_downstreamEnd.node(), and thus m_downstreamEnd.node() itself
-                if (!m_upstreamStart.node()->inDocument() ||
-                    m_upstreamStart.node() == m_downstreamEnd.node() ||
-                    m_upstreamStart.node()->isDescendantOf(m_downstreamEnd.node())) {
-                    m_upstreamStart = Position(m_downstreamEnd.node()->parentNode(), m_downstreamEnd.node()->nodeIndex());
-                }
-                
+                // FIXME: Shouldn't remove m_downstreamEnd.node() if its offsets refer to children.
                 removeNode(m_downstreamEnd.node());
             } else {
                 if (m_downstreamEnd.node()->isTextNode()) {
@@ -479,7 +474,7 @@ void DeleteSelectionCommand::mergeParagraphs()
     
     // We need to merge into m_upstreamStart's block, but it's been emptied out and collapsed by deletion.
     if (!mergeDestination.deepEquivalent().node() || !mergeDestination.deepEquivalent().node()->isDescendantOf(m_upstreamStart.node()->enclosingBlockFlowElement())) {
-        insertNodeAt(createBreakElement(document()).get(), m_upstreamStart.node(), m_upstreamStart.offset());
+        insertNodeAt(createBreakElement(document()).get(), m_upstreamStart);
         mergeDestination = VisiblePosition(m_upstreamStart);
     }
     
@@ -598,8 +593,16 @@ void DeleteSelectionCommand::doApply()
     Position downstreamEnd = m_selectionToDelete.end().downstream();
     m_needPlaceholder = isStartOfParagraph(m_selectionToDelete.visibleStart()) &&
                         isEndOfParagraph(m_selectionToDelete.visibleEnd()) &&
-                        !(downstreamEnd.node()->hasTagName(brTag) && downstreamEnd.offset() == 0) &&
-                        !(downstreamEnd.node()->renderer() && downstreamEnd.node()->renderer()->style()->preserveNewline() && m_selectionToDelete.visibleEnd().characterAfter() == '\n');
+                        !lineBreakExistsAtPosition(m_selectionToDelete.visibleEnd());
+    if (m_needPlaceholder) {
+        // Don't need a placeholder when deleting a selection that starts just before a table
+        // and ends inside it (we do need placeholders to hold open empty cells, but that's
+        // handled elsewhere).
+        if (Node* table = isLastPositionBeforeTable(m_selectionToDelete.visibleStart()))
+            if (m_selectionToDelete.end().node()->isDescendantOf(table))
+                m_needPlaceholder = false;
+    }
+        
     
     // set up our state
     initializePositionData();
@@ -639,7 +642,7 @@ void DeleteSelectionCommand::doApply()
     mergeParagraphs();
     
     if (placeholder)
-        insertNodeAt(placeholder.get(), m_endingPosition.node(), m_endingPosition.offset());
+        insertNodeAt(placeholder.get(), m_endingPosition);
 
     rebalanceWhitespaceAt(m_endingPosition);
 

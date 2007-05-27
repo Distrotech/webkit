@@ -148,14 +148,14 @@ RenderStyle* RenderTextControl::createInnerTextStyle(RenderStyle* startStyle)
         // Set word wrap property based on wrap attribute
         if (static_cast<HTMLTextAreaElement*>(element)->wrap() == HTMLTextAreaElement::ta_NoWrap) {
             textBlockStyle->setWhiteSpace(PRE);
-            textBlockStyle->setWordWrap(WBNORMAL);
+            textBlockStyle->setWordWrap(NormalWordWrap);
         } else {
             textBlockStyle->setWhiteSpace(PRE_WRAP);
-            textBlockStyle->setWordWrap(BREAK_WORD);
+            textBlockStyle->setWordWrap(BreakWordWrap);
         }
     } else {
         textBlockStyle->setWhiteSpace(PRE);
-        textBlockStyle->setWordWrap(WBNORMAL);
+        textBlockStyle->setWordWrap(NormalWordWrap);
         textBlockStyle->setOverflowX(OHIDDEN);
         textBlockStyle->setOverflowY(OHIDDEN);
         
@@ -205,8 +205,12 @@ RenderStyle* RenderTextControl::createResultsButtonStyle(RenderStyle* startStyle
 
 RenderStyle* RenderTextControl::createCancelButtonStyle(RenderStyle* startStyle)
 {
-    RenderStyle* cancelBlockStyle = getPseudoStyle(RenderStyle::SEARCH_CANCEL_BUTTON);
-    if (!cancelBlockStyle)
+    RenderStyle* cancelBlockStyle;
+    
+    if (RenderStyle* pseudoStyle = getPseudoStyle(RenderStyle::SEARCH_CANCEL_BUTTON))
+        // We may be sharing style with another search field, but we must not share the cancel button style.
+        cancelBlockStyle = new (renderArena()) RenderStyle(*pseudoStyle);
+    else
         cancelBlockStyle = new (renderArena()) RenderStyle();
 
     if (startStyle)
@@ -597,7 +601,7 @@ void RenderTextControl::calcHeight()
     // FIXME: We should get the size of the scrollbar from the RenderTheme instead of hard coding it here.
     int scrollbarSize = 0;
     // We are able to have a horizontal scrollbar if the overflow style is scroll, or if its auto and there's no word wrap.
-    if (m_innerText->renderer()->style()->overflowX() == OSCROLL ||  (m_innerText->renderer()->style()->overflowX() == OAUTO && m_innerText->renderer()->style()->wordWrap() == WBNORMAL))
+    if (m_innerText->renderer()->style()->overflowX() == OSCROLL ||  (m_innerText->renderer()->style()->overflowX() == OAUTO && m_innerText->renderer()->style()->wordWrap() == NormalWordWrap))
         scrollbarSize = 15;
 
     m_height = line * rows + toAdd + scrollbarSize;
@@ -659,7 +663,9 @@ void RenderTextControl::layout()
 
     // Set the text block's height
     int textBlockHeight = m_height - paddingTop() - paddingBottom() - borderTop() - borderBottom();
-    m_innerText->renderer()->style()->setHeight(Length(textBlockHeight, Fixed));
+    int currentTextBlockHeight = m_innerText->renderer()->height();
+    if (m_multiLine || m_innerBlock || currentTextBlockHeight > m_height)
+        m_innerText->renderer()->style()->setHeight(Length(textBlockHeight, Fixed));
     if (m_innerBlock)
         m_innerBlock->renderer()->style()->setHeight(Length(textBlockHeight, Fixed));
 
@@ -686,15 +692,25 @@ void RenderTextControl::layout()
         m_innerBlock->renderer()->style()->setWidth(Length(m_width - paddingLeft() - paddingRight() - borderLeft() - borderRight(), Fixed));
 
     RenderBlock::layoutBlock(relayoutChildren);
+    
+    // For text fields, center the inner text vertically
+    // Don't do this for search fields, since we don't honor height for them
+    if (!m_multiLine) {
+        currentTextBlockHeight = m_innerText->renderer()->height();
+        if (!m_innerBlock && currentTextBlockHeight < m_height)
+            m_innerText->renderer()->setPos(m_innerText->renderer()->xPos(), (m_height - currentTextBlockHeight) / 2);
+    }
 }
 
-void RenderTextControl::calcMinMaxWidth()
+void RenderTextControl::calcPrefWidths()
 {
-    m_minWidth = 0;
-    m_maxWidth = 0;
+    ASSERT(prefWidthsDirty());
+
+    m_minPrefWidth = 0;
+    m_maxPrefWidth = 0;
 
     if (style()->width().isFixed() && style()->width().value() > 0)
-        m_minWidth = m_maxWidth = calcContentBoxWidth(style()->width().value());
+        m_minPrefWidth = m_maxPrefWidth = calcContentBoxWidth(style()->width().value());
     else {
         // Figure out how big a text control needs to be for a given number of characters
         // (using "0" as the nominal character).
@@ -712,20 +728,20 @@ void RenderTextControl::calcMinMaxWidth()
             if (factor <= 0)
                 factor = 20;
         }
-        m_maxWidth = static_cast<int>(ceilf(charWidth * factor)) + scrollbarSize;
+        m_maxPrefWidth = static_cast<int>(ceilf(charWidth * factor)) + scrollbarSize;
     }
 
     if (style()->minWidth().isFixed() && style()->minWidth().value() > 0) {
-        m_maxWidth = max(m_maxWidth, calcContentBoxWidth(style()->minWidth().value()));
-        m_minWidth = max(m_minWidth, calcContentBoxWidth(style()->minWidth().value()));
+        m_maxPrefWidth = max(m_maxPrefWidth, calcContentBoxWidth(style()->minWidth().value()));
+        m_minPrefWidth = max(m_minPrefWidth, calcContentBoxWidth(style()->minWidth().value()));
     } else if (style()->width().isPercent() || (style()->width().isAuto() && style()->height().isPercent()))
-        m_minWidth = 0;
+        m_minPrefWidth = 0;
     else
-        m_minWidth = m_maxWidth;
+        m_minPrefWidth = m_maxPrefWidth;
 
     if (style()->maxWidth().isFixed() && style()->maxWidth().value() != undefinedLength) {
-        m_maxWidth = min(m_maxWidth, calcContentBoxWidth(style()->maxWidth().value()));
-        m_minWidth = min(m_minWidth, calcContentBoxWidth(style()->maxWidth().value()));
+        m_maxPrefWidth = min(m_maxPrefWidth, calcContentBoxWidth(style()->maxWidth().value()));
+        m_minPrefWidth = min(m_minPrefWidth, calcContentBoxWidth(style()->maxWidth().value()));
     }
 
     int toAdd = paddingLeft() + paddingRight() + borderLeft() + borderRight() +
@@ -738,10 +754,10 @@ void RenderTextControl::calcMinMaxWidth()
         toAdd += m_cancelButton->renderer()->borderLeft() + m_cancelButton->renderer()->borderRight() +
                  m_cancelButton->renderer()->paddingLeft() + m_cancelButton->renderer()->paddingRight();
 
-    m_minWidth += toAdd;
-    m_maxWidth += toAdd;
+    m_minPrefWidth += toAdd;
+    m_maxPrefWidth += toAdd;
 
-    setMinMaxKnown();
+    setPrefWidthsDirty(false);
 }
 
 void RenderTextControl::forwardEvent(Event* evt)
@@ -842,8 +858,8 @@ void RenderTextControl::addSearchResult()
     if (value.isEmpty())
         return;
 
-    Frame* frame = document()->frame();
-    if (!frame || frame->settings()->privateBrowsingEnabled())
+    Settings* settings = document()->settings();
+    if (!settings || settings->privateBrowsingEnabled())
         return;
 
     int size = static_cast<int>(m_recentSearches.size());

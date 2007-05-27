@@ -156,6 +156,7 @@ static void createElementClassMap()
     addElementClass(HTMLNames::linkTag, [DOMHTMLLinkElement class]);
     addElementClass(HTMLNames::listingTag, [DOMHTMLPreElement class]);
     addElementClass(HTMLNames::mapTag, [DOMHTMLMapElement class]);
+    addElementClass(HTMLNames::marqueeTag, [DOMHTMLMarqueeElement class]);
     addElementClass(HTMLNames::menuTag, [DOMHTMLMenuElement class]);
     addElementClass(HTMLNames::metaTag, [DOMHTMLMetaElement class]);
     addElementClass(HTMLNames::objectTag, [DOMHTMLObjectElement class]);
@@ -399,6 +400,7 @@ static NSArray *kit(const Vector<IntRect>& rects)
 // If it was, we could even autogenerate.
 - (NSRect)boundingBox
 {
+    [self _node]->document()->updateLayoutIgnorePendingStylesheets();
     WebCore::RenderObject *renderer = [self _node]->renderer();
     if (renderer)
         return renderer->absoluteBoundingBoxRect();
@@ -409,6 +411,7 @@ static NSArray *kit(const Vector<IntRect>& rects)
 // If it was, we could even autogenerate.
 - (NSArray *)lineBoxRects
 {
+    [self _node]->document()->updateLayoutIgnorePendingStylesheets();
     WebCore::RenderObject *renderer = [self _node]->renderer();
     if (renderer) {
         Vector<WebCore::IntRect> rects;
@@ -424,12 +427,14 @@ static NSArray *kit(const Vector<IntRect>& rects)
 
 - (NSRect)boundingBox
 {
+    [self _range]->ownerDocument()->updateLayoutIgnorePendingStylesheets();
     return [self _range]->boundingBox();
 }
 
 - (NSArray *)lineBoxRects
 {
     Vector<WebCore::IntRect> rects;
+    [self _range]->ownerDocument()->updateLayoutIgnorePendingStylesheets();
     [self _range]->addLineBoxRects(rects);
     return kit(rects);
 }

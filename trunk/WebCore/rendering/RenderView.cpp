@@ -40,6 +40,8 @@ RenderView::RenderView(Node* node, FrameView* view)
     , m_selectionEndPos(-1)
     , m_printImages(true)
     , m_maximalOutlineSize(0)
+    , m_layoutState(0)
+    , m_layoutStateDisableCount(0)
 {
     // Clear our anonymous bit, set because RenderObject assumes
     // any renderer with document as the node is anonymous.
@@ -51,15 +53,16 @@ RenderView::RenderView(Node* node, FrameView* view)
     // try to contrain the width to the views width
     m_width = 0;
     m_height = 0;
-    m_minWidth = 0;
-    m_maxWidth = 0;
+    m_minPrefWidth = 0;
+    m_maxPrefWidth = 0;
 
-    setMinMaxKnown(false);
+    setPrefWidthsDirty(true, false);
     
     setPositioned(true); // to 0,0 :)
 
     // Create a new root layer for our layer hierarchy.
     m_layer = new (node->document()->renderArena()) RenderLayer(this);
+    setHasLayer(true);
 }
 
 RenderView::~RenderView()
@@ -80,29 +83,30 @@ void RenderView::calcWidth()
     m_marginRight = 0;
 }
 
-void RenderView::calcMinMaxWidth()
+void RenderView::calcPrefWidths()
 {
-    ASSERT(!minMaxKnown());
+    ASSERT(prefWidthsDirty());
 
-    RenderBlock::calcMinMaxWidth();
+    RenderBlock::calcPrefWidths();
 
-    m_maxWidth = m_minWidth;
-
-    setMinMaxKnown();
+    m_maxPrefWidth = m_minPrefWidth;
 }
 
 void RenderView::layout()
 {
     if (printing())
-        m_minWidth = m_width;
+        m_minPrefWidth = m_maxPrefWidth = m_width;
 
     bool relayoutChildren = !printing() && (!m_frameView || m_width != m_frameView->visibleWidth() || m_height != m_frameView->visibleHeight());
     if (relayoutChildren)
         setChildNeedsLayout(true, false);
-
-    if (recalcMinMax())
-        recalcMinMaxWidths();
     
+    ASSERT(!m_layoutState);
+    LayoutState state;
+    // FIXME: May be better to push a clip and avoid issuing offscreen repaints.
+    state.m_clipped = false;
+    m_layoutState = &state;
+
     if (needsLayout())
         RenderBlock::layout();
 
@@ -113,6 +117,9 @@ void RenderView::layout()
     setOverflowWidth(docWidth());
     setOverflowHeight(docHeight());
 
+    ASSERT(m_layoutStateDisableCount == 0);
+    ASSERT(m_layoutState == &state);
+    m_layoutState = 0;
     setNeedsLayout(false);
 }
 
@@ -143,7 +150,7 @@ void RenderView::paintBoxDecorations(PaintInfo& paintInfo, int tx, int ty)
 {
     // Check to see if we are enclosed by a transparent layer.  If so, we cannot blit
     // when scrolling, and we need to use slow repaints.
-    Element* elt = element()->document()->ownerElement();
+    Element* elt = document()->ownerElement();
     if (view() && elt && elt->renderer()) {
         RenderLayer* layer = elt->renderer()->enclosingLayer();
         if (layer->isTransparent() || layer->transparentAncestor())
@@ -180,7 +187,7 @@ void RenderView::repaintViewRectangle(const IntRect& ur, bool immediate)
 
     // We always just invalidate the root view, since we could be an iframe that is clipped out
     // or even invisible.
-    Element* elt = element()->document()->ownerElement();
+    Element* elt = document()->ownerElement();
     if (!elt)
         m_frameView->repaintRectangle(ur, immediate);
     else if (RenderObject* obj = elt->renderer()) {
@@ -221,7 +228,7 @@ RenderObject* rendererAfterPosition(RenderObject* object, unsigned offset)
     return child ? child : object->nextInPreOrderAfterChildren();
 }
 
-IntRect RenderView::selectionRect() const
+IntRect RenderView::selectionRect(bool clipToVisibleContent) const
 {
     document()->updateRendering();
 
@@ -233,13 +240,13 @@ IntRect RenderView::selectionRect() const
     while (os && os != stop) {
         if ((os->canBeSelectionLeaf() || os == m_selectionStart || os == m_selectionEnd) && os->selectionState() != SelectionNone) {
             // Blocks are responsible for painting line gaps and margin gaps. They must be examined as well.
-            selectedObjects.set(os, new SelectionInfo(os));
+            selectedObjects.set(os, new SelectionInfo(os, clipToVisibleContent));
             RenderBlock* cb = os->containingBlock();
             while (cb && !cb->isRenderView()) {
                 SelectionInfo* blockInfo = selectedObjects.get(cb);
                 if (blockInfo)
                     break;
-                selectedObjects.set(cb, new SelectionInfo(cb));
+                selectedObjects.set(cb, new SelectionInfo(cb, clipToVisibleContent));
                 cb = cb->containingBlock();
             }
         }
@@ -292,7 +299,7 @@ void RenderView::setSelection(RenderObject* start, int startPos, RenderObject* e
     while (os && os != stop) {
         if ((os->canBeSelectionLeaf() || os == m_selectionStart || os == m_selectionEnd) && os->selectionState() != SelectionNone) {
             // Blocks are responsible for painting line gaps and margin gaps.  They must be examined as well.
-            oldSelectedObjects.set(os, new SelectionInfo(os));
+            oldSelectedObjects.set(os, new SelectionInfo(os, false));
             RenderBlock* cb = os->containingBlock();
             while (cb && !cb->isRenderView()) {
                 BlockSelectionInfo* blockInfo = oldSelectedBlocks.get(cb);
@@ -341,7 +348,7 @@ void RenderView::setSelection(RenderObject* start, int startPos, RenderObject* e
     o = start;
     while (o && o != stop) {
         if ((o->canBeSelectionLeaf() || o == start || o == end) && o->selectionState() != SelectionNone) {
-            newSelectedObjects.set(o, new SelectionInfo(o));
+            newSelectedObjects.set(o, new SelectionInfo(o, false));
             RenderBlock* cb = o->containingBlock();
             while (cb && !cb->isRenderView()) {
                 BlockSelectionInfo* blockInfo = newSelectedBlocks.get(cb);
@@ -526,6 +533,15 @@ void RenderView::setBestTruncatedAt(int y, RenderObject* forRenderer, bool force
         m_truncatorWidth = width;
         m_bestTruncatedAt = y;
     }
+}
+
+void RenderView::pushLayoutState(RenderObject* root)
+{
+    ASSERT(!m_frameView->needsFullRepaint());
+    ASSERT(m_layoutStateDisableCount == 0);
+    ASSERT(m_layoutState == 0);
+
+    m_layoutState = new (renderArena()) LayoutState(root);
 }
 
 } // namespace WebCore

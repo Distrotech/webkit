@@ -31,7 +31,6 @@
 #import "WebArchive.h"
 #import "WebArchiver.h"
 #import "WebDataSourceInternal.h"
-#import "WebDefaultResourceLoadDelegate.h"
 #import "WebDocument.h"
 #import "WebDocumentLoaderMac.h"
 #import "WebFrameBridge.h"
@@ -405,8 +404,12 @@ static inline void addTypesFromClass(NSMutableDictionary *allTypes, Class objCCl
 
 - (NSMutableURLRequest *)request
 {
-    // FIXME: XXX
-    return (NSMutableURLRequest*)_private->loader->request().nsURLRequest();
+    FrameLoader* frameLoader = _private->loader->frameLoader();
+    if (!frameLoader || !frameLoader->frameHasLoaded())
+        return nil;
+
+    // FIXME: this cast is dubious
+    return (NSMutableURLRequest *)_private->loader->request().nsURLRequest();
 }
 
 - (NSURLResponse *)response

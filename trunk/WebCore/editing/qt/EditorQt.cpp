@@ -28,7 +28,7 @@
 #include "Editor.h"
 
 #include "ClipboardAccessPolicy.h"
-#include "Clipboard.h"
+#include "ClipboardQt.h"
 #include "Document.h"
 #include "Element.h"
 #include "Selection.h"
@@ -37,63 +37,14 @@
 #include "htmlediting.h"
 #include "visible_units.h"
 
+#include <QApplication>
+#include <QClipboard>
+
 namespace WebCore {
 
 PassRefPtr<Clipboard> Editor::newGeneralClipboard(ClipboardAccessPolicy policy)
 {
-    return 0;
-}
-
-void Editor::ignoreSpelling()
-{
-    String text = frame()->selectedText();
-}
-
-void Editor::learnSpelling()
-{
-    String text = frame()->selectedText();
-}
-
-void Editor::advanceToNextMisspelling(bool startBeforeSelection)
-{
-
-}
-
-bool Editor::isSelectionMisspelled()
-{
-    return false;
-}
-
-bool Editor::isSelectionUngrammatical()
-{
-    return false;
-}
-
-Vector<String> Editor::guessesForUngrammaticalSelection()
-{
-    return Vector<String>();
-}
-
-Vector<String> Editor::guessesForMisspelledSelection()
-{
-    String selectedString = frame()->selectedText();
-    return Vector<String>();
-}
-
-void Editor::markMisspellingsAfterTypingToPosition(const VisiblePosition &p)
-{
-    if (!isContinuousSpellCheckingEnabled())
-        return;
-}
-
-void Editor::markMisspellings(const Selection& selection)
-{
-
-}
-
-void Editor::markBadGrammar(const Selection& selection)
-{
-
+    return new ClipboardQt(policy, QApplication::clipboard()->mimeData(), false); 
 }
 
 } // namespace WebCore

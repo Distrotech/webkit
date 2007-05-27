@@ -47,11 +47,9 @@ public:
     virtual void paint(PaintInfo&, int tx, int ty);
 
     virtual void layout();
-    virtual void calcMinMaxWidth();
+    virtual void calcPrefWidths();
 
     virtual void imageChanged(CachedImage*);
-
-    virtual void calcWidth();
 
     virtual InlineBox* createInlineBox(bool, bool, bool);
 
@@ -66,8 +64,10 @@ public:
 
     virtual SelectionState selectionState() const { return m_selectionState; }
     virtual void setSelectionState(SelectionState);
-    virtual IntRect selectionRect();
+    virtual IntRect selectionRect(bool clipToVisibleContent = true);
     virtual bool canBeSelectionLeaf() const { return true; }
+
+    void updateMargins();
 
 private:
     IntRect getRelativeMarkerRect();

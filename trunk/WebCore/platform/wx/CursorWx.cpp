@@ -228,4 +228,17 @@ const Cursor& notAllowedCursor()
     static Cursor c = new wxCursor(wxCURSOR_NO_ENTRY);
     return c;
 }
+
+const Cursor& zoomInCursor()
+{
+    static Cursor c = new wxCursor(wxCURSOR_MAGNIFIER);
+    return c;
+}
+
+const Cursor& zoomOutCursor()
+{
+    // TODO: Find a way to implement in/out magnifiers in wx.
+    return zoomInCursor();
+}
+
 }

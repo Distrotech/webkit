@@ -88,7 +88,16 @@ public:
     virtual bool doTextFieldCommandFromEvent(Element*, KeyboardEvent*);
     virtual void textWillBeDeletedInTextField(Element*);
     virtual void textDidChangeInTextArea(Element*);
-    
+
+    virtual void ignoreWordInSpellDocument(const String&);
+    virtual void learnWord(const String&);
+    virtual void checkSpellingOfString(const UChar*, int length, int* misspellingLocation, int* misspellingLength);
+    virtual void checkGrammarOfString(const UChar*, int length, Vector<GrammarDetail>&, int* badGrammarLocation, int* badGrammarLength);
+    virtual void updateSpellingUIWithGrammarString(const String&, const GrammarDetail& detail);
+    virtual void updateSpellingUIWithMisspelledWord(const String&);
+    virtual void showSpellingUI(bool show);
+    virtual bool spellingUIIsShowing();
+    virtual void getGuessesForWord(const String&, Vector<String>& guesses);
 private:
     Page* m_page;
 };

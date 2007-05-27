@@ -49,6 +49,7 @@
 #import "WebHTMLViewInternal.h"
 #import "WebKitLogging.h"
 #import "WebKitNSStringExtras.h"
+#import "WebKitVersionChecks.h"
 #import "WebLocalizableStrings.h"
 #import "WebNSAttributedStringExtras.h"
 #import "WebNSEventExtras.h"
@@ -70,10 +71,13 @@
 #import <AppKit/NSAccessibility.h>
 #import <ApplicationServices/ApplicationServices.h>
 #import <dlfcn.h>
+#import <WebCore/CachedImage.h>
+#import <WebCore/CachedResourceClient.h>
 #import <WebCore/ContextMenuController.h>
 #import <WebCore/Document.h>
 #import <WebCore/Editor.h>
 #import <WebCore/EditorDeleteAction.h>
+#import <WebCore/Element.h>
 #import <WebCore/EventHandler.h>
 #import <WebCore/EventNames.h>
 #import <WebCore/ExceptionHandlers.h>
@@ -82,7 +86,9 @@
 #import <WebCore/FocusController.h>
 #import <WebCore/Frame.h>
 #import <WebCore/FrameLoader.h>
+#import <WebCore/FrameView.h>
 #import <WebCore/HitTestResult.h>
+#import <WebCore/HTMLNames.h>
 #import <WebCore/Image.h>
 #import <WebCore/KeyboardEvent.h>
 #import <WebCore/MimeTypeRegistry.h>
@@ -91,6 +97,7 @@
 #import <WebCore/PlatformMouseEvent.h>
 #import <WebCore/Range.h>
 #import <WebCore/SelectionController.h>
+#import <WebCore/SharedBuffer.h>
 #import <WebCore/WebCoreObjCExtras.h>
 #import <WebCore/WebCoreTextRenderer.h>
 #import <WebKit/DOM.h>
@@ -99,6 +106,7 @@
 #import <WebKitSystemInterface.h>
 
 using namespace WebCore;
+using namespace HTMLNames;
 
 extern "C" {
 
@@ -128,6 +136,7 @@ void _NSResetKillRingOperationFlag(void);
 - (NSRect)_dirtyRect;
 - (void)_setDrawsOwnDescendants:(BOOL)drawsOwnDescendants;
 - (void)_propagateDirtyRectsToOpaqueAncestors;
+- (void)_windowChangedKeyState;
 @end
 
 @interface NSApplication (AppKitSecretsIKnowAbout)
@@ -212,6 +221,13 @@ static BOOL forceNSViewHitTest;
 static BOOL forceWebHTMLViewHitTest;
 
 static WebHTMLView *lastHitView;
+
+// We need this to be able to safely reference the CachedImage for the promised drag data
+static CachedResourceClient* promisedDataClient()
+{
+    static CachedResourceClient* staticCachedResourceClient = new CachedResourceClient;
+    return staticCachedResourceClient;
+}
 
 @interface WebHTMLView (WebTextSizing) <_WebDocumentTextSizing>
 @end
@@ -301,7 +317,8 @@ struct WebHTMLViewInterpretKeyEventsParameters {
     [firstResponderTextViewAtMouseDownTime release];
     [dataSource release];
     [highlighters release];
-
+    if (promisedDragTIFFDataSource)
+        promisedDragTIFFDataSource->deref(promisedDataClient());
     [super dealloc];
 }
 
@@ -315,6 +332,8 @@ struct WebHTMLViewInterpretKeyEventsParameters {
     [firstResponderTextViewAtMouseDownTime release];
     [dataSource release];
     [highlighters release];
+    if (promisedDragTIFFDataSource)
+        promisedDragTIFFDataSource->deref(promisedDataClient());
 
     mouseDownEvent = nil;
     keyDownEvent = nil;
@@ -324,6 +343,7 @@ struct WebHTMLViewInterpretKeyEventsParameters {
     firstResponderTextViewAtMouseDownTime = nil;
     dataSource = nil;
     highlighters = nil;
+    promisedDragTIFFDataSource = 0;
 }
 
 @end
@@ -373,28 +393,14 @@ struct WebHTMLViewInterpretKeyEventsParameters {
 {
     DOMDocumentFragment *fragment;
     NSEnumerator *enumerator = [paths objectEnumerator];
-    WebDataSource *dataSource = [self _dataSource];
     NSMutableArray *domNodes = [[NSMutableArray alloc] init];
     NSString *path;
     
     while ((path = [enumerator nextObject]) != nil) {
-        NSString *MIMEType = WKGetMIMETypeForExtension([path pathExtension]);
-        if (MimeTypeRegistry::isSupportedImageResourceMIMEType(MIMEType)) {
-            WebResource *resource = [[WebResource alloc] initWithData:[NSData dataWithContentsOfFile:path]
-                                                                  URL:[NSURL fileURLWithPath:path]
-                                                             MIMEType:MIMEType 
-                                                     textEncodingName:nil
-                                                            frameName:nil];
-            if (resource) {
-                [domNodes addObject:[dataSource _imageElementWithImageResource:resource]];
-                [resource release];
-            }
-        } else {
-            // Non-image file types; _web_userVisibleString is appropriate here because this will
-            // be pasted as visible text.
-            NSString *url = [[[NSURL fileURLWithPath:path] _webkit_canonicalize] _web_userVisibleString];
-            [domNodes addObject:[[[self _frame] DOMDocument] createTextNode: url]];
-        }
+        // Non-image file types; _web_userVisibleString is appropriate here because this will
+        // be pasted as visible text.
+        NSString *url = [[[NSURL fileURLWithPath:path] _webkit_canonicalize] _web_userVisibleString];
+        [domNodes addObject:[[[self _frame] DOMDocument] createTextNode: url]];
     }
     
     fragment = [[self _bridge] documentFragmentWithNodesAsParagraphs:domNodes]; 
@@ -607,17 +613,13 @@ static NSURL* uniqueURLWithRelativePart(NSString *relativePart)
 - (DOMRange *)_selectedRange
 {
     Frame* coreFrame = core([self _frame]);
-    if (!coreFrame)
-        return nil;
-    return kit(coreFrame->selectionController()->toRange().get());
+    return coreFrame ? kit(coreFrame->selectionController()->toRange().get()) : nil;
 }
 
 - (BOOL)_shouldDeleteRange:(DOMRange *)range
 {
     Frame* coreFrame = core([self _frame]);
-    if (!coreFrame)
-        return nil;
-    return coreFrame->editor()->shouldDeleteRange(core(range));
+    return coreFrame && coreFrame->editor()->shouldDeleteRange(core(range));
 }
 
 - (BOOL)_canSmartReplaceWithPasteboard:(NSPasteboard *)pasteboard
@@ -1298,164 +1300,22 @@ static NSURL* uniqueURLWithRelativePart(NSString *relativePart)
     return [self _dragImageForURL:urlString withLabel:label];
 }
 
-- (BOOL)_startDraggingImage:(NSImage *)wcDragImage at:(NSPoint)wcDragLoc operation:(NSDragOperation)op event:(NSEvent *)mouseDraggedEvent sourceIsDHTML:(BOOL)srcIsDHTML DHTMLWroteData:(BOOL)dhtmlWroteData
+- (void)pasteboardChangedOwner:(NSPasteboard *)pasteboard
 {
-    WebHTMLView *topHTMLView = [self _topHTMLView];
-    if (self != topHTMLView) {
-        [topHTMLView _setMouseDownEvent:_private->mouseDownEvent];
-        BOOL result = [topHTMLView _startDraggingImage:wcDragImage at:wcDragLoc operation:op event:mouseDraggedEvent sourceIsDHTML:srcIsDHTML DHTMLWroteData:dhtmlWroteData];
-        [topHTMLView _setMouseDownEvent:nil];
-        return result;
+    [self setPromisedDragTIFFDataSource:0];
+}
+
+- (void)pasteboard:(NSPasteboard *)pasteboard provideDataForType:(NSString *)type
+{
+    if ([type isEqual:NSRTFDPboardType] && [[pasteboard types] containsObject:WebArchivePboardType]) {
+        WebArchive *archive = [[WebArchive alloc] initWithData:[pasteboard dataForType:WebArchivePboardType]];
+        [pasteboard _web_writePromisedRTFDFromArchive:archive containsImage:[[pasteboard types] containsObject:NSTIFFPboardType]];
+        [archive release];
+    } else if ([type isEqual:NSTIFFPboardType] && [self promisedDragTIFFDataSource]) {
+        if (Image* image = [self promisedDragTIFFDataSource]->image())
+            [pasteboard setData:(NSData *)image->getTIFFRepresentation() forType:NSTIFFPboardType];
+        [self setPromisedDragTIFFDataSource:0];
     }
-
-    NSPoint mouseDownPoint = [self convertPoint:[_private->mouseDownEvent locationInWindow] fromView:nil];
-    NSDictionary *element = [self elementAtPoint:mouseDownPoint allowShadowContent:YES];
-
-    NSURL *linkURL = [element objectForKey:WebElementLinkURLKey];
-    NSURL *imageURL = [element objectForKey:WebElementImageURLKey];
-    BOOL isSelected = [[element objectForKey:WebElementIsSelectedKey] boolValue];
-
-    NSPoint mouseDraggedPoint = [self convertPoint:[mouseDraggedEvent locationInWindow] fromView:nil];
-    
-    Page* page = core([self _webView]);
-    ASSERT(page);
-    DragController *dragController = page->dragController();
-    dragController->setDraggingImageURL(KURL());
-    dragController->setDragOperation((DragOperation)op);     // will be DragNone if WebCore doesn't care
-    
-    NSImage *dragImage = nil;
-    NSPoint dragLoc = { 0, 0 }; // quiet gcc 4.0 warning
-
-    // We allow WebCore to override the drag image, even if its a link, image or text we're dragging.
-    // This is in the spirit of the IE API, which allows overriding of pasteboard data and DragOp.
-    // We could verify that ActionDHTML is allowed, although WebCore does claim to respect the action.
-    if (wcDragImage) {
-        dragImage = wcDragImage;
-        // wcDragLoc is the cursor position relative to the lower-left corner of the image.
-        // We add in the Y dimension because we are a flipped view, so adding moves the image down.
-        if (linkURL)
-            // see HACK below
-            dragLoc = NSMakePoint(mouseDraggedPoint.x - wcDragLoc.x, mouseDraggedPoint.y + wcDragLoc.y);
-        else
-            dragLoc = NSMakePoint(mouseDownPoint.x - wcDragLoc.x, mouseDownPoint.y + wcDragLoc.y);
-        dragController->setDragOffset(IntPoint(wcDragLoc));
-    }
-    
-    WebView *webView = [self _webView];
-    NSPasteboard *pasteboard = [NSPasteboard pasteboardWithName:NSDragPboard];
-    BOOL startedDrag = YES;  // optimism - we almost always manage to start the drag
-
-    // note per kwebster, the offset arg below is always ignored in positioning the image
-    DOMNode *node = [element objectForKey:WebElementDOMNodeKey];
-    WebHTMLView *innerHTMLView = (WebHTMLView *)[[[[node ownerDocument] webFrame] frameView] documentView];
-    ASSERT([innerHTMLView isKindOfClass:[WebHTMLView class]]);
-    if (imageURL != nil
-            && [node isKindOfClass:[DOMElement class]]
-            && [(DOMElement *)node image]
-            && (dragController->dragSourceAction() & WebDragSourceActionImage)) {
-        id source = self;
-        if (!dhtmlWroteData) {
-            // Select the image when it is dragged. This allows the image to be moved via MoveSelectionCommandImpl and this matches NSTextView's behavior.
-            ASSERT(node != nil);
-            [webView setSelectedDOMRange:[[node ownerDocument] _createRangeWithNode:node] affinity:NSSelectionAffinityDownstream];
-            dragController->setDraggingImageURL(imageURL);
-            
-            WebArchive *archive;
-            
-            // If the image element comes from an ImageDocument, we don't want to 
-            // create a web archive from the image element.
-            if ([[self _bridge] canSaveAsWebArchive])
-                archive = [node webArchive];
-            else
-                archive = [WebArchiver archiveMainResourceForFrame:[self _frame]];
-            
-            source = [pasteboard _web_declareAndWriteDragImageForElement:(DOMElement *)node
-                                                                     URL:linkURL ? linkURL : imageURL
-                                                                   title:[element objectForKey:WebElementImageAltStringKey]
-                                                                 archive:archive
-                                                                  source:self];
-        }
-        [[webView _UIDelegateForwarder] webView:webView willPerformDragSourceAction:WebDragSourceActionImage fromPoint:mouseDownPoint withPasteboard:pasteboard];
-        if (dragImage == nil) {
-            NSPoint point = dragController->dragOffset();
-            [self _web_DragImageForElement:(DOMElement *)node
-                                      rect:[self convertRect:[[element objectForKey:WebElementImageRectKey] rectValue] fromView:innerHTMLView]
-                                     event:_private->mouseDownEvent
-                                pasteboard:pasteboard
-                                    source:source
-                                    offset:&point];
-            dragController->setDragOffset(IntPoint(point));
-        } else
-            [self dragImage:dragImage
-                         at:dragLoc
-                     offset:NSZeroSize
-                      event:_private->mouseDownEvent
-                 pasteboard:pasteboard
-                     source:source
-                  slideBack:YES];
-    } else if (linkURL && (dragController->dragSourceAction() & WebDragSourceActionLink)) {
-        if (!dhtmlWroteData) {
-            NSArray *types = [NSPasteboard _web_writableTypesForURL];
-            [pasteboard declareTypes:types owner:self];
-            [pasteboard _web_writeURL:linkURL andTitle:[element objectForKey:WebElementLinkLabelKey] types:types];            
-        }
-        [[webView _UIDelegateForwarder] webView:webView willPerformDragSourceAction:WebDragSourceActionLink fromPoint:mouseDownPoint withPasteboard:pasteboard];
-        if (dragImage == nil) {
-            dragImage = [self _dragImageForLinkElement:element];
-            NSSize offset = NSMakeSize([dragImage size].width / 2, -DRAG_LABEL_BORDER_Y);
-            dragLoc = NSMakePoint(mouseDraggedPoint.x - offset.width, mouseDraggedPoint.y - offset.height);
-            dragController->setDragOffset(IntPoint((int)offset.width, -(int)offset.height)); // height inverted because we are flipped
-        }
-        // HACK:  We should pass the mouseDown event instead of the mouseDragged!  This hack gets rid of
-        // a flash of the image at the mouseDown location when the drag starts.
-        [self dragImage:dragImage
-                     at:dragLoc
-                 offset:NSZeroSize
-                  event:mouseDraggedEvent
-             pasteboard:pasteboard
-                 source:self
-              slideBack:YES];
-    } else if (isSelected && (dragController->dragSourceAction() & WebDragSourceActionSelection)) {
-        if (!dhtmlWroteData)
-            [innerHTMLView _writeSelectionToPasteboard:pasteboard];
-        [[webView _UIDelegateForwarder] webView:webView willPerformDragSourceAction:WebDragSourceActionSelection fromPoint:mouseDownPoint withPasteboard:pasteboard];
-        if (dragImage == nil) {
-            dragImage = [innerHTMLView _selectionDraggingImage];
-            NSRect draggingRect = [self convertRect:[innerHTMLView _selectionDraggingRect] fromView:innerHTMLView];
-            dragLoc = NSMakePoint(NSMinX(draggingRect), NSMaxY(draggingRect));
-            dragController->setDragOffset(IntPoint((int)(mouseDownPoint.x - dragLoc.x),
-                                                   (int)(dragLoc.y - mouseDownPoint.y)));        // y inverted because we are flipped
-        }
-        [self dragImage:dragImage
-                     at:dragLoc
-                 offset:NSZeroSize
-                  event:_private->mouseDownEvent
-             pasteboard:pasteboard
-                 source:self
-              slideBack:YES];
-    } else if (srcIsDHTML) {
-        ASSERT(dragController->dragSourceAction() & WebDragSourceActionDHTML);
-        [[webView _UIDelegateForwarder] webView:webView willPerformDragSourceAction:WebDragSourceActionDHTML fromPoint:mouseDownPoint withPasteboard:pasteboard];
-        if (dragImage == nil) {
-            // WebCore should have given us an image, but we'll make one up
-            dragImage = Image::loadPlatformResource("missingImage")->getNSImage();
-            NSSize imageSize = [dragImage size];
-            dragLoc = NSMakePoint(mouseDownPoint.x - imageSize.width / 2, mouseDownPoint.y + imageSize.height / 2);
-            dragController->setDragOffset(IntPoint((int)(imageSize.width / 2), (int)(imageSize.height / 2)));
-        }
-        [self dragImage:dragImage
-                     at:dragLoc
-                 offset:NSZeroSize
-                  event:_private->mouseDownEvent
-             pasteboard:pasteboard
-                 source:self
-              slideBack:YES];
-    } else {
-        // Only way I know if to get here is if the original element clicked on in the mousedown is no longer
-        // under the mousedown point, so linkURL, imageURL and isSelected are all false/nil.
-        startedDrag = NO;
-    }
-    return startedDrag;
 }
 
 - (void)_handleAutoscrollForMouseDragged:(NSEvent *)event 
@@ -1561,17 +1421,13 @@ static NSURL* uniqueURLWithRelativePart(NSString *relativePart)
 - (BOOL)_canEdit
 {
     Frame* coreFrame = core([self _frame]);
-    if (!coreFrame)
-        return false;
-    return coreFrame->editor()->canEdit();
+    return coreFrame && coreFrame->editor()->canEdit();
 }
 
 - (BOOL)_canEditRichly
 {
     Frame* coreFrame = core([self _frame]);
-    if (!coreFrame)
-        return NO;
-    return coreFrame->editor()->canEditRichly();
+    return coreFrame && coreFrame->editor()->canEditRichly();
 }
 
 - (BOOL)_canAlterCurrentSelection
@@ -1582,33 +1438,25 @@ static NSURL* uniqueURLWithRelativePart(NSString *relativePart)
 - (BOOL)_hasSelection
 {
     Frame* coreFrame = core([self _frame]);
-    if (!coreFrame)
-        return NO;
-    return coreFrame->selectionController()->isRange();
+    return coreFrame && coreFrame->selectionController()->isRange();
 }
 
 - (BOOL)_hasSelectionOrInsertionPoint
 {
     Frame* coreFrame = core([self _frame]);
-    if (!coreFrame)
-        return NO;
-    return coreFrame->selectionController()->isCaretOrRange();
+    return coreFrame && coreFrame->selectionController()->isCaretOrRange();
 }
 
 - (BOOL)_hasInsertionPoint
 {
     Frame* coreFrame = core([self _frame]);
-    if (!coreFrame)
-        return NO;
-    return coreFrame->selectionController()->isCaret();
+    return coreFrame && coreFrame->selectionController()->isCaret();
 }
 
 - (BOOL)_isEditable
 {
     Frame* coreFrame = core([self _frame]);
-    if (!coreFrame)
-        return NO;
-    return coreFrame->selectionController()->isContentEditable();
+    return coreFrame && coreFrame->selectionController()->isContentEditable();
 }
 
 - (BOOL)_transparentBackground
@@ -1637,50 +1485,53 @@ static NSURL* uniqueURLWithRelativePart(NSString *relativePart)
     return [self selectionImageRect];
 }
 
+- (DOMNode *)_insertOrderedList
+{
+    Frame* coreFrame = core([self _frame]);
+    return coreFrame ? kit(coreFrame->editor()->insertOrderedList().get()) : nil;
+}
+
+- (DOMNode *)_insertUnorderedList
+{
+    Frame* coreFrame = core([self _frame]);
+    return coreFrame ? kit(coreFrame->editor()->insertUnorderedList().get()) : nil;
+}
+
 - (BOOL)_canIncreaseSelectionListLevel
 {
-    return [self _canEditRichly] && [[self _bridge] canIncreaseSelectionListLevel];
+    Frame* coreFrame = core([self _frame]);
+    return coreFrame && coreFrame->editor()->canIncreaseSelectionListLevel();
 }
 
 - (BOOL)_canDecreaseSelectionListLevel
 {
-    return [self _canEditRichly] && [[self _bridge] canDecreaseSelectionListLevel];
+    Frame* coreFrame = core([self _frame]);
+    return coreFrame && coreFrame->editor()->canDecreaseSelectionListLevel();
 }
 
 - (DOMNode *)_increaseSelectionListLevel
 {
-    if (![self _canEditRichly])
-        return nil;
-        
-    WebFrameBridge *bridge = [self _bridge];
-    return [bridge increaseSelectionListLevel];
+    Frame* coreFrame = core([self _frame]);
+    return coreFrame ? kit(coreFrame->editor()->increaseSelectionListLevel().get()) : nil;
 }
 
 - (DOMNode *)_increaseSelectionListLevelOrdered
 {
-    if (![self _canEditRichly])
-        return nil;
-        
-    WebFrameBridge *bridge = [self _bridge];
-    return [bridge increaseSelectionListLevelOrdered];
+    Frame* coreFrame = core([self _frame]);
+    return coreFrame ? kit(coreFrame->editor()->increaseSelectionListLevelOrdered().get()) : nil;
 }
 
 - (DOMNode *)_increaseSelectionListLevelUnordered
 {
-    if (![self _canEditRichly])
-        return nil;
-        
-    WebFrameBridge *bridge = [self _bridge];
-    return [bridge increaseSelectionListLevelUnordered];
+    Frame* coreFrame = core([self _frame]);
+    return coreFrame ? kit(coreFrame->editor()->increaseSelectionListLevelUnordered().get()) : nil;
 }
 
 - (void)_decreaseSelectionListLevel
 {
-    if (![self _canEditRichly])
-        return;
-        
-    WebFrameBridge *bridge = [self _bridge];
-    [bridge decreaseSelectionListLevel];
+    Frame* coreFrame = core([self _frame]);
+    if (coreFrame)
+        coreFrame->editor()->decreaseSelectionListLevel();
 }
 
 - (void)_setHighlighter:(id<WebHTMLHighlighter>)highlighter ofType:(NSString*)type
@@ -1774,14 +1625,16 @@ static NSURL* uniqueURLWithRelativePart(NSString *relativePart)
         types = mutableTypes;
     }
 
-    [pasteboard declareTypes:types owner:nil];
+    [pasteboard declareTypes:types owner:[self _topHTMLView]];
     [self _writeSelectionWithPasteboardTypes:types toPasteboard:pasteboard cachedAttributedString:attributedString];
     [mutableTypes release];
 }
 
 - (void)close
 {
-    if (_private->closed)
+    // Check for a nil _private here incase we were created with initWithCoder. In that case, the WebView is just throwing
+    // out the archived WebHTMLView and recreating a new one if needed. So close dosen't need to do anything in that case.
+    if (!_private || _private->closed)
         return;
     [self _clearLastHitViewIfSelf];
     // FIXME: This is slow; should remove individual observers instead.
@@ -2021,9 +1874,7 @@ static NSURL* uniqueURLWithRelativePart(NSString *relativePart)
     [self setFocusRingType:NSFocusRingTypeNone];
     
     // Make all drawing go through us instead of subviews.
-    if (NSAppKitVersionNumber >= 711) {
-        [self _setDrawsOwnDescendants:YES];
-    }
+    [self _setDrawsOwnDescendants:YES];
     
     _private = [[WebHTMLViewPrivate alloc] init];
 
@@ -2070,7 +1921,7 @@ static NSURL* uniqueURLWithRelativePart(NSString *relativePart)
 
 - (BOOL)writeSelectionToPasteboard:(NSPasteboard *)pasteboard types:(NSArray *)types
 {
-    [pasteboard declareTypes:types owner:nil];
+    [pasteboard declareTypes:types owner:[self _topHTMLView]];
     [self writeSelectionWithPasteboardTypes:types toPasteboard:pasteboard];
     return YES;
 }
@@ -2112,7 +1963,7 @@ static NSURL* uniqueURLWithRelativePart(NSString *relativePart)
     [self centerSelectionInVisibleArea:sender];
 }
 
-- (BOOL)validateUserInterfaceItem:(id <NSValidatedUserInterfaceItem>)item 
+- (BOOL)validateUserInterfaceItemWithoutDelegate:(id <NSValidatedUserInterfaceItem>)item
 {
     SEL action = [item action];
     Frame* frame = core([self _frame]);
@@ -2350,6 +2201,17 @@ static NSURL* uniqueURLWithRelativePart(NSString *relativePart)
 #endif
     
     return YES;
+}
+
+- (BOOL)validateUserInterfaceItem:(id <NSValidatedUserInterfaceItem>)item
+{
+    BOOL result = [self validateUserInterfaceItemWithoutDelegate:item];
+
+    id ud = [[self _webView] UIDelegate];
+    if (ud && [ud respondsToSelector:@selector(webView:validateUserInterfaceItem:defaultValidation:)])
+        return [ud webView:[self _webView] validateUserInterfaceItem:item defaultValidation:result];
+
+    return result;
 }
 
 - (BOOL)acceptsFirstResponder
@@ -2767,10 +2629,18 @@ static NSURL* uniqueURLWithRelativePart(NSString *relativePart)
             [[NSColor clearColor] set];
             NSRectFill (rect);
         }
-        
-        [[self _bridge] drawRect:rect];        
-        WebView *webView = [self _webView];
-        [[webView _UIDelegateForwarder] webView:webView didDrawRect:[webView convertRect:rect fromView:self]];
+
+        [[self _bridge] drawRect:rect];
+
+        // This hack is needed for <rdar://problem/5023545>. We can hit a race condition where drawRect will be
+        // called after the WebView has closed. If the client did not properly close the WebView and set the 
+        // UIDelegate to nil, then the UIDelegate will be stale and this code will crash. 
+        static BOOL version3OrLaterClient = WebKitLinkedOnOrAfter(WEBKIT_FIRST_VERSION_WITHOUT_QUICKBOOKS_QUIRK);
+        if (version3OrLaterClient) {
+            WebView *webView = [self _webView];
+            [[webView _UIDelegateForwarder] webView:webView didDrawRect:[webView convertRect:rect fromView:self]];
+        }
+
         [(WebClipView *)[self superview] resetAdditionalClip];
 
         [NSGraphicsContext restoreGraphicsState];
@@ -2784,6 +2654,7 @@ static NSURL* uniqueURLWithRelativePart(NSString *relativePart)
 
 - (void)drawRect:(NSRect)rect
 {
+    ASSERT_MAIN_THREAD();
     LOG(View, "%@ drawing", self);
 
     const NSRect *rects;
@@ -3069,21 +2940,41 @@ done:
 
 - (NSArray *)namesOfPromisedFilesDroppedAtDestination:(NSURL *)dropDestination
 {
-    ASSERT(![self _webView] || [self _isTopHTMLView]);
-    Page* page = core([self _webView]);
+    NSFileWrapper *wrapper = nil;
     
-    //If a load occurs midway through a drag, the view may be detached, which gives
-    //us no ability to get to the original Page, so we cannot access any drag state
-    //FIXME: is there a way to recover?
-    if (!page) 
-        return nil; 
+    if (WebCore::CachedResource* tiffResource = [self promisedDragTIFFDataSource]) {
+        
+        SharedBuffer *buffer = tiffResource->data();
+        if (!buffer)
+            goto noPromisedData;
+        
+        NSData *data = buffer->createNSData();
+        NSURLResponse *response = tiffResource->response().nsURLResponse();
+        
+        wrapper = [[[NSFileWrapper alloc] initRegularFileWithContents:data] autorelease];
+        [wrapper setPreferredFilename:[response suggestedFilename]];
+    }
     
-    KURL imageURL = page->dragController()->draggingImageURL();
-    ASSERT(!imageURL.isEmpty());
+noPromisedData:
     
-    NSFileWrapper *wrapper = [[self _dataSource] _fileWrapperForURL:imageURL.getNSURL()];
+    if (!wrapper) {
+        ASSERT(![self _webView] || [self _isTopHTMLView]);
+        Page* page = core([self _webView]);
+        
+        //If a load occurs midway through a drag, the view may be detached, which gives
+        //us no ability to get to the original Page, so we cannot access any drag state
+        //FIXME: is there a way to recover?
+        if (!page) 
+            return nil; 
+        
+        KURL imageURL = page->dragController()->draggingImageURL();
+        ASSERT(!imageURL.isEmpty());
+        
+        wrapper = [[self _dataSource] _fileWrapperForURL:imageURL.getNSURL()];
+    }
+    
     if (wrapper == nil) {
-        LOG_ERROR("Failed to create image file. Did the source image change while dragging? (<rdar://problem/4244861>)");
+        LOG_ERROR("Failed to create image file.");
         return nil;
     }
 
@@ -3209,7 +3100,7 @@ done:
     for (i = 0; i != n; ++i) {
         WebFrame *subframe = [subframes objectAtIndex:i];
         WebFrameView *frameView = [subframe frameView];
-        if ([[subframe dataSource] _isDocumentHTML]) {
+        if ([[subframe _dataSource] _isDocumentHTML]) {
             [(WebHTMLView *)[frameView documentView] _setPrinting:printing minimumPageWidth:0.0f maximumPageWidth:0.0f adjustViewSize:adjustViewSize];
         }
     }
@@ -4892,6 +4783,18 @@ static DOMRange *unionDOMRanges(DOMRange *a, DOMRange *b)
     return [super nextResponder];
 }
 
+// Despite its name, this is called at different times than windowDidBecomeKey is.
+// It takes into account all the other factors that determine when NSCell draws
+// with different tints, so it's the right call to use for control tints. We'd prefer
+// to do this with API. <rdar://problem/5136760>
+- (void)_windowChangedKeyState
+{
+    if (Frame* frame = core([self _frame]))
+        if (FrameView* view = frame->view())
+            view->updateControlTints();
+    [super _windowChangedKeyState];
+}
+
 @end
 
 @implementation WebHTMLView (WebTextSizing)
@@ -5208,8 +5111,8 @@ static CGPoint coreGraphicsScreenPointForAppKitScreenPoint(NSPoint point)
     const char *functionName = "DCMDictionaryServiceWindowShow";
 #else
     typedef void (*ServiceWindowShowFunction)(id unusedDictionaryRef, id inWordString, CFRange selectionRange, id unusedFont, CGPoint textOrigin, Boolean verticalText, id unusedTransform);
-    const char *frameworkPath = "/System/Library/Frameworks/DictionaryServices.framework/DictionaryServices";
-    const char *functionName = "DCSShowDictionaryServiceWindow";
+    const char *frameworkPath = "/System/Library/Frameworks/Carbon.framework/Frameworks/HIToolbox.framework/HIToolbox";
+    const char *functionName = "HIDictionaryWindowShow";
 #endif
 
     static bool lookedForFunction = false;
@@ -5238,15 +5141,15 @@ static CGPoint coreGraphicsScreenPointForAppKitScreenPoint(NSPoint point)
     // FIXME: the dictionary API expects the rect for the first line of selection. Passing
     // the rect for the entire selection, as we do here, positions the pop-up window near
     // the bottom of the selection rather than at the selected word.
-    NSRect rect = [self convertRect:core([self _frame])->visibleSelectionRect() toView:nil];
+    NSRect rect = [self convertRect:core([self _frame])->selectionRect() toView:nil];
     rect.origin = [[self window] convertBaseToScreen:rect.origin];
     NSData *data = [attrString RTFFromRange:NSMakeRange(0, [attrString length]) documentAttributes:nil];
     dictionaryServiceWindowShow(data, rect, (writingDirection == NSWritingDirectionRightToLeft) ? 1 : 0);
 #else
-    // The DictionaryServices API requires the origin, in CG screen coordinates, of the first character of text in the selection.
+    // The HIDictionaryWindowShow function requires the origin, in CG screen coordinates, of the first character of text in the selection.
     // FIXME 4945808: We approximate this in a way that works well when a single word is selected, and less well in some other cases
     // (but no worse than we did in Tiger)
-    NSRect rect = core([self _frame])->visibleSelectionRect();
+    NSRect rect = core([self _frame])->selectionRect();
 
     NSDictionary *attributes = [attrString fontAttributesInRange:NSMakeRange(0,1)];
     NSFont *font = [attributes objectForKey:NSFontAttributeName];
@@ -5280,19 +5183,37 @@ static CGPoint coreGraphicsScreenPointForAppKitScreenPoint(NSPoint point)
         parameters.event = event;
         _private->interpretKeyEventsParameters = &parameters;
         KeypressCommand command = event->keypressCommand();
-        bool hasKeypressCommand = !command.name.isEmpty() || !command.text.isEmpty();
+        bool hasKeypressCommand = !command.commandNames.isEmpty() || !command.text.isEmpty();
 
         if (parameters.shouldSaveCommand || !hasKeypressCommand)
             [self interpretKeyEvents:[NSArray arrayWithObject:macEvent]];
         else {
             if (!command.text.isEmpty())
                 [self insertText:command.text];
-            else
-                [self doCommandBySelector:NSSelectorFromString(command.name)];
+            else {
+                size_t size = command.commandNames.size();
+                for (size_t i = 0; i < size; ++i)
+                    [self doCommandBySelector:NSSelectorFromString(command.commandNames[i])];
+            }
         }
         _private->interpretKeyEventsParameters = 0;
     }
     return parameters.eventWasHandled;
+}
+
+- (WebCore::CachedImage*)promisedDragTIFFDataSource 
+{
+    return _private->promisedDragTIFFDataSource;
+}
+
+- (void)setPromisedDragTIFFDataSource:(WebCore::CachedImage*)source
+{
+    if (source)
+        source->ref(promisedDataClient());
+    
+    if (_private->promisedDragTIFFDataSource)
+        _private->promisedDragTIFFDataSource->deref(promisedDataClient());
+    _private->promisedDragTIFFDataSource = source;
 }
 
 @end
@@ -5503,48 +5424,58 @@ static CGPoint coreGraphicsScreenPointForAppKitScreenPoint(NSPoint point)
     coreFrame->editor()->setIgnoreMarkedTextSelectionChange(false);
 }
 
-- (void)doCommandBySelector:(SEL)aSelector
+- (void)doCommandBySelector:(SEL)selector
 {
+    if (selector == @selector(noop:))
+        return;
+
     // Use pointer to get parameters passed to us by the caller of interpretKeyEvents.
+    // The same call to interpretKeyEvents can do more than one command.
     WebHTMLViewInterpretKeyEventsParameters* parameters = _private->interpretKeyEventsParameters;
-    _private->interpretKeyEventsParameters = 0;
+
     KeyboardEvent* event = parameters ? parameters->event : 0;
-    
     bool shouldSaveCommand = parameters && parameters->shouldSaveCommand;
+
     if (event && shouldSaveCommand) {
-        KeypressCommand command;
-        command.name = NSStringFromSelector(aSelector);
+        KeypressCommand command = event->keypressCommand();
+        command.commandNames.append(NSStringFromSelector(selector));
         event->setKeypressCommand(command);
-        return;
+    } else {
+        // Make sure that only direct calls to doCommandBySelector: see the parameters by setting to 0.
+        _private->interpretKeyEventsParameters = 0;
+
+        bool eventWasHandled = true;
+
+        WebView *webView = [self _webView];
+        Frame* coreFrame = core([self _frame]);
+        if (![[webView _editingDelegateForwarder] webView:webView doCommandBySelector:selector] && coreFrame) {
+            if (selector == @selector(insertNewline:) || selector == @selector(insertParagraphSeparator:) || selector == @selector(insertNewlineIgnoringFieldEditor:))
+                eventWasHandled = coreFrame->editor()->execCommand("InsertNewline", event);
+            else if (selector == @selector(insertLineBreak:))
+                eventWasHandled = coreFrame->editor()->execCommand("InsertLineBreak", event);
+            else if (selector == @selector(insertTab:) || selector == @selector(insertTabIgnoringFieldEditor:))
+                eventWasHandled = coreFrame->editor()->execCommand("InsertTab", event);
+            else if (selector == @selector(insertBacktab:))
+                eventWasHandled = coreFrame->editor()->execCommand("InsertBacktab", event);
+            else
+                [super doCommandBySelector:selector];
+        }
+
+        if (parameters)
+            parameters->eventWasHandled = eventWasHandled;
+
+        // Restore the parameters so that other calls to doCommandBySelector: see them,
+        // and other commands can participate in setting the "eventWasHandled" flag.
+        _private->interpretKeyEventsParameters = parameters;
     }
-    
-    if (aSelector == @selector(noop:))
-        return;
-
-    bool eventWasHandled = true;
-
-    WebView *webView = [self _webView];
-    Frame* coreFrame = core([self _frame]);
-    if (![[webView _editingDelegateForwarder] webView:webView doCommandBySelector:aSelector] && coreFrame) {
-        if (aSelector == @selector(insertNewline:) || aSelector == @selector(insertParagraphSeparator:) || aSelector == @selector(insertNewlineIgnoringFieldEditor:))
-            eventWasHandled = coreFrame->editor()->execCommand("InsertNewline", event);
-        else if (aSelector == @selector(insertLineBreak:))
-            eventWasHandled = coreFrame->editor()->execCommand("InsertLineBreak", event);
-        else if (aSelector == @selector(insertTab:) || aSelector == @selector(insertTabIgnoringFieldEditor:))
-            eventWasHandled = coreFrame->editor()->execCommand("InsertTab", event);
-        else if (aSelector == @selector(insertBacktab:))
-            eventWasHandled = coreFrame->editor()->execCommand("InsertBacktab", event);
-        else
-            [super doCommandBySelector:aSelector];
-    }
-
-    if (parameters)
-        parameters->eventWasHandled = eventWasHandled;
 }
 
 - (void)insertText:(id)string
 {
     // Use pointer to get parameters passed to us by the caller of interpretKeyEvents.
+    // If insertText: is called by interpretKeyEvents, we assume that's the only thing it will do;
+    // we don't handle multiple calls to this the way we do in doCommandBySelector:, and we also
+    // don't handle a mix of doCommandBySelector: and insertText:. 
     WebHTMLViewInterpretKeyEventsParameters* parameters = _private->interpretKeyEventsParameters;
     _private->interpretKeyEventsParameters = 0;
 
@@ -5934,7 +5865,7 @@ static CGPoint coreGraphicsScreenPointForAppKitScreenPoint(NSPoint point)
 - (NSRect)selectionImageRect
 {
     if ([self _hasSelection])
-        return core([self _frame])->visibleSelectionRect();
+        return core([self _frame])->selectionRect();
     return NSZeroRect;
 }
 
@@ -5972,6 +5903,13 @@ static CGPoint coreGraphicsScreenPointForAppKitScreenPoint(NSPoint point)
 - (NSString *)string
 {
     return [[self _bridge] stringForRange:[self _documentRange]];
+}
+
+- (NSAttributedString *)textStorage
+{
+    NSAttributedString *result = [self attributedSubstringFromRange:NSMakeRange(0, UINT_MAX)];
+    // We have to return an empty string rather than null to prevent TSM from calling -string
+    return result ? result : [[[NSAttributedString alloc] initWithString:@""] autorelease];
 }
 
 - (NSAttributedString *)_attributeStringFromDOMRange:(DOMRange *)range

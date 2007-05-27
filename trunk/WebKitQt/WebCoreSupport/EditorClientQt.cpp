@@ -221,7 +221,7 @@ void EditorClientQt::handleKeypress(KeyboardEvent* event)
         return;
 
     const PlatformKeyboardEvent* kevent = event->keyEvent();
-    if (!kevent->isKeyUp()) {
+    if (kevent && !kevent->isKeyUp()) {
         Node* start = frame->selectionController()->start().node();
         if (start && start->isContentEditable()) {
             switch(kevent->WindowsKeyCode()) {
@@ -299,6 +299,52 @@ void EditorClientQt::textWillBeDeletedInTextField(Element*)
 
 void EditorClientQt::textDidChangeInTextArea(Element*)
 {
+}
+
+void EditorClientQt::ignoreWordInSpellDocument(const String&)
+{
+    notImplemented();
+}
+
+void EditorClientQt::learnWord(const String&)
+{
+    notImplemented();
+}
+
+void EditorClientQt::checkSpellingOfString(const UChar*, int, int*, int*)
+{
+    notImplemented();
+}
+
+void EditorClientQt::checkGrammarOfString(const UChar*, int, Vector<GrammarDetail>&, int*, int*)
+{
+    notImplemented();
+}
+
+void EditorClientQt::updateSpellingUIWithGrammarString(const String&, const GrammarDetail&)
+{
+    notImplemented();
+}
+
+void EditorClientQt::updateSpellingUIWithMisspelledWord(const String&)
+{
+    notImplemented();
+}
+
+void EditorClientQt::showSpellingUI(bool)
+{
+    notImplemented();
+}
+
+bool EditorClientQt::spellingUIIsShowing()
+{
+    notImplemented();
+    return false;
+}
+
+void EditorClientQt::getGuessesForWord(const String&, Vector<String>&)
+{
+    notImplemented();
 }
 
 bool EditorClientQt::isEditing() const

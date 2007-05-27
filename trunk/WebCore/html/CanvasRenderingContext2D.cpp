@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2004, 2005, 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2007 Trolltech ASA
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -42,6 +43,12 @@
 #include "Settings.h"
 #include "cssparser.h"
 #include <wtf/MathExtras.h>
+
+#if PLATFORM(QT)
+#include <QPainter>
+#include <QPixmap>
+#include <QPainterPath>
+#endif
 
 namespace WebCore {
 
@@ -395,7 +402,7 @@ void CanvasRenderingContext2D::bezierCurveTo(float cp1x, float cp1y, float cp2x,
 void CanvasRenderingContext2D::arcTo(float x0, float y0, float x1, float y1, float r, ExceptionCode& ec)
 {
     ec = 0;
-    if (r < 0) {
+    if (!(r > 0)) {
         ec = INDEX_SIZE_ERR;
         return;
     }
@@ -405,7 +412,7 @@ void CanvasRenderingContext2D::arcTo(float x0, float y0, float x1, float y1, flo
 void CanvasRenderingContext2D::arc(float x, float y, float r, float sa, float ea, bool clockwise, ExceptionCode& ec)
 {
     ec = 0;
-    if (r < 0) {
+    if (!(r > 0)) {
         ec = INDEX_SIZE_ERR;
         return;
     }
@@ -415,7 +422,7 @@ void CanvasRenderingContext2D::arc(float x, float y, float r, float sa, float ea
 void CanvasRenderingContext2D::rect(float x, float y, float width, float height, ExceptionCode& ec)
 {
     ec = 0;
-    if (width < 0 || height < 0) {
+    if (!(width >= 0 && height >= 0)) {
         ec = INDEX_SIZE_ERR;
         return;
     }
@@ -444,6 +451,17 @@ void CanvasRenderingContext2D::fill()
         if (state().m_fillStyle->pattern())
             applyFillPattern();
         CGContextFillPath(c->platformContext());
+    }
+#elif PLATFORM(QT)
+    QPainterPath* path = state().m_path.platformPath();
+    QPainter* p = static_cast<QPainter*>(c->platformContext());
+    willDraw(path->controlPointRect());
+    if (state().m_fillStyle->gradient()) {
+        fprintf(stderr, "FIXME: CanvasRenderingContext2D::fill\n");
+    } else {
+        if (state().m_fillStyle->pattern())
+            applyFillPattern();
+        p->fillPath(*path, p->brush());
     }
 #endif
 }
@@ -476,9 +494,21 @@ void CanvasRenderingContext2D::stroke()
             applyStrokePattern();
         CGContextStrokePath(c->platformContext());
     }
+#elif PLATFORM(QT)
+    QPainterPath* path = state().m_path.platformPath();
+    QPainter* p = static_cast<QPainter*>(c->platformContext());
+    willDraw(path->controlPointRect());
+    if (state().m_strokeStyle->gradient()) {
+        fprintf(stderr, "FIXME: CanvasRenderingContext2D::stroke\n");
+    } else {
+        if (state().m_strokeStyle->pattern())
+            applyStrokePattern();
+        p->strokePath(*path, p->pen());
+    }
 #endif
 
-    if (m_canvas && m_canvas->document()->frame() && m_canvas->document()->frame()->settings()->usesDashboardBackwardCompatibilityMode())
+    Settings* settings = m_canvas ? m_canvas->document()->settings() : 0;
+    if (settings && settings->usesDashboardBackwardCompatibilityMode())
         state().m_path.clear();
 }
 
@@ -493,7 +523,7 @@ void CanvasRenderingContext2D::clip()
 void CanvasRenderingContext2D::clearRect(float x, float y, float width, float height, ExceptionCode& ec)
 {
     ec = 0;
-    if (width < 0 || height < 0) {
+    if (!(width >= 0 && height >= 0)) {
         ec = INDEX_SIZE_ERR;
         return;
     }
@@ -509,7 +539,7 @@ void CanvasRenderingContext2D::fillRect(float x, float y, float width, float hei
 {
     ec = 0;
 
-    if (width < 0 || height < 0) {
+    if (!(width >= 0 && height >= 0)) {
         ec = INDEX_SIZE_ERR;
         return;
     }
@@ -534,6 +564,17 @@ void CanvasRenderingContext2D::fillRect(float x, float y, float width, float hei
             applyFillPattern();
         CGContextFillRect(c->platformContext(), rect);
     }
+#elif PLATFORM(QT)
+    QRectF rect(x, y, width, height);
+    willDraw(rect);
+    QPainter* p = static_cast<QPainter*>(c->platformContext());
+    if (state().m_fillStyle->gradient()) {
+        fprintf(stderr, "FIXME: Canvas gradients\n");
+    } else {
+        if (state().m_fillStyle->pattern())
+            applyFillPattern();
+        p->fillRect(rect, p->brush());
+    }
 #endif
 }
 
@@ -546,7 +587,7 @@ void CanvasRenderingContext2D::strokeRect(float x, float y, float width, float h
 {
     ec = 0;
 
-    if (width < 0 || height < 0 || lineWidth < 0) {
+    if (!(width >= 0 && height >= 0 && lineWidth >= 0)) {
         ec = INDEX_SIZE_ERR;
         return;
     }
@@ -750,16 +791,19 @@ void CanvasRenderingContext2D::drawImage(HTMLImageElement* image, const FloatRec
 
     ec = 0;
 
-    GraphicsContext* c = drawingContext();
-    if (!c)
-        return;
-
     FloatRect imageRect = FloatRect(FloatPoint(), size(image));
-    if (!(imageRect.contains(srcRect) && srcRect.width() > 0 && srcRect.height() > 0 
-        && dstRect.width() > 0 && dstRect.height() > 0)) {
+    if (!(imageRect.contains(srcRect) && srcRect.width() >= 0 && srcRect.height() >= 0 
+            && dstRect.width() >= 0 && dstRect.height() >= 0)) {
         ec = INDEX_SIZE_ERR;
         return;
     }
+
+    if (srcRect.isEmpty() || dstRect.isEmpty())
+        return;
+
+    GraphicsContext* c = drawingContext();
+    if (!c)
+        return;
 
     CachedImage* cachedImage = image->cachedImage();
     if (!cachedImage)
@@ -792,12 +836,14 @@ void CanvasRenderingContext2D::drawImage(HTMLCanvasElement* canvas, const FloatR
 
     ec = 0;
 
-    if (srcRect.isEmpty() || dstRect.isEmpty()) {
+    FloatRect srcCanvasRect = FloatRect(FloatPoint(), canvas->size());
+    if (!(srcCanvasRect.contains(srcRect) && srcRect.width() >= 0 && srcRect.height() >= 0 
+            && dstRect.width() >= 0 && dstRect.height() >= 0)) {
         ec = INDEX_SIZE_ERR;
         return;
     }
 
-    if (!canvas)
+    if (srcRect.isEmpty() || dstRect.isEmpty())
         return;
 
     GraphicsContext* c = drawingContext();
@@ -847,6 +893,13 @@ void CanvasRenderingContext2D::drawImage(HTMLCanvasElement* canvas, const FloatR
     }
 
     CGImageRelease(platformImage);
+#elif PLATFORM(QT)
+    QPixmap px = canvas->createPlatformImage();
+    if (px.isNull())
+        return;
+    willDraw(dstRect);
+    QPainter* painter = static_cast<QPainter*>(c->platformContext());
+    painter->drawPixmap(dstRect, px, srcRect);
 #endif
 }
 
@@ -921,9 +974,10 @@ PassRefPtr<CanvasPattern> CanvasRenderingContext2D::createPattern(HTMLCanvasElem
     PassRefPtr<CanvasPattern> pattern = new CanvasPattern(image, repeatX, repeatY);
     CGImageRelease(image);
     return pattern;
-#else
-    return 0;
+#elif PLATFORM(QT)
+    fprintf(stderr, "FIXME: CanvasRenderingContext2D::createPattern patterns not implemented\n");
 #endif
+    return 0;
 }
 
 void CanvasRenderingContext2D::willDraw(const FloatRect& r)
@@ -970,6 +1024,8 @@ void CanvasRenderingContext2D::applyStrokePattern()
     CGPatternRelease(platformPattern);
 
     state().m_strokeStylePatternTransform = m;
+#elif PLATFORM(QT)
+    fprintf(stderr, "FIXME: CanvasRenderingContext2D::applyStrokePattern\n");
 #endif
     state().m_appliedStrokePattern = true;
 }
@@ -1004,6 +1060,8 @@ void CanvasRenderingContext2D::applyFillPattern()
     CGPatternRelease(platformPattern);
 
     state().m_fillStylePatternTransform = m;
+#elif PLATFORM(QT)
+    fprintf(stderr, "FIXME: CanvasRenderingContext2D::applyStrokePattern\n");
 #endif
     state().m_appliedFillPattern = true;
 }

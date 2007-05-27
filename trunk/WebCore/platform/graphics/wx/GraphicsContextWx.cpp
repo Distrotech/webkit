@@ -361,6 +361,11 @@ void GraphicsContext::clip(const IntRect& r)
 #endif
 }
 
+void GraphicsContext::clipOut(const Path&)
+{
+    notImplemented();
+}
+
 void GraphicsContext::clipOut(const IntRect&)
 {
     notImplemented();

@@ -30,6 +30,7 @@
 #include "HTMLNames.h"
 #include "HTMLOListElement.h"
 #include "RenderListMarker.h"
+#include "RenderView.h"
 
 using namespace std;
 
@@ -170,8 +171,16 @@ void RenderListItem::updateValue()
     if (!m_hasExplicitValue) {
         m_isValueUpToDate = false;
         if (m_marker)
-            m_marker->setNeedsLayoutAndMinMaxRecalc();
+            m_marker->setNeedsLayoutAndPrefWidthsRecalc();
     }
+}
+
+static RenderObject* firstNonMarkerChild(RenderObject* parent)
+{
+    RenderObject* result = parent->firstChild();
+    while (result && result->isListMarker())
+        result = result->nextSibling();
+    return result;
 }
 
 void RenderListItem::updateMarkerLocation()
@@ -191,31 +200,35 @@ void RenderListItem::updateMarkerLocation()
                 lineBoxParent = this;
         }
 
-        if (markerPar != lineBoxParent || !m_marker->minMaxKnown()) {
+        if (markerPar != lineBoxParent || m_marker->prefWidthsDirty()) {
+            // Removing and adding the marker can trigger repainting in
+            // containers other than ourselves, so we need to disable LayoutState.
+            view()->disableLayoutState();
+            updateFirstLetter();
             m_marker->remove();
             if (!lineBoxParent)
                 lineBoxParent = this;
-            lineBoxParent->addChild(m_marker, lineBoxParent->firstChild());
-            if (!m_marker->minMaxKnown())
-                m_marker->calcMinMaxWidth();
-            recalcMinMaxWidths();
+            lineBoxParent->addChild(m_marker, firstNonMarkerChild(lineBoxParent));
+            if (m_marker->prefWidthsDirty())
+                m_marker->calcPrefWidths();
+            view()->enableLayoutState();
         }
     }
 }
 
-void RenderListItem::calcMinMaxWidth()
+void RenderListItem::calcPrefWidths()
 {
-    // Make sure our marker is in the correct location.
+    ASSERT(prefWidthsDirty());
+    
     updateMarkerLocation();
-    if (!minMaxKnown())
-        RenderBlock::calcMinMaxWidth();
+
+    RenderBlock::calcPrefWidths();
 }
 
 void RenderListItem::layout()
 {
-    ASSERT(needsLayout());
-    ASSERT(minMaxKnown());
-    
+    ASSERT(needsLayout()); 
+
     updateMarkerLocation();    
     RenderBlock::layout();
 }
@@ -285,7 +298,7 @@ const String& RenderListItem::markerText() const
 void RenderListItem::explicitValueChanged()
 {
     if (m_marker)
-        m_marker->setNeedsLayoutAndMinMaxRecalc();
+        m_marker->setNeedsLayoutAndPrefWidthsRecalc();
     Node* listNode = enclosingList(node());
     RenderObject* listRenderer = 0;
     if (listNode)
@@ -296,7 +309,7 @@ void RenderListItem::explicitValueChanged()
             if (!item->m_hasExplicitValue) {
                 item->m_isValueUpToDate = false;
                 if (RenderListMarker* marker = item->m_marker)
-                    marker->setNeedsLayoutAndMinMaxRecalc();
+                    marker->setNeedsLayoutAndPrefWidthsRecalc();
             }
         }
 }

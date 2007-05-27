@@ -1,3 +1,1499 @@
+2007-05-26  Darin Adler  <darin@apple.com>
+
+        Reviewed by Tim Hatcher.
+
+        * MigrateHeaders.make: Added dependency on this makefile itself, which is
+        useful when you change the sed command or other aspect of this file. My build
+        failed until I made this fix.
+
+2007-05-25  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Darin Adler.
+
+        Fixed <rdar://problem/5055182> The page cache has no global cap.
+        
+        The main WebKit changes are:
+            1. Changed -[WebBackForwardList setPageCacheSize] and -[WebBackForwardList 
+            pageCacheSize] to accomodate the new global page cache model, updating
+            their documentation. 
+            
+            2. Added -[WebPreferences setShouldUsePageCache] and -[WebPreferences 
+            shouldUsePageCache] as pending public API.
+            
+            3. Centralized calculation of object cache and page cache sizes inside
+            WebPreferences. 
+            
+            Cchanged our old behavior of reading a preference and applying a fudge 
+            factor with a new behavior of just using the preference directly. The 
+            old behavior was confusing and often inappropriate. (For example, if 
+            you set a page cache size of 100, a 256MB machine would somewhat 
+            arbitrarily reduce that number to 98. ???)
+
+        * WebView/WebView.mm: Added support for two flags to determine whether
+        to use the page cache. If either -[WebBackForwardList setPageCacheSize:0]
+        or -[WebPreferences setShouldUsePageCache:NO] is called, we don't use
+        the page cache.
+
+2007-05-25  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Kevin Decker.
+
+        <rdar://problem/5219089> Changes for migration of DictionaryServices
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView _lookUpInDictionaryFromMenu:]): look for the HIDictionaryWindowShow symbol in HIToolbox
+
+2007-05-25  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        Fixed global initializer (like you fix a dog).
+        
+        I'm not sure how our script missed this. I tested, and it generally doesn't 
+        seem to work very well.
+
+        * WebView/WebHTMLView.mm: Allocate lazily to avoid the performance hit of
+        a global initializer.
+        (promisedDataClient):
+        (-[WebHTMLViewPrivate dealloc]):
+        (-[WebHTMLViewPrivate clear]):
+        (-[WebHTMLView setPromisedDragTIFFDataSource:WebCore::]):
+
+2007-05-25  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin
+
+        <rdar://problem/5228371> - REGRESSION - Certain mail message bodies display as empty
+
+        This is due to http://trac.webkit.org/projects/webkit/changeset/21480 which unintentionally
+        made applewebdata urls result in check.call(false) instead of check.call(true)
+
+        Best place for a fix is to have the FrameLoaderClient::canHandleRequest() call return true, which
+        really is rooted in WebView
+
+        <rdar://problem/5229587> tracks adding a layout test
+
+        * WebView/WebView.mm:
+        (+[WebView _canHandleRequest:]): Return true for applewebdata URLs
+
+2007-05-25  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Darin Adler, Tim Hatcher.
+        
+        "unsigned" => "WebNSUInteger" in public API.
+
+        * History/WebBackForwardList.h:
+        * WebView/WebScriptDebugDelegate.h:
+        * WebView/WebUIDelegate.h:
+        * WebView/WebViewPrivate.h:
+
+2007-05-25  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Darin Adler.
+        
+        Moved JavaScriptCore-related pending public API to public API.
+
+        * MigrateHeaders.make: Hack to prevent <JavaScriptCore/JSBase.h> from 
+        automatically converting to <WebKit/JSBase.h>
+        
+        Moved -windowObject and -globalContext
+
+        * WebView/WebFramePrivate.h: from here
+        * WebView/WebFrame.h: to here
+        * WebView/WebFrame.mm: and out of its temporary category
+
+        Moved -didClearWindowObject:forFrame:
+
+        * WebView/WebViewPrivate.h: from here
+        * WebView/WebFrameLoadDelegate.h: to here
+
+2007-05-25  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Anders and Tim
+        
+        - fixed <rdar://problem/5226000> REGRESSION: In Gmail and Mail, a hang occurs when attempting 
+          to grammar/spellcheck a word in a reply
+
+        * WebCoreSupport/WebEditorClient.mm:
+        (WebEditorClient::checkGrammarOfString):
+        Fixed recently-introduced false assumption that NSNotFound == -1
+
+2007-05-24  dethbakin  <bdakin@apple.com>
+
+        Reviewed by Geoff.
+
+        Fix for <rdar://problem/5023545> QuickBooks Pro 2007:hang/crash 
+        after closing QuickBooks Tutorial Center with Leopard9A377
+
+        We can hit a race condition where drawRect will be called after the 
+        WebView has closed. Quickbooks does not properly close the WebView 
+        and set the UIDelegate to nil, so the UIDelegate is stale and we 
+        crash. This is a regression because the code that uses the 
+        UIDelegate in the drawRect code path was only added recently. The 
+        method that the UIDelegate calls into is new -- it does not exist 
+        on Tiger -- so there is no harm in not running this code for 
+        applications linked against older WebKits. Other applications may 
+        run into this same bug so I am not doing a bundle 
+        check...particularly because, as I mentioned, the new UIDelegate 
+        call would not be implemented by older clients anyway.  
+
+        * Misc/WebKitVersionChecks.h:
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView drawSingleRect:]):
+
+2007-05-24  Darin Adler  <darin@apple.com>
+
+        * English.lproj/StringsNotToBeLocalized.txt: Update for recent changes.
+
+2007-05-24  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Adam, Darin, and Geoff.
+
+        Fix for <rdar://problem/5000470> REGRESSION: The IM reconvert
+        function returns incorrect symbol due to inconsistent range
+        domains in TSM
+
+        Text Services Management uses ranges provided by the
+        NSTextInput API to index into the string return by
+        -[WebHTMLView string]. As a result some input methods
+        incorrectly get their candidate text from the beginning
+        of the document instead of from the input element.
+
+        TSM prefers to query -textStorage over -string so as a
+        workaround we provide an implementation of -textStorage that
+        returns the content of the current text input.  TSM only ever
+        queries the result of textStorage as an NSAttributedString so
+        we do not need to implement a fake NSTextStorage class
+
+        This should not cause harm to anything else as textStorage is
+        actually a method on NSTextView, which we clearly are not. TSM
+        only queries the method because it uses respondsToSelector to
+        control behaviour.
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView textStorage]):
+
+
+2007-05-24  David Harrison  <harrison@apple.com>
+
+        Reviewed by Tim Hatcher.
+
+        <rdar://problem/5225343> REGRESSION: With View Source window opened, navigating to a different URL in the browser window results in a crash at WebCore::FrameLoader::frameHasLoaded()
+        
+        _private->loader->frameLoader() was not being nil checked.
+        * WebView/WebDataSource.mm:
+        (-[WebDataSource request]):
+        Add nil check for _private->loader->frameLoader() 
+
+2007-05-23  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Geoff.
+
+        <rdar://problem/3663808> Resize large images to fit in the browser window
+        
+        Add new WebPreferences SPI.
+        
+        * WebView/WebPreferenceKeysPrivate.h:
+        * WebView/WebPreferences.m:
+        (+[WebPreferences initialize]):
+        (-[WebPreferences enableAutomaticImageResizing]):
+        (-[WebPreferences setEnableAutomaticImageResizing:]):
+        * WebView/WebPreferencesPrivate.h:
+        * WebView/WebView.mm:
+        (-[WebView _updateWebCoreSettingsFromPreferences:]):
+
+2007-05-23  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Darin.
+
+        Patch for http://bugs.webkit.org/show_bug.cgi?id=13830
+        Auto-generate JS DOM bindings for HTMLDocument and most of the rest
+        of HTMLElement
+
+        * MigrateHeaders.make: add DOMHTMLDocumentPrivate.h
+        * WebKit.xcodeproj/project.pbxproj:
+
+2007-05-23  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Fix for <rdar://problem/5223782> REGRESSION: Can't drag and drop a standalone image
+
+        The main resource for a standalone image webarchive has the same mimetype as the
+        underlying image.
+
+        * Misc/WebNSPasteboardExtras.mm:
+        (-[NSPasteboard _web_writePromisedRTFDFromArchive:containsImage:]):
+
+2007-05-22  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Adam.
+
+        Patch for http://bugs.webkit.org/show_bug.cgi?id=13833
+        Add ObjC DOM binding for HTMLMarqeeElement
+
+        - Also adds missing DOMHTMLFramePrivate.
+
+        * MigrateHeaders.make:
+
+2007-05-22  Darin Adler  <darin@apple.com>
+
+        Reviewed by Geoff.
+
+        * WebInspector/webInspector/treeoutline.js: Use ownerDocument instead of non-standard
+        document property.
+
+2007-05-22  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Darin.
+
+        Adding some asserts to help detect other cases of <rdar://problem/5171145>
+
+        * WebCoreSupport/WebFrameBridge.mm: (-[WebFrameBridge makeFirstResponder:]):
+
+2007-05-22  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Kevin (Sarge)
+
+        <rdar://problem/5219885> - Crash after closing a inline popup ad at http://news.yahoo.com/
+
+        This regressed in http://trac.webkit.org/projects/webkit/changeset/21618
+
+        * WebView/WebFrame.mm:
+        (-[WebFrame dataSource]): Null check the frameloader
+
+2007-05-21  Adele Peterson  <adele@apple.com>
+
+        Fix by Darin, reviewed by me.
+
+        Fix for <rdar://problem/5171145> Safari crashed closing tab in NSInputContext updateInputContexts
+
+        * WebView/WebFrameView.mm: (-[WebFrameView _setDocumentView:]): If the old view is the first responder,
+        then set the window's first responder to nil so we don't leave the window pointing to a view that's no longer in it.
+
+2007-05-21  Brady Eidson  <beidson@apple.com>
+
+        Making the importance of my last change more clear
+
+        * WebView/WebViewPrivate.h: "Leave for Dashboard, people!"
+
+2007-05-21  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Kevin (Sarge)
+
+        <rdar://problem/5217124> - Re-add mistakenly removed SPI
+
+        * WebView/WebView.mm:
+        (-[WebView handleAuthenticationForResource:challenge:fromDataSource:]):
+        * WebView/WebViewPrivate.h:
+
+2007-05-21  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Ada.
+
+        <rdar://problem/5200816> REGRESSION: With Shiira 1.2.2 , I can't open embedded link in flash object by clicking (http:/www.adobe.com )
+        
+        Null check the request.
+        
+        * WebView/WebView.mm:
+        (+[WebView _canHandleRequest:]):
+
+2007-05-19  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Geoff.
+        
+        <rdar://problem/5205358> REGRESSION (r21367): All messages appear entirely blank when running Mail off of tip of tree WebKit
+        
+        The fix is to return nil from [WebFrame dataSource] when it has not loaded anything but the fake
+        empty initial document. However, WebKit still needs the real data source internally, so I also
+        added a [WebFrame _dataSource] method that skips this check, and made WebKit use it throughout.
+
+        * Misc/WebNSAttributedStringExtras.mm:
+        (fileWrapperForElement):
+        * Plugins/WebBaseNetscapePluginView.mm:
+        (-[WebBaseNetscapePluginView dataSource]):
+        * Plugins/WebNullPluginView.mm:
+        (-[WebNullPluginView viewDidMoveToWindow]):
+        * Plugins/WebPluginController.mm:
+        (-[WebPluginController URLPolicyCheckReferrer]):
+        * WebCoreSupport/WebFrameBridge.mm:
+        (-[WebFrameBridge dataSource]):
+        (-[WebFrameBridge redirectDataToPlugin:]):
+        * WebCoreSupport/WebFrameLoaderClient.mm:
+        (WebFrameLoaderClient::makeDocumentView):
+        (WebFrameLoaderClient::forceLayoutForNonHTML):
+        (WebFrameLoaderClient::prepareForDataSourceReplacement):
+        (WebFrameLoaderClient::canCachePage):
+        * WebCoreSupport/WebViewFactory.mm:
+        (-[WebViewFactory bridgeForView:]):
+        * WebKit.xcodeproj/project.pbxproj:
+        * WebView/WebArchiver.mm:
+        (+[WebArchiver archiveFrame:]):
+        (+[WebArchiver archiveMainResourceForFrame:]):
+        (+[WebArchiver _archiveWithMarkupString:fromFrame:nodes:]):
+        (+[WebArchiver archiveSelectionInFrame:]):
+        * WebView/WebFrame.mm:
+        (-[WebFrame _loadURL:referrer:intoChild:]):
+        (-[WebFrame _addChild:]):
+        (-[WebFrame _dataSource]):
+        (-[WebFrame DOMDocument]):
+        (-[WebFrame dataSource]):
+        * WebView/WebFrameInternal.h:
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView _setPrinting:minimumPageWidth:maximumPageWidth:adjustViewSize:]):
+        * WebView/WebRenderNode.mm:
+        (-[WebRenderNode initWithWebFrameView:]):
+        * WebView/WebView.mm:
+        (-[WebView _mainFrameOverrideEncoding]):
+        (-[WebView mainFrameURL]):
+        (-[WebView mainFrameTitle]):
+        (-[WebView mainFrameIcon]):
+        (-[WebView validateUserInterfaceItemWithoutDelegate:]):
+        (-[WebView replaceSelectionWithArchive:]):
+        (-[WebView _isLoading]):
+        (-[WebView _performTextSizingSelector:withObject:onTrackingDocs:selForNonTrackingDocs:newScaleFactor:]):
+        (-[WebView _notifyTextSizeMultiplierChanged]):
+
+2007-05-18  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Sam.
+
+        Fix for http://bugs.webkit.org/show_bug.cgi?id=13782 
+        REGRESSION (r21528-r21533): Failing editing/selection/drag-in-iframe in pixel mode
+        
+        r21533 made used a DOMElement as the source for promise data, this meant it had to 
+        clear the dragging pasteboard following the drag.  In DRT a drag is non-blocking
+        so this resulted in us prematurely clearing the pasteboard.  
+        
+        This patch avoids this problem by referencing the source CachedImage rather than the
+        DOMElement, so we don't need to worry about retaining an entire document forever, so
+        we don't need to clear the dragging pasteboard following the drag.
+        
+        * Misc/WebNSPasteboardExtras.mm:
+        (imageFromElement):
+          Extract the underlying CachedImage from a DOMElement
+        (-[NSPasteboard _web_writeImage:element:URL:title:archive:types:source:]):
+          Use a CachedImage instead of a DOMElement
+          
+        * WebCoreSupport/WebDragClient.mm:
+        (WebDragClient::startDrag):
+        
+        * WebKit.xcodeproj/project.pbxproj:
+        
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLViewPrivate dealloc]):
+        (-[WebHTMLViewPrivate clear]):
+        (-[WebHTMLView pasteboardChangedOwner:]):
+        (-[WebHTMLView pasteboard:provideDataForType:]):
+        (-[WebHTMLView namesOfPromisedFilesDroppedAtDestination:]):
+        (-[WebHTMLView WebCore::]):
+        (-[WebHTMLView setPromisedDragTIFFDataSource:WebCore::]):
+          Use CachedImage rather than DOMElement as promised data source
+          
+        * WebView/WebHTMLViewInternal.h:
+        * WebView/WebHTMLViewPrivate.h:
+
+2007-05-18  Tristan O'Tierney  <tristan@apple.com>
+
+        Reviewed by Brady E.
+
+        * WebCoreSupport/WebFrameLoaderClient.mm:
+        (WebFrameLoaderClient::download):
+        asked the webframeloaderclient for its webview's history and 
+        injected the originated url into the created WebDownload
+
+2007-05-18  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Kevin Decker
+        
+        Improvement to WebKit part of fix for 5201499 based on more modern understanding. (That is,
+        a couple of hours more modern.)
+
+        * WebView/WebUIDelegatePrivate.h:
+        add showPanel: parameter to just-introduced delegate method webView:saveFrameView:
+
+        * WebView/WebPDFView.mm:
+        (-[WebPDFView PDFViewSavePDFToDownloadFolder:]):
+        pass NO for new showPanel: parameter, and update comment
+
+2007-05-18  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by John.
+        
+        <rdar://problem/5204792> REGRESSION (r21367): System widgets are drawn with vertical/horizontal scroll bars
+        
+        No test because the bug requires calling setAllowsScrolling: to reproduce.
+
+        * WebView/WebFrameView.mm:
+        (-[WebFrameView setAllowsScrolling:]): Update the FrameView's scroll state as well as the one
+        on WebDynamicScrollBarsView, otherwise this setting won't stick if the frame has already loaded
+        a document.
+
+2007-05-18  Geoffrey Garen  <ggaren@apple.com>
+
+        Fixed spelling error.
+        
+        * WebView/WebViewPrivate.h:
+
+2007-05-18  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Kevin Decker
+        
+        WebKit part of fix for 5201499 (support for PDFKit UI for saving PDFs to disk)
+        
+        Also, the PDFKit mechanism for notifying clients about "Open File Externally" was
+        changed from a notification to a delegate method. The notification was new to 
+        Leopard, so removing it doesn't affect clients in the field.
+
+        * WebView/WebUIDelegatePrivate.h:
+        Declared new UI delegate method webView:saveFrameView:, analogous to the existing
+        webView:printFrameView:
+
+        * WebView/WebPDFView.mm:
+        removed declaration of _webkit_PDFKitLaunchNotification
+        (-[WebPDFView viewDidMoveToWindow]):
+        don't observe _webkit_PDFKitLaunchNotification
+        (-[WebPDFView viewWillMoveToWindow:]):
+        ditto
+        (-[WebPDFView PDFViewOpenPDFInNativeApplication:]):
+        new PDFKit delegate method, replaces our use of _webkit_PDFKitLaunchNotification
+        (-[WebPDFView PDFViewSavePDFToDownloadFolder:]):
+        new PDFKit delegate method, calls through to new WebKit UI delegate method
+        
+2007-05-17  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Justin.
+
+        Fix for <rdar://problem/4244861> Safari fails to create image file
+        after releasing dragged image that has changed on source page
+
+        This patch fixes this bug by manually creating an NSFileWrapper from
+        the TIFF promise data for a drag if it is available.  This bypasses
+        the problem of the required resource no longer being held due to page
+        loads or other constraints.
+        
+        We need to leave the old path in place to allow for the case where
+        the promised data is not available.
+
+        * WebCoreSupport/WebDragClient.mm:
+        (WebDragClient::declareAndWriteDragImage):
+          Always use the top WebHTMLView as the pasteboard owner, this is
+          safe as we only use the owner for resolving promised types.
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView _writeSelectionToPasteboard:]):
+        (-[WebHTMLView writeSelectionToPasteboard:types:]):
+          Always use the top WebHTMLView as the pasteboard owner.
+        (-[WebHTMLView namesOfPromisedFilesDroppedAtDestination:]):
+          Add path to create NSFileWrapper from promise data.
+
+2007-05-17  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Adam.
+        
+        Fix for <rdar://problem/4343832> Trying to drag a large 6.2MB jpeg image
+         out of Safari is unexpectedly slow (4 copies of image plus RTF document on pasteboard)
+         
+        This patch causes the construction of the RTF and TIFF data to be delayed until requested.
+        
+        We delay TIFF construction from a DOMElement as this may require generating TIFF data
+        from the CachedImage, which is slow.  To allow the TIFF data to be created later the 
+        it's necessary to add a reference to the source DOMElement to the view.
+
+        * Misc/WebNSPasteboardExtras.h:
+        * Misc/WebNSPasteboardExtras.mm:
+        (-[NSPasteboard _web_writePromisedRTFDFromArchive:containsImage:]):
+          Implements the delayed write of RTF data
+        (-[NSPasteboard _web_writeImage:element:URL:title:archive:types:source:]):
+          Set up the pasteboard to allow the data writing to be delayed
+        (-[NSPasteboard _web_declareAndWriteDragImageForElement:URL:title:archive:source:]):
+          Now we need to pass the WebHTMLView on to _web_writeImage:element:URL:title:archive:types:source:
+        * WebCoreSupport/WebDragClient.mm:
+        (WebDragClient::startDrag):
+          Clear the dragging pasteboard once the drag has ended to ensure we don't hold references
+          to anything longer than we need to.
+        (WebDragClient::declareAndWriteDragImage):
+          
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLViewPrivate dealloc]):
+        (-[WebHTMLViewPrivate clear]):
+        (-[WebHTMLView pasteboardChangedOwner:]):
+          Make sure we clear out the DOMElement reference once it is no longer needed
+        (-[WebHTMLView pasteboard:provideDataForType:]):
+          Provide delayed data
+        (-[WebHTMLView _writeSelectionToPasteboard:]):
+          Make sure we set pasteboard ownership correctly
+        (-[WebHTMLView promisedDragTIFFDataSource]):
+        (-[WebHTMLView setPromisedDragTIFFDataSource:]):
+        (-[WebHTMLView writeSelectionToPasteboard:types:]):
+        * WebView/WebHTMLViewInternal.h:
+        * WebView/WebHTMLViewPrivate.h:
+        
+        * WebView/WebView.mm:
+        (-[WebView _writeImageForElement:withPasteboardTypes:toPasteboard:]):
+
+2007-05-16  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Darin.
+
+        <rdar://problem/5207156> Hamachi test tool causes assertion in FormCompletionController in Safari
+
+        Update for WebCore changes.
+        
+        * WebView/WebFrame.mm:
+        (-[WebFrame _loadURL:referrer:intoChild:]):
+
+2007-05-15  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Sam and Geoff.
+        
+        Removing dead code left behind from drag and drop refactoring.
+
+        * WebCoreSupport/WebFrameBridge.mm:
+        * WebView/WebHTMLView.mm:
+        * WebView/WebHTMLViewPrivate.h:
+
+2007-05-15  Bruce Q Hammond  <bruceq@apple.com>
+
+        Reviewed by Darin.
+
+        Correction of previous patch for http://bugs.webkit.org/show_bug.cgi?id=13578
+        This corrects the sign of the Y-Axis origin adjustment.
+
+        * Plugins/WebBaseNetscapePluginView.mm:
+        (-[WebBaseNetscapePluginView saveAndSetNewPortStateForUpdate:]):
+
+2007-05-15  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        Patch: fixed <rdar://problem/5198890> .5% performance regression caused 
+        by r21307
+        
+        The only code r21307 added that runs during the PLT is a frame load delegate
+        -respondsToSelector: call inside windowObjectCleared(), so it seems like 
+        our message dispatch overhead for the frame load delegate is significant.
+        
+        This patch is a straight port of Maciej's fix for the same problem in the
+        resource load delegate. The solution is simple enough: don't use Objective-C. 
+        Instead, use a special structure that caches which methods the delegate 
+        implements, along with pointers to those methods.
+        
+        I verified each frame load delegate callback in the debugger, except for
+        -webView:didFailLoadWithError:forFrame:, which is not implemented by Safari
+        or DumpRenderTree.
+
+        * WebKit/DefaultDelegates/WebDefaultFrameLoadDelegate.h: Removed.
+        * WebKit/DefaultDelegates/WebDefaultFrameLoadDelegate.m: Removed.
+
+        * WebCoreSupport/WebFrameBridge.mm:
+        (-[WebFrameBridge windowObjectCleared]): I also removed a misleading 
+        comment here. The JS debugger caches the windowScriptObject, so you do
+        need to re-create the debugger every time you invalidate the old 
+        WebScriptObject wrapper for the window object and create a new one, or
+        the debugger will stop working. We could fix this in a number of ways, 
+        but <rdar://problem/4608404> is not the key issue.
+
+2007-05-15  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Hyatt and Lars.
+        
+        - fixed <rdar://problem/5201758> REGRESSION: Stop button enabled and other problems caused by [WebView currentURL] returning non-nil for empty window
+        
+        * WebView/WebDataSource.mm:
+        (-[WebDataSource request]): Return nil when we are still showing the initial empty doc
+
+2007-05-14  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Darin Adler.
+        
+        Updated for WebCore move to PageCache singleton. Also removed some WebCore::
+        prefixes and replaced them with 'using namespace WebCore'.
+
+        * History/WebHistoryItem.mm:
+        (+[WebHistoryItem _releaseAllPendingPageCaches]):
+        (-[WebWindowWatcher windowWillClose:]):
+
+2007-05-13  Darin Adler  <darin@apple.com>
+
+        - one more retain/release for a tiny bit more robustness
+
+        * WebView/WebPDFView.mm:
+        (-[WebPDFView _updatePreferences:]): [prefs release]
+        (-[WebPDFView _updatePreferencesSoon]): [prefs retain]
+
+2007-05-13  Darin Adler  <darin@apple.com>
+
+        Reviewed by Geoff.
+
+        - fix <rdar://problem/5188400> Webkit crashes going back from PDF at perl.org site
+
+        * WebView/WebPDFView.h: Replace _updatePreferencesTimer with _willUpdatePreferencesSoon BOOL.
+        Also remove unneeded @public that gives other classes access to our dataSource member.
+
+        * WebView/WebPDFView.mm: Rearrange top of file a bit, remove forward declaration of the
+        _cancelUpdatePreferencesTimer method.
+        (-[WebPDFView dealloc]): Removed call to _cancelUpdatePreferencesTimer.
+        (-[WebPDFView _updatePreferencesNow:]): Added WebPreferences parameter. This sidesteps problems
+        where the dataSource is no longer present by not looking at the dataSource field at all.
+        Also removed the call to _cancelUpdatePreferencesTimer, added code to set _willUpdatePreferencesSoon
+        to NO and added a release to balance a retain I did in _updatePreferencesSoon.
+        (-[WebPDFView _updatePreferencesSoon]): Changed to use performSelectorAfterDelay instead of
+        an NSTimer. Pass in the preferences object as a parameter, since we might not be able to get to
+        the dataSource when the timer fires.
+
+2007-05-10  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Darin Adler.
+        
+        "IconDatabase::sharedIconDatabase()" => "iconDatabase()" for terseness.
+
+2007-05-10  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Hyatt.
+
+        WebKit part of fix for <rdar://problem/4100616> Doing a "find" in RSS doesn't scroll to result
+
+        Updated to use selectionRect instead of visibleSelectionRect.  selectionRect() now returns the visible rect by default.
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView _lookUpInDictionaryFromMenu:]):
+        (-[WebHTMLView selectionImageRect]):
+
+2007-05-10  dethbakin  <bdakin@apple.com>
+
+        Reviewed by Darin.
+
+        Fix for <rdar://problem/5191941> Leopard: Adobe Acrobat 8: 
+        Distiller 8 needs same check fix as 4992521
+
+        * WebView/WebView.mm:
+        (-[WebView _updateWebCoreSettingsFromPreferences:]): Adobe 
+        Distiller needs the same quirk.
+
+2007-05-10  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+
+        - WebKit part of fix for:
+        <rdar://problem/5063277> blank screen after login to Citibank Online (accessing document before frame starts loading cancels load)
+        <rdar://problem/5159541> REGRESSION (r20972): Wall Street Journal pages replaced by advertisements (13465)
+
+        The basic approach is to have Frames start out containing an empty document instead of absolutely nothing,
+        so there is no need to initialize them on demand. Various side effects of that cause both of these bugs.
+        
+        However, this caused many regressions so I had to fix the fallout.
+
+        * WebCoreSupport/WebChromeClient.mm:
+        (WebChromeClient::takeFocus): Avoid focus cycle problems (can happen in DumpRenderTree
+        with initial empty document now).
+        * WebCoreSupport/WebFrameBridge.mm:
+        (-[WebFrameBridge finishInitializingWithPage:frameName:frameView:ownerElement:]): init the frame.
+        (-[WebFrameBridge determineObjectFromMIMEType:URL:]): return image type when appropriate
+        * WebView/WebFrame.mm:
+        (-[WebFrame stopLoading]): use stopForUserCancel().
+        * WebView/WebFrameView.mm:
+        (-[WebFrameView _makeDocumentViewForDataSource:]): assume html when no mime type available.
+        * WebView/WebView.mm:
+        (-[WebView becomeFirstResponder]): Track whether we are becoming first responder from
+        outside the view.
+        (-[WebView _becomingFirstResponderFromOutside]): Return this value.
+        * WebView/WebViewInternal.h:
+
+2007-05-09  Oliver Hunt  <oliver@apple.com>
+
+        rs=Adele.
+
+        The previous patch (r21346) broke editing, rolling out
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView _interceptEditingKeyEvent:shouldSaveCommand:]):
+        (-[WebHTMLView doCommandBySelector:]):
+
+2007-05-09  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Oliver.
+        
+        Re-applying fix for <rdar://problem/5107538> REGRESSION: Page scroll when selecting characters from inline input candidate window by arrow buttons
+        http://bugs.webkit.org/show_bug.cgi?id=13263
+        
+        We don't need to call interpretKeyEvents for cmd-key events as
+        they events will be interpreted by performKeyEquivalent.
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView _interceptEditingKeyEvent:shouldSaveCommand:]):
+        (-[WebHTMLView doCommandBySelector:]):
+
+2007-05-09  Mark Rowe  <mrowe@apple.com>
+
+        Build fix to keep the buildbot happy.
+
+        * Plugins/WebBaseNetscapePluginView.mm:
+        (-[WebBaseNetscapePluginView saveAndSetNewPortStateForUpdate:]):
+
+2007-05-08  Bruce Q Hammond  <bruceq@apple.com>
+
+        Reviewed by Darin.
+
+        http://bugs.webkit.org/show_bug.cgi?id=13578
+        Bug 13578: When QD plugins draw to an offscreen bitmap the origin is not correct
+
+        Now we have correct handling of the origin when QD plugins draw to
+        offscreen bitmaps.
+        Also the clipping code for this path was doing unnecessary work which
+        caused incorrect results; it has been removed.
+        
+        This change should not affect Safari and in general will only affect
+        plugins (e.g. Flash) drawing to a CGBitmapContext.
+
+        * Plugins/WebBaseNetscapePluginView.mm:
+        (-[WebBaseNetscapePluginView saveAndSetNewPortStateForUpdate:]):
+
+2007-05-08  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Darin.
+
+        Implemented spelling/grammar related WebEditorClient methods.
+
+        * WebCoreSupport/WebEditorClient.h:
+        * WebCoreSupport/WebEditorClient.mm:
+        (WebEditorClient::ignoreWordInSpellDocument): Added. Call through to NSSpellChecker.
+        (WebEditorClient::learnWord): Added. Call through to NSSpellChecker.
+        (WebEditorClient::checkSpellingOfString): Added. Call through to NSSpellChecker.
+        (WebEditorClient::checkGrammarOfString): Added. Call through to NSSpellChecker.
+        (WebEditorClient::updateSpellingUIWithGrammarString): Added. Call through to NSSpellChecker.
+        (WebEditorClient::updateSpellingUIWithMisspelledWord): Added. Call through to NSSpellChecker.
+        (WebEditorClient::showSpellingUI): Added. Call through to NSSpellChecker.
+        (WebEditorClient::spellingUIIsShowing): Added. Call through to NSSpellChecker.
+        (WebEditorClient::getGuessesForWord): Added. Call through to NSSpellChecker.
+
+2007-05-08  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Ada.
+
+        Slight modification to last editor method fix.
+
+        * WebCoreSupport/WebEditorClient.h:
+        (WebEditorClient::updateSpellingUIWithGrammarString):
+
+2007-05-07  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        Fixed <rdar://problem/5140447> API for fetching JSGlobalContextRef from 
+        WebView or WebFrame
+        
+        Added -[WebFrame windowObject] and -[WebFrame globalContext], along with
+        a new frame load delegate method, - (void)webView:(WebView *)webView 
+        didClearWindowObject:(WebScriptObject *)windowObject forFrame:(WebFrame *)frame.
+        This is all to support briding between the WebScriptObject and JavaScriptCore
+        APIs.
+
+        Also fixed more of <rdar://problem/4395622> API: WebScriptObject.h incorrectly 
+        reports that -isSelectorExcludedFromWebScript returns NO by default, and
+        generally cleaned up the WebScriptObject headerdoc.
+
+        * WebCoreSupport/WebFrameBridge.mm:
+        (-[WebFrameBridge windowObjectCleared]):
+        * WebView/WebFrame.mm:
+        (-[WebFrame windowObject]):
+        (-[WebFrame globalContext]):
+        * WebView/WebFramePrivate.h:
+        * WebView/WebViewPrivate.h:
+
+2007-05-07  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Darin.
+
+        <rdar://problem/5180384> webView:validateUserInterfaceItem:defaultValidation: does not get called on WebUIDelegates
+
+        Call the delegate when the one of our views gets a validateUserInterfaceItem: call.
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView validateUserInterfaceItemWithoutDelegate:]): Validate without the delegate.
+        (-[WebHTMLView validateUserInterfaceItem:]): Call the delegate with the result of validateUserInterfaceItemWithoutDelegate:.
+        * WebView/WebPDFView.mm:
+        (-[WebPDFView validateUserInterfaceItemWithoutDelegate:]): Validate without the delegate.
+        (-[WebPDFView validateUserInterfaceItem:]): Call the delegate with the result of validateUserInterfaceItemWithoutDelegate:.
+        * WebView/WebView.mm:
+        (-[WebView _responderValidateUserInterfaceItem:]): Call validateUserInterfaceItemWithoutDelegate: to prevent asking the delegate twice.
+        (-[WebView validateUserInterfaceItemWithoutDelegate:]): Validate without the delegate.
+        (-[WebView validateUserInterfaceItem:]): Call the delegate with the result of validateUserInterfaceItemWithoutDelegate:.
+
+2007-05-07  Brady Eidson  <beidson@apple.com>
+
+        Actually finish the code move from my last checkin
+
+        * History/WebHistoryItem.mm:
+        (-[WebHistoryItem _transientPropertyForKey:]):
+        (-[WebHistoryItem _setTransientProperty:forKey:]):
+
+2007-05-07  Brady Eidson  <beidson@apple.com>
+
+        Rubberstamped by Kevin (Sarge)
+
+        Make _transientPropertyForKey: and _setTransientProperty:forKey: SPI
+
+        * History/WebHistoryItemInternal.h:
+        * History/WebHistoryItemPrivate.h:
+
+2007-05-04  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Tim Hatcher.
+
+        First step in fixing <rdar://problem/5055182> The back cache has no global cap
+
+        Stop giving SnapBack infinite cache-ability. Instead, make SnapBack rely
+        on the underlying back cache.
+        
+        I left -setAlwaysAttemptToUsePageCache: as an empty stub because we don't 
+        want to break Safari 2.0, but I removed its header declaration so nobody 
+        else starts using it.
+
+        * History/WebHistoryItem.mm:
+        (-[WebHistoryItem setAlwaysAttemptToUsePageCache:]):
+        * History/WebHistoryItemPrivate.h:
+
+2007-05-04  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Brady Eidson.
+        
+        Some cleanup in preparation for fixing <rdar://problem/5055182> The 
+        back/forward cache has no global cap
+        
+        Unified naming of WebKit/WebCore b/f lists -- instead of the potpourri 
+        of webBackForwardList, backForwardList, list, kitList, coreList, listWrapper, 
+        and webCoreBackForwardList, we use webBackForwardList for WebKit and 
+        backForwardList for WebCore, matching their respective class names.
+        
+        Removed "private" versions of kit() and core() -- kit() and core() are
+        canonically used for converting between WebKit API objects and WebCore
+        API objects. I think it's clearer to have only one way to do this.
+
+        Removed COMPUTE_DEFAULT_PAGE_CACHE_SIZE, since it was unused.
+        
+        Removed _clearPageCache, since it was unused and it duplicated -setPageCacheSize:0.
+
+        Removed _usesPageCache, since it was unused and it duplicated -pageCacheSize.
+
+2007-05-04  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Mark Rowe
+
+        Added main thread assertion to WebHTMLView to help make sure 3rd party clients aren't trying
+        to draw on secondary threads
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView drawRect:]): Added ASSERT_MAIN_THREAD()
+
+2007-05-04  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Antti.
+
+        <rdar://problem/5179977> Use the correct URLs when dispatching delegate methods for data loads.
+
+        * WebView/WebFrame.mm:
+        (-[WebFrame _loadData:MIMEType:textEncodingName:baseURL:unreachableURL:]):
+        If the base URL is nil, set it to "about:blank", and set the response URL to a generated applewebdata URL.
+        
+        * WebView/WebView.mm:
+        (+[WebView _canHandleRequest:]):
+        No need to special-case applewebdata URLs here anymore, they're only used in responses.
+
+2007-05-03  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Oliver.
+
+        Add missing user description parameter to spelling-related editor client method.
+
+        * WebCoreSupport/WebEditorClient.h:
+        (WebEditorClient::updateSpellingUIWithGrammarString):
+
+2007-05-03  TImothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Kevin.
+
+        <rdar://problem/4975212> REGRESSION: With NetNewsWire 2.1.1, the contextual menu shows extra menu items when focus
+        is placed in input or textarea field
+
+        The NetNewsWire UI delegate isn't expecting calls for form controls, so we need to do a linked-on-or-after check.
+        If the application was linked against Tiger or earlier and the element is a text form control, just return the
+        default menu items and bypass the delegate call completely.
+
+        * WebCoreSupport/WebContextMenuClient.mm:
+        (isPreVersion3Client): Cache the result of the WebKitLinkedOnOrAfter call
+        (fixMenusToSendToOldClients): Call the new isPreVersion3Client()
+        (fixMenusReceivedFromOldClients): Ditto.
+        (WebContextMenuClient::getCustomMenuFromDefaultItems): Return the default menu items if the element is a text form control.
+
+2007-05-03  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Geoff and Kevin.
+
+        <rdar://problem/5141290> WebAssertions.h is still needed by some internal clients
+
+        Second shot at fixing this error.  Stub out the macros rather than forwarding to JavaScriptCore, which would
+        leave clients using this header trying to resolve JavaScriptCore symbols against WebKit when linking.  This
+        should only happen in production builds when assertions should be disabled anyway as anyone building a
+        development configuration should be in a position to move away from using this header.
+
+        * Misc/WebAssertions.h: 
+
+2007-05-03  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Kevin.
+
+        <rdar://problem/5067707> REGRESSION: "Open Link" contextual menu item appears twice in Mail
+
+        Remove the check for Mail in fixMenusToSendToOldClients and fixMenusReceivedFromOldClients
+        when linked on or after Leopard. The isAppleMail() function is still used for Tiger Mail fixups.
+
+        * WebCoreSupport/WebContextMenuClient.mm:
+        (fixMenusToSendToOldClients):
+        (fixMenusReceivedFromOldClients):
+
+2007-05-02  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Brady.
+
+        <rdar://problem/5151113> Assertion firing in [FrameProgressEntry addChild:forDataSource:] when navigating cnn.com
+        
+        The assertion fired because a plug-in was trying to load a subresource when a new load had started but not yet
+        committed. The check that would have prevented this was removed in order to fix <rdar://problem/5085897>.
+        
+        This puts back the check but changes it to allow loads where the target is the same frame as the plugin's parent frame.
+        
+        * Plugins/WebBaseNetscapePluginView.mm:
+        (-[WebBaseNetscapePluginView loadRequest:inTarget:withNotifyData:sendNotification:]):
+
+2007-04-27  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Darin.
+
+        There were only a couple calls to ResourceLoadDelegate forwarder left,
+        this removes the calls and adds a new cached method for didFailLoad.
+
+        * WebKit/DefaultDelegates/WebDefaultResourceLoadDelegate.h: Removed.
+        * WebKit/DefaultDelegates/WebDefaultResourceLoadDelegate.m: Removed.
+        * WebKit/Plugins/WebNullPluginView.mm: Call the resource load delegate directly.
+        * WebKit/WebCoreSupport/WebFrameLoaderClient.mm: Call the cached didFailLoad delegate function.
+        * WebKit/WebKit.xcodeproj/project.pbxproj: Remove WebDefaultResourceLoadDelegate.
+        * WebKit/WebView/WebDataSource.mm: Remove the #import for WebDefaultResourceLoadDelegate.h
+        * WebKit/WebView/WebView.mm: Remove the ResourceLoadDelegate forwarder, and remove a method that isn't used.
+        * WebKit/WebView/WebViewInternal.h: Ditto.
+        * WebKit/WebView/WebViewPrivate.h: Remove a method that is no longer used.
+
+2007-04-27  David Harrison  <harrison@apple.com>
+
+        Reviewed by Darin.
+
+        <rdar://problem/5160627> Export JS list creation support as ObjC SPI for Mail
+
+        * WebKit.xcodeproj/project.pbxproj:
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView _selectedRange]):
+        (-[WebHTMLView _shouldDeleteRange:]):
+        (-[WebHTMLView _canEdit]):
+        (-[WebHTMLView _canEditRichly]):
+        (-[WebHTMLView _hasSelection]):
+        (-[WebHTMLView _hasSelectionOrInsertionPoint]):
+        (-[WebHTMLView _hasInsertionPoint]):
+        (-[WebHTMLView _isEditable]):
+        Condense the check for nil [self frame].
+        Remove canEditRichly checks and rely on the editor to do the check instead.
+        
+        (-[WebHTMLView _insertOrderedList]):
+        (-[WebHTMLView _insertUnorderedList]):
+        New.
+        
+        (-[WebHTMLView _canIncreaseSelectionListLevel]):
+        (-[WebHTMLView _canDecreaseSelectionListLevel]):
+        (-[WebHTMLView _increaseSelectionListLevel]):
+        (-[WebHTMLView _increaseSelectionListLevelOrdered]):
+        (-[WebHTMLView _increaseSelectionListLevelUnordered]):
+        (-[WebHTMLView _decreaseSelectionListLevel]):
+        Moved from bridge to frame editor.
+
+        * WebView/WebHTMLViewPrivate.h:
+        Add _insertOrderedList and _insertUnorderedList to WebHTMLView(WebPrivate)
+
+2007-04-27  Brady Eidson  <beidson@apple.com>
+
+        Rubberstamped by Mark
+
+        Remove default implementation of UIDelegate method that was removed
+
+        I have also been instructed to give Tim a hard time about this one - apparently
+        it was his job to clean it out and he failed...  failed miserably.
+
+        :)
+
+        * DefaultDelegates/WebDefaultUIDelegate.m: Removed webViewPrint:
+
+2007-04-27  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Mark.
+        
+        <rdar://problem/5154113> Repro ASSERT (would be crash) in KJS::GCLock::GCLock (13462)
+        http://bugs.webkit.org/show_bug.cgi?id=13462
+
+        * WebInspector/WebInspector.m:
+        (-[WebInspectorPrivate dealloc]): Delay release of WebView to avoid GC re-entrancy.
+
+2007-04-27  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Mitz.
+
+        <rdar://problem/5165755>
+        View Source is broken; empty window is shown
+        
+        Return YES for applewebdata URLs.
+        
+        * WebView/WebView.mm:
+        (+[WebView _canHandleRequest:]):
+
+2007-04-26  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Adam.
+
+        Fix <rdar://problem/5061252> REGRESSION: In Gmail, image fails 
+        to be inserted into message field after dragging
+
+        Don't try to create <img> tags for local image files as it results
+        in the potential to submit forms that look like they have an image,
+        when in reality they don't.
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView _documentFragmentWithPaths:]):
+
+2007-04-26  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Maciej.
+
+        <rdar://problem/5049099> documents no longer have a default base URL
+        
+        If the base URL is nil, then create a unique applewebdata URL to match what Tiger WebKit does.
+        
+        * WebView/WebFrame.mm:
+        (createUniqueWebDataURL):
+        (-[WebFrame _loadData:MIMEType:textEncodingName:baseURL:unreachableURL:]):
+
+2007-04-25  Oliver Hunt  <oliver@apple.com>
+
+        Rubber stamped by Adele.
+
+        Roll out WebKit changes from from r21052 to fix regression noted in
+        <rdar://problem/5159556> REGRESSION: In Mail, pressing option-command- ' doesn't decrease block quote in selection
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView _interceptEditingKeyEvent:shouldSaveCommand:]):
+        (-[WebHTMLView doCommandBySelector:]):
+
+2007-04-25  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam.
+
+        Mac callbacks for new spelling methods in WebEditorClient.
+        Not used yet.
+
+        * WebCoreSupport/WebEditorClient.h:
+        (WebEditorClient::ignoreWordInSpellDocument):
+        (WebEditorClient::learnWord):
+        (WebEditorClient::checkSpellingOfString):
+        (WebEditorClient::checkGrammarOfString):
+        (WebEditorClient::updateSpellingUIWithGrammarString):
+        (WebEditorClient::updateSpellingUIWithMisspelledWord):
+        (WebEditorClient::showSpellingUI):
+        (WebEditorClient::spellingUIIsShowing):
+        (WebEditorClient::getGuessesForWord):
+
+2007-04-24  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Darin Adler, Tim Hatcher.
+
+        Fixed a few NSAutoreleasePool issues I noticed while reviewing Brady's patch.
+
+        * Carbon/CarbonUtils.m:
+        (PoolCleaner): Call -drain instead of -release, since -release is a 
+        no-op in a GC world.
+
+        * Misc/WebKitErrors.m:
+        (registerErrors): Condensed onto one line.
+
+        * Plugins/WebPluginDatabase.m:
+        (-[WebPluginDatabase refresh]): Call -drain instead of -release, since
+        -release is a no-op in a GC world.
+
+        * WebCoreSupport/WebChromeClient.mm:
+        (WebChromeClient::setStatusbarText):
+
+        * WebInspector/WebNodeHighlightView.m:
+        (-[WebNodeHighlightView initWithHighlight:andRects:forView:]): Don't drain
+        and then release because drain deallocates the receiver, so the release
+        is an over-release.
+
+        * WebView/WebView.mm:
+        (-[WebView rectsForTextMatches]): Re-allocate the pool after draining it,
+        because drain deallocates the receiver, so the drain would leave you without
+        any autorelease pool, causing a leak and then an over-release at the bottom
+        of the loop.
+
+2007-04-24  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Beth, Hyatt, Ada, and Darin
+
+        <rdar://problem/5011477> and <rdar://problem/5011514>
+        Provide support for the icon.db to be moved to a different directory from the old WebKit-style
+        icons, and remove the old directory if that is the case
+
+        * Misc/WebIconDatabase.mm:
+        (-[WebIconDatabase init]):
+        (-[WebIconDatabase _importToWebCoreFormat]): Check "imported()" to determine if a conversion is needed
+          - Look for WebIconDatabaseImportDirectoryDefaultsKey for the source location for the conversion
+          - Set "imported" to true in the Icons.db
+          - If the new Icons.db isn't in the same patch as the old icons, delete the entire directory when finished
+          - Move old icon.db to Icons.db to reflect rename
+        * Misc/WebIconDatabasePrivate.h: Add WebIconDatabaseImportDirectoryDefaultsKey so a WebKit client can tell WebKit
+          where to look for the old icons if their location is different from the icon.db
+        * WebKit.exp:
+
+2007-04-24  Mitz Pettel  <mitz@webkit.org>
+
+        Reviewed by Oliver Hunt.
+
+        Changed an apostrophe (') into a right single quotation mark (U+2019).
+
+        * WebInspector/webInspector/inspector.js:
+
+2007-04-24  Mitz Pettel  <mitz@webkit.org>
+
+        Reviewed by Timothy Hatcher.
+
+        - fix http://bugs.webkit.org/show_bug.cgi?id=13459
+          The "mapped style" link next to an attribute doesn't work
+
+        * WebInspector/webInspector/inspector.js: Added a check that the rule is
+        mapped from an attribute.
+
+2007-04-23  Adele Peterson  <adele@apple.com>
+
+        Fixed and reviewed by Darin, Adele, and Oliver.
+
+        WebKit part of fix for <rdar://problem/5107538> REGRESSION: Page scroll when selecting characters from inline input candidate window by arrow buttons
+        http://bugs.webkit.org/show_bug.cgi?id=13263
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView _interceptEditingKeyEvent:shouldSaveCommand:]):  If we have no command after calling interpretKeyEvents, we assume the input method handled the key.
+        (-[WebHTMLView doCommandBySelector:]): Add noop: to the command vector, but then when actually performing actions, ignore it.
+
+2007-04-23  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Darin.
+
+        <rdar://problem/5124364> IB3 crashes when loading a nib containing a WebView that has a WebHTMLView encoded inside
+
+        Since WebView's initWithCoder throws away all the decoded subviews, the WebHTMLView gets dealoced while it has a nil _private pointer.
+        Checking for a nil _private in WehHTMLView's close fixes this crash. No need to implement a full initWithCoder for WebHTMLView since
+        it will be thrown away by the WebView anyway.
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView close]): Return earily if _priviate is nil.
+        (-[WebHTMLView initWithFrame:]): Unrelated change that removes an AppKit version check that predates Tiger.
+
+2007-04-23  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Mark Rowe.
+
+        Remove the "No Selection" message after leaving search mode.
+        This was a regression caused by the inspector refresh.
+
+        * WebInspector/webInspector/inspector.js:
+
+2007-04-23  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Darin.
+
+        Bug 6658: World leak when closing inspected window
+        http://bugs.webkit.org/show_bug.cgi?id=6658 and <rdar://problem/4411863>
+
+        Removes over-retains of the inspector WebView, WebInspector and WebInspectorPanel.
+
+        * WebInspector/WebInspector.m:
+        (+[WebInspector sharedWebInspector]): Return the global sharedWebInspector variable.
+        (-[WebInspector window]): Release the window after calling setWindow:.
+        (-[WebInspector windowWillClose:]): Set the JavaScript Inspector variable to null and expire the current highlight.
+          Also clear the global sharedWebInspector variable and release it if self equals sharedWebInspector.
+        (-[WebInspector showWindow:]): Set the JavaScript Inspector variable back to self.
+        * WebInspector/WebInspectorInternal.h: Remove the isSharedInspector member variable.
+        * WebView/WebView.mm:
+        (-[WebView windowScriptObject]): Return nil if core([self mainFrame]) is NULL.
+
+2007-04-23  Darin Adler  <darin@apple.com>
+
+        Reviewed by Hyatt.
+
+        - rename box-sizing to -webkit-box-sizing
+
+        * WebInspector/webInspector/inspector.css: Here.
+        * WebInspector/webInspector/inspector.js: And here, in the expected default CSS values list.
+
+2007-04-22  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Darin.
+
+        The fix for <rdar://problem/4976681> ASSERTION failure on quit @ talkcrunch.com in _NPN_ReleaseObject
+        was #ifdefed out in Production builds.
+
+        * WebView/WebView.mm:
+        (+[WebView initialize]): Move the #ifdef REMOVE_SAFARI_DOM_TREE_DEBUG_ITEM inside initialize around the specific code
+        (+[WebView _applicationWillTerminate]): Moved outside the #ifdef REMOVE_SAFARI_DOM_TREE_DEBUG_ITEM block
+
+2007-04-22  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Mitz.
+
+        Bug 13436: Make Option-clicking a disclosure triangle expand the entire subtree
+        http://bugs.webkit.org/show_bug.cgi?id=13436
+
+        Makes option-click recursively expand and collapse the sub-tree. Pressing option-left
+        and -right also recursively expands and collapses the sub-tree.
+
+        * WebInspector/webInspector/treeoutline.js:
+
+2007-04-22  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Mitz.
+
+        Bug 13437: Inspector does not update when navigating to a different page
+        http://bugs.webkit.org/show_bug.cgi?id=13437
+
+        * WebInspector/webInspector/inspector.js: Correctly update to a new root node
+          if the new focus node and the old focus node don't have a common ancestor.
+
+2007-04-22  Darin Adler  <darin@apple.com>
+
+        Reviewed by Adele.
+
+        - fix for <rdar://problem/5100240> REGRESSION: Control-O broken
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView _interceptEditingKeyEvent:shouldSaveCommand:]): Update to handle a vector of
+        command names instead of a single command.
+        (-[WebHTMLView doCommandBySelector:]): Change logic so that we add the command to a vector
+        and also so that the interpretKeyEvents parameters are still intact for a second call to
+        doCommandBySelector:, since the key bindings mechanism can do more than one.
+        (-[WebHTMLView insertText:]): Added comment.
+
+2007-04-21  Darin Adler  <darin@apple.com>
+
+        Reviewed by Oliver.
+
+        - fix some problems I ran into using the inspector
+
+        * WebInspector/webInspector/inspector.js: Add some null checks.
+
+2007-04-20  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Darin.
+
+        Merge over the WebInspectorRefresh branch. This change removes the NSOutlineView and
+        is replaced with a HTML/JavaScript tree. Most of the inspector logic is now in the JavaScript.
+
+        A few bugs are fixed by these changes:
+
+        Bug 6615: Parent node drop-down list is upside-down
+        http://bugs.webkit.org/show_bug.cgi?id=6615
+
+        Bug 6643: REGRESSION: Tree view repaints lines without erasing them first
+        http://bugs.webkit.org/show_bug.cgi?id=6643
+
+        Bug 6650: Web Inspector HTML Hierarchy can't be scrolled with scrollwheel
+        http://bugs.webkit.org/show_bug.cgi?id=6650
+
+        Bug 6677: Can't drag inspector when tree view has focus
+        http://bugs.webkit.org/show_bug.cgi?id=6677
+
+        Bug 7326: Web Inspector tree scrollbar always shows up when resizing the top pane down
+        http://bugs.webkit.org/show_bug.cgi?id=7326
+
+        * WebInspector/WebInspector.h: Removed the searchQuery methods.
+        * WebInspector/WebInspector.m: Removed the DOMNode category and code for the old outline view.
+        * WebInspector/WebInspectorOutlineView.h: Removed.
+        * WebInspector/WebInspectorOutlineView.m: Removed.
+        * WebInspector/WebInspectorInternal.h: Remove some methods and instance variables.
+        * WebInspector/webInspector/Images/resize.png: Added.
+        * WebInspector/webInspector/inspector.css: 
+        * WebInspector/webInspector/inspector.html: Include the new classes and remove the plugin.
+        * WebInspector/webInspector/inspector.js: Changes to use the new tree outline and other fixes.
+        * WebInspector/webInspector/scrollarea.js: Copied from the Dashboard widget resources.
+        * WebInspector/webInspector/scrollbar.js: Ditto.
+        * WebInspector/webInspector/treeoutline.js: New tree outline class.
+        * WebInspector/webInspector/utilities.js: DOM and String prototype additions.
+        * WebKit.xcodeproj/project.pbxproj: Remove WebInspectorOutlineView.
+
+2007-04-20  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Oliver (Black Sheep)
+
+        <rdar://problem/3559794>
+        [WebView setMaintainsBackForwardList:] doesn't actually flush out the current page caches
+
+        * WebView/WebView.mm: Remove _private->useBackForwardList
+        (-[WebView _setInitiatedDrag:]): Use _private->page instead of [self page]
+        (-[WebView initWithCoder:]): Manipulate the flag that is now in WebCore::BackForwardList
+        (-[WebView encodeWithCoder:]): Ditto
+        (-[WebView backForwardList]): Use _private->page instead of [self page]
+        (-[WebView setMaintainsBackForwardList:]): Manipulate the flag that is now in WebCore::BackForwardList
+
+2007-04-20  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Maciej.
+
+        <rdar://problem/5085897> REGRESSION: Some Flash links at www.jumpskyhigh.com just reload the page
+        
+        Get rid of the check that would prevent plugin requests from being loaded if a new page load was underway.
+        www.jumpskyhigh.com had a flash movie that was embedded inside an <a> tag and clicking on the plug-in would cause the
+        URL pointed to by the <a> tag to start loading and thus preventing the plug-in from loading the real URL.
+        
+        This check was added by Maciej and we should be able to remove it with the loader changes that have happened now,
+        (mainly the fact that resource loaders are handled by the document loader instead of the frame loader).
+        
+        * Plugins/WebBaseNetscapePluginView.mm:
+        (-[WebBaseNetscapePluginView loadRequest:inTarget:withNotifyData:sendNotification:]):
+
+2007-04-19  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Adam.
+
+        Fix for <rdar://problem/4960912> -- REGRESSION: Content-Disposition:
+        filename is ignored for drag-and-drop.
+
+        * WebView/WebResource.mm:
+        (-[WebResource _fileWrapperRepresentation]):
+          When creating the NSFileWrapper check the response for a preferred 
+          filename, rather than just blindly hoping for the best.
+
+2007-04-19  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by John.
+
+        <rdar://problem/5137002>
+        REGRESSION (r20812): [WebFrame DOMDocument] is returning non-nil value in bookmarks view, causing trouble in Safari
+
+        Put back the MIME type check as a workaround.
+        * WebView/WebFrame.mm:
+        (-[WebFrame DOMDocument]):
+
+2007-04-19  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Oliver and Adam.
+
+        <rdar://problem/5141290> WebAssertions.h is still needed by some internal clients.
+
+        * Misc/WebAssertions.h: Added.
+        * WebKit.xcodeproj/project.pbxproj:
+
+2007-04-17  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Tim
+
+        <rdar://problem/5008925>
+        Expose the NSURLConnection delegate willCacheResponse API to WebResourceLoadDelegate
+
+        * WebCoreSupport/WebFrameLoaderClient.h:
+        * WebCoreSupport/WebFrameLoaderClient.mm:
+        (WebFrameLoaderClient::willCacheResponse): Call 
+          [WebResourceLoadDelegate webView:resource:willCacheResponse:fromDataSource:];
+
+        * WebView/WebView.mm:
+        (-[WebView _cacheResourceLoadDelegateImplementations]): Pull out the willCacheResponse impl
+
+        * WebView/WebViewPrivate.h: Add WebResourceLoadDelegatePrivate category for this new SPI
+
+2007-04-18  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Adam
+
+        - fixed <rdar://problem/5103009> REGRESSION: Activity window shows blank name for untitled pages
+
+        * WebView/WebHTMLRepresentation.mm:
+        (-[WebHTMLRepresentation title]):
+        return nil for empty string, to match old behavior
+
+2007-04-17  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Tim Hatcher
+
+        - fixed <rdar://problem/5138492> Safari doesn't remember some changes to the PDF scale and display mode 
+
+        Some of the user interactions that could change the PDF scale and display mode were not going through
+        the proxy mechanism in WebPDFView that updates preferences. Now we also listen to PDFKit notifications
+        in order to catch the other cases.
+
+        * WebView/WebPDFView.h:
+        new _ignoreScaleAndDisplayModeNotifications and _updatePreferencesTimer ivars
+
+        * WebView/WebPDFView.mm:
+        (-[WebPDFView setPDFDocument:]):
+        ignore scale and display mode notifications while we're setting up a fresh document
+        (-[WebPDFView dealloc]):
+        cancel the new timer (which releases it)
+        (-[WebPDFView viewDidMoveToWindow]):
+        listen for two PDFKit notifications
+        (-[WebPDFView viewWillMoveToWindow:]):
+        stop listening to the two PDFKit notifications
+        (-[WebPDFView _applyPDFDefaults]):
+        white space change
+        (-[WebPDFView _cancelUpdatePreferencesTimer]):
+        invalidate, release, and nil out the timer
+        (-[WebPDFView _scaleOrDisplayModeChanged:]):
+        update preferences soon, unless deliberately ignoring these notifications
+        (-[WebPDFView _updatePreferencesNow]):
+        cancel timer, then save data to preferences (code for saving the data was extracted from
+        -[PDFPrefUpdatingProxy forwardInvocation:])
+        (-[WebPDFView _updatePreferencesSoon]):
+        use timer to consolidate multiple calls into one action; formerly we were setting preferences
+        multiple times for some atomic user actions
+        (-[PDFPrefUpdatingProxy forwardInvocation:]):
+        call _updatePreferencesSoon where we used to immediately set preferences
+
+2007-04-17  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Kevin Decker
+
+        - fixed <rdar://problem/4184640> "Look Up in Dictionary" item is always disabled for PDF pages
+
+        * WebView/WebPDFView.mm:
+        (-[WebPDFView validateUserInterfaceItem:]):
+        enable "Look Up in Dictionary" only if we're using a version of PDFKit that knows how to do so
+        (-[WebPDFView _canLookUpInDictionary]):
+        use respondsToSelector to test whether the current version of PDFKit supports this non-API feature
+        (-[WebPDFView _lookUpInDictionaryFromMenu:]):
+        implement this method, which WebKit includes in the context menu when there's selected text
+        (-[WebPDFView _menuItemsFromPDFKitForEvent:]):
+        updated comment for this change
+
+2007-04-16  Darin Adler  <darin@apple.com>
+
+        Rubber stamped by Tim Hatcher.
+
+        * WebKit.xcodeproj/project.pbxproj: Added Radar bug number to the error message
+        for the "version number ending in 4" check so folks from Apple can find the
+        original bug that motivated for this. To summarize what's in that bug, it says that
+        <http://my.fedex.com> was failing, that it was because of the OpenCube DHTML Menu,
+        and that some other affected sites were not using OpenCube (so the error is presumably
+        more widespread).
+
+2007-04-16  Darin Adler  <darin@apple.com>
+
+        Reviewed by John Sullivan.
+
+        - fix http://bugs.webkit.org/show_bug.cgi?id=13303
+          <rdar://problem/5126341> REGRESSION: controls in a background Safari window
+          maintain active appearance if the address bar has focus (13303)
+
+        * WebView/WebHTMLView.mm: (-[WebHTMLView _windowChangedKeyState]):
+        Added. Calls FrameView::updateControlTints.
+
 2007-04-13  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Adam.
@@ -1171,7 +2667,7 @@
         (WindowHandler): Use HIObjectIsOfClass in place of GetControlKind.
         (HIWebViewEventHandler): Don't leak the NSEvent.
 
-2007-03-08  Bruce Q Hammond  <bruceq@apple.om>
+2007-03-08  Bruce Q Hammond  <bruceq@apple.com>
 
         Reviewed by Darin.
 

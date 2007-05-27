@@ -98,7 +98,7 @@ class StyledElement;
         RenderStyle* pseudoStyleForElement(RenderStyle::PseudoId, Element*, RenderStyle* parentStyle=0);
 
         RenderStyle* locateSharedStyle();
-        Node* locateCousinList(Element* parent);
+        Node* locateCousinList(Element* parent, unsigned depth = 1);
         bool canShareStyleWithElement(Node* n);
         
         // These methods will give back the set of rules that matched for a given element (or a pseudo-element).
@@ -171,7 +171,7 @@ class StyledElement;
 
         CSSRuleSet* m_authorStyle;
         CSSRuleSet* m_userStyle;
-        CSSStyleSheet* m_userSheet;
+        RefPtr<CSSStyleSheet> m_userSheet;
         
         bool m_hasUAAppearance;
         BorderData m_borderData;
@@ -216,15 +216,14 @@ class StyledElement;
 
         RenderStyle::PseudoId dynamicPseudo;
         
+        Document* m_document; // back pointer to owner document
         RenderStyle *style;
         RenderStyle *parentStyle;
         Element *element;
         StyledElement *styledElement;
         Node *parentNode;
         RenderStyle::PseudoId pseudoStyle;
-        FrameView *view;
-        Frame *frame;
-        const Settings *settings;
+        CSSValue* m_lineHeightValue;
         bool fontDirty;
         bool isXMLDoc;
 

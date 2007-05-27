@@ -34,15 +34,18 @@
 #if PLATFORM(MAC)
 #include "WebCoreSystemInterface.h"
 #endif
+#if PLATFORM(QT)
+#include <qimagereader.h>
+#endif
 
 namespace WebCore
 {
-static WTF::HashSet<String> *supportedImageResourceMIMETypes;
-static WTF::HashSet<String> *supportedImageMIMETypes;
-static WTF::HashSet<String> *supportedNonImageMIMETypes;
+static WTF::HashSet<String>* supportedImageResourceMIMETypes;
+static WTF::HashSet<String>* supportedImageMIMETypes;
+static WTF::HashSet<String>* supportedNonImageMIMETypes;
     
 #if PLATFORM(CG)
-extern String getMIMETypeForUTI(const String & uti);
+extern String getMIMETypeForUTI(const String& uti);
 #endif
 
 static void initialiseSupportedImageMIMETypes()
@@ -61,18 +64,29 @@ static void initialiseSupportedImageMIMETypes()
     }
     CFRelease(supportedTypes);
     
-    //We only get one MIME type per UTI, hence our need to add these manually
+    // On Tiger, com.microsoft.bmp doesn't have a MIME type in the registry.
+    supportedImageMIMETypes->add("image/bmp");
+    supportedImageResourceMIMETypes->add("image/bmp");
+    
+    //  We only get one MIME type per UTI, hence our need to add these manually
     supportedImageMIMETypes->add("image/pjpeg");
     supportedImageResourceMIMETypes->add("image/pjpeg");
     
-    //We don't want to try to treat all binary data as an image
+    //  We don't want to try to treat all binary data as an image
     supportedImageMIMETypes->remove("application/octet-stream");
     supportedImageResourceMIMETypes->remove("application/octet-stream");
     
-    //Don't treat pdf/postscript as images directly
+    //  Don't treat pdf/postscript as images directly
     supportedImageMIMETypes->remove("application/pdf");
     supportedImageMIMETypes->remove("application/postscript");
 
+#elif PLATFORM(QT)
+    QList<QByteArray> formats = QImageReader::supportedImageFormats();
+    for (size_t i = 0; i < formats.size(); ++i) {
+        String mimeType = MimeTypeRegistry::getMIMETypeForExtension(formats.at(i).constData());
+        supportedImageMIMETypes->add(mimeType);
+        supportedImageResourceMIMETypes->add(mimeType);
+    }
 #else
     // assume that all implementations at least support the following standard
     // image types:
@@ -136,25 +150,36 @@ String MimeTypeRegistry::getMIMETypeForPath(const String& path)
     return "application/octet-stream";
 }
 
-bool MimeTypeRegistry::isSupportedImageMIMEType(const String &mimeType)
+bool MimeTypeRegistry::isSupportedImageMIMEType(const String& mimeType)
 { 
     if (!supportedImageMIMETypes)
         initialiseMimeTypeRegistry();
     return !mimeType.isEmpty() && supportedImageMIMETypes->contains(mimeType); 
 }
 
-bool MimeTypeRegistry::isSupportedImageResourceMIMEType(const String &mimeType)
+bool MimeTypeRegistry::isSupportedImageResourceMIMEType(const String& mimeType)
 { 
     if (!supportedImageResourceMIMETypes)
         initialiseMimeTypeRegistry();
     return !mimeType.isEmpty() && supportedImageResourceMIMETypes->contains(mimeType); 
 }
     
-bool MimeTypeRegistry::isSupportedNonImageMIMEType(const String &mimeType)
+bool MimeTypeRegistry::isSupportedNonImageMIMEType(const String& mimeType)
 {
     if (!supportedNonImageMIMETypes)
         initialiseMimeTypeRegistry();
     return !mimeType.isEmpty() && supportedNonImageMIMETypes->contains(mimeType);
+}
+
+bool MimeTypeRegistry::isJavaAppletMIMEType(const String& mimeType)
+{
+    // Since this set is very limited and is likely to remain so we won't bother with the overhead
+    // of using a Hashset.
+    // Note - "application/x-java-applet" may be followed by any number of specific versions of the JVM,
+    // which is why we use startsWith()
+    
+    String lower = mimeType.lower();
+    return lower.startsWith("application/x-java-applet") || lower == "application/x-java-vm";
 }
 
 const HashSet<String> &MimeTypeRegistry::getSupportedImageMIMETypes()

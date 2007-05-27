@@ -1,11 +1,9 @@
-/**
- * This file is part of the DOM implementation for KDE.
- *
+/*
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
  *           (C) 2001 Peter Kelly (pmk@post.com)
  *           (C) 2001 Dirk Mueller (mueller@kde.org)
- * Copyright (C) 2004, 2005, 2006 Apple Computer, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -40,7 +38,7 @@ Attr::Attr(Element* element, Document* docPtr, Attribute* a)
 {
     ASSERT(!m_attribute->attr());
     m_attribute->m_impl = this;
-    m_specified = true;
+    m_attrWasSpecifiedOrElementHasRareData = true;
 }
 
 Attr::~Attr()
@@ -58,8 +56,8 @@ void Attr::createTextChild()
         // This does everything appendChild() would do in this situation (assuming m_ignoreChildrenChanged was set),
         // but much more efficiently.
         textNode->setParent(this);
-        fastSetFirstChild(textNode.get());
-        fastSetLastChild(textNode.get());
+        setFirstChild(textNode.get());
+        setLastChild(textNode.get());
     }
 }
 
@@ -111,12 +109,6 @@ void Attr::setValue( const String& v, ExceptionCode& ec)
     // NO_MODIFICATION_ALLOWED_ERR: Raised when the node is readonly
     if (isReadOnlyNode()) {
         ec = NO_MODIFICATION_ALLOWED_ERR;
-        return;
-    }
-
-    // ### what to do on 0 ?
-    if (v.isNull()) {
-        ec = DOMSTRING_SIZE_ERR;
         return;
     }
 

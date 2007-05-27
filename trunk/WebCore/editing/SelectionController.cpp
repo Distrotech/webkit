@@ -31,6 +31,7 @@
 #include "Editor.h"
 #include "Element.h"
 #include "EventNames.h"
+#include "ExceptionCode.h"
 #include "FocusController.h"
 #include "Frame.h"
 #include "FrameTree.h"
@@ -59,7 +60,7 @@ const int NoXPosForVerticalArrowNavigation = INT_MIN;
 
 SelectionController::SelectionController(Frame* frame, bool isDragCaretController)
     : m_needsLayout(true)
-    , m_modifyBiasSet(false)
+    , m_lastChangeWasHorizontalExtension(false)
     , m_frame(frame)
     , m_isDragCaretController(isDragCaretController)
     , m_isCaretBlinkingSuspended(false)
@@ -140,6 +141,8 @@ void SelectionController::setSelection(const Selection& s, bool closeTyping, boo
     m_frame->respondToChangedSelection(oldSelection, closeTyping);
     if (userTriggered)
         m_frame->revealCaret(RenderLayer::gAlignToEdgeIfNeeded);
+
+    notifyAccessibilityForSelectionChange();
 }
 
 static bool removingNodeRemovesPosition(Node* node, const Position& position)
@@ -200,26 +203,28 @@ void SelectionController::nodeWillBeRemoved(Node *node)
         setSelection(Selection(), false, false);
 }
 
-void SelectionController::setModifyBias(EAlteration alter, EDirection direction)
+void SelectionController::willBeModified(EAlteration alter, EDirection direction)
 {
     switch (alter) {
         case MOVE:
-            m_modifyBiasSet = false;
+            m_lastChangeWasHorizontalExtension = false;
             break;
         case EXTEND:
-            if (!m_modifyBiasSet) {
-                m_modifyBiasSet = true;
+            if (!m_lastChangeWasHorizontalExtension) {
+                m_lastChangeWasHorizontalExtension = true;
+                Position start = m_sel.start();
+                Position end = m_sel.end();
                 switch (direction) {
                     // FIXME: right for bidi?
                     case RIGHT:
                     case FORWARD:
-                        m_sel.setBase(m_sel.start());
-                        m_sel.setExtent(m_sel.end());
+                        m_sel.setBase(start);
+                        m_sel.setExtent(end);
                         break;
                     case LEFT:
                     case BACKWARD:
-                        m_sel.setBase(m_sel.end());
-                        m_sel.setExtent(m_sel.start());
+                        m_sel.setBase(end);
+                        m_sel.setExtent(start);
                         break;
                 }
             }
@@ -455,6 +460,7 @@ bool SelectionController::modify(EAlteration alter, EDirection dir, TextGranular
 {
     if (userTriggered) {
         SelectionController trialSelectionController;
+        trialSelectionController.setLastChangeWasHorizontalExtension(m_lastChangeWasHorizontalExtension);
         trialSelectionController.setSelection(m_sel);
         trialSelectionController.modify(alter, dir, granularity, false);
 
@@ -466,7 +472,7 @@ bool SelectionController::modify(EAlteration alter, EDirection dir, TextGranular
     if (m_frame)
         m_frame->setSelectionGranularity(granularity);
     
-    setModifyBias(alter, dir);
+    willBeModified(alter, dir);
 
     VisiblePosition pos;
     switch (dir) {
@@ -558,7 +564,7 @@ bool SelectionController::modify(EAlteration alter, int verticalDistance, bool u
     if (up)
         verticalDistance = -verticalDistance;
 
-    setModifyBias(alter, up ? BACKWARD : FORWARD);
+    willBeModified(alter, up ? BACKWARD : FORWARD);
 
     VisiblePosition pos;
     int xPos = 0;
@@ -714,9 +720,13 @@ String SelectionController::toString() const
     return String(plainText(m_sel.toRange().get()));
 }
 
-PassRefPtr<Range> SelectionController::getRangeAt(int index) const
+PassRefPtr<Range> SelectionController::getRangeAt(int index, ExceptionCode& ec) const
 {
-    return index == 0 ? m_sel.toRange() : 0;
+    if (index < 0 || index >= rangeCount()) {
+        ec = INDEX_SIZE_ERR;
+        return 0;
+    }   
+    return m_sel.toRange();
 }
 
 void SelectionController::removeAllRanges()
@@ -757,21 +767,33 @@ void SelectionController::addRange(const Range* r)
     }
 }
 
-void SelectionController::setBaseAndExtent(Node *baseNode, int baseOffset, Node *extentNode, int extentOffset)
+void SelectionController::setBaseAndExtent(Node *baseNode, int baseOffset, Node *extentNode, int extentOffset, ExceptionCode& ec)
 {
+    if (baseOffset < 0 || extentOffset < 0) {
+        ec = INDEX_SIZE_ERR;
+        return;
+    }
     VisiblePosition visibleBase = VisiblePosition(baseNode, baseOffset, DOWNSTREAM);
     VisiblePosition visibleExtent = VisiblePosition(extentNode, extentOffset, DOWNSTREAM);
     
     moveTo(visibleBase, visibleExtent);
 }
 
-void SelectionController::setPosition(Node *node, int offset)
+void SelectionController::setPosition(Node *node, int offset, ExceptionCode& ec)
 {
+    if (offset < 0) {
+        ec = INDEX_SIZE_ERR;
+        return;
+    }
     moveTo(VisiblePosition(node, offset, DOWNSTREAM));
 }
 
-void SelectionController::collapse(Node *node, int offset)
+void SelectionController::collapse(Node *node, int offset, ExceptionCode& ec)
 {
+    if (offset < 0) {
+        ec = INDEX_SIZE_ERR;
+        return;
+    }
     moveTo(VisiblePosition(node, offset, DOWNSTREAM));
 }
 
@@ -790,8 +812,12 @@ void SelectionController::empty()
     moveTo(VisiblePosition());
 }
 
-void SelectionController::extend(Node *node, int offset)
+void SelectionController::extend(Node *node, int offset, ExceptionCode& ec)
 {
+    if (offset < 0) {
+        ec = INDEX_SIZE_ERR;
+        return;
+    }
     moveTo(VisiblePosition(node, offset, DOWNSTREAM));
 }
 
@@ -1013,25 +1039,18 @@ bool SelectionController::contains(const IntPoint& point)
     if (!innerNode || !innerNode->renderer())
         return false;
     
-    Position pos(innerNode->renderer()->positionForPoint(result.localPoint()).deepEquivalent());
-    if (pos.isNull())
+    VisiblePosition visiblePos(innerNode->renderer()->positionForPoint(result.localPoint()));
+    if (visiblePos.isNull())
         return false;
-
-    Node *n = start().node();
-    while (n) {
-        if (n == pos.node()) {
-            if ((n == start().node() && pos.offset() < start().offset()) ||
-                (n == end().node() && pos.offset() > end().offset())) {
-                return false;
-            }
-            return true;
-        }
-        if (n == end().node())
-            break;
-        n = n->traverseNextNode();
-    }
-
-   return false;
+        
+    if (m_sel.visibleStart().isNull() || m_sel.visibleEnd().isNull())
+        return false;
+        
+    Position start(m_sel.visibleStart().deepEquivalent());
+    Position end(m_sel.visibleEnd().deepEquivalent());
+    Position p(visiblePos.deepEquivalent());
+    // A selection doesn't contain its endpoints.
+    return comparePositions(start, p) < 0 && comparePositions(p, end) < 0;
 }
 
 // Workaround for the fact that it's hard to delete a frame.
@@ -1097,7 +1116,7 @@ void SelectionController::selectAll()
     }
     
     Node* root = isContentEditable() ? highestEditableRoot(m_sel.start()) : document->documentElement();
-    if (!root->renderer() || !root->renderer()->canSelect())
+    if (!root || !root->renderer() || !root->renderer()->canSelect())
         return;
     Selection newSelection(Selection::selectionFromContentsOfNode(root));
     if (m_frame->shouldChangeSelection(newSelection))

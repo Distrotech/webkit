@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2007 Alp Toker <alp@atoker.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -64,6 +65,7 @@ public:
     ~GraphicsContextPlatformPrivate();
 
     cairo_t* context;
+    Vector<float> layers;
 };
 
 static inline void setColor(cairo_t* cr, const Color& col)
@@ -291,13 +293,16 @@ void GraphicsContext::drawEllipse(const IntRect& rect)
 
     if (fillColor().alpha()) {
         setColor(context, fillColor());
-        cairo_fill(context);
+        cairo_fill_preserve(context);
     }
+
     if (strokeStyle() != NoStroke) {
         setColor(context, strokeColor());
         cairo_set_line_width(context, strokeThickness());
         cairo_stroke(context);
     }
+
+    cairo_new_path(context);
 }
 
 // FIXME: This function needs to be adjusted to match the functionality on the Mac side.
@@ -347,7 +352,7 @@ void GraphicsContext::drawConvexPolygon(size_t npoints, const FloatPoint* points
     if (fillColor().alpha()) {
         setColor(context, fillColor());
         cairo_set_fill_rule(context, CAIRO_FILL_RULE_EVEN_ODD);
-        cairo_fill(context);
+        cairo_fill_preserve(context);
     }
 
     if (strokeStyle() != NoStroke) {
@@ -355,6 +360,8 @@ void GraphicsContext::drawConvexPolygon(size_t npoints, const FloatPoint* points
         cairo_set_line_width(context, strokeThickness());
         cairo_stroke(context);
     }
+
+    cairo_new_path(context);
     cairo_restore(context);
 }
 
@@ -462,6 +469,8 @@ FloatRect GraphicsContext::roundToDevicePixels(const FloatRect& frect)
 
 void GraphicsContext::translate(float x, float y)
 {
+    if (paintingDisabled())
+        return;
     cairo_t* context = m_data->context;
     cairo_translate(context, x, y);
 }
@@ -488,6 +497,8 @@ void GraphicsContext::setPlatformStrokeColor(const Color& col)
 
 void GraphicsContext::setPlatformStrokeThickness(float strokeThickness)
 {
+    if (paintingDisabled())
+        return;
     cairo_set_line_width(m_data->context, strokeThickness);
 }
 
@@ -537,12 +548,6 @@ void GraphicsContext::setURLForRect(const KURL& link, const IntRect& destRect)
     notImplemented();
 }
 
-void GraphicsContext::addRoundedRectClip(const IntRect& rect, const IntSize& topLeft, const IntSize& topRight,
-        const IntSize& bottomLeft, const IntSize& bottomRight) 
-{
-    notImplemented(); 
-}
-
 void GraphicsContext::addInnerRoundedRectClip(const IntRect& rect, int thickness) 
 { 
     notImplemented(); 
@@ -558,14 +563,28 @@ void GraphicsContext::clearShadow()
     notImplemented();
 }
 
-void GraphicsContext::beginTransparencyLayer(float)
+void GraphicsContext::beginTransparencyLayer(float opacity)
 {
-    notImplemented();
+    if (paintingDisabled())
+        return;
+
+    cairo_t* context = m_data->context;
+    cairo_save(context);
+    cairo_push_group(context);
+    m_data->layers.append(opacity);
 }
 
 void GraphicsContext::endTransparencyLayer()
 {
-    notImplemented();
+    if (paintingDisabled())
+        return;
+
+    cairo_t* context = m_data->context;
+
+    cairo_pop_group_to_source(context);
+    cairo_paint_with_alpha(context, m_data->layers.last());
+    m_data->layers.removeLast();
+    cairo_restore(context);
 }
 
 void GraphicsContext::clearRect(const FloatRect&)
@@ -668,6 +687,8 @@ static inline cairo_operator_t toCairoOperator(CompositeOperator op)
 
 void GraphicsContext::setCompositeOperation(CompositeOperator op)
 {
+    if (paintingDisabled())
+        return;
     cairo_set_operator(m_data->context, toCairoOperator(op));
 }
 
@@ -676,14 +697,23 @@ void GraphicsContext::clip(const Path&)
     notImplemented();
 }
 
-void GraphicsContext::rotate(float)
+void GraphicsContext::clipOut(const Path&)
 {
     notImplemented();
 }
 
-void GraphicsContext::scale(const FloatSize&)
+void GraphicsContext::rotate(float angle)
 {
-    notImplemented();
+    if (paintingDisabled())
+        return;
+    cairo_rotate(m_data->context, angle);
+}
+
+void GraphicsContext::scale(const FloatSize& size)
+{
+    if (paintingDisabled())
+        return;
+    cairo_scale(m_data->context, size.width(), size.height());
 }
 
 void GraphicsContext::clipOut(const IntRect&)

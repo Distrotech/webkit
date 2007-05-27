@@ -1,6 +1,6 @@
 /*
     Copyright (C) 2004, 2005, 2006 Nikolas Zimmermann <zimmermann@kde.org>
-                  2004, 2005, 2006 Rob Buis <buis@kde.org>
+                  2004, 2005, 2006, 2007 Rob Buis <buis@kde.org>
 
     This file is part of the KDE project
 
@@ -28,7 +28,6 @@
 #include "cssstyleselector.h"
 #include "RenderPath.h"
 #include "RenderSVGHiddenContainer.h"
-#include "RenderView.h"
 #include "SVGNames.h"
 #include "SVGStopElement.h"
 #include "SVGTransformList.h"
@@ -59,11 +58,10 @@ ANIMATED_PROPERTY_DEFINITIONS(SVGGradientElement, int, Enumeration, enumeration,
 
 void SVGGradientElement::parseMappedAttribute(MappedAttribute* attr)
 {
-    const String& value = attr->value();
     if (attr->name() == SVGNames::gradientUnitsAttr) {
-        if (value == "userSpaceOnUse")
+        if (attr->value() == "userSpaceOnUse")
             setGradientUnitsBaseValue(SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE);
-        else if (value == "objectBoundingBox")
+        else if (attr->value() == "objectBoundingBox")
             setGradientUnitsBaseValue(SVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX);
     } else if (attr->name() == SVGNames::gradientTransformAttr) {
         SVGTransformList* gradientTransforms = gradientTransformBaseValue();
@@ -72,11 +70,11 @@ void SVGGradientElement::parseMappedAttribute(MappedAttribute* attr)
             gradientTransforms->clear(ec);
         }
     } else if (attr->name() == SVGNames::spreadMethodAttr) {
-        if (value == "reflect")
+        if (attr->value() == "reflect")
             setSpreadMethodBaseValue(SVG_SPREADMETHOD_REFLECT);
-        else if (value == "repeat")
+        else if (attr->value() == "repeat")
             setSpreadMethodBaseValue(SVG_SPREADMETHOD_REPEAT);
-        else if (value == "pad")
+        else if (attr->value() == "pad")
             setSpreadMethodBaseValue(SVG_SPREADMETHOD_PAD);
     } else {
         if (SVGURIReference::parseMappedAttribute(attr))
@@ -143,12 +141,12 @@ Vector<SVGGradientStop> SVGGradientElement::buildStops() const
             
             stops.append(makeGradientStop(stopOffset, makeRGBA(c.red(), c.green(), c.blue(), int(opacity * 255.))));
             if (!stop->renderer())
-                stopStyle->deref(view()->renderArena());
+                stopStyle->deref(document()->renderArena());
         }
     }
 
     if (gradientStyle)
-        gradientStyle->deref(view()->renderArena());
+        gradientStyle->deref(document()->renderArena());
     return stops;
 }
 

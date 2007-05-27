@@ -29,6 +29,7 @@
 #import <WebKit/WebHTMLView.h>
 
 @class DOMDocumentFragment;
+@class DOMElement;
 @class DOMNode;
 @class DOMRange;
 @class WebArchive;
@@ -36,7 +37,7 @@
 @class WebView;
 @class WebFrame;
 @class WebPluginController;
- 
+
 @protocol WebHTMLHighlighter
 - (NSRect)highlightRectForLine:(NSRect)lineRect representedNode:(DOMNode *)node;
 - (void)paintHighlightForBox:(NSRect)boxRect onLine:(NSRect)lineRect behindText:(BOOL)text entireLine:(BOOL)line representedNode:(DOMNode *)node;
@@ -74,7 +75,6 @@
 
 - (NSImage *)_dragImageForLinkElement:(NSDictionary *)element;
 - (NSImage *)_dragImageForURL:(NSString*)linkURL withLabel:(NSString*)label;
-- (BOOL)_startDraggingImage:(NSImage *)dragImage at:(NSPoint)dragLoc operation:(NSDragOperation)op event:(NSEvent *)event sourceIsDHTML:(BOOL)flag DHTMLWroteData:(BOOL)dhtmlWroteData;
 - (void)_handleAutoscrollForMouseDragged:(NSEvent *)event;
 - (WebPluginController *)_pluginController;
 
@@ -98,6 +98,8 @@
 // SPI's for Mail.
 - (NSImage *)_selectionDraggingImage;
 - (NSRect)_selectionDraggingRect;
+- (DOMNode *)_insertOrderedList;
+- (DOMNode *)_insertUnorderedList;
 - (BOOL)_canIncreaseSelectionListLevel;
 - (BOOL)_canDecreaseSelectionListLevel;
 - (DOMNode *)_increaseSelectionListLevel;
@@ -120,5 +122,4 @@
 - (void)setMarkedTextMatchesAreHighlighted:(BOOL)newValue;
 - (BOOL)markedTextMatchesAreHighlighted;
 - (NSArray *)rectsForTextMatches;
-
 @end

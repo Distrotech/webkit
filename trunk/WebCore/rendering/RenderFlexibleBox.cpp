@@ -109,51 +109,36 @@ RenderFlexibleBox::~RenderFlexibleBox()
 {
 }
 
-void RenderFlexibleBox::calcHorizontalMinMaxWidth()
+void RenderFlexibleBox::calcHorizontalPrefWidths()
 {
     RenderObject *child = firstChild();
     while (child) {
         // positioned children don't affect the minmaxwidth
-        if (child->isPositioned() || child->style()->visibility() == COLLAPSE)
-        {
+        if (child->isPositioned() || child->style()->visibility() == COLLAPSE) {
             child = child->nextSibling();
             continue;
         }
 
-        int margin=0;
-        //  auto margins don't affect minwidth
-
+        // A margin basically has three types: fixed, percentage, and auto (variable).
+        // Auto and percentage margins simply become 0 when computing min/max width.
+        // Fixed margins can be added in as is.
         Length ml = child->style()->marginLeft();
         Length mr = child->style()->marginRight();
+        int margin = 0, marginLeft = 0, marginRight = 0;
+        if (ml.isFixed())
+            marginLeft += ml.value();
+        if (mr.isFixed())
+            marginRight += mr.value();
+        margin = marginLeft + marginRight;
 
-        // Call calcWidth on the child to ensure that our margins are
-        // up to date.  This method can be called before the child has actually
-        // calculated its margins (which are computed inside calcWidth).
-        child->calcWidth();
-
-        if (!ml.isAuto() && !mr.isAuto()) {
-            if (!child->style()->width().isAuto()) {
-                if (child->style()->direction()==LTR)
-                    margin = child->marginLeft();
-                else
-                    margin = child->marginRight();
-            } else
-                margin = child->marginLeft()+child->marginRight();
-        } else if (!ml.isAuto())
-            margin = child->marginLeft();
-        else if (!mr.isAuto())
-            margin = child->marginRight();
-
-        if (margin < 0) margin = 0;
-
-        m_minWidth += child->minWidth() + margin;
-        m_maxWidth += child->maxWidth() + margin;
+        m_minPrefWidth += child->minPrefWidth() + margin;
+        m_maxPrefWidth += child->maxPrefWidth() + margin;
 
         child = child->nextSibling();
     }    
 }
 
-void RenderFlexibleBox::calcVerticalMinMaxWidth()
+void RenderFlexibleBox::calcVerticalPrefWidths()
 {
     RenderObject *child = firstChild();
     while(child != 0)
@@ -164,102 +149,77 @@ void RenderFlexibleBox::calcVerticalMinMaxWidth()
             continue;
         }
 
+        // A margin basically has three types: fixed, percentage, and auto (variable).
+        // Auto/percentage margins simply become 0 when computing min/max width.
+        // Fixed margins can be added in as is.
         Length ml = child->style()->marginLeft();
         Length mr = child->style()->marginRight();
-
-        // Call calcWidth on the child to ensure that our margins are
-        // up to date.  This method can be called before the child has actually
-        // calculated its margins (which are computed inside calcWidth).
-        if (ml.isPercent() || mr.isPercent())
-            calcWidth();
-
-        // A margin basically has three types: fixed, percentage, and auto (variable).
-        // Auto margins simply become 0 when computing min/max width.
-        // Fixed margins can be added in as is.
-        // Percentage margins are computed as a percentage of the width we calculated in
-        // the calcWidth call above.  In this case we use the actual cached margin values on
-        // the RenderObject itself.
         int margin = 0;
         if (ml.isFixed())
             margin += ml.value();
-        else if (ml.isPercent())
-            margin += child->marginLeft();
-
         if (mr.isFixed())
             margin += mr.value();
-        else if (mr.isAuto())
-            margin += child->marginRight();
-
-        if (margin < 0) margin = 0;
         
-        int w = child->minWidth() + margin;
-        if(m_minWidth < w) m_minWidth = w;
+        int w = child->minPrefWidth() + margin;
+        m_minPrefWidth = max(w, m_minPrefWidth);
         
-        w = child->maxWidth() + margin;
-
-        if(m_maxWidth < w) m_maxWidth = w;
+        w = child->maxPrefWidth() + margin;
+        m_maxPrefWidth = max(w, m_maxPrefWidth);
 
         child = child->nextSibling();
     }    
 }
 
-void RenderFlexibleBox::calcMinMaxWidth()
+void RenderFlexibleBox::calcPrefWidths()
 {
-    ASSERT( !minMaxKnown() );
-
-    m_minWidth = 0;
-    m_maxWidth = 0;
-
-    if (hasMultipleLines() || isVertical())
-        calcVerticalMinMaxWidth();
-    else
-        calcHorizontalMinMaxWidth();
-
-    if(m_maxWidth < m_minWidth) m_maxWidth = m_minWidth;
+    ASSERT(prefWidthsDirty());
 
     if (style()->width().isFixed() && style()->width().value() > 0)
-        m_minWidth = m_maxWidth = calcContentBoxWidth(style()->width().value());
-   
+        m_minPrefWidth = m_maxPrefWidth = calcContentBoxWidth(style()->width().value());
+    else {
+        m_minPrefWidth = m_maxPrefWidth = 0;
+
+        if (hasMultipleLines() || isVertical())
+            calcVerticalPrefWidths();
+        else
+            calcHorizontalPrefWidths();
+
+        m_maxPrefWidth = max(m_minPrefWidth, m_maxPrefWidth);
+    }
+
     if (style()->minWidth().isFixed() && style()->minWidth().value() > 0) {
-        m_maxWidth = max(m_maxWidth, calcContentBoxWidth(style()->minWidth().value()));
-        m_minWidth = max(m_minWidth, calcContentBoxWidth(style()->minWidth().value()));
+        m_maxPrefWidth = max(m_maxPrefWidth, calcContentBoxWidth(style()->minWidth().value()));
+        m_minPrefWidth = max(m_minPrefWidth, calcContentBoxWidth(style()->minWidth().value()));
     }
     
     if (style()->maxWidth().isFixed() && style()->maxWidth().value() != undefinedLength) {
-        m_maxWidth = min(m_maxWidth, calcContentBoxWidth(style()->maxWidth().value()));
-        m_minWidth = min(m_minWidth, calcContentBoxWidth(style()->maxWidth().value()));
+        m_maxPrefWidth = min(m_maxPrefWidth, calcContentBoxWidth(style()->maxWidth().value()));
+        m_minPrefWidth = min(m_minPrefWidth, calcContentBoxWidth(style()->maxWidth().value()));
     }
 
     int toAdd = borderLeft() + borderRight() + paddingLeft() + paddingRight();
-    m_minWidth += toAdd;
-    m_maxWidth += toAdd;
+    m_minPrefWidth += toAdd;
+    m_maxPrefWidth += toAdd;
 
-    setMinMaxKnown();
+    setPrefWidthsDirty(false);
 }
 
 void RenderFlexibleBox::layoutBlock(bool relayoutChildren)
 {
     ASSERT(needsLayout());
-    ASSERT(minMaxKnown());
 
-    if (!relayoutChildren && posChildNeedsLayout() && !normalChildNeedsLayout() && !selfNeedsLayout()) {
-        // All we have to is lay out our positioned objects.
-        layoutPositionedObjects(false);
-        if (hasOverflowClip())
-            m_layer->updateScrollInfoAfterLayout();
-        setNeedsLayout(false);
+    if (!relayoutChildren && layoutOnlyPositionedObjects())
         return;
-    }
 
     IntRect oldBounds;
     IntRect oldOutlineBox;
     bool checkForRepaint = checkForRepaintDuringLayout();
     if (checkForRepaint) {
         oldBounds = absoluteClippedOverflowRect();
-        oldBounds.move(view()->layoutDelta());
         oldOutlineBox = absoluteOutlineBox();
-        oldOutlineBox.move(view()->layoutDelta());
     }
+
+    view()->pushLayoutState(this, IntSize(m_x, m_y));
 
     int previousWidth = m_width;
     int previousHeight = m_height;
@@ -327,6 +287,17 @@ void RenderFlexibleBox::layoutBlock(bool relayoutChildren)
     // Always ensure our overflow width is at least as large as our width.
     if (m_overflowWidth < m_width)
         m_overflowWidth = m_width;
+
+    if (!hasOverflowClip()) {
+        if (ShadowData* boxShadow = style()->boxShadow()) {
+            m_overflowLeft = min(m_overflowLeft, boxShadow->x - boxShadow->blur);
+            m_overflowWidth = max(m_overflowWidth, m_width + boxShadow->x + boxShadow->blur);
+            m_overflowTop = min(m_overflowTop, boxShadow->y - boxShadow->blur);
+            m_overflowHeight = max(m_overflowHeight, m_height + boxShadow->y + boxShadow->blur);
+        }
+    }
+
+    view()->popLayoutState();
 
     // Update our scrollbars if we're overflow:auto/scroll/hidden now that we know if
     // we overflow or not.
@@ -1117,9 +1088,9 @@ int RenderFlexibleBox::allowedChildFlex(RenderObject* child, bool expanding, uns
                 child->style()->maxWidth().isFixed())
                 maxW = child->style()->maxWidth().value();
             else if (child->style()->maxWidth().type() == Intrinsic)
-                maxW = child->maxWidth();
+                maxW = child->maxPrefWidth();
             else if (child->style()->maxWidth().type() == MinIntrinsic)
-                maxW = child->minWidth();
+                maxW = child->minPrefWidth();
             if (maxW == INT_MAX)
                 return maxW;
             return max(0, maxW - w);
@@ -1138,14 +1109,14 @@ int RenderFlexibleBox::allowedChildFlex(RenderObject* child, bool expanding, uns
 
     // FIXME: For now just handle fixed values.
     if (isHorizontal()) {
-        int minW = child->minWidth();
+        int minW = child->minPrefWidth();
         int w = child->overrideWidth() - (child->borderLeft() + child->borderRight() + child->paddingLeft() + child->paddingRight());
         if (child->style()->minWidth().isFixed())
             minW = child->style()->minWidth().value();
         else if (child->style()->minWidth().type() == Intrinsic)
-            minW = child->maxWidth();
+            minW = child->maxPrefWidth();
         else if (child->style()->minWidth().type() == MinIntrinsic)
-            minW = child->minWidth();
+            minW = child->minPrefWidth();
             
         int allowedShrinkage = min(0, minW - w);
         return allowedShrinkage;

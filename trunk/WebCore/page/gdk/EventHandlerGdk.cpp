@@ -48,7 +48,7 @@ static bool isKeyboardOptionTab(KeyboardEvent* event)
     return event
         && (event->type() == keydownEvent || event->type() == keypressEvent)
         && event->altKey()
-        && event->keyIdentifier() == "U+000009";
+        && event->keyIdentifier() == "U+0009";
 }
 
 bool EventHandler::tabsToAllControls(KeyboardEvent* event) const
@@ -97,7 +97,7 @@ bool EventHandler::passSubframeEventToSubframe(MouseEventWithHitTestResults& eve
     return false;
 }
 
-bool EventHandler::passWheelEventToWidget(Widget* widget)
+bool EventHandler::passWheelEventToWidget(PlatformWheelEvent&, Widget* widget)
 {
     notImplementedGdk();
     return false;
@@ -124,14 +124,10 @@ bool EventHandler::passMouseReleaseEventToSubframe(MouseEventWithHitTestResults&
     return passSubframeEventToSubframe(mev, subframe);
 }
 
-bool EventHandler::passWheelEventToSubframe(PlatformWheelEvent&, Frame* subframe)
-{
-    return passWheelEventToWidget(subframe->view());
-}
-
 bool EventHandler::passMousePressEventToScrollbar(MouseEventWithHitTestResults&, PlatformScrollbar* scrollbar)
 {
-    return passWheelEventToWidget(scrollbar);
+    notImplementedGdk();
+    return false;
 }
 
 }

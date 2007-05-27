@@ -56,7 +56,6 @@
 #import "HitTestResult.h"
 #import "Image.h"
 #import "LoaderNSURLExtras.h"
-#import "ModifySelectionListLevel.h"
 #import "MoveSelectionCommand.h"
 #import "Page.h"
 #import "PlatformMouseEvent.h"
@@ -682,17 +681,17 @@ static HTMLFormElement *formElementFromDOMElement(DOMElement *element)
 
 - (NSString *)stringByEvaluatingJavaScriptFromString:(NSString *)string forceUserGesture:(BOOL)forceUserGesture
 {
-    m_frame->loader()->createEmptyDocument();
+    ASSERT(m_frame->document());
     JSValue* result = m_frame->loader()->executeScript(0, string, forceUserGesture);
     if (!result)
         return 0;
     JSLock lock;
-    return String(result->isString() ? result->getString() : result->toString(m_frame->scriptProxy()->interpreter()->globalExec()));
+    return nsStringNilIfEmpty(result->isString() ? result->getString() : result->toString(m_frame->scriptProxy()->interpreter()->globalExec()));
 }
 
 - (NSAppleEventDescriptor *)aeDescByEvaluatingJavaScriptFromString:(NSString *)string
 {
-    m_frame->loader()->createEmptyDocument();
+    ASSERT(m_frame->document());
     JSValue* result = m_frame->loader()->executeScript(0, string, true);
     if (!result) // FIXME: pass errors
         return 0;
@@ -904,7 +903,9 @@ static HTMLFormElement *formElementFromDOMElement(DOMElement *element)
 
 - (void)selectNSRange:(NSRange)range
 {
-    m_frame->selectionController()->setSelection(Selection([self convertToDOMRange:range].get(), SEL_DEFAULT_AFFINITY));
+    RefPtr<Range> domRange = [self convertToDOMRange:range];
+    if (domRange)
+        m_frame->selectionController()->setSelection(Selection(domRange.get(), SEL_DEFAULT_AFFINITY));
 }
 
 - (NSRange)selectedNSRange
@@ -1097,55 +1098,6 @@ static HTMLFormElement *formElementFromDOMElement(DOMElement *element)
     [self replaceSelectionWithFragment:[self documentFragmentWithText:text
         inContext:[DOMRange _wrapRange:m_frame->selectionController()->toRange().get()]]
         selectReplacement:selectReplacement smartReplace:smartReplace matchStyle:YES];
-}
-
-- (bool)canIncreaseSelectionListLevel
-{
-    return IncreaseSelectionListLevelCommand::canIncreaseSelectionListLevel(m_frame->document());
-}
-
-- (bool)canDecreaseSelectionListLevel
-{
-    return DecreaseSelectionListLevelCommand::canDecreaseSelectionListLevel(m_frame->document());
-}
-
-- (DOMNode *)increaseSelectionListLevel;
-{
-    if (m_frame->selectionController()->isNone())
-        return nil;
-    
-    Node* newList = IncreaseSelectionListLevelCommand::increaseSelectionListLevel(m_frame->document());
-    m_frame->revealSelection(RenderLayer::gAlignToEdgeIfNeeded);
-    return [DOMNode _wrapNode:newList];
-}
-
-- (DOMNode *)increaseSelectionListLevelOrdered;
-{
-    if (m_frame->selectionController()->isNone())
-        return nil;
-    
-    Node* newList = IncreaseSelectionListLevelCommand::increaseSelectionListLevelOrdered(m_frame->document());
-    m_frame->revealSelection(RenderLayer::gAlignToEdgeIfNeeded);
-    return [DOMNode _wrapNode:newList];
-}
-
-- (DOMNode *)increaseSelectionListLevelUnordered;
-{
-    if (m_frame->selectionController()->isNone())
-        return nil;
-    
-    Node* newList = IncreaseSelectionListLevelCommand::increaseSelectionListLevelUnordered(m_frame->document());
-    m_frame->revealSelection(RenderLayer::gAlignToEdgeIfNeeded);
-    return [DOMNode _wrapNode:newList];
-}
-
-- (void)decreaseSelectionListLevel
-{
-    if (m_frame->selectionController()->isNone())
-        return;
-    
-    DecreaseSelectionListLevelCommand::decreaseSelectionListLevel(m_frame->document());
-    m_frame->revealSelection(RenderLayer::gAlignToEdgeIfNeeded);
 }
 
 - (void)insertParagraphSeparatorInQuotedContent

@@ -185,6 +185,7 @@ wxWebView::wxWebView(wxWindow* parent, int id, const wxPoint& position,
     m_impl->frameView = new WebCore::FrameView(m_impl->frame.get());
     m_impl->frameView->deref();
     m_impl->frame->setView(m_impl->frameView.get());
+    m_impl->frame->init();
     
     m_impl->frameView->setNativeWindow(this);
     loaderClient->setFrame(m_impl->frame.get());

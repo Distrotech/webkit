@@ -58,7 +58,6 @@
 #include "ProcessingInstruction.h"
 #include "Range.h"
 #include "RenderView.h"
-#include "Settings.h"
 #include "kjs_css.h"
 #include "kjs_events.h"
 #include "kjs_traversal.h"
@@ -258,10 +257,10 @@ void DOMNode::putValueProperty(ExecState* exec, int token, JSValue* value, int /
   Node& node = *m_impl;
   switch (token) {
   case NodeValue:
-    node.setNodeValue(value->toString(exec), exception);
+    node.setNodeValue(valueToStringWithNullCheck(exec, value), exception);
     break;
   case Prefix:
-    node.setPrefix(value->toString(exec), exception);
+    node.setPrefix(valueToStringWithNullCheck(exec, value), exception);
     break;
   case TextContent:
     node.setTextContent(valueToStringWithNullCheck(exec, value), exception);
@@ -1071,9 +1070,9 @@ JSValue* getRuntimeObject(ExecState* exec, Node* n)
     return 0;
 }
 
-JSValue* toJS(ExecState* exec, PassRefPtr<NodeList> l)
+JSValue* toJS(ExecState* exec, NodeList* l)
 {
-    return cacheDOMObject<NodeList, DOMNodeList>(exec, l.get());
+    return cacheDOMObject<NodeList, DOMNodeList>(exec, l);
 }
 
 // -------------------------------------------------------------------------

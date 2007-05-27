@@ -234,7 +234,7 @@ bool EventHandler::handleMousePressEventSingleClick(const MouseEventWithHitTestR
     
     Selection newSelection = m_frame->selectionController()->selection();
     if (extendSelection && newSelection.isCaretOrRange()) {
-        m_frame->selectionController()->clearModifyBias();
+        m_frame->selectionController()->setLastChangeWasHorizontalExtension(false);
         
         // See <rdar://problem/3668157> REGRESSION (Mail): shift-click deselects when selection 
         // was created right-to-left
@@ -362,7 +362,7 @@ bool EventHandler::eventMayStartDrag(const PlatformMouseEvent& event) const
     // that its logic needs to stay in sync with handleMouseMoveEvent() and the way we setMouseDownMayStartDrag
     // in handleMousePressEvent
     
-    if (!m_frame->renderer() || !m_frame->renderer()->layer()
+    if (!m_frame->renderer() || !m_frame->renderer()->hasLayer()
         || event.button() != LeftButton || event.clickCount() != 1)
         return false;
     
@@ -388,7 +388,7 @@ void EventHandler::updateSelectionForMouseDragOverPosition(const VisiblePosition
     // Restart the selection if this is the first mouse move. This work is usually
     // done in handleMousePressEvent, but not if the mouse press was on an existing selection.
     Selection newSelection = m_frame->selectionController()->selection();
-    m_frame->selectionController()->clearModifyBias();
+    m_frame->selectionController()->setLastChangeWasHorizontalExtension(false);
     
     if (!m_beganSelectingText) {
         m_beganSelectingText = true;
@@ -664,6 +664,7 @@ static Cursor selectCursor(const MouseEventWithHitTestResults& event, Frame* fra
 
             // If the link is editable, then we need to check the settings to see whether or not the link should be followed
             if (editable) {
+                ASSERT(frame->settings());
                 switch(frame->settings()->editableLinkBehavior()) {
                     default:
                     case EditableLinkDefaultBehavior:
@@ -757,6 +758,10 @@ static Cursor selectCursor(const MouseEventWithHitTestResults& event, Frame* fra
             return notAllowedCursor();
         case CURSOR_DEFAULT:
             return pointerCursor();
+        case CURSOR_WEBKIT_ZOOM_IN:
+            return zoomInCursor();
+        case CURSOR_WEBKIT_ZOOM_OUT:
+            return zoomOutCursor();
     }
     return pointerCursor();
 }
@@ -849,8 +854,10 @@ bool EventHandler::handleMouseDoubleClickEvent(const PlatformMouseEvent& mouseEv
 
     MouseEventWithHitTestResults mev = prepareMouseEvent(HitTestRequest(false, true), mouseEvent);
     Frame* subframe = subframeForTargetNode(mev.targetNode());
-    if (subframe && passMousePressEventToSubframe(mev, subframe))
+    if (subframe && passMousePressEventToSubframe(mev, subframe)) {
+        m_capturingMouseEventsNode = 0;
         return true;
+    }
 
     m_clickCount = mouseEvent.clickCount();
     bool swallowMouseUpEvent = dispatchMouseEvent(mouseupEvent, mev.targetNode(), true, m_clickCount, mouseEvent, false);
@@ -900,21 +907,23 @@ bool EventHandler::handleMouseMoveEvent(const PlatformMouseEvent& mouseEvent)
     MouseEventWithHitTestResults mev = prepareMouseEvent(request, mouseEvent);
 
     PlatformScrollbar* scrollbar = 0;
-    if (m_frame->view())
-        scrollbar = m_frame->view()->scrollbarUnderMouse(mouseEvent);
-
-    if (!scrollbar)
-        scrollbar = mev.scrollbar();
-
-    if (m_lastScrollbarUnderMouse != scrollbar) {
-        // Send mouse exited to the old scrollbar.
-        if (m_lastScrollbarUnderMouse)
-            m_lastScrollbarUnderMouse->handleMouseOutEvent(mouseEvent);
-        m_lastScrollbarUnderMouse = scrollbar;
-    }
 
     if (m_resizeLayer && m_resizeLayer->inResizeMode())
         m_resizeLayer->resize(mouseEvent, m_offsetFromResizeCorner);
+    else {
+        if (m_frame->view())
+            scrollbar = m_frame->view()->scrollbarUnderMouse(mouseEvent);
+
+        if (!scrollbar)
+            scrollbar = mev.scrollbar();
+
+        if (m_lastScrollbarUnderMouse != scrollbar) {
+            // Send mouse exited to the old scrollbar.
+            if (m_lastScrollbarUnderMouse)
+                m_lastScrollbarUnderMouse->handleMouseOutEvent(mouseEvent);
+            m_lastScrollbarUnderMouse = scrollbar;
+        }
+    }
         
     bool swallowEvent = false;
     Node* targetNode = m_capturingMouseEventsNode.get() ? m_capturingMouseEventsNode.get() : mev.targetNode();
@@ -1163,17 +1172,30 @@ bool EventHandler::dispatchMouseEvent(const AtomicString& eventType, Node* targe
         // Walking up the DOM tree wouldn't work for shadow trees, like those behind the engine-based text fields.
         while (renderer) {
             node = renderer->element();
-            if (node && node->isFocusable())
+            if (node && node->isFocusable()) {
+                // To fix <rdar://problem/4895428> Can't drag selected ToDo, we don't focus a 
+                // node on mouse down if it's selected and inside a focused node. It will be 
+                // focused if the user does a mouseup over it, however, because the mouseup
+                // will set a selection inside it, which will call setFocuseNodeIfNeeded.
+                ExceptionCode ec = 0;
+                Node* n = node->isShadowNode() ? node->shadowParentNode() : node;
+                if (m_frame->selectionController()->isRange() && 
+                    m_frame->selectionController()->toRange()->compareNode(n, ec) == Range::NODE_INSIDE &&
+                    n->isDescendantOf(m_frame->document()->focusedNode()))
+                    return false;
+                    
                 break;
+            }
+            
             renderer = renderer->parent();
         }
         // If focus shift is blocked, we eat the event.  Note we should never clear swallowEvent
         // if the page already set it (e.g., by canceling default behavior).
         if (node && node->isMouseFocusable()) {
-            if (!m_frame->document()->setFocusedNode(node))
+            if (!m_frame->page()->focusController()->setFocusedNode(node, m_frame))
                 swallowEvent = true;
         } else if (!node || !node->focused()) {
-            if (!m_frame->document()->setFocusedNode(0))
+            if (!m_frame->page()->focusController()->setFocusedNode(0, m_frame))
                 swallowEvent = true;
         }
     }
@@ -1196,14 +1218,18 @@ bool EventHandler::handleWheelEvent(PlatformWheelEvent& e)
     HitTestRequest request(true, false);
     HitTestResult result(vPoint);
     doc->renderer()->layer()->hitTest(request, result);
-    Node* node = result.innerNode();    
-    Frame* subframe = subframeForTargetNode(node);
-    if (subframe && passWheelEventToSubframe(e, subframe)) {
-        e.accept();
-        return true;
-    }
-
+    Node* node = result.innerNode();
+    
     if (node) {
+        // Figure out which view to send the event to.
+        RenderObject* target = node->renderer();
+        
+        if (target && target->isWidget() &&
+            passWheelEventToWidget(e, static_cast<RenderWidget*>(target)->widget())) {
+            e.accept();
+            return true;
+        }
+
         node = node->shadowAncestorNode();
         EventTargetNodeCast(node)->dispatchWheelEvent(e);
         if (e.isAccepted())
@@ -1212,11 +1238,13 @@ bool EventHandler::handleWheelEvent(PlatformWheelEvent& e)
         if (node->renderer()) {
             // Just break up into two scrolls if we need to.  Diagonal movement on 
             // a MacBook pro is an example of a 2-dimensional mouse wheel event (where both deltaX and deltaY can be set).
-            if (e.deltaX() && node->renderer()->scroll(e.deltaX() < 0 ? ScrollRight : ScrollLeft, e.isContinuous() ? ScrollByPixel : ScrollByLine,
-                                                       e.deltaX() < 0 ? -e.deltaX() : e.deltaX()))
+            float deltaX = e.isContinuous() ? e.continuousDeltaX() : e.deltaX();
+            float deltaY = e.isContinuous() ? e.continuousDeltaY() : e.deltaY();
+            if (deltaX && node->renderer()->scroll(deltaX < 0 ? ScrollRight : ScrollLeft, e.isContinuous() ? ScrollByPixel : ScrollByLine,
+                                                       deltaX < 0 ? -deltaX : deltaX))
                 e.accept();
-            if (e.deltaY() && node->renderer()->scroll(e.deltaY() < 0 ? ScrollDown : ScrollUp, e.isContinuous() ? ScrollByPixel : ScrollByLine,
-                                                       e.deltaY() < 0 ? -e.deltaY() : e.deltaY()))
+            if (deltaY && node->renderer()->scroll(deltaY < 0 ? ScrollDown : ScrollUp, e.isContinuous() ? ScrollByPixel : ScrollByLine,
+                                                       deltaY < 0 ? -deltaY : deltaY))
                 e.accept();
         }
     }
@@ -1363,7 +1391,7 @@ void EventHandler::defaultKeyboardEventHandler(KeyboardEvent* event)
         m_frame->editor()->handleKeypress(event);
         if (event->defaultHandled())
             return;
-        if (event->keyIdentifier() == "U+000009")
+        if (event->keyIdentifier() == "U+0009")
             defaultTabEventHandler(event, false);
     }
 }

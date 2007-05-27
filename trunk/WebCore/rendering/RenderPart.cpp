@@ -63,7 +63,7 @@ void RenderPart::setWidget(Widget* widget)
             static_cast<FrameView*>(widget)->ref();
         RenderWidget::setWidget(widget);
 
-        setNeedsLayoutAndMinMaxRecalc();
+        setNeedsLayoutAndPrefWidthsRecalc();
 
         // make sure the scrollbars are set correctly for restore
         // ### find better fix
@@ -97,16 +97,22 @@ void RenderPart::updateWidgetPosition()
     width = m_width - borderLeft() - borderRight() - paddingLeft() - paddingRight();
     height = m_height - borderTop() - borderBottom() - paddingTop() - paddingBottom();
     IntRect newBounds(x,y,width,height);
-    if (newBounds != m_widget->frameGeometry()) {
+    bool boundsChanged = newBounds != m_widget->frameGeometry();
+    if (boundsChanged) {
         // The widget changed positions.  Update the frame geometry.
         RenderArena *arena = ref();
         element()->ref();
         m_widget->setFrameGeometry(newBounds);
         element()->deref();
         deref(arena);
-        
-        if (m_widget && m_widget->isFrameView())
-            static_cast<FrameView*>(m_widget)->layout();
+    }
+
+    // if the frame bounds got changed, or if view needs layout (possibly indicating
+    // content size is wrong) we have to do a layout to set the right widget size
+    if (m_widget && m_widget->isFrameView()) {
+        FrameView* frameView = static_cast<FrameView*>(m_widget);
+        if (boundsChanged || frameView->needsLayout())
+            frameView->layout();
     }
 }
 

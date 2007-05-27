@@ -1,11 +1,9 @@
 /*
-    This file is part of the KDE libraries
-
     Copyright (C) 1998 Lars Knoll (knoll@mpi-hd.mpg.de)
     Copyright (C) 2001 Dirk Mueller (mueller@kde.org)
     Copyright (C) 2002 Waldo Bastian (bastian@kde.org)
     Copyright (C) 2006 Samuel Weinig (sam.weinig@gmail.com)
-    Copyright (C) 2004, 2005, 2006 Apple Computer, Inc.
+    Copyright (C) 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Library General Public
@@ -21,9 +19,6 @@
     along with this library; see the file COPYING.LIB.  If not, write to
     the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
     Boston, MA 02111-1307, USA.
-
-    This class provides all functionality needed for loading images, style sheets and html
-    pages from the web. It has a memory cache for these objects.
 */
 
 #include "config.h"
@@ -58,37 +53,49 @@ Loader::~Loader()
 
 void Loader::load(DocLoader* dl, CachedResource* object, bool incremental, bool skipCanLoadCheck)
 {
-    Request* req = new Request(dl, object, incremental);
+    ASSERT(dl);
+    Request* req = new Request(dl, object, incremental, skipCanLoadCheck);
     m_requestsPending.append(req);
-    servePendingRequests(skipCanLoadCheck);
+    dl->incrementRequestCount();
+    servePendingRequests();
 }
 
-void Loader::servePendingRequests(bool skipCanLoadCheck)
+void Loader::servePendingRequests()
 {
-    if (m_requestsPending.count() == 0)
-        return;
+    while (!m_requestsPending.isEmpty()) {
+        // get the first pending request
+        Request* req = m_requestsPending.take(0);
+        DocLoader* dl = req->docLoader();
+        dl->decrementRequestCount();
 
-    // get the first pending request
-    Request* req = m_requestsPending.take(0);
+        ResourceRequest request(req->cachedResource()->url());
 
-    ResourceRequest request(req->cachedResource()->url());
+        if (!req->cachedResource()->accept().isEmpty())
+            request.setHTTPAccept(req->cachedResource()->accept());
 
-    if (!req->cachedResource()->accept().isEmpty())
-        request.setHTTPAccept(req->cachedResource()->accept());
-    if (req->docLoader())  {
-        KURL r = req->docLoader()->doc()->URL();
+        KURL r = dl->doc()->URL();
         if (r.protocol().startsWith("http") && r.path().isEmpty())
             r.setPath("/");
         request.setHTTPReferrer(r.url());
         DeprecatedString domain = r.host();
-        if (req->docLoader()->doc()->isHTMLDocument())
-            domain = static_cast<HTMLDocument*>(req->docLoader()->doc())->domain().deprecatedString();
-    }
-    
-    RefPtr<SubresourceLoader> loader = SubresourceLoader::create(req->docLoader()->doc()->frame(), this, request, skipCanLoadCheck);
+        if (dl->doc()->isHTMLDocument())
+            domain = static_cast<HTMLDocument*>(dl->doc())->domain().deprecatedString();
+        
+        RefPtr<SubresourceLoader> loader = SubresourceLoader::create(dl->doc()->frame(),
+            this, request, req->shouldSkipCanLoadCheck());
 
-    if (loader)
-        m_requestsLoading.add(loader.release(), req);
+        if (loader) {
+            m_requestsLoading.add(loader.release(), req);
+            dl->incrementRequestCount();
+            break;
+        }
+
+        dl->setLoadInProgress(true);
+        req->cachedResource()->error();
+        dl->setLoadInProgress(false);
+
+        delete req;
+    }
 }
 
 void Loader::didFinishLoading(SubresourceLoader* loader)
@@ -99,9 +106,11 @@ void Loader::didFinishLoading(SubresourceLoader* loader)
 
     Request* req = i->second;
     m_requestsLoading.remove(i);
+    DocLoader* docLoader = req->docLoader();
+    if (!req->isMultipart())
+        docLoader->decrementRequestCount();
 
     CachedResource* object = req->cachedResource();
-    DocLoader* docLoader = req->docLoader();
 
     docLoader->setLoadInProgress(true);
     object->data(loader->resourceData(), true);
@@ -126,9 +135,11 @@ void Loader::didFail(SubresourceLoader* loader, bool cancelled)
 
     Request* req = i->second;
     m_requestsLoading.remove(i);
+    DocLoader* docLoader = req->docLoader();
+    if (!req->isMultipart())
+        docLoader->decrementRequestCount();
 
     CachedResource* object = req->cachedResource();
-    DocLoader* docLoader = req->docLoader();
 
     if (!cancelled) {
         docLoader->setLoadInProgress(true);
@@ -160,6 +171,10 @@ void Loader::didReceiveResponse(SubresourceLoader* loader, const ResourceRespons
             req->docLoader()->frame()->loader()->checkCompleted();
     } else if (response.isMultipart()) {
         req->setIsMultipart(true);
+        
+        // We don't count multiParts in a DocLoader's request count
+        req->docLoader()->decrementRequestCount();
+            
         // If we get a multipart response, we must have a handle
         ASSERT(loader->handle());
         if (!req->cachedResource()->isImage())
@@ -176,35 +191,13 @@ void Loader::didReceiveData(SubresourceLoader* loader, const char* data, int siz
     CachedResource* object = request->cachedResource();    
 
     // Set the data.
-    if (request->isMultipart())
+    if (request->isMultipart()) {
         // The loader delivers the data in a multipart section all at once, send eof.
-        object->data(loader->resourceData(), true);
-    else if (request->isIncremental())
+        // The resource data will change as the next part is loaded, so we need to make a copy.
+        SharedBuffer* copiedData = new SharedBuffer(data, size);
+        object->data(copiedData, true);
+    } else if (request->isIncremental())
         object->data(loader->resourceData(), false);
-}
-
-int Loader::numRequests(DocLoader* dl) const
-{
-    // FIXME: Maybe we should keep a collection of requests by DocLoader, so we can do this instantly.
-
-    int res = 0;
-
-    DeprecatedPtrListIterator<Request> pIt(m_requestsPending);
-    for (; pIt.current(); ++pIt) {
-        if (pIt.current()->docLoader() == dl)
-            res++;
-    }
-
-    RequestMap::const_iterator end = m_requestsLoading.end();
-    for (RequestMap::const_iterator i = m_requestsLoading.begin(); !(i == end); ++i) {
-        Request* r = i->second;
-        res += (r->docLoader() == dl && !r->isMultipart());
-    }
-
-    if (dl->loadInProgress())
-        res++;
-
-    return res;
 }
 
 void Loader::cancelRequests(DocLoader* dl)
@@ -214,6 +207,7 @@ void Loader::cancelRequests(DocLoader* dl)
         if (pIt.current()->docLoader() == dl) {
             cache()->remove(pIt.current()->cachedResource());
             m_requestsPending.remove(pIt);
+            dl->decrementRequestCount();
         } else
             ++pIt;
     }
@@ -231,6 +225,11 @@ void Loader::cancelRequests(DocLoader* dl)
         SubresourceLoader* loader = loadersToCancel[i];
         didFail(loader, true);
     }
+    
+    if (dl->loadInProgress())
+        ASSERT(dl->requestCount() == 1);
+    else
+        ASSERT(dl->requestCount() == 0);
 }
 
 } //namespace WebCore

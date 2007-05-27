@@ -61,7 +61,7 @@
 #include "MainResourceLoader.h"
 #include "Node.h"
 #include "NotImplementedGdk.h"
-#include "PageCache.h"
+#include "CachedPage.h"
 #include "Pasteboard.h"
 #include "PlatformMouseEvent.h"
 #include "PlatformScrollBar.h"
@@ -73,6 +73,7 @@
 #include "ScrollBar.h"
 #include "SearchPopupMenu.h"
 #include "TextBoundaries.h"
+#include "TextBreakIteratorInternalICU.h"
 #include "Widget.h"
 #include <gtk/gtk.h>
 #include <stdio.h>
@@ -87,21 +88,15 @@ void FrameView::updateBorder() { notImplementedGdk(); }
 
 void Widget::setEnabled(bool) { notImplementedGdk(); }
 bool Widget::isEnabled() const { notImplementedGdk(); return false; }
-Widget::FocusPolicy Widget::focusPolicy() const { notImplementedGdk(); return NoFocus; }
-void Widget::enableFlushDrawing() { notImplementedGdk(); }
-void Widget::disableFlushDrawing() { notImplementedGdk(); }
-GraphicsContext* Widget::lockDrawingFocus() { notImplementedGdk(); return 0; }
-void Widget::unlockDrawingFocus(GraphicsContext*) { notImplementedGdk(); }
 void Widget::removeFromParent() { notImplementedGdk(); }
 void Widget::paint(GraphicsContext*, IntRect const&) { notImplementedGdk(); }
 void Widget::setIsSelected(bool) { notImplementedGdk(); }
 void Widget::invalidate() { notImplementedGdk(); }
 void Widget::invalidateRect(const IntRect&) { notImplementedGdk(); }
 
-int WebCore::findNextSentenceFromIndex(UChar const*, int, int, bool) { notImplementedGdk(); return 0; }
-void WebCore::findSentenceBoundary(UChar const*, int, int, int*, int*) { notImplementedGdk(); }
 int WebCore::findNextWordFromIndex(UChar const*, int, int, bool) { notImplementedGdk(); return 0; }
 void WebCore::findWordBoundary(UChar const* str, int len, int position, int* start, int* end) {*start = position; *end = position; }
+const char* WebCore::currentTextBreakLocaleID() { notImplementedGdk(); return "en_us"; }
 
 void ChromeClientGdk::chromeDestroyed() { notImplementedGdk(); }
 FloatRect ChromeClientGdk::windowRect() { notImplementedGdk(); return FloatRect(); }
@@ -110,8 +105,8 @@ FloatRect ChromeClientGdk::pageRect() { notImplementedGdk(); return FloatRect();
 float ChromeClientGdk::scaleFactor() { notImplementedGdk(); return 1.0; }
 void ChromeClientGdk::focus() { notImplementedGdk(); }
 void ChromeClientGdk::unfocus() { notImplementedGdk(); }
-WebCore::Page* ChromeClientGdk::createWindow(const FrameLoadRequest&) { notImplementedGdk(); return 0; }
-WebCore::Page* ChromeClientGdk::createModalDialog(const FrameLoadRequest&) { notImplementedGdk(); return 0;}
+WebCore::Page* ChromeClientGdk::createWindow(Frame*, const FrameLoadRequest&) { notImplementedGdk(); return 0; }
+WebCore::Page* ChromeClientGdk::createModalDialog(Frame*, const FrameLoadRequest&) { notImplementedGdk(); return 0; }
 void ChromeClientGdk::show() { notImplementedGdk(); }
 bool ChromeClientGdk::canRunModal() { notImplementedGdk(); return false; }
 void ChromeClientGdk::runModal() { notImplementedGdk(); }
@@ -246,16 +241,6 @@ void SearchPopupMenu::loadRecentSearches(const AtomicString& name, Vector<String
 SearchPopupMenu::SearchPopupMenu(PopupMenuClient* client) : PopupMenu(client) { notImplementedGdk(); }
 bool SearchPopupMenu::enabled() { notImplementedGdk(); return true; }
 
-PlatformScrollbar::PlatformScrollbar(ScrollbarClient* client, ScrollbarOrientation orientation, ScrollbarControlSize controlSize) : Scrollbar(client, orientation, controlSize) { notImplementedGdk(); }
-PlatformScrollbar::~PlatformScrollbar() { notImplementedGdk(); }
-int PlatformScrollbar::width() const { return 15; }
-int PlatformScrollbar::height() const { return 15; }
-void PlatformScrollbar::setEnabled(bool) { notImplementedGdk(); }
-void PlatformScrollbar::paint(GraphicsContext*, const IntRect& damageRect) { notImplementedGdk(); }
-void PlatformScrollbar::updateThumbPosition() { notImplementedGdk(); }
-void PlatformScrollbar::updateThumbProportion() { notImplementedGdk(); }
-void PlatformScrollbar::setRect(const IntRect&) { notImplementedGdk(); }
-
 FileChooser::FileChooser(FileChooserClient*, const String&) { notImplementedGdk(); }
 FileChooser::~FileChooser() { notImplementedGdk(); }
 void FileChooser::openFileChooser(Document*) { notImplementedGdk(); }
@@ -280,17 +265,9 @@ void Font::drawComplexText(GraphicsContext*, const TextRun&, const TextStyle&, c
 float Font::floatWidthForComplexText(const TextRun&, const TextStyle&) const { notImplementedGdk(); return 0; }
 int Font::offsetForPositionForComplexText(const TextRun&, const TextStyle&, int, bool) const { notImplementedGdk(); return 0; }
 
-void PageCache::close() { notImplementedGdk(); }
+void CachedPage::close() { notImplementedGdk(); }
 
-void Editor::ignoreSpelling() { notImplementedGdk(); }
-void Editor::learnSpelling() { notImplementedGdk(); }
-bool Editor::isSelectionUngrammatical() { notImplementedGdk(); return false; }
-bool Editor::isSelectionMisspelled() { notImplementedGdk(); return false; }
-Vector<String> Editor::guessesForMisspelledSelection() { notImplementedGdk(); return Vector<String>(); }
-Vector<String> Editor::guessesForUngrammaticalSelection() { notImplementedGdk(); return Vector<String>(); }
-void Editor::markMisspellingsAfterTypingToPosition(const VisiblePosition&) { notImplementedGdk(); }
 PassRefPtr<Clipboard> Editor::newGeneralClipboard(ClipboardAccessPolicy) { notImplementedGdk(); return 0; }
-void Editor::markMisspellings(const Selection&) { notImplementedGdk(); }
 
 Pasteboard* Pasteboard::generalPasteboard() { notImplementedGdk(); return 0; }
 void Pasteboard::writeSelection(Range*, bool, Frame*) { notImplementedGdk(); }

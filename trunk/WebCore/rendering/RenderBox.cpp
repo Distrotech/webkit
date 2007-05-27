@@ -64,8 +64,8 @@ RenderBox::RenderBox(Node* node)
     , m_marginRight(0)
     , m_marginTop(0)
     , m_marginBottom(0)
-    , m_minWidth(-1)
-    , m_maxWidth(-1)
+    , m_minPrefWidth(-1)
+    , m_maxPrefWidth(-1)
     , m_layer(0)
     , m_inlineBoxWrapper(0)
 {
@@ -116,6 +116,7 @@ void RenderBox::setStyle(RenderStyle* newStyle)
             if (wasFloating && isFloating())
                 setChildNeedsLayout(true);
             m_layer = new (renderArena()) RenderLayer(this);
+            setHasLayer(true);
             m_layer->insertOnlyThisLayer();
             if (parent() && !needsLayout() && containingBlock())
                 m_layer->updateLayerPositions();
@@ -124,6 +125,7 @@ void RenderBox::setStyle(RenderStyle* newStyle)
         ASSERT(m_layer->parent());
         RenderLayer* layer = m_layer;
         m_layer = 0;
+        setHasLayer(false);
         layer->removeOnlyThisLayer();
         if (wasFloating && isFloating())
             setChildNeedsLayout(true);
@@ -134,7 +136,7 @@ void RenderBox::setStyle(RenderStyle* newStyle)
 
     // Set the text color if we're the body.
     if (isBody())
-        element()->document()->setTextColor(newStyle->color());
+        document()->setTextColor(newStyle->color());
 
     if (style()->outlineWidth() > 0 && style()->outlineSize() > maximalOutlineSize(PaintPhaseOutline))
         static_cast<RenderView*>(document()->renderer())->setMaximalOutlineSize(style()->outlineSize());
@@ -164,6 +166,22 @@ void RenderBox::destroy()
 
     if (layer)
         layer->destroy(arena);
+}
+
+int RenderBox::minPrefWidth() const
+{
+    if (prefWidthsDirty())
+        const_cast<RenderBox*>(this)->calcPrefWidths();
+        
+    return m_minPrefWidth;
+}
+
+int RenderBox::maxPrefWidth() const
+{
+    if (prefWidthsDirty())
+        const_cast<RenderBox*>(this)->calcPrefWidths();
+        
+    return m_maxPrefWidth;
 }
 
 int RenderBox::overrideSize() const
@@ -250,7 +268,7 @@ bool RenderBox::nodeAtPoint(const HitTestRequest& request, HitTestResult& result
         // at the moment (a demoted inline <form> for example). If we ever implement a
         // table-specific hit-test method (which we should do for performance reasons anyway),
         // then we can remove this check.
-        if (!child->layer() && !child->isInlineFlow() && child->nodeAtPoint(request, result, x, y, tx, ty, action)) {
+        if (!child->hasLayer() && !child->isInlineFlow() && child->nodeAtPoint(request, result, x, y, tx, ty, action)) {
             updateHitTestResult(result, IntPoint(x - tx, y - ty));
             return true;
         }
@@ -758,8 +776,53 @@ int RenderBox::containingBlockWidth() const
     return cb->availableWidth();
 }
 
+IntSize RenderBox::offsetForPositionedInContainer(RenderObject* container) const
+{
+    if (!container->isRelPositioned() || !container->isInlineFlow())
+        return IntSize();
+
+    // When we have an enclosing relpositioned inline, we need to add in the offset of the first line
+    // box from the rest of the content, but only in the cases where we know we're positioned
+    // relative to the inline itself.
+
+    IntSize offset;
+    RenderFlow* flow = static_cast<RenderFlow*>(container);
+    int sx;
+    int sy;
+    if (flow->firstLineBox()) {
+        sx = flow->firstLineBox()->xPos();
+        sy = flow->firstLineBox()->yPos();
+    } else {
+        sx = flow->staticX();
+        sy = flow->staticY();
+    }
+
+    if (!hasStaticX())
+        offset.setWidth(sx);
+    // This is not terribly intuitive, but we have to match other browsers.  Despite being a block display type inside
+    // an inline, we still keep our x locked to the left of the relative positioned inline.  Arguably the correct
+    // behavior would be to go flush left to the block that contains the inline, but that isn't what other browsers
+    // do.
+    else if (!style()->isOriginalDisplayInlineType())
+        // Avoid adding in the left border/padding of the containing block twice.  Subtract it out.
+        offset.setWidth(sx - (containingBlock()->borderLeft() + containingBlock()->paddingLeft()));
+
+    if (!hasStaticY())
+        offset.setHeight(sy);
+
+    return offset;
+}
+
 bool RenderBox::absolutePosition(int& xPos, int& yPos, bool fixed) const
 {
+    if (RenderView* v = view()) {
+        if (LayoutState* layoutState = v->layoutState()) {
+            xPos = layoutState->m_offset.width() + m_x;
+            yPos = layoutState->m_offset.height() + m_y;
+            return true;
+        }
+    }
+
     if (style()->position() == FixedPosition)
         fixed = true;
 
@@ -767,36 +830,12 @@ bool RenderBox::absolutePosition(int& xPos, int& yPos, bool fixed) const
     if (o && o->absolutePosition(xPos, yPos, fixed)) {
         yPos += o->borderTopExtra();
 
-        if (style()->position() == AbsolutePosition && o->isRelPositioned() && o->isInlineFlow()) {
-            // When we have an enclosing relpositioned inline, we need to add in the offset of the first line
-            // box from the rest of the content, but only in the cases where we know we're positioned
-            // relative to the inline itself.
-            RenderFlow* flow = static_cast<RenderFlow*>(o);
-            int sx;
-            int sy;
-            if (flow->firstLineBox()) {
-                sx = flow->firstLineBox()->xPos();
-                sy = flow->firstLineBox()->yPos();
-            } else {
-                sx = flow->staticX();
-                sy = flow->staticY();
-            }
-
-            bool isInlineType = style()->isOriginalDisplayInlineType();
-
-            if (!hasStaticX())
-                xPos += sx;
-            // This is not terribly intuitive, but we have to match other browsers.  Despite being a block display type inside
-            // an inline, we still keep our x locked to the left of the relative positioned inline.  Arguably the correct
-            // behavior would be to go flush left to the block that contains the inline, but that isn't what other browsers
-            // do.
-            if (hasStaticX() && !isInlineType)
-                // Avoid adding in the left border/padding of the containing block twice.  Subtract it out.
-                xPos += sx - (containingBlock()->borderLeft() + containingBlock()->paddingLeft());
-
-            if (!hasStaticY())
-                yPos += sy;
+        if (style()->position() == AbsolutePosition) {
+            IntSize offset = offsetForPositionedInContainer(o);
+            xPos += offset.width();
+            yPos += offset.height();
         }
+
         if (o->hasOverflowClip())
             o->layer()->subtractScrollOffset(xPos, yPos);
 
@@ -881,13 +920,20 @@ void RenderBox::deleteLineBoxWrapper()
 IntRect RenderBox::absoluteClippedOverflowRect()
 {
     IntRect r = overflowRect(false);
+
+    if (RenderView* v = view())
+        r.move(v->layoutDelta());
+
     if (style()) {
         if (style()->hasAppearance())
             // The theme may wish to inflate the rect used when repainting.
             theme()->adjustRepaintRect(this, r);
 
         // FIXME: Technically the outline inflation could fit within the theme inflation.
-        r.inflate(style()->outlineSize());
+        if (!isInline() && continuation())
+            r.inflate(continuation()->style()->outlineSize());
+        else
+            r.inflate(style()->outlineSize());
     }
     computeAbsoluteRepaintRect(r);
     return r;
@@ -895,6 +941,16 @@ IntRect RenderBox::absoluteClippedOverflowRect()
 
 void RenderBox::computeAbsoluteRepaintRect(IntRect& rect, bool fixed)
 {
+    if (RenderView* v = view()) {
+        if (LayoutState* layoutState = v->layoutState()) {
+            rect.move(m_x, m_y);
+            rect.move(layoutState->m_offset);
+            if (layoutState->m_clipped)
+                rect.intersect(layoutState->m_clipRect);
+            return;
+        }
+    }
+
     int x = rect.x() + m_x;
     int y = rect.y() + m_y;
 
@@ -921,52 +977,20 @@ void RenderBox::computeAbsoluteRepaintRect(IntRect& rect, bool fixed)
             }
         }
 
-        if (style()->position() == AbsolutePosition && o->isRelPositioned() && o->isInlineFlow()) {
-            // When we have an enclosing relpositioned inline, we need to add in the offset of the first line
-            // box from the rest of the content, but only in the cases where we know we're positioned
-            // relative to the inline itself.
-            RenderFlow* flow = static_cast<RenderFlow*>(o);
-            int sx;
-            int sy;
-            if (flow->firstLineBox()) {
-                sx = flow->firstLineBox()->xPos();
-                sy = flow->firstLineBox()->yPos();
-            } else {
-                sx = flow->staticX();
-                sy = flow->staticY();
-            }
-
-            bool isInlineType = style()->isOriginalDisplayInlineType();
-
-            if (!hasStaticX())
-                x += sx;
-            // This is not terribly intuitive, but we have to match other browsers.  Despite being a block display type inside
-            // an inline, we still keep our x locked to the left of the relative positioned inline.  Arguably the correct
-            // behavior would be to go flush left to the block that contains the inline, but that isn't what other browsers
-            // do.
-            if (hasStaticX() && !isInlineType)
-                // Avoid adding in the left border/padding of the containing block twice.  Subtract it out.
-                x += sx - (containingBlock()->borderLeft() + containingBlock()->paddingLeft());
-
-            if (!hasStaticY())
-                y += sy;
+        if (style()->position() == AbsolutePosition) {
+            IntSize offset = offsetForPositionedInContainer(o);
+            x += offset.width();
+            y += offset.height();
         }
 
-        // <body> may not have overflow, since it might be applying its overflow value to the
-        // scrollbars.
+        // FIXME: We ignore the lightweight clipping rect that controls use, since if |o| is in mid-layout,
+        // its controlClipRect will be wrong. For overflow clip we use the values cached by the layer.
         if (o->hasOverflowClip()) {
             // o->height() is inaccurate if we're in the middle of a layout of |o|, so use the
             // layer's size instead.  Even if the layer's size is wrong, the layer itself will repaint
             // anyway if its size does change.
             IntRect boxRect(0, 0, o->layer()->width(), o->layer()->height());
             o->layer()->subtractScrollOffset(x, y); // For overflow:auto/scroll/hidden.
-            IntRect repaintRect(x, y, rect.width(), rect.height());
-            rect = intersection(repaintRect, boxRect);
-            if (rect.isEmpty())
-                return;
-        } else if (o->hasControlClip()) {
-            // Some form controls use a lightweight clipping scheme to avoid the overhead of a layer.
-            IntRect boxRect(borderLeft(), borderTop(), m_width - borderLeft() - borderRight(), m_height - borderTop() - borderBottom());
             IntRect repaintRect(x, y, rect.width(), rect.height());
             rect = intersection(repaintRect, boxRect);
             if (rect.isEmpty())
@@ -1064,7 +1088,7 @@ void RenderBox::calcWidth()
         m_marginLeft = marginLeft.calcMinValue(containerWidth);
         m_marginRight = marginRight.calcMinValue(containerWidth);
         if (treatAsReplaced)
-            m_width = max(width.value() + borderLeft() + borderRight() + paddingLeft() + paddingRight(), m_minWidth);
+            m_width = max(width.value() + borderLeft() + borderRight() + paddingLeft() + paddingRight(), minPrefWidth());
 
         return;
     }
@@ -1093,8 +1117,8 @@ void RenderBox::calcWidth()
         }
     }
 
-    if (m_width < m_minWidth && stretchesToMinIntrinsicWidth()) {
-        m_width = m_minWidth;
+    if (stretchesToMinIntrinsicWidth()) {
+        m_width = max(m_width, minPrefWidth());
         width = Length(m_width, Fixed);
     }
 
@@ -1135,8 +1159,8 @@ int RenderBox::calcWidthUsing(WidthType widthType, int cw)
             width = cw - marginLeft - marginRight;
 
         if (sizesToIntrinsicWidth(widthType)) {
-            width = max(width, m_minWidth);
-            width = min(width, m_maxWidth);
+            width = max(width, minPrefWidth());
+            width = min(width, maxPrefWidth());
         }
     } else
         width = calcBorderBoxWidth(w.calcValue(cw));
@@ -1389,7 +1413,7 @@ int RenderBox::calcReplacedWidthUsing(Length width) const
         }
         // fall through
         default:
-            return intrinsicWidth();
+            return intrinsicSize().width();
      }
  }
 
@@ -1415,14 +1439,20 @@ int RenderBox::calcReplacedHeightUsing(Length height) const
                 cb->calcHeight();
                 int newHeight = cb->calcContentBoxHeight(cb->contentHeight());
                 cb->setHeight(oldHeight);
-
                 return calcContentBoxHeight(height.calcValue(newHeight));
             }
+            
+            // It is necessary to use the border-box to match WinIE's broken
+            // box model.  This is essential for sizing inside
+            // table cells using percentage heights.
+            if (cb->isTableCell() && (cb->style()->height().isAuto() || cb->style()->height().isPercent()))
+                return height.calcValue(cb->availableHeight() - (borderTop() + borderBottom()
+                    + paddingTop() + paddingBottom()));
 
             return calcContentBoxHeight(height.calcValue(cb->availableHeight()));
         }
         default:
-            return intrinsicHeight();
+            return intrinsicSize().height();
     }
 }
 
@@ -1496,7 +1526,7 @@ void RenderBox::setStaticY(int staticY)
 
 int RenderBox::containingBlockWidthForPositioned(const RenderObject* containingBlock) const
 {
-    if (containingBlock->isInline()) {
+    if (containingBlock->isInlineFlow()) {
         ASSERT(containingBlock->isRelPositioned());
 
         const RenderFlow* flow = static_cast<const RenderFlow*>(containingBlock);
@@ -1665,8 +1695,8 @@ void RenderBox::calcAbsoluteHorizontal()
         }
     }
 
-    if (m_width < m_minWidth - bordersPlusPadding && stretchesToMinIntrinsicWidth())
-        calcAbsoluteHorizontalValues(Length(m_minWidth - bordersPlusPadding, Fixed), containerBlock, containerDirection,
+    if (stretchesToMinIntrinsicWidth() && m_width < minPrefWidth() - bordersPlusPadding)
+        calcAbsoluteHorizontalValues(Length(minPrefWidth() - bordersPlusPadding, Fixed), containerBlock, containerDirection,
                                      containerWidth, bordersPlusPadding,
                                      left, right, marginLeft, marginRight,
                                      m_width, m_marginLeft, m_marginRight, m_x);
@@ -1799,8 +1829,8 @@ void RenderBox::calcAbsoluteHorizontalValues(Length width, const RenderObject* c
             int rightValue = right.calcValue(containerWidth);
 
             // FIXME: would it be better to have shrink-to-fit in one step?
-            int preferredWidth = m_maxWidth - bordersPlusPadding;
-            int preferredMinWidth = m_minWidth - bordersPlusPadding;
+            int preferredWidth = maxPrefWidth() - bordersPlusPadding;
+            int preferredMinWidth = minPrefWidth() - bordersPlusPadding;
             int availableWidth = availableSpace - rightValue;
             widthValue = min(max(preferredMinWidth, availableWidth), preferredWidth);
             leftValue = availableSpace - (widthValue + rightValue);
@@ -1809,8 +1839,8 @@ void RenderBox::calcAbsoluteHorizontalValues(Length width, const RenderObject* c
             leftValue = left.calcValue(containerWidth);
 
             // FIXME: would it be better to have shrink-to-fit in one step?
-            int preferredWidth = m_maxWidth - bordersPlusPadding;
-            int preferredMinWidth = m_minWidth - bordersPlusPadding;
+            int preferredWidth = maxPrefWidth() - bordersPlusPadding;
+            int preferredMinWidth = minPrefWidth() - bordersPlusPadding;
             int availableWidth = availableSpace - leftValue;
             widthValue = min(max(preferredMinWidth, availableWidth), preferredWidth);
         } else if (leftIsAuto && !width.isAuto() && !rightIsAuto) {

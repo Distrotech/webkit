@@ -45,6 +45,9 @@
 		22181BD209DC8C4B008342E8 /* ObjCPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = 22181BCE09DC8C4B008342E8 /* ObjCPlugin.m */; };
 		22181BD309DC8C4B008342E8 /* ObjCPluginFunction.h in Headers */ = {isa = PBXBuildFile; fileRef = 22181BCF09DC8C4B008342E8 /* ObjCPluginFunction.h */; };
 		22181BD409DC8C4B008342E8 /* ObjCPluginFunction.m in Sources */ = {isa = PBXBuildFile; fileRef = 22181BD009DC8C4B008342E8 /* ObjCPluginFunction.m */; };
+		6508A2980BFABB8000AD2696 /* FrameLoadDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 6508A26D0BFAB71B00AD2696 /* FrameLoadDelegate.m */; };
+		6508A2990BFABB8100AD2696 /* FrameLoadDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 6508A26C0BFAB71B00AD2696 /* FrameLoadDelegate.h */; };
+		6508A29A0BFABB8200AD2696 /* ResourceLoadDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 1A6CA8630B7120CF00A24B62 /* ResourceLoadDelegate.h */; };
 		9340994C08540CAE007F3BC8 /* DumpRenderTreePrefix.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A70AAB03705E1F00C91783 /* DumpRenderTreePrefix.h */; };
 		9340994E08540CAE007F3BC8 /* DumpRenderTree.m in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* DumpRenderTree.m */; settings = {ATTRIBUTES = (); COMPILER_FLAGS = "-Wno-deprecated-declarations"; }; };
 		9340995108540CAE007F3BC8 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9335435F03D75502008635CE /* WebKit.framework */; };
@@ -93,7 +96,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		08FB7796FE84155DC02AAC07 /* DumpRenderTree.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DumpRenderTree.m; sourceTree = "<group>"; };
+		08FB7796FE84155DC02AAC07 /* DumpRenderTree.m */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; path = DumpRenderTree.m; sourceTree = "<group>"; };
 		141BF233096A44CF00E0753C /* TestNetscapePlugIn.plugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TestNetscapePlugIn.plugin; sourceTree = BUILT_PRODUCTS_DIR; };
 		141BF445096A45C800E0753C /* main.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		141BF446096A45C800E0753C /* PluginObject.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = PluginObject.c; sourceTree = "<group>"; };
@@ -114,10 +117,13 @@
 		22181BCF09DC8C4B008342E8 /* ObjCPluginFunction.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ObjCPluginFunction.h; sourceTree = "<group>"; };
 		22181BD009DC8C4B008342E8 /* ObjCPluginFunction.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = ObjCPluginFunction.m; sourceTree = "<group>"; };
 		32A70AAB03705E1F00C91783 /* DumpRenderTreePrefix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DumpRenderTreePrefix.h; sourceTree = "<group>"; };
+		6508A26C0BFAB71B00AD2696 /* FrameLoadDelegate.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = FrameLoadDelegate.h; sourceTree = "<group>"; };
+		6508A26D0BFAB71B00AD2696 /* FrameLoadDelegate.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = FrameLoadDelegate.m; sourceTree = "<group>"; };
 		9335435F03D75502008635CE /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = WebKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9340995408540CAF007F3BC8 /* DumpRenderTree */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = DumpRenderTree; sourceTree = BUILT_PRODUCTS_DIR; };
 		93442CF408F8BA4900BFE8CA /* TextInputController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TextInputController.h; sourceTree = "<group>"; };
 		93442CF508F8BA4900BFE8CA /* TextInputController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TextInputController.m; sourceTree = "<group>"; };
+		9345229C0BD12B710086EDA0 /* AHEM____.TTF */ = {isa = PBXFileReference; explicitFileType = file; name = AHEM____.TTF; path = DumpRenderTree.qtproj/fonts/AHEM____.TTF; sourceTree = "<group>"; };
 		A803FCB709CAAAB0009B2A37 /* EventSendingController.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = EventSendingController.h; sourceTree = "<group>"; };
 		A803FCB809CAAAB1009B2A37 /* EventSendingController.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = EventSendingController.m; sourceTree = "<group>"; };
 		A803FF7409CAAD08009B2A37 /* DumpRenderTree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DumpRenderTree.h; sourceTree = "<group>"; };
@@ -180,6 +186,7 @@
 				32A70AAB03705E1F00C91783 /* DumpRenderTreePrefix.h */,
 				1422A2750AF6F4BD00E1A883 /* Delegates */,
 				1422A2690AF6F45200E1A883 /* Controllers */,
+				9345229B0BD12B2C0086EDA0 /* Resources */,
 				141BF1F5096A439800E0753C /* TestNetscapePlugIn.subproj */,
 				A803FF7409CAAD08009B2A37 /* DumpRenderTree.h */,
 				08FB7796FE84155DC02AAC07 /* DumpRenderTree.m */,
@@ -229,6 +236,8 @@
 		1422A2750AF6F4BD00E1A883 /* Delegates */ = {
 			isa = PBXGroup;
 			children = (
+				6508A26C0BFAB71B00AD2696 /* FrameLoadDelegate.h */,
+				6508A26D0BFAB71B00AD2696 /* FrameLoadDelegate.m */,
 				A803FFF309CAAFE0009B2A37 /* EditingDelegate.h */,
 				A803FFF409CAAFE0009B2A37 /* EditingDelegate.m */,
 				1A6CA8630B7120CF00A24B62 /* ResourceLoadDelegate.h */,
@@ -247,6 +256,14 @@
 				141BF233096A44CF00E0753C /* TestNetscapePlugIn.plugin */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		9345229B0BD12B2C0086EDA0 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				9345229C0BD12B710086EDA0 /* AHEM____.TTF */,
+			);
+			name = Resources;
 			sourceTree = "<group>";
 		};
 		A803FF6409CAACC1009B2A37 /* Frameworks */ = {
@@ -289,6 +306,8 @@
 				22181BD309DC8C4B008342E8 /* ObjCPluginFunction.h in Headers */,
 				14770FE20A22ADF7009342EE /* GCController.h in Headers */,
 				1422A1BA0AF6EDD600E1A883 /* UIDelegate.h in Headers */,
+				6508A2990BFABB8100AD2696 /* FrameLoadDelegate.h in Headers */,
+				6508A29A0BFABB8200AD2696 /* ResourceLoadDelegate.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -414,6 +433,7 @@
 				14770FE30A22ADF7009342EE /* GCController.mm in Sources */,
 				1A6CA8DE0B7122D100A24B62 /* ResourceLoadDelegate.m in Sources */,
 				1422A1BB0AF6EDD600E1A883 /* UIDelegate.m in Sources */,
+				6508A2980BFABB8000AD2696 /* FrameLoadDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -467,6 +487,7 @@
 				PREBINDING = NO;
 				PRODUCT_NAME = TestNetscapePlugIn;
 				SECTORDER_FLAGS = "";
+				VALID_ARCHS = "ppc7400 ppc970 i386 ppc";
 				WARNING_CFLAGS = (
 					"-Wmost",
 					"-Wno-four-char-constants",
@@ -497,6 +518,7 @@
 				PREBINDING = NO;
 				PRODUCT_NAME = TestNetscapePlugIn;
 				SECTORDER_FLAGS = "";
+				VALID_ARCHS = "ppc7400 ppc970 i386 ppc";
 				WARNING_CFLAGS = (
 					"-Wmost",
 					"-Wno-four-char-constants",
@@ -509,16 +531,32 @@
 		149C29C008902C6D008A9EFC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_PREFIX_HEADER = DumpRenderTreePrefix.h;
+				OTHER_LDFLAGS = (
+					"-sectcreate",
+					__DATA,
+					Ahem,
+					DumpRenderTree.qtproj/fonts/AHEM____.TTF,
+				);
 				PRODUCT_NAME = DumpRenderTree;
+				VALID_ARCHS = "ppc7400 ppc970 i386 ppc";
 			};
 			name = Debug;
 		};
 		149C29C108902C6D008A9EFC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_PREFIX_HEADER = DumpRenderTreePrefix.h;
+				OTHER_LDFLAGS = (
+					"-sectcreate",
+					__DATA,
+					Ahem,
+					DumpRenderTree.qtproj/fonts/AHEM____.TTF,
+				);
 				PRODUCT_NAME = DumpRenderTree;
+				VALID_ARCHS = "ppc7400 ppc970 i386 ppc";
 			};
 			name = Release;
 		};
@@ -613,6 +651,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_PREFIX_HEADER = "";
 				PRODUCT_NAME = ImageDiff;
+				VALID_ARCHS = "ppc7400 ppc970 i386 ppc";
 			};
 			name = Debug;
 		};
@@ -622,6 +661,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_PREFIX_HEADER = "";
 				PRODUCT_NAME = ImageDiff;
+				VALID_ARCHS = "ppc7400 ppc970 i386 ppc";
 			};
 			name = Release;
 		};

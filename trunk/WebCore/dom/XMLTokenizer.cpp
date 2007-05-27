@@ -673,17 +673,6 @@ void XMLTokenizer::startElementNs(const xmlChar* xmlLocalName, const xmlChar* xm
         return;
     }
 
-    // FIXME: This hack ensures implicit table bodies get constructed in XHTML and XML files.
-    // We want to consolidate this with the HTML parser and HTML DOM code at some point.
-    // For now, it's too risky to rip that code up.
-    if (m_currentNode->hasTagName(tableTag) && newElement->hasTagName(trTag)) {
-        RefPtr<Node> implicitTBody = new HTMLTableSectionElement(tbodyTag, m_doc, true /* implicit */);
-        m_currentNode->addChild(implicitTBody.get());
-        setCurrentNode(implicitTBody.get());
-        if (m_view && !implicitTBody->attached())
-            implicitTBody->attach();
-    }
-
     if (newElement->hasTagName(scriptTag))
         static_cast<HTMLScriptElement*>(newElement.get())->setCreatedByParser(true);
     
@@ -717,8 +706,6 @@ void XMLTokenizer::endElementNs()
     exitText();
 
     Node* n = m_currentNode;
-    while (n->implicitNode())
-        n = n->parentNode();
     RefPtr<Node> parent = n->parentNode();
     n->closeRenderer();
     
@@ -978,7 +965,12 @@ inline XMLTokenizer* getTokenizer(void* closure)
 // Otherwise libxml seems to call all the SAX callbacks twice for any replaced entity.
 static inline bool hackAroundLibXMLEntityBug(void* closure)
 {
+#if LIBXML_VERSION >= 20627
+    // This bug has been fixed in libxml 2.6.27.
+    return false;
+#else
     return static_cast<xmlParserCtxtPtr>(closure)->node;
+#endif
 }
 
 static void startElementNsHandler(void* closure, const xmlChar* localname, const xmlChar* prefix, const xmlChar* uri, int nb_namespaces, const xmlChar** namespaces, int nb_attributes, int nb_defaulted, const xmlChar** libxmlAttributes)
@@ -1090,7 +1082,8 @@ static xmlEntityPtr getEntityHandler(void* closure, const xmlChar* name)
     ent = xmlGetDocEntity(ctxt->myDoc, name);
     if (!ent && getTokenizer(closure)->isXHTMLDocument()) {
         ent = getXHTMLEntity(name);
-        ent->etype = XML_INTERNAL_GENERAL_ENTITY;
+        if (ent)
+            ent->etype = XML_INTERNAL_GENERAL_ENTITY;
     }
     
     return ent;

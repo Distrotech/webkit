@@ -143,16 +143,9 @@ NSString *WebPluginContainerKey =   @"WebPluginContainer";
     m_frame = new Frame(page, ownerElement, new WebFrameLoaderClient(_frame));
     m_frame->setBridge(self);
     m_frame->tree()->setName(name);
+    m_frame->init();
     
     [self setTextSizeMultiplier:[webView textSizeMultiplier]];
-
-    // FIXME: This is one-time initialization, but it gets the value of the setting from the
-    // current WebView. That's a mismatch and not good!
-    static bool initializedObjectCacheSize;
-    if (!initializedObjectCacheSize) {
-        initializedObjectCacheSize = true;
-        cache()->setMaximumSize([self getObjectCacheSize]);
-    }
 }
 
 - (id)initMainFrameWithPage:(Page*)page frameName:(NSString *)name frameView:(WebFrameView *)frameView
@@ -269,6 +262,9 @@ NSString *WebPluginContainerKey =   @"WebPluginContainer";
 {
     ASSERT(_frame != nil);
     WebView *webView = [self webView];
+    ASSERT([view isKindOfClass:[NSView class]]);
+    ASSERT([(NSView *)view window]);
+    ASSERT([(NSView *)view window] == [webView window]);
     [webView _pushPerformingProgrammaticFocus];
     [[webView _UIDelegateForwarder] webView:webView makeFirstResponder:view];
     [webView _popPerformingProgrammaticFocus];
@@ -320,7 +316,7 @@ NSString *WebPluginContainerKey =   @"WebPluginContainer";
 - (WebDataSource *)dataSource
 {
     ASSERT(_frame != nil);
-    WebDataSource *dataSource = [_frame dataSource];
+    WebDataSource *dataSource = [_frame _dataSource];
 
     ASSERT(dataSource != nil);
 
@@ -529,7 +525,7 @@ NSString *WebPluginContainerKey =   @"WebPluginContainer";
 
 - (void)redirectDataToPlugin:(NSView *)pluginView
 {
-    WebHTMLRepresentation *representation = (WebHTMLRepresentation *)[[_frame dataSource] representation];
+    WebHTMLRepresentation *representation = (WebHTMLRepresentation *)[[_frame _dataSource] representation];
 
     if ([pluginView isKindOfClass:[WebNetscapePluginEmbeddedView class]])
         [representation _redirectDataToManualLoader:(WebNetscapePluginEmbeddedView *)pluginView forPluginView:pluginView];
@@ -605,33 +601,6 @@ NSString *WebPluginContainerKey =   @"WebPluginContainer";
     return view;
 }
 
-#ifndef NDEBUG
-static BOOL loggedObjectCacheSize = NO;
-#endif
-
--(int)getObjectCacheSize
-{
-    vm_size_t memSize = WebSystemMainMemory();
-    int cacheSize = [[self _preferences] _objectCacheSize];
-    int multiplier = 1;
-    
-    // 2GB and greater will be 128mb.  1gb and greater will be 64mb.
-    // Otherwise just use 32mb.
-    if (memSize >= (unsigned)(2048 * 1024 * 1024)) 
-        multiplier = 4;
-    else if (memSize >= 1024 * 1024 * 1024)
-        multiplier = 2;
-
-#ifndef NDEBUG
-    if (!loggedObjectCacheSize){
-        LOG(CacheSizes, "Object cache size set to %d bytes.", cacheSize * multiplier);
-        loggedObjectCacheSize = YES;
-    }
-#endif
-
-    return cacheSize * multiplier;
-}
-
 - (ObjectElementType)determineObjectFromMIMEType:(NSString*)MIMEType URL:(NSURL*)URL
 {
     if ([MIMEType length] == 0) {
@@ -649,7 +618,7 @@ static BOOL loggedObjectCacheSize = NO;
         return ObjectElementFrame; // Go ahead and hope that we can display the content.
 
     if (MimeTypeRegistry::isSupportedImageMIMEType(MIMEType))
-        return ObjectElementFrame;
+        return ObjectElementImage;
 
     if ([[self webView] _isMIMETypeRegisteredAsPlugin:MIMEType])
         return ObjectElementPlugin;
@@ -658,17 +627,6 @@ static BOOL loggedObjectCacheSize = NO;
         return ObjectElementFrame;
     
     return ObjectElementNone;
-}
-
-- (BOOL)startDraggingImage:(NSImage *)dragImage at:(NSPoint)dragLoc operation:(NSDragOperation)op
-    event:(NSEvent *)event sourceIsDHTML:(BOOL)flag DHTMLWroteData:(BOOL)dhtmlWroteData
-{
-    WebHTMLView *docView = (WebHTMLView *)[[_frame frameView] documentView];
-    ASSERT([docView isKindOfClass:[WebHTMLView class]]);
-    if (core([docView _webView]))
-        core([docView _webView])->dragController()->setDragInitiator(core(_frame) ? core(_frame)->document() : 0);
-    return [docView _startDraggingImage:dragImage at:dragLoc operation:op event:event
-        sourceIsDHTML:flag DHTMLWroteData:dhtmlWroteData];
 }
 
 - (void)print
@@ -744,10 +702,18 @@ static BOOL loggedObjectCacheSize = NO;
 
 - (void)windowObjectCleared
 {
-    WebView *wv = [self webView];
-    [[wv _frameLoadDelegateForwarder] webView:wv windowScriptObjectAvailable:m_frame->windowScriptObject()];
-    if ([wv scriptDebugDelegate] || [WebScriptDebugServer listenerCount]) {
-        [_frame _detachScriptDebugger]; // FIXME: remove this once <rdar://problem/4608404> is fixed
+    WebView *webView = getWebView(_frame);
+    WebFrameLoadDelegateImplementationCache implementations = WebViewGetFrameLoadDelegateImplementations(webView);
+    if (implementations.delegateImplementsDidClearWindowObjectForFrame) {
+        id frameLoadDelegate = WebViewGetFrameLoadDelegate(webView);
+        implementations.didClearWindowObjectForFrameFunc(frameLoadDelegate, @selector(webView:didClearWindowObject:forFrame:), webView, m_frame->windowScriptObject(), _frame);
+    } else if (implementations.delegateImplementsWindowScriptObjectAvailable) {
+        id frameLoadDelegate = WebViewGetFrameLoadDelegate(webView);
+        implementations.windowScriptObjectAvailableFunc(frameLoadDelegate, @selector(webView:windowScriptObjectAvailable:), webView, m_frame->windowScriptObject());
+    }
+
+    if ([webView scriptDebugDelegate] || [WebScriptDebugServer listenerCount]) {
+        [_frame _detachScriptDebugger];
         [_frame _attachScriptDebugger];
     }
 }

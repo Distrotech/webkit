@@ -35,16 +35,6 @@ PassRefPtr<Clipboard> Editor::newGeneralClipboard(ClipboardAccessPolicy policy)
     return new ClipboardWx(policy, true);
 }
 
-void Editor::markMisspellings(const Selection& selection)
-{
-
-}
-
-void WebCore::Editor::markBadGrammar(WebCore::Selection const&)
-{
-
-}
-
 }
 
 

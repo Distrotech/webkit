@@ -100,13 +100,13 @@ if [ ! -f "$GPERF" ]; then
 fi
 
 # TODO: What would be a good way to test for this?
-if [ ! -f $DEPS_PREFIX/lib/libiconv.$SHLIB_EXT ]; then
+if [ ! -f /usr/lib/libiconv.a -a ! -f $DEPS_PREFIX/lib/libiconv.2.$SHLIB_EXT ]; then
   $DL_CMD -o $DL_DIR/$ICONV_TARBALL $ICONV_URL
 
   tar xzvf $DL_DIR/$ICONV_TARBALL
   cd $DL_DIR/libiconv-$ICONV_VERSION
   
-  ./configure --prefix=$DEPS_PREFIX
+  ./configure --disable-shared --prefix=$DEPS_PREFIX
   
   make
   make install

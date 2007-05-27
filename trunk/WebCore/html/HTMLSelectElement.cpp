@@ -96,11 +96,12 @@ HTMLSelectElement::HTMLSelectElement(const QualifiedName& tagName, Document* doc
 
 HTMLSelectElement::~HTMLSelectElement()
 {
-    document()->deregisterFormElementWithState(this);
+    document()->unregisterFormElementWithState(this);
 }
 
 bool HTMLSelectElement::checkDTD(const Node* newChild)
 {
+    // Make sure to keep <optgroup> in sync with this.
     return newChild->isTextNode() || newChild->hasTagName(optionTag) || newChild->hasTagName(optgroupTag) || newChild->hasTagName(hrTag) ||
            newChild->hasTagName(scriptTag);
 }
@@ -299,7 +300,7 @@ void HTMLSelectElement::restoreState(const String& state)
         if (items[i]->hasLocalName(optionTag))
             static_cast<HTMLOptionElement*>(items[i])->setSelectedState(state[i] == 'X');
             
-    setChanged(true);
+    setChanged();
 }
 
 bool HTMLSelectElement::insertBefore(PassRefPtr<Node> newChild, Node* refChild, ExceptionCode& ec)
@@ -398,7 +399,7 @@ bool HTMLSelectElement::isMouseFocusable() const
 
 bool HTMLSelectElement::canSelectAll() const
 {
-    return !usesMenuList() && renderer() && renderer()->canSelect(); 
+    return !usesMenuList(); 
 }
 
 void HTMLSelectElement::selectAll()
@@ -570,27 +571,23 @@ void HTMLSelectElement::reset()
     if (!optionSelected && firstOption && usesMenuList())
         firstOption->setSelectedState(true);
     
-    setChanged(true);
+    setChanged();
 }
 
 void HTMLSelectElement::dispatchFocusEvent()
 {
-#if !ARROW_KEYS_POP_MENU
     if (usesMenuList())
         // Save the selection so it can be compared to the new selection when we call onChange during dispatchBlurEvent.
         saveLastSelection();
-#endif
     HTMLGenericFormElement::dispatchFocusEvent();
 }
 
 void HTMLSelectElement::dispatchBlurEvent()
 {
-#if !ARROW_KEYS_POP_MENU
     // We only need to fire onChange here for menu lists, because we fire onChange for list boxes whenever the selection change is actually made.
     // This matches other browsers' behavior.
     if (usesMenuList())
         menuListOnChange();
-#endif
     HTMLGenericFormElement::dispatchBlurEvent();
 }
 
@@ -630,14 +627,13 @@ void HTMLSelectElement::menuListDefaultEventHandler(Event* evt)
         String keyIdentifier = static_cast<KeyboardEvent*>(evt)->keyIdentifier();
         bool handled = false;
 #if ARROW_KEYS_POP_MENU
-        if (form() && keyIdentifier == "Enter") {
-            blur();
-            // Make sure the form hasn't been destroyed during the blur.
+        if (keyIdentifier == "Enter") {
+            menuListOnChange();
             if (form())
                 form()->submitClick(evt);
             handled = true;
         }
-        if ((keyIdentifier == "Down" || keyIdentifier == "Up" || keyIdentifier == "U+000020") && renderer() && usesMenuList()) {
+        if (keyIdentifier == "Down" || keyIdentifier == "Up" || keyIdentifier == "U+0020") {
             focus();
             // Save the selection so it can be compared to the new selection when we call onChange during setSelectedIndex,
             // which gets called from RenderMenuList::valueChanged, which gets called after the user makes a selection from the menu.
@@ -691,7 +687,7 @@ void HTMLSelectElement::menuListDefaultEventHandler(Event* evt)
 
 void HTMLSelectElement::listBoxDefaultEventHandler(Event* evt)
 {
-    if (!renderer() || !renderer()->canSelect())
+    if (!renderer())
         return;
 
     if (evt->type() == mousedownEvent && evt->isMouseEvent() && static_cast<MouseEvent*>(evt)->button() == LeftButton) {
@@ -762,9 +758,7 @@ void HTMLSelectElement::listBoxDefaultEventHandler(Event* evt)
             return;
         String keyIdentifier = static_cast<KeyboardEvent*>(evt)->keyIdentifier();
 
-        if (form() && keyIdentifier == "Enter") {
-            blur();
-            // Make sure the form hasn't been destroyed during the blur.
+        if (keyIdentifier == "Enter") {
             if (form())
                 form()->submitClick(evt);
             evt->setDefaultHandled();
@@ -857,8 +851,11 @@ void HTMLSelectElement::updateListBoxSelection(bool deselectOtherOptions)
 void HTMLSelectElement::menuListOnChange()
 {
     ASSERT(usesMenuList());
-    if (m_lastOnChangeIndex != selectedIndex())
+    int selected = selectedIndex();
+    if (m_lastOnChangeIndex != selected) {
+        m_lastOnChangeIndex = selected;
         onChange();
+    }
 }
 
 void HTMLSelectElement::listBoxOnChange()

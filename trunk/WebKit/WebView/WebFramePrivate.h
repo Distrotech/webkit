@@ -29,6 +29,9 @@
 // This header contains the WebFrame SPI.
 
 #import <WebKit/WebFrame.h>
+#import <JavaScriptCore/JSBase.h>
+
+@class WebScriptObject;
 
 // Keys for accessing the values in the page cache dictionary.
 extern NSString *WebPageCacheEntryDateKey;

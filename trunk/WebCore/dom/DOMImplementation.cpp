@@ -30,14 +30,17 @@
 #include "DocumentType.h"
 #include "Element.h"
 #include "ExceptionCode.h"
+#include "Frame.h"
 #include "HTMLDocument.h"
 #include "HTMLViewSourceDocument.h"
 #include "Image.h"
 #include "ImageDocument.h"
 #include "MediaList.h"
+#include "Page.h"
 #include "PluginDocument.h"
 #include "PlugInInfoStore.h"
 #include "RegularExpression.h"
+#include "Settings.h"
 #include "TextDocument.h"
 #include "XMLNames.h"
 
@@ -296,14 +299,14 @@ PassRefPtr<CSSStyleSheet> DOMImplementation::createCSSStyleSheet(const String&, 
     return sheet.release();
 }
 
-PassRefPtr<Document> DOMImplementation::createDocument(FrameView* view)
+PassRefPtr<Document> DOMImplementation::createDocument(Frame* frame)
 {
-    return new Document(this, view);
+    return new Document(this, frame);
 }
 
-PassRefPtr<HTMLDocument> DOMImplementation::createHTMLDocument(FrameView* view)
+PassRefPtr<HTMLDocument> DOMImplementation::createHTMLDocument(Frame* frame)
 {
-    return new HTMLDocument(this, view);
+    return new HTMLDocument(this, frame);
 }
 
 DOMImplementation* DOMImplementation::instance()
@@ -341,38 +344,43 @@ PassRefPtr<HTMLDocument> DOMImplementation::createHTMLDocument(const String& tit
     return d.release();
 }
 
-PassRefPtr<Document> DOMImplementation::createDocument(const String& type, FrameView* view, bool inViewSourceMode)
+PassRefPtr<Document> DOMImplementation::createDocument(const String& type, Frame* frame, bool inViewSourceMode)
 {
-    if (inViewSourceMode)
-        return new HTMLViewSourceDocument(this, view);
+    if (inViewSourceMode) {
+        if (type == "text/html" || type == "application/xhtml+xml" || type == "image/svg+xml" || isTextMIMEType(type) || isXMLMIMEType(type))
+            return new HTMLViewSourceDocument(this, frame, type);
+    }
 
     // Plugins cannot take HTML and XHTML from us, and we don't even need to initialize the plugin database for those.
     if (type == "text/html")
-        return new HTMLDocument(this, view);
+        return new HTMLDocument(this, frame);
     if (type == "application/xhtml+xml")
-        return new Document(this, view);
+        return new Document(this, frame);
 
     // PDF is one image type for which a plugin can override built-in support.
     // We do not want QuickTime to take over all image types, obviously.
     if ((type == "application/pdf" || type == "text/pdf") && PlugInInfoStore::supportsMIMEType(type))
-        return new PluginDocument(this, view);
+        return new PluginDocument(this, frame);
     if (Image::supportsType(type))
-        return new ImageDocument(this, view);
+        return new ImageDocument(this, frame);
+    if (isTextMIMEType(type))
+        return new TextDocument(this, frame);
 
     // Everything else can be overridden by plugins. In particular, Adobe SVG Viewer should be used for SVG, if installed.
     if (PlugInInfoStore::supportsMIMEType(type))
-        return new PluginDocument(this, view);
+        return new PluginDocument(this, frame);
 
 #if ENABLE(SVG)
-    if (type == "image/svg+xml")
-        return new SVGDocument(this, view);
+    if (type == "image/svg+xml") {
+        Settings* settings = frame ? frame->settings() : 0;
+        if (!settings || !settings->usesDashboardBackwardCompatibilityMode())
+            return new SVGDocument(this, frame);
+    }
 #endif
     if (isXMLMIMEType(type))
-        return new Document(this, view);
-    if (isTextMIMEType(type))
-        return new TextDocument(this, view);
+        return new Document(this, frame);
 
-    return new HTMLDocument(this, view);
+    return new HTMLDocument(this, frame);
 }
 
 }

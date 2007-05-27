@@ -207,10 +207,51 @@ bool FocusController::advanceFocus(FocusDirection direction, KeyboardEvent* even
     return true;
 }
 
-bool FocusController::setFocusedNode(Node* node)
+static bool relinquishesEditingFocus(Node *node)
+{
+    ASSERT(node);
+    ASSERT(node->isContentEditable());
+
+    Node* root = node->rootEditableElement();
+    Frame* frame = node->document()->frame();
+    if (!frame || !root)
+        return false;
+
+    return frame->editor()->shouldEndEditing(rangeOfContents(root).get());
+}
+
+static void clearSelectionIfNeeded(Frame* oldFocusedFrame, Frame* newFocusedFrame, Node* newFocusedNode)
+{
+    if (!oldFocusedFrame || !newFocusedFrame)
+        return;
+        
+    if (oldFocusedFrame->document() != newFocusedFrame->document())
+        return;
+    
+    SelectionController* s = oldFocusedFrame->selectionController();
+    if (s->isNone())
+        return;
+    
+    Node* selectionStartNode = s->selection().start().node();
+    if (selectionStartNode == newFocusedNode || selectionStartNode->isDescendantOf(newFocusedNode) || selectionStartNode->shadowAncestorNode() == newFocusedNode)
+        return;
+    
+    s->clear();
+}
+
+bool FocusController::setFocusedNode(Node* node, PassRefPtr<Frame> newFocusedFrame)
 {
     RefPtr<Frame> oldFocusedFrame = focusedFrame();
     RefPtr<Document> oldDocument = oldFocusedFrame ? oldFocusedFrame->document() : 0;
+    
+    Node* oldFocusedNode = oldDocument ? oldDocument->focusedNode() : 0;
+    if (oldFocusedNode == node)
+        return true;
+        
+    if (oldFocusedNode && oldFocusedNode->rootEditableElement() == oldFocusedNode && !relinquishesEditingFocus(oldFocusedNode))
+        return false;
+        
+    clearSelectionIfNeeded(oldFocusedFrame.get(), newFocusedFrame.get(), node);
     
     if (!node) {
         if (oldDocument)
@@ -219,7 +260,6 @@ bool FocusController::setFocusedNode(Node* node)
     }
     
     RefPtr<Document> newDocument = node ? node->document() : 0;
-    RefPtr<Frame> newFocusedFrame = newDocument ? newDocument->frame() : 0;
     
     if (newDocument && newDocument->focusedNode() == node)
         return true;

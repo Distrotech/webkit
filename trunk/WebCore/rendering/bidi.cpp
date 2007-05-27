@@ -1,8 +1,6 @@
-/**
- * This file is part of the html renderer for KDE.
- *
+/*
  * Copyright (C) 2000 Lars Knoll (knoll@kde.org)
- * Copyright (C) 2004, 2006 Apple Computer, Inc.
+ * Copyright (C) 2004, 2006, 2007 Apple Inc. All right reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -43,6 +41,9 @@ using namespace WTF;
 using namespace Unicode;
 
 namespace WebCore {
+
+// We don't let our line box tree for a single line get any deeper than this.
+const unsigned cMaxLineDepth = 200;
 
 // an iterator which traverses all the objects within a block
 struct BidiIterator {
@@ -131,7 +132,7 @@ void RenderBlock::bidiReorderCharacters(Document* document, RenderStyle* style, 
     // Create RenderText
     RenderText* text = new (document->renderArena()) RenderText(document, string.impl());
     text->setStyle(blockStyle);
-    block->addChild(text);
+    block->appendChildNode(text, false);
     
     // Call bidiReorderLine
     BidiState bidi;
@@ -171,7 +172,7 @@ void RenderBlock::bidiReorderCharacters(Document* document, RenderStyle* style, 
     }
 
     // Tear down temporary RenderBlock, RenderText, and BidiRuns
-    block->removeChild(text);
+    block->removeChildNode(text, false);
     text->destroy();
     block->destroy();
     deleteBidiRuns(document->renderArena());
@@ -201,9 +202,10 @@ static int getBorderPaddingMargin(RenderObject* child, bool endOfInline)
 
 static int inlineWidth(RenderObject* child, bool start = true, bool end = true)
 {
+    unsigned lineDepth = 1;
     int extraWidth = 0;
     RenderObject* parent = child->parent();
-    while (parent->isInline() && !parent->isInlineBlockOrInlineTable()) {
+    while (parent->isInline() && !parent->isInlineBlockOrInlineTable() && lineDepth++ < cMaxLineDepth) {
         if (start && parent->firstChild() == child)
             extraWidth += getBorderPaddingMargin(parent, false);
         if (end && parent->lastChild() == child)
@@ -842,36 +844,54 @@ InlineFlowBox* RenderBlock::createLineBoxes(RenderObject* obj)
 {
     // See if we have an unconstructed line box for this object that is also
     // the last item on the line.
-    ASSERT(obj->isInlineFlow() || obj == this);
-    RenderFlow* flow = static_cast<RenderFlow*>(obj);
+    unsigned lineDepth = 1;
+    InlineFlowBox* childBox = 0;
+    InlineFlowBox* parentBox = 0;
+    InlineFlowBox* result = 0;
+    do {
+        ASSERT(obj->isInlineFlow() || obj == this);
+        RenderFlow* flow = static_cast<RenderFlow*>(obj);
 
-    // Get the last box we made for this render object.
-    InlineFlowBox* box = flow->lastLineBox();
+        // Get the last box we made for this render object.
+        parentBox = flow->lastLineBox();
 
-    // If this box is constructed then it is from a previous line, and we need
-    // to make a new box for our line.  If this box is unconstructed but it has
-    // something following it on the line, then we know we have to make a new box
-    // as well.  In this situation our inline has actually been split in two on
-    // the same line (this can happen with very fancy language mixtures).
-    if (!box || box->isConstructed() || box->nextOnLine()) {
-        // We need to make a new box for this render object.  Once
-        // made, we need to place it at the end of the current line.
-        InlineBox* newBox = obj->createInlineBox(false, obj == this);
-        ASSERT(newBox->isInlineFlowBox());
-        box = static_cast<InlineFlowBox*>(newBox);
-        box->setFirstLineStyleBit(m_firstLine);
-        
-        // We have a new box. Append it to the inline box we get by constructing our
-        // parent.  If we have hit the block itself, then |box| represents the root
+        // If this box is constructed then it is from a previous line, and we need
+        // to make a new box for our line.  If this box is unconstructed but it has
+        // something following it on the line, then we know we have to make a new box
+        // as well.  In this situation our inline has actually been split in two on
+        // the same line (this can happen with very fancy language mixtures).
+        bool constructedNewBox = false;
+        if (!parentBox || parentBox->isConstructed() || parentBox->nextOnLine()) {
+            // We need to make a new box for this render object.  Once
+            // made, we need to place it at the end of the current line.
+            InlineBox* newBox = obj->createInlineBox(false, obj == this);
+            ASSERT(newBox->isInlineFlowBox());
+            parentBox = static_cast<InlineFlowBox*>(newBox);
+            parentBox->setFirstLineStyleBit(m_firstLine);
+            constructedNewBox = true;
+        }
+                
+        if (!result)
+            result = parentBox;
+
+        // If we have hit the block itself, then |box| represents the root
         // inline box for the line, and it doesn't have to be appended to any parent
         // inline.
-        if (obj != this) {
-            InlineFlowBox* parentBox = createLineBoxes(obj->parent());
-            parentBox->addToLine(box);
-        }
-    }
+        if (childBox)
+            parentBox->addToLine(childBox);
+        
+        if (!constructedNewBox || obj == this)
+            break;
+        
+        childBox = parentBox;        
+        
+        // If we've exceeded our line depth, then jump straight to the root and skip all the remaining
+        // intermediate inline flows.
+        obj = (++lineDepth >= cMaxLineDepth) ? this : obj->parent();
 
-    return box;
+    } while (true);
+
+    return result;
 }
 
 RootInlineBox* RenderBlock::constructLine(const BidiIterator& start, const BidiIterator& end)
@@ -1589,6 +1609,11 @@ void RenderBlock::layoutInlineChildren(bool relayoutChildren, int& repaintTop, i
             if (o->isReplaced() || o->isFloating() || o->isPositioned()) {
                 if (relayoutChildren || o->style()->width().isPercent() || o->style()->height().isPercent())
                     o->setChildNeedsLayout(true, false);
+                    
+                // If relayoutChildren is set and we have percentage padding, we also need to invalidate the child's pref widths.
+                if (relayoutChildren && (o->style()->paddingLeft().isPercent() || o->style()->paddingRight().isPercent()))
+                    o->setPrefWidthsDirty(true, false);
+            
                 if (o->isPositioned())
                     o->containingBlock()->insertPositionedObject(o);
                 else {
@@ -2165,6 +2190,12 @@ BidiIterator RenderBlock::findNextLineBreak(BidiIterator &start, BidiState &bidi
         } else if (o->isInlineFlow()) {
             // Only empty inlines matter.  We treat those similarly to replaced elements.
             ASSERT(!o->firstChild());
+            if (static_cast<RenderFlow*>(o)->isWordBreak()) {
+                w += tmpW;
+                tmpW = 0;
+                lBreak.obj = o;
+                lBreak.pos = 0;
+            }
             tmpW += o->marginLeft() + o->borderLeft() + o->paddingLeft() +
                     o->marginRight() + o->borderRight() + o->paddingRight();
         } else if (o->isReplaced()) {
@@ -2226,9 +2257,10 @@ BidiIterator RenderBlock::findNextLineBreak(BidiIterator &start, BidiState &bidi
             bool breakNBSP = autoWrap && o->style()->nbspMode() == SPACE;
             // Auto-wrapping text should wrap in the middle of a word only if it could not wrap before the word,
             // which is only possible if the word is the first thing on the line, that is, if |w| is zero.
-            bool breakWords = o->style()->wordWrap() == BREAK_WORD && ((autoWrap && !w) || currWS == PRE);
+            bool breakWords = o->style()->breakWords() && ((autoWrap && !w) || currWS == PRE);
             bool midWordBreak = false;
-            
+            bool breakAll = o->style()->wordBreak() == BreakAllWordBreak && autoWrap;
+
             while (len) {
                 bool previousCharacterIsSpace = currentCharacterIsSpace;
                 bool previousCharacterIsWS = currentCharacterIsWS;
@@ -2276,14 +2308,14 @@ BidiIterator RenderBlock::findNextLineBreak(BidiIterator &start, BidiState &bidi
                 
                 currentCharacterIsWS = currentCharacterIsSpace || (breakNBSP && c == noBreakSpace);
 
-                if (breakWords && !midWordBreak) {
+                if (breakAll || (breakWords && !midWordBreak)) {
                     wrapW += t->width(pos, 1, f, w + wrapW);
                     midWordBreak = w + wrapW > width;
                 }
 
                 bool betweenWords = c == '\n' || (currWS != PRE && !atStart && isBreakable(str, pos, strlen, nextBreakable, breakNBSP));
-
-                if (betweenWords || midWordBreak) {
+    
+                if (betweenWords || midWordBreak || breakAll) {
                     bool stoppedIgnoringSpaces = false;
                     if (ignoringSpaces) {
                         if (!currentCharacterIsSpace) {

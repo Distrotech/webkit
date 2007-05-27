@@ -444,8 +444,20 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
 
                         nPort.qdPort.port = port;
                         boundsInWindow = [self bounds];
-                        nPort.qdPort.portx = (int32)-boundsInWindow.origin.x;
-                        nPort.qdPort.porty = (int32)-boundsInWindow.origin.y;
+                        
+                        // Generate a QD origin based on the current affine transform for currentContext.
+                        CGAffineTransform offscreenMatrix = CGContextGetCTM(currentContext);
+                        CGPoint origin = {0,0};
+                        CGPoint axisFlip = {1,1};
+                        origin = CGPointApplyAffineTransform(origin, offscreenMatrix);
+                        axisFlip = CGPointApplyAffineTransform(axisFlip, offscreenMatrix);
+                        
+                        // Quartz bitmaps have origins at the bottom left, but the axes may be inverted, so handle that.
+                        origin.x = offscreenBounds.left - origin.x * (axisFlip.x - origin.x);
+                        origin.y = offscreenBounds.bottom + origin.y * (axisFlip.y - origin.y);
+                        
+                        nPort.qdPort.portx = static_cast<int32>(-boundsInWindow.origin.x + origin.x);
+                        nPort.qdPort.porty = static_cast<int32>(-boundsInWindow.origin.y - origin.y);
                         window.x = 0;
                         window.y = 0;
                         window.window = &nPort;
@@ -463,7 +475,6 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
             
             // Clip to dirty region so plug-in does not draw over already-drawn regions of the window that are
             // not going to be redrawn this update.  This forces plug-ins to play nice with z-index ordering.
-            Rect clipBounds;
             if (forUpdate) {
                 RgnHandle viewClipRegion = NewRgn();
                 
@@ -491,10 +502,6 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
                 // Intersect the dirty region with the clip region, so that we only draw over dirty parts
                 SectRgn(clipRegion, viewClipRegion, clipRegion);
                 DisposeRgn(viewClipRegion);
-                if (port == offscreenGWorld) {
-                    GetRegionBounds(clipRegion, &clipBounds);
-                    OffsetRgn(clipRegion, -clipBounds.left, -clipBounds.top);
-                }
             }
 
             // Switch to the port and set it up.
@@ -510,11 +517,6 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
                 // But the invalid region at that level didn't include AppKit's notion of what was not valid.
                 // We reset the port's visible region to counteract what BeginUpdate did.
                 SetPortVisibleRegion(nPort.qdPort.port, clipRegion);
-
-                // Some plugins do their own BeginUpdate/EndUpdate.
-                // For those, we must make sure that the update region contains the area we want to draw.
-                if (port == offscreenGWorld)
-                    OffsetRgn(clipRegion, clipBounds.left, clipBounds.top);
                 InvalWindowRgn(windowRef, clipRegion);
             }
             
@@ -1445,7 +1447,7 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
 - (WebDataSource *)dataSource
 {
     WebFrame *webFrame = kit(core(element)->document()->frame());
-    return [webFrame dataSource];
+    return [webFrame _dataSource];
 }
 
 - (WebFrame *)webFrame
@@ -2148,10 +2150,21 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
     if (!URL) 
         return NPERR_INVALID_URL;
 
-    // don't let a plugin start any loads if it is no longer part of a document that is being
-    // displayed
-    if ([[self dataSource] _documentLoader] != [[self webFrame] _frameLoader]->activeDocumentLoader())
-        return NPERR_GENERIC_ERROR;
+    NSString *target = nil;
+    if (cTarget) {
+        // Find the frame given the target string.
+        target = (NSString *)CFStringCreateWithCString(kCFAllocatorDefault, cTarget, kCFStringEncodingWindowsLatin1);
+    }
+    WebFrame *frame = [self webFrame];
+
+    // don't let a plugin start any loads if it is no longer part of a document that is being 
+    // displayed unless the loads are in the same frame as the plugin.
+    if ([[self dataSource] _documentLoader] != [[self webFrame] _frameLoader]->activeDocumentLoader() &&
+        (!cTarget || [frame findFrameNamed:target] != frame)) {
+        if (target)
+            CFRelease(target);
+        return NPERR_GENERIC_ERROR; 
+    }
     
     NSString *JSString = [URL _webkit_scriptIfJavaScriptURL];
     if (JSString != nil) {
@@ -2168,13 +2181,7 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
     if (cTarget || JSString) {
         // Make when targetting a frame or evaluating a JS string, perform the request after a delay because we don't
         // want to potentially kill the plug-in inside of its URL request.
-        NSString *target = nil;
-        if (cTarget) {
-            // Find the frame given the target string.
-            target = (NSString *)CFStringCreateWithCString(kCFAllocatorDefault, cTarget, kCFStringEncodingWindowsLatin1);
-        }
         
-        WebFrame *frame = [self webFrame];
         if (JSString != nil && target != nil && [frame findFrameNamed:target] != frame) {
             // For security reasons, only allow JS requests to be made on the frame that contains the plug-in.
             CFRelease(target);

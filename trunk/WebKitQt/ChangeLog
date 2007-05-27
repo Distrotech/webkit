@@ -1,3 +1,391 @@
+2007-05-25  George Staikos  <staikos@kde.org>
+
+        Reviewed by Simon.
+
+        The http loader should only ask for .... http cookies!
+
+        * Api/qwebnetworkinterface.cpp:
+        (QWebNetworkManager::add):
+
+2007-05-24  Simon Hausmann  <hausmann@kde.org>
+
+        Reviewed by Zack.
+
+        Fix multipart/form-data HTTP POSTs. The content-type wasn't set
+        correctly. Fortunately WebCore does it already, so there's no need
+        for us to do it since we already transfer all HTTP header fields :)
+
+        * Api/qwebnetworkinterface.cpp:
+        (QWebNetworkManager::add):
+
+2007-05-23  Simon Hausmann  <hausmann@kde.org>
+
+        Reviewed by Zack, idea from Lars.
+
+        Share WebCoreHttp and therefore HTTP connections among multiple
+        QWebNetworkInterface instances by moving the code into
+        QWebNetworkManager.
+
+        * Api/qwebnetworkinterface.cpp:
+        (QWebNetworkManager::addHttpJob):
+        (QWebNetworkManager::cancelHttpJob):
+        (QWebNetworkManager::httpConnectionClosed):
+        (QWebNetworkInterface::addJob):
+        (QWebNetworkInterface::cancelJob):
+        (WebCoreHttp::scheduleNextRequest):
+        (WebCoreHttp::onResponseHeaderReceived):
+        (WebCoreHttp::onReadyRead):
+        (WebCoreHttp::onRequestFinished):
+        (WebCoreHttp::cancel):
+        * Api/qwebnetworkinterface.h:
+        * Api/qwebnetworkinterface_p.h:
+
+2007-05-23  Simon Hausmann  <hausmann@kde.org>
+
+        Reviewed by Zack, discussed also with Lars.
+
+        Make it possible to specify a per-QWebPage network interface (needed
+        for the KDE KIO integration).
+
+        Merged the file and the network loader into
+        QWebNetworkInterface(Private), which simplifies the loading code.
+
+        When receiving a redirection don't emit the data of the redirected job
+        to the document. (otherwise the kind of "This page has moved" text
+        appears right on top of the real page content)
+
+        * Api/qwebnetworkinterface.cpp:
+        (qHash):
+        (operator==):
+        (QWebNetworkJob::QWebNetworkJob):
+        (QWebNetworkJob::networkInterface):
+        (QWebNetworkManager::add):
+        (QWebNetworkManager::cancel):
+        (QWebNetworkManager::data):
+        (QWebNetworkManager::finished):
+        (QWebNetworkInterfacePrivate::sendFileData):
+        (QWebNetworkInterfacePrivate::parseDataUrl):
+        (QWebNetworkInterfacePrivate::addHttpJob):
+        (QWebNetworkInterfacePrivate::httpConnectionClosed):
+        (QWebNetworkInterface::setDefaultInterface):
+        (QWebNetworkInterface::QWebNetworkInterface):
+        (QWebNetworkInterface::addJob):
+        (QWebNetworkInterface::cancelJob):
+        (WebCoreHttp::scheduleNextRequest):
+        (WebCoreHttp::onResponseHeaderReceived):
+        (WebCoreHttp::onReadyRead):
+        (WebCoreHttp::onRequestFinished):
+        (WebCoreHttp::cancel):
+        * Api/qwebnetworkinterface.h:
+        * Api/qwebnetworkinterface_p.h:
+        * Api/qwebpage.cpp:
+        (QWebPagePrivate::QWebPagePrivate):
+        (QWebPage::setNetworkInterface):
+        * Api/qwebpage.h:
+        * Api/qwebpage_p.h:
+
+2007-05-23  Lars Knoll <lars@trolltech.com>
+
+        Reviewed by Zack
+
+        Don't do HTTP downloads in a second thread. Simplifies
+        the code significantly and fixes crashes on some
+        Web pages.
+
+        * Api/qwebnetworkinterface.cpp:
+        (QWebNetworkManager::add):
+        (QWebNetworkInterface::QWebNetworkInterface):
+        (QWebNetworkInterface::addJob):
+        (QWebNetworkInterface::cancelJob):
+        (LoaderThread::LoaderThread):
+        (LoaderThread::run):
+        (WebCoreHttp::cancel):
+        (NetworkLoader::NetworkLoader):
+        (NetworkLoader::request):
+        (NetworkLoader::cancel):
+        * Api/qwebnetworkinterface_p.h:
+        * WebCoreSupport/FrameLoaderClientQt.cpp:
+        (WebCore::FrameLoaderClientQt::committedLoad):
+        (WebCore::FrameLoaderClientQt::dispatchDidReceiveContentLength):
+
+2007-05-23  Lars Knoll <lars@trolltech.com>
+
+        Reviewed by Simon.
+
+        * Api/qwebnetworkinterface.cpp:
+        (QWebNetworkJobPrivate::setURL):
+        (QWebNetworkManager::started):
+            Fix Host: line in HTTP headers and resolving of relative URLs
+            when redirecting.
+        * Api/qwebnetworkinterface_p.h:
+            Clean up qHash forward declaration a bit.
+
+2007-05-23  Simon Hausmann  <hausmann@kde.org>
+
+        Reviewed by Zack.
+
+        * QtLauncher/main.cpp:
+        (MainWindow::MainWindow): Fix loading progress signal/slot connection.
+
+2007-05-22  Simon Hausmann  <hausmann@kde.org>
+
+        Reviewed by Lars.
+
+        * Api/qwebnetworkinterface.cpp:
+        (QWebNetworkManager::add): Fix http headers for POST.
+
+2007-05-21  Lars Knoll <lars@trolltech.com>
+
+        Reviewed by Simon
+
+        Remove the userHandle methods from QWebnetworkJob again.
+        They don't really give us anything and just clutter the API.
+
+        * Api/qwebnetworkinterface.cpp:
+        * Api/qwebnetworkinterface.h:
+        * Api/qwebnetworkinterface_p.h:
+
+2007-05-21  Simon Hausmann  <hausmann@kde.org>
+
+        Reviewed by Zack.
+
+        * Api/qwebnetworkinterface.h: Export the net API.
+
+2007-05-21  Lars Knoll <lars@trolltech.com>
+
+        Reviewed by Zack.
+
+        Add an API layer for network downloads. Basically QWebnetworkInterface
+        is an interface class for downloading resources. QWebnetworkJob describes
+        the actual object to download.
+
+        QWebNetworkInterface has a default implementation that replaces the
+        old ResourceHandleManager class in the Qt port.
+
+        * Api/qwebnetworkinterface.cpp: Added.
+        (QWebNetworkJobPrivate::setURL):
+        (QWebNetworkJob::QWebNetworkJob):
+        (QWebNetworkJob::~QWebNetworkJob):
+        (QWebNetworkJob::url):
+        (QWebNetworkJob::postData):
+        (QWebNetworkJob::request):
+        (QWebNetworkJob::response):
+        (QWebNetworkJob::setResponse):
+        (QWebNetworkJob::cancelled):
+        (QWebNetworkJob::ref):
+        (QWebNetworkJob::deref):
+        (QWebNetworkJob::setUserHandle):
+        (QWebNetworkJob::userHandle):
+        (QWebNetworkManager::QWebNetworkManager):
+        (QWebNetworkManager::self):
+        (QWebNetworkManager::add):
+        (QWebNetworkManager::cancel):
+        (QWebNetworkManager::started):
+        (QWebNetworkManager::data):
+        (QWebNetworkManager::finished):
+        (QWebNetworkInterface::setDefaultInterface):
+        (QWebNetworkInterface::defaultInterface):
+        (QWebNetworkInterface::QWebNetworkInterface):
+        (QWebNetworkInterface::~QWebNetworkInterface):
+        (QWebNetworkInterface::addJob):
+        (QWebNetworkInterface::cancelJob):
+        (LoaderThread::LoaderThread):
+        (LoaderThread::run):
+        (FileLoader::FileLoader):
+        (FileLoader::request):
+        (FileLoader::sendData):
+        (FileLoader::parseDataUrl):
+        (WebCoreHttp::WebCoreHttp):
+        (WebCoreHttp::~WebCoreHttp):
+        (WebCoreHttp::request):
+        (WebCoreHttp::scheduleNextRequest):
+        (WebCoreHttp::getConnection):
+        (WebCoreHttp::onResponseHeaderReceived):
+        (WebCoreHttp::onReadyRead):
+        (WebCoreHttp::onRequestFinished):
+        (WebCoreHttp::onStateChanged):
+        (WebCoreHttp::cancel):
+        (HostInfo::HostInfo):
+        (qHash):
+        (operator==):
+        (NetworkLoader::NetworkLoader):
+        (NetworkLoader::~NetworkLoader):
+        (NetworkLoader::request):
+        (NetworkLoader::connectionClosed):
+        (NetworkLoader::cancel):
+        * Api/qwebnetworkinterface.h: Added.
+        (QWebNetworkJob::setHandle):
+        (QWebNetworkJob::handle):
+        * Api/qwebnetworkinterface_p.h: Added.
+        (WebCore::LoaderThread::):
+        (WebCore::LoaderThread::waitForSetup):
+        (WebCore::HostInfo::HostInfo):
+
+2007-05-18  Simon Hausmann  <hausmann@kde.org>
+
+        Reviewed by Nikolas.
+
+        * Api/qwebpage.h: Changed the loadProgressChanged API to use an
+        percent integer instead of a double precision floating pointer number.
+        * WebCoreSupport/FrameLoaderClientQt.cpp:
+        (WebCore::FrameLoaderClientQt::setFrame):
+        (WebCore::FrameLoaderClientQt::postProgressEstimateChangedNotification):
+        * WebCoreSupport/FrameLoaderClientQt.h:
+
+2007-05-18  Marius Bugge Monsen  <mbm@trolltech.com>
+
+        Reviewed by Zack Rusin.
+
+        The default constructed KeyboardEvent has
+        no PlatformKeyboardEvent.
+
+        * WebCoreSupport/EditorClientQt.cpp:
+        (WebCore::EditorClientQt::handleKeypress):
+
+2007-05-17  Adam Treat <adam@staikos.net>
+
+        Reviewed by George Staikos.
+
+        - Implement frameLoadCompleted
+        - Fix build (by George)
+
+        * WebCoreSupport/FrameLoaderClientQt.cpp:
+        (WebCore::FrameLoaderClientQt::frameLoadCompleted):
+        (WebCore::FrameLoaderClientQt::createFrame):
+
+2007-05-17  Adam Treat  <adam@staikos.net>
+
+        Reviewed by George Staikos.
+
+        Implement canShowMIMEType
+
+        * WebCoreSupport/FrameLoaderClientQt.cpp:
+        (WebCore::FrameLoaderClientQt::canShowMIMEType):
+
+2007-05-16  Lars Knoll <lars@trolltech.com>
+
+        Reviewed by Zack
+
+        pass the mouse events to the event handler, not the frameview.
+
+        * Api/qwebframe.cpp:
+        (QWebFrame::mouseMoveEvent):
+        (QWebFrame::mouseReleaseEvent):
+
+2007-05-14  Lars Knoll <lars@trolltech.com>
+
+        Reviewed by Zack
+
+        Updates after Maciej's frame change.
+
+        * Api/qwebpage.cpp:
+        (QWebPage::stop):
+              Call stopForUserCancel() instead of stopAllLoaders()
+        * WebCoreSupport/FrameLoaderClientQt.cpp:
+        (WebCore::FrameLoaderClientQt::dispatchDidHandleOnloadEvents):
+        (WebCore::FrameLoaderClientQt::dispatchDidFinishLoad):
+        (WebCore::FrameLoaderClientQt::didFinishLoad):
+        (WebCore::FrameLoaderClientQt::setMainDocumentError):
+        (WebCore::FrameLoaderClientQt::dispatchWillSendRequest):
+        (WebCore::FrameLoaderClientQt::dispatchDidReceiveResponse):
+        (WebCore::FrameLoaderClientQt::dispatchDidFailProvisionalLoad):
+        (WebCore::FrameLoaderClientQt::dispatchDidFailLoad):
+              Call QWebFrame::loadDone() from the places it's supposed to be
+              called from.
+
+2007-05-12  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Rob Buis.
+        
+        - call Frame::init as needed - this prevents crashes but pages don't appear.
+
+        * Api/qwebframe.cpp:
+        (QWebFramePrivate::init):
+        * WebKitPart/WebKitPart.cpp:
+        (WebKitPart::initView):
+
+2007-05-08  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Ada.
+        
+        Slight modification to last editor method fix.
+
+        * WebCoreSupport/EditorClientQt.cpp:
+        (WebCore::EditorClientQt::updateSpellingUIWithGrammarString):
+        * WebCoreSupport/EditorClientQt.h:
+
+2007-05-03  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Oliver.
+
+        Add missing user description parameter to spelling-related editor client method.
+
+        * WebCoreSupport/EditorClientQt.cpp:
+        (WebCore::EditorClientQt::updateSpellingUIWithGrammarString):
+        * WebCoreSupport/EditorClientQt.h:
+
+2007-04-29  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Zack.
+
+        Tie QT drag events to the DragController logic
+        to allow drag and drop events to be handled by
+        webkit.
+
+        * Api/qwebframe.cpp:
+        * Api/qwebframe.h:
+        * Api/qwebpage.cpp:
+        (QWebPagePrivate::QWebPagePrivate):
+        (QWebPage::QWebPage):
+        (dropActionToDragOp):
+        (dragOpToDropAction):
+        (QWebPage::dragEnterEvent):
+        (QWebPage::dragLeaveEvent):
+        (QWebPage::dragMoveEvent):
+        (QWebPage::dropEvent):
+        * Api/qwebpage.h:
+        * WebCoreSupport/DragClientQt.cpp:
+        (WebCore::DragClientQt::startDrag):
+        * WebCoreSupport/DragClientQt.h:
+        (WebCore::DragClientQt::DragClientQt):
+
+2007-04-27  Holger Freyther <freyther@kde.org>
+
+        Reviewed by Maciej.
+
+        Remove unmaintained CMake build system.
+
+        * QtLauncher/CMakeLists.txt: Removed.
+        * WebKitPart/CMakeLists.txt: Removed.
+
+2007-04-25  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam.
+        
+        Fix spelling error in spelling method name.
+
+        * WebCoreSupport/EditorClientQt.cpp:
+        (WebCore::EditorClientQt::updateSpellingUIWithGrammarString):
+        * WebCoreSupport/EditorClientQt.h:
+
+2007-04-24  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Oliver.
+        
+        Spelling and grammar stubs
+
+        * WebCoreSupport/EditorClientQt.cpp:
+        (WebCore::EditorClientQt::ignoreWordInSpellDocument):
+        (WebCore::EditorClientQt::learnWord):
+        (WebCore::EditorClientQt::checkSpellingOfString):
+        (WebCore::EditorClientQt::checkGrammarOfString):
+        (WebCore::EditorClientQt::udpateSpellingUIWithGrammarString):
+        (WebCore::EditorClientQt::updateSpellingUIWithMisspelledWord):
+        (WebCore::EditorClientQt::showSpellingUI):
+        (WebCore::EditorClientQt::spellingUIIsShowing):
+        (WebCore::EditorClientQt::getGuessesForWord):
+        * WebCoreSupport/EditorClientQt.h:
+
 2007-04-11  MorganL  <morganl.webkit@yahoo.com>
 
         Reviewed by Maciej.

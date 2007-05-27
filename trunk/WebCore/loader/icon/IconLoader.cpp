@@ -85,7 +85,6 @@ void IconLoader::startLoading()
 
 void IconLoader::stopLoading()
 {
-    m_resourceLoader = 0;
     clearLoadingState();
 }
 
@@ -96,8 +95,8 @@ void IconLoader::didReceiveResponse(SubresourceLoader* resourceLoader, const Res
     int status = response.httpStatusCode();
     LOG(IconDatabase, "IconLoader::didReceiveResponse() - Loader %p, response %i", resourceLoader, status);
     if (status && (status < 200 || status > 299)) {
-        KURL iconURL = resourceLoader->handle()->url();
-        finishLoading(iconURL);
+        ResourceHandle* handle = resourceLoader->handle();
+        finishLoading(handle ? handle->url() : KURL());
         m_resourceLoader = 0;
     }
 }
@@ -112,7 +111,8 @@ void IconLoader::didFail(SubresourceLoader* resourceLoader, const ResourceError&
     LOG(IconDatabase, "IconLoader::didFail() - Loader %p", resourceLoader);
     ASSERT(resourceLoader == m_resourceLoader);
     ASSERT(m_loadIsInProgress);
-    finishLoading(resourceLoader->handle()->url());
+    ResourceHandle* handle = resourceLoader->handle();
+    finishLoading(handle ? handle->url() : KURL());
 }
 
 void IconLoader::didFinishLoading(SubresourceLoader* resourceLoader)
@@ -122,7 +122,8 @@ void IconLoader::didFinishLoading(SubresourceLoader* resourceLoader)
     // In that case this didFinishLoading callback is pointless and we bail.  Otherwise, finishLoading() as expected
     if (m_loadIsInProgress) {
         ASSERT(resourceLoader == m_resourceLoader);
-        finishLoading(resourceLoader->handle()->url());
+        ResourceHandle* handle = resourceLoader->handle();
+        finishLoading(handle ? handle->url() : KURL());
     }
 }
 
@@ -130,11 +131,12 @@ void IconLoader::finishLoading(const KURL& iconURL)
 {
     // <rdar://5071341> - Crash in IconLoader::finishLoading()
     // In certain circumstance where there is no favicon and the site's 404 page is large and complex, the IconLoader can get 
-    // cancelled/failed twice.  Reproducibility of these phenomenom is unknown, so we'd like to catch this case in debug builds,
+    // cancelled/failed twice.  Reproducibility of this phenomenon is unknown, so we'd like to catch this case in debug builds,
     // but must handle it gracefully in release
     ASSERT(m_resourceLoader);
     if (!iconURL.isEmpty() && m_resourceLoader) {
-        IconDatabase::sharedIconDatabase()->setIconDataForIconURL(m_resourceLoader->resourceData(), iconURL.url());
+        iconDatabase()->setIconDataForIconURL(m_resourceLoader->resourceData(), iconURL.url());
+        LOG(IconDatabase, "IconLoader::finishLoading() - Committing iconURL %s to database", iconURL.url().ascii());
         m_frame->loader()->commitIconURLToIconDatabase(iconURL);
         m_frame->loader()->client()->dispatchDidReceiveIcon();
     }

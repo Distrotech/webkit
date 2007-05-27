@@ -27,6 +27,7 @@
 #include "QualifiedName.h"
 #include <wtf/Forward.h>
 #include <wtf/RefPtr.h>
+#include "HTMLParserErrorCodes.h"
 
 namespace WebCore {
 
@@ -102,8 +103,8 @@ private:
     bool handleError(Node*, bool flat, const AtomicString& localName, int tagPriority);
     
     void pushBlock(const AtomicString& tagName, int level);
-    void popBlock(const AtomicString& tagName);
-    void popBlock(const QualifiedName& qName) { return popBlock(qName.localName()); } // Convenience function for readability.
+    void popBlock(const AtomicString& tagName, bool reportErrors = false);
+    void popBlock(const QualifiedName& qName, bool reportErrors = false) { return popBlock(qName.localName(), reportErrors); } // Convenience function for readability.
     void popOneBlock();
     void moveOneBlockToStack(HTMLStackElem*& head);
     inline HTMLStackElem* popOneBlockCommon();
@@ -128,6 +129,11 @@ private:
     void startBody(); // inserts the isindex element
     PassRefPtr<Node> handleIsindex(Token*);
 
+    void reportError(HTMLParserErrorCode errorCode, const AtomicString* tagName1 = 0, const AtomicString* tagName2 = 0, bool closeTags = false)
+    { if (!m_reportErrors) return; reportErrorToConsole(errorCode, tagName1, tagName2, closeTags); }
+
+    void reportErrorToConsole(HTMLParserErrorCode, const AtomicString* tagName1, const AtomicString* tagName2, bool closeTags);
+    
     Document* document;
 
     // The currently active element (the one new elements will be added to). Can be a document fragment, a document or an element.
@@ -137,8 +143,8 @@ private:
 
     HTMLStackElem* blockStack;
 
-    HTMLFormElement* form; // currently active form
-    HTMLMapElement* m_currentMapElement; // current map
+    RefPtr<HTMLFormElement> m_currentFormElement; // currently active form
+    RefPtr<HTMLMapElement> m_currentMapElement; // current map
     HTMLHeadElement* head; // head element; needed for HTML which defines <base> after </head>
     RefPtr<Node> m_isindexElement; // a possible <isindex> element in the head
 
@@ -149,6 +155,7 @@ private:
     AtomicString m_skipModeTag; // tells the parser to discard all tags until it reaches the one specified
 
     bool m_isParsingFragment;
+    bool m_reportErrors;
     int inStrayTableContent;
 };
 

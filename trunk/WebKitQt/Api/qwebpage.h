@@ -34,12 +34,14 @@ class QUrl;
 
 class QWebPagePrivate;
 class QWebFrameData;
+class QWebNetworkInterface;
 
 namespace WebCore {
     class ChromeClientQt;
     class FrameLoaderClientQt;
     class FrameLoadRequest;
     class EditorClientQt;
+    class ResourceHandle;
 }
 
 class QWEBKIT_EXPORT QWebPage : public QWidget
@@ -73,6 +75,14 @@ public:
     virtual void runJavaScriptAlert(QWebFrame *frame, const QString& msg);
 
     QUndoStack *undoStack();
+    
+    virtual void dragEnterEvent(QDragEnterEvent *);
+    virtual void dragLeaveEvent(QDragLeaveEvent *);
+    virtual void dragMoveEvent(QDragMoveEvent *);
+    virtual void dropEvent(QDropEvent *);
+
+    void setNetworkInterface(QWebNetworkInterface *interface);
+    QWebNetworkInterface *networkInterface() const;
 
 public slots:
     /**
@@ -97,7 +107,7 @@ signals:
      * Signal is emitted when the global progress status changes.
      * It accumulates changes from all the child frames.
      */
-    void loadProgressChanged(double progress);
+    void loadProgressChanged(int progress);
     /**
      * Signal is emitted when load has been finished on one of
      * the child frames of the page. The frame on which the
@@ -127,6 +137,7 @@ private:
     friend class WebCore::ChromeClientQt;
     friend class WebCore::EditorClientQt;
     friend class WebCore::FrameLoaderClientQt;
+    friend class WebCore::ResourceHandle;
     QWebPagePrivate *d;
 };
 

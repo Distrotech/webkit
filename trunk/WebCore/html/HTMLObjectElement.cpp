@@ -28,12 +28,15 @@
 #include "EventNames.h"
 #include "ExceptionCode.h"
 #include "Frame.h"
+#include "FrameLoader.h"
+#include "FrameLoaderClient.h"
 #include "FrameView.h"
 #include "HTMLFormElement.h"
 #include "HTMLDocument.h"
 #include "HTMLImageLoader.h"
 #include "HTMLNames.h"
 #include "Image.h"
+#include "MimeTypeRegistry.h"
 #include "RenderImage.h"
 #include "RenderPartObject.h"
 #include "RenderWidget.h"
@@ -294,7 +297,9 @@ bool HTMLObjectElement::isImageType()
                 m_serviceType = "text/plain"; // Data URLs with no MIME type are considered text/plain.
         }
     }
-    
+    if (document()->frame())
+        return document()->frame()->loader()->client()->objectContentType(KURL(m_url.deprecatedString()), m_serviceType) == ObjectContentImage;
+
     return Image::supportsType(m_serviceType);
 }
 
@@ -467,6 +472,30 @@ int HTMLObjectElement::vspace() const
 void HTMLObjectElement::setVspace(int value)
 {
     setAttribute(vspaceAttr, String::number(value));
+}
+
+bool HTMLObjectElement::containsJavaApplet() const
+{
+    if (MimeTypeRegistry::isJavaAppletMIMEType(type()))
+        return true;
+        
+    Node* child = firstChild();
+    while (child) {
+        if (child->isElementNode()) {
+            Element* e = static_cast<Element*>(child);
+            if (e->hasTagName(paramTag) &&
+                e->getAttribute(nameAttr).domString().lower() == "type" &&
+                MimeTypeRegistry::isJavaAppletMIMEType(e->getAttribute(valueAttr).domString()))
+                return true;
+            else if (e->hasTagName(objectTag) && static_cast<HTMLObjectElement*>(e)->containsJavaApplet())
+                return true;
+            else if (e->hasTagName(appletTag))
+                return true;
+        }
+        child = child->nextSibling();
+    }
+    
+    return false;
 }
 
 #if ENABLE(SVG)

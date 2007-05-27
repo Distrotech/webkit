@@ -25,6 +25,7 @@
 #include <wtf/FastMalloc.h>
 #include <wtf/FastMallocInternal.h>
 #include <wtf/HashCountedSet.h>
+#include <wtf/UnusedParam.h>
 #include "internal.h"
 #include "list.h"
 #include "value.h"
@@ -37,14 +38,19 @@
 #if PLATFORM(DARWIN)
 
 #include <mach/mach_port.h>
+#include <mach/mach_init.h>
 #include <mach/task.h>
 #include <mach/thread_act.h>
+#include <mach/vm_map.h>
 
 #elif PLATFORM(WIN_OS)
 
 #include <windows.h>
 
 #elif PLATFORM(UNIX)
+
+#include <stdlib.h>
+#include <sys/mman.h>
 
 #if HAVE(PTHREAD_NP_H)
 #include <pthread_np.h>
@@ -58,38 +64,14 @@ using std::max;
 
 namespace KJS {
 
+
 // tunable parameters
-const size_t MINIMUM_CELL_SIZE = 48;
-const size_t BLOCK_SIZE = (8 * 4096);
+
 const size_t SPARE_EMPTY_BLOCKS = 2;
 const size_t MIN_ARRAY_SIZE = 14;
 const size_t GROWTH_FACTOR = 2;
 const size_t LOW_WATER_FACTOR = 4;
-const size_t ALLOCATIONS_PER_COLLECTION = 1000;
-
-// derived constants
-const size_t CELL_ARRAY_LENGTH = (MINIMUM_CELL_SIZE / sizeof(double)) + (MINIMUM_CELL_SIZE % sizeof(double) != 0 ? sizeof(double) : 0);
-const size_t CELL_SIZE = CELL_ARRAY_LENGTH * sizeof(double);
-const size_t CELLS_PER_BLOCK = ((BLOCK_SIZE * 8 - sizeof(uint32_t) * 8 - sizeof(void *) * 8) / (CELL_SIZE * 8));
-
-
-
-struct CollectorCell {
-  union {
-    double memory[CELL_ARRAY_LENGTH];
-    struct {
-      void *zeroIfFree;
-      ptrdiff_t next;
-    } freeCell;
-  } u;
-};
-
-
-struct CollectorBlock {
-  CollectorCell cells[CELLS_PER_BLOCK];
-  uint32_t usedCells;
-  CollectorCell *freeList;
-};
+const size_t ALLOCATIONS_PER_COLLECTION = 4000;
 
 struct CollectorHeap {
   CollectorBlock **blocks;
@@ -97,15 +79,11 @@ struct CollectorHeap {
   size_t usedBlocks;
   size_t firstBlockWithPossibleSpace;
   
-  CollectorCell **oversizeCells;
-  size_t numOversizeCells;
-  size_t usedOversizeCells;
-
   size_t numLiveObjects;
   size_t numLiveObjectsAtLastCollect;
 };
 
-static CollectorHeap heap = {NULL, 0, 0, 0, NULL, 0, 0, 0, 0};
+static CollectorHeap heap = {NULL, 0, 0, 0, 0, 0};
 
 size_t Collector::mainThreadOnlyObjectCount = 0;
 bool Collector::memoryFull = false;
@@ -132,10 +110,64 @@ public:
 bool GCLock::isLocked = false;
 #endif
 
+static CollectorBlock* allocateBlock()
+{
+#if PLATFORM(DARWIN)    
+    vm_address_t address = 0;
+    vm_map(current_task(), &address, BLOCK_SIZE, BLOCK_OFFSET_MASK, VM_FLAGS_ANYWHERE, MEMORY_OBJECT_NULL, 0, FALSE, VM_PROT_DEFAULT, VM_PROT_DEFAULT, VM_INHERIT_DEFAULT);
+#elif PLATFORM(WIN)
+     // windows virtual address granularity is naturally 64k
+    LPVOID address = VirtualAlloc(NULL, BLOCK_SIZE, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+#elif HAVE(POSIX_MEMALIGN)
+    void* address;
+    posix_memalign(address, BLOCK_SIZE, BLOCK_SIZE);
+    memset(reinterpret_cast<void*>(address), 0, BLOCK_SIZE);
+#else
+    static size_t pagesize = getpagesize();
+    
+    size_t extra = 0;
+    if (BLOCK_SIZE > pagesize)
+        extra = BLOCK_SIZE - pagesize;
+
+    void* mmapResult = mmap(NULL, BLOCK_SIZE + extra, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+    uintptr_t address = reinterpret_cast<uintptr_t>(mmapResult);
+
+    size_t adjust = 0;
+    if ((address & BLOCK_OFFSET_MASK) != 0)
+        adjust = BLOCK_SIZE - (address & BLOCK_OFFSET_MASK);
+
+    if (adjust > 0)
+        munmap(reinterpret_cast<void*>(address), adjust);
+
+    if (adjust < extra)
+        munmap(reinterpret_cast<void*>(address + adjust + BLOCK_SIZE), extra - adjust);
+
+    address += adjust;
+    memset(reinterpret_cast<void*>(address), 0, BLOCK_SIZE);
+#endif
+
+    return reinterpret_cast<CollectorBlock*>(address);
+}
+
+static void freeBlock(CollectorBlock* block)
+{
+#if PLATFORM(DARWIN)    
+    vm_deallocate(current_task(), reinterpret_cast<vm_address_t>(block), BLOCK_SIZE);
+#elif PLATFORM(WIN)
+    VirtualFree(block, BLOCK_SIZE, MEM_RELEASE);
+#elif HAVE(POSIX_MEMALIGN)
+    free(block);
+#else
+    munmap(block, BLOCK_SIZE);
+#endif
+}
+
 void* Collector::allocate(size_t s)
 {
   ASSERT(JSLock::lockCount() > 0);
   ASSERT(JSLock::currentThreadIsHoldingLock());
+  ASSERT(s <= CELL_SIZE);
+  UNUSED_PARAM(s); // s is now only used for the above assert
 
   // collect if needed
   size_t numLiveObjects = heap.numLiveObjects;
@@ -150,25 +182,6 @@ void* Collector::allocate(size_t s)
 #ifndef NDEBUG
   GCLock lock;
 #endif
-  
-  if (s > CELL_SIZE) {
-    // oversize allocator
-    size_t usedOversizeCells = heap.usedOversizeCells;
-    size_t numOversizeCells = heap.numOversizeCells;
-
-    if (usedOversizeCells == numOversizeCells) {
-      numOversizeCells = max(MIN_ARRAY_SIZE, numOversizeCells * GROWTH_FACTOR);
-      heap.numOversizeCells = numOversizeCells;
-      heap.oversizeCells = static_cast<CollectorCell **>(fastRealloc(heap.oversizeCells, numOversizeCells * sizeof(CollectorCell *)));
-    }
-    
-    void *newCell = fastMalloc(s);
-    heap.oversizeCells[usedOversizeCells] = static_cast<CollectorCell *>(newCell);
-    heap.usedOversizeCells = usedOversizeCells + 1;
-    heap.numLiveObjects = numLiveObjects + 1;
-
-    return newCell;
-  }
   
   // slab allocator
   
@@ -199,7 +212,7 @@ allocateNewBlock:
       heap.blocks = static_cast<CollectorBlock **>(fastRealloc(heap.blocks, numBlocks * sizeof(CollectorBlock *)));
     }
 
-    targetBlock = static_cast<CollectorBlock *>(fastCalloc(1, sizeof(CollectorBlock)));
+    targetBlock = allocateBlock();
     targetBlock->freeList = targetBlock->cells;
     targetBlockUsedCells = 0;
     heap.blocks[usedBlocks] = targetBlock;
@@ -236,10 +249,12 @@ static inline void* currentThreadStackBase()
     return (void*)pTib->StackBase;
 #elif PLATFORM(UNIX)
     static void *stackBase = 0;
+    static size_t stackSize = 0;
     static pthread_t stackThread;
     pthread_t thread = pthread_self();
     if (stackBase == 0 || thread != stackThread) {
         pthread_attr_t sattr;
+        pthread_attr_init(&sattr);
 #if HAVE(PTHREAD_NP_H)
         // e.g. on FreeBSD 5.4, neundorf@kde.org
         pthread_attr_get_np(thread, &sattr);
@@ -247,13 +262,13 @@ static inline void* currentThreadStackBase()
         // FIXME: this function is non-portable; other POSIX systems may have different np alternatives
         pthread_getattr_np(thread, &sattr);
 #endif
-        size_t stackSize;
         int rc = pthread_attr_getstack(&sattr, &stackBase, &stackSize);
         (void)rc; // FIXME: deal with error code somehow?  seems fatal...
         ASSERT(stackBase);
-        return (void*)(size_t(stackBase) + stackSize);
+        pthread_attr_destroy(&sattr);
         stackThread = thread;
     }
+    return (void*)(size_t(stackBase) + stackSize);
 #else
 #error Need a way to get the stack base on this platform
 #endif
@@ -364,49 +379,43 @@ void Collector::registerThread()
 
 #define IS_POINTER_ALIGNED(p) (((intptr_t)(p) & (sizeof(char *) - 1)) == 0)
 
-// cells are 8-byte aligned
-#define IS_CELL_ALIGNED(p) (((intptr_t)(p) & 7) == 0)
+// cell size needs to be a power of two for this to be valid
+#define IS_CELL_ALIGNED(p) (((intptr_t)(p) & CELL_MASK) == 0)
 
 void Collector::markStackObjectsConservatively(void *start, void *end)
 {
   if (start > end) {
-    void *tmp = start;
+    void* tmp = start;
     start = end;
     end = tmp;
   }
 
-  ASSERT(((char *)end - (char *)start) < 0x1000000);
+  ASSERT(((char*)end - (char*)start) < 0x1000000);
   ASSERT(IS_POINTER_ALIGNED(start));
   ASSERT(IS_POINTER_ALIGNED(end));
   
-  char **p = (char **)start;
-  char **e = (char **)end;
+  char** p = (char**)start;
+  char** e = (char**)end;
   
   size_t usedBlocks = heap.usedBlocks;
   CollectorBlock **blocks = heap.blocks;
-  size_t usedOversizeCells = heap.usedOversizeCells;
-  CollectorCell **oversizeCells = heap.oversizeCells;
 
   const size_t lastCellOffset = sizeof(CollectorCell) * (CELLS_PER_BLOCK - 1);
 
   while (p != e) {
-    char *x = *p++;
+    char* x = *p++;
     if (IS_CELL_ALIGNED(x) && x) {
+      uintptr_t offset = reinterpret_cast<uintptr_t>(x) & BLOCK_OFFSET_MASK;
+      CollectorBlock* blockAddr = reinterpret_cast<CollectorBlock*>(x - offset);
       for (size_t block = 0; block < usedBlocks; block++) {
-        size_t offset = x - reinterpret_cast<char *>(blocks[block]);
-        if (offset <= lastCellOffset && offset % sizeof(CollectorCell) == 0)
-          goto gotGoodPointer;
-      }
-      for (size_t i = 0; i != usedOversizeCells; i++)
-        if (x == reinterpret_cast<char *>(oversizeCells[i]))
-          goto gotGoodPointer;
-      continue;
-
-gotGoodPointer:
-      if (((CollectorCell *)x)->u.freeCell.zeroIfFree != 0) {
-        JSCell *imp = reinterpret_cast<JSCell *>(x);
-        if (!imp->marked())
-          imp->mark();
+        if ((blocks[block] == blockAddr) & (offset <= lastCellOffset)) {
+          if (((CollectorCell*)x)->u.freeCell.zeroIfFree != 0) {
+            JSCell* imp = reinterpret_cast<JSCell*>(x);
+            if (!imp->marked())
+              imp->mark();
+          }
+          break;
+        }
       }
     }
   }
@@ -621,7 +630,7 @@ void Collector::protect(JSValue *k)
     if (JSImmediate::isImmediate(k))
       return;
 
-    protectedValues().add(k->downcast());
+    protectedValues().add(k->asCell());
 }
 
 void Collector::unprotect(JSValue *k)
@@ -633,7 +642,7 @@ void Collector::unprotect(JSValue *k)
     if (JSImmediate::isImmediate(k))
       return;
 
-    protectedValues().remove(k->downcast());
+    protectedValues().remove(k->asCell());
 }
 
 void Collector::collectOnMainThreadOnly(JSValue* value)
@@ -645,8 +654,8 @@ void Collector::collectOnMainThreadOnly(JSValue* value)
     if (JSImmediate::isImmediate(value))
       return;
 
-    JSCell* cell = value->downcast();
-    cell->m_collectOnMainThreadOnly = true;
+    JSCell* cell = value->asCell();
+    cellBlock(cell)->collectOnMainThreadOnly.set(cellOffset(cell));
     ++mainThreadOnlyObjectCount;
 }
 
@@ -689,26 +698,15 @@ void Collector::markMainThreadOnlyObjects()
             if (cell->u.freeCell.zeroIfFree == 0)
                 ++minimumCellsToProcess;
             else {
-                JSCell* imp = reinterpret_cast<JSCell*>(cell);
-                if (imp->m_collectOnMainThreadOnly) {
-                    if(!imp->marked())
+                if (curBlock->collectOnMainThreadOnly.get(i)) {
+                    if (!curBlock->marked.get(i)) {
+                        JSCell* imp = reinterpret_cast<JSCell*>(cell);
                         imp->mark();
+                    }
                     if (++count == mainThreadOnlyObjectCount)
                         return;
                 }
             }
-        }
-    }
-
-    for (size_t cell = 0; cell < heap.usedOversizeCells; cell++) {
-        ASSERT(count < mainThreadOnlyObjectCount);
-
-        JSCell* imp = reinterpret_cast<JSCell*>(heap.oversizeCells[cell]);
-        if (imp->m_collectOnMainThreadOnly) {
-            if (!imp->marked())
-                imp->mark();
-            if (++count == mainThreadOnlyObjectCount)
-                return;
         }
     }
 }
@@ -772,20 +770,22 @@ bool Collector::collect()
     if (usedCells == CELLS_PER_BLOCK) {
       // special case with a block where all cells are used -- testing indicates this happens often
       for (size_t i = 0; i < CELLS_PER_BLOCK; i++) {
-        CollectorCell *cell = curBlock->cells + i;
-        JSCell *imp = reinterpret_cast<JSCell *>(cell);
-        if (imp->m_marked) {
-          imp->m_marked = false;
-        } else {
+        if (!curBlock->marked.get(i)) {
+          CollectorCell* cell = curBlock->cells + i;
+
           // special case for allocated but uninitialized object
           // (We don't need this check earlier because nothing prior this point 
           // assumes the object has a valid vptr.)
           if (cell->u.freeCell.zeroIfFree == 0)
             continue;
 
-          ASSERT(currentThreadIsMainThread || !imp->m_collectOnMainThreadOnly);
-          if (imp->m_collectOnMainThreadOnly)
+          JSCell* imp = reinterpret_cast<JSCell*>(cell);
+
+          ASSERT(currentThreadIsMainThread || !curBlock->collectOnMainThreadOnly.get(i));
+          if (curBlock->collectOnMainThreadOnly.get(i)) {
+            curBlock->collectOnMainThreadOnly.clear(i);
             --mainThreadOnlyObjectCount;
+          }
           imp->~JSCell();
           --usedCells;
           --numLiveObjects;
@@ -803,13 +803,13 @@ bool Collector::collect()
         if (cell->u.freeCell.zeroIfFree == 0) {
           ++minimumCellsToProcess;
         } else {
-          JSCell *imp = reinterpret_cast<JSCell *>(cell);
-          if (imp->m_marked) {
-            imp->m_marked = false;
-          } else {
-            ASSERT(currentThreadIsMainThread || !imp->m_collectOnMainThreadOnly);
-            if (imp->m_collectOnMainThreadOnly)
+          if (!curBlock->marked.get(i)) {
+            JSCell *imp = reinterpret_cast<JSCell *>(cell);
+            ASSERT(currentThreadIsMainThread || !curBlock->collectOnMainThreadOnly.get(i));
+            if (curBlock->collectOnMainThreadOnly.get(i)) {
+              curBlock->collectOnMainThreadOnly.clear(i);
               --mainThreadOnlyObjectCount;
+            }
             imp->~JSCell();
             --usedCells;
             --numLiveObjects;
@@ -825,12 +825,13 @@ bool Collector::collect()
     
     curBlock->usedCells = static_cast<uint32_t>(usedCells);
     curBlock->freeList = freeList;
+    curBlock->marked.clearAll();
 
     if (usedCells == 0) {
       emptyBlocks++;
       if (emptyBlocks > SPARE_EMPTY_BLOCKS) {
 #if !DEBUG_COLLECTOR
-        fastFree(curBlock);
+        freeBlock(curBlock);
 #endif
         // swap with the last block so we compact as we go
         heap.blocks[block] = heap.blocks[heap.usedBlocks - 1];
@@ -847,37 +848,6 @@ bool Collector::collect()
 
   if (heap.numLiveObjects != numLiveObjects)
     heap.firstBlockWithPossibleSpace = 0;
-  
-  size_t cell = 0;
-  while (cell < heap.usedOversizeCells) {
-    JSCell *imp = (JSCell *)heap.oversizeCells[cell];
-    
-    if (imp->m_marked) {
-      imp->m_marked = false;
-      cell++;
-    } else {
-      ASSERT(currentThreadIsMainThread || !imp->m_collectOnMainThreadOnly);
-      if (imp->m_collectOnMainThreadOnly)
-        --mainThreadOnlyObjectCount;
-      imp->~JSCell();
-#if DEBUG_COLLECTOR
-      heap.oversizeCells[cell]->u.freeCell.zeroIfFree = 0;
-#else
-      fastFree(imp);
-#endif
-
-      // swap with the last oversize cell so we compact as we go
-      heap.oversizeCells[cell] = heap.oversizeCells[heap.usedOversizeCells - 1];
-
-      heap.usedOversizeCells--;
-      numLiveObjects--;
-
-      if (heap.numOversizeCells > MIN_ARRAY_SIZE && heap.usedOversizeCells < heap.numOversizeCells / LOW_WATER_FACTOR) {
-        heap.numOversizeCells = heap.numOversizeCells / GROWTH_FACTOR; 
-        heap.oversizeCells = (CollectorCell **)fastRealloc(heap.oversizeCells, heap.numOversizeCells * sizeof(CollectorCell *));
-      }
-    }
-  }
   
   bool deleted = heap.numLiveObjects != numLiveObjects;
 

@@ -42,7 +42,9 @@
 #import <WebCore/DOMHTMLAreaElementPrivate.h>
 #import <WebCore/DOMHTMLBodyElementPrivate.h>
 #import <WebCore/DOMHTMLButtonElementPrivate.h>
+#import <WebCore/DOMHTMLDocumentPrivate.h>
 #import <WebCore/DOMHTMLFormElementPrivate.h>
+#import <WebCore/DOMHTMLFrameElementPrivate.h>
 #import <WebCore/DOMHTMLImageElementPrivate.h>
 #import <WebCore/DOMHTMLInputElementPrivate.h>
 #import <WebCore/DOMHTMLLabelElementPrivate.h>

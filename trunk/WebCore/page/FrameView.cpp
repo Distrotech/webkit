@@ -1,10 +1,9 @@
-/* This file is part of the KDE project
- *
+/*
  * Copyright (C) 1998, 1999 Torben Weis <weis@kde.org>
  *                     1999 Lars Knoll <knoll@kde.org>
  *                     1999 Antti Koivisto <koivisto@kde.org>
  *                     2000 Dirk Mueller <mueller@kde.org>
- * Copyright (C) 2004, 2005, 2006 Apple Computer, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
  *           (C) 2006 Graham Dennis (graham.dennis@gmail.com)
  *           (C) 2006 Alexey Proskuryakov (ap@nypop.com)
  *
@@ -33,11 +32,13 @@
 #include "Frame.h"
 #include "FrameLoader.h"
 #include "FrameLoaderClient.h"
+#include "GraphicsContext.h"
 #include "HTMLDocument.h"
 #include "HTMLFrameSetElement.h"
 #include "HTMLNames.h"
 #include "OverflowEvent.h"
 #include "RenderPart.h"
+#include "RenderTheme.h"
 #include "RenderView.h"
 
 namespace WebCore {
@@ -53,11 +54,14 @@ struct ScheduledEvent {
 class FrameViewPrivate {
 public:
     FrameViewPrivate(FrameView* view)
-        : layoutTimer(view, &FrameView::layoutTimerFired)
+        : m_slowRepaintObjectCount(0)
+        , layoutTimer(view, &FrameView::layoutTimerFired)
         , m_mediaType("screen")
         , m_enqueueEvents(0)
         , m_overflowStatusDirty(true)
         , m_viewportRenderer(0)
+        , m_wasScrolledByUser(false)
+        , m_inProgrammaticScroll(false)
     {
         isTransparent = false;
         baseBackgroundColor = Color::white;
@@ -68,7 +72,6 @@ public:
     void reset()
     {
         useSlowRepaints = false;
-        slowRepaintObjectCount = 0;
         borderX = 30;
         borderY = 30;
         layoutTimer.stop();
@@ -76,9 +79,11 @@ public:
         delayedLayout = false;
         doFullRepaint = true;
         layoutSchedulingEnabled = true;
+        midLayout = false;
         layoutCount = 0;
         firstLayout = true;
         repaintRects.clear();
+        m_wasScrolledByUser = false;
     }
 
     bool doFullRepaint;
@@ -86,7 +91,7 @@ public:
     ScrollbarMode vmode;
     ScrollbarMode hmode;
     bool useSlowRepaints;
-    unsigned slowRepaintObjectCount;
+    unsigned m_slowRepaintObjectCount;
 
     int borderX, borderY;
 
@@ -95,6 +100,7 @@ public:
     RefPtr<Node> layoutRoot;
     
     bool layoutSchedulingEnabled;
+    bool midLayout;
     int layoutCount;
 
     bool firstLayout;
@@ -115,6 +121,9 @@ public:
     bool horizontalOverflow;
     bool m_verticalOverflow;    
     RenderObject* m_viewportRenderer;
+
+    bool m_wasScrolledByUser;
+    bool m_inProgrammaticScroll;
 };
 
 FrameView::FrameView(Frame* frame)
@@ -149,7 +158,7 @@ bool FrameView::isFrameView() const
     return true; 
 }
 
-void FrameView::clearPart()
+void FrameView::clearFrame()
 {
     m_frame = 0;
 }
@@ -175,12 +184,6 @@ void FrameView::clear()
     setStaticBackground(false);
     
     d->reset();
-
-#ifdef INSTRUMENT_LAYOUT_SCHEDULING
-    if (d->layoutTimer.isActive() && m_frame->document() && !m_frame->document()->ownerElement())
-        printf("Killing the layout timer from a clear at %d\n", m_frame->document()->elapsedTime());
-#endif    
-    d->layoutTimer.stop();
 
     if (m_frame)
         if (RenderPart* renderer = m_frame->ownerRenderer())
@@ -284,6 +287,10 @@ Node* FrameView::layoutRoot() const
 
 void FrameView::layout(bool allowSubtree)
 {
+    ASSERT(!d->midLayout);
+    if (d->midLayout)
+        return;
+
     d->layoutTimer.stop();
     d->delayedLayout = false;
 
@@ -410,17 +417,15 @@ void FrameView::layout(bool allowSubtree)
     
     RenderLayer* layer = root->enclosingLayer();
      
-    if (!d->doFullRepaint) {
-        layer->checkForRepaintOnResize();
-        root->repaintObjectsBeforeLayout();
-    }
-
-    if (subtree) {
-        if (root->recalcMinMax())
-            root->recalcMinMaxWidths();
-    }
     pauseScheduledEvents();
+
+    if (subtree)
+        root->view()->pushLayoutState(root);
+    d->midLayout = true;
     root->layout();
+    d->midLayout = false;
+    if (subtree)
+        root->view()->popLayoutState();
     d->layoutRoot = 0;
 
     m_frame->invalidateSelection();
@@ -555,7 +560,7 @@ String FrameView::mediaType() const
 
 bool FrameView::useSlowRepaints() const
 {
-    return d->useSlowRepaints || d->slowRepaintObjectCount > 0;
+    return d->useSlowRepaints || d->m_slowRepaintObjectCount > 0;
 }
 
 void FrameView::setUseSlowRepaints()
@@ -566,15 +571,16 @@ void FrameView::setUseSlowRepaints()
 
 void FrameView::addSlowRepaintObject()
 {
-    if (d->slowRepaintObjectCount == 0)
+    if (!d->m_slowRepaintObjectCount)
         setStaticBackground(true);
-    d->slowRepaintObjectCount++;
+    d->m_slowRepaintObjectCount++;
 }
 
 void FrameView::removeSlowRepaintObject()
 {
-    d->slowRepaintObjectCount--;
-    if (d->slowRepaintObjectCount == 0)
+    ASSERT(d->m_slowRepaintObjectCount > 0);
+    d->m_slowRepaintObjectCount--;
+    if (!d->m_slowRepaintObjectCount)
         setStaticBackground(d->useSlowRepaints);
 }
 
@@ -607,14 +613,20 @@ void FrameView::scrollRectIntoViewRecursively(const IntRect& r)
 {
     if (frame()->prohibitsScrolling())
         return;
+    bool wasInProgrammaticScroll = d->m_inProgrammaticScroll;
+    d->m_inProgrammaticScroll = true;
     ScrollView::scrollRectIntoViewRecursively(r);
+    d->m_inProgrammaticScroll = wasInProgrammaticScroll;
 }
 
 void FrameView::setContentsPos(int x, int y)
 {
     if (frame()->prohibitsScrolling())
         return;
+    bool wasInProgrammaticScroll = d->m_inProgrammaticScroll;
+    d->m_inProgrammaticScroll = true;
     ScrollView::setContentsPos(x, y);
+    d->m_inProgrammaticScroll = wasInProgrammaticScroll;
 }
 
 void FrameView::repaintRectangle(const IntRect& r, bool immediate)
@@ -701,18 +713,13 @@ bool FrameView::needsLayout() const
     // It is possible that our document will not have a body yet. If this is the case, 
     // then we are not allowed to schedule layouts yet, so we won't be pending layout.
     RenderView* root = static_cast<RenderView*>(m_frame->renderer());
-    return layoutPending() || (root && root->needsLayout());
+    return layoutPending() || (root && root->needsLayout()) || d->layoutRoot;
 }
 
 void FrameView::setNeedsLayout()
 {
     if (m_frame->renderer())
         m_frame->renderer()->setNeedsLayout(true);
-}
-
-bool FrameView::haveDelayedLayoutScheduled()
-{
-    return d->layoutTimer.isActive() && d->delayedLayout;
 }
 
 void FrameView::unscheduleRelayout()
@@ -872,16 +879,6 @@ IntRect FrameView::windowClipRectForLayer(const RenderLayer* layer, bool clipToL
     return intersection(clipRect, windowClipRect());
 }
 
-bool FrameView::handleMouseMoveEvent(const PlatformMouseEvent& event)
-{
-    return m_frame->eventHandler()->handleMouseMoveEvent(event);
-}
-
-bool FrameView::handleMouseReleaseEvent(const PlatformMouseEvent& event)
-{
-    return m_frame->eventHandler()->handleMouseReleaseEvent(event);
-}
-
 void FrameView::updateDashboardRegions()
 {
     Document* doc = m_frame->document();
@@ -891,6 +888,34 @@ void FrameView::updateDashboardRegions()
         doc->setDashboardRegions(newRegions);
         m_frame.get()->dashboardRegionsChanged();
     }
+}
+
+void FrameView::updateControlTints()
+{
+    // This is called when control tints are changed from aqua/graphite to clear and vice versa.
+    // We do a "fake" paint, and when the theme gets a paint call, it can then do an invalidate.
+    // This is only done if the theme supports control tinting. It's up to the theme and platform
+    // to define when controls get the tint and to call this function when that changes.
+    Document* doc = m_frame->document();
+    if (doc && theme()->supportsControlTints() && m_frame->renderer()) {
+        doc->updateLayout(); // Ensure layout is up to date.
+        PlatformGraphicsContext* const noContext = 0;
+        GraphicsContext context(noContext);
+        context.setUpdatingControlTints(true);
+        m_frame->paint(&context, enclosingIntRect(visibleContentRect()));
+    }
+}
+
+bool FrameView::wasScrolledByUser() const
+{
+    return d->m_wasScrolledByUser;
+}
+
+void FrameView::setWasScrolledByUser(bool wasScrolledByUser)
+{
+    if (d->m_inProgrammaticScroll)
+        return;
+    d->m_wasScrolledByUser = wasScrolledByUser;
 }
 
 }

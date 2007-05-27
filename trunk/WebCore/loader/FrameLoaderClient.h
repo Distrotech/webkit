@@ -33,6 +33,14 @@
 #include <wtf/Forward.h>
 #include <wtf/Platform.h>
 
+#if PLATFORM(MAC)
+#ifdef __OBJC__
+@class NSCachedURLResponse;
+#else
+class NSCachedURLResponse;
+#endif
+#endif
+
 namespace WebCore {
 
     class AuthenticationChallenge;
@@ -80,8 +88,6 @@ namespace WebCore {
         virtual void detachedFromParent2() = 0;
         virtual void detachedFromParent3() = 0;
         virtual void detachedFromParent4() = 0;
-
-        virtual void loadedFromCachedPage() = 0;
 
         virtual void assignIdentifierToInitialRequest(unsigned long identifier, DocumentLoader*, const ResourceRequest&) = 0;
 
@@ -198,6 +204,10 @@ namespace WebCore {
         virtual String overrideMediaType() const = 0;
 
         virtual void windowObjectCleared() const = 0;
+        
+#if PLATFORM(MAC)
+        virtual NSCachedURLResponse* willCacheResponse(DocumentLoader*, unsigned long identifier, NSCachedURLResponse*) const = 0;
+#endif
     };
 
 } // namespace WebCore

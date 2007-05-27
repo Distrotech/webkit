@@ -53,11 +53,6 @@ CharacterData::~CharacterData()
     if(str) str->deref();
 }
 
-String CharacterData::data() const
-{
-    return str;
-}
-
 void CharacterData::setData( const String &_data, ExceptionCode& ec)
 {
     // NO_MODIFICATION_ALLOWED_ERR: Raised when the node is readonly
@@ -72,23 +67,16 @@ void CharacterData::setData( const String &_data, ExceptionCode& ec)
     if (str)
         str->ref();
     
-    if (!renderer() && attached()) {
+    if ((!renderer() || !rendererIsNeeded(renderer()->style())) && attached()) {
         detach();
         attach();
-    }
-    
-    if (renderer())
+    } else if (renderer())
         static_cast<RenderText*>(renderer())->setText(str);
     
     dispatchModifiedEvent(oldStr);
     if(oldStr) oldStr->deref();
     
     document()->removeMarkers(this);
-}
-
-unsigned CharacterData::length() const
-{
-    return str->length();
 }
 
 String CharacterData::substringData( const unsigned offset, const unsigned count, ExceptionCode& ec)
@@ -116,12 +104,10 @@ void CharacterData::appendData( const String &arg, ExceptionCode& ec)
     str->ref();
     str->append(arg.impl());
 
-    if (!renderer() && attached()) {
+    if ((!renderer() || !rendererIsNeeded(renderer()->style())) && attached()) {
         detach();
         attach();
-    }
-
-    if (renderer())
+    } else if (renderer())
         static_cast<RenderText*>(renderer())->setTextWithOffset(str, oldStr->length(), 0);
     
     dispatchModifiedEvent(oldStr);
@@ -140,12 +126,10 @@ void CharacterData::insertData( const unsigned offset, const String &arg, Except
     str->ref();
     str->insert(arg.impl(), offset);
 
-    if (!renderer() && attached()) {
+    if ((!renderer() || !rendererIsNeeded(renderer()->style())) && attached()) {
         detach();
         attach();
-    }
-
-    if (renderer())
+    } else if (renderer())
         static_cast<RenderText*>(renderer())->setTextWithOffset(str, offset, 0);
     
     dispatchModifiedEvent(oldStr);
@@ -167,9 +151,13 @@ void CharacterData::deleteData( const unsigned offset, const unsigned count, Exc
     str = str->copy();
     str->ref();
     str->remove(offset,count);
-    if (renderer())
-        static_cast<RenderText*>(renderer())->setTextWithOffset(str, offset, count);
     
+    if ((!renderer() || !rendererIsNeeded(renderer()->style())) && attached()) {
+        detach();
+        attach();
+    } else if (renderer())
+        static_cast<RenderText*>(renderer())->setTextWithOffset(str, offset, count);
+
     dispatchModifiedEvent(oldStr);
     oldStr->deref();
 
@@ -197,12 +185,10 @@ void CharacterData::replaceData( const unsigned offset, const unsigned count, co
     str->remove(offset,realCount);
     str->insert(arg.impl(), offset);
 
-    if (!renderer() && attached()) {
+    if ((!renderer() || !rendererIsNeeded(renderer()->style())) && attached()) {
         detach();
         attach();
-    }
-
-    if (renderer())
+    } else if (renderer())
         static_cast<RenderText*>(renderer())->setTextWithOffset(str, offset, count);
     
     dispatchModifiedEvent(oldStr);

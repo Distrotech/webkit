@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Computer, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,12 +26,23 @@
 #include "config.h"
 #include "Settings.h"
 
+#include "Frame.h"
+#include "FrameTree.h"
 #include "Page.h"
+#include "PageCache.h"
+#include "HistoryItem.h"
 
 namespace WebCore {
 
-Settings::Settings()
-    : m_editableLinkBehavior(EditableLinkDefaultBehavior)
+static void setNeedsReapplyStylesInAllFrames(Page* page)
+{
+    for (Frame* frame = page->mainFrame(); frame; frame = frame->tree()->traverseNext())
+        frame->setNeedsReapplyStyles();
+}
+
+Settings::Settings(Page* page)
+    : m_page(page)
+    , m_editableLinkBehavior(EditableLinkDefaultBehavior)
     , m_minimumFontSize(0)
     , m_minimumLogicalFontSize(0)
     , m_defaultFontSize(0)
@@ -46,6 +57,8 @@ Settings::Settings()
     , m_textAreasAreResizable(false)
     , m_usesDashboardBackwardCompatibilityMode(false)
     , m_needsAcrobatFrameReloadingQuirk(false)
+    , m_isDOMPasteAllowed(false)
+    , m_shrinksStandaloneImagesToFit(true)
 {
     // A Frame may not have been created yet, so we initialize the AtomicString 
     // hash before trying to use it.
@@ -58,7 +71,7 @@ void Settings::setStandardFontFamily(const AtomicString& standardFontFamily)
         return;
 
     m_standardFontFamily = standardFontFamily;
-    Page::setNeedsReapplyStylesForSettingsChange(this);
+    setNeedsReapplyStylesInAllFrames(m_page);
 }
 
 void Settings::setFixedFontFamily(const AtomicString& fixedFontFamily)
@@ -67,7 +80,7 @@ void Settings::setFixedFontFamily(const AtomicString& fixedFontFamily)
         return;
         
     m_fixedFontFamily = fixedFontFamily;
-    Page::setNeedsReapplyStylesForSettingsChange(this);
+    setNeedsReapplyStylesInAllFrames(m_page);
 }
 
 void Settings::setSerifFontFamily(const AtomicString& serifFontFamily)
@@ -76,7 +89,7 @@ void Settings::setSerifFontFamily(const AtomicString& serifFontFamily)
         return;
         
     m_serifFontFamily = serifFontFamily;
-    Page::setNeedsReapplyStylesForSettingsChange(this);
+    setNeedsReapplyStylesInAllFrames(m_page);
 }
 
 void Settings::setSansSerifFontFamily(const AtomicString& sansSerifFontFamily)
@@ -85,7 +98,7 @@ void Settings::setSansSerifFontFamily(const AtomicString& sansSerifFontFamily)
         return;
         
     m_sansSerifFontFamily = sansSerifFontFamily; 
-    Page::setNeedsReapplyStylesForSettingsChange(this);
+    setNeedsReapplyStylesInAllFrames(m_page);
 }
 
 void Settings::setCursiveFontFamily(const AtomicString& cursiveFontFamily)
@@ -94,7 +107,7 @@ void Settings::setCursiveFontFamily(const AtomicString& cursiveFontFamily)
         return;
         
     m_cursiveFontFamily = cursiveFontFamily;
-    Page::setNeedsReapplyStylesForSettingsChange(this);
+    setNeedsReapplyStylesInAllFrames(m_page);
 }
 
 void Settings::setFantasyFontFamily(const AtomicString& fantasyFontFamily)
@@ -103,7 +116,7 @@ void Settings::setFantasyFontFamily(const AtomicString& fantasyFontFamily)
         return;
         
     m_fantasyFontFamily = fantasyFontFamily;
-    Page::setNeedsReapplyStylesForSettingsChange(this);
+    setNeedsReapplyStylesInAllFrames(m_page);
 }
 
 void Settings::setMinimumFontSize(int minimumFontSize)
@@ -112,7 +125,7 @@ void Settings::setMinimumFontSize(int minimumFontSize)
         return;
 
     m_minimumFontSize = minimumFontSize;
-    Page::setNeedsReapplyStylesForSettingsChange(this);
+    setNeedsReapplyStylesInAllFrames(m_page);
 }
 
 void Settings::setMinimumLogicalFontSize(int minimumLogicalFontSize)
@@ -121,7 +134,7 @@ void Settings::setMinimumLogicalFontSize(int minimumLogicalFontSize)
         return;
 
     m_minimumLogicalFontSize = minimumLogicalFontSize;
-    Page::setNeedsReapplyStylesForSettingsChange(this);
+    setNeedsReapplyStylesInAllFrames(m_page);
 }
 
 void Settings::setDefaultFontSize(int defaultFontSize)
@@ -130,16 +143,16 @@ void Settings::setDefaultFontSize(int defaultFontSize)
         return;
 
     m_defaultFontSize = defaultFontSize;
-    Page::setNeedsReapplyStylesForSettingsChange(this);
+    setNeedsReapplyStylesInAllFrames(m_page);
 }
 
 void Settings::setDefaultFixedFontSize(int defaultFontSize)
 {
-    if (m_defaultFontSize == defaultFontSize)
+    if (m_defaultFixedFontSize == defaultFontSize)
         return;
 
     m_defaultFixedFontSize = defaultFontSize;
-    Page::setNeedsReapplyStylesForSettingsChange(this);
+    setNeedsReapplyStylesInAllFrames(m_page);
 }
 
 void Settings::setLoadsImagesAutomatically(bool loadsImagesAutomatically)
@@ -183,7 +196,7 @@ void Settings::setUserStyleSheetLocation(const KURL& userStyleSheetLocation)
         return;
 
     m_userStyleSheetLocation = userStyleSheetLocation;
-    Page::setNeedsReapplyStylesForSettingsChange(this);
+    setNeedsReapplyStylesInAllFrames(m_page);
 }
 
 void Settings::setShouldPrintBackgrounds(bool shouldPrintBackgrounds)
@@ -197,7 +210,7 @@ void Settings::setTextAreasAreResizable(bool textAreasAreResizable)
         return;
 
     m_textAreasAreResizable = textAreasAreResizable;
-    Page::setNeedsReapplyStylesForSettingsChange(this);
+    setNeedsReapplyStylesInAllFrames(m_page);
 }
 
 void Settings::setEditableLinkBehavior(EditableLinkBehavior editableLinkBehavior)
@@ -210,7 +223,6 @@ void Settings::setUsesDashboardBackwardCompatibilityMode(bool usesDashboardBackw
     m_usesDashboardBackwardCompatibilityMode = usesDashboardBackwardCompatibilityMode;
 }
 
-
 // FIXME: This quirk is needed because of Radar 4674537. We need to phase it out once Adobe
 // can fix the bug from their end.
 void Settings::setNeedsAcrobatFrameReloadingQuirk(bool shouldNotReloadIFramesForUnchangedSRC)
@@ -221,6 +233,25 @@ void Settings::setNeedsAcrobatFrameReloadingQuirk(bool shouldNotReloadIFramesFor
 void Settings::setDOMPasteAllowed(bool DOMPasteAllowed)
 {
     m_isDOMPasteAllowed = DOMPasteAllowed;
+}
+
+void Settings::setUsesPageCache(bool usesPageCache)
+{
+    if (m_usesPageCache == usesPageCache)
+        return;
+        
+    m_usesPageCache = usesPageCache;
+    if (!m_usesPageCache) {
+        HistoryItemVector& historyItems = m_page->backForwardList()->entries();
+        for (unsigned i = 0; i < historyItems.size(); i++)
+            pageCache()->remove(historyItems[i].get());
+        pageCache()->releaseAutoreleasedPagesNow();
+    }
+}
+
+void Settings::setShrinksStandaloneImagesToFit(bool shrinksStandaloneImagesToFit)
+{
+    m_shrinksStandaloneImagesToFit = shrinksStandaloneImagesToFit;
 }
 
 } // namespace WebCore

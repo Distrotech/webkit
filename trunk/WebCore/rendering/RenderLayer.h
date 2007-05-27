@@ -256,7 +256,7 @@ public:
     Scrollbar* horizontalScrollbar() { return m_hBar.get(); }
     Scrollbar* verticalScrollbar() { return m_vBar.get(); }
 
-    PlatformScrollbar* horizontaScrollbarWidget() const;
+    PlatformScrollbar* horizontalScrollbarWidget() const;
     PlatformScrollbar* verticalScrollbarWidget() const;
 
     int verticalScrollbarWidth() const;
@@ -264,6 +264,7 @@ public:
 
     void positionOverflowControls();
     bool isPointInResizeControl(const IntPoint&);
+    bool hitTestOverflowControls(HitTestResult&);
     IntSize offsetFromResizeCorner(const IntPoint&) const;
 
     void paintOverflowControls(GraphicsContext*, int tx, int ty, const IntRect& damageRect);
@@ -279,7 +280,6 @@ public:
     
     void updateLayerPosition();
     void updateLayerPositions(bool doFullRepaint = false, bool checkForRepaint = true);
-    void checkForRepaintOnResize();
 
     void relativePositionOffset(int& relX, int& relY) { relX += m_relX; relY += m_relY; }
 
@@ -338,6 +338,7 @@ public:
     void updateHoverActiveState(const HitTestRequest&, HitTestResult&);
 
     IntRect repaintRect() const { return m_repaintRect; }
+    void setNeedsFullRepaint(bool f = true) { m_needsFullRepaint = f; }
     
     int staticX() const { return m_staticX; }
     int staticY() const { return m_staticY; }
@@ -381,6 +382,8 @@ private:
     void childVisibilityChanged(bool newVisibility);
     void dirtyVisibleDescendantStatus();
     void updateVisibilityStatus();
+
+    Node* enclosingElement() const;
 
 protected:   
     RenderObject* m_object;
@@ -444,7 +447,7 @@ protected:
                                  // we ended up painting this layer or any descendants (and therefore need to
                                  // blend).
     bool m_inOverflowRelayout : 1;
-    bool m_repaintOverflowOnResize : 1;
+    bool m_needsFullRepaint : 1;
 
     bool m_overflowStatusDirty : 1;
     bool m_horizontalOverflow : 1;

@@ -4,7 +4,7 @@
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
  *           (C) 2000 Simon Hausmann <hausmann@kde.org>
- * Copyright (C) 2003, 2006 Apple Computer, Inc.
+ * Copyright (C) 2003, 2006, 2007 Apple Inc. All rights reserved.
  *           (C) 2006 Graham Dennis (graham.dennis@gmail.com)
  *
  * This library is free software; you can redistribute it and/or
@@ -142,8 +142,8 @@ void HTMLAnchorElement::defaultEventHandler(Event* evt)
         // If the link is editable, then we need to check the settings to see whether or not to follow the link
         if (isContentEditable()) {
             EditableLinkBehavior editableLinkBehavior = EditableLinkDefaultBehavior;
-            if (document()->frame() && document()->frame()->settings())
-                editableLinkBehavior = document()->frame()->settings()->editableLinkBehavior();
+            if (Settings* settings = document()->settings())
+                editableLinkBehavior = settings->editableLinkBehavior();
                 
             switch (editableLinkBehavior) {
                 // Always follow the link (Safari 2.0 behavior)
@@ -241,8 +241,8 @@ void HTMLAnchorElement::setActive(bool down, bool pause)
 {
     if (isContentEditable()) {
         EditableLinkBehavior editableLinkBehavior = EditableLinkDefaultBehavior;
-        if (document()->frame() && document()->frame()->settings())
-            editableLinkBehavior = document()->frame()->settings()->editableLinkBehavior();
+        if (Settings* settings = document()->settings())
+            editableLinkBehavior = settings->editableLinkBehavior();
             
         switch(editableLinkBehavior) {
             default:
@@ -455,7 +455,6 @@ String HTMLAnchorElement::search() const
 
 String HTMLAnchorElement::text() const
 {
-    document()->updateLayoutIgnorePendingStylesheets();
     return innerText();
 }
 
@@ -467,8 +466,8 @@ bool HTMLAnchorElement::isLiveLink() const
         return true;
     
     EditableLinkBehavior editableLinkBehavior = EditableLinkDefaultBehavior;
-    if (document() && document()->frame() && document()->frame()->settings())
-        editableLinkBehavior = document()->frame()->settings()->editableLinkBehavior();
+    if (Settings* settings = document()->settings())
+        editableLinkBehavior = settings->editableLinkBehavior();
         
     switch(editableLinkBehavior) {
         default:

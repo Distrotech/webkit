@@ -32,9 +32,11 @@
 
 @class WebTextCompleteController;
 @class DOMDocumentFragment;
+@class DOMElement;
 
 namespace WebCore {
     class KeyboardEvent;
+    class CachedImage;
 }
 
 struct WebHTMLViewInterpretKeyEventsParameters;
@@ -89,6 +91,7 @@ struct WebHTMLViewInterpretKeyEventsParameters;
     NSTextView *firstResponderTextViewAtMouseDownTime;
     
     WebDataSource *dataSource;
+    WebCore::CachedImage *promisedDragTIFFDataSource;
 }
 - (void)clear;
 @end
@@ -118,5 +121,7 @@ struct WebHTMLViewInterpretKeyEventsParameters;
 - (void)setGrammarCheckingEnabled:(BOOL)flag;
 - (void)toggleGrammarChecking:(id)sender;
 #endif
+- (WebCore::CachedImage*)promisedDragTIFFDataSource;
+- (void)setPromisedDragTIFFDataSource:(WebCore::CachedImage*)source;
 @end
 

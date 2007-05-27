@@ -32,6 +32,7 @@
 #include "RenderBlock.h"
 #include "RenderLayer.h"
 #include "TextBoundaries.h"
+#include "TextBreakIterator.h"
 #include "TextIterator.h"
 #include "htmlediting.h"
 
@@ -69,17 +70,21 @@ static VisiblePosition previousBoundary(const VisiblePosition &c, unsigned (*sea
         return VisiblePosition();
         
     SimplifiedBackwardsTextIterator it(searchRange.get());
-    DeprecatedString string;
+    Vector<UChar, 1024> string;
     unsigned next = 0;
     bool inTextSecurityMode = start.node() && start.node()->renderer() && start.node()->renderer()->style()->textSecurity() != TSNONE;
     while (!it.atEnd()) {
         // iterate to get chunks until the searchFunction returns a non-zero value.
-        String iteratorString(it.characters(), it.length());
-        // Treat bullets used in the text security mode as regular characters when looking for boundaries
-        if (inTextSecurityMode)
+        if (!inTextSecurityMode) 
+            string.prepend(it.characters(), it.length());
+        else {
+            // Treat bullets used in the text security mode as regular characters when looking for boundaries
+            String iteratorString(it.characters(), it.length());
             iteratorString = iteratorString.impl()->secure('x');
-        string.prepend(iteratorString.deprecatedString());
-        next = searchFunction(reinterpret_cast<const UChar*>(string.unicode()), string.length());
+            string.prepend(iteratorString.characters(), iteratorString.length());
+        }
+        
+        next = searchFunction(string.data(), string.size());
         if (next != 0)
             break;
         it.advance();
@@ -130,30 +135,39 @@ static VisiblePosition nextBoundary(const VisiblePosition &c, unsigned (*searchF
     searchRange->selectNodeContents(boundary, ec);
     searchRange->setStart(start.node(), start.offset(), ec);
     TextIterator it(searchRange.get(), true);
-    DeprecatedString string;
+    Vector<UChar, 1024> string;
     unsigned next = 0;
     bool inTextSecurityMode = start.node() && start.node()->renderer() && start.node()->renderer()->style()->textSecurity() != TSNONE;
     while (!it.atEnd()) {
         // Keep asking the iterator for chunks until the search function
         // returns an end value not equal to the length of the string passed to it.
-        String iteratorString(it.characters(), it.length());
-        // Treat bullets used in the text security mode as regular characters when looking for boundaries
-        if (inTextSecurityMode)
+        if (!inTextSecurityMode)
+            string.append(it.characters(), it.length());
+        else {
+            // Treat bullets used in the text security mode as regular characters when looking for boundaries
+            String iteratorString(it.characters(), it.length());
             iteratorString = iteratorString.impl()->secure('x');
-        string.append(iteratorString.deprecatedString());
-        next = searchFunction(reinterpret_cast<const UChar*>(string.unicode()), string.length());
-        if (next != string.length())
+            string.append(iteratorString.characters(), iteratorString.length());
+        }
+
+        next = searchFunction(string.data(), string.size());
+        if (next != string.size())
             break;
         it.advance();
     }
     
-    if (it.atEnd() && next == string.length()) {
+    if (it.atEnd() && next == string.size()) {
         pos = it.range()->startPosition();
     } else if (next != 0) {
         // Use the character iterator to translate the next value into a DOM position.
         CharacterIterator charIt(searchRange.get(), true);
         charIt.advance(next - 1);
         pos = charIt.range()->endPosition();
+        
+        // FIXME: workaround for collapsed range (where only start position is correct) emitted for some emitted newlines (see rdar://5192593)
+        VisiblePosition visPos = VisiblePosition(pos);
+        if (visPos == VisiblePosition(charIt.range()->startPosition()))
+            pos = visPos.next(true).deepEquivalent();
     }
 
     // generate VisiblePosition, use UPSTREAM affinity if possible
@@ -506,45 +520,62 @@ VisiblePosition nextLinePosition(const VisiblePosition &visiblePosition, int x)
 
 static unsigned startSentenceBoundary(const UChar* characters, unsigned length)
 {
-    int start, end;
-    findSentenceBoundary(characters, length, length, &start, &end);
-    return start;
+    TextBreakIterator* iterator = sentenceBreakIterator(characters, length);
+    // FIXME: The following function can return -1; we don't handle that.
+    return textBreakPreceding(iterator, length);
 }
 
 VisiblePosition startOfSentence(const VisiblePosition &c)
 {
+    // FIXME: The sentence break iterator will not stop at paragraph boundaries.
+    // Thus this treats many large documents as one giant sentence.
     return previousBoundary(c, startSentenceBoundary);
 }
 
 static unsigned endSentenceBoundary(const UChar* characters, unsigned length)
 {
-    int start, end;
-    findSentenceBoundary(characters, length, 0, &start, &end);
-    return end;
+    // FIXME: It's unclear why this starts searching from the end of the buffer.
+    // The word equivalent starts at the start of the buffer, and I think that's correct.
+    TextBreakIterator* iterator = sentenceBreakIterator(characters, length);
+    // FIXME: The following function can return -1; we don't handle that.
+    int start = textBreakPreceding(iterator, length);
+    return textBreakFollowing(iterator, start);
 }
 
 VisiblePosition endOfSentence(const VisiblePosition &c)
 {
+    // FIXME: The sentence break iterator will not stop at paragraph boundaries.
+    // Thus this treats many large documents as one giant sentence.
     return nextBoundary(c, endSentenceBoundary);
 }
 
 static unsigned previousSentencePositionBoundary(const UChar* characters, unsigned length)
 {
-    return findNextSentenceFromIndex(characters, length, length, false);
+    // FIXME: This is identical to startSentenceBoundary. I'm pretty sure that's not right.
+    TextBreakIterator* iterator = sentenceBreakIterator(characters, length);
+    // FIXME: The following function can return -1; we don't handle that.
+    return textBreakPreceding(iterator, length);
 }
 
 VisiblePosition previousSentencePosition(const VisiblePosition &c)
 {
+    // FIXME: The sentence break iterator will not stop at paragraph boundaries.
+    // Thus this treats many large documents as one giant sentence.
     return previousBoundary(c, previousSentencePositionBoundary);
 }
 
 static unsigned nextSentencePositionBoundary(const UChar* characters, unsigned length)
 {
-    return findNextSentenceFromIndex(characters, length, 0, true);
+    // FIXME: This is too close to endSentenceBoundary. I'm pretty sure it's not right.
+    TextBreakIterator* iterator = sentenceBreakIterator(characters, length);
+    // FIXME: The following function can return -1; we don't handle that.
+    return textBreakFollowing(iterator, 0);
 }
 
 VisiblePosition nextSentencePosition(const VisiblePosition &c)
 {
+    // FIXME: The sentence break iterator will not stop at paragraph boundaries.
+    // Thus this treats many large documents as one giant sentence.
     return nextBoundary(c, nextSentencePositionBoundary);
 }
 

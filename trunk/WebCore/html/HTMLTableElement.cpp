@@ -37,6 +37,7 @@
 #include "HTMLTableCaptionElement.h"
 #include "HTMLTableSectionElement.h"
 #include "RenderTable.h"
+#include "Text.h"
 
 namespace WebCore {
 
@@ -64,7 +65,9 @@ HTMLTableElement::~HTMLTableElement()
 
 bool HTMLTableElement::checkDTD(const Node* newChild)
 {
-    return newChild->isTextNode() || newChild->hasTagName(captionTag) ||
+    if (newChild->isTextNode())
+        return static_cast<const Text*>(newChild)->containsOnlyWhitespace();
+    return newChild->hasTagName(captionTag) ||
            newChild->hasTagName(colTag) || newChild->hasTagName(colgroupTag) ||
            newChild->hasTagName(theadTag) || newChild->hasTagName(tfootTag) ||
            newChild->hasTagName(tbodyTag) || newChild->hasTagName(formTag) ||
@@ -129,7 +132,7 @@ HTMLElement *HTMLTableElement::createTHead()
 {
     if (!m_head) {
         ExceptionCode ec = 0;
-        m_head = new HTMLTableSectionElement(theadTag, document(), true /* implicit */);
+        m_head = new HTMLTableSectionElement(theadTag, document());
         if (m_foot)
             insertBefore(m_head, m_foot, ec);
         else if (m_firstBody)
@@ -155,7 +158,7 @@ HTMLElement *HTMLTableElement::createTFoot()
 {
     if (!m_foot) {
         ExceptionCode ec = 0;
-        m_foot = new HTMLTableSectionElement(tfootTag, document(), true /*implicit */);
+        m_foot = new HTMLTableSectionElement(tfootTag, document());
         if (m_firstBody)
             insertBefore(m_foot, m_firstBody, ec);
         else
@@ -196,14 +199,14 @@ void HTMLTableElement::deleteCaption()
     m_caption = 0;
 }
 
-HTMLElement *HTMLTableElement::insertRow(int index, ExceptionCode& ec)
+PassRefPtr<HTMLElement> HTMLTableElement::insertRow(int index, ExceptionCode& ec)
 {
     // The DOM requires that we create a tbody if the table is empty
     // (cf DOM2TS HTMLTableElement31 test)
     // (note: this is different from "if the table has no sections", since we can have
     // <TABLE><TR>)
     if (!m_firstBody && !m_head && !m_foot)
-        setTBody(new HTMLTableSectionElement(tbodyTag, document(), true /* implicit */));
+        setTBody(new HTMLTableSectionElement(tbodyTag, document()));
 
     // IE treats index=-1 as default value meaning 'append after last'
     // This isn't in the DOM. So, not implemented yet.
@@ -243,7 +246,7 @@ HTMLElement *HTMLTableElement::insertRow(int index, ExceptionCode& ec)
     else {
         // No more sections => index is too big
         ec = INDEX_SIZE_ERR;
-        return 0L;
+        return 0;
     }
 }
 
@@ -526,7 +529,7 @@ CSSMutableStyleDeclaration* HTMLTableElement::getSharedCellDecl()
 {
     MappedAttribute attr(cellborderAttr, m_rulesAttr == AllRules ? "solid-all" : 
                                          (m_rulesAttr == ColsRules ? "solid-cols" : 
-                                         (m_rulesAttr == RowsRules ? "solid-rows" : (!m_borderAttr ? "none" : (m_borderColorAttr ? "solid" : "inset")))));
+                                         (m_rulesAttr == RowsRules ? "solid-rows" : (!m_borderAttr || m_rulesAttr == GroupsRules ? "none" : (m_borderColorAttr ? "solid" : "inset")))));
 
     CSSMappedAttributeDeclaration* decl = getMappedAttributeDecl(ePersistent, &attr);
     if (!decl) {
@@ -549,7 +552,7 @@ CSSMutableStyleDeclaration* HTMLTableElement::getSharedCellDecl()
             decl->setProperty(CSS_PROP_BORDER_TOP_STYLE, CSS_VAL_SOLID, false);
             decl->setProperty(CSS_PROP_BORDER_BOTTOM_STYLE, CSS_VAL_SOLID, false);
             decl->setProperty(CSS_PROP_BORDER_COLOR, "inherit", false);
-        } else if (m_borderAttr || m_rulesAttr == AllRules) {
+        } else if (m_rulesAttr != GroupsRules && (m_borderAttr || m_rulesAttr == AllRules)) {
             decl->setProperty(CSS_PROP_BORDER_WIDTH, "1px", false);
              int v = (m_borderColorAttr || m_rulesAttr == AllRules) ? CSS_VAL_SOLID : CSS_VAL_INSET;
             decl->setProperty(CSS_PROP_BORDER_TOP_STYLE, v, false);

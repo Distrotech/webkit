@@ -149,8 +149,6 @@ public:
     virtual void detachedFromParent3() { }
     virtual void detachedFromParent4() { }
     
-    virtual void loadedFromCachedPage() { }
-    
     virtual void download(ResourceHandle*, const ResourceRequest&, const ResourceResponse&) { }
     
     virtual void assignIdentifierToInitialRequest(unsigned long identifier, DocumentLoader*, const ResourceRequest&) { }
@@ -268,6 +266,11 @@ public:
 
     virtual void redirectDataToPlugin(WebCore::Widget*) {}
     virtual void windowObjectCleared() const {}
+
+#if PLATFORM(MAC)
+    virtual NSCachedURLResponse* willCacheResponse(DocumentLoader*, unsigned long identifier, NSCachedURLResponse* response) const { return response; }
+#endif
+
 };
 
 class SVGEmptyEditorClient : public EditorClient {
@@ -339,6 +342,15 @@ public:
     virtual NSArray* pasteboardTypesForSelection(Frame*) { return 0; }
 #endif
 #endif
+    virtual void ignoreWordInSpellDocument(const String&) { }
+    virtual void learnWord(const String&) { }
+    virtual void checkSpellingOfString(const UChar*, int length, int* misspellingLocation, int* misspellingLength) { }
+    virtual void checkGrammarOfString(const UChar*, int length, Vector<GrammarDetail>&, int* badGrammarLocation, int* badGrammarLength) { }
+    virtual void updateSpellingUIWithGrammarString(const String&, const GrammarDetail&) { }
+    virtual void updateSpellingUIWithMisspelledWord(const String&) { }
+    virtual void showSpellingUI(bool show) { }
+    virtual bool spellingUIIsShowing() { return false; }
+    virtual void getGuessesForWord(const String&, Vector<String>& guesses) { }
   
     
 };

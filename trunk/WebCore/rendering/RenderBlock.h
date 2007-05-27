@@ -99,7 +99,6 @@ public:
     virtual void addChildToFlow(RenderObject* newChild, RenderObject* beforeChild);
     virtual void removeChild(RenderObject*);
 
-    virtual void repaintObjectsBeforeLayout();
     virtual void repaintOverhangingFloats(bool paintAllDescendants);
 
     virtual void setStyle(RenderStyle*);
@@ -196,16 +195,16 @@ public:
     virtual bool hitTestColumns(const HitTestRequest&, HitTestResult&, int x, int y, int tx, int ty, HitTestAction);
     virtual bool hitTestContents(const HitTestRequest&, HitTestResult&, int x, int y, int tx, int ty, HitTestAction);
 
-    virtual bool isPointInScrollbar(HitTestResult&, int x, int y, int tx, int ty);
+    virtual bool isPointInOverflowControl(HitTestResult&, int x, int y, int tx, int ty);
 
     virtual VisiblePosition positionForCoordinates(int x, int y);
     
     // Block flows subclass availableWidth to handle multi column layout (shrinking the width available to children when laying out.)
     virtual int availableWidth() const;
     
-    virtual void calcMinMaxWidth();
-    void calcInlineMinMaxWidth();
-    void calcBlockMinMaxWidth();
+    virtual void calcPrefWidths();
+    void calcInlinePrefWidths();
+    void calcBlockPrefWidths();
 
     virtual int getBaselineOfFirstLineBox() const;
     virtual int getBaselineOfLastLineBox() const;
@@ -240,7 +239,7 @@ public:
 
         BlockSelectionInfo(RenderBlock* b)
             : m_block(b)
-            , m_rects(b->selectionGapRects())
+            , m_rects(b->needsLayout() ? GapRects() : b->selectionGapRects())
             , m_state(b->selectionState())
         { 
         }
@@ -250,7 +249,7 @@ public:
         SelectionState state() const { return m_state; }
     };
 
-    virtual IntRect selectionRect() { return selectionGapRects(); }
+    virtual IntRect selectionRect(bool) { return selectionGapRects(); }
     GapRects selectionGapRects();
     virtual bool shouldPaintSelectionGaps() const;
     bool isSelectionRoot() const;
@@ -288,6 +287,10 @@ public:
     void setDesiredColumnCountAndWidth(int count, int width);
     
     void adjustRectForColumns(IntRect&) const;
+
+    void addContinuationWithOutline(RenderFlow*);
+    void paintContinuationOutlines(PaintInfo&, int tx, int ty);
+
 private:
     void adjustPointToColumnContents(IntPoint&) const;
     void adjustForBorderFit(int x, int& left, int& right) const; // Helper function for borderFitAdjust
@@ -295,6 +298,7 @@ private:
 protected:
     void newLine();
     virtual bool hasLineIfEmpty() const;
+    bool layoutOnlyPositionedObjects();
 
 private:
     Position positionForBox(InlineBox*, bool start = true) const;

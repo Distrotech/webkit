@@ -1,29 +1,37 @@
-# WebCore - Qt4 build info
+# -*- Mode:makefile -*-
+# WebCore - qmake build info
+include($$PWD/../WebKit.pri)
+qt-port:LIBS -= -lWebKitQt
+gdk-port:LIBS -= -lWebKitGdk
 
 TEMPLATE = lib
-TARGET = WebKitQt
+qt-port:TARGET = WebKitQt
+gdk-port:TARGET = WebKitGdk
 OBJECTS_DIR = tmp
-INCLUDEPATH += tmp
+INCLUDEPATH += tmp $$OUTPUT_DIR/WebCore/tmp
 
-isEmpty(OUTPUT_DIR):OUTPUT_DIR=$$PWD/..
 DESTDIR = $$OUTPUT_DIR/lib
+DEPENDPATH += css dom loader editing history html \
+	loader page platform platform/graphics rendering xml
 
 include($$OUTPUT_DIR/config.pri)
+
+unix {
+    CONFIG += create_pc create_prl
+    QMAKE_PKGCONFIG_LIBDIR = $$DESTDIR
+    QMAKE_PKGCONFIG_INCDIR = $$PWD/../WebKitQt/Api
+    QMAKE_PKGCONFIG_DESTDIR = pkgconfig
+}
 
 CONFIG -= warn_on
 QMAKE_CXXFLAGS += -Wreturn-type
 #QMAKE_CXXFLAGS += -Wall -Wno-undef -Wno-unused-parameter
 
-contains(QT_CONFIG, reduce_exports):CONFIG += hide_symbols
+qt-port:contains(QT_CONFIG, reduce_exports):CONFIG += hide_symbols
 unix:contains(QT_CONFIG, reduce_relocations):CONFIG += bsymbolic_functions
 
 linux-*: DEFINES += HAVE_STDINT_H
-
-DEFINES += USE_SYSTEM_MALLOC
-
-CONFIG(release) {
-    DEFINES += NDEBUG
-}
+freebsd-*: DEFINES += HAVE_PTHREAD_NP_H
 
 # PRE-BUILD: make the required config.h file
 #config_h.target = config.h
@@ -38,9 +46,9 @@ DEFINES += BUILD_WEBKIT
 DEFINES += ENABLE_XPATH=1
 DEFINES += ENABLE_XSLT=1
 #DEFINES += ENABLE_XBL=1
-DEFINES += ENABLE_SVG=1
+qt-port:DEFINES += ENABLE_SVG=1
 
-DEFINES += WTF_CHANGES=1 BUILDING_QT__=1
+DEFINES += WTF_CHANGES=1
 
 include($$PWD/../JavaScriptCore/JavaScriptCore.pri)
 
@@ -48,30 +56,46 @@ include($$PWD/../JavaScriptCore/JavaScriptCore.pri)
 #LIBS += -L$$OUTPUT_DIR/lib -lJavaScriptCore
 
 macx {
-    INCLUDEPATH += /opt/local/include /opt/local/include/libxml2
     INCLUDEPATH += /usr/include/libxml2
-    LIBS += -L/opt/local/lib -lxml2 -lxslt
+    LIBS += -lxml2 -lxslt
+}
+qt-port {
+INCLUDEPATH += \
+                $$[QT_INSTALL_PREFIX]/src/3rdparty/sqlite/ \
+                $$PWD/platform/qt \
+                $$PWD/platform/network/qt \
+                $$PWD/platform/graphics/qt \
+                $$PWD/platform/graphics/svg/qt \
+                $$PWD/loader/qt \
+                $$PWD/page/qt \
+                $$PWD/../WebKitQt/WebCoreSupport \
+                $$PWD/../WebKitQt/Api
+
+DEPENDPATH += editing/qt history/qt loader/qt page/qt \
+	platform/graphics/qt ../WeKitQt/Api ../WebKitQt/WebCoreSupport
 }
 
+gdk-port:INCLUDEPATH += \
+    $$PWD/platform/image-decoders/bmp \
+    $$PWD/platform/image-decoders/gif \
+    $$PWD/platform/image-decoders/ico \
+    $$PWD/platform/image-decoders/jpeg \
+    $$PWD/platform/image-decoders/png \
+    $$PWD/platform/image-decoders/xbm
+
 INCLUDEPATH +=  $$PWD \
-                $$[QT_INSTALL_PREFIX]/src/3rdparty/sqlite/ \
                 $$PWD/ForwardingHeaders \
                 $$PWD/../JavaScriptCore/kjs \
                 $$PWD/../JavaScriptCore/bindings \
                 $$PWD/platform \
-                $$PWD/platform/qt \
                 $$PWD/platform/network \
-                $$PWD/platform/network/qt \
                 $$PWD/platform/graphics \
-                $$PWD/platform/graphics/qt \
                 $$PWD/platform/graphics/svg \
-                $$PWD/platform/graphics/svg/qt \
                 $$PWD/platform/graphics/svg/filters \
-                $$PWD/loader $$PWD/loader/icon $$PWD/loader/qt \
+                $$PWD/loader $$PWD/loader/icon \
                 $$PWD/css \
                 $$PWD/dom \
                 $$PWD/page \
-                $$PWD/page/qt \
                 $$PWD/bridge \
                 $$PWD/editing \
                 $$PWD/rendering \
@@ -79,18 +103,14 @@ INCLUDEPATH +=  $$PWD \
                 $$PWD/xml \
                 $$PWD/html \
                 $$PWD/bindings/js \
-                $$PWD/kcanvas $$PWD/kcanvas/device $$PWD/kcanvas/device/qt \
                 $$PWD/ksvg2 $$PWD/ksvg2/css $$PWD/ksvg2/svg $$PWD/ksvg2/misc $$PWD/ksvg2/events \
                 $$PWD/platform/image-decoders \
-                $$PWD/../WebKitQt/WebCoreSupport \
-                $$PWD/../WebKitQt/Api \
-                $$PWD/WebCore+SVG
+                $$PWD/../WebKitQt/WebCoreSupport
 QT += network
 LIBS += -lsqlite3
 
 
 FEATURE_DEFINES_JAVASCRIPT = LANGUAGE_JAVASCRIPT
-
 
 TOKENIZER = $$PWD/css/tokenizer.flex
 
@@ -114,12 +134,14 @@ SVGCSSVALUES = $$PWD/ksvg2/css/CSSValueKeywords.in
 
 STYLESHEETS_EMBED = $$PWD/css/html4.css
 
-MANUALMOC += \
-    $$PWD/platform/network/qt/ResourceHandleManagerQt.h \
+MANUALMOC =
+qt-port:MANUALMOC += \
     $$PWD/platform/qt/QWebPopup.h \
     $$PWD/platform/qt/SharedTimerQt.h \
     $$PWD/../WebKitQt/Api/qwebframe.h \
     $$PWD/../WebKitQt/Api/qwebpage.h \
+    $$PWD/../WebKitQt/Api/qwebnetworkinterface.h \
+    $$PWD/../WebKitQt/Api/qwebnetworkinterface_p.h \
     $$PWD/../WebKitQt/Api/qcookiejar.h \
     $$PWD/../WebKitQt/WebCoreSupport/FrameLoaderClientQt.h
 
@@ -197,10 +219,13 @@ IDL_BINDINGS += \
     html/HTMLFieldSetElement.idl \
     html/HTMLFontElement.idl \
     html/HTMLFormElement.idl \
+    html/HTMLFrameElement.idl \
+    html/HTMLFrameSetElement.idl \
     html/HTMLHeadElement.idl \
     html/HTMLHeadingElement.idl \
     html/HTMLHRElement.idl \
     html/HTMLHtmlElement.idl \
+    html/HTMLIFrameElement.idl \
     html/HTMLImageElement.idl \
     html/HTMLInputElement.idl \
     html/HTMLIsIndexElement.idl \
@@ -209,6 +234,7 @@ IDL_BINDINGS += \
     html/HTMLLIElement.idl \
     html/HTMLLinkElement.idl \
     html/HTMLMapElement.idl \
+    html/HTMLMarqueeElement.idl \
     html/HTMLMenuElement.idl \
     html/HTMLMetaElement.idl \
     html/HTMLModElement.idl \
@@ -223,6 +249,12 @@ IDL_BINDINGS += \
     html/HTMLScriptElement.idl \
     html/HTMLSelectElement.idl \
     html/HTMLStyleElement.idl \
+    html/HTMLTableCaptionElement.idl \
+    html/HTMLTableCellElement.idl \
+    html/HTMLTableColElement.idl \
+    html/HTMLTableElement.idl \
+    html/HTMLTableRowElement.idl \
+    html/HTMLTableSectionElement.idl \
     html/HTMLTextAreaElement.idl \
     html/HTMLTitleElement.idl \
     html/HTMLUListElement.idl \
@@ -235,8 +267,11 @@ SOURCES += \
     bindings/js/JSCanvasRenderingContext2DCustom.cpp \
     bindings/js/JSCustomXPathNSResolver.cpp \
     bindings/js/JSDocumentCustom.cpp \
+    bindings/js/JSHTMLAnchorElementCustom.cpp \
+    bindings/js/JSHTMLDocumentCustom.cpp \
     bindings/js/JSHTMLElementWrapperFactory.cpp \
     bindings/js/JSHTMLFormElementCustom.cpp \
+    bindings/js/JSHTMLFrameSetElementCustom.cpp \
     bindings/js/JSHTMLInputElementBase.cpp \
     bindings/js/JSHTMLOptionElementConstructor.cpp \
     bindings/js/JSHTMLOptionsCollectionCustom.cpp \
@@ -373,7 +408,6 @@ SOURCES += \
     editing/MergeIdenticalElementsCommand.cpp \
     editing/ModifySelectionListLevel.cpp \
     editing/MoveSelectionCommand.cpp \
-    editing/qt/EditorQt.cpp \
     editing/RemoveCSSPropertyCommand.cpp \
     editing/RemoveNodeAttributeCommand.cpp \
     editing/RemoveNodeCommand.cpp \
@@ -394,8 +428,7 @@ SOURCES += \
     history/BackForwardList.cpp \
     history/CachedPage.cpp \
     history/HistoryItem.cpp \
-    history/HistoryItemTimer.cpp \
-    history/qt/CachedPageQt.cpp \
+    history/PageCache.cpp \
     html/CanvasGradient.cpp \
     html/CanvasPattern.cpp \
     html/CanvasRenderingContext2D.cpp \
@@ -456,6 +489,7 @@ SOURCES += \
     html/HTMLParagraphElement.cpp \
     html/HTMLParamElement.cpp \
     html/HTMLParser.cpp \
+    html/HTMLParserErrorCodes.cpp \
     html/HTMLPlugInElement.cpp \
     html/HTMLPreElement.cpp \
     html/HTMLQuoteElement.cpp \
@@ -504,7 +538,6 @@ SOURCES += \
     loader/NetscapePlugInStreamLoader.cpp \
     loader/PluginDocument.cpp \
     loader/ProgressTracker.cpp \
-    loader/qt/DocumentLoaderQt.cpp \
     loader/Request.cpp \
     loader/ResourceLoader.cpp \
     loader/SubresourceLoader.cpp \
@@ -521,9 +554,6 @@ SOURCES += \
     page/FrameView.cpp \
     page/MouseEventWithHitTestResults.cpp \
     page/Page.cpp \
-    page/qt/DragControllerQt.cpp \
-    page/qt/EventHandlerQt.cpp \
-    page/qt/FrameQt.cpp \
     page/Settings.cpp \
     platform/Arena.cpp \
     platform/ArrayImpl.cpp \
@@ -561,20 +591,6 @@ SOURCES += \
     platform/graphics/Path.cpp \
     platform/graphics/PathTraversalState.cpp \
     platform/graphics/Pen.cpp \
-    platform/graphics/qt/AffineTransformQt.cpp \
-    platform/graphics/qt/ColorQt.cpp \
-    platform/graphics/qt/FloatPointQt.cpp \
-    platform/graphics/qt/FloatRectQt.cpp \
-    platform/graphics/qt/GraphicsContextQt.cpp \
-    platform/graphics/qt/IconQt.cpp \
-    platform/graphics/qt/ImageBufferQt.cpp \
-    platform/graphics/qt/ImageDecoderQt.cpp \
-    platform/graphics/qt/ImageQt.cpp \
-    platform/graphics/qt/ImageSourceQt.cpp \
-    platform/graphics/qt/IntPointQt.cpp \
-    platform/graphics/qt/IntRectQt.cpp \
-    platform/graphics/qt/IntSizeQt.cpp \
-    platform/graphics/qt/PathQt.cpp \
     platform/KURL.cpp \
     platform/Logging.cpp \
     platform/MimeTypeRegistry.cpp \
@@ -583,45 +599,9 @@ SOURCES += \
     platform/network/FormData.cpp \
     platform/network/HTTPParsers.cpp \
     platform/network/ProtectionSpace.cpp \
-    platform/network/qt/ResourceHandleManagerQt.cpp \
-    platform/network/qt/ResourceHandleQt.cpp \
     platform/network/ResourceHandle.cpp \
     platform/network/ResourceRequest.cpp \
     platform/network/ResourceResponse.cpp \
-    platform/qt/ClipboardQt.cpp \
-    platform/qt/ContextMenuItemQt.cpp \
-    platform/qt/ContextMenuQt.cpp \
-    platform/qt/CookieJarQt.cpp \
-    platform/qt/CursorQt.cpp \
-    platform/qt/DragDataQt.cpp \
-    platform/qt/DragImageQt.cpp \
-    platform/qt/FileChooserQt.cpp \
-    platform/qt/FontCacheQt.cpp \
-    platform/qt/FontDataQt.cpp \
-    platform/qt/FontPlatformDataQt.cpp \
-    platform/qt/FontQt.cpp \
-    platform/qt/GlyphPageTreeNodeQt.cpp \
-    platform/qt/MimeTypeRegistryQt.cpp \
-    platform/qt/PasteboardQt.cpp \
-    platform/qt/PlatformKeyboardEventQt.cpp \
-    platform/qt/PlatformMouseEventQt.cpp \
-    platform/qt/PlatformScrollBarQt.cpp \
-    platform/qt/PopupMenuQt.cpp \
-    platform/qt/QWebPopup.cpp \
-    platform/qt/RenderThemeQt.cpp \
-    platform/qt/ScreenQt.cpp \
-    platform/qt/ScrollViewQt.cpp \
-    platform/qt/SearchPopupMenuQt.cpp \
-    platform/qt/SharedTimerQt.cpp \
-    platform/qt/SoundQt.cpp \
-    platform/qt/StringQt.cpp \
-    platform/qt/SystemTimeQt.cpp \
-    platform/qt/TemporaryLinkStubs.cpp \
-    platform/qt/TextBoundaries.cpp \
-    platform/qt/TextBreakIteratorQt.cpp \
-    platform/qt/TextCodecQt.cpp \
-    platform/qt/WheelEventQt.cpp \
-    platform/qt/WidgetQt.cpp \
     platform/RegularExpression.cpp \
     platform/ScrollBar.cpp \
 #    platform/SearchPopupMenu.cpp \
@@ -648,6 +628,7 @@ SOURCES += \
     rendering/InlineBox.cpp \
     rendering/InlineFlowBox.cpp \
     rendering/InlineTextBox.cpp \
+    rendering/LayoutState.cpp \
     rendering/ListMarkerBox.cpp \
     rendering/RenderApplet.cpp \
     rendering/RenderArena.cpp \
@@ -690,6 +671,7 @@ SOURCES += \
     rendering/RenderTreeAsText.cpp \
     rendering/RenderView.cpp \
     rendering/RenderWidget.cpp \
+    rendering/RenderWordBreak.cpp \
     rendering/RootInlineBox.cpp \
     rendering/SVGRenderTreeAsText.cpp \
     xml/DOMParser.cpp \
@@ -713,7 +695,64 @@ SOURCES += \
     xml/XPathVariableReference.cpp \
     xml/XSLImportRule.cpp \
     xml/XSLStyleSheet.cpp \
-    xml/XSLTProcessor.cpp \
+    xml/XSLTProcessor.cpp
+
+qt-port:SOURCES += \
+    page/qt/DragControllerQt.cpp \
+    page/qt/EventHandlerQt.cpp \
+    page/qt/FrameQt.cpp \
+    loader/qt/DocumentLoaderQt.cpp \
+    platform/graphics/qt/AffineTransformQt.cpp \
+    platform/graphics/qt/ColorQt.cpp \
+    platform/graphics/qt/FloatPointQt.cpp \
+    platform/graphics/qt/FloatRectQt.cpp \
+    platform/graphics/qt/GraphicsContextQt.cpp \
+    platform/graphics/qt/IconQt.cpp \
+    platform/graphics/qt/ImageBufferQt.cpp \
+    platform/graphics/qt/ImageDecoderQt.cpp \
+    platform/graphics/qt/ImageQt.cpp \
+    platform/graphics/qt/ImageSourceQt.cpp \
+    platform/graphics/qt/IntPointQt.cpp \
+    platform/graphics/qt/IntRectQt.cpp \
+    platform/graphics/qt/IntSizeQt.cpp \
+    platform/graphics/qt/PathQt.cpp \
+    platform/network/qt/ResourceHandleQt.cpp \
+    editing/qt/EditorQt.cpp \
+    history/qt/CachedPageQt.cpp \
+    platform/qt/ClipboardQt.cpp \
+    platform/qt/ContextMenuItemQt.cpp \
+    platform/qt/ContextMenuQt.cpp \
+    platform/qt/CookieJarQt.cpp \
+    platform/qt/CursorQt.cpp \
+    platform/qt/DragDataQt.cpp \
+    platform/qt/DragImageQt.cpp \
+    platform/qt/FileChooserQt.cpp \
+    platform/qt/FontCacheQt.cpp \
+    platform/qt/FontDataQt.cpp \
+    platform/qt/FontPlatformDataQt.cpp \
+    platform/qt/FontQt.cpp \
+    platform/qt/GlyphPageTreeNodeQt.cpp \
+    platform/qt/MimeTypeRegistryQt.cpp \
+    platform/qt/PasteboardQt.cpp \
+    platform/qt/PlatformKeyboardEventQt.cpp \
+    platform/qt/PlatformMouseEventQt.cpp \
+    platform/qt/PlatformScrollBarQt.cpp \
+    platform/qt/PopupMenuQt.cpp \
+    platform/qt/QWebPopup.cpp \
+    platform/qt/RenderThemeQt.cpp \
+    platform/qt/ScreenQt.cpp \
+    platform/qt/ScrollViewQt.cpp \
+    platform/qt/SearchPopupMenuQt.cpp \
+    platform/qt/SharedTimerQt.cpp \
+    platform/qt/SoundQt.cpp \
+    platform/qt/StringQt.cpp \
+    platform/qt/SystemTimeQt.cpp \
+    platform/qt/TemporaryLinkStubs.cpp \
+    platform/qt/TextBoundaries.cpp \
+    platform/qt/TextBreakIteratorQt.cpp \
+    platform/qt/TextCodecQt.cpp \
+    platform/qt/WheelEventQt.cpp \
+    platform/qt/WidgetQt.cpp \
     ../WebKitQt/WebCoreSupport/ChromeClientQt.cpp \
     ../WebKitQt/WebCoreSupport/ContextMenuClientQt.cpp \
     ../WebKitQt/WebCoreSupport/DragClientQt.cpp \
@@ -721,9 +760,106 @@ SOURCES += \
     ../WebKitQt/WebCoreSupport/EditCommandQt.cpp \
     ../WebKitQt/WebCoreSupport/FrameLoaderClientQt.cpp \
     ../WebKitQt/Api/qwebframe.cpp \
+    ../WebKitQt/Api/qwebnetworkinterface.cpp \
     ../WebKitQt/Api/qcookiejar.cpp \
     ../WebKitQt/Api/qwebpage.cpp \
     ../WebKitQt/Api/qwebpagehistory.cpp
+
+gdk-port:SOURCES += \
+        platform/TextCodecICU.cpp \
+        platform/TextBreakIteratorICU.cpp \
+        page/gdk/EventHandlerGdk.cpp \
+        page/gdk/ContextMenuClientGdk.cpp \
+        page/gdk/DragControllerGdk.cpp \
+        loader/gdk/DocumentLoaderGdk.cpp \
+        loader/gdk/FrameLoaderClientGdk.cpp \
+        platform/gdk/CookieJarGdk.cpp \
+        platform/gdk/CursorGdk.cpp \
+        platform/gdk/DragDataGdk.cpp \
+        platform/gdk/DragImageGdk.cpp \
+        platform/gdk/EditorClientGdk.cpp \
+        platform/gdk/FontCacheGdk.cpp \
+        platform/gdk/FontDataGdk.cpp \
+        platform/gdk/FontGdk.cpp \
+        platform/gdk/FontPlatformDataGdk.cpp \
+        platform/gdk/FrameGdk.cpp \
+        platform/gdk/GlyphPageTreeNodeGdk.cpp \
+        platform/gdk/KeyEventGdk.cpp \
+        platform/gdk/MimeTypeRegistryGdk.cpp \
+        platform/gdk/MouseEventGdk.cpp \
+        platform/gdk/PlatformScrollBarGdk.cpp \
+        platform/gdk/PopupMenuGdk.cpp \
+        platform/gdk/RenderThemeGdk.cpp \
+        platform/gdk/ScrollViewGdk.cpp \
+        platform/gdk/ScreenGdk.cpp \
+        platform/gdk/SharedTimerLinux.cpp \
+        platform/gdk/SystemTimeLinux.cpp \
+        platform/gdk/TemporaryLinkStubs.cpp \
+        platform/gdk/WheelEventGdk.cpp \
+        platform/gdk/WidgetGdk.cpp \
+        platform/graphics/gdk/ImageGdk.cpp \
+        platform/network/gdk/ResourceHandleCurl.cpp \
+        platform/network/gdk/ResourceHandleManager.cpp \
+        platform/graphics/cairo/AffineTransformCairo.cpp \
+        platform/graphics/cairo/GraphicsContextCairo.cpp \
+        platform/graphics/cairo/ImageBufferCairo.cpp \
+        platform/graphics/cairo/ImageCairo.cpp \
+        platform/graphics/cairo/ImageSourceCairo.cpp \
+        platform/graphics/cairo/PathCairo.cpp \
+        platform/image-decoders/gif/GIFImageDecoder.cpp \
+        platform/image-decoders/gif/GIFImageReader.cpp  \
+        platform/image-decoders/png/PNGImageDecoder.cpp \
+        platform/image-decoders/png/png.c \
+        platform/image-decoders/png/pngerror.c \
+        platform/image-decoders/png/pnggccrd.c \
+        platform/image-decoders/png/pngget.c \
+        platform/image-decoders/png/pngmem.c \
+        platform/image-decoders/png/pngpread.c \
+        platform/image-decoders/png/pngread.c \
+        platform/image-decoders/png/pngrio.c \
+        platform/image-decoders/png/pngrtran.c \
+        platform/image-decoders/png/pngrutil.c \
+        platform/image-decoders/png/pngset.c \
+        platform/image-decoders/png/pngtrans.c \
+        platform/image-decoders/png/pngvcrd.c \
+        platform/image-decoders/png/pngwio.c \
+        platform/image-decoders/png/pngwrite.c \
+        platform/image-decoders/png/pngwtran.c \
+        platform/image-decoders/png/pngwutil.c \
+        platform/image-decoders/jpeg/JPEGImageDecoder.cpp \
+        platform/image-decoders/jpeg/jcomapi.c \
+        platform/image-decoders/jpeg/jdapimin.c \
+        platform/image-decoders/jpeg/jdapistd.c \
+        platform/image-decoders/jpeg/jdatadst.c \
+        platform/image-decoders/jpeg/jdatasrc.c \
+        platform/image-decoders/jpeg/jdcoefct.c \
+        platform/image-decoders/jpeg/jdcolor.c \
+        platform/image-decoders/jpeg/jddctmgr.c \
+        platform/image-decoders/jpeg/jdhuff.c \
+        platform/image-decoders/jpeg/jdinput.c \
+        platform/image-decoders/jpeg/jdmainct.c \
+        platform/image-decoders/jpeg/jdmarker.c \
+        platform/image-decoders/jpeg/jdmaster.c \
+        platform/image-decoders/jpeg/jdmerge.c \
+        platform/image-decoders/jpeg/jdphuff.c \
+        platform/image-decoders/jpeg/jdpostct.c \
+        platform/image-decoders/jpeg/jdsample.c \
+        platform/image-decoders/jpeg/jerror.c \
+        platform/image-decoders/jpeg/jfdctflt.c \
+        platform/image-decoders/jpeg/jfdctfst.c \
+        platform/image-decoders/jpeg/jfdctint.c \
+        platform/image-decoders/jpeg/jidctflt.c \
+        platform/image-decoders/jpeg/jidctfst.c \
+        platform/image-decoders/jpeg/jidctint.c \
+        platform/image-decoders/jpeg/jmemmgr.c \
+        platform/image-decoders/jpeg/jmemnobs.c \
+        platform/image-decoders/jpeg/jquant1.c \
+        platform/image-decoders/jpeg/jquant2.c \
+        platform/image-decoders/jpeg/jutils.c \
+        platform/image-decoders/bmp/BMPImageDecoder.cpp \
+        platform/image-decoders/ico/ICOImageDecoder.cpp \
+        platform/image-decoders/xbm/XBMImageDecoder.cpp
+ 
 
 contains(DEFINES, ENABLE_XPATH=1) {
     FEATURE_DEFINES_JAVASCRIPT += ENABLE_XPATH
@@ -749,6 +885,11 @@ contains(DEFINES, ENABLE_XBL=1) {
 
 contains(DEFINES, ENABLE_SVG=1) {
     FEATURE_DEFINES_JAVASCRIPT += ENABLE_SVG
+
+    DEPENDPATH += ksvg2/css ksvg2/events ksvg2/misc ksvg2/svg platform/graphics/svg
+    qt-port {
+	DEPENDPATH += platform/graphics/svg/qt
+    }
 
     SVG_NAMES = $$PWD/ksvg2/svg/svgtags.in
 
@@ -1024,16 +1165,6 @@ contains(DEFINES, ENABLE_SVG=1) {
         platform/graphics/svg/filters/SVGFETurbulence.cpp \
         platform/graphics/svg/filters/SVGFilterEffect.cpp \
         platform/graphics/svg/filters/SVGLightSource.cpp \
-        platform/graphics/svg/qt/RenderPathQt.cpp \
-        platform/graphics/svg/qt/SVGPaintServerGradientQt.cpp \
-        platform/graphics/svg/qt/SVGPaintServerLinearGradientQt.cpp \
-        platform/graphics/svg/qt/SVGPaintServerPatternQt.cpp \
-        platform/graphics/svg/qt/SVGPaintServerQt.cpp \
-        platform/graphics/svg/qt/SVGPaintServerRadialGradientQt.cpp \
-        platform/graphics/svg/qt/SVGPaintServerSolidQt.cpp \
-        platform/graphics/svg/qt/SVGResourceClipperQt.cpp \
-        platform/graphics/svg/qt/SVGResourceFilterQt.cpp \
-        platform/graphics/svg/qt/SVGResourceMaskerQt.cpp \
         platform/graphics/svg/SVGImage.cpp \
         platform/graphics/svg/SVGPaintServer.cpp \
         platform/graphics/svg/SVGPaintServerGradient.cpp \
@@ -1051,7 +1182,7 @@ contains(DEFINES, ENABLE_SVG=1) {
         rendering/RenderSVGBlock.cpp \
         rendering/RenderSVGContainer.cpp \
         rendering/RenderSVGGradientStop.cpp \
-        rendering/RenderSVGHiddenContainer.cpp \ 
+        rendering/RenderSVGHiddenContainer.cpp \
         rendering/RenderSVGImage.cpp \
         rendering/RenderSVGInline.cpp \
         rendering/RenderSVGInlineText.cpp \
@@ -1060,6 +1191,18 @@ contains(DEFINES, ENABLE_SVG=1) {
         rendering/SVGInlineFlowBox.cpp \
         rendering/SVGInlineTextBox.cpp \
         rendering/SVGRootInlineBox.cpp
+
+qt-port:SOURCES += \
+        platform/graphics/svg/qt/RenderPathQt.cpp \
+        platform/graphics/svg/qt/SVGPaintServerGradientQt.cpp \
+        platform/graphics/svg/qt/SVGPaintServerLinearGradientQt.cpp \
+        platform/graphics/svg/qt/SVGPaintServerPatternQt.cpp \
+        platform/graphics/svg/qt/SVGPaintServerQt.cpp \
+        platform/graphics/svg/qt/SVGPaintServerRadialGradientQt.cpp \
+        platform/graphics/svg/qt/SVGPaintServerSolidQt.cpp \
+        platform/graphics/svg/qt/SVGResourceClipperQt.cpp \
+        platform/graphics/svg/qt/SVGResourceFilterQt.cpp \
+        platform/graphics/svg/qt/SVGResourceMaskerQt.cpp
 
         # GENERATOR 5-C:
         svgnames_a.output = tmp/SVGNames.cpp

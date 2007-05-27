@@ -89,30 +89,10 @@ IntRect Widget::frameGeometry() const
     return IntRect();
 }
 
-bool Widget::hasFocus() const
-{
-    wxWindow* focus = wxWindow::FindFocus();
-    return (data->nativeWindow == focus);
-}
-
 void Widget::setFocus()
 {
     if (data->nativeWindow)
         data->nativeWindow->SetFocus();
-}
-
-void Widget::clearFocus()
-{
-}
-
-const Font& Widget::font() const
-{
-    return data->font;
-}
-
-void Widget::setFont(const Font& font)
-{
-    data->font = font;
 }
 
 void Widget::setCursor(const Cursor& cursor)

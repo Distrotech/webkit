@@ -1,6 +1,6 @@
 // -*- mode: c++; c-basic-offset: 4 -*-
 /*
- * Copyright (C) 2006-2007 Apple Inc.
+ * Copyright (C) 2006, 2007 Apple Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,6 +25,12 @@
 #include <wtf/Forward.h>
 #include <wtf/RefPtr.h>
 
+#if PLATFORM(MAC)
+#ifndef __OBJC__
+class NSView;
+#endif
+#endif
+
 namespace WebCore {
 
     class ChromeClient;
@@ -37,6 +43,19 @@ namespace WebCore {
     
     struct FrameLoadRequest;
     
+    enum MessageSource {
+        HTMLMessageSource,
+        XMLMessageSource,
+        JSMessageSource,
+        CSSMessageSource
+    };
+
+    enum MessageLevel {
+        LogMessageLevel,
+        WarningMessageLevel,
+        ErrorMessageLevel
+    };
+
     class Chrome {
     public:
         Chrome(Page*, ChromeClient*);
@@ -79,7 +98,7 @@ namespace WebCore {
         
         void setResizable(bool) const;
 
-        void addMessageToConsole(const String& message, unsigned int lineNumber, const String& sourceID);
+        void addMessageToConsole(MessageSource, MessageLevel, const String& message, unsigned lineNumber, const String& sourceID);
 
         bool canRunBeforeUnloadConfirmPanel();
         bool runBeforeUnloadConfirmPanel(const String& message, Frame* frame);
@@ -96,6 +115,10 @@ namespace WebCore {
         void addToDirtyRegion(const IntRect&);
         void scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect);
         void updateBackingStore();
+
+#if PLATFORM(MAC)
+        void focusNSView(NSView*);
+#endif
 
     private:
         Page* m_page;

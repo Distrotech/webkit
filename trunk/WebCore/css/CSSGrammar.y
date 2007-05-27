@@ -3,7 +3,7 @@
 /*
  *  This file is part of the KDE libraries
  *  Copyright (C) 2002-2003 Lars Knoll (knoll@kde.org)
- *  Copyright (C) 2004, 2005, 2006 Apple Computer, Inc.
+ *  Copyright (C) 2004, 2005, 2006, 2007 Apple Inc.
  *  Copyright (C) 2006 Alexey Proskuryakov (ap@nypop.com)
  *
  *  This library is free software; you can redistribute it and/or
@@ -851,6 +851,10 @@ pseudo:
             Document* doc = p->document();
             if (doc)
                 doc->setUsesSiblingRules(true);
+        } else if (type == CSSSelector::PseudoFirstLine) {
+            CSSParser* p = static_cast<CSSParser*>(parser);
+            if (Document* doc = p->document())
+                doc->setUsesFirstLineRules(true);
         }
     }
     | ':' ':' IDENT {
@@ -858,8 +862,14 @@ pseudo:
         $$->m_match = CSSSelector::PseudoElement;
         $3.lower();
         $$->m_value = atomicString($3);
-        if ($$->pseudoType() == CSSSelector::PseudoUnknown)
+        CSSSelector::PseudoType type = $$->pseudoType();
+        if (type == CSSSelector::PseudoUnknown)
             $$ = 0;
+        else if (type == CSSSelector::PseudoFirstLine) {
+            CSSParser* p = static_cast<CSSParser*>(parser);
+            if (Document* doc = p->document())
+                doc->setUsesFirstLineRules(true);
+        }
     }
     // used by :lang
     | ':' FUNCTION IDENT ')' {

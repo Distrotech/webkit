@@ -31,6 +31,7 @@
 #include "Document.h"
 #include "HTMLNames.h"
 #include "RenderTableCell.h"
+#include "RenderView.h"
 
 namespace WebCore {
 
@@ -63,6 +64,10 @@ void RenderTableRow::setStyle(RenderStyle* newStyle)
 
 void RenderTableRow::addChild(RenderObject* child, RenderObject* beforeChild)
 {
+    // Make sure we don't append things after :after-generated content if we have it.
+    if (!beforeChild && isAfterContent(lastChild()))
+        beforeChild = lastChild();
+
     bool isTableRow = element() && element()->hasTagName(trTag);
     
     if (!child->isTableCell()) {
@@ -101,7 +106,9 @@ void RenderTableRow::addChild(RenderObject* child, RenderObject* beforeChild)
 
     RenderTableCell* cell = static_cast<RenderTableCell*>(child);
 
-    section()->addCell(cell, this);
+    // Generated content can result in us having a null section so make sure to null check our parent.
+    if (parent())
+        section()->addCell(cell, this);
 
     RenderContainer::addChild(cell, beforeChild);
 
@@ -112,7 +119,9 @@ void RenderTableRow::addChild(RenderObject* child, RenderObject* beforeChild)
 void RenderTableRow::layout()
 {
     ASSERT(needsLayout());
-    ASSERT(minMaxKnown());
+
+    // Table rows do not add translation.
+    view()->pushLayoutState(this, IntSize());
 
     for (RenderObject* child = firstChild(); child; child = child->nextSibling()) {
         if (child->isTableCell()) {
@@ -123,6 +132,8 @@ void RenderTableRow::layout()
             }
         }
     }
+
+    view()->popLayoutState();
     setNeedsLayout(false);
 }
 
@@ -147,7 +158,7 @@ bool RenderTableRow::nodeAtPoint(const HitTestRequest& request, HitTestResult& r
         // at the moment (a demoted inline <form> for example). If we ever implement a
         // table-specific hit-test method (which we should do for performance reasons anyway),
         // then we can remove this check.
-        if (!child->layer() && !child->isInlineFlow() && child->nodeAtPoint(request, result, x, y, tx, ty, action)) {
+        if (!child->hasLayer() && !child->isInlineFlow() && child->nodeAtPoint(request, result, x, y, tx, ty, action)) {
             updateHitTestResult(result, IntPoint(x - tx, y - ty));
             return true;
         }
@@ -169,7 +180,7 @@ void RenderTableRow::paint(PaintInfo& paintInfo, int tx, int ty)
                 RenderTableCell* cell = static_cast<RenderTableCell*>(child);
                 cell->paintBackgroundsBehindCell(paintInfo, tx, ty, this);
             }
-            if (!child->layer())
+            if (!child->hasLayer())
                 child->paint(paintInfo, tx, ty);
         }
     }

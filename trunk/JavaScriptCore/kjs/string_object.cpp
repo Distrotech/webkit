@@ -551,7 +551,7 @@ JSValue* StringProtoFunc::callAsFunction(ExecState* exec, JSObject* thisObj, con
           // if there are no matches at all, it's important to return
           // Null instead of an empty array, because this matches
           // other browsers and because Null is a false value.
-          result = jsNull(); 
+          result = jsNull();
         } else {
           result = exec->lexicalInterpreter()->builtinArray()->construct(exec, list);
         }
@@ -713,6 +713,8 @@ JSValue* StringProtoFunc::callAsFunction(ExecState* exec, JSObject* thisObj, con
     break;
   }
   case LocaleCompare:
+    if (args.size() < 1)
+      return jsNumber(0);
     return jsNumber(localeCompare(s, a0->toString(exec)));
 #ifndef KJS_PURE_ECMA
   case Big:

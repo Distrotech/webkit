@@ -514,7 +514,7 @@ bool CSSParser::parseValue(int propId, bool important)
     else if (id == CSS_VAL_INITIAL) {
         if (num != 1)
             return false;
-        addProperty(propId, new CSSInitialValue(), important);
+        addProperty(propId, new CSSInitialValue(false), important);
         return true;
     }
 
@@ -905,6 +905,11 @@ bool CSSParser::parseValue(int propId, bool important)
             valid_primitive = validUnit(value, FLength, strict);
         break;
 
+    case CSS_PROP_WORD_BREAK:          // normal | break-all | break-word (this is a custom extension)
+        if (id == CSS_VAL_NORMAL || id == CSS_VAL_BREAK_ALL || CSS_VAL_BREAK_WORD)
+            valid_primitive = true;
+        break;
+
     case CSS_PROP_WORD_WRAP:           // normal | break-word
         if (id == CSS_VAL_NORMAL || id == CSS_VAL_BREAK_WORD)
             valid_primitive = true;
@@ -1179,14 +1184,9 @@ bool CSSParser::parseValue(int propId, bool important)
     case CSS_PROP__WEBKIT_BOX_ORDINAL_GROUP:
         valid_primitive = validUnit(value, FInteger|FNonNeg, true);
         break;
-    case CSS_PROP_BOX_SIZING: {
-        // We don't preface this with -webkit, since MacIE defined this property without the prefix.
-        // Thus the damage has been done, and it's known that this property's definition isn't going
-        // to fluctuate.
-        if (id == CSS_VAL_BORDER_BOX || id == CSS_VAL_CONTENT_BOX)
-            valid_primitive = true;
+    case CSS_PROP__WEBKIT_BOX_SIZING:
+        valid_primitive = id == CSS_VAL_BORDER_BOX || id == CSS_VAL_CONTENT_BOX;
         break;
-    }
     case CSS_PROP__WEBKIT_MARQUEE: {
         const int properties[5] = { CSS_PROP__WEBKIT_MARQUEE_DIRECTION, CSS_PROP__WEBKIT_MARQUEE_INCREMENT,
                                     CSS_PROP__WEBKIT_MARQUEE_REPETITION,
@@ -1553,9 +1553,9 @@ bool CSSParser::parseBackgroundShorthand(bool important)
                     goto fail;
 
                 if (!parsedProperty[i] && properties[i] != CSS_PROP_BACKGROUND_COLOR) {
-                    addBackgroundValue(values[i], new CSSInitialValue());
+                    addBackgroundValue(values[i], new CSSInitialValue(true));
                     if (properties[i] == CSS_PROP_BACKGROUND_POSITION)
-                        addBackgroundValue(positionYValue, new CSSInitialValue());
+                        addBackgroundValue(positionYValue, new CSSInitialValue(true));
                 }
                 parsedProperty[i] = false;
             }
@@ -1586,9 +1586,9 @@ bool CSSParser::parseBackgroundShorthand(bool important)
     // Fill in any remaining properties with the initial value.
     for (i = 0; i < numProperties; ++i) {
         if (!parsedProperty[i]) {
-            addBackgroundValue(values[i], new CSSInitialValue());
+            addBackgroundValue(values[i], new CSSInitialValue(true));
             if (properties[i] == CSS_PROP_BACKGROUND_POSITION)
-                addBackgroundValue(positionYValue, new CSSInitialValue());
+                addBackgroundValue(positionYValue, new CSSInitialValue(true));
         }
     }
     
@@ -1642,7 +1642,7 @@ bool CSSParser::parseShorthand(int propId, const int *properties, int numPropert
     m_implicitShorthand = true;
     for (int i = 0; i < numProperties; ++i) {
         if (!fnd[i])
-            addProperty(properties[i], new CSSInitialValue(), important);
+            addProperty(properties[i], new CSSInitialValue(true), important);
     }
     m_implicitShorthand = false;
 
@@ -2062,6 +2062,8 @@ bool CSSParser::parseDashboardRegions(int propId, bool important)
     Value *value = valueList->current();
 
     if (value->id == CSS_VAL_NONE) {
+        if (valueList->next())
+            return false;
         addProperty(propId, new CSSPrimitiveValue(value->id), important);
         return valid;
     }
@@ -2133,9 +2135,8 @@ bool CSSParser::parseDashboardRegions(int propId, bool important)
         region->m_geometryType = domString(arg->string);
 
         if (numArgs == DASHBOARD_REGION_SHORT_NUM_PARAMETERS || numArgs == (DASHBOARD_REGION_SHORT_NUM_PARAMETERS*2-1)) {
-            CSSPrimitiveValue *amount = arg->id == CSS_VAL_AUTO ?
-                new CSSPrimitiveValue(CSS_VAL_AUTO) :
-                new CSSPrimitiveValue((double)0, (CSSPrimitiveValue::UnitTypes) arg->unit);
+            // This originally used CSS_VAL_INVALID by accident. It might be more logical to use something else.
+            CSSPrimitiveValue *amount = new CSSPrimitiveValue(CSS_VAL_INVALID);
                 
             region->setTop(amount);
             region->setRight(amount);
@@ -2167,6 +2168,9 @@ bool CSSParser::parseDashboardRegions(int propId, bool important)
                     region->setLeft(amount);
             }
         }
+
+        if (args->next())
+            return false;
 
         value = valueList->next();
     }

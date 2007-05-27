@@ -44,7 +44,7 @@ typedef struct objc_object* id;
 
 namespace WebCore {
 
-class CachedPage;
+class Document;
 class Image;
 class KURL;
 class ResourceRequest;
@@ -55,7 +55,6 @@ typedef Vector<RefPtr<HistoryItem> > HistoryItemVector;
 extern void (*notifyHistoryItemChanged)();
 
 class HistoryItem : public Shared<HistoryItem> {
-    friend class HistoryItemTimer;
 public: 
     HistoryItem();
     HistoryItem(const String& urlString, const String& title, double lastVisited);
@@ -70,6 +69,9 @@ public:
     const String& urlString() const;
     const String& title() const;
     
+    void setInPageCache(bool inPageCache) { m_isInPageCache = inPageCache; }
+    bool isInPageCache() const { return m_isInPageCache; }
+    
     double lastVisitedTime() const;
     
     void setAlternateTitle(const String& alternateTitle);
@@ -77,11 +79,6 @@ public:
     
     Image* icon() const;
     
-    void retainIconInDatabase(bool retain);
-    static void performPendingReleaseOfCachedPages();
-    void setCachedPage(PassRefPtr<CachedPage>);
-    CachedPage* cachedPage();
-
     const String& parent() const;
     KURL url() const;
     KURL originalURL() const;
@@ -124,12 +121,11 @@ public:
     const HistoryItemVector& children() const;
     bool hasChildren() const;
 
-    void setAlwaysAttemptToUseCachedPage(bool);
-    bool alwaysAttemptToUseCachedPage() const;
-
     // This should not be called directly for HistoryItems that are already included
     // in GlobalHistory. The WebKit api for this is to use -[WebHistory setLastVisitedTimeInterval:forItem:] instead.
     void setLastVisitedTime(double);
+    
+    bool isCurrentDocument(Document*) const;
     
 #if PLATFORM(MAC)
     id viewState() const;
@@ -141,8 +137,6 @@ public:
     void setTransientProperty(const String&, id);
 #endif
 
-    void scheduleCachedPageForRelease();
-    
 #ifndef NDEBUG
     int showTree() const;
     int showTreeWithIndent(unsigned indentLevel) const;
@@ -150,7 +144,6 @@ public:
 
 private:
     HistoryItem(const HistoryItem&);
-    static void releaseCachedPagesOrReschedule();
     
     String m_urlString;
     String m_originalURLString;
@@ -160,16 +153,14 @@ private:
     String m_displayTitle;
     
     double m_lastVisitedTime;
-    
+
     IntPoint m_scrollPoint;
     Vector<String> m_documentState;
     
     HistoryItemVector m_subItems;
     
-    RefPtr<CachedPage> m_cachedPage;
-    
+    bool m_isInPageCache;
     bool m_isTargetItem;
-    bool m_alwaysAttemptToUseCachedPage;
     int m_visitCount;
     
     // info used to repost form data
@@ -179,7 +170,7 @@ private:
     
     // info used to support RSS feeds
     String m_rssFeedReferrer;
-    
+
 #if PLATFORM(MAC)
     RetainPtr<id> m_viewState;
     OwnPtr<HashMap<String, RetainPtr<id> > > m_transientProperties;

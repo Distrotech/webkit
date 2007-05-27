@@ -60,7 +60,6 @@ static const int computedProperties[] = {
     CSS_PROP_BORDER_TOP_STYLE,
     CSS_PROP_BORDER_TOP_WIDTH,
     CSS_PROP_BOTTOM,
-    CSS_PROP_BOX_SIZING,
     CSS_PROP_CAPTION_SIDE,
     CSS_PROP_CLEAR,
     CSS_PROP_COLOR,
@@ -140,6 +139,7 @@ static const int computedProperties[] = {
     CSS_PROP__WEBKIT_BOX_ORIENT,
     CSS_PROP__WEBKIT_BOX_PACK,
     CSS_PROP__WEBKIT_BOX_SHADOW,
+    CSS_PROP__WEBKIT_BOX_SIZING,
     CSS_PROP__WEBKIT_COLUMN_BREAK_AFTER,
     CSS_PROP__WEBKIT_COLUMN_BREAK_BEFORE,
     CSS_PROP__WEBKIT_COLUMN_BREAK_INSIDE,
@@ -825,6 +825,12 @@ PassRefPtr<CSSValue> CSSComputedStyleDeclaration::getPropertyCSSValue(int proper
                 case CURSOR_NOT_ALLOWED:
                     value = new CSSPrimitiveValue(CSS_VAL_NOT_ALLOWED);
                     break;
+                case CURSOR_WEBKIT_ZOOM_IN:
+                    value = new CSSPrimitiveValue(CSS_VAL__WEBKIT_ZOOM_IN);
+                    break;
+                case CURSOR_WEBKIT_ZOOM_OUT:
+                    value = new CSSPrimitiveValue(CSS_VAL__WEBKIT_ZOOM_OUT);
+                    break;
                 case CURSOR_E_RESIZE:
                     value = new CSSPrimitiveValue(CSS_VAL_E_RESIZE);
                     break;
@@ -1407,13 +1413,22 @@ PassRefPtr<CSSValue> CSSComputedStyleDeclaration::getPropertyCSSValue(int proper
             return new CSSPrimitiveValue(style->widows(), CSSPrimitiveValue::CSS_NUMBER);
         case CSS_PROP_WIDTH:
             return new CSSPrimitiveValue(renderer->contentWidth(), CSSPrimitiveValue::CSS_PX);
+        case CSS_PROP_WORD_BREAK:
+            switch (style->wordBreak()) {
+                case NormalWordBreak:
+                    return new CSSPrimitiveValue(CSS_VAL_NORMAL);
+                case BreakAllWordBreak:
+                    return new CSSPrimitiveValue(CSS_VAL_BREAK_ALL);
+                case BreakWordBreak:
+                    return new CSSPrimitiveValue(CSS_VAL_BREAK_WORD);
+            }
         case CSS_PROP_WORD_SPACING:
             return new CSSPrimitiveValue(style->wordSpacing(), CSSPrimitiveValue::CSS_PX);
         case CSS_PROP_WORD_WRAP:
             switch (style->wordWrap()) {
-                case WBNORMAL:
+                case NormalWordWrap:
                     return new CSSPrimitiveValue(CSS_VAL_NORMAL);
-                case BREAK_WORD:
+                case BreakWordWrap:
                     return new CSSPrimitiveValue(CSS_VAL_BREAK_WORD);
             }
             ASSERT_NOT_REACHED();
@@ -1462,7 +1477,7 @@ PassRefPtr<CSSValue> CSSComputedStyleDeclaration::getPropertyCSSValue(int proper
             if (style->hasAutoZIndex())
                 return new CSSPrimitiveValue(CSS_VAL_NORMAL);
             return new CSSPrimitiveValue(style->zIndex(), CSSPrimitiveValue::CSS_NUMBER);
-        case CSS_PROP_BOX_SIZING:
+        case CSS_PROP__WEBKIT_BOX_SIZING:
             if (style->boxSizing() == CONTENT_BOX)
                 return new CSSPrimitiveValue(CSS_VAL_CONTENT_BOX);
             return new CSSPrimitiveValue(CSS_VAL_BORDER_BOX);

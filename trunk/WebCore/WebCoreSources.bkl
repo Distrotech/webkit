@@ -47,10 +47,13 @@
         DerivedSources/WebCore/JSHTMLFieldSetElement.cpp
         DerivedSources/WebCore/JSHTMLFontElement.cpp
         DerivedSources/WebCore/JSHTMLFormElement.cpp
+        DerivedSources/WebCore/JSHTMLFrameElement.cpp
+        DerivedSources/WebCore/JSHTMLFrameSetElement.cpp
         DerivedSources/WebCore/JSHTMLHRElement.cpp
         DerivedSources/WebCore/JSHTMLHeadElement.cpp
         DerivedSources/WebCore/JSHTMLHeadingElement.cpp
         DerivedSources/WebCore/JSHTMLHtmlElement.cpp
+        DerivedSources/WebCore/JSHTMLIFrameElement.cpp
         DerivedSources/WebCore/JSHTMLImageElement.cpp
         DerivedSources/WebCore/JSHTMLInputElement.cpp
         DerivedSources/WebCore/JSHTMLIsIndexElement.cpp
@@ -59,6 +62,7 @@
         DerivedSources/WebCore/JSHTMLLegendElement.cpp
         DerivedSources/WebCore/JSHTMLLinkElement.cpp
         DerivedSources/WebCore/JSHTMLMapElement.cpp
+        DerivedSources/WebCore/JSHTMLMarqueeElement.cpp
         DerivedSources/WebCore/JSHTMLMenuElement.cpp
         DerivedSources/WebCore/JSHTMLMetaElement.cpp
         DerivedSources/WebCore/JSHTMLModElement.cpp
@@ -73,6 +77,12 @@
         DerivedSources/WebCore/JSHTMLScriptElement.cpp
         DerivedSources/WebCore/JSHTMLSelectElement.cpp
         DerivedSources/WebCore/JSHTMLStyleElement.cpp
+        DerivedSources/WebCore/JSHTMLTableElement.cpp
+        DerivedSources/WebCore/JSHTMLTableCaptionElement.cpp
+        DerivedSources/WebCore/JSHTMLTableCellElement.cpp
+        DerivedSources/WebCore/JSHTMLTableColElement.cpp
+        DerivedSources/WebCore/JSHTMLTableRowElement.cpp
+        DerivedSources/WebCore/JSHTMLTableSectionElement.cpp
         DerivedSources/WebCore/JSHTMLTextAreaElement.cpp
         DerivedSources/WebCore/JSHTMLTitleElement.cpp
         DerivedSources/WebCore/JSHTMLUListElement.cpp
@@ -105,9 +115,9 @@
 
     <set append="1" var="WEBCORE_SOURCES_HISTORY">
         history/BackForwardList.cpp
-        history/HistoryItem.cpp
-        history/HistoryItemTimer.cpp
         history/CachedPage.cpp
+        history/PageCache.cpp
+        history/HistoryItem.cpp
     </set>
 
     <set append="1" var="WEBCORE_SOURCES_PAGE">
@@ -441,6 +451,7 @@
         rendering/InlineBox.cpp
         rendering/InlineFlowBox.cpp
         rendering/InlineTextBox.cpp
+        rendering/LayoutState.cpp
         rendering/ListMarkerBox.cpp
         rendering/RenderApplet.cpp
         rendering/RenderArena.cpp
@@ -483,6 +494,7 @@
         rendering/RenderTreeAsText.cpp
         rendering/RenderView.cpp
         rendering/RenderWidget.cpp
+        rendering/RenderWordBreak.cpp
         rendering/RootInlineBox.cpp
         rendering/bidi.cpp
         rendering/break_lines.cpp
@@ -694,6 +706,7 @@
         html/HTMLParagraphElement.cpp
         html/HTMLParamElement.cpp
         html/HTMLParser.cpp
+        html/HTMLParserErrorCodes.cpp
         html/HTMLPlugInElement.cpp
         html/HTMLPreElement.cpp
         html/HTMLQuoteElement.cpp
@@ -719,8 +732,11 @@
         bindings/js/JSCanvasRenderingContext2DCustom.cpp
         bindings/js/JSCustomXPathNSResolver.cpp
         bindings/js/JSDocumentCustom.cpp
+        bindings/js/JSHTMLAnchorElementCustom.cpp
         bindings/js/JSHTMLElementWrapperFactory.cpp
         bindings/js/JSHTMLFormElementCustom.cpp
+        bindings/js/JSHTMLFrameSetElementCustom.cpp
+        bindings/js/JSHTMLDocumentCustom.cpp
         bindings/js/JSHTMLInputElementBase.cpp
         bindings/js/JSHTMLOptionElementConstructor.cpp
         bindings/js/JSHTMLOptionsCollectionCustom.cpp

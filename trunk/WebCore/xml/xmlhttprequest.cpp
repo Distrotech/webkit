@@ -404,8 +404,9 @@ void XMLHttpRequest::send(const String& body, ExceptionCode& ec)
         String contentType = getRequestHeader("Content-Type");
         if (contentType.isEmpty()) {
             ExceptionCode ec = 0;
-            if (m_doc->frame() && m_doc->frame()->settings()->usesDashboardBackwardCompatibilityMode())
-                setRequestHeader("Content-Type", "application/x-form-urlencoded", ec);
+            Settings* settings = m_doc->settings();
+            if (settings && settings->usesDashboardBackwardCompatibilityMode())
+                setRequestHeader("Content-Type", "application/x-www-form-urlencoded", ec);
             else
                 setRequestHeader("Content-Type", "application/xml", ec);
             ASSERT(ec == 0);
@@ -490,7 +491,8 @@ void XMLHttpRequest::overrideMIMEType(const String& override)
 void XMLHttpRequest::setRequestHeader(const String& name, const String& value, ExceptionCode& ec)
 {
     if (m_state != Open) {
-        if (m_doc && m_doc->frame() && m_doc->frame()->settings()->usesDashboardBackwardCompatibilityMode())
+        Settings* settings = m_doc ? m_doc->settings() : 0;
+        if (settings && settings->usesDashboardBackwardCompatibilityMode())
             return;
 
         ec = INVALID_STATE_ERR;
@@ -499,7 +501,7 @@ void XMLHttpRequest::setRequestHeader(const String& name, const String& value, E
 
     if (!canSetRequestHeader(name)) {
         if (m_doc && m_doc->frame() && m_doc->frame()->page())
-            m_doc->frame()->page()->chrome()->addMessageToConsole("Refused to set unsafe header " + name, 1, String());
+            m_doc->frame()->page()->chrome()->addMessageToConsole(JSMessageSource, ErrorMessageLevel, "Refused to set unsafe header " + name, 1, String());
         return;
     }
 

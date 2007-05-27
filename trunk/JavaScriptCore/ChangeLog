@@ -1,3 +1,957 @@
+2007-05-26  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Darin.
+
+        Patch for http://bugs.webkit.org/show_bug.cgi?id=13854
+        Port of commit 667785 from kjs
+
+        - special case calling String.localeCompare() with no parameters to return 0.
+
+        * kjs/string_object.cpp:
+        (KJS::StringProtoFunc::callAsFunction):
+
+2007-05-25  Kimmo Kinnunen  <kimmok@iki.fi>
+
+        Reviewed by Darin.
+
+        - Fix for http://bugs.webkit.org/show_bug.cgi?id=13456
+        REGRESSION: setTimeout "arguments" object gets shadowed by a local variable
+
+        - Add a explicit check for arguments. Previously check was done with getDirect,
+        but since the arguments is created on-demand in ActivationImp, it doesn't
+        show up in the test. 'arguments' should always be in the VarDeclNode's
+        evaluation scope.
+
+        * kjs/nodes.cpp:
+        (VarDeclNode::evaluate): Additional check if the var decl identifier is 'arguments'
+
+2007-05-25  George Staikos  <staikos@kde.org>
+
+        Reviewed by Maciej.
+
+        - Use COMPILER(GCC), not PLATFORM(GCC) - as Platform.h defines
+
+        * wtf/FastMalloc.h:
+
+2007-05-25  Kimmo Kinnunen  <kimmok@iki.fi>
+
+        Reviewed by Darin.
+
+        - http://bugs.webkit.org/show_bug.cgi?id=13623 (Decompilation of function
+          doesn't compile with "++(x,y)")
+        - Create the error node based on the actual node, not the node inside
+          parenthesis
+        - Fix applies to postfix, prefix and typeof operators
+        - Produces run-time ReferenceError like other non-lvalue assignments etc.
+
+        * kjs/grammar.y: Create {Prefix,Postfix}ErrorNode based on the actual node,
+        not the based on the node returned by "nodeInsideAllParens()". Same for
+        TypeOfValueNode.
+
+2007-05-25  Simon Hausmann  <hausmann@kde.org>
+
+        Reviewed by Zack.
+
+        Fix crash in Qt JavaScript bindings when the arguments used on the Qt side are not
+        registered with QMetaType.
+
+        * bindings/qt/qt_instance.cpp:
+        (KJS::Bindings::QtInstance::invokeMethod):
+        * bindings/qt/qt_runtime.cpp:
+
+2007-05-24  Luciano Montanaro  <mikelima@cirulla.net>
+
+        Reviewed by Darin
+
+        Patch for http://bugs.webkit.org/show_bug.cgi?id=13855
+        Port patch 666176 to JavaScriptCore
+
+        - Renamed JSValue::downcast() to JSValue::asCell() which makes the
+        function meaning cleaner. It's modeled after Harri Porten change in 
+        KDE trunk.
+
+        * kjs/collector.cpp:
+        (KJS::Collector::protect):
+        (KJS::Collector::unprotect):
+        (KJS::Collector::collectOnMainThreadOnly):
+        * kjs/object.h:
+        (KJS::JSValue::isObject):
+        * kjs/string_object.cpp:
+        (KJS::StringProtoFunc::callAsFunction):
+        * kjs/value.h:
+        (KJS::JSValue::asCell):
+        (KJS::JSValue::isNumber):
+        (KJS::JSValue::isString):
+        (KJS::JSValue::isObject):
+        (KJS::JSValue::getNumber):
+        (KJS::JSValue::getString):
+        (KJS::JSValue::getObject):
+        (KJS::JSValue::getUInt32):
+        (KJS::JSValue::mark):
+        (KJS::JSValue::marked):
+        (KJS::JSValue::type):
+        (KJS::JSValue::toPrimitive):
+        (KJS::JSValue::toBoolean):
+        (KJS::JSValue::toNumber):
+        (KJS::JSValue::toString):
+        (KJS::JSValue::toObject):
+
+2007-05-18  Holger Hans Peter Freyther  <zecke@selfish.org>
+
+        Reviewed by Mark Rowe.
+
+        * kjs/testkjs.pro: Make the Gdk port link to icu
+
+2007-05-15  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Adele Peterson.
+        
+        It helps if you swap the right variable.
+
+        * wtf/HashSet.h:
+        (WTF::::operator):
+
+2007-05-15  Lars Knoll <lars@trolltech.com>
+
+        Reviewed by Zack
+
+        Extend the QObject JavaScript bindings to work for slots with
+        arguments.
+
+        * bindings/qt/qt_instance.cpp:
+        (KJS::Bindings::QtInstance::invokeMethod):
+
+2007-05-14  Kimmo Kinnunen  <kimmok@iki.fi>
+
+        Reviewed by Darin.
+
+        - Fixes http://bugs.webkit.org/show_bug.cgi?id=13622 (Decompiler
+          omits trailing comma in array literal)
+
+         * kjs/nodes2string.cpp:
+         (ArrayNode::streamTo): print extra ',' in case there was elision
+         commas (check opt member var) and array elements present
+         in the array expression
+
+2007-05-14  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        Added HashMap::swap and HashSet::swap. WebCore now uses HashSet::swap.
+        I figured while I was in the neighborhood I might as well add HashMap::swap,
+        too.
+
+        * wtf/HashMap.h:
+        (WTF::::operator):
+        (WTF::::swap):
+        * wtf/HashSet.h:
+        (WTF::::operator):
+        (WTF::::swap):
+
+2007-05-11  Kimmo Kinnunen  <kimmok@iki.fi>
+
+        Reviewed by Darin.
+
+        - Fix for bug http://bugs.webkit.org/show_bug.cgi?id=13620
+          Bogus decompilation of "for (var j = 1 in [])"
+        - ForInNode toString()'ed to syntax error if there was var decl
+          and initializer
+        - ForNode toStringed()'ed lost 'var ' if it was present
+
+        * kjs/nodes2string.cpp:
+        (VarDeclListNode::streamTo): Print "var " here
+        (VarStatementNode::streamTo): Don't print "var " here
+        (ForNode::streamTo): Remove TODO comment, VarDeclListNode will
+        stream the "var "
+        (ForInNode::streamTo): ForIn initializer is printed by VarDeclNode
+
+2007-05-11  Kimmo Kinnunen  <kimmok@iki.fi>
+
+        Reviewed by Darin.
+
+        - Fixes http://bugs.webkit.org/show_bug.cgi?id=10878
+          (Incorrect decompilation for "4..x")
+        - Group numbers in dotted expressions in toString() output, so we
+          avoid the 4.x constructs  when the original input is 4..x.
+          4..x means the same as 4. .x or (4).x or Number(4).x
+
+        * kjs/nodes2string.cpp:
+        (KJS::SourceStream::):
+        Add boolean flag to indicate that if next item is a number, it should be grouped.
+        Add new formatting enum which turns on the boolean flag.
+        (KJS::SourceStream::SourceStream): Added. Initialize the flag.
+        (SourceStream::operator<<): Added. New overloaded operator with double value as parameter.
+        (NumberNode::streamTo): Use the double operator
+        (ArrayNode::streamTo):
+        (DotAccessorNode::streamTo):
+        (FunctionCallDotNode::streamTo):
+        (FunctionCallParenDotNode::streamTo):
+        (PostfixDotNode::streamTo):
+        (DeleteDotNode::streamTo):
+        (PrefixDotNode::streamTo):
+        (AssignDotNode::streamTo): Use the new formatting enum to turn on the grouping flag.
+
+2007-05-10  Lars Knoll <lars@trolltech.com>
+
+        Reviewed by Zack
+
+        Fix our last three test failures in the JavaScript
+        tests.
+
+        * wtf/unicode/qt4/UnicodeQt4.h:
+        (WTF::Unicode::toLower):
+        (WTF::Unicode::toUpper):
+
+2007-05-08  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Darin Adler.
+        
+        Fixed #includes of JSStringRefCF.h and use of CF datatypes. I think I 
+        misunderstood this issue before.
+
+        * API/JavaScriptCore.h: #include JSStringRefCF.h. Platforms that don't
+        want this behavior can just #include individual headers, instead of the
+        umbrella framework header. But we definitely want Mac OS X clients to
+        get the #include of JSStringRefCF.h "for free."
+        * API/minidom.c: Don't #include JSStringRefCF.h. (Don't need to #include
+        JavaScriptCore.h, either.)
+        * API/testapi.c: Don't #include JSStringRefCF.h. Do use CF datatypes
+        regardless of whether __APPLE__ is defined. Platforms that don't support
+        CF just shouldn't compile this file.
+        (main):
+
+2007-05-09  Eric Seidel  <eric@webkit.org>
+
+        Reviewed by mjs.
+        
+        http://bugs.webkit.org/show_bug.cgi?id=6985
+        Cyclic __proto__ values cause WebKit to hang
+
+        * kjs/object.cpp:
+        (KJS::JSObject::put): do a cycle check before setting __proto__
+
+2007-05-08  Kimmo Kinnunen  <kimmok@iki.fi>
+
+        Reviewed by darin.  Landed by eseidel.
+
+        - http://bugs.webkit.org/show_bug.cgi?id=10880 (Do..while loop gains 
+        a semicolon each time it is toStringed)
+        Grammar in Ecma-66262, 12.6: "do Statement while ( Expression );"
+        EmptyStatement was created after every do..while(expr) which
+        had semicolon at the end.
+
+        * kjs/grammar.y: Require semicolon at the end of do..while
+
+2007-05-08  Geoffrey Garen  <ggaren@apple.com>
+
+        Build fix -- this time for sure.
+        
+        APICast.h, being private, ends up in a different folder than JSValueRef.h,
+        so we can't include one from the other using "". Instead, just forward
+        declare the relevant data types.
+
+        * API/APICast.h:
+
+2007-05-08  Geoffrey Garen  <ggaren@apple.com>
+
+        Build fix: export APICast.h for WebCore and WebKit.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+
+2007-05-04  Darin Adler  <darin@apple.com>
+
+        Reviewed by Adele.
+
+        - fix http://bugs.webkit.org/show_bug.cgi?id=12821
+          <rdar://problem/5007921> Number.toExponential doesn't work for negative numbers
+
+        * kjs/number_object.cpp: (NumberProtoFunc::callAsFunction):
+        Added a call to fabs before calling log10.
+
+2007-05-03  Holger Freyther <freyther@kde.org>
+
+        Reviewed by Zack, landed by Simon.
+        This is bugzilla bug 13499.
+
+        * JavaScriptCore.pri: Place Qt into the qt-port scope
+        * bindings/testbindings.pro: Place Qt into the qt-port scope
+        * kjs/testkjs.pro: Place Qt into the qt-port scope
+        * pcre/pcre.pri: Place Qt into the qt-port scope
+
+2007-05-02  David Harrison  <harrison@apple.com>
+
+        Reviewed by Antti.
+
+        <rdar://problem/5174862> Crash resulting from DeprecatedString::insert()
+
+        Added insertion support for more than one value.
+        
+        * wtf/Vector.h:
+        (WTF::::insert):
+        Added support for inserting multiple values.
+        
+        (WTF::::prepend):
+        New. Insert at the start of vectors. Convenient for vectors used as strings.
+
+2007-05-01  Jungshik Shin  <jungshik.shin@gmail.com>
+
+        Reviewed by Alexey.
+
+        - get rid of non-ASCII lteral characters : suppress compiler warnings
+        http://bugs.webkit.org/show_bug.cgi?id=13551
+         
+        * kjs/testkjs.cpp:
+        * pcre/pcre_compile.c:
+
+2007-04-28  Jungshik Shin  <jungshik.shin@gmail.com>
+
+        Reviewed by Sam Weinig.
+
+        - Replace copyright sign in Latin-1 (0xA9) with '(C)'
+        http://bugs.webkit.org/show_bug.cgi?id=13531
+
+        * bindings/npruntime.h:
+    
+2007-04-28  Darin Adler  <darin@apple.com>
+
+        Reviewed by Maciej.
+
+        - fix <rdar://problem/5154144> Hamachi test fails: assertion failure in ListHashSet
+
+        Test: fast/forms/add-remove-form-elements-stress-test.html
+
+        * wtf/ListHashSet.h:
+        (WTF::ListHashSetNodeAllocator::ListHashSetNodeAllocator): Initialize
+        m_isDoneWithInitialFreeList to false.
+        (WTF::ListHashSetNodeAllocator::allocate): Added assertions based on a debug-only
+        m_isAllocated flag that make sure we don't allocate a block that's already allocated.
+        These assertions helped pinpoint the bug. Set m_isDoneWithInitialFreeList when we
+        allocate the last block of the initial free list. Once we're done with the initial
+        free list, turn off the rule that says that the next node in the pool after the last
+        node in the free list is also free. This rule works because any free nodes are added
+        to the head of the free list, so a node that hasn't been allocated even once is always
+        at the tail of the free list and all the nodes after it also haven't been allocated
+        even once. But it doesn't work any longer once the entire pool has been used at least
+        once, because there's nothing special about the last node on the free list any more.
+        (WTF::ListHashSetNodeAllocator::deallocate): Set the node's m_isAllocated to false.
+        (WTF::ListHashSetNodeAllocator::pastPool): Added. Used above.
+        (WTF::ListHashSetNodeAllocator::inPool): Changed to use the pastPool function.
+        (WTF::ListHashSetNode::ListHashSetNode): Initialize m_isAllocated to true.
+        (WTF::ListHashSetNode::operator new): Removed variable name for unused size
+        parameter.
+        (WTF::ListHashSetNode::destroy): Changed to call the destructor rather than
+        delete -- this gets rid of the need to define an operator delete.
+
+2007-04-27  Christopher Brichford  <chrisb@adobe.com>
+
+        Reviewed by Timothy Hatcher.
+
+        Fix for: Bug 13211: Move JavaScriptCore mac project files for apollo port
+        http://bugs.webkit.org/show_bug.cgi?id=13211
+
+        * JavaScriptCore.apolloproj/mac/JavaScriptCore.Debug.xcconfig: Added.
+        * JavaScriptCore.apolloproj/mac/JavaScriptCore.Release.xcconfig: Added.
+        * JavaScriptCore.apolloproj/mac/JavaScriptCore.xcconfig: Added.
+        * JavaScriptCore.apolloproj/mac/JavaScriptCore.xcodeproj/project.pbxproj: Added.
+        * JavaScriptCore.apolloproj/mac/JavaScriptCore/JavaScriptCore.Debug.xcconfig: Removed.
+        * JavaScriptCore.apolloproj/mac/JavaScriptCore/JavaScriptCore.Release.xcconfig: Removed.
+        * JavaScriptCore.apolloproj/mac/JavaScriptCore/JavaScriptCore.xcconfig: Removed.
+        * JavaScriptCore.apolloproj/mac/JavaScriptCore/JavaScriptCore.xcodeproj/project.pbxproj: Removed.
+
+2007-04-27  Holger Freyther <freyther@kde.org>
+
+        Reviewed by Maciej.
+
+        Remove unmaintained CMake build system.
+
+        * CMakeLists.txt: Removed.
+        * pcre/CMakeLists.txt: Removed.
+
+2007-04-27  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Oliver.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj: Improve dependencies in Xcode project
+        by marking dftables as a dependency of Generate Derived Sources rather than of
+        JavaScriptCore itself.
+
+2007-04-26  Geoffrey Garen  <ggaren@apple.com>
+
+        Build fix -- added #includes that we used to get implicitly through
+        JSStringRef.h.
+
+        * API/JSNode.c:
+        * API/JSNodeList.c:
+        * API/minidom.c:
+        * API/testapi.c:
+
+2007-04-26  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak, Adam Roben.
+        
+        Fixed 
+        <rdar://problem/4885130> Remove #include of JSStringRefCF.h from JSStringRef.h
+        <rdar://problem/4885123> JavaScriptCore is not cross-platform -- JSStringRef.h references CF datatypes
+
+        * API/JSStringRef.h: Removed #include -- no clients need it anymore.
+
+2007-04-25  David Kilzer  <ddkilzer@apple.com>
+
+        Reviewed by Maciej.
+
+        Add assertions for debug builds.
+
+        * kjs/JSLock.cpp:
+        (KJS::JSLock::lock): Assert the return value of pthread_mutex_lock() in debug builds.
+        (KJS::JSLock::unlock): Assert the return value of pthread_mutex_unlock() in debug builds.
+
+2007-04-25  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Anders.
+        
+        - fix build problems
+
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCore.vcproj: Disable warning that
+        gives often downright incorrect results based on guessing what will happen in 64-bit.
+
+2007-04-25  Darin Adler  <darin@apple.com>
+
+        Reviewed by Geoff.
+
+        - tweak the allocator for a small speedup -- Shark showed this was a win, but I can't
+          measure an improvement right now, but it's also clear these changes do no harm
+
+        * wtf/FastMalloc.cpp:
+        (WTF::LgFloor): Use ALWAYS_INLINE here; in testing I did a while back this was necessary
+        to get this single-instruction function to be inlined.
+        (WTF::SizeClass): Use ALWAYS_INLINE here too for the same reason. Also change the special
+        case for a size of 0 to work without a branch for a bit of extra speed.
+        (WTF::ByteSizeForClass): Use ALWAYS_INLINE here too for the same reason.
+
+2007-04-24  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
+        - use custom calling convention for everything in nodes.cpp on intel gcc for 1.5% speed boost
+
+        Nearly all functions in nodes.cpp were marked up to use the
+        regparm(3) calling convention under GCC for x86, since this is
+        faster and they are all guaranteed to be called only internally to
+        kjs.
+        
+        The only exception is destructors, since delete doesn't know how to use a custom calling convention.
+        
+        * kjs/nodes.cpp:
+        (dotExprDoesNotAllowCallsString):
+        * kjs/nodes.h:
+        (KJS::Node::):
+        (KJS::StatementNode::):
+        (KJS::NullNode::):
+        (KJS::BooleanNode::):
+        (KJS::NumberNode::):
+        (KJS::StringNode::):
+        (KJS::RegExpNode::):
+        (KJS::ThisNode::):
+        (KJS::ResolveNode::):
+        (KJS::GroupNode::):
+        (KJS::ElementNode::):
+        (KJS::ArrayNode::):
+        (KJS::PropertyNameNode::):
+        (KJS::PropertyNode::):
+        (KJS::PropertyListNode::):
+        (KJS::ObjectLiteralNode::):
+        (KJS::BracketAccessorNode::):
+        (KJS::DotAccessorNode::):
+        (KJS::ArgumentListNode::):
+        (KJS::ArgumentsNode::):
+        (KJS::NewExprNode::):
+        (KJS::FunctionCallValueNode::):
+        (KJS::FunctionCallResolveNode::):
+        (KJS::FunctionCallBracketNode::):
+        (KJS::FunctionCallParenBracketNode::):
+        (KJS::FunctionCallDotNode::):
+        (KJS::FunctionCallParenDotNode::):
+        (KJS::PostfixResolveNode::):
+        (KJS::PostfixBracketNode::):
+        (KJS::PostfixDotNode::):
+        (KJS::PostfixErrorNode::):
+        (KJS::DeleteResolveNode::):
+        (KJS::DeleteBracketNode::):
+        (KJS::DeleteDotNode::):
+        (KJS::DeleteValueNode::):
+        (KJS::VoidNode::):
+        (KJS::TypeOfResolveNode::):
+        (KJS::TypeOfValueNode::):
+        (KJS::PrefixResolveNode::):
+        (KJS::PrefixBracketNode::):
+        (KJS::PrefixDotNode::):
+        (KJS::PrefixErrorNode::):
+        (KJS::UnaryPlusNode::):
+        (KJS::NegateNode::):
+        (KJS::BitwiseNotNode::):
+        (KJS::LogicalNotNode::):
+        (KJS::MultNode::):
+        (KJS::AddNode::):
+        (KJS::ShiftNode::):
+        (KJS::RelationalNode::):
+        (KJS::EqualNode::):
+        (KJS::BitOperNode::):
+        (KJS::BinaryLogicalNode::):
+        (KJS::ConditionalNode::):
+        (KJS::AssignResolveNode::):
+        (KJS::AssignBracketNode::):
+        (KJS::AssignDotNode::):
+        (KJS::AssignErrorNode::):
+        (KJS::CommaNode::):
+        (KJS::AssignExprNode::):
+        (KJS::VarDeclListNode::):
+        (KJS::VarStatementNode::):
+        (KJS::EmptyStatementNode::):
+        (KJS::ExprStatementNode::):
+        (KJS::IfNode::):
+        (KJS::DoWhileNode::):
+        (KJS::WhileNode::):
+        (KJS::ForNode::):
+        (KJS::ContinueNode::):
+        (KJS::BreakNode::):
+        (KJS::ReturnNode::):
+        (KJS::WithNode::):
+        (KJS::LabelNode::):
+        (KJS::ThrowNode::):
+        (KJS::TryNode::):
+        (KJS::ParameterNode::):
+        (KJS::Parameter::):
+        (KJS::FunctionBodyNode::):
+        (KJS::FuncExprNode::):
+        (KJS::FuncDeclNode::):
+        (KJS::SourceElementsNode::):
+        (KJS::CaseClauseNode::):
+        (KJS::ClauseListNode::):
+        (KJS::SwitchNode::):
+
+2007-04-24  Oliver Hunt  <oliver@apple.com>
+
+        GTK Build fix, ::findEntry->KJS::findEntry
+
+        * kjs/lookup.cpp:
+        (KJS::Lookup::findEntry):
+        (KJS::Lookup::find):
+
+2007-04-23  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Geoff.
+        
+        - compile most of JavaScriptCore as one file for 4% JS iBench speed improvement 
+
+        * JavaScriptCore.xcodeproj/project.pbxproj: Add AllInOneFile.cpp, and remove files it includes
+        from the build.
+        * kjs/AllInOneFile.cpp: Added.
+        * kjs/dtoa.cpp: Renamed CONST to CONST_ to avoid conflict.
+        (Bigint::):
+        (Bigint::nrv_alloc):
+        * kjs/lookup.cpp: Use "namspace KJS { ... }" instead of "using namespace KJS;" 
+
+2007-04-23  Maciej Stachowiak  <mjs@apple.com>
+
+        Build fix, not reviewed.
+
+        * kjs/collector.h: Fix struct/class mismatch.
+
+2007-04-23  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+
+        - raise ALLOCATIONS_PER_COLLECTION to 4000, for 3.7% iBench speed improvement
+         
+        Now that the cell size is smaller and the block size is bigger, we can fit 4000 objects in
+        the two spare cells the collector is willing to keep around, so collect a bit less often.
+        
+        * kjs/collector.cpp:
+
+2007-04-23  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin and Geoff.
+        
+        - move mark and collectOnMainThreadOnly bits into separate bitmaps
+        
+        This saves 4 bytes per cell, allowing shrink of cell size to 32,
+        which leads to a .8% speed improvement on iBench.
+        
+        This is only feasible because of all the previous changes on the branch.
+
+        * kjs/collector.cpp:
+        (KJS::allocateBlock): Adjust for some renames of constants. 
+        (KJS::Collector::markStackObjectsConservatively): Now that cells are 32 bytes (64 
+        bytes on 64-bit) the cell alignment check can be made much more strict, and also
+        obsoletes the need for a % sizeof(CollectorCell) check. Also, we can mask off the low
+        bits of the pointer to have a potential block pointer to look for.
+        (KJS::Collector::collectOnMainThreadOnly): Use bitmap.
+        (KJS::Collector::markMainThreadOnlyObjects): Use bitmap.
+        (KJS::Collector::collect): When sweeping, use bitmaps directly to find mark bits.
+        * kjs/collector.h:
+        (KJS::): Move needed constants and type declarations here.
+        (KJS::CollectorBitmap::get): Bit twiddling to get a bitmap value.
+        (KJS::CollectorBitmap::set): Bit twiddling to set a bitmap bit to true.
+        (KJS::CollectorBitmap::clear): Bit twiddling to set a bitmap bit to false.
+        (KJS::CollectorBitmap::clearAll): Clear whole bitmap at one go.
+        (KJS::Collector::cellBlock): New operation, compute the block pointer for
+        a cell by masking off low bits.
+        (KJS::Collector::cellOffset): New operation, compute the cell offset for a
+        cell by masking off high bits and dividing (actually a shift).
+        (KJS::Collector::isCellMarked): Check mark bit in bitmap
+        (KJS::Collector::markCell): Set mark bit in bitmap.
+        * kjs/value.h:
+        (KJS::JSCell::JSCell): No more bits.
+        (KJS::JSCell::marked): Let collector handle it.
+        (KJS::JSCell::mark): Let collector handle it.
+
+2007-04-23  Anders Carlsson  <andersca@apple.com>
+
+        Build fix.
+        
+        * kjs/regexp_object.h:
+        RegExpObjectImpPrivate is a struct, not a class.
+        
+2007-04-23  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+        
+        - shrink FunctionImp / DeclaredFunctionImp by 4 bytes, by moving parameter list to function body
+        
+        I reconciled this with a similar change in KDE kjs by Maks Orlovich <maksim@kde.org>.
+
+        * kjs/function.cpp:
+        (KJS::FunctionImp::callAsFunction):
+        (KJS::FunctionImp::passInParameters):
+        (KJS::FunctionImp::lengthGetter):
+        (KJS::FunctionImp::getParameterName):
+        * kjs/function.h:
+        * kjs/function_object.cpp:
+        (FunctionProtoFunc::callAsFunction):
+        (FunctionObjectImp::construct):
+        * kjs/nodes.cpp:
+        (FunctionBodyNode::addParam):
+        (FunctionBodyNode::paramString):
+        (FuncDeclNode::addParams):
+        (FuncDeclNode::processFuncDecl):
+        (FuncExprNode::addParams):
+        (FuncExprNode::evaluate):
+        * kjs/nodes.h:
+        (KJS::Parameter::Parameter):
+        (KJS::FunctionBodyNode::numParams):
+        (KJS::FunctionBodyNode::paramName):
+        (KJS::FunctionBodyNode::parameters):
+        (KJS::FuncExprNode::FuncExprNode):
+        (KJS::FuncDeclNode::FuncDeclNode):
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCore.vcproj: Disable 64-bit warnings because
+        they handle size_t badly.
+
+2007-04-23  Maciej Stachowiak  <mjs@apple.com>
+ 
+        Reviewed by Darin.
+
+        - shrink RegexpObjectImp by 4 bytes
+        
+        Somewhat inexplicably, this seems to be a .33% speedup on JS iBench.
+        
+        * kjs/regexp_object.cpp:
+        (KJS::RegExpObjectImpPrivate::RegExpObjectImpPrivate):
+        (RegExpObjectImp::RegExpObjectImp):
+        (RegExpObjectImp::performMatch):
+        (RegExpObjectImp::arrayOfMatches):
+        (RegExpObjectImp::getBackref):
+        (RegExpObjectImp::getLastMatch):
+        (RegExpObjectImp::getLastParen):
+        (RegExpObjectImp::getLeftContext):
+        (RegExpObjectImp::getRightContext):
+        (RegExpObjectImp::getValueProperty):
+        (RegExpObjectImp::putValueProperty):
+        * kjs/regexp_object.h:
+
+2007-04-23  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
+        - change to 1-bit bitfields instead of 8-bit, this turns out to lead to a .51% speedup on JS iBench
+        
+        The 1-bit bitfields are actually faster than just plain bools, at least on Intel (go figure).
+
+        * kjs/property_map.h:
+
+2007-04-23  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+       
+        - shrink ArrayInstance objects by 4 bytes
+        http://bugs.webkit.org/show_bug.cgi?id=13386
+        
+        I did this by storing the capacity before the beginning of the storage array. It turns out
+        it is rarely needed and is by definition 0 when the storage array is null.
+ 
+        * kjs/array_instance.h:
+        (KJS::ArrayInstance::capacity): Get it from the secret stash
+        * kjs/array_object.cpp:
+        (allocateStorage): New function to encapsulate allocating the storage with extra space ahead
+        for the capacity.
+        (reallocateStorage): ditto for realloc
+        (ArrayInstance::ArrayInstance):
+        (ArrayInstance::~ArrayInstance):
+        (ArrayInstance::resizeStorage):
+
+2007-04-23  Darin Adler  <darin@apple.com>
+
+        Reviewed by Maciej.
+
+        - fix <rdar://problem/4840688> REGRESSION (r10588, r10621): JavaScript won't parse
+          modifications of non-references (breaks 300themovie.warnerbros.com, fedex.com)
+
+        Despite the ECMAScript specification's claim that you can treat these as syntax
+        errors, doing so creates some website incompatibilities. So this patch turns them back
+        into evaluation errors instead.
+
+        Test: fast/js/modify-non-references.html
+
+        * kjs/grammar.y: Change makeAssignNode, makePrefixNode, and makePostfixNode so that they
+        never fail to parse. Update rules that use them. Fix a little bit of indenting. Use
+        new PostfixErrorNode, PrefixErrorNode, and AssignErrorNode classes.
+
+        * kjs/nodes.h: Added an overload of throwError that takes a char* argument.
+        Replaced setExceptionDetailsIfNeeded and debugExceptionIfNeeded with handleException,
+        which does both. Added PostfixErrorNode, PrefixErrorNode, and AssignErrorNode classes.
+
+        * kjs/nodes.cpp: Changed exception macros to use handleException; simpler and smaller
+        code size than the two functions that we used before.
+        (Node::throwError): Added the overload mentioned above.
+        (Node::handleException): Added. Contains the code from both setExceptionDetailsIfNeeded
+        and debugExceptionIfNeeded.
+        (PostfixErrorNode::evaluate): Added. Throws an exception.
+        (PrefixErrorNode::evaluate): Ditto.
+        (AssignErrorNode::evaluate): Ditto.
+        (ThrowNode::execute): Call handleException instead of debugExceptionIfNeeded; this
+        effectively adds a call to setExceptionDetailsIfNeeded, which may help with getting
+        the correct file and line number for these exceptions.
+
+        * kjs/nodes2string.cpp:
+        (PostfixErrorNode::streamTo): Added.
+        (PrefixErrorNode::streamTo): Added.
+        (AssignErrorNode::streamTo): Added.
+
+2007-04-23  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+        
+        - fix test failures / crashes on PPC
+
+        * kjs/property_map.h: Make the bool fields explicitly 8-bit bitfields, since bool is a full
+        word there otherwise :-(
+
+2007-04-23  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+        
+        - fix more test case failures
+
+        * bindings/runtime_array.cpp:
+        (RuntimeArray::RuntimeArray): inherit from JSObject instead of ArrayInstance; it turns
+        out that this class only needs the prototype and classInfo from ArrayInstance, not the
+        actual class itself, and it was too big otherwise.
+        (RuntimeArray::getOwnPropertySlot):
+        * bindings/runtime_array.h:
+
+2007-04-23  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+        
+        - fix some test failures
+
+        * bindings/runtime_method.cpp:
+        (RuntimeMethod::RuntimeMethod): inherit from InternalFunctionImp instead of FunctionImpl,
+        otherwise this is too big
+        (RuntimeMethod::getOwnPropertySlot):
+        * bindings/runtime_method.h:
+
+2007-04-22  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+        
+        - discard the arguments List for an ActivationImp when the corresponding Context is destroyed (1.7% speedup)
+        http://bugs.webkit.org/show_bug.cgi?id=13385
+
+        Based an idea by Christopher E. Hyde <C.Hyde@parableuk.force9.co.uk>. His patch to do 
+        this also had many other List changes and I found this much simpler subset of the changes
+        was actually a hair faster.
+        
+        This optimization is valid because the arguments list is only kept around to
+        lazily make the arguments object. If it's not made by the time the function
+        exits, it never will be, since any function that captures the continuation will
+        have its own local arguments variable in scope.
+        
+        Besides the 1.7% speed improvement, it shrinks List by 4 bytes
+        (which in turn shrinks ActivationImp by 4 bytes).
+        
+        * kjs/Context.cpp:
+        (KJS::Context::~Context): Clear the activation's arguments list.
+        * kjs/function.cpp:
+        (KJS::ActivationImp::ActivationImp): Adjusted for list changes.
+        (KJS::ActivationImp::mark): No need to mark, lists are always protected (this doesn't
+        cause a ref-cycle for reasons stated above).
+        (KJS::ActivationImp::createArgumentsObject): Clear arguments list.
+        * kjs/function.h:
+        * kjs/list.cpp:
+        (KJS::List::List): No more needsMarking boolean
+        (KJS::List::operator=): ditto
+        * kjs/list.h:
+        (KJS::List::List): ditto
+        (KJS::List::reset): ditto
+        (KJS::List::deref): ditto
+
+2007-04-22  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+        
+        - shrink PropertyMap by 8 bytes and therefore shrink CELL_SIZE to 40 (for 32-bit; 
+        similar shrinkage for 64-bit)
+        http://bugs.webkit.org/show_bug.cgi?id=13384
+
+        Inspired by similar changes by Christopher E. Hyde <C.Hyde@parableuk.force9.co.uk>
+        done in the kjs-tweaks branch of KDE's kjs. However, this version is somewhat 
+        cleaner style-wise and avoids some of the negative speed impact (at least on gcc/x86) 
+        of his version.
+        
+        This is nearly a wash performance-wise, maybe a slight slowdown, but worth doing
+        to eventually reach cell size 32.
+        
+        * kjs/collector.cpp:
+        (KJS::):
+        * kjs/property_map.cpp:
+        (KJS::PropertyMap::~PropertyMap):
+        (KJS::PropertyMap::clear):
+        (KJS::PropertyMap::get):
+        (KJS::PropertyMap::getLocation):
+        (KJS::PropertyMap::put):
+        (KJS::PropertyMap::insert):
+        (KJS::PropertyMap::expand):
+        (KJS::PropertyMap::rehash):
+        (KJS::PropertyMap::remove):
+        (KJS::PropertyMap::mark):
+        (KJS::PropertyMap::containsGettersOrSetters):
+        (KJS::PropertyMap::getEnumerablePropertyNames):
+        (KJS::PropertyMap::getSparseArrayPropertyNames):
+        (KJS::PropertyMap::save):
+        (KJS::PropertyMap::checkConsistency):
+        * kjs/property_map.h:
+        (KJS::PropertyMap::hasGetterSetterProperties):
+        (KJS::PropertyMap::setHasGetterSetterProperties):
+        (KJS::PropertyMap::):
+        (KJS::PropertyMap::PropertyMap):
+
+2007-04-22  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+        
+        - change blocks to 64k in size, and use various platform-specific calls to allocate at 64k-aligned addresses
+        http://bugs.webkit.org/show_bug.cgi?id=13383
+        
+        * kjs/collector.cpp:
+        (KJS::allocateBlock): New function to allocate 64k of 64k-aligned memory
+        (KJS::freeBlock): Corresponding free
+        (KJS::Collector::allocate):
+        (KJS::Collector::collect):
+
+2007-04-22  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin and Geoff.
+        
+        - remove the concept of oversize objects, now that there aren't any (for now
+        only enforced with an assert).
+        http://bugs.webkit.org/show_bug.cgi?id=13382
+
+        This change is a .66% speedup on JS iBench for 32-bit platforms, probably much more
+        for 64-bit since it finally gives a reasonable cell size, but I did not test that.
+        
+        * kjs/collector.cpp:
+        (KJS::): Use different cell size for 32-bit and 64-bit, now that there is no
+        oversize allocation.
+        (KJS::Collector::allocate): Remove oversize allocator.
+        (KJS::Collector::markStackObjectsConservatively): Don't check oversize objects.
+        (KJS::Collector::markMainThreadOnlyObjects): Ditto.
+        (KJS::Collector::collect): Ditto.
+
+2007-04-21  Mitz Pettel  <mitz@webkit.org>
+
+        Reviewed by Adam.
+
+        - fix http://bugs.webkit.org/show_bug.cgi?id=13428
+          REGRESSION (r20973-r20976): Failing ecma/Array/15.4.4.5-3.js
+
+        - fix http://bugs.webkit.org/show_bug.cgi?id=13429
+          REGRESSION (r20973-r20976): Crashing in fast/dom/plugin-attributes-enumeration.html
+
+        * kjs/array_object.cpp:
+        (ArrayInstance::sort): Free the old storage, not the new one.
+
+2007-04-20  Maciej Stachowiak  <mjs@apple.com>
+
+        Not reviewed, build fix.
+
+        - fix build problem with last change - -O3 complains more about uninitialized variables
+        
+        * pcre/pcre_compile.c:
+        (compile_branch):
+        (pcre_compile2):
+
+2007-04-20  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+        
+        - <rdar://problem/5149915> use mergesort when possible, since it leads to fewer compares (2% JS iBench speedup)
+
+        * kjs/array_object.cpp:
+        (ArrayInstance::sort): Use mergesort(3) on platforms that have it, since it tends
+        to do fewer compares than qsort; but avoid it very on large arrays since it uses extra
+        memory. Also added comments identifying possibly even better sorting algorithms
+        for sort by string value and sort by compare function.
+        * kjs/config.h:
+
+2007-04-20  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+        
+        - bump optimization flags up to -O3 for 1% JS iBench speed improvement 
+
+        * Configurations/Base.xcconfig:
+
+2007-04-20  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Maciej.
+
+        Fix bogus optimisation in the generic pthread code path.
+
+        * kjs/collector.cpp:
+        (KJS::currentThreadStackBase):
+
+2007-04-20  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Anders.
+
+        Improve FreeBSD compatibility, as suggested by Alexander Botero-Lowry.
+
+        * kjs/collector.cpp:
+        (KJS::currentThreadStackBase): FreeBSD requires that pthread_attr_t's are
+        initialized via pthread_attr_init before being used in any context.
+
+2007-04-19  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Darin.
+
+        Fix http://bugs.webkit.org/show_bug.cgi?id=13401
+        Bug 13401: Reproducible crash calling myArray.sort(compareFn) from within
+        a sort comparison function
+
+        * kjs/array_object.cpp:
+        (ArrayInstance::sort): Save/restore the static variables around calls to qsort
+        to ensure nested calls to ArrayInstance::sort behave correctly.
+
 2007-04-12  Deneb Meketa  <dmeketa@adobe.com>
 
         Reviewed by Darin Adler.

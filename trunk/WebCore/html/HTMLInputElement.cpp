@@ -61,6 +61,8 @@ namespace WebCore {
 using namespace EventNames;
 using namespace HTMLNames;
 
+const int maxSavedResults = 256;
+
 static int numGraphemeClusters(const StringImpl* s)
 {
     if (!s)
@@ -134,7 +136,8 @@ void HTMLInputElement::init()
 
 HTMLInputElement::~HTMLInputElement()
 {
-    document()->deregisterFormElementWithState(this);
+    ownerDocument()->unregisterFormElementWithState(this);
+    ownerDocument()->unregisterForDidRestoreFromCacheCallback(this);
     delete m_imageLoader;
 }
 
@@ -192,7 +195,7 @@ void HTMLInputElement::focus(bool restorePreviousSelection)
         if (!supportsFocus())
             return;
         if (Page* page = doc->page())
-            page->focusController()->setFocusedNode(this);
+            page->focusController()->setFocusedNode(this, doc->frame());
         // FIXME: Should isFocusable do the updateLayout?
         if (!isFocusable()) {
             setNeedsFocusAppearanceUpdate(true);
@@ -213,10 +216,8 @@ void HTMLInputElement::updateFocusAppearance(bool restorePreviousSelection)
             // Restore the cached selection.
             setSelectionRange(cachedSelStart, cachedSelEnd); 
         
-        if (document()->frame()) {
-            document()->frame()->editor()->didBeginEditing();
+        if (document() && document()->frame())
             document()->frame()->revealSelection();
-        }
     } else
         HTMLGenericFormElement::updateFocusAppearance();
 }
@@ -232,7 +233,7 @@ void HTMLInputElement::dispatchFocusEvent()
     if (isTextField()) {
         setAutofilled(false);
         if (inputType() == PASSWORD && document()->frame())
-            document()->frame()->setSecureKeyboardEntry(true);
+            document()->setUseSecureKeyboardEntryWhenActive(true);
     }
     HTMLGenericFormElement::dispatchFocusEvent();
 }
@@ -241,7 +242,7 @@ void HTMLInputElement::dispatchBlurEvent()
 {
     if (isTextField() && document()->frame()) {
         if (inputType() == PASSWORD)
-            document()->frame()->setSecureKeyboardEntry(false);
+            document()->setUseSecureKeyboardEntryWhenActive(false);
         document()->frame()->textFieldDidEndEditing(this);
     }
     HTMLGenericFormElement::dispatchBlurEvent();
@@ -305,11 +306,11 @@ void HTMLInputElement::setInputType(const String& t)
                 detach();
 
             bool didStoreValue = storesValueSeparateFromAttribute();
-            bool didMaintainState = inputType() != PASSWORD;
+            bool wasPasswordField = inputType() == PASSWORD;
             bool didRespectHeightAndWidth = respectHeightAndWidthAttrs();
             m_type = newType;
             bool willStoreValue = storesValueSeparateFromAttribute();
-            bool willMaintainState = inputType() != PASSWORD;
+            bool isPasswordField = inputType() == PASSWORD;
             bool willRespectHeightAndWidth = respectHeightAndWidthAttrs();
 
             if (didStoreValue && !willStoreValue && !m_value.isNull()) {
@@ -321,10 +322,13 @@ void HTMLInputElement::setInputType(const String& t)
             else
                 recheckValue();
 
-            if (willMaintainState && !didMaintainState)
-                document()->registerFormElementWithState(this);
-            else if (!willMaintainState && didMaintainState)
-                document()->deregisterFormElementWithState(this);
+            if (wasPasswordField && !isPasswordField) {
+                ownerDocument()->registerFormElementWithState(this);
+                ownerDocument()->unregisterForDidRestoreFromCacheCallback(this);
+            } else if (!wasPasswordField && isPasswordField) {
+                ownerDocument()->unregisterFormElementWithState(this);
+                ownerDocument()->registerForDidRestoreFromCacheCallback(this);
+            }
 
             if (didRespectHeightAndWidth != willRespectHeightAndWidth) {
                 NamedMappedAttrMap* map = mappedAttributes();
@@ -663,7 +667,7 @@ void HTMLInputElement::parseMappedAttribute(MappedAttribute *attr)
         setHTMLEventListener(searchEvent, attr);
     } else if (attr->name() == resultsAttr) {
         int oldResults = m_maxResults;
-        m_maxResults = !attr->isNull() ? attr->value().toInt() : -1;
+        m_maxResults = !attr->isNull() ? min(attr->value().toInt(), maxSavedResults) : -1;
         // FIXME: Detaching just for maxResults change is not ideal.  We should figure out the right
         // time to relayout for this change.
         if (m_maxResults != oldResults && (m_maxResults <= 0 || oldResults <= 0) && attached()) {
@@ -757,11 +761,6 @@ void HTMLInputElement::attach()
                 imageObj->setImageSizeForAltText();
         }
     }
-
-    // note we don't deal with calling passwordFieldRemoved() on detach, because the timing
-    // was such that it cleared our state too early
-    if (inputType() == PASSWORD)
-        document()->passwordFieldAdded();
 }
 
 void HTMLInputElement::detach()
@@ -855,8 +854,7 @@ bool HTMLInputElement::appendFormData(FormDataList& encoding, bool multipart)
 
         case FILE:
             // Can't submit file on GET.
-            // Don't submit if display: none or display: hidden to avoid uploading files quietly.
-            if (!multipart || !renderer() || renderer()->style()->visibility() != VISIBLE)
+            if (!multipart)
                 return false;
 
             // If no filename at all is entered, return successful but empty.
@@ -977,7 +975,8 @@ String HTMLInputElement::valueWithDefault() const
 
 void HTMLInputElement::setValue(const String& value)
 {
-    if (inputType() == FILE)
+    // For security reasons, we don't allow setting the filename, but we do allow clearing it.
+    if (inputType() == FILE && !value.isEmpty())
         return;
 
     setValueMatchesRenderer(false);
@@ -991,11 +990,14 @@ void HTMLInputElement::setValue(const String& value)
     } else
         setAttribute(valueAttr, constrainValue(value));
     
-    // Restore a caret at the starting point of the old selection.
-    // This matches Safari 2.0 behavior.
-    if (isTextField() && document()->focusedNode() == this && cachedSelStart != -1) {
-        ASSERT(cachedSelEnd != -1);
-        setSelectionRange(cachedSelStart, cachedSelStart);
+    if (isTextField()) {
+        unsigned max = m_value.length();
+        if (document()->focusedNode() == this)
+            setSelectionRange(max, max);
+        else {
+            cachedSelStart = max;
+            cachedSelEnd = max;
+        }
     }
 }
 
@@ -1023,7 +1025,6 @@ bool HTMLInputElement::storesValueSeparateFromAttribute() const
     switch (inputType()) {
         case BUTTON:
         case CHECKBOX:
-        case FILE:
         case HIDDEN:
         case IMAGE:
         case RADIO:
@@ -1031,6 +1032,7 @@ bool HTMLInputElement::storesValueSeparateFromAttribute() const
         case RESET:
         case SUBMIT:
             return false;
+        case FILE:
         case ISINDEX:
         case PASSWORD:
         case SEARCH:
@@ -1183,7 +1185,7 @@ void HTMLInputElement::defaultEventHandler(Event* evt)
 
         String key = static_cast<KeyboardEvent*>(evt)->keyIdentifier();
 
-        if (key == "U+000020") {
+        if (key == "U+0020") {
             switch (inputType()) {
                 case BUTTON:
                 case CHECKBOX:
@@ -1283,8 +1285,13 @@ void HTMLInputElement::defaultEventHandler(Event* evt)
             addSearchResult();
             onSearch();
         }
-        blur();
-        // Form may never have been present, or may have been destroyed by the blur event.
+        // Fire onChange for text fields.
+        RenderObject* r = renderer();
+        if (r && r->isTextField() && r->isEdited()) {
+            onChange();
+            r->setEdited(false);
+        }
+        // Form may never have been present, or may have been destroyed by the change event.
         if (form())
             form()->submitClick(evt);
         evt->setDefaultHandled();
@@ -1464,6 +1471,32 @@ Selection HTMLInputElement::selection() const
    if (!renderer() || !isTextField() || cachedSelStart == -1 || cachedSelEnd == -1)
         return Selection();
    return static_cast<RenderTextControl*>(renderer())->selection(cachedSelStart, cachedSelEnd);
+}
+
+void HTMLInputElement::didRestoreFromCache()
+{
+    ASSERT(inputType() == PASSWORD);
+    reset();
+}
+
+void HTMLInputElement::willMoveToNewOwnerDocument()
+{
+    if (inputType() == PASSWORD)
+        ownerDocument()->unregisterForDidRestoreFromCacheCallback(this);
+    else
+        ownerDocument()->unregisterFormElementWithState(this);
+        
+    HTMLGenericFormElement::willMoveToNewOwnerDocument();
+}
+
+void HTMLInputElement::didMoveToNewOwnerDocument()
+{
+    if (inputType() == PASSWORD)
+        document()->registerForDidRestoreFromCacheCallback(this);
+    else
+        document()->registerFormElementWithState(this);
+        
+    HTMLGenericFormElement::didMoveToNewOwnerDocument();
 }
     
 } // namespace

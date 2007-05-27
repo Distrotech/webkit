@@ -3,7 +3,7 @@
 
 #
 #  Copyright (C) 2000, 2001 Eazel, Inc.
-#  Copyright (C) 2002, 2003, 2004, 2005, 2006 Apple Computer, Inc.
+#  Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007 Apple Inc.
 #
 #  prepare-ChangeLog is free software; you can redistribute it and/or
 #  modify it under the terms of the GNU General Public
@@ -27,6 +27,7 @@
 # Darin Adler <darin@bentspoon.com>, started 20 April 2000
 # Java support added by Maciej Stachowiak <mjs@eazel.com>
 # Objective-C, C++ and Objective-C++ support added by Maciej Stachowiak <mjs@apple.com>
+# Git support added by Adam Roben <aroben@apple.com>
 
 
 #
@@ -56,14 +57,26 @@ use warnings;
 use File::Basename;
 use File::Spec;
 use File::Temp;
+use FindBin;
 use Getopt::Long;
 
+sub diffCommand(\%);
+sub statusCommand(\@);
+sub createPatchCommand($);
+sub diffHeaderFormat();
+sub isModifiedOrAddedStatus($);
+sub isConflictStatus($);
+sub statusDescription($$);
+sub extractLineRange($);
+sub makeFilePathRelative($);
 sub canonicalizePath($);
 sub get_function_line_ranges($$);
 sub get_function_line_ranges_for_c($$);
 sub get_function_line_ranges_for_java($$);
 sub method_decl_to_selector($);
 sub processPaths(\@);
+sub isGit();
+sub isSVN();
 
 my $openChangeLogs = 0;
 my $showHelp = 0;
@@ -74,17 +87,18 @@ my $parseOptionsResult =
                "help|h!" => \$showHelp,
                "open|o!" => \$openChangeLogs,
                "update!" => \$updateChangeLogs);
-if (!$parseOptionsResult || $showHelp)
-  {
+if (!$parseOptionsResult || $showHelp) {
     print STDERR basename($0) . " [-d|--diff] [-h|--help] [-o|--open] [svndir1 [svndir2 ...]]\n";
     print STDERR "  -d|--diff      Spew diff to stdout when running\n";
     print STDERR "  -h|--help      Show this help message\n";
     print STDERR "  -o|--open      Open ChangeLogs in an editor when done\n";
     print STDERR "  --[no-]update  Update ChangeLogs from svn before adding entry (default: update)\n";
     exit 1;
-  }
+}
 
 my %paths = processPaths(@ARGV);
+
+isSVN() || isGit() || die "Couldn't determine your version control system.";
 
 # Find the list of modified files
 my @changed_files;
@@ -94,13 +108,7 @@ my %function_lists;
 my @conflict_files;
 
 my $SVN = "svn";
-
-my %statusDescription = (
-    "A" => " Added.",
-    "D" => " Removed.",
-    "M" => "",
-    "R" => " Replaced.",
-);
+my $GIT = "git";
 
 my $changedLayoutTests = 0;
 
@@ -110,90 +118,100 @@ my $DIFFOUT = new File::Temp(TEMPLATE => basename($0) . "-XXXXXXXX",
 my $diffTempFile = $DIFFOUT->filename();
 my @diffFiles;
 
-print STDERR "  Running 'svn diff' to find changed, added, or removed files.\n";
-open SVNDIFF, "$SVN diff --diff-cmd diff -x -N '" . join("' '", keys %paths) . "'|"
-    or die "The svn diff failed: $!.\n";
-while (<SVNDIFF>)
-  {
+print STDERR "  Running diff to find changed, added, or removed files.\n";
+open DIFF, "-|", diffCommand(%paths) or die "The diff failed: $!.\n";
+
+while (<DIFF>) {
     print $DIFFOUT $_;
-    if (/^Index: (.+)$/)
-      {
-        push @diffFiles, $1;
-      }
-  }
-close SVNDIFF;
+    push @diffFiles, $1 if $_ =~ diffHeaderFormat();
+}
+close DIFF;
 close $DIFFOUT;
 
-if (@diffFiles)
-  {
-    my $diffFilesString = "'" . join ("' '", @diffFiles) . "'";
-    print STDERR "  Running 'svn stat' on changed, added, or removed files.\n";
-    open SVNSTAT, "$SVN stat $diffFilesString 2> /dev/stdout |" or die "The svn stat failed: $!.\n";
-    while(<SVNSTAT>)
-      {
-        if (/^([A-Z]).+\s+(.+)$/)
-          {
-              my $status = $1;
-              my $file = $2;
-              if ($status eq "A" || $status eq "M")
-                {
-                  my @components = File::Spec->splitdir($file);
-                  $changedLayoutTests = 1 if $components[0] eq "LayoutTests";
-                  push @changed_files, $file if $components[$#components] ne "ChangeLog";
-                }
-              push @conflict_files, $file if $status eq "C";
-              $function_lists{$file} = $statusDescription{$status} if exists $statusDescription{$status};
-          }
-        else
-          {
-            print;  # error output from svn stat
-          }
-      }
-    close SVNSTAT;
-  }
+if (@diffFiles) {
+    print STDERR "  Running status on changed, added, or removed files.\n";
+    open STAT, "-|", statusCommand(@diffFiles) or die "The status failed: $!.\n";
+    my $inGitCommitSection = 0;
+    while (<STAT>) {
+        my $status;
+        my $original;
+        my $file;
 
-if (!@diffFiles || !%function_lists)
-  {
+        if (isSVN()) {
+            if (/^([A-Z]).+\s+(.+)$/) {
+                  $status = $1;
+                  $file = $2;
+            } else {
+                print;  # error output from svn stat
+            }
+        } elsif (isGit()) {
+            if (/^# Changes to be committed:$/ || /^# Changed but not updated:$/) {
+                $inGitCommitSection = 1;
+                next;
+            }
+            last if $inGitCommitSection && /^# \S/;
+
+            if ($inGitCommitSection && /^#\s+([^:]+):\s+((.+) -> )?(.+)$/) {
+                $status = $1;
+                $original = $3;
+                $file = $4;
+            }
+        }
+
+        next unless $status;
+
+        $file = makeFilePathRelative($file);
+
+        if (isModifiedOrAddedStatus($status)) {
+            my @components = File::Spec->splitdir($file);
+            $changedLayoutTests = 1 if $components[0] eq "LayoutTests";
+            push @changed_files, $file if $components[$#components] ne "ChangeLog";
+        } elsif (isConflictStatus($status)) {
+            push @conflict_files, $file;
+        }
+        my $description = statusDescription($status, $original);
+        $function_lists{$file} = $description if defined $description;
+    }
+    close STAT;
+}
+
+if (!@diffFiles || !%function_lists) {
     print STDERR "  No changes found.\n";
     exit 1;
-  }
+}
 
-if (@conflict_files)
-  {
+if (@conflict_files) {
     print STDERR "  The following files have conflicts. Run prepare-ChangeLog again after fixing the conflicts:\n";
     print STDERR join("\n", @conflict_files), "\n";
     exit 1;
-  }
+}
 
-if (@changed_files)
-  {
+if (@changed_files) {
     $changed_files_string = "'" . join ("' '", @changed_files) . "'";
 
     # For each file, build a list of modified lines.
     # Use line numbers from the "after" side of each diff.
-    print STDERR "  Reviewing 'svn diff' to determine which lines changed.\n";
+    print STDERR "  Reviewing diff to determine which lines changed.\n";
     my $file;
     open DIFF, "< $diffTempFile" or die "Opening $diffTempFile failed: $!.\n";
-    while (<DIFF>)
-      {
-        $file = $1 if /^Index: (\S+)$/;
+    while (<DIFF>) {
+        $file = makeFilePathRelative($1) if $_ =~ diffHeaderFormat();
         if (defined $file) {
-          if (/^\d+(,\d+)?[acd](\d+)(,(\d+))?/) {
-            push @{$changed_line_ranges{$file}}, [ $2, $4 || $2 ];
-          } elsif (/DO_NOT_COMMIT/) {
-            print STDERR "WARNING: file $file contains the string DO_NOT_COMMIT, line $.\n";
-          }
+            my ($start, $end) = extractLineRange($_);
+            if ($start >= 0 && $end >= 0) {
+                push @{$changed_line_ranges{$file}}, [ $start, $end ];
+            } elsif (/DO_NOT_COMMIT/) {
+                print STDERR "WARNING: file $file contains the string DO_NOT_COMMIT, line $.\n";
+            }
         }
-      }
+    }
     close DIFF;
-  }
+}
 
 # For each source file, convert line range to function list.
-if (%changed_line_ranges)
-  {
+if (%changed_line_ranges) {
     print STDERR "  Extracting affected function names from source files.\n";
-    foreach my $file (keys %changed_line_ranges)
-      {
+    foreach my $file (keys %changed_line_ranges) {
         # Only look for function names in .c files.
         next unless $file =~ /\.(c|cpp|m|mm|h|java)/;
     
@@ -207,13 +225,11 @@ if (%changed_line_ranges)
         my %saw_function;
         my @change_ranges = (@{$changed_line_ranges{$file}}, []);
         my @change_range = (0, 0);
-        FUNCTION: foreach my $function_range_ref (@function_ranges)
-          {
+        FUNCTION: foreach my $function_range_ref (@function_ranges) {
             my @function_range = @$function_range_ref;
     
             # Advance to successive change ranges.
-            for (;; @change_range = @{shift @change_ranges})
-              {
+            for (;; @change_range = @{shift @change_ranges}) {
                 last FUNCTION unless @change_range;
     
                 # If past this function, move on to the next one.
@@ -221,17 +237,15 @@ if (%changed_line_ranges)
     
                 # If an overlap with this function range, record the function name.
                 if ($change_range[1] >= $function_range[0]
-                    and $change_range[0] <= $function_range[1])
-                  {
-                    if (!$saw_function{$function_range[2]})
-                      {
+                    and $change_range[0] <= $function_range[1]) {
+                    if (!$saw_function{$function_range[2]}) {
                         $saw_function{$function_range[2]} = 1;
                         push @functions, $function_range[2];
-                      }
+                    }
                     next FUNCTION;
-                  }
-              }
-          }
+                }
+            }
+        }
     
         # Format the list of functions now.
 
@@ -239,8 +253,8 @@ if (%changed_line_ranges)
             $function_lists{$file} = "" if !defined $function_lists{$file};
             $function_lists{$file} .= "\n        (" . join("):\n        (", @functions) . "):";
         }
-      }
-  }
+    }
+}
 
 # Get some parameters for the ChangeLog we are about to write.
 my $date = sprintf "%d-%02d-%02d",
@@ -261,48 +275,40 @@ $name =~ s/\(.*?\)\s*$//g;
 # Find the change logs.
 my %has_log;
 my %files;
-foreach my $file (sort keys %function_lists)
-  {
+foreach my $file (sort keys %function_lists) {
     my $prefix = $file;
     my $has_log = 0;
-    while ($prefix)
-      {
+    while ($prefix) {
         $prefix =~ s-/[^/]+/?$-/- or $prefix = "";
         $has_log = $has_log{$prefix};
-        if (!defined $has_log)
-          {
+        if (!defined $has_log) {
             $has_log = -f "${prefix}ChangeLog";
             $has_log{$prefix} = $has_log;
-          }
+        }
         last if $has_log;
-      }
-    if (!$has_log)
-      {
+    }
+    if (!$has_log) {
         print STDERR "No ChangeLog found for $file.\n";
-      }
-    else
-      {
+    } else {
         push @{$files{$prefix}}, $file;
-      }
-  }
+    }
+}
 
 # Get the latest ChangeLog files from svn.
 my $logs = "";
-foreach my $prefix (sort keys %files)
-  {
+foreach my $prefix (sort keys %files) {
     $logs .= " ${prefix}ChangeLog";
-  }
-if ($logs && $updateChangeLogs)
-  {
+}
+
+if ($logs && $updateChangeLogs && isSVN()) {
     print STDERR "  Running 'svn update' to update ChangeLog files.\n";
     open ERRORS, "$SVN update -q$logs |" or die "The svn update of ChangeLog files failed: $!.\n";
     print STDERR "    $_" while <ERRORS>;
     close ERRORS;
-  }
+}
 
 # Write out a new ChangeLog file.
-foreach my $prefix (sort keys %files)
-  {
+foreach my $prefix (sort keys %files) {
     print STDERR "  Editing the ${prefix}ChangeLog file.\n";
     open OLD_CHANGE_LOG, "${prefix}ChangeLog" or die "Could not open ${prefix}ChangeLog file: $!.\n";
     # It's less efficient to read the whole thing into memory than it would be
@@ -316,27 +322,24 @@ foreach my $prefix (sort keys %files)
         print CHANGE_LOG "        WARNING: NO TEST CASES ADDED OR CHANGED\n\n" unless $changedLayoutTests;
     }
 
-    foreach my $file (sort @{$files{$prefix}})
-      {
+    foreach my $file (sort @{$files{$prefix}}) {
         my $file_stem = substr $file, length $prefix;
         print CHANGE_LOG "        * $file_stem:$function_lists{$file}\n";
-      }
+    }
     print CHANGE_LOG "\n", @old_change_log;
     close CHANGE_LOG;
-  }
+}
 
 # Write out another diff.
-if ($spewDiff && @changed_files)
-  {
-    print STDERR "  Running 'svn diff' to help you write the ChangeLog entries.\n";
-    open DIFF, "$SVN diff $changed_files_string |" or die "The svn diff failed: $!.\n";
+if ($spewDiff && @changed_files) {
+    print STDERR "  Running diff to help you write the ChangeLog entries.\n";
+    open DIFF, "-|", createPatchCommand($changed_files_string) or die "The diff failed: $!.\n";
     while (<DIFF>) { print; }
     close DIFF;
-  }
+}
 
 # Open ChangeLogs.
-if ($openChangeLogs && $logs)
-  {
+if ($openChangeLogs && $logs) {
     print STDERR "  Opening the edited ChangeLog files.\n";
     my $editor = $ENV{"CHANGE_LOG_EDIT_APPLICATION"};
     if ($editor) {
@@ -344,13 +347,13 @@ if ($openChangeLogs && $logs)
     } else {
         system "open -e$logs";
     }
-  }
+}
 
 # Done.
 exit;
 
 sub canonicalizePath($)
-  {
+{
     my ($file) = @_;
 
     # Remove extra slashes and '.' directories in path
@@ -358,22 +361,18 @@ sub canonicalizePath($)
 
     # Remove '..' directories in path
     my @dirs = ();
-    foreach my $dir (File::Spec->splitdir($file))
-      {
-        if ($dir eq '..' && $#dirs >= 0 && $dirs[$#dirs] ne '..')
-          {
+    foreach my $dir (File::Spec->splitdir($file)) {
+        if ($dir eq '..' && $#dirs >= 0 && $dirs[$#dirs] ne '..') {
             pop(@dirs);
-          }
-        else
-          {
+        } else {
             push(@dirs, $dir);
-          }
-      }
+        }
+    }
     return ($#dirs >= 0) ? File::Spec->catdir(@dirs) : ".";
-  }
+}
 
 sub get_function_line_ranges($$)
-  {
+{
     my ($file_handle, $file_name) = @_;
 
     if ($file_name =~ /\.(c|cpp|m|mm|h)$/) {
@@ -382,34 +381,32 @@ sub get_function_line_ranges($$)
         return get_function_line_ranges_for_java ($file_handle, $file_name);
     }
     return ();
-  }
+}
 
 
 sub method_decl_to_selector($)
-  {
+{
     (my $method_decl) = @_;
 
     $_ = $method_decl;
 
-    if ((my $comment_stripped) = m-([^/]*)(//|/*).*-) 
-      {
+    if ((my $comment_stripped) = m-([^/]*)(//|/*).*-) {
         $_ = $comment_stripped;
-      }
+    }
 
     s/,\s*...//;
 
-    if (/:/) 
-      {
+    if (/:/) {
         my @components = split /:/;
         pop @components if (scalar @components > 1);
         $_ = (join ':', map {s/.*[^[:word:]]//; scalar $_;} @components) . ':';
-      } else {
+    } else {
         s/\s*$//;
         s/.*[^[:word:]]//;
-      }
+    }
 
     return $_;
-  }
+}
 
 
 
@@ -422,7 +419,7 @@ sub method_decl_to_selector($)
 # Result is a list of triples: [ start_line, end_line, function_name ].
 
 sub get_function_line_ranges_for_c($$)
-  {
+{
     my ($file_handle, $file_name) = @_;
 
     my @ranges;
@@ -452,59 +449,46 @@ sub get_function_line_ranges_for_c($$)
     my $potential_namespace = "";
     my @namespaces;
 
-    while (<$file_handle>)
-      {
+    while (<$file_handle>) {
         # Handle continued multi-line comment.
-        if ($in_comment)
-          {
+        if ($in_comment) {
             next unless s-.*\*/--;
             $in_comment = 0;
-          }
+        }
 
         # Handle continued macro.
-        if ($in_macro)
-          {
+        if ($in_macro) {
             $in_macro = 0 unless /\\$/;
             next;
-          }
+        }
 
         # Handle start of macro (or any preprocessor directive).
-        if (/^\s*\#/)
-          {
+        if (/^\s*\#/) {
             $in_macro = 1 if /^([^\\]|\\.)*\\$/;
             next;
-          }
+        }
 
         # Handle comments and quoted text.
-        while (m-(/\*|//|\'|\")-) # \' and \" keep emacs perl mode happy
-          {
+        while (m-(/\*|//|\'|\")-) { # \' and \" keep emacs perl mode happy
             my $match = $1;
-            if ($match eq "/*")
-              {
-                if (!s-/\*.*?\*/--)
-                  {
+            if ($match eq "/*") {
+                if (!s-/\*.*?\*/--) {
                     s-/\*.*--;
                     $in_comment = 1;
-                  }
-              }
-            elsif ($match eq "//")
-              {
+                }
+            } elsif ($match eq "//") {
                 s-//.*--;
-              }
-            else # ' or "
-              {
-                if (!s-$match([^\\]|\\.)*?$match--)
-                  {
+            } else { # ' or "
+                if (!s-$match([^\\]|\\.)*?$match--) {
                     warn "mismatched quotes at line $. in $file_name\n";
                     s-$match.*--;
-                  }
-              }
-          }
+                }
+            }
+        }
 
 
         # continued method declaration
-        if ($in_method_declaration) 
-          {
+        if ($in_method_declaration) {
               my $original = $_;
               my $method_cont = $_;
 
@@ -513,14 +497,13 @@ sub get_function_line_ranges_for_c($$)
               $potential_method_spec = "${potential_method_spec} ${method_cont}";
 
               $_ = $original;
-              if (/;/) 
-                {
+              if (/;/) {
                   $potential_start = 0;
                   $potential_method_spec = "";
                   $potential_method_char = "";
                   $in_method_declaration = 0;
                   s/^[^;\{]*//;
-                } elsif (/{/) {
+              } elsif (/{/) {
                   my $selector = method_decl_to_selector ($potential_method_spec);
                   $potential_name = "${potential_method_char}\[${interface_name} ${selector}\]";
                   
@@ -530,33 +513,31 @@ sub get_function_line_ranges_for_c($$)
   
                   $_ = $original;
                   s/^[^;{]*//;
-                } elsif (/\@end/) {
+              } elsif (/\@end/) {
                   $in_method_declaration = 0;
                   $interface_name = "";
                   $_ = $original;
-                } else {
+              } else {
                   next;
-                }
-          }
+              }
+        }
 
         
         # start of method declaration
-        if ((my $method_char, my $method_spec) = m&^([-+])([^0-9;][^;]*);?$&)
-          {
+        if ((my $method_char, my $method_spec) = m&^([-+])([^0-9;][^;]*);?$&) {
             my $original = $_;
 
-            if ($interface_name) 
-              {
+            if ($interface_name) {
                 chomp $method_spec;
                 $method_spec =~ s/\{.*//;
-            
+
                 $potential_method_char = $method_char;
                 $potential_method_spec = $method_spec;
                 $potential_start = $.;
                 $in_method_declaration = 1;
-              } else { 
+            } else { 
                 warn "declaring a method but don't have interface on line $. in $file_name\n";
-              }
+            }
             $_ = $original;
             if (/\{/) {
               my $selector = method_decl_to_selector ($potential_method_spec);
@@ -574,43 +555,37 @@ sub get_function_line_ranges_for_c($$)
             } else {
               next;
             }
-          }
+        }
 
 
         # Find function, interface and method names.
-        while (m&((?:[[:word:]]+::)*operator(?:[ \t]*\(\)|[^()]*)|[[:word:]:~]+|[(){}:;])|\@(?:implementation|interface|protocol)\s+(\w+)[^{]*&g)
-          {
+        while (m&((?:[[:word:]]+::)*operator(?:[ \t]*\(\)|[^()]*)|[[:word:]:~]+|[(){}:;])|\@(?:implementation|interface|protocol)\s+(\w+)[^{]*&g) {
             # interface name
-            if ($2) 
-              {
+            if ($2) {
                 $interface_name = $2;
                 next;
-              }
+            }
 
             # Open parenthesis.
-            if ($1 eq "(")
-              {
+            if ($1 eq "(") {
                 $potential_name = $word unless $in_parentheses || $skip_til_brace_or_semicolon;
                 $in_parentheses++;
                 next;
-              }
+            }
 
             # Close parenthesis.
-            if ($1 eq ")")
-              {
+            if ($1 eq ")") {
                 $in_parentheses--;
                 next;
-              }
+            }
 
             # C++ constructor initializers
-            if ($1 eq ":")
-              {
+            if ($1 eq ":") {
                   $skip_til_brace_or_semicolon = 1 unless ($in_parentheses || $in_braces);
-              }
+            }
 
             # Open brace.
-            if ($1 eq "{")
-              {
+            if ($1 eq "{") {
                 $skip_til_brace_or_semicolon = 0;
 
                 if ($potential_namespace) {
@@ -621,25 +596,23 @@ sub get_function_line_ranges_for_c($$)
 
                 # Promote potential name to real function name at the
                 # start of the outer level set of braces (function body?).
-                if (!$in_braces and $potential_start)
-                  {
+                if (!$in_braces and $potential_start) {
                     $start = $potential_start;
                     $name = $potential_name;
                     if (@namespaces && (length($name) < 2 || substr($name,1,1) ne "[")) {
                         $name = join ('::', @namespaces, $name);
                     }
-                  }
+                }
 
                 $in_method_declaration = 0;
 
                 $brace_start = $. if (!$in_braces);
                 $in_braces++;
                 next;
-              }
+            }
 
             # Close brace.
-            if ($1 eq "}")
-              {
+            if ($1 eq "}") {
                 if (!$in_braces && @namespaces) {
                     pop @namespaces;
                     next;
@@ -650,26 +623,24 @@ sub get_function_line_ranges_for_c($$)
 
                 # End of an outer level set of braces.
                 # This could be a function body.
-                if (!$in_braces and $name)
-                  {
+                if (!$in_braces and $name) {
                     push @ranges, [ $start, $., $name ];
                     $name = "";
-                  }
+                }
 
                 $potential_start = 0;
                 $potential_name = "";
                 next;
-              }
+            }
 
             # Semicolon.
-            if ($1 eq ";")
-              {
+            if ($1 eq ";") {
                 $skip_til_brace_or_semicolon = 0;
                 $potential_start = 0;
                 $potential_name = "";
                 $in_method_declaration = 0;
                 next;
-              }
+            }
 
             # Ignore "const" method qualifier.
             if ($1 eq "const") {
@@ -684,24 +655,24 @@ sub get_function_line_ranges_for_c($$)
             # Word.
             $word = $1;
             if (!$skip_til_brace_or_semicolon) {
-              if ($next_word_could_be_namespace) {
-                $potential_namespace = $word;
-                $next_word_could_be_namespace = 0;
-              } elsif ($potential_namespace) {
-                $potential_namespace = "";
-              }
+                if ($next_word_could_be_namespace) {
+                    $potential_namespace = $word;
+                    $next_word_could_be_namespace = 0;
+                } elsif ($potential_namespace) {
+                    $potential_namespace = "";
+                }
 
-              if (!$in_parentheses) {
-                $potential_start = 0;
-                $potential_name = "";
-              }
-              if (!$potential_start) {
-                $potential_start = $.;
-                $potential_name = "";
-              }
+                if (!$in_parentheses) {
+                    $potential_start = 0;
+                    $potential_name = "";
+                }
+                if (!$potential_start) {
+                    $potential_start = $.;
+                    $potential_name = "";
+                }
             }
-          }
-      }
+        }
+    }
 
     warn "missing close braces in $file_name (probable start at $brace_start)\n" if ($in_braces > 0);
     warn "too many close braces in $file_name (probable start at $brace_end)\n" if ($in_braces < 0);
@@ -709,7 +680,7 @@ sub get_function_line_ranges_for_c($$)
     warn "mismatched parentheses in $file_name\n" if $in_parentheses;
 
     return @ranges;
-  }
+}
 
 
 
@@ -736,7 +707,7 @@ sub get_function_line_ranges_for_c($$)
 # Result is a list of triples: [ start_line, end_line, function_name ].
 
 sub get_function_line_ranges_for_java($$)
-  {
+{
     my ($file_handle, $file_name) = @_;
 
     my @current_scopes;
@@ -760,90 +731,72 @@ sub get_function_line_ranges_for_java($$)
     my $name = "";
     my $current_name_is_class_or_interface = 0;
 
-    while (<$file_handle>)
-      {
+    while (<$file_handle>) {
         # Handle continued multi-line comment.
-        if ($in_comment)
-          {
+        if ($in_comment) {
             next unless s-.*\*/--;
             $in_comment = 0;
-          }
+        }
 
         # Handle continued macro.
-        if ($in_macro)
-          {
+        if ($in_macro) {
             $in_macro = 0 unless /\\$/;
             next;
-          }
+        }
 
         # Handle start of macro (or any preprocessor directive).
-        if (/^\s*\#/)
-          {
+        if (/^\s*\#/) {
             $in_macro = 1 if /^([^\\]|\\.)*\\$/;
             next;
-          }
+        }
 
         # Handle comments and quoted text.
-        while (m-(/\*|//|\'|\")-) # \' and \" keep emacs perl mode happy
-          {
+        while (m-(/\*|//|\'|\")-) { # \' and \" keep emacs perl mode happy
             my $match = $1;
-            if ($match eq "/*")
-              {
-                if (!s-/\*.*?\*/--)
-                  {
+            if ($match eq "/*") {
+                if (!s-/\*.*?\*/--) {
                     s-/\*.*--;
                     $in_comment = 1;
-                  }
-              }
-            elsif ($match eq "//")
-              {
+                }
+            } elsif ($match eq "//") {
                 s-//.*--;
-              }
-            else # ' or "
-              {
-                if (!s-$match([^\\]|\\.)*?$match--)
-                  {
+            } else { # ' or "
+                if (!s-$match([^\\]|\\.)*?$match--) {
                     warn "mismatched quotes at line $. in $file_name\n";
                     s-$match.*--;
-                  }
-              }
-          }
+                }
+            }
+        }
 
         # Find function names.
-        while (m-(\w+|[(){};])-g)
-          {
+        while (m-(\w+|[(){};])-g) {
             # Open parenthesis.
-            if ($1 eq "(")
-              {
+            if ($1 eq "(") {
                 if (!$in_parentheses) {
                     $potential_name = $word;
                     $potential_name_is_class_or_interface = 0;
                 }
                 $in_parentheses++;
                 next;
-              }
+            }
 
             # Close parenthesis.
-            if ($1 eq ")")
-              {
+            if ($1 eq ")") {
                 $in_parentheses--;
                 next;
-              }
+            }
 
             # Open brace.
-            if ($1 eq "{")
-              {
+            if ($1 eq "{") {
                 # Promote potential name to real function name at the
                 # start of the outer level set of braces (function/class/interface body?).
                 if (!$in_non_block_braces
                     and (!$in_braces or $current_name_is_class_or_interface)
-                    and $potential_start)
-                  {
-                    if ($name)
-                      {
+                    and $potential_start) {
+                    if ($name) {
                           push @ranges, [ $start, ($. - 1),
                                           join ('.', @current_scopes) ];
-                      }
+                    }
 
 
                     $current_name_is_class_or_interface = $potential_name_is_class_or_interface;
@@ -852,76 +805,65 @@ sub get_function_line_ranges_for_java($$)
                     $name = $potential_name;
 
                     push (@current_scopes, $name);
-                  } else {
-                      $in_non_block_braces++;
-                  }
+                } else {
+                    $in_non_block_braces++;
+                }
 
                 $potential_name = "";
                 $potential_start = 0;
 
                 $in_braces++;
                 next;
-              }
+            }
 
             # Close brace.
-            if ($1 eq "}")
-              {
+            if ($1 eq "}") {
                 $in_braces--;
 
                 # End of an outer level set of braces.
                 # This could be a function body.
-                if (!$in_non_block_braces)
-                  {
-                    if ($name)
-                      {
+                if (!$in_non_block_braces) {
+                    if ($name) {
                         push @ranges, [ $start, $.,
                                         join ('.', @current_scopes) ];
 
                         pop (@current_scopes);
 
-                        if (@current_scopes)
-                          {
+                        if (@current_scopes) {
                             $current_name_is_class_or_interface = 1;
 
                             $start = $. + 1;
                             $name =  $current_scopes[$#current_scopes-1];
-                          }
-                        else
-                          {
+                        } else {
                             $current_name_is_class_or_interface = 0;
                             $start = 0;
                             $name =  "";
-                          }
+                        }
                     }
-                  }
-                else
-                  {
+                } else {
                     $in_non_block_braces-- if $in_non_block_braces;
-                  }
+                }
 
                 $potential_start = 0;
                 $potential_name = "";
                 next;
-              }
+            }
 
             # Semicolon.
-            if ($1 eq ";")
-              {
+            if ($1 eq ";") {
                 $potential_start = 0;
                 $potential_name = "";
                 next;
-              }
+            }
 
-            if ($1 eq "class" or $1 eq "interface")
-              {
+            if ($1 eq "class" or $1 eq "interface") {
                 $class_or_interface_just_seen = 1;
                 next;
-              }
+            }
 
             # Word.
             $word = $1;
-            if (!$in_parentheses)
-              {
+            if (!$in_parentheses) {
                 if ($class_or_interface_just_seen) {
                     $potential_name = $word;
                     $potential_start = $.;
@@ -929,31 +871,29 @@ sub get_function_line_ranges_for_java($$)
                     $potential_name_is_class_or_interface = 1;
                     next;
                 }
-              }
-            if (!$potential_start)
-              {
+            }
+            if (!$potential_start) {
                 $potential_start = $.;
                 $potential_name = "";
-              }
+            }
             $class_or_interface_just_seen = 0;
-          }
-      }
+        }
+    }
 
     warn "mismatched braces in $file_name\n" if $in_braces;
     warn "mismatched parentheses in $file_name\n" if $in_parentheses;
 
     return @ranges;
-  }
+}
 
 sub processPaths(\@)
-  {
+{
     my ($paths) = @_;
     return ("." => 1) if (!@{$paths});
 
     my %result = ();
 
-    for my $file (@{$paths})
-      {
+    for my $file (@{$paths}) {
         die "can't handle absolute paths like \"$file\"\n" if File::Spec->file_name_is_absolute($file);
         die "can't handle empty string path\n" if $file eq "";
         die "can't handle path with single quote in the name like \"$file\"\n" if $file =~ /'/; # ' (keep Xcode syntax highlighting happy)
@@ -965,22 +905,194 @@ sub processPaths(\@)
         die "can't handle paths with .. like \"$untouchedFile\"\n" if $file =~ m|/\.\./|;
 
         $result{$file} = 1;
-      }
+    }
 
     return ("." => 1) if ($result{"."});
 
     # Remove any paths that also have a parent listed.
-    for my $path (keys %result)
-      {
-        for (my $parent = dirname($path); $parent ne '.'; $parent = dirname($parent))
-         {
-            if ($result{$parent})
-              {
+    for my $path (keys %result) {
+        for (my $parent = dirname($path); $parent ne '.'; $parent = dirname($parent)) {
+            if ($result{$parent}) {
                 delete $result{$path};
                 last;
-              }
-          }
-      }
+            }
+        }
+    }
 
     return %result;
-  }
+}
+
+sub diffCommand(\%)
+{
+    my ($paths) = @_;
+
+    my $prefix;
+    if (isSVN()) {
+        $prefix = "$SVN diff --diff-cmd diff -x -N";
+    } elsif (isGit()) {
+        $prefix = "$GIT diff HEAD --";
+    }
+
+    return "$prefix '" . join("' '", keys %{$paths}) . "'";
+}
+
+sub statusCommand(\@)
+{
+    my ($files) = @_;
+
+    my $filesString = "'" . join ("' '", @{$files}) . "'";
+    my $command;
+    if (isSVN()) {
+        $command = "$SVN stat $filesString";
+    } elsif (isGit()) {
+        # FIXME: This command will give status for the whole repository, not
+        # just the files passed in.
+        $command = "$GIT status";
+    }
+
+    return "$command 2> /dev/stdout";
+}
+
+sub createPatchCommand($)
+{
+    my ($changedFilesString) = @_;
+
+    return "'$FindBin::Bin/svn-create-patch' $changedFilesString" if isSVN();
+    return "$GIT diff -C -M HEAD -- $changedFilesString" if isGit();
+}
+
+sub diffHeaderFormat()
+{
+    return qr/^Index: (\S+)$/ if isSVN();
+    return qr/^diff --git a\/.+ b\/(.+)$/ if isGit();
+}
+
+sub isModifiedOrAddedStatus($)
+{
+    my ($status) = @_;
+
+    my %svn = (
+        "A" => 1,
+        "M" => 1,
+        "R" => 1,
+    );
+
+    my %git = (
+        "new file" => 1,
+        "modified" => 1,
+        "copied" => 1,
+        "renamed" => 1,
+    );
+
+    return $svn{$status} if isSVN();
+    return $git{$status} if isGit();
+}
+
+sub isConflictStatus($)
+{
+    my ($status) = @_;
+
+    my %svn = (
+        "C" => 1,
+    );
+
+    my %git = (
+        "unmerged" => 1,
+    );
+
+    return $svn{$status} if isSVN();
+    return $git{$status} if isGit();
+}
+
+sub statusDescription($$)
+{
+    my ($status, $original) = @_;
+
+    my %svn = (
+        "A" => " Added.",
+        "D" => " Removed.",
+        "M" => "",
+        "R" => " Replaced.",
+    );
+    my %git = (
+        "copied" => " Copied from \%s.",
+        "deleted" => " Removed.",
+        "modified" => "",
+        "new file" => " Added.",
+        "renamed" => " Renamed from \%s.",
+    );
+
+    return $svn{$status} if isSVN() && exists $svn{$status};
+    return sprintf($git{$status}, $original) if isGit() && exists $git{$status};
+}
+
+sub extractLineRange($)
+{
+    my ($string) = @_;
+
+    my ($start, $end) = (-1, -1);
+
+    if (isSVN() && $string =~ /^\d+(,\d+)?[acd](\d+)(,(\d+))?/) {
+        $start = $2;
+        $end = $4 || $2;
+    } elsif (isGit() && $string =~ /^@@ -\d+,\d+ \+(\d+),(\d+) @@/) {
+        $start = $1;
+        $end = $1 + $2 - 1;
+
+        # git-diff shows 3 lines of context above and below the actual changes,
+        # so we need to subtract that context to find the actual changed range.
+
+        # FIXME: This won't work if there's a change at the very beginning or
+        # very end of a file.
+
+        $start += 3;
+        $end -= 6;
+    }
+
+    return ($start, $end);
+}
+
+my $gitRoot;
+sub makeFilePathRelative($)
+{
+    my ($path) = @_;
+    return $path unless isGit();
+
+    unless (defined $gitRoot) {
+        chomp($gitRoot = `git rev-parse --git-dir`);
+        $gitRoot =~ s/\.git$//;
+    }
+    my $result = File::Spec->abs2rel(File::Spec->rel2abs($path, $gitRoot));
+    return $result;
+}
+
+my $isGit;
+sub isGit()
+{
+    return $isGit if defined $isGit;
+
+    my $dir = ".";
+    my @dirs = keys(%paths);
+
+    $dir = -d $dirs[0] ? $dirs[0] : dirname($dirs[0]) if @dirs;
+
+    $isGit = system("cd $dir && git rev-parse > /dev/null 2>&1") == 0;
+    return $isGit;
+}
+
+my $isSVN;
+sub isSVN()
+{
+    return $isSVN if defined $isSVN;
+
+    my $dir = ".svn";
+    my @dirs = keys(%paths);
+
+    if (@dirs) {
+        my $path = -d $dirs[0] ? $dirs[0] : dirname($dirs[0]);
+        $dir = File::Spec->catdir($path, ".svn");
+    }
+
+    $isSVN = -d $dir;
+    return $isSVN;
+}

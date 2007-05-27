@@ -556,7 +556,8 @@ void FrameLoaderClientWx::didFinishLoad()
 
 void FrameLoaderClientWx::prepareForDataSourceReplacement()
 {
-    m_frame->loader()->detachChildren();
+    if (m_frame && m_frame->loader())
+        m_frame->loader()->detachChildren();
 }
 
 
@@ -843,7 +844,7 @@ Frame* FrameLoaderClientWx::createFrame(const KURL& url, const String& name, HTM
     FrameLoadType childLoadType = FrameLoadTypeInternal;
 
     childFrame->loader()->load(url, referrer, childLoadType,
-                             String(), 0, 0, WTF::HashMap<String, String>());
+                            String(), 0, 0);
     
     // The frame's onload handler may have removed it from the document.
     if (!childFrame->tree()->parent())

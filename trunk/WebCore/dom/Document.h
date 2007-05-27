@@ -1,6 +1,4 @@
 /*
- * This file is part of the DOM implementation for KDE.
- *
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
  *           (C) 2001 Dirk Mueller (mueller@kde.org)
@@ -82,6 +80,7 @@ namespace WebCore {
     class Range;
     class RegisteredEventListener;
     class RenderArena;
+    class Settings;
     class StyleSheet;
     class StyleSheetList;
     class Text;
@@ -135,7 +134,7 @@ struct FormElementKeyHashTraits : WTF::GenericHashTraits<FormElementKey> {
 
 class Document : public ContainerNode {
 public:
-    Document(DOMImplementation*, FrameView*);
+    Document(DOMImplementation*, Frame*);
     ~Document();
 
     virtual void removedLastRef();
@@ -209,6 +208,7 @@ public:
 
     PassRefPtr<HTMLCollection> images();
     PassRefPtr<HTMLCollection> embeds();
+    PassRefPtr<HTMLCollection> plugins(); // an alias for embeds() required for the JS DOM bindings.
     PassRefPtr<HTMLCollection> applets();
     PassRefPtr<HTMLCollection> links();
     PassRefPtr<HTMLCollection> forms();
@@ -255,7 +255,14 @@ public:
      * This method returns true if all top-level stylesheets have loaded (including
      * any @imports that they may be loading).
      */
-    bool haveStylesheetsLoaded() const { return m_pendingStylesheets <= 0 || m_ignorePendingStylesheets; }
+    bool haveStylesheetsLoaded() const
+    {
+        return m_pendingStylesheets <= 0 || m_ignorePendingStylesheets
+#if USE(LOW_BANDWIDTH_DISPLAY)
+            || m_inLowBandwidthDisplay
+#endif
+            ;
+    }
 
     /**
      * Increments the number of pending sheets.  The <link> elements
@@ -280,10 +287,14 @@ public:
     void setUsesDescendantRules(bool b) { m_usesDescendantRules = b; }
     bool usesSiblingRules() const { return m_usesSiblingRules; }
     void setUsesSiblingRules(bool b) { m_usesSiblingRules = b; }
+    bool usesFirstLineRules() const { return m_usesFirstLineRules; }
+    void setUsesFirstLineRules(bool b) { m_usesFirstLineRules = b; }
+    bool usesFirstLetterRules() const { return m_usesFirstLetterRules; }
+    void setUsesFirstLetterRules(bool b) { m_usesFirstLetterRules = b; }
 
     // Machinery for saving and restoring state when you leave and then go back to a page.
     void registerFormElementWithState(HTMLGenericFormElement* e) { m_formElementsWithState.add(e); }
-    void deregisterFormElementWithState(HTMLGenericFormElement* e) { m_formElementsWithState.remove(e); }
+    void unregisterFormElementWithState(HTMLGenericFormElement* e) { m_formElementsWithState.remove(e); }
     Vector<String> formElementsState() const;
     void setStateForNewFormElements(const Vector<String>&);
     bool hasStateForNewFormElements() const;
@@ -292,6 +303,7 @@ public:
     FrameView* view() const; // can be NULL
     Frame* frame() const; // can be NULL
     Page* page() const; // can be NULL
+    Settings* settings() const; // can be NULL
 
     PassRefPtr<Range> createRange();
 
@@ -627,10 +639,20 @@ public:
 
     bool isAllowedToLoadLocalResources() const { return m_isAllowedToLoadLocalResources; }
 
+    void setUseSecureKeyboardEntryWhenActive(bool);
+    bool useSecureKeyboardEntryWhenActive() const;
+    
+#if USE(LOW_BANDWIDTH_DISPLAY)
+    void setDocLoader(DocLoader* loader) { m_docLoader = loader; }
+    bool inLowBandwidthDisplay() const { return m_inLowBandwidthDisplay; }
+    void setLowBandwidthDisplay(bool lowBandWidth) { m_inLowBandwidthDisplay = lowBandWidth; }
+#endif     
+
 protected:
     CSSStyleSelector* m_styleSelector;
-    FrameView* m_view;
+    bool m_didCalculateStyleSelector;
 
+    Frame* m_frame;
     DocLoader* m_docLoader;
     Tokenizer* m_tokenizer;
     bool m_wellFormed;
@@ -688,6 +710,8 @@ protected:
     ListHashSet<HTMLGenericFormElement*> m_formElementsWithState;
     FormElementStateMap m_stateForNewFormElements;
 
+    HashSet<Element*> m_didRestorePageCallbackSet;
+    
     Color m_linkColor;
     Color m_visitedLinkColor;
     Color m_activeLinkColor;
@@ -703,7 +727,9 @@ protected:
     bool m_closeAfterStyleRecalc;
     bool m_usesDescendantRules;
     bool m_usesSiblingRules;
-    
+    bool m_usesFirstLineRules;
+    bool m_usesFirstLetterRules;
+
     String m_title;
     bool m_titleSetExplicitly;
     RefPtr<Element> m_titleElement;
@@ -752,9 +778,12 @@ public:
     bool inPageCache();
     void setInPageCache(bool flag);
 
-    void passwordFieldAdded();
-    void passwordFieldRemoved();
-    bool hasPasswordField() const;
+    // Elements can register themselves for the "didRestoreFromCache()" callback which will be
+    // called if the document is restored from the Page Cache
+    void registerForDidRestoreFromCacheCallback(Element*);
+    void unregisterForDidRestoreFromCacheCallback(Element*);
+    
+    void didRestoreFromCache();
 
     void secureFormAdded();
     void secureFormRemoved();
@@ -801,7 +830,6 @@ private:
 
     mutable String m_domain;
     RenderObject* m_savedRenderer;
-    int m_passwordFields;
     int m_secureForms;
     
     RefPtr<TextResourceDecoder> m_decoder;
@@ -839,6 +867,12 @@ private:
     String m_iconURL;
 
     bool m_isAllowedToLoadLocalResources;
+    
+    bool m_useSecureKeyboardEntryWhenActive;
+
+#if USE(LOW_BANDWIDTH_DISPLAY)
+    bool m_inLowBandwidthDisplay;
+#endif
 };
 
 } //namespace

@@ -278,47 +278,53 @@ UChar32 WidthIterator::normalizeVoicingMarks(int currentCharacter)
 // Font Implementation (Cross-Platform Portion)
 // ============================================================================================
 
-Font::Font() :m_fontList(0), m_letterSpacing(0), m_wordSpacing(0)
-{}
-
-Font::Font(const FontDescription& fd, short letterSpacing, short wordSpacing) 
-: m_fontDescription(fd),
-  m_fontList(0),
-  m_pageZero(0),
-  m_letterSpacing(letterSpacing),
-  m_wordSpacing(wordSpacing)
-{}
-
-Font::Font(const FontPlatformData& fontData, bool isPrinterFont)
+Font::Font()
     : m_pageZero(0)
     , m_letterSpacing(0)
     , m_wordSpacing(0)
+    , m_isPlatformFont(false)
+{
+}
+
+Font::Font(const FontDescription& fd, short letterSpacing, short wordSpacing) 
+    : m_fontDescription(fd)
+    , m_pageZero(0)
+    , m_letterSpacing(letterSpacing)
+    , m_wordSpacing(wordSpacing)
+    , m_isPlatformFont(false)
+{
+}
+
+Font::Font(const FontPlatformData& fontData, bool isPrinterFont)
+    : m_fontList(new FontFallbackList)
+    , m_pageZero(0)
+    , m_letterSpacing(0)
+    , m_wordSpacing(0)
+    , m_isPlatformFont(true)
 {
     m_fontDescription.setUsePrinterFont(isPrinterFont);
-    m_fontList = new FontFallbackList();
     m_fontList->setPlatformFont(fontData);
 }
 
 Font::Font(const Font& other)
+    : m_fontDescription(other.m_fontDescription)
+    , m_fontList(other.m_fontList)
+    , m_pages(other.m_pages)
+    , m_pageZero(other.m_pageZero)
+    , m_letterSpacing(other.m_letterSpacing)
+    , m_wordSpacing(other.m_wordSpacing)
+    , m_isPlatformFont(other.m_isPlatformFont)
 {
-    m_fontDescription = other.m_fontDescription;
-    m_fontList = other.m_fontList;
-    m_letterSpacing = other.m_letterSpacing;
-    m_wordSpacing = other.m_wordSpacing;
-    m_pages = other.m_pages;
-    m_pageZero = other.m_pageZero;
 }
 
 Font& Font::operator=(const Font& other)
 {
-    if (&other != this) {
-        m_fontDescription = other.m_fontDescription;
-        m_fontList = other.m_fontList;
-        m_pages = other.m_pages;
-        m_pageZero = other.m_pageZero;
-        m_letterSpacing = other.m_letterSpacing;
-        m_wordSpacing = other.m_wordSpacing;
-    }
+    m_fontDescription = other.m_fontDescription;
+    m_fontList = other.m_fontList;
+    m_pages = other.m_pages;
+    m_pageZero = other.m_pageZero;
+    m_letterSpacing = other.m_letterSpacing;
+    m_wordSpacing = other.m_wordSpacing;
     return *this;
 }
 
@@ -367,7 +373,7 @@ const GlyphData& Font::glyphDataForCharacter(UChar32 c, const UChar* cluster, un
             const GlyphData& data = page->glyphDataForCharacter(c);
             if (data.glyph || !attemptFontSubstitution) {
                 if (!smallCaps)
-                    return data;
+                    return data;  // We have a glyph for the character in question in the current page (or we've been told not to fall back).
 
                 const FontData* smallCapsFontData = data.fontData->smallCapsFontData(m_fontDescription);
 
@@ -396,7 +402,10 @@ const GlyphData& Font::glyphDataForCharacter(UChar32 c, const UChar* cluster, un
         }
 
         if (node->isSystemFallback()) {
-            // System fallback is character-dependent.
+            // System fallback is character-dependent. When we get here, we
+            // know that the character in question isn't in the system fallback
+            // font's glyph page. Try to lazily create it here.
+
             // Convert characters that shouldn't render to zero width spaces when asking what font is
             // appropriate.
             const FontData* characterFontData;
@@ -407,6 +416,9 @@ const GlyphData& Font::glyphDataForCharacter(UChar32 c, const UChar* cluster, un
             if (smallCaps)
                 characterFontData = characterFontData->smallCapsFontData(m_fontDescription);
             if (characterFontData) {
+                // Got the fallback font, return the glyph page associated with
+                // it. We also store the FontData for the glyph in the fallback
+                // page for future use (it's lazily populated by us).
                 GlyphPage* fallbackPage = GlyphPageTreeNode::getRootChild(characterFontData, pageNumber)->page();
                 const GlyphData& data = fallbackPage ? fallbackPage->glyphDataForCharacter(c) : characterFontData->missingGlyphData();
                 if (!smallCaps)
@@ -430,7 +442,6 @@ const GlyphData& Font::glyphDataForCharacter(UChar32 c, const UChar* cluster, un
         else
             m_pageZero = node;
     }
-
 }
 
 const FontData* Font::primaryFont() const
@@ -455,11 +466,11 @@ void Font::update() const
 {
     // FIXME: It is pretty crazy that we are willing to just poke into a RefPtr, but it ends up 
     // being reasonably safe (because inherited fonts in the render tree pick up the new
-    // style anyway.  Other copies are transient, e.g., the state in the GraphicsContext, and
-    // won't stick around long enough to get you in trouble).  Still, this is pretty disgusting,
+    // style anyway. Other copies are transient, e.g., the state in the GraphicsContext, and
+    // won't stick around long enough to get you in trouble). Still, this is pretty disgusting,
     // and could eventually be rectified by using RefPtrs for Fonts themselves.
     if (!m_fontList)
-        m_fontList = new FontFallbackList();
+        m_fontList = new FontFallbackList;
     m_fontList->invalidate();
     m_pageZero = 0;
     m_pages.clear();

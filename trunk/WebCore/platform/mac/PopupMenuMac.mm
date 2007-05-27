@@ -100,8 +100,11 @@ void PopupMenu::show(const IntRect& r, FrameView* v, int index)
 {
     populate();
     int numItems = [m_popup.get() numberOfItems];
-    if (numItems <= 0)
+    if (numItems <= 0) {
+        if (client())
+            client()->hidePopup();
         return;
+    }
     ASSERT(numItems > index);
 
     // Workaround for crazy bug where a selected index of -1 for a menu with only 1 item will cause a blank menu.
@@ -150,6 +153,7 @@ void PopupMenu::show(const IntRect& r, FrameView* v, int index)
     frame->willPopupMenu(menu);
     wkPopupMenu(menu, location, roundf(NSWidth(r)), dummyView.get(), index, font);
 
+    [m_popup.get() dismissPopUp];
     [dummyView.get() removeFromSuperview];
 
     if (client()) {

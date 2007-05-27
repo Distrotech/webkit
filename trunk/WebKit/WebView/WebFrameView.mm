@@ -57,6 +57,7 @@
 #import <JavaScriptCore/Assertions.h>
 #import <WebCore/DragController.h>
 #import <WebCore/Frame.h>
+#import <WebCore/FrameView.h>
 #import <WebCore/HistoryItem.h>
 #import <WebCore/Page.h>
 #import <WebCore/WebCoreFrameView.h>
@@ -164,13 +165,23 @@ enum {
     // tree, so must do this before setDocumentView:.
     [sv setDocumentCursor:[NSCursor arrowCursor]];
 
+    // If the old view is the first responder, then set the window's first responder to nil so
+    // we don't leave the window pointing to a view that's no longer in it.
+    NSWindow *window = [sv window];
+    NSResponder *firstResponder = [window firstResponder];
+    if ([firstResponder isKindOfClass:[NSView class]] && [(NSView *)firstResponder isDescendantOf:[sv documentView]])
+        [window makeFirstResponder:nil];
+
     [sv setDocumentView:view];
     [sv setSuppressLayout:NO];
 }
 
 -(NSView <WebDocumentView> *)_makeDocumentViewForDataSource:(WebDataSource *)dataSource
-{    
-    Class viewClass = [[self class] _viewClassForMIMEType:[[dataSource response] MIMEType]];
+{
+    NSString* MIMEType = [[dataSource response] MIMEType];
+    if (!MIMEType)
+        MIMEType = @"text/html";
+    Class viewClass = [[self class] _viewClassForMIMEType:MIMEType];
     NSView <WebDocumentView> *documentView;
     if (viewClass) {
         // If the dataSource's representation has already been created, and it is also the
@@ -342,7 +353,13 @@ static inline void addTypesFromClass(NSMutableDictionary *allTypes, Class objCCl
 
 - (void)setAllowsScrolling:(BOOL)flag
 {
-    [(WebDynamicScrollBarsView *)[self _scrollView] setAllowsScrolling:flag];
+    WebDynamicScrollBarsView *scrollView = (WebDynamicScrollBarsView *)[self _scrollView];
+    [scrollView setAllowsScrolling:flag];
+    WebCore::Frame *frame = core([self webFrame]);
+    if (WebCore::FrameView *view = frame? frame->view() : 0) {
+        view->setHScrollbarMode((WebCore::ScrollbarMode)[scrollView horizontalScrollingMode]);
+        view->setVScrollbarMode((WebCore::ScrollbarMode)[scrollView verticalScrollingMode]);
+    }
 }
 
 - (BOOL)allowsScrolling

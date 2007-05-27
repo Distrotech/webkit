@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.
+ * Copyright (C) 2006, 2007 Apple Inc. All rights reserved.
  *
  * Portions are Copyright (C) 1998 Netscape Communications Corporation.
  *
@@ -141,7 +141,7 @@ RenderLayer::RenderLayer(RenderObject* object)
     , m_isOverflowOnly(shouldBeOverflowOnly())
     , m_usedTransparency(false)
     , m_inOverflowRelayout(false)
-    , m_repaintOverflowOnResize(false)
+    , m_needsFullRepaint(false)
     , m_overflowStatusDirty(true)
     , m_visibleContentStatusDirty(true)
     , m_hasVisibleContent(false)
@@ -174,15 +174,6 @@ RenderLayer::~RenderLayer()
     ASSERT(!m_clipRects);
 }
 
-void RenderLayer::checkForRepaintOnResize()
-{
-    // FIXME: The second part of the condition is probably no longer needed. The first part can be
-    // done when the object is marked for layout instead of walking the tree here.
-    m_repaintOverflowOnResize = m_object->selfNeedsLayout() || m_object->hasOverflowClip() && m_object->normalChildNeedsLayout();
-    for (RenderLayer* child = firstChild(); child; child = child->nextSibling())
-        child->checkForRepaintOnResize();
-}
-
 void RenderLayer::updateLayerPositions(bool doFullRepaint, bool checkForRepaint)
 {
     if (doFullRepaint) {
@@ -199,19 +190,22 @@ void RenderLayer::updateLayerPositions(bool doFullRepaint, bool checkForRepaint)
     updateVisibilityStatus();
         
     if (m_hasVisibleContent) {
+        RenderView* view = m_object->view();
+        ASSERT(view);
+        // FIXME: Optimize using LayoutState and remove the disableLayoutState() call
+        // from updateScrollInfoAfterLayout().
+        ASSERT(!view->layoutState());
+
         IntRect newRect = m_object->absoluteClippedOverflowRect();
         IntRect newOutlineBox = m_object->absoluteOutlineBox();
         if (checkForRepaint) {
-            RenderView* view = m_object->view();
-            ASSERT(view);
             if (view && !view->printing()) {
-                bool didMove = newOutlineBox.location() != m_outlineBox.location();
-                if (!didMove && !m_repaintOverflowOnResize)
-                    m_object->repaintAfterLayoutIfNeeded(m_repaintRect, m_outlineBox);
-                else if (didMove || newRect != m_repaintRect) {
+                if (m_needsFullRepaint) {
                     view->repaintViewRectangle(m_repaintRect);
-                    view->repaintViewRectangle(newRect);
-                }
+                    if (newRect != m_repaintRect)
+                        view->repaintViewRectangle(newRect);
+                } else
+                    m_object->repaintAfterLayoutIfNeeded(m_repaintRect, m_outlineBox);
             }
         }
         m_repaintRect = newRect;
@@ -220,6 +214,8 @@ void RenderLayer::updateLayerPositions(bool doFullRepaint, bool checkForRepaint)
         m_repaintRect = IntRect();
         m_outlineBox = IntRect();
     }
+
+    m_needsFullRepaint = false;
     
     for (RenderLayer* child = firstChild(); child; child = child->nextSibling())
         child->updateLayerPositions(doFullRepaint, checkForRepaint);
@@ -291,11 +287,11 @@ void RenderLayer::updateVisibilityStatus()
             m_hasVisibleContent = false;
             RenderObject* r = m_object->firstChild();
             while (r) {
-                if (r->style()->visibility() == VISIBLE && !r->layer()) {
+                if (r->style()->visibility() == VISIBLE && !r->hasLayer()) {
                     m_hasVisibleContent = true;
                     break;
                 }
-                if (r->firstChild() && !r->layer())
+                if (r->firstChild() && !r->hasLayer())
                     r = r->firstChild();
                 else if (r->nextSibling())
                     r = r->nextSibling();
@@ -326,7 +322,7 @@ void RenderLayer::updateLayerPosition()
         // We must adjust our position by walking up the render tree looking for the
         // nearest enclosing object with a layer.
         RenderObject* curr = m_object->parent();
-        while (curr && !curr->layer()) {
+        while (curr && !curr->hasLayer()) {
             if (!curr->isTableRow()) {
                 // Rows and cells share the same coordinate space (that of the section).
                 // Omit them when computing our xpos/ypos.
@@ -357,39 +353,12 @@ void RenderLayer::updateLayerPosition()
         // For positioned layers, we subtract out the enclosing positioned layer's scroll offset.
         positionedParent->subtractScrollOffset(x, y);
         
-        if (m_object->isPositioned() && positionedParent->renderer()->isRelPositioned() &&
-            positionedParent->renderer()->isInlineFlow()) {
-            // When we have an enclosing relpositioned inline, we need to add in the offset of the first line
-            // box from the rest of the content, but only in the cases where we know we're positioned
-            // relative to the inline itself.
-            RenderFlow* flow = static_cast<RenderFlow*>(positionedParent->renderer());
-            int sx = 0, sy = 0;
-            if (flow->firstLineBox()) {
-                sx = flow->firstLineBox()->xPos();
-                sy = flow->firstLineBox()->yPos();
-            }
-            else {
-                sx = flow->staticX();
-                sy = flow->staticY();
-            }
-            bool isInlineType = m_object->style()->isOriginalDisplayInlineType();
-            
-            if (!m_object->hasStaticX())
-                x += sx;
-            
-            // This is not terribly intuitive, but we have to match other browsers.  Despite being a block display type inside
-            // an inline, we still keep our x locked to the left of the relative positioned inline.  Arguably the correct
-            // behavior would be to go flush left to the block that contains the inline, but that isn't what other browsers
-            // do.
-            if (m_object->hasStaticX() && !isInlineType)
-                // Avoid adding in the left border/padding of the containing block twice.  Subtract it out.
-                x += sx - (m_object->containingBlock()->borderLeft() + m_object->containingBlock()->paddingLeft());
-            
-            if (!m_object->hasStaticY())
-                y += sy;
+        if (m_object->isPositioned()) {
+            IntSize offset = static_cast<RenderBox*>(m_object)->offsetForPositionedInContainer(positionedParent->renderer());
+            x += offset.width();
+            y += offset.height();
         }
-    }
-    else if (parent())
+    } else if (parent())
         parent()->subtractScrollOffset(x, y);
     
     setPos(x,y);
@@ -730,8 +699,16 @@ void RenderLayer::scrollRectToVisible(const IntRect &rect, const ScrollAlignment
     FrameView* frameView = m_object->document()->view();
     if (frameView)
         frameView->pauseScheduledEvents();
-    
-    if (m_object->hasOverflowClip()) {
+
+    bool restrictedByLineClamp = false;
+    if (m_object->parent()) {
+        parentLayer = m_object->parent()->enclosingLayer();
+        restrictedByLineClamp = m_object->parent()->style()->lineClamp() >= 0;
+    }
+
+    if (m_object->hasOverflowClip() && !restrictedByLineClamp) {
+        // Don't scroll to reveal an overflow layer that is restricted by the -webkit-line-clamp property.
+        // This will prevent us from revealing text hidden by the slider in Safari RSS.
         int x, y;
         m_object->absolutePosition(x, y);
         IntRect layerBounds = IntRect(x + scrollXOffset(), y + scrollYOffset(), 
@@ -754,10 +731,7 @@ void RenderLayer::scrollRectToVisible(const IntRect &rect, const ScrollAlignment
             newRect.setX(rect.x() - diffX);
             newRect.setY(rect.y() - diffY);
         }
-    
-        if (m_object->parent())
-            parentLayer = m_object->parent()->enclosingLayer();
-    } else {
+    } else if (!parentLayer) {
         if (frameView) {
             if (m_object->document() && m_object->document()->ownerElement() && m_object->document()->ownerElement()->renderer()) {
                 IntRect viewRect = enclosingIntRect(frameView->visibleContentRect());
@@ -887,64 +861,66 @@ void RenderLayer::autoscroll()
     scrollRectToVisible(IntRect(currentPos, IntSize(1, 1)), gAlignToEdgeIfNeeded, gAlignToEdgeIfNeeded);    
 }
 
-void RenderLayer::resize(const PlatformMouseEvent& evt, const IntSize& offsetFromResizeCorner)
+void RenderLayer::resize(const PlatformMouseEvent& evt, const IntSize& oldOffset)
 {
-    if (!inResizeMode() || !renderer()->hasOverflowClip() || m_object->style()->resize() == RESIZE_NONE)
+    if (!inResizeMode() || !m_object->hasOverflowClip())
         return;
 
-    if (!m_object->document()->frame()->eventHandler()->mousePressed())
+    // Set the width and height of the shadow ancestor node if there is one.
+    // This is necessary for textarea elements since the resizable layer is in the shadow content.
+    Element* element = static_cast<Element*>(m_object->node()->shadowAncestorNode());
+    RenderBox* renderer = static_cast<RenderBox*>(element->renderer());
+
+    EResize resize = renderer->style()->resize();
+    if (resize == RESIZE_NONE)
         return;
 
-    // FIXME Radar 4118559: This behaves very oddly for textareas that are in blocks with right-aligned text; you have
-    // to drag the bottom-right corner to make the bottom-left corner move.
-    // FIXME Radar 4118564: ideally we'd autoscroll the window as necessary to keep the point under
-    // the cursor in view.
+    Document* document = element->document();
+    if (!document->frame()->eventHandler()->mousePressed())
+        return;
 
-    IntPoint currentPoint = m_object->document()->view()->windowToContents(evt.pos());
-    currentPoint += offsetFromResizeCorner;
+    IntSize newOffset = offsetFromResizeCorner(document->view()->windowToContents(evt.pos()));
 
-    int x;
-    int y;
-    m_object->absolutePosition(x, y);
-    int right = x + m_object->width();
-    int bottom = y + m_object->height();
-    int diffWidth =  max(currentPoint.x() - right, min(0, MinimumWidthWhileResizing - m_object->width()));
-    int diffHeight = max(currentPoint.y() - bottom, min(0, MinimumHeightWhileResizing - m_object->height()));
-    
-    ExceptionCode ec = 0;
-    // Set the width and height for the shadow ancestor node.  This is necessary for textareas since the resizable layer is on the inner div.
-    // For non-shadow content, this will set the width and height on the original node.
-    RenderObject* renderer = m_object->node()->shadowAncestorNode()->renderer();
-    if (diffWidth && (m_object->style()->resize() == RESIZE_HORIZONTAL || m_object->style()->resize() == RESIZE_BOTH)) {
-        CSSStyleDeclaration* style = static_cast<Element*>(m_object->node()->shadowAncestorNode())->style();
-        if (renderer->element() && renderer->element()->isControl()) {
+    IntSize currentSize = IntSize(renderer->width(), renderer->height());
+
+    IntSize minimumSize = element->minimumSizeForResizing().shrunkTo(currentSize);
+    element->setMinimumSizeForResizing(minimumSize);
+
+    IntSize difference = (currentSize + newOffset - oldOffset).expandedTo(minimumSize) - currentSize;
+
+    CSSStyleDeclaration* style = element->style();
+    bool isBoxSizingBorder = renderer->style()->boxSizing() == BORDER_BOX;
+
+    ExceptionCode ec;
+
+    if (difference.width()) {
+        if (element && element->isControl()) {
+            // Make implicit margins from the theme explicit (see <http://bugs.webkit.org/show_bug.cgi?id=9547>).
             style->setProperty(CSS_PROP_MARGIN_LEFT, String::number(renderer->marginLeft()) + "px", false, ec);
             style->setProperty(CSS_PROP_MARGIN_RIGHT, String::number(renderer->marginRight()) + "px", false, ec);
         }
-        int baseWidth = renderer->width() - (renderer->style()->boxSizing() == BORDER_BOX ? 0 : renderer->borderLeft() + renderer->paddingLeft() + renderer->borderRight() + renderer->paddingRight());
-        style->setProperty(CSS_PROP_WIDTH, String::number(baseWidth + diffWidth) + "px", false, ec);
+        int baseWidth = renderer->width() - (isBoxSizingBorder ? 0
+            : renderer->borderLeft() + renderer->paddingLeft() + renderer->borderRight() + renderer->paddingRight());
+        style->setProperty(CSS_PROP_WIDTH, String::number(baseWidth + difference.width()) + "px", false, ec);
     }
 
-    if (diffHeight && (m_object->style()->resize() == RESIZE_VERTICAL || m_object->style()->resize() == RESIZE_BOTH)) {
-        CSSStyleDeclaration* style = static_cast<Element*>(m_object->node()->shadowAncestorNode())->style();
-        if (renderer->element() && renderer->element()->isControl()) {
+    if (difference.height()) {
+        if (element && element->isControl()) {
+            // Make implicit margins from the theme explicit (see <http://bugs.webkit.org/show_bug.cgi?id=9547>).
             style->setProperty(CSS_PROP_MARGIN_TOP, String::number(renderer->marginTop()) + "px", false, ec);
             style->setProperty(CSS_PROP_MARGIN_BOTTOM, String::number(renderer->marginBottom()) + "px", false, ec);
         }
-        int baseHeight = renderer->height() - (renderer->style()->boxSizing() == BORDER_BOX ? 0 : renderer->borderTop() + renderer->paddingTop() + renderer->borderBottom() + renderer->paddingBottom());
-        style->setProperty(CSS_PROP_HEIGHT, String::number(baseHeight + diffHeight) + "px", false, ec);
+        int baseHeight = renderer->height() - (isBoxSizingBorder ? 0
+            : renderer->borderTop() + renderer->paddingTop() + renderer->borderBottom() + renderer->paddingBottom());
+        style->setProperty(CSS_PROP_HEIGHT, String::number(baseHeight + difference.height()) + "px", false, ec);
     }
-    
-    ASSERT(ec == 0);
 
-    if (m_object->style()->resize() != RESIZE_NONE) {
-        m_object->setNeedsLayout(true);
-        m_object->node()->shadowAncestorNode()->renderer()->setNeedsLayout(true);
-        m_object->document()->updateLayout();
-    }
+    document->updateLayout();
+
+    // FIXME (Radar 4118564): We should also autoscroll the window as necessary to keep the point under the cursor in view.
 }
 
-PlatformScrollbar* RenderLayer::horizontaScrollbarWidget() const
+PlatformScrollbar* RenderLayer::horizontalScrollbarWidget() const
 {
     if (m_hBar && m_hBar->isWidget())
         return static_cast<PlatformScrollbar*>(m_hBar.get());
@@ -1066,7 +1042,7 @@ IntSize RenderLayer::offsetFromResizeCorner(const IntPoint& p) const
     int x = width();
     int y = height();
     convertToLayerCoords(root(), x, y);
-    return IntSize(x - p.x(), y - p.y());
+    return p - IntPoint(x, y);
 }
 
 static IntRect scrollCornerRect(RenderObject* renderer, const IntRect& absBounds)
@@ -1183,8 +1159,18 @@ RenderLayer::updateScrollInfoAfterLayout()
         // to pull our scroll offsets back to the max (or push them up to the min).
         int newX = max(0, min(scrollXOffset(), scrollWidth() - m_object->clientWidth()));
         int newY = max(0, min(m_scrollY, scrollHeight() - m_object->clientHeight()));
-        if (newX != scrollXOffset() || newY != m_scrollY)
+        if (newX != scrollXOffset() || newY != m_scrollY) {
+            RenderView* view = m_object->view();
+            ASSERT(view);
+            // scrollToOffset() may call updateLayerPositions(), which doesn't work
+            // with LayoutState.
+            // FIXME: Remove the disableLayoutState/enableLayoutState if the above changes.
+            if (view)
+                view->disableLayoutState();
             scrollToOffset(newX, newY);
+            if (view)
+                view->enableLayoutState();
+        }
     }
 
     bool haveHorizontalBar = m_hBar;
@@ -1342,6 +1328,45 @@ bool RenderLayer::isPointInResizeControl(const IntPoint& point)
     return scrollCornerRect(m_object, absBounds).contains(point);
 }
     
+bool RenderLayer::hitTestOverflowControls(HitTestResult& result)
+{
+    if (!m_hBar && !m_vBar && (!renderer()->hasOverflowClip() || renderer()->style()->resize() == RESIZE_NONE))
+        return false;
+
+    int x = 0;
+    int y = 0;
+    convertToLayerCoords(root(), x, y);
+    IntRect absBounds(x, y, renderer()->width(), renderer()->height());
+    
+    IntRect resizeControlRect;
+    if (renderer()->style()->resize() != RESIZE_NONE) {
+        resizeControlRect = scrollCornerRect(renderer(), absBounds);
+        if (resizeControlRect.contains(result.point()))
+            return true;
+    }
+
+    int resizeControlSize = max(resizeControlRect.height(), 0);
+
+    if (m_vBar) {
+        IntRect vBarRect(absBounds.right() - renderer()->borderRight() - m_vBar->width(), absBounds.y() + renderer()->borderTop(), m_vBar->width(), absBounds.height() - (renderer()->borderTop() + renderer()->borderBottom()) - (m_hBar ? m_hBar->height() : resizeControlSize));
+        if (vBarRect.contains(result.point())) {
+            result.setScrollbar(verticalScrollbarWidget());
+            return true;
+        }
+    }
+
+    resizeControlSize = max(resizeControlRect.width(), 0);
+    if (m_hBar) {
+        IntRect hBarRect(absBounds.x() + renderer()->borderLeft(), absBounds.bottom() - renderer()->borderBottom() - m_hBar->height(), absBounds.width() - (renderer()->borderLeft() + renderer()->borderRight()) - (m_vBar ? m_vBar->width() : resizeControlSize), m_hBar->height());
+        if (hBarRect.contains(result.point())) {
+            result.setScrollbar(horizontalScrollbarWidget());
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool RenderLayer::scroll(ScrollDirection direction, ScrollGranularity granularity, float multiplier)
 {
     bool didHorizontalScroll = false;
@@ -1544,6 +1569,16 @@ bool RenderLayer::hitTest(const HitTestRequest& request, HitTestResult& result)
     return insideLayer;
 }
 
+Node* RenderLayer::enclosingElement() const
+{
+    for (RenderObject* r = renderer(); r; r = r->parent()) {
+        if (Node* e = r->element())
+            return e;
+    }
+    ASSERT_NOT_REACHED();
+    return 0;
+}
+
 RenderLayer* RenderLayer::hitTestLayer(RenderLayer* rootLayer, const HitTestRequest& request,
     HitTestResult& result, const IntRect& hitTestRect)
 {
@@ -1587,27 +1622,18 @@ RenderLayer* RenderLayer::hitTestLayer(RenderLayer* rootLayer, const HitTestRequ
                             layerBounds.x() - renderer()->xPos(),
                             layerBounds.y() - renderer()->yPos() + m_object->borderTopExtra(), 
                             HitTestDescendants)) {
-        // for positioned generated content, we might still not have a
+        // For positioned generated content, we might still not have a
         // node by the time we get to the layer level, since none of
         // the content in the layer has an element. So just walk up
         // the tree.
-        if (!result.innerNode()) {
-            for (RenderObject *r = renderer(); r != NULL; r = r->parent()) { 
-                if (r->element()) {
-                    result.setInnerNode(r->element());
-                    break;
-                }
-            }
+        if (!result.innerNode() || !result.innerNonSharedNode()) {
+            Node* e = enclosingElement();
+            if (!result.innerNode())
+                result.setInnerNode(e);
+            if (!result.innerNonSharedNode())
+                result.setInnerNonSharedNode(e);
         }
 
-        if (!result.innerNonSharedNode()) {
-             for (RenderObject *r = renderer(); r != NULL; r = r->parent()) { 
-                 if (r->element()) {
-                     result.setInnerNonSharedNode(r->element());
-                     break;
-                 }
-             }
-        }
         return this;
     }
         
@@ -1625,8 +1651,17 @@ RenderLayer* RenderLayer::hitTestLayer(RenderLayer* rootLayer, const HitTestRequ
         renderer()->hitTest(request, result, result.point().x(), result.point().y(),
                             layerBounds.x() - renderer()->xPos(),
                             layerBounds.y() - renderer()->yPos() + m_object->borderTopExtra(),
-                            HitTestSelf))
+                            HitTestSelf)) {
+        if (!result.innerNode() || !result.innerNonSharedNode()) {
+            Node* e = enclosingElement();
+            if (!result.innerNode())
+                result.setInnerNode(e);
+            if (!result.innerNonSharedNode())
+                result.setInnerNonSharedNode(e);
+        }
+
         return this;
+    }
 
     // We didn't hit any layer. If we are the root layer and the mouse is -- or just was -- down, 
     // return ourselves. We do this so mouse events continue getting delivered after a drag has 
@@ -1751,7 +1786,14 @@ void RenderLayer::calculateRects(const RenderLayer* rootLayer, const IntRect& pa
 
         // If we establish a clip at all, then go ahead and make sure our background
         // rect is intersected with our layer's bounds.
-        backgroundRect.intersect(layerBounds);
+        if (ShadowData* boxShadow = renderer()->style()->boxShadow()) {
+            IntRect shadowRect = layerBounds;
+            shadowRect.move(boxShadow->x, boxShadow->y);
+            shadowRect.inflate(boxShadow->blur);
+            shadowRect.unite(layerBounds);
+            backgroundRect.intersect(shadowRect);
+        } else
+            backgroundRect.intersect(layerBounds);
     }
 }
 

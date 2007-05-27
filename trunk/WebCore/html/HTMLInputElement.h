@@ -183,7 +183,12 @@ public:
 
     String constrainValue(const String& proposedValue) const;
 
+    virtual void didRestoreFromCache();
+    
 protected:
+    virtual void willMoveToNewOwnerDocument();
+    virtual void didMoveToNewOwnerDocument();
+    
     AtomicString m_name;
 
 private:

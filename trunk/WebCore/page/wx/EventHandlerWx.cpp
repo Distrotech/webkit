@@ -53,14 +53,9 @@ bool EventHandler::passMouseReleaseEventToSubframe(MouseEventWithHitTestResults&
     return passSubframeEventToSubframe(mev, subframe);
 }
 
-bool EventHandler::passWheelEventToSubframe(PlatformWheelEvent&, Frame* subframe)
+bool EventHandler::passMousePressEventToScrollbar(MouseEventWithHitTestResults& mouseEvent, PlatformScrollbar* scrollbar)
 {
-    return passWheelEventToWidget(subframe->view());
-}
-
-bool EventHandler::passMousePressEventToScrollbar(MouseEventWithHitTestResults&, PlatformScrollbar* scrollbar)
-{
-    return passWheelEventToWidget(scrollbar);
+    return passMouseDownEventToWidget(scrollbar);
 }
 
 bool EventHandler::passWidgetMouseDownEventToWidget(const MouseEventWithHitTestResults& event)

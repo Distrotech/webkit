@@ -45,6 +45,7 @@ DocLoader::DocLoader(Frame *frame, Document* doc)
     , m_cachePolicy(CachePolicyVerify)
     , m_frame(frame)
     , m_doc(doc)
+    , m_requestCount(0)
     , m_autoLoadImages(true)
     , m_loadInProgress(false)
     , m_allowStaleResources(false)
@@ -91,6 +92,9 @@ CachedImage* DocLoader::requestImage(const String& url)
 
 CachedCSSStyleSheet* DocLoader::requestCSSStyleSheet(const String& url, const String& charset, bool isUserStyleSheet)
 {
+    // FIXME: Passing true for "skipCanLoadCheck" here in the isUserStyleSheet case  won't have any effect
+    // if this resource is already in the cache. It's theoretically possible that what's in the cache already
+    // is a load that failed because of the canLoad check. Probably not an issue in practice.
     return static_cast<CachedCSSStyleSheet*>(requestResource(CachedResource::CSSStyleSheet, url, &charset, isUserStyleSheet));
 }
 
@@ -173,7 +177,7 @@ void DocLoader::removeCachedResource(CachedResource* resource) const
 void DocLoader::setLoadInProgress(bool load)
 {
     m_loadInProgress = load;
-    if (!load)
+    if (!load && m_frame)
         m_frame->loader()->loadDone();
 }
 
@@ -203,6 +207,24 @@ void DocLoader::checkCacheObjectStatus(CachedResource* resource)
     // FIXME: If the WebKit client changes or cancels the request, WebCore does not respect this and continues the load.
     m_frame->loader()->loadedResourceFromMemoryCache(request, response, data ? data->size() : 0);
     m_frame->loader()->didTellBridgeAboutLoad(resource->url());
+}
+
+void DocLoader::incrementRequestCount()
+{
+    ++m_requestCount;
+}
+
+void DocLoader::decrementRequestCount()
+{
+    --m_requestCount;
+    ASSERT(m_requestCount > -1);
+}
+
+int DocLoader::requestCount()
+{
+    if (loadInProgress())
+         return m_requestCount + 1;
+    return m_requestCount;
 }
 
 }

@@ -138,6 +138,7 @@ namespace WebCore {
         bool isLoadingMainResource() const;
         bool isLoadingSubresources() const;
         bool isLoadingPlugIns() const;
+        bool isLoadingMultipartContent() const;
 
         void stopLoadingPlugIns();
         void stopLoadingSubresources();
@@ -147,6 +148,8 @@ namespace WebCore {
         void addPlugInStreamLoader(ResourceLoader*);
         void removePlugInStreamLoader(ResourceLoader*);
 
+        void subresourceLoaderFinishedLoadingOnePart(ResourceLoader*);
+        
     private:
         void setupForReplace();
         void commitIfReady();
@@ -159,6 +162,7 @@ namespace WebCore {
 
         RefPtr<MainResourceLoader> m_mainResourceLoader;
         ResourceLoaderSet m_subresourceLoaders;
+        ResourceLoaderSet m_multipartSubresourceLoaders;
         ResourceLoaderSet m_plugInStreamLoaders;
 
         RefPtr<SharedBuffer> m_mainResourceData;

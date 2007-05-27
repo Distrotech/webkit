@@ -31,8 +31,10 @@
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4
 #define WebNSInteger int
+#define WebNSUInteger unsigned int
 #else
 #define WebNSInteger NSInteger
+#define WebNSUInteger NSUInteger
 #endif
 
 @class NSError;
@@ -48,7 +50,9 @@ typedef NSURLRequest *(*WebWillSendRequestFunc)(id, SEL, WebView *, id, NSURLReq
 typedef void (*WebDidReceiveResponseFunc)(id, SEL, WebView *, id, NSURLResponse *, WebDataSource *);
 typedef void (*WebDidReceiveContentLengthFunc)(id, SEL, WebView *, id, WebNSInteger, WebDataSource *);
 typedef void (*WebDidFinishLoadingFromDataSourceFunc)(id, SEL, WebView *, id, WebDataSource *);
+typedef void (*WebDidFailLoadingWithErrorFromDataSourceFunc)(id, SEL, WebView *, id, NSError *, WebDataSource *);
 typedef void (*WebDidLoadResourceFromMemoryCacheFunc)(id, SEL, WebView *, NSURLRequest *, NSURLResponse *, WebNSInteger, WebDataSource *);
+typedef NSCachedURLResponse *(*WebWillCacheResponseFunc)(id, SEL, WebView *, id, NSCachedURLResponse *, WebDataSource *);
 
 typedef struct _WebResourceDelegateImplementationCache {
     uint delegateImplementsDidCancelAuthenticationChallenge:1;
@@ -56,9 +60,11 @@ typedef struct _WebResourceDelegateImplementationCache {
     uint delegateImplementsDidReceiveResponse:1;
     uint delegateImplementsDidReceiveContentLength:1;
     uint delegateImplementsDidFinishLoadingFromDataSource:1;
+    uint delegateImplementsDidFailLoadingWithErrorFromDataSource:1;
     uint delegateImplementsWillSendRequest:1;
     uint delegateImplementsIdentifierForRequest:1;
     uint delegateImplementsDidLoadResourceFromMemoryCache:1;
+    uint delegateImplementsWillCacheResponse:1;
 
     WebDidCancelAuthenticationChallengeFunc didCancelAuthenticationChallengeFunc;
     WebDidReceiveAuthenticationChallengeFunc didReceiveAuthenticationChallengeFunc;
@@ -67,8 +73,66 @@ typedef struct _WebResourceDelegateImplementationCache {
     WebDidReceiveResponseFunc didReceiveResponseFunc;
     WebDidReceiveContentLengthFunc didReceiveContentLengthFunc;
     WebDidFinishLoadingFromDataSourceFunc didFinishLoadingFromDataSourceFunc;
+    WebDidFailLoadingWithErrorFromDataSourceFunc didFailLoadingWithErrorFromDataSourceFunc;
     WebDidLoadResourceFromMemoryCacheFunc didLoadResourceFromMemoryCacheFunc;
+    WebWillCacheResponseFunc willCacheResponseFunc;
 } WebResourceDelegateImplementationCache;
+
+typedef void (*WebDidClearWindowObjectForFrameFunc)(id, SEL, WebView *, WebScriptObject *, WebFrame *);
+typedef void (*WebWindowScriptObjectAvailableFunc)(id, SEL, WebView *, WebScriptObject *);
+typedef void (*WebDidHandleOnloadEventsForFrameFunc)(id, SEL, WebView *, WebFrame *);
+typedef void (*WebDidReceiveServerRedirectForProvisionalLoadForFrameFunc)(id, SEL, WebView *, WebFrame *);
+typedef void (*WebDidCancelClientRedirectForFrameFunc)(id, SEL, WebView *, WebFrame *);
+typedef void (*WebWillPerformClientRedirectToURLDelayFireDateForFrameFunc)(id, SEL, WebView *, NSURL *, double, NSDate *, WebFrame *);
+typedef void (*WebDidChangeLocationWithinPageForFrameFunc)(id, SEL, WebView *, WebFrame *);
+typedef void (*WebWillCloseFrameFunc)(id, SEL, WebView *, WebFrame *);
+typedef void (*WebDidStartProvisionalLoadForFrameFunc)(id, SEL, WebView *, WebFrame *);
+typedef void (*WebDidReceiveTitleForFrameFunc)(id, SEL, WebView *, NSString *, WebFrame *);
+typedef void (*WebDidCommitLoadForFrameFunc)(id, SEL, WebView *, WebFrame *);
+typedef void (*WebDidFailProvisionalLoadWithErrorForFrameFunc)(id, SEL, WebView *, NSError *, WebFrame *);
+typedef void (*WebDidFailLoadWithErrorForFrameFunc)(id, SEL, WebView *, NSError *, WebFrame *);
+typedef void (*WebDidFinishLoadForFrameFunc)(id, SEL, WebView *, WebFrame *);
+typedef void (*WebDidFirstLayoutInFrameFunc)(id, SEL, WebView *, WebFrame *);
+typedef void (*WebDidReceiveIconForFrameFunc)(id, SEL, WebView *, NSImage *, WebFrame *);
+typedef void (*WebDidFinishDocumentLoadForFrameFunc)(id, SEL, WebView *, WebFrame *);
+
+typedef struct _WebFrameLoadDelegateImplementationCache {
+    uint delegateImplementsDidClearWindowObjectForFrame: 1;
+    uint delegateImplementsWindowScriptObjectAvailable: 1;
+    uint delegateImplementsDidHandleOnloadEventsForFrame: 1;
+    uint delegateImplementsDidReceiveServerRedirectForProvisionalLoadForFrame: 1;
+    uint delegateImplementsDidCancelClientRedirectForFrame: 1;
+    uint delegateImplementsWillPerformClientRedirectToURLDelayFireDateForFrame: 1;
+    uint delegateImplementsDidChangeLocationWithinPageForFrame: 1;
+    uint delegateImplementsWillCloseFrame: 1;
+    uint delegateImplementsDidStartProvisionalLoadForFrame: 1;
+    uint delegateImplementsDidReceiveTitleForFrame: 1;
+    uint delegateImplementsDidCommitLoadForFrame: 1;
+    uint delegateImplementsDidFailProvisionalLoadWithErrorForFrame: 1;
+    uint delegateImplementsDidFailLoadWithErrorForFrame: 1;
+    uint delegateImplementsDidFinishLoadForFrame: 1;
+    uint delegateImplementsDidFirstLayoutInFrame: 1;
+    uint delegateImplementsDidReceiveIconForFrame: 1;
+    uint delegateImplementsDidFinishDocumentLoadForFrame: 1;
+
+    WebDidClearWindowObjectForFrameFunc didClearWindowObjectForFrameFunc;
+    WebWindowScriptObjectAvailableFunc windowScriptObjectAvailableFunc;
+    WebDidHandleOnloadEventsForFrameFunc didHandleOnloadEventsForFrameFunc;
+    WebDidReceiveServerRedirectForProvisionalLoadForFrameFunc didReceiveServerRedirectForProvisionalLoadForFrameFunc;
+    WebDidCancelClientRedirectForFrameFunc didCancelClientRedirectForFrameFunc;
+    WebWillPerformClientRedirectToURLDelayFireDateForFrameFunc willPerformClientRedirectToURLDelayFireDateForFrameFunc;
+    WebDidChangeLocationWithinPageForFrameFunc didChangeLocationWithinPageForFrameFunc;
+    WebWillCloseFrameFunc willCloseFrameFunc;
+    WebDidStartProvisionalLoadForFrameFunc didStartProvisionalLoadForFrameFunc;
+    WebDidReceiveTitleForFrameFunc didReceiveTitleForFrameFunc;
+    WebDidCommitLoadForFrameFunc didCommitLoadForFrameFunc;
+    WebDidFailProvisionalLoadWithErrorForFrameFunc didFailProvisionalLoadWithErrorForFrameFunc;
+    WebDidFailLoadWithErrorForFrameFunc didFailLoadWithErrorForFrameFunc;
+    WebDidFinishLoadForFrameFunc didFinishLoadForFrameFunc;
+    WebDidFirstLayoutInFrameFunc didFirstLayoutInFrameFunc;
+    WebDidReceiveIconForFrameFunc didReceiveIconForFrameFunc;
+    WebDidFinishDocumentLoadForFrameFunc didFinishDocumentLoadForFrameFunc;
+} WebFrameLoadDelegateImplementationCache;
 
 extern NSString *_WebCanGoBackKey;
 extern NSString *_WebCanGoForwardKey;
@@ -163,7 +227,7 @@ typedef enum {
 // These methods might end up moving into a protocol, so different document types can specify
 // whether or not they implement the protocol. For now we'll just deal with HTML.
 // These methods are still in flux; don't rely on them yet.
-- (unsigned)markAllMatchesForText:(NSString *)string caseSensitive:(BOOL)caseFlag highlight:(BOOL)highlight limit:(unsigned)limit;
+- (WebNSUInteger)markAllMatchesForText:(NSString *)string caseSensitive:(BOOL)caseFlag highlight:(BOOL)highlight limit:(WebNSUInteger)limit;
 - (void)unmarkAllTextMatches;
 - (NSArray *)rectsForTextMatches;
 
@@ -263,7 +327,6 @@ Could be worth adding to the API.
 - (NSDictionary *)_dashboardRegions;
 
 - (void)_setDashboardBehavior:(WebDashboardBehavior)behavior to:(BOOL)flag;
-- (void)handleAuthenticationForResource:(id)identifier challenge:(NSURLAuthenticationChallenge *)challenge fromDataSource:(WebDataSource *)dataSource;
 - (BOOL)_dashboardBehavior:(WebDashboardBehavior)behavior;
 
 + (void)_setShouldUseFontSmoothing:(BOOL)f;
@@ -337,6 +400,13 @@ Could be worth adding to the API.
 - (BOOL)defersCallbacks; // called by QuickTime plug-in
 - (void)setDefersCallbacks:(BOOL)defer; // called by QuickTime plug-in
 
+- (BOOL)usesPageCache;
+- (void)setUsesPageCache:(BOOL)usesPageCache;
+
+// <rdar://problem/5217124> Clients other than dashboard, don't use this.
+// Do not remove until Dashboard has moved off it
+- (void)handleAuthenticationForResource:(id)identifier challenge:(NSURLAuthenticationChallenge *)challenge fromDataSource:(WebDataSource *)dataSource;
+
 @end
 
 @interface WebView (WebViewPrintingPrivate)
@@ -397,8 +467,15 @@ Could be worth adding to the API.
 // of its subresources.
 - (void)webView:(WebView *)sender didFinishDocumentLoadForFrame:(WebFrame *)frame;
 
-// Addresses 4192534.  Private API for now.
+// Addresses 4192534.  SPI for now.
 - (void)webView:(WebView *)sender didHandleOnloadEventsForFrame:(WebFrame *)frame;
+
+@end
+
+@interface NSObject (WebResourceLoadDelegatePrivate)
+// Addresses <rdar://problem/5008925> - SPI for now
+- (NSCachedURLResponse *)webView:(WebView *)sender resource:(id)identifier willCacheResponse:(NSCachedURLResponse *)response fromDataSource:(WebDataSource *)dataSource;
 @end
 
 #undef WebNSInteger
+#undef WebNSUInteger

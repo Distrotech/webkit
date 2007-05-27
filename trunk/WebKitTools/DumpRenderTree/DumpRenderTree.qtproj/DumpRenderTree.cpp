@@ -50,12 +50,24 @@ namespace WebCore {
 const unsigned int maxViewWidth = 800;
 const unsigned int maxViewHeight = 600;
 
+class WebPage : public QWebPage {
+public:
+    WebPage(QWidget *parent) : QWebPage(parent) {}
+    
+    void javaScriptConsoleMessage(const QString& message, unsigned int lineNumber, const QString& sourceID);
+};
+
+void WebPage::javaScriptConsoleMessage(const QString& message, unsigned int lineNumber, const QString&)
+{
+    fprintf (stdout, "CONSOLE MESSAGE: line %d: %s\n", lineNumber, message.toUtf8().constData());
+}
+
 DumpRenderTree::DumpRenderTree()
     : m_stdin(0)
     , m_notifier()
     , m_loading(false)
 {
-    page = new QWebPage(0);
+    page = new WebPage(0);
     page->resize(maxViewWidth, maxViewHeight);
     frame = page->mainFrame();
     frame->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -71,6 +83,8 @@ DumpRenderTree::DumpRenderTree()
     QObject::connect(this, SIGNAL(quit()), qApp, SLOT(quit()), Qt::QueuedConnection);
     QObject::connect(frame, SIGNAL(cleared()), this, SLOT(initJSObjects()));
     QObject::connect(frame, SIGNAL(loadDone(bool)), this, SLOT(maybeDump(bool)));
+
+    m_eventSender = new EventSender(page);
     
 //     page->resize(800, 800);
 }
@@ -125,6 +139,7 @@ void DumpRenderTree::resetJSObjects()
 void DumpRenderTree::initJSObjects()
 {
     frame->addToJSWindowObject("layoutTestController", m_controller);    
+    frame->addToJSWindowObject("eventSender", m_eventSender);    
 }
 
 void DumpRenderTree::dump()
@@ -145,7 +160,7 @@ void DumpRenderTree::dump()
         renderDump = frame->renderTreeDump();
     }
     if (renderDump.isEmpty()) {
-        printf("ERROR: nil result from %s", m_controller->shouldDumpAsText() ? "[documentElement innerText]" : "[frame renderTreeAsExternalRepresentation]");
+        printf("ERROR: nil result from %s", m_controller->shouldDumpAsText() ? "[documentElement innerText]" : "[frame renderTreeAsExternalRepresentation]\n#EOF\n");
     } else {
         fprintf(stdout, "%s#EOF\n", renderDump.toUtf8().constData());
     }

@@ -77,16 +77,6 @@ void InsertLineBreakCommand::insertNodeBeforePosition(Node *node, const Position
         insertNodeBefore(node, pos.node());
 }
 
-static bool lineBreakExistsAtPosition(VisiblePosition& visiblePosition)
-{
-    if (visiblePosition.isNull())
-        return false;
-        
-    Position downstream(visiblePosition.deepEquivalent().downstream());
-    return downstream.node()->hasTagName(brTag) ||
-           downstream.node()->isTextNode() && downstream.node()->renderer()->style()->preserveNewline() && visiblePosition.characterAfter() == '\n';
-}
-
 void InsertLineBreakCommand::doApply()
 {
     deleteSelection();
@@ -133,7 +123,7 @@ void InsertLineBreakCommand::doApply()
             // There aren't any VisiblePositions like this yet.
             ASSERT_NOT_REACHED();
     } else if (isEndOfParagraph(caret) && !lineBreakExistsAtPosition(caret)) {
-        insertNodeAt(nodeToInsert.get(), pos.node(), pos.offset());
+        insertNodeAt(nodeToInsert.get(), pos);
         insertNodeBefore(nodeToInsert->cloneNode(false).get(), nodeToInsert.get());
         VisiblePosition endingPosition(Position(nodeToInsert.get(), 0));
         setEndingSelection(Selection(endingPosition));

@@ -22,6 +22,8 @@
 #include "config.h"
 #include "TextBreakIterator.h"
 
+#include "TextBreakIteratorInternalICU.h"
+
 #include <unicode/ubrk.h>
 
 namespace WebCore {
@@ -33,12 +35,8 @@ static TextBreakIterator* setUpIterator(bool& createdIterator, TextBreakIterator
         return 0;
 
     if (!createdIterator) {
-        // The locale is currently ignored when determining character cluster breaks.
-        // This may change in the future, according to Deborah Goldsmith.
-        // FIXME: Presumably we do need to pass the correct locale for word and line
-        // break iterators, though!
         UErrorCode openStatus = U_ZERO_ERROR;
-        iterator = static_cast<TextBreakIterator*>(ubrk_open(type, "en_us", 0, 0, &openStatus));
+        iterator = static_cast<TextBreakIterator*>(ubrk_open(type, currentTextBreakLocaleID(), 0, 0, &openStatus));
         createdIterator = true;
     }
     if (!iterator)
@@ -74,6 +72,14 @@ TextBreakIterator* lineBreakIterator(const UChar* string, int length)
     static TextBreakIterator* staticLineBreakIterator;
     return setUpIterator(createdLineBreakIterator,
         staticLineBreakIterator, UBRK_LINE, string, length);
+}
+
+TextBreakIterator* sentenceBreakIterator(const UChar* string, int length)
+{
+    static bool createdSentenceBreakIterator = false;
+    static TextBreakIterator* staticSentenceBreakIterator;
+    return setUpIterator(createdSentenceBreakIterator,
+        staticSentenceBreakIterator, UBRK_SENTENCE, string, length);
 }
 
 int textBreakFirst(TextBreakIterator* bi)

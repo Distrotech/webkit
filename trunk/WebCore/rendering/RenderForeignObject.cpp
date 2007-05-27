@@ -27,6 +27,7 @@
 #include "RenderForeignObject.h"
 
 #include "GraphicsContext.h"
+#include "RenderView.h"
 #include "SVGForeignObjectElement.h"
 #include "SVGLength.h"
 
@@ -85,7 +86,9 @@ bool RenderForeignObject::requiresLayer()
 void RenderForeignObject::layout()
 {
     ASSERT(needsLayout());
-    ASSERT(minMaxKnown());
+
+    // Arbitrary affine transforms are incompatible with LayoutState.
+    view()->disableLayoutState();
 
     IntRect oldBounds;
     IntRect oldOutlineBox;
@@ -102,6 +105,7 @@ void RenderForeignObject::layout()
     if (checkForRepaint)
         repaintAfterLayoutIfNeeded(oldBounds, oldOutlineBox);
 
+    view()->enableLayoutState();
     setNeedsLayout(false);
 }
 

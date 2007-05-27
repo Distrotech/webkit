@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.
+ * Copyright (C) 2006, 2007 Apple Inc.
  * Copyright (C) 2006 Samuel Weinig <sam.weinig@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -20,14 +20,14 @@
 
 module html {
 
-    interface HTMLTableColElement : HTMLElement {
+    interface [LegacyParent=KJS::JSHTMLElement, GenerateConstructor] HTMLTableColElement : HTMLElement {
 
-        attribute DOMString       align;
-        attribute DOMString       ch;
-        attribute DOMString       chOff;
+        attribute [ConvertNullToNullString] DOMString       align;
+        attribute [ConvertNullToNullString] DOMString       ch;
+        attribute [ConvertNullToNullString] DOMString       chOff;
         attribute long            span;
-        attribute DOMString       vAlign;
-        attribute DOMString       width;
+        attribute [ConvertNullToNullString] DOMString       vAlign;
+        attribute [ConvertNullToNullString] DOMString       width;
 
     };
 

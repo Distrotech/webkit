@@ -1,4 +1,5 @@
 #include "config.h"
+#include "Platform.h"
 #include "ChromeClientGdk.h"
 #include "ContextMenuClientGdk.h"
 #include "Document.h"
@@ -24,15 +25,10 @@
 
 using namespace WebCore;
 
-static GtkWidget* gUrlBarEntry;
-static FrameGdk*  gFrame;
+static GtkWidget* gURLBarEntry;
+static FrameGdk* gFrame = 0;
 
-static bool strEmpty(const char* str)
-{
-    return !str || !*str;
-}
-
-static bool strEq(const char* str1, const char* str2)
+static bool stringIsEqual(const char* str1, const char* str2)
 {
     return 0 == strcmp(str1, str2);
 }
@@ -42,23 +38,33 @@ static void handleGdkEvent(GtkWidget* widget, GdkEvent* event)
     gFrame->handleGdkEvent(event);
 }
 
-static void goToUrlBarText(GtkWidget* urlBarEntry)
+static String autocorrectURL(const String& url)
 {
-    const gchar* url = gtk_entry_get_text(GTK_ENTRY(urlBarEntry));
-    if (strEmpty(url))
+    String parsedURL = url;
+    if (!url.startsWith("http://") && !url.startsWith("https://")
+        && !url.startsWith("file://") && !url.startsWith("ftp://"))
+        parsedURL = String("http://") + url;
+    return parsedURL;
+}
+
+static void goToURLBarText(GtkWidget* urlBarEntry)
+{
+    String url(gtk_entry_get_text(GTK_ENTRY(urlBarEntry)));
+    if (url.isEmpty())
         return;
-    // FIXME: append "http://" if doesn't have a scheme
-    gFrame->loader()->load(url, 0);
+
+    String parsedURL = autocorrectURL(url);
+    gFrame->loader()->load(ResourceRequest(parsedURL));
 }
 
-static void goButtonClickedCb(GtkWidget* widget, GtkWidget* entry)
+static void goButtonClickedCallback(GtkWidget* widget, GtkWidget* entry)
 {
-    goToUrlBarText(entry);
+    goToURLBarText(entry);
 }
 
-static void urlBarEnterCb(GtkWidget* widget, GtkWidget* entry)
+static void urlBarEnterCallback(GtkWidget* widget, GtkWidget* entry)
 {
-    goToUrlBarText(entry);
+    goToURLBarText(entry);
 }
 
 static void registerRenderingAreaEvents(GtkWidget* win)
@@ -83,29 +89,34 @@ static void registerRenderingAreaEvents(GtkWidget* win)
     g_signal_connect(GTK_OBJECT(win), "scroll-event", G_CALLBACK(handleGdkEvent), NULL);
 }
 
-static void frameResizeCb(GtkWidget* widget, gpointer data)
+static void frameResizeCallback(GtkWidget* widget, GtkAllocation* allocation, gpointer data)
 {
-    // FIXME: resize the area?
+    if (!gFrame)
+        return;
+
+    gFrame->view()->setFrameGeometry(IntRect(allocation->x,allocation->y,allocation->width,allocation->height));
+    gFrame->forceLayout();
+    gFrame->sendResizeEvent();
 }
 
-static void frameDestroyCb(GtkWidget* widget, gpointer data)
+static void frameDestroyCallback(GtkWidget* widget, gpointer data)
 {
     gtk_main_quit();
 }
 
-static void menuMainBackCb(gpointer data)
+static void menuMainBackCallback(gpointer data)
 {
     ASSERT(!data);
     gFrame->loader()->goBackOrForward(-1);
 }
 
-static void menuMainForwardCb(gpointer data)
+static void menuMainForwardCallback(gpointer data)
 {
     ASSERT(!data);
     gFrame->loader()->goBackOrForward(1);
 }
 
-static void menuMainQuitCb(gpointer data)
+static void menuMainQuitCallback(gpointer data)
 {
     gtk_main_quit();
 }
@@ -114,43 +125,43 @@ int main(int argc, char* argv[])
 {
     gtk_init(&argc, &argv);
 
-    const char* url = "http://www.google.com";
+    String url("http://www.google.com");
     bool exitAfterLoading = false;
     bool dumpRenderTree = false;
     for (int argPos = 1; argPos < argc; ++argPos) {
         char *currArg = argv[argPos];
-        if (strEq(currArg, "-exit-after-loading"))
+        if (stringIsEqual(currArg, "-exit-after-loading"))
             exitAfterLoading = true;
-        else if (strEq(currArg, "-exitafterloading"))
+        else if (stringIsEqual(currArg, "-exitafterloading"))
             exitAfterLoading = true;
-        else if (strEq(currArg, "-exitafterload"))
+        else if (stringIsEqual(currArg, "-exitafterload"))
             exitAfterLoading = true;
-        else if (strEq(currArg, "-exit-after-load"))
+        else if (stringIsEqual(currArg, "-exit-after-load"))
             exitAfterLoading = true;
-        else if (strEq(currArg, "-drt"))
+        else if (stringIsEqual(currArg, "-drt"))
             dumpRenderTree = true;
-        else if (strEq(currArg, "-dump-render-tree"))
+        else if (stringIsEqual(currArg, "-dump-render-tree"))
             dumpRenderTree = true;
-        else if (strEq(currArg, "-dumprendertree"))
+        else if (stringIsEqual(currArg, "-dumprendertree"))
             dumpRenderTree = true;
         else
-            url = currArg;
+            url = autocorrectURL(currArg);
     }
 
     GtkWidget* menuMain = gtk_menu_new();
     GtkWidget* menuMainBack = gtk_menu_item_new_with_label("Back");
     gtk_menu_shell_append(GTK_MENU_SHELL(menuMain), menuMainBack);
-    g_signal_connect_swapped(G_OBJECT(menuMainBack), "activate", G_CALLBACK(menuMainBackCb), NULL);
+    g_signal_connect_swapped(G_OBJECT(menuMainBack), "activate", G_CALLBACK(menuMainBackCallback), NULL);
     gtk_widget_show(menuMainBack);
 
     GtkWidget* menuMainForward = gtk_menu_item_new_with_label("Forward");
     gtk_menu_shell_append(GTK_MENU_SHELL(menuMain), menuMainForward);
-    g_signal_connect_swapped(G_OBJECT(menuMainForward), "activate", G_CALLBACK(menuMainForwardCb), NULL);
+    g_signal_connect_swapped(G_OBJECT(menuMainForward), "activate", G_CALLBACK(menuMainForwardCallback), NULL);
     gtk_widget_show(menuMainForward);
 
     GtkWidget* menuMainQuit = gtk_menu_item_new_with_label("Quit");
     gtk_menu_shell_append(GTK_MENU_SHELL(menuMain), menuMainQuit);
-    g_signal_connect_swapped(G_OBJECT(menuMainQuit), "activate", G_CALLBACK(menuMainQuitCb), NULL);
+    g_signal_connect_swapped(G_OBJECT(menuMainQuit), "activate", G_CALLBACK(menuMainQuitCallback), NULL);
     gtk_widget_show(menuMainQuit);
 
     GtkWidget* menuMainRoot = gtk_menu_item_new_with_label("Main");
@@ -158,32 +169,32 @@ int main(int argc, char* argv[])
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menuMainRoot), menuMain);
 
     GtkWidget* menuBar = gtk_menu_bar_new();
-    gtk_menu_bar_append(GTK_MENU_BAR(menuBar), menuMainRoot);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), menuMainRoot);
 
     GtkWidget* topLevelWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_default_size(GTK_WINDOW(topLevelWindow), 800, 600);
     gtk_widget_set_name(topLevelWindow, "GdkLauncher");
     GtkWidget* vbox = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(topLevelWindow), vbox);
-    g_signal_connect(G_OBJECT(topLevelWindow), "destroy", G_CALLBACK(frameDestroyCb), NULL);
-    g_signal_connect(GTK_OBJECT(topLevelWindow), "size-request", G_CALLBACK(frameResizeCb), NULL);
+    g_signal_connect(G_OBJECT(topLevelWindow), "destroy", G_CALLBACK(frameDestroyCallback), NULL);
 
     GtkWidget* hbox = gtk_hbox_new(FALSE, 2);
     gtk_box_pack_start(GTK_BOX(vbox), menuBar, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
-    gUrlBarEntry = gtk_entry_new();
-    g_signal_connect(G_OBJECT(gUrlBarEntry), "activate", G_CALLBACK(urlBarEnterCb), (gpointer)gUrlBarEntry);
-    gtk_box_pack_start(GTK_BOX(hbox), gUrlBarEntry, TRUE, TRUE, 0);
+    gURLBarEntry = gtk_entry_new();
+    g_signal_connect(G_OBJECT(gURLBarEntry), "activate", G_CALLBACK(urlBarEnterCallback), (gpointer)gURLBarEntry);
+    gtk_box_pack_start(GTK_BOX(hbox), gURLBarEntry, TRUE, TRUE, 0);
 
     GtkWidget* urlBarSubmitButton = gtk_button_new_with_label("Go");  
     gtk_box_pack_start(GTK_BOX(hbox), urlBarSubmitButton, FALSE, FALSE, 0);
-    g_signal_connect(G_OBJECT(urlBarSubmitButton), "clicked", G_CALLBACK(goButtonClickedCb), (gpointer)gUrlBarEntry);
+    g_signal_connect(G_OBJECT(urlBarSubmitButton), "clicked", G_CALLBACK(goButtonClickedCallback), (gpointer)gURLBarEntry);
     gtk_widget_show(vbox);
 
     GtkWidget* frameWindow = gtk_drawing_area_new();
     registerRenderingAreaEvents(frameWindow); 
     gtk_box_pack_start(GTK_BOX(vbox), frameWindow, TRUE, TRUE, 0);
+    g_signal_connect(GTK_OBJECT(frameWindow), "size-allocate", G_CALLBACK(frameResizeCallback), NULL);
     gtk_widget_show(frameWindow);
     GTK_WIDGET_SET_FLAGS(frameWindow, GTK_CAN_FOCUS);
 
@@ -200,10 +211,10 @@ int main(int argc, char* argv[])
 
     FrameView* frameView = new FrameView(gFrame);
     gFrame->setView(frameView);
-    frameView->ScrollView::setDrawable(frameWindow->window);
+    frameView->setGtkWidget(frameWindow);
 
-    printf("OPENING URL == %s \n", url);
-    gFrame->loader()->load(ResourceRequest(KURL(url)));
+    gFrame->init();
+    gFrame->loader()->load(ResourceRequest(url));
     gtk_main();
 #if 0 // FIXME: this crashes at the moment. needs to provide DragClient
     delete page;

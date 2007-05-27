@@ -51,6 +51,7 @@ static PassRefPtr<Element> createIndentBlockquoteElement(Document* document)
 {
     RefPtr<Element> indentBlockquoteElement = createElement(document, "blockquote");
     indentBlockquoteElement->setAttribute(classAttr, indentBlockquoteString());
+    indentBlockquoteElement->setAttribute(styleAttr, "margin: 0 0 0 40px; border: none; padding: 0px;");
     return indentBlockquoteElement.release();
 }
 
@@ -140,10 +141,10 @@ void IndentOutdentCommand::indentRegion()
     
     // Special case empty root editable elements because there's nothing to split
     // and there's nothing to move.
-    Node* startNode = startOfSelection.deepEquivalent().downstream().node();
-    if (startNode == startNode->rootEditableElement()) {
+    Position start = startOfSelection.deepEquivalent().downstream();
+    if (start.node() == editableRootForPosition(start)) {
         RefPtr<Node> blockquote = createIndentBlockquoteElement(document());
-        insertNodeAt(blockquote.get(), startNode, 0);
+        insertNodeAt(blockquote.get(), start);
         RefPtr<Node> placeholder = createBreakElement(document());
         appendNode(placeholder.get(), blockquote.get());
         setEndingSelection(Selection(Position(placeholder.get(), 0), DOWNSTREAM));
@@ -185,8 +186,8 @@ void IndentOutdentCommand::indentRegion()
             // Create a new blockquote and insert it as a child of the root editable element. We accomplish
             // this by splitting all parents of the current paragraph up to that point.
             RefPtr<Node> blockquote = createIndentBlockquoteElement(document());
-            Node* startNode = startOfParagraph(endOfCurrentParagraph).deepEquivalent().node();
-            Node* startOfNewBlock = splitTreeToNode(startNode, startNode->rootEditableElement());
+            Position start = startOfParagraph(endOfCurrentParagraph).deepEquivalent();
+            Node* startOfNewBlock = splitTreeToNode(start.node(), editableRootForPosition(start));
             insertNodeBefore(blockquote.get(), startOfNewBlock);
             newBlockquote = blockquote.get();
             insertionPoint = prepareBlockquoteLevelForInsertion(endOfCurrentParagraph, &newBlockquote);
@@ -228,9 +229,9 @@ void IndentOutdentCommand::outdentParagraph()
         removeNodePreservingChildren(enclosingNode);
         updateLayout();
         if (visibleStartOfParagraph.isNotNull() && !isStartOfParagraph(visibleStartOfParagraph))
-            insertNodeAt(createBreakElement(document()).get(), visibleStartOfParagraph.deepEquivalent().node(), visibleStartOfParagraph.deepEquivalent().offset());
+            insertNodeAt(createBreakElement(document()).get(), visibleStartOfParagraph.deepEquivalent());
         if (visibleEndOfParagraph.isNotNull() && !isEndOfParagraph(visibleEndOfParagraph))
-            insertNodeAt(createBreakElement(document()).get(), visibleEndOfParagraph.deepEquivalent().node(), visibleEndOfParagraph.deepEquivalent().offset());
+            insertNodeAt(createBreakElement(document()).get(), visibleEndOfParagraph.deepEquivalent());
         return;
     }
     Node* enclosingBlockFlow = enclosingBlockFlowElement(visibleStartOfParagraph);

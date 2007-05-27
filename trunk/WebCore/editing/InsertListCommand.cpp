@@ -36,12 +36,20 @@ namespace WebCore {
 
 using namespace HTMLNames;
 
+PassRefPtr<Node> InsertListCommand::insertList(Document* document, Type type)
+{
+    RefPtr<InsertListCommand> insertCommand = new InsertListCommand(document, type, "");
+    insertCommand->apply();
+    return insertCommand->m_listElement;
+}
+
 Node* InsertListCommand::fixOrphanedListChild(Node* node)
 {
     RefPtr<Element> listElement = createUnorderedListElement(document());
     insertNodeBefore(listElement.get(), node);
     removeNode(node);
     appendNode(node, listElement.get());
+    m_listElement = listElement;
     return listElement.get();
 }
 
@@ -170,21 +178,26 @@ void InsertListCommand::doApply()
         VisiblePosition previousPosition = start.previous(true);
         VisiblePosition nextPosition = end.next(true);
         RefPtr<Element> listItemElement = createListItemElement(document());
+        RefPtr<Element> placeholder = createBreakElement(document());
+        appendNode(placeholder.get(), listItemElement.get());
         Node* previousList = outermostEnclosingList(previousPosition.deepEquivalent().node());
         Node* nextList = outermostEnclosingList(nextPosition.deepEquivalent().node());
-        if (previousList && !previousList->hasTagName(listTag))
+        Node* startNode = start.deepEquivalent().node();
+        if (previousList && (!previousList->hasTagName(listTag) || startNode->isDescendantOf(previousList)))
             previousList = 0;
-        if (nextList && !nextList->hasTagName(listTag))
+        if (nextList && (!nextList->hasTagName(listTag) || startNode->isDescendantOf(nextList)))
             nextList = 0;
-        // Stitch matching adjoining lists together.
+        // Place list item into adjoining lists.
         if (previousList)
             appendNode(listItemElement.get(), previousList);
         else if (nextList)
-            appendNode(listItemElement.get(), nextList);
+            insertNodeAt(listItemElement.get(), Position(nextList, 0));
         else {
             // Create the list.
             RefPtr<Element> listElement = m_type == OrderedList ? createOrderedListElement(document()) : createUnorderedListElement(document());
-            static_cast<HTMLElement*>(listElement.get())->setId(m_id);
+            m_listElement = listElement;
+            if (!m_id.isEmpty())
+                static_cast<HTMLElement*>(listElement.get())->setId(m_id);
             appendNode(listItemElement.get(), listElement.get());
             
             if (start == end && isBlock(start.deepEquivalent().node())) {
@@ -196,9 +209,20 @@ void InsertListCommand::doApply()
                 end = start;
             }
             
-            insertNodeAt(listElement.get(), start.deepEquivalent().node(), start.deepEquivalent().offset());
+            // Insert the list at a position visually equivalent to start of the
+            // paragraph that is being moved into the list. 
+            // Try to avoid inserting it somewhere where it will be surrounded by 
+            // inline ancestors of start, since it is easier for editing to produce 
+            // clean markup when inline elements are pushed down as far as possible.
+            Position insertionPos(start.deepEquivalent().upstream());
+            // Also avoid the containing list item.
+            Node* listChild = enclosingListChild(insertionPos.node());
+            if (listChild && listChild->hasTagName(liTag))
+                insertionPos = positionBeforeNode(listChild);
+                
+            insertNodeAt(listElement.get(), insertionPos);
         }
-        moveParagraph(start, end, VisiblePosition(Position(listItemElement.get(), 0)), true);
+        moveParagraph(start, end, VisiblePosition(Position(placeholder.get(), 0)), true);
         if (nextList && previousList)
             mergeIdenticalElements(static_cast<Element*>(previousList), static_cast<Element*>(nextList));
     }

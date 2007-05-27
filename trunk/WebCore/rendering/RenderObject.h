@@ -176,7 +176,6 @@ public:
     // Obtains the nearest enclosing block (including this block) that contributes a first-line style to our inline
     // children.
     virtual RenderBlock* firstLineBlock() const;
-    virtual void updateFirstLetter();
 
     // Called when an object that was floating or positioned becomes a normal flow object
     // again.  We have to make sure the render tree updates as needed to accommodate the new
@@ -205,9 +204,12 @@ public:
     virtual bool createsAnonymousWrapper() const { return false; }
 
     // raw tree manipulation
-    virtual RenderObject* removeChildNode(RenderObject*);
-    virtual void appendChildNode(RenderObject*);
-    virtual void insertChildNode(RenderObject* child, RenderObject* before);
+    virtual RenderObject* removeChildNode(RenderObject*, bool fullRemove = true);
+    virtual void appendChildNode(RenderObject*, bool fullAppend = true);
+    virtual void insertChildNode(RenderObject* child, RenderObject* before, bool fullInsert = true);
+    // Designed for speed.  Don't waste time doing a bunch of work like layer updating and repainting when we know that our
+    // change in parentage is not going to affect anything.
+    virtual void moveChildNode(RenderObject*);
     //////////////////////////////////////////
 
 protected:
@@ -263,6 +265,7 @@ public:
     virtual bool isImage() const { return false; }
     virtual bool isTextArea() const { return false; }
     virtual bool isTextField() const { return false; }
+    virtual bool isFrame() const { return false; }
     virtual bool isFrameSet() const { return false; }
     virtual bool isApplet() const { return false; }
     virtual bool isMenuList() const { return false; }
@@ -309,7 +312,9 @@ public:
     bool isRunIn() const { return style()->display() == RUN_IN; } // run-in object
     bool isDragging() const { return m_isDragging; }
     bool isReplaced() const { return m_replaced; } // a "replaced" element (see CSS)
-
+    
+    bool hasLayer() const { return m_hasLayer; }
+    
     bool hasBoxDecorations() const { return m_paintBackground; }
     bool mustRepaintBackgroundOrBorder() const;
 
@@ -318,8 +323,7 @@ public:
     bool posChildNeedsLayout() const { return m_posChildNeedsLayout; }
     bool normalChildNeedsLayout() const { return m_normalChildNeedsLayout; }
 
-    bool minMaxKnown() const { return m_minMaxKnown; }
-    bool recalcMinMax() const { return m_recalcMinMax; }
+    bool prefWidthsDirty() const { return m_prefWidthsDirty; }
 
     bool isSelectionBorder() const;
 
@@ -368,24 +372,13 @@ public:
     void setNeedsLayout(bool b, bool markParents = true);
     void setChildNeedsLayout(bool b, bool markParents = true);
 
-    void setMinMaxKnown(bool b = true)
+    void setPrefWidthsDirty(bool, bool markParents = true);
+    void invalidateContainerPrefWidths();
+    
+    void setNeedsLayoutAndPrefWidthsRecalc()
     {
-        m_minMaxKnown = b;
-        if (!b) {
-            RenderObject* o = this;
-            RenderObject* root = this;
-            while(o) { // FIXME: && !o->m_recalcMinMax ) {
-                o->m_recalcMinMax = true;
-                root = o;
-                o = o->m_parent;
-            }
-        }
-    }
-
-    void setNeedsLayoutAndMinMaxRecalc()
-    {
-        setMinMaxKnown(false);
         setNeedsLayout(true);
+        setPrefWidthsDirty(true);
     }
 
     void setPositioned(bool b = true)  { m_positioned = b;  }
@@ -396,6 +389,7 @@ public:
     void setRenderText() { m_isText = true; }
     void setReplaced(bool b = true) { m_replaced = b; }
     void setHasOverflowClip(bool b = true) { m_hasOverflowClip = b; }
+    void setHasLayer(bool b = true) { m_hasLayer = b; }
 
     void scheduleRelayout();
 
@@ -458,26 +452,7 @@ public:
                                          int clipy, int cliph, int tx, int ty, int width, int height,
                                          bool includeLeftEdge = true, bool includeRightEdge = true) { }
 
-    /*
-     * This function calculates the minimum & maximum width that the object
-     * can be set to.
-     *
-     * when the Element calls setMinMaxKnown(true), calcMinMaxWidth() will
-     * be no longer called.
-     *
-     * when a element has a fixed size, m_minWidth and m_maxWidth should be
-     * set to the same value. This has the special meaning that m_width,
-     * contains the actual value.
-     *
-     * assumes calcMinMaxWidth has already been called for all children.
-     */
-    virtual void calcMinMaxWidth() { }
-
-    /*
-     * Does the min max width recalculations after changes.
-     */
-    void recalcMinMaxWidths();
-
+    
     /*
      * Calculates the actual width of the object (only for non inline
      * objects)
@@ -555,10 +530,6 @@ public:
     IntRect absoluteContentBox() const;
     int contentWidth() const { return clientWidth() - paddingLeft() - paddingRight(); }
     int contentHeight() const { return clientHeight() - paddingTop() - paddingBottom(); }
-
-    // intrinsic extend of replaced elements. undefined otherwise
-    virtual int intrinsicWidth() const { return 0; }
-    virtual int intrinsicHeight() const { return 0; }
 
     // used by flexible boxes to impose a flexed width/height override
     virtual int overrideSize() const { return 0; }
@@ -685,8 +656,8 @@ public:
 
     virtual void addFocusRingRects(GraphicsContext*, int tx, int ty);
 
-    virtual int minWidth() const { return 0; }
-    virtual int maxWidth() const { return 0; }
+    virtual int minPrefWidth() const { return 0; }
+    virtual int maxPrefWidth() const { return 0; }
 
     RenderStyle* style() const { return m_style; }
     RenderStyle* firstLineStyle() const;
@@ -724,9 +695,6 @@ public:
 
     // Called to repaint a block's floats.
     virtual void repaintOverhangingFloats(bool paintAllDescendants = false);
-
-    // Called before layout to repaint all dirty children (with selfNeedsLayout() set).
-    virtual void repaintObjectsBeforeLayout();
 
     bool checkForRepaintDuringLayout() const;
 
@@ -779,7 +747,7 @@ public:
 
     // A single rectangle that encompasses all of the selected objects within this object.  Used to determine the tightest
     // possible bounding box for the selection.
-    virtual IntRect selectionRect() { return IntRect(); }
+    virtual IntRect selectionRect(bool) { return IntRect(); }
 
     // Whether or not an object can be part of the leaf elements of the selection.
     virtual bool canBeSelectionLeaf() const { return false; }
@@ -809,9 +777,9 @@ public:
         {
         }
 
-        SelectionInfo(RenderObject* o)
+        SelectionInfo(RenderObject* o, bool clipToVisibleContent)
             : m_object(o)
-            , m_rect(o->selectionRect())
+            , m_rect(o->needsLayout() ? IntRect() : o->selectionRect(clipToVisibleContent))
             , m_state(o->selectionState())
         {
         }
@@ -896,6 +864,8 @@ protected:
 
     virtual void removeLeftoverAnonymousBoxes();
 
+    void adjustRectForOutlineAndShadow(IntRect&) const;
+
     void arenaDelete(RenderArena*, void* objectBase);
 
 private:
@@ -912,7 +882,7 @@ private:
     bool m_needsLayout               : 1;
     bool m_normalChildNeedsLayout    : 1;
     bool m_posChildNeedsLayout       : 1;
-    bool m_minMaxKnown               : 1;
+    bool m_prefWidthsDirty           : 1;
     bool m_floating                  : 1;
 
     bool m_positioned                : 1;
@@ -921,12 +891,12 @@ private:
                                           // background painting phase (background, border, etc)
 
     bool m_isAnonymous               : 1;
-    bool m_recalcMinMax              : 1;
     bool m_isText                    : 1;
     bool m_inline                    : 1;
     bool m_replaced                  : 1;
     bool m_isDragging                : 1;
 
+    bool m_hasLayer                  : 1;
     bool m_hasOverflowClip           : 1;
 
     bool m_hasOverrideSize           : 1;

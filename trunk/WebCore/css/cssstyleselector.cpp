@@ -222,15 +222,14 @@ static PseudoState pseudoState;
 CSSStyleSelector::CSSStyleSelector(Document* doc, const String& userStyleSheet, StyleSheetList *styleSheets, bool _strictParsing)
 {
     init();
+    
+    m_document = doc;
 
-    view = doc->view();
     strictParsing = _strictParsing;
-    settings = view ? view->frame()->settings() : 0;
     if (!defaultStyle)
         loadDefaultStyle();
 
     m_userStyle = 0;
-    m_userSheet = 0;
 
     // construct document root element default style. this is needed
     // to evaluate media queries that contain relative constraints, like "screen and (max-width: 10em)"
@@ -238,6 +237,7 @@ CSSStyleSelector::CSSStyleSelector(Document* doc, const String& userStyleSheet, 
     // document doesn't have documentElement
     // NOTE: this assumes that element that gets passed to styleForElement -call
     // is always from the document that owns the style selector
+    FrameView* view = m_document->view();
     if (view)
         m_medium = new MediaQueryEvaluator(view->mediaType());
     else
@@ -259,7 +259,7 @@ CSSStyleSelector::CSSStyleSelector(Document* doc, const String& userStyleSheet, 
         m_userSheet->parseString(userStyleSheet, strictParsing);
 
         m_userStyle = new CSSRuleSet();
-        m_userStyle->addRulesFromSheet(m_userSheet, m_medium);
+        m_userStyle->addRulesFromSheet(m_userSheet.get(), m_medium);
     }
 
     // add stylesheets from document
@@ -301,8 +301,6 @@ CSSStyleSelector::CSSStyleSelector(CSSStyleSheet *sheet)
 void CSSStyleSelector::init()
 {
     element = 0;
-    settings = 0;
-    m_matchedRules.clear();
     m_matchedDecls.clear();
     m_ruleList = 0;
     m_collectRulesOnly = false;
@@ -334,7 +332,6 @@ CSSStyleSelector::~CSSStyleSelector()
 
     delete m_authorStyle;
     delete m_userStyle;
-    delete m_userSheet;
 }
 
 static CSSStyleSheet* parseUASheet(const char* characters, unsigned size)
@@ -559,14 +556,10 @@ void CSSStyleSelector::initForStyleResolve(Element* e, RenderStyle* defaultParen
         parentStyle = defaultParent;
     else
         parentStyle = parentNode ? parentNode->renderStyle() : 0;
-    view = element->document()->view();
     isXMLDoc = !element->document()->isHTMLDocument();
-    frame = element->document()->frame();
-    settings = frame ? frame->settings() : 0;
 
     style = 0;
     
-    m_matchedRules.clear();
     m_matchedDecls.clear();
 
     m_ruleList = 0;
@@ -654,29 +647,29 @@ static int fraction = 0;
 static int total = 0;
 #endif
 
-const int siblingThreshold = 10;
+static const unsigned cStyleSearchThreshold = 10;
 
-Node* CSSStyleSelector::locateCousinList(Element* parent)
+Node* CSSStyleSelector::locateCousinList(Element* parent, unsigned depth)
 {
     if (parent && parent->isStyledElement()) {
         StyledElement* p = static_cast<StyledElement*>(parent);
         if (!p->inlineStyleDecl() && !p->hasID()) {
             Node* r = p->previousSibling();
-            int subcount = 0;
+            unsigned subcount = 0;
             RenderStyle* st = p->renderStyle();
             while (r) {
                 if (r->renderStyle() == st)
                     return r->lastChild();
-                if (subcount++ == siblingThreshold)
+                if (subcount++ == cStyleSearchThreshold)
                     return 0;
                 r = r->previousSibling();
             }
-            if (!r)
-                r = locateCousinList(static_cast<Element*>(parent->parentNode()));
+            if (!r && depth < cStyleSearchThreshold)
+                r = locateCousinList(static_cast<Element*>(parent->parentNode()), depth + 1);
             while (r) {
                 if (r->renderStyle() == st)
                     return r->lastChild();
-                if (subcount++ == siblingThreshold)
+                if (subcount++ == cStyleSearchThreshold)
                     return 0;
                 r = r->previousSibling();
             }
@@ -742,13 +735,13 @@ RenderStyle* CSSStyleSelector::locateSharedStyle()
     if (styledElement && !styledElement->inlineStyleDecl() && !styledElement->hasID() &&
         !styledElement->document()->usesSiblingRules()) {
         // Check previous siblings.
-        int count = 0;
+        unsigned count = 0;
         Node* n;
         for (n = element->previousSibling(); n && !n->isElementNode(); n = n->previousSibling());
         while (n) {
             if (canShareStyleWithElement(n))
                 return n->renderStyle();
-            if (count++ == siblingThreshold)
+            if (count++ == cStyleSearchThreshold)
                 return 0;
             for (n = n->previousSibling(); n && !n->isElementNode(); n = n->previousSibling());
         }
@@ -757,7 +750,7 @@ RenderStyle* CSSStyleSelector::locateSharedStyle()
         while (n) {
             if (canShareStyleWithElement(n))
                 return n->renderStyle();
-            if (count++ == siblingThreshold)
+            if (count++ == cStyleSearchThreshold)
                 return 0;
             for (n = n->previousSibling(); n && !n->isElementNode(); n = n->previousSibling());
         }        
@@ -777,7 +770,7 @@ void CSSStyleSelector::matchUARules(int& firstUARule, int& lastUARule)
         matchRules(defaultQuirksStyle, firstUARule, lastUARule);
         
     // If we're in view source mode, then we match rules from the view source style sheet.
-    if (view && view->frame() && view->frame()->inViewSourceMode())
+    if (m_document->frame() && m_document->frame()->inViewSourceMode())
         matchRules(defaultViewSourceStyle, firstUARule, lastUARule);
 }
 
@@ -883,6 +876,7 @@ RenderStyle* CSSStyleSelector::styleForElement(Element* e, RenderStyle* defaultP
     // high-priority properties first, i.e., those properties that other properties depend on.
     // The order is (1) high-priority not important, (2) high-priority important, (3) normal not important
     // and (4) normal important.
+    m_lineHeightValue = 0;
     applyDeclarations(true, false, 0, m_matchedDecls.size() - 1);
     if (!resolveForRootDefault) {
         applyDeclarations(true, true, firstAuthorRule, lastAuthorRule);
@@ -893,7 +887,11 @@ RenderStyle* CSSStyleSelector::styleForElement(Element* e, RenderStyle* defaultP
     // If our font got dirtied, go ahead and update it now.
     if (fontDirty)
         updateFont();
-    
+
+    // Line-height is set when we are sure we decided on the font-size
+    if (m_lineHeightValue)
+        applyProperty(CSS_PROP_LINE_HEIGHT, m_lineHeightValue);
+
     // Now do the normal priority UA properties.
     applyDeclarations(false, false, firstUARule, lastUARule);
     
@@ -938,7 +936,7 @@ RenderStyle* CSSStyleSelector::pseudoStyleForElement(RenderStyle::PseudoId pseud
     
     // Check UA, user and author rules.
     int firstUARule = -1, lastUARule = -1, firstUserRule = -1, lastUserRule = -1, firstAuthorRule = -1, lastAuthorRule = -1;
-    matchRules(defaultStyle, firstUARule, lastUARule);
+    matchUARules(firstUARule, lastUARule);
     matchRules(m_userStyle, firstUserRule, lastUserRule);
     matchRules(m_authorStyle, firstAuthorRule, lastAuthorRule);
     
@@ -953,6 +951,7 @@ RenderStyle* CSSStyleSelector::pseudoStyleForElement(RenderStyle::PseudoId pseud
         parentStyle = style;
     style->noninherited_flags._styleType = pseudoStyle;
     
+    m_lineHeightValue = 0;
     // High-priority properties.
     applyDeclarations(true, false, 0, m_matchedDecls.size() - 1);
     applyDeclarations(true, true, firstAuthorRule, lastAuthorRule);
@@ -962,6 +961,10 @@ RenderStyle* CSSStyleSelector::pseudoStyleForElement(RenderStyle::PseudoId pseud
     // If our font got dirtied, go ahead and update it now.
     if (fontDirty)
         updateFont();
+
+    // Line-height is set when we are sure we decided on the font-size
+    if (m_lineHeightValue)
+        applyProperty(CSS_PROP_LINE_HEIGHT, m_lineHeightValue);
     
     // Now do the normal priority properties.
     applyDeclarations(false, false, firstUARule, lastUARule);
@@ -1178,7 +1181,7 @@ void CSSStyleSelector::cacheBorderAndBackground()
 
 RefPtr<CSSRuleList> CSSStyleSelector::styleRulesForElement(Element* e, bool authorOnly)
 {
-    if (!e->document()->haveStylesheetsLoaded())
+    if (!e || !e->document()->haveStylesheetsLoaded())
         return 0;
 
     m_collectRulesOnly = true;
@@ -1261,9 +1264,6 @@ bool CSSStyleSelector::checkSelector(CSSSelector* sel, Element *e)
         case CSSSelector::Child:
         {
             n = n->parentNode();
-            if (!strictParsing)
-                while (n && n->implicitNode())
-                    n = n->parentNode();
             if (!n || !n->isElementNode())
                 return false;
             if (!checkOneSelector(sel, static_cast<Element*>(n)))
@@ -1583,6 +1583,8 @@ bool CSSStyleSelector::checkOneSelector(CSSSelector* sel, Element* e, bool isSub
             case CSSSelector::PseudoFirstLetter:
                 if (subject) {
                     dynamicPseudo = RenderStyle::FIRST_LETTER;
+                    if (Document* doc = e->document())
+                        doc->setUsesFirstLetterRules(true);
                     return true;
                 }
                 break;
@@ -1758,6 +1760,10 @@ void CSSStyleSelector::applyDeclarations(bool applyFirst, bool isImportant,
             if (isImportant == current.isImportant()) {
                 bool first;
                 switch(current.id()) {
+                    case CSS_PROP_LINE_HEIGHT:
+                        m_lineHeightValue = current.value();
+                        first = !applyFirst; // we apply line-height later
+                        break;
                     case CSS_PROP_COLOR:
                     case CSS_PROP_DIRECTION:
                     case CSS_PROP_DISPLAY:
@@ -1776,7 +1782,6 @@ void CSSStyleSelector::applyDeclarations(bool applyFirst, bool isImportant,
                         first = false;
                         break;
                 }
-                
                 if (first == applyFirst)
                     applyProperty(current.id(), current.value());
             }
@@ -2663,22 +2668,40 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
         return;
     }
 
-    case CSS_PROP_WORD_WRAP:
-    {
-        HANDLE_INHERIT_AND_INITIAL(wordWrap, WordWrap)
+    case CSS_PROP_WORD_BREAK: {
+        HANDLE_INHERIT_AND_INITIAL(wordBreak, WordBreak)
 
-        if(!primitiveValue->getIdent()) return;
+        EWordBreak b;
+        switch (primitiveValue->getIdent()) {
+        case CSS_VAL_BREAK_ALL:
+            b = BreakAllWordBreak;
+            break;
+        case CSS_VAL_BREAK_WORD:
+            b = BreakWordBreak;
+            break;
+        case CSS_VAL_NORMAL:
+        default:
+            b = NormalWordBreak;
+            break;
+        }
+        style->setWordBreak(b);
+        return;
+    }
+
+    case CSS_PROP_WORD_WRAP: {
+        HANDLE_INHERIT_AND_INITIAL(wordWrap, WordWrap)
 
         EWordWrap s;
         switch(primitiveValue->getIdent()) {
         case CSS_VAL_BREAK_WORD:
-            s = BREAK_WORD;
+            s = BreakWordWrap;
             break;
         case CSS_VAL_NORMAL:
         default:
-            s = WBNORMAL;
+            s = NormalWordWrap;
             break;
         }
+
         style->setWordWrap(s);
         return;
     }
@@ -2749,7 +2772,7 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
 
         if (!primitiveValue->getIdent()) return;
 
-        EResize r;
+        EResize r = RESIZE_NONE;
         switch(primitiveValue->getIdent()) {
         case CSS_VAL_BOTH:
             r = RESIZE_BOTH;
@@ -2761,7 +2784,8 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
             r = RESIZE_VERTICAL;
             break;
         case CSS_VAL_AUTO:
-            r = settings->textAreasAreResizable() ? RESIZE_BOTH : RESIZE_NONE;
+            if (Settings* settings = m_document->settings())
+                r = settings->textAreasAreResizable() ? RESIZE_BOTH : RESIZE_NONE;
             break;
         case CSS_VAL_NONE:
         default:
@@ -3081,7 +3105,11 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
             style->setHasAutoZIndex();
             return;
         }
-        style->setZIndex((int)primitiveValue->getFloatValue());
+        
+        // FIXME: Should clamp all sorts of other integer properties too.
+        const double minIntAsDouble = INT_MIN;
+        const double maxIntAsDouble = INT_MAX;
+        style->setZIndex(static_cast<int>(max(minIntAsDouble, min(primitiveValue->getFloatValue(), maxIntAsDouble))));
         return;
     }
     case CSS_PROP_WIDOWS:
@@ -3115,8 +3143,8 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
             double multiplier = 1.0;
             // Scale for the font zoom factor only for types other than "em" and "ex", since those are
             // already based on the font size.
-            if (type != CSSPrimitiveValue::CSS_EMS && type != CSSPrimitiveValue::CSS_EXS && view && view->frame()) {
-                multiplier = view->frame()->zoomFactor() / 100.0;
+            if (type != CSSPrimitiveValue::CSS_EMS && type != CSSPrimitiveValue::CSS_EXS && m_document->frame()) {
+                multiplier = m_document->frame()->zoomFactor() / 100.0;
             }
             lineHeight = Length(primitiveValue->computeLengthIntForLength(style, multiplier), Fixed);
         } else if (type == CSSPrimitiveValue::CSS_PERCENTAGE)
@@ -3293,9 +3321,10 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
             if(!item->isPrimitiveValue()) continue;
             CSSPrimitiveValue *val = static_cast<CSSPrimitiveValue*>(item);
             AtomicString face;
-            if(val->primitiveType() == CSSPrimitiveValue::CSS_STRING)
+            Settings* settings = m_document->settings();
+            if (val->primitiveType() == CSSPrimitiveValue::CSS_STRING)
                 face = static_cast<FontFamilyValue*>(val)->fontName();
-            else if (val->primitiveType() == CSSPrimitiveValue::CSS_IDENT) {
+            else if (val->primitiveType() == CSSPrimitiveValue::CSS_IDENT && settings) {
                 switch (val->getIdent()) {
                     case CSS_VAL__WEBKIT_BODY:
                         face = settings->standardFontFamily();
@@ -3504,16 +3533,19 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
         if (isInherit) {
             FontDescription fontDescription = parentStyle->fontDescription();
             style->setLineHeight(parentStyle->lineHeight());
+            m_lineHeightValue = 0;
             if (style->setFontDescription(fontDescription))
                 fontDirty = true;
         } else if (isInitial) {
             FontDescription fontDescription;
             fontDescription.setGenericFamily(FontDescription::StandardFamily);
             style->setLineHeight(RenderStyle::initialLineHeight());
+            m_lineHeightValue = 0;
             if (style->setFontDescription(fontDescription))
                 fontDirty = true;
         } else if (primitiveValue) {
             style->setLineHeight(RenderStyle::initialLineHeight());
+            m_lineHeightValue = 0;
             FontDescription fontDescription;
             theme()->systemFont(primitiveValue->getIdent(), fontDescription);
             // Double-check and see if the theme did anything.  If not, don't bother updating the font.
@@ -3533,13 +3565,7 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
             applyProperty(CSS_PROP_FONT_WEIGHT, font->weight.get());
             applyProperty(CSS_PROP_FONT_SIZE, font->size.get());
 
-            // Line-height can depend on font().pixelSize(), so we have to update the font
-            // before we evaluate line-height, e.g., font: 1em/1em.  FIXME: Still not
-            // good enough: style="font:1em/1em; font-size:36px" should have a line-height of 36px.
-            if (fontDirty)
-                CSSStyleSelector::style->font().update();
-            
-            applyProperty(CSS_PROP_LINE_HEIGHT, font->lineHeight.get());
+            m_lineHeightValue = font->lineHeight.get();
             applyProperty(CSS_PROP_FONT_FAMILY, font->family.get());
         }
         return;
@@ -3874,7 +3900,7 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
             return; // Error case.
         style->setBoxOrdinalGroup((unsigned int)(primitiveValue->getFloatValue()));
         return;
-    case CSS_PROP_BOX_SIZING:
+    case CSS_PROP__WEBKIT_BOX_SIZING:
         HANDLE_INHERIT_AND_INITIAL(boxSizing, BoxSizing)
         if (!primitiveValue) return;
         if (primitiveValue->getIdent() == CSS_VAL_CONTENT_BOX)
@@ -4005,7 +4031,7 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
         if (primitiveValue->getIdent() == CSS_VAL_INFINITE)
             style->setMarqueeLoopCount(-1); // -1 means repeat forever.
         else if (primitiveValue->primitiveType() == CSSPrimitiveValue::CSS_NUMBER)
-            style->setMarqueeLoopCount((int)(primitiveValue->getFloatValue()));
+            style->setMarqueeLoopCount((int)primitiveValue->getFloatValue());
         return;
     }
     case CSS_PROP__WEBKIT_MARQUEE_SPEED: {
@@ -4652,7 +4678,10 @@ void CSSStyleSelector::checkForGenericFamilyChange(RenderStyle* style, RenderSty
         size = fontSizeForKeyword(CSS_VAL_XX_SMALL + childFont.keywordSize() - 1, style->htmlHacks(),
                                   childFont.genericFamily() == FontDescription::MonospaceFamily);
     } else {
-        float fixedScaleFactor = ((float)settings->defaultFixedFontSize()) / settings->defaultFontSize();
+        Settings* settings = m_document->settings();
+        float fixedScaleFactor = settings
+            ? static_cast<float>(settings->defaultFixedFontSize()) / settings->defaultFontSize()
+            : 1;
         size = (parentFont.genericFamily() == FontDescription::MonospaceFamily) ? 
                 childFont.specifiedSize()/fixedScaleFactor :
                 childFont.specifiedSize()*fixedScaleFactor;
@@ -4680,10 +4709,15 @@ float CSSStyleSelector::getComputedSizeFromSpecifiedSize(bool isAbsoluteSize, fl
     // With the smart minimum, we never want to get smaller than the minimum font size to keep fonts readable.
     // However we always allow the page to set an explicit pixel size that is smaller,
     // since sites will mis-render otherwise (e.g., http://www.gamespot.com with a 9px minimum).
+    
+    Settings* settings = m_document->settings();
+    if (!settings)
+        return 1.0f;
+
     int minSize = settings->minimumFontSize();
     int minLogicalSize = settings->minimumLogicalFontSize();
 
-    float zoomPercent = view ? view->frame()->zoomFactor()/100.0f : 1.0f;
+    float zoomPercent = m_document->frame() ? m_document->frame()->zoomFactor() / 100.0f : 1.0f;
     float zoomedSize = specifiedSize * zoomPercent;
 
     // Apply the hard minimum first.  We only apply the hard minimum if after zooming we're still too small.
@@ -4744,6 +4778,10 @@ static const float fontSizeFactors[totalKeywords] = { 0.60, 0.75, 0.89, 1.0, 1.2
 
 float CSSStyleSelector::fontSizeForKeyword(int keyword, bool quirksMode, bool fixed) const
 {
+    Settings* settings = m_document->settings();
+    if (!settings)
+        return 1.0f;
+
     int mediumSize = fixed ? settings->defaultFixedFontSize() : settings->defaultFontSize();
     if (mediumSize >= fontSizeTableMin && mediumSize <= fontSizeTableMax) {
         // Look up the entry in the table.
@@ -4797,33 +4835,33 @@ static const ColorValue colorValues[] = {
     { CSS_VAL_YELLOW, 0xFFFFFF00 },
     { CSS_VAL_TRANSPARENT, 0x00000000 },
     { CSS_VAL_GREY, 0xFF808080 },
-    { CSS_VAL_ACTIVEBORDER, 0xFFE0E0E0 },
-    { CSS_VAL_ACTIVECAPTION, 0xFF000000 },
-    { CSS_VAL_APPWORKSPACE, 0xFF000000 },
+    { CSS_VAL_ACTIVEBORDER, 0xFFFFFFFF },
+    { CSS_VAL_ACTIVECAPTION, 0xFFCCCCCC },
+    { CSS_VAL_APPWORKSPACE, 0xFFFFFFFF },
     { CSS_VAL_BUTTONFACE, 0xFFC0C0C0 },
-    { CSS_VAL_BUTTONHIGHLIGHT, 0xFFE0E0E0 },
-    { CSS_VAL_BUTTONSHADOW, 0xFFFFFFFF },
+    { CSS_VAL_BUTTONHIGHLIGHT, 0xFFDDDDDD },
+    { CSS_VAL_BUTTONSHADOW, 0xFF888888 },
     { CSS_VAL_BUTTONTEXT, 0xFF000000 },
     { CSS_VAL_CAPTIONTEXT, 0xFF000000 },
     { CSS_VAL_GRAYTEXT, 0xFF808080 },
-    { CSS_VAL_HIGHLIGHT, 0xFFFFFFFF },
-    { CSS_VAL_HIGHLIGHTTEXT, 0xFFFFFFFF },
+    { CSS_VAL_HIGHLIGHT, 0xFFB5D5FF },
+    { CSS_VAL_HIGHLIGHTTEXT, 0xFF000000 },
     { CSS_VAL_INACTIVEBORDER, 0xFFFFFFFF },
     { CSS_VAL_INACTIVECAPTION, 0xFFFFFFFF },
-    { CSS_VAL_INACTIVECAPTIONTEXT, 0xFF000000 },
-    { CSS_VAL_INFOBACKGROUND, 0xFF000000 },
+    { CSS_VAL_INACTIVECAPTIONTEXT, 0xFF7F7F7F },
+    { CSS_VAL_INFOBACKGROUND, 0xFFFBFCC5 },
     { CSS_VAL_INFOTEXT, 0xFF000000 },
-    { CSS_VAL_MENU, 0xFFFFFFFF },
-    { CSS_VAL_MENUTEXT, 0xFFFFFFFF },
+    { CSS_VAL_MENU, 0xFFC0C0C0 },
+    { CSS_VAL_MENUTEXT, 0xFF000000 },
     { CSS_VAL_SCROLLBAR, 0xFFFFFFFF },
     { CSS_VAL_TEXT, 0xFF000000 },
-    { CSS_VAL_THREEDDARKSHADOW, 0xFF404040 },
+    { CSS_VAL_THREEDDARKSHADOW, 0xFF666666 },
     { CSS_VAL_THREEDFACE, 0xFFC0C0C0 },
-    { CSS_VAL_THREEDHIGHLIGHT, 0xFFE0E0E0 },
+    { CSS_VAL_THREEDHIGHLIGHT, 0xFFDDDDDD },
     { CSS_VAL_THREEDLIGHTSHADOW, 0xFFC0C0C0 },
-    { CSS_VAL_THREEDSHADOW, 0xFFFFFFFF },
+    { CSS_VAL_THREEDSHADOW, 0xFF888888 },
     { CSS_VAL_WINDOW, 0xFFFFFFFF },
-    { CSS_VAL_WINDOWFRAME, 0xFFFFFFFF },
+    { CSS_VAL_WINDOWFRAME, 0xFFCCCCCC },
     { CSS_VAL_WINDOWTEXT, 0xFF000000 },
     { 0, 0 }
 };

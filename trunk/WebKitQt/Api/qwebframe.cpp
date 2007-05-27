@@ -31,6 +31,7 @@
 #include "FrameView.h"
 #include "GraphicsContext.h"
 #include "HitTestResult.h"
+#include "Page.h"
 #include "PlatformMouseEvent.h"
 #include "PlatformKeyboardEvent.h"
 #include "PlatformWheelEvent.h"
@@ -40,6 +41,7 @@
 #include "RenderTreeAsText.h"
 #include "Element.h"
 #include "Document.h"
+#include "DragData.h"
 #include "RenderObject.h"
 
 #include "bindings/runtime.h"
@@ -77,6 +79,7 @@ void QWebFramePrivate::init(QWebFrame *qframe, WebCore::Page *page, QWebFrameDat
     frameView->setScrollArea(qframe);
     frameView->setAllowsScrolling(frameData->allowsScrolling);
     frame->setView(frameView.get());
+    frame->init();
     eventHandler = frame->eventHandler();
 }
 
@@ -263,7 +266,7 @@ void QWebFrame::mouseMoveEvent(QMouseEvent *ev)
     if (!d->frameView)
         return;
 
-    d->frameView->handleMouseMoveEvent(PlatformMouseEvent(ev, 0));
+    d->eventHandler->handleMouseMoveEvent(PlatformMouseEvent(ev, 0));
     const int xOffset = horizontalScrollBar()->value();
     const int yOffset = verticalScrollBar()->value();
     IntPoint pt(ev->x() + xOffset, ev->y() + yOffset);
@@ -288,7 +291,7 @@ void QWebFrame::mouseReleaseEvent(QMouseEvent *ev)
     if (!d->frameView)
         return;
 
-    d->frameView->handleMouseReleaseEvent(PlatformMouseEvent(ev, 0));
+    d->eventHandler->handleMouseReleaseEvent(PlatformMouseEvent(ev, 0));
 }
 
 void QWebFrame::wheelEvent(QWheelEvent *e)
@@ -311,18 +314,6 @@ void QWebFrame::keyPressEvent(QKeyEvent *ev)
 void QWebFrame::keyReleaseEvent(QKeyEvent *ev)
 {
     d->_q_handleKeyEvent(ev, true);
-}
-
-void QWebFrame::dragEnterEvent(QDragEnterEvent *)
-{
-}
-
-void QWebFrame::dragLeaveEvent(QDragLeaveEvent *)
-{
-}
-
-void QWebFrame::dragMoveEvent(QDragMoveEvent *)
-{
 }
 
 /*!\reimp

@@ -453,7 +453,11 @@ FrameEdgeInfo RenderFrameSet::edgeInfo() const
 void RenderFrameSet::layout()
 {
     ASSERT(needsLayout());
-    ASSERT(minMaxKnown());
+
+    bool doFullRepaint = selfNeedsLayout() && checkForRepaintDuringLayout();
+    IntRect oldBounds;
+    if (doFullRepaint)
+        oldBounds = absoluteClippedOverflowRect();
 
     if (!parent()->isFrameSet()) {
         FrameView* v = view()->frameView();
@@ -478,6 +482,13 @@ void RenderFrameSet::layout()
     RenderContainer::layout();
 
     computeEdgeInfo();
+
+    if (doFullRepaint) {
+        view()->repaintViewRectangle(oldBounds);
+        IntRect newBounds = absoluteClippedOverflowRect();
+        if (newBounds != oldBounds)
+            view()->repaintViewRectangle(newBounds);
+    }
 
     setNeedsLayout(false);
 }
@@ -652,6 +663,11 @@ int RenderFrameSet::hitTestSplit(const GridAxis& axis, int position) const
         splitPosition += borderThickness + axis.m_sizes[i];
     }
     return noSplit;
+}
+
+bool RenderFrameSet::isChildAllowed(RenderObject* child, RenderStyle* style) const
+{
+    return child->isFrame() || child->isFrameSet();
 }
 
 #ifndef NDEBUG

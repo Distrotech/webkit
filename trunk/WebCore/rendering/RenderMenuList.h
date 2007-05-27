@@ -57,7 +57,7 @@ public:
 
     virtual const char* renderName() const { return "RenderMenuList"; }
 
-    virtual void calcMinMaxWidth();
+    virtual void calcPrefWidths();
 
     bool popupIsVisible() const { return m_popupIsVisible; }
     void showPopup();
@@ -89,6 +89,7 @@ private:
     virtual bool hasLineIfEmpty() const { return true; }
 
     void createInnerBlock();
+    void adjustInnerStyle();
     void setText(const String&);
     void setTextFromOption(int optionIndex);
     void updateOptionsWidth();

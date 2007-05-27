@@ -106,6 +106,7 @@ all : \
     DOMHTMLLegendElement.h \
     DOMHTMLLinkElement.h \
     DOMHTMLMapElement.h \
+    DOMHTMLMarqueeElement.h \
     DOMHTMLMenuElement.h \
     DOMHTMLMetaElement.h \
     DOMHTMLModElement.h \
@@ -331,41 +332,51 @@ all : \
     JSHTMLBRElement.h \
     JSHTMLButtonElement.h \
     JSHTMLCanvasElement.h \
+    JSHTMLDListElement.h \
     JSHTMLDirectoryElement.h \
     JSHTMLDivElement.h \
-    JSHTMLDListElement.h \
     JSHTMLDocument.h \
     JSHTMLElement.h \
     JSHTMLFieldSetElement.h \
     JSHTMLFontElement.h \
     JSHTMLFormElement.h \
+    JSHTMLFrameElement.h \
+    JSHTMLFrameSetElement.h \
+    JSHTMLHRElement.h \
     JSHTMLHeadElement.h \
     JSHTMLHeadingElement.h \
-    JSHTMLHRElement.h \
-    JSHTMLImageElement.h \
-    JSHTMLIsIndexElement.h \
     JSHTMLHtmlElement.h \
+    JSHTMLIFrameElement.h \
+    JSHTMLImageElement.h \
     JSHTMLInputElement.h \
     JSHTMLInputElementBaseTable.cpp \
+    JSHTMLIsIndexElement.h \
+    JSHTMLLIElement.h \
     JSHTMLLabelElement.h \
     JSHTMLLegendElement.h \
-    JSHTMLLIElement.h \
     JSHTMLLinkElement.h \
-    JSHTMLMenuElement.h \
-    JSHTMLOptionElement.h \
-    JSHTMLOptionsCollection.h \
-    JSHTMLOptGroupElement.h \
-    JSHTMLQuoteElement.h \
     JSHTMLMapElement.h \
+    JSHTMLMarqueeElement.h \
+    JSHTMLMenuElement.h \
     JSHTMLMetaElement.h \
     JSHTMLModElement.h \
     JSHTMLOListElement.h \
+    JSHTMLOptGroupElement.h \
+    JSHTMLOptionElement.h \
+    JSHTMLOptionsCollection.h \
     JSHTMLParagraphElement.h \
     JSHTMLParamElement.h \
     JSHTMLPreElement.h \
+    JSHTMLQuoteElement.h \
     JSHTMLScriptElement.h \
     JSHTMLSelectElement.h \
     JSHTMLStyleElement.h \
+    JSHTMLTableCaptionElement.h \
+    JSHTMLTableCellElement.h \
+    JSHTMLTableColElement.h \
+    JSHTMLTableElement.h \
+    JSHTMLTableRowElement.h \
+    JSHTMLTableSectionElement.h \
     JSHTMLTextAreaElement.h \
     JSHTMLTitleElement.h \
     JSHTMLUListElement.h \
@@ -565,21 +576,29 @@ tokenizer.cpp : css/tokenizer.flex css/maketokenizer
 	flex -t $< | perl $(WebCore)/css/maketokenizer > $@
 
 # CSS grammar
+# NOTE: older versions of bison do not inject an inclusion guard, so we do it
 
 CSSGrammar.cpp : css/CSSGrammar.y
 	bison -d -p cssyy $< -o $@
 	touch CSSGrammar.cpp.h
 	touch CSSGrammar.hpp
-	cat CSSGrammar.cpp.h CSSGrammar.hpp > CSSGrammar.h
+	echo '#ifndef CSSGrammar_h' > CSSGrammar.h
+	echo '#define CSSGrammar_h' >> CSSGrammar.h
+	cat CSSGrammar.cpp.h CSSGrammar.hpp >> CSSGrammar.h
+	echo '#endif' >> CSSGrammar.h
 	rm -f CSSGrammar.cpp.h CSSGrammar.hpp
 
 # XPath grammar
+# NOTE: older versions of bison do not inject an inclusion guard, so we do it
 
 XPathGrammar.cpp : xml/XPathGrammar.y $(PROJECT_FILE)
 	bison -d -p xpathyy $< -o $@
 	touch XPathGrammar.cpp.h
 	touch XPathGrammar.hpp
-	cat XPathGrammar.cpp.h XPathGrammar.hpp > XPathGrammar.h
+	echo '#ifndef XPathGrammar_h' > XPathGrammar.h
+	echo '#define XPathGrammar_h' >> XPathGrammar.h
+	cat XPathGrammar.cpp.h XPathGrammar.hpp >> XPathGrammar.h
+	echo '#endif' >> XPathGrammar.h
 	rm -f XPathGrammar.cpp.h XPathGrammar.hpp
 
 # user agent style sheets
@@ -671,7 +690,7 @@ OBJC_BINDINGS_SCRIPTS = \
 #
 
 DOM%.h : %.idl $(OBJC_BINDINGS_SCRIPTS) bindings/objc/PublicDOMInterfaces.h
-	perl -I $(WebCore)/bindings/scripts $(WebCore)/bindings/scripts/generate-bindings.pl --defines "$(FEATURE_DEFINES) LANGUAGE_OBJECTIVE_C" --generator ObjC --include dom --include html --include css --include page --include xml --include /ksvg2/svg --include /ksvg2/events --outputdir . $<
+	perl -I $(WebCore)/bindings/scripts $(WebCore)/bindings/scripts/generate-bindings.pl --defines "$(FEATURE_DEFINES) LANGUAGE_OBJECTIVE_C" --generator ObjC --include dom --include html --include css --include page --include xml --include ksvg2/svg --include ksvg2/events --outputdir . $<
 
 # new-style JavaScript bindings
 
@@ -684,4 +703,4 @@ JS_BINDINGS_SCRIPTS = \
 #
 
 JS%.h : %.idl $(JS_BINDINGS_SCRIPTS)
-	perl -I $(WebCore)/bindings/scripts $(WebCore)/bindings/scripts/generate-bindings.pl --defines "$(FEATURE_DEFINES) LANGUAGE_JAVASCRIPT" --generator JS --include dom --include html --include css --include page --include xml --include ksvg2/svg --include /ksvg2/events --outputdir . $<
+	perl -I $(WebCore)/bindings/scripts $(WebCore)/bindings/scripts/generate-bindings.pl --defines "$(FEATURE_DEFINES) LANGUAGE_JAVASCRIPT" --generator JS --include dom --include html --include css --include page --include xml --include ksvg2/svg --include ksvg2/events --outputdir . $<

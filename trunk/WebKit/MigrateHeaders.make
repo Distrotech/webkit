@@ -1,4 +1,4 @@
-# Copyright (C) 2006 Apple Computer, Inc. All rights reserved.
+# Copyright (C) 2006, 2007 Apple Inc. All rights reserved.
 # Copyright (C) 2006 Samuel Weinig <sam.weinig@gmail.com>
 #
 # Redistribution and use in source and binary forms, with or without
@@ -93,6 +93,7 @@ all : \
     $(PUBLIC_HEADERS_DIR)/DOMHTMLDirectoryElement.h \
     $(PUBLIC_HEADERS_DIR)/DOMHTMLDivElement.h \
     $(PUBLIC_HEADERS_DIR)/DOMHTMLDocument.h \
+    $(PRIVATE_HEADERS_DIR)/DOMHTMLDocumentPrivate.h \
     $(PUBLIC_HEADERS_DIR)/DOMHTMLElement.h \
     $(INTERNAL_HEADERS_DIR)/DOMHTMLElementInternal.h \
     $(PUBLIC_HEADERS_DIR)/DOMHTMLEmbedElement.h \
@@ -101,6 +102,7 @@ all : \
     $(PUBLIC_HEADERS_DIR)/DOMHTMLFormElement.h \
     $(PRIVATE_HEADERS_DIR)/DOMHTMLFormElementPrivate.h \
     $(PUBLIC_HEADERS_DIR)/DOMHTMLFrameElement.h \
+    $(PRIVATE_HEADERS_DIR)/DOMHTMLFrameElementPrivate.h \
     $(PUBLIC_HEADERS_DIR)/DOMHTMLFrameSetElement.h \
     $(PUBLIC_HEADERS_DIR)/DOMHTMLHRElement.h \
     $(PUBLIC_HEADERS_DIR)/DOMHTMLHeadElement.h \
@@ -121,6 +123,7 @@ all : \
     $(PUBLIC_HEADERS_DIR)/DOMHTMLLinkElement.h \
     $(PRIVATE_HEADERS_DIR)/DOMHTMLLinkElementPrivate.h \
     $(PUBLIC_HEADERS_DIR)/DOMHTMLMapElement.h \
+    $(PUBLIC_HEADERS_DIR)/DOMHTMLMarqueeElement.h \
     $(PUBLIC_HEADERS_DIR)/DOMHTMLMenuElement.h \
     $(PUBLIC_HEADERS_DIR)/DOMHTMLMetaElement.h \
     $(PUBLIC_HEADERS_DIR)/DOMHTMLModElement.h \
@@ -199,7 +202,7 @@ all : \
     $(PUBLIC_HEADERS_DIR)/npruntime.h \
 #
 
-REPLACE_RULES = -e s/\<WebCore/\<WebKit/ -e s/\<JavaScriptCore/\<WebKit/ -e s/DOMDOMImplementation/DOMImplementation/
+REPLACE_RULES = -e s/\<WebCore/\<WebKit/ -e s/\<JavaScriptCore/\<WebKit/ -e s/DOMDOMImplementation/DOMImplementation/ -e 's/\<WebKit\/JSBase.h/\<JavaScriptCore\/JSBase.h/'
 HEADER_MIGRATE_CMD = sed $(REPLACE_RULES) $< $(PROCESS_HEADER_FOR_MACOSX_TARGET_CMD) > $@
 
 ifeq ($(MACOSX_DEPLOYMENT_TARGET),10.4)
@@ -208,17 +211,17 @@ else
 PROCESS_HEADER_FOR_MACOSX_TARGET_CMD = | ( unifdef -UBUILDING_ON_TIGER || exit 0 )
 endif
 
-$(PUBLIC_HEADERS_DIR)/DOM% : DOMDOM%
+$(PUBLIC_HEADERS_DIR)/DOM% : DOMDOM% MigrateHeaders.make
 	$(HEADER_MIGRATE_CMD)
 
-$(PRIVATE_HEADERS_DIR)/DOM% : DOMDOM%
+$(PRIVATE_HEADERS_DIR)/DOM% : DOMDOM% MigrateHeaders.make
 	$(HEADER_MIGRATE_CMD)
 
-$(PUBLIC_HEADERS_DIR)/% : %
+$(PUBLIC_HEADERS_DIR)/% : % MigrateHeaders.make
 	$(HEADER_MIGRATE_CMD)
 
-$(PRIVATE_HEADERS_DIR)/% : %
+$(PRIVATE_HEADERS_DIR)/% : % MigrateHeaders.make
 	$(HEADER_MIGRATE_CMD)
 
-$(INTERNAL_HEADERS_DIR)/% : %
+$(INTERNAL_HEADERS_DIR)/% : % MigrateHeaders.make
 	$(HEADER_MIGRATE_CMD)

@@ -2,7 +2,7 @@
  *  This file is part of the KDE libraries
  *  Copyright (C) 1999-2002 Harri Porten (porten@kde.org)
  *  Copyright (C) 2001 Peter Kelly (pmk@post.com)
- *  Copyright (C) 2003 Apple Computer, Inc.
+ *  Copyright (C) 2003, 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
@@ -54,10 +54,9 @@ using namespace KJS;
 
 #define KJS_CHECKEXCEPTION \
   if (exec->hadException()) { \
-    setExceptionDetailsIfNeeded(exec); \
     JSValue *ex = exec->exception(); \
     exec->clearException(); \
-    debugExceptionIfNeeded(exec, ex); \
+    handleException(exec, ex); \
     return Completion(Throw, ex); \
   } \
   if (Collector::isOutOfMemory()) \
@@ -65,8 +64,7 @@ using namespace KJS;
 
 #define KJS_CHECKEXCEPTIONVALUE \
   if (exec->hadException()) { \
-    setExceptionDetailsIfNeeded(exec); \
-    debugExceptionIfNeeded(exec, exec->exception()); \
+    handleException(exec); \
     return jsUndefined(); \
   } \
   if (Collector::isOutOfMemory()) \
@@ -74,8 +72,7 @@ using namespace KJS;
 
 #define KJS_CHECKEXCEPTIONLIST \
   if (exec->hadException()) { \
-    setExceptionDetailsIfNeeded(exec); \
-    debugExceptionIfNeeded(exec, exec->exception()); \
+    handleException(exec); \
     return List(); \
   } \
   if (Collector::isOutOfMemory()) \
@@ -187,6 +184,7 @@ void Node::clearNewNodes()
     newNodes = 0;
 }
 
+static void substitute(UString &string, const UString &substring) KJS_FAST_CALL;
 static void substitute(UString &string, const UString &substring)
 {
     int position = string.find("%s");
@@ -194,11 +192,13 @@ static void substitute(UString &string, const UString &substring)
     string = string.substr(0, position) + substring + string.substr(position + 2);
 }
 
+static inline int currentSourceId(ExecState* exec) KJS_FAST_CALL;
 static inline int currentSourceId(ExecState* exec)
 {
     return exec->context()->currentBody()->sourceId();
 }
 
+static inline const UString& currentSourceURL(ExecState* exec) KJS_FAST_CALL;
 static inline const UString& currentSourceURL(ExecState* exec)
 {
     return exec->context()->currentBody()->sourceURL();
@@ -219,6 +219,13 @@ Completion Node::createErrorCompletion(ExecState *exec, ErrorType e, const char 
 JSValue *Node::throwError(ExecState* exec, ErrorType e, const char *msg)
 {
     return KJS::throwError(exec, e, msg, lineNo(), currentSourceId(exec), currentSourceURL(exec));
+}
+
+JSValue *Node::throwError(ExecState* exec, ErrorType e, const char* msg, const char* string)
+{
+    UString message = msg;
+    substitute(message, string);
+    return KJS::throwError(exec, e, message, lineNo(), currentSourceId(exec), currentSourceURL(exec));
 }
 
 JSValue *Node::throwError(ExecState *exec, ErrorType e, const char *msg, JSValue *v, Node *expr)
@@ -268,20 +275,20 @@ JSValue *Node::throwUndefinedVariableError(ExecState *exec, const Identifier &id
     return throwError(exec, ReferenceError, "Can't find variable: %s", ident);
 }
 
-void Node::setExceptionDetailsIfNeeded(ExecState *exec)
+void Node::handleException(ExecState* exec)
 {
-    JSValue *exceptionValue = exec->exception();
+    handleException(exec, exec->exception());
+}
+
+void Node::handleException(ExecState* exec, JSValue* exceptionValue)
+{
     if (exceptionValue->isObject()) {
-        JSObject *exception = static_cast<JSObject *>(exceptionValue);
+        JSObject* exception = static_cast<JSObject*>(exceptionValue);
         if (!exception->hasProperty(exec, "line") && !exception->hasProperty(exec, "sourceURL")) {
             exception->put(exec, "line", jsNumber(m_line));
             exception->put(exec, "sourceURL", jsString(currentSourceURL(exec)));
         }
     }
-}
-
-void Node::debugExceptionIfNeeded(ExecState* exec, JSValue* exceptionValue)
-{
     Debugger* dbg = exec->dynamicInterpreter()->debugger();
     if (dbg && !dbg->hasHandledException(exec, exceptionValue)) {
         bool cont = dbg->exception(exec, currentSourceId(exec), m_line, exceptionValue);
@@ -741,12 +748,14 @@ JSValue *FunctionCallBracketNode::evaluate(ExecState *exec)
   return func->call(exec, thisObj, argList);
 }
 
+static const char *dotExprNotAnObjectString() KJS_FAST_CALL;
 static const char *dotExprNotAnObjectString()
 {
   return "Value %s (result of expression %s.%s) is not object.";
 }
 
-static const char *dotExprDoesNotAllowCallsString() 
+static const char *dotExprDoesNotAllowCallsString() KJS_FAST_CALL;
+static const char *dotExprDoesNotAllowCallsString()
 {
   return "Object %s (result of expression %s.%s) does not allow calls.";
 }
@@ -873,9 +882,20 @@ JSValue *PostfixDotNode::evaluate(ExecState *exec)
   return jsNumber(n);
 }
 
-// ECMA 11.4.1
+// ------------------------------ PostfixErrorNode -----------------------------------
+
+JSValue* PostfixErrorNode::evaluate(ExecState* exec)
+{
+    throwError(exec, ReferenceError, "Postfix %s operator applied to value that is not a reference.",
+        m_oper == OpPlusPlus ? "++" : "--");
+    handleException(exec);
+    return jsUndefined();
+}
 
 // ------------------------------ DeleteResolveNode -----------------------------------
+
+// ECMA 11.4.1
+
 JSValue *DeleteResolveNode::evaluate(ExecState *exec)
 {
   const ScopeChain& chain = exec->context()->scopeChain();
@@ -900,6 +920,7 @@ JSValue *DeleteResolveNode::evaluate(ExecState *exec)
 }
 
 // ------------------------------ DeleteBracketNode -----------------------------------
+
 JSValue *DeleteBracketNode::evaluate(ExecState *exec)
 {
   JSValue *baseValue = m_base->evaluate(exec);
@@ -952,6 +973,7 @@ JSValue *VoidNode::evaluate(ExecState *exec)
 
 // ------------------------------ TypeOfValueNode -----------------------------------
 
+static JSValue *typeStringForValue(JSValue *v) KJS_FAST_CALL;
 static JSValue *typeStringForValue(JSValue *v)
 {
     switch (v->type()) {
@@ -1107,6 +1129,16 @@ JSValue *PrefixDotNode::evaluate(ExecState *exec)
   base->put(exec, m_ident, n2);
 
   return n2;
+}
+
+// ------------------------------ PrefixErrorNode -----------------------------------
+
+JSValue* PrefixErrorNode::evaluate(ExecState* exec)
+{
+    throwError(exec, ReferenceError, "Prefix %s operator applied to value that is not a reference.",
+        m_oper == OpPlusPlus ? "++" : "--");
+    handleException(exec);
+    return jsUndefined();
 }
 
 // ------------------------------ UnaryPlusNode --------------------------------
@@ -1335,6 +1367,7 @@ JSValue *ConditionalNode::evaluate(ExecState *exec)
 
 // ECMA 11.13
 
+static ALWAYS_INLINE JSValue *valueForReadModifyAssignment(ExecState * exec, JSValue *v1, JSValue *v2, Operator oper) KJS_FAST_CALL;
 static ALWAYS_INLINE JSValue *valueForReadModifyAssignment(ExecState * exec, JSValue *v1, JSValue *v2, Operator oper)
 {
   JSValue *v;
@@ -1466,6 +1499,15 @@ JSValue *AssignDotNode::evaluate(ExecState *exec)
   return v;
 }
 
+// ------------------------------ AssignErrorNode -----------------------------------
+
+JSValue* AssignErrorNode::evaluate(ExecState* exec)
+{
+    throwError(exec, ReferenceError, "Left side of assignment is not a reference.");
+    handleException(exec);
+    return jsUndefined();
+}
+
 // ------------------------------ AssignBracketNode -----------------------------------
 
 JSValue *AssignBracketNode::evaluate(ExecState *exec)
@@ -1556,7 +1598,13 @@ JSValue *VarDeclNode::evaluate(ExecState *exec)
   } else {
       // already declared? - check with getDirect so you can override
       // built-in properties of the global object with var declarations.
-      if (variable->getDirect(ident)) 
+      // Also check for 'arguments' property. The 'arguments' cannot be found with
+      // getDirect, because it's created lazily by
+      // ActivationImp::getOwnPropertySlot.
+      // Since variable declarations are always in function scope, 'variable'
+      // will always contain instance of ActivationImp and ActivationImp will
+      // always have 'arguments' property
+      if (variable->getDirect(ident) || ident == exec->propertyNames().arguments)
           return 0;
       val = jsUndefined();
   }
@@ -2288,8 +2336,7 @@ Completion ThrowNode::execute(ExecState *exec)
   JSValue *v = expr->evaluate(exec);
   KJS_CHECKEXCEPTION
 
-  debugExceptionIfNeeded(exec, v);
-
+  handleException(exec, v);
   return Completion(Throw, v);
 }
 
@@ -2358,7 +2405,32 @@ void FunctionBodyNode::processFuncDecl(ExecState *exec)
         source->processFuncDecl(exec);
 }
 
+void FunctionBodyNode::addParam(const Identifier& ident)
+{
+  m_parameters.append(Parameter(ident));
+}
+
+UString FunctionBodyNode::paramString() const
+{
+  UString s("");
+  size_t count = numParams();
+  for (size_t pos = 0; pos < count; ++pos) {
+    if (!s.isEmpty())
+        s += ", ";
+    s += paramName(pos).ustring();
+  }
+
+  return s;
+}
+
+
 // ------------------------------ FuncDeclNode ---------------------------------
+
+void FuncDeclNode::addParams() 
+{
+  for (ParameterNode *p = param.get(); p != 0L; p = p->nextParam())
+    body->addParam(p->ident());
+}
 
 // ECMA 13
 void FuncDeclNode::processFuncDecl(ExecState *exec)
@@ -2372,11 +2444,7 @@ void FuncDeclNode::processFuncDecl(ExecState *exec)
   proto->put(exec, exec->propertyNames().constructor, func, ReadOnly | DontDelete | DontEnum);
   func->put(exec, exec->propertyNames().prototype, proto, Internal|DontDelete);
 
-  int plen = 0;
-  for(ParameterNode *p = param.get(); p != 0L; p = p->nextParam(), plen++)
-    func->addParameter(p->ident());
-
-  func->put(exec, exec->propertyNames().length, jsNumber(plen), ReadOnly|DontDelete|DontEnum);
+  func->put(exec, exec->propertyNames().length, jsNumber(body->numParams()), ReadOnly|DontDelete|DontEnum);
 
   // ECMA 10.2.2
   context->variableObject()->put(exec, ident, func, Internal | (context->codeType() == EvalCode ? 0 : DontDelete));
@@ -2401,6 +2469,12 @@ Completion FuncDeclNode::execute(ExecState *)
 // ------------------------------ FuncExprNode ---------------------------------
 
 // ECMA 13
+void FuncExprNode::addParams()
+{
+  for (ParameterNode *p = param.get(); p != 0L; p = p->nextParam())
+    body->addParam(p->ident());
+}
+
 JSValue *FuncExprNode::evaluate(ExecState *exec)
 {
   Context *context = exec->context();
@@ -2419,10 +2493,6 @@ JSValue *FuncExprNode::evaluate(ExecState *exec)
   JSObject* proto = exec->lexicalInterpreter()->builtinObject()->construct(exec, List::empty());
   proto->put(exec, exec->propertyNames().constructor, func, ReadOnly | DontDelete | DontEnum);
   func->put(exec, exec->propertyNames().prototype, proto, Internal | DontDelete);
-
-  int plen = 0;
-  for(ParameterNode *p = param.get(); p != 0L; p = p->nextParam(), plen++)
-    func->addParameter(p->ident());
 
   if (named) {
     functionScopeObject->put(exec, ident, func, Internal | ReadOnly | (context->codeType() == EvalCode ? 0 : DontDelete));

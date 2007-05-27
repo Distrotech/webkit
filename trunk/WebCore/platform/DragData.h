@@ -32,6 +32,7 @@
 #include "IntPoint.h"
 
 #include <wtf/Forward.h>
+#include <wtf/Vector.h>
 
 #if PLATFORM(MAC)
 #ifdef __OBJC__ 
@@ -42,7 +43,8 @@ typedef id <NSDraggingInfo> DragDataRef;
 typedef void* DragDataRef;
 #endif
 #elif PLATFORM(QT)
-typedef class QMimeData* DragDataRef;
+class QMimeData;
+typedef const QMimeData* DragDataRef;
 #elif PLATFORM(WIN)
 typedef struct IDataObject* DragDataRef;
 #elif PLATFORM(WX)
@@ -87,11 +89,12 @@ namespace WebCore {
         bool containsCompatibleContent() const;
         String asURL(String* title = 0) const;
         String asPlainText() const;
+        void asFilenames(Vector<String>&) const;
         Color asColor() const;
         PassRefPtr<DocumentFragment> asFragment(Document*) const;
         bool canSmartReplace() const;
         bool containsColor() const;
-        
+        bool containsFiles() const;
     private:
         IntPoint m_clientPosition;
         IntPoint m_globalPosition;

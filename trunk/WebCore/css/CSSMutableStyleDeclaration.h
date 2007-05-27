@@ -26,6 +26,7 @@
 #include "CSSStyleDeclaration.h"
 #include "CSSPrimitiveValue.h"
 #include "DeprecatedValueList.h"
+#include "Node.h"
 #include "PlatformString.h"
 
 namespace WebCore {
@@ -81,7 +82,7 @@ public:
 
     void clear();
 
-    void setChanged();
+    void setChanged(StyleChangeType changeType = FullStyleChange);
  
     // setLengthProperty treats integers as pixels! (Needed for conversion of HTML attributes.)
     void setLengthProperty(int propertyId, const String& value, bool important, bool multiLength = false);
@@ -103,6 +104,7 @@ public:
 
 private:
     String getShorthandValue(const int* properties, int number) const;
+    String getLayeredShorthandValue(const int* properties, unsigned number) const;
     String get4Values(const int* properties) const;
  
     DeprecatedValueList<CSSProperty> m_values;

@@ -20,14 +20,14 @@
 
 module core {
 
-    interface [LegacyParent=KJS::DOMEventTargetNode] Attr : EventTargetNode {
+    interface [LegacyParent=KJS::DOMEventTargetNode, GenerateConstructor] Attr : EventTargetNode {
 
         // DOM Level 1
 
         readonly attribute [ConvertNullStringTo=Null] DOMString name;
         readonly attribute boolean specified;
-                 attribute [ConvertNullStringTo=Null] DOMString value 
-                     setter raises (DOMException);
+                 attribute [ConvertNullStringTo=Null, ConvertNullToNullString] DOMString value 
+                     setter raises(DOMException);
 
         // DOM Level 2
 

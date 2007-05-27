@@ -1,6 +1,6 @@
 /*
     Copyright (C) 2004, 2005, 2007 Nikolas Zimmermann <zimmermann@kde.org>
-                  2004, 2005, 2006 Rob Buis <buis@kde.org>
+                  2004, 2005, 2006, 2007 Rob Buis <buis@kde.org>
 
     This file is part of the KDE project
 
@@ -26,7 +26,6 @@
 #include "SVGClipPathElement.h"
 
 #include "Document.h"
-#include "RenderView.h"
 #include "SVGNames.h"
 #include "SVGUnitTypes.h"
 #include "cssstyleselector.h"
@@ -50,11 +49,10 @@ ANIMATED_PROPERTY_DEFINITIONS(SVGClipPathElement, int, Enumeration, enumeration,
 
 void SVGClipPathElement::parseMappedAttribute(MappedAttribute* attr)
 {
-    const String& value = attr->value();
     if (attr->name() == SVGNames::clipPathUnitsAttr) {
-        if (value == "userSpaceOnUse")
+        if (attr->value() == "userSpaceOnUse")
             setClipPathUnitsBaseValue(SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE);
-        else if (value == "objectBoundingBox")
+        else if (attr->value() == "objectBoundingBox")
             setClipPathUnitsBaseValue(SVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX);
     } else {
         if (SVGTests::parseMappedAttribute(attr))
@@ -69,9 +67,6 @@ void SVGClipPathElement::parseMappedAttribute(MappedAttribute* attr)
 
 SVGResource* SVGClipPathElement::canvasResource()
 {
-    if (!view())
-        return 0;
-
     if (!m_clipper)
         m_clipper = new SVGResourceClipper();
     else
@@ -90,10 +85,10 @@ SVGResource* SVGClipPathElement::canvasResource()
                 pathData.transform(static_cast<SVGStyledTransformableElement*>(e)->localMatrix());
             if (!pathData.isEmpty())
                 m_clipper->addClipData(pathData, pathStyle->svgStyle()->clipRule(), bbox);
-            pathStyle->deref(view()->renderArena());
+            pathStyle->deref(document()->renderArena());
         }
     }
-    clipPathStyle->deref(view()->renderArena());
+    clipPathStyle->deref(document()->renderArena());
     return m_clipper.get();
 }
 
