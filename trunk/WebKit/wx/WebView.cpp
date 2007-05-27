@@ -347,13 +347,9 @@ void wxWebView::OnPaint(wxPaintEvent& event)
         m_impl->frameView->layout();
     }
     
-// FIXME: We should use buffered drawing under Win/Linux to avoid flicker and such.
-#if 0 //ndef __WXMAC__
-    wxBufferedPaintDC dc(this, wxBUFFER_CLIENT_AREA);
-#else
-    wxPaintDC dc(this);
+    wxAutoBufferedPaintDC dc(this);
     DoPrepareDC(dc);
-#endif
+
     if (IsShown() && m_impl->frame && m_impl->frame->document())
     {
 #if USE(WXGC)

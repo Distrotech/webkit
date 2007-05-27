@@ -104,16 +104,11 @@ void BitmapImage::draw(GraphicsContext* ctxt, const FloatRect& dst, const FloatR
     float scaleX = srcRect.width() / dstRect.width();
     float scaleY = srcRect.height() / dstRect.height();
    
-    // Draw the image.
+// FIXME: Transparency doesn't seem to be respected when we do this...
 #if USE(WXGC)
-    // FIXME: Transparency doesn't seem to be respected when we do this...
     context->DrawBitmap(*bitmap, dst.x(), dst.y(), dst.width(), dst.height()); 
 #else
-    wxMemoryDC* mydc = new wxMemoryDC();
-    mydc->SelectObject(*bitmap);
-    context->Blit((wxCoord)dst.x(),(wxCoord)dst.y(), (wxCoord)dst.width(), (wxCoord)dst.height(), mydc,
-                    (wxCoord)src.x(), (wxCoord)src.y());
-    mydc->SelectObject(wxNullBitmap);
+    context->DrawBitmap(*bitmap, dst.x(), dst.y(), true);
 #endif
     startAnimation();
 }
@@ -148,12 +143,11 @@ void BitmapImage::drawPattern(GraphicsContext* ctxt, const FloatRect& srcRect, c
     {
         while ( currentH < dstRect.height() )
         {
+// FIXME: This doesn't seem to work for transparent images.
 #if USE(WXGC)
             context->DrawBitmap(*bitmap, dstRect.x() + currentW, dstRect.y() + currentH, srcRect.width(), srcRect.height()); 
 #else
-            context->Blit((wxCoord)dstRect.x() + currentW, (wxCoord)dstRect.y() + currentH, 
-                            (wxCoord)srcRect.width(), (wxCoord)srcRect.height(), mydc,
-                            (wxCoord)srcRect.x(), (wxCoord)srcRect.y());
+            context->DrawBitmap(*bitmap, dstRect.x() + currentW, dstRect.y() + currentH, true);
 #endif
             currentH += srcRect.height();
         }
